@@ -19,13 +19,16 @@
 
 /*
 
-  This class serves as a base for aggregates that will implement a
-  per-element XUL API.
+  The base XUL element class and associates.
 
 */
 
 #ifndef nsXULElement_h__
 #define nsXULElement_h__
+
+// XXX because nsIEventListenerManager has broken includes
+#include "nslayout.h" 
+#include "nsIDOMEvent.h"
 
 #include "nsForwardReference.h"
 #include "nsHTMLValue.h"
@@ -35,6 +38,7 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULTreeElement.h"
+#include "nsIEventListenerManager.h"
 #include "nsIFocusableContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
@@ -46,8 +50,8 @@
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 
+class nsClassList;
 class nsIDocument;
-class nsIEventListenerManager;
 class nsIRDFService;
 class nsISupportsArray;
 class nsIXULContentUtils;
@@ -55,6 +59,60 @@ class nsRDFDOMNodeList;
 class nsString;
 class nsVoidArray;
 class nsXULAttributes;
+class nsXULPrototypeDocument;
+
+////////////////////////////////////////////////////////////////////////
+
+/**
+
+  A prototype attribute for an nsXULPrototypeElement.
+
+ */
+
+struct nsXULPrototypeAttribute
+{
+    PRInt32     mNameSpaceID;
+    nsIAtom*    mName;
+    PRUnichar*  mValue;
+};
+
+
+/**
+
+  A prototype content model element that holds the "primordial" values
+  that have been parsed from the original XUL document. A
+  'lightweight' nsXULElement may delegate its representation to this
+  structure, which is shared.
+
+ */
+
+struct nsXULPrototypeElement
+{
+    nsXULPrototypeDocument*  mDocument;           // [OWNER] because doc is refcounted
+    PRInt32                  mNumChildren;
+    nsXULPrototypeElement*   mChildren;           // [OWNER]
+
+    nsINameSpace*            mNameSpace;          // [OWNER]
+    nsIAtom*                 mNameSpacePrefix;    // [OWNER]
+    PRInt32                  mNameSpaceID;
+    nsIAtom*                 mTag;                // [OWNER]
+
+    PRInt32                  mNumAttributes;
+    nsXULPrototypeAttribute* mAttributes;         // [OWNER]
+
+    nsIStyleRule*            mInlineStyleRule;    // [OWNER]
+    nsClassList*             mClassList;
+};
+
+
+////////////////////////////////////////////////////////////////////////
+
+/**
+
+  This class serves as a base for aggregates that will implement a
+  per-element XUL API.
+
+ */
 
 class nsXULAggregateElement : public nsISupports
 {
@@ -84,40 +142,61 @@ public:
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsXULElement : public nsIDOMXULElement,
-                     public nsIDOMEventReceiver,
-                     public nsIScriptObjectOwner,
-                     public nsIJSScriptObject,
-                     public nsIStyledContent,
+/**
+
+  The XUL element.
+
+ */
+
+class nsXULElement : public nsIStyledContent,
                      public nsIXMLContent,
                      public nsIXULContent,
                      public nsIFocusableContent,
+                     public nsIDOMXULElement,
+                     public nsIDOMEventReceiver,
+                     public nsIScriptObjectOwner,
+                     public nsIJSScriptObject,
                      public nsIStyleRule
 {
 public:
-    nsXULElement(PRInt32 aNameSpaceID, nsIAtom* aTag);
+protected:
+    // pseudo-constants
+    static nsrefcnt             gRefCnt;
+    static nsIRDFService*       gRDFService;
+    static nsINameSpaceManager* gNameSpaceManager;
+    static nsIXULContentUtils*  gXULUtils;
+    static PRInt32              kNameSpaceID_RDF;
+    static PRInt32              kNameSpaceID_XUL;
 
-    virtual ~nsXULElement(void);
+    static nsIAtom*             kClassAtom;
+    static nsIAtom*             kContextAtom;
+    static nsIAtom*             kIdAtom;
+    static nsIAtom*             kObservesAtom;
+    static nsIAtom*             kPopupAtom;
+    static nsIAtom*             kRefAtom;
+    static nsIAtom*             kSelectedAtom;
+    static nsIAtom*             kStyleAtom;
+    static nsIAtom*             kTitledButtonAtom;
+    static nsIAtom*             kTooltipAtom;
+    static nsIAtom*             kTreeAtom;
+    static nsIAtom*             kTreeCellAtom;
+    static nsIAtom*             kTreeChildrenAtom;
+    static nsIAtom*             kTreeColAtom;
+    static nsIAtom*             kTreeItemAtom;
+    static nsIAtom*             kTreeRowAtom;
+    static nsIAtom*             kEditorAtom;
+
+public:
+    static nsresult
+    Create(nsXULPrototypeElement* aPrototype, nsIContent** aResult);
+
+    static nsresult
+    Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
 
     // nsISupports
     NS_DECL_ISUPPORTS
        
-    // nsIDOMNode (from nsIDOMElement)
-    NS_DECL_IDOMNODE
-  
-    // nsIDOMElement
-    NS_DECL_IDOMELEMENT
-
-    // nsIScriptObjectOwner
-    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
-    NS_IMETHOD SetScriptObject(void *aScriptObject);
-
     // nsIContent (from nsIStyledContent)
-
-    // Any of the nsIContent methods that directly manipulate content
-    // (e.g., AppendChildTo()), are assumed to "know what they're
-    // doing" to the content model. No attempt is made to muck with
-    // the underlying RDF representation.
     NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
     NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep);
     NS_IMETHOD GetParent(nsIContent*& aResult) const;
@@ -152,30 +231,20 @@ public:
                               PRUint32 aFlags,
                               nsEventStatus& aEventStatus);
 
-    NS_IMETHOD GetContentID(PRUint32* aID) {
-      *aID = 0;
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-
-    NS_IMETHOD SetContentID(PRUint32 aID) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
+    NS_IMETHOD GetContentID(PRUint32* aID);
+    NS_IMETHOD SetContentID(PRUint32 aID);
 
     NS_IMETHOD RangeAdd(nsIDOMRange& aRange);
     NS_IMETHOD RangeRemove(nsIDOMRange& aRange); 
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
 
+    // nsIStyledContent
     NS_IMETHOD GetID(nsIAtom*& aResult) const;
     NS_IMETHOD GetClasses(nsVoidArray& aArray) const;
     NS_IMETHOD HasClass(nsIAtom* aClass) const;
 
     NS_IMETHOD GetContentStyleRules(nsISupportsArray* aRules);
     NS_IMETHOD GetInlineStyleRules(nsISupportsArray* aRules);
-
-    /** NRA ***
-    * Get a hint that tells the style system what to do when 
-    * an attribute on this node changes.
-    */
     NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                         PRInt32& aHint) const;
 
@@ -193,30 +262,35 @@ public:
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
 
+    // nsIFocusableContent interface
+    NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
+    NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
+
+    // nsIDOMNode (from nsIDOMElement)
+    NS_DECL_IDOMNODE
+  
+    // nsIDOMElement
+    NS_DECL_IDOMELEMENT
+
+    // nsIDOMXULElement
+    NS_DECL_IDOMXULELEMENT
+
+    // nsIDOMEventTarget interface (from nsIDOMEventReceiver)
+    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                PRBool aUseCapture);
+    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                   PRBool aUseCapture);
+
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
     NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
     NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
 
-    // nsIDOMEventTarget interface
-    NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                PRBool aUseCapture);
-    NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
-                                   PRBool aUseCapture);
+    // nsIScriptObjectOwner
+    NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
+    NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-
-    // nsIFocusableContent interface
-    NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
-    NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
-
-    // nsIStyleRule interface. The node implements this to deal with attributes that
-    // need to be mapped into style contexts (e.g., width in treecols).
-    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
-    NS_IMETHOD GetStrength(PRInt32& aStrength) const;
-    NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
-    NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
-    
     // nsIJSScriptObject
     virtual PRBool AddProperty(JSContext *aContext, jsval aID, jsval *aVp);
     virtual PRBool DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp);
@@ -227,8 +301,18 @@ public:
     virtual PRBool Convert(JSContext *aContext, jsval aID);
     virtual void   Finalize(JSContext *aContext);
 
-    // nsIDOMXULElement
-    NS_DECL_IDOMXULELEMENT
+    // nsIStyleRule interface. The node implements this to deal with attributes that
+    // need to be mapped into style contexts (e.g., width in treecols).
+    NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
+    NS_IMETHOD GetStrength(PRInt32& aStrength) const;
+    NS_IMETHOD MapFontStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+    NS_IMETHOD MapStyleInto(nsIMutableStyleContext* aContext, nsIPresContext* aPresContext);
+    
+protected:
+    nsXULElement();
+    nsresult Init();
+    virtual ~nsXULElement(void);
+
 
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
@@ -266,59 +350,68 @@ public:
 
     PRBool IsFocusableContent();
 
-private:
-    // pseudo-constants
-    static nsrefcnt             gRefCnt;
-    static nsIRDFService*       gRDFService;
-    static nsINameSpaceManager* gNameSpaceManager;
-    static nsIXULContentUtils*  gXULUtils;
-    static PRInt32              kNameSpaceID_RDF;
-    static PRInt32              kNameSpaceID_XUL;
+protected:
+    // Required fields
+    nsXULPrototypeElement*              mPrototype;
+    nsIDocument*                        mDocument;           // [WEAK]
+    nsIContent*                         mParent;             // [WEAK]
+    nsCOMPtr<nsISupportsArray>          mChildren;           // [OWNER]
 
-    static nsIAtom*             kClassAtom;
-    static nsIAtom*             kContextAtom;
-    static nsIAtom*             kIdAtom;
-    static nsIAtom*             kObservesAtom;
-    static nsIAtom*             kPopupAtom;
-    static nsIAtom*             kRefAtom;
-    static nsIAtom*             kSelectedAtom;
-    static nsIAtom*             kStyleAtom;
-    static nsIAtom*             kTitledButtonAtom;
-    static nsIAtom*             kTooltipAtom;
-    static nsIAtom*             kTreeAtom;
-    static nsIAtom*             kTreeCellAtom;
-    static nsIAtom*             kTreeChildrenAtom;
-    static nsIAtom*             kTreeColAtom;
-    static nsIAtom*             kTreeItemAtom;
-    static nsIAtom*             kTreeRowAtom;
-    static nsIAtom*             kEditorAtom;
+    // The state of our sloth for lazy content model construction via
+    // RDF; see nsIXULContent and nsRDFGenericBuilder.
+    PRInt32                             mLazyState;
 
+    // Lazily instantiated if/when object is mutated. Instantiating
+    // the mSlots makes an nsXULElement 'heavyweight'.
+    struct Slots {
+        Slots(nsXULElement* mElement);
+        ~Slots();
 
-    
-    nsIDocument*           mDocument;           // [WEAK]
-    void*                  mScriptObject;       // [OWNER]
-    nsISupportsArray*      mChildren;           // [OWNER]
-    nsIContent*            mParent;             // [WEAK]
-    nsCOMPtr<nsINameSpace> mNameSpace;          // [OWNER]
-    nsCOMPtr<nsIAtom>      mNameSpacePrefix;    // [OWNER]
-    PRInt32                mNameSpaceID;
-    nsIAtom*               mTag;                // [OWNER]
-    nsIEventListenerManager* mListenerManager;  // [OWNER]
-    nsXULAttributes*       mAttributes;         // [OWNER]
-    nsVoidArray*		   mBroadcastListeners; // [WEAK]
-    nsIDOMXULElement*      mBroadcaster;        // [WEAK]
-    nsCOMPtr<nsIControllers>             mControllers; // [OWNER]
-    nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;   // [OWNER]    
-    nsCOMPtr<nsIRDFResource>            mOwnedResource; // [OWNER]
+        nsXULElement*                       mElement;            // [WEAK]
+        PRInt32                             mNameSpaceID;
+        nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
+        nsCOMPtr<nsIAtom>                   mNameSpacePrefix;    // [OWNER]
+        nsCOMPtr<nsIAtom>                   mTag;                // [OWNER]
+        void*                               mScriptObject;       // [OWNER]
+        nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
+        nsVoidArray*                        mBroadcastListeners; // [WEAK]
+        nsIDOMXULElement*                   mBroadcaster;        // [WEAK]
+        nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
+        nsCOMPtr<nsIRDFCompositeDataSource> mDatabase;           // [OWNER]
+        nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
+        nsXULAttributes*                    mAttributes;
 
-    // An unreferenced bare pointer to an aggregate that can implement
-    // element-specific APIs.
-    nsXULAggregateElement* mInnerXULElement;
+        // An unreferenced bare pointer to an aggregate that can
+        // implement element-specific APIs.
+        nsXULAggregateElement*              mInnerXULElement;
+    };
 
-    // The state of our sloth; see nsIXULContent.
-    PRInt32                mLazyState;
+    friend struct Slots;
+    Slots* mSlots;
+    nsresult EnsureSlots();
 
 
+protected:
+    // Internal accessors. These shadow the 'Slots', and return
+    // appropriate default values if there are no slots defined in the
+    // delegate.
+    PRInt32                    NameSpaceID() const     { return mSlots ? mSlots->mNameSpaceID           : mPrototype->mNameSpaceID; }
+    nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace; }
+    nsIAtom*                   NameSpacePrefix() const { return mSlots ? mSlots->mNameSpacePrefix.get() : mPrototype->mNameSpacePrefix; }
+    nsIAtom*                   Tag() const             { return mSlots ? mSlots->mTag.get()             : mPrototype->mTag; }
+    void*                      ScriptObject() const       { return mSlots ? mSlots->mScriptObject             : nsnull; }
+    nsIEventListenerManager*   ListenerManager() const    { return mSlots ? mSlots->mListenerManager.get()    : nsnull; }
+    nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
+    nsIDOMXULElement*          Broadcaster() const        { return mSlots ? mSlots->mBroadcaster              : nsnull; }
+    nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
+    nsIRDFCompositeDataSource* Database() const           { return mSlots ? mSlots->mDatabase.get()           : nsnull; }
+    nsIRDFResource*            OwnedResource() const      { return mSlots ? mSlots->mOwnedResource.get()      : nsnull; }
+    nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
+    nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
+
+protected:
+
+    // XXX Move to nsXULContentSink?
     class ObserverForwardReference : public nsForwardReference
     {
     protected:

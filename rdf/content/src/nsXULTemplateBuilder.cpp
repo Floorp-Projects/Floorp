@@ -72,6 +72,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "nsXULElement.h"
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "prlog.h"
@@ -2990,7 +2991,7 @@ RDFGenericBuilderImpl::CreateElement(PRInt32 aNameSpaceID,
             return NS_ERROR_UNEXPECTED;
     }
     else {
-        rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result));
+        rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(result));
         if (NS_FAILED(rv)) return rv;
     }
 

@@ -86,6 +86,7 @@
 #include "nsRDFParserUtils.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
+#include "nsXULElement.h"
 #include "prlog.h"
 #include "prmem.h"
 #include "rdfutil.h"
@@ -1553,7 +1554,7 @@ XULContentSinkImpl::CreateXULElement(PRInt32 aNameSpaceID, nsIAtom* aTag, nsCOMP
     nsresult rv;
 
     nsCOMPtr<nsIContent> element;
-    rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(element));
+    rv = nsXULElement::Create(aNameSpaceID, aTag, getter_AddRefs(element));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create new content element");
     if (NS_FAILED(rv)) return rv;
 
@@ -2019,6 +2020,9 @@ XULContentSinkImpl::OpenOverlayTag(const nsIParserNode& aNode, PRInt32 aNameSpac
 
     // Add the attributes
     rv = AddAttributes(aNode, element);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = AddElementToMap(element);
     if (NS_FAILED(rv)) return rv;
 
     if (domparent) {

@@ -37,31 +37,31 @@
 
 class nsIURI;
 
-struct nsClassList {
-  nsClassList(nsIAtom* aAtom)
-    : mAtom(aAtom),
-      mNext(nsnull)
-  {
-  }
-  nsClassList(const nsClassList& aCopy)
-    : mAtom(aCopy.mAtom),
-      mNext(nsnull)
-  {
-    NS_ADDREF(mAtom);
-    if (nsnull != aCopy.mNext) {
-      mNext = new nsClassList(*(aCopy.mNext));
-    }
-  }
-  ~nsClassList(void)
-  {
-    NS_IF_RELEASE(mAtom);
-    if (nsnull != mNext) {
-      delete mNext;
-    }
-  }
+////////////////////////////////////////////////////////////////////////
 
-  nsIAtom*      mAtom;
-  nsClassList*  mNext;
+class nsClassList {
+public:
+    nsClassList(nsIAtom* aAtom)
+        : mAtom(aAtom), mNext(nsnull) {}
+
+
+    nsClassList(const nsClassList& aCopy)
+        : mAtom(aCopy.mAtom), mNext(nsnull)
+    {
+        if (aCopy.mNext) mNext = new nsClassList(*(aCopy.mNext));
+    }
+
+
+    ~nsClassList(void)
+    {
+        delete mNext;
+    }
+
+    nsCOMPtr<nsIAtom> mAtom;
+    nsClassList*      mNext;
+
+private:
+    nsClassList& operator=(const nsClassList& aClassList) { return *this; } // not to be implemented
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -69,7 +69,7 @@ struct nsClassList {
 class nsXULAttribute : public nsIDOMAttr,
                        public nsIScriptObjectOwner
 {
-private:
+protected:
     nsXULAttribute(nsIContent* aContent,
                    PRInt32 aNameSpaceID,
                    nsIAtom* aName,
@@ -77,14 +77,13 @@ private:
 
     virtual ~nsXULAttribute();
 
-    friend nsresult
-    NS_NewXULAttribute(nsXULAttribute** aResult,
-                       nsIContent* aContent,
-                       PRInt32 aNameSpaceID,
-                       nsIAtom* aName,
-                       const nsString& aValue);
-
 public:
+    static nsresult
+    Create(nsIContent* aContent,
+           PRInt32 aNameSpaceID,
+           nsIAtom* aName,
+           const nsString& aValue,
+           nsXULAttribute** aResult);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -102,27 +101,18 @@ public:
     // Implementation methods
     void GetQualifiedName(nsString& aAttributeName);
 
-    PRInt32 GetNameSpaceID();
-    nsIAtom* GetName();
-    const nsString& GetValue();
+    PRInt32 GetNameSpaceID() const { return mNameSpaceID; }
+    nsIAtom* GetName() const { return mName; }
+    void SetValueInternal(const nsString& aValue) { mValue = aValue; }
 
-    // Publicly exposed to make life easier. This is a private class
-    // anyway.
-    PRInt32      mNameSpaceID;
-    nsIAtom*     mName;
-    nsAutoString mValue;
-
-private:
+protected:
+    PRInt32     mNameSpaceID;
+    nsIAtom*    mName;
+    nsString    mValue;
     nsIContent* mContent;
     void*       mScriptObject;
 };
 
-nsresult
-NS_NewXULAttribute(nsXULAttribute** aResult,
-                   nsIContent* aContent,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aName,
-                   const nsString& aValue);
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -130,6 +120,9 @@ class nsXULAttributes : public nsIDOMNamedNodeMap,
                         public nsIScriptObjectOwner
 {
 public:
+    static nsresult
+    Create(nsIContent* aElement, nsXULAttributes** aResult);
+
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
@@ -155,10 +148,7 @@ public:
     nsresult UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue);
     nsresult GetInlineStyleRule(nsIStyleRule*& aRule);
 
-private:
-    friend nsresult
-    NS_NewXULAttributes(nsXULAttributes** aResult, nsIContent* aContent);
-
+protected:
     nsXULAttributes(nsIContent* aContent);
     virtual ~nsXULAttributes();
 
@@ -172,9 +162,6 @@ private:
     void*         mScriptObject;
 };
 
-
-nsresult
-NS_NewXULAttributes(nsXULAttributes** aResult, nsIContent* aContent);
 
 #endif // nsXULAttributes_h__
 

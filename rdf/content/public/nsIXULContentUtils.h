@@ -98,10 +98,6 @@ public:
 };
 
 
-// in nsRDFElement.cpp
-extern nsresult
-NS_NewRDFElement(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
-
 // {3E727CE1-6499-11d3-BE38-00104BDE6048}
 #define NS_XULCONTENTUTILS_CID \
 { 0x3e727ce1, 0x6499, 0x11d3, { 0xbe, 0x38, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }

@@ -72,20 +72,15 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
 
 nsXULAttribute::~nsXULAttribute()
 {
-#ifdef DEBUG_REFS
-    --gInstanceCount;
-    fprintf(stdout, "%d - RDF: nsXULAttribute\n", gInstanceCount);
-#endif
-
     NS_IF_RELEASE(mName);
 }
 
 nsresult
-NS_NewXULAttribute(nsXULAttribute** aResult,
-                   nsIContent* aContent,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aName,
-                   const nsString& aValue)
+nsXULAttribute::Create(nsIContent* aContent,
+                       PRInt32 aNameSpaceID,
+                       nsIAtom* aName,
+                       const nsString& aValue,
+                       nsXULAttribute** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
@@ -283,6 +278,8 @@ nsXULAttribute::GetValue(nsString& aValue)
 NS_IMETHODIMP
 nsXULAttribute::SetValue(const nsString& aValue)
 {
+    // We call back to the content node's SetValue() method so we can
+    // share all of the work that it does.
     nsCOMPtr<nsIDOMElement> element( do_QueryInterface(mContent) );
     if (element) {
         nsAutoString qualifiedName;
@@ -376,14 +373,14 @@ nsXULAttributes::~nsXULAttributes()
 {
     PRInt32 count = mAttributes.Count();
     for (PRInt32 indx = 0; indx < count; indx++) {
-        nsXULAttribute* attr = (nsXULAttribute*)mAttributes.ElementAt(indx);
+        nsXULAttribute* attr = NS_REINTERPRET_CAST(nsXULAttribute*, mAttributes.ElementAt(indx));
         NS_RELEASE(attr);
     }
 }
 
 
 nsresult
-NS_NewXULAttributes(nsXULAttributes** aResult, nsIContent* aContent)
+nsXULAttributes::Create(nsIContent* aContent, nsXULAttributes** aResult)
 {
     NS_PRECONDITION(aResult != nsnull, "null ptr");
     if (! aResult)
@@ -464,10 +461,10 @@ nsXULAttributes::GetNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     // graph. The problem is, how else do we get the named item?
     for (PRInt32 i = mAttributes.Count() - 1; i >= 0; --i) {
         nsXULAttribute* attr = (nsXULAttribute*) mAttributes[i];
-        if (((nameSpaceID == attr->mNameSpaceID) ||
+        if (((nameSpaceID == attr->GetNameSpaceID()) ||
              (nameSpaceID == kNameSpaceID_Unknown) ||
              (nameSpaceID == kNameSpaceID_None)) &&
-            (name == attr->mName)) {
+            (name == attr->GetName())) {
             NS_ADDREF(attr);
             *aReturn = attr;
             break;
@@ -564,7 +561,7 @@ nsXULAttributes::HasClass(nsIAtom* aClass) const
 {
   const nsClassList* classList = mClassList;
   while (nsnull != classList) {
-    if (classList->mAtom == aClass) {
+    if (classList->mAtom.get() == aClass) {
       return NS_OK;
     }
     classList = classList->mNext;
