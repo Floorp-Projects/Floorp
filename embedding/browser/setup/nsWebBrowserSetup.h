@@ -28,6 +28,8 @@
 class nsWebBrowserSetup : public nsIWebBrowserSetup
 {
 public:
+   nsWebBrowserSetup();
+
    NS_DECL_ISUPPORTS
    
    NS_DECL_NSIWEBBROWSERSETUP
@@ -35,7 +37,6 @@ public:
    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void** ppv);
 
 protected:
-   nsWebBrowserSetup();
    virtual ~nsWebBrowserSetup();
 };
 
