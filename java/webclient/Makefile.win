@@ -35,15 +35,9 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH = ..\..
 
-!if defined(WEBCLIENT_PRE_SPEC)
-DIRS  = classes \
-	src \
-	$(NULL)
-!else
 DIRS  = classes_spec \
 	src_moz \
 	$(NULL)
-!endif
 
 !if defined(BAL_INTERFACE)
 DIRS = classes_spec \
