@@ -99,7 +99,9 @@ protected:
   nsCOMPtr<nsISupportsArray> m_filters;
   nsCString m_arbitraryHeaders;
   nsCOMPtr<nsIFileSpec> m_defaultFile;
+
 private:
+  nsresult TruncateLog();
   nsresult GetLogFileSpec(nsIFileSpec **aFileSpec);
   nsCOMPtr<nsIOutputStream> m_logStream;
 };

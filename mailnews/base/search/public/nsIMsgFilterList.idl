@@ -120,8 +120,11 @@ interface nsIMsgFilterList : nsISupports {
     void writeBoolAttr(in nsMsgFilterFileAttribValue attrib, in boolean value, in nsIOFileStream stream);
     boolean matchOrChangeFilterTarget(in string oldUri, in string newUri, in boolean caseInsensitive);
  
+    // for filter logging
     attribute nsIOutputStream logStream;
     readonly attribute string logURL;
+    void clearLog();
+    void ensureLogFile();
 };
 
 

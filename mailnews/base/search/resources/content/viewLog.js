@@ -1,5 +1,6 @@
 var gFilterList;
 var gLogFilters;
+var gLogView;
 
 function onLoad()
 {
@@ -8,15 +9,16 @@ function onLoad()
   gLogFilters = document.getElementById("logFilters");
   gLogFilters.checked = gFilterList.loggingEnabled;
 
-  var logView = document.getElementById("logView");
+  gLogView = document.getElementById("logView");
 
   // for security, disable JS
-  logView.docShell.allowJavascript = false;
+  gLogView.docShell.allowJavascript = false;
 
-  // won't work yet
-  // Security Error: Content at chrome://messenger/content/filterLog.xul 
-  // may not load or link to file:///C|/Documents%20and%20Settings/Administrator/Application%20Data/Mozilla/Profiles/sspitzer/js48p4bs.slt/ImapMail/nsmail-1/filterlog.html.
-  logView.setAttribute("src", gFilterList.logURL);
+  // if log doesn't exist, this will create an empty file on disk
+  // otherwise, the user will get an error that the file doesn't exist
+  gFilterList.ensureLogFile();
+
+  gLogView.setAttribute("src", gFilterList.logURL);
 }
 
 function toggleLogFilters()
@@ -26,10 +28,9 @@ function toggleLogFilters()
 
 function clearLog()
 {
-  // var logURL = gFilterList.logURL;
-  // gFilterList.logStream = null;
-  // get file for logURL;
-  // truncate file
-  // reload blank log file in viewer
+  gFilterList.clearLog();
+
+  // reload the newly truncated file
+  gLogView.setAttribute("src", gFilterList.logURL);
 }
 

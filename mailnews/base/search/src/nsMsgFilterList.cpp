@@ -120,6 +120,50 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 	return SaveTextFilters(stream);
 }
 
+NS_IMETHODIMP nsMsgFilterList::EnsureLogFile()
+{
+  nsCOMPtr <nsIFileSpec> file;
+  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool exists;
+  rv = file->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && !exists) {
+    rv = file->Touch();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
+}
+
+nsresult nsMsgFilterList::TruncateLog()
+{
+  // this will flush and close the steam
+  nsresult rv = SetLogStream(nsnull);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIFileSpec> file;
+  rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = file->Truncate(0);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgFilterList::ClearLog()
+{
+  PRBool loggingEnabled = m_loggingEnabled;
+  
+  // disable logging while clearing
+  m_loggingEnabled = PR_FALSE;
+
+  nsresult rv = TruncateLog();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to truncate filter log");
+
+  m_loggingEnabled = loggingEnabled;
+  return NS_OK;
+}
+
 nsresult 
 nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
 {
@@ -154,12 +198,10 @@ nsMsgFilterList::GetLogURL(char **aLogURL)
 NS_IMETHODIMP
 nsMsgFilterList::SetLogStream(nsIOutputStream *aLogStream)
 {
-  // if there is a log stream already, flush it to disk and close it
+  // if there is a log stream already, close it
   if (m_logStream) {
-    nsresult rv = m_logStream->Flush();
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = m_logStream->Close();
+    // will flush
+    nsresult rv = m_logStream->Close();
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
