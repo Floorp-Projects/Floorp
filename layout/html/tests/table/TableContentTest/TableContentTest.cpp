@@ -146,10 +146,10 @@ nsresult BasicTest::AppendSimpleSpan(nsIContent* aContainer, const char* aTag, c
     tmp.Append(aText);
     rv = NS_NewHTMLText(&text, tmp.GetUnicode(), tmp.Length());
     if (NS_OK == rv) {
-      span->AppendChild(text);
+      span->AppendChildTo(text);
       NS_RELEASE(text);
     }
-    aContainer->AppendChild(span);
+    aContainer->AppendChildTo(span);
     NS_RELEASE(span);
   }
   NS_RELEASE(atom);
@@ -197,18 +197,18 @@ void BasicTest::CreateCorrectContent(int aRows, int aCols)
           if (NS_OK == rv) {
             rv = AppendSimpleSpan (cell, "P", "test");   
           }
-          row->AppendChild(cell);
+          row->AppendChildTo(cell);
           NS_RELEASE(cell);
         }
-        table->AppendChild(row);
+        table->AppendChildTo(row);
         NS_RELEASE(row);
       }
     }
     ((nsTablePart *)table)->GetMaxColumns();  // has important side effect of creating pseudo-columns
-    body->AppendChild(table);
+    body->AppendChildTo(table);
     NS_RELEASE(table);
   }
-  root->AppendChild(body);
+  root->AppendChildTo(body);
   NS_RELEASE(body);
 }
 
@@ -246,20 +246,20 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
   nsIAtom* captionAtom = NS_NewAtom("CAPTION");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
-  table->AppendChild(caption);
+  table->AppendChildTo(caption);
   
   // add column group
   PRInt32 colIndex;
   nsIAtom* colGroupAtom = NS_NewAtom("COLGROUP");
   rv = NS_NewTableColGroupPart(&colGroup, colGroupAtom);
   NS_RELEASE(colGroupAtom);
-  table->AppendChild(colGroup);
+  table->AppendChildTo(colGroup);
 
   // add columns
   nsIAtom* colAtom = NS_NewAtom("COL");
   for (colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
     rv = NS_NewTableColPart(&col, colAtom);
-    colGroup->AppendChild(col);
+    colGroup->AppendChildTo(col);
   }
   NS_RELEASE(colAtom);
 
@@ -278,17 +278,17 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
           if (NS_OK == rv) {
             rv = AppendSimpleSpan (cell, "P", "test");   
           }
-          row->AppendChild(cell);
+          row->AppendChildTo(cell);
           NS_RELEASE(cell);
         }
-        table->AppendChild(row);
+        table->AppendChildTo(row);
         NS_RELEASE(row);
       }
     }
-    body->AppendChild(table);
+    body->AppendChildTo(table);
     NS_RELEASE(table);
   }
-  root->AppendChild(body);
+  root->AppendChildTo(body);
   NS_RELEASE(body);
 }
 
@@ -338,7 +338,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
           if (NS_OK == rv) {
             rv = AppendSimpleSpan (cell, "P", "test");   
           }
-          row->AppendChild(cell);
+          row->AppendChildTo(cell);
           NS_RELEASE(cell);
           if (1==rowIndex && 0==colIndex)
           {
@@ -347,29 +347,29 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
             nsIAtom* colGroupAtom = NS_NewAtom("COLGROUP");
             rv = NS_NewTableColGroupPart(&colGroup, colGroupAtom);
             NS_RELEASE(colGroupAtom);
-            table->AppendChild(colGroup);
+            table->AppendChildTo(colGroup);
           }
         }
-        table->AppendChild(row);
+        table->AppendChildTo(row);
         NS_RELEASE(row);
       }
     }
     ((nsTablePart *)table)->GetMaxColumns();  // has important side effect of creating pseudo-columns
-    body->AppendChild(table);
+    body->AppendChildTo(table);
   }
-  root->AppendChild(body);
+  root->AppendChildTo(body);
 
   // add caption in middle
   nsIAtom* captionAtom = NS_NewAtom("CAPTION");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
-  table->AppendChild(caption);
+  table->AppendChildTo(caption);
 
   // add columns
   nsIAtom* colAtom = NS_NewAtom("COL");
   for (PRInt32 colIndex = 0; (NS_OK == rv) && (colIndex < aCols); colIndex++) {
     rv = NS_NewTableColPart(&col, colAtom);
-    colGroup->AppendChild(col);
+    colGroup->AppendChildTo(col);
   }
   NS_RELEASE(colAtom);
 
@@ -377,7 +377,7 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   captionAtom = NS_NewAtom("CAPTION");
   rv = NS_NewTableCaptionPart(&caption, captionAtom);
   NS_RELEASE(captionAtom);
-  table->AppendChild(caption);
+  table->AppendChildTo(caption);
 
   NS_RELEASE(table);
   NS_RELEASE(body);

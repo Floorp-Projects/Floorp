@@ -163,7 +163,7 @@ nsrefcnt nsTablePart::Release(void)
   * 
   */
 NS_IMETHODIMP
-nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
+nsTablePart::AppendChildTo (nsIContent * aContent, PRBool aNotify)
 {
   NS_PRECONDITION(nsnull!=aContent, "bad arg");
   PRBool contentHandled = PR_FALSE;
@@ -188,9 +188,9 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
       if (gsDebug==PR_TRUE)
       {
         if (contentType == nsITableContent::kTableRowType)
-          printf ("nsTablePart::AppendChild -- adding a row.\n");
+          printf ("nsTablePart::AppendChildTo -- adding a row.\n");
         else
-          printf ("nsTablePart::AppendChild -- adding a cell.\n");
+          printf ("nsTablePart::AppendChildTo -- adding a cell.\n");
       }
       // find last row group, if ! implicit, make one, append there
       nsTableRowGroup *group = nsnull;
@@ -215,17 +215,17 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
         group->IsSynthetic(groupIsImplicit);
       if ((nsnull == group) || (PR_FALSE==groupIsImplicit))
       {
-        if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- creating an implicit row group.\n");
+        if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChildTo -- creating an implicit row group.\n");
         nsIAtom * rowGroupTag = NS_NewAtom(kRowGroupBodyTagString); // rowGroupTag: REFCNT++
         group = new nsTableRowGroup (rowGroupTag, PR_TRUE);
         NS_ADDREF(group);                         // group: REFCNT++
-        rv = AppendChild (group, PR_FALSE);
+        rv = AppendChildTo (group, PR_FALSE);
         if (NS_OK==rv)
           group->SetTable(this);
         NS_RELEASE(rowGroupTag);                                  // rowGroupTag: REFCNT--
       }
       // group is guaranteed to be allocated at this point
-      rv = group->AppendChild(aContent, PR_FALSE);
+      rv = group->AppendChildTo(aContent, PR_FALSE);
       contentHandled = PR_TRUE;
       NS_RELEASE(group);                          // group: REFCNT--
     }
@@ -259,7 +259,7 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
     // SEC the logic here is very suspicious!!!!
     if (PR_FALSE==contentHandled)
     {
-      if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- content not handled!!!\n");
+      if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChildTo -- content not handled!!!\n");
       nsTableCaption *caption = nsnull;
       nsIContent *lastChild = ChildAt (ChildCount() - 1); // lastChild: REFCNT++
       if (nsnull != lastChild)
@@ -274,12 +274,12 @@ nsTablePart::AppendChild (nsIContent * aContent, PRBool aNotify)
         caption->IsSynthetic(captionIsImplicit);
       if ((nsnull == caption) || (PR_FALSE==captionIsImplicit))
       {
-        if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChild -- adding an implicit caption.\n");
+        if (gsDebug==PR_TRUE) printf ("nsTablePart::AppendChildTo -- adding an implicit caption.\n");
         caption = new nsTableCaption (PR_TRUE);
         result = AppendCaption (caption);
         // check result
       }
-      result = caption->AppendChild (aContent, PR_FALSE);
+      result = caption->AppendChildTo (aContent, PR_FALSE);
     }
   }
   NS_RELEASE(tableContentInterface);                                        // tableContentInterface: REFCNT--
@@ -489,7 +489,7 @@ PRBool nsTablePart::AppendColGroup(nsTableColGroup *aContent)
   for (PRInt32 i=0; i<span; i++)
   {
     nsTableCol *col = new nsTableCol(PR_TRUE);
-    rv = aContent->AppendChild (col, PR_FALSE);
+    rv = aContent->AppendChildTo (col, PR_FALSE);
     if (NS_OK!=rv)
     {
       result = PR_FALSE;
@@ -528,14 +528,14 @@ PRBool nsTablePart::AppendColumn(nsTableCol *aContent)
   if ((PR_FALSE == foundColGroup) || (PR_FALSE==groupIsImplicit))
   {
     if (gsDebug==PR_TRUE) 
-      printf ("nsTablePart::AppendChild -- creating an implicit column group.\n");
+      printf ("nsTablePart::AppendChildTo -- creating an implicit column group.\n");
     group = new nsTableColGroup (PR_TRUE);
-    rv = AppendChild (group, PR_FALSE);
+    rv = AppendChildTo (group, PR_FALSE);
     if (NS_OK==rv)
       group->SetTable(this);
   }
   if (NS_OK==rv)
-    rv = group->AppendChild (aContent, PR_FALSE);
+    rv = group->AppendChildTo (aContent, PR_FALSE);
 
   return (PRBool)(NS_OK==rv);
 }

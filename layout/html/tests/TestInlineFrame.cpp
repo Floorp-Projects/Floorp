@@ -273,9 +273,9 @@ TestReflowUnmapped(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Append three fixed width elements.
-  b->AppendChild(new FixedSizeContent(100, 100));
-  b->AppendChild(new FixedSizeContent(300, 300));
-  b->AppendChild(new FixedSizeContent(200, 200));
+  b->AppendChildTo(new FixedSizeContent(100, 100));
+  b->AppendChildTo(new FixedSizeContent(300, 300));
+  b->AppendChildTo(new FixedSizeContent(200, 200));
 
   // Create an inline frame for the HTML container and set its
   // style context
@@ -368,7 +368,7 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Add one fixed width element.
-  b->AppendChild(new FixedSizeContent(100, 100));
+  b->AppendChildTo(new FixedSizeContent(100, 100));
 
   // Create an inline frame for the HTML container and set its
   // style context
@@ -404,8 +404,8 @@ TestChildrenThatDontFit(nsIPresContext* presContext)
   // Test #1b
 
   // Append two more fixed width elements.
-  b->AppendChild(new FixedSizeContent(300, 300));
-  b->AppendChild(new FixedSizeContent(200, 200));
+  b->AppendChildTo(new FixedSizeContent(300, 300));
+  b->AppendChildTo(new FixedSizeContent(200, 200));
 
   // Create a new inline frame for the HTML container
   InlineFrame*  f1 = new InlineFrame(b, 0, nsnull);
@@ -538,9 +538,9 @@ TestOverflow(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Append three fixed width elements.
-  b->AppendChild(new FixedSizeContent(100, 100));
-  b->AppendChild(new FixedSizeContent(300, 300));
-  b->AppendChild(new FixedSizeContent(200, 200));
+  b->AppendChildTo(new FixedSizeContent(100, 100));
+  b->AppendChildTo(new FixedSizeContent(300, 300));
+  b->AppendChildTo(new FixedSizeContent(200, 200));
 
   // Create an inline frame for the HTML container and set its
   // style context
@@ -650,9 +650,9 @@ TestPushingPulling(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Append three fixed width elements.
-  b->AppendChild(new FixedSizeContent(100, 100));
-  b->AppendChild(new FixedSizeContent(300, 300));
-  b->AppendChild(new FixedSizeContent(200, 200));
+  b->AppendChildTo(new FixedSizeContent(100, 100));
+  b->AppendChildTo(new FixedSizeContent(300, 300));
+  b->AppendChildTo(new FixedSizeContent(200, 200));
 
   // Create an inline frame for the HTML container and set its
   // style context
@@ -1071,9 +1071,9 @@ TestSplittableChildren(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Append three fixed width elements that can split
-  b->AppendChild(new FixedSizeContent(100, 100, PR_TRUE));
-  b->AppendChild(new FixedSizeContent(300, 300, PR_TRUE));
-  b->AppendChild(new FixedSizeContent(200, 200, PR_TRUE));
+  b->AppendChildTo(new FixedSizeContent(100, 100, PR_TRUE));
+  b->AppendChildTo(new FixedSizeContent(300, 300, PR_TRUE));
+  b->AppendChildTo(new FixedSizeContent(200, 200, PR_TRUE));
 
   // Create an inline frame for the HTML container and set its
   // style context
@@ -1430,9 +1430,9 @@ TestMaxElementSize(nsIPresContext* presContext)
   NS_NewHTMLContainer(&b, NS_NewAtom("SPAN"));
 
   // Append three fixed width elements.
-  b->AppendChild(new FixedSizeContent(100, 100));
-  b->AppendChild(new FixedSizeContent(300, 300));
-  b->AppendChild(new FixedSizeContent(200, 200));
+  b->AppendChildTo(new FixedSizeContent(100, 100));
+  b->AppendChildTo(new FixedSizeContent(300, 300));
+  b->AppendChildTo(new FixedSizeContent(200, 200));
 
   // Create an inline frame for the HTML container and set its
   // style context

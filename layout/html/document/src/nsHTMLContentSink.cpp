@@ -424,7 +424,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   nsIHTMLContent* it = nsnull;
   nsresult rv = NS_NewHTMLTitle(&it, atom, aValue);
   if (NS_OK == rv) {
-    mHead->AppendChild(it, PR_FALSE);
+    mHead->AppendChildTo(it, PR_FALSE);
     NS_RELEASE(it);
   }
   NS_RELEASE(atom);
@@ -474,7 +474,7 @@ NS_ASSERTION(nsnull == mBody, "yikes");
 
     // This is done here instead of earlier because we need the
     // attributes from the real body tag before we initiate reflow.
-    mRoot->AppendChild(mBody, PR_FALSE);
+    mRoot->AppendChildTo(mBody, PR_FALSE);
     StartLayout();
   }
 
@@ -639,7 +639,7 @@ HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
   FlushText();
 
-  mRoot->AppendChild(mFrameset, PR_TRUE);
+  mRoot->AppendChildTo(mFrameset, PR_TRUE);
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "HTMLContentSink::CloseFrameset", aNode);
@@ -978,7 +978,7 @@ HTMLContentSink::WillBuildModel(void)
   if (NS_OK != rv) {
     return rv;
   }
-  mRoot->AppendChild(mHead, PR_FALSE);
+  mRoot->AppendChildTo(mHead, PR_FALSE);
 
   // Notify document that the load is beginning
   mDocument->BeginLoad();
@@ -1499,7 +1499,7 @@ HTMLContentSink::AppendToCorrectParent(nsHTMLTag aParentTag,
     break;
   }
 
-  realParent->AppendChild(aChild, aAllowReflow);
+  realParent->AppendChildTo(aChild, aAllowReflow);
   if (aAllowReflow) {
 //    ScrollToRef();
   }
@@ -1704,7 +1704,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     rv = NS_NewHTMLMeta(&it, atom) ;
     if (NS_OK == rv) {
       rv = AddAttributes(aNode, it);
-      mHead->AppendChild(it, PR_FALSE);
+      mHead->AppendChildTo(it, PR_FALSE);
 
       // Handle the Refresh Case. We could also handle 
       // the other http-equiv cases here such as "Content-type".

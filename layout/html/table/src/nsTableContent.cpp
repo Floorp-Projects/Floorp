@@ -215,9 +215,9 @@ nsTableContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsTableContent::AppendChild(nsIContent* aKid, PRBool aNotify)
+nsTableContent::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 { 
-  nsresult rv = nsHTMLContainer::AppendChild(aKid, aNotify);
+  nsresult rv = nsHTMLContainer::AppendChildTo(aKid, aNotify);
   if (NS_OK == rv)
     SetTableForTableContent(aKid,mTable);
   return rv;

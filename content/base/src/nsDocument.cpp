@@ -813,6 +813,13 @@ nsDocument::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP    
+nsDocument::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
 nsDocument::CloneNode(nsIDOMNode** aReturn)
 {
   // XXX TBI

@@ -571,12 +571,12 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
     if (nsnull==lastColGroupFrame)
     {
       //QQQ
-      // need to find the generic way to stamp out this content, and ::AppendChild it
+      // need to find the generic way to stamp out this content, and ::AppendChildTo it
       // this might be ok.  no matter what my mcontent is, I know it needs a colgroup as a kid?
 
       lastColGroup = new nsTableColGroup (PR_TRUE);
-      // XXX: how do I know whether AppendChild should notify or not?
-      mContent->AppendChild(lastColGroup, PR_FALSE);  // was AppendColGroup
+      // XXX: how do I know whether AppendChildTo should notify or not?
+      mContent->AppendChildTo(lastColGroup, PR_FALSE);  // was AppendColGroup
       NS_ADDREF(lastColGroup);                        // ADDREF a: lastColGroup++
       // Resolve style for the child
       nsIStyleContext* colGroupStyleContext =
@@ -617,9 +617,9 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
     PRInt32 excessColumns = GetColCount() - actualColumns;
     for ( ; excessColumns > 0; excessColumns--)
     {//QQQ
-      // need to find the generic way to stamp out this content, and ::AppendChild it
+      // need to find the generic way to stamp out this content, and ::AppendChildTo it
       nsTableCol *col = new nsTableCol(PR_TRUE);
-      lastColGroup->AppendChild (col, PR_FALSE);
+      lastColGroup->AppendChildTo (col, PR_FALSE);
     }
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
     lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);

@@ -184,7 +184,7 @@ nsHTMLContainer::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsHTMLContainer::AppendChild(nsIContent* aKid, PRBool aNotify)
+nsHTMLContainer::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   NS_PRECONDITION((nsnull != aKid) && (aKid != this), "null ptr");
   PRBool rv = mChildren.AppendElement(aKid);
@@ -998,7 +998,7 @@ nsHTMLContainer::InsertBefore(nsIDOMNode* aNewChild,
     if (nsnull == aRefChild) {
       // Append the new child to the end
       SetDocumentInChildrenOf(newContent, mDocument);
-      res = AppendChild(newContent, PR_TRUE);
+      res = AppendChildTo(newContent, PR_TRUE);
     }
     else {
       // Get the index of where to insert the new child
@@ -1075,3 +1075,9 @@ nsHTMLContainer::RemoveChild(nsIDOMNode* aOldChild,
   return res;
 }
 
+NS_IMETHODIMP    
+nsHTMLContainer::AppendChild(nsIDOMNode* aNewChild, 
+                             nsIDOMNode** aReturn)
+{
+  return InsertBefore(aNewChild, nsnull, aReturn);
+}

@@ -277,6 +277,7 @@ public:
   NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
   NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
   NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn);
 
   // nsIDOMData interface
   NS_IMETHOD    GetData(nsString& aData);
@@ -2069,6 +2070,12 @@ NS_IMETHODIMP
 Text::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
   return nsHTMLContent::RemoveChild(aOldChild, aReturn);
+}
+
+NS_IMETHODIMP    
+Text::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::AppendChild(aNewChild, aReturn);
 }
 
 //

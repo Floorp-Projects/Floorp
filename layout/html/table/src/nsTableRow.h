@@ -103,9 +103,9 @@ public:
 
   /** can only append objects that are cells (implement nsITableContent and are .
     * of type nsITableContent::kTableCellType.)
-    * @see nsIContent::AppendChild
+    * @see nsIContent::AppendChildTo
     */
-  NS_IMETHOD AppendChild(nsIContent* aKid, PRBool aNotify);
+  NS_IMETHOD AppendChildTo(nsIContent* aKid, PRBool aNotify);
 
   /** can only insert objects that are cells (implement nsITableContent and are .
     * of type nsITableContent::kTableCellType.)

@@ -271,7 +271,7 @@ nsHTMLContent::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
 }
 
 NS_IMETHODIMP
-nsHTMLContent::AppendChild(nsIContent* aKid, PRBool aNotify)
+nsHTMLContent::AppendChildTo(nsIContent* aKid, PRBool aNotify)
 {
   return NS_OK;
 }
@@ -584,6 +584,12 @@ nsHTMLContent::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOM
 
 NS_IMETHODIMP    
 nsHTMLContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsHTMLContent::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
   return NS_ERROR_FAILURE;
 }
