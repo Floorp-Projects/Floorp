@@ -18,94 +18,9 @@
  */
 
 #include "pratom.h"
-
 #include "nsRepository.h"
-#include "nsIUnicodeDecoder.h"
 #include "nsISO2022JPToUnicode.h"
-#include "nsIUnicodeDecodeUtil.h"
-#include "nsUCVJA2CID.h"
 #include "nsUCVJA2Dll.h"
-
-//----------------------------------------------------------------------
-// Global functions and data [declaration]
-
-#define NS_SRC_CHARSET  "ISO-2022-JP"
-#define NS_DEST_CHARSET "Unicode"
-
-#define BUFFSIZE 2      // the size of the buffer for partial conversions
-
-//----------------------------------------------------------------------
-// Class nsISO2022JPToUnicode [declaration]
-
-/**
- * A character set converter from ISO-2022-JP to Unicode.
- *
- * The state machine is:
- * S0 + ESC -> S1
- * S0 + * -> S0; convert using the current mCharset
- * S1 + '(' -> S2
- * S1 + '$' -> S3
- * S1 + * -> ERR
- * S2 + 'B' -> S0; mCharset = kASCII
- * S2 + 'J' -> S0; mCharset = kJISX0201_1976
- * S2 + * -> ERR
- * S3 + '@' -> S0; mCharset = kJISX0208_1978
- * S3 + 'B' -> S0; mCharset = kJISX0208_1983
- * S3 + * -> ERR
- * ERR + * -> ERR
- *
- * @created         09/Feb/1998
- * @author  Catalin Rotaru [CATA]
- */
-class nsISO2022JPToUnicode : public nsIUnicodeDecoder
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsISO2022JPToUnicode();
-
-  /**
-   * Class destructor.
-   */
-  ~nsISO2022JPToUnicode();
-
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecoder [declaration]
-
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
-
-private:
-
-  enum {
-    kASCII, 
-    kJISX0201_1976,
-    kJISX0208_1978,
-    kJISX0208_1983
-  };
-
-  PRInt32   mState;             // current state of the state machine
-  PRInt32   mCharset;           // current character set
-
-  char      mBuff[BUFFSIZE];    // buffer for the partial conversions
-  PRInt32   mBuffLen;
-
-  nsIUnicodeDecodeUtil  * mHelper;  // decoder helper object
-
-  nsresult ConvertBuffer(const char ** aSrc, const char * aSrcEnd, 
-      PRUnichar ** aDest, PRUnichar * aDestEnd);
-};
 
 //----------------------------------------------------------------------
 // Class nsISO2022JPToUnicode [implementation]
@@ -125,6 +40,12 @@ nsISO2022JPToUnicode::~nsISO2022JPToUnicode()
 {
   NS_IF_RELEASE(mHelper);
   PR_AtomicDecrement(&g_InstanceCount);
+}
+
+nsresult nsISO2022JPToUnicode::CreateInstance(nsISupports ** aResult) 
+{
+  *aResult = new nsISO2022JPToUnicode();
+  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 // XXX quick hack so I don't have to include nsICharsetConverterManager
@@ -352,99 +273,5 @@ NS_IMETHODIMP nsISO2022JPToUnicode::Reset()
 NS_IMETHODIMP nsISO2022JPToUnicode::SetInputErrorBehavior(PRInt32 aBehavior)
 {
   // we are supporting only the kOnError_Signal behavior in this implementation
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Class nsISO2022JPToUnicodeFactory [implementation]
-
-nsISO2022JPToUnicodeFactory::nsISO2022JPToUnicodeFactory() 
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsISO2022JPToUnicodeFactory::~nsISO2022JPToUnicodeFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------
-// Interface nsISupports [implementation]
-
-NS_IMPL_ADDREF(nsISO2022JPToUnicodeFactory);
-NS_IMPL_RELEASE(nsISO2022JPToUnicodeFactory);
-
-nsresult nsISO2022JPToUnicodeFactory::QueryInterface(REFNSIID aIID, 
-                                                     void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kICharsetConverterInfoIID);                         
-  static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kIFactoryIID)) {                                          
-    *aInstancePtr = (void*) ((nsIFactory*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)(nsIFactory*)this);
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-
-  return NS_NOINTERFACE;                                                 
-}
-
-//----------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsISO2022JPToUnicodeFactory::CreateInstance(nsISupports *aDelegate,
-                                                       const nsIID &aIID,
-                                                       void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsIUnicodeDecoder * t = new nsISO2022JPToUnicode;
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
-  return res;
-}
-
-NS_IMETHODIMP nsISO2022JPToUnicodeFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Interface nsICharsetConverterInfo [implementation]
-
-NS_IMETHODIMP nsISO2022JPToUnicodeFactory::GetCharsetSrc(char ** aCharset)
-{
-  (*aCharset) = NS_SRC_CHARSET;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsISO2022JPToUnicodeFactory::GetCharsetDest(char ** aCharset)
-{
-  (*aCharset) = NS_DEST_CHARSET;
   return NS_OK;
 }

@@ -20,20 +20,38 @@
 #ifndef nsISO2022JPToUnicode_h___
 #define nsISO2022JPToUnicode_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeDecodeUtil.h"
 
 //----------------------------------------------------------------------
-// Class nsISO2022JPToUnicodeFactory [declaration]
+// Global functions and data [declaration]
+
+#define BUFFSIZE 2      // the size of the buffer for partial conversions
+
+//----------------------------------------------------------------------
+// Class nsISO2022JPToUnicode [declaration]
 
 /**
- * Factory class for the nsISO2022JPToUnicode objects.
- * 
+ * A character set converter from ISO-2022-JP to Unicode.
+ *
+ * The state machine is:
+ * S0 + ESC -> S1
+ * S0 + * -> S0; convert using the current mCharset
+ * S1 + '(' -> S2
+ * S1 + '$' -> S3
+ * S1 + * -> ERR
+ * S2 + 'B' -> S0; mCharset = kASCII
+ * S2 + 'J' -> S0; mCharset = kJISX0201_1976
+ * S2 + * -> ERR
+ * S3 + '@' -> S0; mCharset = kJISX0208_1978
+ * S3 + 'B' -> S0; mCharset = kJISX0208_1983
+ * S3 + * -> ERR
+ * ERR + * -> ERR
+ *
  * @created         09/Feb/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsISO2022JPToUnicodeFactory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsISO2022JPToUnicode : public nsIUnicodeDecoder
 {
   NS_DECL_ISUPPORTS
 
@@ -42,28 +60,50 @@ public:
   /**
    * Class constructor.
    */
-  nsISO2022JPToUnicodeFactory();
+  nsISO2022JPToUnicode();
 
   /**
    * Class destructor.
    */
-  ~nsISO2022JPToUnicodeFactory();
+  ~nsISO2022JPToUnicode();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
 
   //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  // Interface nsIUnicodeDecoder [declaration]
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
+  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 * aSrcLength);
+  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 
-  NS_IMETHOD LockFactory(PRBool aLock);
+private:
 
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
+  enum {
+    kASCII, 
+    kJISX0201_1976,
+    kJISX0208_1978,
+    kJISX0208_1983
+  };
 
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
+  PRInt32   mState;             // current state of the state machine
+  PRInt32   mCharset;           // current character set
+
+  char      mBuff[BUFFSIZE];    // buffer for the partial conversions
+  PRInt32   mBuffLen;
+
+  nsIUnicodeDecodeUtil  * mHelper;  // decoder helper object
+
+  nsresult ConvertBuffer(const char ** aSrc, const char * aSrcEnd, 
+      PRUnichar ** aDest, PRUnichar * aDestEnd);
 };
-
-
 
 #endif /* nsISO2022JPToUnicode_h___ */
