@@ -43,7 +43,6 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame()
   mRenderer.SetNameSpace(kNameSpaceID_None);
   mSuggestedWidth  = kSuggestedNotSet;
   mSuggestedHeight = kSuggestedNotSet;
-  mUpdateValue = "";
 }
 
 PRBool
@@ -145,30 +144,34 @@ nsGfxButtonControlFrame::IsSubmit(PRInt32 type)
 PRBool
 nsGfxButtonControlFrame::IsBrowse(PRInt32 type)
 {
+  PRBool rv = PR_FALSE;
   if (NS_FORM_BROWSE == type) {
-    return PR_TRUE;
+    rv = PR_TRUE;
   }
-  if (NS_FORM_INPUT_BUTTON == type) {
+  else if (NS_FORM_INPUT_BUTTON == type) {
   
     // Check to see if parent is a file input
-    nsIContent* parentContent;
-    mContent->GetParent(parentContent);
-    nsIAtom* atom;
-    if (parentContent->GetTag(atom) == NS_OK && atom == nsHTMLAtoms::input) {
+    nsresult result;
+    nsCOMPtr<nsIContent> parentContent;
+    result = mContent->GetParent(*getter_AddRefs(parentContent));
+    if (NS_SUCCEEDED(result) && parentContent) {
+      nsCOMPtr<nsIAtom> atom;
+      result = parentContent->GetTag(*getter_AddRefs(atom));
+      if (NS_SUCCEEDED(result) && atom) {
+        if (atom.get() == nsHTMLAtoms::input) {
 
-      // It's an input, is it a file input?
-      nsString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE == parentContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
-        value.ToUpperCase();
-        nsString file("FILE");
-        if (value == file) {
-          return PR_TRUE;
+          // It's an input, is it a file input?
+          nsAutoString value;
+          if (NS_CONTENT_ATTR_HAS_VALUE == parentContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, value)) {
+            if (value.EqualsIgnoreCase("file")) {
+              rv = PR_TRUE;
+            }
+          }
         }
       }
     }
-    NS_RELEASE(parentContent);
   }
-  return PR_FALSE;
+  return rv;
 }
 
 /*
@@ -228,10 +231,19 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext
 
     // Get the text from the "value" attribute 
     // for measuring the height, width of the text
-    // This shouldn't be zero because if it was we set it to 
-    // a default.  See CreateAnonymousContent and Reflow
     nsAutoString value;
     GetValue(&value);
+
+    if (value.Length() == 0) {
+      // Generate localized label.
+      // We can't make any assumption as to what the default would be
+      // because the value is localized for non-english platforms, thus
+      // it might not be the string "Reset", "Submit Query", or "Browse..."
+      res = GetDefaultLabel(value);
+      if (NS_FAILED(res)) {
+        return res;
+      }
+    }
 
     const nsStyleText* textStyle;
     GetStyleData(eStyleStruct_Text,  (const nsStyleStruct *&)textStyle);
@@ -376,21 +388,16 @@ nsGfxButtonControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     }
   }
 
-  // Cache this value away until we have created
-  // a frame so we can update the value attribute.
-  // This makes input.value return the default string as in Nav and IE.
-  if (initvalue != value) {
-    mUpdateValue = value;
-  }
-
   // Add a child text content node for the label
   nsCOMPtr<nsIContent> labelContent;
   result = NS_NewTextNode(getter_AddRefs(labelContent));
   if (NS_SUCCEEDED(result) && labelContent) {
-    // set the value of the text node
-    labelContent->QueryInterface(NS_GET_IID(nsITextContent), getter_AddRefs(mTextContent));
-    mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
-    aChildList.AppendElement(mTextContent);
+    // set the value of the text node and add it to the child list
+    mTextContent = do_QueryInterface(labelContent, &result);
+    if (NS_SUCCEEDED(result) && mTextContent) {
+      mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+      aChildList.AppendElement(mTextContent);
+    }
   }
   return result;
 }
@@ -489,15 +496,25 @@ nsGfxButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                        nsIAtom*        aAttribute,
                                        PRInt32         aHint)
 {
+  nsresult rv = NS_OK;
+
   // If the value attribute is set, update the text of the label
   if (nsHTMLAtoms::value == aAttribute) {
-    nsString value;
-    if (nsnull != mTextContent && NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
-      mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+    nsAutoString value;
+    if (mTextContent && mContent) {
+      if (NS_CONTENT_ATTR_HAS_VALUE != mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value)) {
+        value = "";
+      }
+      rv = mTextContent->SetText(value.GetUnicode(), value.Length(), PR_TRUE);
+    } else {
+      rv = NS_ERROR_UNEXPECTED;
     }
-  }
 
-  return nsHTMLButtonControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  // defer to HTMLButtonControlFrame
+  } else {
+    rv = nsHTMLButtonControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -511,23 +528,6 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (eReflowReason_Initial == aReflowState.reason) {
     if (!mFormFrame) {
       nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
-    }
-    // If we cached a value (mUpdateValue) in CreateAnonymousContent(),
-    // set the value attribute of the button to this generated label.
-    // This will allow e.g. submit inputs to return a value of Submit Query
-    // when none is specified, as they do in IE 5.0 and Nav 4.x.  We have to
-    // wait until now because updating our value attribute will cause a
-    // reflow and the frame must exist.
-    if (mUpdateValue.Length() != 0) {
-      if (mContent) {
-        nsIHTMLContent* formControl = nsnull;
-        rv = mContent->QueryInterface(kIHTMLContentIID, (void**)&formControl);
-        if (NS_SUCCEEDED(rv) && formControl) {
-          rv = formControl->SetHTMLAttribute(nsHTMLAtoms::value, mUpdateValue, PR_TRUE);
-          NS_RELEASE(formControl);
-        }
-      }
-      mUpdateValue = "";
     }
   }
 
