@@ -42,6 +42,7 @@ public:
   NS_IMETHOD GetWebWidget(nsIWebWidget** aResult);
   NS_IMETHOD OnLinkClick(nsIFrame* aFrame, const nsString& aURLSpec,
 			 const nsString& aTargetSpec);
+  NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
   void HandleLinkClickEvent(const nsString& aURLSpec,
 			    const nsString& aTargetSpec);
@@ -150,6 +151,28 @@ NS_IMETHODIMP LinkHandlerImpl::OnLinkClick(nsIFrame* aFrame,
 
 {
   new OnLinkClickEvent(this, aURLSpec, aTargetSpec);
+  return NS_OK;
+}
+
+NS_IMETHODIMP LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
+{
+  // XXX not yet implemented
+  aState = eLinkState_Unvisited;
+
+#ifdef NS_DEBUG
+  if (aURLSpec.Equals("http://visited/")) {
+    aState = eLinkState_Visited;
+  }
+  else if (aURLSpec.Equals("http://out-of-date/")) {
+    aState = eLinkState_OutOfDate;
+  }
+  else if (aURLSpec.Equals("http://active/")) {
+    aState = eLinkState_Active;
+  }
+  else if (aURLSpec.Equals("http://hover/")) {
+    aState = eLinkState_Hover;
+  }
+#endif
   return NS_OK;
 }
 
