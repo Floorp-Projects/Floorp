@@ -178,6 +178,12 @@ nsViewSourceChannel::GetURI(nsIURI* *aURI)
     if (NS_FAILED(rv))
       return rv;
 
+    // protect ourselves against broken channel implementations
+    if (!uri) {
+      NS_ERROR("inner channel returned NS_OK and a null URI");
+      return NS_ERROR_UNEXPECTED;
+    }
+
     nsCAutoString spec;
     uri->GetSpec(spec);
 
