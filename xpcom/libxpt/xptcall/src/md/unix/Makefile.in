@@ -44,6 +44,18 @@ CPPSRCS		= \
 endif
 endif
 
+#ifneq (,$(filter SunOS,$(OS_ARCH)))
+#CPPSRCS		= \
+#	xptcinvoke_sparc_solaris.cpp \
+#	xptcstubs_sparc_solaris.cpp \
+#	$(NULL)
+#
+#ASFILES		= \
+#	xptcinvoke_asm_sparc_solaris.s \
+#	xptcstubs_asm_sparc_solaris.s \
+#	$(NULL)
+#endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= -I$(srcdir)/../..
