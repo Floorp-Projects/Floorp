@@ -297,7 +297,9 @@ NS_IMETHODIMP nsAddressBook::GetAbDatabaseFromURI(const char *aURI, nsIAddrDatab
     do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = addrDBFactory->Open(dbPath, PR_TRUE /* create */, aDB, PR_TRUE);
+  /* Don't create otherwise we end up re-opening a deleted address book */
+  /* bug 66410 */
+  rv = addrDBFactory->Open(dbPath, PR_FALSE /* no create */, aDB, PR_TRUE);
   delete dbPath;
   NS_ENSURE_SUCCESS(rv,rv);
   
