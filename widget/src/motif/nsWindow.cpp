@@ -655,8 +655,8 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
   mBounds.y = aY;
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
-  XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
-//    XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
+  //XtMoveWidget(mWidget, (Position)aX, (Position)GetYCoord(aY));
+  XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
 }
 
 //-------------------------------------------------------------------------
@@ -673,6 +673,8 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
   XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+
+//    XtResizeWidget(mWidget, aWidth, aHeight, 0);
 }
 
     
@@ -690,7 +692,7 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
 //  UpdateVisibilityFlag();
 //  UpdateDisplay();
   XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY),
-                         XmNwidth, aWidth, XmNheight, aHeight, nsnull);
+                        XmNwidth, aWidth, XmNheight, aHeight, nsnull);
 }
 
     
@@ -1079,7 +1081,9 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
       Position x;
       Position y;
       XtVaGetValues(children[i], XtNx, &x, XtNy, &y, nsnull);
-      XtMoveWidget(children[i], x + aDx,  y + aDy);
+
+      XtVaSetValues(children[i], XmNx, x + aDx, XmNy, y + aDy, nsnull);
+    //  XtMoveWidget(children[i], x + aDx,  y + aDy);
     } 
   }
   
