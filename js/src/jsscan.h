@@ -179,6 +179,10 @@ struct JSTokenStream {
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
 #define TSF_DIRTYLINE   0x80            /* stuff other than whitespace since start of line */
 
+/* Unicode separators that are treated as line terminators, in addition to \n, \r */
+#define LINE_SEPARATOR  (0x2028)
+#define PARA_SEPARATOR  (0x2029)
+
 /*
  * Create a new token stream, either from an input buffer or from a file.
  * Return null on file-open or memory-allocation failure.
