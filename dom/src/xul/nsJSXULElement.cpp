@@ -28,6 +28,7 @@
 #include "nsString.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
+#include "nsIRDFResource.h"
 #include "nsIDOMNodeList.h"
 
 
@@ -36,12 +37,20 @@ static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULElement);
+NS_DEF_PTR(nsIRDFResource);
 NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// XULElement property ids
+//
+enum XULElement_slots {
+  XULELEMENT_RESOURCE = -1
+};
 
 /***********************************************************************/
 //
@@ -59,7 +68,18 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case XULELEMENT_RESOURCE:
+      {
+        nsIRDFResource* prop;
+        if (NS_OK == a->GetResource(&prop)) {
+          // get the js object
+          *vp = OBJECT_TO_JSVAL(nsIRDFResource::GetJSObject(cx, prop));
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -316,6 +336,7 @@ JSClass XULElementClass = {
 //
 static JSPropertySpec XULElementProperties[] =
 {
+  {"resource",    XULELEMENT_RESOURCE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

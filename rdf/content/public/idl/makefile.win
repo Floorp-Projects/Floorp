@@ -25,9 +25,7 @@ IDLSRCS =  \
         NodeObserver.idl        \
         XULDocument.idl         \
         XULElement.idl          \
-!if YOU_HAVE_WATERSONS_IDLC_HACK
         XULTreeElement.idl      \
-!endif
         $(NULL)
 
 XPCOM_DESTDIR=$(DEPTH)\rdf\content\public
