@@ -1193,11 +1193,11 @@
           </menu>
           <menu id="menu_MessagePaneLayout" label="&messagePaneLayoutStyle.label;" accesskey="&messagePaneLayoutStyle.accesskey;">
             <menupopup onpopupshowing="InitViewLayoutStyleMenu()">
-              <menuitem id="messagePaneClassic" type="radio" label="&messagePaneClassic.label;"
+              <menuitem id="messagePaneClassic" type="radio" label="&messagePaneClassic.label;" name="viewlayoutgroup"
                         accesskey="&messagePaneClassic.accesskey;" oncommand="ChangeMailLayout(kClassicMailLayout);"/>
-              <menuitem id="messagePaneWide" type="radio" label="&messagePaneWide.label;"
+              <menuitem id="messagePaneWide" type="radio" label="&messagePaneWide.label;" name="viewlayoutgroup"
                         accesskey="&messagePaneWide.accesskey;" oncommand="ChangeMailLayout(kWideMailLayout);"/>
-              <menuitem id="messagePaneVertical" type="radio" label="&messagePaneVertical.label;"
+              <menuitem id="messagePaneVertical" type="radio" label="&messagePaneVertical.label;" name="viewlayoutgroup"
                         accesskey="&messagePaneVertical.accesskey;" oncommand="ChangeMailLayout(kVerticalMailLayout);"/>
               <menuseparator/>
               <menuitem id="menu_showMessage" type="checkbox" label="&showMessageCmd.label;" key="key_toggleMessagePane"
