@@ -26,13 +26,14 @@
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
 
-//typedef struct _profile_struct ProfileStruct;
 typedef struct _profile_struct {
 	char*	profileName;
 	char*	profileLocation;
 	char*	isMigrated;
 	char*   NCProfileName;
 	char*	NCDeniedService;
+	char*   NCEmailAddress;
+	char*   NCHavePregInfo;
 	PRBool	updateProfileEntry;
 }ProfileStruct;
 
@@ -86,7 +87,7 @@ public:
 	nsresult Get4xProfileInfo(const char *registryName);
 	nsresult UpdateProfileArray();
 	void	 SetPREGInfo(const char* pregInfo);
-	void	 GetPREGInfo(char** pregInfo);
+	void	 GetPREGInfo(const char *profileName, char** pregInfo);
 	void	 FreeProfileMembers(nsVoidArray *aProfile, PRInt32 numElems);
 };
 
