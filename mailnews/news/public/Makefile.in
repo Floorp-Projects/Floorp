@@ -23,12 +23,12 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
-		nsIMsgNewsArticleList.h \
+		nsINNTPNewsgroupList.h \
 		nsIMsgNewsHost.h \
 		nsIMsgNewsgroup.h \
 		nsIMsgXOVERParser.h\
 		nsIMsgOfflineNewsState.h \
-		nsINNTPArticleKeysState.h \
+		nsINNTPArticleList.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -33,9 +33,6 @@ interface nsIMsgNewsArticleList : nsISupports {
    * -alecf */
 
 
-  void InitAddArticleKeyToGroup();
-  void AddArticleKeyToGroup(in long found_id);
-  void FinishAddArticleKeyToGroup();
   void GetRangeOfArtsToDownload(out long status,
                                 in long first_message,
                                 in long last_message,

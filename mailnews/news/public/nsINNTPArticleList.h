@@ -1,9 +1,9 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsINNTPArticleKeysState.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsINNTPArticleList.idl
  */
 
-#ifndef __nsINNTPArticleKeysState_h__
-#define __nsINNTPArticleKeysState_h__
+#ifndef __nsINNTPArticleList_h__
+#define __nsINNTPArticleList_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgNewsgroup.h" /* interface nsIMsgNewsgroup */
@@ -36,4 +36,4 @@ class nsINNTPArticleKeysState : public nsISupports {
   NS_IMETHOD FinishAddingArticleKeys() = 0;
 };
 
-#endif /* __nsINNTPArticleKeysState_h__ */
+#endif /* __nsINNTPArticleList_h__ */
