@@ -40,7 +40,6 @@
 #include "nsIURI.h"
 #include "nsMsgI18N.h"
 
-#include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
 #include "nsVCardStringResources.h"
@@ -95,7 +94,6 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define     VCARD_URL     "chrome://messenger/locale/vcard.properties"
 

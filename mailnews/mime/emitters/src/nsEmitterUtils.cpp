@@ -26,7 +26,6 @@
 #include "nsIMimeEmitter.h"
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
-#include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"

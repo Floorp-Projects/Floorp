@@ -21,7 +21,6 @@
  */
 
 #include "nsIURL.h"
-#include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIGenericFactory.h"

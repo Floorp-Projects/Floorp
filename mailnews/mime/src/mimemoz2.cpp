@@ -50,7 +50,6 @@
 #include "comi18n.h"
 #include "nsIStringBundle.h"
 #include "nsString.h"
-#include "nsIEventQueueService.h"
 #include "nsMimeStringResources.h"
 #include "nsStreamConverter.h"
 #include "nsIMsgSend.h"
@@ -1616,7 +1615,6 @@ mimeSetNewURL(nsMIMESession *stream, char *url)
 
 /* This is the next generation string retrieval call */
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #define     MIME_URL "chrome://messenger/locale/mime.properties"
 
