@@ -245,6 +245,12 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
     if ((lexTable[ch] & START_IDENT) != 0) {
       return ParseIdent(aErrorCode, ch, aToken);
     }
+    if (ch == '-') {  // possible ident
+      PRInt32 nextChar = Peek(aErrorCode);
+      if ((0 <= nextChar) && (0 != (lexTable[nextChar] & START_IDENT))) {
+        return ParseIdent(aErrorCode, ch, aToken);
+      }
+    }
 
     // AT_KEYWORD
     if (ch == '@') {
@@ -290,13 +296,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
     }
     if (ch == '/') {
       PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '/') {
-        (void) Read(aErrorCode);
-        aToken.mIdent.SetLength(0);
-        aToken.mIdent.Append(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(ch));
-        return ParseEOLComment(aErrorCode, aToken);
-      } else if (nextChar == '*') {
+      if (nextChar == '*') {
         (void) Read(aErrorCode);
         aToken.mIdent.SetLength(0);
         aToken.mIdent.Append(PRUnichar(ch));
@@ -308,7 +308,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
       PRInt32 nextChar = Peek(aErrorCode);
       if (nextChar == '!') {
         (void) Read(aErrorCode);
-        aToken.mType = eCSSToken_WhiteSpace;
+        aToken.mType = eCSSToken_HTMLComment;
         aToken.mIdent.SetLength(0);
         aToken.mIdent.Append(PRUnichar(ch));
         aToken.mIdent.Append(PRUnichar(nextChar));
@@ -339,7 +339,7 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
         }
         if (nextChar == '>') { // HTML end
           (void) Read(aErrorCode);
-          aToken.mType = eCSSToken_WhiteSpace;
+          aToken.mType = eCSSToken_HTMLComment;
           aToken.mIdent.SetLength(0);
           while (0 < dashCount--) {
             aToken.mIdent.Append('-');
@@ -390,13 +390,7 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
     }
     if (ch == '/') {
       PRInt32 nextChar = Peek(aErrorCode);
-      if (nextChar == '/') {
-        (void) Read(aErrorCode);
-        aToken.mIdent.SetLength(0);
-        aToken.mIdent.Append(PRUnichar(ch));
-        aToken.mIdent.Append(PRUnichar(ch));
-        return ParseEOLComment(aErrorCode, aToken);
-      } else if (nextChar == '*') {
+      if (nextChar == '*') {
         (void) Read(aErrorCode);
         aToken.mIdent.SetLength(0);
         aToken.mIdent.Append(PRUnichar(ch));

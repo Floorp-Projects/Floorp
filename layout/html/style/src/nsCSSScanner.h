@@ -38,7 +38,7 @@ enum nsCSSTokenType {
   // A css string (e.g. "foo" or 'foo')
   eCSSToken_String = 5,         // mSymbol + mIdent + mSymbol
 
-  // Whitespace (e.g. " " or "/* abc */" or "// foo <eol>")
+  // Whitespace (e.g. " " or "/* abc */")
   eCSSToken_WhiteSpace = 6,     // mIdent
 
   // A css symbol (e.g. ':', ';', '+', etc.)
@@ -49,8 +49,10 @@ enum nsCSSTokenType {
 
   eCSSToken_Function = 9,       // mIdent
 
-  eCSSToken_URL = 10,            // mIdent
-  eCSSToken_InvalidURL = 11     // doesn't matter
+  eCSSToken_URL = 10,           // mIdent
+  eCSSToken_InvalidURL = 11,    // doesn't matter
+
+  eCSSToken_HTMLComment = 12    // "<!--" or "--{w}>"
 
 };
 
