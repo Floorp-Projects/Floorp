@@ -1793,8 +1793,14 @@ PRBool BasicTableLayoutStrategy::ColumnsAreValidFor(const nsTableCellFrame& aCel
   }
 
   PRBool desChanged = PR_TRUE;
-  if (((cellDes > aPrevCellDes) && (cellDes <= colDes)) ||
-      ((cellDes <= aPrevCellDes) && (aPrevCellDes <= colDes))) {
+  if ((cellDes > aPrevCellDes) && (cellDes <= colDes)) {
+    // XXX This next check causes a problem if the cell's desired width shrinks,
+    // because the comparison (aPresCellDes <= colDes) will always be TRUE and
+    // so we always end up setting desChanged to PR_FALSE. That means the column
+    // won't shrink like it should
+#if 0
+      || ((cellDes <= aPrevCellDes) && (aPrevCellDes <= colDes))) {
+#endif
     desChanged = PR_FALSE;
   }
   
