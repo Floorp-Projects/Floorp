@@ -1,0 +1,160 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+ * WINDOWS
+ */
+
+window {
+	background: #FF9; /* pale yellow */
+	color: black;
+	}
+
+/* only does anything for calendar */
+table { width: 100%; }
+
+box#tabs { padding: 1px; }
+/*  crash in 
+#0  0x40b20926 in nsSelectControlFrame::SetProperty ()
+#1  0x40ade441 in nsHTMLSelectElement::SetSelectedIndex ()
+#2  0x403d30cf in NS_NewScriptHTMLScriptElement ()
+#3  0x40446433 in js_SetProperty ()
+box#main { overflow: scroll; }
+
+box#main { overflow: auto; }
+*/
+
+/* XXX Interesting... */
+/* window { overflow: scroll; } */
+
+window[debug] { background: yellow; }
+window[debug] box { background: red; }
+window[debug] div { background: green; }
+
+/* XXX: Bug: Problems - increases height; should center the table  - happens
+if any margin is auto */
+table {
+	/* margin: 0 auto; */
+	}
+
+td, th {
+	line-height: 1;
+	padding: 0;
+	}
+
+/* XXX Doesn't work: */
+box#outer { overflow: scroll; }
+
+/*
+ * BUTTONS AND TABS: Used in schedule and pick windows.
+ */
+
+/*
+#ApptTable { overflow: scroll; }
+*/
+
+button, td[class~="button"], td[class~="tab"] {
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	border: 1px outset #FF9;
+	padding: 1px;
+	color: black;
+	background: #FF9;
+	}
+
+td[class~="button"]:active, td[class~="tab"]:active {
+	border-style: inset;
+	padding: 2px 0px 0px 2px;
+	background: #fc3;
+	}
+
+td[class~="tab"][class~="disable"] {
+	color: #888;
+	}
+
+td[class~="tab"][class~="disable"]:active {
+	/* back to default */
+	background: #FF9;
+	}
+
+td[id="DateOutput"], td[id="MonthOutput"] {
+	vertical-align: middle;
+	text-align: center;
+	font-weight: bold;
+	}
+
+/*
+ * SCHEDULE LIST
+ */
+
+/* XXX XUL Bug?? tr[id] without the tbody matches the row in the thead too */
+table[class~="data"] tbody[id="ApptTable"] tr {
+	cursor: pointer;
+	}
+
+/* Problem with bug 5693
+table[class~="data"] tbody#ApptTable tr:hover {
+	background: #ff0;
+	text-decoration: underline; /* really a nonstandard use */
+	}
+*/
+
+table[class~="data"] th, table[class~="data"] td {
+	text-align: left;
+	vertical-align: baseline;
+	}
+
+/*
+ * EVENT ADDER
+ */
+
+table#add th {
+	text-align: right;
+	font-weight: bold;
+	}
+
+table#add th:after {
+	content: ":";
+	}
+
+/*
+ * DATE PICKER
+ */
+
+/* the numbers in the calendar, including those below */
+
+td[class~="caldate"] {
+	cursor: pointer;
+	text-align: center;
+	border: 1px solid transparent;
+	}
+
+/* the number in the calendar for the date now being shown (overrides above) */
+
+td[class~="caldate"][class~="nowshowing"] {
+	background: #f90;
+	color: black;
+	}
+
+/* the number in the calendar for today's date (overrides above) */
+
+td[class~="caldate"][class~="today"] {
+	border: 1px solid black;
+	/* font-weight: bold; */
+	}
