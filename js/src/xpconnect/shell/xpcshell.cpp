@@ -50,6 +50,8 @@
 #include "nsIAllocator.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSRuntimeService.h"
+#include "nsCOMPtr.h"
+#include "nsIXPCSecurityManager.h"
 
 // all this crap is needed to do the interactive shell stuff
 #include <stdlib.h>
@@ -632,6 +634,58 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
 /***************************************************************************/
 
+class FullTrustSecMan : public nsIXPCSecurityManager
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIXPCSECURITYMANAGER
+  FullTrustSecMan();
+};
+
+NS_IMPL_ISUPPORTS1(FullTrustSecMan, nsIXPCSecurityManager);
+
+FullTrustSecMan::FullTrustSecMan()
+{
+    NS_INIT_REFCNT();
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::CanCreateWrapper(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::CanCreateInstance(JSContext * aJSContext, const nsCID & aCID)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::CanGetService(JSContext * aJSContext, const nsCID & aCID)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::CanCallMethod(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+FullTrustSecMan::CanGetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    return NS_OK;
+}
+NS_IMETHODIMP
+FullTrustSecMan::CanSetProperty(JSContext * aJSContext, const nsIID & aIID, nsISupports *aObj, nsIInterfaceInfo *aInterfaceInfo, PRUint16 aMethodIndex, const jsid aName)
+{
+    return NS_OK;
+}
+
+/***************************************************************************/
+
 int
 main(int argc, char **argv)
 {
@@ -673,6 +727,15 @@ main(int argc, char **argv)
         return 1;
     }
 
+    // Since the caps security system might set a default security manager
+    // we will be sure that the secman on this context gives full trust.
+    // That way we can avoid getting principals from the caps security manager
+    // just to shut it up. Also, note that even though our secman will allow
+    // anything, we set the flags to '0' so it ought never get called anyway.
+    nsCOMPtr<nsIXPCSecurityManager> secman = 
+        NS_STATIC_CAST(nsIXPCSecurityManager*,new FullTrustSecMan());
+    xpc->SetSecurityManagerForJSContext(jscontext, secman, 0);
+    
     NS_WITH_SERVICE(nsIJSContextStack, cxstack, "nsThreadJSContextStack", &rv);
     if(NS_FAILED(rv))
     {
