@@ -26,6 +26,7 @@ class nsIInputStream;
 class nsIAllocator;
 class nsIBufferInputStream;
 class nsIBufferOutputStream;
+class nsIBufferObserver;
 
 #define NS_IBUFFER_IID                               \
 { /* 1eebb300-fb8b-11d2-9324-00104ba0fd40 */         \
@@ -76,7 +77,7 @@ public:
      * minus SEGMENT_OVERHEAD bytes.
      */
     NS_IMETHOD Init(PRUint32 growBySize, PRUint32 maxSize,
-                    nsIAllocator* allocator) = 0;
+                    nsIBufferObserver* observer, nsIAllocator* allocator) = 0;
 
     /**
      * Reads from the read cursor into a char buffer up to a specified length.
@@ -102,6 +103,11 @@ public:
     NS_IMETHOD GetReadSegment(PRUint32 segmentLogicalOffset, 
                               const char* *resultSegment,
                               PRUint32 *resultSegmentLen) = 0;
+
+    /**
+     * Returns the amount of data currently in the buffer available for reading.
+     */
+    NS_IMETHOD GetReadableAmount(PRUint32 *amount) = 0;
 
     /**
      * Writes from a char buffer up to a specified length. 
@@ -134,6 +140,11 @@ public:
                                PRUint32 *resultSegmentLen) = 0;
 
     /**
+     * Returns the amount of space currently in the buffer available for writing.
+     */
+    NS_IMETHOD GetWritableAmount(PRUint32 *amount) = 0;
+
+    /**
      * Sets an EOF marker (typcially done by the writer) so that a reader can be informed
      * when all the data in the buffer is consumed. After the EOF marker has been
      * set, all subsequent calls to the above write methods will return NS_BASE_STREAM_EOF.
@@ -160,13 +171,47 @@ public:
                       PRBool *found, PRUint32 *offsetSearchedTo) = 0;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+#define NS_IBUFFEROBSERVER_IID                       \
+{ /* 0c18bef0-22a8-11d3-9349-00104ba0fd40 */         \
+    0x0c18bef0,                                      \
+    0x22a8,                                          \
+    0x11d3,                                          \
+    {0x93, 0x49, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
+}
+
+/**
+ * A buffer observer is used to detect when the buffer becomes completely full
+ * or completely empty. 
+ */
+class nsIBufferObserver : public nsISupports {
+public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IBUFFEROBSERVER_IID);
+
+    NS_IMETHOD OnFull() = 0;
+
+    NS_IMETHOD OnEmpty() = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Creates a new buffer. 
+ * @param observer - may be null
+ */
 extern NS_COM nsresult
 NS_NewBuffer(nsIBuffer* *result,
-             PRUint32 growBySize, PRUint32 maxSize);
+             PRUint32 growBySize, PRUint32 maxSize,
+             nsIBufferObserver* observer);
 
+/**
+ * Creates a new buffer, allocating segments from virtual memory pages.
+ */
 extern NS_COM nsresult
 NS_NewPageBuffer(nsIBuffer* *result,
-                 PRUint32 growBySize, PRUint32 maxSize);
+                 PRUint32 growBySize, PRUint32 maxSize,
+                 nsIBufferObserver* observer);
 
 extern NS_COM nsresult
 NS_NewBufferInputStream(nsIBufferInputStream* *result,
@@ -177,8 +222,11 @@ NS_NewBufferOutputStream(nsIBufferOutputStream* *result,
                          nsIBuffer* buffer, PRBool blocking = PR_FALSE);
 
 extern NS_COM nsresult
-NS_NewPipe2(nsIBufferInputStream* *inStrResult,
+NS_NewPipe(nsIBufferInputStream* *inStrResult,
            nsIBufferOutputStream* *outStrResult,
-           PRUint32 growBySize, PRUint32 maxSize);
+           PRUint32 growBySize, PRUint32 maxSize,
+           PRBool blocking, nsIBufferObserver* observer);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #endif // nsIBuffer_h___

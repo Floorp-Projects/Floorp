@@ -18,10 +18,28 @@
 
 #include "nsThread.h"
 #include "prmem.h"
-//#include <stdio.h>
+#include "prlog.h"
 
 PRUintn nsThread::kIThreadSelfIndex = 0;
 static nsIThread *gMainThread = 0;
+
+#if defined(PR_LOGGING)
+//
+// Log module for nsIThread logging...
+//
+// To enable logging (see prlog.h for full details):
+//
+//    set NSPR_LOG_MODULES=nsIThread:5
+//    set NSPR_LOG_FILE=nspr.log
+//
+// this enables PR_LOG_DEBUG level information and places all output in
+// the file nspr.log
+//
+// gSocketLog is defined in nsSocketTransport.cpp
+//
+PRLogModuleInfo* nsIThreadLog = nsnull;
+
+#endif /* PR_LOGGING */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,6 +47,16 @@ nsThread::nsThread()
     : mThread(nsnull), mRunnable(nsnull), mDead(PR_FALSE)
 {
     NS_INIT_REFCNT();
+
+#if defined(PR_LOGGING)
+    //
+    // Initialize the global PRLogModule for nsIThread logging 
+    // if necessary...
+    //
+    if (nsIThreadLog == nsnull) {
+        nsIThreadLog = PR_NewLogModule("nsIThread");
+    }
+#endif /* PR_LOGGING */
 }
 
 nsresult
@@ -46,7 +74,8 @@ nsThread::Init(nsIRunnable* runnable,
         NS_ADDREF_THIS();   // released in nsThread::Join
     mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
                               priority, scope, state, stackSize);
-//    printf("%x %x (%d) create\n", this, mThread, mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p created\n", this));
     if (mThread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
@@ -54,7 +83,8 @@ nsThread::Init(nsIRunnable* runnable,
 
 nsThread::~nsThread()
 {
-//    printf("%x %x (%d) destroy\n", this, mThread, mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p destroyed\n", this));
     NS_IF_RELEASE(mRunnable);
 }
 
@@ -67,13 +97,15 @@ nsThread::Main(void* arg)
     rv = self->RegisterThreadSelf();
     NS_ASSERTION(rv == NS_OK, "failed to set thread self");
 
-//    printf("%x %x (%d) start run\n", self, self->mThread, self->mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p start run %p\n", self, self->mRunnable));
     rv = self->mRunnable->Run();
     NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
     PRThreadState state;
     rv = self->GetState(&state);
-//    printf("%x %x (%d) end run\n", self, self->mThread, self->mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p end run %p\n", self, self->mRunnable));
 }
 
 void
@@ -82,7 +114,8 @@ nsThread::Exit(void* arg)
     nsThread* self = (nsThread*)arg;
     nsresult rv = NS_OK;
     self->mDead = PR_TRUE;
-//    printf("%x %x (%d) exit\n", self, self->mThread, self->mRefCnt - 1);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p exited\n", self));
     NS_RELEASE(self);
 }
 
@@ -94,11 +127,13 @@ nsThread::Join()
     // don't check for mDead here because nspr calls Exit (cleaning up
     // thread-local storage) before they let us join with the thread
 
-//    printf("%x %x (%d) start join\n", this, mThread, mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p start join\n", this));
     PRStatus status = PR_JoinThread(mThread);
     // XXX can't use NS_RELEASE here because the macro wants to set
     // this to null (bad c++)
-//    printf("%x %x (%d) end join\n", this, mThread, mRefCnt);
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThread %p end join\n", this));
     if (status == PR_SUCCESS) {
         this->Release();   // most likely the final release of this thread 
         return NS_OK;
@@ -368,7 +403,12 @@ nsThreadPool::GetRequest()
             rv = NS_ERROR_FAILURE;
             break;
         }
-//        printf("thread %x waiting\n", PR_CurrentThread());
+#if defined(PR_LOGGING)
+        nsIThread* th;
+        nsIThread::GetCurrent(&th);
+#endif
+        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+               ("nsIThreadPool thread %p waiting\n", th));
         PRStatus status = PR_Wait(mRequestMonitor, PR_INTERVAL_NO_TIMEOUT);
         if (status != PR_SUCCESS || mShuttingDown) {
             rv = NS_ERROR_FAILURE;
@@ -495,17 +535,23 @@ nsThreadPoolRunnable::Run()
     PR_CNotify(mPool);
     PR_CExitMonitor(mPool);
 
+#if defined(PR_LOGGING)
+    nsIThread* th;
+    nsIThread::GetCurrent(&th);
+#endif
     while ((request = mPool->GetRequest()) != nsnull) {
-//        printf("running %x, thread %x\n", this, PR_CurrentThread());
+        PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+               ("nsIThreadPool thread %p running %p\n", th, this));
         rv = request->Run();
         NS_ASSERTION(NS_SUCCEEDED(rv), "runnable failed");
 
-        // let the thread pool know we're finished a run
+        // let the thread pool know we've finished a run
         PR_CEnterMonitor(mPool);
         PR_CNotify(mPool);
         PR_CExitMonitor(mPool);
     }
-//    printf("quitting %x, thread %x\n", this, PR_CurrentThread());
+    PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
+           ("nsIThreadPool thread %p quitting %x\n", th, this));
     return rv;
 }
 
