@@ -399,14 +399,6 @@ BEGIN {
         print sprintf "<br>Tp:%dms", $pageloader_time;
       }
 
-      # Startup data
-      if (defined $td->{startup}{$logfile}) {
-        my ($startup_time)
-            = @{ $td->{startup}{$logfile} };
-        # ex: Tp:5.45s
-        print sprintf "<br>Ts:%4.2fs", $startup_time/1000;
-      }
-
       # Scrape data
       if (defined $td->{scrape}{$logfile}) {
         my (@scrape_data)
