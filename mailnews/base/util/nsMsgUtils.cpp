@@ -56,7 +56,7 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService(nsCAutoString(progID), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
+		rv = nsServiceManager::GetService((const char *) nsCAutoString(progID), nsCOMTypeInfo<nsIMsgMessageService>::GetIID(),
 		           (nsISupports**)messageService, nsnull);
 	}
 
