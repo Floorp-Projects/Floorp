@@ -2521,7 +2521,69 @@ nsEditor::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount)
   return result;
 }
 
-// content-based inline vs. block query
+// The list of block nodes is shorter, so do the real work here...
+nsresult 
+nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
+{
+  // this is a content-based implementation
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+
+  nsresult result = NS_ERROR_FAILURE;
+  aIsBlock = PR_FALSE;
+  nsCOMPtr<nsIDOMElement>element;
+  element = do_QueryInterface(aNode);
+  if (element)
+  {
+    nsAutoString tagName;
+    result = element->GetTagName(tagName);
+    if (NS_SUCCEEDED(result))
+    {
+      tagName.ToLowerCase();
+      nsIAtom *tagAtom = NS_NewAtom(tagName);
+      if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
+
+      if (tagAtom==nsIEditProperty::p          ||
+          tagAtom==nsIEditProperty::div        ||
+          tagAtom==nsIEditProperty::blockquote ||
+          tagAtom==nsIEditProperty::h1         ||
+          tagAtom==nsIEditProperty::h2         ||
+          tagAtom==nsIEditProperty::h3         ||
+          tagAtom==nsIEditProperty::h4         ||
+          tagAtom==nsIEditProperty::h5         ||
+          tagAtom==nsIEditProperty::h6         ||
+          tagAtom==nsIEditProperty::ul         ||
+          tagAtom==nsIEditProperty::ol         ||
+          tagAtom==nsIEditProperty::dl         ||
+          tagAtom==nsIEditProperty::pre        ||
+          tagAtom==nsIEditProperty::noscript   ||
+          tagAtom==nsIEditProperty::form       ||
+          tagAtom==nsIEditProperty::hr         ||
+          tagAtom==nsIEditProperty::table      ||
+          tagAtom==nsIEditProperty::fieldset   ||
+          tagAtom==nsIEditProperty::address    ||
+          tagAtom==nsIEditProperty::body       ||
+          tagAtom==nsIEditProperty::tr         ||
+          tagAtom==nsIEditProperty::td         ||
+          tagAtom==nsIEditProperty::th         ||
+          tagAtom==nsIEditProperty::caption    ||
+          tagAtom==nsIEditProperty::col        ||
+          tagAtom==nsIEditProperty::colgroup   ||
+          tagAtom==nsIEditProperty::thead      ||
+          tagAtom==nsIEditProperty::tfoot      ||
+          tagAtom==nsIEditProperty::li         ||
+          tagAtom==nsIEditProperty::dt         ||
+          tagAtom==nsIEditProperty::dd         ||
+          tagAtom==nsIEditProperty::legend     )
+      {
+        aIsBlock = PR_TRUE;
+      }
+      result = NS_OK;
+    }
+  }
+  return result;
+}
+
+// ...and simply assume non-block element is inline
 nsresult
 nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
 {
@@ -2530,36 +2592,10 @@ nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
 
   nsresult result;
   aIsInline = PR_FALSE;
-  nsCOMPtr<nsIDOMElement>element;
-  element = do_QueryInterface(aNode);
-  if (element)
-  {
-    nsAutoString tag;
-    result = element->GetTagName(tag);
-    if (NS_SUCCEEDED(result))
-    {
-      tag.ToLowerCase();
-      nsIAtom *tagAtom = NS_NewAtom(tag);
-      if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
-      if (tagAtom==nsIEditProperty::a      ||
-          tagAtom==nsIEditProperty::b      ||
-          tagAtom==nsIEditProperty::big    ||
-          tagAtom==nsIEditProperty::font   ||
-          tagAtom==nsIEditProperty::i      ||
-          tagAtom==nsIEditProperty::img    ||
-          tagAtom==nsIEditProperty::span   ||
-          tagAtom==nsIEditProperty::small  ||
-          tagAtom==nsIEditProperty::strike ||
-          tagAtom==nsIEditProperty::sub    ||
-          tagAtom==nsIEditProperty::sup    ||
-          tagAtom==nsIEditProperty::tt     ||
-          tagAtom==nsIEditProperty::u      )
-      {
-        aIsInline = PR_TRUE;
-      }
-    }
-  }
-  return NS_OK;
+  PRBool IsBlock = PR_FALSE;
+  result = IsNodeBlock(aNode, IsBlock);
+  aIsInline = !IsBlock;
+  return result;
 }
 
 nsresult
