@@ -345,8 +345,16 @@ public:
 
   NS_IMETHOD GetReflowEventStatus(PRBool* aPending);
   NS_IMETHOD SetReflowEventStatus(PRBool aPending);
-  
+
+  /**
+   * Reflow batching
+   */   
+  NS_IMETHOD BeginBatchingReflows();
+  NS_IMETHOD EndBatchingReflows(PRBool aFlushPendingReflows);  
+  NS_IMETHOD GetReflowBatchingStatus(PRBool* aBatch);
+
   NS_IMETHOD FlushPendingNotifications();
+
 
   //nsIViewObserver interface
 
@@ -481,6 +489,7 @@ protected:
   FrameArena                    mFrameArena;
   PRInt32                       mAccumulatedReflowTime;  // Time spent in reflow command processing so far
   PRPackedBool                  mDocumentIsLoading;  // A flag that is true while the document is loading.
+  PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.
 
   MOZ_TIMER_DECLARE(mReflowWatch)  // Used for measuring time spent in reflow
   MOZ_TIMER_DECLARE(mFrameCreationWatch)  // Used for measuring time spent in frame creation 
@@ -611,6 +620,7 @@ PresShell::PresShell()
   EnableScrolling();
   mPendingReflowEvent = PR_FALSE;  
   mDocumentIsLoading = PR_TRUE;
+  mBatchReflows = PR_FALSE;
 
 #ifdef DEBUG_nisheeth
   mReflows = 0;
@@ -829,7 +839,7 @@ NS_IMETHODIMP
 PresShell::ExitReflowLock(PRBool aTryToReflow)
 {
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
-  if (newReflowLockCount == 0 && aTryToReflow) {
+  if (newReflowLockCount == 0 && aTryToReflow && !mBatchReflows) {
     /* If a) layout.reflow.async is true, OR
      *    b) layout.reflow.async.afterDocLoad is true AND the doc has finished loading
      * Then
@@ -1826,10 +1836,12 @@ struct ReflowEvent : public PLEvent {
          printf("\n*** Handling reflow event: PresShell=%p, event=%p\n", presShell.get(), this);
       }
 #endif
+      PRBool isBatching;
       presShell->SetReflowEventStatus(PR_FALSE);
       presShell->EnterReflowLock();
-      presShell->ProcessReflowCommands(PR_TRUE);
-      presShell->ExitReflowLock(PR_FALSE);      
+      presShell->GetReflowBatchingStatus(&isBatching);
+      if (!isBatching) presShell->ProcessReflowCommands(PR_TRUE);
+      presShell->ExitReflowLock(PR_FALSE);
     }
     else
       mPresShell = 0;    
@@ -2381,6 +2393,32 @@ NS_IMETHODIMP
 PresShell::SetReflowEventStatus(PRBool aPending)
 {
   mPendingReflowEvent = aPending;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PresShell::BeginBatchingReflows()
+{  
+  mBatchReflows = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PresShell::EndBatchingReflows(PRBool aFlushPendingReflows)
+{  
+  nsresult rv = NS_OK;
+  mBatchReflows = PR_FALSE;
+  if (aFlushPendingReflows) {
+    rv = FlushPendingNotifications();
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP
+PresShell::GetReflowBatchingStatus(PRBool* aIsBatching)
+{
+  *aIsBatching = mBatchReflows;
   return NS_OK;
 }
 
