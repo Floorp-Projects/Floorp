@@ -15,8 +15,7 @@ bin/libnspr3.so
 bin/libplc3.so
 bin/libplds3.so
 bin/libxpcom.so
-; this file doesn't seem to be here. -blizzard
-; bin/components/libxpistub.so
+bin/components/libxpistub.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 bin/component.reg
