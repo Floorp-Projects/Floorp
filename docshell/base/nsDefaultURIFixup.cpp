@@ -51,9 +51,13 @@ nsDefaultURIFixup::~nsDefaultURIFixup()
 }
 
 
-/* nsIURI createFixupURI (in string aURIText); */
-NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsIURI **aURI)
+/* nsIURI createFixupURI (in wstring aURIText, in unsigned long aFixupFlags); */
+NS_IMETHODIMP
+nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFlags, nsIURI **aURI)
 {
+    NS_ENSURE_ARG_POINTER(aStringURI);
+    NS_ENSURE_ARG_POINTER(aURI);
+
     *aURI = nsnull;
 
     // Try and get the prefs service
@@ -68,21 +72,44 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
     // Eliminate embedded newlines, which single-line text fields now allow:
     uriString.StripChars("\r\n");
 
-    // Check for if it is a file URL
-    FileURIFixup(uriString.get(), aURI);
-    if(*aURI)
-        return NS_OK;
+    // View-source is a pseudo scheme. We're interested in fixing up the stuff
+    // after it. The easiest way to do that is to call this method again with the
+    // "view-source:" lopped off and then prepend it again afterwards.
+
+    if (uriString.EqualsIgnoreCase("view-source:", 12))
+    {
+        nsCOMPtr<nsIURI> uri;
+	PRUint32 newFixupFlags = aFixupFlags & ~FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP;
+        nsresult rv =  CreateFixupURI(
+            PromiseFlatString(Substring(uriString, 
+                                        12, 
+                                        uriString.Length() - 12)).get(),
+            newFixupFlags,
+            getter_AddRefs(uri));
+        if (NS_FAILED(rv) || !uri)
+            return NS_ERROR_FAILURE;
+        nsXPIDLCString spec;
+        uri->GetSpec(getter_Copies(spec));
+        uriString.Assign(NS_LITERAL_STRING("view-source:"));
+        uriString.Append(NS_ConvertASCIItoUCS2(spec));
+    }
+    else {
+        // Check for if it is a file URL
+        FileURIFixup(uriString.get(), aURI);
+        if(*aURI)
+            return NS_OK;
 
 #ifdef XP_PC
-    // Not a file URL, so translate '\' to '/' for convenience in the common protocols
-    if (uriString.FindChar(':') == -1 ||
-	uriString.EqualsIgnoreCase("http:", 5) ||
-        uriString.EqualsIgnoreCase("https:", 6) ||
-        uriString.EqualsIgnoreCase("ftp:", 4))
-    {
-        uriString.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
-    }
+        // Not a file URL, so translate '\' to '/' for convenience in the common protocols
+        if (uriString.FindChar(':') == -1 ||
+            uriString.EqualsIgnoreCase("http:", 5) ||
+            uriString.EqualsIgnoreCase("https:", 6) ||
+            uriString.EqualsIgnoreCase("ftp:", 4))
+        {
+            uriString.ReplaceChar(PRUnichar('\\'), PRUnichar('/'));
+        }
 #endif
+    }
 
     // Just try to create an URL out of it
     NS_NewURI(aURI, uriString, nsnull);
@@ -91,16 +118,18 @@ NS_IMETHODIMP nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, nsI
 
     // See if it is a keyword
     // Test whether keywords need to be fixed up
-    PRBool fixupKeywords = PR_FALSE;
-    if (mPrefs)
-    {
-        NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
-    }
-    if (fixupKeywords)
-    {
-        KeywordURIFixup(uriString.get(), aURI);
-        if(*aURI)
-            return NS_OK;
+    if (aFixupFlags & FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP) {
+        PRBool fixupKeywords = PR_FALSE;
+        if (mPrefs)
+        {
+            NS_ENSURE_SUCCESS(mPrefs->GetBoolPref("keyword.enabled", &fixupKeywords), NS_ERROR_FAILURE);
+        }
+        if (fixupKeywords)
+        {
+            KeywordURIFixup(uriString.get(), aURI);
+            if(*aURI)
+                return NS_OK;
+        }
     }
 
     // See if a protocol needs to be added

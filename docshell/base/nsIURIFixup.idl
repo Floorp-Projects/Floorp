@@ -30,14 +30,24 @@ interface nsIURI;
 [scriptable, uuid(2EFD4A40-A5E1-11d4-9589-0020183BF181)]
 interface nsIURIFixup : nsISupports
 {
-	/*
-	This method converts the specified string into a URI, first attempting
-	to correct any errors in the syntax or other vagaries.
+    /** No fixup flags. */
+    const unsigned long FIXUP_FLAG_NONE = 0;
 
-	aURIText - String URI
+    /**
+     * Allow the fixup to use a keyword lookup service to complete the URI.
+     * The fixup object implementer should honour this flag and only perform
+     * any lengthy keyword (or search) operation if it is set.
+     */
+    const unsigned long FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP = 1;
 
-	Returns a wellformed URI or nsnull if it can't
-	*/
-    nsIURI createFixupURI(in wstring aURIText);
+    /**
+     * Converts the specified string into a URI, first attempting
+     * to correct any errors in the syntax or other vagaries. Returns
+     * a wellformed URI or nsnull if it can't.
+     *
+     * @param aURIText    Candidate URI.
+     * @param aFixupFlags Flags that govern ways the URI may be fixed up.
+     */
+    nsIURI createFixupURI(in wstring aURIText, in unsigned long aFixupFlags);
 };
 
