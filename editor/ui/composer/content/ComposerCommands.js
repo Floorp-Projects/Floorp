@@ -61,8 +61,8 @@ function SetupControllerCommands()
 
   gComposerCommandManager.registerCommand("cmd_image",         nsImageCommand);
   gComposerCommandManager.registerCommand("cmd_hline",         nsHLineCommand);
-  gComposerCommandManager.registerCommand("cmd_table",         nsTableCommand);   // insert or edit
-  gComposerCommandManager.registerCommand("cmd_editTable",     nsEditTableCommand);   // edit
+  gComposerCommandManager.registerCommand("cmd_table",         nsInsertOrEditTableCommand);
+  gComposerCommandManager.registerCommand("cmd_editTable",     nsEditTableCommand);
   gComposerCommandManager.registerCommand("cmd_link",          nsLinkCommand);
   gComposerCommandManager.registerCommand("cmd_anchor",        nsAnchorCommand);
   gComposerCommandManager.registerCommand("cmd_insertHTML",    nsInsertHTMLCommand);
@@ -535,31 +535,43 @@ var nsHLineCommand =
 };
 
 //-----------------------------------------------------------------------------------
-var nsTableCommand =
-{
-  isCommandEnabled: function(aCommand, dummy)
-  {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-  doCommand: function(aCommand)
-  {
-    EditorInsertOrEditTable(true);
-  }
-};
+// Launch Object properties for appropriate selected element 
 
-
-//-----------------------------------------------------------------------------------
-var nsEditTableCommand =
+function EditorObjectProperties()
 {
-  isCommandEnabled: function(aCommand, dummy)
+  var element = GetSelectedElementOrParentCell();
+  // dump("EditorObjectProperties: element="+element+"\n");
+  if (element)
   {
-    return (window.editorShell && window.editorShell.documentEditable);
-  },
-  doCommand: function(aCommand)
-  {
-    EditorInsertOrEditTable(false);
+    // dump("TagName="+element.nodeName+"\n");
+    switch (element.nodeName)
+    {
+      case 'IMG':
+        goDoCommand("cmd_image");
+        break;
+      case 'HR':
+        goDoCommand("cmd_hline");
+        break;
+      case 'TABLE':
+        EditorInsertOrEditTable(false);
+        break;
+      case 'TD':
+        EditorTableCellProperties();
+        break;
+      case 'A':
+        if(element.href)
+          goDoCommand("cmd_link");
+        else if (element.name)
+          goDoCommand("cmd_anchor");
+        break;
+    }
+  } else {
+    // We get a partially-selected link if asked for specifically
+    element = editorShell.GetSelectedElement("href");
+    if (element)
+      goDoCommand("cmd_link");
   }
-};
+}
 
 //-----------------------------------------------------------------------------------
 var nsLinkCommand =
@@ -750,7 +762,6 @@ function EditorInitTableMenu()
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
 }
 
-
 function goUpdateTableMenuItems(commandset)
 {
   // Insert table can be done any time (if editable document)
@@ -768,9 +779,9 @@ function goUpdateTableMenuItems(commandset)
       // We can delete or normalize table if inside a table 
       //  or any table element is selected
       enabledIfTable = true;  
-      
+
       // All others require being inside a cell or selected cell
-      enable = (tagNameObj.value == "td");
+      enabled = (tagNameObj.value == "td");
     }
   }
 
@@ -791,17 +802,94 @@ function goUpdateTableMenuItems(commandset)
   }
 }
 
+//-----------------------------------------------------------------------------------
+// Helpers for inserting and editing tables:
+
+function IsInTable()
+{
+  return (window.editorShell && window.editorShell.documentEditable &&
+          null != window.editorShell.GetElementOrParentByTagName("table", null));
+}
+
+function IsInTableCell()
+{
+dump("IsInTableCell???\n");
+  return (window.editorShell && window.editorShell.documentEditable &&
+          null != window.editorShell.GetElementOrParentByTagName("td", null));
+}
+
+// Call this with insertAllowed = true to allow inserting if not in existing table,
+//   else use false to do nothing if not in a table
+function EditorInsertOrEditTable(insertAllowed)
+{
+  if (IsInTable()) {
+    // Edit properties of existing table
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "","TablePanel");
+    contentWindow.focus();
+  } else if(insertAllowed) {
+    EditorInsertTable();
+  }
+}
+
+function EditorInsertTable()
+{
+  // Insert a new table
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
+  contentWindow.focus();
+}
+
+function EditorTableCellProperties()
+{
+  var cell = editorShell.GetElementOrParentByTagName("td", null);
+  if (cell) {
+    // Start Table Properties dialog on the "Cell" panel
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "", "CellPanel");
+    contentWindow.focus();
+  }
+}
+
+//-----------------------------------------------------------------------------------
+var nsInsertOrEditTableCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return (window.editorShell && window.editorShell.documentEditable);
+  },
+  doCommand: function(aCommand)
+  {
+    if (this.isCommandEnabled(aCommand))
+      EditorInsertOrEditTable(true);
+  }
+};
+
+//-----------------------------------------------------------------------------------
+var nsEditTableCommand =
+{
+  isCommandEnabled: function(aCommand, dummy)
+  {
+    return IsInTable();
+  },
+  doCommand: function(aCommand)
+  {
+    if (this.isCommandEnabled(aCommand))
+      EditorInsertOrEditTable(false);
+  }
+};
+
+//-----------------------------------------------------------------------------------
 var nsSelectTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("table"));
+    return IsInTable();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SelectTable();
+      contentWindow.focus();
+    }
   }
 };
 
@@ -809,13 +897,15 @@ var nsSelectTableRowCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SelectTableRow();
+      contentWindow.focus();
+    }
   }
 };
 
@@ -823,14 +913,15 @@ var nsSelectTableColumnCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-dump("nsSelectTableColumnCommand\n");
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SelectTableColumn();
+      contentWindow.focus();
+    }
   }
 };
 
@@ -838,13 +929,15 @@ var nsSelectTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return  IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SelectTableCell();
+      contentWindow.focus();
+    }
   }
 };
 
@@ -852,16 +945,19 @@ var nsSelectAllTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SelectAllTableCells();
+      contentWindow.focus();
+    }
   }
 };
 
+//-----------------------------------------------------------------------------------
 var nsInsertTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
@@ -870,8 +966,8 @@ var nsInsertTableCommand =
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
-      window.editorShell.InsertTable();
+    if (this.isCommandEnabled(aCommand))
+      EditorInsertTable();
   }
 };
 
@@ -879,13 +975,15 @@ var nsInsertTableRowAboveCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.InsertTableRow(false);
+      contentWindow.focus();
+    }
   }
 };
 
@@ -893,13 +991,15 @@ var nsInsertTableRowBelowCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.InsertTableRow(true);
+      contentWindow.focus();
+    }
   }
 };
 
@@ -907,13 +1007,15 @@ var nsInsertTableColumnBeforeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.InsertTableColumn(false);
+      contentWindow.focus();
+    }
   }
 };
 
@@ -921,13 +1023,15 @@ var nsInsertTableColumnAfterCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.InsertTableColumn(true);
+      contentWindow.focus();
+    }
   }
 };
 
@@ -935,12 +1039,11 @@ var nsInsertTableCellBeforeCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
       window.editorShell.InsertTableCell(false);
   }
 };
@@ -949,27 +1052,32 @@ var nsInsertTableCellAfterCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.InsertTableCell(true);
+      contentWindow.focus();
+    }
   }
 };
 
+//-----------------------------------------------------------------------------------
 var nsDeleteTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("table"));
+    return IsInTable();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.DeleteTable();        
+      contentWindow.focus();
+    }
   }
 };
 
@@ -977,13 +1085,15 @@ var nsDeleteTableRowCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.DeleteTableRow(1);   
+      contentWindow.focus();
+    }
   }
 };
 
@@ -991,13 +1101,15 @@ var nsDeleteTableColumnCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.DeleteTableColumn(1); 
+      contentWindow.focus();
+    }
   }
 };
 
@@ -1005,13 +1117,15 @@ var nsDeleteTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.DeleteTableCell(1);   
+      contentWindow.focus();
+    }
   }
 };
 
@@ -1019,58 +1133,70 @@ var nsDeleteTableCellContentsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.DeleteTableCellContents();
+      contentWindow.focus();
+    }
   }
 };
 
+//-----------------------------------------------------------------------------------
 var nsNormalizeTableCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("table"));
+    return IsInTable();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.NormalizeTable();
+      contentWindow.focus();
+    }
   }
 };
 
+//-----------------------------------------------------------------------------------
 var nsJoinTableCellsCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    //TODO: This should really only be allowed if there's a cell to the right
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.JoinTableCells();
+      contentWindow.focus();
+    }
   }
 };
 
+//-----------------------------------------------------------------------------------
 var nsSplitTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return (window.editorShell && window.editorShell.documentEditable &&
-            null != window.editorShell.GetElementOrParentByTagName("td"));
+    //TODO: This should be allowed only if rowspan or colspan > 0;
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
-    if (isCommandEnabled)
+    if (this.isCommandEnabled(aCommand))
+    {
       window.editorShell.SplitTableCell();
+      contentWindow.focus();
+    }
   }
 };
-
 
 //-----------------------------------------------------------------------------------
 var nsPreferencesCommand =

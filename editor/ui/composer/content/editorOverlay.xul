@@ -114,12 +114,11 @@
     <command id="cmd_hline"           oncommand="goDoCommand('cmd_hline')"/>
     <command id="cmd_table"           oncommand="goDoCommand('cmd_table')"/>
     <command id="cmd_insertChars"     oncommand="goDoCommand('cmd_insertChars')"     value="&insertCharsCmd.label;"/>
-    <command id="cmd_editTable"       oncommand="goDoCommand('cmd_editTable')"/>
+    <command id="cmd_editTable"/>
     <command id="cmd_insertHTML"      oncommand="goDoCommand('cmd_insertHTML')"      value="&HTMLSourceCmd.label;"/>
     <command id="cmd_editHTML"        oncommand="goDoCommand('cmd_editHTML')"        value="&HTMLSourceCmd.label;"/>
     <command id="cmd_insertBreak"     oncommand="goDoCommand('cmd_insertBreak')"     value="&insertLineBreakCmd.label;"/>
     <command id="cmd_insertBreakAll"  oncommand="goDoCommand('cmd_insertBreakAll')"  value="&insertBreakBelowImagesCmd.label;"/>
-
   </commandset>
   
   <commandset id="composerSaveMenuItems"
