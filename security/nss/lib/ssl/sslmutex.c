@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.14 2002/05/18 03:24:17 wtc%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.15 2002/09/07 01:44:11 jpierre%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -370,7 +370,6 @@ static SECStatus sslMutex_2LevelDestroy(sslMutex *sem)
 SECStatus
 sslMutex_Init(sslMutex *pMutex, int shared)
 {
-    SECStatus retvalue;
     HANDLE hMutex;
     SECURITY_ATTRIBUTES attributes =
                                 { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };

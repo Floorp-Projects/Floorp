@@ -179,7 +179,7 @@ CERTPackageType
 CERT_CertPackageType(SECItem *package, SECItem *certitem)
 {
     unsigned char *cp;
-    int seqLen, seqLenLen;
+    unsigned int seqLen, seqLenLen;
     SECItem oiditem;
     SECOidData *oiddata;
     CERTPackageType type = certPackageNone;

@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.40 2002/08/09 21:53:15 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.41 2002/09/07 01:44:11 jpierre%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -789,7 +789,7 @@ ssl3_ComputeExportRSAKeyHash(SECItem modulus, SECItem publicExponent,
     	pBuf += 2;
     memcpy(pBuf, publicExponent.data, publicExponent.len);
     	pBuf += publicExponent.len;
-    PORT_Assert(pBuf - hashBuf == bufLen);
+    PORT_Assert((unsigned int)(pBuf - hashBuf) == bufLen);
 
     rv  = PK11_DigestBegin(md5);
     rv |= PK11_DigestOp(md5, hashBuf, bufLen);
@@ -880,7 +880,7 @@ ssl3_ComputeDHKeyHash(SECItem dh_p, SECItem dh_g, SECItem dh_Ys,
     	pBuf += 2;
     memcpy(pBuf, dh_Ys.data, dh_Ys.len);
     	pBuf += dh_Ys.len;
-    PORT_Assert(pBuf - hashBuf == bufLen);
+    PORT_Assert((unsigned int)(pBuf - hashBuf) == bufLen);
 
     rv  = PK11_DigestBegin(md5);
     rv |= PK11_DigestOp(md5, hashBuf, bufLen);
