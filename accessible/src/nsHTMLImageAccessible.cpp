@@ -30,9 +30,9 @@
 #include "nsIDOMHTMLCollection.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
-#include "imgIRequest.h"
-#include "imgIContainer.h"
-#include "nsIImageFrame.h"
+//#include "imgIRequest.h"
+//#include "imgIContainer.h"
+//#include "nsIImageFrame.h"
 // #include "nsIImageRequest.h"
 
 // --- image -----
