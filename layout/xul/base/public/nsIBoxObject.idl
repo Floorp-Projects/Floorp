@@ -42,6 +42,8 @@ interface nsIBoxObject : nsISupports
   wstring getProperty(in wstring propertyName);
   void setProperty(in wstring propertyName, in wstring propertyValue);
   void removeProperty(in wstring propertyName);
+  
+  wstring getLookAndFeelMetric(in wstring propertyName);
 };
 
 %{C++
