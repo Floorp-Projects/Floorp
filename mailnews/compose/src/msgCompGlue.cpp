@@ -96,7 +96,7 @@ History_entry *		SHIST_GetCurrent(History *) {return NULL;}
 int					MISC_ValidateReturnAddress (MWContext *,const char *) {return nsnull;}
 char        *msg_MagicFolderName(MSG_Prefs* prefs, uint32 flag, int *pStatus) {return NULL;}
 
-time_t 			GetTimeMac()	{return 0;}
+//time_t 			GetTimeMac()	{return 0;}
 
 extern "C" {
   void FE_MsgShowHeaders(MSG_Pane *, MSG_HEADER_SET) {return;}
