@@ -26,7 +26,6 @@
 #include "nsBrowserWindow.h"
 //#include "JSConsole.h"
 #include "nsBrowserWindow.h"
-#include "nsIImageManager.h"
 #include <stdlib.h>
 #include "plevent.h"
 
