@@ -147,14 +147,11 @@ void _PR_InitThreads(PRThreadType type, PRThreadPriority priority,
     }
 
     if (!thread) PR_Abort();
-#ifdef _PR_GLOBAL_THREADS_ONLY
-    thread->flags |= _PR_PRIMORDIAL | _PR_GLOBAL_SCOPE;
-#else
+#ifdef _PR_LOCAL_THREADS_ONLY
     thread->flags |= _PR_PRIMORDIAL;
+#else
+    thread->flags |= _PR_PRIMORDIAL | _PR_GLOBAL_SCOPE;
 #endif
-
-	if (_native_threads_only)
-		thread->flags |= _PR_GLOBAL_SCOPE;
 
     /*
      * Needs _PR_PRIMORDIAL flag set before calling
@@ -366,10 +363,10 @@ _PR_UserDestroyThread(PRThread *thread)
         _PR_MD_CLEAN_THREAD(thread);
 #else
         /*
-         * This assertion does not apply to NT.  On NT, every fiber,
-         * including the primordial thread, has its threadAllocatedOnStack
-         * equal to 0.  Elsewhere, only the primordial thread has its
-         * threadAllocatedOnStack equal to 0.
+         * This assertion does not apply to NT.  On NT, every fiber
+         * has its threadAllocatedOnStack equal to 0.  Elsewhere,
+         * only the primordial thread has its threadAllocatedOnStack
+         * equal to 0.
          */
         PR_ASSERT(thread->flags & _PR_PRIMORDIAL);
 #endif
@@ -1373,15 +1370,16 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
         else
             thread->cpu = _PR_MD_CURRENT_CPU();
 
-        if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(me))
+        PR_ASSERT(!_PR_IS_NATIVE_THREAD(thread));
+
+        if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(me)) {
             _PR_INTSOFF(is);
-        if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(thread)) {
             _PR_RUNQ_LOCK(thread->cpu);
             _PR_ADD_RUNQ(thread, thread->cpu, priority);
             _PR_RUNQ_UNLOCK(thread->cpu);
         }
 
-        if ((thread->flags & _PR_IDLE_THREAD) || _PR_IS_NATIVE_THREAD(me)) {
+        if (thread->flags & _PR_IDLE_THREAD) {
             /*
             ** If the creating thread is a kernel thread, we need to
             ** awaken the user thread idle thread somehow; potentially
@@ -1389,6 +1387,8 @@ PR_IMPLEMENT(PRThread*) _PR_CreateThread(PRThreadType type,
             ** it.  To do so, wake the idle thread...  
             */
             _PR_MD_WAKEUP_WAITER(NULL);
+        } else if (_PR_IS_NATIVE_THREAD(me)) {
+            _PR_MD_WAKEUP_WAITER(thread);
         }
         if ((! (thread->flags & _PR_IDLE_THREAD)) && !_PR_IS_NATIVE_THREAD(me) )
             _PR_INTSON(is);

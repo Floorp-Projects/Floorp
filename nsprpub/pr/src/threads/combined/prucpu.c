@@ -61,6 +61,10 @@ static void PR_CALLBACK _PR_CPU_Idle(void *);
 
 static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue);
 
+#if !defined(_PR_LOCAL_THREADS_ONLY)
+static void _PR_RunCPU(void *arg);
+#endif
+
 void  _PR_InitCPUs()
 {
     PRThread *me = _PR_MD_CURRENT_THREAD();
@@ -72,6 +76,8 @@ void  _PR_InitCPUs()
     _MD_NEW_LOCK(&_pr_md_idle_cpus_lock);
 #endif
 #endif
+
+#ifdef _PR_LOCAL_THREADS_ONLY
 
 #ifdef HAVE_CUSTOM_USER_THREADS
 	if (!_native_threads_only)
@@ -88,6 +94,20 @@ void  _PR_InitCPUs()
     _PR_MD_CURRENT_THREAD()->cpu = _pr_primordialCPU;
 
     _PR_MD_SET_LAST_THREAD(me);
+
+#else /* Combined MxN model */
+
+    _PR_CreateThread(PR_SYSTEM_THREAD,
+                     _PR_RunCPU,
+                     me,
+                     PR_PRIORITY_NORMAL,
+                     PR_GLOBAL_THREAD,
+                     PR_UNJOINABLE_THREAD,
+                     0,
+                     _PR_IDLE_THREAD);
+    _PR_MD_WAIT(me, PR_INTERVAL_NO_TIMEOUT);
+
+#endif /* _PR_LOCAL_THREADS_ONLY */
 
     _PR_MD_INIT_CPUS();
 }
@@ -187,14 +207,11 @@ static _PRCPU *_PR_CreateCPU(PRThread *thread, PRBool needQueue)
 /*
 ** This code is used during a cpu's initial creation.
 */
-static void _PR_RunCPU(void *unused)
+static void _PR_RunCPU(void *arg)
 {
-#if defined(XP_MAC)
-#pragma unused (unused)
-#endif
-
     _PRCPU *cpu;
     PRThread *me = _PR_MD_CURRENT_THREAD();
+    PRThread *waiter = (PRThread *) arg;
 
     PR_ASSERT(NULL != me);
 
@@ -228,6 +245,13 @@ static void _PR_RunCPU(void *unused)
     _PR_MD_SET_CURRENT_CPU(cpu);
     _PR_MD_SET_CURRENT_THREAD(cpu->thread);
     me->cpu = cpu;
+
+    if (waiter) {
+        _pr_primordialCPU = cpu;
+        _pr_numCPU = 1;
+        _PR_MD_WAKEUP_WAITER(waiter);
+    }
+
     while(1) {
         PRInt32 is;
         if (!_PR_IS_NATIVE_THREAD(me)) _PR_INTSOFF(is);
