@@ -199,7 +199,9 @@
         <!--////// IMAGE MAP BUTTONS //////-->
         <titledbox orient="vertical" flex="1">
            <label id="imagemapLabel" value="&imagemapBox.label;"/>
-           <box flex="1">
+           <box flex="1" equalsize="always">
+
+<!-- Hide Image Map Editor. Not ready for prime time yet
             <button
               class   = "dialog"
               id      = "editImageMap"
@@ -207,12 +209,14 @@
               tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
               label   = "&editImageMapButton.label;"
               flex    = "1"/>
+-->
             <button
               class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
               label   = "&removeImageMapButton.label;"
               flex    = "1"/>
+            <spring flex="1"/><!-- remove when we restore Image Map Editor -->
             </box>
           <spring class="spacer"/>
         </titledbox>
