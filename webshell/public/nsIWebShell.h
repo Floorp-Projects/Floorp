@@ -466,4 +466,10 @@ public:
 extern "C" NS_WEB nsresult
 NS_NewWebShellFactory(nsIFactory** aFactory);
 
+#ifdef NS_DEBUG
+  extern "C" NS_WEB
+  unsigned long
+  NS_TotalWebShellsInExistence();
+#endif
+
 #endif /* nsIWebShell_h___ */
