@@ -412,7 +412,9 @@ The handlers and userData are initialized from the parser argument.
 Returns 0 if out of memory.  Otherwise returns a new XML_Parser object. */
 
 #if 1
+#ifndef XML_DTD
 #define XML_DTD
+#endif
 #endif /* 0 */
 
 XML_Parser XMLPARSEAPI
