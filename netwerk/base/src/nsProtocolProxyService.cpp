@@ -407,8 +407,8 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo* *aResult) {
                                 &proxyInfo->mType);
          if (NS_FAILED(rv) || !proxyInfo->Type() ||               // If: it didn't work
              !PL_strcasecmp("direct", proxyInfo->Type()) ||       // OR we're meant to go direct
-             (PL_strcasecmp("http", proxyInfo->Type()) != 0 &&    // OR we're an http proxy...
-                !(flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP))) { // ... but we can't proxy with http
+             (!PL_strcasecmp("http", proxyInfo->Type()) &&        // OR we're an http proxy...
+              !(flags & nsIProtocolHandler::ALLOWS_PROXY_HTTP))) { // ... but we can't proxy with http
              delete proxyInfo;                                    // don't proxy this
          } else {
              if (proxyInfo->Port() <= 0)
