@@ -1307,7 +1307,7 @@ static JSFunctionSpec FileOpMethods[] =
   {"nativeVersion",             InstallFileOpFileGetNativeVersion,     1},
   {"diskSpaceAvailable",        InstallFileOpFileGetDiskSpaceAvailable,1},
   {"modDate",                   InstallFileOpFileGetModDate,           1},
-  {"Size",                      InstallFileOpFileGetSize,              1},
+  {"size",                      InstallFileOpFileGetSize,              1},
   {"isDirectory",               InstallFileOpFileIsDirectory,          1},
   {"isFile",                    InstallFileOpFileIsFile,               1},
   {"modDateChanged",            InstallFileOpFileModDateChanged,       2},
