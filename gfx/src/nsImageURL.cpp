@@ -23,6 +23,7 @@
 #include "ilIURL.h"
 #include "nsIURL.h"
 #include "nsIURLGroup.h"
+#include "nsILoadAttribs.h"
 #include "nsString.h"
 #include "il_strm.h"
 
@@ -158,6 +159,19 @@ ImageURLImpl::GetExpires()
 void 
 ImageURLImpl::SetBackgroundLoad(PRBool aBgload)
 {
+  nsILoadAttribs* loadAttributes;
+
+  if (nsnull != mURL) {
+    loadAttributes = mURL->GetLoadAttribs();
+    if (nsnull != loadAttributes) {
+      if (aBgload) {
+        loadAttributes->SetLoadType(nsURLLoadBackground);
+      } else {
+        loadAttributes->SetLoadType(nsURLLoadNormal);
+      }
+      NS_RELEASE(loadAttributes);
+    }
+  }
 }
 
 int
