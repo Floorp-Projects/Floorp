@@ -647,7 +647,6 @@ pascal	OSErr	FindDrive(ConstStr255Param pathname,
 	return ( result );
 }
 
-#endif /* CALL_NOT_IN_CARBON */
 
 /*****************************************************************************/
 
@@ -786,6 +785,8 @@ pascal	OSErr	GetDiskBlocks(ConstStr255Param pathname,
 	
 	return ( result );
 }
+
+#endif /* CALL_NOT_IN_CARBON */
 
 /*****************************************************************************/
 
