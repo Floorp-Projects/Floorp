@@ -145,9 +145,13 @@ sub load_data {
 
     $tree = $form{'tree'};
 
-    die "the \"tree\" parameter must be provided\n" unless $tree;
+    return unless $tree;
+    #die "the \"tree\" parameter must be provided\n" unless $tree;
 
-    require "$tree/treedata.pl";
+     if ( -r "$tree/treedata.pl" ) {
+         require "$tree/treedata.pl";
+     }
+
     $ignore_builds = {};
     if( -r "$tree/ignorebuilds.pl" ){
         require "$tree/ignorebuilds.pl";
@@ -456,9 +460,6 @@ sub check_password {
         $correct = <REAL>;
         close REAL;
         $correct =~ s/\s+$//;   # Strip trailing whitespace.
-    }
-    if ($correct eq "") {
-        return;
     }
     $form{'password'} =~ s/\s+$//;      # Strip trailing whitespace.
     if ($form{'password'} ne "") {

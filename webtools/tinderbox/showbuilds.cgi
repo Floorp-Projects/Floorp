@@ -86,6 +86,19 @@ sub show_tree_selector {
         }
     }
     print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
+
+    print "<P><TABLE WIDTH=\"100%\">";
+    print "<TR><TD ALIGN=CENTER><a href=admintree.cgi>Administer</a> one of the following trees:</TD></TR>";
+    print "<TR><TD ALIGN=CENTER>\n";
+    print " <TABLE><TR><TD><UL>\n";
+
+    while(<*>) {
+        if( -d $_ && $_ ne 'data' && $_ ne 'CVS' ){
+            print "<LI><a href=admintree.cgi?tree=$_>$_</a>\n";
+         }
+     }
+     print "<//UL></TD></TR></TABLE></TD></TR></TABLE>";
+
 }
 
 
