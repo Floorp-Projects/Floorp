@@ -226,26 +226,6 @@ a:out-of-date {
   text-decoration: underline;
   cursor: pointer;
 }
-a:link img {
-  display: inline;
-  border: 2px solid;
-  text-decoration: none;
-}
-a:visited img {
-  display: inline;
-  border: 2px solid;
-  text-decoration: none;
-}
-a:active img {
-  display: inline;
-  border: 2px solid;
-  text-decoration: none;
-}
-a:out-of-date img {
-  display: inline;
-  border: 2px solid;
-  text-decoration: none;
-}
 b, strong {
   display: inline;
   font-weight: bolder;
@@ -423,6 +403,15 @@ img[align=left] {
 }
 img[align=right] {
   margin-left: 4px;
+}
+a:link img, a:visited img, a:active img,
+a:out-of-date img, img[usemap], object[usemap] {
+  display: inline;
+  border: 2px solid;
+  cursor: pointer;
+}
+img[usemap], object[usemap] {
+  color: blue;
 }
 img:-moz-text {
   /* font-family: sans-serif; */
