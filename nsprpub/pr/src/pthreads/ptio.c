@@ -123,7 +123,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #define _PRSockOptVal_t char *
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(HPUX) \
     || defined(LINUX) || defined(FREEBSD) || defined(BSDI) || defined(VMS) \
-    || defined(NTO) || defined(OPENBSD)
+    || defined(NTO) || defined(OPENBSD) || defined(RHAPSODY)
 #define _PRSockOptVal_t void *
 #else
 #error "Cannot determine architecture"
@@ -137,7 +137,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
     || defined(OSF1) || defined(SOLARIS) \
     || defined(HPUX10_30) || defined(HPUX11) || defined(LINUX) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-    || defined(BSDI) || defined(VMS) || defined(NTO)
+    || defined(BSDI) || defined(VMS) || defined(NTO) || defined(RHAPSODY)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -2440,7 +2440,8 @@ static PRIOMethods _pr_socketpollfd_methods = {
 
 #if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
     || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD) \
-    || defined(OPENBSD) || defined(BSDI) || defined(VMS) || defined(NTO)
+    || defined(OPENBSD) || defined(BSDI) || defined(VMS) || defined(NTO) \
+    || defined(RHAPSODY)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"

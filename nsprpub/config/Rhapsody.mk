@@ -21,6 +21,17 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
+#
+# The default implementation strategy for Rhapsody is pthreads.
+#
+ifeq ($(CLASSIC_NSPR),1)
+IMPL_STRATEGY   = _EMU
+DEFINES         += -D_PR_LOCAL_THREADS_ONLY
+else
+USE_PTHREADS    = 1
+IMPL_STRATEGY   = _PTH
+endif
+
 CC              = cc
 ifeq ($(OS_RELEASE),5.0)
 CCC             = cc++
@@ -48,8 +59,6 @@ endif
 # Also, common symbols are not allowed with Rhapsody dynamic libraries.
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fno-common -pipe -DRHAPSODY -DHAVE_STRERROR -DHAVE_BSD_FLOCK
-
-DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 
 ARCH			= rhapsody
 

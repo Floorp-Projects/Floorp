@@ -27,7 +27,11 @@
 #include <dlfcn.h>  /* For dlopen, dlsym, dlclose */
 #endif
 
+#if defined(RHAPSODY)
+#include <crt_externs.h>
+#else
 extern char **environ;
+#endif
 
 /*
  * HP-UX 9 doesn't have the SA_RESTART flag.
@@ -156,7 +160,11 @@ ForkAndExec(
     childEnvp = envp;
     if (attr && attr->fdInheritBuffer) {
         if (NULL == childEnvp) {
+#ifdef RHAPSODY
+            childEnvp = *(_NSGetEnviron());
+#else
             childEnvp = environ;
+#endif
         }
         for (nEnv = 0; childEnvp[nEnv]; nEnv++) {
         }

@@ -42,7 +42,6 @@
 #define USE_MACH_DYLD
 #define _PR_HAVE_SOCKADDR_LEN  
 #define _PR_STAT_HAS_ST_ATIMESPEC
-#define _PR_TIMESPEC_HAS_TS_SEC
 #define _PR_NO_LARGE_FILES
 
 #define USE_SETJMP

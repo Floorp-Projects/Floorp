@@ -50,6 +50,9 @@ OS_ARCH		:= UNIXWARE
 OS_RELEASE	:= $(shell uname -v)
 endif
 endif
+ifeq ($(OS_ARCH),Mac OS)
+OS_ARCH		:= Rhapsody
+endif
 ifeq ($(OS_ARCH),ncr)
 OS_ARCH		:= NCR
 endif

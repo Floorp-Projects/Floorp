@@ -87,13 +87,32 @@ _MD_CREATE_THREAD(
 }
 #endif /* ! _PR_PTHREADS */
 
+#if defined(_PR_PTHREADS)
+
 /*
-** Whoops, we don't have a syscall stub for this
+** Stubs for unimplemented functions
 */
-int mprotect (caddr_t addr, size_t size, int prot)
+
+int pthread_condattr_init(pthread_condattr_t *attr)
 {
-   return -1;
-} 
+    return 0;
+}
+
+int pthread_kill(pthread_t thread, int sig)
+{
+    return ENOSYS;
+}
+
+typedef struct siginfo_t siginfo_t;
+
+int sigtimedwait(const sigset_t *set, siginfo_t *info,
+    const struct timespec *timeout)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+#endif /* _PR_PTHREADS */
 
 /* rhapsody.c */
 
