@@ -1495,7 +1495,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
 }
 
 nsresult
-nsPath2URI(const char* rootURI, nsFileSpec& spec, char* *uri)
+nsPath2URI(const char* rootURI, const nsFileSpec& spec, char* *uri)
 {
   nsresult rv;
 
@@ -1596,7 +1596,7 @@ nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *
 
 }
 
-nsresult nsBuildLocalMessageURI(nsFileSpec& path, PRUint32 key, char** uri)
+nsresult nsBuildLocalMessageURI(const nsFileSpec& path, PRUint32 key, char** uri)
 {
 	
 	if(!uri)
