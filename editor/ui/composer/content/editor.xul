@@ -35,7 +35,14 @@
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/editor.dtd"> 
+<!DOCTYPE window [
+<!ENTITY % editorDTD SYSTEM "chrome://editor/locale/editor.dtd" >
+%editorDTD;
+<!ENTITY % editorOverlayDTD SYSTEM "chrome://editor/locale/editorOverlay.dtd" >
+%editorOverlayDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+%brandDTD;
+]> 
 
 <window id="main-window" xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -171,8 +178,7 @@
     <button id="namedAnchorButton"/>
     <spring flex="1"/>
     <box id="throbber-box" autostretch="never">
-      <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')">
-        <!-- tooltip="aTooltip" tooltiptext="&throbber.tooltip; -->
+      <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
         <observes element="Editor:Throbber" attribute="busy"/>
       </button>
     </box> 

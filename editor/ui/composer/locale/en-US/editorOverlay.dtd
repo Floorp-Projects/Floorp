@@ -581,6 +581,7 @@
 <!ENTITY textColorCaption.label "Text Color">
 <!ENTITY TextColorButton.tooltip "Choose color for text">
 <!ENTITY BackgroundColorButton.tooltip "Choose color for background">
+<!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 
 <!-- editor toolbar -->
 <!ENTITY decreaseFontSizeToolbarCmd.tooltip "Smaller font size">
