@@ -29,7 +29,7 @@ public:
         eWIDTH_SOURCE_CELL_WITH_SPAN=2    // a cell implicitly specified a width via colspan
   };
 
-  void InitColFrame(PRInt32 aColIndex, PRInt32 aRepeat);
+  void InitColFrame(PRInt32 aColIndex);
 
   /** instantiate a new instance of nsTableColFrame.
     * @param aResult    the new object is returned in this out-param
@@ -56,7 +56,7 @@ public:
   virtual int GetColumnIndex ();
 
   /** return the number of the columns the col represents.  always >= 0 */
-  virtual int GetRepeat ();
+  virtual int GetSpan ();
 
   /** set the index of the column this content object represents.  must be >= 0 */
   virtual void SetColumnIndex (int aColIndex);
@@ -96,8 +96,6 @@ protected:
   /** the starting index of the column (starting at 0) that this col object represents */
   PRInt32  mColIndex;
 
-  /** the number of columns that the attributes of this column extend to */
-  PRInt32  mRepeat;
 
   nscoord mMaxColWidth;
   nscoord mMinColWidth;
@@ -112,21 +110,15 @@ protected:
 };
 
 
-inline void nsTableColFrame::InitColFrame(PRInt32 aColIndex, PRInt32 aRepeat)
+inline void nsTableColFrame::InitColFrame(PRInt32 aColIndex)
 {
   NS_ASSERTION(0<=aColIndex, "bad col index param");
-  NS_ASSERTION(0<=aRepeat, "bad repeat param");
-
   mColIndex = aColIndex;
-  mRepeat = aRepeat;
 }
 
 inline nsTableColFrame::GetColumnIndex()
 { return mColIndex; }
 
-inline nsTableColFrame::GetRepeat()
-{ return mRepeat; }
-  
 inline void nsTableColFrame::SetColumnIndex (int aColIndex)
 {  mColIndex = aColIndex;}
 

@@ -36,7 +36,6 @@ nsTableColFrame::nsTableColFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsFrame(aContent, aParentFrame)
 {
   mColIndex = 0;
-  mRepeat = 1;
   mMaxColWidth = 0;
   mMinColWidth = 0;
   mMaxEffectiveColWidth = 0;
@@ -74,6 +73,13 @@ NS_METHOD nsTableColFrame::Reflow(nsIPresContext&      aPresContext,
   }
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
+}
+
+PRInt32 nsTableColFrame::GetSpan()
+{  
+  nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  return tableStyle->mSpan;
 }
 
 

@@ -67,24 +67,20 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
       // Set the preliminary values for the column frame
       nsIContent* kid;
       kidFrame->GetContent(kid);
-      // should use style to get this value
-      PRInt32 repeat=1;
-      nsIHTMLTableColElement* colContent = nsnull;
-      rv = kid->QueryInterface(kIHTMLTableColElementIID, 
-                       (void**) &colContent); // colContent: ADDREF++
-      NS_RELEASE(kid);
-      if (rv==NS_OK)
-      {
-        colContent->GetSpanValue(&repeat);
-        NS_RELEASE(colContent);
-      }
+
       PRInt32 colIndex = mStartColIndex + mColCount;
-      ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex, repeat);
-      mColCount+= repeat;
-      tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
+      ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
+      PRInt32 repeat = ((nsTableColFrame *)(kidFrame))->GetSpan();
+      mColCount += repeat;
+      for (PRInt32 i=0; i<repeat; i++)
+      {
+        tableFrame->AddColumnFrame((nsTableColFrame *)kidFrame);
+      }
     }
     // colgroup's span attribute is how many columns the group represents
     // in the absence of any COL children
+    // Note that this is the correct, though perhaps unexpected, behavior for the span attribute.  
+    // The spec says that if there are any COL children, the colgroup's span is ignored.
     if (0==mColCount)
     {
       nsIFrame *firstImplicitColFrame=nsnull;
@@ -112,7 +108,7 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
 
         // Set nsColFrame-specific information
         PRInt32 absColIndex = mStartColIndex + colIndex;
-        ((nsTableColFrame *)(colFrame))->InitColFrame (absColIndex, 1);
+        ((nsTableColFrame *)(colFrame))->InitColFrame (absColIndex);
         ((nsTableColFrame *)colFrame)->SetColumnIndex(absColIndex);
         tableFrame->AddColumnFrame((nsTableColFrame *)colFrame);
 
@@ -569,8 +565,39 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
         }
         colFrame->GetNextSibling(colFrame);
       }
-      mStyleContext->RecalcAutomaticData(&aPresContext);
     }
+    else
+    {
+      // propagate the colgroup width attribute down to the columns if they have no width of their own
+      nsStylePosition* position = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
+      if (eStyleUnit_Null!=position->mWidth.GetUnit())
+      {
+        // now for every column that doesn't have it's own width, set the width style
+        nsIFrame *colFrame=mFirstChild;
+        while (nsnull!=colFrame)
+        {
+          nsStyleDisplay * colDisplay=nsnull;
+          colFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)colDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
+          {
+            nsIStyleContextPtr colStyleContext;
+            nsStylePosition * colPosition=nsnull;
+            colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct *&)colPosition); // get a read-only version of the style context
+            //XXX: how do I know this is auto because it's defaulted, vs. set explicitly to "auto"?
+            if (eStyleUnit_Auto==colPosition->mWidth.GetUnit())
+            {
+              // notice how we defer getting a mutable style context until we're sure we really need one
+              colFrame->GetStyleContext(colStyleContext.AssignRef());
+              colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
+              colPosition->mWidth = position->mWidth;
+              colStyleContext->RecalcAutomaticData(&aPresContext);
+            }
+          }
+          colFrame->GetNextSibling(colFrame);
+        }
+      }
+    }
+    //mStyleContext->RecalcAutomaticData(&aPresContext);
   }
   return rv;
 }
@@ -592,7 +619,7 @@ int nsTableColGroupFrame::GetColumnCount ()
     {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
       col->SetColumnIndex (mStartColIndex + mColCount);
-      mColCount += col->GetRepeat();
+      mColCount += col->GetSpan();
     }
     childFrame->GetNextSibling(childFrame);
   }
@@ -643,7 +670,7 @@ nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
     if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
     {
       nsTableColFrame *col = (nsTableColFrame *)childFrame;
-      count += col->GetRepeat();
+      count += col->GetSpan();
       if (aColIndex<=count)
         result = col;
     }
