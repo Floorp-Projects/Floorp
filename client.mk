@@ -236,6 +236,10 @@ endif
 ifeq (,$(filter directory/c-sdk, $(BUILD_MODULE_DIRS) $(BUILD_MODULE_DEP_DIRS)))
   CVSCO_LDAPCSDK :=
 endif
+else
+  # Do not pull PSM/NSS by default
+  CVSCO_PSM :=
+  CVSCO_NSS :=
 endif
 
 ####################################
