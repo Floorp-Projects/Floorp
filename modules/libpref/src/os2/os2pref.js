@@ -20,77 +20,90 @@
  * Contributor(s): 
  */
 
-pref("intl.font2.win.prop_font",        "Tms Rmn");
-pref("intl.font2.win.prop_size",        12);
-pref("intl.font2.win.fixed_font",       "Courier");
-pref("intl.font2.win.fixed_size",       10);
+platform.windows = true;
 
-pref("intl.font260.win.prop_font",      "Tms Rmn");
-pref("intl.font260.win.prop_size",      10);
-pref("intl.font260.win.fixed_font",     "Courier");
-pref("intl.font260.win.fixed_size",     10);
+pref("browser.bookmark_window_showwindow",  1);		// SW_NORMAL
+pref("mailnews.folder_window_showwindow",   1);		// SW_NORMAL
+pref("mailnews.thread_window_showwindow",   1);		// SW_NORMAL
+pref("mailnews.message_window_showwindow",  1);		// SW_NORMAL
 
-pref("intl.font263.win.prop_font",      "Tms Rmn");
-pref("intl.font263.win.prop_size",      12);
-pref("intl.font263.win.fixed_font",     "Courier");
-pref("intl.font263.win.fixed_size",     10);
+pref("browser.bookmark_columns_win",        "");
+pref("mailnews.folder_columns_win",         "");
+pref("mail.thread_columns_win",             "");
+pref("news.thread_columns_win",             "");
+pref("category.thread_columns_win",         "");
+pref("news.category_columns_win",           "");
 
-pref("intl.font1292.win.prop_font",     "Tms Rmn");
-pref("intl.font1292.win.prop_size",     12);
-pref("intl.font1292.win.fixed_font",    "Courier");
-pref("intl.font1292.win.fixed_size",    10);
+pref("ui.key.menuAccessKeyFocuses", true);
 
-pref("intl.font264.win.prop_font",      "Tms Rmn");
-pref("intl.font264.win.prop_size",      12);
-pref("intl.font264.win.fixed_font",     "Courier");
-pref("intl.font264.win.fixed_size",     10);
+pref("font.name.serif.ar", "Tms Rm");
+pref("font.name.sans-serif.ar", "Helv");
+pref("font.name.monospace.ar", "Courier");
 
-pref("intl.font44.win.prop_font",       "Tms Rmn");
-pref("intl.font44.win.prop_size",       12);
-pref("intl.font44.win.fixed_font",      "Courier");
-pref("intl.font44.win.fixed_size",      10);
+pref("font.name.serif.el", "Tms Rmn");
+pref("font.name.sans-serif.el", "Helv");
+pref("font.name.monospace.el", "Courier");
 
-pref("intl.font41.win.prop_font",       "Tms Rmn");
-pref("intl.font41.win.prop_size",       12);
-pref("intl.font41.win.fixed_font",      "Courier");
-pref("intl.font41.win.fixed_size",      10);
+pref("font.name.serif.he", "Tms Rmn");
+pref("font.name.sans-serif.he", "Helv");
+pref("font.name.monospace.he", "Courier");
 
-pref("intl.font43.win.prop_font",       "Tms Rmn");
-pref("intl.font43.win.prop_size",       12);
-pref("intl.font43.win.fixed_font",      "Courier");
-pref("intl.font43.win.fixed_size",      10);
+pref("font.name.serif.ja", "Tms Rmn");
+pref("font.name.sans-serif.ja", "Helv");
+pref("font.name.monospace.ja", "Courier");
 
-pref("intl.font20.win.prop_font",       "Tms Rmn");
-pref("intl.font20.win.prop_size",       12);
-pref("intl.font20.win.fixed_font",      "Courier");
-pref("intl.font20.win.fixed_size",      10);
+pref("font.name.serif.ko", "Tms Rmn");
+pref("font.name.sans-serif.ko", "Helv");
+pref("font.name.monospace.ko", "Courier");
 
-pref("intl.font290.win.prop_font",      "Tms Rmn");
-pref("intl.font290.win.prop_size",      12);
-pref("intl.font290.win.fixed_font",     "Courier");
-pref("intl.font290.win.fixed_size",     10);
+pref("font.name.serif.th", "Tms Rmn");
+pref("font.name.sans-serif.th", "Helv");
+pref("font.name.monospace.th", "Courier");
 
-pref("intl.font254.win.prop_font",      "Tms Rmn");
-pref("intl.font254.win.prop_size",      12);
-pref("intl.font254.win.fixed_font",     "Courier");
-pref("intl.font254.win.fixed_size",     10);
+pref("font.name.serif.tr", "Tms Rmn");
+pref("font.name.sans-serif.tr", "Helv");
+pref("font.name.monospace.tr", "Courier");
 
-pref("intl.font58.win.mimecharset",     "ibm864");
-pref("intl.font58.win.prop_font",       "Tms Rmn");
-pref("intl.font58.win.prop_size",       12);
-pref("intl.font58.win.fixed_font",      "Courier");
-pref("intl.font58.win.fixed_size",      10);
+pref("font.name.serif.x-baltic", "Tms Rmn");
+pref("font.name.sans-serif.x-baltic", "Helv");
+pref("font.name.monospace.x-baltic", "Courier");
 
-pref("intl.font57.win.mimecharset",     "ibm862");
-pref("intl.font57.win.prop_font",       "Tms Rmn");
-pref("intl.font57.win.prop_size",       12);
-pref("intl.font57.win.fixed_font",      "Courier");
-pref("intl.font57.win.fixed_size",      10);
+pref("font.name.serif.x-central-euro", "Tms Rmn");
+pref("font.name.sans-serif.x-central-euro", "Helv");
+pref("font.name.monospace.x-central-euro", "Courier");
 
-pref("intl.font60.win.mimecharset",     "ibm874");
-pref("intl.font60.win.prop_font",       "Tms Rmn");
-pref("intl.font60.win.prop_size",       12);
-pref("intl.font60.win.fixed_font",      "Courier");
-pref("intl.font60.win.fixed_size",      10);
-pref("security.enable_java",            false);
+pref("font.name.serif.x-cyrillic", "Tms Rmn");
+pref("font.name.sans-serif.x-cyrillic", "Helv");
+pref("font.name.monospace.x-cyrillic", "Courier");
 
+pref("font.name.serif.x-unicode", "Tms Rmn");
+pref("font.name.sans-serif.x-unicode", "Helv");
+pref("font.name.monospace.x-unicode", "Courier");
+
+pref("font.name.serif.x-western", "Tms Rmn");
+pref("font.name.sans-serif.x-western", "Helv");
+pref("font.name.monospace.x-western", "Courier");
+
+pref("font.name.serif.zh-CN", "Tms Rmn");
+pref("font.name.sans-serif.zh-CN", "Helv");
+pref("font.name.monospace.zh-CN", "Courier");
+
+pref("font.name.serif.zh-TW", "Tms Rmn");
+pref("font.name.sans-serif.zh-TW", "Helv");
+pref("font.name.monospace.zh-TW", "Courier");
+
+pref("font.size.nav4rounding", false);
+
+
+pref("taskbar.x",                           -1); 
+pref("taskbar.y",                           -1);
+pref("taskbar.floating",                    true);
+pref("taskbar.horizontal",                  false);
+pref("taskbar.ontop",                       true);
+pref("taskbar.button_style",                -1);
+
+pref("netinst.profile.show_profile_wizard", true); 
+
+//The following pref is internal to Communicator. Please
+//do *not* place it in the docs...
+pref("netinst.profile.show_dir_overwrite_msg",  true); 
