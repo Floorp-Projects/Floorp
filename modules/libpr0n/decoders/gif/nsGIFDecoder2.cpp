@@ -24,7 +24,6 @@
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImage.h"
 #include "nsMemory.h"
 
 #include "imgIContainerObserver.h"

@@ -36,7 +36,6 @@ MODULE_NAME     = nsXBMModule
 REQUIRES	= xpcom \
 		  gfx \
 		  imglib2 \
-		  string \
 		  $(NULL)
 
 CPPSRCS        = nsXBMDecoder.cpp

@@ -43,15 +43,9 @@
 
 #include "nsIInputStream.h"
 #include "nsIComponentManager.h"
-#include "nsIImage.h"
-#include "nsMemory.h"
 #include "imgIContainerObserver.h"
-#include "nsRect.h"
-#include "nsCRT.h"
 
 #include "imgILoad.h"
-
-#include "prcpucfg.h" // To get IS_LITTLE_ENDIAN / IS_BIG_ENDIAN
 
 NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 
