@@ -26,6 +26,7 @@ MODULE=layout
 
 EXPORTS =               \
         nsCSSAtoms.h	\
+        nsCSSAtomList.h	\
         nsICSSLoader.h	\
         nsICSSParser.h	\
         nsICSSStyleSheet.h \
