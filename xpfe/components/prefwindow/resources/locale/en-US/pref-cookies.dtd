@@ -19,7 +19,7 @@
 <!ENTITY warnAboutCookies.label         "Warn me before accepting a cookie">
 <!ENTITY warnAboutCookies.accesskey     "w">
 
-<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their websites to suit your individual preferences.">
+<!ENTITY cookieDetails                  "Cookies are small pieces of information that websites store on your computer. This allows them to customize their web pages to suit your individual preferences.">
 
 <!ENTITY viewCookies.label              "View Stored Cookies">
 <!ENTITY viewCookies.accesskey          "v">
