@@ -1554,6 +1554,12 @@ nsXPCComponents::nsXPCComponents()
 
 nsXPCComponents::~nsXPCComponents()
 {
+    ClearMembers();
+}
+
+void 
+nsXPCComponents::ClearMembers()
+{
     NS_IF_RELEASE(mInterfaces);
     NS_IF_RELEASE(mClasses);
     NS_IF_RELEASE(mClassesByID);

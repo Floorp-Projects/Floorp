@@ -431,6 +431,10 @@ XPCWrappedNativeScope::SystemIsBeingShutDown(XPCCallContext& ccx)
 
     for(cur = gDyingScopes; cur; cur = cur->mNext)
     {
+        // Give the Components object a chance to try to clean up.
+        if(cur->mComponents)
+            cur->mComponents->SystemIsBeingShutDown();
+
         // Walk the protos first. Wrapper shutdown can leave dangling
         // proto pointers in the proto map.
         cur->mWrappedNativeProtoMap->
