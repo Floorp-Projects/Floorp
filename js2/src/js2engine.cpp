@@ -313,11 +313,11 @@ namespace MetaData {
     float64 JS2Engine::truncateFloat64(float64 d)
     {
         if (d == 0)
-	        return d;
+            return d;
         if (!JSDOUBLE_IS_FINITE(d)) {
-	        if (JSDOUBLE_IS_NaN(d))
-	            return 0;
-	        return d;
+            if (JSDOUBLE_IS_NaN(d))
+                return 0;
+            return d;
         }
         bool neg = (d < 0);
         d = fd::floor(neg ? -d : d);
@@ -773,6 +773,10 @@ namespace MetaData {
         case eForValue:     // leave the iterator helper
             return 1;       // and push iteration value
 
+        case eFrameSlotRead:
+            return 1;           // push value
+        case eFrameSlotWrite:
+            return -1;          // doesn't leave value on stack
 
         case eLexicalPostInc:
         case eLexicalPostDec:
