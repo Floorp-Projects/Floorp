@@ -703,16 +703,16 @@ nsGopherChannel::PushStreamConverters(nsIStreamListener *listener, nsIStreamList
     // What we now do depends on what type of file we have
     if (mType=='1' || mType=='7') {
         // Send the directory format back for a directory
-        rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/gopher-dir").get(), 
-               NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+        rv = StreamConvService->AsyncConvertData("text/gopher-dir", 
+               APPLICATION_HTTP_INDEX_FORMAT,
                listener,
                mUrl,
                getter_AddRefs(converterListener));
         if (NS_FAILED(rv)) return rv;
     } else if (mType=='0') {
         // Convert general file
-        rv = StreamConvService->AsyncConvertData(NS_LITERAL_STRING("text/plain").get(),
-                                                 NS_LITERAL_STRING("text/html").get(),
+        rv = StreamConvService->AsyncConvertData("text/plain",
+                                                 "text/html",
                                                  listener,
                                                  mListenerContext,
                                                  getter_AddRefs(converterListener));

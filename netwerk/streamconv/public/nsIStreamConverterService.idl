@@ -38,6 +38,17 @@
 #include "nsIInputStream.idl"
 #include "nsIStreamListener.idl"
 
+%{C++
+#define NS_STREAMCONVERTERSERVICE_CID                \
+{ /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
+    0x892ffeb0,                                      \
+    0x3f80,                                          \
+    0x11d3,                                          \
+    {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
+}
+#define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"
+%}
+
 /**
  * The nsIStreamConverterService is a higher level stream converter factory
  * responsible for locating and creating stream converters
@@ -51,19 +62,7 @@
  * @author Jud Valeski
  * @see nsIStreamConverter
  */
-
-%{C++
-#define NS_STREAMCONVERTERSERVICE_CID                \
-{ /* 892FFEB0-3F80-11d3-A16C-0050041CAF44 */         \
-    0x892ffeb0,                                      \
-    0x3f80,                                          \
-    0x11d3,                                          \
-    {0xa1, 0x6c, 0x00, 0x50, 0x04, 0x1c, 0xaf, 0x44} \
-}
-#define NS_ISTREAMCONVERTER_KEY         "@mozilla.org/streamconv;1"
-%}
-
-[scriptable, uuid(00362090-3B97-11d3-A16C-0050041CAF44)]
+[scriptable, uuid(e086e1e2-40ff-4193-8b8c-bd548babe70d)]
 interface nsIStreamConverterService : nsISupports {
 
     /**
@@ -84,8 +83,8 @@ interface nsIStreamConverterService : nsISupports {
      *                      until it is used.
      */
     nsIInputStream convert(in nsIInputStream aFromStream,
-                           in wstring aFromType,
-                           in wstring aToType,
+                           in string aFromType,
+                           in string aToType,
                            in nsISupports aContext);
 
     /**
@@ -105,8 +104,8 @@ interface nsIStreamConverterService : nsISupports {
      * @return              A nsIStreamListener that receives data via its
      *                      OnDataAvailable() method.
      */
-    nsIStreamListener asyncConvertData(in wstring aFromType, 
-                                       in wstring aToType, 
+    nsIStreamListener asyncConvertData(in string aFromType, 
+                                       in string aToType, 
                                        in nsIStreamListener aListener,
                                        in nsISupports aContext);
 };

@@ -97,23 +97,20 @@ nsHTTPCompressConv::~nsHTTPCompressConv()
 }
 
 NS_IMETHODIMP
-nsHTTPCompressConv::AsyncConvertData(const PRUnichar *aFromType, 
-                                     const PRUnichar *aToType, 
+nsHTTPCompressConv::AsyncConvertData(const char *aFromType, 
+                                     const char *aToType, 
                                      nsIStreamListener *aListener, 
                                      nsISupports *aCtxt)
 {
-    NS_LossyConvertUCS2toASCII from(aFromType);
-    const char *fromStr = from.get();
-
-    if (!PL_strncasecmp(fromStr, HTTP_COMPRESS_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
-        !PL_strncasecmp(fromStr, HTTP_X_COMPRESS_TYPE, sizeof(HTTP_X_COMPRESS_TYPE)-1))
+    if (!PL_strncasecmp(aFromType, HTTP_COMPRESS_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
+        !PL_strncasecmp(aFromType, HTTP_X_COMPRESS_TYPE, sizeof(HTTP_X_COMPRESS_TYPE)-1))
         mMode = HTTP_COMPRESS_COMPRESS;
 
-    else if (!PL_strncasecmp(fromStr, HTTP_GZIP_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
-             !PL_strncasecmp(fromStr, HTTP_X_GZIP_TYPE, sizeof(HTTP_X_GZIP_TYPE)-1))
+    else if (!PL_strncasecmp(aFromType, HTTP_GZIP_TYPE, sizeof(HTTP_COMPRESS_TYPE)-1) ||
+             !PL_strncasecmp(aFromType, HTTP_X_GZIP_TYPE, sizeof(HTTP_X_GZIP_TYPE)-1))
         mMode = HTTP_COMPRESS_GZIP;
 
-    else if (!PL_strncasecmp(fromStr, HTTP_DEFLATE_TYPE, sizeof(HTTP_DEFLATE_TYPE)-1))
+    else if (!PL_strncasecmp(aFromType, HTTP_DEFLATE_TYPE, sizeof(HTTP_DEFLATE_TYPE)-1))
         mMode = HTTP_COMPRESS_DEFLATE;
 
     // hook ourself up with the receiving listener. 
@@ -361,8 +358,8 @@ nsHTTPCompressConv::OnDataAvailable(nsIRequest* request,
 
 NS_IMETHODIMP
 nsHTTPCompressConv::Convert(nsIInputStream *aFromStream, 
-                            const PRUnichar *aFromType, 
-                            const PRUnichar *aToType, 
+                            const char *aFromType, 
+                            const char *aToType, 
                             nsISupports *aCtxt, 
                             nsIInputStream **_retval)
 { 

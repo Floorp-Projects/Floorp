@@ -52,14 +52,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS4(nsTXTToHTMLConv,
 // nsIStreamConverter methods
 NS_IMETHODIMP
 nsTXTToHTMLConv::Convert(nsIInputStream *aFromStream,
-                         const PRUnichar *aFromType, const PRUnichar *aToType,
+                         const char *aFromType, const char *aToType,
                          nsISupports *aCtxt, nsIInputStream * *_retval) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsTXTToHTMLConv::AsyncConvertData(const PRUnichar *aFromType,
-                                  const PRUnichar *aToType,
+nsTXTToHTMLConv::AsyncConvertData(const char *aFromType,
+                                  const char *aToType,
                                   nsIStreamListener *aListener,
                                   nsISupports *aCtxt) {
     NS_ASSERTION(aListener, "null pointer");

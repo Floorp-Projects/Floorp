@@ -40,7 +40,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIStreamConverterService.h"
 #include "nsStreamConverterService.h"
-
+#include "nsNetCID.h"
 
 nsresult NS_NewStreamConv(nsStreamConverterService** aStreamConv);
 

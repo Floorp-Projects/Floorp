@@ -126,19 +126,19 @@ static char binhex_decode[256] =
 
 NS_IMETHODIMP
 nsBinHexDecoder::Convert(nsIInputStream *aFromStream,
-                          const PRUnichar *aFromType,
-                          const PRUnichar *aToType,
-                          nsISupports *aCtxt, 
-                          nsIInputStream **aResultStream) 
+                         const char *aFromType,
+                         const char *aToType,
+                         nsISupports *aCtxt, 
+                         nsIInputStream **aResultStream) 
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBinHexDecoder::AsyncConvertData(const PRUnichar *aFromType, 
-                                   const PRUnichar *aToType,
-                                   nsIStreamListener *aListener, 
-                                   nsISupports *aCtxt)
+nsBinHexDecoder::AsyncConvertData(const char *aFromType, 
+                                  const char *aToType,
+                                  nsIStreamListener *aListener, 
+                                  nsISupports *aCtxt)
 {
   NS_ASSERTION(aListener && aFromType && aToType, 
                "null pointer passed into bin hex converter");

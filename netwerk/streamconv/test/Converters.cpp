@@ -17,8 +17,8 @@ TestConverter::TestConverter() {
 // in the aToType "string".
 NS_IMETHODIMP
 TestConverter::Convert(nsIInputStream *aFromStream, 
-                       const PRUnichar *aFromType, 
-                       const PRUnichar *aToType, 
+                       const char *aFromType, 
+                       const char *aToType, 
                        nsISupports *ctxt, 
                        nsIInputStream **_retval) {
     char buf[1024+1];
@@ -28,10 +28,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
 
     // verify that the data we're converting matches the from type
     // if it doesn't then we're being handed the wrong data.
-    nsString from(aFromType);
-    char *fromMIME = ToNewCString(from);
-    char fromChar = *fromMIME;
-    nsMemory::Free(fromMIME);
+    char fromChar = *aFromType;
 
     if (fromChar != buf[0]) {
         printf("We're receiving %c, but are supposed to have %c.\n", buf[0], fromChar);
@@ -40,10 +37,7 @@ TestConverter::Convert(nsIInputStream *aFromStream,
 
 
     // Get the first character 
-    nsString to(aToType);
-    char *toMIME = ToNewCString(to);
-    char toChar = *toMIME;
-    nsMemory::Free(toMIME);
+    char toChar = *aToType;
 
     for (PRUint32 i = 0; i < read; i++) 
         buf[i] = toChar;
@@ -54,10 +48,10 @@ TestConverter::Convert(nsIInputStream *aFromStream,
 }
 
 /* This method initializes any internal state before the stream converter
- * begins asyncronous conversion */
+ * begins asynchronous conversion */
 NS_IMETHODIMP
-TestConverter::AsyncConvertData(const PRUnichar *aFromType,
-                                const PRUnichar *aToType, 
+TestConverter::AsyncConvertData(const char *aFromType,
+                                const char *aToType, 
                                 nsIStreamListener *aListener, 
                                 nsISupports *ctxt) {
     NS_ASSERTION(aListener, "null listener");

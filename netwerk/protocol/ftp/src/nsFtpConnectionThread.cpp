@@ -2410,8 +2410,8 @@ nsFtpState::BuildStreamConverter(nsIStreamListener** convertStreamListener)
     if (NS_FAILED(rv)) 
         return rv;
 
-    rv = scs->AsyncConvertData(NS_LITERAL_STRING("text/ftp-dir").get(),
-                               NS_LITERAL_STRING(APPLICATION_HTTP_INDEX_FORMAT).get(),
+    rv = scs->AsyncConvertData("text/ftp-dir",
+                               APPLICATION_HTTP_INDEX_FORMAT,
                                listener, 
                                mURL, 
                                getter_AddRefs(converterListener));

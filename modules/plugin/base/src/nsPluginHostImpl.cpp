@@ -6608,8 +6608,8 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 
   nsCOMPtr<nsIStreamConverterService> serv = do_GetService(kStreamConverterServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = serv->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_BYTERANGES).get(),
-                                NS_LITERAL_STRING("*/*").get(),
+    rv = serv->AsyncConvertData(MULTIPART_BYTERANGES,
+                                "*/*",
                                 finalStreamListener,
                                 nsnull,
                                 getter_AddRefs(mStreamConverter));

@@ -417,15 +417,15 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsMultiMixedConv,
 // No syncronous conversion at this time.
 NS_IMETHODIMP
 nsMultiMixedConv::Convert(nsIInputStream *aFromStream,
-                          const PRUnichar *aFromType,
-                          const PRUnichar *aToType,
+                          const char *aFromType,
+                          const char *aToType,
                           nsISupports *aCtxt, nsIInputStream **_retval) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // Stream converter service calls this to initialize the actual stream converter (us).
 NS_IMETHODIMP
-nsMultiMixedConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnichar *aToType,
+nsMultiMixedConv::AsyncConvertData(const char *aFromType, const char *aToType,
                                    nsIStreamListener *aListener, nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType, "null pointer passed into multi mixed converter");
 

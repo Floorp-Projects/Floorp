@@ -677,10 +677,9 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
             nsCOMPtr<nsIStreamConverterService> serv =
                 do_GetService("@mozilla.org/streamConverters;1", &rv);
             if (NS_SUCCEEDED(rv)) {
-                NS_ConvertASCIItoUCS2 from(UNKNOWN_CONTENT_TYPE);
                 nsCOMPtr<nsIStreamListener> converter;
-                rv = serv->AsyncConvertData(from.get(),
-                                            NS_LITERAL_STRING("*/*").get(),
+                rv = serv->AsyncConvertData(UNKNOWN_CONTENT_TYPE,
+                                            "*/*",
                                             mListener,
                                             mUserContext,
                                             getter_AddRefs(converter));

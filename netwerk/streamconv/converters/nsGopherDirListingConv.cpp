@@ -70,8 +70,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsGopherDirListingConv,
 
 NS_IMETHODIMP
 nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
-                                const PRUnichar *aFromType,
-                                const PRUnichar *aToType,
+                                const char *aFromType,
+                                const char *aToType,
                                 nsISupports *aCtxt, nsIInputStream **_retval) {
     
     nsresult rv;
@@ -126,8 +126,8 @@ nsGopherDirListingConv::Convert(nsIInputStream *aFromStream,
 // Stream converter service calls this to initialize the actual
 // stream converter (us).
 NS_IMETHODIMP
-nsGopherDirListingConv::AsyncConvertData(const PRUnichar *aFromType,
-                                         const PRUnichar *aToType,
+nsGopherDirListingConv::AsyncConvertData(const char *aFromType,
+                                         const char *aToType,
                                          nsIStreamListener *aListener,
                                          nsISupports *aCtxt) {
     NS_ASSERTION(aListener && aFromType && aToType,
