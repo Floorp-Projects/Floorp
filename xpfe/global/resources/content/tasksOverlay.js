@@ -29,9 +29,39 @@ function toIRC()
 
 }
 
+// Set up a lame hack to avoid opening two bookmarks.
+// Could otherwise happen with two Ctrl-B's in a row.
+var gDisableHistory = false;
+function enableHistory() {
+  gDisableHistory = false;
+}
+
 function toHistory()
 {
-    window.open( "chrome://history/content/", "_blank", "chrome,dependent=yes,all" );
+  // Use a single sidebar history dialog
+
+  var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
+  var iwindowManager = Components.interfaces.nsIWindowMediator;
+  var windowManager  = cwindowManager.QueryInterface(iwindowManager);
+
+  var historyWindow = windowManager.GetMostRecentWindow('history:manager');
+
+  if (historyWindow) {
+    //debug("Reuse existing history window");
+    historyWindow.focus();
+  } else {
+    //debug("Open a new history dialog");
+
+    if (true == gDisableHistory) {
+      //debug("Recently opened one. Wait a little bit.");
+      return;
+    }
+    gDisableHistory = true;
+
+    window.open( "chrome://history/content/", "_blank", "chrome,menubar,resizable,scrollbars" );
+    setTimeout(enableHistory, 2000);
+  }
+
 }
 
 function toJavaConsole()
