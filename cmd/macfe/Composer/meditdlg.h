@@ -169,7 +169,6 @@ protected:
 	LControl*			fCustomColor;
 	CColorButton*		fColorCustomColor;
 
-	LControl*			fIncludeCaption;
 	LControl*			fCaptionAboveBelow;
 	
 	LGAPopup*			mTableAlignment;
@@ -829,6 +828,9 @@ protected:
 	
 	LControl*			fCustomColor;
 	CColorButton*		fColorCustomColor;
+	
+	LControl*			mNextButton;
+	LControl*			mPreviousButton;
 
 	LControl*			mUseImage;
 	CLargeEditField*	mImageFileName;

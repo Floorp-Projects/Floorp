@@ -1703,7 +1703,6 @@ void CTableInsertDialog::FinishCreateSelf()
 	fCustomColor = (LControl*)FindPaneByID( 'tclr' );
 	fColorCustomColor = (CColorButton*)FindPaneByID( 'Colo' );
 	
-	fIncludeCaption = (LControl*)FindPaneByID( 'cptn' );
 	fCaptionAboveBelow = (LControl*)FindPaneByID( 'cPop' );
 
 	mTableAlignment = (LGAPopup *)FindPaneByID( 'HzPU' );
@@ -1766,7 +1765,6 @@ void CTableInsertDialog::FinishCreateSelf()
 	macColor.blue = 0xFFFF;
 	fColorCustomColor->SetColor(macColor);
 
-	fIncludeCaption->SetValue(FALSE);			//assume no caption
 	fCaptionAboveBelow->SetValue( 1 );
 
 	AdjustEnable();
@@ -1776,7 +1774,7 @@ void CTableInsertDialog::FinishCreateSelf()
 void CTableInsertDialog::InitializeDialogControls()
 {
 	short 			resID;
-	CStr255			title;
+//	CStr255			title;
 	StringHandle	titleH;
 
 	if (EDT_IsInsertPointInTable(fContext))
@@ -1789,22 +1787,23 @@ void CTableInsertDialog::InitializeDialogControls()
 	{
 		SInt8 hstate = HGetState( (Handle)titleH );
 		HLock( (Handle)titleH );
-		title = *titleH;
-		HSetState( (Handle)titleH, hstate );
+//		title = *titleH;
 
 		MenuHandle menuh = ((LGAPopup *)fWidthPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fWidthPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
 		
 		menuh = ((LGAPopup *)fHeightPopup)->GetMacMenuH();
 		if (menuh)
 		{
-			SetMenuItemText( menuh, kPercentOfWindowItem, title );
+			SetMenuItemText( menuh, kPercentOfWindowItem, *titleH );
 			((LGAPopup *)fHeightPopup)->SetMacMenuH( menuh );	// resets menu width
 		}
+
+		HSetState( (Handle)titleH, hstate );
 	}
 }
 
@@ -1838,11 +1837,6 @@ void CTableInsertDialog::AdjustEnable()
 		fHeightEditText->Disable();
 		fHeightPopup->Disable();
 	}
-
-	if (fIncludeCaption->GetValue())
-		fCaptionAboveBelow->Enable();
-	else
-		fCaptionAboveBelow->Disable();
 	
 	if ( mUseImage->GetValue() )
 		mLeaveImage->Enable();
@@ -1939,16 +1933,15 @@ Boolean CTableInsertDialog::CommitChanges(Boolean /* allPanes */ )
 	EDT_FreeTableData(fData);
 	
 	
-	// clean this up later after we're sure the XP interfaces aren't improving.
-	if (fIncludeCaption->GetValue())
+	if (fCaptionAboveBelow->GetValue() != 1)
 	{
 		EDT_TableCaptionData* fCaptionData;
 		fCaptionData = EDT_NewTableCaptionData();
 		if (fCaptionData)
 		{
-			if ( fCaptionAboveBelow->GetValue() == 1 )
+			if ( fCaptionAboveBelow->GetValue() == 2 )
 				fCaptionData->align = ED_ALIGN_ABSTOP;
-			else
+			else if ( fCaptionAboveBelow->GetValue() == 3 )
 				fCaptionData->align = ED_ALIGN_ABSBOTTOM;	// got this constant from CEditTableElement::SetCaption();
 				
 			EDT_InsertTableCaption( fContext, fCaptionData );
@@ -2060,7 +2053,6 @@ void CEDTableContain::FinishCreateSelf()
 	fCustomColor = (LControl*)this->FindPaneByID( 'tclr' );
 	fColorCustomColor = (CColorButton*)FindPaneByID( 'Colo' );
 	
-	fIncludeCaption = (LControl*)this->FindPaneByID( 'cptn' );
 	fCaptionAboveBelow = (LControl*)this->FindPaneByID( 'cPop' );
 
 	mTableAlignment = (LGAPopup *)FindPaneByID( 'HzPU' );
@@ -2114,11 +2106,6 @@ void CEDTableContain::AdjustEnable()
 		fHeightPopup->Disable();
 	}
 
-	if (fIncludeCaption->GetValue())
-		fCaptionAboveBelow->Enable();
-	else
-		fCaptionAboveBelow->Disable();
-	
 	if ( mUseImage->GetValue() )
 		mLeaveImage->Enable();
 	else
@@ -2149,7 +2136,7 @@ void CEDTableContain::PrefsFromControls()
 	
 // deal with caption
 	EDT_TableCaptionData* fCaptionData = EDT_GetTableCaptionData(fContext);				// find out if we have a caption....
-	if (fIncludeCaption->GetValue() == FALSE)
+	if (fCaptionAboveBelow->GetValue() == 1)	/* no caption */
 	{
 		if (fCaptionData)
 		{
@@ -2274,16 +2261,14 @@ void CEDTableContain::ControlsFromPref()
 	EDT_TableCaptionData* fCaptionData = EDT_GetTableCaptionData( fContext );
 	if (fCaptionData)
 	{
-		fIncludeCaption->SetValue(TRUE);
 		if (fCaptionData->align != ED_ALIGN_ABSBOTTOM)
-			fCaptionAboveBelow->SetValue( 1 );
-		else
 			fCaptionAboveBelow->SetValue( 2 );
+		else
+			fCaptionAboveBelow->SetValue( 3 );
 		EDT_FreeTableCaptionData(fCaptionData);
 	}
 	else
 	{
-		fIncludeCaption->SetValue(FALSE);
 		fCaptionAboveBelow->SetValue( 1 );
 	}
 	
@@ -2436,6 +2421,9 @@ void CEDTableCellContain::FinishCreateSelf()
 	
 	fCustomColor = (LControl*)this->FindPaneByID( 'cclr' );
 	fColorCustomColor = (CColorButton*)FindPaneByID( 'Colo' );
+	
+	mNextButton = (LControl*)this->FindPaneByID( 'NEXT' );
+	mPreviousButton = (LControl*)this->FindPaneByID( 'PREV' );
 	
 	mUseImage = (LControl*)FindPaneByID( 'UseI' );
 	mImageFileName = (CLargeEditField *)FindPaneByID( 'TImg' );
@@ -2824,6 +2812,30 @@ void CEDTableCellContain::ListenToMessage( MessageT inMessage, void* /* ioParam 
 {
 	switch ( inMessage )
 	{
+		case 'NEXT':
+			/* AllFieldsOK?, Cancel->Close, Apply */
+//			CEditDialog::ListenToMessage( msg_Apply, NULL );
+
+			/* select next */
+			/* HACK ALERT!!!!!!!  For now, let's just tab to the next cell */
+			EDT_TabKey( fContext, true, false );
+			
+			/* fill in new data */
+			ControlsFromPref();
+			break;
+			
+		case 'PREV':
+			/* AllFieldsOK */
+			/* Apply */
+			
+			/* select next */
+			/* HACK ALERT!!!!!!!  For now, let's just tab to the previous cell */
+			EDT_TabKey( fContext, false, false );
+
+			/* fill in new data */
+			SysBeep(0);
+			break;
+			
 		case 'cwth':
 		case 'chgt':
 		case 'cclr':
