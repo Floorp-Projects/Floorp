@@ -2708,7 +2708,7 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
   rv = aTableCreator.CreateTableRowGroupFrame(&aNewFrame);
 
   nsIFrame* scrollFrame = nsnull;
-  if (IsScrollable(aPresContext, styleDisplay)) {
+  if (styleDisplay->IsScrollableOverflow()) {
     // Create an area container for the frame
     BuildScrollFrame(aPresShell, aPresContext, aState, aContent, aStyleContext, 
                      aNewFrame, parentFrame, nsnull, scrollFrame, aStyleContext);
@@ -3522,7 +3522,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
   // The document root should not be scrollable in any paginated context,
   // even in print preview.
-  PRBool isScrollable = IsScrollable(aPresContext, display)
+  PRBool isScrollable = display->IsScrollableOverflow()
     && !aPresContext->IsPaginated()
     && !propagatedScrollToViewport;
 
@@ -5481,7 +5481,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         }
 
         // Boxes can scroll.
-        if (IsScrollable(aPresContext, display)) {
+        if (display->IsScrollableOverflow()) {
 
           nsIFrame* scrollPort = nsnull;
           if (listboxScrollPort) {
@@ -5581,7 +5581,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
 #endif
     }
 
-    if (mayBeScrollable && IsScrollable(aPresContext, display)) {
+    if (mayBeScrollable && display->IsScrollableOverflow()) {
       // set the top to be the newly created scrollframe
       BuildScrollFrame(aPresShell, aPresContext, aState, aContent,
                        aStyleContext, newFrame, aParentFrame, nsnull,
@@ -6089,7 +6089,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
   // XXX Ignore tables for the time being
   if (aDisplay->IsBlockLevel() &&
       aDisplay->mDisplay != NS_STYLE_DISPLAY_TABLE &&
-      IsScrollable(aPresContext, aDisplay) &&
+      aDisplay->IsScrollableOverflow() &&
       !propagatedScrollToViewport) {
 
     if (!pseudoParent && !aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -6494,25 +6494,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
   return rv;
 }
-
-
-PRBool
-nsCSSFrameConstructor::IsScrollable(nsPresContext*       aPresContext,
-                                    const nsStyleDisplay* aDisplay)
-{
-  // For the time being it's scrollable if the overflow property is auto or
-  // scroll, regardless of whether the width or height is fixed in size
-  switch (aDisplay->mOverflow) {
-    case NS_STYLE_OVERFLOW_SCROLL:
-    case NS_STYLE_OVERFLOW_AUTO:
-    case NS_STYLE_OVERFLOW_HIDDEN:
-    case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
-    case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
-      return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
 
 nsresult 
 nsCSSFrameConstructor::InitAndRestoreFrame(nsPresContext*          aPresContext,
