@@ -3913,7 +3913,11 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             focusController->SetSuppressFocus(PR_TRUE,
                                               "Win32-Only Link Traversal Issue");
             // Remove focus from the element that has it
-            focusController->SetFocusedElement(nsnull);
+            nsCOMPtr<nsIDOMWindowInternal> focusedWindow;
+            focusController->GetFocusedWindow(getter_AddRefs(focusedWindow));
+            nsCOMPtr<nsIDOMWindowInternal> ourFocusedWindow(do_QueryInterface(ourWindow));
+            if (ourFocusedWindow == focusedWindow)
+              focusController->SetFocusedElement(nsnull);
         }
     }
 
