@@ -331,6 +331,9 @@ nsBrowserWindow::Destroy()
     NS_RELEASE(mWebShell);
   }
 
+  NS_IF_RELEASE(mBack);
+  NS_IF_RELEASE(mForward);
+  NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mThrobber);
   // XXX What about releasing all the other objects...
 }
