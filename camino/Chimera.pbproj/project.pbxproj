@@ -219,6 +219,18 @@
 			settings = {
 			};
 		};
+		0FF326C6042507CF00A80166 = {
+			isa = PBXFileReference;
+			name = libxpcom_compat.a;
+			path = ../xpcom/obsolete/libxpcom_compat.a;
+			refType = 2;
+		};
+		0FF326C7042507CF00A80166 = {
+			fileRef = 0FF326C6042507CF00A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //0F0
 //0F1
 //0F2
@@ -4929,6 +4941,7 @@
 		};
 		F56F242202AC6F7101A967F3 = {
 			children = (
+				0FF326C6042507CF00A80166,
 				0FA8EFCA0423EAAD00A80166,
 				F56F242602AC706801A967F3,
 				F56F242702AC706801A967F3,
@@ -7593,6 +7606,7 @@
 				F5BAABA102AC4AA701A967F3,
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
+				0FF326C7042507CF00A80166,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
