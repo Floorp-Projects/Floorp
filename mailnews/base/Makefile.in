@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src search util prefs build resources
+DIRS = public src util search prefs build resources
 
 ifdef ENABLE_TESTS
 DIRS += tests
