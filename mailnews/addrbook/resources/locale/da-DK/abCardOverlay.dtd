@@ -1,0 +1,61 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY Address.tab "Adresse">
+<!ENTITY CellularNumber.label "Mobil:">
+<!ENTITY Company.label "Firma:">
+<!ENTITY Custom1.label "Brugerdefineret 1:">
+<!ENTITY Custom2.label "Brugerdefineret 2:">
+<!ENTITY Custom3.label "Brugerdefineret 3:">
+<!ENTITY Custom4.label "Brugerdefineret 4:">
+<!ENTITY Department.label "Afdeling:">
+<!ENTITY DisplayName.label "Vist:">
+<!ENTITY FaxNumber.label "Fax:">
+<!ENTITY FirstName.label "Fornavn:">
+<!ENTITY Home.box "Hjemme">
+<!ENTITY HomeAddress.label "Adresse:">
+<!ENTITY HomeAddress2.label " ">
+<!ENTITY HomeCity.label "By:">
+<!ENTITY HomeCountry.label "Land:">
+<!ENTITY HomePhone.label "Hjemme:">
+<!ENTITY HomeState.label "State *?*:">
+<!ENTITY HomeZipCode.label "Postnr.:">
+<!ENTITY Internet.box "Internet">
+<!ENTITY JobTitle.label "Titel:">
+<!ENTITY LastName.label "Efternavn:">
+<!ENTITY Name.box "Navn">
+<!ENTITY Name.tab "Navn">
+<!ENTITY NickName.label "Kælenavn:">
+<!ENTITY Notes.box "Noter">
+<!ENTITY Other.tab "Andet">
+<!ENTITY PagerNumber.label "Personsøger:">
+<!ENTITY Phones.box "Telefoner">
+<!ENTITY PrimaryEmail.label "primær email:">
+<!ENTITY SecondEmail.label "Sekundær email:">
+<!ENTITY SendPlainText.label "Send email som almindelig tekst (ingen HTML)">
+<!ENTITY Web.box "Web">
+<!ENTITY WebPage1.label "Hjemmeside:">
+<!ENTITY Work.box "Arbejde">
+<!ENTITY WorkAddress.label "Adresse:">
+<!ENTITY WorkAddress2.label " ">
+<!ENTITY WorkCity.label "By:">
+<!ENTITY WorkCountry.label "Land:">
+<!ENTITY WorkPhone.label "Arbejde:">
+<!ENTITY WorkState.label "State: *?*">
+<!ENTITY WorkZipCode.label "Postnr.:">

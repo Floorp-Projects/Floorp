@@ -1,0 +1,38 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY bigger.label "Større">
+<!ENTITY bold.label "Fed">
+<!ENTITY boldItalic.label "Fed og Kursiv">
+<!ENTITY color.label "Farve:">
+<!ENTITY confirmMove.label "Bekræft når mapper flyttes til Trash">
+<!ENTITY displayWith.label "Vis almindelig tekst beskeder med">
+<!ENTITY fixedWidth.label "Fast bredde skrifttype">
+<!ENTITY italic.label "Kursiv">
+<!ENTITY pane.title "Post &amp; nyhedgrupper">
+<!ENTITY playSound.label "Afspil lyd når der er nye beskeder">
+<!ENTITY regular.label "Normal">
+<!ENTITY rememberLastMsg.label "Husk den sidst valgte besked">
+<!ENTITY size.label "Størelse:">
+<!ENTITY smaller.label "mindre">
+<!ENTITY style.label "Stil:">
+<!ENTITY textBegin.label "Almindelig citeret tekst bliver vist som">
+<!ENTITY useMessenger.label "Brug Netscape Messenger fra MAPI-baserede programmer">
+<!ENTITY variableWidth.label "Variabel bredde skrifttype">
+<!ENTITY window.title "Post &amp; nyhedsgrupper">

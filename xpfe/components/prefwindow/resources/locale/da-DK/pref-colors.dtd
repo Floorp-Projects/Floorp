@@ -1,0 +1,33 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY  alwaysOverCheck.label "Brug altid mine farver">
+<!ENTITY  background "Baggrund:">
+<!ENTITY  color "Farver">
+<!ENTITY  colorPick "Farvevælger">
+<!ENTITY  lHeader "Farver">
+<!ENTITY  links "Links">
+<!ENTITY  rHeader "Ændrer farverne i dit display">
+<!ENTITY  someProvColors "Nogle gang angiver et dokument sine egne farver og baggrund.">
+<!ENTITY  text "Tekst:">
+<!ENTITY  underLinksCheck.label "Understreg links">
+<!ENTITY  unvisit "Ubesøgte links:">
+<!ENTITY  useWinColorsCheck.label "Use Windows colors *?*">
+<!ENTITY  visit "Besøgte Links:">
+<!ENTITY  window.title "Farver">

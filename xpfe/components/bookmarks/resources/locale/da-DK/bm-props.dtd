@@ -1,0 +1,63 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY am.label "AM">
+<!ENTITY bookmarks.cancel.label "Annuller">
+<!ENTITY bookmarks.description.label "Beskrivelse:">
+<!ENTITY bookmarks.location.label "Adresse:">
+<!ENTITY bookmarks.name.label "Navn:">
+<!ENTITY bookmarks.ok.label "OK">
+<!ENTITY bookmarks.shortcut.label "Genvej:">
+<!ENTITY bookmarks.title.label "Egenskaber for bogmærke">
+<!ENTITY check.label "Check: ">
+<!ENTITY checkeveryday.label "Hver dag">
+<!ENTITY checkforupdates.legend.label "Check web-siden for opdateringer">
+<!ENTITY checkfridays.label "Fredage">
+<!ENTITY checkmondays.label "Mandage">
+<!ENTITY checknever.label "Aldrig">
+<!ENTITY checksaturdays.label "Lørdage">
+<!ENTITY checksundays.label "Søndage">
+<!ENTITY checkthursdays.label "Torsdage">
+<!ENTITY checktuesdays.label "Tirsdage">
+<!ENTITY checkwednesdays.label "Onsdage">
+<!ENTITY checkweekdays.label "Ugedage">
+<!ENTITY checkweekends.label "Weekender">
+<!ENTITY eight.label "8">
+<!ENTITY eleven.label "11">
+<!ENTITY every.label "hver ">
+<!ENTITY five.label "5">
+<!ENTITY four.label "4">
+<!ENTITY from.label "fra">
+<!ENTITY midnight.label "Midnat">
+<!ENTITY minutes.label "Minute(r)">
+<!ENTITY nine.label "9">
+<!ENTITY noon.label "middag">
+<!ENTITY notification.alert.label "Vis en dialogboks">
+<!ENTITY notification.icon.label "Skift ikon">
+<!ENTITY notification.sound.label "Afspil lyd">
+<!ENTITY notification.window.label "Åben web-side i nyt vindue">
+<!ENTITY notifications.legend.label "Notification:">
+<!ENTITY one.label "1">
+<!ENTITY pm.label "PM">
+<!ENTITY seven.label "7">
+<!ENTITY six.label "6">
+<!ENTITY ten.label "10">
+<!ENTITY three.label "3">
+<!ENTITY to.label "til">
+<!ENTITY two.label "2">

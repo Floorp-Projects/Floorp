@@ -1,0 +1,32 @@
+<!--
+  The contents of this file are subject to the Netscape Public License Version
+  1.1 (the "License"); you may not use this file except in compliance with the
+  License. You may obtain a copy of the License at http://www.mozilla.org/NPL/ 
+  
+  Software distributed under the License is distributed on an "AS IS" basis, 
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License for
+  the specific language governing rights and limitations under the License. 
+  
+  The Original Code is Mozilla Communicator client code, released March 31, 
+  1998. 
+  
+  The Initial Developer of the Original Code is Netscape Communications 
+  Corporation. Portions created by Netscape are Copyright (C) 1999 Netscape
+  Communications Corporation. All Rights Reserved. 
+  
+  Contributor(s):	Henrik Lynggaard<Lynggaard@netscape.net>. 
+-->
+<!-- Translated with MozillaTranslator -->
+<!ENTITY both.label "Begge typer kvitering">
+<!ENTITY custom.label "Customize...">
+<!ENTITY dsn.label "En leverings kvitering fra modtagens server (DSN)">
+<!ENTITY leaveIt.label "Lad den ligge I min Inbox">
+<!ENTITY mdn.label "En læse kvitering, som fortæller når modtageren har åbnet beskeden (MDN)">
+<!ENTITY moveToSent.label "Flyt den til min sent post mappe">
+<!ENTITY never.label "Send en kvitering for nogle beskeder">
+<!ENTITY pane.title "Kviteringer">
+<!ENTITY receiptArrive.label " Når jeg modtager en kvitering">
+<!ENTITY requestMDN.label "Når jeg modtager en beksed og afsenderen ønsker en kvitering (MDN)">
+<!ENTITY requestReceipt.label "Hvis jeg beder om en kvitering, ønsker jeg">
+<!ENTITY returnSome.label "Send en kvitering for nogle beskeder">
+<!ENTITY window.title "Kviteringer">
