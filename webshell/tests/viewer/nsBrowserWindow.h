@@ -40,7 +40,6 @@
 class nsILabel;
 class nsICheckButton;
 class nsIRadioButton;
-class nsIDialog;
 class nsITextWidget;
 class nsIButton;
 class nsIThrobber;
@@ -239,7 +238,7 @@ public:
   nsITextWidget* mStatus;
 
   // Find Dialog
-  nsIDialog      * mDialog;
+  nsIBrowserWindow * mDialog;
   nsIButton      * mCancelBtn;
   nsIButton      * mFindBtn;
   nsITextWidget  * mTextField;
