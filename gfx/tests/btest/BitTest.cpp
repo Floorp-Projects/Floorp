@@ -30,6 +30,7 @@
 #include "nsIImageRequest.h"
 #include "nsIImageObserver.h"
 #include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
 #include "nsGUIEvent.h"
@@ -40,9 +41,16 @@
 
 #include <windows.h>
 
+#include "nsWidgetsCID.h" 
+#include "nsITextWidget.h"
+
+// widget interface
+static NS_DEFINE_IID(kITextWidgetIID,     NS_ITEXTWIDGET_IID);
+static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
+
+
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
-
 static NS_DEFINE_IID(kCWindowIID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChildWindowIID, NS_CHILD_CID);
 static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
@@ -60,6 +68,9 @@ static nsIImage *gBlendImage = nsnull;
 static nsIImage *gMaskImage = nsnull;
 static PRBool gInstalledColorMap = PR_FALSE;
 static PRInt32  gXOff,gYOff,gTestNum;
+static nsITextWidget  *gBlendMessage;
+static nsITextWidget  *gQualMessage;
+
 
 extern void    Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY);
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -134,7 +145,6 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           {
           nsColorMap *cmap = (*mImage)->GetColorMap();
           nsRect *rect = (nsRect *)aParam3;
-
           Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
           }
        }
@@ -249,31 +259,49 @@ MyObserver::NotifyError(nsIImageRequest *aImageRequest,
 void
 Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY)
 {
-nsPoint         *location;
+nsPoint         location;
 PRUint32        min,seconds,milli,i,h,w;
+PRInt32         numtemp,numerror;
 nsBlendQuality  quality=nsMedQual;
 SYSTEMTIME      thetime;
 nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 nsIImage        *theimage;
+nsString        str;
 
+    // get the quality that we are going to blend to
+    gQualMessage->GetText(str,3);
+    quality = (nsBlendQuality)str.ToInteger(&numerror);
+    if(quality < nsLowQual)
+      quality = nsLowQual;
+    if(quality > nsHighQual)
+      quality = nsHighQual;
 
-  if(aTestNum == 1)
+    // set the blend amount
+    gBlendMessage->GetText(str,3);
+    numtemp = str.ToInteger(&numerror);
+    if(numtemp < 0)
+      numtemp = 0;
+    if(numtemp > 100)
+      numtemp = 100;
+    aBImage->SetAlphaLevel(numtemp);
+
+    location.x=0;
+    location.y=0;
+
+    if(aTestNum == 1)
     {
-    location = new nsPoint(aX,aY);
+    
     if(aMImage)
       {
       aBImage->SetAlphaMask(aMImage);
       aBImage->MoveAlphaMask(rand() % aImage->GetWidth(),rand() % aImage->GetHeight());
       }
 
-    if(aMImage == nsnull)
-      {
-      location->x = rand() % aImage->GetWidth();
-      location->y = rand() % aImage->GetHeight();
-      printf("\n Image Location is %d, %d\n", location->x,location->y);
-      }
-    
-    aImage->CompositeImage(aBImage,location,quality);
+    theimage = aImage->DuplicateImage();
+    nsIDeviceContext  *dx = drawCtx->GetDeviceContext();
+    theimage->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
+    theimage->CompositeImage(aBImage,&location,quality);
+    drawCtx->DrawImage(theimage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
     }
 
   // speed test
@@ -284,7 +312,8 @@ nsIImage        *theimage;
     min = thetime.wMinute;
     seconds = thetime.wSecond;
     milli = thetime.wMilliseconds;
-    location = new nsPoint(aX,aY);
+    location.x = aX;
+    location.y = aY;
     w = gImage->GetWidth();
     h = gImage->GetHeight();
 
@@ -295,7 +324,7 @@ nsIImage        *theimage;
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
         theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,location,quality);
+        theimage->CompositeImage(aBImage,&location,quality);
         drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
         NS_RELEASE(theimage);
 
@@ -306,6 +335,7 @@ nsIImage        *theimage;
       }
     else
       {
+      nsIDeviceContext  *dx = drawCtx->GetDeviceContext();
       for(i=0;i<200;i++)
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
@@ -315,9 +345,12 @@ nsIImage        *theimage;
         //NS_RELEASE(theimage);
 
         // non buffered
-        aImage->CompositeImage(aBImage,location,quality);
+        aImage->CompositeImage(aBImage,&location,quality);
+        // let everyone know that the colors have changed
+        aImage->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
         drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
         }
+      NS_IF_RELEASE(dx);
       }
 
     ::GetSystemTime(&thetime);
@@ -337,7 +370,8 @@ nsIImage        *theimage;
   
     if(aTestNum == 3)
     {
-    location = new nsPoint(aX,aY);
+    location.x = aX;
+    location.y = aY;
 
     if(aMImage)
       {
@@ -355,7 +389,7 @@ nsIImage        *theimage;
         aBImage->MoveAlphaMask(cpos.x,cpos.y);
 
         theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,location,quality);
+        theimage->CompositeImage(aBImage,&location,quality);
         drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
         NS_RELEASE(theimage);
 
@@ -372,13 +406,13 @@ nsIImage        *theimage;
         {
         aBImage->MoveAlphaMask(rand()%w,rand()%h);
         theimage = aImage->DuplicateImage();
-        theimage->CompositeImage(aBImage,location,quality);
+        theimage->CompositeImage(aBImage,&location,quality);
         drawCtx->DrawImage(theimage, 0, 0, theimage->GetWidth(), theimage->GetHeight());
         NS_RELEASE(theimage);
         }
     }
 
-  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+  //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 
   // we are finished with this
   if (gBlendImage) 
@@ -852,21 +886,6 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
         }	  
       gImageManager->SetCacheSize(1024*1024);
       break;
-
-    /*case WM_MOUSEMOVE: 
-      {
-        DWORD pos = ::GetMessagePos();
-        POINT cpos;
-
-        cpos.x = LOWORD(pos);
-        cpos.y = HIWORD(pos);
-
-        ::ScreenToClient(hWnd, &cpos);
-        // Dothing(cpos.x, cpos.y);
-
-      }
-      break;*/
-
     case WM_DESTROY:
       MyInterrupt();
       MyReleaseImages();
@@ -898,6 +917,7 @@ WndProc(HWND hWnd, UINT msg, WPARAM param, LPARAM lparam)
 
 static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int aHeight)
 {
+
   // Create a simple top level window
   HWND window = ::CreateWindowEx(WS_EX_CLIENTEDGE,
                                  clazz, title,
@@ -913,10 +933,23 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
 
   nsresult rv = NSRepository::CreateInstance(kCChildWindowIID, NULL, kIWidgetIID, (void**)&gWindow);
 
+
   if (NS_OK == rv) 
     {
     gWindow->Create((nsNativeWindow)window, rect, MyHandleEvent, NULL);
     }
+
+  // something for input
+  NSRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+  rect.SetRect(25, 370, 40, 25);  
+  NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gBlendMessage);
+  gBlendMessage->Create(gWindow, rect, nsnull, nsnull);
+  gBlendMessage->SetText("50");
+
+  rect.SetRect(70,370,40,25);
+  NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
+  gQualMessage->Create(gWindow, rect, nsnull, nsnull);
+  gQualMessage->SetText("3");
 
   ::ShowWindow(window, SW_SHOW);
   ::UpdateWindow(window);
