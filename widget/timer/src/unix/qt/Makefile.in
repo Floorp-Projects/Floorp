@@ -48,6 +48,12 @@ MODULE_NAME	= nsQtTimerModule
 CPPSRCS		+= nsTimerQtFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_QT_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
+
+# If not primary toolkit, install in secondary path
+ifneq (qt, $(MOZ_WIDGET_TOOLKIT))
+INACTIVE_COMPONENT = 1
+endif
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES        += $(MOZ_QT_CFLAGS) -I$(srcdir)/..
