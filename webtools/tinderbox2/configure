@@ -215,7 +215,13 @@ pwd=`/bin/pwd`
 /bin/echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 
 
-/bin/echo "\n" >> $config_script
+# some bash seems to not interpolate the '\n' I wish I understood what
+# was going on here as MY bash does fine.  I will leave this here
+# commeted out until I figure out what is going on.
+
+# /bin/echo "\n" >> $config_script
+
+/bin/echo >> $config_script
 
 /bin/echo "  # Hard code various executable paths into the source for security reasons." >> $config_script
 
