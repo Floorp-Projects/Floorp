@@ -143,8 +143,10 @@ nsTextServicesDocument::nsTextServicesDocument()
 
 nsTextServicesDocument::~nsTextServicesDocument()
 {
+#ifdef HAVE_EDIT_ACTION_LISTENERS
   if (mEditor && mNotifier)
     mEditor->RemoveEditActionListener(mNotifier);
+#endif // HAVE_EDIT_ACTION_LISTENERS
 
   ClearOffsetTable();
 
@@ -324,7 +326,9 @@ nsTextServicesDocument::SetEditor(nsIEditor *aEditor)
 
   mNotifier = do_QueryInterface(notifier);
 
+#ifdef HAVE_EDIT_ACTION_LISTENERS
   result = mEditor->AddEditActionListener(mNotifier);
+#endif // HAVE_EDIT_ACTION_LISTENERS
 
   UNLOCK_DOC(this);
 
@@ -644,9 +648,9 @@ nsTextServicesDocument::DeleteSelection()
   LOCK_DOC(this);
 
   //**** KDEBUG ****
-  printf("\n---- Before Delete\n");
-  printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  PrintOffsetTable();
+  // printf("\n---- Before Delete\n");
+  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PrintOffsetTable();
   //**** KDEBUG ****
 
   PRInt32 i, selLength;
@@ -836,9 +840,9 @@ nsTextServicesDocument::DeleteSelection()
   result = RemoveInvalidOffsetEntries();
 
   //**** KDEBUG ****
-  printf("\n---- After Delete\n");
-  printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
-  PrintOffsetTable();
+  // printf("\n---- After Delete\n");
+  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PrintOffsetTable();
   //**** KDEBUG ****
 
   UNLOCK_DOC(this);
@@ -1075,8 +1079,8 @@ nsTextServicesDocument::InsertNode(nsIDOMNode *aNode,
                                    PRInt32 aPosition)
 {
   //**** KDEBUG ****
-  printf("** InsertNode: 0x%.8x  0x%.8x  %d\n", aNode, aParent, aPosition);
-  fflush(stdout);
+  // printf("** InsertNode: 0x%.8x  0x%.8x  %d\n", aNode, aParent, aPosition);
+  // fflush(stdout);
   //**** KDEBUG ****
 
   NS_ASSERTION(0, "InsertNode called, offset tables might be out of sync."); 
@@ -1088,8 +1092,8 @@ nsresult
 nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
 {
   //**** KDEBUG ****
-  printf("** DeleteNode: 0x%.8x\n", aChild);
-  fflush(stdout);
+  // printf("** DeleteNode: 0x%.8x\n", aChild);
+  // fflush(stdout);
   //**** KDEBUG ****
 
   LOCK_DOC(this);
@@ -1166,8 +1170,8 @@ nsTextServicesDocument::SplitNode(nsIDOMNode *aExistingRightNode,
                                   nsIDOMNode *aNewLeftNode)
 {
   //**** KDEBUG ****
-  printf("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
-  fflush(stdout);
+  // printf("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
+  // fflush(stdout);
   //**** KDEBUG ****
 
   NS_ASSERTION(0, "SplitNode called, offset tables might be out of sync."); 
@@ -1185,8 +1189,8 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
   nsresult result;
 
   //**** KDEBUG ****
-  printf("** JoinNodes: 0x%.8x  0x%.8x  0x%.8x\n", aLeftNode, aRightNode, aParent);
-  fflush(stdout);
+  // printf("** JoinNodes: 0x%.8x  0x%.8x  0x%.8x\n", aLeftNode, aRightNode, aParent);
+  // fflush(stdout);
   //**** KDEBUG ****
 
   // Make sure that both nodes are text nodes!
@@ -2041,7 +2045,7 @@ nsTextServicesDocument::PrintOffsetTable()
   {
     entry = (OffsetEntry *)mOffsetTable[i];
     printf("ENTRY %4d: 0x%.8x  %c  %c  %4d  %4d  %4d\n",
-           i, entry->mNode,  entry->mIsValid ? 'V' : 'N',
+           i, (PRInt32)entry->mNode,  entry->mIsValid ? 'V' : 'N',
            entry->mIsInsertedText ? 'I' : 'B',
            entry->mNodeOffset, entry->mStrOffset, entry->mLength);
   }
