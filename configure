@@ -2866,9 +2866,9 @@ EOF
 *-sunos*) 
     AS='$(CC)'
     ASFLAGS='$(CFLAGS)'
-    DSO_LDOPTS=''
-    MKSHLIB='$(LD) $(DSO_LDOPTS)'
-    MKCSHLIB='$(LD) $(DSO_LDOPTS)'
+    DSO_LDOPTS='-Bdynamic'
+    MKSHLIB='-$(LD) $(DSO_LDOPTS)'
+    MKCSHLIB='-$(LD) $(DSO_LDOPTS)'
     ;;
 
 esac
