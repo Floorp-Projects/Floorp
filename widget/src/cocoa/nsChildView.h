@@ -62,7 +62,6 @@
 
 struct nsPluginPort;
 
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 class nsChildView;

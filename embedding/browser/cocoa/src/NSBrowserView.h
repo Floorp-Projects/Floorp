@@ -38,7 +38,6 @@
 #ifndef __nsCocoaBrowserView_h__
 #define __nsCocoaBrowserView_h__
 
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 @class NSBrowserView;

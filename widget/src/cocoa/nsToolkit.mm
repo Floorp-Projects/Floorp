@@ -51,7 +51,6 @@
 
 // for some reason, this must come last. otherwise the appshell 
 // component fails to instantiate correctly at runtime.
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 static CFBundleRef getBundle(CFStringRef frameworkPath)

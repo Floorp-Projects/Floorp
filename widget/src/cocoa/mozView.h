@@ -35,7 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 class nsIWidget;
 

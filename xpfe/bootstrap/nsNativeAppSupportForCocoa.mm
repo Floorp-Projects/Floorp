@@ -34,7 +34,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 #include "nsNativeAppSupport.h"

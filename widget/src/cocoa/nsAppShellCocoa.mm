@@ -44,7 +44,6 @@
 // interface may change, so this comment must be updated accordingly.)
 //
 
-#undef DARWIN
 #import <Cocoa/Cocoa.h>
 
 #include "nsAppShellCocoa.h"
