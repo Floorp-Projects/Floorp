@@ -30,7 +30,7 @@
 /* ::::: checkbox ::::: */
 
 input[type="checkbox"] {
-  -moz-appearance: checkbox;
+/*  -moz-appearance: checkbox; */
   -moz-box-align: center;
   border: 2px solid;
   padding-left: 1px;

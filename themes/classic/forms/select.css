@@ -47,11 +47,11 @@ select[size] {
   margin: 0;
   min-height: none;
   color: inherit;
-  -moz-appearance: treeview;
+/*  -moz-appearance: treeview; */
 }
   
 xul|*.select-outlinerbody:-moz-outliner-row {
-  -moz-apperance: treeitem;
+/*  -moz-apperance: treeitem; */
   border: 1px solid transparent;
 }
 
