@@ -25,6 +25,12 @@ int MMXAvailable;
 int mmxsupport();
 #endif
 
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
+int SSE2Available = 0;
+int sse2support();
+#endif
+
+
 /*
  * Initialization of a JPEG decompression object.
  * The error manager must already be set up (in case memory manager fails).
@@ -41,6 +47,11 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
   if(!cpuidDetected)
   {
 	MMXAvailable = mmxsupport();
+
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
+	SSE2Available = sse2support();
+#endif
+
 	cpuidDetected = 1;
   }
 #endif
@@ -462,10 +473,26 @@ NOT_SUPPORTED:
 
 	return mmx_supported;		
 }
+#endif
 
+#ifdef HAVE_SSE2_INTEL_MNEMONICS
 
+int sse2support()
+{
+	int sse2available = 0;
+	int my_edx;
+	_asm
+	{
+		mov eax, 01                       
+		cpuid                                    
+		mov my_edx, edx    
+	}
+	if (my_edx & (0x1 << 26)) 
+		sse2available = 1; 
+	else sse2available = 2;
 
-
+	return sse2available;
+}
 
 #endif
 
