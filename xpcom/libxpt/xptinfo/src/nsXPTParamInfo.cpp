@@ -30,8 +30,6 @@
 #include "xpt_cpp.h"
 #include "xptinfo.h"
 
-// Placeholder - this implementation just returns NULL.
-
 nsIInterfaceInfo*
 nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const
 {
@@ -40,7 +38,6 @@ nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const
 
     nsInterfaceRecord *record =
         ((nsInterfaceInfo *)info)->getInterfaceRecord();
-
     
     nsIInterfaceInfoManager* mgr;
     if(!(mgr = nsInterfaceInfoManager::GetInterfaceInfoManager()))
@@ -52,7 +49,10 @@ nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const
 
     // can't use IID, because it could be null for this entry.
     char *interface_name;
-    interface_name = which_header->interface_directory[type.type.interface].name;
+
+    // offset is 1-based, so subtract 1 to use in interface_directory.
+    interface_name =
+        which_header->interface_directory[type.type.interface - 1].name;
 
     nsIInterfaceInfo *ii;
     nsresult nsr = mgr->GetInfoForName(interface_name, &ii);
@@ -82,7 +82,10 @@ nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const
 
     // can't use IID, because it could be null for this entry.
     char *interface_name;
-    interface_name = which_header->interface_directory[type.type.interface].name;
+
+    // offset is 1-based, so subtract 1 to use in interface_directory.
+    interface_name =
+        which_header->interface_directory[type.type.interface - 1].name;
 
     nsIID* iid;
     nsresult nsr = mgr->GetIIDForName(interface_name, &iid);

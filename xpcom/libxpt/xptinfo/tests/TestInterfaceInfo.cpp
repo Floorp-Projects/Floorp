@@ -37,12 +37,14 @@ static void RegAllocator();
 // containing these files.
 
 int main (int argc, char **argv) {
+    int i;
+    nsIID *iid1, *iid2, *iid3, *iid4, *iid5, *iid6;
+    char *name1, *name2, *name3, *name4, *name5, *name6;
+    nsIInterfaceInfo *info1, *info2, *info3, *info4, *info5, *info6;;
+
     RegAllocator();
 
     nsIInterfaceInfoManager *iim = XPTI_GetInterfaceInfoManager();
-    nsIID *iid1, *iid2, *iid3, *iid4;
-    char *name1, *name2, *name3, *name4;
-    nsIInterfaceInfo *info1, *info2, *info3, *info4;
 
     fprintf(stderr, "\ngetting iid for 'nsISupports'\n");
     iim->GetIIDForName("nsISupports", &iid1);
@@ -77,6 +79,45 @@ int main (int argc, char **argv) {
 #ifdef DEBUG
     ((nsInterfaceInfo *)info4)->print(stderr);
 #endif
+
+    fprintf(stderr, "\nparams work?\n");
+    fprintf(stderr, "\ngetting info for name 'nsIServiceManager'\n");
+    iim->GetInfoForName("nsIServiceManager", &info5);
+#ifdef DEBUG
+    ((nsInterfaceInfo *)info5)->print(stderr);
+#endif
+    
+    uint16 methodcount;
+    info5->GetMethodCount(&methodcount);
+    const nsXPTMethodInfo *mi;
+    for (i = 0; i < methodcount; i++) {
+        info5->GetMethodInfo(i, &mi);
+        char *methodname;
+        fprintf(stderr, "method %d, name %s\n", i, mi->GetName());
+    }
+
+    // 7 is GetServiceWithListener, which has juicy params.
+    info5->GetMethodInfo(7, &mi);
+    uint8 paramcount = mi->GetParamCount();
+
+    nsXPTParamInfo param2 = mi->GetParam(2);
+    // should be IID for nsIShutdownListener
+    nsIID *nsISL = param2.GetInterfaceIID(info5);
+    fprintf(stderr, "iid assoc'd with param 2 of method 7 of GetServiceWithListener - %s\n", nsISL->ToString());
+    // if we look up the name?
+    char *nsISLname;
+    iim->GetNameForIID(nsISL, &nsISLname);
+    fprintf(stderr, "which is called %s\n", nsISLname);
+
+    fprintf(stderr, "\nhow about one defined in a different typelib\n");
+    nsXPTParamInfo param3 = mi->GetParam(3);
+    // should be IID for nsIShutdownListener
+    nsIID *nsISS = param3.GetInterfaceIID(info5);
+    fprintf(stderr, "iid assoc'd with param 3 of method 7 of GetServiceWithListener - %s\n", nsISS->ToString());
+    // if we look up the name?
+    char *nsISSname;
+    iim->GetNameForIID(nsISS, &nsISSname);
+    fprintf(stderr, "which is called %s\n", nsISSname);
 
     return 0;
 }    
