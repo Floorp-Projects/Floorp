@@ -37,7 +37,10 @@ extern void
 WLLT_ChangePassword();
 
 extern void
-WLLT_PreEdit(nsIURL* url);
+WLLT_PreEdit(nsAutoString& walletList);
+
+extern void
+WLLT_PostEdit(nsAutoString walletList);
 
 extern void
 WLLT_PrefillReturn(nsAutoString results);

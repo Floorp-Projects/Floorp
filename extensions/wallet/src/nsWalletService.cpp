@@ -58,8 +58,13 @@ NS_IMETHODIMP nsWalletlibService::WALLET_ChangePassword() {
     return NS_OK;
 }
 
-NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsIURL* url) {
-    ::WLLT_PreEdit(url);
+NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
+    ::WLLT_PreEdit(walletList);
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsWalletlibService::WALLET_PostEdit(nsAutoString walletList) {
+    ::WLLT_PostEdit(walletList);
     return NS_OK;
 }
 

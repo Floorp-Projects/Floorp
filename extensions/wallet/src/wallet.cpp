@@ -1194,16 +1194,6 @@ wallet_FetchSchemaConcatFromNetCenter() {
     ("http://people.netscape.com/morse/wallet/SchemaConcat.tbl","SchemaConcat.tbl");
 }
 
-/*
- * fetch wallet editor from netcenter and put into
- * local copy of file at walleted.html
- */
-void
-wallet_FetchWalletEditorFromNetCenter() {
-  wallet_FetchFromNetCenter
-    ("http://people.netscape.com/morse/wallet/walleted.html","walleted.html");
-}
-
 /*********************************************************************/
 /* The following are utility routines for the main wallet processing */
 /*********************************************************************/
@@ -1427,7 +1417,6 @@ wallet_Initialize() {
     wallet_FetchFieldSchemaFromNetCenter();
     wallet_FetchURLFieldSchemaFromNetCenter();
     wallet_FetchSchemaConcatFromNetCenter();
-    wallet_FetchWalletEditorFromNetCenter();
 
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
@@ -1642,93 +1631,6 @@ SI_InSequence(char* sequence, int number);
 extern char*
 SI_FindValueInArgs(nsAutoString results, char* name);
 
-#define WALLET_EDITOR_NAME "walleted.html"
-// bad!!! should pass the above URL as parameter to wallet_PostEdit
-#define BREAK '\001'
-
-void
-wallet_PostEdit() {
-  if (Wallet_BadKey()) {
-    return;
-  }
-
-  nsAutoString * nsCookie = new nsAutoString("");
-  nsIURL* url;
-  char* separator;
-
-  nsINetService *netservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
-    nsFileSpec dirSpec;
-    nsresult rv = Wallet_ProfileDirectory(dirSpec);
-    if (NS_FAILED(rv)) {
-      return;
-    }
-    nsFileURL u = nsFileURL(dirSpec + WALLET_EDITOR_NAME);
-    if (!NS_FAILED(NS_NewURL(&url, (char *)u.GetURLString()))) {
-      res = netservice->GetCookieString(url, *nsCookie);
-    }
-    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
-
-    /* convert cookie to a C string */
-    char *cookies = nsCookie->ToNewCString();
-    char *cookie = PL_strstr(cookies, "SchemaToValue="); /* get to SchemaToValue= */
-    if (!cookie) {
-      delete[] cookies; 
-      return;
-    }
-    cookie = cookie + PL_strlen("SchemaToValue="); /* get passed SchemaToValue=| */
-
-    /* return if OK button was not pressed */
-    separator = strchr(cookie, BREAK);
-    if (!separator) {
-      delete[] cookies; 
-      return;
-    }
-    *separator = '\0';
-    if (PL_strcmp(cookie, "OK")) {
-      *separator = BREAK;
-      delete []cookies;
-      return;
-    }
-    cookie = separator+1;
-    *separator = BREAK;
-
-    /* open SchemaValue file */
-    nsOutputFileStream strm(dirSpec + "SchemaValue.tbl");
-
-    if (!strm.is_open()) {
-      NS_ERROR("unable to open file");
-      delete []cookies;
-      return;
-    }
-    Wallet_RestartKey();
-
-    /* write the values in the cookie to the file */
-    for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
-      separator = strchr(cookie, BREAK);
-      if (!separator) {
-        strm.close();
-        delete[] cookies; 
-        return;
-      }
-      *separator = '\0';
-      wallet_PutLine(strm, cookie,PR_TRUE);
-      cookie = separator+1;
-      *separator = BREAK;
-    }
-
-    /* close the file and read it back into the SchemaToValue list */
-    strm.close();
-    wallet_Clear(&wallet_SchemaToValue_list);
-    wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
-    delete []cookies;
-  }
-}
-
 PRIVATE void
 wallet_FreeURL(wallet_MapElement *url) {
 
@@ -1875,47 +1777,90 @@ WLLT_GetNocaptureListForViewer(nsString& aNocaptureList)
   PR_FREEIF(buffer);
 }
 
-/*
- * edit the users data
- */
 PUBLIC void
-WLLT_PreEdit(nsIURL* url) {
-
-  if (nsnull == url) {
-    wallet_PostEdit();
+WLLT_PostEdit(nsAutoString walletList) {
+  if (Wallet_BadKey()) {
     return;
   }
 
-  nsINetService *netservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != netservice)) {
-    wallet_Initialize();
-    nsAutoString * cookie = new nsAutoString("SchemaToValue=");
-    *cookie += BREAK;
-    XP_List * list_ptr;
-    wallet_MapElement * ptr;
-    list_ptr = wallet_SchemaToValue_list;
+  char* separator;
 
-    while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
-      *cookie += *(ptr->item1) + BREAK;
-      if (*ptr->item2 != "") {
-        *cookie += *(ptr->item2) + BREAK;
-      } else {
-        XP_List * list_ptr1;
-        wallet_Sublist * ptr1;
-        list_ptr1 = ptr->itemList;
-        while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
-          *cookie += *(ptr1->item) + BREAK;
-        }
-      }
-      *cookie += BREAK;
+  nsFileSpec dirSpec;
+  nsresult rv = Wallet_ProfileDirectory(dirSpec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  /* convert walletList to a C string */
+  char *walletListAsCString = walletList.ToNewCString();
+  char *nextItem = walletListAsCString;
+
+  /* return if OK button was not pressed */
+  separator = strchr(nextItem, BREAK);
+  if (!separator) {
+    delete[] walletListAsCString; 
+    return;
+  }
+  *separator = '\0';
+  if (PL_strcmp(nextItem, "OK")) {
+    *separator = BREAK;
+    delete []walletListAsCString;
+    return;
+  }
+  nextItem = separator+1;
+  *separator = BREAK;
+
+  /* open SchemaValue file */
+  nsOutputFileStream strm(dirSpec + "SchemaValue.tbl");
+  if (!strm.is_open()) {
+    NS_ERROR("unable to open file");
+    delete []walletListAsCString;
+    return;
+  }
+  Wallet_RestartKey();
+
+  /* write the values in the walletList to the file */
+  for (int i=0; (*nextItem != '\0'); i++) {
+    separator = strchr(nextItem, BREAK);
+    if (!separator) {
+      strm.close();
+      delete[] walletListAsCString; 
+      return;
     }
-    res = netservice->SetCookieString(url, *cookie);
-    delete cookie;
-    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
+    *separator = '\0';
+    wallet_PutLine(strm, nextItem, PR_TRUE);
+    nextItem = separator+1;
+    *separator = BREAK;
+  }
+
+  /* close the file and read it back into the SchemaToValue list */
+  strm.close();
+  wallet_Clear(&wallet_SchemaToValue_list);
+  wallet_ReadFromFile("SchemaValue.tbl", wallet_SchemaToValue_list, PR_TRUE);
+  delete []walletListAsCString;
+}
+
+PUBLIC void
+WLLT_PreEdit(nsAutoString& walletList) {
+  wallet_Initialize();
+  walletList = BREAK;
+  XP_List * list_ptr;
+  wallet_MapElement * ptr;
+  list_ptr = wallet_SchemaToValue_list;
+
+  while((ptr = (wallet_MapElement *) XP_ListNextObject(list_ptr))!=0) {
+    walletList += *(ptr->item1) + BREAK;
+    if (*ptr->item2 != "") {
+      walletList += *(ptr->item2) + BREAK;
+    } else {
+      XP_List * list_ptr1;
+      wallet_Sublist * ptr1;
+      list_ptr1 = ptr->itemList;
+      while((ptr1=(wallet_Sublist *) XP_ListNextObject(list_ptr1))!=0) {
+        walletList += *(ptr1->item) + BREAK;
+      }
+    }
+    walletList += BREAK;
   }
 }
 
@@ -2201,18 +2146,7 @@ wallet_ClearStopwatch();
 
 PUBLIC void
 WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
-  nsFileSpec dirSpec;
-  PRBool isWalletEditor;
-  nsresult rv = Wallet_ProfileDirectory(dirSpec);
   nsAutoString * url = new nsAutoString(urlName);
-
-  /* determine if it is the wallet editor, in which case we don't want to capture */
-  if (NS_FAILED(rv)) {
-    isWalletEditor = PR_FALSE;
-  } else {
-    nsFileURL u = nsFileURL(dirSpec + WALLET_EDITOR_NAME);
-    isWalletEditor = !PL_strcmp(urlName, (char *)u.GetURLString());
-  }
 
   /* see if this url is already on list of url's for which we don't want to capture */
   wallet_InitializeURLList();
@@ -2227,7 +2161,7 @@ WLLT_OKToCapture(PRBool * result, PRInt32 count, char* urlName) {
   }
 
   /* ask user if we should capture the values on this form */
-  if (!isWalletEditor && wallet_GetFormsCapturingPref() && (count>=3)) {
+  if (wallet_GetFormsCapturingPref() && (count>=3)) {
     char * message = Wallet_Localize("WantToCaptureForm?");
     char * checkMessage = Wallet_Localize("NeverSave");
     PRBool checkValue;
