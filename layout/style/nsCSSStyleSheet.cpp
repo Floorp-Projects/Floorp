@@ -4052,6 +4052,19 @@ CSSRuleProcessor::HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
   NS_PRECONDITION(aData->mContent->IsContentOfType(nsIContent::eELEMENT),
                   "content must be element");
 
+  // Since we always have :-moz-any-link (and almost always have :link
+  // and :visited rules from prefs), rather than hacking AddRule below
+  // to add |href| to the hash, we'll just handle it here.
+  if (aData->mAttribute == nsHTMLAtoms::href &&
+      aData->mIsHTMLContent &&
+      (aData->mContentTag == nsHTMLAtoms::a ||
+       aData->mContentTag == nsHTMLAtoms::area ||
+       aData->mContentTag == nsHTMLAtoms::link)) {
+    *aResult = PR_TRUE;
+    return NS_OK;
+  }
+  // XXX What about XLinks?
+
   RuleCascadeData* cascade = GetRuleCascade(aData->mPresContext, aMedium);
 
   // We do the same thing for attributes that we do for state selectors
