@@ -23,7 +23,7 @@
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
-VPATH		= @srcdir@
+VPATH		= @srcdir@/..
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -46,17 +46,3 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libzlib_s.a
 include $(topsrcdir)/config/rules.mk
 
 DEFINES += -DSTANDALONE
-
-export::	copysrcs
-
-copysrcs::
-	cp $(srcdir)/../*.cpp .
-	cp $(srcdir)/../*.h .
-
-clean::
-	$(RM) -f *.cpp *.h *.o *.a
-
-clobber::	clean
-
-clobber_all::	clean
-
