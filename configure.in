@@ -1241,10 +1241,16 @@ mailnews/base/public/Makefile
 mailnews/base/src/Makefile
 mailnews/base/build/Makefile
 mailnews/base/tests/Makefile
+mailnews/imap/Makefile
+mailnews/imap/public/Makefile
+mailnews/imap/src/Makefile
 mailnews/news/Makefile
 mailnews/news/public/Makefile
 mailnews/news/src/Makefile
 mailnews/news/tests/Makefile
+mailnews/mime/Makefile
+mailnews/mime/public/Makefile
+mailnews/mime/src/Makefile
 mailnews/public/Makefile
 "
 
