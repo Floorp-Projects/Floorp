@@ -37,6 +37,7 @@ class nsIScrollableView;
 class nsIPresShell;
 class nsITreeFrame;
 class nsIFrameSelection;
+class nsIDocShell;
 
 // mac uses click-hold context menus, a holdover from 4.x
 #ifdef XP_MAC
@@ -113,6 +114,10 @@ public:
 
   NS_IMETHOD MoveFocus(PRBool aDirection, nsIContent* aRoot);
 
+  NS_IMETHOD SetSpecialTopOfDoc(PRBool aIsAtTop) { mSpecialTopOfDoc = aIsAtTop; return NS_OK; }
+
+  NS_IMETHOD FigureOutKindOfDoc(nsIDocument* aDoc, eDocType* aDocType);
+
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
@@ -122,12 +127,39 @@ protected:
   PRBool ChangeFocus(nsIContent* aFocus, nsIFrame* aFocusFrame, PRBool aSetFocus);
   void ShiftFocus(PRBool forward, nsIContent* aRoot=nsnull);
   NS_IMETHOD GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* aFrame, PRBool forward, nsIContent** aResult);
+  NS_IMETHOD GetNextTabbableIndexContent(nsIContent* aRootContent, 
+                                         PRBool forward, 
+                                         PRBool aStartOver,
+                                         nsIContent** aResult);
+  NS_IMETHOD HasPositiveTabIndex(nsIContent* aContent, 
+                                 PRBool* aResult);
+
   PRInt32 GetNextTabIndex(nsIContent* aParent, PRBool foward);
   NS_IMETHOD SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aContent);
   PRBool CheckDisabled(nsIContent* aContent);
   void EnsureDocument(nsIPresShell* aPresShell);
   void EnsureDocument(nsIPresContext* aPresContext);
   void FlushPendingEvents(nsIPresContext* aPresContext);
+
+  //---------------------------------------------
+  // DocShell Focus Traversal Methods
+  //---------------------------------------------
+
+  void   ShiftFocusByDoc(PRBool forward, nsIContent* aRoot=nsnull);
+  PRBool FocusAfterHTMLFrameDoc(nsIDocShell* aDocShell, nsIDocShell* aParentDocShell, PRBool aForward);
+  PRBool FocusAfterHTMLIFrameDoc(nsIDocShell* aDocShell, nsIDocShell* aParentDocShell, PRBool aForward, PRBool& aFocusDoc);
+  PRBool FocusWithinHTMLFrameDoc(nsIContent*   aRootContent, nsIPresShell* aPresShell, PRBool aForward, PRBool& aDoFocusAvailDocShells);
+  PRBool FocusWithinHTMLIFrameDoc(nsIContent* aNextContent, PRBool aForward);
+  nsIContent* GetLastContent(nsIDocShell* aDocShell);
+  nsIContent* GetLastContent(nsIContent* aRootContent);
+  nsIDocShell* GetDocShellFromContent(nsIDocShell* aParentDocShell, nsIContent* aContent);
+  nsIDocShell* GetNextDocShell(nsIDocShell* aParentDS, nsIDocShell* aCurrentDS, PRBool aForward);
+  void ForceUpdate(nsIDocShell* aDocShell);
+  nsresult GetDocShellsFromDoc(nsIDocument* aDocument, nsIDocShell** aDocShell, nsIDocShell** aParentDS);
+  PRBool IsLastFrameInFrameSet(nsIContent* aLastFrameContent);
+  nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell* aDocShell);
+  PRBool IsFrameSetDoc(nsIContent* aContent);
+
 
   // These functions are for mousewheel scrolling
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
@@ -187,6 +219,10 @@ protected:
   nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
   PRBool      mConsumeFocusEvents;
   PRInt32     mLockCursor;
+
+  // DocShell Traversal Data Memebers
+  PRPackedBool mSpecialTopOfDoc;
+  nsCOMPtr<nsIContent> mLastContentFocus;
 
   //Anti-recursive stack controls
   nsIContent* mFirstBlurEvent;

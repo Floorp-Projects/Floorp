@@ -261,6 +261,12 @@ protected:
 
     PRBool IsFrame();
 
+    // DocShell Focus helpers
+    void     ForceUpdate(nsIDocShell* aDocShell);
+    nsresult FindNextChildDoc(nsIDocShellTreeNode* aNode, PRBool aForward, nsIDocShell** aDocShell);
+    PRBool   FocusNextChild(nsIBaseWindow * aCurrentFocus, PRBool aForward);
+    void     MakeSureOfSetFocus(nsIBaseWindow * aCurrentFocus, nsIDocShell* aDocShell = nsnull);
+
     //
     // Helper method that is called when a new document (including any
     // sub-documents - ie. frames) has been completely loaded.
@@ -306,6 +312,8 @@ protected:
     PRUint32                   mAppType;
     PRInt32                    mChildOffset;  // Offset in the parent's child list.
     PRUint32                   mBusyFlags;
+    PRPackedBool               mHasFocus;
+
     // Reference to the SHEntry for this docshell until the page is destroyed.
     // Somebody give me better name
     nsCOMPtr<nsISHEntry>       OSHE; 

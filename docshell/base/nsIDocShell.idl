@@ -237,6 +237,16 @@ interface nsIDocShell : nsISupports
    */
   attribute long marginHeight;
 
+	/*
+	 * Tells the DocShell that it now has focus or has lost focus
+	*/
+	attribute boolean hasFocus;
+
+	/*
+	 * Tells the docshell whether the canvas should have focus
+	*/
+	attribute boolean canvasHasFocus;
+
   /**
    * Current busy state for DocShell
    */
