@@ -240,9 +240,26 @@ str_unescape(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+#if JS_HAS_TOSOURCE_FUN
+static JSBool
+str_ToSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSString *str;
+    
+    str = js_ValueToSource(cx, argv[0]);
+    if (!str)
+        return JS_FALSE;
+    *rval = STRING_TO_JSVAL(str);
+    return JS_TRUE;
+}
+#endif
+
 static JSFunctionSpec string_functions[] = {
     {"escape",          str_escape,             1},
     {"unescape",        str_unescape,           1},
+#if JS_HAS_TOSOURCE_FUN
+    {"ToSource",        str_ToSource,           1},
+#endif
     {0}
 };
 
