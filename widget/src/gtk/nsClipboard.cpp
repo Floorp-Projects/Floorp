@@ -794,45 +794,44 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
         }
       } // if valid length
 
+      if (platformLen > 0) {
+        int status = 0;
+        XTextProperty prop;
+
 #ifdef DEBUG_CLIPBOARD
-      g_print("platformText is %s\n", platformText);
-      g_print("dblength is %d\n", platformLen);
+        g_print("\nConverted text from unicode to platform locale\n");
+        g_print("platformText is %s\n", platformText);
+        g_print("platformLen is %d\n", platformLen);
 #endif
 
-#if 0
+        status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XCompoundTextStyle,
+                                           &prop);
 
-      if (platformLen > 0) {
-        char **data;
-        int count = 0;
-
-        XTextProperty prop;
-        prop.value = platformText;
-        prop.encoding = XInternAtom(GDK_DISPLAY(), "COMPOUND_TEXT", FALSE);
-        prop.format = 8;
-        prop.nitems = 1;
-
-        XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &data, &count);
-
-        if (*data) {
+        if (status == Success) {
 #ifdef DEBUG_CLIPBOARD
-          printf("%s %i\n", *data, count);
+          g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
+                  prop.nitems);
 #endif
           nsAllocator::Free(platformText);
-          platformText = *data;
-          platformLen = sizeof(data);
+          platformText = prop.value;
+          platformLen = prop.nitems;
         }
       }
+
+#ifdef DEBUG_CLIPBOARD
+      g_print("\nFinished trying to convert to platform charset\n");
 #endif
 
-      if (platformText) {
+      if (clipboardData) {
         nsAllocator::Free(NS_REINTERPRET_CAST(char*, clipboardData));
         clipboardData = platformText;
         dataLength = platformLen;
       }
     }
 #ifdef DEBUG_CLIPBOARD
-    g_print("clipboardData is %s\n", clipboardData);
-    g_print("length is %d\n", dataLength);
+    g_print("\nPutting data on clipboard:\n");
+    g_print("  clipboardData is %s\n", clipboardData);
+    g_print("  length is %d\n", dataLength);
 #endif
     if (clipboardData && dataLength > 0)
       gtk_selection_data_set(aSelectionData,
