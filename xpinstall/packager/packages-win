@@ -351,4 +351,5 @@ bin\components\pippki.dll
 bin\components\pippki.xpt
 bin\chrome\pipnss.jar
 bin\chrome\pippki.jar
+bin\res\nssifail.txt
 

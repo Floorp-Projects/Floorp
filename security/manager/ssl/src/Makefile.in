@@ -51,6 +51,9 @@ META_COMPONENT	= crypto
 EXPORTS = 			\
 	$(NULL)
 
+install::
+	$(INSTALL) $(srcdir)/nssifail.txt $(DIST)/bin/res
+
 CPPSRCS = 				\
 	nsNSSCallbacks.cpp		\
 	nsNSSComponent.cpp		\

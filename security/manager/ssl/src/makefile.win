@@ -105,4 +105,5 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
     $(MAKE_INSTALL) $(DIST)\lib\nssckbi.dll $(DIST)\bin
+    $(MAKE_INSTALL) nssifail.txt $(DIST)\bin\res
 
