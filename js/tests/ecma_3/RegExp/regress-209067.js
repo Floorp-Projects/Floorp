@@ -60,7 +60,8 @@ function formatHTML(h)
     return s.replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
-  h+='\n';h=h.replace(/&([^\s]+;)/g,'&lt;&amp;$1&gt;');
+  h+='\n';
+  h=h.replace(/&([^\s]+;)/g,'&lt;&amp;$1&gt;');
   h=h.replace(new RegExp('<!-'+'-[\\s\\S]*-'+'->','g'), S);
   h=h.replace(/"[^"]*"/g,S);
   h=h.replace(/'[^']*'/g,S);
@@ -71,6 +72,7 @@ function formatHTML(h)
               {
                 if(s.match(/!doctype/i))
                   return'<span class=doctype>&lt;' + p + '&gt;</span>';
+
                 p=p.replace(/\\'/g,'\\&#39;').replace(/\\"/g,'\\&#34;').replace(/^\s/,'');
                 p=p.replace(/(\s)([^<]+)$/g,
                             function(s,p1,p2)
@@ -82,7 +84,7 @@ function formatHTML(h)
                             }
                            )
 
-                 return'&lt;<span class=' + (s.match(/<\s*\//)?'end-tag':'start-tag') + '>' + p + '</span>&gt;';
+                return'&lt;<span class=' + (s.match(/<\s*\//)?'end-tag':'start-tag') + '>' + p + '</span>&gt;';
               }
              )
 
@@ -105,7 +107,9 @@ function formatHTML(h)
 
 
 
-// sanity check
+/*
+ * sanity check
+ */
 status = inSection(1);
 actual = formatHTML('abc');
 expect = '<span class=text>1. abc\n</span>';
