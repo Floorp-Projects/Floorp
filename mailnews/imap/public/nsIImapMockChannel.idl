@@ -55,7 +55,7 @@ interface nsIURI;
 
 interface nsIImapMockChannel : nsIChannel
 {
-	void GetProgressEventSink(out nsIProgressEventSink aProgressSink);
+	attribute nsIProgressEventSink progressEventSink;
     void GetChannelListener(out nsIStreamListener aChannelListener);
     void GetChannelContext(out nsISupports aChannelContext);
     void Close();

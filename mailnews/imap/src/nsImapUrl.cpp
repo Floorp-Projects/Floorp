@@ -51,6 +51,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgHdr.h"
+#include "nsIProgressEventSink.h"
 
 static NS_DEFINE_CID(kCImapMockChannel, NS_IMAPMOCKCHANNEL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -105,8 +106,13 @@ NS_IMETHODIMP nsImapUrl::SetMsgWindow(nsIMsgWindow *aMsgWindow)
       nsCOMPtr<nsIDocShell> msgDocShell;
       m_msgWindow->GetRootDocShell(getter_AddRefs(msgDocShell));
       if (msgDocShell) {
+        nsCOMPtr <nsIProgressEventSink> prevEventSink;
+        m_mockChannel->GetProgressEventSink(getter_AddRefs(prevEventSink));
         nsCOMPtr<nsIInterfaceRequestor> docIR(do_QueryInterface(msgDocShell));
         m_mockChannel->SetNotificationCallbacks(docIR);
+        // we want to use our existing event sink.
+        if (prevEventSink)
+          m_mockChannel->SetProgressEventSink(prevEventSink);
       }
     }
   }

@@ -1731,6 +1731,7 @@ void nsImapProtocol::ProcessSelectedStateURL()
         break;
         case nsIImapUrl::nsImapSaveMessageToDisk:
         case nsIImapUrl::nsImapMsgFetch:
+        case nsIImapUrl::nsImapMsgDownloadForOffline:
             {
               nsXPIDLCString messageIdString;
               m_runningUrl->CreateListOfMessageIdsString(getter_Copies(messageIdString));
@@ -6797,6 +6798,12 @@ NS_IMETHODIMP nsImapMockChannel::GetProgressEventSink(nsIProgressEventSink ** aP
 {
   *aProgressEventSink = mProgressEventSink;
   NS_IF_ADDREF(*aProgressEventSink);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsImapMockChannel::SetProgressEventSink(nsIProgressEventSink * aProgressEventSink)
+{
+  mProgressEventSink = aProgressEventSink;
   return NS_OK;
 }
 
