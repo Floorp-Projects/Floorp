@@ -32,11 +32,11 @@ static PRInt32 gLockCnt = 0;
 static PRInt32 gInstanceCnt = 0;
 
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
-static NS_DEFINE_IID(kMailCoreCID,        NS_MailCore_CID);
+static NS_DEFINE_IID(kMailCoreCID,        NS_MAILCORE_CID);
 static NS_DEFINE_IID(kToolbarCoreCID,     NS_TOOLBARCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
-static NS_DEFINE_IID(kAppCoresCID,        NS_AppCores_CID);
+static NS_DEFINE_IID(kAppCoresManagerCID, NS_APPCORESMANAGER_CID);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(const char *path)
 {
     printf("*** AppCores is being registered\n");
-    nsRepository::RegisterFactory(kAppCoresCID, path, PR_TRUE, PR_TRUE);
+    nsRepository::RegisterFactory(kAppCoresManagerCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kMailCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kToolbarCoreCID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kToolkitCoreCID, path, PR_TRUE, PR_TRUE);
@@ -66,7 +66,7 @@ NSUnregisterSelf(const char *path)
 {
     printf("*** AppCores is being unregistered\n");
     
-    nsRepository::UnregisterFactory(kAppCoresCID, path);
+    nsRepository::UnregisterFactory(kAppCoresManagerCID, path);
     nsRepository::UnregisterFactory(kMailCoreCID, path);
     nsRepository::UnregisterFactory(kToolbarCoreCID, path);
     nsRepository::UnregisterFactory(kToolkitCoreCID, path);
@@ -89,7 +89,7 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
     *aFactory = NULL;
     nsISupports *inst;
 
-    if ( aClass.Equals(kAppCoresCID) )
+    if ( aClass.Equals(kAppCoresManagerCID) )
     {
         inst = new nsAppCoresManagerFactory();        
     }

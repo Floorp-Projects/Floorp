@@ -26,28 +26,28 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMAppCoresManager.h"
 #include "nsIDOMBaseAppCore.h"
-#include "nsIDOMAppCores.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
 static NS_DEFINE_IID(kIBaseAppCoreIID, NS_IDOMBASEAPPCORE_IID);
-static NS_DEFINE_IID(kIAppCoresIID, NS_IDOMAPPCORES_IID);
 
+NS_DEF_PTR(nsIDOMAppCoresManager);
 NS_DEF_PTR(nsIDOMBaseAppCore);
-NS_DEF_PTR(nsIDOMAppCores);
 
 
 /***********************************************************************/
 //
-// AppCores Properties Getter
+// AppCoresManager Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetAppCoresProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAppCores *a = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -70,12 +70,12 @@ GetAppCoresProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// AppCores Properties Setter
+// AppCoresManager Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetAppCoresProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetAppCoresManagerProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAppCores *a = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *a = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -98,30 +98,30 @@ SetAppCoresProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// AppCores finalizer
+// AppCoresManager finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeAppCores(JSContext *cx, JSObject *obj)
+FinalizeAppCoresManager(JSContext *cx, JSObject *obj)
 {
   nsJSUtils::nsGenericFinalize(cx, obj);
 }
 
 
 //
-// AppCores enumerate
+// AppCoresManager enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateAppCores(JSContext *cx, JSObject *obj)
+EnumerateAppCoresManager(JSContext *cx, JSObject *obj)
 {
   return nsJSUtils::nsGenericEnumerate(cx, obj);
 }
 
 
 //
-// AppCores resolve
+// AppCoresManager resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveAppCores(JSContext *cx, JSObject *obj, jsval id)
+ResolveAppCoresManager(JSContext *cx, JSObject *obj, jsval id)
 {
   return nsJSUtils::nsGenericResolve(cx, obj, id);
 }
@@ -131,9 +131,9 @@ ResolveAppCores(JSContext *cx, JSObject *obj, jsval id)
 // Native method Startup
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCoresStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManagerStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCores *nativeThis = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -164,9 +164,9 @@ AppCoresStartup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 // Native method Shutdown
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCoresShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManagerShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCores *nativeThis = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
@@ -197,9 +197,9 @@ AppCoresShutdown(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 // Native method Add
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCoresAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManagerAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCores *nativeThis = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCorePtr b0;
 
@@ -239,9 +239,9 @@ AppCoresAdd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 // Native method Remove
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCoresRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManagerRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCores *nativeThis = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCorePtr b0;
 
@@ -281,9 +281,9 @@ AppCoresRemove(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 // Native method Find
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCoresFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManagerFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMAppCores *nativeThis = (nsIDOMAppCores*)JS_GetPrivate(cx, obj);
+  nsIDOMAppCoresManager *nativeThis = (nsIDOMAppCoresManager*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsIDOMBaseAppCore* nativeRet;
   nsAutoString b0;
@@ -316,59 +316,59 @@ AppCoresFind(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 /***********************************************************************/
 //
-// class for AppCores
+// class for AppCoresManager
 //
-JSClass AppCoresClass = {
-  "AppCores", 
+JSClass AppCoresManagerClass = {
+  "AppCoresManager", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetAppCoresProperty,
-  SetAppCoresProperty,
-  EnumerateAppCores,
-  ResolveAppCores,
+  GetAppCoresManagerProperty,
+  SetAppCoresManagerProperty,
+  EnumerateAppCoresManager,
+  ResolveAppCoresManager,
   JS_ConvertStub,
-  FinalizeAppCores
+  FinalizeAppCoresManager
 };
 
 
 //
-// AppCores class properties
+// AppCoresManager class properties
 //
-static JSPropertySpec AppCoresProperties[] =
+static JSPropertySpec AppCoresManagerProperties[] =
 {
   {0}
 };
 
 
 //
-// AppCores class methods
+// AppCoresManager class methods
 //
-static JSFunctionSpec AppCoresMethods[] = 
+static JSFunctionSpec AppCoresManagerMethods[] = 
 {
-  {"Startup",          AppCoresStartup,     0},
-  {"Shutdown",          AppCoresShutdown,     0},
-  {"Add",          AppCoresAdd,     1},
-  {"Remove",          AppCoresRemove,     1},
-  {"Find",          AppCoresFind,     1},
+  {"Startup",          AppCoresManagerStartup,     0},
+  {"Shutdown",          AppCoresManagerShutdown,     0},
+  {"Add",          AppCoresManagerAdd,     1},
+  {"Remove",          AppCoresManagerRemove,     1},
+  {"Find",          AppCoresManagerFind,     1},
   {0}
 };
 
 
 //
-// AppCores constructor
+// AppCoresManager constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-AppCores(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+AppCoresManager(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// AppCores class initialization
+// AppCoresManager class initialization
 //
-nsresult NS_InitAppCoresClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -377,7 +377,7 @@ nsresult NS_InitAppCoresClass(nsIScriptContext *aContext, void **aPrototype)
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "AppCores", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "AppCoresManager", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
@@ -386,11 +386,11 @@ nsresult NS_InitAppCoresClass(nsIScriptContext *aContext, void **aPrototype)
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &AppCoresClass,      // JSClass
-                         AppCores,            // JSNative ctor
+                         &AppCoresManagerClass,      // JSClass
+                         AppCoresManager,            // JSNative ctor
                          0,             // ctor args
-                         AppCoresProperties,  // proto props
-                         AppCoresMethods,     // proto funcs
+                         AppCoresManagerProperties,  // proto props
+                         AppCoresManagerMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -413,17 +413,17 @@ nsresult NS_InitAppCoresClass(nsIScriptContext *aContext, void **aPrototype)
 
 
 //
-// Method for creating a new AppCores JavaScript object
+// Method for creating a new AppCoresManager JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptAppCores(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptAppCoresManager(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptAppCores");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptAppCoresManager");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMAppCores *aAppCores;
+  nsIDOMAppCoresManager *aAppCoresManager;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -439,23 +439,23 @@ extern "C" NS_DOM nsresult NS_NewScriptAppCores(nsIScriptContext *aContext, nsIS
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitAppCoresClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitAppCoresManagerClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kIAppCoresIID, (void **)&aAppCores);
+  result = aSupports->QueryInterface(kIAppCoresManagerIID, (void **)&aAppCoresManager);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &AppCoresClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &AppCoresManagerClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aAppCores);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aAppCoresManager);
   }
   else {
-    NS_RELEASE(aAppCores);
+    NS_RELEASE(aAppCoresManager);
     return NS_ERROR_FAILURE; 
   }
 

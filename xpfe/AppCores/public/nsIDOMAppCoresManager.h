@@ -17,8 +17,8 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMAppCores_h__
-#define nsIDOMAppCores_h__
+#ifndef nsIDOMAppCoresManager_h__
+#define nsIDOMAppCoresManager_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
@@ -26,13 +26,13 @@
 
 class nsIDOMBaseAppCore;
 
-#define NS_IDOMAPPCORES_IID \
+#define NS_IDOMAPPCORESMANAGER_IID \
  { 0x18c2f981, 0xb09f, 0x11d2, \
   {0xbc, 0xde, 0x00, 0x80, 0x5f, 0x0e, 0x13, 0x53}} 
 
-class nsIDOMAppCores : public nsISupports {
+class nsIDOMAppCoresManager : public nsISupports {
 public:
-  static const nsIID& IID() { static nsIID iid = NS_IDOMAPPCORES_IID; return iid; }
+  static const nsIID& IID() { static nsIID iid = NS_IDOMAPPCORESMANAGER_IID; return iid; }
 
   NS_IMETHOD    Startup()=0;
 
@@ -46,7 +46,7 @@ public:
 };
 
 
-#define NS_DECL_IDOMAPPCORES   \
+#define NS_DECL_IDOMAPPCORESMANAGER   \
   NS_IMETHOD    Startup();  \
   NS_IMETHOD    Shutdown();  \
   NS_IMETHOD    Add(nsIDOMBaseAppCore* aAppcore);  \
@@ -55,7 +55,7 @@ public:
 
 
 
-#define NS_FORWARD_IDOMAPPCORES(_to)  \
+#define NS_FORWARD_IDOMAPPCORESMANAGER(_to)  \
   NS_IMETHOD    Startup() { return _to##Startup(); }  \
   NS_IMETHOD    Shutdown() { return _to##Shutdown(); }  \
   NS_IMETHOD    Add(nsIDOMBaseAppCore* aAppcore) { return _to##Add(aAppcore); }  \
@@ -63,8 +63,8 @@ public:
   NS_IMETHOD    Find(const nsString& aId, nsIDOMBaseAppCore** aReturn) { return _to##Find(aId, aReturn); }  \
 
 
-extern nsresult NS_InitAppCoresClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitAppCoresManagerClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptAppCores(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptAppCoresManager(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMAppCores_h__
+#endif // nsIDOMAppCoresManager_h__

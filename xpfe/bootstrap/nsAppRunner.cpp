@@ -47,11 +47,11 @@ static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
 //#if defined(XP_PC) || defined(XP_MAC)
 #include "nsAppCoresCIDs.h"
-#include "nsIDOMAppCores.h"
+#include "nsIDOMAppCoresManager.h"
 
-static nsIDOMAppCores *gAppCores = nsnull;
-static NS_DEFINE_IID(kIAppCoresIID, NS_IDOMAPPCORES_IID);
-static NS_DEFINE_IID(kAppCoresCID,  NS_AppCores_CID);
+static nsIDOMAppCoresManager *gAppCores = nsnull;
+static NS_DEFINE_IID(nsIDOMAppCoresManager, NS_IDOMAPPCORESMANAGER_IID);
+static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 //#endif
 /*********************************************/
 
@@ -195,7 +195,7 @@ int main(int argc, char* argv[])
   }
 
 //#if defined(XP_PC) || defined(XP_MAC)
-	rv = nsRepository::CreateInstance(kAppCoresCID, nsnull, kIAppCoresIID, (void**) &gAppCores);
+	rv = nsRepository::CreateInstance(kAppCoresManagerCID, nsnull, nsIDOMAppCoresManager, (void**) &gAppCores);
 	if (rv == NS_OK) {
 		if (gAppCores->Startup() != NS_OK) {
 			gAppCores->Shutdown();

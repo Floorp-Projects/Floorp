@@ -72,7 +72,7 @@ OBJS = \
     .\$(OBJDIR)\nsAppCoresManager.obj       \
     .\$(OBJDIR)\nsAppCoresManagerFactory.obj       \
     .\$(OBJDIR)\nsJSBaseAppCore.obj       \
-    .\$(OBJDIR)\nsJSAppCores.obj       \
+    .\$(OBJDIR)\nsJSAppCoresManager.obj       \
     .\$(OBJDIR)\nsJSMailCore.obj   \
     .\$(OBJDIR)\nsJSToolbarCore.obj   \
     .\$(OBJDIR)\nsJSToolkitCore.obj     \
