@@ -412,11 +412,14 @@ treechildren::-moz-tree-image(remote-err) {
 }     
 
 .composemenu-text-2 {
-  font-style: italic;
-  color: GrayText;
+  color: #555566;
 }
 
 /* ::::: addressing widget ::::: */
+
+.autocomplete-treebody::-moz-tree-cell-text(comment) {
+  color: #555566;
+}
   
 #addressingWidget {
   -moz-user-focus: none;
