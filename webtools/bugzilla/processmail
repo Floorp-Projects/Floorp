@@ -1,0 +1,238 @@
+#! /usr/bonsaitools/bin/mysqltcl
+# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+# 
+# The Original Code is the Bugzilla Bug Tracking System.
+# 
+# The Initial Developer of the Original Code is Netscape Communications
+# Corporation. Portions created by Netscape are Copyright (C) 1998
+# Netscape Communications Corporation. All Rights Reserved.
+# 
+# Contributor(s): Terry Weissman <terry@mozilla.org>
+
+
+# To recreate the shadow database, nuke all the entires and then run
+# processmail regenerate <last>, where <last> is the biggest bug number
+# currently used.
+
+
+source "globals.tcl"
+
+umask 0
+
+proc Different {file1 file2} {
+    if {[file size $file1] != [file size $file2]} {
+        return 1
+    }
+    set f1 [open $file1 "r"]
+    set f2 [open $file2 "r"]
+    set d1 [read $f1]
+    set d2 [read $f2]
+    close $f1
+    close $f2
+    return [expr ![cequal $d1 $d2]]
+}
+
+
+proc DescCC {cclist} {
+    if {[lempty $cclist]} return ""
+    return "Cc: [join $cclist ", "]\n"
+}
+
+proc DescFixVersion {v} {
+    if {[cequal $v ""]} return ""
+    return "Fix-Version: $v\n"
+}
+
+
+proc GetBugText {id} {
+    global bug
+    catch {unset bug}
+set query "
+select
+        bug_id,
+        product,
+        version,
+        rep_platform,
+        op_sys,
+        bug_status,
+        resolution,
+        priority,
+        bug_severity,
+        area,
+        assigned_to,
+        reporter,
+        bug_file_loc,
+        target_fix_version,
+        short_desc,
+        component
+from bugs
+where bug_id = $id";
+
+    SendSQL $query
+
+    set ret [FetchSQLData]
+    
+    if {$ret == ""} {
+        return ""
+    }
+    set count 0
+    foreach field { bug_id product version rep_platform op_sys bug_status
+                  resolution priority bug_severity area assigned_to
+                  reporter bug_file_loc target_fix_version short_desc
+                  component } {
+      set bug($field) [lindex $ret $count]
+      incr count
+    }
+
+    set bug(assigned_to) [DBID_to_name $bug(assigned_to)]
+    set bug(reporter) [DBID_to_name $bug(reporter)]
+
+    set bug(long_desc) [GetLongDescription $id]
+
+    set bug(cclist) [split [ShowCcList $id] ","]
+
+
+    return "Bug\#: $id
+Product: $bug(product)
+Version: $bug(version)
+Platform: $bug(rep_platform)
+OS/Version: $bug(op_sys)
+Status: $bug(bug_status)   
+Resolution: $bug(resolution)
+Severity: $bug(bug_severity)
+Priority: $bug(priority)
+Component: $bug(component)
+Area: $bug(area)
+AssignedTo: $bug(assigned_to)                            
+ReportedBy: $bug(reporter)               
+URL: $bug(bug_file_loc)
+[DescCC $bug(cclist)][DescFixVersion $bug(target_fix_version)]Summary: $bug(short_desc)
+
+$bug(long_desc)"
+
+}
+
+
+
+proc fixaddresses {list} {
+    global nomail
+    set result {}
+    foreach i [lrmdups $list] {
+        if {![info exists nomail($i)]} {
+            lappend result $i
+        }
+    }
+    return [join $result ", "]
+}
+
+
+proc Log {str} {
+    set lockfid [open "maillock" "w"]
+    flock -write $lockfid
+    set fid [open "maillog" "a"]
+    puts $fid "[fmtclock [getclock] "%D %H:%M"] $str"
+    close $fid
+    close $lockfid
+}
+    
+
+set COOKIE(Bugzilla_login) terry
+set COOKIE(Bugzilla_password) terry
+
+ConnectToDatabase
+
+
+
+set template "From: bugzilla-daemon
+To: terry@netscape.com
+X-Real-To: %s
+X-Real-Cc: %s
+Subject: \[Bug %s\] %s - %s
+
+http://bugzilla.mozilla.org/bugzilla/show_bug.cgi?id=%s
+
+%s"
+
+
+set lockfid [open "maillock" "r"]
+flock -read $lockfid
+
+# foreach i [split [read_file -nonewline "okmail"] "\n"] {
+#     set okmail($i) 1
+# }
+
+foreach i [split [read_file -nonewline "nomail"] "\n"] {
+    if {[info exists okmail($i)]} {
+        unset okmail($i)
+    }
+    set nomail($i) 1
+}
+
+
+close $lockfid
+
+
+set regenerate 0
+if {[cequal [lindex $argv 0] "regenerate"]} {
+    set regenerate 1
+    set last [lindex $argv 1]
+    set argv ""
+    loop i 1 [expr $last + 1] {
+        lappend argv $i
+    }
+}
+
+foreach i $argv {
+    if {[lempty $i]} continue
+    set old shadow/$i
+    set new shadow/$i.tmp.[id process]
+    set diffs shadow/$i.diffs.[id process]
+    set verb "Changed"
+    if {![file exists $old]} {
+        close [open $old "w"]
+        set verb "New"
+    }
+    set text [GetBugText $i]
+    if {$text == ""} {
+        if {$regenerate} {
+            continue
+        }
+        error "Couldn't find bug $i."
+    }
+    set fid [open $new "w"]
+    puts $fid $text
+    close $fid
+    if {[Different $old $new]} {
+        catch {exec diff -c $old $new > $diffs}
+        set tolist [fixaddresses [list $bug(assigned_to) $bug(reporter)]]
+        set cclist [fixaddresses $bug(cclist)]
+        set logstr "Bug $i changed"
+        if {![lempty $tolist] || ![lempty $cclist]} {
+            set msg [format $template $tolist $cclist $i $verb \
+                         $bug(short_desc) $i [read_file $diffs]]
+            if {!$regenerate || ![cequal $verb "New"]} {
+                exec /usr/lib/sendmail -t << $msg
+                set logstr "$logstr; mail sent to $tolist $cclist"
+            }
+        }
+        unlink $diffs
+        Log $logstr
+    }
+    frename $new $old
+    catch {chmod 0666 $old}
+    if {$regenerate} {
+        puts -nonewline "$i "
+    }
+}
+
+exit
