@@ -60,7 +60,7 @@ sub splitArguments {
         } elsif ($argument =~ /^--([^-][^=]*)=(.+)$/os) {
             $self->addArgument($1, $2);
             $lastArgument = undef;
-        } elsif ($argument =~ /^--no-([^-].+)/os) {            
+        } elsif ($argument =~ /^--no-([^-].+)/os) {
             $self->addArgument($1, 0);
             $lastArgument = undef;
         } elsif ($argument =~ /^--([^-].+)/os) {
@@ -92,7 +92,7 @@ sub createArgument {
         if ($self->getArgument('batch')) {
             $self->SUPER::createArgument(@_);
         } else {
-            $self->warn(5, "going to request '$argument' from user!");
+            $self->warn(8, "going to request '$argument' from user!");
             $self->app->output->request(@_);
             # get input from user
             my $term = Term::ReadLine->new($self->app->name);
