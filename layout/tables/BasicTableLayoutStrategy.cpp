@@ -184,13 +184,13 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
     //availWidth = mMinTableWidth;                          // bump it up to the min
 
   // Step 3 - assign the width of all proportional-width columns in the remaining space
-  //if (PR_TRUE==gsDebug) 
+  if (PR_TRUE==gsDebug) 
   {
     printf ("BalanceColumnWidths with aMaxWidth = %d, availWidth = %d\n", aMaxWidth, availWidth);
     printf ("\t\t specifiedTW = %d, min/maxTW = %d %d\n", specifiedTableWidth, mMinTableWidth, mMaxTableWidth);
     printf ("\t\t reflow reason = %d\n", aReflowState.reason);
   }
-  //if (PR_TRUE==gsDebug)
+  if (PR_TRUE==gsDebug)
   {
     printf("\n%p: BEGIN BALANCE COLUMN WIDTHS\n", mTableFrame);
     for (PRInt32 i=0; i<mNumCols; i++)
@@ -200,7 +200,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
   result = BalanceProportionalColumns(aReflowState, availWidth, aMaxWidth,
                                       specifiedTableWidth, tableIsAutoWidth);
 
-  //if (PR_TRUE==gsDebug)
+  if (PR_TRUE==gsDebug)
   {
     printf("\n%p: END BALANCE COLUMN WIDTHS\n", mTableFrame);
     for (PRInt32 i=0; i<mNumCols; i++)
@@ -649,7 +649,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
       if (NS_UNCONSTRAINEDSIZE!=rowMaxWidth)
         rowMaxWidth += cellMaxSize.width;
     }
-    printf("  rowMinWidth=%d, rowMaxWidth=%d\n", rowMinWidth, rowMaxWidth);
+    if (gsDebug) printf("  rowMinWidth=%d, rowMaxWidth=%d\n", rowMinWidth, rowMaxWidth);
     // the largest row widths are the table widths
     mMinTableWidth = PR_MAX(mMinTableWidth, rowMinWidth);
     mMaxTableWidth = PR_MAX(mMaxTableWidth, rowMaxWidth);
@@ -663,7 +663,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableWidths()
     sumOfAdjustedColMinWidths += colFrame->GetAdjustedMinColWidth() + colInset;
   }
   mMinTableWidth = PR_MAX(mMinTableWidth, sumOfAdjustedColMinWidths);
-  printf("minTW=%d, maxTW=%d with DMCW=%d\n", mMinTableWidth, mMaxTableWidth, sumOfAdjustedColMinWidths);
+  if (gsDebug) printf("minTW=%d, maxTW=%d with DMCW=%d\n", mMinTableWidth, mMaxTableWidth, sumOfAdjustedColMinWidths);
 }
 
 // take the fixed space spanned by the columns in aColSpanList 
