@@ -348,7 +348,7 @@ namespace JavaScript {
 	};
 
   #ifndef DEBUG
-	inline void Lexer::redesignate(bool) {}
+	inline void Lexer::redesignate(bool) {}	// See description for the DEBUG version inside parser.cpp
   #endif
 
 	// Return the position of the first character of the next token, which must have been peeked.
@@ -433,7 +433,10 @@ namespace JavaScript {
 		ExprNode *type;					// Type expression or nil if not provided
 		ExprNode *initializer;			// Initial value expression or nil if not provided
 		
-		VariableBinding(uint32 pos): ParseNode(pos), next(0), name(0), type(0), initializer(0) {}
+		VariableBinding(uint32 pos, ExprNode *name, ExprNode *type, ExprNode *initializer):
+				ParseNode(pos), next(0), name(name), type(type), initializer(initializer) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct FunctionDefinition: FunctionName {
@@ -448,7 +451,7 @@ namespace JavaScript {
 	struct ExprNode: ParseNode {
 		enum Kind {						// Actual class			Operands	// Keep synchronized with kindNames
 			none,
-			identifier,					// IdentifierExprNode	<name>
+			identifier,					// IdentifierExprNode	<name>		// Begin of isPostfix()
 			number,						// NumberExprNode		<value>
 			string,						// StringExprNode		<str>
 			regExp,						// RegExpExprNode		/<re>/<flags>
@@ -474,8 +477,9 @@ namespace JavaScript {
 			dot,						// BinaryExprNode		<op1> . <op2>  // <op2> must be identifier or qualify
 			dotParen,					// BinaryExprNode		<op1> .( <op2> )
 			at,							// BinaryExprNode		<op1> @ <op2>   or   <op1> @( <op2> )
+																			// End of isPostfix()
 
-			Delete,						// UnaryExprNode		delete <op>		// Begin of isUnaryKind()
+			Delete,						// UnaryExprNode		delete <op>
 			Typeof,						// UnaryExprNode		typeof <op>
 			Eval,						// UnaryExprNode		eval <op>
 			preIncrement,				// UnaryExprNode		++ <op>
@@ -485,7 +489,7 @@ namespace JavaScript {
 			plus,						// UnaryExprNode		+ <op>
 			minus,						// UnaryExprNode		- <op>
 			complement,					// UnaryExprNode		~ <op>
-			logicalNot,					// UnaryExprNode		! <op>			// End of isUnaryKind()
+			logicalNot,					// UnaryExprNode		! <op>
 
 			add,						// BinaryExprNode		<op1> + <op2>
 			subtract,					// BinaryExprNode		<op1> - <op2>
@@ -547,8 +551,8 @@ namespace JavaScript {
 
 		static bool isFieldKind(Kind kind) {return kind == identifier || kind == number || kind == string || kind == qualify;}
 		static bool isAssigningKind(Kind kind) {return kind >= assignment && kind <= logicalOrEquals;}
-		static bool isUnaryKind(Kind kind) {return kind >= Delete && kind <= logicalNot;}
 		static const char *kindName(Kind kind) {ASSERT(uint(kind) < kindsEnd); return kindNames[kind];}
+		bool isPostfix() const {return kind >= identifier && kind <= at;}
 
 		virtual void print(PrettyPrinter &f) const;
 	};
@@ -689,9 +693,7 @@ namespace JavaScript {
 			DoWhile,					// UnaryStmtNode		do <stmt> while ( <expr> )
 			With,						// UnaryStmtNode		with ( <expr> ) <stmt>
 			For,						// ForStmtNode			for ( <initializer> ; <expr2> ; <expr3> ) <stmt>
-			ForExprIn,					// ForExprInStmtNode	for ( <varExpr> in <container> ) <stmt>
-			ForConstIn,					// ForVarInStmtNode		for ( const <binding> in <container> ) <stmt>
-			ForVarIn,					// ForVarInStmtNode		for ( var <binding> in <container> ) <stmt>
+			ForIn,						// ForStmtNode			for ( <initializer> in <expr2> ) <stmt>
 			Case,						// ExprStmtNode			case <expr> :	or   default :	// Only occurs directly inside a Switch
 			Break,						// GoStmtNode			break ;   or   break <name> ;
 			Continue,					// GoStmtNode			continue ;   or   continue <name> ;
@@ -723,14 +725,12 @@ namespace JavaScript {
 		Kind getKind() const {return kind;}
 		bool hasKind(Kind k) const {return kind == k;}
 
-		virtual void print(PrettyPrinter &f) const;
-		void printSubstatement(PrettyPrinter &f, const char *continuation = 0) const;
 		static void printStatements(PrettyPrinter &f, const StmtNode *statements);
 		static void printBlock(PrettyPrinter &f, const StmtNode *statements);
+		static void printSemi(PrettyPrinter &f, bool noSemi);
+		void printSubstatement(PrettyPrinter &f, bool noSemi, const char *continuation = 0) const;
+		virtual void print(PrettyPrinter &f, bool noSemi) const;
 	};
-
-	// Print s onto f.
-	inline PrettyPrinter &operator<<(PrettyPrinter &f, const StmtNode *s) {ASSERT(s); s->print(f); return f;}
 
 
 	struct ExprStmtNode: StmtNode {
@@ -738,7 +738,7 @@ namespace JavaScript {
 
 		ExprStmtNode(uint32 pos, Kind kind, ExprNode *expr): StmtNode(pos, kind), expr(expr) {}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct IdentifierList: ArenaObject {
@@ -753,7 +753,7 @@ namespace JavaScript {
 
 		AttributeStmtNode(uint32 pos, Kind kind, IdentifierList *attributes): StmtNode(pos, kind), attributes(attributes) {}
 
-		void print(PrettyPrinter &f) const;
+		void printAttributes(PrettyPrinter &f) const;
 	};
 	
 	struct BlockStmtNode: AttributeStmtNode {
@@ -762,7 +762,7 @@ namespace JavaScript {
 		BlockStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, StmtNode *statements):
 				AttributeStmtNode(pos, kind, attributes), statements(statements) {}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct LabelStmtNode: StmtNode {
@@ -772,7 +772,7 @@ namespace JavaScript {
 		LabelStmtNode(uint32 pos, const StringAtom &name, StmtNode *stmt):
 				StmtNode(pos, label), name(name), stmt(stmt) {ASSERT(stmt);}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct UnaryStmtNode: ExprStmtNode {
@@ -781,7 +781,7 @@ namespace JavaScript {
 		UnaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt):
 				ExprStmtNode(pos, kind, expr), stmt(stmt) {ASSERT(stmt);}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct BinaryStmtNode: UnaryStmtNode {
@@ -790,39 +790,22 @@ namespace JavaScript {
 		BinaryStmtNode(uint32 pos, Kind kind, ExprNode *expr, StmtNode *stmt1, StmtNode *stmt2):
 				UnaryStmtNode(pos, kind, expr, stmt1), stmt2(stmt2) {ASSERT(stmt2);}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct ForStmtNode: StmtNode {
-		StmtNode *initializer;			// First item in parentheses; either nil (if not provided), an expression, or a Var, or a Const.
-		ExprNode *expr2;				// Second item in parentheses; nil if not provided
-		ExprNode *expr3;				// Third item in parentheses; nil if not provided
+		StmtNode *initializer;			// For: First item in parentheses; either nil (if not provided), an expression, or a Var, or a Const.
+										// ForIn: Expression or declaration before 'in'; either an expression, or a Var or a Const with exactly one binding.
+		ExprNode *expr2;				// For: Second item in parentheses; nil if not provided
+										// ForIn: Subexpression after 'in'; non-nil only
+		ExprNode *expr3;				// For: Third item in parentheses; nil if not provided
+										// ForIn: nil
 		StmtNode *stmt;					// Substatement; non-nil only
 
-		ForStmtNode(uint32 pos, Kind kind, StmtNode *stmt):
-				StmtNode(pos, kind), stmt(stmt) {ASSERT(stmt);}
-	};
-	
-	struct ForInStmtNode: StmtNode {
-		ExprNode *container;			// Subexpression after 'in'; non-nil only
-		StmtNode *stmt;					// Substatement; non-nil only
+		ForStmtNode(uint32 pos, Kind kind, StmtNode *initializer, ExprNode *expr2, ExprNode *expr3, StmtNode *stmt):
+				StmtNode(pos, kind), initializer(initializer), expr2(expr2), expr3(expr3), stmt(stmt) {ASSERT(stmt);}
 
-		ForInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt):
-				StmtNode(pos, kind), container(container), stmt(stmt) {ASSERT(container && stmt);}
-	};
-	
-	struct ForExprInStmtNode: ForInStmtNode {
-		ExprNode *varExpr;				// Subexpression before 'in'; non-nil only
-
-		ForExprInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt, ExprNode *varExpr):
-				ForInStmtNode(pos, kind, container, stmt), varExpr(varExpr) {ASSERT(varExpr);}
-	};
-	
-	struct ForVarInStmtNode: ForInStmtNode {
-		VariableBinding *binding;		// Var or const binding before 'in'; non-nil only
-
-		ForVarInStmtNode(uint32 pos, Kind kind, ExprNode *container, StmtNode *stmt, VariableBinding *binding):
-				ForInStmtNode(pos, kind, container, stmt), binding(binding) {ASSERT(binding);}
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct SwitchStmtNode: ExprStmtNode {
@@ -830,7 +813,7 @@ namespace JavaScript {
 
 		SwitchStmtNode(uint32 pos, ExprNode *expr, StmtNode *statements): ExprStmtNode(pos, Switch, expr), statements(statements) {}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct GoStmtNode: StmtNode {
@@ -838,7 +821,7 @@ namespace JavaScript {
 
 		GoStmtNode(uint32 pos, Kind kind, const StringAtom *name): StmtNode(pos, kind), name(name) {}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 	
 	struct CatchClause: ParseNode {
@@ -859,7 +842,7 @@ namespace JavaScript {
 		TryStmtNode(uint32 pos, StmtNode *stmt, CatchClause *catches, StmtNode *finally):
 				StmtNode(pos, Try), stmt(stmt), catches(catches), finally(finally) {ASSERT(stmt);}
 
-		void print(PrettyPrinter &f) const;
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct PackageName: ArenaObject {	// Either idList or str may be null, but not both
@@ -918,6 +901,8 @@ namespace JavaScript {
 
 		VariableStmtNode(uint32 pos, Kind kind, IdentifierList *attributes, VariableBinding *bindings):
 				AttributeStmtNode(pos, kind, attributes), bindings(bindings) {}
+
+		void print(PrettyPrinter &f, bool noSemi) const;
 	};
 
 	struct FunctionStmtNode: AttributeStmtNode {
@@ -980,15 +965,16 @@ namespace JavaScript {
 		bool lineBreakBefore(const Token &t) const {return lineBreaksSignificant && t.getLineBreak();}
 		bool lineBreakBefore() {return lineBreaksSignificant && lexer.peek(true).getLineBreak();}
 
-		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
-		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers);
-		ExprNode *parseQualifiedIdentifier(const Token &t);
+		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers, bool preferRegExp);
+		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers, bool preferRegExp);
+		ExprNode *parseQualifiedIdentifier(const Token &t, bool preferRegExp);
 		PairListExprNode *parseArrayLiteral(const Token &initialToken);
 		PairListExprNode *parseObjectLiteral(const Token &initialToken);
 		ExprNode *parsePrimaryExpression();
 		BinaryExprNode *parseMember(ExprNode *target, const Token &tOperator, ExprNode::Kind kind, ExprNode::Kind parenKind);
 		InvokeExprNode *parseInvoke(ExprNode *target, uint32 pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind);
 		ExprNode *parsePostfixExpression(bool newExpression = false);
+		void ensurePostfix(const ExprNode *e);
 		ExprNode *parseUnaryExpression();
 
 		enum Precedence {
@@ -1026,13 +1012,15 @@ namespace JavaScript {
 	  private:
 		ExprNode *parseParenthesizedExpression();
 		const StringAtom &parseTypedIdentifier(ExprNode *&type);
+		VariableBinding *parseVariableBinding(bool noQualifiers, bool noIn);
 		
 		enum SemicolonState {semiNone, semiNoninsertable, semiInsertable};
 		enum AttributeStatement {asAny, asBlock, asConstVar};
 		StmtNode *parseBlock(bool inSwitch, bool noOpenBrace, bool noCloseBrace);
-		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, SemicolonState &semicolonState);
+		StmtNode *parseAttributeStatement(uint32 pos, IdentifierList *attributes, const Token &t, bool noIn, SemicolonState &semicolonState);
 		StmtNode *parseAttributesAndStatement(const Token *t, AttributeStatement as, SemicolonState &semicolonState);
 		StmtNode *parseAnnotatedBlock();
+		StmtNode *parseFor(uint32 pos, SemicolonState &semicolonState);
 		StmtNode *parseTry(uint32 pos);
 	  public:
 		StmtNode *parseStatement(bool topLevel, bool inSwitch, SemicolonState &semicolonState);
