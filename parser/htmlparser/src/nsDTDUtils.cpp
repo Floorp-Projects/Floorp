@@ -508,7 +508,7 @@ void nsDTDContext::PushStyles(nsEntryStack *aStyles){
         PRUint32 scount=aStyles->mCount;
         PRUint32 sindex=0;
 
-        nsTagEntry *theEntry=aStyles->mEntries;
+        theEntry=aStyles->mEntries;
         for(sindex=0;sindex<scount;sindex++){            
           theEntry->mParent=0;  //this tells us that the style is not open at any level
           theEntry++;

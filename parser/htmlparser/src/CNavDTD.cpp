@@ -709,6 +709,9 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
             if(mHasOpenHead) {
               //just fall through and handle current token
               if(!gHTMLElements[eHTMLTag_head].IsChildOfHead(theTag)){
+
+                //If you're here then we found a child of the body that was out of place.
+                //We're going to move it to the body by storing it temporarily on the misplaced stack.
                 mMisplacedContent.Push(aToken);
                 aToken->mUseCount++;
                 return result;
@@ -2987,7 +2990,7 @@ nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTarget, PRBool aC
                 //style tag that got onto that tag stack from a stylestack somewhere.
                 //The the target==theTag, then pop it from the stylestack.
                 if(theTag==aTarget) {
-                  nsIParserNode* theNextNode=mBodyContext->PopStyle(theTag);
+                  theNode=(nsCParserNode*)mBodyContext->PopStyle(theTag);
                 }
               }
             } 
@@ -3190,7 +3193,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode *aNode){
 nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
   nsresult result=NS_OK;
 
-  static eHTMLTags gNoXTags[]={eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
+  static eHTMLTags gNoXTags[]={eHTMLTag_noembed,eHTMLTag_noframes,eHTMLTag_nolayer,eHTMLTag_noscript};
   
   //this code has been added to prevent <meta> tags from being processed inside
   //the document if the <meta> tag itself was found in a <noframe>, <nolayer>, or <noscript> tag.
