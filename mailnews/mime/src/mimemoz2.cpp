@@ -711,9 +711,37 @@ mime_display_stream_write (nsMIMESession *stream,
                            PRInt32 size)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) ((nsMIMESession *)stream)->data_object;
+  static PRBool   firstCheck = PR_TRUE;
 
   MimeObject *obj = (msd ? msd->obj : 0);  
   if (!obj) return -1;
+
+  //
+  // Ok, now check to see if this is a display operation for a MIME Parts on Demand
+  // enabled call.
+  //
+  if (firstCheck)
+  {
+    if (msd->channel)
+    {
+      nsCOMPtr<nsIURI> aUri;
+	    if (NS_SUCCEEDED(msd->channel->GetURI(getter_AddRefs(aUri))))
+      {
+        nsCOMPtr<nsIImapUrl> imapURL = do_QueryInterface(aUri);
+        if (imapURL)
+        {
+          nsImapContentModifiedType   cModified;
+          if (NS_SUCCEEDED(imapURL->GetContentModified(&cModified)))
+          {
+            if ( cModified != nsImapContentModifiedTypes::IMAP_CONTENT_NOT_MODIFIED )
+              msd->options->missing_parts = PR_TRUE;
+          }
+        }
+      }
+    }
+
+    firstCheck = PR_FALSE;
+  }
 
   return obj->clazz->parse_buffer((char *) buf, size, obj);
 }
@@ -1219,28 +1247,6 @@ mime_bridge_create_display_stream(
     nsServiceManager::ReleaseService(kPrefCID, msd->options->prefs);
     PR_FREEIF(msd);
     return nsnull;
-  }
-
-  //
-  // Ok, now check to see if this is a display operation for a MIME Parts on Demand
-  // enabled call.
-  //
-  if (aChannel)
-  {
-    nsCOMPtr<nsIURI> aUri;
-	  if (NS_SUCCEEDED(aChannel->GetURI(getter_AddRefs(aUri))))
-    {
-      nsCOMPtr<nsIImapUrl> imapURL = do_QueryInterface(aUri);
-      if (imapURL)
-      {
-        nsImapContentModifiedType   cModified;
-        if (NS_SUCCEEDED(imapURL->GetContentModified(&cModified)))
-        {
-          if ( cModified != nsImapContentModifiedTypes::IMAP_CONTENT_NOT_MODIFIED )
-            msd->options->missing_parts = PR_TRUE;
-        }
-      }
-    }
   }
 
   //
