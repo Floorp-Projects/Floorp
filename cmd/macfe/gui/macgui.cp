@@ -95,6 +95,9 @@ HyperStyle::HyperStyle( MWContext *context, const CCharSet* charSet, LO_TextAttr
 {
 	fElement = element;
 	
+	fAttr = *attr;
+	fAttr.size *= context->fontScalingPercentage;
+	
 	fFontReference = CFontReference::GetFontReference(charSet, attr, context, sUnderlineLinks);
 	
 	strike = ( attr->attrmask & LO_ATTR_STRIKEOUT );
@@ -107,8 +110,6 @@ HyperStyle::HyperStyle( MWContext *context, const CCharSet* charSet, LO_TextAttr
 		rgbBkColor = UGraphics::MakeRGBColor( attr->bg.red, attr->bg.green, attr->bg.blue );
 	}
 	
-	memcpy( &fAttr, attr, sizeof( LO_TextAttr ) );	// Just copy the fields
-
 }
 
 // ¥ calculate a rectangular area of the page based on "where" and the
