@@ -1138,14 +1138,8 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
   }
   // finish up
   if (NS_FAILED(rv)) {
-    // if we got an error, we are probably going to be replaced
-
-    // for a replaced object frame, clear our vertical alignment style info, see bug 36997
-    nsStyleTextReset* text = NS_STATIC_CAST(nsStyleTextReset*,
-      mStyleContext->GetUniqueStyleData(mPresContext,  eStyleStruct_TextReset));
-    text->mVerticalAlign.SetNormalValue();
-
-    //check for alternative content with CantRenderReplacedElement()
+    // if we got an error, we'll check for alternative content with
+    // CantRenderReplacedElement()
     nsIPresShell* presShell;
     aPresContext->GetShell(&presShell);
     rv = presShell->CantRenderReplacedElement(aPresContext, this);
