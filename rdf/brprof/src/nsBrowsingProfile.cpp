@@ -77,6 +77,7 @@ public:
     NS_IMETHOD GetVector(nsBrowsingProfileVector& result);
     NS_IMETHOD SetVector(nsBrowsingProfileVector& value);
     NS_IMETHOD GetCookieString(char buf[kBrowsingProfileCookieSize]);
+    NS_IMETHOD SetCookieString(char buf[kBrowsingProfileCookieSize]);
     NS_IMETHOD GetDescription(char* *htmlResult);
     NS_IMETHOD CountPageVisit(const char* url);
 
@@ -103,6 +104,7 @@ public:
     static PRUint32 gRefCnt;
     static nsIRDFService* gRDFService;
     static nsIRDFDataSource* gCategoryDB; 
+    static nsIRDFDataSource* gHistory;
     static nsIRDFResource* kNC_Page;
     static nsIRDFResource* kOPENDIR_Topic;
     static nsIRDFResource* kOPENDIR_link;
@@ -113,16 +115,22 @@ protected:
     nsBrowsingProfileVector mVector;
     nsHashtable mCategories;    // for fast indexing into mCategoryChain
     PRCList mCategoryChain;
+
+    static char kHexMap[];
 };
 
 PRUint32 nsBrowsingProfile::gRefCnt = 0;
 nsIRDFService* nsBrowsingProfile::gRDFService = nsnull;
 nsIRDFDataSource* nsBrowsingProfile::gCategoryDB = nsnull; 
+nsIRDFDataSource* nsBrowsingProfile::gHistory    = nsnull;
 
 nsIRDFResource* nsBrowsingProfile::kNC_Page       = nsnull;
 nsIRDFResource* nsBrowsingProfile::kOPENDIR_Topic = nsnull;
 nsIRDFResource* nsBrowsingProfile::kOPENDIR_link  = nsnull;
 nsIRDFResource* nsBrowsingProfile::kOPENDIR_catid = nsnull;
+
+char nsBrowsingProfile::kHexMap[] =  "0123456789ABCDEF";
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -157,6 +165,10 @@ nsBrowsingProfile::Init(const char* userProfileName)
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get directory data source");
         if (NS_FAILED(rv)) return rv;
 
+        rv = gRDFService->GetDataSource("rdf:history", &gHistory);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get history data source");
+        if (NS_FAILED(rv)) return rv;
+
         // get all the properties we'll need:
         rv = gRDFService->GetResource(kURINC_Page, &kNC_Page);
         NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
@@ -172,18 +184,12 @@ nsBrowsingProfile::Init(const char* userProfileName)
         if (NS_FAILED(rv)) return rv;
     }
 
-    // Grab the history data source, which is what we'll observe
-    nsCOMPtr<nsIRDFDataSource> history;
-    rv = gRDFService->GetDataSource("rdf:history", getter_AddRefs(history));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get history data source");
-    if (NS_FAILED(rv)) return rv;
-
     // XXX: TODO
     // Grovel through the history data source to initialize the profile
 
     // add ourself as an observer so that we can keep the profile
     // in-sync as the user browses.
-    rv = history->AddObserver(this);
+    rv = gHistory->AddObserver(this);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self as history observer");
     return rv;
 }
@@ -191,13 +197,8 @@ nsBrowsingProfile::Init(const char* userProfileName)
 nsBrowsingProfile::~nsBrowsingProfile()
 {
     // Stop observing the history data source
-    nsresult rv;
-    nsCOMPtr<nsIRDFDataSource> history;
-    rv = gRDFService->GetDataSource("rdf:history", getter_AddRefs(history));
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get history data source");
-    if (NS_SUCCEEDED(rv)) {
-        history->RemoveObserver(this);
-    }
+    if (gHistory)
+        gHistory->RemoveObserver(this);
 
     PRCList* chain = &mCategoryChain;
     while (!PR_CLIST_IS_EMPTY(chain)) {
@@ -218,6 +219,11 @@ nsBrowsingProfile::~nsBrowsingProfile()
         if (gCategoryDB) {
             NS_RELEASE(gCategoryDB);
             gCategoryDB = nsnull;
+        }
+
+        if (gHistory) {
+            NS_RELEASE(gHistory);
+            gHistory = nsnull;
         }
 
         if (gRDFService) {
@@ -272,14 +278,36 @@ NS_IMETHODIMP
 nsBrowsingProfile::GetCookieString(char buf[kBrowsingProfileCookieSize])
 {
     // translate mVector to hex
-	char hexMap[] = "0123456789ABCDEF";
     PRUint8* vector = (PRUint8*)&mVector;
     for (PRUint32 i = 0; i < sizeof(mVector); i++) {
         unsigned char c = vector[i];
-        *buf++ = hexMap[c >> 4];
-        *buf++ = hexMap[c & 0x0F];
+        *buf++ = kHexMap[c >> 4];
+        *buf++ = kHexMap[c & 0x0F];
     }
     *buf = '\0';
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsBrowsingProfile::SetCookieString(char buf[kBrowsingProfileCookieSize])
+{
+    // translate mVector from hex
+    PRUint8* vector = (PRUint8*)&mVector;
+    for (PRUint32 i = 0; i < sizeof(mVector); i++) {
+        char* hip = PL_strchr(kHexMap, *buf++);
+        NS_ASSERTION(hip != nsnull, "invalid character");
+        if (! hip)
+            return NS_ERROR_FAILURE;
+
+        char* lop = PL_strchr(kHexMap, *buf++);
+        NS_ASSERTION(lop != nsnull, "invalid character");
+        if (! lop)
+            return NS_ERROR_FAILURE;
+
+        PRUint8 hi = hip - kHexMap;
+        PRUint8 lo = lop - kHexMap;
+        vector[i] = (hi << 4) + lo;
+    }
     return NS_OK;
 }
 
@@ -511,21 +539,18 @@ nsBrowsingProfile::OnUnassert(nsIRDFResource* subject,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewBrowsingProfile(const char* userProfileName,
-                      nsIBrowsingProfile* *result)
+NS_NewBrowsingProfile(nsIBrowsingProfile* *aResult)
 {
-    nsresult rv;
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
     nsBrowsingProfile* profile = new nsBrowsingProfile();
     if (profile == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = profile->Init(userProfileName);
-    if (NS_FAILED(rv)) {
-        delete profile;
-		return rv;
-    }
     NS_ADDREF(profile);
-    *result = profile;
-    return rv;
+    *aResult = profile;
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
