@@ -29,21 +29,22 @@
 #define _nsRenderingContextOS2_h
 
 #include "nsIRenderingContext.h"
+#include "nsUnitConversion.h"
 #include "nsFont.h"
+#include "nsIFontMetrics.h"
+#include "nsPoint.h"
+#include "nsString.h"
 #include "nsCRT.h"
 #include "nsTransform2D.h"
+#include "nsIWidget.h"
+#include "nsRect.h"
 #include "nscoord.h"
-#include "nsDrawingSurfaceOS2.h"
 #include "nsImageOS2.h"
-#include "nsRenderingContextImpl.h"
+#include "nsIDeviceContext.h"
+#include "nsVoidArray.h"
 #include "nsIRenderingContextOS2.h"
-
-class nsIDeviceContext;
-class nsIFontMetrics;
-class nsString;
-class nsIWidget;
-class nsPoint;
-class nsRect;
+#include "nsDrawingSurfaceOS2.h"
+#include "nsRenderingContextImpl.h"
 
 class GraphicsState;
 class nsDrawingSurfaceOS2;
@@ -244,7 +245,8 @@ protected:
    nsLineStyle          mLineStyle;       // current line style
    nsTransform2D        mTMatrix;         // current xform matrix
    float                mP2T;             // cache pix-2-app factor from DC
-   GraphicsState       *mStateStack;      // stack of graphics states
+   GraphicsState       *mStates;
+   nsVoidArray       *mStateCache;
    nsIFontMetrics      *mFontMetrics;     // current font
    nsIFontMetrics      *mCurrFontMetrics; // currently selected font
    nscolor              mCurrTextColor;   // currently selected text color

@@ -62,129 +62,67 @@ HRGN OS2_CopyClipRegion( HPS hps);
 
 BOOL doSetupFontAndTextColor = PR_TRUE;
 
-// Use these instead of native GpiSave/RestorePS because: need to store ----
-// more information, and need to be able to push from onscreen & pop onto
-// offscreen.  Potentially.
-struct GraphicsState
+#define FLAG_CLIP_VALID       0x0001
+#define FLAG_CLIP_CHANGED     0x0002
+#define FLAG_LOCAL_CLIP_VALID 0x0004
+
+#define FLAGS_ALL             (FLAG_CLIP_VALID | FLAG_CLIP_CHANGED | FLAG_LOCAL_CLIP_VALID)
+
+class GraphicsState
 {
-   GraphicsState() { Construct(); }
-  ~GraphicsState() { Destruct(); }
+public:
+  GraphicsState();
+  GraphicsState(GraphicsState &aState);
+  ~GraphicsState();
 
-   void Construct();
-   void Destruct();
-
-   nsTransform2D   mMatrix;
-   HRGN            mClipRegion;
-   nscolor         mColor;
-   nsIFontMetrics *mFontMetrics;
-   nsLineStyle     mLineStyle;
-
-   GraphicsState  *mNext;
+  GraphicsState   *mNext;
+  nsTransform2D   mMatrix;
+  nsRect          mLocalClip;
+  HRGN            mClipRegion;
+  nscolor         mColor;
+  nsIFontMetrics  *mFontMetrics;
+  PRInt32         mFlags;
+  nsLineStyle     mLineStyle;
 };
 
-void GraphicsState::Construct()
+GraphicsState :: GraphicsState()
 {
-   mClipRegion = 0;
-   mColor = NS_RGB( 0, 0, 0);
-   mFontMetrics = nsnull;
-   mLineStyle = nsLineStyle_kSolid;
-   mNext = nsnull;
+  mNext = nsnull;
+  mMatrix.SetToIdentity();  
+  mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
+  mClipRegion = NULL;
+  mColor = NS_RGB(0, 0, 0);
+  mFontMetrics = nsnull;
+  mFlags = ~FLAGS_ALL;
+  mLineStyle = nsLineStyle_kSolid;
 }
 
-void GraphicsState::Destruct()
+GraphicsState :: GraphicsState(GraphicsState &aState) :
+                               mMatrix(&aState.mMatrix),
+                               mLocalClip(aState.mLocalClip)
 {
-   if( mClipRegion)
-   {
-      printf( "oops, leaked a region from rc-gs\n");
-      mClipRegion = 0;
-   }
-   NS_IF_RELEASE( mFontMetrics);
+  mNext = &aState;
+  mClipRegion = NULL;
+  mColor = NS_RGB(0, 0, 0);
+  mFontMetrics = nsnull;
+  mFlags = ~FLAGS_ALL;
+  mLineStyle = aState.mLineStyle;
 }
 
-class GraphicsStateCache
+GraphicsState :: ~GraphicsState()
 {
-   GraphicsState *mFirst;
-   UINT           mSize;
-#ifdef PROFILE_GSTATE
-   UINT           mDeleted;
-   UINT           mCount;
-   UINT           mPeak;
-#endif
+  if (NULL != mClipRegion)
+  {
+//    VERIFY(::DeleteObject(mClipRegion));
+    printf( "oops, leaked a region from rc-gs\n");
+    mClipRegion = NULL;
+  }
 
- public:
-   GraphicsStateCache() : mFirst(nsnull), mSize(0)
-#ifdef PROFILE_GSTATE
-                         , mDeleted(0), mCount(0), mPeak(0)
-#endif
-   {}
-
-  ~GraphicsStateCache()
-   {
-#ifdef PROFILE_GSTATE
-      printf( "---- Graphics-State Stats -----\n");
-      printf( "  GStates requested:       %d\n", mCount);
-      printf( "  Actual GStates created:  %d\n", mPeak);
-      double d = mCount ? (double)(mCount - mPeak) / (double)mCount : 0;
-      printf( "  Gstates recycled:        %d (%d%%)\n", mCount - mPeak, (int)(d*100.0));
-      UINT i = mSize+mDeleted;
-      printf( "  Cached+Deleted:          %d\n", i);
-      if( i != mPeak)
-         printf( "  WARNING: GStates leaked: %d\n", mPeak - i);
-      printf( "------------------------------\n\n");
-#endif
-
-      // Clear up the cache
-      GraphicsState *pTemp, *pNext = mFirst;
-      while( pNext)
-      {
-         pTemp = pNext->mNext;
-         delete pNext;
-         pNext = pTemp;
-      }
-   }
-
-   GraphicsState *NewState()
-   {
-      GraphicsState *state = nsnull;
-      if( mFirst)
-      {
-         state = mFirst;
-         mFirst = mFirst->mNext;
-         state->Construct();
-         mSize--;
-      }
-      else
-      {
-         state = new GraphicsState;
-#ifdef PROFILE_GSTATE
-         mPeak++;
-#endif
-      }
-#ifdef PROFILE_GSTATE
-      mCount++;
-#endif
-      return state;
-   }
-
-   void DisposeState( GraphicsState *aState)
-   {
-      if( GSTATE_CACHESIZE == mSize)
-      {
-         delete aState;
-#ifdef PROFILE_GSTATE
-         mDeleted++;
-#endif
-      }
-      else
-      {
-         aState->Destruct();
-         aState->mNext = mFirst;
-         mFirst = aState;
-         mSize++;
-      }
-   }
-
-} GStateCache; // XXX make this less static, I suppose
+  //these are killed by the rendering context...
+//  mSolidPen = NULL;
+//  mDashedPen = NULL;
+//  mDottedPen = NULL;
+}
 
 // Rendering context -------------------------------------------------------
 
@@ -226,7 +164,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mMainSurface = nsnull;
    mColor = NS_RGB( 0, 0, 0);
    mP2T = 1.0f;
-   mStateStack = nsnull;
+  mStateCache = new nsVoidArray();
    mFontMetrics = nsnull;
    mLineStyle = nsLineStyle_kSolid;
    mPreservedInitialClipRegion = PR_FALSE;
@@ -238,6 +176,7 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    mCurrLineColor   = mColor + 1;
    mCurrLineStyle   = (nsLineStyle)((int)mLineStyle + 1);
    mCurrFillColor   = mColor + 1;
+  PushState();
 }
 
 nsRenderingContextOS2::~nsRenderingContextOS2()
@@ -251,19 +190,26 @@ nsRenderingContextOS2::~nsRenderingContextOS2()
       PopState (clipState);
    }
 
-   // clear state stack
-   GraphicsState *pTemp, *pNext = mStateStack;
-   while( pNext)
-   {
-      if( pNext->mClipRegion)
-      {
-         GFX (::GpiDestroyRegion (mPS, pNext->mClipRegion), FALSE);
-         pNext->mClipRegion = 0;
-      }
-      pTemp = pNext->mNext;
-      GStateCache.DisposeState( pNext);
-      pNext = pTemp;
-   }
+  if (nsnull != mStateCache)
+  {
+    PRInt32 cnt = mStateCache->Count();
+
+    while (--cnt >= 0)
+    {
+      GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt);
+      if (state->mClipRegion) {
+         GFX (::GpiDestroyRegion (mPS, state->mClipRegion), FALSE);
+         state->mClipRegion = 0;
+      } /* endif */
+      mStateCache->RemoveElementAt(cnt);
+
+      if (nsnull != state)
+        delete state;
+    }
+
+    delete mStateCache;
+    mStateCache = nsnull;
+  }
 
    // Release surfaces and the palette
    NS_IF_RELEASE(mMainSurface);
@@ -380,7 +326,7 @@ nsresult nsRenderingContextOS2::CommonInit()
    mContext->GetGammaTable(mGammaTable);
    float app2dev = 0;
    mContext->GetAppUnitsToDevUnits( app2dev);
-   mTMatrix.AddScale( app2dev, app2dev);
+   mTranMatrix->AddScale( app2dev, app2dev);
    mContext->GetDevUnitsToAppUnits( mP2T);
 
    return SetupPS ();
@@ -524,65 +470,114 @@ NS_IMETHODIMP nsRenderingContextOS2::UnlockDrawingSurface()
   return NS_OK;
 }
 
-// State stack -------------------------------------------------------------
-nsresult nsRenderingContextOS2::PushState()
+NS_IMETHODIMP nsRenderingContextOS2 :: PushState(void)
 {
-   GraphicsState *state = GStateCache.NewState();
+  PRInt32 cnt = mStateCache->Count();
 
-   // copy matrix into state
-   state->mMatrix.SetMatrix( &mTMatrix);
-   // copy color & font
-   state->mColor = mColor;
-   state->mFontMetrics = mFontMetrics;
-   state->mLineStyle = mLineStyle;
+  if (cnt == 0)
+  {
+    if (nsnull == mStates)
+      mStates = new GraphicsState();
+    else
+      mStates = new GraphicsState(*mStates);
+  }
+  else
+  {
+    GraphicsState *state = (GraphicsState *)mStateCache->ElementAt(cnt - 1);
+    mStateCache->RemoveElementAt(cnt - 1);
 
-   // add a new ref to the fontmetrics
-   NS_IF_ADDREF( mFontMetrics);
+    state->mNext = mStates;
 
+    //clone state info
+
+    state->mMatrix = mStates->mMatrix;
+    state->mLocalClip = mStates->mLocalClip;
    // clip region: get current & copy it.
    state->mClipRegion = OS2_CopyClipRegion( mPS);
+    state->mFlags = ~FLAGS_ALL;
+    state->mLineStyle = mStates->mLineStyle;
 
-   // push state onto stack
-   state->mNext = mStateStack;
-   mStateStack = state;
-   return NS_OK;
+    mStates = state;
+  }
+
+  if (nsnull != mStates->mNext)
+  {
+    mStates->mNext->mColor = mColor;
+    mStates->mNext->mFontMetrics = mFontMetrics;
+    NS_IF_ADDREF(mStates->mNext->mFontMetrics);
+  }
+
+  mTranMatrix = &mStates->mMatrix;
+
+  return NS_OK;
 }
 
-// RC here is true if clip region is now empty.
-nsresult nsRenderingContextOS2::PopState( PRBool &aClipEmpty)
+NS_IMETHODIMP nsRenderingContextOS2 :: PopState(PRBool &aClipEmpty)
 {
-   PRBool rc = PR_TRUE;
+  PRBool  retval = PR_FALSE;
 
-   NS_ASSERTION( mStateStack, "state underflow");
-   if( !mStateStack) return NS_ERROR_FAILURE;
+  if (nsnull == mStates)
+  {
+    NS_ASSERTION(!(nsnull == mStates), "state underflow");
+  }
+  else
+  {
+    GraphicsState *oldstate = mStates;
 
-   GraphicsState *state = mStateStack;
-   mStateStack = state->mNext;
+    mStates = mStates->mNext;
 
-   // update xform matrix
-   mTMatrix.SetMatrix( &state->mMatrix);
+    mStateCache->AppendElement(oldstate);
 
-   // color & font
-   SetColor( state->mColor);
-   SetLineStyle( state->mLineStyle);
-   NS_IF_RELEASE(mFontMetrics);
-   mFontMetrics = state->mFontMetrics;
-   state->mFontMetrics = nsnull;
+    if (nsnull != mStates)
+    {
+      mTranMatrix = &mStates->mMatrix;
 
-   // Clip region
-   OS2_SetClipRegion( mPS, state->mClipRegion);
+      GraphicsState *pstate;
 
-   if( state->mClipRegion != 0)
-   {
-      state->mClipRegion = 0;
-      rc = PR_FALSE;
-   }
+#ifdef OLDCODE
+      if (oldstate->mFlags & FLAG_CLIP_CHANGED)
+      {
+        pstate = mStates;
 
-   GStateCache.DisposeState( state);
+        //the clip rect has changed from state to state, so
+        //install the previous clip rect
 
-   aClipEmpty = rc;
+        while ((nsnull != pstate) && !(pstate->mFlags & FLAG_CLIP_VALID))
+          pstate = pstate->mNext;
 
-   return NS_OK;
+        if (nsnull != pstate)
+        {
+          int cliptype = ::SelectClipRgn(mDC, pstate->mClipRegion);
+
+          if (cliptype == NULLREGION)
+            retval = PR_TRUE;
+        }
+      }
+#endif
+      OS2_SetClipRegion( mPS, mStates->mClipRegion);
+      if( mStates->mClipRegion != 0)
+      {
+         mStates->mClipRegion = 0;
+         retval = PR_FALSE;
+      }
+
+      oldstate->mFlags &= ~FLAGS_ALL;
+
+      NS_IF_RELEASE(mFontMetrics);
+      mFontMetrics = mStates->mFontMetrics;
+
+      mColor = mStates->mColor;
+      SetColor( mStates->mColor);
+
+      SetLineStyle(mStates->mLineStyle);
+    }
+    else
+      mTranMatrix = nsnull;
+  }
+
+  aClipEmpty = retval;
+
+  return NS_OK;
 }
 
 nsresult nsRenderingContextOS2::Reset()
@@ -597,7 +592,7 @@ nsresult nsRenderingContextOS2::IsVisibleRect( const nsRect &aRect,
                                                PRBool &aIsVisible)
 {
    nsRect trect( aRect);
-   mTMatrix.TransformCoord( &trect.x, &trect.y,
+   mTranMatrix->TransformCoord( &trect.x, &trect.y,
                             &trect.width, &trect.height);
    RECTL rcl;
    mSurface->NS2PM_ININ (trect, rcl);
@@ -614,7 +609,7 @@ nsresult nsRenderingContextOS2::IsVisibleRect( const nsRect &aRect,
 nsresult nsRenderingContextOS2::SetClipRect( const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty)
 {
    nsRect trect = aRect;
-   mTMatrix.TransformCoord( &trect.x, &trect.y, &trect.width, &trect.height);
+   mTranMatrix->TransformCoord( &trect.x, &trect.y, &trect.width, &trect.height);
    long lrc = RGN_ERROR;
 
    if( trect.width == 0 || trect.height == 0)
@@ -851,27 +846,27 @@ nsresult nsRenderingContextOS2::GetFontMetrics( nsIFontMetrics*& aFontMetrics)
 // add the passed in translation to the current translation
 nsresult nsRenderingContextOS2::Translate( nscoord aX, nscoord aY)
 {
-   mTMatrix.AddTranslation( (float) aX, (float) aY);
+   mTranMatrix->AddTranslation( (float) aX, (float) aY);
    return NS_OK;
 }
 
 // add the passed in scale to the current scale
 nsresult nsRenderingContextOS2::Scale( float aSx, float aSy)
 {
-   mTMatrix.AddScale(aSx, aSy);
+   mTranMatrix->AddScale(aSx, aSy);
    return NS_OK;
 }
 
 nsresult nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTransform)
 {
 /* JSK0126 - Assign mTMatrix into aTransform, since aTransform is not a valid object yet */
-   aTransform = &mTMatrix;
+   aTransform = mTranMatrix;
 
    /*
    NS_PRECONDITION(aTransform,"Null transform ptr");
    if( !aTransform)
       return NS_ERROR_NULL_POINTER;
-   aTransform->SetMatrix( &mTMatrix);
+   aTransform->SetMatrix( mTranMatrix);
    */
    return NS_OK;
 }
@@ -963,8 +958,8 @@ void nsRenderingContextOS2::SetupFontAndTextColor (void)
 
 nsresult nsRenderingContextOS2::DrawLine( nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-   mTMatrix.TransformCoord( &aX0, &aY0);
-   mTMatrix.TransformCoord( &aX1, &aY1);
+   mTranMatrix->TransformCoord( &aX0, &aY0);
+   mTranMatrix->TransformCoord( &aX1, &aY1);
 
    POINTL ptls[] = { { (long) aX0, (long) aY0 },
                      { (long) aX1, (long) aY1 } };
@@ -1024,7 +1019,7 @@ void nsRenderingContextOS2::PMDrawPoly( const nsPoint aPoints[], PRInt32 aNumPoi
       {
          pp->x = np->x;
          pp->y = np->y;
-         mTMatrix.TransformCoord( (int*)&pp->x, (int*)&pp->y);
+         mTranMatrix->TransformCoord( (int*)&pp->x, (int*)&pp->y);
       }
 
       // go to os2
@@ -1103,7 +1098,7 @@ nsRenderingContextOS2 :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nsco
 
 void nsRenderingContextOS2::PMDrawRect( nsRect &rect, BOOL fill)
 {
-   mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
+   mTranMatrix->TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
 
    RECTL rcl;
    mSurface->NS2PM_ININ (rect, rcl);
@@ -1198,7 +1193,7 @@ void nsRenderingContextOS2::PMDrawArc( nsRect &rect, PRBool bFilled, PRBool bFul
                                        float start, float end)
 {
    // convert coords
-   mTMatrix.TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
+   mTranMatrix->TransformCoord( &rect.x, &rect.y, &rect.width, &rect.height);
 
    RECTL rcl;
    mSurface->NS2PM_ININ (rect, rcl);
@@ -1557,9 +1552,9 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString(const char *aString, PRUint32 
     if (aLength > 500) {
       dx0 = new INT[aLength];
     }
-    mTMatrix.ScaleXCoords(aSpacing, aLength, dx0);
+    mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
-  mTMatrix.TransformCoord(&x, &y);
+  mTranMatrix->TransformCoord(&x, &y);
 
   POINTL ptl = { x, y };
   mSurface->NS2PM (&ptl, 1);
@@ -1674,13 +1669,13 @@ nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aSRec
    nsRect sr,dr;
 
    sr = aSRect;
-   mTMatrix.TransformCoord( &sr.x, &sr.y, &sr.width, &sr.height);
+   mTranMatrix->TransformCoord( &sr.x, &sr.y, &sr.width, &sr.height);
    sr.x = aSRect.x;
    sr.y = aSRect.y;
-   mTMatrix.TransformNoXLateCoord(&sr.x, &sr.y);
+   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
    dr = aDRect;
-   mTMatrix.TransformCoord( &dr.x, &dr.y, &dr.width, &dr.height);
+   mTranMatrix->TransformCoord( &dr.x, &dr.y, &dr.width, &dr.height);
 
    return aImage->Draw( *this, mSurface, sr.x, sr.y, sr.width, sr.height, dr.x, dr.y, dr.width, dr.height);
 }
@@ -1688,7 +1683,7 @@ nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aSRec
 nsresult nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& aRect)
 {
    nsRect tr( aRect);
-   mTMatrix.TransformCoord( &tr.x, &tr.y, &tr.width, &tr.height);
+   mTranMatrix->TransformCoord( &tr.x, &tr.y, &tr.width, &tr.height);
 
    return aImage->Draw( *this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
@@ -1709,8 +1704,8 @@ nsRenderingContextOS2::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord
   orgY = aY0;
   orgWidth = aX1 - aX0;
   orgHeight = aY1 - aY0;
-  mTMatrix.TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-  mTMatrix.TransformCoord(&orgX,&orgY,&orgWidth,&orgHeight);
+  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
+  mTranMatrix->TransformCoord(&orgX,&orgY,&orgWidth,&orgHeight);
   aX1 = aX0 + orgWidth;
   aY1 = aY0 + orgHeight;
 
@@ -1774,10 +1769,10 @@ nsresult nsRenderingContextOS2::CopyOffScreenBits(
    nsRect drect( aDestBounds);
 
    if( aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-      mTMatrix.TransformCoord( &aSrcX, &aSrcY);
+      mTranMatrix->TransformCoord( &aSrcX, &aSrcY);
 
    if( aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-      mTMatrix.TransformCoord( &drect.x, &drect.y,
+      mTranMatrix->TransformCoord( &drect.x, &drect.y,
                                &drect.width, &drect.height);
 
    // Note rects for GpiBitBlt are in-ex.
