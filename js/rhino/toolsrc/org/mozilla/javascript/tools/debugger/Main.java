@@ -2335,8 +2335,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     ObjToIntMap contexts = new ObjToIntMap();
 
-    static Thread mainThread; // thread used to run the shell
-
     public void contextCreated(Context cx) {
 
         synchronized (contexts) {
@@ -2348,7 +2346,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             // Main then set the break flag so that when the debugger is run
             // with a file argument on the command line it will
             // break at the start of the file
-            if (breakFlag || Thread.currentThread() == mainThread) {
+            if (breakFlag) {
                 contextData.breakNextLine = true;
             }
         }
@@ -3527,8 +3525,8 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     public static void main(String[] args) {
         try {
-            mainThread = Thread.currentThread();
             final Main sdb = new Main("Rhino JavaScript Debugger");
+            sdb.breakFlag = true;
             swingInvoke(new Runnable() {
                     public void run() {
                         sdb.pack();
