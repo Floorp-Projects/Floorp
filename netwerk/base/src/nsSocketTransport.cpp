@@ -65,7 +65,10 @@ public:
     NS_DECL_ISUPPORTS
 
     nsSocketInputStream()
-        : mBytesRead(0), mSocketFD(nsnull) { NS_INIT_ISUPPORTS(); }
+        : mBytesRead(0),
+          mSocketFD(nsnull),
+          mWouldBlock(PR_FALSE)
+        { NS_INIT_ISUPPORTS(); }
     virtual ~nsSocketInputStream() {}
 
     void SetSocketFD(PRFileDesc *aSocketFD) {
@@ -76,6 +79,9 @@ public:
     }
     void ZeroBytesRead() {
         mBytesRead = 0;
+    }
+    PRBool GotWouldBlock() {
+        return mWouldBlock;
     }
 
     //
@@ -98,11 +104,15 @@ public:
         NS_PRECONDITION(mSocketFD, "null socket fd");
         PRInt32 result = PR_Read(mSocketFD, aBuf, aCount);
         LOG(("nsSocketTransport: PR_Read(count=%u) returned %d\n", aCount, result));
+        mWouldBlock = PR_FALSE;
         nsresult rv = NS_OK;
         if (result < 0) {
             PRErrorCode code = PR_GetError();
-            if (PR_WOULD_BLOCK_ERROR == code)
+            if (PR_WOULD_BLOCK_ERROR == code) {
+                LOG(("nsSocketTransport: PR_Read() failed with PR_WOULD_BLOCK_ERROR\n"));
                 rv = NS_BASE_STREAM_WOULD_BLOCK;
+                mWouldBlock = PR_TRUE;
+            }
             else {
                 LOG(("nsSocketTransport: PR_Read() failed [error=%x, os_error=%x]\n",
                     code, PR_GetOSError()));
@@ -133,6 +143,7 @@ public:
 protected:
     PRUint32    mBytesRead;
     PRFileDesc *mSocketFD;
+    PRBool      mWouldBlock;
 };
 
 NS_IMPL_ISUPPORTS1(nsSocketInputStream, nsIInputStream)
@@ -148,7 +159,10 @@ public:
     NS_DECL_ISUPPORTS
 
     nsSocketOutputStream()
-        : mBytesWritten(0), mSocketFD(nsnull) { NS_INIT_ISUPPORTS(); }
+        : mBytesWritten(0),
+          mSocketFD(nsnull),
+          mWouldBlock(PR_FALSE)
+        { NS_INIT_ISUPPORTS(); }
     virtual ~nsSocketOutputStream() {}
 
     void SetSocketFD(PRFileDesc *aSocketFD) {
@@ -159,6 +173,9 @@ public:
     }
     void ZeroBytesWritten() {
         mBytesWritten = 0;
+    }
+    PRBool GotWouldBlock() {
+        return mWouldBlock;
     }
 
     //
@@ -174,12 +191,15 @@ public:
         NS_PRECONDITION(mSocketFD, "null socket fd");
         PRInt32 result = PR_Write(mSocketFD, aBuf, aCount);
         LOG(("nsSocketTransport: PR_Write(count=%u) returned %d\n", aCount, result));
+        mWouldBlock = PR_FALSE;
         nsresult rv = NS_OK;
         if (result < 0) {
             PRErrorCode code = PR_GetError();
-            if (PR_WOULD_BLOCK_ERROR == code)
+            if (PR_WOULD_BLOCK_ERROR == code) {
+                LOG(("nsSocketTransport: PR_Write() failed with PR_WOULD_BLOCK_ERROR\n"));
                 rv = NS_BASE_STREAM_WOULD_BLOCK;
-            else {
+                mWouldBlock = PR_TRUE;
+            } else {
                 LOG(("nsSocketTransport: PR_Write() failed [error=%x, os_error=%x]\n",
                     code, PR_GetOSError()));
                 rv = NS_ERROR_FAILURE;
@@ -216,6 +236,7 @@ public:
 protected:
     PRUint32    mBytesWritten;
     PRFileDesc *mSocketFD;
+    PRBool      mWouldBlock;
 };
 
 NS_IMPL_ISUPPORTS1(nsSocketOutputStream, nsIOutputStream)
@@ -761,8 +782,9 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             break;
 
         case eSocketState_WaitReadWrite:
-            LOG(("nsSocketTransport: Transport [host=%s:%d this=%x] is in WaitReadWrite state.\n",
-                mHostName, mPort, this));
+            LOG(("nsSocketTransport: Transport [host=%s:%d this=%x] "
+                 "is in WaitReadWrite state [readtype=%x writetype=%x status=%x].\n",
+                mHostName, mPort, this, GetReadType(), GetWriteType(), mStatus));
             // Process the read request...
             if (GetReadType() != eSocketRead_None) {
                 if (mBytesExpected == 0) {
@@ -1259,7 +1281,7 @@ nsresult nsSocketTransport::doReadAsync(PRInt16 aSelectFlags)
         //
         if (mSelectFlags & PR_POLL_WRITE) {
             LOG(("nsSocketTransport: READING [this=%x] busy waiting on read!\n", this));
-            PR_Sleep(50); // Don't starve the other threads either!!
+            PR_Sleep(10); // Don't starve the other threads either!!
         } else {
             LOG(("nsSocketTransport: READING [this=%x] listener would block; suspending self.\n", this));
             mSuspendCount++;
@@ -1276,7 +1298,7 @@ nsresult nsSocketTransport::doReadAsync(PRInt16 aSelectFlags)
         PRUint32 total = mSocketInputStream->GetBytesRead();
         mReadOffset += total;
 
-        if (0 == total) {
+        if ((0 == total) && !mSocketInputStream->GotWouldBlock()) {
             LOG(("nsSocketTransport: READING [this=%x] done reading socket.\n", this));
             mSelectFlags &= ~PR_POLL_READ;
         }
@@ -1289,7 +1311,7 @@ nsresult nsSocketTransport::doReadAsync(PRInt16 aSelectFlags)
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
 
-        if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
+        if (total && !(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
             // we don't have content length info at the socket level
             // just pass 0 through.
             mEventSink->OnProgress(this, mReadContext, mReadOffset, 0);
@@ -1442,7 +1464,7 @@ nsresult nsSocketTransport::doWriteAsync(PRInt16 aSelectFlags)
         //
         if (mSelectFlags & PR_POLL_READ) {
             LOG(("nsSocketTransport: WRITING [this=%x] busy waiting on write!\n", this));
-            PR_Sleep(50); // Don't starve the other threads either!!
+            PR_Sleep(10); // Don't starve the other threads either!!
         } else {
             LOG(("nsSocketTransport: WRITING [this=%x] provider would block; suspending self.\n", this));
             mSuspendCount++;
@@ -1459,12 +1481,12 @@ nsresult nsSocketTransport::doWriteAsync(PRInt16 aSelectFlags)
         PRUint32 total = mSocketOutputStream->GetBytesWritten();
         mWriteOffset += total;
 
-        if (0 == total) {
-            LOG(("nsSocketTransport: READING [this=%x] done writing to socket.\n", this));
+        if ((0 == total) && !mSocketOutputStream->GotWouldBlock()) {
+            LOG(("nsSocketTransport: WRITING [this=%x] done writing to socket.\n", this));
             mSelectFlags &= ~PR_POLL_WRITE;
         }
         else {
-            LOG(("nsSocketTransport: READING [this=%x] wrote %u bytes [offset=%u]\n",
+            LOG(("nsSocketTransport: WRITING [this=%x] wrote %u bytes [offset=%u]\n",
                 this, total, mWriteOffset));
             //
             // Stay in the write state
@@ -1472,7 +1494,7 @@ nsresult nsSocketTransport::doWriteAsync(PRInt16 aSelectFlags)
             rv = NS_BASE_STREAM_WOULD_BLOCK;
         }
 
-        if (!(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
+        if (total && !(nsIChannel::LOAD_BACKGROUND & mLoadAttributes) && mEventSink)
             // we don't have content length info at the socket level
             // just pass 0 through.
             mEventSink->OnProgress(this, mWriteContext, mWriteOffset, 0);
