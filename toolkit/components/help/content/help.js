@@ -203,9 +203,9 @@ function loadHelpRDF() {
                 // Cache Additional Datasources to Augment Search Datasources.
                 if (panelID == "search") {
                     emptySearchText = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_TEXT, null) || "No search items found.";
+                        NC_EMPTY_SEARCH_TEXT, "No search items found.");
                     emptySearchLink = getAttribute(helpFileDS, panelDef,
-                        NC_EMPTY_SEARCH_LINK, null) || "about:blank";
+                        NC_EMPTY_SEARCH_LINK, "about:blank");
                     searchDatasources = datasources;
                     // Don't try to display them yet!
                     datasources = "rdf:null";
@@ -539,6 +539,7 @@ function showPanel(panelId) {
     document.getElementById("help-toc-btn").removeAttribute("selected");
     //add the selected style to the correct panel.
     theButton.setAttribute("selected", "true");
+    document.commandDispatcher.advanceFocusIntoSubtree(theButton);
 }
 
 function findParentNode(node, parentNode)
@@ -563,15 +564,13 @@ function findParentNode(node, parentNode)
 }
 
 function onselect_loadURI(tree) {
-    try {
-        var resource = tree.view.getResourceAtIndex(tree.currentIndex);
+    var row = tree.currentIndex;
+    if (row >= 0) {
+        var resource = tree.view.getResourceAtIndex(row);
 	var link = tree.database.GetTarget(resource, NC_LINK, true);
-	if (link) {
-            link = link.QueryInterface(Components.interfaces.nsIRDFLiteral);
+        if (link instanceof Components.interfaces.nsIRDFLiteral && link.Value)
             loadURI(link.Value);
-        }
-    } catch (e) {
-    }// when switching between tabs a spurious row number is returned.
+    }
 }
 
 # doFind - Searches the help files for what is located in findText and outputs into
@@ -746,23 +745,8 @@ function loadCompositeDS(datasources) {
 function getAttribute(datasource, resource, attributeResourceName,
         defaultValue) {
     var literal = datasource.GetTarget(resource, attributeResourceName, true);
-    if (!literal) {
-        return defaultValue;
-    }
-    return getLiteralValue(literal, defaultValue);
-}
-
-function getLiteralValue(literal, defaultValue) {
-    if (literal) {
-        literal = literal.QueryInterface(Components.interfaces.nsIRDFLiteral);
-        if (literal) {
-            return literal.Value;
-        }
-    }
-    if (defaultValue) {
-        return defaultValue;
-    }
-    return null;
+    return literal instanceof Components.interfaces.nsIRDFLiteral ?
+           literal.Value : defaultValue;
 }
 
 # Write debug string to javascript console.

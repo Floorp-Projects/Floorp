@@ -176,8 +176,8 @@ function loadHelpRDF() {
         datasources = normalizeLinks(helpBaseURI, datasources);
         // cache additional datsources to augment search datasources.
         if (panelID == "search") {
-	       emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, null) || "No search items found." ;        
-	       emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, null) || "about:blank";        
+	       emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, "No search items found.");
+	       emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, "about:blank");
           searchDatasources = datasources;
           datasources = "rdf:null"; // but don't try to display them yet!
         }  
@@ -443,6 +443,7 @@ function showPanel(panelId) {
   //add the selected style to the correct panel.
   var theButton = document.getElementById(panelId + "-btn");
   theButton.setAttribute("selected", "true");
+  document.commandDispatcher.advanceFocusIntoSubtree(theButton);
 }
 
 function onselect_loadURI(tree) {
@@ -450,7 +451,7 @@ function onselect_loadURI(tree) {
   if (row >= 0) {
     var resource = tree.view.getResourceAtIndex(row);
     var link = tree.database.GetTarget(resource, NC_LINK, true);
-    if (link instanceof Components.interfaces.nsIRDFLiteral)
+    if (link instanceof Components.interfaces.nsIRDFLiteral && link.Value)
       loadURI(link.Value);
   }
 }
@@ -625,20 +626,7 @@ function loadCompositeDS(datasources) {
 
 function getAttribute(datasource, resource, attributeResourceName, defaultValue) {
   var literal = datasource.GetTarget(resource, attributeResourceName, true);
-  if (!literal)
-    return defaultValue;
-  return getLiteralValue(literal, defaultValue);  
-}
-
-function getLiteralValue(literal, defaultValue) {
-  if (literal) {
-      literal = literal.QueryInterface(Components.interfaces.nsIRDFLiteral);
-      if (literal)
-        return literal.Value;
-  }
-  if (defaultValue)
-    return defaultValue;
-  return null;
+  return literal instanceof Components.interfaces.nsIRDFLiteral ? literal.Value : defaultValue;
 }
 // Write debug string to javascript console.
 function log(aText) {
