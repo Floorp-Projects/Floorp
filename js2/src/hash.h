@@ -185,7 +185,7 @@ namespace JavaScript {
 	template<class Data, class Key, class H>
 	HashTable<Data, Key, H>::~HashTable()
 	{
-		GenericHashEntry *be = bucketsEnd;
+		GenericHashEntry **be = bucketsEnd;
 		for (GenericHashEntry **b = buckets; b != be; b++) {
 			Entry *e = static_cast<Entry *>(*b);
 			while (e) {
