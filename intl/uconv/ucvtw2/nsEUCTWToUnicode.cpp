@@ -109,12 +109,6 @@ nsEUCTWToUnicode::nsEUCTWToUnicode()
 {
 }
 
-nsresult nsEUCTWToUnicode::CreateInstance(nsISupports ** aResult) 
-{
-  *aResult = new nsEUCTWToUnicode();
-  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
 //----------------------------------------------------------------------
 // Subclassing of nsTablesDecoderSupport class [implementation]
 
