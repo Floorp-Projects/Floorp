@@ -273,35 +273,35 @@
     <treecol id="ShortcutURL"
       sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#ShortcutURL"
-      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="Description"
       sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#Description"
-      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="LastVisitDate"
       sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
-      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="BookmarkAddDate"
       sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
-      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
 
     <splitter class="tree-splitter"/>
 
     <treecol id="LastModifiedDate"
       sortSeparators="true" persist="hidden width sortActive sortDirection" width="1*" flex="1"
       resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
-      resource2="http://home.netscape.com/NC-rdf#Name" hidden="true"/>
+      resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
   </treecolgroup>
 
@@ -310,15 +310,15 @@
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.name.label;"
         onclick="return TriStateColumnSort('Name');"
-        observes="Name" />
+        observes="Name"/>
       <treecell class="treecell-header sortDirectionIndicator" 
         value="&tree.header.url.label;"
         onclick="return TriStateColumnSort('URL');"
-        observes="URL" />
+        observes="URL"/>
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.shortcut.label;"
         onclick="return TriStateColumnSort('ShortcutURL');"
-        observes="ShortcutURL" />
+        observes="ShortcutURL"/>
       <treecell class="treecell-header sortDirectionIndicator"
         value="&tree.header.description.label;" 
         onclick="return TriStateColumnSort('Description');"
