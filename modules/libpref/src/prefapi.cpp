@@ -50,10 +50,6 @@
   #include "windows.h"
 #endif /* _WIN32 */
 
-#ifdef MOZ_ADMIN_LIB
-#include "prefldap.h"
-#endif
-
 #ifdef MOZ_SECURITY
 #include "sechash.h"
 #endif
@@ -65,6 +61,7 @@
 #include "prprf.h"
 #include "nsQuickSort.h"
 #include "nsString.h"
+#include "prlink.h"
 
 #ifdef XP_OS2
 #define INCL_DOS
@@ -76,7 +73,7 @@ extern JSRuntime* PREF_GetJSRuntime();
 #define BOGUS_DEFAULT_INT_PREF_VALUE (-5632)
 #define BOGUS_DEFAULT_BOOL_PREF_VALUE (-2)
 
-void PR_CALLBACK
+PR_STATIC_CALLBACK(void)
 clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 {
     PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, entry);
@@ -89,7 +86,7 @@ clearPrefEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
     memset(entry, 0, table->entrySize);
 }
 
-PRBool PR_CALLBACK
+PR_STATIC_CALLBACK(PRBool)
 matchPrefEntry(PLDHashTable*, const PLDHashEntryHdr* entry,
                const void* key)
 {
@@ -110,8 +107,6 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeLockPref(JSContext *cx, JSObject *obj, uns
 PR_STATIC_CALLBACK(JSBool) pref_NativeUnlockPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-PR_STATIC_CALLBACK(JSBool) pref_NativeGetLDAPAttr(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
-
 /*----------------------------------------------------------------------------------------*/
 #include "prefapi_private_data.h"
 
@@ -129,26 +124,29 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id)
     return JS_ResolveStandardClass(cx, obj, id, &resolved);
 }
 
-JSRuntime *       gMochaTaskState = NULL;
 JSContext *       gMochaContext = NULL;
-JSObject *        gMochaPrefObject = NULL;
-JSObject *        gGlobalConfigObject = NULL;
-JSClass           global_class = {
+PRBool              gErrorOpeningUserPrefs = PR_FALSE;
+PLDHashTable        gHashTable = { nsnull };
+
+static JSRuntime *       gMochaTaskState = NULL;
+static JSObject *        gMochaPrefObject = NULL;
+static JSObject *        gGlobalConfigObject = NULL;
+static JSClass      global_class = {
                     "global", 0,
                     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
                     global_enumerate, global_resolve, JS_ConvertStub, JS_FinalizeStub,
                     JSCLASS_NO_OPTIONAL_MEMBERS
                     };
-JSClass             autoconf_class = {
+static JSClass      autoconf_class = {
                     "PrefConfig", 0,
                     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
                     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub,
                     JSCLASS_NO_OPTIONAL_MEMBERS
                     };
-JSPropertySpec      autoconf_props[] = {
+static JSPropertySpec autoconf_props[] = {
                     {0,0,0,0,0}
                     };
-JSFunctionSpec      autoconf_methods[] = {
+static JSFunctionSpec autoconf_methods[] = {
                     { "pref",               pref_NativeDefaultPref, 2,0,0 },
                     { "defaultPref",        pref_NativeDefaultPref, 2,0,0 },
                     { "user_pref",          pref_NativeUserPref,    2,0,0 },
@@ -156,22 +154,18 @@ JSFunctionSpec      autoconf_methods[] = {
                     { "unlockPref",         pref_NativeUnlockPref,  1,0,0 },
                     { "config",             pref_NativeSetConfig,   2,0,0 },
                     { "getPref",            pref_NativeGetPref,     1,0,0 },
-                    { "getLDAPAttributes",  pref_NativeGetLDAPAttr, 4,0,0 },
                     { "localPref",          pref_NativeDefaultPref, 1,0,0 },
                     { "localUserPref",      pref_NativeUserPref,    2,0,0 },
                     { "localDefPref",       pref_NativeDefaultPref, 2,0,0 },
                     { NULL,                 NULL,                   0,0,0 }
                     };
 
-struct CallbackNode*    gCallbacks = NULL;
-PRBool              gErrorOpeningUserPrefs = PR_FALSE;
-PRBool              gCallbacksEnabled = PR_FALSE;
-PRBool              gIsAnyPrefLocked = PR_FALSE;
-PRBool              gLockInfoRead = PR_FALSE;
-PLDHashTable        gHashTable = { nsnull };
-char *              gSavedLine = NULL; 
-char *              gLockFileName = NULL;
-char *              gLockVendor = NULL;
+static struct CallbackNode* gCallbacks = NULL;
+static PRBool       gCallbacksEnabled = PR_FALSE;
+static PRBool       gIsAnyPrefLocked = PR_FALSE;
+static char *       gSavedLine = NULL; 
+static char *       gLockFileName = NULL;
+static char *       gLockVendor = NULL;
 
 
 static PLDHashTableOps     pref_HashTableOps = {
@@ -197,10 +191,6 @@ static PLDHashTableOps     pref_HashTableOps = {
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action);
 static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
-#include "prlink.h"
-extern PRLibrary *pref_LoadAutoAdminLib(void);
-PRLibrary *gAutoAdminLib = NULL;
-
 /* -- Privates */
 struct CallbackNode {
     char*                   domain;
@@ -210,14 +200,14 @@ struct CallbackNode {
 };
 
 /* -- Prototypes */
-PrefResult pref_DoCallback(const char* changed_pref);
-PRBool pref_VerifyLockFile(char* buf, long buflen);
+static PrefResult pref_DoCallback(const char* changed_pref);
+static PRBool pref_VerifyLockFile(char* buf, long buflen);
 
 
-JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
-void JS_DLL_CALLBACK pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
-void pref_Alert(char* msg);
-PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
+PR_STATIC_CALLBACK(JSBool) pref_BranchCallback(JSContext *cx, JSScript *script);
+PR_STATIC_CALLBACK(void) pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
+static void pref_Alert(char* msg);
+static PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 static inline PrefHashEntry* pref_HashTableLookup(const void *key);
   
 /* Computes the MD5 hash of the given buffer (not including the first line)
@@ -273,6 +263,9 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
     return PR_TRUE;
 #endif
 }
+
+
+
 PRBool PREF_Init(const char *filename)
 {
     PRBool ok = PR_TRUE, request = PR_FALSE;
@@ -348,39 +341,6 @@ PRBool PREF_Init(const char *filename)
     return ok;
 } /*PREF_Init*/
 
-PrefResult
-PREF_GetConfigContext(JSContext **js_context)
-{
-    if (!js_context) return PREF_ERROR;
-
-    *js_context = gMochaContext;
-    return PREF_NOERROR;
-}
-
-PrefResult
-PREF_GetGlobalConfigObject(JSObject **js_object)
-{
-    if (!js_object) return PREF_ERROR;
-
-    *js_object = NULL;
-    if (gGlobalConfigObject)
-        *js_object = gGlobalConfigObject;
-
-    return PREF_NOERROR;
-}
-
-PrefResult
-PREF_GetPrefConfigObject(JSObject **js_object)
-{
-    if (!js_object) return PREF_ERROR;
-
-    *js_object = NULL;
-    if (gMochaPrefObject)
-        *js_object = gMochaPrefObject;
-
-    return PREF_NOERROR;
-}
-
 /* Frees the callback list. */
 void PREF_Cleanup()
 {
@@ -432,25 +392,6 @@ void PREF_CleanupPrefs()
     if (gSavedLine)
         free(gSavedLine);
     gSavedLine = NULL;
-}
-
-PrefResult
-PREF_ReadLockFile(const char *filename)
-{
-/*
-    return pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE);
-
-    Lock files are obscured, and the security code to read them has
-    been removed from the free source.  So don't even try to read one.
-    This is benign: no one listens closely to this error return,
-    and no one mourns the missing lock file.
-*/
-    return PREF_ERROR;
-}
-
-void PREF_SetCallbacksStatus( PRBool status )
-{
-    gCallbacksEnabled = status;
 }
 
 /* This is more recent than the below 3 routines which should be obsoleted */
@@ -520,7 +461,7 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 }
 
 // note that this appends to aResult, and does not assign!
-void str_escape(const char * original, nsAFlatCString& aResult)
+static void str_escape(const char * original, nsAFlatCString& aResult)
 {
     const char *p;
     
@@ -575,62 +516,6 @@ PREF_SetBoolPref(const char *pref_name, PRBool value)
     return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETUSER);
 }
 
-PrefResult
-PREF_SetBinaryPref(const char *pref_name, void * value, long size)
-{
-    char* buf = PL_Base64Encode((const char*)value, (PRUint32)size, NULL);
-
-    if (buf) {
-        PrefValue pref;
-        pref.stringVal = buf;
-        return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
-    }
-    else
-        return PREF_ERROR;
-}
-
-PrefResult
-PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
-{
-    char colstr[63];
-    PrefValue pref;
-    PR_snprintf( colstr, 63, "#%02X%02X%02X", red, green, blue);
-
-    pref.stringVal = colstr;
-    return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
-}
-
-#define MYGetboolVal(rgb)   ((PRUint8) ((rgb) >> 16))
-#define MYGetGValue(rgb)   ((PRUint8) (((PRUint16) (rgb)) >> 8)) 
-#define MYGetRValue(rgb)   ((PRUint8) (rgb)) 
-
-PrefResult
-PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref)
-{
-    int red,green,blue;
-    char colstr[63];
-    PrefValue pref;
-
-    red = MYGetRValue(colorref);
-    green = MYGetGValue(colorref);
-    blue = MYGetboolVal(colorref);
-    PR_snprintf( colstr, 63, "#%02X%02X%02X", red, green, blue);
-
-    pref.stringVal = colstr;
-    return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
-}
-
-PrefResult
-PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
-{
-    char rectstr[63];
-    PrefValue pref;
-    PR_snprintf( rectstr, 63, "%d,%d,%d,%d", left, top, right, bottom);
-
-    pref.stringVal = rectstr;
-    return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
-}
-
 /*
 ** DEFAULT VERSIONS:  Call internal with (set_default == PR_TRUE)
 */
@@ -661,38 +546,6 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
     
     return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETDEFAULT);
 }
-
-PrefResult
-PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
-{
-    char* buf = PL_Base64Encode((const char*)value, (PRUint32)size, NULL);
-    if (buf) {
-        PrefValue pref;
-        pref.stringVal = buf;
-        return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETDEFAULT);
-    }
-    else
-        return PREF_ERROR;
-}
-
-PrefResult
-PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue)
-{
-    char colstr[63];
-    PR_snprintf( colstr, 63, "#%02X%02X%02X", red, green, blue);
-
-    return PREF_SetDefaultCharPref(pref_name, colstr);
-}
-
-PrefResult
-PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom)
-{
-    char rectstr[63];
-    PR_snprintf( rectstr, 63, "%d,%d,%d,%d", left, top, right, bottom);
-
-    return PREF_SetDefaultCharPref(pref_name, rectstr);
-}
-
 
 PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
@@ -896,123 +749,8 @@ PrefResult PREF_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
     return result;
 }
 
-
-
-PrefResult
-PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue, PRBool isDefault)
-{
-    char colstr[8];
-    int iSize = 8;
-
-    PrefResult result = PREF_GetCharPref(pref_name, colstr, &iSize, isDefault);
-    
-    if (result == PREF_NOERROR)
-    {
-        unsigned int r, g, b;
-        sscanf(colstr, "#%02x%02x%02x", &r, &g, &b);
-        *red = r;
-        *green = g;
-        *blue = b;
-    }   
-    return result;
-}
-
-#define MYRGB(r, g ,b)  ((PRUint32) (((PRUint8) (r) | ((PRUint16) (g) << 8)) | (((PRUint32) (PRUint8) (b)) << 16))) 
-
-PrefResult
-PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref, PRBool isDefault)
-{
-    PRUint8 red, green, blue;
-    PrefResult   result;
-    PR_ASSERT(colorref);
-    result = PREF_GetColorPref(pref_name, &red, &green, &blue, isDefault);
-    if (result == PREF_NOERROR)
-        *colorref = MYRGB(red,green,blue);
-    return result;
-}
-
-
-PrefResult
-PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size, PRBool isDefault)
-{
-    char* buf;
-    PrefResult result;
-
-    if (!gMochaPrefObject || !return_value) return PREF_ERROR;
-
-    result = PREF_CopyCharPref(pref_name, &buf, isDefault);
-
-    if (result == PREF_NOERROR)
-    {
-        if (PL_strlen(buf) == 0)
-        {       /* don't decode empty string ? */
-            PR_Free(buf);
-            return PREF_ERROR;
-        }
-    
-        PL_Base64Decode(buf, (PRUint32)(*size), (char*)return_value);
-        
-        PR_Free(buf);
-    }
-    return result;
-}
-
-typedef PrefResult (* PR_CALLBACK CharPrefReadFunc)(const char*, char**, PRBool);
-
-static PrefResult
-ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPrefReadFunc inFunc, PRBool isDefault)
-{
-    char* buf;
-    PrefResult result;
-
-    if (!gMochaPrefObject || !return_value)
-        return PREF_ERROR;
-    *return_value = NULL;
-
-    result = inFunc(pref_name, &buf, isDefault);
-
-    if (result == PREF_NOERROR)
-    {
-        if (PL_strlen(buf) == 0)
-        {       /* do not decode empty string? */
-            PR_Free(buf);
-            return PREF_ERROR;
-        }
-    
-        *return_value = PL_Base64Decode(buf, 0, NULL);
-        *size = PL_strlen(buf);
-        
-        PR_Free(buf);
-    }
-    return result;
-}
-
-PrefResult
-PREF_CopyBinaryPref(const char *pref_name, void  ** return_value, int *size, PRBool isDefault)
-{
-    return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyCharPref, isDefault);
-}
-
-#ifndef XP_MAC
-PrefResult
-PREF_CopyPathPref(const char *pref_name, char ** return_buffer, PRBool isDefault)
-{
-    return PREF_CopyCharPref(pref_name, return_buffer, isDefault);
-}
-
-PrefResult
-PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
-{
-    PrefAction action = set_default ? PREF_SETDEFAULT : PREF_SETUSER;
-    PrefValue pref;
-    pref.stringVal = (char*) path;
-    
-    return pref_HashPref(pref_name, pref, PREF_STRING, action);
-}
-#endif /* XP_MAC */
-
 /* Delete a branch. Used for deleting mime types */
-PLDHashOperator PR_CALLBACK
+PR_STATIC_CALLBACK(PLDHashOperator)
 pref_DeleteItem(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
     PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
@@ -1118,7 +856,7 @@ PrefResult pref_UnlockPref(const char *key)
     return PREF_OK;
 }
 
-PrefResult pref_LockPref(const char *key)
+PrefResult PREF_LockPref(const char *key)
 {
     PrefHashEntry* pref;
     if (!gHashTable.ops)
@@ -1129,12 +867,6 @@ PrefResult pref_LockPref(const char *key)
         return PREF_DOES_NOT_EXIST;
    
     return pref_HashPref(key, pref->defaultPref, (PrefType)pref->flags, PREF_LOCK);
-}
-
-PrefResult
-PREF_LockPref(const char *key)
-{
-    return pref_LockPref(key);
 }
 
 /*
@@ -1309,25 +1041,25 @@ PREF_GetPrefType(const char *pref_name)
     return PREF_INVALID;
 }
 
-JSBool PR_CALLBACK pref_NativeDefaultPref
+PR_STATIC_CALLBACK(JSBool) pref_NativeDefaultPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     return pref_HashJSPref(argc, argv, PREF_SETDEFAULT);
 }
 
-JSBool PR_CALLBACK pref_NativeUserPref
+PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     return pref_HashJSPref(argc, argv, PREF_SETUSER);
 }
 
-JSBool PR_CALLBACK pref_NativeLockPref
+PR_STATIC_CALLBACK(JSBool) pref_NativeLockPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     return pref_HashJSPref(argc, argv, PREF_LOCK);
 }
 
-JSBool PR_CALLBACK pref_NativeUnlockPref
+PR_STATIC_CALLBACK(JSBool) pref_NativeUnlockPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
@@ -1345,13 +1077,13 @@ JSBool PR_CALLBACK pref_NativeUnlockPref
     return JS_TRUE;
 }
 
-JSBool PR_CALLBACK pref_NativeSetConfig
+PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     return pref_HashJSPref(argc, argv, PREF_SETCONFIG);
 }
 
-JSBool PR_CALLBACK pref_NativeGetPref
+PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref
     (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
 {
     /*void* value = NULL;*/
@@ -1412,7 +1144,7 @@ typedef struct
   and entry is
   "a.b.c" or "a.b"
   then add "a.b" to the list. */
-PLDHashOperator PR_CALLBACK
+PR_STATIC_CALLBACK(PLDHashOperator)
 pref_addChild(PLDHashTable *table, PLDHashEntryHdr* heh,PRUint32 number,void *arg)
 {
     PrefHashEntry* he = NS_STATIC_CAST(PrefHashEntry*,heh);
@@ -1458,17 +1190,13 @@ pref_addChild(PLDHashTable *table, PLDHashEntryHdr* heh,PRUint32 number,void *ar
     return PL_DHASH_NEXT;
 }
 
-PrefResult
+static PrefResult
 PREF_CreateChildList(const char* parent_node, char **child_list)
 {
     PrefChildIter pcs;
     if (!gHashTable.ops)
         return PREF_NOT_INITIALIZED;
-#ifdef XP_WIN16
-    pcs.bufsize = 20480;
-#else
     pcs.bufsize = 2048;
-#endif
     pcs.childList = (char*) malloc(sizeof(char) * pcs.bufsize);
     if (*parent_node > 0)
         pcs.parent = PR_smprintf("%s.", parent_node);
@@ -1484,139 +1212,6 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
     PR_Free(pcs.parent);
     
     return (pcs.childList == NULL) ? PREF_OUT_OF_MEMORY : PREF_OK;
-}
-
-char*
-PREF_NextChild(char *child_list, int *indx)
-{
-    char *nextstr;
-    char* child = PL_strtok_r(&child_list[*indx], ";", &nextstr);
-    if (child)
-        *indx += PL_strlen(child) + 1;
-    return child;
-}
-
-/*----------------------------------------------------------------------------------------
-*   pref_copyTree
-*
-*   A recursive function that copies all the prefs in some subtree to
-*   another subtree. Either srcPrefix or dstPrefix can be empty strings,
-*   but not NULL pointers. Preferences in the destination are created if 
-*   they do not already exist; otherwise the old values are replaced.
-*
-*   Example calls:
-*
-*       Copy all the prefs to another tree:         pref_copyTree("", "temp", "")
-*
-*       Copy all the prefs under mail. to newmail.: pref_copyTree("mail", "newmail", "mail")
-*
---------------------------------------------------------------------------------------*/ 
-PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *curSrcBranch)
-{
-    PrefResult      result = PREF_NOERROR;
-
-    char*   children = NULL;
-    
-    if ( PREF_CreateChildList(curSrcBranch, &children) == PREF_NOERROR )
-    {   
-        int     indx = 0;
-        int     srcPrefixLen = PL_strlen(srcPrefix);
-        char*   child = NULL;
-        
-        while ( (child = PREF_NextChild(children, &indx)) != NULL)
-        {
-            PrefType prefType;
-            char    *destPrefName = NULL;
-            char    *childStart = (srcPrefixLen > 0) ? (child + srcPrefixLen + 1) : child;
-            
-            /*NS_ASSERTION( PL_strncmp(child, curSrcBranch, (PRUint32)srcPrefixLen) == 0, "bad pref child in pref_copyTree" );*/
-            
-            if (*destPrefix > 0)
-                destPrefName = PR_smprintf("%s.%s", destPrefix, childStart);
-            else
-                destPrefName = PR_smprintf("%s", childStart);
-            
-            if (!destPrefName)
-            {
-                result = PREF_OUT_OF_MEMORY;
-                break;
-            }
-            
-            if ( ! PREF_PrefIsLocked(destPrefName) )        /* returns true if the prefs exists, and is locked */
-            {
-                /*  PREF_GetPrefType masks out the other bits of the pref flag, so we only
-                    ever get the values in the switch.
-                */
-                prefType = PREF_GetPrefType(child);
-                
-                switch (prefType)
-                {
-                    case PREF_STRING:
-                        {
-                            char    *prefVal = NULL;
-                            
-                            result = PREF_CopyCharPref(child, &prefVal, PR_FALSE);
-                            if (result == PREF_NOERROR)
-                                result = PREF_SetCharPref(destPrefName, prefVal);
-                                
-                            PR_FREEIF(prefVal);
-                        }
-                        break;
-                    
-                    case PREF_INT:
-                            {
-                            PRInt32     prefValInt;
-                            
-                            result = PREF_GetIntPref(child, &prefValInt, PR_FALSE);
-                            if (result == PREF_NOERROR)
-                                result = PREF_SetIntPref(destPrefName, prefValInt);
-                        }
-                        break;
-                        
-                    case PREF_BOOL:
-                        {
-                            PRBool  prefBool;
-                            
-                            result = PREF_GetBoolPref(child, &prefBool, PR_FALSE);
-                            if (result == PREF_NOERROR)
-                                result = PREF_SetBoolPref(destPrefName, prefBool);
-                        }
-                        break;
-                    
-                    case PREF_INVALID:
-                        /*  this is probably just a branch. Since we can have both
-                             a.b and a.b.c as valid prefs, this is OK.
-                        */
-                        break;
-                        
-                    default:
-                        /* we should never get here */
-                        PR_ASSERT(PR_FALSE);
-                        break;
-                }
-                
-            }   /* is not locked */
-            
-            PR_FREEIF(destPrefName);
-            
-            /* Recurse */
-            if (result == PREF_NOERROR || result == PREF_VALUECHANGED)
-                result = pref_copyTree(srcPrefix, destPrefix, child);
-        }
-        
-        PR_Free(children);
-    }
-    
-    return result;
-}
-
-PrefResult
-PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
-{
-    PR_ASSERT(srcRoot != NULL);
-    PR_ASSERT(destRoot != NULL);
-    
-    return pref_copyTree(srcRoot, destRoot, srcRoot);
 }
 
 /* Adds a node to the beginning of the callback list. */
@@ -1672,7 +1267,7 @@ PREF_UnregisterCallback(const char *pref_node,
     return result;
 }
 
-PrefResult pref_DoCallback(const char* changed_pref)
+static PrefResult pref_DoCallback(const char* changed_pref)
 {
     PrefResult result = PREF_OK;
     struct CallbackNode* node;
@@ -1688,84 +1283,9 @@ PrefResult pref_DoCallback(const char* changed_pref)
     return result;
 }
 
-/* !! Front ends need to implement */
-#ifndef XP_MAC /* see macpref.cp */
-PRBool
-PREF_IsAutoAdminEnabled()
-{
-    return PR_TRUE;
-}
-#endif /* XP_MAC */
-
-/* Called from JavaScript */
-typedef char* (*ldap_func)(char*, char*, char*, char*, char**); 
-
-JSBool PR_CALLBACK pref_NativeGetLDAPAttr
-    (JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval)
-{
-#ifdef MOZ_ADMIN_LIB
-    ldap_func get_ldap_attributes = NULL;
-#if (defined (XP_MAC) && defined(powerc)) || defined (XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
-    if (!gAutoAdminLib)
-        gAutoAdminLib = pref_LoadAutoAdminLib();
-        
-    if (gAutoAdminLib)
-    {
-        get_ldap_attributes = (ldap_func)
-            PR_FindSymbol(
-             gAutoAdminLib,
-#ifndef XP_WIN16
-            "pref_get_ldap_attributes"
-#else
-            MAKEINTRESOURCE(1)
-#endif
-            );
-    }
-    if (get_ldap_attributes == NULL)
-    {
-        /* This indicates the AutoAdmin dll was not found. */
-        *rval = JSVAL_NULL;
-        return JS_TRUE;
-    }
-#else
-    get_ldap_attributes = pref_get_ldap_attributes;
-#endif /* MOZ_ADMIN_LIB */
-
-    if (argc >= 4 && JSVAL_IS_STRING(argv[0])
-        && JSVAL_IS_STRING(argv[1])
-        && JSVAL_IS_STRING(argv[2])
-        && JSVAL_IS_STRING(argv[3]))
-    {
-        char *return_error = NULL;
-        char *value = get_ldap_attributes(
-            JS_GetStringBytes(JSVAL_TO_STRING(argv[0])),
-            JS_GetStringBytes(JSVAL_TO_STRING(argv[1])),
-            JS_GetStringBytes(JSVAL_TO_STRING(argv[2])),
-            JS_GetStringBytes(JSVAL_TO_STRING(argv[3])),
-            &return_error );
-        
-        if (value)
-        {
-            JSString* str = JS_NewStringCopyZ(cx, value);
-            PR_Free(value);
-            if (str)
-            {
-                *rval = STRING_TO_JSVAL(str);
-                return JS_TRUE;
-            }
-        }
-        if (return_error)
-            pref_Alert(return_error);
-    }
-#endif
-    
-    *rval = JSVAL_NULL;
-    return JS_TRUE;
-}
-
 #define MAYBE_GC_BRANCH_COUNT_MASK  4095
 
-JSBool PR_CALLBACK
+PR_STATIC_CALLBACK(JSBool)
 pref_BranchCallback(JSContext *cx, JSScript *script)
 { 
     static PRUint32 count = 0;
@@ -1864,68 +1384,6 @@ void pref_Alert(char* msg)
 
 #endif
 
-#ifdef XP_WIN16
-#define ADMNLIBNAME "adm1640.dll"
-#elif defined XP_WIN || defined XP_OS2
-#define ADMNLIBNAME "adm3240.dll"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-#define ADMNLIBNAME "libAutoAdmin.so"
-extern void fe_GetProgramDirectory(char *path, int len);
-#else
-#define ADMNLIBNAME "AutoAdmin" /* internal fragment name */
-#endif
-
-/* Try to load AutoAdminLib */
-PRLibrary *
-pref_LoadAutoAdminLib()
-{
-    PRLibrary *lib = NULL;
-
-#ifdef XP_MAC
-    const char *oldpath = PR_GetLibraryPath();
-    PR_SetLibraryPath( "/usr/local/netscape/" );
-#endif
-
-#if defined(XP_UNIX) && !defined(B_ONE_M)
-    {
-        char aalib[MAXPATHLEN];
-
-        if (getenv("NS_ADMIN_LIB"))
-        {
-            lib = PR_LoadLibrary(getenv("NS_ADMIN_LIB"));
-        }
-        else
-        {
-            if (getenv("MOZILLA_FIVE_HOME"))
-            {
-                PL_strcpy(aalib, getenv("MOZILLA_FIVE_HOME"));
-                lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
-            }
-            if (lib == NULL)
-            {
-                fe_GetProgramDirectory(aalib, sizeof(aalib)-1);
-                lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
-            }
-            if (lib == NULL)
-            {
-                (void) PL_strcpy(aalib, "/usr/local/netscape/");
-                lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
-            }
-        }
-    }
-    /* Make sure it's really libAutoAdmin.so */
-    
-    if ( lib && PR_FindSymbol(lib, "_POLARIS_SplashPro") == NULL ) return NULL;
-#else
-    lib = PR_LoadLibrary( ADMNLIBNAME );
-#endif
-
-#ifdef XP_MAC
-    PR_SetLibraryPath(oldpath);
-#endif
-
-    return lib;
-}
 
 /*--------------------------------------------------------------------------------------*/
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
@@ -1962,18 +1420,5 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
     }
 
     return JS_TRUE;
-}
-
-/*--------------------------------------------------------------------------------------*/
-static int pref_CountListMembers(char* list)
-/*--------------------------------------------------------------------------------------*/
-{
-    int members = 0;
-    char* p = list = PL_strdup(list);
-    char* nextstr;
-    for ( p = PL_strtok_r(p, ",", &nextstr); p != NULL; p = PL_strtok_r(nextstr, ",", &nextstr) )
-        members++;
-    PR_FREEIF(list);
-    return members;
 }
 

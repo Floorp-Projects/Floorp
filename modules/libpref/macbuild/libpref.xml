@@ -507,7 +507,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2643ymd6646adc2pD&#134;&#232;</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -799,10 +799,15 @@
                     <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                 </SETTING>
                 <SETTING><NAME>MWProject_PPC_flatrsrcfilename</NAME><VALUE></VALUE></SETTING>
-                <PANELDATA><NAME>PPCAsm Panel</NAME><VALUE>
-                    0002000000030002000000000000000000000000000000000000000000000000
-                    00000000000000000000000000000000
-                </VALUE></PANELDATA>
+
+                <!-- Settings for "PPCAsm Panel" panel -->
+                <SETTING><NAME>MWAssembler_PPC_auxheader</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_symmode</NAME><VALUE>Mac</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_dialect</NAME><VALUE>PPC</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_prefixfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_typecheck</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_warnings</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_casesensitive</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "Rez Compiler" panel -->
                 <SETTING><NAME>MWRez_Language_maxwidth</NAME><VALUE>80</VALUE></SETTING>
@@ -949,23 +954,9 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>macpref.cp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>JavaScriptDebug.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
-                    <FILEFLAGS>Debug</FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MacPrefUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS>Debug</FILEFLAGS>
                 </FILE>
                 <FILE>
@@ -1019,17 +1010,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>macpref.cp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsPref.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MacPrefUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -1543,7 +1524,7 @@
                 <!-- Settings for "FTP Panel" panel -->
                 <SETTING><NAME>MWFTP_Post_hostName</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_username</NAME><VALUE></VALUE></SETTING>
-                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>0&lt;s&#144;</VALUE></SETTING>
+                <SETTING><NAME>MWFTP_Post_password</NAME><VALUE>2643ymd6646adc2pD&#134;&#232;</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_remoteDir</NAME><VALUE></VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathVersion</NAME><VALUE>1</VALUE></SETTING>
                 <SETTING><NAME>MWFTP_Post_ftp_PathType</NAME><VALUE>0</VALUE></SETTING>
@@ -1835,10 +1816,15 @@
                     <SETTING><NAME>PathRoot</NAME><VALUE>Project</VALUE></SETTING>
                 </SETTING>
                 <SETTING><NAME>MWProject_PPC_flatrsrcfilename</NAME><VALUE></VALUE></SETTING>
-                <PANELDATA><NAME>PPCAsm Panel</NAME><VALUE>
-                    0002000000030002000000000000000000000000000000000000000000000000
-                    00000000000000000000000000000000
-                </VALUE></PANELDATA>
+
+                <!-- Settings for "PPCAsm Panel" panel -->
+                <SETTING><NAME>MWAssembler_PPC_auxheader</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_symmode</NAME><VALUE>Mac</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_dialect</NAME><VALUE>PPC</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_prefixfile</NAME><VALUE></VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_typecheck</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_warnings</NAME><VALUE>0</VALUE></SETTING>
+                <SETTING><NAME>MWAssembler_PPC_casesensitive</NAME><VALUE>0</VALUE></SETTING>
 
                 <!-- Settings for "Rez Compiler" panel -->
                 <SETTING><NAME>MWRez_Language_maxwidth</NAME><VALUE>80</VALUE></SETTING>
@@ -1957,20 +1943,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>macpref.cp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MacPrefUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>JavaScript.shlb</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Library</FILEKIND>
@@ -2056,16 +2028,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>nsPref.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>macpref.cp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MacPrefUtils.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -2170,20 +2132,6 @@
                 <PATH>prefapi.cpp</PATH>
                 <PATHFORMAT>MacOS</PATHFORMAT>
             </FILEREF>
-            <GROUP><NAME>mac</NAME>
-                <FILEREF>
-                    <TARGETNAME>libprefDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>macpref.cp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <TARGETNAME>libprefDebug.shlb</TARGETNAME>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MacPrefUtils.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-            </GROUP>
         </GROUP>
         <GROUP><NAME>NS Libraries</NAME>
             <GROUP><NAME>Optimized</NAME>

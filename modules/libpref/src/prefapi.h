@@ -131,29 +131,11 @@ typedef enum {
 // </font>
 */
 
-#if defined (XP_WIN) || defined (XP_MAC) || defined(XP_OS2)
-/* PREF_Init actually returns a profile object */
-void *
-PREF_InitProfile(void);
-
-void *
-PREF_GetCurrentProfile(void);
-#endif
-
 PRBool
 PREF_Init(const char *filename);
 
 PrefResult
 PREF_LockPref(const char *key);
-
-PrefResult
-PREF_GetConfigContext(JSContext **js_context);
-
-PrefResult
-PREF_GetGlobalConfigObject(JSObject **js_object);
-
-PrefResult
-PREF_GetPrefConfigObject(JSObject **js_object);
 
 /*
 // Cleanup should be called at program exit to free the 
@@ -164,16 +146,6 @@ PREF_Cleanup();
 
 void
 PREF_CleanupPrefs();
-
-/*
-// <font color=blue>
-// Given a path to a local Lock file, unobscures the file (not implemented yet)
-// and verifies the MD5 hash.  Returns PREF_BAD_LOCKFILE if hash failed;
-// otherwise, evaluates the contents of the file as a JS buffer.
-// </font>
-*/
-PrefResult
-PREF_ReadLockFile(const char *filename);
 
 JSBool
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
@@ -234,10 +206,6 @@ typedef enum { PREF_INVALID = 0,
 PrefResult PREF_SetCharPref(const char *pref,const char* value);
 PrefResult PREF_SetIntPref(const char *pref,PRInt32 value);
 PrefResult PREF_SetBoolPref(const char *pref,PRBool value);
-PrefResult PREF_SetBinaryPref(const char *pref,void * value, long size);
-PrefResult PREF_SetColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue);
-PrefResult PREF_SetColorPrefDWord(const char *pref_name, PRUint32 colorref);
-PrefResult PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
 /*
 // <font color=blue>
@@ -251,9 +219,6 @@ PrefResult PREF_SetRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PR
 PrefResult PREF_SetDefaultCharPref(const char *pref,const char* value);
 PrefResult PREF_SetDefaultIntPref(const char *pref,PRInt32 value);
 PrefResult PREF_SetDefaultBoolPref(const char *pref,PRBool value);
-PrefResult PREF_SetDefaultBinaryPref(const char *pref,void * value, long size);
-PrefResult PREF_SetDefaultColorPref(const char *pref_name, PRUint8 red, PRUint8 green, PRUint8 blue);
-PrefResult PREF_SetDefaultRectPref(const char *pref_name, PRInt16 left, PRInt16 top, PRInt16 right, PRInt16 bottom);
 
 PRBool PREF_HasUserPref(const char* pref_name);
 
@@ -265,11 +230,6 @@ PRBool PREF_HasUserPref(const char* pref_name);
 // They also take a pointer to fill in with the return value and return an
 // error value.  At the moment, this is simply an int but it may
 // be converted to an enum once the global error strategy is worked out.
-// In addition, the GetChar and GetBinary versions take an (int *) which
-// should contain the length of the buffer which is passed to be filled
-// in.  If the length passed in is 0, the function will not copy the
-// preference but will instead return the length necessary for the buffer,
-// including null terminator.
 //
 // They will perform conversion if the type doesn't match what was requested.
 // (if it is reasonably possible)
@@ -278,9 +238,6 @@ PRBool PREF_HasUserPref(const char* pref_name);
 PrefResult PREF_GetIntPref(const char *pref,
                            PRInt32 * return_int, PRBool isDefault);	
 PrefResult PREF_GetBoolPref(const char *pref, PRBool * return_val, PRBool isDefault);	
-PrefResult PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length, PRBool isDefault);
-PrefResult PREF_GetColorPref(const char *pref_name, PRUint8 *red, PRUint8 *green, PRUint8 *blue, PRBool isDefault);
-PrefResult PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref, PRBool isDefault);
 /*
 // <font color=blue>
 // These functions are similar to the above "Get" version with the significant
@@ -289,20 +246,6 @@ PrefResult PREF_GetColorPrefDWord(const char *pref_name, PRUint32 *colorref, PRB
 // </font>
 */
 PrefResult PREF_CopyCharPref(const char *pref, char ** return_buf, PRBool isDefault);
-PrefResult PREF_CopyBinaryPref(const char *pref_name, void ** return_value, int *size, PRBool isDefault);
-
-/*
-// <font color=blue>
-// Get and set encoded full file/directory pathname strings
-// (i.e. file URLs without the file:// part).
-// On Windows and Unix, these are just stored as string preferences.
-// On Mac, paths should be stored as aliases.  These calls convert
-// between paths and aliases flattened into binary strings.
-// </font>
-*/
-PrefResult PREF_CopyPathPref(const char *pref, char ** return_buf, PRBool isDefault);
-PrefResult PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default);
-
 /*
 // <font color=blue>
 // PRBool function that returns whether or not the preference is locked and therefore
@@ -312,19 +255,6 @@ PrefResult PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_
 PRBool PREF_PrefIsLocked(const char *pref_name);
 
 PrefType PREF_GetPrefType(const char *pref_name);
-
-/*
-// <font color=blue>
-// Cause the preference file to be written to disk
-// </font>
-*/
-PrefResult PREF_SavePrefFile(void);
-
-/*
- * Called to handle the "about:config" command.
- * Currently dumps out some debugging information.
- */
-char * PREF_AboutConfig();
 
 /*
  * Delete a branch of the tree
@@ -341,33 +271,6 @@ PrefResult PREF_ClearUserPref(const char *pref_name);
  */
 PrefResult PREF_ClearAllUserPrefs();
 
-/*
- * Creates an iterator over the children of a node.  Sample code:
- 	char* children;
-	if ( PREF_CreateChildList("mime", &children) == 0 )
-	{	
-		int indx = 0;
-		while (char* child = PREF_NextChild(children, &indx)) {
-			...
-		}
-		XP_FREE(children);
-	}
- *	e.g. subsequent calls to Next() return
- *     "mime.image_gif", then
- *     "mime.image_jpeg", etc.
- */
-PrefResult PREF_CreateChildList(const char* parent_node, char **child_list);
-char* PREF_NextChild(char *child_list, int *indx);
-
-/*  The following function parts of the hierarchy from one root to another.
- *	For example, PREF_CopyPrefsTree("mail","newmail") copies all
- *	the "mail." prefs to "newmail." prefs. It does not delete the
- *	source tree; you should do that yourself.
- *	
- *	Either srcRoot or destRoot can be empty strings, to denote 
- *	the root of the entire tree, but cannot be NULL.
- */
-PrefResult PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
 
 /*
 // <font color=blue>
@@ -399,22 +302,6 @@ void PREF_RegisterCallback( const char* domain,
 								PrefChangedFunc callback, void* instance_data );
 PrefResult PREF_UnregisterCallback( const char* domain,
 								PrefChangedFunc callback, void* instance_data );
-
-/*
-// Front ends implement to determine whether AutoAdmin library is installed.
-*/
-PRBool PREF_IsAutoAdminEnabled(void);
-
-#ifdef XP_UNIX
-struct fe_icon_data;
-typedef void* XmStringPtr;
-typedef void* KeySymPtr;
-/* void PREF_AlterSplashIcon(struct fe_icon_data*); */
-PRBool PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
-PRBool PREF_GetUrl(char*, char**);
-void PREF_SetCallbacksStatus(PRBool status);
-PrefResult PREF_LoadLDAPPrefs(void);
-#endif
 
 NSPR_END_EXTERN_C
 #endif
