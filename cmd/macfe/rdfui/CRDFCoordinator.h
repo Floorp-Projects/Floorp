@@ -85,28 +85,31 @@ protected:
 	virtual			~CRDFCoordinator();
 	
 public:
-	enum { class_ID = 'RCoo', pane_ID = 'RCoo' };
+	enum { class_ID = 'RCoo' };
 	enum {
-		msg_ActiveSelectorChanged = 'selc',		// broadcast when selector changes
-		kScrollerPaneID = 'HyTC'				// pane id of the scroller containing tree/headers/etc
+		msg_ActiveSelectorChanged = 'selc'		// broadcast when selector changes
 	};
 
 		// Set the current workspace to a particular kind of workspace
 	virtual void SelectView ( HT_ViewType inPane ) ;
 		
 		// register/unregister this NavCenter for SiteMap updates, etc
-	void RegisterNavCenter ( MWContext* inContext ) ;
-	void UnregisterNavCenter ( ) ;
+	void RegisterNavCenter ( const MWContext* inContext ) const ;
+	void UnregisterNavCenter ( ) const ;
 	
 		// because sometimes you just need to get to the top-level HT pane....
-	HT_Pane HTPane ( ) const { return mHTPane; } ;
-
+	const HT_Pane HTPane ( ) const { return mHTPane; } ;
+	HT_Pane HTPane ( ) { return mHTPane; }
+	
 		// get/set the frame to which urls are dispatched. It's ok not to set
 		// this as the default will be the top-most HTML view.
 	virtual void	SetTargetFrame ( const char* inFrame ) ;
 	
 protected:
-
+	enum {
+		kScrollerPaneID = 'HyTC'				// pane id of the scroller containing tree/headers/etc
+	};
+	
 		// handle showing/hiding column headers. Should be called after the HT_Pane has
 		// been created.
 	virtual void	ShowOrHideColumnHeaders ( ) ;
@@ -169,7 +172,8 @@ public:
 
 		// access to the shelf that comprised the NavCenter. This wrapper class
 		// allows you to easily slide in/out the shelf or check if it is open.
-	CShelf& NavCenterShelf() const { return *mNavCenter; } ;
+	CShelf& NavCenterShelf() { return *mNavCenter; } ;
+	const CShelf& NavCenterShelf() const { return *mNavCenter; } ;
 	
 		// create the pane with |inNode| as the root of the view
 	virtual void	BuildHTPane ( HT_Resource inNode ) ;
@@ -205,7 +209,7 @@ public:
 					CShackRDFCoordinator(LStream* inStream);
 	virtual			~CShackRDFCoordinator();
 
-	virtual void	BuildHTPane ( const char* inURL, unsigned int inCount, 
+	void			BuildHTPane ( const char* inURL, unsigned int inCount, 
 									char** inParamNames, char** inParamValues ) ;
 	
 }; // CShackRDFCoordinator
@@ -231,12 +235,12 @@ public:
 					CWindowRDFCoordinator(LStream* inStream);
 	virtual			~CWindowRDFCoordinator();
 
-	virtual void	BuildHTPane ( HT_Resource inNode ) ;
-	virtual void	BuildHTPane ( RDF_Resource inNode ) ;
+	void			BuildHTPane ( HT_Resource inNode ) ;
+	void			BuildHTPane ( RDF_Resource inNode ) ;
 
 protected:
 
-	virtual void	FinishCreateSelf ( ) ;
+	void			FinishCreateSelf ( ) ;
 
 }; // CWindowRDFCoordinator
 

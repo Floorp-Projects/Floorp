@@ -547,10 +547,10 @@ CRDFCoordinator :: ObeyCommand ( CommandT inCommand, void* ioParam )
 // Tell XP about this navCenter & context for site map stuff
 //
 void
-CRDFCoordinator :: RegisterNavCenter ( MWContext* inContext )
+CRDFCoordinator :: RegisterNavCenter ( const MWContext* inContext ) const
 {
 	if ( HTPane() )
-		XP_RegisterNavCenter ( mHTPane, inContext );
+		XP_RegisterNavCenter ( mHTPane, const_cast<MWContext*>(inContext) );
 
 } // RegisterNavCenter
 
@@ -561,7 +561,7 @@ CRDFCoordinator :: RegisterNavCenter ( MWContext* inContext )
 // Tell XP this window is going away.
 //
 void
-CRDFCoordinator :: UnregisterNavCenter ( )
+CRDFCoordinator :: UnregisterNavCenter ( ) const
 {
 	if ( HTPane() )
 		XP_UnregisterNavCenter ( mHTPane );	
