@@ -2208,9 +2208,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT *rc)
         // behaviour (see nsEditorEventListeners.cpp)
     
         case WM_BUTTON1DOWN:
+          WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
           break;
         case WM_BUTTON1UP:
+          WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
           break;
         case WM_BUTTON1DBLCLK:
@@ -2218,9 +2220,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT *rc)
           break;
     
         case WM_BUTTON2DOWN:
+          WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
           break;
         case WM_BUTTON2UP:
+          WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
           break;
         case WM_BUTTON2DBLCLK:
@@ -2269,7 +2273,9 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT *rc)
                 ptlLastPos.y = (SHORT)SHORT2FROMMP(mp1);
             }
           }
-          result = DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
+          DispatchMouseEvent( NS_MOUSE_MOVE, mp1, mp2);
+          // don't propogate mouse move or the OS will change the pointer
+          result = PR_TRUE;
           break;
         case WM_MOUSEENTER:
           result = DispatchMouseEvent( NS_MOUSE_ENTER, mp1, mp2);
@@ -3309,3 +3315,7 @@ PCSZ nsWindow::WindowClass()
     return className;
 }
 
+ULONG nsWindow::WindowStyle()
+{
+   return BASE_CONTROL_STYLE | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+}

@@ -48,7 +48,7 @@
 // class definition headers
 #include "nsAppShell.h"
 #include "nsBidiKeyboard.h"
-#include "nsCanvas.h"
+#include "nsWindow.h"
 #include "nsDragService.h"
 #include "nsILocalFile.h"
 #include "nsFilePicker.h"
@@ -68,7 +68,7 @@
 
 // objects that just require generic constructors
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCanvas)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
@@ -227,10 +227,10 @@ static const nsModuleComponentInfo components[] =
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-  { "OS/2 Canvas",
+  { "OS/2 Child Window",
     NS_CHILD_CID,
     "@mozilla.org/widget/child_window/os2;1",
-    nsCanvasConstructor },
+    nsWindowConstructor },
   { "OS/2 Clipboard",
     NS_CLIPBOARD_CID,
     "@mozilla.org/widget/clipboard;1",

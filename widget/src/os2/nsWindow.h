@@ -183,7 +183,7 @@ protected:
    static  nsWindow*   gCurrentWindow;
    // nsWindow methods subclasses must provide for creation to work
    virtual PCSZ  WindowClass();
-   virtual ULONG WindowStyle() = 0;
+   virtual ULONG WindowStyle();
 
    // hooks subclasses may wish to override!
    virtual void     PostCreateWidget()            {}
