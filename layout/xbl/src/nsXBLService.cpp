@@ -178,6 +178,7 @@ protected:
   static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files 
                                              // we have loaded
                                              // during this session.
+  static nsSupportsHashtable* mProtoClassTable;   // Every binding with methods/properties has a protoclass.
   static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
   static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
 
@@ -194,6 +195,8 @@ protected:
 // Static member variable initialization
 PRUint32 nsXBLService::gRefCnt = 0;
 nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
+nsSupportsHashtable* nsXBLService::mProtoClassTable = nsnull;
+
 nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
 
 nsIAtom* nsXBLService::kExtendsAtom = nsnull;
@@ -212,6 +215,7 @@ nsXBLService::nsXBLService(void)
   if (gRefCnt == 1) {
     // Create our binding table.
     mBindingTable = new nsSupportsHashtable();
+    mProtoClassTable = new nsSupportsHashtable();
 
     // Register the XBL namespace.
     nsresult rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
@@ -240,6 +244,8 @@ nsXBLService::~nsXBLService(void)
   gRefCnt--;
   if (gRefCnt == 0) {
     delete mBindingTable;
+    delete mProtoClassTable;
+
     NS_IF_RELEASE(gNameSpaceManager);
     
     // Release our atoms
@@ -271,7 +277,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   }
 
   if (!binding) {
-    nsCAutoString str = "Failed to locate XBL binding.  The invalid binding name is: ";
+    nsCAutoString str = "Failed to locate XBL binding. XBL is now using id instead of name to reference bindings. Make sure you have switched over.  The invalid binding name is: ";
     str.AppendWithConversion(aURL);
     NS_ERROR(str);
     return NS_ERROR_FAILURE;
@@ -412,7 +418,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(nsCAutoString& aURLStr, nsIXBLBinding** a
     root->ChildAt(i, *getter_AddRefs(child));
 
     nsAutoString value;
-    child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, value);
+    child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, value);
     
     // If no ref is specified just use this.
     if ((bindingName.IsEmpty()) || (bindingName == value)) {
