@@ -509,34 +509,6 @@ nsContentList::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
   return NS_OK;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsContentList)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsContentList)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsContentList)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsContentList)
-
-void
-nsContentList::BeginUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-}
-
-void
-nsContentList::EndUpdate(nsIDocument *aDocument, nsUpdateType aUpdateType)
-{
-}
-
-void
-nsContentList::ContentChanged(nsIDocument* aDocument, nsIContent* aContent,
-                              nsISupports* aSubContent)
-{
-}
-
-void
-nsContentList::AttributeChanged(nsIDocument* aDocument, nsIContent* aContent,
-                                PRInt32 aNameSpaceID, nsIAtom* aAttribute,
-                                PRInt32 aModType)
-{
-}
-
 void
 nsContentList::ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
                                PRInt32 aNewIndexInContainer)

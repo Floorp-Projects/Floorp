@@ -43,7 +43,7 @@
 #include "nsString.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIDOMNodeList.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIContentList.h"
 #include "nsIAtom.h"
 
@@ -152,7 +152,7 @@ protected:
 class nsContentList : public nsBaseContentList,
                       protected nsContentListKey,
                       public nsIDOMHTMLCollection,
-                      public nsIDocumentObserver,
+                      public nsStubDocumentObserver,
                       public nsIContentList
 {
 public:
@@ -179,7 +179,16 @@ public:
   virtual PRInt32 IndexOf(nsIContent *aContent, PRBool aDoFlush);
 
   // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER
+  virtual void ContentAppended(nsIDocument *aDocument, nsIContent* aContainer,
+                               PRInt32 aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument *aDocument, nsIContent* aContainer,
+                               nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void ContentReplaced(nsIDocument *aDocument, nsIContent* aContainer,
+                               nsIContent* aOldChild, nsIContent* aNewChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument *aDocument, nsIContent* aContainer,
+                              nsIContent* aChild, PRInt32 aIndexInContainer);
+  virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
   // Other public methods
   nsContentListKey* GetKey() {

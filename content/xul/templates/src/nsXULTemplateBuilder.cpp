@@ -282,30 +282,6 @@ nsXULTemplateBuilder::RemoveListener(nsIXULBuilderListener* aListener)
 // nsIDocumentOberver interface
 //
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXULTemplateBuilder)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXULTemplateBuilder)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXULTemplateBuilder)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXULTemplateBuilder)
-
-void
-nsXULTemplateBuilder::BeginUpdate(nsIDocument *aDocument,
-                                  nsUpdateType aUpdateType)
-{
-}
-
-void
-nsXULTemplateBuilder::EndUpdate(nsIDocument *aDocument,
-                                nsUpdateType aUpdateType)
-{
-}
-
-void
-nsXULTemplateBuilder::ContentChanged(nsIDocument *aDocument,
-                                     nsIContent* aContent,
-                                     nsISupports* aSubContent)
-{
-}
-
 void
 nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
                                        nsIContent*  aContent,
@@ -318,38 +294,6 @@ nsXULTemplateBuilder::AttributeChanged(nsIDocument *aDocument,
     // beneath the element.
     if ((aAttribute == nsXULAtoms::ref) && (aContent == mRoot))
         Rebuild();
-}
-
-void
-nsXULTemplateBuilder::ContentAppended(nsIDocument *aDocument,
-                                      nsIContent* aContainer,
-                                      PRInt32     aNewIndexInContainer)
-{
-}
-
-void
-nsXULTemplateBuilder::ContentInserted(nsIDocument *aDocument,
-                                      nsIContent* aContainer,
-                                      nsIContent* aChild,
-                                      PRInt32 aIndexInContainer)
-{
-}
-
-void
-nsXULTemplateBuilder::ContentReplaced(nsIDocument *aDocument,
-                                      nsIContent* aContainer,
-                                      nsIContent* aOldChild,
-                                      nsIContent* aNewChild,
-                                      PRInt32 aIndexInContainer)
-{
-}
-
-void
-nsXULTemplateBuilder::ContentRemoved(nsIDocument *aDocument,
-                                     nsIContent* aContainer,
-                                     nsIContent* aChild,
-                                     PRInt32 aIndexInContainer)
-{
 }
 
 void

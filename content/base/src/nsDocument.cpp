@@ -235,23 +235,6 @@ nsDOMStyleSheetList::Item(PRUint32 aIndex, nsIDOMStyleSheet** aReturn)
   return NS_OK;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsDOMStyleSheetList)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsDOMStyleSheetList)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsDOMStyleSheetList)
-NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(nsDOMStyleSheetList)
-
-void
-nsDOMStyleSheetList::BeginUpdate(nsIDocument* aDocument,
-                                 nsUpdateType aUpdateType)
-{
-}
-
-void
-nsDOMStyleSheetList::EndUpdate(nsIDocument* aDocument,
-                               nsUpdateType aUpdateType)
-{
-}
-
 void
 nsDOMStyleSheetList::DocumentWillBeDestroyed(nsIDocument *aDocument)
 {
@@ -283,35 +266,6 @@ nsDOMStyleSheetList::StyleSheetRemoved(nsIDocument *aDocument,
       mLength--;
     }
   }
-}
-
-void
-nsDOMStyleSheetList::StyleSheetApplicableStateChanged(nsIDocument* aDocument,
-                                                      nsIStyleSheet* aStyleSheet,
-                                                      PRBool aApplicable)
-{
-}
-
-void
-nsDOMStyleSheetList::StyleRuleChanged(nsIDocument* aDocument,
-                                      nsIStyleSheet* aStyleSheet,
-                                      nsIStyleRule* aOldStyleRule,
-                                      nsIStyleRule* aNewStyleRule)
-{
-}
-
-void
-nsDOMStyleSheetList::StyleRuleAdded(nsIDocument* aDocument,
-                                    nsIStyleSheet* aStyleSheet,
-                                    nsIStyleRule* aStyleRule)
-{
-}
-
-void
-nsDOMStyleSheetList::StyleRuleRemoved(nsIDocument* aDocument,
-                                      nsIStyleSheet* aStyleSheet,
-                                      nsIStyleRule* aStyleRule)
-{
 }
 
 

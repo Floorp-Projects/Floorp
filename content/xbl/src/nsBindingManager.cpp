@@ -64,7 +64,7 @@
 #include "nsITextContent.h"
 #include "nsIStreamListener.h"
 #include "nsIStyleRuleSupplier.h"
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 
 #include "nsIXBLBinding.h"
 #include "nsIXBLDocumentInfo.h"
@@ -294,7 +294,9 @@ SetOrRemoveObject(PLDHashTable& table, nsISupports* aKey, nsISupports* aValue)
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsBindingManager : public nsIBindingManager, public nsIStyleRuleSupplier, public nsIDocumentObserver
+class nsBindingManager : public nsIBindingManager,
+                         public nsIStyleRuleSupplier,
+                         public nsStubDocumentObserver
 {
   NS_DECL_ISUPPORTS
 
@@ -362,7 +364,18 @@ public:
                        RuleProcessorData* aData);
 
   // nsIDocumentObserver
-  NS_DECL_NSIDOCUMENTOBSERVER
+  virtual void ContentAppended(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               PRInt32     aNewIndexInContainer);
+  virtual void ContentInserted(nsIDocument* aDocument,
+                               nsIContent* aContainer,
+                               nsIContent* aChild,
+                               PRInt32 aIndexInContainer);
+  virtual void ContentRemoved(nsIDocument* aDocument,
+                              nsIContent* aContainer,
+                              nsIContent* aChild,
+                              PRInt32 aIndexInContainer);
+  // XXXldb Is there really no need to implement |ContentReplaced|?
 
 protected:
   nsresult GetXBLChildNodesInternal(nsIContent* aContent,
@@ -1318,31 +1331,9 @@ nsBindingManager::GetNestedInsertionPoint(nsIContent* aParent, nsIContent* aChil
   return NS_OK;
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsBindingManager)
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsBindingManager)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsBindingManager)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsBindingManager)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsBindingManager)
-
-void
-nsBindingManager::ContentChanged(nsIDocument* aDoc, 
-                            nsIContent* aContent,
-                            nsISupports* aSubContent)
-{
-}
-
-void
-nsBindingManager::AttributeChanged(nsIDocument* aDocument,
-                              nsIContent*  aContent,
-                              PRInt32      aNameSpaceID,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aModType)
-{
-}
-
 void
 nsBindingManager::ContentAppended(nsIDocument* aDocument,
-			                            nsIContent* aContainer,
+                                  nsIContent* aContainer,
                                   PRInt32     aNewIndexInContainer)
 {
   // XXX This is hacked and not quite correct. See below.
@@ -1428,20 +1419,10 @@ nsBindingManager::ContentInserted(nsIDocument* aDocument,
 }
 
 void
-nsBindingManager::ContentReplaced(nsIDocument* aDocument,
-                                  nsIContent* aContainer,
-                                  nsIContent* aOldChild,
-                                  nsIContent* aNewChild,
-                                  PRInt32 aIndexInContainer)
-{
-}
-
-void
 nsBindingManager::ContentRemoved(nsIDocument* aDocument,
                                  nsIContent* aContainer,
                                  nsIContent* aChild,
                                  PRInt32 aIndexInContainer)
-
 {
   if (aIndexInContainer == -1 || !mContentListTable.ops)
     // It's anonymous.

@@ -1005,22 +1005,13 @@ nsImageMap::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
   }
 }
 
-NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(nsImageMap)
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsImageMap)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsImageMap)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsImageMap)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsImageMap)
-
-
 PRBool
 nsImageMap::IsAncestorOf(nsIContent* aContent,
                          nsIContent* aAncestorContent)
 {
-  nsCOMPtr<nsIContent> parent = aContent->GetParent();
-  if (parent) {
-    return parent == aAncestorContent ||
-           IsAncestorOf(parent, aAncestorContent);
-  }
+  for (nsIContent *a = aContent->GetParent(); a; a = a->GetParent())
+    if (a == aAncestorContent)
+      return PR_TRUE;
 
   return PR_FALSE;
 }

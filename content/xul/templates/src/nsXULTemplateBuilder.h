@@ -43,7 +43,7 @@
 #ifndef nsXULTemplateBuilder_h__
 #define nsXULTemplateBuilder_h__
 
-#include "nsIDocumentObserver.h"
+#include "nsStubDocumentObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIRDFCompositeDataSource.h"
@@ -78,7 +78,7 @@ class nsIRDFCompositeDataSource;
  */
 class nsXULTemplateBuilder : public nsIXULTemplateBuilder,
                              public nsISecurityCheckedComponent,
-                             public nsIDocumentObserver,
+                             public nsStubDocumentObserver,
                              public nsIRDFObserver
 {
 public:
@@ -97,7 +97,10 @@ public:
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 
     // nsIDocumentObserver
-    NS_DECL_NSIDOCUMENTOBSERVER
+    virtual void AttributeChanged(nsIDocument *aDocument, nsIContent* aContent,
+                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute,
+                                  PRInt32 aModType);
+    virtual void DocumentWillBeDestroyed(nsIDocument *aDocument);
 
     // nsIRDFObserver interface
     NS_DECL_NSIRDFOBSERVER

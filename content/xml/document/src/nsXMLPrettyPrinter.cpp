@@ -209,10 +209,6 @@ nsXMLPrettyPrinter::MaybeUnhook(nsIContent* aContent)
 }
 
 // nsIDocumentObserver implementation
-NS_IMPL_NSIDOCUMENTOBSERVER_LOAD_STUB(nsXMLPrettyPrinter)
-NS_IMPL_NSIDOCUMENTOBSERVER_REFLOW_STUB(nsXMLPrettyPrinter)
-NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(nsXMLPrettyPrinter)
-NS_IMPL_NSIDOCUMENTOBSERVER_STYLE_STUB(nsXMLPrettyPrinter)
 
 void
 nsXMLPrettyPrinter::BeginUpdate(nsIDocument* aDocument,
@@ -245,15 +241,6 @@ nsXMLPrettyPrinter::EndUpdate(nsIDocument* aDocument, nsUpdateType aUpdateType)
 
         NS_RELEASE_THIS();
     }
-}
-
-
-
-void
-nsXMLPrettyPrinter::ContentChanged(nsIDocument* aDocument,
-                                   nsIContent *aContent,
-                                   nsISupports *aSubContent)
-{
 }
 
 void
