@@ -39,4 +39,9 @@ Rights Reserved.
 <!ENTITY rememberLastMsg.label "Remember the last selected message">
 <!ENTITY confirmMove.label "Confirm when moving folders to the trash">
 <!ENTITY useMessenger.label "Use Mozilla Messenger from MAPI-based applications">
+<!ENTITY startPageHeader.label "Messenger Start Page">
+<!ENTITY startPageInfo.label "This is the page you see when you launch Messenger.">
+<!ENTITY location "Location:">
+<!ENTITY useCurrent "Use Current Page">
+<!ENTITY browseFile "Select File...">
 

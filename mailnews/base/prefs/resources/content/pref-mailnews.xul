@@ -97,6 +97,7 @@
 			<html:label for="pref:1:bool:mailnews.confirm.moveFoldersToTrash">&confirmMove.label;</html:label>
 		</html:div>
 			
+		<!-- this should be in a platform specific overlay, as Linux and Mac don't have MAPI -->
 		<html:div>
 			<html:input id="pref:0:bool:mail.use_mapi_server" type="checkbox"/>
 			<html:label for="pref:0:bool:mail.use_mapi_server">&useMessenger.label;</html:label>
@@ -112,6 +113,19 @@
 			<html:tr><html:td><html:input type="checkbox" id="pref:0:bool:mail.use_mapi_server"/>
 			<html:label>&useMessenger.label;</html:label></html:td></html:tr>
 		</html:table-->
+	</html:fieldset>
+	<html:fieldset>
+		<html:legend align="left">
+			<html:div>&startPageHeader.label;</html:div>
+		</html:legend>
+		<html:div>&startPageInfo.label;</html:div>
+                &location;
+		<html:input name="homepage" type="text" id="pref:string:mailnews.start_page.url" size="50" />
+                <html:div>
+			<spring flex="100%"/>
+			<titledbutton class="dialog push" name="starts" type="button" value="&useCurrent;" onclick="SetPrefToCurrentPage('pref:string:mailnews.start_page.url');" />
+			<titledbutton class="dialog push" name="browse" type="button" value="&browseFile;" onclick="PrefNavSelectFile('pref:string:mailnews.start_page.url')"/>
+                </html:div>
 	</html:fieldset>
 
 </window>
