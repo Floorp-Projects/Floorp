@@ -240,7 +240,7 @@ nsDirectoryService::nsDirectoryService()
     NS_ASSERTION(mHashtable != NULL, "hashtable null error");
     
     NS_NewISupportsArray(getter_AddRefs(mProviders));
-    NS_ASSERTION(mProviders != NULL, "providers null error");
+    NS_ASSERTION(mProviders.get() != NULL, "providers null error");
 
 	RegisterProvider(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this));
 }
