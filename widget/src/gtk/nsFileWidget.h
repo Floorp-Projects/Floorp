@@ -20,76 +20,52 @@
 #define nsFileWidget_h__
 
 #include "nsToolkit.h"
+#include "nsWidgetsCID.h"
 #include "nsIWidget.h"
 #include "nsIFileWidget.h"
-#include "nsWidget.h"
+
+#include <gtk/gtk.h>
 
 /**
- * Native GTK+ FileSelector wrapper
+ * Native GTK FileSelector wrapper
  */
 
-class nsFileWidget : public nsWidget, public nsIFileWidget
+class nsFileWidget : public nsIFileWidget 
 {
   public:
-                            nsFileWidget();
-    virtual                 ~nsFileWidget();
+    nsFileWidget(); 
+    virtual ~nsFileWidget();
 
+    NS_DECL_ISUPPORTS
 
-    // nsISupports
-    NS_IMETHOD_(nsrefcnt) AddRef();
-    NS_IMETHOD_(nsrefcnt) Release();
-    NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-    NS_IMETHOD Create(nsIWidget *aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext = nsnull,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
-
-    NS_IMETHOD Create(nsNativeWidget aParent,
-                const nsRect &aRect,
-                EVENT_CALLBACK aHandleEventFunction,
-                nsIDeviceContext *aContext = nsnull,
-                nsIAppShell *aAppShell = nsnull,
-                nsIToolkit *aToolkit = nsnull,
-                nsWidgetInitData *aInitData = nsnull);
+    PRBool		OnPaint();
 
     // nsIWidget interface
-
-    NS_IMETHOD            Create( nsIWidget *aParent,
-                                    nsString& aTitle,
-                                    nsMode aMode,
-                                    nsIDeviceContext *aContext = nsnull,
-                                    nsIAppShell *aAppShell = nsnull,
-                                    nsIToolkit *aToolkit = nsnull,
-                                    void *aInitData = nsnull);
+  
+    NS_IMETHOD		Create(nsIWidget *aParent,
+                               nsString& aTitle,
+			       nsMode aMode,
+			       nsIDeviceContext *aContext = nsnull,
+			       nsIAppShell *aAppShell = nsnull,
+			       nsIToolkit *aToolkit = nsnull,
+			       void *aInitData = nsnull);
 
     // nsIFileWidget part
-    virtual PRBool        Show();
-    NS_IMETHOD            GetFile(nsString& aFile);
-    NS_IMETHOD            SetDefaultString(nsString& aString);
-    NS_IMETHOD            SetFilterList(PRUint32 aNumberOfFilters,
-                                        const nsString aTitles[],
-                                        const nsString aFilters[]);
-    NS_IMETHOD            OnOk();
-    NS_IMETHOD            OnCancel();
-
+    virtual PRBool	Show();
+    NS_IMETHOD		GetFile(nsString& aFile);
+    NS_IMETHOD		SetDefaultString(nsString& aFile);
+    NS_IMETHOD		SetFilterList(PRUint32 aNumberOfFilters,
+				      const nsString aTitles[],
+				      const nsString aFilters[]);
+  
   protected:
-     GtkWidget             *mWidget;
-     PRBool                 mIOwnEventLoop;
-     PRBool                 mWasCancelled;
-     nsString               mTitle;
-     nsMode                 mMode;
-     nsString               mFile;
-     PRUint32               mNumberOfFilters;
-     const nsString*        mTitles;
-     const nsString*        mFilters;
-     nsString               mDefault;
-
-     void GetFilterListArray(nsString& aFilterList);
-
+    GtkWidget		*mWidget;
+    nsString		mTitle;
+    nsMode		mMode;
+    PRUint32		mNumberOfFilters;  
+    const nsString*	mTitles;
+    const nsString*	mFilters;
+    nsString		mDefault;
 };
 
 #endif // nsFileWidget_h__

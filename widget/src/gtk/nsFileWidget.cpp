@@ -17,187 +17,97 @@
  */
 
 #include "nsFileWidget.h"
-#include "nsStringUtil.h"
 
-
-NS_IMPL_ADDREF(nsFileWidget)
-NS_IMPL_RELEASE(nsFileWidget)
+NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
+NS_IMPL_ISUPPORTS(nsFileWidget, kIFileWidgetIID);
 
 //-------------------------------------------------------------------------
 //
 // nsFileWidget constructor
 //
 //-------------------------------------------------------------------------
-nsFileWidget::nsFileWidget() : nsWidget(), nsIFileWidget()
+nsFileWidget::nsFileWidget() : nsIFileWidget()
 {
   NS_INIT_REFCNT();
+  mWidget = NULL;
   mNumberOfFilters = 0;
 }
 
-NS_METHOD nsFileWidget::Create(nsIWidget        *aParent,
-                          const nsRect     &aRect,
-                          EVENT_CALLBACK   aHandleEventFunction,
-                          nsIDeviceContext *aContext,
-                          nsIAppShell      *aAppShell,
-                          nsIToolkit       *aToolkit,
-                          nsWidgetInitData *aInitData)
+//-------------------------------------------------------------------------
+//
+// nsFileWidget destructor
+//
+//-------------------------------------------------------------------------
+nsFileWidget::~nsFileWidget()
 {
-  nsString title("Load");
-  Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
-  return NS_OK;
+//  gtk_widget_destroy(mWidget);
 }
 
 
-//-------------------------------------------------------------------------
-NS_METHOD   nsFileWidget:: Create(nsIWidget  *aParent,
-                             nsString&   aTitle,
-                             nsMode      aMode,
-                             nsIDeviceContext *aContext,
-                             nsIAppShell *aAppShell,
-                             nsIToolkit *aToolkit,
-                             void       *aInitData)
-{
-  mTitle.SetLength(0);
-  mTitle.Append(aTitle);
-  mMode = aMode;
-
-  nsRect tRect(0,0,0,0);
-
-  //  BaseCreate(aParent, tRect, (EVENT_CALLBACK)nsnull, aContext, 
-  //            aAppShell, aToolkit, aInitData);
- 
-  NS_ALLOC_STR_BUF(title, aTitle, 256);
-  mWidget = gtk_file_selection_new(title);
-  NS_FREE_STR_BUF(title);
-  /*
-  gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(mWidget)->ok_button),
-                            "clicked",
-                            GTK_SIGNAL_FUNC(nsFileWidget::OnOk),
-                            this);
-
-  gtk_signal_connect_object(GTK_OBJECT(GTK_FILE_SELECTION(mWidget->)cancel_button),
-                            "clicked",
-                            GTK_SIGNAL_FUNC(nsFileWidget::OnCancel),
-                            this);
-  */
-  return NS_OK;
-}
-
-NS_METHOD nsFileWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
-{
-  return NS_ERROR_FAILURE;
-}
-
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    nsresult result = NS_NOINTERFACE;
-    static NS_DEFINE_IID(kInsFileWidgetIID, NS_IFILEWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsFileWidgetIID)) {
-        *aInstancePtr = (void*) ((nsIFileWidget*)this);
-        AddRef();
-        result = NS_OK;
-    }
-
-    return result;
-}
-
-
-
-//-------------------------------------------------------------------------
-//
-// Ok's the dialog
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsFileWidget::OnOk()
-{
-#if 0
-  XtUnmanageChild(mWidget);
-  mWasCancelled  = PR_FALSE;
-  mIOwnEventLoop = PR_FALSE;
-#endif
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Cancel the dialog
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsFileWidget::OnCancel()
-{
-#if 0
-  XtUnmanageChild(mWidget);
-  mWasCancelled  = PR_TRUE;
-  mIOwnEventLoop = PR_FALSE;
-#endif
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 //
 // Show - Display the file dialog
 //
 //-------------------------------------------------------------------------
+
 PRBool nsFileWidget::Show()
 {
-#if 0
-  nsresult result = nsEventStatus_eIgnore;
-  XtManageChild(mWidget);
+  gtk_widget_show(mWidget);
+/*
+  char fileBuffer[MAX_PATH+1] = "";
+  mDefault.ToCString(fileBuffer,MAX_PATH);
 
-  // XXX Kludge: gAppContext is a global set in nsAppShell
-  XEvent event;
-  mIOwnEventLoop = PR_TRUE;
-  while (mIOwnEventLoop) {
-    XtAppNextEvent(gAppContext, &event);
-    XtDispatchEvent(&event);
+  OPENFILENAME ofn;
+  memset(&ofn, 0, sizeof(ofn));
+
+  ofn.lStructSize = sizeof(ofn);
+
+  nsString filterList;
+  GetFilterListArray(filterList);
+  char *filterBuffer = filterList.ToNewCString();
+  char *title = mTitle.ToNewCString();
+  ofn.lpstrTitle = title;
+  ofn.lpstrFilter = filterBuffer;
+  ofn.nFilterIndex = 1;
+  ofn.hwndOwner = mWnd;
+  ofn.lpstrFile = fileBuffer;
+  ofn.nMaxFile = MAX_PATH;
+  ofn.Flags = OFN_SHAREAWARE | OFN_NOCHANGEDIR | OFN_LONGNAMES | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+  
+  BOOL result;
+
+    // Save current directory, so we can reset if it changes.
+  char* currentDirectory = new char[MAX_PATH+1];
+  VERIFY(::GetCurrentDirectory(MAX_PATH, currentDirectory) > 0);
+
+  if (mMode == eMode_load) {
+    result = GetOpenFileName(&ofn);
+  }
+  else if (mMode == eMode_save) {
+    result = GetSaveFileName(&ofn);
+  }
+  else {
+    NS_ASSERTION(0, "Only load and save are supported modes"); 
   }
 
-  if (!mWasCancelled) {
-    XmString str;
-    char *   fileBuf;
-    XtVaGetValues(mWidget, XmNdirSpec, &str, nsnull);
-    if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &fileBuf)) {
-      // Set user-selected location of file or directory
-      mFile.SetLength(0);
-      mFile.Append(fileBuf);
-      XmStringFree(str);
-      XtFree(fileBuf);
-    }
+  VERIFY(::SetCurrentDirectory(currentDirectory));
+  
+   // Clean up filter buffers
+  delete filterBuffer;
+  delete title;
+
+   // Set user-selected location of file or directory
+  mFile.SetLength(0);
+  if (result==PR_TRUE) {
+    mFile.Append(fileBuffer);
   }
-#endif
- return PR_TRUE;
-}
-
-//-------------------------------------------------------------------------
-//
-// Convert filter titles + filters into a Windows filter string
-//
-//-------------------------------------------------------------------------
-
-void nsFileWidget::GetFilterListArray(nsString& aFilterList)
-{
-  aFilterList.SetLength(0);
-  for (PRUint32 i = 0; i < mNumberOfFilters; i++) {
-    const nsString& title = mTitles[i];
-    const nsString& filter = mFilters[i];
-
-    aFilterList.Append(title);
-    aFilterList.Append('\0');
-    aFilterList.Append(filter);
-    aFilterList.Append('\0');
-  }
-  aFilterList.Append('\0');
+  
+  return((PRBool)result);
+  */
+  // returning true causes the browser to try and display the dir structure...
+//  return PR_TRUE;
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -206,7 +116,9 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 //
 //-------------------------------------------------------------------------
 
-NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
+NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
+				      const nsString aTitles[],
+				      const nsString aFilters[])
 {
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
@@ -222,30 +134,48 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString a
 
 NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
 {
+  gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
+
   aFile.SetLength(0);
-  aFile.Append(mFile);
+  aFile.Append(fn);
+  delete fn;
   return NS_OK;
 }
+
 
 //-------------------------------------------------------------------------
 //
 // Get the file + path
 //
 //-------------------------------------------------------------------------
-
 NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 {
-  mDefault = aString;
+  char *fn = aString.ToNewCString();
+  g_print("%s\n",fn);
+  gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget), fn);
+  delete fn;
   return NS_OK;
 }
 
-
-
 //-------------------------------------------------------------------------
-//
-// nsFileWidget destructor
-//
-//-------------------------------------------------------------------------
-nsFileWidget::~nsFileWidget()
+NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
+                           nsString& aTitle,
+                           nsMode aMode,
+                           nsIDeviceContext *aContext,
+                           nsIAppShell *aAppShell,
+                           nsIToolkit *aToolkit,
+                           void *aInitData)
 {
+  mMode = aMode;
+  mTitle.SetLength(0);
+  mTitle.Append(aTitle);
+  char *title = mTitle.ToNewCString();
+
+  mWidget = gtk_file_selection_new(title);
+
+//  mWnd = (HWND) ((aParent) ? aParent->GetNativeData(NS_NATIVE_WINDOW) : 0); 
+//  mTitle.SetLength(0);
+//  mTitle.Append(aTitle);
+  return NS_OK;
 }
+
