@@ -95,7 +95,6 @@ public:
   // nsIWebShellWindow methods...
   NS_IMETHOD Show(PRBool aShow);
   NS_IMETHOD ShowModal();
-  NS_IMETHOD ShowModally(PRBool aPrepare);
   NS_IMETHOD Toolbar();
   NS_IMETHOD Close();
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);

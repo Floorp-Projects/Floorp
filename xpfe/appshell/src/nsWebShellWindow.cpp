@@ -1101,17 +1101,6 @@ nsWebShellWindow::ShowModal()
   return nsXULWindow::ShowModal();
 }
 
-
-// yes, this one's name and ShowModal are a confusing pair. plan is to merge
-// the two someday.
-NS_IMETHODIMP
-nsWebShellWindow::ShowModally(PRBool aPrepare)
-{ 
-   NS_ERROR("Can't use this anymore");
-   return NS_ERROR_FAILURE;
-}
-
-
 /* return the main, outermost webshell in this window */
 NS_IMETHODIMP 
 nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
