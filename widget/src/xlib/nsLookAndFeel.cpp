@@ -50,7 +50,7 @@ nsLookAndFeel::~nsLookAndFeel()
 
 nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
 {
-    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::GetColor()\n"));
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsLookAndFeel::NativeGetColor()\n"));
     nsresult res = NS_OK;
 
     aColor = 0;
