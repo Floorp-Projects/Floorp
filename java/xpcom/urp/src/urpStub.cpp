@@ -54,7 +54,6 @@ void urpStub::Dispatch(bcICall *call) {
   printf("this is method Dispatch of urpStub\n");
   bcIID iid; bcOID oid; bcMID mid;
   call->GetParams(&iid, &oid, &mid);
-printf("IID %s %ld %ld\n",iid.ToString(),oid,mid);
   nsIInterfaceInfo *interfaceInfo;
   nsIInterfaceInfoManager* iimgr;
   if( (iimgr = XPTI_GetInterfaceInfoManager()) ) {

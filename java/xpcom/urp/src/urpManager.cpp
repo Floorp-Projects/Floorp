@@ -145,7 +145,6 @@ void
 urpManager::WriteType(bcIID iid, urpPacket* message) {
 
 	short cache_index;
-printf("IID %s\n",iid.ToString());
 
 	char typeClass = INTERFACE;
 	int found = 0;
@@ -165,8 +164,11 @@ printf("write type is %x\n",(char)typeClass | (found ? 0x0 : 0x80));
 	   message->WriteShort(cache_index);
 printf("write type is %x\n",cache_index);
 
-	   if(!found)
-		message->WriteString(iid.ToString(), strlen(iid.ToString()));
+	   if(!found) {
+		char* iidStr = iid.ToString();
+		message->WriteString(iidStr, strlen(iidStr));
+		PR_Free(iidStr);
+	   }
 	}
 }
 
@@ -182,6 +184,7 @@ urpManager::ReadType(urpPacket* message) {
 	nsIID iid;
 	char* name = message->ReadString(size);
 	iid.Parse(name);
+	PR_Free(name);
 	return iid;
 }
 
@@ -207,10 +210,13 @@ urpManager::WriteOid(bcOID oid, urpPacket* message) {
 bcOID
 urpManager::ReadOid(urpPacket* message) {
 	int& size = 0;
+	bcOID result;
 
 	char* str = message->ReadString(size);
 	short cache_index = message->ReadShort();
-	return (bcOID)atol(str);
+	result = (bcOID)atol(str);
+	PR_Free(str);
+	return result;
 }
 
 void
@@ -234,10 +240,12 @@ urpManager::WriteThreadID(bcTID tid, urpPacket* message) {
 bcTID
 urpManager::ReadThreadID(urpPacket* message) {
 	int& size = 0;
-
+	bcTID result;
 	char* array = message->ReadOctetStream(size);
 	short cache_index = message->ReadShort();
-	return (bcTID)array[0];
+	result= (bcTID)array[0];
+	PR_Free(array);
+	return result;
 }
 
 nsresult
@@ -352,7 +360,6 @@ printf("NS_WITH_SERVICE(bcXPC in Marshal failed\n");
                     if(NS_FAILED(interfaceInfo->GetTypeForParam(methodIndex, param, 1,&datumType))) {
                         return r;
                     }
-printf("arraySize %d %d\n",arraySize,(int)&arraySize);
                     message->WriteInt(arraySize);
                     PRInt16 elemSize = GetSimpleSize(datumType);
                     char *current = *(char**)data;
@@ -394,7 +401,6 @@ urpManager::WriteParams(nsXPTCVariant* params, PRUint32 paramCount, const nsXPTM
 	    nsXPTCVariant *value = & params[i];
             void *data;
             data = (isOut) ? value->val.p : value;
-printf("before Marshal %d %d %d %d\n",methodIndex,paramCount,i,param.GetType().TagPart());
 	    rv = MarshalElement(data, &param,param.GetType().TagPart(), i, interfaceInfo, message, methodIndex, info, params);
 	    if(NS_FAILED(rv)) return rv;
 
@@ -504,7 +510,6 @@ printf("NS_WITH_SERVICE(bcXPCOMStubsAndProxies, xp failed\n");
                 PRUint32 arraySize;
                 PRInt16 elemSize = GetSimpleSize(datumType);
                 arraySize = message->ReadInt();
-printf("arraySize is %d\n",arraySize);
 
                 char * current;
                 *(char**)data = current = (char *) allocator->Alloc(elemSize*arraySize);
@@ -547,7 +552,6 @@ urpManager::ReadParams(nsXPTCVariant* params, PRUint32 paramCount, const nsXPTMe
 
             void *data;
             data = (isOut) ? value->val.p : value;
-printf("before UnMarshal %d %d %d %d\n",methodIndex,paramCount,i,param.GetType().TagPart());
 	    rv = UnMarshal(data, &param, param.GetType().TagPart(), interfaceInfo, 
 		message, methodIndex, allocator);
 	    if(NS_FAILED(rv)) return rv;
@@ -573,7 +577,7 @@ printf("before UnMarshal %d %d %d %d\n",methodIndex,paramCount,i,param.GetType()
             }
 */
 	}
-	free(allocator);
+	delete allocator;
 	return rv;
 }
 
@@ -594,6 +598,7 @@ printf("header in reply is %x %x %x\n",header, BIG_HEADER, header & BIG_HEADER);
 	else
 	   printf("short request header\n");
 	delete connection;
+	delete message;
 //	transport->close();
 	return rv;
 }
