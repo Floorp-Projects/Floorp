@@ -377,9 +377,6 @@ sub BuildClientDist()
 
 	_InstallFromManifest(":mozilla:xpcom:typelib:xpt:public:MANIFEST",				"$distdirectory:xpcom:");
 	
-	#PREFS
-	_InstallFromManifest(":mozilla:modules:libpref:src:MANIFEST_PREFS",				$dist_dir."Components:", 1);
-
 	#ZLIB
     _InstallFromManifest(":mozilla:modules:zlib:src:MANIFEST",						"$distdirectory:zlib:");
 
@@ -564,7 +561,6 @@ sub BuildClientDist()
 
     #XPINSTALL (the one and only!)
     _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST",                       "$distdirectory:xpinstall:");
-    _InstallFromManifest(":mozilla:xpinstall:public:MANIFEST_PREFS",				    $dist_dir."Components:", 1);
 
 	#FULL CIRCLE    
 	if ($main::MOZ_FULLCIRCLE)
@@ -1192,7 +1188,20 @@ sub MakeResourceAliases()
 	# need to duplicate this line if more files in default profile folder
 	my($defaults_dir) = "$dist_dir" . "Defaults:";
 	mkdir($defaults_dir, 0);
-	_copy(":mozilla:profile:defaults:bookmarks.html", 									"$defaults_dir"."bookmarks.html");
+
+	# Default _profile_ directory stuff
+	my($default_profile_dir) = "$defaults_dir"."Profile:";
+	mkdir($default_profile_dir, 0);
+
+	_copy(":mozilla:profile:defaults:bookmarks.html", 									"$default_profile_dir"."bookmarks.html");
+
+	# Default _pref_ directory stuff
+	my($default_pref_dir) = "$defaults_dir"."Pref:";
+	mkdir($default_pref_dir, 0);
+	_InstallResources(":mozilla:xpinstall:public:MANIFEST_PREFS",				   		"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:MANIFEST_PREFS",					"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:init:MANIFEST",						"$default_pref_dir", 0);
+	_InstallResources(":mozilla:modules:libpref:src:mac:MANIFEST",						"$default_pref_dir", 0);
 
 	my($prefmigrator_dir) = "$resource_dir" . "pref-migrator:";
 	BuildFolderResourceAliases(":mozilla:profile:pref-migrator:resources:",				"$resource_dir");
