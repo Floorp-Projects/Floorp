@@ -37,7 +37,6 @@ CPPSRCS		= \
 		nsChromeTreeOwner.cpp \
 		nsContentTreeOwner.cpp \
 		nsXULWindow.cpp \
-		nsXULCommand.cpp \
 		nsAppShellService.cpp \
 		nsWebShellWindow.cpp \
 		nsCommandLineService.cpp \

@@ -167,13 +167,15 @@ public:
 
 protected:
   
-  void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
-  void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
+  void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
+#if 0
+  void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
   NS_IMETHOD               CreateMenu(nsIMenuBar * aMenuBar, nsIDOMNode * aMenuNode, nsString & aMenuName);
   void LoadSubMenu(nsIMenu * pParentMenu, nsIDOMElement * menuElement,nsIDOMNode * menuNode);
   NS_IMETHOD LoadMenuItem(nsIMenu * pParentMenu, nsIDOMElement * menuitemElement, nsIDOMNode * menuitemNode);
+#endif
 
   nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
   void                     ExecuteStartupCode();
