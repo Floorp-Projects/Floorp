@@ -290,7 +290,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsString& aURI)
     rv = service->MakeAbsolute(nsCAutoString(aURI), baseUri, &absUrlStr);
     NS_RELEASE(baseUri);
     result = absUrlStr;
-    delete [] absUrlStr;
+    nsCRT::free(absUrlStr);
 #endif // NECKO
     if (NS_SUCCEEDED(rv)) {
         aURI = result;
