@@ -21,12 +21,13 @@
 
 DEPTH=..\..
 
-MODULE		= necko
+MODULE		= necko2
 LIBRARY_NAME	= necko2
 MODULE_NAME	= necko_secondary_protocols
 REQUIRES	= xpcom \
 		  string \
 		  nkcache \
+		  necko \
 		  $(NULL)
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
@@ -40,20 +41,18 @@ SUB_LIBRARIES= \
         $(DIST)\lib\nkftp_s.lib \
         $(DIST)\lib\nkfinger_s.lib \
         $(DIST)\lib\nkdatetm_s.lib \
-	$(DIST)\lib\nkviewsource_s.lib \
+		$(DIST)\lib\nkviewsource_s.lib \
         $(NULL)
 
 LLIBS=                          \
         $(DIST)\lib\xpcom.lib   \
         $(LIBNSPR)  
 
-INCS = $(INCS)                               \
-        -I$(DEPTH)\dist\include              \
-        -I$(DEPTH)\netwerk\protocol\gopher\src \
+LINCS = -I$(DEPTH)\netwerk\protocol\gopher\src \
         -I$(DEPTH)\netwerk\protocol\ftp\src \
         -I$(DEPTH)\netwerk\protocol\finger\src \
         -I$(DEPTH)\netwerk\protocol\datetime\src \
-	-I$(DEPTH)\netwerk\protocol\viewsource\src \
+		-I$(DEPTH)\netwerk\protocol\viewsource\src \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

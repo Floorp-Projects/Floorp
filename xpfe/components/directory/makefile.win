@@ -40,6 +40,7 @@ MODULE=appcomps
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  necko2 \
 		  rdf \
 		  layout \
 		  timer \
@@ -55,6 +56,7 @@ REQUIRES	= xpcom \
 		  content \
 		  raptor \
 		  $(NULL)
+
 XPIDL_MODULE=directory
 XPIDLSRCS =                             \
         .\nsIHTTPIndex.idl              \

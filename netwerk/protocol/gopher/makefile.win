@@ -21,8 +21,6 @@
 
 DEPTH = ..\..\..
 
-MODULE = necko
-
 DIRS=      \
     src    \
     $(NULL)

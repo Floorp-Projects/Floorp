@@ -17,7 +17,7 @@
 #
 # Contributor(s): 
 
-MODULE = necko
+MODULE = necko2
 REQUIRES	= xpcom \
 		  string \
 		  exthandler \
@@ -26,6 +26,7 @@ REQUIRES	= xpcom \
 		  pref \
 		  intl \
 		  nkcache \
+		  necko \
 		  $(NULL)
 
 DEPTH = ..\..\..\..

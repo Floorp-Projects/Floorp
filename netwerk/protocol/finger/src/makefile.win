@@ -17,12 +17,13 @@
 # Contributor(s): 
 #  Brian Ryner <bryner@uiuc.edu>
 
-MODULE = necko
+MODULE = necko2
 
 DEPTH = ..\..\..\..
-REQUIRES	= xpcom \
+REQUIRES= xpcom \
 		  string \
 		  mimetype \
+		  necko \
 		  $(NULL)
 
 LIBRARY_NAME=nkfinger_s

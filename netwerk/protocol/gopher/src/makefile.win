@@ -17,12 +17,13 @@
 # Contributor(s): 
 #  Bradley Baetz <bbaetz@student.usyd.edu.au>
 
-MODULE = necko
+MODULE = necko2
 
 DEPTH = ..\..\..\..
 REQUIRES	= xpcom \
 		  string \
 		  mimetype \
+		  necko \
 		  $(NULL)
 
 LIBRARY_NAME=nkgopher_s
