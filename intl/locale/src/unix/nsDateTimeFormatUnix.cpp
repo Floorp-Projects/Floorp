@@ -194,7 +194,6 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
                                         const struct tm*  tmTime, 
                                         nsString& stringOut) 
 {
-  NS_ENSURE_TRUE(mDecoder, NS_ERROR_NOT_INITIALIZED);
 #define NSDATETIME_FORMAT_BUFFER_LEN  80
   char strOut[NSDATETIME_FORMAT_BUFFER_LEN*2];  // buffer for date and time
   char fmtD[NSDATETIME_FORMAT_BUFFER_LEN], fmtT[NSDATETIME_FORMAT_BUFFER_LEN];
@@ -203,6 +202,7 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
   
   // set up locale data
   (void) Initialize(locale);
+  NS_ENSURE_TRUE(mDecoder, NS_ERROR_NOT_INITIALIZED);
 
   // set date format
   switch (dateFormatSelector) {
