@@ -262,7 +262,7 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
   const PRUint32 MAX_LEN = 55;
 #elif defined(XP_OS2)
   nsCAutoString illegalChars("\"/\\[]:;=,|?<>*$. ");
-  const PRUint32 MAX_LEN = 8;
+  const PRUint32 MAX_LEN = 55;
 #else
 #error need_to_define_your_max_filename_length
 #endif
