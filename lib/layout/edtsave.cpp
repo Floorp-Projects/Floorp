@@ -503,6 +503,13 @@ ED_FileError CFileSaveObject::FetchNextFile(){
     XP_FREE(srcURL);    
     // Store file save object so we can access OpenOutputFile etc.
     pUrl->fe_data = this;
+   /* EXTREME HACK ALERT!
+       Special signal for Composer (Editor)
+       This will be used in IL_ViewStream to tell we are an editor
+       and use IL_NewStream instead (as we did in 4.06 code) 
+       IL_NewStream triggers tag parsing on images, which is bad! */
+    pUrl->owner_id = 0x000000ED;
+    //TODO: Should we be setting the referer field as well?
     NET_GetURL( pUrl, FO_EDT_SAVE_IMAGE, m_pContext, edt_UrlExit );
     return m_status;
 }

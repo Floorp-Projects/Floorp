@@ -970,20 +970,34 @@ intn EDT_ProcessTag(void *data_object, PA_Tag *tag, intn status){
     intn retVal;
     XP_Bool bCreatedEditor = FALSE;
 
-    if( !tag || !EDT_IS_EDITOR(pDocData->window_id) ){
+    if( !tag || !EDT_IS_EDITOR(pDocData->window_id) )
         return LO_ProcessTag( data_object, tag, status );
-    }
 
-    if( pDocData->edit_buffer == 0 ){
-        // HACK ALERT
-        // Libnet does not seem to be able to supply us with a reliable
-        //  "content_type" in the URL_Struct passed around to the front ends,
-        //  so we need to figure out when we are converting a text file into
-        //  HTML here.
-        // Since we just created our edit buffer for the first tag encountered,
-        //  if it is the PLAIN_TEXT type, then we are probably importing a text file
-        pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id, tag->type == P_PLAIN_TEXT );
-        bCreatedEditor = pDocData->edit_buffer != NULL;
+    CEditBuffer* pEditBuffer = (CEditBuffer*) LO_GetEDBuffer(pDocData->window_id);
+
+    if( pDocData->edit_buffer == 0 )
+    {
+        // We shouldn't have a buffer associated with a context and
+        //  not have one in pDocData as well...
+        // (This is needed because we now end up here when inserting images!)
+        if( pEditBuffer )
+        {
+            // ...We should NEVER be in this situation
+            XP_ASSERT(FALSE);
+            pDocData->edit_buffer = pEditBuffer;
+        } 
+        else 
+        {
+            // HACK ALERT
+            // Libnet does not seem to be able to supply us with a reliable
+            //  "content_type" in the URL_Struct passed around to the front ends,
+            //  so we need to figure out when we are converting a text file into
+            //  HTML here.
+            // Since we just created our edit buffer for the first tag encountered,
+            //  if it is the PLAIN_TEXT type, then we are probably importing a text file
+            pDocData->edit_buffer = EDT_MakeEditBuffer( pDocData->window_id, tag->type == P_PLAIN_TEXT );
+            bCreatedEditor = pDocData->edit_buffer != NULL;
+        }
     }
 
 #if 0
@@ -2175,6 +2189,11 @@ void EDT_ImageLoadCancel( MWContext *pContext ){
     GET_EDIT_BUF_OR_RETURN(pContext, pEditBuffer);
     if( pEditBuffer->m_pLoadingImage ){
         delete pEditBuffer->m_pLoadingImage;
+    } 
+    else
+    {
+        FE_ImageLoadDialogDestroy( pEditBuffer->m_pContext );
+        FE_EnableClicking( pEditBuffer->m_pContext );
     }
 }
 

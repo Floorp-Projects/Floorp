@@ -9721,6 +9721,9 @@ void CEditImageElement::FinishedLoad( CEditBuffer *pBuffer ){
             // The user didn't specify a size. Look at what we got.
             m_iHeight = pBuffer->m_pContext->convertPixY * m_pLoImage->height;
             m_iWidth = pBuffer->m_pContext->convertPixX * m_pLoImage->width;
+            // This fixes lots of image size problems (like bug 148158),
+            // but we will ALWAYS write out the size, even if not in original HTML
+            m_bSizeIsBogus = FALSE;
         }
     }
 }
