@@ -335,7 +335,7 @@ public class Global {
     static final String privateName = "org.mozilla.javascript.tools.shell.Global private";
     
     public static Global getInstance(Scriptable scope) {
-        Object v = scope.get(privateName, scope);
+        Object v = ScriptableObject.getProperty(scope,privateName);
         if (v instanceof Global)
             return (Global) v;
         return null;
