@@ -39,7 +39,7 @@ enum nsVariantType {
     // when the variant is deleted
     nsVariantType_voidPtr,
     nsVariantType_charPtr,
-    nsVariantType_PRUnicharPtr,
+    nsVariantType_PRUnicharPtr
 };
 
 class nsVariantValue {
