@@ -79,8 +79,8 @@
 <script type="application/x-javascript">
    var neStartTimeErrorAlertMessage = "&newevent.starttimeerror.alertmessage;";
    var neRecurErrorAlertMessage     = "&newevent.recurendtimeerror.alertmessage;";
-   var DTD_noEmailMessage = "&ab-selectAddressesDialogNoEmailMessage.label;";
-   var DTD_toPrefix = "&ab-selectAddressesDialogPrefixTo.label;";
+   var DTD_noEmailMessage           = "&ab-selectAddressesDialogNoEmailMessage.label;";
+   var DTD_toPrefix                 = "&ab-selectAddressesDialogPrefixTo.label;";
 </script>
 
 
@@ -107,115 +107,99 @@
     <data id="data-event-title-new"             value="&event.title.new;" />
     <data id="data-event-title-edit"            value="&event.title.edit;" />
     <data id="neStartTimeErrorAlertMessage"     value="&newevent.starttimeerror.alertmessage;" />
-    <data id="onthe-text"     value="&onthe-text;" />
-    <data id="last-text"     value="&last-text;" />
-    <data id="ofthemonth-text"     value="&ofthemonth-text;" />
+    <data id="onthe-text"                       value="&onthe-text;" />
+    <data id="last-text"                        value="&last-text;" />
+    <data id="ofthemonth-text"                  value="&ofthemonth-text;" />
 </dataset>
 
 
 <!-- Picker popups -->
 
- <popup  id="oe-date-picker-popup"  position="after_start" oncommand="onDatePick( this )" value=""/>
- <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
+   <popup  id="oe-time-picker-popup"  position="after_start" oncommand="onTimePick( this )" value=""/>
 
- <keyset id="dialogKeys"/>
-
-  <!-- The dialog -->
-    
-    <!-- dialog-box: from dialogOverlay.xul -->
-    
-    <vbox id="dialog-box" flex="1">  
+   <vbox id="standard-dialog-content"  flex="1">
    
-        <!-- standard-dialog-content: from dialogOverlay.xul  -->
-        
-        <vbox id="standard-dialog-content"  flex="1">
-        
-            <tabbox>
-               <tabs>
-                <tab label="&newevent.newevent.tab.label;"/>
-                <tab label="&newevent.recurrence.tab.label;"/>
-                <tab label="&newevent.contacts.tab.label;"  collapsed="true"/>
-                <tab label="&newevent.files.tab.label;" collapsed="true"/>
-               </tabs>
-               <tabpanels>
-                <tabpanel>
+      <tabbox>
+         <tabs>
+            <tab label="&newevent.newevent.tab.label;"/>
+            <tab label="&newevent.recurrence.tab.label;"/>
+            <tab label="&newevent.contacts.tab.label;"  collapsed="true"/>
+            <tab label="&newevent.files.tab.label;" collapsed="true"/>
+         </tabs>
+         <tabpanels>
+            <tabpanel>
+               <grid>
+                  <columns>
+                     <column />
+                     <column flex="1"/>
+                  </columns>
                   
-         <!-- Form elements -->
-            
-            <grid>
-            
-                <columns>
-                    <column />
-                    <column flex="1"/>
-                </columns>
-                
-                <rows>
-            
-                    <!-- Title -->    
-                    <row align="center">
+                  <rows>
+                     <!-- Title -->    
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label for="title-field" value="&newevent.title.label;"/>
                         </hbox>
                         <textbox id="title-field"/>
-                    </row>
-        
-                    <!-- Location -->    
-                    <row align="center">
+                     </row>
+                     
+                     <!-- Location -->    
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label for="location-field" value="&newevent.location.label;"/>
                         </hbox>
                         <textbox id="location-field"/>
-                    </row>
-            
-                    <!-- Start Date -->    
-                    <row align="center">
+                     </row>
+                        
+                     <!-- Start Date -->    
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.startdate.label;"/>
                         </hbox>
                         <hbox  id="start-date-box" align="center">
-                            <datepicker id="start-date-picker" value=""/>
-                            <textbox id="start-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
+                            <datepicker id="start-date-picker" value="" ondatepick="onDatePick( this );updateEndDate( this );"/>
+                            <textbox id="start-time-text" readonly="true" value=""        onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image id="start-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('start-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
-                    </row>
-                    
-                    <!-- End Date -->    
-                    <row align="center">
+                     </row>
+                     
+                     <!-- End Date -->    
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newevent.enddate.label;"/>
                         </hbox>
                         <hbox  id="end-date-box" align="center">
-                            <datepicker id="end-date-picker" value=""/>
+                            <datepicker id="end-date-picker" value="" ondatepick="updateDateDifference( this )"/>
                             <textbox id="end-time-text" readonly="true" value=""      onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                             <image id="end-time-button" class="event-time-button-class" onmousedown="prepareTimePicker('end-time-text')" popup="oe-time-picker-popup" position="after_start"/>
                         </hbox>
-                    </row>
-                    
-                    <!-- All Day -->    
-                    <row align="center">
+                     </row>
+              
+                     <!-- All Day -->    
+                     <row align="center">
                         <spacer />
                         <label id="end-time-warning" class="warning-text-class" value="&newevent.endtime.warning;" collapsed="true"/>
-                    </row>
-                    
-                    
-                    <!-- All Day -->    
-                    <row align="center">
+                     </row>
+              
+              
+                     <!-- All Day -->    
+                     <row align="center">
                         <spacer />
                         <checkbox id="all-day-event-checkbox" label="&newevent.alldayevent.label;" checked="false" oncommand="commandAllDay()"/>
-                    </row>
-            
-                    
-                    <!-- Description -->    
-                    <row flex="1" align="start">
+                     </row>
+                     
+                     
+                     <!-- Description -->    
+                     <row flex="1" align="start">
                         <hbox class="field-label-box-class" pack="end">
                             <label for="description-field" value="&newevent.description.label;"/>
                         </hbox>
                         <textbox id="description-field" multiline="true" rows="3" cols="30" />
-                    </row>
-                    
-            
-                    <!-- URI/URL -->    
-                    <row align="center">
+                     </row>
+                     
+                     
+                     <!-- URI/URL -->    
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label for="uri-field" value="&newevent.uri.label;"/>
                         </hbox>
@@ -223,58 +207,56 @@
                           <textbox id="uri-field" flex="1"/>
                           <button label="&newevent.uri.visit.label;" oncommand="launchBrowser()"/>
                         </hbox>
-                    </row>
-                    
-            
-                    <!-- Private -->    
-                    <row align="center">
+                     </row>
+              
+      
+                     <!-- Private -->    
+                     <row align="center">
                         <spacer />
                         <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
-                    </row>
-            
-            
-                    <!-- Alarm -->    
-                    <row align="center">
+                     </row>
+                     
+                     
+                     <!-- Alarm -->    
+                     <row align="center">
                         <spacer />
                         <vbox>
-									<hbox  id="alarm-box" align="center">
-										 <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
-										 <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
-                               
-                               <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
-											  <menupopup>
-													<menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
-													<menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
-													<menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
-											  </menupopup>
-										 </menulist>
-										 
-										 <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
-                               
-									</hbox>
-									<hbox id="alarm-box-email" collapsed="true" align="center">
-										 <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
-										 <textbox id="alarm-email-field" disabled="true" size="39" value="" />
-									</hbox>       
+                           <hbox  id="alarm-box" align="center">
+                              <checkbox id="alarm-checkbox" class="proper-align" label="&newevent.alarm.label;" checked="false" oncommand="commandAlarm()"/>
+                              <textbox id="alarm-length-field"  oninput="alarmLengthKeyDown( this )"/>
+                              <menulist id="alarm-length-units" crop="none" labelnumber="labelplural">
+                                 <menupopup>
+                                    <menuitem label="&alarm.units.minutes;" labelplural="&alarm.units.minutes;"   labelsingular="&alarm.units.minutes.singular;"  value="minutes"/>
+                                    <menuitem label="&alarm.units.hours;"   labelplural="&alarm.units.hours;"     labelsingular="&alarm.units.hours.singular;"    value="hours" />
+                                    <menuitem label="&alarm.units.days;"    labelplural="&alarm.units.days;"      labelsingular="&alarm.units.days.singular;"     value="days"/>
+                                 </menupopup>
+                              </menulist>
+                              <label id="alarm-length-text" for="alarm-length-field" value="&newevent.beforealarm.label;"/>
+                           </hbox>
+                           
+                           <hbox id="alarm-box-email" collapsed="true" align="center">
+                               <checkbox id="alarm-email-checkbox"  label="&newevent.email.label;" checked="false" oncommand="commandAlarmEmail()"/>
+                               <textbox id="alarm-email-field" disabled="true" size="39" value="" />
+                           </hbox>       
                         </vbox>
-                    </row>
-
-                    <!-- Calendar Status -->
-                    <row align="center">
+                     </row>
+   
+                     <!-- Calendar Status -->
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="Event Status"/>
                         </hbox>
                         <menulist id="status-field" label="&newevent.status.label;">
                             <menupopup id="status-menulist-menupopup">
                                 <menuitem label="&newevent.status.tentative.label;"  value="ICAL_STATUS_TENTATIVE"/>
-										  <menuitem label="&newevent.status.confirmed.label;"  value="ICAL_STATUS_CONFIRMED"/>
-										  <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
+                                <menuitem label="&newevent.status.confirmed.label;"  value="ICAL_STATUS_CONFIRMED"/>
+                                <menuitem label="&newevent.status.cancelled.label;"  value="ICAL_STATUS_CANCELLED"/>
                             </menupopup>
                         </menulist>
-                    </row>
-
-                    <!-- Categories -->
-                    <row align="center">
+                     </row>
+                     
+                     <!-- Categories -->
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label value="&newtodo.categories.label;"/>
                         </hbox>
@@ -283,10 +265,10 @@
                                 <menuitem label="&priority.level.none;" value="0"/>
                             </menupopup>
                         </menulist>
-                    </row>
-                  
-                    <!-- Calendar Server -->
-                    <row align="center">
+                     </row>
+            
+                     <!-- Calendar Server -->
+                     <row align="center">
                         <hbox class="field-label-box-class" pack="end">
                             <label id="server-field-label" value="&newevent.server.label;"/>
                         </hbox>
@@ -299,194 +281,188 @@
                               </template>
                             </menupopup>
                         </menulist>
-                    </row>
+                     </row>
                   </rows>
                </grid>
-                </tabpanel>
-                <tabpanel>
-                    <!-- Repeat -->    
-                        <vbox>
-                          <hbox id="repeat-box" align="center">
-                            <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
-                            <textbox id="repeat-length-field" class="cursor-pointer" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
-                                    
-                            <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
-                                <menupopup>
-                                    <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   id="repeat-length-days"   value="days" />
-                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks"/>
-                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"/>
-                                    <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"  id="repeat-length-years"  value="years" />
-                                </menupopup>
-                            </menulist>
-                          </hbox>
-                               
-                          
-                          <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Tue" id="advanced-repeat-week-2" value="2" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Wed" id="advanced-repeat-week-3" value="3" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Thu" id="advanced-repeat-week-4" value="4" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Fri" id="advanced-repeat-week-5" value="5" checked="false" />
-                            <checkbox disable-controller="repeat" class="repeat-day-class" label="Sat" id="advanced-repeat-week-6" value="6" checked="false" />
-                          </hbox>
-                               
-                          
-                          <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
-                              <vbox align="center">
-                                 <radiogroup id="advanced-repeat-month" disable-controller="repeat">
-                                    <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="On the xth day of the month" selected="true"/>
-                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="4th Tuesday of the month"/>
-                                    <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="Last Tuesday of the month" disabled="true"/>
-                                 </radiogroup>
-                              </vbox>
-                          </hbox>
-                               
-                          <spacer height="10" />
-                            
-                          <hbox align="center">
-                            <spacer class="repeat-left-spacer" />
-                            <radiogroup id="repeat-until-group" disable-controller="repeat">
-                              <radio id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
-                              <hbox id="repeat-end-box" align="center">
-                                  <vbox>
-                                     <hbox>
-                                        <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
-                                        <spacer id="until-spacer"/>
-                                        <datepicker id="repeat-end-date-picker" value=""/>
-                                     </hbox>
-                                     <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
-                                  </vbox>
-                              </hbox>
-                            </radiogroup>
-                          </hbox>
-                          
-                          <hbox align="center">
-                            <spacer class="repeat-left-spacer" />
-                            <groupbox>
-                              <caption label="&newevent.exceptions.caption;"/>
-                              <grid>
-                                 <columns>
-                                    <column flex="1"/>
-                                    <column/>
-                                 </columns>
-                                 <rows>
-                                    <row>
-                                       <hbox align="center">
-                                          <datepicker id="exceptions-date-picker" disable-controller="repeat" value=""/>
-                                       </hbox>   
-                                       <button id="exception-add-button" label="&newevent.addexceptions.label;" disable-controller="repeat" oncommand="addException()"/>
-                                    </row>
-                                    <row>
-                                       <listbox id="exception-dates-listbox" disable-controller="repeat" rows="4"/>
-                                       <vbox>
-                                          <button label="&newevent.deleteexceptions.label;" disable-controller="repeat" oncommand="removeSelectedExceptionDate()"/>
-                                       </vbox>
-                                    </row>
-                                 </rows>
-                              </grid>
-                            </groupbox>
-                          </hbox>
-                        </vbox>
-                    <!-- /Repeat -->   
             </tabpanel>
-            
+            <tabpanel>
+             
+            <!-- Repeat -->    
+               <vbox>
+                  <hbox id="repeat-box" align="center">
+                     <checkbox id="repeat-checkbox" class="proper-align" label="&newevent.repeat.label;"  checked="false" oncommand="commandRepeat()"/>
+                     <textbox id="repeat-length-field" class="cursor-pointer" disable-controller="repeat" value="1"  oninput="repeatLengthKeyDown( this )"/>
+                              
+                     <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
+                        <menupopup>
+                           <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   id="repeat-length-days"   value="days" />
+                           <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks"/>
+                           <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"/>
+                           <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"  id="repeat-length-years"  value="years" />
+                        </menupopup>
+                     </menulist>
+                  </hbox>
+                    
+                  <hbox id="repeat-extenstions-week" disabled="true" disable-controller="repeat" collapsed="false" align="center">
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Sun" id="advanced-repeat-week-0" value="0" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Mon" id="advanced-repeat-week-1" value="1" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Tue" id="advanced-repeat-week-2" value="2" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Wed" id="advanced-repeat-week-3" value="3" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Thu" id="advanced-repeat-week-4" value="4" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Fri" id="advanced-repeat-week-5" value="5" checked="false" />
+                     <checkbox disable-controller="repeat" class="repeat-day-class" label="Sat" id="advanced-repeat-week-6" value="6" checked="false" />
+                  </hbox>
+                         
+                  <hbox id="repeat-extenstions-month" diabled="true" collapsed="true" align="center">
+                     <vbox align="center">
+                        <radiogroup id="advanced-repeat-month" disable-controller="repeat">
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofmonth"      label="On the xth day of the month" selected="true"/>
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek"       label="4th Tuesday of the month"/>
+                           <radio disable-controller="repeat" id="advanced-repeat-dayofweek-last"  label="Last Tuesday of the month" disabled="true"/>
+                        </radiogroup>
+                     </vbox>
+                  </hbox>
+                         
+                  <spacer height="10" />
+                      
+                  <hbox align="center">
+                     <spacer class="repeat-left-spacer" />
+                     <radiogroup id="repeat-until-group" disable-controller="repeat">
+                        <radio id="repeat-forever-radio" disable-controller="repeat" label="&newevent.forever.label;" oncommand="commandUntil()"/>
+                        <hbox id="repeat-end-box" align="center">
+                           <vbox>
+                              <hbox>
+                                 <radio id="repeat-until-radio" disable-controller="repeat" label="&newevent.until.label;" oncommand="commandUntil()"/>
+                                 <spacer id="until-spacer"/>
+                                 <datepicker id="repeat-end-date-picker" value=""/>
+                              </hbox>
+                              <label id="repeat-time-warning" class="warning-text-class" value="&newevent.recurend.warning;" collapsed="true"/>
+                           </vbox>
+                        </hbox>
+                     </radiogroup>
+                  </hbox>
+                    
+                  <hbox align="center">
+                     <spacer class="repeat-left-spacer" />
+                     <groupbox>
+                        <caption label="&newevent.exceptions.caption;"/>
+                        <grid>
+                           <columns>
+                              <column flex="1"/>
+                              <column/>
+                           </columns>
+                           <rows>
+                              <row>
+                                 <hbox align="center">
+                                    <datepicker id="exceptions-date-picker" disable-controller="repeat" value=""/>
+                                 </hbox>   
+                                 <button id="exception-add-button" label="&newevent.addexceptions.label;" disable-controller="repeat" oncommand="addException()"/>
+                              </row>
+                              <row>
+                                 <listbox id="exception-dates-listbox" disable-controller="repeat" rows="4"/>
+                                 <vbox>
+                                    <button label="&newevent.deleteexceptions.label;" disable-controller="repeat" oncommand="removeSelectedExceptionDate()"/>
+                                 </vbox>
+                              </row>
+                           </rows>
+                        </grid>
+                     </groupbox>
+                  </hbox>
+               </vbox>
+               <!-- /Repeat -->   
+            </tabpanel>
+      
             <!-- Contacts panel -->
             <tabpanel orient="vertical" collapsed="true">
                <!-- Invite -->    
-                  <vbox collapsed="true">
-                     <hbox id="invite-box" align="center">
-                         <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
-                         <textbox id="invite-email-field" size="39" disabled="true"/>
-                     </hbox>
+               <vbox collapsed="true">
+                  <hbox id="invite-box" align="center">
+                     <checkbox id="invite-checkbox"  label="&newevent.invite.label;" checked="false" oncommand="commandInvite()"/>
+                     <textbox id="invite-email-field" size="39" disabled="true"/>
+                  </hbox>
+               </vbox>
+            
+               <vbox flex="1">
+               <hbox id="topBox" align="center">
+                  <label value="&ab-selectAddressesDialogLookIn.label;" />
+                  
+                  <!-- Address book chooser -->                    
+                  <menulist id="addressBookList" oncommand="onChooseAddressBookEventDialog( this );">
+                     <menupopup id="addressBookList-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
+                        <template> 
+                           <rule nc:IsMailList="false">
+                              <menuitem uri="..."
+                                 label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                                 value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+                           </rule>
+                        </template> 
+                     </menupopup>
+                  </menulist>
+               </hbox>
+               
+               <hbox flex="1">    
+               
+                  <!-- Existing addresses -->                
+                  <vbox id="resultsBox" flex="4">
+                     <label value=" " />
+                     <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" seltype="multiple" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
+                      
+                        <treecols id="recipientTreeCols">
+                           <treecol id="GeneratedName" sort-field="GeneratedName" class="sortDirectionIndicator"   list-view-sort-field="true" 
+                              persist="ordinal width" flex="1" label="&ab-selectAddressesDialogNameColumn.label;" primary="true"/>
+                              
+                           <splitter class="tree-splitter"/>
+                              
+                           <treecol id="PrimaryEmail" sort-field="PrimaryEmail" class="sortDirectionIndicator" list-view-sort-field="true"  
+                              persist="ordinal width"  flex="1" label="&ab-selectAddressesDialogEmailColumn.label;"/>
+                        </treecols>
+                          
+                        <treechildren />
+                             
+                     </tree>
                   </vbox>
                   
+                  <!-- Add and remove buttons -->
+                  <vbox id="addToBucketButtonBox">
+                      <spacer flex="1" />
+                      <button id="toButton" label="&ab-selectAddressesDialogInvite.label;" command="addToInviteList" /> 
+                      <spacer />
+                      <button id="remove" label="&ab-selectAddressesDialogUninvite.label;" class="dialog" command="removeFromInviteList" /> 
+                      <spacer flex="1" />
+                  </vbox>
                   
-    <vbox flex="1">
-        <hbox id="topBox" align="center">
-            <label value="&ab-selectAddressesDialogLookIn.label;" />
-            
-            <!-- Address book chooser -->                    
-            <menulist id="addressBookList" oncommand="onChooseAddressBookEventDialog( this );">
-                <menupopup id="addressBookList-menupopup" ref="moz-abdirectory://" datasources="rdf:addressdirectory">
-                    <template> 
-                        <rule nc:IsMailList="false">
-                            <menuitem uri="..."
-                                label="rdf:http://home.netscape.com/NC-rdf#DirName"
-                                value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-                        </rule>
-                    </template> 
-                </menupopup>
-            </menulist>
-        </hbox>
-        
-        <hbox flex="1">    
-    
-            <!-- Existing addresses -->                
-            <vbox id="resultsBox" flex="4">
-                <label value=" " />
-                <tree id="abResultsTree" flex="1" persist="height" hidecolumnpicker="true" seltype="multiple" onclick="this.contactsTree.onClick( event );" ondblclick="this.contactsTree.onDblClick( event );">
-                
-                    <treecols id="recipientTreeCols">
-                        <treecol id="GeneratedName" sort-field="GeneratedName" class="sortDirectionIndicator"   list-view-sort-field="true" 
-                        persist="ordinal width" flex="1" label="&ab-selectAddressesDialogNameColumn.label;" primary="true"/>
-                        
-                        <splitter class="tree-splitter"/>
-                        
-                        <treecol id="PrimaryEmail" sort-field="PrimaryEmail" class="sortDirectionIndicator" list-view-sort-field="true"  
-                        persist="ordinal width"  flex="1" label="&ab-selectAddressesDialogEmailColumn.label;"/>
-                    </treecols>
-                    
-                    <treechildren />
-                       
-                </tree>
+                  <!-- Recipient list -->                           
+                  <vbox id="bucketBox" flex="1">
+                      <label value="&ab-selectAddressesDialogInviteList.label;"/>
+                      
+                      <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
+                          <treecols>
+                              <treecol id="addressCol" flex="1" hideheader="true"/>
+                          </treecols>
+                          
+                          <treechildren id="bucketBody" flex="1"/>
+                      </tree>
+                  </vbox>
+                  
+               </hbox>
             </vbox>
-            
-            <!-- Add and remove buttons -->
-            <vbox id="addToBucketButtonBox">
-                <spacer flex="1" />
-                <button id="toButton" label="&ab-selectAddressesDialogInvite.label;" command="addToInviteList" /> 
-                <spacer />
-                <button id="remove" label="&ab-selectAddressesDialogUninvite.label;" class="dialog" command="removeFromInviteList" /> 
-                <spacer flex="1" />
+         </tabpanel>
+      
+         <tabpanel>
+            <listbox id="attachmentBucket" flex="1" rows="8"
+                onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
+                onclick="AttachmentBucketClicked(event);"
+                ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
+                ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
+                ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
+            <vbox>
+               <button onclick="AttachFile()" label="Choose File"/>
+               <button onclick="removeSelectedAttachment()" label="Remove Selected File"/>
+               <spacer flex="1"/>
             </vbox>
-            
-            <!-- Recipient list -->                           
-            <vbox id="bucketBox" flex="1">
-                <label value="&ab-selectAddressesDialogInviteList.label;"/>
-                
-                <tree id="addressBucket" flex="1" seltype="multiple" hidecolumnpicker="true" onclick="selectEventRecipient( this );">
-                    <treecols>
-                        <treecol id="addressCol" flex="1" hideheader="true"/>
-                    </treecols>
-                    
-                    <treechildren id="bucketBody" flex="1"/>
-                </tree>
-            </vbox>
-            
-        </hbox>
-    </vbox>
-                   
-            </tabpanel>
-            
-            <tabpanel>
-               <listbox id="attachmentBucket" flex="1" rows="8"
-                   onkeypress="if (event.keyCode == 8 || event.keyCode == 46) RemoveSelectedAttachment();"
-                   onclick="AttachmentBucketClicked(event);"
-                   ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
-                   ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
-                   ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
-               <vbox>
-                  <button onclick="AttachFile()" label="Choose File"/>
-                  <button onclick="removeSelectedAttachment()" label="Remove Selected File"/>
-                  <spacer flex="1"/>
-               </vbox>
-            </tabpanel>
-         </tabpanels>
-         </tabbox>
+         </tabpanel>
+      </tabpanels>
+   </tabbox>
 
-            
-         </vbox> <!-- standard-dialog-content -->
-    </vbox> <!-- dialog-box -->
-
+   </vbox> <!-- standard-dialog-content -->
 </dialog>

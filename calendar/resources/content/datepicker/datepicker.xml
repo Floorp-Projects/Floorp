@@ -5,11 +5,11 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  	<binding id="datepicker" extends="xul:box" inherits="value,disabled">
+  	<binding id="datepicker" extends="xul:box" inherits="value,ondatepick">
 		<!-- ::::::::::::::::: CONTENT ::::::::::::::::::::::::: -->
 		<content id="content">
 		<xul:hbox flex="1" id="hbox">
-			<xul:textbox id="textbox" xbl:inherits="disabled" 
+			<xul:textbox id="textbox" 
 				onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new Date(this.value));"
 				onblur="this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value));"/>
 			
@@ -28,8 +28,8 @@
 			onset="this.update(val)"
 			onget="return this.mValue"/>
          
-      <property name="callback" 
-			onset="this.callbackFunction = val;"
+      <property name="ondatepick" 
+			onset="this.callback = val;"
 			/>
 
 		<constructor>
@@ -41,7 +41,11 @@
 
 				if (val) this.value = val;
 				else this.value = new Date();
-		
+            
+            var val = this.getAttribute("ondatepick");
+            dump( "\ncallback is "+val );
+				if (val) this.callback = new Function( val );
+            
 			]]>
 		</constructor>
 		
@@ -54,8 +58,7 @@
 					this.mValue = aValue;
                this.mTextBox.setAttribute("value", this.getPrettyDate(this.mValue));
 				}
-            if( this.callback )
-                this.callbackFunction();    
+                
 			]]></body>
 		</method>
 

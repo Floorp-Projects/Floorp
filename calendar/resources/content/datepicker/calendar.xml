@@ -95,6 +95,7 @@
 			onset="this.update(val)"/>
 			
 		<property name="onchange"/>
+      <property name="onchangecallback"/>
 		
 		<constructor>
 			<![CDATA[
@@ -114,7 +115,7 @@
           else this.mValue = new Date();
           var change = this.getAttribute("onchange");
           if (change) this.onchange = new Function(change);
-
+          
           this.showMonth(this.mValue);
         }
 			]]>
@@ -207,6 +208,8 @@
         this.value = aDay.date;
 
         if (this.onchange) this.onchange();
+        
+        if (this.parentNode.parentNode.parentNode.parentNode.callback) this.parentNode.parentNode.parentNode.parentNode.callback();
 
 			]]></body>
 		</method>

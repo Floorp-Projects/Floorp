@@ -82,6 +82,8 @@ var gEvent;          // event being edited
 var gOnOkFunction;   // function to be called when user clicks OK
 
 var gTimeDifference = 3600000;  //when editing an event, we change the end time if the start time is changing. This is the difference for the event time.
+var gDateDifference = 3600000;  //this is the difference for the dates, not the times.
+
 var gDefaultAlarmLength = 15; //number of minutes to default the alarm to
 var gCategoryManager;
 
@@ -141,6 +143,7 @@ function loadCalendarEventDialog()
    setTimeFieldValue( "end-time-text", endDate );
    
    gTimeDifference = gEvent.end.getTime() - gEvent.start.getTime(); //the time difference in ms
+   gDateDifference = gTimeDifference; //the time difference in ms
    
    var today = new Date();
 
@@ -280,12 +283,10 @@ function loadCalendarEventDialog()
    }
    else
    {
-      /*alert( gEvent.parent.server );
       if( gEvent.parent )
          setFieldValue( "server-field", gEvent.parent.server );
       else
       {
-         alert( "set selected index to 1" );
          document.getElementById( "server-field" ).selectedIndex = 1;
       }
          
@@ -293,7 +294,6 @@ function loadCalendarEventDialog()
       setFieldValue( "server-field", "true", "disabled" );
 
       setFieldValue( "server-field-label", "true", "disabled" );
-      */
    }
    
    // update enabling and disabling
@@ -547,50 +547,19 @@ function updateOKButton()
 }
 
 /**
-*   Called when an item with a datepicker is clicked, BEFORE the picker is shown.
-*/
-
-function prepareDatePicker( dateFieldName )
-{
-   // get the popup and the field we are editing
-   
-   var datePickerPopup = document.getElementById( "oe-date-picker-popup" );
-   var dateField = document.getElementById( dateFieldName );
-   
-   // tell the date picker the date to edit.
-   
-   setFieldValue( "oe-date-picker-popup", dateField.editDate, "value" );
-   
-   // remember the date field that is to be updated by adding a 
-   // property "dateField" to the popup.
-   
-   datePickerPopup.dateField = dateField;
-}
-   
-
-/**
 *   Called when a datepicker is finished, and a date was picked.
 */
 
-function onDatePick( datepopup )
+function onDatePick( datepicker )
 {
-   // display the new date in the textbox
-   
-   //datepopup.dateField.value = formatDate( datepopup.value );
-   
-   // remember the new date in a property, "editDate".  we created on the date textbox
-   
-   //datepopup.dateField.editDate = datepopup.value;
-
    var Now = new Date();
 
    //change the end date of recurring events to today, if the new date is after today and repeat is not checked.
 
-   if ( datepopup.value > Now && !getFieldValue( "repeat-checkbox", "checked" ) ) 
+   if ( datepicker.value > Now && !getFieldValue( "repeat-checkbox", "checked" ) ) 
    {
-      document.getElementById( "repeat-end-date-picker" ).value = formatDate( datepopup.value );
+      document.getElementById( "repeat-end-date-picker" ).value = datepicker.value;
    }
-
    updateAdvancedWeekRepeat();
       
    updateAdvancedRepeatDayOfMonth();
@@ -637,12 +606,7 @@ function onTimePick( timepopup )
    if ( newEndDate.getDate() != timepopup.value.getDate() ) //if this moves us to tomorrow...
    {
       //put us back at today, with a time of 11:55 PM.
-      newEndDate = new Date( timepopup.value.getFullYear(),
-                             timepopup.value.getMonth(),
-                             timepopup.value.getDate(),
-                             23,
-                             55,
-                             0);
+      document.getElementById( "end-date-picker" ).value = newEndDate;
    }
    
    if( timepopup.timeField.id != "end-time-text" )
@@ -679,6 +643,20 @@ function onTimePick( timepopup )
 }
 
 
+function updateEndDate( datepicker )
+{
+   //get the new end time by adding on the time difference to the start time.
+   newEndDate = datepicker.value.getTime() + gDateDifference;
+      
+   newEndDate = new Date( newEndDate );
+
+   document.getElementById( "end-date-picker" ).value = newEndDate;
+}
+
+function updateDateDifference( datepicker )
+{
+   gDateDifference = ( datepicker.value.getTime() - document.getElementById( "start-date-picker" ).value.getTime() );
+}
 
 /**
 *   Called when the repeat checkbox is clicked.
