@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.3 2000/07/19 23:54:43 mcgreer%netscape.com Exp $
+ * $Id: blapi.h,v 1.4 2000/07/21 20:50:31 nelsonb%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -346,12 +346,12 @@ extern SECStatus RC5_Decrypt(RC5Context *cx, unsigned char *output,
 ** Create a new DES context suitable for DES encryption/decryption.
 ** 	"key" raw key data
 ** 	"len" the number of bytes of key data
-** 	"iv" is the CBC initialization vector (if mode is SEC_DES_CBC or
+** 	"iv" is the CBC initialization vector (if mode is NSS_DES_CBC or
 ** 	   mode is DES_EDE3_CBC)
-** 	"mode" one of SEC_DES, SEC_DES_CBC, SEC_DES_EDE3 or SEC_DES_EDE3_CBC
+** 	"mode" one of NSS_DES, NSS_DES_CBC, NSS_DES_EDE3 or NSS_DES_EDE3_CBC
 **	"encrypt" is PR_TRUE if the context will be used for encryption
 **
-** When mode is set to SEC_DES_CBC or SEC_DES_EDE3_CBC then the DES
+** When mode is set to NSS_DES_CBC or NSS_DES_EDE3_CBC then the DES
 ** cipher is run in "cipher block chaining" mode.
 */
 extern DESContext *DES_CreateContext(unsigned char *key, unsigned char *iv,
