@@ -174,11 +174,11 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
   NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServMgr, kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsString2 actualProgID(NS_IMIME_MISC_STATUS_KEY, eOneByte);
+  nsCAutoString actualProgID(NS_IMIME_MISC_STATUS_KEY);
   actualProgID.Append(STATUS_ID_NAME);
   rv = compMgr->RegisterComponent(kMimeMiscStatusCID,
                                   "Mime Misc Status",
-                                  actualProgID.GetBuffer(),
+                                  actualProgID,
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
