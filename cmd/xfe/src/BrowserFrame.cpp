@@ -275,7 +275,7 @@ static ToolbarSpec editor_style_toolbar_spec[] = {
 	{ xfeCmdToggleCharacterStyleBold,	   TOGGLEBUTTON, &ed_bold_group },
 	{ xfeCmdToggleCharacterStyleItalic,	   TOGGLEBUTTON, &ed_italic_group },
 	{ xfeCmdToggleCharacterStyleUnderline, TOGGLEBUTTON, &ed_underline_group },
-	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
+//	{ xfeCmdClearAllStyles,                PUSHBUTTON  , &ed_clear_group },
 	TOOLBAR_SEPARATOR,
 
 	{ xfeCmdInsertBulletedList,	TOGGLEBUTTON, &ed_bullet_group },
@@ -451,9 +451,8 @@ XFE_BrowserFrame::showEditorToolbar(XFE_View* view)
     if (view)
       m_editorStyleToolbar->setCommandDispatcher(view);
     m_editorStyleToolbar->update();
-    // XXX Need to find a way to reset the toolbar to reflect
-    // what's selected in the current view.  This doesn't do it:
-    //m_editorStyleToolbar->updateCommand(0);
+    // Update the toolbar to reflect the current view and cursor location:
+    m_editorStyleToolbar->updateCommand(0);
     m_editorStyleToolbar->show();
   }
 }

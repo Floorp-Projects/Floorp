@@ -22,7 +22,7 @@
  *  EditorToolbar.cpp --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.cpp,v 3.3 1998/08/21 23:02:19 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.cpp,v 3.4 1998/08/25 23:10:26 akkana%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -291,10 +291,16 @@ void XFE_ActionMenuItem::doCommand(XFE_CommandInfo* info)
 }
 
 void
-XFE_EditorToolbarPushButton::update()
+XFE_EditorToolbarPushButton::update(XFE_Component* dispatcher)
 {
 	XFE_CommandInfo e_info(XFE_COMMAND_BUTTON_ACTIVATE, m_widget);
 	Boolean         sensitive = False;
+
+	//
+	//    Do we have a command dispatcher?
+	//
+    if (dispatcher == 0)
+      dispatcher = getParentFrame();
 
 	//
 	//    Do we have a command handler?
@@ -303,7 +309,12 @@ XFE_EditorToolbarPushButton::update()
 		m_cmd_handler = getCommand(m_cmd_id);
 
 	if (m_cmd_handler != NULL)
-		sensitive = m_cmd_handler->isEnabled(getParentFrame(), &e_info);
+    {
+      if (dispatcher->isClassOf("Frame"))
+		sensitive = m_cmd_handler->isEnabled((XFE_Frame*)dispatcher, &e_info);
+      else if (dispatcher->isClassOf("View"))
+		sensitive = m_cmd_handler->isEnabled((XFE_View*)dispatcher, &e_info);
+    }
 
 	XtVaSetValues(m_widget, XtNsensitive, sensitive, 0);
 }
@@ -392,13 +403,18 @@ tb_valuechanged_cb(Widget widget, XtPointer closure, XtPointer cb_d)
 }
 
 void
-XFE_EditorToolbarToggleButton::update()
+XFE_EditorToolbarToggleButton::update(XFE_Component* dispatcher)
 {
 	XFE_CommandInfo e_info(XFE_COMMAND_BUTTON_ACTIVATE, m_widget);
 	Boolean         sensitive = False;
 	Boolean         selected = False;
 	Boolean         determinate = True;
-	XFE_Frame*      frame = getParentFrame();
+
+	//
+	//    Do we have a command dispatcher?
+	//
+    if (dispatcher == 0)
+      dispatcher = getParentFrame();
 
 	//
 	//    Do we have a command handler?
@@ -406,11 +422,23 @@ XFE_EditorToolbarToggleButton::update()
 	if (!m_cmd_handler)
 		m_cmd_handler = getCommand(m_cmd_id);
 
-	if (m_cmd_handler != NULL) {
-		sensitive = m_cmd_handler->isEnabled(frame, &e_info);
-		selected = m_cmd_handler->isSelected(frame, &e_info);
-		determinate = m_cmd_handler->isDeterminate(frame, &e_info);
-	}
+	if (m_cmd_handler != NULL)
+    {
+      if (dispatcher->isClassOf("Frame"))
+      {
+		sensitive = m_cmd_handler->isEnabled((XFE_Frame*)dispatcher, &e_info);
+		selected = m_cmd_handler->isSelected((XFE_Frame*)dispatcher, &e_info);
+		determinate = m_cmd_handler->isDeterminate((XFE_Frame*)dispatcher,
+                                                   &e_info);
+      }
+      else if (dispatcher->isClassOf("View"))
+      {
+		sensitive = m_cmd_handler->isEnabled((XFE_View*)dispatcher, &e_info);
+		selected = m_cmd_handler->isSelected((XFE_View*)dispatcher, &e_info);
+		determinate = m_cmd_handler->isDeterminate((XFE_View*)dispatcher,
+                                                   &e_info);
+      }
+    }
 
 	XtVaSetValues(m_widget,
 				  XtNsensitive, sensitive,
@@ -472,7 +500,7 @@ public:
 	XFE_ComboList(Widget parent,
 				  ToolbarSpec* spec,
 				  XFE_Component* tb);
-	virtual void update() = 0;
+	virtual void update(XFE_Component* dispatcher = 0) = 0;
 	virtual void itemSelected(unsigned index) = 0;
 	void    selectItem(int index);
 	void    addItems(XFE_CommandParameters* list);
@@ -596,7 +624,7 @@ public:
 				  ToolbarSpec* spec,
 				  XFE_Component* tb);
 	void itemSelected(unsigned index);
-	void update();
+	void update(XFE_Component* dispatcher = 0);
 	
 protected:
 	XFE_CommandParameters* m_params;
@@ -637,21 +665,35 @@ XFE_SmartComboList::itemSelected(unsigned index)
 }
 
 void
-XFE_SmartComboList::update()
+XFE_SmartComboList::update(XFE_Component* dispatcher)
 {
-	XFE_Frame* frame = getParentFrame();
 	int        index = -1;
 
+	//
+	//    Do we have a command dispatcher?
+	//
+    if (dispatcher == 0)
+      dispatcher = getParentFrame();
+
+	//
+	//    Do we have a command handler?
+	//
     if (!m_cmd_handler)
       m_cmd_handler = getCommand();
 
 	if (m_cmd_handler != NULL) {
 		if (!m_params) {
-			m_params = m_cmd_handler->getParameters(frame);
-			addItems(m_params);
+            if (dispatcher->isClassOf("Frame"))
+              m_params = m_cmd_handler->getParameters((XFE_Frame*)dispatcher);
+            else if (dispatcher->isClassOf("View"))
+			  m_params = m_cmd_handler->getParameters((XFE_View*)dispatcher);
+            addItems(m_params);
 		}
 
-		index = m_cmd_handler->getParameterIndex(frame);
+        if (dispatcher->isClassOf("Frame"))
+          index = m_cmd_handler->getParameterIndex((XFE_Frame*)dispatcher);
+        else if (dispatcher->isClassOf("View"))
+          index = m_cmd_handler->getParameterIndex((XFE_View*)dispatcher);
 	}
 
 	selectItem(index);
@@ -732,21 +774,34 @@ public:
 					  XFE_Component* tb);
 	void doIndex(unsigned index);
 	void updateDisplayed(int index);
-	void update();
+	void update(XFE_Component* dispatcher = 0);
 	XP_Bool showsUpdate() { return TRUE; };
 };
 
 void
-XFE_AlignmentMenu::update()
+XFE_AlignmentMenu::update(XFE_Component* dispatcher)
 {
-	XFE_Frame* frame = getParentFrame();
 	int        index = -1;
 
+	//
+	//    Do we have a command dispatcher?
+	//
+    if (dispatcher == 0)
+      dispatcher = getParentFrame();
+
+	//
+	//    Do we have a command handler?
+	//
 	if (!m_cmd_handler)
 		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
 
 	if (m_cmd_handler != NULL)
-		index = m_cmd_handler->getParameterIndex(frame);
+    {
+      if (dispatcher->isClassOf("Frame"))
+		index = m_cmd_handler->getParameterIndex((XFE_Frame*)dispatcher);
+      else if (dispatcher->isClassOf("View"))
+		index = m_cmd_handler->getParameterIndex((XFE_View*)dispatcher);
+    }
 
 	updateDisplayed(index);
 }
@@ -846,7 +901,7 @@ public:
 					 ToolbarSpec*   spec,
 					 XFE_Component* tb);
 	void setValue(LO_Color* color);
-	void update();
+	void update(XFE_Component* dispatcher = 0);
 protected:
 	void instanciateMenu();
 	Widget m_arrow;
@@ -1220,12 +1275,23 @@ XFE_ColorMenu::XFE_ColorMenu(Widget         parent,
 }
 
 void
-XFE_ColorMenu::update()
+XFE_ColorMenu::update(XFE_Component* dispatcher)
 {
-	XFE_Frame* frame = getParentFrame();
-	MWContext* context = frame->getContext();
-	LO_Color   color;
+	//
+	//    Do we have a command dispatcher?
+	//
+    if (dispatcher == 0)
+      dispatcher = getParentFrame();
 
+	MWContext* context;
+    if (dispatcher->isClassOf("Frame"))
+        context = ((XFE_Frame*)dispatcher)->getContext();
+    else if (dispatcher->isClassOf("View"))
+        context = ((XFE_View*)dispatcher)->getContext();
+
+	//
+	//    Do we have a command handler?
+	//
 	if (!m_cmd_handler)
 		m_cmd_handler = getParentFrame()->getCommand(m_cmd_id);
 
@@ -1234,7 +1300,14 @@ XFE_ColorMenu::update()
 
 	Pixel pixel;
 
-	if (m_cmd_handler->isDeterminate(frame, 0)) { /* is it defined */
+    Boolean is_determinate = FALSE;
+    if (dispatcher->isClassOf("Frame"))
+      is_determinate = m_cmd_handler->isDeterminate((XFE_Frame*)dispatcher, 0);
+    else if (dispatcher->isClassOf("View"))
+      is_determinate = m_cmd_handler->isDeterminate((XFE_View*)dispatcher, 0);
+
+	LO_Color   color;
+	if (is_determinate) { /* is it defined */
 		fe_EditorColorGet(context, &color);
 		pixel = fe_GetPixel(context, color.red, color.green, color.blue);
 	} else {
@@ -1356,12 +1429,12 @@ XFE_EditorToolbar::findButton(const char* /*name*/,
 }
 
 static void
-update_children(Widget parent, CommandType cmd)
+update_children(Widget parent, CommandType cmd, XFE_Component* dispatcher)
 {
 	Widget* children;
 	int     nchildren;
 	int     i;
-  
+
 	XtVaGetValues(parent,
 				  XmNchildren, &children,
 				  XmNnumChildren, &nchildren,
@@ -1373,12 +1446,11 @@ update_children(Widget parent, CommandType cmd)
 		if (!menu_item)
 			continue;
 
-
 		if ((cmd == 0 || menu_item->getCmdId() == cmd)
 			&&
 			menu_item->showsUpdate()) {
 
-			menu_item->update();
+			menu_item->update(dispatcher);
 		}
 	}
 }
@@ -1389,7 +1461,7 @@ XFE_EditorToolbar::updateCommand(CommandType cmd)
 	if (!XtIsManaged(m_widget))
 		return;
   
-	update_children(m_rowcol, cmd);
+	update_children(m_rowcol, cmd, m_cmdDispatcher);
 }
 
 void
@@ -1401,7 +1473,8 @@ XFE_EditorToolbar::update()
 void
 XFE_EditorToolbar::show()
 {
-	update_children(m_rowcol, 0); // skip the updateCommand() managed check.
+	update_children(m_rowcol, 0, m_cmdDispatcher);
+        // skip the updateCommand() managed check.
 	XFE_ToolboxItem::show();
 }
 

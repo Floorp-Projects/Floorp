@@ -22,7 +22,7 @@
  *  EditorToolbar.h --- Toolbar for Editor and HTML Mail Compose.
  *
  *  Created: David Williams <djw@netscape.com>, Feb-7-1997
- *  RCSID: "$Id: EditorToolbar.h,v 3.3 1998/08/13 21:50:59 akkana%netscape.com Exp $"
+ *  RCSID: "$Id: EditorToolbar.h,v 3.4 1998/08/25 23:10:26 akkana%netscape.com Exp $"
  *
  *----------------------------------------------------------------------------
  */
@@ -73,7 +73,7 @@ class XFE_AbstractMenuItem : public XFE_Component
 {
 public:
 	// methods
-	virtual void update() { };
+	virtual void update(XFE_Component* /*dispatcher*/ = 0) { };
 	virtual CommandType getCmdId() = 0;
 	virtual XP_Bool showsUpdate() { return TRUE; };
 };
@@ -155,7 +155,7 @@ public:
 	XFE_EditorToolbarPushButton(Widget         parent,
 								ToolbarSpec*   spec,
 								XFE_Component* tb);
-	void update();
+	void update(XFE_Component* dispatcher=0);
 };
 
 class XFE_EditorToolbarToggleButton : public XFE_EditorToolbarItem
@@ -165,7 +165,7 @@ public:
 								  ToolbarSpec* spec,
 								  XFE_Component* tb);
 								  
-	void update();
+	void update(XFE_Component* dispatcher=0);
 };
 
 class XFE_EditorToolbarRadioButton : public XFE_EditorToolbarToggleButton

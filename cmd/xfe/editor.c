@@ -6373,19 +6373,22 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
       }
       else
       {
-#ifdef ENDER
-          /* See if we're in an HTML textarea -- if so, we need to fiddle
-           * with toolbars to indicate which area has focus.
-           */
-          if (EDITOR_CONTEXT_DATA(context)->embedded)
-              XFE_EmbeddedEditorViewFocus(context);
-#endif /* ENDER */
           edElement = 0;
       }
       crossedCellBoundary = FALSE;
   }
 
   EDT_StartSelection(context, x, y);
+
+#ifdef ENDER
+  /* See if we're in an HTML textarea -- if so, we need to
+   * fiddle with toolbars to indicate which area has focus.
+   * This has to happen *after* EDT_StartSelection
+   * so the EditorView knows where the cursor has moved.
+   */
+  if (EDITOR_CONTEXT_DATA(context)->embedded)
+      XFE_EmbeddedEditorViewFocus(context);
+#endif /* ENDER */
 }
 
 /* We never call fe_EditorSelectionBegin(), as far as I can tell. ...Akk */

@@ -49,6 +49,7 @@ int fe_add_to_all_MWContext_list(MWContext *context);
 int fe_remove_from_all_MWContext_list(MWContext *context);
 void fe_find_scrollbar_sizes(MWContext *context);
 void fe_get_final_context_resources(MWContext *context);
+void XFE_EmbeddedEditorViewFocus(MWContext* context);
 }
 
 
@@ -68,6 +69,8 @@ XFE_EmbeddedEditorView::XFE_EmbeddedEditorView(XFE_Component *toplevel_component
 
 XFE_EmbeddedEditorView::~XFE_EmbeddedEditorView()
 {
+  XFE_EmbeddedEditorViewFocus(0);
+
   XFE_View *parent_view = getParent();
 
   if (parent_view)
@@ -180,7 +183,7 @@ XFE_CreateEmbeddedEditor(Widget parent, int32 cols, int32 rows,
   eev->getURL(url);
 
   // Show the editor toolbars in the containing Frame:
-  // XXX NOTE!  This needs to be redone when we support
+  // XXX NOTE!  This will need to be redone when we support
   // an embedded editor inside an EditorFrame.
   XFE_BrowserFrame* bf = (XFE_BrowserFrame*)frame;
   if (bf)
@@ -193,26 +196,31 @@ extern "C" void
 XFE_EmbeddedEditorViewFocus(MWContext* context)
 {
   static Widget currentFrame = 0;
+  if (currentFrame)
+    XtVaSetValues(currentFrame, XmNshadowType, XmSHADOW_ETCHED_IN, 0);
+  if (context == 0)
+  {
+    currentFrame = 0;
+    return;
+  }
+
   XFE_Frame *frame = fe_getFrameFromContext(context);
-  XFE_EmbeddedEditorView* eev = 0;
   XP_ASSERT(frame);
+
+  XFE_EmbeddedEditorView* eev = 0;
   if (frame)
     eev = (XFE_EmbeddedEditorView*)frame->widgetToView(CONTEXT_DATA(context)->drawing_area);
   XP_ASSERT(eev);
   if (!eev)
     return;
 
-  if (currentFrame)
-    XtVaSetValues(currentFrame, XmNshadowType, XmSHADOW_ETCHED_IN, 0);
   Widget embedFrame = XtParent(XtParent(CONTEXT_DATA(context)->drawing_area));
   XtVaSetValues(embedFrame, XmNshadowType, XmSHADOW_IN, 0);
   currentFrame = embedFrame;
 
   XFE_BrowserFrame* bf = (XFE_BrowserFrame*)frame;
   if (bf)
-  {
     bf->showEditorToolbar(eev);
-  }
 }
 
 extern "C" MWContext *
