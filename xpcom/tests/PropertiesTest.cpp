@@ -33,6 +33,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
+#include <iostream.h>  //BAD DOG -- no biscuit!
 
 #include "nsSpecialSystemDirectory.h"
 

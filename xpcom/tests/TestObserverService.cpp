@@ -23,6 +23,7 @@
 #include "nsIObserver.h"
 #include "nsString.h"
 #include "prprf.h"
+#include <iostream.h>
 
 static nsIObserverService *anObserverService = NULL;
 
