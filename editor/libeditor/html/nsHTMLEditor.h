@@ -119,6 +119,9 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
+  NS_IMETHOD CopyLastEditableChildStyles(nsIDOMNode *aPreviousBlock, nsIDOMNode *aNewBlock,
+                                         nsIDOMNode **aOutBrNode);
+
   NS_IMETHOD ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyleRule **_retval); 
 
   NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 

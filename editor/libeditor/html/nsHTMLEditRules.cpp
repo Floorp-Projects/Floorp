@@ -5976,7 +5976,7 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
   if (NS_FAILED(res)) return res;
   // now split list item
   PRInt32 newOffset;
-  res = mHTMLEditor->SplitNodeDeep( aListItem, selNode, aOffset, &newOffset);
+  res = mHTMLEditor->SplitNodeDeep( aListItem, selNode, aOffset, &newOffset, PR_FALSE);
   if (NS_FAILED(res)) return res;
   // hack: until I can change the damaged doc range code back to being
   // extra inclusive, I have to manually detect certain list items that
@@ -5993,6 +5993,21 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       nsCOMPtr<nsIDOMNode> brNode;
       res = CreateMozBR(prevItem, 0, address_of(brNode));
       if (NS_FAILED(res)) return res;
+    }
+    else {
+      res = mHTMLEditor->IsEmptyNode(aListItem, &bIsEmptyNode, PR_TRUE);
+      if (NS_FAILED(res)) return res;
+      if (bIsEmptyNode) {
+        nsCOMPtr<nsIDOMNode> brNode;
+        res = mHTMLEditor->CopyLastEditableChildStyles(prevItem, aListItem, getter_AddRefs(brNode));
+        if (NS_FAILED(res)) return res;
+        if (brNode) {
+          nsCOMPtr<nsIDOMNode> brParent;
+          PRInt32 offset;
+          res = nsEditor::GetNodeLocation(brNode, address_of(brParent), &offset);
+          return aSelection->Collapse(brParent, offset);
+        }
+      }
     }
   }
   res = aSelection->Collapse(aListItem,0);
