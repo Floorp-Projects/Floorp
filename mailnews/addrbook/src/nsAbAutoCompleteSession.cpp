@@ -631,13 +631,12 @@ NS_IMETHODIMP nsAbAutoCompleteSession::OnStartLookup(const PRUnichar *uSearchStr
               status = nsIAutoCompleteStatus::matchFound;
               if (addedDefaultItem)
               {
-                if (nbrOfItems > 2)
-                  results->SetDefaultItemIndex(-1);
-                else
-                  results->SetDefaultItemIndex(nbrOfItems == 2 ? 1 : 0);
+                // always make the first search result the default item. 
+                // if we dont' have any matches then use pos 0 which is the default item....
+                  results->SetDefaultItemIndex(nbrOfItems > 1 ? 1 : 0);
               }
               else
-                results->SetDefaultItemIndex(nbrOfItems > 1 ? -1 : 0);
+                results->SetDefaultItemIndex(0);  
             }
         }
     }
