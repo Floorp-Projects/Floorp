@@ -98,14 +98,18 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	proto = getprotobyname("tcp");
 	if (!proto)
 	{
-		perror("getprotobyname failed");
+		perror("getprotobyname");
+		viewReport(a, "getprotobyname failed");
+		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
 		return -1;
 	}
 
 	sock = socket(PF_INET, SOCK_STREAM, proto->p_proto);
 	if (sock < 0)
 	{
-		perror("socket failed");
+		perror("socket");
+		viewReport(a, "socket failed");
+		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
 		return -1;
 	}
 
