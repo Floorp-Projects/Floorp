@@ -274,7 +274,7 @@ nsresult nsMsgThreadedDBView::ListThreadIds(nsMsgKey *startMsg, PRBool unreadOnl
 		}
 	}
 
-	if (threadHdr)
+	if (hasMore && threadHdr)
 	{
     threadHdr->GetThreadKey(startMsg);
 	}
