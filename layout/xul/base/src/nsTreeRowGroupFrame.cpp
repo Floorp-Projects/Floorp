@@ -85,7 +85,7 @@ nsTreeRowGroupFrame::Destroy(nsIPresContext& aPresContext)
     mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
     mScrollbar->Destroy(aPresContext);
   }
-  return NS_OK;
+  return nsTableRowGroupFrame::Destroy(aPresContext);
 }
 
 NS_IMPL_ADDREF(nsTreeRowGroupFrame)
