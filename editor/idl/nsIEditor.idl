@@ -480,7 +480,7 @@ interface nsIEditor  : nsISupports
                          in unsigned long flags);
   void outputToStream(in nsIOutputStream aStream,
                       in AString formatType,
-                      in AString charsetOverride,
+                      in ACString charsetOverride,
                       in unsigned long flags);
 
 
