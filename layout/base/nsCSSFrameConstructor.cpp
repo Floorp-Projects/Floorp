@@ -4752,7 +4752,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*          aPre
 
     nsIFrame* scrolledFrame = nsnull;
 
-    NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
+    NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SPACE_MGR |
+                    NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
 
 
     nsIStyleContext* newStyle = nsnull;
