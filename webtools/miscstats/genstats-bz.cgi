@@ -19,10 +19,10 @@
 # 
 # Contributor(s): Dan Mosedale <dmose@mozilla.org>
 #                 Myk Melez <myk@mozilla.org>
-#
+# 
 
 #
-# $Id: genstats.cgi,v 1.12 2001/04/14 01:47:39 myk%mozilla.org Exp $ 
+# $Id: genstats-bz.cgi,v 1.1 2001/04/14 01:47:40 myk%mozilla.org Exp $ 
 #
 # generate statistics related to non-Netscape participation in mozilla.org
 #
@@ -37,59 +37,40 @@ use Date::Format;
 
 @::STATINFO = (
 
-	["Active checkers-in (source only)",
-						# statistic title
-	 "bonsai",				# database
-	 "checkins.ci_when",			# timestamp field
-	 "people.who",				# email addr field
-	 "select distinct people.id from checkins,people where " . 
-		"people.id=checkins.whoid"
-	],
-
-	["New checkers-in (source)",
-						# statistic title
-	 "mozusers",				# database
-	 "changes.when",			# timestamp field
-	 "changes.email",			# email addr field
-	 "select distinct id from changes,users where changes.field=" .
-		"'cvs_group' and changes.email=users.email ".
-	        "and changes.oldvalue='None'"
-	],
-
-	["New checkers-in (docs)",
-						# statistic title
-	 "mozusers",				# database
-	 "changes.when",			# timestamp field
-	 "changes.email",			# email addr field
-	 "select distinct id from changes,users where changes.field=" .
-		"'gila_group' and changes.email=users.email ".
-	        "and changes.oldvalue='None'"
-	],
-
-	["Useful patches (as attributed in CVS logs)",
+	["Useful browser 5.0 bugs (includes NEW; excludes WORKSFORME)",
 					 	# statistic title
-	 "bonsai",				# database
-	 "checkins.ci_when",			# timestamp field
-	 "descs.description",			# email addr field
-	 'select distinct description from checkins,descs where ' .
-		'checkins.descid=descs.id and description regexp ' . 
-		'"[[:<:]][a-zA-Z0-9_\\.\\-]+@[a-zA-Z0-9_\\.\\-]+[[:>:]]"'
+	 "bugs",				# database
+	 "bugs.creation_ts",			# timestamp field
+	 "login_name",				# email addr field
+	 "select bugs.bug_id from profiles,bugs where " .
+		"profiles.userid=bugs.reporter and resolution not in " .
+		"('DUPLICATE','INVALID','WORKSFORME') and product in " .
+		"('BROWSER','MailNews','NSPR','CCK')"	
 	],
 
-	["Checkins",			# title
-	 "bonsai",				# database 
-         "ci_when",				# timestamp field
-	 "people.who",				# email addr field
-	 "select distinct descs.description from people,checkins,descs " .
-		"where checkins.descid=descs.id and people.id=checkins.whoid"
+	["Useful bugs (includes NEW; excludes WORKSFORME)",
+					 	# statistic title
+	 "bugs",				# database
+	 "bugs.creation_ts",			# timestamp field
+	 "login_name",				# email addr field
+	 "select bugs.bug_id from profiles,bugs where " .
+		"profiles.userid=bugs.reporter and resolution not in " .
+		"('DUPLICATE','INVALID','WORKSFORME')"
 	],
 
-	["Files checked in",		# title
-	 "bonsai",				# database 
-         "ci_when",				# timestamp field
-	 "people.who",				# email addr field
-	 "select fileid from people,checkins where people.id=checkins.whoid"
-	]		 
+	["Useful browser patches submitted via Bugzilla" 
+	                 . " (includes NEW; excludes WORKSFORME)",
+						# statistic title
+	 "bugs",				# database
+	 "attachments.creation_ts",		# timestamp field
+	 "login_name",				# email addr field
+	 "select bugs.bug_id from attachments,profiles,bugs where ispatch!=0" .
+		" and profiles.userid=attachments.submitter_id and " .
+		"bugs.bug_id=attachments.bug_id and resolution not in " .
+		"('DUPLICATE','INVALID','WORKSFORME') and product in " .
+		"('BROWSER','MailNews','NSPR','CCK')"	
+	]
+
 );
 
 @::STATS = ();
@@ -267,7 +248,7 @@ print "These statistics were generated using the assumption that " .
 
 print p();
 print "Perhaps you are looking for " . 
-      qq|<a href="http://mothra.mozilla.org/miscstats/">the Bugzilla statistics?</a> |;
+      qq|<a href="http://webtools.mozilla.org/miscstats/">the Bonsai statistics?</a> |;
 
 
 # generate the row of headers listing the months
@@ -337,7 +318,7 @@ print p();
 print "Statistics generated at " . time2str("%c", time()) . ".";
 
 print p(); 
-print a({href=>"genstats.cgi"}, 
+print a({href=>"genstats-bz.cgi"}, 
 	"Tweak parameters & regenerate statistics (slow)");
 
 print end_html();
