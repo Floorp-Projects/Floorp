@@ -827,7 +827,7 @@ query.  You will have to start over at the <A HREF="query.cgi">query page</A>.
     }
     my @list = split(/:/, $::COOKIE{'BUGLIST'});
     $::MFORM{'bug_id'} = \@list;
-    $::FORM{'bug_id'} = join('', $::MFORM{'bug_id'});
+    $::FORM{'bug_id'} = join(',', @list);
     if (!$::FORM{'order'}) {
         $::FORM{'order'} = 'reuse last sort';
     }
