@@ -1,0 +1,56 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..
+IGNORE_MANIFEST=1
+
+include <$(DEPTH)\config\config.mak>
+
+
+LIBRARY_NAME=emitterutils
+MODULE= mailnews
+REQUIRES=nspr
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS=    nsEmitterUtils.cpp				\
+			nsMimeRebuffer.cpp					\
+			$(NULL)
+
+CPP_OBJS=   .\$(OBJDIR)\nsEmitterUtils.obj				\
+			.\$(OBJDIR)\nsMimeRebuffer.obj					\
+			$(NULL)
+
+
+EXPORTS=	nsEmitterUtils.h				\
+    			nsMimeRebuffer.h						\
+          $(NULL)
+
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
