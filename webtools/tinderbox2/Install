@@ -10,14 +10,17 @@ To install:
 1) read and edit the variables found in the files ./src/lib/* particularly: 
 
 	TinderConfig.pm: general configuration settings
+	TreeData.pm: version control configuration
+
 	Error_Parse.pm: the regular expressions for highlighting errors
 	FileStructure.pm: filesystem (storage) and global/per-project settings
 	BTData.pm: bug tracking configuration
-	TreeData.pm: version control configuration
 
-2) run ./configure
+2) run ./configure to generate a make file.  Although Tinderbox
+consists entirely of perl scripts we must substitute some values into
+the source code to make it executable.
 
-3) run make
+3) run make to create executable versions of the source code.
 
 4) run the test programs as described in /build/test/ReadMe to ensure
 that you have configured the program correctly.
@@ -27,39 +30,82 @@ that you have configured the program correctly.
 6) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes.
    set up a cron job to run $prefix/bin/tinder.cgi/rmlogs once a day.
-     six am is a good time to run this as the machine load is light and 
-     will avoids any day light savings problems.
+     six am is a good time to run this as the machine load is usually light
+      and will avoids any day light savings problems.
 
 7) set up the $prefix/bin/processmail* programs to receive the
 incoming tinderbox mail.  The process id which receives and process
-the mail must be the the same id which runs the cron job.  We use the
-mail address 'tinderbox_builds' for build information destined for the
-webserver.  Each build machine mails the build log of each build to
-this address, and puts some build data at the top of the log.  Build
-information includes whether the build was a success, which error
-parsers to use on the log file and what build this is.  Similarly the
-bug tracking system sends mail to 'tinderbox_bugs' on the webserver
-whenever a Bug ticket changes state. It is not interesting to see
-which tickets are being worked on, so we restrict mailing to changes
-in state not updates of a ticket. (Currently I have a program called
+the mail must be the the same id which runs the tinderbox cron job to
+prepare the web pages.  Usually this set up is accomplished by having
+the MTA (Sendmail) pass mail for particular accounts into a script.
+This can be configued via a global configuration file (Sendmail alias
+file) or via a .forward file (each account gets the same user id but a
+different home directory, each home directory gets a .forward to cause
+incomming mail to be delivered through the correct tinderbox mail
+processing program).  
+
+If it is not possible to have mail delivery on your web machine and to
+have your web machine deliver specific mail through a program then I
+suggest you use fetchmail to simulate this delivery format.  Download
+fetchmail (from http://tuxedo.org/~esr/fetchmail) and install it on
+your webserver.  Have the mail sent to any pop/imap mail server which
+is accessible from the webserver.  Configure fetchmail to gather the
+mail from the mail server and pass it through to the correct mail
+processing program.  You should keep the polling interval short (30
+seconds) as long polling intervals will cause delays in the tinderbox
+system and limit how quickly users see the new data.  If the polling
+interval is too short then you will overload your pop server with
+needless queries.  Fetchmail should run under the same id as the
+tinderbox server.  The fetchmail configuration file will look
+something like:
+
+	poll mail.provider.net with proto pop3:
+               user "tinderbox_builds" there has password "u can't krak this"
+               is tinder here and wants mda "$prefix/bin/processmail_builds"
+
+
+
+
+We use the mail address 'tinderbox_builds' for build information
+destined for the webserver. Similarly the bug tracking system should
+send mail to 'tinderbox_bugs'. Currently I have a program called
 'processmail' it will eventually be renamed to 'processmail_builds' so
-that it is clear what mail it is processing.)
+that it is clear what mail it is processing. (Originally there was
+only one mail processing program.) The bug tracking mail is parsed by
+the script processmail_bugs.
+
+
+
+
 
 8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
-each tree you have defined.  This must be done exactly as you wrote it
-in TreeData.  Then copy your ~/.cvspass into tinderbox home directory.
-This is the REAL home of the Tinderbox daemon, as listed in
+each tree you have defined.  The login command must use the
+hostname/modules exactly as you wrote it in TreeData.  Then copy your
+~/.cvspass into the tinderbox server user id's home directory.  This
+must be the REAL home of the Tinderbox daemon, as listed in
 /etc/passwd/ and set in the $HOME environmental variable for
 tinder.cgi.
 
-9) setup the build machines to mail their build logs 
-   (with tinderbox variables on the top) to the web server machine. 
-   New builds must not start earlier then 6 minutes after the 
-   last build started.
 
-10) Check that the time on your webserver and your build machine is in
-sync.  Check that mail if build mail bounces either on the build
-machine or on the webserver machine, that it will be recieved by
-someone who can act on it.
+9) setup the build machines to mail their build logs (with tinderbox
+variables on the top) to the web server machine.  New builds must not
+start earlier then 6 minutes after the last build started.  Each build
+machine mails the build log of each build and puts some build data at
+the top of the log.  Build information includes whether the build was
+a success, which error parsers to use on the log file and what build
+this is.  The mail processing program has a help file (--help) which
+details the format it knows how to accept.
+
+
+10) Set up the bug tracking system to send mail to 'tinderbox_bugs' on
+the webserver machine whenever a Bug ticket changes state. It is not
+interesting to see which tickets are being worked on, so restrict
+mailing to changes in ticket state not updates (edit) of a ticket.
+
+
+11) Check that the time on your webserver, your version control
+machine, your bug tracking machine and your build machines are all in
+sync.  Check that mail if build mail bounces on any of the aboce
+machines that it will be recieved by someone who can act on it.
 
