@@ -57,13 +57,16 @@ public:
   NS_IMETHOD GetData(nsITransferable *aTransferable, PRUint32 aItemIndex);
   NS_IMETHOD IsDataFlavorSupported(const char *aDataFlavor, PRBool *_retval);
 
-  BOOL WriteData(PSZ szDest, PSZ szURL);
+  BOOL     WriteData(PSZ szDest, PCSZ szURL);
+  nsresult GetUrlAndTitle(nsISupports *aGenericData, char **aTargetName);
+  nsresult GetUniTextTitle(nsISupports *aGenericData, char **aTargetName);
 
   HWND mDragWnd;
 
   // our source data items
   nsCOMPtr<nsISupportsArray> mSourceDataItems;
-
+  nsCOMPtr<nsISupports> mSourceData;
+  char * mMimeType;
 
   friend MRESULT EXPENTRY nsDragWindowProc( HWND, ULONG, MPARAM, MPARAM);
 };
