@@ -64,6 +64,10 @@ list-style-image: url("chrome://messenger/skin/icons/folder-open.png");
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
+.folderMenuItem[SpecialFolder="Virtual"] {
+  list-style-image: url("chrome://messenger/skin/icons/folder-search.png");
+}
+
 .folderMenuItem[IsServer="true"] {
   list-style-image: url("chrome://messenger/skin/icons/server-mail.png");
 }
