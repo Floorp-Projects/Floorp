@@ -25,6 +25,7 @@
 #include "nsIServiceManager.h"
 #include "rdf.h"
 #include "nsCRT.h"
+#include "nsCOMPtr.h"
 
 #include "nsIMessenger.h"
 #include "nsMessenger.h"
