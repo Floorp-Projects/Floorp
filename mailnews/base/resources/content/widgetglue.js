@@ -269,7 +269,7 @@ function GetMsgFolderFromUri(uri, checkFolderAttributes)
     var msgfolder = null;
     try {
         var resource = GetResourceFromUri(uri);
-        var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (checkFolderAttributes) {
             if (!(msgfolder && (msgfolder.parent || msgfolder.isServer))) {
                 msgfolder = null;
