@@ -31,6 +31,7 @@
 #include "nsIWidget.h"
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
+#include "nslog.h"
 
 #include <View.h>
 
