@@ -43,13 +43,9 @@
 #include "glhist.h"
 
 #include "il_strm.h"            /* Image Lib stream converters. */
-#ifndef MODULAR_NETLIB
-#include "libimg.h"             /* Image Lib public API. */
-#else
 #include "il_types.h"
 IL_EXTERN(int)
 IL_Type(const char *buf, int32 len);
-#endif
 
 #if defined(XP_WIN) || defined(XP_OS2)
 #include "errno.h"
@@ -61,7 +57,7 @@ IL_Type(const char *buf, int32 len);
 extern void ProcessCookiesAndTrustLabels( ActiveEntry *ce );
 #endif 
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
 #include "progress.h"
 #endif
 
@@ -506,7 +502,7 @@ net_open_file (ActiveEntry * cur_entry)
         	return(MK_UNABLE_TO_OPEN_FILE);
 	  }
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Status(cur_entry->window_id,
               cur_entry->URL_s,
               XP_GetString(XP_PROGRESS_READFILE));
@@ -530,7 +526,7 @@ net_open_file (ActiveEntry * cur_entry)
 
 	con_data->next_state = NET_SETUP_FILE_STREAM;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Progress(cur_entry->window_id,
                 cur_entry->URL_s,
                 0,
@@ -574,7 +570,7 @@ net_setup_file_stream (ActiveEntry * cur_entry)
         if(!count)
           {
             NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             PM_Status(cur_entry->window_id,
                       cur_entry->URL_s,
                       XP_GetString(XP_PROGRESS_FILEZEROLENGTH));
@@ -846,7 +842,7 @@ net_open_directory (ActiveEntry * cur_entry)
 
     con_data->is_dir = TRUE;
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Progress(cur_entry->window_id,
                 cur_entry->URL_s,
                 0,
@@ -905,7 +901,7 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 			cur_entry->save_stream = con_data->stream;
 			con_data->stream = NULL;
 			NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             PM_Status(cur_entry->window_id,
                       cur_entry->URL_s,
                       XP_GetString(XP_PROGRESS_FILEDONE));
@@ -924,7 +920,7 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 			/* go get more byte ranges */
 			COMPLETE_STREAM;
 			con_data->next_state = NET_SETUP_FILE_STREAM;
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
             PM_Status(cur_entry->window_id,
                       cur_entry->URL_s,
                       XP_GetString(XP_READING_SEGMENT));
@@ -936,7 +932,7 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 		  }
 
 		NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
         PM_Status(cur_entry->window_id,
                   cur_entry->URL_s,
                   XP_GetString(XP_PROGRESS_FILEDONE));
@@ -955,7 +951,7 @@ net_read_file_chunk(ActiveEntry * cur_entry)
 
     CE_STATUS = PUTB(NET_Socket_Buffer, count);
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Progress(cur_entry->window_id,
                 cur_entry->URL_s,
                 cur_entry->bytes_received,
@@ -1049,7 +1045,7 @@ net_read_directory_chunk (ActiveEntry * cur_entry)
 
 	PR_FREEIF(full_path);
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
     PM_Status(cur_entry->window_id,
               cur_entry->URL_s,
               XP_GetString(XP_PROGRESS_DIRDONE));
@@ -1358,7 +1354,7 @@ net_ProcessFile (ActiveEntry * cur_entry)
             case NET_FILE_DONE:
     			if(con_data->stream)
                		COMPLETE_STREAM;
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_StopBinding(cur_entry->window_id, cur_entry->URL_s, 0, NULL);
 #endif
                 con_data->next_state = NET_FILE_FREE;
@@ -1378,7 +1374,7 @@ net_ProcessFile (ActiveEntry * cur_entry)
 					NET_ClearFileReadSelect(CE_WINDOW_ID, NET_XP_Fileno(con_data->file_ptr));
                     NET_XP_FileClose(con_data->file_ptr);
 				  }
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_StopBinding(cur_entry->window_id, cur_entry->URL_s, -1, NULL);
 #endif
                 con_data->next_state = NET_FILE_FREE;
@@ -1391,7 +1387,7 @@ net_ProcessFile (ActiveEntry * cur_entry)
                    con_data->calling_netlib_all_the_time = FALSE;
 				}
 
-#if !defined(SMOOTH_PROGRESS) || defined(MODULAR_NETLIB)
+#if !defined(SMOOTH_PROGRESS)
 				if(CD_DESTROY_GRAPH_PROGRESS)
                     FE_GraphProgressDestroy(CE_WINDOW_ID,
                                             cur_entry->URL_s,
@@ -1535,11 +1531,8 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 			PD_PUTS(out_buf);
 		}
 	  }
-#ifndef MODULAR_NETLIB
-    PR_snprintf(out_buf, sizeof(out_buf), "<PRE>"CRLF);
-	PD_PUTS(out_buf); /* output the line */
-#endif
-	if(NET_HTTPIndexParserGetTextMessage(obj->parse_data))
+
+    if(NET_HTTPIndexParserGetTextMessage(obj->parse_data))
 	  {
 		char *msg;
 
@@ -1622,11 +1615,7 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 				PR_snprintf(out_buf, 
 							sizeof(out_buf), 
 							"<IMG ALIGN=absbottom "
-#ifndef MODULAR_NETLIB
-							"BORDER=0 SRC=\"internal-gopher-menu\">");
-#else
 							"BORDER=0 SRC=\"resource:/res/network/gopher-menu.gif\">");
-#endif
 			  }
             else if(cinfo && cinfo->icon)
               {
@@ -1639,11 +1628,7 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
                 PR_snprintf(out_buf, 
 							sizeof(out_buf), 
 							"<IMG ALIGN=absbottom BORDER=0 "
-#ifndef MODULAR_NETLIB
-						   	"SRC=\"internal-gopher-unknown\">");
-#else
 						   	"SRC=\"resource:/res/network/gopher-unknown.gif\">");
-#endif
 		      }
 
        		PD_PUTS(out_buf); /* output the line */
@@ -1740,9 +1725,7 @@ PRIVATE void net_IdxConvComplete(NET_StreamClass *inputStream)
 cleanup:
 	NET_HTTPIndexParserFree(obj->parse_data);
 	PR_FREEIF(path);
-#ifdef MODULAR_NETLIB
 	(stream->complete)(stream);
-#endif
 }
 
 PRIVATE void net_IdxConvAbort(NET_StreamClass *stream, int32 status)

@@ -29,15 +29,9 @@
 #include "netutils.h"
 #include "net_xp_file.h"
 
-#ifdef MODULAR_NETLIB
 static char *net_default_types [] = {
 # include "ngtypes.h"
   0 };
-#else
-static char *net_default_types [] = {
-# include "mktypes.h"
-  0 };
-#endif
 
 /* func proto
  */

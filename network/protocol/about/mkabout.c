@@ -287,9 +287,8 @@ net_OutputURLDocInfo(MWContext *ctxt, char *which, char **data, int32 *length)
 		&& !PL_strncasecmp(URL_s->content_type, "image", 5))
 	  {
 	/* Have a seat. Lie down.  Tell me about yourself. */
-#ifdef MODULAR_NETLIB
 	il_msg = NULL;
-#else
+#if 0 /* Used to be MODULAR_NETLIB */
 	il_msg = IL_HTMLImageInfo(URL_s->address);
 #endif
 	if (il_msg) {

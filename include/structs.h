@@ -337,10 +337,8 @@ struct MWContext_ {
   /* if the window is displaying an XML file, keep a pointer to the XML file structure here */
     void*   xmlfile;
     Bool anonymous;
-#ifdef MODULAR_NETLIB
     URL_Struct*   modular_data;
     PRInt32       ref_count;
-#endif
 
     /* This gets set to `true' when layout encounters an image with no
        width or height: layout will proceed to place the image, but

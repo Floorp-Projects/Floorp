@@ -914,11 +914,7 @@ extern XP_Bool NET_HaveConverterForMimeType(char *content_type);
 /* builds an outgoing stream and returns a stream class structure
  * containing a stream function table
  */
-#ifdef MODULAR_NETLIB
 PR_EXTERN(NET_StreamClass *)
-#else
-extern NET_StreamClass * 
-#endif /* MODULAR_NETLIB */
            NET_StreamBuilder (
            FO_Present_Types  format_out,
            URL_Struct *      anchor,

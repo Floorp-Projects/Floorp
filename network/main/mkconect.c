@@ -55,7 +55,7 @@
 
 #include "timing.h"
 
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
 #include "progress.h"
 #endif
 
@@ -462,7 +462,7 @@ PRIVATE int net_bad_ports_table[] = {
  *   it again).
  * 
  * On success hostEnt is not null. */
-#if defined(XP_WIN) && defined(MODULAR_NETLIB)
+#if defined(XP_WIN)
 extern int NET_AsyncDNSLookup(void* aContext,
                               const char* aHostPort,
                               PRHostEnt** aHoststructPtrPtr,
@@ -510,11 +510,7 @@ net_dns_lookup(MWContext *windowID,
 	 * if it's not done yet.
 	 *
 	 * dbbuf and hpbuf are not needed in ASYNC_DNS case. */
-#ifdef MODULAR_NETLIB
 	status = NET_AsyncDNSLookup(windowID, host, hostEnt, socket);
-#else
-	status = FE_AsyncDNSLookup(windowID, host, hostEnt, socket);
-#endif
 
 	if(status == MK_WAITING_FOR_LOOKUP)	{
 		/* Always get here after first call to FE_Async.. for a
@@ -755,7 +751,7 @@ net_FindAddress (const char *host_ptr,
 			char *msg = PR_smprintf(XP_GetString(XP_PROGRESS_LOOKUPHOST), host_port);
 
 			if(msg) {
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_Status(window_id, NULL, msg);
 #else
         		NET_Progress(window_id, msg);
@@ -866,7 +862,7 @@ net_start_first_connect(const char   *host,
       {
         PR_snprintf(buf, (len+10)*sizeof(char),
                 XP_GetString(XP_PROGRESS_CONTACTHOST), host);
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS) 
         PM_Status(window_id, NULL, buf);
 #else
         NET_Progress(window_id, buf);
@@ -1159,7 +1155,7 @@ HG28879
 				  {
 					PR_snprintf(buf, (len+10)*sizeof(char),
 							XP_GetString(XP_PROGRESS_UNABLELOCATE), prefSocksHost);
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                     PM_Status(window_id, NULL, buf);
 #else
 					NET_Progress(window_id, buf);
@@ -1228,7 +1224,7 @@ HG71089
               {
                 PR_snprintf(buf, (len+10)*sizeof(char),
                         XP_GetString(XP_PROGRESS_UNABLELOCATE), host);
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                 PM_Status(window_id, NULL, buf);
 #else
                 NET_Progress(window_id, buf);
@@ -1362,7 +1358,7 @@ NET_FinishConnect (CONST char   *url,
               	  {
                 	PR_snprintf(buf, (len+10)*sizeof(char),
                         	XP_GetString(XP_PROGRESS_UNABLELOCATE), host);
-#if defined(SMOOTH_PROGRESS) && !defined(MODULAR_NETLIB)
+#if defined(SMOOTH_PROGRESS)
                     PM_Status(window_id, NULL, buf);
 #else
                 	NET_Progress(window_id, buf);

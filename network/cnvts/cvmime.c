@@ -64,10 +64,6 @@
 #include "xpgetstr.h"
 extern int XP_EDITOR_NON_HTML;
 
-#ifndef MODULAR_NETLIB
-#include "marimurl.h"
-#endif
-
 #ifdef CRAWLER
 /* crawler converters */
 #include "pagescan.h"
@@ -525,56 +521,6 @@ net_RegisterDefaultDecoders (void)
 #endif /* XP_UNIX */
 
 
-#ifndef MODULAR_NETLIB
-  /* Set things up so that the image library gets reconnected once the
-	 internally-handled images have been started. */
-  NET_RegisterContentTypeConverter (IMAGE_GIF, FO_INTERNAL_IMAGE,
-									(void *) IL_GIF, IL_NewStream);
-  NET_RegisterContentTypeConverter (IMAGE_JPG, FO_INTERNAL_IMAGE,
-									(void *) IL_JPEG, IL_NewStream);
-  NET_RegisterContentTypeConverter (IMAGE_PJPG, FO_INTERNAL_IMAGE,
-									(void *) IL_JPEG, IL_NewStream);
-  
-  NET_RegisterContentTypeConverter (IMAGE_PNG, FO_INTERNAL_IMAGE,
-									(void *) IL_PNG, IL_NewStream);
-
-  NET_RegisterContentTypeConverter (IMAGE_XBM, FO_INTERNAL_IMAGE,
-									(void *) IL_XBM, IL_NewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM2, FO_INTERNAL_IMAGE,
-									(void *) IL_XBM, IL_NewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM3, FO_INTERNAL_IMAGE,
-									(void *) IL_XBM, IL_NewStream);
-  NET_RegisterContentTypeConverter ("*", FO_INTERNAL_IMAGE,
-									(void *) IL_UNKNOWN, IL_NewStream);
-
-  NET_RegisterContentTypeConverter (IMAGE_GIF, FO_PRESENT,NULL, IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_JPG, FO_PRESENT,NULL, IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_PJPG,FO_PRESENT,NULL, IL_ViewStream);
-  
-  NET_RegisterContentTypeConverter (IMAGE_PNG, FO_PRESENT,NULL, IL_ViewStream);
-
-  NET_RegisterContentTypeConverter (IMAGE_XBM, FO_PRESENT,NULL, IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM2,FO_PRESENT,NULL, IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM3,FO_PRESENT,NULL, IL_ViewStream);
-
-  NET_RegisterContentTypeConverter (IMAGE_GIF, FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_JPG, FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_PJPG,FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-  
-  NET_RegisterContentTypeConverter (IMAGE_PNG,FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-
-  NET_RegisterContentTypeConverter (IMAGE_XBM, FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM2,FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-  NET_RegisterContentTypeConverter (IMAGE_XBM3,FO_PRESENT_INLINE,NULL,
-                                    IL_ViewStream);
-#endif /* !MODULAR_NETLIB */
-
   /* register default (non)decoders for the text printer
    */
   NET_RegisterContentTypeConverter ("*", FO_SAVE_AS_TEXT,
@@ -792,11 +738,6 @@ NET_RegisterMIMEDecoders (void)
 								 (void *) ENCODING_UUENCODE4,
 								 NET_MimeEncodingConverter);
 #endif  
-
-#ifndef MODULAR_NETLIB
-  NET_RegisterContentTypeConverter ("*", FO_MULTIPART_IMAGE,
-									(void *) 1, IL_ViewStream);
-#endif
 
 #if defined(SMART_MAIL) || defined(XP_UNIX)
   /* #### This should really be done all the time, because all versions of

@@ -102,7 +102,7 @@ AutoAdminTimeoutCallback(void *closure)
 PUBLIC void
 NET_DownloadAutoAdminCfgFile()
 {
-#ifndef MODULAR_NETLIB
+#if 0 /* Used to be MODULAR_NETLIB */ 
 	static XP_Bool first_time = TRUE;
 	XP_Bool append_email;
 	char* email_addr;
