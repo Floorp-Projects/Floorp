@@ -168,7 +168,7 @@ nsresult nsImapOfflineSync::AdvanceToNextFolder()
   if (!NS_SUCCEEDED(rv))
     rv = AdvanceToNextServer();
 
-  if (NS_SUCCEEDED(rv))
+  if (NS_SUCCEEDED(rv) && m_serverEnumerator)
   {
     // ### argh, this doesn't go into sub-folders of each folder.
     nsCOMPtr <nsISupports> supports;
