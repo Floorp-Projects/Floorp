@@ -28,8 +28,7 @@
 class nsIDOMWindow;
 
 #define NS_IDOMSIGNONCORE_IID \
- { 0x6b654240, 0xe2d, 0x11d3, \
-    { 0xab, 0x9f, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 }}
+{ 0x17f3b780, 0x148e, 0x11d3, { 0xab, 0xa6, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 }}
 
 class nsIDOMSignonCore : public nsIDOMBaseAppCore {
 public:
@@ -44,6 +43,14 @@ public:
   NS_IMETHOD    SaveSignon(const nsString& aResults)=0;
 
   NS_IMETHOD    CancelSignon()=0;
+
+  NS_IMETHOD    GetSignonList(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetRejectList(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetNopreviewList(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetNocaptureList(nsString& aReturn)=0;
 };
 
 
@@ -53,6 +60,10 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SaveSignon(const nsString& aResults);  \
   NS_IMETHOD    CancelSignon();  \
+  NS_IMETHOD    GetSignonList(nsString& aReturn);  \
+  NS_IMETHOD    GetRejectList(nsString& aReturn);  \
+  NS_IMETHOD    GetNopreviewList(nsString& aReturn);  \
+  NS_IMETHOD    GetNocaptureList(nsString& aReturn);  \
 
 
 
@@ -62,6 +73,10 @@ public:
   NS_IMETHOD    PanelLoaded(nsIDOMWindow* aWin) { return _to PanelLoaded(aWin); }  \
   NS_IMETHOD    SaveSignon(const nsString& aResults) { return _to SaveSignon(aResults); }  \
   NS_IMETHOD    CancelSignon() { return _to CancelSignon(); }  \
+  NS_IMETHOD    GetSignonList(nsString& aReturn) { return _to GetSignonList(aReturn); }  \
+  NS_IMETHOD    GetRejectList(nsString& aReturn) { return _to GetRejectList(aReturn); }  \
+  NS_IMETHOD    GetNopreviewList(nsString& aReturn) { return _to GetNopreviewList(aReturn); }  \
+  NS_IMETHOD    GetNocaptureList(nsString& aReturn) { return _to GetNocaptureList(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSignonCoreClass(nsIScriptContext *aContext, void **aPrototype);
