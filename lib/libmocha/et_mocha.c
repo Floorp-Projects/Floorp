@@ -142,7 +142,7 @@ et_event_to_mocha(ETEvent * e)
 #define ET_BEGIN_EVENT_HANDLER(jsevent)				  \
 {								  \
     MWContext* _c = (jsevent)->ce.context;			  \
-    MochaDecoder* decoder;					  \
+    MochaDecoder* decoder=NULL;					  \
     if (_c == NULL) {						  \
 	goto _quit;						  \
     }								  \

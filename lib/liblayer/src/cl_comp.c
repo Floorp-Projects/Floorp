@@ -285,7 +285,7 @@ cl_refresh_window_region_common(CL_Compositor *compositor,
                                 FE_Region refresh_region,
                                 PRBool copy_region)
 {
-    FE_Region draw_region, save_update_region, copy_refresh_region;
+    FE_Region draw_region, save_update_region, copy_refresh_region=0;
     CL_Drawable *backing_store;
     PRBool save_offscreen_inhibited;
     
@@ -1302,8 +1302,8 @@ cl_composite(CL_Compositor *compositor, PRBool cutoutp)
 {
     CL_Layer *top_undrawn_layer, *bottom_undrawn_layer;
     CL_Drawable *backing_store;
-    FE_Region offscreen_region, update_region;
-    PRBool save_offscreen_enabled, prefer_draw_offscreen = PR_FALSE;
+    FE_Region offscreen_region=0, update_region;
+    PRBool save_offscreen_enabled=PR_FALSE, prefer_draw_offscreen = PR_FALSE;
     
     XP_ASSERT(compositor);
 

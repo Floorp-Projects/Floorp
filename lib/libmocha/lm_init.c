@@ -1538,7 +1538,7 @@ lm_FindEventHandler(MWContext *context, JSObject *obj, JSObject *eventObj,
 
     MochaDecoder *decoder;
     JSContext *cx;
-    JSBool ok, is_window;
+    JSBool ok=JS_FALSE, is_window;
     JSEventCapturer *js_cap;
     JSEvent *event;
     MWContext *mwcx;

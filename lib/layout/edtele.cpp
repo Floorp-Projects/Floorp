@@ -2822,7 +2822,7 @@ void CEditTableElement::NormalizeCellsPerRow()
             break;
         
         intn iExtraCells = iTotalRows - pCellsPerRow[i];
-        for( intn i = 0; i < iExtraCells; i++ )
+        for( intn j = 0; j < iExtraCells; j++ )
         {
             CEditTableCellElement *pNewCell = new CEditTableCellElement();
             if( pNewCell )
@@ -11118,7 +11118,7 @@ int CEditIconElement::ParseLocalData(char ***mimeTypes,char ***URLs) {
       // reset p.
       p = pLocalData;
 
-      char *mimeStart,*mimeEnd,*URLStart,*URLEnd;
+      char *mimeStart=NULL, *mimeEnd=NULL, *URLStart=NULL, *URLEnd=NULL;
 
       // State machine to read in string
       int state = BeforeMIME;

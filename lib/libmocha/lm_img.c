@@ -297,7 +297,7 @@ image_set_src(JSImage *image, const char *str, LO_ImageStruct *image_data)
 PR_STATIC_CALLBACK(JSBool)
 image_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-    JSBool ok;
+    JSBool ok=JS_FALSE;
     JSImage *image;
     MochaDecoder *decoder;
     MWContext *context;

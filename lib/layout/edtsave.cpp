@@ -774,6 +774,8 @@ XP_Bool CFileSaveObject::SaveErrorContinueDialog(ED_FileError iError) {
           StrAllocCat(tmplate,XP_GetString(XP_EDT_ERR_SAVE_CONTINUE));
           msg = PR_smprintf(tmplate,pRelDest,pRelDest);
           break;
+        default:
+          break;
       }
       break;
 
@@ -795,6 +797,8 @@ XP_Bool CFileSaveObject::SaveErrorContinueDialog(ED_FileError iError) {
           StrAllocCat(tmplate,XP_GetString(XP_EDT_ERR_PUBLISH_CONTINUE));
           msg = PR_smprintf(tmplate,pRelDest,pRelDest);
           break;
+        default:
+          break;
       }
       break;
 
@@ -815,6 +819,8 @@ XP_Bool CFileSaveObject::SaveErrorContinueDialog(ED_FileError iError) {
           tmplate = XP_STRDUP(XP_GetString(XP_EDT_ERR_MAIL_FILE_READ));
           StrAllocCat(tmplate,XP_GetString(XP_EDT_ERR_MAIL_CONTINUE));
           msg = PR_smprintf(tmplate,pRelDest,pRelDest);
+          break;
+        default:
           break;
       }
       break;

@@ -764,7 +764,7 @@ XP_HandleHTMLDialog(URL_Struct *url)
     char *buttonString;
     XPDialogState *handle = NULL;
     unsigned int button;
-    PRBool ret;
+    PRBool ret=PR_FALSE;
     
     /* collect post data */
     av = cgi_ConvertStringToArgVec(url->post_data, url->post_data_size, &ac);
@@ -962,7 +962,7 @@ freeHTMLDialogStream(HTMLDialogStream *stream)
 HTMLDialogStream *
 newHTMLDialogStream(void *cx)
 {
-    HTMLDialogStream *stream;
+    HTMLDialogStream *stream=NULL;
     PRArenaPool *arena;
 
     arena = PORT_NewArena(512);
@@ -1080,7 +1080,7 @@ xp_DrawHTMLDialog(void *cx, XPDialogInfo *dialogInfo,
 		  void *state, PRBool utf8CharSet)
 {
     HTMLDialogStream *stream = NULL;
-    SECStatus rv;
+    SECStatus rv=0;
     char buf[50];
     XPDialogStrings *dlgstrings;
     int buttontag;
@@ -1226,7 +1226,7 @@ XP_MakeHTMLDialogWithChrome(void *proto_win, XPDialogInfo *dialogInfo,
 			    int titlenum, XPDialogStrings *strings,
 			    Chrome *chrome, void *arg, PRBool utf8CharSet)
 {
-    void *cx;
+    void *cx=NULL;
     SECStatus rv;
     XPDialogState *state;
     PRArenaPool *arena = NULL;
@@ -1473,7 +1473,7 @@ displayPanelCB(void *arg)
     XPPanelState *state;
     HTMLDialogStream *stream;
     XPDialogStrings *contentstrings;
-    SECStatus rv;
+    SECStatus rv=0;
     char buf[50];
     XPDialogStrings *dlgstrings;
     int buttontag;

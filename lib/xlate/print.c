@@ -1638,7 +1638,7 @@ PSFE_DisplayFormElement(MWContext *cx, int loc, LO_FormElementStruct *form)
         text_width = form->width;
         
         for (i = 0; i < text_array->size; i++) {
-            PA_Block text_save;
+            PA_Block text_save=0;
 
             text = text_array->text[i];
             text->x = x;

@@ -4887,7 +4887,7 @@ void CSizingObject::ResizeObject()
 {
     // Erase visual feedback when adding rows or columns
     EraseAddRowsOrCols();
-    int32 iWidth, iWidthPixels, iHeightPixels, iHeight;
+    int32 iWidth=0, iWidthPixels=0, iHeightPixels=0, iHeight=0;
 
     // Get the element being sized (except table or cell - obtained below)
      CEditLeafElement *pElement = (CEditLeafElement*)(m_pLoElement->lo_any.edit_element);

@@ -434,7 +434,7 @@ PRIVATE void
 writeln(MWContext *cx, char* s, int line_width)
 {
   char *buf = NULL;
-  char *cp;
+  char *cp=NULL;
   char *prefix = cx->prSetup->prefix;
   INTL_CharSetInfo csi = LO_GetDocumentCharacterSetInfo(cx);
   int16 win_csid = INTL_GetCSIWinCSID(csi);

@@ -871,7 +871,7 @@ MODULE_PRIVATE unsigned char *viet_any_2_viqr (
                                           int32 in_bufsz)
 {
     unsigned char *out_buf, *viqr_buf;
-    uint32 use_tmp_mem, bufsz, fcsid;
+    uint32 use_tmp_mem, bufsz=0, fcsid;
  
     fcsid = INTL_GetCCCFromCSID(obj);
     use_tmp_mem = 1; /*** Assume we will use a temporary VIS buf ***/
@@ -911,7 +911,7 @@ MODULE_PRIVATE unsigned char *viet_any_2_vni (
                                           int32 in_bufsz)
 {
     unsigned char *out_buf, *vni_buf;
-    uint32 use_tmp_mem, bufsz, fcsid;
+    uint32 use_tmp_mem, bufsz=0, fcsid;
  
     fcsid = INTL_GetCCCFromCSID(obj);
     use_tmp_mem = 1; /*** Assume we will use a temporary VIS buf ***/

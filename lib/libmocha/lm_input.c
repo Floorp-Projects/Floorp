@@ -2289,8 +2289,8 @@ lm_InputEvent(MWContext *context, LO_Element *element, JSEvent *pEvent,
     JSObject *obj;
     JSDocument *doc;
     JSEventCapturer *cap;
-    JSEventReceiver *rec;
-    JSInputHandler *handler;
+    JSEventReceiver *rec=NULL;
+    JSInputHandler *handler=NULL;
     LO_FormElementData *data;
     lo_FormData *form_data;
     JSString *str;

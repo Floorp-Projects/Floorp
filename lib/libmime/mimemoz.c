@@ -2317,7 +2317,7 @@ mime_vcard_abort (NET_StreamClass *stream, int status )
   if (!vcd) return;
 
   if (vcd->obj) {
-      int status;
+      int status=0;
 
       if ( !vcd->obj->closed_p )
           status = vcd->obj->class->parse_eof ( vcd->obj, TRUE );

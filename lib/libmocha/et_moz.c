@@ -1458,7 +1458,7 @@ et_HandleEvent_DocWrite(MozillaEvent_DocWrite* e)
     LO_Element * save_blocking = NULL;
     LO_Element * current_script = NULL;
     Bool bumped_no_newline_count = FALSE;
-    uint save_overflow;
+    uint save_overflow=0;
     int status;
 
     e->processed = JS_TRUE;
