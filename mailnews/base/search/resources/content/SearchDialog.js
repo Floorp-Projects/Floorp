@@ -45,6 +45,49 @@ var gDataSourceSearchListener;
 var gIsSearchHit = false;
 var gButton;
 
+// Controller object for search results thread pane
+var nsSearchResultsController =
+{
+    supportsCommand: function(command)
+    {
+        switch(command) {
+        case "cmd_open":
+            return true;
+        default:
+            return false;
+        }
+    },
+
+    // this controller only handles commands
+    // that rely on items being selected in
+    // the threadpane.
+    isCommandEnabled: function(command)
+    {
+        var enabled = true;
+        if (gThreadTree.selectedItems.length <= 0)
+            enabled = false;
+
+        return enabled;
+    },
+
+    doCommand: function(command)
+    {
+        switch(command) {
+        case "cmd_open":
+            MsgOpenSelectedMessages();
+            return true;
+
+        default:
+            return false;
+        }
+
+    },
+
+    onEvent: function(event)
+    {
+    }
+}
+
 // nsIMsgSearchNotify object
 var gSearchNotificationListener = 
 {
@@ -73,6 +116,9 @@ var gSearchNotificationListener =
     {
         gButton.setAttribute("value", Bundle.GetStringFromName("labelForStopButton"));
         gStatusFeedback.ShowStatusString(Bundle.GetStringFromName("searchingMessage"));
+        if (gThreadTree)
+            gThreadTree.clearItemSelection();
+        ThreadTreeUpdate_Search();
     }
 }
 
@@ -113,6 +159,12 @@ function initializeSearchWindowWidgets()
     msgWindow = Components.classes[msgWindowContractID].createInstance(nsIMsgWindow);
     msgWindow.statusFeedback = gStatusFeedback;
     msgWindow.SetDOMWindow(window);
+
+    // functionality to enable/disable buttons using nsSearchResultsController
+    // depending of whether items are selected in the search results thread pane.
+    gThreadTree.controllers.appendController(nsSearchResultsController);
+    top.controllers.insertControllerAt(0, nsSearchResultsController);
+    ThreadTreeUpdate_Search();
 }
 
 
@@ -336,4 +388,9 @@ function onSearchButton(event)
         onSearch(event);
     else
         onSearchStop(event);
+}
+
+function ThreadTreeUpdate_Search()
+{
+    goUpdateCommand("cmd_open");
 }

@@ -45,7 +45,22 @@ Rights Reserved.
   
   <script src="chrome://global/content/strres.js"/>
   <script src="chrome://messenger/content/mailWindow.js"/>
+  <script src="chrome://messenger/content/threadPane.js"/>
+  <script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+  <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://messenger/content/SearchDialog.js"/>
+
+  <commands id="commands">
+    <commandset id="ThreadTreeUpdate_Search"
+                commandupdater="true"
+                events="threadTree-select"
+                oncommandupdate="ThreadTreeUpdate_Search()"/>
+  </commands>
+ 
+
+  <broadcasterset id="broadcasterset">
+    <broadcaster id="cmd_open" oncommand="goDoCommand('cmd_open')"/>
+  </broadcasterset>
 
   <dummy class="usesMailWidgets"/>
   <box flex="1" orient="vertical">
@@ -83,6 +98,7 @@ Rights Reserved.
     </titledbox>
     
     <box autostretch="never" align="right">
+      <button value="&openButton.label;" id="openButton" observes="cmd_open"/>
       <button value="&closeButton.label;" oncommand="window.close();"/>
     </box>
   
