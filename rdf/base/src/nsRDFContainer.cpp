@@ -69,6 +69,7 @@
 #include "nsCOMPtr.h"
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
+#include "nsIRDFInMemoryDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
@@ -79,6 +80,8 @@
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID, NS_RDFCONTAINERUTILS_CID);
 static const char kRDFNameSpaceURI[] = RDF_NAMESPACE_URI;
+
+#define RDF_SEQ_LIST_LIMIT   8
 
 class RDFContainerImpl : public nsIRDFContainer
 {
@@ -739,6 +742,18 @@ RDFContainerImpl::GetNextValue(nsIRDFResource** aResult)
 
     rv = mDataSource->Assert(mContainer, kRDF_nextVal, nextValLiteral, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
+
+    if (RDF_SEQ_LIST_LIMIT == nextVal)
+    {
+        // focal point for RDF container mutation;
+        // basically, provide a hint to allow for fast access
+        nsCOMPtr<nsIRDFInMemoryDataSource> inMem = do_QueryInterface(mDataSource);
+        if (inMem)
+        {
+            // ignore error; failure just means slower access
+            (void)inMem->EnsureFastContainment(mContainer);
+        }
+    }
 
     return NS_OK;
 }

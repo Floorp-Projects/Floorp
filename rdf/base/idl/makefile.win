@@ -32,6 +32,7 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFContainer.idl             \
                 .\nsIRDFContainerUtils.idl        \
                 .\nsIRDFDelegateFactory.idl       \
+                .\nsIRDFInMemoryDataSource.idl    \
                 .\nsIRDFPurgeableDataSource.idl   \
                 .\nsIRDFRemoteDataSource.idl      \
                 .\nsIRDFXMLParser.idl             \
