@@ -182,12 +182,92 @@ nsBulletFrame::SetListItemOrdinal(PRInt32 aNextOrdinal)
   return mOrdinal + 1;
 }
 
+
+// XXX change roman/alpha to use unsigned math so that maxint and
+// maxnegint will work
+
+
+static void DecimalToText(PRInt32 ordinal, nsString& result)
+{
+   char cbuf[40];
+   PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
+   result.Append(cbuf);
+}
+static void DecimalLeadingZeroToText(PRInt32 ordinal, nsString& result)
+{
+   char cbuf[40];
+   PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
+   result.Append(cbuf);
+}
+
+
 static const char* gLowerRomanCharsA = "ixcm";
 static const char* gUpperRomanCharsA = "IXCM";
 static const char* gLowerRomanCharsB = "vld?";
 static const char* gUpperRomanCharsB = "VLD?";
-static const char* gLowerAlphaChars  = "abcdefghijklmnopqrstuvwxyz";
-static const char* gUpperAlphaChars  = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+static void RomanToText(PRInt32 ordinal, nsString& result, const char* achars, const char* bchars)
+{
+  if (ordinal <= 0) {
+    ordinal = 1;
+  }
+  nsAutoString addOn, decStr;
+  decStr.Append(ordinal, 10);
+  PRIntn len = decStr.Length();
+  const PRUnichar* dp = decStr.GetUnicode();
+  const PRUnichar* end = dp + len;
+  PRIntn romanPos = len;
+  PRIntn n;
+
+  for (; dp < end; dp++) {
+    romanPos--;
+    addOn.SetLength(0);
+    switch(*dp) {
+      case '3':  addOn.Append(achars[romanPos]);
+      case '2':  addOn.Append(achars[romanPos]);
+      case '1':  addOn.Append(achars[romanPos]);
+        break;
+      case '4':
+        addOn.Append(achars[romanPos]);
+        // FALLTHROUGH
+      case '5': case '6':
+      case '7': case  '8':
+        addOn.Append(bchars[romanPos]);
+        for(n=0;n<(*dp-'5');n++) {
+          addOn.Append(achars[romanPos]);
+        }
+        break;
+      case '9':
+        addOn.Append(achars[romanPos]);
+        addOn.Append(achars[romanPos+1]);
+        break;
+      default:
+        break;
+    }
+    result.Append(addOn);
+  }
+}
+
+#define ALPHA_SIZE 26
+static PRUnichar gLowerAlphaChars[ALPHA_SIZE]  = 
+{
+0x0061, 0x0062, 0x0063, 0x0064, 0x0065, // A   B   C   D   E
+0x0066, 0x0067, 0x0068, 0x0069, 0x006A, // F   G   H   I   J
+0x006B, 0x006C, 0x006D, 0x006E, 0x006F, // K   L   M   N   O
+0x0070, 0x0071, 0x0072, 0x0073, 0x0074, // P   Q   R   S   T
+0x0075, 0x0076, 0x0077, 0x0078, 0x0079, // U   V   W   X   Y
+0x007A                                  // Z
+};
+
+static PRUnichar gUpperAlphaChars[ALPHA_SIZE]  = 
+{
+0x0041, 0x0042, 0x0043, 0x0044, 0x0045, // A   B   C   D   E
+0x0046, 0x0047, 0x0048, 0x0049, 0x004A, // F   G   H   I   J
+0x004B, 0x004C, 0x004D, 0x004E, 0x004F, // K   L   M   N   O
+0x0050, 0x0051, 0x0052, 0x0053, 0x0054, // P   Q   R   S   T
+0x0055, 0x0056, 0x0057, 0x0058, 0x0059, // U   V   W   X   Y
+0x005A                                  // Z
+};
 
 
 #define KATAKANA_CHARS_SIZE 48
@@ -267,185 +347,340 @@ static PRUnichar gLowerGreekChars[LOWER_GREEK_CHARS_SIZE] =
 0x03C6, 0x03C7, 0x03C8, 0x03C9          // phi    chi   psi    omega    
 };
 
-// XXX change roman/alpha to use unsigned math so that maxint and
-// maxnegint will work
+// We know cjk-ideographic need 31 characters to display 99,999,999,999,999,999
+// georgian and armenian need 6 at most
+// hebrew may need more...
+
+#define NUM_BUF_SIZE 34 
+
+static void CharListToText(PRInt32 ordinal, nsString& result, const PRUnichar* chars, PRInt32 aBase)
+{
+  PRUnichar buf[NUM_BUF_SIZE];
+  PRInt32 idx = NUM_BUF_SIZE;
+  if (ordinal <= 0) {
+    ordinal = 1;
+  }
+  do {
+		ordinal--; // a == 0
+		PRInt32 cur = ordinal % aBase;
+		buf[--idx] = chars[cur];
+		ordinal /= aBase ;
+  } while ( ordinal > 0);
+  result.Append(buf+idx,NUM_BUF_SIZE-idx);
+}
+
+
+static PRUnichar gCJKIdeographicDigit[10] =
+{
+  0x96f6, 0x4e00, 0x4e8c, 0x4e09, 0x56db,  // 0 - 4
+  0x4e94, 0x516d, 0x4e03, 0x516b, 0x4e5d   // 5 - 9
+};
+static PRUnichar gCJKIdeographicUnit[4] =
+{
+  0x000, 0x5341, 0x767e, 0x5343
+};
+static PRUnichar gCJKIdeographic10KUnit[4] =
+{
+  0x000, 0x842c, 0x5104, 0x5146
+};
+
+static void CJKIdeographicToText(PRInt32 ordinal, nsString& result, 
+						  const PRUnichar* digits, const PRUnichar *unit, 
+						  const PRUnichar* unit10k)
+{
+// In theory, we need the following if condiction,
+// However, the limit, 10 ^ 16, is greater than the max of PRUint32
+// so we don't really need to test it here.
+// if( ordinal > 9999999999999999)
+// {
+//    PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
+//    result.Append(cbuf);
+// } 
+// else 
+// {
+	PRUnichar c10kUnit = 0;
+	PRUnichar cUnit = 0;
+	PRUnichar cDigit = 0;
+	PRUint32 ud = 0;
+	PRUnichar buf[NUM_BUF_SIZE];
+	PRInt32 idx = NUM_BUF_SIZE;
+	PRBool bOutputZero = ( 0 == ordinal );
+	do {
+	   if(0 == (ud % 4)) {
+		  c10kUnit = unit10k[ud/4];
+	   }
+	   PRInt32 cur = ordinal % 10;
+	   cDigit = digits[cur];
+	   if( 0 == cur)
+	   {
+		  cUnit = 0;
+		  if(bOutputZero) {
+			 bOutputZero = PR_FALSE;
+			 if(0 != cDigit)
+				buf[--idx] = cDigit;
+		  }
+	   }
+	   else
+	   {
+		  bOutputZero = PR_TRUE;
+		  cUnit = unit[ud%4];
+
+		  if(0 != c10kUnit)
+			 buf[--idx] = c10kUnit;
+		  if(0 != cUnit)
+			 buf[--idx] = cUnit;
+		  if((0 != cDigit) && ( 1 == (ud%4)) && (ordinal < 10))
+			 buf[--idx] = cDigit;
+
+		  c10kUnit =  0;
+	   }
+	   ordinal /= 10;
+	   ud++;
+
+	} while( ordinal > 0);
+	result.Append(buf+idx,NUM_BUF_SIZE-idx);
+// }
+
+}
+
+#define HEBREW_THROSAND_SEP 0x0020
+#define HEBREW_GERESH       0x05F3
+#define HEBREW_GERSHAYIM    0x05F4
+static PRUnichar gHebrewDigit[22] = 
+{
+//   1       2       3       4       5       6       7       8       9
+0x05D0, 0x05D1, 0x05D2, 0x05D3, 0x05D4, 0x05D5, 0x05D6, 0x05D7, 0x05D8,
+//  10      20      30      40      50      60      70      80      90
+0x05D9, 0x05DB, 0x05DC, 0x05DE, 0x05E0, 0x05E1, 0x05E2, 0x05E4, 0x05E6,
+// 100     200     300     400
+0x05E7, 0x05E8, 0x05E9, 0x05EA
+};
+
+static void HebrewToText(PRInt32 ordinal, nsString& result)
+{
+    PRBool outputSep = PR_FALSE;
+	PRUnichar buf[NUM_BUF_SIZE];
+	PRInt32 idx = NUM_BUF_SIZE;
+	PRUnichar digit;
+	do {
+		PRInt32 n3 = ordinal % 1000;
+		if(outputSep)
+			buf[--idx] = HEBREW_THROSAND_SEP;	// output thousand seperator
+		outputSep = ( n3 > 0); // request to output thousand seperator next time.
+
+		PRInt32 d = 0; // we need to keep track of digit got output per 3 digits,
+		               // so we can handle Gershayim and Gersh correctly
+
+		// Process digit for 100 - 900
+		for(PRInt32 n1 = 400; n1 > 0; )
+		{
+			if( n3 >= n1)
+			{
+				n3 -= n1;
+
+				digit = gHebrewDigit[(n1/100)-1+18];
+				if( n3 > 0)
+				{
+					buf[--idx] = digit;
+					d++;
+				} else { 
+					// if this is the last digit
+					if (d > 0)
+					{
+						buf[--idx] = HEBREW_GERSHAYIM;	
+						buf[--idx] = digit;
+					} else {
+						buf[--idx] = digit;				
+						buf[--idx] = HEBREW_GERESH;
+					} // if
+				} // if
+			} else {
+				n1 -= 100;
+			} // if
+		} // for
+
+		// Process digit for 10 - 90
+		PRInt32 n2;
+		if( n3 >= 10 )
+		{
+			// Special process for 15 and 16
+			if(( 15 == n3 ) || (16 == n3)) {
+				// Special rule for religious reason...
+				// 15 is represented by 9 and 6, not 10 and 5
+				// 16 is represented by 9 and 7, not 10 and 6
+				n2 = 9;
+				digit = gHebrewDigit[ n2 - 1];    
+			} else {
+				n2 = n3 - (n3 % 10);
+				digit = gHebrewDigit[(n2/10)-1+9];
+			} // if
+
+			n3 -= n2;
+
+			if( n3  > 0) {
+				buf[--idx] = digit;
+				d++;
+			} else {
+				// if this is the last digit
+				if (d > 0)
+				{
+					buf[--idx] = HEBREW_GERSHAYIM;		
+					buf[--idx] = digit;
+				} else {
+					buf[--idx] = digit; 			
+					buf[--idx] = HEBREW_GERESH;
+				} // if
+			} // if
+		} // if
+		
+		// Process digit for 1 - 9 
+		if ( n3 > 0)
+		{
+			digit = gHebrewDigit[n3-1];
+			// must be the last digit
+			if (d > 0)
+			{
+				buf[--idx] = HEBREW_GERSHAYIM;	
+				buf[--idx] = digit;
+			} else {
+				buf[--idx] = digit;				
+				buf[--idx] = HEBREW_GERESH;
+			} // if
+		} // if
+		ordinal /= 1000;
+	} while (ordinal >= 1);
+	result.Append(buf+idx,NUM_BUF_SIZE-idx);
+}
+
+
+static void ArmenianToText(PRInt32 ordinal, nsString& result)
+{
+	if((0 == ordinal) || (ordinal > 9999)) { // zero or reach the limit of Armenain numbering system
+		DecimalToText(ordinal, result);
+		return;
+	} else {
+		PRUnichar buf[NUM_BUF_SIZE];
+		PRInt32 idx = NUM_BUF_SIZE;
+		PRInt32 d = 0;
+		do {
+			PRInt32 cur = ordinal % 10;
+			if( cur > 0)
+			{
+				PRUnichar u = 0x0530 + (d * 9) + cur;
+				buf[--idx] = u;
+			}
+			d++;
+			ordinal /= 10;
+		} while ( ordinal > 0);
+		result.Append(buf+idx,NUM_BUF_SIZE-idx);
+	}
+}
+
+
+static PRUnichar gGeorgianValue [ 37 ] = { // 4 * 9 + 1 = 37
+//      1       2       3       4       5       6       7       8       9
+   0x10A0, 0x10A1, 0x10A2, 0x10A3, 0x10A4, 0x10A5, 0x10A6, 0x10C1, 0x10A7,
+//     10      20      30      40      50      60      70      80      90
+   0x10A8, 0x10A9, 0x10AA, 0x10AB, 0x10AC, 0x10C2, 0x10AD, 0x10AE, 0x10AF,
+//    100     200     300     400     500     600     700     800     900
+   0x10B0, 0x10B1, 0x10B2, 0x10B3, 0x10C3, 0x10B4, 0x10B5, 0x10B6, 0x10B7,
+//   1000    2000    3000    4000    5000    6000    7000    8000    9000
+   0x10B8, 0x10B9, 0x10BA, 0x10BB, 0x10BC, 0x10BD, 0x10BE, 0x10C4, 0x10C5,
+//  10000
+   0x10BF
+};
+static void GeorgianToText(PRInt32 ordinal, nsString& result)
+{
+	if((0 == ordinal) || (ordinal > 19999)) { // zero or reach the limit of Armenain numbering system
+		DecimalToText(ordinal, result);
+		return;
+	} else {
+		PRUnichar buf[NUM_BUF_SIZE];
+		PRInt32 idx = NUM_BUF_SIZE;
+		PRInt32 d = 0;
+		do {
+			PRInt32 cur = ordinal % 10;
+			if( cur > 0)
+			{
+				PRUnichar u = gGeorgianValue[(d * 9 ) + ( cur - 1)];
+				buf[--idx] = u;
+			}
+			d++;
+			ordinal /= 10;
+		} while ( ordinal > 0);
+		result.Append(buf+idx,NUM_BUF_SIZE-idx);
+	}
+}
+
 void
 nsBulletFrame::GetListItemText(nsIPresContext& aCX,
                                const nsStyleList& aListStyle,
                                nsString& result)
 {
-  PRInt32 ordinal = mOrdinal;
-  char cbuf[40];
   switch (aListStyle.mListStyleType) {
-    case NS_STYLE_LIST_STYLE_HEBREW: // XXX Change me i18n 
-    case NS_STYLE_LIST_STYLE_ARMENIAN: // XXX Change me i18n 
-    case NS_STYLE_LIST_STYLE_GEORGIAN: // XXX Change me i18n 
-    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: // XXX Change me i18n 
-
     case NS_STYLE_LIST_STYLE_DECIMAL:
  	default: // CSS2 say "A users  agent that does not recognize a numbering system
 		     // should use 'decimal'
-     PR_snprintf(cbuf, sizeof(cbuf), "%ld", ordinal);
-      result.Append(cbuf);
-      break;
+		DecimalToText(mOrdinal, result);
+		break;
 
     case NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO:
-     PR_snprintf(cbuf, sizeof(cbuf), "%02ld", ordinal);
-      result.Append(cbuf);
-      break;
+ 		DecimalLeadingZeroToText(mOrdinal, result);
+		break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ROMAN:
+		RomanToText(mOrdinal, result, gLowerRomanCharsA, gLowerRomanCharsB);
+		break;
     case NS_STYLE_LIST_STYLE_UPPER_ROMAN:
-    {
-      if (ordinal <= 0) {
-        ordinal = 1;
-      }
-      nsAutoString addOn, decStr;
-      decStr.Append(ordinal, 10);
-      PRIntn len = decStr.Length();
-      const PRUnichar* dp = decStr.GetUnicode();
-      const PRUnichar* end = dp + len;
-      PRIntn romanPos = len;
-      PRIntn n;
-
-      const char* achars;
-      const char* bchars;
-      if (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ROMAN) {
-        achars = gLowerRomanCharsA;
-        bchars = gLowerRomanCharsB;
-      }
-      else {
-        achars = gUpperRomanCharsA;
-        bchars = gUpperRomanCharsB;
-      }
-      for (; dp < end; dp++) {
-        romanPos--;
-        addOn.SetLength(0);
-        switch(*dp) {
-          case '3':  addOn.Append(achars[romanPos]);
-          case '2':  addOn.Append(achars[romanPos]);
-          case '1':  addOn.Append(achars[romanPos]);
-            break;
-          case '4':
-            addOn.Append(achars[romanPos]);
-            // FALLTHROUGH
-          case '5': case '6':
-          case '7': case  '8':
-            addOn.Append(bchars[romanPos]);
-            for(n=0;n<(*dp-'5');n++) {
-              addOn.Append(achars[romanPos]);
-            }
-            break;
-          case '9':
-            addOn.Append(achars[romanPos]);
-            addOn.Append(achars[romanPos+1]);
-            break;
-          default:
-            break;
-        }
-        result.Append(addOn);
-      }
-    }
-    break;
+		RomanToText(mOrdinal, result, gUpperRomanCharsA, gUpperRomanCharsB);
+		break;
 
     case NS_STYLE_LIST_STYLE_LOWER_ALPHA:
-    case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
-    {
-      PRInt32 anOffset = -1;
-      PRInt32 aBase = 26;
-      PRInt32 ndex=0;
-      PRInt32 root=1;
-      PRInt32 next=aBase;
-      PRInt32 expn=1;
-      const char* chars =
-        (aListStyle.mListStyleType == NS_STYLE_LIST_STYLE_LOWER_ALPHA)
-        ? gLowerAlphaChars : gUpperAlphaChars;
+ 		CharListToText(mOrdinal, result, gLowerAlphaChars, ALPHA_SIZE);
+ 		break;
 
-      // must be positive here...
-      if (ordinal <= 0) {
-        ordinal = 1;
-      }
-      ordinal--;          // a == 0
+	case NS_STYLE_LIST_STYLE_UPPER_ALPHA:
+ 		CharListToText(mOrdinal, result, gUpperAlphaChars, ALPHA_SIZE);
+ 		break;
 
-      // scale up in baseN; exceed current value.
-      while (next<=ordinal) {
-        root=next;
-        next*=aBase;
-        expn++;
-      }
-      while (0!=(expn--)) {
-        ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
-        ordinal %= root;
-        if (root>1)
-          result.Append(chars[ndex+anOffset]);
-        else
-          result.Append(chars[ndex]);
-        root /= aBase;
-      }
-    }
-    break;
     case NS_STYLE_LIST_STYLE_KATAKANA:
+ 		CharListToText(mOrdinal, result, gKatakanaChars, KATAKANA_CHARS_SIZE);
+ 		break;
+
     case NS_STYLE_LIST_STYLE_HIRAGANA:
-    case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-    case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+ 		CharListToText(mOrdinal, result, gHiraganaChars, HIRAGANA_CHARS_SIZE);
+ 		break;
+    
+	case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
+    	CharListToText(mOrdinal, result, gKatakanaIrohaChars, KATAKANA_IROHA_CHARS_SIZE);
+ 		break;
+	
+	case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
+    	CharListToText(mOrdinal, result, gHiraganaIrohaChars, HIRAGANA_IROHA_CHARS_SIZE);
+ 		break;
+
     case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-    {
-      PRInt32 anOffset = -1;
-      PRInt32 aBase;
-      PRInt32 ndex=0;
-      PRInt32 root=1;
-	  PRInt32 expn=1;
-      const PRUnichar* chars;
-	  switch(aListStyle.mListStyleType)
-	  {
-		case NS_STYLE_LIST_STYLE_KATAKANA:
-			chars = gKatakanaChars;
-			aBase = KATAKANA_CHARS_SIZE;
-			break;
-		case NS_STYLE_LIST_STYLE_HIRAGANA:
-			chars = gHiraganaChars;
-			aBase = HIRAGANA_CHARS_SIZE;
-			break;
-		case NS_STYLE_LIST_STYLE_KATAKANA_IROHA:
-			chars = gKatakanaIrohaChars;
-			aBase = KATAKANA_IROHA_CHARS_SIZE;
-			break;
-		case NS_STYLE_LIST_STYLE_HIRAGANA_IROHA:
-			chars = gHiraganaIrohaChars;
-			aBase = HIRAGANA_IROHA_CHARS_SIZE;
-			break;
-		default:
-		case NS_STYLE_LIST_STYLE_LOWER_GREEK:
-			chars = gLowerGreekChars;
-			aBase = LOWER_GREEK_CHARS_SIZE;
-			break;
-	  }
+     	CharListToText(mOrdinal, result, gLowerGreekChars , LOWER_GREEK_CHARS_SIZE);
+ 		break;
 
-      PRInt32 next=aBase;
-       // must be positive here...
-      if (ordinal <= 0) {
-        ordinal = 1;
-      }
-      ordinal--;          // a == 0
+    case NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC: 
+		// We may need to pass in different table for CJK-Ideographic-complex if it is
+		// supported in CSS3 or we may pass in different table for simplified Chinese
+		CJKIdeographicToText(mOrdinal, result, gCJKIdeographicDigit, gCJKIdeographicUnit, gCJKIdeographic10KUnit);
+		break;
 
-      // scale up in baseN; exceed current value.
-      while (next<=ordinal) {
-        root=next;
-        next*=aBase;
-        expn++;
-      }
-      while (0!=(expn--)) {
-        ndex = ((root<=ordinal) && (0!=root)) ? (ordinal/root): 0;
-        ordinal %= root;
-        if (root>1)
-          result.Append(chars[ndex+anOffset]);
-        else
-          result.Append(chars[ndex]);
-        root /= aBase;
-      }
-    }
-	break;
+    case NS_STYLE_LIST_STYLE_HEBREW: 
+ 		HebrewToText(mOrdinal, result);
+		break;
 
+    case NS_STYLE_LIST_STYLE_ARMENIAN: 
+ 		ArmenianToText(mOrdinal, result);
+		break;
+
+    case NS_STYLE_LIST_STYLE_GEORGIAN: 
+		GeorgianToText(mOrdinal, result);
+		break;
+ 
   }
   result.Append(".");
 }
