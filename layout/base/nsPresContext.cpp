@@ -36,7 +36,7 @@
 
 #define NOISY_IMAGES
 
-static int
+int
 PrefChangedCallback(const char* aPrefName, void* instance_data)
 {
   nsPresContext*  presContext = (nsPresContext*)instance_data;
