@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
@@ -31,27 +32,7 @@ ConnectToDatabase();
 
 quietly_check_login();
 
-# More warning suppression silliness.
-$::userid = $::userid;
-$::usergroupset = $::usergroupset;
-
-######################################################################
-# Begin Data/Security Validation
-######################################################################
-
-# Make sure the bug ID is a positive integer representing an existing
-# bug that the user is authorized to access.
-if (defined $::FORM{'id'}) {
-  ValidateBugID($::FORM{'id'});
-}
-
-######################################################################
-# End Data/Security Validation
-######################################################################
-
-my $id = $::FORM{'id'};
-
-my $urlbase = Param("urlbase");
+use vars qw($template $vars $userid $usergroupset);
 
 my %seen;
 my %edgesdone;
@@ -67,153 +48,148 @@ sub AddLink {
     }
 }
 
-
-print "Content-type: text/html\n\n";
-PutHeader("Dependency graph", "Dependency graph", $id);
-
 $::FORM{'rankdir'} = "LR" if !defined $::FORM{'rankdir'};
 
+if (!defined($::FORM{'id'})) {
+    DisplayError("No bug numbers given.");
+    exit;
+}    
 
-if (defined $id) {
-    mkdir("data/webdot", 0777);
+mkdir("data/webdot", 0777);
 
-    my $filename = "data/webdot/$$.dot";
-    open(DOT, ">$filename") || die "Can't create $filename";
-    print DOT "digraph G {";
-    print DOT qq{
+my $filename = "data/webdot/$$.dot";
+my $urlbase = Param('urlbase');
+
+open(DOT, ">$filename") || die "Can't create $filename";
+print DOT "digraph G {";
+print DOT qq{
 graph [URL="${urlbase}query.cgi", rankdir=$::FORM{'rankdir'}, size="64,64"]
 node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
 };
-    my %baselist;
 
-    foreach my $i (split('[\s,]+', $::FORM{'id'})) {
-        $i = trim($i);
-        if ($i ne "") {
-            $baselist{$i} = 1;
-        }
-    }
-    my @basearray = keys(%baselist);
+my %baselist;
 
-    if ($::FORM{'doall'}) {
-        SendSQL("select blocked, dependson from dependencies");
-        
-        while (MoreSQLData()) {
-            my ($blocked, $dependson) = (FetchSQLData());
-            AddLink($blocked, $dependson);
-        }
-    } else {
-        my @stack = @basearray;
-        while (@stack) {
-            my $id = shift @stack;
-            SendSQL("select blocked, dependson from dependencies where blocked = $id or dependson = $id");
-            while (MoreSQLData()) {
-                my ($blocked, $dependson) = (FetchSQLData());
-                if ($blocked != $id && !exists $seen{$blocked}) {
-                    push @stack, $blocked;
-                }
-                if ($dependson != $id && !exists $seen{$dependson}) {
-                    push @stack, $dependson;
-                }
-                AddLink($blocked, $dependson);
-            }
-        }
-    }
+foreach my $i (split('[\s,]+', $::FORM{'id'})) {
+    $i = trim($i);
+    ValidateBugID($i);
+    $baselist{$i} = 1;
+}
 
-    foreach my $k (@basearray) {
-        $seen{$k} = 1;
-    }
-    foreach my $k (keys(%seen)) {
-        my $summary = "";
-        my $stat;
-        if ($::FORM{'showsummary'}) {
-            SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
-                                  "WHERE bugs.bug_id = $k",
-                                  $::userid,
-                                  $::usergroupset));
-            ($stat, $summary) = (FetchSQLData());
-            $stat = "NEW" if !defined $stat;
-            $summary = "" if !defined $summary;
-        } else {
-            SendSQL("select bug_status from bugs where bug_id = $k");
-            $stat = FetchOneColumn();
-        }
-        my @params;
-#        print DOT "$k [URL" . qq{="${urlbase}show_bug.cgi?id=$k"};
-        if ($summary ne "") {
-            $summary =~ s/([\\\"])/\\$1/g;
-            push(@params, qq{label="$k\\n$summary"});
-        }
-        if (exists $baselist{$k}) {
-            push(@params, "shape=box");
-        }
-        my $opened = ($stat eq "NEW" || $stat eq "ASSIGNED" ||
-                      $stat eq "REOPENED");
-        if ($opened) {
-            push(@params, "color=green");
-        }
-        if (@params) {
-            print DOT "$k [" . join(',', @params) . "]\n";
-        } else {
-            print DOT "$k\n";
-        }
-    }
+if ($::FORM{'doall'}) {
+    SendSQL("SELECT blocked, dependson FROM dependencies");
 
-
-    print DOT "}\n";
-    close DOT;
-    chmod 0777, $filename;
-    
-    my $webdotbase = Param('webdotbase');
-    if($webdotbase =~ /^https?:/) {
-        my $url = PerformSubsts(Param("webdotbase")) . $filename;
-        print qq{<a href="$url.map"> <img src="$url.gif" ismap> </a><hr>\n};
-    } else {
-        my $pngfilename = "data/webdot/$$.png";
-        my $mapfilename = "data/webdot/$$.map";
-        system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-        system("$webdotbase","-Timap","-o","$mapfilename","$filename");
-        print qq{<a href="$mapfilename"> <img src="$pngfilename" ismap> </a><hr>\n};
-    }
-  
-    # Cleanup any old .dot files created from previous runs.
-    my $since = time() - 24 * 60 * 60;
-    foreach my $f (glob("data/webdot/*.dot data/webdot/*.png data/webdot/*.map")) {
-        # Here we are deleting all old files. All entries are from the
-        # data/webdot/ directory. Since we're deleting the file (not following
-        # symlinks), this can't escape to delete anything it shouldn't
-        trick_taint($f);
-        if (ModTime($f) < $since) {
-            unlink $f;
-        }
+    while (MoreSQLData()) {
+        my ($blocked, $dependson) = FetchSQLData();
+        AddLink($blocked, $dependson);
     }
 } else {
-    $::FORM{'id'} = "";
-    $::FORM{'doall'} = 0;
-    $::FORM{'showsummary'} = 0;
-}    
+    my @stack = keys(%baselist);
+    foreach my $id (@stack) {
+        SendSQL("SELECT blocked, dependson 
+                 FROM   dependencies 
+                 WHERE  blocked = $id or dependson = $id");
+        while (MoreSQLData()) {
+            my ($blocked, $dependson) = FetchSQLData();
+            if ($blocked != $id && !exists $seen{$blocked}) {
+                push @stack, $blocked;
+            }
 
-print "
-<form>
-<table>
-<tr>
-<th align=right>Bug numbers:</th>
-<td><input name=id value=\"" . value_quote($::FORM{'id'}) . "\"></td>
-<td><input type=checkbox name=doall" . ($::FORM{'doall'} ? " checked" : "") .
-">Show <b>every</b> bug in the system with 
-dependencies</td>
-</tr>
-<tr><td colspan=3><input type=checkbox name=showsummary" .
-($::FORM{'showsummary'} ? " checked" : "") . ">Show the summary of all bugs
-</tr>
-<tr><td colspan=3><select name=rankdir>
-<option value=\"TB\"" . ($::FORM{'rankdir'} eq 'TB' ? 'selected' : '') .
-">Orient top-to-bottom
-<option value=\"LR\"" . ($::FORM{'rankdir'} eq 'LR' ? 'selected' : '') .
-">Orient left-to-right
-</select></td></tr>
-</table>
-<input type=submit value=\"Submit\">
-</form>
- ";
+            if ($dependson != $id && !exists $seen{$dependson}) {
+                push @stack, $dependson;
+            }
 
-PutFooter();
+            AddLink($blocked, $dependson);
+        }
+    }
+}
+
+foreach my $k (keys(%baselist)) {
+    $seen{$k} = 1;
+}
+
+foreach my $k (keys(%seen)) {
+    my $summary = "";
+    my $stat;
+    if ($::FORM{'showsummary'}) {
+        SendSQL(SelectVisible("SELECT bug_status, short_desc FROM bugs " .
+                              "WHERE bugs.bug_id = $k",
+                              $::userid,
+                              $::usergroupset));
+        ($stat, $summary) = FetchSQLData();
+        $stat = "NEW" if !defined $stat;
+        $summary = "" if !defined $summary;
+    } else {
+        SendSQL("SELECT bug_status FROM bugs WHERE bug_id = $k");
+        $stat = FetchOneColumn();
+    }
+    my @params;
+
+    if ($summary ne "") {
+        $summary =~ s/([\\\"])/\\$1/g;
+        push(@params, qq{label="$k\\n$summary"});
+    }
+
+    if (exists $baselist{$k}) {
+        push(@params, "shape=box");
+    }
+
+    if ($stat =~ /^(NEW|ASSIGNED|REOPENED)$/) {
+        push(@params, "color=green");
+    }
+
+    if (@params) {
+        print DOT "$k [" . join(',', @params) . "]\n";
+    } else {
+        print DOT "$k\n";
+    }
+}
+
+
+print DOT "}\n";
+close DOT;
+
+chmod 0777, $filename;
+
+my $webdotbase = Param('webdotbase');
+
+if ($webdotbase =~ /^https?:/) {
+     # Remote dot server
+     my $url = PerformSubsts($webdotbase) . $filename;
+     $vars->{'image_url'} = $url . ".gif";
+     $vars->{'map_url'} = $url . ".map";
+} else {
+    # Local dot installation
+    my $pngfilename = "data/webdot/$$.png";
+    my $mapfilename = "data/webdot/$$.map";
+    system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
+    system("$webdotbase","-Timap","-o","$mapfilename","$filename");
+    $vars->{'image_url'} = $pngfilename;
+    $vars->{'map_url'} = $mapfilename;
+}
+
+# Cleanup any old .dot files created from previous runs.
+my $since = time() - 24 * 60 * 60;
+foreach my $f (glob("data/webdot/*.dot 
+                     data/webdot/*.png 
+                     data/webdot/*.map"))
+{
+    # Here we are deleting all old files. All entries are from the
+    # data/webdot/ directory. Since we're deleting the file (not following
+    # symlinks), this can't escape to delete anything it shouldn't
+    trick_taint($f);
+    if (ModTime($f) < $since) {
+        unlink $f;
+    }
+}
+
+$vars->{'bug_id'} = $::FORM{'id'};
+$vars->{'multiple_bugs'} = ($::FORM{'id'} =~ /[ ,]/);
+$vars->{'doall'} = $::FORM{'doall'};
+$vars->{'rankdir'} = $::FORM{'rankdir'};
+$vars->{'showsummary'} = $::FORM{'showsummary'};
+
+# Generate and return the UI (HTML page) from the appropriate template.
+print "Content-type: text/html\n\n";
+$template->process("show/dependency-graph.html.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
