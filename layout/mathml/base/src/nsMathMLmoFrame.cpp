@@ -256,6 +256,8 @@ nsMathMLmoFrame::ProcessTextData(nsIPresContext* aPresContext)
   if (1 == length) {
     PRUnichar ch = data[0];
     if ((ch == '+') || (ch == '=') || (ch == '*') ||
+        (ch == 0x2264) || // &le;
+        (ch == 0x2265) || // &ge;
         (ch == 0x00D7)) { // &times;
       mFlags |= NS_MATHML_OPERATOR_CENTERED;
     }
