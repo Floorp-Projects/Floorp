@@ -19,7 +19,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <gtk/gtkprivate.h>
-#include "gtk_moz_window.h"
 
 #include "nsWindow.h"
 #include "nsWidgetsCID.h"
