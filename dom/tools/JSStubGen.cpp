@@ -713,6 +713,15 @@ static const char kStringGetCaseStr[] =
 static const char kIntGetCaseStr[] = 
 "            *vp = INT_TO_JSVAL(prop);\n";
 
+static const char kLongLongGetCaseStr[] = 
+"#ifdef HAVE_LONG_LONG\n"
+"            *vp = INT_TO_JSVAL(prop);\n"
+"#else\n"
+"            int i;\n"
+"            LL_L2UI(i, prop);\n"
+"            *vp = INT_TO_JSVAL(i);\n"
+"#endif\n";
+
 static const char kFloatGetCaseStr[] = 
 "            *vp = DOUBLE_TO_JSVAL(JS_NewDouble(cx, prop));\n";
 
@@ -744,15 +753,17 @@ JSStubGen::GeneratePropGetter(ofstream *file,
       case_str = kBoolGetCaseStr;
       break;
     case TYPE_LONG:
-    case TYPE_LONG_LONG:
     case TYPE_SHORT:
     case TYPE_ULONG:
-    case TYPE_ULONG_LONG:
     case TYPE_USHORT:
     case TYPE_CHAR:
     case TYPE_INT:
     case TYPE_UINT:
       case_str = kIntGetCaseStr;
+      break;
+    case TYPE_LONG_LONG:
+    case TYPE_ULONG_LONG:
+      case_str = kLongLongGetCaseStr;
       break;
     case TYPE_FLOAT:
       case_str = kFloatGetCaseStr;

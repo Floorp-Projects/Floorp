@@ -41,6 +41,13 @@ public:
   * @returns whether the event was consumed or ignored. @see nsresult
   */
   virtual nsresult Paint(nsIDOMEvent* aEvent) = 0;
+
+  /**
+  * Processes a resize event
+  * @param aEvent @see nsIDOMEvent.h 
+  * @returns whether the event was consumed or ignored. @see nsresult
+  */
+  virtual nsresult Resize(nsIDOMEvent* aEvent) = 0;
 };
 
 #endif /* nsIDOMPaintListener_h__ */

@@ -1282,7 +1282,9 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   
   nsIDOMEvent* domEvent = nsnull;
   if (NS_EVENT_FLAG_INIT & aFlags) {
-    aDOMEvent = &domEvent;
+    if (!aDOMEvent) {
+      aDOMEvent = &domEvent;
+    }
     aEvent->flags = aFlags;
     aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }

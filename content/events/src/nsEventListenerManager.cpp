@@ -417,6 +417,10 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aI
   else if (aType == nsLayoutAtoms::onpaint) {
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
+  }
+  else if (aType == nsLayoutAtoms::onresize) {
+    aIID = kIDOMPaintListenerIID;
+    *aFlags = NS_EVENT_BITS_PAINT_RESIZE;
   } // extened this to handle IME related events
   else if (aType == nsLayoutAtoms::oncreate) {
     aIID = kIDOMMenuListenerIID; 
@@ -1322,6 +1326,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
       break;
   
     case NS_PAINT:
+    case NS_RESIZE_EVENT:
       if (nsnull != mPaintListeners) {
         if (nsnull == *aDOMEvent) {
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, empty, aEvent);
@@ -1336,14 +1341,36 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
             if (ls->mFlags & aFlags) {
               if (NS_OK == ls->mListener->QueryInterface(kIDOMPaintListenerIID,
                                                        (void**)&paintListener)) {
-                ret = paintListener->Paint(*aDOMEvent);
+                switch(aEvent->message) {
+                  case NS_PAINT:
+                    ret = paintListener->Paint(*aDOMEvent);
+                    break;
+                  case NS_RESIZE_EVENT:
+                    ret = paintListener->Resize(*aDOMEvent);
+                    break;
+                  default:
+                    break;
+                }
                 NS_RELEASE(paintListener);
               }
               else {
                 PRBool correctSubType = PR_FALSE;
-                PRUint32 subType = NS_EVENT_BITS_PAINT_PAINT;
-                if (ls->mSubType & NS_EVENT_BITS_PAINT_PAINT) {
-                  correctSubType = PR_TRUE;
+                PRUint32 subType = 0;
+                switch(aEvent->message) {
+                  case NS_PAINT:
+                    subType = NS_EVENT_BITS_PAINT_PAINT;
+                    if (ls->mSubType & NS_EVENT_BITS_PAINT_PAINT) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  case NS_RESIZE_EVENT:
+                    subType = NS_EVENT_BITS_PAINT_RESIZE;
+                    if (ls->mSubType & NS_EVENT_BITS_PAINT_RESIZE) {
+                      correctSubType = PR_TRUE;
+                    }
+                    break;
+                  default:
+                    break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
                   ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget, subType, aFlags);
@@ -1782,6 +1809,15 @@ nsresult nsEventListenerManager::FlipCaptureBit(PRInt32 aEventTypes, PRBool aIni
     if (ls) {
       if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_LOAD_ERROR; 
       else ls->mSubTypeCapture &= ~NS_EVENT_BITS_LOAD_ERROR;
+      ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
+    }
+  }
+  if (aEventTypes & nsIDOMEvent::RESIZE) {
+    iid = kIDOMPaintListenerIID;
+    ls = FindJSEventListener(iid);
+    if (ls) {
+      if (aInitCapture) ls->mSubTypeCapture |= NS_EVENT_BITS_PAINT_RESIZE; 
+      else ls->mSubTypeCapture &= ~NS_EVENT_BITS_PAINT_RESIZE;
       ls->mFlags |= NS_EVENT_FLAG_CAPTURE;
     }
   }

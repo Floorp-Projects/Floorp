@@ -158,7 +158,13 @@ GetEventProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           PRUint64 prop;
           rv = a->GetTimeStamp(&prop);
           if (NS_SUCCEEDED(rv)) {
-            //*vp = INT_TO_JSVAL(prop);
+#ifdef HAVE_LONG_LONG
+            *vp = INT_TO_JSVAL(prop);
+#else
+            int i;
+            LL_L2UI(i, prop);
+            *vp = INT_TO_JSVAL(i);
+#endif
           }
         }
         break;
