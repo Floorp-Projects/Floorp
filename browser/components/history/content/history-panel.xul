@@ -95,6 +95,10 @@
                   type="radio"
                   oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'visited');
                              GroupBy('none'); SortBy('visited');"/>
+        <menuitem id="bylastvisited" label="&byLastVisited.label;" accesskey="&byLastVisited.accesskey;"
+                  type="radio"
+                  oncommand="this.parentNode.parentNode.setAttribute('selectedsort', 'lastvisited');
+                             GroupBy('none'); SortBy('lastvisited');"/>
       </menupopup>
     </toolbarbutton>
   </hbox>

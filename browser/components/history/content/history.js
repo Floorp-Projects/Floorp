@@ -63,6 +63,8 @@ function HistoryCommonInit()
       document.getElementById("bysite").setAttribute("checked", "true");
     else if (mode == "visited")
       document.getElementById("byvisited").setAttribute("checked", "true");
+    else if (mode == "lastvisited")
+      document.getElementById("bylastvisited").setAttribute("checked", "true");
     else
       document.getElementById("byday").setAttribute("checked", "true");
     gHistoryTree.focus();
@@ -224,6 +226,10 @@ function SortBy(sortKey)
     case "name":
       sortKey = "Name";
       sortDirection = "natural";
+      break;
+    case "lastvisited":
+      sortKey = "Date";
+      sortDirection = "ascending";
       break;
     default:
       return;    
