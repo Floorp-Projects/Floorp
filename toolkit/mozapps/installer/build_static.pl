@@ -150,7 +150,6 @@ sub ParseInstallerCfg
 
     while ($line = <fpInstallCfg>)
     {
-
       if (substr($line, -2, 2) eq "\r\n") {
         $line = substr($line, 0, length($line) - 2) . "\n";
       }
@@ -203,6 +202,9 @@ sub ParseInstallerCfg
       }
       elsif ($prop eq "GREVersion") {
         $ENV{WIZ_greVersion} = $value;
+      }
+      elsif ($prop eq "LicenseFile") {
+        $ENV{WIZ_licenseFile} = $value;
       }
     }
 

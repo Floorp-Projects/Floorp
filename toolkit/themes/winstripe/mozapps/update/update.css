@@ -60,23 +60,28 @@ updateitem {
 }
 
 /* Inline Update Notifications */
-.updateIndicator[updateCount="0"] {
-  visibility: hidden;
+toolbarbutton[type="updates"] {
+  padding: 0px;
+  -moz-appearance: none;
+  border: none;
 }
-
-.updateIcon {
+toolbarbutton[type="updates"][updateCount="0"] {
+  visibility: collapse;
+}
+toolbarbutton[type="updates"] > .toolbarbutton-icon {
   list-style-image: url("chrome://mozapps/skin/update/extensionalert.png"); 
   -moz-image-region: rect(0px 16px 16px 0px);
   width: 16px;
   height: 16px;
+  margin: 0px 2px;
 }
-.updateIcon[severity="0"] {
+toolbarbutton[type="updates"][severity="0"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 16px 16px 0px);
 }
-.updateIcon[severity="1"] {
+toolbarbutton[type="updates"][severity="1"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
-.updateIcon[severity="2"] {
+toolbarbutton[type="updates"][severity="2"] > .toolbarbutton-icon {
   -moz-image-region: rect(0px 48px 16px 32px);
 }
 

@@ -39,6 +39,7 @@
 
 <?xml-stylesheet href="chrome://help/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://help/skin/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 
 <?xul-overlay href="chrome://help/content/helpContextOverlay.xul"?>
 <!DOCTYPE window [
@@ -46,6 +47,10 @@
     %brandDTD;
     <!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd">
     %helpDTD;
+    <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+    %browserDTD;
+    <!ENTITY % findDTD SYSTEM "chrome://global/locale/finddialog.dtd" >
+    %findDTD;
 ]>
 
 <window id="help"
@@ -55,15 +60,17 @@
         height="550"
         persist="width height screenX screenY"
         onload="init();"
-        onunload="window.XULBrowserWindow.destroy();">
+        onunload="uninitFindBar(); window.XULBrowserWindow.destroy();">
 
     <script type="application/x-javascript" src="chrome://help/content/toolbarCustomization.js"/>
     <script type="application/x-javascript" src="chrome://help/content/help.js"/>
     <script type="application/x-javascript" src="chrome://browser/content/sessionHistoryUI.js"/>
-    <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
+    <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
     <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
     <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
 
+    <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
+    
     <menupopup id="backMenu" position="after_start"
         onpopupshowing="return createBackMenu(event);"
         oncommand="gotoHistoryIndex(event);"/>
@@ -86,14 +93,14 @@
         <command id="Help:Home" oncommand="goHome();"/>
         <command id="Help:Back" oncommand="goBack();"       observes="canGoBack"/>
         <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
-        <command id="Help:Find" oncommand="helpBrowser.find();"/>
-        <command id="Help:FindAgain" oncommand="helpBrowser.findAgain();"/>
-        <command id="Help:FindPrevious" oncommand="helpBrowser.findPrevious();"/>
         <command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
         <command id="cmd_closeWindow" oncommand="close();"/>
         <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
         <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
         <command id="cmd_CustomizeToolbars" oncommand="CustomizeToolbar('help-toolbox');"/>
+        <command id="cmd_find" oncommand="onFindCmd();"/>
+        <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
+        <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
     </commandset>
     <keyset id="keys">
         <key id="goHome"      keycode="VK_HOME"  command="Help:Home" modifiers="alt"/>
@@ -107,15 +114,12 @@
         <key keycode="VK_BACK" command="Help:Forward" modifiers="shift"/>
 #endif
         <key id="printKb" key="&printCmd.commandkey;" oncommand="print();"
-            modifiers="accel"/>
-        <key id="key_find" key="&findOnCmd.commandkey;"
-            command="Help:Find" modifiers="accel"/>
-        <key id="key_findAgain" key="&findAgainCmd.commandkey;"
-            command="Help:FindAgain" modifiers="accel"/>
-        <key id="key_findPrevious" key="&findAgainCmd.commandkey;"
-            command="Help:FindPrevious" modifiers="accel,shift"/>
-        <key keycode="VK_F3" command="Help:FindAgain"/>
-        <key keycode="VK_F3" command="Help:FindPrevious" modifiers="shift"/>
+            modifiers="accel"/>  
+        <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
+        <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
+        <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+        <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
+        <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
         <key keycode="VK_F5" oncommand="reload();"/>
         <key id="key_closeWindow" key="&closeWindow.commandkey;"
             command="cmd_closeWindow" modifiers="accel"/>
@@ -175,7 +179,7 @@
                     command="Help:Home"/>
                 <toolbarbutton id="help-find-button"
                     class="toolbarbutton-1" label="&findBtn.label;"
-                    command="Help:Find"/>
+                    command="cmd_find"/>
                 <toolbarbutton id="help-zoom-small-button"
                     class="toolbarbutton-1" label="&textZoomReduceBtn.label;"
                     tooltiptext="&textZoomReduceBtn.tooltip;"
@@ -409,14 +413,12 @@
             </splitter>
 
             <vbox id="appcontent" flex="3">
-                <!-- this box is temporary, pending XBLified <browser> -->
-                <hbox id="browser" flex="1">
-                    <!-- type attribute is used by frame construction to locate
-                        iframes intended to hold (html) content -->
-                    <browser context="contentAreaContextMenu"
-                        type="content-primary" id="help-content"
-                        src="about:blank" flex="1"/>
-                </hbox>
+              <!-- type attribute is used by frame construction to locate
+                  iframes intended to hold (html) content -->
+              <browser context="contentAreaContextMenu"
+                  type="content-primary" id="help-content"
+                  src="about:blank" flex="1"/>
+#include ../../typeaheadfind/content/findBar.inc
             </vbox>
         </hbox>
     </vbox>

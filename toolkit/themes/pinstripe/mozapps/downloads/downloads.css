@@ -14,6 +14,7 @@
 
 /* Download Manager Command Bar */
 #commandBar {
+	padding-right: 16px;
 }
 
 
@@ -120,3 +121,9 @@ dialog label {
 	font-size: 100% !important;
         font: icon;
 }
+
+#saveToFolder .toolbarbutton-text {
+  text-align: left;
+  margin-left: 5px !important;
+}
+

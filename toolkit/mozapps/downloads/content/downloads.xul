@@ -37,6 +37,12 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+#define XP_GNOME 1
+#endif
+#endif
+
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://mozapps/content/downloads/downloads.css"?>
 <?xml-stylesheet href="chrome://mozapps/skin/downloads/downloads.css"?>
@@ -76,7 +82,11 @@
   <keyset id="downloadKeys">
     <key id="key_cleanUp" keycode="VK_DELETE" command="cmd_cleanUp" modifiers="accel,shift"/>
     <key id="key_close"   key="&cmd.close.commandKey;"  oncommand="closeWindow(true);"    modifiers="accel"/>
-    <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);"    modifiers="accel"/>
+#ifdef XP_GNOME
+    <key id="key_close2"  key="&cmd.close2Unix.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+#else
+    <key id="key_close2"  key="&cmd.close2.commandKey;" oncommand="closeWindow(true);" modifiers="accel"/>
+#endif
     <key                  keycode="VK_ESCAPE"           oncommand="closeWindow(true);"/>
     <key id="key_info"    key="&cmd.info.commandKey;"   oncommand="onDownloadShowInfo();" modifiers="accel"/>
   </keyset>

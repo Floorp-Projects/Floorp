@@ -19,6 +19,7 @@ classic.jar:
 +  skin/classic/global/dialog.css
 +  skin/classic/global/filepicker.css
 +  skin/classic/global/formatting.css
++  skin/classic/global/findBar.css
 +  skin/classic/global/global.css
 +  skin/classic/global/globalBindings.xml
 +  skin/classic/global/groupbox.css
@@ -85,6 +86,10 @@ classic.jar:
 +  skin/classic/global/icons/close.gif                                (icons/close.gif)
 +  skin/classic/global/icons/closetab-active.png                      (icons/closetab-active.png)
 +  skin/classic/global/icons/closetab.png                             (icons/closetab.png)
++  skin/classic/global/icons/find.png                                 (icons/find.png)
++  skin/classic/global/icons/find-bar-background.png                  (icons/find-bar-background.png)
++  skin/classic/global/icons/find-bar-flash.png                       (icons/find-bar-flash.png)
++  skin/classic/global/icons/find-bar-notfound.png                    (icons/find-bar-notfound.png)
 +  skin/classic/global/icons/grip-vrt.gif                             (icons/grip-vrt.gif)
 +  skin/classic/global/icons/loading_16_grey.gif                      (icons/loading_16_grey.gif)
 +  skin/classic/global/icons/loading_16.gif                           (icons/loading_16.gif)
@@ -99,6 +104,7 @@ classic.jar:
 +  skin/classic/global/icons/small-document.png                       (icons/small-document.png)
 +  skin/classic/global/icons/small-globe-sunken-grey.png              (icons/small-globe-sunken-grey.png)
 +  skin/classic/global/icons/small-globe-sunken.png                   (icons/small-globe-sunken.png)
++  skin/classic/global/icons/white-gray-gradient.gif                  (icons/white-gray-gradient.gif)
 +  skin/classic/global/menu/menu-arrow-dis.gif                        (menu/menu-arrow-dis.gif)
 +  skin/classic/global/menu/menu-arrow-hov.gif                        (menu/menu-arrow-hov.gif)
 +  skin/classic/global/menu/menu-arrow.gif                            (menu/menu-arrow.gif)

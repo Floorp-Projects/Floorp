@@ -182,7 +182,7 @@ nsUnknownContentTypeDialog.prototype = {
         var wildCardExtension = "*";
         if (aSuggestedFileExtension) {
           wildCardExtension += aSuggestedFileExtension;
-          picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
+          picker.appendFilter(this.mLauncher.MIMEInfo.Description, wildCardExtension);
         }
 
         picker.appendFilters( nsIFilePicker.filterAll );
@@ -265,6 +265,7 @@ nsUnknownContentTypeDialog.prototype = {
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
          // Put file name in window title.
+         var win   = this.dialogElement( "unknownContentType" );
          var suggestedFileName = this.mLauncher.suggestedFileName;
 
          // Some URIs do not implement nsIURL, so we can't just QI.
@@ -287,7 +288,7 @@ nsUnknownContentTypeDialog.prototype = {
            
 
          this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
-         this.mDialog.document.title = this.mTitle;
+         win.setAttribute( "title", this.mTitle );
 
          // Put content type, filename and location into intro.
          this.initIntro(url, fname);
@@ -373,7 +374,7 @@ nsUnknownContentTypeDialog.prototype = {
         var mimeInfo = this.mLauncher.MIMEInfo;
         
         // 1. Try to use the pretty description of the type, if one is available.
-        var typeString = mimeInfo.description;
+        var typeString = mimeInfo.Description;
         
         if (typeString == "") {
           // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"

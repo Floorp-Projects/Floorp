@@ -197,7 +197,6 @@
       <handler event="keypress" keycode="vk_left" modifiers="meta" action="this.selected = null"/>
       <handler event="keypress" keycode="vk_right" modifiers="meta" action="this.selected = null"/>
       <handler event="keypress" keycode="vk_delete" action="if (this.selected) this.selected.fireEvent('remove');"/>
-      <handler event="keypress" key=" " action="if (this.selected) { this.selected.pauseResume(); }"/>
     </handlers>
   </binding>
   

@@ -24,6 +24,7 @@
 #     Doron Rosenberg <doronr@naboonline.com>
 #     Roger B. Sidje <rbs@maths.uq.edu.au>
 #     Pierre Chanial <p_ch@verizon.net>
+#     Blake Ross     <blake@cs.stanford.edu>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -41,6 +42,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://global/content/viewSource.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/findBar.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 
@@ -49,11 +51,18 @@
 %brandDTD;
 <!ENTITY % sourceDTD SYSTEM "chrome://global/locale/viewSource.dtd" >
 %sourceDTD;
+#ifdef MOZ_PHOENIX
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+%browserDTD;
+#endif
+<!ENTITY % findDTD SYSTEM "chrome://global/locale/finddialog.dtd" >
+%findDTD;
 ]>
 
 <window id="main-window"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoadViewSource();"
+        onunload="onUnloadViewSource();"
         contenttitlesetting="true"
         title="&mainWindow.title;" 
         titlemodifier="&mainWindow.titlemodifier;" 
@@ -65,23 +74,35 @@
         persist="screenX screenY width height sizemode">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/printUtils.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewSource.js"/>
   <script type="application/x-javascript" src="chrome://global/content/viewZoomOverlay.js"/>
-
-  <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+#ifdef MOZ_PHOENIX
+  <script type="application/x-javascript" src="chrome://global/content/findBar.js"/>
+  <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
+  <stringbundle id="bundle_findBar" src="chrome://browser/locale/browser.properties"/>
+#else
+  <script type="application/x-javascript" src="chrome://global/content/findUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
+#endif
   <stringbundle id="viewSourceBundle" src="chrome://global/locale/viewSource.properties"/>
 
-  <command id="cmd_savePage" disabled="true" oncommand="ViewSourceSavePage();"/>
+  <command id="cmd_savePage" oncommand="ViewSourceSavePage();"/>
   <command id="cmd_print" oncommand="PrintUtils.print();"/>
   <command id="cmd_printpreview" oncommand="PrintUtils.printPreview(onEnterPP, onExitPP);"/>
   <command id="cmd_pagesetup" oncommand="PrintUtils.showPageSetup();"/>
   <command id="cmd_close" oncommand="window.close();"/>
   <commandset id="editMenuCommands"/>
+#ifdef MOZ_PHOENIX
+  <command id="cmd_find" oncommand="onFindCmd();"/>
+  <command id="cmd_findAgain" oncommand="onFindAgainCmd();"/>
+  <command id="cmd_findPrevious" oncommand="onFindPreviousCmd();"/>    
+#else
   <command id="cmd_find" oncommand="getBrowser().find();"/>
   <command id="cmd_findAgain" oncommand="getBrowser().findAgain()"/>
   <command id="cmd_findPrevious" oncommand="getBrowser().findPrevious()"/>
+#endif
   <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
   <command id="cmd_highlightSyntax" oncommand="highlightSyntax();"/>
   <command id="cmd_wrapLongLines" oncommand="wrapLongLines()"/>
@@ -99,6 +120,13 @@
     <key id="key_textZoomEnlarge2" key="&textEnlarge.commandkey2;" command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key id="key_textZoomReduce"  key="&textReduce.commandkey;" command="cmd_textZoomReduce" modifiers="accel"/>
     <key id="key_textZoomReset" key="&textReset.commandkey;" oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
+#ifdef MOZ_PHOENIX
+    <key id="key_find" key="&findOnCmd.commandkey;" command="cmd_find" modifiers="accel"/>
+    <key id="key_findAgain" key="&findAgainCmd.commandkey;" command="cmd_findAgain" modifiers="accel"/>
+    <key id="key_findPrevious" key="&findAgainCmd.commandkey;" command="cmd_findPrevious" modifiers="accel,shift"/>
+    <key keycode="&findAgainCmd.commandkey2;" command="cmd_findAgain"/>
+    <key keycode="&findAgainCmd.commandkey2;"  command="cmd_findPrevious" modifiers="shift"/>
+#endif
   </keyset>
 
   <popup id="viewSourceContextMenu">
@@ -113,7 +141,7 @@
   <toolbox id="viewSource-toolbox">
     <menubar id="viewSource-main-menubar">
 
-      <menu id="menu_file" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
+      <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="filemenu-popup">
           <menuitem key="key_savePage" command="cmd_savePage"
                     label="&savePageCmd.label;" accesskey="&savePageCmd.accesskey;"/>
@@ -130,7 +158,7 @@
       </menu>
 
       <menu id="menu_edit">
-        <menupopup id="editmenu-popup">
+        <menupopup>
           <menuitem id="menu_undo"/>
           <menuitem id="menu_redo"/>
           <menuseparator/>
@@ -149,8 +177,8 @@
         </menupopup>
       </menu>
 
-      <menu id="menu_view" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
-        <menupopup id="viewmenu-popup">
+      <menu label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
+        <menupopup>
           <menuitem id="menu_textEnlarge" command="cmd_textZoomEnlarge"
                     label="&menu_textEnlarge.label;" accesskey="&menu_textEnlarge.accesskey;"
                     key="key_textZoomEnlarge"/>
@@ -173,6 +201,9 @@
 
     <browser id="content" type="content-primary" name="content" src="about:blank" flex="1"
              context="viewSourceContextMenu"/>
+#ifdef MOZ_PHOENIX
+#include ../../typeaheadfind/content/findBar.inc
+#endif
 
   </vbox> 
 

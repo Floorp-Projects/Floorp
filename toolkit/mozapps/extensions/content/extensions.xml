@@ -65,49 +65,9 @@
             <xul:label class="extension-item-version" xbl:inherits="value=version"/>
           </xul:hbox>
           <xul:label class="extension-item-description" xbl:inherits="value=description" crop="right"/>
-          <xul:label class="extension-item-creator" xbl:inherits="value=creator" crop="right"/>
-        </xul:vbox>
-        <xul:vbox pack="start">
-          <xul:image class="extension-button" anonid="options-button" 
-#ifdef XP_WIN
-                     tooltiptext="&options.tooltip;" 
-#else
-                     tooltiptext="&optionsUnix.tooltip;" 
-#endif
-                     />
-          <xul:image class="extension-button" anonid="about-button" 
-                     tooltiptext="&about.tooltip;" />
-          <xul:image class="extension-button" anonid="homepage-button" 
-                     tooltiptext="&homepage.tooltip;" />
         </xul:vbox>
       </xul:hbox>
     </content>  
-    <implementation>
-      <field name="eventPrefix">"extension-"</field>
-    </implementation>
-    <handlers>
-      <handler event="click">
-      <![CDATA[
-        switch (event.originalTarget.getAttribute("anonid")) {
-        case "options-button":
-          gExtensionsViewController.commands.cmd_options(this);
-          event.preventDefault();
-          event.stopPropagation();
-          break;
-        case "about-button":
-          gExtensionsViewController.commands.cmd_about(this);
-          event.preventDefault();
-          event.stopPropagation();
-          break;
-        case "homepage-button":
-          gExtensionsViewController.commands.cmd_homepage(this);
-          event.preventDefault();
-          event.stopPropagation();
-          break;
-        }
-      ]]>
-      </handler>
-    </handlers>
   </binding>
   
   <binding id="extension-tobedisabled" extends="chrome://mozapps/content/shared/richview.xml#richview-item">

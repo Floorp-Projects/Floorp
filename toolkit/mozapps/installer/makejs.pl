@@ -76,11 +76,10 @@ $greUniqueID      = $ENV{WIZ_greUniqueID};
 $greVersion       = $ENV{WIZ_greVersion};
 
 # Get the name of the file replacing the .jst extension with a .js extension
-@inJstFileSplit   = split(/\./,$inJstFile);
-$outJsFile        = $inJstFileSplit[0];
-$outJsFile       .= ".js";
-$outTempFile      = $inJstFileSplit[0];
-$outTempFile     .= ".template";
+$inJstFileBase    = $inJstFile;
+$inJstFileBase    =~ s/\.jst//;
+$outJsFile        = "$inJstFileBase.js";
+$outTempFile      = "$inJstFileBase.template";
 $foundLongFiles   = 0;
 
 print " copy \"$topsrcdir/xpinstall/packager/common/share.t\" $outTempFile\n";

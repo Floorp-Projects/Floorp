@@ -102,9 +102,7 @@ var progressListener = {
 
   QueryInterface: function (iid)
   {
-    if (iid.equals(Components.interfaces.nsIWebProgressListener) ||
-        iid.equals(Components.interfaces.nsISupportsWeakReference) ||
-        iid.equals(Components.interfaces.nsISupports))
+    if (iid.equals(Components.interfaces.nsIWebProgressListener) || iid.equals(Components.interfaces.nsISupportsWeakReference))
       return this;   
     throw Components.results.NS_NOINTERFACE;
   }

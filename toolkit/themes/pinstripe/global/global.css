@@ -114,7 +114,7 @@ statusbar {
   min-height: 15px !important;
   background-color: #FFFFFF;
   margin: 0px !important;
-  padding: 0px 10px 1px 1px;
+  padding: 0px 16px 1px 1px;
   -moz-appearance: none;
 }
 

@@ -323,9 +323,9 @@ var rejectsTreeView = {
   isSorted: function() { return false; },
   isContainer : function(index) {return false;},
   cycleHeader : function(column) {},
-  getRowProperties : function(row,prop) {},
-  getColumnProperties : function(column,prop) {},
-  getCellProperties : function(row,column,prop) {}
+  getRowProperties : function(row,prop){},
+  getColumnProperties : function(column,prop){},
+  getCellProperties : function(row,column,prop){}
  };
 var rejectsTree;
 

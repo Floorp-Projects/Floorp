@@ -94,14 +94,11 @@ nsUnknownContentTypeDialog.prototype = {
                                    "chrome://mozapps/content/downloads/unknownContentType.xul",
                                    null,
                                    "chrome,centerscreen,titlebar,dialog=yes,dependent",
-                                    null);
-
+                                   null);
       // Hook this object to the dialog.
       this.mDialog.dialog = this;
       
       // Hook up utility functions. 
-      // XXXben these lines can disappear if we can get XULPP to run on stuff not 
-      //        thus referenced in jar.mns. 
       this.getSpecialFolderKey = this.mDialog.getSpecialFolderKey;
       
       // Watch for error notifications.
@@ -218,7 +215,7 @@ nsUnknownContentTypeDialog.prototype = {
         var wildCardExtension = "*";
         if (aSuggestedFileExtension) {
           wildCardExtension += aSuggestedFileExtension;
-          picker.appendFilter(this.mLauncher.MIMEInfo.description, wildCardExtension);
+          picker.appendFilter(this.mLauncher.MIMEInfo.Description, wildCardExtension);
         }
 
         picker.appendFilters( nsIFilePicker.filterAll );
@@ -255,11 +252,25 @@ nsUnknownContentTypeDialog.prototype = {
     
     validateLeafName: function (aLocalFile, aLeafName, aFileExt)
     {
+      if (aLeafName == "")
+        aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
+      aLocalFile.append(aLeafName);
+
+      this.makeFileUnique(aLocalFile);
+
+      if (aLocalFile.isExecutable() && !this.mLauncher.targetFile.isExecutable()) {
+        var f = aLocalFile.clone();
+        aLocalFile.leafName = aLocalFile.leafName + "." + this.mLauncher.MIMEInfo.primaryExtension; 
+
+        f.remove(false);
+        this.makeFileUnique(aLocalFile);
+      }
+      return aLocalFile;
+    },
+
+    makeFileUnique: function (aLocalFile)
+    {
       try {
-        if (aLeafName == "")
-          aLeafName = "unnamed" + (aFileExt ? "." + aFileExt : "");
-        aLocalFile.append(aLeafName);
-        
         // Since we're automatically downloading, we don't get the file picker's 
         // logic to check for existing files, so we need to do that here.
         //
@@ -279,6 +290,7 @@ nsUnknownContentTypeDialog.prototype = {
             aLocalFile.leafName = aLocalFile.leafName.replace(/\.|$/, "-1$&");
           }
         }
+        aLocalFile.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
       }
       catch (e) {
         dump("*** exception in validateLeafName: " + e + "\n");
@@ -287,8 +299,7 @@ nsUnknownContentTypeDialog.prototype = {
           if (aLocalFile.exists())
             aLocalFile.createUnique(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0600);
         }
-      }      
-      return aLocalFile;
+      }
     },
     
     // ---------- implementation methods ----------
@@ -339,6 +350,7 @@ nsUnknownContentTypeDialog.prototype = {
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
       // Put file name in window title.
+      var win   = this.dialogElement( "unknownContentType" );
       var suggestedFileName = this.mLauncher.suggestedFileName;
 
       // Some URIs do not implement nsIURL, so we can't just QI.
@@ -362,7 +374,7 @@ nsUnknownContentTypeDialog.prototype = {
       var displayName = fname.replace(/ +/g, " ");
 
       this.mTitle = this.dialogElement("strings").getFormattedString("title", [displayName]);
-      this.mDialog.document.title = this.mTitle;
+      win.setAttribute( "title", this.mTitle );
 
       // Put content type, filename and location into intro.
       this.initIntro(url, fname, displayName);
@@ -460,7 +472,7 @@ nsUnknownContentTypeDialog.prototype = {
         var mimeInfo = this.mLauncher.MIMEInfo;
         
         // 1. Try to use the pretty description of the type, if one is available.
-        var typeString = mimeInfo.description;
+        var typeString = mimeInfo.Description;
         
         if (typeString == "") {
           // 2. If there is none, use the extension to identify the file, e.g. "ZIP file"
@@ -754,6 +766,7 @@ nsUnknownContentTypeDialog.prototype = {
           // for the file to be saved to to pass to |saveToDisk| - otherwise
           // we must ask the user to pick a save name.
 
+#if 0
           var prefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
           var targetFile = null;
           try {
@@ -764,8 +777,10 @@ nsUnknownContentTypeDialog.prototype = {
             targetFile = this.validateLeafName(targetFile, leafName, null);
           }
           catch(e) { }
-          
+
           this.mLauncher.saveToDisk(targetFile, false);
+#endif
+          this.mLauncher.saveToDisk(null, false);
         }
         else
           this.mLauncher.launchWithApplication(null, false);

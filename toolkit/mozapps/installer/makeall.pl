@@ -207,17 +207,20 @@ foreach $_ (@wizard_files) {
   chmod $mode, "$gDirDistInstall/setup/$_";
 }
 
-foreach $_ ("config.ini", @extra_ini_files) {
+foreach $_ ("config.ini", "install.ini") {
     copy ("$gDirDistInstall/$_", "$gDirDistInstall/setup") ||
 	die "copy $gDirDistInstall/$_ $gDirDistInstall/setup: $!\n";
 }
 
 # copy license file for the installer
-copy("$topsrcdir/LICENSE", "$gDirDistInstall/license.txt") ||
-  die "copy $topsrcdir/LICENSE $gDirDistInstall/license.txt: $!\n";
-copy("$topsrcdir/LICENSE", "$gDirDistInstall/setup/license.txt") ||
-  die "copy $topsrcdir/LICENSE $gDirDistInstall/setup/license.txt: $!\n";
-
+$licenseLocation = "$topsrcdir/LICENSE";
+if ($ENV{WIZ_licenseFile} ne "") {
+  $licenseLocation = $ENV{WIZ_licenseFile};
+}
+copy("$topsrcdir/$licenseLocation", "$gDirDistInstall/license.txt") ||
+  die "copy $topsrcdir/$licenseLocation $gDirDistInstall/license.txt: $!\n";
+copy("$topsrcdir/$licenseLocation", "$gDirDistInstall/setup/license.txt") ||
+  die "copy $licenseLocation $gDirDistInstall/setup/license.txt: $!\n";
 
 BuildPlatformInstaller() && die;
 
@@ -323,7 +326,7 @@ sub MakeConfigFile
 {
   # Make config.ini and other ini files
   chdir($gDirDistInstall);
-  foreach $_ ("config.ini", @extra_ini_files) {
+  foreach $_ ("config.ini", "install.ini") {
       $itFile = $_;
       $itFile =~ s/\.ini$/\.it/;
       copy("$inConfigFiles/$itFile", "$gDirDistInstall/$itFile") || die "copy $inConfigFiles/$itFile $gDirDistInstall/$itFile";
@@ -387,7 +390,7 @@ sub VerifyComponents()
     if($mComponent =~ /talkback/i)
     {
       print " place holder: $gDirStageProduct/$mComponent\n";
-      mkdir("$gDirStageProduct/$mComponent", 775);
+      mkdir("$gDirStageProduct/$mComponent", 0775);
     }
     elsif(-d "$gDirStageProduct/$mComponent")
     {

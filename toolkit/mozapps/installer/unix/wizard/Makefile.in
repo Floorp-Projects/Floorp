@@ -60,10 +60,6 @@ LIBS        = \
         -lpthread \
         $(NULL)
 
-ifeq ($(OS_ARCH),SunOS)
-LIBS    += -lnsl
-endif
-
 EXTRA_DEPS = \
 	$(DIST)/lib/$(LIB_PREFIX)jar50_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)xpnet_s.$(LIB_SUFFIX) \
@@ -79,7 +75,6 @@ LOCAL_INCLUDES = -I$(topsrcdir)/xpinstall/stub
 WIZARD_FILES = \
 	mozilla-installer \
 	$(PROGRAM) \
-	installer.ini \
 	$(NULL)
 
 libs:: $(WIZARD_FILES)

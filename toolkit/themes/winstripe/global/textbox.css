@@ -55,6 +55,10 @@ html|*.textbox-textarea {
   font: inherit;
 }
 
+.textbox-input-box menupopup {
+  cursor: default;
+}
+
 /* ..... readonly state ..... */
 
 textbox[readonly="true"] {

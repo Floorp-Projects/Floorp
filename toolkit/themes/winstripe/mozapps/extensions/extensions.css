@@ -39,6 +39,17 @@
   -moz-image-region: rect(21px, 42px, 42px, 21px) !important;
 }
 
+#optionsButton {
+  margin: 0px;
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(0px, 84px, 21px, 63px) !important;
+}
+
+#optionsButton[disabled="true"] {
+  list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
+  -moz-image-region: rect(21px, 84px, 42px, 63px) !important;
+}
+
 #useThemeButton {
   margin: 0px;
   list-style-image: url("chrome://mozapps/skin/extensions/actionbuttons.png");
@@ -50,7 +61,10 @@
   -moz-image-region: rect(21px, 63px, 42px, 42px) !important;
 }
 
-#uninstallButton .button-icon, #updateButton .button-icon, #useThemeButton .button-icon {
+#uninstallButton .button-icon, 
+#updateButton .button-icon, 
+#optionsButton .button-icon,
+#useThemeButton .button-icon {
   margin: 0px 5px 0px 0px !important;
 }
 
@@ -104,6 +118,10 @@ extension {
 extension[disabled="true"] {
   color: GrayText;
   background-image: none;
+}
+
+extension[disabled="true"][compatible="false"] .extension-item-description {
+  color: #C77173;
 }
 
 extension[disabled="true"][selected="true"] {

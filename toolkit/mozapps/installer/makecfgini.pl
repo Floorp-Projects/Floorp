@@ -293,7 +293,11 @@ sub OutputInstallSize()
   my($installSize);
 
   print "   calculating size for $inPath\n";
-  $installSize    = `$ENV{WIZ_distInstallPath}/ds32.exe /D /L0 /A /S /C 32768 $inPath`;
+
+  my ($inPathWin) = `cygpath -wa $inPath`;
+  chomp($inPathWin);
+  $inPathWin =~ s/\\/\\\\/g;
+  $installSize    = `$ENV{WIZ_distInstallPath}/ds32.exe /D /L0 /A /S /C 32768 $inPathWin`;
   $installSize   += 32768; # take into account install.js
   $installSize    = int($installSize / 1024);
   $installSize   += 1;

@@ -3,7 +3,3 @@ toolkit.jar:
 *+ content/global/console.xul                           (content/console.xul)
 +   content/global/console.css                           (content/console.css)
 +   content/global/consoleBindings.xml                   (content/consoleBindings.xml)
-
-en-US.jar:
-*+ locale/en-US/global/console.dtd                      (locale/console.dtd)
-+  locale/en-US/global/console.properties               (locale/console.properties)

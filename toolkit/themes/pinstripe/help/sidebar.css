@@ -28,7 +28,7 @@
 #
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
- #sidebar-box {
+#sidebar-box {
   background-color: Window;
 }
 
@@ -36,8 +36,6 @@
 
 .box-texttab {
   -moz-binding: url("chrome://help/skin/sidebarBindings.xml#sbtab");
-  height: 20px;
-  -moz-appearance: toolbox;
 }
 
 .box-texttab[selected="true"],
@@ -50,13 +48,10 @@
 
 .sbtab-label {
   margin: 0px 0px 0px 0px !important;
+  text-align: left;
 }
 
 .sbtab-twisty {
   margin: 0px 7px;
-  list-style-image: url("chrome://help/skin/sbtab-twisty.gif");
-}
-
-.sbtab-twisty[selected="true"] {
-  list-style-image: url("chrome://help/skin/sbtab-twisty-open.gif");
+  list-style-image: url("chrome://global/skin/tree/folder.png");
 }

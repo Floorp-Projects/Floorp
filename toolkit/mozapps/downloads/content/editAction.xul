@@ -74,7 +74,7 @@
         <radio id="openApplication" value="app" label="&openApplication.label;"/>
         <hbox align="center" class="biggerIndent">
           <textbox id="customAppPath" readonly="true" flex="1"/>
-          <button id="changeApp" oncommand="changeApp();"
+          <button id="changeApp" oncommand="changeApp();" 
                   label="&changeApp.label;" filepickertitle="&changeAppWindowTitle.label;" accesskey="&changeApp.accesskey;"/>
         </hbox>
         <separator class="thin"/>
