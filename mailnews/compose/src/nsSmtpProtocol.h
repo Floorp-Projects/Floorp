@@ -205,6 +205,8 @@ private:
 	// End of Protocol Methods
 	////////////////////////////////////////////////////////////////////////////////////////
 	
+	PRInt32 SendMessageInFile();
+
 	// extract domain name from userName field in the url...
 	const char * GetUserDomainName();
 };
