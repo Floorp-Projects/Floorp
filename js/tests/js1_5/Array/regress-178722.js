@@ -53,42 +53,42 @@ var arr;
 
 
 // create empty array or pseudo-array objects in various ways
-var arr_empty_1 = Array();
-var arr_empty_2 = new Array();
-var arr_empty_3 = [];
-var arr_empty_4 = [1];
-arr_empty_4.pop();
+var arr1 = Array();
+var arr2 = new Array();
+var arr3 = [];
+var arr4 = [1];
+arr4.pop();
 function f () {return arguments};
-var arr_empty_5 = f();
-arr_empty_5.__proto__ = Array.prototype;
+var arr5 = f();
+arr5.__proto__ = Array.prototype;
 
 
 status = inSection(1);
-arr = arr_empty_1.sort();
+arr = arr1.sort();
 actual = arr instanceof Array && arr.length === 0;
 expect = true;
 addThis();
 
 status = inSection(2);
-arr = arr_empty_2.sort();
+arr = arr2.sort();
 actual = arr instanceof Array && arr.length === 0;
 expect = true;
 addThis();
 
 status = inSection(3);
-arr = arr_empty_3.sort();
+arr = arr3.sort();
 actual = arr instanceof Array && arr.length === 0;
 expect = true;
 addThis();
 
 status = inSection(4);
-arr = arr_empty_4.sort();
+arr = arr4.sort();
 actual = arr instanceof Array && arr.length === 0;
 expect = true;
 addThis();
 
 status = inSection(5);
-arr = arr_empty_5.sort();
+arr = arr5.sort();
 actual = arr instanceof Array && arr.length === 0;
 expect = true;
 addThis();
