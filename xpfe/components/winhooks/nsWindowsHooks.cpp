@@ -54,6 +54,7 @@
 #include "nsString.h"
 #include "nsMemory.h"
 #include "nsNetCID.h"
+#include "nsIFileStreams.h"
 // The order of these headers is important on Win2K because CreateDirectory
 // is |#undef|-ed in nsFileSpec.h, so we need to pull in windows.h for the
 // first time after nsFileSpec.h.
@@ -197,23 +198,23 @@ nsWindowsHooks::GetSettings( nsWindowsHooksSettings **result ) {
     NS_ADDREF( prefs );
 
     // Get each registry value and copy to prefs structure.
-    prefs->mHandleHTTP   = (void*)( BoolRegistryEntry( "isHandlingHTTP"   ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleHTTPS  = (void*)( BoolRegistryEntry( "isHandlingHTTPS"  ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleFTP    = (void*)( BoolRegistryEntry( "isHandlingFTP"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleCHROME = (void*)( BoolRegistryEntry( "isHandlingCHROME" ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleGOPHER = (void*)( BoolRegistryEntry( "isHandlingGOPHER" ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleHTML   = (void*)( BoolRegistryEntry( "isHandlingHTML"   ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleJPEG   = (void*)( BoolRegistryEntry( "isHandlingJPEG"   ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleGIF    = (void*)( BoolRegistryEntry( "isHandlingGIF"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandlePNG    = (void*)( BoolRegistryEntry( "isHandlingPNG"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleMNG    = (void*)( BoolRegistryEntry( "isHandlingMNG"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleBMP    = (void*)( BoolRegistryEntry( "isHandlingBMP"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleICO    = (void*)( BoolRegistryEntry( "isHandlingICO"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleXML    = (void*)( BoolRegistryEntry( "isHandlingXML"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleXHTML  = (void*)( BoolRegistryEntry( "isHandlingXHTML"  ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHandleXUL    = (void*)( BoolRegistryEntry( "isHandlingXUL"    ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mShowDialog   = (void*)( BoolRegistryEntry( "showDialog"       ) ) ? PR_TRUE : PR_FALSE;
-    prefs->mHaveBeenSet  = (void*)( BoolRegistryEntry( "haveBeenSet"      ) ) ? PR_TRUE : PR_FALSE;
+    prefs->mHandleHTTP   = BoolRegistryEntry( "isHandlingHTTP"   );
+    prefs->mHandleHTTPS  = BoolRegistryEntry( "isHandlingHTTPS"  );
+    prefs->mHandleFTP    = BoolRegistryEntry( "isHandlingFTP"    );
+    prefs->mHandleCHROME = BoolRegistryEntry( "isHandlingCHROME" );
+    prefs->mHandleGOPHER = BoolRegistryEntry( "isHandlingGOPHER" );
+    prefs->mHandleHTML   = BoolRegistryEntry( "isHandlingHTML"   );
+    prefs->mHandleJPEG   = BoolRegistryEntry( "isHandlingJPEG"   );
+    prefs->mHandleGIF    = BoolRegistryEntry( "isHandlingGIF"    );
+    prefs->mHandlePNG    = BoolRegistryEntry( "isHandlingPNG"    );
+    prefs->mHandleMNG    = BoolRegistryEntry( "isHandlingMNG"    );
+    prefs->mHandleBMP    = BoolRegistryEntry( "isHandlingBMP"    );
+    prefs->mHandleICO    = BoolRegistryEntry( "isHandlingICO"    );
+    prefs->mHandleXML    = BoolRegistryEntry( "isHandlingXML"    );
+    prefs->mHandleXHTML  = BoolRegistryEntry( "isHandlingXHTML"  );
+    prefs->mHandleXUL    = BoolRegistryEntry( "isHandlingXUL"    );
+    prefs->mShowDialog   = BoolRegistryEntry( "showDialog"       );
+    prefs->mHaveBeenSet  = BoolRegistryEntry( "haveBeenSet"      );
 
 #ifdef DEBUG_law
 NS_WARN_IF_FALSE( NS_SUCCEEDED( rv ), "GetPreferences failed" );
@@ -890,13 +891,18 @@ WriteBitmap(nsString& aPath, gfxIImageFrame* aImage)
   bf.bfSize = bf.bfOffBits + bmi->biSizeImage;
 
   // get a file output stream
-  nsFileSpec path(aPath);
-  nsCOMPtr<nsISupports> streamSupports;
-  NS_NewTypicalOutputFileStream(getter_AddRefs(streamSupports), path);
-  nsCOMPtr<nsIOutputStream> stream = do_QueryInterface(streamSupports);
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> path;
+  rv = NS_NewLocalFile(aPath, PR_TRUE, getter_AddRefs(path));
+  
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsIOutputStream> stream;
+  NS_NewLocalFileOutputStream(getter_AddRefs(stream), path);
 
   // write the bitmap headers and rgb pixel data to the file
-  nsresult rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_FAILURE;
   if (stream) {
     PRUint32 written;
     stream->Write((const char*)&bf, sizeof(BITMAPFILEHEADER), &written);

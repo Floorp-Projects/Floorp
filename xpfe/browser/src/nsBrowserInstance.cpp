@@ -93,7 +93,8 @@
 
 #include "nsIObserverService.h"
 
-#include "nsIFileSpec.h"
+#include "nsILocalFile.h"
+#include "nsIFileStreams.h"
 
 #include "nsCURILoader.h"
 #include "nsIContentHandler.h"
@@ -111,15 +112,14 @@
 #define ENABLE_PAGE_CYCLER
 #endif
 
-#include "nsTimeBomb.h"
+#include "nsITimeBomb.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kPrefServiceCID,           NS_PREF_CID);
-static NS_DEFINE_IID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
-static NS_DEFINE_IID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_IID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
-static NS_DEFINE_CID(kTimeBombCID,     NS_TIMEBOMB_CID);
+static NS_DEFINE_CID(kProxyObjectManagerCID,    NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_CID(kAppShellServiceCID,       NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kCmdLineServiceCID,        NS_COMMANDLINE_SERVICE_CID);
+static NS_DEFINE_CID(kCGlobalHistoryCID,        NS_GLOBALHISTORY_CID);
 
 #ifdef DEBUG                                                           
 static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
@@ -169,15 +169,16 @@ public:
 
   nsresult Init(const char* nativePath) {
     nsresult rv;
-    mFile = nativePath;
-    if (!mFile.IsFile())
-      return mFile.Error();
+    if (!mFile) {
+      rv = NS_NewNativeLocalFile(nsDependentCString(nativePath),
+                                 PR_TRUE, getter_AddRefs(mFile));
+      if (NS_FAILED(rv)) return rv;
+    }
 
-    nsCOMPtr<nsISupports> in;
-    rv = NS_NewTypicalInputFileStream(getter_AddRefs(in), mFile);
+    nsCOMPtr<nsIInputStream> inStr;
+    rv = NS_NewLocalFileInputStream(getter_AddRefs(inStr), mFile);
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIInputStream> inStr = do_QueryInterface(in, &rv);
-    if (NS_FAILED(rv)) return rv;
+
     PRUint32 avail;
     rv = inStr->Available(&avail);
     if (NS_FAILED(rv)) return rv;
@@ -352,7 +353,7 @@ public:
 
 protected:
   nsBrowserInstance*    mAppCore;
-  nsFileSpec            mFile;
+  nsCOMPtr<nsILocalFile> mFile;
   char*                 mBuffer;
   char*                 mCursor;
   nsAutoString          mLastRequest;
@@ -742,7 +743,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     timebombChecked = PR_TRUE;
 
     PRBool expired;
-    nsCOMPtr<nsITimeBomb> timeBomb(do_GetService(kTimeBombCID, &rv));
+    nsCOMPtr<nsITimeBomb> timeBomb(do_GetService(NS_TIMEBOMB_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = timeBomb->Init();

@@ -87,8 +87,6 @@
 #include "nsObsoleteModuleLoading.h"
 #include "nsIComponentRegistrar.h"
 #include "nsPluginLogging.h"
-#include "nsDirectoryServiceDefs.h"
-#include "nsAppDirectoryServiceDefs.h"
 
 // Friggin' X11 has to "#define None". Lame!
 #ifdef None
@@ -142,6 +140,7 @@
 
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsIFile.h"
 #include "nsPluginDirServiceProvider.h"
 #include "nsInt64.h"
