@@ -8289,9 +8289,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
         temp->GetParent(*getter_AddRefs(content));
       }
 
-      if (content) {
+      nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+      if (outerFrame) {
         // We found it.  Get the primary frame.
-        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
         nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
         
         // Convert to a tree row group frame.
@@ -8696,9 +8696,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         temp->GetParent(*getter_AddRefs(content));
       }
 
-      if (content) {
+      nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+      if (outerFrame) {
         // We found it.  Get the primary frame.
-        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
         nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
         
         // Convert to a tree row group frame.
@@ -9396,9 +9396,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
           temp->GetParent(*getter_AddRefs(content));
         }
 
-        if (content) {
+        nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
+        if (outerFrame) {
           // We found it.  Get the primary frame.
-          nsIFrame* outerFrame = GetFrameFor(shell, aPresContext, content);
           nsXULTreeFrame* tree = NS_STATIC_CAST(nsXULTreeFrame*, outerFrame);
         
           // Convert to a tree row group frame.
