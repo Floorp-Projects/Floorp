@@ -34,7 +34,6 @@
   <tab id="imageLocationTab" label="&imageLocationTab.label;"/>
   <tab id="imageDimensionsTab" label="&imageDimensionsTab.label;"/>
   <tab id="imageAppearanceTab" label="&imageAppearanceTab.label;"/>
-  <!-- This tab is currently not used -->
   <tab id="imageLinkTab" label="&imageLinkTab.label;"/>
 
   <vbox id="imageLocation"> 
@@ -43,10 +42,7 @@
       value = "&locationEditField.label;"
       tooltiptext="&locationEditField.tooltip;"
       />
-    <textbox flex="1"
-      id         = "srcInput" 
-      oninput    = "ChangeImageSrc()"
-      style      = "min-width : 20em"/>
+    <textbox id="srcInput" oninput="ChangeImageSrc();"/>
     <hbox>
       <checkbox 
         id  = "MakeRelativeCheckbox"

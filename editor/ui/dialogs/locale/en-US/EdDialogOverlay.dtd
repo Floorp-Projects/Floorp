@@ -25,3 +25,6 @@
 <!ENTITY chooseButton.label "Choose File...">
 <!ENTITY makeUrlRelative.label "URL is relative to page location">
 <!ENTITY makeUrlRelative.tooltip "Change between relative and absolute URL. You must first save the page to change this.">
+
+<!-- Shared by Link and Image dialogs -->
+<!ENTITY LinkURLEditField.label "Enter a web page location, a local file, or select a Named Anchor or Heading from the popup list:">

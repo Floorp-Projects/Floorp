@@ -71,6 +71,9 @@
 <!ENTITY topBottomEditField.label "Top and Bottom:">
 <!ENTITY borderEditField.label "Solid Border:">
 
+<!-- These controls are in the Link Box -->
+<!ENTITY showImageLinkBorder.label "Show border around linked image">
+
 <!-- These controls may be added some day; currently not used -->
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
 <!ENTITY makePageBackgroundCheckbox.tooltip "Use image as background for your page">
@@ -82,5 +85,4 @@
 <!ENTITY imageLocationTab.label "Location">
 <!ENTITY imageDimensionsTab.label "Dimensions">
 <!ENTITY imageAppearanceTab.label "Appearance">
-<!-- This tab is currently not used -->
 <!ENTITY imageLinkTab.label "Link">

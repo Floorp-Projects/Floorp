@@ -58,11 +58,38 @@
   oncommand = "chooseFile()"
   label     = "&chooseButton.label;"/>
 
+<button
+  id        = "ChooseLink"
+  oncommand = "chooseLink();"
+  label     = "&chooseButton.label;"/>
+
 <checkbox
   id        = "MakeRelativeCheckbox"
   label     = "&makeUrlRelative.label;"
-  oncommand = "MakeInputValueRelativeOrAbsolute()"
-  tooltiptext = "&makeUrlRelative.tooltip;"
-  style     = "margin-top: 0px"/>
+  oncommand = "MakeInputValueRelativeOrAbsolute(this);"
+  tooltiptext = "&makeUrlRelative.tooltip;"/>
+
+<checkbox
+  id        = "MakeRelativeLink"
+  label     = "&makeUrlRelative.label;"
+  oncommand = "MakeInputValueRelativeOrAbsolute(this);"
+  tooltiptext = "&makeUrlRelative.tooltip;"/>
+
+<vbox id="LinkLocationBox">
+  <description width="1">&LinkURLEditField.label;</description>
+  <menulist editable="true" id="hrefInput" oninput="ChangeLinkLocation();">
+    <menupopup/>
+  </menulist>
+  <hbox align="center">
+    <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
+    <checkbox id="MakeRelativeLink"
+              for="hrefInput"
+              label="&makeUrlRelative.label;"
+              oncommand="MakeInputValueRelativeOrAbsolute(this);"
+              tooltiptext="&makeUrlRelative.tooltip;"/>
+    <spacer flex="1"/>
+    <button label="&chooseButton.label;" oncommand="chooseLinkFile();"/>
+  </hbox>
+</vbox>  
 
 </overlay>    
