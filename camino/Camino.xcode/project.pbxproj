@@ -287,7 +287,7 @@
 		29B97313FDCFA39411CA2CEA = {
 			buildSettings = {
 				MACOSX_DEPLOYMENT_TARGET = 10.2;
-				SDKROOT = /Developer/SDKs/MacOSX10.2.7.sdk;
+				SDKROOT = /Developer/SDKs/MacOSX10.2.8.sdk;
 			};
 			buildStyles = (
 				4A9504CCFFE6A4B311CA0CBA,
