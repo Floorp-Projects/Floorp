@@ -52,3 +52,25 @@ include $(DEPTH)/config/rules.mk
 $(LIBRARY): \
 	$(OBJS)
 
+install::
+	$(INSTALL) res/gopher-audio.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-binary.gif  $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-find.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-image.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-menu.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-movie.gif   $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-telnet.gif  $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-text.gif    $(DIST)/bin/res/network
+	$(INSTALL) res/gopher-unknown.gif $(DIST)/bin/res/network
+
+clobber::
+	rm -f $(DIST)/bin/res/network/gopher-audio.gif
+	rm -f $(DIST)/bin/res/network/gopher-binary.gif
+	rm -f $(DIST)/bin/res/network/gopher-find.gif
+	rm -f $(DIST)/bin/res/network/gopher-image.gif
+	rm -f $(DIST)/bin/res/network/gopher-menu.gif
+	rm -f $(DIST)/bin/res/network/gopher-movie.gif
+	rm -f $(DIST)/bin/res/network/gopher-telnet.gif
+	rm -f $(DIST)/bin/res/network/gopher-text.gif
+	rm -f $(DIST)/bin/res/network/gopher-unknown.gif
+
