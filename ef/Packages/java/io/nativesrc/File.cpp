@@ -324,7 +324,7 @@ NS_EXPORT NS_NATIVECALL(uint32 /* bool */)
 Netscape_Java_java_io_File_isAbsolute(Java_java_io_File *file)
 {
   JavaString* jspath = (JavaString*)file->path;
-  const int16* path = jspath->getStr();
+  const uint16* path = jspath->getStr();
   char first = (char) path[0];
   
   // Shouldn't this be done in NSPR ? 
