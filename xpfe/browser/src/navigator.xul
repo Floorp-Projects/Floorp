@@ -18,12 +18,11 @@
     if (appCore != null) {
       dump("BrowserAppCore has been created.\n");
       appCore.Init("BrowserAppCore." + ( new Date() ).getTime().toString() );
-	  tryToSetContentWindow();
-      //appCore.setContentWindow( window.frames[0].frames[1] );
 	  appCore.setWebShellWindow(window);
 	  appCore.setToolbarWindow(window);
-      appCore.setDisableCallback("DoDisableButtons();");
-      appCore.setEnableCallback("DoEnableButtons();");
+	  tryToSetContentWindow();
+//      appCore.setDisableCallback("DoDisableButtons();");
+//      appCore.setEnableCallback("DoEnableButtons();");
     }
   }
 
@@ -31,15 +30,9 @@
     if ( window.frames[0].frames[1] ) {
         dump("Setting content window\n");
         appCore.setContentWindow( window.frames[0].frames[1] );
-        // Load initial page.
-        var args = document.getElementById("args");
-        var input = document.getElementById("urlbar");
-        if ( args &amp;&amp; input ) {
-            var url = args.getAttribute("value");
-            dump("Loading initial url: " + url + "\n");
-            input.setAttribute("value",url);
-            BrowserLoadURL();
-        }
+
+        // Call in to BrowserAppcore to load initial page.
+	appCore.loadInitialPage();
     } else {
         // Try again.
         dump("Scheduling later attempt to set content window\n");
@@ -70,13 +63,13 @@
   function BrowserBack()
   {
      // Get a handle to the back-button
-     var bb = document.getElementById("back-button");
+     var bb = document.getElementById("canGoBack");
      // If the button is disabled, don't bother calling in to Appcore
-     if ( (bb.getAttribute("disable")) == "true" ) 
+     if ( (bb.getAttribute("disabled")) == "true" ) 
         return;
 
     if (appCore != null) {
-	    dump("Going Back\n");
+      dump("Going Back\n");
       appCore.back();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -86,17 +79,73 @@
   function BrowserForward()
   {
      // Get a handle to the back-button
-     var fb = document.getElementById("forward-button");
+     var fb = document.getElementById("canGoForward");
      // If the button is disabled, don't bother calling in to Appcore
-     if ( (fb.getAttribute("disable")) == "true" ) 
+     if ( (fb.getAttribute("disabled")) == "true" ) 
         return;
 
     if (appCore != null) {
-	    dump("Going Forward\n");
+      dump("Going Forward\n");
       appCore.forward();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
+  }
+
+  function BrowserSetForward()
+  {
+     var forwardBElem = document.getElementById("canGoForward");
+     if (!forwardBElem) {
+	dump("Couldn't obtain handle to forward Broarcast element\n");
+	return;
+	}
+
+     var canForward = forwardBElem.getAttribute("disabled");
+     var fb = document.getElementById("forward-button");
+     
+     if (!fb) {
+	dump("Could not obtain handle to forward button\n");
+	return;
+     }
+	
+     // Enable/Disable the Forward button      
+     if (canForward == "true")  {
+        fb.setAttribute("disabled", "true");
+     }
+     else {
+        fb.setAttribute("disabled", "");
+     }
+        
+     // Enable/Disable the Forward menu
+     
+  }
+
+  function BrowserSetBack()
+  {
+     var backBElem = document.getElementById("canGoBack");
+     if (!backBElem) {
+	dump("Couldn't obtain handle to back Broarcast element\n");
+	return;
+	}
+
+     var canBack = backBElem.getAttribute("disabled");
+     var bb = document.getElementById("back-button");
+     
+     if (!bb) {
+	dump("Could not obtain handle to back button\n");
+	return;
+     }
+	
+     // Enable/Disable the Back button      
+     if (canBack == "true")  {
+        bb.setAttribute("disabled", "true");
+     }
+     else {
+        bb.setAttribute("disabled", "");
+     }
+        
+     // Enable/Disable the Back menu
+     
   }
 
   function BrowserHome()
@@ -408,8 +457,8 @@
 
   </html:script>
 
-  <broadcaster id="canGoBack"/>
-  <broadcaster id="canGoForward"/>
+  <broadcaster id="canGoBack" disabled="true"/>
+  <broadcaster id="canGoForward" disabled="true"/>
   <broadcaster id="canReload"/>
   <broadcaster id="canStop"/>
   <broadcaster id="canPrint"/>
@@ -419,8 +468,9 @@
   <broadcaster id="Browser:OnStopBinding"/>
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
-  
   <broadcaster id="args" value="resource:/res/samples/BrowserInitPage.html"/>
+
+
   <menubar>
       <menu name="File">
       <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
@@ -634,12 +684,12 @@
    <toolbox>
     <toolbar class="main-bar">
 		  <titledbutton id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
-				  <observes element="canGoBack" attribute="disabled"/>			
+				  <observes element="canGoBack" attribute="disabled" onChange="BrowserSetBack()"/>			
 	      </titledbutton>
 
 	      <titledbutton id="forward-button" align="bottom" value="Forward" 
 				onclick="BrowserForward()">
-				  <observes element="canGoForward" attribute="disabled"/>
+				  <observes element="canGoForward" attribute="disabled" onChange="BrowserSetForward()"/>
 	      </titledbutton>
 
 	      <titledbutton id="reload-button" align="bottom" value="Reload" 
