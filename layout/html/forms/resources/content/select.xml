@@ -514,18 +514,64 @@
    </binding>
  
   <binding id="select" extends="xul:menu">
+    <implementation>
+      <property name="selectElement" readonly="true"
+                onget="return this.QueryInterface(Components.interfaces.nsISelectElement);"/>
+      <method name="updateLabel">
+        <body>
+        <![CDATA[
+          var selectedIndex = this.selectedIndex;
+          var item = this.childNodes[selectedIndex];
+          var newLabel = item.label;
+          if (!newLabel)
+            newLabel = item.text;
+          this.setAttribute('label', newLabel);
+        ]]>
+        </body>
+      </method>
+
+      <constructor>
+        <![CDATA[
+          this.updateLabel();
+        ]]>
+      </constructor>
+    </implementation>
     <content sizetopopup="true">
-        <xul:label flex="1" value="Dummy" style="border: 1px solid red"/>
+        <xul:label flex="1" value="   " inherits="value=label" style="border: 1px solid red"/>
         <xul:dropmarker/>
         <xul:menupopup style="display:-moz-popup!important">
           <children/>
         </xul:menupopup>
     </content>
+    <handlers>
+      <handler event="command" phase="capturing">
+      <![CDATA[
+        if (event.originalTarget.localName != 'OPTION')
+          return;
+
+        // Notify the select element that the selected item has changed.
+        // It will then give us a selectedItemChanged event.
+        var itemIndex = 0;
+        for (itemIndex = 0; itemIndex < this.childNodes.length; ++itemIndex) {
+          if (this.childNodes[itemIndex] == event.originalTarget)
+            break;
+        }
+
+        if (itemIndex == this.childNodes.length) // not found
+          return;
+
+        this.selectElement.setOptionsSelectedByIndex(itemIndex, itemIndex, true,
+                                                     true, false);
+        ]]>
+      </handler>
+
+      <handler event="selectedItemChanged" action="this.updateLabel();"/>
+    </handlers>
   </binding>
 
   <binding id="select-option" extends="xul:menuitem">
     <content>
-       <xul:label>
+       <xul:label inherits="value=label">
          <children/>
       </xul:label>
     </content>
