@@ -97,6 +97,8 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsEscape.h"
 #include "nsContentUtils.h"
+#include "nsIMIMEService.h"
+#include "imgIRequest.h"
 
 // private clipboard data flavors for html copy, used by editor when pasting
 #define kHTMLContext   "text/_moz_htmlcontext"
@@ -1105,12 +1107,61 @@ nsTransferableFactory::Produce(nsITransferable** outTrans)
         if (mTitleString.IsEmpty())
           mTitleString = mUrlString;
 
-        // pass out the image source string
-        mImageSourceString = mUrlString;
+        nsCOMPtr<imgIRequest> imgRequest;
 
-        // also grab the image data, assuming the image extension in
-        // the image URI maps to a known image mimetype.
-        mImage = nsContentUtils::GetImageFromContent(image, PR_TRUE);
+        // grab the image data, and its request.
+        nsCOMPtr<nsIImage> img =
+          nsContentUtils::GetImageFromContent(image,
+                                              getter_AddRefs(imgRequest));
+
+        nsCOMPtr<nsIMIMEService> mimeService =
+          do_GetService("@mozilla.org/mime;1");
+
+        // Fix the file extension in the URL if necessary
+        if (imgRequest && mimeService) {
+          nsCOMPtr<nsIURI> imgUri;
+          imgRequest->GetURI(getter_AddRefs(imgUri));
+
+          nsCOMPtr<nsIURL> imgUrl(do_QueryInterface(imgUri));
+
+          if (imgUrl) {
+            nsCAutoString extension;
+            imgUrl->GetFileExtension(extension);
+
+            nsXPIDLCString mimeType;
+            imgRequest->GetMimeType(getter_Copies(mimeType));
+
+            nsCOMPtr<nsIMIMEInfo> mimeInfo;
+            mimeService->GetFromTypeAndExtension(mimeType, EmptyCString(),
+                                                 getter_AddRefs(mimeInfo));
+
+            if (mimeInfo) {
+              PRBool validExtension;
+
+              if (NS_FAILED(mimeInfo->ExtensionExists(extension,
+                                                      &validExtension)) ||
+                  !validExtension) {
+                nsresult rv = imgUrl->Clone(getter_AddRefs(imgUri));
+                NS_ENSURE_SUCCESS(rv, rv);
+
+                imgUrl = do_QueryInterface(imgUri);
+
+                mimeInfo->GetPrimaryExtension(extension);
+
+                imgUrl->SetFileExtension(extension);
+              }
+
+              nsCAutoString spec;
+              imgUrl->GetSpec(spec);
+
+              // pass out the image source string
+              CopyUTF8toUTF16(spec, mImageSourceString);
+
+              // and the image object
+              mImage = img;
+            }
+          }
+        }
 
         if (parentLink)
         {

@@ -368,9 +368,10 @@ public:
    * Method to get an nsIImage from an image loading content
    *
    * @param aContent The image loading content.  Must not be null.
+   * @param aRequest The image request [out]
    * @return the nsIImage corresponding to the first frame of the image
    */
-  static already_AddRefed<nsIImage> GetImageFromContent(nsIImageLoadingContent* aContent, PRBool aDoMimeCheck);
+  static already_AddRefed<nsIImage> GetImageFromContent(nsIImageLoadingContent* aContent, imgIRequest **aRequest = nsnull);
 
   /**
    * Method that decides whether a content node is draggable

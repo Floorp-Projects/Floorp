@@ -2280,15 +2280,33 @@ nsStandardURL::SetFileName(const nsACString &input)
 NS_IMETHODIMP
 nsStandardURL::SetFileBaseName(const nsACString &input)
 {
-    NS_NOTYETIMPLEMENTED("");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCAutoString extension;
+    nsresult rv = GetFileExtension(extension);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCAutoString newFileName(input);
+
+    if (!extension.IsEmpty()) {
+        newFileName.Append('.');
+        newFileName.Append(extension);
+    }
+
+    return SetFileName(newFileName);
 }
 
 NS_IMETHODIMP
 nsStandardURL::SetFileExtension(const nsACString &input)
 {
-    NS_NOTYETIMPLEMENTED("");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsCAutoString newFileName;
+    nsresult rv = GetFileBaseName(newFileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!input.IsEmpty()) {
+        newFileName.Append('.');
+        newFileName.Append(input);
+    }
+
+    return SetFileName(newFileName);
 }
 
 //----------------------------------------------------------------------------
