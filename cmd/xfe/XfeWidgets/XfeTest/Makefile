@@ -47,7 +47,8 @@ REQUIRES		= \
 				XfeTest \
 				XfeWidgets \
 				XfeBm \
-				XfeToolBar
+				XfeToolBar \
+				XfeComboBox
 
 EXPORTS			= \
 				XfeTest.h \

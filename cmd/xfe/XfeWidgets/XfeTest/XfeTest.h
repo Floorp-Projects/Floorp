@@ -58,6 +58,9 @@
 #include <Xfe/ToolItem.h>
 #include <Xfe/ToolScroll.h>
 
+#include <Xfe/ComboBox.h>
+#include <Xfe/FancyBox.h>
+
 #if defined(XFE_WIDGETS_BUILD_UNUSED)
 #include <Xfe/BypassShell.h>
 #include <Xfe/FontChooser.h>
