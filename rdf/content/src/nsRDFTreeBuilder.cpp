@@ -809,7 +809,7 @@ RDFTreeBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
         // XXX We really only care about treeitems in the body; not
         // treeitems in the header...
         if ((childNameSpaceID == kNameSpaceID_XUL) &&
-            (childNameAtom == kTreeCellAtom)) {
+            (childNameAtom.get() == kTreeCellAtom)) {
 
             // ...and the child is a tree cell. They're adding a value
             // for a property.
@@ -955,7 +955,7 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
         // XXX We really only care about treeitems in the body; not
         // treeitems in the header...
         if ((childNameSpaceID == kNameSpaceID_XUL) &&
-            (childNameAtom == kTreeCellAtom)) {
+            (childNameAtom.get() == kTreeCellAtom)) {
 
             // ...and the child is a tree cell. They're adding a value
             // for a property.
