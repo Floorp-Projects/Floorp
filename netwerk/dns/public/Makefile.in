@@ -15,7 +15,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = netwerk
+MODULE = necko
 
 DEPTH = ../../..
 
@@ -23,7 +23,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-XPIDL_MODULE = netwerk_dns
+XPIDL_MODULE = necko_dns
 
 XPIDLSRCS =			\
 	nsIDNSListener.idl	\

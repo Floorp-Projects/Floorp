@@ -20,7 +20,7 @@ DEPTH = ..\..\..\..
 // temporary, until we land:
 !ifndef NECKO
 include <$(DEPTH)/config/config.mak>
-PUBLIC = $(DEPTH)\necko\dist\include
+PUBLIC = $(DEPTH)\netwerk\dist\include
 !endif
 
 MAKE_OBJ_TYPE=DLL

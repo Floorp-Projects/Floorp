@@ -19,7 +19,7 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = netwerk
+MODULE = necko
 
 LIBRARY_NAME = necko_file
 
@@ -33,7 +33,7 @@ CPPSRCS =			  \
         nsFileProtocolFactory.cpp \
         $(NULL)
 
-REQUIRES = xpcom netwerk raptor
+REQUIRES = xpcom necko raptor
 
 include $(topsrcdir)/config/config.mk
 

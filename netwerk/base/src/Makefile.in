@@ -19,9 +19,9 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-MODULE = netwerk
+MODULE = necko
 
-LIBRARY_NAME = netwerkbase_s
+LIBRARY_NAME = neckobase_s
 
 include $(DEPTH)/config/autoconf.mk
 
