@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=compose
+LIBRARY_NAME=msgcompose
 MODULE= mailnews
 REQUIRES=xpcom js nspr netlib mailnews
 
