@@ -16,7 +16,7 @@ Project Files:   D:\JS_2\mozilla\js2\src\winbuild\Epimetheus.dsp  <---------- ac
 
 
 RUNNING EPIMETHEUS AFTER YOU'VE BUILT IT:
->cd  (path to)\mozilla\js2\src\cpp\winbuild\Epimetheus\Debug
+>cd  (path to)\mozilla\js2\src\winbuild\Epimetheus\Debug      <-- assuming you built the debug target (the default)
 >Epimetheus
 Welcome to Epimetheus.
 ep> (use ^z to exit)
@@ -40,8 +40,8 @@ Building JS2 on LINUX:
 
 
 RUNNING THE JS2 SHELL AFTER YOU'VE BUILT IT:
-cd   (path to)/mozilla/js2/tests/cpp
-[ (path to)/mozilla/js2/tests/cpp] ./dikdik
+cd   (path to)/mozilla/js2/src
+[ (path to)/mozilla/js2/src] ./epimetheus
 
 
 
@@ -68,6 +68,7 @@ hash.cpp hash.h
 js2engine.[cpp|h]
     - interpreter loop & runtime support routines
 
+js2array.[cpp|h]
 js2date.[cpp|h]
 js2math.[cpp|h]
 js2string.[cpp|h]
