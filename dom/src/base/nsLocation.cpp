@@ -658,7 +658,7 @@ LocationImpl::Reload(JSContext *cx, jsval *argv, PRUint32 argc)
 NS_IMETHODIMP    
 LocationImpl::Replace(JSContext *cx, jsval *argv, PRUint32 argc)
 {
-  // XXX Security manager needs to be called
+  
   nsresult result = NS_OK;
 
   if (argc > 0) {
