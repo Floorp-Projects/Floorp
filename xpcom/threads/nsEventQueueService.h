@@ -45,7 +45,7 @@ private:
 
 class nsEventQueueServiceImpl : public nsIEventQueueService
 {
-friend EventQueueEntry;
+friend class EventQueueEntry;
 public:
   nsEventQueueServiceImpl();
   virtual ~nsEventQueueServiceImpl();
