@@ -57,6 +57,7 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  chardet \
 		  transformiix \
+		  intl \
 		  xmlextras \
                   find \
                   appshell \

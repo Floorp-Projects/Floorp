@@ -214,6 +214,7 @@ protected:
                           const nsAReadableString& aOptions,
                           PRBool aDialog, jsval *argv, PRUint32 argc,
                           nsISupports *aExtraArgument, nsIDOMWindow **aReturn);
+  nsresult ConfirmClose(PRBool* aConfirmed);
   static void CloseWindow(nsISupports* aWindow);
 
   // Timeout Functions
