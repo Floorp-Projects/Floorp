@@ -20,6 +20,8 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
+	AOL_NetFind.src				\
+	AOL_NetFind.gif				\
 	Google.src				\
 	GoTo.com.gif				\
 	GoTo.com.src				\
