@@ -43,6 +43,7 @@ class nsPresContext;
 class nsIContent;
 class nsIAtom;
 class nsIView;
+class nsIScrollableView;
 
 #include "prtypes.h"
 #include "nsStyleContext.h"
@@ -162,6 +163,15 @@ public:
    */
   static PRBool IsProperAncestorFrame(nsIFrame* aAncestorFrame, nsIFrame* aFrame,
                                       nsIFrame* aCommonAncestor = nsnull);
+
+  /**
+   * GetNearestScrollingView locates the first ancestor of aView (or
+   * aView itself) that is scrollable.
+   *
+   * @param  aView the view we're looking at
+   * @return the nearest scrollable view or nsnull if not found
+   */
+  static nsIScrollableView* GetNearestScrollingView(nsIView* aView);
 
   /**
    * HasPseudoStyle returns PR_TRUE if aContent (whose primary style

@@ -74,6 +74,7 @@
 #include "nsILineIterator.h"
 #include "nsLayoutAtoms.h"
 #include "nsIFrameTraversal.h"
+#include "nsLayoutUtils.h"
 #include "nsLayoutCID.h"
 static NS_DEFINE_CID(kFrameTraversalCID, NS_FRAMETRAVERSAL_CID);
 
@@ -245,7 +246,6 @@ public:
   nsresult     ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll);
   nsresult     ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool aScrollParentViews, PRBool *aDidScroll);
   nsresult     GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, nscoord *aXOffset, nscoord *aYOffset);
-  nsresult     GetClosestScrollableView(nsIView *aView, nsIScrollableView **aScrollableView);
 
   SelectionType GetType(){return mType;}
   void          SetType(SelectionType aType){mType = aType;}
@@ -5285,26 +5285,6 @@ nsTypedSelection::GetViewAncestorOffset(nsIView *aView, nsIView *aAncestorView, 
 }
 
 nsresult
-nsTypedSelection::GetClosestScrollableView(nsIView *aView, nsIScrollableView **aScrollableView)
-{
-  if (!aView || !aScrollableView)
-    return NS_ERROR_FAILURE;
-
-  *aScrollableView = 0;
-
-  while (!*aScrollableView && aView)
-  {
-    CallQueryInterface(aView, aScrollableView);
-    if (!*aScrollableView)
-    {
-      aView = aView->GetParent();
-    }
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRBool *aDidScroll)
 {
   nsresult result;
@@ -5318,12 +5298,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
   // Get aView's scrollable view.
   //
 
-  nsIScrollableView *scrollableView = 0;
-
-  result = GetClosestScrollableView(aView, &scrollableView);
-
-  if (NS_FAILED(result))
-    return result;
+  nsIScrollableView *scrollableView = nsLayoutUtils::GetNearestScrollingView(aView);
 
   if (!scrollableView)
     return NS_OK; // Nothing to do!
@@ -5513,12 +5488,7 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
     // Find aView's parent scrollable view.
     //
 
-    nsIScrollableView *scrollableView = 0;
-
-    result = GetClosestScrollableView(aView, &scrollableView);
-
-    if (NS_FAILED(result))
-      return result;
+    nsIScrollableView *scrollableView = nsLayoutUtils::GetNearestScrollingView(aView);
 
     if (scrollableView)
     {
@@ -5542,10 +5512,7 @@ nsTypedSelection::ScrollPointIntoView(nsPresContext *aPresContext, nsIView *aVie
 
         while (view)
         {
-          result = GetClosestScrollableView(view, &scrollableView);
-
-          if (NS_FAILED(result))
-            return result;
+          scrollableView = nsLayoutUtils::GetNearestScrollingView(view);
 
           if (!scrollableView)
             break;
@@ -7015,10 +6982,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
 
   nsIView* view = parentWithView->GetView();
 
-  result = GetClosestScrollableView(view, aScrollableView);
-
-  if (NS_FAILED(result))
-    return result;
+  *aScrollableView = nsLayoutUtils::GetNearestScrollingView(view);
 
   if (!*aScrollableView)
     return NS_OK;
@@ -7265,12 +7229,7 @@ nsTypedSelection::ScrollRectIntoView(nsIScrollableView *aScrollableView,
 
     if (view)
     {
-      nsIScrollableView *parentSV = 0;
-
-      rv = GetClosestScrollableView(view, &parentSV);
-
-      if (NS_FAILED(rv))
-        return rv;
+      nsIScrollableView *parentSV = nsLayoutUtils::GetNearestScrollingView(view);
 
       if (parentSV)
       {

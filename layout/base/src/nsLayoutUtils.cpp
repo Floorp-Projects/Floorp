@@ -44,6 +44,7 @@
 #include "nsIAtom.h"
 #include "nsCSSPseudoElements.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 
 /**
  * A namespace class for static layout utilities.
@@ -331,4 +332,19 @@ nsLayoutUtils::FindSiblingViewFor(nsIView* aParentView, nsIFrame* aFrame) {
     }
   }
   return nsnull;
+}
+
+// static
+nsIScrollableView*
+nsLayoutUtils::GetNearestScrollingView(nsIView* aView)
+{
+  NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
+  nsIScrollableView* scrollableView = nsnull;
+  for (; aView; aView = aView->GetParent()) {
+    CallQueryInterface(aView, &scrollableView);
+    if (scrollableView) {
+      break;
+    }
+  }
+  return scrollableView;
 }
