@@ -55,8 +55,6 @@ static const PRBool gsDebug = PR_FALSE;
 #define PUSH_CLIP     0x0002
 #define POP_CLIP      0x0004
 
-#ifdef USE_DISPLAY_LIST_ELEMENTS
-
 #define DISPLAYLIST_INC  1
 
 //display list elements
@@ -65,18 +63,6 @@ struct DisplayListElement {
   nsRect	mClip;
   PRUint32	mFlags;
 };
-
-#else
-
-//number of entries per view in display list
-#define DISPLAYLIST_INC  3
-
-//display list slots
-#define VIEW_SLOT     0
-#define RECT_SLOT     1
-#define FLAGS_SLOT    2
-
-#endif
 
 static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
@@ -178,23 +164,12 @@ nsViewManager :: ~nsViewManager()
 
   if (nsnull != mDisplayList)
   {
-#ifdef USE_DISPLAY_LIST_ELEMENTS
 	PRInt32 count = mDisplayList->Count();
 	for (PRInt32 index = 0; index < count; index++) {
 		DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
 		if (element != nsnull)
 			delete element;
 	}
-#else
-    PRInt32 cnt = mDisplayList->Count(), idx;
-    for (idx = RECT_SLOT; idx < cnt; idx += DISPLAYLIST_INC)
-    {
-      nsRect *rect = (nsRect *)mDisplayList->ElementAt(idx);
-
-      if (nsnull != rect)
-        delete rect;
-    }
-#endif
 
     delete mDisplayList;
     mDisplayList = nsnull;
@@ -643,18 +618,12 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
     for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
     {
-#ifdef USE_DISPLAY_LIST_ELEMENTS
       DisplayListElement* curelement = (DisplayListElement*) mDisplayList->ElementAt(cnt);
       if (nsnull == curelement)
         continue;
       curview = curelement->mView;
       currect = &curelement->mClip;
       curflags = curelement->mFlags;
-#else    
-      curview = (nsIView *)mDisplayList->ElementAt(cnt + VIEW_SLOT);
-      currect = (nsRect *)mDisplayList->ElementAt(cnt + RECT_SLOT);
-      curflags = (PRUint32)mDisplayList->ElementAt(cnt + FLAGS_SLOT);
-#endif
     
       if ((nsnull != curview) && (nsnull != currect))
       {
@@ -811,11 +780,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                     mOpaqueRgn->ContainsRect(trect.x, trect.y, trect.width, trect.height))
                 {
                   transprop |= (trans << TRANS_PROPERTY_TRANS) | (translucent << TRANS_PROPERTY_OPACITY);
-#ifdef USE_DISPLAY_LIST_ELEMENTS
                   curelement->mFlags = (VIEW_INCLUDED | curflags);
-#else
-                  mDisplayList->ReplaceElementAt((void *)(VIEW_INCLUDED | curflags), cnt + FLAGS_SLOT);
-#endif
 
                   if (!isBottom)
                   {
@@ -2493,7 +2458,6 @@ PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
 
 PRBool nsViewManager :: AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex, nsIView *aView, nsRect &aRect, PRUint32 aFlags)
 {
-#ifdef USE_DISPLAY_LIST_ELEMENTS
   PRInt32 index = (*aIndex)++;
   DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(index);
   if (element == nsnull) {
@@ -2510,32 +2474,6 @@ PRBool nsViewManager :: AddToDisplayList(nsVoidArray *aArray, PRInt32 *aIndex, n
   element->mFlags = aFlags;
   
   return PR_FALSE;
-#else
-  aArray->ReplaceElementAt(aView, (*aIndex)++);
-
-  nsRect *grect = (nsRect *)aArray->ElementAt(*aIndex);
-
-  if (!grect)
-  {
-    grect = new nsRect(aRect.x, aRect.y, aRect.width, aRect.height);
-
-    if (!grect)
-    {
-      (*aIndex)--;
-      return PR_TRUE;
-    }
-
-    aArray->ReplaceElementAt(grect, *aIndex);
-  }
-  else
-    *grect = aRect;
-
-  (*aIndex)++;
-
-  aArray->ReplaceElementAt((void *)aFlags, (*aIndex)++);
-
-  return PR_FALSE;
-#endif
 }
 
 void nsViewManager::ShowDisplayList(PRInt32 flatlen)
@@ -2558,16 +2496,10 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
     PRUint32  flags;
     PRInt32   zindex;
 
-#ifdef USE_DISPLAY_LIST_ELEMENTS
     DisplayListElement* element = (DisplayListElement*) mDisplayList->ElementAt(cnt);
     view = element->mView;
     rect = element->mClip;
     flags = element->mFlags;
-#else
-    view = mDisplayList->ElementAt(cnt + VIEW_SLOT);
-    rect = *(nsRect *)mDisplayList->ElementAt(cnt + RECT_SLOT);
-    flags = (PRUint32)mDisplayList->ElementAt(cnt + FLAGS_SLOT);
-#endif
 
     nest[nestcnt << 1] = 0;
 
