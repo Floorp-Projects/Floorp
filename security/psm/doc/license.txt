@@ -1,0 +1,343 @@
+
+NETSCAPE CLIENT PRODUCTS LICENSE AGREEMENT
+Redistribution Or Rental Not Permitted
+
+These terms apply to Personal Security Manager.
+
+BY CLICKING THE ACCEPTANCE BUTTON OR INSTALLING OR
+USING PERSONAL SECURITY MANAGER SOFTWARE (THE "PRODUCT"), 
+THE INDIVIDUAL OR ENTITY LICENSING THE PRODUCT
+("LICENSEE") IS CONSENTING TO BE BOUND BY AND IS
+BECOMING A PARTY TO THIS AGREEMENT.  IF LICENSEE DOES
+NOT AGREE TO ALL OF THE TERMS OF THIS AGREEMENT, THE
+BUTTON INDICATING NON-ACCEPTANCE MUST BE
+SELECTED, AND LICENSEE MUST NOT INSTALL OR USE
+THE SOFTWARE.
+
+1. LICENSE AGREEMENT.  As used in this Agreement, for
+residents of Europe, the Middle East or Africa,
+"Netscape" shall mean Netscape Communications Ireland
+Limited; for residents of Japan, "Netscape" shall
+mean Netscape Communications (Japan), Ltd.; for
+residents of all other countries, "Netscape" shall
+mean Netscape Communications Corporation.  In this
+Agreement "Licensor" shall mean Netscape except under
+the following circumstances: (i) if Licensee acquired
+the Product as a bundled component of a third party
+product or service, then such third party shall be
+Licensor; and (ii) if any third party software is
+included as part of the default installation and no
+license is presented for acceptance the first time
+that third party software is invoked, then the use of
+that third party software shall be governed by this
+Agreement, but the term "Licensor," with respect to
+such third party software, shall mean the
+manufacturer of that software and not Netscape.  With
+the exception of the situation described in (ii)
+above, the use of any included third party software
+product shall be governed by the third party's
+license agreement and not by this Agreement, whether
+that license agreement is presented for acceptance
+the first time that the third party software is
+invoked, is included in a file in electronic form, or
+is included in the package in printed form.  If more
+than one license agreement was provided for the
+Product, and the terms vary, the order of precedence
+of those license agreements is as follows: a signed
+agreement, a license agreement available for review
+on the Netscape website, a printed or electronic
+agreement that states clearly that it supersedes
+other agreements, a printed agreement provided with
+the Product, an electronic agreement provided with
+the Product.
+
+2. LICENSE GRANT.  Licensor grants Licensee a
+non-exclusive and non-transferable license to
+reproduce and use for personal or internal business
+purposes the executable code version of the Product,
+provided any copy must contain all of the original
+proprietary notices.  This license does not entitle
+Licensee to receive from Netscape hard-copy
+documentation, technical support, telephone
+assistance, or enhancements or updates to the
+Product.  Licensee may not customize the Product
+unless Licensee has also licensed the Netscape
+Client Customization Kit ("CCK"), and then only to
+the extent permitted in the license agreement for CCK,
+as applicable.  Licensee may not redistribute the
+Product unless Licensee has separately entered into a
+distribution agreement with Netscape such as the
+Unlimited Distribution Program Agreement.
+
+3. RESTRICTIONS.  Except as otherwise expressly
+permitted in this Agreement, or in another Netscape
+agreement to which Licensee is a party such as the
+CCK license agreement or a distribution agreement,
+Licensee may not: (i) modify or create any derivative
+works of the Product or documentation, including translation
+or localization; (ii) decompile, disassemble, reverse engineer,
+or otherwise attempt to derive the source code for the
+Product (except to the extent applicable laws
+specifically prohibit such restriction or as provided by the
+Netscape Public License or Mozilla Public License
+for portions of the product governed by those licenses);
+(iii) redistribute, encumber, sell, rent, lease,
+sublicense, or otherwise transfer rights to the
+Product; (iv) remove or alter any trademark, logo,
+copyright or other proprietary notices, legends,
+symbols or labels in the Product; or (v) publish any
+results of benchmark tests run on the Product to a
+third party without Netscape's prior written
+consent.
+
+4. FEES.  There is no license fee for the Product.
+If Licensee wishes to receive the Product on media,
+there may be a small charge for the media and for
+shipping and handling.  Licensee is responsible for
+any and all taxes.
+
+5. TERMINATION.  Without prejudice to any other
+rights, Licensor may terminate this Agreement if
+Licensee breaches any of its terms and conditions.
+Upon termination, Licensee shall destroy all copies
+of the Product.
+
+6. PROPRIETARY RIGHTS.  Title, ownership rights, and
+intellectual property rights in the Product shall
+remain in Netscape and/or its suppliers.  Licensee
+acknowledges such ownership and intellectual property
+rights and will not take any action to jeopardize,
+limit or interfere in any manner with Netscape's or
+its suppliers' ownership of or rights with respect to
+the Product.  The Product is protected by copyright
+and other intellectual property laws and by
+international treaties.  Title and related rights in
+the content accessed through the Product is the
+property of the applicable content owner and is
+protected by applicable law.  The license granted
+under this Agreement gives Licensee no rights to such
+content.
+
+7. USE AND AVAILABILITY OF OPEN SOURCE
+CODE. Portions of Personal Security Manager were created using source
+code governed by the Netscape Public License (NPL) and
+the Mozilla Public License (MPL).  The source code for
+the portions of Personal Security Manager governed by the NPL and MPL
+is available from http://www.mozilla.org under those licenses.
+
+8. DISCLAIMER OF WARRANTY.  THE PRODUCT IS PROVIDED
+FREE OF CHARGE, AND, THEREFORE, ON AN "AS IS" BASIS,
+WITHOUT WARRANTY OF ANY KIND, INCLUDING WITHOUT
+LIMITATION THE WARRANTIES THAT IT IS FREE OF DEFECTS,
+MERCHANTABLE, FIT FOR A PARTICULAR PURPOSE OR
+NON-INFRINGING.  THE ENTIRE RISK AS TO THE QUALITY
+AND PERFORMANCE OF THE PRODUCT IS BORNE BY LICENSEE.
+SHOULD THE PRODUCT PROVE DEFECTIVE IN ANY RESPECT,
+LICENSEE AND NOT LICENSOR OR ITS SUPPLIERS OR
+RESELLERS OR ANY CONTRIBUTORS TO THE SOURCE CODE
+OF THE PORTIONS OF PERSONAL SECURITY MANAGER AVAILABLE FROM
+HTTP://WWW.MOZILLA.ORG ASSUMES THE ENTIRE COST
+OF ANY SERVICE AND REPAIR.  IN ADDITION, THE SECURITY
+MECHANISMS IMPLEMENTED BY THE PRODUCT HAVE
+INHERENT LIMITATIONS, AND LICENSEE MUST DETERMINE
+THAT THE PRODUCT SUFFICIENTLY MEETS ITS REQUIREMENTS.
+THIS DISCLAIMER OF WARRANTY CONSTITUTES AN ESSENTIAL
+PART OF THIS AGREEMENT.  NO USE OF THE PRODUCT IS
+AUTHORIZED HEREUNDER EXCEPT UNDER THIS DISCLAIMER.
+
+9. LIMITATION OF LIABILITY.  TO THE MAXIMUM EXTENT
+PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL
+LICENSOR OR ITS SUPPLIERS OR RESELLERS OR ANY
+CONTRIBUTORS TO THE SOURCE CODE OF THE PORTIONS OF 
+PERSONAL SECURITY MANAGER AVAILABLE FROM
+HTTP://WWW.MOZILLA.ORG BE LIABLE FOR
+ANY INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL
+DAMAGES ARISING OUT OF THE USE OF OR INABILITY TO USE
+THE PRODUCT, INCLUDING, WITHOUT LIMITATION, DAMAGES
+FOR LOSS OF GOODWILL, WORK STOPPAGE, COMPUTER FAILURE
+OR MALFUNCTION, OR ANY AND ALL OTHER COMMERCIAL
+DAMAGES OR LOSSES, EVEN IF ADVISED OF THE POSSIBILITY
+THEREOF, AND REGARDLESS OF THE LEGAL OR EQUITABLE
+THEORY (CONTRACT, TORT OR OTHERWISE) UPON WHICH THE
+CLAIM IS BASED.  IN ANY CASE, LICENSOR'S ENTIRE
+LIABILITY UNDER ANY PROVISION OF THIS AGREEMENT SHALL
+NOT EXCEED IN THE AGGREGATE THE SUM OF THE FEES
+LICENSEE PAID FOR THIS LICENSE (IF ANY) AND FEES FOR
+SUPPORT OF THE PRODUCT RECEIVED BY NETSCAPE UNDER A
+SEPARATE SUPPORT AGREEMENT (IF ANY), WITH THE
+EXCEPTION OF DEATH OR PERSONAL INJURY CAUSED BY THE
+NEGLIGENCE OF LICENSOR TO THE EXTENT APPLICABLE LAW
+PROHIBITS THE LIMITATION OF DAMAGES IN SUCH CASES.
+SOME JURISDICTIONS DO NOT ALLOW THE EXCLUSION OR
+LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO
+THIS EXCLUSION AND LIMITATION MAY NOT BE APPLICABLE.
+NETSCAPE IS NOT RESPONSIBLE FOR ANY LIABILITY ARISING
+OUT OF CONTENT PROVIDED BY LICENSEE OR A THIRD PARTY
+THAT IS ACCESSED THROUGH THE PRODUCT AND/OR ANY
+MATERIAL LINKED THROUGH SUCH CONTENT.
+
+10. ENCRYPTION.  If Licensee wishes to use the
+cryptographic features of the Product, then Licensee
+may need to obtain and install a signed digital
+certificate from a certificate authority or a
+certificate server.  Licensee may be charged
+additional fees for certification services.  Licensee
+is responsible for maintaining the security of the
+environment in which the Product is used and the
+integrity of the private key file used with the
+Product.  In addition, the use of digital
+certificates is subject to the terms specified by the
+certificate provider, and there are inherent
+limitations in the capabilities of digital
+certificates.  If Licensee is sending or receiving
+digital certificates, Licensee is responsible for
+familiarizing itself with and evaluating such terms
+and limitations.  If the Product is a version with
+FORTEZZA, Licensee will need to obtain PC Card
+Readers and FORTEZZA Crypto Cards from another vendor
+to enable the FORTEZZA features.
+
+11. EXPORT CONTROL.  Licensee agrees to comply with
+all export laws and restrictions and regulations of
+the United States or foreign agencies or authorities,
+and not to export or re-export the Product or any
+direct product thereof in violation of any such
+restrictions, laws or regulations, or without all
+necessary approvals.  As applicable, each party shall
+obtain and bear all expenses relating to any
+necessary licenses and/or exemptions with respect to
+its own export of the Product from the U.S.  Neither
+the Product nor the underlying information or
+technology may be downloaded or otherwise exported or
+re-exported (i) into Cuba, Iran, Iraq, Libya, North
+Korea, Sudan, Syria or any other country subject to
+U.S. trade sanctions covering the Product, to
+individuals or entities controlled by such countries,
+or to nationals or residents of such countries other
+than nationals who are lawfully admitted permanent
+residents of countries not subject to such sanctions;
+or (ii) to anyone on the U.S. Treasury Department's
+list of Specially Designated Nationals and Blocked
+Persons or the U.S. Commerce Department's Table of
+Denial Orders.  By downloading or using the Product,
+Licensee agrees to the foregoing and represents and
+warrants that it complies with these conditions.
+
+12. HIGH RISK ACTIVITIES.  The Product is not
+fault-tolerant and is not designed, manufactured or
+intended for use or resale as on-line control
+equipment in hazardous environments requiring
+fail-safe performance, such as in the operation of
+nuclear facilities, aircraft navigation or
+communication systems, air traffic control, direct
+life support machines, or weapons systems, in which
+the failure of the Product could lead directly to
+death, personal injury, or severe physical or
+environmental damage ("High Risk Activities").
+Accordingly, Licensor and its suppliers specifically
+disclaim any express or implied warranty of fitness
+for High Risk Activities.  Licensee agrees that
+Licensor and its suppliers will not be liable for any
+claims or damages arising from the use of the Product
+in such applications.
+
+13. U.S. GOVERNMENT END USERS.  The Product is a
+"commercial item," as that term is defined in 48
+C.F.R. 2.101 (Oct. 1995), consisting of "commercial
+computer software" and "commercial computer software
+documentation," as such terms are used in 48 C.F.R.
+12.212 (Sept.  1995).  Consistent with 48 C.F.R.
+12.212 and 48 C.F.R. 227.7202-1 through 227.7202-4
+(June 1995), all U.S. Government End Users acquire
+the Product with only those rights set forth herein.
+
+13. MISCELLANEOUS.  (a) This Agreement constitutes
+the entire agreement between the parties concerning
+the subject matter hereof.  (b) This Agreement may be
+amended only by a writing signed by both parties.
+(c) Except to the extent applicable law, if any,
+provides otherwise, this Agreement shall be governed
+by the laws of the State of California, U.S.A.,
+excluding its conflict of law provisions.  (d) Unless
+otherwise agreed in writing, all disputes relating to
+this Agreement (excepting any dispute relating to
+intellectual property rights) shall be subject to
+final and binding arbitration in Santa Clara County,
+California, under the auspices of JAMS/EndDispute,
+with the losing party paying all costs of
+arbitration.  (e) This Agreement shall not be
+governed by the United Nations Convention on
+Contracts for the International Sale of Goods.  (f)
+If any provision in this Agreement should be held
+illegal or unenforceable by a court having
+jurisdiction, such provision shall be modified to the
+extent necessary to render it enforceable without
+losing its intent, or severed from this Agreement if
+no such modification is possible, and other
+provisions of this Agreement shall remain in full
+force and effect.  (g) The controlling language of
+this Agreement is English.  If Licensee has received
+a translation into another language, it has been
+provided for Licensee's convenience only.  (h) A
+waiver by either party of any term or condition of
+this Agreement or any breach thereof, in any one
+instance, shall not waive such term or condition or
+any subsequent breach thereof.  (i) The provisions of
+this Agreement which require or contemplate
+performance after the expiration or termination of
+this Agreement shall be enforceable notwithstanding
+said expiration or termination.  (j) Licensee may not
+assign or otherwise transfer by operation of law or
+otherwise this Agreement or any rights or obligations
+herein except in the case of a merger or the sale of
+all or substantially all of Licensee's assets to
+another entity.  (k) This Agreement shall be binding
+upon and shall inure to the benefit of the parties,
+their successors and permitted assigns.  (l) Neither
+party shall be in default or be liable for any delay,
+failure in performance (excepting the obligation to
+pay) or interruption of service resulting directly or
+indirectly from any cause beyond its reasonable
+control.  (m) The relationship between Licensor and
+Licensee is that of independent contractors and
+neither Licensee nor its agents shall have any
+authority to bind Licensor in any way.  (n) If any
+dispute arises under this Agreement, the prevailing
+party shall be reimbursed by the other party for any
+and all legal fees and costs associated therewith.
+(o) If any Netscape professional services are being
+provided, then such professional services are
+provided pursuant to the terms of a separate
+Professional Services Agreement between Netscape and
+Licensee.  The parties acknowledge that such services
+are acquired independently of the Product licensed
+hereunder, and that provision of such services is not
+essential to the functionality of such Product.  (p)
+The headings to the sections of this Agreement are
+used for convenience only and shall have no
+substantive meaning.  (q) Licensor may use Licensee's
+name in any customer reference list or in any press
+release issued by Licensor regarding the licensing of
+the Product and/or provide Licensee's name and the
+names of the Product licensed by Licensee to third
+parties.
+
+14. LICENSEE OUTSIDE THE U.S.  If Licensee is located
+outside the U.S., then the provisions of this Section
+shall apply.  (i) Les parties aux presentes
+confirment leur volonte que cette convention de meme
+que tous les documents y compris tout avis qui s'y
+rattache, soient rediges en langue anglaise.
+(translation: "The parties confirm that this
+Agreement and all related documentation is and will
+be in the English language.")  (ii) Licensee is
+responsible for complying with any local laws in its
+jurisdiction which might impact its right to import,
+export or use the Product, and Licensee represents
+that it has complied with any regulations or
+registration procedures required by applicable law to
+make this license enforceable.
+
+
+Netscape Client Software EULA           Rev. [022500]
+
