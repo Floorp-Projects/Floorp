@@ -79,13 +79,22 @@ nsresult Register(const char *path)
 
 nsresult Unregister(const char *path) 
 {
-  /* NEEDS IMPLEMENTATION */
-#if 0
-  nsresult res = nsComponentManager::AutoUnregisterComponent(path);
-  return res;
-#else
-  return NS_ERROR_FAILURE;
-#endif
+  nsCOMPtr<nsILocalFile> spec;
+  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                   nsnull, 
+                                                   NS_GET_IID(nsILocalFile), 
+                                                   getter_AddRefs(spec));
+
+  if (NS_FAILED(rv) || (!spec)) 
+  {
+      printf("create nsILocalFile failed\n");
+      return NS_ERROR_FAILURE;
+  }
+
+  rv = spec->InitWithPath((char *)path);
+  if (NS_FAILED(rv)) return rv;
+  rv = nsComponentManager::AutoUnregisterComponent(nsIComponentManager::NS_Startup, spec);
+  return rv;
 }
 
 int ProcessArgs(int argc, char *argv[])
