@@ -533,13 +533,15 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
 
   if (mFocused != this) return;
 
-  PRInt32 focusedIndexed = mEndSelectionIndex;
-  PRInt32 selectedIndex  = mEndSelectionIndex;
-  GetSelectedIndex(&selectedIndex);
-
-  if (focusedIndexed == kNothingSelected) {
-    focusedIndexed = selectedIndex;
+  // The mEndSelectionIndex is what is currently being selected
+  // use the selected index if this is kNothingSelected
+  PRInt32 focusedIndex;
+  if (mEndSelectionIndex == kNothingSelected) {
+    GetSelectedIndex(&focusedIndex);
+  } else {
+    focusedIndex = mEndSelectionIndex;
   }
+
   nsIScrollableView * scrollableView;
   GetScrollableView(scrollableView);
   if (!scrollableView) return;
@@ -557,26 +559,26 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
 
   nsCOMPtr<nsIContent> focusedContent;
 
+  nsCOMPtr<nsIDOMNSHTMLSelectElement> selectNSElement(do_QueryInterface(mContent));
+  NS_ASSERTION(selectNSElement, "Can't be null");
+
+  nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
+  NS_ASSERTION(selectElement, "Can't be null");
+
   // If we have a selected index then get that child frame
-  if (focusedIndexed != kNothingSelected) {
-    focusedContent = getter_AddRefs(GetOptionContent(focusedIndexed));
+  if (focusedIndex != kNothingSelected) {
+    focusedContent = getter_AddRefs(GetOptionContent(focusedIndex));
     // otherwise we find the focusedContent's frame and scroll to it
     if (focusedContent) {
       result = presShell->GetPrimaryFrameFor(focusedContent, &childframe);
     }
   } else {
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectHTMLElement(do_QueryInterface(mContent));
+    NS_ASSERTION(selectElement, "Can't be null");
+
     // Since there isn't a selected item we need to show a focus ring around the first
     // non-disabled item and skip all the option group elements (nodes)
     nsCOMPtr<nsIDOMNode> node;
-
-    nsCOMPtr<nsIDOMNSHTMLSelectElement> selectNSElement(do_QueryInterface(mContent));
-    NS_ASSERTION(selectNSElement, "Can't be null");
-
-    nsCOMPtr<nsISelectElement> selectElement(do_QueryInterface(mContent));
-    NS_ASSERTION(selectElement, "Can't be null");
-
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectHTMLElement(do_QueryInterface(mContent));
-    NS_ASSERTION(selectElement, "Can't be null");
 
     PRUint32 length;
     selectHTMLElement->GetLength(&length);
@@ -660,14 +662,24 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
     fRect.y += optRect.y;
   }
 
+  PRBool lastItemIsSelected = PR_FALSE;
+  nsCOMPtr<nsIDOMNode> node;
+  if (NS_SUCCEEDED(selectNSElement->Item(focusedIndex, getter_AddRefs(node)))) {
+    nsCOMPtr<nsIDOMHTMLOptionElement> domOpt(do_QueryInterface(node));
+    if (domOpt) {
+      selectElement->IsOptionSelected(domOpt, &lastItemIsSelected);
+    }
+  }
+
   // set up back stop colors and then ask L&F service for the real colors
-  nscolor color = focusedIndexed >= 0 ? NS_RGB(245,219,149) : NS_RGB(0,0,0);
+  nscolor color;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
   mPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel));
-  if (selectedIndex != focusedIndexed) {
-    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetSelectBackground, color);
-  } else if (lookAndFeel) {
-    lookAndFeel->GetColor(focusedIndexed >= 0?nsILookAndFeel::eColor_WidgetSelectForeground:nsILookAndFeel::eColor_WidgetSelectBackground, color);
+  if (lookAndFeel){
+    lookAndFeel->GetColor(lastItemIsSelected?nsILookAndFeel::eColor_WidgetSelectForeground:nsILookAndFeel::eColor_WidgetSelectBackground, color);
+  } else {
+    // Use some backstop colors if for some reason we don't have a L&F object
+    color = lastItemIsSelected? NS_RGB(245,219,149) : NS_RGB(0,0,0);
   }
 
   float p2t;
