@@ -1947,13 +1947,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
     
 #ifdef MSGCOMP_TRACE_PERFORMANCE
     nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
-    composeService->TimeStamp("done with mime. Lets update some UI element", PR_FALSE);
+    composeService->TimeStamp("Done with MIME. Now we're updating the UI elements", PR_FALSE);
 #endif
 
     compose->NotifyStateListeners(eComposeFieldsReady, NS_OK);
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
-    composeService->TimeStamp("addressing widget, windows title and focus are now set, time to insert the body", PR_FALSE);
+    composeService->TimeStamp("Addressing widget, window title and focus are now set, time to insert the body", PR_FALSE);
 #endif
 
     if (! mHeadersOnly)
@@ -2710,7 +2710,7 @@ nsMsgDocumentStateListener::NotifyDocumentCreated(void)
 
 #ifdef MSGCOMP_TRACE_PERFORMANCE
   nsCOMPtr<nsIMsgComposeService> composeService (do_GetService(NS_MSGCOMPOSESERVICE_CONTRACTID));
-  composeService->TimeStamp("Editor is done loading about::blank. Now let mime do its job", PR_FALSE);
+  composeService->TimeStamp("Editor is done loading about:blank. This is New Compose window time.  Time for MIME.", PR_FALSE);
 #endif
 
   nsCOMPtr<nsIMsgCompose>compose = do_QueryReferent(mWeakComposeObj);

@@ -21,7 +21,7 @@
  *
  * Contributor(s):
  *  Jean-Francois Ducarroz <ducarroz@netscape.com>
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ *  Pierre Phaneuf <pp@ludusdesign.com>
  *  Seth Spitzer <sspitzer@netscape.com> 
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -528,7 +528,7 @@ NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTim
 
   if (resetTime)
   {      
-    PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("--------------------\n"));
+    PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("\n[process]: [totalTime][deltaTime]\n--------------------\n"));
 
     mStartTime = PR_IntervalNow();
     mPreviousTime = mStartTime;
@@ -543,7 +543,8 @@ NS_IMETHODIMP nsMsgComposeService::TimeStamp(const char * label, PRBool resetTim
 #if defined(DEBUG_ducarroz)
   printf(">>> Time Stamp: [%5d][%5d] - %s\n", totalTime, deltaTime, label);
 #endif
-  PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("[%5d][%5d] - %s\n", totalTime, deltaTime, label));
+  PR_LOG(MsgComposeLogModule, PR_LOG_ALWAYS, ("[%3.2f][%3.2f] - %s\n",
+((double)totalTime/1000.0) + 0.005, ((double)deltaTime/1000.0) + 0.005, label));
 
   mPreviousTime = now;
 #endif
