@@ -82,9 +82,11 @@ nsHTMLEditorLog::SetInlineProperty(nsIAtom *aProperty, const nsAString &aAttribu
     aProperty->ToString(propStr);
 
     PrintSelection();
-    Write("window.editorShell.SetTextProperty(\"");
+    Write("atomService = Components.classes[\"@mozilla.org/atom-service;1\"].getService(Components.interfaces.nsIAtomService);\n");
+    Write("propAtom = atomService.getAtom(\"");
     PrintUnicode(propStr);
-    Write("\", \"");
+    Write("\");\n");
+    Write("GetCurrentEditor().setInlineProperty(propAtom, \"");
     if (aAttribute.Length())
       PrintUnicode(aAttribute);
     Write("\", \"");
@@ -106,7 +108,7 @@ nsHTMLEditorLog::SetParagraphFormat(const nsAString& aParagraphFormat)
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.SetParagraphFormat(\"");
+    Write("GetCurrentEditor().setParagraphFormat(\"");
     PrintUnicode(aParagraphFormat);
     Write("\");\n");
 
@@ -128,9 +130,11 @@ nsHTMLEditorLog::RemoveInlineProperty(nsIAtom *aProperty, const nsAString &aAttr
     aProperty->ToString(propStr);
 
     PrintSelection();
-    Write("window.editorShell.RemoveTextProperty(\"");
+    Write("atomService = Components.classes[\"@mozilla.org/atom-service;1\"].getService(Components.interfaces.nsIAtomService);\n");
+    Write("propAtom = atomService.getAtom(\"");
     PrintUnicode(propStr);
-    Write("\", \"");
+    Write("\");\n");
+    Write("GetCurrentEditor().removeInlineProperty(propAtom, \"");
     if (aAttribute.Length())
       PrintUnicode(aAttribute);
     Write("\");\n");
@@ -149,7 +153,7 @@ nsHTMLEditorLog::DeleteSelection(nsIEditor::EDirection aAction)
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.DeleteSelection(");
+    Write("GetCurrentEditor().deleteSelection(");
     WriteInt("%d", aAction);
     Write(");\n");
 
@@ -168,7 +172,7 @@ nsHTMLEditorLog::InsertText(const nsAString& aStringToInsert)
   {
     PrintSelection();
 
-    Write("window.editorShell.InsertText(\"");
+    Write("GetCurrentEditor().insertText(\"");
     nsAutoString str(aStringToInsert);
     PrintUnicode(str);
     Write("\");\n");
@@ -187,7 +191,7 @@ nsHTMLEditorLog::InsertLineBreak()
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.InsertBreak();\n");
+    Write("GetCurrentEditor().insertLineBreak();\n");
     Flush();
   }
 
@@ -201,7 +205,9 @@ nsHTMLEditorLog::Undo(PRUint32 aCount)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.Undo();\n");
+    Write("GetCurrentEditor().undo(");
+    WriteInt("%d", aCount);
+    Write(");\n");
     Flush();
   }
 
@@ -215,7 +221,9 @@ nsHTMLEditorLog::Redo(PRUint32 aCount)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.Redo();\n");
+    Write("GetCurrentEditor().redo(");
+    WriteInt("%d", aCount);
+    Write(");\n");
     Flush();
   }
 
@@ -229,7 +237,7 @@ nsHTMLEditorLog::BeginTransaction()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.BeginBatchChanges();\n");
+    Write("GetCurrentEditor().beginTransaction();\n");
     Flush();
   }
 
@@ -243,7 +251,7 @@ nsHTMLEditorLog::EndTransaction()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.EndBatchChanges();\n");
+    Write("GetCurrentEditor().endTransaction();\n");
     Flush();
   }
 
@@ -257,7 +265,7 @@ nsHTMLEditorLog::SelectAll()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.SelectAll();\n");
+    Write("GetCurrentEditor().selectAll();\n");
     Flush();
   }
 
@@ -271,7 +279,7 @@ nsHTMLEditorLog::BeginningOfDocument()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.BeginningOfDocument();\n");
+    Write("GetCurrentEditor().beginningOfDocument();\n");
     Flush();
   }
 
@@ -285,7 +293,7 @@ nsHTMLEditorLog::EndOfDocument()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.EndOfDocument();\n");
+    Write("GetCurrentEditor().endOfDocument();\n");
     Flush();
   }
 
@@ -300,7 +308,7 @@ nsHTMLEditorLog::Cut()
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.Cut();\n");
+    Write("GetCurrentEditor().cut();\n");
     Flush();
   }
 
@@ -315,7 +323,7 @@ nsHTMLEditorLog::Copy()
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.Copy();\n");
+    Write("GetCurrentEditor().copy();\n");
     Flush();
   }
 
@@ -323,66 +331,74 @@ nsHTMLEditorLog::Copy()
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::Paste(PRInt32 aSelectionType)
+nsHTMLEditorLog::Paste(PRInt32 aClipboardType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.Paste();\n");
+    Write("GetCurrentEditor().paste(");
+    WriteInt("%d", aClipboardType);
+    Write(");\n");
     Flush();
   }
 
-  return nsHTMLEditor::Paste(aSelectionType);
+  return nsHTMLEditor::Paste(aClipboardType);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsQuotation(PRInt32 aSelectionType)
+nsHTMLEditorLog::PasteAsQuotation(PRInt32 aClipboardType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.PasteAsQuotation();\n");
+    Write("GetCurrentEditor().pasteAsQuotation(");
+    WriteInt("%d", aClipboardType);
+    Write(");\n");
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsQuotation(aSelectionType);
+  return nsHTMLEditor::PasteAsQuotation(aClipboardType);
 }
 
 NS_IMETHODIMP
-nsHTMLEditorLog::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
+nsHTMLEditorLog::PasteAsPlaintextQuotation(PRInt32 aClipboardType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.PasteAsQuotation();\n");
+    Write("GetCurrentEditor().pasteAsQuotation(");
+    WriteInt("%d", aClipboardType);
+    Write(");\n");
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsPlaintextQuotation(aSelectionType);
+  return nsHTMLEditor::PasteAsPlaintextQuotation(aClipboardType);
 }
 
 NS_IMETHODIMP
 nsHTMLEditorLog::PasteAsCitedQuotation(const nsAString& aCitation,
-                                       PRInt32 aSelectionType)
+                                       PRInt32 aClipboardType)
 {
   nsAutoHTMLEditorLogLock logLock(this);
 
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.PasteAsCitedQuotation(\"");
+    Write("GetCurrentEditor().pasteAsCitedQuotation(\"");
     PrintUnicode(aCitation);
-    Write("\");\n");
+    Write("\", ");
+    WriteInt("%d", aClipboardType);
+    Write(");\n");
     Flush();
   }
 
-  return nsHTMLEditor::PasteAsCitedQuotation(aCitation, aSelectionType);
+  return nsHTMLEditor::PasteAsCitedQuotation(aCitation, aClipboardType);
 }
 
 NS_IMETHODIMP
@@ -394,7 +410,7 @@ nsHTMLEditorLog::InsertAsQuotation(const nsAString& aQuotedText,
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.InsertAsQuotation(\"");
+    Write("GetCurrentEditor().insertAsQuotation(\"");
     PrintUnicode(aQuotedText);
     Write("\");\n");
     Flush();
@@ -412,7 +428,7 @@ nsHTMLEditorLog::InsertAsPlaintextQuotation(const nsAString& aQuotedText,
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.InsertAsQuotation(\"");
+    Write("GetCurrentEditor().insertAsQuotation(\"");
     PrintUnicode(aQuotedText);
     Write("\");\n");
     Flush();
@@ -433,10 +449,14 @@ nsHTMLEditorLog::InsertAsCitedQuotation(const nsAString& aQuotedText,
   if (!mLocked && mFileStream)
   {
     PrintSelection();
-    Write("window.editorShell.InsertAsCitedQuotation(\"");
+    Write("GetCurrentEditor().insertAsCitedQuotation(\"");
     PrintUnicode(aQuotedText);
     Write("\", \"");
     PrintUnicode(aCitation);
+    Write("\", ");
+    Write(aInsertHTML ? "true" : "false");
+    Write(", \"");
+    PrintUnicode(aCharset);
     Write("\");\n");
     Flush();
   }
@@ -452,7 +472,7 @@ nsHTMLEditorLog::SetBackgroundColor(const nsAString& aColor)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.SetBackgroundColor(\"");
+    Write("GetCurrentEditor().setBackgroundColor(\"");
     PrintUnicode(aColor);
     Write("\");\n");
     Flush();
@@ -468,7 +488,7 @@ nsHTMLEditorLog::SetBodyAttribute(const nsAString& aAttr, const nsAString& aValu
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.SetBodyAttribute(\"");
+    Write("GetCurrentEditor().setBodyAttribute(\"");
     PrintUnicode(aAttr);
     Write("\", \"");
     PrintUnicode(aValue);
@@ -486,8 +506,11 @@ nsHTMLEditorLog:: InsertTableCell(PRInt32 aNumber, PRBool aAfter)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.InsertTableCell(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().insertTableCell(");
+    WriteInt("%d", aNumber);
+    Write(", ");
+    Write(aAfter ? "true" : "false");
+    Write(");\n");
     Flush();
   }
 
@@ -502,8 +525,11 @@ nsHTMLEditorLog:: InsertTableColumn(PRInt32 aNumber, PRBool aAfter)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.InsertTableColumn(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().insertTableColumn(");
+    WriteInt("%d", aNumber);
+    Write(", ");
+    Write(aAfter ? "true" : "false");
+    Write(");\n");
     Flush();
   }
 
@@ -518,8 +544,11 @@ nsHTMLEditorLog:: InsertTableRow(PRInt32 aNumber, PRBool aAfter)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.InsertTableRow(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().insertTableRow(");
+    WriteInt("%d", aNumber);
+    Write(", ");
+    Write(aAfter ? "true" : "false");
+    Write(");\n");
     Flush();
   }
 
@@ -533,7 +562,7 @@ nsHTMLEditorLog:: DeleteTable()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.DeleteTable();\n");
+    Write("GetCurrentEditor().deleteTable();\n");
     Flush();
   }
 
@@ -547,8 +576,9 @@ nsHTMLEditorLog:: DeleteTableCell(PRInt32 aNumber)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.DeleteTableCell(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().deleteTableCell(");
+    WriteInt("%d", aNumber);
+    Write(");\n");
     Flush();
   }
 
@@ -562,7 +592,7 @@ nsHTMLEditorLog:: DeleteTableCellContents()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.DeleteTableCellContents();\n");
+    Write("GetCurrentEditor().deleteTableCellContents();\n");
     Flush();
   }
 
@@ -577,8 +607,9 @@ nsHTMLEditorLog:: DeleteTableColumn(PRInt32 aNumber)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.DeleteTableColumn(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().deleteTableColumn(");
+    WriteInt("%d", aNumber);
+    Write(");\n");
     Flush();
   }
 
@@ -593,8 +624,9 @@ nsHTMLEditorLog:: DeleteTableRow(PRInt32 aNumber)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.DeleteTableRow(\"");
-    Write("\");\n");
+    Write("GetCurrentEditor().deleteTableRow(");
+    WriteInt("%d", aNumber);
+    Write(");\n");
     Flush();
   }
 
@@ -608,7 +640,9 @@ nsHTMLEditorLog:: JoinTableCells(PRBool aMergeNonContiguousContents)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.JoinTableCells();\n");
+    Write("GetCurrentEditor().joinTableCells(");
+    Write(aMergeNonContiguousContents ? "true" : "false");
+    Write(");\n");
     Flush();
   }
 
@@ -622,7 +656,7 @@ nsHTMLEditorLog:: SplitTableCell()
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.SplitTableCell();\n");
+    Write("GetCurrentEditor().splitTableCell();\n");
     Flush();
   }
 
@@ -637,8 +671,12 @@ nsHTMLEditorLog:: NormalizeTable(nsIDOMElement *aTable)
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.NormalizeTable(\"");
-    Write("\");\n");
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aTable);
+    if (!node)
+      return NS_ERROR_NULL_POINTER;
+
+    PrintNode(node, 0);
+    Write("GetCurrentEditor().normalizeTable(n0);\n");
     Flush();
   }
 
@@ -652,8 +690,12 @@ nsHTMLEditorLog::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMEle
 
   if (!mLocked && mFileStream)
   {
-    Write("window.editorShell.SwitchTableCellHeaderType(\"");
-    Write("\");\n");
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aSourceCell);
+    if (!node)
+      return NS_ERROR_NULL_POINTER;
+
+    PrintNode(node, 0);
+    Write("GetCurrentEditor().switchTableCellHeaderType(n0);\n");
     Flush();
   }
 
@@ -669,8 +711,12 @@ nsHTMLEditorLog::MakeOrChangeList(const nsAString& aListType, PRBool entireList,
   {
     PrintSelection();
 
-    Write("window.editorShell.MakeOrChangeList(\"");
+    Write("GetCurrentEditor().makeOrChangeList(\"");
     PrintUnicode(aListType);
+    Write("\", ");
+    Write(entireList ? "true" : "false");
+    Write(", \"");
+    PrintUnicode(aBulletType);
     Write("\");\n");
     Flush();
   }
@@ -687,7 +733,7 @@ nsHTMLEditorLog::Indent(const nsAString& aIndent)
   {
     PrintSelection();
 
-    Write("window.editorShell.Indent(\"");
+    Write("GetCurrentEditor().indent(\"");
     PrintUnicode(aIndent);
     Write("\");\n");
     Flush();
@@ -705,7 +751,7 @@ nsHTMLEditorLog::Align(const nsAString& aAlign)
   {
     PrintSelection();
 
-    Write("window.editorShell.Align(\"");
+    Write("GetCurrentEditor().align(\"");
     PrintUnicode(aAlign);
     Write("\");\n");
     Flush();
@@ -731,7 +777,7 @@ nsHTMLEditorLog::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDelet
 
     PrintSelection();
     PrintNode(node, 0);
-    Write("window.editorShell.InsertElementAtSelection(n0, ");
+    Write("GetCurrentEditor().insertElementAtSelection(n0, ");
     Write(aDeleteSelection ? "true" : "false");
     Write(");\n");
     Flush();
@@ -757,7 +803,7 @@ nsHTMLEditorLog::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
 
     PrintSelection();
     PrintNode(node, 0);
-    Write("window.editorShell.InsertLinkAroundSelection(n0);\n");
+    Write("GetCurrentEditor().insertLinkAroundSelection(n0);\n");
     Flush();
   }
 
@@ -773,7 +819,7 @@ nsHTMLEditorLog::SetDocumentTitle(const nsAString& aTitle)
   {
     PrintSelection();
 
-    Write("window.editorShell.SetDocumentTitle(\"");
+    Write("GetCurrentEditor().setDocumentTitle(\"");
     nsAutoString str(aTitle);
     PrintUnicode(str);
     Write("\");\n");
@@ -1067,7 +1113,7 @@ nsHTMLEditorLog::PrintElementNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   Write("n");
   WriteInt("%d", aDepth);
-  Write(" = window.editorShell.editorDocument.createElement(\"");
+  Write(" = GetCurrentEditor().editorDocument.createElement(\"");
   PrintUnicode(tag);
   Write("\");\n");
 
@@ -1126,7 +1172,7 @@ nsHTMLEditorLog::PrintAttributeNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   Write("a");
   WriteInt("%d", aDepth);
-  Write(" = window.editorShell.editorDocument.createAttribute(\"");
+  Write(" = GetCurrentEditor().editorDocument.createAttribute(\"");
   PrintUnicode(str);
   Write("\");\n");
 
@@ -1220,7 +1266,7 @@ nsHTMLEditorLog::PrintTextNode(nsIDOMNode *aNode, PRInt32 aDepth)
 
   Write("n");
   WriteInt("%d", aDepth);
-  Write(" = window.editorShell.editorDocument.createTextNode(\"");
+  Write(" = GetCurrentEditor().editorDocument.createTextNode(\"");
   PrintUnicode(str);
   Write("\");\n");
 
@@ -1362,7 +1408,7 @@ function EditorGetNodeAtOffsets(offsets)
   var node = null;
   var i;
 
-  node = window.editorShell.editorDocument;
+  node = GetCurrentEditor().editorDocument;
 
   for (i = 0; i < offsets.length; i++)
   {
@@ -1375,7 +1421,7 @@ function EditorGetNodeAtOffsets(offsets)
 function EditorSetSelectionFromOffsets(selRanges)
 {
   var rangeArr, start, end, i, node, offset;
-  var selection = window.editorShell.editorSelection;
+  var selection = GetCurrentEditor().editorSelection;
 
   selection.clearSelection();
 
@@ -1385,7 +1431,7 @@ function EditorSetSelectionFromOffsets(selRanges)
     start    = rangeArr[0];
     end      = rangeArr[1];
 
-    var range = window.editorShell.editorDocument.createRange();
+    var range = GetCurrentEditor().editorDocument.createRange();
 
     node   = EditorGetNodeAtOffsets(start[0]);
     offset = start[1];
