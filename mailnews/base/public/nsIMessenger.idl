@@ -75,6 +75,6 @@ interface nsIMessenger : nsISupports {
 	void LoadFirstDraft();
 	void SetDocumentCharset(in wstring characterSet);
     void saveAs(in string url, in boolean asFile);
-    void openAttachment(in string url);
+    void openAttachment(in string url, in string displayName, in string messageUri);
 };
 
