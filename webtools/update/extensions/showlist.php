@@ -88,14 +88,14 @@ if (!$category) {$categoryname = "All $typename"; } else {$categoryname = $categ
     <meta http-equiv="Content-Style-Type" content="text/css">
 
 <TITLE>Mozilla Update :: Extensions - List - <?php echo"$categoryname"; if ($pageid) {echo" - Page $pageid"; } ?></TITLE>
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
+
 <?php
 if ($rsslist) {
 echo"<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"http://$_SERVER[HTTP_HOST]/$rssfeed\">";
 }
 ?>
-</HEAD>
-<BODY>
+
+<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 <?php
 include"$page_header";
 
@@ -105,7 +105,6 @@ include"$page_header";
 
 include"inc_sidebar.php";
 
-echo"<DIV id=\"content\">\n"; // Begin Content Area
 //Query for List Creation
 $s = "0";
 $startpoint = ($pageid-1)*$items_per_page;
@@ -115,7 +114,7 @@ $editorpick="true";
 } else if ($category =="Newest") {
 $orderby = "TV.DateAdded DESC, `Name` ASC";
 } else if ($category =="Popular") {
-$orderby = "TM.TotalDownloads DESC, `Name` ASC";
+$orderby = "TM.downloadcount DESC, `Name` ASC";
 } else if ($category =="Top Rated") {
 $orderby = "TM.Rating DESC, `Name` ASC";
 }
@@ -123,7 +122,7 @@ $catname = $category;
 $category = "%";
 }
 if ($app_version=="0.10") {$app_version="0.95"; }
-$sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TM.TotalDownloads, TV.vID,
+$sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Description, TM.Rating, TM.TotalDownloads, TM.downloadcount, TV.vID,
 SUBSTRING(MAX(CONCAT(LPAD(TV.Version, 6, '0'), TV.vID)), 7)  AS MAXvID,
 MAX(TV.Version) AS Version,
 TA.AppName, TOS.OSName
@@ -139,6 +138,7 @@ if ($editorpick=="true") { $sql .="AND TR.Pick = 'YES' "; }
 if ($category && $category !=="%") {$sql .="AND CatName LIKE '$category' ";}
 if ($app_version) { $sql .=" AND TV.MinAppVer_int <= '".strtolower($app_version)."' AND TV.MaxAppVer_int >= '".strtolower($app_version)."' ";}
 if ($OS) { $sql .=" AND (TOS.OSName = '$OS' OR TOS.OSName = 'All') "; }
+if ($catname == "Popular") { $sql .=" AND TM.downloadcount > '5'"; }
 $sql .="GROUP BY `Name` ";
 if ($orderby) {
 $sql .="ORDER BY $orderby";
@@ -170,32 +170,42 @@ $resultsquery .= " LIMIT $startpoint , $items_per_page"; //Append LIMIT clause t
 if ($category=="%") {$category = $catname; unset($catname); }
 
 //Now Showing Box
-echo"<DIV id=\"listnav\">";
+if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
+echo"<H3>".ucwords("$application $typename &#187; $categoryname ")."</H3>\n";
+
+$sql = "SELECT `CatDesc` FROM `t_categories` WHERE `CatName`='$category' and `CatType`='$type' LIMIT 1";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   $row = mysql_fetch_array($sql_result);
+     $categorydescription = $row["CatDesc"];
+if ($category=="All") {$categorydescription="All listed extensions for $application";}
+
+if ($categorydescription) {echo"$categorydescription<br>\n";}
+
+
 if (!$OS) {$OS="all";}
 if (!$category) {$categoryname="All"; } else {$categoryname = $category;}
-echo"<DIV class=\"pagenum\" "; if ($application!="mozilla") {echo" style=\"margin-right: 95px;\""; } echo">";
+
+echo"".ucwords("$typename")." $startitem - $enditem of $totalresults&nbsp;&nbsp;|&nbsp;&nbsp;";
+
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> � ";
+echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" � <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
 }
 
-echo"</DIV>\n";
+echo"<br><br>\n";
 
-echo"<SPAN class=\"listtitle\">".ucwords("$application $typename &#187; $categoryname ")."</SPAN><br>";
-echo"".ucwords("$typename")." $startitem - $enditem of $totalresults";
 
 
 // Modify List Form
 
-echo"<DIV class=\"listform\">";
+echo"<DIV class=\"key-point\">";
 echo"<FORM NAME=\"listviews\" METHOD=\"GET\" ACTION=\"showlist.php\">\n";
-
 //Items-Per-Page
 echo"Show/Page: ";
 $perpage = array("5","10","20","50");
@@ -251,8 +261,6 @@ $application = $app_orig; unset($app_orig);
 echo"</SELECT>\n";
 echo"<INPUT NAME=\"submit\" TYPE=\"SUBMIT\" VALUE=\"Update\">";
 echo"</FORM>";
-echo"</DIV>";
-
 echo"</DIV>\n";
 
 
@@ -300,10 +308,10 @@ $sql = "$resultsquery";
     $osname = $row["OSName"];
     $appname = $row["AppName"];
     $downloadcount = $row["TotalDownloads"];
+    $populardownloads = $row["downloadcount"];
 
 //Get Version Record for Referenced MAXvID from list query
-$sql2 = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes, TP.PreviewURI FROM  `t_version` TV
-LEFT  JOIN t_previews TP ON TV.vID = TP.vID
+$sql2 = "SELECT TV.vID, TV.Version, TV.MinAppVer, TV.MaxAppVer, TV.Size, TV.DateAdded AS VerDateAdded, TV.DateUpdated AS VerDateUpdated, TV.URI, TV.Notes FROM  `t_version` TV
 INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
 INNER  JOIN t_os TOS ON TV.OSID = TOS.OSID
 WHERE TV.ID = '$id' AND TV.Version = '$row[Version]' AND TA.AppName = '$appname' AND TOS.OSName = '$osname' LIMIT 1";
@@ -320,9 +328,14 @@ if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"
    $notes = $row["Notes"];
    $version = $row["Version"];
    $uri = $row["URI"];
-   $previewuri = $row["PreviewURI"];
-
    $filename = basename($uri);
+
+$sql3 = "SELECT `PreviewURI`, `caption` from `t_previews` WHERE `ID` = '$id' AND `preview`='YES' LIMIT 1";
+ $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+   $row3 = mysql_fetch_array($sql_result3);
+   $previewuri = $row3["PreviewURI"];
+   $caption = $row3["caption"];
+
 
 if ($VerDateAdded > $dateadded) {$dateadded = $VerDateAdded; }
 if ($VerDateUpdated > $dateupdated) {$dateupdated = $VerDateUpdated; }
@@ -339,76 +352,61 @@ if ($authorcount != $n) {$authorstring .=", "; }
 $authors = $authorstring;
 unset($authorstring, $n); // Clear used Vars.. 
 
-//Create Customizeable Timestamp
-	$day=substr($dateupdated,8,2);  //get the day
-    $month=substr($dateupdated,5,2); //get the month
-    $year=substr($dateupdated,0,4); //get the year
-    $hour=substr($dateupdated,11,2); //get the hour
-    $minute=substr($dateupdated,14,2); //get the minute
-    $second=substr($dateupdated,17,2); //get the sec
-    $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
-    $dateupdated = gmdate("F d, Y g:i:sa", $timestamp); //gmdate("F d, Y g:i:sa T", $timestamp);
+if ($dateupdated > $dateadded) {
+    $timestamp = $dateupdated;
+    $datetitle = "Last Update: ";
+  } else {
+    $timestamp = $dateadded;
+    $datetitle = "Added on: ";
+  }
+
+  $date = date("F d, Y g:i:sa",  strtotime("$timestamp"));
 
 
-echo"<DIV class=\"item\">\n";
-//echo"<DIV style=\"height: 100px\">"; //Not sure why this is here, it caused text to flood out of the box though.
+$datestring = "$datetitle $date";
+
+
+echo"<DIV id=\"item\">\n";
 
 if ($previewuri) {
 list($width, $height, $type, $attr) = getimagesize("$websitepath"."$previewuri");
-
-echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width STYLE=\"float: right; padding-right: 5px\" ALT=\"$name preview\">";
+echo"<DIV style=\"padding-top: 6px; float: right; padding-right: 0px\">\n";
+echo"<IMG SRC=\"$previewuri\" BORDER=0 HEIGHT=$height WIDTH=$width ALT=\"$name preview - $caption\" TITLE=\"$caption\">\n";
+echo"</DIV>\n";
 }
-
-
-//Upper-Right Side Box
-echo"<DIV class=\"liststars\" title=\"$rating of 5 stars\" style=\"font-size: 8pt\"><A HREF=\"moreinfo.php?id=$id&page=comments\">";
-for ($i = 1; $i <= floor($rating); $i++) {
-echo"<IMG SRC=\"/images/stars/star_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-if ($rating>floor($rating)) {
-$val = ($rating-floor($rating))*10;
-echo"<IMG SRC=\"/images/stars/star_0$val.png\" BORDER=0 ALT=\"\">";
-$i++;
-}
-for ($i = $i; $i <= 5; $i++) {
-echo"<IMG SRC=\"/images/stars/graystar_icon.png\" BORDER=0 ALT=\""; if ($i==1) {echo"$rating of 5 stars";} echo"\">";
-}
-echo"</A></DIV>\n";
-
-
-echo"<DIV class=\"itemtitle\">";
+echo"<h5>";
 echo"<SPAN class=\"title\"><A HREF=\"moreinfo.php?id=$id&vid=$vid\">$name $version</A></SPAN><BR>";
-echo"<SPAN class=\"authorline\">By $authors</SPAN><br>";
-echo"</DIV>";
+echo"<SPAN class=\"authorline\">By $authors</SPAN>";
+echo"</h5>";
 
 //Description & Version Notes
-echo"<SPAN class=\"itemdescription\">";
 echo"$description<BR>";
-if ($notes) {echo"$notes"; }
-echo"</SPAN>\n";
+if ($notes) {echo"<BR>$notes"; }
 echo"<BR>";
-//echo"</DIV>";
 
 //Icon Bar Modules
-echo"<DIV style=\"height: 34px\">";
-echo"<DIV class=\"iconbar\" style=\"width: 104px;\">";
+echo"<DIV style=\"margin-top: 30px; height: 34px\">";
+echo"<DIV class=\"iconbar\">";
 if ($appname=="Thunderbird") {
-echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
+echo"<A HREF=\"moreinfo.php?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"More Info about $name\" ALT=\"\">More Info</A>";
 } else {
-echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name\" ALT=\"\">Install</A>";
+echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A>";
 }
-echo"<BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
-if ($homepage) {echo"<DIV class=\"iconbar\" style=\"width: 98px;\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
-if($osname !=="ALL") { echo"<DIV class=\"iconbar\" style=\"width: 85px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>$osname</DIV>"; }
+echo"<BR><SPAN class=\"filesize\">&nbsp;&nbsp;$filesize kb</SPAN></DIV>";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
+if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
+echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 echo"</DIV>";
 
-echo"<DIV class=\"baseline\">Updated: $dateupdated | Total Downloads: $downloadcount<BR></DIV>\n";
+echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
+if ($populardownloads > 5 ) {echo" | Downloads this Week: $populardownloads";}
+echo"</DIV>\n";
 echo"</DIV>\n";
 
 } //End While Loop
 if ($totalresults=="0") {
-echo"<DIV class=\"item noitems\">\n";
+echo"<DIV id=\"item\" class=\"noitems\">\n";
 echo"No extensions found in this category for ".ucwords($application).".\n";
 echo"</DIV>\n";
 
@@ -419,29 +417,31 @@ echo"</DIV>\n";
 
 
 <?php
-// Begin PHP Code for Dynamic Navbars
+echo"<H3>".ucwords("$application $typename &#187; $categoryname ")."</H3>";
+echo"".ucwords("$typename")." $startitem - $enditem of $totalresults";
+echo"&nbsp;&nbsp;|&nbsp;&nbsp;";
+
+// Begin Code for Dynamic Navbars
 if ($pageid <=$num_pages) {
-echo"<DIV id=\"listnav\">";
 
 
-echo"<DIV class=\"pagenum\">";
 $previd=$pageid-1;
 if ($previd >"0") {
-echo"<a href=\"?pageid=$previd\">&#171; Previous</A> � ";
+echo"<a href=\"?pageid=$previd\">&#171; Previous</A> &bull; ";
 }
 echo"Page $pageid of $num_pages";
 
 
 $nextid=$pageid+1;
 if ($pageid <$num_pages) {
-echo" � <a href=\"?pageid=$nextid\">Next &#187;</a>";
+echo" &bull; <a href=\"?pageid=$nextid\">Next &#187;</a>";
 }
 echo"<BR>\n";
 
 
 //Skip to Page...
 if ($num_pages>1) {
-echo"Jump to: ";
+echo"Jump to Page: ";
 $pagesperpage=9; //Plus 1 by default..
 $i = 01;
 //Dynamic Starting Point
@@ -466,15 +466,10 @@ if ($i==$pageid) {
 }
 }
 
-echo"</DIV>\n";
 
-echo"<SPAN class=\"listtitle\">".ucwords("$application $typename &#187; $categoryname ")."</SPAN><br>";
-echo"".ucwords("$typename")." $startitem - $enditem of $totalresults";
 
-echo"</DIV>\n";
 }
 
-echo"</DIV>\n"; //End Content
 ?>
 <?php
 include"$page_footer";

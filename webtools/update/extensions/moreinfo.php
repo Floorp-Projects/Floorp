@@ -48,7 +48,7 @@ require"../core/config.php";
 
 <?php
 //Bookmarking-Friendly Page Title
-$sql = "SELECT  Name FROM `t_main`  WHERE ID = '$_GET[id]' AND Type = 'E' LIMIT 1";
+$sql = "SELECT  Name FROM `t_main`  WHERE ID = '$_GET[id]' AND Type = 'T' LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 if (mysql_num_rows($sql_result)===0) {
 $return = page_error("1","Extension ID is Invalid or Missing.");
@@ -62,13 +62,13 @@ $pagetitles = array("releases"=>"All Releases", "comments"=>"User Comments", "st
 $pagetitle = $pagetitles[$_GET["page"]];
 ?>
 
-<TITLE>Mozilla Update :: Extensions -- More Info: <?php echo"$row[Name]"; if ($pagetitle) {echo" - $pagetitle"; } ?></TITLE>
+<TITLE>Mozilla Update :: Themes -- More Info: <?php echo"$row[Name]"; if ($pagetitle) {echo" - $pagetitle"; } ?></TITLE>
 
 <LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
 
 <?php
 include"$page_header";
-$type = "E";
+$type = "T";
 $category=$_GET["category"];
 include"inc_sidebar.php";
 ?>
@@ -139,6 +139,7 @@ if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"
    $uri = $row["URI"];
    $downloadcount = $row["TotalDownloads"];
    $populardownloads = $row["downloadcount"];
+   $filename = basename($uri);
 
 $sql3 = "SELECT `PreviewURI`, `caption` from `t_previews` WHERE `ID` = '$id' AND `preview`='YES' LIMIT 1";
  $sql_result3 = mysql_query($sql3, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
@@ -238,17 +239,14 @@ $time .= "$time_minutes minutes ";
 }
 $time .="$time_seconds seconds";
 
-$filename = basename($uri);
 
 echo"
 <SPAN style=\"itemdescription\">Released on $verdateadded</SPAN><BR>
-
-
 <DIV class=\"moreinfoinstall\">";
 if ($appname=="Thunderbird") { 
-echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
+echo"<A HREF=\"install.php?id=$id&vid=$vid\" TITLE=\"Download $name $version\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Download Now )</A><BR>";
 } else {
-echo"<A HREF=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\" TITLE=\"Install $name $version (Right-Click to Download)\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" ALT=\"\">&nbsp;( Install Now )</A><BR>";
 }
 echo"
 <SPAN class=\"filesize\">&nbsp;&nbsp;$filesize KB, ($time @ $speed"."k)</SPAN></DIV>
@@ -268,17 +266,17 @@ echo"</DIV>";
 echo"<BR>";
 
 if ($application=="thunderbird") {
-echo"<SPAN style=\"font-size: 10pt; color: #00F\">Extension Install Instructions for Thunderbird Users:</SPAN><BR>
-<SPAN style=\"font-size: 8pt;\">(1) Right-Click the link above and choose \"Save Link As...\" to Download and save the file to your hard disk.<BR>
-(2) In Mozilla Thunderbird, open the extension manager (Tools Menu/Extensions)<BR>
+echo"<SPAN style=\"font-size: 10pt; color: #00F\">Theme Install Instructions for Thunderbird Users:</SPAN><BR>
+<SPAN style=\"font-size: 8pt;\">(1) Click the link above to Download and save the file to your hard disk.<BR>
+(2) In Mozilla Thunderbird, open the theme manager (Tools Menu/Themes)<BR>
 (3) Click the Install button, and locate/select the file you downloaded and click \"OK\"</SPAN><BR>
 ";
 }
-if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this Extension? For Help and Technical Support, visit the <A HREF=\"$homepage\">Extension's Homepage</A>.</SPAN>";}
+if ($homepage) {echo"<SPAN style=\"font-size:10pt\">Having a problem with this theme? For Help and Technical Support, visit the <A HREF=\"$homepage\">Theme's Homepage</A>.</SPAN>";}
 
 echo"<UL style=\"font-size:10pt\">";
-if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Extension Home Page</A>"; }
-if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\" TITLE=\"Right-click to Save\">Download Extension</A>"; }
+if ($homepage) {echo"<LI> <A HREF=\"$homepage\">Theme Homepage</A>"; }
+if ($appname !="Thunderbird") {echo"<LI> <a href=\"install.php/$filename?id=$id&vid=$vid\">Download Theme</A>"; }
 echo"<LI> <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=releases\">Other Versions</A>";
 ?>
 </UL>
@@ -326,7 +324,7 @@ echo"&nbsp;<BR>\n";
 echo"$commentnotes<BR>\n\n";
 echo"&nbsp;<BR>\n";
 echo"<DIV class=\"commentfooter\">\n";
-echo"$commentdate | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?id=$id&vid=$vid&category=$category&vid=$vid&page=opinion\">Rate It!</A>\n";
+echo"$commentdate | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=comments\">More Comments...</A> | <A HREF=\"moreinfo.php?id=$id&vid=$vid&page=opinion\">Rate It!</A>\n";
 echo"</DIV>\n";
 }
 
@@ -369,7 +367,6 @@ if ($appvernames[$row["MaxAppVer"]]) {$maxappver = $appvernames[$row["MaxAppVer"
    $uri = $row["URI"];
    $osname = $row["OSName"];
    $appname = $row["AppName"];
-   $filename = basename($uri);
 
 echo"<DIV>"; //Open Version DIV
 
@@ -379,7 +376,8 @@ if ($notes) {echo"$notes<br><br>\n"; }
 
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
-echo"<DIV class=\"iconbar\"><A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
+echo"<DIV class=\"iconbar\">";
+echo"<A HREF=\"javascript:void(InstallTrigger.installChrome(InstallTrigger.SKIN,'$uri','$name'))\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 TITLE=\"Install $name\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">&nbsp;For $appname:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 if($osname !=="ALL") { echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">For&nbsp;$osname<BR>only</DIV>"; }
 echo"</DIV><BR>\n";
@@ -442,13 +440,6 @@ WHERE `Type` = 'E' AND TR.ID = '$_GET[id]' ORDER BY `rID` DESC LIMIT 1";
     $username = $row["UserName"];
 
 //Create Customizeable Timestamp
-//	$day=substr($dateadded,8,2);  //get the day
-//    $month=substr($dateadded,5,2); //get the month
-//    $year=substr($dateadded,0,4); //get the year
-//    $hour=substr($dateadded,11,2); //get the hour
-//    $minute=substr($dateadded,14,2); //get the minute
-//    $second=substr($dateadded,17,2); //get the sec
-//    $timestamp = strtotime("$year-$month-$day $hour:$minute:$second");
     $timestamp = strtotime("$dateadded");
     $date = gmdate("F, Y", $timestamp);
     $posteddate = date("F j Y, g:i:sa", $timestamp);
@@ -466,7 +457,7 @@ echo"
 
 This $typename has not yet been reviewed.<BR><BR>
 
-To see what other users think of this extension, view the <A HREF=\"moreinfo.php?id=$id&page=comments\">User Comments...</A>
+To see what other users think of this theme, view the <A HREF=\"moreinfo.php?id=$id&page=comments\">User Comments...</A>
 ";
 
 
