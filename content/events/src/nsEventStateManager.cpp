@@ -1949,8 +1949,8 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
       gLastFocusedContent = mCurrentFocus;
       NS_IF_ADDREF(gLastFocusedContent);
     } else {
-      notifyContent[3] = mCurrentFocus;
-      NS_IF_ADDREF(mCurrentFocus);
+      notifyContent[3] = gLastFocusedContent;
+      NS_IF_ADDREF(gLastFocusedContent);
       SendFocusBlur(mPresContext, aContent);
     }
   }
