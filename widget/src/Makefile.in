@@ -41,7 +41,6 @@ ifdef MOZ_ENABLE_GTK
 DIRS		+= gtksuperwin
 DIRS            += gtkxtbin
 DIRS		+= gtk
-DIRS		+= xremoteclient
 endif
 
 ifdef MOZ_ENABLE_MOTIF
@@ -51,16 +50,18 @@ endif
 ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlibxtbin
 DIRS		+= xlib
-DIRS		+= xremoteclient
 endif
 
 ifdef MOZ_ENABLE_QT
 DIRS		+= qt
-DIRS		+= xremoteclient
 endif
 
 ifdef MOZ_ENABLE_PHOTON
 DIRS		+= photon
+endif
+
+ifdef MOZ_ENABLE_XREMOTE
+DIRS		+= xremoteclient
 endif
 
 else

@@ -67,7 +67,7 @@
 #include "nsIWebBrowserChrome.h"
 
 // for X remote support
-#ifdef XP_UNIX
+#ifdef MOZ_ENABLE_XREMOTE
 #include "nsXRemoteClientCID.h"
 #include "nsIXRemoteClient.h"
 #endif
