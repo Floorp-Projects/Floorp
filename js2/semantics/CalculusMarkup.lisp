@@ -472,24 +472,29 @@
   (if (keywordp x)
     (depict-tag-name markup-stream x :reference)
     (with-standard-io-syntax
-      (multiple-value-bind (sign s e) (float-to-string-components x exponent-char t)
-        (when e
-          (depict markup-stream "("))
-        (when sign
-          (depict markup-stream :minus))
-        (if e
-          (progn
-            (unless (equal s "1")
-              (depict markup-stream s)
-              (depict markup-stream :cartesian-product-10))
-            (depict markup-stream "10")
-            (depict-char-style (markup-stream :superscript)
-              (depict-integer markup-stream e))
-            (depict markup-stream ")"))
-          (depict markup-stream s)))
-      (depict-char-style (markup-stream :subscript)
-        (depict-char-style (markup-stream :tag-name)
-          (depict markup-stream suffix))))))
+      (let ((sign nil))
+        (when (minusp x)
+          (setq sign t)
+          (setq x (- x)))
+        (multiple-value-bind (s e) (positive-float-to-string-components x exponent-char nil nil)
+          (when (or sign e)
+            (depict markup-stream "("))
+          (when sign
+            (depict markup-stream :minus))
+          (if e
+            (progn
+              (unless (equal s "1")
+                (depict markup-stream s)
+                (depict markup-stream :cartesian-product-10))
+              (depict markup-stream "10")
+              (depict-char-style (markup-stream :superscript)
+                (depict-integer markup-stream e)))
+            (depict markup-stream s))
+          (when (or sign e)
+            (depict markup-stream ")")))
+        (depict-char-style (markup-stream :subscript)
+          (depict-char-style (markup-stream :tag-name)
+            (depict markup-stream suffix)))))))
 
 
 ; Emit markup for the value constant.
@@ -624,6 +629,15 @@
       (depict markup-stream "-")
       (depict-hex markup-stream world level (- n) length))
     (depict markup-stream (format nil "0x~V,'0X" length n))))
+
+
+; (supplementary-char <integer>)
+(defun depict-supplementary-char (markup-stream world level code-point)
+  (declare (ignore world level))
+  (depict markup-stream :left-single-quote)
+  (depict-char-style (markup-stream :character-literal)
+    (depict-supplementary-character markup-stream code-point))
+  (depict markup-stream :right-single-quote))
 
 
 ; (/*/ <value-expr> . <styled-text>)
@@ -766,13 +780,6 @@
 (defun depict-repeat (markup-stream world level element-annotated-expr count-annotated-expr)
   (declare (ignore level))
   (depict-special-function markup-stream world "repeat" element-annotated-expr count-annotated-expr))
-
-
-#|
-(defun depict-subscript-type-expr (markup-stream world type-expr)
-  (depict-char-style (markup-stream 'sub)
-    (depict-type-expr markup-stream world type-expr)))
-|#
 
 
 ; (nth <vector-expr> <n-expr>)
@@ -1269,8 +1276,19 @@
 ; (exec <expr>)
 (defun depict-exec (markup-stream world semicolon last-paragraph-style annotated-expr)
   (depict-paragraph (markup-stream last-paragraph-style)
-    (depict-expression markup-stream world annotated-expr %expr%)
-    (depict-semicolon markup-stream semicolon)))
+    (depict-logical-block (markup-stream 0)
+      (depict markup-stream "Evaluate")
+      (depict-break markup-stream 1)
+      (depict-expression markup-stream world annotated-expr %expr%)
+      (depict-break markup-stream 1)
+      (depict markup-stream "and")
+      (depict-break markup-stream 1)
+      (depict markup-stream "ignore")
+      (depict-break markup-stream 1)
+      (depict markup-stream "its")
+      (depict-break markup-stream 1)
+      (depict markup-stream "result")
+      (depict-semicolon markup-stream semicolon))))
 
 
 ; (const <name> <type> <value>)
@@ -1286,6 +1304,12 @@
         (depict-break markup-stream 1)
         (depict-expression markup-stream world value-annotated-expr %expr%)))
     (depict-semicolon markup-stream semicolon)))
+
+
+; (multiple-value-bind ((<name> <type>) ...) <lisp-function> <arg-exprs>)
+(defun depict-multiple-value-bind (markup-stream world semicolon last-paragraph-style names-and-types lisp-function arg-exprs)
+  (declare (ignore markup-stream world semicolon last-paragraph-style names-and-types lisp-function arg-exprs))
+  (error "Can't depict a multiple-value-bind; enclose it inside a /* */ comment."))
 
 
 ; (function (<name> (<var1> <type1> [:var | :unused]) ... (<varn> <typen> [:var | :unused])) <result-type> . <statements>)
@@ -1578,7 +1602,7 @@
 ; (%highlight <highlight> <command> ... <command>)
 ; Depict the commands highlighted with the <highlight> division style.
 (defun depict-%highlight (markup-stream world depict-env highlight &rest commands)
-  (when commands
+  (when (and commands (not (eq highlight :hide)))
     (depict-division-style (markup-stream highlight t)
       (depict-commands markup-stream world depict-env commands))))
 
@@ -1972,7 +1996,7 @@
                    (depict-function-signature markup-stream world bindings ->-result t)))
                (depict-string-words markup-stream " propagates the call to ")
                (depict-action-name markup-stream action-name)
-               (depict-string-words markup-stream " to every nonterminal in the expansion of ")
+               (depict-string-words markup-stream " to nonterminals in the expansion of ")
                (depict-general-grammar-symbol markup-stream general-grammar-symbol :reference)
                (depict markup-stream ".")))))
         (:singleton (depict-delayed-action (markup-stream world depict-env action-name)
