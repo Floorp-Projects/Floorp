@@ -30,6 +30,13 @@ class nsInstallFileOpItem : public nsInstallObject
 {
   public:
     /* Public Fields */
+    enum 
+    {
+      ACTION_NONE                 = -401,
+      ACTION_SUCCESS              = -402,
+      ACTION_FAILED               = -403
+    };
+
 
     /* Public Methods */
     // used by:
@@ -109,19 +116,33 @@ class nsInstallFileOpItem : public nsInstallObject
     PRInt32       mFlags;
     PRInt32       mIconId;
     PRInt32       mCommand;
+    PRInt32       mAction;
     
     /* Private Methods */
 
-    PRInt32       NativeFileOpDirCreate(nsFileSpec* aTarget);
-    PRInt32       NativeFileOpDirRemove(nsFileSpec* aTarget, PRInt32 aFlags);
-    PRInt32       NativeFileOpDirRename(nsFileSpec* aSrc, nsString* aTarget);
-    PRInt32       NativeFileOpFileCopy(nsFileSpec* aSrc, nsFileSpec* aTarget);
-    PRInt32       NativeFileOpFileDelete(nsFileSpec* aTarget, PRInt32 aFlags);
-    PRInt32       NativeFileOpFileExecute(nsFileSpec* aTarget, nsString* aParams);
-    PRInt32       NativeFileOpFileMove(nsFileSpec* aSrc, nsFileSpec* aTarget);
-    PRInt32       NativeFileOpFileRename(nsFileSpec* aSrc, nsString* aTarget);
-    PRInt32       NativeFileOpWindowsShortcut(nsFileSpec* aTarget, nsFileSpec* aShortcutPath, nsString* aDescription, nsFileSpec* aWorkingPath, nsString* aParams, nsFileSpec* aIcon, PRInt32 aIconId);
-    PRInt32       NativeFileOpMacAlias(nsFileSpec* aSrc, nsFileSpec* aTarget);
+    PRInt32       NativeFileOpDirCreatePrepare();
+    PRInt32       NativeFileOpDirCreateAbort();
+    PRInt32       NativeFileOpDirRemovePrepare();
+    PRInt32       NativeFileOpDirRemoveComplete();
+    PRInt32       NativeFileOpDirRenamePrepare();
+    PRInt32       NativeFileOpDirRenameComplete();
+    PRInt32       NativeFileOpDirRenameAbort();
+    PRInt32       NativeFileOpFileCopyPrepare();
+    PRInt32       NativeFileOpFileCopyComplete();
+    PRInt32       NativeFileOpFileCopyAbort();
+    PRInt32       NativeFileOpFileDeletePrepare();
+    PRInt32       NativeFileOpFileDeleteComplete(nsFileSpec *aTarget);
+    PRInt32       NativeFileOpFileExecutePrepare();
+    PRInt32       NativeFileOpFileExecuteComplete();
+    PRInt32       NativeFileOpFileMovePrepare();
+    PRInt32       NativeFileOpFileMoveComplete();
+    PRInt32       NativeFileOpFileMoveAbort();
+    PRInt32       NativeFileOpFileRenamePrepare();
+    PRInt32       NativeFileOpFileRenameComplete();
+    PRInt32       NativeFileOpFileRenameAbort();
+    PRInt32       NativeFileOpWindowsShortcutComplete();
+    PRInt32       NativeFileOpWindowsShortcutAbort();
+    PRInt32       NativeFileOpMacAlias();
     PRInt32       NativeFileOpUnixLink();
 
 };

@@ -1418,11 +1418,6 @@ nsInstall::FileOpDirCreate(nsFileSpec& aTarget, PRInt32* aReturn)
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1461,11 +1456,6 @@ nsInstall::FileOpDirRemove(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1494,11 +1484,6 @@ nsInstall::FileOpDirRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1527,11 +1512,6 @@ nsInstall::FileOpFileCopy(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1560,11 +1540,6 @@ nsInstall::FileOpFileDelete(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aRetur
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1593,11 +1568,6 @@ nsInstall::FileOpFileExecute(nsFileSpec& aTarget, nsString& aParams, PRInt32* aR
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1681,11 +1651,6 @@ nsInstall::FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aRetur
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1714,11 +1679,6 @@ nsInstall::FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aRetur
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1747,11 +1707,6 @@ nsInstall::FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutP
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 
   return NS_OK;
@@ -1786,11 +1741,6 @@ nsInstall::FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt
       *aReturn = ScheduleForInstall( ifop );
   }
       
-  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
-  {
-      *aReturn = nsInstall::SUCCESS;
-  }
-
   SaveError(*aReturn);
 #endif
 
