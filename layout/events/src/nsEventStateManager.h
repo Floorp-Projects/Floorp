@@ -107,6 +107,8 @@ protected:
   void GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent ) ;
   PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
 
+  PRBool mSuppressFocusChange; // Used only for Ender text fields to suppress a focus firing on mouse down
+
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIContent* mCurrentTargetContent;

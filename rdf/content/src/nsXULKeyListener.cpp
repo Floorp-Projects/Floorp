@@ -500,7 +500,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
   commandDispatcher->GetFocusedWindow(getter_AddRefs(domWindow));
   piWindow = do_QueryInterface(domWindow);
 
-  nsCAutoString keyFile;
+  nsCAutoString keyFile, platformKeyFile;
   if (focusedElement) {
     // See if it's a textarea or input field.
     // XXX Check to see if the "key-bindings" CSS property points us to a file.
@@ -511,23 +511,37 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     if (tagName.EqualsIgnoreCase("input")) {
       nsAutoString type;
       focusedElement->GetAttribute(nsAutoString("type"), type);
-      if (type == "" || type.EqualsIgnoreCase("text"))
+      if (type == "" || type.EqualsIgnoreCase("text") ||
+          type.EqualsIgnoreCase("password")) {
         keyFile = "chrome://global/content/inputBindings.xul";
+        platformKeyFile = "chrome://global/content/platformInputBindings.xul";
+      }
     }
-    else if (tagName.EqualsIgnoreCase("textarea"))
+    else if (tagName.EqualsIgnoreCase("textarea")) {
       keyFile = "chrome://global/content/textAreaBindings.xul";
+      platformKeyFile = "chrome://global/content/platformTextAreaBindings.xul";
+    }
   }
    
   nsCOMPtr<nsIDOMXULDocument> document;
-  GetKeyBindingDocument(keyFile, getter_AddRefs(document));
+  GetKeyBindingDocument(platformKeyFile, getter_AddRefs(document));
   
   // Locate the key node and execute the JS on a match.
   PRBool handled = PR_FALSE;
   if (document) // Local focused ELEMENT handling stage.
     LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
 	
+  if (!handled) {
+    GetKeyBindingDocument(keyFile, getter_AddRefs(document));
+    if (document) // Local focused ELEMENT handling stage.
+    LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
+  }
+  
   nsCAutoString browserFile = "chrome://global/content/browserBindings.xul";
   nsCAutoString editorFile = "chrome://global/content/editorBindings.xul";
+  nsCAutoString browserPlatformFile = "chrome://global/content/platformBrowserBindings.xul";
+  nsCAutoString editorPlatformFile = "chrome://global/content/platformEditorBindings.xul";
+
   nsresult result;
 
   if (!handled) {
@@ -568,19 +582,26 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 
 
         PRBool editorHasBindings = PR_FALSE;
+        nsCOMPtr<nsIDOMXULDocument> platformDoc;
         if (presShell)
         {
           PRBool isEditor;
           if (NS_SUCCEEDED(presShell->GetDisplayNonTextSelection(&isEditor)) && isEditor)
           {
             editorHasBindings = PR_TRUE;
+            GetKeyBindingDocument(editorPlatformFile, getter_AddRefs(platformDoc));
             GetKeyBindingDocument(editorFile, getter_AddRefs(document));
           }
         }
-        if (!editorHasBindings)
+        if (!editorHasBindings) {
+          GetKeyBindingDocument(browserPlatformFile, getter_AddRefs(platformDoc));
           GetKeyBindingDocument(browserFile, getter_AddRefs(document));
+        }
 
-        if (document)
+        if (platformDoc)
+          LocateAndExecuteKeyBinding(keyEvent, aEventType, platformDoc, handled);
+
+        if (!handled && document)
           LocateAndExecuteKeyBinding(keyEvent, aEventType, document, handled);
       }
 
@@ -1559,6 +1580,8 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
               masterContext->BindCompiledEventHandler(scriptObject, eventName, nsnull);
 
+              aKeyEvent->PreventBubble();
+              aKeyEvent->PreventCapture();
               return NS_OK;
             }
           }
