@@ -1,0 +1,184 @@
+//Microsoft eMbedded Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_WINEMBED            ICON    DISCARDABLE     "winEmbed.ICO"
+IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "winEmbed"
+    IDS_HELLO               "Embedding Mozilla is so much fun!!"
+    IDS_ABOUT               "winEmbed - Gecko embedding sample"
+    IDS_ABOUT_TITLE         "About winEmbed"
+    IDS_HIST_BACK           "Going Back to: "
+    IDS_HIST_FORWARD        "Going Forward to: "
+    IDS_HIST_RELOAD_NORMAL  "Reloading url, (normal) :"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_HIST_RELOAD_BYPASSPROXY "Reloading url, (bypassing Proxy) :"
+    IDS_HIST_RELOAD_BYPASSCACHE "Reloading url, (bypassing cache) :"
+    IDS_HIST_ADDURL         " added to Session History"
+    IDS_HIST_RELOAD_BYPASSPROXYANDCACHE 
+                            "Reloading url, (bypassing Proxy and cache) :"
+    IDS_HIST_PURGE          "purged from session history"
+    IDS_HIST_GOTO           "Going to history index : "
+    IDS_HIST_URL            " URL : "
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_FILE            "File"
+    IDS_CAP_EDIT            "Edit"
+    IDS_CAP_MENUITEM32796   "Tools"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAP_HELP            "Help"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.K.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENG)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_UK
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_BROWSER DIALOG DISCARDABLE  0, 0, 160, 167
+STYLE DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CLIPCHILDREN | WS_CAPTION
+MENU 109
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "<",IDC_BACK,1,1,10,13
+    PUSHBUTTON      ">",IDC_FORWARD,11,1,10,13
+    PUSHBUTTON      "R",IDC_RELOAD,21,1,10,13
+    PUSHBUTTON      "S",IDC_STOP,31,1,10,13
+    COMBOBOX        IDC_ADDRESS,41,1,99,52,CBS_DROPDOWN | CBS_AUTOHSCROLL | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "Go",IDC_GO,139,1,17,13
+    CONTROL         "Status",IDC_STATUS,"Static",SS_LEFTNOWORDWRAP | 
+                    WS_GROUP,0,158,117,9
+    CONTROL         "Progress1",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    125,158,31,9
+    LTEXT           "",IDC_BROWSER,4,17,151,136,NOT WS_GROUP
+END
+
+IDD_BROWSER_NC DIALOG DISCARDABLE  0, 0, 164, 153
+STYLE WS_POPUP | WS_CLIPCHILDREN
+MENU 109
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "",IDC_BROWSER,0,0,164,140,NOT WS_GROUP
+    LTEXT           "",IDC_BROWSER2,0,0,161,151,NOT WS_GROUP
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO MOVEABLE PURE 
+BEGIN
+    IDD_BROWSER, DIALOG
+    BEGIN
+        RIGHTMARGIN, 156
+        TOPMARGIN, 1
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // English (U.K.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
