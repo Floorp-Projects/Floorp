@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=../..
+DEPTH=..\..
 include <$(DEPTH)/config/config.mak>
 
 DIRS = public src res
