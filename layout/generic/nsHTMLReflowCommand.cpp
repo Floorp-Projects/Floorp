@@ -142,59 +142,6 @@ nsHTMLReflowCommand::~nsHTMLReflowCommand()
 }
 
 nsresult
-nsHTMLReflowCommand::GetTarget(nsIFrame*& aTargetFrame) const
-{
-  aTargetFrame = mTargetFrame;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::SetTarget(nsIFrame* aTargetFrame)
-{
-  mTargetFrame = aTargetFrame;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::GetType(nsReflowType& aReflowType) const
-{
-  aReflowType = mType;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::GetAttribute(nsIAtom *& aAttribute) const
-{
-  aAttribute = mAttribute;
-  if (nsnull!=aAttribute)
-    NS_ADDREF(aAttribute);
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::GetChildFrame(nsIFrame*& aChildFrame) const
-{
-  aChildFrame = mChildFrame;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::GetChildListName(nsIAtom*& aListName) const
-{
-  aListName = mListName;
-  NS_IF_ADDREF(aListName);
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::SetChildListName(nsIAtom* aListName)
-{
-  mListName = aListName;
-  NS_IF_ADDREF(mListName);
-  return NS_OK;
-}
-
-nsresult
 nsHTMLReflowCommand::List(FILE* out) const
 {
 #ifdef DEBUG
@@ -247,18 +194,3 @@ nsHTMLReflowCommand::List(FILE* out) const
 #endif
   return NS_OK;
 }
-
-nsresult
-nsHTMLReflowCommand::GetFlags(PRInt32* aFlags)
-{
-  *aFlags = mFlags;
-  return NS_OK;
-}
-
-nsresult
-nsHTMLReflowCommand::SetFlags(PRInt32 aFlags)
-{
-  mFlags = aFlags;
-  return NS_OK;
-}
-

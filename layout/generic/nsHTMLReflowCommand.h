@@ -90,27 +90,22 @@ public:
   /**
    * Get the target of the reflow command.
    */
-  nsresult GetTarget(nsIFrame*& aTargetFrame) const;
-
-  /**
-   * Change the target of the reflow command.
-   */
-  nsresult SetTarget(nsIFrame* aTargetFrame);
+  nsIFrame* GetTarget() const { return mTargetFrame; }
 
   /**
    * Get the type of reflow command.
    */
-  nsresult GetType(nsReflowType& aReflowType) const;
+  nsReflowType GetType() const { return mType; }
 
   /**
-   * Can return nsnull.  If nsnull is not returned, the caller must NS_RELEASE aAttribute
+   * Can return nsnull.
    */
-  nsresult GetAttribute(nsIAtom *& aAttribute) const;
+  nsIAtom* GetAttribute() const { return mAttribute; }
 
   /**
    * Get the child frame associated with the reflow command.
    */
-  nsresult GetChildFrame(nsIFrame*& aChildFrame) const;
+  nsIFrame* GetChildFrame() const { return mChildFrame; }
 
   /**
    * Returns the name of the child list to which the child frame belongs.
@@ -120,14 +115,18 @@ public:
    * Returns nsnull if the child frame is associated with the unnamed
    * principal child list
    */
-  nsresult GetChildListName(nsIAtom*& aListName) const;
+  nsIAtom* GetChildListName() const { return mListName; }
 
   /**
    * Sets the name of the child list to which the child frame belongs.
    * Only used for reflow command types FrameAppended, FrameInserted, and
    * FrameRemoved
    */
-  nsresult SetChildListName(nsIAtom* aListName);
+  void SetChildListName(nsIAtom* aListName) {
+    NS_ASSERTION(!mListName, "SetChildListName called twice");
+    mListName = aListName;
+    NS_IF_ADDREF(mListName);
+  }
 
   /**
    * Dump out the reflow-command to out
@@ -137,8 +136,49 @@ public:
   /**
    * Get/set reflow command flags
    */
-  nsresult GetFlags(PRInt32* aFlags);
-  nsresult SetFlags(PRInt32 aFlags);
+  PRInt32 GetFlagBits() { return mFlags; }
+  void AddFlagBits(PRInt32 aBits) { mFlags |= aBits; }
+  void RemoveFlagBits(PRInt32 aBits) { mFlags &= ~aBits; }
+
+  /**
+   * DEPRECATED compatibility methods
+   */
+  nsresult GetTarget(nsIFrame*& aTargetFrame) const {
+    aTargetFrame = mTargetFrame;
+    return NS_OK;
+  }
+
+  nsresult GetType(nsReflowType& aReflowType) const {
+    aReflowType = mType;
+    return NS_OK;
+  }
+
+  nsresult GetAttribute(nsIAtom *& aAttribute) const {
+    aAttribute = mAttribute;
+    NS_IF_ADDREF(aAttribute);
+    return NS_OK;
+  }
+
+  nsresult GetChildFrame(nsIFrame*& aChildFrame) const {
+    aChildFrame = mChildFrame;
+    return NS_OK;
+  }
+
+  nsresult GetChildListName(nsIAtom*& aListName) const {
+    aListName = mListName;
+    NS_IF_ADDREF(aListName);
+    return NS_OK;
+  }
+
+  nsresult GetFlags(PRInt32* aFlags) {
+    *aFlags = mFlags;
+    return NS_OK;
+  }
+
+  nsresult SetFlags(PRInt32 aFlags) {
+    mFlags = aFlags;
+    return NS_OK;
+  }
 
 private:
   nsReflowType    mType;
