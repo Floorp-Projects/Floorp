@@ -300,8 +300,11 @@ namespace ICodeASM {
             if (++begin != end) {
                 try
                 {
-                    return ParseUInt32 (++begin, end, 
-                                        static_cast<uint32 *>(rval));
+                    end = ParseUInt32 (++begin, end, 
+                                       static_cast<uint32 *>(rval));
+                    if (*rval != VM::NotARegister && *rval > mMaxRegister)
+                        mMaxRegister = *rval;
+                    return end;
                 }
                 catch (ICodeParseException *e)
                 {
@@ -482,7 +485,13 @@ namespace ICodeASM {
              * codegen (acording to rogerl.)
              */
             VM::TypedRegister tr = VM::TypedRegister(r, 0);
-            VM::Argument arg = VM::Argument (tr, 0 /* XXX convert argName to a stringatom somehow */);
+
+            StringAtom *sap = 0;
+            if (argName) {
+                sap = &(mCx->getWorld().identifiers[argName->c_str()]);
+                delete argName;
+            }
+            VM::Argument arg = VM::Argument (tr, sap);
             
             al->push_back(arg);
 
@@ -549,53 +558,88 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseICodeModuleOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseICodeModuleOperand (iter /*begin*/, iter end, string **/*rval*/)
     {
+        NOT_REACHED ("ICode modules are hard, lets go shopping.");
+        return end;
+        /*
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected ICode Module as a quoted string");
+        
         return ParseString (tl.begin, end, rval);
+        */
     }
     
     iter
-    ICodeParser::ParseJSClassOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseJSClassOperand (iter /*begin*/, iter end,
+                                      string **/*rval*/)
     {
+        NOT_REACHED ("JSClasses are hard, lets go shopping.");
+        return end;
+
+        /*
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected JSClass as a quoted string");
         return ParseString (tl.begin, end, rval);
+        */
     }
 
     iter
-    ICodeParser::ParseJSStringOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseJSStringOperand (iter begin, iter end,
+                                       JSTypes::JSString **rval)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected JSString as a quoted string");
-        return ParseString (tl.begin, end, rval);
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        *rval = new JSTypes::JSString (str->c_str());
+        delete str;
+        return end;
     }
     
     iter
-    ICodeParser::ParseJSFunctionOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseJSFunctionOperand (iter /*begin*/, iter end,
+                                         string **/*rval*/)
     {
+        NOT_REACHED ("JSFunctions are hard, lets go shopping.");
+        return end;
+
+        /*
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected JSFunction as a quoted string");
         return ParseString (tl.begin, end, rval);
+        */
     }
 
     iter
-    ICodeParser::ParseJSTypeOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseJSTypeOperand (iter begin, iter end,
+                                     JSTypes::JSType **rval)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected JSType as a quoted string");
-        return ParseString (tl.begin, end, rval);
+
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        StringAtom &typename_atom = mCx->getWorld().identifiers[str->c_str()];
+        delete str;
+        JSTypes::JSValue jsv = 
+            mCx->getGlobalObject()->getVariable(typename_atom);
+        if (jsv.isType())
+            *rval = jsv.type;
+        else
+            *rval = &(JSTypes::Any_Type);
+
+        return end;
     }
 
     iter
@@ -664,13 +708,17 @@ namespace ICodeASM {
     }
 
     iter
-    ICodeParser::ParseStringAtomOperand (iter begin, iter end, string **rval)
+    ICodeParser::ParseStringAtomOperand (iter begin, iter end, StringAtom **rval)
     {
         TokenLocation tl = SeekTokenStart (begin, end);
 
         if (tl.estimate != teString)
             throw new ICodeParseException ("Expected StringAtom as a quoted string");
-        return ParseString (tl.begin, end, rval);
+        string *str;
+        end = ParseString (tl.begin, end, &str);
+        *rval = &(mCx->getWorld().identifiers[str->c_str()]);
+        delete str;
+        return end;
     }
 
     /* "High Level" parse functions ... */
@@ -710,13 +758,13 @@ namespace ICodeASM {
                 CASE_TYPE(Double, double, static_cast);
                 CASE_TYPE(ICodeModule, string *, reinterpret_cast);
                 CASE_TYPE(JSClass, string *, reinterpret_cast);
-                CASE_TYPE(JSString, string *, reinterpret_cast);
+                CASE_TYPE(JSString, JSTypes::JSString *, reinterpret_cast);
                 CASE_TYPE(JSFunction, string *, reinterpret_cast);
-                CASE_TYPE(JSType, string *, reinterpret_cast);
+                CASE_TYPE(JSType, JSTypes::JSType *, reinterpret_cast);
                 CASE_TYPE(Label, VM::Label *, reinterpret_cast);
                 CASE_TYPE(UInt32, uint32, static_cast);
                 CASE_TYPE(Register, JSTypes::Register, static_cast);
-                CASE_TYPE(StringAtom, string *, reinterpret_cast);
+                CASE_TYPE(StringAtom, StringAtom *, reinterpret_cast);
                 default:
                     break;                    
             }
@@ -814,5 +862,6 @@ namespace ICodeASM {
 
     }
 
+    
 }
 }
