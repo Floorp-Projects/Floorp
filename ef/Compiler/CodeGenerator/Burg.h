@@ -30,7 +30,7 @@
 typedef Primitive* NODEPTR_TYPE;
 
 #define OP_LABEL(p)					p->getOperation()
-#define STATE_LABEL(p)				p->getBurgState()
+#define STATE_LABEL(p)				*(p->getBurgStatePtr())
 #define SET_STATE_LABEL(p, state)	p->setBurgState(state)
 #define LEFT_CHILD(p)				CodeGenerator::getExpressionLeftChild(p)
 #define RIGHT_CHILD(p)				CodeGenerator::getExpressionRightChild(p)	
