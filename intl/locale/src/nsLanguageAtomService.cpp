@@ -103,10 +103,10 @@ nsLanguageAtomService::LookupLanguage(const nsAString &aLanguage,
           truncated.Truncate(hyphen);
           res = mLangGroups->GetStringFromName(truncated.get(), getter_Copies(langGroupStr));
           if (NS_FAILED(res)) {
-            langGroupStr.AssignLiteral("x-western");
+            langGroupStr.AssignLiteral("x-unicode");
           }
         } else {
-          langGroupStr.AssignLiteral("x-western");
+          langGroupStr.AssignLiteral("x-unicode");
         }
       }
     }
