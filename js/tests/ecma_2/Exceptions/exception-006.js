@@ -10,7 +10,7 @@
  */
     var SECTION = "exception-006";
     var VERSION = "js1_4";
-    var TITLE   = "Tests for JavaScript Standard Exceptions: ToPrimitiveError";
+    var TITLE   = "Tests for JavaScript Standard Exceptions: TypeError";
 
     startTest();
     writeHeaderToLog( SECTION + " "+ TITLE);

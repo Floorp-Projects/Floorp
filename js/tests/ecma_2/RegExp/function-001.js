@@ -6,7 +6,7 @@
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
  */
-    var SECTION = "RegExp/function-001.js";
+    var SECTION = "RegExp/function-001";
     var VERSION = "ECMA_2";
     var TITLE   = "RegExp( pattern, flags )";
 

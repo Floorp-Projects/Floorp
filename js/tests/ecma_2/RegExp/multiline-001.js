@@ -6,7 +6,7 @@
  *  Date:               19 February 1999
  */
 
-    var SECTION = "RegExp/multiline-001.js";
+    var SECTION = "RegExp/multiline-001";
     var VERSION = "ECMA_2";
     var TITLE   = "RegExp: multiline flag";
     var BUGNUMBER="343901";

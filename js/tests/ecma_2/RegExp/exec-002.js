@@ -8,7 +8,7 @@
  *  Author:             christine@netscape.com
  *  Date:               19 February 1999
  */
-    var SECTION = "RegExp/exec-002.js";
+    var SECTION = "RegExp/exec-002";
     var VERSION = "ECMA_2";
     var TITLE   = "RegExp.prototype.exec(string)";
 
