@@ -220,6 +220,8 @@ var dropObserver = {
       return;
 
     item.removeAttribute("flex");
+    if (item.firstChild.getAttribute("flex"))
+      item.firstChild.setAttribute("flex", item.firstChild.getAttribute("flex"));
     item.removeAttribute("width");
     item.setAttribute("ondraggesture", "gDraggingFromPalette = false; nsDragAndDrop.startDrag(event, dragObserver);");
  
