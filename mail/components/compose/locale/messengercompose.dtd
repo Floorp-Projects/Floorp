@@ -13,8 +13,10 @@
 <!ENTITY newCard.accesskey "c">
 <!ENTITY attachFileCmd.label "Attach File...">
 <!ENTITY attachFileCmd.accesskey "F">
+<!ENTITY attachFileButton.label "File(s)...">
 <!ENTITY attachPageCmd.label "Attach Web Page...">
 <!ENTITY attachPageCmd.accesskey "W">
+<!ENTITY attachPageButton.label "Web Page...">
 <!ENTITY closeCmd.label "Close">
 <!ENTITY closeCmd.key "W">
 <!ENTITY closeCmd.accesskey "c">
@@ -180,7 +182,7 @@
 <!ENTITY sendlaterButton.tooltip "Send this message later"> 
 <!ENTITY quoteButton.tooltip "Quote the previous message"> 
 <!ENTITY addressButton.tooltip "Select a recipient from an Address Book"> 
-<!ENTITY attachButton.tooltip "Attach a file to this message"> 
+<!ENTITY attachButton.tooltip "Include an attachment"> 
 <!ENTITY saveButton.tooltip "Save this message"> 
 <!ENTITY throbber.tooltip "Go to the &vendorShortName; home page">
 
@@ -236,8 +238,6 @@
 <!ENTITY delete.accesskey "D">
 <!ENTITY selectAll.label "Select All">
 <!ENTITY selectAll.accesskey "A">
-<!ENTITY addAttachment.label "Add Attachment">
-<!ENTITY addAttachment.accesskey "t">
 
 <!-- Title for the address picker panel -->
 <!ENTITY addressesSidebarTitle.label "Contacts">

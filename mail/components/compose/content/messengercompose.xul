@@ -209,7 +209,7 @@
   <menuitem label="&delete.label;" accesskey="&delete.accesskey;" command="cmd_delete"/>
   <menuitem label="&selectAll.label;" accesskey="&selectAll.accesskey;" command="cmd_selectAll"/>
   <menuseparator/>
-  <menuitem label="&addAttachment.label;" accesskey="&addAttachment.accesskey;" command="cmd_attachFile"/>
+  <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
 </popup>
 
 <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
@@ -468,8 +468,8 @@
                tooltiptext="&attachButton.tooltip;" 
                command="cmd_attachFile">
          <menupopup>
-           <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
-           <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
+           <menuitem label="&attachFileButton.label;" accesskey="&attachFileCmd.accesskey;" command="cmd_attachFile"/>
+           <menuitem label="&attachPageButton.label;" accesskey="&attachPageCmd.accesskey;" command="cmd_attachPage"/>
          </menupopup>
     </toolbarbutton>
     
