@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,64 +13,44 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH = ../../..
+DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME := widget_$(MOZ_WIDGET_TOOLKIT)
+LIBRARY_NAME	= widget_$(MOZ_WIDGET_TOOLKIT)
 
-DEFINES += -D_IMPL_NS_WIDGET
+CPPSRCS		= nsWidgetSupport.cpp
 
-TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT)
+LOCAL_INCLUDES	= \
+		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT) \
+		-I$(srcdir)/. \
+		$(NULL)
 
-LOCAL_INCLUDES := \
-	-I$(srcdir)/../xpwidgets \
-	$(TOOLKIT_INCLUDES) \
-	 -I$(srcdir)/. \
-	$(NULL)
+SHARED_LIBRARY_LIBS = \
+		$(addprefix $(DIST)/lib/libraptorwidget,$(addsuffix _s.a,$(MOZ_WIDGET_TOOLKIT))) \
+		$(DIST)/lib/libraptorbasewidget_s.a \
+		$(NULL)
 
-CPPSRCS := \
-	nsWidgetSupport.cpp \
-	$(NULL)
-
-include $(topsrcdir)/config/config.mk
-
-CXXFLAGS += $(TK_CFLAGS)
-
-TOOLKIT_DSO_LDOPTS = $(addprefix $(DIST)/lib/libraptorwidget, \
-			$(addsuffix _s.a, $(MOZ_WIDGET_TOOLKIT)))
-
-SHARED_LIBRARY_LIBS =			    \
-	$(TOOLKIT_DSO_LDOPTS)		    \
-	$(DIST)/lib/libraptorbasewidget_s.a \
-	$(NULL)
-
-ifeq ($(OS_ARCH),HP-UX)
-EXTRA_DSO_LDOPTS += -c objs/objslist
-else
-EXTRA_DSO_LDOPTS+=	       \
-	$(MKSHLIB_FORCE_ALL)   \
-	$(SHARED_LIBRARY_LIBS) \
-	$(MKSHLIB_UNFORCE_ALL) \
-	$(NULL)
-endif
-
-EXTRA_DSO_LDOPTS += $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS)
+EXTRA_DSO_LDOPTS = \
+		$(MKSHLIB_FORCE_ALL) \
+		$(SHARED_LIBRARY_LIBS) \
+		$(MKSHLIB_UNFORCE_ALL) \
+		$(TOOLKIT_LIBS) \
+		$(XLDFLAGS) \
+		$(XLIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(OS_ARCH),HP-UX)
-shared_library_objs: $(SHARED_LIBRARY_LIBS)
-	rm -rf objs
-	mkdir objs
-	(cd objs; for lib in $(SHARED_LIBRARY_LIBS); do ar xv ../$$lib; done) \
-	| awk '{ print "objs/"$$3 }' > objs/objslist
+CXXFLAGS	+= $(TK_CFLAGS)
 
-$(LIBRARY) $(SHARED_LIBRARY): shared_library_objs Makefile
-else
+DEFINES		+= -D_IMPL_NS_WIDGET
+
 $(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-endif
+
