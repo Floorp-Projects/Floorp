@@ -27,10 +27,7 @@
 #include "nsString.h"
 #include "nsVoidArray.h"
 
-/* Carriage return and linefeeds */
-
-/* see mozilla/xpcom/public/nsError.h for details */
-#define NS_ERROR_MODULE_MAILNEWS 16
+/* NS_ERROR_MODULE_MAILNEWS is defined in mozilla/xpcom/public/nsError.h */
 
 /*
  * NS_ERROR macros - use these macros to generate error constants
