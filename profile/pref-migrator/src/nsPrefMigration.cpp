@@ -133,6 +133,8 @@
 /* and the winner is:  Windows */
 #define PREF_FILE_NAME_IN_5x "prefs.js"
 
+#define PREF_MIGRATION_PROGRESS_URL "resource:/res/profile/pmunprog.xul"
+
 typedef struct
 {
   const char* oldFile;
@@ -276,29 +278,19 @@ nsPrefMigration::ProcessPrefs()
 {
   nsresult rv;
   nsCOMPtr<nsIURI> pmprogressURL;
-  PRInt32 pmWinWidth  = 300;
-  PRInt32 pmWinHeight = 200;
-  nsAutoString args;
-  const char *pmprogressStr = "resource:/res/profile/pmunprog.xul";
-
 
   NS_WITH_SERVICE(nsIAppShellService, PMProgressAppShell,
                   kAppShellServiceCID, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
 
-  rv = NS_NewURI(getter_AddRefs(pmprogressURL), pmprogressStr);
+  rv = NS_NewURI(getter_AddRefs(pmprogressURL), PREF_MIGRATION_PROGRESS_URL);
   if (NS_FAILED(rv)) return rv;
 
   rv = PMProgressAppShell->CreateTopLevelWindow(nsnull, pmprogressURL,
                                           PR_TRUE, PR_TRUE, NS_CHROME_ALL_CHROME,
-                                          nsnull, pmWinWidth, pmWinHeight,
+                                          nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT,
                                           getter_AddRefs(mPMProgressWindow));
-
-  if (NS_FAILED(rv)) 
-  {
-     return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
 
   //PMProgressAppShell->Run();
   mPMProgressWindow->ShowModal();
