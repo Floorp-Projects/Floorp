@@ -39,8 +39,8 @@
 ** File:                prtypes.h
 ** Description: Definitions of NSPR's basic types
 **
-** Prototypes and macros used to make up for deficiencies in ANSI environments
-** that we have found.
+** Prototypes and macros used to make up for deficiencies that we have found
+** in ANSI environments.
 **
 ** Since we do not wrap <stdlib.h> and all the other standard headers, authors
 ** of portable code will not know in general that they need these definitions.
@@ -424,7 +424,7 @@ typedef PRInt64 PROffset64;
 ** TYPES:       PRPtrDiff
 ** DESCRIPTION:
 **  A type for pointer difference. Variables of this type are suitable
-**      for storing a pointer or pointer sutraction. 
+**      for storing a pointer or pointer subtraction. 
 ************************************************************************/
 typedef ptrdiff_t PRPtrdiff;
 
@@ -442,7 +442,7 @@ typedef unsigned long PRUptrdiff;
 **  Use PRBool for variables and parameter types. Use PR_FALSE and PR_TRUE
 **      for clarity of target type in assignments and actual arguments. Use
 **      'if (bool)', 'while (!bool)', '(bool) ? x : y' etc., to test booleans
-**      juast as you would C int-valued conditions. 
+**      just as you would C int-valued conditions. 
 ************************************************************************/
 typedef PRIntn PRBool;
 #define PR_TRUE 1
@@ -451,7 +451,7 @@ typedef PRIntn PRBool;
 /************************************************************************
 ** TYPES:       PRPackedBool
 ** DESCRIPTION:
-**  Use PRPackedBOol within structs where bitfields are not desireable
+**  Use PRPackedBool within structs where bitfields are not desirable
 **      but minimum and consistant overhead matters.
 ************************************************************************/
 typedef PRUint8 PRPackedBool;

@@ -48,7 +48,7 @@
  * This API was not designed as an "optimal" or "ideal" string library; it 
  * was based on the good ol' unix string.3 functions, and was written to
  *
- *  1) replace the libc functions, for cross-platform consistancy, 
+ *  1) replace the libc functions, for cross-platform consistency, 
  *  2) complete the API on platforms lacking common functions (e.g., 
  *     strcase*), and
  *  3) to implement some obvious "closure" functions that I've seen
@@ -418,7 +418,7 @@ PL_strcaserstr(const char *big, const char *little);
 /*
  * PL_strncasestr
  *
- * Returns a pointer to the first instance of the listtle string within the first
+ * Returns a pointer to the first instance of the little string within the first
  * n characters of the big one, ignoring case.  It returns null if either string is 
  * null.  It returns null if the length of the little string is greater than n.
  */

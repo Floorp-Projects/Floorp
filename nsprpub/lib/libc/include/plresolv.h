@@ -66,7 +66,7 @@ NSPR_BEGIN_EXTERN_C
 #define PL_RESOLVE_ETIMEDOUT     4           /* Request timed-out */
 #define PL_RESOLVE_EINVAL        5           /* Invalid argument */
 #define PL_RESOLVE_EOVERFLOW     6           /* Buffer Overflow */
-#define PL_RESOLVE_EUNKNOWN      7           /* berzerk error */
+#define PL_RESOLVE_EUNKNOWN      7           /* berserk error */
 
 /* ----------- Function Prototypes ----------------*/
 

@@ -320,7 +320,7 @@ PR_EXTERN(void) PR_DumpIndent(FILE *out, PRIntn indent);
 **    a pointer falls within the GC heap. [ see GC_IN_HEAP(...) ]
 **
 ** lock:
-**    Monitor used for syncronization within the GC.
+**    Monitor used for synchronization within the GC.
 **
 ** finalizer:
 **    Thread in which the GC finalizer is running.
@@ -352,7 +352,7 @@ typedef struct GCInfoStr {
     PRWord  allocMemory;   /* sum of busy & free memory             */
     PRWord  maxMemory;     /* max memory we are allowed to allocate */
     PRWord *lowSeg;        /* lowest segment in the GC heap         */
-    PRWord *highSeg;       /* higest segment in the GC heap         */
+    PRWord *highSeg;       /* highest segment in the GC heap         */
 
     PRMonitor *lock;
     PRThread  *finalizer;
