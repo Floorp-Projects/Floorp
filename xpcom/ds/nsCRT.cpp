@@ -154,7 +154,7 @@ PRInt32 nsCRT::strlen(const PRUnichar* s)
  * NOTE: If both are null, we return 0.
  * @update	gess7/30/98
  * @param   s1 and s2 both point to unichar strings
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
 {
@@ -177,7 +177,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const PRUnichar* s2)
  * NOTE: If either is null, we return 0.
  * @update	gess7/30/98
  * @param   s1 and s2 both point to unichar strings
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 {
@@ -204,7 +204,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
  * NOTE: If both are null, we return 0.
  * @update	gess7/30/98
  * @param   s1 and s2 both point to unichar strings
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
 {
@@ -232,7 +232,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const PRUnichar* s2)
  * NOTE: If both are null, we return 0.
  * @update	gess7/30/98
  * @param   s1 and s2 both point to unichar strings
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
 {
@@ -263,7 +263,7 @@ PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const PRUnichar* s2, PRInt32 n)
  * @update	gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
 {
@@ -288,7 +288,7 @@ PRInt32 nsCRT::strcmp(const PRUnichar* s1, const char* s2)
  * @update	gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 {
@@ -314,7 +314,7 @@ PRInt32 nsCRT::strncmp(const PRUnichar* s1, const char* s2, PRInt32 n)
  * @update	gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
 {
@@ -342,7 +342,7 @@ PRInt32 nsCRT::strcasecmp(const PRUnichar* s1, const char* s2)
  * @update	gess7/30/98
  * @param   s1 points to unichar string
  * @param   s2 points to cstring
- * @return  1 if they match, 0 if not
+ * @return  0 if they match, -1 if s1<s2; 1 if s1>s2
  */
 PRInt32 nsCRT::strncasecmp(const PRUnichar* s1, const char* s2, PRInt32 n)
 {
