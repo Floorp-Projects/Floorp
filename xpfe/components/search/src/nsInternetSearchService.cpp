@@ -75,6 +75,7 @@
 #include "nsWeakReference.h"
 #include "nsIBookmarksService.h"
 #include "nsITimer.h"
+#include "nsIPref.h"
 
 #ifdef	XP_MAC
 #include "Files.h"
@@ -91,7 +92,7 @@
 
 
 
-#define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded; charset=ISO-8859-1\r\nContent-Length: "
+#define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded\r\nContent-Length: "
 #define	POSTHEADER_SUFFIX	"\r\n\r\n"
 
 
@@ -104,6 +105,7 @@ static NS_DEFINE_CID(kRDFXMLDataSourceCID,         NS_RDFXMLDATASOURCE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kTextToSubURICID,             NS_TEXTTOSUBURI_CID);
 static NS_DEFINE_CID(kFileLocatorCID,              NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kPrefCID,                     NS_PREF_CID);
 
 static const char kURINC_SearchEngineRoot[]                   = "NC:SearchEngineRoot";
 static const char kURINC_SearchResultsSitesRoot[]             = "NC:SearchResultsSitesRoot";
@@ -116,6 +118,8 @@ static const char kURINC_SearchCategoryEngineBasenamePrefix[] = "NC:SearchCatego
 static const char kURINC_FilterSearchURLsRoot[]       = "NC:FilterSearchURLsRoot";
 static const char kURINC_FilterSearchSitesRoot[]      = "NC:FilterSearchSitesRoot";
 static const char kSearchCommand[]                    = "http://home.netscape.com/NC-rdf#command?";
+
+static int	searchModePrefCallback(const char *pref, void *aClosure);
 
 
 
@@ -296,6 +300,7 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFResource		*kNC_SearchResult;
 	static nsIRDFResource		*kNC_SearchEngineRoot;
 	static nsIRDFResource		*kNC_LastSearchRoot;
+	static nsIRDFResource		*kNC_LastSearchMode;
 	static nsIRDFResource		*kNC_SearchCategoryRoot;
 	static nsIRDFResource		*kNC_SearchResultsSitesRoot;
 	static nsIRDFResource		*kNC_FilterSearchURLsRoot;
@@ -334,6 +339,8 @@ static	PRBool				mEngineListBuilt;
 	static nsIRDFResource		*kNC_SearchCommand_FilterSite;
 	static nsIRDFResource		*kNC_SearchCommand_ClearFilters;
 
+	static nsIRDFLiteral		*kTrueLiteral;
+
 protected:
 	static nsIRDFDataSource		*mInner;
 
@@ -341,8 +348,11 @@ protected:
 	static nsCOMPtr<nsILoadGroup>		mBackgroundLoadGroup;
 	static nsCOMPtr<nsILoadGroup>		mLoadGroup;
 	static nsCOMPtr<nsIRDFDataSource>	categoryDataSource;
+	static nsCOMPtr<nsIPref>		prefs;
+
 
 friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID aIID, void** aResult);
+friend	int		searchModePrefCallback(const char *pref, void *aClosure);
 
 	// helper methods
 	PRBool		isEngineURI(nsIRDFResource* aResource);
@@ -411,10 +421,12 @@ PRBool				InternetSearchDataSource::mEngineListBuilt;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mBackgroundLoadGroup;
 nsCOMPtr<nsILoadGroup>		InternetSearchDataSource::mLoadGroup;
 nsCOMPtr<nsITimer>		InternetSearchDataSource::mTimer;
+nsCOMPtr<nsIPref>		InternetSearchDataSource::prefs;
 
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchResult;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchEngineRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_LastSearchRoot;
+nsIRDFResource			*InternetSearchDataSource::kNC_LastSearchMode;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCategoryRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchResultsSitesRoot;
 nsIRDFResource			*InternetSearchDataSource::kNC_FilterSearchURLsRoot;
@@ -453,10 +465,32 @@ nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterResult;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_FilterSite;
 nsIRDFResource			*InternetSearchDataSource::kNC_SearchCommand_ClearFilters;
 
+nsIRDFLiteral			*InternetSearchDataSource::kTrueLiteral;
+
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
 
 #define	SEARCH_UPDATE_TIMEOUT	60000		// fire every 60 seconds
+
+
+
+static int
+searchModePrefCallback(const char *pref, void *aClosure)
+{
+	InternetSearchDataSource *searchDS = NS_STATIC_CAST(InternetSearchDataSource *, aClosure);
+	if (!searchDS)	return(NS_OK);
+
+	if (searchDS->prefs)
+	{
+		PRInt32		searchMode=0;
+		searchDS->prefs->GetIntPref(pref, &searchMode);
+#ifdef	DEBUG
+		printf("searchModePrefCallback: '%s' = %lu\n", pref, searchMode);
+#endif
+		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
+	}
+	return(NS_OK);
+}
 
 
 
@@ -482,6 +516,7 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(kURINC_FilterSearchURLsRoot,            &kNC_FilterSearchURLsRoot);
 		gRDFService->GetResource(kURINC_FilterSearchSitesRoot,           &kNC_FilterSearchSitesRoot);
 		gRDFService->GetResource(kURINC_SearchCategoryRoot,              &kNC_SearchCategoryRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "SearchMode",          &kNC_LastSearchMode);
 
 		gRDFService->GetResource(NC_NAMESPACE_URI "searchtype",          &kNC_SearchType);
 		gRDFService->GetResource(NC_NAMESPACE_URI "SearchResult",        &kNC_SearchResult);
@@ -517,6 +552,14 @@ InternetSearchDataSource::InternetSearchDataSource(void)
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filterresult",   &kNC_SearchCommand_FilterResult);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=filtersite",     &kNC_SearchCommand_FilterSite);
 		gRDFService->GetResource(NC_NAMESPACE_URI "command?cmd=clearfilters",   &kNC_SearchCommand_ClearFilters);
+
+		gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+
+		rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), getter_AddRefs(prefs));
+		if (NS_SUCCEEDED(rv) && (prefs))
+		{
+			prefs->RegisterCallback("browser.search.mode", searchModePrefCallback, this);
+		}
 	}
 }
 
@@ -529,6 +572,7 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_SearchResult);
 		NS_IF_RELEASE(kNC_SearchEngineRoot);
 		NS_IF_RELEASE(kNC_LastSearchRoot);
+		NS_IF_RELEASE(kNC_LastSearchMode);
 		NS_IF_RELEASE(kNC_SearchCategoryRoot);
 		NS_IF_RELEASE(kNC_SearchResultsSitesRoot);
 		NS_IF_RELEASE(kNC_FilterSearchURLsRoot);
@@ -567,6 +611,8 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 		NS_IF_RELEASE(kNC_SearchCommand_FilterSite);
 		NS_IF_RELEASE(kNC_SearchCommand_ClearFilters);
 
+		NS_IF_RELEASE(kTrueLiteral);
+
 		NS_IF_RELEASE(mInner);
 
 		mBackgroundLoadGroup = nsnull;
@@ -579,6 +625,12 @@ InternetSearchDataSource::~InternetSearchDataSource (void)
 			// weak reference back to InternetSearchDataSource
 			mTimer->Cancel();
 			mTimer = nsnull;
+		}
+
+		if (prefs)
+		{
+			prefs->UnregisterCallback("browser.search.mode", searchModePrefCallback, this);
+			prefs = nsnull;
 		}
 
 		if (gRDFC)
@@ -2689,27 +2741,22 @@ InternetSearchDataSource::Stop()
 	}
 
 	// remove any loading icons
-	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
-		getter_AddRefs(trueLiteral))))
+	nsCOMPtr<nsISimpleEnumerator>	arcs;
+	if (NS_SUCCEEDED(rv = mInner->GetSources(kNC_loading, kTrueLiteral, PR_TRUE,
+		getter_AddRefs(arcs))))
 	{
-		nsCOMPtr<nsISimpleEnumerator>	arcs;
-		if (NS_SUCCEEDED(rv = mInner->GetSources(kNC_loading, trueLiteral, PR_TRUE,
-			getter_AddRefs(arcs))))
+		PRBool			hasMore = PR_TRUE;
+		while (hasMore == PR_TRUE)
 		{
-			PRBool			hasMore = PR_TRUE;
-			while (hasMore == PR_TRUE)
+			if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+				break;
+			nsCOMPtr<nsISupports>	arc;
+			if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+				break;
+			nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(arc);
+			if (src)
 			{
-				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
-					break;
-				nsCOMPtr<nsISupports>	arc;
-				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
-					break;
-				nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(arc);
-				if (src)
-				{
-					mInner->Unassert(src, kNC_loading, trueLiteral);
-				}
+				mInner->Unassert(src, kNC_loading, kTrueLiteral);
 			}
 		}
 	}
@@ -2802,12 +2849,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		}
 	}
 
-	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),
-		getter_AddRefs(trueLiteral))))
-	{
-		mInner->Assert(source, kNC_loading, trueLiteral, PR_TRUE);
-	}
+	mInner->Assert(source, kNC_loading, kTrueLiteral, PR_TRUE);
 
 	PRBool	requestInitiated = PR_FALSE;
 
@@ -3222,11 +3264,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			rv = mInner->Unassert(engine, kNC_StatusIcon, engineIconNode);
 		}
 
-		nsCOMPtr<nsIRDFLiteral>	literal;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(literal))))
-		{
-			mInner->Assert(engine, kNC_loading, literal, PR_TRUE);
-		}
+		mInner->Assert(engine, kNC_loading, kTrueLiteral, PR_TRUE);
 	}
 
 	return(rv);
@@ -4127,11 +4165,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	context->Truncate();
 
 	// (do this last) potentially remove the loading attribute
-	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(trueLiteral))))
-	{
-		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
-	}
+	mInner->Unassert(mEngine, kNC_loading, kTrueLiteral);
 
 	if (mLoadGroup)
 	{
@@ -4967,16 +5001,12 @@ InternetSearchDataSource::SetHint(nsIRDFResource *mParent, nsIRDFResource *hintR
 {
 	if (!mInner)	return(NS_OK);
 
-	nsresult		rv;
-	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), getter_AddRefs(trueLiteral))))
+	nsresult	rv;
+	PRBool		hasAssertionFlag = PR_FALSE;
+	if (NS_SUCCEEDED(rv = mInner->HasAssertion(mParent, hintRes, kTrueLiteral, PR_TRUE, &hasAssertionFlag))
+		&& (hasAssertionFlag == PR_FALSE))
 	{
-		PRBool		hasAssertionFlag = PR_FALSE;
-		if (NS_SUCCEEDED(rv = mInner->HasAssertion(mParent, hintRes, trueLiteral, PR_TRUE, &hasAssertionFlag))
-			&& (hasAssertionFlag == PR_FALSE))
-		{
-			rv = mInner->Assert(mParent, hintRes, trueLiteral, PR_TRUE);
-		}
+		rv = mInner->Assert(mParent, hintRes, kTrueLiteral, PR_TRUE);
 	}
 	return(rv);
 }
