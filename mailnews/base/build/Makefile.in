@@ -17,8 +17,8 @@
 
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -40,9 +40,9 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS) \
 		$(MKSHLIB_UNFORCE_ALL) \
 		-L$(DIST)/bin \
-		-L$(DIST)/lib	\
+		-L$(DIST)/lib \
 		-lxpcom \
-		$(MOZ_TIMER_LIBS)	\
+		$(MOZ_TIMER_LIBS) \
 		-lmsgbaseutil \
 		$(NSPR_LIBS) \
 		$(NULL)
