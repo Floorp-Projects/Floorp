@@ -40,6 +40,7 @@
 #include "pk11func.h"
 #include "pki3hack.h"
 #include "secerr.h"
+#include "dev.h"
 
 /* these are for displaying error messages */
 
@@ -639,7 +640,10 @@ SECMOD_DestroyModule(SECMODModule *module) {
      * module to disappear altogether */
     for (i=0 ; i < slotCount; i++) {
 	if (!module->slots[i]->disabled) {
-		PK11_ClearSlotList(module->slots[i]);
+	    PK11_ClearSlotList(module->slots[i]);
+	    if (module->slots[i]->nssToken) {
+		nssToken_NotifyCertsNotVisible(module->slots[i]->nssToken);
+	    }
 	}
 	PK11_FreeSlot(module->slots[i]);
     }
