@@ -51,6 +51,19 @@ public:
         if (aCopy.mNext) mNext = new nsClassList(*(aCopy.mNext));
     }
 
+    nsClassList& operator=(const nsClassList& aClassList)
+    {
+        if (this != &aClassList) {
+            delete mNext;
+            mNext = nsnull;
+            mAtom = aClassList.mAtom;
+
+            if (aClassList.mNext) {
+                mNext = new nsClassList(*(aClassList.mNext));
+            }
+        }
+        return *this;
+    }
 
     ~nsClassList(void)
     {
@@ -68,9 +81,6 @@ public:
 
     static nsresult
     ParseClasses(nsClassList** aList, const nsString& aValue);
-
-private:
-    nsClassList& operator=(const nsClassList& aClassList) { return *this; } // not to be implemented
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -153,19 +163,22 @@ public:
     nsresult GetClasses(nsVoidArray& aArray) const;
     nsresult HasClass(nsIAtom* aClass) const;
 
+    nsresult SetClassList(nsClassList* aClassList);
     nsresult UpdateClassList(const nsString& aValue);
     nsresult UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue);
+
+    nsresult SetInlineStyleRule(nsIStyleRule* aRule);
     nsresult GetInlineStyleRule(nsIStyleRule*& aRule);
 
 protected:
     nsXULAttributes(nsIContent* aContent);
     virtual ~nsXULAttributes();
 
-    nsIContent*   mContent;
-    nsClassList*  mClassList;
-    nsIStyleRule* mStyleRule;
-    nsVoidArray   mAttributes;
-    void*         mScriptObject;
+    nsIContent*            mContent;
+    nsClassList*           mClassList;
+    nsCOMPtr<nsIStyleRule> mStyleRule;
+    nsVoidArray            mAttributes;
+    void*                  mScriptObject;
 };
 
 

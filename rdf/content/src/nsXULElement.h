@@ -451,6 +451,8 @@ protected:
     nsIDocument*                        mDocument;           // [WEAK]
     nsIContent*                         mParent;             // [WEAK]
     nsCOMPtr<nsISupportsArray>          mChildren;           // [OWNER]
+    nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
+    void*                               mScriptObject;       // [OWNER]
 
     // The state of our sloth for lazy content model construction via
     // RDF; see nsIXULContent and nsRDFGenericBuilder.
@@ -467,8 +469,6 @@ protected:
         nsCOMPtr<nsINameSpace>              mNameSpace;          // [OWNER]
         nsCOMPtr<nsIAtom>                   mNameSpacePrefix;    // [OWNER]
         nsCOMPtr<nsIAtom>                   mTag;                // [OWNER]
-        void*                               mScriptObject;       // [OWNER]
-        nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
         nsVoidArray*                        mBroadcastListeners; // [WEAK]
         nsIDOMXULElement*                   mBroadcaster;        // [WEAK]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
@@ -494,8 +494,6 @@ protected:
     nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
     nsIAtom*                   NameSpacePrefix() const { return mSlots ? mSlots->mNameSpacePrefix.get() : mPrototype->mNameSpacePrefix.get(); }
     nsIAtom*                   Tag() const             { return mSlots ? mSlots->mTag.get()             : mPrototype->mTag.get(); }
-    void*                      ScriptObject() const       { return mSlots ? mSlots->mScriptObject             : nsnull; }
-    nsIEventListenerManager*   ListenerManager() const    { return mSlots ? mSlots->mListenerManager.get()    : nsnull; }
     nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
     nsIDOMXULElement*          Broadcaster() const        { return mSlots ? mSlots->mBroadcaster              : nsnull; }
     nsIControllers*            Controllers() const        { return mSlots ? mSlots->mControllers.get()        : nsnull; }
