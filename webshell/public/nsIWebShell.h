@@ -213,17 +213,6 @@ public:
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult) = 0;
 
   /**
-   * Set the nsIStreamObserver which receives all notifications from URLs 
-   * in the old fashion.
-   */
-  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver) = 0;
-
-  /**
-   * Return the current nsIStreamObserver.
-   */
-  NS_IMETHOD GetObserver(nsIStreamObserver*& aResult) = 0;
-
-  /**
    * Set the DocLoaderObserver which receives all notifications from URLs 
    * loaded by the document.
    */

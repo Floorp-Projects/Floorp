@@ -47,6 +47,7 @@
 #include "nsIComponentManager.h"
 
 #include "nsIWebShell.h"
+#include "nsIDocumentLoader.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPref.h"
 #include "nsIView.h"
@@ -86,7 +87,7 @@ static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
-static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentObserverIID, NS_IDOCUMENT_OBSERVER_IID);
 
 static NS_DEFINE_CID(kHTMLEditorCID, NS_HTMLEDITOR_CID);
@@ -874,7 +875,11 @@ nsGfxTextControlFrame::CreateWebShell(nsIPresContext& aPresContext,
                   webBounds.width, webBounds.height);
   NS_RELEASE(widget);
 
-  mWebShell->SetObserver(mTempObserver);
+  nsCOMPtr<nsIDocumentLoader> docLoader;
+  mWebShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+  if (docLoader) {
+    docLoader->AddObserver(mTempObserver);
+  }
   mWebShell->Show();
   return NS_OK;
 }
@@ -2582,13 +2587,13 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIStreamObserverIID)) {
-    *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
     AddRef();
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*) ((nsISupports*)((nsIDocumentObserver*)this));
+    *aInstancePtr = (void*) ((nsISupports*)((nsIDocumentLoaderObserver*)this));
     AddRef();
     return NS_OK;
   }
@@ -2596,37 +2601,20 @@ EnderTempObserver::QueryInterface(const nsIID& aIID,
 }
 
 
-#ifndef NECKO
+// document loader observer implementation
 NS_IMETHODIMP
-EnderTempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
+EnderTempObserver::OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                       nsIURI* aURL, 
+                                       const char* aCommand)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-EnderTempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-  return NS_OK;
-}
-#endif
-
-NS_IMETHODIMP
-#ifdef NECKO
-EnderTempObserver::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
-#else
-EnderTempObserver::OnStartRequest(nsIURI* aURL, const char *aContentType)
-#endif
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-#ifdef NECKO
-EnderTempObserver::OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status,
-                                 const PRUnichar *errorMsg)
-#else
-EnderTempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
-#endif
+EnderTempObserver::OnEndDocumentLoad(nsIDocumentLoader* loader,
+                                     nsIChannel* channel,
+                                     nsresult aStatus,
+                                     nsIDocumentLoaderObserver * aObserver)
 {
   if (PR_TRUE==mFirstCall)
   {
@@ -2637,6 +2625,49 @@ EnderTempObserver::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar*
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+EnderTempObserver::OnStartURLLoad(nsIDocumentLoader* loader,
+                                  nsIChannel* channel, 
+                                  nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EnderTempObserver::OnProgressURLLoad(nsIDocumentLoader* loader,
+                                     nsIChannel* channel,
+                                     PRUint32 aProgress, 
+                                     PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EnderTempObserver::OnStatusURLLoad(nsIDocumentLoader* loader,
+                                   nsIChannel* channel,
+                                   nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EnderTempObserver::OnEndURLLoad(nsIDocumentLoader* loader,
+                                nsIChannel* channel,
+                                nsresult aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+EnderTempObserver::HandleUnknownContentType(nsIDocumentLoader* loader,
+                                            nsIChannel* channel,
+                                            const char *aContentType,
+                                            const char *aCommand)
+{
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 EnderTempObserver::SetFrame(nsGfxTextControlFrame *aFrame)

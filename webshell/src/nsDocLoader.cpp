@@ -141,8 +141,7 @@ public:
     nsresult Init(nsDocLoaderImpl* aDocLoader,
                   const char *aCommand, 
                   nsIContentViewerContainer* aContainer,
-                  nsISupports* aExtraInfo,
-                  nsIStreamObserver* anObserver);
+                  nsISupports* aExtraInfo);
 
     NS_DECL_ISUPPORTS
 
@@ -173,7 +172,6 @@ protected:
     char*               m_Command;
     nsIContentViewerContainer* m_Container;
     nsISupports*        m_ExtraInfo;
-    nsIStreamObserver*  m_Observer;
     nsIStreamListener*  m_NextStream;
     nsDocLoaderImpl*    m_DocLoader;
 };
@@ -207,7 +205,6 @@ public:
                             nsIContentViewerContainer* aContainer,
                             nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
-                            nsIStreamObserver* anObserver = nsnull,
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
                             const PRUint32 aLocalIP = 0,
                             const PRUnichar* aReferrer = nsnull);
@@ -297,7 +294,6 @@ protected:
   
     nsCOMPtr<nsIChannel>       mDocumentChannel;       // [OWNER] ???compare with document
     nsVoidArray                mDocObservers;
-    nsCOMPtr<nsIStreamObserver> mStreamObserver;    // ??? unclear what to do here
     nsIContentViewerContainer* mContainer;          // [WEAK] it owns me!
 
     nsDocLoaderImpl*  mParent;                      // [OWNER] but upside down ownership model
@@ -493,7 +489,6 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
                               nsIContentViewerContainer* aContainer,
                               nsIInputStream* aPostDataStream,
                               nsISupports* aExtraInfo,
-                              nsIStreamObserver* anObserver,
                               nsLoadFlags aType,
                               const PRUint32 aLocalIP,
                               const PRUnichar* aReferrer)
@@ -526,8 +521,7 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
   loader->Init(this,           // DocLoader
                aCommand,       // Command
                aContainer,     // Viewer Container
-               aExtraInfo,     // Extra Info
-               anObserver);    // Observer
+               aExtraInfo);    // Extra Info
 
   /*
    * Set the flag indicating that the document loader is in the process of
@@ -535,8 +529,6 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
    * OnConnectionsComplete(...) notification is fired for the loader...
    */
   mIsLoadingDocument = PR_TRUE;
-
-  mStreamObserver = dont_QueryInterface(anObserver);
 
   rv = loader->Bind(aUri, mLoadGroup, aPostDataStream, aReferrer);
 
@@ -574,9 +566,8 @@ nsDocLoaderImpl::LoadSubDocument(nsIURI *aUri,
   NS_ADDREF(loader);
   loader->Init(this,           // DocLoader
                nsnull,         // Command
-               nsnull,     // Viewer Container
-               aExtraInfo,     // Extra Info
-               mStreamObserver);    // Observer
+               nsnull,         // Viewer Container
+               aExtraInfo);    // Extra Info
 
 
   rv = loader->Bind(aUri, mLoadGroup, nsnull, nsnull);
@@ -591,12 +582,6 @@ nsDocLoaderImpl::Stop(void)
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
          ("DocLoader:%p: Stop() called\n", this));
   rv = mLoadGroup->Cancel();
-
-  /* 
-   * Release the Stream Observer...  
-   * It will be set on the next LoadDocument(...) 
-   */
-  mStreamObserver = null_nsCOMPtr();
 
   return rv;
 }       
@@ -1024,7 +1009,6 @@ nsDocumentBindInfo::nsDocumentBindInfo()
     m_Command = nsnull;
     m_Container = nsnull;
     m_ExtraInfo = nsnull;
-    m_Observer = nsnull;
     m_NextStream = nsnull;
     m_DocLoader = nsnull;
 }
@@ -1033,8 +1017,7 @@ nsresult
 nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
                          const char *aCommand, 
                          nsIContentViewerContainer* aContainer,
-                         nsISupports* aExtraInfo,
-                         nsIStreamObserver* anObserver)
+                         nsISupports* aExtraInfo)
 {
     m_NextStream = nsnull;
     m_Command    = (nsnull != aCommand) ? PL_strdup(aCommand) : nsnull;
@@ -1044,9 +1027,6 @@ nsDocumentBindInfo::Init(nsDocLoaderImpl* aDocLoader,
 
     m_Container = aContainer;
     NS_IF_ADDREF(m_Container);
-
-    m_Observer = anObserver;
-    NS_IF_ADDREF(m_Observer);
 
     m_ExtraInfo = aExtraInfo;
     NS_IF_ADDREF(m_ExtraInfo);
@@ -1064,7 +1044,6 @@ nsDocumentBindInfo::~nsDocumentBindInfo()
     NS_RELEASE   (m_DocLoader);
     NS_IF_RELEASE(m_NextStream);
     NS_IF_RELEASE(m_Container);
-    NS_IF_RELEASE(m_Observer);
     NS_IF_RELEASE(m_ExtraInfo);
 }
 
@@ -1208,13 +1187,6 @@ NS_METHOD nsDocumentBindInfo::OnProgress(nsIChannel* channel, nsISupports *ctxt,
     /* Pass the notification out to any observers... */
     m_DocLoader->FireOnProgressURLLoad(m_DocLoader, channel, aProgress, aProgressMax);
 
-    /* Pass the notification out to the Observer... */
-    if (nsnull != m_Observer) {
-        /* XXX: Should we ignore the return value? */
-//        (void) m_Observer->OnProgress(channel, aProgress, aProgressMax);
-        NS_ASSERTION(0, "help");
-    }
-
     return rv;
 }
 
@@ -1236,13 +1208,6 @@ NS_METHOD nsDocumentBindInfo::OnStatus(nsIChannel* channel, nsISupports *ctxt, c
     /* Pass the notification out to any observers... */
     nsString msgStr(aMsg);
     m_DocLoader->FireOnStatusURLLoad(m_DocLoader, channel, msgStr);
-
-    /* Pass the notification out to the Observer... */
-    if (nsnull != m_Observer) {
-        /* XXX: Should we ignore the return value? */
-//        (void) m_Observer->OnStatus(ctxt, aMsg);
-        NS_ASSERTION(0, "help");
-    }
 
     return rv;
 }
@@ -1319,13 +1284,6 @@ nsDocumentBindInfo::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
      */
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStartRequest(channel, ctxt);
-    }
-
-    /* Pass the notification out to the Observer... */
-    if (nsnull != m_Observer) {
-        nsresult rv2 = m_Observer->OnStartRequest(channel, ctxt);
-        if (NS_SUCCEEDED(rv))
-        	rv = rv2;
     }
 
   done:
@@ -1411,12 +1369,6 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIChannel* channel, nsISupports *ct
 
     if (nsnull != m_NextStream) {
         rv = m_NextStream->OnStopRequest(channel, ctxt, aStatus, aMsg);
-    }
-
-    /* Pass the notification out to the Observer... */
-    if (nsnull != m_Observer) {
-        /* XXX: Should we ignore the return value? */
-        (void) m_Observer->OnStopRequest(channel, ctxt, aStatus, aMsg);
     }
 
     NS_IF_RELEASE(m_NextStream);

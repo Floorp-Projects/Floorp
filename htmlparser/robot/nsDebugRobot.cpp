@@ -19,6 +19,8 @@
 #include "nsIRobotSinkObserver.h"
 #include "nsIParser.h"
 #include "nsIWebShell.h"
+#include "nsIDocumentLoader.h"
+#include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
@@ -28,7 +30,6 @@
 #include "nsIIOService.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
-#include "nsIStreamListener.h"
 #include "nsIDTDDebug.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
@@ -119,7 +120,7 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir);
 
-class CStreamListener:  public nsIStreamObserver
+class CStreamListener:  public nsIDocumentLoaderObserver
 {
 public:
   CStreamListener() {
@@ -132,34 +133,96 @@ public:
 
   NS_DECL_ISUPPORTS
 
-#ifdef NECKO
-  NS_DECL_NSISTREAMOBSERVER
-#else
-  NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 Progress, PRUint32 ProgressMax) { return NS_OK; }
-  NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg) { return NS_OK; }
-  NS_IMETHOD OnStartRequest(nsIURI* aURL, const char *aContentType) { return NS_OK; }
-  NS_IMETHOD OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
-#endif
+  // nsIDocumentLoaderObserver
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                 nsIURI* aURL, 
+                                 const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel,
+                               nsresult aStatus,
+							   nsIDocumentLoaderObserver * aObserver);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
+                            nsIChannel* channel, 
+                            nsIContentViewer* aViewer);
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel,
+                               PRUint32 aProgress, 
+                               PRUint32 aProgressMax);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
+                             nsIChannel* channel,
+                             nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
+                          nsIChannel* channel,
+                          nsresult aStatus);
+  NS_IMETHOD HandleUnknownContentType( nsIDocumentLoader* loader,
+                                       nsIChannel* channel,
+                                       const char *aContentType,
+                                       const char *aCommand );
+
 };
 
-#ifdef NECKO
-NS_IMETHODIMP CStreamListener::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+// document loader observer implementation
+NS_IMETHODIMP
+CStreamListener::OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                     nsIURI* aURL, 
+                                     const char* aCommand)
 {
   return NS_OK;
 }
-#endif
 
-#ifdef NECKO
-NS_IMETHODIMP CStreamListener::OnStopRequest(nsIChannel* channel, nsISupports* aContext,
-                                             nsresult status, const PRUnichar* aMsg)
-#else
-NS_IMETHODIMP CStreamListener::OnStopRequest(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
-#endif
+NS_IMETHODIMP
+CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
+                                   nsIChannel* channel,
+                                   nsresult aStatus,
+  						           nsIDocumentLoaderObserver * aObserver)
 {
-   fputs("done.\n",stdout);
-   g_bReadyForNextUrl = PR_TRUE;
-   return NS_OK;
+  fputs("done.\n",stdout);
+  g_bReadyForNextUrl = PR_TRUE;
+  return NS_OK;
 }
+
+NS_IMETHODIMP
+CStreamListener::OnStartURLLoad(nsIDocumentLoader* loader,
+                                nsIChannel* channel, 
+                                nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CStreamListener::OnProgressURLLoad(nsIDocumentLoader* loader,
+                                   nsIChannel* channel,
+                                   PRUint32 aProgress, 
+                                   PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CStreamListener::OnStatusURLLoad(nsIDocumentLoader* loader,
+                                 nsIChannel* channel,
+                                 nsString& aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CStreamListener::OnEndURLLoad(nsIDocumentLoader* loader,
+                              nsIChannel* channel,
+                              nsresult aStatus)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CStreamListener::HandleUnknownContentType(nsIDocumentLoader* loader,
+                                          nsIChannel* channel,
+                                          const char *aContentType,
+                                          const char *aCommand)
+{
+  return NS_OK;
+}
+
 
 nsresult CStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
@@ -278,7 +341,7 @@ extern "C" NS_EXPORT int DebugRobot(
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;  
 
-    parser->Parse(url, pl,PR_TRUE);/* XXX hook up stream listener here! */
+    parser->Parse(url, nsnull,PR_TRUE);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
       if (yieldProc != NULL) {
 #ifdef NECKO
@@ -295,7 +358,13 @@ extern "C" NS_EXPORT int DebugRobot(
     }
     g_bReadyForNextUrl = PR_FALSE;
     if (ww) {
-      ww->SetObserver(pl);
+      nsIDocumentLoader *docLoader;
+
+      ww->GetDocumentLoader(docLoader);
+      if (docLoader) {
+        docLoader->AddObserver(pl);
+        NS_RELEASE(docLoader);
+      }
 #ifdef NECKO
       char* spec;
       (void)url->GetSpec(&spec);

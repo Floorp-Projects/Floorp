@@ -56,7 +56,6 @@
 #include "prlog.h"
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
-#include "nsIStreamObserver.h"
 #include "nsIWebShellServices.h"
 #include "nsIGlobalHistory.h"
 #include "prmem.h"
@@ -75,9 +74,6 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 #include <windows.h>
 #endif
 
-//XXX used for nsIStreamObserver implementation.  This sould be replaced by DocLoader
-//    notifications...
-#include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
 
@@ -156,7 +152,6 @@ class nsWebShell : public nsIWebShell,
                    public nsIDocumentLoaderObserver,
                    public nsIPrompt,
                    public nsIRefreshURI,
-//                   public nsIStreamObserver,
                    public nsIClipboardCommands
 {
 public:
@@ -194,8 +189,6 @@ public:
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
-  NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
   NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
@@ -420,7 +413,6 @@ protected:
   nsIScriptGlobalObject *mScriptGlobal;
   nsIScriptContext* mScriptContext;
 
-  nsIStreamObserver * mObserver;
   nsIWebShellContainer* mContainer;
   nsIContentViewer* mContentViewer;
   nsIDeviceContext* mDeviceContext;
@@ -537,7 +529,6 @@ static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIFactoryIID,            NS_IFACTORY_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
-static NS_DEFINE_IID(kIStreamObserverIID,     NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kRefreshURIIID,          NS_IREFRESHURI_IID);
 
@@ -681,7 +672,6 @@ nsWebShell::~nsWebShell()
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mContainer);
-  NS_IF_RELEASE(mObserver);
 
   if (nsnull != mScriptGlobal) {
     mScriptGlobal->SetWebShell(nsnull);
@@ -1156,7 +1146,6 @@ nsWebShell::Destroy()
   mDocLoader->Destroy();
 
   SetContainer(nsnull);
-  SetObserver(nsnull);
   SetDocLoaderObserver(nsnull);
   SetUrlDispatcher(nsnull);
 
@@ -1446,28 +1435,6 @@ nsWebShell::HandleEvent(nsGUIEvent *aEvent)
 {
   return nsEventStatus_eIgnore;
 }
-
-NS_IMETHODIMP
-nsWebShell::SetObserver(nsIStreamObserver* anObserver)
-{
-  NS_IF_RELEASE(mObserver);
-
-  mObserver = anObserver;
-  if (nsnull != mObserver) {
-    NS_ADDREF(mObserver);
-  }
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::GetObserver(nsIStreamObserver*& aResult)
-{
-  aResult = mObserver;
-  NS_IF_ADDREF(mObserver);
-  return NS_OK;
-}
-
 
 
 NS_IMETHODIMP
@@ -2130,7 +2097,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
                                   this,            // Container
                                   aPostDataStream, // Post Data
                                   nsnull,          // Extra Info...
-                                  mObserver,       // Observer
                                   aType,           // reload type
                                   aLocalIP,        // load attributes.
                                   aReferrer);      // referrer
@@ -3799,74 +3765,6 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   return NS_OK;
 }
 
-#if 0
-NS_IMETHODIMP
-nsWebShell::OnStartRequest(nsIURI* aURL, const char *aContentType)
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull != mObserver) {
-    rv = mObserver->OnStartRequest(aURL, aContentType);
-  }
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull != mObserver) {
-    rv = mObserver->OnProgress(aURL, aProgress, aProgressMax);
-  }
-
-  // Pass status messages out to the nsIBrowserWindow...
-  nsIBrowserWindow *browserWindow;
-
-  browserWindow = GetBrowserWindow();
-  if (nsnull != browserWindow) {
-    browserWindow->SetProgress(aProgress, aProgressMax);
-    NS_RELEASE(browserWindow);
-  }
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull != mObserver) {
-    rv = mObserver->OnStatus(aURL, aMsg);
-  }
-
-  // Pass status messages out to the nsIBrowserWindow...
-  nsIBrowserWindow *browserWindow;
-
-  browserWindow = GetBrowserWindow();
-  if (nsnull != browserWindow) {
-    browserWindow->SetStatus(aMsg);
-    NS_RELEASE(browserWindow);
-  }
-
-  return rv;
-}
-
-
-NS_IMETHODIMP
-nsWebShell::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PRUnichar* aMsg)
-{
-  nsresult rv = NS_OK;
-
-  if (nsnull != mObserver) {
-    rv = mObserver->OnStopRequest(aURL, aStatus, aMsg);
-  }
-  return rv;
-}
-#endif  /* 0 */
 
 
 //----------------------------------------------------------------------
