@@ -57,7 +57,6 @@
 
 
 class nsIFile;
-class nsISecretDecoderRing;
 class nsIPrompt;
 class nsIStringBundle;
 class nsIComponentManager;
@@ -142,14 +141,17 @@ protected:
                                                                 PRInt32 aEntry,
                                                                 void* aUserData);
 
-  nsresult DecryptData(const nsAString& aData, nsAString& aPlaintext);
-  nsresult EncryptData(const nsAString& aPlaintext, nsACString& aEncrypted);
-  void EnsureDecoderRing();
+  static nsresult DecryptData(const nsAString& aData, nsAString& aPlaintext);
+  static nsresult EncryptData(const nsAString& aPlaintext,
+                              nsACString& aEncrypted);
+  static nsresult EncryptDataUCS2(const nsAString& aPlaintext,
+                                  nsAString& aEncrypted);
+
+  static void EnsureDecoderRing();
 
   nsClassHashtable<nsCStringHashKey,SignonDataEntry> mSignonTable;
   nsDataHashtable<nsCStringHashKey,PRInt32> mRejectTable;
 
-  nsCOMPtr<nsISecretDecoderRing> mDecoderRing;
   nsCOMPtr<nsIFile> mSignonFile;
 };
 
