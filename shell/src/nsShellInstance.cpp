@@ -57,9 +57,8 @@ nsShellInstance::~nsShellInstance()
 {
 }
 
-NS_IMPL_ADDREF(nsShellInstance)
-NS_IMPL_RELEASE(nsShellInstance)
-NS_IMPL_QUERY_INTERFACE(nsShellInstance,NS_ISHELLINSTANCE_IID);
+NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
+NS_IMPL_ISUPPORTS(nsShellInstance,kIShellInstanceIID);
 
 nsresult nsShellInstance::Init()
 {
@@ -182,7 +181,7 @@ nsIWidget * nsShellInstance::CreateApplicationWindow(const nsRect &aRect,
   NSRepository::CreateInstance(kCWindowCID, 
                                nsnull, 
                                kIWidgetIID, 
-                               (LPVOID*)&(mApplicationWindow));
+                               (void **)&(mApplicationWindow));
 
   mApplicationWindow->Create((nsIWidget*)NULL, 
                   aRect, 
