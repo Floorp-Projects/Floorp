@@ -98,7 +98,10 @@ HyperStyle::HyperStyle( MWContext *context, const CCharSet* charSet, LO_TextAttr
 	fAttr = *attr;
 	fAttr.size *= context->fontScalingPercentage;
 	
-	fFontReference = CFontReference::GetFontReference(charSet, attr, context, sUnderlineLinks);
+	// GetFontReference() stashes font info into fAttr->FE_Data so we need to make sure that
+	// we propogate that info to the attribute struct that is going back to layout.
+	fFontReference = CFontReference::GetFontReference(charSet, &fAttr, context, sUnderlineLinks);
+	attr->FE_Data = fAttr.FE_Data;
 	
 	strike = ( attr->attrmask & LO_ATTR_STRIKEOUT );
 	fInlineInput = ( attr->attrmask & ( LO_ATTR_INLINEINPUT | LO_ATTR_INLINEINPUTTHICK | LO_ATTR_INLINEINPUTDOTTED ) );
