@@ -103,17 +103,11 @@ function folderPropsOnLoad()
         document.getElementById("offline.selectForOfflineNewsgroup").checked = false;
     }
 
-    // get charset title (i.e. localized name), needed in order to set value for the menu
-    var ccm = Components.classes['@mozilla.org/charset-converter-manager;1'];
-    ccm = ccm.getService();
-    ccm = ccm.QueryInterface(Components.interfaces.nsICharsetConverterManager2);
-    // get a localized string
-    var charsetTitle = ccm.GetCharsetTitle(ccm.GetCharsetAtom(gMsgFolder.charset));
-
     // select the menu item 
     var folderCharsetList = document.getElementById("folderCharsetList");
-    folderCharsetList.setAttribute("label", charsetTitle);
-    folderCharsetList.setAttribute("value", gMsgFolder.charset);
+    var elements = folderCharsetList.getElementsByAttribute("value", gMsgFolder.charset);
+    folderCharsetList.selectedItem = elements[0];
+
 
     // set override checkbox
     document.getElementById("folderCharsetOverride").checked = gMsgFolder.charsetOverride;
