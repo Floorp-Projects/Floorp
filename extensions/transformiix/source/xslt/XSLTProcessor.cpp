@@ -819,6 +819,10 @@ txXSLTProcessor::processAction(Node* aAction,
             return;
         }
         exprResult->stringValue(value);
+        if (value.IsEmpty()) {
+            delete exprResult;
+            return;
+        }
 
         NS_ASSERTION(aPs->mResultHandler, "mResultHandler must not be NULL!");
         MBool doe = MB_FALSE;
