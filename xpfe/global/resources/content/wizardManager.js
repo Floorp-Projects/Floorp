@@ -167,7 +167,8 @@ function WM_ProgressUpdate( currentPageNumber )
     try {
       string += ( " " + this.bundle.GetStringFromName("oflabel") + " " );
     } catch (e) {
-      string += "of";
+      // mac string bundle hack
+      string += " of ";
     }
     string += this.GetMapLength();
     var textNode = document.createTextNode ( string );
