@@ -1317,7 +1317,7 @@ extern "C" JSBool pref_InitInitialObjects()
 #elif defined(XP_PC)
 	,	"winpref.js"
 #elif defined(XP_UNIX)
-	,	"unixpref.js"
+	,	"unix.js"
 #endif
 	};
     JSBool worked = (JSBool)(pref_OpenFileSpec(
@@ -1326,6 +1326,7 @@ extern "C" JSBool pref_InitInitialObjects()
     	PR_FALSE,
     	PR_FALSE,
     	PR_FALSE) == PREF_NOERROR);
+	NS_ASSERTION(worked, "initpref.js not parsed successfully");
     // Parse all the random files that happen to be in the components directory.
 	for (nsDirectoryIterator i(componentsDir); i.Exists(); i++)
 	{
@@ -1341,6 +1342,7 @@ extern "C" JSBool pref_InitInitialObjects()
 				if (strcmp(leafName, specialFiles[j]) == 0)
 					shouldParse = PR_FALSE;
 		}
+		nsCRT::free((char*)leafName);
 		if (shouldParse)
 		{
 		    worked = (JSBool)(pref_OpenFileSpec(
@@ -1349,8 +1351,8 @@ extern "C" JSBool pref_InitInitialObjects()
 		    	PR_FALSE,
 		    	PR_FALSE,
 		    	PR_FALSE) == PREF_NOERROR);
+			NS_ASSERTION(worked, "Config file not parsed successfully");
 		}
-		nsCRT::free((char*)leafName);
 	}
 	// Finally, parse any other special files (platform-specific ones).
 	for (int k = 1; k < sizeof(specialFiles) / sizeof(char*); k++)
@@ -1361,7 +1363,7 @@ extern "C" JSBool pref_InitInitialObjects()
 	    	PR_FALSE,
 	    	PR_FALSE,
 	    	PR_FALSE) == PREF_NOERROR);
+		NS_ASSERTION(worked, "<platform>.js was not parsed successfully");
 	}
-	NS_ASSERTION(worked, "Config file was not read");
     return JS_TRUE;
 }
