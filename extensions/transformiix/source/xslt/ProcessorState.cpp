@@ -323,7 +323,7 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
 
     if (!node) return 0;
     Element* matchTemplate = 0;
-    double currentPriority = 0.5;
+    double currentPriority = Double::NEGATIVE_INFINITY;
 
     for (int i = 0; i < templates.size(); i++) {
 
@@ -354,18 +354,12 @@ Element* ProcessorState::findTemplate(Node* node, Node* context, String* mode) {
             }
             else tmpPriority = pExpr->getDefaultPriority(node,context,this);
 
-            if (( !matchTemplate ) || ( tmpPriority >= currentPriority ))
+            if (tmpPriority >= currentPriority) {
                 matchTemplate = xslTemplate;
-            currentPriority = tmpPriority;
+                currentPriority = tmpPriority;
+            }
         }
     }
-    // cout << "findTemplate:end"<<endl;
-    // if (matchTemplate) {
-    //     String nodeName = node->getNodeName();
-    //     cout << "node " << nodeName;
-    //     String match = matchTemplate->getAttribute(MATCH_ATTR);
-    //     cout << " matched template: " << match << endl;
-    // }
 
     return matchTemplate;
 } //-- findTemplate
@@ -633,9 +627,6 @@ void ProcessorState::setDefaultNameSpaceURIForResult(const String& nsURI) {
     defaultNameSpaceURIStack.push(nsURIPointer);
 } //-- setDefaultNameSpaceURI
 
-/**
- * Sets the document base for use when resolving relative URIs
-**/
 /**
  * Sets the output method. Valid output method options are,
  * "xml", "html", or "text".

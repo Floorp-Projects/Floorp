@@ -85,13 +85,13 @@ ExprResult* FilterExpr::evaluate(Node* context, ContextState* cs) {
 /**
  * Returns the default priority of this Pattern based on the given Node,
  * context Node, and ContextState.
- * If this pattern does not match the given Node under the current context Node and
- * ContextState then Negative Infinity is returned.
 **/
 double FilterExpr::getDefaultPriority(Node* node, Node* context, ContextState* cs) {
-    //-- this method will never be called, it's only here since
-    //-- I made it manditory for PatternExprs I will remove it soon
-    return Double::NEGATIVE_INFINITY;
+    NS_ASSERTION(0, "FilterExpr is not allowed in Patterns");
+
+    if (isEmpty())
+        return expr->getDefaultPriority(node, context, cs);
+    return 0.5;
 } //-- getDefaultPriority
 
 /**
