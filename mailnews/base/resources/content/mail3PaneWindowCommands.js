@@ -170,6 +170,7 @@ var DefaultController =
 			case "cmd_previousMsg":
 			case "cmd_previousUnreadMsg":
 			case "cmd_previousFlaggedMsg":
+      case "cmd_goStartPage":
 			case "cmd_viewAllMsgs":
 			case "cmd_viewUnreadMsgs":
       case "cmd_viewThreadsWithUnread":
@@ -356,6 +357,8 @@ var DefaultController =
       case "cmd_previousMsg":
       case "cmd_previousUnreadMsg":
         return IsViewNavigationItemEnabled();
+      case "cmd_goStartPage":
+        return pref.getBoolPref("mailnews.start_page.enabled") && !IsMessagePaneCollapsed();
       case "cmd_markAllRead":
       case "cmd_markReadByDate":
         return IsFolderSelected();
@@ -525,6 +528,10 @@ var DefaultController =
 			case "cmd_previousFlaggedMsg":
 				MsgPreviousFlaggedMessage();
 				break;
+      case "cmd_goStartPage":
+        HideMessageHeaderPane();
+        loadStartPage();
+        break;
 			case "cmd_viewAllMsgs":
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":

@@ -217,6 +217,7 @@
   <command id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
   <command id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
   <command id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
+  <command id="cmd_goStartPage" oncommand="goDoCommand('cmd_goStartPage');"/>
 </commandset>
 
 <commandset id="mailMessageMenuItems"
@@ -1326,7 +1327,7 @@
         </menupopup>
       </menu>
       <menuseparator id="goStartPageSeparator"/>
-      <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
+      <menuitem id="goStartPage" label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" command="cmd_goStartPage"/>
     </menupopup>
   </menu>
 
