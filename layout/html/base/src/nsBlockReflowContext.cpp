@@ -153,6 +153,7 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
     reflowState.isTopOfPage = PR_FALSE;  // make sure this is cleared
   }
   mIsTable = NS_STYLE_DISPLAY_TABLE == reflowState.mStyleDisplay->mDisplay;
+  mComputedWidth = reflowState.mComputedWidth;
 
   nscoord topMargin = 0;
   if (aApplyTopMargin) {
@@ -413,10 +414,29 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // doesn't use it all of the available width then we need to
       // align it using the text-align property.
       if (NS_UNCONSTRAINEDSIZE != mSpace.width) {
+        // It is possible that the object reflowed was given a
+        // constrained width and ended up picking a different width
+        // (e.g. a table width a set width that ended up larger
+        // because its contents required it). When this happens we
+        // need to recompute auto margins because the reflow state's
+        // computations are no longer valid.
+        if (mMetrics.width != mComputedWidth) {
+          if (eStyleUnit_Auto == leftUnit) {
+            x = 0;
+            mMargin.left = 0;
+          }
+          if (eStyleUnit_Auto == rightUnit) {
+            mMargin.right = 0;
+          }
+        }
+
+        // Compute how much remaining space there is, and in special
+        // cases apply it (normally we should get zero here because of
+        // the logic in nsHTMLReflowState).
         nscoord remainingSpace = mSpace.XMost() -
           (x + mMetrics.width + mMargin.right);
         if (remainingSpace > 0) {
-          // The block frame didn't use all of the available
+          // The block/table frame didn't use all of the available
           // space. Synthesize margins for its horizontal placement.
           if (eStyleUnit_Auto == leftUnit) {
             if (eStyleUnit_Auto == rightUnit) {
@@ -429,6 +449,7 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
             }
           }
           else if (eStyleUnit_Auto != rightUnit) {
+            // The block/table doesn't have auto margins.
             PRBool doCSS = PR_TRUE;
             if (mIsTable) {
               const nsStyleText* styleText;
@@ -451,6 +472,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
               }
             }
             if (doCSS) {
+// XXX It's not clear we can ever get here because for normal blocks,
+// their size will be well defined by the nsHTMLReflowState logic
+// (maybe width=0 cases get here?)
               // When neither margin is auto then the block is said to
               // be over constrained, Depending on the direction, choose
               // which margin to treat as auto.
