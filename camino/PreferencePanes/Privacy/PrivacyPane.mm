@@ -15,9 +15,13 @@
 static const char* const gUseKeychainPref = "chimera.store_passwords_with_keychain";
 static const char* const gAutoFillEnabledPref = "chimera.keychain_passwords_autofill";
 
-const int kPromptForCookiesTag = 99;
+// network.cookie.cookieBehavior settings
 const int kEnableAllCookies = 0;
 const int kDisableAllCookies = 2;
+
+// network.cookie.lifetimePolicy settings
+const int kAcceptCookiesNormally = 0;
+const int kWarnAboutCookies = 1;
 
 // callbacks for sorting the permission list
 PR_STATIC_CALLBACK(int) compareHosts(nsIPermission* aPerm1, nsIPermission* aPerm2, void* aData)
@@ -95,9 +99,10 @@ PR_STATIC_CALLBACK(int) compareCapabilities(nsIPermission* aPerm1, nsIPermission
     [mEditSitesButton setEnabled:NO];
     [mEditSitesText setTextColor:[NSColor lightGrayColor]];
   }
-  PRBool warnAboutCookies = PR_TRUE;
-  mPrefService->GetBoolPref("network.cookie.warnAboutCookies", &warnAboutCookies);
-  if ( warnAboutCookies )
+  // lifetimePolicy now controls asking about cookies, despite being totally unintuitive
+  PRInt32 lifetimePolicy = kAcceptCookiesNormally;
+  mPrefService->GetIntPref("network.cookie.lifetimePolicy", &lifetimePolicy);
+  if ( lifetimePolicy == kWarnAboutCookies )
     [mAskAboutCookies setState:YES];
   
   // store permission manager service and cache the enumerator.
@@ -154,7 +159,7 @@ PR_STATIC_CALLBACK(int) compareCapabilities(nsIPermission* aPerm1, nsIPermission
 
 -(IBAction) clickAskAboutCookies:(id)sender
 {
-  [self setPref:"network.cookie.warnAboutCookies" toBoolean:[sender state]];
+  [self setPref:"network.cookie.lifetimePolicy" toInt:([sender state] == NSOnState) ? kWarnAboutCookies : kAcceptCookiesNormally];
 }
 
 
