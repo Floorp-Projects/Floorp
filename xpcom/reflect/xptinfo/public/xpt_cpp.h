@@ -22,6 +22,7 @@
 #define xpt_cpp_h___
 
 #include "xpt_struct.h"
+#include "xptinfo.h"
 
 // Everything here is dependent upon - and sensitive to changes in -
 // xpcom/libxpt/xpt_struct.h!
@@ -115,10 +116,10 @@ public:
     // is associated with so that we can find the table this index indexes
     // and then find the referenced XPTInterfaceDirectoryEntry so that we can
     // find (or build) the appropriate nsIInterfaceInfo. Simple :)
-    nsIInterfaceInfo* GetInterface(nsIInterfaceInfo *info) const ;
+    XPTI_EXPORT nsIInterfaceInfo* GetInterface(nsIInterfaceInfo *info) const ;
 
     // a *little* simpler than the above
-    const nsIID* GetInterfaceIID(nsIInterfaceInfo *info) const ;
+    XPTI_EXPORT const nsIID* GetInterfaceIID(nsIInterfaceInfo *info) const ;
 
 private:
     nsXPTParamInfo();   // no implementation

@@ -102,7 +102,7 @@ int main (int argc, char **argv) {
 
     nsXPTParamInfo param2 = mi->GetParam(2);
     // should be IID for nsIShutdownListener
-    nsIID *nsISL = param2.GetInterfaceIID(info5);
+    const nsIID *nsISL = param2.GetInterfaceIID(info5);
     fprintf(stderr, "iid assoc'd with param 2 of method 7 of GetServiceWithListener - %s\n", nsISL->ToString());
     // if we look up the name?
     char *nsISLname;
@@ -112,7 +112,7 @@ int main (int argc, char **argv) {
     fprintf(stderr, "\nhow about one defined in a different typelib\n");
     nsXPTParamInfo param3 = mi->GetParam(3);
     // should be IID for nsIShutdownListener
-    nsIID *nsISS = param3.GetInterfaceIID(info5);
+    const nsIID *nsISS = param3.GetInterfaceIID(info5);
     fprintf(stderr, "iid assoc'd with param 3 of method 7 of GetServiceWithListener - %s\n", nsISS->ToString());
     // if we look up the name?
     char *nsISSname;
