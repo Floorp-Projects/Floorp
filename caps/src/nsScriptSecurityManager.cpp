@@ -61,6 +61,7 @@
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
+#include "nscore.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -403,41 +404,77 @@ static char *domPropNames[] = {
 };
 
 NS_IMETHODIMP
+nsScriptSecurityManager::CheckScriptAccessToURL(JSContext *cx, 
+                                                const char* aObjUrlStr, PRInt32 domPropInt, 
+                                                PRBool isWrite)
+{    
+    return CheckScriptAccessInternal(cx, nsnull, aObjUrlStr, domPropInt, isWrite);
+}
+
+NS_IMETHODIMP
 nsScriptSecurityManager::CheckScriptAccess(JSContext *cx, 
                                            void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite)
+{    
+    return CheckScriptAccessInternal(cx, aObj, nsnull, domPropInt, isWrite);
+}
+
+
+NS_IMETHODIMP
+nsScriptSecurityManager::CheckScriptAccessInternal(JSContext *cx, 
+                                                   void* aObj, const char* aObjUrlStr, 
+                                                   PRInt32 domPropInt, PRBool isWrite)
 {
     nsCOMPtr<nsIPrincipal> principal;
-    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
+    if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal))))
         return NS_ERROR_FAILURE;
-    }
+
     PRBool equals;
     if (!principal || 
         NS_SUCCEEDED(principal->Equals(mSystemPrincipal, &equals)) && equals) 
-    {
         // We have native code or the system principal: just allow access
         return NS_OK;
-    }
     nsCAutoString capability;
     nsDOMProp domProp = (nsDOMProp) domPropInt;
     PRInt32 secLevel = GetSecurityLevel(principal, domProp, isWrite,
                                         capability);
-    switch (secLevel) {
+
+    static const char UBR[] = "UniversalBrowserRead";
+    static const char UBW[] = "UniversalBrowserWrite";
+
+    switch (secLevel)
+    {
       case SCRIPT_SECURITY_ALL_ACCESS:
         return NS_OK;
       case SCRIPT_SECURITY_UNDEFINED_ACCESS:
-      case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS: {
-        const char *cap = isWrite  
-                          ? "UniversalBrowserWrite" 
-                          : "UniversalBrowserRead";
-        return CheckPermissions(cx, (JSObject *) aObj, cap);
+      case SCRIPT_SECURITY_SAME_DOMAIN_ACCESS:
+      {
+        const char *cap = isWrite ? UBW : UBR;
+
+        nsCOMPtr<nsIPrincipal> objectPrincipal;
+        if (aObj)
+        {
+            if (NS_FAILED(GetObjectPrincipal(cx, NS_STATIC_CAST(JSObject*, aObj),
+                                             getter_AddRefs(objectPrincipal))))
+                return NS_ERROR_FAILURE;
+        }
+        else
+        {
+            nsCOMPtr<nsIURI> objectURI;
+            nsresult rv = NS_NewURI(getter_AddRefs(objectURI), aObjUrlStr, nsnull);
+            if (NS_FAILED(rv)) return rv;
+            rv = GetCodebasePrincipal(objectURI, getter_AddRefs(objectPrincipal));
+            if (NS_FAILED(rv)) return rv;
+        }
+        return CheckPermissions(cx, objectPrincipal, cap);
       }
-      case SCRIPT_SECURITY_CAPABILITY_ONLY: {
-        PRBool capabilityEnabled = PR_FALSE;
-        nsresult rv = IsCapabilityEnabled(capability, &capabilityEnabled);
-        if (NS_FAILED(rv) || !capabilityEnabled)
-            return NS_ERROR_DOM_SECURITY_ERR;
-        return NS_OK;
+      case SCRIPT_SECURITY_CAPABILITY_ONLY:
+      {
+          PRBool capabilityEnabled = PR_FALSE;
+          nsresult rv = IsCapabilityEnabled(capability, &capabilityEnabled);
+          if (NS_FAILED(rv) || !capabilityEnabled)
+              return NS_ERROR_DOM_SECURITY_ERR;
+          return NS_OK;
       }
       default:
         // Default is no access
@@ -1304,7 +1341,8 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
         rv = systemCertZip->Open();
         if (NS_SUCCEEDED(rv))
         {
-			nsCOMPtr<nsIJAR> systemCertJar = do_QueryInterface(systemCertZip);
+            nsCOMPtr<nsIJAR> systemCertJar = do_QueryInterface(systemCertZip, &rv);
+            if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
             rv = systemCertJar->GetCertificatePrincipal(nsnull, 
                                                         getter_AddRefs(mSystemCertificate));
             if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
@@ -1627,7 +1665,7 @@ nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj,
 }
 
 NS_IMETHODIMP
-nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj, 
+nsScriptSecurityManager::CheckPermissions(JSContext *aCx, nsIPrincipal* aObjectPrincipal, 
                                           const char *aCapability)
 {
     /*
@@ -1637,29 +1675,25 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     if (NS_FAILED(GetSubjectPrincipal(aCx, getter_AddRefs(subject))))
         return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIPrincipal> object;
-    if (NS_FAILED(GetObjectPrincipal(aCx, aObj, getter_AddRefs(object))))
-        return NS_ERROR_FAILURE;
-    if (subject == object) {
+    if (subject.get() == aObjectPrincipal)
         return NS_OK;
-    }
 
     PRBool isSameOrigin = PR_FALSE;
-    if (NS_FAILED(subject->Equals(object, &isSameOrigin)))
+    if (NS_FAILED(subject->Equals(aObjectPrincipal, &isSameOrigin)))
         return NS_ERROR_FAILURE;
     
     if (isSameOrigin)
         return NS_OK;
 
     // Allow access to about:blank
-    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
-    if (objectCodebase) {
+    nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(aObjectPrincipal);
+    if (objectCodebase)
+    {
         nsXPIDLCString origin;
         if (NS_FAILED(objectCodebase->GetOrigin(getter_Copies(origin))))
             return NS_ERROR_FAILURE;
-        if (nsCRT::strcasecmp(origin, "about:blank") == 0) {
+        if (nsCRT::strcasecmp(origin, "about:blank") == 0)
             return NS_OK;
-        }
     }
 
     /*

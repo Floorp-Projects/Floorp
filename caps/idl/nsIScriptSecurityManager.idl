@@ -40,23 +40,23 @@ interface nsIScriptSecurityManager : nsISupports
 	 * executing script. Will return null if there is no script 
 	 * currently executing.
 	 */
-    nsIPrincipal GetSubjectPrincipal();
+    nsIPrincipal getSubjectPrincipal();
 
 	/**
 	 * Return the all-powerful system principal.
 	 */
-    nsIPrincipal GetSystemPrincipal();
+    nsIPrincipal getSystemPrincipal();
 
 	/**
 	 * Return a principal that can be QI'd to nsICodebasePrincipal and 
 	 * has the same origin as aURI.
 	 */
-    nsIPrincipal GetCodebasePrincipal(in nsIURI aURI);
+    nsIPrincipal getCodebasePrincipal(in nsIURI aURI);
 
 	/**
 	 * Return a principal that can be QI'd to nsICertificatePrincipal.
 	 */
-    nsIPrincipal GetCertificatePrincipal(in string CertID);
+    nsIPrincipal getCertificatePrincipal(in string CertID);
 
 	///////////////// Security Checks //////////////////
 
@@ -69,7 +69,7 @@ interface nsIScriptSecurityManager : nsISupports
      * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
      * @param isWrite True if write access is being attempted
      */
-	[noscript] void CheckScriptAccess(in JSContextPtr cx, in voidPtr obj, 
+	[noscript] void checkScriptAccess(in JSContextPtr cx, in voidPtr obj, 
 	                       in long prop, in boolean isWrite);
 
 	/**
@@ -81,7 +81,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * @param cx the JSContext of the script causing the load
 	 * @param uri the URI that is being loaded
 	 */
-    [noscript] void CheckLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
+    [noscript] void checkLoadURIFromScript(in JSContextPtr cx, in nsIURI uri);
 
     /** 
      * Default CheckLoadURI permissions
@@ -109,7 +109,7 @@ interface nsIScriptSecurityManager : nsISupports
 	 * @param disallowFromMail if true, return NS_ERROR_DOM_BAD_URI if 'from'
 	 *                         is a URI associated with mail or news
 	 */
-    void CheckLoadURI(in nsIURI from, in nsIURI uri, 
+    void checkLoadURI(in nsIURI from, in nsIURI uri, 
 	                  in unsigned long flags);
 
   /**
@@ -122,14 +122,14 @@ interface nsIScriptSecurityManager : nsISupports
    * @param funObj The function trying to run..
    * @param targetObj The object the function will run on.
    */
-    [noscript] void CheckFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
+    [noscript] void checkFunctionAccess(in JSContextPtr cx, in voidPtr funObj,
                                         in voidPtr targetObj);
 
 	/**
 	 * Return true if content from the given principal is allowed to
 	 * execute scripts.
 	 */
-    boolean CanExecuteScripts(in nsIPrincipal principal);
+    boolean canExecuteScripts(in nsIPrincipal principal);
 
 
 	///////////////// Capabilities /////////////////////
@@ -139,7 +139,7 @@ interface nsIScriptSecurityManager : nsISupports
      * with 'principal'. Will prompt user if necessary. Returns 
      * nsIPrincipal::ENABLE_GRANTED or nsIPrincipal::ENABLE_DENIED based on user's choice.
      */
-    void RequestCapability(in nsIPrincipal principal, in string capability, out short result);
+    void requestCapability(in nsIPrincipal principal, in string capability, out short result);
 	
 	/**
 	 * Return true if the currently executing script has 'capability' enabled.
@@ -150,20 +150,20 @@ interface nsIScriptSecurityManager : nsISupports
 	 * Enable 'capability' in the innermost frame of the currently executing
 	 * script.
 	 */
-	void EnableCapability(in string capability);
+	void enableCapability(in string capability);
 
 	/**
 	 * Remove 'capability' from the innermost frame of the currently executing
 	 * script. Any setting of 'capability' from enclosing frames thus comes into
 	 * effect.
 	 */
-    void RevertCapability(in string capability);
+    void revertCapability(in string capability);
 
 	/**
 	 * Disable 'capability' in the innermost frame of the currently executing
 	 * script.
 	 */
-    void DisableCapability(in string capability);
+    void disableCapability(in string capability);
 
     //////////////// Master Certificate Functions ////////////////////
 
@@ -171,8 +171,22 @@ interface nsIScriptSecurityManager : nsISupports
 	 * Allow 'certificateID' to enable 'capability.' Can only be performed
      * by code signed by the system certificate.
 	 */
-    void SetCanEnableCapability(in string certificateID, in string capability, 
+    void setCanEnableCapability(in string certificateID, in string capability, 
                                 in short canEnable);    
+
+
+	//////////////// Temporary ///////////////////////////////////////
+    /**
+     * Checks whether the currently executing script can load the given URL
+     * (special case for XMLHttpRequest)
+     *
+     * @param cx The current active JavaScript context
+     * @param url The url that is being accessed
+     * @param prop The ordinal of the property being accessed (see nsDOMPropEnums.h)
+     * @param isWrite True if write access is being attempted
+     */
+	[noscript] void checkScriptAccessToURL(in JSContextPtr cx, in string url, 
+                                           in long prop, in boolean isWrite);
 };
 
 %{C++
