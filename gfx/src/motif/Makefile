@@ -47,6 +47,7 @@ endif
 CPPSRCS=nsDeviceContextUnix.cpp nsFontMetricsUnix.cpp nsGfxFactoryUnix.cpp \
 	nsRenderingContextUnix.cpp nsRegionUnix.cpp nsImageUnix.cpp
 
-include $(DEPTH)/config/rules.mk
+EXPORTS=nsDeviceContextUnix.h
 
+include $(DEPTH)/config/rules.mk
 
