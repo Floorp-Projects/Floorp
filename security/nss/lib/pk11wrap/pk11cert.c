@@ -1280,7 +1280,9 @@ PK11_FindCertFromNickname(char *nickname, void *wincx) {
 	nssPKIObjectCollection_AddInstances(collection, instances, 0);
 	nss_ZFreeIf(instances);
 	/* if it wasn't found, repeat the process for email address */
-	if (nssPKIObjectCollection_Count(collection) == 0) {
+	if (nssPKIObjectCollection_Count(collection) == 0 &&
+	    PORT_Strchr(nickname, '@') != NULL) 
+	{
 	    (void)nssTrustDomain_GetCertsForEmailAddressFromCache(defaultTD, 
 	                                                          nickname, 
 	                                                          certList);
