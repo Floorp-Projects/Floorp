@@ -476,10 +476,10 @@ LINK_LIBS= \
     $(DIST)\lib\nsldap32v30.lib \
 !endif
     $(DIST)\lib\unicvt32.lib \
-!ifdef JAVA_OR_NSJVM
 !ifdef MOZ_SMARTUPDATE
     $(DIST)\lib\softup32.lib \
 !endif
+!ifdef JAVA_OR_NSJVM
 !ifndef NO_SECURITY
     $(DIST)\lib\jsl32.lib \
 !endif
@@ -650,11 +650,11 @@ CDISTINCLUDES1= \
     /I$(XPDIST)\public\plugin \
     /I$(XPDIST)\public\plugimpl \
     /I$(XPDIST)\public\caps \
+    /I$(XPDIST)\public\softupdt \
 !if defined(MOZ_OJI)
     /I$(XPDIST)\public\oji \
     /I$(XPDIST)\public\ojiimpl \
     /I$(XPDIST)\public\npj \
-    /I$(XPDIST)\public\softupdt \
 !elseif defined(MOZ_JAVA)
     /I$(XPDIST)\public\applet \
     /I$(XPDIST)\public\softupdt \

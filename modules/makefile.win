@@ -55,10 +55,10 @@ DIRS=                   \
 !ifdef EDITOR
 	edtplug         \
 !endif
+	zlib            \
+!endif
 !ifdef MOZ_SMARTUPDATE
 	softupdt        \
-!endif
-	zlib            \
 !endif
 	progress	\
 !if ("$(MOZ_BITS)" == "16")

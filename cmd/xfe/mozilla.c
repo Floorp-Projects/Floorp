@@ -2918,12 +2918,10 @@ main
 #endif
 
 
-#ifdef JAVA
   /* Startup softupdate */
 #if defined(MOZ_SMARTUPDATE)
   SU_Startup();
 #endif /* MOZ_SMARTUPDATE */
-#endif /* MOZ_MAIL_NEWS */
 
   NR_StartupRegistry();
   fe_RegisterConverters ();  /* this must be before InstallPreferences(),
