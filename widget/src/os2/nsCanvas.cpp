@@ -180,6 +180,7 @@ PRBool nsCanvas::OnPaint()
                     if (NS_OK == winrc->CreateDrawingSurface(hPS, surf, event.widget))
                     {
                       event.renderingContext->Init(mContext, surf);
+#ifdef COLOR_256
                       nsPaletteInfo palInfo;
                       mContext->GetPaletteInfo(palInfo);
                       if (palInfo.isPaletteDevice && palInfo.palette)
@@ -187,6 +188,7 @@ PRBool nsCanvas::OnPaint()
                           ULONG cclr;
                           ::WinRealizePalette(mWnd, hPS, &cclr);
                       }
+#endif
                       rc = DispatchWindowEvent(&event);
                       event.renderingContext->DestroyDrawingSurface(surf);
                     }
@@ -212,6 +214,7 @@ PRBool nsCanvas::OnRealizePalette()
 {
    PRBool rc = PR_FALSE;
 
+#ifdef COLOR_256
    // Get palette info from device 
    nsPaletteInfo palInfo;
    mContext->GetPaletteInfo( palInfo);
@@ -228,6 +231,7 @@ PRBool nsCanvas::OnRealizePalette()
 
       rc = PR_TRUE;
    }
+#endif
 
    return rc;
 }

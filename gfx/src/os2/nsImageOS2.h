@@ -85,8 +85,10 @@ public:
    * @param aHeight The destination height of the pixelmap
    * @return if TRUE, no errors
    */
-// OS2TODO
-  PRBool  DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
+  NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
+                      nsDrawingSurface aSurface,
+                      PRInt32 aSXOffset, PRInt32 aSYOffset,
+                      const nsRect &aTileRect);
 
 #ifdef USE_IMG2
   NS_IMETHOD DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord aDY,

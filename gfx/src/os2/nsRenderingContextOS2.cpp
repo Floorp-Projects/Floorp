@@ -50,7 +50,6 @@
 #include "nsGfxCIID.h"
 #include "nsString.h"
 #include "nsFont.h"
-#include "libimg.h"
 #include "prprf.h"
 #include "nsIRenderingContextOS2.h"
 
@@ -265,11 +264,12 @@ nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
 
 nsresult nsRenderingContextOS2::SetupPS (void)
 {
+   LONG BlackColor, WhiteColor;
+
+#ifdef COLOR_256
    // If this is a palette device, then select and realize the palette
    nsPaletteInfo palInfo;
    mContext->GetPaletteInfo(palInfo);
-
-   LONG BlackColor, WhiteColor;
 
    if (palInfo.isPaletteDevice && palInfo.palette)
    {
@@ -287,6 +287,7 @@ nsresult nsRenderingContextOS2::SetupPS (void)
       mPaletteMode = PR_TRUE;
    }
    else
+#endif
    {
       GFX (::GpiCreateLogColorTable (mPS, 0, LCOLF_RGB, 0, 0, 0), FALSE);
 
@@ -1727,41 +1728,6 @@ NS_IMETHODIMP nsRenderingContextOS2::DrawImage( nsIImage *aImage, const nsRect& 
 
    return aImage->Draw( *this, mSurface, tr.x, tr.y, tr.width, tr.height);
 }
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 3/16/00 dwc
- */
-NS_IMETHODIMP
-nsRenderingContextOS2::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                                    nscoord aWidth,nscoord aHeight)
-{
-  nscoord     orgX,orgY,orgWidth,orgHeight;
-  PRBool      didtile = FALSE;
-
-  // convert output platform, but no translation.. just scale
-  orgX = aX0;
-  orgY = aY0;
-  orgWidth = aX1 - aX0;
-  orgHeight = aY1 - aY0;
-  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-  mTranMatrix->TransformCoord(&orgX,&orgY,&orgWidth,&orgHeight);
-  aX1 = aX0 + orgWidth;
-  aY1 = aY0 + orgHeight;
-
-//  if ( PR_TRUE==CanTile(aWidth,aHeight) ) {    
-//    didtile = ((nsImageOS2*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
-//  }
-      
-//  if (PR_FALSE ==didtile){
-    // rely on the slower tiler supported in nsRenderingContextWin.. don't have 
-    // to use xplatform which is really slow (slowest is the only one that supports transparency
-    didtile = ((nsImageOS2*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
-//  }
-
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsRenderingContextOS2::CopyOffScreenBits(
                      nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,

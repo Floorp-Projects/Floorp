@@ -557,6 +557,7 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
    }
 }
 
+#ifdef PAVLOV_REALLY_SUCKS
 PRBool 
 nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
                               nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
@@ -686,6 +687,19 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
    return(PR_TRUE);
 }
+#else
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *  @update 3/16/00 dwc
+ */
+NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
+                                   nsDrawingSurface aSurface,
+                                   PRInt32 aSXOffset, PRInt32 aSYOffset,
+                                   const nsRect &aTileRect)
+{
+   return(PR_FALSE);
+}
+#endif
 
 PRBool nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, 
                              nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1, 
