@@ -56,7 +56,12 @@
 #define THUNK_BASED_THIS_ADJUST
 
 #elif defined(__FreeBSD__) 
+#include <osreldate.h>
+#if __FreeBSD_version >= 400015
+#define CFRONT_STYLE_THIS_ADJUST
+#else
 #define THUNK_BASED_THIS_ADJUST
+#endif
 
 #elif defined(__NetBSD__) 
 #define THUNK_BASED_THIS_ADJUST
