@@ -82,6 +82,21 @@ public:
   virtual nsresult GetNumberOfRedoItems(PRInt32 *aNumItems) = 0;
 
   /**
+   * Sets the maximum number of transaction items the transaction manager will
+   * maintain at any time. This is commonly referred to as the number of levels
+   * of undo.
+   * @param aMaxCount A value of -1 means no limit. A value of zero means the
+   * transaction manager will execute each transaction, then immediately release
+   * all references it has to the transaction without pushing it on the undo
+   * stack. A value greater than zero indicates the max number of transactions
+   * that can exist at any time on both the undo and redo stacks. This method
+   * will prune the neccessary number of transactions on the undo and redo
+   * stacks if the value specified is less than the number of items that exist
+   * on both the undo and redo stacks.
+   */
+  virtual nsresult SetMaxTransactionCount(PRInt32 aMaxCount) = 0;
+
+  /**
    * Returns a pointer to the transaction at the top of the undo stack.
    * @param aTransaction will contain pointer to the transaction.
    */
