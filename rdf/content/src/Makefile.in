@@ -35,6 +35,7 @@ CPPSRCS =				\
 	nsRDFTreeBuilder.cpp		\
 	nsRDFXULBuilder.cpp		\
 	nsXULDocument.cpp               \
+	nsJSXULNode.cpp	\
 	$(NULL)
 
 EXPORTS = \
