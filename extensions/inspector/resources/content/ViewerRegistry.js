@@ -202,7 +202,7 @@ ViewerRegistryLoadObserver.prototype = {
 
   onError: function(aErrorMsg) 
   {
-    this.mTarget.onLoadError(aErrorMsg);
+    this.mTarget.onError(aErrorMsg);
   },
 
   onDataSourceReady: function(aDS) 
