@@ -23,8 +23,10 @@
 #include "nsIGenericFactory.h"
 
 #include "nsConsoleService.h"
+#include "nsScriptError.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsConsoleService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsScriptError)
 
 static nsModuleComponentInfo components[] =
 {
@@ -32,6 +34,11 @@ static nsModuleComponentInfo components[] =
     nsConsoleServiceConstructor,
     nsnull, // RegisterConsoleService
     nsnull, // UnregisterConsoleService
+  },
+  { "Script Error", NS_SCRIPTERROR_CID, NS_SCRIPTERROR_PROGID,
+    nsScriptErrorConstructor,
+    nsnull,
+    nsnull,
   }
 };
 
@@ -49,5 +56,8 @@ static nsModuleComponentInfo components[] =
 // xdr search on ..._WITH_DTOR
 
 NS_IMPL_NSGETMODULE("nsConsoleServiceModule", components)
+
+
+
 
 

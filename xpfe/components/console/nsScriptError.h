@@ -20,6 +20,9 @@
  * Contributor(s): 
  */
 
+#ifndef __nsscripterror_h__
+#define __nsscripterror_h__
+
 #include "nsIScriptError.h"
 #include "nsString.h"
 
@@ -30,23 +33,6 @@ public:
     virtual ~nsScriptError();
 
   // TODO - do something reasonable on getting null from these babies.
-
-    nsScriptError(const PRUnichar *message,
-                  const PRUnichar *sourceName, // or URL
-                  const PRUnichar *sourceLine,
-                  PRUint32 lineNumber,
-                  PRUint32 columnNumber,
-                  PRUint32 flags,
-                  const char *category)
-    {
-        mMessage.SetString(message);
-        mSourceName.SetString(sourceName);
-        mLineNumber = lineNumber;
-        mSourceLine.SetString(sourceLine);
-        mColumnNumber = columnNumber;
-        mFlags = flags;
-        mCategory.SetString(category);
-    }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
@@ -62,4 +48,4 @@ private:
     nsCAutoString mCategory;
 };
 
-
+#endif /* __nsscripterror_h__ */

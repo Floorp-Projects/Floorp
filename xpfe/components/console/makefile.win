@@ -38,9 +38,7 @@ XPIDLSRCS =					\
 	.\nsIConsoleMessage.idl			\
 	.\nsIConsoleListener.idl		\
 	.\nsIScriptError.idl			\
-	.\nsIScriptErrorLogger.idl		\
 	$(NULL)
-
 
 LINCS = \
 	$(NULL)
@@ -49,7 +47,6 @@ LLIBS = \
 	$(LIBNSPR) \
 	$(DIST)\lib\xpcom.lib \
 	$(NULL)
-
 
 OBJS = \
 	.\$(OBJDIR)\nsConsoleMessage.obj	\

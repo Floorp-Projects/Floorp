@@ -28,13 +28,8 @@
 
 #include "nsConsoleService.h"
 #include "nsConsoleMessage.h"
-#include "nsScriptError.h"
 
-// NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleService, NS_GET_IID(nsIConsoleService));
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsConsoleService,
-                              nsIConsoleService,
-                              nsIScriptErrorLogger);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleService, NS_GET_IID(nsIConsoleService));
 
 nsConsoleService::nsConsoleService()
 {
@@ -193,21 +188,4 @@ nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
     // nsresult.
     mListeners->RemoveElement(listener);
     return NS_OK;
-}
-
-// nsIScriptErrorLogger methods
-NS_IMETHODIMP
-nsConsoleService::LogScriptError(const PRUnichar *message,
-                                 const PRUnichar *sourceName,
-                                 const PRUnichar *sourceLine,
-                                 PRUint32 lineNumber,
-                                 PRUint32 columnNumber,
-                                 PRUint32 flags,
-                                 const char *category)
-{
-    // LogMessage adds a ref to this, and eventual release does delete.
-    nsScriptError *err = new nsScriptError(message, sourceName, sourceLine,
-                                           lineNumber, columnNumber,
-                                           flags, category);
-    return this->LogMessage(err);
 }
