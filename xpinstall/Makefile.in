@@ -40,6 +40,9 @@ endif
 ifeq ($(OS_ARCH),WINNT)
 DIRS		+= wizard/windows
 endif
+ifeq ($(OS_ARCH),OS2)
+DIRS		+= wizard/os2
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
