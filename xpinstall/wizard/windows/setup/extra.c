@@ -429,6 +429,9 @@ BOOL LocateJar(siC *siCObject)
   {
     /* jar file found.  Unset attribute to download from the net */
     siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+    /* save the path of where jar was found at */
+    lstrcpy(siCObject->szArchivePath, sgProduct.szAlternateArchiveSearchPath);
+    AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
     bRet = TRUE;
   }
   else
@@ -453,6 +456,9 @@ BOOL LocateJar(siC *siCObject)
           {
             /* jar file found.  Unset attribute to download from the net */
             siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+            /* save the path of where jar was found at */
+            lstrcpy(siCObject->szArchivePath, szTempDirTemp);
+            AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
             bRet = TRUE;
 
             /* found what we're looking for.  No need to continue */
@@ -474,6 +480,9 @@ BOOL LocateJar(siC *siCObject)
       {
         /* jar file found.  Unset attribute to download from the net */
         siCObject->dwAttributes &= ~SIC_DOWNLOAD_REQUIRED;
+        /* save the path of where jar was found at */
+        lstrcpy(siCObject->szArchivePath, szSetupDirTemp);
+        AppendBackSlash(siCObject->szArchivePath, MAX_BUF);
         bRet = TRUE;
       }
     }
@@ -1147,7 +1156,8 @@ HRESULT InitSCoreFile()
   if((siCFCoreFile.szMessage = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
-  siCFCoreFile.bCleanup = TRUE;
+  siCFCoreFile.bCleanup         = TRUE;
+  siCFCoreFile.ullInstallSize   = 0;
   return(0);
 }
 
@@ -1165,11 +1175,14 @@ siC *CreateSiCNode()
   if((siCNode = NS_GlobalAlloc(sizeof(struct sinfoComponent))) == NULL)
     exit(1);
 
-  siCNode->dwAttributes         = 0;
-  siCNode->ullInstallSize       = 0;
-  siCNode->ullInstallSizeSystem = 0;
+  siCNode->dwAttributes          = 0;
+  siCNode->ullInstallSize        = 0;
+  siCNode->ullInstallSizeSystem  = 0;
+  siCNode->ullInstallSizeArchive = 0;
 
   if((siCNode->szArchiveName = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
+  if((siCNode->szArchivePath = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
   if((siCNode->szDescriptionShort = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
@@ -1212,6 +1225,7 @@ void SiCNodeDelete(siC *siCTemp)
     siCTemp->Next       = NULL;
     siCTemp->Prev       = NULL;
 
+    FreeMemory(&(siCTemp->szArchivePath));
     FreeMemory(&(siCTemp->szArchiveName));
     FreeMemory(&(siCTemp->szDescriptionLong));
     FreeMemory(&(siCTemp->szDescriptionShort));
@@ -1452,6 +1466,70 @@ ULONGLONG SiCNodeGetInstallSize(DWORD dwIndex, BOOL bIncludeInvisible)
   return(0L);
 }
 
+ULONGLONG SiCNodeGetInstallSizeSystem(DWORD dwIndex, BOOL bIncludeInvisible)
+{
+  DWORD dwCount   = 0;
+  siC   *siCTemp  = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->ullInstallSizeSystem);
+
+      ++dwCount;
+    }
+    
+    siCTemp = siCTemp->Next;
+    while((siCTemp != NULL) && (siCTemp != siComponents))
+    {
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->ullInstallSizeSystem);
+      
+        ++dwCount;
+      }
+      
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(0L);
+}
+
+ULONGLONG SiCNodeGetInstallSizeArchive(DWORD dwIndex, BOOL bIncludeInvisible)
+{
+  DWORD dwCount   = 0;
+  siC   *siCTemp  = siComponents;
+
+  if(siCTemp != NULL)
+  {
+    if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+    {
+      if(dwIndex == 0)
+        return(siCTemp->ullInstallSizeArchive);
+
+      ++dwCount;
+    }
+    
+    siCTemp = siCTemp->Next;
+    while((siCTemp != NULL) && (siCTemp != siComponents))
+    {
+      if((bIncludeInvisible == TRUE) || ((bIncludeInvisible == FALSE) && (!(siCTemp->dwAttributes & SIC_INVISIBLE))))
+      {
+        if(dwIndex == dwCount)
+          return(siCTemp->ullInstallSizeArchive);
+      
+        ++dwCount;
+      }
+      
+      siCTemp = siCTemp->Next;
+    }
+  }
+  return(0L);
+}
+
 /* retrieve Index of node containing short description */
 int SiCNodeGetIndexDS(char *szInDescriptionShort)
 {
@@ -1540,7 +1618,7 @@ BOOL IsWin95Debute()
 ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 {
   ULONGLONG ullTotalSize = 0;
-  siC       *siCTemp   = siComponents;
+  siC       *siCTemp     = siComponents;
 
   if(siCTemp != NULL)
   {
@@ -1554,6 +1632,11 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
 
         case DSR_SYSTEM:
           ullTotalSize += siCTemp->ullInstallSizeSystem;
+          break;
+
+        case DSR_TEMP:
+          if(LocateJar(siCTemp) == FALSE)
+            ullTotalSize += siCTemp->ullInstallSizeArchive;
           break;
       }
     }
@@ -1572,12 +1655,23 @@ ULONGLONG GetDiskSpaceRequired(DWORD dwType)
           case DSR_SYSTEM:
             ullTotalSize += siCTemp->ullInstallSizeSystem;
             break;
+
+          case DSR_TEMP:
+            if(LocateJar(siCTemp) == FALSE)
+              ullTotalSize += siCTemp->ullInstallSizeArchive;
+            break;
         }
       }
 
       siCTemp = siCTemp->Next;
     }
   }
+
+  /* add the amount of disk space it will take for the 
+     xpinstall engine in the TEMP area */
+  if(dwType == DSR_TEMP)
+    ullTotalSize += siCFCoreFile.ullInstallSize;
+
   return(ullTotalSize);
 }
 
@@ -1627,7 +1721,59 @@ ULONGLONG GetDiskSpaceAvailable(LPSTR szPath)
     }
     ullReturn = uliFreeBytesAvailableToCaller.QuadPart;
   }
+
+  if(ullReturn > 1024)
+    ullReturn /= 1024;
+  else
+    ullReturn = 0;
+
   return(ullReturn);
+}
+
+HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPSTR szPath, BOOL bCrutialMsg)
+{
+  char      szBuf1[MAX_BUF];
+  char      szBuf2[MAX_BUF];
+  char      szBuf3[MAX_BUF];
+  char      szBufRootPath[MAX_BUF];
+  char      szBufMsg[MAX_BUF];
+  char      szDSAvailable[MAX_BUF];
+  char      szDSRequired[MAX_BUF];
+  char      szDlgDiskSpaceCheckTitle[MAX_BUF];
+  char      szDlgDiskSpaceCheckMsg[MAX_BUF];
+  DWORD     dwDlgType;
+
+  if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_TITLE, szDlgDiskSpaceCheckTitle, MAX_BUF) != WIZ_OK)
+    exit(1);
+
+  if(bCrutialMsg)
+  {
+    dwDlgType = MB_RETRYCANCEL;
+    if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_CRUTIAL_MSG, szDlgDiskSpaceCheckMsg, MAX_BUF) != WIZ_OK)
+      exit(1);
+  }
+  else
+  {
+    dwDlgType = MB_OKCANCEL;
+    if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_MSG, szDlgDiskSpaceCheckMsg, MAX_BUF) != WIZ_OK)
+      exit(1);
+  }
+
+  ParsePath(szPath, szBufRootPath, sizeof(szBufRootPath), PP_ROOT_ONLY);
+  RemoveBackSlash(szBufRootPath);
+
+  _ui64toa(ullDSAvailable, szDSAvailable, 10);
+  _ui64toa(ullDSRequired, szDSRequired, 10);
+
+  lstrcpy(szBuf1, "\n\n    ");
+  lstrcat(szBuf1, szPath);
+  lstrcat(szBuf1, "\n\n    ");
+  lstrcpy(szBuf2, szDSRequired);
+  lstrcat(szBuf2, " K\n    ");
+  lstrcpy(szBuf3, szDSAvailable);
+  lstrcat(szBuf3, " K\n\n");
+  wsprintf(szBufMsg, szDlgDiskSpaceCheckMsg, szBufRootPath, szBuf1, szBuf2, szBuf3);
+  return(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, dwDlgType | MB_ICONEXCLAMATION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND));
 }
 
 HRESULT VerifyDiskSpace()
@@ -1636,117 +1782,120 @@ HRESULT VerifyDiskSpace()
   ULONGLONG ullDSRPath;
   ULONGLONG ullDSASysPath;
   ULONGLONG ullDSRSysPath;
+  ULONGLONG ullDSATempPath;
+  ULONGLONG ullDSRTempPath;
   ULONGLONG ullDSTotalAvailable;
   ULONGLONG ullDSTotalRequired;
-  char      szDSAPath[MAX_BUF];
-  char      szDSRPath[MAX_BUF];
-  char      szDSASysPath[MAX_BUF];
-  char      szDSRSysPath[MAX_BUF];
+  HRESULT   hRetValue = TRUE;
   char      szSysPath[MAX_BUF];
-  char      szBuf1[MAX_BUF];
-  char      szBuf2[MAX_BUF];
-  char      szBuf3[MAX_BUF];
   char      szBufPath[MAX_BUF];
   char      szBufSysPath[MAX_BUF];
-  char      szBufMsg[MAX_BUF];
-  char      szBufSysMsg[MAX_BUF];
-  char      szDlgDiskSpaceCheckTitle[MAX_BUF];
-  char      szDlgDiskSpaceCheckMsg[MAX_BUF];
-  char      szDlgDiskSpaceCheckSysMsg[MAX_BUF];
+  char      szBufTempPath[MAX_BUF];
 
-  if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_TITLE, szDlgDiskSpaceCheckTitle, MAX_BUF) != WIZ_OK)
-    exit(1);
-  if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_MSG, szDlgDiskSpaceCheckMsg, MAX_BUF) != WIZ_OK)
-    exit(1);
-  if(NS_LoadString(hSetupRscInst, IDS_DLG_DISK_SPACE_CHECK_SYS_MSG, szDlgDiskSpaceCheckSysMsg, MAX_BUF) != WIZ_OK)
-    exit(1);
-
+  /* Calculate disk space for destination path */
   ullDSAPath = GetDiskSpaceAvailable(sgProduct.szPath);
   ullDSRPath = GetDiskSpaceRequired(DSR_DESTINATION);
 
   if(GetSystemDirectory(szSysPath, MAX_BUF) != 0)
   {
+    /* Calculate disk space for system path */
     ullDSASysPath = GetDiskSpaceAvailable(szSysPath);
     ullDSRSysPath = GetDiskSpaceRequired(DSR_SYSTEM);
+  }
+  else
+  {
+    ullDSASysPath = 0;
+    ullDSRSysPath = 0;
+    ZeroMemory(szSysPath, MAX_BUF);
+  }
 
-    ParsePath(sgProduct.szPath, szBufPath,    sizeof(szBufPath),    PP_ROOT_ONLY);
-    ParsePath(szSysPath,        szBufSysPath, sizeof(szBufSysPath), PP_ROOT_ONLY);
+  /* Calculate disk space for temp path */
+  ullDSATempPath = GetDiskSpaceAvailable(szTempDir);
+  ullDSRTempPath = GetDiskSpaceRequired(DSR_TEMP);
 
-    AppendBackSlash(szBufPath, sizeof(szBufPath));
-    AppendBackSlash(szBufSysPath, sizeof(szBufSysPath));
+  ParsePath(sgProduct.szPath, szBufPath,      sizeof(szBufPath),     PP_ROOT_ONLY);
+  ParsePath(szSysPath,        szBufSysPath,   sizeof(szBufSysPath),  PP_ROOT_ONLY);
+  ParsePath(szTempDir,        szBufTempPath,  sizeof(szBufTempPath), PP_ROOT_ONLY);
 
-    /* check to see if system path is the same as sgProduct.szPath */
-    if(lstrcmpi(szBufPath, szBufSysPath) == 0)
+  AppendBackSlash(szBufPath,      sizeof(szBufPath));
+  AppendBackSlash(szBufSysPath,   sizeof(szBufSysPath));
+  AppendBackSlash(szBufTempPath,  sizeof(szBufTempPath));
+
+  /* destination == temp == system */
+  if((lstrcmpi(szBufPath, szBufTempPath) == 0) &&
+     (lstrcmpi(szBufPath, szBufSysPath)  == 0))
+  {
+    ullDSTotalRequired  = ullDSRPath + ullDSRTempPath + ullDSRSysPath;
+    ullDSTotalAvailable = ullDSAPath;
+
+    if(ullDSTotalAvailable < ullDSTotalRequired)
+      return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
+  }
+  else
+  {
+    if((lstrcmpi(szBufPath,     szBufTempPath) != 0) &&
+       (lstrcmpi(szBufPath,     szBufSysPath)  != 0) &&
+       (lstrcmpi(szBufTempPath, szBufSysPath)  != 0))
     {
-      /* check disk space for both system and destination */
-      ullDSTotalRequired  = ullDSRPath + ullDSRSysPath;
-      ullDSTotalAvailable = ullDSAPath;
-
-      if(ullDSTotalAvailable < ullDSTotalRequired)
+      /* check TEMP drive */
+      if(ullDSATempPath < ullDSRTempPath)
       {
-        _ui64toa(ullDSTotalAvailable, szDSAPath, 10);
-        _ui64toa(ullDSTotalRequired,  szDSRPath, 10);
-        lstrcpy(szBuf1, "\n\n    ");
-        lstrcat(szBuf1, sgProduct.szPath);
-        lstrcat(szBuf1, "\n\n    ");
-        lstrcpy(szBuf2, szDSRPath);
-        lstrcat(szBuf2, "\n    ");
-        lstrcpy(szBuf3, szDSAPath);
-        lstrcat(szBuf3, "\n\n");
-        wsprintf(szBufMsg, szDlgDiskSpaceCheckMsg, szBuf1, szBuf2, szBuf3);
-        if(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1 | MB_APPLMODAL | MB_SETFOREGROUND) == IDYES)
-        {
-          return(FALSE);
-        }
-        else
-        {
-          return(TRUE);
-        }
+        return(ErrorMsgDiskSpace(ullDSATempPath, ullDSRTempPath, szTempDir, TRUE));
       }
-    }
-    else
-    {
-      /* check disk space for system only */
+
+      /* check SYSTEM drive */
       if(ullDSASysPath < ullDSRSysPath)
       {
-        _ui64toa(ullDSASysPath, szDSASysPath, 10);
-        _ui64toa(ullDSRSysPath, szDSRSysPath, 10);
-        lstrcpy(szBuf1, "\n\n    ");
-        lstrcat(szBuf1, sgProduct.szPath);
-        lstrcat(szBuf1, "\n\n    ");
-        lstrcpy(szBuf2, szDSRPath);
-        lstrcat(szBuf2, "\n    ");
-        lstrcpy(szBuf3, szDSAPath);
-        lstrcat(szBuf3, "\n\n");
-        wsprintf(szBufSysMsg, szDlgDiskSpaceCheckSysMsg, szBuf1, szBuf2, szBuf3);
-        return(MessageBox(hWndMain, szBufSysMsg, szDlgDiskSpaceCheckTitle, MB_RETRYCANCEL | MB_ICONQUESTION | MB_DEFBUTTON2 | MB_APPLMODAL | MB_SETFOREGROUND));
+        return(ErrorMsgDiskSpace(ullDSASysPath, ullDSRSysPath, szSysPath, TRUE));
+      }
+
+      /* check Destination drive */
+      if(ullDSAPath < ullDSRPath)
+      {
+        return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
+      }
+    }
+    else
+    {
+      /* temp == system */
+      if(lstrcmpi(szBufTempPath, szBufSysPath) == 0)
+      {
+        /* check temp + system */
+        if(ullDSATempPath < (ullDSRTempPath + ullDSRSysPath))
+          return(ErrorMsgDiskSpace(ullDSATempPath, (ullDSRTempPath + ullDSRSysPath), szTempDir, TRUE));
+
+        /* check destination only */
+        if(ullDSAPath < ullDSRPath)
+          return(ErrorMsgDiskSpace(ullDSAPath, ullDSRPath, sgProduct.szPath, FALSE));
+      }
+
+      /* destination == temp */
+      if(lstrcmpi(szBufPath, szBufTempPath) == 0)
+      {
+        /* check destination + temp */
+        if(ullDSAPath < (ullDSRPath + ullDSRTempPath))
+          return(ErrorMsgDiskSpace(ullDSAPath, (ullDSRPath + ullDSRTempPath), sgProduct.szPath, FALSE));
+
+        /* check system only */
+        if(ullDSASysPath < ullDSRSysPath)
+          return(ErrorMsgDiskSpace(ullDSASysPath, ullDSRSysPath, szSysPath, TRUE));
+      }
+
+      /* destination == system */
+      if(lstrcmpi(szBufPath, szBufSysPath) == 0)
+      {
+        /* check destination + system */
+        if(ullDSAPath < (ullDSRPath + ullDSRSysPath))
+          return(ErrorMsgDiskSpace(ullDSAPath, (ullDSRPath + ullDSRSysPath), sgProduct.szPath, FALSE));
+
+        /* check temp only */
+        if(ullDSATempPath < ullDSRTempPath)
+          return(ErrorMsgDiskSpace(ullDSATempPath, ullDSRTempPath, szTempDir, TRUE));
       }
     }
   }
 
-  /* check disk space for destination only */
-  if(ullDSAPath < ullDSRPath)
-  {
-    _ui64toa(ullDSAPath, szDSAPath, 10);
-    _ui64toa(ullDSRPath, szDSRPath, 10);
-    lstrcpy(szBuf1, "\n\n    ");
-    lstrcat(szBuf1, sgProduct.szPath);
-    lstrcat(szBuf1, "\n\n    ");
-    lstrcpy(szBuf2, szDSRPath);
-    lstrcat(szBuf2, "\n    ");
-    lstrcpy(szBuf3, szDSAPath);
-    lstrcat(szBuf3, "\n\n");
-    wsprintf(szBufMsg, szDlgDiskSpaceCheckMsg, szBuf1, szBuf2, szBuf3);
-    if(MessageBox(hWndMain, szBufMsg, szDlgDiskSpaceCheckTitle, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON1 | MB_APPLMODAL | MB_SETFOREGROUND) == IDYES)
-    {
-      return(FALSE);
-    }
-    else
-    {
-      return(TRUE);
-    }
-  }
-  return(TRUE);
+  return(FALSE);
 }
 
 HRESULT ParseComponentAttributes(char *szAttribute)
@@ -1814,9 +1963,16 @@ void InitSiComponents(char *szFileIni)
     /* get install size required in system for component.  Sould be in Kilobytes */
     GetPrivateProfileString(szComponentItem, "Install Size System", "", szBuf, MAX_BUF, szFileIni);
     if(*szBuf != '\0')
-      siCTemp->ullInstallSizeSystem = atol(szBuf);
+      siCTemp->ullInstallSizeSystem = _atoi64(szBuf);
     else
       siCTemp->ullInstallSizeSystem = 0;
+
+    /* get install size required in temp for component.  Sould be in Kilobytes */
+    GetPrivateProfileString(szComponentItem, "Install Size Archive", "", szBuf, MAX_BUF, szFileIni);
+    if(*szBuf != '\0')
+      siCTemp->ullInstallSizeArchive = _atoi64(szBuf);
+    else
+      siCTemp->ullInstallSizeArchive = 0;
 
     /* get attributes of component */
     GetPrivateProfileString(szComponentItem, "Attributes", "", szBuf, MAX_BUF, szFileIni);
@@ -2324,6 +2480,13 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
       SiCNodeSetItemsSelected(diSetupType.stSetupType3.dwItems, diSetupType.stSetupType3.dwItemsSelected);
     }
   }
+
+  /* get install size required in temp for component core.  Sould be in Kilobytes */
+  GetPrivateProfileString("Core", "Install Size", "", szBuf, MAX_BUF, szFileIniConfig);
+  if(*szBuf != '\0')
+    siCFCoreFile.ullInstallSize = _atoi64(szBuf);
+  else
+    siCFCoreFile.ullInstallSize = 0;
 
   GetPrivateProfileString("SmartDownload-Netscape Install", "core_file",        "", siSDObject.szCoreFile,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("SmartDownload-Netscape Install", "core_file_path",   "", siSDObject.szCoreFilePath,    MAX_BUF, szFileIniConfig);

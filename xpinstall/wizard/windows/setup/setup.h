@@ -126,6 +126,7 @@ typedef int PRInt32;
 /* DSR: Disk Space Required */
 #define DSR_DESTINATION                 0
 #define DSR_SYSTEM                      1
+#define DSR_TEMP                        2
 
 typedef HRESULT (_cdecl *SDI_NETINSTALL) (LPSDISTRUCT);
 
@@ -249,10 +250,11 @@ typedef struct sinfoSmartDownload
 
 typedef struct sinfoCoreFile
 {
-  LPSTR szSource;
-  LPSTR szDestination;
-  BOOL  bCleanup;
-  LPSTR szMessage;
+  LPSTR       szSource;
+  LPSTR       szDestination;
+  LPSTR       szMessage;
+  BOOL        bCleanup;
+  ULONGLONG   ullInstallSize;
 } siCF;
 
 typedef struct sinfoComponentDep siCD;
@@ -268,8 +270,10 @@ struct sinfoComponent
 {
   ULONGLONG       ullInstallSize;
   ULONGLONG       ullInstallSizeSystem;
+  ULONGLONG       ullInstallSizeArchive;
   DWORD           dwAttributes;
   LPSTR           szArchiveName;
+  LPSTR           szArchivePath;
   LPSTR           szDescriptionShort;
   LPSTR           szDescriptionLong;
   LPSTR           szParameter;
