@@ -44,14 +44,12 @@ interface nsIImapIncomingServer : nsISupports {
   attribute boolean overrideNamespaces;
   attribute boolean usingSubscription;
     
-%{C++
-  NS_IMETHOD GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
-                                           nsIImapUrl* aImapUrl,
-                                           nsIUrlListener* aUrlListener,
-                                           nsISupports* aConsumer,
-                                           nsIURI** aURL) = 0;
-  NS_IMETHOD LoadNextQueuedUrl() = 0;
-  NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection) = 0;
-%}
+  nsIURI GetImapConnectionAndLoadUrl(in nsIEventQueue aClientEventQueue,
+                                           in nsIImapUrl aImapUrl,
+                                           in nsIUrlListener aUrlListener,
+                                           in nsISupports aConsumer);
 
+  void LoadNextQueuedUrl();
+
+  void RemoveConnection(in nsIImapProtocol aImapConnection);
 };

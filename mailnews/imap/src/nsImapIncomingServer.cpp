@@ -69,50 +69,11 @@ public:
 	NS_IMETHOD SetKey(char * aKey);  // override nsMsgIncomingServer's implementation...
 	NS_IMETHOD GetServerURI(char * *aServerURI);
 
-	// we support the nsIImapIncomingServer interface
-    NS_IMETHOD GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
-                                           nsIImapUrl* aImapUrl,
-                                           nsIUrlListener* aUrlListener = 0,
-                                           nsISupports* aConsumer = 0,
-                                           nsIURI** aURL = 0);
-    NS_IMETHOD LoadNextQueuedUrl();
-    NS_IMETHOD RemoveConnection(nsIImapProtocol* aImapConnection);
-    
-    NS_IMETHOD GetMaximumConnectionsNumber(PRInt32* maximumConnectionsNumber);
-    NS_IMETHOD SetMaximumConnectionsNumber(PRInt32 maximumConnectionsNumber);
-    NS_IMETHOD GetTimeOutLimits(PRInt32* minutes);
-    NS_IMETHOD SetTimeOutLimits(PRInt32 minutes);
-    NS_IMETHOD GetAdminUrl(char * *aAdminUrl);
-    NS_IMETHOD SetAdminUrl(char * aAdminUrl);
-    NS_IMETHOD GetCapabilityPref(PRInt32 *aCapabilityPref);
-    NS_IMETHOD SetCapabilityPref(PRInt32 aCapabilityPref);
-    NS_IMETHOD GetCleanupInboxOnExit(PRBool *aCleanupInboxOnExit);
-    NS_IMETHOD SetCleanupInboxOnExit(PRBool aCleanupInboxOnExit);
-    NS_IMETHOD GetDeleteModel(PRInt32 *aDeleteModel);
-    NS_IMETHOD SetDeleteModel(PRInt32 aDeleteModel);
-    NS_IMETHOD GetDualUseFolders(PRBool *aDualUseFolders);
-    NS_IMETHOD SetDualUseFolders(PRBool aDualUseFolders);
-    NS_IMETHOD GetEmptyTrashOnExit(PRBool *aEmptyTrashOnExit);
-    NS_IMETHOD SetEmptyTrashOnExit(PRBool aEmptyTrashOnExit);
-    NS_IMETHOD GetEmptyTrashThreshhold(PRInt32 *aEmptyTrashThreshhold);
-    NS_IMETHOD SetEmptyTrashThreshhold(PRInt32 aEmptyTrashThreshhold);
-    NS_IMETHOD GetOtherUsersNamespace(char * *aOtherUsersNamespace);
-    NS_IMETHOD SetOtherUsersNamespace(char * aOtherUsersNamespace);
-    NS_IMETHOD GetPersonalNamespace(char * *aPersonalNamespace);
-    NS_IMETHOD SetPersonalNamespace(char * aPersonalNamespace);
-    NS_IMETHOD GetPublicNamespace(char * *aPublicNamespace);
-    NS_IMETHOD SetPublicNamespace(char * aPublicNamespace);
-    NS_IMETHOD GetOfflineDownload(PRBool *aOfflineDownload);
-    NS_IMETHOD SetOfflineDownload(PRBool aOfflineDownload);
-    NS_IMETHOD GetOverrideNamespaces(PRBool *aOverrideNamespaces);
-    NS_IMETHOD SetOverrideNamespaces(PRBool aOverrideNamespaces);
-    NS_IMETHOD GetUsingSubscription(PRBool *aUsingSubscription);
-    NS_IMETHOD SetUsingSubscription(PRBool aUsingSubscription); 
+	NS_DECL_NSIIMAPINCOMINGSERVER
+	NS_DECL_NSIIMAPSERVERSINK
     
 	NS_IMETHOD PerformBiff();
 
-	// nsIImapServerSink impl
-	NS_DECL_NSIIMAPSERVERSINK
 protected:
 	nsresult GetUnverifiedSubFolders(nsIFolder *parentFolder, nsISupportsArray *aFoldersArray, PRInt32 *aNumUnverifiedFolders);
 	nsresult GetUnverifiedFolders(nsISupportsArray *aFolderArray, PRInt32 *aNumUnverifiedFolders);
