@@ -69,38 +69,35 @@ function AddSelectedAddressesIntoBucket(prefix)
 
 function AddAddressIntoBucket(doc, address)
 {
-	var tree = doc.getElementById('addressBucket');
-
-	var item = doc.getElementById("bucketItem");
+	var body = doc.getElementById("bucketBody");
 	
-	//newitem.setAttribute("rowID", num);
-	//newitem.setAttribute("rowName", name);
-
-	var cell = doc.createElement('treecell');
+	var item = doc.createElement('treeitem');
 	var row = doc.createElement('treerow');
+	var cell = doc.createElement('treecell');
 	var text = doc.createTextNode(address);
 	
 	cell.appendChild(text);
 	row.appendChild(cell);
 	item.appendChild(row);
+	body.appendChild(item);
 }
 
 function RemoveSelectedFromBucket()
 {
 	var bucketDoc = frames["browser.addressbucket"].document;
 	dump("bucketDoc = " + bucketDoc + "\n");
-	var item = bucketDoc.getElementById("bucketItem");
-	dump("item = " + item + "\n");
+	var body = bucketDoc.getElementById("bucketBody");
+	dump("body = " + body + "\n");
 	
-	var selArray = item.getElementsByAttribute('selected', 'true');
+	var selArray = body.getElementsByAttribute('selected', 'true');
 	dump("selArray = " + selArray + "\n");
 	if ( selArray && selArray.length )
 	{
-		for ( var row = selArray.length - 1; row >= 0; row-- )
+		for ( var item = selArray.length - 1; item >= 0; item-- )
 		{
-			dump("selArray[row] = " + selArray[row] + "\n");
-			DumpDOM(selArray[row]);
-			item.removeChild(selArray[row]);
+			dump("selArray[item] = " + selArray[item] + "\n");
+			DumpDOM(selArray[item]);
+			body.removeChild(selArray[item]);
 		}
 	}	
 }

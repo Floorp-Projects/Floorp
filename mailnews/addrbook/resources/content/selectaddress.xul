@@ -36,7 +36,7 @@ Rights Reserved.
 	<!ENTITY newButton.label	".New..."> 
 	<!ENTITY editButton.label	".Edit..."> 
 	<!ENTITY viewButton.label	".View"> 
-	<!ENTITY removeButton.label	".Remove"> 
+	<!ENTITY removeButton.label	"Remove"> 
 	<!ENTITY okButton.label		".OK"> 
 	<!ENTITY cancelButton.label	".Cancel"> 
 	<!ENTITY helpButton.label	".Help"> 
