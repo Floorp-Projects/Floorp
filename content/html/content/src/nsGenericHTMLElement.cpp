@@ -940,7 +940,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAReadableString& aInnerHTML)
   }
 
   if (scripts_enabled) {
-    // If we disabled scripts, re-enable them now that we're done.
+    // If we disabled scripts, re-enable them now that we're
+    // done. Don't fire JS timeouts when enabling the context here.
 
     scx->SetScriptsEnabled(PR_TRUE, PR_FALSE);
   }
