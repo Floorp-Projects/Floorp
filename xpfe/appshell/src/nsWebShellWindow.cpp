@@ -950,10 +950,16 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     nsCOMPtr<nsIDOMNode> menuItem;
     menuNodes->Item(0, getter_AddRefs(menuItem));
     if (menuItem) {
-      nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuItem);
+      //nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuItem);
 
       // XXX Call the context menu creation method
-
+      DoContextMenu(
+        nsnull,
+        menuItem, 
+        mWindow,
+        aXPos,
+        aYPos);
+  
     }
     return NS_OK;
   }
