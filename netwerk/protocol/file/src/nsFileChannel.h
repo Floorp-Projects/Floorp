@@ -24,6 +24,7 @@
 #include "nsFileSpec.h"
 #include "prlock.h"
 #include "nsIEventQueueService.h"
+#include "nsIBuffer.h"
 
 class nsIEventSinkGetter;
 class nsIStreamListener;
@@ -33,7 +34,10 @@ class nsIBuffer;
 class nsIBufferInputStream;
 class nsIBufferOutputStream;
 
-class nsFileChannel : public nsIFileChannel, public nsIRunnable {
+class nsFileChannel : public nsIFileChannel, 
+                      public nsIRunnable,
+                      public nsIBufferObserver
+{
 public:
 
     NS_DECL_ISUPPORTS
@@ -138,6 +142,13 @@ public:
     NS_IMETHOD Run(void);
 
     ////////////////////////////////////////////////////////////////////////////
+    // nsIBufferObserver:
+
+    NS_IMETHOD OnFull(nsIBuffer* buffer);
+
+    NS_IMETHOD OnEmpty(nsIBuffer* buffer);
+
+    ////////////////////////////////////////////////////////////////////////////
     // nsFileChannel:
 
     nsFileChannel();
@@ -184,11 +195,11 @@ protected:
     PRUint32                    mSourceOffset;
     PRInt32                     mAmount;
 
-    PRLock*                     mLock;
+    PRMonitor*                  mMonitor;
     PRUint32                    mLoadAttributes;
 };
 
 #define NS_FILE_TRANSPORT_SEGMENT_SIZE   (4*1024)
-#define NS_FILE_TRANSPORT_BUFFER_SIZE    (32*1024)
+#define NS_FILE_TRANSPORT_BUFFER_SIZE    (1024*1024)//(32*1024)
 
 #endif // nsFileChannel_h__
