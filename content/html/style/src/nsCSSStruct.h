@@ -485,7 +485,6 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   nsCSSValue      mUserInput;
   nsCSSValue      mUserModify;
   nsCSSValue      mUserSelect;
-  nsCSSValueList* mKeyEquivalent;
   nsCSSValue      mUserFocus;
   
   nsCSSValueList* mCursor;
