@@ -23,6 +23,7 @@ extern CString linuxDir;
 extern CString nsinstPath;
 extern CString xpiDir;
 extern CString tarfile;
+extern CString tarfile1;
 
 extern COMPONENT Components[100];
 extern int numComponents;
@@ -121,9 +122,12 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		pos += 1;
 		CString linuxinstDirPath = linuxblobPath.Left(pos);
 		tarfile = linuxblobPath.Right(pathlen-pos);
+		pos = tarfile.ReverseFind('.');
+		tarfile1 = tarfile.Left(pos);
 
 		int direxist = GetFileAttributes(nscpxpilinuxPath);
-		if (direxist == -1) // nscpxpiLinux directory does not exist
+		if ((direxist == -1) && (linuxblobPath != "")) 
+		// nscpxpiLinux directory does not exist	
 		{
 			char currentdir[_MAX_PATH];
 			_getcwd(currentdir, _MAX_PATH);
@@ -131,8 +135,14 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			_mkdir(linuxDir);
 			_chdir(linuxinstDirPath);
 			tnscpxpilinuxPath.Replace("\\","/");
-			CString command = "tar -zxvf " + tarfile + " -C " + tnscpxpilinuxPath;
+
+			CString command = "gzip -d " + tarfile;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+			command = "tar -xvf " + tarfile1 + " -C " + tnscpxpilinuxPath;
+ 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+			command = "gzip " + tarfile1;
+			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+			
 			nscpxpiPath = nscpxpilinuxPath + nsinstPath;
 			CString tempxpiPath = nscpxpiPath;
 			tempxpiPath.Replace(xpiDir,"");

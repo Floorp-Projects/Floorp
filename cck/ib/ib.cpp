@@ -38,6 +38,7 @@ CString nsinstallerDir;
 CString xpiDir;
 CString templinuxDir;
 CString tarfile;
+CString tarfile1;
 
 WIDGET *tempWidget;
 char buffer[50000];
@@ -986,13 +987,17 @@ void CreateLinuxInstaller()
 	char currentdir[_MAX_PATH];
 	_getcwd(currentdir,_MAX_PATH);
 	CopyDirectory(xpiDstPath, templinuxPath + xpiDir);
-	remove(templinuxPath + xpiDir + "\\N6Setup.exe");
+	DeleteFile(templinuxPath + xpiDir + "\\N6Setup.exe");
 	CopyFile(xpiDstPath+"\\Config.ini", templinuxPath+"\\Config.ini",FALSE);
-	remove(templinuxPath + xpiDir + "\\Config.ini");
+	DeleteFile(templinuxPath + xpiDir + "\\Config.ini");
 	_chdir(outputPath);
 	templinuxPath = tempPath;
 	templinuxPath.Replace("\\", "/");
-	CString command = "tar -zcvf " + tarfile + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;
+	DeleteFile(tarfile1);
+	DeleteFile(tarfile);
+	CString command = "tar -cvf " + tarfile1 + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;    
+	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+	command = "gzip " + tarfile1;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	_chdir(currentdir);
 }
@@ -1027,6 +1032,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	xpiDir = "\\xpi";
 	templinuxDir = "tempLinux";
 	tarfile = "netscape-i686-pc-linux-gnu-sea.tar.gz";
+	tarfile1 = "netscape-i686-pc-linux-gnu-sea.tar";
 
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
