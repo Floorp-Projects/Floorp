@@ -24,9 +24,6 @@
 // See documentation in associated header file
 //
 
-#ifndef nsToolbarFrame_h___
-#define nsToolbarFrame_h___
-
 #include "nsToolbarFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
@@ -135,5 +132,66 @@ nsToolbarFrame :: Reflow ( nsIPresContext&          aPresContext,
 
 } // Reflow 
 
-#endif
 
+//
+// GetFrameForPoint
+//
+// Override to process events in our own frame
+//
+NS_IMETHODIMP
+nsToolbarFrame :: GetFrameForPoint(const nsPoint& aPoint, 
+                                  nsIFrame**     aFrame)
+{
+  nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+
+  // returning NS_OK means that we tell the frame finding code that we have something
+  // and to stop looking elsewhere for a frame.
+  if ( aFrame && *aFrame == this )
+    retVal = NS_OK;
+  else if ( retVal != NS_OK ) {
+    *aFrame = this;
+    retVal = NS_OK;
+  }
+     
+  return retVal;
+  
+} // GetFrameForPoint
+
+
+// 
+// HandleEvent 
+// 
+// Process events that come to this frame. If they end up here, they are
+// almost certainly drag and drop events.
+//
+NS_IMETHODIMP 
+nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext, 
+                                   nsGUIEvent*     aEvent, 
+                                   nsEventStatus&  aEventStatus) 
+{ 
+  if ( !aEvent ) 
+    return nsEventStatus_eIgnore; 
+
+  printf("nsToolbarFrame :: HandleEvent %d\n", aEvent->message); 
+
+  switch (aEvent->message) { 
+    case NS_DRAGDROP_ENTER: 
+      // show drop feedback 
+      break; 
+
+    case NS_DRAGDROP_OVER: 
+      break; 
+
+    case NS_DRAGDROP_EXIT: 
+      // remove drop feedback 
+      break; 
+
+    case NS_DRAGDROP_DROP: 
+      // do drop coolness stuff 
+      break; 
+  } 
+
+  //XXX this needs to change when I am really handling the D&D events 
+  return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus); 
+  
+} // HandleEvent

@@ -32,11 +32,16 @@
 // the DOM. The exact structure of the children is documented on:
 //   http://www.mozilla.org/xpfe/DMWSpecNew.html
 //
-// <<describe toolbar layout in detail>>
+// This implementation of toolbars now uses evaughan's box code for layout
+// of its children and to determine its size.
 //
+
+#ifndef nsToolbarFrame_h__
+#define nsToolbarFrame_h__
 
 
 #include "nsBoxFrame.h"
+
 
 class nsToolbarFrame : public nsBoxFrame
 {
@@ -53,6 +58,12 @@ public:
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+                              nsIFrame**     aFrame);
+  NS_IMETHOD  HandleEvent(nsIPresContext& aPresContext, 
+                          nsGUIEvent*     aEvent,
+                          nsEventStatus&  aEventStatus);
+
 protected:
   nsToolbarFrame();
   virtual ~nsToolbarFrame();
@@ -63,3 +74,5 @@ protected:
   nsToolbarFrame& operator= ( const nsToolbarFrame& aFrame ) ;  // DO NOT IMPLEMENT
   
 }; // class nsToolbarFrame
+
+#endif
