@@ -59,6 +59,7 @@
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
+#include "nsIAlertsService.h"
  
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 
@@ -105,7 +106,8 @@ private:
 
 class nsDownload : public nsIDownload,
                    public nsIWebProgressListener,
-                   public nsIObserver
+                   public nsIObserver,
+                   public nsIAlertListener
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
@@ -113,12 +115,14 @@ public:
   NS_DECL_NSIDOWNLOAD
   NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIALERTLISTENER
 
   nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource);
   ~nsDownload();
 
   nsresult Suspend();
   nsresult Resume();
+  void DisplayDownloadFinishedAlert();
 
   void SetDialogListener(nsIWebProgressListener* aInternalListener) {
     mDialogListener = aInternalListener;

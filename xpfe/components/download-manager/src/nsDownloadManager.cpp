@@ -63,14 +63,12 @@
 #include "nsISound.h"
 #include "nsIPrefService.h"
 #include "nsIFileURL.h"
+#include "nsIAlertsService.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
  */
   
-static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
-
 #define DOWNLOAD_MANAGER_FE_URL "chrome://communicator/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
 #define INTERVAL 500
@@ -162,7 +160,7 @@ nsDownloadManager::Init()
   if (NS_FAILED(rv)) return rv;
   
 
-  rv = CallGetService(kRDFServiceCID, &gRDFService);
+  rv = CallGetService("@mozilla.org/rdf/rdf-service;1", &gRDFService);
   if (NS_FAILED(rv)) return rv;                                                 
 
   gRDFService->GetResource(NS_LITERAL_CSTRING("NC:DownloadsRoot"), &gNC_DownloadsRoot);
@@ -185,7 +183,7 @@ nsDownloadManager::Init()
   mListener = do_CreateInstance("@mozilla.org/download-manager/listener;1", &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
   
   rv =  bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(mBundle));
@@ -713,7 +711,7 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, nsIDownload* aDownload)
   // if this fails, it fails -- continue.
   AssertProgressInfo();
   
-  //check for an existing manager window and focus it
+  // check for an existing manager window and focus it
   nsresult rv;
   nsCOMPtr<nsIWindowMediator> wm = do_GetService(NS_WINDOWMEDIATOR_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
@@ -921,7 +919,7 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS4(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver)
+NS_IMPL_ISUPPORTS5(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener, nsIObserver, nsIAlertListener)
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
                        nsIURI* aTarget,
@@ -1104,7 +1102,7 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
       // Get title for alert.
       nsXPIDLString title;
       nsresult rv;
-      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
+      nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
       nsCOMPtr<nsIStringBundle> bundle;
       if (bundleService)
         rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
@@ -1125,6 +1123,41 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
   }
 
   return NS_OK;
+}
+
+void nsDownload::DisplayDownloadFinishedAlert()
+{
+  nsresult rv;
+  nsCOMPtr<nsIAlertsService> alertsService(do_GetService(NS_ALERTSERVICE_CONTRACTID, &rv));
+  if (NS_FAILED(rv))
+    return;
+
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return;
+
+  rv = bundleService->CreateBundle(DOWNLOAD_MANAGER_BUNDLE, getter_AddRefs(bundle));
+  if (NS_FAILED(rv))
+    return;
+
+  nsXPIDLString finishedTitle, finishedText;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("finishedTitle").get(),
+                                 getter_Copies(finishedTitle));
+  if (NS_FAILED(rv))
+    return;
+
+  const PRUnichar *strings[] = { mDisplayName.get() };
+  rv = bundle->FormatStringFromName(NS_LITERAL_STRING("finishedText").get(),
+                                    strings, 1, getter_Copies(finishedText));
+  if (NS_FAILED(rv))
+    return;
+  
+  nsCAutoString url;
+  mTarget->GetSpec(url);
+  alertsService->ShowAlertNotification(PromiseFlatCString(NS_LITERAL_CSTRING("moz-icon://") + url).get(),
+                                       finishedTitle, finishedText, PR_TRUE,
+                                       NS_LITERAL_STRING("download").get(), this);
 }
 
 NS_IMETHODIMP
@@ -1154,7 +1187,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       mCurrBytes = mMaxBytes;
       mPercentComplete = 100;
 
-      //Play a sound when the download finishes
+      // Play a sound or show an alert when the download finishes
+      PRBool playSound = PR_FALSE;
+      PRBool showAlert = PR_FALSE;
       nsXPIDLCString soundStr;
 
       nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1");
@@ -1162,14 +1197,19 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
       if (prefs) {
         nsCOMPtr<nsIPrefBranch> prefBranch;
         prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
-        if (prefBranch)
-          prefBranch->GetCharPref("browser.download.finished_sound_url", getter_Copies(soundStr));
+        if (prefBranch) {
+          rv = prefBranch->GetBoolPref("browser.download.finished_download_sound", &playSound);
+          if (NS_SUCCEEDED(rv) && playSound)
+            prefBranch->GetCharPref("browser.download.finished_sound_url", getter_Copies(soundStr));
+          rv = prefBranch->GetBoolPref("browser.download.finished_download_alert", &showAlert);
+          if (NS_FAILED(rv))
+            showAlert = PR_FALSE;
+        }
       }
 
-      //only continue if it isn't blank
       if (!soundStr.IsEmpty()) {
         nsCOMPtr<nsISound> snd = do_GetService("@mozilla.org/sound;1");
-        if (snd) { //hopefully we got it
+        if (snd) {
           nsCOMPtr<nsIURI> soundURI;
           
           NS_NewURI(getter_AddRefs(soundURI), soundStr);
@@ -1180,7 +1220,9 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
             snd->Beep();
         }
       }
-
+      if (showAlert)
+        DisplayDownloadFinishedAlert();
+      
       nsCAutoString path;
       rv = GetFilePathUTF8(mTarget, path);
       // can't do an early return; have to break reference cycle below
@@ -1226,6 +1268,23 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 
   return NS_OK;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIAlertListener
+
+NS_IMETHODIMP
+nsDownload::OnAlertFinished(const PRUnichar * aAlertCookie)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::OnAlertClickCallback(const PRUnichar * aAlertCookie)
+{
+  // show the download manager
+  mDownloadManager->Open(nsnull, this);
+  return NS_OK;
+} 
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIDownload

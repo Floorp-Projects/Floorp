@@ -2,23 +2,21 @@ function Startup()
 {
   PlaySoundCheck();
 
-  // if we don't have the alert service, hide the pref UI for using alerts to notify on new mail
+  // if we don't have the alert service, hide the pref UI for using alerts to notify on download completion
   // see bug #158711
-  var newMailNotificationAlertUI = document.getElementById("newMailNotificationAlert");
-  newMailNotificationAlertUI.hidden = !("@mozilla.org/alerts-service;1" in Components.classes);
+  var downloadDoneNotificationAlertUI = document.getElementById("finishedNotificationAlert");
+  downloadDoneNotificationAlertUI.hidden = !("@mozilla.org/alerts-service;1" in Components.classes);
 }
 
 function PlaySoundCheck()
 {
-  var playSound = document.getElementById("newMailNotification").checked;
-  var playSoundType = document.getElementById("newMailNotificationType");
-  playSoundType.disabled = !playSound;
+  var playSound = document.getElementById("finishedNotificationSound").checked;
 
-  var disableCustomUI = !(playSound && playSoundType.value == 1);
-  var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
+  var disableCustomUI = !playSound;
+  var finishedSoundUrl = document.getElementById("finishedSoundUrl");
 
-  mailnewsSoundFileUrl.disabled = disableCustomUI
-  document.getElementById("preview").disabled = disableCustomUI || (mailnewsSoundFileUrl.value == "");
+  finishedSoundUrl.disabled = disableCustomUI;
+  document.getElementById("preview").disabled = disableCustomUI || (finishedSoundUrl.value == "");
   document.getElementById("browse").disabled = disableCustomUI;
 }
 
@@ -27,7 +25,7 @@ const nsIFilePicker = Components.interfaces.nsIFilePicker;
 function Browse()
 {
   var fp = Components.classes["@mozilla.org/filepicker;1"]
-                       .createInstance(nsIFilePicker);
+                     .createInstance(nsIFilePicker);
 
   // XXX todo, persist the last sound directory and pass it in
   // XXX todo filter by .wav
@@ -36,19 +34,20 @@ function Browse()
 
   var ret = fp.show();
   if (ret == nsIFilePicker.returnOK) {
-    var mailnewsSoundFileUrl = document.getElementById("mailnewsSoundFileUrl");
+    var soundUrl = document.getElementById("finishedSoundUrl");
     // convert the nsILocalFile into a nsIFile url 
-    mailnewsSoundFileUrl.value = fp.fileURL.spec;
+    soundUrl.value = fp.fileURL.spec;
   }
 
-  document.getElementById("preview").disabled = (document.getElementById("mailnewsSoundFileUrl").value == "");
+  document.getElementById("preview").disabled =
+    (document.getElementById("finishedSoundUrl").value == "");
 }
 
 var gSound = null;
 
 function PreviewSound()
 {
-  var soundURL = document.getElementById("mailnewsSoundFileUrl").value;
+  var soundURL = document.getElementById("finishedSoundUrl").value;
 
   if (!gSound)
     gSound = Components.classes["@mozilla.org/sound;1"].createInstance(Components.interfaces.nsISound);
@@ -60,7 +59,7 @@ function PreviewSound()
   }
   else {
     var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                     .getService(Components.interfaces.nsIIOService);
+                              .getService(Components.interfaces.nsIIOService);
     var url = ioService.newURI(soundURL, null, null);
     gSound.play(url)
   }
