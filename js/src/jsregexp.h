@@ -73,14 +73,14 @@ typedef struct RENode RENode;
 
 struct JSRegExp {
     jsrefcount   nrefs;         /* reference count */
-    JSString     *source;       /* locked source string, sans // */
-    uintN        lastIndex;     /* number of parenthesized submatches */
-    uint32       parenCount:24, /* index after last match, for //g iterator */
+    uint32       parenCount:24, /* number of parenthesized submatches */
                  flags:8;       /* flags, see jsapi.h's JSREG_* defines */
+    double       lastIndex;     /* index after last match, for //g iterator */
     RENode       *ren;          /* regular expression tree root */
-#ifdef JS_THREADSAFE
-    jsword       owningThread;  /* not quite right if someone intentionally */
-    JSDHashTable *lastIndexes;  /* passes a regexp from thread A to B */
+    JSString     *source;       /* locked source string, sans // */
+#ifdef JS_THREADSAFE            /* extension: lastIndex is thread-specific */
+    jsword       owningThread;  /* (not quite right if someone intentionally */
+    JSDHashTable *lastIndexes;  /* passes a regexp from thread A to B) */
 #endif
 };
 
