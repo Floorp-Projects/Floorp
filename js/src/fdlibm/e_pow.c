@@ -86,7 +86,7 @@ zero    =  0.0,
 one	=  1.0,
 two	=  2.0,
 two53	=  9007199254740992.0,	/* 0x43400000, 0x00000000 */
-huge	=  1.0e300,
+really_big	=  1.0e300,
 tiny    =  1.0e-300,
 	/* poly coefs for (3/2)*(log(x)-2s-2/3*s**3 */
 L1  =  5.99999999999994648725e-01, /* 0x3FE33333, 0x33333303 */
@@ -200,15 +200,15 @@ ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
     /* (x<0)**(non-int) is NaN */
 	if((((hx>>31)+1)|yisint)==0) return (x-x)/(x-x);
 
-    /* |y| is huge */
+    /* |y| is really_big */
 	if(iy>0x41e00000) { /* if |y| > 2**31 */
 	    if(iy>0x43f00000){	/* if |y| > 2**64, must o/uflow */
-		if(ix<=0x3fefffff) return (hy<0)? huge*huge:tiny*tiny;
-		if(ix>=0x3ff00000) return (hy>0)? huge*huge:tiny*tiny;
+		if(ix<=0x3fefffff) return (hy<0)? really_big*really_big:tiny*tiny;
+		if(ix>=0x3ff00000) return (hy>0)? really_big*really_big:tiny*tiny;
 	    }
 	/* over/underflow if x is not close to one */
-	    if(ix<0x3fefffff) return (hy<0)? huge*huge:tiny*tiny;
-	    if(ix>0x3ff00000) return (hy>0)? huge*huge:tiny*tiny;
+	    if(ix<0x3fefffff) return (hy<0)? really_big*really_big:tiny*tiny;
+	    if(ix>0x3ff00000) return (hy>0)? really_big*really_big:tiny*tiny;
 	/* now |1-x| is tiny <= 2**-20, suffice to compute 
 	   log(x) by x-x^2/2+x^3/3-x^4/4 */
 	    t = x-1;		/* t has 20 trailing zeros */
@@ -281,9 +281,9 @@ ivln2_l  =  1.92596299112661746887e-08; /* 0x3E54AE0B, 0xF85DDF44 =1/ln2 tail*/
 	i = __LO(z);
 	if (j>=0x40900000) {				/* z >= 1024 */
 	    if(((j-0x40900000)|i)!=0)			/* if z > 1024 */
-		return s*huge*huge;			/* overflow */
+		return s*really_big*really_big;			/* overflow */
 	    else {
-		if(p_l+ovt>z-p_h) return s*huge*huge;	/* overflow */
+		if(p_l+ovt>z-p_h) return s*really_big*really_big;	/* overflow */
 	    }
 	} else if((j&0x7fffffff)>=0x4090cc00 ) {	/* z <= -1075 */
 	    if(((j-0xc090cc00)|i)!=0) 		/* z < -1075 */

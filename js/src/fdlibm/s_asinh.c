@@ -47,7 +47,7 @@ static double
 #endif
 one =  1.00000000000000000000e+00, /* 0x3FF00000, 0x00000000 */
 ln2 =  6.93147180559945286227e-01, /* 0x3FE62E42, 0xFEFA39EF */
-huge=  1.00000000000000000000e+300; 
+really_big=  1.00000000000000000000e+300; 
 
 #ifdef __STDC__
 	double fd_asinh(double x)
@@ -62,7 +62,7 @@ huge=  1.00000000000000000000e+300;
 	ix = hx&0x7fffffff;
 	if(ix>=0x7ff00000) return x+x;	/* x is inf or NaN */
 	if(ix< 0x3e300000) {	/* |x|<2**-28 */
-	    if(huge+x>one) return x;	/* return x inexact except 0 */
+	    if(really_big+x>one) return x;	/* return x inexact except 0 */
 	} 
 	if(ix>0x41b00000) {	/* |x| > 2**28 */
 	    w = __ieee754_log(fd_fabs(x))+ln2;

@@ -85,7 +85,7 @@ static const double
 #else
 static double 
 #endif
-huge    = 1e300,
+really_big    = 1e300,
 one	= 1.0,
 invsqrtpi=  5.64189583547756279280e-01, /* 0x3FE20DD7, 0x50429B6D */
 tpi      =  6.36619772367581382433e-01, /* 0x3FE45F30, 0x6DC9C883 */
@@ -139,7 +139,7 @@ static double zero    = 0.0;
 		else  	 return  z;
 	}
 	if(ix<0x3e400000) {	/* |x|<2**-27 */
-	    if(huge+x>one) return 0.5*x;/* inexact if x!=0 necessary */
+	    if(really_big+x>one) return 0.5*x;/* inexact if x!=0 necessary */
 	}
 	z = x*x;
 	r =  z*(r00+z*(r01+z*(r02+z*r03)));
