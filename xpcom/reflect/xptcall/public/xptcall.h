@@ -64,20 +64,20 @@ struct nsXPTCMiniVariant
 // with no penalty.
     union
     {
-        PRInt8   i8;
-        PRInt16  i16;
-        PRInt32  i32;
-        PRInt64  i64;
-        PRUint8  u8;
-        PRUint16 u16;
-        PRUint32 u32;
-        PRUint64 u64;
-        float    f;
-        double   d;
-        PRBool   b;
-        char     c;
-        wchar_t  wc;
-        void*    p;
+        PRInt8    i8;
+        PRInt16   i16;
+        PRInt32   i32;
+        PRInt64   i64;
+        PRUint8   u8;
+        PRUint16  u16;
+        PRUint32  u32;
+        PRUint64  u64;
+        float     f;
+        double    d;
+        PRBool    b;
+        char      c;
+        PRUnichar wc;
+        void*     p;
     } val;
 };
 
