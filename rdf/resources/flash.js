@@ -44,7 +44,7 @@ function Init()
             // unfortunately, force it to be read synchronously the
             // first time around.
             var flashservice = RDF.GetDataSource(service.Value);
-            flashservice = flashservice.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
+            flashservice = flashservice.QueryInterface(Components.interfaces.nsIRDFDataSource);
             // Add it to the tree control's composite datasource.
             tree.database.AddDataSource(flashservice);
 

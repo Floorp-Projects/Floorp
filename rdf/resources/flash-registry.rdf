@@ -8,6 +8,10 @@
         <NC:poll-interval>300</NC:poll-interval>
       </RDF:Description>
     </RDF:li>
+    <RDF:li>
+	  <!-- Messenger Flashes -->	 
+      <RDF:Description about="rdf:msgnotifications" />
+    </RDF:li>
   </RDF:Bag>
 
   <RDF:Bag about="NC:FlashStyleSheets">
