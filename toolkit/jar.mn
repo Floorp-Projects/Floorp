@@ -23,7 +23,6 @@ toolkit.jar:
 +        content/global/mozilla.xhtml                       (content/mozilla.xhtml) 
 *+       content/global/nsDragAndDrop.js                    (content/nsDragAndDrop.js)
 *+       content/global/nsWidgetStateManager.js             (content/nsWidgetStateManager.js)
-+        content/global/prefWindowUtils.js                  (content/prefWindowUtils.js) 
 +        content/global/selectDialog.js                     (content/selectDialog.js) 
 +        content/global/selectDialog.xul                    (content/selectDialog.xul) 
 *+       content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
