@@ -14,7 +14,7 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Original Author:
@@ -165,7 +165,7 @@ struct nsCharTraits
     length( const char_type* s )
       {
         size_t result = 0;
-        while ( !eq(*s++, CharT()) )
+        while ( !eq(*s++, CharT(0)) )
           ++result;
         return result;
       }
