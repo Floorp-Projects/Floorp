@@ -538,7 +538,12 @@
               rangeMax = {};
               s.getRangeAt(0, rangeMin, rangeMax);
               BookmarksController.doCommand(aCommand, selection, target);
-              s.select(rangeMin.value);
+              // Select the next remaining row if there is one,
+              // or the previous row, even "Bookmarks for <profile name>"(= 0)
+              // if no other row remains.
+              s.select((rangeMin.value >= this.mOuter.treeBuilder.rowCount)
+                       ? this.mOuter.treeBuilder.rowCount - 1
+                       : rangeMin.value);
               break;
             case "cmd_bm_expandfolder":
               this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
