@@ -214,7 +214,8 @@ static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
-#if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
+#if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
+#if defined(XP_MAC) || defined (XP_UNIX)
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
@@ -227,6 +228,7 @@ static NS_DEFINE_CID(kRDFXULBuilderCID,         NS_RDFXULBUILDER_CID);
 static NS_DEFINE_CID(kXULDataSourceCID,         NS_XULDATASOURCE_CID);
 static NS_DEFINE_CID(kXULDocumentCID,           NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,        NS_XULCONTENTSINK_CID);
+#endif
 #endif
 
 static NS_DEFINE_CID(kCSSParserCID,             NS_CSSPARSER_CID);
@@ -347,7 +349,8 @@ NS_SetupRegistry()
 #endif
   nsComponentManager::RegisterComponent(kCEventListenerManagerCID, NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
-#if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
+#if 0	// autoregistration now works on all platforms, and RDF self-registers, so commenting out
+#if defined(XP_MAC) || defined (XP_UNIX)
   nsComponentManager::RegisterComponent(kRDFBookMarkDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFCompositeDataSourceCID, NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kRDFHTMLBuilderCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
@@ -360,6 +363,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kXULDataSourceCID,         NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXULDocumentCID,           NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kXULContentSinkCID,        NULL, NULL, RDF_DLL, PR_FALSE, PR_FALSE);
+#endif
 #endif
 
   nsComponentManager::RegisterComponent(kCSSParserCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
