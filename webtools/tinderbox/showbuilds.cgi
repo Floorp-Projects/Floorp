@@ -881,7 +881,7 @@ sub do_quickparse {
   my @treelist = split /,/, $::tree;
   foreach my $t (@treelist) {
     if (is_tree_state_available()) {
-      my $state = is_tree_open() ? 'open' : 'close';
+      my $state = is_tree_open() ? 'open' : 'closed';
       print "State|$t|$bonsai_tree|$state\n";
     }
     my (%build, %times);
