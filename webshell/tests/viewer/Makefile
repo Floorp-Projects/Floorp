@@ -83,6 +83,7 @@ EX_LIBS = \
 	$(DIST)/bin/libraptorhtmltable_s.so \
 	$(DIST)/bin/libraptorlayout_s.so \
 	$(DIST)/bin/libraptorview.so \
+	$(DIST)/bin/libraptorwebwidget.so \
 	$(DIST)/bin/libreg.so \
 	$(DIST)/bin/libremoturl.so \
 	$(DIST)/bin/libsecfree.so \
