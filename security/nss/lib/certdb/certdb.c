@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.43 2002/10/01 14:32:07 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.44 2002/10/03 03:34:36 jpierre%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -2601,6 +2601,45 @@ CERT_FilterCertListByUsage(CERTCertList *certList, SECCertUsage usage,
     
 loser:
     return(SECFailure);
+}
+
+PRBool CERT_IsUserCert(CERTCertificate* cert)
+{
+    if ( (cert->trust->sslFlags & CERTDB_USER ) ||
+         (cert->trust->emailFlags & CERTDB_USER ) ||
+         (cert->trust->objectSigningFlags & CERTDB_USER ) ) {
+        return PR_TRUE;
+    } else {
+        return PR_FALSE;
+    }
+}
+
+SECStatus
+CERT_FilterCertListForUserCerts(CERTCertList *certList)
+{
+    CERTCertListNode *node, *freenode;
+    CERTCertificate *cert;
+
+    if (!certList) {
+        return SECFailure;
+    }
+
+    node = CERT_LIST_HEAD(certList);
+    
+    while ( ! CERT_LIST_END(node, certList) ) {
+	cert = node->cert;
+	if ( PR_TRUE != CERT_IsUserCert(cert) ) {
+	    /* Not a User Cert, so remove this cert from the list */
+	    freenode = node;
+	    node = CERT_LIST_NEXT(node);
+	    CERT_RemoveCertListNode(freenode);
+	} else {
+	    /* Is a User cert, so leave it in the list */
+	    node = CERT_LIST_NEXT(node);
+	}
+    }
+
+    return(SECSuccess);
 }
 
 static PZLock *certRefCountLock = NULL;
