@@ -508,6 +508,28 @@ nsDocument::~nsDocument()
     NS_RELEASE(subdoc);
   }
 
+  if (mRootContent) {
+    nsCOMPtr<nsIDocument> doc;
+
+    mRootContent->GetDocument(*getter_AddRefs(doc));
+
+    if (doc) {
+      // The root content still has a pointer back to the document,
+      // clear the document pointer in all children.
+
+      PRUint32 count;
+      mChildren->Count(&count);
+      for (indx = 0; (PRUint32)indx < count; indx++) {
+        nsCOMPtr<nsIContent> content;
+
+        mChildren->QueryElementAt(indx, NS_GET_IID(nsIContent),
+                                  getter_AddRefs(content));
+
+        content->SetDocument(nsnull, PR_TRUE, PR_FALSE);
+      }
+    }
+  }
+
   mRootContent = nsnull;
   mChildren->Clear();
 
