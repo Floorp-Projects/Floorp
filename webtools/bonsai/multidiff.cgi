@@ -68,7 +68,11 @@ for $k (@revs) {
     $prevrev = &PrevRev($rev);
     
     # this doesn't handle files in the attic
-    open( DIFF, "/tools/ns/bin/rcsdiff -c -r$prevrev -r$rev $cvsroot/$dir/$file,v 2>&1|" );
+    $fullname = "$cvsroot/$dir/$file,v";
+    if (IsHidden($fullname)) {
+        next;
+    }
+    open( DIFF, "/tools/ns/bin/rcsdiff -c -r$prevrev -r$rev $fullname 2>&1|" );
     $_ =~ s/&/&amp;/g;
     $_ =~ s/</&lt;/g;
     while(<DIFF>){
