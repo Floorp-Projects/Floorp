@@ -451,40 +451,61 @@ nsImageFrame::HandleLoadError(nsresult aStatus, nsIPresShell* aPresShell)
     return NS_OK;
   }
   
-  // check if we want to honor the ALT text in the IMG frame, or let the preShell make it into inline text
-  //  - if QuirksMode, and the IMG has a size, then render the ALT text in the IMG frame
-  //    UNLESS there is a pref set to force inline alt text
-  PRBool useSizedBox = PR_FALSE;
-  PRBool prefForceInlineAltText = mIconLoad ? mIconLoad->mPrefForceInlineAltText : PR_FALSE;
+  // Check if we want to use a placeholder box with an icon or just
+  // let the the presShell make us into inline text.  Decide as follows:
+  //
+  //  - if our special "force icons" style is set, show an icon
+  //  - else if our "do not show placeholders" pref is set, skip the icon
+  //  - else:
+  //  - if QuirksMode, and there is no alt attribute, and this is not an
+  //    <object> (which could not possibly have such an attribute), show an
+  //    icon.
+  //  - if QuirksMode, and the IMG has a size, and the image is
+  //    broken, not blocked, show an icon.
+  //  - otherwise, skip the icon
 
-  // check if we have fixed size
-  const nsStylePosition* stylePosition;
-  ::GetStyleData(this, &stylePosition);
-  NS_ASSERTION(stylePosition, "null style position: frame is corrupted");
-        
-  // check for quirks mode
-  nsCompatibility mode;
-  mPresContext->GetCompatibilityMode(&mode);
-        
-  // check for being in Composer: if we are, we always show the size-box
-  PRBool forceIcon = PR_FALSE;
-
-  // check for style property that indicates the icon should always be shown
-  const nsStyleUIReset* styleData;
-  ::GetStyleData(this, &styleData);
-  if (styleData->mForceBrokenImageIcon) {
-    forceIcon = PR_TRUE;
+  PRBool useSizedBox;
+  
+  const nsStyleUIReset* uiResetData;
+  ::GetStyleData(this, &uiResetData);
+  NS_ASSERTION(uiResetData, "null style position: frame is corrupted");
+  if (uiResetData->mForceBrokenImageIcon) {
+    useSizedBox = PR_TRUE;
   }
+  else if (mIconLoad && mIconLoad->mPrefForceInlineAltText) {
+    useSizedBox = PR_FALSE;
+  }
+  else {
+    nsCompatibility mode;
+    mPresContext->GetCompatibilityMode(&mode);
+    if (mode != eCompatibility_NavQuirks) {
+      useSizedBox = PR_FALSE;
+    }
+    else {
+      // We are in quirks mode, so we can just check the tag name; no need to
+      // check the namespace.
+      nsCOMPtr<nsINodeInfo> nodeInfo;
+      mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+      
+      if (!mContent->HasAttr(kNameSpaceID_None, nsHTMLAtoms::alt) &&
+          nodeInfo &&
+          !nodeInfo->Equals(nsHTMLAtoms::object)) {
+        useSizedBox = PR_TRUE;
+      }
+      else if (aStatus == NS_ERROR_IMAGE_BLOCKED) {
+        useSizedBox = PR_FALSE;
+      }
+      else {
+        // check whether we have fixed size
+        const nsStylePosition* stylePosition;
+        ::GetStyleData(this, &stylePosition);
+        NS_ASSERTION(stylePosition, "null style position: frame is corrupted");
 
-  // wrap it all up: use the size box if
-  // - in editor
-  // - not forcing inline alt text, have fixed size, in quirks mode, image not blocked
-  useSizedBox = forceIcon ||
-                (!prefForceInlineAltText &&
-                 HaveFixedSize(*stylePosition) && 
-                 mode == eCompatibility_NavQuirks &&
-                 aStatus != NS_ERROR_IMAGE_BLOCKED);
-
+        useSizedBox = HaveFixedSize(*stylePosition);
+      }
+    }
+  }
+  
   if (!useSizedBox) {
     // let the presShell handle converting this into the inline alt
     // text frame
