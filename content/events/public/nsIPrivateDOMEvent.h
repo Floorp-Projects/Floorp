@@ -71,9 +71,6 @@ public:
 };
 
 nsresult
-NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext,
-               nsEvent *aEvent);
-nsresult
 NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                  nsIPresContext* aPresContext, const nsAString& aEventType,
                  nsEvent *aEvent);
