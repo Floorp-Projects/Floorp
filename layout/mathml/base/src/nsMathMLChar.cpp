@@ -54,6 +54,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIWindowWatcher.h"
+#include "nsIStringBundle.h"
 
 #include "nsMathMLOperators.h"
 #include "nsMathMLChar.h"
@@ -138,43 +139,49 @@ CheckFontExistence(nsIPresContext* aPresContext, const nsString& aFontName)
 static void
 AlertMissingFonts(nsString& aMissingFonts)
 {
+  nsCOMPtr<nsIStringBundleService> sbs(do_GetService(NS_STRINGBUNDLE_CONTRACTID));
+  if (!sbs)
+    return;
+
+  nsCOMPtr<nsIStringBundle> sb;
+  sbs->CreateBundle("resource:/res/fonts/mathfont.properties", getter_AddRefs(sb));
+  if (!sb)
+    return;
+
+  nsXPIDLString title, message;
+  const PRUnichar* strings[] = { aMissingFonts.get() };
+  sb->GetStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_title").get(), getter_Copies(title));
+  sb->FormatStringFromName(NS_LITERAL_STRING("mathfont_missing_dialog_message").get(),
+                           strings, 1, getter_Copies(message));
+
   nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-  if (wwatch) {
-    nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
-    if (!paramBlock) return;
+  if (!wwatch)
+    return;
 
-    // copied from nsICommonDialogs.idl which curiously isn't part of the build
-    // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
-    enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
-          eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
-          eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
-    enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
-          eEditField1Password=4};
+  nsCOMPtr<nsIDialogParamBlock> paramBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+  if (!paramBlock)
+    return;
 
-    nsAutoString icon;
-    icon.Assign(NS_LITERAL_STRING("alert-icon"));
+  // copied from nsICommonDialogs.idl which curiously isn't part of the build
+  // (mozilla/xpfe/appshell/public/nsICommonDialogs.idl)
+  enum {eMsg=0, eCheckboxMsg=1, eIconClass=2, eTitleMessage=3, eEditfield1Msg=4,
+        eEditfield2Msg=5, eEditfield1Value=6, eEditfield2Value=7, eButton0Text=8,
+        eButton1Text=9, eButton2Text=10, eButton3Text=11,eDialogTitle=12};
+  enum {eButtonPressed=0, eCheckboxState=1, eNumberButtons=2, eNumberEditfields=3,
+        eEditField1Password=4};
 
-    nsAutoString title;
-    title.Assign(NS_LITERAL_STRING("Missing MathML Fonts"));
+  paramBlock->SetInt(eNumberButtons, 1);
+  paramBlock->SetString(eIconClass, NS_LITERAL_STRING("alert-icon").get());
+  paramBlock->SetString(eDialogTitle, title.get());
+  paramBlock->SetString(eMsg, message.get());
 
-    nsAutoString message;
-    message.Assign(NS_LITERAL_STRING("To properly display the MathML on this page you need to install the following fonts:\n"));
-    message.Append(aMissingFonts);
-    message.Append(NS_LITERAL_STRING(".\n\n\n For further information see:\n http://www.mozilla.org/projects/mathml/fonts"));
+  nsCOMPtr<nsIDOMWindow> parent;
+  wwatch->GetActiveWindow(getter_AddRefs(parent));
 
-    paramBlock->SetInt(eNumberButtons, 1);
-    paramBlock->SetString(eDialogTitle, title.get());
-    paramBlock->SetString(eMsg, message.get());
-    paramBlock->SetString(eIconClass, icon.get());
-
-    nsCOMPtr<nsIDOMWindow> parent;
-    wwatch->GetActiveWindow(getter_AddRefs(parent));
-
-    nsCOMPtr<nsIDOMWindow> dialog;
-    wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
-                       "dependent,centerscreen,chrome,titlebar", paramBlock,
-                       getter_AddRefs(dialog));
-  }
+  nsCOMPtr<nsIDOMWindow> dialog;
+  wwatch->OpenWindow(parent, "chrome://global/content/commonDialog.xul", "_blank",
+                     "dependent,centerscreen,chrome,titlebar", paramBlock,
+                     getter_AddRefs(dialog));
 }
 
 // helper to trim off comments from data in a MathFont Property File
