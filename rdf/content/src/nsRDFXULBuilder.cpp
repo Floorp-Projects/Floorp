@@ -636,7 +636,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
         PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-contents"));
         PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
 
-        delete[] elementCStr;
+        nsCRT::free(elementCStr);
     }
 #endif
 
@@ -857,7 +857,7 @@ RDFXULBuilderImpl::OnAssert(nsIRDFResource* aSource,
         PR_LOG(gLog, PR_LOG_DEBUG, ("  --[%s]-->", (const char*) property));
         PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    targetCStr));
 
-        delete[] targetCStr;
+        nsCRT::free(targetCStr);
     }
 #endif
 
@@ -985,7 +985,7 @@ RDFXULBuilderImpl::OnUnassert(nsIRDFResource* aSource,
         PR_LOG(gLog, PR_LOG_DEBUG, ("  --[%s]-->", (const char*) property));
         PR_LOG(gLog, PR_LOG_DEBUG, ("    (%s)",    targetCStr));
 
-        delete[] targetCStr;
+        nsCRT::free(targetCStr);
     }
 #endif
 
@@ -1109,8 +1109,8 @@ RDFXULBuilderImpl::OnChange(nsIRDFResource* aSource,
         PR_LOG(gLog, PR_LOG_DEBUG, ("  -X(%s)",   oldTargetCStr));
         PR_LOG(gLog, PR_LOG_DEBUG, ("  ->(%s)",   newTargetCStr));
 
-        delete[] oldTargetCStr;
-        delete[] newTargetCStr;
+        nsCRT::free(oldTargetCStr);
+        nsCRT::free(newTargetCStr);
     }
 #endif
 
@@ -1257,8 +1257,8 @@ RDFXULBuilderImpl::AppendChild(nsINameSpace* aNameSpace,
             PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
             PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
 
-            delete[] childCStr;
-            delete[] parentCStr;
+            nsCRT::free(childCStr);
+            nsCRT::free(parentCStr);
         }
 #endif
 
@@ -1332,8 +1332,8 @@ RDFXULBuilderImpl::InsertChildAt(nsINameSpace* aNameSpace,
             PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
             PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
 
-            delete[] childCStr;
-            delete[] parentCStr;
+            nsCRT::free(childCStr);
+            nsCRT::free(parentCStr);
         }
 #endif
 
@@ -1412,8 +1412,8 @@ RDFXULBuilderImpl::ReplaceChildAt(nsINameSpace* aNameSpace,
             PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
             PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
 
-            delete[] childCStr;
-            delete[] parentCStr;
+            nsCRT::free(childCStr);
+            nsCRT::free(parentCStr);
         }
 #endif
 
@@ -1488,8 +1488,8 @@ RDFXULBuilderImpl::RemoveChild(nsIContent* aElement, nsIRDFNode* aValue)
                 PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   parentCStr));
                 PR_LOG(gLog, PR_LOG_DEBUG, ("    %s", childCStr));
 
-                delete[] childCStr;
-                delete[] parentCStr;
+                nsCRT::free(childCStr);
+                nsCRT::free(parentCStr);
             }
 #endif
             // okay, found it. now blow it away...
@@ -1560,7 +1560,7 @@ RDFXULBuilderImpl::CreateOrReuseElement(nsINameSpace* aContainingNameSpace,
         PR_LOG(gLog, PR_LOG_DEBUG, ("xulbuilder create-or-reuse created new element"));
         PR_LOG(gLog, PR_LOG_DEBUG, ("  %s", elementCStr));
 
-        delete[] elementCStr;
+        nsCRT::free(elementCStr);
     }
 #endif
 
@@ -2033,9 +2033,9 @@ RDFXULBuilderImpl::AddAttribute(nsIContent* aElement,
         PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   elementCStr));
         PR_LOG(gLog, PR_LOG_DEBUG, ("    %s=\"%s\"", attrCStr, valueCStr));
 
-        delete[] valueCStr;
-        delete[] attrCStr;
-        delete[] elementCStr;
+        nsCRT::free(valueCStr);
+        nsCRT::free(attrCStr);
+        nsCRT::free(elementCStr);
     }
 #endif
 
@@ -2152,9 +2152,9 @@ RDFXULBuilderImpl::RemoveAttribute(nsIContent* aElement,
         PR_LOG(gLog, PR_LOG_DEBUG, ("  %s",   elementCStr));
         PR_LOG(gLog, PR_LOG_DEBUG, ("    %s=\"%s\"", attrCStr, valueCStr));
 
-        delete[] valueCStr;
-        delete[] attrCStr;
-        delete[] elementCStr;
+        nsCRT::free(valueCStr);
+        nsCRT::free(attrCStr);
+        nsCRT::free(elementCStr);
     }
 #endif
 
@@ -2267,14 +2267,14 @@ RDFXULBuilderImpl::CreateTemplateBuilder(nsIContent* aElement,
         {
             char buf[256], *p = buf;
             if (uri.Length() >= PRInt32(sizeof buf))
-                p = new char[uri.Length() + 1];
+                p = (char *)nsAllocator::Alloc(uri.Length() + 1);
 
             uri.ToCString(p, uri.Length() + 1);
 
             rv = gRDFService->GetDataSource(p, getter_AddRefs(ds));
 
             if (p != buf)
-                delete[] p;
+                nsCRT::free(p);
         }
 
         if (NS_FAILED(rv)) {

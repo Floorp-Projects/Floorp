@@ -2955,7 +2955,7 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
       PR_LOG(gXULLog, PR_LOG_DEBUG,
              ("xul[CreateElement] %s", tagCStr));
 
-      delete[] tagCStr;
+      nsCRT::free(tagCStr);
     }
 #endif
 
@@ -2971,7 +2971,7 @@ XULDocumentImpl::CreateElement(const nsString& aTagName, nsIDOMElement** aReturn
         char* tagNameStr = aTagName.ToNewCString();
         PR_LOG(gXULLog, PR_LOG_ERROR,
                ("xul[CreateElement] unable to parse tag '%s'; no such namespace.", tagNameStr));
-        delete[] tagNameStr;
+        nsCRT::free(tagNameStr);
 #endif
         return rv;
     }
@@ -3223,8 +3223,8 @@ XULDocumentImpl::CreateElementWithNameSpace(const nsString& aTagName,
       PR_LOG(gXULLog, PR_LOG_DEBUG,
              ("xul[CreateElementWithNameSpace] [%s]:%s", namespaceCStr, tagCStr));
 
-      delete[] tagCStr;
-      delete[] namespaceCStr;
+      nsCRT::free(tagCStr);
+      nsCRT::free(namespaceCStr);
     }
 #endif
 

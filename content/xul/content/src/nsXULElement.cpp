@@ -1551,12 +1551,12 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
             char buf[64];
             char* p = buf;
             if (tag.Length() >= PRInt32(sizeof buf))
-                p = new char[tag.Length() + 1];
+                p = (char *)nsAllocator::Alloc(tag.Length() + 1);
 
             aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
 
             if (p != buf)
-                delete[] p;
+                nsCRT::free(p);
         }
     }
 
@@ -1738,12 +1738,12 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
                     char buf[64];
                     char* p = buf;
                     if (tag.Length() >= PRInt32(sizeof buf))
-                        p = new char[tag.Length() + 1];
+                        p = (char *)nsAllocator::Alloc(tag.Length() + 1);
 
                     context->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
 
                     if (p != buf)
-                        delete[] p;
+                        nsCRT::free(p);
 
                     NS_RELEASE(context);
                 }
