@@ -369,6 +369,7 @@ protected:
   // last classification callback happens
   nsCString mLastJunkUriInBatch;
   PRUint8 mOutstandingJunkBatches;
+  nsUInt32Array mIndicesToNoteChange;
 
 protected:
   static nsresult   InitDisplayFormats();
@@ -384,7 +385,6 @@ private:
   nsresult PerformActionOnJunkMsgs();
   nsresult SaveJunkMsgForAction(nsIMsgIncomingServer *aServer, const char *aMsgURI, nsMsgJunkStatus aClassification);
 
-  nsUInt32Array mIndicesToNoteChange;
 };
 
 #endif

@@ -36,54 +36,54 @@
 class NS_MSG_BASE nsUInt32Array
 {
 public:
-	// Construction/destruction
-    nsUInt32Array();
-    virtual ~nsUInt32Array();
-
-	// State/attribute member functions
-	PRUint32          GetSize() const;
-	PRBool            SetSize(PRUint32 nNewSize, PRBool AdjustGrowth=PR_FALSE, PRUint32 nGrowBy = 0);
+  // Construction/destruction
+  nsUInt32Array();
+  virtual ~nsUInt32Array();
+  
+  // State/attribute member functions
+  PRUint32          GetSize() const;
+  PRBool            SetSize(PRUint32 nNewSize, PRBool AdjustGrowth=PR_FALSE, PRUint32 nGrowBy = 0);
   PRBool            AllocateSpace(PRUint32 nNewSize) {
-                      if (nNewSize == 0) return PR_TRUE;
-                      PRUint32 saveSize = m_nSize;
-                      nsresult rv = SetSize(nNewSize);
-                      m_nSize = saveSize;
-                      return rv;
-                    };
-
-	// Accessor member functions
-	PRUint32            &ElementAt(PRUint32 nIndex);
-	PRUint32             GetAt(PRUint32 nIndex) const;
-	PRUint32            *GetData();
-	void               SetAt(PRUint32 nIndex, PRUint32 newElement);
-
-	// Insertion/deletion member functions
-	PRUint32			Add(PRUint32 newElement);
-	PRUint32           Add(PRUint32 *elementPtr, PRUint32 numElements); 
-	void	           InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCount = 1);
-	void               InsertAt(PRUint32 nStartIndex, const nsUInt32Array *pNewArray);
-	void               RemoveAll();
-	void               RemoveAt(PRUint32 nIndex, PRUint32 nCount = 1);
-	void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
-
-	// Sorting member functions
-	void               QuickSort(int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *) = NULL);
-
-	// Overloaded operators
-	PRUint32             operator[](PRUint32 nIndex) const { return GetAt(nIndex); }
-	PRUint32            &operator[](PRUint32 nIndex) { return ElementAt(nIndex); }
-
-	// Miscellaneous member functions
-	PRUint32            *CloneData(); 
-	void               CopyArray(nsUInt32Array *oldA);
-	void               CopyArray(nsUInt32Array &oldA);
-
+    if (nNewSize == 0) return PR_TRUE;
+    PRUint32 saveSize = m_nSize;
+    nsresult rv = SetSize(nNewSize);
+    m_nSize = saveSize;
+    return rv;
+  };
+  
+  // Accessor member functions
+  PRUint32            &ElementAt(PRUint32 nIndex);
+  PRUint32             GetAt(PRUint32 nIndex) const;
+  PRUint32            *GetData();
+  void               SetAt(PRUint32 nIndex, PRUint32 newElement);
+  
+  // Insertion/deletion member functions
+  PRUint32  Add(PRUint32 newElement);
+  PRUint32          Add(PRUint32 *elementPtr, PRUint32 numElements); 
+  void	           InsertAt(PRUint32 nIndex, PRUint32 newElement, PRUint32 nCount = 1);
+  void               InsertAt(PRUint32 nStartIndex, const nsUInt32Array *pNewArray);
+  void               RemoveAll();
+  void               RemoveAt(PRUint32 nIndex, PRUint32 nCount = 1);
+  void               SetAtGrow(PRUint32 nIndex, PRUint32 newElement);
+  PRBool             RemoveElement(PRUint32 element);
+  // Sorting member functions
+  void               QuickSort(int (* PR_CALLBACK compare) (const void *elem1, const void *elem2, void *) = NULL);
+  
+  // Overloaded operators
+  PRUint32             operator[](PRUint32 nIndex) const { return GetAt(nIndex); }
+  PRUint32            &operator[](PRUint32 nIndex) { return ElementAt(nIndex); }
+  
+  // Miscellaneous member functions
+  PRUint32            *CloneData(); 
+  void               CopyArray(nsUInt32Array *oldA);
+  void               CopyArray(nsUInt32Array &oldA);
+  
 protected:
-    // Member data
-	PRUint32 m_nSize;
-	PRUint32 m_nMaxSize;
-	PRUint32 m_nGrowBy;
-	PRUint32* m_pData;
+  // Member data
+  PRUint32 m_nSize;
+  PRUint32 m_nMaxSize;
+  PRUint32 m_nGrowBy;
+  PRUint32* m_pData;
 };
 
 

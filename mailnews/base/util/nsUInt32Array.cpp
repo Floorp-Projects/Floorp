@@ -255,6 +255,20 @@ void nsUInt32Array::SetAtGrow(PRUint32 nIndex, PRUint32 newElement)
 	m_pData[nIndex] = newElement;
 }
 
+PRBool nsUInt32Array:: RemoveElement(PRUint32 element)
+{
+  for (PRUint32 i = 0; i < GetSize(); i++)
+  {
+    if ((PRUint32)(m_pData[i]) == element)
+    {
+      RemoveAt(i, 1);
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+
 /////////////////////////////////////////////////////////////////////////////
 
 void nsUInt32Array::CopyArray(nsUInt32Array *oldA)
