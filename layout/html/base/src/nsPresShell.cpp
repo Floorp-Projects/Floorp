@@ -3124,7 +3124,6 @@ NS_IMETHODIMP PresShell::SetCaretWidth(PRInt16 pixels)
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
 {
   return mCaret->SetCaretReadOnly(aReadOnly);
-  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
