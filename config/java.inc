@@ -198,4 +198,37 @@ export:: $(JRI_GEN)
 !endif # JAVA_OR_OJI
 !endif
 
+
+!ifdef JNI_GEN
+!ifdef JAVA_OR_OJI
+#//------------------------------------------------------------------------
+#//
+#// Rule to generate JNI header files using javah.
+#//
+#//------------------------------------------------------------------------
+$(JNI_GEN):: display_jni_header_msg
+    !echo $(JAVAH) -jni -d _jni $@
+    !$(JAVAH) -jni -d _jni $@
+
+!ifdef NSBUILDROOT
+LINCS = $(LINCS) -I$(JNI_GEN_DIR) -I$(XPDIST)
+!else
+LINCS = $(LINCS) -I$(JNI_GEN_DIR)
+!endif
+
+display_jni_header_msg:
+	echo +++ make: Generating JNI header files...
+
+!ifdef MOZ_GENMAC
+$(JNI_GEN)::display_jni_header_msg_mac $(MAC_JAVA_HEADERS_DIR)
+        echo +++ make: creating JRI header for $@
+        !$(JAVAH) -mac -jni -d $(MAC_JAVA_HEADERS_DIR)/_jni $@
+         
+display_jni_header_msg_mac:
+        echo +++ make: Generating Macintosh java JNI header files +++
+!endif
+!endif # JAVA_OR_OJI
+export:: $(JNI_GEN)
+!endif # JNI_GEN
+
 !endif # CONFIG_JAVA_INC

@@ -47,6 +47,28 @@ WINOS=$(WINOS: =)^
 !if [del osuname.inc]
 !endif
 
+!if "$(STAND_ALONE_JAVA)" == "1"
+LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
+!endif
+
+!ifdef MOZ_JAVA
+MOZ_JAVA_FLAG=-DJAVA
+!ifdef MOZ_OJI
+!error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
+!endif
+JAVA_OR_OJI = 1
+JAVA_OR_NSJVM = 1
+!endif
+
+!ifdef NSJVM
+JAVA_OR_NSJVM = 1
+!endif
+
+!ifdef MOZ_OJI
+LCFLAGS=$(LCFLAGS) -DOJI
+JAVA_OR_OJI=1
+!endif
+
 ## Include support for MOZ_LITE/MOZ_MEDIUM
 include <$(DEPTH)/config/liteness.mak>
 
@@ -129,23 +151,6 @@ INCS=$(INCS) -I$(DEPTH)\include -I$(DIST)\include \
 !ifndef NO_LAYERS
 INCS=$(INCS) -I$(DEPTH)\lib\liblayer\include
 !endif 
-
-!if "$(STAND_ALONE_JAVA)" == "1"
-LCFLAGS=$(LCFLAGS) -DSTAND_ALONE_JAVA
-!endif
-
-!if defined(MOZ_JAVA)
-MOZ_JAVA_FLAG=-DJAVA
-!if defined(MOZ_OJI)
-!error You can't define both MOZ_JAVA and MOZ_OJI anymore. 
-!endif
-JAVA_OR_OJI=1
-!endif
-
-!if defined(MOZ_OJI)
-LCFLAGS=$(LCFLAGS) -DOJI
-JAVA_OR_OJI=1
-!endif
 
 # Perhaps we should add MOZ_LITENESS_FLAGS to 16 bit build
 !if "$(MOZ_BITS)" == "16"

@@ -42,14 +42,9 @@ include <$(DEPTH)\config\config.mak>
 #DIRS=libi18n layout libstyle liblayer libmocha
 DIRS=   libi18n htmldlgs libparse layout libstyle
 
-!ifdef MOZ_OJI
-DIRS=   $(DIRS) plugin
-!endif
-DIRS= $(DIRS) \
 !ifdef MOZ_MAIL_NEWS
-	libaddr \
+DIRS= $(DIRS) libaddr 
 !endif
-	libparse
 
 #//------------------------------------------------------------------------
 #//
