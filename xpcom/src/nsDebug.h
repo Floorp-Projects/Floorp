@@ -42,6 +42,11 @@ public:
   static NS_COM void Abort(const char* aFile, PRIntn aLine);
 
   /**
+   * Break the executing program into the debugger. 
+   */
+  static NS_COM void Break(const char* aFile, PRIntn aLine);
+
+  /**
    * Log a pre-condition message to the debug log
    */
   static NS_COM void PreCondition(const char* aStr, const char* aExpr,
@@ -102,6 +107,15 @@ if (!(expr))		       \
   nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
 
 /**
+ * Test an assertion for truth. If the expression is not true then
+ * trigger a program failure. The expression will still be
+ * executed in release mode.
+ */
+#define NS_VERIFY(expr,str) \
+if (!(expr))		       \
+  nsDebug::Assertion(str, #expr, __FILE__, __LINE__)
+
+/**
  * Test a post-condition for truth. If the expression is not true then
  * trigger a program failure.
  */
@@ -141,16 +155,24 @@ if (!(expr))			   \
 #define NS_ABORT() \
   nsDebug::Abort(__FILE__, __LINE__)
 
+/**
+ * Cause a break
+ */
+#define NS_BREAK() \
+  nsDebug::Break(__FILE__, __LINE__)
+
 #else /* NS_DEBUG */
 
 #define NS_PRECONDITION(expr,str)  {}
 #define NS_ASSERTION(expr,str)     {}
+#define NS_VERIFY(expr,str)        expr
 #define NS_POSTCONDITION(expr,str) {}
 #define NS_NOTYETIMPLEMENTED(str)  {}
 #define NS_NOTREACHED(str)         {}
 #define NS_ERROR(str)              {}
 #define NS_WARNING(str)            {}
 #define NS_ABORT()                 {}
+#define NS_BREAK()                 {}
 
 #endif /* ! NS_DEBUG */
 

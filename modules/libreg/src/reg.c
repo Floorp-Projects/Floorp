@@ -33,13 +33,10 @@
 #define VERIFY_READ     1
 #endif
 
-#ifndef STANDALONE_REGISTRY
-  #include "xp_mcom.h"
-  #include "xp_error.h"
-  #include "prmon.h"
-  #include "prefapi.h"
-#else
-
+#ifdef XP_MAC
+#include <size_t.h>
+#endif
+	
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -49,7 +46,6 @@
 #ifdef SUNOS4
   #include <unistd.h>  /* for SEEK_SET */
 #endif /* SUNOS4 */
-#endif /* STANDALONE_REGISTRY */
 
 #include "reg.h"
 #include "NSReg.h"
@@ -97,7 +93,7 @@ static XP_Bool bRegStarted = FALSE;
 #if !defined(STANDALONE_REGISTRY)
 static PRMonitor *reglist_monitor;
 #endif
-
+static char *user_name = NULL;
 
 
 /* --------------------------------------------------------------------
@@ -1513,6 +1509,8 @@ static void   nr_InitStdRkeys( REGFILE *reg );
 static Bool   nr_ProtectedNode( REGFILE *reg, REGOFF key );
 static REGERR nr_RegAddKey( REGFILE *reg, RKEY key, char *path, RKEY *newKey );
 static void   nr_Upgrade_1_1( REGFILE *reg );
+static char*  nr_GetUsername();
+
 /* --------------------------------------------------------------------- */
 
 
@@ -1549,9 +1547,8 @@ static REGOFF nr_TranslateKey( REGFILE *reg, RKEY key )
                     REGERR  err;
                     char*   profName;
 
-                    err = PREF_CopyDefaultCharPref( "profile.name", &profName );
-
-                    if (err == PREF_NOERROR ) {
+                    profName = nr_GetUsername();
+                    if ( NULL != profName ) {
                         /* Don't assign a slot for missing or magic profile */
                         if ( '\0' == *profName ||
                             0 == XP_STRCMP(ASW_MAGIC_PROFILE_NAME, profName)) 
@@ -1790,11 +1787,41 @@ static void nr_Upgrade_1_1(REGFILE *reg)
 
 }
 
-
+static char *nr_GetUsername()
+{
+  if (NULL == user_name) {
+    return "default";
+  } else {
+    return user_name;
+  }
+}
 
 /* ---------------------------------------------------------------------
  * Public API
  * --------------------------------------------------------------------- */
+
+/* ---------------------------------------------------------------------
+ * NR_RegSetUsername - Set the current username
+ *
+ * Parameters:
+ *     name     - name of the current user
+ *
+ * Output:
+ * ---------------------------------------------------------------------
+ */
+
+VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
+{
+  char *tmp = XP_STRDUP(name);
+  if (NULL == tmp) {
+    return REGERR_MEMORY;
+  }
+  
+  XP_FREEIF(user_name);
+  user_name = tmp;
+  
+  return REGERR_OK;
+}
 
 /* ---------------------------------------------------------------------
  * NReg_Open - Open a netscape XP registry
@@ -2845,19 +2872,13 @@ VR_INTERFACE(REGERR) NR_RegEnumEntries( HREG hReg, RKEY key, REGENUM *state,
 #ifndef STANDALONE_REGISTRY
 #include "VerReg.h"
 
-#ifdef WIN32
-extern BOOL WFE_IsMoveFileExBroken();
-#endif
 /* ---------------------------------------------------------------------
  * ---------------------------------------------------------------------
  * Registry initialization and shut-down
  * ---------------------------------------------------------------------
  * ---------------------------------------------------------------------
  */
-#ifdef BROKEN
-extern void SU_InitMonitor(void);
-extern void SU_DestroyMonitor(void);
-#endif
+
 extern PRMonitor *vr_monitor;
 #ifdef XP_UNIX
 extern XP_Bool bGlobalRegistry;
@@ -2867,14 +2888,12 @@ extern XP_Bool bGlobalRegistry;
 #pragma export on
 #endif
 
-void NR_StartupRegistry(void)
+VR_INTERFACE(void) NR_StartupRegistry(void)
 {
     HREG reg;
-    RKEY key;
-    REGERR  err;
-    REGENUM state;
-    XP_Bool removeFromList;
-    XP_StatStruct stat;
+
+    if (bRegStarted)
+        return;
 
     vr_monitor = PR_NewMonitor();
     XP_ASSERT( vr_monitor != NULL );
@@ -2884,110 +2903,10 @@ void NR_StartupRegistry(void)
     bGlobalRegistry = ( getenv(UNIX_GLOBAL_FLAG) != NULL );
 #endif
 
-#ifdef BROKEN
-    SU_InitMonitor();
-#endif
     bRegStarted = TRUE;
-    /* need to register a PREF callback for "profile.name" */
 
     /* check to see that we have a valid registry */
-    if (REGERR_OK == NR_RegOpen("", &reg))
-    {
-#ifdef XP_PC
-        /* perform scheduled file deletions and replacements (PC only) */
-        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE,
-            REG_DELETE_LIST_KEY,&key))
-        {
-            char *urlFile;
-            char *pFile;
-            char buf[MAXREGNAMELEN];
-
-            state = 0;
-            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state,
-                buf, sizeof(buf), NULL ))
-            {
-                urlFile = XP_PlatformFileToURL(buf);
-                if ( urlFile == NULL)
-                    continue;
-                pFile = urlFile+7;
-
-                removeFromList = FALSE;
-                if (0 == XP_FileRemove(pFile, xpURL)) {
-                    /* file was successfully deleted */
-                    removeFromList = TRUE;
-                }
-                else if (XP_Stat(pFile, &stat, xpURL) != 0) {
-                    /* file doesn't appear to exist */
-                    removeFromList = TRUE;
-                }
-
-                if (removeFromList) {
-                    err = NR_RegDeleteEntry( reg, key, buf );
-                    /* must reset state or enum will stop on deleted entry */
-                    if ( err == REGERR_OK )
-                        state = 0;
-                }
-
-                XP_FREEIF(urlFile);
-            }
-            /* delete list node if empty */
-			state = 0;
-            if (REGERR_NOMORE == NR_RegEnumEntries( reg, key, &state, buf, 
-                sizeof(buf), NULL ))
-            {
-                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_DELETE_LIST_KEY);
-            }
-        }
-
-        /* replace files if any listed */
-        if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE,
-            REG_REPLACE_LIST_KEY, &key))
-        {
-            char tmpfile[MAXREGNAMELEN];
-            char target[MAXREGNAMELEN];
-
-            state = 0;
-            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state,
-                tmpfile, sizeof(tmpfile), NULL ))
-            {
-                removeFromList = FALSE;
-                if (XP_Stat(tmpfile, &stat, xpURL) != 0)
-                {
-                    /* new file is gone! */
-                    removeFromList = TRUE;
-                }
-                else if ( REGERR_OK != NR_RegGetEntryString( reg, key, 
-                    tmpfile, target, sizeof(target) ) )
-                {
-                    /* can't read target filename, corruption? */
-                    removeFromList = TRUE;
-                }
-                else {
-                    if (XP_Stat(target, &stat, xpURL) == 0) {
-                        /* need to delete old file first */
-                        XP_FileRemove( target, xpURL );
-                    }
-                    if (0 == XP_FileRename(tmpfile, xpURL, target, xpURL)) {
-                        removeFromList = TRUE;
-                    }
-                }
-
-                if (removeFromList) {
-                    err = NR_RegDeleteEntry( reg, key, tmpfile );
-                    /* must reset state or enum will stop on deleted entry */
-                    if ( err == REGERR_OK )
-                        state = 0;
-                }
-            }
-            /* delete list node if empty */
-            state = 0;
-            if (REGERR_NOMORE == NR_RegEnumEntries(reg, key, &state, tmpfile, 
-                sizeof(tmpfile), NULL )) 
-            {
-                NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
-            }
-        }
-#endif /* XP_PC */
+    if (REGERR_OK == NR_RegOpen("", &reg)) {
         NR_RegClose(reg);
     }
     else {
@@ -2996,9 +2915,10 @@ void NR_StartupRegistry(void)
         VR_InRegistry("/Netscape");
         VR_Close();
     }
+
 }
 
-void NR_ShutdownRegistry(void)
+VR_INTERFACE(void) NR_ShutdownRegistry(void)
 {
     REGFILE* pReg;
 
@@ -3022,9 +2942,10 @@ void NR_ShutdownRegistry(void)
         PR_DestroyMonitor( reglist_monitor );
         reglist_monitor = NULL;
     }
-#ifdef BROKEN
-    SU_DestroyMonitor();
-#endif
+
+    XP_FREEIF(user_name);
+
+    bRegStarted = FALSE;
 }
 
 #ifdef XP_MAC

@@ -25,7 +25,6 @@
 #include "prlink.h"
 #include "nsRepository.h"
 #ifdef USE_NSREG
-#define STANDALONE_REGISTRY
 #define XP_BEGIN_PROTOS extern "C" {
 #define XP_END_PROTOS };
 #include "NSReg.h"
@@ -34,7 +33,6 @@
 nsHashtable *NSRepository::factories = NULL;
 PRMonitor *NSRepository::monitor = NULL;
 
-static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_IID(kFactory2IID, NS_IFACTORY2_IID);
 
 class FactoryEntry {
@@ -77,15 +75,15 @@ public:
     id = aID;
   }
   
-  PRUint32 HashValue() {
+  PRUint32 HashValue(void) const {
     return id.m0;
   }
 
-  PRBool Equals(nsHashKey *aKey) {
-    return (id.Equals(((IDKey *) aKey)->id));
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (id.Equals(((const IDKey *) aKey)->id));
   }
 
-  nsHashKey *Clone() {
+  nsHashKey *Clone(void) const {
     return new IDKey(id);
   }
 };
@@ -100,15 +98,16 @@ static nsresult platformRegister(const nsCID &aCID, const char *aLibrary)
   if (err == REGERR_OK) {
     RKEY key;
     err = NR_RegAddKey(hreg, ROOTKEY_COMMON, 
-                       "SOFTWARE\\Netscape\\CID", &key);
+                       "Classes", &key);
     if (err == REGERR_OK) {
       char *cidString = aCID.ToString();
-      NR_RegSetEntryString(hreg, key, cidString, (char *) aLibrary);
+      err = NR_RegSetEntryString(hreg, key, cidString, (char *) aLibrary);
       delete [] cidString;
     }
     NR_RegClose(hreg);
   }
-  return NS_OK;
+
+  return err;
 }
 
 static nsresult platformUnregister(const nsCID &aCID, const char *aLibrary) 
@@ -118,15 +117,15 @@ static nsresult platformUnregister(const nsCID &aCID, const char *aLibrary)
   if (err == REGERR_OK) {
     RKEY key;
     err = NR_RegAddKey(hreg, ROOTKEY_COMMON, 
-                       "SOFTWARE\\Netscape\\CID", &key);
+                       "Classes", &key);
     if (err == REGERR_OK) {
       char *cidString = aCID.ToString();
-      NR_RegDeleteEntry(hreg, key, cidString);
+      err = NR_RegDeleteEntry(hreg, key, cidString);
       delete [] cidString;
     }
     NR_RegClose(hreg);
   }
-  return NS_OK;
+  return err;
 }
 
 static FactoryEntry *platformFind(const nsCID &aCID)
@@ -137,11 +136,11 @@ static FactoryEntry *platformFind(const nsCID &aCID)
   if (err == REGERR_OK) {
     RKEY key;
     err = NR_RegGetKey(hreg, ROOTKEY_COMMON, 
-                       "SOFTWARE\\Netscape\\CID", &key);
+                       "Classes", &key);
     if (err == REGERR_OK) {
       char *cidString = aCID.ToString();
-      char library[_MAX_PATH];
-      uint32 len = _MAX_PATH;
+      char library[256];
+      uint32 len = 256;
       err = NR_RegGetEntryString(hreg, key, cidString, library, len);
                                  
       delete [] cidString;
@@ -294,6 +293,9 @@ nsresult NSRepository::Initialize()
     monitor = PR_NewMonitor();
   }
 
+#ifdef USE_NSREG
+  NR_StartupRegistry();
+#endif
   return NS_OK;
 }
 

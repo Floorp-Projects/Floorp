@@ -29,8 +29,8 @@ protected:                                                                  \
                                                                             \
     /* You must implement this operation instead of the nsISupports */      \
     /* methods if you inherit from nsAggregated. */                         \
-    NS_IMETHOD AggregatedQueryInterface(const nsIID& aIID,                  \
-                                        void** aInstancePtr);               \
+    NS_IMETHOD                                                              \
+    AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr);       \
                                                                             \
     class Internal : public nsISupports {                                   \
     public:                                                                 \
@@ -38,7 +38,7 @@ protected:                                                                  \
         Internal() {}                                                       \
                                                                             \
         NS_IMETHOD QueryInterface(const nsIID& aIID,                        \
-                                  void** aInstancePtr);                     \
+                                        void** aInstancePtr);               \
         NS_IMETHOD_(nsrefcnt) AddRef(void);                                 \
         NS_IMETHOD_(nsrefcnt) Release(void);                                \
                                                                             \
@@ -60,7 +60,7 @@ public:                                                                     \
 
 // Put this in your class's implementation file:
 #define NS_IMPL_AGGREGATED(_class)                                          \
-NS_METHOD                                                                   \
+NS_IMETHODIMP                                                               \
 _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)              \
 {                                                                           \
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                  \
@@ -74,7 +74,7 @@ _class::QueryInterface(const nsIID& aIID, void** aInstancePtr)              \
         return AggregatedQueryInterface(aIID, aInstancePtr);                \
 }                                                                           \
                                                                             \
-NS_METHOD_(nsrefcnt)                                                        \
+NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::AddRef(void)                                                        \
 {                                                                           \
     if (fOuter)                                                             \
@@ -83,7 +83,7 @@ _class::AddRef(void)                                                        \
         return ++mRefCnt;                                                   \
 }                                                                           \
                                                                             \
-NS_METHOD_(nsrefcnt)                                                        \
+NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Release(void)                                                       \
 {                                                                           \
     if (fOuter)                                                             \
@@ -97,21 +97,21 @@ _class::Release(void)                                                       \
     }                                                                       \
 }                                                                           \
                                                                             \
-NS_METHOD                                                                   \
+NS_IMETHODIMP                                                               \
 _class::Internal::QueryInterface(const nsIID& aIID, void** aInstancePtr)    \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
     return agg->AggregatedQueryInterface(aIID, aInstancePtr);               \
 }                                                                           \
                                                                             \
-NS_METHOD                                                                   \
+NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::AddRef(void)                                              \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \
     return ++agg->mRefCnt;                                                  \
 }                                                                           \
                                                                             \
-NS_METHOD                                                                   \
+NS_IMETHODIMP_(nsrefcnt)                                                    \
 _class::Internal::Release(void)                                             \
 {                                                                           \
     _class* agg = (_class*)((char*)(this) - offsetof(_class, fAggregated)); \

@@ -20,17 +20,19 @@ DEPTH=../..
 include $(DEPTH)/config/config.mk
 
 CPPSRCS = \
+	RegFactory.cpp \
 	TestFactory.cpp	\
 	$(NULL)
 
-INCLUDES=-I../src
+INCLUDES=-I../src -I$(DIST)/include
 
 DIRS = dynamic 
 
 OBJS	= $(CPPSRCS:.cpp=.o)
 
 EX_LIBS = \
-	$(DIST)/lib/libxpcom.a	\
+        $(DIST)/bin/libreg.so	\
+	$(DIST)/bin/libxpcom.so	\
 	$(DIST)/lib/libplc21.a	\
 	$(DIST)/lib/libplds21.a	\
 	$(DIST)/lib/libnspr21.a	\
@@ -45,7 +47,7 @@ include $(DEPTH)/config/rules.mk
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ $(CFLAGS) -c $*.cpp
+	$(CCC) -o $@ $(CFLAGS) -DUSE_NSREG -c $*.cpp
 
 $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 	@$(MAKE_OBJDIR)
@@ -53,6 +55,6 @@ $(PROGS):$(OBJDIR)/%: $(OBJDIR)/%.o $(EX_LIBS)
 
 export::
 
-instal:: $(TARGETS)
-	$(INSTALL) NON_DIRS $(DIST)/bin
+install:: $(PROGS)
+	$(INSTALL) $(PROGS) $(DIST)/bin
 

@@ -1618,6 +1618,12 @@ install:    \
 !IF EXIST($(DIST)\bin\sched32.dll)
 	    $(OUTDIR)\sched32.dll    \
 !ENDIF
+!IF EXIST($(DIST)\bin\libreg32.dll)
+	    $(OUTDIR)\libreg32.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\xpcom32.dll)
+	    $(OUTDIR)\xpcom32.dll    \
+!ENDIF
 !IF EXIST($(DIST)\bin\jrt32$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\jrt32$(VERSION_NUMBER).dll    \
 !ENDIF
@@ -1722,6 +1728,12 @@ install:    \
 !ENDIF
 !IF EXIST($(DIST)\bin\sched16.dll)
 	    $(OUTDIR)\sched16.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\libreg16.dll)
+	    $(OUTDIR)\libreg16.dll    \
+!ENDIF
+!IF EXIST($(DIST)\bin\xpcom16.dll)
+	    $(OUTDIR)\xpcom16.dll    \
 !ENDIF
 !IF EXIST($(DIST)\bin\nsinit.exe)
 	    $(OUTDIR)\nsinit.exe    \
@@ -1874,6 +1886,12 @@ $(OUTDIR)\xppref32.dll:   $(DIST)\bin\xppref32.dll
 $(OUTDIR)\sched32.dll:   $(DIST)\bin\sched32.dll
     @IF EXIST $(DIST)\bin\sched32.dll copy $(DIST)\bin\sched32.dll $(OUTDIR)\sched32.dll
 
+$(OUTDIR)\libreg32.dll:   $(DIST)\bin\libreg32.dll
+    @IF EXIST $(DIST)\bin\libreg32.dll copy $(DIST)\bin\libreg32.dll $(OUTDIR)\libreg32.dll
+
+$(OUTDIR)\xpcom32.dll:   $(DIST)\bin\xpcom32.dll
+    @IF EXIST $(DIST)\bin\xpcom32.dll copy $(DIST)\bin\xpcom32.dll $(OUTDIR)\xpcom32.dll
+
 $(OUTDIR)\uni3200.dll:   $(DIST)\bin\uni3200.dll
     @IF EXIST $(DIST)\bin\uni3200.dll copy $(DIST)\bin\uni3200.dll $(OUTDIR)\uni3200.dll
 
@@ -1948,6 +1966,12 @@ $(OUTDIR)\xppref16.dll:   $(DIST)\bin\xppref16.dll
 
 $(OUTDIR)\sched16.dll:   $(DIST)\bin\sched16.dll
     @IF EXIST $(DIST)\bin\sched16.dll copy $(DIST)\bin\sched16.dll $(OUTDIR)\sched16.dll
+
+$(OUTDIR)\libreg16.dll:   $(DIST)\bin\libreg16.dll
+    @IF EXIST $(DIST)\bin\libreg16.dll copy $(DIST)\bin\libreg16.dll $(OUTDIR)\libreg16.dll
+
+$(OUTDIR)\xpcom16.dll:   $(DIST)\bin\xpcom16.dll
+    @IF EXIST $(DIST)\bin\xpcom16.dll copy $(DIST)\bin\xpcom16.dll $(OUTDIR)\xpcom16.dll
 
 $(OUTDIR)\uni1600.dll:   $(DIST)\bin\uni1600.dll
     @IF EXIST $(DIST)\bin\uni1600.dll copy $(DIST)\bin\uni1600.dll $(OUTDIR)\uni1600.dll
@@ -2212,6 +2236,7 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\softup16.lib +
 !else
     $(DIST)\lib\libreg16.lib +
+    $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\libsjs16.lib +
     $(DIST)\lib\libnjs16.lib +
 !endif
@@ -2249,6 +2274,8 @@ BUILD_SOURCE: $(OBJ_FILES)
     $(DIST)\lib\hook.lib +
     $(DIST)\lib\png.lib +
 	$(DIST)\lib\sched16.lib +
+    $(DIST)\lib\libreg16.lib +
+    $(DIST)\lib\xpcom16.lib +
     $(DIST)\lib\rdf16.lib +
     $(DIST)\lib\xpstrdll.lib +
     $(DIST)\lib\abouturl.lib +
@@ -2676,5 +2703,7 @@ ns.zip:
 		editor32.dll		\
 		xppref32.dll		\
 		sched32.dll			\
+		libreg32.dll		\
+		xpcom32.dll		\
 		netscape.cfg		\
 		moz40p3	

@@ -20,19 +20,23 @@
 #define nsHashtable_h__
 
 #include "plhash.h"
+#include "nsCom.h"
 
-class nsHashKey {
+class NS_COM nsHashKey {
+protected:
+  nsHashKey(void);
 public:
-  virtual PRUint32 HashValue() = 0;
-  virtual PRBool Equals(nsHashKey *aKey) = 0;
-  virtual nsHashKey *Clone() = 0;
+  virtual ~nsHashKey(void);
+  virtual PRUint32 HashValue(void) const = 0;
+  virtual PRBool Equals(const nsHashKey *aKey) const = 0;
+  virtual nsHashKey *Clone(void) const = 0;
 };
 
 // Enumerator callback function. Use
 
 typedef PRBool (*nsHashtableEnumFunc)(nsHashKey *aKey, void *aData);
 
-class nsHashtable {
+class NS_COM nsHashtable {
 private:
   // members  
   PLHashTable *hashtable;
@@ -41,6 +45,7 @@ public:
   nsHashtable(PRUint32 aSize = 256);
   ~nsHashtable();
 
+  PRInt32 Count(void) { return hashtable->nentries; }
   void *Put(nsHashKey *aKey, void *aData);
   void *Get(nsHashKey *aKey);
   void *Remove(nsHashKey *aKey);

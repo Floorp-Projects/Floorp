@@ -87,10 +87,11 @@ public:
                             const nsIID &aIID,
                             void **aResult);
 
-  NS_IMETHOD_(void) LockFactory(PRBool aLock) {
+  NS_IMETHOD LockFactory(PRBool aLock) {
     cout << "nsTestComFactory: ";
     cout << (aLock == PR_TRUE ? "Locking server" : "Unlocking server");
     cout << "\n";
+    return S_OK;
   }
 };
 

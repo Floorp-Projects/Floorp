@@ -24,41 +24,50 @@
  */
 
 #ifdef _IMPL_NS_COM
-#  ifdef XP_PC
-#    define NS_COM _declspec(dllexport)
-#  else  // !XP_PC
-#    define NS_COM
-#  endif // !XP_PC
+#ifdef XP_PC
+#define NS_COM _declspec(dllexport)
+#else  // !XP_PC
+#define NS_COM
+#endif // !XP_PC
 #else  // !_IMPL_NS_COM
-#  ifdef XP_PC
-#    define NS_COM _declspec(dllimport)
-#  else  // !XP_PC
-#    define NS_COM
-#  endif // !XP_PC
+#ifdef XP_PC
+#define NS_COM _declspec(dllimport)
+#else  // !XP_PC
+#define NS_COM
+#endif // !XP_PC
 #endif // !_IMPL_NS_COM
 
 /*
  * DLL Export macro
  */
 
-#ifndef NS_EXPORT
-#  ifdef XP_PC
-#    define NS_EXPORT           _declspec(dllexport)
-#  else  // !XP_PC
-#    define NS_EXPORT
-#  endif // !XP_PC
-#endif // !NS_EXPORT
-
 #ifdef XP_PC
-#  define NS_METHOD_(Type)      Type __stdcall
-#  define NS_METHOD             nsresult __stdcall
-#else  // !XP_PC
-#  define NS_METHOD_(Type)      Type
-#  define NS_METHOD             nsresult
-#endif // !XP_PC
 
-#define NS_IMETHOD_(Type)       virtual NS_METHOD_(Type)
-#define NS_IMETHOD              virtual NS_METHOD
+#define NS_EXPORT _declspec(dllexport)
+#define NS_EXPORT_(type) _declspec(dllexport) type __stdcall
+
+#define NS_IMETHOD_(type) virtual type __stdcall
+#define NS_IMETHOD virtual nsresult __stdcall
+#define NS_IMETHODIMP_(type) type __stdcall
+#define NS_IMETHODIMP nsresult __stdcall
+
+#define NS_METHOD_(type) type __stdcall
+#define NS_METHOD nsresult __stdcall
+
+#else  // !XP_PC
+
+#define NS_EXPORT
+#define NS_EXPORT_(type) type
+
+#define NS_IMETHOD_(type) virtual type
+#define NS_IMETHOD virtual nsresult
+#define NS_IMETHODIMP_(type) type
+#define NS_IMETHODIMP nsresult
+
+#define NS_METHOD_(type) type
+#define NS_METHOD nsresult
+
+#endif // !XP_PC
 
 #endif
 
