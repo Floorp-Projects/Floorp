@@ -83,6 +83,9 @@ class nsTextAccessibleWrap : public nsTextAccessible,
         /* [in] */ unsigned int startIndex,
         /* [in] */ unsigned int endIndex);
 
+    virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_fontFamily( 
+        /* [retval][out] */ BSTR __RPC_FAR *fontFamily);
+    
   protected:
     nsresult GetCharacterExtents(PRInt32 aStartOffset, PRInt32 aEndOffset,
                                  PRInt32* aX, PRInt32* aY, 

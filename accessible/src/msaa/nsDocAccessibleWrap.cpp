@@ -242,7 +242,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessib
     GUITHREADINFO guiInfo;
     guiInfo.cbSize = sizeof(GUITHREADINFO);
     if (gmGetGUIThreadInfo(NULL, &guiInfo)) {
-      hWnd = guiInfo.hwndFocus;
+      if (hWnd != guiInfo.hwndFocus) {
+        hWnd = guiInfo.hwndFocus;
+      }
     }
   }
 

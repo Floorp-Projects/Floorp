@@ -465,9 +465,9 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *_retval)
 // Possible states: focused, focusable, selected, expanded/collapsed
 NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
 {
-  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
   *_retval = STATE_FOCUSABLE | STATE_SELECTABLE;
+
+  NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   // get expanded/collapsed state
   PRBool isContainer, isContainerOpen, isContainerEmpty;
