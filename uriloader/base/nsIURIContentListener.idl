@@ -153,6 +153,14 @@ interface nsIURIContentListener : nsISupports
  /**
   * The parent content listener if this particular listener is part of a chain
   * of content listeners (i.e. a docshell!)
+  *
+  * @note If this attribute is set to an object that implements
+  *       nsISupportsWeakReference, the implementation should get the
+  *       nsIWeakReference and hold that.  Otherwise, the implementation
+  *       should not refcount this interface; it should assume that a non
+  *       null value is always valid.  In that case, the caller is
+  *       responsible for explicitly setting this value back to null if the
+  *       parent content listener is destroyed.
   */
   attribute nsIURIContentListener parentContentListener;
 };
