@@ -21,6 +21,7 @@
 
 #include "nsIPop3URL.h"
 #include "nsMsgMailNewsUrl.h"
+#include "nsIMsgIncomingServer.h"
 #include "nsCOMPtr.h"
 
 class nsPop3URL : public nsIPop3URL, public nsMsgMailNewsUrl
@@ -31,6 +32,8 @@ public:
     NS_IMETHOD SetPop3Sink(nsIPop3Sink* aPop3Sink);
     NS_IMETHOD GetPop3Sink(nsIPop3Sink** aPop3Sink);
 
+	NS_IMETHOD SetUsername(const char *aUserName);
+
     nsPop3URL();
 	
     NS_DECL_ISUPPORTS_INHERITED
@@ -39,6 +42,9 @@ protected:
 	virtual ~nsPop3URL();
 	// protocol specific code to parse a url...
     virtual nsresult ParseUrl(const nsString& aSpec);
+	virtual const char * GetUserName() { return m_userName.GetBuffer();}
+
+	nsCString m_userName;
 
 	/* Pop3 specific event sinks */
     nsCOMPtr<nsIPop3Sink> m_pop3Sink;

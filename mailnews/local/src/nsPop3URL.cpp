@@ -79,6 +79,16 @@ nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
     return NS_OK;
 }
 
+NS_IMETHODIMP nsPop3URL::SetUsername(const char *aUserName)
+{
+	nsresult rv = NS_OK;
+	if (aUserName)
+		m_userName = aUserName;
+	else
+		rv = NS_ERROR_NULL_POINTER;
+
+	return rv;
+}
 
 nsresult nsPop3URL::ParseUrl(const nsString& aSpec)
 {
@@ -87,4 +97,6 @@ nsresult nsPop3URL::ParseUrl(const nsString& aSpec)
 	NS_ASSERTION(0, "we shouldn't need to call this method anymore");
     return NS_OK;
 }
+
+
 
