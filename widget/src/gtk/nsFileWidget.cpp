@@ -65,23 +65,27 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
-  // make things shorter
-  GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
   PRBool ret;
+  if (mWidget) {
+    // make things shorter
+    GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
 
-  gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
-  gtk_widget_show(mWidget);
+    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
+    gtk_widget_show(mWidget);
 
-// handle close, destroy, etc on the dialog
-  gtk_signal_connect(GTK_OBJECT(fs->ok_button), "clicked",
-	             GTK_SIGNAL_FUNC(file_ok_clicked),
-		     &ret);
-  gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
-	             GTK_SIGNAL_FUNC(file_cancel_clicked),
-		     &ret);
-  // start new loop.   ret is set in the above callbacks.
-  gtk_main();
-
+    // handle close, destroy, etc on the dialog
+    gtk_signal_connect(GTK_OBJECT(fs->ok_button), "clicked",
+                       GTK_SIGNAL_FUNC(file_ok_clicked),
+                       &ret);
+    gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
+                       GTK_SIGNAL_FUNC(file_cancel_clicked),
+                       &ret);
+    // start new loop.   ret is set in the above callbacks.
+    gtk_main();
+  }
+  else {
+    ret = PR_FALSE;
+  }
   return ret;
 }
 
@@ -109,25 +113,24 @@ NS_METHOD nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,
 
 NS_METHOD  nsFileWidget::GetFile(nsString& aFile)
 {
-  gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
-
-  aFile.SetLength(0);
-  aFile.Append(fn);
+  aFile.Truncate();
+  if (mWidget) {
+    gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
+    aFile.Append(fn);
 //  g_free(fn);
+  }
   return NS_OK;
 }
 
 
 NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
-  gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
-
-  aFile = fn; // Put the filename into the nsFileSpec instance.
-
+  if (mWidget) {
+    gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
+    aFile = fn; // Put the filename into the nsFileSpec instance.
+  }
   return NS_OK;
 }
-
-
 
 
 //-------------------------------------------------------------------------
@@ -137,10 +140,12 @@ NS_METHOD  nsFileWidget::GetFile(nsFileSpec& aFile)
 //-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::SetDefaultString(nsString& aString)
 {
-  char *fn = aString.ToNewCString();
-  g_print("%s\n",fn);
-  gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget), fn);
-  delete[] fn;
+  if (mWidget) {
+    char *fn = aString.ToNewCString();
+    g_print("%s\n",fn);
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget), fn);
+    delete[] fn;
+  }
   return NS_OK;
 }
 
@@ -183,6 +188,10 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   char *title = mTitle.ToNewCString();
 
   mWidget = gtk_file_selection_new(title);
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
 
   // Hide the file column for the folder case.
   if(aMode == eMode_getfolder) {
@@ -192,6 +201,22 @@ NS_METHOD nsFileWidget::Create(nsIWidget *aParent,
   delete[] title;
 
   return NS_OK;
+}
+
+gint
+nsFileWidget::DestroySignal(GtkWidget *  aGtkWidget,
+                            nsFileWidget* aWidget)
+{
+  aWidget->OnDestroySignal(aGtkWidget);
+  return TRUE;
+}
+
+void
+nsFileWidget::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mWidget) {
+    mWidget = nsnull;
+  }
 }
 
 nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,

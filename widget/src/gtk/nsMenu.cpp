@@ -228,7 +228,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 NS_METHOD nsMenu::AddMenu(nsIMenu * aMenu)
 {
   nsString Label;
-  GtkWidget *item=nsnull, *newmenu=nsnull;
+  GtkWidget *newmenu=nsnull;
   char *labelStr;
   void *voidData=NULL;
   

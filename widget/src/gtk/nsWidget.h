@@ -31,6 +31,11 @@
 
 #include <gtk/gtk.h>
 
+#ifdef DEBUG
+#undef NOISY_DESTROY
+#else
+#undef NOISY_DESTROY
+#endif
 
 /**
  * Base of all GTK+ native widgets.
@@ -122,6 +127,10 @@ class nsWidget : public nsBaseWidget
   // are we a "top level" widget?
     PRBool     mIsToplevel;
 
+#ifdef DEBUG
+  void IndentByDepth(FILE* out);
+#endif
+
  protected:
 
     virtual void InitCallbacks(char * aName = nsnull);
@@ -176,6 +185,8 @@ class nsWidget : public nsBaseWidget
   virtual void OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent);
   virtual void OnRealize();
 
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
+
 private:
 
   //////////////////////////////////////////////////////////////////
@@ -207,6 +218,9 @@ private:
   static gint RealizeSignal(GtkWidget *      aWidget, 
                             gpointer         aData);
 
+  static gint DestroySignal(GtkWidget *      aGtkWidget,
+                            nsWidget*        aWidget);
+
   //////////////////////////////////////////////////////////////////
   //
   // GTK event support methods
@@ -222,6 +236,7 @@ private:
   void InitMouseEvent(GdkEventButton * aGdkButtonEvent,
                       nsMouseEvent &   anEvent,
                       PRUint32         aEventType);
+
 protected:
     GtkWidget *mWidget;
     nsIWidget *mParent;

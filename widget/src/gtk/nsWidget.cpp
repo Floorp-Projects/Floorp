@@ -92,6 +92,10 @@ nsWidget::nsWidget()
 
 nsWidget::~nsWidget()
 {
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
+  printf("nsWidget::~nsWidget:%p\n", this);
+#endif
   mIsDestroying = PR_TRUE;
   if (nsnull != mWidget) {
     Destroy();
@@ -116,6 +120,20 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
     return NS_OK;
 }
 
+#ifdef DEBUG
+void
+nsWidget::IndentByDepth(FILE* out)
+{
+  PRInt32 depth = 0;
+  nsWidget* parent = (nsWidget*)mParent;
+  while (parent) {
+    parent = (nsWidget*) parent->mParent;
+    depth++;
+  }
+  while (--depth >= 0) fprintf(out, "  ");
+}
+#endif
+
 //-------------------------------------------------------------------------
 //
 // Close this nsWidget
@@ -124,7 +142,8 @@ NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-#ifdef NOISY_WIDGET_DESTROY
+#ifdef NOISY_DESTROY
+  IndentByDepth(stdout);
   printf("nsWidget::Destroy:%p: isDestroying=%s widget=%p parent=%p\n",
          this, mIsDestroying ? "yes" : "no", mWidget, mParent);
 #endif
@@ -165,6 +184,21 @@ void nsWidget::OnDestroy()
     mRefCnt = 99;
     DispatchStandardEvent(NS_DESTROY);
     mRefCnt = old;
+  }
+}
+
+gint
+nsWidget::DestroySignal(GtkWidget* aGtkWidget, nsWidget* aWidget)
+{
+  aWidget->OnDestroySignal(aGtkWidget);
+  return PR_TRUE;
+}
+
+void
+nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mWidget) {
+    mWidget = nsnull;
   }
 }
 
@@ -741,7 +775,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 {
   GtkWidget *parentWidget = nsnull;
 
-#if 0
+#ifdef NOISY_DESTROY
   if (aParent)
     g_print("nsWidget::CreateWidget (%p) nsIWidget parent\n",
             this);
@@ -786,6 +820,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
 
+  // Add in destroy callback
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
+
 #ifdef NS_GTK_REF
   if (aNativeParent) {
     gtk_widget_unref(GTK_WIDGET(aNativeParent));
@@ -804,16 +844,16 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 //-------------------------------------------------------------------------
 
 NS_METHOD nsWidget::Create(nsIWidget *aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+                           const nsRect &aRect,
+                           EVENT_CALLBACK aHandleEventFunction,
+                           nsIDeviceContext *aContext,
+                           nsIAppShell *aAppShell,
+                           nsIToolkit *aToolkit,
+                           nsWidgetInitData *aInitData)
 {
-    return(CreateWidget(aParent, aRect, aHandleEventFunction,
-                        aContext, aAppShell, aToolkit, aInitData,
-                        nsnull));
+  return CreateWidget(aParent, aRect, aHandleEventFunction,
+                      aContext, aAppShell, aToolkit, aInitData,
+                      nsnull);
 }
 
 //-------------------------------------------------------------------------
@@ -822,16 +862,16 @@ NS_METHOD nsWidget::Create(nsIWidget *aParent,
 //
 //-------------------------------------------------------------------------
 NS_METHOD nsWidget::Create(nsNativeWidget aParent,
-                      const nsRect &aRect,
-                      EVENT_CALLBACK aHandleEventFunction,
-                      nsIDeviceContext *aContext,
-                      nsIAppShell *aAppShell,
-                      nsIToolkit *aToolkit,
-                      nsWidgetInitData *aInitData)
+                           const nsRect &aRect,
+                           EVENT_CALLBACK aHandleEventFunction,
+                           nsIDeviceContext *aContext,
+                           nsIAppShell *aAppShell,
+                           nsIToolkit *aToolkit,
+                           nsWidgetInitData *aInitData)
 {
-    return(CreateWidget(nsnull, aRect, aHandleEventFunction,
-                        aContext, aAppShell, aToolkit, aInitData,
-                        aParent));
+  return CreateWidget(nsnull, aRect, aHandleEventFunction,
+                      aContext, aAppShell, aToolkit, aInitData,
+                      aParent);
 }
 
 //-------------------------------------------------------------------------

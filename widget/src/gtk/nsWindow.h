@@ -110,6 +110,8 @@ protected:
 
   virtual gint OnDrawSignal(GdkRectangle * aArea);
 
+  virtual void OnDestroySignal(GtkWidget* aGtkWidget);
+
   //////////////////////////////////////////////////////////////////////
 
   virtual void InitCallbacks(char * aName = nsnull);
@@ -144,6 +146,7 @@ protected:
 class ChildWindow : public nsWindow {
 public:
   ChildWindow();
+  ~ChildWindow();
   virtual PRBool IsChild() const;
   NS_IMETHOD Destroy(void);
 };

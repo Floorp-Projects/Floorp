@@ -42,8 +42,6 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
 {
   NS_INIT_REFCNT();
   mMultiSelect = PR_FALSE;
-//  mBackground  = NS_RGB(124, 124, 124);
-
   mItems = nsnull;
   mNumItems = 0;
 }
@@ -55,14 +53,12 @@ nsComboBox::nsComboBox() : nsWidget(), nsIListWidget(), nsIComboBox()
 //-------------------------------------------------------------------------
 nsComboBox::~nsComboBox()
 {
-  for ( GList *items = mItems; items != NULL; items = (GList *) g_list_next(items))
-    {
+  if (mItems) {
+    for (GList *items = mItems; items; items = (GList*) g_list_next(items)){
       g_free(items->data);
     }
-  g_list_free(mItems);
-#if 0
-  gtk_widget_destroy(mCombo);
-#endif
+    g_list_free(mItems);
+  }
 }
 
 //-------------------------------------------------------------------------
@@ -88,8 +84,10 @@ NS_METHOD nsComboBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 {
   NS_ALLOC_STR_BUF(val, aItem, 256);
   mItems = g_list_insert( mItems, g_strdup(val), aPosition );
-  gtk_combo_set_popdown_strings( GTK_COMBO( mCombo ), mItems );
   mNumItems++;
+  if (mCombo) {
+    gtk_combo_set_popdown_strings( GTK_COMBO( mCombo ), mItems );
+  }
   NS_FREE_STR_BUF(val);
   return NS_OK;
 }
@@ -138,8 +136,10 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 
     g_free(g_list_nth(mItems, aPosition)->data);
     mItems = g_list_remove_link(mItems, g_list_nth(mItems, aPosition));
-    gtk_combo_set_popdown_strings(GTK_COMBO( mCombo ), mItems);
     mNumItems--;
+    if (mCombo) {
+      gtk_combo_set_popdown_strings(GTK_COMBO( mCombo ), mItems);
+    }
     return PR_TRUE;
   }
   else
@@ -153,13 +153,11 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-  PRBool result = PR_FALSE;
   if (aPosition >= 0 && aPosition < mNumItems) {
     anItem = (gchar *) g_list_nth(mItems, aPosition)->data;
     return PR_TRUE;
   }
-  else
-    return PR_FALSE;
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------
@@ -169,7 +167,10 @@ PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
-  aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mCombo)->entry));
+  aItem.Truncate();
+  if (mCombo) {
+    aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mCombo)->entry));
+  }
   return NS_OK;
 }
 
@@ -200,7 +201,10 @@ NS_METHOD nsComboBox::SelectItem(PRInt32 aPosition)
   if (!pos)
     return NS_ERROR_FAILURE;
 
-  gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(mCombo)->entry), (gchar *) pos->data);
+  if (mCombo) {
+    gtk_entry_set_text(GTK_ENTRY(GTK_COMBO(mCombo)->entry),
+                       (gchar *) pos->data);
+  }
 
   return NS_OK;
 }
@@ -288,9 +292,23 @@ NS_METHOD  nsComboBox::CreateNative(GtkWidget *parentWindow)
   /* make the stuff uneditable */
   gtk_entry_set_editable(GTK_ENTRY(GTK_COMBO(mCombo)->entry), PR_FALSE);
   gtk_container_add(GTK_CONTAINER(mWidget), mCombo);
-//  gtk_combo_set_value_in_list(GTK_COMBO(mCombo), PR_TRUE, PR_TRUE);
+  gtk_signal_connect(GTK_OBJECT(mCombo),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
 
   return NS_OK;
+}
+
+void
+nsComboBox::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mCombo) {
+    mCombo = nsnull;
+  }
+  else {
+    nsWidget::OnDestroySignal(aGtkWidget);
+  }
 }
 
 //-------------------------------------------------------------------------
