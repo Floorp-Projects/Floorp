@@ -760,7 +760,7 @@
                               disabled="true"/>
                      <button id="invite-email-button"
                              label="Add"
-                             onclick="onIniviteAdd();"
+                             onclick="onInviteeAdd();"
                              disabled="true"/>
                   </hbox>
                </vbox>
