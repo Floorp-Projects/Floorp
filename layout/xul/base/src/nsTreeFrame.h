@@ -36,7 +36,7 @@ public:
   void MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
   void MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame);
-  using nsTableFrame::MoveTo;    // don't hide inherited::Move
+//  using nsTableFrame::MoveTo;    // don't hide inherited::Move
   void MoveTo(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame);
      // NOTE: CWPro4 still reports a warning about hiding inherited virtual functions.
      // Compiler bug, ignore it.
