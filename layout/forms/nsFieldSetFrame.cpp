@@ -108,8 +108,9 @@ public:
                                const nsPoint&    aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**        aFrame);
-  
+#ifdef ACCESSIBILITY  
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
+#endif
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const {
