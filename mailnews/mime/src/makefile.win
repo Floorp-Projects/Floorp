@@ -41,8 +41,25 @@ DEPTH=..\..\..
 
 MODULE  = mime
 REQUIRES= 
-#EXPORTS =\
-#        $(NULL)
+EXPORTS =\
+		nsMimeObjectClassAccess.h		\
+		nsMimeConverter.h				\
+		mimetext.h						\
+		mimeleaf.h						\
+		mimecth.h						\
+		mimeobj.h						\
+		mimei.h							\
+		modmimee.h						\
+		mimecont.h						\
+		mimemult.h						\
+		mimemsig.h						\
+		mimehdrs.h						\
+		modmime.h						\
+		mimepbuf.h						\
+		modlmime.h						\
+		mimerosetta.h					\
+		comi18n.h						\
+        $(NULL)
 
 
 #DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
@@ -146,22 +163,6 @@ LLIBS=							\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
-
-LINCS=$(LINCS)  -I.                         		\
-			   -I$(PUBLIC)\pref		\
-			   -I$(PUBLIC)\js		\
-			   -I$(PUBLIC)\security		\
-			   -I$(PUBLIC)\netlib		\
-			   -I$(PUBLIC)\xpcom		\
-			   -I$(PUBLIC)\raptor		\
-			   -I$(PUBLIC)\mime		\
-			   -I$(PUBLIC)\mailnews         \
-			   -I$(PUBLIC)\uconv		\
-			   -I$(PUBLIC)\netcnvts		\
-			   -I$(PUBLIC)\plugin		\
-         -I$(PUBLIC)\intl \
-         -I$(PUBLIC)\locale \
-			   $(NULL)
 
 #//------------------------------------------------------------------------
 #//
