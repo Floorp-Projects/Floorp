@@ -41,6 +41,7 @@
 #include "nsXPIDLString.h"
 #include "nsIObserverService.h"
 #include "nsIXPCScriptable.h"
+#include "nsString.h"
 #ifndef XPCONNECT_STANDALONE
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptObjectPrincipal.h"
