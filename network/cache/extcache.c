@@ -21,6 +21,8 @@
 
 #ifdef MOZILLA_CLIENT
 #include "mktrace.h"
+#include "prmem.h"
+#include "plstr.h"
 
 /* Publicly released Netscape cache access routines.
  *
