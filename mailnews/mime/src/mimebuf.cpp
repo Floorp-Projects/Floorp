@@ -119,6 +119,17 @@ convert_and_send_buffer(char* buf, int length, PRBool convert_newlines_p,
    */
   char* newline;
 
+#if (MSG_LINEBREAK_LEN == 2)
+  /***
+  * This is a patch to support a mail DB corruption cause by earlier version that lead to a crash.
+  * What happened is that the line terminator is CR+NULL+LF. Therefore, we first process a line
+  * terminated by CR then a second line that contains only NULL+LF. We need to ignore this second
+  * line. See bug http://bugzilla.mozilla.org/show_bug.cgi?id=61412 for more information.
+  ***/
+  if (length == 2 && buf[0] == 0x00 && buf[1] == LF)
+    return 0;
+#endif
+
   PR_ASSERT(buf && length > 0);
   if (!buf || length <= 0) return -1;
   newline = buf + length;
