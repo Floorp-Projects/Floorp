@@ -156,6 +156,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         PATH=${DIST}/${OBJDIR}/bin:${DIST}/${OBJDIR}/lib:$PATH
         PATH=`perl ../path_uniq -d ':' "$PATH"`
     fi
+echo $PATH
 
     LD_LIBRARY_PATH=${DIST}/${OBJDIR}/lib
     SHLIB_PATH=${DIST}/${OBJDIR}/lib
@@ -173,7 +174,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         ?*)
             ;;
         *)
-            echo "$SCRIPTNAME: HOST environment variable is not defined."
+            echo "$SCRIPTNAME: Fatal HOST environment variable is not defined."
             exit 1 #does not need to be Exit, very early in script
             ;;
     esac
@@ -181,16 +182,35 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     if [ -z "${DOMSUF}" ]; then
         DOMSUF=`domainname`
         if  [ -z "${DOMSUF}" ]; then
-            echo "$SCRIPTNAME: DOMSUF environment variable is not defined."
+            echo "$SCRIPTNAME: Fatal DOMSUF env. variable is not defined."
+            exit 1 #does not need to be Exit, very early in script
+        fi
+    fi
+    if [ -z "$USE_IP" -o "$USE_IP" != "TRUE" ] ; then
+        HOSTADDR=${HOST}.${DOMSUF}
+    else
+        HOSTADDR=${IP_ADDRESS}
+    fi
+
+    #if running remote side of the distributed stress test we need to use the files that
+    #the server side gives us...
+    if [ -n "$DO_REM_ST" -a "$DO_REM_ST" = "TRUE" ] ; then
+        for w in `ls -rtd ${TESTDIR}/${HOST}.[0-9]* 2>/dev/null |
+            sed -e "s/.*${HOST}.//"` ; do
+                version=$w
+        done
+        HOSTDIR=${TESTDIR}/${HOST}.$version
+        echo $HOSTDIR
+        if [ ! -d $HOSTDIR ] ; then
+            echo "$SCRIPTNAME: Fatal: Remote side of dist. stress test "
+            echo "       - server HOSTDIR $HOSTDIR does not exist"
             exit 1 #does not need to be Exit, very early in script
         fi
     fi
 
-#NOTE - this HOSTDIR migh not be set at the time of this test!!!
-# the original had a -s maybe meant -z???? - first replaced it with -d
-#which worked, but resulted in [ ! -d "" ] which doesn't make a lot of sense
-
-    if [ -z "${HOSTDIR}" ]; then
+    if [ -n "${HOSTDIR}" ]; then
+        version=`echo $HOSTDIR | sed  -e "s/.*${HOST}.//"` 
+    else
         if [ -f "${TESTDIR}/${HOST}" ]; then
             version=`cat ${TESTDIR}/${HOST}`
         else
@@ -227,6 +247,14 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         echo "   Platform: ${OBJDIR}"
         echo "   Results: ${HOST}.$version"
         echo "********************************************"
+    #if running remote side of the distributed stress test let the user know who it is...
+    elif [ -n "$DO_REM_ST" -a "$DO_REM_ST" = "TRUE" ] ; then
+        echo "********************************************"
+        echo "   Platform: ${OBJDIR}"
+        echo "   Results: ${HOST}.$version"
+        echo "   remote side of distributed stress test "
+        echo "   `uname -n -s`"
+        echo "********************************************"
     fi
     if [ -z "${LOGFILE}" ]; then
         LOGFILE=${HOSTDIR}/output.log
@@ -243,6 +271,16 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
         PS="/usr/5bin/ps"
     else
         PS="ps"
+    fi
+    #found 3 rsh's so far that do not work as expected - cygnus mks6 (restricted sh) and mks 7
+    if [ -z "$RSH" ]; then
+        if [ "${OS_ARCH}" = "WINNT" -a "$OS_NAME"  = "CYGWIN_NT" ]; then
+            RSH=/cygdrive/c/winnt/system32/rsh
+        elif [ "${OS_ARCH}" = "WINNT" ]; then
+            RSH=c:/winnt/system32/rsh
+        else
+            RSH=rsh
+        fi
     fi
    
 
@@ -289,11 +327,23 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     trap "Exit $0 Signal_caught" 2 3
 
     export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
-    export DOMSUF
+    export DOMSUF HOSTADDR
     export KILL SLEEP PS
     export MOZILLA_ROOT SECURITY_ROOT DIST TESTDIR OBJDIR HOSTDIR QADIR
     export LOGFILE SCRIPTNAME
 
+    if [ -z "$GLOB_MIN_CERT" ] ; then
+        GLOB_MIN_CERT=0
+    fi
+    if [ -z "$GLOBMAX_CERT" ] ; then
+        GLOB_MAX_CERT=200
+    fi
+    if [ -z "$MIN_CERT" ] ; then
+        MIN_CERT=$GLOB_MIN_CERT
+    fi
+    if [ -z "$MAX_CERT" ] ; then
+        MAX_CERT=$GLOB_MAX_CERT
+    fi
 
     SCRIPTNAME=$0
     INIT_SOURCED=TRUE   #whatever one does - NEVER export this one please
