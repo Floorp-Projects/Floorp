@@ -386,6 +386,12 @@ bin\components\msgmdn.xpt
 bin\components\mdn-service.js
 bin\components\nsSetDefaultMail.js
 bin\components\nsUnsetDefaultMail.js
+;these Palm Sync files are conditionally built so would not exist unless built
+bin\PalmSyncProxy.dll
+bin\PalmSyncInstall.exe
+bin\components\palmsync.dll
+bin\components\palmsync.xpt
+
 
 [chatzilla]
 bin\components\chatzilla-service.js
