@@ -30,8 +30,6 @@
 #include "mdb.h"
 #include "nsHashtable.h"
 
-class FolderCachePool;
-
 class nsMsgFolderCache : public nsIMsgFolderCache
 {
 
@@ -59,7 +57,6 @@ protected:
 
 	nsFileSpec		m_dbFileSpec;
 	nsSupportsHashtable	*m_cacheElements;
-	FolderCachePool		*m_morkEnvMemPool;
 	// mdb stuff
 	nsIMdbEnv		    *m_mdbEnv;	// to be used in all the db calls.
 	nsIMdbStore	 	    *m_mdbStore;
