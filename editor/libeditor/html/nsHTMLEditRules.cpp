@@ -1261,8 +1261,21 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         // block parents the same?  
         if (mHTMLEditor->HasSameBlockNodeParent(startNode, priorNode)) 
         {
+          // is prior node a text node?
+          if ( mHTMLEditor->IsTextNode(priorNode) )
+          {
+            // delete last character
+            PRUint32 offset;
+            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+            nodeAsText = do_QueryInterface(priorNode);
+            nodeAsText->GetLength((PRUint32*)&offset);
+            res = aSelection->Collapse(priorNode,offset);
+            // just return without setting handled to true.
+            // default code will take care of actual deletion
+            return res;
+          }
           // is prior node not a container?  (ie, a br, hr, image...)
-          if (!mHTMLEditor->IsContainer(priorNode))   // MOOSE: anchors not handled
+          else if (!mHTMLEditor->IsContainer(priorNode))   // MOOSE: anchors not handled
           {
             // delete the break, and join like nodes if appropriate
             res = mHTMLEditor->DeleteNode(priorNode);
@@ -1287,19 +1300,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
                 res = aSelection->Collapse(selNode,selOffset);
               }
             }
-            return res;
-          }
-          // is prior node a text node?
-          else if ( mHTMLEditor->IsTextNode(priorNode) )
-          {
-            // delete last character
-            PRUint32 offset;
-            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-            nodeAsText = do_QueryInterface(priorNode);
-            nodeAsText->GetLength((PRUint32*)&offset);
-            res = aSelection->Collapse(priorNode,offset);
-            // just return without setting handled to true.
-            // default code will take care of actual deletion
             return res;
           }
           else if ( mHTMLEditor->IsInlineNode(priorNode) )
@@ -1374,8 +1374,19 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         // block parents the same?  
         if (mHTMLEditor->HasSameBlockNodeParent(startNode, nextNode)) 
         {
+          // is next node a text node?
+          if ( mHTMLEditor->IsTextNode(nextNode) )
+          {
+            // delete first character
+            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+            nodeAsText = do_QueryInterface(nextNode);
+            res = aSelection->Collapse(nextNode,0);
+            // just return without setting handled to true.
+            // default code will take care of actual deletion
+            return res;
+          }
           // is next node not a container?  (ie, a br, hr, image...)
-          if (!mHTMLEditor->IsContainer(nextNode))  // MOOSE: anchors not handled
+          else if (!mHTMLEditor->IsContainer(nextNode))  // MOOSE: anchors not handled
           {
             // delete the break, and join like nodes if appropriate
             res = mHTMLEditor->DeleteNode(nextNode);
@@ -1400,17 +1411,6 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
                 res = aSelection->Collapse(selNode,selOffset);
               }
             }
-            return res;
-          }
-          // is next node a text node?
-          else if ( mHTMLEditor->IsTextNode(nextNode) )
-          {
-            // delete first character
-            nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-            nodeAsText = do_QueryInterface(nextNode);
-            res = aSelection->Collapse(nextNode,0);
-            // just return without setting handled to true.
-            // default code will take care of actual deletion
             return res;
           }
           else if ( mHTMLEditor->IsInlineNode(nextNode) )
@@ -2590,7 +2590,7 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   if (!mHTMLEditor->mTypeInState) return NS_ERROR_NULL_POINTER;
   
   PRBool weDidSometing = PR_FALSE;
-  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMNode> node, tmp;
   PRInt32 offset;
   nsresult res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(node), &offset);
   if (NS_FAILED(res)) return res;
@@ -2600,13 +2600,30 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
   mHTMLEditor->mTypeInState->TakeClearProperty(&item);
   while (item)
   {
-    nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent;
+    nsCOMPtr<nsIDOMNode> leftNode, rightNode, secondSplitParent, newSelParent, savedBR;
     res = mHTMLEditor->SplitStyleAbovePoint(address_of(node), &offset, item->tag, &item->attr, address_of(leftNode), address_of(rightNode));
     if (NS_FAILED(res)) return res;
+    PRBool bIsEmptyNode;
+    mHTMLEditor->IsEmptyNode(leftNode, &bIsEmptyNode, PR_FALSE, PR_TRUE);
+    if (bIsEmptyNode)
+    {
+      // delete leftNode if it became empty
+      res = mEditor->DeleteNode(leftNode);
+      if (NS_FAILED(res)) return res;
+    }
+
     if (rightNode)
     {
       res = mHTMLEditor->GetLeftmostChild(rightNode, getter_AddRefs(secondSplitParent));
       if (NS_FAILED(res)) return res;
+      // don't try to split br's...
+      // note: probably should only split containers, but being more conservative in changes for now.
+      if (nsHTMLEditUtils::IsBreak(secondSplitParent))
+      {
+        savedBR = secondSplitParent;
+        savedBR->GetParentNode(getter_AddRefs(tmp));
+        secondSplitParent = tmp;
+      }
       offset = 0;
       res = mHTMLEditor->SplitStyleAbovePoint(address_of(secondSplitParent), &offset, item->tag, &(item->attr), address_of(leftNode), address_of(rightNode));
       if (NS_FAILED(res)) return res;
@@ -2614,6 +2631,20 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
       if (!leftNode) return NS_ERROR_FAILURE;
       res = mHTMLEditor->GetLeftmostChild(leftNode, getter_AddRefs(newSelParent));
       if (NS_FAILED(res)) return res;
+      // if rightNode starts with a br, suck it out of right node and into leftNode.
+      // This is so we you don't revert back to the previous style if you happen to click at the end of a line.
+      if (savedBR)
+      {
+        res = mEditor->MoveNode(savedBR, newSelParent, 0);
+        if (NS_FAILED(res)) return res;
+      }
+      mHTMLEditor->IsEmptyNode(rightNode, &bIsEmptyNode, PR_FALSE, PR_TRUE);
+      if (bIsEmptyNode)
+      {
+        // delete rightNode if it became empty
+        res = mEditor->DeleteNode(rightNode);
+        if (NS_FAILED(res)) return res;
+      }
       // register a rangeStore item that points at the new heirarchy.
       // This is so we can know where to put the selection after we call
       // RemoveStyleInside().  RemoveStyleInside() could remove any and all of those nodes,
@@ -2655,7 +2686,6 @@ nsHTMLEditRules::CreateStyleForInsertText(nsISelection *aSelection, nsIDOMDocume
       // if we are in a text node, split it
       res = mHTMLEditor->SplitNodeDeep(node, node, offset, &offset);
       if (NS_FAILED(res)) return res;
-      nsCOMPtr<nsIDOMNode> tmp;
       node->GetParentNode(getter_AddRefs(tmp));
       node = tmp;
     }
