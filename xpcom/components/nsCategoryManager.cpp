@@ -92,7 +92,8 @@ class CategoryNode
   {
     public:
       CategoryNode()
-          : nsObjectHashtable(0, 0, Destroy_LeafNode, 0)
+          : nsObjectHashtable((nsHashtableCloneElementFunc) 0, 0,
+                                (nsHashtableEnumFunc) Destroy_LeafNode, 0 )
         {
           // Nothing else to do here...
         }
@@ -156,7 +157,9 @@ class nsCategoryManager
 NS_IMPL_ISUPPORTS1(nsCategoryManager, nsICategoryManager)
 
 nsCategoryManager::nsCategoryManager()
-    : nsObjectHashtable(0, 0, Destroy_CategoryNode, 0)
+    : nsObjectHashtable((nsHashtableCloneElementFunc) 0, 0,
+                                (nsHashtableEnumFunc) Destroy_CategoryNode, 0 )
+
   {
     NS_INIT_REFCNT();
   }

@@ -109,7 +109,7 @@ nsProxyObjectManager::~nsProxyObjectManager()
 {
     if (mProxyClassMap)
     {
-        mProxyClassMap->Reset(PurgeProxyClasses, nsnull);
+        mProxyClassMap->Reset((nsHashtableEnumFunc)PurgeProxyClasses, nsnull);
         delete mProxyClassMap;
     }
     delete mProxyObjectMap;

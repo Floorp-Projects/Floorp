@@ -52,7 +52,7 @@ class nsDirectoryService : public nsIDirectoryService, public nsIProperties, pub
 
 private:
     static nsDirectoryService* mService;
-    static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
+    static PRBool PR_CALLBACK ReleaseValues(nsHashKey* key, void* data, void* closure);
     nsHashtable* mHashtable;
     nsCOMPtr<nsISupportsArray> mProviders;
 
