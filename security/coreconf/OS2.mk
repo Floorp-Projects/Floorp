@@ -227,6 +227,8 @@ else
 	endif
 endif
 
+DEFINES += -DXP_OS2
+
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); fi
 endef
