@@ -2537,7 +2537,7 @@ GlobalWindowImpl::ReadyOpenedWebShell(nsIWebShell *aWebShell, nsIDOMWindow **aDO
   nsresult              res;
 
   *aDOMWindow = nsnull;
-  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(mWebShell));
+  nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(aWebShell));
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
   res = CallQueryInterface(globalObject.get(), aDOMWindow);
   globalObject->SetOpenerWindow(this); // damnit
