@@ -459,34 +459,6 @@ HandlerOverride.prototype = {
     this.changeMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
     return aIsEditableString;
   },
-  
-  get largeIconURL()
-  {
-    var url = this.getLiteralForContentType(this.URI, "largeIcon");
-    if (!url)
-      url = "chrome://communicator/skin/content-large.gif";
-    return url;
-  },
-  
-  set largeIconURL(aLargeIconURL)
-  {
-    this.changeMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
-    return aLargeIconURL;
-  },
-  
-  get smallIconURL()
-  {
-    var url = this.getLiteralForContentType(this.URI, "smallIcon");
-    if (!url)
-      url = "chrome://communicator/skin/content-small.gif";
-    return url;
-  },
-  
-  set smallIconURL(aSmallIconURL)
-  {
-    this.changeMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aSmallIconURL);
-    return aSmallIconURL;
-  },
 
   get extensions()
   {

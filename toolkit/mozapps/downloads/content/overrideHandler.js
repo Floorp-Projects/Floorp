@@ -90,38 +90,6 @@ HandlerOverride.prototype = {
     else
       changeMIMEStuff(MIME_URI(this.mimeType), "editable", aIsEditableString);
   },
-  
-  get largeIconURL()
-  {
-    var url = getLiteralForContentType(this.URI, "largeIcon");
-    if (!url)
-      url = "chrome://communicator/skin/content-large.gif";
-    return url;
-  },
-  
-  set largeIconURL(aLargeIconURL)
-  {
-    if (!this.mUpdateMode)
-      assertMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
-    else
-      changeMIMEStuff(MIME_URI(this.mimeType), "largeIcon", aLargeIconURL);
-  },
-  
-  get smallIconURL()
-  {
-    var url = getLiteralForContentType(this.URI, "smallIcon");
-    if (!url)
-      url = "chrome://communicator/skin/content-small.gif";
-    return url;
-  },
-  
-  set smallIconURL(aSmallIconURL)
-  {
-    if (!this.mUpdateMode)
-      assertMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aSmallIconURL);
-    else
-      changeMIMEStuff(MIME_URI(this.mimeType), "smallIcon", aSmallIconURL);
-  },
 
   get extensions()
   {

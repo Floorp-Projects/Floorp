@@ -91,9 +91,3 @@
 #disabledDomains {
   max-height: 13em;
 }
-
-/* ::::: File icon (32x32) ::::: */
-
-.file-icon-large {
-  list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
-}
