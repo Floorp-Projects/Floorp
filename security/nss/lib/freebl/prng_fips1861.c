@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.13 2003/03/24 22:25:51 ian.mcgreer%sun.com Exp $
+ * $Id: prng_fips1861.c,v 1.14 2003/05/12 21:07:01 nelsonb%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -378,17 +378,20 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
      * If there are enough bytes of random data, send back Xj, 
      * else call alg3_1() with 0's to generate more random data.
      */
-    while (len > 0) {
-	if (rng->avail == 0)
+    while (len > 0 && rv == SECSuccess) {
+	if (rng->avail == 0) {
 	    /* All available bytes are used, so generate more. */
 	    rv = alg_fips186_1_x3_1(rng, NULL, q);
+	}
 	/* number of bytes to obtain on this iteration (max of 20) */
 	num = PR_MIN(rng->avail, len);
 	/* if avail < BSIZE, the first avail bytes have already been used. */
-	memcpy(output, rng->Xj + (BSIZE - rng->avail), num);
-	rng->avail -= num;
-	len -= num;
-	output += num;
+	if (num) {
+	    memcpy(output, rng->Xj + (BSIZE - rng->avail), num);
+	    rng->avail -= num;
+	    len -= num;
+	    output += num;
+	}
     }
     PZ_Unlock(rng->lock);
     /* --- UNLOCKED --- */
