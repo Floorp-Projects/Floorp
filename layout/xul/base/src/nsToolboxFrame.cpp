@@ -130,7 +130,7 @@ nsToolboxFrame :: nsToolboxFrame ( )
 //
 // nsToolboxFrame dstr
 //
-// Cleanup, if necessary
+// Cleanup, as necessary
 //
 nsToolboxFrame :: ~nsToolboxFrame ( )
 {
@@ -138,7 +138,7 @@ nsToolboxFrame :: ~nsToolboxFrame ( )
     mDragListenerDelegate->NotifyFrameDestroyed();
     NS_RELEASE(mDragListenerDelegate);
   }
-	//еее walk mGrippies and delete elements
+  ClearGrippyList ( mGrippies );
 }
 
 
