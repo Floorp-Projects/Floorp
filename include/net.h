@@ -35,6 +35,7 @@
 #include "shistele.h"
 #include "xp_list.h"
 #include "msgtypes.h"
+#include "timing.h"
 
 #ifdef XP_UNIX
 #include <sys/param.h> /* for MAXPATHLEN */
