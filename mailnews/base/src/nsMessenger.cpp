@@ -66,7 +66,6 @@
 #include "nsMsgLocalCID.h"
 
 #include "nsIComponentManager.h"
-#include "nsTransactionManagerCID.h"
 
 #include "nsIMsgSendLater.h" 
 #include "nsMsgCompCID.h"
@@ -99,7 +98,6 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID); 
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kCopyMessageStreamListenerCID, NS_COPYMESSAGESTREAMLISTENER_CID); 
@@ -324,6 +322,8 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
             NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
             if(NS_SUCCEEDED(rv))
 	            mailSession->SetTemporaryMsgWindow(aMsgWindow);
+
+            aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
 		}
 	}
     NS_RELEASE(rootWebShell);
@@ -366,17 +366,6 @@ void nsMessenger::InitializeFolderRoot()
         if (NS_SUCCEEDED(rv))
           m_folderPath += "Inbox";
     } // if we have a folder root for the current server
-    
-    // create Undo/Redo Transaction Manager
-    NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      rv = compMgr->CreateInstance(kTransactionManagerCID, nsnull, 
-                                   nsCOMTypeInfo<nsITransactionManager>::GetIID(),
-                                   getter_AddRefs(mTxnMgr));
-      if (NS_SUCCEEDED(rv))
-        mTxnMgr->SetMaxTransactionCount(-1);
-    }
 }
 
 NS_IMETHODIMP
@@ -681,10 +670,6 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 	rv = rdfService->GetResource(command, getter_AddRefs(commandResource));
 	if(NS_SUCCEEDED(rv))
 	{
-        // ** jt - temporary solution for pickybacking the undo manager into
-        // the nsISupportArray
-        if (mTxnMgr)
-            srcArray->InsertElementAt(mTxnMgr, 0);
 		rv = db->DoCommand(srcArray, commandResource, argumentArray);
 	}
 

@@ -20,6 +20,11 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsTransactionManagerCID.h"
+#include "nsIComponentManager.h"
+
+static NS_DEFINE_CID(kTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
+static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 
 NS_IMPL_ISUPPORTS(nsMsgWindow, nsCOMTypeInfo<nsIMsgWindow>::GetIID())
 
@@ -27,6 +32,7 @@ nsMsgWindow::nsMsgWindow()
 {
 	NS_INIT_REFCNT();
 	mRootWebShell = nsnull;
+    Init();
 }
 
 nsMsgWindow::~nsMsgWindow()
@@ -36,7 +42,19 @@ nsMsgWindow::~nsMsgWindow()
 
 nsresult nsMsgWindow::Init()
 {
-	return NS_OK;
+    nsresult rv = NS_OK;
+    // create Undo/Redo Transaction Manager
+    NS_WITH_SERVICE (nsIComponentManager, compMgr, kComponentManagerCID, &rv);
+
+    if (NS_SUCCEEDED(rv))
+    {
+        rv = compMgr->CreateInstance(kTransactionManagerCID, nsnull,
+                       nsCOMTypeInfo<nsITransactionManager>::GetIID(),
+                                     getter_AddRefs(mTransactionManager));
+      if (NS_SUCCEEDED(rv))
+        mTransactionManager->SetMaxTransactionCount(-1);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgWindow::GetStatusFeedback(nsIMsgStatusFeedback * *aStatusFeedback)
