@@ -32,8 +32,8 @@
 # 
 #
 
-CORE_DEPTH = ../../..
-DEPTH      = ../../..
+CORE_DEPTH = ../..
+DEPTH      = ../..
 
 DIRS = protocol client
 
