@@ -70,7 +70,6 @@ public:
 	NS_DECL_NSIINCOMINGSERVERLISTENER
 	NS_DECL_NSIOBSERVER
 
-	nsresult Init();
 	nsresult PerformBiff();
 
 protected:
@@ -83,6 +82,7 @@ protected:
 	nsCOMPtr<nsITimer> mBiffTimer;
 	nsVoidArray *mBiffArray;
 	PRBool mHaveShutdown;
+  PRBool mInited;
 };
 
 

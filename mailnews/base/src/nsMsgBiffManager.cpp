@@ -59,11 +59,11 @@ nsMsgBiffManager::nsMsgBiffManager()
 
   mBiffArray = nsnull;
   mHaveShutdown = PR_FALSE;
+  mInited = PR_FALSE;
 }
 
 nsMsgBiffManager::~nsMsgBiffManager()
 {
-  nsresult rv;
   
   if (mBiffTimer) {
     mBiffTimer->Cancel();
@@ -81,31 +81,33 @@ nsMsgBiffManager::~nsMsgBiffManager()
   if(!mHaveShutdown)
   {
     Shutdown();
-    //Don't remove from Observer service in Shutdown because Shutdown also gets called
-    //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-    nsCOMPtr<nsIObserverService> observerService = 
-      do_GetService("@mozilla.org/observer-service;1", &rv);
-    if (NS_SUCCEEDED(rv))
-    {    
-      observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
-    }
   }
 }
 
-nsresult nsMsgBiffManager::Init()
+NS_IMETHODIMP nsMsgBiffManager::Init()
 {
+  if (mInited)
+    return NS_OK;
+
+  mInited = PR_TRUE;
   nsresult rv;
   
-  mBiffArray = new nsVoidArray();
-  if(!mBiffArray)
-    return NS_ERROR_OUT_OF_MEMORY;
-  
   nsCOMPtr<nsIMsgAccountManager> accountManager = 
-    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv))
   {
     accountManager->AddIncomingServerListener(this);
   }
+
+  if(mHaveShutdown) //in turbo mode on profile change we don't need to do anything below this
+  {
+    mHaveShutdown = PR_FALSE;
+    return NS_OK;
+  }
+
+  mBiffArray = new nsVoidArray();
+  if(!mBiffArray)
+    return NS_ERROR_OUT_OF_MEMORY;
   
   nsCOMPtr<nsIObserverService> observerService = 
     do_GetService("@mozilla.org/observer-service;1", &rv);
@@ -137,6 +139,7 @@ NS_IMETHODIMP nsMsgBiffManager::Shutdown()
   }
   
   mHaveShutdown = PR_TRUE;
+  mInited = PR_FALSE;
   return NS_OK;
 }
 
@@ -348,5 +351,4 @@ nsresult nsMsgBiffManager::PerformBiff()
   SetupNextBiff();
   return NS_OK;
 }
-
 

@@ -204,13 +204,15 @@ nsresult nsMsgAccountManager::Shutdown()
   {
     WriteToFolderCache(m_msgFolderCache);
   }
-  nsCOMPtr<nsIMsgBiffManager> biffService = do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && biffService)
-    biffService->Shutdown();
 
   CloseCachedConnections();
   UnloadAccounts();
-
+  
+  //shutdown removes nsIIncomingServer listener from biff manager, so do it after accounts have been unloaded
+  nsCOMPtr<nsIMsgBiffManager> biffService = do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && biffService)
+    biffService->Shutdown();
+  
   if (m_prefs) {
     nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
     m_prefs = 0;
@@ -1111,6 +1113,7 @@ NS_IMETHODIMP
 nsMsgAccountManager::GetAccounts(nsISupportsArray **_retval)
 {
   nsresult rv;
+  
   rv = LoadAccounts();
   if (NS_FAILED(rv)) return rv;
   
@@ -1285,6 +1288,9 @@ nsMsgAccountManager::LoadAccounts()
   //Ensure biff service has started
   nsCOMPtr<nsIMsgBiffManager> biffService = 
            do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv))
+    biffService->Init();
   
   // Ensure messenger OS integration service has started
   // note, you can't expect the integrationService to be there
@@ -1624,8 +1630,8 @@ nsMsgAccountManager::findAccountByKey(nsISupports* element, void *aData)
 
 NS_IMETHODIMP nsMsgAccountManager::AddIncomingServerListener(nsIIncomingServerListener *serverListener)
 {
-    m_incomingServerListeners->AppendElement(serverListener);
-    return NS_OK;
+   m_incomingServerListeners->AppendElement(serverListener);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgAccountManager::RemoveIncomingServerListener(nsIIncomingServerListener *serverListener)
