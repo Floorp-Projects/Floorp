@@ -210,23 +210,6 @@ void DeleteWinRegKey(HKEY hkRootKey, LPSTR szKey, BOOL bAbsoluteDelete)
   }
 }
 
-void DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName)
-{
-  HKEY    hkResult;
-  DWORD   dwErr;
-
-  dwErr = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
-  if(dwErr == ERROR_SUCCESS)
-  {
-    if(*szName == '\0')
-      dwErr = RegDeleteValue(hkResult, NULL);
-    else
-      dwErr = RegDeleteValue(hkResult, szName);
-
-    RegCloseKey(hkResult);
-  }
-}
-
 void ParseForUninstallCommand(LPSTR szString, LPSTR szKeyStr, LPSTR szFile, DWORD dwFileBufSize, LPSTR szParam, DWORD dwParamBufSize)
 {
   LPSTR   szFirstNonSpace;
