@@ -146,6 +146,10 @@ static nsEventStatus
 HandleScrollEvent ( EventMouseWheelAxis inAxis, PRBool inByLine, PRInt32 inDelta,
                      Point inMouseLoc, nsIWidget* inWidget )
 {
+  NS_ASSERTION(inWidget, "HandleScrollEvent doesn't work with a null widget");
+  if (!inWidget)
+    return nsEventStatus_eIgnore;
+
   nsMouseScrollEvent scrollEvent;
   
   scrollEvent.scrollFlags = 
