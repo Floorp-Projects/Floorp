@@ -6,6 +6,7 @@ calendar.jar:
     content/calendar/calendarClipboard.js (content/calendarClipboard.js)
     content/calendar/calendarDayView.js (content/calendarDayView.js)
     content/calendar/calendarDayView.xul (content/calendarDayView.xul)
+    content/calendar/calendarDragDrop.js (content/calendarDragDrop.js)
     content/calendar/calendarEvent.js (content/calendarEvent.js)
     content/calendar/calendarEventAlertDialog.js (content/calendarEventAlertDialog.js)
     content/calendar/calendarEventAlertDialog.xul (content/calendarEventAlertDialog.xul)
