@@ -10,6 +10,7 @@
 <!ENTITY sidebar.panel.whats-related "What's Related">
 <!ENTITY sidebar.panel.search "Search">
 <!ENTITY sidebar.panel.tinderbox "Tinderbox">
+<!ENTITY sidebar.panel.tinderbox-ports "Tinderbox-Ports">
 <!ENTITY sidebar.nc-panel.stocks "Stocks">
 <!ENTITY sidebar.panel.client-bookmarks "Bookmarks">
 ]
@@ -24,6 +25,7 @@
         <RDF:li resource="urn:sidebar:panel:whats-related"/>
         <RDF:li resource="urn:sidebar:panel:search"/>
         <RDF:li resource="urn:sidebar:panel:tinderbox"/>
+        <RDF:li resource="urn:sidebar:panel:tinderbox-ports"/>
         <RDF:li resource="urn:sidebar:panel:bookmarks"/>
       </RDF:Seq>
     </NC:panel-list>
