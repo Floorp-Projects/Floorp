@@ -48,6 +48,9 @@ public:
   // Set whether or not tags & classes are case sensitive or uppercased
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
 
+  // Set whether or not to emulate Nav quirks
+  NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
+
   // Set loader to use for child sheets
   NS_IMETHOD SetChildLoader(nsICSSLoader* aChildLoader) = 0;
 

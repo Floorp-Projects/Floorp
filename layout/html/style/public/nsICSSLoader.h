@@ -46,6 +46,7 @@ public:
   NS_IMETHOD DropDocumentReference(void) = 0; // notification that doc is going away
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
+  NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
   NS_IMETHOD SetPreferredSheet(const nsString& aTitle) = 0;
 
   // Get/Recycle a CSS parser for general use
