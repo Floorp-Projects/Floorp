@@ -651,7 +651,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
   if(0<aDest.mLength) {
     while(--index>=0) {
       PRUnichar theChar=GetCharAt(aDest,index);
-      thePos=gRFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
+      thePos=gFindChars[aSet.mCharSize](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
       if(kNotFound!=thePos)
         return index;
     } //while
@@ -691,7 +691,7 @@ PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PR
 
 //----------------------------------------------------------------------------------------
 
-CSharedStrBuffer::CSharedStrBuffer(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
+CBufDescriptor::CBufDescriptor(char* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
   mBuffer=aString;
   mCharSize=eOneByte;
   mStackBased=aStackBased;
@@ -704,7 +704,7 @@ CSharedStrBuffer::CSharedStrBuffer(char* aString,PRBool aStackBased,PRUint32 aCa
   }
 }
 
-CSharedStrBuffer::CSharedStrBuffer(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
+CBufDescriptor::CBufDescriptor(PRUnichar* aString,PRBool aStackBased,PRUint32 aCapacity,PRInt32 aLength) { 
   mBuffer=(char*)aString;
   mCharSize=eTwoByte;
   mStackBased=aStackBased;
