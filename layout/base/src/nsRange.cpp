@@ -21,6 +21,8 @@
  * nsRange.cpp: Implementation of the nsIDOMRange object.
  */
 
+#include "nsIDOMRange.h"
+
 class nsRange : public nsIDOMRange
 {
 public:
