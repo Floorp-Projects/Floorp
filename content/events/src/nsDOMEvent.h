@@ -223,9 +223,6 @@ protected:
 
   nsDOMEvent() {}; // private constructor for pool, not for general use
 
-  /** event pool used as a simple recycler for objects of this class */
-  static nsDOMEvent gEventPool;
-
   /** bit to say whether the event pool is in use or not.
     * note that it would be trivial to make this a bitmap if we ever
     * wanted to increase the size of the pool from one.  But with our

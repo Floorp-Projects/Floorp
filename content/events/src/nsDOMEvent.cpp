@@ -76,8 +76,10 @@ static char* mEventNames[] = {
   "DOMAttrModified", "DOMCharacterDataModified"
 }; 
 
+/** event pool used as a simple recycler for objects of this class */
+static PRUint8 gEventPool[ sizeof(nsDOMEvent) ];
+
 /* declare static class data */
-nsDOMEvent nsDOMEvent::gEventPool;
 PRBool nsDOMEvent::gEventPoolInUse=PR_FALSE;
 
 #ifdef NS_DEBUG   // metrics for measuring event pool use
