@@ -54,7 +54,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 
 
-static nsresult
+static NS_METHOD
 RegisterProc(nsIComponentManager *aCompMgr,
              nsIFile *aPath,
              const char *registryLocation,
@@ -76,7 +76,7 @@ RegisterProc(nsIComponentManager *aCompMgr,
                                    getter_Copies(previous));
     return rv;
 }
-static nsresult 
+static NS_METHOD 
 UnregisterProc(nsIComponentManager *aCompMgr,
                nsIFile *aPath,
                const char *registryLocation,
