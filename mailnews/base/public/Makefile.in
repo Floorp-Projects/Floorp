@@ -26,6 +26,7 @@ IDLSRCS =				  \
 		nsIMsgHost.idl		  \
 		nsIMsgGroupRecord.idl	  \
 		nsIMsgFolder.idl	  \
+		nsIDOMMsgAppCore.idl	\
 		$(NULL)
 
 EXPORTS =				\
