@@ -66,7 +66,7 @@
 #include "nsILabel.h"
 #include "nsWidgetSupport.h"
 
-#include "nsITreeView.h"
+#include "nsIContentConnector.h"
 
 #include "resources.h"
 
@@ -141,7 +141,7 @@ static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIThrobberIID, NS_ITHROBBER_IID);
-static NS_DEFINE_IID(kITreeViewIID, NS_ITREEVIEW_IID);
+static NS_DEFINE_IID(kIContentConnectorIID, NS_ICONTENTCONNECTOR_IID);
 static NS_DEFINE_IID(kCTreeViewCID, NS_TREEVIEW_CID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
@@ -882,8 +882,8 @@ nsBrowserWindow::DoTreeView()
 
 	r = nsRect(0,0,r.width,r.height);
 
-	rv = nsRepository::CreateInstance(kCTreeViewCID, nsnull, kITreeViewIID,
-                                    (void**)&mTreeView);
+	rv = nsRepository::CreateInstance(kCTreeViewCID, nsnull, kIContentConnectorIID,
+                                       (void**)&mTreeView);
 	if (NS_OK != rv) {
 	  return;
 	}
@@ -1084,6 +1084,7 @@ nsBrowserWindow::~nsBrowserWindow()
 {
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mAppShell);
+  NS_IF_RELEASE(mTreeView);
 }
 
 NS_IMPL_ADDREF(nsBrowserWindow)
