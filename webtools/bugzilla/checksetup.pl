@@ -2899,6 +2899,9 @@ if (GetFieldDef("bugs","qacontact_accessible")) {
 }
 
 # 2002-03-15 bbaetz@student.usyd.edu.au - bug 129466
+# 2002-05-13 preed@sigkill.com - bug 129446 patch backported to the 
+#  BUGZILLA-2_14_1-BRANCH as a security blocker for the 2.14.2 release
+# 
 # Use the ip, not the hostname, in the logincookies table
 if (GetFieldDef("logincookies", "hostname")) {
     # We've changed what we match against, so all entries are now invalid
