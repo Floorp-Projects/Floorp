@@ -434,7 +434,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
   rv = CreateImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
   if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
   if (aProtocol)
   {
     rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
@@ -444,7 +444,7 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
     if (NS_FAILED(rv))
     {
       NS_ASSERTION(PR_FALSE, "shouldn't get an error loading url");
-        rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
+      rv = aProtocol->LoadUrl(mailnewsurl, aConsumer);
     }
   }
   else
@@ -829,29 +829,28 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 
 nsresult
 nsImapIncomingServer::CreateProtocolInstance(nsIEventQueue *aEventQueue, 
-                                           nsIImapProtocol ** aImapConnection)
+                                             nsIImapProtocol ** aImapConnection)
 {
-	// create a new connection and add it to the connection cache
-	// we may need to flag the protocol connection as busy so we don't get
-    // a race 
-	// condition where someone else goes through this code 
-	nsIImapProtocol * protocolInstance = nsnull;
-	nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
-                                            NS_GET_IID(nsIImapProtocol),
-                                            (void **) &protocolInstance);
-	if (NS_SUCCEEDED(rv) && protocolInstance)
-    {
-        nsCOMPtr<nsIImapHostSessionList> hostSession = 
-                 do_GetService(kCImapHostSessionListCID, &rv);
-        if (NS_SUCCEEDED(rv))
-            rv = protocolInstance->Initialize(hostSession, aEventQueue);
-    }
-	
-	// take the protocol instance and add it to the connectionCache
-	if (protocolInstance)
-		m_connectionCache->AppendElement(protocolInstance);
-	*aImapConnection = protocolInstance; // this is already ref counted.
-	return rv;
+  // create a new connection and add it to the connection cache
+  // we may need to flag the protocol connection as busy so we don't get
+  // a race condition where someone else goes through this code 
+  nsIImapProtocol * protocolInstance = nsnull;
+  nsresult rv = nsComponentManager::CreateInstance(kImapProtocolCID, nsnull,
+    NS_GET_IID(nsIImapProtocol),
+    (void **) &protocolInstance);
+  if (NS_SUCCEEDED(rv) && protocolInstance)
+  {
+    nsCOMPtr<nsIImapHostSessionList> hostSession = 
+      do_GetService(kCImapHostSessionListCID, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = protocolInstance->Initialize(hostSession, aEventQueue);
+  }
+  
+  // take the protocol instance and add it to the connectionCache
+  if (protocolInstance)
+    m_connectionCache->AppendElement(protocolInstance);
+  *aImapConnection = protocolInstance; // this is already ref counted.
+  return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::CloseConnectionForFolder(nsIMsgFolder *aMsgFolder)
@@ -1124,18 +1123,26 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
   if (NS_FAILED(rv))
     return rv;
 
+  nsCAutoString dupFolderPath(folderPath);
+  if (dupFolderPath.Last() == hierarchyDelimiter)
+  {
+      dupFolderPath.SetLength(dupFolderPath.Length()-1);
+      // *** this is what we did in 4.x in order to list uw folder only
+      // mailbox in order to get the \NoSelect flag
+      explicitlyVerify = !(boxFlags & kNameSpace);
+  }
   if (mDoingSubscribeDialog) 
   {
     // Make sure the imapmailfolder object has the right delimiter because the unsubscribed
     // folders (those not in the 'lsub' list) have the delimiter set to the default ('^').
-    if (a_nsIFolder && folderPath && (*folderPath))
+    if (a_nsIFolder && !dupFolderPath.IsEmpty())
     {
       nsCOMPtr<nsIMsgFolder> msgFolder;
       nsCOMPtr<nsIFolder> subFolder;
       PRBool isNamespace = PR_FALSE;
       PRBool noSelect = PR_FALSE;
 
-      rv = a_nsIFolder->FindSubFolder(folderPath, getter_AddRefs(subFolder));
+      rv = a_nsIFolder->FindSubFolder(dupFolderPath.get(), getter_AddRefs(subFolder));
       NS_ENSURE_SUCCESS(rv,rv);
       msgFolder = do_QueryInterface(subFolder, &rv);
       m_subscribeFolders.AppendObject(msgFolder);
@@ -1146,7 +1153,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       imapFolder->SetHierarchyDelimiter(hierarchyDelimiter);
       isNamespace = (boxFlags & kNameSpace) != 0;
       if (!isNamespace && !noSelect)
-        rv = AddTo(folderPath, mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
+        rv = AddTo(dupFolderPath.get(), mDoingLsub /* add as subscribed */, mDoingLsub /* change if exists */);
       NS_ENSURE_SUCCESS(rv,rv);
       return rv;
     }
@@ -1156,14 +1163,6 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
   if (NS_FAILED(rv))
     return rv;
 
-  nsCAutoString dupFolderPath(folderPath);
-  if (dupFolderPath.Last() == hierarchyDelimiter)
-  {
-      dupFolderPath.SetLength(dupFolderPath.Length()-1);
-      // *** this is what we did in 4.x in order to list uw folder only
-      // mailbox in order to get the \NoSelect flag
-      explicitlyVerify = !(boxFlags & kNameSpace);
-  }
   nsCAutoString tempFolderName(dupFolderPath);
   nsCAutoString tokenStr, remStr, changedStr;
   PRInt32 slashPos = tempFolderName.FindChar('/');
