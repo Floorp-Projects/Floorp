@@ -76,5 +76,9 @@ interface nsISubscribableServer : nsISupports {
     void getChildren(in string path, in nsISupportsArray array);
     // if path is null, use the root
     void getFirstChildURI(in string path, out string result);
+
+    // for searching
+    void setSearchValue(in string searchValue);
+    readonly attribute boolean supportsSubscribeSearch;
 };
 

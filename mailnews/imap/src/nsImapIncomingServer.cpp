@@ -3131,3 +3131,15 @@ nsImapIncomingServer::GetFormattedName(const PRUnichar *prettyName, PRUnichar **
     return rv;
 }
 
+NS_IMETHODIMP
+nsImapIncomingServer::SetSearchValue(const char *searchValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetSupportsSubscribeSearch(PRBool *retVal)
+{
+   *retVal = PR_FALSE;
+   return NS_OK;
+}

@@ -5,18 +5,21 @@ var gServerURI = null;
 var gSubscribableServer = null;
 var gStatusBar = null;
 var gNameField = null;
+var gNameFieldLabel = null;
 var gFolderDelimiter = ".";
 var gStatusFeedback = new nsMsgStatusFeedback;
-
+var gSubscribeDeck = null;
+var gSearchView = null;
+var gSearchOutlinerBoxObject = null;
 // the rdf service
 var RDF = '@mozilla.org/rdf/rdf-service;1'
 RDF = Components.classes[RDF].getService();
 RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 var subscribeDS = RDF.GetDataSource("rdf:subscribe");
 
-// used for caching the tree children (in typedown)
-var lastTreeChildrenValue = null;
-var lastTreeChildren = null;
+// get the "subscribed" atom
+var atomService = Components.classes["@mozilla.org/atom-service;1"].getService().QueryInterface(Components.interfaces.nsIAtomService);
+var gSubscribedAtom = atomService.getAtom("subscribed").QueryInterface(Components.interfaces.nsISupports);
 
 var gSubscribeBundle;
 
@@ -34,21 +37,17 @@ function Stop()
 
 function SetServerTypeSpecificTextValues()
 {
-	if (!gServerURI) return;
+    if (!gServerURI) return;
 
-	var serverType = GetMsgFolderFromUri(gServerURI).server.type;
+    var serverType = GetMsgFolderFromUri(gServerURI).server.type;
 	
-	//set the server specific ui elements
-
-    var element = document.getElementById("foldertextlabel");
-	var stringName = "foldertextfor-" + serverType;
-	var stringval = gSubscribeBundle.getString(stringName);
-	element.setAttribute('value',stringval);
-
-	stringName = "foldersheaderfor-" + serverType;
-	stringval = gSubscribeBundle.getString(stringName);
-    element = document.getElementById("foldersheaderlabel");
-	element.setAttribute('label',stringval);
+    // set the server specific ui elements
+    var stringName = "foldersheaderfor-" + serverType;
+    var stringval = gSubscribeBundle.getString(stringName);
+    var element = document.getElementById("foldersheaderlabel");
+    element.setAttribute('label',stringval);
+    element = document.getElementById("nameCol");
+    element.setAttribute('label',stringval);
 
     //set the delimiter
     try {
@@ -116,35 +115,36 @@ function SetUpTree(forceToServer)
 {
 	//dump("SetUpTree()\n");
 	
-	// forget the cached tree children
-	lastTreeChildrenValue = null;
-	lastTreeChildren = null;
-
 	gStatusBar = document.getElementById('statusbar-icon');
 	if (!gServerURI) return;
-
 
 	var folder = GetMsgFolderFromUri(gServerURI);
 	var server = folder.server;
 
 	try {
-		gSubscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
-	    gSubscribeTree.setAttribute('ref',null);
+          gSubscribableServer = server.QueryInterface(Components.interfaces.nsISubscribableServer);
+          gSubscribeTree.setAttribute('ref',null);
 
-        // clear out the text field when switching server
-		gNameField.setAttribute('value',"");
+          // enable (or disable) the search related UI
+          EnableSearchUI();
 
-        gSubscribeTree.database.RemoveDataSource(subscribeDS);
-		gSubscribableServer.subscribeListener = MySubscribeListener;
+          // clear out the text field when switching server
+          gNameField.setAttribute('value',"");
 
-		gStatusFeedback.showProgress(0);
-		gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
-		gStatusBar.setAttribute("mode","undetermined");
+          // since there is no text, switch to the non-search view...
+          SwitchToNormalView();
 
-		gSubscribableServer.startPopulating(msgWindow, forceToServer);
+          gSubscribeTree.database.RemoveDataSource(subscribeDS);
+          gSubscribableServer.subscribeListener = MySubscribeListener;
+
+          gStatusFeedback.showProgress(0);
+          gStatusFeedback.showStatusString(gSubscribeBundle.getString("pleaseWaitString"));
+          gStatusBar.setAttribute("mode","undetermined");
+
+          gSubscribableServer.startPopulating(msgWindow, forceToServer);
 	}
 	catch (ex) {
-		//dump("failed to populate subscribe ds: " + ex + "\n");
+          //dump("failed to populate subscribe ds: " + ex + "\n");
 	}
 }
 
@@ -159,19 +159,34 @@ function SubscribeOnUnload()
   }
 }
 
+function EnableSearchUI()
+{
+  if (gSubscribableServer.supportsSubscribeSearch) {
+    gNameField.removeAttribute('disabled');
+    gNameFieldLabel.removeAttribute('disabled');
+  }
+  else {
+    gNameField.setAttribute('disabled',true);
+    gNameFieldLabel.setAttribute('disabled',true);
+  }
+}
+
 function SubscribeOnLoad()
 {
-	//dump("SubscribeOnLoad()\n");
+  //dump("SubscribeOnLoad()\n");
   gSubscribeBundle = document.getElementById("bundle_subscribe");
 	
-    gSubscribeTree = document.getElementById('subscribetree');
-	gNameField = document.getElementById('namefield');
+  gSubscribeTree = document.getElementById('subscribetree');
+  gSearchOutlinerBoxObject = document.getElementById("searchOutliner").boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+  gNameField = document.getElementById('namefield');
+  gNameFieldLabel = document.getElementById('namefieldlabel');
+  gSubscribeDeck = document.getElementById("subscribedeck");
 
-	msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
-    msgWindow.statusFeedback = gStatusFeedback;
-	msgWindow.SetDOMWindow(window);
+  msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
+  msgWindow.statusFeedback = gStatusFeedback;
+  msgWindow.SetDOMWindow(window);
 
-	doSetOKCancel(subscribeOK,subscribeCancel);
+  doSetOKCancel(subscribeOK,subscribeCancel);
 
 	// look in arguments[0] for parameters
 	if (window.arguments && window.arguments[0]) {
@@ -189,6 +204,8 @@ function SubscribeOnLoad()
 		//dump("folder.server="+folder.server+"\n");
 		try {
 			gSubscribableServer = folder.server.QueryInterface(Components.interfaces.nsISubscribableServer);
+                        // enable (or disable) the search related UI
+                        EnableSearchUI();
 			gServerURI = folder.server.serverURI;
 		}
 		catch (ex) {
@@ -236,28 +253,26 @@ function subscribeOK()
 
 function subscribeCancel()
 {
-	//dump("in subscribeCancel()\n");
-	Stop();
-	if (gSubscribableServer) {
-		gSubscribableServer.subscribeCleanup();
-	}
-	return true;
+  Stop();
+  if (gSubscribableServer) {
+    gSubscribableServer.subscribeCleanup();
+  }
+  return true;
 }
 
 function SetState(name,state)
 {
-	//dump("SetState(" + name + "," + state + ")\n");
-
-    var changed = gSubscribableServer.setState(name, state);
-	if (changed) {
-        StateChanged(name,state);
-	}
+  var changed = gSubscribableServer.setState(name, state);
+  if (changed) {
+    StateChanged(name,state);
+  }
 }
 
-function changeTableRecord(server, name, state) {
-    this.server = server;
-    this.name = name;
-    this.state = state;
+function changeTableRecord(server, name, state) 
+{
+  this.server = server;
+  this.name = name;
+  this.state = state;
 }
 
 function StateChanged(name,state)
@@ -278,35 +293,112 @@ function StateChanged(name,state)
   }
 }
 
+function InSearchMode()
+{
+    // search is the second card in the deck
+    return (gSubscribeDeck.getAttribute("index") == "1");
+}
+
+function SearchOnClick(event)
+{
+  var t = event.originalTarget;
+
+  if (t.localName == "outlinerbody") {
+    var row = new Object;
+    var colID = new Object;
+    var childElt = new Object;
+
+    gSearchOutlinerBoxObject.getCellAt(event.clientX, event.clientY, row, colID, childElt);
+
+    // if they are clicking on empty rows, drop the event 
+    if (row.value + 1 > gSearchView.rowCount) return;
+
+    if (colID.value == "subscribedCol") {
+      if (event.detail != 2) {
+        // single clicked on the check box 
+        // (in the "subscribedCol" column) reverse state
+        // if double click, do nothing
+        ReverseStateFromRow(row.value);
+      }
+    }
+    else if (event.detail == 2) {
+      // double clicked on a row, reverse state
+      ReverseStateFromRow(row.value);
+    }
+  }
+}
+
+function ReverseStateFromRow(row)
+{
+    // to determine if the row is subscribed or not,
+    // we get the properties for the "subscribedCol" cell in the row
+    // and look for the "subscribed" property
+    // if the "subscribed" atom is in the list of properties
+    // we are subscribed
+    var properties = Components.classes["@mozilla.org/supports-array;1"].createInstance(Components.interfaces.nsISupportsArray);
+    gSearchView.getCellProperties(row, "subscribedCol", properties);
+
+    var isSubscribed = (properties.GetIndexOf(gSubscribedAtom) != -1);
+   
+    var name = gSearchView.getCellText(row,"nameCol");
+    // we need to escape the name because
+    // some news servers have newsgroups with non ASCII names
+    // we need to escape those name before calling SetState()
+    SetState(escape(name), !isSubscribed);
+}
+
 function SetSubscribeState(state)
 {
   try {
-	var groupList = gSubscribeTree.selectedItems;
-	for (var i=0;i<groupList.length;i++) {
-		var group = groupList[i];
-		var name = group.getAttribute('name');
-		SetState(name,state);
-	}
+    if (InSearchMode()) {
+        // if we are in "search" mode, we need to iterate over the
+        // outliner selection, and set the state for all elements
+        // in the selection
+        var outlinerSelection = gSearchView.selection; 
+        for (var i=0;i<outlinerSelection.getRangeCount();i++) {
+          var start = new Object;
+          var end = new Object;
+          outlinerSelection.getRangeAt(i,start,end);
+          for (var k=start.value;k<=end.value;k++) {
+            var name = gSearchView.getCellText(k,"nameCol");
+            // we need to escape the name because
+            // some news servers have newsgroups with non ASCII names
+            // we need to escape those name before calling SetState()
+            SetState(escape(name),state);
+          }
+        }
+        // force a repaint of the outliner since states have changed
+        InvalidateSearchOutliner();
+    }
+    else {
+      // we are in the "normal" mode
+      var groupList = gSubscribeTree.selectedItems;
+      for (var i=0;i<groupList.length;i++) {
+        var group = groupList[i];
+        var name = group.getAttribute('name');
+        SetState(name,state);
+      }
+    }
   }
   catch (ex) {
-	//dump("SetSubscribedState failed:  " + ex + "\n");
+    //dump("SetSubscribedState failed:  " + ex + "\n");
   }
 }
 
 function ReverseStateFromNode(node)
 {
-	var state;
+  var state;
 
-	if (node.getAttribute('Subscribed') == "true") {
-		state = false;
-	}
-	else {
-		state = true;
-	}
-	
-	var uri = node.getAttribute('id');
-	var	name = node.getAttribute('name');
-	SetState(name, state);
+  if (node.getAttribute('Subscribed') == "true") {
+    state = false;
+  }
+  else {
+    state = true;
+  }
+ 
+  var uri = node.getAttribute('id');
+  var name = node.getAttribute('name');
+  SetState(name, state);
 }
 
 
@@ -340,10 +432,6 @@ function SubscribeOnClick(event)
                 return;
             }
 
-			var name = t.parentNode.parentNode.getAttribute('name');
-			if (name && (name.length > 0)) {
-				gNameField.setAttribute('value',name);
-			}
 		}
 	}
 }
@@ -354,144 +442,34 @@ function Refresh()
 	SetUpTree(true);
 }
 
-function trackGroupInTree()
+function InvalidateSearchOutliner()
 {
-  var portion = gNameField.value;
-  selectNodeByName( portion );  
+    gSearchOutlinerBoxObject.invalidate();
 }
 
-
-function selectNodeByName( aMatchString )
+function SwitchToNormalView()
 {
-  var lastDot = aMatchString.lastIndexOf(gFolderDelimiter);
-  var nodeValue = lastDot != -1 ? aMatchString.substring(0, lastDot) : aMatchString;
-  
-  var chain = aMatchString.split(gFolderDelimiter);
-  var node;
-  if( chain.length == 1 ) {
-	if (lastTreeChildrenValue != "") {
-    	node = getTreechildren(gSubscribeTree);
-    	if( !node ) return;
-		lastTreeChildrenValue = "";
-		lastTreeChildren = node;
-		//dump("cache miss!\n");
-	}
-	else {
-		node = lastTreeChildren;
-		//dump("cache hit!\n");
-	}
+  // the first card in the deck is the "normal" view
+  gSubscribeDeck.setAttribute("index","0");
+}
+
+function SwitchToSearchView()
+{
+  // the second card in the deck is the "search" view
+  gSubscribeDeck.setAttribute("index","1");
+}
+
+function Search()
+{
+  var searchValue = gNameField.value;
+  if (searchValue.length && gSubscribableServer.supportsSubscribeSearch) {
+    SwitchToSearchView();
+    gSubscribableServer.setSearchValue(searchValue);
+
+    gSearchView = gSubscribableServer.QueryInterface(Components.interfaces.nsIOutlinerView);
+    gSearchOutlinerBoxObject.view = gSearchView;
   }
   else {
-	// if we can, use the cached tree children
-	if (nodeValue != lastTreeChildrenValue) {
-	try {
-    node = gSubscribeTree.getElementsByAttribute("name",nodeValue)[0];
-	}
-	catch (ex) {
-		// this can happen if you do "spoon.foo" and there is no "spoon"
-		return;
-	}
-		// expand the node, if we need to
-    if( node.getAttribute("container") == "true" && 
-        	node.getAttribute("open") != "true" ) {
-      		node.setAttribute("open","true");
-		}
-    node = getTreechildren(node);
-
-		lastTreeChildren = node;
-		lastTreeChildrenValue = nodeValue;
-		//dump("cache miss!\n");
-	}
-	else {
-		//dump("cache hit!\n");
-		node = lastTreeChildren;
-	}
+    SwitchToNormalView();
   }
-  
-  // find the match, using a binary search.
-  var totalItems = node.childNodes.length;
-  if (totalItems == 0) return;
-  var lastLow = 0;
-  var lastHigh = totalItems;
-  while (true) {
-  	var i = Math.floor((lastHigh + lastLow) / 2);
-	//dump(i+","+lastLow+","+lastHigh+"\n");
-	var currItem = node.childNodes[i];
-	var currValue = (currItem.getAttribute("name")).substring(0,aMatchString.length);
-	//dump(currValue+" vs "+aMatchString+"\n");
-	if (currValue > aMatchString) {
-		if (lastHigh == i) return;
-		lastHigh = i;
-    }
-	else if (currValue < aMatchString) {
-		if (lastLow == i) return;
-		lastLow = i;
-	}
-	else {
-      SelectFirstMatch(lastLow, i, node.childNodes, aMatchString);
-      return;
-	}
-  }
-}
-
-function SelectFirstMatch(startNode, endNode, nodes, matchStr)
-{
-  // this code is to make sure we select the alphabetically first match
-  // not just any match (see bug #60242)
-
-  // find the match, using a binary search.
-
-  var lastMatch = nodes[endNode];
-  var totalItems = endNode - startNode;
-  if (totalItems == 0) {
-    gSubscribeTree.selectItem( lastMatch );
-    gSubscribeTree.ensureElementIsVisible( lastMatch );
-    return;
-  }
-
-  var lastLow = startNode;
-  var lastHigh = endNode;
-  while (true) {
-    var i = Math.floor((lastHigh + lastLow) / 2);
-    //dump(i+","+lastLow+","+lastHigh+"\n");
-    var currItem = nodes[i];
-    var currValue = (currItem.getAttribute("name")).substring(0,matchStr.length);
-    //dump(currValue+" vs "+matchStr+"\n");
-    if (currValue > matchStr) {
-        gSubscribeTree.selectItem( lastMatch );
-        gSubscribeTree.ensureElementIsVisible( lastMatch );
-        return;
-    }
-    else if (currValue < matchStr) {
-        if (lastLow == i) {
-            gSubscribeTree.selectItem( lastMatch );
-            gSubscribeTree.ensureElementIsVisible( lastMatch );
-            return;
-        }
-        lastLow = i;
-    }
-    else {
-        lastMatch = currItem;
-        if (lastHigh == i) {
-            gSubscribeTree.selectItem( lastMatch );
-            gSubscribeTree.ensureElementIsVisible( lastMatch );
-            return;
-        }
-        lastHigh = i;
-    }
-  }
-}
-
-function getTreechildren( aTreeNode )
-{
-  if( aTreeNode.childNodes ) 
-    {
-      for( var i = 0; i < aTreeNode.childNodes.length; i++ )
-      {
-        if( aTreeNode.childNodes[i].localName.toLowerCase() == "treechildren" )
-          return aTreeNode.childNodes[i];
-      }
-      return aTreeNode;
-    }
-  return null;
 }

@@ -59,3 +59,17 @@
 #subscribetree {
   margin: 0px 0px 0px 0px !important;
 }
+
+/* for search */
+
+outlinerbody:-moz-outliner-image(nameCol, nntp) {
+  list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
+}
+
+outlinerbody:-moz-outliner-image(subscribedCol) {
+  list-style-image: url("chrome://messenger/skin/dot.gif");
+}
+
+outlinerbody:-moz-outliner-image(subscribedCol, subscribed) {
+  list-style-image: url("chrome://messenger/skin/check.gif");
+}

@@ -41,78 +41,97 @@
 #include "nsITimer.h"
 #include "nsFileStream.h"
 
+#include "nsIOutlinerView.h"
+#include "nsIOutlinerSelection.h"
+#include "nsIAtom.h"
+
 class nsINntpUrl;
 class nsIMsgMailNewsUrl;
 
 /* get some implementation from nsMsgIncomingServer */
 class nsNntpIncomingServer : public nsMsgIncomingServer,
                              public nsINntpIncomingServer,
-			     public nsIUrlListener,
-			     public nsISubscribableServer,
-				 public nsMsgLineBuffer
-							 
+                             public nsIUrlListener,
+                             public nsISubscribableServer,
+                             public nsMsgLineBuffer,
+                             public nsIOutlinerView
+                             
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSINNTPINCOMINGSERVER
     NS_DECL_NSIURLLISTENER
     NS_DECL_NSISUBSCRIBABLESERVER
+    NS_DECL_NSIOUTLINERVIEW
 
     nsNntpIncomingServer();
     virtual ~nsNntpIncomingServer();
     
     NS_IMETHOD GetLocalStoreType(char * *type);
     NS_IMETHOD CloseCachedConnections();
-	NS_IMETHOD PerformBiff();
+    NS_IMETHOD PerformBiff();
     NS_IMETHOD PerformExpand(nsIMsgWindow *aMsgWindow);
     NS_IMETHOD GetFilterList(nsIMsgFilterList **aResult);
 
-	// for nsMsgLineBuffer
-	virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
+    // for nsMsgLineBuffer
+    virtual PRInt32 HandleLine(char *line, PRUint32 line_size);
 
     // override to clear all passwords associated with server
     NS_IMETHODIMP ForgetPassword();
     NS_IMETHOD GetCanSearchMessages(PRBool *canSearchMessages);
     NS_IMETHOD GetOfflineSupportLevel(PRInt32 *aSupportLevel);
     NS_IMETHOD GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer);
+    nsresult AppendIfSearchMatch(const char *newsgroupName);
 
 protected:
-	nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
+    nsresult CreateProtocolInstance(nsINNTPProtocol ** aNntpConnection, nsIURI *url,
                                              nsIMsgWindow *window);
     PRBool ConnectionTimeOut(nsINNTPProtocol* aNntpConnection);
     nsCOMPtr<nsISupportsArray> m_connectionCache;
-	NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
-	nsByteArray		mHostInfoInputStream;	
+    NS_IMETHOD GetServerRequiresPasswordForBiff(PRBool *_retval);
+    nsByteArray        mHostInfoInputStream;    
     nsresult SetupNewsrcSaveTimer();
     static void OnNewsrcSaveTimer(nsITimer *timer, void *voidIncomingServer);
 
 private:
-	nsCStringArray mSubscribedNewsgroups;
-	nsCStringArray mGroupsOnServer;
+    nsCStringArray mSubscribedNewsgroups;
+    nsCStringArray mGroupsOnServer;
+    nsCStringArray mSubscribeSearchResult;
+    // the list of of subscribed newsgroups within a given
+    // subscribed dialog session.  
+    // we need to keep track of them so we know what to show as "checked"
+    // in the search view
+    nsCStringArray mTempSubscribed;
+    nsCOMPtr<nsIAtom> mSubscribedAtom;
+    nsCOMPtr<nsIAtom> mNntpAtom;
 
-	PRBool   mHasSeenBeginGroups;
-	nsresult WriteHostInfoFile();
-	nsresult LoadHostInfoFile();
+    nsCString mSearchValue;
+    nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
+    nsCOMPtr<nsIOutlinerSelection> mOutlinerSelection;
+
+    PRBool   mHasSeenBeginGroups;
+    nsresult WriteHostInfoFile();
+    nsresult LoadHostInfoFile();
     nsresult AddGroupOnServer(const char *name);
 
     PRBool mNewsrcHasChanged;
-	nsAdapterEnumerator *mGroupsEnumerator;
-	PRBool mHostInfoLoaded;
-	PRBool mHostInfoHasChanged;
-	nsCOMPtr <nsIFileSpec> mHostInfoFile;
-	
-	PRUint32 mLastGroupDate;
-	PRTime mFirstNewDate;
-	PRInt32 mUniqueId;	
-	PRBool mPushAuth;
+    nsAdapterEnumerator *mGroupsEnumerator;
+    PRBool mHostInfoLoaded;
+    PRBool mHostInfoHasChanged;
+    nsCOMPtr <nsIFileSpec> mHostInfoFile;
+    
+    PRUint32 mLastGroupDate;
+    PRTime mFirstNewDate;
+    PRInt32 mUniqueId;    
+    PRBool mPushAuth;
     PRUint32 mLastUpdatedTime;
-	PRInt32 mVersion;
+    PRInt32 mVersion;
     PRBool mPostingAllowed;
 
     nsCOMPtr<nsITimer> mNewsrcSaveTimer;
-	nsCOMPtr <nsIMsgWindow> mMsgWindow;
+    nsCOMPtr <nsIMsgWindow> mMsgWindow;
 
-	nsCOMPtr <nsISubscribableServer> mInner;
+    nsCOMPtr <nsISubscribableServer> mInner;
     nsresult EnsureInner();
     nsresult ClearInner();
     

@@ -81,8 +81,8 @@ Rights Reserved.
               </menulist>
             </row>
             <row>
-          		<text class="label" id="foldertextlabel" value="..." for="namefield"/>
-          		<textbox id="namefield" flex="1" oninput="trackGroupInTree();"/>
+          		<text class="label" id="namefieldlabel" value="&namefield.label;" for="namefield"/>
+          		<textbox id="namefield" flex="1" oninput="Search();"/>
             </row>
           </rows>
         </grid>
@@ -93,6 +93,8 @@ Rights Reserved.
         <spring/>
       </row>
       <row flex="1">
+      <deck id="subscribedeck" index="0">
+      <box id="normalview">
         <tree class="inset" flex="1"
               id="subscribetree"
               datasources="rdf:null"
@@ -127,6 +129,18 @@ Rights Reserved.
             </treerow>
           </treehead> 
         </tree>
+     </box>
+     <box id="searchview">
+       <outliner id="searchOutliner" flex="1" onclick="SearchOnClick(event);"> 
+         <outlinercol id="nameCol" label="..." class="outlinercol-header outlinercol-inset-header" flex="5" width="0" persist="hidden width" />
+         <splitter class="tree-splitter" />
+         <outlinercol id="subscribedCol" fixed="true" persist="hidden" class="outlinercol-header outlinercol-image outlinercol-inset-header subscribedColumnHeader" label="&subscribedHeader.label;" />
+         <splitter class="tree-splitter" />
+         <outlinercol id="messagesCol" label="&messagesHeader.label;" class="outlinercol-header outlinercol-inset-header" flex="1" width="0" persist="hidden width" />
+         <outlinerbody id="searchOutlinerBody" flex="1" />
+       </outliner>
+     </box>
+     </deck>
         <box orient="vertical">
           <button id="subscribe" class="dialog" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
           <button id="unsubscribe" class="dialog" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>

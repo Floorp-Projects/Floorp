@@ -798,3 +798,14 @@ nsSubscribableServer::CommitSubscribeChanges()
 	return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsSubscribableServer::SetSearchValue(const char *searchValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSubscribableServer::GetSupportsSubscribeSearch(PRBool *retVal)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
