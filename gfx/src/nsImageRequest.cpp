@@ -56,12 +56,12 @@ ImageRequestImpl::~ImageRequestImpl()
 
 nsresult
 ImageRequestImpl::Init(IL_GroupContext *aGroupContext, 
-		       const char* aUrl, 
-		       nsIImageRequestObserver *aObserver,
-		       const nscolor* aBackgroundColor,
-		       PRUint32 aWidth, PRUint32 aHeight,
-		       PRUint32 aFlags,
-           ilINetContext* aNetContext)
+                       const char* aUrl, 
+                       nsIImageRequestObserver *aObserver,
+                       const nscolor* aBackgroundColor,
+                       PRUint32 aWidth, PRUint32 aHeight,
+                       PRUint32 aFlags,
+                       ilINetContext* aNetContext)
 {
   NS_PRECONDITION(nsnull != aGroupContext, "null group context");
   NS_PRECONDITION(nsnull != aUrl, "null URL");
