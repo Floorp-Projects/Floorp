@@ -25,20 +25,6 @@
 #include <string.h>
 #include <time.h>
 #include "prtypes.h"
-
-/*
- * Not sure if prosdep is required on any platform but, for now,
- * we're including it on non-Unix platforms.
- */
-#ifndef NSPR20
-#include "prosdep.h"
-#else
-#ifdef XP_MAC
-#include "prosdep.h"
-#elif defined(XP_WIN)
-#include "md/prosdep.h"
-#endif
-#endif
 #include "prprf.h"
 #include "prmjtime.h"
 

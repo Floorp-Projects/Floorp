@@ -36,15 +36,8 @@
         And TRUE, FALSE, ON, OFF, YES, NO
 -----------------------------------------------------------------------------*/
 
-#ifdef NSPR20
 #include "prtypes.h"	/* for intn, etc. */
-#ifdef XP_MAC
-#include "prosdep.h"
-#else
-#include "md/prosdep.h"
-#endif
 #include "prlog.h"
-#endif /* NSPR20 */
 
 #ifndef _XP_Core_
 #define _XP_Core_
@@ -155,14 +148,6 @@
 
 /* simple common types */
 
-#if defined(XP_WIN) || defined(XP_OS2)
-#ifndef RESOURCE_STR
-#include "prtypes.h"
-#endif /* RESOURCE_STR */
-#else /* XP_WIN */
-#include "prtypes.h"
-#endif /* XP_WIN */
-
 #ifdef XP_MAC
 #include <Types.h>
 
@@ -180,7 +165,6 @@
     typedef int Bool;
     typedef int XP_Bool;
 #elif defined(XP_OS2) && !defined(RC_INVOKED)
-#include "prosdep.h"
     typedef unsigned long Bool;
     typedef unsigned long XP_Bool;
 #else
@@ -192,6 +176,10 @@
      */
     typedef char Bool;
     typedef char XP_Bool;
+#endif
+
+#if !defined(XP_WIN)
+typedef int (*FARPROC)();
 #endif
 
 #if defined(XP_WIN)
@@ -215,15 +203,7 @@
 #define FALSE 0
 #endif
 
-/* disable the TRUE redefinition warning
- * TRUE is defined by windows.h in the MSVC
- * development environment, and creates a
- * nasty warning for every file.  The only
- * way to turn it off is to disable all
- * macro redefinition warnings or to not
- * define TRUE here
- */
-#if !defined(TRUE) && !defined(XP_WIN)
+#ifndef TRUE
 #define TRUE !FALSE
 #endif
 

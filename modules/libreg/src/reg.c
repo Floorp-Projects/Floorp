@@ -41,9 +41,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <assert.h>
-#include <errno.h>
 
 #ifdef SUNOS4
   #include <unistd.h>  /* for SEEK_SET */
@@ -56,6 +54,10 @@
 #ifndef MAX_PATH
 #define MAX_PATH 1024
 #endif
+#elif defined(WIN32)
+#include <windef.h>  /* for MAX_PATH */
+#elif defined(XP_MAC)
+#define MAX_PATH 512
 #endif
 
 
@@ -206,7 +208,9 @@ static REGERR nr_OpenFile(char *path, FILEHANDLE *fh)
             else
                 return REGERR_FAIL;
                 
+#ifdef EMFILE  /* Mac doesn't have EMFILE. */
 		case EMFILE:	/* too many files open */
+#endif
 		default:
 			return REGERR_FAIL;
 		}

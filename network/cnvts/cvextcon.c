@@ -19,6 +19,7 @@
  */
 
 #include "xp.h"
+#include "prmem.h"
 #include "plstr.h"
 #include "netutils.h"
 #include "mkselect.h"

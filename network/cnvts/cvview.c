@@ -18,6 +18,7 @@
 
 /* Please leave outside of ifdef for windows precompiled headers */
 #include "xp.h"
+#include "prmem.h"
 #include "plstr.h"
 #include "netutils.h"
 #include "mkselect.h"
@@ -34,6 +35,19 @@
 
 #include "libmime.h"
 
+/* for select(), fd_set, struct timeval */
+#if defined(XP_UNIX)
+#include <sys/time.h>
+#include <sys/types.h>
+#include <unistd.h>
+#if defined(AIX)
+#include <sys/select.h>
+#endif
+#elif defined(XP_WIN)
+#include <windows.h>
+#elif defined(XP_MAC)
+#include "macsocket.h"
+#endif
 
 /* for XP_GetString() */
 #include <xpgetstr.h>

@@ -31,6 +31,7 @@
 #define _NET_PROTO_H_
 
 #include "xp_core.h"
+#include "prio.h"
 #include "ntypes.h"
 #include "shistele.h"
 #include "xp_list.h"

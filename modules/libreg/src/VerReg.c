@@ -31,7 +31,6 @@
  * --------------------------------------------------------------------
  */
 #include <fcntl.h>
-#include <errno.h>
 
 #if defined(XP_WIN)
 #include <io.h>
@@ -39,7 +38,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 
 #include "reg.h"
@@ -354,7 +352,9 @@ static REGERR vr_GetCheck(char *path, int32 *check)
 			return REGERR_NOFILE;
 
 		case EACCES:	/* file in use */
+#ifdef EMFILE  /* Mac doesn't have EMFILE. */
 		case EMFILE:	/* too many files open */
+#endif
 		default:
 			return REGERR_FAIL;
 		}
