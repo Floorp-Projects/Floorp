@@ -443,12 +443,13 @@ MOZ_ARG_ENABLE_STRING(toolkit,
 [  --enable-toolkit=\$val   Enable \$val fe (defaults to gtk)],
   [if test "$enableval" = "motif" \
         -o "$enableval" = "gtk" \
+	-o "$enableval" = "xlib" \
         -o "$useRhapsody" ; then
      dnl nglayout only supports building with one toolkit,
      dnl so ignore everything after the first comma (",").
      MOZ_TOOLKIT=`echo "$enableval" | sed -e "s/,.*$//"`
    else
-     AC_MSG_ERROR(Toolkit must be either gtk or motif.)
+     AC_MSG_ERROR(Toolkit must be xlib, gtk or motif.)
    fi], 
   [if test "$useRhapsody" ; then
      MOZ_TOOLKIT="rhapsody"
