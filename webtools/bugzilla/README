@@ -5,11 +5,14 @@ This is Bugzilla.  See <http://www.mozilla.org/bugs/>.
         DISCLAIMER
         ==========
 
-   This is not very well packaged code.  It's not packaged at all.  Don't
-come here expecting something you plop in a directory, twiddle a few
-things, and you're off and using it.  Work has to be done to get there.  
-We'd like to get there, but it wasn't clear when that would be, and so we
-decided to let people see it first.
+   Bugzilla is not a package where you can just plop it in a directory,
+twiddle a few things, and you're off.  Installing Bugzilla assumes you
+know your variant of UNIX or Microsoft Windows well, are familiar with the
+command line, and are comfortable compiling and installing a plethora
+of third-party utilities.  To install Bugzilla on Win32 requires
+fair Perl proficiency, and if you use a webserver other than Apache you
+should be intimately familiar with the security mechanisms and CGI
+environment thereof.
 
    Bugzilla has not undergone a complete security review. Security holes
 may exist in the code.  Great care should be taken both in the installation
@@ -17,26 +20,46 @@ and usage of this software.  Carefully consider the implications of
 installing other network services with Bugzilla.
 
 
+        ===========
+        CONVENTIONS
+        ===========
+
+
+  Throughout this README and "The Bugzilla Guide" in the docs/ folder,
+we use some writing conventions.  Bourne shell prompts are used
+generically to indicate any shell.
+
+	File Names 					file.extension
+	Directory Names 				directory/
+	Commands to be typed 				<shell> command
+	Prompt of user command under bash shell:	bash$
+	Prompt of root user command under bash shell:	bash#
+	Prompt of user command under tcsh shell:	tcsh$
+	Environment Variables				VARIABLE
+	Emphasized word					*word* 
+
+
         ============
         INSTALLATION
         ============
 
+
 0. Introduction
 
-   Installation of bugzilla is pretty straight forward, especially if your
+   Installation of bugzilla is pretty straightforward, particularly if your
 machine already has MySQL and the MySQL-related perl packages installed.
 If those aren't installed yet, then that's the first order of business.  The
 other necessary ingredient is a web server set up to run cgi scripts.
+While using Apache for your webserver is not required, it is recommended.
 
    Bugzilla has been successfully installed under Solaris, Linux, and
-Windows NT. The peculiarities of installing on Windows NT have not
-been included in this README; please consult the Bugzilla Guide for
-detailed Windows NT installation instructions.
+Win32. The peculiarities of installing on Win32 (Win98+/NT/2K) are not
+included in this README; please consult the Bugzilla Guide for more
+detailed Win32 installation instructions.
 
   The Bugzilla Guide is contained in the "docs/" folder.  It is available
 in plain text (docs/txt), HTML (docs/html), or SGML source (docs/sgml).
 
-news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 
 1. Installing the Prerequisites
 
@@ -50,18 +73,22 @@ news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
         6. TimeDate Perl module collection
         7. GD perl module (1.8.3)
         8. Chart::Base Perl module (0.99c)
-        9. The web server of your choice
+        9. The web server of your choice.  Apache is recommended.
 
-   Bugzilla has quite a few prerequisites, but none of them are TCL.
-Previous versions required TCL, but it no longer needed (or used).
+	For the contrib/bug_email.pl interface, you also need:
+	10.  MIME::Parser Perl module
 
-   You must also run Bugzilla on a filesystem that supports file locking via
+    You must also run Bugzilla on a filesystem that supports file locking via
 flock().  This is necessary for Bugzilla to operate safely with multiple
 instances.
 
+    It is a good idea, while installing Bugzilla, to ensure it is not
+accessible from the Internet.  The machine may be vulnerable to attacks
+while you are installing. 
+
 1.1. Getting and setting up MySQL database (3.22.5 or greater)
 
-   Visit MySQL homepage at http://www.mysql.org and grab the latest stable
+   Visit MySQL homepage at http://www.mysql.org/ and grab the latest stable
 release of the server.  Both binaries and source are available and which
 you get shouldn't matter.  Be aware that many of the binary versions
 of MySQL store their data files in /var which on many installations
@@ -80,6 +107,10 @@ may put on bugs.  If you add something like "-O max_allowed_packet=1M"
 to the command that starts mysqld (or safe_mysqld), then you will be
 able to have attachments up to about 1 megabyte.
 
+  If you plan on running Bugzilla and MySQL on the same machine,
+consider using the "--skip-networking" option in the init script.
+This enhances security by preventing network access to MySQL.
+
 1.2. Perl (5.004 or greater)
 
   Any machine that doesn't have perl on it is a sad machine indeed.  Perl
@@ -93,6 +124,20 @@ sort of packaging system (be it RPM, deb, or what have you) to ensure
 a sane install.  In the subsequent sections you'll be installing quite
 a few perl modules; this can be quite ornery if your perl installation
 isn't up to snuff.
+
+
+SHORTCUT:  You can skip the following Perl module installation
+steps by installing "Bundle::Bugzilla" from CPAN, which includes them.
+All Perl module installation steps require you have an active Internet
+connection.
+
+	bash# perl -MCPAN -e 'install "Bundle::Bugzilla"'
+
+    Bundle::Bugzilla doesn't include GD, Chart::Base, or MIME::Parser,
+which are not essential to a basic Bugzilla install.  If installing
+this bundle fails, you should install each module individually to
+isolate the problem.
+
 
 1.3. DBI Perl module
 
@@ -113,7 +158,7 @@ which does all the hard work for you.
 
 To use the CPAN shell to install DBI:
 
-               1. Type perl -MCPAN -e 'install "DBI"'
+	bash#  perl -MCPAN -e 'install "DBI"'
 (replace DBI with the name of the module you wish to install, Data::Dumper,
 etc...)
 
@@ -209,7 +254,8 @@ versions of GD.
 
    You have a freedom of choice here - Apache, Netscape or any other
 server on UNIX would do.  You can easily run the web server on a different
-machine than MySQL, but that makes MySQL permissions harder to manage.
+machine than MySQL, but need to adjust the MySQL "bugs" user permissions
+accordingly.
 
    You'll want to make sure that your web server will run any file
 with the .cgi extension as a cgi and not just display it.  If you're using
@@ -231,24 +277,32 @@ access.conf.
 
 2. Installing the Bugzilla Files
 
-   You should untar the bugzilla files into a directory that you're
+   You should untar the Bugzilla files into a directory that you're
 willing to make writable by the default web server user (probably
 'nobody').  You may decide to put the files off of the main web space
 for your web server or perhaps off of /usr/local with a symbolic link
 in the web space that points to the bugzilla directory.  At any rate,
 just dump all the files in the same place (optionally omitting the CVS
-directory if it accidentally got tarred up with the rest of bugzilla)
-and make sure you can get at the files in that directory through your
+directories if they were accidentally tarred up with the rest of Bugzilla)
+and make sure you can access the files in that directory through your
 web server.
+
+HINT:  If you symlink the bugzilla directory into your Apache's
+HTML heirarchy, you may receive "Forbidden" errors unless you
+add the "FollowSymLinks" directive to the <Directory> entry
+for the HTML root.
 
    Once all the files are in a web accessible directory, make that
 directory writable by your webserver's user (which may require just
-making it world writable).  
+making it world writable).  This is a temporary step until you run
+the post-install "checksetup.pl" script, which locks down your
+installation.
         
    Lastly, you'll need to set up a symbolic link from /usr/bonsaitools/bin
 to the correct location of your perl executable (probably /usr/bin/perl).
-Or, you'll have to hack all the .cgi files to change where they look
-for perl.
+Otherwise you must hack all the .cgi files to change where they look
+for perl.  To make future upgrades easier, you should use the symlink
+approach.
 
 3. Setting Up the MySQL database
 
@@ -256,61 +310,54 @@ for perl.
 to start preparing the database for its life as a the back end to a high
 quality bug tracker.
 
-    First, you'll want to fix MySQL permissions.  By default, Bugzilla
-logs in as user "bugs", with no password.  That needs to work.  MySQL
-permissions are a deep, nasty complicated thing.  I've just turned
-them off.  If you want to do that, too, then the magic is to do run
-"mysql mysql", and feed it commands like this (replace all instances of
-HOSTNAME with the name of the machine mysql is running on):
+    First, you'll want to fix MySQL permissions to allow access from
+Bugzilla.  For the purpose of this README, the Bugzilla username
+will be "bugs", and will have minimal permissions.  Bugzilla has
+not undergone a thorough security audit.  It may be possible for
+a system cracker to somehow trick Bugzilla into executing a command
+such as "; DROP DATABASE mysql".
 
-        DELETE FROM host;
-        DELETE FROM user;
-        INSERT INTO host VALUES
-          ('localhost','%','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
-        INSERT INTO host VALUES
-          (HOSTNAME,'%','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y');
-        INSERT INTO user VALUES
-          ('localhost','root','','Y','Y','Y','Y','Y','Y','Y','Y','Y',
-          'Y','Y','Y','Y','Y');
-        INSERT INTO user VALUES
-          (HOSTNAME,'','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y',
-          'Y','Y','Y');
-        INSERT INTO user VALUES
-          (HOSTNAME,'root','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y',
-          'Y','Y','Y','Y');
-        INSERT INTO user VALUES
-          ('localhost','','','Y','Y','Y','Y','Y','Y','Y','Y','Y','Y',
-          'Y','Y','Y','Y');
+    That would be bad.
 
-The number of 'Y' entries to use varies with the version of MySQL; they
-keep adding columns.  The list here should work with version 3.22.23b.
+    Give the MySQL root user a password.  MySQL passwords are
+limited to 16 characters.
 
-This run of "mysql mysql" may need some extra parameters to deal with
-whatever database permissions were set up previously.  In particular,
-you might have to say "mysql -uroot mysql", and give it an appropriate
-password.
+	bash$ mysql -u root mysql
+	mysql> UPDATE user SET Password=PASSWORD ('new_password')
+	WHERE user='root';
+	mysql> FLUSH PRIVILEGES;
 
-For much more information about MySQL permissions, see the MySQL
-documentation.
+    From this point on, if you need to access MySQL as the
+MySQL root user, you will need to use "mysql -u root -p" and
+enter your new_password.  Remember that MySQL user names have
+nothing to do with Unix user names (login names).
 
-After you've tweaked the permissions, run "mysqladmin reload" to make
-sure that the database server knows to look at your new permission list.
+    Next, we create the "bugs" user, and grant sufficient
+permissions for checksetup.pl, which we'll use later, to work
+its magic.  This also restricts the "bugs" user to operations
+within a database called "bugs", and only allows the account
+to connect from "localhost".  Modify it to reflect your setup
+if you will be connecting from another machine or as a different
+user.
 
-Or, at the mysql prompt:
+    Remember to set bugs_password to some unique password.
 
-mysql> flush privileges;
+	mysql> GRANT SELECT,INSERT,UPDATE,DELETE,INDEX,
+		ALTER,CREATE,DROP,REFERENCES 
+		ON bugs.* TO bugs@localhost
+		IDENTIFIED BY 'bugs_password';
+	mysql> FLUSH PRIVILEGES;
 
-You must explictly tell mysql to reload permissions before running
-checksetup.pl.
+Next, run the magic checksetup.pl script.  (Many thanks to Holger
+Schurig <holgerschurig@nikocity.de> for writing this script!)
+It will make sure Bugzilla files and directories have reasonable
+permissions, set up the "data" directory, and create all the MySQL
+tables.
 
-Next, you can just run the magic checksetup.pl script.  (Many thanks
-to Holger Schurig <holgerschurig@nikocity.de> for writing this script!)
-It will make sure things have reasonable permissions, set up the "data"
-directory, and create all the MySQL tables.  Just run:
-
-        ./checksetup.pl
+        bash$ ./checksetup.pl
 
    The first time you run it, it will create a file called "localconfig".
+
 
 4. Tweaking localconfig
 
@@ -322,18 +369,16 @@ how Bugzilla should connect to the MySQL database.
         1. server's host: just use "localhost" if the MySQL server is
                 local
         2. database name: "bugs" if you're following these directions
-        3. MySQL username: whatever you created for your webserver user
-        4. Password for the MySQL account in item 3.
+        3. MySQL username: "bugs" if you're following these directions
+        4. Password for the "bugs" MySQL account in item 3.
 
    Once you are happy with the settings, re-run checksetup.pl.  On this
-second run, it will do the real work of creating the database.
+second run, it will create the database and an administrator account
+for which you will be prompted to provide information.
 
-   One thing it will do is to automatically create an administrator account
-from information it will ask for.
-
-   When logged into an administrator account, if you go to the query page
-(off of the bugzilla main menu), you'll find an 'edit parameters' option
-that is filled with editable treats.
+   When logged into an administrator account once Bugzilla is running,
+if you go to the query page (off of the bugzilla main menu), you'll
+find an 'edit parameters' option that is filled with editable treats.
 
    Should everything work, you should have a nearly empty copy of the bug
 tracking setup.
@@ -351,12 +396,12 @@ without causing harm.  You should run it after any upgrade to Bugzilla.
 5. Setting Up Maintainers Manually (Optional)
 
     If you want to add someone else to every group by hand, you can do it
-by typing the appropriate MySQL commands.  Run 'mysql bugs' (you may need
-extra parameters, depending on your security settings according to
-section 3, above), and type:
+by typing the appropriate MySQL commands.  Run 'mysql -u root -p bugs'
+(you may need different parameters, depending on your security settings
+according to section 3, above).  Then:
 
-        update profiles set groupset=0x7fffffffffffffff
-        where login_name = 'XXX';
+        mysql> update profiles set groupset=0x7fffffffffffffff
+        	where login_name = 'XXX';
 
 replacing XXX with the Bugzilla email address.
 
@@ -373,15 +418,21 @@ crontab man page):
 7. Bug Graphs (Optional)
 
    As long as you installed the GD and Graph::Base Perl modules you might
-as well turn on the nifty bugzilla bug reporting graphs.  Just add
-the command:
+as well turn on the nifty bugzilla bug reporting graphs.
 
-        cd <your-bugzilla-directory> ; ./collectstats.pl
+	bash# crontab -e
+   Adding this entry runs collectstats daily at 5 after midnight:
+        5 0 * * * cd <your-bugzilla-directory> ; ./collectstats.pl
 
-as a nightly entry to your crontab and after two days have passed you'll
-be able to view bug graphs from the Bug Reports page.
+After two days have passed you'll be able to view bug graphs from the
+Bug Reports page.
 
 8. Real security for MySQL
+
+If you followed the README for setting up your "bugs" and "root" user in
+MySQL, much of this should not apply to you.  If you are upgrading
+an existing installation of Bugzilla, you should pay close attention
+to this section.
 
 MySQL has "interesting" default security parameters:
         mysqld defaults to running as root
@@ -506,6 +557,11 @@ instructions by Terry Weissman <terry@mozilla.org>.
 Martin Pool, & Dan Mosedale (But don't send bug reports to them!
 Report them using bugzilla, at http://bugzilla.mozilla.org/enter_bug.cgi ,
 project Webtools, component Bugzilla).
+
+  This document was heavily modified again Wednesday, March 07 2001 to
+reflect changes for Bugzilla 2.12 release by Matthew P. Barnson.  The
+securing MySQL section should be changed to become standard procedure
+for Bugzilla installations.
 
    Comments from people using this document for the first time are
 especially welcomed.
