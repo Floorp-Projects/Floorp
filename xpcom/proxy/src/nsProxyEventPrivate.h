@@ -46,17 +46,16 @@ class nsProxyEventClass;
 
 class nsProxyEventClass : public nsISupports
 {
-
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
 
 public:
-		NS_DEFINE_STATIC_IID_ACCESSOR(NS_PROXYEVENT_CLASS_IID)
 
     static nsProxyEventClass* GetNewOrUsedClass(REFNSIID aIID);
     
     
     NS_IMETHOD DelegatedQueryInterface(nsProxyEventObject* self, REFNSIID aIID, void** aInstancePtr);
+    REFNSIID                 GetIID() const {return mIID;}
     nsIInterfaceInfo*        GetInterfaceInfo() const {return mInfo;}
     nsProxyEventObject*      GetRootProxyObject(nsProxyEventObject* anObject);
     nsProxyEventObject*      CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID aIID);
