@@ -77,22 +77,22 @@ static NS_DEFINE_CID(kCImapHostSessionListCID, NS_IIMAPHOSTSESSIONLIST_CID);
 
 nsImapUrl::nsImapUrl()
 {
-	m_listOfMessageIds = nsnull;
-	m_sourceCanonicalFolderPathSubString = nsnull;
-	m_destinationCanonicalFolderPathSubString = nsnull;
-	m_listOfMessageIds = nsnull;
+  m_listOfMessageIds = nsnull;
+  m_sourceCanonicalFolderPathSubString = nsnull;
+  m_destinationCanonicalFolderPathSubString = nsnull;
+  m_listOfMessageIds = nsnull;
   m_tokenPlaceHolder = nsnull;
   m_searchCriteriaString = nsnull;
-	m_idsAreUids = PR_FALSE;
-	m_mimePartSelectorDetected = PR_FALSE;
-	m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
+  m_idsAreUids = PR_FALSE;
+  m_mimePartSelectorDetected = PR_FALSE;
+  m_allowContentChange = PR_TRUE;	// assume we can do MPOD.
   m_fetchPartsOnDemand = PR_FALSE; // but assume we're not doing it :-)
   m_msgLoadingFromCache = PR_FALSE;
-	m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
-	m_validUrl = PR_TRUE;	// assume the best.
-	m_flags = 0;
-	m_onlineSubDirSeparator = '/'; 
-
+  m_contentModified = IMAP_CONTENT_NOT_MODIFIED;
+  m_validUrl = PR_TRUE;	// assume the best.
+  m_flags = 0;
+  m_onlineSubDirSeparator = '/'; 
+  
   // ** jt - the following are not ref counted
   m_copyState = nsnull;
   m_fileSpec = nsnull;
@@ -106,8 +106,8 @@ nsImapUrl::nsImapUrl()
 
 nsresult nsImapUrl::Initialize()
 {
-	nsresult rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));      
-	return rv;
+  nsresult rv = nsComponentManager::CreateInstance(kCImapMockChannel, nsnull, NS_GET_IID(nsIImapMockChannel), getter_AddRefs(m_mockChannel));      
+  return rv;
 }
 
 
