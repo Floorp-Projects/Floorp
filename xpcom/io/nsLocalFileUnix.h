@@ -88,6 +88,7 @@ protected:
     struct stat mCachedStat;
     nsXPIDLCString mPath;
     
+    nsresult CopyDirectoryTo(nsIFile *newParent);
     nsresult CreateAllAncestors(PRUint32 permissions);
     nsresult GetLeafNameRaw(const char **_retval);
     nsresult GetTargetPathName(nsIFile *newParent, const char *newName,
