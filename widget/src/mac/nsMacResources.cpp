@@ -24,9 +24,10 @@ short nsMacResources::mRefNum				= kResFileNotOpened;
 short nsMacResources::mSaveResFile	= 0;
 
 
-pascal OSErr __initialize(const CFragInitBlock *theInitBlock);
+pascal OSErr __NSInitialize(const CFragInitBlock *theInitBlock);
 pascal OSErr __initializeResources(const CFragInitBlock *theInitBlock);
-pascal void __terminate(void);
+
+pascal void __NSTerminate(void);
 pascal void __terminateResources(void);
 
 
@@ -35,7 +36,7 @@ pascal void __terminateResources(void);
 //----------------------------------------------------------------------------------------
 pascal OSErr __initializeResources(const CFragInitBlock *theInitBlock)
 {
-    OSErr err = __initialize(theInitBlock);
+    OSErr err = __NSInitialize(theInitBlock);
     if (err)
     	return err;
 
@@ -56,7 +57,7 @@ pascal OSErr __initializeResources(const CFragInitBlock *theInitBlock)
 pascal void __terminateResources(void)
 {
 	::CloseResFile(nsMacResources::GetLocalResourceFile());
-    __terminate();
+    __NSTerminate();
 }
 
 
