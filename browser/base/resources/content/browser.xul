@@ -82,6 +82,9 @@ Contributor(s): ______________________________________. -->
     
     // Global variable that caches the default search engine info
     var gDefaultEngine = null;
+    
+    var gBookmarkPopup = null;
+
   </script>
   <script type="application/x-javascript" src="chrome://communicator/content/nsContextMenu.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
@@ -91,20 +94,16 @@ Contributor(s): ______________________________________. -->
   <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
 
   <commandset id="commands">    
-    <commandset id="globalEditMenuItems"
-                commandupdater="true"
+    <commandset commandupdater="true"
                 events="focus"
                 oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-    <commandset id="selectEditMenuItems"
-                commandupdater="true"
+    <commandset commandupdater="true"
                 events="select"
                 oncommandupdate="goUpdateSelectEditMenuItems()"/>
-    <commandset id="undoEditMenuItems"
-                commandupdater="true"
+    <commandset commandupdater="true"
                 events="undo"
                 oncommandupdate="goUpdateUndoEditMenuItems()"/>
-    <commandset id="clipboardEditMenuItems"
-                commandupdater="true"
+    <commandset commandupdater="true"
                 events="clipboard"
                 oncommandupdate="goUpdatePasteMenuItems()"/>
     <command id="cmd_newNavigator"
@@ -143,13 +142,6 @@ Contributor(s): ______________________________________. -->
              disabled="true"
              observes="isImage"/>
 
-    <command id="cmd_copyLink"
-             oncommand="goDoCommand('cmd_copyLink')"
-             disabled="false"/>
-    <command id="cmd_copyImageLocation"
-             oncommand="goDoCommand('cmd_copyImageLocation')"
-             disabled="false"/>
-
     <!-- View Menu -->
     <command id="View:PageSource" oncommand="BrowserViewSourceOfDocument(_content.document);"/>
     <command id="View:PageInfo"   oncommand="BrowserPageInfo();"/>
@@ -172,20 +164,19 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <command id="cmd_history" oncommand="toHistory();"/>
+    <command id="cmd_stop" oncommad="BrowserStop();"/>
+    <command id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
+    <command id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
+    <command id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
+    <command id="cmd_viewlocationbar" oncommand="goToggleToolbar('LocationToolbar','cmd_viewlocationbar');" checked="true"/>
   </commandset>
 
-  <broadcasterset>
-    <broadcaster id="canGoBack"    disabled="true"/>
-    <broadcaster id="canGoForward" disabled="true"/>
-    <broadcaster id="Communicator:WorkMode"
-                 label="&offlineGoOfflineCmd.label;"
-                 oncommand="toggleOfflineStatus();"/>
-    <broadcaster id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
-    <broadcaster id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
-    <broadcaster id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
-    <broadcaster id="cmd_viewlocationbar" oncommand="goToggleToolbar('LocationToolbar','cmd_viewlocationbar');" checked="true"/>
-    <broadcaster id="isImage"/>
-  </broadcasterset>
+  <broadcaster id="canGoBack"    disabled="true"/>
+  <broadcaster id="canGoForward" disabled="true"/>
+  <broadcaster id="Communicator:WorkMode"
+               label="&offlineGoOfflineCmd.label;"
+               oncommand="toggleOfflineStatus();"/>
+  <broadcaster id="isImage"/>
    
   <keyset>
     <key id="key_newNavigator"
@@ -239,7 +230,7 @@ Contributor(s): ______________________________________. -->
     <key id="manBookmarkKb" key="&manBookmarksCmd.commandkey;" command="Browser:ManageBookmark" modifiers="accel"/>
 
     <!-- Misc -->
-    <key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+    <key id="key_stop" keycode="VK_ESCAPE" command="cmd_stop"/>
     <key id="key_textZoomReduce"  key="&textZoomReduceCmd.commandkey;"   command="cmd_textZoomReduce"  modifiers="accel"/>
     <key id="key_textZoomEnlarge" key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel"/>
     <key                          key="&textZoomEnlargeCmd.commandkey;"  command="cmd_textZoomEnlarge" modifiers="accel,shift"/>
@@ -254,14 +245,7 @@ Contributor(s): ______________________________________. -->
   <popup id="forwardMenu" position="after_start" onpopupshowing="return BrowserForwardMenu(event);" oncommand="gotoHistoryIndex(event);"/>
   <tooltip id="aHTMLTooltip" onpopupshowing="return FillInHTMLTooltip(document.tooltipNode);"/>
 
-  <popupset id="bookmarksPopupset"/>
- 
-  <!-- context menu -->
-  <popupset id="contentAreaContextSet">
-    <!-- This is a generic context menu for a content area. It contains 
-         each and every possible menu choice.  The appropriate items are
-         hidden/shown upon display, based on what the user has clicked-on.
-     -->
+  <popupset id="bookmarksPopupset">
     <popup id="contentAreaContextMenu"
            onpopupshowing="gContextMenu = new nsContextMenu( this ); return gContextMenu.shouldDisplay;"
            onpopuphiding="gContextMenu = null;">
@@ -291,7 +275,7 @@ Contributor(s): ______________________________________. -->
       <menuitem id="context-copylink"
                 label="&copyLinkCmd.label;"
                 accesskey="&copyLinkCmd.accesskey;"
-                command="cmd_copyLink"/>
+                oncommand="goDoCommand('cmd_copyLink');"/>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-viewimage"
                 label="&viewImageCmd.label;"
@@ -300,7 +284,7 @@ Contributor(s): ______________________________________. -->
       <menuitem id="context-copyimage"
                 label="&copyImageCmd.label;"
                 accesskey="&copyImageCmd.accesskey;"
-                command="cmd_copyImageLocation"/>
+                oncommand="goDoCommand('cmd_copyImageLocation');"/>
       <menuseparator id="context-sep-copyimage"/>
       <menuitem id="context-saveimage"
                 label="&saveImageCmd.label;"
@@ -327,7 +311,7 @@ Contributor(s): ______________________________________. -->
                 label="&stopCmd.label;"
                 accesskey="&stopCmd.accesskey;"
                 disabled="true"
-                oncommand="BrowserStop();"/>
+                cmd="cmd_stop"/>
       <menuseparator id="context-sep-stop"/>
       <menuitem id="context-bookmarkpage"
                 label="&bookmarkPageCmd.label;"
@@ -422,10 +406,6 @@ Contributor(s): ______________________________________. -->
     </popup>
   </popupset>
 
-  <script type="application/x-javascript">
-    var gBookmarkPopup = null;
-  </script>
-
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
       <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
@@ -500,10 +480,10 @@ Contributor(s): ______________________________________. -->
           <menupopup>
             <menu label="&toolbarsCmd.label;" accesskey="&toolbarsCmd.accesskey;">
               <menupopup onpopupshowing="updateToolbarStates(this);"> 
-                <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewnavbar"  />
-                <menuitem label="&locationbarCmd.label;" accesskey="&locationbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewlocationbar"/>
-                <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewpersonaltoolbar" />
-                <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" observes="cmd_viewtaskbar" />
+                <menuitem label="&navbarCmd.label;" accesskey="&navbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewnavbar"  />
+                <menuitem label="&locationbarCmd.label;" accesskey="&locationbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewlocationbar"/>
+                <menuitem label="&personalbarCmd.label;" accesskey="&personalbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewpersonaltoolbar" />
+                <menuitem label="&taskbarCmd.label;" accesskey="&taskbarCmd.accesskey;" class="menuitem-iconic" type="checkbox" command="cmd_viewtaskbar" />
               </menupopup>
             </menu>   
             <menuitem id="menuitem_fullScreen" accesskey="&fullScreenCmd.accesskey;"
@@ -511,7 +491,7 @@ Contributor(s): ______________________________________. -->
                       command="View:FullScreen" hidden="true"/>
             <menuseparator />
             <menuitem accesskey="&reloadCmd.accesskey;" key="key_reload" label="&reloadCmd.label;" oncommand="BrowserReload();"/>
-            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" oncommand="BrowserStop();" key="key_stop"/>
+            <menuitem label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" disabled="true" command="cmd_stop" key="key_stop"/>
             <menuseparator/>
             <menuitem accesskey="&pageSourceCmd.accesskey;" label="&pageSourceCmd.label;" key="key_viewSource" command="View:PageSource"/>
             <menuitem accesskey="&pageInfoCmd.accesskey;"   label="&pageInfoCmd.label;"   key="key_viewInfo"   command="View:PageInfo"/>
@@ -738,7 +718,7 @@ Contributor(s): ______________________________________. -->
                        
         <toolbarbutton id="stop-button" class="toolbarbutton-1"
                        label="&stopButton.label;"
-                       oncommand="BrowserStop();" observes="canStop"  
+                       oncommand="cmd_stop();" disabled="true"
                        tooltiptext="&stopButton.tooltip;"/>
         <toolbarbutton id="home-button" class="toolbarbutton-1"
                        label="&homeButton.label;" persist="hidden"
