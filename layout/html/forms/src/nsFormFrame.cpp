@@ -77,6 +77,9 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
 
+// Get base target for submission
+#include "nsIHTMLContent.h"
+
 #include "net.h"
 #include "xp_file.h"
 #include "prio.h"
@@ -217,6 +220,14 @@ nsFormFrame::GetTarget(nsString* aTarget)
     result = mContent->QueryInterface(kIDOMHTMLFormElementIID, (void**)&form);
     if ((NS_OK == result) && form) {
       form->GetTarget(*aTarget);
+      if ((*aTarget).Length() == 0) {
+        nsIHTMLContent* content = nsnull;
+	result = form->QueryInterface(kIHTMLContentIID, (void**)&content);
+	if ((NS_OK == result) && content) {
+	  content->GetBaseTarget(*aTarget);
+	  NS_RELEASE(content);
+	}
+      }
       NS_RELEASE(form);
     }
   }
