@@ -93,46 +93,50 @@ interface nsIAtom : nsISupports
 
 
 /**
- * Find an atom that matches the given ISO-Latin1 C string. The
- * C string is translated into its unicode equivalent.
+ * Find an atom that matches the given UTF-8 string.
+ * The string is assumed to be zero terminated.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const char* utf8String);
-extern NS_COM nsIAtom* NS_NewAtom(const nsACString& utf8String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* utf8String);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& utf8String);
+extern NS_COM nsIAtom* NS_NewAtom(const char* aUTF8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const char* aUTF8String);
 
-inline already_AddRefed<nsIAtom> do_GetAtom(const char* utf8String)
-    { return NS_NewAtom(utf8String); }
-inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& utf8String)
-    { return NS_NewAtom(utf8String); }
+inline already_AddRefed<nsIAtom> do_GetAtom(const char* aUTF8String)
+    { return NS_NewAtom(aUTF8String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* aUTF8String)
+    { return NS_NewPermanentAtom(aUTF8String); }
  
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const char* utf8String)
-    { return NS_NewPermanentAtom(utf8String); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsACString& utf8String)
-    { return NS_NewPermanentAtom(utf8String); }
+/**
+ * Find an atom that matches the given UTF-8 string.
+ */
+extern NS_COM nsIAtom* NS_NewAtom(const nsACString& aUTF8String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsACString& aUTF8String);
+
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsACString& aUTF8String)
+    { return NS_NewAtom(aUTF8String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsACString& aUTF8String)
+    { return NS_NewPermanentAtom(aUTF8String); }
 
 /**
- * Find an atom that matches the given unicode string. The string is assumed
- * to be zero terminated.
+ * Find an atom that matches the given UTF-16 string.
+ * The string is assumed to be zero terminated.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* unicode);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const PRUnichar* unicode);
+extern NS_COM nsIAtom* NS_NewAtom(const PRUnichar* aUTF16String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const PRUnichar* aUTF16String);
 
-inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* unicode)
-    { return NS_NewAtom(unicode); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* unicode)
-    { return NS_NewPermanentAtom(unicode); }
+inline already_AddRefed<nsIAtom> do_GetAtom(const PRUnichar* aUTF16String)
+    { return NS_NewAtom(aUTF16String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const PRUnichar* aUTF16String)
+    { return NS_NewPermanentAtom(aUTF16String); }
 
 /**
- * Find an atom that matches the given string.
+ * Find an atom that matches the given UTF-16 string.
  */
-extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aString);
-extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aString);
+extern NS_COM nsIAtom* NS_NewAtom(const nsAString& aUTF16String);
+extern NS_COM nsIAtom* NS_NewPermanentAtom(const nsAString& aUTF16String);
 
-inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aString)
-    { return NS_NewAtom(aString); }
-inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAString& aString)
-    { return NS_NewPermanentAtom(aString); }
+inline already_AddRefed<nsIAtom> do_GetAtom(const nsAString& aUTF16String)
+    { return NS_NewAtom(aUTF16String); }
+inline already_AddRefed<nsIAtom> do_GetPermanentAtom(const nsAString& aUTF16String)
+    { return NS_NewPermanentAtom(aUTF16String); }
 
 /**
  * Return a count of the total number of atoms currently

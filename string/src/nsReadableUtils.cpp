@@ -1257,43 +1257,49 @@ CountCharInReadable( const nsACString& aStr,
 }
 
 NS_COM PRBool
-StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring)
+StringBeginsWith( const nsAString& aSource, const nsAString& aSubstring,
+                  const nsStringComparator& aComparator )
   {
     nsAString::size_type src_len = aSource.Length(),
                          sub_len = aSubstring.Length();
     if (sub_len > src_len)
       return PR_FALSE;
-    return Substring(aSource, 0, sub_len) == aSubstring;
+    return Substring(aSource, 0, sub_len).Equals(aSubstring, aComparator);
   }
 
 NS_COM PRBool
-StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring)
+StringBeginsWith( const nsACString& aSource, const nsACString& aSubstring,
+                  const nsCStringComparator& aComparator )
   {
     nsACString::size_type src_len = aSource.Length(),
                           sub_len = aSubstring.Length();
     if (sub_len > src_len)
       return PR_FALSE;
-    return Substring(aSource, 0, sub_len) == aSubstring;
+    return Substring(aSource, 0, sub_len).Equals(aSubstring, aComparator);
   }
 
 NS_COM PRBool
-StringEndsWith( const nsAString& aSource, const nsAString& aSubstring)
+StringEndsWith( const nsAString& aSource, const nsAString& aSubstring,
+                const nsStringComparator& aComparator )
   {
     nsAString::size_type src_len = aSource.Length(),
                          sub_len = aSubstring.Length();
     if (sub_len > src_len)
       return PR_FALSE;
-    return Substring(aSource, src_len - sub_len, sub_len) == aSubstring;
+    return Substring(aSource, src_len - sub_len, sub_len).Equals(aSubstring,
+                                                                 aComparator);
   }
 
 NS_COM PRBool
-StringEndsWith( const nsACString& aSource, const nsACString& aSubstring)
+StringEndsWith( const nsACString& aSource, const nsACString& aSubstring,
+                const nsCStringComparator& aComparator )
   {
     nsACString::size_type src_len = aSource.Length(),
                           sub_len = aSubstring.Length();
     if (sub_len > src_len)
       return PR_FALSE;
-    return Substring(aSource, src_len - sub_len, sub_len) == aSubstring;
+    return Substring(aSource, src_len - sub_len, sub_len).Equals(aSubstring,
+                                                                 aComparator);
   }
 
 
