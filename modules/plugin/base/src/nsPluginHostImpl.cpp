@@ -1005,7 +1005,6 @@ nsPluginStreamInfo::~nsPluginStreamInfo()
 		PL_strfree(mFilePath);
 
     NS_IF_RELEASE(mPluginInstance);
-    NS_IF_RELEASE(mPluginStreamListenerPeer);
 }
 
 NS_IMPL_ADDREF(nsPluginStreamInfo)
@@ -1241,7 +1240,8 @@ nsPluginStreamInfo::SetPluginInstance(nsIPluginInstance * aPluginInstance)
 void 
 nsPluginStreamInfo::SetPluginStreamListenerPeer(nsPluginStreamListenerPeer * aPluginStreamListenerPeer)
 {
-    NS_IF_ADDREF(mPluginStreamListenerPeer = aPluginStreamListenerPeer);
+    // not addref'd - nsPluginStreamInfo is owned by mPluginStreamListenerPeer
+    mPluginStreamListenerPeer = aPluginStreamListenerPeer;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1353,6 +1353,7 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
   NS_IF_RELEASE(mInstance);
   NS_IF_RELEASE(mPStreamListener);
   NS_IF_RELEASE(mHost);
+  NS_IF_RELEASE(mPluginStreamInfo);
 
   // if we have mLocalFile (temp file used to post data) it should be
   // safe to delete it now, and hopefully the owner doesn't hold it.
@@ -1397,7 +1398,10 @@ nsresult nsPluginStreamListenerPeer::Initialize(nsIURI *aURL,
   NS_ADDREF(mPStreamListener);
 
   mPluginStreamInfo = new nsPluginStreamInfo();
+  if (!mPluginStreamInfo)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
@@ -1448,7 +1452,10 @@ nsresult nsPluginStreamListenerPeer::InitializeEmbeded(nsIURI *aURL,
   }
 
   mPluginStreamInfo = new nsPluginStreamInfo();
+  if (!mPluginStreamInfo)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
@@ -1473,7 +1480,10 @@ nsresult nsPluginStreamListenerPeer::InitializeFullPage(nsIPluginInstance *aInst
   NS_ADDREF(mInstance);
 
   mPluginStreamInfo = new nsPluginStreamInfo();
+  if (!mPluginStreamInfo)
+    return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_ADDREF(mPluginStreamInfo);
   mPluginStreamInfo->SetPluginInstance(aInstance);
   mPluginStreamInfo->SetPluginStreamListenerPeer(this);
 
