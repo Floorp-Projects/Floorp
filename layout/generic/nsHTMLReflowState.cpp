@@ -39,7 +39,7 @@
 
 // Initialize a <b>root</b> reflow state with a rendering context to
 // use for measuring things.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsReflowReason       aReason,
                                      nsIRenderingContext* aRenderingContext,
@@ -63,7 +63,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
 
 // Initialize a <b>root</b> reflow state for an <b>incremental</b>
 // reflow.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*      aPresContext,
                                      nsIFrame*            aFrame,
                                      nsIReflowCommand&    aReflowCommand,
                                      nsIRenderingContext* aRenderingContext,
@@ -88,7 +88,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
 // Initialize a reflow state for a child frames reflow. Some state
 // is copied from the parent reflow state; the remaining state is
 // computed.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
@@ -114,7 +114,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 
 // Same as the previous except that the reason is taken from the
 // parent's reflow state.
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace)
@@ -136,7 +136,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 }
 
 // Version that species the containing block width and height
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
+nsHTMLReflowState::nsHTMLReflowState(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aParentReflowState,
                                      nsIFrame*                aFrame,
                                      const nsSize&            aAvailableSpace,
@@ -160,7 +160,7 @@ nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
 }
 
 void
-nsHTMLReflowState::Init(nsIPresContext& aPresContext,
+nsHTMLReflowState::Init(nsIPresContext* aPresContext,
                         nscoord         aContainingBlockWidth,
                         nscoord         aContainingBlockHeight)
 {
@@ -425,7 +425,7 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
 }
 
 void
-nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
+nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
                                            const nsHTMLReflowState* cbrs,
                                            nscoord containingBlockWidth,
                                            nscoord containingBlockHeight)
@@ -441,7 +441,7 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     // Get the placeholder frame
     nsIFrame*     placeholderFrame;
     nsCOMPtr<nsIPresShell> presShell;
-    aPresContext.GetShell(getter_AddRefs(presShell));
+    aPresContext->GetShell(getter_AddRefs(presShell));
 
     presShell->GetPlaceholderFrameFor(frame, &placeholderFrame);
     NS_ASSERTION(nsnull != placeholderFrame, "no placeholder frame");
@@ -835,7 +835,7 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(const nsHTMLReflowState* aCon
 // we are computing: width,height,line-height; margin; offsets
 
 void
-nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext,
+nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
                                    nscoord         aContainingBlockWidth,
                                    nscoord         aContainingBlockHeight)
 {
@@ -1128,7 +1128,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext,
 // Compute the box data for block and block-replaced elements in the
 // normal flow.
 void
-nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext& aPresContext,
+nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
                                        const nsHTMLReflowState* cbrs,
                                        nsStyleUnit aWidthUnit,
                                        nsStyleUnit aHeightUnit,
@@ -1449,7 +1449,7 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
 }
 
 nscoord
-nsHTMLReflowState::CalcLineHeight(nsIPresContext& aPresContext,
+nsHTMLReflowState::CalcLineHeight(nsIPresContext* aPresContext,
                                   nsIRenderingContext* aRenderingContext,
                                   nsIFrame* aFrame)
 {

@@ -178,7 +178,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aHint)
 {
   mNeedsLayout = PR_TRUE;
-  UpdateAttributes(*aPresContext);
+  UpdateAttributes(aPresContext);
 
   // added back in because boxes now handle only redraw what is reflowed.
   // reflow
@@ -238,17 +238,17 @@ nsTitledButtonFrame::~nsTitledButtonFrame()
 }
 
 NS_METHOD
-nsTitledButtonFrame::Destroy(nsIPresContext& aPresContext)
+nsTitledButtonFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Release image loader first so that it's refcnt can go to zero
-  mImageLoader.StopAllLoadImages(&aPresContext);
+  mImageLoader.StopAllLoadImages(aPresContext);
 
   return nsLeafFrame::Destroy(aPresContext);
 }
 
 
 NS_IMETHODIMP
-nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
+nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIStyleContext* aContext,
@@ -261,7 +261,7 @@ nsTitledButtonFrame::Init(nsIPresContext&  aPresContext,
   
   // place 4 pixels of spacing
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   mSpacing = NSIntPixelsToTwips(4, p2t);
 
   mHasImage = PR_FALSE;
@@ -326,7 +326,7 @@ nsTitledButtonFrame::GetImageSource(nsString& aResult)
 }
 
 void
-nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
+nsTitledButtonFrame::UpdateAttributes(nsIPresContext*  aPresContext)
 {
 	nsAutoString value;
 	mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
@@ -360,7 +360,7 @@ nsTitledButtonFrame::UpdateAttributes(nsIPresContext&  aPresContext)
 }
 
 void
-nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
+nsTitledButtonFrame::UpdateImage(nsIPresContext*  aPresContext)
 {
   // see if the source changed
   // get the old image src
@@ -383,7 +383,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
           mHasImage = PR_FALSE;
         }
 
-        mImageLoader.UpdateURLSpec(&aPresContext, src);
+        mImageLoader.UpdateURLSpec(aPresContext, src);
         //PRUint32 loadStatus = mImageLoader.GetLoadStatus();
 
         /*
@@ -396,7 +396,7 @@ nsTitledButtonFrame::UpdateImage(nsIPresContext&  aPresContext)
             // imageLib stores width/height in pixels and we store it in twips. do the conversion
             // before comparing.
 		    float p2t = 0.0;
-            aPresContext.GetScaledPixelsToTwips(&p2t);
+            aPresContext->GetScaledPixelsToTwips(&p2t);
             int imageWidth = NSIntPixelsToTwips(image->GetWidth(), p2t);
             int imageHeight = NSIntPixelsToTwips(image->GetHeight(), p2t);
             if ( imageWidth == mImageRect.width && imageHeight == mImageRect.height ) {
@@ -428,7 +428,7 @@ static PRBool dump_stack = PR_FALSE;
 #endif
 
 NS_IMETHODIMP
-nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
+nsTitledButtonFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -480,7 +480,7 @@ nsTitledButtonFrame::Paint(nsIPresContext& aPresContext,
 
 
 void
-nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
+nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -588,13 +588,13 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 }
 
 void 
-nsTitledButtonFrame::GetTextSize(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext,
+nsTitledButtonFrame::GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                                 const nsString& aString, nsSize& aSize)
 {
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
   nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
   nsCOMPtr<nsIFontMetrics> fontMet;
   deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
@@ -604,7 +604,7 @@ nsTitledButtonFrame::GetTextSize(nsIPresContext& aPresContext, nsIRenderingConte
 }
 
 void 
-nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth)
+nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth)
 {
   if (mTitle.Length() == 0)
      return;
@@ -612,7 +612,7 @@ nsTitledButtonFrame::CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRen
   const nsStyleFont* fontStyle = (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
 
   nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
 
   nsCOMPtr<nsIFontMetrics> fontMet;
   deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
@@ -773,7 +773,7 @@ nsTitledButtonFrame::UpdateAccessUnderline()
 }
 
 NS_IMETHODIMP
-nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
+nsTitledButtonFrame::PaintTitle(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -785,7 +785,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 
    	 // place 4 pixels of spacing
 		 float p2t;
-		 aPresContext.GetScaledPixelsToTwips(&p2t);
+		 aPresContext->GetScaledPixelsToTwips(&p2t);
 		 nscoord pixel = NSIntPixelsToTwips(1, p2t);
 
      nsRect disabledRect(mTitleRect.x+pixel, mTitleRect.y+pixel, mTitleRect.width, mTitleRect.height);
@@ -855,7 +855,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsTitledButtonFrame::PaintImage(nsIPresContext& aPresContext,
+nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -896,7 +896,7 @@ nsTitledButtonFrame::PaintImage(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
+nsTitledButtonFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -909,7 +909,7 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     }
   }
 
@@ -927,7 +927,7 @@ nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
   nsBoxInfo info;
   info.clear();
 
-  GetBoxInfo(*aPresContext, aReflowState, info);
+  GetBoxInfo(aPresContext, aReflowState, info);
 
   // size is our preferred unless calculated.
   aDesiredSize.width = info.prefSize.width;
@@ -974,7 +974,7 @@ struct nsTitleRecessedBorder : public nsStyleSpacing {
 };
 
 void
-nsTitledButtonFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
+nsTitledButtonFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  PRInt32              aIconId)
 {
@@ -983,7 +983,7 @@ nsTitledButtonFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   nsRect  inner = mImageRect;
  
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nsTitleRecessedBorder recessedBorder(NSIntPixelsToTwips(1, p2t));
   nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this, inner,
                               inner, recessedBorder, mStyleContext, 0);
@@ -1039,7 +1039,7 @@ nsTitledButtonFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
 // between words if a word would extend past the edge of the rectangle
 void
-nsTitledButtonFrame::DisplayAltText(nsIPresContext&      aPresContext,
+nsTitledButtonFrame::DisplayAltText(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
@@ -1149,11 +1149,10 @@ nsTitledButtonFrame::MeasureString(const PRUnichar*     aString,
 }
 
 NS_IMETHODIMP
-nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsTitledButtonFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
-                                      nsEventStatus& aEventStatus)
+                                      nsEventStatus* aEventStatus)
 {
-
   // if disabled do nothing
   if (PR_TRUE == mRenderer->isDisabled()) {
     return NS_OK;
@@ -1226,14 +1225,14 @@ nsTitledButtonFrame::SetCurrentCheckState(CheckState aState)
 // If the state is mixed, then set it to off. You can't ever get back to mixed.
 //
 void 
-nsTitledButtonFrame::MouseClicked (nsIPresContext & aPresContext) 
+nsTitledButtonFrame::MouseClicked (nsIPresContext* aPresContext) 
 {
   // Execute the oncommand event handler.
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
-  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   // if we are not toggling then do nothing
   CheckState oldState = GetCurrentCheckState();
@@ -1329,7 +1328,7 @@ NS_IMETHODIMP
 nsTitledButtonFrame :: DidSetStyleContext( nsIPresContext* aPresContext )
 {
   // if list-style-image change we want to change the image
-  UpdateImage(*aPresContext);
+  UpdateImage(aPresContext);
   
   return NS_OK;
   
@@ -1375,9 +1374,9 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
  * Ok return our dimensions
  */
 NS_IMETHODIMP
-nsTitledButtonFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
-  GetImageSize(&aPresContext);
+  GetImageSize(aPresContext);
 
   aSize.minSize.width = mImageRect.width;
   aSize.minSize.height = mImageRect.height;
@@ -1470,7 +1469,7 @@ nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsTitledButtonFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsTitledButtonFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   // leafs should just return themselves as the incremental child
   incrementalChild = this;

@@ -113,11 +113,11 @@ AnonymousElement::List(FILE* out, PRInt32 aIndent) const
 */
 
 NS_IMETHODIMP
-AnonymousElement::HandleDOMEvent(nsIPresContext& aPresContext,
+AnonymousElement::HandleDOMEvent(nsIPresContext* aPresContext,
                               nsEvent* aEvent,
                               nsIDOMEvent** aDOMEvent,
                               PRUint32 aFlags,
-                              nsEventStatus& aEventStatus)
+                              nsEventStatus* aEventStatus)
 {
   /*
   // if our parent is not anonymous then we don't want to bubble the event
@@ -295,7 +295,7 @@ nsScrollbarFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 
 
 NS_IMETHODIMP
-nsScrollbarFrame::Init(nsIPresContext&  aPresContext,
+nsScrollbarFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -304,7 +304,7 @@ nsScrollbarFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
   return rv;
 }
@@ -360,33 +360,33 @@ nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandlePress(nsIPresContext& aPresContext, 
+nsScrollbarFrame::HandlePress(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsScrollbarFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
+nsScrollbarFrame::HandleMultiplePress(nsIPresContext* aPresContext, 
                      nsGUIEvent*     aEvent,
-                     nsEventStatus&  aEventStatus)
+                     nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleDrag(nsIPresContext& aPresContext, 
+nsScrollbarFrame::HandleDrag(nsIPresContext* aPresContext, 
                               nsGUIEvent*     aEvent,
-                              nsEventStatus&  aEventStatus)
+                              nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsScrollbarFrame::HandleRelease(nsIPresContext& aPresContext, 
+nsScrollbarFrame::HandleRelease(nsIPresContext* aPresContext, 
                                  nsGUIEvent*     aEvent,
-                                 nsEventStatus&  aEventStatus)
+                                 nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }

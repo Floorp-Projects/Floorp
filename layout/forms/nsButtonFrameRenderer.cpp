@@ -52,7 +52,7 @@ nsButtonFrameRenderer::SetNameSpace(PRInt32 aNameSpace)
 }
 
 void
-nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext)
+nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext* aPresContext)
 {
   mFrame = aFrame;
   ReResolveStyles(aPresContext);
@@ -108,7 +108,7 @@ nsButtonFrameRenderer::Redraw(nsIPresContext* aPresContext)
 }
 
 void 
-nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
+nsButtonFrameRenderer::PaintButton     (nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           nsFramePaintLayer aWhichLayer,
@@ -124,7 +124,7 @@ nsButtonFrameRenderer::PaintButton     (nsIPresContext& aPresContext,
 }
 
 void
-nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
+nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           nsFramePaintLayer aWhichLayer,
@@ -166,7 +166,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
 
 void
-nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext& aPresContext,
+nsButtonFrameRenderer::PaintBorderAndBackground(nsIPresContext* aPresContext,
           nsIRenderingContext& aRenderingContext,
           const nsRect& aDirtyRect,
           nsFramePaintLayer aWhichLayer,
@@ -329,7 +329,7 @@ nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
  * Call this when styles change
  */
 void 
-nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
+nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
 {
 
   // get all the styles
@@ -341,13 +341,13 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext& aPresContext)
 
   // style for the inner such as a dotted line (Windows)
   nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
-  aPresContext.ProbePseudoStyleContextFor(content, atom, context,
+  aPresContext->ProbePseudoStyleContextFor(content, atom, context,
                                           PR_FALSE,
                                           getter_AddRefs(mInnerFocusStyle));
 
   // style for outer focus like a ridged border (MAC).
   atom = getter_AddRefs(NS_NewAtom(":-moz-focus-outer"));
-  aPresContext.ProbePseudoStyleContextFor(content, atom, context,
+  aPresContext->ProbePseudoStyleContextFor(content, atom, context,
                                           PR_FALSE,
                                           getter_AddRefs(mOuterFocusStyle));
 

@@ -82,8 +82,8 @@ public:
     static nsIFrame* mDebugChild;
     void GetValue(const nsSize& a, const nsSize& b, char* value);
     void GetValue(float a, float b, char* value);
-    void DrawSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
-    void PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+    void DrawSpring( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
+    void PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
     void DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height);
 
@@ -94,7 +94,7 @@ public:
     virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
     virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-    nsresult DisplayDebugInfoFor(nsIPresContext& aPresContext,
+    nsresult DisplayDebugInfoFor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
@@ -176,8 +176,8 @@ public:
   }
 
   void GetDebugInset(nsMargin& inset);
-  void AdjustChildren(nsIPresContext& aPresContext, nsBoxFrame* aBox);
-  void UpdatePseudoElements(nsIPresContext& aPresContext);
+  void AdjustChildren(nsIPresContext* aPresContext, nsBoxFrame* aBox);
+  void UpdatePseudoElements(nsIPresContext* aPresContext);
   nsresult GetContentOf(nsIFrame* aFrame, nsIContent** aContent);
 
     nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
@@ -236,7 +236,7 @@ PRBool nsBoxFrame::IsHorizontal() const
  * Initialize us. This is a good time to get the alignment of the box
  */
 NS_IMETHODIMP
-nsBoxFrame::Init(nsIPresContext&  aPresContext,
+nsBoxFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -306,7 +306,7 @@ nsBoxFrame::GetInnerRect(nsRect& aInner)
  * if so it used those instead. Currently it gets its values from css
  */
 void 
-nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
+nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
   // add in the css min, max, pref
     const nsStylePosition* position;
@@ -368,7 +368,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
     {
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
 
         value.Trim("%");
 
@@ -378,7 +378,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
     {
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
 
         value.Trim("%");
 
@@ -392,7 +392,7 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext&  aPresContext, nsIFrame* aFra
  *
  */
 nsresult
-nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
+nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
   aSize.clear();
 
@@ -486,7 +486,7 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
  * 3) move all the children to the right locations.
  */
 NS_IMETHODIMP
-nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
+nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -527,7 +527,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       // if it has redraw us
-      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     } else {
       // otherwise dirty our children
       Dirty(aPresContext, aReflowState,incrementalChild);
@@ -633,7 +633,7 @@ ListTag(stdout); printf(": reflow done\n");
  * at its not size.
  */
 nsresult
-nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
+nsBoxFrame::FlowChildren(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
@@ -723,7 +723,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
       ListTag(stdout);
       printf("is being redrawn\n");
 #endif
-    Invalidate(&aPresContext, nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
+    Invalidate(aPresContext, nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
   }
 
   delete[] resized;
@@ -868,11 +868,11 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
 }
 
 void 
-nsBoxFrame::CollapseChild(nsIPresContext& aPresContext, nsIFrame* frame, PRBool hide)
+nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame, PRBool hide)
 {
     // shrink the view
       nsIView* view = nsnull;
-      frame->GetView(&aPresContext, &view);
+      frame->GetView(aPresContext, &view);
 
       // if we find a view stop right here. All views under it
       // will be clipped.
@@ -905,7 +905,7 @@ nsBoxFrame::CollapseChild(nsIPresContext& aPresContext, nsIFrame* frame, PRBool 
 }
 
 NS_IMETHODIMP
-nsBoxFrame::DidReflow(nsIPresContext& aPresContext,
+nsBoxFrame::DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus)
 {
   nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
@@ -934,7 +934,7 @@ nsBoxFrame::DidReflow(nsIPresContext& aPresContext,
  * their margins
  */
 nsresult
-nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
+nsBoxFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
 {
   // ------- set the childs positions ---------
   nscoord x = boxRect.x;
@@ -952,7 +952,7 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
        nsRect rect(0,0,0,0);
        childFrame->GetRect(rect);
        if (rect.width > 0 || rect.height > 0) {
-          childFrame->SizeTo(&aPresContext, 0,0);
+          childFrame->SizeTo(aPresContext, 0,0);
        }
     } else {
       const nsStyleSpacing* spacing;
@@ -975,18 +975,18 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
       childFrame->GetRect(rect);
       rect.x = x;
       rect.y = y;
-      childFrame->SetRect(&aPresContext, rect);
-      childFrame->GetView(&aPresContext, &view);
+      childFrame->SetRect(aPresContext, rect);
+      childFrame->GetView(aPresContext, &view);
       // XXX Because we didn't position the frame or its view when reflowing
       // it we must re-position all child views. This isn't optimal, and if
       // we knew its final position, it would be better to position the frame
       // and its view when doing the reflow...
       if (view) {
-        nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, childFrame,
+        nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, childFrame,
                                                    view, nsnull);
       } else {
         // Re-position any child frame views
-        nsContainerFrame::PositionChildViews(&aPresContext, childFrame);
+        nsContainerFrame::PositionChildViews(aPresContext, childFrame);
       }
 
       // add in the right margin
@@ -1023,7 +1023,7 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 
 nsresult
 nsBoxFrame::FlowChildAt(nsIFrame* childFrame, 
-                     nsIPresContext& aPresContext,
+                     nsIPresContext* aPresContext,
                      nsHTMLReflowMetrics&     desiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
@@ -1063,7 +1063,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                shouldReflow = PR_FALSE;
                desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
                desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
-               childFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
+               childFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
           } else {
             desiredSize.width = currentRect.width;
             desiredSize.height = currentRect.height;
@@ -1202,9 +1202,9 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         // set the rect and size the view (if it has one).. Don't position the view
         // and sync its properties (like opacity) until later when we know its final
         // position
-        childFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
+        childFrame->SizeTo(aPresContext, desiredSize.width, desiredSize.height);
         nsIView*  view;
-        childFrame->GetView(&aPresContext, &view);
+        childFrame->GetView(aPresContext, &view);
         if (view) {
           nsIViewManager  *vm;
 
@@ -1503,7 +1503,7 @@ nsBoxFrame::SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc)
 // Marks the frame as dirty and generates an incremental reflow
 // command targeted at this frame
 nsresult
-nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
+nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
                                        nsIPresShell&   aPresShell)
 {
   nsCOMPtr<nsIReflowCommand>  reflowCmd;
@@ -1521,7 +1521,7 @@ nsBoxFrame::GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -1550,7 +1550,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::InsertFrames(nsIPresContext& aPresContext,
+nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -1592,7 +1592,7 @@ nsBoxFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::ReplaceFrame(nsIPresContext& aPresContext,
+nsBoxFrame::ReplaceFrame(nsIPresContext* aPresContext,
                       nsIPresShell&   aPresShell,
                       nsIAtom*        aListName,
                       nsIFrame*       aOldFrame,
@@ -1623,7 +1623,7 @@ nsBoxFrame::ReplaceFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::AppendFrames(nsIPresContext& aPresContext,
+nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)
@@ -1661,7 +1661,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
  * This method is defined in nsIBox interface.
  */
 NS_IMETHODIMP
-nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
    nsresult rv;
 
@@ -1777,13 +1777,13 @@ nsBoxFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
  * will be flowed incrementally.
  */
 NS_IMETHODIMP
-nsBoxFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsBoxFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   nsIFrame* targetFrame = nsnull;
   aReflowState.reflowCommand->GetTarget(targetFrame);
   if (this == targetFrame) {
     // if it has redraw us if we are the target
-    Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
   }
 
   incrementalChild = nsnull;
@@ -1830,7 +1830,7 @@ nsBoxFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflow
 }
 
 NS_IMETHODIMP
-nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
+nsBoxFrame :: Paint ( nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect& aDirtyRect,
                       nsFramePaintLayer aWhichLayer)
@@ -1858,7 +1858,7 @@ nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
 
 // Paint one child frame
 void
-nsBoxFrame::PaintChild(nsIPresContext&      aPresContext,
+nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
@@ -1875,7 +1875,7 @@ nsBoxFrame::PaintChild(nsIPresContext&      aPresContext,
 }
 
 void 
-nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect)
+nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect)
 {
     
         // remove our border
@@ -1887,7 +1887,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext& aPresContext, nsIRenderingContext&
         spacing->GetBorderPadding(border);
 
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
         nsIStyleContext* debugStyle;
@@ -1973,12 +1973,12 @@ nsBoxDebugInner::FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nsc
 }
 
 void 
-nsBoxDebugInner::DrawSpring(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
+nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, float flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
 {
         // PRBool h = mOuter->mHorizontal;
     
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
      // if we do draw the coils
@@ -2015,7 +2015,7 @@ nsBoxDebugInner::DrawSpring(nsIPresContext& aPresContext, nsIRenderingContext& a
 }
 
 void
-nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext) 
+nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext) 
 {
     nsCOMPtr<nsIStyleContext> hs;
     nsCOMPtr<nsIStyleContext> vs;
@@ -2024,12 +2024,12 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext)
     GetContentOf(mOuter, getter_AddRefs(content));
 
 	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
-	aPresContext.ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
+	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
 										  getter_AddRefs(hs));
 
   	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
-	aPresContext.ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
+	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
 										  PR_FALSE,
 										  getter_AddRefs(vs));
 
@@ -2041,7 +2041,7 @@ nsBoxFrameInner::UpdatePseudoElements(nsIPresContext& aPresContext)
         }
         mDebugInner->mHorizontalDebugStyle = hs;
         mDebugInner->mVerticalDebugStyle = vs;
-        aPresContext.GetScaledPixelsToTwips(&mDebugInner->mP2t);
+        aPresContext->GetScaledPixelsToTwips(&mDebugInner->mP2t);
     } else {
         if (mDebugInner) 
         {
@@ -2211,7 +2211,7 @@ nsBoxDebugInner::RemoveListener()
 }
 
 nsresult
-nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
+nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -2226,7 +2226,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
       // how much we are scrolled.
       nsIScrollableView* scrollingView;
       nsIView*           view;
-      parent->GetView(&aPresContext, &view);
+      parent->GetView(aPresContext, &view);
       if (view) {
         nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
         if (NS_SUCCEEDED(result)) {
@@ -2362,7 +2362,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
                     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
                     {
                         float p2t;
-                        aPresContext.GetScaledPixelsToTwips(&p2t);
+                        aPresContext->GetScaledPixelsToTwips(&p2t);
 
                         value.Trim("%");
 
@@ -2372,7 +2372,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
                     if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
                     {
                         float p2t;
-                        aPresContext.GetScaledPixelsToTwips(&p2t);
+                        aPresContext->GetScaledPixelsToTwips(&p2t);
 
                         value.Trim("%");
 
@@ -2415,7 +2415,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsBoxFrame::GetCursor(nsIPresContext& aPresContext,
+nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
                            nsPoint&        aPoint,
                            PRInt32&        aCursor)
 {

@@ -109,7 +109,7 @@ nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioBu
 }
 
 void
-nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
+nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
                                       nsIRenderingContext& aRenderingContext,
                                       const nsRect& aDirtyRect)
 {
@@ -142,7 +142,7 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
 }
 
 NS_METHOD 
-nsGfxRadioControlFrame::Paint(nsIPresContext& aPresContext,
+nsGfxRadioControlFrame::Paint(nsIPresContext* aPresContext,
                            nsIRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect,
                            nsFramePaintLayer aWhichLayer)
@@ -175,7 +175,7 @@ void nsGfxRadioControlFrame::SetRadioState(nsIPresContext* aPresContext, PRBool 
 
 #ifdef DEBUG_rods
 NS_IMETHODIMP 
-nsGfxRadioControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsGfxRadioControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)

@@ -35,7 +35,7 @@ public:
   friend nsresult NS_NewMathMLmtdFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);

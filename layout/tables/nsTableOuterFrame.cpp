@@ -60,11 +60,11 @@ struct OuterTableReflowState {
   // Running y-offset
   nscoord y;
 
-  OuterTableReflowState(nsIPresContext&          aPresContext,
+  OuterTableReflowState(nsIPresContext*          aPresContext,
                         const nsHTMLReflowState& aReflowState)
     : reflowState(aReflowState)
   {
-    pc = &aPresContext;
+    pc = aPresContext;
     availSize.width = reflowState.availableWidth;
     availSize.height = reflowState.availableHeight;
     prevMaxPosBottomMargin = 0;
@@ -101,7 +101,7 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   }
 }
 
-NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContext,
+NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                      nsIAtom*        aListName,
                                                      nsIFrame*       aChildList)
 {
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContex
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::AppendFrames(nsIPresContext& aPresContext,
+nsTableOuterFrame::AppendFrames(nsIPresContext* aPresContext,
                                 nsIPresShell&   aPresShell,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aFrameList)
@@ -170,7 +170,7 @@ nsTableOuterFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::InsertFrames(nsIPresContext& aPresContext,
+nsTableOuterFrame::InsertFrames(nsIPresContext* aPresContext,
                                 nsIPresShell&   aPresShell,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aPrevFrame,
@@ -181,7 +181,7 @@ nsTableOuterFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aOldFrame)
@@ -222,7 +222,7 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD nsTableOuterFrame::Paint(nsIPresContext&      aPresContext,
+NS_METHOD nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    const nsRect&        aDirtyRect,
                                    nsFramePaintLayer    aWhichLayer)
@@ -309,7 +309,7 @@ nsresult nsTableOuterFrame::RecoverState(OuterTableReflowState& aReflowState,
   return NS_OK;
 }
 
-nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext*        aPresContext,
                                               nsHTMLReflowMetrics&   aDesiredSize,
                                               OuterTableReflowState& aReflowState,
                                               nsReflowStatus&        aStatus)
@@ -336,7 +336,7 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext&        aPresContex
   return rv;
 }
 
-nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
                                              nsHTMLReflowMetrics&   aDesiredSize,
                                              OuterTableReflowState& aReflowState,
                                              nsReflowStatus&        aStatus,
@@ -369,7 +369,7 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext&        aPresContext
   return rv;
 }
 
-nsresult nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext*        aPresContext,
                                                        nsHTMLReflowMetrics&   aDesiredSize,
                                                        OuterTableReflowState& aReflowState,
                                                        nsReflowStatus&        aStatus)
@@ -378,7 +378,7 @@ nsresult nsTableOuterFrame::IR_TargetIsInnerTableFrame(nsIPresContext&        aP
   return rv;
 }
 
-nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*        aPresContext,
                                                     nsHTMLReflowMetrics&   aDesiredSize,
                                                     OuterTableReflowState& aReflowState,
                                                     nsReflowStatus&        aStatus)
@@ -465,7 +465,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
   }
 
   // regardless of what we've done up to this point, place the caption and inner table
-  rv = SizeAndPlaceChildren(&aPresContext, innerTableSize, 
+  rv = SizeAndPlaceChildren(aPresContext, innerTableSize, 
                             nsSize (captionSize.width, captionSize.height), 
                             aReflowState);
 
@@ -473,7 +473,7 @@ nsresult nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext&        aPres
 }
 
 nsresult
-nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
+nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*        aPresContext,
                                   nsHTMLReflowMetrics&   aDesiredSize,
                                   OuterTableReflowState& aReflowState,
                                   nsReflowStatus&        aStatus)
@@ -490,7 +490,7 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
 
       // Repaint our entire bounds
       // XXX Improve this...
-      Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+      Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
     }
   }
 
@@ -512,13 +512,13 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
 
     // Repaint the inner table frame's entire visible area
     dirtyRect.x = dirtyRect.y = 0;
-    Invalidate(&aPresContext, dirtyRect);
+    Invalidate(aPresContext, dirtyRect);
 
   } else if (!mCaptionFrame) {
     // The inner table isn't dirty so we don't need to reflow it, but make
     // sure it's placed correctly. It could be that we're dirty because the
     // caption was removed
-    mInnerTableFrame->MoveTo(&aPresContext, 0,0);
+    mInnerTableFrame->MoveTo(aPresContext, 0,0);
 
     // Update our state so we calculate our desired size correctly
     nsRect  innerRect;
@@ -528,14 +528,14 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext&        aPresContext,
     
     // Repaint our entire bounds
     // XXX Improve this...
-    Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
+    Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
   }
 
   return rv;
 }
 
 // IR_TargetIsMe is free to foward the request to the inner table frame 
-nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext*        aPresContext,
                                           nsHTMLReflowMetrics&   aDesiredSize,
                                           OuterTableReflowState& aReflowState,
                                           nsReflowStatus&        aStatus)
@@ -568,7 +568,7 @@ nsresult nsTableOuterFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   return rv;
 }
 
-nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*        aPresContext,
                                                 nsHTMLReflowMetrics&   aDesiredSize,
                                                 OuterTableReflowState& aReflowState,
                                                 nsReflowStatus&        aStatus)
@@ -632,7 +632,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
       else {
         captionRect.SizeTo(oldCaptionRect.width, oldCaptionRect.height);
       }
-      mCaptionFrame->SetRect(&aPresContext, captionRect);
+      mCaptionFrame->SetRect(aPresContext, captionRect);
     }
   }
 
@@ -666,7 +666,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
     aReflowState.y = innerSize.height;
   }
   nsRect innerRect(0, innerY, innerSize.width, innerSize.height);
-  mInnerTableFrame->SetRect(&aPresContext, innerRect);
+  mInnerTableFrame->SetRect(aPresContext, innerRect);
 
   aReflowState.innerTableMaxSize.width = innerSize.width;
   return rv;
@@ -678,7 +678,7 @@ nsresult nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext&        aPresCont
    checks the old maxElementSize and reflows the table only if it
    has changed
 */
-nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresContext,
+nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*        aPresContext,
                                                nsHTMLReflowMetrics&   aDesiredSize,
                                                OuterTableReflowState& aReflowState,
                                                nsReflowStatus&        aStatus)
@@ -718,7 +718,7 @@ nsresult nsTableOuterFrame::IR_CaptionInserted(nsIPresContext&        aPresConte
     }
   }
 
-  rv = SizeAndPlaceChildren(&aPresContext,
+  rv = SizeAndPlaceChildren(aPresContext,
                             nsSize (innerSize.width, innerSize.height), 
                             nsSize (captionSize.width, captionSize.height), 
                             aReflowState);
@@ -841,7 +841,7 @@ nscoord nsTableOuterFrame::ComputeAvailableTableWidth(const nsHTMLReflowState& a
   * inner table no longer fits and has to be reflowed again this time with s
   * smaller available height
   */
-NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
+NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
                                     const nsHTMLReflowState& aReflowState,
                                     nsReflowStatus&          aStatus)
@@ -866,7 +866,7 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext&          aPresContext,
     if (eReflowReason_Initial == aReflowState.reason) {
       // Set up our kids.  They're already present, on an overflow list, 
       // or there are none so we'll create them now
-      MoveOverflowToChildList(&aPresContext);
+      MoveOverflowToChildList(aPresContext);
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {
@@ -1013,7 +1013,7 @@ NS_METHOD nsTableOuterFrame::VerifyTree() const
  * @param   aChild child this child's next-in-flow
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
-void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, 
+void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext, 
                                                nsIFrame*       aChild)
 {
   NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");

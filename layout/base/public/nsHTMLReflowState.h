@@ -207,7 +207,7 @@ struct nsHTMLReflowState {
 
   // Initialize a <b>root</b> reflow state with a rendering context to
   // use for measuring things.
-  nsHTMLReflowState(nsIPresContext&          aPresContext,
+  nsHTMLReflowState(nsIPresContext*          aPresContext,
                     nsIFrame*                aFrame,
                     nsReflowReason           aReason,
                     nsIRenderingContext*     aRenderingContext,
@@ -215,7 +215,7 @@ struct nsHTMLReflowState {
 
   // Initialize a <b>root</b> reflow state for an <b>incremental</b>
   // reflow.
-  nsHTMLReflowState(nsIPresContext&          aPresContext,
+  nsHTMLReflowState(nsIPresContext*          aPresContext,
                     nsIFrame*                aFrame,
                     nsIReflowCommand&        aReflowCommand,
                     nsIRenderingContext*     aRenderingContext,
@@ -224,7 +224,7 @@ struct nsHTMLReflowState {
   // Initialize a reflow state for a child frames reflow. Some state
   // is copied from the parent reflow state; the remaining state is
   // computed.
-  nsHTMLReflowState(nsIPresContext&          aPresContext,
+  nsHTMLReflowState(nsIPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
@@ -232,14 +232,14 @@ struct nsHTMLReflowState {
 
   // Same as the previous except that the reason is taken from the
   // parent's reflow state.
-  nsHTMLReflowState(nsIPresContext&          aPresContext,
+  nsHTMLReflowState(nsIPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace);
 
   // Used when you want to override the default containing block
   // width and height. Used by absolute positioning code
-  nsHTMLReflowState(nsIPresContext&          aPresContext,
+  nsHTMLReflowState(nsIPresContext*          aPresContext,
                     const nsHTMLReflowState& aParentReflowState,
                     nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
@@ -287,7 +287,7 @@ struct nsHTMLReflowState {
    * value, if line-height was applied and is valid will be >= 0. Otherwise,
    * the return value will be <0 which is illegal (CSS2 spec: section 10.8.1).
    */
-  static nscoord CalcLineHeight(nsIPresContext& aPresContext,
+  static nscoord CalcLineHeight(nsIPresContext* aPresContext,
                                 nsIRenderingContext* aRenderingContext,
                                 nsIFrame* aFrame);
 
@@ -302,15 +302,15 @@ struct nsHTMLReflowState {
 protected:
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsIPresContext& aPresContext,
+  void Init(nsIPresContext* aPresContext,
             nscoord         aContainingBlockWidth = -1,
             nscoord         aContainingBlockHeight = -1);
 
-  void InitConstraints(nsIPresContext& aPresContext,
+  void InitConstraints(nsIPresContext* aPresContext,
                        nscoord         aContainingBlockWidth,
                        nscoord         aContainingBlockHeight);
 
-  void InitAbsoluteConstraints(nsIPresContext& aPresContext,
+  void InitAbsoluteConstraints(nsIPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,
                                nscoord aContainingBlockWidth,
                                nscoord aContainingBlockHeight);
@@ -319,7 +319,7 @@ protected:
                               nscoord aContainingBlockWidth,
                               nscoord aContainingBlockHeight);
 
-  void ComputeBlockBoxData(nsIPresContext& aPresContext,
+  void ComputeBlockBoxData(nsIPresContext* aPresContext,
                            const nsHTMLReflowState* cbrs,
                            nsStyleUnit aWidthUnit,
                            nsStyleUnit aHeightUnit,

@@ -38,12 +38,12 @@ public:
   friend nsresult NS_NewTitledButtonFrame(nsIFrame** aNewFrame);
 
   // nsIBox frame interface
-  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild);
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -61,27 +61,27 @@ public:
                                         nsIStyleContext* aStyleContext);
   NS_IMETHOD  DidSetStyleContext (nsIPresContext* aPresContext);
 
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void UpdateAttributes(nsIPresContext&  aPresContext);
-  virtual void UpdateImage(nsIPresContext&  aPresContext);
+  virtual void UpdateAttributes(nsIPresContext*  aPresContext);
+  virtual void UpdateImage(nsIPresContext*  aPresContext);
 
   // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
  
   ~nsTitledButtonFrame();
@@ -93,19 +93,19 @@ protected:
   void SetCurrentCheckState(CheckState aState);
   void UpdateAccessUnderline();
 
-  virtual void MouseClicked(nsIPresContext & aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
+  NS_IMETHOD  PaintTitle(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect,
                          nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD  PaintImage(nsIPresContext& aPresContext,
+  NS_IMETHOD  PaintImage(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect,
                          nsFramePaintLayer aWhichLayer);
 
-  virtual void LayoutTitleAndImage(nsIPresContext& aPresContext,
+  virtual void LayoutTitleAndImage(nsIPresContext* aPresContext,
                                    nsIRenderingContext& aRenderingContext,
                                    const nsRect& aDirtyRect,
                                    nsFramePaintLayer aWhichLayer);
@@ -115,10 +115,10 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize);
 
 
-  void DisplayAltFeedback(nsIPresContext&      aPresContext,
+  void DisplayAltFeedback(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRInt32              aIconId);
-  void DisplayAltText(nsIPresContext&      aPresContext,
+  void DisplayAltText(nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsString&      aAltText,
                       const nsRect&        aRect);
@@ -131,9 +131,9 @@ protected:
 
   nsTitledButtonFrame();
 
-  virtual void CalculateTitleForWidth(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
+  virtual void CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
 
-  virtual void GetTextSize(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
+  virtual void GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize);
 
   virtual void SetDisabled(nsAutoString aDisabled);
 

@@ -45,7 +45,7 @@ public:
   friend nsresult NS_NewMathMLmstyleFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Init(nsIPresContext&  aPresContext,
+  Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
@@ -61,7 +61,7 @@ public:
                                     PRBool  aDisplayStyle);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext& aPresContext,
+  SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {

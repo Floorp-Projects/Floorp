@@ -127,13 +127,13 @@ nsMenuFrame::nsMenuFrame()
 } // cntr
 
 NS_IMETHODIMP
-nsMenuFrame::Init(nsIPresContext&  aPresContext,
+nsMenuFrame::Init(nsIPresContext*  aPresContext,
                      nsIContent*      aContent,
                      nsIFrame*        aParent,
                      nsIStyleContext* aContext,
                      nsIFrame*        aPrevInFlow)
 {
-  mPresContext = &aPresContext; // Don't addref it.  Our lifetime is shorter.
+  mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
 
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
@@ -158,7 +158,7 @@ nsMenuFrame::FirstChild(nsIAtom*   aListName,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -202,7 +202,7 @@ nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Destroy(nsIPresContext& aPresContext)
+nsMenuFrame::Destroy(nsIPresContext* aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
@@ -232,11 +232,12 @@ nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsMenuFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsMenuFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   
   if (IsDisabled()) // Disabled menus process no events.
     return NS_OK;
@@ -521,7 +522,7 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       if (mMenuParent)
         mMenuParent->IsMenuBar(onMenuBar);
 
-      menuPopup->SyncViewWithFrame(*mPresContext, onMenuBar, this, -1, -1);
+      menuPopup->SyncViewWithFrame(mPresContext, onMenuBar, this, -1, -1);
     }
 
     ActivateMenu(PR_TRUE);
@@ -594,7 +595,7 @@ nsMenuFrame::GetMenuChildrenElement(nsIContent** aResult)
 }
 
 NS_IMETHODIMP
-nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
+nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
@@ -627,7 +628,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
    // Set the child's width and height to its desired size
    // Note: don't position or size the view now, we'll do that in the
    // DidReflow() function
-  frame->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+  frame->SizeTo(aPresContext, aDesiredSize.width, aDesiredSize.height);
   frame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Don't let it affect our size.
@@ -639,7 +640,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
 
 
 NS_IMETHODIMP
-nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
+nsMenuFrame::DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus)
 {
   nsresult rv;
@@ -665,7 +666,7 @@ nsMenuFrame::DidReflow(nsIPresContext& aPresContext,
 
 // Overridden Box method.
 NS_IMETHODIMP
-nsMenuFrame::Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
+nsMenuFrame::Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
 {
   incrementalChild = nsnull;
   nsresult rv = NS_OK;
@@ -1176,7 +1177,7 @@ nsMenuFrame::Execute()
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
-  mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   // XXX HACK. Just gracefully exit if the node has been removed, e.g., window.close()
   // was executed.
@@ -1206,8 +1207,8 @@ nsMenuFrame::OnCreate()
   
   nsresult rv;
   if (child) 
-    rv = child->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  else rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    rv = child->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  else rv = mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
@@ -1227,8 +1228,8 @@ nsMenuFrame::OnDestroy()
   
   nsresult rv;
   if (child) 
-    rv = child->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  else rv = mContent->HandleDOMEvent(*mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+    rv = child->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  else rv = mContent->HandleDOMEvent(mPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   if ( NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault )
     return PR_FALSE;
@@ -1236,7 +1237,7 @@ nsMenuFrame::OnDestroy()
 }
 
 NS_IMETHODIMP
-nsMenuFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsMenuFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -1255,7 +1256,7 @@ nsMenuFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::InsertFrames(nsIPresContext& aPresContext,
+nsMenuFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -1279,7 +1280,7 @@ nsMenuFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuFrame::AppendFrames(nsIPresContext& aPresContext,
+nsMenuFrame::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList)

@@ -652,7 +652,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 				        }
 				        aKeyEvent->PreventBubble();
 				        aKeyEvent->PreventCapture();
-				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+				        content->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
                         ret = NS_ERROR_BASE;
 
 		                if (aEventType == eKeyPress) {
@@ -662,7 +662,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		                  nsMouseEvent evt;
 		                  evt.eventStructType = NS_EVENT;
 		                  evt.message = NS_MENU_ACTION;
-		                  content->HandleDOMEvent(*aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, stat);
+		                  content->HandleDOMEvent(aPresContext, &evt, nsnull, NS_EVENT_FLAG_INIT, &stat);
 						}
 					    // Ok, we got this far and handled the event, so don't continue scanning nodes
 					    //printf("Keybind executed \n");

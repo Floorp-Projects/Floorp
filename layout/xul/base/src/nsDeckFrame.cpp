@@ -62,7 +62,7 @@ NS_NewDeckFrame ( nsIFrame** aNewFrame )
 } // NS_NewDeckFrame
 
 NS_IMETHODIMP
-nsDeckFrame::Init(nsIPresContext&  aPresContext,
+nsDeckFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -119,9 +119,9 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
       {
         // make collapsed children not show up
         if (index != count) 
-           CollapseChild(*aPresContext, childFrame, PR_TRUE);
+           CollapseChild(aPresContext, childFrame, PR_TRUE);
         else
-           CollapseChild(*aPresContext, childFrame, PR_FALSE);
+           CollapseChild(aPresContext, childFrame, PR_FALSE);
 
         rv = childFrame->GetNextSibling(&childFrame);
         NS_ASSERTION(rv == NS_OK,"failed to get next child");
@@ -165,7 +165,7 @@ nsDeckFrame::GetSelectedFrame()
 
 
 NS_IMETHODIMP
-nsDeckFrame::Paint(nsIPresContext& aPresContext,
+nsDeckFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -232,7 +232,7 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsDeckFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -268,7 +268,7 @@ nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
 }
 
 nsresult
-nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
+nsDeckFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
 {
   // ------- set the childs positions ---------
   nsIFrame* childFrame = mFrames.FirstChild(); 
@@ -288,7 +288,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
           CollapseChild(aPresContext, childFrame, PR_TRUE);
        //}
     } else {
-      childFrame->MoveTo(&aPresContext, boxRect.x, boxRect.y);
+      childFrame->MoveTo(aPresContext, boxRect.x, boxRect.y);
     }
 
     rv = childFrame->GetNextSibling(&childFrame);
@@ -301,7 +301,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 }
 
 NS_IMETHODIMP
-nsDeckFrame::DidReflow(nsIPresContext& aPresContext,
+nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus)
 {
   int index = 0;

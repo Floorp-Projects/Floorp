@@ -61,7 +61,7 @@ nsTreeIndentationFrame::~nsTreeIndentationFrame()
 }
 
 NS_IMETHODIMP
-nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
+nsTreeIndentationFrame::Reflow(nsIPresContext*          aPresContext,
 							   nsHTMLReflowMetrics&     aMetrics,
 							   const nsHTMLReflowState& aReflowState,
 							   nsReflowStatus&          aStatus)
@@ -117,7 +117,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
  
   if (0 != mWidth) {
       aMetrics.width = NSIntPixelsToTwips(mWidth, p2t);

@@ -138,32 +138,32 @@ nsButtonControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsButtonControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsButtonControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerHeight) const
 {
   float pad;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonVerticalInsidePadding,  pad);
   }
   return (nscoord)NSToIntRound((float)aInnerHeight * pad);
 }
 
 nscoord 
-nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                  float aPixToTwip, 
                                                  nscoord aInnerWidth,
                                                  nscoord aCharWidth) const
 {
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(&mode);
+  aPresContext->GetCompatibilityMode(&mode);
 
   float   pad;
   PRInt32 padQuirks;
   PRInt32 padQuirksOffset;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
     lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ButtonHorizontalInsidePadding,  pad);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingNavQuirks,  padQuirks);
     lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks,  padQuirksOffset);
@@ -195,7 +195,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     case NS_FORM_INPUT_RESET:
       event.message = NS_FORM_RESET;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnReset(aPresContext);
@@ -204,7 +204,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     case NS_FORM_INPUT_SUBMIT:
       event.message = NS_FORM_SUBMIT;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnSubmit(aPresContext, this);
@@ -272,7 +272,7 @@ nsButtonControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     }
   } else {
     nsSize styleSize;
-    GetStyleSize(*aPresContext, aReflowState, styleSize);
+    GetStyleSize(aPresContext, aReflowState, styleSize);
     // a browse button shares its style context with its parent nsInputFile
     // it uses everything from it except width
     if (NS_FORM_BROWSE == type) {

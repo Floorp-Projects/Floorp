@@ -216,7 +216,7 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
 // need to hold an owning ref to it ourselves.
 //
 NS_IMETHODIMP
-nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+nsToolbarFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                         nsIFrame* aParent, nsIStyleContext* aContext,
                         nsIFrame* aPrevInFlow)
 {
@@ -229,7 +229,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
   // register our drag over and exit capturers. These annotate the content object
   // with enough info to determine where the drop would happen so that JS down the 
   // line can do the right thing.
-  mDragListener = new nsToolbarDragListener(this, &aPresContext);
+  mDragListener = new nsToolbarDragListener(this, aPresContext);
   receiver->AddEventListener("dragover", mDragListener, PR_TRUE);
   receiver->AddEventListener("dragexit", mDragListener, PR_TRUE);
 
@@ -267,7 +267,7 @@ nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
 // Used to draw the drop feedback based on attributes set by the drag event capturer
 //
 NS_IMETHODIMP
-nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
+nsToolbarFrame :: Paint ( nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -279,7 +279,7 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
     // have it yet, go looking for it.
     if (!mMarkerStyle) {
       nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
-      aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+      aPresContext->ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
                                                 PR_FALSE, getter_AddRefs(mMarkerStyle));
     }
     
@@ -342,9 +342,9 @@ nsToolbarFrame :: GetFrameForPoint ( nsIPresContext* aPresContext,
 // almost certainly drag and drop events.
 //
 NS_IMETHODIMP 
-nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext, 
+nsToolbarFrame :: HandleEvent ( nsIPresContext* aPresContext, 
                                    nsGUIEvent*     aEvent, 
-                                   nsEventStatus&  aEventStatus) 
+                                   nsEventStatus*  aEventStatus) 
 { 
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
@@ -376,7 +376,7 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
  * Call this when styles change
  */
 void 
-nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
+nsToolbarFrame::ReResolveStyles(nsIPresContext* aPresContext,
                                        PRInt32 aParentChange,
                                        nsStyleChangeList* aChangeList,
                                        PRInt32* aLocalChange)
@@ -388,7 +388,7 @@ nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
   /*nsCOMPtr<nsIStyleContext> oldMarker = mMarkerStyle;
 
 	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-marker")) );
-	aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+	aPresContext->ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
 										  PR_FALSE,
 										  getter_AddRefs(mMarkerStyle));
   if ((mMarkerStyle && oldMarker) && (mMarkerStyle != oldMarker)) {

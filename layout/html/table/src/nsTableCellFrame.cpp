@@ -56,7 +56,7 @@ nsTableCellFrame::~nsTableCellFrame()
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::Init(nsIPresContext&  aPresContext,
+nsTableCellFrame::Init(nsIPresContext*  aPresContext,
                        nsIContent*      aContent,
                        nsIFrame*        aParent,
                        nsIStyleContext* aContext,
@@ -107,7 +107,7 @@ void nsTableCellFrame::SetPass1MaxElementSize(const nsSize& aMaxElementSize)
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::AppendFrames(nsIPresContext& aPresContext,
+nsTableCellFrame::AppendFrames(nsIPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aFrameList)
@@ -117,7 +117,7 @@ nsTableCellFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::InsertFrames(nsIPresContext& aPresContext,
+nsTableCellFrame::InsertFrames(nsIPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aPrevFrame,
@@ -128,7 +128,7 @@ nsTableCellFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableCellFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsTableCellFrame::RemoveFrame(nsIPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aOldFrame)
@@ -216,7 +216,7 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
 }
 
 
-NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
+NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
@@ -287,7 +287,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
   // the rendering context.
   PRBool clipState;
   nsPoint offset;
-  GetCollapseOffset(&aPresContext, offset);
+  GetCollapseOffset(aPresContext, offset);
   if ((0 != offset.x) || (0 != offset.y)) {
     aRenderingContext.PushState();
     aRenderingContext.Translate(offset.x, offset.y);
@@ -550,7 +550,7 @@ void DebugCheckChildSize(nsIFrame*            aChild,
 
 /**
   */
-NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
+NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -560,7 +560,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
   nsCompatibility compatMode;
-  aPresContext.GetCompatibilityMode(&compatMode);
+  aPresContext->GetCompatibilityMode(&compatMode);
 
   // Initialize out parameter
   if (nsnull != aDesiredSize.maxElementSize) {
@@ -695,7 +695,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext&          aPresContext,
 
   // calculate the min cell width
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
   nscoord smallestMinWidth = onePixel;
   if (eCompatibility_NavQuirks == compatMode) {

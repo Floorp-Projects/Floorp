@@ -28,6 +28,7 @@ XPIDL_MODULE=widget
 
 XPIDLSRCS =               \
   .\nsIAppShell.idl \
+  .\nsIBaseWindow.idl \
   .\nsIFilePicker.idl          \
   .\nsIFileSpecWithUI.idl          \
   .\nsISound.idl          \

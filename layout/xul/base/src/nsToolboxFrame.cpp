@@ -222,14 +222,14 @@ nsToolboxFrame::SetAdditionalStyleContext(PRInt32 aIndex,
 }
 
 NS_IMETHODIMP
-nsToolboxFrame::Init(nsIPresContext&  aPresContext,
+nsToolboxFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
               nsIFrame*        aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  UpdateStyles(&aPresContext);
+  UpdateStyles(aPresContext);
 
   // Register the delegate as a drag listener.
   mDragListenerDelegate = new DragListenerDelegate(this);
@@ -267,7 +267,7 @@ nsToolboxFrame::UpdateStyles(nsIPresContext*  aPresContext)
 // children, draw our grippies for each toolbar.
 //
 NS_IMETHODIMP
-nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
+nsToolboxFrame :: Paint ( nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -297,7 +297,7 @@ nsToolboxFrame :: Paint ( nsIPresContext& aPresContext,
 // and figuring out how to draw the grippies based on size/visibility information
 // 
 void
-nsToolboxFrame :: DrawGrippies (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext ) const
+nsToolboxFrame :: DrawGrippies (  nsIPresContext* aPresContext, nsIRenderingContext & aRenderingContext ) const
 {
   for ( PRInt32 i = 0; i < mGrippies.Count(); ++i ) {
     TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);
@@ -315,7 +315,7 @@ nsToolboxFrame :: DrawGrippies (  nsIPresContext& aPresContext, nsIRenderingCont
 // Draw a single grippy in the given rectangle, either with or without rollover feedback.
 //
 void
-nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContext & aRenderingContext,
+nsToolboxFrame :: DrawGrippy (  nsIPresContext* aPresContext, nsIRenderingContext & aRenderingContext,
                                   const nsRect & aBoundingRect, PRBool aDrawHilighted ) const
 {
   nsCOMPtr<nsIStyleContext> style ( aDrawHilighted ? mGrippyRolloverStyle : mGrippyNormalStyle ) ;
@@ -339,14 +339,14 @@ nsToolboxFrame :: DrawGrippy (  nsIPresContext& aPresContext, nsIRenderingContex
 } // DrawGrippy
 
 NS_IMETHODIMP
-nsToolboxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
+nsToolboxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize)
 {
   CalculateGrippies(aPresContext);
   return nsBoxFrame::GetBoxInfo(aPresContext, aReflowState, aSize);
 }
 
 NS_IMETHODIMP 
-nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
+nsToolboxFrame :: Reflow(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
@@ -360,7 +360,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 // After we have been flowed this should be flowed to place the grippies at there
 // physical locations.
 nsresult
-nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
+nsToolboxFrame::ReflowGrippies(nsIPresContext*          aPresContext,
                          nsHTMLReflowMetrics&     aDesiredSize,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
@@ -370,7 +370,7 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
   GetInnerRect(innerRect);
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord grippyWidth = kGrippyWidthInPixels * onePixel;   // remember to leave room for the grippy on the right
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
@@ -430,12 +430,12 @@ nsToolboxFrame::ReflowGrippies(nsIPresContext&          aPresContext,
 // called to figure out how big our grippies are and how many we have
 // this will be called by boxes reflow method.
 void
-nsToolboxFrame::CalculateGrippies(nsIPresContext& aPresContext)
+nsToolboxFrame::CalculateGrippies(nsIPresContext* aPresContext)
 {
    // compute amount (in twips) each toolbar will be offset from the right because of 
   // the grippy
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
   nscoord collapsedGrippyWidth  = kCollapsedGrippyWidthInPixels  * onePixel;
@@ -631,9 +631,9 @@ nsToolboxFrame :: GetFrameForPoint(nsIPresContext* aPresContext,
 //
 // 
 NS_IMETHODIMP
-nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext, 
+nsToolboxFrame :: HandleEvent ( nsIPresContext* aPresContext, 
                                    nsGUIEvent*     aEvent,
-                                   nsEventStatus&  aEventStatus)
+                                   nsEventStatus*  aEventStatus)
 {
   if ( !aEvent )
     return nsEventStatus_eIgnore;
@@ -645,15 +645,15 @@ nsToolboxFrame :: HandleEvent ( nsIPresContext& aPresContext,
       break;
 
     case NS_MOUSE_LEFT_BUTTON_UP:
-      OnMouseLeftClick ( &aPresContext, aEvent->point );
+      OnMouseLeftClick ( aPresContext, aEvent->point );
       break;
     
     case NS_MOUSE_MOVE:
-      OnMouseMove ( &aPresContext, aEvent->point );
+      OnMouseMove ( aPresContext, aEvent->point );
       break;
       
     case NS_MOUSE_EXIT:
-      OnMouseExit ( &aPresContext);
+      OnMouseExit ( aPresContext);
       break;
 
     default:

@@ -323,11 +323,11 @@ nsHTMLImageElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 
 
 NS_IMETHODIMP
-nsHTMLImageElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLImageElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

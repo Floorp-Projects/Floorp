@@ -208,11 +208,11 @@ public:
 
 
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus);
+                            nsEventStatus* aEventStatus);
 
   // nsIJSScriptObject interface
   virtual PRBool    AddProperty(JSContext *aContext, jsval aID, jsval *aVp);

@@ -187,23 +187,23 @@ public:
   NS_IMETHOD ClearUndisplayedContentMap();
 
   // Functions for manipulating the frame model
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIFrame*       aParentFrame,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
@@ -215,10 +215,10 @@ public:
 
   NS_IMETHOD NotifyDestroyingFrame(nsIFrame* aFrame);
 
-  NS_IMETHOD ReParentStyleContext(nsIPresContext& aPresContext,
+  NS_IMETHOD ReParentStyleContext(nsIPresContext* aPresContext,
                                   nsIFrame* aFrame, 
                                   nsIStyleContext* aNewParentContext);
-  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext& aPresContext,
+  NS_IMETHOD ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                    nsIFrame* aFrame, 
                                    PRInt32 aAttrNameSpaceID,
                                    nsIAtom* aAttribute,
@@ -279,7 +279,7 @@ private:
   CantRenderReplacedElementEvent* mPostedEvents;
   PropertyList*                   mPropertyList;
 
-  void ReResolveStyleContext(nsIPresContext& aPresContext,
+  void ReResolveStyleContext(nsIPresContext* aPresContext,
                              nsIFrame* aFrame,
                              nsIStyleContext* aParentContext,
                              nsIContent* aParentContent,
@@ -337,7 +337,7 @@ FrameManager::~FrameManager()
   // we've destroyed the frame hierarchy because some frames may expect to be
   // able to retrieve their properties during destruction
   if (mRootFrame) {
-    mRootFrame->Destroy(*presContext);
+    mRootFrame->Destroy(presContext);
     mRootFrame = nsnull;
   }
   
@@ -596,7 +596,7 @@ FrameManager::ClearUndisplayedContentMap()
 //----------------------------------------------------------------------
 
 NS_IMETHODIMP
-FrameManager::AppendFrames(nsIPresContext& aPresContext,
+FrameManager::AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIFrame*       aParentFrame,
                            nsIAtom*        aListName,
@@ -607,7 +607,7 @@ FrameManager::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-FrameManager::InsertFrames(nsIPresContext& aPresContext,
+FrameManager::InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIFrame*       aParentFrame,
                            nsIAtom*        aListName,
@@ -619,7 +619,7 @@ FrameManager::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-FrameManager::RemoveFrame(nsIPresContext& aPresContext,
+FrameManager::RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIFrame*       aParentFrame,
                           nsIAtom*        aListName,
@@ -630,7 +630,7 @@ FrameManager::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-FrameManager::ReplaceFrame(nsIPresContext& aPresContext,
+FrameManager::ReplaceFrame(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIFrame*       aParentFrame,
                            nsIAtom*        aListName,
@@ -982,7 +982,7 @@ FrameManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 #endif
 
 NS_IMETHODIMP
-FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
+FrameManager::ReParentStyleContext(nsIPresContext* aPresContext,
                                    nsIFrame* aFrame, 
                                    nsIStyleContext* aNewParentContext)
 {
@@ -997,7 +997,7 @@ FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
 
     if (oldContext) {
       nsIStyleContext* newContext = nsnull;
-      result = mStyleSet->ReParentStyleContext(&aPresContext, 
+      result = mStyleSet->ReParentStyleContext(aPresContext, 
                                                oldContext, aNewParentContext,
                                                &newContext);
       if (NS_SUCCEEDED(result) && newContext) {
@@ -1042,7 +1042,7 @@ FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
             aFrame->GetAdditionalChildListName(listIndex++, &childList);
           } while (childList);
           
-          aFrame->SetStyleContext(&aPresContext, newContext);
+          aFrame->SetStyleContext(aPresContext, newContext);
 
           // do additional contexts 
           PRInt32 contextIndex = -1;
@@ -1052,7 +1052,7 @@ FrameManager::ReParentStyleContext(nsIPresContext& aPresContext,
             if (NS_SUCCEEDED(result)) {
               if (oldExtraContext) {
                 nsIStyleContext* newExtraContext = nsnull;
-                result = mStyleSet->ReParentStyleContext(&aPresContext,
+                result = mStyleSet->ReParentStyleContext(aPresContext,
                                                          oldExtraContext, newContext,
                                                          &newExtraContext);
                 if (NS_SUCCEEDED(result) && newExtraContext) {
@@ -1137,7 +1137,7 @@ CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
 }
 
 void
-FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
+FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     nsIFrame* aFrame,
                                     nsIStyleContext* aParentContext,
                                     nsIContent* aParentContent,
@@ -1172,24 +1172,24 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
     // do primary context
     nsIStyleContext* newContext = nsnull;
     if (pseudoTag) {
-      aPresContext.ResolvePseudoStyleContextFor(content, pseudoTag, aParentContext, PR_FALSE,
+      aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, aParentContext, PR_FALSE,
                                                 &newContext);
       NS_RELEASE(pseudoTag);
     }
     else {
       NS_ASSERTION(localContent, "non pseudo-element frame without content node");
-      aPresContext.ResolveStyleContextFor(content, aParentContext, PR_FALSE, &newContext);
+      aPresContext->ResolveStyleContextFor(content, aParentContext, PR_FALSE, &newContext);
     }
     NS_ASSERTION(newContext, "failed to get new style context");
     if (newContext) {
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame, content, aChangeList, aMinChange);
         if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
-          aFrame->SetStyleContext(&aPresContext, newContext);
+          aFrame->SetStyleContext(aPresContext, newContext);
         }
       }
       else {
-        oldContext->RemapStyle(&aPresContext, PR_FALSE);
+        oldContext->RemapStyle(aPresContext, PR_FALSE);
         if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, aMinChange = NS_STYLE_HINT_REFLOW);
@@ -1212,7 +1212,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
           nsIStyleContext* newExtraContext = nsnull;
           oldExtraContext->GetPseudoType(pseudoTag);
           NS_ASSERTION(pseudoTag, "extra style context is not pseudo element");
-          result = aPresContext.ResolvePseudoStyleContextFor(content, pseudoTag, newContext,
+          result = aPresContext->ResolvePseudoStyleContextFor(content, pseudoTag, newContext,
                                                              PR_FALSE, &newExtraContext);
           NS_RELEASE(pseudoTag);
           if (NS_SUCCEEDED(result) && newExtraContext) {
@@ -1224,7 +1224,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
               }
             }
             else {
-              oldExtraContext->RemapStyle(&aPresContext, PR_FALSE);
+              oldExtraContext->RemapStyle(aPresContext, PR_FALSE);
               if (aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, aMinChange = NS_STYLE_HINT_REFLOW);
@@ -1246,19 +1246,19 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
       while (undisplayed) {
         nsIStyleContext* undisplayedContext = nsnull;
         if (undisplayed->mContent) {  // child content
-          aPresContext.ResolveStyleContextFor(undisplayed->mContent, newContext, 
+          aPresContext->ResolveStyleContextFor(undisplayed->mContent, newContext, 
                                               PR_FALSE, &undisplayedContext);
         }
         else {  // pseudo element
           undisplayed->mStyle->GetPseudoType(pseudoTag);
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
-          aPresContext.ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
+          aPresContext->ResolvePseudoStyleContextFor(localContent, pseudoTag, newContext, PR_FALSE,
                                                     &undisplayedContext);
           NS_RELEASE(pseudoTag);
         }
         if (undisplayedContext) {
           if (undisplayedContext == undisplayed->mStyle) {
-            undisplayedContext->RemapStyle(&aPresContext);
+            undisplayedContext->RemapStyle(aPresContext);
           }
           const nsStyleDisplay* display = 
                 (const nsStyleDisplay*)undisplayedContext->GetStyleData(eStyleStruct_Display);
@@ -1327,7 +1327,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-FrameManager::ComputeStyleChangeFor(nsIPresContext& aPresContext,
+FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                     nsIFrame* aFrame, 
                                     PRInt32 aAttrNameSpaceID,
                                     nsIAtom* aAttribute,

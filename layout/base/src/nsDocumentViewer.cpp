@@ -650,7 +650,7 @@ DocumentViewerImpl::PrintContent(nsIWebShell  *aParent,nsIDeviceContext *aDConte
 
     ps->GetPageSequenceFrame(&pageSequence);
     NS_ASSERTION(nsnull != pageSequence, "no page sequence frame");
-    pageSequence->Print(*cx, options, nsnull);
+    pageSequence->Print(cx, options, nsnull);
     aDContext->EndDocument();
 
     ps->EndObservingDocument();

@@ -52,14 +52,14 @@ void nsTableColFrame::ResetSizingInfo()
   mConstrainingCell = nsnull;
 }
 
-NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
+NS_METHOD nsTableColFrame::Paint(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
                                  nsFramePaintLayer aWhichLayer)
 {
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_Standard == mode) {
       const nsStyleDisplay* disp =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -78,7 +78,7 @@ NS_METHOD nsTableColFrame::Paint(nsIPresContext& aPresContext,
 }
 
 
-NS_METHOD nsTableColFrame::Reflow(nsIPresContext&      aPresContext,
+NS_METHOD nsTableColFrame::Reflow(nsIPresContext*      aPresContext,
                                   nsHTMLReflowMetrics& aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)

@@ -56,7 +56,7 @@ nsContainerFrame::~nsContainerFrame()
 }
 
 NS_IMETHODIMP
-nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsContainerFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
@@ -81,11 +81,11 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::Destroy(nsIPresContext& aPresContext)
+nsContainerFrame::Destroy(nsIPresContext* aPresContext)
 {
   // Prevent event dispatch during destruction
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     view->SetClientData(nsnull);
   }
@@ -98,7 +98,7 @@ nsContainerFrame::Destroy(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
+nsContainerFrame::DidReflow(nsIPresContext* aPresContext,
                             nsDidReflowStatus aStatus)
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
@@ -152,7 +152,7 @@ nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 // Painting/Events
 
 NS_IMETHODIMP
-nsContainerFrame::Paint(nsIPresContext&      aPresContext,
+nsContainerFrame::Paint(nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect&        aDirtyRect,
                         nsFramePaintLayer    aWhichLayer)
@@ -168,7 +168,7 @@ nsContainerFrame::Paint(nsIPresContext&      aPresContext,
 // Note: aDirtyRect is in our coordinate system (and of course, child
 // rect's are also in our coordinate system)
 void
-nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
+nsContainerFrame::PaintChildren(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect&        aDirtyRect,
                                 nsFramePaintLayer    aWhichLayer)
@@ -201,14 +201,14 @@ nsContainerFrame::PaintChildren(nsIPresContext&      aPresContext,
 
 // Paint one child frame
 void
-nsContainerFrame::PaintChild(nsIPresContext&      aPresContext,
+nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
                              nsFramePaintLayer    aWhichLayer)
 {
   nsIView *pView;
-  aFrame->GetView(&aPresContext, &pView);
+  aFrame->GetView(aPresContext, &pView);
   if (nsnull == pView) {
     nsRect kidRect;
     aFrame->GetRect(kidRect);
@@ -350,7 +350,7 @@ nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::ReplaceFrame(nsIPresContext& aPresContext,
+nsContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
                                nsIPresShell&   aPresShell,
                                nsIAtom*        aListName,
                                nsIFrame*       aOldFrame,
@@ -596,7 +596,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
  */
 nsresult
 nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
-                              nsIPresContext&          aPresContext,
+                              nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nscoord                  aX,
@@ -623,14 +623,14 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   aKidFrame->WillReflow(aPresContext);
 
   if (0 == (aFlags & NS_FRAME_NO_MOVE_FRAME)) {
-    aKidFrame->MoveTo(&aPresContext, aX, aY);
+    aKidFrame->MoveTo(aPresContext, aX, aY);
   }
 
   if (0 == (aFlags & NS_FRAME_NO_MOVE_VIEW)) {
     nsIView*  view;
-    aKidFrame->GetView(&aPresContext, &view);
+    aKidFrame->GetView(aPresContext, &view);
     if (view) {
-      PositionFrameView(&aPresContext, aKidFrame, view);
+      PositionFrameView(aPresContext, aKidFrame, view);
     }
   }
 
@@ -734,7 +734,7 @@ nsContainerFrame::PositionChildViews(nsIPresContext* aPresContext,
 */
 nsresult
 nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
-                                    nsIPresContext&      aPresContext,
+                                    nsIPresContext*      aPresContext,
                                     nsHTMLReflowMetrics& aDesiredSize,
                                     nscoord              aX,
                                     nscoord              aY,
@@ -744,14 +744,14 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
   nsRect  bounds(aX, aY, aDesiredSize.width, aDesiredSize.height);
 
   aKidFrame->GetOrigin(curOrigin);
-  aKidFrame->SetRect(&aPresContext, bounds);
+  aKidFrame->SetRect(aPresContext, bounds);
 
   nsIView*  view;
-  aKidFrame->GetView(&aPresContext, &view);
+  aKidFrame->GetView(aPresContext, &view);
   if (view) {
     // Make sure the frame's view is properly sized and positioned and has
     // things like opacity correct
-    SyncFrameViewAfterReflow(&aPresContext, aKidFrame, view,
+    SyncFrameViewAfterReflow(aPresContext, aKidFrame, view,
                              &aDesiredSize.mCombinedArea,
                              aFlags);
 
@@ -759,7 +759,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
     // If the frame has moved, then we need to make sure any child views are
     // correctly positioned
     if ((curOrigin.x != aX) || (curOrigin.y != aY)) {
-      PositionChildViews(&aPresContext, aKidFrame);
+      PositionChildViews(aPresContext, aKidFrame);
     }
   }
   
@@ -774,7 +774,7 @@ nsContainerFrame::FinishReflowChild(nsIFrame*            aKidFrame,
  * @return  PR_TRUE if successful and PR_FALSE otherwise
  */
 void
-nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
+nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext* aPresContext,
                                          nsIFrame* aChild)
 {
   NS_PRECONDITION(mFrames.ContainsFrame(aChild), "bad geometric parent");
@@ -848,7 +848,7 @@ DestroyOverflowFrames(nsIPresContext* aPresContext,
   if (aPropertyValue) {
     nsFrameList frames((nsIFrame*)aPropertyValue);
 
-    frames.DestroyFrames(*aPresContext);
+    frames.DestroyFrames(aPresContext);
   }
 }
 

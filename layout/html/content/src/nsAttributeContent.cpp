@@ -135,11 +135,11 @@ public:
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const {  return NS_OK;  }
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
-                          nsEventStatus& aEventStatus);
+                          nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetContentID(PRUint32* aID) {
     *aID = 0;
@@ -369,11 +369,11 @@ nsAttributeContent::SetParent(nsIContent* aParent)
 }
 
 nsresult
-nsAttributeContent::HandleDOMEvent(nsIPresContext& aPresContext,
+nsAttributeContent::HandleDOMEvent(nsIPresContext* aPresContext,
                                      nsEvent* aEvent,
                                      nsIDOMEvent** aDOMEvent,
                                      PRUint32 aFlags,
-                                     nsEventStatus& aEventStatus)
+                                     nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
   return ret;

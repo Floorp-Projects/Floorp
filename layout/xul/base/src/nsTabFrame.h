@@ -52,22 +52,22 @@ protected:
   // XXX Doc me... (in nsIFrame.h puhleeze)
   // XXX If these are selection specific, then the name should imply selection
   // rather than generic event processing, e.g., SelectionHandlePress...
-  NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus) { return NS_OK; }
+                         nsEventStatus*  aEventStatus) { return NS_OK; }
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)  { return NS_OK; }
+                         nsEventStatus*  aEventStatus)  { return NS_OK; }
 
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus) { return NS_OK; }
+                        nsEventStatus*  aEventStatus) { return NS_OK; }
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus)  { return NS_OK; }
+                           nsEventStatus*  aEventStatus)  { return NS_OK; }
 
 private:
    

@@ -28,7 +28,7 @@
 class nsSplittableFrame : public nsFrame
 {
 public:
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,

@@ -67,7 +67,7 @@ nsMathMLmfracFrame::~nsMathMLmfracFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
@@ -117,7 +117,7 @@ nsMathMLmfracFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmfracFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer)
@@ -137,7 +137,7 @@ nsMathMLmfracFrame::Paint(nsIPresContext&      aPresContext,
   // paint the fraction line
   if (NS_SUCCEEDED(rv) && 0 < mLineThickness) {
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nscoord thickness = NSIntPixelsToTwips(mLineThickness, p2t); 
 /*
 //  line looking like <hr noshade>
@@ -160,7 +160,7 @@ nsMathMLmfracFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -212,13 +212,13 @@ nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext.GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
   fm->GetStrikeout(strikeOffset, strikeThickness);
 
   // Take care of mLineThickness
   float p2t;
   nscoord Thickspace, halfThickspace;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   if (mLineThickness <= 1) {
     Thickspace = 0; 		
     halfThickspace = 0;  	
@@ -238,8 +238,8 @@ nsMathMLmfracFrame::Reflow(nsIPresContext&          aPresContext,
   rect[0].y = 0;
   rect[1].y = aDesiredSize.height - rect[1].height;
   
-  child[0]->SetRect(&aPresContext, rect[0]);
-  child[1]->SetRect(&aPresContext, rect[1]); 
+  child[0]->SetRect(aPresContext, rect[0]);
+  child[1]->SetRect(aPresContext, rect[1]); 
   SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar  
 
   if (nsnull != aDesiredSize.maxElementSize) {

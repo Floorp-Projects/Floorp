@@ -275,7 +275,7 @@ nsresult nsListControlFrame::CountAllChild(nsIDOMNode * aNode, PRInt32& aCount)
 // specified. 
 
 NS_IMETHODIMP 
-nsListControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsListControlFrame::Reflow(nsIPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
@@ -354,7 +354,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Add the list frame as a child of the form
   if (IsInDropDownMode() == PR_FALSE && !mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
   //--Calculate a width just big enough for the scrollframe to shrink around the
@@ -411,7 +411,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
   float sbWidth  = 0.0;
   float sbHeight = 0.0;;
   nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
@@ -1026,10 +1026,11 @@ nsListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsListControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsListControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus)
+                                       nsEventStatus*  aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
 
   /*const char * desc[] = {"NS_MOUSE_MOVE", 
                           "NS_MOUSE_LEFT_BUTTON_UP",
@@ -1055,7 +1056,7 @@ nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
     printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
   }*/
 
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus)
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
     return NS_OK;
 
   if (nsFormFrame::GetDisabled(this))
@@ -1069,7 +1070,7 @@ nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
         printf("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
 #endif
         //if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-        //  MouseClicked(&aPresContext);
+        //  MouseClicked(aPresContext);
         //}
       }
       break;
@@ -1084,7 +1085,7 @@ nsListControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -1107,7 +1108,7 @@ nsListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     // the reset/initialize
     if (CheckIfAllFramesHere()) {
       InitSelectionCache(-1);
-      Reset(&aPresContext);
+      Reset(aPresContext);
       mHasBeenInitialized = PR_TRUE;
     }
   }*/
@@ -1131,13 +1132,13 @@ nsListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
 
 //---------------------------------------------------------
 NS_IMETHODIMP  
-nsListControlFrame::Init(nsIPresContext&  aPresContext,
+nsListControlFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
   nsresult result = nsScrollFrame::Init(aPresContext, aContent, aParent, aContext,
                                         aPrevInFlow);
@@ -1148,7 +1149,7 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
    // get the proper style based on attribute selectors which refer to the
    // selected attribute.
   if (!mIsInitializedFromContent) {
-    Reset(&aPresContext);
+    Reset(aPresContext);
   } else {
     InitSelectionCache(-1);
   }
@@ -1180,7 +1181,7 @@ nsListControlFrame::Init(nsIPresContext&  aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsListControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsListControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -1190,7 +1191,7 @@ nsListControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsListControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -2056,7 +2057,7 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
   // Here we create our own DOM event and set the target to the Select
   // We'll pass this DOM event in, in hopes that the target is used.
   nsIDOMEvent* DOMEvent = nsnull;
-  nsresult res = NS_NewDOMUIEvent(&DOMEvent, *mPresContext, &event);
+  nsresult res = NS_NewDOMUIEvent(&DOMEvent, mPresContext, &event);
   if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
     nsIDOMNode* node = nsnull;
     res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
@@ -2067,7 +2068,7 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
         res = pDOMEvent->SetTarget(node);
 	if (NS_SUCCEEDED(res)) {
           // Have the content handle the event.
-          res = mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status);
+          res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, &status);
         }
         NS_RELEASE(pDOMEvent);
       }
@@ -2082,7 +2083,7 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
       nsIFrame* frame = nsnull;
       res = this->QueryInterface(kIFrameIID, (void**)&frame);
       if ((NS_SUCCEEDED(res)) && (nsnull != frame)) {
-        res = frame->HandleEvent(*mPresContext, &event, status);
+        res = frame->HandleEvent(mPresContext, &event, &status);
         // NS_RELEASE(frame);
       }
     }
@@ -2330,7 +2331,7 @@ nsListControlFrame::GetScrollingParentView(nsIPresContext* aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
+nsListControlFrame::DidReflow(nsIPresContext* aPresContext,
                               nsDidReflowStatus aStatus)
 {
   if (PR_TRUE == IsInDropDownMode()) 
@@ -2339,7 +2340,7 @@ nsListControlFrame::DidReflow(nsIPresContext& aPresContext,
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     nsresult rv = nsScrollFrame::DidReflow(aPresContext, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    SyncViewWithFrame(&aPresContext);
+    SyncViewWithFrame(aPresContext);
     return rv;
   } else {
     return nsScrollFrame::DidReflow(aPresContext, aStatus);

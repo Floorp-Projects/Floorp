@@ -68,7 +68,7 @@ nsMathMLmfencedFrame::~nsMathMLmfencedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmfencedFrame::Init(nsIPresContext*  aPresContext,
                            nsIContent*      aContent,
                            nsIFrame*        aParent,
                            nsIStyleContext* aContext,
@@ -85,7 +85,7 @@ nsMathMLmfencedFrame::Init(nsIPresContext&  aPresContext,
 
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsMathMLmfencedFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aChildList)
 {
@@ -182,7 +182,7 @@ nsMathMLmfencedFrame::ReCreateFencesAndSeparators()
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmfencedFrame::Paint(nsIPresContext*      aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect&        aDirtyRect,
                             nsFramePaintLayer    aWhichLayer)
@@ -206,7 +206,7 @@ nsMathMLmfencedFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus)
@@ -242,7 +242,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
       // will use the origins as placeholders to store the child's ascent and
       // descent. Before return, we should set the origins so as to overwrite
       // what we are storing there now.
-      childFrame->SetRect(&aPresContext,
+      childFrame->SetRect(aPresContext,
                           nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                                  childDesiredSize.width, childDesiredSize.height));
 
@@ -281,7 +281,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
       aMathMLFrame->Stretch(aPresContext, renderingContext, 
                             stretchDir, parentSize, childSize);
       // store the updated metrics
-      childFrame->SetRect(&aPresContext,
+      childFrame->SetRect(aPresContext,
                           nsRect(childSize.descent, childSize.ascent,
                                  childSize.width, childSize.height));
     }
@@ -327,7 +327,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
-      childFrame->MoveTo(&aPresContext, dx, rect.y);
+      childFrame->MoveTo(aPresContext, dx, rect.y);
       dx += rect.width;
       if (i < mSeparatorsCount) {
         ReflowChar(aPresContext, renderingContext, mStyleContext, &mSeparatorsChar[i], NS_MATHML_OPERATOR_FORM_INFIX,
@@ -351,7 +351,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
   while (childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
-      childFrame->MoveTo(&aPresContext, rect.x, aDesiredSize.ascent - rect.y);
+      childFrame->MoveTo(aPresContext, rect.x, aDesiredSize.ascent - rect.y);
     }
     childFrame->GetNextSibling(&childFrame);
   }
@@ -378,7 +378,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext&          aPresContext,
 
 // helper function to perform the common task of formatting our chars
 nsresult
-nsMathMLmfencedFrame::ReflowChar(nsIPresContext&      aPresContext,
+nsMathMLmfencedFrame::ReflowChar(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  nsIStyleContext*     aStyleContext,
                                  nsMathMLChar*        aMathMLChar,

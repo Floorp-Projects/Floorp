@@ -324,7 +324,7 @@ nsMathMLChar::SetEnum() {
 
 // 
 NS_IMETHODIMP
-nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
+nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       nsIStyleContext*     aStyleContext,
                       nsStretchDirection   aStretchDirection,
@@ -471,7 +471,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLChar::Paint(nsIPresContext&      aPresContext,
+nsMathMLChar::Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     nsIStyleContext*     aStyleContext)
 {
@@ -534,7 +534,7 @@ nsMathMLChar::DrawChar(nsIRenderingContext& aRenderingContext,
 
 // paint a stretchy char by assembling glyphs vertically
 nsresult
-nsMathMLChar::PaintVertically(nsIPresContext&      aPresContext,
+nsMathMLChar::PaintVertically(nsIPresContext*      aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIStyleContext*     aStyleContext,
                               nscoord              fontAscent,
@@ -558,7 +558,7 @@ nsMathMLChar::PaintVertically(nsIPresContext&      aPresContext,
   nsRect clipRect;
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
 
   // get metrics data to be re-used later
@@ -669,7 +669,7 @@ nsMathMLChar::PaintVertically(nsIPresContext&      aPresContext,
 
 // paint a stretchy char by assembling glyphs horizontally
 nsresult
-nsMathMLChar::PaintHorizontally(nsIPresContext&      aPresContext,
+nsMathMLChar::PaintHorizontally(nsIPresContext*      aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 nsIStyleContext*     aStyleContext,
                                 nscoord              fontAscent,
@@ -693,7 +693,7 @@ nsMathMLChar::PaintHorizontally(nsIPresContext&      aPresContext,
   nsRect clipRect;
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
 
   // get metrics data to be re-used later

@@ -48,11 +48,11 @@ class HRuleFrame : public nsFrame {
 public:
   HRuleFrame();
 
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -88,7 +88,7 @@ HRuleFrame::HRuleFrame()
 }
 
 NS_METHOD
-HRuleFrame::Paint(nsIPresContext&      aPresContext,
+HRuleFrame::Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect&        aDirtyRect,
                   nsFramePaintLayer    aWhichLayer)
@@ -104,7 +104,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord thickness = mThickness;
 
   // Get style data
@@ -171,7 +171,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-HRuleFrame::Reflow(nsIPresContext&          aPresContext,
+HRuleFrame::Reflow(nsIPresContext*          aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus)
@@ -180,7 +180,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute the width
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
     aDesiredSize.width = aReflowState.mComputedWidth;
   }
@@ -213,7 +213,7 @@ HRuleFrame::Reflow(nsIPresContext&          aPresContext,
   GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&) font);
   const nsFont& f = font->mFont;
   nsCOMPtr<nsIFontMetrics> fm;
-  aPresContext.GetMetricsFor(f, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(f, getter_AddRefs(fm));
   nscoord fontHeight;
   fm->GetHeight(fontHeight);
 

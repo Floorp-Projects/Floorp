@@ -74,7 +74,7 @@ nsTreeRowFrame::~nsTreeRowFrame()
 {
 }
 
-NS_METHOD nsTreeRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
+NS_METHOD nsTreeRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
                                             nsHTMLReflowMetrics& aDesiredSize,
                                             RowReflowState&      aReflowState,
                                             nsReflowStatus&      aStatus,
@@ -99,7 +99,7 @@ NS_METHOD nsTreeRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 
 
 NS_IMETHODIMP
-nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
+nsTreeRowFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,
@@ -126,7 +126,7 @@ nsTreeRowFrame::Init(nsIPresContext&  aPresContext,
         // headers get their own views, so that they can capture events
         CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
         nsIView* view;
-        GetView(&aPresContext, &view);
+        GetView(aPresContext, &view);
         view->SetContentTransparency(PR_TRUE);
 			}
 			else 
@@ -173,7 +173,7 @@ nsTreeRowFrame::HeaderDrag(nsIPresContext* aPresContext, PRBool aGrabMouseEvents
 
 
 NS_IMETHODIMP
-nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
+nsTreeRowFrame::Reflow(nsIPresContext*          aPresContext,
 							         nsHTMLReflowMetrics&     aDesiredSize,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus)
@@ -205,22 +205,23 @@ nsTreeRowFrame::Reflow(nsIPresContext&          aPresContext,
 }
 
 nsresult
-nsTreeRowFrame::HandleMouseUpEvent(nsIPresContext& aPresContext, 
+nsTreeRowFrame::HandleMouseUpEvent(nsIPresContext* aPresContext, 
 									                  nsGUIEvent*     aEvent,
-									                  nsEventStatus&  aEventStatus)
+									                  nsEventStatus*  aEventStatus)
 {
   if (DraggingHeader()) {
-    HeaderDrag(&aPresContext, PR_FALSE);
+    HeaderDrag(aPresContext, PR_FALSE);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsTreeRowFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsTreeRowFrame::HandleEvent(nsIPresContext* aPresContext, 
                              nsGUIEvent*     aEvent,
-                             nsEventStatus&  aEventStatus)
+                             nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
 	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP)
     HandleMouseUpEvent(aPresContext, aEvent, aEventStatus);
   else if (aEvent->message == NS_MOUSE_MOVE && mDraggingHeader && mHitFrame)
@@ -248,7 +249,7 @@ nsTreeRowFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeRowFrame::GetCursor(nsIPresContext& aPresContext,
+nsTreeRowFrame::GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -267,9 +268,9 @@ nsTreeRowFrame::GetCursor(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext& aPresContext, 
+nsTreeRowFrame::HandleHeaderDragEvent(nsIPresContext* aPresContext, 
 									                    nsGUIEvent*     aEvent,
-									                    nsEventStatus&  aEventStatus)
+									                    nsEventStatus*  aEventStatus)
 {
   // Grab our tree frame.
   nsTableFrame* tableFrame = nsnull;

@@ -97,18 +97,18 @@ nsImageFrame::~nsImageFrame()
 }
 
 NS_METHOD
-nsImageFrame::Destroy(nsIPresContext& aPresContext)
+nsImageFrame::Destroy(nsIPresContext* aPresContext)
 {
   NS_IF_RELEASE(mImageMap);
 
   // Release image loader first so that it's refcnt can go to zero
-  mImageLoader.StopAllLoadImages(&aPresContext);
+  mImageLoader.StopAllLoadImages(aPresContext);
 
   return nsLeafFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsImageFrame::Init(nsIPresContext&  aPresContext,
+nsImageFrame::Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -245,7 +245,7 @@ nsImageFrame::GetInnerArea(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsImageFrame::Reflow(nsIPresContext&          aPresContext,
+nsImageFrame::Reflow(nsIPresContext*          aPresContext,
                      nsHTMLReflowMetrics&     aMetrics,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
@@ -256,8 +256,8 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
-  GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-  AddBordersAndPadding(&aPresContext, aReflowState, aMetrics, mBorderPadding);
+  GetDesiredSize(aPresContext, aReflowState, aMetrics);
+  AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
@@ -337,7 +337,7 @@ nsImageFrame::MeasureString(const PRUnichar*     aString,
 // Formats the alt-text to fit within the specified rectangle. Breaks lines
 // between words if a word would extend past the edge of the rectangle
 void
-nsImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
+nsImageFrame::DisplayAltText(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsString&      aAltText,
                              const nsRect&        aRect)
@@ -408,18 +408,18 @@ struct nsRecessedBorder : public nsStyleSpacing {
 };
 
 void
-nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
+nsImageFrame::DisplayAltFeedback(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  PRInt32              aIconId)
 {
   // Calculate the inner area
   nsRect  inner;
-  GetInnerArea(&aPresContext, inner);
+  GetInnerArea(aPresContext, inner);
 
   // Display a recessed one pixel border
   float   p2t;
   nscoord borderEdgeWidth;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   borderEdgeWidth = NSIntPixelsToTwips(1, p2t);
 
   // Make sure we have enough room to actually render the border within
@@ -476,7 +476,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
 }
 
 NS_METHOD
-nsImageFrame::Paint(nsIPresContext& aPresContext,
+nsImageFrame::Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer)
@@ -509,10 +509,10 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
         // Now render the image into our content area (the area inside the
         // borders and padding)
         nsRect inner;
-        GetInnerArea(&aPresContext, inner);
+        GetInnerArea(aPresContext, inner);
         if (mImageLoader.GetLoadImageFailed()) {
           float p2t;
-          aPresContext.GetScaledPixelsToTwips(&p2t);
+          aPresContext->GetScaledPixelsToTwips(&p2t);
           inner.width = NSIntPixelsToTwips(image->GetWidth(), p2t);
           inner.height = NSIntPixelsToTwips(image->GetHeight(), p2t);
         }
@@ -525,7 +525,7 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
         nsImageMap* map = GetImageMap();
         if (nsnull != map) {
           nsRect inner;
-          GetInnerArea(&aPresContext, inner);
+          GetInnerArea(aPresContext, inner);
           PRBool clipState;
           aRenderingContext.SetColor(NS_RGB(0, 0, 0));
           aRenderingContext.PushState();
@@ -591,13 +591,13 @@ nsImageFrame::GetImageMap()
 }
 
 void
-nsImageFrame::TriggerLink(nsIPresContext& aPresContext,
+nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
                           const nsString& aURLSpec,
                           const nsString& aTargetSpec,
                           PRBool aClick)
 {
   nsILinkHandler* handler = nsnull;
-  aPresContext.GetLinkHandler(&handler);
+  aPresContext->GetLinkHandler(&handler);
   if (nsnull != handler) {
     if (aClick) {
       handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.GetUnicode(), aTargetSpec.GetUnicode());
@@ -639,7 +639,7 @@ nsImageFrame::GetSuppress()
 // view) into a localized pixel coordinate that is relative to the
 // content area of this frame (inside the border+padding).
 void
-nsImageFrame::TranslateEventCoords(nsIPresContext& aPresContext,
+nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
                                    const nsPoint& aPoint,
                                    nsPoint& aResult)
 {
@@ -650,10 +650,10 @@ nsImageFrame::TranslateEventCoords(nsIPresContext& aPresContext,
   // to this frame; otherwise we have to adjust the coordinates
   // appropriately.
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   if (nsnull == view) {
     nsPoint offset;
-    GetOffsetFromView(&aPresContext, offset, &view);
+    GetOffsetFromView(aPresContext, offset, &view);
     if (nsnull != view) {
       x -= offset.x;
       y -= offset.y;
@@ -663,13 +663,13 @@ nsImageFrame::TranslateEventCoords(nsIPresContext& aPresContext,
   // Subtract out border and padding here so that the coordinates are
   // now relative to the content area of this frame.
   nsRect inner;
-  GetInnerArea(&aPresContext, inner);
+  GetInnerArea(aPresContext, inner);
   x -= inner.x;
   y -= inner.y;
 
   // Translate the coordinates from twips to pixels
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   aResult.x = NSTwipsToIntPixels(x, t2p);
   aResult.y = NSTwipsToIntPixels(y, t2p);
 }
@@ -701,10 +701,11 @@ nsImageFrame::GetAnchorHREF(nsString& aResult)
 
 // XXX what should clicks on transparent pixels do?
 NS_METHOD
-nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
+nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
                           nsGUIEvent* aEvent,
-                          nsEventStatus& aEventStatus)
+                          nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   nsImageMap* map;
 
   switch (aEvent->message) {
@@ -738,7 +739,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
             // We hit a clickable area. Time to go somewhere...
             PRBool clicked = PR_FALSE;
             if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-              aEventStatus = nsEventStatus_eConsumeDoDefault; 
+              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
               clicked = PR_TRUE;
             }
             TriggerLink(aPresContext, absURL, target, clicked);
@@ -781,7 +782,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
             absURL.Append(cbuf);
             PRBool clicked = PR_FALSE;
             if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-              aEventStatus = nsEventStatus_eConsumeDoDefault; 
+              *aEventStatus = nsEventStatus_eConsumeDoDefault; 
               clicked = PR_TRUE;
             }
             TriggerLink(aPresContext, absURL, target, clicked);
@@ -799,7 +800,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
 //XXX This will need to be rewritten once we have content for areas
 NS_METHOD
-nsImageFrame::GetCursor(nsIPresContext& aPresContext,
+nsImageFrame::GetCursor(nsIPresContext* aPresContext,
                         nsPoint& aPoint,
                         PRInt32& aCursor)
 {

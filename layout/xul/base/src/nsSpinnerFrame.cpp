@@ -67,7 +67,7 @@ nsSpinnerFrame::nsSpinnerFrame()
 // Overidden to handle ???
 //
 NS_METHOD 
-nsSpinnerFrame::Paint(nsIPresContext& aPresContext,
+nsSpinnerFrame::Paint(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)

@@ -74,7 +74,7 @@ nsMathMLmrootFrame::~nsMathMLmrootFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmrootFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmrootFrame::Init(nsIPresContext*  aPresContext,
                         nsIContent*      aContent,
                         nsIFrame*        aParent,
                         nsIStyleContext* aContext,

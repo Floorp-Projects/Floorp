@@ -67,7 +67,7 @@ nsMathMLmpaddedFrame::~nsMathMLmpaddedFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmpaddedFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmpaddedFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,

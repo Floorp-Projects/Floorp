@@ -37,7 +37,7 @@ class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   friend nsresult NS_NewScrollFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -46,37 +46,37 @@ public:
   // Called to set the one and only child frame. Returns NS_ERROR_INVALID_ARG
   // if the child frame is NULL, and NS_ERROR_UNEXPECTED if the child list
   // contains more than one frame
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
   // Because there can be only one child frame, these two function return
   // NS_ERROR_FAILURE
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
 
   // This function returns NS_ERROR_NOT_IMPLEMENTED
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext*   aPresContext,
                        nsDidReflowStatus aStatus);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
@@ -106,9 +106,9 @@ protected:
                                           nsIView**       aParentView);
 
 private:
-  nsresult CreateScrollingView(nsIPresContext& aPresContext);
+  nsresult CreateScrollingView(nsIPresContext* aPresContext);
 
-  nsresult CalculateScrollAreaSize(nsIPresContext&          aPresContext,
+  nsresult CalculateScrollAreaSize(nsIPresContext*          aPresContext,
                                    const nsHTMLReflowState& aReflowState,
                                    nsMargin&                aMargin,
                                    nscoord                  aSBWidth,

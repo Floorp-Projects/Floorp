@@ -99,26 +99,26 @@ public:
   friend nsresult NS_NewMathMLmfracFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Init(nsIPresContext&  aPresContext,
+  Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
 
   NS_IMETHOD 
-  Paint(nsIPresContext&      aPresContext,
+  Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext& aPresContext,
+  SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {

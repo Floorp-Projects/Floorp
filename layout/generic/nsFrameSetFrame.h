@@ -105,7 +105,7 @@ public:
   NS_IMETHOD  QueryInterface(const nsIID& aIID, 
                              void**       aInstancePtr);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -123,35 +123,35 @@ public:
 
   static nsHTMLFramesetFrame* GetFramesetParent(nsIFrame* aChild);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                        nsPoint&        aPoint,
                        PRInt32&        aCursor);
 
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD  VerifyTree() const;
 
-  void StartMouseDrag(nsIPresContext&            aPresContext, 
+  void StartMouseDrag(nsIPresContext*            aPresContext, 
                       nsHTMLFramesetBorderFrame* aBorder, 
                       nsGUIEvent*                aEvent);
 
-  void MouseDrag(nsIPresContext& aPresContext, 
+  void MouseDrag(nsIPresContext* aPresContext, 
                  nsGUIEvent*     aEvent);
 
   void EndMouseDrag(nsIPresContext* aPresContext);
@@ -213,7 +213,7 @@ protected:
                           nsFramesetSpec* aSpecs);
 
   void ReflowPlaceChild(nsIFrame*                aChild,
-                        nsIPresContext&          aPresContext,
+                        nsIPresContext*          aPresContext,
                         const nsHTMLReflowState& aReflowState,
                         nsPoint&                 aOffset,
                         nsSize&                  aSize,

@@ -105,11 +105,11 @@ public:
                                 PRBool&               aHeightExplicit, 
                                 nscoord&              aRowSize);
 
-  static nscoord GetTextSize(nsIPresContext& aContext, nsIFormControlFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext* aContext, nsIFormControlFrame* aFrame,
                              const nsString& aString, nsSize& aSize,
                              nsIRenderingContext *aRendContext);
 
-  static nscoord GetTextSize(nsIPresContext& aContext, nsIFormControlFrame* aFrame,
+  static nscoord GetTextSize(nsIPresContext* aContext, nsIFormControlFrame* aFrame,
                              PRInt32 aNumChars, nsSize& aSize,
                              nsIRenderingContext *aRendContext);
 
@@ -119,11 +119,11 @@ public:
                       nsFont&                aFont);
 
   // returns the an addref'ed FontMetrics for the default font for the frame
-  static void GetFrameFontFM(nsIPresContext& aPresContext, 
+  static void GetFrameFontFM(nsIPresContext* aPresContext, 
                              nsIFormControlFrame * aFrame,
                              nsIFontMetrics** aFontMet);
 
-  static nscoord CalcNavQuirkSizing(nsIPresContext&      aPresContext, 
+  static nscoord CalcNavQuirkSizing(nsIPresContext*      aPresContext, 
                                     nsIRenderingContext* aRendContext,
                                     nsIFontMetrics*      aFontMet, 
                                     nsIFormControlFrame* aFrame,
@@ -158,7 +158,7 @@ public:
   //     need to change to use it.
   static  nscoord GetScrollbarWidth(float aPixToTwip);
 
-  static nsCompatibility GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2);
+  static nsCompatibility GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2);
 
   typedef enum {
     eHTMLTextWrap_Unknown = 0,
@@ -290,7 +290,7 @@ public:
 
   static void PaintArrow(nsArrowDirection aArrowDirection,
 			 nsIRenderingContext& aRenderingContext,
-			 nsIPresContext& aPresContext, 
+			 nsIPresContext* aPresContext, 
 		 	 const nsRect& aDirtyRect,
                          nsRect& aRect, 
 			 nscoord aOnePixel, 
@@ -314,7 +314,7 @@ public:
     */
 
   static void PaintScrollbar(nsIRenderingContext& aRenderingContext,
-																	nsIPresContext& aPresContext, 
+																	nsIPresContext* aPresContext, 
 																  const nsRect& aDirtyRect,
                                   nsRect& aRect, 
 																  PRBool aHorizontal, 
@@ -370,7 +370,7 @@ public:
     * @param aForFrame the frame that the scrollbar will be rendered in to
     */
 
-  static void PaintRectangularButton(nsIPresContext& aPresContext,
+  static void PaintRectangularButton(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, const nsRect& aRect, 
                             PRBool aShift, PRBool aShowFocus, PRBool aDisabled,
@@ -416,7 +416,7 @@ public:
     * @param aHeight height ofthe border in TWIPS
     */
 
-  static void PaintCircularBackground(nsIPresContext& aPresContext,
+  static void PaintCircularBackground(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);
@@ -435,7 +435,7 @@ public:
     * @param aHeight height ofthe border in TWIPS
     */
 
-  static void PaintCircularBorder(nsIPresContext& aPresContext,
+  static void PaintCircularBorder(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight);

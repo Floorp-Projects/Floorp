@@ -598,7 +598,7 @@ nsHTMLInputElement::Click()
 	  nsGUIEvent event;
 	  event.eventStructType = NS_GUI_EVENT;
 	  event.message = NS_MOUSE_LEFT_CLICK;
-          rv = HandleDOMEvent(*context, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+          rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
 	NS_RELEASE(shell);
       }
@@ -609,12 +609,13 @@ nsHTMLInputElement::Click()
 }
 
 NS_IMETHODIMP
-nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus)
+                            nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   if ((aEvent->message == NS_FOCUS_CONTENT && mSkipFocusEvent) ||
       (aEvent->message == NS_BLUR_CONTENT && mSkipFocusEvent)) {
     return NS_OK;
@@ -624,7 +625,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
       case NS_FOCUS_CONTENT:
@@ -669,7 +670,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
                 nsIFormControlFrame* formControlFrame = nsnull;
                 if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
                   if (formControlFrame) {
-                    formControlFrame->MouseClicked(&aPresContext);
+                    formControlFrame->MouseClicked(aPresContext);
                   }
                 }
               }

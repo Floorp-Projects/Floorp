@@ -297,19 +297,20 @@ nsHTMLLabelElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 }
 
 NS_IMETHODIMP
-nsHTMLLabelElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLLabelElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   nsresult rv = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 
   // Now a little special trickery because we are a label:
   // We need to pass this event on to our child iff it is a focus,
   // keypress/up/dn, mouseclick/dblclick/up/down.
-  if ((NS_OK == rv) && (nsEventStatus_eIgnore == aEventStatus) && (NS_EVENT_FLAG_INIT == aFlags)) {
+  if ((NS_OK == rv) && (nsEventStatus_eIgnore == *aEventStatus) && (NS_EVENT_FLAG_INIT == aFlags)) {
     PRBool isFormElement = PR_FALSE;
     nsIHTMLContent* node = nsnull; // Strong ref to node we are a label for
     switch (aEvent->message) {

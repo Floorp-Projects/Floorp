@@ -163,7 +163,7 @@ nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetri
 }
 
 NS_IMETHODIMP 
-nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext&          aPresContext, 
+nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext*          aPresContext, 
                                            nsHTMLReflowMetrics&     aDesiredSize,
                                            const nsHTMLReflowState& aReflowState, 
                                            nsReflowStatus&          aStatus)
@@ -278,7 +278,7 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext&          aPresContext
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
       nsIReflowCommand::ReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
@@ -311,13 +311,13 @@ nsGfxButtonControlFrame::DoNavQuirksReflow(nsIPresContext&          aPresContext
                        ((desiredSize.height - textHeight)/2) + aReflowState.mComputedBorderPadding.top, 
                        desiredSize.width, 
                        desiredSize.height);
-  firstKid->SetRect(&aPresContext, rect);
+  firstKid->SetRect(aPresContext, rect);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP 
-nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsGfxButtonControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState, 
                                 nsReflowStatus&          aStatus)
@@ -343,7 +343,7 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   } else { // Normal reflow.
 
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
 
     if (mode == eCompatibility_NavQuirks) {
       // Do NavQuirks Sizing and layout
@@ -371,9 +371,9 @@ nsGfxButtonControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 }
 
 NS_IMETHODIMP
-nsGfxButtonControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent*     aEvent,
-                                      nsEventStatus&  aEventStatus)
+                                      nsEventStatus*  aEventStatus)
 {
   // Override the HandleEvent to prevent the nsFrame::HandleEvent
   // from being called. The nsFrame::HandleEvent causes the button label
@@ -387,7 +387,7 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
    // lets see if the button was clicked
   switch (aEvent->message) {
      case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(&aPresContext);
+        MouseClicked(aPresContext);
      break;
   }
 

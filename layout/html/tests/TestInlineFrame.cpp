@@ -74,7 +74,7 @@ public:
   FixedSizeFrame(nsIContent* aContent,
                  nsIFrame* aParentFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -113,7 +113,7 @@ FixedSizeFrame::FixedSizeFrame(nsIContent* aContent,
 {
 }
 
-NS_METHOD FixedSizeFrame::Reflow(nsIPresContext&      aPresContext,
+NS_METHOD FixedSizeFrame::Reflow(nsIPresContext*      aPresContext,
                                  nsReflowMetrics&     aDesiredSize,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)

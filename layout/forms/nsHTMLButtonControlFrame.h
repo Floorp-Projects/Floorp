@@ -66,27 +66,27 @@ public:
 
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -124,10 +124,10 @@ public:
                     nsFont&         aFont);
 
   NS_IMETHOD GetFormContent(nsIContent*& aContent) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;

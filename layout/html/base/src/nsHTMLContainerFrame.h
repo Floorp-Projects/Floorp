@@ -45,7 +45,7 @@ struct nsStylePosition;
 // functionality.
 class nsHTMLContainerFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD  Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
@@ -57,14 +57,14 @@ public:
    * linked into the flow. In addition, the new frame becomes the
    * next-sibling of aFrame.
    */
-  static nsresult CreateNextInFlow(nsIPresContext& aPresContext,
+  static nsresult CreateNextInFlow(nsIPresContext* aPresContext,
                                    nsIFrame* aOuterFrame,
                                    nsIFrame* aFrame,
                                    nsIFrame*& aNextInFlowResult);
 
   // Helper method to wrap views around frames. Used by containers
   // under special circumstances (can be used by leaf frames as well)
-  static nsresult CreateViewForFrame(nsIPresContext& aPresContext,
+  static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
                                      nsIFrame* aFrame,
                                      nsIStyleContext* aStyleContext,
                                      PRBool aForce);

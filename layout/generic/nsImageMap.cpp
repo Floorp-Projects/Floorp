@@ -54,7 +54,7 @@ public:
   void ParseCoords(const nsString& aSpec);
 
   virtual PRBool IsInside(nscoord x, nscoord y) = 0;
-  virtual void Draw(nsIPresContext& aCX,
+  virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC) = 0;
   virtual void GetShapeName(nsString& aResult) const = 0;
 
@@ -403,7 +403,7 @@ public:
   ~DefaultArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
-  virtual void Draw(nsIPresContext& aCX,
+  virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
   virtual void GetShapeName(nsString& aResult) const;
 };
@@ -424,7 +424,7 @@ PRBool DefaultArea::IsInside(nscoord x, nscoord y)
   return PR_TRUE;
 }
 
-void DefaultArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+void DefaultArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
 }
 
@@ -443,7 +443,7 @@ public:
   ~RectArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
-  virtual void Draw(nsIPresContext& aCX,
+  virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
   virtual void GetShapeName(nsString& aResult) const;
 };
@@ -477,11 +477,11 @@ PRBool RectArea::IsInside(nscoord x, nscoord y)
   return PR_FALSE;
 }
 
-void RectArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+void RectArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 4) {
     float p2t;
-    aCX.GetPixelsToTwips(&p2t);
+    aCX->GetPixelsToTwips(&p2t);
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord x2 = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -508,7 +508,7 @@ public:
   ~PolyArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
-  virtual void Draw(nsIPresContext& aCX,
+  virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
   virtual void GetShapeName(nsString& aResult) const;
 };
@@ -586,11 +586,11 @@ PRBool PolyArea::IsInside(nscoord x, nscoord y)
   return PR_FALSE;
 }
 
-void PolyArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+void PolyArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 6) {
     float p2t;
-    aCX.GetPixelsToTwips(&p2t);
+    aCX->GetPixelsToTwips(&p2t);
     nscoord x0 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y0 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord x1, y1;
@@ -622,7 +622,7 @@ public:
   ~CircleArea();
 
   virtual PRBool IsInside(nscoord x, nscoord y);
-  virtual void Draw(nsIPresContext& aCX,
+  virtual void Draw(nsIPresContext* aCX,
                     nsIRenderingContext& aRC);
   virtual void GetShapeName(nsString& aResult) const;
 };
@@ -658,11 +658,11 @@ PRBool CircleArea::IsInside(nscoord x, nscoord y)
   return PR_FALSE;
 }
 
-void CircleArea::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+void CircleArea::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
   if (mNumCoords >= 3) {
     float p2t;
-    aCX.GetPixelsToTwips(&p2t);
+    aCX->GetPixelsToTwips(&p2t);
     nscoord x1 = NSIntPixelsToTwips(mCoords[0], p2t);
     nscoord y1 = NSIntPixelsToTwips(mCoords[1], p2t);
     nscoord radius = NSIntPixelsToTwips(mCoords[2], p2t);
@@ -930,7 +930,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY)
 }
 
 void
-nsImageMap::Draw(nsIPresContext& aCX, nsIRenderingContext& aRC)
+nsImageMap::Draw(nsIPresContext* aCX, nsIRenderingContext& aRC)
 {
   PRInt32 i, n = mAreas.Count();
   for (i = 0; i < n; i++) {

@@ -54,11 +54,11 @@ public:
   NS_IMETHOD_(void)       GetWebShell(nsIWebShell **aWebShell)=0;
   NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener)=0;
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus)=0;
+                            nsEventStatus* aEventStatus)=0;
 };
 
 extern "C" NS_DOM nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);

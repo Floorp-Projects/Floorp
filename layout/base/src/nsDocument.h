@@ -386,11 +386,11 @@ public:
                                  PRBool aUseCapture);
 
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus);
+                            nsEventStatus* aEventStatus);
 
 
   virtual PRBool IsInSelection(nsIDOMSelection* aSelection, const nsIContent *aContent) const;

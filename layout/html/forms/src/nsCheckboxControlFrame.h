@@ -55,7 +55,7 @@ public:
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
                                 nscoord& aHeight);
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -87,9 +87,9 @@ public:
                               PRInt32         aNameSpaceID,
                               nsIAtom*        aAttribute,
                               PRInt32         aHint) ;
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
    // this should be protected, but VC6 is lame.
   enum CheckState { eOff, eOn, eMixed } ;

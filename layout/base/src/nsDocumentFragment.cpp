@@ -181,13 +181,14 @@ public:
     { return NS_OK; }
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const
     { return NS_OK; }
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus)
+                            nsEventStatus* aEventStatus)
     {
-      aEventStatus = nsEventStatus_eIgnore;
+      NS_ENSURE_ARG_POINTER(aEventStatus);
+      *aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
     }
 

@@ -54,18 +54,18 @@ public:
   // Expect this code to repackaged and moved to a new location in the future.
   //
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  virtual void PaintRadioButton(nsIPresContext& aPresContext,
+  virtual void PaintRadioButton(nsIPresContext* aPresContext,
                         nsIRenderingContext& aRenderingContext,
                         const nsRect& aDirtyRect);
 
   ///XXX: End o the temporary methods
 #ifdef DEBUG_rods
-  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+  NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

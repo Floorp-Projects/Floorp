@@ -67,7 +67,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+  NS_IMETHOD Stretch(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      nsStretchDirection   aStretchDirection,
                      nsCharMetrics&       aContainerSize,
@@ -88,19 +88,19 @@ public:
   // nsHTMLContainerFrame methods
  
   NS_IMETHOD
-  Init(nsIPresContext&  aPresContext,
+  Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext& aPresContext,
+  SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);
@@ -110,7 +110,7 @@ public:
   // base method not to worry about our position.
   nsresult 
   ReflowChild(nsIFrame*                aKidFrame,
-              nsIPresContext&          aPresContext,
+              nsIPresContext*          aPresContext,
               nsHTMLReflowMetrics&     aDesiredSize,
               const nsHTMLReflowState& aReflowState,
               nsReflowStatus&          aStatus)
@@ -125,7 +125,7 @@ public:
   // the style system has some provisions for MathML
 
   NS_IMETHOD
-  InsertScriptLevelStyleContext(nsIPresContext& aPresContext);
+  InsertScriptLevelStyleContext(nsIPresContext* aPresContext);
 
   // helper methods for processing empty MathML frames (with whitespace only)
 
@@ -133,7 +133,7 @@ public:
   IsOnlyWhitespace(nsIFrame* aFrame);
   
   static void
-  ReflowEmptyChild(nsIPresContext& aPresContext,
+  ReflowEmptyChild(nsIPresContext* aPresContext,
                    nsIFrame*       aFrame);
 
 protected:
@@ -153,14 +153,14 @@ class nsMathMLWrapperFrame : public nsMathMLContainerFrame {
 public:
   friend nsresult NS_NewMathMLWrapperFrame(nsIFrame** aNewFrame);
 
-  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+  NS_IMETHOD Stretch(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      nsStretchDirection   aStretchDirection,
                      nsCharMetrics&       aContainerSize,
                      nsCharMetrics&       aDesiredStretchSize);
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus);

@@ -64,7 +64,7 @@ public:
    */
   PRBool IsInside(nscoord aX, nscoord aY);
 
-  void Draw(nsIPresContext& aCX, nsIRenderingContext& aRC);
+  void Draw(nsIPresContext* aCX, nsIRenderingContext& aRC);
 
 #ifdef DEBUG
   void SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;

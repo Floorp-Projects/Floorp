@@ -115,7 +115,7 @@ public:
   {
   }
  
-  NS_IMETHOD Paint(nsIPresContext&      aPresContext,
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    nsIStyleContext*     aStyleContext);
 
@@ -123,7 +123,7 @@ public:
   // aDesiredStretchSize is an IN/OUT parameter.
   // On input  - it contains our current size.
   // On output - the same size or the new size that the char wants.
-  NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
+  NS_IMETHOD Stretch(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      nsIStyleContext*     aStyleContext,
                      nsStretchDirection   aStretchDirection,
@@ -182,7 +182,7 @@ private:
            nsRect&              aClipRect);
 
   static nsresult
-  PaintVertically(nsIPresContext&      aPresContext,
+  PaintVertically(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   nsIStyleContext*     aStyleContext,
                   nscoord              fontAscent,
@@ -191,7 +191,7 @@ private:
                   nsRect               aRect);
 
   static nsresult
-  PaintHorizontally(nsIPresContext&      aPresContext,
+  PaintHorizontally(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     nsIStyleContext*     aStyleContext,
                     nscoord              fontAscent,

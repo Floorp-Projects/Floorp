@@ -67,7 +67,7 @@ nsMathMLmunderoverFrame::~nsMathMLmunderoverFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmunderoverFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmunderoverFrame::Reflow(nsIPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)
@@ -164,7 +164,7 @@ nsMathMLmunderoverFrame::Reflow(nsIPresContext&          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext.GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
   fm->GetLeading(leading);
   
   aDesiredSize.height -= 2*leading;
@@ -173,9 +173,9 @@ nsMathMLmunderoverFrame::Reflow(nsIPresContext&          aPresContext,
   rect[0].y -= leading;
   rect[1].y -= 2*leading;
 //     
-  child[0]->SetRect(&aPresContext, rect[0]);
-  child[1]->SetRect(&aPresContext, rect[1]); 
-  child[2]->SetRect(&aPresContext, rect[2]);
+  child[0]->SetRect(aPresContext, rect[0]);
+  child[1]->SetRect(aPresContext, rect[1]); 
+  child[2]->SetRect(aPresContext, rect[2]);
 
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;

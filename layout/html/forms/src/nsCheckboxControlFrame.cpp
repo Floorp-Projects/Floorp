@@ -98,7 +98,7 @@ nsCheckboxControlFrame :: nsCheckboxControlFrame ( )
 // We need to override this in order to see if we're a tristate checkbox.
 //
 NS_IMETHODIMP
-nsCheckboxControlFrame::Init(nsIPresContext&  aPresContext,
+nsCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -271,18 +271,19 @@ nsCheckboxControlFrame::Reset(nsIPresContext* aPresContext)
   SetCheckboxState (aPresContext, checked ? eOn : eOff );
 }  
 
-NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_METHOD nsCheckboxControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                               nsGUIEvent* aEvent,
-                                              nsEventStatus& aEventStatus)
+                                              nsEventStatus* aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus)
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
     return NS_OK;
 
   if (nsFormFrame::GetDisabled(this))
     return NS_OK;
 
   if (NS_MOUSE_LEFT_BUTTON_UP == aEvent->message) {
-    MouseUp(&aPresContext);
+    MouseUp(aPresContext);
   }
 
   return(nsNativeFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus));

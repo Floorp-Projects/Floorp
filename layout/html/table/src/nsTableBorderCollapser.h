@@ -36,22 +36,22 @@ public:
   ~nsTableBorderCollapser();
 
   /** notification that top and bottom borders have been computed */ 
-  void DidComputeHorizontalBorders(nsIPresContext& aPresContext,
+  void DidComputeHorizontalBorders(nsIPresContext* aPresContext,
                                    PRInt32         aStartRowIndex,
                                    PRInt32         aEndRowIndex);
 
   /** compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void ComputeVerticalBorders(nsIPresContext& aPresContext,
+  void ComputeVerticalBorders(nsIPresContext* aPresContext,
                               PRInt32         aStartRowIndex, 
                               PRInt32          aEndRowIndex);
 
   /** compute the top and bottom collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void ComputeHorizontalBorders(nsIPresContext& aPresContext,
+  void ComputeHorizontalBorders(nsIPresContext* aPresContext,
                                 PRInt32         aStartRowIndex, 
                                 PRInt32         aEndRowIndex);
 
   /** compute the left borders for the table objects intersecting at (aRowIndex, aColIndex) */
-  void ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
+  void ComputeLeftBorderForEdgeAt(nsIPresContext* aPresContext,
                                   PRInt32         aRowIndex, 
                                   PRInt32         aColIndex);
 
@@ -59,12 +59,12 @@ public:
     * and the appropriate border for that cell's right neighbor 
     * (the left border for a neighboring cell, or the right table edge) 
     */
-  void ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
+  void ComputeRightBorderForEdgeAt(nsIPresContext* aPresContext,
                                    PRInt32         aRowIndex, 
                                    PRInt32         aColIndex);
 
   /** compute the top borders for the table objects intersecting at (aRowIndex, aColIndex) */
-  void ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
+  void ComputeTopBorderForEdgeAt(nsIPresContext* aPresContext,
                                  PRInt32         aRowIndex, 
                                  PRInt32         aColIndex);
 
@@ -72,7 +72,7 @@ public:
     * and the appropriate border for that cell's bottom neighbor 
     * (the top border for a neighboring cell, or the bottom table edge) 
     */
-  void ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
+  void ComputeBottomBorderForEdgeAt(nsIPresContext* aPresContext,
                                     PRInt32         aRowIndex, 
                                     PRInt32         aColIndex);
   

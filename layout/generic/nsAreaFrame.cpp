@@ -80,14 +80,14 @@ nsAreaFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 // nsIFrame
 
 NS_IMETHODIMP
-nsAreaFrame::Destroy(nsIPresContext& aPresContext)
+nsAreaFrame::Destroy(nsIPresContext* aPresContext)
 {
   mAbsoluteContainer.DestroyFrames(this, aPresContext);
   return nsBlockFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsAreaFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList)
 {
@@ -103,7 +103,7 @@ nsAreaFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::AppendFrames(nsIPresContext& aPresContext,
+nsAreaFrame::AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList)
@@ -122,7 +122,7 @@ nsAreaFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::InsertFrames(nsIPresContext& aPresContext,
+nsAreaFrame::InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -142,7 +142,7 @@ nsAreaFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsAreaFrame::RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
@@ -243,7 +243,7 @@ CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
+nsAreaFrame::Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)

@@ -36,11 +36,11 @@ struct nsStyleText;
 
 class nsLineLayout {
 public:
-  nsLineLayout(nsIPresContext& aPresContext,
+  nsLineLayout(nsIPresContext* aPresContext,
                nsISpaceManager* aSpaceManager,
                const nsHTMLReflowState* aOuterReflowState,
                PRBool aComputeMaxElementSize);
-  nsLineLayout(nsIPresContext& aPresContext);
+  nsLineLayout(nsIPresContext* aPresContext);
   ~nsLineLayout();
 
   void Init(nsBlockReflowState* aState, nscoord aMinLineHeight,
@@ -210,7 +210,7 @@ public:
   // internal text-run state is reset.
   nsTextRun* TakeTextRuns();
 
-  nsIPresContext& mPresContext;
+  nsIPresContext* mPresContext;
 
 protected:
   // This state is constant for a given block frame doing line layout

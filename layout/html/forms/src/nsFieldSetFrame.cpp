@@ -64,16 +64,16 @@ public:
 
   nsFieldSetFrame();
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
                                
-  NS_METHOD Paint(nsIPresContext& aPresContext,
+  NS_METHOD Paint(nsIPresContext* aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect,
                   nsFramePaintLayer aWhichLayer);
@@ -118,7 +118,7 @@ nsFieldSetFrame::nsFieldSetFrame()
 }
 
 NS_IMETHODIMP
-nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsFieldSetFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {
@@ -132,7 +132,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fieldsetContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::fieldsetContentPseudo,
                                             mStyleContext, PR_FALSE, &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
   mFrames.FirstChild()->SetNextSibling(nsnull);
@@ -184,7 +184,7 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
 // this is identical to nsHTMLContainerFrame::Paint except for the background and border. 
 NS_IMETHODIMP
-nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
+nsFieldSetFrame::Paint(nsIPresContext* aPresContext,
                        nsIRenderingContext& aRenderingContext,
                        const nsRect& aDirtyRect,
                        nsFramePaintLayer aWhichLayer)
@@ -278,7 +278,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 #ifdef DEBUG
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
-    GetView(&aPresContext, &view);
+    GetView(aPresContext, &view);
     if (nsnull != view) {
       aRenderingContext.SetColor(NS_RGB(0,0,255));
     }
@@ -293,7 +293,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP 
-nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
+nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
@@ -388,7 +388,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     // place the legend
     nsRect actualLegendRect(mLegendRect);
     actualLegendRect.Deflate(legendMargin);
-    mLegendFrame->SetRect(&aPresContext, actualLegendRect);
+    mLegendFrame->SetRect(aPresContext, actualLegendRect);
   }
   
   // Return our size and our result

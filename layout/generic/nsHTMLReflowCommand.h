@@ -48,7 +48,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIReflowCommand
-  NS_IMETHOD Dispatch(nsIPresContext&      aPresContext,
+  NS_IMETHOD Dispatch(nsIPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsSize&        aMaxSize,
                       nsIRenderingContext& aRendContext);

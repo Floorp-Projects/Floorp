@@ -41,7 +41,7 @@ public:
 
  
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -54,16 +54,16 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect,
                     nsFramePaintLayer aWhichLayer);
 
  
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList);
 
@@ -77,7 +77,7 @@ public:
 protected:
 
   virtual nsIFrame* GetSelectedFrame();
-    virtual nsresult PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect);
+    virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
     virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);

@@ -238,11 +238,11 @@ nsHTMLUListElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 
 
 NS_IMETHODIMP
-nsHTMLUListElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLUListElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

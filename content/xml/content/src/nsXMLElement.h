@@ -143,11 +143,11 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {
     return mInner.FinishConvertToXIF(aConverter);
   }
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus);
+                            nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetContentID(PRUint32* aID) {
     *aID = mContentID;

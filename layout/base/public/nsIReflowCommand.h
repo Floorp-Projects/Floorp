@@ -103,7 +103,7 @@ public:
    *
    * @see nsIFrame#Reflow()
    */
-  NS_IMETHOD Dispatch(nsIPresContext&      aPresContext,
+  NS_IMETHOD Dispatch(nsIPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsSize&        aMaxSize,
                       nsIRenderingContext& aRendContext) = 0;

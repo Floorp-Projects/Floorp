@@ -55,7 +55,7 @@ void nsTableBorderCollapser::SetBorderEdgeLength(PRUint8 aSide,
   }
 }
 
-void nsTableBorderCollapser::DidComputeHorizontalBorders(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::DidComputeHorizontalBorders(nsIPresContext* aPresContext,
                                                          PRInt32         aStartRowIndex,
                                                          PRInt32         aEndRowIndex)
 {
@@ -117,7 +117,7 @@ void nsTableBorderCollapser::DidComputeHorizontalBorders(nsIPresContext& aPresCo
   // the object on the right/bottom gets the extra portion
 
 /* compute the top and bottom collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-void nsTableBorderCollapser::ComputeHorizontalBorders(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeHorizontalBorders(nsIPresContext* aPresContext,
                                                       PRInt32         aStartRowIndex,
                                                       PRInt32         aEndRowIndex)
 {
@@ -138,7 +138,7 @@ void nsTableBorderCollapser::ComputeHorizontalBorders(nsIPresContext& aPresConte
 }
 
 /* compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-void nsTableBorderCollapser::ComputeVerticalBorders(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeVerticalBorders(nsIPresContext* aPresContext,
                                                     PRInt32         aStartRowIndex,
                                                     PRInt32         aEndRowIndex)
 {
@@ -170,7 +170,7 @@ void nsTableBorderCollapser::ComputeVerticalBorders(nsIPresContext& aPresContext
   }
 }
 
-void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext* aPresContext,
                                                         PRInt32         aRowIndex, 
                                                         PRInt32         aColIndex)
 {
@@ -225,9 +225,9 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresCon
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the table border
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
   nscoord widthToAdd = 0;
   border->mWidth = widthAsPixels/2;
@@ -247,7 +247,7 @@ void nsTableBorderCollapser::ComputeLeftBorderForEdgeAt(nsIPresContext& aPresCon
   mBorderEdges.mMaxBorderWidth.left = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.left);
 }
 
-void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext* aPresContext,
                                                          PRInt32         aRowIndex, 
                                                          PRInt32         aColIndex)
 {
@@ -345,9 +345,9 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext& aPresCo
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right cell border
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
   nscoord widthToAdd = 0;
   border.mWidth = widthAsPixels/2;
@@ -374,7 +374,7 @@ void nsTableBorderCollapser::ComputeRightBorderForEdgeAt(nsIPresContext& aPresCo
   }
 }
 
-void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext* aPresContext,
                                                        PRInt32         aRowIndex, 
                                                        PRInt32         aColIndex)
 {
@@ -431,9 +431,9 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext& aPresCont
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right border
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border->mWidth)*t2p);
   nscoord widthToAdd = 0;
   border->mWidth = widthAsPixels/2;
@@ -463,7 +463,7 @@ void nsTableBorderCollapser::ComputeTopBorderForEdgeAt(nsIPresContext& aPresCont
   mBorderEdges.mMaxBorderWidth.top = PR_MAX(border->mWidth, mBorderEdges.mMaxBorderWidth.top);
 }
 
-void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
+void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext* aPresContext,
                                                           PRInt32         aRowIndex, 
                                                           PRInt32         aColIndex)
 {
@@ -559,9 +559,9 @@ void nsTableBorderCollapser::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresC
   // to avoid rounding errors, we convert up to pixels, divide by 2, and 
   // we give the odd pixel to the right cell border
   float t2p;
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetTwipsToPixels(&t2p);
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   nscoord widthAsPixels = NSToCoordRound((float)(border.mWidth)*t2p);
   nscoord widthToAdd = 0;
   border.mWidth = widthAsPixels/2;

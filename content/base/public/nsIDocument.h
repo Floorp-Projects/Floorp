@@ -300,11 +300,11 @@ public:
   virtual void SetDisplaySelection(PRBool aToggle) = 0;
   virtual PRBool GetDisplaySelection() const = 0;
 
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, 
                             nsEvent* aEvent, 
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus) = 0;
+                            nsEventStatus* aEventStatus) = 0;
 
 
 

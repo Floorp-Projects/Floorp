@@ -259,7 +259,7 @@ public:
                    const nsRect&        aDirtyRect);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
@@ -990,23 +990,23 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     CreateRenderingContext(rootFrame, &rcx);
 
-    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
+    nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Initial, rcx, maxSize);
     nsIView*          view;
 
-    rootFrame->WillReflow(*mPresContext);
+    rootFrame->WillReflow(mPresContext);
     rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
     }
-    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
       
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
@@ -1086,22 +1086,22 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     CreateRenderingContext(rootFrame, &rcx);
 
-    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
+    nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
     nsIView*          view;
 
-    rootFrame->WillReflow(*mPresContext);
+    rootFrame->WillReflow(mPresContext);
     rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
     }
-    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
@@ -1282,23 +1282,23 @@ PresShell::StyleChangeReflow()
     CreateRenderingContext(rootFrame, &rcx);
 
     // XXX We should be using eReflowReason_StyleChange
-    nsHTMLReflowState reflowState(*mPresContext, rootFrame,
+    nsHTMLReflowState reflowState(mPresContext, rootFrame,
                                   eReflowReason_Resize, rcx, maxSize);
     nsIView*          view;
 
-    rootFrame->WillReflow(*mPresContext);
+    rootFrame->WillReflow(mPresContext);
     rootFrame->GetView(mPresContext, &view);
     if (view) {
       nsContainerFrame::PositionFrameView(mPresContext, rootFrame, view);
     }
-    rootFrame->Reflow(*mPresContext, desiredSize, reflowState, status);
+    rootFrame->Reflow(mPresContext, desiredSize, reflowState, status);
     rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
     mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
     if (view) {
       nsContainerFrame::SyncFrameViewAfterReflow(mPresContext, rootFrame, view,
                                                  nsnull);
     }
-    rootFrame->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
+    rootFrame->DidReflow(mPresContext, NS_FRAME_REFLOW_FINISHED);
 #ifdef NS_DEBUG
     if (nsIFrameDebug::GetVerifyTreeEnable()) {
       nsIFrameDebug*  frameDebug;
@@ -1646,7 +1646,7 @@ PresShell::ProcessReflowCommands()
       // Dispatch the reflow command
       nsSize          maxSize;
       rootFrame->GetSize(maxSize);
-      rc->Dispatch(*mPresContext, desiredSize, maxSize, *rcx);
+      rc->Dispatch(mPresContext, desiredSize, maxSize, *rcx);
       NS_RELEASE(rc);
       VERIFY_STYLE_TREE;
     }
@@ -2314,11 +2314,11 @@ PresShell::Paint(nsIView              *aView,
   {
     StCaretHider  caretHider(this);			// stack-based class hides caret until dtor.
 
-    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_BACKGROUND);
-    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FLOATERS);
-    rv = frame->Paint(*mPresContext, aRenderingContext, aDirtyRect,
+    rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FOREGROUND);
                       
                
@@ -2376,7 +2376,7 @@ PresShell::PopCurrentEventFrame()
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
-                       nsEventStatus&  aEventStatus)
+                       nsEventStatus*  aEventStatus)
 {
   void*     clientData;
   nsIFrame* frame;
@@ -2429,18 +2429,18 @@ PresShell::HandleEvent(nsIView         *aView,
       if (GetCurrentEventFrame() || focusContent) {
       //Once we have the targetFrame, handle the event in this order
         //1. Give event to event manager for pre event state changes and generation of synthetic events.
-        rv = manager->PreHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
+        rv = manager->PreHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
 
         //2. Give event to the DOM for third party and JS use.
         if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {
           if (focusContent) {
-            rv = focusContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+            rv = focusContent->HandleDOMEvent(mPresContext, (nsEvent*)aEvent, nsnull, 
                                                NS_EVENT_FLAG_INIT, aEventStatus);
           }
           else {
             nsIContent* targetContent;
             if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
-              rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
+              rv = targetContent->HandleDOMEvent(mPresContext, (nsEvent*)aEvent, nsnull, 
                                                  NS_EVENT_FLAG_INIT, aEventStatus);
               NS_RELEASE(targetContent);
             }
@@ -2450,12 +2450,12 @@ PresShell::HandleEvent(nsIView         *aView,
           // XXX The event isn't translated into the local coordinate space
           // of the frame...
           if (GetCurrentEventFrame() && NS_OK == rv) {
-            rv = mCurrentEventFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
+            rv = mCurrentEventFrame->HandleEvent(mPresContext, aEvent, aEventStatus);
           }
 
           //4. Give event to event manager for post event state changes and generation of synthetic events.
           if ((GetCurrentEventFrame() || focusContent) && NS_OK == rv) {
-            rv = manager->PostHandleEvent(*mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
+            rv = manager->PostHandleEvent(mPresContext, aEvent, mCurrentEventFrame, aEventStatus, aView);
           }
         }
       }

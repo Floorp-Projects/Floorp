@@ -35,7 +35,7 @@ public:
   friend nsresult NS_NewMathMLmpaddedFrame(nsIFrame** aNewFrame);
   
   NS_IMETHOD
-  Init(nsIPresContext&  aPresContext,
+  Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,

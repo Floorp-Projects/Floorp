@@ -91,7 +91,7 @@ nsInlineFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
+nsInlineFrame::AppendFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aFrameList)
@@ -113,7 +113,7 @@ nsInlineFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::InsertFrames(nsIPresContext& aPresContext,
+nsInlineFrame::InsertFrames(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aPrevFrame,
@@ -137,7 +137,7 @@ nsInlineFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
                            nsIPresShell& aPresShell,
                            nsIAtom* aListName,
                            nsIFrame* aOldFrame)
@@ -192,7 +192,7 @@ nsInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsInlineFrame::ReplaceFrame(nsIPresContext& aPresContext,
+nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
                             nsIPresShell& aPresShell,
                             nsIAtom* aListName,
                             nsIFrame* aOldFrame,
@@ -223,7 +223,7 @@ nsInlineFrame::ReplaceFrame(nsIPresContext& aPresContext,
 // Reflow methods
 
 NS_IMETHODIMP
-nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
+nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aMetrics,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -231,7 +231,7 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
   if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
-  DrainOverflow(&aPresContext);
+  DrainOverflow(aPresContext);
 
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
 #ifdef DEBUG_kipp
@@ -268,10 +268,10 @@ nsInlineFrame::Reflow(nsIPresContext&          aPresContext,
     // Try to pull over one frame before starting so that we know
     // whether we have an anonymous block or not.
     PRBool complete;
-    (void) PullOneFrame(&aPresContext, irs, &complete);
+    (void) PullOneFrame(aPresContext, irs, &complete);
   }
 
-  rv = ReflowFrames(&aPresContext, aReflowState, irs, aMetrics, aStatus);
+  rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
 
   // Note: the line layout code will properly compute our
   // NS_FRAME_OUTSIDE_CHILDREN state for us.
@@ -510,7 +510,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
       // Break-after
       if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
         nsIFrame* newFrame;
-        rv = CreateNextInFlow(*aPresContext, this, aFrame, newFrame);
+        rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -537,7 +537,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
     nsIFrame* newFrame;
-    rv = CreateNextInFlow(*aPresContext, this, aFrame, newFrame);
+    rv = CreateNextInFlow(aPresContext, this, aFrame, newFrame);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -733,7 +733,7 @@ nsFirstLineFrame::DrainOverflow(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
+nsFirstLineFrame::Reflow(nsIPresContext* aPresContext,
                          nsHTMLReflowMetrics& aMetrics,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus& aStatus)
@@ -741,7 +741,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
   if (nsnull == aReflowState.mLineLayout) {
     return NS_ERROR_INVALID_ARG;
   }
-  DrainOverflow(&aPresContext);
+  DrainOverflow(aPresContext);
 
   // Set our own reflow state (additional state above and beyond
   // aReflowState)
@@ -765,7 +765,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
     // Try to pull over one frame before starting so that we know
     // whether we have an anonymous block or not.
     PRBool complete;
-    PullOneFrame(&aPresContext, irs, &complete);
+    PullOneFrame(aPresContext, irs, &complete);
   }
 
   if (nsnull == mPrevInFlow) {
@@ -778,7 +778,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
     irs.mPrevFrame = mFrames.LastChild();
     for (;;) {
       PRBool complete;
-      nsIFrame* frame = PullOneFrame(&aPresContext, irs, &complete);
+      nsIFrame* frame = PullOneFrame(aPresContext, irs, &complete);
       if (!frame) {
         break;
       }
@@ -806,16 +806,16 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
         // we behave as if an anonymous (unstyled) span was the child
         // of the parent frame.
         nsIStyleContext* newSC;
-        aPresContext.ResolvePseudoStyleContextFor(mContent,
+        aPresContext->ResolvePseudoStyleContextFor(mContent,
                                                   nsHTMLAtoms::mozLineFrame,
                                                   parentContext,
                                                   PR_FALSE, &newSC);
         if (newSC) {
           // Switch to the new style context.
-          SetStyleContext(&aPresContext, newSC);
+          SetStyleContext(aPresContext, newSC);
 
           // Re-resolve all children
-          ReParentChildListStyle(&aPresContext, mStyleContext, mFrames);
+          ReParentChildListStyle(aPresContext, mStyleContext, mFrames);
 
           NS_RELEASE(newSC);
         }
@@ -824,7 +824,7 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
     }
   }
 
-  rv = ReflowFrames(&aPresContext, aReflowState, irs, aMetrics, aStatus);
+  rv = ReflowFrames(aPresContext, aReflowState, irs, aMetrics, aStatus);
 
   // Note: the line layout code will properly compute our
   // NS_FRAME_OUTSIDE_CHILDREN state for us.
@@ -850,14 +850,14 @@ NS_NewPositionedInlineFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::Destroy(nsIPresContext& aPresContext)
+nsPositionedInlineFrame::Destroy(nsIPresContext* aPresContext)
 {
   mAbsoluteContainer.DestroyFrames(this, aPresContext);
   return nsInlineFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsPositionedInlineFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                              nsIAtom*        aListName,
                                              nsIFrame*       aChildList)
 {
@@ -873,7 +873,7 @@ nsPositionedInlineFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::AppendFrames(nsIPresContext& aPresContext,
+nsPositionedInlineFrame::AppendFrames(nsIPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aFrameList)
@@ -892,7 +892,7 @@ nsPositionedInlineFrame::AppendFrames(nsIPresContext& aPresContext,
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::InsertFrames(nsIPresContext& aPresContext,
+nsPositionedInlineFrame::InsertFrames(nsIPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aPrevFrame,
@@ -912,7 +912,7 @@ nsPositionedInlineFrame::InsertFrames(nsIPresContext& aPresContext,
 }
   
 NS_IMETHODIMP
-nsPositionedInlineFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsPositionedInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
                                      nsIPresShell&   aPresShell,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aOldFrame)
@@ -962,7 +962,7 @@ nsPositionedInlineFrame::GetFrameType(nsIAtom** aType) const
 }
 
 NS_IMETHODIMP
-nsPositionedInlineFrame::Reflow(nsIPresContext&          aPresContext,
+nsPositionedInlineFrame::Reflow(nsIPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
                                 nsReflowStatus&          aStatus)

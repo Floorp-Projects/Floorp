@@ -148,11 +148,11 @@ public:
   }
   nsresult GetNameSpaceID(PRInt32& aNameSpaceID) const;
   nsresult GetTag(nsIAtom*& aResult) const;
-  nsresult HandleDOMEvent(nsIPresContext& aPresContext,
+  nsresult HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
-                          nsEventStatus& aEventStatus);
+                          nsEventStatus* aEventStatus);
 
   nsresult GetContentID(PRUint32* aID) {
     *aID = mContentID;
@@ -193,7 +193,7 @@ public:
                                   const nsString& aValue,
                                   REFNSIID aIID);
 
-  void TriggerLink(nsIPresContext& aPresContext,
+  void TriggerLink(nsIPresContext* aPresContext,
                    nsLinkVerb aVerb,
                    nsIURI* aBaseURL,
                    const nsString& aURLSpec,
@@ -514,11 +514,11 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);                  \
+                            nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
     return _g.GetContentID(aID);                                           \
   }                                                                        \
@@ -623,11 +623,11 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);                  \
+                            nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
     return _g.GetContentID(aID);                                           \
   }                                                                        \
@@ -732,11 +732,11 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);                  \
+                            nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
     return _g.GetContentID(aID);                                           \
   }                                                                        \
@@ -839,11 +839,11 @@ public:
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const {        \
     return _g.FinishConvertToXIF(aConverter);                              \
   }                                                                        \
-  NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,                  \
+  NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext,                  \
                             nsEvent* aEvent,                               \
                             nsIDOMEvent** aDOMEvent,                       \
                             PRUint32 aFlags,                               \
-                            nsEventStatus& aEventStatus);                  \
+                            nsEventStatus* aEventStatus);                  \
   NS_IMETHOD GetContentID(PRUint32* aID) {                                 \
     return _g.GetContentID(aID);                                           \
   }                                                                        \

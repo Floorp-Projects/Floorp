@@ -95,10 +95,10 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::Destroy(nsIPresContext& aPresContext)
+nsTreeRowGroupFrame::Destroy(nsIPresContext* aPresContext)
 {
   if (mScrollbar) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar);
     mScrollbar->Destroy(aPresContext);
   }
   return nsTableRowGroupFrame::Destroy(aPresContext);
@@ -136,7 +136,7 @@ nsTreeRowGroupFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 // need to hold an owning ref to it ourselves.
 //
 NS_IMETHODIMP
-nsTreeRowGroupFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+nsTreeRowGroupFrame::Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                              nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow)
 {
   nsresult rv = nsTableRowGroupFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
@@ -148,7 +148,7 @@ nsTreeRowGroupFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
   // register our drag over and exit capturers. These annotate the content object
   // with enough info to determine where the drop would happen so that JS down the 
   // line can do the right thing.
-  mDragCapturer = new nsTreeItemDragCapturer(this, &aPresContext);
+  mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
   receiver->AddEventListener("dragover", mDragCapturer, PR_TRUE);
   receiver->AddEventListener("dragexit", mDragCapturer, PR_TRUE);
 
@@ -157,7 +157,7 @@ nsTreeRowGroupFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
 } // Init
 
 
-void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext* aPresContext, PRInt32& rowsToLose) 
 {
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
@@ -188,13 +188,13 @@ void nsTreeRowGroupFrame::DestroyRows(nsTableFrame* aTableFrame, nsIPresContext&
     
     nsIFrame* nextFrame;
     GetNextFrame(childFrame, &nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame);
     mFrames.DestroyFrame(aPresContext, childFrame);
     mTopFrame = childFrame = nextFrame;
   }
 }
 
-void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose) 
+void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext* aPresContext, PRInt32& rowsToLose) 
 {
   // We need to destroy frames until our row count has been properly
   // reduced.  A reflow will then pick up and create the new frames.
@@ -224,7 +224,7 @@ void nsTreeRowGroupFrame::ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresC
     
     nsIFrame* prevFrame;
     prevFrame = mFrames.GetPrevSiblingFor(childFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, childFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, childFrame);
     mFrames.DestroyFrame(aPresContext, childFrame);
     mBottomFrame = childFrame = prevFrame;
   }
@@ -249,7 +249,7 @@ nsTreeRowGroupFrame::ConstructContentChain(nsIContent* aRowContent)
 }
 
 void 
-nsTreeRowGroupFrame::ConstructOldContentChain(nsIPresContext& aPresContext,
+nsTreeRowGroupFrame::ConstructOldContentChain(nsIPresContext* aPresContext,
                                               nsIContent* aOldRowContent)
 {
 	nsCOMPtr<nsIContent> childOfCommonAncestor;
@@ -354,13 +354,13 @@ nsTreeRowGroupFrame::IsTableRowFrame(nsIFrame *frame)
 }
 
 void
-nsTreeRowGroupFrame::CreateOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain)
+nsTreeRowGroupFrame::CreateOldContentChain(nsIPresContext* aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain)
 {
   nsCOMPtr<nsIContent> currContent = dont_QueryInterface(aOldRowContent);
   nsCOMPtr<nsIContent> prevContent;
 
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
 
   //For each item between the (oldtoprow) and
   // (the new first child of common ancestry between new top row and old top row)
@@ -629,7 +629,7 @@ nsTreeRowGroupFrame::ComputeTotalRowCount(PRInt32& aCount, nsIContent* aParent)
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
+nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex)
 {
 #ifdef DEBUG_tree
     printf("PositionChanged from %d to %d\n", aOldIndex, aNewIndex);
@@ -697,7 +697,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldI
     // Just blow away all our frames, but keep a content chain
     // as a hint to figure out how to build the frames.
     // Remove the scrollbar first.
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, this);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, this);
     mFrames.DestroyFrames(aPresContext);
     tableFrame->InvalidateCellMap();
     nsCOMPtr<nsIContent> topRowContent;
@@ -821,7 +821,7 @@ nsTreeRowGroupFrame::GetAdditionalChildListName(PRInt32   aIndex,
   return NS_OK;
 }
 
-void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
+void nsTreeRowGroupFrame::PaintChildren(nsIPresContext*      aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect&        aDirtyRect,
                                          nsFramePaintLayer    aWhichLayer)
@@ -831,7 +831,7 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
   if (mScrollbar) {
     nsIView *pView;
      
-    mScrollbar->GetView(&aPresContext, &pView);
+    mScrollbar->GetView(aPresContext, &pView);
     if (nsnull == pView) {
       PRBool clipState;
       nsRect kidRect;
@@ -856,7 +856,7 @@ void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
+nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
@@ -911,7 +911,7 @@ nsTreeRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP 
-nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
+nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext*      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
                                            RowGroupReflowState& aReflowState,
                                            nsReflowStatus&      aStatus,
@@ -923,7 +923,7 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP 
-nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
+nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext*       aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
                                            RowGroupReflowState& aReflowState,
                                            nsReflowStatus&      aStatus,
@@ -963,7 +963,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
    
     if (nukeScrollbar || (value == "0" && !mIsFull)) {
       // Nuke the scrollbar.
-      mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
+      mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, mScrollbar);
       mScrollbarList.DestroyFrames(aPresContext);
       mScrollbar = nsnull;
     }
@@ -1077,7 +1077,7 @@ nsTreeRowGroupFrame::GetNextFrame(nsIFrame* aPrevFrame, nsIFrame** aResult)
 }
 
 nsIFrame* 
-nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext) 
+nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext* aPresContext) 
 { 
   // Clear ourselves out.
   mLinkupFrame = nsnull;
@@ -1154,7 +1154,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
      
     PRBool isAppend = (mLinkupFrame == nsnull);
 
-    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, startContent,
+    mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, startContent,
                                                &mTopFrame, isAppend, PR_FALSE);
     
     // XXX Can be optimized if we detect that we're appending a row.
@@ -1190,7 +1190,7 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
 }
   
 void 
-nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult) 
+nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIFrame** aResult) 
 { 
 
    if (mIsLazy) {
@@ -1239,7 +1239,7 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
           prevFrame = aFrame;
           isAppend = PR_FALSE;
         }
-        mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, prevFrame, nextContent,
+        mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, prevFrame, nextContent,
                                                    aResult, isAppend, PR_FALSE);
 
         // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
@@ -1278,7 +1278,7 @@ nsTreeRowGroupFrame::TreeAppendFrames(nsIFrame* aFrameList)
 }
 
 
-PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height) 
+PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height) 
 { 
   //printf("Y is: %d\n", y);
   //printf("Height is: %d\n", height); 
@@ -1299,7 +1299,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
       while (currFrame) {
         nsIFrame* nextFrame;
         currFrame->GetNextSibling(&nextFrame);
-        mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
+        mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame);
         mFrames.DestroyFrame(aPresContext, currFrame);
         currFrame = nextFrame;
         //printf("Nuked one off the end.\n");
@@ -1312,7 +1312,7 @@ PRBool nsTreeRowGroupFrame::ContinueReflow(nsIPresContext& aPresContext, nscoord
 }
   
 // Responses to changes
-void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext) 
+void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext) 
 {
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
@@ -1321,7 +1321,7 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext)
   MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
-void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext& aPresContext, nsIFrame* aNextSibling)
+void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling)
 {
   nsIFrame* currFrame = aNextSibling;
 
@@ -1331,7 +1331,7 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext& aPresContext, nsIFra
   while (currFrame) {
     nsIFrame* nextFrame;
     currFrame->GetNextSibling(&nextFrame);
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, currFrame);
     mFrames.DestroyFrame(aPresContext, currFrame);
     currFrame = nextFrame;
     //printf("Nuked one off the end.\n");
@@ -1340,7 +1340,7 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext& aPresContext, nsIFra
 	
 }
 
-void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext, 
+void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext, 
                                            nsIFrame* aChildFrame)
 {
   // We need to make sure we update things when content gets removed.
@@ -1354,7 +1354,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext,
 
   // Go ahead and delete the frame.
   if (aChildFrame) {
-    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, aChildFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(aPresContext, aChildFrame);
     mFrames.DestroyFrame(aPresContext, aChildFrame);
     treeFrame->InvalidateCellMap();
     treeFrame->InvalidateColumnCache();
@@ -1390,7 +1390,7 @@ void nsTreeRowGroupFrame::SetShouldHaveScrollbar()
   mIsLazy = PR_TRUE;
 }
 
-void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext& aPresContext)
+void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext* aPresContext)
 {
   if (mShouldHaveScrollbar && !mScrollbar) {
     // Create an anonymous scrollbar node.
@@ -1409,14 +1409,14 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext& aPresContext)
     content->SetAttribute(kNameSpaceID_None, align, "vertical", PR_FALSE);
     
     nsIFrame* aResult;
-    mFrameConstructor->CreateTreeWidgetContent(&aPresContext, this, nsnull, content,
+    mFrameConstructor->CreateTreeWidgetContent(aPresContext, this, nsnull, content,
                                                &aResult, PR_FALSE, PR_TRUE);
 
   }
 }
 
 void
-nsTreeRowGroupFrame::IndexOfCell(nsIPresContext& aPresContext,
+nsTreeRowGroupFrame::IndexOfCell(nsIPresContext* aPresContext,
                                  nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex)
 {
   // Get the index of our parent row.
@@ -1432,14 +1432,14 @@ nsTreeRowGroupFrame::IndexOfCell(nsIPresContext& aPresContext,
 
 // returns the 0-based index of the content node, within the content tree
 void
-nsTreeRowGroupFrame::IndexOfRow(nsIPresContext& aPresContext,
+nsTreeRowGroupFrame::IndexOfRow(nsIPresContext* aPresContext,
                                 nsIContent* aRowContent, PRInt32& aRowIndex)
 {
   // Use GetPrimaryFrameFor to retrieve the frame.
   // This crawls only the frame tree, and will be much faster for the case
   // where the frame is onscreen.
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
 
   nsIFrame* result = nsnull;
   shell->GetPrimaryFrameFor(aRowContent, &result);
@@ -1562,7 +1562,7 @@ nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex,
 #endif
 }
 
-void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext)
+void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext* aPresContext)
 {
   // shouldn't need this anymore
   // DidAppendRow((nsTableRowFrame*)aRowFrame);
@@ -1584,7 +1584,7 @@ void nsTreeRowGroupFrame::PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPr
   }
 }
 
-void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext& aPresContext,
+void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext* aPresContext,
                                                  PRInt32 lines)
 {
   if (nsnull == mScrollbar)  // nothing to scroll
@@ -1611,7 +1611,7 @@ void nsTreeRowGroupFrame::ScrollByLines(nsIPresContext& aPresContext,
 
 
 void
-nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame)
+nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* aTreeFrame)
 {
   if (IsLazy() && !aTreeFrame->IsSlatedForReflow()) {
     aTreeFrame->SlateForReflow();
@@ -1633,7 +1633,7 @@ nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* 
                                  nsIReflowCommand::ReflowDirty);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
+      aPresContext->GetShell(getter_AddRefs(presShell));
       presShell->AppendReflowCommand(reflowCmd);
     }
   }
@@ -1644,7 +1644,7 @@ nsTreeRowGroupFrame::MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* 
 // for wherever it belows in the map
 void
 nsTreeRowGroupFrame::AddRowToMap(nsTableFrame *aTableFrame,
-                                        nsIPresContext& aPresContext,
+                                        nsIPresContext* aPresContext,
                                         nsIContent *aContent,
                                         nsIFrame* aCurrentFrame)
 {
@@ -1659,7 +1659,7 @@ nsTreeRowGroupFrame::AddRowToMap(nsTableFrame *aTableFrame,
 // determine the appropriate index of this row in the row map
 PRInt32
 nsTreeRowGroupFrame::GetInsertionIndexForContent(nsTableFrame *aTableFrame,
-                                                 nsIPresContext& aPresContext,
+                                                 nsIPresContext* aPresContext,
                                                  nsIContent *aContent)
 {
 
@@ -1669,7 +1669,7 @@ nsTreeRowGroupFrame::GetInsertionIndexForContent(nsTableFrame *aTableFrame,
   if (aContent) {
     // Retrieve the primary frame.
     nsCOMPtr<nsIPresShell> shell;
-    aPresContext.GetShell(getter_AddRefs(shell));
+    aPresContext->GetShell(getter_AddRefs(shell));
     
     nsIFrame* result = nsnull;
     shell->GetPrimaryFrameFor(aContent, &result);
@@ -1824,7 +1824,7 @@ nsTreeRowGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIConte
 // Used to draw the drop feedback based on attributes set by the drag event capturer
 //
 NS_IMETHODIMP
-nsTreeRowGroupFrame :: Paint ( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext,
+nsTreeRowGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
 {
   nsresult res = nsTableRowGroupFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
@@ -1834,7 +1834,7 @@ nsTreeRowGroupFrame :: Paint ( nsIPresContext& aPresContext, nsIRenderingContext
     // have it yet, go looking for it.
     if (!mMarkerStyle) {
       nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
-      aPresContext.ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
+      aPresContext->ProbePseudoStyleContextFor(mContent, atom, mStyleContext,
                                                 PR_FALSE, getter_AddRefs(mMarkerStyle));
     }
 

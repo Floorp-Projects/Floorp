@@ -210,11 +210,11 @@ nsHTMLTableCaptionElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFo
 
 
 NS_IMETHODIMP
-nsHTMLTableCaptionElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLTableCaptionElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                    nsEvent* aEvent,
                                    nsIDOMEvent** aDOMEvent,
                                    PRUint32 aFlags,
-                                   nsEventStatus& aEventStatus)
+                                   nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

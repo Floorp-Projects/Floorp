@@ -36,7 +36,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBorder(nsIPresContext& aPresContext,
+  static void PaintBorder(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -56,7 +56,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintOutline(nsIPresContext& aPresContext,
+  static void PaintOutline(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -77,7 +77,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBorderEdges(nsIPresContext& aPresContext,
+  static void PaintBorderEdges(nsIPresContext* aPresContext,
                                nsIRenderingContext& aRenderingContext,
                                nsIFrame* aForFrame,
                                const nsRect& aDirtyRect,
@@ -95,7 +95,7 @@ public:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintBackground(nsIPresContext& aPresContext,
+  static void PaintBackground(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
@@ -142,7 +142,7 @@ protected:
    * Both aDirtyRect and aBorderArea are in the local coordinate space
    * of aForFrame
    */
-  static void PaintRoundedBorder(nsIPresContext& aPresContext,
+  static void PaintRoundedBorder(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           nsIFrame* aForFrame,
                           const nsRect& aDirtyRect,
@@ -157,7 +157,7 @@ protected:
                         const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel);
 
-  static void PaintRoundedBackground(nsIPresContext& aPresContext,
+  static void PaintRoundedBackground(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,

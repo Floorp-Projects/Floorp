@@ -72,7 +72,7 @@ nsColorPickerFrame::~nsColorPickerFrame()
 
 
 NS_IMETHODIMP
-nsColorPickerFrame::Init(nsIPresContext&  aPresContext,
+nsColorPickerFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
@@ -98,11 +98,12 @@ nsColorPickerFrame::Init(nsIPresContext&  aPresContext,
 
 
 NS_IMETHODIMP
-nsColorPickerFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsColorPickerFrame::HandleEvent(nsIPresContext* aPresContext, 
                                 nsGUIEvent*     aEvent,
-                                nsEventStatus&  aEventStatus)
+                                nsEventStatus*  aEventStatus)
 {
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
 	if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN)
 		HandleMouseDownEvent(aPresContext, aEvent, aEventStatus);
 
@@ -110,9 +111,9 @@ nsColorPickerFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 nsresult
-nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext& aPresContext, 
+nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext* aPresContext, 
                                          nsGUIEvent*     aEvent,
-                                         nsEventStatus&  aEventStatus)
+                                         nsEventStatus*  aEventStatus)
 {
   int x,y;
   char *color;
@@ -140,14 +141,14 @@ nsColorPickerFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
 //
 //
 NS_METHOD 
-nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
+nsColorPickerFrame::Paint(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
   float p2t;
 
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
   mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -183,7 +184,7 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
   aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
 
   // call the color picker's paint method
-  mColorPicker->Paint(&aPresContext, &aRenderingContext);
+  mColorPicker->Paint(aPresContext, &aRenderingContext);
 
   aRenderingContext.PopState(clipState);
 

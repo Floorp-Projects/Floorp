@@ -54,7 +54,7 @@ nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
 
 
 void
-nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
+nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext* aPresContext,
                   nsIRenderingContext& aRenderingContext,
                   const nsRect& aDirtyRect,
                   nsFramePaintLayer aWhichLayer)
@@ -62,7 +62,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   aRenderingContext.PushState();
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
 
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -156,7 +156,7 @@ nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingConte
 
 
 NS_METHOD 
-nsGfxCheckboxControlFrame::Paint(nsIPresContext& aPresContext,
+nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)
@@ -192,7 +192,7 @@ nsGfxCheckboxControlFrame :: SetCheckboxState (nsIPresContext* aPresContext,
 
 #ifdef DEBUG_rods
 NS_IMETHODIMP 
-nsGfxCheckboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsGfxCheckboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState, 
                                   nsReflowStatus&          aStatus)

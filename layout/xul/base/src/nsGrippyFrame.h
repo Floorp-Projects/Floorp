@@ -50,7 +50,7 @@ public:
   nsGrippyFrame();  
 
 protected:
-  virtual void MouseClicked(nsIPresContext& aPresContext);
+  virtual void MouseClicked(nsIPresContext* aPresContext);
 
 private:
 

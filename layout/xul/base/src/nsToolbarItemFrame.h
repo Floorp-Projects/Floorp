@@ -43,15 +43,15 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
  
 }; // class nsToolbarItemFrame

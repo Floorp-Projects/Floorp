@@ -59,27 +59,27 @@ static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
  */
 class RootFrame : public nsHTMLContainerFrame {
 public:
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
     aBase = PR_TRUE;
     return NS_OK;
@@ -155,7 +155,7 @@ RootFrame::SetRect(nsIPresContext* aPresContext, const nsRect& aRect)
 }
 
 NS_IMETHODIMP
-RootFrame::AppendFrames(nsIPresContext& aPresContext,
+RootFrame::AppendFrames(nsIPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aFrameList)
@@ -192,7 +192,7 @@ RootFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::InsertFrames(nsIPresContext& aPresContext,
+RootFrame::InsertFrames(nsIPresContext* aPresContext,
                         nsIPresShell&   aPresShell,
                         nsIAtom*        aListName,
                         nsIFrame*       aPrevFrame,
@@ -213,7 +213,7 @@ RootFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::RemoveFrame(nsIPresContext& aPresContext,
+RootFrame::RemoveFrame(nsIPresContext* aPresContext,
                        nsIPresShell&   aPresShell,
                        nsIAtom*        aListName,
                        nsIFrame*       aOldFrame)
@@ -230,7 +230,7 @@ RootFrame::RemoveFrame(nsIPresContext& aPresContext,
     // Damage the area occupied by the deleted frame
     nsRect  damageRect;
     aOldFrame->GetRect(damageRect);
-    Invalidate(&aPresContext, damageRect, PR_FALSE);
+    Invalidate(aPresContext, damageRect, PR_FALSE);
 
     // Remove the frame and destroy it
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -251,7 +251,7 @@ RootFrame::RemoveFrame(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-RootFrame::Reflow(nsIPresContext&          aPresContext,
+RootFrame::Reflow(nsIPresContext*          aPresContext,
                   nsHTMLReflowMetrics&     aDesiredSize,
                   const nsHTMLReflowState& aReflowState,
                   nsReflowStatus&          aStatus)
@@ -395,7 +395,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     // it repaints
     if (isDirtyChildReflow) {
       // Damage the area occupied by the deleted frame
-      Invalidate(&aPresContext, rect, PR_FALSE);
+      Invalidate(aPresContext, rect, PR_FALSE);
     }
 
     // Return our desired size
@@ -424,11 +424,12 @@ RootFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-RootFrame::HandleEvent(nsIPresContext& aPresContext, 
+RootFrame::HandleEvent(nsIPresContext* aPresContext, 
                        nsGUIEvent* aEvent,
-                       nsEventStatus& aEventStatus)
+                       nsEventStatus* aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 

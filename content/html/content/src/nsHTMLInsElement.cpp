@@ -182,11 +182,11 @@ nsHTMLInsElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFunc
 
 
 NS_IMETHODIMP
-nsHTMLInsElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLInsElement::HandleDOMEvent(nsIPresContext* aPresContext,
                           nsEvent* aEvent,
                           nsIDOMEvent** aDOMEvent,
                           PRUint32 aFlags,
-                          nsEventStatus& aEventStatus)
+                          nsEventStatus* aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

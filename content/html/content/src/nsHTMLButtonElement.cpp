@@ -407,27 +407,29 @@ nsHTMLButtonElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
 }
 
 NS_IMETHODIMP
-nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
-                                    nsEventStatus& aEventStatus)
+                                    nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG(aPresContext);
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   // Try script event handlers first
   nsresult ret = mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                        aFlags, aEventStatus);
 
-  if ((NS_OK == ret) && (nsEventStatus_eIgnore == aEventStatus) &&
+  if ((NS_OK == ret) && (nsEventStatus_eIgnore == *aEventStatus) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE)) {
     switch (aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_DOWN:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
           NS_RELEASE(stateManager);
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
@@ -435,13 +437,13 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
       {
         nsIEventStateManager *stateManager;
         nsIContent *activeLink = nsnull;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           //stateManager->GetActiveLink(&activeLink);
           NS_RELEASE(stateManager);
         }
 
         if (activeLink == this) {
-          if (nsEventStatus_eConsumeNoDefault != aEventStatus) {
+          if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
             nsAutoString href, target, disabled;
             nsIURI* baseURL = nsnull;
             GetBaseURL(baseURL);
@@ -454,7 +456,7 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
             }
             mInner.TriggerLink(aPresContext, eLinkVerb_Replace, baseURL, href, target, PR_TRUE);
             NS_IF_RELEASE(baseURL);
-            aEventStatus = nsEventStatus_eConsumeNoDefault; 
+            *aEventStatus = nsEventStatus_eConsumeNoDefault; 
           }
         }
       }
@@ -467,11 +469,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_ENTER:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(this, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 
@@ -479,11 +481,11 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext& aPresContext,
     case NS_MOUSE_EXIT:
       {
         nsIEventStateManager *stateManager;
-        if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+        if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
           stateManager->SetContentState(nsnull, NS_EVENT_STATE_HOVER);
           NS_RELEASE(stateManager);
         }
-        aEventStatus = nsEventStatus_eConsumeNoDefault; 
+        *aEventStatus = nsEventStatus_eConsumeNoDefault; 
       }
       break;
 

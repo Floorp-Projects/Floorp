@@ -36,16 +36,16 @@ public:
   nsGfxButtonControlFrame();
 
      //nsIFrame
-  NS_IMETHOD Reflow(nsIPresContext&          aCX,
+  NS_IMETHOD Reflow(nsIPresContext*          aCX,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   virtual const nsIID& GetCID();
   virtual const nsIID& GetIID();
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
  
    // nsFormControlFrame
@@ -61,7 +61,7 @@ public:
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                    const nsHTMLReflowState& aSuggestedReflowState);
-  NS_IMETHOD DoNavQuirksReflow(nsIPresContext&          aPresContext, 
+  NS_IMETHOD DoNavQuirksReflow(nsIPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus);

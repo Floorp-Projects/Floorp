@@ -122,10 +122,10 @@ void nsFormControlHelper::GetBoolString(const PRBool aValue, nsString& aResult)
 
 
 nsCompatibility
-nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char& char2) 
+nsFormControlHelper::GetRepChars(nsIPresContext* aPresContext, char& char1, char& char2) 
 {
   nsCompatibility mode;
-  aPresContext.GetCompatibilityMode(&mode);
+  aPresContext->GetCompatibilityMode(&mode);
   if (eCompatibility_Standard == mode) {
     char1 = 'W';
     char2 = 'w';
@@ -137,16 +137,16 @@ nsFormControlHelper::GetRepChars(nsIPresContext& aPresContext, char& char1, char
   }
 }
 
-void nsFormControlHelper::GetFrameFontFM(nsIPresContext& aPresContext, 
+void nsFormControlHelper::GetFrameFontFM(nsIPresContext* aPresContext, 
                                          nsIFormControlFrame * aFrame,
                                          nsIFontMetrics** aFontMet)
 {
   // Initialize with default font
-  nsFont font(aPresContext.GetDefaultFixedFontDeprecated());
+  nsFont font(aPresContext->GetDefaultFixedFontDeprecated());
   // Get frame font
-  aFrame->GetFont(&aPresContext, font);
+  aFrame->GetFont(aPresContext, font);
   nsCOMPtr<nsIDeviceContext> deviceContext;
-  aPresContext.GetDeviceContext(getter_AddRefs(deviceContext));
+  aPresContext->GetDeviceContext(getter_AddRefs(deviceContext));
   NS_ASSERTION(deviceContext, "Couldn't get the device context"); 
   // Get font metrics
   deviceContext->GetMetricsFor(font, *aFontMet);
@@ -203,7 +203,7 @@ nsFormControlHelper::GetWrapPropertyEnum(nsIContent * aContent, nsHTMLTextWrap& 
 }
 
 nscoord 
-nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext, 
+nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext*      aPresContext, 
                                         nsIRenderingContext* aRendContext,
                                         nsIFontMetrics*      aFontMet, 
                                         nsIFormControlFrame* aFrame,
@@ -212,8 +212,8 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
 {
   float p2t;
   float t2p;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
-  aPresContext.GetTwipsToPixels(&t2p);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetTwipsToPixels(&t2p);
 
   nscoord ascent;
   nscoord descent;
@@ -254,7 +254,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
     nscoord scrollbarHeight = 0;
     float   scale;
     nsCOMPtr<nsIDeviceContext> dx;
-    aPresContext.GetDeviceContext(getter_AddRefs(dx));
+    aPresContext->GetDeviceContext(getter_AddRefs(dx));
     if (dx) { 
       float sbWidth;
       float sbHeight;
@@ -329,7 +329,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
 }
 
 nscoord 
-nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFrame* aFrame,
+nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
                                 const nsString& aString, nsSize& aSize,
                                 nsIRenderingContext *aRendContext)
 {
@@ -360,7 +360,7 @@ nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFra
 }  
   
 nscoord
-nsFormControlHelper::GetTextSize(nsIPresContext& aPresContext, nsIFormControlFrame* aFrame,
+nsFormControlHelper::GetTextSize(nsIPresContext* aPresContext, nsIFormControlFrame* aFrame,
                                 PRInt32 aNumChars, nsSize& aSize,
                                 nsIRenderingContext *aRendContext)
 {
@@ -448,7 +448,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
     PRInt32 col = ((colAttr.GetUnit() == eHTMLUnit_Pixel) ? colAttr.GetPixelValue() : colAttr.GetIntValue());
     if (aSpec.mColSizeAttrInPixels) {
       // need to set charWidth and aDesiredSize.height
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
+      charWidth = GetTextSize(aPresContext, aFrame, 1, aDesiredSize, aRendContext);
       col = (col <= 0) ? 15 : col; // XXX why a default of 15 pixels, why hide it
                                    // XXX this conflicts with a default of 20 found in nsTextControlFrame.
       aDesiredSize.width = NSIntPixelsToTwips(col, p2t);
@@ -456,14 +456,14 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
       col = (col <= 0) ? 1 : col; // XXX why a default of 1 char, why hide it
       if (eCompatibility_NavQuirks == qMode) {
         nsCOMPtr<nsIFontMetrics> fontMet;
-        GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+        GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
         if (fontMet) {
           aRendContext->SetFont(fontMet);
           aSpec.mColDefaultSize = col;
-          charWidth = CalcNavQuirkSizing(*aPresContext, aRendContext, fontMet, 
+          charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
                                          aFrame, aSpec, aDesiredSize);
         } else {
-          charWidth = GetTextSize(*aPresContext, aFrame, col, aDesiredSize, aRendContext);
+          charWidth = GetTextSize(aPresContext, aFrame, col, aDesiredSize, aRendContext);
         }
       }
     }
@@ -476,20 +476,20 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   } else {
     // set aDesiredSize for height calculation below. CSS may override width
     if (NS_CONTENT_ATTR_HAS_VALUE == valStatus) { // use width of initial value 
-      charWidth = GetTextSize(*aPresContext, aFrame, valAttr, aDesiredSize, aRendContext);
+      charWidth = GetTextSize(aPresContext, aFrame, valAttr, aDesiredSize, aRendContext);
     } else if (aSpec.mColDefaultValue) {          // use default value
-      charWidth = GetTextSize(*aPresContext, aFrame, *aSpec.mColDefaultValue, aDesiredSize, aRendContext);
+      charWidth = GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aDesiredSize, aRendContext);
     } else if (aSpec.mColDefaultSizeInPixels) {   // use default width in pixels
-      charWidth = GetTextSize(*aPresContext, aFrame, 1, aDesiredSize, aRendContext);
+      charWidth = GetTextSize(aPresContext, aFrame, 1, aDesiredSize, aRendContext);
       aDesiredSize.width = aSpec.mColDefaultSize;
     } else  {                                     // use default width in num characters
       if (eCompatibility_NavQuirks == qMode) {
         nsCOMPtr<nsIFontMetrics> fontMet;
-        GetFrameFontFM(*aPresContext, aFrame, getter_AddRefs(fontMet));
+        GetFrameFontFM(aPresContext, aFrame, getter_AddRefs(fontMet));
         if (fontMet) {
           aRendContext->SetFont(fontMet);
           // this passes in a 
-          charWidth = CalcNavQuirkSizing(*aPresContext, aRendContext, fontMet, 
+          charWidth = CalcNavQuirkSizing(aPresContext, aRendContext, fontMet, 
                                          aFrame, aSpec, aDesiredSize);
         } else {
           NS_ASSERTION(fontMet, "Couldn't get Font Metrics"); 
@@ -497,7 +497,7 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
           aDesiredSize.width = 1500;
         }
       } else {
-        charWidth = GetTextSize(*aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
+        charWidth = GetTextSize(aPresContext, aFrame, aSpec.mColDefaultSize, aDesiredSize, aRendContext); 
       }
     }
     aMinSize.width = aDesiredSize.width;
@@ -550,13 +550,13 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
   {
     if (!aWidthExplicit && mode == eWidgetRendering_Native) {
 	  //if (!aWidthExplicit) {
-      PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(*aPresContext, p2t, aDesiredSize.width, charWidth));
+      PRInt32 hPadding = (2 * aFrame->GetHorizontalInsidePadding(aPresContext, p2t, aDesiredSize.width, charWidth));
       aDesiredSize.width += hPadding;
       aMinSize.width += hPadding;
     }
     if (!aHeightExplicit && mode == eWidgetRendering_Native) {
 	  //if (!aHeightExplicit) { 
-      PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(*aPresContext, p2t, aRowHeight));
+      PRInt32 vPadding = (2 * aFrame->GetVerticalInsidePadding(aPresContext, p2t, aRowHeight));
       aDesiredSize.height += vPadding;
       aMinSize.height += vPadding;
     }
@@ -751,7 +751,7 @@ nsFormControlHelper::PaintArrowGlyph(nsIRenderingContext& aRenderingContext,
 void 
 nsFormControlHelper::PaintArrow(nsArrowDirection aArrowDirection,
 					                    nsIRenderingContext& aRenderingContext,
-															nsIPresContext& aPresContext, 
+															nsIPresContext* aPresContext, 
 															const nsRect& aDirtyRect,
                                                             nsRect& aRect, 
 															nscoord aOnePixel, 
@@ -778,7 +778,7 @@ nsFormControlHelper::PaintArrow(nsArrowDirection aArrowDirection,
 //---------------------------------------------------------------------------
 void 
 nsFormControlHelper::PaintScrollbar(nsIRenderingContext& aRenderingContext,
-																	nsIPresContext& aPresContext, 
+																	nsIPresContext* aPresContext, 
 																  const nsRect& aDirtyRect,
                                   nsRect& aRect, 
 																  PRBool aHorizontal, 
@@ -970,7 +970,7 @@ nsFormControlHelper::PaintFocus(nsIRenderingContext& aRenderingContext,
 
 
 void 
-nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
+nsFormControlHelper::PaintRectangularButton(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect, const nsRect& aRect, 
                             PRBool aPressed, 
@@ -1060,7 +1060,7 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
 
 
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
     nsRect outside(aRect.x, aRect.y, aRect.width, aRect.height);
@@ -1089,8 +1089,8 @@ nsFormControlHelper::PaintRectangularButton(nsIPresContext& aPresContext,
     context->GetAppUnitsToDevUnits(devUnits);
     context->GetDevUnitsToAppUnits(appUnits);
 
-    nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
-    formFrame->GetFont(&aPresContext, font);
+    nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
+    formFrame->GetFont(aPresContext, font);
 
     aRenderingContext.SetFont(font);
 
@@ -1141,13 +1141,13 @@ nsFormControlHelper::GetCircularRect(PRUint32 aWidth, PRUint32 aHeight, nsRect& 
 
 
 void
-nsFormControlHelper::PaintCircularBackground(nsIPresContext& aPresContext,
+nsFormControlHelper::PaintCircularBackground(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight)
 {
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel     = NSIntPixelsToTwips(1, p2t);
 
   nsRect outside;
@@ -1166,7 +1166,7 @@ nsFormControlHelper::PaintCircularBackground(nsIPresContext& aPresContext,
 //are painted by the standard border code by setting a border radius
 //to 1/2 the width of the border
 void
-nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
+nsFormControlHelper::PaintCircularBorder(nsIPresContext* aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect, nsIStyleContext* aStyleContext, PRBool aInset,
                          nsIFrame* aForFrame, PRUint32 aWidth, PRUint32 aHeight)
@@ -1177,7 +1177,7 @@ nsFormControlHelper::PaintCircularBorder(nsIPresContext& aPresContext,
   aRenderingContext.PushState();
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
  
   const nsStyleSpacing* spacing = (const nsStyleSpacing*)aStyleContext->GetStyleData(eStyleStruct_Spacing);
   nsMargin border;

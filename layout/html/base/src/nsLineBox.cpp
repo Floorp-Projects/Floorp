@@ -229,7 +229,7 @@ nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineBox* aLine)
     for (nsIFrame* child = aLine->mFirstChild; child; ) {
       nsIFrame* nextChild;
       child->GetNextSibling(&nextChild);
-      child->Destroy(*aPresContext);
+      child->Destroy(aPresContext);
       child = nextChild;
     }
 

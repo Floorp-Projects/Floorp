@@ -75,23 +75,23 @@ public:
                               const nsPoint& aPoint, 
                              nsIFrame**     aFrame);
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
 
 
   // nsIBox methods
-  NS_IMETHOD GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
-  NS_IMETHOD Dirty(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
+  NS_IMETHOD GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsBoxInfo& aSize);
+  NS_IMETHOD Dirty(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame*& aIncrementalChild);
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
 
-  NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
+  NS_IMETHOD DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus);
 
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                    nsIContent*      aContent,
                    nsIFrame*        aParent,
                    nsIStyleContext* aContext,
@@ -104,33 +104,33 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD Paint ( nsIPresContext& aPresContext,
+  NS_IMETHOD Paint ( nsIPresContext* aPresContext,
                       nsIRenderingContext& aRenderingContext,
                       const nsRect& aDirtyRect,
                       nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  InsertFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aPrevFrame,
                            nsIFrame*       aFrameList);
 
-  NS_IMETHOD  RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD  RemoveFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame,
@@ -150,7 +150,7 @@ public:
   virtual void SetChildNeedsRecalc(PRInt32 aIndex, PRBool aRecalc);
 
   // Paint one child frame
-  virtual void PaintChild(nsIPresContext&      aPresContext,
+  virtual void PaintChild(nsIPresContext*      aPresContext,
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect,
                              nsIFrame*            aFrame,
@@ -160,16 +160,16 @@ public:
 protected:
     nsBoxFrame(PRUint32 aFlags = 0);
 
-    virtual void GetRedefinedMinPrefMax(nsIPresContext& aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual nsresult GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
-    virtual nsresult FlowChildren(nsIPresContext&   aPresContext,
+    virtual void GetRedefinedMinPrefMax(nsIPresContext* aPresContext, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
+    virtual nsresult GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize);
+    virtual nsresult FlowChildren(nsIPresContext*   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
                      nsRect& availableSize); 
 
     virtual nsresult FlowChildAt(nsIFrame* frame, 
-                     nsIPresContext& aPresContext,
+                     nsIPresContext* aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
@@ -177,7 +177,7 @@ protected:
                      PRBool& needsRedraw,
                      nsString& aReason);
 
-    virtual nsresult PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect);
+    virtual nsresult PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect);
     virtual void ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason);
     virtual void LayoutChildrenInRect(nsRect& size);
     virtual void AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo);
@@ -188,9 +188,9 @@ protected:
     virtual PRIntn GetSkipSides() const { return 0; }
 
     virtual void GetInset(nsMargin& margin); 
-    virtual void CollapseChild(nsIPresContext& aPresContext, nsIFrame* frame, PRBool hide);
+    virtual void CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame, PRBool hide);
 
-    nsresult GenerateDirtyReflowCommand(nsIPresContext& aPresContext,
+    nsresult GenerateDirtyReflowCommand(nsIPresContext* aPresContext,
                                         nsIPresShell&   aPresShell);
 
     // return true if the alignment is horizontal false if vertical

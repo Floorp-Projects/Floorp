@@ -94,11 +94,11 @@ public:
   virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
-  void MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
-  void MouseUp(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
+  void MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
+  void MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent);
 
-  void AdjustChildren(nsIPresContext& aPresContext);
-  void AdjustChildren(nsIPresContext& aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal);
+  void AdjustChildren(nsIPresContext* aPresContext);
+  void AdjustChildren(nsIPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal);
 
   void AddRemoveSpace(nscoord aDiff,
                     nsSplitterInfo* aChildInfos,
@@ -276,7 +276,7 @@ nsSplitterFrame::CreateAnonymousContent(nsISupportsArray& aAnonymousChildren)
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::GetCursor(nsIPresContext& aPresContext,
+nsSplitterFrame::GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -316,7 +316,7 @@ nsSplitterFrame::AttributeChanged(nsIPresContext* aPresContext,
  * Initialize us. If we are in a box get our alignment so we know what direction we are
  */
 NS_IMETHODIMP
-nsSplitterFrame::Init(nsIPresContext&  aPresContext,
+nsSplitterFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -325,11 +325,11 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   // XXX Hack because we need the pres context in some of the event handling functions...
-  mPresContext = &aPresContext; 
+  mPresContext = aPresContext; 
 
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&aPresContext, &view);
+  GetView(aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
 /*
@@ -391,33 +391,33 @@ nsSplitterFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandlePress(nsIPresContext& aPresContext,
+nsSplitterFrame::HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)
+                         nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleMultiplePress(nsIPresContext& aPresContext,
+nsSplitterFrame::HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus)
+                         nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleDrag(nsIPresContext& aPresContext,
+nsSplitterFrame::HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus)
+                        nsEventStatus*  aEventStatus)
 {
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleRelease(nsIPresContext& aPresContext,
+nsSplitterFrame::HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus)
+                           nsEventStatus*  aEventStatus)
 {
   return NS_OK;
 }
@@ -436,9 +436,9 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsSplitterFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsSplitterFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent* aEvent,
-                                      nsEventStatus& aEventStatus)
+                                      nsEventStatus* aEventStatus)
 {
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: 
@@ -455,21 +455,21 @@ nsSplitterFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 void
-nsSplitterFrameImpl::MouseUp(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+nsSplitterFrameImpl::MouseUp(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
-      if (IsMouseCaptured(&aPresContext)) {
+      if (IsMouseCaptured(aPresContext)) {
           AdjustChildren(aPresContext);
           AddListener();
-          CaptureMouse(&aPresContext, PR_FALSE);
+          CaptureMouse(aPresContext, PR_FALSE);
           mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "", PR_TRUE);
           mPressed = PR_FALSE;
       }
 }
 
 void
-nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+nsSplitterFrameImpl::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent)
 {
-        if (IsMouseCaptured(&aPresContext)) {
+        if (IsMouseCaptured(aPresContext)) {
           PRBool isHorizontal = !mSplitter->IsHorizontal();
            // convert coord to pixels
           nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
@@ -481,7 +481,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
            nscoord startpx = mDragStartPx;
               
            float p2t;
-           aPresContext.GetScaledPixelsToTwips(&p2t);
+           aPresContext->GetScaledPixelsToTwips(&p2t);
            nscoord onePixel = NSIntPixelsToTwips(1, p2t);
            nscoord start = startpx*onePixel;
 
@@ -493,7 +493,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
               // how much we are scrolled.
               nsIScrollableView* scrollingView;
               nsIView*           view;
-              parent->GetView(&aPresContext, &view);
+              parent->GetView(aPresContext, &view);
               if (view) {
                 nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
                 if (NS_SUCCEEDED(result)) {
@@ -533,7 +533,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 
 //            nscoord oldPos = pos;
 
-            ResizeChildTo(&aPresContext, pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
+            ResizeChildTo(aPresContext, pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 
             /*
             if (oldPos > 0 && oldPos > pos)
@@ -573,7 +573,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
             */
 
             nsCOMPtr<nsIPresShell> shell;
-            aPresContext.GetShell(getter_AddRefs(shell));
+            aPresContext->GetShell(getter_AddRefs(shell));
 
             nsCOMPtr<nsIReflowCommand> reflowCmd;
             nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), mSplitter->mParent,
@@ -918,14 +918,14 @@ nsSplitterFrameImpl::UpdateState()
 }
 
 void
-nsSplitterFrameImpl::AdjustChildren(nsIPresContext& aPresContext)
+nsSplitterFrameImpl::AdjustChildren(nsIPresContext* aPresContext)
 {
   PRBool isHorizontal = mParentBox->IsHorizontal();
   AdjustChildren(aPresContext, mChildInfosBefore, mChildInfosBeforeCount, isHorizontal);
   AdjustChildren(aPresContext, mChildInfosAfter, mChildInfosAfterCount, isHorizontal);
    
   nsCOMPtr<nsIPresShell> shell;
-  aPresContext.GetShell(getter_AddRefs(shell));
+  aPresContext->GetShell(getter_AddRefs(shell));
   
   nsCOMPtr<nsIReflowCommand> reflowCmd;
   nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), mParentBox,
@@ -935,7 +935,7 @@ nsSplitterFrameImpl::AdjustChildren(nsIPresContext& aPresContext)
 }
 
 void
-nsSplitterFrameImpl::AdjustChildren(nsIPresContext& aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal)
+nsSplitterFrameImpl::AdjustChildren(nsIPresContext* aPresContext, nsSplitterInfo* aChildInfos, PRInt32 aCount, PRBool aIsHorizontal)
 {
    // printf("------- AdjustChildren------\n");
 
@@ -969,7 +969,7 @@ nsSplitterFrameImpl::AdjustChildren(nsIPresContext& aPresContext, nsSplitterInfo
         }
 
         float p2t;
-        aPresContext.GetScaledPixelsToTwips(&p2t);
+        aPresContext->GetScaledPixelsToTwips(&p2t);
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
         nsCOMPtr<nsIContent> content;

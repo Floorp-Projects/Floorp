@@ -48,25 +48,25 @@ public:
   friend nsresult 
   NS_NewTableColGroupFrame(nsIFrame** aResult);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -77,7 +77,7 @@ public:
     * don't play directly in the rendering game.  They do however
     * maintain important state that effects table and cell layout.
     */
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -122,7 +122,7 @@ public:
     */
   //PRBool IsManufactured();
 
-  void DeleteColFrame(nsIPresContext& aPresContext, nsTableColFrame* aColFrame);
+  void DeleteColFrame(nsIPresContext* aPresContext, nsTableColFrame* aColFrame);
 
 protected:
 
@@ -135,35 +135,35 @@ protected:
     * Since we need to know the full column structure before the COLS attribute
     * can be interpreted, we can't just use DidSetStyleContext
     */
-  NS_IMETHOD SetStyleContextForFirstPass(nsIPresContext& aPresContext);
+  NS_IMETHOD SetStyleContextForFirstPass(nsIPresContext* aPresContext);
 
-  NS_IMETHOD InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
-  NS_IMETHOD AppendNewFrames(nsIPresContext& aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD InitNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList);
+  NS_IMETHOD AppendNewFrames(nsIPresContext* aPresContext, nsIFrame* aChildList);
 
 
-  NS_IMETHOD IncrementalReflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD IncrementalReflow(nsIPresContext*          aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext&          aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus);
 
-  NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,
+  NS_IMETHOD IR_StyleChanged(nsIPresContext*          aPresContext,
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState,
                              nsReflowStatus&          aStatus);
 
 
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext&          aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext*          aPresContext,
                               nsHTMLReflowMetrics&     aDesiredSize,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus,
                               nsIFrame *               aNextFrame);
 
-  nsresult AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+  nsresult AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
                                       nsIPresShell&   aPresShell,
                                       nsIFrame*       aTableFrame);
 

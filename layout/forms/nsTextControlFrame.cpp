@@ -101,7 +101,7 @@ nsTextControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 
 // for a text area aInnerHeight is the height of one line
 nscoord 
-nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -121,7 +121,7 @@ nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 vertPad;
   PRInt32 shouldUseVertPad;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaVerticalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldVerticalInsidePadding,  padTextField);
    // These two (below) are really only needed for GTK
@@ -143,7 +143,7 @@ nsTextControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 }
 //static float pad = 0.95F;
 nscoord 
-nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -164,7 +164,7 @@ nsTextControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
   PRInt32 shouldUsePadMinText;
 
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextFieldHorizontalInsidePadding,  padTextField);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_TextAreaHorizontalInsidePadding,  padTextArea);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextHorizontalInsideMinimumPadding,  padMinText);
@@ -236,7 +236,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   // get the css size and let the frame use or override it
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aReflowState, styleSize);
+  GetStyleSize(aPresContext, aReflowState, styleSize);
 
   nsSize desiredSize;
   nsSize minSize;
@@ -321,7 +321,7 @@ nsTextControlFrame::GetMaxNumValues()
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetCursor(nsIPresContext& aPresContext, nsPoint& aPoint, PRInt32& aCursor)
+nsTextControlFrame::GetCursor(nsIPresContext* aPresContext, nsPoint& aPoint, PRInt32& aCursor)
 {
   /*const nsStyleColor* styleColor;
   GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)styleColor);

@@ -55,13 +55,13 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
 
-  NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
                                     nsIContent*      aContent,
                                     nsIFrame*        aParent,
                                     nsIStyleContext* aContext,
                                     nsIFrame*        aPrevInFlow);
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 
@@ -72,25 +72,25 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
-   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,
+   NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMultiplePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
-                         nsEventStatus&  aEventStatus);
+                         nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleDrag(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleDrag(nsIPresContext* aPresContext,
                         nsGUIEvent *    aEvent,
-                        nsEventStatus&  aEventStatus);
+                        nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleRelease(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleRelease(nsIPresContext* aPresContext,
                            nsGUIEvent *    aEvent,
-                           nsEventStatus&  aEventStatus);
+                           nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
-                         nsEventStatus& aEventStatus);
+                         nsEventStatus* aEventStatus);
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 

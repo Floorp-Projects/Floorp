@@ -68,7 +68,7 @@ nsMathMLmstyleFrame::~nsMathMLmstyleFrame()
 
 // mstyle needs special care for its scriptlevel and displaystyle attributes
 NS_IMETHODIMP
-nsMathMLmstyleFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
                           nsIContent*      aContent,
                           nsIFrame*        aParent,
                           nsIStyleContext* aContext,

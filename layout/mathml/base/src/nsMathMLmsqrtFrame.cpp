@@ -74,7 +74,7 @@ nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
@@ -92,7 +92,7 @@ nsMathMLmsqrtFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Paint(nsIPresContext&      aPresContext,
+nsMathMLmsqrtFrame::Paint(nsIPresContext*      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect&        aDirtyRect,
                           nsFramePaintLayer    aWhichLayer)
@@ -115,7 +115,7 @@ nsMathMLmsqrtFrame::Paint(nsIPresContext&      aPresContext,
 }
 
 NS_IMETHODIMP
-nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -205,7 +205,7 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext&          aPresContext,
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
       childFrame->GetRect(rect);
-      childFrame->MoveTo(&aPresContext, dx, rect.y + dy);
+      childFrame->MoveTo(aPresContext, dx, rect.y + dy);
       dx += rect.width;
     }
     rv = childFrame->GetNextSibling(&childFrame);

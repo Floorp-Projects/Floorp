@@ -48,20 +48,20 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // nsIFrame overrides
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aPrevFrame,
                           nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
-  NS_IMETHOD ReplaceFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD ReplaceFrame(nsIPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aOldFrame,
@@ -72,7 +72,7 @@ public:
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
   // nsIHTMLReflow overrides
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -135,7 +135,7 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 #endif
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -163,24 +163,24 @@ protected:
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
 #endif
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell& aPresShell,
                           nsIAtom* aListName,
                           nsIFrame* aPrevFrame,
                           nsIFrame* aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
@@ -190,7 +190,7 @@ public:
 
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);

@@ -93,7 +93,7 @@ nsHTMLButtonControlFrame::~nsHTMLButtonControlFrame()
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Init(nsIPresContext&  aPresContext,
+nsHTMLButtonControlFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -116,7 +116,7 @@ nsHTMLButtonControlFrame::Init(nsIPresContext&  aPresContext,
 
   // Resolve style and initialize the frame
   nsIStyleContext* styleContext;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
+  aPresContext->ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
                                             mStyleContext, PR_FALSE,
                                             &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext, nsnull);
@@ -309,7 +309,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     if (IsReset(type) == PR_TRUE) {
       event.message = NS_FORM_RESET;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnReset(aPresContext);
@@ -318,7 +318,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     else if (IsSubmit(type) == PR_TRUE) {
       event.message = NS_FORM_SUBMIT;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+        formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnSubmit(aPresContext, this);
@@ -365,9 +365,9 @@ nsHTMLButtonControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect
             
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                       nsGUIEvent*     aEvent,
-                                      nsEventStatus&  aEventStatus)
+                                      nsEventStatus*  aEventStatus)
 {
   // if disabled do nothing
   if (mRenderer.isDisabled()) {
@@ -377,7 +377,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
    // lets see if the button was clicked. -EDV
   switch (aEvent->message) {
      case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(&aPresContext);
+        MouseClicked(aPresContext);
      break;
   }
 
@@ -396,12 +396,12 @@ nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
   // add ourself as an nsIFormControlFrame
-  nsFormFrame::AddFormControlFrame(aPresContext, *this);
+  nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
 
  
   // Set the parent for each of the child frames
@@ -414,7 +414,7 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
+nsHTMLButtonControlFrame::Paint(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
@@ -498,13 +498,13 @@ nsHTMLButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetr
 }
 
 NS_IMETHODIMP 
-nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
+nsHTMLButtonControlFrame::Reflow(nsIPresContext* aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus& aStatus)
 {
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
   // XXX remove the following when the reflow state is fixed
@@ -527,7 +527,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     if (!view) {
       nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	    nsCOMPtr<nsIPresShell> presShell;
-      aPresContext.GetShell(getter_AddRefs(presShell));
+      aPresContext->GetShell(getter_AddRefs(presShell));
 	    nsCOMPtr<nsIViewManager> viewMan;
       presShell->GetViewManager(getter_AddRefs(viewMan));
 
@@ -581,7 +581,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
       nsIReflowCommand::ReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
@@ -677,7 +677,7 @@ nsHTMLButtonControlFrame::GetFormContent(nsIContent*& aContent) const
 }
 
 nscoord 
-nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                                    float aPixToTwip, 
                                                    nscoord aInnerHeight) const
 {
@@ -685,7 +685,7 @@ nsHTMLButtonControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 }
 
 nscoord 
-nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsHTMLButtonControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const

@@ -35,7 +35,7 @@ public:
   friend nsresult NS_NewMathMLmphantomFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Paint(nsIPresContext&      aPresContext,
+  Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);

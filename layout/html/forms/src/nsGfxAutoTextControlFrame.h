@@ -44,15 +44,15 @@ public:
 	nsGfxAutoTextControlFrame();
 	virtual ~nsGfxAutoTextControlFrame();
 
-	NS_IMETHOD  Init(nsIPresContext&  aPresContext,
+	NS_IMETHOD  Init(nsIPresContext*  aPresContext,
 					nsIContent*      aContent,
 					nsIFrame*        aParent,
 					nsIStyleContext* aContext,
 					nsIFrame*        aPrevInFlow);
 
-	NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+	NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
 					nsGUIEvent* aEvent,
-					nsEventStatus& aEventStatus);
+					nsEventStatus* aEventStatus);
 
 	NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
 	NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 

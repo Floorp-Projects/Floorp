@@ -41,7 +41,7 @@ public:
   friend nsresult NS_NewSpacerFrame(nsIFrame** aNewFrame);
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -77,7 +77,7 @@ SpacerFrame::~SpacerFrame()
 }
 
 NS_IMETHODIMP
-SpacerFrame::Reflow(nsIPresContext&          aPresContext,
+SpacerFrame::Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aMetrics,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus)
@@ -122,7 +122,7 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {

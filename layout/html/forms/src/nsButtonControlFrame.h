@@ -51,10 +51,10 @@ public:
 
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;

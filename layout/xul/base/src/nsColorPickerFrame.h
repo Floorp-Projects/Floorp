@@ -46,7 +46,7 @@ public:
   nsColorPickerFrame();
   virtual ~nsColorPickerFrame();
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -59,14 +59,14 @@ public:
 #endif
 
   // nsIFrame overrides
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
-                         nsEventStatus&  aEventStatus);
-  nsresult HandleMouseDownEvent(nsIPresContext& aPresContext,
+                         nsEventStatus*  aEventStatus);
+  nsresult HandleMouseDownEvent(nsIPresContext* aPresContext,
                                 nsGUIEvent*     aEvent,
-                                nsEventStatus&  aEventStatus);
+                                nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);

@@ -87,7 +87,7 @@ nsNativeButtonControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoo
     nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
     GetFont(aPresContext, font);
     mWidget->SetFont(font);
-    SetColors(*aPresContext);
+    SetColors(aPresContext);
 
     nsAutoString value;
     nsresult result = GetValue(&value);

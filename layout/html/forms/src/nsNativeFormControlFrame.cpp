@@ -51,7 +51,7 @@ nsNativeFormControlFrame::~nsNativeFormControlFrame()
 
 
 NS_METHOD
-nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
+nsNativeFormControlFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -63,7 +63,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
   nsresult result = NS_OK;
 
   nsCOMPtr<nsIDeviceContext> dx;
-  aPresContext.GetDeviceContext(getter_AddRefs(dx));
+  aPresContext->GetDeviceContext(getter_AddRefs(dx));
   PRBool requiresWidget = PR_TRUE;
  
     // Checkto see if the device context supports widgets at all
@@ -72,7 +72,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   nsWidgetRendering mode;
-  aPresContext.GetWidgetRenderingMode(&mode);
+  aPresContext->GetWidgetRenderingMode(&mode);
   if ((eWidgetRendering_Gfx == mode) || (eWidgetRendering_PartialGfx == mode)) {
       // Check with the frame to see if requires a widget to render
     if (PR_TRUE == requiresWidget) {
@@ -86,21 +86,21 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   // add ourself as an nsIFormControlFrame
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
   }
 
-  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+  GetDesiredSize(aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
 	{
 	  nsCOMPtr<nsIPresShell> presShell;
-	  aPresContext.GetShell(getter_AddRefs(presShell));
+	  aPresContext->GetShell(getter_AddRefs(presShell));
 	  nsCOMPtr<nsIViewManager> viewMan;
 	  presShell->GetViewManager(getter_AddRefs(viewMan));
 	  nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
 
 	  // absolutely positioned controls already have a view but not a widget
 	  nsIView* view = nsnull;
-	  GetView(&aPresContext, &view);
+	  GetView(aPresContext, &view);
 	  if (nsnull == view) {
 	    result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
 	    if (!NS_SUCCEEDED(result)) {
@@ -112,8 +112,8 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 	    nsIFrame* parWithView;
 	    nsIView *parView;
 
-	    GetParentWithView(&aPresContext, &parWithView);
-	    parWithView->GetView(&aPresContext, &parView);
+	    GetParentWithView(aPresContext, &parWithView);
+	    parWithView->GetView(aPresContext, &parView);
 
 	    // initialize the view as hidden since we don't know the (x,y) until Paint
 	    result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
@@ -124,7 +124,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 	    }
 
 	    viewMan->InsertChild(parView, view, 0);
-	    SetView(&aPresContext, view);
+	    SetView(aPresContext, view);
 	  }
 
 	  PRInt32 type;
@@ -147,7 +147,7 @@ nsNativeFormControlFrame::Reflow(nsIPresContext&          aPresContext,
 	    }
 	  }
 
-	  PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+	  PostCreateWidget(aPresContext, aDesiredSize.width, aDesiredSize.height);
 	  mDidInit = PR_TRUE;
 
 	  if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
@@ -184,11 +184,11 @@ nsNativeFormControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
 void 
-nsNativeFormControlFrame::SetColors(nsIPresContext& aPresContext)
+nsNativeFormControlFrame::SetColors(nsIPresContext* aPresContext)
 {
   if (mWidget) {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
     const nsStyleColor* color =
       (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     if (nsnull != color) {
@@ -264,15 +264,16 @@ nsNativeFormControlFrame::GetWidget(nsIView* aView, nsIWidget** aWidget)
 }
 
 
-NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                           nsGUIEvent* aEvent,
-                                          nsEventStatus& aEventStatus)
+                                          nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   if (nsnull == mWidget) {
     return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
 
@@ -280,10 +281,10 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	// XXX if there is no view, it could be an image button. Unfortunately,
 	// every image button will get every event.
 	nsIView* view;
-	GetView(&aPresContext, &view);
+	GetView(aPresContext, &view);
 	if (view) {
 	  if (mWidget != aEvent->widget) {
-	    aEventStatus = nsEventStatus_eIgnore;
+	    *aEventStatus = nsEventStatus_eIgnore;
 	    return NS_OK;
 	  }
 	}
@@ -308,7 +309,7 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 	  case NS_MOUSE_LEFT_BUTTON_UP:
 	    if (eMouseDown == mLastMouseState) {
-	      MouseClicked(&aPresContext);
+	      MouseClicked(aPresContext);
 	    } 
 	    mLastMouseState = eMouseEnter;
 	    break;
@@ -318,14 +319,14 @@ NS_METHOD nsNativeFormControlFrame::HandleEvent(nsIPresContext& aPresContext,
 	    break;
 
 	  case NS_CONTROL_CHANGE:
-	    ControlChanged(&aPresContext);
+	    ControlChanged(aPresContext);
 	    break;
 
 		case NS_KEY_DOWN:
 			return nsFormControlFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 	}
 
-  aEventStatus = nsEventStatus_eConsumeDoDefault;
+  *aEventStatus = nsEventStatus_eConsumeDoDefault;
   return NS_OK;
 }
 

@@ -39,7 +39,7 @@ public:
   friend nsresult NS_NewTreeRowGroupFrame(nsIFrame** aNewFrame);
 
     // hook in to setup d&d capturers
-  NS_IMETHOD Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+  NS_IMETHOD Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
                       nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow) ;
 
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
@@ -50,7 +50,7 @@ public:
   void SetFrameConstructor(nsCSSFrameConstructor* aFrameConstructor) { mFrameConstructor = aFrameConstructor; };
   void SetShouldHaveScrollbar();
 
-  void CreateScrollbar(nsIPresContext& aPresContext);
+  void CreateScrollbar(nsIPresContext* aPresContext);
 
   void MakeLazy() { mIsLazy = PR_TRUE; };
   PRBool IsLazy() { return mIsLazy; };
@@ -61,27 +61,27 @@ public:
                                nsIFrame*       aFrameList);
 
   NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
-  void PaintChildren(nsIPresContext&      aPresContext,
+  void PaintChildren(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer);
 
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  PRBool ContinueReflow(nsIPresContext& aPresContext, nscoord y, nscoord height);
+  PRBool ContinueReflow(nsIPresContext* aPresContext, nscoord y, nscoord height);
 
   PRBool IsFull() { return mIsFull; };
 
   // Responses to changes
-  void OnContentAdded(nsIPresContext& aPresContext);
-  void OnContentInserted(nsIPresContext& aPresContext, nsIFrame* aNextSibling);
-  void OnContentRemoved(nsIPresContext& aPresContext, nsIFrame* aChildFrame);
+  void OnContentAdded(nsIPresContext* aPresContext);
+  void OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling);
+  void OnContentRemoved(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
                                  PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
 
     // nsIHTMLReflow overrides
-  NS_IMETHOD Paint(nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
                     const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
                     
   virtual nsIFrame* GetFirstFrame();
@@ -92,10 +92,10 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD PositionChanged(nsIPresContext& aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex);
+  NS_IMETHOD PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldIndex, PRInt32 aNewIndex);
   NS_IMETHOD PagedUpDown();
 
-  void ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines);
+  void ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
 
 protected:
   nsTreeRowGroupFrame();
@@ -103,29 +103,29 @@ protected:
 
   virtual PRBool RowGroupReceivesExcessSpace();
   
-  void DestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose);
-  void ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext& aPresContext, PRInt32& rowsToLose);
+  void DestroyRows(nsTableFrame* aTableFrame, nsIPresContext* aPresContext, PRInt32& rowsToLose);
+  void ReverseDestroyRows(nsTableFrame* aTableFrame, nsIPresContext* aPresContext, PRInt32& rowsToLose);
 
-  NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
+  NS_IMETHOD     ReflowBeforeRowLayout(nsIPresContext*      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
                                       nsReflowReason       aReason);
 
-  NS_IMETHOD     ReflowAfterRowLayout(nsIPresContext&      aPresContext,
+  NS_IMETHOD     ReflowAfterRowLayout(nsIPresContext*      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
                                       nsReflowReason       aReason);
 
-  NS_IMETHOD     IR_TargetIsChild(nsIPresContext&      aPresContext,
+  NS_IMETHOD     IR_TargetIsChild(nsIPresContext*      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowGroupReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
                                       nsIFrame *           aNextFrame);
 
-  virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext& aPresContext);
-  virtual void GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFrame* aFrame, nsIFrame** aResult);
+  virtual nsIFrame* GetFirstFrameForReflow(nsIPresContext* aPresContext);
+  virtual void GetNextFrameForReflow(nsIPresContext* aPresContext, nsIFrame* aFrame, nsIFrame** aResult);
 
   void LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult);
 
@@ -133,8 +133,8 @@ protected:
   void InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFrame);
 
   void ConstructContentChain(nsIContent* aRowContent);
-  void ConstructOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent);
-  void CreateOldContentChain(nsIPresContext& aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain);
+  void ConstructOldContentChain(nsIPresContext* aPresContext, nsIContent* aOldRowContent);
+  void CreateOldContentChain(nsIPresContext* aPresContext, nsIContent* aOldRowContent, nsIContent* topOfChain);
 
   void FindChildOfCommonContentChainAncestor(nsIContent *startContent, nsIContent **child);
 
@@ -144,13 +144,15 @@ protected:
                               nsIContent* aDownwardHint, nsIContent** aResult);
   static void FindRowContentAtIndex(PRInt32& aIndex, nsIContent* aParent, 
                              nsIContent** aResult);
-  void MarkTreeAsDirty(nsIPresContext& aPresContext, nsTreeFrame* aTreeFrame);
+  void MarkTreeAsDirty(nsIPresContext* aPresContext, nsTreeFrame* aTreeFrame);
 
   void GetFirstRowContent(nsIContent** aRowContent);
 
   void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
-  void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext& aPresContext);
+  void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext* aPresContext);
+
+  void GetFirstRow(nsTableRowFrame **aRowFrame);
 
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
@@ -158,12 +160,12 @@ public:
 
   // Tells you the row and index of a cell (given only the content node).
   // This method is expensive.
-  void IndexOfCell(nsIPresContext& aPresContext, nsIContent* aCellContent, 
+  void IndexOfCell(nsIPresContext* aPresContext, nsIContent* aCellContent, 
                    PRInt32& aRowIndex, PRInt32& aColIndex);
   
   // Tells you the row index of a row (given only the content node).
   // This method is expensive.
-  void IndexOfRow(nsIPresContext& aPresContext, nsIContent* aRowContent, PRInt32& aRowIndex);
+  void IndexOfRow(nsIPresContext* aPresContext, nsIContent* aRowContent, PRInt32& aRowIndex);
 
   // get the first frame
   void GetFirstRowFrame(nsTableRowFrame **aRowFrame);
@@ -185,11 +187,11 @@ public:
 
   PRInt32 GetInsertionIndex(nsIFrame *aFrame, PRInt32 aCurrentIndex, PRBool& aDone);
   PRInt32 GetInsertionIndexForContent(nsTableFrame* aTableFrame,
-                                      nsIPresContext& aPresContext,
+                                      nsIPresContext* aPresContext,
                                       nsIContent *aContent);
 
   void AddRowToMap(nsTableFrame *aTableFrame,
-                   nsIPresContext& aPresContext,
+                   nsIPresContext* aPresContext,
                    nsIContent *aContent, nsIFrame *aCurrentFrame);
   
   static PRBool IsTableRowGroupFrame(nsIFrame*);

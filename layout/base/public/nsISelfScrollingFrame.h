@@ -15,7 +15,7 @@ class nsISelfScrollingFrame : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISELFSCROLLINGFRAME_IID)
 
-  NS_IMETHOD ScrollByLines(nsIPresContext& aPresContext, PRInt32 lines)=0;
+  NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)=0;
 
 };
 

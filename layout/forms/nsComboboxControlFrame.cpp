@@ -168,7 +168,7 @@ nsComboboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::Init(nsIPresContext&  aPresContext,
+nsComboboxControlFrame::Init(nsIPresContext*  aPresContext,
               nsIContent*      aContent,
               nsIFrame*        aParent,
               nsIStyleContext* aContext,
@@ -176,7 +176,7 @@ nsComboboxControlFrame::Init(nsIPresContext&  aPresContext,
 {
    // Need to hold on the pres context because it is used later in methods
    // which don't have it passed in.
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
   return nsAreaFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 }
@@ -308,7 +308,7 @@ nsComboboxControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 
 //--------------------------------------------------------------
 nscoord 
-nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                                  float aPixToTwip, 
                                                  nscoord aInnerHeight) const
 {
@@ -317,7 +317,7 @@ nsComboboxControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 
 //--------------------------------------------------------------
 nscoord 
-nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsComboboxControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -409,7 +409,7 @@ nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
 nsresult
 nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame, 
-                                         nsIPresContext&  aPresContext, 
+                                         nsIPresContext*  aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus,
@@ -449,12 +449,12 @@ nsComboboxControlFrame::SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nsco
 }
 
 nsresult 
-nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext& aPresContext, nsIContent* aContent, nsIFrame** aFrame)
+nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame)
 {
   nsresult rv = NS_OK;
    // Get the primary frame from the presentation shell.
   nsCOMPtr<nsIPresShell> presShell;
-  rv = aPresContext.GetShell(getter_AddRefs(presShell));
+  rv = aPresContext->GetShell(getter_AddRefs(presShell));
   if (NS_SUCCEEDED(rv) && presShell) {
     presShell->GetPrimaryFrameFor(aContent, aFrame);
   }
@@ -462,7 +462,7 @@ nsComboboxControlFrame::GetPrimaryComboFrame(nsIPresContext& aPresContext, nsICo
 }
 
 nsIFrame*
-nsComboboxControlFrame::GetButtonFrame(nsIPresContext& aPresContext)
+nsComboboxControlFrame::GetButtonFrame(nsIPresContext* aPresContext)
 {
   if (mButtonFrame == nsnull) {
     NS_ASSERTION(mButtonContent != nsnull, "nsComboboxControlFrame mButtonContent is null");
@@ -473,7 +473,7 @@ nsComboboxControlFrame::GetButtonFrame(nsIPresContext& aPresContext)
 }
 
 nsIFrame* 
-nsComboboxControlFrame::GetDisplayFrame(nsIPresContext& aPresContext)
+nsComboboxControlFrame::GetDisplayFrame(nsIPresContext* aPresContext)
 {
   if (mDisplayFrame == nsnull) {
     NS_ASSERTION(mDisplayContent != nsnull, "nsComboboxControlFrame mDisplayContent is null");
@@ -491,12 +491,12 @@ nsComboboxControlFrame::GetDropdownFrame()
 
 
 nsresult 
-nsComboboxControlFrame::GetScreenHeight(nsIPresContext& aPresContext,
+nsComboboxControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
                                         nscoord& aHeight)
 {
   aHeight = 0;
   nsIDeviceContext* context;
-  aPresContext.GetDeviceContext( &context );
+  aPresContext->GetDeviceContext( &context );
 	if ( nsnull != context )
 	{
 		PRInt32 height;
@@ -515,7 +515,7 @@ nsComboboxControlFrame::GetScreenHeight(nsIPresContext& aPresContext,
 int counter = 0;
 
 nsresult 
-nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext, 
+nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext, 
                                          nscoord aHeight, 
                                          nsRect aAbsoluteTwipsRect, 
                                          nsRect aAbsolutePixelRect)
@@ -544,7 +544,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(GetScreenHeight(aPresContext, screenHeightInPixels))) {
      // Get the height of the dropdown list in pixels.
      float t2p;
-     aPresContext.GetTwipsToPixels(&t2p);
+     aPresContext->GetTwipsToPixels(&t2p);
      nscoord absoluteDropDownHeight = NSTwipsToIntPixels(dropdownRect.height, t2p);
     
       // Check to see if the drop-down list will go offscreen
@@ -560,7 +560,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   dropdownFrame->GetRect(currentRect);
 
   //if (currentRect != dropdownRect) {
-    dropdownFrame->SetRect(&aPresContext, dropdownRect);
+    dropdownFrame->SetRect(aPresContext, dropdownRect);
 #ifdef DEBUG_rodsXXXXXX
     printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
 #endif
@@ -572,7 +572,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
 
 // Calculate a frame's position in screen coordinates
 nsresult
-nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
+nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext* aPresContext,
                                                  nsIFrame *aFrame, 
                                                  nsRect& aAbsoluteTwipsRect, 
                                                  nsRect& aAbsolutePixelRect)
@@ -590,13 +590,13 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
     // Get conversions between twips and pixels
   float t2p;
   float p2t;
-  aPresContext.GetTwipsToPixels(&t2p);
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetTwipsToPixels(&t2p);
+  aPresContext->GetPixelsToTwips(&p2t);
   
    // Add in frame's offset from it it's containing view
   nsIView *containingView = nsnull;
   nsPoint offset;
-  rv = aFrame->GetOffsetFromView(&aPresContext, offset, &containingView);
+  rv = aFrame->GetOffsetFromView(aPresContext, offset, &containingView);
   if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
     aAbsoluteTwipsRect.x += offset.x;
     aAbsoluteTwipsRect.y += offset.y;
@@ -653,7 +653,7 @@ static int myCounter = 0;
 #endif
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsComboboxControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
@@ -690,7 +690,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
 
  
   if (!mFormFrame && (eReflowReason_Initial == aReflowState.reason)) {
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*,this));
   }
 
   const nsStyleSpacing* spacing;
@@ -773,7 +773,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     buttonFrame->GetRect(buttonRect);
     buttonRect.y = displayRect.y;
     buttonRect.height = displayRect.height;
-    buttonFrame->SetRect(&aPresContext, buttonRect);
+    buttonFrame->SetRect(aPresContext, buttonRect);
 
     // Reflow the dropdown list to match the width of the display + button
     ReflowComboChildFrame(dropdownFrame, aPresContext, dropdownDesiredSize, firstPassState, aStatus, aDesiredSize.width, NS_UNCONSTRAINEDSIZE);
@@ -1027,11 +1027,11 @@ nsComboboxControlFrame::AbsolutelyPositionDropDown()
 {
   nsRect absoluteTwips;
   nsRect absolutePixels;
-// XXX Not used  nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
+// XXX Not used  nsIFrame* displayFrame = GetDisplayFrame(mPresContext);
   nsRect rect;
   this->GetRect(rect);
-  GetAbsoluteFramePosition(*mPresContext, this,  absoluteTwips, absolutePixels);
-  PositionDropdown(*mPresContext, rect.height, absoluteTwips, absolutePixels);
+  GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, absolutePixels);
+  PositionDropdown(mPresContext, rect.height, absoluteTwips, absolutePixels);
   return NS_OK;
 }
 
@@ -1041,7 +1041,7 @@ nsComboboxControlFrame::GetAbsoluteRect(nsRect* aRect)
   nsRect absoluteTwips;
   nsRect rect;
   this->GetRect(rect);
-  GetAbsoluteFramePosition(*mPresContext, this,  absoluteTwips, *aRect);
+  GetAbsoluteFramePosition(mPresContext, this,  absoluteTwips, *aRect);
 
   return NS_OK;
 }
@@ -1058,7 +1058,7 @@ nsComboboxControlFrame::SelectionChanged()
     if (NS_SUCCEEDED(rv) && htmlContent) {
       rv = htmlContent->SetHTMLAttribute(nsHTMLAtoms::value, mTextStr, PR_TRUE);
       if (NS_SUCCEEDED(rv)) {
-        nsIFrame* displayFrame = GetDisplayFrame(*mPresContext);
+        nsIFrame* displayFrame = GetDisplayFrame(mPresContext);
 
         nsIReflowCommand* cmd;
         rv = NS_NewHTMLReflowCommand(&cmd, displayFrame, nsIReflowCommand::StyleChanged);
@@ -1164,11 +1164,12 @@ nsComboboxControlFrame::GetOptionSelected(PRInt32 aIndex, PRBool* aValue)
 }
 
 NS_IMETHODIMP 
-nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsComboboxControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus)
+                                       nsEventStatus*  aEventStatus)
 {
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus) {
     return NS_OK;
   }
   if (nsFormFrame::GetDisabled(this)) { 
@@ -1282,7 +1283,7 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::Destroy(nsIPresContext& aPresContext)
+nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DestroyFrames(aPresContext);
@@ -1303,7 +1304,7 @@ nsComboboxControlFrame::FirstChild(nsIAtom*   aListName,
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -1312,7 +1313,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     mPopupFrames.SetFrames(aChildList);
   } else {
     rv = nsAreaFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    InitTextStr(&aPresContext, PR_FALSE);
+    InitTextStr(aPresContext, PR_FALSE);
   }
   return rv;
 }

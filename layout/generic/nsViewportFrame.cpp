@@ -50,21 +50,21 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
  */
 class ViewportFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
@@ -74,7 +74,7 @@ public:
 
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
 
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -92,19 +92,19 @@ public:
 #endif
 
 protected:
-  nsresult IncrementalReflow(nsIPresContext&          aPresContext,
+  nsresult IncrementalReflow(nsIPresContext*          aPresContext,
                              const nsHTMLReflowState& aReflowState);
 
-  nsresult ReflowFixedFrame(nsIPresContext&          aPresContext,
+  nsresult ReflowFixedFrame(nsIPresContext*          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsIFrame*                aKidFrame,
                             PRBool                   aInitialReflow,
                             nsReflowStatus&          aStatus) const;
 
-  void ReflowFixedFrames(nsIPresContext&          aPresContext,
+  void ReflowFixedFrames(nsIPresContext*          aPresContext,
                          const nsHTMLReflowState& aReflowState) const;
 
-  void CalculateFixedContainingBlockSize(nsIPresContext&          aPresContext,
+  void CalculateFixedContainingBlockSize(nsIPresContext*          aPresContext,
                                          const nsHTMLReflowState& aReflowState,
                                          nscoord&                 aWidth,
                                          nscoord&                 aHeight) const;
@@ -131,14 +131,14 @@ NS_NewViewportFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-ViewportFrame::Destroy(nsIPresContext& aPresContext)
+ViewportFrame::Destroy(nsIPresContext* aPresContext)
 {
   mFixedFrames.DestroyFrames(aPresContext);
   return nsContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
-ViewportFrame::SetInitialChildList(nsIPresContext& aPresContext,
+ViewportFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                    nsIAtom*        aListName,
                                    nsIFrame*       aChildList)
 {
@@ -160,7 +160,7 @@ ViewportFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::AppendFrames(nsIPresContext& aPresContext,
+ViewportFrame::AppendFrames(nsIPresContext* aPresContext,
                             nsIPresShell&   aPresShell,
                             nsIAtom*        aListName,
                             nsIFrame*       aFrameList)
@@ -193,7 +193,7 @@ ViewportFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::InsertFrames(nsIPresContext& aPresContext,
+ViewportFrame::InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
@@ -227,7 +227,7 @@ ViewportFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::RemoveFrame(nsIPresContext& aPresContext,
+ViewportFrame::RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
@@ -282,7 +282,7 @@ ViewportFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 }
 
 void
-ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresContext,
+ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext*          aPresContext,
                                                  const nsHTMLReflowState& aReflowState,
                                                  nscoord&                 aWidth,
                                                  nscoord&                 aHeight) const
@@ -296,7 +296,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
   nsIFrame* kidFrame = mFrames.FirstChild();
   nsIView*  kidView;
 
-  kidFrame->GetView(&aPresContext, &kidView);
+  kidFrame->GetView(aPresContext, &kidView);
   if (nsnull != kidView) {
     nsIScrollableView* scrollingView;
     
@@ -304,7 +304,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
       // Get the scrollbar dimensions
       float             sbWidth, sbHeight;
       nsCOMPtr<nsIDeviceContext> dc;
-      aPresContext.GetDeviceContext(getter_AddRefs(dc));
+      aPresContext->GetDeviceContext(getter_AddRefs(dc));
 
       dc->GetScrollBarDimensions(sbWidth, sbHeight);
       
@@ -323,7 +323,7 @@ ViewportFrame::CalculateFixedContainingBlockSize(nsIPresContext&          aPresC
 }
 
 nsresult
-ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
+ViewportFrame::ReflowFixedFrame(nsIPresContext*          aPresContext,
                                 const nsHTMLReflowState& aReflowState,
                                 nsIFrame*                aKidFrame,
                                 PRBool                   aInitialReflow,
@@ -345,14 +345,14 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
     
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
-  aKidFrame->MoveTo(&aPresContext, 
+  aKidFrame->MoveTo(aPresContext, 
                     kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                     kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
   
   // Position its view
   nsIView*  kidView;
-  aKidFrame->GetView(&aPresContext, &kidView);
-  nsContainerFrame::PositionFrameView(&aPresContext, aKidFrame, kidView);
+  aKidFrame->GetView(aPresContext, &kidView);
+  nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -370,11 +370,11 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
   nsRect  rect(kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                kidDesiredSize.width, kidDesiredSize.height);
-  aKidFrame->SetRect(&aPresContext, rect);
+  aKidFrame->SetRect(aPresContext, rect);
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
-  nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, aKidFrame, kidView,
+  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mCombinedArea);
   aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   return rv;
@@ -383,7 +383,7 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
 // Called by Reflow() to reflow all of the fixed positioned child frames.
 // This is only done for 'initial', 'resize', and 'style change' reflow commands
 void
-ViewportFrame::ReflowFixedFrames(nsIPresContext&          aPresContext,
+ViewportFrame::ReflowFixedFrames(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState) const
 {
   NS_PRECONDITION(eReflowReason_Incremental != aReflowState.reason,
@@ -415,7 +415,7 @@ ViewportFrame::ReflowFixedFrames(nsIPresContext&          aPresContext,
  * of a fixed child frame
  */
 nsresult
-ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
+ViewportFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                  const nsHTMLReflowState& aReflowState)
 {
   nsIReflowCommand::ReflowType  type;
@@ -459,7 +459,7 @@ ViewportFrame::IncrementalReflow(nsIPresContext&          aPresContext,
 }
 
 NS_IMETHODIMP
-ViewportFrame::Reflow(nsIPresContext&          aPresContext,
+ViewportFrame::Reflow(nsIPresContext*          aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus&          aStatus)
@@ -561,7 +561,7 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
   if ((eReflowReason_Initial == aReflowState.reason) ||
       (eReflowReason_Resize == aReflowState.reason)) {
     nsRect  damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-    Invalidate(&aPresContext, damageRect, PR_FALSE);
+    Invalidate(aPresContext, damageRect, PR_FALSE);
   }
 
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);

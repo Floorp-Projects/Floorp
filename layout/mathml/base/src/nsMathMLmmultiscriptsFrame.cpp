@@ -67,7 +67,7 @@ nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
+nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsHTMLReflowMetrics&     aDesiredSize,
                                    const nsHTMLReflowState& aReflowState,
                                    nsReflowStatus&          aStatus)
@@ -150,7 +150,7 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
         // At this stage, the origin points of the children have no use, so we will use the
         // origins to store the child's ascent and descent. At the next pass, we should 
         // set the origins so as to overwrite what we are storing there now
-        childFrame->SetRect(&aPresContext,
+        childFrame->SetRect(aPresContext,
                             nsRect(childDesiredSize.descent, childDesiredSize.ascent,
                             childDesiredSize.width, childDesiredSize.height));                        
         isSubscript = !isSubscript;
@@ -169,7 +169,7 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
   nsCOMPtr<nsIFontMetrics> fm;
   const nsStyleFont* aFont =
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  aPresContext.GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
+  aPresContext->GetMetricsFor(aFont->mFont, getter_AddRefs(fm));
   fm->GetSubscriptOffset(subscriptOffset);
   fm->GetSuperscriptOffset(superscriptOffset);
   fm->GetLeading(leading);
@@ -199,7 +199,7 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
       childFrame->GetRect(rect[0]);
       rect[0].x = offset;
       rect[0].y = aDesiredSize.height - subHeight;
-      childFrame->SetRect(&aPresContext, rect[0]);
+      childFrame->SetRect(aPresContext, rect[0]);
       offset += rect[0].width;
     }
     else if (mprescriptsFrame != childFrame) { 
@@ -220,8 +220,8 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext&          aPresContext,
           rect[0].x = offset + (width - rect[0].width) / 2; // centering
           rect[1].x = offset + (width - rect[1].width) / 2; 
 
-          child[0]->SetRect(&aPresContext, rect[0]);
-          child[1]->SetRect(&aPresContext, rect[1]);          
+          child[0]->SetRect(aPresContext, rect[0]);
+          child[1]->SetRect(aPresContext, rect[1]);          
           offset += width;
         }        
       }

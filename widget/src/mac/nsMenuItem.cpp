@@ -448,7 +448,7 @@ NS_METHOD nsMenuItem::DoCommand()
       return rv;
   }
 
-  rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+  rv = contentNode->HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
 
   return nsEventStatus_eConsumeNoDefault;
 

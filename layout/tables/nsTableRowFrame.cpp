@@ -59,7 +59,7 @@ nsTableRowFrame::nsTableRowFrame()
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::Init(nsIPresContext&  aPresContext,
+nsTableRowFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,
@@ -84,7 +84,7 @@ nsTableRowFrame::Init(nsIPresContext&  aPresContext,
 // Helper function. It marks the table frame as dirty and generates
 // a reflow command
 nsresult
-nsTableRowFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+nsTableRowFrame::AddTableDirtyReflowCommand(nsIPresContext* aPresContext,
                                             nsIPresShell&   aPresShell,
                                             nsIFrame*       aTableFrame)
 {
@@ -112,7 +112,7 @@ nsTableRowFrame::AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::AppendFrames(nsIPresContext& aPresContext,
+nsTableRowFrame::AppendFrames(nsIPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aFrameList)
@@ -161,7 +161,7 @@ nsTableRowFrame::AppendFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::InsertFrames(nsIPresContext& aPresContext,
+nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
                               nsIAtom*        aListName,
                               nsIFrame*       aPrevFrame,
@@ -195,7 +195,7 @@ nsTableRowFrame::InsertFrames(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableRowFrame::RemoveFrame(nsIPresContext& aPresContext,
+nsTableRowFrame::RemoveFrame(nsIPresContext* aPresContext,
                              nsIPresShell&   aPresShell,
                              nsIAtom*        aListName,
                              nsIFrame*       aOldFrame)
@@ -295,7 +295,7 @@ nsTableRowFrame::InitChildren()
  * Post-reflow hook. This is where the table row does its post-processing
  */
 void
-nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
+nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
                            const nsHTMLReflowState& aReflowState)
 {
   // Resize and re-align the cell frames based on our row height
@@ -337,7 +337,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
         // XXX If the cell frame has a view, then we need to resize
         // it as well. We would like to only do that if the cell's size
         // is changing. Why is the 'if' stmt above commented out?
-        cellFrame->SizeTo(&aPresContext, cellFrameSize.width, cellHeight);
+        cellFrame->SizeTo(aPresContext, cellFrameSize.width, cellHeight);
         // realign cell content based on the new height
         /*nsHTMLReflowMetrics desiredSize(nsnull);
         nsHTMLReflowState kidReflowState(aPresContext, aReflowState,
@@ -349,7 +349,7 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
         //     But some content crashes when this reflow is issued, to be investigated
         //XXX nsReflowStatus status;
         //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
-        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(&aPresContext);
+        ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild(aPresContext);
         /* if we're collapsing borders, notify the cell that the border edge length has changed */
         if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
           ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
@@ -396,7 +396,7 @@ PRBool IsFirstRow(nsTableFrame&    aTable,
 }
 
 
-NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
+NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,
                                  const nsRect& aDirtyRect,
                                  nsFramePaintLayer aWhichLayer)
@@ -404,7 +404,7 @@ NS_METHOD nsTableRowFrame::Paint(nsIPresContext& aPresContext,
   nsresult rv;
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
     nsCompatibility mode;
-    aPresContext.GetCompatibilityMode(&mode);
+    aPresContext->GetCompatibilityMode(&mode);
     if (eCompatibility_Standard == mode) {
       const nsStyleDisplay* disp =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -469,7 +469,7 @@ nsTableRowFrame::GetSkipSides() const
 /** overloaded method from nsContainerFrame.  The difference is that 
   * we don't want to clip our children, so a cell can do a rowspan
   */
-void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
+void nsTableRowFrame::PaintChildren(nsIPresContext*      aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect&        aDirtyRect,
                                     nsFramePaintLayer aWhichLayer)
@@ -478,7 +478,7 @@ void nsTableRowFrame::PaintChildren(nsIPresContext&      aPresContext,
   while (nsnull != kid) {
     nsIView *pView;
      
-    kid->GetView(&aPresContext, &pView);
+    kid->GetView(aPresContext, &pView);
     if (nsnull == pView) {
       nsRect kidRect;
       kid->GetRect(kidRect);
@@ -598,7 +598,7 @@ void nsTableRowFrame::FixMinCellHeight(nsTableFrame *aTableFrame)
 // Position and size aKidFrame and update our reflow state. The origin of
 // aKidRect is relative to the upper-left origin of our frame, and includes
 // any left/top margin.
-void nsTableRowFrame::PlaceChild(nsIPresContext&      aPresContext,
+void nsTableRowFrame::PlaceChild(nsIPresContext*      aPresContext,
 																 RowReflowState&      aReflowState,
 																 nsIFrame*            aKidFrame,
                                  nsHTMLReflowMetrics& aDesiredSize,
@@ -750,7 +750,7 @@ nsTableRowFrame::CalculateCellAvailableWidth(nsTableFrame* aTableFrame,
  * changed. Reflows all the existing table cell frames unless aDirtyOnly
  * is PR_TRUE in which case only reflow the dirty frames
  */
-NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
+NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
                                         nsHTMLReflowMetrics& aDesiredSize,
                                         RowReflowState&      aReflowState,
                                         nsReflowStatus&      aStatus,
@@ -965,7 +965,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
   nscoord overAllocated = aDesiredSize.width - aReflowState.reflowState.availableWidth;
   if (overAllocated > 0) {
     float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
+    aPresContext->GetScaledPixelsToTwips(&p2t);
     if (overAllocated > p2t) {
       printf("row over allocated by %d\n twips", overAllocated);
     }
@@ -980,7 +980,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext&      aPresContext,
  * reflows it to gets its minimum and maximum sizes
  */
 NS_METHOD
-nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
+nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
                                nsHTMLReflowMetrics& aDesiredSize,
                                RowReflowState&      aReflowState,
                                nsReflowStatus&      aStatus,
@@ -1095,7 +1095,7 @@ nsTableRowFrame::InitialReflow(nsIPresContext&      aPresContext,
 // - maxCellHeight
 // - maxVertCellSpace
 // - x
-NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
+NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
                                         RowReflowState& aReflowState,
                                         nsIFrame*       aKidFrame,
                                         nsSize*         aMaxElementSize)
@@ -1166,7 +1166,7 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext& aPresContext,
 
 
 
-NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext&       aPresContext,
+NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext*       aPresContext,
                                              nsHTMLReflowMetrics&  aDesiredSize,
                                              RowReflowState&       aReflowState,
                                              nsReflowStatus&       aStatus)
@@ -1191,7 +1191,7 @@ NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext&       aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
+NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext*      aPresContext,
                                          nsHTMLReflowMetrics& aDesiredSize,
                                          RowReflowState&      aReflowState,
                                          nsReflowStatus&      aStatus)
@@ -1240,7 +1240,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsMe(nsIPresContext&      aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext&      aPresContext,
+NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext*      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,
                                            RowReflowState&      aReflowState,
                                            nsReflowStatus&      aStatus)
@@ -1252,7 +1252,7 @@ NS_METHOD nsTableRowFrame::IR_StyleChanged(nsIPresContext&      aPresContext,
   return rv;
 }
 
-NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
+NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
                                             nsHTMLReflowMetrics& aDesiredSize,
                                             RowReflowState&      aReflowState,
                                             nsReflowStatus&      aStatus,
@@ -1402,7 +1402,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
   * This method stacks cells horizontally according to HTML 4.0 rules.
   */
 NS_METHOD
-nsTableRowFrame::Reflow(nsIPresContext&          aPresContext,
+nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
                         nsHTMLReflowMetrics&     aDesiredSize,
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&          aStatus)
@@ -1509,7 +1509,7 @@ PRBool nsTableRowFrame::Contains(const nsPoint& aPoint)
  * pushing a row frame that has cell frames that span into it. The cell frame
  * should be reflowed with the specified height
  */
-void nsTableRowFrame::ReflowCellFrame(nsIPresContext&          aPresContext,
+void nsTableRowFrame::ReflowCellFrame(nsIPresContext*          aPresContext,
                                       const nsHTMLReflowState& aReflowState,
                                       nsTableCellFrame*        aCellFrame,
                                       nscoord                  aAvailableHeight,
@@ -1526,8 +1526,8 @@ void nsTableRowFrame::ReflowCellFrame(nsIPresContext&          aPresContext,
 
   ReflowChild(aCellFrame, aPresContext, desiredSize, cellReflowState,
               0, 0, NS_FRAME_NO_MOVE_FRAME, aStatus);
-  aCellFrame->SizeTo(&aPresContext, cellSize.width, aAvailableHeight);
-  aCellFrame->VerticallyAlignChild(&aPresContext);
+  aCellFrame->SizeTo(aPresContext, cellSize.width, aAvailableHeight);
+  aCellFrame->VerticallyAlignChild(aPresContext);
   aCellFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 }
 

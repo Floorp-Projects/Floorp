@@ -35,14 +35,14 @@ public:
   friend nsresult NS_NewMathMLmoFrame(nsIFrame** aNewFrame);
   
   NS_IMETHOD
-  Init(nsIPresContext&  aPresContext,
+  Init(nsIPresContext*  aPresContext,
        nsIContent*      aContent,
        nsIFrame*        aParent,
        nsIStyleContext* aContext,
        nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD
-  Paint(nsIPresContext&      aPresContext,
+  Paint(nsIPresContext*      aPresContext,
         nsIRenderingContext& aRenderingContext,
         const nsRect&        aDirtyRect,
         nsFramePaintLayer    aWhichLayer);
@@ -50,7 +50,7 @@ public:
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
-  Stretch(nsIPresContext&      aPresContext,
+  Stretch(nsIPresContext*      aPresContext,
           nsIRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsCharMetrics&       aContainerSize,

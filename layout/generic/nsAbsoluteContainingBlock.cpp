@@ -45,7 +45,7 @@ nsAbsoluteContainingBlock::FirstChild(const nsIFrame* aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
-                                               nsIPresContext& aPresContext,
+                                               nsIPresContext* aPresContext,
                                                nsIAtom*        aListName,
                                                nsIFrame*       aChildList)
 {
@@ -59,7 +59,7 @@ nsAbsoluteContainingBlock::SetInitialChildList(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
-                                        nsIPresContext& aPresContext,
+                                        nsIPresContext* aPresContext,
                                         nsIPresShell&   aPresShell,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aFrameList)
@@ -86,7 +86,7 @@ nsAbsoluteContainingBlock::AppendFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
-                                        nsIPresContext& aPresContext,
+                                        nsIPresContext* aPresContext,
                                         nsIPresShell&   aPresShell,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aPrevFrame,
@@ -114,7 +114,7 @@ nsAbsoluteContainingBlock::InsertFrames(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
-                                       nsIPresContext& aPresContext,
+                                       nsIPresContext* aPresContext,
                                        nsIPresShell&   aPresShell,
                                        nsIAtom*        aListName,
                                        nsIFrame*       aOldFrame)
@@ -129,7 +129,7 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
-                                  nsIPresContext&          aPresContext,
+                                  nsIPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight)
@@ -153,7 +153,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
 nsresult
 nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatingFrame,
-                                             nsIPresContext&          aPresContext,
+                                             nsIPresContext*          aPresContext,
                                              const nsHTMLReflowState& aReflowState,
                                              nscoord                  aContainingBlockWidth,
                                              nscoord                  aContainingBlockHeight,
@@ -234,7 +234,7 @@ nsAbsoluteContainingBlock::IncrementalReflow(nsIFrame*                aDelegatin
 
 void
 nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
-                                         nsIPresContext& aPresContext)
+                                         nsIPresContext* aPresContext)
 {
   mAbsoluteFrames.DestroyFrames(aPresContext);
 }
@@ -244,7 +244,7 @@ nsAbsoluteContainingBlock::DestroyFrames(nsIFrame*       aDelegatingFrame,
 // reflow...
 nsresult
 nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
-                                               nsIPresContext&          aPresContext,
+                                               nsIPresContext*          aPresContext,
                                                const nsHTMLReflowState& aReflowState,
                                                nscoord                  aContainingBlockWidth,
                                                nscoord                  aContainingBlockHeight,
@@ -275,14 +275,14 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   // XXX TROY
   // Send the WillReflow() notification and position the frame
   aKidFrame->WillReflow(aPresContext);
-  aKidFrame->MoveTo(&aPresContext, 
+  aKidFrame->MoveTo(aPresContext, 
                     border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                     border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top);
 
   // Position its view
   nsIView*  kidView;
-  aKidFrame->GetView(&aPresContext, &kidView);
-  nsContainerFrame::PositionFrameView(&aPresContext, aKidFrame, kidView);
+  aKidFrame->GetView(aPresContext, &kidView);
+  nsContainerFrame::PositionFrameView(aPresContext, aKidFrame, kidView);
 
   // Do the reflow
   rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
@@ -377,11 +377,11 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                kidDesiredSize.width, kidDesiredSize.height);
-  aKidFrame->SetRect(&aPresContext, rect);
+  aKidFrame->SetRect(aPresContext, rect);
 
   // Size and position the view and set its opacity, visibility, content
   // transparency, and clip
-  nsContainerFrame::SyncFrameViewAfterReflow(&aPresContext, aKidFrame, kidView,
+  nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, aKidFrame, kidView,
                                              &kidDesiredSize.mCombinedArea);
   aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   return rv;

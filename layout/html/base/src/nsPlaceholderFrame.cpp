@@ -44,7 +44,7 @@ NS_NewPlaceholderFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-nsPlaceholderFrame::Reflow(nsIPresContext&          aPresContext,
+nsPlaceholderFrame::Reflow(nsIPresContext*          aPresContext,
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
@@ -73,14 +73,14 @@ nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
 
 #ifdef DEBUG
 NS_IMETHODIMP
-nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
+nsPlaceholderFrame::Paint(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
-    aPresContext.GetPixelsToTwips(&p2t);
+    aPresContext->GetPixelsToTwips(&p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     nscoord x = NSIntPixelsToTwips(-5, p2t);
     aRenderingContext.FillRect(x, 0, NSIntPixelsToTwips(13, p2t),

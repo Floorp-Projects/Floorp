@@ -48,7 +48,7 @@ public:
   NS_IMETHOD SetTarget(nsIDOMNode* aNode) = 0;
 };
 
-extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent);
-extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent);
+extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
+extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
 
 #endif // nsIPrivateDOMEvent_h__

@@ -2513,11 +2513,11 @@ nsXULElement::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 
 
 NS_IMETHODIMP 
-nsXULElement::HandleDOMEvent(nsIPresContext& aPresContext,
+nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                        nsEvent* aEvent,
                                        nsIDOMEvent** aDOMEvent,
                                        PRUint32 aFlags,
-                                       nsEventStatus& aEventStatus)
+                                       nsEventStatus* aEventStatus)
 {
     nsresult ret = NS_OK;
   
@@ -2970,7 +2970,7 @@ nsXULElement::ExecuteJSCode(nsIDOMElement* anElement, nsEvent* aEvent)
 
         // Handle the DOM event
         nsEventStatus status = nsEventStatus_eIgnore;
-        content->HandleDOMEvent(*aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, status);
+        content->HandleDOMEvent(aPresContext, aEvent, nsnull, NS_EVENT_FLAG_INIT, &status);
     }
 
     return NS_OK;
@@ -3485,9 +3485,7 @@ NS_IMETHODIMP nsXULElement::HandleChromeEvent(nsIPresContext* aPresContext,
    nsEvent* aEvent, nsIDOMEvent** aDOMEvent, PRUint32 aFlags, 
    nsEventStatus* aEventStatus)
 {
-   NS_ENSURE_ARG(aPresContext);
-   NS_ENSURE_ARG_POINTER(aEventStatus);
-   return HandleDOMEvent(*aPresContext, aEvent, aDOMEvent, aFlags,*aEventStatus);
+   return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
 }
 
 //----------------------------------------------------------------------

@@ -267,18 +267,18 @@ nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 }
 
 
-NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext, 
+NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext, 
                                          nsHTMLReflowMetrics&     aDesiredSize,
                                          const nsHTMLReflowState& aReflowState, 
                                          nsReflowStatus&          aStatus)
 {
   if (mFormFrame == nsnull && eReflowReason_Initial == aReflowState.reason) {
     // add ourself as an nsIFormControlFrame
-    nsFormFrame::AddFormControlFrame(aPresContext, *this);
+    nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     mTextFrame = GetTextControlFrame(this);
     if (!mTextFrame) return NS_ERROR_UNEXPECTED;
     if (mCachedState) {
-      mTextFrame->SetProperty(&aPresContext, nsHTMLAtoms::value, *mCachedState);
+      mTextFrame->SetProperty(aPresContext, nsHTMLAtoms::value, *mCachedState);
       delete mCachedState;
       mCachedState = nsnull;
     }
@@ -289,7 +289,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext&          aPresContext,
 
 /*
 NS_IMETHODIMP
-nsFileControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsFileControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                               nsIAtom*        aListName,
                                               nsIFrame*       aChildList)
 {
@@ -460,7 +460,7 @@ nsFileControlFrame::GetFont(nsIPresContext*        aPresContext,
   return NS_OK;
 }
 nscoord 
-nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -468,7 +468,7 @@ nsFileControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 }
 
 nscoord 
-nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsFileControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -516,7 +516,7 @@ NS_IMETHODIMP nsFileControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 
 
 NS_METHOD
-nsFileControlFrame::Paint(nsIPresContext& aPresContext,
+nsFileControlFrame::Paint(nsIPresContext* aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect,
                           nsFramePaintLayer aWhichLayer)

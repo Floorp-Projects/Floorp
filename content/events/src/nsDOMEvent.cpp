@@ -687,7 +687,7 @@ NS_METHOD nsDOMEvent::GetRangeParent(nsIDOMNode** aRangeParent)
     nsIContent* parent = nsnull;
     PRInt32 offset, endOffset;
     PRBool beginOfContent;
-    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(*mPresContext, 
+    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
                                               mEvent->point,
                                               &parent,
                                               offset,
@@ -718,7 +718,7 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
     nsIContent* parent = nsnull;
     PRInt32 endOffset;
     PRBool beginOfContent;
-    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(*mPresContext, 
+    if (NS_SUCCEEDED(targetFrame->GetContentAndOffsetsFromPoint(mPresContext, 
                                               mEvent->point,
                                               &parent,
                                               *aRangeOffset,
@@ -904,9 +904,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   return nsnull;
 }
 
-nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
+nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 
 {
-  nsDOMEvent* it = new nsDOMEvent(&aPresContext, aEvent);
+  nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -914,7 +914,7 @@ nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPre
   return it->QueryInterface(kIDOMEventIID, (void **) aInstancePtrResult);
 }
 
-nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext& aPresContext, nsEvent *aEvent) 
+nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent) 
 {
   return NS_ERROR_FAILURE;
 }

@@ -1700,11 +1700,11 @@ nsXULDocument::GetDisplaySelection() const
 }
 
 NS_IMETHODIMP
-nsXULDocument::HandleDOMEvent(nsIPresContext& aPresContext,
+nsXULDocument::HandleDOMEvent(nsIPresContext* aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,
                             PRUint32 aFlags,
-                            nsEventStatus& aEventStatus)
+                            nsEventStatus* aEventStatus)
 {
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;

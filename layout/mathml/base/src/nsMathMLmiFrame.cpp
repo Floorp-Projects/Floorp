@@ -72,7 +72,7 @@ nsMathMLmiFrame::~nsMathMLmiFrame()
 
 
 NS_IMETHODIMP
-nsMathMLmiFrame::Init(nsIPresContext&  aPresContext,
+nsMathMLmiFrame::Init(nsIPresContext*  aPresContext,
                       nsIContent*      aContent,
                       nsIFrame*        aParent,
                       nsIStyleContext* aContext,
@@ -88,7 +88,7 @@ nsMathMLmiFrame::Init(nsIPresContext&  aPresContext,
 // XXX TrimWhitespace / CompressWhitespace?
 
 NS_IMETHODIMP
-nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                      nsIAtom*        aListName,
                                      nsIFrame*       aChildList)
 {

@@ -272,7 +272,7 @@ static nsIScrollableView * GetScrollableView(nsIPresContext * aPresContext, nsIF
 // specified. 
 
 NS_IMETHODIMP 
-nsGfxListControlFrame::Reflow(nsIPresContext&          aPresContext, 
+nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext, 
                            nsHTMLReflowMetrics&     aDesiredSize,
                            const nsHTMLReflowState& aReflowState, 
                            nsReflowStatus&          aStatus)
@@ -426,7 +426,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext&          aPresContext,
   float sbWidth  = 0.0;
   float sbHeight = 0.0;;
   nsCOMPtr<nsIDeviceContext> dc;
-  aPresContext.GetDeviceContext(getter_AddRefs(dc));
+  aPresContext->GetDeviceContext(getter_AddRefs(dc));
   dc->GetScrollBarDimensions(sbWidth, sbHeight);
   // Convert to nscoord's by rounding
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
@@ -1049,10 +1049,11 @@ nsGfxListControlFrame::IsAncestor(nsIView* aAncestor, nsIView* aChild)
 
 //---------------------------------------------------------
 NS_IMETHODIMP 
-nsGfxListControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+nsGfxListControlFrame::HandleEvent(nsIPresContext* aPresContext, 
                                        nsGUIEvent*     aEvent,
-                                       nsEventStatus&  aEventStatus)
+                                       nsEventStatus*  aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
 
   /*const char * desc[] = {"NS_MOUSE_MOVE", 
                           "NS_MOUSE_LEFT_BUTTON_UP",
@@ -1078,7 +1079,7 @@ nsGfxListControlFrame::HandleEvent(nsIPresContext& aPresContext,
     printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
   }*/
 
-  if (nsEventStatus_eConsumeNoDefault == aEventStatus)
+  if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
     return NS_OK;
 
   if (nsFormFrame::GetDisabled(this))
@@ -1090,7 +1091,7 @@ nsGfxListControlFrame::HandleEvent(nsIPresContext& aPresContext,
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         printf("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
         //if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-        //  MouseClicked(&aPresContext);
+        //  MouseClicked(aPresContext);
         //}
       }
       break;
@@ -1105,7 +1106,7 @@ nsGfxListControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsGfxListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
+nsGfxListControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
 {
@@ -1130,7 +1131,7 @@ nsGfxListControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
     // the reset/initialize
     if (CheckIfAllFramesHere()) {
       InitSelectionCache(-1);
-      Reset(&aPresContext);
+      Reset(aPresContext);
       mHasBeenInitialized = PR_TRUE;
     }
   }
@@ -1154,13 +1155,13 @@ nsGfxListControlFrame::GetSizeAttribute(PRInt32 *aSize) {
 
 //---------------------------------------------------------
 NS_IMETHODIMP  
-nsGfxListControlFrame::Init(nsIPresContext&  aPresContext,
+nsGfxListControlFrame::Init(nsIPresContext*  aPresContext,
                          nsIContent*      aContent,
                          nsIFrame*        aParent,
                          nsIStyleContext* aContext,
                          nsIFrame*        aPrevInFlow)
 {
-  mPresContext = &aPresContext;
+  mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
   nsresult result = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext,
                                         aPrevInFlow);
@@ -1171,7 +1172,7 @@ nsGfxListControlFrame::Init(nsIPresContext&  aPresContext,
    // get the proper style based on attribute selectors which refer to the
    // selected attribute.
   if (!mIsInitializedFromContent) {
-    Reset(&aPresContext);
+    Reset(aPresContext);
   } else {
     InitSelectionCache(-1);
   }
@@ -1203,7 +1204,7 @@ nsGfxListControlFrame::Init(nsIPresContext&  aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsGfxListControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsGfxListControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerHeight) const
 {
@@ -1213,7 +1214,7 @@ nsGfxListControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
 
 //---------------------------------------------------------
 nscoord 
-nsGfxListControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsGfxListControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                float aPixToTwip, 
                                                nscoord aInnerWidth,
                                                nscoord aCharWidth) const
@@ -2082,7 +2083,7 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
   // Here we create our own DOM event and set the target to the Select
   // We'll pass this DOM event in, in hopes that the target is used.
   nsIDOMEvent* DOMEvent = nsnull;
-  nsresult res = NS_NewDOMUIEvent(&DOMEvent, *mPresContext, &event);
+  nsresult res = NS_NewDOMUIEvent(&DOMEvent, mPresContext, &event);
   if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
     nsIDOMNode* node = nsnull;
     res = mContent->QueryInterface(kIDOMNodeIID, (void**)&node);
@@ -2093,7 +2094,7 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
         res = pDOMEvent->SetTarget(node);
 	if (NS_SUCCEEDED(res)) {
           // Have the content handle the event.
-          res = mContent->HandleDOMEvent(*mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status);
+          res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, status);
         }
         NS_RELEASE(pDOMEvent);
       }
@@ -2108,7 +2109,7 @@ nsGfxListControlFrame::SelectionChanged(nsIContent* aContent)
       nsIFrame* frame = nsnull;
       res = this->QueryInterface(kIFrameIID, (void**)&frame);
       if ((NS_SUCCEEDED(res)) && (nsnull != frame)) {
-        res = frame->HandleEvent(*mPresContext, &event, status);
+        res = frame->HandleEvent(mPresContext, &event, status);
         // NS_RELEASE(frame);
       }
     }
@@ -2356,7 +2357,7 @@ nsGfxListControlFrame::GetScrollingParentView(nsIPresContext* aPresContext,
 */
 //---------------------------------------------------------
 NS_IMETHODIMP
-nsGfxListControlFrame::DidReflow(nsIPresContext& aPresContext,
+nsGfxListControlFrame::DidReflow(nsIPresContext* aPresContext,
                               nsDidReflowStatus aStatus)
 {
   if (PR_TRUE == IsInDropDownMode()) 
@@ -2365,7 +2366,7 @@ nsGfxListControlFrame::DidReflow(nsIPresContext& aPresContext,
     mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
     nsresult rv = nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);
     mState |= NS_FRAME_SYNC_FRAME_AND_VIEW;
-    SyncViewWithFrame(&aPresContext);
+    SyncViewWithFrame(aPresContext);
     return rv;
   } else {
     return nsHTMLContainerFrame::DidReflow(aPresContext, aStatus);

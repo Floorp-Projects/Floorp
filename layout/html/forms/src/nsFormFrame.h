@@ -63,7 +63,7 @@ public:
   void OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
     
   void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
-  static void AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame);
+  static void AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aFrame);
   void RemoveFormControlFrame(nsIFormControlFrame& aFrame);
   void RemoveRadioControlFrame(nsIFormControlFrame * aFrame);
   nsresult GetRadioInfo(nsIFormControlFrame* aFrame, nsString& aName, nsRadioControlGroup *& aGroup);

@@ -35,13 +35,13 @@ public:
   friend nsresult NS_NewMathMLmsupFrame(nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Reflow(nsIPresContext&          aPresContext,
+  Reflow(nsIPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus); 
 
   NS_IMETHOD
-  SetInitialChildList(nsIPresContext& aPresContext,
+  SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList)
   {

@@ -54,26 +54,26 @@ public:
   NS_NewTableOuterFrame(nsIFrame** aResult);
 
   /**  @see nsIFrame::SetInitialChildList */    
-  NS_IMETHOD  SetInitialChildList(nsIPresContext& aPresContext,
+  NS_IMETHOD  SetInitialChildList(nsIPresContext* aPresContext,
                                   nsIAtom*        aListName,
                                   nsIFrame*       aChildList);
 
-  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD InsertFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
                           nsIAtom*        aListName,
                           nsIFrame*       aPrevFrame,
                           nsIFrame*       aFrameList);
-  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+  NS_IMETHOD RemoveFrame(nsIPresContext* aPresContext,
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
   /** @see nsIFrame::Paint */
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
@@ -81,7 +81,7 @@ public:
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.
     * @see nsIFrame::Reflow */
-  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
                     nsHTMLReflowMetrics&     aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
@@ -161,33 +161,33 @@ protected:
    * @param   aChild child this child's next-in-flow
    * @return  PR_TRUE if successful and PR_FALSE otherwise
    */
-  virtual void DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame* aChild);
+  virtual void DeleteChildsNextInFlow(nsIPresContext* aPresContext, nsIFrame* aChild);
 
 // begin Incremental Reflow methods
   /** prepare aReflowState for an incremental reflow */
   NS_IMETHOD RecoverState(OuterTableReflowState& aReflowState, nsIFrame* aKidFrame);
 
   /** process an incremental reflow command */
-  NS_IMETHOD IncrementalReflow(nsIPresContext&        aPresContext,
+  NS_IMETHOD IncrementalReflow(nsIPresContext*        aPresContext,
                                nsHTMLReflowMetrics&   aDesiredSize,
                                OuterTableReflowState& aReflowState,
                                nsReflowStatus&        aStatus);
 
   /** process an incremental reflow command targeted at a child of this frame. */
-  NS_IMETHOD IR_TargetIsChild(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_TargetIsChild(nsIPresContext*        aPresContext,
                               nsHTMLReflowMetrics&   aDesiredSize,
                               OuterTableReflowState& aReflowState,
                               nsReflowStatus&        aStatus,
                               nsIFrame *             aNextFrame);
 
   /** process an incremental reflow command targeted at the table inner frame. */
-  NS_IMETHOD IR_TargetIsInnerTableFrame(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_TargetIsInnerTableFrame(nsIPresContext*        aPresContext,
                                         nsHTMLReflowMetrics&   aDesiredSize,
                                         OuterTableReflowState& aReflowState,
                                         nsReflowStatus&        aStatus);
 
   /** process an incremental reflow command targeted at the caption. */
-  NS_IMETHOD IR_TargetIsCaptionFrame(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_TargetIsCaptionFrame(nsIPresContext*        aPresContext,
                                      nsHTMLReflowMetrics&   aDesiredSize,
                                      OuterTableReflowState& aReflowState,
                                      nsReflowStatus&        aStatus);
@@ -197,25 +197,25 @@ protected:
     * are actually handled by the inner frame.  The logic to decide this
     * is here.
     */
-  NS_IMETHOD IR_TargetIsMe(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_TargetIsMe(nsIPresContext*        aPresContext,
                            nsHTMLReflowMetrics&   aDesiredSize,
                            OuterTableReflowState& aReflowState,
                            nsReflowStatus&        aStatus);
 
   /** pass along the incremental reflow command to the inner table. */
-  NS_IMETHOD IR_InnerTableReflow(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_InnerTableReflow(nsIPresContext*        aPresContext,
                                  nsHTMLReflowMetrics&   aDesiredSize,
                                  OuterTableReflowState& aReflowState,
                                  nsReflowStatus&        aStatus);
 
   /** handle incremental reflow notification that a caption was inserted. */
-  NS_IMETHOD IR_CaptionInserted(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_CaptionInserted(nsIPresContext*        aPresContext,
                                 nsHTMLReflowMetrics&   aDesiredSize,
                                 OuterTableReflowState& aReflowState,
                                 nsReflowStatus&        aStatus);
 
   /** handle incremental reflow notification that we have dirty child frames */
-  NS_IMETHOD IR_ReflowDirty(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_ReflowDirty(nsIPresContext*        aPresContext,
                             nsHTMLReflowMetrics&   aDesiredSize,
                             OuterTableReflowState& aReflowState,
                             nsReflowStatus&        aStatus);

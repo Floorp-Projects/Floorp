@@ -34,11 +34,11 @@ class nsLeafFrame : public nsFrame {
 public:
 
   // nsIFrame replacements
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
-  NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);

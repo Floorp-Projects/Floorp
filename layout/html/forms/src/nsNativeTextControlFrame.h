@@ -38,7 +38,7 @@ public:
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
@@ -52,23 +52,23 @@ public:
 
   NS_IMETHOD GetText(nsString* aValue, PRBool aInitialValue);
 
-  virtual void EnterPressed(nsIPresContext& aPresContext) ;
+  virtual void EnterPressed(nsIPresContext* aPresContext) ;
 
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
   virtual void Reset(nsIPresContext* aPresContext);
 
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
  
-  virtual void PaintTextControlBackground(nsIPresContext& aPresContext,
+  virtual void PaintTextControlBackground(nsIPresContext* aPresContext,
                                           nsIRenderingContext& aRenderingContext,
                                           const nsRect& aDirtyRect,
                                           nsFramePaintLayer aWhichLayer);
  
-  virtual void PaintTextControl(nsIPresContext& aPresContext,
+  virtual void PaintTextControl(nsIPresContext* aPresContext,
                                 nsIRenderingContext& aRenderingContext,
                                 const nsRect& aDirtyRect, nsString& aText,
                                 nsIStyleContext* aStyleContext,

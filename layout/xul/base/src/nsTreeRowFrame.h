@@ -33,18 +33,18 @@ public:
   friend nsresult NS_NewTreeRowFrame(nsIFrame** aNewFrame);
 
   // Overridden methods
-  NS_IMETHOD     IR_TargetIsChild(nsIPresContext&      aPresContext,
+  NS_IMETHOD     IR_TargetIsChild(nsIPresContext*      aPresContext,
                                       nsHTMLReflowMetrics& aDesiredSize,
                                       RowReflowState& aReflowState,
                                       nsReflowStatus&      aStatus,
                                       nsIFrame *           aNextFrame);
 
-  NS_IMETHOD     Reflow(nsIPresContext&          aPresContext,
+  NS_IMETHOD     Reflow(nsIPresContext*          aPresContext,
 							         nsHTMLReflowMetrics&     aDesiredSize,
 							         const nsHTMLReflowState& aReflowState,
 							         nsReflowStatus&          aStatus);
 
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
@@ -54,19 +54,19 @@ public:
                               const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
 
-  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,
                         nsGUIEvent* aEvent,
-                        nsEventStatus& aEventStatus);
+                        nsEventStatus* aEventStatus);
 
-  NS_IMETHOD HandleMouseUpEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleMouseUpEvent(nsIPresContext* aPresContext,
                                 nsGUIEvent* aEvent,
-                                nsEventStatus& aEventStatus);
+                                nsEventStatus* aEventStatus);
 
-  NS_IMETHOD HandleHeaderDragEvent(nsIPresContext& aPresContext,
+  NS_IMETHOD HandleHeaderDragEvent(nsIPresContext* aPresContext,
                                    nsGUIEvent* aEvent,
-                                   nsEventStatus& aEventStatus);
+                                   nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
+  NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor);
 

@@ -67,7 +67,7 @@ nsFontPickerFrame::nsFontPickerFrame()
 // Overidden to handle ???
 //
 NS_METHOD 
-nsFontPickerFrame::Paint(nsIPresContext& aPresContext,
+nsFontPickerFrame::Paint(nsIPresContext* aPresContext,
                               nsIRenderingContext& aRenderingContext,
                               const nsRect& aDirtyRect,
                               nsFramePaintLayer aWhichLayer)

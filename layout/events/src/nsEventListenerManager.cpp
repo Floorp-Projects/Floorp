@@ -511,12 +511,13 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
 * @param an event listener
 */
 
-nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
+nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent,
                                              PRUint32 aFlags,
-                                             nsEventStatus& aEventStatus)
+                                             nsEventStatus* aEventStatus)
 {
+  NS_ENSURE_ARG_POINTER(aEventStatus);
   nsresult ret = NS_OK;
   if (aFlags & NS_EVENT_FLAG_INIT) {
     aFlags |= (NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_CAPTURE);
@@ -1204,14 +1205,14 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
       break;
   }
   //XXX This is going away
-  aEventStatus = (NS_OK == ret)
-    ? aEventStatus
+  *aEventStatus = (NS_OK == ret)
+    ? *aEventStatus
     : nsEventStatus_eConsumeNoDefault;
 
   // This is correct
-  aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
+  *aEventStatus = (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)
     ? nsEventStatus_eConsumeNoDefault
-    : aEventStatus;
+    : *aEventStatus;
 
   return NS_OK;
 }
@@ -1220,7 +1221,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext& aPresContext,
 * Creates a DOM event
 */
 
-nsresult nsEventListenerManager::CreateEvent(nsIPresContext& aPresContext,
+nsresult nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                                              nsEvent* aEvent,
                                              nsIDOMEvent** aDOMEvent)
 {

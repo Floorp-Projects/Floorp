@@ -87,7 +87,7 @@ public:
   }
 #endif
 
-  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext);
+  virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext* aPresContext);
 
   virtual void PostCreateWidget(nsIPresContext* aPresContext,
                                 nscoord& aWidth,
@@ -99,10 +99,10 @@ public:
 
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                            float aPixToTwip,
                                            nscoord aInnerHeight) const;
-  virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+  virtual nscoord GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                              float aPixToTwip, 
                                              nscoord aInnerWidth,
                                              nscoord aCharWidth) const;
@@ -114,7 +114,7 @@ public:
   NS_METHOD GetMultiple(PRBool* aResult, nsIDOMHTMLSelectElement* aSelect = nsnull);
   virtual void Reset(nsIPresContext* aPresContext);
 
-  NS_IMETHOD  AppendFrames(nsIPresContext& aPresContext,
+  NS_IMETHOD  AppendFrames(nsIPresContext* aPresContext,
                            nsIPresShell&   aPresShell,
                            nsIAtom*        aListName,
                            nsIFrame*       aFrameList);
@@ -124,16 +124,16 @@ public:
   // under windows. Later it may be used to GFX-render the controls to the display. 
   // Expect this code to repackaged and moved to a new location in the future.
   //
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  virtual void PaintOption(PRBool aPaintSelected, nsIPresContext& aPresContext,
+  virtual void PaintOption(PRBool aPaintSelected, nsIPresContext* aPresContext,
                  nsIRenderingContext& aRenderingContext, nsString aText, nscoord aX, nscoord aY,
                  const nsRect& aInside, nscoord aTextHeight);
 
-  virtual void PaintSelectControl(nsIPresContext& aPresContext,
+  virtual void PaintSelectControl(nsIPresContext* aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect);
 
@@ -185,7 +185,7 @@ protected:
                               nsHTMLReflowMetrics& aDesiredSize)
  				{ nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, aDesiredSize); }
   
-  void GetWidgetSize(nsIPresContext& aPresContext, nscoord& aWidth, nscoord& aHeight);
+  void GetWidgetSize(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight);
 
   PRBool mIsComboBox;
   PRBool mOptionsAdded;
@@ -276,7 +276,7 @@ nsNativeSelectControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsNativeSelectControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::GetVerticalInsidePadding(nsIPresContext* aPresContext,
                                                      float aPixToTwip, 
                                                      nscoord aInnerHeight) const
 {
@@ -294,7 +294,7 @@ nsNativeSelectControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContex
   PRInt32 padInside;
   PRInt32 shouldUsePadInside;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListVerticalInsidePadding,  pad);
    // These two (below) are really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListVerticalInsidePadding,  padInside);
@@ -309,7 +309,7 @@ nsNativeSelectControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContex
 }
 
 PRInt32 
-nsNativeSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext* aPresContext,
                                                  float aPixToTwip, 
                                                  nscoord aInnerWidth,
                                                  nscoord aCharWidth) const
@@ -328,7 +328,7 @@ nsNativeSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresCont
   PRInt32 padMin;
   PRInt32 shouldUsePadMin;
   nsCOMPtr<nsILookAndFeel> lookAndFeel;
-  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListHorizontalInsidePadding,  pad);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListHorizontalInsideMinimumPadding,  padMin);
    // This one (below) is really only needed for GTK
@@ -380,7 +380,7 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
 
   // get the css size 
   nsSize styleSize;
-  GetStyleSize(*aPresContext, aReflowState, styleSize);
+  GetStyleSize(aPresContext, aReflowState, styleSize);
 
   // get the size of the longest option 
   PRInt32 maxWidth = 1;
@@ -395,7 +395,7 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
     }
     nsSize textSize;
     // use the style for the select rather that the option, since widgets don't support it
-    nsFormControlHelper::GetTextSize(*aPresContext, this, text, textSize, aReflowState.rendContext); 
+    nsFormControlHelper::GetTextSize(aPresContext, this, text, textSize, aReflowState.rendContext); 
     if (textSize.width > maxWidth) {
       maxWidth = textSize.width;
     }
@@ -468,11 +468,11 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
   aDesiredLayoutSize.height = (mIsComboBox)
-    ? rowHeight + (2 * GetVerticalInsidePadding(*aPresContext, p2t, rowHeight))
+    ? rowHeight + (2 * GetVerticalInsidePadding(aPresContext, p2t, rowHeight))
     : desiredSize.height; 
   if (aDesiredLayoutSize.maxElementSize) {
     aDesiredLayoutSize.maxElementSize->height = (mIsComboBox)
-      ? rowHeight + (2 * GetVerticalInsidePadding(*aPresContext, p2t, rowHeight))
+      ? rowHeight + (2 * GetVerticalInsidePadding(aPresContext, p2t, rowHeight))
       : minSize.height; 
   }
 
@@ -489,7 +489,7 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
   // override the width and height for a combo box that has already got a widget
   if (mWidget && mIsComboBox) {
     nscoord ignore;
-    GetWidgetSize(*aPresContext, ignore, aDesiredLayoutSize.height);
+    GetWidgetSize(aPresContext, ignore, aDesiredLayoutSize.height);
     aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
     if (aDesiredLayoutSize.maxElementSize) {
       aDesiredLayoutSize.maxElementSize->height = aDesiredLayoutSize.height;
@@ -500,14 +500,14 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
 }
 
 nsWidgetInitData*
-nsNativeSelectControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
+nsNativeSelectControlFrame::GetWidgetInitData(nsIPresContext* aPresContext)
 {
   if (mIsComboBox) {
     nsComboBoxInitData* initData = new nsComboBoxInitData();
     if (initData) {
       initData->clipChildren = PR_TRUE;
       float twipToPix;
-      aPresContext.GetTwipsToPixels(&twipToPix);
+      aPresContext->GetTwipsToPixels(&twipToPix);
       initData->mDropDownHeight = NSTwipsToIntPixels(mWidgetSize.height, twipToPix);
     }
     return initData;
@@ -587,12 +587,12 @@ nsNativeSelectControlFrame::GetOptions(nsIDOMHTMLSelectElement* aSelect)
 }
 
 void
-nsNativeSelectControlFrame::GetWidgetSize(nsIPresContext& aPresContext, nscoord& aWidth, nscoord& aHeight)
+nsNativeSelectControlFrame::GetWidgetSize(nsIPresContext* aPresContext, nscoord& aWidth, nscoord& aHeight)
 {
   nsRect bounds;
   mWidget->GetBounds(bounds);
   float p2t;
-  aPresContext.GetPixelsToTwips(&p2t);
+  aPresContext->GetPixelsToTwips(&p2t);
   aWidth  = NSIntPixelsToTwips(bounds.width, p2t);
   aHeight = NSTwipsToIntPixels(bounds.height, p2t);
 }
@@ -612,7 +612,7 @@ nsNativeSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
   GetFont(aPresContext, font);
   mWidget->SetFont(font);
-  SetColors(*aPresContext);
+  SetColors(aPresContext);
 
   // add the options 
   if (!mOptionsAdded) {
@@ -654,7 +654,7 @@ nsNativeSelectControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
   if (mIsComboBox) {  
     nscoord ignore;
     nscoord height;
-    GetWidgetSize(*aPresContext, ignore, height);
+    GetWidgetSize(aPresContext, ignore, height);
     if (height > aHeight) {
       aHeight = height;
     }
@@ -851,7 +851,7 @@ nsNativeSelectControlFrame::GetOptionValue(nsIDOMHTMLCollection& aCollection, PR
 
 
 void
-nsNativeSelectControlFrame::PaintOption(PRBool aPaintSelected, nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::PaintOption(PRBool aPaintSelected, nsIPresContext* aPresContext,
                  nsIRenderingContext& aRenderingContext, nsString aText, nscoord aX, nscoord aY,
                  const nsRect& aInside,
                  nscoord aTextHeight)
@@ -864,7 +864,7 @@ nsNativeSelectControlFrame::PaintOption(PRBool aPaintSelected, nsIPresContext& a
   }
  
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nsRect rect(aInside.x, aY-onePixel, mRect.width-onePixel, aTextHeight+onePixel);
   nscolor currentColor;
@@ -878,7 +878,7 @@ nsNativeSelectControlFrame::PaintOption(PRBool aPaintSelected, nsIPresContext& a
 
 
 void
-nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext* aPresContext,
                                          nsIRenderingContext& aRenderingContext,
                                          const nsRect& aDirtyRect)
 {
@@ -891,13 +891,13 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
    */
   nsIAtom * sbAtom = NS_NewAtom(":scrollbar-look");
   nsIStyleContext* scrollbarStyle;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
+  aPresContext->ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
                                             PR_FALSE, &scrollbarStyle);
   NS_RELEASE(sbAtom);
 
   sbAtom = NS_NewAtom(":scrollbar-arrow-look");
   nsIStyleContext* arrowStyle;
-  aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
+  aPresContext->ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
                                             PR_FALSE, &arrowStyle);
   NS_RELEASE(sbAtom);
 
@@ -920,7 +920,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   spacing->CalcBorderFor(this, border);
 
   float p2t;
-  aPresContext.GetScaledPixelsToTwips(&p2t);
+  aPresContext->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
   nsRect outside(0, 0, mRect.width, mRect.height);
@@ -931,8 +931,8 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 
   aRenderingContext.SetColor(NS_RGB(0,0,0));
 
-  nsFont font(aPresContext.GetDefaultFixedFontDeprecated()); 
-  GetFont(&aPresContext, font);
+  nsFont font(aPresContext->GetDefaultFixedFontDeprecated()); 
+  GetFont(aPresContext, font);
 
   aRenderingContext.SetFont(font);
 
@@ -1053,7 +1053,7 @@ nsNativeSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 }
 
 NS_METHOD 
-nsNativeSelectControlFrame::Paint(nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::Paint(nsIPresContext* aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
@@ -1155,7 +1155,7 @@ nsNativeSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 
       event.message = NS_FORM_CHANGE;
       if (nsnull != mContent) {
-        mContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        mContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
       }
     }
   }
@@ -1529,7 +1529,7 @@ nsNativeSelectControlFrame::UpdateWidgetToCache(PRBool aDeselectFirst)
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::AppendFrames(nsIPresContext& aPresContext,
+nsNativeSelectControlFrame::AppendFrames(nsIPresContext* aPresContext,
                                           nsIPresShell&   aPresShell,
                                           nsIAtom*        aListName,
                                           nsIFrame*       aFrameList)

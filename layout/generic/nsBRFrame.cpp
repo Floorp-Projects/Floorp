@@ -40,12 +40,12 @@ class BRFrame : public nsFrame {
 public:
   // nsIFrame
 #ifdef NS_DEBUG
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+  NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 #endif
-  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+  NS_IMETHOD GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                          const nsPoint& aPoint,
                          nsIContent** aNewContent,
                          PRInt32& aContentOffset,
@@ -55,7 +55,7 @@ public:
                          nsPeekOffsetStruct *aPos);
 
   // nsIHTMLReflow
-  NS_IMETHOD Reflow(nsIPresContext& aPresContext,
+  NS_IMETHOD Reflow(nsIPresContext* aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus& aStatus);
@@ -84,14 +84,14 @@ BRFrame::~BRFrame()
 
 #ifdef NS_DEBUG
 NS_IMETHODIMP
-BRFrame::Paint(nsIPresContext& aPresContext,
+BRFrame::Paint(nsIPresContext* aPresContext,
                nsIRenderingContext& aRenderingContext,
                const nsRect& aDirtyRect,
                nsFramePaintLayer aWhichLayer)
 {
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     float p2t;
-    aPresContext.GetPixelsToTwips(&p2t);
+    aPresContext->GetPixelsToTwips(&p2t);
     nscoord five = NSIntPixelsToTwips(5, p2t);
     aRenderingContext.SetColor(NS_RGB(0, 255, 255));
     aRenderingContext.FillRect(0, 0, five, five*2);
@@ -101,7 +101,7 @@ BRFrame::Paint(nsIPresContext& aPresContext,
 #endif
 
 NS_IMETHODIMP
-BRFrame::Reflow(nsIPresContext& aPresContext,
+BRFrame::Reflow(nsIPresContext* aPresContext,
                 nsHTMLReflowMetrics& aMetrics,
                 const nsHTMLReflowState& aReflowState,
                 nsReflowStatus& aStatus)
@@ -175,7 +175,7 @@ BRFrame::Reflow(nsIPresContext& aPresContext,
 }
 
 
-NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
+NS_IMETHODIMP BRFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
                                                      const nsPoint&  aPoint,
                                                      nsIContent **   aContent,
                                                      PRInt32&        aOffsetBegin,
