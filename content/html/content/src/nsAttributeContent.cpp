@@ -100,8 +100,8 @@ public:
   }
 
   NS_IMETHOD GetTag(nsIAtom*& aResult) const {
-    //*aResult = nsnull;
-    return NS_ERROR_FAILURE;
+    aResult = nsnull;
+    return NS_OK;
   }
 
 
