@@ -32,28 +32,25 @@
     <sidebarheader id="title-box" class="sidebar-main-header" 
       value="&sidebar.panels.label;"
       collapse="after" persist="state" onmouseup="PersistHeight();">
-      <button value="&sidebar.customize.label;" class="standard"
-            oncommand="SidebarCustomize();" />
-<!--      <menu id="panel-picker" class="standard" 
-        onclick="SidebarBuildPickerPopup();" 
+      <menu id="panel-picker" class="standard" 
+        oncreate="SidebarBuildPickerPopup();" 
         value="&sidebar.picker.label;" >
-        <menupopup id="panel-picker-popup" class="standard" popupanchor="topright"
+        <menupopup id="panel-picker-popup" popupanchor="topright"
           datasources="rdf:null"
           ref="urn:sidebar:current-panel-list">
           <template>
             <rule>
-              <menuitem uri="rdf:*" type="checkbox" class="standard"
+              <menuitem uri="rdf:*" type="checkbox"
                 oncommand="SidebarTogglePanel(event.target);"
                 value="rdf:http://home.netscape.com/NC-rdf#title"
                 exclude="rdf:http://home.netscape.com/NC-rdf#exclude"/>
             </rule>
           </template>
-          <menuitem value="&sidebar.customize.label;" class="standard"
+          <menuitem value="&sidebar.customize.label;"
             oncommand="SidebarCustomize();" />
-          <menuseparator class="standard" />
+          <menuseparator />
         </menupopup>
       </menu>
--->
     </sidebarheader>
 
     <box id="sidebar-panels" align="vertical"
