@@ -26,11 +26,11 @@
 
 -->
 
-<project name="webclient" default="dist" basedir=".">
+<project name="webclient" default="main" basedir=".">
 
   <property name="Name" value="webclient"/>
   <property name="name" value="webclient"/>
-  <property name="version" value="2_0_a3"/>
+  <property name="version" value="2_0_a4"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -118,14 +118,20 @@
          <include name="**/*.java"/>
          <exclude name="**/impl/**/*.java" />
          <exclude name="**/wrapper_nonnative/**/*.java" />
-         <exclude name="**/test*/**/*.java" />
          <exclude name="**/*Impl.java" />
+         <exclude name="**/test*/**/*.java" />
+         <exclude name="plugins/**/*.*" />
+         <exclude name="xpcom/**/*.*" />
+         <exclude name="dom/blackconnect/**/*.*" />
+         <exclude name="pluggable-jvm/**/*.*" />
        </fileset>
       <classpath refid="compile.classpath"/>
     </javadoc>
   </target>
 
-  <target name="dist" depends="prepare,compile.test">
+  <target name="main" depends="dist,src.dist"/>
+
+  <target name="dist" depends="prepare,compile.test,javadocs">
 
     <echo message="${build.home}" />
 
@@ -190,6 +196,7 @@
   <target name="clean.test.dist" depends="props">
 
     <delete file="${moz.install.dir}/build.xml" />
+    <delete dir="${moz.install.dir}/javadocs" />
     <delete file="${moz.install.dir}/components/${so.prefix}javadom.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}javadomjni.${so.extension}" />
     <delete file="${moz.install.dir}/${so.prefix}${name}.${so.extension}" />

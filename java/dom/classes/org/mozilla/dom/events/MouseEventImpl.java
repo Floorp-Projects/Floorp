@@ -139,7 +139,7 @@ public class MouseEventImpl extends UIEventImpl implements MouseEvent {
      * @param metaKeyArg Specifies whether or not meta key was depressed during 
      *   the  <code>Event</code>.
      * @param buttonArg Specifies the <code>Event</code>'s mouse button.
-     * @param relatedNodeArg Specifies the <code>Event</code>'s related Node.
+     * @param relatedTargetArg Specifies the <code>Event</code>'s related Node.
      */
     public native void initMouseEvent(String typeArg, 
 				      boolean canBubbleArg, 
