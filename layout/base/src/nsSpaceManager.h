@@ -332,9 +332,6 @@ protected:
     nscoord mXMost;
     nscoord mLowestTop;
     SpaceManagerState *mNext;
-
-    SpaceManagerState() : mX(0), mY(0), mLastFrame(nsnull), mNext(nsnull) {}
-    ~SpaceManagerState() {}
   };
 
 public:
@@ -411,6 +408,7 @@ protected:
   nsIntervalSet   mFloatDamage;
 
   SpaceManagerState *mSavedStates;
+  SpaceManagerState mAutoState;
 
 protected:
   FrameInfo* GetFrameInfoFor(nsIFrame* aFrame);
