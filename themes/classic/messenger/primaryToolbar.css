@@ -163,20 +163,36 @@
 } 
 
 #button-mark {
-  -moz-image-region: rect(336px 23px 356px 0);
+  -moz-image-region: rect(336px 23px 357px 0);
 }
 
 #button-mark[buttonover] {
-  -moz-image-region: rect(336px 46px 356px 23px);
+  -moz-image-region: rect(336px 46px 357px 23px);
 } 
 
 #button-mark[buttondown] {
-  -moz-image-region: rect(336px 69px 356px 46px);
+  -moz-image-region: rect(336px 69px 357px 46px);
 } 
 
 #button-mark[disabled] {
-  -moz-image-region: rect(336px 92px 356px 69px) !important;
+  -moz-image-region: rect(336px 92px 357px 69px) !important;
 } 
+
+#button-junk{
+  -moz-image-region: rect(357px 23px 378px 0);
+}
+
+#button-junk:hover {
+  -moz-image-region: rect(357px 46px 378px 23px);
+}
+
+#button-junk:hover:active {
+  -moz-image-region: rect(357px 69px 378px 46px);
+}
+
+#button-junk[disabled="true"] {
+  -moz-image-region: rect(357px 92px 378px 69px) !important;
+}
 
 #button-print {
   list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
@@ -197,39 +213,23 @@
 
 #button-stop {
   list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
-  -moz-image-region: rect(21px 22px 41px 0px);
+  -moz-image-region: rect(21px 22px 42px 0px);
 }
 
 #button-stop:hover {
-  -moz-image-region: rect(21px 44px 41px 22px);
+  -moz-image-region: rect(21px 44px 42px 22px);
 } 
 
 #button-stop:hover:active {
-  -moz-image-region: rect(21px 66px 41px 44px);
+  -moz-image-region: rect(21px 66px 42px 44px);
 }
 
 #button-stop[disabled="true"] {
-  -moz-image-region: rect(21px 88px 41px 66px) !important;
-}
-
-#button-junk{
-  list-style-image: url("chrome://messenger/skin/icons/junk.gif");
-}
-
-#button-junk:hover {
-  list-style-image: url("chrome://messenger/skin/icons/junk-hov.gif");
-}
-
-#button-junk:hover:active {
-  list-style-image: url("chrome://messenger/skin/icons/junk-act.gif");
-}
-
-#button-junk[disabled="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/junk-dis.gif");
+  -moz-image-region: rect(21px 88px 42px 66px) !important;
 }
 
 #junkBarImage {
-  list-style-image: url("chrome://messenger/skin/icons/junk.gif");
+  list-style-image: url("chrome://messenger/skin/icons/junkBar.gif");
 }
 
 #junkBarMessage {
