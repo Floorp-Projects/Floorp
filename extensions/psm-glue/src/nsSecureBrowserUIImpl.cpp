@@ -212,7 +212,7 @@ nsSecureBrowserUIImpl::DisplayPageInfoUI()
     if (mCurrentURI)
         mCurrentURI->GetHost(getter_Copies(host));
     
-    return psm->DisplaySecurityAdvisor(mLastPSMStatus, host, mWindow);
+    return psm->DisplayPSMAdvisor(mLastPSMStatus, host, mWindow);
 }
 
 

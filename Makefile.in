@@ -89,9 +89,9 @@ DIRS		+= \
 		widget/timer \
 		include \
 		modules/libutil \
+		netwerk \
 		modules/appfilelocprovider \
 		security \
-		netwerk \
 		uriloader \
 		intl \
 		modules/libpref \

@@ -34,12 +34,7 @@ include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS = \
 	nsIPSMComponent.idl \
 	nsIPSMUIHandler.idl \
-	nsISecureBrowserUI.idl \
-    nsIPSMSocketInfo.idl \
-	nsISSLSocketProvider.idl \
-	nsISecretDecoderRing.idl \
+	nsIPSMSocketInfo.idl \
 	$(NULL)
-
-PREF_JS_EXPORTS	= $(srcdir)/psm-glue.js
 
 include $(topsrcdir)/config/rules.mk

@@ -711,6 +711,12 @@ embedding/tests/gtkEmbed/Makefile
 
 MAKEFILES_security="
 security/Makefile
+security/base/Makefile
+security/base/public/Makefile
+security/base/res/Makefile
+security/base/res/content/Makefile
+security/base/res/locale/Makefile
+security/base/res/locale/en-US/Makefile
 security/psm/Makefile
 security/psm/lib/Makefile
 security/psm/lib/client/Makefile
@@ -862,10 +868,6 @@ for extension in $MOZ_EXTENSIONS; do
         psm-glue ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/psm-glue/public/Makefile
 	    extensions/psm-glue/Makefile
-	    extensions/psm-glue/res/content/Makefile
-	    extensions/psm-glue/res/Makefile
-	    extensions/psm-glue/res/locale/Makefile
-	    extensions/psm-glue/res/locale/en-US/Makefile
 	    extensions/psm-glue/src/Makefile
             " ;;
         irc ) MAKEFILES_extensions="$MAKEFILES_extensions

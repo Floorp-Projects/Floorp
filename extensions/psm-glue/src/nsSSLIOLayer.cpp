@@ -44,6 +44,7 @@ public:
     virtual ~nsPSMSocketInfo();
     
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISECURESOCKETINFO
     NS_DECL_NSIPSMSOCKETINFO
     
     // internal functions to psm-glue.
@@ -340,7 +341,8 @@ nsPSMSocketInfo::~nsPSMSocketInfo()
     PR_FREEIF(mPickledStatus);    
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsPSMSocketInfo, nsIPSMSocketInfo);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsPSMSocketInfo, nsISecureSocketInfo,
+                              nsIPSMSocketInfo);
 
 // if the connection was via a proxy, we need to have the
 // ssl layer "step up" to take an active role in the connection
