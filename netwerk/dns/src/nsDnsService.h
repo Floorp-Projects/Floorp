@@ -39,9 +39,9 @@
 #include "nsHashtable.h"
 #include "prmon.h"
 
-//#ifdef DEBUG
-#define DNS_TIMING 1    // XXX remove later
-//#endif
+#ifdef DEBUG
+#define DNS_TIMING 1
+#endif
 
 class nsIDNSListener;
 class nsDNSLookup;
