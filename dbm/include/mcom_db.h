@@ -222,6 +222,14 @@
 #define MAXPATHLEN 	1024               
 #endif
 
+#ifdef XP_OS2_VACPP
+#include <os2.h>
+#define	MAXPATHLEN	CCHMAXPATH
+#define	EPERM		EINVAL
+#define	ENOTDIR		EBADPOS
+#define	S_ISDIR(s)	((s) & S_IFDIR)
+#endif
+
 #define	EFTYPE		EINVAL		/* POSIX 1003.1 format errno. */
 
 #ifndef	STDERR_FILENO
