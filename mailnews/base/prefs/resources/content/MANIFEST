@@ -34,3 +34,10 @@ pref-winsetting.html
 pref-receipts.html
 custreceipt.html
 pref-diskspace.html
+AccountWizard.xul
+AccountWizard.js
+aw-intro.xul
+aw-identity.xul
+aw-server.xul
+aw-smtp.xul
+aw-done.xul
