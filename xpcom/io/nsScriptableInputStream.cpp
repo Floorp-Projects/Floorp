@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -28,7 +28,7 @@ NS_IMPL_ISUPPORTS2(nsScriptableInputStream, nsIBaseStream, nsIScriptableInputStr
 // nsIBaseStream methods
 NS_IMETHODIMP
 nsScriptableInputStream::Close(void) {
-    if (mInputStream) return NS_ERROR_NOT_INITIALIZED;
+    if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
     return mInputStream->Close();
 }
 
@@ -42,7 +42,7 @@ nsScriptableInputStream::Init(nsIInputStream *aInputStream) {
 
 NS_IMETHODIMP
 nsScriptableInputStream::Available(PRUint32 *_retval) {
-    if (mInputStream) return NS_ERROR_NOT_INITIALIZED;
+    if (!mInputStream) return NS_ERROR_NOT_INITIALIZED;
     return mInputStream->Available(_retval);
 }
 
