@@ -775,7 +775,7 @@ OpenRegressionFile(const nsString& aBaseName, const nsString& aOutputName)
   if (!fp) {
     printf("Unable to open regression data file %s\n", fn);
   }
-  delete fn;
+  delete[] fn;
   return fp;
 }
 
