@@ -1667,10 +1667,10 @@ SECKEYPrivateKey *selfsignprivkey, char *issuerNickName, void *pwarg)
       }
 
       caPrivateKey = PK11_FindKeyByAnyCert(issuer, pwarg);
-    if (caPrivateKey == NULL) {
+      if (caPrivateKey == NULL) {
 	SECU_PrintError(progName, "unable to retrieve key %s", issuerNickName);
 	return NULL;
-    }
+      }
     }
 	
     arena = cert->arena;
@@ -2408,9 +2408,10 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_CreateAndAddCert].activated) {
 	outFile = PR_Open(certreqfile, PR_RDWR | PR_CREATE_FILE, 00660);
 	if (!outFile) {
-	    PR_fprintf(PR_STDERR, "%s -o: unable to open \"%s\" for writing (%ld, %ld)\n",
-	                          progName, certreqfile,
-	                          PR_GetError(), PR_GetOSError());
+	    PR_fprintf(PR_STDERR, 
+		       "%s -o: unable to open \"%s\" for writing (%ld, %ld)\n",
+		       progName, certreqfile,
+		       PR_GetError(), PR_GetOSError());
 	    return -1;
 	}
     }
@@ -2446,8 +2447,19 @@ main(int argc, char **argv)
 
     /*  Initialize NSPR and NSS.  */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
-                   "secmod.db", PR_FALSE);
+    rv = NSS_Initialize(SECU_ConfigDirectory(NULL), certPrefix, certPrefix,
+                        "secmod.db", PR_FALSE);
+    if (rv != SECSuccess) {
+	char buffer[513];
+	PRErrorCode err    = PR_GetError();
+	PRInt32     errLen = PR_GetErrorTextLength();
+	if (errLen > 0 && errLen < sizeof buffer)
+	    PR_GetErrorText(buffer);
+	SECU_PrintError(progName, "NSS_Initialize failed");
+	if (errLen > 0 && errLen < sizeof buffer)
+	    PR_fprintf(PR_STDERR, "\t%s\n", buffer);
+	return -1;
+    }
     certHandle = CERT_GetDefaultCertDB();
 
     if (certutil.commands[cmd_Version].activated) {
