@@ -35,18 +35,18 @@
 *
 *
 * Date:    30 Oct 2002
-* SUMMARY: '\378' should lex as 2-digit octal + '8', not as 3-digit octal
+* SUMMARY: '\400' should lex as a 2-digit octal escape + '0'
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=177314
 *
-* Bug was that Rhino interpreted '\378' as a 3-digit octal. As such it is
-* invalid, since octal escape sequences only run from \0 to \377. But the
-* lexer should interpret this as '\37' + '8' instead, and throw no error.
+* Bug was that Rhino interpreted '\400' as a 3-digit octal escape. As such
+* it is invalid, since octal escapes may only run from '\0' to '\377'. But
+* the lexer should interpret this as '\40' + '0' instead, and throw no error.
 *
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
 var bug = 177314;
-var summary = "'\\" + "378' should lex as 2-digit octal + '8', not as 3-digit octal";
+var summary = "'\\" + "400' should lex as a 2-digit octal escape + '0'";
 var status = '';
 var statusitems = [];
 var actual = '';
@@ -61,12 +61,13 @@ actual = '\377';
 expect = '\xFF';
 addThis();
 
-// now exercise the lexer by going one higher
+// now exercise the lexer by going one higher in the last digit
 status = inSection(2);
 actual = '\378';
 expect = '\37' + '8';
 addThis();
 
+// trickier: 400 is a valid octal number, but '\400' isn't a valid octal escape
 status = inSection(3);
 actual = '\400';
 expect = '\40' + '0';
