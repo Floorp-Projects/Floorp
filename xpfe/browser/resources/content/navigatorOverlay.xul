@@ -219,7 +219,7 @@ for some reason, this makes mac freak out. pulling out until i understand why (p
         </menupopup>
       </menu>
 -->
-     <menu value="&useStyleSheetMenu.label;" disabled="false">
+     <menu value="&useStyleSheetMenu.label;" accesskey="&useStyleSheetMenu.accesskey;" disabled="false">
         <menupopup oncreate="stylesheetFillPopup(window._content.document, this, document.getElementById('authssnoopt'))">
           <menuitem value="&useStyleSheetNone.label;" id="authssnoopt" type="radio" name="authorstyle" oncommand="stylesheetSwitch(window._content.document, '')"/>
         </menupopup>
