@@ -60,6 +60,7 @@ LIBS		= \
 		$(DIST)/lib/$(LIB_PREFIX)gkconxmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkxulbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)gkconshared_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)gkconxsldoc_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \
