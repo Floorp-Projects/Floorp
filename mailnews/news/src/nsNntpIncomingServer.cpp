@@ -831,6 +831,10 @@ nsNntpIncomingServer::WriteHostInfoFile()
     NS_ENSURE_SUCCESS(rv,rv);
 	
     nsFileSpec hostinfoFileSpec;
+
+    if (!mHostInfoFile) 
+      return NS_ERROR_UNEXPECTED;
+
     rv = mHostInfoFile->GetFileSpec(&hostinfoFileSpec);
     NS_ENSURE_SUCCESS(rv,rv);
 
