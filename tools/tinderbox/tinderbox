@@ -41,17 +41,11 @@ build_type="$1"
 build_action="$2"
 
 # Depend or clobber build?
-case "$1" in
-  depend)
-	treeOption="depend"
-	;;
-  clobber)
-	treeOption="clobber"
-	;;
-  *)
-	tinderbox_usage
-	exit 1
-esac
+if [ "$build_type" != "depend" -a \
+     "$build_type" != "clobber" ]; then
+    echo "Unknown option: $1"
+    tinderbox_usage
+fi
 
 # See how we were called.
 case "$build_action" in
@@ -61,17 +55,18 @@ case "$build_action" in
       echo "$build_type build already running with PID "`cat $build_type.pid`
     else
       nohup ./build-seamonkey.pl --$build_type &
-      echo "PID $$"
-      echo $$ > $build_type.pid
+      echo "PID $!"
+      echo $! > $build_type.pid
     fi
     ;;
   stop)
-    echo "Shutting down $build_type tinderbox..."
     if test -f $build_type.pid; then
       pid=`cat $build_type.pid`
-      echo "kill $pid"
-      kill `$pid`
+      echo "Shutting down $build_type tinderbox, PID = $pid"
+      kill $pid
       \rm $build_type.pid
+    else
+      echo "$build_type is not running."
     fi
     echo
     ;;
