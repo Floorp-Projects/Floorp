@@ -78,7 +78,7 @@ typedef enum _FTPentryType {
 // indexEntry is the data structure used to maintain directory entry information.
 class indexEntry {
 public:
-    indexEntry() { mContentLen = 0; mMDTM = 0; mType = File; mSupressSize = PR_FALSE; };
+    indexEntry() { mContentLen = 0; mMDTM = PR_Now(); mType = File; mSupressSize = PR_FALSE; };
 
     nsCString       mName;              // the file or dir name
     FTPentryType    mType;              
