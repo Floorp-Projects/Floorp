@@ -504,17 +504,58 @@ function newObject(contractID, iface)
     if (!jsenv.HAS_XPCOM)
         return null;
 
-    var obj = Components.classes[contractID].createInstance();
     var rv;
+    var cls = Components.classes[contractID];
+    
+    if (!cls)
+        return null;
 
     switch (typeof iface)
     {
+        case "undefined":
+            rv = cls.createInstance();
+            break;
+
         case "string":
-            rv = obj.QueryInterface(Components.interfaces[iface]);
+            rv = cls.createInstance(Components.interfaces[iface]);
             break;
 
         case "object":
-            rv = obj.QueryInterface[iface];
+            rv = cls.createInstance(iface);
+            break;
+
+        default:
+            rv = null;
+            break;
+    }
+
+    return rv;
+
+}
+
+function getService(contractID, iface)
+{
+    if (!jsenv.HAS_XPCOM)
+        return null;
+
+    var rv;
+    var cls = Components.classes[contractID];
+    
+    if (!cls)
+        return null;
+
+    switch (typeof iface)
+    {
+        case "undefined":
+            rv = cls.getService();
+            break;
+
+        case "string":
+            rv = cls.getService(Components.interfaces[iface]);
+            break;
+
+        case "object":
+            rv = cls.getService(iface);
             break;
 
         default:
@@ -849,10 +890,12 @@ function getSpecialDirectory(name)
 
 function getFileFromURLSpec(url)
 {
-    const FILE_CTRID = "@mozilla.org/network/protocol;1?name=file";
     const nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
 
-    var handler = Components.classes[FILE_CTRID].createInstance();
+    var service = getService("@mozilla.org/network/io-service;1", 
+                             "nsIIOService");
+    
+    var handler = service.getProtocolHandler("file");
     handler = handler.QueryInterface(nsIFileProtocolHandler);
     return handler.getFileFromURLSpec(url);
 }
