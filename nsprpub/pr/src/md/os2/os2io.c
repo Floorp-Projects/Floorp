@@ -151,8 +151,6 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
     APIRET rc = 0;
     PRUword actionTaken;
 
-    ULONG fattr;
-
     if (osflags & PR_SYNC) access |= OPEN_FLAGS_WRITE_THROUGH;
 
     if (osflags & PR_RDONLY)
@@ -181,16 +179,12 @@ _PR_MD_OPEN(const char *name, PRIntn osflags, int mode)
             flags = OPEN_ACTION_FAIL_IF_NEW | OPEN_ACTION_OPEN_IF_EXISTS;
     }
 
-    if (isxdigit(mode) == 0) /* file attribs are hex, UNIX modes octal */
-        fattr = ((ULONG)mode == FILE_HIDDEN) ? FILE_HIDDEN : FILE_NORMAL;
-    else fattr = FILE_NORMAL;
-
     do {
         rc = DosOpen((char*)name,
                      &file,            /* file handle if successful */
                      &actionTaken,     /* reason for failure        */
                      0,                /* initial size of new file  */
-                     fattr,            /* file system attributes    */
+                     FILE_NORMAL,      /* file system attributes    */
                      flags,            /* Open flags                */
                      access,           /* Open mode and rights      */
                      0);               /* OS/2 Extended Attributes  */
