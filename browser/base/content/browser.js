@@ -73,8 +73,10 @@ var gLastValidURL = null;
 var gHaveUpdatedToolbarState = false;
 #ifdef XP_WIN
 var gClickSelectsAll = true;
-#else
+#elif XP_MACOSX
 var gClickSelectsAll = true;
+#else
+var gClickSelectsAll = false;
 #endif
 var gIgnoreFocus = false;
 var gIgnoreClick = false;
