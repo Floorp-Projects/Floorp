@@ -1159,8 +1159,9 @@ nsGenericElement::InternalIsSupported(const nsAString& aFeature,
              PL_strcasecmp(f, "CSS") == 0 ||
              PL_strcasecmp(f, "CSS2") == 0 ||
              PL_strcasecmp(f, "Events") == 0 ||
-//           PL_strcasecmp(f, "UIEvents") == 0 ||
+             PL_strcasecmp(f, "UIEvents") == 0 ||
              PL_strcasecmp(f, "MouseEvents") == 0 ||
+             // Non-standard!
              PL_strcasecmp(f, "MouseScrollEvents") == 0 ||
              PL_strcasecmp(f, "HTMLEvents") == 0 ||
              PL_strcasecmp(f, "Range") == 0) {

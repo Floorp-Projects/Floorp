@@ -339,9 +339,9 @@ protected:
 #define NS_EVENT_BITS_CONTEXT_MENU  0x01
 
 // nsIDOMUIListener
-#define NS_EVENT_BITS_DOMUI_NONE      0x00
-#define NS_EVENT_BITS_DOMUI_ACTIVATE  0x01
-#define NS_EVENT_BITS_DOMUI_FOCUSIN   0x02
-#define NS_EVENT_BITS_DOMUI_FOCUSOUT  0x04
+#define NS_EVENT_BITS_UI_NONE      0x00
+#define NS_EVENT_BITS_UI_ACTIVATE  0x01
+#define NS_EVENT_BITS_UI_FOCUSIN   0x02
+#define NS_EVENT_BITS_UI_FOCUSOUT  0x04
 
 #endif // nsEventListenerManager_h__

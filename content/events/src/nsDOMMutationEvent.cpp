@@ -36,96 +36,70 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsIDOMMutationEvent.h"
-#include "nsDOMEvent.h"
+#include "nsDOMMutationEvent.h"
 #include "nsMutationEvent.h"
 #include "nsContentUtils.h"
 
 class nsPresContext;
 
-class nsDOMMutationEvent : public nsDOMEvent, public nsIDOMMutationEvent
-{
-  NS_DECL_NSIDOMMUTATIONEVENT
-  NS_FORWARD_NSIDOMEVENT(nsDOMEvent::)
-  
-  NS_DECL_ISUPPORTS_INHERITED
-
-  nsDOMMutationEvent(nsPresContext* aPresContext, 
-                     nsEvent* aEvent);
-
-  ~nsDOMMutationEvent();
-};
-
-nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext,
-                                       nsEvent* aEvent)
-  :nsDOMEvent(aPresContext, aEvent, NS_LITERAL_STRING("MutationEvents")) 
+nsDOMMutationEvent::nsDOMMutationEvent(nsPresContext* aPresContext, nsMutationEvent* aEvent)
+  :nsDOMEvent(aPresContext, aEvent ? aEvent : new nsMutationEvent())
 {  
   if ( aEvent ) {
+    mEventIsInternal = PR_FALSE;
+    mEventIsTrusted = PR_TRUE;
     nsMutationEvent* mutation = (nsMutationEvent*)aEvent;
     SetTarget(mutation->mTarget);
   }
-}
-
-nsDOMMutationEvent::~nsDOMMutationEvent() {
-  
+  else
+  {
+    mEventIsInternal = PR_TRUE;
+    mEventIsTrusted = PR_FALSE;
+  }
 }
 
 NS_INTERFACE_MAP_BEGIN(nsDOMMutationEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMutationEvent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEvent, nsIDOMMutationEvent)
-  NS_INTERFACE_MAP_ENTRY(nsIPrivateDOMEvent)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMutationEvent)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MutationEvent)
-NS_INTERFACE_MAP_END
+NS_INTERFACE_MAP_END_INHERITING(nsDOMEvent)
 
 NS_IMPL_ADDREF_INHERITED(nsDOMMutationEvent, nsDOMEvent)
 NS_IMPL_RELEASE_INHERITED(nsDOMMutationEvent, nsDOMEvent)
-
 
 NS_IMETHODIMP
 nsDOMMutationEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
 {
   *aRelatedNode = nsnull;
-  if (mEvent) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-    *aRelatedNode = mutation->mRelatedNode;
-    NS_IF_ADDREF(*aRelatedNode);
-  }
-  else *aRelatedNode = nsnull;
-
+  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  *aRelatedNode = mutation->mRelatedNode;
+  NS_IF_ADDREF(*aRelatedNode);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMMutationEvent::GetPrevValue(nsAString& aPrevValue)
 {
-  if (mEvent) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-    if (mutation && mutation->mPrevAttrValue)
-      mutation->mPrevAttrValue->ToString(aPrevValue);
-  }
+  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  if (mutation->mPrevAttrValue)
+    mutation->mPrevAttrValue->ToString(aPrevValue);
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMMutationEvent::GetNewValue(nsAString& aNewValue)
 {
-  if (mEvent) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-    if (mutation && mutation->mNewAttrValue)
+  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  if (mutation->mNewAttrValue)
       mutation->mNewAttrValue->ToString(aNewValue);
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDOMMutationEvent::GetAttrName(nsAString& aAttrName)
 {
-  if (mEvent) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-    if (mutation && mutation->mAttrName)
+  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  if (mutation->mAttrName)
       mutation->mAttrName->ToString(aAttrName);
-  }
   return NS_OK;
 }
 
@@ -133,45 +107,35 @@ NS_IMETHODIMP
 nsDOMMutationEvent::GetAttrChange(PRUint16* aAttrChange)
 {
   *aAttrChange = 0;
-  if (mEvent) {
-    nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-    if (mutation && mutation->mAttrChange)
+  nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
+  if (mutation->mAttrChange)
       *aAttrChange = mutation->mAttrChange;
-  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, 
-                                      PRBool aCancelableArg, nsIDOMNode* aRelatedNodeArg, 
-                                      const nsAString& aPrevValueArg, 
-                                      const nsAString& aNewValueArg, 
-                                      const nsAString& aAttrNameArg,
-                                      PRUint16 aAttrChangeArg)
+nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, nsIDOMNode* aRelatedNodeArg, const nsAString& aPrevValueArg, const nsAString& aNewValueArg, const nsAString& aAttrNameArg, PRUint16 aAttrChangeArg)
 {
-  NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);
-  mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
-  mEvent->flags |= aCancelableArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_CANCEL;
+  nsresult rv = nsDOMEvent::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
-  if (mutation) {
-    mutation->mRelatedNode = aRelatedNodeArg;
-    if (!aPrevValueArg.IsEmpty())
-      mutation->mPrevAttrValue = do_GetAtom(aPrevValueArg);
-    if (!aNewValueArg.IsEmpty())
-      mutation->mNewAttrValue = do_GetAtom(aNewValueArg);
-    if (!aAttrNameArg.IsEmpty()) {
-      mutation->mAttrName = do_GetAtom(aAttrNameArg);
-    }
-    mutation->mAttrChange = aAttrChangeArg;
+  mutation->mRelatedNode = aRelatedNodeArg;
+  if (!aPrevValueArg.IsEmpty())
+    mutation->mPrevAttrValue = do_GetAtom(aPrevValueArg);
+  if (!aNewValueArg.IsEmpty())
+    mutation->mNewAttrValue = do_GetAtom(aNewValueArg);
+  if (!aAttrNameArg.IsEmpty()) {
+    mutation->mAttrName = do_GetAtom(aAttrNameArg);
   }
+  mutation->mAttrChange = aAttrChangeArg;
     
   return NS_OK;
 }
 
 nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aInstancePtrResult,
                                 nsPresContext* aPresContext,
-                                nsEvent *aEvent) 
+                                nsMutationEvent *aEvent) 
 {
   nsDOMMutationEvent* it = new nsDOMMutationEvent(aPresContext, aEvent);
   if (nsnull == it) {

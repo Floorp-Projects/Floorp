@@ -89,7 +89,7 @@ class nsIURI;
 #define NS_APPCOMMAND_EVENT               24
 #define NS_POPUPBLOCKED_EVENT             25
 #define NS_BEFORE_PAGE_UNLOAD_EVENT       26
-#define NS_DOMUI_EVENT                    27
+#define NS_UI_EVENT                       27
 
 #define NS_EVENT_FLAG_NONE                0x0000
 #define NS_EVENT_FLAG_INIT                0x0001
@@ -102,6 +102,7 @@ class nsIURI;
 #define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
 #define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
 #define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
+#define NS_EVENT_FLAG_STOP_DISPATCH_IMMEDIATELY 0x0400 // @see nsIDOM3Event::stopImmediatePropagation()
 
 #define NS_EVENT_CAPTURE_MASK             (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_BUBBLE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
 #define NS_EVENT_BUBBLE_MASK              (~(NS_EVENT_FLAG_INIT | NS_EVENT_FLAG_CAPTURE | NS_EVENT_FLAG_NO_CONTENT_DISPATCH))
@@ -301,12 +302,12 @@ class nsIURI;
 #define NS_TEXT_START                 2400
 #define NS_TEXT_TEXT                  (NS_TEXT_START)
 
-// DOM UI events
-#define NS_DOMUI_EVENT_START          2500
+// UI events
+#define NS_UI_EVENT_START          2500
 // this is not to be confused with NS_ACTIVATE!
-#define NS_DOMUI_ACTIVATE             (NS_DOMUI_EVENT_START)
-#define NS_DOMUI_FOCUSIN              (NS_DOMUI_EVENT_START + 1)
-#define NS_DOMUI_FOCUSOUT             (NS_DOMUI_EVENT_START + 2)
+#define NS_UI_ACTIVATE             (NS_UI_EVENT_START)
+#define NS_UI_FOCUSIN              (NS_UI_EVENT_START + 1)
+#define NS_UI_FOCUSOUT             (NS_UI_EVENT_START + 2)
 
 /**
  * Return status for event processors, nsEventStatus, is defined in
@@ -813,10 +814,10 @@ struct nsPopupBlockedEvent : public nsEvent
 /**
  * DOM UIEvent
  */
-struct nsDOMUIEvent : public nsEvent {
-  nsDOMUIEvent(PRUint32 msg = 0,
+struct nsUIEvent : public nsEvent {
+  nsUIEvent(PRUint32 msg = 0,
                PRInt32 d = 0,
-               PRUint8 structType = NS_DOMUI_EVENT)
+               PRUint8 structType = NS_UI_EVENT)
     : nsEvent(msg, structType),
       detail(d)
   {

@@ -1276,7 +1276,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   // Track whether we're in the "outer" HandleDOMEvent invocation
   PRBool clickOrExtActivate =
     (aEvent->message == NS_MOUSE_LEFT_CLICK ||
-     (aEvent->message == NS_DOMUI_ACTIVATE &&
+     (aEvent->message == NS_UI_ACTIVATE &&
       !GET_BOOLBIT(mBitField, BF_IN_INTERNAL_ACTIVATE)));
 
   PRBool originalCheckedValue = PR_FALSE;
@@ -1361,7 +1361,7 @@ nsHTMLInputElement::HandleDOMEvent(nsPresContext* aPresContext,
   if (*aEventStatus != nsEventStatus_eConsumeNoDefault &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT) &&
       aEvent->message == NS_MOUSE_LEFT_CLICK && mType != NS_FORM_INPUT_TEXT) {
-    nsDOMUIEvent actEvent(NS_DOMUI_ACTIVATE, 1);
+    nsUIEvent actEvent(NS_UI_ACTIVATE, 1);
 
     nsIPresShell *shell = aPresContext->GetPresShell();
     if (shell) {

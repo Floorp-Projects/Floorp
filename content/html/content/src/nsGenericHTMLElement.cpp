@@ -1459,7 +1459,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
           // The default action is simply to dispatch DOMActivate
           nsIPresShell *shell = aPresContext->GetPresShell();
           if (shell) {
-            nsDOMUIEvent actEvent(NS_DOMUI_ACTIVATE, 1); // single-click
+            nsUIEvent actEvent(NS_UI_ACTIVATE, 1); // single-click
             nsEventStatus status = nsEventStatus_eIgnore;
 
             ret = shell->HandleDOMEventWithTarget(this, &actEvent, &status);
@@ -1471,7 +1471,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsPresContext* aPresContext,
         }
         break;
 
-      case NS_DOMUI_ACTIVATE:
+      case NS_UI_ACTIVATE:
         if (nsEventStatus_eConsumeNoDefault != *aEventStatus) {
           nsAutoString target;
           nsCOMPtr<nsIURI> baseURI = GetBaseURI();
