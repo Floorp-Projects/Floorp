@@ -304,7 +304,7 @@ public:
 void CTokenRecycler::RecycleToken(CToken* aToken) {
   if(aToken) {
     PRInt32 theType=aToken->GetTokenType();
-    CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat(CTokenFinder(aToken));
+    CToken* theMatch=(CToken*)mTokenCache[theType-1]->FirstThat((nsDequeFunctor&)CTokenFinder(aToken));
     if(theMatch) {
       int x=5;
     }
