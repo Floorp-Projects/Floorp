@@ -52,12 +52,13 @@ static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 
 nsIRDFResource* nsMsgFolderDataSource::kNC_Child = nsnull;
-nsIRDFResource* nsMsgFolderDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Folder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Name= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeName= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleName= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeSimpleNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateFoldersOnServer = nsnull;
@@ -103,6 +104,8 @@ nsIAtom * nsMsgFolderDataSource::kNewMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kTotalUnreadMessagesAtom = nsnull;
 nsIAtom * nsMsgFolderDataSource::kNameAtom = nsnull;
+nsIAtom * nsMsgFolderDataSource::kSynchronizeAtom = nsnull;
+
 
 nsMsgFolderDataSource::nsMsgFolderDataSource()
 {
@@ -111,12 +114,13 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
   
   if (gFolderResourceRefCnt++ == 0) {
     rdf->GetResource(NC_RDF_CHILD,   &kNC_Child);
-    rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
     rdf->GetResource(NC_RDF_FOLDER,  &kNC_Folder);
     rdf->GetResource(NC_RDF_NAME,    &kNC_Name);
     rdf->GetResource(NC_RDF_FOLDERTREENAME,    &kNC_FolderTreeName);
+    rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME,    &kNC_FolderTreeSimpleName);
     rdf->GetResource(NC_RDF_NAME_SORT,    &kNC_NameSort);
     rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
+    rdf->GetResource(NC_RDF_FOLDERTREESIMPLENAME_SORT,    &kNC_FolderTreeSimpleNameSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
     rdf->GetResource(NC_RDF_CANCREATEFOLDERSONSERVER, &kNC_CanCreateFoldersOnServer);
@@ -159,8 +163,9 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     kTotalMessagesAtom           = NS_NewAtom("TotalMessages");
     kTotalUnreadMessagesAtom     = NS_NewAtom("TotalUnreadMessages");
     kBiffStateAtom               = NS_NewAtom("BiffState");
-    kNewMessagesAtom               = NS_NewAtom("NewMessages");
-    kNameAtom              = NS_NewAtom("Name");
+    kNewMessagesAtom             = NS_NewAtom("NewMessages");
+    kNameAtom                    = NS_NewAtom("Name");
+    kSynchronizeAtom             = NS_NewAtom("Synchronize");
   }
   
 	CreateLiterals(rdf);
@@ -174,12 +179,13 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 	{
 		nsrefcnt refcnt;
 		NS_RELEASE2(kNC_Child, refcnt);
-		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_Folder, refcnt);
 		NS_RELEASE2(kNC_Name, refcnt);
 		NS_RELEASE2(kNC_FolderTreeName, refcnt);
+		NS_RELEASE2(kNC_FolderTreeSimpleName, refcnt);
 		NS_RELEASE2(kNC_NameSort, refcnt);
 		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
+		NS_RELEASE2(kNC_FolderTreeSimpleNameSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
 		NS_RELEASE2(kNC_CanCreateFoldersOnServer, refcnt);
@@ -223,6 +229,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE(kBiffStateAtom);
     NS_RELEASE(kNewMessagesAtom);
     NS_RELEASE(kNameAtom);
+    NS_RELEASE(kSynchronizeAtom);
 	}
 
 }
@@ -405,6 +412,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
     }
     else if ((kNC_Name == property) ||
              (kNC_FolderTreeName == property) ||
+             (kNC_FolderTreeSimpleName == property) ||
              (kNC_SpecialFolder == property) ||
              (kNC_IsServer == property) ||
              (kNC_IsSecure == property) ||
@@ -495,6 +503,7 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
 	if (NS_SUCCEEDED(rv)) {
     *result = (aArc == kNC_Name ||
                aArc == kNC_FolderTreeName ||
+               aArc == kNC_FolderTreeSimpleName ||
                aArc == kNC_SpecialFolder ||
                aArc == kNC_ServerType ||
                aArc == kNC_CanCreateFoldersOnServer ||
@@ -557,6 +566,7 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   
   (*arcs)->AppendElement(kNC_Name);
   (*arcs)->AppendElement(kNC_FolderTreeName);
+  (*arcs)->AppendElement(kNC_FolderTreeSimpleName);
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_ServerType);
   (*arcs)->AppendElement(kNC_CanCreateFoldersOnServer);
@@ -867,23 +877,25 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
                                                  PRBool oldValue,
                                                  PRBool newValue)
 {
-    nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item)); 
-    if(folder) 
-	{ 
-		nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item)); 
-		if(resource) 
-		{ 
-			if (kNewMessagesAtom == property) 
-			{ 
-				if (newValue != oldValue) {
-					nsIRDFNode* newMessagesNode = newValue?kTrueLiteral:kFalseLiteral;
-					NotifyPropertyChanged(resource, kNC_NewMessages, newMessagesNode); 
-				}
-			} 
-		} 
-	} 
+  nsresult rv = NS_OK;
 
-	return NS_OK;
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item)); 
+  if (!folder) return rv;
+
+  nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(item)); 
+  if (!item) return rv;
+
+  if (newValue != oldValue) {
+    nsIRDFNode* literalNode = newValue?kTrueLiteral:kFalseLiteral;
+    if (kNewMessagesAtom == property) {
+      NotifyPropertyChanged(resource, kNC_NewMessages, literalNode); 
+    }
+    else if (kSynchronizeAtom == property) {
+      NotifyPropertyChanged(resource, kNC_Synchronize, literalNode); 
+    }
+  } 
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -937,15 +949,19 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
   nsresult rv = NS_RDF_NO_VALUE;
 
   if (kNC_NameSort == property)
-		rv = createFolderNameNode(folder, target, PR_TRUE);
+    rv = createFolderNameNode(folder, target, PR_TRUE);
   else if(kNC_FolderTreeNameSort == property)
-	rv = createFolderTreeNameNode(folder, target, PR_TRUE);
+    rv = createFolderTreeNameNode(folder, target, PR_TRUE);
+  else if(kNC_FolderTreeSimpleNameSort == property)
+    rv = createFolderTreeSimpleNameNode(folder, target, PR_TRUE);
   else if (kNC_Name == property)
-		rv = createFolderNameNode(folder, target, PR_FALSE);
+    rv = createFolderNameNode(folder, target, PR_FALSE);
   else if (kNC_FolderTreeName == property)
-		rv = createFolderTreeNameNode(folder, target, PR_FALSE);
+    rv = createFolderTreeNameNode(folder, target, PR_FALSE);
+  else if (kNC_FolderTreeSimpleName == property)
+    rv = createFolderTreeSimpleNameNode(folder, target, PR_FALSE);
   else if ((kNC_SpecialFolder == property))
-		rv = createFolderSpecialNode(folder,target);
+    rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
     rv = createFolderServerTypeNode(folder, target);
   else if ((kNC_CanCreateFoldersOnServer == property))
@@ -1037,6 +1053,20 @@ nsresult nsMsgFolderDataSource::createFolderTreeNameNode(nsIMsgFolder *folder,
 
 	}
 	createNode(nameString, target, getRDFService());
+  return NS_OK;
+}
+
+nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * folder, nsIRDFNode **target, PRBool sort)
+{
+  nsXPIDLString name;
+  nsresult rv = folder->GetAbbreviatedName(getter_Copies(name));
+  if (NS_FAILED(rv)) return rv;
+  nsAutoString nameString(name);
+  if(sort)
+  {
+    CreateNameSortString(folder, nameString);
+  }
+  createNode(nameString, target, getRDFService());
   return NS_OK;
 }
 
@@ -1564,7 +1594,6 @@ nsMsgFolderDataSource::NotifyFolderTreeNameChanged(nsIMsgFolder* aFolder,
     return NS_OK;
 }
 
-// <<<<<<<<< >>>>>>>>>>>>>>>>..
 // New Messages
 
 nsresult
@@ -1639,8 +1668,6 @@ nsMsgFolderDataSource::GetNewMessagesString(PRBool newMessages, nsCAutoString& n
 
 	return NS_OK;
 }
-// <<<<<<<<< >>>>>>>>>>>>>>>>..
-
 
 nsresult
 nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)
@@ -1914,7 +1941,8 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 		}
 	}
 	else if ((kNC_Name == property) ||
-			(kNC_FolderTreeName == property) ||
+           (kNC_FolderTreeName == property) ||
+           (kNC_FolderTreeSimpleName == property) ||
            (kNC_SpecialFolder == property) ||
            (kNC_ServerType == property) ||
            (kNC_CanCreateFoldersOnServer == property) ||

@@ -28,7 +28,7 @@ outlinerbody {
 }
 
 outlinerbody:-moz-outliner-row {
-  height: 17px;
+  height: 18px;
   border: 1px solid transparent;
 }
 
@@ -144,3 +144,6 @@ outlinerbody:-moz-outliner-twisty(open) {
   list-style-image: url("chrome://global/skin/twisty-open.gif");
 }
 
+outlinerbody:-moz-outliner-indentation {
+  width: 16px;
+}

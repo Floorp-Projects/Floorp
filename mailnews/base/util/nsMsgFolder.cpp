@@ -83,6 +83,7 @@ nsIAtom * nsMsgFolder::kTotalUnreadMessagesAtom	= nsnull;
 nsIAtom * nsMsgFolder::kFlaggedAtom	= nsnull;
 nsIAtom * nsMsgFolder::kStatusAtom	= nsnull;
 nsIAtom * nsMsgFolder::kNameAtom	= nsnull;
+nsIAtom * nsMsgFolder::kSynchronizeAtom = nsnull;
 
 #ifdef MSG_FASTER_URI_PARSING
 nsCOMPtr<nsIURL> nsMsgFolder::mParsingURL;
@@ -126,6 +127,7 @@ nsMsgFolder::nsMsgFolder(void)
     kTotalMessagesAtom       = NS_NewAtom("TotalMessages");
     kStatusAtom              = NS_NewAtom("Status");
     kFlaggedAtom             = NS_NewAtom("Flagged");
+    kSynchronizeAtom         = NS_NewAtom("Synchronize");
 
     initializeStrings();
 
@@ -166,6 +168,7 @@ nsMsgFolder::~nsMsgFolder(void)
       NS_IF_RELEASE(kFlaggedAtom);
       NS_IF_RELEASE(kStatusAtom);
       NS_IF_RELEASE(kNameAtom);
+      NS_IF_RELEASE(kSynchronizeAtom);
 
       CRTFREEIF(kInboxName);
       CRTFREEIF(kTrashName);
@@ -1588,9 +1591,15 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
         db->Commit(nsMsgDBCommitType::kLargeCommit);
+     
+      if (flag & MSG_FOLDER_FLAG_OFFLINE) {
+        PRBool newValue = mFlags & MSG_FOLDER_FLAG_OFFLINE;
+        rv = NotifyBoolPropertyChanged(kSynchronizeAtom, !newValue, newValue);
+        NS_ENSURE_SUCCESS(rv,rv);
+      }
   }
-  folderInfo = null_nsCOMPtr();
-	return rv;
+  folderInfo = nsnull;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgFolder::SetFlags(PRUint32 aFlags)
@@ -1617,6 +1626,12 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, PRUint32 resultsiz
 	nsresult rv;
 	nsCOMPtr<nsIMsgFolder> folder;
 	PRUint32 cnt;
+
+        // call GetSubFolders() to ensure that mSubFolders is initialized
+        nsCOMPtr <nsIEnumerator> enumerator;
+        rv = GetSubFolders(getter_AddRefs(enumerator));
+        NS_ENSURE_SUCCESS(rv,rv);
+	
   rv = mSubFolders->Count(&cnt);
   if (NS_SUCCEEDED(rv)) {
     for (PRUint32 i=0; i < cnt; i++) 

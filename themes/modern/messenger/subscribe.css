@@ -79,6 +79,7 @@ statusbarpanel,
 /* for search in subscribe */
 
 outlinerbody:-moz-outliner-image(nameCol, nntp) {
+ padding-right: 2px;
  list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
 }
 

@@ -16,17 +16,22 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jan Varga (varga@utcru.sk)
+ *   Håkan Waara (hwaara@chello.se)
  */
 
 /* This is where functions related to the 3 pane window are kept */
 
+const MSG_FOLDER_FLAG_ELIDED = 0x0010;
 
 var showPerformance = false;
 
-var gFolderTree; 
-var gThreadOutliner;
+var gFolderOutliner; 
 var gMessagePane;
 var gMessagePaneFrame;
+var gThreadOutliner;
 
 var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
@@ -172,11 +177,63 @@ var folderListener = {
           else if (eventType == "DeleteOrMoveMsgFailed") {
                         HandleDeleteOrMoveMsgFailed(folder);
         }
-
           else if (eventType == "CompactCompleted") {
-            HandleCompactCompleted(folder);
+                        HandleCompactCompleted(folder);
         }
+    }
+}
 
+var folderObserver = {
+    canDropOn: function(index)
+    {
+        return CanDropOnFolderOutliner(index);
+    },
+
+    canDropBeforeAfter: function(index, before)
+    {
+        return CanDropBeforeAfterFolderOutliner(index, before);
+    },
+
+    onDrop: function(row, orientation)
+    {
+        DropOnFolderOutliner(row, orientation);
+    },
+
+    onToggleOpenState: function()
+    {
+    },
+
+    onCycleHeader: function(colID, elt)
+    {
+    },
+
+    onCycleCell: function(row, colID)
+    {
+    },
+
+    onSelectionChanged: function()
+    {
+    },
+
+    isEditable: function(row, colID)
+    {
+        return false;
+    },
+
+    onSetCellText: function(row, colID, value)
+    {
+    },
+
+    onPerformAction: function(action)
+    {
+    },
+
+    onPerformActionOnRow: function(action, row)
+    {
+    },
+
+    onPerformActionOnCell: function(action, row, colID)
+    {
     }
 }
 
@@ -242,7 +299,6 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 
 function HandleCompactCompleted (folder)
 {
-  dump ("Compact Completed \n\n");
   if(folder)
   {
     var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -312,14 +368,14 @@ function OnLoadMessenger()
     
   HideAccountCentral();
   loadStartPage();
-	InitMsgWindow();
+  InitMsgWindow();
 
-	messenger.SetWindow(window, msgWindow);
+  messenger.SetWindow(window, msgWindow);
 
-	InitializeDataSources();
-	InitPanes();
+  InitializeDataSources();
+  InitPanes();
 
-	accountManager.SetSpecialFoldersForIdentities();
+  accountManager.SetSpecialFoldersForIdentities();
 
   AddToSession();
   //need to add to session before trying to load start folder otherwise listeners aren't
@@ -383,7 +439,6 @@ function OnLoadMessenger()
 	  var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
 	  dump("Time in OnLoadMessger is " +  timeToLoad + " seconds\n");
 	}
-	
 }
 
 function OnUnloadMessenger()
@@ -395,50 +450,40 @@ function Create3PaneGlobals()
 {
 }
 
-function PerformExpandForAllOpenServers(tree)
+function OpenAndExpandElidedServers()
 {
-	//dump("PerformExpandForAllOpenServers()\n");
-
-	var uri = null;
-	var open = null;
-	var treechild = null;
-    var server = null;
-
-	if ( tree && tree.childNodes ) {
-		for ( var i = tree.childNodes.length - 1; i >= 0; i-- ) {
-			treechild = tree.childNodes[i];
-			if (treechild.localName == 'treechildren') {
-				var treeitems = treechild.childNodes;
-				for ( var j = treeitems.length - 1; j >= 0; j--) {
-					open = treeitems[j].getAttribute('open');
-					//dump("open="+open+"\n");
-					if (open == "true") {
-						var isServer = (treeitems[j].getAttribute('IsServer') == "true");
-						//dump("isServer="+isServer+"\n");
-						if (isServer) {
-							uri = treeitems[j].getAttribute('id');
-							//dump("uri="+uri+"\n");
-							server = GetServer(uri);
-							if (server) {
-								// don't do this for imap servers.
-								// see bug #41943
-								if (server.type != "imap") {
-									//dump("PerformExpand on " + uri + "\n");
-									server.PerformExpand(msgWindow);
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+    var folderOutliner = GetFolderOutliner();
+    var view = folderOutliner.outlinerBoxObject.view;
+    for (var i = 0; i < view.rowCount; i++)
+    {
+        if (view.isContainer(i))
+        {
+            var folderResource = GetFolderResource(folderOutliner, i);
+            var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+            var open = msgFolder.getFlag(MSG_FOLDER_FLAG_ELIDED)
+            if (open)
+            {
+                view.toggleOpenState(i);
+                var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer"); 
+                if (isServer == "true")
+                {
+                    var server = msgFolder.server;
+                    // Don't do this for imap servers. See bug #41943
+                    if (server.type != "imap")
+                        server.PerformExpand(msgWindow);
+                }
+            }
+        }
+    }
 }
 
 function loadStartFolder(initialUri)
 {
+    OpenAndExpandElidedServers();
+
+    var folderOutliner = GetFolderOutliner();
     var defaultServer = null;
-    var startFolderUri = initialUri;
+    var startFolderResource = null;
     var isLoginAtStartUpEnabled = false;
     var enabledNewMailCheckOnce = false;
     var mailCheckOncePref = "mail.startup.enabledMailCheckOnce";
@@ -446,7 +491,9 @@ function loadStartFolder(initialUri)
     //First get default account
     try
     {
-        if(!startFolderUri)
+        if(initialUri)
+            startFolderResource = RDF.GetResource(initialUri);
+        else
         {
             var defaultAccount = accountManager.defaultAccount;
 
@@ -454,8 +501,7 @@ function loadStartFolder(initialUri)
             var rootFolder = defaultServer.RootFolder;
             var rootMsgFolder = rootFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-            var folderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-            startFolderUri = folderResource.Value;
+            startFolderResource = rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
 
             enabledNewMailCheckOnce = pref.GetBoolPref(mailCheckOncePref);
 
@@ -477,48 +523,40 @@ function loadStartFolder(initialUri)
                 //now find Inbox
                 var outNumFolders = new Object();
                 var inboxFolder = rootMsgFolder.getFoldersWithFlag(0x1000, 1, outNumFolders); 
-                if(!inboxFolder) return;
+                if (!inboxFolder) return;
 
-                var resource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-                startFolderUri = resource.Value;
+                startFolderResource = inboxFolder.QueryInterface(Components.interfaces.nsIRDFResource);
             }
         }
 
-        var startFolder = document.getElementById(startFolderUri);
-
+        var startFolderIndex = GetFolderIndex(folderOutliner, startFolderResource);
         //if it's not here we will have to make sure it's open.
-        if(!startFolder && startFolderUri && isLoginAtStartUpEnabled)
+        if(startFolderIndex < 0 && startFolderResource && isLoginAtStartUpEnabled)
         {
             // Opens the twisty for the default account 
-            OpenTwistyForServer(defaultServer);
-            startFolder = document.getElementById(startFolderUri);
+            OpenTwistyForServer(folderOutliner, defaultServer);
+            startFolderIndex = GetFolderIndex(folderOutliner, startFolderResource);
         }
-
-        var folderTree= GetFolderTree();
-        ChangeSelection(folderTree, startFolder);
+        ChangeSelection(folderOutliner, startFolderIndex);
                 
         // only do this on startup, when we pass in null
         if (!initialUri && isLoginAtStartUpEnabled)
         {
             // Perform biff on the server to check for new mail, except for imap
-            if (defaultServer.type != "imap" )
+            if (defaultServer.type != "imap")
             {
                var localFolder = inboxFolder.QueryInterface(Components.interfaces.nsIMsgLocalMailFolder);
                if (localFolder)
                { 
-                 if (!localFolder.parsingInbox)
-                   defaultServer.PerformBiff();
-                 else
-                   localFolder.checkForNewMessagesAfterParsing = true;
+                   if (!localFolder.parsingInbox)
+                       defaultServer.PerformBiff();
+                   else
+                       localFolder.checkForNewMessagesAfterParsing = true;
                }              
                else  //it can be only nntp
                    defaultServer.PerformBiff();
             }
         } 
-
-        // because the "open" state persists, we'll call
-        // PerformExpand() for all servers that are open at startup.
-        PerformExpandForAllOpenServers(folderTree);
     }
     catch(ex)
     {
@@ -530,44 +568,32 @@ function loadStartFolder(initialUri)
     {
         MsgGetMessagesForAllServers(defaultServer);
     }
-
 }
 
-function OpenTwistyForServer(server)
+function OpenTwistyForServer(folderOutliner, server)
 {
-    var treeNode = GetTreeNodeForServerURI(server.serverURI); 
+    var folderIndex = GetFolderIndexForServerURI(folderOutliner, server.serverURI);
 
-    if (treeNode)
-        treeNode.setAttribute('open', 'true');
-}
-
-
-function GetTreeNodeForServerURI(serverURI)
-{
-    var treeNode = null;
-
-    var tree = GetFolderTree();     
-
-    // Iterate through folder tree to find the node associated with given serverURI
-    if ( tree && tree.childNodes ) {
-        for ( var i = tree.childNodes.length - 1; i >= 0; i-- ) {
-            var treechild = tree.childNodes[i];
-            if (treechild.localName == 'treechildren') {
-                var treeitems = treechild.childNodes;
-                for ( var j = treeitems.length - 1; j >= 0; j--) {
-                    var isServer = treeitems[j].getAttribute('IsServer');
-                    if (isServer == "true") {
-                        var uri = treeitems[j].getAttribute('id');
-                        if (uri == serverURI) {
-                            treeNode = treeitems[j];
-                            break; 
-                        }
-                    }
-                }
-            } 
-        }
+    if (folderIndex >= 0)
+    {
+        var isContainerOpen = folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex);
+        if (! isContainerOpen)
+            folderOutliner.outlinerBoxObject.view.toggleOpenState(folderIndex);
     }
-    return treeNode;
+}
+
+
+function GetFolderIndexForServerURI(folderOutliner, serverURI)
+{
+    var folderResource = RDF.GetResource(serverURI);
+    var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
+    if (isServer == "true")
+    {
+        var folderIndex = GetFolderIndex(folderOutliner, folderResource);
+        return folderIndex;
+     }
+    else
+        return -1;
 }
 
 function TriggerGetMessages(server)
@@ -589,14 +615,10 @@ function AddToSession()
     }
 }
 
-
 function InitPanes()
 {
-	var folderTree = GetFolderTree();
-	if(folderTree)
-		OnLoadFolderPane(folderTree);
-		
-	SetupCommandUpdateHandlers();
+    OnLoadFolderPane();
+    SetupCommandUpdateHandlers();
 }
 
 function InitializeDataSources()
@@ -611,42 +633,67 @@ function InitializeDataSources()
 	SetupMoveCopyMenus('threadPaneContext-copyMenu', accountManagerDataSource, folderDataSource);
 }
 
-function OnLoadFolderPane(folderTree)
+function OnFolderUnreadColAttrModified(event)
 {
-    gFolderTree = folderTree;
-	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#FolderTreeName');
+    if (event.attrName == "hidden")
+    {
+        var folderNameCell = document.getElementById("folderNameCell");
+        var folderNameCol = document.getElementById("folderNameCol");
+        if (event.newValue == "true")
+        {
+            folderNameCell.setAttribute("label", "?folderTreeName");
+            folderNameCol.setAttribute("sort", "?folderTreeNameSort");
+        }
+        else if (event.attrChange == Components.interfaces.nsIDOMMutationEvent.REMOVAL)
+        {
+            folderNameCell.setAttribute("label", "?folderTreeSimpleName");
+            folderNameCol.setAttribute("sort", "?folderTreeSimpleNameSort");
+        }
+    }
+}
 
-	//Add folderDataSource and accountManagerDataSource to folderPane
-	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	var database = GetFolderDatasource();
+function OnLoadFolderPane()
+{
+    var folderUnreadCol = document.getElementById("folderUnreadCol");
+    var hidden = folderUnreadCol.getAttribute("hidden");
+    if (!hidden)
+    {
+        var folderNameCell = document.getElementById("folderNameCell");
+        var folderNameCol = document.getElementById("folderNameCol");
+        folderNameCell.setAttribute("label", "?folderTreeSimpleName");
+        folderNameCol.setAttribute("sort", "?folderTreeSimpleNameSort");
+    }
+    folderUnreadCol.addEventListener("DOMAttrModified", OnFolderUnreadColAttrModified, false);
 
-	database.AddDataSource(accountManagerDataSource);
+    SortFolderPane("folderNameCol");
+
+    //Add folderDataSource and accountManagerDataSource to folderPane
+    accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+    var database = GetFolderDatasource();
+
+    database.AddDataSource(accountManagerDataSource);
     database.AddDataSource(folderDataSource);
-	folderTree.setAttribute('ref', 'msgaccounts:/');
+    var folderOutliner = GetFolderOutliner();
+    folderOutliner.outlinerBoxObject.outlinerBody.setAttribute("ref", "msgaccounts:/");
+
+    var folderOutlinerBuilder = folderOutliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    folderOutlinerBuilder.addObserver(folderObserver);
+    folderOutliner.addEventListener("click",FolderPaneOnClick,true);
 }
 
 function GetFolderDatasource()
 {
-    var folderTree = GetFolderTree();
-    var db = folderTree.database;
-    if (!db) return false;
-    return db;
-}
-
-function OnLoadThreadPane(threadTree)
-{
-	setTimeout("ShowThreads(false);", 0);
+    var folderOutliner = GetFolderOutliner();
+    return folderOutliner.outlinerBoxObject.outlinerBody.database;
 }
 
 /* Functions for accessing particular parts of the window*/
-function GetFolderTree()
+function GetFolderOutliner()
 {
-    if (gFolderTree) return gFolderTree;
-    
-	var folderTree = document.getElementById('folderTree');
-    gFolderTree = folderTree;
-	return folderTree;
+    if (! gFolderOutliner)
+        gFolderOutliner = document.getElementById("folderOutliner");
+    return gFolderOutliner;
 }
 
 function GetMessagePane()
@@ -724,7 +771,8 @@ function ClearThreadPaneSelection()
     if (gDBView) {
       var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
       var outlinerSelection = outlinerView.selection;
-      outlinerSelection.clearSelection(); 
+      if (outlinerSelection) 
+        outlinerSelection.clearSelection(); 
     }
   }
   catch (ex) {
@@ -746,113 +794,102 @@ function ClearMessagePane()
 }
 
 
-function GetSelectedFolder()
+function GetSelectedFolderIndex()
 {
-  try {
-	var tree = GetFolderTree();
-	var selection = tree.selectedItems;
-	if(selection.length > 0)
-		return selection[0];
-	else
-		return null;
-  }
-  catch (ex) {
-    return null;
-  }
+    var folderOutliner = GetFolderOutliner();
+    var startIndex = {};
+    var endIndex = {};
+    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    return startIndex.value;
 }
 
 function FolderPaneOnClick(event)
 {
-  debug("in FolderPaneClick()\n");
-  // we only care about button 0 (left click) events
-  if (event.button != 0) return;
+    // we only care about button 0 (left click) events
+    if (event.button != 0)
+        return;
 
-  var t = event.originalTarget;
-  var item;
-  var uri;
+    var folderOutliner = GetFolderOutliner();
+    var row = {};
+    var col = {};
+    var elt = {};
+    folderOutliner.outlinerBoxObject.getCellAt(event.clientX, event.clientY, row, col, elt);
 
-    if (t.getAttribute('twisty') == 'true') {
-        // The twisty is nested three below the treeitem:
-        // <treeitem>
-        //   <treerow>
-        //     <treecell>
-        //         <button class="tree-cell-twisty"> <!-- anonymous -->
-        var treeitem = t.parentNode.parentNode.parentNode;
-		var open = treeitem.getAttribute('open');
-		if(open == "true") {
-			//dump("twisty open\n");
+    if (elt.value == "twisty")
+    {
+        var folderResource = GetFolderResource(folderOutliner, row.value);
+        var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
 
-			item = t.parentNode.parentNode.parentNode;
-			if (item.localName == "treeitem") {
-				var isServer = (treeitem.getAttribute('IsServer') == "true");
-				if (isServer) {
-	    			uri = treeitem.getAttribute("id");
-					var server = GetServer(uri);
-					if (server) {
-						server.PerformExpand(msgWindow);
-					}
-				}
-				else {
-					var isImap = (treeitem.getAttribute('ServerType') == "imap");
-					if (isImap) {
-		    			uri = treeitem.getAttribute("id");
-						var folder = GetMsgFolderFromUri(uri);
-						if (folder) {
-							var imapFolder = folder.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
-							if (imapFolder) {
-								imapFolder.performExpand(msgWindow);
-							}
-						}
-					}
-				}
-			}
-		}
+        if (folderOutliner.outlinerBoxObject.view.isContainerOpen(row.value))
+            msgFolder.clearFlag(MSG_FOLDER_FLAG_ELIDED);
+        else
+        {
+            msgFolder.setFlag(MSG_FOLDER_FLAG_ELIDED);
+            var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
+            if (isServer == "true")
+            {
+                var server = msgFolder.server;
+                server.PerformExpand(msgWindow);
+            }
+            else
+            {
+                var serverType = GetFolderAttribute(folderOutliner, folderResource, "ServerType");
+                if (serverType == "imap")
+                {
+                    var imapFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgImapMailFolder);
+                    imapFolder.performExpand(msgWindow);
+                }
+            }
+        }
     }
-	else if(event.detail == 2)
-	{
-		item = t.parentNode.parentNode;
-		if (item.localName == "treeitem")
-			FolderPaneDoubleClick(item);
-	}
+    else if ((event.originalTarget.localName == "outlinercol") ||
+             (event.originalTarget.localName == "scrollbarbutton")) {
+      // clicking on the name column in the folder pane should not sort
+      event.preventBubble();
+    }
+    else if (event.detail == 2) {
+      FolderPaneDoubleClick(row.value, event);
+    }
 }
 
-function FolderPaneDoubleClick(treeitem)
+function FolderPaneDoubleClick(folderIndex, event)
 {
-	var isServer = false;
+    var folderOutliner = GetFolderOutliner();
+    var folderResource = GetFolderResource(folderOutliner, folderIndex);
+    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var isServer = GetFolderAttribute(folderOutliner, folderResource, "IsServer");
 
-	if (treeitem) {
-		isServer = (treeitem.getAttribute('IsServer') == "true");
-		if (isServer) {
-			var open = treeitem.getAttribute('open');
-			if (open == "true") {
-				var uri = treeitem.getAttribute("id");
-				server = GetServer(uri);
-				if (server) {
-					// double clicking open, PerformExpand()
-					server.PerformExpand(msgWindow);
-				}
-			}
-			else {
-				// double clicking close, don't PerformExpand()
-			}
-		}
-	}
+    if (isServer == "true")
+    {
+      if (folderOutliner.outlinerBoxObject.view.isContainerOpen(folderIndex))
+        msgFolder.clearFlag(MSG_FOLDER_FLAG_ELIDED);
+      else 
+      {
+        msgFolder.setFlag(MSG_FOLDER_FLAG_ELIDED);
+        var server = msgFolder.server;
+        server.PerformExpand(msgWindow);
+      }
+    }
+    else 
+    {
+      // Open a new msg window only if we are double clicking on 
+      // folders or newsgroups.
+      MsgOpenNewWindowForFolder(folderResource.Value);
 
-	// don't open a new msg window if we are double clicking on a server.
-	// only do it for folders or newsgroups
-	if (!isServer) {
-		MsgOpenNewWindowForFolder(treeitem.getAttribute('id'));
-	}
+      // double clicking should not toggle the open / close state of the
+      // folder.  this will happen if we don't prevent the event from
+      // bubbling to the default handler in outliner.xml
+      event.preventBubble();
+    }
 }
 
-function ChangeSelection(tree, newSelection)
+function ChangeSelection(outliner, newIndex)
 {
-	if(newSelection)
-	{
-		tree.clearItemSelection();
-		tree.selectItem(newSelection);
-		tree.ensureElementIsVisible(newSelection);
-	}
+    if(newIndex >= 0)
+    {
+        outliner.outlinerBoxObject.selection.select(newIndex);
+        outliner.outlinerBoxObject.ensureRowIsVisible(newIndex);
+    }
 }
 
 function SetActiveThreadPaneSortColumn(column)
@@ -876,27 +913,49 @@ function ClearActiveThreadPaneSortColumn()
 
 }
 
+function GetSelectedFolders()
+{
+    var folderArray = [];
+    var k = 0;
+    var folderOutliner = GetFolderOutliner();
+    var rangeCount = folderOutliner.outlinerBoxObject.selection.getRangeCount();
+
+    for(var i = 0; i < rangeCount; i++)
+    {
+        var startIndex = {};
+        var endIndex = {};
+        folderOutliner.outlinerBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        for (var j = startIndex.value; j <= endIndex.value; j++)
+        {
+            var folderResource = GetFolderResource(folderOutliner, j);
+            folderArray[k++] = folderResource.Value;
+        }
+    }
+
+    return folderArray;
+}
 
 function GetSelectedMsgFolders()
 {
-	var folderTree = GetFolderTree();
-	var selectedFolders = folderTree.selectedItems;
-	var numFolders = selectedFolders.length;
+    var folderArray = [];
+    var k = 0;
+    var folderOutliner = GetFolderOutliner();
+    var rangeCount = folderOutliner.outlinerBoxObject.selection.getRangeCount();
 
-	var folderArray = new Array(numFolders);
+    for(var i = 0; i < rangeCount; i++)
+    {
+        var startIndex = {};
+        var endIndex = {};
+        folderOutliner.outlinerBoxObject.selection.getRangeAt(i, startIndex, endIndex);
+        for (var j = startIndex.value; j <= endIndex.value; j++)
+        {
+            var msgFolder = GetFolderResource(folderOutliner, j).QueryInterface(Components.interfaces.nsIMsgFolder);
+            if(msgFolder)
+                folderArray[k++] = msgFolder;
+        }
+    }
 
-	for(var i = 0; i < numFolders; i++)
-	{
-		var folder = selectedFolders[i];
-		var folderUri = folder.getAttribute("id");
-		var folderResource = RDF.GetResource(folderUri);
-		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		if(msgFolder)
-		{
-			folderArray[i] = msgFolder;	
-		}
-	}
-	return folderArray;
+    return folderArray;
 }
 
 function GetFirstSelectedMessage()
@@ -962,25 +1021,22 @@ function ClearMessageSelection()
 function GetCompositeDataSource(command)
 {
 	if (command == "GetNewMessages" || command == "NewFolder" || command == "MarkAllMessagesRead")
-	{
         return GetFolderDatasource();
-	}
 
 	return null;
 }
 
 function SetNextMessageAfterDelete()
 {
-    //dump("setting next msg view index after delete to " + gDBView.msgToSelectAfterDelete + "\n");
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
 }
 
 function SelectFolder(folderUri)
 {
-	var tree = GetFolderTree();
-	var treeitem = document.getElementById(folderUri);
-	if(tree && treeitem)
-		ChangeSelection(tree, treeitem);
+    var folderOutliner = GetFolderOutliner();
+    var folderResource = RDF.GetResource(folderUri);
+    var folderIndex = GetFolderIndex(folderOutliner, folderResource);
+    ChangeSelection(folderOutliner, folderIndex);
 }
 
 function SelectMessage(messageUri)
@@ -1003,12 +1059,31 @@ function SetBusyCursor(window, enable)
 
 	var numFrames = window.frames.length;
 	for(var i = 0; i < numFrames; i++)
-	{
 		SetBusyCursor(window.frames[i], enable);
-	}
 }
 
 function GetDBView()
 {
     return gDBView;
+}
+
+function GetFolderResource(outliner, index)
+{
+    var outlinerBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    return outlinerBuilder.getResourceAtIndex(index);
+}
+
+function GetFolderIndex(outliner, resource)
+{
+    var outlinerBuilder = outliner.outlinerBoxObject.outlinerBody.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
+    return outlinerBuilder.getIndexOfResource(resource);
+}
+
+function GetFolderAttribute(outliner, source, attribute)
+{
+    var property = RDF.GetResource("http://home.netscape.com/NC-rdf#" + attribute);
+    var target = outliner.outlinerBoxObject.outlinerBody.database.GetTarget(source, property, true);
+    if (target)
+        target = target.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
+    return target;
 }

@@ -343,6 +343,8 @@ Rights Reserved.
 <!ENTITY editMsgAsNewCmd.key "e">
 <!ENTITY moveMsgMenu.label "Move Message">
 <!ENTITY moveMsgMenu.accesskey "M">
+<!ENTITY copyMessageLocation.label "Copy Message Location">
+<!ENTITY copyMessageLocation.accesskey "M">
 <!ENTITY copyMsgMenu.label "Copy Message">
 <!ENTITY copyMsgMenu.accesskey "C">
 <!ENTITY killThreadMenu.label "Ignore Thread">
@@ -377,8 +379,10 @@ Rights Reserved.
 <!ENTITY openMessageWindowCmd.accesskey "O">
 <!ENTITY openMessageWindowCmd.key "o">
 
-<!-- Sidebar -->
-<!ENTITY mail-sidebar-header.label "Mail Folders">
+<!-- Folder Pane -->
+<!ENTITY nameColumn.label "Name">
+<!ENTITY unreadColumn.label "Unread">
+<!ENTITY totalColumn.label "Total">
 
 <!-- Toolbar items -->
 <!ENTITY getMsgButton.label "Get Msg">

@@ -321,6 +321,10 @@ Rights Reserved.
         accesskey="&contextEditAsNew.accesskey;"
         oncommand="MsgEditMessageAsNew();"/>
     <menuseparator id="threadPaneContext-sep-reply"/>
+    <menuitem id="threadPaneContext-copyMessageUrl"
+        label="&copyMessageLocation.label;"
+        accesskey="&copyMessageLocation.accesskey;"
+        oncommand="CopyMessageUrl()"/>
     <menu id="threadPaneContext-moveMenu"
         label="&contextMoveMsgMenu.label;"
         accesskey="&contextMoveMsgMenu.accesskey;"
@@ -566,6 +570,10 @@ Rights Reserved.
         accesskey="&contextEditAsNew.accesskey;"
         oncommand="MsgEditMessageAsNew();"/>
     <menuseparator id="messagePaneContext-sep-reply"/>
+    <menuitem id="messagePaneContext-copyMessageUrl"
+        label="&copyMessageLocation.label;"
+        accesskey="&copyMessageLocation.accesskey;"
+        oncommand="CopyMessageUrl()"/>
     <menu id="messagePaneContext-moveMenu"
         label="&contextMoveMsgMenu.label;"
         accesskey="&contextMoveMsgMenu.accesskey;"

@@ -139,6 +139,8 @@ nsOutlinerBoxObject::GetOutlinerBody()
   FindBodyElement(startContent, getter_AddRefs(content));
 
   mPresShell->GetPrimaryFrameFor(content, &frame);
+  if (!frame)
+     return nsnull;
 
   // It's a frame. Refcounts are irrelevant.
   nsCOMPtr<nsIOutlinerBoxObject> body;

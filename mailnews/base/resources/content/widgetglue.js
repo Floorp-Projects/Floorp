@@ -16,6 +16,10 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Jan Varga (varga@utcru.sk)
+ *   Håkan Waara (hwaara@chello.se)
  */
 
 /*
@@ -42,45 +46,26 @@ function ConvertDOMListToResourceArray(nodeList)
 
 function GetSelectedFolderURI()
 {
-	var uri = null;
-	var selectedFolder = null;
-	try {
-		var folderTree = GetFolderTree(); 
-		var selectedFolderList = folderTree.selectedItems;
-	
-		//  you can only select one folder / server to add new folder / subscribe to
-		if (selectedFolderList.length == 1) {
-			selectedFolder = selectedFolderList[0];
-		}
-		else {
-			//dump("number of selected folder was " + selectedFolderList.length + "\n");
-		}
-	}
-	catch (ex) {
-		// dump("failed to get the selected folder\n");
-		uri = null;
-	}
+    var folderOutliner = GetFolderOutliner();
+    var selection = folderOutliner.outlinerBoxObject.selection;
+    if (selection.count == 1)
+    {
+        var startIndex = {};
+        var endIndex = {};
+        selection.getRangeAt(0, startIndex, endIndex);
+        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        return folderResource.Value;
+    }
 
-	try {
-       		if (selectedFolder) {
-			uri = selectedFolder.getAttribute('id');
-			// dump("folder to preselect: " + preselectedURI + "\n");
-		}
-	}
-	catch (ex) {
-		uri = null;
-	}
-
-	return uri;
+    return null;
 }
- 
 
 function MsgRenameFolder() 
 {
 	var preselectedURI = GetSelectedFolderURI();
-	var folderTree = GetFolderTree();
+	var folderOutliner = GetFolderOutliner();
 
-	var name = GetFolderNameFromUri(preselectedURI, folderTree);
+	var name = GetFolderNameFromUri(preselectedURI, folderOutliner);
 
 	dump("preselectedURI = " + preselectedURI + "\n");
 	var dialog = window.openDialog(
@@ -94,8 +79,8 @@ function MsgRenameFolder()
 function RenameFolder(name,uri)
 {
     dump("uri,name = " + uri + "," + name + "\n");
-    var folderTree = GetFolderTree();
-    if (folderTree)
+    var folderOutliner = GetFolderOutliner();
+    if (folderOutliner)
     {
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
@@ -111,7 +96,7 @@ function RenameFolder(name,uri)
 
                 ClearThreadPane();
                 ClearMessagePane();
-                folderTree.clearItemSelection();
+                folderOutliner.outlinerBoxObject.selection.clearSelection();
         }
         else {
                 dump("no name or nothing selected\n");
@@ -124,106 +109,73 @@ function RenameFolder(name,uri)
 
 function MsgEmptyTrash() 
 {
-    var tree = GetFolderTree();
-    if (tree)
+    var folderOutliner = GetFolderOutliner();
+    var startIndex = {};
+    var endIndex = {};
+    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    if (startIndex.value >= 0)
     {
-        var folderList = tree.selectedItems;
-        if (folderList)
-        {
-            var folder;
-            folder = folderList[0];
-            if (folder)
-			{
-                var trashUri = GetSelectTrashUri(folder);
-                if (trashUri)
-                {
-                    var trashElement = document.getElementById(trashUri);
-                    if (trashElement)
-                    {
-                        dump ('found trash folder\n');
-                        trashElement.setAttribute('open','');
-                    }
-                    var trashSelected = IsSpecialFolderSelected(MSG_FOLDER_FLAG_TRASH);
-                    if(trashSelected)
-                    {
-                        tree.clearItemSelection();
-                    }
-                    try {
-                          messenger.EmptyTrash(tree.database, folder.resource);
-                      }
-                      catch(e)
-                       {  
-                          dump ("Exception : messenger.EmptyTrash \n");
-                       }
-                    if (trashSelected)
-                    {
-                        trashElement = document.getElementById(trashUri);
-                        if (trashElement)
-                            ChangeSelection(tree, trashElement);
-                    }
-                }
-			}
+        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        try {
+            messenger.EmptyTrash(GetFolderDatasource(), folderResource);
+        }
+            catch(e)
+        {  
+            dump ("Exception : messenger.EmptyTrash \n");
         }
     }
 }
 
 function MsgCompactFolder(isAll) 
 {
-	//get the selected elements
-	var tree = GetFolderTree();
-    if (tree)
-    {
-        var folderList = tree.selectedItems;
-        if (folderList)
-        {
-            var folder = folderList[0];
-            if (folder)
-            {
-                dump("folder = " + folder.localName + "\n"); 
-                var selectedFolderUri = folder.getAttribute('id');
-                var isImap=false;
-                if (selectedFolderUri.indexOf("imap:") != -1)
-                  isImap = true;
-                if (!isImap)  //can be local only
-                {
-                  var resource = RDF.GetResource(selectedFolderUri);
-                  var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-                  var expungedBytes = msgfolder.expungedBytes;
+  // Get the selected folders.
+  var selectedFolders = GetSelectedMsgFolders();
 
-                  if (expungedBytes > 0)
-                  { 
-                    if (gDBView)
-                      gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
-                    ClearThreadPaneSelection();
-                    ClearThreadPane();
-                    ClearMessagePane();
-                  }
-                  else
-                  {
-                     if (!isAll)  //you have one local folder with no room to compact
-                       return;
-                  }
-                } 
-                try
-                {
-                  messenger.CompactFolder(tree.database, folder.resource, isAll);
-                }
-                catch(e)
-                {
-                  dump ("Exception : messenger.CompactFolder \n");
-                }
-             }
-	     }
+  if (selectedFolders.length == 1)
+  {
+    var selectedFolder = selectedFolders[0];
+    var resource = selectedFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+
+    if (selectedFolder.server.type != "imap") //can be local only
+    {
+      var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+      var expungedBytes = msgfolder.expungedBytes;
+
+      if (expungedBytes > 0)
+      { 
+        if (gDBView)
+        {
+          gCurrentlyDisplayedMessage = gDBView.currentlyDisplayedMessage;
+        }
+
+        ClearThreadPaneSelection();
+        ClearThreadPane();
+        ClearMessagePane();
+      }
+      else
+      {
+        if (!isAll)  //you have one local folder with no room to compact
+          return;
+      }
+    } 
+    try
+    {
+      messenger.CompactFolder(GetFolderDatasource(), resource, isAll);
     }
+    catch(ex)
+    {
+      dump("Exception : messenger.CompactFolder : " + ex + "\n");
+    }
+  }
 }
 
 function MsgFolderProperties() 
 {
 	var preselectedURI = GetSelectedFolderURI();
 	var serverType = GetMsgFolderFromUri(preselectedURI).server.type;
-	var folderTree = GetFolderTree();
+	var folderOutliner = GetFolderOutliner();
 
-	var name = GetFolderNameFromUri(preselectedURI, folderTree);
+	var name = GetFolderNameFromUri(preselectedURI, folderOutliner);
 
 	var windowTitle = gMessengerBundle.getString("folderProperties");
 	var dialog = window.openDialog(
@@ -231,7 +183,7 @@ function MsgFolderProperties()
                     "",
                     "chrome,centerscreen,titlebar,modal",
                     {preselectedURI:preselectedURI, serverType:serverType,
-					msgWindow:msgWindow, title:windowTitle,
+                    msgWindow:msgWindow, title:windowTitle,
                     okCallback:FolderProperties, 
                     tabID:"", tabIndex:0, name:name});
 }

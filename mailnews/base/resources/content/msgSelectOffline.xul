@@ -29,7 +29,9 @@ Contributors:
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgSynchronize.dtd" >
-<window	xmlns:NC="http://home.netscape.com/NC-rdf#"
+<window	xmlns:nc="http://home.netscape.com/NC-rdf#"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         id="select-offline" 
         title="&MsgSelect.label;"
@@ -42,12 +44,12 @@ Contributors:
 <script src="chrome://global/content/strres.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindowOverlay.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
-<script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailCommands.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/msgMail3PaneWindow.js"/>
+<script type="application/x-javascript" src="chrome://messenger/content/msgSynchronize.js"/>
 	
     <keyset id="keyset"/>
     <html class="desc">&MsgSelectDesc.label;</html>
@@ -57,47 +59,62 @@ Contributors:
     <rows>
     <row flex="1">
 
-    <tree class="inset"	flex="1" id="synchronizetree"  datasources="rdf:null"
-        onclick="onSpaceClick(event);">
+    <outliner flex="1" id="synchronizeOutliner">
+      <outlinerbody flex="1" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ref="msgaccounts:/" onclick="onSynchronizeClick(event);">
+        <template>
+          <rule>
+            <conditions>
+              <outlinerrow uri="?container"/>
+              <member container="?container" child="?member"/>
+              <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
+            </conditions>
 
-    <template>
-    <rule NC:SupportsOffline="true">
-    <treechildren flex="1">
-        <treeitem class="folderTreeItem" uri="..." 
-                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-                  Synchronize="rdf:http://home.netscape.com/NC-rdf#Synchronize">
+            <bindings>
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName"
+                     object="?folderTreeName" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#FolderTreeName?sort=true"
+                     object="?folderTreeNameSort" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#SpecialFolder"
+                     object="?specialFolder" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#IsServer"
+                     object="?isServer" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#IsSecure"
+                     object="?isSecure" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#ServerType"
+                     object="?serverType" />
+              <binding subject="?member"
+                     predicate="http://home.netscape.com/NC-rdf#Synchronize"
+                     object="?synchronize" />
+            </bindings>
+             
+            <action>
+              <outlinerrow uri="?member">
+               <outlinercell ref="folderNameCol"
+                             label="?folderTreeName"
+                             properties="specialFolder-?specialFolder
+                                         isServer-?isServer
+                                         isSecure-?isSecure
+                                         serverType-?serverType"/>
+               <outlinercell ref="syncCol"
+                             properties="synchronize-?synchronize
+                                         isServer-?isServer"/>
+              </outlinerrow>
+            </action>
+          </rule>
+        </template>
+      </outlinerbody>
 
-            <treerow class="tree-folder-row" IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer">
-                <treecell  indent="true" class="treecell-indent tree-cell-folderpane-icon" 
-                           label="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
-                           SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-                           IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                           ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-                <treecell indent="true" allowevents="true" align="center">
-                    <checkbox id="selectBox" checked="rdf:http://home.netscape.com/NC-rdf#Synchronize"
-	                      hidden="rdf:http://home.netscape.com/NC-rdf#SyncDisabled" class="tree-folder-checkbox"/>
-                </treecell>
-            </treerow>
-        </treeitem>
-    </treechildren>
-    </rule>
-    </template>
+      <outlinercol class="outlinercol-header outlinercol-inset-header" id="folderNameCol" flex="5" persist="hidden width" label="&MsgSelectItems.label;" primary="true" />
+      <splitter class="tree-splitter"/>		  
+      <outlinercol class="outlinercol-header outlinercol-inset-header" id="syncCol" flex="1" persist="hidden width" label="&MsgSelectInd.label;" />
+    </outliner>
 
-    <treecolgroup>		
-        <treecol persist="hidden width" flex="5" id="SyncColumn" resource="http://home.netscape.com/NC-rdf#Synchronize"/>
-        <splitter class="tree-splitter"/>		  
-        <treecol persist="hidden width" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
-    </treecolgroup>
-
-    <treehead>	
-        <treerow> 
-            <treecell class="treecell-header" label="&MsgSelectItems.label;"/>
-            <treecell class="treecell-header" label="&MsgSelectInd.label;"/>
-        </treerow>
-    </treehead>
-    </tree>
     </row>
     </rows>
     </grid>

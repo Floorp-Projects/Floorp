@@ -16,6 +16,10 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributors(s):
+ *   Jan Varga <varga@utcru.sk>
+ *   Håkan Waara (hwaara@chello.se)
  */
 
  //This file stores variables common to mail windows
@@ -515,32 +519,32 @@ function HideAccountCentral()
 // prompt if offline.
 function OpenInboxForServer(server)
 {
-  try {
-    HideAccountCentral();
-    OpenTwistyForServer(server);
-    var inboxFolder    = GetInboxFolder(server);
-    var folderTree     = GetFolderTree();
-    var inboxFolderUri = document.getElementById(inboxFolder.URI);
-    ChangeSelection(folderTree, inboxFolderUri);
+    try {
+        HideAccountCentral();
+        OpenTwistyForServer(server);
+        var inboxFolder = GetInboxFolder(server);
+        var folderResource = RDF.GetResource(inboxFolder.URI)
+        var folderOutliner = GetFolderOutliner();
+        var folderIndex = GetFolderIndex(folderOutliner, folderResource);
+        ChangeSelection(folderOutliner, folderIndex);
 
-    if(CheckOnline()) {
-      GetMessagesForInboxOnServer(server);
-    }
-    else {
-      var option = PromptGetMessagesOffline();
-      if(option == 0) {
-        if (!gOfflineManager) 
-          GetOfflineMgrService();
+        if(CheckOnline())
+            GetMessagesForInboxOnServer(server);
+        else {
+            var option = PromptGetMessagesOffline();
+            if(option == 0) {
+                if (!gOfflineManager) 
+                    GetOfflineMgrService();
 
-        gOfflineManager.goOnline(false /* sendUnsentMessages */, 
-                                 false /* playbackOfflineImapOperations */, 
-                                 msgWindow);
-        GetMessagesForInboxOnServer(server);
-      }
+                gOfflineManager.goOnline(false /* sendUnsentMessages */, 
+                                         false /* playbackOfflineImapOperations */, 
+                                         msgWindow);
+                GetMessagesForInboxOnServer(server);
+            }
+        }
     }
-  }
-  catch (ex) {
-    dump("Error opening inbox for server -> " + ex + "\n");
-    return;
-  }
+    catch (ex) {
+        dump("Error opening inbox for server -> " + ex + "\n");
+        return;
+    }
 }

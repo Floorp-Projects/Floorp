@@ -31,9 +31,6 @@ Rights Reserved.
 <script src="chrome://messenger/content/threadPane.js"/>
 
 <outliner id="threadOutliner" flex="1" 
-    ondraggesture="return BeginDragThreadPane(event);"
-    ondragdrop="return DropOnThreadPane(event);" 
-    onclick="ThreadPaneOnClick(event);"
     onkeypress="ThreadPaneKeyPress(event);">
   <outlinercol id="threadCol" display="&threadColumn.label;" class="outlinercol-header outlinercol-image outlinercol-inset-header threadColumnHeader" currentView="unthreaded" cycler="true" persist="hidden" fixed="true" />
   <outlinercol id="subjectCol" class="outlinercol-header outlinercell-inset-header sortDirectionIndicator" persist="hidden width" flex="7" label="&subjectColumn.label;" primary="true"/>
@@ -56,7 +53,9 @@ Rights Reserved.
   <splitter class="tree-splitter"/>
   <outlinercol id="totalCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden width" flex="1" label="&totalColumn.label;"/>
   <outlinercol id="locationCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true" label="&locationColumn.label;"/>
-  <outlinerbody id ="threadOutlinerBody" flex="1" onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"/>
+  <outlinerbody flex="1"
+    onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"
+    ondraggesture="return BeginDragThreadPane(event);"/>
 </outliner>
 
 </overlay>

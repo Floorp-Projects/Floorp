@@ -19,6 +19,8 @@
  *
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
+ *   Håkan Waara (hwaara@chello.se)
+ *   Jan Varga (varga@utcru.sk)
  */
 
 /* ===== folderPane.css =================================================
@@ -29,163 +31,119 @@
 
 /* ::::: mail folder ::::: */
 
-.folderTreeItem {
+outlinerbody:-moz-outliner-image(folderNameCol) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-closed.gif");
-  font-weight: normal;
 }
 
-.folderTreeItem[selected="true"]
-.folderTreeItem[open="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-open.gif");
-}
-
-.folderTreeItem[NewMessages="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, newMessages-true) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-new.gif");
-  font-weight: bold;
-}
-
-.folderTreeItem[selected="true"][NewMessages="true"],
-.folderTreeItem[open="true"][NewMessages="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-new-open.gif");
 }
 
 /* ..... Inbox ..... */
 
-.folderTreeItem[SpecialFolder="Inbox"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Inbox) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox.gif");
 }
 
-.folderTreeItem[selected="true"][SpecialFolder="Inbox"],
-.folderTreeItem[open="true"][SpecialFolder="Inbox"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-inbox-open.gif");
-}
-
-.folderTreeItem[SpecialFolder="Inbox"][NewMessages="true"],
-.folderTreeItem[NewMessages="true"][SpecialFolder="Inbox"][selected="true"],
-.folderTreeItem[NewMessages="true"][SpecialFolder="Inbox"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Inbox, newMessages-true) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-inbox-new.gif");
-  font-weight: bold;
 }
 
 /* ..... Sent ..... */
 
-.folderTreeItem[SpecialFolder="Sent"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Sent) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-sent.gif");
-}
-
-.folderTreeItem[selected="true"][SpecialFolder="Sent"],
-.folderTreeItem[selected="true"][SpecialFolder="Sent"][NewMessages="true"],
-.folderTreeItem[open="true"][SpecialFolder="Sent"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-sent-open.gif");
 }
 
 /* ..... Drafts ..... */
 
-.folderTreeItem[SpecialFolder="Drafts"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Drafts) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-draft.gif");
-}
-
-.folderTreeItem[selected="true"][SpecialFolder="Drafts"],
-.folderTreeItem[selected="true"][SpecialFolder="Drafts"][NewMessages="true"],
-.folderTreeItem[open="true"][SpecialFolder="Drafts"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-draft-open.gif");
 }
 
 /* ..... Templates ..... */
 
-.folderTreeItem[SpecialFolder="Templates"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Templates) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-template.gif");
-}
-
-.folderTreeItem[selected="true"][SpecialFolder="Templates"],
-.folderTreeItem[selected="true"][SpecialFolder="Templates"][NewMessages="true"],
-.folderTreeItem[open="true"][SpecialFolder="Templates"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-template-open.gif");
 }
 
 /* ..... Unsent Messages ..... */
 
-.folderTreeItem[SpecialFolder="Unsent Messages"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Unsent Messages) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-outbox.gif");
-}
-
-.folderTreeItem[selected="true"][SpecialFolder="Unsent Messages"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-outbox-open.gif");
 }
 
 /* ..... Trash ..... */
 
-.folderTreeItem[SpecialFolder="Trash"] {
+outlinerbody:-moz-outliner-image(folderNameCol, specialFolder-Trash) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.gif");
-}
-
-.folderTreeItem[selected="true"][SpecialFolder="Trash"],
-.folderTreeItem[selected="true"][SpecialFolder="Trash"][NewMessages="true"],
-.folderTreeItem[open="true"][SpecialFolder="Trash"][NewMessages="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/folder-trash-open.gif");
 }
 
 /* ..... Server Folders ..... */
 
-.folderTreeItem[IsServer="true"],
-.folderTreeItem[IsServer="true"][selected="true"],
-.folderTreeItem[IsServer="true"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-mail.gif");
 }
 
-.folderTreeItem[BiffState="NewMail"][IsServer="true"],
-.folderTreeItem[BiffState="NewMail"][IsServer="true"][selected="true"],
-.folderTreeItem[BiffState="NewMail"][IsServer="true"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, biffState-NewMail, isServer-true) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-mail-new.gif");
 }
 
-.folderTreeItem[IsServer="true"][ServerType="imap"][IsSecure="true"],
-.folderTreeItem[IsServer="true"][ServerType="imap"][IsSecure="true"][selected="true"],
-.folderTreeItem[IsServer="true"][ServerType="imap"][IsSecure="true"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-pop3, isSecure-true) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
+}
+
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-imap, isSecure-true) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
 /* ..... Local Servers ..... */
 
-.folderTreeItem[IsServer="true"][ServerType="none"],
-.folderTreeItem[IsServer="true"][ServerType="none"][selected="true"],
-.folderTreeItem[IsServer="true"][ServerType="none"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-none) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
-}
-
-/* ..... News Servers ..... */
-
-.folderTreeItem[IsServer="true"][ServerType="nntp"],
-.folderTreeItem[IsServer="true"][ServerType="nntp"][selected="true"],
-.folderTreeItem[IsServer="true"][ServerType="nntp"][open="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
-}
-
-.folderTreeItem[IsServer="true"][ServerType="nntp"][IsSecure="true"],
-.folderTreeItem[IsServer="true"][ServerType="nntp"][IsSecure="true"][selected="true"],
-.folderTreeItem[IsServer="true"][ServerType="nntp"][IsSecure="true"][open="true"] {
-  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
 /* ..... News Folders ..... */
 
-.folderTreeItem[ServerType="nntp"],
-.folderTreeItem[ServerType="nntp"][selected="true"],
-.folderTreeItem[ServerType="nntp"][open="true"] {
+outlinerbody:-moz-outliner-image(folderNameCol, serverType-nntp) {
+  padding-right: 2px;
   list-style-image: url("chrome://messenger/skin/icons/folder-newsgroup.gif");
+}
+
+/* ..... News Servers ..... */
+
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/server-news.gif");
+}
+
+outlinerbody:-moz-outliner-image(folderNameCol, isServer-true, serverType-nntp, isSecure-true) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/server-news-lock.gif");
 }
 
 /* ::::: All Servers ::::: */
 
-.tree-folder-row[IsServer="true"] {
+outlinerbody:-moz-outliner-cell-text(folderNameCol, isServer-true),
+outlinerbody:-moz-outliner-cell-text(hasUnreadMessages-true) {
   font-weight: bold;
 }
 
-.tree-folder-row[HasUnreadMessages="true"] {
-  font-weight: bold;
-}
-
-.tree-folder-row[NoSelect="true"] {
+outlinerbody:-moz-outliner-cell-text(folderNameCol, noSelect-true) {
   color: gray;
   font-style: italic;
 }
@@ -193,3 +151,18 @@
 .tree-folder-checkbox {
   list-style-image: none;
 }
+
+outlinerbody:-moz-outliner-image(syncCol) {
+  list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+outlinerbody:-moz-outliner-image(syncCol, synchronize-true) {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+outlinerbody:-moz-outliner-image(syncCol, isServer-true) {
+  list-style-image: none;
+}
+
+
+

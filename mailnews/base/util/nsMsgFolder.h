@@ -295,6 +295,7 @@ protected:
   static nsIAtom* kStatusAtom;
   static nsIAtom* kFlaggedAtom;
   static nsIAtom* kNameAtom;
+  static nsIAtom* kSynchronizeAtom;
 
 #ifdef MSG_FASTER_URI_PARSING
   // cached parsing URL object

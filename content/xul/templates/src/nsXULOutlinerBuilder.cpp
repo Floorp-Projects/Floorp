@@ -960,7 +960,7 @@ nsXULOutlinerBuilder::ReplaceMatch(nsIRDFResource* aMember,
             // itself out.
 
             // Notify the box object
-            mBoxObject->RowCountChanged(row, -delta);
+            mBoxObject->RowCountChanged(row, -delta - 1);
         }
     }
     else if (aNewMatch) {
@@ -1718,26 +1718,71 @@ nsXULOutlinerBuilder::SortSubtree(nsOutlinerRows::Subtree* aSubtree)
 NS_IMETHODIMP
 nsXULOutlinerBuilder::CanDropOn(PRInt32 index, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = PR_FALSE;
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                observer->CanDropOn(index, _retval);
+                if (*_retval)
+                    break;
+            }
+        }
+    }
+
+    return NS_OK;
 }
 
 /* boolean canDropBeforeAfter (in long index, in boolean before); */
 NS_IMETHODIMP
 nsXULOutlinerBuilder::CanDropBeforeAfter(PRInt32 index, PRBool before, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *_retval = PR_FALSE;
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                observer->CanDropBeforeAfter(index, before, _retval);
+                if (*_retval)
+                    break;
+            }
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::Drop(PRInt32 row, PRInt32 orient)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULOutlinerBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULOutlinerBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                PRBool canDropOn = PR_FALSE;
+                observer->CanDropOn(row, &canDropOn);
+                if (canDropOn)
+                    observer->OnDrop(row, orient);
+            }
+        }
+    }
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULOutlinerBuilder::IsSorted(PRBool *_retval)
 {
-  *_retval = PR_FALSE;
+  *_retval = mSortVariable;
   return NS_OK;
 }
 

@@ -1329,7 +1329,9 @@ nsXULTreeOuterGroupFrame::ReflowFinished(nsIPresShell* aPresShell, PRBool* aFlus
   // then mark everything as a style change. That
   // will dirty the tree all the way to its leaves.
   if (mRowHeightWasSet) {
-     treeBox->MarkStyleChange(state);
+     if (!treeBox)
+        return NS_ERROR_NULL_POINTER;
+	 treeBox->MarkStyleChange(state);
      PRInt32 pos = mCurrentIndex*mRowHeight;
      if (mYPosition != pos) 
        mAdjustScroll = PR_TRUE;

@@ -50,7 +50,8 @@ function validate(data)
 // - if the user ALSO entered an @domain, then we just chop it off
 // - at some point it would be useful to keep the @domain, in case they
 //   wish to override the domain.
-function validateEmail() { 
+function validateEmail()
+{
   var emailElement = document.getElementById("email");
   var email = emailElement.value;
   var emailArray = email.split('@');

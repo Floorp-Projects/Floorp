@@ -29,6 +29,7 @@ var gCurrentMessageUri;
 var gCurrentFolderUri;
 var gThreadPaneCommandUpdater = null;
 var gCurrentMessageIsDeleted = false;
+var gNextMessageViewIndexAfterDelete = -1;
 
 // the folderListener object
 var folderListener = {

@@ -834,7 +834,7 @@ NS_IMETHODIMP nsMsgDBView::HasNextSibling(PRInt32 rowIndex, PRInt32 afterIndex, 
   PRInt32 i;
   PRInt32 count;
   GetRowCount(&count);
-  for(i = afterIndex + 1; i < count - 1; i++) {
+  for(i = afterIndex + 1; i < count; i++) {
     PRInt32 l;
     GetLevel(i, &l);
     if (l < rowIndexLevel)

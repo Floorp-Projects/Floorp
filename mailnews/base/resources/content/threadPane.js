@@ -55,6 +55,10 @@ function ThreadPaneOnClick(event)
        var col = document.getElementById(colID.value);
        if (col && col.getAttribute("cycler") != "true" && (childElt.value != "twisty")) {
          ThreadPaneDoubleClick();
+         // double clicking should not toggle the open / close state of the 
+         // thread.  this will happen if we don't prevent the event from
+         // bubbling to the default handler in outliner.xml
+	 event.preventBubble();
        }
     }
 }
@@ -116,17 +120,17 @@ function MsgComposeDraftMessage()
 
 function ThreadPaneDoubleClick()
 {
-	if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
-		MsgComposeDraftMessage();
-	}
-	else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
-		var loadedFolder = GetLoadedMsgFolder();
-		var messageArray = GetSelectedMessages();
-		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
-	}
-	else {
-        MsgOpenSelectedMessages();
-	}
+  if (IsSpecialFolderSelected(MSG_FOLDER_FLAG_DRAFTS)) {
+    MsgComposeDraftMessage();
+  }
+  else if(IsSpecialFolderSelected(MSG_FOLDER_FLAG_TEMPLATES)) {
+    var loadedFolder = GetLoadedMsgFolder();
+    var messageArray = GetSelectedMessages();
+    ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
+  }
+  else {
+    MsgOpenSelectedMessages();
+  }
 }
 
 function ThreadPaneKeyPress(event)
@@ -294,3 +298,11 @@ function EnsureRowInThreadOutlinerIsVisible(index)
   var outliner = GetThreadOutliner();
   outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).ensureRowIsVisible(index); 
 }
+
+function ThreadPaneOnLoad()
+{
+  var outliner = GetThreadOutliner();
+  outliner.addEventListener("click",ThreadPaneOnClick,true);
+}
+
+addEventListener("load",ThreadPaneOnLoad,true);

@@ -16,6 +16,10 @@
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
+ *
+ * Contributors(s):
+ *   Jan Varga <varga@utcru.sk>
+ *   Håkan Waara (hwaara@chello.se)
  */
 
 
@@ -45,22 +49,19 @@ function OpenURL(url)
   messenger.OpenURL(url);
 }
 
-function GetMsgFolderFromNode(folderNode)
+function GetMsgFolderFromResource(folderResource)
 {
-  var folderURI = folderNode.getAttribute("id");
-  return GetMsgFolderFromURI(folderURI);
+  if (!folderResource)
+     return null;
+
+  var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+  return msgFolder;
 }
 
 function GetMsgFolderFromURI(folderURI)
 {
   var folderResource = RDF.GetResource(folderURI);
-  if(folderResource)
-  {
-    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    return msgFolder;
-  }
-
-  return null;
+  return GetMsgFolderFromResource(folderResource);
 }
 
 function GetServer(uri)
@@ -98,35 +99,6 @@ function LoadMessageByUri(uri)
     OpenURL(uri);
   }
 
-}
-
-function ChangeFolderByDOMNode(folderNode)
-{
-  var uri = folderNode.getAttribute('id');
-  dump(uri + "\n");
-  if (!uri) return;
-
-  var sortType = 0;
-  var sortOrder = 0;
-  var viewFlags = 0;
-  var viewType = 0;
-  var resource = RDF.GetResource(uri);
-  var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
-  // don't get the db if this folder is a server
-  // we're going to be display account central
-  if (msgfolder && !msgfolder.isServer)
-  {
-    var msgdb = msgfolder.getMsgDatabase(msgWindow);
-    if (msgdb)
-    {
-      var dbFolderInfo = msgdb.dBFolderInfo;
-      sortType = dbFolderInfo.sortType;
-      sortOrder = dbFolderInfo.sortOrder;
-      viewFlags = dbFolderInfo.viewFlags;
-      viewType = dbFolderInfo.viewType;
-    }
-  }
-  ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder);
 }
 
 function setTitleFromFolder(msgfolder, subject)
@@ -192,11 +164,14 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
 
   //if it's a server, clear the threadpane and don't bother trying to load.
   if(msgfolder.isServer) {
+    msgWindow.openFolder = null;
+
     ClearThreadPane();
 
     // Load AccountCentral page here.
     ShowAccountCentral();
-  return;
+
+    return;
   }
   else
   {
@@ -615,7 +590,7 @@ function UpdateSortIndicator(column,sortDirection)
   // this is obsolete
 }
 
-function SortFolderPane(column, sortKey)
+function SortFolderPane(column)
 {
   var node = FindInSidebar(window, column);
   if(!node)
@@ -623,60 +598,25 @@ function SortFolderPane(column, sortKey)
     dump('Couldnt find sort column\n');
     return false;
   }
-  SortColumn(node, sortKey, null, null);
-  //Remove the sortActive attribute because we don't want this pane to have any
-  //sort styles.
-  node.setAttribute("sortActive", "false");
-  return true;
-}
 
-function SortColumn(node, sortKey, secondarySortKey, direction)
-{
-	var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
-
-  if (xulSortService)
+  try 
   {
-    xulSortService = xulSortService.QueryInterface(Components.interfaces.nsIXULSortService);
-    if (xulSortService)
-    {
-      // sort!!!
-      var sortDirection;
-      if(direction)
-        sortDirection = direction;
-      else
-      {
-        var currentDirection = node.getAttribute('sortDirection');
-        if (currentDirection == "ascending")
-            sortDirection = "descending";
-        else if (currentDirection == "descending")
-            sortDirection = "ascending";
-        else    sortDirection = "ascending";
-      }
-
-      try
-      {
-        if(secondarySortKey)
-          node.setAttribute('resource2', secondarySortKey);
-        xulSortService.Sort(node, sortKey, sortDirection);
-      }
-      catch(e)
-      {
-                    //dump("Sort failed: " + e + "\n");
-      }
-    }
+    var folderOutliner = GetFolderOutliner();
+    folderOutliner.outlinerBoxObject.view.cycleHeader(column, node);
   }
-
+  catch (ex) 
+  {
+    dump("failed to cycle header: " + ex + "\n");
+  }
 }
 
 function GetSelectedFolderResource()
 {
-  var folderTree = GetFolderTree();
-  var selectedFolderList = folderTree.selectedItems;
-  var selectedFolder = selectedFolderList[0];
-  var uri = selectedFolder.getAttribute('id');
-
-	var folderResource = RDF.GetResource(uri);
-	return folderResource;
+    var folderOutliner = GetFolderOutliner();
+    var startIndex = {};
+    var endIndex = {};
+    folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+    return GetFolderResource(folderOutliner, startIndex.value);
 }
 
 function OnMouseUpThreadAndMessagePaneSplitter()
@@ -699,27 +639,61 @@ function OnClickThreadAndMessagePaneSplitterGrippy()
 
 function FolderPaneSelectionChange()
 {
-  var tree = GetFolderTree();
-  if(tree)
-  {
-    var selArray = tree.selectedItems;
-    if ( selArray && (selArray.length == 1) )
+    var folderOutliner = GetFolderOutliner();
+    if (folderOutliner.outlinerBoxObject.selection.count == 1)
     {
-      ChangeFolderByDOMNode(selArray[0]);
+        var startIndex = {};
+        var endIndex = {};
+        folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+        var folderResource = GetFolderResource(folderOutliner, startIndex.value);
+        var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (msgFolder == msgWindow.openFolder)
+            return;
+        else
+        {
+            var sortType = 0;
+            var sortOrder = 0;
+            var viewFlags = 0;
+            var viewType = 0;
+
+            // don't get the db if this folder is a server
+            // we're going to be display account central
+            if (!(msgFolder.isServer)) 
+            {
+              try 
+              {
+                var msgDatabase = msgFolder.getMsgDatabase(msgWindow);
+                if (msgDatabase)
+                {
+                  var dbFolderInfo = msgDatabase.dBFolderInfo;
+                  sortType = dbFolderInfo.sortType;
+                  sortOrder = dbFolderInfo.sortOrder;
+                  viewFlags = dbFolderInfo.viewFlags;
+                  viewType = dbFolderInfo.viewType;
+                }
+              }
+              catch (ex)
+              {
+                dump("failed to get view & sort values.  ex = " + ex +"\n");
+              }
+            }
+            ChangeFolderByURI(folderResource.Value, viewType, viewFlags, sortType, sortOrder);
+        }
     }
     else
     {
-      ClearThreadPane();
+        msgWindow.openFolder = null;
+        ClearThreadPane();
     }
-  }
 
-  if (!gAccountCentralLoaded)
-    ClearMessagePane();
-  if (gDisplayStartupPage)
-  {
-    loadStartPage();
-    gDisplayStartupPage = false;
-  }
+    if (! gAccountCentralLoaded)
+        ClearMessagePane();
+
+    if (gDisplayStartupPage)
+    {
+        loadStartPage();
+        gDisplayStartupPage = false;
+    }
 }
 
 function ClearThreadPane()
@@ -728,46 +702,6 @@ function ClearThreadPane()
     gDBView.close();
     gDBView = null; 
   }
-}
-
-function OpenFolderTreeToFolder(folderURI)
-{
-	var tree = GetFolderTree();
-	return OpenToFolder(tree, folderURI);
-}
-
-function OpenToFolder(item, folderURI)
-{
-	if(item.nodeType != Node.ELEMENT_NODE)
-		return null;
-
-  var uri = item.getAttribute('id');
-  dump(uri);
-  dump('\n');
-  if(uri == folderURI)
-  {
-    dump('found folder: ' + uri);
-    dump('\n');
-    return item;
-  }
-
-  var children = item.childNodes;
-  var length = children.length;
-  var i;
-  dump('folder ' + uri);
-  dump('has ' + length);
-  dump('children\n');
-  for(i = 0; i < length; i++)
-  {
-    var child = children[i];
-    var folder = OpenToFolder(child, folderURI);
-    if(folder)
-    {
-      child.setAttribute('open', 'true');
-      return folder;
-    }
-  }
-  return null;
 }
 
 function IsSpecialFolder(msgFolder, flags)
