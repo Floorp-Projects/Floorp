@@ -34,7 +34,6 @@
 #define XPFC_DLL "libxpfc10.so"
 
 extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
   return strdup("/tmp");
 }
 
@@ -78,6 +77,8 @@ void main(int argc, char **argv)
   nsIShellInstance * pShellInstance ;
   nsIApplicationShell * pApplicationShell ;
 
+  PL_InitializeEventsLib("");
+
   XtSetLanguageProc(NULL, NULL, NULL);
 
   topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
@@ -86,6 +87,7 @@ void main(int argc, char **argv)
 
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
     PR_STDIO_INIT();
+    
 
     // Let get a ShellInstance for this Application instance
     nsRepository::RegisterFactory(kCShellInstanceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
@@ -157,8 +159,7 @@ void main(int argc, char **argv)
 
     // We're done, clean up
   nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
-  NS_ShutdownINetService();
-  PR_Cleanup();
+  //PR_Cleanup();
 
   // book out of here
   return ;

@@ -72,10 +72,12 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
 	nsIShellInstance * pShellInstance ;
 	nsIApplicationShell * pApplicationShell ;
 
-    PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
-    PR_STDIO_INIT();
+  PL_InitializeEventsLib("");
 
-    PL_InitializeEventsLib("");
+  PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
+  PR_STDIO_INIT();
+
+    
 
 
     // Let get a ShellInstance for this Application instance
@@ -148,8 +150,7 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
 
     NS_RELEASE(pApplicationShell);
     NS_RELEASE(pShellInstance);
-
-    NS_ShutdownINetService();
+    
     //PR_Cleanup();
 
     // book out of here

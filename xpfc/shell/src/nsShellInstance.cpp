@@ -86,6 +86,8 @@ nsShellInstance::nsShellInstance()
 
 nsShellInstance::~nsShellInstance()
 {
+  //NS_ShutdownINetService();
+
   NS_IF_RELEASE(mDeviceContext);
   NS_IF_RELEASE(mApplicationWindow);
 
@@ -116,9 +118,9 @@ nsresult nsShellInstance::Init()
   mPref->Startup(nsnull);
 
 
-  res = NS_InitINetService();
-  if (NS_OK != res)
-    return res;
+  //res = NS_InitINetService();
+  //if (NS_OK != res)
+  //  return res;
 
   // Create a Stream Manager
   res = nsRepository::CreateInstance(kCStreamManager, 
