@@ -55,15 +55,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VALID_DTD_IID); 
 
 
-//static const char* kNullURL = "Error: Null URL given";
-//static const char* kNullFilename= "Error: Null filename given";
-//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-//static const char* kNullToken = "Error: Null token given";
-//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-
-static nsAutoString gEmpty;
-
-
 /**
  *  This method gets called as part of our COM-like interfaces.
  *  Its purpose is to create an interface to parser object

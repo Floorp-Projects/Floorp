@@ -28,8 +28,8 @@
  * @update	gess4/18/98
  * @return  new deque
  */
-nsDeque::nsDeque(nsDequeFunctor& aMemDestroyer) : mMemDestroyer(aMemDestroyer) {
-  mMemDestroyer=aMemDestroyer;
+nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
+  mDeallocator=aDeallocator;
   mCapacity=eGrowthDelta;
   mOrigin=mSize=0;
   mData=new void*[mCapacity];
@@ -44,6 +44,10 @@ nsDeque::~nsDeque() {
   Erase();
   delete [] mData;
   mData=0;
+  if(mDeallocator) {
+    delete mDeallocator;
+  }
+  mDeallocator=0;
 }
 
 
@@ -82,7 +86,9 @@ nsDeque& nsDeque::Empty() {
  * @return  this
  */
 nsDeque& nsDeque::Erase() {
-  ForEach(mMemDestroyer);
+  if(mDeallocator) {
+    ForEach(*mDeallocator);
+  }
   return Empty();
 }
 

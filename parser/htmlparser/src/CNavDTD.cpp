@@ -4,7 +4,7 @@
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
- *                        
+ *                         
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
@@ -25,7 +25,7 @@
 #include "nsIParser.h"
 #include "nsIHTMLContentSink.h" 
 #include "nsScanner.h"
-#include "nsVoidArray.h"
+//#include "nsVoidArray.h"
 #include "nsTokenHandler.h"
 #include "nsIDTDDebug.h"
 #include "prenv.h"  //this is here for debug reasons...
@@ -48,15 +48,11 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_INAVHTML_DTD_IID); 
  
-//static const char* kNullURL = "Error: Null URL given";
-//static const char* kNullFilename= "Error: Null filename given";
 static const  char* kNullToken = "Error: Null token given";
 static const  char* kInvalidTagStackPos = "Error: invalid tag stack position";
 static char*        kVerificationDir = "c:/temp";
-static const  char* kViewSourceCommand= "view-source";
 static char         gShowCRC=0;
  
-static nsAutoString gEmpty;
 
 static eHTMLTags gFormElementTags[]= {  
     eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
@@ -132,7 +128,7 @@ public:
 class CTagHandlerRegister {
 public:
   
-  CTagHandlerRegister() : mDeallocator(), mTagHandlerDeque(mDeallocator) {
+  CTagHandlerRegister() : mTagHandlerDeque(new CTagHandlerDeallocator()) {
   }
 
   ~CTagHandlerRegister() {
@@ -151,7 +147,6 @@ public:
     return foundHandler;
   }
   
-  CTagHandlerDeallocator  mDeallocator;
   nsDeque                 mTagHandlerDeque;
   CTagFinder              mTagFinder;
 };
@@ -1208,6 +1203,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     case eHTMLTag_map:
     case eHTMLTag_form:
+    case eHTMLTag_head:
       result=CloseContainer(theNode,theChildTag,PR_FALSE);
       break;
 
@@ -1679,7 +1675,9 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
             }
             CTagList* theParents=gHTMLElements[aChild].GetSpecialParents();
             if(theParents) {
-              result=!theParents->Contains(aParent);
+                PRInt32 theParentIndex=theParents->GetTopmostIndexOf(mBodyContext->mTags);
+                result=PRBool(kNotFound==theParentIndex);
+              // result=!theParents->Contains(aParent); THE OLD WAY
             }
           }
           break;
@@ -1726,21 +1724,6 @@ PRBool CNavDTD::CanOmitEndTag(eHTMLTags aParent,eHTMLTags aChild) const {
   if(gHTMLElements[aChild].CanOmitEndTag(aParent)) {
     return PR_TRUE;
   }
-
-/*
-  CTagList* theRootTags=gHTMLElements[aChild].GetRootTags();
-  if(theRootTags) {
-    PRInt32 theRootIndex=theRootTags->GetTopmostIndexOf(mBodyContext->mTags);          
-    PRInt32 theChildIndex=GetTopmostIndexOf(aChild);
-    if(kNotFound==theChildIndex) {
-      CTagList* theSynTags=gHTMLElements[aChild].GetSynonymousTags(); //get the list of tags that THIS tag can close
-      if(theSynTags) {
-        theChildIndex=theSynTags->GetTopmostIndexOf(mBodyContext->mTags);
-      }
-    }
-    result=!PRBool(theRootIndex<theChildIndex);
-  }
-*/
 
   PRInt32 theChildIndex=GetTopmostIndexOf(aChild);
   if(kNotFound==theChildIndex) {
@@ -2120,8 +2103,8 @@ nsresult CNavDTD::OpenBody(const nsIParserNode& aNode){
       //no HTML tag in document. Let's open it.
 
       result=CloseContainersTo(0,eHTMLTag_html,PR_TRUE);  //close current stack containers.
-
-      CHTMLToken    token(gEmpty,eHTMLTag_html);
+      nsAutoString  theEmpty;
+      CHTMLToken    token(theEmpty,eHTMLTag_html);
       nsCParserNode htmlNode(&token,mLineNumber);
       result=OpenHTML(htmlNode);  //open the html container...
     }
@@ -2404,19 +2387,18 @@ CNavDTD::CloseContainer(const nsIParserNode& aNode,eHTMLTags aTag,
  * @param   
  * @return  TRUE if ok, FALSE if error
  */
-nsresult
-CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag,
-                           PRBool aUpdateStyles){
+nsresult CNavDTD::CloseContainersTo(PRInt32 anIndex,eHTMLTags aTag, PRBool aUpdateStyles){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
   nsresult result=NS_OK;
 
-  static CEndToken aToken(gEmpty);
-  nsCParserNode theNode(&aToken,mLineNumber);
+  nsAutoString  theEmpty;
+  CEndToken     theToken(theEmpty);
+  nsCParserNode theNode(&theToken,mLineNumber);
 
   if((anIndex<mBodyContext->GetCount()) && (anIndex>=0)) {
     while(mBodyContext->GetCount()>anIndex) {
       eHTMLTags theTag=mBodyContext->Last();
-      aToken.SetTypeID(theTag);
+      theToken.SetTypeID(theTag);
       result=CloseContainer(theNode,aTag,aUpdateStyles);
     }
   }
@@ -2476,10 +2458,11 @@ nsresult CNavDTD::CloseContainersTo(eHTMLTags aTag,PRBool aUpdateStyles){
 nsresult CNavDTD::CloseTopmostContainer(){
   NS_PRECONDITION(mBodyContext->GetCount() > 0, kInvalidTagStackPos);
 
-  CEndToken aToken(gEmpty);
+  nsAutoString  theEmpty;
+  CEndToken     theToken(theEmpty);
   eHTMLTags theTag=mBodyContext->Last();
-  aToken.SetTypeID(theTag);
-  nsCParserNode theNode(&aToken,mLineNumber);
+  theToken.SetTypeID(theTag);
+  nsCParserNode theNode(&theToken,mLineNumber);
   return CloseContainer(theNode,theTag,PR_TRUE);
 }
 
@@ -2527,8 +2510,7 @@ nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
   return result;
 }
 
-  
-static nsTagStack kPropagationStack;
+ 
 
 /**
  *  This method gets called to create a valid context stack
@@ -2543,6 +2525,7 @@ static nsTagStack kPropagationStack;
  */
 nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   
+  static nsTagStack kPropagationStack;
   kPropagationStack.Empty();
   
   nsresult  result=(nsresult)kContextMismatch;
@@ -2588,7 +2571,8 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
 
   //now, build up the stack according to the tags 
   //you have that aren't in the stack...
-  static CStartToken theToken(gEmpty);
+  nsAutoString  theEmpty;
+  CStartToken theToken(theEmpty);
   if(PR_TRUE==bResult){
     while(kPropagationStack.mCount>0) {
       eHTMLTags theTag=kPropagationStack.Pop();

@@ -52,16 +52,6 @@ static NS_DEFINE_IID(kIDTDIID,      NS_IDTD_IID);
 static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID); 
 
 
-//static const char* kNullURL = "Error: Null URL given";
-//static const char* kNullFilename= "Error: Null filename given";
-//static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
-//static const char* kNullToken = "Error: Null token given";
-//static const char* kInvalidTagStackPos = "Error: invalid tag stack position";
-static const char* kViewSourceCommand= "view-source";
-
-static nsAutoString gEmpty;
-static CTokenRecycler gTokenRecycler;
-
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -120,8 +110,6 @@ NS_IMPL_ADDREF(CViewSourceHTML)
 NS_IMPL_RELEASE(CViewSourceHTML)
 
 
-static CTokenDeallocator gTokenKiller;
-
 
 void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIContentSink& aSink) {
   if(aEnable){
@@ -176,7 +164,7 @@ void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
  *  @param   
  *  @return  
  */
-CViewSourceHTML::CViewSourceHTML() : nsIDTD(), mTokenDeque(gTokenKiller) {
+CViewSourceHTML::CViewSourceHTML() : nsIDTD() {
   NS_INIT_REFCNT();
   mParser=0;
   mSink=0;

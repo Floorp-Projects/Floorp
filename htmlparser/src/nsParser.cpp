@@ -46,10 +46,6 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static const char* kNullURL = "Error: Null URL given";
 static const char* kOnStartNotCalled = "Error: OnStartBinding() must be called before OnDataAvailable()";
 static const char* kBadListenerInit  = "Error: Parser's IStreamListener API was not setup correctly in constructor.";
-static nsString    kUnknownFilename("unknown");
-static nsString    kEmptyString("unknown");
-
-static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
  
 class CTokenDeallocator: public nsDequeFunctor{
@@ -61,7 +57,6 @@ public:
   }
 };
 
-CTokenDeallocator gTokenDeallocator2;
 
 class CDTDDeallocator: public nsDequeFunctor{
 public:
@@ -91,7 +86,7 @@ public:
 class CSharedParserObjects {
 public:
 
-  CSharedParserObjects() : mDeallocator(), mDTDDeque(mDeallocator) {
+  CSharedParserObjects() : mDTDDeque(new CDTDDeallocator()) {
 
     nsIDTD* theDTD;
 
@@ -125,11 +120,10 @@ public:
     return 0;
   }
 
-  CDTDDeallocator mDeallocator;
   nsDeque mDTDDeque;
 };
 
-CSharedParserObjects gSharedParserObjects;
+static CSharedParserObjects* gSharedParserObjects=0;
 
 //----------------------------------------
 
@@ -148,6 +142,9 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mParserContext=0;
   mTokenObserver=anObserver;
   mDTDVerification=PR_FALSE;
+  if(!gSharedParserObjects) {
+    gSharedParserObjects = new CSharedParserObjects();
+  }
 }
 
  
@@ -273,7 +270,7 @@ nsIContentSink* nsParser::GetContentSink(void){
 }
 
 /**
- *  Call this static method when you want to
+ *  Call this method when you want to
  *  register your dynamic DTD's with the parser.
  *  
  *  @update  gess 01/04/99
@@ -281,16 +278,7 @@ nsIContentSink* nsParser::GetContentSink(void){
  *  @return  nothing.
  */
 void nsParser::RegisterDTD(nsIDTD* aDTD){
-
-#ifdef rickgdebug
-  nsIDTD* rv=0;
-  NS_NewRTF_DTD(&rv);
-  gSharedParserObjects.RegisterDTD(rv);
-  NS_NewWellFormed_DTD(&rv);
-  gSharedParserObjects.RegisterDTD(rv);
-#endif
-
-  gSharedParserObjects.RegisterDTD(aDTD);
+  gSharedParserObjects->RegisterDTD(aDTD);
 }
 
 /**
@@ -334,8 +322,8 @@ PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsStri
     if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0))
       return PR_TRUE;
 
-  nsDequeIterator b=gSharedParserObjects.mDTDDeque.Begin(); 
-  nsDequeIterator e=gSharedParserObjects.mDTDDeque.End(); 
+  nsDequeIterator b=gSharedParserObjects->mDTDDeque.Begin(); 
+  nsDequeIterator e=gSharedParserObjects->mDTDDeque.End(); 
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
   nsIDTD* theBestDTD=0;
@@ -567,7 +555,8 @@ nsresult nsParser::Parse(fstream& aStream,PRBool aVerifyEnabled){
   nsresult  result=NS_ERROR_OUT_OF_MEMORY;
   
   //ok, time to create our tokenizer and begin the process
-  CParserContext* pc=new CParserContext(new nsScanner(kUnknownFilename,aStream,PR_FALSE),&aStream,0);
+  nsAutoString theUnknownFilename("unknown");
+  CParserContext* pc=new CParserContext(new nsScanner(theUnknownFilename,aStream,PR_FALSE),&aStream,0);
   if(pc) {
     PushContext(*pc);
     pc->mSourceType=kHTMLTextContentType;

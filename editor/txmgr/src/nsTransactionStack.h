@@ -35,7 +35,6 @@ public:
 
 class nsTransactionStack
 {
-  nsTransactionReleaseFunctor mRF;
   nsDeque mQue;
 
 public:

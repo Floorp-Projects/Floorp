@@ -20,7 +20,6 @@
 #include "nsDTDUtils.h"
 #include "CNavDTD.h" 
 
-static CTokenDeallocator gTokenKiller;
  
 /***************************************************************
   First, define the tagstack class
@@ -265,7 +264,7 @@ eHTMLTags nsDTDContext::Last() const {
 CTokenRecycler::CTokenRecycler() : nsITokenRecycler() {
   int i=0;
   for(i=0;i<eToken_last-1;i++) {
-    mTokenCache[i]=new nsDeque(gTokenKiller);
+    mTokenCache[i]=new nsDeque(new CTokenDeallocator());
     //mTotals[i]=0;
   }
 }
@@ -344,6 +343,43 @@ CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag, 
       case eToken_script:     result=new CScriptToken(); break;
       case eToken_style:      result=new CStyleToken(); break;
       case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
+      case eToken_instruction:result=new CInstructionToken(); break;
+      case eToken_cdatasection:result=new CCDATASectionToken(); break;
+        default:
+          break;
+    }
+  }
+  return result;
+}
+
+/**
+ * 
+ * @update	vidur 11/12/98
+ * @param 
+ * @return
+ */
+CToken* CTokenRecycler::CreateTokenOfType(eHTMLTokenTypes aType,eHTMLTags aTag) {
+
+  CToken* result=(CToken*)mTokenCache[aType-1]->Pop();
+
+  static nsAutoString theEmpty;
+  if(result) {
+    result->Reinitialize(aTag,theEmpty);
+  }
+  else {
+    //mTotals[aType-1]++;
+    switch(aType){
+      case eToken_start:      result=new CStartToken(aTag); break;
+      case eToken_end:        result=new CEndToken(aTag); break;
+      case eToken_comment:    result=new CCommentToken(); break;
+      case eToken_attribute:  result=new CAttributeToken(); break;
+      case eToken_entity:     result=new CEntityToken(); break;
+      case eToken_whitespace: result=new CWhitespaceToken(); break;
+      case eToken_newline:    result=new CNewlineToken(); break;
+      case eToken_text:       result=new CTextToken(theEmpty); break;
+      case eToken_script:     result=new CScriptToken(); break;
+      case eToken_style:      result=new CStyleToken(); break;
+      case eToken_skippedcontent: result=new CSkippedContentToken(theEmpty); break;
       case eToken_instruction:result=new CInstructionToken(); break;
       case eToken_cdatasection:result=new CCDATASectionToken(); break;
         default:

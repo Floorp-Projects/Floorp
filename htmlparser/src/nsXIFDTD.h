@@ -34,7 +34,6 @@
 #include "nsIDTD.h"
 #include "nsIContentSink.h"
 #include "nsHTMLTokens.h"
-#include "nsDeque.h"
 #include "nsVoidArray.h"
 #include <fstream.h>
 
@@ -533,7 +532,6 @@ protected:
 
     PRBool                mHasOpenForm;
     PRBool                mHasOpenMap;
-    nsDeque               mTokenDeque;
 
     nsIDTDDebug*		      mDTDDebug;
 

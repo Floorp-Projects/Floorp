@@ -31,8 +31,6 @@
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
-#include "nsVoidArray.h"
-#include "nsDeque.h"
 #include "nsIHTMLContentSink.h"
 
 #define NS_VIEWSOURCE_HTML_IID      \
@@ -243,7 +241,6 @@ protected:
     nsIHTMLContentSink* mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    nsDeque             mTokenDeque;
     PRBool              mIsHTML;
     nsITokenizer*       mTokenizer;
     PRInt32             mHasOpenHead;

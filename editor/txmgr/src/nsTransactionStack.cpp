@@ -20,7 +20,7 @@
 #include "nsCOMPtr.h"
 
 nsTransactionStack::nsTransactionStack()
-  : mRF(), mQue(mRF)
+  : mQue(new nsTransactionReleaseFunctor())
 {
 }
 

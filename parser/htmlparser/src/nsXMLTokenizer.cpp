@@ -37,7 +37,6 @@ static NS_DEFINE_IID(kISupportsIID,     NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITokenizerIID,    NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID, NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,         NS_XMLTOKENIZER_IID); 
-static nsAutoString gEmpty;
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -199,12 +198,14 @@ nsresult nsXMLTokenizer::ConsumeComment(PRUnichar aChar,nsScanner& aScanner,CTok
   result = ConsumeConditional(aScanner, CDATAString, isCDATA);
   CTokenRecycler* theRecycler=(CTokenRecycler*)GetTokenRecycler();
 
+
   if (NS_OK == result) {
+    nsAutoString  theEmpty;
     if (isCDATA) {
-      aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,gEmpty);
+      aToken=theRecycler->CreateTokenOfType(eToken_cdatasection,eHTMLTag_unknown,theEmpty);
     }
     else {
-      aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,gEmpty);
+      aToken=theRecycler->CreateTokenOfType(eToken_comment,eHTMLTag_comment,theEmpty);
     }
   }
 

@@ -31,8 +31,6 @@
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
-#include "nsVoidArray.h"
-#include "nsDeque.h"
 #include "nsIContentSink.h"
 
 #define NS_WELLFORMED_DTD_IID      \
@@ -235,7 +233,6 @@ protected:
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    nsDeque             mTokenDeque;
     nsITokenizer*       mTokenizer;
 };
 

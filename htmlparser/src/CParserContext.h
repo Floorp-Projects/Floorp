@@ -70,8 +70,6 @@ public:
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRBool              mMultipart;
     eContextType        mContextType;
-
-    // nsDeque          mTokenDeque;
 };
 
 
