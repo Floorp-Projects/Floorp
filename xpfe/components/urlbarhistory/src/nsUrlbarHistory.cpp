@@ -89,8 +89,10 @@ nsUrlbarHistory::nsUrlbarHistory():mLength(0)
    // Get the pref service
    res = nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref),
 	                                    (nsISupports **) &gPrefs);
+#if DEBUG_radha
    if (gPrefs)
 	   printf("***** Got the pref service *****\n");
+#endif
 }
 
 
