@@ -253,7 +253,7 @@ sub display_build_table_row {
                       "onClick=\"return log_popup(event,'$buildtree','$popupbuildname'," .
                       "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&mainframe=1'," .
                       "'showlog.cgi?logfile=$logfile\&tree=$buildtree\&errorparser=$errorparser&buildname=$buildname&buildtime=$buildtime&fulltext=1&mainframe=1'," .
-                      "'addnote.cgi?tree=$treename&buildname=$buildname&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser');\">";
+                      "'addnote.cgi?tree=$buildtree&buildname=$buildname&buildtime=$buildtime&logfile=$logfile&errorparser=$errorparser');\">";
 
 
                 print "L</a>\n";
