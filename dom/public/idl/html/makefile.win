@@ -88,6 +88,7 @@ XPIDLSRCS =					\
 	.\nsIDOMNSHTMLElement.idl		\
 	.\nsIDOMNSHTMLFormControlList.idl	\
 	.\nsIDOMNSHTMLFormElement.idl		\
+	.\nsIDOMNSHTMLFrameElement.idl		\
 	.\nsIDOMNSHTMLImageElement.idl		\
 	.\nsIDOMNSHTMLInputElement.idl		\
 	.\nsIDOMNSHTMLOptionCollectn.idl	\
