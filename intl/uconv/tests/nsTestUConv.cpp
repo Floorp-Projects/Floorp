@@ -21,16 +21,17 @@
 
 #include <stdio.h>
 #include "nsRepository.h"
+#include "nsISupports.h"
 #include "nsICharsetConverterManager.h"
 #include "nsConverterCID.h"
 
 #ifdef XP_UNIX
 #define UCONV_DLL       "libuconv.so"
 #else
-#ifdef XP_WIN
-#define UCONV_DLL       "uconv.dll"
-#else /* XP_MAC */
+#ifdef XP_MAC
 #define UCONV_DLL       "UCONV_DLL"
+#else /* XP_MAC */
+#define UCONV_DLL       "uconv.dll"
 #endif
 #endif
 #define TABLE_SIZE1     5
@@ -42,7 +43,7 @@ nsresult setupRegistry()
   nsresult res;
 
   res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, UCONV_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
 
   res = nsRepository::RegisterFactory(kAscii2UnicodeCID, UCONV_DLL, PR_FALSE, PR_FALSE);
   return res;
@@ -53,7 +54,7 @@ nsresult init()
   nsresult res;
 
   res = setupRegistry();
-  if (NS_FAILED(res)) {
+  if (NS_FAILED(res)  && (NS_ERROR_FACTORY_EXISTS != res)) {
     printf("Error setting up registry: 0x%x",res);
     return res;
   }
