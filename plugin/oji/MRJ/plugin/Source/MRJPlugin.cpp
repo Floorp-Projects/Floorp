@@ -426,9 +426,14 @@ nsrefcnt MRJPlugin::ReleaseJNIEnv(JNIEnv* env)
 
 NS_METHOD MRJPlugin::CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv)
 {
-	// Need to spawn a new JVM communication thread here.
-	NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
-	return CSecureEnv::Create(this, proxyEnv, kISecureEnvIID, (void**)outSecureEnv);
+	*outSecureEnv = NULL;
+	nsresult rv = StartupJVM();
+	if (rv == NS_OK) {
+		// Need to spawn a new JVM communication thread here.
+		NS_DEFINE_IID(kISecureEnvIID, NS_ISECUREENV_IID);
+		rv = CSecureEnv::Create(this, proxyEnv, kISecureEnvIID, (void**)outSecureEnv);
+	}
+	return rv;
 }
 
 NS_METHOD MRJPlugin::SpendTime(PRUint32 timeMillis)
