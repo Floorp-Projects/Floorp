@@ -743,7 +743,7 @@ Wallet_Confirm(PRUnichar * szMessage, nsIDOMWindow* window)
 
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompt(getter_AddRefs(dialog)); 
+  window->GetPrompterer(getter_AddRefs(dialog)); 
   if (!dialog) {
     return retval;
   } 
@@ -758,7 +758,7 @@ PUBLIC PRBool
 Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindow* window) {
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompt(getter_AddRefs(dialog)); 
+  window->GetPrompter(getter_AddRefs(dialog)); 
   if (!dialog) {
     return PR_FALSE;
   } 
@@ -799,7 +799,7 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   nsresult res;  
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompt(getter_AddRefs(dialog)); 
+  window->GetPrompter(getter_AddRefs(dialog)); 
   if (!dialog) {
     return 0; /* default value is NO */
   } 
@@ -844,7 +844,7 @@ wallet_Alert(PRUnichar * szMessage, nsIDOMWindow* window)
 {
   nsresult res;
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompt(getter_AddRefs(dialog)); 
+  window->GetPrompter(getter_AddRefs(dialog)); 
   if (!dialog) {
     return;     // XXX should return the error
   } 
@@ -873,7 +873,7 @@ Wallet_CheckConfirmYN
      nsIDOMWindow* window) {
   nsresult res;
   nsCOMPtr<nsIPrompt> dialog; 
-  window->GetPrompt(getter_AddRefs(dialog)); 
+  window->GetPrompter(getter_AddRefs(dialog)); 
   if (!dialog) {
     return PR_FALSE;
   } 
