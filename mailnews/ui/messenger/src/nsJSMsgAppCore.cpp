@@ -16,10 +16,6 @@
  * Reserved.
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
-/* Not quite - slightly modified by alecf
- * once the XPIDL compiler knows how to generate this stuff,
- * I'll generate it again
- */
 
 #include "jsapi.h"
 #include "nsJSUtils.h"
@@ -32,11 +28,13 @@
 #include "nsString.h"
 #include "nsIDOMMsgAppCore.h"
 #include "nsIDOMWindow.h"
-#include "nsIScriptNameSpaceManager.h"
-#include "nsRepository.h"
-#include "nsDOMCID.h"
 
-#include "nsJSMsgAppCore.h"
+
+static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
+static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
+static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
+static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIDOMMsgAppCore);
 NS_DEF_PTR(nsIDOMWindow);
@@ -129,7 +127,9 @@ ResolveMsgAppCore(JSContext *cx, JSObject *obj, jsval id)
 }
 
 
+//
 // Native method GetNewMail
+//
 PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -138,12 +138,14 @@ MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   *rval = JSVAL_NULL;
 
+  // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
   if (argc >= 0) {
-    if (NS_FAILED(nativeThis->GetNewMail())) {
+
+    if (NS_OK != nativeThis->GetNewMail()) {
       return JS_FALSE;
     }
 
@@ -157,6 +159,7 @@ MsgAppCoreGetNewMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
   return JS_TRUE;
 }
 
+
 //
 // Native method Open3PaneWindow
 //
@@ -164,99 +167,25 @@ PR_STATIC_CALLBACK(JSBool)
 MsgAppCoreOpen3PaneWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
   }
 
-  if (argc ==0 ) {
+  if (argc >= 0) {
 
     if (NS_OK != nativeThis->Open3PaneWindow()) {
       return JS_FALSE;
     }
-  }
-  else {
-    JS_ReportError(cx, "Open3PaneWindow don't have argument");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-// this was in the old MailCore
-#if 0
-//
-// Native method SendMail
-//
-PR_STATIC_CALLBACK(JSBool)
-MsgAppCoreSendMail(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString b0;
-  nsAutoString b1;
-  nsAutoString b2;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 3) {
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
-
-    nsJSUtils::nsConvertJSValToString(b2, cx, argv[2]);
-
-    if (NS_OK != nativeThis->SendMail(b0, b1, b2)) {
-      return JS_FALSE;
-    }
 
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function SendMail requires 3 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method MailCompleteCallback
-//
-PR_STATIC_CALLBACK(JSBool)
-MsgAppCoreMailCompleteCallback(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString b0;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 1) {
-
-    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
-
-    if (NS_OK != nativeThis->MailCompleteCallback(b0)) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function MailCompleteCallback requires 1 parameters");
+    JS_ReportError(cx, "Function Open3PaneWindow requires 0 parameters");
     return JS_FALSE;
   }
 
@@ -284,7 +213,7 @@ MsgAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   if (argc >= 1) {
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b0,
-                                           nsIWindow::IID(),
+                                           kIWindowIID,
                                            "Window",
                                            cx,
                                            argv[0])) {
@@ -304,7 +233,43 @@ MsgAppCoreSetWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
   return JS_TRUE;
 }
-#endif
+
+
+//
+// Native method OpenURL
+//
+PR_STATIC_CALLBACK(JSBool)
+MsgAppCoreOpenURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
+
+    if (NS_OK != nativeThis->OpenURL(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function OpenURL requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
 
 /***********************************************************************/
 //
@@ -338,14 +303,10 @@ static JSPropertySpec MsgAppCoreProperties[] =
 //
 static JSFunctionSpec MsgAppCoreMethods[] = 
 {
-  // don't have old MailCore methods
-  {"GetNewMail",					MsgAppCoreGetNewMail,        0},
-  {"Open3PaneWindow",				MsgAppCoreOpen3PaneWindow,     0},
-#if 0
-  {"SendMail",          MsgAppCoreSendMail,     3},
-  {"MailCompleteCallback",          MsgAppCoreMailCompleteCallback,     1},
+  {"GetNewMail",          MsgAppCoreGetNewMail,     0},
+  {"Open3PaneWindow",          MsgAppCoreOpen3PaneWindow,     0},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
-#endif
+  {"OpenURL",          MsgAppCoreOpenURL,     1},
   {0}
 };
 
@@ -356,46 +317,9 @@ static JSFunctionSpec MsgAppCoreMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 MsgAppCore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsresult result;
-  nsIID classID;
-  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
-  nsIScriptNameSpaceManager* manager;
-  nsIDOMMsgAppCore *nativeThis;
-  nsIScriptObjectOwner *owner = nsnull;
-
-  result = context->GetNameSpaceManager(&manager);
-  if (NS_OK != result) {
-    return JS_FALSE;
-  }
-
-  result = manager->LookupName("MsgAppCore", PR_TRUE, classID);
-  NS_RELEASE(manager);
-  if (NS_OK != result) {
-    return JS_FALSE;
-  }
-
-  result = nsRepository::CreateInstance(classID,
-                                        nsnull,
-                                        nsIDOMMsgAppCore::IID(),
-                                        (void **)&nativeThis);
-  if (NS_OK != result) {
-    return JS_FALSE;
-  }
-
-  // XXX We should be calling Init() on the instance
-
-  result = nativeThis->QueryInterface(nsIScriptObjectOwner::IID(), (void **)&owner);
-  if (NS_OK != result) {
-    NS_RELEASE(nativeThis);
-    return JS_FALSE;
-  }
-
-  owner->SetScriptObject((void *)obj);
-  JS_SetPrivate(cx, obj, nativeThis);
-
-  NS_RELEASE(owner);
-  return JS_TRUE;
+  return JS_FALSE;
 }
+
 
 //
 // MsgAppCore class initialization
@@ -463,7 +387,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
   if (nsnull == aParent) {
     parent = nsnull;
   }
-  else if (NS_OK == aParent->QueryInterface(nsIScriptObjectOwner::IID(), (void**)&owner)) {
+  else if (NS_OK == aParent->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
     if (NS_OK != owner->GetScriptObject(aContext, (void **)&parent)) {
       NS_RELEASE(owner);
       return NS_ERROR_FAILURE;
@@ -478,7 +402,7 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(nsIMsgAppCore::IID(), (void **)&aMsgAppCore);
+  result = aSupports->QueryInterface(kIMsgAppCoreIID, (void **)&aMsgAppCore);
   if (NS_OK != result) {
     return result;
   }
@@ -496,4 +420,3 @@ extern "C" NS_DOM nsresult NS_NewScriptMsgAppCore(nsIScriptContext *aContext, ns
 
   return NS_OK;
 }
-

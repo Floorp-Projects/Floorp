@@ -6,6 +6,7 @@
 #define __gen_nsIDOMMsgAppCore_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsIDOMWindow.h" /* interface nsIDOMWindow */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 
 
@@ -29,6 +30,12 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
 
   /* void Open3PaneWindow (); */
   NS_IMETHOD Open3PaneWindow() = 0;
+
+  /* void SetWindow (in nsIDOMWindow ptr); */
+  NS_IMETHOD SetWindow(nsIDOMWindow *ptr) = 0;
+
+  /* void OpenURL (in string str); */
+  NS_IMETHOD OpenURL(nsAutoString& str) = 0;
 };
 
 #endif /* __gen_nsIDOMMsgAppCore_h__ */

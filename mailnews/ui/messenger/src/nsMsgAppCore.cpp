@@ -33,6 +33,11 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 class nsMsgAppCore : public nsIDOMMsgAppCore,
                      public nsIScriptObjectOwner
 {
@@ -52,6 +57,7 @@ public:
   NS_IMETHOD Open3PaneWindow();
   NS_IMETHOD GetNewMail();
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
+  NS_IMETHOD OpenURL(nsAutoString& url);
 
 private:
   
@@ -104,12 +110,12 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(nsIMsgAppCore::IID()) ) {
+  else if ( aIID.Equals(nsIDOMMsgAppCore::IID()) ) {
       *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
       AddRef();
       return NS_OK;
   }
-  else if ( aIID.Equals(::nsISupports::IID()) ) {
+  else if ( aIID.Equals(kISupportsIID) ) {
       *aInstancePtr = (void*)(nsISupports*)(nsIScriptObjectOwner*)this;
       AddRef();
       return NS_OK;
@@ -213,7 +219,7 @@ NS_NewMsgAppCore(nsIDOMMsgAppCore **aResult)
 
   nsMsgAppCore *appcore = new nsMsgAppCore();
   if (appcore) {
-    return appcore->QueryInterface(nsIMsgAppCore::IID(),
+    return appcore->QueryInterface(nsIDOMMsgAppCore::IID(),
                                    (void **)aResult);
 
   }
@@ -263,6 +269,12 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
 	return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMsgAppCore::OpenURL(nsAutoString& url)
+{
+    // here's where we call mscott's LoadURL
+    // LoadURL(mWebShell, url);
+}
 
 //  to load the webshell!
 //  mWebShell->LoadURL(nsAutoString("http://www.netscape.com"), 
