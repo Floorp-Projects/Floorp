@@ -121,7 +121,8 @@ public:
   nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURI* aUrl,
                       nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
-                      PRInt32 aInitialWidth, PRInt32 aInitialHeight);
+                      PRInt32 aInitialWidth, PRInt32 aInitialHeight,
+                      nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
 
   void DoContextMenu(

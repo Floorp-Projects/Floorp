@@ -289,7 +289,8 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURI* aUrl, 
                                       nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
-                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight)
+                                      PRInt32 aInitialWidth, PRInt32 aInitialHeight,
+                                      nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
 
@@ -299,16 +300,12 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
 	// Doesn't come from prefs... will come from CSS/XUL/RDF
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
-  nsWidgetInitData initData;
-
   // Create top level window
   rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, kIWidgetIID,
                                     (void**)&mWindow);
   if (NS_OK != rv) {
     return rv;
   }
-
-  initData.mBorderStyle = eBorderStyle_window;
 
   if (!aParent || NS_FAILED(aParent->GetWidget(parentWidget)))
     parentWidget = nsnull;
@@ -320,7 +317,7 @@ nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                   nsnull,                             // Device context
                   aShell,                             // Application shell
                   nsnull,                             // nsIToolkit
-                  &initData);                         // Widget initialization data
+                  &widgetInitData);                   // Widget initialization data
   mWindow->GetClientBounds(r);
   mWindow->SetBackgroundColor(NS_RGB(192,192,192));
 
@@ -1144,8 +1141,25 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
-                                 nsnull, nsnull, 200, 300);
+  
+  nsWebShellWindow* window = new nsWebShellWindow();
+  if (nsnull == window) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  // temporarily disabling parentage because non-Windows platforms
+  // seem to be interpreting it in unexpected ways.
+  nsWidgetInitData widgetInitData;
+  widgetInitData.mBorderStyle = eBorderStyle_BorderlessTopLevel;
+
+  rv = window->Initialize((nsIWebShellWindow *) nsnull, nsnull, nsnull,
+                          nsnull, nsnull,
+                          200, 300, widgetInitData);
+  
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  newWindow = window;
+
   // Move the window to aXPos and aYPos
   nsCOMPtr<nsIBrowserWindow> browserWindow = do_QueryInterface(newWindow);
   browserWindow->MoveTo(aXPos, aYPos);
@@ -2500,8 +2514,11 @@ NS_IMETHODIMP nsWebShellWindow::Init(nsIAppShell* aAppShell,
    // Note: null nsIStreamObserver means this window won't be able to answer FE_callback-type
    // questions from netlib.  Observers are generally appcores.  We'll have to supply
    // a generic browser appcore here someday.
+   nsWidgetInitData widgetInitData;
+   widgetInitData.mBorderStyle = eBorderStyle_window;
+
    rv = Initialize(nsnull, aAppShell, urlObj,
-       nsnull, nsnull, aBounds.width, aBounds.height);
+       nsnull, nsnull, aBounds.width, aBounds.height, widgetInitData);
    mChromeMask = aChromeMask;
    if (NS_SUCCEEDED(rv))
      MoveTo(aBounds.x, aBounds.y);
