@@ -29,6 +29,9 @@
 #include "nsISupportsArray.h"
 
 class nsNetModuleMgr : public nsINetModuleMgr {
+protected:
+    static nsNetModuleMgr* gManager;
+
 public:
     // nsISupports
     NS_DECL_ISUPPORTS
@@ -44,7 +47,7 @@ public:
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
 
-    nsISupportsArray    *mEntries;
+    nsISupportsArray   *mEntries;
     PRLock             *mLock;
 };
 

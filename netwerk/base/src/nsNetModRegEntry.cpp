@@ -100,8 +100,6 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
     nsresult rv = NS_OK;
     *_retVal = PR_FALSE;
 
-    NS_ADDREF(aEntry);
-
     char* topic;
 
     rv = aEntry->GetTopic(&topic);
