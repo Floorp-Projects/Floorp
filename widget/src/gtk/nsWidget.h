@@ -113,7 +113,7 @@ public:
   NS_IMETHOD Enable(PRBool aState);
   NS_IMETHOD SetFocus(void);
 
-  virtual void LooseFocus(void);
+  virtual void LoseFocus(void);
 
   PRBool OnResize(nsSizeEvent event);
   virtual PRBool OnResize(nsRect &aRect);
@@ -175,6 +175,11 @@ public:
 
   // are we a "top level" widget?
   PRBool     mIsToplevel;
+
+  virtual void DispatchSetFocusEvent(void);
+  virtual void DispatchLostFocusEvent(void);
+  virtual void DispatchActivateEvent(void);
+  virtual void DispatchDeactivateEvent(void);
 
 #ifdef DEBUG
   void IndentByDepth(FILE* out);
@@ -240,10 +245,11 @@ protected:
   PRBool       mHasFocus;
 
 
-  // if anyone uses this for public access other than the key press/release code on the main window, i will kill you. pav
+  // if anyone uses this for public access other than the key
+  // press/release code on the main window, i will kill you. pav
 public:
   // this is the current GdkSuperWin with the focus
-  static nsWidget *focusWindow;
+  static nsWidget *sFocusWindow;
 
 protected:
   // 

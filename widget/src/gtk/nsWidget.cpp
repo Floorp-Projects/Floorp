@@ -71,7 +71,7 @@ static nsWidget *GetShellWidget(GdkWindow *gdkWindow);
 PRUint32 nsWidget::sWidgetCount = 0;
 
 // this is the nsWindow with the focus
-nsWidget *nsWidget::focusWindow = NULL;
+nsWidget *nsWidget::sFocusWindow = 0;
 
 #ifdef USE_XIM
 GdkFont *nsWidget::gPreeditFontset = nsnull;
@@ -90,10 +90,10 @@ PRBool nsWidget::OnInput(nsInputEvent &aEvent)
   nsWidget *widget = NULL;
 
   // rewrite the key event to the window with 'de focus
-  if (focusWindow) {
-    widget = focusWindow;
+  if (sFocusWindow) {
+    widget = sFocusWindow;
     NS_ADDREF(widget);
-    aEvent.widget = focusWindow;
+    aEvent.widget = sFocusWindow;
     releaseWidget = PR_TRUE;
   }
   if (mEventCallback) {
@@ -674,7 +674,7 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
   // call this so that any cleanup will happen that needs to...
-  LooseFocus();
+  LoseFocus();
 
   if (mWidget)
   {
@@ -686,19 +686,14 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
 }
 
 /* virtual */ void
-nsWidget::LooseFocus(void)
+nsWidget::LoseFocus(void)
 {
   // doesn't do anything.  needed for nsWindow housekeeping, really.
-  if (mHasFocus == PR_FALSE) {
+  if (mHasFocus == PR_FALSE)
     return;
-  }
   
-  focusWindow = NULL;
+  sFocusWindow = 0;
   mHasFocus = PR_FALSE;
-
-  // we don't need to send out a focus out event from here because
-  // when the gtk widget goes out of focus, it will get a focus_out
-  // event
 
 }
 
@@ -2896,9 +2891,9 @@ NS_IMETHODIMP nsWidget::ResetInputState()
       mIMECompositionUniString[uniCharSize] = 0;
 
       nsWidget *saved_focusWindow = 0;
-      if (focusWindow) {
-        saved_focusWindow = focusWindow;
-        focusWindow = 0;
+      if (sFocusWindow) {
+        saved_focusWindow = sFocusWindow;
+        sFocusWindow = 0;
       }
 
       IMEComposeStart(nsnull);
@@ -2913,7 +2908,7 @@ NS_IMETHODIMP nsWidget::ResetInputState()
       IMEComposeEnd(nsnull);
 
       if (saved_focusWindow) {
-        focusWindow = saved_focusWindow;
+        sFocusWindow = saved_focusWindow;
       }
 
       if (gInputStyle & GDK_IM_PREEDIT_POSITION) {
@@ -3637,3 +3632,20 @@ void nsWidget::IMECheckPreedit_PostProc()
   }
 }
 #endif // USE_XIM 
+
+void nsWidget::DispatchSetFocusEvent(void)
+{
+  NS_ASSERTION(0, "nsWidget::DispatchSetFocusEvent shouldn't be called!\n");
+}
+void nsWidget::DispatchLostFocusEvent(void)
+{
+  NS_ASSERTION(0, "nsWidget::DispatchLostFocusEvent shouldn't be called!\n");
+}
+void nsWidget::DispatchActivateEvent(void)
+{
+  NS_ASSERTION(0, "nsWidget::DispatchActivateEvent shouldn't be called!\n");
+}
+void nsWidget::DispatchDeactivateEvent(void)
+{
+  NS_ASSERTION(0, "nsWidget::DispatchDeactivateEvent shouldn't be called!\n");
+}
