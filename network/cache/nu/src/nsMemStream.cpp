@@ -20,7 +20,12 @@
 #include "nsMemStream.h"
 #include "prmem.h"
 #include "prlog.h" /* Assert */
+
+#ifndef XP_MAC
 #include "memory.h"
+#else
+#include "cstring"
+#endif
 
 static const PRUint32 kPageSize = 1024;//4096;
 nsMemStream::nsMemStream():m_AllocSize(0),m_Size(0),m_pStart(0),m_ReadOffset(0),m_WriteOffset(0)

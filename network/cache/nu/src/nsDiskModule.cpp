@@ -147,7 +147,8 @@ PRBool nsDiskModule::AddObject(nsCacheObject* io_pObject)
         
         //Close the corresponding file 
         PR_ASSERT(io_pObject->Stream());
-        PR_Close(((nsFileStream*)io_pObject->Stream())->FileDesc());
+		if (io_pObject->Stream())
+			PR_Close(((nsFileStream*)io_pObject->Stream())->FileDesc());
 
         key->data = (void*)io_pObject->Address(); 
         /* Later on change this to include post data- io_pObject->KeyData() */
@@ -514,8 +515,10 @@ char* FullFilename(const char* i_Filename)
     PL_strcpy(g_FullFilename, nsCachePref::GetInstance()->DiskCacheFolder());
     if (0==cacheFolderLength)
         cacheFolderLength = PL_strlen(nsCachePref::GetInstance()->DiskCacheFolder());
+#ifndef XP_MAC
     g_FullFilename[cacheFolderLength] = PR_GetDirectorySepartor(); //spelling check later as nspr fixes it. 
     g_FullFilename[cacheFolderLength+1] = '\0';
+#endif
     PL_strcat(g_FullFilename, i_Filename);
     return g_FullFilename;
 }
