@@ -37,8 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.lang.reflect.Method;
-
 /**
  * This class implements the String native object.
  *
@@ -194,49 +192,43 @@ final class NativeString extends IdScriptable {
                      (ScriptRuntime.toString(thisObj), args);
 
                 case Id_bold:
-                    return realThis(thisObj, f).tagify("b", null, null);
+                    return tagify(thisObj, "b", null, null);
 
                 case Id_italics:
-                    return realThis(thisObj, f).tagify("i", null, null);
+                    return tagify(thisObj, "i", null, null);
 
                 case Id_fixed:
-                    return realThis(thisObj, f).tagify("tt", null, null);
+                    return tagify(thisObj, "tt", null, null);
 
                 case Id_strike:
-                    return realThis(thisObj, f).tagify("strike", null, null);
+                    return tagify(thisObj, "strike", null, null);
 
                 case Id_small:
-                    return realThis(thisObj, f).tagify("small", null, null);
+                    return tagify(thisObj, "small", null, null);
 
                 case Id_big:
-                    return realThis(thisObj, f).tagify("big", null, null);
+                    return tagify(thisObj, "big", null, null);
 
                 case Id_blink:
-                    return realThis(thisObj, f).tagify("blink", null, null);
+                    return tagify(thisObj, "blink", null, null);
 
                 case Id_sup:
-                    return realThis(thisObj, f).tagify("sup", null, null);
+                    return tagify(thisObj, "sup", null, null);
 
                 case Id_sub:
-                    return realThis(thisObj, f).tagify("sub", null, null);
+                    return tagify(thisObj, "sub", null, null);
 
                 case Id_fontsize:
-                    return realThis(thisObj, f).
-                        tagify("font size", "font",
-                               ScriptRuntime.toString(args, 0));
+                    return tagify(thisObj, "font", "size", args);
 
                 case Id_fontcolor:
-                    return realThis(thisObj, f).
-                        tagify("font color", "font",
-                               ScriptRuntime.toString(args, 0));
+                    return tagify(thisObj, "font", "color", args);
 
                 case Id_link:
-                    return realThis(thisObj, f).
-                        tagify("a href", "a", ScriptRuntime.toString(args, 0));
+                    return tagify(thisObj, "a", "href", args);
 
                 case Id_anchor:
-                    return realThis(thisObj, f).
-                        tagify("a name", "a", ScriptRuntime.toString(args, 0));
+                    return tagify(thisObj, "a", "name", args);
 
                 case Id_equals:
                     return wrap_boolean(jsFunction_equals
@@ -279,19 +271,24 @@ final class NativeString extends IdScriptable {
     /*
      * HTML composition aids.
      */
-    private String tagify(String begin, String end, String value) {
+    private static String tagify(Object thisObj, String tag,
+                                 String attribute, Object[] args)
+    {
+        String str = ScriptRuntime.toString(thisObj);
         StringBuffer result = new StringBuffer();
         result.append('<');
-        result.append(begin);
-        if (value != null) {
+        result.append(tag);
+        if (attribute != null) {
+            result.append(' ');
+            result.append(attribute);
             result.append("=\"");
-            result.append(value);
+            result.append(ScriptRuntime.toString(args, 0));
             result.append('"');
         }
         result.append('>');
-        result.append(this.string);
+        result.append(str);
         result.append("</");
-        result.append((end == null) ? begin : end);
+        result.append(tag);
         result.append('>');
         return result.toString();
     }
@@ -300,7 +297,7 @@ final class NativeString extends IdScriptable {
         int N = args.length;
         if (N < 1)
             return "";
-        StringBuffer s = new java.lang.StringBuffer(N);
+        StringBuffer s = new StringBuffer(N);
         for (int i=0; i < N; i++) {
             s.append(ScriptRuntime.toUint16(args[i]));
         }
@@ -336,14 +333,16 @@ final class NativeString extends IdScriptable {
      * XXX is this ECMA?  A version check is probably needed. In js too.
      */
     public Object get(int index, Scriptable start) {
-        if (index >= 0 && index < string.length())
+        if (0 <= index && index < string.length()) {
             return string.substring(index, index + 1);
+        }
         return super.get(index, start);
     }
 
     public void put(int index, Scriptable start, Object value) {
-        if (index >= 0 && index < string.length())
+        if (0 <= index && index < string.length()) {
             return;
+        }
         super.put(index, start, value);
     }
 
@@ -351,8 +350,7 @@ final class NativeString extends IdScriptable {
      *
      * See ECMA 15.5.4.[4,5]
      */
-    private static String jsFunction_charAt(String target, Object[] args)
-    {
+    private static String jsFunction_charAt(String target, Object[] args) {
         // this'll return 0 if undefined... seems
         // to be ECMA.
         double pos = ScriptRuntime.toInteger(args, 0);
@@ -363,8 +361,7 @@ final class NativeString extends IdScriptable {
         return target.substring((int)pos, (int)pos + 1);
     }
 
-    private static double jsFunction_charCodeAt(String target, Object[] args)
-    {
+    private static double jsFunction_charCodeAt(String target, Object[] args) {
         double pos = ScriptRuntime.toInteger(args, 0);
 
         if (pos < 0 || pos >= target.length()) {
