@@ -248,6 +248,25 @@
     Update: ramiro is working on getting these into the configuration system.
   */
 
+#ifndef HAVE_CPP_EXPLICIT
+#define NSCAP_NO_EXPLICIT
+#endif
+
+#ifndef HAVE_CPP_USING
+#define NSCAP_NO_MEMBER_USING_DECLARATIONS
+#endif
+
+/* HAVE_CPP_NEW_CASTS test is not strict enough yet. scc? */
+#if 0
+#ifndef HAVE_CPP_NEW_CASTS
+#define NSCAP_NO_NEW_CASTS
+#endif
+#endif
+
+#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
+#define NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS
+#endif
+
 #if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 
