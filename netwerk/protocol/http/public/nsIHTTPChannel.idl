@@ -20,6 +20,7 @@
 
 interface nsIHTTPEventSink;
 interface nsIStreamListener;
+interface nsIInputStream;
 
 [scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
 interface nsIHTTPChannel : nsIChannel
@@ -41,6 +42,12 @@ interface nsIHTTPChannel : nsIChannel
 
     void SetRequestMethod(in unsigned long method);
 //    NS_IMETHOD          SetRequestMethod(HTTPMethod i_Method=HM_GET) = 0;
+
+    /*
+        Pass in the post data if any...
+    */
+    void SetPostDataStream(in nsIInputStream postStream);
+    void GetPostDataStream(out nsIInputStream postStream);
 
     /* 
         Response funtions. A call to any of these implicitly calls Load() on this

@@ -37,7 +37,8 @@
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
-nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, nsIChannel* i_pTransport):
+nsHTTPRequest::nsHTTPRequest(nsIURI* i_pURL, HTTPMethod i_Method, 
+	nsIChannel* i_pTransport):
     m_Method(i_Method),
     m_pArray(new nsVoidArray()),
     m_Version(HTTP_ONE_ZERO),
@@ -145,12 +146,10 @@ nsHTTPRequest::Build()
            ("\tnsHTTPRequest [this=%x].\tFirst line: %s",
             this, lineBuffer.GetBuffer()));
 
-#if 0
-    rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(), 
-                         &bytesWritten);
-#else
     rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(), 
                          &bytesWritten);
+#ifdef DEBUG_gagan    
+    printf(lineBuffer.GetBuffer());
 #endif
     if (NS_FAILED(rv)) return rv;
     
@@ -195,25 +194,65 @@ nsHTTPRequest::Build()
                ("\tnsHTTPRequest [this=%x].\t\t%s\n",
                 this, lineBuffer.GetBuffer()));
 
-#if 0
-        rv = m_Request->Fill(lineBuffer.GetBuffer(), lineBuffer.Length(),
-                             &bytesWritten);
-#else
         rv = buf->Write(lineBuffer.GetBuffer(), lineBuffer.Length(),
                              &bytesWritten);
+#ifdef DEBUG_gagan    
+    printf(lineBuffer.GetBuffer());
 #endif
         if (NS_FAILED(rv)) return rv;
 
         lineBuffer.Truncate();
     }
 
-    // Write the final \r\n
-#if 0
-    rv = m_Request->Fill(CRLF, PL_strlen(CRLF), &bytesWritten);
-#else
-    rv = buf->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
+	nsCOMPtr<nsIInputStream> stream;
+	NS_ASSERTION(m_pConnection, "Hee ha!");
+	if (NS_FAILED(m_pConnection->GetPostDataStream(getter_AddRefs(stream))))
+			return NS_ERROR_FAILURE;
+
+    // Currently nsIPostStreamData contains the header info and the data.
+    // So we are forced to putting this here in the end. 
+    // This needs to change! since its possible for someone to modify it
+    // TODO- Gagan
+
+    if (stream)
+	{
+		NS_ASSERTION(m_Method == HM_POST, "Post data without a POST method?");
+
+		PRUint32 length;
+		stream->GetLength(&length);
+
+		// TODO Change reading from nsIInputStream to nsIBuffer
+		char* tempBuff = new char[length+1];
+		if (!tempBuff)
+			return NS_ERROR_OUT_OF_MEMORY;
+		if (NS_FAILED(stream->Read(tempBuff, length, &length)))
+        {
+            NS_ASSERTION(0, "Failed to read post data!");
+            return NS_ERROR_FAILURE;
+        }
+        else
+		{
+            tempBuff[length] = '\0';
+            PRUint32 writtenLength;
+			buf->Write(tempBuff, length, &writtenLength);
+#ifdef DEBUG_gagan    
+    printf(tempBuff);
 #endif
-    if (NS_FAILED(rv)) return rv;
+			// ASSERT that you wrote length = stream's length
+            NS_ASSERTION(writtenLength == length, "Failed to write post data!");
+		}
+		delete[] tempBuff;
+	}
+    else 
+    {
+
+        // Write the final \r\n
+        rv = buf->Write(CRLF, PL_strlen(CRLF), &bytesWritten);
+#ifdef DEBUG_gagan    
+    printf(CRLF);
+#endif
+        if (NS_FAILED(rv)) return rv;
+    }
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
            ("nsHTTPRequest::Build() [this=%x].\tFinished building request.\n",

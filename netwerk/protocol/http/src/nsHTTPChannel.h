@@ -84,6 +84,8 @@ public:
     NS_IMETHOD GetRequestHeader(const char *headerName, char **_retval);
     NS_IMETHOD SetRequestHeader(const char *headerName, const char *value);
     NS_IMETHOD SetRequestMethod(PRUint32 method);
+    NS_IMETHOD SetPostDataStream(nsIInputStream *i_postStream);
+    NS_IMETHOD GetPostDataStream(nsIInputStream **o_postStream);
     NS_IMETHOD GetResponseHeader(const char *headerName, char **_retval);
     NS_IMETHOD GetResponseStatus(PRUint32 *aResponseStatus);
     NS_IMETHOD GetResponseString(char * *aResponseString);
@@ -110,6 +112,7 @@ protected:
 
     nsCOMPtr<nsISupports>       mResponseContext;
     nsILoadGroup*               mLoadGroup;
+    nsIInputStream*             mPostStream;
 };
 
 #endif /* _nsHTTPChannel_h_ */
