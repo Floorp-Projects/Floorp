@@ -50,6 +50,7 @@ class nsBaseAppCore : public nsIScriptObjectOwner, public nsIDOMBaseAppCore
 
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId);
+    NS_IMETHOD    SetDocumentCharset(const nsString& aCharset);
 
   protected:
     nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);

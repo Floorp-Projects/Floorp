@@ -110,6 +110,12 @@ nsBaseAppCore::GetId(nsString& aId)
     return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsBaseAppCore::SetDocumentCharset(const nsString& aCharset)
+{
+  return NS_OK;
+}
+
 //----------------------------------------
 nsIScriptContext *    
 nsBaseAppCore::GetScriptContext(nsIDOMWindow * aWin)
