@@ -47,4 +47,9 @@ class nsIPref;
 - (IBAction)historyDaysModified:(id)sender;
 - (IBAction)clearGlobalHistory:(id)sender;
 
+- (NSString*)getSystemHomePage;
+- (NSString*)getCurrentHomePage;
+
+- (NSString*)getPrefString: (const char*)prefName;
+- (void)setPref: (const char*)prefName toString:(NSString*)value;
 @end

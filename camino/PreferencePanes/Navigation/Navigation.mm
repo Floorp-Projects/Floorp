@@ -21,7 +21,10 @@
 *   william@dell.wisner.name (William Dell Wisner)
 */
 
+#import <Carbon/Carbon.h>
+
 #import "Navigation.h"
+
 #include "nsIServiceManager.h"
 #include "nsIPrefBranch.h"
 #include "nsIPref.h"
@@ -75,13 +78,26 @@ const int kDefaultExpireDays = 9;
   if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
     [checkboxOpenTabs setState:YES];
 
-	char *buf = nsnull;
-	rv = mPrefService->GetCharPref("browser.startup.homepage", &buf);
-	if (NS_SUCCEEDED(rv) && buf)
-	{
-		[textFieldHomePage setStringValue:[NSString stringWithCString:buf]];
-		free(buf);
-	}
+  BOOL useSystemHomePage = NO;
+  rv = mPrefService->GetBoolPref("chimera.use_system_home_page", &boolPref);
+  if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
+    useSystemHomePage = YES;
+  
+  if (useSystemHomePage)
+    [textFieldHomePage setEnabled:NO];
+
+  [checkboxUseSystemHomePage setState:useSystemHomePage];
+  [textFieldHomePage setStringValue: [self getCurrentHomePage]];
+}
+
+- (void) didUnselect
+{
+  if (!mPrefService)
+    return;
+
+  // only save the home page pref if it's not the system one
+  if (![checkboxUseSystemHomePage state])
+    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
 
 }
 
@@ -103,7 +119,19 @@ const int kDefaultExpireDays = 9;
 
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender
 {
-	NSLog(@"Homepage clicked");
+  if (!mPrefService)
+    return;
+  
+  BOOL useSystemHomePage = [sender state];
+
+  // save the mozilla pref
+  if (useSystemHomePage)
+    [self setPref: "browser.startup.homepage" toString: [textFieldHomePage stringValue]];
+  
+  mPrefService->SetBoolPref("chimera.use_system_home_page", useSystemHomePage ? PR_TRUE : PR_FALSE);
+
+  [textFieldHomePage setStringValue: [self getCurrentHomePage]];
+  [textFieldHomePage setEnabled:!useSystemHomePage];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -157,5 +185,68 @@ const int kDefaultExpireDays = 9;
   if ( hist )
     hist->RemoveAllPages();
 }
+
+- (NSString*) getSystemHomePage
+{
+  NSMutableString* homePageString = [[[NSMutableString alloc] init] autorelease];
+  
+  ICInstance		icInstance = NULL;
+  OSStatus 			error;
+  
+  // it would be nice to use CHPreferenceManager, but I don't want to drag
+  // all that code into the plugin
+  error = ICStart(&icInstance, 'CHIM');
+  if (error != noErr) {
+    NSLog(@"Error from ICStart");
+    return @"";
+  }
+  
+  ICAttr	dummyAttr;
+  Str255	homePagePStr;
+  long		prefSize = sizeof(homePagePStr);
+  error = ICGetPref(icInstance, kICWWWHomePage, &dummyAttr, homePagePStr, &prefSize);
+  if (error == noErr)
+    [homePageString setString: [NSString stringWithCString: (const char*)&homePagePStr[1] length:homePagePStr[0]]];
+  else
+    NSLog(@"Error getting home page from Internet Config");
+  
+  ICStop(icInstance);
+  
+  return homePageString;
+}
+
+- (NSString*) getCurrentHomePage
+{
+  BOOL useSystemHomePage = NO;
+  PRBool boolPref;
+  nsresult rv = mPrefService->GetBoolPref("chimera.use_system_home_page", &boolPref);
+  if (NS_SUCCEEDED(rv) && boolPref == PR_TRUE)
+    return [self getSystemHomePage];
+    
+  return [self getPrefString: "browser.startup.homepage"];
+}
+
+// convenience routines for mozilla prefs
+- (NSString*)getPrefString: (const char*)prefName
+{
+  NSMutableString *prefValue = [[[NSMutableString alloc] init] autorelease];
+  
+  char *buf = nsnull;
+  nsresult rv = mPrefService->GetCharPref(prefName, &buf);
+  if (NS_SUCCEEDED(rv) && buf) {
+    [prefValue setString:[NSString stringWithCString:buf]];
+    free(buf);
+  }
+  
+  return prefValue;
+}
+
+- (void)setPref: (const char*)prefName toString:(NSString*)value
+{
+  if (mPrefService) {
+    mPrefService->SetCharPref(prefName, [value cString]);
+  }
+}
+
 
 @end

@@ -91,7 +91,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 - (BOOL) initInternetConfig
 {
     OSStatus error;
-    error = ICStart (&internetConfig, '????');
+    error = ICStart (&internetConfig, 'CHIM');
     if (error != noErr) {
         // XXX throw here?
         NSLog(@"Error initializing IC.\n");
@@ -150,7 +150,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     rv = profileService->SetCurrentProfile(newProfileName.get());
     if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_FILE_ACCESS_DENIED) {
-        //horrible, horrible, bad, fixed strings.  need localization string file.
         NSString *alert = NSLocalizedString(@"AlreadyRunningAlert",@"");
         NSString *message = NSLocalizedString(@"AlreadyRunningMsg",@"");
         NSString *quit = NSLocalizedString(@"AlreadyRunningButton",@"");
@@ -172,7 +171,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     CFStringRef cfString;
     char strbuf[1024];
     int numbuf;
-    NSString *string;
 
     nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));
     if (!prefs) {
@@ -194,12 +192,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 		  prefs->SetIntPref(kCookieBehaviorPref, acceptCookies);
     }
 		
-    // get home page from Internet Config
-    string = [self getICStringPref:kICWWWHomePage];
-    if (string) {
-        prefs->SetCharPref("browser.startup.homepage", [string cString]);
-    }
-
     // get proxies from SystemConfiguration
     prefs->SetIntPref("network.proxy.type", 0); // 0 == no proxies
     prefs->ClearUserPref("network.proxy.http");
@@ -302,6 +294,25 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     }
 }
 
+// convenience routines for mozilla prefs
+- (NSString*)getMozillaPrefString: (const char*)prefName
+{
+  NSMutableString *prefValue = [[[NSMutableString alloc] init] autorelease];
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID));  
+  if (prefs) {
+    char *buf = nsnull;
+    nsresult rv = prefs->GetCharPref(prefName, &buf);
+    if (NS_SUCCEEDED(rv) && buf) {
+      [prefValue setString:[NSString stringWithCString:buf]];
+      free(buf);
+    }
+  }
+  
+  return prefValue;
+}
+
+
 //- (BOOL) getICBoolPref:(ConstStr255Param) prefKey;
 //{
 //    ICAttr dummy;
@@ -355,7 +366,6 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   if (!prefs)
     return @"about:blank";
 
-  NSString *url = nil;
   PRInt32 mode = 1;
   
   // In some cases, we need to check browser.startup.page to see if
@@ -367,17 +377,17 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   if ( checkStartupPagePref )
     rv = prefs->GetIntPref("browser.startup.page", &mode);
   if (NS_FAILED(rv) || mode == 1) {
-      char *buf = nsnull;
-      prefs->GetCharPref("browser.startup.homepage", &buf);
-      if (buf && *buf)
-          url = [NSString stringWithCString:buf];
-      else
-          url = @"about:blank";
-      free (buf);
-      return url;
+    // see which home page to use
+    PRBool boolPref;
+    if (NS_SUCCEEDED(prefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref)
+      return [self getICStringPref:kICWWWHomePage];
+
+    NSString* homepagePref = [self getMozillaPrefString:"browser.startup.homepage"];
+    if ([homepagePref length] > 0)
+      return homepagePref;
   }
-  else
-      return @"about:blank";
+  
+  return @"about:blank";
 }
 
 @end

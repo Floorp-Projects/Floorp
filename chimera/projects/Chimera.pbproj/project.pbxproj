@@ -1676,6 +1676,7 @@
 				F52627DC027E9CCD01000102,
 				F52627DD027E9CCD01000102,
 				F52627DE027EA5BE01000102,
+				F5421B0802CFEAB4011C94A4,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -2511,6 +2512,12 @@
 		};
 		F541496502714F9A01A80166 = {
 			fileRef = F541496302714F9A01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F5421B0802CFEAB4011C94A4 = {
+			fileRef = F52D5CDB027D412A01A80166;
 			isa = PBXBuildFile;
 			settings = {
 			};
