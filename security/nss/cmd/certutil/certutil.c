@@ -606,37 +606,52 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     SECItem data;
     PRInt32 numBytes;
     SECStatus rv = SECFailure;
+    CERTCertList *certs;
+    CERTCertListNode *node;
 
     /* List certs on a non-internal slot. */
     if (!PK11_IsFriendly(slot) && PK11_NeedLogin(slot))
 	    PK11_Authenticate(slot, PR_TRUE, pwarg);
     if (name) {
 	CERTCertificate *the_cert;
-	the_cert = PK11_FindCertFromNickname(name, NULL);
+/*	the_cert = PK11_FindCertFromNickname(name, NULL); */
+	the_cert = CERT_FindCertByNicknameOrEmailAddr(handle, name);
 	if (!the_cert) {
-	    SECU_PrintError(progName, "Could not find: %s\n", name);
-	    return SECFailure;
-	}
-	data.data = the_cert->derCert.data;
-	data.len = the_cert->derCert.len;
-	if (ascii) {
-	    PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
-		        BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
-	    rv = SECSuccess;
-	} else if (raw) {
-	    numBytes = PR_Write(outfile, data.data, data.len);
-	    if (numBytes != data.len) {
-		SECU_PrintSystemError(progName, "error writing raw cert");
-		rv = SECFailure;
+	    the_cert = PK11_FindCertFromNickname(name, NULL);
+	    if (!the_cert) {
+		SECU_PrintError(progName, "Could not find: %s\n", name);
+		return SECFailure;
 	    }
-	    rv = SECSuccess;
-	} else {
-	    rv = printCertCB(the_cert, the_cert->trust);
 	}
+	certs = CERT_CreateSubjectCertList(NULL, handle, &the_cert->derSubject,
+		PR_Now(), PR_FALSE);
 	CERT_DestroyCertificate(the_cert);
+
+	for (node = CERT_LIST_HEAD(certs); !CERT_LIST_END(node,certs);
+						node = CERT_LIST_NEXT(node)) {
+	    the_cert = node->cert;
+	    /* now get the subjectList that matches this cert */
+	    data.data = the_cert->derCert.data;
+	    data.len = the_cert->derCert.len;
+	    if (ascii) {
+		PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+		        BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
+		rv = SECSuccess;
+	    } else if (raw) {
+		numBytes = PR_Write(outfile, data.data, data.len);
+		if (numBytes != data.len) {
+		   SECU_PrintSystemError(progName, "error writing raw cert");
+		    rv = SECFailure;
+		}
+		rv = SECSuccess;
+	    } else {
+		rv = printCertCB(the_cert, the_cert->trust);
+	    }
+	    if (rv != SECSuccess) {
+		break;
+	    }
+	}
     } else {
-	CERTCertList *certs;
-	CERTCertListNode *node;
 
 	certs = PK11_ListCertsInSlot(slot);
 	if (certs) {
@@ -644,10 +659,10 @@ listCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 						node = CERT_LIST_NEXT(node)) {
 		SECU_PrintCertNickname(node->cert,stdout);
 	    }
-	    CERT_DestroyCertList(certs);
 	    rv = SECSuccess;
 	}
     }
+    CERT_DestroyCertList(certs);
     if (rv) {
 	SECU_PrintError(progName, "problem printing certificate nicknames");
 	return SECFailure;
