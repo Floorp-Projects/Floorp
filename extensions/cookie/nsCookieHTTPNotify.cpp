@@ -22,6 +22,7 @@
 
 #include <stdio.h>
 #include "nsCookieHTTPNotify.h"
+#include "nsIGenericFactory.h"
 #include "nsIHTTPChannel.h"
 #include "nsCookie.h"
 #include "nsIURL.h"
@@ -33,21 +34,16 @@
 ///////////////////////////////////
 // nsISupports
 
-NS_IMPL_ISUPPORTS2(nsCookieHTTPNotify, nsIHTTPNotify, nsINetNotify);
+NS_IMPL_ISUPPORTS1(nsCookieHTTPNotify, nsIHTTPNotify);
 
 ///////////////////////////////////
 // nsCookieHTTPNotify Implementation
 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCookieHTTPNotify, Init)
+
 NS_COOKIE nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify)
 {
-    if (aHTTPNotify == NULL) {
-        return NS_ERROR_NULL_POINTER;
-    } 
-    nsCookieHTTPNotify* it = new nsCookieHTTPNotify();
-    if (it == 0) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    return it->QueryInterface(nsIHTTPNotify::GetIID(), (void **) aHTTPNotify);
+    return nsCookieHTTPNotifyConstructor(nsnull, NS_GET_IID(nsIHTTPNotify), (void **) aHTTPNotify);
 }
 
 nsCookieHTTPNotify::nsCookieHTTPNotify()
@@ -55,34 +51,20 @@ nsCookieHTTPNotify::nsCookieHTTPNotify()
     NS_INIT_REFCNT();
 }
 
-nsCookieHTTPNotify::~nsCookieHTTPNotify()
+NS_IMETHODIMP
+nsCookieHTTPNotify::Init()
 {
+    mCookieHeader = NS_NewAtom("cookie");
+    if (!mCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
+    mSetCookieHeader = NS_NewAtom("set-cookie");
+    if (!mSetCookieHeader) return NS_ERROR_OUT_OF_MEMORY;
+    mExpiresHeader = NS_NewAtom("date");
+    if (!mExpiresHeader) return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
-NS_METHOD
-nsCookieHTTPNotify::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
+nsCookieHTTPNotify::~nsCookieHTTPNotify()
 {
-    if (! aResult) {
-        return NS_ERROR_NULL_POINTER;
-    }
-    if (aOuter) {
-        return NS_ERROR_NO_AGGREGATION;
-    }
-    *aResult = nsnull;
-    nsresult rv;
-    nsIHTTPNotify* inst = nsnull;
-    if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&inst))) {
-        return rv;
-    }
-    if (!inst) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-    rv = inst->QueryInterface(aIID, aResult);
-    if (NS_FAILED(rv)) {
-        *aResult = NULL;
-    }
-    NS_RELEASE(inst);
-    return rv;
 }
 
 ///////////////////////////////////
@@ -92,59 +74,26 @@ NS_IMETHODIMP
 nsCookieHTTPNotify::ModifyRequest(nsISupports *aContext)
 {
     nsresult rv;
-    nsIHTTPChannel* pHTTPConnection= nsnull;
-    if (aContext) {
-        rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), (void**)&pHTTPConnection);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    if (NS_FAILED(rv)) {
-        return rv; 
-    }
-    nsIURI* pURL;
-    rv = pHTTPConnection->GetURI(&pURL);
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    nsXPIDLCString url;
-    if (pURL == nsnull) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    rv = pURL->GetSpec(getter_Copies(url));
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    if (url == nsnull) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    const char* cookie = ::COOKIE_GetCookie((char*)(const char*)url);
-    if (cookie == nsnull) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    nsCOMPtr<nsIAtom> cookieHeader;
+    if (!aContext) return NS_ERROR_NULL_POINTER;
 
-    // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
-    cookieHeader = NS_NewAtom("cookie");
-    if (!cookieHeader) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        rv = pHTTPConnection->SetRequestHeader(cookieHeader, cookie);
-    }
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pURL);
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    NS_RELEASE(pURL);
-    NS_RELEASE(pHTTPConnection);
+    nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext, &rv);
+    if (NS_FAILED(rv)) return rv; 
+
+    nsCOMPtr<nsIURI> pURL;
+    rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString url;
+    rv = pURL->GetSpec(getter_Copies(url));
+    if (NS_FAILED(rv)) return rv;
+    if (url == nsnull) return NS_ERROR_FAILURE;
+
+    const char* cookie = ::COOKIE_GetCookie((char*)(const char*)url);
+    if (cookie == nsnull) return rv;
+
+    rv = pHTTPConnection->SetRequestHeader(mCookieHeader, cookie);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 
@@ -152,74 +101,36 @@ NS_IMETHODIMP
 nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
 {
     nsresult rv;
-    nsIHTTPChannel* pHTTPConnection= nsnull;
-    if (aContext) {
-        rv = aContext->QueryInterface(nsIHTTPChannel::GetIID(), (void**)&pHTTPConnection);
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    if (NS_FAILED(rv)) {
-        return rv;
-    }
-    char* cookie;
-    nsCOMPtr<nsIAtom> header;
+    NS_ENSURE_ARG_POINTER(aContext);
 
-    // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
-    header = NS_NewAtom("set-cookie");
-    if (!header) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-    } else {
-        rv = pHTTPConnection->GetResponseHeader(header, &cookie);
-    }
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(pHTTPConnection);
-        return rv;
-    }
-    if (cookie) {
-        nsIURI* pURL;
-        rv = pHTTPConnection->GetURI(&pURL);
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-        nsXPIDLCString url;
-        if (pURL == nsnull) {
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-        rv = pURL->GetSpec(getter_Copies(url));
-        if (NS_FAILED(rv)) {
-            NS_RELEASE(pURL);
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-        if (url == nsnull) {
-            NS_RELEASE(pURL);
-            NS_RELEASE(pHTTPConnection);
-            nsCRT::free(cookie);
-            return rv;
-        }
-        char *pDate = nsnull;
-        // XXX:  Should cache this atom?  HTTP atoms *msut* be lower case
-        header = NS_NewAtom("date");
-        if (!header) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            rv = pHTTPConnection->GetResponseHeader(header, &pDate);
-        }
-        if (NS_SUCCEEDED(rv)) {
-            COOKIE_SetCookieStringFromHttp((char*)(const char*)url, cookie, pDate);
-            if(pDate) {
-                nsCRT::free(pDate);
-            }
-        }
-        NS_RELEASE(pURL);
-        nsCRT::free(cookie);
-    }
-    NS_RELEASE(pHTTPConnection);
+    nsCOMPtr<nsIHTTPChannel> pHTTPConnection = do_QueryInterface(aContext);
+    if (NS_FAILED(rv)) return rv;
+
+    // Get the Cookie header
+    nsXPIDLCString cookie;
+    rv = pHTTPConnection->GetResponseHeader(mSetCookieHeader, getter_Copies(cookie));
+    if (NS_FAILED(rv)) return rv;
+    if (!cookie) return NS_ERROR_OUT_OF_MEMORY;
+
+    // Get the url string
+    nsCOMPtr<nsIURI> pURL;
+    nsXPIDLCString url;
+    rv = pHTTPConnection->GetURI(getter_AddRefs(pURL));
+    if (NS_FAILED(rv)) return rv;
+    rv = pURL->GetSpec(getter_Copies(url));
+    if (NS_FAILED(rv)) return rv;
+    if (url == nsnull) return NS_ERROR_FAILURE;
+    
+    // Get the expires
+    nsXPIDLCString pDate;
+    rv = pHTTPConnection->GetResponseHeader(mExpiresHeader, getter_Copies(pDate));
+    if (NS_FAILED(rv)) return rv;
+
+    // Save the cookie
+    COOKIE_SetCookieStringFromHttp((char*)(const char*)url,
+                                   (char *)(const char *)cookie,
+                                   (char *)(const char *)pDate);
+
     return NS_OK;
 }
 

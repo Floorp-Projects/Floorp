@@ -23,8 +23,9 @@
 #ifndef nsCookieHTTPNotify_h___
 #define nsCookieHTTPNotify_h___
 
-#include "nsIFactory.h"
 #include "nsIHttpNotify.h"
+#include "nsCOMPtr.h"
+#include "nsIAtom.h"
 
 // {6BC1F522-1F45-11d3-8AD4-00105A1B8860}
 #define NS_COOKIEHTTPNOTIFY_CID \
@@ -37,6 +38,9 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // Init method
+  NS_IMETHOD Init();
+
   // nsIHttpNotify methods:
   NS_IMETHOD ModifyRequest(nsISupports *aContext);
   NS_IMETHOD AsyncExamineResponse(nsISupports *aContext);
@@ -45,11 +49,10 @@ public:
   nsCookieHTTPNotify();
   virtual ~nsCookieHTTPNotify();
 
-  static NS_METHOD
-  Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
- 
 private:
-   
+    nsCOMPtr<nsIAtom> mCookieHeader;
+    nsCOMPtr<nsIAtom> mSetCookieHeader;
+    nsCOMPtr<nsIAtom> mExpiresHeader;
 };
 
 extern NS_EXPORT nsresult NS_NewCookieHTTPNotify(nsIHTTPNotify** aHTTPNotify);
