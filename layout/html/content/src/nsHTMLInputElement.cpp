@@ -198,6 +198,7 @@ protected:
   nsCOMPtr<nsIControllers> mControllers;
 
 
+  NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
   PRBool IsImage() const {
     nsAutoString tmp;
     mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, tmp);
@@ -234,10 +235,10 @@ nsHTMLInputElement::nsHTMLInputElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLInputElement::~nsHTMLInputElement()
 {
-  if (nsnull != mForm) {
-    // prevent mForm from decrementing its ref count on us
-    mForm->RemoveElement(this, PR_FALSE); 
-    NS_RELEASE(mForm);
+  // Null out form's pointer to us - no ref counting here!
+  if (mForm) {
+    mForm->RemoveElement(this);
+    mForm = nsnull;
   }
 }
 
@@ -266,23 +267,7 @@ nsHTMLInputElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMPL_ADDREF(nsHTMLInputElement);
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLInputElement::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLInputElement");
-	if (mRefCnt <= 0) {
-    delete this;                                       
-    return 0;                                          
-  } else if ((1 == mRefCnt) && mForm) {         
-    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLInputElement");
-    delete this;
-    return 0;
-  } else {
-    return mRefCnt;
-  }
-}
+NS_IMPL_RELEASE(nsHTMLInputElement);
 
 // nsIDOMNode
 
@@ -602,26 +587,25 @@ nsHTMLInputElement::Focus()
 {
   nsCOMPtr<nsIDocument> doc; // Strong
   nsresult rv = GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!doc) { return NS_ERROR_NULL_POINTER; }
+  if (NS_SUCCEEDED(rv) && doc) {
 
-  PRInt32 numShells = doc->GetNumberOfShells();
-  nsCOMPtr<nsIPresContext> context;
-  for (PRInt32 i=0; i<numShells; i++) 
-  {
-    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
-    if (!shell) { return NS_ERROR_NULL_POINTER; }
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 i=0; i<numShells; i++) 
+    {
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
+      if (!shell) { rv = NS_ERROR_NULL_POINTER; break; }
 
-    rv = shell->GetPresContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) { return rv; }
-    if (!context) { return NS_ERROR_NULL_POINTER; }
+      rv = shell->GetPresContext(getter_AddRefs(context));
+      if (NS_FAILED(rv)) { break; }
+      if (!context) { rv = NS_ERROR_NULL_POINTER; break; }
 
-    rv = SetFocus(context);
-    if (NS_FAILED(rv)) { return rv; }
+      rv = SetFocus(context);
+      if (NS_FAILED(rv)) { break; }
+    }
   }
 
-  // any errors would have been returned above
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -641,9 +625,10 @@ nsHTMLInputElement::SetFocus(nsIPresContext* aPresContext)
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
-    // XXX commented out - redundant. cps: Turns out to be important
     formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
+    // Could call SelectAll(aPresContext) here to automatically
+    // select text when we receive focus - only for text and password!
   }
 
   return rv;
@@ -660,14 +645,54 @@ nsHTMLInputElement::RemoveFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsHTMLInputElement::Select()
 {
+  nsresult rv = NS_OK;
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+    return rv;
+  }
+
+  // see what type of input we are.  Only select for texts and passwords
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_PASSWORD == type ||
+      NS_FORM_INPUT_TEXT == type) {
+ 
+    // Currently we have to give focus to the text field before we
+    // can select text in it.  :S
+
+    // Just like SetFocus() but without the ScrollIntoView()!
+    nsCOMPtr<nsIPresContext> presContext;
+    nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+    nsCOMPtr<nsIEventStateManager> esm;
+    if (NS_OK == presContext->GetEventStateManager(getter_AddRefs(esm))) {
+      esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+    }
+
+    nsIFormControlFrame* formControlFrame = nsnull;
+    nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+    if (NS_SUCCEEDED(rv)) {
+      formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+    }
+
+    // Now Select all the text!
+    if (NS_SUCCEEDED(rv)) {
+      rv = SelectAll(presContext);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLInputElement::SelectAll(nsIPresContext* aPresContext)
+{
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     if (formControlFrame )
     {
-      nsCOMPtr<nsIPresContext> presContext;
-      nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, nsAutoString());
+      formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select, nsAutoString());
       return NS_OK;
     }
   }
@@ -677,32 +702,50 @@ nsHTMLInputElement::Select()
 NS_IMETHODIMP
 nsHTMLInputElement::Click()
 {
-  nsCOMPtr<nsIDocument> doc; // Strong
-  nsresult rv = GetDocument(*getter_AddRefs(doc));
-  if (NS_SUCCEEDED(rv) && doc) {
-    PRInt32 numShells = doc->GetNumberOfShells();
-    nsCOMPtr<nsIPresContext> context;
-    for (PRInt32 i=0; i<numShells; i++) {
-      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
-      if (shell) {
-        rv = shell->GetPresContext(getter_AddRefs(context));
-        if (NS_SUCCEEDED(rv) && context) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event;
-          event.eventStructType = NS_GUI_EVENT;
-          event.message = NS_MOUSE_LEFT_CLICK;
-          event.isShift = PR_FALSE;
-          event.isControl = PR_FALSE;
-          event.isAlt = PR_FALSE;
-          event.isMeta = PR_FALSE;
-          event.clickCount = 0;
-          event.widget = nsnull;
-          rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+  nsresult rv = NS_OK;
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+    return rv;
+  }
+
+  // see what type of input we are.  Only select for texts and passwords
+  PRInt32 type;
+  GetType(&type);
+  if (NS_FORM_INPUT_BUTTON == type ||
+      NS_FORM_INPUT_CHECKBOX == type ||
+      NS_FORM_INPUT_RADIO == type ||
+      NS_FORM_INPUT_RESET == type ||
+      NS_FORM_INPUT_SUBMIT == type) {
+
+    nsCOMPtr<nsIDocument> doc; // Strong
+    rv = GetDocument(*getter_AddRefs(doc));
+    if (NS_SUCCEEDED(rv) && doc) {
+      PRInt32 numShells = doc->GetNumberOfShells();
+      nsCOMPtr<nsIPresContext> context;
+      for (PRInt32 i=0; i<numShells; i++) {
+        nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
+        if (shell) {
+          rv = shell->GetPresContext(getter_AddRefs(context));
+          if (NS_SUCCEEDED(rv) && context) {
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsMouseEvent event;
+            event.eventStructType = NS_GUI_EVENT;
+            event.message = NS_MOUSE_LEFT_CLICK;
+            event.isShift = PR_FALSE;
+            event.isControl = PR_FALSE;
+            event.isAlt = PR_FALSE;
+            event.isMeta = PR_FALSE;
+            event.clickCount = 0;
+            event.widget = nsnull;
+            rv = HandleDOMEvent(context, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+          }
         }
       }
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -742,7 +785,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
           mSkipFocusEvent = PR_FALSE;
           return NS_OK;
-        }                                                                       
+        }
       }                                                                         
       break; // NS_FOCUS_CONTENT
 
@@ -819,6 +862,21 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           case NS_FORM_INPUT_RADIO:
             SetChecked(PR_TRUE);
             break;
+
+          case NS_FORM_INPUT_BUTTON:
+          case NS_FORM_INPUT_RESET:
+          case NS_FORM_INPUT_SUBMIT:
+            {
+              // Tell the frame about the click
+              nsIFormControlFrame* formControlFrame = nsnull;
+              nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+              if (NS_SUCCEEDED(rv)) {
+                formControlFrame->MouseClicked(aPresContext);
+              }
+            }
+            break;
+
+
         } //switch 
       } break;// NS_MOUSE_LEFT_BUTTON_DOWN
 
@@ -1060,34 +1118,27 @@ nsHTMLInputElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapFu
 }
 
 // nsIFormControl
-
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLInputElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result;
-  nsIFormControl *formControl;
-
-  result = QueryInterface(kIFormControlIID, (void**)&formControl);
-  if (NS_FAILED(result))
-    formControl = nsnull;
+  nsCOMPtr<nsIFormControl> formControl;
+  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  if (NS_FAILED(result)) formControl = nsnull;
 
   if (mForm && formControl)
-    mForm->RemoveElement(formControl, PR_TRUE);
+    mForm->RemoveElement(formControl);
 
-  if (nsnull == aForm)
-    mForm = nsnull;
-  else {
-    NS_IF_RELEASE(mForm);
-    if (formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
+  if (aForm) {
+    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
+    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+    if ((NS_OK == result) && theForm) {
+      if (formControl) {
+        theForm->AddElement(formControl);
       }
     }
+  } else {
+    mForm = nsnull;
   }
-  NS_IF_RELEASE(formControl);
 
   mInner.SetForm(mForm);
 

@@ -44,6 +44,7 @@ class nsISizeOfHandler;
  */
 class nsIForm : public nsISupports {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFORM_IID)
 
   /**
     * Add an element to end of this form's list of elements
@@ -79,12 +80,9 @@ public:
   /**
     * Remove an element from this form's list of elements
     * @param aElement the element to remove
-    * @param aChildIsRef if PR_TRUE, the elements ref count will be decremented
-    * otherwise not. This is to facilitate circular references.
     * @return NS_OK if the element was successfully removed.
     */
-  NS_IMETHOD RemoveElement(nsIFormControl* aElement, 
-                           PRBool aChildIsRef = PR_TRUE) = 0;
+  NS_IMETHOD RemoveElement(nsIFormControl* aElement) = 0;
 
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const = 0;
 };

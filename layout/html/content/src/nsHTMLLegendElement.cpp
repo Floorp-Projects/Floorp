@@ -111,8 +111,10 @@ nsHTMLLegendElement::nsHTMLLegendElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLLegendElement::~nsHTMLLegendElement()
 {
+  // Null out form's pointer to us - no ref counting here!
   if (mForm) {
-    NS_RELEASE(mForm);
+    mForm->RemoveElement(this);
+    mForm = nsnull;
   }
 }
 
@@ -178,26 +180,26 @@ nsHTMLLegendElement::GetForm(nsIDOMHTMLFormElement** aForm)
   return result;
 }
 
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLLegendElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result = NS_OK;
-  if (nsnull == aForm) {
-    mForm = nsnull;
-    return NS_OK;
-  } else {
-    NS_IF_RELEASE(mForm);
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(NS_GET_IID(nsIFormControl), (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
+  nsCOMPtr<nsIFormControl> formControl;
+  nsresult result = QueryInterface(NS_GET_IID(nsIFormControl), getter_AddRefs(formControl));
+  if (NS_FAILED(result)) formControl = nsnull;
+
+  if (mForm && formControl)
+    mForm->RemoveElement(formControl);
+
+  if (aForm) {
+    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
+    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+    if ((NS_OK == result) && theForm) {
+      if (formControl) {
+        theForm->AddElement(formControl);
       }
-      NS_RELEASE(formControl);
     }
+  } else {
+    mForm = nsnull;
   }
 
   mInner.SetForm(mForm);

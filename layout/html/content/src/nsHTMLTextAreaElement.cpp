@@ -45,6 +45,8 @@
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
 #include "nsLinebreakConverter.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -120,6 +122,8 @@ protected:
   nsGenericHTMLContainerFormElement mInner;
   nsIForm*   mForm;
   nsCOMPtr<nsIControllers> mControllers;
+
+  NS_IMETHOD SelectAll(nsIPresContext* aPresContext);
 };
 
 nsresult
@@ -146,14 +150,15 @@ nsHTMLTextAreaElement::nsHTMLTextAreaElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLTextAreaElement::~nsHTMLTextAreaElement()
 {
-  if (nsnull != mForm) {
-    // prevent mForm from decrementing its ref count on us
-    mForm->RemoveElement(this, PR_FALSE); 
-    NS_RELEASE(mForm);
+  // Null out form's pointer to us - no ref counting here!
+  if (mForm) {
+    mForm->RemoveElement(this);
+    mForm = nsnull;
   }
 }
 
 NS_IMPL_ADDREF(nsHTMLTextAreaElement)
+NS_IMPL_RELEASE(nsHTMLTextAreaElement)
 
 nsresult
 nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -175,23 +180,6 @@ nsHTMLTextAreaElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLTextAreaElement::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLTextAreaElement");
-	if (mRefCnt <= 0) {
-    delete this;                                       
-    return 0;                                          
-  } else if ((1 == mRefCnt) && mForm) {     
-    NS_LOG_RELEASE(this, mRefCnt, "nsHTMLTextAreaElement");
-    delete this;
-    return 0;
-  } else {
-    return mRefCnt;
-  }
 }
 
 // nsIDOMHTMLTextAreaElement
@@ -254,32 +242,53 @@ nsHTMLTextAreaElement::Blur() // XXX not tested
 NS_IMETHODIMP
 nsHTMLTextAreaElement::Focus() 
 {
-  nsIFormControlFrame* formControlFrame = nsnull;
-  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
-  if (NS_SUCCEEDED(rv)) {
-    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
-    return NS_OK;
+  nsCOMPtr<nsIDocument> doc; // Strong
+  nsresult rv = GetDocument(*getter_AddRefs(doc));
+  if (NS_SUCCEEDED(rv) && doc) {
+
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 i=0; i<numShells; i++) 
+    {
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(doc->GetShellAt(i));
+      if (!shell) { rv = NS_ERROR_NULL_POINTER; break; }
+
+      rv = shell->GetPresContext(getter_AddRefs(context));
+      if (NS_FAILED(rv)) { break; }
+      if (!context) { rv = NS_ERROR_NULL_POINTER; break; }
+
+      rv = SetFocus(context);
+      if (NS_FAILED(rv)) { break; }
+    }
   }
+
   return rv;
 }
-
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetFocus(nsIPresContext* aPresContext)
 {
+  // first see if we are disabled or not. If disabled then do nothing.
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+    return NS_OK;
+  }
+
   nsIEventStateManager* esm;
   if (NS_OK == aPresContext->GetEventStateManager(&esm)) {
     esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
     NS_RELEASE(esm);
   }
 
-  // XXX Should focus only this presContext
-  Focus();
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
+    formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
     formControlFrame->ScrollIntoView(aPresContext);
+    // Could call SelectAll(aPresContext) here to automatically
+    // select text when we receive focus.
   }
+
   return rv;
 }
 
@@ -292,16 +301,52 @@ nsHTMLTextAreaElement::RemoveFocus(nsIPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsHTMLTextAreaElement::Select() 
+nsHTMLTextAreaElement::Select()
+{
+  nsresult rv = NS_OK;
+
+  // first see if we are disabled or not. If disabled then do nothing.
+  nsAutoString disabled;
+  if (NS_CONTENT_ATTR_HAS_VALUE == mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, disabled)) {
+    return rv;
+  }
+
+  // Currently we have to give focus to the text field before we
+  // can select text in it.  :S
+
+  // Just like SetFocus() but without the ScrollIntoView()!
+  nsCOMPtr<nsIPresContext> presContext;
+  nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
+  nsCOMPtr<nsIEventStateManager> esm;
+  rv = presContext->GetEventStateManager(getter_AddRefs(esm));
+  if (NS_SUCCEEDED(rv)) {
+    rv = esm->SetContentState(this, NS_EVENT_STATE_FOCUS);
+
+    if (NS_SUCCEEDED(rv)) {
+      nsIFormControlFrame* formControlFrame = nsnull;
+      rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+      if (NS_SUCCEEDED(rv)) {
+        formControlFrame->SetFocus(PR_TRUE, PR_TRUE);
+      }
+    }
+  }
+
+  // Now Select all the text!
+  if (NS_SUCCEEDED(rv)) {
+    rv = SelectAll(presContext);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLTextAreaElement::SelectAll(nsIPresContext* aPresContext)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     if (formControlFrame )
     {
-      nsCOMPtr<nsIPresContext> presContext;
-      nsGenericHTMLElement::GetPresContext(this, getter_AddRefs(presContext));
-      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, nsAutoString());
+      formControlFrame->SetProperty(aPresContext, nsHTMLAtoms::select, nsAutoString());
       return NS_OK;
     }
   }
@@ -503,34 +548,27 @@ nsHTMLTextAreaElement::GetType(PRInt32* aType)
   }
 }
 
-
-// An important assumption is that if aForm is null, the previous mForm will not be released
-// This allows nsHTMLFormElement to deal with circular references.
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result;
-  nsIFormControl *formControl;
-
-  result = QueryInterface(kIFormControlIID, (void**)&formControl);
-  if (NS_FAILED(result))
-    formControl = nsnull;
+  nsCOMPtr<nsIFormControl> formControl;
+  nsresult result = QueryInterface(kIFormControlIID, getter_AddRefs(formControl));
+  if (NS_FAILED(result)) formControl = nsnull;
 
   if (mForm && formControl)
-    mForm->RemoveElement(formControl, PR_TRUE);
+    mForm->RemoveElement(formControl);
 
-  if (nsnull == aForm)
-    mForm = nsnull;
-  else {
-    NS_IF_RELEASE(mForm);
-    if (formControl) {
-      result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
-      if ((NS_OK == result) && mForm) {
-        mForm->AddElement(formControl);
+  if (aForm) {
+    nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm, &result);
+    mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+    if ((NS_OK == result) && theForm) {
+      if (formControl) {
+        theForm->AddElement(formControl);
       }
     }
+  } else {
+    mForm = nsnull;
   }
-  NS_IF_RELEASE(formControl);
 
   mInner.SetForm(mForm);
 

@@ -115,7 +115,7 @@ public:
   NS_IMETHOD AddElementToTable(nsIFormControl* aChild, const nsString& aName);
   NS_IMETHOD GetElementAt(PRInt32 aIndex, nsIFormControl** aElement) const;
   NS_IMETHOD GetElementCount(PRUint32* aCount) const;
-  NS_IMETHOD RemoveElement(nsIFormControl* aElement, PRBool aChildIsRef = PR_TRUE);
+  NS_IMETHOD RemoveElement(nsIFormControl* aElement);
 
 protected:
   nsFormControlList*       mControls;
@@ -144,14 +144,14 @@ public:
   nsresult GetNamedObject(JSContext* aContext, jsval aID, JSObject** aObj);
 
   nsresult AddElementToTable(nsIFormControl* aChild, const nsString& aName);
-  nsresult RemoveElementFromTable(nsIFormControl* aChild, PRBool aChildIsRef);
+  nsresult RemoveElementFromTable(nsIFormControl* aChild);
 
 #ifdef DEBUG
   nsresult SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
   void        *mScriptObject;
-  nsVoidArray mElements;  
+  nsVoidArray mElements;  // WEAK - bug 36639
   nsIDOMHTMLFormElement* mForm;  // WEAK - the form owns me
 
 protected:
@@ -187,20 +187,15 @@ nsHTMLFormElement::nsHTMLFormElement(nsINodeInfo *aNodeInfo)
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
-  // set the controls to have no form
+  // Null out childrens' pointer to me.  No refcounting here
   PRUint32 numControls;
   GetElementCount(&numControls);
-  do {
-    if (numControls-- == 0)
-      break;
-    // avoid addref to child
+  while (numControls--) {
     nsIFormControl* control = (nsIFormControl*)mControls->mElements.ElementAt(numControls); 
     if (control) {
-      // it is assummed that passing in nsnull will not release formControl's previous form
       control->SetForm(nsnull); 
     }
-  } while(1);
-
+  }
   mControls->SetForm(nsnull);
   NS_RELEASE(mControls);
 
@@ -240,28 +235,7 @@ nsHTMLFormElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMPL_ADDREF(nsHTMLFormElement);
-
-NS_IMETHODIMP_(nsrefcnt)
-nsHTMLFormElement::Release()
-{
-  --mRefCnt;
-  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLFormElement");
-  PRUint32 numChildren;
-  GetElementCount(&numChildren);
-  if (mRefCnt == nsrefcnt(numChildren)) {
-#ifdef NS_BUILD_REFCNT_LOGGING
-    while(mRefCnt > 0) {
-      --mRefCnt;
-      NS_LOG_RELEASE(this, mRefCnt, "nsHTMLFormElement");
-    }
-#else
-    mRefCnt = 0;
-#endif
-    delete this; 
-    return 0;
-  } 
-  return mRefCnt;
-}
+NS_IMPL_RELEASE(nsHTMLFormElement);
 
 // nsIDOMHTMLFormElement
 nsresult
@@ -482,10 +456,7 @@ NS_IMETHODIMP
 nsHTMLFormElement::AddElement(nsIFormControl* aChild)
 {
   PRBool rv = mControls->mElements.AppendElement(aChild);
-  if (rv) {
-    NS_ADDREF(aChild);        
-  }
-
+  // WEAK - don't addref
   return rv;
 }
 
@@ -497,14 +468,12 @@ nsHTMLFormElement::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
 
 
 NS_IMETHODIMP 
-nsHTMLFormElement::RemoveElement(nsIFormControl* aChild, PRBool aChildIsRef) 
+nsHTMLFormElement::RemoveElement(nsIFormControl* aChild) 
 { 
   PRBool rv = mControls->mElements.RemoveElement(aChild);
-  if (rv) {   
-    mControls->RemoveElementFromTable(aChild, aChildIsRef);    
-    if (aChildIsRef) {
-      NS_RELEASE(aChild);
-    }
+  if (rv) {
+    mControls->RemoveElementFromTable(aChild);
+    // WEAK - don't release
   }
   return rv;
 }
@@ -756,9 +725,9 @@ nsFormControlList::Clear()
   for (PRUint32 i = 0; i < numElements; i++) {
     nsIFormControl* elem = (nsIFormControl*) mElements.ElementAt(i);
     if (mLookupTable) {
-      RemoveElementFromTable(elem, PR_TRUE);
+      RemoveElementFromTable(elem);
     }
-    NS_IF_RELEASE(elem);
+    // WEAK, don't release
   }
 }
 
@@ -1005,15 +974,10 @@ nsFormControlList::AddElementToTable(nsIFormControl* aChild, const nsString& aNa
 }
 
 nsresult
-nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild, PRBool aChildIsRef)
-{  
-  // This nsIContent* cannot be a COM pointer because it shouldn't
-  // be released at the end of this function when aChildIsRef is FALSE.
-  nsIContent* content = nsnull;  
+nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild)
+{
   nsAutoString name;
- 
-  aChild->QueryInterface(kIContentIID, (void**) &content);
-
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aChild);  
   if (mLookupTable && content &&
       (content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, name) == NS_CONTENT_ATTR_HAS_VALUE ||
        content->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, name) == NS_CONTENT_ATTR_HAS_VALUE))
@@ -1021,12 +985,6 @@ nsFormControlList::RemoveElementFromTable(nsIFormControl* aChild, PRBool aChildI
     nsStringKey key(name);
     mLookupTable->Remove(&key);
   }
-  
-  if (aChildIsRef) 
-  {
-    NS_RELEASE(content);
-  }
-
   return NS_OK;
 }
 
