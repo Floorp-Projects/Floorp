@@ -20,6 +20,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
+#include "nsIHttpUrl.h"
 #include "nsHTMLDocument.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
@@ -99,6 +100,7 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 
 //----------------------------------------------------------------------
 
+static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -1639,6 +1641,10 @@ nsresult
 HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
+  nsIHttpUrl* httpUrl=nsnull;
+  nsString header("HTTP-EQUIV"), result;
+  char *value=nsnull, *name=nsnull;
+
   if (nsnull != mHead) {
     nsAutoString tmp("META");
     nsIAtom* atom = NS_NewAtom(tmp);
@@ -1648,10 +1654,42 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     if (NS_OK == rv) {
       rv = AddAttributes(aNode, it);
       mHead->AppendChild(it, PR_FALSE);
+
+      // Handle the Refresh Case. We could also handle 
+      // the other http-equiv cases here such as "Content-type".
+      it->GetAttribute(header, result);
+      if(result.EqualsIgnoreCase("REFRESH")) {
+          header="CONTENT";
+          it->GetAttribute(header, result);
+          if(result.Length() > 0) {
+              value=result.ToNewCString();
+              if (!value) {
+                  NS_RELEASE(atom);
+                  return NS_ERROR_OUT_OF_MEMORY;
+              }
+          }
+          header="REFRESH";
+          name=header.ToNewCString();
+          if (!name) {
+              delete value;
+              NS_RELEASE(atom);
+              return NS_ERROR_OUT_OF_MEMORY;
+          }
+          rv = mDocumentURL->QueryInterface(kIHTTPUrlIID, (void **)&httpUrl);
+          if(rv == NS_OK) {
+              httpUrl->AddMimeHeader(name, value);
+              NS_RELEASE(httpUrl);
+              delete name;
+              delete value;
+          }
+      }
+
       NS_RELEASE(it);
     }
+
     NS_RELEASE(atom);
   }
+
   return rv;
 }
 
