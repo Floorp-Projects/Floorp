@@ -53,7 +53,7 @@ public:
     virtual ~nsInterfaceInfo();
 
 #ifdef DEBUG
-    void print(FILE *fd);
+    void NS_EXPORT print(FILE *fd);
 #endif
 
 private:

@@ -164,10 +164,10 @@ indexify_file(const char *filename,
     int limit = header->num_interfaces;
 
     interface_record *value;
-#ifdef DEBUG_mccabe
+//#ifdef DEBUG_mccabe
     static int which = 0;
     which++;
-#endif
+//#endif
     for (int i = 0; i < limit; i++) {
         XPTInterfaceDirectoryEntry *current = header->interface_directory + i;
 

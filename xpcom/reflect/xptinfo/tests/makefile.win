@@ -63,8 +63,6 @@ install:: $(PROGRAMS)
         $(CURDIR)$(*B).cpp
 <<KEEP
 
-clean :: clobber
-
 clobber::
 	-for %p in ($(PROGRAMS)) do $(RM) %p $(DIST)\bin\%p
 
