@@ -1,29 +1,27 @@
-# Copyright © 1998, 1999 by David Kilzer
-# Visit http://home.earthlink.net/~ddkilzer/
-# mailto:ddkilzer@earthlink.net
-# Version 1.6 -- Sat, Jul 10, 1999
+# Copyright © 1999 by cricket
+# cricket@apple.com
+# Version 1.1 -- 13 October 1999
 
 <search 
-	name = "Google"
+	name = "Google!"
 	method = get 
 	action = "http://www.google.com/search"
-	update = "http://home.earthlink.net/~ddkilzer/sherlock/google.src.hqx"
-	updateCheckDays = 15
-	bannerLink = "http://www.google.com/"
-	bannerImage = '<IMG SRC="http://www.google.com/logos/googlesm5.gif">'
-	>
+	update = "http://mbay.net/~crickee/sherlock/Google.src.hqx"
+	updateCheckDays = 1
+    >
 
 <INPUT NAME="q" user>
-<INPUT NAME="num" VALUE="30">
+<INPUT NAME="num" VALUE="25">
 
 <interpret
-	resultListStart = "</form>"
-	resultListEnd = "<center><table"
+	resultListStart = "<br></form"
+	resultListEnd = "</font><p><center>"
 
-	resultItemStart = "<IMG border=0 "
-	resultItemEnd = "k)</A></font>"
-
-	relevanceStart = " alt="
-	relevanceEnd = "%"
+	resultItemStart = "<p>"
+	resultItemEnd = "</font></font>"
+	
+	bannerStart = "<hr size=1><br>"
+	bannerEnd = "<p><center><font color=darkgray>"
+	
 	>
 </search>
