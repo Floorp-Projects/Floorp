@@ -20,9 +20,9 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
-include <$(DEPTH)/config/config.mak>
-
 MODULE=necko
+REQUIRES	= xpcom string nkcache caps xpconnect js
+include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkabout_s
 

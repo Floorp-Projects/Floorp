@@ -20,6 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..
+REQUIRES	= xpcom string necko nkcache timer cookie dbm util
 
 MAKE_OBJ_TYPE	= EXE
 PROG1 = .\$(OBJDIR)\TestFileInput.exe

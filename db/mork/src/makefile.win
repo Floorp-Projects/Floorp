@@ -21,8 +21,8 @@
 
 
 DEPTH=..\..\..
-MODULE= msgmork
-
+MODULE= mork
+REQUIRES = xpcom
 include <$(DEPTH)\config\config.mak>
 
 ################################################################################

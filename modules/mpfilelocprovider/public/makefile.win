@@ -20,6 +20,7 @@
 
 DEPTH=..\..\..
 
+MODULE = mpfilelocprovider
 EXPORTS =                           \
         nsMPFileLocProvider.h \
         $(NULL)

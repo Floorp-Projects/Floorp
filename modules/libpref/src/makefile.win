@@ -40,6 +40,7 @@ DEPTH = ..\..\..
 MODULE		= pref
 LIBRARY_NAME	= xppref$(MOZ_BITS)
 MODULE_NAME	= nsPrefModule
+REQUIRES	= xpcom string js xpconnect caps intl timer necko embedcomponents profile
 
 LINCS = -I$(PUBLIC)/js \
 	-I$(PUBLIC)/pref \

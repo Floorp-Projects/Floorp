@@ -36,6 +36,7 @@
 #//
 #//------------------------------------------------------------------------
 DEPTH=..\..
+MODULE=js
 include <$(DEPTH)\config\config.mak>
 
 !ifdef MOZ_OJI
@@ -130,7 +131,11 @@ OBJS =					\
 #// install headers
 #//
 #//------------------------------------------------------------------------
+!ifdef MOZ_TRACK_MODULE_DEPS
+INSTALL_DIR=$(XPDIST)\include\$(MODULE)
+!else
 INSTALL_DIR=$(XPDIST)\include
+!endif
 INSTALL_FILE_LIST=	\
 	js.msg		\
 	jsapi.h		\

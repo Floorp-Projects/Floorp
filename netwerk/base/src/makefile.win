@@ -20,6 +20,7 @@
 MODULE = necko
 
 DEPTH = ..\..\..
+REQUIRES	= xpcom string exthandler mimetype intl pref
 include <$(DEPTH)/config/config.mak>
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET

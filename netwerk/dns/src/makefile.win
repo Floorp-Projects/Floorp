@@ -21,6 +21,7 @@ MODULE = necko
 
 DEPTH = ..\..\..
 
+REQUIRES	= xpcom string pref
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
 LIBRARY_NAME=neckodns_s

@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..\..
 MODULE=necko
+REQUIRES	= xpcom string exthandler mimetype
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=nkfile_s
