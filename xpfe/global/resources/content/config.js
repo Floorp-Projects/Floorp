@@ -155,9 +155,10 @@ function onConfigLoad()
                 break;
         }
 
+        prefArray[i] = htmlEscape(prefArray[i]);
         baseArray[k] = {indexCol:prefIndex, prefCol:prefArray[i], lockCol:prefLockState, typeCol:prefType, valueCol:prefValue};
     }
-  
+
     view.rowCount = k + 1;
 
     gOutliner = document.getElementById("configOutliner");
