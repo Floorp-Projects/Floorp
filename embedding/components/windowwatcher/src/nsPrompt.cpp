@@ -21,30 +21,12 @@
  */
 
 #include "nsILocale.h"
-#include "nsIStringBundle.h"
 #include "nsIServiceManager.h"
 #include "nsIWalletService.h"
 #include "nsPrompt.h"
 #include "nsReadableUtils.h"
 
-static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kSingleSignOnPromptCID, NS_SINGLESIGNONPROMPT_CID);
-
-#define kWebShellLocaleProperties "chrome://global/locale/commonDialogs.properties"
-
-class AutoStringFree {
-
-public:
-  AutoStringFree() : mString(0) { }
-  ~AutoStringFree() { if (mString) nsCRT::free(mString); }
-  void TakeString(PRUnichar *aString) {
-         if (mString) nsCRT::free(mString);
-         mString = aString;
-       }
-
-private:
-  PRUnichar *mString;
-};
 
 nsresult
 NS_NewPrompter(nsIPrompt **result, nsIDOMWindow *aParent)
@@ -115,23 +97,6 @@ nsPrompt::Init()
   return mPromptService ? NS_OK : NS_ERROR_FAILURE;
 }
 
-nsresult
-nsPrompt::GetLocaleString(const PRUnichar *aKey, PRUnichar **aResult)
-{
-  nsresult rv;
-
-  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
-  nsCOMPtr<nsIStringBundle> stringBundle;
-  nsILocale *locale = nsnull;
- 
-  rv = stringService->CreateBundle(kWebShellLocaleProperties, locale, getter_AddRefs(stringBundle));
-  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-
-  rv = stringBundle->GetStringFromName(aKey, aResult);
-
-  return rv;
-}
-
 //*****************************************************************************
 // nsPrompt::nsIPrompt
 //*****************************************************************************   
@@ -140,17 +105,7 @@ NS_IMETHODIMP
 nsPrompt::Alert(const PRUnichar* dialogTitle, 
                 const PRUnichar* text)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
- 
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Alert").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->Alert(mParent, title, text);
+  return mPromptService->Alert(mParent, dialogTitle, text);
 }
 
 NS_IMETHODIMP
@@ -159,17 +114,7 @@ nsPrompt::AlertCheck(const PRUnichar* dialogTitle,
                      const PRUnichar* checkMsg,
                      PRBool *checkValue)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Alert").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->AlertCheck(mParent, title, text, checkMsg, checkValue);
+  return mPromptService->AlertCheck(mParent, dialogTitle, text, checkMsg, checkValue);
 }
 
 NS_IMETHODIMP
@@ -177,17 +122,7 @@ nsPrompt::Confirm(const PRUnichar* dialogTitle,
                   const PRUnichar* text,
                   PRBool *_retval)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Confirm").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->Confirm(mParent, title, text, _retval);
+  return mPromptService->Confirm(mParent, dialogTitle, text, _retval);
 }
 
 NS_IMETHODIMP
@@ -197,17 +132,21 @@ nsPrompt::ConfirmCheck(const PRUnichar* dialogTitle,
                        PRBool *checkValue,
                        PRBool *_retval)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
+  return mPromptService->ConfirmCheck(mParent, dialogTitle, text, checkMsg, checkValue, _retval);
+}
 
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("ConfirmCheck").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->ConfirmCheck(mParent, title, text, checkMsg, checkValue, _retval);
+NS_IMETHODIMP
+nsPrompt::ConfirmEx(const PRUnichar *dialogTitle,
+                    const PRUnichar *text,
+                    PRUint32 button0And1Flags,
+                    const PRUnichar *button2Title,
+                    const PRUnichar *checkMsg,
+                    PRBool *checkValue,
+                    PRInt32 *buttonPressed)
+{
+  return mPromptService->ConfirmEx(mParent, dialogTitle, text,
+                                   button0And1Flags, button2Title,
+                                   checkMsg, checkValue, buttonPressed);
 }
 
 NS_IMETHODIMP
@@ -218,17 +157,7 @@ nsPrompt::Prompt(const PRUnichar *dialogTitle,
                  PRBool *checkValue,
                  PRBool *_retval)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Prompt").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->Prompt(mParent, title, text, answer,
+  return mPromptService->Prompt(mParent, dialogTitle, text, answer,
                                 checkMsg, checkValue, _retval);
 }
 
@@ -241,17 +170,7 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
                                     PRBool *checkValue,
                                     PRBool *_retval)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-  
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("PromptUsernameAndPassword").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->PromptUsernameAndPassword(mParent, title, text, username, password,
+  return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text, username, password,
                                                    checkMsg, checkValue, _retval);
 }
 
@@ -263,17 +182,7 @@ nsPrompt::PromptPassword(const PRUnichar *dialogTitle,
                          PRBool *checkValue,
                          PRBool *_retval)
 {
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("PromptPassword").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->PromptPassword(mParent, title, text, password,
+  return mPromptService->PromptPassword(mParent, dialogTitle, text, password,
                                         checkMsg, checkValue, _retval);
 }
 
@@ -285,62 +194,8 @@ nsPrompt::Select(const PRUnichar *dialogTitle,
                  PRInt32 *outSelection,
                  PRBool *_retval)
 {
-  nsresult rv; 
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Select").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->Select(mParent, title, inMsg,
+  return mPromptService->Select(mParent, dialogTitle, inMsg,
                                 inCount, inList, outSelection, _retval);
-}
-
-NS_IMETHODIMP
-nsPrompt::UniversalDialog(const PRUnichar *inTitleMessage,
-                                     const PRUnichar *inDialogTitle,
-                                     const PRUnichar *inMsg,
-                                     const PRUnichar *inCheckboxMsg,
-                                     const PRUnichar *inButton0Text,
-                                     const PRUnichar *inButton1Text,
-                                     const PRUnichar *inButton2Text,
-                                     const PRUnichar *inButton3Text,
-                                     const PRUnichar *inEditfield1Msg,
-                                     const PRUnichar *inEditfield2Msg,
-                                     PRUnichar **inoutEditfield1Value,
-                                     PRUnichar **inoutEditfield2Value,
-                                     const PRUnichar *inIConURL,
-                                     PRBool *inoutCheckboxState,
-                                     PRInt32 inNumberButtons,
-                                     PRInt32 inNumberEditfields,
-                                     PRInt32 inEditField1Password,
-                                     PRInt32 *outButtonPressed)
-{
-  nsresult rv;
-  NS_ASSERTION(inDialogTitle, "UniversalDialog must have a dialog title supplied");
-  rv = mPromptService->UniversalDialog(mParent, 
-                                       inTitleMessage,
-                                       inDialogTitle,
-                                       inMsg,
-                                       inCheckboxMsg,
-                                       inButton0Text,
-                                       inButton1Text,
-                                       inButton2Text,
-                                       inButton3Text,
-                                       inEditfield1Msg,
-                                       inEditfield2Msg,
-                                       inoutEditfield1Value,
-                                       inoutEditfield2Value,
-                                       inIConURL,
-                                       inoutCheckboxState,
-                                       inNumberButtons,
-                                       inNumberEditfields,
-                                       inEditField1Password,
-                                       outButtonPressed);
-  return rv;
 }
 
 //*****************************************************************************
@@ -359,19 +214,9 @@ nsPrompt::Prompt(const PRUnichar* dialogTitle,
                  PRBool *_retval)
 {
   // Ignore passwordRealm and savePassword
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("Prompt").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
   if (defaultText)
     *result = ToNewUnicode(nsLiteralString(defaultText));
-  return mPromptService->Prompt(mParent, title, text,
+  return mPromptService->Prompt(mParent, dialogTitle, text,
                                 result, nsnull, nsnull, _retval);
 }
 
@@ -385,17 +230,7 @@ nsPrompt::PromptUsernameAndPassword(const PRUnichar* dialogTitle,
                                     PRBool *_retval)
 {
   // Ignore passwordRealm and savePassword
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-  
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("PromptUsernameAndPassword").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->PromptUsernameAndPassword(mParent, title, text,
+  return mPromptService->PromptUsernameAndPassword(mParent, dialogTitle, text,
                                                    user, pwd, nsnull, nsnull, _retval);
 }
 
@@ -408,16 +243,6 @@ nsPrompt::PromptPassword(const PRUnichar* dialogTitle,
                          PRBool *_retval)
 {
   // Ignore passwordRealm and savePassword
-  nsresult rv;
-  AutoStringFree stringOwner;
-  PRUnichar *title = NS_CONST_CAST(PRUnichar *, dialogTitle);
-
-  if (!title) {
-    rv = GetLocaleString(NS_LITERAL_STRING("PromptPassword").get(), &title);
-    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-    stringOwner.TakeString(title);
-  }
-
-  return mPromptService->PromptPassword(mParent, title, text,
+  return mPromptService->PromptPassword(mParent, dialogTitle, text,
                                         pwd, nsnull, nsnull, _retval);
 }

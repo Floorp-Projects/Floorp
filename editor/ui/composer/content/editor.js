@@ -393,28 +393,11 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
 
   var result = {value:0};
-  promptService.universalDialog(
-    window,
-    null,
-    dialogTitle,
-    dialogMsg,
-    null,
-    window.editorShell.GetString("Save"),     // Save Button
-    window.editorShell.GetString("Cancel"),   // Cancel Button
-    (allowDontSave ? window.editorShell.GetString("DontSave") : null), // Don't Save Button
-    null,
-    null,
-    null,
-    {value:0},
-    {value:0},
-    "question-icon",
-    {value:"false"},
-    (allowDontSave ? 3 : 2),
-    0,
-    0,
-    result
-    );
-
+  promptService.confirmEx(window, dialogTitle, dialogMsg,
+  						  (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
+  						  (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+  						  (allowDontSave ? window.editorShell.GetString("DontSave") : null),
+  						  null, {value:0}, result);
    if (result.value == 0)
    {
      // Save

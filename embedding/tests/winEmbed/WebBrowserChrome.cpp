@@ -592,6 +592,11 @@ NS_IMETHODIMP WebBrowserChrome::ConfirmCheck(const PRUnichar* dialogTitle, const
     return NS_OK;
 }
 
+NS_IMETHODIMP WebBrowserChrome::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 button0And1Flags, const PRUnichar *button2Title, const PRUnichar *checkMsg, PRBool *checkValue, PRInt32 *buttonPressed)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP WebBrowserChrome::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **answer, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -612,7 +617,3 @@ NS_IMETHODIMP WebBrowserChrome::Select(const PRUnichar *inDialogTitle, const PRU
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP WebBrowserChrome::UniversalDialog(const PRUnichar *titleMessage, const PRUnichar *dialogTitle, const PRUnichar *text, const PRUnichar *checkboxMsg, const PRUnichar *button0Text, const PRUnichar *button1Text, const PRUnichar *button2Text, const PRUnichar *button3Text, const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg, PRUnichar **editfield1Value, PRUnichar **editfield2Value, const PRUnichar *iconURL, PRBool *checkboxState, PRInt32 numberButtons, PRInt32 numberEditfields, PRInt32 editField1Password, PRInt32 *buttonPressed)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}

@@ -42,8 +42,6 @@ public:
 protected:
   nsCOMPtr<nsIDOMWindow>        mParent;
   nsCOMPtr<nsIPromptService>    mPromptService;
-
-  nsresult GetLocaleString(const PRUnichar *aKey, PRUnichar **aResult);
 };
 
 nsresult

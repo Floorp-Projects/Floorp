@@ -1466,27 +1466,14 @@ function ComposeCanClose()
 		if (promptService)
 		{
             var result = {value:0};
-			promptService.universalDialog(
-				window,
-				null,
-				gComposeMsgsBundle.getString("saveDlogTitle"),
-				gComposeMsgsBundle.getString("saveDlogMessage"),
-				null,
-				gComposeMsgsBundle.getString("saveDlogSaveBtn"),
-				gComposeMsgsBundle.getString("saveDlogCancelBtn"),
-				gComposeMsgsBundle.getString("saveDlogDontSaveBtn"),
-				null,
-				null,
-				null,
-				{value:0},
-				{value:0},
-				"question-icon",
-				{value:"false"},
-				3,
-				0,
-				0,
-				result
-				);
+            promptService.confirmEx(window,
+                              gComposeMsgsBundle.getString("saveDlogTitle"),
+                              gComposeMsgsBundle.getString("saveDlogMessage"),
+                              (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
+                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
+                              gComposeMsgsBundle.getString("saveDlogDontSaveBtn"),
+                              null, {value:0}, result);
+
 			if (result)
 			{
 				switch (result.value)

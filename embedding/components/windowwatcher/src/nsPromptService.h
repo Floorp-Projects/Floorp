@@ -52,6 +52,8 @@ public:
   NS_DECL_ISUPPORTS
 
 private:
+  nsresult GetLocaleString(const char *aKey, PRUnichar **aResult);
+
 
   nsCOMPtr<nsIWindowWatcher> mWatcher;
 };

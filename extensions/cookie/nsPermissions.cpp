@@ -73,38 +73,20 @@ permission_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar
   }
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * yes_string = CKutil_Localize(NS_LITERAL_STRING("Yes").get());
-  PRUnichar * no_string = CKutil_Localize(NS_LITERAL_STRING("No").get());
   PRUnichar * confirm_string = CKutil_Localize(NS_LITERAL_STRING("Confirm").get());
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    confirm_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    szCheckMessage, /* This is the checkbox message */
-    yes_string, /* first button text */
-    no_string, /* second button text */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    NULL, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NS_LITERAL_STRING("question-icon").get(),
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    0, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  res = dialog->ConfirmEx(confirm_string, szMessage,
+                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                          nsnull, szCheckMessage, checkValue, &buttonPressed);
 
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
   if (*checkValue!=0 && *checkValue!=1) {
+    NS_ASSERTION(PR_FALSE, "Bad result from checkbox");
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
-  Recycle(yes_string);
-  Recycle(no_string);
   Recycle(confirm_string);
   return (buttonPressed == 0);
 }

@@ -29,12 +29,19 @@
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsUtils.h"
+#include "nsIStringBundle.h"
+#include "nsXPIDLString.h"
 
 const char *kPromptURL="chrome://global/content/commonDialog.xul";
 const char *kSelectPromptURL="chrome://global/content/selectDialog.xul";
 const char *kQuestionIconClass ="question-icon";
 const char *kAlertIconClass ="alert-icon";
 const char *kWarningIconClass ="message-icon";
+
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+
+#define kCommonDialogsProperties "chrome://global/locale/commonDialogs.properties"
+
 
 /****************************************************************
  ************************* ParamBlock ***************************
@@ -62,7 +69,6 @@ private:
   nsIDialogParamBlock *mBlock;
 };
 
-
 /****************************************************************
  ************************ nsPromptService ***********************
  ****************************************************************/
@@ -89,6 +95,14 @@ nsPromptService::Alert(nsIDOMWindow *parent,
                    const PRUnichar *dialogTitle, const PRUnichar *text)
 {
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Alert", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -117,6 +131,14 @@ nsPromptService::AlertCheck(nsIDOMWindow *parent,
 
 {
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Alert", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -145,6 +167,14 @@ nsPromptService::Confirm(nsIDOMWindow *parent,
                    PRBool *_retval)
 {
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Confirm", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -175,6 +205,14 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
                    PRBool *_retval)
 {
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("ConfirmCheck", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -202,66 +240,72 @@ nsPromptService::ConfirmCheck(nsIDOMWindow *parent,
 }
 
 NS_IMETHODIMP
-nsPromptService::UniversalDialog(nsIDOMWindow *parent,
-                   const PRUnichar *titleMessage, const PRUnichar *dialogTitle,
-                   const PRUnichar *text, const PRUnichar *checkboxMsg,
-                   const PRUnichar *button0Text, const PRUnichar *button1Text,
-                   const PRUnichar *button2Text, const PRUnichar *button3Text,
-                   const PRUnichar *editfield1Msg, const PRUnichar *editfield2Msg,
-                   PRUnichar **editfield1Value, PRUnichar **editfield2Value,
-                   const PRUnichar *iconClass, PRBool *checkboxState,
-                   PRInt32 numberButtons, PRInt32 numberEditfields,
-                   PRInt32 editfield1Password, PRInt32 *buttonPressed)
+nsPromptService::ConfirmEx(nsIDOMWindow *parent,
+                    const PRUnichar *dialogTitle, const PRUnichar *text,
+                    PRUint32 button0And1Flags, const PRUnichar *button2Title,
+                    const PRUnichar *checkMsg, PRBool *checkValue,
+                    PRInt32 *buttonPressed)
 {
   nsresult rv;
-
-  /* check for at least one button */
-  if (numberButtons < 1)
-    rv = NS_ERROR_FAILURE;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Confirm", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
 
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
     return rv;
 
-  /* load up input parameters */
-
-  block->SetString(eTitleMessage, titleMessage);
   block->SetString(eDialogTitle, dialogTitle);
   block->SetString(eMsg, text);
-  block->SetString(eCheckboxMsg, checkboxMsg);
-  if (numberButtons >= 4)
-    block->SetString(eButton3Text, button3Text);
-
-  if (numberButtons >= 3)
-    block->SetString(eButton2Text, button2Text);
-
-  if (numberButtons >= 2)
-    block->SetString(eButton1Text, button1Text);
-
-  if (numberButtons >= 1)
-    block->SetString(eButton0Text, button0Text);
-
-  if (numberEditfields >= 2) {
-    block->SetString(eEditfield2Msg, editfield2Msg);
-    block->SetString(eEditfield2Value, *editfield2Value);
+  
+  PRInt32 numberButtons = 0;
+  for (int buttonID = eButton0Text; buttonID <= eButton1Text; buttonID++) { 
+    
+    PRUnichar *buttonText = nsnull;
+    switch (button0And1Flags & 0xff) {
+      case BUTTON_TITLE_OK:
+        GetLocaleString("OK", &buttonText);
+        break;
+      case BUTTON_TITLE_CANCEL:
+        GetLocaleString("Cancel", &buttonText);
+        break;
+      case BUTTON_TITLE_YES:
+        GetLocaleString("Yes", &buttonText);
+        break;
+      case BUTTON_TITLE_NO:
+        GetLocaleString("No", &buttonText);
+        break;
+      case BUTTON_TITLE_SAVE:
+        GetLocaleString("Save", &buttonText);
+        break;
+      case BUTTON_TITLE_REVERT:
+        GetLocaleString("Revert", &buttonText);
+        break;
+    }
+    if (buttonText) {
+      block->SetString(buttonID, buttonText);
+      ++numberButtons;
+    }
+    button0And1Flags >>= 8;
   }
-  if (numberEditfields >= 1) {
-    block->SetString(eEditfield1Msg, editfield1Msg);
-    block->SetString(eEditfield1Value, *editfield1Value);
-    block->SetInt(eEditField1Password, editfield1Password);
+  if (button2Title) {
+    block->SetString(eButton2Text, button2Title);
+    ++numberButtons;
   }
-  if (iconClass)
-    block->SetString(eIconClass, iconClass);
-  else
-    block->SetString(eIconClass, NS_ConvertASCIItoUCS2(kQuestionIconClass).GetUnicode());
-
-  if (checkboxMsg)
-    block->SetInt(eCheckboxState, *checkboxState);
-
   block->SetInt(eNumberButtons, numberButtons);
-  block->SetInt(eNumberEditfields, numberEditfields);
+  
+  block->SetString(eIconClass, NS_ConvertASCIItoUCS2(kQuestionIconClass).GetUnicode());
 
+  if (checkMsg && checkValue) {
+    block->SetString(eCheckboxMsg, checkMsg);
+    block->SetInt(eCheckboxState, *checkValue);
+  }
+  
   /* perform the dialog */
 
   rv = DoDialog(parent, block, kPromptURL);
@@ -271,14 +315,8 @@ nsPromptService::UniversalDialog(nsIDOMWindow *parent,
   if (buttonPressed)
     block->GetInt(eButtonPressed, buttonPressed);
 
-  if (checkboxMsg && checkboxState)
-    block->GetInt(eCheckboxState, checkboxState);
-
-  if (numberEditfields >= 2 && editfield2Value)
-    block->GetString(eEditfield2Value, editfield2Value);
-
-  if (numberEditfields >= 1 && editfield1Value)
-    block->GetString(eEditfield1Value, editfield1Value);
+  if (checkMsg && checkValue)
+    block->GetInt(eCheckboxState, checkValue);
 
   return rv;
 }
@@ -293,6 +331,14 @@ nsPromptService::Prompt(nsIDOMWindow *parent,
   NS_ENSURE_ARG(_retval);
 
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Prompt", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -347,6 +393,14 @@ nsPromptService::PromptUsernameAndPassword(nsIDOMWindow *parent,
   NS_ENSURE_ARG(_retval);
   
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("PromptUsernameAndPassword", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -407,6 +461,14 @@ NS_IMETHODIMP nsPromptService::PromptPassword(nsIDOMWindow *parent,
   NS_ENSURE_ARG(_retval);
 	
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("PromptPassword", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   ParamBlock block;
   rv = block.Init();
   if (NS_FAILED(rv))
@@ -457,6 +519,14 @@ nsPromptService::Select(nsIDOMWindow *parent, const PRUnichar *dialogTitle,
                    PRBool *_retval)
 {	
   nsresult rv;
+  nsXPIDLString stringOwner;
+ 
+  if (!dialogTitle) {
+    rv = GetLocaleString("Select", getter_Copies(stringOwner));
+    if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+    dialogTitle = stringOwner.get();
+  }
+
   const PRInt32 eSelection = 2;
   ParamBlock block;
   rv = block.Init();
@@ -511,6 +581,23 @@ nsPromptService::DoDialog(nsIDOMWindow *aParent,
   mWatcher->OpenWindow(aParent, aChromeURL, "_blank",
               "centerscreen,chrome,modal,titlebar", arguments,
               getter_AddRefs(dialog));
+
+  return rv;
+}
+
+nsresult
+nsPromptService::GetLocaleString(const char *aKey, PRUnichar **aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsILocale *locale = nsnull;
+ 
+  rv = stringService->CreateBundle(kCommonDialogsProperties, locale, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
+
+  rv = stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aKey).GetUnicode(), aResult);
 
   return rv;
 }

@@ -530,32 +530,13 @@ Wallet_ConfirmYN(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
   } 
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * yes_string = Wallet_Localize("Yes");
-  PRUnichar * no_string = Wallet_Localize("No");
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    confirm_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    NULL, /* This is the checkbox message */
-    yes_string, /* first button text */
-    no_string, /* second button text */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    NULL, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL, /* icon: question mark by default */
-    NULL, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    0, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  res = dialog->ConfirmEx(confirm_string, szMessage,
+                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                          nsnull, nsnull, nsnull, &buttonPressed);
 
-  Recycle(yes_string);
-  Recycle(no_string);
   Recycle(confirm_string);
   return (buttonPressed == 0);
 }
@@ -571,34 +552,14 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window)
   } 
 
   PRInt32 buttonPressed = 1; /* default of NO if user exits dialog by clickin X */
-  PRUnichar * yes_string = Wallet_Localize("Yes");
-  PRUnichar * no_string = Wallet_Localize("No");
   PRUnichar * never_string = Wallet_Localize("Never");
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    confirm_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    NULL, /* This is the checkbox message */
-    yes_string, /* first button text */
-    no_string, /* second button text */
-    never_string, /* third button text */
-    NULL, /* fourth button text */
-    /* note: buttons are laid out as FIRST, THIRD, FOURTH, SECOND */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    NULL, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    NULL, /* initial and final value of checkbox */
-    3, /* number of buttons */
-    0, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  res = dialog->ConfirmEx(confirm_string, szMessage,
+                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                          never_string, nsnull, nsnull, &buttonPressed);
 
-  Recycle(yes_string);
-  Recycle(no_string);
   Recycle(never_string);
   Recycle(confirm_string);
 
@@ -645,38 +606,20 @@ Wallet_CheckConfirmYN
   } 
 
   PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
-  PRUnichar * yes_string = Wallet_Localize("Yes");
-  PRUnichar * no_string = Wallet_Localize("No");
   PRUnichar * confirm_string = Wallet_Localize("Confirm");
 
-  res = dialog->UniversalDialog(
-    NULL, /* title message */
-    confirm_string, /* title text in top line of window */
-    szMessage, /* this is the main message */
-    szCheckMessage, /* This is the checkbox message */
-    yes_string, /* first button text */
-    no_string, /* second button text */
-    NULL, /* third button text */
-    NULL, /* fourth button text */
-    NULL, /* first edit field label */
-    NULL, /* second edit field label */
-    NULL, /* first edit field initial and final value */
-    NULL, /* second edit field initial and final value */
-    NULL,  /* icon: question mark by default */
-    checkValue, /* initial and final value of checkbox */
-    2, /* number of buttons */
-    0, /* number of edit fields */
-    0, /* is first edit field a password field */
-    &buttonPressed);
+  res = dialog->ConfirmEx(confirm_string, szMessage,
+                          (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
+                          nsnull, szCheckMessage, checkValue, &buttonPressed);
 
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
   if (*checkValue!=0 && *checkValue!=1) {
+    NS_ASSERTION(PR_FALSE, "Bad result from checkbox");
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
-  Recycle(yes_string);
-  Recycle(no_string);
   Recycle(confirm_string);
   return (buttonPressed == 0);
 }
