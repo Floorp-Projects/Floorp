@@ -83,11 +83,9 @@ nsColorPickerFrame::Init(nsIPresContext&  aPresContext,
   mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
 
   if (type.EqualsIgnoreCase("swatch") || type.Equals(""))
-    mColorPicker = new nsStdColorPicker();
-  if (type.EqualsIgnoreCase("nose"))
   {
-    printf("nose picker!\n");
     mColorPicker = new nsStdColorPicker();
+    mColorPicker->Init(mContent);
   }
 
   return rv;
@@ -178,7 +176,7 @@ nsColorPickerFrame::Paint(nsIPresContext& aPresContext,
   PRBool clipState;
 
   // Clip so we don't render outside the inner rect
-	aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
+  aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipState);
 
   // call the color picker's paint method
   mColorPicker->Paint(&aPresContext, &aRenderingContext);
@@ -217,7 +215,7 @@ nsColorPickerFrame::GetDesiredSize(nsIPresContext* aPresContext,
   else
     aDesiredSize.height = -1;
 
-  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : aDesiredSize.width/p2t,
+  mColorPicker->SetSize((aDesiredSize.width == -1) ? -1 : aDesiredSize.width /p2t,
                         (aDesiredSize.height == -1) ? -1 : aDesiredSize.height/p2t);
 
 
