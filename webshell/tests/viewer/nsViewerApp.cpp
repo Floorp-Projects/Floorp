@@ -827,6 +827,8 @@ static nsIButton      * mSiteCancelBtn;
 static nsIButton      * mSitePrevBtn;
 static nsIButton      * mSiteNextBtn;
 static nsILabel       * mSiteLabel;
+static nsIButton      * mSiteJumpBtn;
+static nsITextWidget  * mSiteIndexTxt;
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kButtonCID,      NS_BUTTON_CID);
@@ -1163,6 +1165,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 //----------------------------------------
 static nsBrowserWindow* gWinData;
 static int gTop100Pointer = 0;
+static int gTop100LastPointer = 0;
 static char * gTop100List[] = {
    "http://www.yahoo.com",
    "http://www.netscape.com",
@@ -1314,34 +1317,54 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
     case NS_MOUSE_LEFT_BUTTON_UP: {
       if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteCancelBtn)) {
         NS_ShowWidget(mSiteDialog,PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSitePrevBtn)) {
-        if (gTop100Pointer > 0) {
-          NS_EnableWidget(mSiteNextBtn,PR_TRUE);
-          if (gWinData) {
-            nsString urlStr(gTop100List[--gTop100Pointer]);
-            mSiteLabel->SetLabel(urlStr);
-            gWinData->GoTo(urlStr.GetUnicode());
-          }
-        } else  {
-          NS_EnableWidget(mSitePrevBtn,PR_FALSE);
-          NS_EnableWidget(mSiteNextBtn,PR_TRUE);
-        }
 
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteNextBtn)) {
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteIndexTxt)) {
+        // no op
 
-        char * p = gTop100List[++gTop100Pointer];
-        if (p) {
-          if (gWinData) {
-            nsString urlStr(gTop100List[gTop100Pointer]);
-            mSiteLabel->SetLabel(urlStr);
-            gWinData->GoTo(urlStr.GetUnicode());
-          }
-          NS_EnableWidget(mSitePrevBtn,PR_TRUE);
+      } else {
+
+        PRInt32 oldIndex = gTop100Pointer;
+
+        if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSitePrevBtn)) {
+          gTop100Pointer--;
+        } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteNextBtn)) {
+          gTop100Pointer++;
         } else {
-          NS_EnableWidget(mSitePrevBtn,PR_TRUE);
-          NS_EnableWidget(mSiteNextBtn,PR_FALSE);
-          mSiteLabel->SetLabel("[END OF LIST]");
+          nsString str;
+          PRUint32 size;
+          PRInt32  inx;
+
+          mSiteIndexTxt->GetText(str, 255, size);
+          char * cStr = str.ToNewCString();
+          sscanf(cStr, "%d", &inx);
+          if (inx >= 0 && inx < gTop100LastPointer) {
+            gTop100Pointer = inx;
+          }
+          delete[] cStr;
         }
+
+        PRBool loadPage = PR_FALSE;
+        if (gTop100Pointer < 0) {
+          gTop100Pointer = 0;
+        } else if (gTop100Pointer >= gTop100LastPointer) {
+          gTop100Pointer = gTop100LastPointer-1;
+        } else {
+          loadPage = PR_TRUE;
+        }
+
+        NS_EnableWidget(mSitePrevBtn, gTop100Pointer > 0);
+        NS_EnableWidget(mSiteNextBtn, gTop100Pointer < (gTop100LastPointer-1));
+
+        if (gWinData && loadPage && oldIndex != gTop100Pointer) {
+          nsString urlStr(gTop100List[gTop100Pointer]);
+          mSiteLabel->SetLabel(urlStr);
+          gWinData->GoTo(urlStr.GetUnicode());
+        }
+
+        nsString str("");
+        str += gTop100Pointer;
+        PRUint32 size;
+        mSiteIndexTxt->SetText(str, size);
       }
       } break;
       
@@ -1371,16 +1394,17 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
 static
 PRBool CreateSiteDialog(nsIWidget * aParent)
 {
+  // Dynamically find the index of the last pointer
+  gTop100LastPointer = 0;
+  char * p;
+  do {
+    p = gTop100List[gTop100LastPointer++];
+  } while (p);
+  gTop100LastPointer--;
 
   PRBool result = PR_TRUE;
 
   if (mSiteDialog == nsnull) {
-    nsILookAndFeel * lookAndFeel;
-    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-       //lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-       //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
-       //lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
-    }
 
     nsILabel * label;
 
@@ -1396,7 +1420,7 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     // create a Dialog
     //
     nsRect rect;
-    rect.SetRect(0, 0, dialogWidth, 125);  
+    rect.SetRect(0, 0, dialogWidth, 125+24+10);  
 
     nsIWidget* widget = nsnull;
     nsComponentManager::CreateInstance(kWindowCID, nsnull, 
@@ -1410,6 +1434,10 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
       //mSiteDialog->SetLabel("Top 100 Site Walker");
     }
     //mSiteDialog->SetClientData(this);
+    nsAutoString titleStr("Top ");
+    titleStr += gTop100LastPointer;
+    titleStr += " Sites";
+    mSiteDialog->SetTitle(titleStr);
 
     nscoord w  = 65;
     nscoord x  = 5;
@@ -1474,7 +1502,55 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
 #endif
     NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
     mSiteCancelBtn->SetLabel("Cancel");
+
+    /////////////////////////
+    w  = 65;
+    x  = spacing;
+    y  += 24 + 10;
+
+    nscoord txtHeight   = 24;
+    nscolor textBGColor = NS_RGB(255,255,255);
+    nscolor textFGColor = NS_RGB(255,255,255);
+
+    nsILookAndFeel * lookAndFeel;
+    if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+       lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground, textBGColor);
+       lookAndFeel->GetColor(nsILookAndFeel::eColor_TextForeground, textFGColor);
+    }
+
+    // Create TextField
+    rect.SetRect(x, y, w, txtHeight);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewTextWidget(&mSiteIndexTxt);
+#else
+    nsComponentManager::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mSiteIndexTxt);
+#endif
+    NS_CreateTextWidget(mSiteDialog,mSiteIndexTxt,rect,HandleSiteEvent,&font);
+    if (mVerDirTxt && NS_OK == mSiteIndexTxt->QueryInterface(kIWidgetIID,(void**)&widget)) {
+      widget->SetBackgroundColor(textBGColor);
+      widget->SetForegroundColor(textFGColor);
+    }
+    NS_IF_RELEASE(lookAndFeel);
+
+    nsString str("");
+    str += 0;
+    PRUint32 size;
+    mSiteIndexTxt->SetText(str,size);
+
+    x += spacing + w;
+    w = 100;
+    // Create Jump Button
+    rect.SetRect(x, y, w, 24);  
+#ifdef USE_LOCAL_WIDGETS
+    NS_NewButton(&mSiteJumpBtn);
+#else
+    nsComponentManager::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteJumpBtn);
+#endif
+    NS_CreateButton(mSiteDialog,mSiteJumpBtn,rect,HandleSiteEvent,&font);
+    mSiteJumpBtn->SetLabel("Jump to Index");
   }
+
 
   NS_ShowWidget(mSiteDialog,PR_TRUE);
   NS_SetFocusToWidget(mSiteNextBtn);
