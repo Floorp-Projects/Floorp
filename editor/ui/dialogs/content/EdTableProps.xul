@@ -285,7 +285,7 @@
     <!-- from EdDialogOverlay -->
     <box>
       <spring flex="1"/>
-	    <button class="dialog" value="Apply" oncommand="Apply();"/>
+	    <button class="dialog" value="&applyButton.label;" oncommand="Apply();"/>
       <box id="okCancelButtons"/> 
     </box>
   </tabcontrol>
