@@ -31,16 +31,16 @@
 #include "nsIRenderingContext.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextXPrint.h"
+#include "nsISupportsArray.h"
 
 class nsXPrintContext;
 
-class nsDeviceContextXP : public DeviceContextImpl,
-                          public nsIDeviceContextXP
+class nsDeviceContextXP : public nsIDeviceContextXP
 {
 public:
   nsDeviceContextXP();
 
-	NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS_INHERITED
 
   /**
    * This method does nothing since a postscript devicecontext will never be created
@@ -57,47 +57,47 @@ public:
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-  void                            SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
-  NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
+  void               SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
+  NS_IMETHOD         GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
-  NS_IMETHOD 	  CheckFontExistence(const nsString& aFontName);
-  NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD 	  GetDepth(PRUint32& aDepth);
-  NS_IMETHOD 	  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+  NS_IMETHOD         CheckFontExistence(const nsString& aFontName);
+  NS_IMETHODIMP      GetILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD         GetDepth(PRUint32& aDepth);
+  NS_IMETHOD         ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD GetRect(nsRect &aRect);
-  NS_IMETHOD    GetClientRect(nsRect &aRect);
+  NS_IMETHOD         GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD         GetRect(nsRect &aRect);
+  NS_IMETHOD         GetClientRect(nsRect &aRect);
 
-  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
-  NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
-  NS_IMETHOD 	BeginDocument(PRUnichar * aTitle);
-  NS_IMETHOD 	EndDocument(void);
-  NS_IMETHOD 	BeginPage(void);
-  NS_IMETHOD 	EndPage(void);
+  NS_IMETHOD         GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
+  NS_IMETHOD         GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
+  NS_IMETHOD         BeginDocument(PRUnichar * aTitle);
+  NS_IMETHOD         EndDocument(void);
+  NS_IMETHOD         BeginPage(void);
+  NS_IMETHOD         EndPage(void);
 
   NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
 
-  Display * GetDisplay(); 
-  nsXPrintContext *GetPrintContext() { return mPrintContext; }
+  Display * GetDisplay();
+  NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);
 
   NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
-  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics);
+  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
+                              nsIFontMetrics*& aMetrics);
 
 protected:
-  virtual 	~nsDeviceContextXP();
+  virtual         ~nsDeviceContextXP();
 
-  nsDrawingSurface       mSurface ;
-  nsXPrintContext 	*mPrintContext;  
-  Display		*mDisplay;
-  Screen		*mScreen;
-  PRUint32 		mDepth;
-  nsIDeviceContextSpec  *mSpec;
+  nsDrawingSurface       mSurface;
+  nsXPrintContext      *mPrintContext;  
+  Display              *mDisplay;
+  Screen               *mScreen;
+  PRUint32              mDepth;
+  nsCOMPtr<nsIDeviceContextSpec> mSpec;
   float                 mPixelScale;
-  nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
+  nsCOMPtr<nsISupportsArray> mFontMetrics;  // we are not using the normal font cache
 
 private:
-  void                 CommonInit(void);
   nsPaletteInfo        mPaletteInfo;
   PRBool               mWriteable;
   PRUint32             mNumCells;
@@ -109,4 +109,4 @@ private:
 
 };
 
-#endif /* nsDeviceContextPS_h___ */
+#endif /* !nsDeviceContextPS_h___ */

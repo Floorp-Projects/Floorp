@@ -124,7 +124,7 @@ public:
   NS_IMETHOD FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,
-			nscoord aY1, nscoord aWidth,nscoord aHeight);
+                        nscoord aY1, nscoord aWidth,nscoord aHeight);
 
   NS_IMETHOD DrawArc(const nsRect& aRect,
                      float aStartAngle, float aEndAngle);
@@ -190,17 +190,17 @@ private:
   void PushClipState(void);
 
 protected:
-  nsIDeviceContext 	*mContext;
-  nsXPrintContext     	*mPrintContext;
-  nsIFontMetrics    	*mFontMetrics;
-  nsRegionXP            *mClipRegion;
-  float               	mP2T;
-  nscolor             	mCurrentColor;
+  nsCOMPtr<nsIDeviceContextXP>     mContext;
+  nsXPrintContext     *mPrintContext;
+  nsIFontMetrics      *mFontMetrics;
+  nsRegionXP          *mClipRegion;
+  float                mP2T;
+  nscolor              mCurrentColor;
  
-  nsLineStyle          	mCurrLineStyle;
-  XP_State            	*mStates;
-  nsVoidArray         	*mStateCache;
-  XFontStruct	      	*mCurrentFont;	
+  nsLineStyle          mCurrLineStyle;
+  XP_State            *mStates;
+  nsVoidArray         *mStateCache;
+  XFontStruct         *mCurrentFont;        
 
   //state management
   PRUint8             *mGammaTable;

@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *
  */
 
  
@@ -44,7 +46,7 @@ public:
   NS_IMETHOD Init(nsIDeviceContextSpecXP *aSpec);
   NS_IMETHOD BeginPage();
   NS_IMETHOD EndPage();
-  NS_IMETHOD BeginDocument();
+  NS_IMETHOD BeginDocument(PRUnichar * aTitle);
   NS_IMETHOD EndDocument();
  
   GC         GetGC(void) { return mGC; }
@@ -52,8 +54,8 @@ public:
   Screen *   GetScreen() { return mScreen; }
   Visual *   GetVisual() { return mVisual; }
   int        GetDepth() { return mDepth; }
-  int	     GetHeight() { return mHeight; }
-  int	     GetWidth() { return mWidth; }
+  int        GetHeight() { return mHeight; }
+  int        GetWidth() { return mWidth; }
   int        GetScreenNumber() { return XScreenNumberOfScreen(mScreen); }
   
   Display *  GetDisplay() { return mPDisplay; }
@@ -72,30 +74,28 @@ public:
   NS_IMETHOD SetForegroundColor(nscolor aColor); 
  
 private:
-  static Display *     mDisplay;
-  Display *     mPDisplay;
-  Screen *      mScreen;
-  Visual *      mVisual;
+  Display      *mPDisplay;
+  Screen       *mScreen;
+  Visual       *mVisual;
   GC            mGC;
   Drawable      mDrawable;
-  XImage *      mImage;
-  int		mDepth;
-  int		mScreenNumber;
+  XImage       *mImage;
+  int           mDepth;
+  int           mScreenNumber;
   Pixmap        mAlphaPixmap;
   Pixmap        mImagePixmap;
-  int 		mWidth;
-  int		mHeight;
+  int           mWidth;
+  int           mHeight;
   XPContext     mPContext;
-  int		mPrintResolution;
-  float		mTextZoom;
-
-  char 		*mPrintServerName;
-  char 		*mPrinterName;
-  char 		*mAttrPool;
+  PRBool        mIsAPrinter;
+  char         *mPrintFile; /* file to "print" to */
+  void         *mXpuPrintToFileHandle; /* handle for XpuPrintToFile/XpuWaitForPrintFileChild when printing to file */
+  long          mPrintResolution;
+  float         mTextZoom;
 
   NS_IMETHOD SetupWindow(int x, int y, int width, int height);
   NS_IMETHOD SetupPrintContext(nsIDeviceContextSpecXP *aSpec);
 };
 
 
-#endif
+#endif /* !_XPCONTEXT_H_ */

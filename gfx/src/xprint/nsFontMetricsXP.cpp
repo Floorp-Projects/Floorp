@@ -203,7 +203,7 @@ NS_IMETHODIMP nsFontMetricsXP::Init(const nsFont& aFont, nsIAtom* aLangGroup,
           nsAutoString loc(str);
           loc.Truncate(2);
           loc.ToLowerCase();
-	  if ((loc.Equals(NS_ConvertASCIItoUCS2("ja"))) || 
+          if ((loc.Equals(NS_ConvertASCIItoUCS2("ja"))) || 
               (loc.Equals(NS_ConvertASCIItoUCS2("ko"))) || 
               (loc.Equals(NS_ConvertASCIItoUCS2("zh")))) {
             // In CJK environments, we want the minimum request to be 16px,
@@ -1140,7 +1140,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "johabs-1",           &X11Johab      },
   { "johabsh-1",          &X11Johab      },
   { "ksc5601.1987-0",     &KSC5601       },
-  { "microsoft-cp1251",   &CP1251	 },
+  { "microsoft-cp1251",   &CP1251         },
   { "misc-fontspecific",  &Ignore        },
   { "sgi-fontspecific",   &Ignore        },
   { "sun-fontspecific",   &Ignore        },
@@ -1315,7 +1315,11 @@ GetMapFor10646Font(XFontStruct* aFont)
 void
 nsFontXP::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXP* aMetrics)
 {
-  // XXX this is slow as dirt.
+  PR_LOG(FontMetricsXPLM, PR_LOG_DEBUG, ("nsFontXP::LoadFont: loading font '%s'\n", mName));
+
+  /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
+  NS_ASSERTION((XpGetContext(aMetrics->mDisplay) != None), "Obtaining font information (XLoadQueryFont()) _before_ XpSetContext()");
+  // XXX this is slow as dirt 
   XFontStruct *xlibFont = XLoadQueryFont(aMetrics->mDisplay, mName);
   if (xlibFont) {
     if (aCharSet->mInfo->mCharSet) {
@@ -1324,7 +1328,7 @@ nsFontXP::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXP* aMetrics)
     else {
       mMap = GetMapFor10646Font(xlibFont);
       if (!mMap) {
-	XFreeFont(aMetrics->mDisplay, xlibFont);
+        XFreeFont(aMetrics->mDisplay, xlibFont);
         return;
       }
     }
@@ -1389,7 +1393,7 @@ nsFontXPNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
   XChar2b buf[512];
   int ret;
   int len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
-    				(char*) buf, sizeof(buf));
+                                    (char*) buf, sizeof(buf));
   // XXX this is slow as dirt.
   XFontStruct *font_struct = mFont;
   if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
@@ -1406,7 +1410,7 @@ nsFontXPNormal::DrawString(nsXPrintContext* aPrintContext,
 {
   XChar2b buf[512];
   int len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
-    				(char*) buf, sizeof(buf));
+                                    (char*) buf, sizeof(buf));
   XFontStruct *font_struct = mFont;
   nsFontMetricsXP::SetFont(aPrintContext, font_struct->fid);
   if ((font_struct->min_byte1 == 0) && (font_struct->max_byte1 == 0))
@@ -1468,18 +1472,18 @@ public:
 
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength);
   virtual int DrawString(nsXPrintContext* aContext,
-			  nscoord aX,
+                          nscoord aX,
                           nscoord aY, const PRUnichar* aString,
                           PRUint32 aLength);
 #ifdef MOZ_MATHML
   virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
                                       PRUint32           aLength,
                                       nsBoundingMetrics& aBoundingMetrics);
-#endif
+#endif /* MOZ_MATHML */
   virtual PRUint32 Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
                            PRUnichar* aDest, PRUint32 aDestLen);
 
-  nsFontXP* mSubstituteFont;
+  nsFontXP *mSubstituteFont;
 
   static int gCount;
   static nsISaveAsCharset* gConverter;
@@ -2209,6 +2213,8 @@ GetFontNames(char* aPattern)
   nsFontFamily* family = nsnull;
 
   int count = 0;
+  /* applications must not make any assumptions about fonts _before_ XpSetContext() !!! */
+  NS_ASSERTION((XpGetContext(gDisplay) != None), "Obtaining font information (XListFonts()) _before_ XpSetContext()");  
   char** list = ::XListFonts(gDisplay, aPattern, INT_MAX, &count);
   if ((!list) || (count < 1)) {
     return nsnull;

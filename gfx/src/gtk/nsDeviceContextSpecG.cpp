@@ -356,11 +356,11 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: GetPrintMethod(int &aMethod )
   nsresult rv;
   nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && pPrefs) {
-    PRInt32 method = 0;
+    PRInt32 method = NS_DEFAULT_PRINT_METHOD;
     (void) pPrefs->GetIntPref("print.print_method", &method);
     aMethod = method;
   } else {
-    aMethod = 0;
+    aMethod = NS_DEFAULT_PRINT_METHOD;
   }
   return NS_OK;
 }

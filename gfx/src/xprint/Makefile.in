@@ -17,6 +17,7 @@
 # Rights Reserved.
 #
 # Contributor(s): 
+# Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
 #
 
 DEPTH		= ../../..
@@ -30,9 +31,11 @@ MODULE		= layout
 LIBRARY_NAME	= gfxxprt
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= gkgfx
-REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2
+REQUIRES	= xpcom string widget view img util dom pref locale uconv unicharutil gfx2 necko
 
 CSRCS		= ../xlibrgb/xlibrgb.c \
+                xprintutil.c \
+                xprintutil_printtofile.c \
 		$(NULL)
 
 CPPSRCS		= \
