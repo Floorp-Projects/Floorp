@@ -234,13 +234,16 @@ static nsDll *platformCreateDll(const char *fullname)
 	}
 
 	PRTime lastModTime = LL_ZERO;
-	PRUint64 fileSize = LL_ZERO;
+	PRUint64 fileSize64 = LL_ZERO;
 	uint32 n = sizeof(lastModTime);
 	NR_RegGetEntry(hreg, key, "LastModTimeStamp", &lastModTime, &n);
-	n = sizeof(fileSize);
-	NR_RegGetEntry(hreg, key, "FileSize", &fileSize, &n);
+	n = sizeof(fileSize64);
+	NR_RegGetEntry(hreg, key, "FileSize", &fileSize64, &n);
 
-	nsDll *dll = new nsDll(fullname, lastModTime, fileSize);
+    PRUint32 fileSize32;
+    LL_L2UI(fileSize32, fileSize64);
+    
+	nsDll *dll = new nsDll(fullname, lastModTime, fileSize32);
 
 	return (dll);
 }
@@ -352,12 +355,15 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 	NR_RegAddKey(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
 
 	PRTime lastModTime = dll->GetLastModifiedTime();
-	PRUint64 fileSize = dll->GetSize();
+    PRUint32 fileSize32 = dll->GetSize();
+    
+	PRUint64 fileSize64;
+    LL_UI2L(fileSize64,fileSize32);
 
 	NR_RegSetEntry(hreg, key, "LastModTimeStamp", REGTYPE_ENTRY_BYTES,
 		&lastModTime, sizeof(lastModTime));
 	NR_RegSetEntry(hreg, key, "FileSize",  REGTYPE_ENTRY_BYTES,
-		&fileSize, sizeof(fileSize));
+		&fileSize64, sizeof(fileSize64));
 
 	unsigned int nComponents = 0;
 	char buf[MAXREGNAMELEN];
@@ -477,7 +483,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 
 	// Get the library name, modifiedtime and size
 	PRTime lastModTime = LL_ZERO;
-	PRUint64 fileSize = LL_ZERO;
+	PRUint64 fileSize64 = LL_ZERO;
 
 	char buf[MAXREGNAMELEN];
 	uint32 len = sizeof(buf);
@@ -502,13 +508,15 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 			uint32 n = sizeof(lastModTime);
 			NR_RegGetEntry(hreg, key, "LastModTimeStamp", &lastModTime, &n);
 			PR_ASSERT(n == sizeof(lastModTime));
-			n = sizeof(fileSize);
-			NR_RegGetEntry(hreg, key, "FileSize", &fileSize, &n);
-			PR_ASSERT(n == sizeof(fileSize));
+			n = sizeof(fileSize64);
+			NR_RegGetEntry(hreg, key, "FileSize", &fileSize64, &n);
+			PR_ASSERT(n == sizeof(fileSize64));
 		}
 	}
 
-	res = new FactoryEntry(aCID, library, lastModTime, fileSize);
+    PRUint32 fileSize32;
+    LL_L2UI(fileSize32, fileSize64);
+	res = new FactoryEntry(aCID, library, lastModTime, fileSize32);
 
 	NR_RegClose(hreg);
 
