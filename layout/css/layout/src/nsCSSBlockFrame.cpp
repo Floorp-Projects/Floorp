@@ -129,6 +129,16 @@ public:
   NS_IMETHOD ContentAppended(nsIPresShell*   aShell,
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer);
+  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent);
+  NS_IMETHOD ContentDeleted(nsIPresShell*   aShell,
+                            nsIPresContext* aPresContext,
+                            nsIContent*     aContainer,
+                            nsIContent*     aChild,
+                            PRInt32         aIndexInParent);
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
@@ -184,6 +194,8 @@ protected:
   nsresult InitialReflow(nsCSSBlockReflowState& aState);
 
   nsresult FrameAppendedReflow(nsCSSBlockReflowState& aState);
+
+  nsresult FrameInsertedReflow(nsCSSBlockReflowState& aState);
 
   nsresult CreateNewFrames(nsIPresContext* aPresContext);
 
@@ -264,10 +276,10 @@ protected:
 #define LINE_LAST_CONTENT_IS_COMPLETE 0x4
 
 struct LineData {
-  LineData(nsIFrame* aFrame, PRInt32 aCount) {
+  LineData(nsIFrame* aFrame, PRInt32 aCount, PRUint16 flags) {
     mFirstChild = aFrame;
     mChildCount = aCount;
-    mState = LINE_IS_DIRTY;
+    mState = LINE_IS_DIRTY | flags;
     mFloaters = nsnull;
     mNext = nsnull;
   }
@@ -277,6 +289,8 @@ struct LineData {
   void List(FILE* out, PRInt32 aIndent) const;
 
   nsIFrame* LastChild() const;
+
+  PRBool IsLastChild(nsIFrame* aFrame) const;
 
   void SetLastContentIsComplete() {
     mState |= LINE_LAST_CONTENT_IS_COMPLETE;
@@ -333,6 +347,8 @@ struct LineData {
   }
 
   PRUint16 GetState() const { return mState; }
+
+  PRBool Contains(nsIFrame* aFrame) const;
 
 #ifdef NS_DEBUG
   void Verify();
@@ -406,6 +422,27 @@ LineData::LastChild() const
     frame->GetNextSibling(frame);
   }
   return frame;
+}
+
+PRBool
+LineData::IsLastChild(nsIFrame* aFrame) const
+{
+  nsIFrame* lastFrame = LastChild();
+  return aFrame == lastFrame;
+}
+
+PRBool
+LineData::Contains(nsIFrame* aFrame) const
+{
+  PRInt32 n = mChildCount;
+  nsIFrame* frame = mFirstChild;
+  while (--n >= 0) {
+    if (frame == aFrame) {
+      return PR_TRUE;
+    }
+    frame->GetNextSibling(frame);
+  }
+  return PR_FALSE;
 }
 
 #ifdef NS_DEBUG
@@ -518,6 +555,18 @@ LastLine(LineData* aLine)
     }
   }
   return aLine;
+}
+
+static LineData*
+FindLineContaining(LineData* aLine, nsIFrame* aFrame)
+{
+  while (nsnull != aLine) {
+    if (aLine->Contains(aFrame)) {
+      return aLine;
+    }
+    aLine = aLine->mNext;
+  }
+  return nsnull;
 }
 
 //----------------------------------------------------------------------
@@ -1157,6 +1206,10 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
         rv = FrameAppendedReflow(state);
         break;
 
+      case nsIReflowCommand::FrameInserted:
+        rv = FrameInsertedReflow(state);
+        break;
+
       default:
         NS_NOTYETIMPLEMENTED("XXX");
       }
@@ -1361,9 +1414,9 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
 
 // XXX move this somewhere else!!!
 static PRBool
-IsBlock(PRUint8 aDisplay)
+TreatFrameAsBlock(const nsStyleDisplay* aDisplay)
 {
-  switch (aDisplay) {
+  switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
   case NS_STYLE_DISPLAY_TABLE:
@@ -1552,7 +1605,7 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
     if (NS_OK != rv) {
       return rv;
     }
-    PRBool isBlock = IsBlock(kidDisplay->mDisplay);
+    PRBool isBlock = TreatFrameAsBlock(kidDisplay);
 
     // If the child is an inline then add it to the lastLine (if it's
     // an inline line, otherwise make a new line). If the child is a
@@ -1569,7 +1622,9 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
       }
 
       // Create a line for the block
-      LineData* line = new LineData(frame, 1);
+      LineData* line = new LineData(frame, 1,
+                                    (LINE_IS_BLOCK |
+                                     LINE_LAST_CONTENT_IS_COMPLETE));
       if (nsnull == line) {
         return NS_ERROR_OUT_OF_MEMORY;
       }
@@ -1580,13 +1635,11 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
         lastLine->mNext = line;
       }
       lastLine = line;
-      lastLine->SetIsBlock();
-      lastLine->SetLastContentIsComplete();
     }
     else {
       // Queue up the inlines for reflow later on
       if (0 == pendingInlines) {
-        LineData* line = new LineData(frame, 0);
+        LineData* line = new LineData(frame, 0, 0);
         if (nsnull == line) {
           return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -1615,6 +1668,7 @@ nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
+// XXX keep the text-run data in the first-in-flow of the block
 nsresult
 nsCSSBlockFrame::FindTextRuns(nsCSSBlockReflowState& aState)
 {
@@ -1662,13 +1716,41 @@ nsCSSBlockFrame::FindTextRuns(nsCSSBlockReflowState& aState)
   return NS_OK;
 }
 
+nsresult
+nsCSSBlockFrame::FrameInsertedReflow(nsCSSBlockReflowState& aState)
+{
+  LineData* line = mLines;
+  while (nsnull != line->mNext) {
+    if (line->IsDirty()) {
+      break;
+    }
+    line = line->mNext;
+  }
+  NS_ASSERTION(nsnull != line, "bad inserted reflow");
+  //XXX return ReflowDirtyLines(aState, line);
+
+  // XXX Correct implementation: reflow the dirty lines only; all
+  // other lines can be moved; recover state before first dirty line.
+
+  // XXX temporary
+  aState.GetAvailableSpace();
+  aState.mPrevLine = nsnull;
+  return ReflowLinesAt(aState, mLines);
+}
+
 // XXX Todo: some incremental reflows are passing through this block
 // and into a child block; those cannot impact our text-runs. In that
 // case skip the FindTextRuns work.
+
+// XXX easy optimizations: find the line that contains the next child
+// in the reflow-command path and mark it dirty and only reflow it;
+// recover state before it, slide lines down after it.
+
 nsresult
 nsCSSBlockFrame::ChildIncrementalReflow(nsCSSBlockReflowState& aState)
 {
-  // Generate text-run information
+  // Generate text-run information; this will also "fluff out" any
+  // inline children's frame tree.
   nsresult rv = FindTextRuns(aState);
   if (NS_OK != rv) {
     return rv;
@@ -1816,7 +1898,7 @@ nsCSSBlockFrame::ReflowLine(nsCSSBlockReflowState& aState,
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&) display);
-    PRBool isBlock = IsBlock(display->mDisplay);
+    PRBool isBlock = TreatFrameAsBlock(display);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif 
    if (aLine->IsBlock()) {
@@ -2072,13 +2154,13 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     if (nsnull != nextInFlow) {
       // We made a next-in-flow for the block child frame. Create a
       // line to map the block childs next-in-flow.
-      LineData* line = new LineData(nextInFlow, 1);
+      LineData* line = new LineData(nextInFlow, 1,
+                                    (LINE_IS_BLOCK |
+                                     LINE_LAST_CONTENT_IS_COMPLETE));
       if (nsnull == line) {
         aReflowResult = nsInlineReflowStatus(NS_ERROR_OUT_OF_MEMORY);
         return PR_FALSE;
       }
-      line->SetLastContentIsComplete();
-      line->SetIsBlock();
       line->mNext = aLine->mNext;
       aLine->mNext = line;
     }
@@ -2190,6 +2272,9 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
 }
 
 // XXX alloc lines using free-list in aState
+
+// XXX refactor this since the split NEVER has to deal with blocks
+
 nsresult
 nsCSSBlockFrame::SplitLine(nsCSSBlockReflowState& aState,
                            LineData*              aLine,
@@ -2209,7 +2294,7 @@ nsCSSBlockFrame::SplitLine(nsCSSBlockReflowState& aState,
       // as it's continuation. This causes all sorts of bad side
       // effects so we don't allow it.
       if (to->mChildCount != 0) {
-        LineData* insertedLine = new LineData(aFrame, pushCount);
+        LineData* insertedLine = new LineData(aFrame, pushCount, 0);
         aLine->mNext = insertedLine;
         insertedLine->mNext = to;
         to = insertedLine;
@@ -2218,17 +2303,11 @@ nsCSSBlockFrame::SplitLine(nsCSSBlockReflowState& aState,
         to->mChildCount += pushCount;
       }
     } else {
-      to = new LineData(aFrame, pushCount);
+      to = new LineData(aFrame, pushCount, 0);
       aLine->mNext = to;
     }
     if (nsnull == to) {
       return NS_ERROR_OUT_OF_MEMORY;
-    }
-    if (1 == pushCount) {
-      const nsStyleDisplay* display;
-      to->mFirstChild->GetStyleData(eStyleStruct_Display,
-                                    (const nsStyleStruct*&) display);
-      to->SetIsBlock(IsBlock(display->mDisplay));
     }
     to->SetLastContentIsComplete(aLineWasComplete);
     aLine->mChildCount -= pushCount;
@@ -2278,7 +2357,7 @@ nsCSSBlockFrame::PullFrame(nsCSSBlockReflowState& aState,
     const nsStyleDisplay* display;
     frame->GetStyleData(eStyleStruct_Display,
                         (const nsStyleStruct*&) display);
-    PRBool isBlock = IsBlock(display->mDisplay);
+    PRBool isBlock = TreatFrameAsBlock(display);
     NS_ASSERTION(isBlock == aLine->IsBlock(), "bad line isBlock");
 #endif
   }
@@ -2542,6 +2621,360 @@ nsCSSBlockFrame::ContentAppended(nsIPresShell*   aShell,
   }
 
   return NS_OK;
+}
+
+// XXX we assume that the insertion is really an assertion and never an append
+// XXX what about zero lines case
+NS_IMETHODIMP
+nsCSSBlockFrame::ContentInserted(nsIPresShell*   aShell,
+                                 nsIPresContext* aPresContext,
+                                 nsIContent*     aContainer,
+                                 nsIContent*     aChild,
+                                 PRInt32         aIndexInParent)
+{
+  // Find the frame that precedes this frame
+  nsIFrame* prevSibling = nsnull;
+  if (aIndexInParent > 0) {
+    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    prevSibling = aShell->FindFrameWithContent(precedingContent);
+    NS_ASSERTION(nsnull != prevSibling, "no frame for preceding content");
+    NS_RELEASE(precedingContent);
+
+    // The frame may have a next-in-flow. Get the last-in-flow; we do
+    // it the hard way because we can't assume that prevSibling is a
+    // subclass of nsSplittableFrame.
+    nsIFrame* nextInFlow;
+    do {
+      prevSibling->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        prevSibling = nextInFlow;
+      }
+    } while (nsnull != nextInFlow);
+  }
+
+  // Get the parent of the previous sibling (which will be the proper
+  // next-in-flow for the child). We expect it to be this frame or one
+  // of our next-in-flow(s).
+  nsCSSBlockFrame* flow = this;
+  if (nsnull != prevSibling) {
+    prevSibling->GetGeometricParent((nsIFrame*&)flow);
+  }
+
+  // Now that we have the right flow block we can create the new
+  // frame; test and see if the inserted frame is a block or not.
+  // XXX create-frame could return that fact
+  nsIFrame* newFrame;
+  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, flow, aChild,
+                                        nsnull, newFrame);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  const nsStyleDisplay* display;
+  newFrame->GetStyleData(eStyleStruct_Display,
+                         (const nsStyleStruct*&) display);
+  PRUint16 newFrameIsBlock = TreatFrameAsBlock(display)
+    ? LINE_IS_BLOCK
+    : 0;
+
+  // Insert/append the frame into flows line list at the right spot
+  LineData* newLine;
+  LineData* line = flow->mLines;
+  if (nsnull == prevSibling) {
+    // Insert new frame into the sibling list
+    newFrame->SetNextSibling(line->mFirstChild);
+
+    if (line->IsBlock() || newFrameIsBlock) {
+      // Create a new line
+      newLine = new LineData(newFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
+                             newFrameIsBlock);
+      if (nsnull == newLine) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      newLine->mNext = flow->mLines;
+      flow->mLines = newLine;
+    } else {
+      // Insert frame at the front of the line
+      line->mFirstChild = newFrame;
+      line->mChildCount++;
+      line->MarkDirty();
+    }
+  }
+  else {
+    // Find line containing the previous sibling to the new frame
+    line = FindLineContaining(line, prevSibling);
+    NS_ASSERTION(nsnull != line, "no line contains the previous sibling");
+    if (nsnull != line) {
+      if (line->IsBlock()) {
+        // Create a new line just after line
+        newLine = new LineData(newFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
+                               newFrameIsBlock);
+        if (nsnull == newLine) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+        newLine->mNext = line->mNext;
+        line->mNext = newLine;
+      }
+      else if (newFrameIsBlock) {
+        // Split line in two, if necessary. We can't allow a block to
+        // end up in an inline line.
+        if (line->IsLastChild(prevSibling)) {
+          // The new frame goes after prevSibling and prevSibling is
+          // the last frame on the line. Therefore we don't need to
+          // split the line, just create a new line.
+          newLine = new LineData(newFrame, 1, LINE_LAST_CONTENT_IS_COMPLETE |
+                                 newFrameIsBlock);
+          if (nsnull == newLine) {
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          newLine->mNext = line->mNext;
+          line->mNext = newLine;
+        }
+        else {
+          // The new frame goes after prevSibling and prevSibling is
+          // somewhere in the line, but not at the end. Split the line
+          // just after prevSibling.
+          PRInt32 i, n = line->mChildCount;
+          nsIFrame* frame = line->mFirstChild;
+          for (i = 0; i < n; i++) {
+            if (frame == prevSibling) {
+              nsIFrame* nextSibling;
+              prevSibling->GetNextSibling(nextSibling);
+
+              // Create new line to hold the remaining frames
+              NS_ASSERTION(n - i - 1 > 0, "bad line count");
+              newLine = new LineData(nextSibling, n - i - 1,
+                               line->mState & LINE_LAST_CONTENT_IS_COMPLETE);
+              if (nsnull == newLine) {
+                return NS_ERROR_OUT_OF_MEMORY;
+              }
+              newLine->mNext = line->mNext;
+              line->mNext = newLine;
+              line->MarkDirty();
+              line->SetLastContentIsComplete();
+              line->mChildCount = i + 1;
+              break;
+            }
+            frame->GetNextSibling(frame);
+          }
+
+          // Now create a new line to hold the block
+          newLine = new LineData(newFrame, 1,
+                             newFrameIsBlock | LINE_LAST_CONTENT_IS_COMPLETE);
+          if (nsnull == newLine) {
+            return NS_ERROR_OUT_OF_MEMORY;
+          }
+          newLine->mNext = line->mNext;
+          line->mNext = newLine;
+        }
+      }
+      else {
+        // Insert frame into the line.
+        NS_ASSERTION(line->GetLastContentIsComplete(), "bad line LCIC");
+        line->mChildCount++;
+        line->MarkDirty();
+      }
+    }
+
+    // Insert new frame into the sibling list; note: this must be done
+    // after the above logic because the above logic depends on the
+    // sibling list being in the "before insertion" state.
+    nsIFrame* nextSibling;
+    prevSibling->GetNextSibling(nextSibling);
+    newFrame->SetNextSibling(nextSibling);
+    prevSibling->SetNextSibling(newFrame);
+  }
+
+  // Generate a reflow command
+  nsIReflowCommand* cmd;
+  rv = NS_NewHTMLReflowCommand(&cmd, flow, nsIReflowCommand::FrameInserted);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  aShell->AppendReflowCommand(cmd);
+  NS_RELEASE(cmd);
+
+  // Update the content offsets of the flow block and all that follow
+  PRBool pseudos = flow->IsPseudoFrame();
+  flow->mLastContentOffset++;
+  if (pseudos) {
+    nsContainerFrame* flowParent = (nsContainerFrame*)flow->mGeometricParent;
+    flowParent->PropagateContentOffsets(flow, flow->mFirstContentOffset,
+                                        flow->mLastContentOffset,
+                                        flow->mLastContentIsComplete);
+  }
+  flow = (nsCSSBlockFrame*) flow->mNextInFlow;
+  while (nsnull != flow) {
+    flow->mFirstContentOffset++;
+    flow->mLastContentOffset++;
+    if (pseudos) {
+      nsContainerFrame* flowParent = (nsContainerFrame*)flow->mGeometricParent;
+      flowParent->PropagateContentOffsets(flow, flow->mFirstContentOffset,
+                                          flow->mLastContentOffset,
+                                          flow->mLastContentIsComplete);
+    }
+    flow = (nsCSSBlockFrame*) flow->mNextInFlow;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSSBlockFrame::ContentDeleted(nsIPresShell*   aShell,
+                                nsIPresContext* aPresContext,
+                                nsIContent*     aContainer,
+                                nsIContent*     aChild,
+                                PRInt32         aIndexInParent)
+{
+  // Find the frame that precedes the frame to destroy and the frame
+  // to destroy (the first-in-flow if the frame is continued). We also
+  // find which of our next-in-flows contain the dead frame.
+  nsCSSBlockFrame* flow;
+  nsIFrame* deadFrame;
+  nsIFrame* prevSibling = nsnull;
+  if (aIndexInParent > 0) {
+    nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
+    prevSibling = aShell->FindFrameWithContent(precedingContent);
+    NS_RELEASE(precedingContent);
+
+    // The frame may have a next-in-flow. Get the last-in-flow; we do
+    // it the hard way because we can't assume that prevSibling is a
+    // subclass of nsSplittableFrame.
+    nsIFrame* nextInFlow;
+    do {
+      prevSibling->GetNextInFlow(nextInFlow);
+      if (nsnull != nextInFlow) {
+        prevSibling = nextInFlow;
+      }
+    } while (nsnull != nextInFlow);
+
+    // Get the dead frame (maybe)
+    prevSibling->GetGeometricParent((nsIFrame*&)flow);
+    prevSibling->GetNextSibling(deadFrame);
+    if (nsnull == deadFrame) {
+      // The deadFrame must be prevSibling's parent's next-in-flows
+      // first frame. Therefore it doesn't have a prevSibling.
+      flow = (nsCSSBlockFrame*) flow->mNextInFlow;
+      if (nsnull != flow) {
+        deadFrame = flow->mLines->mFirstChild;
+      }
+      prevSibling = nsnull;
+    }
+  }
+  else {
+    flow = this;
+    deadFrame = mLines->mFirstChild;
+  }
+  NS_ASSERTION(nsnull != deadFrame, "yikes! couldn't find frame");
+  if (nsnull == deadFrame) {
+    return NS_OK;
+  }
+
+  // Generate a reflow command for the appropriate flow frame
+  nsIReflowCommand* cmd;
+  nsresult rv = NS_NewHTMLReflowCommand(&cmd, flow,
+                                        nsIReflowCommand::FrameDeleted);
+  if (NS_OK != rv) {
+    return rv;
+  }
+  aShell->AppendReflowCommand(cmd);
+  NS_RELEASE(cmd);
+
+  // Find line that contains deadFrame; we also find the pointer to
+  // the line.
+  nsCSSBlockFrame* block = flow;
+  LineData** linep = &block->mLines;
+  LineData* line = block->mLines;
+  while (nsnull != line) {
+    if (line->Contains(deadFrame)) {
+      break;
+    }
+    linep = &line->mNext;
+    line = line->mNext;
+  }
+
+  // Remove frame and its continuations
+  PRBool pseudos = flow->IsPseudoFrame();
+  nsIFrame* flowParent = flow->mGeometricParent;
+  while ((nsnull != block) && (nsnull != deadFrame)) {
+    while ((nsnull != line) && (nsnull != deadFrame)) {
+#ifdef NS_DEBUG
+      nsIFrame* parent;
+      deadFrame->GetGeometricParent(parent);
+      NS_ASSERTION(block == parent, "messed up delete code");
+#endif
+      // Remove deadFrame from the line
+      if (line->mFirstChild == deadFrame) {
+        nsIFrame* nextFrame;
+        deadFrame->GetNextSibling(nextFrame);
+        line->mFirstChild = nextFrame;
+      }
+      else {
+        nsIFrame* lastFrame = line->LastChild();
+        if (lastFrame == deadFrame) {
+          line->SetLastContentIsComplete();
+        }
+      }
+
+      // Take deadFrame out of the sibling list
+      if (nsnull != prevSibling) {
+        nsIFrame* nextFrame;
+        deadFrame->GetNextSibling(nextFrame);
+        prevSibling->SetNextSibling(nextFrame);
+        prevSibling = nsnull;
+      }
+
+      // Destroy frame; capture its next-in-flow first in case we need
+      // to destroy that too.
+      nsIFrame* nextInFlow;
+      deadFrame->GetNextInFlow(nextInFlow);
+      deadFrame->BreakFromNextFlow();
+      deadFrame->DeleteFrame();
+      deadFrame = nextInFlow;
+
+      // If line is empty, remove it now
+      LineData* next = line->mNext;
+      if (0 == --line->mChildCount) {
+        *linep = next;
+        line->mNext = nsnull;
+        delete line;
+      }
+      else {
+        linep = &line->mNext;
+      }
+      line = next;
+    }
+
+    // Update content offsets
+    block->mLastContentOffset--;
+    if (block != flow) {
+      block->mFirstContentOffset--;
+    }
+    if (pseudos) {
+      nsContainerFrame* parent = (nsContainerFrame*)block->mGeometricParent;
+      parent->PropagateContentOffsets(block, block->mFirstContentOffset,
+                                      block->mLastContentOffset,
+                                      block->mLastContentIsComplete);
+      if (parent != flowParent) {
+        nsIReflowCommand* cmd;
+        rv = NS_NewHTMLReflowCommand(&cmd, block,
+                                     nsIReflowCommand::FrameDeleted);
+        if (NS_OK != rv) {
+          return rv;
+        }
+        aShell->AppendReflowCommand(cmd);
+        NS_RELEASE(cmd);
+      }
+    }
+
+    // Advance to next flow block if the frame has more continuations
+    if (nsnull != deadFrame) {
+      block = (nsCSSBlockFrame*) block->mNextInFlow;
+      NS_ASSERTION(nsnull != block, "whoops, continuation with a parent");
+      line = block->mLines;
+      prevSibling = nsnull;
+    }
+  }
+  return rv;
 }
 
 PRBool
