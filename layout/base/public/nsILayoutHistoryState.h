@@ -14,8 +14,8 @@ class nsILayoutHistoryState : public nsISupports {
  public: 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILAYOUTHISTORYSTATE_IID)
 
-  NS_IMETHOD AddState(PRUint32 aContentID, nsISupports* aState, StateType aStateType) = 0;
-  NS_IMETHOD GetState(PRUint32 aContentID, nsISupports** aState, StateType aStateType) = 0;
+  NS_IMETHOD AddState(PRUint32 aContentID, nsISupports* aState, nsIStatefulFrame::StateType aStateType) = 0;
+  NS_IMETHOD GetState(PRUint32 aContentID, nsISupports** aState,  nsIStatefulFrame::StateType aStateType) = 0;
 };
 
 nsresult
