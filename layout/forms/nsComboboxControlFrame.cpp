@@ -559,7 +559,11 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   nsresult rv = NS_OK;
  
   aFrame->GetRect(aAbsoluteTwipsRect);
- 
+  // zero these out, 
+  // because the GetOffsetFromView figures them out
+  aAbsoluteTwipsRect.x = 0;
+  aAbsoluteTwipsRect.y = 0;
+
     // Get conversions between twips and pixels
   float t2p;
   float p2t;
