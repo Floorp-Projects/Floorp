@@ -2151,7 +2151,6 @@ ostream& operator<<(ostream& os,nsAutoString& aString){
 }
 
 
-
 /**
  * 
  * @update	gess 7/27/98
@@ -2171,7 +2170,7 @@ NS_BASE int fputs(const nsString& aString, FILE* out)
   if(len>0)
     ::fwrite(cp, 1, len, out);
   if (cp != buf) {
-    delete cp;
+    delete [] cp;
   }
   return (int) len;
 }
