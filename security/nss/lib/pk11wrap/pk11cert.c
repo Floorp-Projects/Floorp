@@ -706,19 +706,8 @@ PK11_GetCertFromPrivateKey(SECKEYPrivateKey *privKey)
     CERTCertificate *cert;
 
     if (certID == CK_INVALID_HANDLE) {
-	/* couldn't find it on the card, look in our data base */
-	SECItem derSubject;
-
-	rv = PK11_ReadAttribute(slot, handle, CKA_SUBJECT, NULL,
-					&derSubject);
-	if (rv != SECSuccess) {
-	    PORT_SetError(SSL_ERROR_NO_CERTIFICATE);
-	    return NULL;
-	}
-
-	cert = CERT_FindCertByName(CERT_GetDefaultCertDB(),&derSubject);
-	PORT_Free(derSubject.data);
-	return cert;
+	PORT_SetError(SSL_ERROR_NO_CERTIFICATE);
+	return NULL;
     }
     cert = PK11_MakeCertFromHandle(slot,certID,NULL);
     return (cert);
