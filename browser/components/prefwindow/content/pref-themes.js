@@ -40,7 +40,7 @@ var gShowDescription = true;
 var gData;
 const kPrefSvcContractID = "@mozilla.org/preferences;1";
 const kPrefSvcIID = Components.interfaces.nsIPref;
-const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+const gPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
 try {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
@@ -62,7 +62,7 @@ function Startup()
 
   var theme = null;
   try {
-    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
+    theme = gPrefSvc.getComplexValue("general.skins.selectedSkin",
                                      Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
@@ -99,11 +99,11 @@ function applyTheme()
 
   const kPrefSvcContractID = "@mozilla.org/preferences;1";
   const kPrefSvcIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
+  var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
   var theme = null;
   try {
-    theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
+    theme = prefSvc.getComplexValue("general.skins.selectedSkin",
                                      Components.interfaces.nsISupportsString).data;
   } catch (e) {
   }
@@ -133,15 +133,11 @@ function applyTheme()
 
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   if (oldTheme) {
-    var navbundle = document.getElementById("bundle_navigator");
-    var brandbundle = document.getElementById("bundle_brand");
-    var title = navbundle.getString("oldthemetitle");
-    var message = navbundle.getString("oldTheme");
-    var list = document.getElementById("skinsList");
-    var themeName = list.selectedItems.length ? list.selectedItems[0] : null;
-
+    var title = gNavigatorBundle.getString("oldthemetitle");
+    var message = gNavigatorBundle.getString("oldTheme");
+    
     message = message.replace(/%theme_name%/, themeName.getAttribute("displayName"));
-    message = message.replace(/%brand%/g, brandbundle.getString("brandShortName"));
+    message = message.replace(/%brand%/g, gBrandBundle.getString("brandShortName"));
 
     if (promptService.confirm(window, title, message)){
       var inUse = chromeRegistry.isSkinSelected(data.name, true);
@@ -152,7 +148,7 @@ function applyTheme()
                           .createInstance(Components.interfaces.nsISupportsString);
 
       str.data = true;
-      kPrefSvc.setComplexValue("general.skins.removelist." + data.name,
+      pref.setComplexValue("general.skins.removelist." + data.name,
                            Components.interfaces.nsISupportsString, str);
       
       if (inUse)
@@ -166,7 +162,7 @@ function applyTheme()
   var str = Components.classes["@mozilla.org/supports-string;1"]
                       .createInstance(Components.interfaces.nsISupportsString);
   str.data = data.name;
-  kPrefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
+  prefSvc.setComplexValue("general.skins.selectedSkin", Components.interfaces.nsISupportsString, str);
 
 
   chromeRegistry.selectSkin(data.name, true);                                        
@@ -239,7 +235,7 @@ function themeSelect()
     // XXX - this sucks and should only be temporary.
     var selectedSkin = "";
     try {
-      selectedSkin = kPrefSvc.CopyCharPref("general.skins.selectedSkin");
+      selectedSkin = gPrefSvc.CopyCharPref("general.skins.selectedSkin");
     }
     catch (e) {
     }
