@@ -1,38 +1,21 @@
-// OnOK(), Undo(), and Cancel() are in EdDialogCommon.js
-// applyChanges() must be implemented here
-
-var appCore;
-var toolkitCore;
+//Cancel() is in EdDialogCommon.js
+var editorShell;
 var insertNew = true;
-var undoCount = 0;
+var inserted = false;
+var tagname = "TAG NAME"
 
 // dialog initialization code
 function Startup()
 {
-  dump("Doing Startup...\n");
-  toolkitCore = XPAppCoresManager.Find("ToolkitCore");
-  if (!toolkitCore) {
-    toolkitCore = new ToolkitCore();
-    if (toolkitCore)
-      toolkitCore.Init("ToolkitCore");
+  // get the editor shell from the parent window
+  editorShell = window.opener.editorShell;
+  editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+  if(!editorShell) {
+    dump("EditoreditorShell not found!!!\n");
+    window.close();
+    return;
   }
-  if(!toolkitCore) {
-    dump("toolkitCore not found!!! And we can't close the dialog!\n");
-  }
-
-  // NEVER create an appcore here - we must find parent editor's
-  
-  // temporary while this window is opend with ShowWindowWithArgs
-  dump("Getting parent appcore\n");
-  var editorName = document.getElementById("args").getAttribute("value");
-  dump("Got editorAppCore called " + editorName + "\n");
-  appCore = XPAppCoresManager.Find(editorName);  
-  if(!appCore || !toolkitCore) {
-    dump("EditorAppCore not found!!!\n");
-    toolkitCore.CloseWindow(window);
-    return;  
-  }
-  dump("EditorAppCore found for ???????? dialog\n");
+  dump("EditoreditorShell found for NamedAnchor Properties dialog\n");
 
   // Create dialog object to store controls for easy access
   dialog = new Object;
@@ -47,7 +30,7 @@ function Startup()
 
 function initDialog() {
   // Get a single selected element of the desired type
-  element = appCore.getSelectedElement(tagName);
+  element = editorShell.GetSelectedElement(tagName);
 
   if (element) {
     // We found an element and don't need to insert one
@@ -64,16 +47,27 @@ function initDialog() {
   if(!element)
   {
     dump("Failed to get selected element or create a new one!\n");
-    //toolkitCore.CloseWindow(window);
+    window.close();
   }
 }
 
-function applyChanges()
+function onOK()
 {
-// Set all attributes from the dialog values, for example:
-  element.setAttribute("src",dialog.Src.value);
-
+// Set attribute example:
+//  imageElement.setAttribute("src",dialog.srcInput.value);
   if (insertNew) {
-    appCore.insertElement(element, true)
+    editorShell.InsertElement(element, true);
+    // Select the newly-inserted image
+    editorShell.SelectElement(element);
+    // Mark that we inserted so we can collapse the selection
+    //  when dialog closes
+    inserted = true;
   }
+
+  if (inserted) {
+    // We selected the object, undo it by
+    //  setting caret to just after the inserted element
+    editorShell.SetSelectionAfterElement(imageElement);
+  }
+  window.close();
 }

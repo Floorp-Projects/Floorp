@@ -20,15 +20,17 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install::
-	$(MAKE_INSTALL) EdDialogCommon.js     $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdLinkProps.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdLinkProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdImageProps.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdImageProps.js       $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdHLineProps.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdHLineProps.js       $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdSpellCheck.xul      $(DIST)\bin\chrome\editor\dialogs\content\default
-	$(MAKE_INSTALL) EdSpellCheck.js       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdDialogCommon.js      $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdLinkProps.xul        $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdLinkProps.js         $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdImageProps.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdImageProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdHLineProps.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdHLineProps.js        $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdSpellCheck.xul       $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdSpellCheck.js        $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdNamedAnchorProps.xul $(DIST)\bin\chrome\editor\dialogs\content\default
+	$(MAKE_INSTALL) EdNamedAnchorProps.js  $(DIST)\bin\chrome\editor\dialogs\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdDialogCommon.js
@@ -40,3 +42,5 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdHLineProps.js
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.xul
   rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdSpellCheck.js
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.xul
+  rm -f $(DIST)\bin\chrome\editor\dialogs\content\default\EdNamedAnchorProps.js

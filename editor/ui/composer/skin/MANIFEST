@@ -41,3 +41,10 @@ images:ED_TextColor.gif
 images:ED_BackColor.gif
 images:ED_Align.gif
 images:ED_ObjectPopup.gif
+images:ED_NewFile.gif
+images:ED_OpenFile.gif
+images:ED_SaveFile.gif
+images:ED_Publish.gif
+images:ED_Preview.gif
+images:ED_Print.gif
+images:ED_Find.gif

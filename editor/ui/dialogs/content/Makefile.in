@@ -36,6 +36,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EdHLineProps.js \
 	$(srcdir)/EdSpellCheck.xul \
 	$(srcdir)/EdSpellCheck.js \
+  $(srcdir)/EdNamedAnchorProps.xul \
+  $(srcdir)/EdNamedAnchorProps.js  \
 	$(NULL)
 
 install::

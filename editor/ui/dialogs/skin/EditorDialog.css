@@ -145,3 +145,8 @@ input[type="file"] {
 titledbutton.PixelOrPercent {
   min-width: 7em;
 }
+
+
+hr.DividerLine {
+  height: 2px;
+}
