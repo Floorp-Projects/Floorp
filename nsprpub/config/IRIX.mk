@@ -119,6 +119,9 @@ OS_CFLAGS		+= -D_PR_HAVE_SGI_PRDA_PROCMASK
 endif
 
 ifeq (,$(filter-out 6.5,$(OS_RELEASE)))
+ifndef NS_USE_GCC
+OS_CFLAGS		+= -mips3
+endif
 OS_CFLAGS		+= -D_PR_HAVE_GETPROTO_R -D_PR_HAVE_GETPROTO_R_POINTER
 endif
 
