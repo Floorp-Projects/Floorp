@@ -146,10 +146,9 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     mVBox = gtk_vbox_new(FALSE, 0);
     gtk_widget_show (mVBox);
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
-
-    gtk_widget_show (mWidget);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, TRUE, TRUE, 0);
   }
+  gtk_widget_show(mWidget);
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
   mCursor = eCursor_select;

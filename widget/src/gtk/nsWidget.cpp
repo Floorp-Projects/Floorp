@@ -87,7 +87,8 @@ nsIWidget *nsWidget::GetParent(void)
 
 NS_METHOD nsWidget::Show(PRBool bState)
 {
-  g_print("nsWidget::Show(%6d)    - %s %p\n", bState, mWidget->name, this);
+    g_print("nsWidget::Show(%6d)    - %s %p\n", bState, mWidget->name, this);
+
     if (bState) {
       if (mWidget) {
         gtk_widget_show(mWidget);
@@ -348,10 +349,8 @@ void *nsWidget::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
       case NS_NATIVE_WINDOW:
-        if (GTK_IS_LAYOUT(mWidget))
-	  return (void *)GTK_LAYOUT(mWidget)->bin_window;
-	else
-	  return (void *)mWidget->window;
+   //     return (void *)GTK_LAYOUT(mWidget)->bin_window;
+        return (void *)mWidget->parent->window;
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
       case NS_NATIVE_WIDGET:
