@@ -355,6 +355,18 @@ public:
                    nsIShutdownListener* shutdownListener = NULL);
 
     NS_IMETHOD
+    RegisterService(const char* aProgID, nsISupports* aService)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
+    UnregisterService(const char* aProgID)
+    {
+    	return NS_ERROR_NOT_IMPLEMENTED;
+	}
+
+    NS_IMETHOD
     GetService(const char* aProgID, const nsIID& aIID,
                nsISupports* *result,
                nsIShutdownListener* shutdownListener = NULL)
@@ -564,13 +576,6 @@ public:
 
     NS_IMETHOD
     SetWindowSize(PRUint32 width, PRUint32 height);
-
-	NS_IMETHOD
-	GetJSWindow(JSObject* *outJSWindow)
-	{
-		*outJSWindow = NULL;
-		return NS_ERROR_NOT_IMPLEMENTED;
-	}
 
 	nsIPluginInstance* GetInstance(void) { return mInstance; }
 	NPP GetNPPInstance(void) { return npp; }
