@@ -365,6 +365,24 @@ static const char* ioServiceContractID = "@mozilla.org/network/io-service;1";
         [mTab setLabel:@"Untitled"];
 }
 
+// called when a toolip should be shown/hidden
+- (void)onShowTooltip:(NSPoint)where withText:(NSString*)text
+{
+  NSLog([text description]);
+#if 0
+  // This doesn't work, and i'm not sure why
+  [mBrowserView setToolTip:text];
+  NSToolTipTag tag = [mBrowserView addToolTipRect:[mBrowserView bounds] owner:text userData:nil];
+  printf("tag is %d\n", tag);
+#endif
+}
+
+- (void)onHideTooltip
+{
+  NSLog(@"hiding");
+  [mBrowserView removeAllToolTips];
+}
+
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode
 {

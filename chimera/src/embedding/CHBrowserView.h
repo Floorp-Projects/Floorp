@@ -68,6 +68,9 @@ class nsIDragHelperService;
 - (void)onSecurityStateChange:(unsigned long)newState;
 // Called when a context menu should be shown.
 - (void)onShowContextMenu:(int)flags domEvent:(nsIDOMEvent*)aEvent domNode:(nsIDOMNode*)aNode;
+// Called when a tooltip should be shown or hidden
+- (void)onShowTooltip:(NSPoint)where withText:(NSString*)text;
+- (void)onHideTooltip;
 @end
 
 typedef enum {

@@ -82,6 +82,7 @@
 #include "nsISHEntry.h"
 #include "nsNetUtil.h"
 #include "nsIContextMenuListener.h"
+#include "nsITooltipListener.h"
 
 typedef unsigned int DragReference;
 #include "nsIDragHelperService.h"
@@ -100,7 +101,8 @@ class nsCocoaBrowserListener : public nsSupportsWeakReference,
                                public nsIWindowCreator,
 			                         public nsIEmbeddingSiteWindow,
                                public nsIWebProgressListener,
-                               public nsIContextMenuListener
+                               public nsIContextMenuListener,
+                               public nsITooltipListener
 {
 public:
   nsCocoaBrowserListener(CHBrowserView* aView);
@@ -113,6 +115,7 @@ public:
   NS_DECL_NSIEMBEDDINGSITEWINDOW
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSICONTEXTMENULISTENER
+  NS_DECL_NSITOOLTIPLISTENER
     
   void AddListener(id <NSBrowserListener> aListener);
   void RemoveListener(id <NSBrowserListener> aListener);
@@ -142,14 +145,15 @@ nsCocoaBrowserListener::~nsCocoaBrowserListener()
   }
 }
 
-NS_IMPL_ISUPPORTS7(nsCocoaBrowserListener,
+NS_IMPL_ISUPPORTS8(nsCocoaBrowserListener,
 		               nsIInterfaceRequestor,
 		               nsIWebBrowserChrome,
                    nsIWindowCreator,
 		               nsIEmbeddingSiteWindow,
 		               nsIWebProgressListener,
                    nsISupportsWeakReference,
-                   nsIContextMenuListener)
+                   nsIContextMenuListener,
+                   nsITooltipListener)
 
 // Implementation of nsIInterfaceRequestor
 NS_IMETHODIMP 
@@ -202,6 +206,23 @@ nsCocoaBrowserListener::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent* a
 {
   [mContainer onShowContextMenu: aContextFlags domEvent: aEvent domNode: aNode];
   return NS_OK;
+}
+
+// Implementation of nsITooltipListener
+NS_IMETHODIMP
+nsCocoaBrowserListener::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+{
+  NSPoint where;
+  where.x = aXCoords; where.y = aYCoords;
+  [mContainer onShowTooltip:where withText:[NSString stringWithCharacters:aTipText length:nsCRT::strlen(aTipText)]];
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCocoaBrowserListener::OnHideTooltip()
+{
+  [mContainer onHideTooltip];
+	return NS_OK;
 }
 
 // Implementation of nsIWebBrowserChrome
