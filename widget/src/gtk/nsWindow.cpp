@@ -91,9 +91,6 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   gint x;
   gint y;
 
-#ifdef DEBUG_pavlov
-  g_print("nsWindow::WidgetToScreen\n");
-#endif
   if (mIsToplevel && mShell)
   {
     if (mShell->window)
@@ -101,9 +98,6 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
-#ifdef DEBUG_pavlov
-      g_print("  x = %i, y = %i\n", x, y);
-#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -115,9 +109,6 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
       gdk_window_get_origin(mWidget->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
-#ifdef DEBUG_pavlov
-      g_print("  x = %i, y = %i\n", x, y);
-#endif
     }
     else
       return NS_ERROR_FAILURE;
@@ -553,7 +544,6 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 {
-#ifdef DEBUG_pavlov
   GtkWidget *grabWidget;
 
   if (mIsToplevel && mShell)
@@ -563,27 +553,25 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
   if (aCapture)
   {
-    printf("grabbing mShell\n");
+    printf("grabbing widget\n");
     mGrabTime = gdk_time_get();
-
-    gdk_pointer_grab (GDK_ROOT_WINDOW(), PR_TRUE,(GdkEventMask)
+    GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
+    gdk_pointer_grab (GTK_WIDGET(grabWidget)->window, PR_TRUE,(GdkEventMask)
                       (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                        GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
                        GDK_POINTER_MOTION_MASK),
-                      (GdkWindow*) NULL, (GdkCursor*) NULL, mGrabTime);
+                      (GdkWindow*) NULL, cursor, GDK_CURRENT_TIME);
+    gdk_cursor_destroy(cursor);
     gtk_grab_add(grabWidget);
   }
   else
   {
-    printf("ungrabbing mShell\n");
-    gdk_pointer_ungrab(mGrabTime);
+    printf("ungrabbing widget\n");
+    gdk_pointer_ungrab(GDK_CURRENT_TIME);
     gtk_grab_remove(grabWidget);
   }
 
   return NS_OK;
-#else
-  return NS_ERROR_FAILURE;
-#endif
 }
 
 
