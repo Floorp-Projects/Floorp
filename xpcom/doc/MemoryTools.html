@@ -1032,7 +1032,7 @@ and Release methods, then there is nothing you need do. By default, those
 macros support refcnt logging directly.
 <P>If your object is not an xpcom object then some manual editing is in
 order. The following sample code shows what must be done:
-<BLOCKQUOTE><B><TT>MOZ_DECL_CTOR_COUNTER(MyType);</TT></B>
+<BLOCKQUOTE><B><TT>MOZ_DECL_CTOR_COUNTER(MyType)</TT></B>
 <P><B><TT>MyType::MyType()</TT></B>
 <BR><B><TT>{</TT></B>
 <BR><B><TT>&nbsp; MOZ_COUNT_CTOR(MyType);</TT></B>
