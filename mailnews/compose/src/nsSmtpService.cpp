@@ -342,12 +342,13 @@ NS_IMETHODIMP nsMailtoChannel::AsyncOpen(nsIStreamListener *listener, nsISupport
 
 NS_IMETHODIMP nsMailtoChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+  *aLoadAttributes = 0;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMailtoChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsMailtoChannel::GetContentType(char * *aContentType)

@@ -97,7 +97,7 @@ typedef enum _PrefTrySSL {
     PREF_SSL_ALWAYS = 2
 } PrefTrySSL;
 
-class nsSmtpProtocol : public nsMsgProtocol,
+class nsSmtpProtocol : public nsMsgAsyncWriteProtocol,
                        public nsIMsgLogonRedirectionRequester
 {
 public:
