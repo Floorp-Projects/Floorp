@@ -54,7 +54,7 @@ extern "C" int XP_JAVA_NO_CLASSES;
 extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
-extern nsIServiceManager  *g_pNSIServiceManager;
+extern nsIServiceManager  *theServiceManager;
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 //static NS_DEFINE_CID(kPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
@@ -469,7 +469,7 @@ nsJVMManager::StartupJVM(void)
 
 	// beard:  Now uses the nsIPluginHost to load the plugin factory for NS_JVM_MIME_TYPE.
 	nsIPluginHost* pluginHost = NULL;
-    nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pluginHost);
+    nsresult err = theServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pluginHost);
 	if (err != NS_OK) {
         fStatus = nsJVMStatus_Failed;
         return fStatus;
