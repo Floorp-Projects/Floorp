@@ -147,6 +147,8 @@ public:
     static void      SetMemoryCacheEnabled(PRBool  enabled);
     static void      SetMemoryCacheCapacity(PRInt32  capacity);
 
+    nsresult         Init();
+    void             Shutdown();
 private:
 
     /**

@@ -433,11 +433,9 @@ nsCacheService::~nsCacheService()
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsCacheService::Init()
 {
-    nsresult  rv;
-
     NS_ASSERTION(!mInitialized, "nsCacheService already initialized.");
     if (mInitialized)
         return NS_ERROR_ALREADY_INITIALIZED;
@@ -448,7 +446,7 @@ nsCacheService::Init()
     CACHE_LOG_INIT();
 
     // initialize hashtable for active cache entries
-    rv = mActiveEntries.Init();
+    nsresult rv = mActiveEntries.Init();
     if (NS_FAILED(rv)) return rv;
     
     // get references to services we'll be using frequently
@@ -476,7 +474,7 @@ nsCacheService::Init()
 }
 
 
-NS_IMETHODIMP
+void
 nsCacheService::Shutdown()
 {
     nsAutoLock  lock(mCacheServiceLock);
@@ -507,7 +505,6 @@ nsCacheService::Shutdown()
 #endif
 #endif
     }
-    return NS_OK;
 }
 
 
@@ -565,7 +562,7 @@ nsresult
 nsCacheService::EvictEntriesForClient(const char *          clientID,
                                       nsCacheStoragePolicy  storagePolicy)
 {
-    if (this == nsnull) return NS_ERROR_NOT_AVAILABLE;
+    if (this == nsnull) return NS_ERROR_NOT_AVAILABLE; // XXX eh?
     nsAutoLock lock(mCacheServiceLock);
     nsresult rv = NS_OK;
 
