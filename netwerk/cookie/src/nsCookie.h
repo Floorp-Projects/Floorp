@@ -96,10 +96,10 @@ class nsCookie : public nsICookie2
     inline nsCookieStatus Status()          const { return mStatus; }
     inline nsCookiePolicy Policy()          const { return mPolicy; }
 
-    // setters on nsCookie only exist for SetLastAccessed().
-    // except for this method, an nsCookie is immutable
-    // and must be deleted & recreated if it needs to be changed.
+    // setters
     inline void SetLastAccessed(nsInt64 aLastAccessed) { mLastAccessed = aLastAccessed; }
+    inline void SetExpiry(PRInt64 aExpiry)             { mExpiry = aExpiry; }
+    inline void SetIsSession(PRBool aIsSession)        { mIsSession = aIsSession; }
 
   protected:
     // member variables

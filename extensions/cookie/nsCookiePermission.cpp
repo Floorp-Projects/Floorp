@@ -55,16 +55,27 @@
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsString.h"
-#include "nsInt64.h"
-#include "prtime.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
  ****************************************************************/
 
+// additional values for nsCookieAccess, which are for internal use only
+// (and thus do not belong in the public nsICookiePermission API). these
+// private values could be defined as a separate set of constants, but
+// have been chosen to extend nsCookieAccess for convenience.
+static const nsCookieAccess ACCESS_SESSION = 8;
+
 static const PRBool kDefaultPolicy = PR_TRUE;
 static const char kCookiesAskPermission[] = "network.cookie.warnAboutCookies";
+#ifdef MOZ_PHOENIX
+static const char kCookiesLifetimeEnabled[] = "network.cookie.enableForCurrentSessionOnly";
+#else
+static const char kCookiesLifetimeEnabled[] = "network.cookie.lifetime.enabled";
+static const char kCookiesLifetimeCurrentSession[] = "network.cookie.lifetime.behavior";
+static const char kCookiesLifetimeDays[] = "network.cookie.lifetime.days";
 static const char kCookiesDisabledForMailNews[] = "network.cookie.disableCookieForMailNews";
+#endif
 static const char kPermissionType[] = "cookie";
 
 // XXX these casts and constructs are horrible, but our nsInt64/nsTime
@@ -131,7 +142,12 @@ nsCookiePermission::Init()
     nsCOMPtr<nsIPrefBranchInternal> prefInt = do_QueryInterface(prefBranch);   
     if (prefInt) {
       prefInt->AddObserver(kCookiesAskPermission, this, PR_FALSE);
+      prefInt->AddObserver(kCookiesLifetimeEnabled, this, PR_FALSE);
+#ifndef MOZ_PHOENIX
+      prefInt->AddObserver(kCookiesLifetimeCurrentSession, this, PR_FALSE);
+      prefInt->AddObserver(kCookiesLifetimeDays, this, PR_FALSE);
       prefInt->AddObserver(kCookiesDisabledForMailNews, this, PR_FALSE);
+#endif
     }
     PrefChanged(prefBranch, nsnull);
   }
@@ -151,7 +167,20 @@ nsCookiePermission::PrefChanged(nsIPrefBranch *prefBranch,
       NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesAskPermission, &val)))
     mCookiesAskPermission = val;
 
+  if (PREF_CHANGED(kCookiesLifetimeEnabled) &&
+      NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesLifetimeEnabled, &val)))
+    mCookiesLifetimeEnabled = val;
+
 #ifndef MOZ_PHOENIX
+  if (PREF_CHANGED(kCookiesLifetimeCurrentSession) &&
+      NS_SUCCEEDED(prefBranch->GetIntPref(kCookiesLifetimeCurrentSession, &val)))
+    mCookiesLifetimeCurrentSession = (val == 0);
+
+  if (PREF_CHANGED(kCookiesLifetimeDays) &&
+      NS_SUCCEEDED(prefBranch->GetIntPref(kCookiesLifetimeDays, &val)))
+    // save cookie lifetime in seconds instead of days
+    mCookiesLifetimeSec = val * 24 * 60 * 60;
+
   if (PREF_CHANGED(kCookiesDisabledForMailNews) &&
       NS_SUCCEEDED(prefBranch->GetBoolPref(kCookiesDisabledForMailNews, &val)))
     mCookiesDisabledForMailNews = val;
@@ -218,14 +247,38 @@ nsCookiePermission::CanAccess(nsIURI         *aURI,
 #endif // MOZ_PHOENIX
   
   // finally, check with permission manager...
-  return mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
+  nsresult rv = mPermMgr->TestPermission(aURI, kPermissionType, (PRUint32 *) aResult);
+  if (NS_SUCCEEDED(rv)) {
+    switch (*aResult) {
+    // if we have one of the publicly-available values, just return it
+    case nsIPermissionManager::UNKNOWN_ACTION: // ACCESS_DEFAULT
+    case nsIPermissionManager::ALLOW_ACTION:   // ACCESS_ALLOW
+    case nsIPermissionManager::DENY_ACTION:    // ACCESS_DENY
+      break;
+
+    // for types not publicly available, we need to convert the value
+    // into an understandable one. ACCESS_SESSION means the cookie can be
+    // accepted; the session downgrade will occur in CanSetCookie().
+    case ACCESS_SESSION:
+      *aResult = ACCESS_ALLOW;
+      break;
+
+    // ack, an unknown type! just use the defaults.
+    default:
+      *aResult = ACCESS_DEFAULT;
+    }
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
 nsCookiePermission::CanSetCookie(nsIURI     *aURI,
                                  nsIChannel *aChannel,
                                  nsICookie2 *aCookie,
-                                 PRBool     *aResult) 
+                                 PRBool     *aIsSession,
+                                 PRInt64    *aExpiry,
+                                 PRBool     *aResult)
 {
   NS_ASSERTION(aURI, "null uri");
 
@@ -234,88 +287,113 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
   nsresult rv;
   PRUint32 perm;
   mPermMgr->TestPermission(aURI, kPermissionType, &perm);
-  if (perm == nsIPermissionManager::DENY_ACTION) {
-    *aResult = PR_FALSE;
-  } else if (perm == nsIPermissionManager::ALLOW_ACTION) {
+  switch (perm) {
+  case ACCESS_SESSION:
+    *aIsSession = PR_TRUE;
+
+  case nsIPermissionManager::ALLOW_ACTION: // ACCESS_ALLOW
     *aResult = PR_TRUE;
-  } else if (mCookiesAskPermission) {
-    // check whether the user wants to be prompted. we only do this if the
-    // permissionlist lookup returned UNKNOWN_ACTION (i.e., no permissionlist
-    // entry exists for this host).
+    break;
+
+  case nsIPermissionManager::DENY_ACTION:  // ACCESS_DENY
+    *aResult = PR_FALSE;
+    break;
+
+  default:
+    // the permission manager has nothing to say about this cookie -
+    // so, we apply the default prefs to it.
     NS_ASSERTION(perm == nsIPermissionManager::UNKNOWN_ACTION, "unknown permission");
 
-    // default to rejecting, in case the prompting process fails
-    *aResult = PR_FALSE;
+    // check cookie lifetime pref, and limit lifetime if required.
+    // we only want to do this if the cookie isn't going to be expired anyway.
+    nsInt64 delta;
+    if (!*aIsSession) {
+      nsInt64 currentTime = NOW_IN_SECONDS;
+      delta = nsInt64(*aExpiry) - currentTime;
 
-    nsCAutoString hostPort;
-    aURI->GetHostPort(hostPort);
-
-    if (!aCookie) {
-       return NS_ERROR_UNEXPECTED;
-    }
-    // If there is no host, use the scheme, and append "://",
-    // to make sure it isn't a host or something.
-    // This is done to make the dialog appear for javascript cookies from
-    // file:// urls, and make the text on it not too weird. (bug 209689)
-    if (hostPort.IsEmpty()) {
-      aURI->GetScheme(hostPort);
-      if (hostPort.IsEmpty()) {
-        // still empty. Just return the default.
-        return NS_OK;
-      }
-      hostPort = hostPort + NS_LITERAL_CSTRING("://");
-    }
-
-    // we don't cache the cookiePromptService - it's not used often, so not
-    // worth the memory.
-    nsCOMPtr<nsICookiePromptService> cookiePromptService =
-        do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    // try to get a nsIDOMWindow from the channel...
-    nsCOMPtr<nsIDOMWindow> parent;
-    GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIDOMWindow),
-                            getter_AddRefs(parent));
-
-    // get some useful information to present to the user:
-    // whether a previous cookie already exists, and how many cookies this host
-    // has set
-    PRBool foundCookie;
-    PRUint32 countFromHost;
-    nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-      rv = cookieManager->FindMatchingCookie(aCookie, &countFromHost, &foundCookie);
-    if (NS_FAILED(rv)) return rv;
-
-    // check if the cookie we're trying to set is already expired, and return;
-    // but only if there's no previous cookie, because then we need to delete the previous
-    // cookie. we need this check to avoid prompting the user for already-expired cookies.
-    if (!foundCookie) {
-      PRBool isSession;
-      aCookie->GetIsSession(&isSession);
-      if (!isSession) {
-        nsInt64 currentTime = NOW_IN_SECONDS;
-        PRInt64 expiry;
-        aCookie->GetExpiry(&expiry);
-        if (nsInt64(expiry) <= currentTime) {
-          // the cookie has already expired. accept it, and let the backend figure
-          // out it's expired, so that we get correct logging & notifications.
-          *aResult = PR_TRUE;
-          return rv;
+      if (mCookiesLifetimeEnabled && delta > nsInt64(0)) {
+#ifdef MOZ_PHOENIX
+        // limit lifetime to session
+        *aIsSession = PR_TRUE;
+#else
+        if (mCookiesLifetimeCurrentSession) {
+          // limit lifetime to session
+          *aIsSession = PR_TRUE;
+        } else if (delta > mCookiesLifetimeSec) {
+          // limit lifetime to specified time
+          delta = mCookiesLifetimeSec;
+          *aExpiry = currentTime + mCookiesLifetimeSec;
         }
+#endif
       }
     }
 
-    PRBool rememberDecision = PR_FALSE;
-    rv = cookiePromptService->CookieDialog(parent, aCookie, hostPort, 
-                                           countFromHost, foundCookie,
-                                           &rememberDecision, aResult);
-    if (NS_FAILED(rv)) return rv;
+    // check whether the user wants to be prompted
+    if (mCookiesAskPermission) {
+      // default to rejecting, in case the prompting process fails
+      *aResult = PR_FALSE;
 
-    if (rememberDecision) {
-      mPermMgr->Add(aURI, kPermissionType,
-                   *aResult ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
-                            : (PRUint32) nsIPermissionManager::DENY_ACTION);
+      nsCAutoString hostPort;
+      aURI->GetHostPort(hostPort);
+
+      if (!aCookie) {
+         return NS_ERROR_UNEXPECTED;
+      }
+      // If there is no host, use the scheme, and append "://",
+      // to make sure it isn't a host or something.
+      // This is done to make the dialog appear for javascript cookies from
+      // file:// urls, and make the text on it not too weird. (bug 209689)
+      if (hostPort.IsEmpty()) {
+        aURI->GetScheme(hostPort);
+        if (hostPort.IsEmpty()) {
+          // still empty. Just return the default.
+          return NS_OK;
+        }
+        hostPort = hostPort + NS_LITERAL_CSTRING("://");
+      }
+
+      // we don't cache the cookiePromptService - it's not used often, so not
+      // worth the memory.
+      nsCOMPtr<nsICookiePromptService> cookiePromptService =
+          do_GetService(NS_COOKIEPROMPTSERVICE_CONTRACTID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      // try to get a nsIDOMWindow from the channel...
+      nsCOMPtr<nsIDOMWindow> parent;
+      GetInterfaceFromChannel(aChannel, NS_GET_IID(nsIDOMWindow),
+                              getter_AddRefs(parent));
+
+      // get some useful information to present to the user:
+      // whether a previous cookie already exists, and how many cookies this host
+      // has set
+      PRBool foundCookie;
+      PRUint32 countFromHost;
+      nsCOMPtr<nsICookieManager2> cookieManager = do_GetService(NS_COOKIEMANAGER_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = cookieManager->FindMatchingCookie(aCookie, &countFromHost, &foundCookie);
+      if (NS_FAILED(rv)) return rv;
+
+      // check if the cookie we're trying to set is already expired, and return;
+      // but only if there's no previous cookie, because then we need to delete the previous
+      // cookie. we need this check to avoid prompting the user for already-expired cookies.
+      if (!foundCookie && !*aIsSession && delta <= nsInt64(0)) {
+        // the cookie has already expired. accept it, and let the backend figure
+        // out it's expired, so that we get correct logging & notifications.
+        *aResult = PR_TRUE;
+        return rv;
+      }
+
+      PRBool rememberDecision = PR_FALSE;
+      rv = cookiePromptService->CookieDialog(parent, aCookie, hostPort, 
+                                             countFromHost, foundCookie,
+                                             &rememberDecision, aResult);
+      if (NS_FAILED(rv)) return rv;
+
+      if (rememberDecision) {
+        mPermMgr->Add(aURI, kPermissionType,
+                      *aResult ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
+                               : (PRUint32) nsIPermissionManager::DENY_ACTION);
+      }
     }
   }
 
