@@ -2033,7 +2033,9 @@ inline
 #endif
 PRUint32 nsStyleContextData::AddRef(void)
 {
-  return ++mRefCnt;
+  ++mRefCnt;
+  NS_LOG_ADDREF(this,mRefCnt,"nsStyleContextData",sizeof(*this));
+  return mRefCnt;
 }
 
 #ifndef DEBUG
@@ -2042,7 +2044,9 @@ inline
 PRUint32 nsStyleContextData::Release(void)
 {
   NS_ASSERTION(mRefCnt > 0, "RefCount error in nsStyleContextData");
-  if (0 == --mRefCnt) {
+  --mRefCnt;
+  NS_LOG_RELEASE(this,mRefCnt,"nsStyleContextData");
+  if (0 == mRefCnt) {
 #ifdef NOISY_DEBUG
     printf("deleting nsStyleContextData instance: (%ld)\n", (long)(--gInstanceCount));
 #endif
