@@ -218,12 +218,12 @@ public:
     total->mAllStats.mRefsOutstandingVariance += mNewStats.mRefsOutstandingVariance + mAllStats.mRefsOutstandingVariance;
     total->mAllStats.mObjsOutstandingTotal += mNewStats.mObjsOutstandingTotal + mAllStats.mObjsOutstandingTotal;
     total->mAllStats.mObjsOutstandingVariance += mNewStats.mObjsOutstandingVariance + mAllStats.mObjsOutstandingVariance;
-    PRInt32 rem = (mNewStats.mCreates + mAllStats.mCreates) - (mNewStats.mDestroys + mAllStats.mDestroys);
-    total->mClassSize += mClassSize * rem;    // adjust for average in DumpTotal
+    PRInt32 count = (mNewStats.mCreates + mAllStats.mCreates);
+    total->mClassSize += mClassSize * count;    // adjust for average in DumpTotal
   }
 
   nsresult DumpTotal(PRUint32 nClasses, FILE* out) {
-    mClassSize /= (mAllStats.mCreates - mAllStats.mDestroys);
+    mClassSize /= mAllStats.mCreates;
     return Dump(-1, out, &mAllStats);
   }
 
