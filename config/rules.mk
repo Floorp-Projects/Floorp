@@ -222,6 +222,7 @@ _OBJS			= \
 	$(addsuffix .$(OBJ_SUFFIX), $(JMC_GEN)) \
 	$(CSRCS:.c=.$(OBJ_SUFFIX)) \
 	$(CPPSRCS:.cpp=.$(OBJ_SUFFIX)) \
+	$(CMSRCS:.m=.$(OBJ_SUFFIX)) \
 	$(CMMSRCS:.mm=.$(OBJ_SUFFIX)) \
 	$(ASFILES:.$(ASM_SUFFIX)=.$(OBJ_SUFFIX))
 OBJS	= $(strip $(_OBJS))
@@ -1118,6 +1119,11 @@ $(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.mm Makefile Makefile.in
 	@$(MAKE_DEPS_AUTO)
 	$(ELOG) $(CCC) -o $@ -c $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
+$(OBJ_PREFIX)%.$(OBJ_SUFFIX): %.m Makefile Makefile.in
+	$(REPORT_BUILD)
+	@$(MAKE_DEPS_AUTO)
+	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $(_VPATH_SRCS)
+
 %.s: %.cpp
 	$(CCC) -S $(COMPILE_CXXFLAGS) $(_VPATH_SRCS)
 
@@ -1637,7 +1643,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .mm .idl $(BIN_SUFFIX)
+.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in .$(OBJ_SUFFIX) .m .mm .idl $(BIN_SUFFIX)
 
 #
 # Fake targets.  Always run these rules, even if a file/directory with that
