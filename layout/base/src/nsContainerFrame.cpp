@@ -1152,6 +1152,8 @@ NS_METHOD nsContainerFrame::ListTag(FILE* out) const
 NS_METHOD nsContainerFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
+  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
+
   // Check our child count
   PRInt32 len = LengthOf(mFirstChild);
   VERIFY_ASSERT(len == mChildCount, "bad child count");

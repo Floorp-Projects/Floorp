@@ -336,6 +336,7 @@ NS_METHOD
 nsBlockFrame::VerifyTree() const
 {
 #ifdef NS_DEBUG
+  NS_ASSERTION(0 == (mState & NS_FRAME_IN_REFLOW), "frame is in reflow");
   nsresult rv = nsHTMLContainerFrame::VerifyTree();
   if (NS_OK != rv) {
     return rv;
