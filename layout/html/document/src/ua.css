@@ -22,7 +22,7 @@ HTML {
 
 BODY {
   background: inherit;
-  cursor: default;
+  cursor: inherit;
   display: block;
   line-height: normal;
 
@@ -155,7 +155,7 @@ TD, TH {
 //  border-style: inset;
   border-color: #C0C0C0;
   display: table-cell;
-  cursor: default;
+  cursor: inherit;
 }
 TH {
   font-weight: bold;
