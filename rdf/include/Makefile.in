@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
+	rdf.h				\
 	nsIRDFCursor.h			\
 	nsIRDFDataBase.h		\
 	nsIRDFDataSource.h 		\

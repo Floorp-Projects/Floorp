@@ -26,20 +26,26 @@ include $(topsrcdir)/config/config.mk
 
 LIBRARY_NAME = rdf
 
-INCLUDES += \
+# XXX For now we have an evil dependency on the
+# Raptor HTML implementation
+INCLUDES += 						\
+        -I$(srcdir)/../../layout/base/src		\
+        -I$(srcdir)/../../layout/html/base/src		\
+        -I$(srcdir)/../../layout/html/style/src		\
+        -I$(srcdir)/../../layout/html/document/src	\
 	$(NULL)
 
 CPPSRCS =				\
         nsBookmarkDataSource.cpp	\
-        nsEmptyCursor.obj               \
-        nsMemoryDataSource.obj          \
-        nsRDFContentSink.obj            \
-        nsRDFDocument.obj               \
-        nsRDFElement.obj                \
-        nsRDFFactory.obj                \
-        nsRDFRegistryImpl.obj           \
-        nsRDFResourceManager.obj        \
-        nsSimpleDataBase.obj            \
+        nsEmptyCursor.cpp               \
+        nsMemoryDataSource.cpp          \
+        nsRDFContentSink.cpp            \
+        nsRDFDocument.cpp               \
+        nsRDFElement.cpp                \
+        nsRDFFactory.cpp                \
+        nsRDFRegistryImpl.cpp           \
+        nsRDFResourceManager.cpp        \
+        nsSimpleDataBase.cpp            \
 	$(NULL)
 
 EXPORTS = \
@@ -49,9 +55,7 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
 MODULE = rdf
 
-REQUIRES = xpcom raptor dom netlib js pref
-
-MKSHLIB :=
+REQUIRES = dom js netlib rdf raptor xpcom
 
 include $(topsrcdir)/config/rules.mk
 
