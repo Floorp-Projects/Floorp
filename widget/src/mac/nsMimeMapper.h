@@ -64,7 +64,8 @@ public:
   void MapMacOSTypeToMimeType ( ResType inMacType, nsString & outMimeStr ) ;
  
     // Takes the internal mappings and converts them to a string for
-    // placing on the clipboard or in a drag item.
+    // placing on the clipboard or in a drag item. |outLength| includes 
+    // the NULL at the end of the string.
   char* ExportMapping ( short * outLength ) const;
 
   static ResType MappingFlavor ( ) { return kMappingFlavor; }

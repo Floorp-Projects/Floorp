@@ -148,7 +148,8 @@ nsClipboard :: SetNativeClipboardData()
   } // foreach flavor in transferable
   delete flavorList;
 
-  // write out the mapping data in a special flavor on the clipboard
+  // write out the mapping data in a special flavor on the clipboard. |mappingLen|
+  // includes the NULL terminator.
   short mappingLen = 0;
   const char* mapping = theMapper.ExportMapping(&mappingLen);
   long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
@@ -188,7 +189,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   GetDataOffClipboard ( nsMimeMapperMac::MappingFlavor(), &mimeMapperData, nsnull );
   nsMimeMapperMac theMapper ( mimeMapperData );
   delete [] mimeMapperData;
-  
+ 
   // 
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
@@ -232,8 +233,9 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* 
     return NS_ERROR_FAILURE;
 
   // check if it is on the clipboard
-  long offsetUnused;
-  if ( ::GetScrap(NULL, inMacFlavor, &offsetUnused) > 0 ) {
+  long offsetUnused = 0;
+  OSErr clipResult = ::GetScrap(NULL, inMacFlavor, &offsetUnused);
+  if ( clipResult > 0 ) {
     // we have it, get it off the clipboard. Put it into memory that we allocate
     // with new[] so that the tranferable can own it (and then later use delete[]
     // on it).
