@@ -4234,7 +4234,10 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
           nsCOMPtr<nsIEventStateManager> esm;
           pc->GetEventStateManager(getter_AddRefs(esm));
           esm->ConsumeFocusEvents(PR_TRUE);
-          mFrame->SetFocus();
+          gfxFrame = mFrame.Reference(); // check for deletion
+          if (gfxFrame) {
+            gfxFrame->SetFocus();
+          }
         }
       }
       NS_IF_RELEASE(event.widget);
