@@ -309,16 +309,18 @@ nsMessenger::OpenURL(const char * url)
     char* unescapedUrl = PL_strdup(url);
     if (unescapedUrl)
     {
+	  // I don't know why we're unescaping this url - I'll leave it unescaped
+	  // for the web shell, but the message service doesn't need it unescaped.
       nsUnescape(unescapedUrl);
       
       nsIMsgMessageService * messageService = nsnull;
-      nsresult rv = GetMessageServiceFromURI(unescapedUrl,
+      nsresult rv = GetMessageServiceFromURI(url,
         &messageService);
       
       if (NS_SUCCEEDED(rv) && messageService)
       {
-        messageService->DisplayMessage(unescapedUrl, mWebShell, mMsgWindow, nsnull, nsnull);
-        ReleaseMessageServiceFromURI(unescapedUrl, messageService);
+        messageService->DisplayMessage(url, mWebShell, mMsgWindow, nsnull, nsnull);
+        ReleaseMessageServiceFromURI(url, messageService);
       }
       //If it's not something we know about, then just load the url.
       else
