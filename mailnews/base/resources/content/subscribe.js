@@ -3,38 +3,19 @@ var gCurrentServer = null;
 var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
+var RDF = null;
+var SubscribeDS = null;
+var gCurrentServerURI = null;
 
-function AddItem(children,cells)
+function SetUpTree()
 {
-		var kids = document.getElementById(children);
-		var item  = document.createElement("treeitem");
-		var row   = document.createElement("treerow");
+	var nntpService = Components.classes['component://netscape/messenger/nntpservice'].getService(Components.interfaces.nsINntpService);
+	nntpService = nntpService.QueryInterface(Components.interfaces.nsINntpService);
+	nntpService.buildSubscribeDatasource(gCurrentServer);
 
-		for(var i = 0; i < cells.length; i++) {
-			var cell  = document.createElement("treecell");
-			cell.setAttribute("value", cells[i])
-			cell.setAttribute("id", cells[0] + "#" + i)
-			row.appendChild(cell);
-		}
-
-		item.appendChild(row);
-		item.setAttribute("id",cells[0]);
-		kids.appendChild(item);
-}
-
-var SubscribeDialogListener = {
-	AddItem:	function(name, subscribed, count) {
-		dump(name + "," + subscribed + "," + count + "\n");
-		AddItem("folders",[name,subscribed,count]);
-	}
-};
-
-function SetUpTree(server)
-{
-	dump("SetUpTree("+ server.hostname + ")\n");
-
-	var master = server.QueryInterface(Components.interfaces.nsISubscribeDialogMaster);
-	master.populateSubscribeDialog(SubscribeDialogListener);
+	gCurrentServerURI = "news://" + gCurrentServer.hostName;
+	dump("root subscribe tree at: "+gCurrentServerURI+"\n");
+	gSubscribeTree.setAttribute('ref',gCurrentServerURI);
 }
 
 function SubscribeOnLoad()
@@ -42,7 +23,6 @@ function SubscribeOnLoad()
 	dump("SubscribeOnLoad()\n");
 	
     gSubscribeTree = document.getElementById('subscribetree');
-    gCurrentServer = document.getElementById('currentserver');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 
@@ -57,33 +37,17 @@ function SubscribeOnLoad()
 		}
 	}
 	
-	// pre select the folderPicker, based on what they selected in the folder pane
 	if (window.arguments[0].preselectedURI) {
 		gServerURI = window.arguments[0].preselectedURI;
-		var folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
-		var server = folder.server;
+		folder = GetMsgFolderFromUri(window.arguments[0].preselectedURI);
+		gCurrentServer = folder.server;
+
+		SetUpTree();
+
+		RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 		
-		gCurrentServer.value = server.hostName;	// use gServer.prettyName?
-
-		SetUpTree(server);
-
-		dump("for each child of " + server.hostName + " set subscribed to true in the datasource\n");
-
-		var folders = folder.GetSubFolders();
-		
-		if (folders) {
-			try {
-				while (true) {
-					var i = folders.currentItem();
-					var f = i.QueryInterface(Components.interfaces.nsIMsgFolder);
-					SetState(f.name, null, 'true');
-					folders.next();
-				}
-			}
-			catch (ex) {
-				dump("no more subfolders\n");
-			}
-		}
+		SubscribeDS = RDF.GetDataSource("rdf:subscribe");
 	}
 }
 
@@ -102,18 +66,20 @@ function subscribeCancel()
 	return true;
 }
 
-function SetState(uri, element, state)
+function SetState(uri, state)
 {
-	var subCell = element;
-	dump("SetState: " + uri + "," + element + "," + state + "\n");
-	
-	if (!subCell) {
-		subCell  = document.getElementById(uri + "#1");
-		dump("subCell =" + subCell + "\n");
-	}
+	dump("SetState(" + uri +"," + state + ")\n");
+	if (!uri || !state) return;
 
-	if (subCell) {
-		subCell.setAttribute("value",state);
+	try {
+		var src = RDF.GetResource(uri, true);
+		var prop = RDF.GetResource("http://home.netscape.com/NC-rdf#Subscribed", true);
+		var oldLiteral = SubscribeDS.GetTarget(src, prop, true);
+		var newLiteral = RDF.GetLiteral(state);
+		SubscribeDS.Change(src, prop, oldLiteral, newLiteral);
+	}
+	catch (ex) {
+		dump("failed: " + ex + "\n");
 	}
 }
 
@@ -135,6 +101,9 @@ function StateChanged(uri,state)
 
 function SetSubscribeState(state)
 {
+  dump("SetSubscribedState()\n");
+
+  try {
 	dump("subscribe button clicked\n");
 
 	var groupList = gSubscribeTree.selectedItems;
@@ -142,12 +111,13 @@ function SetSubscribeState(state)
 		group = groupList[i];
 		uri = group.getAttribute('id');
 		dump(uri + "\n");
-		
-		var cells = group.getElementsByAttribute("id",uri + "#1");
-		dump("cell=" + cells[0] + "\n");
-		SetState(uri, cells[0], state);
+		SetState(uri, state);
 		StateChanged(uri,state);
 	}
+  }
+  catch (ex) {
+	dump("SetSubscribedState failed:  " + ex + "\n");
+  }
 }
 
 function SubscribeOnClick(event)

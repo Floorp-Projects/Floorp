@@ -31,7 +31,7 @@ Rights Reserved.
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns:NC="http://home.netscape.com/NC-rdf#"	
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        orient="vertical"
 		class="dialog"
 		height="300"
 		width="600"
@@ -43,40 +43,71 @@ Rights Reserved.
 
 	<keyset id="keyset"/>
 
-	<box align="horizontal" flex="100%">
-		<box align="vertical" flex="100%">
-			<box align="horizontal" flex="100%">
-				<html:div>&server.label;</html:div>
-				<titledbutton id="currentserver" value="..."/>
+	<box orient="horizontal" flex="100%">
+		<box orient="vertical" flex="100%">
+			<box orient="horizontal" flex="100%">
+				<text class="label" value="&server.label;" for="currentserver"/>
+				<menulist id="currentserver" value="...">
+					<menupopup>
+						<menuitem value="news.mozilla.org" uri="news://news.mozilla.org" />
+						<menuitem value="news.fresmeat.net" uri="news://news.freshmeant.net" />
+						<menuitem value="news.mcom.com" uri="news://news.mcom.com" />
+<!--
+					<menupopup datasources="rdf:msgaccountmanager" ref="msgaccounts:/">
+						<template>
+							<rule>
+								<menuitem value="..."/>
+							</rule>
+						</template>
+-->
+					</menupopup>
+				</menulist>
 			</box>
-			<box align="horizontal" flex="100%">
-				<html:div>&folders.label;</html:div>
-				<html:input tabindex="0" type="text" id="name" 
-						style="width:100%"/>
+			<box orient="horizontal" flex="100%">
+				<text class="label" value="&folders.label;" for="name"/>
+				<textfield id="name"/>
 			</box>
 		</box>
 	</box>
-	<box align="horizontal" flex="100%">
-		<box align="vertical" flex="100%">
+	<box orient="horizontal" flex="100%">
+		<box orient="vertical" flex="100%">
 
 <tree style="width:100px;" flex="100%"
 	      		class="inset"
 				id="subscribetree"
+				datasources="rdf:subscribe"
 				onclick="SubscribeOnClick(event);"> 
+	<template>
+		<rule>
+			<treechildren>
+				<treeitem uri="...">	
+					<treerow>
+						<treecell value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+						<treecell value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
+						<treecell value="rdf:http://home.netscape.com/NC-rdf#Count"/>
+					</treerow>
+				</treeitem>
+			</treechildren>
+		</rule>
+	</template>
+
+	<treecolgroup id="theSubscribeColumns">
+		<treecol width="8*" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+		<treecol width="1*" id="SubscribedColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subscribed"/>
+		<treecol width="1*" id="CountColumn" rdf:resource="http://home.netscape.com/NC-rdf#Count"/>
+	</treecolgroup>
+
 	<treehead>	
 		<treerow id="headRow">
-			<treecell value="&foldersHeader.label;"/>
+			<treecell value="&foldersHeader.label;" />
 			<treecell value="&subscribedHeader.label;"/>
 			<treecell value="&messagesHeader.label;"/>
 		</treerow>
 	</treehead>	
-    <treechildren>
-		<treeitem id="folders"/>
-	</treechildren>
 </tree>
 
 		</box>
-		<box align="vertical" flex="20%">
+		<box orient="vertical" flex="20%">
 			<spring flex="100%"/>
 			<titledbutton id="subscribe" class="push" value="&subscribeButton.label;" onclick="SetSubscribeState('true')"/>
 			<titledbutton id="unsubscribe" class="push" value="&unsubscribeButton.label;" onclick="SetSubscribeState('false')"/>
