@@ -368,5 +368,27 @@ typedef PRUint32 nsresult;
 #define NS_PTR_TO_INT32(x) ((char *)(x) - (char *)0)
 #define NS_INT32_TO_PTR(x) ((void *)((char *)0 + (x)))
 
+/*
+ * These macros allow you to give a hint to the compiler about branch
+ * probability so that it can better optimize.  Use them like this:
+ *
+ *  if (NS_LIKELY(v == 1)) {
+ *    ... expected code path ...
+ *  }
+ *
+ *  if (NS_UNLIKELY(v == 0)) {
+ *    ... non-expected code path ...
+ *  }
+ *
+ */
+
+#if defined(__GNUC__) && (__GNUC__ > 2)
+#define NS_LIKELY(x)    (__builtin_expect((x), 1))
+#define NS_UNLIKELY(x)  (__builtin_expect((x), 0))
+#else
+#define NS_LIKELY(x)    (x)
+#define NS_UNLIKELY(x)  (x)
+#endif
+
 #endif /* nscore_h___ */
 

@@ -106,8 +106,8 @@
  * @name Standard Error Handling Macros
  */
 
-#define NS_FAILED(_nsresult) ((_nsresult) & 0x80000000)
-#define NS_SUCCEEDED(_nsresult) (!((_nsresult) & 0x80000000))
+#define NS_FAILED(_nsresult) (NS_UNLIKELY((_nsresult) & 0x80000000))
+#define NS_SUCCEEDED(_nsresult) (NS_LIKELY(!((_nsresult) & 0x80000000)))
 
 /**
  * @name Severity Code.  This flag identifies the level of warning
