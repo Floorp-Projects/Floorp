@@ -46,7 +46,7 @@ public class KeyWrapping {
 
       try {
 
-        CryptoManager.initialize("secmod.db", "key3.db", "cert7.db");
+        CryptoManager.initialize("dbdir");
         CryptoManager cm = CryptoManager.getInstance();
         CryptoToken token = cm.getInternalCryptoToken();
         CryptoToken keyToken = cm.getInternalKeyStorageToken();
@@ -79,7 +79,7 @@ public class KeyWrapping {
 
         keyWrap.initUnwrap(wrapper, null);
         SymmetricKey unwrapped = keyWrap.unwrapSymmetric(wrappedKey,
-            SymmetricKey.DES, 0);
+            SymmetricKey.DES, SymmetricKey.Usage.DECRYPT, 0);
 
         Cipher decryptor = token.getCipherContext(EncryptionAlgorithm.DES_ECB);
         decryptor.initDecrypt(unwrapped);
@@ -126,7 +126,8 @@ public class KeyWrapping {
         keyWrap.initWrap(pub,null);
         wrappedKey = keyWrap.wrap(keyWrapped);
         keyWrap.initUnwrap(newPrivk, null);
-        unwrapped = keyWrap.unwrapSymmetric(wrappedKey, SymmetricKey.DES, 0);
+        unwrapped = keyWrap.unwrapSymmetric(wrappedKey, SymmetricKey.DES,
+            SymmetricKey.Usage.DECRYPT, 0);
         unwrapped = kg.clone(unwrapped);
         decryptor = token.getCipherContext(EncryptionAlgorithm.DES_ECB);
         decryptor.initDecrypt(unwrapped);
