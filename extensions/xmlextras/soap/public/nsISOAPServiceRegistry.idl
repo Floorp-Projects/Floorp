@@ -59,41 +59,41 @@ interface nsISOAPEncodingRegistry;
  */
 [scriptable, uuid(9790d6bc-1dd1-11b2-afe0-bcb310c078bf)]
 interface nsISOAPServiceRegistry {
-/**
- * Process a configuration and add the resulting sources
- *   and services.  This will fail if errors occur during
- *   processing of the configuration.
- *
- * @param aConfiguration Root element of configuration XML.
- */
+  /**
+   * Process a configuration and add the resulting sources
+   *   and services.  This will fail if errors occur during
+   *   processing of the configuration.
+   *
+   * @param aConfiguration Root element of configuration XML.
+   */
   boolean addConfiguration(in nsIDOMElement aConfiguration);
 
-/**
- * Add a transport to be serviced by the registered services.
- *   This will fail if the specified source was already added
- *   with the same setting of the capture flag.
- *
- * @param aTransport string specifying the transport to supply
- *   messages for the service.
- *
- * @param aCapture True if capturing before later declarations
- */
+  /**
+   * Add a transport to be serviced by the registered services.
+   *   This will fail if the specified source was already added
+   *   with the same setting of the capture flag.
+   *
+   * @param aTransport string specifying the transport to supply
+   *   messages for the service.
+   *
+   * @param aCapture True if capturing before later declarations
+   */
   void addSource(in AString aTransport, in boolean aCapture);
 
-/**
- * Add a service to service the registered transports.  This
- *   will fail if the specified service was already added.
- *
- * @param aService Service to be serviced.
- */
+  /**
+   * Add a service to service the registered transports.  This
+   *   will fail if the specified service was already added.
+   *
+   * @param aService Service to be serviced.
+   */
   void addService(in nsISOAPService aService);
 
-/**
- * Registry identifying how to encode and decode
- *   messages containing specific types, automatically
- *   added to messages sent to services in this
- *   registry.
- */
+  /**
+   * Registry identifying how to encode and decode
+   *   messages containing specific types, automatically
+   *   added to messages sent to services in this
+   *   registry.
+   */
   attribute nsISOAPEncodingRegistry encodings;
 };
 

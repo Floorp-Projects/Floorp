@@ -53,22 +53,22 @@ interface nsISOAPAttachments;
 [scriptable, uuid(4c2e02ae-1dd2-11b2-b1cd-c79dea3d46db)]
 interface nsISOAPDecoder:nsISupports {
 
-/**
- * Decode the source DOM node
- *
- * @param aEncodings The encodings used to decode
- *
- * @param aEncodingStyleURI The encoding style
- *
- * @param aSource The DOM node to be decoded.
- *
- * @param aSchemaType The schema type of the source DOM node
- *
- * @param aAttachments Dispenses any attachments.
- *
- * @return The decoded variant, which is null if 
- *   the operation failed or did not return a result.
- */
+  /**
+   * Decode the source DOM node
+   *
+   * @param aEncodings The encodings used to decode
+   *
+   * @param aEncodingStyleURI The encoding style
+   *
+   * @param aSource The DOM node to be decoded.
+   *
+   * @param aSchemaType The schema type of the source DOM node
+   *
+   * @param aAttachments Dispenses any attachments.
+   *
+   * @return The decoded variant, which is null if 
+   *   the operation failed or did not return a result.
+   */
   nsIVariant decode(in nsISOAPEncoding aEncoding,
 		    in nsIDOMElement aSource,
 		    in nsISchemaType aSchemaType,

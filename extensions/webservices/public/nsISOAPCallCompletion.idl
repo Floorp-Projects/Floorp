@@ -51,30 +51,30 @@ interface nsISOAPResponseListener;
 [scriptable, uuid(86114dd8-1dd2-11b2-ab2b-91d0c995e03a)]
 interface nsISOAPCallCompletion:nsISupports {
 
-/**
- * The call which was invoked (may have changed since
- *   the call was made).
- */
+  /**
+   * The call which was invoked (may have changed since
+   *   the call was made).
+   */
   readonly attribute nsISOAPCall call;
-/**
- * The response, if any, to the call.
- */
+  /**
+   * The response, if any, to the call.
+   */
   readonly attribute nsISOAPResponse response;
-/**
- * The listener to the call.
- */
+  /**
+   * The listener to the call.
+   */
   readonly attribute nsISOAPResponseListener listener;
-/**
- * Whether the call is complete.
- */
+  /**
+   * Whether the call is complete.
+   */
   readonly attribute boolean isComplete;
 
-/**
- * Cause the invoked method to abort, if it is not
- * already complete.
- * @return true if the state of isComplete became
- *   true as a result.  False if it was already
- *   true or reamined false.
- */
+  /**
+   * Cause the invoked method to abort, if it is not
+   * already complete.
+   * @return true if the state of isComplete became
+   *   true as a result.  False if it was already
+   *   true or reamined false.
+   */
   boolean abort();
 };

@@ -65,111 +65,111 @@ interface nsISchemaCollection;
 [scriptable, uuid(9ae49600-1dd1-11b2-877f-e62f620c5e92)]
 interface nsISOAPEncoding:nsISupports {
 
-/**
- * The name of the encoding as it is known to SOAP.
- */
+  /**
+   * The name of the encoding as it is known to SOAP.
+   */
   readonly attribute AString styleURI;
 
-/**
- * Get an associated encoding for a different encoding style.  If
- *   there is no default associated encoding available for the
- *   specified encoding style, then if aCreateIf is specified, one
- *   is created, otherwise a null is returned.  Associated encodings
- *   are the set of encodings that may be used and modified together
- *   as a set.
- *
- * @param aStyleURI The style URI of the associated encoding.
- *
- * @param aCreateIf If true, then create the associated encoding if it
- *   does not already exist, otherwise return the existing encoding.
- *
- * @return The associated encoding which corresponds to the
- *   specified styleURI, or null if the spefied alternative encoding
- *   does not exist and it was not requested that it be created.
- */
+  /**
+   * Get an associated encoding for a different encoding style.  If
+   *   there is no default associated encoding available for the
+   *   specified encoding style, then if aCreateIf is specified, one
+   *   is created, otherwise a null is returned.  Associated encodings
+   *   are the set of encodings that may be used and modified together
+   *   as a set.
+   *
+   * @param aStyleURI The style URI of the associated encoding.
+   *
+   * @param aCreateIf If true, then create the associated encoding if it
+   *   does not already exist, otherwise return the existing encoding.
+   *
+   * @return The associated encoding which corresponds to the
+   *   specified styleURI, or null if the spefied alternative encoding
+   *   does not exist and it was not requested that it be created.
+   */
   nsISOAPEncoding getAssociatedEncoding(in AString aStyleURI,
 					in boolean aCreateIf);
 
-/**
-  * Set an encoder in the encoding.
-  *
-  * @param aKey The key to be associated with the encoder.
-  *
-  * @param aEncoder The encoder to be specified or null to eliminate
-  *   the encoder.
-  */
+  /**
+    * Set an encoder in the encoding.
+    *
+    * @param aKey The key to be associated with the encoder.
+    *
+    * @param aEncoder The encoder to be specified or null to eliminate
+    *   the encoder.
+    */
   void setEncoder(in AString aKey, in nsISOAPEncoder aEncoder);
 
-/**
-  * Get an encoder from the encoding.
-  *
-  * @param aKey The key to be used to look up the encoder.
-  *
-  * @return The encoder.
-  */
+  /**
+    * Get an encoder from the encoding.
+    *
+    * @param aKey The key to be used to look up the encoder.
+    *
+    * @return The encoder.
+    */
   nsISOAPEncoder getEncoder(in AString aKey);
 
-/**
-  * Set a decoder in the encoding.
-  *
-  * @param aKey The key to be associated with the decoder.
-  *
-  * @param aDecoder The decoder to be specified or null to eliminate
-  *   the decoder.
-  */
+  /**
+    * Set a decoder in the encoding.
+    *
+    * @param aKey The key to be associated with the decoder.
+    *
+    * @param aDecoder The decoder to be specified or null to eliminate
+    *   the decoder.
+    */
   void setDecoder(in AString aKey, in nsISOAPDecoder aDecoder);
 
-/**
-  * Get a decoder from the encoding.
-  *
-  * @param aKey The key to be used to look up the decoder.
-  *
-  * @return The decoder.
-  */
+  /**
+    * Get a decoder from the encoding.
+    *
+    * @param aKey The key to be used to look up the decoder.
+    *
+    * @return The decoder.
+    */
   nsISOAPDecoder getDecoder(in AString aKey);
 
-/**
- * The default encoder invoked by all encoding calls. Appropriate calls
- * to more-specific encoders, if any, must be dispatched by this default 
- * encoder.  The default encoder typically looks up encoders by known 
- * information such as explicit or implicit types.
- */
+  /**
+   * The default encoder invoked by all encoding calls. Appropriate calls
+   * to more-specific encoders, if any, must be dispatched by this default 
+   * encoder.  The default encoder typically looks up encoders by known 
+   * information such as explicit or implicit types.
+   */
   attribute nsISOAPEncoder defaultEncoder;
 
-/**
- * The default decoder invoked by all encoding calls. Appropriate calls
- * to more-specific decoders, if any, must be dispatched by this default 
- * decoder.  The default decoder typically looks up encoders by known 
- * information such as explicit or implicit types.
- */
+  /**
+   * The default decoder invoked by all encoding calls. Appropriate calls
+   * to more-specific decoders, if any, must be dispatched by this default 
+   * decoder.  The default decoder typically looks up encoders by known 
+   * information such as explicit or implicit types.
+   */
   attribute nsISOAPDecoder defaultDecoder;
 
-/**
-  * The schema collection used by this and all associated encodings.
-  */
+  /**
+    * The schema collection used by this and all associated encodings.
+    */
   attribute nsISchemaCollection schemaCollection;
 
-/**
- * Encode the source variant
- *
- * @param aEncodings The encodings to be used.
- *
- * @param aEncodingStyleURI The encoding style
- *
- * @param aSource The variant to be encoded, soon to become a variant
- *
- * @param aNamespaceURI The namespace of the thing being coded
- *
- * @param aName The name of the thing being coded
- *
- * @param aSchemaType The schema type of the thing being encoded
- *
- * @param aDestination The node scope where the result will live.
- *
- * @param aAttachments Accumulates any attachments.
- *
- * @return The element which was inserted and encoded.
- */
+  /**
+   * Encode the source variant
+   *
+   * @param aEncodings The encodings to be used.
+   *
+   * @param aEncodingStyleURI The encoding style
+   *
+   * @param aSource The variant to be encoded, soon to become a variant
+   *
+   * @param aNamespaceURI The namespace of the thing being coded
+   *
+   * @param aName The name of the thing being coded
+   *
+   * @param aSchemaType The schema type of the thing being encoded
+   *
+   * @param aDestination The node scope where the result will live.
+   *
+   * @param aAttachments Accumulates any attachments.
+   *
+   * @return The element which was inserted and encoded.
+   */
   nsIDOMElement encode(in nsIVariant aSource,
 		       in AString aNamespaceURI,
 		       in AString aName,
@@ -177,78 +177,78 @@ interface nsISOAPEncoding:nsISupports {
 		       in nsISOAPAttachments aAttachments,
 		       in nsIDOMElement aDestination);
 
-/**
- * Decode the source DOM node
- *
- * @param aEncodings The encodings used to decode
- *
- * @param aEncodingStyleURI The encoding style
- *
- * @param aSource The DOM node to be decoded.
- *
- * @param aSchemaType The schema type of the source DOM node
- *
- * @param aAttachments Dispenses any attachments.
- *
- * @return The decoded variant, soon to become a variant, which is null if 
- *   the operation failed or did not return a result.
- */
+  /**
+   * Decode the source DOM node
+   *
+   * @param aEncodings The encodings used to decode
+   *
+   * @param aEncodingStyleURI The encoding style
+   *
+   * @param aSource The DOM node to be decoded.
+   *
+   * @param aSchemaType The schema type of the source DOM node
+   *
+   * @param aAttachments Dispenses any attachments.
+   *
+   * @return The decoded variant, soon to become a variant, which is null if 
+   *   the operation failed or did not return a result.
+   */
   nsIVariant decode(in nsIDOMElement aSource,
 		    in nsISchemaType aSchemaType,
 		    in nsISOAPAttachments aAttachments);
-/**
- * Map an external schema URI to an internal one.  In an
- * ideal world, we don't need this, but schemas change URIs,
- * and we wind up with inconsistencies between WSDL and
- * exchanged documents.  The external URI must not be
- * currently mapped and if output mapping is true, then
- * the internal URI must be unique for output mapping.
- *
- * @param aExternalURI the external URI to be mapped.
- *
- * @param aInternalURI the internal URI to be mapped.
- *
- * @param aOutput If true, then re-map to the output
- *   URI when outputting.
- *
- * @return boolean true if succeeded, false if the
- *   mapping was not unique as required.
- */
+  /**
+   * Map an external schema URI to an internal one.  In an
+   * ideal world, we don't need this, but schemas change URIs,
+   * and we wind up with inconsistencies between WSDL and
+   * exchanged documents.  The external URI must not be
+   * currently mapped and if output mapping is true, then
+   * the internal URI must be unique for output mapping.
+   *
+   * @param aExternalURI the external URI to be mapped.
+   *
+   * @param aInternalURI the internal URI to be mapped.
+   *
+   * @param aOutput If true, then re-map to the output
+   *   URI when outputting.
+   *
+   * @return boolean true if succeeded, false if the
+   *   mapping was not unique as required.
+   */
   boolean mapSchemaURI(in AString aExternalURI,
                     in AString aInternalURI,
                     in boolean aOutput);
 
-/**
- * Unmap an external schema URI as mapped by
- * mapSchemaURI.
- *
- * @param aExternalURI the external URI to be mapped.
- *
- * @return boolean true if succeeded, false if the
- *   mapping did not exist.
- */
+  /**
+   * Unmap an external schema URI as mapped by
+   * mapSchemaURI.
+   *
+   * @param aExternalURI the external URI to be mapped.
+   *
+   * @return boolean true if succeeded, false if the
+   *   mapping did not exist.
+   */
   boolean unmapSchemaURI(in AString aExternalURI);
 
-/**
- * Get an internal schema URI from an external one.
- *
- * @param aExternalURI the external URI which may
- *   have been mapped.
- *
- * @return The corresponding internal URI (the
- *   original is returned if it has not been mapped).
- */
+  /**
+   * Get an internal schema URI from an external one.
+   *
+   * @param aExternalURI the external URI which may
+   *   have been mapped.
+   *
+   * @return The corresponding internal URI (the
+   *   original is returned if it has not been mapped).
+   */
   AString getInternalSchemaURI(in AString aExternalURI);
 
-/**
- * Get an external schema URI from an internal one.
- *
- * @param aExternalURI the external URI which may
- *   have been mapped.
- *
- * @return The corresponding internal URI (the
- *   original is returned if it has not been mapped).
- */
+  /**
+   * Get an external schema URI from an internal one.
+   *
+   * @param aExternalURI the external URI which may
+   *   have been mapped.
+   *
+   * @return The corresponding internal URI (the
+   *   original is returned if it has not been mapped).
+   */
   AString getExternalSchemaURI(in AString aInternalURI);
 
 };

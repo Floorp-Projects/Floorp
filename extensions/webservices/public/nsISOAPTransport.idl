@@ -47,68 +47,68 @@ interface nsISOAPCallCompletion;
 [scriptable, uuid(99ec6695-535f-11d4-9a58-000064657374)]
 interface nsISOAPTransport:nsISupports {
 
-/**
- * Send the specified message to the specified destination.
- * This will fail if synchronous calls are not supported or if there is any
- * failure in the actual message exchange.  Failure of the call itself will be
- * contained in the response.
- *
- * @param aCall Actual message to be sent.
- *
- * @param aResponse Message to be recieved.  Calling synchronously assumes that 
- *   exactly one response is expected.
- */
+  /**
+   * Send the specified message to the specified destination.
+   * This will fail if synchronous calls are not supported or if there is any
+   * failure in the actual message exchange.  Failure of the call itself will be
+   * contained in the response.
+   *
+   * @param aCall Actual message to be sent.
+   *
+   * @param aResponse Message to be recieved.  Calling synchronously assumes that 
+   *   exactly one response is expected.
+   */
   void syncCall(in nsISOAPCall aCall, in nsISOAPResponse aResponse);
 
-/**
- * Send the specified message to the specified destination synchronously waiting 
- * for completion and any response.
- * This will fail if there is any failure in the setup of the message exchange.
- * Later errors will only be known through the response listener.  Failures of the
- * call itself will be contained in the response passed to the response listener.
- *
- * @param aCall Actual message to be sent.
- *
- * @param aListener Handler to be invoked (single threaded) as each response is 
- *  received and finally with null.  If specified as null, no responses are returned.
- *
- * @param response Message to recieve response and be handled by listener.  May be 
- *   null if listener is null.
- */
+  /**
+   * Send the specified message to the specified destination synchronously waiting 
+   * for completion and any response.
+   * This will fail if there is any failure in the setup of the message exchange.
+   * Later errors will only be known through the response listener.  Failures of the
+   * call itself will be contained in the response passed to the response listener.
+   *
+   * @param aCall Actual message to be sent.
+   *
+   * @param aListener Handler to be invoked (single threaded) as each response is 
+   *  received and finally with null.  If specified as null, no responses are returned.
+   *
+   * @param response Message to recieve response and be handled by listener.  May be 
+   *   null if listener is null.
+   */
   nsISOAPCallCompletion asyncCall(in nsISOAPCall aCall,
 				  in nsISOAPResponseListener aListener,
 				  in nsISOAPResponse aResponse);
 
-/**
- * Add listener for unsolicited messages arriving on the transport.  Listeners
- *  are provided with the opportunity to accept and process messages.  Typically
- *  a listener will be a service dispatcher.  Listeners will be invoked in the
- *  reverse order of declaration, allowing more local service dispatchers to
- *  temporarily override permanent service dispatchers.  This will fail if the
- *  desired listener was already added to the transport with the specified
- *  capture flag or if the transport does not support incoming messages.
- *
- * @param aListener The listener to recieve unsolicited messages from the
- *   transport.
- *
- * @param aCapture True if the listener should capture the message before
- *   later-declared services.
- */
+  /**
+   * Add listener for unsolicited messages arriving on the transport.  Listeners
+   *  are provided with the opportunity to accept and process messages.  Typically
+   *  a listener will be a service dispatcher.  Listeners will be invoked in the
+   *  reverse order of declaration, allowing more local service dispatchers to
+   *  temporarily override permanent service dispatchers.  This will fail if the
+   *  desired listener was already added to the transport with the specified
+   *  capture flag or if the transport does not support incoming messages.
+   *
+   * @param aListener The listener to recieve unsolicited messages from the
+   *   transport.
+   *
+   * @param aCapture True if the listener should capture the message before
+   *   later-declared services.
+   */
   void addListener(in nsISOAPTransportListener aListener,
 		   in boolean aCapture);
 
-/**
- * Remove listener for unsolicited messages arriving on the transport.  This
- *  will fail if the specified listener was not added with the specified
- *  capture setting.
- *
- * @param aListener The listener to stop from recieving unsolicited messages 
- *  from the transport.
- *
- * @param aCapture True if the listener was added to capture the message before
- *   later-declared services (must be specified to remove, since a listener
- *   may be registered as both).
- */
+  /**
+   * Remove listener for unsolicited messages arriving on the transport.  This
+   *  will fail if the specified listener was not added with the specified
+   *  capture setting.
+   *
+   * @param aListener The listener to stop from recieving unsolicited messages 
+   *  from the transport.
+   *
+   * @param aCapture True if the listener was added to capture the message before
+   *   later-declared services (must be specified to remove, since a listener
+   *   may be registered as both).
+   */
   void removeListener(in nsISOAPTransportListener aListener,
 		      in boolean aCapture);
 };

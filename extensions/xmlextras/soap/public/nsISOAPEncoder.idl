@@ -55,29 +55,29 @@ interface nsISOAPAttachments;
 [scriptable, uuid(fc33ffd6-1dd1-11b2-8750-fa62430a38b4)]
 interface nsISOAPEncoder:nsISupports {
 
-/**
- * Encode the source variant.
- *
- * @param aEncodings The encodings to be used.
- *
- * @param aEncodingStyleURI The encoding style
- *
- * @param aSource The variant to be encoded.
- *
- * @param aNamespaceURI The namespace of the thing being coded
- *
- * @param aName The name of the thing being coded
- *
- * @param aSchemaType The schema type of the thing being encoded
- *
- * @param aDestination The node scope, if any, where the result 
- *   will live.  If this is null, then the result must be 
- *   explicitly attached to the message.
- *
- * @return element which was inserted.
- *
- * @param aAttachments Accumulates any attachments.
- */
+  /**
+   * Encode the source variant.
+   *
+   * @param aEncodings The encodings to be used.
+   *
+   * @param aEncodingStyleURI The encoding style
+   *
+   * @param aSource The variant to be encoded.
+   *
+   * @param aNamespaceURI The namespace of the thing being coded
+   *
+   * @param aName The name of the thing being coded
+   *
+   * @param aSchemaType The schema type of the thing being encoded
+   *
+   * @param aDestination The node scope, if any, where the result 
+   *   will live.  If this is null, then the result must be 
+   *   explicitly attached to the message.
+   *
+   * @return element which was inserted.
+   *
+   * @param aAttachments Accumulates any attachments.
+   */
   nsIDOMElement encode(in nsISOAPEncoding aEncoding,
 		       in nsIVariant aSource,
 		       in AString aNamespaceURI,

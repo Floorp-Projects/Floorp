@@ -49,22 +49,22 @@
 [scriptable, uuid(6192dcbe-1dd2-11b2-81ad-a4597614c4ae)]
 interface nsISOAPAttachments:nsISupports {
 
-/**
- * Get the attachment associated with a particular identifier.
- *
- * @param aIdentifier The identifier of the attachment to be accessed.
- *
- * Appropriate return(s) must be identified.
- */
+  /**
+   * Get the attachment associated with a particular identifier.
+   *
+   * @param aIdentifier The identifier of the attachment to be accessed.
+   *
+   * Appropriate return(s) must be identified.
+   */
   void getAttachment(in AString aIdentifier);
 
-/**
- * Attach an attachment to the message.
- *
- * Appropriate argument(s) must be identified.
- *
- * @return The identifier of the attachment, to be referenced in SOAP encoding
- */
+  /**
+   * Attach an attachment to the message.
+   *
+   * Appropriate argument(s) must be identified.
+   *
+   * @return The identifier of the attachment, to be referenced in SOAP encoding
+   */
   AString attach();
 
 };

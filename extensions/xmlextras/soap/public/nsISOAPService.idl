@@ -50,23 +50,23 @@ interface nsISOAPResponseListener;
  */
 [scriptable, uuid(9927fa40-1dd1-11b2-a8d1-857ad21b872c)]
 interface nsISOAPService:nsISupports {
-/**
- * Configuration object that may contain more info on the service
- */
+  /**
+   * Configuration object that may contain more info on the service
+   */
   attribute nsISupports configuration;
 
-/**
- * Process an incoming message.
- *
- * @param aMessage message to be processed
- *
- * @param aListener listener to which to report results
- *
- * @return True if the message will be handled, false if
- *   it should be given to some other service or fail.
- *   In case of failure, a more detailed status will be
- *   recorded in the message.
- */
+  /**
+   * Process an incoming message.
+   *
+   * @param aMessage message to be processed
+   *
+   * @param aListener listener to which to report results
+   *
+   * @return True if the message will be handled, false if
+   *   it should be given to some other service or fail.
+   *   In case of failure, a more detailed status will be
+   *   recorded in the message.
+   */
   boolean process(in nsISOAPMessage aMessage,
 		  in nsISOAPResponseListener aListener);
 };
