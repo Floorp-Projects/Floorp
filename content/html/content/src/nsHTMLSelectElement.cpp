@@ -18,9 +18,6 @@
  */
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLFormElement.h"
-#include "nsIFormControl.h"
-#include "nsIForm.h"
-#include "nsIDOMHTMLCollection.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
@@ -30,15 +27,17 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
-#include "nsIWidget.h"
-#include "nsHTMLAtoms.h"
 #include "nsIHTMLAttributes.h"
+#include "nsIFormControl.h"
+#include "nsIForm.h"
+#include "nsIWidget.h"
+#include "nsIDOMHTMLCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 
 // Notify/query select frame for selectedIndex
-#include "nsIFormControlFrame.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
 
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
@@ -139,14 +138,10 @@ public:
   NS_IMETHOD Init();
 
 protected:
-
   nsGenericHTMLContainerElement mInner;
   nsIWidget*    mWidget; // XXX this needs to go away when FindFrameWithContent is efficient
   nsIForm*      mForm;
   nsOptionList* mOptions;
-
-  // Return the primary frame associated with this content
-  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame);   
 };
 
 
@@ -318,7 +313,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     nsString value;
     formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
     NS_RELEASE(formControlFrame);
@@ -331,8 +326,33 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
         return NS_OK;
       }
     }
+  } else { // The frame hasn't been created yet.  Use the options array
+    *aValue = -1;
+    nsIDOMHTMLCollection* options;
+    if (NS_OK == GetOptions(&options)) {
+      PRUint32 numOptions;
+      options->GetLength(&numOptions);
+
+      for (PRUint32 i = 0; i < numOptions; i++) {
+        nsIDOMNode* node = nsnull;
+        if ((NS_OK == options->Item(i, &node)) && node) {
+          nsIDOMHTMLOptionElement* option = nsnull;
+          if (NS_OK == node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option)) {
+            PRBool selected;
+            option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
+            NS_RELEASE(option);
+            if (selected) {
+              *aValue = i;
+              NS_RELEASE(node); // Have to release this as the call below is skipped.
+              break;
+            }
+          }
+          NS_RELEASE(node);
+        }
+      }
+      NS_RELEASE(options);
+    }
   }
-  *aValue = -1; // If no selectedIndex was to be had, make it -1 (none selected)
   return NS_OK;
 }
 
@@ -340,7 +360,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::SetSelectedIndex(PRInt32 aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == GetPrimaryFrame(formControlFrame)) {
+  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     nsString value;
     value.Append(aValue, 10);
     formControlFrame->SetProperty(nsHTMLAtoms::selectedindex, value);
@@ -690,6 +710,7 @@ nsOptionList::Clear()
   PRUint32 numOptions = mElements.Count();
   for (PRUint32 i = 0; i < numOptions; i++) {
     nsIDOMHTMLOptionElement* option = (nsIDOMHTMLOptionElement*)mElements.ElementAt(i);
+    NS_ASSERTION(option,"option already released");
     NS_RELEASE(option);
   }
   mElements.Clear();
@@ -702,27 +723,4 @@ nsHTMLSelectElement::GetStyleHintForAttributeChange(
 {
   nsGenericHTMLElement::GetStyleHintForCommonAttributes(this, aAttribute, aHint);
   return NS_OK;
-}
-
-nsresult
-nsHTMLSelectElement::GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame)
-{
-  nsIDocument* doc = nsnull;
-  nsresult res = NS_NOINTERFACE;
-  // Get the document
-  if (NS_OK == GetDocument(doc)) {
-    // Get presentation shell 0
-    nsIPresShell* presShell = doc->GetShellAt(0);
-    if (nsnull != presShell) {
-      nsIFrame *frame = nsnull;
-      presShell->GetPrimaryFrameFor(this, &frame);
-      if (nsnull != frame) {
-        res = frame->QueryInterface(kIFormControlFrameIID, (void**)&aFormControlFrame);
-      }
-      NS_RELEASE(presShell);
-    }
-  NS_RELEASE(doc);
-  }
-
-  return res;
 }
