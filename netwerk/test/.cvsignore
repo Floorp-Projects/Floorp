@@ -5,4 +5,5 @@ TestSocketTransport
 TestProtocols
 TestFileInput
 TestFileInput2
+TestRes
 urltest
