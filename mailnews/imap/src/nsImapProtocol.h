@@ -171,6 +171,7 @@ public:
 	void Store(nsString2 &aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
 	void Expunge();
+	void SelectMailbox(const char *mailboxName);
 
 	nsIImapUrl		*GetCurrentUrl() {return m_runningUrl;}
 	// Tunnels
@@ -259,6 +260,9 @@ private:
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
 	void HeaderFetchCompleted();
+
+	// mailbox name utilities.
+	char *CreateEscapedMailboxName(const char *rawName);
 
 	// header listing data
 	PRBool		m_fetchMsgListIsNew;

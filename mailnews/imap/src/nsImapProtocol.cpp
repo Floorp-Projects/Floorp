@@ -868,6 +868,59 @@ nsImapProtocol::AdjustChunkSize()
 	}
 }
 
+// authenticated state commands 
+// escape any backslashes or quotes.  Backslashes are used a lot with our NT server
+char *nsImapProtocol::CreateEscapedMailboxName(const char *rawName)
+{
+	nsString2 escapedName(rawName, eOneByte);
+
+	for (PRInt32 strIndex = 0; *rawName; strIndex++)
+	{
+		char currentChar = *rawName++;
+		if ((currentChar == '\\') || (currentChar == '\"'))
+		{
+			escapedName.Insert('\\', strIndex++);
+		}
+	}
+	return escapedName.ToNewCString();
+}
+
+void nsImapProtocol::SelectMailbox(const char *mailboxName)
+{
+//    ProgressEventFunction_UsingId (MK_IMAP_STATUS_SELECTING_MAILBOX);
+    IncrementCommandTagNumber();
+    
+    m_closeNeededBeforeSelect = PR_FALSE;		// initial value
+	GetServerStateParser().ResetFlagInfo(0);    
+    char *escapedName = CreateEscapedMailboxName(mailboxName);
+    nsString2 commandBuffer(GetServerCommandTag(), eOneByte);
+	commandBuffer.Append(" select \"");
+	commandBuffer.Append(escapedName);
+	commandBuffer.Append("\"" CRLF);
+            
+    PR_FREEIF( escapedName);
+           
+    int                 ioStatus = SendData(commandBuffer.GetBuffer());
+	ParseIMAPandCheckForNewMail();
+
+	PRInt32 numOfMessagesInFlagState = 0;
+	nsIImapUrl::nsImapAction imapAction; 
+	m_flagState.GetNumberOfMessages(&numOfMessagesInFlagState);
+	nsresult res = m_runningUrl->GetImapAction(&imapAction);
+	// if we've selected a mailbox, and we're not going to do an update because of the
+	// url type, but don't have the flags, go get them!
+	if (NS_SUCCEEDED(res) &&
+		imapAction != nsIImapUrl::nsImapSelectFolder && imapAction != nsIImapUrl::nsImapExpungeFolder 
+		&& imapAction != nsIImapUrl::nsImapLiteSelectFolder &&
+		imapAction != nsIImapUrl::nsImapDeleteAllMsgs && 
+		((GetServerStateParser().NumberOfMessages() != numOfMessagesInFlagState) && (numOfMessagesInFlagState == 0))) 
+	{
+	   	ProcessMailboxUpdate(PR_FALSE);	
+	}
+}
+
+
+
 // this routine is used to fetch a message or messages, or headers for a
 // message...
 
