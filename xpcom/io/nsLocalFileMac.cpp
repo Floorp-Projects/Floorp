@@ -67,6 +67,7 @@
 #include <Math64.h>
 #include <Aliases.h>
 #include <Folders.h>
+#include <Gestalt.h>
 #include "macDirectoryCopy.h"
 
 #include <limits.h>
@@ -79,6 +80,11 @@ extern "C"
 #include <FSp_fopen.h>
 #endif
 }
+
+#if TARGET_CARBON
+#include <CodeFragments.h>	// Needed for definition of kUnresolvedCFragSymbolAddress
+#include <LaunchServices.h>
+#endif
 
 #pragma mark [Constants]
 
@@ -975,6 +981,7 @@ NS_IMPL_ISUPPORTS1(nsDirEnumerator, nsISimpleEnumerator)
 
 OSType nsLocalFile::sCurrentProcessSignature = 0;
 PRBool nsLocalFile::sHasHFSPlusAPIs = PR_FALSE;
+PRBool nsLocalFile::sRunningOSX = PR_FALSE;
 
 #pragma mark [CTOR/DTOR]
 nsLocalFile::nsLocalFile()
@@ -2226,16 +2233,41 @@ NS_IMETHODIMP
 nsLocalFile::IsExecutable(PRBool *outIsExecutable)
 {
 	NS_ENSURE_ARG(outIsExecutable);
-	*outIsExecutable = PR_FALSE;
+	*outIsExecutable = PR_FALSE;	// Assume failure
 
 	nsresult rv = ResolveAndStat(PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 
+#if TARGET_CARBON
+	// If we're running under OS X ask LaunchServices if we're executable
+	if (sRunningOSX)
+	{
+		if ( (UInt32)LSCopyItemInfoForRef != (UInt32)kUnresolvedCFragSymbolAddress )
+		{
+			FSRef	theRef;
+			LSRequestedInfo theInfoRequest = kLSRequestAllInfo;
+			LSItemInfoRecord theInfo;
+			
+			if (::FSpMakeFSRef(&mTargetSpec, &theRef) == noErr)
+			{
+				if (::LSCopyItemInfoForRef(&theRef, theInfoRequest, &theInfo) == noErr)
+				{
+					if ((theInfo.flags & kLSItemInfoIsApplication) != 0)
+						*outIsExecutable = PR_TRUE;
+				}
+			}
+		}
+	}
+	else
+#endif
+	{
 	OSType fileType, fileCreator;
 	rv = GetFileTypeAndCreator(&fileType, &fileCreator);
 	if (NS_FAILED(rv)) return rv;
 	
 	*outIsExecutable = (fileType == 'APPL' || fileType == 'appe' || fileType == 'FNDR');
+	}
+	
 	return NS_OK;
 }
 
@@ -2779,6 +2811,23 @@ NS_IMETHODIMP nsLocalFile::Launch()
   // for launching a file, we'll use mTargetSpec (which is both a resolved spec and a resolved alias)
   ResolveAndStat(PR_TRUE);
     
+#if TARGET_CARBON
+	if (sRunningOSX)
+	{ // We're running under Mac OS X, LaunchServices here we come
+
+		// First we make sure the LaunchServices routine we want is implemented
+		if ( (UInt32)LSOpenFSRef != (UInt32)kUnresolvedCFragSymbolAddress )
+		{
+			FSRef	theRef;
+			if (::FSpMakeFSRef(&mTargetSpec, &theRef) == noErr)
+			{
+				(void)::LSOpenFSRef(&theRef, NULL);
+			}
+		}
+	}
+	else
+#endif
+	{ // We're running under Mac OS 8.x/9.x, use the Finder Luke
   nsresult rv = FindRunningAppBySignature ('MACS', appSpec, process);
   if (NS_SUCCEEDED(rv))
   {	
@@ -2827,6 +2876,7 @@ NS_IMETHODIMP nsLocalFile::Launch()
 	  }
 	}
   }
+	}
 					  
 	return NS_OK;
 }
@@ -2850,6 +2900,13 @@ NS_IMETHODIMP nsLocalFile::Reveal()
     if (errorResult == noErr)
     {
 	  /* Create the FinderEvent */
+#if TARGET_CARBON
+	// The Finder under OS X uses a different event to reveal
+	if (sRunningOSX)
+	  errorResult = AECreateAppleEvent(kAEMiscStandards, kAEMakeObjectsVisible, &myAddressDesc, kAutoGenerateReturnID, kAnyTransactionID,
+								       &aeEvent);	
+	else
+#endif
 	  errorResult = AECreateAppleEvent(kFinderType, kAERevealSelection, &myAddressDesc, kAutoGenerateReturnID, kAnyTransactionID,
 								       &aeEvent);	
       if (errorResult == noErr) 
@@ -2859,9 +2916,17 @@ NS_IMETHODIMP nsLocalFile::Reveal()
 		if (errorResult == noErr) 
 		{
 		  errorResult = AEPutPtr(&fileList, 0, typeFSS, &mResolvedSpec, sizeof(FSSpec));
+		  
 		  if (errorResult == noErr)
 		  {
+#if TARGET_CARBON
+		    // When we're sending the event under OS X the FSSpec must be a keyDirectObject
+		    if (sRunningOSX)
+		      errorResult = AEPutParamDesc(&aeEvent, keyDirectObject, &fileList);
+		    else
+#endif
 		    errorResult = AEPutParamDesc(&aeEvent,keySelection, &fileList);
+
 			if (errorResult == noErr)
 			{
 		      errorResult = AESend(&aeEvent, &aeReply, kAENoReply, kAENormalPriority, kAEDefaultTimeout, nil, nil);
@@ -2891,6 +2956,46 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
 	Boolean				running = false;
 	nsresult			rv = NS_OK;
 	
+#if TARGET_CARBON
+	if (sRunningOSX)
+	{ // Under Mac OS X we'll use LaunchServices
+		
+		// First we make sure the LaunchServices routine we want is implemented
+		if ( (UInt32)LSOpenFromRefSpec != (UInt32)kUnresolvedCFragSymbolAddress )
+		{
+			FSRef	appRef;
+			FSRef	docRef;
+			LSLaunchFlags		theLaunchFlags = kLSLaunchDefaults;
+			LSLaunchFSRefSpec	thelaunchSpec;
+			
+			if (::FSpMakeFSRef(&appSpec, &appRef) != noErr)
+				return NS_ERROR_FAILURE;
+			
+			if (aDocToLoad)
+				if (::FSpMakeFSRef(aDocToLoad, &docRef) != noErr)
+					return NS_ERROR_FAILURE;
+			
+			if (aLaunchInBackground)
+				theLaunchFlags |= kLSLaunchDontSwitch;
+				
+			memset(&thelaunchSpec, 0, sizeof(LSLaunchFSRefSpec));
+			
+			thelaunchSpec.appRef = &appRef;
+			if (aDocToLoad)
+			{
+				thelaunchSpec.numDocs = 1;
+				thelaunchSpec.itemRefs = &docRef;
+			}
+			thelaunchSpec.launchFlags = theLaunchFlags;
+			
+			err = ::LSOpenFromRefSpec(&thelaunchSpec, NULL);
+			NS_ASSERTION((err != noErr), "Error calling LSOpenFromRefSpec");
+			if (err != noErr) return NS_ERROR_FAILURE;
+		}
+	}
+	else
+#endif
+	{ // The old fashioned way for Mac OS 8.x/9.x
 	rv = FindRunningAppByFSSpec(appSpec, thePSN);
 	running = NS_SUCCEEDED(rv);
 	
@@ -2972,6 +3077,7 @@ nsresult nsLocalFile::MyLaunchAppWithDoc(const FSSpec& appSpec, const FSSpec* aD
 	
 	if (theEvent.dataHandle != nil) AEDisposeDesc(&theEvent);
 	if (theReply.dataHandle != nil) AEDisposeDesc(&theReply);
+	}
 
 	return NS_OK;
 }
@@ -3221,6 +3327,13 @@ nsLocalFile::GetFileSizeWithResFork(PRInt64 *aFileSize)
 NS_IMETHODIMP
 nsLocalFile::LaunchAppWithDoc(nsILocalFile* aDocToLoad, PRBool aLaunchInBackground)
 {
+#if TARGET_CARBON
+	// Either there's something fundamentally wrong with IC's mapping of helper apps
+	// under OS X or our interaction with the info we get back so for now I'm just going
+	// to fall back to LaunchServices and let the OS figure out how to deal with it
+	if (sRunningOSX)
+	  return (aDocToLoad->Launch());
+#endif
 	// are we launchable?
 	PRBool isExecutable;
 	nsresult rv = IsExecutable(&isExecutable);
@@ -3385,6 +3498,14 @@ void nsLocalFile::InitClassStatics()
         err = ::Gestalt(gestaltFSAttr, &response);
         sHasHFSPlusAPIs = (err == noErr && (response & (1 << gestaltHasHFSPlusAPIs)) != 0);
         didHFSPlusCheck = PR_TRUE;
+    }
+    
+    static PRBool didOSXCheck = PR_FALSE;
+    if (!didOSXCheck)
+    {
+        long version;
+        sRunningOSX = (::Gestalt(gestaltSystemVersion, &version) == noErr && version >= 0x00001000);
+        didOSXCheck = PR_TRUE;
     }
 }
 

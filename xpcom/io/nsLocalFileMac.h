@@ -145,6 +145,7 @@ private:
 
     static OSType   sCurrentProcessSignature;
     static PRBool   sHasHFSPlusAPIs;        
+    static PRBool   sRunningOSX;        
 };
 
 #endif
