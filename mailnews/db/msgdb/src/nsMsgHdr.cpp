@@ -38,7 +38,7 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 void nsMsgHdr::Init()
 {
 	m_cachedValuesInitialized = PR_FALSE;
-	m_statusOffset = -1;
+	m_statusOffset = 0xffffffff;
 	m_messageKey = nsMsgKey_None;
 	m_messageSize = 0;
 	m_date = LL_ZERO;
