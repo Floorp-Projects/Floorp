@@ -20,6 +20,7 @@
 
 #include <nsIXRemoteService.h>
 #include <nsHashtable.h>
+#include <nsIDOMWindow.h>
 #include <nsIWidget.h>
 #include <nsCOMPtr.h>
 
@@ -42,12 +43,32 @@ class XRemoteService : public nsIXRemoteService {
 
  private:
 
-  // this builds a response for any parsing
-  char *BuildResponse(const char *aError, const char *aMessage);
-
   // create and destroy the proxy window
   void CreateProxyWindow();
   void DestroyProxyWindow();
+
+  // this builds a response for any parsing
+  char *BuildResponse(const char *aError, const char *aMessage);
+
+  // find the last argument in an argument string
+  void FindLastInList(nsCString &aString, nsCString &retString,
+		      PRUint32 *aIndexRet);
+
+  // short cut for opening chrome windows
+  nsresult OpenChromeWindow(nsIDOMWindow *aParent,
+			    const char *aUrl,
+			    const char *aFeatures,
+			    nsISupports *aArguments,
+			    nsIDOMWindow **_retval);
+
+  // get the primary browser chrome location
+  nsresult GetBrowserLocation(char **_retval);
+
+  // remote command handlers
+  nsresult OpenURL(nsCString &aArgument,
+		   nsIDOMWindowInternal *aParent);
+
+  nsresult OpenURLDialog(nsIDOMWindowInternal *aParent);
 
   // hidden window for proxy requests
   nsCOMPtr<nsIWidget> mProxyWindow;

@@ -31,6 +31,12 @@
 #include <nsIServiceManager.h>
 #include <nsRect.h>
 #include <nsString.h>
+#include <nsIPref.h>
+#include <nsIWindowWatcher.h>
+#include <nsISupportsPrimitives.h>
+#include <nsIInterfaceRequestor.h>
+#include <nsIDocShellTreeItem.h>
+#include <nsIDocShellTreeOwner.h>
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -38,8 +44,7 @@ NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 static char *s200ExecutedCommand     = "200 executed command:";
 static char *s500ParseCommand        = "500 command not parsable:";
 static char *s501UnrecognizedCommand = "501 unrecognized command:";
-// not using this yet...
-// static char *s502NoWindow            = "502 no appropriate window for:";
+static char *s502NoWindow            = "502 no appropriate window for:";
 static char *s509InternalError       = "509 internal error";
 
 XRemoteService::XRemoteService()
@@ -72,7 +77,8 @@ XRemoteService::Shutdown(void)
 }
 
 NS_IMETHODIMP
-XRemoteService::ParseCommand(const char *aCommand, char **aResponse)
+XRemoteService::ParseCommand(nsIWidget *aWidget,
+			     const char *aCommand, char **aResponse)
 {
   printf("ParseCommand\n");
   if (!aCommand || !aResponse)
@@ -104,7 +110,7 @@ XRemoteService::ParseCommand(const char *aCommand, char **aResponse)
   // and that the ')' follows the '('
   if (begin_arg == kNotFound || end_arg == kNotFound ||
       begin_arg == 0 || end_arg < begin_arg) {
-    *aResponse = BuildResponse(s500ParseCommand, tempString.get());
+    *aResponse = BuildResponse(s500ParseCommand, aCommand);
     return NS_OK;
   }
 
@@ -126,9 +132,128 @@ XRemoteService::ParseCommand(const char *aCommand, char **aResponse)
   action.Trim(" ", PR_TRUE, PR_TRUE);
   action.ToLowerCase();
 
-  printf("action %s argument\n", action.get(), argument.get());
+  // pull off the noraise argument if it's there.
+  PRUint32  index = 0;
+  PRBool    raiseWindow = PR_TRUE;
+  nsCString lastArgument;
 
-  return NS_OK;
+  FindLastInList(argument, lastArgument, &index);
+  if (lastArgument.EqualsIgnoreCase("noraise")) {
+    argument.Truncate(index);
+    raiseWindow = PR_FALSE;
+  }
+
+  printf("action %s argument %s\n", action.get(), argument.get());
+
+  nsresult rv = NS_OK;
+  
+  // find the DOM window for the passed in parameter
+  nsVoidKey *key;
+  key = new nsVoidKey(aWidget);
+  nsIDOMWindowInternal *domWindow = NS_STATIC_CAST(nsIDOMWindowInternal *,
+						   mWindowList.Get(key));
+  delete key;
+
+  printf("dom window is %p\n", (void *)domWindow);
+
+  /*   
+      openURL ( ) 
+            Prompts for a URL with a dialog box. 
+      openURL (URL) 
+            Opens the specified document without prompting. 
+      openURL (URL, new-window) 
+            Create a new window displaying the the specified document. 
+  */
+
+  if (action.Equals("openurl")) {
+    if (argument.Length() == 0) {
+      rv = OpenURLDialog(domWindow);
+    }
+    else {
+      rv = OpenURL(argument, domWindow);
+    }
+  }
+
+  /*
+      openFile ( ) 
+            Prompts for a file with a dialog box. 
+      openFile (File) 
+            Opens the specified file without prompting. 
+
+  */
+
+  else if (action.Equals("openfile")) {
+    if (argument.Length() == 0) {
+      // XXX open file dialog
+    }
+    else {
+      // XXX open file
+    }
+  }
+
+  /*
+      saveAs ( ) 
+            Prompts for a file with a dialog box (like the menu item). 
+      saveAs (Output-File) 
+            Writes HTML to the specified file without prompting. 
+      saveAs (Output-File, Type) 
+            Writes to the specified file with the type specified -
+	    the type may be HTML, Text, or PostScript. 
+
+  */
+
+  else if (action.Equals("saveas")) {
+    // XXX save files
+  }
+
+  /*
+      mailto ( ) 
+            pops up the mail dialog with the To: field empty. 
+      mailto (a, b, c) 
+            Puts the addresses "a, b, c" in the default To: field. 
+
+  */
+
+  else if (action.Equals("mailto")) {
+    // XXX mailto
+  }
+
+  /*
+      addBookmark ( ) 
+            Adds the current document to the bookmark list. 
+      addBookmark (URL) 
+            Adds the given document to the bookmark list. 
+      addBookmark (URL, Title) 
+            Adds the given document to the bookmark list,
+	    with the given title. 
+  */
+
+  else if (action.Equals("addbookmark")) {
+    // XXX bookmarks
+  }
+
+  // bad command
+  else {
+    rv = NS_ERROR_FAILURE;
+    *aResponse = BuildResponse(s501UnrecognizedCommand, aCommand);
+  }
+
+  // if we failed and *aResponse isn't already filled in, fill it in
+  // with a generic internal error message.
+  if (NS_FAILED(rv)) {
+    if (!*aResponse) {
+      if (rv == NS_ERROR_NOT_IMPLEMENTED)
+	*aResponse = BuildResponse(s501UnrecognizedCommand, aCommand);
+      else
+	*aResponse = nsCRT::strdup(s509InternalError);
+    }
+  }
+
+  // if we got this far then everything worked.
+  if (!*aResponse)
+    *aResponse = BuildResponse(s200ExecutedCommand, aCommand);
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -238,25 +363,6 @@ XRemoteService::RemoveBrowserInstance(nsIDOMWindowInternal *aBrowser)
   return NS_OK;
 }
 
-char *
-XRemoteService::BuildResponse(const char *aError, const char *aMessage)
-{
-  nsCString retvalString;
-  char *retval;
-  
-  // check to make sure that we have the minimum for allocating this
-  // buffer
-  if (!aError || !aMessage)
-    return nsnull;
-  
-  retvalString.Append(aError);
-  retvalString.Append(" ");
-  retvalString.Append(aMessage);
-
-  retval = retvalString.ToNewCString();
-  return retval;
-}
-
 void
 XRemoteService::CreateProxyWindow(void)
 {
@@ -302,6 +408,228 @@ XRemoteService::DestroyProxyWindow(void)
 
   mProxyWindow->Destroy();
   mProxyWindow = nsnull;
+}
+
+char *
+XRemoteService::BuildResponse(const char *aError, const char *aMessage)
+{
+  nsCString retvalString;
+  char *retval;
+  
+  // check to make sure that we have the minimum for allocating this
+  // buffer
+  if (!aError || !aMessage)
+    return nsnull;
+  
+  retvalString.Append(aError);
+  retvalString.Append(" ");
+  retvalString.Append(aMessage);
+
+  retval = retvalString.ToNewCString();
+  return retval;
+}
+
+void
+XRemoteService::FindLastInList(nsCString &aString, nsCString &retString,
+			       PRUint32 *aIndexRet)
+{
+  // init our return
+  *aIndexRet = 0;
+  // make a copy to work with
+  nsCString tempString = aString;
+  PRInt32   strIndex;
+  // find out of there's a , at the end of the string
+  strIndex = tempString.RFindChar(',');
+
+  // give up now if you can
+  if (strIndex == kNotFound)
+    return;
+
+  // cut the string down to the first ,
+  tempString.Cut(0, strIndex + 1);
+
+  // strip off leading + trailing whitespace
+  tempString.Trim(" ", PR_TRUE, PR_TRUE);
+
+  // see if we've reduced it to nothing
+  if (tempString.IsEmpty())
+    return;
+
+  *aIndexRet = strIndex;
+
+  // otherwise, return it as a new C string
+  retString = tempString;
+
+}
+
+nsresult
+XRemoteService::OpenChromeWindow(nsIDOMWindow *aParent,
+				 const char *aUrl, const char *aFeatures,
+				 nsISupports *aArguments,
+				 nsIDOMWindow **_retval)
+{
+  nsCOMPtr<nsIWindowWatcher> watcher;
+  watcher = do_GetService("@mozilla.org/embedcomp/window-watcher;1");
+    
+  if (!watcher)
+    return NS_ERROR_FAILURE;
+
+  return watcher->OpenWindow(aParent, aUrl, "_blank",
+			     aFeatures, aArguments, _retval);
+}
+
+nsresult
+XRemoteService::GetBrowserLocation(char **_retval)
+{
+  // get the browser chrome URL
+  nsCOMPtr<nsIPref> prefs;
+  prefs = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefs)
+    return NS_ERROR_FAILURE;
+  
+  prefs->CopyCharPref("browser.chromeURL", _retval);
+
+  // fallback
+  if (!*_retval)
+    *_retval = nsCRT::strdup("chrome://navigator/content/navigator.xul");
+
+  return NS_OK;
+}
+
+nsresult
+XRemoteService::OpenURL(nsCString &aArgument,
+			nsIDOMWindowInternal *aParent)
+{
+  // see if there's a new window argument on the end
+  nsCString lastArgument;
+  PRBool    newWindow = PR_FALSE;
+  PRUint32  index = 0;
+  FindLastInList(aArgument, lastArgument, &index);
+  if (lastArgument.EqualsIgnoreCase("new-window")) {
+    aArgument.Truncate(index);
+    newWindow = PR_TRUE;
+    // recheck for a possible noraise argument since it might have
+    // been before the new-window argument
+    FindLastInList(aArgument, lastArgument, &index);
+    if (lastArgument.EqualsIgnoreCase("noraise"))
+      aArgument.Truncate(index);
+  }
+
+  nsString url;
+  url.AssignWithConversion(aArgument);
+
+  // if there's no parent passed in then this is a new window
+  if (!aParent)
+    newWindow = PR_TRUE;
+
+  nsresult rv = NS_OK;
+
+  if (newWindow) {
+    nsXPIDLCString urlString;
+    GetBrowserLocation(getter_Copies(urlString));
+    if (!urlString)
+      return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsISupportsWString> arg;
+    arg = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
+    if (!arg)
+      return NS_ERROR_FAILURE;
+    
+    // save the url into the wstring
+    arg->SetData(url.get());
+    
+    nsCOMPtr<nsIDOMWindow> window;
+    rv = OpenChromeWindow(aParent, urlString, "chrome,all,dialog=no",
+			  arg, getter_AddRefs(window));
+  }
+
+  else {
+    // find the primary content shell for the window that we've been
+    // asked to load into.
+    nsCOMPtr<nsIScriptGlobalObject> scriptObject;
+    scriptObject = do_QueryInterface(aParent);
+    if (!scriptObject) {
+      NS_WARNING("Failed to get script object for browser instance");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocShell> docShell;
+    scriptObject->GetDocShell(getter_AddRefs(docShell));
+    if (!docShell) {
+      NS_WARNING("Failed to get docshell object for browser instance");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> item;
+    item = do_QueryInterface(docShell);
+    if (!item) {
+      NS_WARNING("failed to get doc shell tree item for browser instance");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    item->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (!treeOwner) {
+      NS_WARNING("failed to get tree owner");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIDocShellTreeItem> primaryContent;
+    treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryContent));
+
+    docShell = do_QueryInterface(primaryContent);
+    if (!docShell) {
+      NS_WARNING("failed to get docshell from primary content item");
+      return NS_ERROR_FAILURE;
+    }
+
+    nsCOMPtr<nsIWebNavigation> webNav;
+    webNav = do_GetInterface(docShell);
+    if (!webNav) {
+      NS_WARNING("failed to get web nav from inner docshell");
+      return NS_ERROR_FAILURE;
+    }
+
+    rv = webNav->LoadURI(url.get(), nsIWebNavigation::LOAD_FLAGS_NONE);
+      
+  }
+  
+  return rv;
+}
+
+nsresult
+XRemoteService::OpenURLDialog(nsIDOMWindowInternal *aParent)
+{
+  nsresult rv;
+
+  nsIDOMWindow *finalParent = aParent;
+  nsCOMPtr<nsIDOMWindow> window;
+
+  // if there's no parent then create a new browser window to be the
+  // parent.
+  if (!finalParent) {
+    nsXPIDLCString urlString;
+    GetBrowserLocation(getter_Copies(urlString));
+    if (!urlString)
+      return NS_ERROR_FAILURE;
+    
+    rv = OpenChromeWindow(nsnull, urlString, "chrome,all,dialog=no",
+			  nsnull, getter_AddRefs(window));
+    if (NS_FAILED(rv))
+      return rv;
+
+    finalParent = window.get();
+
+  }
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  rv = OpenChromeWindow(finalParent,
+			"chrome://communicator/content/openLocation.xul",
+			"chrome,all",
+			finalParent,
+			getter_AddRefs(newWindow));
+  
+  return rv;
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteService)
