@@ -454,7 +454,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth,
     if (mIsTooSmall)
     {
       // if we are not shown, we don't want to force a show here, so check and see if Show(TRUE) has been called
-      NeedToShow = mShown;
+      NeedToShow = mIsShown;
       mIsTooSmall = PR_FALSE;
     }
   }
