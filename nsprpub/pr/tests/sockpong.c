@@ -30,6 +30,7 @@
  * descriptor inheritance.
  */
 
+#include "prerror.h"
 #include "prio.h"
 
 #include <stdio.h>
@@ -58,28 +59,30 @@ int main()
     }
 
     for (idx = 0; idx < NUM_ITERATIONS; idx++) {
+        memset(buf, 0, sizeof(buf));
         nBytes = PR_Read(sock, buf, sizeof(buf));
         if (nBytes == -1) {
-            fprintf(stderr, "PR_Read failed\n");
+            fprintf(stderr, "PR_Read failed: (%d, %d)\n",
+                    PR_GetError(), PR_GetOSError());
             exit(1);
         }
+        printf("pong process: received \"%s\"\n", buf);
         if (nBytes != 5) {
-            fprintf(stderr, "sockpong: expected 5 bytes but got %d bytes\n",
+            fprintf(stderr, "pong process: expected 5 bytes but got %d bytes\n",
                     nBytes);
             exit(1);
         }
-        printf("sockpong: received \"%s\"\n", buf);
         if (strcmp(buf, "ping") != 0) {
-            fprintf(stderr, "sockpong: expected \"ping\" but got \"%s\"\n",
+            fprintf(stderr, "pong process: expected \"ping\" but got \"%s\"\n",
                     buf);
             exit(1);
         }
 
         strcpy(buf, "pong");
-        printf("sockpong: sending \"%s\"\n", buf);
-        nBytes = PR_Send(sock, buf, 5, 0, PR_INTERVAL_NO_TIMEOUT);
+        printf("pong process: sending \"%s\"\n", buf);
+        nBytes = PR_Write(sock, buf, 5);
         if (nBytes == -1) {
-            fprintf(stderr, "PR_Send failed\n");
+            fprintf(stderr, "PR_Write failed\n");
             exit(1);
         }
     }

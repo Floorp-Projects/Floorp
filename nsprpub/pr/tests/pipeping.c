@@ -31,9 +31,12 @@
  * inheritance, standard I/O redirection.
  */
 
-#include "nspr.h"
+#include "prerror.h"
+#include "prio.h"
+#include "prproces.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static char *child_argv[] = { "pipepong", NULL };
@@ -102,21 +105,28 @@ int main()
 
     for (idx = 0; idx < NUM_ITERATIONS; idx++) {
         strcpy(buf, "ping");
-        printf("pipeping: sending \"%s\"\n", buf);
+        printf("ping process: sending \"%s\"\n", buf);
         nBytes = PR_Write(out_pipe[1], buf, 5);
         if (nBytes == -1) {
             fprintf(stderr, "PR_Write failed: (%d, %d)\n", PR_GetError(),
                     PR_GetOSError());
             exit(1);
         }
+        memset(buf, 0, sizeof(buf));
         nBytes = PR_Read(in_pipe[0], buf, sizeof(buf));
         if (nBytes == -1) {
-            fprintf(stderr, "PR_Read failed\n");
+            fprintf(stderr, "PR_Read failed: (%d, %d)\n",
+                    PR_GetError(), PR_GetOSError());
             exit(1);
         }
-        printf("pipeping: received \"%s\"\n", buf);
+        printf("ping process: received \"%s\"\n", buf);
+        if (nBytes != 5) {
+            fprintf(stderr, "ping process: expected 5 bytes but got %d bytes\n",
+                    nBytes);
+            exit(1);
+        }
         if (strcmp(buf, "pong") != 0) {
-            fprintf(stderr, "pipeping: expected \"pong\" but got \"%s\"\n",
+            fprintf(stderr, "ping process: expected \"pong\" but got \"%s\"\n",
                     buf);
             exit(1);
         }

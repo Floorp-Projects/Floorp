@@ -30,6 +30,7 @@
  * descriptor inheritance.
  */
 
+#include "prerror.h"
 #include "prio.h"
 #include "prproces.h"
 
@@ -60,7 +61,8 @@ int main()
 
     status = PR_SetFDInheritable(sock[1], PR_TRUE);
     if (status == PR_FAILURE) {
-        fprintf(stderr, "PR_SetFDInheritable failed\n");
+        fprintf(stderr, "PR_SetFDInheritable failed: (%d, %d)\n",
+                PR_GetError(), PR_GetOSError());
         exit(1);
     }
 
@@ -90,25 +92,27 @@ int main()
 
     for (idx = 0; idx < NUM_ITERATIONS; idx++) {
         strcpy(buf, "ping");
-        printf("sockping: sending \"%s\"\n", buf);
+        printf("ping process: sending \"%s\"\n", buf);
         nBytes = PR_Write(sock[0], buf, 5);
         if (nBytes == -1) {
-            fprintf(stderr, "PR_Write failed\n");
+            fprintf(stderr, "PR_Write failed: (%d, %d)\n",
+                    PR_GetError(), PR_GetOSError());
             exit(1);
         }
-        nBytes = PR_Recv(sock[0], buf, sizeof(buf), 0, PR_INTERVAL_NO_TIMEOUT);
+        memset(buf, 0, sizeof(buf));
+        nBytes = PR_Read(sock[0], buf, sizeof(buf));
         if (nBytes == -1) {
-            fprintf(stderr, "PR_Recv failed\n");
+            fprintf(stderr, "PR_Read failed\n");
             exit(1);
         }
+        printf("ping process: received \"%s\"\n", buf);
         if (nBytes != 5) {
-            fprintf(stderr, "sockping: expected 5 bytes but got %d bytes\n",
+            fprintf(stderr, "ping process: expected 5 bytes but got %d bytes\n",
                     nBytes);
             exit(1);
         }
-        printf("sockping: received \"%s\"\n", buf);
         if (strcmp(buf, "pong") != 0) {
-            fprintf(stderr, "sockping: expected \"pong\" but got \"%s\"\n",
+            fprintf(stderr, "ping process: expected \"pong\" but got \"%s\"\n",
                     buf);
             exit(1);
         }
