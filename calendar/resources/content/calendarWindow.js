@@ -580,7 +580,8 @@ CalendarWindow.prototype.onMouseUpCalendarViewSplitter = function calWinOnMouseU
 *   The resize handler, used to set the size of the views so they fit the screen.
 */
  window.onresize = CalendarWindow.prototype.doResize = function calWin_doResize(){
-     gCalendarWindow.currentView.refresh();
+  if( gCalendarWindow )
+    gCalendarWindow.currentView.refresh();
 }
 
 
