@@ -1879,6 +1879,21 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
     NS_IF_ADDREF(*referrer);
     return NS_OK;
 }
+
+#define numInvalidReferrerSchemes 8
+
+static char * invalidReferrerSchemes [numInvalidReferrerSchemes] = 
+{
+  "chrome",
+  "resource",
+  "file",
+  "mailbox",
+  "imap",
+  "news",
+  "snews",
+  "imaps"
+};
+
 NS_IMETHODIMP
 nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
 {
@@ -1886,6 +1901,17 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
 
     if (nsHttpHandler::get()->ReferrerLevel() < referrerType)
         return NS_OK;
+
+    // don't remember this referrer if it's on our black list....
+    if (referrer)
+    {
+      PRBool invalidScheme = PR_FALSE;
+      for (PRUint32 i = 0; i < numInvalidReferrerSchemes && !invalidScheme; i++)
+         referrer->SchemeIs(invalidReferrerSchemes[i], &invalidScheme);
+
+      if (invalidScheme) return NS_OK; // kick out....
+    }
+
 
     // save a copy of the referrer so we can return it if requested
     mReferrer = referrer;
