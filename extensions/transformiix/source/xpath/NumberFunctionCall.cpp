@@ -17,16 +17,21 @@
  * Portions created by Keith Visco as a Non MITRE employee,
  * (C) 1999 Keith Visco. All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s):
+ *
  * Olivier Gerardin, ogerardin@vo.lu
  *   -- original author.
+ *
+ * Nisheeth Ranjan, nisheeth@netscape.com
+ *   -- implemented rint function, which was not available on Windows.
+ *
+ * $Id: NumberFunctionCall.cpp,v 1.5 2000/05/16 09:03:13 kvisco%ziplink.net Exp $
  */
 
-/**
- * NumberFunctionCall
- * A representation of the XPath Number funtions
- * @author <A HREF="mailto:ogerardin@vo.lu">Olivier Gerardin</A>
-**/
+/*
+  NumberFunctionCall
+  A representation of the XPath Number funtions
+*/
 
 #include "FunctionLib.h"
 
