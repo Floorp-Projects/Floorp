@@ -50,6 +50,13 @@
 #include <stdlib.h>
 #endif
 
+#if defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
+#include <signal.h>
+/* for nsTraceRefcnt::WalkTheStack() */
+#include "nsISupportsUtils.h"
+#include "nsTraceRefcnt.h"
+#endif
+
 #if defined(XP_OS2)
 /* Added definitions for DebugBreak() for 2 different OS/2 compilers.  Doing
  * the int3 on purpose for Visual Age so that a developer can step over the
@@ -258,7 +265,51 @@ NS_COM void nsDebug::Break(const char* aFile, PRIntn aLine)
    fprintf(stderr, "Break: at file %s\n",aFile, aLine);  fflush(stderr);
 #endif
 #elif defined(XP_UNIX) && !defined(UNIX_CRASH_ON_ASSERT)
-  fprintf(stderr, "\07");  fflush(stderr);
+    fprintf(stderr, "\07");
+
+    char *assertBehavior = getenv("XPCOM_DEBUG_BREAK");
+
+    if (!assertBehavior) {
+
+      // the default; nothing else to do
+      ;
+
+    } else if ( strcmp(assertBehavior, "suspend")== 0 ) {
+
+      // the suspend case is first because we wanna send the signal before 
+      // other threads have had a chance to get too far from the state that
+      // caused this assertion (in case they happen to have been involved).
+      //
+      fprintf(stderr, "Suspending process; attach with the debugger.\n");
+      kill(0, SIGSTOP);
+
+    } else if ( strcmp(assertBehavior, "warn")==0 ) {
+      
+      // same as default; nothing else to do (see "suspend" case comment for
+      // why this compare isn't done as part of the default case)
+      //
+      ;
+
+    } else if ( strcmp(assertBehavior,"stack")==0 ) {
+
+      // walk the stack
+      //
+      nsTraceRefcnt::WalkTheStack(stderr);
+
+    } else if ( strcmp(assertBehavior,"abort")==0 ) {
+
+      // same as UNIX_CRASH_ON_ASSERT
+      //
+      Abort(aFile, aLine);
+
+    } else {
+
+      fprintf(stderr, "unrecognized value of XPCOM_DEBUG_BREAK env var!\n");
+
+    }    
+    fflush(stderr); // this shouldn't really be necessary, i don't think,
+                    // but maybe there's some lame stdio that buffers stderr
+
 #elif defined(XP_BEOS)
   {
 #ifdef UNIX_CRASH_ON_ASSERT
