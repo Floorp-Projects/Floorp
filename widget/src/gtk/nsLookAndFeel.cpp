@@ -77,7 +77,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
         break;
     case eColor_TextSelectBackground:
         aColor = GDK_COLOR_TO_NS_RGB(style->bg[GTK_STATE_SELECTED]);
-        aColor;
+	break;
     case eColor_TextSelectForeground:
         aColor = GDK_COLOR_TO_NS_RGB(style->text[GTK_STATE_SELECTED]);
         break;
