@@ -43,6 +43,7 @@
 #include <secasn1.h>
 
 #include <jssutil.h>
+#include <Algorithm.h>
 #include "pk11util.h"
 #include <java_ids.h>
 #include <jss_exceptions.h>
@@ -687,4 +688,107 @@ Java_org_mozilla_jss_pkcs11_PK11Store_importPrivateKey
 {
     importPrivateKey(env, this, keyArray,
         keyTypeObj, PR_FALSE /* not temporary */);
+}
+
+
+JNIEXPORT jbyteArray JNICALL
+Java_org_mozilla_jss_pkcs11_PK11Store_getEncryptedPrivateKeyInfo
+(JNIEnv *env, jobject this, jobject certObj, jobject algObj,
+    jobject pwObj, jint iteration)
+
+{
+    SECKEYEncryptedPrivateKeyInfo *epki = NULL;
+    jbyteArray encodedEpki = NULL;
+    PK11SlotInfo *slot = NULL;
+    SECOidTag algTag;
+    jclass passwordClass = NULL;
+    jmethodID getByteCopyMethod = NULL;
+    jbyteArray pwArray = NULL;
+    jbyte* pwchars = NULL;
+    SECItem pwItem;
+    CERTCertificate *cert = NULL;
+    SECItem epkiItem;
+
+    epkiItem.data = NULL;
+
+    /* get slot */
+    if( JSS_PK11_getStoreSlotPtr(env, this, &slot) != PR_SUCCESS) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    PR_ASSERT(slot!=NULL);
+    
+    /* get algorithm */
+    algTag = JSS_getOidTagFromAlg(env, algObj);
+    if( algTag == SEC_OID_UNKNOWN ) {
+        JSS_throwMsg(env, NO_SUCH_ALG_EXCEPTION, "Unrecognized PBE algorithm");
+        goto finish;
+    }
+
+    /*
+     * get password
+     */
+    passwordClass = (*env)->GetObjectClass(env, pwObj);
+    if(passwordClass == NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    getByteCopyMethod = (*env)->GetMethodID(
+                                            env,
+                                            passwordClass,
+                                            PW_GET_BYTE_COPY_NAME,
+                                            PW_GET_BYTE_COPY_SIG);
+    if(getByteCopyMethod==NULL) {
+        ASSERT_OUTOFMEM(env);
+        goto finish;
+    }
+    pwArray = (*env)->CallObjectMethod( env, pwObj, getByteCopyMethod);
+    pwchars = (*env)->GetByteArrayElements(env, pwArray, NULL);
+    /* !!! Include the NULL byte or not? */
+    pwItem.data = (unsigned char*) pwchars;
+    pwItem.len = strlen((const char*)pwchars) + 1;
+
+    /*
+     * get cert
+     */
+    if( JSS_PK11_getCertPtr(env, certObj, &cert) != PR_SUCCESS ) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    /*
+     * export the epki
+     */
+    epki = PK11_ExportEncryptedPrivateKeyInfo(slot, algTag, &pwItem,
+            cert, iteration, NULL /*wincx*/);
+
+
+    /*
+     * DER-encode the epki
+     */
+    epkiItem.data = NULL;
+    epkiItem.len = 0;
+    if( SEC_ASN1EncodeItem(NULL, &epkiItem, epki,
+        SEC_ASN1_GET(SECKEY_EncryptedPrivateKeyInfoTemplate) )  == NULL ) {
+        JSS_throwMsg(env, TOKEN_EXCEPTION, "Failed to ASN1-encode "
+            "EncryptedPrivateKeyInfo");
+        goto finish;
+    }
+
+    /*
+     * convert to Java byte array
+     */
+    encodedEpki = JSS_SECItemToByteArray(env, &epkiItem);
+
+finish:
+    if( epki != NULL ) {
+        SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE /*freeit*/);
+    }
+    if( pwchars != NULL ) {
+        (*env)->ReleaseByteArrayElements(env, pwArray, pwchars, JNI_ABORT);
+    }
+    if(epkiItem.data != NULL) {
+        PR_Free(epkiItem.data);
+    }
+    return encodedEpki;
 }

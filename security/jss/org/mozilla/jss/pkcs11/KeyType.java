@@ -93,6 +93,9 @@ final class KeyType {
         return (KeyType) obj;
     }
 
+    public String toString() {
+        return name;
+    }
 
 
     //////////////////////////////////////////////////////////////
