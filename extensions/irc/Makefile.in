@@ -52,16 +52,6 @@ XULLIBFILES	= \
 		$(NULL)
 
 TESTFILES	= \
-		$(srcdir)/xul/tests/index.html \
-		$(srcdir)/xul/tests/test1.html \
-		$(srcdir)/xul/tests/test1-static.js \
-		$(srcdir)/xul/tests/test1-handlers.js \
-		$(srcdir)/xul/tests/test2.html \
-		$(srcdir)/xul/tests/test2.css \
-		$(srcdir)/xul/tests/test2-static.js \
-		$(srcdir)/xul/tests/test2-handlers.js \
-		$(srcdir)/xul/tests/csteel1.jpg \
-		$(srcdir)/xul/tests/csteel2.jpg \
 		$(srcdir)/xul/tests/test3.xul \
 		$(srcdir)/xul/tests/test3.css \
 		$(srcdir)/xul/tests/test3-output-default.css \

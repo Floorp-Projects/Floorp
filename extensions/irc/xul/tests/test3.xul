@@ -57,7 +57,8 @@ resource:///irc/tests/test3.xul
       <menupopup>
         <menuitem id="menu-dmessages" value="Debug Messages"
                   oncommand="onToggleTraceHook()"/>
-        <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"/>
+        <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"
+                  checked="true"/>
         <menuitem id="menu-viewicons" value="Icons in View Buttons" 
                   checked="true" oncommand="onNotImplemented();"/>
         <menuseparator/>

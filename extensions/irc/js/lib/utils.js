@@ -45,11 +45,10 @@ else
     dd = function (){};
 
 var jsenv = new Object();
-
-if (netscape && netscape.security) {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-}
-jsenv.HAS_XPCOM = ((typeof Components == "function") &&
+jsenv.HAS_SECURITYMANAGER = ((typeof netscape == "object") &&
+                             (typeof netscape.security == "object"));
+jsenv.HAS_XPCOM = ((getPriv("UniversalXPConnect")) &&
+                   (typeof Components == "function") &&
                    (typeof Components.classes == "function"));
 jsenv.HAS_JAVA = (typeof java == "object");
 jsenv.HAS_RHINO = (typeof defineClass == "function");
@@ -240,10 +239,9 @@ function renameProperty (obj, oldname, newname)
 
 function newObject(progID, iface)
 {
-    if (!jsenv.HAS_XPCOM)
+    if ((!jsenv.HAS_XPCOM) || (!getPriv("UniversalXPConnect")))
         return null;
 
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
     var obj = Components.classes[progID].createInstance();
     var rv;
 
@@ -262,6 +260,27 @@ function newObject(progID, iface)
             break;
     }
 
+    return rv;
+    
+}
+
+function getPriv (priv)
+{
+    if (!jsenv.HAS_SECURITYMANAGER)
+        return true;
+
+    var rv = true;
+
+    try
+    {
+        netscape.security.PrivilegeManager.enablePrivilege(priv);
+    }
+    catch (e)
+    {
+        dd ("getPriv: unable to get privlege '" + priv + "': " + e);
+        rv = false;
+    }
+    
     return rv;
     
 }

@@ -842,7 +842,7 @@ function my_433 (e)
 }
 
 CIRCNetwork.prototype.onError =
-function my_netping (e)
+function my_neterror (e)
 {
 
     e.server.parent.display (e.meat, "ERROR");

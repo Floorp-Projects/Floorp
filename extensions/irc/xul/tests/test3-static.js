@@ -60,7 +60,7 @@ CIRCNetwork.prototype.MAX_MESSAGES = 100;
 CIRCNetwork.prototype.IGNORE_MOTD = false;
 
 CIRCServer.prototype.READ_TIMEOUT = 0;
-CIRCServer.prototype.VERSION_RPLY += "\nChatZilla test client #3";
+CIRCServer.prototype.VERSION_RPLY += "\nChatZilla";
 if (jsenv.HAS_DOCUMENT)
 {
     CIRCServer.prototype.VERSION_RPLY += ", running under " +
@@ -97,6 +97,13 @@ function initStatic()
     
     setCurrentObject (client);
 
+    if (!jsenv.HAS_XPCOM)
+        client.display ("ChatZilla was not given access to the XPConnect " +
+                        "service.  You will not be able to connect to an " +
+                        "irc server.  A workaround may be to set the " +
+                        "'security.checkxpconnect' pref to false in " +
+                        "all.js, or your user prefs.",
+                        "ERROR");
     window.onkeypress = onWindowKeyPress;
     
 }
@@ -133,7 +140,7 @@ function initHost(obj)
                                false /* disable */);
 
     obj.munger = new CMunger();
-    obj.munger.enabled = false;
+    obj.munger.enabled = true;
     obj.munger.addRule ("you-talking-to-me?", matchMyNick, "");
     obj.munger.addRule
         ("link", /((http|mailto|ftp)\:\/\/[^\)\s]*|www\.\S+\.\S[^\)\s]*)/,

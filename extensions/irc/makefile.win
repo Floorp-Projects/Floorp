@@ -42,21 +42,11 @@ JSLIBFILES = \
 
 XULLIBFILES = \
     .\xul\lib\EntryHistory.js \
-	.\xul\lib\listbox.js \
-	.\xul\lib\munger.js \
+    .\xul\lib\listbox.js \
+    .\xul\lib\munger.js \
     $(NULL)
 
 TESTFILES = \
-    .\xul\tests\index.html \
-    .\xul\tests\test1.html \
-    .\xul\tests\test1-handlers.js \
-    .\xul\tests\test1-static.js \
-    .\xul\tests\test2.html \
-    .\xul\tests\test2.css \
-    .\xul\tests\test2-static.js \
-    .\xul\tests\test2-handlers.js \
-    .\xul\tests\csteel1.jpg \
-    .\xul\tests\csteel2.jpg \
     .\xul\tests\test3.xul \
     .\xul\tests\test3.css \
     .\xul\tests\test3-output-default.css \
@@ -76,15 +66,15 @@ TESTFILES = \
     .\xul\tests\yellow-on.gif \
     .\xul\tests\xtal.jpg \
     .\xul\tests\blue_rock.gif \
-	.\xul\tests\face-angry.gif \
-	.\xul\tests\face-cry.gif \
-	.\xul\tests\face-frown.gif \
-	.\xul\tests\face-smile.gif \
-	.\xul\tests\face-surprise.gif \
-	.\xul\tests\face-tongue.gif \
-	.\xul\tests\face-wink.gif \
-	.\xul\tests\face-screw.gif \
-	.\xul\tests\face-dunno.gif \
+    .\xul\tests\face-angry.gif \
+    .\xul\tests\face-cry.gif \
+    .\xul\tests\face-frown.gif \
+    .\xul\tests\face-smile.gif \
+    .\xul\tests\face-surprise.gif \
+    .\xul\tests\face-tongue.gif \
+    .\xul\tests\face-wink.gif \
+    .\xul\tests\face-screw.gif \
+    .\xul\tests\face-dunno.gif \
     $(NULL)
 
 
