@@ -435,13 +435,6 @@ endif
 # we link statically or dynamic?  Assuming dynamic for now.
 LIBS_DIR = -L$(DIST)/bin
 
-#
-# Turn on C++ linking if we have any .cpp files
-#
-ifdef CPPSRCS
-CPP_PROG_LINK = 1
-endif
-
 # all public include files go in subdirectories of PUBLIC:
 PUBLIC		= $(XPDIST)/public
 
