@@ -1730,6 +1730,26 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    */
    SetHistoryState(aHistoryState);
 
+   /* If the current Uri is the same as the one to be loaded
+    * don't add it to session history. This avoids multiple
+	* entries for the same url in the  go menu 
+	*/
+   nsCOMPtr<nsIURI> currentURI;
+   nsresult res = GetCurrentURI(getter_AddRefs(currentURI));
+   if (NS_SUCCEEDED(res) && currentURI) {
+	  nsXPIDLCString currentUriSpec;
+      rv = currentURI->GetSpec(getter_Copies(currentUriSpec));
+      if (NS_FAILED(rv)) return rv;
+      nsAutoString currentURIString(currentUriSpec);
+	  if (currentURIString == spec) {
+         /* The url to be loaded is the same as the 
+		  * url already in the page. Don't add it to session history
+		  */
+		  aModifyHistory = PR_FALSE;
+	  }
+   }
+
+
   /* Add the page to session history */
   if (aModifyHistory && shist && (!isMail))  {
         PRInt32  ret;
@@ -1738,13 +1758,13 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
 
   nsCOMPtr<nsIWebShell> parent;
-  nsresult res = GetParent(*getter_AddRefs(parent));
+  res = GetParent(*getter_AddRefs(parent));
   nsCOMPtr<nsIURI> newURI;
 
   if ((isLoadingHistory)) {
   /* if LoadURL() got called from SH, AND If we are going "Back/Forward" 
    * to a frame page,SH  will change the current uri to the right value
-     * for smoother redraw. 
+   * for smoother redraw. 
    */
      res = GetCurrentURI(getter_AddRefs(newURI));
   }
