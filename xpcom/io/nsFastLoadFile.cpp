@@ -492,10 +492,10 @@ nsFastLoadFileReader::SelectMuxedDocument(nsISupports* aURI,
 
     mCurrentDocumentMapEntry = docMapEntry;
 #ifdef DEBUG_MUX
-    PRUint32 currentSegmentOffset;
+    PRInt64 currentSegmentOffset;
     Tell(&currentSegmentOffset);
-    trace_mux('r', "select %p (%p) offset %lu\n",
-              aURI, key.get(), currentSegmentOffset);
+    trace_mux('r', "select %p (%p) offset %ld\n",
+              aURI, key.get(), (long) currentSegmentOffset);
 #endif
     return NS_OK;
 }
