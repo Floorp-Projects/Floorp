@@ -3,11 +3,12 @@ help.jar:
         content/help/help.js                            (content/help.js)
         content/help/contents.rdf                       (content/contents.rdf)
         content/help/helpMenuOverlay.xul                (content/helpMenuOverlay.xul)
+
+en-US.jar:
         locale/en-US/help/contents.rdf                  (locale/en-US/contents.rdf)
         locale/en-US/help/welcome_help.html             (locale/en-US/welcome_help.html)
         locale/en-US/help/help-toc.rdf                  (locale/en-US/help-toc.rdf)
         locale/en-US/help/help_index.html               (locale/en-US/help_index.html)
-        locale/en-US/help/im_help.html                  (locale/en-US/im_help.html)
         locale/en-US/help/nav_help.html                 (locale/en-US/nav_help.html)
         locale/en-US/help/mail_help.html                (locale/en-US/mail_help.html)
         locale/en-US/help/composer_help.html            (locale/en-US/composer_help.html)
