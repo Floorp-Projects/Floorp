@@ -100,7 +100,7 @@ Rights Reserved.
           <template>
             <rule>
               <conditions>
-                <treeitem uri="?container"/>
+                <content uri="?container"/>
                 <member container="?container" child="?member"/>
               </conditions>
               

@@ -134,7 +134,7 @@
         <template>
           <rule>
           <conditions>
-            <treeitem uri="?uri"/>
+            <content uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
               object="?subheadings" />
@@ -182,7 +182,7 @@
         <template>
           <rule>
           <conditions>
-            <treeitem uri="?uri"/>
+            <content uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
               object="?subheadings" />
@@ -243,7 +243,7 @@
             <template>
               <rule>
                 <conditions>
-                  <treeitem uri="?uri"/>
+                  <content uri="?uri"/>
                   <member container="?uri" child="?subheading" />
                 </conditions>
 
@@ -291,7 +291,7 @@
           <template>
             <rule>
               <conditions>
-               <treeitem uri="?uri"/>
+               <content uri="?uri"/>
                <triple subject="?uri"
                  predicate="http://home.netscape.com/NC-rdf#subheadings"
                  object="?subheadings" />

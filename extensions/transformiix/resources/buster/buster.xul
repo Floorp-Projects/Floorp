@@ -150,7 +150,7 @@
   <template>
     <rule>
       <conditions>
-        <treeitem uri="?uri" />
+        <content uri="?uri" />
         <member container="?uri" child="?subheading" />
         <triple subject="?subheading"
                 predicate="http://home.netscape.com/NC-rdf#purp"
@@ -186,7 +186,7 @@
     </rule>
     <rule>
       <conditions>
-        <treeitem uri="?uri" />
+        <content uri="?uri" />
         <member container="?uri" child="?subheading" />
       </conditions>
 

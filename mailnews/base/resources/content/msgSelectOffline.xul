@@ -60,7 +60,7 @@ Contributors:
       <template>
         <rule>
           <conditions>
-            <treeitem uri="?container"/>
+            <content uri="?container"/>
             <member container="?container" child="?member"/>
             <triple subject="?member" predicate="http://home.netscape.com/NC-rdf#SupportsOffline" object="true"/>
           </conditions>
