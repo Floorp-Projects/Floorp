@@ -495,6 +495,7 @@ private:
 };
 
 // NS_DEF_STRING_COMPARISON_OPERATORS(nsCString, char)
+NS_DEF_DERIVED_STRING_OPERATOR_PLUS(nsCString, char)
 
 extern NS_COM int fputs(const nsCString& aString, FILE* out);
 //ostream& operator<<(ostream& aStream,const nsCString& aString);
