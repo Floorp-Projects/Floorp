@@ -24,6 +24,7 @@
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
 #include "nsEscape.h"
+#include "nsCRT.h"
 
 #include "nsIPlatformCharset.h"
 #include "nsILocalFile.h"
@@ -136,7 +137,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     }
     else {
         // Check for if it is a file URL
-        FileURIFixup(uriString.get(), aURI);
+        FileURIFixup(uriString, aURI);
         if(*aURI)
             return NS_OK;
 
@@ -194,7 +195,8 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
     rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
     if (rv == NS_ERROR_UNKNOWN_PROTOCOL)
     {
-        return rv;
+        if (!PossiblyHostPortUrl(uriString))
+            return NS_ERROR_UNKNOWN_PROTOCOL;
     }
     if (*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
@@ -212,7 +214,7 @@ nsDefaultURIFixup::CreateFixupURI(const nsAString& aStringURI, PRUint32 aFixupFl
         }
         if (fixupKeywords)
         {
-            KeywordURIFixup(uriString.get(), aURI);
+            KeywordURIFixup(uriString, aURI);
             if(*aURI)
                 return NS_OK;
         }
@@ -385,13 +387,12 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     return PR_TRUE;
 }
 
-nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI, 
+nsresult nsDefaultURIFixup::FileURIFixup(const nsAString& aStringURI, 
                                          nsIURI** aURI)
 {
-    nsAutoString uriSpecIn(aStringURI);
     nsCAutoString uriSpecOut;
 
-    nsresult rv = ConvertFileToStringURI(uriSpecIn, uriSpecOut);
+    nsresult rv = ConvertFileToStringURI(aStringURI, uriSpecOut);
     if (NS_SUCCEEDED(rv))
     {
         // if this is file url, uriSpecOut is already in FS charset
@@ -401,7 +402,7 @@ nsresult nsDefaultURIFixup::FileURIFixup(const PRUnichar* aStringURI,
     return NS_ERROR_FAILURE;
 }
 
-nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
+nsresult nsDefaultURIFixup::ConvertFileToStringURI(const nsAString& aIn,
                                                    nsCString& aOut)
 {
     PRBool attemptFixup = PR_FALSE;
@@ -413,9 +414,8 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
         attemptFixup = PR_TRUE;
     }
 #elif XP_UNIX
-    // Check if it starts with / or \ (UNIX)
-    const PRUnichar * up = aIn.get();
-    if((PRUnichar('/') == *up) || (PRUnichar('\\') == *up))
+    // Check if it starts with / (UNIX)
+    if(aIn.First() == PRUnichar('/'))
     {
         attemptFixup = PR_TRUE;
     }
@@ -473,20 +473,125 @@ nsresult nsDefaultURIFixup::ConvertFileToStringURI(nsString& aIn,
     return NS_ERROR_FAILURE;
 }
 
-PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(nsString& aIn)
+PRBool nsDefaultURIFixup::PossiblyHostPortUrl(const nsAString &aUrl)
 {
-  // XXXXX HACK XXXXX : please don't copy this code.
-  // There are cases where aIn contains the locale byte chars padded to short
-  // (thus the name "ByteExpanded"); whereas other cases 
-  // have proper Unicode code points.
-  // This is a temporary fix.  Please refer to 58866, 86948
-  const PRUnichar* uniChar = aIn.get();
-  for (PRUint32 i = 0; i < aIn.Length(); i++)  {
-    if ((uniChar[i] >= 0x0080) && (uniChar[i] <= 0x00FF))  {
-      return PR_TRUE;
+    // Oh dear, the protocol is invalid. Test if the protocol might
+    // actually be a url without a protocol:
+    //
+    //   http://www.faqs.org/rfcs/rfc1738.html
+    //   http://www.faqs.org/rfcs/rfc2396.html
+    //
+    // e.g. Anything of the form:
+    //
+    //   <hostname>:<port> or
+    //   <hostname>:<port>/
+    //
+    // Where <hostname> is a string of alphanumeric characters and dashes
+    // seperated by dots.
+    // and <port> is a 5 or less digits. This actually breaks the rfc2396
+    // definition of a scheme which allows dots in schemes.
+    //
+    // Note:
+    //   People expecting this to work with
+    //   <user>:<password>@<host>:<port>/<url-path> will be disappointed!
+    //
+    // Note: Parser could be a lot tighter, tossing out silly hostnames
+    //       such as those containing consecutive dots and so on.
+
+    // Read the hostname which should of the form
+    // [a-zA-Z0-9\-]+(\.[a-zA-Z0-9\-]+)*:
+
+    nsReadingIterator<PRUnichar> iterBegin;
+    nsReadingIterator<PRUnichar> iterEnd;
+    aUrl.BeginReading(iterBegin);
+    aUrl.EndReading(iterEnd);
+    nsReadingIterator<PRUnichar> iter = iterBegin;
+
+    while (iter != iterEnd)
+    {
+        PRUint32 chunkSize = 0;
+        // Parse a chunk of the address
+        while (iter != iterEnd &&
+               (*iter == PRUnichar('-') ||
+                nsCRT::IsAsciiAlpha(*iter) ||
+                nsCRT::IsAsciiDigit(*iter)))
+        {
+            ++chunkSize;
+            ++iter;
+        }
+        if (chunkSize == 0 || iter == iterEnd)
+        {
+            return PR_FALSE;
+        }
+        if (*iter == PRUnichar(':'))
+        {
+            // Go onto checking the for the digits
+            break;
+        }
+        if (*iter != PRUnichar('.'))
+        {
+            // Whatever it is, it ain't a hostname!
+            return PR_FALSE;
+        }
+        ++iter;
     }
-  }
-  return PR_FALSE;
+    if (iter == iterEnd)
+    {
+        // No point continuing since there is no colon
+        return PR_FALSE;
+    }
+    ++iter;
+
+    // Count the number of digits after the colon and before the
+    // next forward slash (or end of string)
+
+    PRUint32 digitCount = 0;
+    while (iter != iterEnd && digitCount <= 5)
+    {
+        if (nsCRT::IsAsciiDigit(*iter))
+        {
+            digitCount++;
+        }
+        else if (*iter == PRUnichar('/'))
+        {
+            break;
+        }
+        else
+        {
+            // Whatever it is, it ain't a port!
+            return PR_FALSE;
+        }
+        ++iter;
+    }
+    if (digitCount == 0 || digitCount > 5)
+    {
+        // No digits or more digits than a port would have.
+        return PR_FALSE;
+    }
+
+    // Yes, it's possibly a host:port url
+    return PR_TRUE;
+}
+
+PRBool nsDefaultURIFixup::PossiblyByteExpandedFileName(const nsAString& aIn)
+{
+    // XXXXX HACK XXXXX : please don't copy this code.
+    // There are cases where aIn contains the locale byte chars padded to short
+    // (thus the name "ByteExpanded"); whereas other cases 
+    // have proper Unicode code points.
+    // This is a temporary fix.  Please refer to 58866, 86948
+
+    nsReadingIterator<PRUnichar> iter;
+    nsReadingIterator<PRUnichar> iterEnd;
+    aIn.BeginReading(iter);
+    aIn.EndReading(iterEnd);
+    while (iter != iterEnd)
+    {
+        if (*iter >= 0x0080 && *iter <= 0x00FF)
+            return PR_TRUE;
+        ++iter;
+    }
+    return PR_FALSE;
 }
 
 const char * nsDefaultURIFixup::GetFileSystemCharset()
@@ -524,7 +629,7 @@ const char * nsDefaultURIFixup::GetCharsetForUrlBar()
   return charset;
 }
 
-nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI, 
+nsresult nsDefaultURIFixup::KeywordURIFixup(const nsAString & aURIString, 
                                             nsIURI** aURI)
 {
     // These are keyword formatted strings
@@ -540,11 +645,10 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI,
     // "nonQualifiedHost?args"
     // "nonQualifiedHost?some args"
 
-    nsAutoString uriString(aStringURI);
-    if(uriString.FindChar('.') == -1 && uriString.FindChar(':') == -1)
+    if(aURIString.FindChar('.') == -1 && aURIString.FindChar(':') == -1)
     {
-        PRInt32 qMarkLoc = uriString.FindChar('?');
-        PRInt32 spaceLoc = uriString.FindChar(' ');
+        PRInt32 qMarkLoc = aURIString.FindChar('?');
+        PRInt32 spaceLoc = aURIString.FindChar(' ');
 
         PRBool keyword = PR_FALSE;
         if(qMarkLoc == 0)
@@ -555,7 +659,7 @@ nsresult nsDefaultURIFixup::KeywordURIFixup(const PRUnichar* aStringURI,
         if(keyword)
         {
             nsCAutoString keywordSpec("keyword:");
-            char *utf8Spec = ToNewUTF8String(uriString);
+            char *utf8Spec = ToNewUTF8String(aURIString);
             if(utf8Spec)
             {
                 char* escapedUTF8Spec = nsEscape(utf8Spec, url_Path);
