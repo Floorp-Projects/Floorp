@@ -27,7 +27,7 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsIAppShell.h"
-#include "nsITimer.h"
+#include "plevent.h"
 
 class nsAppShellService : public nsIAppShellService,
                           public nsIObserver,
@@ -64,11 +64,17 @@ protected:
   PRBool mDeleteCalled;
   nsISplashScreen *mSplashScreen;
 
-  // The mShutdownTimer is set in Quit() to asynchronously call the
-  // ExitCallback(). This allows one last pass through any events in
-  // the event queue before shutting down the appshell.
-  nsCOMPtr<nsITimer> mShutdownTimer;
-  static void ExitCallback(nsITimer* aTimer, void* aClosure);
+  // Set when the appshell service is going away.
+  PRBool mShuttingDown;
+
+  // A "last event" that is used to flush the appshell's event queue.
+  struct ExitEvent {
+    PLEvent            mEvent;
+    nsAppShellService* mService;
+  };
+
+  static void* HandleExitEvent(PLEvent* aEvent);
+  static void DestroyExitEvent(PLEvent* aEvent);
 };
 
 #endif
