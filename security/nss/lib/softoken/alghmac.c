@@ -64,11 +64,6 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
     int i;
     unsigned char hashed_secret[SHA1_LENGTH];
 
-    /* required by FIPS 198 */
-    if (secret_len < hash_obj->length/2) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return NULL;
-    }
     cx = (HMACContext*)PORT_ZAlloc(sizeof(HMACContext));
     if (cx == NULL)
 	return NULL;
