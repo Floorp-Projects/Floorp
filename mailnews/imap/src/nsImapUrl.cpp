@@ -825,7 +825,6 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
 NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory)
 {
   nsresult rv;
-  nsXPIDLCString serverKey;
   nsString aString;
   char *newOnlineName = nsnull;
   
@@ -840,10 +839,10 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
   if (onlineMailboxName && !onlineDir.IsEmpty())
   {
     nsIMAPNamespace *ns = nsnull;
-    rv = hostSessionList->GetNamespaceForMailboxForHost(serverKey,
+    rv = hostSessionList->GetNamespaceForMailboxForHost(m_serverKey,
       onlineMailboxName, ns); 
     if (!ns)
-       hostSessionList->GetDefaultNamespaceOfTypeForHost(serverKey, kPersonalNamespace, ns);
+       hostSessionList->GetDefaultNamespaceOfTypeForHost(m_serverKey, kPersonalNamespace, ns);
     
     if (PL_strcasecmp(onlineMailboxName, "INBOX"))
     {
@@ -881,7 +880,7 @@ NS_IMETHODIMP nsImapUrl::AddOnlineDirectoryIfNecessary(const char *onlineMailbox
             PL_strcat(newOnlineName, onlineMailboxName);
           }
         }
-      }
+     }
       // just prepend the online server directory if it doesn't start with it already
       else if (strncmp(onlineMailboxName, onlineDirWithDelimiter.get(), onlineDirWithDelimiter.Length()))
       {
