@@ -516,6 +516,7 @@ case "$target" in
     ;;
 
 *-irix6*)
+    dnl What about IRIX 6.2?
     AC_DEFINE(IRIX6_3)
     DSO_LDOPTS='-elf -shared'
     MKSHLIB='$(CCC) $(DSO_LDOPTS)'
@@ -530,6 +531,7 @@ case "$target" in
        MKSHLIB_UNFORCE_ALL='-none'
        CFLAGS="$CFLAGS -woff 3262"
        CXXFLAGS="$CXXFLAGS -woff 3262"
+       AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     fi
     ;;
 
