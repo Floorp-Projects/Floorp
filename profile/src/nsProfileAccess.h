@@ -121,7 +121,7 @@ private:
     nsString      mCurrentProfile;
     nsString      mHavePREGInfo;
     PRBool        m4xProfilesAdded;
-    
+    PRBool        mStartWithLastProfile;
 public:
     PRBool        mProfileDataChanged;
     PRBool        mForgetProfileCalled;
@@ -138,7 +138,9 @@ public:
     nsresult GetOriginalProfileDir(const PRUnichar *profileName, nsILocalFile **orginalDir);
     nsresult SetMigratedFromDir(const PRUnichar *profileName, nsILocalFile *orginalDir);
     nsresult SetProfileLastModTime(const PRUnichar *profileName, PRInt64 lastModTime);
-
+    nsresult GetStartWithLastUsedProfile(PRBool *aStartWithLastUsedProfile);
+    nsresult SetStartWithLastUsedProfile(PRBool aStartWithLastUsedProfile);
+    
     // if fromImport is true all the 4.x profiles will be added to mProfiles with the isImportType flag set.
     // pass fromImport as True only if you are calling from the Import Module.
     nsresult Get4xProfileInfo(const char *registryName, PRBool fromImport);

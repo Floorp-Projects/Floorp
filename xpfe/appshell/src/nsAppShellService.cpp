@@ -64,9 +64,7 @@
 #include "nsICmdLineService.h"
 #include "nsCRT.h"
 #include "nsITimelineService.h"
-#ifdef NS_DEBUG
 #include "prprf.h"    
-#endif
 
 #if defined(XP_MAC) || defined(XP_MACOSX)
 #include <Gestalt.h>
@@ -89,6 +87,12 @@ static PRBool OnMacOSX();
 
 #include "nsAppShellService.h"
 #include "nsIProfileInternal.h"
+#include "nsIProfileChangeStatus.h"
+#include "nsICloseAllWindows.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIPlatformCharset.h"
+#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeDecoder.h"
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellCID,          NS_APPSHELL_CID);
@@ -96,11 +100,16 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
 
-#define gEQActivatedNotification "nsIEventQueueActivated"
-#define gEQDestroyedNotification "nsIEventQueueDestroyed"
-#define gSkinSelectedTopic       "skin-selected"
-#define gLocaleSelectedTopic     "locale-selected"
-#define gInstallRestartTopic     "xpinstall-restart"
+#define gEQActivatedNotification       "nsIEventQueueActivated"
+#define gEQDestroyedNotification       "nsIEventQueueDestroyed"
+#define gSkinSelectedTopic             "skin-selected"
+#define gLocaleSelectedTopic           "locale-selected"
+#define gInstallRestartTopic           "xpinstall-restart"
+#define gProfileChangeTeardownTopic    "profile-change-teardown"
+#define gProfileInitialStateTopic      "profile-initial-state"
+
+// Static Function Prototypes
+static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString); 
 
 nsAppShellService::nsAppShellService() : 
   mDeleteCalled(PR_FALSE),
@@ -1048,6 +1057,254 @@ nsAppShellService::ExitLastWindowClosingSurvivalArea(void)
   return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP
+nsAppShellService::CreateStartupState(PRInt32 aWindowWidth, PRInt32 aWindowHeight, PRBool *_retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  nsresult rv;
+  
+  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (!prefService)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIPrefBranch> startupBranch;
+  prefService->GetBranch(PREF_STARTUP_PREFIX, getter_AddRefs(startupBranch));
+  if (!startupBranch)
+    return NS_ERROR_FAILURE;
+  
+  PRUint32 childCount;
+  char **childArray = nsnull;
+  rv = startupBranch->GetChildList("", &childCount, &childArray);
+  if (NS_FAILED(rv))
+    return rv;
+    
+  for (PRUint32 i = 0; i < childCount; i++) {
+    PRBool prefValue;
+    startupBranch->GetBoolPref(childArray[i], &prefValue);
+    if (prefValue) {
+      PRBool windowOpened;
+      rv = LaunchTask(childArray[i], aWindowHeight, aWindowWidth, &windowOpened);
+      if (NS_SUCCEEDED(rv) && windowOpened)
+        *_retval = PR_TRUE;
+    }
+  }
+  
+  NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(childCount, childArray);
+  
+  return NS_OK;
+}
+
+nsresult
+nsAppShellService::LaunchTask(const char *aParam, PRInt32 height, PRInt32 width, PRBool *windowOpened)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr <nsICmdLineService> cmdLine =
+    do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr <nsICmdLineHandler> handler;
+  rv = cmdLine->GetHandlerForParam(aParam, getter_AddRefs(handler));
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString chromeUrlForTask;
+  rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool handlesArgs = PR_FALSE;
+  rv = handler->GetHandlesArgs(&handlesArgs);
+  if (handlesArgs) {
+    nsXPIDLString defaultArgs;
+    rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+    if (NS_FAILED(rv)) return rv;
+    rv = OpenWindow(chromeUrlForTask, defaultArgs, SIZE_TO_CONTENT, SIZE_TO_CONTENT);
+  }
+  else {
+    rv = OpenWindow(chromeUrlForTask, nsString(), width, height);
+  }
+  
+  // If we get here without an error, then a window was opened OK.
+  if (NS_SUCCEEDED(rv)) {
+    *windowOpened = PR_TRUE;
+  }
+
+  return rv;
+}
+
+nsresult
+nsAppShellService::OpenWindow(const nsAFlatCString& aChromeURL,
+                              const nsAFlatString& aAppArgs,
+                              PRInt32 aWidth, PRInt32 aHeight)
+{
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+  nsCOMPtr<nsISupportsString> sarg(do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID));
+  if (!wwatch || !sarg)
+    return NS_ERROR_FAILURE;
+
+  // Make sure a profile is selected.
+
+  // We need the native app support object. If this fails, we still proceed.
+  // That's because some platforms don't have a native app
+  // support implementation.  On those platforms, "ensuring a
+  // profile" is moot (because they don't support "-turbo",
+  // basically).  Specifically, because they don't do turbo, they will
+  // *always* have a profile selected.
+  nsCOMPtr<nsINativeAppSupport> nativeApp;
+  if (NS_SUCCEEDED(GetNativeAppSupport(getter_AddRefs(nativeApp))))
+  {
+    nsCOMPtr <nsICmdLineService> cmdLine =
+      do_GetService("@mozilla.org/appshell/commandLineService;1");
+
+    if (cmdLine) {
+      // Make sure profile has been selected.
+      // At this point, we have to look for failure.  That
+      // handles the case where the user chooses "Exit" on
+      // the profile manager window.
+      if (NS_FAILED(nativeApp->EnsureProfile(cmdLine)))
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+  }
+
+  sarg->SetData(aAppArgs);
+
+  nsCAutoString features("chrome,dialog=no,all");
+  if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
+    features.Append(",height=");
+    features.AppendInt(aHeight);
+  }
+  if (aWidth != nsIAppShellService::SIZE_TO_CONTENT) {
+    features.Append(",width=");
+    features.AppendInt(aWidth);
+  }
+
+  nsCOMPtr<nsIDOMWindow> newWindow;
+  return wwatch->OpenWindow(0, aChromeURL.get(), "_blank",
+                            features.get(), sarg,
+                            getter_AddRefs(newWindow));
+}
+
+NS_IMETHODIMP
+nsAppShellService::Ensure1Window(nsICmdLineService *aCmdLineService)
+{
+  nsresult rv;
+
+  // If starting up in server mode, then we do things differently.
+  nsCOMPtr<nsINativeAppSupport> nativeApp;
+  rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
+  if (NS_SUCCEEDED(rv)) {
+      PRBool isServerMode = PR_FALSE;
+      nativeApp->GetIsServerMode(&isServerMode);
+      if (isServerMode) {
+          nativeApp->StartServerMode();
+      }
+      PRBool shouldShowUI = PR_TRUE;
+      nativeApp->GetShouldShowUI(&shouldShowUI);
+      if (!shouldShowUI) {
+          return NS_OK;
+      }
+  }
+  
+  nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+  if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
+  {
+    PRBool more;
+    windowEnumerator->HasMoreElements(&more);
+    if (!more)
+    {
+      // No window exists so lets create a browser one
+      PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
+      PRInt32 width  = nsIAppShellService::SIZE_TO_CONTENT;
+				
+      // Get the value of -width option
+      nsXPIDLCString tempString;
+      rv = aCmdLineService->GetCmdLineValue("-width", getter_Copies(tempString));
+      if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+        PR_sscanf(tempString.get(), "%d", &width);
+
+
+      // Get the value of -height option
+      rv = aCmdLineService->GetCmdLineValue("-height", getter_Copies(tempString));
+      if (NS_SUCCEEDED(rv) && !tempString.IsEmpty())
+        PR_sscanf(tempString.get(), "%d", &height);
+
+      rv = OpenBrowserWindow(height, width);
+    }
+  }
+  return rv;
+}
+
+nsresult
+nsAppShellService::OpenBrowserWindow(PRInt32 height, PRInt32 width)
+{
+    nsresult rv;
+    nsCOMPtr<nsICmdLineHandler> handler(do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser", &rv));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString chromeUrlForTask;
+    rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+    if (NS_FAILED(rv)) return rv;
+
+    nsCOMPtr <nsICmdLineService> cmdLine = do_GetService("@mozilla.org/appshell/commandLineService;1", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLCString urlToLoad;
+    rv = cmdLine->GetURLToLoad(getter_Copies(urlToLoad));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!urlToLoad.IsEmpty()) {
+
+#ifdef DEBUG_CMD_LINE
+      printf("url to load: %s\n", urlToLoad.get());
+#endif /* DEBUG_CMD_LINE */
+
+      nsAutoString url; 
+      if (nsCRT::IsAscii(urlToLoad))  {
+        url.AssignWithConversion(urlToLoad);
+      }
+      else {
+        // get a platform charset
+        nsAutoString charSet;
+        nsCOMPtr <nsIPlatformCharset> platformCharset(do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv));
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to get a platform charset");
+          return rv;
+        }
+
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charSet);
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to get a charset");
+          return rv;
+        }
+
+        // convert the cmdLine URL to Unicode
+        rv = ConvertToUnicode(charSet, urlToLoad, url);
+        if (NS_FAILED(rv)) {
+          NS_ASSERTION(0, "Failed to convert commandline url to unicode");
+          return rv;
+        }
+      }
+      rv = OpenWindow(chromeUrlForTask, url, width, height);
+
+    } else {
+
+      nsXPIDLString defaultArgs;
+      rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
+      if (NS_FAILED(rv)) return rv;
+
+#ifdef DEBUG_CMD_LINE
+      printf("default args: %s\n", NS_ConvertUCS2toUTF8(defaultArgs).get());
+#endif /* DEBUG_CMD_LINE */
+
+      rv = OpenWindow(chromeUrlForTask, defaultArgs, width, height);
+    }
+
+    return rv;
+}
 
 //-------------------------------------------------------------------------
 // nsIObserver interface and friends
@@ -1055,10 +1312,10 @@ nsAppShellService::ExitLastWindowClosingSurvivalArea(void)
 
 NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
                                          const char *aTopic,
-                                         const PRUnichar *)
+                                         const PRUnichar *aData)
 {
   NS_ASSERTION(mAppShell, "appshell service notified before appshell built");
-  if (!nsCRT::strcmp(aTopic, gEQActivatedNotification) ) {
+  if (!strcmp(aTopic, gEQActivatedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq) {
       PRBool isNative = PR_TRUE;
@@ -1067,7 +1324,7 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_TRUE);
     }
-  } else if (!nsCRT::strcmp(aTopic, gEQDestroyedNotification)) {
+  } else if (!strcmp(aTopic, gEQDestroyedNotification)) {
     nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
     if (eq) {
       PRBool isNative = PR_TRUE;
@@ -1076,11 +1333,35 @@ NS_IMETHODIMP nsAppShellService::Observe(nsISupports *aSubject,
       if (isNative)
         mAppShell->ListenToEventQueue(eq, PR_FALSE);
     }
-  } else if (!nsCRT::strcmp(aTopic, gSkinSelectedTopic) ||
-             !nsCRT::strcmp(aTopic, gLocaleSelectedTopic) ||
-             !nsCRT::strcmp(aTopic,  gInstallRestartTopic)) {
+  } else if (!strcmp(aTopic, gSkinSelectedTopic) ||
+             !strcmp(aTopic, gLocaleSelectedTopic) ||
+             !strcmp(aTopic, gInstallRestartTopic)) {
     if (mNativeAppSupport)
       mNativeAppSupport->SetIsServerMode(PR_FALSE);
+  } else if (!strcmp(aTopic, gProfileChangeTeardownTopic)) {
+    nsresult rv;
+    EnterLastWindowClosingSurvivalArea();
+    // NOTE: No early error exits because we need to execute the
+    // balancing ExitLastWindowClosingSurvivalArea().
+    nsCOMPtr<nsICloseAllWindows> closer =
+            do_CreateInstance("@mozilla.org/appshell/closeallwindows;1", &rv);
+    NS_ASSERTION(closer, "Failed to create nsICloseAllWindows impl.");
+    PRBool proceedWithSwitch = PR_FALSE;
+    if (closer)
+      rv = closer->CloseAll(PR_TRUE, &proceedWithSwitch);
+    if (NS_FAILED(rv) || !proceedWithSwitch) {
+      nsCOMPtr<nsIProfileChangeStatus> changeStatus(do_QueryInterface(aSubject));
+      if (changeStatus)
+        changeStatus->VetoChange();
+    }
+    ExitLastWindowClosingSurvivalArea();
+  } else if (!strcmp(aTopic, gProfileInitialStateTopic) &&
+             nsDependentString(aData).Equals(NS_LITERAL_STRING("switch"))) {
+    // Now, establish the startup state according to the new prefs.
+    PRBool openedWindow;
+    CreateStartupState(SIZE_TO_CONTENT, SIZE_TO_CONTENT, &openedWindow);
+    if (!openedWindow)
+      OpenBrowserWindow(SIZE_TO_CONTENT, SIZE_TO_CONTENT);
   }
   return NS_OK;
 }
@@ -1106,12 +1387,16 @@ void nsAppShellService::RegisterObserver(PRBool aRegister)
       os->AddObserver(weObserve, gSkinSelectedTopic, PR_TRUE);
       os->AddObserver(weObserve, gLocaleSelectedTopic, PR_TRUE);
       os->AddObserver(weObserve, gInstallRestartTopic, PR_TRUE);
+      os->AddObserver(weObserve, gProfileChangeTeardownTopic, PR_TRUE);
+      os->AddObserver(weObserve, gProfileInitialStateTopic, PR_TRUE);
     } else {
       os->RemoveObserver(weObserve, gEQActivatedNotification);
       os->RemoveObserver(weObserve, gEQDestroyedNotification);
       os->RemoveObserver(weObserve, gSkinSelectedTopic);
       os->RemoveObserver(weObserve, gLocaleSelectedTopic);
       os->RemoveObserver(weObserve, gInstallRestartTopic);
+      os->RemoveObserver(weObserve, gProfileChangeTeardownTopic);
+      os->RemoveObserver(weObserve, gProfileInitialStateTopic);
     }
     NS_RELEASE(glop);
   }
@@ -1156,3 +1441,40 @@ OnMacOSX()
   return gOnMacOSX;
 }
 #endif
+
+static nsresult ConvertToUnicode(nsString& aCharset, const char* inString, nsAString& outString)
+{
+  nsresult rv;
+
+  // convert result to unicode
+  nsCOMPtr<nsICharsetConverterManager> ccm(do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID , &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsCOMPtr <nsIUnicodeDecoder> decoder; 
+  rv = ccm->GetUnicodeDecoder(&aCharset, getter_AddRefs(decoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 uniLength = 0;
+  PRInt32 srcLength = strlen(inString);
+  rv = decoder->GetMaxLength(inString, srcLength, &uniLength);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRUnichar *unichars = new PRUnichar [uniLength];
+  if (nsnull != unichars) {
+    // convert to unicode
+    rv = decoder->Convert(inString, &srcLength, unichars, &uniLength);
+    if (NS_SUCCEEDED(rv)) {
+      // Pass back the unicode string
+      outString.Assign(unichars, uniLength);
+    }
+    delete [] unichars;
+  }
+  else {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return rv;
+}

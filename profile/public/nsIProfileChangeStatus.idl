@@ -85,6 +85,9 @@
     *   did during its profile-do-change. For example, to respond to
     *   new preferences. 
     *
+    * "profile-initial-state"
+    *   Called after all phases of a change have completed. Typically
+    *   in this phase, an application level observer will open a new window.
     *
     * Contexts for profile changes. These are passed as the someData param to the
     * observer's Observe() method.

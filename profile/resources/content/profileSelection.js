@@ -24,6 +24,8 @@
  *   Dan Veditz <dveditz@netscape.com>
  */
 
+var gDialogParams;
+var gStartupMode; // TRUE if we're being shown at app startup, FALSE if from menu.
 var gProfileManagerBundle;
 var gBrandBundle;
 var profile     = Components.classes["@mozilla.org/profile/manager;1"].getService();
@@ -34,6 +36,10 @@ var Registry;
 
 function StartUp()
 {
+  gDialogParams = window.arguments[0].
+                    QueryInterface(Components.interfaces.nsIDialogParamBlock);
+  gStartupMode = (gDialogParams.GetString(0) == "startup");
+  
   gProfileManagerBundle = document.getElementById("bundle_profileManager");
   gBrandBundle = document.getElementById("bundle_brand");
 
@@ -41,6 +47,22 @@ function StartUp()
   centerWindowOnScreen();
   if(window.location && window.location.search && window.location.search == "?manage=true" )
     SwitchProfileManagerMode();
+    
+  // Set up the intro text, depending on our context
+  var introTextItem = document.getElementById("intro");
+  var introText, insertText;
+  if (gStartupMode) {
+    insertText = gProfileManagerBundle.getFormattedString("startButton",
+                                    [gBrandBundle.getString("brandShortName")]);
+    introText = gProfileManagerBundle.getFormattedString("intro_start",
+                    [insertText]);
+  }
+  else {
+    insertText = gProfileManagerBundle.getString("selectButton");
+    introText = gProfileManagerBundle.getFormattedString("intro_switch",
+                    [insertText]);
+  }
+  introTextItem.childNodes[0].nodeValue = introText;
 
   var dirServ = Components.classes['@mozilla.org/file/directory_service;1'].createInstance();
   dirServ = dirServ.QueryInterface(Components.interfaces.nsIProperties);
@@ -62,15 +84,20 @@ function StartUp()
   loadElements();
   highlightCurrentProfile();
 
-  // set the checkbox to reflect the current state.
   var offlineState = document.getElementById("offlineState");
-  try {
-    var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
-                                                    "nsIIOService");
+  if (gStartupMode) {
+    // set the checkbox to reflect the current state.
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                      getService(Components.interfaces.nsIIOService);
     offlineState.checked = ioService.offline;
   }
-  catch(e) {
+  else {
+    // hide the checkbox in this context
+    offlineState.hidden = true;
   }
+
+  var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
+  autoSelectLastProfile.checked = profile.startWithLastUsedProfile;
 
   var profileList = document.getElementById("profiles");
   profileList.focus();
@@ -190,15 +217,19 @@ function onStart()
   }
 
   // start in online or offline mode
-  var offlineState = document.getElementById("offlineState");
-  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
-                                                  "nsIIOService");
-  ioService.offline = offlineState.checked;
-
+  if (gStartupMode) {
+    var offlineState = document.getElementById("offlineState");
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].
+                      getService(Components.interfaces.nsIIOService);
+    if (offlineState.checked != ioService.offline)
+      ioService.offline = offlineState.checked;
+  }
+  
+  var autoSelectLastProfile = document.getElementById("autoSelectLastProfile");
+  profile.startWithLastUsedProfile = autoSelectLastProfile.checked;
+  
   try {
-    // All this really does is set the current profile.
-    // It has nothing to do with starting the application.
-    profile.startApprunner(profilename);
+    profile.currentProfile = profilename;
   }
   catch (ex) {
 	  var brandName = gBrandBundle.getString("brandShortName");    
@@ -219,6 +250,8 @@ function onStart()
       promptService.alert(window, null, message);
       return false;
   }
+  
+  gDialogParams.SetInt(0, 1); // 1 == success
     
   return true;
 }
@@ -227,12 +260,7 @@ function onStart()
 // purpose  : quits startup process (User Choice: "Exit")
 function onExit()
 {
-  try {
-    profile.forgetCurrentProfile();
-  }
-  catch (ex) {
-    dump("Failed to forget current profile.\n");
-  }
+  gDialogParams.SetInt(0, 0); // 0 == cancel
   return true;
 }
 
@@ -244,12 +272,17 @@ function SetUpOKCancelButtons()
 
   var okButtonString;
   var cancelButtonString;
-
-  try {
-    okButtonString = gProfileManagerBundle.getString("startButton");
-    okButtonString = okButtonString.replace(/%brandShortName%/,
-                                            gBrandBundle.getString("brandShortName"));
-    cancelButtonString = gProfileManagerBundle.getString("exitButton");
+  
+  try {    
+    if (gStartupMode) {
+      okButtonString = gProfileManagerBundle.getFormattedString("startButton",
+                                    [gBrandBundle.getString("brandShortName")]);
+      cancelButtonString = gProfileManagerBundle.getString("exitButton");
+    }
+    else {
+      okButtonString = gProfileManagerBundle.getString("selectButton");
+      cancelButtonString = gProfileManagerBundle.getString("cancel");
+    }
   } catch (e) {
     okButtonString = "Start Yah";
     cancelButtonString = "Exit Yah";

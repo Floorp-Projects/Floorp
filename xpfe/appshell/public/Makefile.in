@@ -47,6 +47,7 @@ XPIDLSRCS	= \
 		nsITimingService.idl \
 		nsINativeAppSupport.idl \
 		nsIPopupWindowManager.idl \
+		nsICloseAllWindows.idl \
 		$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)

@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  profile \
 		  unicharutil \
 		  embed_base \
+		  uconv \
 		  exthandler \
 		  $(NULL)
 
@@ -93,6 +94,8 @@ CPPSRCS	+= nsUserInfoUnix.cpp
 endif
 endif
 endif
+
+EXTRA_COMPONENTS = nsCloseAllWindows.js
 
 ifeq ($(OS_ARCH),WINNT)
 EXTRA_DSO_LIBS	= gkgfx

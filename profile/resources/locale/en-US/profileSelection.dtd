@@ -28,9 +28,6 @@
 <!ENTITY            welcome.label         "Welcome to &brandShortName;">
 <!ENTITY            profilemanager.label  "&brandShortName; Profile Manager">
 
-<!ENTITY            introgeneral.label    "To access your personal profile, which contains your stored messages, settings and other personalized information, please choose your profile from the list, and click Start &brandShortName; to begin your session.">
-<!ENTITY            introroaming.label    "If you have a Roaming Access profile which does not exist on this computer, choose Roaming Access. &brandShortName; will then prompt you to log into your Roaming Access server.">
-
 <!ENTITY            profilename.label     "Profile Name:">
 
 <!ENTITY            workoffline.label     "Work Offline">
@@ -57,3 +54,6 @@
 
 <!ENTITY            offlineState.label    "Work Offline">
 <!ENTITY            offlineState.accesskey "o">
+
+<!ENTITY            autoSelectLastProfile.label    "Don't Ask at Startup">
+<!ENTITY            autoSelectLastProfile.accesskey "s">

@@ -204,4 +204,22 @@ function checkFocusedWindow()
   }
 }
 
+function toProfileManager()
+{
+  var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+             .getService(Components.interfaces.nsIWindowWatcher);
+  var params = Components.classes["@mozilla.org/embedcomp/dialogparam;1"]
+                 .createInstance(Components.interfaces.nsIDialogParamBlock);
+  
+  params.SetNumberStrings(1);
+  params.SetString(0, "menu");
+  ww.openWindow(null, // no parent
+                "chrome://communicator/content/profile/profileSelection.xul",
+                null,
+                "centerscreen,chrome,modal,titlebar",
+                params);
+  
+  // Here, we don't care about the result code
+  // that was returned in the param block.
+}
 

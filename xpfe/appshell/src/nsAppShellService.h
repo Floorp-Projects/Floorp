@@ -100,6 +100,17 @@ protected:
 
 private:
   nsresult CheckAndRemigrateDefunctProfile();
+  
+  nsresult LaunchTask(const char *aParam,
+                      PRInt32 height, PRInt32 width,
+                      PRBool *windowOpened);
+  
+  nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+                      const nsAFlatString& aAppArgs,
+                      PRInt32 aWidth, PRInt32 aHeight);
+                      
+  nsresult OpenBrowserWindow(PRInt32 height, PRInt32 width);
+
 };
 
 #endif

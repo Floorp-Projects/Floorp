@@ -34,6 +34,8 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webbrwsr \
 		  dom \
+		  js \
+		  xpconnect \
 		  widget \
 		  necko \
 		  uriloader \
