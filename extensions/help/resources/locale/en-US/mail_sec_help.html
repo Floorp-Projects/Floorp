@@ -175,8 +175,12 @@ How Encryption Works</h3>
 <p>When you view a signed or encrypted message in the Mail window, these icons near the upper-right corner of the message header indicate the security status of the message:</p>
 
 
-	<table><tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrSignOk.gif" alt="digital signature icon"></td><td>The message is digitally signed. If there is a problem with the signature, the pen is broken.</td>
-	<tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrCryptoOk.gif" alt="key icon"></td><td>The message is encrypted. If there is a problem with the encryption, the key is broken.</td></table>
+	<table><tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrSignOk.gif" alt="digital signature icon"></td><td>The message is digitally signed and has been validated. If there is a problem with the signature, the pen is broken.</td>
+	<tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrSignUnknown.gif" alt="unkown icon"></td><td>The message is signed, but it has a large attachment that has not yet been downloaded from the IMAP server. As a result, the signature cannot be validated. Click the icon to download the attachment and validate the signature.</td>
+	<tr><td>&nbsp;</td><td><img src="chrome://messenger/skin/smime/icons/hdrCryptoOk.gif" alt="key icon"></td><td>The message is encrypted. If there is a problem with the encryption, the key is broken.</td>
+	</table>
+
+<p>For information about certificate validation, see <a href="using_certs_help.html#Controlling_Validation">Controlling Validation</a>.
 
 
 <p>To see more detailed information about the message's security, click the key or lock icon, or follow the instructions in <a href="#received_security">Message Security - Received Message</a>.
@@ -268,7 +272,7 @@ How Encryption Works</h3>
 <hr>
 
 
-<p><i>17 May 2002</i></p>
+<p><i>28 May 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>

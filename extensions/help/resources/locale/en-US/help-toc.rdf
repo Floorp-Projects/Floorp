@@ -12,6 +12,53 @@
     </nc:subheadings>
   </rdf:Description>
 
+  <rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window"
+                  nc:link="help_help.html"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#help-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help-window" nc:name="Finding the Topic You Want"
+                  nc:link="help_help.html#tabs"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#help-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help-retrace" nc:name="Retracing Your Steps and Printing"
+                  nc:link="help_help.html#retrace"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#help-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help-shortcuts" nc:name="Using Help Shortcuts"
+                  nc:link="help_help.html#shortcuts"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="#help-help">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="help-help-buttons" nc:name="Using Help Buttons"
+                  nc:link="help_help.html#buttons"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+
+
 <!-- NAVIGATOR HELP SECTION -->
 
   <rdf:Description about="urn:root">

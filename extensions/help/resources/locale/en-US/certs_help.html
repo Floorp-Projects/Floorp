@@ -41,7 +41,7 @@
 <a NAME="import_certificatesIDX"></a>
 <a NAME="backing_up_certificatesIDX"></a>
 <a NAME="certificates:backups_ofIDX"></a>
-<a NAME="certificates:importingIDX"></a>
+<a NAME="certificates:importing_your_ownIDX"></a>
 <a NAME="smart_card_backupsSDX"></a>
 <a NAME="smart_cards:backupsSDX"></a>
 <a NAME="My_Certificates"></a><hr><h2>Your Certificates</h2>
@@ -126,37 +126,9 @@
 <ul>
 	<li><b>View:</b> Display detailed information about the selected certificates.
 
-	<li><b>Edit:</b> View or change the trust settings that Certificate Manager associates with the selected certificates. You can use these settings to designate a certificate as one that you trust or don't trust for identification purposes.
-
 	<li><b>Delete:</b> Delete the selected certificates.
 </ul>
 
-<p>&nbsp;</p><a NAME="Edit_Email_Certificate_Trust_Settings"></a><hr>
-<h3>Edit Email Certificate Trust Settings</h3>
- 
-<p>When you select someone else's certificate from the <A href="#certs_first">Other People's</a> tab in the Certificate Manager and click Edit, you see a dialog box titled &quot;Edit email certificate trust settings.&quot; 
-
-<p>Here you specify whether you want to trust the selected certificate to identify messages from and send encrypted messages to the email address shown.
-
-<p>The dialog box contains these elements:
-
-<ul>
-
-	<li><b>The certificate &quot;<i>name of certificate</i>&quot; was issued by:</b> Provides information about the <a href="glossary.html#certificate_authority_(CA)">certificate authority</a> that issued this certificate.
-
-	<li><b>Edit certificate trust settings:</b></li>
-
-	<ul>
-	<li><b>Trust the authenticity of this certificate:</b> If you select this option, Certificate Manager will henceforth trust this certificate for the purposes of identifying messages from and sending encrypted email messages to the email address shown. 
-
-	<li><b>Do not trust the authenticity of this certificate:</b> If you select this option, Certificate Manager will no longer trust this certificate for the purposes of identifying messages from and sending encrypted email messages to the email address shown.
-	</ul>
-
-	<li><b>Edit CA Trust:</b> Click this button to specify trust settings for the certificate authority (CA) that issued the email certificate. These settings allow you to trust or not to trust different kinds of certificates issued by that certificate authority. For example, you can choose to trust all email certificates issued by the authority.
-
-</ul>
-
-<p>Click OK to confirm your choice.
 
 <p>&nbsp;</p>
 <a NAME="Delete_Email_Certificate"></a><hr>
@@ -229,6 +201,8 @@ Here you specify whether you want to trust the selected certificate for identify
 
  
 <p>&nbsp;</p>
+<a NAME="importing_a_certificate_chainSDX"></a>
+<a NAME="certificates:importing_chained_CAIDX"></a>
 <a NAME="CA_Certificates"></a><hr>
 <h2>Authorities</h2>
 
@@ -252,7 +226,14 @@ Here you specify whether you want to trust the selected certificate for identify
 
 	<li><b>Delete:</b> Delete the selected certificates.
 </ul>
- 
+
+<p>To ensure that an entire <a href="glossary.html#certificate_chain">certificate chain</a> of CAs are all trusted, you need to edit the root CA certifiate only. 
+
+<p>To import the chain, you click a link on a web page provided by the CA. You can then use the authorities tab to locate the root certificate and edit its  trust settings. 
+
+<p>The root and intermediate CAs all appear under the same organization. The root certificate is the one that lists itself as the the issuer.
+
+
 <p>&nbsp;</p><a NAME="Edit_CA_Certificate_Settings"></a><hr>
 <h3>Edit CA Certificate Trust Settings</h3>
 
@@ -306,7 +287,7 @@ Here you specify whether you want to trust the selected certificate for identify
 </ul>
 
 <hr>
-<p><i>8 May 2002</i></p>
+<p><i>30 May 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
