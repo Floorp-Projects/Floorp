@@ -1222,6 +1222,13 @@ wallet_KeyTimedOut() {
   return PR_FALSE;
 }
 
+PRIVATE void
+wallet_KeyResetTime() {
+  if (Wallet_KeySet()) {
+    keyExpiresTime = time(NULL) + keyDuration;
+  }
+}
+
 PUBLIC PRBool
 Wallet_CancelKey() {
   return keyCancel;
@@ -1405,7 +1412,6 @@ Wallet_SetKey(PRBool isNewkey) {
     strm2.close();
     Wallet_RestartKey();
     keySet = PR_TRUE;
-    keyExpiresTime = time(NULL) + keyDuration;
     return PR_TRUE;
 
   } else {
@@ -1422,7 +1428,6 @@ Wallet_SetKey(PRBool isNewkey) {
     if (useDefaultKey && (Wallet_KeySize() == 0) ) {
       Wallet_RestartKey();
       keySet = PR_TRUE;
-      keyExpiresTime = time(NULL) + keyDuration;
       return PR_TRUE;
     }
 
@@ -2028,18 +2033,68 @@ wallet_GetPrefills(
   return -1;
 }
 
+void
+wallet_FetchFromNetCenter() {
+
+  nsresult rv;
+  char * url = nsnull;
+
+  SI_GetCharPref(pref_WalletServer, &wallet_Server);
+  if (!wallet_Server || (*wallet_Server == '\0')) {
+    /* user does not want to download mapping tables */
+    return;
+  }
+  nsFileSpec dirSpec;
+  rv = Wallet_ResourceDirectory(dirSpec);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "URLFieldSchema.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
+  PR_FREEIF(url);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "SchemaConcat.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "SchemaConcat.tbl");
+  PR_FREEIF(url);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  StrAllocCopy(url, wallet_Server);
+  StrAllocCat(url, "FieldSchema.tbl");
+  rv = NS_NewURItoFile(url, dirSpec, "FieldSchema.tbl");
+  PR_FREEIF(url);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+}
+
 /*
  * initialization for wallet session (done only once)
  */
 void
-wallet_Initialize() {
-  static PRBool wallet_Initialized = PR_FALSE;
+wallet_Initialize(PRBool fetchTables) {
+  static PRBool wallet_tablesInitialized = PR_FALSE;
   static PRBool wallet_keyInitialized = PR_FALSE;
-  if (!wallet_Initialized) {
+
+  /* initialize tables 
+   * Note that we don't initialize the tables if this call was made from the wallet
+   * editor.  The tables are certainly not needed since all we are doing is displaying
+   * the contents of the user wallet.  Furthermore, there is a problem which causes the
+   * window to come up blank in that case.  Has something to do with the fact that we
+   * were being called from javascript in this case.  So to avoid the problem, the 
+   * fetchTables parameter was added and it is set to PR_FALSE in the case of the
+   * wallet editor and PR_TRUE in all other cases
+   */
+  if (!wallet_tablesInitialized & fetchTables) {
+    wallet_FetchFromNetCenter();
     wallet_ReadFromFile("FieldSchema.tbl", wallet_FieldToSchema_list, PR_FALSE, PR_FALSE);
     wallet_ReadFromURLFieldToSchemaFile("URLFieldSchema.tbl", wallet_URLFieldToSchema_list);
     wallet_ReadFromFile("SchemaConcat.tbl", wallet_SchemaConcat_list, PR_FALSE, PR_FALSE);
-    wallet_Initialized = PR_TRUE;
+    wallet_tablesInitialized = PR_TRUE;
   }
 
   /* see if key has timed out */
@@ -2060,6 +2115,9 @@ wallet_Initialize() {
     wallet_ReadFromFile(schemaValueFileName, wallet_SchemaToValue_list, PR_TRUE, PR_TRUE);
     wallet_keyInitialized = PR_TRUE;
   }
+
+  /* restart key timeout period */
+  wallet_KeyResetTime();
 
 #if DEBUG
 //    fprintf(stdout,"Field to Schema table \n");
@@ -2100,7 +2158,7 @@ void WLLT_ChangePassword() {
 
   /* read in user data using old key */
 
-  wallet_Initialize();
+  wallet_Initialize(PR_TRUE);
 #ifdef SingleSignon
   SI_LoadSignonData(PR_TRUE);
 #endif
@@ -2374,7 +2432,7 @@ wallet_Capture(nsIDocument* doc, nsString field, nsString value, nsString vcard)
 
   /* read in the mappings if they are not already present */
   if (!vcard.Length()) {
-    wallet_Initialize();
+    wallet_Initialize(PR_TRUE);
     wallet_InitializeCurrentURL(doc);
     if (!Wallet_KeySet()) {
       return;
@@ -2596,7 +2654,7 @@ WLLT_PostEdit(nsAutoString walletList) {
 
 PUBLIC void
 WLLT_PreEdit(nsAutoString& walletList) {
-  wallet_Initialize();
+  wallet_Initialize(PR_FALSE);
   if (!Wallet_KeySet()) {
     return;
   }
@@ -2781,7 +2839,7 @@ WLLT_Prefill(nsIPresShell* shell, PRBool quick) {
         urlName = wallet_GetHostFile(url);
         NS_RELEASE(url);
       }
-      wallet_Initialize();
+      wallet_Initialize(PR_TRUE);
       if (!Wallet_KeySet()) {
         NS_RELEASE(doc);
         NS_RELEASE(shell);
@@ -2944,7 +3002,7 @@ WLLT_RequestToCapture(nsIPresShell* shell) {
     nsIDocument* doc = nsnull;
     result = shell->GetDocument(&doc);
     if (NS_SUCCEEDED(result)) {
-      wallet_Initialize();
+      wallet_Initialize(PR_TRUE);
       if (!Wallet_KeySet()) {
         NS_RELEASE(doc);
         NS_RELEASE(shell);
@@ -3221,39 +3279,5 @@ WLLT_OnSubmit(nsIContent* formNode) {
 
 PUBLIC void
 WLLT_FetchFromNetCenter() {
-
-  nsresult rv;
-  char * url = nsnull;
-
-  SI_GetCharPref(pref_WalletServer, &wallet_Server);
-  if (!wallet_Server || (*wallet_Server == '\0')) {
-    /* user does not want to download mapping tables */
-    return;
-  }
-  nsFileSpec dirSpec;
-  rv = Wallet_ResourceDirectory(dirSpec);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "URLFieldSchema.tbl");
-  rv = NS_NewURItoFile(url, dirSpec, "URLFieldSchema.tbl");
-  PR_FREEIF(url);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "SchemaConcat.tbl");
-  rv = NS_NewURItoFile(url, dirSpec, "SchemaConcat.tbl");
-  PR_FREEIF(url);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-  StrAllocCopy(url, wallet_Server);
-  StrAllocCat(url, "FieldSchema.tbl");
-  rv = NS_NewURItoFile(url, dirSpec, "FieldSchema.tbl");
-  PR_FREEIF(url);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+//  wallet_FetchFromNetCenter();
 }
