@@ -71,7 +71,7 @@ public:
 	nsresult ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount);
 
 	static PRInt32		IsEudoraFromSeparator( const char *pData, PRInt32 maxLen, nsCString& defaultDate);
-	static PRBool		IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType);
+	static PRBool		IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType, PRInt32& tagLength);
 
 protected:
 	nsresult	CreateTempFile( nsIFileSpec **ppSpec);

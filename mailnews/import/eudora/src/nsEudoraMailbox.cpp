@@ -560,9 +560,9 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
   bodyType = "text/plain";
 
 	while ((lineLen = IsEudoraFromSeparator( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, tmp)) == -1) {
-
-		if (IsEudoraTag ( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, insideEudoraTags, bodyType)) {
-			// We don't want to keep eudora tags so we remove this line
+    PRInt32 tagLength = 0; 
+		if (IsEudoraTag ( copy.m_pBuffer + copy.m_writeOffset, copy.m_bytesInBuf - copy.m_writeOffset, insideEudoraTags, bodyType, tagLength)) {
+			// We don't want to keep eudora tags so skip over them.
 			
 			// let's write the previous text
 			if (!body.Write( copy.m_pBuffer, copy.m_writeOffset)) {
@@ -570,19 +570,12 @@ nsresult nsEudoraMailbox::ReadNextMessage( ReadFileState *pState, SimpleBufferTo
 				return( NS_ERROR_FAILURE);
 			}
 
-			lineLen = -1;
-			while (copy.m_bytesInBuf && lineLen == -1) {
-				lineLen = FindStartLine( copy);
-				if (lineLen == -1) 
-					copy.m_writeOffset = copy.m_bytesInBuf;
-				else
-					copy.m_writeOffset += lineLen;
-
+      // we want to skip over the tag...for now we are assuming the tag is always at the start of line.
+      copy.m_writeOffset += tagLength;
 				if (NS_FAILED( rv = FillMailBuffer( pState, copy))) {
 					IMPORT_LOG0( "*** Error reading message body\n");
 					return( rv);
 				}
-			}
 			
 			if (!copy.m_bytesInBuf)
 				break;
@@ -734,11 +727,11 @@ static char *eudoraTag[] = {
 
 static PRInt32 eudoraTagLen[] = {
 	8,
-	8,
-	8,
+	9,
 	8,
 	9,
-	9,
+	10,
+	11,
 	0
 };
 
@@ -754,12 +747,11 @@ static const char *TagContentType[] = {
 
 
 	// Determine if this line contains an eudora special tag
-PRBool	nsEudoraMailbox::IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType)
+PRBool	nsEudoraMailbox::IsEudoraTag( const char *pChar, PRInt32 maxLen, PRBool &insideEudoraTags, nsCString &bodyType, PRInt32 &tagLength)
 {
-	PRInt32	cnt;
 	PRInt32	idx = 0;
-	while ((cnt = eudoraTagLen[idx]) != 0) {
-		if (maxLen >= cnt && !nsCRT::strncmp( eudoraTag[idx], pChar, cnt)) {
+	while ((tagLength = eudoraTagLen[idx]) != 0) {
+		if (maxLen >= tagLength && !nsCRT::strncmp( eudoraTag[idx], pChar, tagLength)) {
 			insideEudoraTags = (pChar[1] != '/');
 			bodyType = TagContentType[idx];
 			return PR_TRUE;
