@@ -34,7 +34,7 @@
           src="chrome://browser/content/pref/pref-fonts.js"/>
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["selectLangs", "foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseDocumentColors"];
+    var _elementIDs = ["selectLangs", "foregroundText", "background", "browserUseSystemColors", "unvisitedLinks", "visitedLinks", "browserUnderlineAnchors", "browserUseMyColors"];
   ]]>
   </script>
  
@@ -68,26 +68,15 @@
       </menulist>
     </caption>
     
-    <separator class="thin"/>
-    
     <grid>
       <columns>
         <column/>
         <column flex="1"/>
         <column/>
+        <column/>
       </columns>
       
       <rows>
-        <row align="center">
-          <spacer/>
-          <hbox align="center">
-            <label value="&typefaces.label;"/>
-          </hbox>  
-          <hbox align="center">
-            <label value="&sizes.label;"/>
-          </hbox>  
-        </row>
-
         <row>
           <separator class="thin"/>
         </row>
@@ -107,6 +96,9 @@
                         label="&useDefaultFontSansSerif.label;"/>
             </menupopup>
           </menulist>
+           <hbox align="center" pack="end">
+             <label value="&sizes.label;"/>
+           </hbox>  
           <menulist id="sizeVar" class="small-margin">
             <menupopup>
               <menuitem value="8" label="8"/>
@@ -132,9 +124,6 @@
               <menuitem value="72" label="72"/>
             </menupopup>
           </menulist>
-        </row>
-        <row>
-          <separator class="thin"/>
         </row>
         <row align="center">
           <hbox align="center" pack="end">
@@ -168,6 +157,9 @@
                     flex="1" style="width: 0px;" crop="right">
             <menupopup/>
           </menulist>
+          <hbox align="center" pack="end">
+            <label value="&sizes.label;"/>
+          </hbox>  
           <menulist id="sizeMono">
             <menupopup>
               <menuitem value="8" label="8"/>
@@ -194,16 +186,38 @@
             </menupopup>
           </menulist>
         </row>
-        <row>
-          <separator class="thin"/>
-        </row>
-        <row>
-          <spacer/>
+      </rows>
+    </grid>
+    <hbox flex="1">
+          <hbox align="center" pack="end">
+            <label value="&resolution.label;" 
+                   accesskey="&resolution.accesskey;" 
+                   control="screenResolution"/>
+            <menulist id="screenResolution" 
+                      oncommand="changeScreenResolution()"
+                      dpi="&resolution.dpival;">
+              <menupopup>
+                <menuitem value="" 
+                          label="&resolution.dpival;"
+                          id="otherResolution"/>
+                <menuitem value="" 
+                          label="&resolution.dpival;" 
+                          id="defaultResolution"/>
+                <menuitem value="0"
+                          label="&resolution.system.label;" 
+                          id="systemResolution"
+                          hidden="true"/>
+                <menuseparator/>
+                <menuitem id="userResolution" hidden="true"/>
+                <menuitem value="other" label="&resolution.other;"/>
+              </menupopup>
+            </menulist>
+          </hbox>
+          <spacer flex="1"/>
           <hbox align="center" pack="end">
             <label value="&minSize.label;"
                    accesskey="&minSize.accesskey;"
                    control="minSize"/>
-          </hbox>
           <menulist id="minSize">
             <menupopup>
               <menuitem value="0" label="&minSize.none;"/>
@@ -224,46 +238,21 @@
               <menuitem value="24" label="24"/>
             </menupopup>
           </menulist>
-        </row>
-      </rows>
-    </grid>
+        </hbox>
+      </hbox>
   </groupbox>
 
   <separator class="thin"/>
   
   <hbox align="center">
+    <label value="Allow documents to use other: "/>
     <!-- Unchecking this removes the ability to select dynamic fonts -->
     <checkbox id="browserUseDocumentFonts" 
               label="&useDocumentFonts.label;" 
               accesskey="&useDocumentFonts.accesskey;"/>
-  </hbox>
-
-  <separator class="thin"/>
-  
-  <hbox align="center">
-    <label value="&resolution.label;" 
-           accesskey="&resolution.accesskey;" 
-           control="screenResolution"/>
-    <menulist id="screenResolution" 
-              oncommand="changeScreenResolution()"
-              dpi="&resolution.dpival;">
-      <menupopup>
-        <menuitem value="" 
-                  label="&resolution.dpival;"
-                  id="otherResolution"/>
-        <menuitem value="" 
-                  label="&resolution.dpival;" 
-                  id="defaultResolution"/>
-        <menuitem value="0"
-                  label="&resolution.system.label;" 
-                  id="systemResolution"
-                  hidden="true"/>
-        <menuseparator/>
-        <menuitem id="userResolution" hidden="true"/>
-        <menuitem value="other" label="&resolution.other;"/>
-      </menupopup>
-    </menulist>
-
+    <checkbox id="browserUseMyColors" label="&alwaysUseMyColors.label;"
+              accesskey="&alwaysUseMyColors.accesskey;"
+              prefstring="browser.display.use_document_colors"/>
   </hbox>
   <hbox>
     <groupbox flex="1" id="pageColours">
@@ -308,13 +297,4 @@
       </hbox>
     </groupbox>
   </hbox>
-  
-  <groupbox>
-    <caption label="&someProvColors;"/>
-  
-    <checkbox id="browserUseDocumentColors" label="&alwaysUseMyColors.label;"
-              accesskey="&alwaysUseMyColors.accesskey;"
-              prefstring="browser.display.use_document_colors"/>
-  </groupbox>
-
 </page>
