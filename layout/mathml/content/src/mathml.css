@@ -33,6 +33,7 @@
 
 math {
   direction: ltr;
+  unicode-bidi: embed;
   display: inline;
   font-size: inherit;
   font-style: normal;
