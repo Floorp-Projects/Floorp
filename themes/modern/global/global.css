@@ -8,6 +8,9 @@
 
 /* import the widget style sheets */
 
+/* all localizable skin settings shall live here */
+@import url(chrome://global/locale/intl.css);
+
 @import url(chrome://global/skin/box.css);
 @import url(chrome://global/skin/button.css);
 @import url(chrome://global/skin/checkbox.css);
@@ -44,10 +47,11 @@ titledbutton {
 /**
  * The is the outer most tag in a xul document all xul
  * content will be inside it.
+ *
+ * -  font: 3mm tahoma,arial,helvetica,sans-serif; moved to intl.css
  */
 window { 
   background-color: white;
-  font: 3mm tahoma,arial,helvetica,sans-serif;
   padding: 0px;
 }
 

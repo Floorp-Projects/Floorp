@@ -73,19 +73,16 @@
       <property name="value" onget="return this.anonymousContent[0].selectedItem.data">
         <setter>
           <![CDATA[
-            dump("(" + this.tagName + "): preselecting " + val + "\n");
             var menulist = this.anonymousContent[0];
             var dataItems = menulist.getElementsByAttribute("data", val);
-            dump("Found " + dataItems.length + " items\n");
-            menulist.selectedItem = dataItems[0];
-            dump("done.\n");
+            if (dataItems.length > 0)
+                menulist.selectedItem = dataItems[0];
           ]]>
         </setter>
       </property>
       <method name="refreshList">
         <body>
           <![CDATA[
-            dump("Refreshing " + this.tagName + " id=" + this.id + "\n");
             var menuItemIds = this.valueIds;
             var menuItemStrings = this.valueStrings;
 
@@ -244,21 +241,34 @@
           this.internalValue = val;
           var attrib = val.attrib;
           this.searchAttribute = attrib;
-          if (type == Components.interfaces.nsMsgSearchAttrib.Priority)
+          if (attrib == Components.interfaces.nsMsgSearchAttrib.Priority)
             this.anonymousContent[1].data=val.priority;
-          else if (type == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
+          else if (attrib == Components.interfaces.nsMsgSearchAttrib.MsgStatus)
             this.anonymousContent[2].data=val.status;
           else
             this.anonymousContent[0].value = val.str;
           ]]>
         </setter>
       </property>
+      <method name="save">
+        <body>
+          <![CDATA[
+            dump("Saving searchvalue\n");
+            var searchValue = this.value;
+            var searchAttribute = this.searchAttribute;
+            var nsMsgSearchAttrib = Components.interfaces.nsMsgSearchAttrib;
+            if (searchAttribute == nsMsgSearchAttrib.Priority)
+               searchValue.priority = this.anonymousContent[1].selectedItem.data;
+            else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
+               searchValue.status = this.anonymousContent[2].selectedItem.data;
+            else
+               searchValue.str = this.anonymousContent[0].value;
+          ]]>
+        </body>
+      </method>
     </interface>
   </binding>
   <binding id="searchterm" extends="xul:box">
-    <content>
-      <xul:text value="searchterm"/>
-    </content>
     <interface>
       <!-- the three tags that make up a term - to use, set the
            attribute in the XUL to the ID of the term.
@@ -274,12 +284,12 @@
             var searchOperator=this.searchoperator;
             var searchValue=this.searchvalue;
 
-            dump("Setting searchAttribute.value\n");
+            // now reflect all attributes of the searchterm into the widgets
             if (searchAttribute) searchAttribute.value = term.attrib;
-            dump("Setting searchOperator.value\n");
             if (searchOperator) searchOperator.value = val.op;
-            dump("Setting searchValue.value\n");
             if (searchValue) searchValue.value = term.value;
+
+            this.booleanAnd = val.booleanAnd;
           ]]>
         </setter>
       </property>
@@ -287,15 +297,15 @@
       <property name="searchScope">
         <getter>
           <![CDATA[
-             var searchAttribute = this.searchAttribute;
+             var searchAttribute = this.searchattribute;
              if (searchAttribute)
-               return this.searchAttribute.searchScope;
+               return searchAttribute.searchScope;
              return undefined;
            ]]>
         </getter>
         <setter>
           <![CDATA[
-            var searchAttribute = this.searchAttribute;
+            var searchAttribute = this.searchattribute;
             if (searchAttribute) searchAttribute.searchScope=val;
            ]]>
         </setter>
@@ -311,17 +321,55 @@
       <property name="searchvalue" 
                 onget="return document.getElementById(this.getAttribute('searchvalue'));"
                 onset="this.setAttribute('searchvalue',val.id)"/>
+      <property name="booleanNodes">
+        <![CDATA[
+          null;
+        ]]>
+      </property>
+      <property name="stringBundle">
+          <![CDATA[
+             srGetStrBundle("chrome://messenger/locale/search.properties");
+          ]]>
+      </property>
+      <property name="booleanAnd" onget="return this.internalBooleanAnd">
+        <setter>
+          <![CDATA[
+            // whenever you set this, all nodes in booleanNodes
+            // are updated to reflect the string
 
-      <!-- takes an nsIMsgSearchValue and initializes the appropriate widget
-           with the right value
-        -->
-      <!-- right now only handles filters - need to abstract termlist -->
-      <method name="initialize">
-        <argument name="filter"/>
-        <argument name="termIndex"/>
-        <argument name="scope"/>
+            if (this.internalBooleanAnd == val) return;
+            this.internalBooleanAnd = val;
+
+            var booleanNodes = this.booleanNodes;
+            if (!booleanNodes) return;
+
+            var stringBundle = this.stringBundle;
+            var andString = booleanAnd ? "And" : "Or";
+            for (var i=0; i<booleanNodes.length; i++) {
+              try {              
+                var staticString =
+                    stringBundle.GetStringFromName("search" + andString + i);
+                if (staticString && staticString.length>0)
+                    booleanNodes[i].setAttribute("value", staticString);
+              } catch (ex) { /* no error, means string not found */}
+            }
+          ]]>
+        </setter>
+      </property>
+      <method name="save">
         <body>
           <![CDATA[
+            var searchTerm = this.searchTerm;
+
+            dump("Saving searchterm = " + searchTerm + "\n");
+            dump("Saving (" + this.searchattribute.value + "," +
+                              this.searchoperator.value + "," +
+                              this.searchvalue.value + "," +
+                              this.booleanAnd + ")\n");
+            searchTerm.attrib = this.searchattribute.value;
+            searchTerm.op = this.searchoperator.value;
+            this.searchvalue.save();
+            searchTerm.booleanAnd = this.booleanAnd;
           ]]>
         </body>
       </method>
