@@ -2946,7 +2946,7 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
 										   PR_FALSE, nsCAutoString(postStr), 0)))
 					{
-						httpChannel->SetPostDataStream(postDataStream);
+						httpChannel->SetUploadStream(postDataStream);
 					}
 				}
 			}
