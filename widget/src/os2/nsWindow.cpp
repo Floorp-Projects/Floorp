@@ -2207,9 +2207,13 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
       if (usVKey == VK_ALTGRAF || usVKey == VK_ALT) event.isAlt = PR_TRUE;
    }    
 
-   if (((event.keyCode == NS_VK_UP) || (event.keyCode == NS_VK_DOWN)) && (!(fsFlags & KC_KEYUP))) {
+   /* Checking for a scroll mouse event vs. a keyboard event */
+   /* The way we know this is that the repeat count is 0 and */
+   /* the key is not physically down */
+   if (((event.keyCode == NS_VK_UP) || (event.keyCode == NS_VK_DOWN)) &&
+       (!(fsFlags & KC_KEYUP)) &&
+       (CHAR3FROMMP(mp1) == 0)) {
       if (!(WinGetPhysKeyState(HWND_DESKTOP, CHAR4FROMMP(mp1)) & 0x8000)) {
-         /* This isn't a real keyboard event - assume it is a scroll mouse */
          MPARAM mp2;
          if (event.keyCode == NS_VK_UP)
             mp2 = MPFROM2SHORT(0, SB_LINEUP);
