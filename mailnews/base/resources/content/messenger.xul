@@ -231,8 +231,12 @@ Rights Reserved.
 <!ENTITY newMsgButton.label "New Msg">  
 <!ENTITY replyButton.img "chrome://messenger/skin/reply.gif">
 <!ENTITY replyButton.label "Reply">  
+<!ENTITY replyAllButton.img "chrome://messenger/skin/replyall.gif">
+<!ENTITY replyAllButton.label "Reply All">  
 <!ENTITY forwardButton.img "chrome://messenger/skin/forward.gif">
 <!ENTITY forwardButton.label "Forward">  
+<!ENTITY nextButton.img "chrome://messenger/skin/next.gif">
+<!ENTITY nextButton.label "Next">  
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
 <!ENTITY throbber.url "http://www.mozilla.org/"> 
@@ -576,7 +580,9 @@ Rights Reserved.
 	  <titledbutton src="&newMsgButton.img;" align="top" value="&newMsgButton.label;" onclick="MsgNewMessage()"/>
 	  <html:div class="separator" align="vertical"/> 
 	  <titledbutton src="&replyButton.img;" align="top" value="&replyButton.label;" onclick="MsgReplyMessage()"/>
+	  <titledbutton src="&replyAllButton.img;" align="top" value="&replyAllButton.label;" onclick="MsgReplyToAllMessage()"/>
 	  <titledbutton src="&forwardButton.img;" align="top" value="&forwardButton.label;" onclick="MsgForwardMessage()"/>
+	  <titledbutton src="&nextButton.img;" align="top" value="&nextButton.label;" onclick="MsgNextUnreadMessage()"/>
 	  <titledbutton src="&deleteButton.img;" align="top" value="&deleteButton.label;" onclick="MsgDeleteMessage(true)"/>
       <spring flex="100%"/>
       <titledbutton id="Throbber" onclick="window.content.location.href='&throbber.url;'">
