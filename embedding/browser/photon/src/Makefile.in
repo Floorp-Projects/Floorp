@@ -62,6 +62,8 @@ CPPSRCS		= \
 		PtMozilla.cpp \
 		EmbedStream.cpp \
 		PromptService.cpp \
+		EmbedDownload.cpp \
+		HeaderSniffer.cpp \
 		nsUnknownContentTypeHandler.cpp
 
 # Force applications to be built non-statically

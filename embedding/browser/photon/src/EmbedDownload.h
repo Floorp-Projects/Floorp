@@ -37,41 +37,37 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSUNKNOWNCONTENTTYPEHANDLER_EMB
-#define NSUNKNOWNCONTENTTYPEHANDLER_EMB
+#ifndef EMBEDDOWNLOAD_EMB
+#define EMBEDDOWNLOAD_EMB
 
-#include "nsIHelperAppLauncherDialog.h"
-#include "nsIExternalHelperAppService.h"
+#include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
-#include "nsWeakReference.h"
-#include "nsIWindowWatcher.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "EmbedDownload.h"
+#include "EmbedPrivate.h"
 #include "PtMozilla.h"
 
-
-static NS_DEFINE_CID( kCID, NS_IHELPERAPPLAUNCHERDIALOG_IID );
-
-class nsUnknownContentTypeHandler : public nsIHelperAppLauncherDialog {
+/* download related */
+class EmbedDownload : public nsIWebProgressListener
+{
 
 public:
+	EmbedDownload( PtMozillaWidget_t *aMoz, int aDownloadTicket, const char * aURL );
+	virtual ~EmbedDownload();
 
-    nsUnknownContentTypeHandler();
-    virtual ~nsUnknownContentTypeHandler();
+	void ReportDownload( int type, int current, int total, char *message );
 
+	int mDownloadTicket;
+	nsIHelperAppLauncher *mLauncher; /* weak reference - either mLauncher or mPersist is set, but not both */
+	nsIWebBrowserPersist *mPersist; /* weak reference - either mLauncher or mPersist is set, but not both */
 
-
-    // This class implements the nsISupports interface functions.
-    NS_DECL_ISUPPORTS
-
-    // This class implements the nsIHelperAppLauncherDialog interface functions.
-    NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
-		PtWidget_t* GetWebBrowser(nsIDOMWindow *aWindow);
+	PtMozillaWidget_t *mMozillaWidget;
+	char *mURL;
+	PRBool mDone;
+	};
 
-}; // nsUnknownContentTypeHandler
-
-int Init_nsUnknownContentTypeHandler_Factory( );
+EmbedDownload *FindDownload( PtMozillaWidget_t *moz, int download_ticket );
 
 #endif

@@ -69,6 +69,8 @@
 
 #include "EmbedPrivate.h"
 #include "EmbedWindow.h"
+#include "EmbedDownload.h"
+#include "HeaderSniffer.h"
 #include "PromptService.h"
 #include "PtMozilla.h"
 
@@ -127,19 +129,6 @@ MozSetPreference(PtWidget_t *widget, int type, char *pref, void *data)
 	}
 }
 
-int MozSavePageAs(PtWidget_t *widget, char *fname, int type)
-{
-	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
-	char dirname[1024];
-
-	if (!fname || !widget) return -1;
-
-	sprintf( dirname, "%s.dir", fname );
-	moz->EmbedRef->SaveAs( fname, dirname );
-
-	return (0);
-}
-
 static void 
 MozLoadURL(PtMozillaWidget_t *moz, char *url)
 {
@@ -149,6 +138,43 @@ MozLoadURL(PtMozillaWidget_t *moz, char *url)
 
 	moz->EmbedRef->SetURI(url);
 	moz->EmbedRef->LoadCurrentURI();
+}
+
+/* watch for an Ph_EV_INFO event in order to detect an Ph_OFFSCREEN_INVALID */
+static int EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo )
+{
+	if( cbinfo->event && cbinfo->event->type == Ph_EV_INFO && cbinfo->event->subtype == Ph_OFFSCREEN_INVALID ) {
+		PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) widget;
+		nsIPref *pref = moz->EmbedRef->GetPrefs();
+		PRBool displayInternalChange = PR_FALSE;
+		pref->GetBoolPref("browser.display.internaluse.graphics_changed", &displayInternalChange);
+		pref->SetBoolPref("browser.display.internaluse.graphics_changed", !displayInternalChange);
+		}
+	return Pt_CONTINUE;
+}
+
+const char* const kPersistContractID = "@mozilla.org/embedding/browser/nsWebBrowserPersist;1";
+
+void MozSaveTarget( char *url, PtMozillaWidget_t *moz )
+{
+	nsresult rv;
+	nsCOMPtr<nsIWebBrowserPersist> webPersist(do_CreateInstance(kPersistContractID, &rv));
+	if( !webPersist ) return;
+
+	nsCOMPtr<nsIURI> uri;
+	NS_NewURI( getter_AddRefs(uri), url );
+
+	/* create a temporary file */
+	char tmp_path[1024];
+	tmpnam( tmp_path );
+	nsCOMPtr<nsILocalFile> tmpFile;
+	NS_NewNativeLocalFile(nsDependentCString( tmp_path ), PR_TRUE, getter_AddRefs(tmpFile));
+
+	/* create a download object, use to sniff the headers for a location indication */
+	HeaderSniffer *sniffer = new HeaderSniffer( webPersist, moz, uri, tmpFile );
+
+	webPersist->SetProgressListener( sniffer );
+	webPersist->SaveURI( uri, nsnull, nsnull, nsnull, nsnull, tmpFile );
 }
 
 // defaults function, called on creation of a widget
@@ -175,6 +201,8 @@ mozilla_defaults( PtWidget_t *widget )
 			Pt_BOTTOM_ANCHORED_TOP | Pt_RIGHT_ANCHORED_LEFT | Pt_ANCHORS_INVALID;
 
 	cntr->flags |= Pt_CHILD_GETTING_FOCUS;
+
+	PtAddEventHandler( widget, Ph_EV_INFO, EvInfo, NULL );
 }
 
 // widget destroy function
@@ -344,6 +372,17 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 					finder->FindNext( &didFind );
 					break;
 					}
+
+				case Pt_MOZ_COMMAND_SAVEAS: {
+					PtWebClient2Command_t *wdata = ( PtWebClient2Command_t * ) argt->len;
+					char *dirname = ( char * ) calloc( 1, strlen( wdata->SaveasInfo.filename + 7 ) );
+					if( dirname ) {
+						sprintf( dirname, "%s_files", wdata->SaveasInfo.filename );
+						moz->EmbedRef->SaveAs( wdata->SaveasInfo.filename, dirname );
+						free( dirname );
+						}
+					break;
+					}
 			}
 			break;
 
@@ -357,16 +396,19 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const *
 		case Pt_ARG_MOZ_UNKNOWN_RESP: {
 			PtWebClient2UnknownData_t *unknown = ( PtWebClient2UnknownData_t * ) argt->value;
 			if( unknown->response == Pt_WEB_RESPONSE_CANCEL ) {
-				Download_t *d = FindDownload( moz, unknown->download_ticket );
-				d->mLauncher->Cancel();
-				RemoveDownload( moz, unknown->download_ticket );
+				EmbedDownload *d = FindDownload( moz, unknown->download_ticket );
+				if( d ) {
+					if( d->mLauncher ) d->mLauncher->Cancel(); /* this will also call the EmbedDownload destructor */
+					else if( d->mPersist ) d->mPersist->CancelSave(); /* this will also call the EmbedDownload destructor */
+					else delete d; /* just in case neither d->mLauncher or d->mPersist was set */
+					}
 				}
 			}
 			break;
 
 		case Pt_ARG_MOZ_DOWNLOAD: 
 			{
-				moz->EmbedRef->SaveURI((char*)argt->value, (char*) argt->len);
+				MozSaveTarget( (char*)argt->value, moz );
 			}
 			break;
 
@@ -454,11 +496,13 @@ mozilla_get_info( PtWidget_t *widget, PtArg_t const *argt, PtResourceRec_t const
 			mozilla_get_pref( widget, (char*)argt->len, (char*) argt->value );
 			break;
 
-		case Pt_ARG_MOZ_GET_CONTEXT:
-			if ( moz->rightClickUrl ) 
-				*(char**) argt->value = moz->rightClickUrl;
-			else 
-				*(char*) argt->value = 0;
+		case Pt_ARG_MOZ_GET_CONTEXT: {
+			if( argt->len & Pt_MOZ_CONTEXT_LINK )
+				*(char**) argt->value = moz->rightClickUrl_link;
+			else if( argt->len & Pt_MOZ_CONTEXT_IMAGE )
+				*(char**) argt->value = moz->rightClickUrl_image;
+			else *(char**) argt->value = moz->rightClickUrl_link;
+			}
 			break;
 
 		case Pt_ARG_MOZ_ENCODING: 
@@ -967,7 +1011,7 @@ static int StartupEmbedding()
   // Initialize XPCOM's module info table
   NSGetStaticModuleInfo = ph_getModuleInfo;
 #endif
-    
+
   rv = NS_InitEmbedding(nsnull, nsnull);
   if( NS_FAILED( rv ) ) return -1;
 

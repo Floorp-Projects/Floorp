@@ -46,6 +46,8 @@
 
 extern PtWidgetClassRef_t *PtMozilla;
 
+class EmbedDownload; /* forward declaration */
+
 /* Resources */
 
 #define Pt_ARG_MOZ_GET_URL					Pt_RESOURCE( 104,  0 )
@@ -284,9 +286,6 @@ typedef struct mozilla_print_status_t
 #define Pt_MOZ_PREF_INT		3
 #define Pt_MOZ_PREF_COLOR	4
 void MozSetPreference(PtWidget_t *widget, int type, char *pref, void *data);
-#define Pt_MOZ_SAVEAS_HTML	1
-#define Pt_MOZ_SAVEAS_TEXT	2
-int MozSavePageAs(PtWidget_t *widget, char *fname, int type);
 
 // mozilla commands
 enum
@@ -297,7 +296,7 @@ enum
 	Pt_MOZ_COMMAND_SELECTALL,
 	Pt_MOZ_COMMAND_CLEAR,
 	Pt_MOZ_COMMAND_FIND,
-	Pt_MOZ_COMMAND_SAVEAS,
+	Pt_MOZ_COMMAND_SAVEAS
 };
 
 typedef struct {
@@ -328,7 +327,7 @@ typedef struct Pt_mozilla_client_widget
 	char 				disable_exception_dlg, disable_new_windows, spare[2];
 
 	int fDownloadCount;
-	struct Download_ **fDownload;
+	EmbedDownload **fDownload;
 
 	/* text_zoom is the text zooming as set by the client ( 100 = 100% ) */
 	short int		text_zoom;
@@ -337,7 +336,8 @@ typedef struct Pt_mozilla_client_widget
 		to remember to set the zooming when the content is loaded */
 	short int actual_text_zoom;
 
-	char				*rightClickUrl; /* keep the url the user clicked on, to provide it latter for Pt_ARG_WEB_GET_CONTEXT */
+	char *rightClickUrl_image; /* keep the url the user clicked on, to provide it latter for Pt_ARG_WEB_GET_CONTEXT */
+	char *rightClickUrl_link; /* keep the url the user clicked on, to provide it latter for Pt_ARG_WEB_GET_CONTEXT */
 
 	PtMozillaAuthCtrl_t *moz_auth_ctrl;
 	PtMozillaUnknownCtrl_t *moz_unknown_ctrl;

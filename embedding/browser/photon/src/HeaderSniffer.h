@@ -37,41 +37,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NSUNKNOWNCONTENTTYPEHANDLER_EMB
-#define NSUNKNOWNCONTENTTYPEHANDLER_EMB
+#ifndef HEADERSNIFFER_EMB
+#define HEADERSNIFFER_EMB
 
-#include "nsIHelperAppLauncherDialog.h"
-#include "nsIExternalHelperAppService.h"
+#include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
-#include "nsWeakReference.h"
-#include "nsIWindowWatcher.h"
-#include "nsIEmbeddingSiteWindow.h"
-#include "EmbedDownload.h"
+#include "EmbedPrivate.h"
 #include "PtMozilla.h"
 
-
-static NS_DEFINE_CID( kCID, NS_IHELPERAPPLAUNCHERDIALOG_IID );
-
-class nsUnknownContentTypeHandler : public nsIHelperAppLauncherDialog {
-
+class HeaderSniffer : public nsIWebProgressListener
+{
 public:
-
-    nsUnknownContentTypeHandler();
-    virtual ~nsUnknownContentTypeHandler();
-
-
-
-    // This class implements the nsISupports interface functions.
-    NS_DECL_ISUPPORTS
-
-    // This class implements the nsIHelperAppLauncherDialog interface functions.
-    NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
+	HeaderSniffer( nsIWebBrowserPersist* aPersist, PtMozillaWidget_t *aMoz, nsIURI* aURL, nsIFile* aFile );
+	virtual ~HeaderSniffer();
+	
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIWEBPROGRESSLISTENER
 
 private:
-		PtWidget_t* GetWebBrowser(nsIDOMWindow *aWindow);
-
-}; // nsUnknownContentTypeHandler
-
-int Init_nsUnknownContentTypeHandler_Factory( );
+	PtMozillaWidget_t *mMozillaWidget;
+	nsIWebBrowserPersist*     mPersist; // Weak. It owns us as a listener.
+	nsCOMPtr<nsIFile>         mTmpFile;
+	nsCOMPtr<nsIURI>          mURL;
+};
 
 #endif

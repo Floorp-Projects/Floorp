@@ -50,8 +50,6 @@
 #include "EmbedPrivate.h"
 #include "PtMozilla.h"
 
-#include <photon/PtWebClient.h>
-
 nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
 	NS_INIT_ISUPPORTS();
 ///* ATENTIE */ printf( "In nsUnknownContentTypeHandler constructor\n" );
@@ -59,12 +57,7 @@ nsUnknownContentTypeHandler::nsUnknownContentTypeHandler( ) {
 
 nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( )
 {
-///* ATENTIE */ printf( "In destructor mURL=%s\n", mURL );
-
-	/* remove this download from our list */
-	RemoveDownload( mMozillaWidget, mDownloadTicket );
-
-	if( mURL ) free( mURL );
+///* ATENTIE */ printf( "In nsUnknownContentTypeHandler destr\n" );
 }
 
 
@@ -83,8 +76,6 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	NS_ENSURE_ARG_POINTER(_retval);
 	*_retval = nsnull;
 
-	aLauncher->SetWebProgressListener( this );
-
 	/* try to get the PtMozillawidget_t* pointer form the aContext - use the fact the the WebBrowserContainer is
 		registering itself as nsIDocumentLoaderObserver ( SetDocLoaderObserver ) */
 	nsCOMPtr<nsIDOMWindow> domw( do_GetInterface( aWindowContext ) );
@@ -93,8 +84,6 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	PtWidget_t *w = GetWebBrowser( parent );
 	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) w;
 
-	mMozillaWidget = moz;
-
 	/* get the suggested filename */
 	NS_ConvertUCS2toUTF8 theUnicodeString( aDefaultFile );
 	const char *filename = theUnicodeString.get( );
@@ -102,12 +91,10 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	/* get the url */
 	nsCOMPtr<nsIURI> aSourceUrl;
 	aLauncher->GetSource( getter_AddRefs(aSourceUrl) );
-	char *url;
+	const char *url;
 	nsCAutoString specString;
 	aSourceUrl->GetSpec(specString);
-	url = (char *) specString.get();
-
-	mURL = strdup( url );
+	url = specString.get();
 
 	/* get the mime type */
 	nsCOMPtr<nsIMIMEInfo> mimeInfo;
@@ -124,7 +111,7 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	cbinfo.cbdata = &cb;
 	cb.action = Pt_WEB_ACTION_OK;
 	cb.content_type = mimeType;
-	cb.url = url;
+	cb.url = (char *)url;
 	cb.content_length = strlen( cb.url );
 	cb.suggested_filename = (char*)filename;
 	PtInvokeCallbackList( moz->web_unknown_cb, (PtWidget_t *)moz, &cbinfo );
@@ -132,8 +119,6 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 
 	/* we have the result in moz->moz_unknown_ctrl */
 	if( moz->moz_unknown_ctrl->response != Pt_WEB_RESPONSE_OK ) return NS_ERROR_ABORT;
-
-	mDownloadTicket = moz->moz_unknown_ctrl->download_ticket;
 
 	/* the user chosen filename is moz->moz_unknown_ctrl->filename */
 	nsCOMPtr<nsILocalFile> file(do_CreateInstance("@mozilla.org/file/local;1"));
@@ -147,7 +132,9 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsIHelperAppLaun
 	NS_ADDREF( *_retval );
 
 	/* add this download to our list */
-	AddDownload( mMozillaWidget, mDownloadTicket, aLauncher, this );
+	EmbedDownload *download = new EmbedDownload( moz, moz->moz_unknown_ctrl->download_ticket, url );
+	download->mLauncher = aLauncher;
+	aLauncher->SetWebProgressListener( download );
 
 	return NS_OK;
 }
@@ -178,119 +165,6 @@ PtWidget_t *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
   }
 
   return val;
-}
-
-
-/* nsIWebProgressListener interface */
-
-/* void onProgressChange (in nsIWebProgress aProgress, in nsIRequest aRequest, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
-NS_IMETHODIMP nsUnknownContentTypeHandler::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress) {
-
-///* ATENTIE */ printf("this=%p OnProgressChange curSelfProgress=%d maxSelfProgress=%d curTotalProgress=%d maxTotalProgress=%d\n",
-//this, curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress );
-
-	ReportDownload( Pt_WEB_DOWNLOAD_PROGRESS, curSelfProgress, maxSelfProgress, "" );
-
-	return NS_OK;
-	}
-
-NS_IMETHODIMP nsUnknownContentTypeHandler::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus) {
-	if( aStateFlags & STATE_STOP ) {
-		ReportDownload( Pt_WEB_DOWNLOAD_DONE, 0, 0, "" );
-		}
-	return NS_OK;
-	}
-
-NS_IMETHODIMP nsUnknownContentTypeHandler::OnLocationChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsIURI *location) {
-	return NS_OK;
-	}
-NS_IMETHODIMP nsUnknownContentTypeHandler::OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsresult aStatus, const PRUnichar* aMessage) {
-	return NS_OK;
-	}
-NS_IMETHODIMP nsUnknownContentTypeHandler::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state) {
-	return NS_OK;
-	}
-
-NS_IMETHODIMP nsUnknownContentTypeHandler::ReportDownload( int type, int current, int total, char *message )
-{
-  PtCallbackInfo_t cbinfo;
-  PtWebDownloadCallback_t cb;
-
-  memset( &cbinfo, 0, sizeof( cbinfo ) );
-  cbinfo.reason = Pt_CB_MOZ_DOWNLOAD;
-  cbinfo.cbdata = &cb;
-
-  cb.download_ticket = mDownloadTicket;
-  cb.type = type;
-  cb.url = mURL;
-  cb.current = current;
-  cb.total = total;
-  cb.message = message;
-
-  PtInvokeCallbackList( mMozillaWidget->web_download_cb, (PtWidget_t *)mMozillaWidget, &cbinfo );
-	return NS_OK;
-  }
-
-void AddDownload( PtMozillaWidget_t *moz, int download_ticket, nsIHelperAppLauncher* aLauncher, nsUnknownContentTypeHandler *unknown )
-{
-	Download_t *d;
-
-	d = ( Download_t * ) calloc( 1, sizeof( Download_t ) );
-	if( !d ) return;
-
-	d->download_ticket = download_ticket;
-	d->mLauncher = aLauncher;
-	NS_RELEASE( aLauncher );
-
-	d->unknown = unknown;
-
-	/* insert d into moz->fDownload */
-	moz->fDownload = ( Download_t ** ) realloc( moz->fDownload, ( moz->fDownloadCount + 1 ) * sizeof( Download_t * ) );
-	if( !moz->fDownload ) return;
-
-	moz->fDownload[ moz->fDownloadCount ] = d;
-	moz->fDownloadCount++;
-}
-
-void RemoveDownload( PtMozillaWidget_t *moz, int download_ticket )
-{
-	int i;
-
-  /* remove d from the moz->fDownload */
-  for( i=0; i<moz->fDownloadCount; i++ ) {
-    if( moz->fDownload[i]->download_ticket == download_ticket ) break;
-    }
-
-  if( i<moz->fDownloadCount ) {
-    int j;
-		Download_t *d;
-
-		d = moz->fDownload[i];
-
-    for( j=i; j<moz->fDownloadCount-1; j++ )
-      moz->fDownload[j] = moz->fDownload[j+1];
-
-    moz->fDownloadCount--;
-    if( !moz->fDownloadCount ) {
-      free( moz->fDownload );
-      moz->fDownload = NULL;
-      }
-
-		d->unknown->ReportDownload( Pt_WEB_DOWNLOAD_CANCEL, 0, 0, "" );
-
-  	free( d );
-    }
-
-///* ATENTIE */ printf( "after remove fDownloadCount=%d\n", moz->fDownloadCount );
-}
-
-Download_t *FindDownload( PtMozillaWidget_t *moz, int download_ticket )
-{
-	int i;
-  for( i=0; i<moz->fDownloadCount; i++ ) {
-    if( moz->fDownload[i]->download_ticket == download_ticket ) return moz->fDownload[i];
-    }
-	return NULL;
 }
 
 //#######################################################################################
