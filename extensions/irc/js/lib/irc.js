@@ -108,6 +108,12 @@ CIRCNetwork.prototype.stayingPower = false;
 
 CIRCNetwork.prototype.TYPE = "IRCNetwork";
 
+CIRCNetwork.prototype.getURL =
+function net_geturl ()
+{
+    return "irc://" + this.name + "/";
+}
+
 CIRCNetwork.prototype.connect =
 function net_conenct(pass)
 {
@@ -253,6 +259,7 @@ function CIRCServer (parent, connection)
         s.users = new Object();
     }
     
+    s.name = serverName;
     s.parent = parent;
     s.connection = connection;
     s.sendQueue = new Array();
@@ -282,6 +289,12 @@ CIRCServer.prototype.VERSION_RPLY = "JS-IRC Library v0.01, " +
 CIRCServer.prototype.DEFAULT_REASON = "no reason";
 
 CIRCServer.prototype.TYPE = "IRCServer";
+
+CIRCServer.prototype.getURL =
+function serv_geturl ()
+{
+    return this.parent.getURL();
+}
 
 CIRCServer.prototype.onStreamDataAvailable = 
 function serv_sda (request, inStream, sourceOffset, count)
@@ -485,7 +498,13 @@ function serv_ctcpto (target, code, msg, method)
     if (typeof method == "undefined")
         method = "PRIVMSG";
     
-     
+    code = code.toUpperCase();
+    if (code == "PING" && !msg)
+    {
+        var user = this.users[target.toLowerCase()];
+        if (user)
+             msg = Number(new Date());
+    }
     this.messageTo (method, target, msg, code);
 
 }
@@ -1315,6 +1334,14 @@ function serv_notice (e)
         e.replyTo = e.channel;
         e.set = "channel";
     }
+    else if (e.meat.search (/\x01.*\x01/i) != -1)
+    {
+        e.type = "ctcp-reply";
+        e.destMethod = "onCTCPReply";
+        e.set = "server";
+        e.destObject = this;
+        return;
+    }
     else
     {
         e.set = "user";
@@ -1355,6 +1382,49 @@ function serv_privmsg (e)
     }
     else
         e.destObject = e.replyTo;
+
+    return true;
+    
+}
+
+CIRCServer.prototype.onCTCPReply = 
+function serv_ctcpr (e)
+{
+    var ary = e.meat.match (/^\x01(\S+) ?(.*)\x01$/i);
+
+    if (ary == null)
+        return false;
+
+    e.CTCPData = ary[2] ? ary[2] : "";
+
+    e.CTCPCode = ary[1].toLowerCase();
+    e.type = "ctcp-reply-" + e.CTCPCode;
+    e.destMethod = "onCTCPReply" + ary[1][0].toUpperCase() +
+        ary[1].substr (1, ary[1].length).toLowerCase();
+
+    if (typeof this[e.destMethod] != "function")
+    { /* if there's no place to land the event here, try to forward it */
+        e.destObject = this.parent;
+        e.set = "network";
+        
+        if (typeof e.destObject[e.destMethod] != "function")
+        { /* if there's no place to forward it, send it to unknownCTCP */
+            e.type = "unk-ctcp-reply";
+            e.destMethod = "onUnknownCTCPReply";
+            if (this[e.destMethod])
+            {
+                e.set = "server";
+                e.destObject = this;
+            }
+            else
+            {
+                e.set = "network";
+                e.destObject = this.parent;
+            }
+        }
+    }
+    else
+        e.destObject = this;
 
     return true;
     
@@ -1518,7 +1588,13 @@ function CIRCChannel (parent, name)
 }
 
 CIRCChannel.prototype.TYPE = "IRCChannel";
-    
+
+CIRCChannel.prototype.getURL =
+function chan_geturl ()
+{
+    return this.parent.parent.getURL() + this.name + "/";
+}
+
 CIRCChannel.prototype.addUser = 
 function chan_adduser (nick, isOp, isVoice)
 {
@@ -1862,6 +1938,12 @@ function CIRCUser (parent, nick, name, host)
 
 CIRCUser.prototype.TYPE = "IRCUser";
 
+CIRCUser.prototype.getURL =
+function usr_geturl ()
+{
+    return this.parent.getURL() + this.nick + "/";
+}
+
 CIRCUser.prototype.changeNick =
 function usr_changenick (nick)
 {
@@ -1949,6 +2031,7 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     protoUser = new CIRCUser (parent.parent, properNick);
         
     this.__proto__ = protoUser;
+    this.getURL = cusr_geturl;
     this.setOp = cusr_setop;
     this.setVoice = cusr_setvoice;
     this.setBan = cusr_setban;
@@ -1966,6 +2049,11 @@ function CIRCChanUser (parent, nick, isOp, isVoice)
     parent.users[nick] = this;
 
     return this;
+}
+
+function cusr_geturl ()
+{
+    return this.parent.parent.getURL() + this.nick + "/";
 }
 
 function cusr_setop (f)
