@@ -51,6 +51,7 @@
 #include "nsIStyleRule.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSDeclaration.h"
+#include "nsIRuleNode.h"
 
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"

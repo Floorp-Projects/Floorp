@@ -344,16 +344,30 @@ nsCSSRuleDataSource::GetTargetsForElement(nsIDOMElement* aElement, nsIRDFResourc
     shell->GetStyleContextFor(frame, getter_AddRefs(styleContext));
     if (NS_FAILED(rv) || !styleContext) return rv;
 
-    // display all the pretty information
-    PRInt32 count = styleContext->GetStyleRuleCount();
-    nsCOMPtr<nsISupportsArray> rules(dont_AddRef(styleContext->GetStyleRules()));
-    nsCOMPtr<nsICSSStyleRule> rule;
+    // create a resource for all the style rules from the 
+    // context and add them to aArcs
+    nsCOMPtr<nsIRuleNode> ruleNode;
+    styleContext->GetRuleNode(getter_AddRefs(ruleNode));
     
-    for (PRInt32 k = 0; k < count; k++) {
-      rule = do_QueryInterface(rules->ElementAt(k));
-      nsCOMPtr<nsIRDFResource> resource;
+    nsCOMPtr<nsIStyleRule> srule;
+    nsCOMPtr<nsICSSStyleRule> rule;
+    nsCOMPtr<nsIRuleNode> ruleNodeTmp;
+    nsCOMPtr<nsIRDFResource> resource;
+    while (ruleNode) {
+      ruleNode->GetRule(getter_AddRefs(srule));
+      rule = do_QueryInterface(srule);
+
       rv = GetResourceForObject(rule, getter_AddRefs(resource));
-      rv = aArcs->AppendElement(resource);
+      // since tree of nodes is from top down, insert in reverse order
+      rv = aArcs->InsertElementAt(resource, 0); 
+      
+      ruleNode->GetParent(getter_AddRefs(ruleNodeTmp));
+      ruleNode = ruleNodeTmp;
+      
+      // don't be adding that there root node
+      PRBool isRoot;
+      ruleNode->IsRoot(&isRoot);
+      if (isRoot) break;
     }
   }
 
