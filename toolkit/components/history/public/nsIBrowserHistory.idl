@@ -42,7 +42,7 @@
 #include "nsISupports.idl"
 #include "nsIGlobalHistory2.idl"
 
-[scriptable, uuid(68c59967-d043-4659-a973-f8f11b1d2aca)]
+[scriptable, uuid(c43079c3-3d8d-4b7c-af14-0e30ab46865f)]
 interface nsIBrowserHistory : nsIGlobalHistory2
 {
     /** 
@@ -50,7 +50,7 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * Adds a page to history with specific time stamp information. This is used in
      * the History migrator. 
      */
-    void addPageWithDetails(in string aURL, in wstring aTitle, in long long aLastVisited);
+    void addPageWithDetails(in nsIURI aURI, in wstring aTitle, in long long aLastVisited);
 
     /**
      * lastPageVisited
@@ -67,7 +67,7 @@ interface nsIBrowserHistory : nsIGlobalHistory2
     /**
      * remove a page from history
      */
-    void removePage(in string aURI);
+    void removePage(in nsIURI aURI);
 
     /**
      * removePagesFromHost
@@ -75,7 +75,7 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * If aEntireDomain is true, will assume aHost is a domain,
      * and remove all pages from the entire domain.
      */
-    void removePagesFromHost(in string aHost, in boolean aEntireDomain);
+    void removePagesFromHost(in AUTF8String aHost, in boolean aEntireDomain);
 
     /**
      * removeAllPages
@@ -98,5 +98,5 @@ interface nsIBrowserHistory : nsIGlobalHistory2
      * Designate the url as having been explicitly typed in by
      * the user, so it's okay to be an autocomplete result.
      */
-    void markPageAsTyped(in string url);
+    void markPageAsTyped(in nsIURI aURI);
 };

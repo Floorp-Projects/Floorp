@@ -870,6 +870,40 @@ nsGlobalHistory::AddNewPageToDatabase(nsIURI* aURI,
 }
 
 nsresult
+nsGlobalHistory::RemovePageInternal(const char *aSpec)
+{
+  if (!mTable) return NS_ERROR_NOT_INITIALIZED;
+  // find the old row, ignore it if we don't have it
+  nsCOMPtr<nsIMdbRow> row;
+  nsresult rv = FindRow(kToken_URLColumn, aSpec, getter_AddRefs(row));
+  if (NS_FAILED(rv)) return NS_OK;
+
+  // remove the row
+  mdb_err err = mTable->CutRow(mEnv, row);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  // if there are batches in progress, we don't want to notify
+  // observers that we're deleting items. the caller promises
+  // to handle whatever UI updating is necessary when we're finished.  
+  if (!mBatchesInProgress) {
+    // get the resource so we can do the notification
+    nsCOMPtr<nsIRDFResource> oldRowResource;
+    gRDFService->GetResource(nsDependentCString(aSpec), getter_AddRefs(oldRowResource));
+    NotifyFindUnassertions(oldRowResource, row);
+  }
+
+  // not a fatal error if we can't cut all column
+  err = row->CutAllColumns(mEnv);
+  NS_ASSERTION(err == 0, "couldn't cut all columns");
+
+  // Sigh. This is pretty bad - if the user selects a bunch of things then
+  // hits delete we'll be re-writing history over and over. Still, we will
+  // be whacking global history pretty hard after 1.0 so I don't feel too 
+  // bad.
+  return Commit(kCompressCommit);
+}
+
+nsresult
 nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt64& aValue)
 {
   mdb_err err;
@@ -1023,17 +1057,13 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::AddPageWithDetails(const char *aURL, const PRUnichar *aTitle, 
+nsGlobalHistory::AddPageWithDetails(nsIURI *aURI, const PRUnichar *aTitle, 
                                     PRInt64 aLastVisitDate)
 {
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = AddPageToDatabase(uri, PR_FALSE, PR_TRUE, aLastVisitDate);
+  nsresult rv = AddPageToDatabase(aURI, PR_FALSE, PR_TRUE, aLastVisitDate);
   if (NS_FAILED(rv)) return rv;
 
-  return SetPageTitle(uri, nsDependentString(aTitle));
+  return SetPageTitle(aURI, nsDependentString(aTitle));
 }
 
 NS_IMETHODIMP
@@ -1108,49 +1138,24 @@ nsGlobalHistory::SetPageTitle(nsIURI *aURI, const nsAString& aTitle)
 
 
 NS_IMETHODIMP
-nsGlobalHistory::RemovePage(const char *aURL)
+nsGlobalHistory::RemovePage(nsIURI *aURI)
 {
-  mdb_err err;
-  nsresult rv;
-
-  if (!mTable) return NS_ERROR_NOT_INITIALIZED;
-  // find the old row, ignore it if we don't have it
-  nsCOMPtr<nsIMdbRow> row;
-  rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
-  if (NS_FAILED(rv)) return NS_OK;
-
-  // remove the row
-  err = mTable->CutRow(mEnv, row);
-  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
-
-  // if there are batches in progress, we don't want to notify
-  // observers that we're deleting items. the caller promises
-  // to handle whatever UI updating is necessary when we're finished.  
-  if (!mBatchesInProgress) {
-    // get the resource so we can do the notification
-    nsCOMPtr<nsIRDFResource> oldRowResource;
-    gRDFService->GetResource(nsDependentCString(aURL), getter_AddRefs(oldRowResource));
-    NotifyFindUnassertions(oldRowResource, row);
-  }
-
-  // not a fatal error if we can't cut all column
-  err = row->CutAllColumns(mEnv);
-  NS_ASSERTION(err == 0, "couldn't cut all columns");
-
-  // Sigh. This is pretty bad - if the user selects a bunch of things then
-  // hits delete we'll be re-writing history over and over. Still, we will
-  // be whacking global history pretty hard after 1.0 so I don't feel too 
-  // bad.
-  return Commit(kCompressCommit);
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_SUCCEEDED(rv))
+    rv = RemovePageInternal(spec.get());
+  return rv;
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::RemovePagesFromHost(const char *aHost, PRBool aEntireDomain)
+nsGlobalHistory::RemovePagesFromHost(const nsACString &aHost, PRBool aEntireDomain)
 {
+  const nsCString &host = PromiseFlatCString(aHost);
+
   matchHost_t hostInfo;
   hostInfo.history = this;
   hostInfo.entireDomain = aEntireDomain;
-  hostInfo.host = aHost;
+  hostInfo.host = host.get();
   
   nsresult rv = RemoveMatchingRows(matchHostCallback, (void *)&hostInfo, PR_TRUE);
   if (NS_FAILED(rv)) return rv;
@@ -1361,16 +1366,16 @@ nsGlobalHistory::HidePage(nsIURI *aURI)
 }
 
 NS_IMETHODIMP
-nsGlobalHistory::MarkPageAsTyped(const char* aURL)
+nsGlobalHistory::MarkPageAsTyped(nsIURI *aURI)
 {
+  nsCAutoString spec;
+  nsresult rv = aURI->GetSpec(spec);
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIMdbRow> row;
-  nsresult rv = FindRow(kToken_URLColumn, aURL, getter_AddRefs(row));
+  rv = FindRow(kToken_URLColumn, spec.get(), getter_AddRefs(row));
   if (NS_FAILED(rv)) {
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), nsDependentCString(aURL), nsnull, nsnull);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = AddNewPageToDatabase(uri, GetNow(), PR_FALSE, PR_TRUE, getter_AddRefs(row));
+    rv = AddNewPageToDatabase(aURI, GetNow(), PR_FALSE, PR_TRUE, getter_AddRefs(row));
     NS_ENSURE_SUCCESS(rv, rv);
 
     // We don't know if this is a valid URI yet. Hide it until it finishes
@@ -1775,7 +1780,6 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
             // if the top of a site does not have a title
             // (common for redirections) then return the hostname
             return GetTarget(aSource, kNC_Hostname, aTruthValue, aTarget);
-            
           }
         }
 
@@ -1802,7 +1806,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
         rv = GetRowValue(row, kToken_ReferrerColumn, str);
       
       if (NS_FAILED(rv)) return rv;
-      
+
       nsCOMPtr<nsIRDFResource> resource;
       rv = gRDFService->GetResource(str, getter_AddRefs(resource));
       if (NS_FAILED(rv)) return rv;
@@ -2003,7 +2007,7 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
     }
 
     // ignore any error
-    rv = RemovePage(targetUrl);
+    rv = RemovePageInternal(targetUrl);
     if (NS_FAILED(rv)) return NS_RDF_ASSERTION_REJECTED;
 
     if (!mBatchesInProgress && IsFindResource(aSource)) {
