@@ -1,3 +1,0 @@
-mozilla/intl/uconv/ucvja2/nsEUCJPToUnicode.cpp
-mozilla/intl/uconv/ucvja2/nsISO2022JPToUnicode.cpp
-mozilla/intl/uconv/ucvja2/nsUCVJA2Dll.cpp
