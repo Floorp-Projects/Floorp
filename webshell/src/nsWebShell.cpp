@@ -60,7 +60,7 @@
  * Note: the log module is created during initialization which
  * means that you cannot perform logging before then.
  */
-static PRLogModuleInfo* gLogModule = PR_NewLogModule("webwidget");
+static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 #endif
 
 #define WEB_TRACE_CALLS        0x1
