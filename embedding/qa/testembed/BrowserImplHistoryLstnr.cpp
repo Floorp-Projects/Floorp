@@ -100,7 +100,7 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryGoForward(nsIURI *theUri, PRBool *notify)
 
 NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags, PRBool *notify)
 {
-	char flagString[100];
+	char flagString[200];
 
 	QAOutput("nsIHistoryListener::OnHistoryReload()", 2);
 
@@ -110,16 +110,25 @@ NS_IMETHODIMP CBrowserImpl::OnHistoryReload(nsIURI *theUri, PRUint32 reloadFlags
 
 	if (reloadFlags == 0x0000)
 		strcpy(flagString, "LOAD_FLAGS_NONE");
+	else if (reloadFlags == 0x0010)
+		strcpy(flagString, "LOAD_FLAGS_IS_REFRESH");
+	else if (reloadFlags == 0x0020)
+		strcpy(flagString, "LOAD_FLAGS_IS_LINK");
+	else if (reloadFlags == 0x0040)
+		strcpy(flagString, "LOAD_FLAGS_BYPASS_HISTORY");
+	else if (reloadFlags == 0x0080)
+		strcpy(flagString, "LOAD_FLAGS_REPLACE_HISTORY");
 	else if (reloadFlags == 0x0100)
 		strcpy(flagString, "LOAD_FLAGS_BYPASS_CACHE");
 	else if (reloadFlags == 0x0200)
 		strcpy(flagString, "LOAD_FLAGS_BYPASS_PROXY");
 	else if (reloadFlags == 0x0400)
 		strcpy(flagString, "LOAD_FLAGS_CHARSET_CHANGE");
-	else if (reloadFlags == (0x0200 | 0x0400))
-		strcpy(flagString, "LOAD_RELOAD_BYPASS_PROXY_AND_CACHE");
+	else if (reloadFlags == (0x0100 | 0x0200))
+		strcpy(flagString, "LOAD_FLAGS_BYPASS_CACHE | LOAD_FLAGS_BYPASS_PROXY");
 
-	FormatAndPrintOutput("OnHistoryReload() flag = ", flagString, 2);
+	FormatAndPrintOutput("OnHistoryReload() flag value = ", reloadFlags, 1);
+	FormatAndPrintOutput("OnHistoryReload() flag string = ", flagString, 2);
 
 	return NS_OK;
 }
