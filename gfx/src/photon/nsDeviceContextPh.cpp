@@ -58,10 +58,11 @@ nsDeviceContextPh :: nsDeviceContextPh()
   mPixelScale = 1.0f;
   mWidthFloat = 0.0f;
   mHeightFloat = 0.0f;
+
+  /* These *MUST* be -1 */
   mWidth = -1;
   mHeight = -1;
-  mWidth = 0;
-  mHeight = 0;
+
   mSpec = nsnull;
   mDC = nsnull;
 }
@@ -269,17 +270,16 @@ NS_IMETHODIMP nsDeviceContextPh :: CreateRenderingContext(nsIRenderingContext *&
 	if (nsnull != pContext)
 	{
 	  NS_ADDREF(pContext);
+
 	  surf = new nsDrawingSurfacePh();
 	  if (nsnull != surf)
 	  {
-#if 0
-  /* This is untested and may be breaking things */
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
+        /* I think this is a good idea... not sure if mDC is the right one tho... */
+        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::CreateRenderingContext - mDC=<%p>\n", mDC));
 
 		PhGC_t * aGC = (PhGC_t *) mDC;
         rv = surf->Init(aGC);
         if (NS_OK == rv)
-#endif
           rv = pContext->Init(this, surf);
       }
 	  else
@@ -344,21 +344,15 @@ NS_IMETHODIMP nsDeviceContextPh :: GetSystemAttribute(nsSystemAttrID anID, Syste
 
 NS_IMETHODIMP nsDeviceContextPh :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDrawingSurface - Not Implemented\n"));
-/*
-  if (NULL == mSurface)
-  {
-     aContext.CreateDrawingSurface(nsnull, 0, mSurface);
-  }
-		
-  aSurface = mSurface;
-*/
-  return NS_OK;
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDrawingSurface\n"));
+
+  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
+  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
 {
-  PRInt32 width, height;
+  PRInt32 width=-1, height=-1;
   nsresult rv;
 	
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetClientRect\n"));
@@ -368,6 +362,7 @@ NS_IMETHODIMP nsDeviceContextPh :: GetClientRect(nsRect &aRect)
   aRect.y = 0;
   aRect.width = width;
   aRect.height = height;
+
   return rv;
 }
 
