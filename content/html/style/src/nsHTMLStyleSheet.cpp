@@ -1386,6 +1386,12 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
           nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
                                                    pseudoStyle, PR_TRUE);
 
+          // Add the page sequence frame to the scroll frame. We need to do this
+          // now BEFORE we process the child content, so the view hierarchy is
+          // correct (the scrolling view creates a clip view and widget and inserts
+          // the scrolled frame's view as a child of the clip view)
+          scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+
           // Create the first page
           NS_NewPageFrame(pageFrame);
 
@@ -1402,9 +1408,6 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
           if (NS_SUCCEEDED(rv)) {
             pageFrame->SetInitialChildList(*aPresContext, nsnull, childList);
             pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
-    
-            // Set the scroll frame's initial child list
-            scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
           }
 
           // Set the root frame's initial child list
@@ -1461,13 +1464,16 @@ HTMLStyleSheetImpl::ConstructXMLRootDescendants(nsIPresContext*  aPresContext,
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, wrapperFrame,
                                              scrolledPseudoStyle, PR_TRUE);
     
+    // Set the scroll frame's initial child list. We need to do this now
+    // BEFORE we process the child content, so the view hierarchy is correct
+    // (the scrolling view creates a clip view and widget and inserts the
+    // scrolled frame's view as a child of the clip view)
+    scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
+
     // Construct a frame for the document element and process its children
     nsIFrame* docElementFrame;
     ConstructFrame(aPresContext, aContent, wrapperFrame, docElementFrame);
     wrapperFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
-    
-    // Set the scroll frame's initial child list
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
   }
 
   aNewFrame = scrollFrame;
