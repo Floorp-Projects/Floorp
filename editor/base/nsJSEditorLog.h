@@ -117,6 +117,7 @@ public:
   NS_IMETHOD RemoveParagraphStyle();
   NS_IMETHOD RemoveParent(const nsString &aParentTag);
   NS_IMETHOD InsertList(const nsString& aListType);
+  NS_IMETHOD InsertHeader(const nsString& aHeaderType);
   NS_IMETHOD Indent(const nsString& aIndent);
   NS_IMETHOD Align(const nsString& aAlign);
   NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn);

@@ -610,6 +610,24 @@ nsJSEditorLog::InsertList(const nsString& aListType)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP
+nsJSEditorLog::InsertHeader(const nsString& aHeaderType)
+{
+  if (mLocked)
+    return NS_OK;
+
+  PrintSelection();
+
+  Write("window.editorShell.InsertHeader(\"");
+  PrintUnicode(aHeaderType);
+  Write("\");\n");
+  Flush();
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP
 nsJSEditorLog::Indent(const nsString& aIndent)
 {
