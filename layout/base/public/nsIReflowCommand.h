@@ -80,17 +80,6 @@ public:
     // reflow command is the frame that changed style.
     StyleChanged,
 
-    // When an incremental reflow operation affects a next-in-flow,
-    // these commands are used to get the next-in-flow to update
-    // itself.
-    PullupReflow,
-    PushReflow,
-
-    // This command is used to see if a prev-in-flow wants to pullup
-    // some children from a next-in-flow that has changed because of
-    // an incremental reflow.
-    CheckPullupReflow,
-
     // Reflow dirty stuff (really a per-frame extension)
     ReflowDirty,
 

@@ -168,9 +168,6 @@ nsBlockFrame::InitDebugFlags()
 static const char* kReflowCommandType[] = {
   "ContentChanged",
   "StyleChanged",
-  "PullupReflow",
-  "PushReflow",
-  "CheckPullupReflow",
   "ReflowDirty",
   "UserDefined",
 };

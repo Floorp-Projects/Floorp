@@ -225,9 +225,6 @@ NS_IMETHODIMP nsHTMLReflowCommand::List(FILE* out) const
   static const char* kReflowCommandType[] = {
     "ContentChanged",
     "StyleChanged",
-    "PullupReflow",
-    "PushReflow",
-    "CheckPullupReflow",
     "ReflowDirty",
     "UserDefined",
   };
