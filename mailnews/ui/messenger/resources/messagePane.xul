@@ -1,4 +1,6 @@
 <?xml version="1.0"?> 
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window>
 
@@ -14,8 +16,9 @@ window {
 } 
 
 </html:style>
-
-<html:iframe src="http://messenger.netscape.com/bookmark/4_5/messengerstart.html" name="browser.webwindow" width="100%" height="325px" > </html:iframe>
-
+<box align="vertical" style="width: 100%; height: 100%">
+<box align="horizontal" flex="100%">
+<html:iframe src="http://messenger.netscape.com/bookmark/4_5/messengerstart.html" name="browser.webwindow" width="100%" height="325px" flex="100%"> </html:iframe>
+</box>
 
 </window>
