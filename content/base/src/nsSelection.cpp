@@ -2889,7 +2889,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
 
   nsCOMPtr<nsIContent> theNode = aNode;
 
-  if (aNode->CanContainChildren())
+  if (aNode->IsContentOfType(nsIContent::eELEMENT))
   {
     PRInt32 childIndex  = 0;
     PRInt32 numChildren = 0;
@@ -2930,7 +2930,7 @@ nsSelection::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, HINT aHin
     // Now that we have the child node, check if it too
     // can contain children. If so, call this method again!
 
-    if (theNode->CanContainChildren())
+    if (theNode->IsContentOfType(nsIContent::eELEMENT))
     {
       PRInt32 newOffset = 0;
 
@@ -4179,7 +4179,7 @@ nsTypedSelection::GetTableSelectionType(nsIDOMRange* aRange, PRInt32* aTableSele
 
   // if we simply cannot have children, return NS_OK as a non-failing,
   // non-completing case for table selection
-  if (!content->CanContainChildren())
+  if (!content->IsContentOfType(nsIContent::eELEMENT))
     return NS_OK; //got to be a text node, definately not a table row/cell
   
   PRInt32 startOffset;
@@ -4824,7 +4824,7 @@ nsTypedSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOf
   if (!content)
     return NS_ERROR_NULL_POINTER;
   
-  if (content->CanContainChildren())
+  if (content->IsContentOfType(nsIContent::eELEMENT))
   {
     if (aIsEndNode)
       aOffset--;
@@ -5031,7 +5031,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange
     if (NS_FAILED(result) || !content)
       return result;
 
-    if (!content->CanContainChildren())
+    if (!content->IsContentOfType(nsIContent::eELEMENT))
     {
       result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(content, &frame);
       if (NS_SUCCEEDED(result) && frame)
@@ -5055,7 +5055,7 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext, nsIDOMRange *aRange
       if (NS_FAILED(result) || !content)
         return result;
 
-      if (!content->CanContainChildren())
+      if (!content->IsContentOfType(nsIContent::eELEMENT))
       {
         result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(content, &frame);
         if (NS_SUCCEEDED(result) && frame)

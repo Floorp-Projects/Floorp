@@ -2522,7 +2522,7 @@ nsBoxFrame::CreateViewForFrame(nsIPresContext*  aPresContext,
             // at whether the frame has any child frames
             nsIContent* content = aFrame->GetContent();
 
-            if (content && content->CanContainChildren()) {
+            if (content && content->IsContentOfType(nsIContent::eELEMENT)) {
               // The view needs to be visible, but marked as having transparent
               // content
               viewHasTransparentContent = PR_TRUE;

@@ -794,12 +794,6 @@ nsGenericDOMDataNode::GetNodeInfo() const
   return nsnull;
 }
 
-PRBool
-nsGenericDOMDataNode::CanContainChildren() const
-{
-  return PR_FALSE;
-}
-
 PRUint32
 nsGenericDOMDataNode::GetChildCount() const
 {

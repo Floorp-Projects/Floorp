@@ -4537,14 +4537,14 @@ nsEventStateManager::GetDocSelectionLocation(nsIContent **aStartContent,
       nsIContent *childContent = nsnull;
 
       startContent = do_QueryInterface(startNode);
-      if (startContent->CanContainChildren()) {
+      if (startContent->IsContentOfType(nsIContent::eELEMENT)) {
         childContent = startContent->GetChildAt(*aStartOffset);
         if (childContent)
           startContent = childContent;
       }
 
       endContent = do_QueryInterface(endNode);
-      if (endContent->CanContainChildren()) {
+      if (endContent->IsContentOfType(nsIContent::eELEMENT)) {
         PRInt32 endOffset = 0;
         domRange->GetEndOffset(&endOffset);
         childContent = endContent->GetChildAt(endOffset);
