@@ -112,6 +112,7 @@ private:
         nsIDOMNode *aNode, const char *aAttribute,
         PRBool aNeedsPersisting = PR_TRUE,
         URIData **aData = nsnull);
+    nsresult GetNodeToFixup(nsIDOMNode *aNodeIn, nsIDOMNode **aNodeOut);
     nsresult FixupNodeAttribute(nsIDOMNode *aNode, const char *aAttribute);
     nsresult FixupAnchor(nsIDOMNode *aNode);
     nsresult StoreAndFixupStyleSheet(nsIStyleSheet *aStyleSheet);
