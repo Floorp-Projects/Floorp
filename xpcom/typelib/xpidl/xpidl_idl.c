@@ -43,7 +43,7 @@ xpidl_process_node(TreeState *state)
     return TRUE;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 extern void mac_warning(const char* warning_message);
 #endif
 
@@ -57,7 +57,7 @@ msg_callback(int level, int num, int line, const char *file,
         file = "<unknown file>";
     warning_message = g_strdup_printf("%s:%d: %s\n", file, line, message);
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
     mac_warning(warning_message);
 #else
     fputs(warning_message, stderr);
@@ -123,7 +123,7 @@ fopen_from_includes(const char *filename, const char *mode,
     return NULL;
 }
 
-#ifdef XP_MAC
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
 extern FILE* mac_fopen(const char* filename, const char *mode);
 #endif
 
@@ -139,17 +139,9 @@ new_input_data(const char *filename, IncludePathEntry *include_path)
     size_t i;
 #endif
 
-#ifdef XP_MAC
-    // if file is a full path name, just use fopen, otherwise search access paths.
-#if 0
-    if (strchr(filename, ':') == NULL)
-        inputfile = mac_fopen(filename, "r");
-    else
-        inputfile = fopen(filename, "r");
-#else
+#if defined(XP_MAC) && defined(XPIDL_PLUGIN)
     // on Mac, fopen knows how to find files.
     inputfile = fopen(filename, "r");
-#endif
 #else
     inputfile = fopen_from_includes(filename, "r", include_path);
 #endif
