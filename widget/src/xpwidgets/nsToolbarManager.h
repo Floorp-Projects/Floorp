@@ -25,17 +25,21 @@
 #include "nsWindow.h"
 #include "nsIImageButtonListener.h"
 
+#include "nsCOMPtr.h"
+
 class nsIToolbar;
 class nsIImageButton;
 class nsIWidget;
 class nsIToolbarManagerListener;
+class nsIImageRequest;
 
 struct nsRect;
 
-typedef struct {
-  nsIToolbar     * mToolbar;
-  nsIImageButton * mTab;
-} TabInfo;
+
+struct TabInfo {
+  nsCOMPtr<nsIToolbar>  mToolbar;
+  nsRect                mBoundingRect;
+};
 
 
 //
@@ -53,8 +57,6 @@ class nsToolbarManager : public ChildWindow,
                          public nsIToolbarManager, //*** for now 
                          public nsIContentConnector,
                          public nsIImageButtonListener
-
-                  
 {
 public:
     nsToolbarManager();
@@ -96,14 +98,26 @@ public:
     NS_IMETHOD NotifyImageButtonEvent(nsIImageButton * aImgBtn,
                                       nsGUIEvent     * aEvent);
 
-protected:
-  NS_METHOD  AddTabToManager(nsIToolbar *    aToolbar,
-                             const nsString& aUpURL,
-                             const nsString& aPressedURL,
-                             const nsString& aDisabledURL,
-                             const nsString& aRollOverURL);
+  // Override the widget creation method
+  NS_IMETHOD Create(nsIWidget *aParent,
+                            const nsRect &aRect,
+                            EVENT_CALLBACK aHandleEventFunction,
+                            nsIDeviceContext *aContext,
+                            nsIAppShell *aAppShell,
+                            nsIToolkit *aToolkit,
+                            nsWidgetInitData *aInitData);
 
-  nsIToolbarManagerListener * mListener;
+protected:
+  enum { kNoGrippyHilighted = -1 } ;
+  
+  void DrawGrippies ( nsIRenderingContext* aContext ) const ;
+  void DrawGrippy ( nsIRenderingContext* aContext, const nsRect & aBoundingRect, 
+                     PRBool aDrawHilighted ) const ;
+
+  void OnMouseMove ( nsPoint & aMouseLoc ) ;
+  void OnMouseExit ( ) ;
+
+  nsCOMPtr<nsIToolbarManagerListener> mListener;
 
   //*** this should be smart pointers ***
 //nsToolbarDataModel* mDataModel;   // The data source from which everything to draw is obtained.
@@ -121,15 +135,26 @@ protected:
   nsString mExpandRollOverURL;
 
   // XXX these will be changed to Vectors
-  nsIToolbar ** mToolbars;
+  nsCOMPtr<nsIToolbar> * mToolbars;
   PRInt32       mNumToolbars;
 
-  TabInfo    ** mTabs;
-  PRInt32       mNumTabs;
+  TabInfo    mTabs[10];
+  int mGrippyHilighted;      // used to indicate which grippy the mouse is inside
 
   TabInfo    ** mTabsSave;
   PRInt32       mNumTabsSave;
 
-};
+  // Images for the pieces of the grippy panes. They are composites of a set of urls
+  // which specify the top, middle, and bottom of the grippy.
+  //*** should these be in an imageGroup?
+  nsCOMPtr<nsIImageRequest> mGrippyNormalTop;		// Image for grippy in normal state
+  nsCOMPtr<nsIImageRequest> mGrippyNormalMiddle;	// Image for grippy in normal state
+  nsCOMPtr<nsIImageRequest> mGrippyNormalBottom;	// Image for grippy in normal state
+
+  nsCOMPtr<nsIImageRequest> mGrippyRolloverTop;     // image for grippy in rollover state
+  nsCOMPtr<nsIImageRequest> mGrippyRolloverMiddle;  // image for grippy in rollover state
+  nsCOMPtr<nsIImageRequest> mGrippyRolloverBottom;  // image for grippy in rollover state
+  
+}; // class nsToolbarManager
 
 #endif /* nsToolbarManager_h___ */
