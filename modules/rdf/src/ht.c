@@ -655,8 +655,7 @@ bmkNotifFunc (RDF_Event ns, void* pdata)
 				htr = htr->nextItem;
 			}
 		}
-		else if ((uev->s == gCoreVocab->RDF_name) || (uev->s == gNavCenter->RDF_smallIcon) ||
-				 (uev->s == gNavCenter->RDF_largeIcon))
+		else
 		{
 			htr = PL_HashTableLookup(hash, (RDF_Resource)uev->u);
 			while (htr != NULL)
@@ -2466,7 +2465,6 @@ resynchItem (HT_Resource node, void *token, void *data, PRBool assertAction)
 			if ((*value)->tokenType == HT_COLUMN_STRING ||
 			    (*value)->tokenType == HT_COLUMN_DATE_STRING)
 			{
-				
 				if ((*value)->data)
 				{
 					freeMem((*value)->data);
@@ -5276,6 +5274,7 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 	HT_Error		error = HT_Err;
 	void			*oldData = NULL;
 	PRBool			dirty = PR_TRUE;
+	char			*temp;
 
 	XP_ASSERT(node != NULL);
 	XP_ASSERT(token != NULL);
@@ -5303,8 +5302,13 @@ HT_SetNodeData (HT_Resource node, void *token, uint32 tokenType, void *data)
 			{
 				if (oldData != NULL)
 				{
-					RDF_Unassert(node->view->pane->db, node->node,
-						token, oldData, RDF_STRING_TYPE);
+					temp = copyString(oldData);
+					if (temp != NULL)
+					{
+						RDF_Unassert(node->view->pane->db, node->node,
+							token, temp, RDF_STRING_TYPE);
+						freeMem(temp);
+					}
 				}
 				if ((data != NULL) && (((char *)data)[0] != '\0'))
 				{
@@ -5392,6 +5396,7 @@ HT_IsNodeDataEditable(HT_Resource node, void *token, uint32 tokenType)
 			(token == gNavCenter->viewPressedColor) || (token == gNavCenter->viewDisabledColor) ||
 			(token == gNavCenter->toolbarBitmapPosition) || (token == gNavCenter->toolbarButtonsFixedSize) ||
 			(token == gNavCenter->toolbarDisplayMode) ||
+			(token == gNavCenter->toolbarCollapsed) || (token == gNavCenter->toolbarVisible) ||
 			(token == gNavCenter->RDF_smallDisabledIcon) || (token == gNavCenter->RDF_largeDisabledIcon) ||
 			(token == gNavCenter->RDF_smallRolloverIcon) || (token == gNavCenter->RDF_largeRolloverIcon) ||
 			(token == gNavCenter->RDF_smallPressedIcon) || (token == gNavCenter->RDF_largePressedIcon) ||
@@ -5915,6 +5920,7 @@ htIsPropertyInMoreOptions(RDF_Resource r)
 	    (r == gNavCenter->viewPressedColor) || (r == gNavCenter->viewDisabledColor) ||
 	    (r == gNavCenter->toolbarBitmapPosition) || (r == gNavCenter->toolbarButtonsFixedSize) ||
 	    (r == gNavCenter->toolbarDisplayMode) ||
+		(r == gNavCenter->toolbarCollapsed) || (r == gNavCenter->toolbarVisible) ||
 	    (r == gNavCenter->RDF_smallDisabledIcon) || (r == gNavCenter->RDF_largeDisabledIcon) ||
 	    (r == gNavCenter->RDF_smallRolloverIcon) || (r == gNavCenter->RDF_largeRolloverIcon) ||
 	    (r == gNavCenter->RDF_smallPressedIcon) || (r == gNavCenter->RDF_largePressedIcon) ||

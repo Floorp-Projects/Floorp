@@ -246,6 +246,8 @@ createNavCenterVocab () {
   gNavCenter->toolbarBitmapPosition = newResource("toolbarBitmapPosition", 0 /* XXX "Toolbar Bitmap Position" */ );
   gNavCenter->toolbarButtonsFixedSize = newResource("toolbarButtonsFixedSize", 0 /* XXX "Toolbar Bitmap Position" */ );
   gNavCenter->toolbarDisplayMode = newResource("toolbarDisplayMode", 0);
+  gNavCenter->toolbarCollapsed = newResource("toolbarCollapsed", 0);
+  gNavCenter->toolbarVisible = newResource("toolbarVisible", 0);
   gNavCenter->RDF_smallDisabledIcon = newResource("smallDisabledIcon", 0 /* XXX */);
   gNavCenter->RDF_largeDisabledIcon  = newResource("largeDisabledIcon", 0 /* XXX */);
   gNavCenter->RDF_smallRolloverIcon = newResource("smallRolloverIcon", 0 /* XXX */);

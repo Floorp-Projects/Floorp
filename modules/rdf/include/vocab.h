@@ -169,7 +169,8 @@ typedef struct _RDF_NCVocabStruct {
   /* Toolbar Appearance Styles */
   RDF_Resource toolbarBitmapPosition; /* Bitmap's position ("side"/"top") */
   RDF_Resource toolbarDisplayMode;
-
+  RDF_Resource toolbarCollapsed;
+  RDF_Resource toolbarVisible;
 
   /* Cookie Stuff */
   RDF_Resource cookieDomain;
