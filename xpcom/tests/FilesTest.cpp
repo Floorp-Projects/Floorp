@@ -593,7 +593,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_DriveDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -605,7 +605,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_TemporaryDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+       (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -617,7 +617,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "OS_CurrentProcessDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -765,7 +765,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Win_SystemDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -777,7 +777,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Win_WindowsDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -790,7 +790,7 @@ int FilesTest::SpecialSystemDirectories()
     mConsole << "Unix_LocalDirectory yields \t";
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
@@ -803,7 +803,7 @@ int FilesTest::SpecialSystemDirectories()
 
     if (systemDir.Valid())
     {
-        (nsOutputStream)mConsole << systemDir << nsEndl;
+        (nsOutputStream&)mConsole << systemDir << nsEndl;
     }
     else
     {
