@@ -49,8 +49,6 @@ UserInGroup("editbugs")
 print "Content-type: text/html\n";
 print "\n";
 
-SendSQL("set SQL_BIG_TABLES=1");
-
 my $offervotecacherebuild = 0;
 
 sub Status {

@@ -449,11 +449,6 @@ sub check_webdotbase {
     return "";
 }
 
-DefParam("expectbigqueries",
-         "If this is on, then we will tell mysql to <tt>set option SQL_BIG_TABLES=1</tt> before doing queries on bugs.  This will be a little slower, but one will not get the error <tt>The table ### is full</tt> for big queries that require a big temporary table.",
-         "b",
-         0);
-
 DefParam("emailregexp",
          'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@]+$</tt>, which means "local usernames, no @ allowed."',
          "t",
