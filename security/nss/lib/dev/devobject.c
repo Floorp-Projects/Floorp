@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.13 $ $Date: 2002/01/23 01:20:32 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.14 $ $Date: 2002/01/23 17:00:34 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -374,6 +374,25 @@ get_token_cert
 	    email = dc->getEmailAddress(dc);
 	    if (email) 
 	    	rvCert->email = nssUTF8_Duplicate(email, arena);
+	} else {
+	    goto loser;
+	}
+    }
+    /* nss 3.4 must deal with tokens that do not follow the PKCS#11
+     * standard and return decoded serial numbers.  The easiest way to
+     * work around this is just to grab the serial # from the full encoding
+     */
+    if (PR_TRUE) {
+	nssDecodedCert *dc;
+	dc = nssCertificate_GetDecoding(rvCert);
+	if (dc) {
+	    PRStatus sn_stat;
+	    sn_stat = dc->getDERSerialNumber(dc, &rvCert->serial, arena);
+	    if (sn_stat != PR_SUCCESS) {
+		goto loser;
+	    }
+	} else {
+	    goto loser;
 	}
     }
 #endif
@@ -432,12 +451,11 @@ nssToken_ImportCertificate
 }
 
 static PRBool 
-compare_cert_by_issuer_sn(void *a, void *b)
+compare_cert_by_encoding(void *a, void *b)
 {
     NSSCertificate *c1 = (NSSCertificate *)a;
     NSSCertificate *c2 = (NSSCertificate *)b;
-    return  (nssItem_Equal(&c1->issuer, &c2->issuer, NULL) &&
-             nssItem_Equal(&c1->serial, &c2->serial, NULL));
+    return  (nssItem_Equal(&c1->encoding, &c2->encoding, NULL));
 }
 
 static PRStatus
@@ -449,20 +467,14 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
     NSSCertificate *cert = NULL;
     nssListIterator *instances;
     nssCryptokiInstance *ci;
-    CK_ATTRIBUTE issuersn_tmpl[] = {
-	{ CKA_ISSUER,        NULL, 0 },
-	{ CKA_SERIAL_NUMBER, NULL, 0 }
-    };
-    CK_ULONG ist_size = sizeof(issuersn_tmpl) / sizeof(issuersn_tmpl[0]);
+    CK_ATTRIBUTE derValue = { CKA_VALUE, NULL, 0 };
     if (search->cached) {
 	NSSCertificate csi; /* a fake cert for indexing */
-	nssrv = nssCKObject_GetAttributes(h, issuersn_tmpl, ist_size,
+	nssrv = nssCKObject_GetAttributes(h, &derValue, 1,
 	                                  NULL, session, t->slot);
-	NSS_CK_ATTRIBUTE_TO_ITEM(&issuersn_tmpl[0], &csi.issuer);
-	NSS_CK_ATTRIBUTE_TO_ITEM(&issuersn_tmpl[1], &csi.serial);
+	NSS_CK_ATTRIBUTE_TO_ITEM(&derValue, &csi.encoding);
 	cert = (NSSCertificate *)nssList_Get(search->cached, &csi);
-	nss_ZFreeIf(csi.issuer.data);
-	nss_ZFreeIf(csi.serial.data);
+	nss_ZFreeIf(csi.encoding.data);
     }
     found = PR_FALSE;
     if (cert) {
@@ -527,7 +539,7 @@ nssToken_TraverseCertificates
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
     if (search->cached) {
-	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+	nssList_SetCompareFunction(search->cached, compare_cert_by_encoding);
     }
     nssrv = traverse_objects_by_template(token, sessionOpt,
                                          cert_template, ctsize,
@@ -559,7 +571,7 @@ nssToken_TraverseCertificatesBySubject
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
     NSS_CK_TEMPLATE_FINISH(subj_template, attr, stsize);
     if (search->cached) {
-	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+	nssList_SetCompareFunction(search->cached, compare_cert_by_encoding);
     }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
@@ -592,7 +604,7 @@ nssToken_TraverseCertificatesByNickname
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(nick_template, attr, ntsize);
     if (search->cached) {
-	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+	nssList_SetCompareFunction(search->cached, compare_cert_by_encoding);
     }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
@@ -638,7 +650,7 @@ nssToken_TraverseCertificatesByEmail
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(email_template, attr, etsize);
     if (search->cached) {
-	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+	nssList_SetCompareFunction(search->cached, compare_cert_by_encoding);
     }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,

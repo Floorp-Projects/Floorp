@@ -35,7 +35,7 @@
 #define PKINSS3HACK_H
 
 #ifdef DEBUG
-static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.3 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
+static const char PKINSS3HACK_CVS_ID[] = "@(#) $RCSfile: pki3hack.h,v $ $Revision: 1.4 $ $Date: 2002/01/23 17:00:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKIT_H
@@ -69,10 +69,16 @@ STAN_LoadDefaultNSS3TrustDomain
 NSS_EXTERN void
 STAN_Shutdown();
 
-NSS_EXTERN PRStatus
-STAN_AddNewSlotToDefaultTD
+NSS_EXTERN SECStatus
+STAN_AddModuleToDefaultTrustDomain
 (
-  PK11SlotInfo *sl
+  SECMODModule *module
+);
+
+NSS_IMPLEMENT SECStatus
+STAN_RemoveModuleFromDefaultTrustDomain
+(
+  SECMODModule *module
 );
 
 NSS_EXTERN CERTCertificate *

@@ -245,7 +245,7 @@ SECMOD_DeleteModule(char *name, int *type) {
 	    if (!mlp->module->internal) {
 		SECMOD_RemoveList(mlpp,mlp);
 		/* delete it after we release the lock */
-		rv = SECSuccess;
+		rv = STAN_RemoveModuleFromDefaultTrustDomain(mlp->module);
 	    } else if (mlp->module->isFIPS) {
 		*type = SECMOD_FIPS;
 	    } else {
@@ -279,8 +279,8 @@ SECMOD_DeleteInternalModule(char *name) {
 	if (PORT_Strcmp(name,mlp->module->commonName) == 0) {
 	    /* don't delete the internal module */
 	    if (mlp->module->internal) {
-		rv = SECSuccess;
 		SECMOD_RemoveList(mlpp,mlp);
+		rv = STAN_RemoveModuleFromDefaultTrustDomain(mlp->module);
 	    } 
 	    break;
 	}
@@ -323,6 +323,7 @@ SECMOD_DeleteInternalModule(char *name) {
 	SECMOD_DestroyModule(oldModule);
  	SECMOD_DeletePermDB(mlp->module);
 	SECMOD_DestroyModuleListElement(mlp);
+	rv = STAN_AddModuleToDefaultTrustDomain(internalModule);
     }
     return rv;
 }
@@ -331,7 +332,6 @@ SECStatus
 SECMOD_AddModule(SECMODModule *newModule) {
     SECStatus rv;
     SECMODModule *oldModule;
-    int i;
 
     /* Test if a module w/ the same name already exists */
     /* and return SECWouldBlock if so. */
@@ -356,12 +356,9 @@ SECMOD_AddModule(SECMODModule *newModule) {
     SECMOD_AddPermDB(newModule);
     SECMOD_AddModuleToList(newModule);
 
-    for (i=0; i < newModule->slotCount; i++) {
-	PK11SlotInfo *slot = newModule->slots[i];
-	STAN_AddNewSlotToDefaultTD(slot);
-    }
+    rv = STAN_AddModuleToDefaultTrustDomain(newModule);
 
-    return SECSuccess;
+    return rv;
 }
 
 PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name) {

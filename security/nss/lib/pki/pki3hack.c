@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.25 $ $Date: 2002/01/18 03:36:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.26 $ $Date: 2002/01/23 17:00:38 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -128,6 +128,45 @@ STAN_LoadDefaultNSS3TrustDomain
     g_default_crypto_context = NSSTrustDomain_CreateCryptoContext(td, NULL);
 }
 
+NSS_IMPLEMENT SECStatus
+STAN_AddModuleToDefaultTrustDomain
+(
+  SECMODModule *module
+)
+{
+    NSSToken *token;
+    NSSTrustDomain *td;
+    int i;
+    td = STAN_GetDefaultTrustDomain();
+    for (i=0; i<module->slotCount; i++) {
+	token = nssToken_CreateFromPK11SlotInfo(td, module->slots[i]);
+	PK11Slot_SetNSSToken(module->slots[i], token);
+	nssList_Add(td->tokenList, token);
+    }
+    nssListIterator_Destroy(td->tokens);
+    td->tokens = nssList_CreateIterator(td->tokenList);
+    return SECSuccess;
+}
+
+NSS_IMPLEMENT SECStatus
+STAN_RemoveModuleFromDefaultTrustDomain
+(
+  SECMODModule *module
+)
+{
+    NSSToken *token;
+    NSSTrustDomain *td;
+    int i;
+    td = STAN_GetDefaultTrustDomain();
+    for (i=0; i<module->slotCount; i++) {
+	token = PK11Slot_GetNSSToken(module->slots[i]);
+	nssList_Remove(td->tokenList, token);
+    }
+    nssListIterator_Destroy(td->tokens);
+    td->tokens = nssList_CreateIterator(td->tokenList);
+    return SECSuccess;
+}
+
 NSS_IMPLEMENT void
 STAN_Shutdown()
 {
@@ -137,24 +176,6 @@ STAN_Shutdown()
     if (g_default_crypto_context) {
 	NSSCryptoContext_Destroy(g_default_crypto_context);
     }
-}
-
-NSS_IMPLEMENT PRStatus
-STAN_AddNewSlotToDefaultTD
-(
-  PK11SlotInfo *sl
-)
-{
-    NSSTrustDomain *td =g_default_trust_domain;
-    NSSToken *token;
-    token = nssToken_CreateFromPK11SlotInfo(td, sl);
-    PK11Slot_SetNSSToken(sl, token);
-    nssList_Add(td->tokenList, token);
-    if (td->tokens) {
-	nssListIterator_Destroy(td->tokens);
-    }
-    td->tokens = nssList_CreateIterator(td->tokenList);
-    return PR_SUCCESS;
 }
 
 /* this function should not be a hack; it will be needed in 4.0 (rename) */
@@ -321,6 +342,21 @@ nss3certificate_getEmailAddress(nssDecodedCert *dc)
     return cc ? (NSSASCII7 *)cc->emailAddr : NULL;
 }
 
+static PRStatus
+nss3certificate_getDERSerialNumber(nssDecodedCert *dc, 
+                                   NSSDER *serial, NSSArena *arena)
+{
+    CERTCertificate *cc = (CERTCertificate *)dc->data;
+    SECItem derSerial = { 0 };
+    SECStatus secrv;
+    secrv = CERT_SerialNumberFromDERCert(&cc->derCert, &derSerial);
+    if (secrv == SECSuccess) {
+	(void)nssItem_Create(arena, serial, derSerial.len, derSerial.data);
+	return PR_SUCCESS;
+    }
+    return PR_FAILURE;
+}
+
 NSS_IMPLEMENT nssDecodedCert *
 nssDecodedPKIXCertificate_Create
 (
@@ -342,6 +378,7 @@ nssDecodedPKIXCertificate_Create
     rvDC->isNewerThan = nss3certificate_isNewerThan;
     rvDC->matchUsage = nss3certificate_matchUsage;
     rvDC->getEmailAddress = nss3certificate_getEmailAddress;
+    rvDC->getDERSerialNumber = nss3certificate_getDERSerialNumber;
     return rvDC;
 }
 
