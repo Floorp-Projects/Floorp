@@ -356,7 +356,7 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
    switch( bih.cBitCount)
    {
       case 8:
-         // use defaults from constructor
+         memset( aFormat, 0, sizeof(nsPixelFormat));
          break;
 
       case 16:
