@@ -4247,15 +4247,9 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     }
   }
 
-#ifdef DEBUG
-  if (closestView) {
-    nsIScrollableView* _testView = nsnull;
-    CallQueryInterface(closestView, &_testView);
-    NS_ASSERTION(!_testView,
-                 "What happened to the scrolled view?  "
-                 "The frame should not be directly in the scrolling view!");
-  }
-#endif
+  NS_ASSERTION(closestView && !closestView->ToScrollableView(),
+               "What happened to the scrolled view?  "
+               "The frame should not be directly in the scrolling view!");
   
   // Walk up the view hierarchy.  Make sure to add the view's position
   // _after_ we get the parent and see whether it's scrollable.  We want to
@@ -4264,7 +4258,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
   while (closestView) {
     nsIView* parent = closestView->GetParent();
     if (parent) {
-      CallQueryInterface(parent, &scrollingView);
+      scrollingView = parent->ToScrollableView();
       if (scrollingView) {
         ScrollViewToShowRect(scrollingView, frameBounds, aVPercent, aHPercent);
       }
@@ -6608,7 +6602,6 @@ PresShell::Observe(nsISupports* aSubject,
 #ifdef NS_DEBUG
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
-#include "nsIScrollableView.h"
 #include "nsIDeviceContext.h"
 #include "nsIURL.h"
 #include "nsILinkHandler.h"

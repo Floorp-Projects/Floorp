@@ -2453,8 +2453,8 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
         
         // Insert the view into the view hierarchy. If the parent view is a
         // scrolling view we need to do this differently
-        nsIScrollableView*  scrollingView;
-        if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollingView))) {
+        nsIScrollableView*  scrollingView = parentView->ToScrollableView();
+        if (scrollingView) {
           scrollingView->SetScrolledView(view);
         } else {
           viewManager->SetViewZIndex(view, autoZIndex, zIndex);

@@ -3586,8 +3586,8 @@ nsPluginInstanceOwner::Destroy()
   nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView)
   {
-    nsIScrollableView* scrollingView;
-    if (NS_SUCCEEDED(CallQueryInterface(curView, &scrollingView)))
+    nsIScrollableView* scrollingView = curView->ToScrollableView();
+    if (scrollingView)
       scrollingView->RemoveScrollPositionListener((nsIScrollPositionListener *)this);
     
     curView = curView->GetParent();
@@ -3816,8 +3816,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::Init(nsPresContext* aPresContext, nsObjectF
   nsIView* curView = parentWithView ? parentWithView->GetView() : nsnull;
   while (curView)
   {
-    nsIScrollableView* scrollingView;
-    if (NS_SUCCEEDED(CallQueryInterface(curView, &scrollingView)))
+    nsIScrollableView* scrollingView = curView->ToScrollableView();
+    if (scrollingView)
       scrollingView->AddScrollPositionListener((nsIScrollPositionListener *)this);
     
     curView = curView->GetParent();

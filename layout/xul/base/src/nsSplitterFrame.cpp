@@ -543,9 +543,8 @@ nsSplitterFrameInner::MouseDrag(nsPresContext* aPresContext, nsGUIEvent* aEvent)
       // how much we are scrolled.
       nsIView* view = parent->GetView();
       if (view) {
-        nsIScrollableView* scrollingView;
-        nsresult result = CallQueryInterface(view, &scrollingView);
-        if (NS_SUCCEEDED(result)) {
+        nsIScrollableView* scrollingView = view->ToScrollableView();
+        if (scrollingView) {
           nscoord xoff = 0;
           nscoord yoff = 0;
           scrollingView->GetScrollPosition(xoff, yoff);

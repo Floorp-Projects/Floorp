@@ -120,7 +120,15 @@ NS_IMETHODIMP ViewWrapper::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 NS_IMETHODIMP ViewWrapper::GetInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  return mView->QueryInterface(aIID, aInstancePtr);
+  if (aIID.Equals(NS_GET_IID(nsIScrollableView))) {
+    *aInstancePtr = mView->ToScrollableView();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsIView))) {
+    *aInstancePtr = mView;
+    return NS_OK;
+  }
+  return QueryInterface(aIID, aInstancePtr);
 }
 
 /**

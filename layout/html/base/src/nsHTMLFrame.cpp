@@ -55,7 +55,6 @@
 #include "nsHTMLAtoms.h"
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
-#include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPresShell.h"
 #include "nsIScrollPositionListener.h"
@@ -422,11 +421,11 @@ CanvasFrame::Paint(nsPresContext*      aPresContext,
         nsIFrame * parentFrame = GetParent();
         nsIView* parentView = parentFrame->GetView();
 
-        nsIScrollableView* scrollableView;
-        if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollableView))) {
+        nsIScrollableView* scrollableView = parentView->ToScrollableView();
+        if (scrollableView) {
           nscoord width, height;
           scrollableView->GetContainerSize(&width, &height);
-          nsRect vcr = scrollableView->View()->GetBounds();
+          nsRect vcr = parentView->GetBounds();
           focusRect.width = vcr.width;
           focusRect.height = vcr.height;
           nscoord x,y;

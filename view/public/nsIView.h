@@ -45,6 +45,7 @@
 #include "nsIWidget.h"
 
 class nsIViewManager;
+class nsIScrollableView;
 class nsViewManager;
 class nsView;
 struct nsRect;
@@ -113,18 +114,17 @@ struct nsViewZIndex {
  * of a view, go through nsIViewManager.
  */
 
-// hack to make egcs / gcc 2.95.2 happy
-class nsIView_base
+class nsIView
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) = 0;
-};
+  /**
+   * See if this view is scrollable.
+   * @result an nsIScrollableView* if the view is scrollable, or nsnull if not.
+   */
+  virtual nsIScrollableView* ToScrollableView() { return nsnull; }
 
-class nsIView : public nsIView_base
-{
-public:
   /**
    * Get the view manager which "owns" the view.
    * This method might require some expensive traversal work in the future. If you can get the

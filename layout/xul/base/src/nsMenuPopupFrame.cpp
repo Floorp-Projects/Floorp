@@ -375,10 +375,7 @@ PRBool ParentIsScrollableView(nsIView* aStartView);
 PRBool ParentIsScrollableView(nsIView* aStartView)
 {
   nsIView* scrollportView = aStartView->GetParent();
-  nsIScrollableView* scrollableView = nsnull;
-  if (scrollportView)
-    scrollportView->QueryInterface(NS_GET_IID(nsIScrollableView), (void**) &scrollableView);
-  return scrollableView != nsnull;
+  return scrollportView != nsnull && scrollportView->ToScrollableView() != nsnull;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1373,7 +1370,7 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   do {
     nsIView* view = currFrame->GetView();
     if ( view )
-      CallQueryInterface(view, &scrollableView);
+      scrollableView = view->ToScrollableView();
     if ( scrollableView )
       return scrollableView;
     currFrame = currFrame->GetNextSibling();

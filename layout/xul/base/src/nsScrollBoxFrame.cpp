@@ -206,12 +206,8 @@ nsScrollBoxFrame::GetScrollingParentView(nsPresContext* aPresContext,
 nsIView*
 nsScrollBoxFrame::GetMouseCapturer() const
 {
-  nsIScrollableView* scrollingView;
-#ifdef DEBUG
-  nsresult result =
-#endif
-    CallQueryInterface(GetView(), &scrollingView);
-  NS_ASSERTION(NS_SUCCEEDED(result),
+  nsIScrollableView* scrollingView = GetView()->ToScrollableView();
+  NS_ASSERTION(scrollingView,
                "Scrollbox does not contain a scrolling view?");
   nsIView* view;
   scrollingView->GetScrolledView(view);
@@ -368,8 +364,8 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   }
 
   nsIView* view = GetView();
-  nsIScrollableView* scrollingView;
-  if (NS_SUCCEEDED(CallQueryInterface(view, &scrollingView))) {
+  nsIScrollableView* scrollingView = view->ToScrollableView();
+  if (scrollingView) {
     scrollingView->ComputeScrollOffsets(PR_TRUE);
   }
 
