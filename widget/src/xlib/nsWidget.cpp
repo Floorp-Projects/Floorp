@@ -103,7 +103,7 @@ nsWidget::nsWidget() : nsBaseWidget()
   mBorderPixel = xlib_rgb_xpixel_from_rgb(mBorderRGB);
   mGC = 0;
   mParentWidget = nsnull;
-  mName = "unnamed";
+  mName.AssignWithConversion("unnamed");
   mIsShown = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mVisibility = VisibilityFullyObscured; // this is an X constant.
@@ -331,7 +331,7 @@ NS_IMETHODIMP nsWidget::SetFocus(void)
 
 NS_IMETHODIMP nsWidget::SetName(const char * aName)
 {
-  mName = aName;
+  mName.AssignWithConversion(aName);
 
   return NS_OK;
 }
@@ -659,11 +659,12 @@ void nsWidget::CreateNativeWindow(Window aParent, nsRect aRect,
   int width;
   int height;
 
+  nsCAutoString nameStr; nameStr.AssignWithConversion(mName);
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
          ("*** Warning: nsWidget::CreateNative falling back to sane default for widget type \"%s\"\n", 
-          (const char *) nsCAutoString(mName)));
+          (const char *) nameStr));
 
-  if (mName == "unnamed") {
+  if (nameStr.Equals("unnamed")) {
     PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG,
            ("What freaking widget is this, anyway?\n"));
   }
@@ -960,9 +961,11 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
 
   static int sPrintCount=0;
 
+  nsCAutoString eventString;
+  eventString.AssignWithConversion(debug_GuiEventToString(&aEvent));
   printf("%4d %-26s(this=%-8p , window=%-8p",
          sPrintCount++,
-         (const char *) nsCAutoString(debug_GuiEventToString(&aEvent)),
+         (const char *) eventString,
          this,
          (void *) aWindow);
          
