@@ -323,6 +323,9 @@ profile/pref-migrator/Makefile
 profile/pref-migrator/public/Makefile
 profile/pref-migrator/src/Makefile
 profile/pref-migrator/resources/Makefile
+profile/pref-migrator/resources/content/Makefile
+profile/pref-migrator/resources/locale/Makefile
+profile/pref-migrator/resources/locale/en-US/Makefile
 profile/defaults/Makefile
 rdf/Makefile
 rdf/base/Makefile
