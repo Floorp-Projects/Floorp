@@ -45,6 +45,9 @@
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsICharsetConverterManager.h"
+#define DECODER_NAME_BASE "Unicode Decoder-"
+#define ENCODER_NAME_BASE "Unicode Encoder-"
+ 
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -286,9 +289,23 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports * aServMgr,
       nsIRegistry::ApplicationComponentRegistry);
   if (NS_FAILED(res)) goto done;
 
+  char name[128];
+  char progid[128];
   for (i=0; i<ARRAY_SIZE(g_FactoryData); i++) {
+    if(0==PL_strcmp(g_FactoryData[i].mCharsetSrc,"Unicode"))
+    {
+       PL_strcpy(name, DECODER_NAME_BASE);
+       PL_strcat(name, g_FactoryData[i].mCharsetDest);
+       PL_strcpy(progid, NS_UNICODEDECODER_PROGID_BASE);
+       PL_strcat(progid, g_FactoryData[i].mCharsetDest);
+    } else {
+       PL_strcpy(name, ENCODER_NAME_BASE);
+       PL_strcat(name, g_FactoryData[i].mCharsetSrc);
+       PL_strcpy(progid, NS_UNICODEENCODER_PROGID_BASE);
+       PL_strcat(progid, g_FactoryData[i].mCharsetSrc);
+    }
     // register component
-    res = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), NULL, NULL,
+    res = compMgr->RegisterComponent(*(g_FactoryData[i].mCID), name, progid,
       path, PR_TRUE, PR_TRUE);
     if(NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) goto done;
 
