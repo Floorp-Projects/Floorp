@@ -1140,7 +1140,7 @@ sub update
           # Bugzilla::User needs to rederive groups. profiles and 
           # user_group_map would be READ locks instead of WRITE locks if it
           # weren't for derive_groups, which needs to write to those tables.
-          'bugs READ', 'profiles WRITE',
+          'bugs READ', 'profiles WRITE', 'email_setting READ',
           'cc READ', 'bug_group_map READ', 'user_group_map WRITE',
           'group_group_map READ', 'groups READ');
 

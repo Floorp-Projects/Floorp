@@ -1182,7 +1182,7 @@ foreach my $id (@idlist) {
             "keyworddefs READ", "groups READ", "attachments READ",
             "group_control_map AS oldcontrolmap READ",
             "group_control_map AS newcontrolmap READ",
-            "group_control_map READ");
+            "group_control_map READ", "email_setting READ");
     # Fun hack.  @::log_columns only contains the component_id,
     # not the name (since bug 43600 got fixed).  So, we need to have
     # this id ready for the loop below, otherwise anybody can
