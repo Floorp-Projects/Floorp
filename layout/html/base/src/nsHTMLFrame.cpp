@@ -547,17 +547,7 @@ RootContentFrame::Paint(nsIPresContext&      aPresContext,
         // padding area.
         mFirstChild->GetStyleData(eStyleStruct_Color,
                                   (const nsStyleStruct*&) color);
-        if (NS_STYLE_BG_IMAGE_NONE & color->mBackgroundFlags) {
-          renderAll = PR_FALSE;
-        }
-        else {
-          // If our child has an image background then rendering the
-          // various pieces will not work so don't do it.
-
-          // XXX background-position will be computed wrong here!
-          // Change PaintBackground to take in an x,y that provides
-          // the "origin" for the rendering operation.
-        }
+        renderAll = PR_FALSE;
       }
     }
 
@@ -583,7 +573,7 @@ RootContentFrame::Paint(nsIPresContext&      aPresContext,
         nsRect r(border.left, border.top, w, h);
         if ((w > 0) && (h > 0)) {
           nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
-                                          this, aDirtyRect, r, *color);
+                                          this, aDirtyRect, r, *color, 0, 0);
         }
       }
       else {
@@ -618,30 +608,29 @@ RootContentFrame::Paint(nsIPresContext&      aPresContext,
         nsRect childBounds;
         mFirstChild->GetRect(childBounds);
 
-        // Compute left/right padding+margin width
-        nscoord lpmw = padding.left + margin.left;
-        nscoord rpmw = padding.right + margin.right;
-
         // Paint the top padding+margin area
         nsRect r(border.left, border.top,
                  mRect.width - border.left - border.right,
                  padding.top + margin.top);
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
-                                        this, aDirtyRect, r, *color);
+                                        this, aDirtyRect, r, *color,
+                                        childBounds.x, childBounds.y);
 
         // Paint the left padding+margin area
         r.y = childBounds.y;
         r.width = padding.left + margin.left;
         r.height = childBounds.YMost() - padding.top - margin.top;
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
-                                        this, aDirtyRect, r, *color);
+                                        this, aDirtyRect, r, *color,
+                                        childBounds.x, childBounds.y);
 
         // Paint the right padding+margin area
         r.x = mRect.width - border.right - padding.right - margin.right -
           sbarWidth;
         r.width = padding.right + margin.right + sbarWidth;
         nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
-                                        this, aDirtyRect, r, *color);
+                                        this, aDirtyRect, r, *color,
+                                        childBounds.x, childBounds.y);
 
         // Paint the bottom padding+margin+extra area
         r.x = border.left;
@@ -650,7 +639,8 @@ RootContentFrame::Paint(nsIPresContext&      aPresContext,
           r.width = mRect.width - border.left - border.right;
           r.height = mRect.height - r.y;
           nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
-                                          this, aDirtyRect, r, *color);
+                                          this, aDirtyRect, r, *color,
+                                          childBounds.x, childBounds.y);
         }
       }
     }
