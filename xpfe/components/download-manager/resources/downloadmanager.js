@@ -157,12 +157,11 @@ var downloadViewController = {
 
     switch (aCommand) {
     case "cmd_openfile":
-      if (isDownloading)
-        return false;      
     case "cmd_showinshell":
       // we can't reveal until the download is complete, because we have not given
       // the file its final name until them.
-      return selectionCount == 1 && !isDownloading;
+      return selectionCount == 1 && !isDownloading && selectedItem &&
+             getFileForItem(selectedItem).exists();
     case "cmd_properties":
       return selectionCount == 1 && isDownloading;
     case "cmd_pause":
@@ -287,11 +286,13 @@ var downloadViewController = {
           newSelectionPos = gDownloadView.treeBoxObject.view.rowCount - 1;
         gDownloadView.treeBoxObject.selection.select(newSelectionPos);
         gDownloadView.treeBoxObject.ensureRowIsVisible(newSelectionPos);
+        gStatusBar.label = getSelectedItem().id;
       }
       else {
         // Nothing on the panel, so clear the Status Bar
         gStatusBar.label = "";
       }
+      window.updateCommands("tree-select");
       break;
     case "cmd_selectAll":
       gDownloadView.treeBoxObject.selection.selectAll();
