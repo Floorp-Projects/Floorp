@@ -1,4 +1,3 @@
-# Generated automatically from Makefile.in by configure.
 #!gmake
 #
 # The contents of this file are subject to the Netscape Public License
@@ -18,6 +17,7 @@
 
 DEPTH = ../../../..
 topsrcdir	= ../../../..
+VPATH		= .
 srcdir		= .
 
 include $(DEPTH)/config/autoconf.mk

@@ -57,7 +57,7 @@ LIBS = \
         -lsecfree \
         $(ZLIB_LIBS) \
         $(NSPR_LIBS) \
-        -lgfx$(MOZ_TOOLKIT)     \
+        -lgfx$(MOZ_GFX_TOOLKIT)     \
         -lraptorgfx     \
         -limg           \
         -lmozutil       \

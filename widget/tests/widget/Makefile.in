@@ -28,8 +28,8 @@ PROGRAM = widget
 # Hardcoding dlopen()'s?  This needs to get fixed.
 #
 TOOLKIT_CXXFLAGS := \
-	-DWIDGET_DLL=\"libwidget$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
-	-DGFX_DLL=\"libgfx$(MOZ_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DWIDGET_DLL=\"libwidget$(MOZ_WIDGET_TOOLKIT).$(DLL_SUFFIX)\" \
+	-DGFX_DLL=\"libgfx$(MOZ_GFX_TOOLKIT).$(DLL_SUFFIX)\" \
 	$(TK_CFLAGS)
 
 CPPSRCS = \
@@ -71,8 +71,8 @@ LIBS = \
 	-lxpcom \
 	-lreg \
 	-l$(MOZ_LIB_JS_PREFIX)js \
-	-lwidget$(MOZ_TOOLKIT) \
-	-lgfx$(MOZ_TOOLKIT)    \
+	-lwidget$(MOZ_WIDGET_TOOLKIT) \
+	-lgfx$(MOZ_GFX_TOOLKIT)    \
 	$(TK_LIBS) \
 	-lraptorgfx \
 	-lxp \

@@ -50,7 +50,7 @@ LIBS = \
 	-lpref \
 	-lsecfree \
 	-lraptorgfx \
-	-lgfx$(MOZ_TOOLKIT) \
+	-lgfx$(MOZ_GFX_TOOLKIT) \
 	-limg \
 	-l$(MOZ_LIB_UTIL_PREFIX)util \
 	$(PNG_LIBS) \

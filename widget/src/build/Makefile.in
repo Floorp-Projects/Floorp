@@ -22,9 +22,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME := widget$(MOZ_TOOLKIT)
+LIBRARY_NAME := widget$(MOZ_WIDGET_TOOLKIT)
 
-TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_TOOLKIT)
+TOOLKIT_INCLUDES := -I$(srcdir)/../$(MOZ_WIDGET_TOOLKIT)
 
 LOCAL_INCLUDES := \
 	-I$(srcdir)/../xpwidgets \
@@ -55,7 +55,7 @@ CPPSRCS_beos	:= \
 	nsBeOSWidgetFactory.cpp
 
 CPPSRCS := \
-	$(CPPSRCS_$(MOZ_TOOLKIT)) \
+	$(CPPSRCS_$(MOZ_WIDGET_TOOLKIT)) \
 	nsWidgetSupport.cpp \
 	$(NULL)
 
@@ -64,7 +64,7 @@ include $(topsrcdir)/config/config.mk
 CXXFLAGS += $(TK_CFLAGS)
 
 TOOLKIT_DSO_LDOPTS = $(addprefix $(DIST)/lib/libraptorwidget, \
-			$(addsuffix _s.a, $(MOZ_TOOLKIT)))
+			$(addsuffix _s.a, $(MOZ_WIDGET_TOOLKIT)))
 
 SHARED_LIBRARY_LIBS =			    \
 	$(TOOLKIT_DSO_LDOPTS)		    \

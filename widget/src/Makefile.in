@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = $(MOZ_TOOLKIT) xpwidgets build
+DIRS = $(MOZ_WIDGET_TOOLKIT) xpwidgets build
 
 include $(topsrcdir)/config/config.mk
 

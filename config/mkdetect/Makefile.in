@@ -40,7 +40,7 @@ DETECT_NAME	= detect_$(DETECT_UNIQ_IDENT)_gen.mk
 DETECT_GLIBC	= $(DETECT_DIR)/detect_glibc.sh -o $(DETECT_UNIQ_IDENT) \
 	-cc $(CC)
 
-ifeq (motif, $(MOZ_TOOLKIT))
+ifeq (motif, $(MOZ_WIDGET_TOOLKIT))
 # The motif detection script
 DETECT_MOTIF	=\
 				$(DETECT_DIR)/detect_motif.sh -o $(DETECT_UNIQ_IDENT) \
@@ -155,7 +155,7 @@ endif
 ## Motif
 ##
 
-ifeq ($(MOZ_TOOLKIT),motif)
+ifeq ($(MOZ_WIDGET_TOOLKIT),motif)
 
 ##
 ## Set the motif include flags

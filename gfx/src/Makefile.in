@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = ps $(MOZ_TOOLKIT)
+DIRS = ps $(MOZ_GFX_TOOLKIT)
 
 LIBRARY_NAME = raptorgfx
 
