@@ -57,6 +57,7 @@ pref("app.version",
 pref("app.build_id", 
 #expand __BUILD_ID__
 );
+pref("app.extensions.version", "0.9");
 
 pref("update.app.enabled", true);
 pref("update.app.url", "chrome://mozapps/locale/update/update.properties");

@@ -15,6 +15,8 @@
 <!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
+<!ENTITY openLocationCmd.label "Open Location...">
+<!ENTITY openLocationCmd.accesskey "L">
 <!ENTITY openFileCmd.label "Open File...">
 <!ENTITY openFileCmd.accesskey "O">
 <!ENTITY openFileCmd.commandkey "o">
@@ -158,6 +160,8 @@
 <!ENTITY selectAllCmd.label         "Select All">  
 <!ENTITY selectAllCmd.key         "A">  
 <!ENTITY selectAllCmd.accesskey       "A"> 
+<!ENTITY showUpdatesCmd.label       "Check for Updates...">
+<!ENTITY showUpdatesCmd.accesskey   "U">
 <!ENTITY preferencesCmd.label       "Options...">
 <!ENTITY preferencesCmd.accesskey     "O"> 
 <!ENTITY preferencesCmdUnix.label       "Preferences">

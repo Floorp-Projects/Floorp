@@ -44,6 +44,7 @@
                           command="cmd_newNavigator"/>
                 <menuitem command="cmd_newNavigatorTab" key="key_newNavigatorTab"
                           label="&tabCmd.label;" accesskey="&tabCmd.accesskey;"/>
+                <menuitem label="&openLocationCmd.label;" accesskey="&openLocationCmd.accesskey;" key="focusURLBar" command="Browser:OpenLocation"/>
                 <menuitem label="&openFileCmd.label;" accesskey="&openFileCmd.accesskey;" key="openFileKb" command="Browser:OpenFile"/>
                 <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
                 <menuitem id="menu_closeWindow" hidden="true" command="cmd_closeWindow" key="key_closeWindow" label="&closeWindow.label;"/>
@@ -355,6 +356,10 @@
                         command="Tools:Extensions"/>
               <menuitem label="&themes.label;" accesskey="&themes.accesskey;" 
                         command="Tools:Themes"/>
+              <menuitem id="menu_showUpdates"
+                        label="&showUpdatesCmd.label;"
+                        accesskey="&showUpdatesCmd.accesskey;"
+                        oncommand="document.getElementById('statusbar-updates').showUpdates();"/>
               <menuseparator id="devToolsSeparator"/>
               <menuitem id="javascriptConsole" 
                         label="&javaScriptConsoleCmd.label;" accesskey="&javaScriptConsoleCmd.accesskey;" 
