@@ -87,6 +87,7 @@ XPIDLSRCS	= \
 		nsIRollupListener.idl \
 		nsIMenuRollup.idl \
 		nsIBaseWindow.idl \
+		nsIBidiKeyboard.idl \
 		nsIXRemoteClient.idl \
 		$(NULL)
 

@@ -3,6 +3,7 @@
 #
 
 nsIAppShell.idl
+nsIBidiKeyboard.idl
 nsIFilePicker.idl
 nsIFileSpecWithUI.idl
 nsISound.idl
