@@ -35,7 +35,7 @@
 #include "nsLocalFileMac.h"
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #include "nsLocalFileUnix.h"
 #endif
 
