@@ -143,7 +143,7 @@ isEUCJP(const unsigned char *cp, PRInt32 len)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static nsresult AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aLen, char* aCharset)
+static nsresult JA_AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aLen, char* aCharset)
 {
   PRBool hasEsc = PR_FALSE;
   PRBool asciiOnly = PR_TRUE;
@@ -170,14 +170,21 @@ static nsresult AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aLen,
     // use old japanese auto detect code
     int euc, sjis;
     euc = isEUCJP((unsigned char *) aBuffer, aLen);
-    if (YES == euc || MAYBE == euc) {
+    sjis = isSJIS((unsigned char *) aBuffer, aLen);
+    if (YES == euc) {
       PL_strcpy(aCharset, "EUC-JP");
     }
-    else {
-      sjis = isSJIS((unsigned char *) aBuffer, aLen);
-      if (YES == sjis || MAYBE == sjis) {
-        PL_strcpy(aCharset, "Shift_JIS");
-      }
+    else if (YES == sjis) {
+      PL_strcpy(aCharset, "Shift_JIS");
+    }
+    else if (MAYBE == euc && NO == sjis) {
+      PL_strcpy(aCharset, "EUC-JP");
+    }
+    else if (MAYBE == sjis && NO == euc) {
+      PL_strcpy(aCharset, "Shift_JIS");
+    }
+    else if (MAYBE == euc && MAYBE == sjis) {
+      PL_strcpy(aCharset, "EUC-JP");
     }
   }
 
@@ -193,7 +200,7 @@ class nsClassicDetector :
 public:
   NS_DECL_ISUPPORTS
 
-  nsClassicDetector(PRUint32 aCodePage);
+  nsClassicDetector(const char* language);
   virtual ~nsClassicDetector();
   NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
@@ -202,15 +209,17 @@ public:
 private:
   nsICharsetDetectionObserver* mObserver;
   char mCharset[65];
+  char mLanguage[32];
 };
 
 NS_IMPL_ISUPPORTS(nsClassicDetector, nsICharsetDetector::GetIID());
 
 //----------------------------------------------------------
-nsClassicDetector::nsClassicDetector(PRUint32 aCodePage)
+nsClassicDetector::nsClassicDetector(const char* language)
 {
   NS_INIT_REFCNT();
   mObserver = nsnull;
+  PL_strcpy(mLanguage, language);
   PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
@@ -241,7 +250,8 @@ NS_IMETHODIMP nsClassicDetector::DoIt(
   if((nsnull == aBuf) || (nsnull == oDontFeedMe))
      return NS_ERROR_ILLEGAL_VALUE;
 
-  if (NS_SUCCEEDED(AutoCharsetDetectBuffer(aBuf, (PRInt32) aLen, mCharset))) {
+  if (!PL_strcasecmp("ja", mLanguage) &&
+      NS_SUCCEEDED(JA_AutoCharsetDetectBuffer(aBuf, (PRInt32) aLen, mCharset))) {
     mObserver->Notify(mCharset, eBestAnswer);
   }
   else {
@@ -266,21 +276,23 @@ class nsClassicStringDetector :
 public:
   NS_DECL_ISUPPORTS
 
-  nsClassicStringDetector(PRUint32 aCodePage);
+  nsClassicStringDetector(const char* language);
   virtual ~nsClassicStringDetector();
   NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
                   const char** oCharset, 
                   nsDetectionConfident &oConfident);
 protected:
   char mCharset[65];
+  char mLanguage[32];
 };
 
 NS_IMPL_ISUPPORTS(nsClassicStringDetector, nsIStringCharsetDetector::GetIID());
 
 //----------------------------------------------------------
-nsClassicStringDetector::nsClassicStringDetector(PRUint32 aCodePage)
+nsClassicStringDetector::nsClassicStringDetector(const char* language)
 {
   NS_INIT_REFCNT();
+  PL_strcpy(mLanguage, language);
   PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
@@ -291,13 +303,14 @@ nsClassicStringDetector::~nsClassicStringDetector()
 
 //----------------------------------------------------------
 NS_IMETHODIMP nsClassicStringDetector::DoIt(const char* aBuf, PRUint32 aLen, 
-                                           const char** oCharset, 
-                                           nsDetectionConfident &oConfident)
+                                            const char** oCharset, 
+                                            nsDetectionConfident &oConfident)
 {
   oConfident = eNoAnswerMatch;
   *oCharset = "";
 
-  if (NS_SUCCEEDED(AutoCharsetDetectBuffer(aBuf, (PRInt32) aLen, mCharset))) {
+  if (!PL_strcasecmp("ja", mLanguage) &&
+      NS_SUCCEEDED(JA_AutoCharsetDetectBuffer(aBuf, (PRInt32) aLen, mCharset))) {
     *oCharset = mCharset;
     oConfident = eBestAnswer;
   }
@@ -310,9 +323,9 @@ class nsClassicDetectorFactory : public nsIFactory {
    NS_DECL_ISUPPORTS
 
 public:
-   nsClassicDetectorFactory(PRUint32 aCodePage, PRBool stringBase) {
+   nsClassicDetectorFactory(const char* language, PRBool stringBase) {
      NS_INIT_REFCNT();
-     mCodePage = aCodePage;
+     PL_strcpy(mLanguage, language);
      mStringBase = stringBase;
      PR_AtomicIncrement(&g_InstanceCount);
    }
@@ -323,7 +336,7 @@ public:
    NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
    NS_IMETHOD LockFactory(PRBool aLock);
 private:
-   PRUint32 mCodePage;
+   char mLanguage[32];
    PRBool mStringBase;
 };
 
@@ -343,9 +356,9 @@ NS_IMETHODIMP nsClassicDetectorFactory::CreateInstance(
 
   nsISupports *inst = nsnull;
   if (mStringBase)
-    inst = (nsISupports *) new nsClassicStringDetector(mCodePage);
+    inst = (nsISupports *) new nsClassicStringDetector(mLanguage);
    else
-    inst = (nsISupports *) new nsClassicDetector(mCodePage);
+    inst = (nsISupports *) new nsClassicDetector(mLanguage);
   if(NULL == inst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -368,14 +381,14 @@ NS_IMETHODIMP nsClassicDetectorFactory::LockFactory(PRBool aLock)
 
 //==========================================================
 nsIFactory* NEW_JA_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory(50932, PR_FALSE);
+  return new nsClassicDetectorFactory("ja", PR_FALSE);
 }
 nsIFactory* NEW_JA_STRING_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory(50932, PR_TRUE);
+  return new nsClassicDetectorFactory("ja", PR_TRUE);
 }
 nsIFactory* NEW_KO_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory(50949, PR_FALSE);
+  return new nsClassicDetectorFactory("ko", PR_FALSE);
 }
 nsIFactory* NEW_KO_STRING_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory(50949, PR_TRUE);
+  return new nsClassicDetectorFactory("ko", PR_TRUE);
 }
