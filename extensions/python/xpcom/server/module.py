@@ -31,6 +31,7 @@ class Module:
         c = self.components = {}
         for klass in comps:
             c[components.ID(klass._reg_clsid_)] = klass
+        self.klassFactory = factory.Factory
 
     def getClassObject(self, compMgr, clsid, iid):
         # Single retval result.
@@ -39,8 +40,8 @@ class Module:
         except KeyError:
             raise ServerException(nsError.NS_ERROR_FACTORY_NOT_REGISTERED)
         
-        # We can ignore the IID - the auto-wrapp process will automatically QI us.
-        return factory.Factory(klass)
+        # We can ignore the IID - the auto-wrap process will automatically QI us.
+        return self.klassFactory(klass)
 
     def registerSelf(self, compMgr, location, loaderStr, componentType):
         # void function.
