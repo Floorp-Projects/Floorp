@@ -3555,8 +3555,6 @@ static PRBool SelectorMatches(RuleProcessorData &data,
           !IsQuirkEventSensitive(data.mContentTag)) {
         // In quirks mode, only make certain elements sensitive to
         // selectors ":hover" and ":active".
-        // XXX Once we make ":active" work correctly (bug 65917) this
-        // quirk should apply only to ":hover" (if to anything at all).
         result = localFalse;
       } else {
         if (nsCSSPseudoClasses::active == pseudoClass->mAtom) {
