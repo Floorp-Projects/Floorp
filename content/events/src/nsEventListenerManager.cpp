@@ -66,6 +66,10 @@
 #include "nsLayoutAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
+#include "nsIFrame.h"
+#include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptSecurityManager.h"
@@ -1407,8 +1411,8 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         nsCOMPtr<nsIDOMEventTarget> currentTarget ( aCurrentTarget );
         nsCOMPtr<nsIDOMElement> currentFocus;
         nsCOMPtr<nsIDocument> doc;
+        nsCOMPtr<nsIPresShell> shell;
         if ( aEvent->message == NS_CONTEXTMENU_KEY ) {
-          nsCOMPtr<nsIPresShell> shell;
           aPresContext->GetShell(getter_AddRefs(shell));
           shell->GetDocument(getter_AddRefs(doc));
           if ( doc ) {
@@ -1441,6 +1445,14 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
         if (NS_OK == ret) {
           // update the target
           if ( currentFocus ) {
+            // Reset event coordinates relative to focused frame in view
+            nsPoint targetPt;
+            GetCoordinatesFor(currentFocus, aPresContext, shell, targetPt);
+            aEvent->point.x += targetPt.x - aEvent->refPoint.x;
+            aEvent->point.y += targetPt.y - aEvent->refPoint.y;
+            aEvent->refPoint.x = targetPt.x;
+            aEvent->refPoint.y = targetPt.y;
+
             currentTarget = do_QueryInterface(currentFocus);
             nsCOMPtr<nsIPrivateDOMEvent> pEvent ( do_QueryInterface(*aDOMEvent) );
             pEvent->SetTarget ( currentTarget );
@@ -2653,6 +2665,49 @@ nsEventListenerManager::HandleEvent(nsIDOMEvent *aEvent)
 {
   PRBool noDefault;
   return DispatchEvent(aEvent, &noDefault);
+}
+
+void nsEventListenerManager::GetCoordinatesFor(nsIDOMElement *aCurrentEl, 
+                                               nsIPresContext *aPresContext,
+                                               nsIPresShell *aPresShell, 
+                                               nsPoint& aTargetPt)
+{
+  nsCOMPtr<nsIContent> focusedContent(do_QueryInterface(aCurrentEl));
+  nsIFrame *frame = nsnull;
+  aPresShell->GetPrimaryFrameFor(focusedContent, &frame);
+  if (frame) {
+    nsIView *view;
+    frame->GetOffsetFromView(aPresContext, aTargetPt, &view);
+    float t2p;
+    aPresContext->GetTwipsToPixels(&t2p);
+
+    // Start context menu down and to the right from top left of frame
+    // use the lineheight. This is a good distance to move the context
+    // menu away from the top left corner of the frame. If we always 
+    // used the frame height, the context menu could end up far away,
+    // for example when we're focused on linked images.
+    nsCOMPtr<nsIViewManager> vm;
+    aPresShell->GetViewManager(getter_AddRefs(vm));
+    if (vm) {
+      nsIScrollableView* scrollableView = nsnull;
+      vm->GetRootScrollableView(&scrollableView);
+      nscoord extraDistance;
+      if (scrollableView) {
+        scrollableView->GetLineHeight(&extraDistance);
+      }
+      else {
+        // No scrollable view, use height of frame as fallback
+        nsRect frameRect;
+        frame->GetRect(frameRect);
+        extraDistance = frameRect.height;
+      }
+      aTargetPt.x += extraDistance;
+      aTargetPt.y += extraDistance;
+    }
+     // Convert to pixels using that scale
+    aTargetPt.x = NSTwipsToIntPixels(aTargetPt.x, t2p);
+    aTargetPt.y = NSTwipsToIntPixels(aTargetPt.y, t2p);
+  }
 }
 
 nsresult

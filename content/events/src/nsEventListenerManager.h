@@ -210,6 +210,8 @@ protected:
   nsresult FlipCaptureBit(PRInt32 aEventTypes, PRBool aInitCapture);
   nsVoidArray* GetListenersByType(EventArrayType aType, nsHashKey* aKey, PRBool aCreate);
   EventArrayType GetTypeForIID(const nsIID& aIID);
+  void GetCoordinatesFor(nsIDOMElement *aCurrentEl, nsIPresContext *aPresContext,
+                         nsIPresShell *aPresShell, nsPoint& aTargetPt);
 
   PRUint8 mManagerType;
   EventArrayType mSingleListenerType;
