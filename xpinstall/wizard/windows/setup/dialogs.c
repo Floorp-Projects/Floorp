@@ -466,63 +466,58 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
           }
 
           AppendBackSlash(szBuf, sizeof(szBuf));
+
+          /* Make sure that the path is not within the windows dir */
+          if(IsPathWithinWindir(szBuf))
+          {
+              char errorMsg[MAX_BUF];
+              char errorMsgTitle[MAX_BUF];
+
+              GetPrivateProfileString("Messages", "ERROR_PATH_WITHIN_WINDIR",
+                  "", errorMsg, sizeof(errorMsg), szFileIniInstall);
+              GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "",
+                  errorMsgTitle, sizeof(errorMsgTitle), szFileIniInstall);
+              MessageBox(hDlg, errorMsg, errorMsgTitle, MB_OK | MB_ICONERROR);
+              break;
+          }
+
+          /* Create the path if it does not exist */
           if(FileExists(szBuf) == FALSE)
           {
-            char szMsgCreateDirectory[MAX_BUF];
-            char szStrCreateDirectory[MAX_BUF];
             char szBufTemp[MAX_BUF];
-            char szBufTemp2[MAX_BUF];
+            char szBuf2[MAX_PATH];
 
-            GetPrivateProfileString("Messages", "STR_CREATE_DIRECTORY", "", szStrCreateDirectory, sizeof(szStrCreateDirectory), szFileIniInstall);
-            if(GetPrivateProfileString("Messages", "MSG_CREATE_DIRECTORY", "", szMsgCreateDirectory, sizeof(szMsgCreateDirectory), szFileIniInstall))
+            if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
             {
+              char szECreateDirectory[MAX_BUF];
+              char szEMessageTitle[MAX_BUF];
+
               lstrcpy(szBufTemp, "\n\n");
-              lstrcat(szBufTemp, szBuf);
+              lstrcat(szBufTemp, sgProduct.szPath);
               RemoveBackSlash(szBufTemp);
               lstrcat(szBufTemp, "\n\n");
-              wsprintf(szBufTemp2, szMsgCreateDirectory, szBufTemp);
-            }
 
-            if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
-            {
-              char szBuf2[MAX_PATH];
+              if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
+                wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
-              {
-                char szECreateDirectory[MAX_BUF];
-                char szEMessageTitle[MAX_BUF];
+              GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
 
-                lstrcpy(szBufTemp, "\n\n");
-                lstrcat(szBufTemp, sgProduct.szPath);
-                RemoveBackSlash(szBufTemp);
-                lstrcat(szBufTemp, "\n\n");
-
-                if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
-                  wsprintf(szBuf, szECreateDirectory, szBufTemp);
-
-                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
-
-                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
-                break;
-              }
-
-              if(*sgProduct.szSubPath != '\0')
-              {
-                 /* log the subpath for uninstallation.  This subpath does not normally get logged
-                  * for uninstallation due to a chicken and egg problem with creating the log file
-                  * and the directory its in */
-                lstrcpy(szBuf2, szBuf);
-                AppendBackSlash(szBuf2, sizeof(szBuf2));
-                lstrcat(szBuf2, sgProduct.szSubPath);
-                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
-              }
-
-              bCreateDestinationDir = TRUE;
-            }
-            else
-            {
+              MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
               break;
             }
+
+            if(*sgProduct.szSubPath != '\0')
+            {
+               /* log the subpath for uninstallation.  This subpath does not normally get logged
+                * for uninstallation due to a chicken and egg problem with creating the log file
+                * and the directory its in */
+              lstrcpy(szBuf2, szBuf);
+              AppendBackSlash(szBuf2, sizeof(szBuf2));
+              lstrcat(szBuf2, sgProduct.szSubPath);
+              UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
+            }
+
+            bCreateDestinationDir = TRUE;
           }
 
           lstrcpy(szTempSetupPath, szBuf);
@@ -665,7 +660,6 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
   HWND          hDestinationPath;
   char          szBuf[MAX_BUF];
   char          szBufTemp[MAX_BUF];
-  char          szBufTemp2[MAX_BUF];
 
   hRadioSt0   = GetDlgItem(hDlg, IDC_RADIO_ST0);
   hStaticSt0  = GetDlgItem(hDlg, IDC_STATIC_ST0_DESCRIPTION);
@@ -839,93 +833,70 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           lstrcpy(szBuf, sgProduct.szPath);
           AppendBackSlash(szBuf, sizeof(szBuf));
 
+          /* Make sure that the path is not within the windows dir */
+          if(IsPathWithinWindir(szBuf))
+          {
+              char errorMsg[MAX_BUF];
+              char errorMsgTitle[MAX_BUF];
+
+              GetPrivateProfileString("Messages", "ERROR_PATH_WITHIN_WINDIR",
+                  "", errorMsg, sizeof(errorMsg), szFileIniInstall);
+              GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "",
+                  errorMsgTitle, sizeof(errorMsgTitle), szFileIniInstall);
+              MessageBox(hDlg, errorMsg, errorMsgTitle, MB_OK | MB_ICONERROR);
+              break;
+          }
+
+          /* Create the path if it does not exist */
           if(FileExists(szBuf) == FALSE)
           {
-            char szMsgCreateDirectory[MAX_BUF];
-            char szStrCreateDirectory[MAX_BUF];
+            char szBuf2[MAX_PATH];
 
-            GetPrivateProfileString("Messages", "STR_CREATE_DIRECTORY", "", szStrCreateDirectory, sizeof(szStrCreateDirectory), szFileIniInstall);
-            if(GetPrivateProfileString("Messages", "MSG_CREATE_DIRECTORY", "", szMsgCreateDirectory, sizeof(szMsgCreateDirectory), szFileIniInstall))
+            if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
             {
+              char szECreateDirectory[MAX_BUF];
+              char szEMessageTitle[MAX_BUF];
+
               lstrcpy(szBufTemp, "\n\n");
-              lstrcat(szBufTemp, szBuf);
+              lstrcat(szBufTemp, sgProduct.szPath);
               RemoveBackSlash(szBufTemp);
               lstrcat(szBufTemp, "\n\n");
-              wsprintf(szBufTemp2, szMsgCreateDirectory, szBufTemp);
-            }
 
-            if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
-            {
-              char szBuf2[MAX_PATH];
+              if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
+                wsprintf(szBuf, szECreateDirectory, szBufTemp);
 
-              if(CreateDirectoriesAll(szBuf, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
-              {
-                char szECreateDirectory[MAX_BUF];
-                char szEMessageTitle[MAX_BUF];
+              GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
 
-                lstrcpy(szBufTemp, "\n\n");
-                lstrcat(szBufTemp, sgProduct.szPath);
-                RemoveBackSlash(szBufTemp);
-                lstrcat(szBufTemp, "\n\n");
-
-                if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", szECreateDirectory, sizeof(szECreateDirectory), szFileIniInstall))
-                  wsprintf(szBuf, szECreateDirectory, szBufTemp);
-
-                GetPrivateProfileString("Messages", "ERROR_MESSAGE_TITLE", "", szEMessageTitle, sizeof(szEMessageTitle), szFileIniInstall);
-
-                MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
-                break;
-              }
-
-              if(*sgProduct.szSubPath != '\0')
-              {
-                 /* log the subpath for uninstallation.  This subpath does not normally get logged
-                  * for uninstallation due to a chicken and egg problem with creating the log file
-                  * and the directory its in */
-                lstrcpy(szBuf2, szBuf);
-                AppendBackSlash(szBuf2, sizeof(szBuf2));
-                lstrcat(szBuf2, sgProduct.szSubPath);
-                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
-              }
-
-              bCreateDestinationDir = TRUE;
-            }
-            else
-            {
+              MessageBox(hDlg, szBuf, szEMessageTitle, MB_OK | MB_ICONERROR);
               break;
             }
+
+            if(*sgProduct.szSubPath != '\0')
+            {
+               /* log the subpath for uninstallation.  This subpath does not normally get logged
+                * for uninstallation due to a chicken and egg problem with creating the log file
+                * and the directory its in */
+              lstrcpy(szBuf2, szBuf);
+              AppendBackSlash(szBuf2, sizeof(szBuf2));
+              lstrcat(szBuf2, sgProduct.szSubPath);
+              UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2, FALSE);
+            }
+
+            bCreateDestinationDir = TRUE;
           }
 
           /* retrieve and save the state of the selected radio button */
           if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST0)      == BST_CHECKED)
-          {
-            SiCNodeSetItemsSelected(ST_RADIO0);
-
             dwSetupType     = ST_RADIO0;
-            dwTempSetupType = dwSetupType;
-          }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST1) == BST_CHECKED)
-          {
-            SiCNodeSetItemsSelected(ST_RADIO1);
-
             dwSetupType     = ST_RADIO1;
-            dwTempSetupType = dwSetupType;
-          }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST2) == BST_CHECKED)
-          {
-            SiCNodeSetItemsSelected(ST_RADIO2);
-
             dwSetupType     = ST_RADIO2;
-            dwTempSetupType = dwSetupType;
-          }
           else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ST3) == BST_CHECKED)
-          {
-            SiCNodeSetItemsSelected(ST_RADIO3);
-
             dwSetupType     = ST_RADIO3;
-            dwTempSetupType = dwSetupType;
-          }
 
+          dwTempSetupType = dwSetupType;
+          SiCNodeSetItemsSelected(dwSetupType);
           DestroyWindow(hDlg);
           DlgSequence(NEXT_DLG);
           break;
@@ -941,6 +912,90 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
         case IDCANCEL:
           lstrcpy(sgProduct.szPath, szTempSetupPath);
           AskCancelDlg(hDlg);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
+}
+
+LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  char buf[MAX_BUF];
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+
+      GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
+          buf, sizeof(buf), szFileIniInstall);
+      SetWindowText(hDlg, buf);
+
+      GetPrivateProfileString("Strings", "Message Cleanup On Upgrade", "",
+          buf, sizeof(buf), szFileIniConfig);
+      ReplacePrivateProfileStrCR(buf);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, buf);
+
+      GetPrivateProfileString("Strings", "Cleanup On Upgrade Path Box String", "",
+          buf, sizeof(buf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_STATIC, buf);
+
+      MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
+      RemoveBackSlash(buf);
+      SetDlgItemText(hDlg, IDC_DELETE_PATH, buf);
+
+      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+
+      SetDlgItemText(hDlg, IDCONTINUE, sgInstallGui.szContinue_);
+      SetDlgItemText(hDlg, IDSKIP, sgInstallGui.szSkip_);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_DELETE_PATH, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDCONTINUE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDSKIP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDCONTINUE:
+          /* If the installation path happens to be within the %windir%, then
+           * show error message and continue without removing the previous
+           * installation path. */
+          if(IsPathWithinWindir(sgProduct.szPath))
+          {
+            GetPrivateProfileString("Strings", "Message Cleanup On Upgrade Windir", "",
+                buf, sizeof(buf), szFileIniConfig);
+            MessageBox(hWndMain, buf, NULL, MB_ICONEXCLAMATION);
+          }
+          else
+            /* set the var to delete target path here */
+            sgProduct.doCleanupOnUpgrade = TRUE;
+
+          SiCNodeSetItemsSelected(dwSetupType);
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          DlgSequence(NEXT_DLG);
+          break;
+
+        case IDSKIP:
+          sgProduct.doCleanupOnUpgrade = FALSE;
+          SiCNodeSetItemsSelected(dwSetupType);
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          DlgSequence(NEXT_DLG);
+          break;
+
+        case IDWIZBACK:
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          DlgSequence(PREV_DLG);
           break;
 
         default:
@@ -2677,6 +2732,9 @@ void DlgSequence(int iDirection)
           dwWizardState = DLG_SETUP_TYPE;
           break;
         case DLG_SETUP_TYPE:
+          dwWizardState = DLG_UPGRADE;
+          break;
+        case DLG_UPGRADE:
           dwWizardState = DLG_SELECT_COMPONENTS;
           break;
         case DLG_SELECT_COMPONENTS:
@@ -2718,6 +2776,9 @@ void DlgSequence(int iDirection)
           break;
         case DLG_SETUP_TYPE:
           dwWizardState = DLG_LICENSE;
+          break;
+        case DLG_UPGRADE:
+          dwWizardState = DLG_SETUP_TYPE;
           break;
         case DLG_SELECT_COMPONENTS:
           dwWizardState = DLG_SETUP_TYPE;
@@ -2792,6 +2853,47 @@ void DlgSequence(int iDirection)
           hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
           bDone = TRUE;
         }
+        break;
+
+      case DLG_UPGRADE:
+        if(sgProduct.checkCleanupOnUpgrade)
+        {
+          char buf[MAX_BUF];
+
+          // Found destination folder.  check to see if we're upgrading ontop
+          // of a previous installation.  If so, we need to prompt the user
+          // about removing the entire dir before installation happens.
+          MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
+          AppendBackSlash(buf, sizeof(buf));
+          lstrcat(buf, sgProduct.szProgramName);
+          if(FileExists(buf))
+          {
+            char warningTitleString[MAX_BUF];
+
+            GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
+                warningTitleString, sizeof(warningTitleString),
+                szFileIniInstall);
+
+            /* Prompt user if deleting target path is okay. Only show
+             * prompt if the setup is running in normal mode, else
+             * assume user wants deletion */
+            if(sgProduct.mode == NORMAL)
+            {
+              hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState,
+                  warningTitleString, DlgProcUpgrade);
+              bDone = TRUE;
+            }
+            else
+              sgProduct.doCleanupOnUpgrade = TRUE;
+          }
+        }
+
+        /* SiCNodeSetItemsSelected() is called from within DlgProcUpgrade().
+         * If DlgProcUpgrade is not called (in the case of a !NORMAL install),
+         * then we need to call it here. */
+        if(sgProduct.mode != NORMAL)
+          SiCNodeSetItemsSelected(dwSetupType);
+
         break;
 
       case DLG_SELECT_COMPONENTS:
@@ -2987,6 +3089,14 @@ void CommitInstall(void)
         PostQuitMessage(0);
 
         return;
+      }
+
+      /* Remove the previous installation of the product here.
+       * This should be done before processing the Xpinstall engine. */
+      if(sgProduct.doCleanupOnUpgrade)
+      {
+        SetSetupState(SETUP_STATE_REMOVING_PREV_INST);
+        CleanupOnUpgrade();
       }
 
       if(gbDownloadTriggered || gbPreviousUnfinishedDownload)

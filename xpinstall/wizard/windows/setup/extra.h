@@ -199,6 +199,7 @@ int               CRCCheckArchivesStartup(char *szCorruptedArchiveList,
 BOOL              ResolveForceUpgrade(siC *siCObject);
 void              RestoreInvisibleFlag(siC *siCNode);
 void              RestoreAdditionalFlag(siC *siCNode);
+void              RestoreEnabledFlag(siC *siCNode);
 void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
 void              ClearWinRegUninstallFileDeletion(void);
 int               AppendToGlobalMessageStream(char *szInfo);
@@ -226,6 +227,8 @@ void              GetXpinstallPath(char *aPath, int aPathBufSize);
 BOOL              GreInstallerNeedsReboot(void);
 void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
 void              UpdateGREAppInstallerProgress(int percent);
+BOOL              IsPathWithinWindir();
+void              CleanupOnUpgrade();
 
 #endif /* _EXTRA_H_ */
 

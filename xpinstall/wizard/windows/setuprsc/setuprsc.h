@@ -23,9 +23,11 @@
 #define IDC_STATUS1                     1001
 #define ID_DELETE                       1001
 #define IDC_STATUS_URL                  1001
+#define IDCONTINUE                      1001
 #define IDC_GAUGE                       1002
 #define IDC_GAUGE_FILE                  1002
 #define ID_IGNORE                       1002
+#define IDSKIP                          1002
 #define IDC_STATUS2                     1003
 #define IDC_STATUS_URL2                 1003
 #define IDC_STATUS_TO                   1003

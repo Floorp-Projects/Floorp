@@ -57,12 +57,18 @@ void    LaunchExistingGreInstaller(greInfo *gre);
 HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize);
 HRESULT GetInfoFromInstalledGreConfigIni(greInfo *aGre);
 HRESULT DetermineGreComponentDestinationPath(char *aInPath, char *aOutPath, DWORD aOutPathBufSize);
+BOOL    IsOkToRemoveFileOrDirname(char *aFileOrDirname);
 
 static greInfo gGre;
 
 char *ArchiveExtensions[] = {"zip",
                              "xpi",
                              "jar",
+                             ""};
+
+char *ExcludeRemoveList[] = {"plugins",
+                             "uninstall",
+                             "install_status.log",
                              ""};
 
 #define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
@@ -2410,6 +2416,144 @@ HRESULT LaunchApps()
   return(0);
 }
 
+/* Function: IsPathWithinWindir()
+ *       in: char *aTargetPath
+ *      out: returns a BOOL type indicating whether the install path chosen
+ *           by the user is within the %windir% or not.
+ *  purpose: To see if aTargetPath is within the %windir% path.
+ */
+BOOL IsPathWithinWindir(char *aTargetPath)
+{
+  char windir[MAX_PATH];
+  char targetPath[MAX_PATH];
+
+  assert(aTargetPath);
+
+  if(GetWindowsDirectory(windir, sizeof(windir)))
+  {
+    MozCopyStr(aTargetPath, targetPath, sizeof(targetPath));
+    RemoveBackSlash(targetPath);
+    CharUpperBuff(targetPath, sizeof(targetPath));
+    RemoveBackSlash(windir);
+    CharUpperBuff(windir, sizeof(windir));
+    if(strstr(targetPath, windir) == targetPath)
+      return(TRUE);
+  }
+  else
+  {
+    /* If we can't get the windows path, just show error message and assume
+     * the install path is not within the windows dir. */
+    char szEGetWindirFailed[MAX_BUF];
+
+    if(GetPrivateProfileString("Messages", "ERROR_GET_WINDOWS_DIRECTORY_FAILED", "", szEGetWindirFailed, sizeof(szEGetWindirFailed), szFileIniInstall))
+      PrintError(szEGetWindirFailed, ERROR_CODE_SHOW);
+  }
+  return(FALSE);
+}
+
+/* Function: IsOkToRemoveFileOrDir()
+ *       in: char *aFileOrDirname
+ *      out: bool return type
+ *  purpose: To check if the file or dirname is not in the ExcludeRemoveList.
+ */
+BOOL IsOkToRemoveFileOrDirname(char *aFileOrDirname)
+{
+  int  i;
+
+  i = 0;
+  while(*ExcludeRemoveList[i] != '\0')
+  {
+    if(lstrcmpi(aFileOrDirname, ExcludeRemoveList[i]) == 0)
+      return(FALSE);
+
+    ++i;
+  }
+  return(TRUE);
+}
+
+/* Function: CleanupOnUpgrade()
+ *       in: none.
+ *      out: none.
+ *  purpose: To cleanup/remove files and dirs within the user chosen
+ *           installation path, excluding the list in
+ *           ExcludeRemoveList.
+ */
+void CleanupOnUpgrade()
+{
+  HANDLE          fileHandle;
+  WIN32_FIND_DATA fdFile;
+  char            destPathTemp[MAX_BUF];
+  char            targetPath[MAX_BUF];
+  char            buf[MAX_BUF];
+  BOOL            found;
+
+  MozCopyStr(sgProduct.szPath, targetPath, sizeof(targetPath));
+  RemoveBackSlash(targetPath);
+
+  if(!FileExists(targetPath))
+    return;
+
+  UpdateInstallStatusLog("\n    Files/Dirs deleted on upgrade:\n");
+
+  /* Check to see if the installation path is within the %windir%.  If so,
+   * warn the user and do not delete any file! */
+  if(IsPathWithinWindir(targetPath))
+  {
+    if(sgProduct.mode == NORMAL)
+    {
+      GetPrivateProfileString("Strings", "Message Cleanup On Upgrade Windir", "",
+          buf, sizeof(buf), szFileIniConfig);
+      MessageBox(hWndMain, buf, NULL, MB_ICONEXCLAMATION);
+    }
+
+    _snprintf(buf, sizeof(buf), "        None.  Installation path is within %windir%:\n            %s\n", targetPath);
+    buf[sizeof(buf) - 1] = '\0';
+    UpdateInstallStatusLog(buf);
+    return;
+  }
+
+  _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\*", targetPath);
+  destPathTemp[sizeof(destPathTemp) - 1] = '\0';
+
+  found = TRUE;
+  fileHandle = FindFirstFile(destPathTemp, &fdFile);
+  while((fileHandle != INVALID_HANDLE_VALUE) && (found == TRUE))
+  {
+    if((lstrcmpi(fdFile.cFileName, ".") != 0) && (lstrcmpi(fdFile.cFileName, "..") != 0))
+    {
+      /* create full path */
+      _snprintf(destPathTemp, sizeof(destPathTemp), "%s\\%s", targetPath, fdFile.cFileName);
+      destPathTemp[sizeof(destPathTemp) - 1] = '\0';
+
+      if(IsOkToRemoveFileOrDirname(fdFile.cFileName))
+      {
+        if(fdFile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        {
+          AppendBackSlash(destPathTemp, sizeof(destPathTemp));
+          DirectoryRemove(destPathTemp, TRUE);
+        }
+        else
+          DeleteFile(destPathTemp);
+
+        /* Check to see if the file/dir was deleted successfully */
+        if(!FileExists(destPathTemp))
+          _snprintf(buf, sizeof(buf), "        ok: %s\n", destPathTemp);
+        else
+          _snprintf(buf, sizeof(buf), "    failed: %s\n", destPathTemp);
+      }
+      else
+        _snprintf(buf, sizeof(buf), "   skipped: %s\n", destPathTemp);
+
+      buf[sizeof(buf) - 1] = '\0';
+      UpdateInstallStatusLog(buf);
+    }
+
+    found = FindNextFile(fileHandle, &fdFile);
+  }
+
+  FindClose(fileHandle);
+}
+
 /* Function: ProcessGre()
  *       in: none.
  *      out: path to where gre is installed at.
@@ -3047,6 +3191,8 @@ HRESULT InitSetupGeneral()
   sgProduct.mode                 = NOT_SET;
   sgProduct.bSharedInst          = FALSE;
   sgProduct.bInstallFiles        = TRUE;
+  sgProduct.checkCleanupOnUpgrade = FALSE;
+  sgProduct.doCleanupOnUpgrade    = FALSE;
   sgProduct.greType              = GRE_TYPE_NOT_SET;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
@@ -3572,6 +3718,20 @@ void RestoreAdditionalFlag(siC *siCNode)
     siCNode->dwAttributes &= ~SIC_ADDITIONAL;
 }
 
+void RestoreEnabledFlag(siC *siCNode)
+{
+  char szBuf[MAX_BUF_TINY];
+  char szAttribute[MAX_BUF_TINY];
+
+  GetPrivateProfileString(siCNode->szReferenceName, "Attributes", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  lstrcpy(szAttribute, szBuf);
+  CharUpperBuff(szAttribute, sizeof(szAttribute));
+
+  if(strstr(szAttribute, "ENABLED") && !strstr(szAttribute, "DISABLED"))
+    siCNode->dwAttributes |= SIC_DISABLED;
+  else
+    siCNode->dwAttributes &= ~SIC_DISABLED;
+}
 
 //  This function:
 //  - Zeros the SELECTED and ADDITIONAL attributes of all components.
@@ -3651,6 +3811,11 @@ void SiCNodeSetItemsSelected(DWORD dwSetupType)
         if(!siCNode->bSupersede)
           siCNode->dwAttributes |= SIC_SELECTED;
 
+        /* We need to restore the ENBLED/DISABLED flag for this component
+         * from config.ini because it could have been altered in
+         * ResolveForceUpgrade().  We need to restore it here so the override
+         * attribute can override it here. */
+        RestoreEnabledFlag(siCNode);
         if(*szOverrideAttributes != '\0')
           siCNode->dwAttributes = ParseComponentAttributes(szOverrideAttributes, siCNode->dwAttributes, TRUE);
       }
@@ -4699,22 +4864,25 @@ BOOL ResolveForceUpgrade(siC *siCObject)
   siCObject->bForceUpgrade = FALSE;
   if(siCObject->dwAttributes & SIC_FORCE_UPGRADE)
   {
-    dwIndex = 0;
-    BuildNumberedString(dwIndex, NULL, "Force Upgrade File", szKey, sizeof(szKey));
-    GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szForceUpgradeFile, sizeof(szForceUpgradeFile), szFileIniConfig);
-    while(*szForceUpgradeFile != '\0')
+    if(!sgProduct.doCleanupOnUpgrade)
     {
-      DecryptString(szFilePath, szForceUpgradeFile);
-      if(FileExists(szFilePath))
-      {
-        siCObject->bForceUpgrade = TRUE;
-
-        /* Found at least one file, so break out of while loop */
-        break;
-      }
-
-      BuildNumberedString(++dwIndex, NULL, "Force Upgrade File", szKey, sizeof(szKey));
+      dwIndex = 0;
+      BuildNumberedString(dwIndex, NULL, "Force Upgrade File", szKey, sizeof(szKey));
       GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szForceUpgradeFile, sizeof(szForceUpgradeFile), szFileIniConfig);
+      while(*szForceUpgradeFile != '\0')
+      {
+        DecryptString(szFilePath, szForceUpgradeFile);
+        if(FileExists(szFilePath))
+        {
+          siCObject->bForceUpgrade = TRUE;
+
+          /* Found at least one file, so break out of while loop */
+          break;
+        }
+
+        BuildNumberedString(++dwIndex, NULL, "Force Upgrade File", szKey, sizeof(szKey));
+        GetPrivateProfileString(siCObject->szReferenceName, szKey, "", szForceUpgradeFile, sizeof(szForceUpgradeFile), szFileIniConfig);
+      }
     }
 
     if(siCObject->bForceUpgrade)
@@ -5745,13 +5913,13 @@ DWORD ParseCommandLine(LPSTR aMessageToClose, LPSTR lpszCmdLine)
       lstrcpy(sgProduct.szRegPath, szArgVBuf);
     }
     else if(!lstrcmpi(szArgVBuf, "-showBanner") || !lstrcmpi(szArgVBuf, "/showBanner"))
-    {
       gShowBannerImage = TRUE;
-    }
     else if(!lstrcmpi(szArgVBuf, "-hideBanner") || !lstrcmpi(szArgVBuf, "/hideBanner"))
-    {
       gShowBannerImage = FALSE;
-    }
+    else if(!lstrcmpi(szArgVBuf, "-cleanupOnUpgrade") || !lstrcmpi(szArgVBuf, "/cleanupOnUpgrade"))
+      sgProduct.checkCleanupOnUpgrade = TRUE;
+    else if(!lstrcmpi(szArgVBuf, "-noCleanupOnUpgrade") || !lstrcmpi(szArgVBuf, "/noCleanupOnUpgrade"))
+      sgProduct.checkCleanupOnUpgrade = FALSE;
 
 #ifdef XXX_DEBUG
     itoa(i, szBuf, 10);
@@ -6368,9 +6536,14 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   /* find out if we are doing a shared install */
   GetPrivateProfileString("General", "Shared Install", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "TRUE") == 0)
-  {
     sgProduct.bSharedInst = TRUE;
-  }
+
+  /* find out if we need to cleanup previous installation on upgrade
+   * (installing ontop of - not related to cleaning up olde GRE's
+   *  installed elsewhere) */
+  GetPrivateProfileString("General", "Cleanup On Upgrade", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    sgProduct.checkCleanupOnUpgrade = TRUE;
 
   /* this is a default value so don't change it if it has already been set */
   if(*sgProduct.szAppID == '\0')
@@ -6973,6 +7146,7 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "CANCEL", "", sgInstallGui.szCancel, sizeof(sgInstallGui.szCancel), szFileIniInstall);
   GetPrivateProfileString("General", "NEXT_", "", sgInstallGui.szNext_, sizeof(sgInstallGui.szNext_), szFileIniInstall);
   GetPrivateProfileString("General", "BACK_", "", sgInstallGui.szBack_, sizeof(sgInstallGui.szBack_), szFileIniInstall);
+  GetPrivateProfileString("General", "IGNORE_", "", sgInstallGui.szIgnore_, sizeof(sgInstallGui.szIgnore_), szFileIniInstall);
   GetPrivateProfileString("General", "PROXYSETTINGS_", "", sgInstallGui.szProxySettings_, sizeof(sgInstallGui.szProxySettings_), szFileIniInstall);
   GetPrivateProfileString("General", "PROXYSETTINGS", "", sgInstallGui.szProxySettings, sizeof(sgInstallGui.szProxySettings), szFileIniInstall);
   GetPrivateProfileString("General", "SERVER", "", sgInstallGui.szServer, sizeof(sgInstallGui.szServer), szFileIniInstall);
@@ -7004,6 +7178,8 @@ HRESULT ParseInstallIni()
   GetPrivateProfileString("General", "CURRENTSETTINGS", "", sgInstallGui.szCurrentSettings, sizeof(sgInstallGui.szCurrentSettings), szFileIniInstall);
   GetPrivateProfileString("General", "INSTALL_", "", sgInstallGui.szInstall_, sizeof(sgInstallGui.szInstall_), szFileIniInstall);
   GetPrivateProfileString("General", "DELETE_", "", sgInstallGui.szDelete_, sizeof(sgInstallGui.szDelete_), szFileIniInstall);
+  GetPrivateProfileString("General", "CONTINUE_", "", sgInstallGui.szContinue_, sizeof(sgInstallGui.szContinue_), szFileIniInstall);
+  GetPrivateProfileString("General", "SKIP_", "", sgInstallGui.szSkip_, sizeof(sgInstallGui.szSkip_), szFileIniInstall);
   GetPrivateProfileString("General", "EXTRACTING", "", sgInstallGui.szExtracting, sizeof(sgInstallGui.szExtracting), szFileIniInstall);
   GetPrivateProfileString("General", "README", "", sgInstallGui.szReadme_, sizeof(sgInstallGui.szReadme_), szFileIniInstall);
   GetPrivateProfileString("General", "PAUSE_", "", sgInstallGui.szPause_, sizeof(sgInstallGui.szPause_), szFileIniInstall);
