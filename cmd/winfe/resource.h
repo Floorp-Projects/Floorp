@@ -2029,6 +2029,10 @@
 #define IDC_ADDBOOK                     2667
 #define IDC_LOGINNAME                   2668
 #define IDC_PASSWORD                    2669
+/* Add new stuff here (but cross your fingers). */
+#define ID_ENDER                        3000
+#define IDS_EDIT_FLOAT_TOOLBAR          3001
+#define IDB_EDIT_FLOAT_TOOLBAR          3002
 /*Mail and News has reserved resource ID's 10,0000 to 15,000. */
 #define FIRST_HISTORY_MENU_ID           16384
 #define LAST_HISTORY_MENU_ID            16600
@@ -3468,7 +3472,7 @@
 #define IDS_OLE_CANTUSE_VIEWER          62095
 #define IDS_OLE_CANTUSE_HANDLER         62096
 #define IDS_OLE_CANTUSE_VIEWER2         62110
-#define IDS_LANGUAGE_THAI	        62120
+#define IDS_LANGUAGE_THAI   	        62120
 #define IDS_LANGUAGE_USRDEF3            62121
 #define IDS_LANGUAGE_USRDEF4            62122
 #define IDS_LANGUAGE_USRDEF5            62123
@@ -4072,9 +4076,10 @@
 #define IDM_SAVEASTEMPLATE              65504
 #define IDS_ADVSEARCH_TITLE             65505
 #define IDS_BASICSEARCH_TITLE           65506
-#define ID_ENDER                        65507
-#define IDS_EDIT_FLOAT_TOOLBAR          65508
-#define IDB_EDIT_FLOAT_TOOLBAR          65509
+/* Don't add here!  Doing so has been demonstrated */
+/* to generate a resource .dll that does not work  */
+/* on Windows 95/98.  -- law 08/03/1998            */
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
