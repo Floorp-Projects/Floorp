@@ -55,7 +55,7 @@ interface nsIChromeRegistry : nsISupports
    *
    * @param aChromeURL the URL that is to be converted.
    */
-	void convertChromeURL(in nsIURI aChromeURL);
+	string convertChromeURL(in nsIURI aChromeURL);
 
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
 		

@@ -367,7 +367,7 @@ nsChromeRegistry::Canonify(nsIURI* aChromeURI)
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
+nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
 {
   nsresult rv = NS_OK;
   NS_ASSERTION(aChromeURL, "null url!");
@@ -450,7 +450,8 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
   finalURL += "/";
   finalURL += remaining;
 
-  aChromeURL->SetSpec(finalURL);
+  *aResult = nsXPIDLCString::Copy(finalURL);
+
   return NS_OK;
 }
 
