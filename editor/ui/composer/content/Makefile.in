@@ -12,8 +12,11 @@
 #
 # The Initial Developer of this code under the NPL is Netscape
 # Communications Corporation.  Portions created by Netscape are
-# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
+# Contributors:
+#    Sammy Ford
 
 DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
@@ -28,6 +31,7 @@ include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EditorAppShell.xul \
+	$(srcdir)/EditorCommandOverlay.xul \
 	$(srcdir)/EditorCommands.js \
 	$(srcdir)/TextEditorAppShell.xul \
 	$(srcdir)/EditorInitPage.html \
@@ -44,6 +48,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/sb-file-panel.js \
 	$(srcdir)/sb-file-panel.xul \
 	$(srcdir)/sb-FileWidgetFileHandler.js \
+  $(srcdir)/viewsource.xul \
+  $(srcdir)/viewsource.js \
 	$(NULL)
 
 install:: 
