@@ -550,7 +550,6 @@ nsMimeXULEmitter::DumpAttachmentMenu()
   if (mAttachArray->Count() > 0)
   {
     PRInt32     i;
-    UtilityWriteCRLF("<menubar name=\"attachment-menubar\">");
     UtilityWriteCRLF("<menu name=\"attachment-menu\">");
     UtilityWriteCRLF(buttonXUL);
     UtilityWriteCRLF("<menupopup>");    
@@ -592,8 +591,6 @@ nsMimeXULEmitter::DumpAttachmentMenu()
     }
     UtilityWriteCRLF("</menupopup>");
     UtilityWriteCRLF("</menu>");
-    
-    UtilityWriteCRLF("</menubar>");
   }
 
   UtilityWriteCRLF("</box>");
