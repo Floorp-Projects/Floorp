@@ -34,6 +34,7 @@ interface nsIProfileServices : nsISupports
 	void StartCommunicator(in string profileName);
 	string GetCurrentProfile();
 	void MigrateProfile(in string profileName);
+	void ProcessPREGInfo(in string data);
 };
 
 
