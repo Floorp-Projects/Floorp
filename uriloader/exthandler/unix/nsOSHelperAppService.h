@@ -71,9 +71,10 @@ private:
                                   const char* aEnvVarName,
                                   PRUnichar** aFileLocation);
   static nsresult LookUpTypeAndDescription(const nsAString& aFileExtension,
-                                    nsAString& aMajorType,
-                                    nsAString& aMinorType,
-                                    nsAString& aDescription);
+                                           nsAString& aMajorType,
+                                           nsAString& aMinorType,
+                                           nsAString& aDescription,
+                                           PRBool aUserData);
   static nsresult CreateInputStream(const nsAString& aFilename,
                                     nsIFileInputStream ** aFileInputStream,
                                     nsILineInputStream ** aLineInputStream,
@@ -128,7 +129,8 @@ private:
                                                 nsHashtable& aTypeOptions,
                                                 nsAString& aHandler,
                                                 nsAString& aDescription,
-                                                nsAString& aMozillaFlags);
+                                                nsAString& aMozillaFlags,
+                                                PRBool aUserData);
   
   static nsresult GetHandlerAndDescriptionFromMailcapFile(const nsAString& aFilename,
                                                           const nsAString& aMajorType,
