@@ -11,7 +11,8 @@
   <RDF:Description about="urn:mozilla:package:pipnss"
         chrome:displayName="pipnss"
         chrome:author="PSM Team"
-        chrome:name="pipnss">
+        chrome:name="pipnss"
+ 	chrome:localeVersion="0.9.3">
   </RDF:Description>
 </RDF:RDF>  
 
