@@ -37,7 +37,6 @@
 
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
-extern "C" int NET_PollSockets();
 
 static NS_DEFINE_IID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
@@ -425,7 +424,6 @@ nsViewerApp::GetPlatform(nsString& aPlatform)
 void
 nsViewerApp::AfterDispatch()
 {
-   NET_PollSockets();
 }
 
 //----------------------------------------
@@ -464,8 +462,6 @@ void yieldProc(const char * str)
                               JSConsole::sAccelTable, &msg)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
-      /* Pump Netlib... */
-      NET_PollSockets();
     }
   }
 }

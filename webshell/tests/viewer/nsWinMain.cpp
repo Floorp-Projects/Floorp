@@ -23,8 +23,6 @@
 #include "JSConsole.h"
 #include "plevent.h"
 
-extern "C" int  NET_PollSockets();
-
 JSConsole *gConsole;
 HANDLE gInstance, gPrevInstance;
 static nsITimer* gNetTimer;
@@ -37,16 +35,6 @@ nsNativeViewerApp::~nsNativeViewerApp()
 {
 }
 
-static void
-PollNet(nsITimer *aTimer, void *aClosure)
-{
-  NET_PollSockets();
-  NS_IF_RELEASE(gNetTimer);
-  if (NS_OK == NS_NewTimer(&gNetTimer)) {
-    gNetTimer->Init(PollNet, nsnull, 1000 / 50);
-  }
-}
-
 int
 nsNativeViewerApp::Run()
 {
@@ -54,7 +42,6 @@ nsNativeViewerApp::Run()
  
   // Process messages
   MSG msg;
-  PollNet(0, 0);
   while (::GetMessage(&msg, NULL, 0, 0)) {
     if (!JSConsole::sAccelTable ||
         !gConsole ||
@@ -63,7 +50,6 @@ nsNativeViewerApp::Run()
                               JSConsole::sAccelTable, &msg)) {
       TranslateMessage(&msg);
       DispatchMessage(&msg);
-      NET_PollSockets();
     }
   }
   return msg.wParam;
