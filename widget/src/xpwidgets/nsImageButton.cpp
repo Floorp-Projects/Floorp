@@ -406,7 +406,7 @@ nsIImageRequest * nsImageButton::RequestImage(nsString aUrl)
 
   //request->GetNaturalDimensions(&mImageWidth, &mImageHeight);
 
-  delete url;
+  delete[] url;
 
   return request;
 }
