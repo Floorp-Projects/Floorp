@@ -6,7 +6,6 @@ chatzilla.jar:
 	content/chatzilla/lib/js/events.js           (js/lib/events.js)
 	content/chatzilla/lib/js/connection-xpcom.js (js/lib/connection-xpcom.js)
 	content/chatzilla/lib/js/command-manager.js  (js/lib/command-manager.js)
-	content/chatzilla/lib/js/command-manager.js  (js/lib/command-manager.js)
 	content/chatzilla/lib/js/pref-manager.js     (js/lib/pref-manager.js)
 	content/chatzilla/lib/js/message-manager.js  (js/lib/message-manager.js)
 	content/chatzilla/lib/js/menu-manager.js     (js/lib/menu-manager.js)
