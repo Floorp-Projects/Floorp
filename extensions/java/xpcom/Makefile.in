@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsJavaInterfaces.cpp \
 		nsJavaWrapper.cpp \
 		nsJavaXPTCStub.cpp \
+		nsJavaXPTCStubWeakRef.cpp \
 		nsJavaXPCOMBindingUtils.cpp \
 		$(NULL)
 

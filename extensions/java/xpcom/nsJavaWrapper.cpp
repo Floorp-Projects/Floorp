@@ -320,18 +320,21 @@ SetupParams(JNIEnv *env, const jobject aParam,
         // Check if we already have a corresponding XPCOM object
         void* inst = GetMatchingXPCOMObject(env, data);
 
-        if (inst == nsnull) {
+        // Get IID for this param
+        nsID iid;
+        rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
+                                  aMethodIndex, aDispatchParams, PR_TRUE,
+                                  iid);
+        if (NS_FAILED(rv))
+          return rv;
+
+        PRBool isWeakRef = iid.Equals(NS_GET_IID(nsIWeakReference));
+
+        if (inst == nsnull && !isWeakRef) {
           // If there is not corresponding XPCOM object, then that means that the
           // parameter is non-generated class (that is, it is not one of our
           // Java stubs that represent an exising XPCOM object).  So we need to
           // create an XPCOM stub, that can route any method calls to the class.
-
-          // Get IID for this param
-          nsID iid;
-          rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                    aMethodIndex, aDispatchParams, PR_TRUE, iid);
-          if (NS_FAILED(rv))
-            return rv;
 
           // Get interface info for class
           nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
@@ -343,34 +346,14 @@ SetupParams(JNIEnv *env, const jobject aParam,
           inst = SetAsXPTCStub(xpcomStub);
           AddJavaXPCOMBinding(env, data, inst);
         }
-#if 1
-        // XXX This code is here to make sure that the nsJavaXPTCStub that is
-        //  used has the correct (asked for) interface info.  For example, in
-        //  the Java code, the nsIWeakReference functions return the current
-        //  Java object ('this');  so when we call GetMatchingXPCOMObject on
-        //  that Java object, we get back a nsJavaXPTCStub that has the interface
-        //  info for something other than nsIWeakReference.  This will cause
-        //  problems later when we try to call one of the nsIWeakReference
-        //  functions on that Java object, but the nsJavaXPTCStub object doesn't
-        //  know anything about nsIWeakReference.
-        else {
-          if (IsXPTCStub(inst)) {
-            // Get IID for this param
-            nsID iid;
-            rv = GetIIDForMethodParam(aIInfo, aMethodInfo, aParamInfo,
-                                      aMethodIndex, aDispatchParams, PR_TRUE, iid);
-            if (NS_FAILED(rv))
-              return rv;
 
-            void* temp;
-            rv = GetXPTCStubAddr(inst)->QueryInterface(iid, &temp);
-            if (NS_SUCCEEDED(rv) && temp != GetXPTCStubAddr(inst))
-              inst = SetAsXPTCStub((nsJavaXPTCStub*) temp);
-          }
-        }
-#endif
-
-        if (IsXPTCStub(inst)) {
+        if (isWeakRef) {
+          // If the function expects an weak reference, then we need to
+          // create it here.
+          nsJavaXPTCStubWeakRef* weakref = new nsJavaXPTCStubWeakRef(env, data);
+          NS_ADDREF(weakref);
+          aVariant.val.p = aVariant.ptr = (void*) weakref;
+        } else if (IsXPTCStub(inst)) {
           nsJavaXPTCStub* xpcomStub = GetXPTCStubAddr(inst);
           NS_ADDREF(xpcomStub);
           aVariant.val.p = aVariant.ptr = (void*) xpcomStub;
