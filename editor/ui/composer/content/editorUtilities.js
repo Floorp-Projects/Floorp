@@ -217,7 +217,7 @@ function SetElementHidden(element, hide)
   if (element)
   {
     if (hide)
-      element.setAttribute("hidden", true);
+      element.setAttribute("hidden", "true");
     else
       element.removeAttribute("hidden");
   }
@@ -689,20 +689,47 @@ function GetFilename(url)
   return filename ? filename : "";
 }
 
-// Return the url with username and password (preHost) removed
-function StripUsernamePassword(url)
+// Return the url without username and password
+// Optional output objects return extracted username and password strings
+// This uses just string routines via nsIIOServices
+function StripUsernamePassword(url, usernameObj, passwordObj)
 {
-  if (url)
+  url = TrimString(url);
+  if (!url || IsUrlAboutBlank(url))
+    return url;
+
+  var IOService = GetIOService();
+  if (!IOService)
+    return url;
+
+  if (usernameObj)
+    usernameObj.value = "";
+  if (passwordObj)
+    passwordObj.value = "";
+
+  // "@" must exist else we will never detect username or password
+  var atIndex = url.indexOf("@");
+  if (atIndex > 0)
   {
     try {
-      uri = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-      uri.spec = url;
-      return StripUsernamePasswordFromURI(uri);
-    } catch (e) {}    
+      var startU = {value :0};
+      var username = IOService.extractUrlPart(url, IOService.url_Username, startU, {end:0});
+      var password = IOService.extractUrlPart(url, IOService.url_Password, {start:0}, {end:0});
+
+      if (usernameObj && username)
+        usernameObj.value = username;
+      if (passwordObj && password)
+        passwordObj.value = password;
+
+      if (username)
+        return url.slice(0, startU.value) + url.slice(atIndex+1);
+
+    } catch (e) {}
   }
   return url;
 }
 
+// Version to use when you have an nsIURI object
 function StripUsernamePasswordFromURI(uri)
 {
   var url = "";

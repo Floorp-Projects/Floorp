@@ -28,7 +28,8 @@ var gPreviousDefaultSite;
 var gPreviousTitle;
 var gSettingsChanged = false;
 var gSiteDataChanged = false;
-var gNewSite = false;
+var gAddNewSite = false;
+var gCurrentSiteIndex = -1;
 
 // Dialog initialization code
 function Startup()
@@ -72,7 +73,10 @@ function InitDialog()
 
 function FillSiteList()
 {
+  // Prevent triggering SelectSiteList() actions
+  gIsSelecting = true;
   ClearListbox(gDialog.SiteList);
+  gIsSelecting = false;
   gDefaultSiteIndex = -1;
 
   // Fill the site list
@@ -102,12 +106,12 @@ function SetPublishItemStyle(item)
 function AddNewSite()
 {
   // Save any pending changes locally first
-  if (gSettingsChanged && !UpdateSettings())
+  if (!ApplyChanges())
     return;
 
   // Initialize Setting widgets to none of the selected sites
   InitSiteSettings(-1);
-  gNewSite = true;
+  gAddNewSite = true;
 
   SetTextboxFocus(gDialog.SiteNameInput);
 }
@@ -122,6 +126,7 @@ function RemoveSite()
   if (index != -1)
   {
     item = gDialog.SiteList.selectedItems[0];
+    var nameToRemove = item.getAttribute("label");
 
     // Remove one item from site data array
     gPublishSiteData.splice(index, 1);
@@ -134,6 +139,12 @@ function RemoveSite()
       index--;
     InitSiteSettings(index);
 
+    if (nameToRemove == gDefaultSiteName)
+    {
+      // Deleting current default -- set to new selected item
+      //  Arbitrary, but what else to do?
+      SetDefault();
+    }
     gSiteDataChanged = true;
   }
 }
@@ -159,7 +170,8 @@ function SetDefault()
   }
 }
 
-// Recursion prevention: InitSiteSettings() changes selected item
+// Recursion prevention:
+// Use when you don't want to trigger ApplyChanges and InitSiteSettings
 var gIsSelecting = false;
 
 function SelectSiteList()
@@ -168,22 +180,34 @@ function SelectSiteList()
     return;
 
   gIsSelecting = true;
+  var newIndex = gDialog.SiteList.selectedIndex;
 
   // Save any pending changes locally first
-  if (gSettingsChanged && !UpdateSettings())
+  if (!ApplyChanges())
     return;
 
-  InitSiteSettings(gDialog.SiteList.selectedIndex);
+  InitSiteSettings(newIndex);
 
   gIsSelecting = false;
 }
 
-function InitSiteSettings(selectedSiteIndex)
+// Use this to prevent recursion in SelectSiteList
+function SetSelectedSiteIndex(index)
 {
+  gIsSelecting = true;
+  gDialog.SiteList.selectedIndex = index;
+  gIsSelecting = false;
+}
+
+function InitSiteSettings(selectedSiteIndex)
+{  
+  // Index to the site we will need to update if settings changed
+  gCurrentSiteIndex = selectedSiteIndex;
+  
   var savePassord = false;
 
+  SetSelectedSiteIndex(selectedSiteIndex);
   var haveData = (gPublishSiteData && selectedSiteIndex != -1);
-  gDialog.SiteList.selectedIndex = selectedSiteIndex;
 
   gDialog.SiteNameInput.value = haveData ? gPublishSiteData[selectedSiteIndex].siteName : "";
   gDialog.PublishUrlInput.value = haveData ? gPublishSiteData[selectedSiteIndex].publishUrl : "";
@@ -204,6 +228,17 @@ function onInputSettings()
   gSettingsChanged = true;
 }
 
+function ApplyChanges()
+{
+  if (gSettingsChanged && !UpdateSettings())
+  {
+    // Restore selection to previously current site
+    SetSelectedSiteIndex(gCurrentSiteIndex);
+    return false;
+  }
+  return true;
+}
+
 function UpdateSettings()
 {
   // Validate and add new site
@@ -220,80 +255,66 @@ function UpdateSettings()
     return false;
   }
 
-  var siteIndex = -1;
+  // Start assuming we're updating existing site at gCurrentSiteIndex
+  var newSiteData = false;
+
   if (!gPublishSiteData)
   {
-    // Create the first site profile
+    // First time used - Create the first site profile
     gPublishSiteData = new Array(1);
-    siteIndex = 0;
-    gNewSite = true;
+    gCurrentSiteIndex = 0;
+    newSiteData = true;
   }
-  else
+  else if (gCurrentSiteIndex == -1)
   {
+    // No currently-selected site,
+    //  must be adding a new site
     // Add new data at the end of list
-    siteIndex = gPublishSiteData.length;
+    gCurrentSiteIndex = gPublishSiteData.length;
+    newSiteData = true;
   }
     
-  if (gNewSite || gDialog.SiteList.selectedIndex == -1)
+  if (newSiteData)
   {
-    // Init new site object
-    gPublishSiteData[siteIndex] = {};
-    gPublishSiteData[siteIndex].docDir = "/";
-    gPublishSiteData[siteIndex].otherDir = "/";
-    gPublishSiteData[siteIndex].dirList = ["/"];
-  }
-  else
-  {
-    // Update existing site profile
-    siteIndex = gDialog.SiteList.selectedIndex;
+    // Init new site profile
+    gPublishSiteData[gCurrentSiteIndex] = {};
+    gPublishSiteData[gCurrentSiteIndex].docDir = "/";
+    gPublishSiteData[gCurrentSiteIndex].otherDir = "/";
+    gPublishSiteData[gCurrentSiteIndex].dirList = ["/"];
   }
 
-  gPublishSiteData[siteIndex].siteName = newName;
-  gPublishSiteData[siteIndex].publishUrl = newUrl;
-  gPublishSiteData[siteIndex].browseUrl = FormatUrlForPublishing(gDialog.BrowseUrlInput.value);
-  gPublishSiteData[siteIndex].username = TrimString(gDialog.UsernameInput.value);
-  gPublishSiteData[siteIndex].password= gDialog.PasswordInput.value;
-  gPublishSiteData[siteIndex].savePassword = gDialog.SavePassword.checked;
+  gPublishSiteData[gCurrentSiteIndex].siteName = newName;
+  gPublishSiteData[gCurrentSiteIndex].publishUrl = newUrl;
+  gPublishSiteData[gCurrentSiteIndex].browseUrl = FormatUrlForPublishing(gDialog.BrowseUrlInput.value);
+  gPublishSiteData[gCurrentSiteIndex].username = TrimString(gDialog.UsernameInput.value);
+  gPublishSiteData[gCurrentSiteIndex].password= gDialog.PasswordInput.value;
+  gPublishSiteData[gCurrentSiteIndex].savePassword = gDialog.SavePassword.checked;
 
-  if (siteIndex == gDefaultSiteIndex)
+  if (gCurrentSiteIndex == gDefaultSiteIndex)
     gDefaultSiteName = newName;
 
-  var count = gPublishSiteData.length;
-  if (count > 1)
-  {
-    // XXX Ascii sort, not locale-aware
-    gPublishSiteData.sort();
-
-    //Find previous items in sorted list
-    for (var i = 0; i < count; i++)
-    {
-      if (gPublishSiteData[i].siteName == newName)
-      {
-        siteIndex = i;
-        break;
-      }
-    }
-  }
-
   // When adding the very first site, assume that's the default
-  if (count == 1 && !gDefaultSiteName)
+  if (gPublishSiteData.length == 1 && !gDefaultSiteName)
   {
     gDefaultSiteName = gPublishSiteData[0].siteName;
     gDefaultSiteIndex = 0;
   }
 
   FillSiteList();
-  gDialog.SiteList.selectedIndex = siteIndex;
+
+  // Select current site in list  
+  SetSelectedSiteIndex(gCurrentSiteIndex);
 
   // Signal saving data to prefs
   gSiteDataChanged = true;
   
   // Clear current site flags
   gSettingsChanged = false;
-  gNewSite = false;
+  gAddNewSite = false;
 
   return true;
 }
+
 
 function doHelpButton()
 {
@@ -303,7 +324,7 @@ function doHelpButton()
 function onAccept()
 {
   // Save any pending changes locally first
-  if (gSettingsChanged && !UpdateSettings())
+  if (!ApplyChanges())
     return false;
 
   if (gSiteDataChanged)

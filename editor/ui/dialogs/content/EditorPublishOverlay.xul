@@ -43,6 +43,7 @@
     <spacer class="spacer"/>
     <label value="&browseUrl.label;"/>
     <textbox id="BrowseUrlInput" class="MinWidth20em" oninput="onInputSettings();"/>
+    <spacer class="spacer"/>
   </groupbox>
   <groupbox id="LoginSettingsBox">
     <caption label="&loginInfo.label;"/>
@@ -62,6 +63,7 @@
         </row>
       </rows>
     </grid>
+    <spacer class="spacer"/>
   </groupbox>
 </vbox>
 

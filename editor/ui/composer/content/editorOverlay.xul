@@ -140,8 +140,7 @@
     <command id="cmd_exportToText"   label="&exportToTextCmd.label;"   oncommand="goDoCommand('cmd_exportToText')"/>
     <command id="cmd_saveAsCharset"  label="&saveAsCharsetCmd.label;"  oncommand="goDoCommand('cmd_saveAsCharset')"/>
     <command id="cmd_publish"        label="&publishCmd.label;"        oncommand="goDoCommand('cmd_publish')"/>
-    <!-- Always use "doStatefulCommand('cmd_publishAs', 'siteName')" to set siteName in "state" attribute -->
-    <command id="cmd_publishAs"      state=""/>
+    <command id="cmd_publishAs"      label="&publishAsCmd.label;"      oncommand="goDoCommand('cmd_publishAs')"/>
     <command id="cmd_revert"         label="&fileRevert.label;"        oncommand="goDoCommand('cmd_revert')"/>
     <command id="cmd_preview"                                          oncommand="goDoCommand('cmd_preview')"/>
     <command id="cmd_editSendPage"   label="&sendPageCmd.label;"
@@ -311,16 +310,7 @@
       <menuitem accesskey="&filesaveas.accesskey;" observes="cmd_saveAs"/>
       <menuitem accesskey="&filesaveascharset.accesskey;" observes="cmd_saveAsCharset"/>
       <menuitem id="publishMenuitem" accesskey="&publishcmd.accesskey;" observes="cmd_publish"/>
-      <menu id="publishToMenu" label="&publishMenu.label;" pubaccesskey="&publishmenu.accesskey;"
-            observes="cmd_publishAs"
-            oncommand="doStatefulCommand('cmd_publishAs', event.target.getAttribute('value'))"
-            onpopupshowing="InitPublishMenu();">
-        <menupopup>
-          <menuitem label="&publishAsCmd.label;" accesskey="&publishas.accesskey;" value=""/>
-          <menuseparator id="publishSitesSeparator"/>
-          <!-- list of available sites are added at runtime by InitPublishMenu -->
-        </menupopup>
-      </menu>
+      <menuitem accesskey="&publishas.accesskey;" observes="cmd_publishAs"/>
       <menuseparator/>
       <menuitem accesskey="&fileexporttotext.accesskey;"                    observes="cmd_exportToText" id="fileExportToText"/>
       <menuitem accesskey="&filerevert.accesskey;" observes="cmd_revert"/>
@@ -673,7 +663,7 @@
                  tooltiptext="&saveToolbarCmd.tooltip;"/>
   <toolbarbutton id="publishButton" class="toolbarbutton-1"
                  observes="cmd_publish"
-                 tooltiptext="&publishToolbarCmd.tooltip;" collapsed="true"/>
+                 tooltiptext="&publishToolbarCmd.tooltip;" hidden="true"/>
   <toolbarbutton id="previewButton" class="toolbarbutton-1"
                  label="&previewToolbarCmd.label;" observes="cmd_preview"
                  tooltiptext="&previewToolbarCmd.tooltip;"/>
