@@ -40,7 +40,11 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
   nsAutoString alertText(msg);
   if (dialog) 
   {
+#ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
+#else
+    printf("%s",msg);
+#endif
   }
 
   PR_FREEIF(msg);
@@ -65,9 +69,7 @@ nsMsgDisplayMessageByString(char *msg)
 #ifdef BUG_7770_IS_FIXED
     rv = dialog->Alert(alertText);
 #else
-#ifdef DEBUG
     printf("%s",msg);
-#endif
 #endif    
   }
 
