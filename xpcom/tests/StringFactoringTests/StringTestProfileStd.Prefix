@@ -1,0 +1,5 @@
+// StringTestProfileOld.Prefix
+
+#include "StringTest.Prefix"
+#undef NEW_STRING_APIS
+#define TEST_STD_STRING
