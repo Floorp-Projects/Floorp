@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsAboutBloat.cpp \
 		nsAboutCache.cpp \
 		nsAboutCredits.cpp \
+		nsAboutPlugins.cpp \
 		mzAboutMozilla.cpp \
 		$(NULL)
 
