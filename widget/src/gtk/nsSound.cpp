@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -18,67 +18,98 @@
 
 
 #include "nscore.h"
-#include "nsISound.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
 #include "stdio.h"
 
-#include <gdk/gdk.h>
+#include "prlink.h"
 
-class SoundImpl : public nsISound
-{
-public:
-    SoundImpl();
-    virtual ~SoundImpl();
+#include "nsSound.h"
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
+#include <unistd.h>
 
-    // nsISound interface
+#include <gtk/gtk.h>
+/* used with esd_open_sound */
+//static int esdref = -1;
+static PRLibrary *lib = nsnull;
 
-    NS_IMETHOD Beep();
+//typedef int (PR_CALLBACK *EsdOpenSoundType)(const char *host);
+//typedef int (PR_CALLBACK *EsdCloseType)(int);
 
-};
+/* used to play the sounds from the find symbol call */
+typedef int (PR_CALLBACK *EsdPlayFileType)(const char *, const char *, int);
 
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewSound(nsISound** aSound)
-{
-    NS_PRECONDITION(aSound != nsnull, "null ptr");
-    if (! aSound)
-        return NS_ERROR_NULL_POINTER;
-
-    *aSound = new SoundImpl();
-    if (! *aSound)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aSound);
-    return NS_OK;
-}
+NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
-
-
-SoundImpl::SoundImpl()
+nsSound::nsSound()
 {
-    NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
+
+  /* we don't need to do esd_open_sound if we are only going to play files
+     but we will if we want to do things like streams, etc
+  */
+  //  EsdOpenSoundType EsdOpenSound;
+
+  lib = PR_LoadLibrary("libesd.so");
+
+  /*
+    if (!lib)
+    return;
+    EsdOpenSound = (EsdOpenSoundType) PR_FindSymbol(lib, "esd_open_sound");
+    esdref = (*EsdOpenSound)("localhost");
+  */
+}
+
+nsSound::~nsSound()
+{
+  /* see above comment */
+  /*
+    if (esdref != -1)
+    {
+    EsdCloseType EsdClose = (EsdCloseType) PR_FindSymbol(lib, "esd_close");
+    (*EsdClose)(esdref);
+    esdref = -1;
+    }
+  */
+}
+
+nsresult NS_NewSound(nsISound** aSound)
+{
+  NS_PRECONDITION(aSound != nsnull, "null ptr");
+  if (! aSound)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aSound = new nsSound();
+  if (! *aSound)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(*aSound);
+  return NS_OK;
 }
 
 
-SoundImpl::~SoundImpl()
+NS_METHOD nsSound::Init(void)
 {
+  return NS_OK;
 }
 
 
-
-NS_IMPL_ISUPPORTS(SoundImpl, nsISound::GetIID());
-
-
-NS_IMETHODIMP
-SoundImpl::Beep()
+NS_METHOD nsSound::Beep()
 {
 	::gdk_beep();
 
+  return NS_OK;
+}
+
+NS_METHOD nsSound::Play(const char *filename)
+{
+  if (lib)
+  {
+    g_print("there are some issues with playing sound right now, but this should work\n");
+    EsdPlayFileType EsdPlayFile = (EsdPlayFileType) PR_FindSymbol(lib, "esd_play_file");
+    (*EsdPlayFile)("mozilla", filename, 1);
     return NS_OK;
+  }
+  return NS_OK;
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,69 +16,58 @@
  * Reserved.
  */
 
-
 #include "nscore.h"
-#include "nsISound.h"
 #include "nsIAllocator.h"
 #include "plstr.h"
 #include "stdio.h"
 
 #include <windows.h>
 
-class SoundImpl : public nsISound
-{
-public:
-    SoundImpl();
-    virtual ~SoundImpl();
+#include "nsSound.h"
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsISound interface
-
-    NS_IMETHOD Beep();
-
-};
+NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
 
 ////////////////////////////////////////////////////////////////////////
-
-nsresult
-NS_NewSound(nsISound** aSound)
+nsSound::nsSound()
 {
-    NS_PRECONDITION(aSound != nsnull, "null ptr");
-    if (! aSound)
-        return NS_ERROR_NULL_POINTER;
-
-    *aSound = new SoundImpl();
-    if (! *aSound)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    NS_ADDREF(*aSound);
-    return NS_OK;
+  NS_INIT_REFCNT();
 }
 
-////////////////////////////////////////////////////////////////////////
-
-
-SoundImpl::SoundImpl()
-{
-    NS_INIT_REFCNT();
-}
-
-
-SoundImpl::~SoundImpl()
+nsSound::~nsSound()
 {
 }
 
-
-
-NS_IMPL_ISUPPORTS(SoundImpl, nsCOMTypeInfo<nsISound>::GetIID());
-
-
-NS_IMETHODIMP
-SoundImpl::Beep()
+nsresult NS_NewSound(nsISound** aSound)
 {
-	::MessageBeep(0);
-
-    return NS_OK;
+  NS_PRECONDITION(aSound != nsnull, "null ptr");
+  if (! aSound)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aSound = new nsSound();
+  if (! *aSound)
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  NS_ADDREF(*aSound);
+  return NS_OK;
 }
+
+
+NS_METHOD nsSound::Init(void)
+{
+  return NS_OK;
+}
+
+
+NS_METHOD nsSound::Beep()
+{
+  ::MessageBeep(0);
+
+  return NS_OK;
+}
+
+NS_METHOD nsSound::Play(const char *filename)
+{
+  ::PlaySound(filename, nsnull, SND_FILENAME | SND_NODEFAULT | SND_ASYNC);
+  return NS_OK;
+}
+

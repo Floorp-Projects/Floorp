@@ -46,6 +46,7 @@
 #include "nsAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsFontRetrieverService.h"
+#include "nsSound.h"
 
 // Drag & Drop, Clipboard
 #include "nsClipboard.h"
@@ -53,8 +54,6 @@
 #include "nsXIFFormatConverter.h"
 #include "nsDragService.h"
 #include "nsFileListTransferable.h"
-
-#include "nsISound.h"
 
 static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
