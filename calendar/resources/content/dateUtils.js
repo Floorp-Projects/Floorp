@@ -282,7 +282,34 @@ DateFormater.prototype.getShortDayName = function( dayIndex )
    return dayName;
 }
 
+DateFormater.prototype.parseShortDate = function ( dateString )
+{ 
+  // probe for date format -- this part could be in constructor
+  // probe result state:
+  var parseShortDateRegex = /^\s*(\d+)\D(\d+)\D(\d+)\s*$/; //digits & nonDigits
+  var parsedYearIndex = -1, parsedMonthIndex = -1, parsedDayIndex = -1;
+  { // do probe 
+    var probeDate = new Date(2002,3-1,4); // month is 0-based
+    var probeString = this.getShortFormatedDate(probeDate);
 
+    var probeArray = parseShortDateRegex.exec(probeString);
+    for (var i = 1; i <= 3; i++) { 
+      switch (Number(probeArray[i])) {
+      case 2002: case 02: parsedYearIndex = i;  break;
+      case 3:             parsedMonthIndex = i; break;
+      case 4:             parsedDayIndex = i;   break;
+      }
+    }
+    // all three parsed indexes are now set (no longer -1)
+  }
+  // parse dateString
+  var dateNumbersArray = parseShortDateRegex.exec(dateString);
+  if (dateNumbersArray != null) { 
+    return new Date(Number(dateNumbersArray[parsedYearIndex]),
+		    Number(dateNumbersArray[parsedMonthIndex]) - 1, // 0-based
+		    Number(dateNumbersArray[parsedDayIndex]));
+  } else return null; // did not match regex, not a valid date
+}
 
 
 

@@ -10,8 +10,8 @@
 		<content id="content">
 		<xul:hbox flex="1" id="hbox">
 			<xul:textbox id="textbox" 
-				onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new Date(this.value));"
-				onblur="this.parentNode.parentNode.parentNode.parentNode.update(new Date(this.value),true);"/>
+                                onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.update(new DateFormater().parseShortDate(this.value));"
+                                onblur="this.parentNode.parentNode.parentNode.parentNode.update(new DateFormater().parseShortDate(this.value),true);"/>
 			
 			<xul:menu class="datepicker-button">
 				<xul:menupopup popupanchor="bottomright" popupalign="topright" oncreate="this.parentNode.parentNode.parentNode.parentNode.openPopup()">
@@ -37,6 +37,7 @@
 				this.mTextBox = document.getAnonymousNodes(this)[0].childNodes[0];
 				this.mPopup = document.getAnonymousNodes(this)[0].childNodes[1].childNodes[0];
 				this.calendar = document.getAnonymousNodes(this)[0].childNodes[1].childNodes[0].childNodes[0];
+                                this.formatter= new DateFormater();
                 
 				var val = this.getAttribute("value");
 
@@ -76,7 +77,7 @@
         <method name="getPrettyDate">
 		<parameter name="aValue"/>
 			<body><![CDATA[
-				return (aValue.getMonth()+1) + "/" + aValue.getDate() + "/" + aValue.getFullYear();
+                                return this.formatter.getShortFormatedDate(aValue);
 			]]></body>
 		</method>
 
