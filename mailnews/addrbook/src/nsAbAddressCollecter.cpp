@@ -84,6 +84,7 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 	nsresult res = nsComponentManager::CreateInstance(kMsgHeaderParserCID, 
                                                     NULL, nsIMsgHeaderParser::GetIID(), 
                                                     (void **) getter_AddRefs(pHeader)); 
+	if (NS_FAILED(res)) return res;
 
 	nsresult ret = pHeader->ParseHeaderAddresses (nsnull, address, &names, &addresses, &numAddresses);
 	if (ret == NS_OK)
@@ -229,8 +230,6 @@ nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char
 {
 	char *firstName = nsnull;
 	char *lastName = nsnull;
-
-	char *displayName = nsnull;
 
 	nsresult rv = senderCard->GetFirstName(&firstName);
 	if (NS_SUCCEEDED(rv) && firstName)
