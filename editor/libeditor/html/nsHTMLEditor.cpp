@@ -5183,7 +5183,7 @@ nsHTMLEditor::RemoveTextPropertiesForNode(nsIDOMNode *aNode,
           if (gNoisy) { printf("* parent has tag %s\n", tag.ToNewCString()); } // XXX leak!
           if (NS_SUCCEEDED(result))
           {
-            PRUnichar *unicodeString;
+            const PRUnichar *unicodeString;
             aPropName->GetUnicode(&unicodeString);
             if (PR_FALSE==tag.EqualsIgnoreCase(unicodeString))
             {

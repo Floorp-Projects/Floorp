@@ -1119,7 +1119,7 @@ RDFContentSinkImpl::AddProperties(const nsIParserNode& aNode,
           nameSpaceID = kNameSpaceID_None;  // ignore unknown prefix XXX is this correct?
         }
         GetNameSpaceURI(nameSpaceID, k);
-        PRUnichar *unicodeString;
+        const PRUnichar *unicodeString;
         attr->GetUnicode(&unicodeString);
         k.Append(unicodeString);
 
@@ -1228,7 +1228,7 @@ RDFContentSinkImpl::OpenObject(const nsIParserNode& aNode)
         // tag name. We can do this 'cause we don't need it anymore...
         nsAutoString typeStr;
         GetNameSpaceURI(nameSpaceID, typeStr);  // XXX append ':' too?
-        PRUnichar *unicodeString;
+        const PRUnichar *unicodeString;
         tag->GetUnicode(&unicodeString);
         typeStr.Append(unicodeString);
 
@@ -1267,7 +1267,7 @@ RDFContentSinkImpl::OpenProperty(const nsIParserNode& aNode)
 
     // destructively alter "ns" to contain the fully qualified tag
     // name. We can do this 'cause we don't need it anymore...
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     tag->GetUnicode(&unicodeString);
     ns.Append(unicodeString);
 

@@ -342,7 +342,7 @@ nsRDFContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
             nsAutoString prefixStr;
             prefix->ToString(prefixStr);
             if (prefixStr.Length()) {
-                PRUnichar *unicodeString;
+                const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
                 aResult.Append(':');
@@ -354,7 +354,7 @@ nsRDFContentUtils::GetElementLogString(nsIContent* aElement, nsString& aResult)
     rv = aElement->GetTag(*getter_AddRefs(tag));
     if (NS_FAILED(rv)) return rv;
 
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     tag->GetUnicode(&unicodeString);
     aResult.Append(unicodeString);
 
@@ -418,7 +418,7 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
             nsAutoString prefixStr;
             prefix->ToString(prefixStr);
             if (prefixStr.Length()) {
-                PRUnichar *unicodeString;
+                const PRUnichar *unicodeString;
                 prefix->GetUnicode(&unicodeString);
                 aResult.Append(unicodeString);
                 aResult.Append(':');
@@ -426,7 +426,7 @@ nsRDFContentUtils::GetAttributeLogString(nsIContent* aElement, PRInt32 aNameSpac
         }
     }
 
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     aTag->GetUnicode(&unicodeString);
     aResult.Append(unicodeString);
     return NS_OK;

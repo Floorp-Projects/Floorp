@@ -70,10 +70,10 @@ AtomImpl::ToString(nsString& aBuf) /*FIX: const */
 }
 
 NS_IMETHODIMP 
-AtomImpl::GetUnicode( PRUnichar** _retval ) /*FIX: const */
+AtomImpl::GetUnicode(const PRUnichar **aResult) /*FIX: const */
 {
-  NS_ENSURE_ARG_POINTER(_retval);
-  *_retval = mString;
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = mString;
   return NS_OK;
 }
 

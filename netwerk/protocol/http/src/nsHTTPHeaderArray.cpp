@@ -179,7 +179,7 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
   count = 0;
   (void)mHTTPHeaders->Count(&count);
   
-  PRUnichar* aHeaderString;
+  const PRUnichar* aHeaderString;
   aHeader->GetUnicode( &aHeaderString );
 
   for (i = 0; i < count; i++) {
@@ -190,7 +190,7 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
     element = NS_STATIC_CAST(nsHeaderEntry*, entry);
 
     //TODO get rid of the string compare.  see bug 12755. 
-    PRUnichar* elementString;
+    const PRUnichar* elementString;
     element->mAtom.get()->GetUnicode( &elementString );
     
     if (nsCRT::strcmp(aHeaderString, elementString) == 0) 

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
   // Now make sure we can find all the idents we just made
   for (i = 0; i < count; i++) {
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     ids[i]->GetUnicode(&unicodeString);
     nsIAtom* id = NS_NewAtom(unicodeString);
     if (id != ids[i]) {

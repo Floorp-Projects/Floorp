@@ -1765,7 +1765,7 @@ PRBool nsString::Equals(/*FIX: const */nsIAtom* aAtom,PRBool aIgnoreCase) const{
   PRBool result=PR_FALSE;
   if(aAtom){
     PRInt32 cmp=0;
-    PRUnichar* unicode;
+    const PRUnichar* unicode;
     if (aAtom->GetUnicode(&unicode) != NS_OK || unicode == nsnull)
         return PR_FALSE;
     if (aIgnoreCase)

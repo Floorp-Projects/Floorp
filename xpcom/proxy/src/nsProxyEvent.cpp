@@ -141,6 +141,8 @@ nsProxyObject::Post( PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTCMi
         return NS_ERROR_OUT_OF_MEMORY;
 
   
+    if (methodInfo->IsNotXPCOM())
+        return NS_ERROR_PROXY_INVALID_IN_PARAMETER;
     ///////////////////////////////////////////////////////////////////////
     // Auto-proxification
     ///////////////////////////////////////////////////////////////////////

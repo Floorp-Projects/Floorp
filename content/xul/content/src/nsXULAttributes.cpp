@@ -126,7 +126,7 @@ nsXULAttribute::QueryInterface(REFNSIID aIID, void** aResult)
 NS_IMETHODIMP
 nsXULAttribute::GetNodeName(nsString& aNodeName)
 {
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
 
     aNodeName.SetString(unicodeString);
@@ -253,7 +253,7 @@ nsXULAttribute::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXULAttribute::GetName(nsString& aName)
 {
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
     aName.SetString(unicodeString);
     return NS_OK;
@@ -340,14 +340,14 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
         rv = mContent->GetNameSpacePrefixFromId(mNameSpaceID, prefix);
 
         if (NS_SUCCEEDED(rv) && (prefix != nsnull)) {
-            PRUnichar *unicodeString;
+            const PRUnichar *unicodeString;
             prefix->GetUnicode(&unicodeString);
             aQualifiedName.Append(unicodeString);
             aQualifiedName.Append(':');
             NS_RELEASE(prefix);
         }
     }
-    PRUnichar *unicodeString;
+    const PRUnichar *unicodeString;
     mName->GetUnicode(&unicodeString);
     aQualifiedName.Append(unicodeString);
 }
