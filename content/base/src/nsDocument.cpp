@@ -570,7 +570,6 @@ nsDocument::~nsDocument()
     }
   }
 
-  mPrincipal = nsnull;
   mLoadFlags = nsIRequest::LOAD_NORMAL; // XXX maybe not required
   mDocumentLoadGroup = nsnull;
 
