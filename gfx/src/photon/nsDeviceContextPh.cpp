@@ -23,6 +23,9 @@
 #include "il_util.h"
 #include "nsPhGfxLog.h"
 
+static NS_DEFINE_IID(kIDeviceContextSpecIID, NS_IDEVICE_CONTEXT_SPEC_IID);
+
+
 nsDeviceContextPh :: nsDeviceContextPh()
   : DeviceContextImpl()
 {
@@ -316,14 +319,77 @@ NS_IMETHODIMP nsDeviceContextPh :: GetDeviceContextFor(nsIDeviceContextSpec *aDe
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginDocument(void)
 {
+  nsresult    ret_code = NS_ERROR_FAILURE;
+
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - Not Implemented\n"));
-  return NS_OK;
+
+  /* convert the mSpec into a nsDeviceContextPh */
+  if (mSpec)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - mSpec=<%p>\n", mSpec));
+    nsDeviceContextSpecPh * PrintSpec = nsnull;
+    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
+    if (PrintSpec)
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - PriontSpec=<%p>\n", PrintSpec));
+
+      PpPrintContext_t *PrinterContext = nsnull;
+  	  PrintSpec->GetPrintContext( PrinterContext );
+      if (PrinterContext)
+	  {
+        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - PrinterContext=<%p>\n", PrinterContext));
+
+		PhDrawContext_t *DrawContext = nsnull;
+		DrawContext = PpPrintStart(PrinterContext);
+		if (DrawContext)
+		{
+          PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::BeginDocument - DrawContext=<%p>\n", DrawContext));
+          ret_code = NS_OK;
+		}
+      }
+    }
+    NS_RELEASE(PrintSpec);
+  }  
+
+  return ret_code;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: EndDocument(void)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - Not Implemented\n"));
-  return NS_OK;
+  nsresult    ret_code = NS_ERROR_FAILURE;
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - Not Implemented\n"));
+
+  /* convert the mSpec into a nsDeviceContextPh */
+  if (mSpec)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - mSpec=<%p>\n", mSpec));
+    nsDeviceContextSpecPh * PrintSpec = nsnull;
+    mSpec->QueryInterface(kIDeviceContextSpecIID, (void**) &PrintSpec);
+    if (PrintSpec)
+    {
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - PriontSpec=<%p>\n", PrintSpec));
+
+      PpPrintContext_t *PrinterContext = nsnull;
+  	  PrintSpec->GetPrintContext( PrinterContext );
+      if (PrinterContext)
+	  {
+        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - PrinterContext=<%p>\n", PrinterContext));
+
+		int err;
+		err = PpPrintClose(PrinterContext);
+		if (err == 0)
+		{
+          PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::EndDocument - err=<%d>\n", err));
+          ret_code = NS_OK;
+		}
+      }
+    }
+    NS_RELEASE(PrintSpec);
+  }  
+
+  return ret_code;
 }
 
 NS_IMETHODIMP nsDeviceContextPh :: BeginPage(void)
