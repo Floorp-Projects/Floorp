@@ -89,6 +89,8 @@ protected:
 	// stream, etc). 
 	virtual PRInt32 SendData(nsIURI * aURL, const char * dataBuffer);
 
+    virtual nsresult PostMessage(nsIURI* url, nsIFileSpec * fileSpec);
+
 	// Ouput stream for writing commands to the socket
 	nsCOMPtr<nsIChannel>		m_channel; 
 	nsCOMPtr<nsIOutputStream>	m_outputStream;   // this will be obtained from the transport interface

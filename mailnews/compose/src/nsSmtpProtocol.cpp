@@ -1076,116 +1076,13 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     return(status);  
 }
 
-// mscott: after dogfood, make a note to move this type of function into a base
-// utility class....
-#define POST_DATA_BUFFER_SIZE 2048
-
 PRInt32 nsSmtpProtocol::SendMessageInFile()
 {
 	nsCOMPtr<nsIFileSpec> fileSpec;
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
 	m_runningURL->GetPostMessageFile(getter_AddRefs(fileSpec));
-	if (fileSpec)
-	{
-		// mscott -- this function should be re-written to use the file url code so it can be
-		// asynch
-		nsFileSpec afileSpec;
-		fileSpec->GetFileSpec(&afileSpec);
-		nsInputFileStream * fileStream = new nsInputFileStream(afileSpec, PR_RDONLY, 00700);
-		if (fileStream && fileStream->is_open())
-		{
-			PRInt32 amtInBuffer = 0; 
-			PRBool lastLineWasComplete = PR_TRUE;
-
-			PRBool quoteLines = PR_TRUE;  // it is always true but I'd like to generalize this function and then it might not be
-			char buffer[POST_DATA_BUFFER_SIZE];
-
-            if (quoteLines /* || add_crlf_to_line_endings */)
-            {
-				char *line;
-				char * b = buffer;
-                PRInt32 bsize = POST_DATA_BUFFER_SIZE;
-                amtInBuffer =  0;
-                do {
-					lastLineWasComplete = PR_TRUE;
-					PRInt32 L = 0;
-					if (fileStream->eof())
-					{
-						line = nsnull;
-						break;
-					}
-					
-					if (!fileStream->readline(b, bsize-5)) 
-						lastLineWasComplete = PR_FALSE;
-					line = b;
-
-					L = PL_strlen(line);
-
-					/* escape periods only if quote_lines_p is set
-					*/
-					if (quoteLines && lastLineWasComplete && line[0] == '.')
-                    {
-                      /* This line begins with "." so we need to quote it
-                         by adding another "." to the beginning of the line.
-                       */
-						PRInt32 i;
-						line[L+1] = 0;
-						for (i = L; i > 0; i--)
-							line[i] = line[i-1];
-						L++;
-                    }
-
-					if (!lastLineWasComplete || (L > 1 && line[L-2] == CR && line[L-1] == LF))
-                    {
-                        /* already ok */
-                    }
-					else if(L > 0 /* && (line[L-1] == LF || line[L-1] == CR) */)
-                    {
-                      /* only add the crlf if required
-                       * we still need to do all the
-                       * if comparisons here to know
-                       * if the line was complete
-                       */
-                      if(/* add_crlf_to_line_endings */ PR_TRUE)
-                      {
-                          /* Change newline to CRLF. */
-//                          L--;
-                          line[L++] = CR;
-                          line[L++] = LF;
-                          line[L] = 0;
-                      }
-					}
-                    else if (L == 0 && !fileStream->eof()
-                             /* && add_crlf_to_line_endings */)
-                    {
-                        // jt ** empty line; output CRLF
-                        line[L++] = CR;
-                        line[L++] = LF;
-                        line[L] = 0;
-                    }
-
-					bsize -= L;
-					b += L;
-					amtInBuffer += L;
-					// test hack by mscott. If our buffer is almost full, then send it off & reset ourselves
-					// to make more room.
-					if (bsize < 100) // i chose 100 arbitrarily.
-					{
-						nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-						if (*buffer)
-							SendData(url, buffer);
-						buffer[0] = '\0';
-						b = buffer; // reset buffer
-						bsize = POST_DATA_BUFFER_SIZE;
-					}
-
-				} while (line /* && bsize > 100 */);
-              }
-
-			nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-			SendData(url, buffer); 
-			delete fileStream;
-		}
-	} // if filePath
+	if (url && fileSpec)
+        PostMessage(url, fileSpec);
 
 	SetFlag(SMTP_PAUSE_FOR_READ);
 
@@ -1193,8 +1090,8 @@ PRInt32 nsSmtpProtocol::SendMessageInFile()
 	// to post data...
 
 	// always issue a '.' and CRLF when we are done...
-	nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
-	SendData(url, CRLF "." CRLF);
+    if (url)
+        SendData(url, CRLF "." CRLF);
     UpdateStatus(SMTP_MESSAGE_SENT_WAITING_MAIL_REPLY);
     m_nextState = SMTP_RESPONSE;
     m_nextStateAfterResponse = SMTP_SEND_MESSAGE_RESPONSE;

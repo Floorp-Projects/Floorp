@@ -28,6 +28,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsILoadGroup.h"
 #include "nsIIOService.h"
+#include "nsFileStream.h"
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -392,4 +393,114 @@ NS_IMETHODIMP nsMsgProtocol::Suspend()
 NS_IMETHODIMP nsMsgProtocol::Resume()
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
+{
+    if (!url || !fileSpec) return NS_ERROR_NULL_POINTER;
+
+#define POST_DATA_BUFFER_SIZE 2048
+
+    // mscott -- this function should be re-written to use the file url code
+    // so it can be asynch
+    nsFileSpec afileSpec;
+    fileSpec->GetFileSpec(&afileSpec);
+    nsInputFileStream * fileStream = new nsInputFileStream(afileSpec,
+                                                           PR_RDONLY, 00700);
+    if (fileStream && fileStream->is_open())
+    {
+        PRInt32 amtInBuffer = 0; 
+        PRBool lastLineWasComplete = PR_TRUE;
+        
+        PRBool quoteLines = PR_TRUE;  // it is always true but I'd like to
+                                      // generalize this function and then it
+                                      // might not be 
+        char buffer[POST_DATA_BUFFER_SIZE];
+        
+        if (quoteLines /* || add_crlf_to_line_endings */)
+        {
+            char *line;
+            char * b = buffer;
+            PRInt32 bsize = POST_DATA_BUFFER_SIZE;
+            amtInBuffer =  0;
+            do {
+                lastLineWasComplete = PR_TRUE;
+                PRInt32 L = 0;
+                if (fileStream->eof())
+                {
+                    line = nsnull;
+                    break;
+                }
+                
+                if (!fileStream->readline(b, bsize-5)) 
+                    lastLineWasComplete = PR_FALSE;
+                line = b;
+                
+                L = PL_strlen(line);
+                
+                /* escape periods only if quote_lines_p is set
+                 */
+                if (quoteLines && lastLineWasComplete && line[0] == '.')
+                {
+                    /* This line begins with "." so we need to quote it
+                       by adding another "." to the beginning of the line.
+                       */
+                    PRInt32 i;
+                    line[L+1] = 0;
+                    for (i = L; i > 0; i--)
+                        line[i] = line[i-1];
+                    L++;
+                }
+                
+                if (!lastLineWasComplete || (L > 1 && line[L-2] == CR &&
+                                             line[L-1] == LF))
+                {
+                    /* already ok */
+                }
+                else if(L > 0 /* && (line[L-1] == LF || line[L-1] == CR) */)
+                {
+                    /* only add the crlf if required
+                     * we still need to do all the
+                     * if comparisons here to know
+                     * if the line was complete
+                     */
+                    if(/* add_crlf_to_line_endings */ PR_TRUE)
+                    {
+                        /* Change newline to CRLF. */
+                          line[L++] = CR;
+                          line[L++] = LF;
+                          line[L] = 0;
+                    }
+                }
+                else if (L == 0 && !fileStream->eof()
+                         /* && add_crlf_to_line_endings */)
+                {
+                    // jt ** empty line; output CRLF
+                    line[L++] = CR;
+                    line[L++] = LF;
+                    line[L] = 0;
+                }
+                
+                bsize -= L;
+                b += L;
+                amtInBuffer += L;
+                // test hack by mscott. If our buffer is almost full, then
+                // send it off & reset ourselves 
+                // to make more room.
+                if (bsize < 100) // i chose 100 arbitrarily.
+                {
+                    if (*buffer)
+                        SendData(url, buffer);
+                    buffer[0] = '\0';
+                    b = buffer; // reset buffer
+                    bsize = POST_DATA_BUFFER_SIZE;
+                }
+                
+            } while (line /* && bsize > 100 */);
+        }
+        
+        SendData(url, buffer); 
+        delete fileStream;
+    }
+    return NS_OK;
 }

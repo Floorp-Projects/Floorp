@@ -2134,7 +2134,7 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 
 			rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
 
-			if (NS_SUCCEEDED(rv))
+			if (NS_SUCCEEDED(rv) && msgHdr)
 				msgHdr->MarkRead(PR_TRUE);
 
 			ClearFlag(NNTP_PAUSE_FOR_READ);
@@ -3303,119 +3303,22 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
 // sspitzer:  PostMessageInFile is derived from nsSmtpProtocol::SendMessageInFile()
 // 
-// mscott: after dogfood, make a note to move this type of function into a base
-// utility class....
-#define POST_DATA_BUFFER_SIZE 2048
 
 PRInt32 nsNNTPProtocol::PostMessageInFile(nsIFileSpec *aPostMessageFile)
 {
-    nsFileSpec fileToPost;
-
-    aPostMessageFile->GetFileSpec(&fileToPost);
-    
-#ifdef DEBUG_NEWS
-        printf("post this file: %s\n",(const char *)fileToPost);
-#endif /* DEBUG_NEWS */
-        
-		nsInputFileStream * fileStream = new nsInputFileStream(fileToPost, PR_RDONLY, 00700);
-		if (fileStream)
-		{
-			PRInt32 amtInBuffer = 0; 
-			PRBool lastLineWasComplete = PR_TRUE;
-
-			PRBool quoteLines = PR_TRUE;  // it is always true but I'd like to generalize this function and then it might not be
-			char buffer[POST_DATA_BUFFER_SIZE];
-
-            if (quoteLines /* || add_crlf_to_line_endings */)
-            {
-				char *line;
-				char * b = buffer;
-                PRInt32 bsize = POST_DATA_BUFFER_SIZE;
-                amtInBuffer =  0;
-                do {
-					
-					PRInt32 L = 0;
-					if (fileStream->eof())
-					{
-						line = nsnull;
-						break;
-					}
-					if (!fileStream->readline(b, bsize-5)) // if the readline returns false, jump out...
-					{
-						line = nsnull;
-						break;
-					}
-					else
-						line = b;
-
-					L = PL_strlen(line);
-
-					/* escape periods only if quote_lines_p is set
-					*/
-					if (quoteLines && lastLineWasComplete && line[0] == '.')
-                    {
-                      /* This line begins with "." so we need to quote it
-                         by adding another "." to the beginning of the line.
-                       */
-						PRInt32 i;
-						line[L+1] = 0;
-						for (i = L; i > 0; i--)
-							line[i] = line[i-1];
-						L++;
-                    }
-
-					/* set default */
-					lastLineWasComplete = PR_TRUE;
-
-					if (L > 1 && line[L-2] == CR && line[L-1] == LF)
-                    {
-                        /* already ok */
-                    }
-					else if(L > 0 /* && (line[L-1] == LF || line[L-1] == CR) */)
-                    {
-                      /* only add the crlf if required
-                       * we still need to do all the
-                       * if comparisons here to know
-                       * if the line was complete
-                       */
-                      if(/* add_crlf_to_line_endings */ PR_TRUE)
-                      {
-                          /* Change newline to CRLF. */
-//                          L--;
-                          line[L++] = CR;
-                          line[L++] = LF;
-                          line[L] = 0;
-                      }
-					}
-					else
-                    {
-						line[L++] = CR;
-                        line[L++] = LF;
-                        line[L] = 0;
-						lastLineWasComplete = PR_FALSE;
-                    }
-
-					bsize -= L;
-					b += L;
-					amtInBuffer += L;
-				} while (line && bsize > 100);
-              }
-
-			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-			if (mailnewsurl)
-				SendData(mailnewsurl, buffer); 
-		}
+    nsCOMPtr<nsIURI> url = do_QueryInterface(m_runningURL);
+    if (url && aPostMessageFile)
+        nsMsgProtocol::PostMessage(url, aPostMessageFile);
 
     SetFlag(NNTP_PAUSE_FOR_READ);
     
-	// for now, we are always done at this point..we aren't making multiple calls
-	// to post data...
+	// for now, we are always done at this point..we aren't making multiple
+    // calls to post data...
 
 	// always issue a '.' and CRLF when we are done...
     PL_strcpy(m_dataBuf, CRLF "." CRLF);
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	if (mailnewsurl)
-		SendData(mailnewsurl, m_dataBuf);
+	if (url)
+		SendData(url, m_dataBuf);
 #ifdef UNREADY_CODE
     NET_Progress(CE_WINDOW_ID,
                  XP_GetString(XP_MESSAGE_SENT_WAITING_MAIL_REPLY));
