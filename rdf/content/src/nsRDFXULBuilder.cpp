@@ -3084,7 +3084,7 @@ RDFXULBuilderImpl::GetGraphNodeForXULElement(nsIDOMNode* aNode, nsIRDFNode** aRe
         // point.)
         nsCOMPtr<nsIRDFResource> resource;
         rv = GetRDFResourceFromXULElement(aNode, getter_AddRefs(resource));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "new child doesn't have a resource");
+//        NS_ASSERTION(NS_SUCCEEDED(rv), "new child doesn't have a resource");
         if (NS_FAILED(rv)) return rv;
 
         // If the node isn't marked as a XUL element in the graph,
