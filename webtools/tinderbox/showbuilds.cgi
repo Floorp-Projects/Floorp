@@ -761,12 +761,6 @@ sub do_express {
 
 # This is essentially do_express but it outputs a different format
 sub do_panel {
-    my $bonsai_tree = '';
-    require "$form{tree}/treedata.pl";
-    if ($bonsai_tree ne "") {
-      print "The tree is", tree_open() ? "OPEN" : "CLOSED", "<br>\n";
-    }
-
     my %build, %times;
     loadquickparseinfo($form{tree}, \%build, \%times);
 
@@ -777,7 +771,15 @@ sub do_panel {
     print "<a href=showbuilds.cgi?tree=$form{tree}";
     print "&hours=$form{'hours'}" if $form{'hours'};
     print "&nocrap=1" if $form{'nocrap'};
-    print ">$tree as of $tm</a><br>";
+    print ">$tree";
+
+    $bonsai_tree = '';
+    require "$tree/treedata.pl";
+    if ($bonsai_tree ne "") {
+      print " is ", tree_open() ? "OPEN" : "CLOSED";
+    }
+    print " as of $tm</a><br>";
+
     print "<table border=0 cellpadding=1 cellspacing=1>";
     for $buildname (@keys) {
       print "<tr><td bgcolor='";
