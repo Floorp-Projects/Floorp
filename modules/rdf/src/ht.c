@@ -2206,11 +2206,12 @@ HT_NewCursor (HT_Resource node)
 	{
 		/* determine if container should be auto opened */
 
-		if (node->view->inited == PR_TRUE)		return(NULL);
 		if (node->view->pane->special == PR_TRUE)	return(NULL);
-		if (nlocalStoreHasAssertion(gLocalStore, node->node,
-			gNavCenter->RDF_AutoOpen, "yes",
-			RDF_STRING_TYPE, 1))
+
+		if (node->flags & HT_INITED_FLAG)		return(NULL);
+		node->flags |= HT_INITED_FLAG;
+		if (RDF_HasAssertion(gNCDB, node->node, gNavCenter->RDF_AutoOpen,
+			"yes", RDF_STRING_TYPE, 1))
 		{
 			node->flags |= HT_OPEN_FLAG;
 		}

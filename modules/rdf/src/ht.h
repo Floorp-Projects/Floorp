@@ -143,6 +143,7 @@ typedef	struct _HT_ValueStruct {
 #define	HT_VOLATILE_URL_FLAG	0x0010
 #define	HT_FREEICON_URL_FLAG	0x0020
 #define	HT_PASSWORDOK_FLAG	0x0040
+#define	HT_INITED_FLAG		0x0080
 
 typedef struct _HT_ResourceStruct {
 	struct _HT_ResourceStruct	*nextItem; 
