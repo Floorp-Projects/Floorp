@@ -145,6 +145,9 @@ extern PRUint32 _pr_md_ioq_timeout;
 
 struct _MDFileDesc {
     int osfd;
+#if defined(LINUX) && defined(_PR_PTHREADS)
+    int tcp_nodelay;  /* used by pt_LinuxSendFile */
+#endif
 };
 
 struct _MDDir {
