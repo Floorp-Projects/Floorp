@@ -529,8 +529,7 @@ jsj_ConvertJavaStringToJSString(JSContext *cx, JNIEnv *jEnv, jstring java_str)
     JSString *js_str;
     jboolean is_copy;
     const jchar *ucs2_str;
-    jchar *copy_ucs2_str;
-    jsize ucs2_str_len, num_bytes;
+    jsize ucs2_str_len;
 
     ucs2_str_len = (*jEnv)->GetStringLength(jEnv, java_str);
     ucs2_str = (*jEnv)->GetStringChars(jEnv, java_str, &is_copy);
@@ -540,19 +539,10 @@ jsj_ConvertJavaStringToJSString(JSContext *cx, JNIEnv *jEnv, jstring java_str)
         return NULL;
     }
 
-    js_str = NULL;
-
     /* The string data passed into JS_NewUCString() is
        not copied, so make a copy of the Unicode character vector. */
-    num_bytes = ucs2_str_len * sizeof(jchar);
-    copy_ucs2_str = (jchar*)JS_malloc(cx, num_bytes);
-    if (!copy_ucs2_str)
-        goto done;
-    memcpy(copy_ucs2_str, ucs2_str, num_bytes);
+    js_str = JS_NewUCStringCopyN(cx, ucs2_str, ucs2_str_len);
 
-    js_str = JS_NewUCString(cx, (jschar*)copy_ucs2_str, ucs2_str_len);
-
-done:
     (*jEnv)->ReleaseStringChars(jEnv, java_str, ucs2_str);
     return js_str;
 }

@@ -1,0 +1,8 @@
+DEPTH = ../../..
+
+include $(DEPTH)/config.mk
+include $(DEPTH)/liveconnect/config/$(OS_CONFIG).mk
+
+DIRS = javascript
+
+include $(DEPTH)/rules.mk

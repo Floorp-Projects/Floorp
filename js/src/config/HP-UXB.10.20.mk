@@ -29,6 +29,8 @@ CCC = CC -Ae +a1 +eh +Z
 RANLIB = echo
 MKSHLIB = $(LD) -b
 
+SO_SUFFIX = sl
+
 #.c.o:
 #	$(CC) -c -MD $*.d $(CFLAGS) $<
 

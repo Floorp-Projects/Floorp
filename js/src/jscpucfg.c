@@ -141,9 +141,6 @@ static void do32(void)
     if (u.c[0] == 0x01) {
 	printf("#undef  IS_LITTLE_ENDIAN\n");
 	printf("#define IS_BIG_ENDIAN 1\n\n");
-#if defined(AIX)
-	printf("#define JS_HAVE_LONG_LONG 1\n\n");
-#endif
     } else {
 	printf("#define IS_LITTLE_ENDIAN 1\n");
 	printf("#undef  IS_BIG_ENDIAN\n\n");

@@ -33,9 +33,17 @@
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsj_hash.h"           /* Hash tables */
 
+#ifdef JSJ_THREADSAFE
+#   include "prmon.h"
+#endif
+
 /* A one-to-one mapping between all referenced java.lang.Class objects and
    their corresponding JavaClassDescriptor objects */
 static JSJHashTable *java_class_reflections;
+
+#ifdef JSJ_THREADSAFE
+static PRMonitor *java_class_reflections_monitor;
+#endif
 
 /*
  * Given a JVM handle to a java.lang.Class object, malloc a C-string
@@ -406,11 +414,26 @@ extern JavaClassDescriptor *
 jsj_GetJavaClassDescriptor(JSContext *cx, JNIEnv *jEnv, jclass java_class)
 {
     JavaClassDescriptor *class_descriptor;
+
+#ifdef JSJ_THREADSAFE
+    PR_EnterMonitor(java_class_reflections_monitor);
+#endif
+
     class_descriptor = JSJ_HashTableLookup(java_class_reflections,
                                            (const void *)java_class,
                                            (void*)jEnv);
-    if (!class_descriptor)
-        return new_class_descriptor(cx, jEnv, java_class);
+    if (!class_descriptor) {
+        class_descriptor = new_class_descriptor(cx, jEnv, java_class);
+
+#ifdef JSJ_THREADSAFE
+        PR_ExitMonitor(java_class_reflections_monitor);
+#endif
+        return class_descriptor;
+    }
+
+#ifdef JSJ_THREADSAFE
+    PR_ExitMonitor(java_class_reflections_monitor);
+#endif
 
     JS_ASSERT(class_descriptor->ref_count > 0);
     class_descriptor->ref_count++;
@@ -658,8 +681,15 @@ jsj_InitJavaClassReflectionsTable()
         return JS_FALSE;
 
 #ifdef JSJ_THREADSAFE
+    java_class_reflections_monitor =
+            (struct PRMonitor *) PR_NewMonitor();
+    if (!java_class_reflections_monitor)
+        return JS_FALSE;
+
     java_reflect_monitor =
-            (struct PRMonitor *) PR_NewNamedMonitor("java_reflect_monitor");
+            (struct PRMonitor *) PR_NewMonitor();
+    if (!java_reflect_monitor)
+        return JS_FALSE;
 #endif
     
     return JS_TRUE;

@@ -185,7 +185,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 		      JSCodeGenerator *cg)
 {
     JSStackFrame *fp, frame;
-    JSTokenType stop, tt;
+    JSTokenType tt;
     JSBool ok;
     JSParseNode *pn;
 
@@ -195,13 +195,6 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 	frame.scopeChain = chain;
 	frame.down = fp;
 	cx->fp = &frame;
-    }
-
-    if (ts->flags & TSF_INTERACTIVE) {
-	SCAN_NEWLINES(ts);
-	stop = TOK_EOL;
-    } else {
-	stop = TOK_EOF;
     }
 
     /*
@@ -217,7 +210,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
 	ts->flags |= TSF_REGEXP;
 	tt = js_GetToken(cx, ts);
 	ts->flags &= ~TSF_REGEXP;
-	if (tt == stop || tt <= TOK_EOF) {
+	if (tt <= TOK_EOF) {
 	    if (tt == TOK_ERROR)
 		ok = JS_FALSE;
 	    break;
@@ -566,7 +559,6 @@ static JSParseNode *
 Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 {
     JSParseNode *pn, *pn2;
-    uintN newlines;
     JSTokenType tt;
 
     JS_ASSERT(ts->token.type == TOK_LC);
@@ -575,25 +567,16 @@ Statements(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	return NULL;
     PN_INIT_LIST(pn);
 
-    newlines = ts->flags & TSF_NEWLINES;
-    if (newlines)
-	HIDE_NEWLINES(ts);
-
     while ((tt = js_PeekToken(cx, ts)) > TOK_EOF && tt != TOK_RC) {
 	pn2 = Statement(cx, ts, tc);
-	if (!pn2) {
-	    pn = NULL;
-	    goto out;
-	}
+	if (!pn2)
+            return NULL;
 	PN_APPEND(pn, pn2);
     }
 
     pn->pn_pos.end = ts->token.pos.end;
     if (tt == TOK_ERROR)
 	pn = NULL;
-out:
-    if (newlines)
-	SCAN_NEWLINES(ts);
     return pn;
 }
 
@@ -620,7 +603,7 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (JSVERSION_IS_ECMA(cx->version))
 	    goto no_rewrite;
 	pn->pn_type = TOK_EQOP;
-	pn->pn_op = cx->jsop_eq;
+	pn->pn_op = (JSOp)cx->jsop_eq;
 	pn2 = pn->pn_left;
 	switch (pn2->pn_op) {
 	  case JSOP_SETARG:
@@ -847,7 +830,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 #if JS_HAS_SWITCH_STATEMENT
       case TOK_SWITCH:
       {
-	uintN newlines;
 	JSParseNode *pn5;
 	JSBool seenDefault = JS_FALSE;
 
@@ -871,9 +853,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	PN_INIT_LIST(pn2);
 
 	js_PushStatement(tc, &stmtInfo, STMT_SWITCH, -1);
-	newlines = ts->flags & TSF_NEWLINES;
-	if (newlines)
-	    HIDE_NEWLINES(ts);
 
 	while ((tt = js_GetToken(cx, ts)) != TOK_RC) {
 	    switch (tt) {
@@ -881,7 +860,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 		if (seenDefault) {
 		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
 						JSMSG_TOO_MANY_DEFAULTS);
-		    goto bad_switch;
+		    return NULL;
 		}
 		seenDefault = JS_TRUE;
 		/* fall through */
@@ -889,44 +868,44 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	      case TOK_CASE:
 		pn3 = NewParseNode(cx, &ts->token, PN_BINARY);
 		if (!pn3)
-		    goto bad_switch;
+		    return NULL;
 		if (tt == TOK_DEFAULT) {
 		    pn3->pn_left = NULL;
 		} else {
 		    pn3->pn_left = Expr(cx, ts, tc);
 		    if (!pn3->pn_left)
-			goto bad_switch;
+			return NULL;
 		}
 		PN_APPEND(pn2, pn3);
 		if (pn2->pn_count == JS_BIT(16)) {
 		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
 						JSMSG_TOO_MANY_CASES);
-		    goto bad_switch;
+		    return NULL;
 		}
 		break;
 
 	      case TOK_ERROR:
-		goto bad_switch;
+		return NULL;
 
 	      default:
 		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
 					    JSMSG_BAD_SWITCH);
-		goto bad_switch;
+                return NULL;
 	    }
 	    MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_AFTER_CASE);
 
 	    pn4 = NewParseNode(cx, &ts->token, PN_LIST);
 	    if (!pn4)
-		goto bad_switch;
+                return NULL;
 	    pn4->pn_type = TOK_LC;
 	    PN_INIT_LIST(pn4);
 	    while ((tt = js_PeekToken(cx, ts)) != TOK_RC &&
 		    tt != TOK_CASE && tt != TOK_DEFAULT) {
 		if (tt == TOK_ERROR)
-		    goto bad_switch;
+                    return NULL;
 		pn5 = Statement(cx, ts, tc);
 		if (!pn5)
-		    goto bad_switch;
+                    return NULL;
 		pn4->pn_pos.end = pn5->pn_pos.end;
 		PN_APPEND(pn4, pn5);
 	    }
@@ -934,19 +913,12 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    pn3->pn_right = pn4;
 	}
 
-	if (newlines)
-	    SCAN_NEWLINES(ts);
 	js_PopStatement(tc);
 
 	pn->pn_pos.end = pn2->pn_pos.end = ts->token.pos.end;
 	pn->pn_kid1 = pn1;
 	pn->pn_kid2 = pn2;
 	return pn;
-
-      bad_switch:
-	if (newlines)
-	    SCAN_NEWLINES(ts);
-	return NULL;
       }
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
@@ -1700,13 +1672,13 @@ LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 
     obj = js_FindVariableScope(cx, &fun);
     clasp = OBJ_GET_CLASS(cx, obj);
+    *opp = JSOP_NAME;
     if (clasp != &js_FunctionClass && clasp != &js_CallClass)
 	return JS_TRUE;
     if (InWithStatement(tc))
 	return JS_TRUE;
     if (!js_LookupProperty(cx, obj, (jsid)atom, &pobj, (JSProperty **)&sprop))
 	return JS_FALSE;
-    *opp = JSOP_NAME;
     *slotp = -1;
     if (sprop) {
 	if (sprop->getter == js_GetArgument) {

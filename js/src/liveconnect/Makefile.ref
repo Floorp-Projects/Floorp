@@ -87,6 +87,8 @@ OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm -L../$(OBJDIR) -ljs
 endif
 
 ifdef JS_THREADSAFE
+DEFINES += -DJS_THREADSAFE
+INCLUDES += -I../../../dist/$(OBJDIR)/include
 ifdef USE_MSVC
 OTHER_LIBS += $(DEPTH)/../../dist/$(OBJDIR)/lib/libnspr3.lib
 else

@@ -1270,8 +1270,10 @@ js_Interpret(JSContext *cx, jsval *result)
 	    rval = POP();
 	    /* FALL THROUGH */
 	  case JSOP_FORELEM2:
-	    POP_ELEMENT_ID(id);
-	    lval = POP();
+            /* FORELEM2 simply initializes the iteration state and
+               leaves the assignment to the enumerator until after
+               the next property has been acquired.
+            */
 
 	  do_forinloop:
 	    /*
@@ -1384,9 +1386,6 @@ js_Interpret(JSContext *cx, jsval *result)
 		}
 	    }
 
-	    /* Convert lval to a non-null object containing id. */
-	    VALUE_TO_OBJECT(cx, lval, obj);
-
 	    /* Make sure rval is a string for uniformity and compatibility. */
 	    if (!JSVAL_IS_INT(rval)) {
 		rval = ATOM_KEY((JSAtom *)rval);
@@ -1402,10 +1401,17 @@ js_Interpret(JSContext *cx, jsval *result)
 		rval = sp[0] = STRING_TO_JSVAL(str);
 	    }
 
-	    /* Set the variable obj[id] to refer to rval. */
-	    ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
-	    if (!ok)
-		goto out;
+            if (op != JSOP_FORELEM2) {
+                /* Convert lval to a non-null object containing id. */
+	        VALUE_TO_OBJECT(cx, lval, obj);
+
+	        /* Set the variable obj[id] to refer to rval. */
+	        ok = OBJ_SET_PROPERTY(cx, obj, id, &rval);
+	        if (!ok)
+		    goto out;
+            }
+            else
+                PUSH_OPND(rval);
 
 	    /* Push true to keep looping through properties. */
 	    rval = JSVAL_TRUE;
@@ -2172,19 +2178,28 @@ js_Interpret(JSContext *cx, jsval *result)
 	    PUSH_OPND(rval);
 	    break;
 
+          case JSOP_ENUMELEM:
+            POP_ELEMENT_ID(id);
+            lval = POP();
+            VALUE_TO_OBJECT(cx, lval, obj);
+            rval = POP();
+            CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
+            if (!ok)
+	        goto out;
+            break;
+
 	  case JSOP_PUSHOBJ:
 	    PUSH_OPND(OBJECT_TO_JSVAL(obj));
 	    break;
 
-	  case JSOP_CALLSPECIAL:
 	  case JSOP_CALL:
+	  case JSOP_EVAL:
 	    argc = GET_ARGC(pc);
 	    SAVE_SP(fp);
 	    ok = js_Invoke(cx, argc, JS_FALSE);
 	    RESTORE_SP(fp);
-	    if (!ok) {
+	    if (!ok)
 		goto out;
-	    }
 	    obj = NULL;
 	    break;
 

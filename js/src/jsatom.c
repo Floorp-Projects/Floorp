@@ -470,7 +470,6 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 	    JS_UNLOCK(&state->lock,cx);
 	    flags &= ~ATOM_TMPSTR;
 	    if (flags & ATOM_NOCOPY) {
-		flags &= ~ATOM_NOCOPY;
 		str = js_NewString(cx, str->chars, str->length, 0);
 	    } else {
 		str = js_NewStringCopyN(cx, str->chars, str->length, 0);
@@ -484,6 +483,8 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 		hep = JS_HashTableRawLookup(table, keyHash, (void *)key);
 		if ((he = *hep) != NULL) {
 		    atom = (JSAtom *)he;
+		    if (flags & ATOM_NOCOPY)
+			str->chars = NULL;
 		    goto out;
 		}
 	    }
@@ -498,7 +499,7 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
     }
 
     atom = (JSAtom *)he;
-    atom->flags |= flags;
+    atom->flags |= (flags & ~ATOM_NOCOPY);
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;

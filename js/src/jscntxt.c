@@ -140,6 +140,12 @@ js_DestroyContext(JSContext *cx)
     JS_FinishArenaPool(&cx->tempPool);
     if (cx->lastMessage)
 	free(cx->lastMessage);
+
+#ifdef JS_THREADSAFE
+    /* Destroying a context implicitly calls JS_EndRequest(). */ 
+    if (cx->requestDepth)
+        JS_EndRequest(cx);
+#endif
     free(cx);
 }
 
@@ -173,7 +179,12 @@ js_ReportErrorVA(JSContext *cx, uintN flags, const char *format, va_list ap)
 	/* XXX should fetch line somehow */
 	report.linebuf = NULL;
 	report.tokenptr = NULL;
+        report.uclinebuf = NULL;
+        report.uctokenptr = NULL;
 	report.flags = flags;
+        report.errorNumber = 0;
+        report.ucmessage = NULL;
+        report.messageArgs = NULL;
 	reportp = &report;
     } else {
 	/* XXXshaver still fill out report here for flags? */
@@ -331,8 +342,17 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
 	report.filename = fp->script->filename;
 	report.lineno = js_PCToLineNumber(fp->script, fp->pc);
     } else {
-	report.filename = NULL;
-	report.lineno = 0;
+        /*  We can't find out where the error was from the current
+            frame so see if the next frame has a script/pc combo we
+            could use */
+        if (fp && fp->down && fp->down->script && fp->down->pc) {
+	    report.filename = fp->down->script->filename;
+	    report.lineno = js_PCToLineNumber(fp->down->script, fp->down->pc);
+        }
+        else {
+	    report.filename = NULL;
+	    report.lineno = 0;
+        }
     }
 
     /* XXX should fetch line somehow */
@@ -341,11 +361,19 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     report.flags = flags;
     report.errorNumber = errorNumber;
 
+    /*
+     * js_ExpandErrorArguments only sometimes fills these in, so we
+     * initialize them to clear garbage.
+     */
+    report.uclinebuf = NULL;
+    report.uctokenptr = NULL;
+    report.ucmessage = NULL;
+    report.messageArgs = NULL;
+
     if (!js_ExpandErrorArguments(cx, callback, userRef, errorNumber,
 				 &message, &report, charArgs, ap))
 	return;
 
-#if JS_HAS_ERROR_EXCEPTIONS
     /*
      * Check the error report, and set a JavaScript-catchable exception
      * if the error is defined to have an associated exception.  If an
@@ -358,6 +386,7 @@ js_ReportErrorNumberVA(JSContext *cx, uintN flags, JSErrorCallback callback,
     if (errorNumber == JSMSG_UNCAUGHT_EXCEPTION)
         report.flags |= JSREPORT_EXCEPTION;
     
+#if JS_HAS_ERROR_EXCEPTIONS
     /* 
      * Only call the error reporter if an exception wasn't raised. 
      *

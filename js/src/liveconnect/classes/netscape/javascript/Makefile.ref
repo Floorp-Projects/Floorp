@@ -1,0 +1,14 @@
+DEPTH = ../../../..
+
+include $(DEPTH)/config.mk
+include $(DEPTH)/liveconnect/config/$(OS_CONFIG).mk
+
+JARPATH   = netscape/javascript
+
+JAVA_SRCS = JSException.java \
+            JSObject.java    \
+            JSProxy.java     \
+            JSRunnable.java  \
+            JSUtil.java
+
+include $(DEPTH)/rules.mk

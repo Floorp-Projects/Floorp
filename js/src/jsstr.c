@@ -1342,8 +1342,11 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
 		 * sep->length to our return value.
 		 */
 		if ((size_t)i == str->length) {
-		    sep->length = 1;
-		    return i;
+                    if (cx->version == JSVERSION_1_2) {
+		        sep->length = 1;
+		        return i;
+                    }
+                    return -1;
 		}
 		i++;
 		goto again;
@@ -1367,21 +1370,20 @@ find_split(JSContext *cx, JSString *str, JSRegExp *re, jsint *ip,
      * substrings.  Let our caller worry about whether to split once at end of
      * string into an empty substring.
      *
-     * For 1.2 compatibility, at the end of the string, we return the string length
-     * as the result, and set the separator length to 1 - this allows the caller
+     * For 1.2 compatibility, at the end of the string, we return the length as
+     * the result, and set the separator length to 1 -- this allows the caller
      * to include an additional null string at the end of the substring list.
      */
-    if (sep->length == 0)
+    if (sep->length == 0) {
         if (cx->version == JSVERSION_1_2) {
             if ((size_t)i == str->length) {
                 sep->length = 1;
                 return i;
             }
-            else
-                return i + 1;
+	    return i + 1;
         }
-        else
-            return ((size_t)i == str->length) ? -1 : i + 1;
+	return ((size_t)i == str->length) ? -1 : i + 1;
+    }
 
     /*
      * Now that we know sep is non-empty, search starting at i in str for an
@@ -1439,9 +1441,16 @@ str_split(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	} else
 #endif
 	{
-	    sep = (JSSubString *)js_ValueToString(cx, argv[0]);
-	    if (!sep)
+	    JSString *str2 = js_ValueToString(cx, argv[0]);
+	    if (!str2)
 		return JS_FALSE;
+	    /*
+	     * Point sep at a local copy of str2's header because find_split
+	     * will modify sep->length.
+	     */
+	    tmp.length = str2->length;
+	    tmp.chars = str2->chars;
+	    sep = &tmp;
 	    argv[0] = STRING_TO_JSVAL(sep);
 	    reobj = NULL;
 	    re = NULL;

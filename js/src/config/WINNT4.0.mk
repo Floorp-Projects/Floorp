@@ -32,15 +32,20 @@ GFX_ARCH = win32
 # /nologo  - suppress copyright message
 # /W3      - Warning level 3
 # /Gm      - enable minimal rebuild
-# /Zi      - put debug info in a Program Database (.pdb) file
+# /Z7      - put debug info into the executable, not in .pdb file
 # /YX      - automatic precompiled headers
 # /GX      - enable C++ exception support
-WIN_CFLAGS = /nologo /W3 /Gm /Zi /Fp$(OBJDIR)/js.pch /Fd$(OBJDIR)/js32.pdb
+WIN_CFLAGS = /nologo /W3 /Fp$(OBJDIR)/js.pch
 
-# MSVC compiler options for debug builds
+# MSVC compiler options for debug builds linked to MSVCRTD.DLL
 # /MDd     - link with MSVCRTD.LIB (Dynamically-linked, multi-threaded, debug C-runtime)
 # /Od      - minimal optimization
-WIN_DEBUG_CFLAGS = /MDd /Od
+WIN_IDG_CFLAGS = /MDd /Od /Z7 
+
+# MSVC compiler options for debug builds linked to MSVCRT.DLL
+# /MD      - link with MSVCRT.LIB (Dynamically-linked, multi-threaded, debug C-runtime)
+# /Od      - minimal optimization
+WIN_DEBUG_CFLAGS = /MD /Od /Z7 
 
 # MSVC compiler options for release (optimized) builds
 # /MD      - link with MSVCRT.LIB (Dynamically-linked, multi-threaded, C-runtime)
@@ -51,7 +56,11 @@ WIN_OPT_CFLAGS = /MD /O2
 ifdef BUILD_OPT
 OPTIMIZER = $(WIN_OPT_CFLAGS)
 else
+ifdef BUILD_IDG
+OPTIMIZER = $(WIN_IDG_CFLAGS)
+else
 OPTIMIZER = $(WIN_DEBUG_CFLAGS)
+endif
 endif
 
 OS_CFLAGS = -DXP_PC -DWIN32 -D_WINDOWS -D_WIN32 $(WIN_CFLAGS)
@@ -63,16 +72,16 @@ USE_MSVC = 1
 
 LIB_LINK_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib oldnames.lib /nologo\
- /subsystem:windows /dll /incremental:yes /debug\
+ /subsystem:windows /dll /debug /pdb:none\
  /machine:I386
 
 EXE_LINK_FLAGS=kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib\
  advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib oldnames.lib /nologo\
- /subsystem:console /incremental:yes /debug\
+ /subsystem:console /debug /pdb:none\
  /machine:I386
 
-CAFEDIR = t:/cafe
-JCLASSPATH = $(CAFEDIR)/Java/Lib/classes.zip
-JAVAC = $(CAFEDIR)/Bin/sj.exe
-JAVAH = $(CAFEDIR)/Java/Bin/javah.exe
-JCFLAGS = -I$(CAFEDIR)/Java/Include -I$(CAFEDIR)/Java/Include/win32
+# CAFEDIR = t:/cafe
+# JCLASSPATH = $(CAFEDIR)/Java/Lib/classes.zip
+# JAVAC = $(CAFEDIR)/Bin/sj.exe
+# JAVAH = $(CAFEDIR)/Java/Bin/javah.exe
+# JCFLAGS = -I$(CAFEDIR)/Java/Include -I$(CAFEDIR)/Java/Include/win32

@@ -22,6 +22,7 @@
  * JavaScript API.
  */
 #include <stddef.h>
+#include <stdio.h>
 #include "jspubtd.h"
 
 JS_BEGIN_EXTERN_C
@@ -772,8 +773,23 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
 				const jschar *chars, size_t length,
 				const char *filename, uintN lineno);
 
+/*
+ * Given a buffer, return JS_FALSE if the buffer might become a valid
+ * javascript statement with the addition of more lines.  Otherwise return
+ * JS_TRUE.  The intended use is to support interactive compilation, by
+ * accumulating lines in a buffer until JS_BufferIsCompilableUnit is true, then
+ * passing it to the compiler.
+ */
+extern JS_PUBLIC_API(JSBool)
+JS_BufferIsCompilableUnit(JSContext *cx, JSObject *obj,
+                          const char *bytes, size_t length);
+
 extern JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename);
+
+extern JS_PUBLIC_API(JSScript *)
+JS_CompileFileHandle(JSContext *cx, JSObject *obj, const char *filename,
+                     FILE *fh);
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script);
@@ -995,7 +1011,7 @@ JS_SetErrorReporter(JSContext *cx, JSErrorReporter er);
  */
 #define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
-#define JSREG_MULTILINE 0x04    /* ^ and $ match position of \n */
+#define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 
 extern JS_PUBLIC_API(JSObject *)
 JS_NewRegExpObject(JSContext *cx, char *bytes, size_t length, uintN flags);
@@ -1085,3 +1101,4 @@ JS_IsAssigning(JSContext *cx);
 JS_END_EXTERN_C
 
 #endif /* jsapi_h___ */
+

@@ -1866,12 +1866,24 @@ js_NewDateObject(JSContext* cx, int year, int mon, int mday,
     return obj;
 }
 
+JS_FRIEND_API(JSBool)
+js_DateIsValid(JSContext *cx, JSObject* obj)
+{
+    jsdouble *date = date_getProlog(cx, obj, NULL);
+
+    if (!date || JSDOUBLE_IS_NaN(*date))
+        return JS_FALSE;
+    else
+        return JS_TRUE;
+}
+
 JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    /* Preserve legacy API behavior of returning 0 for invalid dates. */
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) YearFromTime(LocalTime(*date));
 }
@@ -1881,7 +1893,7 @@ js_DateGetMonth(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) MonthFromTime(LocalTime(*date));
 }
@@ -1891,7 +1903,7 @@ js_DateGetDate(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) DateFromTime(LocalTime(*date));
 }
@@ -1901,7 +1913,7 @@ js_DateGetHours(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) HourFromTime(LocalTime(*date));
 }
@@ -1911,7 +1923,7 @@ js_DateGetMinutes(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) MinFromTime(LocalTime(*date));
 }
@@ -1921,7 +1933,7 @@ js_DateGetSeconds(JSContext *cx, JSObject* obj)
 {
     jsdouble *date = date_getProlog(cx, obj, NULL);
 
-    if (!date)
+    if (!date || JSDOUBLE_IS_NaN(*date))
 	return 0;
     return (int) SecFromTime(*date);
 }

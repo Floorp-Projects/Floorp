@@ -1,0 +1,17 @@
+DEPTH = ../..
+
+include $(DEPTH)/config.mk
+include $(DEPTH)/liveconnect/config/$(OS_CONFIG).mk
+
+JARS     = $(LCJAR)
+
+JARS    := $(addprefix $(CLASSDIR)/$(OBJDIR)/, $(JARS))
+
+PREDIRS  = netscape
+TARGETS += $(JARS)
+
+include $(DEPTH)/rules.mk
+
+$(CLASSDIR)/$(OBJDIR)/$(LCJAR):
+	cd $(CLASSDIR)/$(OBJDIR) ; \
+	  $(JDK)/bin/jar cvf $(@F) netscape

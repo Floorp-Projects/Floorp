@@ -550,6 +550,22 @@ array_reverse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	    return JS_FALSE;
 	if (!OBJ_GET_PROPERTY(cx, obj, id2, &v2))
 	    return JS_FALSE;
+
+#if JS_HAS_SPARSE_ARRAYS
+        /* This part isn't done yet. */
+
+        if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+                    return JS_FALSE;
+                if (!prop) {
+                    OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
+                    continue;
+                }
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+#endif
+
+
+
+
 	if (!OBJ_SET_PROPERTY(cx, obj, id, &v2))
 	    return JS_FALSE;
 	if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
@@ -690,7 +706,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval;
     CompareArgs ca;
-    jsuint len, i;
+    jsuint len, newlen, i;
     jsval *vec;
     jsid id;
 
@@ -711,10 +727,32 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     if (!vec)
 	return JS_FALSE;
 
+#if JS_HAS_SPARSE_ARRAYS
+    newlen = 0;
+#else
+    newlen = len;
+#endif
+
     for (i = 0; i < len; i++) {
 	ca.status = IndexToId(cx, i, &id);
 	if (!ca.status)
 	    goto out;
+#if JS_HAS_SPARSE_ARRAYS
+        {
+            JSObject *obj2;
+            JSProperty *prop;
+            ca.status = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
+            if (!ca.status)
+                goto out;
+            if (!prop) {
+                vec[i] = JSVAL_VOID;
+                continue;
+            } else {
+                newlen++;
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+            }
+        }
+#endif
 	ca.status = OBJ_GET_PROPERTY(cx, obj, id, &vec[i]);
 	if (!ca.status)
 	    goto out;
@@ -729,10 +767,26 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (ca.status) {
-	ca.status = InitArrayObject(cx, obj, len, vec);
+	ca.status = InitArrayObject(cx, obj, newlen, vec);
 	if (ca.status)
 	    *rval = OBJECT_TO_JSVAL(obj);
+#if JS_HAS_SPARSE_ARRAYS
+        /* set length of newly-created array object to old length. */
+        if (ca.status && newlen < len) {
+            ca.status = js_SetLengthProperty(cx, obj, len);
+
+            /* Delete any leftover properties greater than newlen. */
+            while (ca.status && newlen < len) {
+                jsval junk;
+
+                ca.status = !IndexToId(cx, newlen, &id) ||
+                    !OBJ_DELETE_PROPERTY(cx, obj, id, &junk);
+                newlen++;
+            }
+        }
+#endif
     }
+
 out:
     if (vec)
 	JS_free(cx, vec);
@@ -898,6 +952,10 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     uintN i;
     jsid id, id2;
     jsval v;
+#if JS_HAS_SPARSE_ARRAYS
+    JSObject *obj2;
+    JSProperty *prop;
+#endif
 
     if (!js_GetLengthProperty(cx, obj, &length))
 	return JS_FALSE;
@@ -910,7 +968,16 @@ array_unshift(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 		    return JS_FALSE;
 		if (!IndexToId(cx, last + argc, &id2))
 		    return JS_FALSE;
-		if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
+#if JS_HAS_SPARSE_ARRAYS
+                if (!OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop))
+                    return JS_FALSE;
+                if (!prop) {
+                    OBJ_DELETE_PROPERTY(cx, obj, id2, &v); /* v is junk. */
+                    continue;
+                }
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+#endif
+                if (!OBJ_GET_PROPERTY(cx, obj, id, &v))
 		    return JS_FALSE;
 		if (!OBJ_SET_PROPERTY(cx, obj, id2, &v))
 		    return JS_FALSE;

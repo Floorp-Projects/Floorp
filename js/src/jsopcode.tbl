@@ -177,7 +177,7 @@ OPDEF(JSOP_VARDEC,    102,"vardec",     NULL,         3,  0,  1, 10,  JOF_QVAR |
 OPDEF(JSOP_TOOBJECT,  103,"toobject",   NULL,         1,  1,  1,  0,  JOF_BYTE)
 OPDEF(JSOP_FORNAME2,  104,"forname2",   NULL,         3,  0,  1,  0,  JOF_CONST|JOF_NAME|JOF_SET|JOF_FOR2)
 OPDEF(JSOP_FORPROP2,  105,"forprop2",   NULL,         3,  1,  1,  0,  JOF_CONST|JOF_PROP|JOF_SET|JOF_FOR2)
-OPDEF(JSOP_FORELEM2,  106,"forelem2",   NULL,         1,  2,  1,  0,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_FOR2)
+OPDEF(JSOP_FORELEM2,  106,"forelem2",   NULL,         1,  2,  4,  0,  JOF_BYTE |JOF_ELEM|JOF_SET|JOF_FOR2)
 OPDEF(JSOP_POP2,      107,"pop2",       NULL,         1,  2,  0,  0,  JOF_BYTE)
 
 /* ECMA-complaint assignment ops. */
@@ -214,4 +214,5 @@ OPDEF(JSOP_DEFAULT,   120,"default",    NULL,         3,  1,  0,  0,  JOF_JUMP)
 /*
 * ECMA-compliant call to eval op
 */
-OPDEF(JSOP_CALLSPECIAL,121,"callspecial",NULL,         3, -1,  1, 11,  JOF_UINT16)
+OPDEF(JSOP_EVAL,      121,"eval",       NULL,         3, -1,  1, 11,  JOF_UINT16)
+OPDEF(JSOP_ENUMELEM,   122,"enumelem",   NULL,        1,  3,  0,  1,  JOF_BYTE |JOF_ELEM|JOF_SET)

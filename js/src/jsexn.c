@@ -94,30 +94,24 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
      *
      * NOTE nothing uses this and I'm not really maintaining it until
      * I know it's the desired API.
-     *
-     * Temporarily disabled, because uclinebuf is 0x10 when I evaluate 'Math()'!
      */
-#if 0
     if (report->uclinebuf != NULL) {
-	len = js_strlen(report->uclinebuf) + 1;
+	jsint len = js_strlen(report->uclinebuf) + 1;
 	newReport->uclinebuf =
 	    (const jschar *)JS_malloc(cx, len * sizeof(jschar));
-	js_strncpy(newReport->uclinebuf, report->uclinebuf, len);
+	js_strncpy((jschar *)newReport->uclinebuf, report->uclinebuf, len);
 	newReport->uctokenptr = newReport->uclinebuf + (report->uctokenptr -
 							report->uclinebuf);
     } else
-#endif
 	newReport->uclinebuf = newReport->uctokenptr = NULL;
-
-    /* Executing the code below makes a seg fault where JS_malloc fails!? */
-#if 0    
+    
     if (report->ucmessage != NULL) {
-        len = js_strlen(report->ucmessage) + 1;
+        jsint len = js_strlen(report->ucmessage) + 1;
         newReport->ucmessage = (const jschar *)JS_malloc(cx, len);
         js_strncpy((jschar *)newReport->ucmessage, report->ucmessage, len);
         
         if (report->messageArgs) {
-            int i;
+            intN i;
             
             for (i = 0; report->messageArgs[i] != NULL; i++)
                 ;
@@ -139,10 +133,7 @@ exn_initPrivate(JSContext *cx, JSErrorReport *report)
         newReport->ucmessage = NULL;
         newReport->messageArgs = NULL;
     }
-#else
-    newReport->ucmessage = NULL;
-    newReport->messageArgs = NULL;
-#endif
+    newReport->errorNumber = report->errorNumber;
 
     /* Note that this is before it gets flagged with JSREPORT_EXCEPTION */
     newReport->flags = report->flags;
@@ -167,13 +158,11 @@ exn_destroyPrivate(JSContext *cx, JSExnPrivate *privateData)
     if (report->filename)
 	JS_free(cx, (void *)report->filename);
     if (report->ucmessage)
-        JS_free(cx, (void *)report->ucmessage);
-    if (report->ucmessage)
 	JS_free(cx, (void *)report->ucmessage);
     if (report->messageArgs) {
         args = report->messageArgs;
-        while(*args++ != NULL)
-            JS_free(cx, (void *)*args);
+        while(*args != NULL)
+            JS_free(cx, (void *)*args++);
         JS_free(cx, (void *)report->messageArgs);
     }
     JS_free(cx, report);
@@ -582,9 +571,9 @@ js_ReportUncaughtException(JSContext *cx)
      * Because js_ValueToString below could error and an exception object
      * could become unrooted, we root it here.
      */
-    if (JSVAL_IS_OBJECT(exn)) {
+    if (JSVAL_IS_OBJECT(exn) && exn != JSVAL_NULL) {
         exnObject = JSVAL_TO_OBJECT(exn);
-        if (!js_AddRoot(cx, exnObject, "exn.report.root"))
+        if (!js_AddRoot(cx, &exnObject, "exn.report.root"))
             return JS_FALSE;
     } else {
         exnObject = NULL;
@@ -612,7 +601,7 @@ js_ReportUncaughtException(JSContext *cx)
     }
 
     if (exnObject != NULL)
-        js_RemoveRoot(cx, exnObject);
+        js_RemoveRoot(cx, &exnObject);
     return JS_TRUE;
 }
 

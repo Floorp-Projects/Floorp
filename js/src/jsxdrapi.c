@@ -383,6 +383,8 @@ JS_XDRString(JSXDRState *xdr, JSString **strp)
     } else if (xdr->mode == JSXDR_DECODE) {
 	for (i = 0; i < len; i++)
 	    chars[i] = JSXDR_SWAB16(raw[i]);
+        chars[len] = 0;
+
 	if (!(*strp = JS_NewUCString(xdr->cx, chars, len)))
 	    goto bad;
     }

@@ -54,7 +54,7 @@ JS_END_EXTERN_C
 /*
  * Get OS specific header information.
  */
-#if defined(AIXV3)
+#if defined(AIXV3) || defined(AIX)
 #define JS_HAVE_LONG_LONG
 
 #elif defined(BSDI)

@@ -91,7 +91,7 @@ jsj_init_js_obj_reflections_table()
         return JS_FALSE;
 
 #ifdef JSJ_THREADSAFE
-    js_obj_reflections_monitor = PR_NewNamedMonitor("js_obj_reflections");
+    js_obj_reflections_monitor = PR_NewMonitor();
     if (!js_obj_reflections_monitor) {
         JS_HashTableDestroy(js_obj_reflections);
         return JS_FALSE;

@@ -26,7 +26,7 @@ RANLIB = /bin/true
 
 #NS_USE_GCC = 1
 
-ifdef NS_USE_GCC
+ifndef NS_USE_NATIVE
 CC = gcc
 CCC = g++
 AS = $(CC) -x assembler-with-cpp
@@ -36,12 +36,16 @@ OPTIMIZER = -O6
 endif
 else
 ifeq ($(OS_RELEASE),6.2)
-CC	= cc -32 -DIRIX6_2
+CC	= cc -n32 -DIRIX6_2
 endif
 ifeq ($(OS_RELEASE),6.3)
-CC	= cc -32 -DIRIX6_3
+CC	= cc -n32 -DIRIX6_3
+endif
+ifeq ($(OS_RELEASE),6.5)
+CC	= cc -n32 -DIRIX6_5
 endif
 CCC = CC
+# LD  = CC
 ODD_CFLAGS = -fullwarn -xansi
 ifdef BUILD_OPT
 OPTIMIZER += -Olimit 4000
@@ -55,4 +59,4 @@ PURE_OS_CFLAGS = $(ODD_CFLAGS) -DXP_UNIX -DSVR4 -DSW_THREADS -DIRIX
 OS_CFLAGS = $(PURE_OS_CFLAGS) -MDupdate $(DEPENDENCIES)
 
 BSDECHO	= echo
-MKSHLIB = $(LD) -shared
+MKSHLIB = $(LD) -n32 -shared
