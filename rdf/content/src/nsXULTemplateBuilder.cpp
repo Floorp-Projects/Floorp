@@ -1091,8 +1091,8 @@ public:
         temp2 |= PLHashNumber(mMemberVariable) << 16;
         return temp1 ^ temp2; }
 
-    static PLHashNumber HashClusterKey(const void* aKey);
-    static PRIntn CompareClusterKeys(const void* aLeft, const void* aRight);
+    static PLHashNumber PR_CALLBACK HashClusterKey(const void* aKey);
+    static PRIntn PR_CALLBACK CompareClusterKeys(const void* aLeft, const void* aRight);
 
 protected:
     PRBool Equals(const ClusterKey& aKey) const {
@@ -1119,14 +1119,14 @@ ClusterKey::ClusterKey(const Instantiation& aInstantiation, const Rule* aRule)
 }
 
 
-PLHashNumber
+PLHashNumber PR_CALLBACK
 ClusterKey::HashClusterKey(const void* aKey)
 {
     const ClusterKey* key = NS_STATIC_CAST(const ClusterKey*, aKey);
     return key->Hash();
 }
 
-PRIntn
+PRIntn PR_CALLBACK
 ClusterKey::CompareClusterKeys(const void* aLeft, const void* aRight)
 {
     const ClusterKey* left  = NS_STATIC_CAST(const ClusterKey*, aLeft);
@@ -1437,8 +1437,8 @@ protected:
         if (aFlag == HT_FREE_ENTRY)
             delete NS_REINTERPRET_CAST(SupportEntry*, aHashEntry); }
 
-    static PLHashNumber HashMemoryElement(const void* aBinding);
-    static PRIntn CompareMemoryElements(const void* aLeft, const void* aRight);
+    static PLHashNumber PR_CALLBACK HashMemoryElement(const void* aBinding);
+    static PRIntn PR_CALLBACK CompareMemoryElements(const void* aLeft, const void* aRight);
 
 
     // Maps a MemoryElement to the Match objects whose bindings it
@@ -1491,10 +1491,10 @@ protected:
             delete NS_REINTERPRET_CAST(BindingEntry*, aHashEntry);
         } }
 
-    static PLHashNumber HashBindingElement(const void* aSupport) {
+    static PLHashNumber PR_CALLBACK HashBindingElement(const void* aSupport) {
         return PLHashNumber(aSupport) >> 3; }
         
-    static PRIntn CompareBindingElements(const void* aLeft, const void* aRight) {
+    static PRIntn PR_CALLBACK CompareBindingElements(const void* aLeft, const void* aRight) {
         return aLeft == aRight; }
 
     // The pool from whence all our slop will be allocated
@@ -1814,7 +1814,7 @@ ConflictSet::Clear()
     Init();
 }
 
-PLHashNumber
+PLHashNumber PR_CALLBACK
 ConflictSet::HashMemoryElement(const void* aMemoryElement)
 {
     const MemoryElement* element =
@@ -1823,7 +1823,7 @@ ConflictSet::HashMemoryElement(const void* aMemoryElement)
     return element->Hash();
 }
 
-PRIntn
+PRIntn PR_CALLBACK
 ConflictSet::CompareMemoryElements(const void* aLeft, const void* aRight)
 {
     const MemoryElement* left =
@@ -2238,7 +2238,7 @@ protected:
             nsFixedSizeAllocator::Free(entry, sizeof(Entry));
         } }
 
-    static PLHashNumber
+    static PLHashNumber PR_CALLBACK
     HashPointer(const void* aKey) {
         return PLHashNumber(aKey) >> 3; }
 };
