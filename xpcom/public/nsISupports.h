@@ -76,6 +76,7 @@ typedef PRUint32 nsrefcnt;
  */
 class nsISupports {
 public:
+  static const nsIID& IID() { static nsIID iid = NS_ISUPPORTS_IID; return iid; }
   /**
    * @name Methods
    */
