@@ -1132,10 +1132,10 @@ nsWebShellWindow::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-    #ifdef XP_PC
-    DynamicLoadMenus(menubarDOMDoc, mWindow);
-    #else
+    #ifdef XP_MAC
     LoadMenus(menubarDOMDoc, mWindow);
+    #else
+    DynamicLoadMenus(menubarDOMDoc, mWindow);
     #endif
   }
 
@@ -1357,10 +1357,10 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
   ///////////////////////////////
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc) {
-    #ifdef XP_PC
-    DynamicLoadMenus(menubarDOMDoc, mWindow);
-    #else
+    #ifdef XP_MAC
     LoadMenus(menubarDOMDoc, mWindow);
+    #else
+    DynamicLoadMenus(menubarDOMDoc, mWindow);
     #endif
   }
 
