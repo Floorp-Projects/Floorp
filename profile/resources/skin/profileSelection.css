@@ -1,0 +1,170 @@
+/* 
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Ben Goodger (28/10/99)
+ */
+
+/* note that I'm defining most of my styles here because I have not figured out
+ * a reigime under the new skin. I hope to update this soon.
+ *  
+ * I am respecting user's choice of system colours by using them rather than 
+ * defining my own, with the exception of the header text
+ */ 
+ 
+window {
+  padding                   : 7px;
+  background                : url('chrome://profile/skin/header.gif');
+  background-repeat         : no-repeat;
+  background-position       : 0px -10px;
+  background-color          : threedface;
+}
+
+div.label {
+  margin-left               : 10px;
+  margin-right              : 7px;
+  margin-bottom             : 10px;
+}
+
+div.rule {
+  border-bottom             : 2px threedface groove;
+  margin-left               : -10px;
+  width                     : 100%;
+}
+
+/* these two will probably break on Mac, as they did in profile wizard. */
+/* can we find a font? a nice font? */
+/* maybe perpetua *nudgenudge*/
+div#welcometo {
+  font-family               : serif;
+  font-size                 : 20px;
+  font-weight               : bold;
+  color                     : #61400A;
+}
+
+div#mozilla {
+  font-family               : serif;
+  font-size                 : 36px;
+  font-weight               : bold;
+  color                     : #000000;
+  margin-top                : -13px;
+  margin-left               : 25px;
+}
+
+hr {
+  height                    : 2px;
+  border                    : none;
+  background-color          : black;
+}
+
+tree#profiles {
+  border                    : 1px inset threedface;
+/*  outline                   : 1px inset #CCCCDD;*/
+  background-color          : transparent;
+}
+
+treecell {
+  padding-left              : 5px;
+  padding-top               : 1px;
+  padding-bottom            : 1px;
+}
+
+tree > treechildren {
+  background-color          : window;
+}
+
+tree#profiles > treehead > treerow > treecell {
+  padding-left              : 10px;
+  border-left               : none;
+  border-top                : none;
+  border-right              : none;
+  border-bottom             : 1px solid #61400A;
+  background-color          : transparent;
+  color                     : windowtext;
+}
+
+treecell#roamingcell {
+  border-top                : 1px solid windowtext;
+}
+
+treeitem#roamingitem {
+  margin-top                : 5px;
+}
+
+treeitem[selected="true"] treecell {
+  background-color          : highlight;
+  color                     : highlighttext;
+}
+
+treeitem[selected="true"] titledbutton.displaybutton {
+  border                    : none;
+  padding                   : 0px;
+  list-style-image          : url('chrome://profile/skin/profileicon-selected.gif');
+}
+
+treeitem titledbutton.displaybutton {
+  border                    : none;
+  padding                   : 0px;
+  list-style-image          : url('chrome://profile/skin/profileicon.gif');
+}
+
+box#prattle {
+  background-color          : threedface;
+  border-top                : 1px outset threedface;
+  margin-left               : -7px;
+  padding-top               : 7px;
+}
+
+box.selection > titledbutton  {
+  -moz-border-radius        : 2px;
+}
+box.selection > titledbutton:hover {
+  text-decoration           : none;
+}
+box.selection > titledbutton:active  {
+  -moz-border-radius        : 2px;
+}
+
+titledbutton.padded {
+  padding-left              : 20px;
+  padding-right             : 20px;
+}
+
+spring#makeup {
+  border-top                : 1px outset threedface;
+  background-color          : threedface;
+}
+
+input[type="checkbox"] {
+  background-color          : threedface;
+  border                    : 1px outset threedface;
+/*  outline                   : 1px solid threeddarkshadow;*/
+  -moz-border-radius        : 2px;
+}
+
+input[type="checkbox"]:hover {
+  outline                   : 1px solid threeddarkshadow;
+}
+
+input[type="checkbox"]:active {
+  background-color          : threedface;
+  border                    : 1px inset threedface;
+/*  outline                   : 1px solid threeddarkshadow;*/
+  -moz-border-radius        : 2px;
+}

@@ -99,6 +99,8 @@
 // this used to be cpwPreg.xul, that no longer exists.  we need to fix this.
 #define PROFILE_PREG_URL "chrome://profile/content/createProfileWizard.xul"
 
+#define PROFILE_SELECTION_URL "chrome://profile/content/profileSelection.xul"
+#define PROFILE_SELECTION_CMD_LINE_ARG "-SelectProfile"
 #define PROFILE_MANAGER_URL "chrome://profile/content/profileManager.xul"
 #define PROFILE_MANAGER_CMD_LINE_ARG "-ProfileManager"
 #define PROFILE_WIZARD_URL "chrome://profile/content/createProfileWizard.xul"
@@ -314,7 +316,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
                         profileURLStr = PROFILE_WIZARD_URL;
                 }
             else if (numProfiles > 1)
-                profileURLStr = PROFILE_MANAGER_URL;
+                profileURLStr = PROFILE_SELECTION_URL;
         }
 
 
@@ -455,8 +457,18 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
                 profileURLStr = PROFILE_MANAGER_URL;
             }
         }
-
-	// Start Profile Wizard
+    
+    // Start Profile Selection
+    rv = cmdLineArgs->GetCmdLineValue(PROFILE_SELECTION_CMD_LINE_ARG, &cmdResult);
+    if (NS_SUCCEEDED(rv))
+        {		
+            if (cmdResult) {
+                profileURLStr = PROFILE_SELECTION_URL;
+            }
+        }
+    
+    
+    // Start Profile Wizard
     rv = cmdLineArgs->GetCmdLineValue(PROFILE_WIZARD_CMD_LINE_ARG, &cmdResult);
     if (NS_SUCCEEDED(rv))
         {		
