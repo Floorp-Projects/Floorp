@@ -696,12 +696,18 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     NS_ASSERTION(oldData == aLoadData, "broken loading table");
   }
 
-  // unblock parser
+  // release all parsers, but we only need to unblock one
   data = aLoadData;
+  PRBool done = PR_FALSE;
   do {
-    if (data->mParserToUnblock && data->mDidBlockParser) {
-      data->mParserToUnblock->EnableParser(PR_TRUE);  // this may result in re-entrant calls to loader
-      break;
+    if (data->mParserToUnblock) {
+      if (!done && data->mDidBlockParser) {
+        done = PR_TRUE;
+        data->mParserToUnblock->EnableParser(PR_TRUE);  // this may result in re-entrant calls to loader
+      }
+      // To reduce the risk of leaking a parser if we leak a SheetLoadData,
+      // release the parser here.
+      NS_RELEASE(data->mParserToUnblock); // assigns nsnull
     }
     data = data->mNext;
   } while (data);
