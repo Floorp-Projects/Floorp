@@ -4082,7 +4082,7 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                because in testing it seems an accurate harbinger of
                an impending min/max/restore change (WM_NCCALCSIZE would
                also work, but it's also sent when merely resizing.)) */
-            if (wp->flags & SWP_FRAMECHANGED) {
+            if (wp->flags & SWP_FRAMECHANGED && ::IsWindowVisible(mWnd)) {
               WINDOWPLACEMENT pl;
               pl.length = sizeof(pl);
               ::GetWindowPlacement(mWnd, &pl);
