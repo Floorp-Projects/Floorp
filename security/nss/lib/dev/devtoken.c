@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.34 $ $Date: 2003/07/01 00:32:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.35 $ $Date: 2003/08/01 02:02:43 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -152,8 +152,7 @@ nssToken_Destroy (
 )
 {
     if (tok) {
-	PR_AtomicDecrement(&tok->base.refCount);
-	if (tok->base.refCount == 0) {
+	if (PR_AtomicDecrement(&tok->base.refCount) == 0) {
 	    PZ_DestroyLock(tok->base.lock);
 	    nssTokenObjectCache_Destroy(tok->cache);
 	    return nssArena_Destroy(tok->base.arena);

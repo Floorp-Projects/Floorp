@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.46 $ $Date: 2003/01/30 05:12:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.47 $ $Date: 2003/08/01 02:02:46 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -131,8 +131,7 @@ nssCertificate_Destroy (
 	} else {
 	    nssTrustDomain_LockCertCache(td);
 	}
-	PR_AtomicDecrement(&c->object.refCount);
-	if (c->object.refCount == 0) {
+	if (PR_AtomicDecrement(&c->object.refCount) == 0) {
 	    /* --- remove cert and UNLOCK storage --- */
 	    if (cc) {
 		nssCertificateStore_RemoveCertLOCKED(cc->certStore, c);

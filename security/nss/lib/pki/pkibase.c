@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.20 $ $Date: 2003/05/02 03:01:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.21 $ $Date: 2003/08/01 02:02:47 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -106,8 +106,7 @@ nssPKIObject_Destroy (
 {
     PRUint32 i;
     PR_ASSERT(object->refCount > 0);
-    PR_AtomicDecrement(&object->refCount);
-    if (object->refCount == 0) {
+    if (PR_AtomicDecrement(&object->refCount) == 0) {
 	for (i=0; i<object->numInstances; i++) {
 	    nssCryptokiObject_Destroy(object->instances[i]);
 	}
