@@ -31,13 +31,8 @@ function goQuitApplication()
   {
     var  windowToClose = enumerator.getNext();
     var domWindow = windowManagerInterface.convertISupportsToDOMWindow( windowToClose );
-    if (!("tryToClose" in domWindow))
+    if (!("tryToClose" in domWindow) || domWindow.tryToClose())
       domWindow.close();
-    else
-    {
-      if ( !domWindow.tryToClose() )
-        return false;
-    }
   };
   if (!nativeAppSupport || !nativeAppSupport.isServerMode)
     appShell.quit();
