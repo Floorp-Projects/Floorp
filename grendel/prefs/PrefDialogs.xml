@@ -62,7 +62,7 @@
      insets="[5,5,0,5]"/>
 
     <input type="text" ID="mailDirectoryField" value="mailDirectoryField"
-     weightx="1" fill="horizontal" gridwidth="relative" columns="15"
+     weightx="1" fill="horizontal" gridwidth="relative" 
      insets="[0,5,5,5]"/>
 
     <input type="button" ID="chooseButton" command="chooseButton"
