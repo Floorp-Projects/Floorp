@@ -2444,6 +2444,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   // Now that we have a url and a unicode input stream, parse the
   // style sheet.
   rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
+  NS_RELEASE(element);
   NS_RELEASE(uin);
   NS_RELEASE(url);
 
