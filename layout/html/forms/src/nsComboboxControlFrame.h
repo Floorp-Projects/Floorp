@@ -24,6 +24,7 @@
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDOMMouseListener.h"
+#include "nsIDOMFocusListener.h"
 #include "nsVoidArray.h"
 #include "nsIAnonymousContentCreator.h"
 
@@ -45,6 +46,7 @@ class nsComboboxControlFrame : public nsAreaFrame,
                                public nsIFormControlFrame,
                                public nsIComboboxControlFrame,
                                public nsIDOMMouseListener,
+                               public nsIDOMFocusListener,
                                public nsIAnonymousContentCreator
 
 {
@@ -134,7 +136,10 @@ public:
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; }
 
-  
+  //nsIDOMFocusListener
+  virtual nsresult Focus(nsIDOMEvent* aEvent);
+  virtual nsresult Blur(nsIDOMEvent* aEvent);
+
 protected:
 
    // nsHTMLContainerFrame
@@ -183,6 +188,7 @@ protected:
   nsIFrame*             mButtonFrame;             // button frame
   nsIFrame*             mDropdownFrame;           // dropdown list frame
   nsIListControlFrame * mListControlFrame;        // ListControl Interface for the dropdown frame
+  PRBool                mIgnoreFocus;             // Tells the combo to ignore all focus notifications
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
