@@ -624,7 +624,8 @@ NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list
 NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **listchild)
 {
   char* temp = (char*)&child_list[*indx];
-  char* child = strtok(temp, ";");
+  char* newstr;
+  char* child = nsCRT::strtok(temp, ";", &newstr);
   if (child) {
     *indx += PL_strlen(child) + 1;
     *listchild = child;
