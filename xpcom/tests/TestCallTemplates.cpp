@@ -32,6 +32,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsWeakReference.h"
+#include "nsIInterfaceRequestor.h"
 
 #define NS_ITESTSERVICE_IID \
   {0x127b5253, 0x37b1, 0x43c7, \
@@ -100,6 +101,11 @@ int main()
     CallGetService(NS_TEST_SERVICE_CONTRACTID, &myITestService);
     CallGetService(NS_TEST_SERVICE_CONTRACTID, myShutdownListener,
                    &myITestService);
+
+    /* Test CallGetInterface */
+    nsIInterfaceRequestor *myInterfaceRequestor =
+        NS_STATIC_CAST(nsIInterfaceRequestor*, mySupportsPtr);
+    CallGetInterface(myInterfaceRequestor, &myITestService);
 
     return 0;
 }
