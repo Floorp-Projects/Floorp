@@ -211,10 +211,6 @@ class nsDOMIterator
     nsresult Init(nsIDOMRange* aRange);
     nsresult Init(nsIDOMNode* aNode);
     void ForEach(nsDomIterFunctor& functor) const;
-    // XXX probably want to remove MakeList in favor of AppendList at
-    // some point.
-    nsresult MakeList(nsBoolDomIterFunctor& functor,
-                      nsCOMArray<nsIDOMNode>& outArrayOfNodes) const;
     nsresult AppendList(nsBoolDomIterFunctor& functor,
                         nsCOMArray<nsIDOMNode>& arrayOfNodes) const;
   protected:

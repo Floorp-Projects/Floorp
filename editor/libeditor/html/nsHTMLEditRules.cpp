@@ -2216,7 +2216,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
           nsDOMSubtreeIterator iter;
           res = iter.Init(range);
           if (NS_FAILED(res)) return res;
-          res = iter.MakeList(functor, arrayOfNodes);
+          res = iter.AppendList(functor, arrayOfNodes);
           if (NS_FAILED(res)) return res;
       
           // now that we have the list, delete non table elements
@@ -4354,7 +4354,7 @@ nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsAString *alignType)
   nsDOMIterator iter;
   res = iter.Init(aNode);
   if (NS_FAILED(res)) return res;
-  res = iter.MakeList(functor, arrayOfNodes);
+  res = iter.AppendList(functor, arrayOfNodes);
   if (NS_FAILED(res)) return res;
   
   // now that we have the list, align their contents as requested
@@ -5712,7 +5712,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
   nsDOMIterator iter;
   nsresult res = iter.Init(inNode);
   if (NS_FAILED(res)) return res;
-  res = iter.MakeList(functor, arrayOfBreaks);
+  res = iter.AppendList(functor, arrayOfBreaks);
   if (NS_FAILED(res)) return res;
   
   // if there aren't any breaks, just put inNode itself in the array
@@ -6842,7 +6842,7 @@ nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
   nsDOMIterator iter;
   nsresult res = iter.Init(mDocChangeRange);
   if (NS_FAILED(res)) return res;
-  res = iter.MakeList(functor, arrayOfNodes);
+  res = iter.AppendList(functor, arrayOfNodes);
   if (NS_FAILED(res)) return res;
 
   // put moz-br's into these empty li's and td's
