@@ -43,6 +43,13 @@ function onLoad() {
 
 function onOk() {
   onSave();
+    // hack hack - save the prefs file NOW in case we crash
+    try {
+        var prefs = Components.classes["component://netscape/preferences"].getService(Components.interfaces.nsIPref);
+        prefs.SavePrefFile();
+    } catch (ex) {
+        dump("Error saving prefs!\n");
+    }
   return true;
 }
 
