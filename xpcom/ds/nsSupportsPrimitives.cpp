@@ -146,7 +146,7 @@ NS_IMETHODIMP nsSupportsStringImpl::ToString(char **_retval)
     return GetData(_retval);
 }  
 
-NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRInt32 aLength, const char *aData)
+NS_IMETHODIMP nsSupportsStringImpl::SetDataWithLength(PRUint32 aLength, const char *aData)
 {
     if(mData)
       nsAllocator::Free(mData);
@@ -212,7 +212,7 @@ NS_IMETHODIMP nsSupportsWStringImpl::ToString(PRUnichar **_retval)
 
 // NOTE: assumes |length| does not include the null and null terminates itself. |length|
 // is in characters, not bytes.
-NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRInt32 aLength, const PRUnichar *aData)
+NS_IMETHODIMP nsSupportsWStringImpl::SetDataWithLength(PRUint32 aLength, const PRUnichar *aData)
 {
     if(mData)
       nsAllocator::Free(mData);
