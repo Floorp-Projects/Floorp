@@ -590,7 +590,8 @@ nsScriptSecurityManager::CheckSameOriginPrincipal(nsIPrincipal* aSourcePrincipal
                                                   nsIPrincipal* aTargetPrincipal)
 {
     return CheckSameOriginDOMProp(aSourcePrincipal, aTargetPrincipal,
-                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY);
+                                  nsIXPCSecurityManager::ACCESS_SET_PROPERTY,
+                                  PR_FALSE);
 }
 
 
@@ -724,7 +725,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
                     NS_ERROR("CheckPropertyAccessImpl called without a target object or URL");
                     return NS_ERROR_FAILURE;
                 }
-                rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal, aAction);
+                rv = CheckSameOriginDOMProp(subjectPrincipal, objectPrincipal,
+                                            aAction, (PRBool)aTargetURI);
                 break;
             }
         default:
@@ -849,7 +851,8 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 nsresult
 nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
                                                 nsIPrincipal* aObject,
-                                                PRUint32 aAction)
+                                                PRUint32 aAction,
+                                                PRBool aIsCheckConnect)
 {
     nsresult rv;
     /*
@@ -867,6 +870,14 @@ nsScriptSecurityManager::CheckSameOriginDOMProp(nsIPrincipal* aSubject,
         // explicitly setting document.domain then the other must also have
         // done so in order to be considered the same origin. This prevents
         // DNS spoofing based on document.domain (154930)
+
+        // But this restriction does not apply to CheckConnect calls, since
+        // that's called for data-only load checks like XMLHTTPRequest, where
+        // the target document has not yet loaded and can't have set its domain
+        // (bug 163950)
+        if (aIsCheckConnect)
+            return NS_OK;
+
         nsCOMPtr<nsIAggregatePrincipal> subjectAgg(do_QueryInterface(aSubject, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
         PRBool subjectSetDomain = PR_FALSE;
@@ -1206,7 +1217,7 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aSourceURI, nsIURI *aTargetURI,
     }
 
     //-- If the schemes don't match, the policy is specified in this table.
-    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol };
+    enum Action { AllowProtocol, DenyProtocol, PrefControlled, ChromeProtocol};
     static const struct
     {
         const char *name;

@@ -323,7 +323,8 @@ private:
     nsresult
     CheckSameOriginDOMProp(nsIPrincipal* aSubject, 
                            nsIPrincipal* aObject,
-                           PRUint32 aAction);
+                           PRUint32 aAction,
+                           PRBool aIsCheckConnect);
     
     PRInt32 
     GetSecurityLevel(nsIPrincipal *principal,
