@@ -56,40 +56,4 @@ interface nsIOutlinerContentView : nsISupports
    * Retrieve the index associated with the specified content item.
    */
   long getIndexOfItem(in nsIDOMElement item);
-
-  /**
-   * Notification that an item has been selected.
-   */
-  void select(in long index);
-
-  /**
-   * Notification that all items have been selected.
-   */
-  void selectAll();
-
-  /**
-   * Notification that an item has been deselected.
-   */
-  void deselect(in long index);
-
-  /**
-   * Notification that all items have been deselected.
-   */
-  void deselectAll();
-
-  /**
-   * Notification that a range of items has been selected.
-   */
-  void selectRange(in long start, in long end);
-
-  /**
-   * Notification that a range of items has been deselected.
-   */
-  void deselectRange(in long start, in long end);
-
-  /**
-   * Notification that all items except this one have been deselected.
-   */
-  void deselectAllBut(in long index);
-
 };

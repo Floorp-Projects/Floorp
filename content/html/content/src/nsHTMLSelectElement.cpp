@@ -183,29 +183,7 @@ public:
                             nsString* aNames);
 
   // nsISelectElement
-  NS_IMETHOD WillAddOptions(nsIContent* aOptions,
-                            nsIContent* aParent,
-                            PRInt32 aContentIndex);
-  NS_IMETHOD WillRemoveOptions(nsIContent* aParent,
-                               PRInt32 aContentIndex);
-  NS_IMETHOD AddOption(nsIContent* aContent);
-  NS_IMETHOD RemoveOption(nsIContent* aContent);
-  NS_IMETHOD DoneAddingContent(PRBool aIsDone);
-  NS_IMETHOD IsDoneAddingContent(PRBool * aIsDone);
-  NS_IMETHOD IsOptionSelected(nsIDOMHTMLOptionElement* anOption,
-                              PRBool * aIsSelected);
-  NS_IMETHOD SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
-                               PRBool aIsSelected);
-  NS_IMETHOD SetOptionsSelectedByIndex(PRInt32 aStartIndex,
-                                       PRInt32 aEndIndex,
-                                       PRBool aIsSelected,
-                                       PRBool aClearAll,
-                                       PRBool aSetDisabled,
-                                       PRBool* aChangedSomething);
-  NS_IMETHOD IsOptionDisabled(PRInt32 aIndex, PRBool* aIsDisabled);
-  NS_IMETHOD OnOptionDisabled(nsIDOMHTMLOptionElement* anOption);
-  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
-  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsIPresState* aState);
+  NS_DECL_NSISELECTELEMENT
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAReadableString& aValue,
@@ -226,7 +204,8 @@ protected:
   nsresult OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                             nsIPresContext* aPresContext,
                             PRInt32 aIndex,
-                            PRBool aSelected);
+                            PRBool aSelected,
+                            PRBool aNotify);
   nsresult InitializeOption(nsIDOMHTMLOptionElement* aOption,
                             PRUint32* aNumOptions);
   nsresult RestoreStateTo(nsAString* aNewSelected);
@@ -479,13 +458,13 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
           PRBool isMultiple;
           GetMultiple(&isMultiple);
           if (!isMultiple) {
-            SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
+            SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
           }
 
           // This is sort of a hack ... we need to notify that the option was
           // set and change selectedIndex even though we didn't really change
           // its value.
-          OnOptionSelected(selectFrame, presContext, i, PR_TRUE);
+          OnOptionSelected(selectFrame, presContext, i, PR_TRUE, PR_TRUE);
         }
       }
     }
@@ -978,7 +957,7 @@ NS_IMETHODIMP
 nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 {
   return SetOptionsSelectedByIndex(aIndex, aIndex, PR_TRUE,
-                                   PR_FALSE, PR_TRUE, nsnull);
+                                   PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
 }
 
 nsresult
@@ -1049,7 +1028,8 @@ nsresult
 nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
                                       nsIPresContext* aPresContext,
                                       PRInt32 aIndex,
-                                      PRBool aSelected)
+                                      PRBool aSelected,
+                                      PRBool aNotify)
 {
   //printf("OnOptionSelected(%d = '%c')\n", aIndex, (aSelected ? 'Y' : 'N'));
   // Set the selected index
@@ -1064,7 +1044,7 @@ nsHTMLSelectElement::OnOptionSelected(nsISelectControlFrame* aSelectFrame,
   Item(aIndex, getter_AddRefs(option));
   if (option) {
     nsCOMPtr<nsIOptionElement> optionElement(do_QueryInterface(option));
-    optionElement->SetSelectedInternal(aSelected, PR_TRUE);
+    optionElement->SetSelectedInternal(aSelected, aNotify);
   }
 
   // Let the frame know too
@@ -1105,7 +1085,7 @@ nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
   }
 
   return SetOptionsSelectedByIndex(index, index, aIsSelected,
-                                   PR_FALSE, PR_TRUE, nsnull);
+                                   PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
 }
 
 // XXX Consider splitting this into two functions for ease of reading:
@@ -1133,6 +1113,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                                                PRBool aIsSelected,
                                                PRBool aClearAll,
                                                PRBool aSetDisabled,
+                                               PRBool aNotify,
                                                PRBool* aChangedSomething)
 {
 #if 0
@@ -1239,7 +1220,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
 
             did_get_frame = PR_TRUE;
 
-            OnOptionSelected(selectFrame, presContext, optIndex, PR_TRUE);
+            OnOptionSelected(selectFrame, presContext, optIndex, PR_TRUE, aNotify);
             optionsSelected = PR_TRUE;
           }
         }
@@ -1272,7 +1253,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
                 did_get_frame = PR_TRUE;
               }
 
-              OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE);
+              OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE, aNotify);
               optionsDeselected = PR_TRUE;
 
               // Only need to deselect one option if not multiple
@@ -1314,7 +1295,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
             did_get_frame = PR_TRUE;
           }
 
-          OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE);
+          OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE, aNotify);
           optionsDeselected = PR_TRUE;
         }
       }
@@ -1915,7 +1896,7 @@ nsHTMLSelectElement::RestoreStateTo(nsAString* aNewSelected)
   GetLength(&len);
 
   // First clear all
-  SetOptionsSelectedByIndex(-1, -1, PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
+  SetOptionsSelectedByIndex(-1, -1, PR_TRUE, PR_TRUE, PR_TRUE, PR_TRUE, nsnull);
 
   // Next set the proper ones
   PRUint32 currentInd = 0;
@@ -1927,7 +1908,7 @@ nsHTMLSelectElement::RestoreStateTo(nsAString* aNewSelected)
     nsDependentSubstring s = Substring(*aNewSelected,
                                        currentInd, (nextInd-currentInd));
     PRInt32 i = atoi(NS_ConvertUCS2toUTF8(s).get());
-    SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, nsnull);
+    SetOptionsSelectedByIndex(i, i, PR_TRUE, PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
     currentInd = (PRUint32)nextInd+1;
   }
 

@@ -50,7 +50,6 @@
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerSelection.h"
 #include "nsIOutlinerContentView.h"
-#include "nsISelectElement.h"
 
 class Property;
 
@@ -184,20 +183,6 @@ class nsOutlinerContentView : public nsIOutlinerView,
     nsresult GetNamedCell(nsIContent* aContainer, const PRUnichar* aColID, nsIContent** aResult);
 
     nsresult ParseProperties(nsIContent* aContent, Property** aProperty);
-
-    inline nsresult SetOptionsSelected(PRInt32 aStart, PRInt32 aEnd,
-                                       PRBool aSelect, PRBool aClear)
-    {
-      nsresult rv = NS_OK;
-
-      if (mRoot) {
-        nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(mRoot);
-        if (selectElement)
-          rv = selectElement->SetOptionsSelectedByIndex(aStart, aEnd, aSelect,
-                                                        aClear, PR_FALSE, nsnull);
-      }
-      return rv;
-    }
 
   private:
     nsCOMPtr<nsIOutlinerBoxObject>      mBoxObject;

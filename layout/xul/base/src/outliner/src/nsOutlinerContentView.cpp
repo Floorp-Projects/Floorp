@@ -49,7 +49,6 @@
 #include "nsChildIterator.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMClassInfo.h"
-#include "nsISelectElement.h"
 
 
 // A content model view implementation for the outliner.
@@ -600,48 +599,6 @@ nsOutlinerContentView::GetIndexOfItem(nsIDOMElement* aItem, PRInt32* _retval)
   *_retval = FindContent(content);
 
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::Select(PRInt32 aIndex)
-{
-  return SetOptionsSelected(aIndex, aIndex, PR_TRUE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::SelectAll()
-{
-  return SetOptionsSelected(0, mRows.Count() - 1, PR_TRUE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::Deselect(PRInt32 aIndex)
-{
-  return SetOptionsSelected(aIndex, aIndex, PR_FALSE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::DeselectAll()
-{
-  return SetOptionsSelected(0, mRows.Count() - 1, PR_FALSE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::SelectRange(PRInt32 aStart, PRInt32 aEnd)
-{
-  return SetOptionsSelected(aStart, aEnd, PR_TRUE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::DeselectRange(PRInt32 aStart, PRInt32 aEnd)
-{
-  return SetOptionsSelected(aStart, aEnd, PR_FALSE, PR_FALSE);
-}
-
-NS_IMETHODIMP
-nsOutlinerContentView::DeselectAllBut(PRInt32 aIndex)
-{
-  return SetOptionsSelected(aIndex, aIndex, PR_TRUE, PR_TRUE);
 }
 
 NS_IMETHODIMP
