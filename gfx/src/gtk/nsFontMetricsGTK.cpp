@@ -2745,60 +2745,56 @@ nsFontMetricsGTK::PickASizeAndLoad(nsFontStretch* aStretch,
   // favor it over outline scaled font)
   if ((  (bitmap_size < mPixelSize-(mPixelSize/10))
       || (bitmap_size > mPixelSize+(mPixelSize/10)))
-       && (aStretch->mScalable)) {
-    // if we have an outline font then use that
-    // if it is allowed to be closer than the bitmap
-    if (aStretch->mOutlineScaled) {
-      scale_size = PR_MAX(mPixelSize, aCharSet->mOutlineScaleMin);
+      && (aStretch->mOutlineScaled)) {
+    scale_size = PR_MAX(mPixelSize, aCharSet->mOutlineScaleMin);
 
-      if (ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size)) {
-        use_scaled_font = 1;
-        SIZE_FONT_PRINTF(("outline font:______ %s\n"
-                    "                    desired=%d, scaled=%d, bitmap=%d", 
-                    aStretch->mScalable, mPixelSize, scale_size,
-                    (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
+    if (ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size)) {
+      use_scaled_font = 1;
+      SIZE_FONT_PRINTF(("outline font:______ %s\n"
+                  "                    desired=%d, scaled=%d, bitmap=%d", 
+                  aStretch->mScalable, mPixelSize, scale_size,
+                  (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
+    }
+  }
+  if (!use_scaled_font
+      && (bitmap_size<NOT_FOUND_FONT_SIZE) && gAABitmapScaleEnabled) {
+    // if we do not have a near-the-right-size font or scalable font
+    // see if we can anti-alias bitmap scale one
+    scale_size = PR_MAX(mPixelSize, aCharSet->mAABitmapScaleMin);
+    double ratio = (bitmap_size / ((double) mPixelSize));
+    if (   (ratio < aCharSet->mAABitmapUndersize)
+         || (ratio > aCharSet->mAABitmapOversize)) {
+      //
+      // Try to get a size font to scale that is 2x larger 
+      // (but at least 16 pixel)
+      //
+      PRUint32 aa_target_size = MAX((scale_size*2), 16);
+      base_aafont = FindNearestSize(aStretch, aa_target_size);
+      NS_ASSERTION(base_aafont,
+             "failed to find a base font for Anti-Aliased bitmap Scaling");
+      if (base_aafont) {
+        use_scaled_font = PR_TRUE;
+        int aa_bitmap_size = base_aafont->mSize;
+        bitmap_size = font->mSize;
+        SIZE_FONT_PRINTF(("anti-aliased bitmap scaled font: %s\n"
+              "                    desired=%d, aa-scaled=%d, bitmap=%d, "
+              "aa_bitmap=%d",
+              aName, mPixelSize, scale_size, bitmap_size, aa_bitmap_size));
       }
     }
-    else {
-      // if we do not have a near-the-right-size font or scalable font
-      // see if we can anti-alias bitmap scale one
-      scale_size = PR_MAX(mPixelSize, aCharSet->mAABitmapScaleMin);
+    if (!use_scaled_font && aStretch->mScalable) {
+      // if we do not have any similarly sized font
+      // use a bitmap scaled font (ugh!)
+      scale_size = PR_MAX(mPixelSize, aCharSet->mBitmapScaleMin);
       double ratio = (bitmap_size / ((double) mPixelSize));
-      if (gAABitmapScaleEnabled && (bitmap_size<NOT_FOUND_FONT_SIZE)
-           && ((ratio < aCharSet->mAABitmapUndersize)
-               || (ratio > aCharSet->mAABitmapOversize))) {
-        //
-        // Try to get a size font to scale that is 2x larger 
-        // (but at least 16 pixel)
-        //
-        PRUint32 aa_target_size = MAX((scale_size*2), 16);
-        base_aafont = FindNearestSize(aStretch, aa_target_size);
-        NS_ASSERTION(base_aafont,
-               "failed to find a base font for Anti-Aliased bitmap Scaling");
-        if (base_aafont) {
-          use_scaled_font = PR_TRUE;
-          int aa_bitmap_size = base_aafont->mSize;
-          bitmap_size = font->mSize;
-          SIZE_FONT_PRINTF(("anti-aliased bitmap scaled font: %s\n"
-                "                    desired=%d, aa-scaled=%d, bitmap=%d, "
-                "aa_bitmap=%d",
-                aName, mPixelSize, scale_size, bitmap_size, aa_bitmap_size));
-        }
-      }
-      else {
-        // if we do not have any similarly sized font
-        // use a bitmap scaled font (ugh!)
-        scale_size = PR_MAX(mPixelSize, aCharSet->mBitmapScaleMin);
-        double ratio = (bitmap_size / ((double) mPixelSize));
-        if ((ratio < aCharSet->mBitmapUndersize)
-            || (ratio > aCharSet->mBitmapOversize)) {
-          if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
-            use_scaled_font = 1;
-            SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
-                    "                    desired=%d, scaled=%d, bitmap=%d", 
-                    aStretch->mScalable, mPixelSize, scale_size,
-                    (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
-          }
+      if ((ratio < aCharSet->mBitmapUndersize)
+          || (ratio > aCharSet->mBitmapOversize)) {
+        if ((ABS(mPixelSize-scale_size) < ABS(mPixelSize-bitmap_size))) {
+          use_scaled_font = 1;
+          SIZE_FONT_PRINTF(("bitmap scaled font: %s\n"
+                  "                    desired=%d, scaled=%d, bitmap=%d", 
+                  aStretch->mScalable, mPixelSize, scale_size,
+                  (bitmap_size=NOT_FOUND_FONT_SIZE?0:bitmap_size)));
         }
       }
     }
@@ -3675,6 +3671,9 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
         continue;
     }
   
+    // get pixel size before the string is changed
+    int pixels = atoi(pixelSize);
+
     p = name;
     while (p < charSetName) {
       if (!*p) {
@@ -3683,9 +3682,10 @@ GetFontNames(const char* aPattern, PRBool aAnyFoundry, nsFontNodeArray* aNodes)
       p++;
     }
  
-    int pixels = atoi(pixelSize);
-    if (!NodeAddSize(stretch, pixels, name, charSetInfo))
-      continue;
+    if (pixels) {
+      if (!NodeAddSize(stretch, pixels, name, charSetInfo))
+        continue;
+    }
   }
   XFreeFontNames(list);
 
