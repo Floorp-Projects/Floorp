@@ -7,6 +7,9 @@
  	debugging method to BrowserControlMozillaShim.java
  	nativeDebugBreak().
 
+	This changes makes webclient depend on having mozilla sources from
+ 	10/5/99 or later.
+
 	Reviewed by Mark Lin <marklin@eng.sun.com>
 	Approved by Ed Burns <edburns@acm.org>, module owner
 	

@@ -38,7 +38,7 @@ import java.awt.*;
  * There is one instance of this class and all of the exposed methods
  * are static.
 
- * @version $Id: BrowserControlMozillaShim.java,v 1.3 1999/09/03 19:28:45 edburns%acm.org Exp $
+ * @version $Id: BrowserControlMozillaShim.java,v 1.4 1999/10/08 00:48:02 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlImpl
 
@@ -85,25 +85,19 @@ public BrowserControlMozillaShim()
 // Class methods
 //
 
-public static void initialize () throws Exception 
+    /** 
+
+     * it is safe to call this method multiple times, it is guaranteed
+     * to only actually do something once.
+
+     */
+
+public static void initialize(String verifiedBinDirAbsolutePath) throws Exception 
 {
 	if (!initialized) {
 		instance = new BrowserControlMozillaShim();
 
-        // PENDING(mark): Try loading the native library in your own implemntation specfic canvas
-        // class (ie. Win32BrowserControlCanvas or MotifBrowserControlCanvas.
-        // The Unix port needs this. If this is a problem, let me know ASAP.
-        // - Mark
-		/*
-		try {
-			System.loadLibrary("webclient");
-		}
-		catch (java.lang.UnsatisfiedLinkError e) {
-			throw new Exception("Unable to open native webclient library");
-		}
-		*/
-
-		instance.nativeInitialize();
+		instance.nativeInitialize(verifiedBinDirAbsolutePath);
 		initialized = true;
 	}
 }
@@ -281,11 +275,14 @@ public static void widgetUpdate (int widgetPtr)
 //
 
 public static int webShellCreate (int windowPtr, 
-								  Rectangle bounds) throws Exception 
+                                  Rectangle bounds) throws Exception 
 {
 	synchronized(lock) {
 		if (initialized) {
-			return(instance.nativeWebShellCreate(windowPtr, bounds.x, bounds.y, bounds.width + 1, bounds.height + 1));
+			return(instance.nativeWebShellCreate(windowPtr, 
+                                                 bounds.x, bounds.y, 
+                                                 bounds.width + 1, 
+                                                 bounds.height + 1));
 		}
 		else {
 			throw new Exception("Error: unable to create native nsIWebShell");
@@ -504,7 +501,7 @@ public static boolean webShellRefresh(int webShellPtr) throws Exception
 // Native interfaces
 //
 
-private native void nativeInitialize () throws Exception;
+private native void nativeInitialize (String verifiedBinDirAbsolutePath) throws Exception;
 private native void nativeTerminate () throws Exception;
     
 
@@ -573,6 +570,8 @@ private native String	nativeWebShellGetURL			(int webShellPtr, int aHistoryIndex
  */
 private native boolean  nativeWebShellRefresh           (int webShellPtr) throws Exception;
 
+public static native void nativeDebugBreak(String fileName, int lineNumber);
+
 //
 // General Methods
 //
@@ -589,7 +588,7 @@ public static void main(String [] args)
     BrowserControlMozillaShim me = new BrowserControlMozillaShim();
     Log.setApplicationName("BrowserControlMozillaShim");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.3 1999/09/03 19:28:45 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlMozillaShim.java,v 1.4 1999/10/08 00:48:02 edburns%acm.org Exp $");
     
 }
 

@@ -32,7 +32,7 @@ import org.mozilla.webclient.*;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EmbeddedMozilla.java,v 1.2 1999/09/03 19:28:45 edburns%acm.org Exp $
+ * @version $Id: EmbeddedMozilla.java,v 1.3 1999/10/08 00:48:04 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
 
@@ -46,17 +46,27 @@ public class EmbeddedMozilla extends Frame implements ActionListener {
 	private BrowserControl	browserControl;
 	private Panel			controlPanel;
 	private Panel			buttonsPanel;
+
+public static void printUsage()
+{
+    System.out.println("usage: java org.mozilla.webclient.test.EmbeddedMozilla <path> [url]");
+    System.out.println("       <path> is the absolute path to the native browser bin directory, ");
+    System.out.println("       including the bin.");
+}
 	
 	
     public static void main (String[] arg) {
-		String urlArg =(0 < arg.length) ? arg[0] : "http://www.mozilla.org/";
+        if (1 > arg.length) {
+            printUsage();
+            System.exit(-1);
+        }
+		String urlArg =(2 == arg.length) ? arg[1] : "http://www.mozilla.org/";
 		
 		EmbeddedMozilla gecko = 
-			new EmbeddedMozilla("Embedded Mozilla", urlArg);
+			new EmbeddedMozilla("Embedded Mozilla", arg[0], urlArg);
     } // main()
     
-
-    public EmbeddedMozilla (String title, String url) {
+    public EmbeddedMozilla (String title, String binDir, String url) {
 		super(title);
         System.out.println("constructed with " + url);
 	
@@ -96,8 +106,17 @@ public class EmbeddedMozilla extends Frame implements ActionListener {
 		controlPanel.add(buttonsPanel, BorderLayout.WEST);
 
 		// Create the browser
-		BrowserControlCanvas browser  = 
-			BrowserControlCanvasFactory.newBrowserControlCanvas();
+		BrowserControlCanvas browser  = null;
+
+        try {
+            BrowserControlCanvasFactory.setAppData(binDir);
+			browser = BrowserControlCanvasFactory.newBrowserControlCanvas();
+        }
+        catch(Exception e) {
+            System.out.println("Can't create BrowserControlCanvas: " + 
+                               e.getMessage());
+        }
+
 		browser.setSize(defaultWidth, defaultHeight);
 	
 		// Add the control panel and the browser

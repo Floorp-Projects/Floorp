@@ -60,6 +60,8 @@ nsMacMessageSink gMessageSink;
 #include "nsActions.h"
 
 #include "nsIRegistry.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
 
 #define DEBUG_RAPTOR_CANVAS 1
 
@@ -71,9 +73,13 @@ static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
 
 extern "C" void NS_SetupRegistry();
+extern nsresult NS_AutoregisterComponents();
 
+static nsFileSpec registryFile;  
+static nsFileSpec componentDir; 
 
 struct WebShellInitContext {
 #ifdef XP_UNIX
@@ -288,10 +294,27 @@ EmbeddedEventHandler (void * arg) {
         initContext->initFailCode = kInitWebShellError;
         return;
     }
+
+#if DEBUG_RAPTOR_CANVAS
+	printf("EmbeddedEventHandler(%lx): Install Prefs in the Webshell...\n", initContext);
+#endif
+
+    nsIPref *prefs;
+    
+    rv = nsServiceManager::GetService(kPrefCID, 
+                                      nsIPref::GetIID(), 
+                                      (nsISupports **)&prefs);
+    if (NS_SUCCEEDED(rv)) {
+        // Set the prefs in the outermost webshell.
+        initContext->webShell->SetPrefs(prefs);
+        nsServiceManager::ReleaseService(kPrefCID, prefs);
+    }
+    
+    
 #if DEBUG_RAPTOR_CANVAS
 	printf("EmbeddedEventHandler(%lx): Show the WebShell...\n", initContext);
 #endif
-    
+
     rv = initContext->webShell->Show();
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kShowWebShellError;
@@ -588,19 +611,29 @@ extern "C" {
 /*
  * Class:     BrowserControlMozillaShim
  * Method:    raptorInitialize
- * Signature: ()V
+ * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL
-Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize (
-	JNIEnv		*	env,
-	jobject			obj)
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize(
+    JNIEnv *env, 
+    jobject obj, 
+    jstring verifiedBinDirAbsolutePath)
 {
 	JNIEnv		*	pEnv = env;
 	jobject			jobj = obj;
 	static PRBool	gFirstTime = PR_TRUE;
 	if (gFirstTime)
 	{
+        // set the registryFile and componentDir correctly
+        const char *nativePath = (const char *) env->GetStringUTFChars(verifiedBinDirAbsolutePath, 0);
+        registryFile = nativePath;
+        registryFile += "component.reg";
+        componentDir = nativePath;
+        componentDir += "components";
+        
+        NS_InitXPCOM(NULL, &registryFile, &componentDir);
 		NS_SetupRegistry();
+        NS_AutoregisterComponents();
 		gFirstTime = PR_FALSE;
 	}
 } // Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeInitialize()
@@ -1844,6 +1877,21 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_proce
     processEventLoop(initContext);
 }
 #endif
+
+/*
+ * Class:     org_mozilla_webclient_BrowserControlMozillaShim
+ * Method:    nativeDebugBreak
+ * Signature: (Ljava/lang/String;I)V
+ */
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_BrowserControlMozillaShim_nativeDebugBreak(JNIEnv *jEnv, 
+                                                                      jclass myClass, 
+                                                                      jstring fileName, 
+                                                                      jint lineNumber)
+{
+    const char *charFileName = (char *) jEnv->GetStringUTFChars(fileName, 0);
+    nsDebug::Break(charFileName, lineNumber);
+}
 
 
 #ifdef XP_UNIX

@@ -31,7 +31,7 @@ import java.awt.Rectangle;
  *
  * <B>Lifetime And Scope</B> <P>
  *
- * @version $Id: BrowserControlImpl.java,v 1.2 1999/09/03 19:28:44 edburns%acm.org Exp $
+ * @version $Id: BrowserControlImpl.java,v 1.3 1999/10/08 00:48:01 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControl
  *
@@ -69,7 +69,8 @@ public class BrowserControlImpl extends Object implements BrowserControl
 
 public BrowserControlImpl(int windowPtr, Rectangle bounds) throws Exception 
 {
-	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, bounds);
+	nativeWebShell = BrowserControlMozillaShim.webShellCreate(windowPtr, 
+                                                              bounds);
 }
 
 //
@@ -244,7 +245,7 @@ public static void main(String [] args)
     //    BrowserControlImpl me = new BrowserControlImpl();
     Log.setApplicationName("BrowserControlImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.2 1999/09/03 19:28:44 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: BrowserControlImpl.java,v 1.3 1999/10/08 00:48:01 edburns%acm.org Exp $");
     
 }
 
