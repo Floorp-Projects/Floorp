@@ -21,7 +21,7 @@
   #                 Myk Melez <myk@mozilla.org>
   #%]
 
-[% INCLUDE global/variables.none.tmpl %]
+[% PROCESS global/variables.none.tmpl %]
 
 [% PROCESS global/header.html.tmpl
    title = "Dependency tree for $terms.Bug $bugid"
