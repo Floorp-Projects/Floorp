@@ -30,6 +30,11 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef XP_MAC
+#include <Aliases.h>
+#include <TextUtils.h>
+#endif
+
 //========================================================================================
 //            class nsSimpleCharString
 //========================================================================================
@@ -252,6 +257,7 @@ void nsSimpleCharString::ReallocData(PRUint32 inLength)
     mData->mLength = inLength;
 } // nsSimpleCharString::ReleaseData
 
+
 //========================================================================================
 NS_NAMESPACE nsFileSpecHelpers
 //========================================================================================
@@ -362,6 +368,11 @@ char* nsSimpleCharString::GetLeaf(char inSeparator) const
     return result;
 } // nsSimpleCharString::GetLeaf
 
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 #if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 
 //----------------------------------------------------------------------------------------
@@ -437,10 +448,15 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 
 #endif // XP_PC || XP_UNIX
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 #if defined(XP_PC)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
-#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
+//#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
+// we include the .cpp file in the project now.
 #elif defined(XP_BEOS)
 #include "nsFileSpecBeOS.cpp" // BeOS-specific implementations
 #elif defined(XP_UNIX)
@@ -602,6 +618,10 @@ void nsFileURL::operator = (const nsFileSpec& inOther)
 } // nsFileURL::operator =
 #endif
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 //========================================================================================
 //                                nsFilePath implementation
 //========================================================================================
@@ -741,6 +761,8 @@ void nsFilePath::operator = (const nsFilePath& inOther)
 void nsFilePath::operator +=(const char* inRelativeUnixPath)
 //----------------------------------------------------------------------------------------
 {
+	NS_ASSERTION(inRelativeUnixPath, "Attempt append relative path with null path");
+
     char* escapedPath = nsEscape(inRelativeUnixPath, url_Path);
     mPath += escapedPath;
     nsCRT::free(escapedPath);
@@ -753,10 +775,17 @@ void nsFilePath::operator +=(const char* inRelativeUnixPath)
 nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 //----------------------------------------------------------------------------------------
 {
-   nsFilePath result(*this);
-   result += inRelativeUnixPath;
-   return result;
+   NS_ASSERTION(inRelativeUnixPath, "Attempt append relative path with null path");
+
+   nsFilePath resultPath(*this);
+   resultPath += inRelativeUnixPath;
+   return resultPath;
 }  // nsFilePath::operator +
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //========================================================================================
 //                                nsFileSpec implementation
@@ -766,10 +795,26 @@ nsFilePath nsFilePath::operator +(const char* inRelativeUnixPath) const
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec()
 //----------------------------------------------------------------------------------------
-:    mError(NS_OK)
+:    mError(NS_OK)		// XXX shouldn't this be NS_ERROR_NOT_INITIALIZED?
 {
 }
+
+//----------------------------------------------------------------------------------------
+void nsFileSpec::Clear()
+//----------------------------------------------------------------------------------------
+{
+    mPath.SetToEmpty();
+    mError = NS_ERROR_NOT_INITIALIZED;
+}
+
 #endif
+
+//----------------------------------------------------------------------------------------
+nsFileSpec::~nsFileSpec()
+//----------------------------------------------------------------------------------------
+{
+    // mPath cleans itself up
+}
 
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsPersistentFileDescriptor& inDescriptor)
@@ -876,9 +921,7 @@ nsFileSpec::nsFileSpec(const nsFilePath& inPath)
 ,    mError(NS_OK)
 {
 }
-#endif // XP_UNIX
 
-#if defined XP_UNIX || defined XP_BEOS
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const nsFilePath& inPath)
 //----------------------------------------------------------------------------------------
@@ -896,9 +939,7 @@ nsFileSpec::nsFileSpec(const nsFileSpec& inSpec)
 ,    mError(NS_OK)
 {
 }
-#endif //XP_UNIX
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -908,9 +949,7 @@ nsFileSpec::nsFileSpec(const char* inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 }
-#endif //XP_UNIX,PC
 
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
 //----------------------------------------------------------------------------------------
@@ -920,15 +959,7 @@ nsFileSpec::nsFileSpec(const nsString& inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 }
-#endif //XP_UNIX,PC
 
-//----------------------------------------------------------------------------------------
-nsFileSpec::~nsFileSpec()
-//----------------------------------------------------------------------------------------
-{
-}
-
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const nsFileSpec& inSpec)
 //----------------------------------------------------------------------------------------
@@ -936,10 +967,7 @@ void nsFileSpec::operator = (const nsFileSpec& inSpec)
     mPath = inSpec.mPath;
     mError = inSpec.Error();
 }
-#endif //XP_UNIX
 
-
-#if defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
 //----------------------------------------------------------------------------------------
 void nsFileSpec::operator = (const char* inString)
 //----------------------------------------------------------------------------------------
@@ -949,15 +977,17 @@ void nsFileSpec::operator = (const char* inString)
     nsFileSpecHelpers::Canonify(mPath, PR_FALSE /* XXX? */);
     mError = NS_OK;
 }
-#endif //XP_UNIX
+#endif //XP_UNIX,PC,XP_BEOS
 
 //----------------------------------------------------------------------------------------
 nsFileSpec nsFileSpec::operator + (const char* inRelativePath) const
 //----------------------------------------------------------------------------------------
 {
-    nsFileSpec result = *this;
-    result += inRelativePath;
-    return result;
+	NS_ASSERTION(inRelativePath, "Attempt to append name with a null string");
+
+    nsFileSpec resultSpec = *this;
+    resultSpec += inRelativePath;
+    return resultSpec;
 } // nsFileSpec::operator +
 
 //----------------------------------------------------------------------------------------
@@ -1015,22 +1045,23 @@ PRBool nsFileSpec::operator != (const nsFileSpec& inOther) const
 
 #ifndef XP_MAC
 //----------------------------------------------------------------------------------------
-const char* nsFileSpec::GetCString() const
 // This is the only automatic conversion to const char*
 // that is provided, and it allows the
 // path to be "passed" to NSPR file routines.  This practice
 // is VERY EVIL and should only be used to support legacy
 // code.  Using it guarantees bugs on Macintosh. The path is NOT allocated, so do
 // not even think of deleting (or freeing) it.
+const char* nsFileSpec::GetCString() const
 //----------------------------------------------------------------------------------------
 {
     return mPath;
 }
 #endif
 
-/* Is our spec a child of the provided parent? */
-PRBool
-nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
+//----------------------------------------------------------------------------------------
+// Is our spec a child of the provided parent?
+PRBool nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
+//----------------------------------------------------------------------------------------
 {
     nsFileSpec iter = *this, parent;
 #ifdef DEBUG
@@ -1059,10 +1090,13 @@ nsFileSpec::IsChildOf(nsFileSpec &possibleParent)
 #endif
     }
 
-    /* not reached, but I bet some compiler will whine */
+    // not reached, but I bet some compiler will whine
     return PR_FALSE;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //========================================================================================
 //    class nsPersistentFileDescriptor

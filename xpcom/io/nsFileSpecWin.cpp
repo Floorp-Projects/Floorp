@@ -175,6 +175,7 @@ void nsFilePath::operator = (const nsFileSpec& inSpec)
 void nsFileSpec::SetLeafName(const char* inLeafName)
 //----------------------------------------------------------------------------------------
 {
+	NS_ASSERTION(inLeafName, "Attempt to SetLeafName with a null string");
 	mPath.LeafReplace('\\', inLeafName);
 } // nsFileSpec::SetLeafName
 
@@ -374,6 +375,8 @@ void nsFileSpec::GetParent(nsFileSpec& outSpec) const
 void nsFileSpec::operator += (const char* inRelativePath)
 //----------------------------------------------------------------------------------------
 {
+	NS_ASSERTION(inRelativePath, "Attempt to do += with a null string");
+
 	if (!inRelativePath || mPath.IsEmpty())
 		return;
 	
@@ -468,6 +471,8 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 nsresult nsFileSpec::Rename(const char* inNewName)
 //----------------------------------------------------------------------------------------
 {
+	NS_ASSERTION(inNewName, "Attempt to Rename with a null string");
+
     // This function should not be used to move a file on disk. 
     if (strchr(inNewName, '/')) 
         return NS_FILE_FAILURE;
