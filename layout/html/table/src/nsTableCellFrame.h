@@ -44,7 +44,8 @@ public:
   void SetBorderEdge(PRUint8 aSide, 
                      PRInt32 aRowIndex, 
                      PRInt32 aColIndex, 
-                     nsBorderEdge *border);
+                     nsBorderEdge *border,
+                     nscoord aOddAmountToAdd);
 
   void SetBorderEdgeLength(PRUint8 aSide, 
                            PRInt32 aIndex, 

@@ -211,15 +211,27 @@ public:
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
 
   /** compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void    ComputeVerticalCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+  void    ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext,
+                                           PRInt32 aStartRowIndex, 
+                                           PRInt32 aEndRowIndex);
 
   /** compute the top and bottom collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void    ComputeHorizontalCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+  void    ComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
+                                             PRInt32 aStartRowIndex, 
+                                             PRInt32 aEndRowIndex);
 
-  void    ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
-  void    ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
-  void    ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
-  void    ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  void    ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
+                                     PRInt32 aRowIndex, 
+                                     PRInt32 aColIndex);
+  void    ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
+                                      PRInt32 aRowIndex, 
+                                      PRInt32 aColIndex);
+  void    ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
+                                    PRInt32 aRowIndex, 
+                                    PRInt32 aColIndex);
+  void    ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
+                                       PRInt32 aRowIndex, 
+                                       PRInt32 aColIndex);
   
   /** at the time we initially compute collapsing borders, we don't yet have the 
     * column widths.  So we set them as a post-process of the column balancing algorithm.
@@ -240,7 +252,7 @@ public:
                                         PRBool        aFlipLastSide);
 
 
-  void    RecalcLayoutData();
+  void    RecalcLayoutData(nsIPresContext& aPresContext);
 
   // Get cell margin information
   NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
