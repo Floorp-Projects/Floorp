@@ -638,7 +638,10 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   return rv;
 }
 
+#ifdef DEBUG_rods
 static int myCounter = 0;
+#endif
+
 NS_IMETHODIMP 
 nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
                                nsHTMLReflowMetrics&     aDesiredSize,
