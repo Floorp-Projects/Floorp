@@ -39,8 +39,9 @@ void XXXNeverCalled()
   NS_NewInlineFrame(nsnull, nsnull, f);
   NS_NewBRFrame(nsnull, nsnull, f);
   NS_NewWBRFrame(nsnull, nsnull, f);
-  NS_NewWBRFrame(nsnull, nsnull, f);
+  NS_NewHRFrame(nsnull, nsnull, f);
   NS_NewObjectFrame(nsnull, nsnull, f);
   NS_NewSpacerFrame(nsnull, nsnull, f);
   NS_NewHTMLFramesetFrame(nsnull, nsnull, f);
+  NS_NewHTMLFrame(nsnull, nsnull, f);
 }
