@@ -1106,7 +1106,7 @@ MatchLabel(JSContext *cx, JSTokenStream *ts, JSParseNode *pn)
     label = NULL;
 #endif
     pn->pn_atom = label;
-    if (pn->pn_pos.end.lineno == ts->lineno)
+    if (ON_CURRENT_LINE(ts, pn->pn_pos))
         return WellTerminated(cx, ts, TOK_ERROR);
     return JS_TRUE;
 }
@@ -1246,7 +1246,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             } while (js_MatchToken(cx, ts, TOK_COMMA));
         }
         pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        if (pn->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
             !WellTerminated(cx, ts, TOK_ERROR)) {
             return NULL;
         }
@@ -1265,7 +1265,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             PN_APPEND(pn, pn2);
         } while (js_MatchToken(cx, ts, TOK_COMMA));
         pn->pn_pos.end = PN_LAST(pn)->pn_pos.end;
-        if (pn->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
             !WellTerminated(cx, ts, TOK_ERROR)) {
             return NULL;
         }
@@ -1277,7 +1277,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = FunctionStmt(cx, ts, tc);
         if (!pn)
             return NULL;
-        if (pn->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
             !WellTerminated(cx, ts, TOK_FUNCTION)) {
             return NULL;
         }
@@ -1693,7 +1693,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (!pn2)
             return NULL;
         pn->pn_pos.end = pn2->pn_pos.end;
-        if (pn->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
             !WellTerminated(cx, ts, TOK_ERROR)) {
             return NULL;
         }
@@ -1825,7 +1825,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         pn = Variables(cx, ts, tc);
         if (!pn)
             return NULL;
-        if (pn->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn->pn_pos) &&
             !WellTerminated(cx, ts, TOK_ERROR)) {
             return NULL;
         }
@@ -1854,7 +1854,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             pn2 = Expr(cx, ts, tc);
             if (!pn2)
                 return NULL;
-            if (pn2->pn_pos.end.lineno == ts->lineno &&
+            if (ON_CURRENT_LINE(ts, pn2->pn_pos) &&
                 !WellTerminated(cx, ts, TOK_ERROR)) {
                 return NULL;
             }
@@ -1950,7 +1950,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         }
 
         /* Check termination of (possibly multi-line) function expression. */
-        if (pn2->pn_pos.end.lineno == ts->lineno &&
+        if (ON_CURRENT_LINE(ts, pn2->pn_pos) &&
             !WellTerminated(cx, ts, lastExprType)) {
             return NULL;
         }
@@ -2626,7 +2626,7 @@ UnaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
             return NULL;
 
         /* Don't look across a newline boundary for a postfix incop. */
-        if (pn->pn_pos.end.lineno == ts->lineno) {
+        if (ON_CURRENT_LINE(ts, pn->pn_pos)) {
             tt = js_PeekTokenSameLine(cx, ts);
             if (tt == TOK_INC || tt == TOK_DEC) {
                 (void) js_GetToken(cx, ts);
