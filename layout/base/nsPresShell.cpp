@@ -3096,35 +3096,6 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame)
   if (!aFrame)
     return NS_ERROR_NULL_POINTER;
   
-  // Before we scroll the frame into view, ask the command dispatcher
-  // if we're resetting focus because a window just got an activate
-  // event. If we are, we do not want to scroll the frame into view.
-  // Example: The user clicks on an anchor, and then deactivates the 
-  // window. When they reactivate the window, the expected behavior
-  // is not for the anchor link to scroll back into view. That is what
-  // this check is preventing.
-  nsCOMPtr<nsIContent> content;
-  aFrame->GetContent(getter_AddRefs(content));
-  if(content) {
-    nsCOMPtr<nsIDocument> document;
-    content->GetDocument(*getter_AddRefs(document));
-    if(document){
-      nsCOMPtr<nsIFocusController> focusController;
-	    nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-	    document->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
-      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
-      if(ourWindow) {
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
-        if (focusController) {
-          PRBool dontScroll;
-          focusController->GetSuppressFocusScroll(&dontScroll);
-          if(dontScroll)
-            return NS_OK;
-        }
-      }
-    }
-  }
-    
   if (IsScrollingEnabled())
     return ScrollFrameIntoView(aFrame, NS_PRESSHELL_SCROLL_ANYWHERE,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
@@ -4155,12 +4126,115 @@ PresShell::SelectRange(nsIDOMRange *aRange)
   return rv;
 }
 
+/**
+ * This function takes a scrolling view, a rect, and a scroll position and
+ * attempts to scroll that rect to that position in that view.  The rect
+ * should be in the coordinate system of the _scrolled_ view.
+ */
+static void ScrollViewToShowRect(nsIScrollableView* aScrollingView,
+                                 nsRect &           aRect,
+                                 PRIntn             aVPercent,
+                                 PRIntn             aHPercent)
+{
+  // Determine the visible rect in the scrolling view's coordinate space.
+  // The size of the visible area is the clip view size
+  const nsIView*  clipView;
+  nsRect          visibleRect;
+
+  aScrollingView->GetClipView(&clipView);
+  clipView->GetBounds(visibleRect); // get width and height
+  aScrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
+
+  // The actual scroll offsets
+  nscoord scrollOffsetX = visibleRect.x;
+  nscoord scrollOffsetY = visibleRect.y;
+
+  nscoord lineHeight;
+  aScrollingView->GetLineHeight(&lineHeight);
+  
+  // See how the rect should be positioned vertically
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
+    // The caller doesn't care where the frame is positioned vertically,
+    // so long as it's fully visible
+    if (aRect.y < visibleRect.y) {
+      // Scroll up so the frame's top edge is visible
+      scrollOffsetY = aRect.y;
+    } else if (aRect.YMost() > visibleRect.YMost()) {
+      // Scroll down so the frame's bottom edge is visible. Make sure the
+      // frame's top edge is still visible
+      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
+      if (scrollOffsetY > aRect.y) {
+        scrollOffsetY = aRect.y;
+      }
+    }
+  } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent) {
+    // Scroll only if no part of the frame is visible in this view
+    if (aRect.YMost() - lineHeight < visibleRect.y) {
+      // Scroll up so the frame's top edge is visible
+      scrollOffsetY = aRect.y;
+    }  else if (aRect.y + lineHeight > visibleRect.YMost()) {
+      // Scroll down so the frame's bottom edge is visible. Make sure the
+      // frame's top edge is still visible
+      scrollOffsetY += aRect.YMost() - visibleRect.YMost();
+      if (scrollOffsetY > aRect.y) {
+        scrollOffsetY = aRect.y;
+      }
+    }
+  } else {
+    // Align the frame edge according to the specified percentage
+    nscoord frameAlignY =
+      NSToCoordRound(aRect.y + aRect.height * (aVPercent / 100.0));
+    scrollOffsetY =
+      NSToCoordRound(frameAlignY - visibleRect.height * (aVPercent / 100.0));
+  }
+
+  // See how the frame should be positioned horizontally
+  if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
+    // The caller doesn't care where the frame is positioned horizontally,
+    // so long as it's fully visible
+    if (aRect.x < visibleRect.x) {
+      // Scroll left so the frame's left edge is visible
+      scrollOffsetX = aRect.x;
+    } else if (aRect.XMost() > visibleRect.XMost()) {
+      // Scroll right so the frame's right edge is visible. Make sure the
+      // frame's left edge is still visible
+      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
+      if (scrollOffsetX > aRect.x) {
+        scrollOffsetX = aRect.x;
+      }
+    }
+  } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent) {
+    // Scroll only if no part of the frame is visible in this view
+    // XXXbz using the line height here is odd, but there are no
+    // natural dimensions to use here, really....
+    if (aRect.XMost() - lineHeight < visibleRect.x) {
+      // Scroll left so the frame's left edge is visible
+      scrollOffsetX = aRect.x;
+    }  else if (aRect.x + lineHeight > visibleRect.XMost()) {
+      // Scroll right so the frame's right edge is visible. Make sure the
+      // frame's left edge is still visible
+      scrollOffsetX += aRect.XMost() - visibleRect.XMost();
+      if (scrollOffsetX > aRect.x) {
+        scrollOffsetX = aRect.x;
+      }
+    }
+  } else {
+    // Align the frame edge according to the specified percentage
+    nscoord frameAlignX =
+      NSToCoordRound(aRect.x + aRect.width * (aHPercent / 100.0));
+    scrollOffsetX =
+      NSToCoordRound(frameAlignX - visibleRect.width * (aHPercent / 100.0));
+  }
+
+  aScrollingView->ScrollTo(scrollOffsetX, scrollOffsetY,
+                           NS_VMREFRESH_IMMEDIATE);
+}
+
 NS_IMETHODIMP
 PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
                                PRIntn   aVPercent, 
                                PRIntn   aHPercent) const
 {
-  nsresult rv = NS_OK;
   if (!aFrame) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -4195,202 +4269,94 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
     }
   }
 
-  if (mViewManager) {
-    // Get the viewport scroller
-    nsIScrollableView* scrollingView = nsnull;
+  // This is a two-step process.
+  // Step 1: Find the bounds of the rect we want to scroll into view.  For
+  //         example, for an inline frame we want to scroll in the whole line.
+  // Step 2: Walk the views that are parents of the frame and scroll them
+  //         appropriately.
+  
+  nsRect  frameBounds;
+  aFrame->GetRect(frameBounds);
+  nsPoint offset;
+  nsIView* closestView;
+  aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
+  frameBounds.MoveTo(offset);
 
-    nsIFrame *scrolled_frame = aFrame;
+  // If this is an inline frame, we need to change the top of the
+  // bounds to include the whole line.
+  nsCOMPtr<nsIAtom> frameType;
+  nsIFrame *prevFrame = aFrame;
+  nsIFrame *frame = aFrame;
 
-    // Get the closest scrollable view.
-    while (1) {
-      scrolled_frame->GetParentWithView(mPresContext, &scrolled_frame);
+  while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
+                   frameType == nsLayoutAtoms::inlineFrame)) {
+    prevFrame = frame;
+    prevFrame->GetParent(&frame);
+  }
 
-      if (!scrolled_frame) {
-        break;
-      }
+  if (frame != aFrame &&
+      frame &&
+      frameType == nsLayoutAtoms::blockFrame) {
+    // find the line containing aFrame and increase the top of |offset|.
+    nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
 
-      nsIView *view = nsnull;
+    if (lines) {
+      PRInt32 index = -1;
+      lines->FindLineContaining(prevFrame, &index);
+      if (index >= 0) {
+        nsIFrame *trash1;
+        PRInt32 trash2;
+        nsRect lineBounds;
+        PRUint32 trash3;
 
-      scrolled_frame->GetView(mPresContext, &view);
-      NS_ASSERTION(scrolled_frame == aFrame || view,
-                   "No view in frame that came from GetView()!");
+        if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
+                                        lineBounds, &trash3))) {
+          nsPoint blockOffset;
+          nsIView* blockView;
+          frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
 
-      if (view) {
-        view->QueryInterface(NS_GET_IID(nsIScrollableView),
-                             (void **)&scrollingView);
+          if (blockView == closestView) {
+            // XXX If views not equal, this is hard.  Do we want to bother?
+            nscoord newoffset = lineBounds.y + blockOffset.y;
 
-        if (scrollingView) {
-          break;
-        }
-      }
-    }
-
-    if (scrollingView) {
-      nsIView*  scrolledView;
-      nsPoint   offset;
-      nsIView*  closestView;
-
-      // Determine the offset from aFrame to the scrolled view. We do that by
-      // getting the offset from its closest view and then walking up
-      scrollingView->GetScrolledView(scrolledView);
-      aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
-
-      // If this is an inline frame, we need to change the top of the
-      // offset to include the whole line.
-      nsCOMPtr<nsIAtom> frameType;
-      nsIFrame *prevFrame = aFrame;
-      nsIFrame *frame = aFrame;
-
-      while (frame && (frame->GetFrameType(getter_AddRefs(frameType)),
-                       frameType == nsLayoutAtoms::inlineFrame)) {
-        prevFrame = frame;
-        prevFrame->GetParent(&frame);
-      }
-
-      if (frame != aFrame &&
-          frame &&
-          frameType == nsLayoutAtoms::blockFrame) {
-        // find the line containing aFrame and increase the top of |offset|.
-        nsCOMPtr<nsILineIterator> lines( do_QueryInterface(frame) );
-
-        if (lines) {
-          PRInt32 index = -1;
-          lines->FindLineContaining(prevFrame, &index);
-          if (index >= 0) {
-            nsIFrame *trash1;
-            PRInt32 trash2;
-            nsRect lineBounds;
-            PRUint32 trash3;
-
-            if (NS_SUCCEEDED(lines->GetLine(index, &trash1, &trash2,
-                                            lineBounds, &trash3))) {
-              nsPoint blockOffset;
-              nsIView* blockView;
-              frame->GetOffsetFromView(mPresContext, blockOffset, &blockView);
-
-              if (blockView == closestView) {
-                // XXX If views not equal, this is hard.  Do we want to bother?
-                nscoord newoffset = lineBounds.y + blockOffset.y;
-
-                if (newoffset < offset.y)
-                  offset.y = newoffset;
-              }
-            }
+            if (newoffset < frameBounds.y)
+              frameBounds.y = newoffset;
           }
         }
-      }
-
-      // We now have the offset relative to the closest parent view.
-      // Walk up the view tree till we get to the scrolled view, since the
-      // closest view could belong to a positioned but not scrolled element
-      // This should give us the offset relative to the scrolled view
-      while (closestView && closestView != scrolledView) {
-        nscoord x, y;
-        
-        closestView->GetPosition(&x, &y);
-        offset.MoveBy(x, y);
-        closestView->GetParent(closestView);
-      }
-      
-      // Determine the visible rect in the scrolled view's coordinate space.
-      // The size of the visible area is the clip view size
-      const nsIView*  clipView;
-      nsRect          visibleRect;
-
-      scrollingView->GetClipView(&clipView);
-      clipView->GetBounds(visibleRect); // get width and height
-      scrollingView->GetScrollPosition(visibleRect.x, visibleRect.y);
-
-      // The actual scroll offsets
-      nscoord scrollOffsetX = visibleRect.x;
-      nscoord scrollOffsetY = visibleRect.y;
-
-      // The frame's bounds in the coordinate space of the scrolled frame
-      nsRect  frameBounds;
-      aFrame->GetRect(frameBounds);
-      frameBounds.x = offset.x;
-      frameBounds.y = offset.y;
-
-      // See how the frame should be positioned vertically
-      if (NS_PRESSHELL_SCROLL_ANYWHERE == aVPercent) {
-        // The caller doesn't care where the frame is positioned vertically,
-        // so long as it's fully visible
-        if (frameBounds.y < visibleRect.y) {
-          // Scroll up so the frame's top edge is visible
-          scrollOffsetY = frameBounds.y;
-        } else if (frameBounds.YMost() > visibleRect.YMost()) {
-          // Scroll down so the frame's bottom edge is visible. Make sure the
-          // frame's top edge is still visible
-          scrollOffsetY += frameBounds.YMost() - visibleRect.YMost();
-          if (scrollOffsetY > frameBounds.y) {
-            scrollOffsetY = frameBounds.y;
-          }
-        }
-      } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aVPercent) {
-        // Scroll only if no part of the frame is visible in this view
-        if (frameBounds.YMost() < visibleRect.y) {
-          // Scroll up so the frame's top edge is visible
-          scrollOffsetY = frameBounds.y;
-        }  else if (frameBounds.y > visibleRect.YMost()) {
-          // Scroll down so the frame's bottom edge is visible. Make sure the
-          // frame's top edge is still visible
-          scrollOffsetY += frameBounds.YMost() - visibleRect.YMost();
-          if (scrollOffsetY > frameBounds.y) {
-            scrollOffsetY = frameBounds.y;
-          }
-         }
-      } else {
-        // Align the frame edge according to the specified percentage
-        nscoord frameAlignY = frameBounds.y + (frameBounds.height * aVPercent) / 100;
-        scrollOffsetY = frameAlignY - (visibleRect.height * aVPercent) / 100;
-      }
-
-      // See how the frame should be positioned horizontally
-      if (NS_PRESSHELL_SCROLL_ANYWHERE == aHPercent) {
-        // The caller doesn't care where the frame is positioned horizontally,
-        // so long as it's fully visible
-        if (frameBounds.x < visibleRect.x) {
-          // Scroll left so the frame's left edge is visible
-          scrollOffsetX = frameBounds.x;
-        } else if (frameBounds.XMost() > visibleRect.XMost()) {
-          // Scroll right so the frame's right edge is visible. Make sure the
-          // frame's left edge is still visible
-          scrollOffsetX += frameBounds.XMost() - visibleRect.XMost();
-          if (scrollOffsetX > frameBounds.x) {
-            scrollOffsetX = frameBounds.x;
-          }
-        }
-      } else if (NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE == aHPercent) {
-        // Scroll only if no part of the frame is visible in this view
-        if (frameBounds.XMost() < visibleRect.x) {
-          // Scroll left so the frame's left edge is visible
-          scrollOffsetX = frameBounds.x;
-        }  else if (frameBounds.x > visibleRect.XMost()) {
-          // Scroll right so the frame's right edge is visible. Make sure the
-          // frame's left edge is still visible
-          scrollOffsetX += frameBounds.XMost() - visibleRect.XMost();
-          if (scrollOffsetX > frameBounds.x) {
-            scrollOffsetX = frameBounds.x;
-          }
-        }
-      } else {
-        // Align the frame edge according to the specified percentage
-        nscoord frameAlignX = frameBounds.x + (frameBounds.width * aHPercent) / 100;
-        scrollOffsetX = frameAlignX - (visibleRect.width * aHPercent) / 100;
-      }
-
-      scrollingView->ScrollTo(scrollOffsetX, scrollOffsetY,
-                              NS_VMREFRESH_IMMEDIATE);
-
-      if (scrolled_frame) {
-        // Recurse in case aFrame is in a nested scrollable view.
-
-        rv = ScrollFrameIntoView(scrolled_frame, aVPercent, aHPercent);
       }
     }
   }
 
-  return rv;
+#ifdef DEBUG
+  if (closestView) {
+    nsIScrollableView* _testView = nsnull;
+    CallQueryInterface(closestView, &_testView);
+    NS_ASSERTION(!_testView,
+                 "What happened to the scrolled view?  "
+                 "The frame should not be directly in the scrolling view!");
+  }
+#endif
+  
+  // Walk up the view hierarchy.  Make sure to add the view's position
+  // _after_ we get the parent and see whether it's scrollable.  We want to
+  // make sure to get the scrolled view's position after it has been scrolled.
+  nsIScrollableView* scrollingView = nsnull;
+  while (closestView) {
+    nsIView* parent;
+    closestView->GetParent(parent);
+    if (parent) {
+      CallQueryInterface(parent, &scrollingView);
+      if (scrollingView) {
+        ScrollViewToShowRect(scrollingView, frameBounds, aVPercent, aHPercent);
+      }
+    }
+    nscoord x, y;
+    closestView->GetPosition(&x, &y);
+    frameBounds.MoveBy(x, y);
+    closestView = parent;
+  }
+
+  return NS_OK;
 }
 
 // GetLinkLocation: copy link location to clipboard
