@@ -38,8 +38,8 @@
 #ifndef ipcService_h__
 #define ipcService_h__
 
-#include "nsCOMPtr.h"
 #include "nsHashtable.h"
+#include "nsAutoPtr.h"
 #include "plevent.h"
 
 #include "ipcIService.h"
@@ -68,9 +68,9 @@ public:
     virtual ~ipcService();
 
     nsresult Init();
+    void Shutdown();
 
     // ipcTransportObserver:
-    void OnConnectionEstablished(PRUint32 clientID);
     void OnConnectionLost();
     void OnMessageAvailable(const ipcMessage *);
 
@@ -80,20 +80,10 @@ private:
     void     OnIPCMClientInfo(const ipcmMessageClientInfo *);
     void     OnIPCMError(const ipcmMessageError *);
 
-    struct ProcessDelayedMsgQ_Event : PLEvent {
-        ProcessDelayedMsgQ_Event(ipcService *, ipcMessageQ *); 
-       ~ProcessDelayedMsgQ_Event();
-        ipcService  *mServ;
-        ipcMessageQ *mMsgQ;
-    };
-    PR_STATIC_CALLBACK(void*) ProcessDelayedMsgQ_EventHandler(PLEvent *);
-    PR_STATIC_CALLBACK(void)  ProcessDelayedMsgQ_EventCleanup(PLEvent *);
-
-    nsHashtable     mObserverDB;
-    ipcTransport   *mTransport;
-    PRUint32        mClientID;
-
-    ipcClientQueryQ mQueryQ;
+    nsHashtable            mObserverDB;
+    nsRefPtr<ipcTransport> mTransport;
+    ipcClientQueryQ        mQueryQ;
+    PRUint32               mClientID;
 };
 
 #endif // !ipcService_h__

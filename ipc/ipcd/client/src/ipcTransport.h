@@ -54,7 +54,6 @@
 class ipcTransportObserver
 {
 public:
-    virtual void OnConnectionEstablished(PRUint32 clientID) = 0;
     virtual void OnConnectionLost() = 0;
     virtual void OnMessageAvailable(const ipcMessage *) = 0;
 };
@@ -74,11 +73,7 @@ public:
         , mIncomingMsgQ(nsnull)
         , mSyncReplyMsg(nsnull)
         , mSyncWaiting(nsnull)
-        , mSentHello(PR_FALSE)
         , mHaveConnection(PR_FALSE)
-        , mSpawnedDaemon(PR_FALSE)
-        , mConnectionAttemptCount(0)
-        , mClientID(0)
         {}
 
     virtual ~ipcTransport()
@@ -86,7 +81,7 @@ public:
         PR_DestroyMonitor(mMonitor);
     }
 
-    nsresult Init(ipcTransportObserver *observer);
+    nsresult Init(ipcTransportObserver *observer, PRUint32 *clientID);
     nsresult Shutdown();
 
     // takes ownership of |msg|
@@ -109,24 +104,20 @@ private:
     void ProcessIncomingMsgQ();
 
     PR_STATIC_CALLBACK(void *) ProcessIncomingMsgQ_EventHandler(PLEvent *);
-    PR_STATIC_CALLBACK(void *) ConnectionEstablished_EventHandler(PLEvent *);
     PR_STATIC_CALLBACK(void *) ConnectionLost_EventHandler(PLEvent *);
     PR_STATIC_CALLBACK(void)   Generic_EventCleanup(PLEvent *);
+
+    nsresult SendMsg_Locked(ipcMessage *msg, PRBool sync, ipcMessage **syncReply);
 
     //
     // data
     //
     PRMonitor             *mMonitor;
     ipcTransportObserver  *mObserver; // weak reference
-    ipcMessageQ            mDelayedQ;
     ipcMessageQ           *mIncomingMsgQ;
     ipcMessage            *mSyncReplyMsg;
     PRPackedBool           mSyncWaiting;
-    PRPackedBool           mSentHello;
     PRPackedBool           mHaveConnection;
-    PRPackedBool           mSpawnedDaemon;
-    PRUint32               mConnectionAttemptCount;
-    PRUint32               mClientID;
 };
 
 #endif // !ipcTransport_h__
