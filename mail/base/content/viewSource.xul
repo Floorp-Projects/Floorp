@@ -75,6 +75,7 @@
     <commandset id="clipboardEditMenuItems"/>
     <commandset id="viewSourceMenuItems">
       <command id="cmd_close" oncommand="ViewSourceClose()"/>
+      <command id="cmd_goToLine" oncommand="ViewSourceGoToLine();" disabled="true"/>
     </commandset>
   </commandset>  
 
