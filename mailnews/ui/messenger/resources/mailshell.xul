@@ -4,33 +4,9 @@
 <!DOCTYPE window> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-			xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  			onconstruction="MsgStartUp()">
-  <html:style>
-      #toolbar {
-        position: fixed;
-        width: 100%;
-        height: 80px;
-        top: 0;
-        right: 0;
-        bottom: auto;
-        left: 0;
-        background-color: #cccccc;
-      }
-      #footer {
-        position: fixed;
-        width: 100%;
-        height: 34px;
-        top: auto;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        text-align: center;
-        margin-top: auto;
-        background-color: #cccccc;
-      }
-</html:style>
-
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onconstruction="MsgStartUp()"
+        style="width:100%;height:100%">
 
 <html:script src="widgetglue.js"></html:script>
 <html:script src="commandglue.js"></html:script>
@@ -267,47 +243,45 @@
     </menu>
   </menubar>
 
-<html:div id="header">
-   <toolbox>
-    <toolbar>
- 	  <html:table width="100%" cellpadding=0 cellspacing=0><html:tr>
+  <box id="header" align="vertical" style="width:100%;height:100%">
+    <toolbox>
+      <toolbar>
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()"/>
 
-	  <html:td width="80%">	  
-	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Get Msg" onclick="MsgGetMessage()">
-	  </titledbutton>
+	  <titledbutton src="resource:/res/mailnews/messenger/newmsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/newmsg.gif" align="bottom" value="New Msg" onclick="MsgNewMessage()">
-	  </titledbutton>
+	  <titledbutton src="resource:/res/mailnews/messenger/reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/reply.gif" align="bottom" value="Reply" onclick="MsgReplyMessage()">
-	  </titledbutton>
+	  <titledbutton src="resource:/res/mailnews/messenger/forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/forward.gif" align="bottom" value="Forward" onclick="MsgForwardMessage()">
-	  </titledbutton>
+	  <titledbutton src="resource:/res/mailnews/messenger/trash.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/trash.gif" align="bottom" value="Delete" onclick="MsgDeleteMessage()">
+	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')"/>
 
-	  </titledbutton>
+          <spring flex="100%"/>
 
-	  <titledbutton src="resource:/res/mailnews/messenger/getmsg.gif" align="bottom" value="Load Msg" onclick="MsgLoadNewsMessage('news://news.mcom.com:119/35BE6AB1.55A14AE4@netscape.com')">
-	  </titledbutton>
-	  </html:td>
+	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')"/>
+      </toolbar>
+    </toolbox>
 
-	  <html:td width="40px">	  
-	  <titledbutton src="resource:/res/throbber/anims00.gif" align="right" onclick="MsgHome('http://home.netscape.com/')">
-	  </html:td>
-      </html:tr></html:table>
-    </toolbar>
-	</toolbox>
-</html:div>
+    <!-- The main mail three pane frame -->
+    <html:iframe src="3panemail.html" name="browser.3panemail" flex="100%" />
 
-<html:div id="3panemail">
-<html:iframe src="3panemail.html" name="browser.3panemail" width="100%" height="700" > </html:iframe>
-</html:div>
+    <!-- Ripped off from navigator.xul; this should be a XUL fragment! -->
+    <box align="horizontal" id="status-bar">
+ 
+      <titledbutton value="[Notification Component]" onclick="doTests()"/>
+	<box align="vertical" style="width:100px">
+		<spring flex="100%"/>
+		<progressmeter mode="normal" value="0">
+		</progressmeter>
+		<spring flex="100%"/>
+	</box>
 
-<html:div id="footer">
-<html:iframe src="resource:/res/samples/status.html" name="browser.status" width="100%" height="34" > </html:iframe>
-</html:div>
+	<titledbutton id="statusText" align="right" flex="100%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+	</titledbutton>
+    </box>
 
+  </box>
 </window>
 
