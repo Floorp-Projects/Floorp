@@ -462,3 +462,19 @@ noembed, noscript, param, *|*:-moz-comment, *|*:-moz-pi {
   clip: inherit;
   -moz-opacity: inherit;
 }
+
+
+/* PRINT ONLY rules follow */
+
+@media print {
+ 
+ /* undo floats on aligned tables since we cannot print them correctly: see bug 74738 and bug 85768 */
+ table[align="left"] {
+   float: none;
+ }
+
+ table[align="right"] {
+   float: none;
+ }
+
+}
