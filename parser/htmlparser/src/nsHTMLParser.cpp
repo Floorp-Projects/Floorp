@@ -769,7 +769,7 @@ PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
         } 
         else (*mCurrentPos)--;
       }
-      else kInterrupted;
+      else return kInterrupted;
     }
     else return kInterrupted;
   }
@@ -1023,10 +1023,15 @@ PRInt32 nsHTMLParser::HandleEndToken(CToken* aToken) {
  */
 PRInt32 nsHTMLParser::HandleEntityToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  CEntityToken*  et = (CEntityToken*)(aToken);
-  PRInt32 result=kNoError;
-  nsCParserNode aNode((CHTMLToken*)aToken);
-  result=AddLeaf(aNode);
+
+  CEntityToken* et = (CEntityToken*)(aToken);
+  PRInt32       result=kNoError;
+  eHTMLTags     tokenTagType=et->GetHTMLTag();
+
+  if(PR_FALSE==mDTD->CanOmit(GetTopNode(),tokenTagType)) {
+    nsCParserNode aNode((CHTMLToken*)aToken);
+    result=AddLeaf(aNode);
+  }
   return result;
 }
 
