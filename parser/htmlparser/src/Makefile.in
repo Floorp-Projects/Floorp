@@ -37,7 +37,6 @@ CPPSRCS= \
 	CNavDTD.cpp					\
 	COtherDTD.cpp 				\
 	CRtfDTD.cpp 				\
-	nsDTDDebug.cpp				\
 	nsHTMLEntities.cpp			\
 	nsHTMLNullSink.cpp			\
 	nsHTMLTags.cpp				\
@@ -56,8 +55,14 @@ CPPSRCS= \
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp 		\
 	nsXIFDTD.cpp				\
-	prstrm.cpp					\
 	$(NULL)
+
+# Disable some DTD debugging code in the parser that 
+# breaks on some compilers because of some broken 
+# streams code in prstrm.cpp.
+ifndef MOZ_DISABLE_DTD_DEBUG
+  CPPSRCS += nsDTDDebug.cpp prstrm.cpp
+endif
 
 EXPORTS =     \
 	nshtmlpars.h    \

@@ -412,7 +412,13 @@ nsresult CNavDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
 PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
   PRBool result=PR_TRUE;
 
-  if(!mDTDDebug){;
+  /*
+   * Disable some DTD debugging code in the parser that 
+   * breaks on some compilers because of some broken 
+   * streams code in prstrm.cpp.
+   */
+#if !defined(MOZ_DISABLE_DTD_DEBUG)
+  if(!mDTDDebug){
     nsresult rval = NS_NewDTDDebug(&mDTDDebug);
     if (NS_OK != rval) {
       fputs("Cannot create parser debugger.\n", stdout);
@@ -420,6 +426,8 @@ PRBool CNavDTD::Verify(nsString& aURLRef,nsIParser* aParser){
     }
     else mDTDDebug->SetVerificationDirectory(kVerificationDir);
   }
+#endif
+
   if(mDTDDebug) {
     // mDTDDebug->Verify(this,aParser,mBodyContext->GetCount(),mBodyContext->mStack,aURLRef);
   }

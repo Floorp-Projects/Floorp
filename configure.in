@@ -463,6 +463,24 @@ fi
 
 dnl ========================================================
 
+dnl ========================================================
+dnl =
+dnl = --diable-dtd-debug
+dnl =
+dnl = Disable some DTD debugging code in the parser that 
+dnl = breaks on some compilers because of evil and broken 
+dnl = streams code in htmlparser/src/prstrm.cpp
+dnl =
+dnl ========================================================
+MOZ_DISABLE_DTD_DEBUG=
+
+MOZ_ARG_DISABLE_BOOL(dtd-debug,
+[  --disable-dtd-debug         Disable some DTD debuggin code in the parser)],
+  MOZ_DISABLE_DTD_DEBUG=1 
+  AC_DEFINE(MOZ_DISABLE_DTD_DEBUG) )
+
+dnl ========================================================
+
 
 dnl Checks for X libraries.
 dnl Ordering is important.
@@ -2025,7 +2043,7 @@ AC_SUBST(CXXFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(LIBS)
 
-AC_SUBST(USE_STRING2)
+AC_SUBST(MOZ_DISABLE_DTD_DEBUG)
 
 AC_SUBST(WRAP_MALLOC_CFLAGS)
 AC_SUBST(WRAP_MALLOC_LIB)

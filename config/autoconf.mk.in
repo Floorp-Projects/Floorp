@@ -190,6 +190,8 @@ LIBS_PATH       = @LIBS_PATH@
 COMPILER_DEPEND = @COMPILER_DEPEND@
 MDDEPDIR        := @MDDEPDIR@
 
+MOZ_DISABLE_DTD_DEBUG = @MOZ_DISABLE_DTD_DEBUG@
+
 # Pulled these out of configure.in,
 # so undefine them now instead of subst
 MOZ_NETCAST	=
