@@ -785,7 +785,7 @@ void ImportAddressImpl::SaveFieldMap( nsIImportFieldMap *pMap)
 		nsXPIDLCString	prefStr;
 		rv = prefs->CopyCharPref( "mailnews.import.text.fieldmap", getter_Copies(prefStr));
 		if (NS_SUCCEEDED( rv)) {
-			if (!Compare(str, nsCAutoString((const char *)prefStr)))
+			if (str.Equals(prefStr))
 				done = PR_TRUE;
 		}
 		if (!done) {
