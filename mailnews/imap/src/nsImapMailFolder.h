@@ -113,6 +113,7 @@ public:
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
+	NS_IMETHOD AddSubfolder(nsAutoString *name, nsIMsgFolder **child);
     
     NS_IMETHOD Compact();
     NS_IMETHOD EmptyTrash();
@@ -292,9 +293,6 @@ protected:
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
-	//Creates a subfolder with the name 'name' and adds it to the list of
-    //children. Returns the child as well.
-	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
 	nsresult GetDatabase();
 	virtual const char *GetIncomingServerType() {return "imap";}
 

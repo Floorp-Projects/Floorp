@@ -232,8 +232,8 @@ nsShouldIgnoreFile(nsString& name)
     return PR_TRUE;
 }
 
-nsresult nsImapMailFolder::AddSubfolder(nsAutoString name, 
-                                        nsIMsgFolder **child)
+NS_IMETHODIMP nsImapMailFolder::AddSubfolder(nsAutoString *name, 
+                                             nsIMsgFolder **child)
 {
 	if(!child)
 		return NS_ERROR_NULL_POINTER;
@@ -248,7 +248,7 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	uri.Append(mURI);
 	uri.Append('/');
 
-	uri.Append(name);
+	uri.Append(*name);
 	char* uriStr = uri.ToNewCString();
 	if (uriStr == nsnull) 
 		return NS_ERROR_OUT_OF_MEMORY;
@@ -272,15 +272,15 @@ nsresult nsImapMailFolder::AddSubfolder(nsAutoString name,
 	if(NS_SUCCEEDED(rv) && isServer)
 	{
 
-		if(name.Compare("Inbox", PR_TRUE) == 0)
+		if(name->Compare("Inbox", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_INBOX);
-		else if(name.Compare("Trash", PR_TRUE) == 0)
+		else if(name->Compare("Trash", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TRASH);
-		else if(name.Compare("Sent", PR_TRUE) == 0)
+		else if(name->Compare("Sent", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-		else if(name.Compare("Drafts", PR_TRUE) == 0)
+		else if(name->Compare("Drafts", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-		else if (name.Compare("Templates", PR_TRUE) == 0)
+		else if (name->Compare("Templates", PR_TRUE) == 0)
 			folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 	}
 	//at this point we must be ok and we don't want to return failure in case GetIsServer failed.
@@ -314,7 +314,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 			continue;
 		}
 
-		AddSubfolder(currentFolderNameStr, getter_AddRefs(child));
+		AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));
 		PL_strfree(folderName);
     }
 	return rv;
@@ -573,7 +573,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 			}
 
 			//Now let's create the actual new folder
-			rv = AddSubfolder(folderNameStr, getter_AddRefs(child));
+			rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
 
 			nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
 			if (imapFolder)

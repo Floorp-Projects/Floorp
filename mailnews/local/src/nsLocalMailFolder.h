@@ -152,10 +152,6 @@ protected:
 	*/
 	nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
-	//Creates a subfolder with the name 'name' and adds it to the list of children.
-	//Returns the child as well.
-	nsresult AddSubfolder(nsAutoString name, nsIMsgFolder **child);
-
 	nsresult DeleteMessage(nsIMessage *message, nsIMsgWindow *msgWindow,
                          PRBool deleteStorage);
   // copy message helper
