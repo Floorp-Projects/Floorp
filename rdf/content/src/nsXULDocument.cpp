@@ -1416,19 +1416,9 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
         if (NS_FAILED(rv)) return rv;
     }
 
-    // Now notify external observers
-    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
-        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aHint);
-        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
-            i--;
-        }
-    }
-
-    // Handle "special" cases. We do this handling _after_ we've
-    // notified the observer to ensure that any frames that are
-    // caching information (e.g., the tree widget and the 'open'
-    // attribute) will notice things properly.
+    // Handle "open" and "close" cases. We do this handling before
+    // we've notified the observer, so that content is already created
+    // for the frame system to walk.
     if ((nameSpaceID == kNameSpaceID_XUL) && (aAttribute == kOpenAtom)) {
         nsAutoString open;
         rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, open);
@@ -1441,7 +1431,20 @@ nsXULDocument::AttributeChanged(nsIContent* aElement,
             CloseWidgetItem(aElement);
         }
     }
-    else if (aAttribute == kRefAtom) {
+
+    // Now notify external observers
+    for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+        nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
+        observer->AttributeChanged(this, aElement, aNameSpaceID, aAttribute, aHint);
+        if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
+            i--;
+        }
+    }
+
+    // Check for a change to the 'ref' attribute on an atom, in which
+    // case we may need to nuke and rebuild the entire content model
+    // beneath the element.
+    if (aAttribute == kRefAtom) {
         RebuildWidgetItem(aElement);
     }
 
