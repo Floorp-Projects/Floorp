@@ -51,8 +51,9 @@ MATHML_ATOM(lastcolumn, "-moz-math-lastcolumn")
 MATHML_ATOM(mozMathInline, ":-moz-math-inline")
 
 // Alphabetical list of MathML frame types
+MATHML_ATOM(operatorVisibleMathMLFrame, "OperatorVisibleMathMLFrame")
+MATHML_ATOM(operatorInvisibleMathMLFrame, "OperatorInvisibleMathMLFrame")
 MATHML_ATOM(ordinaryMathMLFrame, "OrdinaryMathMLFrame")
-MATHML_ATOM(operatorMathMLFrame, "OperatorMathMLFrame")
 MATHML_ATOM(schemataMathMLFrame, "SchemataMathMLFrame") // 'inner' in TeX
 
 
