@@ -104,8 +104,8 @@ BUILD_MODULE_CVS_NS   = $(foreach mod,$(BUILD_MODULES), $(BM_CVS_NS_$(mod)))
 #
 ifdef PERL
 
-BUILD_MODULE_DIRS := $(shell $(topsrcdir)/build/unix/uniq.pl $(BUILD_MODULE_DIRS))
-BUILD_MODULE_DEP_DIRS := $(shell $(topsrcdir)/build/unix/uniq.pl $(BUILD_MODULE_DEP_DIRS))
+BUILD_MODULE_DIRS := $(shell $(PERL) $(topsrcdir)/build/unix/uniq.pl $(BUILD_MODULE_DIRS))
+BUILD_MODULE_DEP_DIRS := $(shell $(PERL) $(topsrcdir)/build/unix/uniq.pl $(BUILD_MODULE_DEP_DIRS))
 
 else
 # Since PERL isn't defined, client.mk must've called us so order doesn't matter
