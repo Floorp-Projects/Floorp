@@ -206,11 +206,9 @@ nsHTMLFrameOuterFrame::Init(nsIPresContext&  aPresContext,
                             nsIFrame*        aPrevInFlow)
 {
   // determine if we are a <frame> or <iframe>
-  nsIDOMHTMLFrameElement* frameElem = nsnull;
   if (aContent) {
-    aContent->QueryInterface(kIDOMHTMLIFrameElementIID, (void**) &frameElem);
-    mIsInline = (frameElem) ? PR_TRUE : PR_FALSE;
-    NS_IF_RELEASE(frameElem);
+    nsCOMPtr<nsIDOMHTMLFrameElement> frameElem = do_QueryInterface(aContent);
+    mIsInline = frameElem ? PR_FALSE : PR_TRUE;
   }
   return nsHTMLFrameOuterFrameSuper::Init(aPresContext, aContent, aParent,
                                           aContext, aPrevInFlow);
@@ -440,46 +438,28 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
 
 PRBool nsHTMLFrameInnerFrame::GetURL(nsIContent* aContent, nsString& aResult)
 {
-  PRBool result = PR_FALSE;
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::src, value))) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(aResult);
-        if (aResult.Length() > 0) {
-          result = PR_TRUE;
-        }
-      }
+  aResult.SetLength(0);     
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, aResult))) {
+    if (aResult.Length() > 0) {
+      return PR_TRUE;
     }
-    NS_RELEASE(content);
   }
-  if (PR_FALSE == result) {
-    aResult.SetLength(0);
-  }
-  return result;
+
+  return PR_FALSE;
 }
 
 PRBool nsHTMLFrameInnerFrame::GetName(nsIContent* aContent, nsString& aResult)
 {
-  PRBool result = PR_FALSE;
-  nsIHTMLContent* content = nsnull;
-  aContent->QueryInterface(kIHTMLContentIID, (void**) &content);
-  if (nsnull != content) {
-    nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == (content->GetHTMLAttribute(nsHTMLAtoms::name, value))) {
-      if (eHTMLUnit_String == value.GetUnit()) {
-        value.GetStringValue(aResult);
-        result = PR_TRUE;
-      }
-    } 
-    NS_RELEASE(content);
+  aResult.SetLength(0);     
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == (aContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::name, aResult))) {
+    if (aResult.Length() > 0) {
+      return PR_TRUE;
+    }
   }
-  if (PR_FALSE == result) {
-    aResult.SetLength(0);
-  }
-  return result;
+
+  return PR_FALSE;
 }
 
 PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStandardMode)
