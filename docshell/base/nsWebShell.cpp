@@ -3161,7 +3161,7 @@ nsWebShell::CreateScriptEnvironment()
   }
 
   if (nsnull == mScriptContext) {
-    res = NS_CreateContext(mScriptGlobal, &mScriptContext);
+    res = NS_CreateScriptContext(mScriptGlobal, &mScriptContext);
   }
 
   return res;
