@@ -827,6 +827,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (nsnull != root) {
+    NS_RESET_AND_START_STOPWATCH(mFrameCreationWatch)
     if (nsnull == mRootFrame) {
       // Have style sheet processor construct a frame for the
       // precursors to the root content object's frame
@@ -837,6 +838,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // content object down
     mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
     NS_RELEASE(root);
+    NS_STOP_STOPWATCH(mFrameCreationWatch)
   }
 
   if (nsnull != mRootFrame) {
@@ -1152,6 +1154,15 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 NS_IMETHODIMP
 PresShell::EndLoad(nsIDocument *aDocument)
 {
+#ifdef RAPTOR_PERF_METRICS
+  // NRA Dump reflow, style resolution and frame construction times here.
+  printf("Reflow time: ");
+  mReflowWatch.Print();
+  printf("\n");
+  printf("Frame construction plus style resolution time: ");
+  mFrameCreationWatch.Print();
+  printf("\n");
+#endif
   return NS_OK;
 }
 
@@ -1215,6 +1226,7 @@ PresShell::CancelReflowCommand(nsIFrame* aTargetFrame)
 NS_IMETHODIMP
 PresShell::ProcessReflowCommands()
 {
+  NS_START_STOPWATCH(mReflowWatch)
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
@@ -1276,6 +1288,7 @@ PresShell::ProcessReflowCommands()
 #endif
   }
 
+  NS_STOP_STOPWATCH(mReflowWatch)
   return NS_OK;
 }
 
@@ -1660,6 +1673,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
                            PRInt32     aNewIndexInContainer)
 {
   EnterReflowLock();
+  NS_START_STOPWATCH(mFrameCreationWatch)
   nsresult  rv = mStyleSet->ContentAppended(mPresContext, aContainer, aNewIndexInContainer);
 
   if (NS_SUCCEEDED(rv) && nsnull != mHistoryState) {
@@ -1672,6 +1686,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
       mFrameManager->RestoreFrameState(frame, mHistoryState);
   }
 
+  NS_STOP_STOPWATCH(mFrameCreationWatch)
   ExitReflowLock();
   return rv;
 }
