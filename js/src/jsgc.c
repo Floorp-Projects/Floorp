@@ -309,7 +309,7 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 }
 #endif
 
-#if DEBUG
+#ifdef DEBUG
 JS_STATIC_DLL_CALLBACK(JSDHashOperator)
 js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
 {
