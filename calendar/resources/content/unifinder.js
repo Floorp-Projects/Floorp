@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Chris Charabaruk <coldacid@meldstar.com>
  *						 Colin Phillips <colinp@oeone.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -270,6 +271,12 @@ function unifinderEditCommand()
 
 function unifinderDeleteCommand( DoNotConfirm )
 {
+   if( unifinderToDoHasFocus() )
+   {
+      unifinderDeleteToDoCommand( DoNotConfirm );
+      return;
+   }
+   
    var SelectedItems = gCalendarWindow.EventSelection.selectedEvents;
    
    if( SelectedItems.length == 1 )
@@ -404,7 +411,7 @@ function unifinderShowFutureEventsOnly( event )
 
    refreshEventTree( eventTable );
 
-   /* The following isn't exactly right. It should reload after the next event happens. */
+   /* The following isn't exactly right. It should actually reload after the next event happens. */
 
    // get the current time
    var now = new Date();

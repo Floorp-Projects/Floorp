@@ -1137,19 +1137,47 @@
    -moz-box-align       : start;
 }
 
+
 /* TO DO ITEMS */
 
-#unifinder-todo-listbox > listitem[overdue="true"] > listcell
+treechildren:-moz-tree-cell-text(started)
+{
+   color                 : green;
+}
+
+treechildren:-moz-tree-cell-text(overdue)
 {
    color                  : red;
 }
 
-#unifinder-todo-listbox > listitem[completed="true"] > listcell
+treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
 }
 
-#unifinder-todo-listbox > listitem[started="true"] > listcell
-{
-   color                   : green;
+
+/* TO DO LIST IMAGES */
+
+#unifinder-todo-tree-col-completed {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/checkbox_unchecked.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/checkbox_checked.png" )
+}
+
+#unifinder-todo-tree-col-priority {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_high.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
 }

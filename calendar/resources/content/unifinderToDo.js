@@ -45,7 +45,7 @@
 *   improve this to make it usable in general.
 */
 
-const ToDoUnifinderTreeName = "unifinder-todo-listbox";
+const ToDoUnifinderTreeName = "unifinder-todo-tree";
 
 /**
 *   Observer for the calendar event data source. This keeps the unifinder
@@ -135,6 +135,36 @@ function toDoUnifinderRefesh()
    refreshToDoTree( eventTable );
 }
 
+function unifinderToDoHasFocus()
+{
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   return( tree.treeBoxObject.focused );
+}
+
+
+function getToDoFromEvent( event )
+{
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var row = new Object();
+
+   tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, {}, {} );
+
+   if( row.value != -1 && row.value < tree.view.rowCount )
+   { 
+      var treeitem = tree.treeBoxObject.view.getItemAtIndex( row.value );
+      var todoId = treeitem.getAttribute("toDoID");
+      return gICalLib.fetchTodo( todoId );
+   }
+}
+
+function getSelectedToDo()
+{
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   // .toDo object sometimes isn't available?
+   var todoId = tree.contentView.getItemAtIndex(tree.currentIndex).getAttribute("toDoID");
+   return gICalLib.fetchTodo( todoId );
+}
+
 
 /**
 *  This is attached to the onclik attribute of the events shown in the unifinder
@@ -142,11 +172,22 @@ function toDoUnifinderRefesh()
 
 function unifinderClickToDo( event )
 {
-   var listItemCheckbox = event.target.getElementsByTagName( "checkbox" )[0];
-   if ( event.clientX > listItemCheckbox.boxObject.x && event.clientX < listItemCheckbox.boxObject.x + listItemCheckbox.boxObject.width )
-   {
-      listItemCheckbox.checked = !listItemCheckbox.checked;
-      checkboxClick( event )
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var ThisToDo = getToDoFromEvent( event );
+   var row = new Object();
+   var childElt = { };
+   var colID = { };
+   tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, colID, childElt );
+
+   if( colID.value == "unifinder-todo-tree-col-completed" && childElt.value == "image" )
+   {      
+      var treeitem = tree.treeBoxObject.view.getItemAtIndex( row.value );
+      var isChecked = treeitem.getAttribute( "checked" );
+      if( isChecked )
+         treeitem.removeAttribute( "checked" )
+      else
+         treeitem.setAttribute(" checked", true );
+      checkboxClick( ThisToDo, !isChecked )
    }
 }
 
@@ -158,31 +199,30 @@ function unifinderDoubleClickToDo( event )
 {
    //open the edit to do dialog box
 
-   var ThisToDo = event.currentTarget.toDo;
-   
+   var ThisToDo = getToDoFromEvent( event );
+   if( ThisToDo )
    editToDo( ThisToDo );
 
 }
 
 /**
-*  Delete all ToDo items that are selected in the ToDo unifinder list
+*  Delete the current selected item with focus from the ToDo unifinder list
 */
 
 function unifinderDeleteToDoCommand( DoNotConfirm )
 {
-   var unifinderTodoTree = document.getElementById( ToDoUnifinderTreeName );
+// TODO Implement Confirm
+   var tree = document.getElementById( ToDoUnifinderTreeName );
+   var treeitem = tree.treeBoxObject.view.getItemAtIndex( tree.treeBoxObject.selection.currentIndex );
+   var todoId = treeitem.getAttribute("toDoID");
 
-   for( var i = 0; i < unifinderTodoTree.selectedCount; i++ ) {
-      gICalLib.deleteTodo( unifinderTodoTree.getSelectedItem( i ).toDo.id );
-   }
+   gICalLib.deleteTodo( todoId );
 }
 
-function checkboxClick( event )
+function checkboxClick( ThisToDo, completed )
 {
    // var ThisToDo = event.currentTarget.parentNode.parentNode.toDo;
-   var ThisToDo = event.currentTarget.toDo;
-   
-   if( event.target.getElementsByTagName( "checkbox" )[0].checked == true )
+   if( completed )
    {
       var completedTime = new Date();
       
@@ -211,54 +251,97 @@ function checkboxClick( event )
 function setUnifinderToDoTreeItem( treeItem, calendarToDo )
    {
       treeItem.toDo = calendarToDo;
+      treeItem.setAttribute( "toDoID", calendarToDo.id );
+
+      var treeRow = document.createElement( "treerow" );
+      var treeCellCompleted = document.createElement( "treecell" );
+      var treeCellPriority  = document.createElement( "treecell" );
+      var treeCellTitle     = document.createElement( "treecell" );
+      var treeCellStartdate = document.createElement( "treecell" );
+      var treeCellDuedate   = document.createElement( "treecell" );
+      var treeCellPercentcomplete = document.createElement( "treecell" );
+      var treeCellCompleteddate = document.createElement( "treecell" );
+      var treeCellCategories = document.createElement( "treecell" );
 
       var now = new Date();
       
       var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
 
-      treeItem.removeAttribute( "completed" );
-      treeItem.removeAttribute( "started" );
-      treeItem.removeAttribute( "overdue" );
+      if(treeItem.getElementsByTagName( "treerow" )[0])
+        treeItem.removeChild( treeItem.getElementsByTagName( "treerow" )[0] );
 
-
+      var textProperties = "";
       if( calendarToDo.start.getTime() <= thisMorning.getTime() )
       {
          //this task should be started
-         treeItem.setAttribute( "started", "true" );
+         textProperties = textProperties + " started";
       }
 
       var completed = calendarToDo.completed.getTime();
 
       if( completed > 0 )
       {
-         treeItem.getElementsByTagName( "checkbox" )[0].checked = true;
-         
          /* for setting some css */
-         treeItem.setAttribute( "completed", "true" );
+         textProperties = textProperties + " completed";
+         treeItem.setAttribute( "checked", "true" );
       }
 
-      treeItem.getElementsByAttribute( "name", "title-listcell" )[0].setAttribute( "label", calendarToDo.title );
+      treeCellTitle.setAttribute( "label", calendarToDo.title );
 
+      var startDate     = new Date( calendarToDo.start.getTime() );
       var dueDate = new Date( calendarToDo.due.getTime() );
+      var completedDate = new Date( calendarToDo.completed.getTime() );
 
-      var now = new Date();
 
       var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59 );
 
       if( now.getTime() > tonightMidnight.getTime() )
       {
          /* for setting some css */
-         treeItem.setAttribute( "overdue", "true" );
+         textProperties = textProperties + " overdue";
+      } else
+      {
+         textProperties = textProperties + " inprogress";
       }
+      if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
+         textProperties = textProperties + " highpriority";
+      if(calendarToDo.priority > 5 && calendarToDo.priority < 10)
+         textProperties = textProperties + " lowpriority";
 
+
+      var FormattedStartDate = formatUnifinderEventDate( startDate );
       var FormattedDueDate = formatUnifinderEventDate( dueDate );
+      var FormattedCompletedDate = formatUnifinderEventDate( completedDate );
 
-      treeItem.getElementsByAttribute( "name", "due-date-listcell" )[0].setAttribute( "label", FormattedDueDate );
-
-      treeItem.removeAttribute( "collapsed" );
+      treeCellStartdate.setAttribute( "label", FormattedStartDate );
+      treeCellDuedate.setAttribute( "label", FormattedDueDate );
+      treeCellCompleteddate.setAttribute( "label", FormattedCompletedDate );
+      treeCellPercentcomplete.setAttribute( "label", calendarToDo.percent + " %" );
+      treeCellCategories.setAttribute( "label", calendarToDo.categories );
 
       treeItem.setAttribute( "taskitem", "true" );
+      
+      treeRow.setAttribute("properties", textProperties);
+      treeCellCompleted.setAttribute("properties", textProperties);
+      treeCellPriority.setAttribute("properties", textProperties);
+      treeCellTitle.setAttribute("properties", textProperties);
+      treeCellStartdate.setAttribute("properties", textProperties);
+      treeCellDuedate.setAttribute("properties", textProperties);
+      treeCellCompleteddate.setAttribute("properties", textProperties);
+      treeCellPercentcomplete.setAttribute("properties", textProperties);
+      treeCellCategories.setAttribute("properties", textProperties);
+      
+      treeRow.appendChild( treeCellCompleted );
+      treeRow.appendChild( treeCellPriority );
+      treeRow.appendChild( treeCellTitle );
+      treeRow.appendChild( treeCellStartdate );
+      treeRow.appendChild( treeCellDuedate );
+      treeRow.appendChild( treeCellCompleteddate );
+      treeRow.appendChild( treeCellPercentcomplete );
+      treeRow.appendChild( treeCellCategories );
+      treeItem.appendChild( treeRow );
 }
+
 
 /**
 *  Redraw the categories unifinder tree
@@ -272,7 +355,6 @@ function refreshToDoTree( eventArray )
 
    var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
    
-   var oldSelectedIndex = oldTreeChildren.selectedIndex;
    
    for( var i = 0; i < elementsToRemove.length; i++ )
    {
@@ -285,18 +367,15 @@ function refreshToDoTree( eventArray )
       var calendarToDo = eventArray[ index ];
       
       // make the items
-      var oldTreeItems = document.getElementsByAttribute( "name", "sample-todo-listitem" );
-
-      var oldTreeItem = oldTreeItems[0];
       
-      var treeItem = oldTreeItem.cloneNode( true );
+      var treeItem = document.createElement( "treeitem" );
       
       setUnifinderToDoTreeItem( treeItem, calendarToDo );
 
-      oldTreeChildren.appendChild( treeItem );
+      oldTreeChildren.getElementsByTagName( "treechildren" )[0]. appendChild( treeItem );
    }  
-   oldTreeChildren.selectedIndex = oldSelectedIndex;
 }
+
 
 /**
 *  Redraw a single item of the ToDo unifinder tree
@@ -310,7 +389,7 @@ function toDoUnifinderItemUpdate( calendarToDo )
 
    for( var i = 0; i < elementsToRemove.length; i++ )
    {
-      if(elementsToRemove[i].toDo == calendarToDo)
+      if(elementsToRemove[i].getAttribute("toDoID") == calendarToDo.id)
       {
          setUnifinderToDoTreeItem( elementsToRemove[i], calendarToDo );
       }

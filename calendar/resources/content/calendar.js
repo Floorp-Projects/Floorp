@@ -23,6 +23,7 @@
  *                 Colin Phillips <colinp@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
  *                 Mike Norton <xor@ivwnet.com>
+ *                 ArentJan Banck <ajbanck@planet.nl> 
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -627,12 +628,6 @@ function selectAllEvents()
 }
 
 
-function deleteToDoCommand( event )
-{
-   alert( event.originalTarget.getAttribute( "id" ) );
-}
-
-
 function closeCalendar()
 {
    self.close();
@@ -641,7 +636,7 @@ function closeCalendar()
 
 function changeToolTipTextForToDo( event )
 {
-   var toDoItem = event.currentTarget.toDo;
+   var toDoItem = getToDoFromEvent( event );
 
    var Html = document.getElementById( "savetip" );
 
@@ -651,6 +646,9 @@ function changeToolTipTextForToDo( event )
    }
    
    var HolderBox = document.createElement( "vbox" );
+
+   if( toDoItem )
+   {
 
    if (toDoItem.title)
    {
@@ -681,6 +679,7 @@ function changeToolTipTextForToDo( event )
    }
    
    Html.appendChild( HolderBox );
+   }   
 }
 
 function changeToolTipTextForEvent( event )

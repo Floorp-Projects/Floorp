@@ -1102,29 +1102,64 @@
    -moz-box-align       : start;
 }
 
+
 /* TO DO ITEMS */
 
-#unifinder-todo-listbox > listitem[overdue="true"] > listcell
+treechildren:-moz-tree-cell-text(started)
+{
+   color                 : green;
+}
+
+treechildren:-moz-tree-cell-text(overdue)
 {
    color                  : red;
 }
 
-#unifinder-todo-listbox > listitem[completed="true"] > listcell
+treechildren:-moz-tree-cell-text(completed)
 {
    text-decoration        : line-through;
 }
 
-#unifinder-todo-listbox > listitem[started="true"] > listcell
-{
-   color                   : green;
+treechildren:-moz-tree-row(selected) {
+   background-color      : -moz-Dialog; 
 }
 
-#unifinder-todo-listbox:focus > listitem[selected="true"] > listcell
-{
+treechildren:-moz-tree-row(selected, focus) {
    background-color        : #d5e3f2; 
+   border                : 1px dotted #d5e3f2;
 }
 
-#unifinder-todo-listbox > listitem[selected="true"] > listcell
-{
-   background-color        : -moz-Dialog; 
+
+/* TO DO LIST IMAGES */
+
+#unifinder-todo-tree-col-completed {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, inprogress, current) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-act.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-completed, completed, current) {
+   list-style-image      : url("chrome://global/skin/checkbox/cbox-act-check.gif");
+}
+
+#unifinder-todo-tree-col-priority {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_header.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, highpriority) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_high.png" )
+}
+
+treechildren:-moz-tree-image(unifinder-todo-tree-col-priority, lowpriority) {
+   list-style-image      : url( "chrome://calendar/skin/unifinder/priority_low.png" )
 }
