@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.11 2000/09/30 01:46:30 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.12 2000/12/02 02:37:22 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -65,68 +65,76 @@ CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -O3 $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
 
+ifeq ($(TARGET),mipsIRIX)
 #IRIX
-#MPICMN += -DMP_MONT_USE_MP_MUL
-#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
-#AS_OBJS = mpi_mips.o
+MPICMN += -DMP_MONT_USE_MP_MUL -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE
+AS_OBJS = mpi_mips.o
 #ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions
-#ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 
+ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 
 #CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
-#CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
+CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
 #CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE $(MPICMN)
 #CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_NO_MP_WORD \
  $(MPICMN)
 #CFLAGS=-ansi -64 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_NO_MP_WORD \
  $(MPICMN)
+endif
 
+ifeq ($(TARGET),alphaOSF1)
 #Alpha/OSF1
 #CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT $(MPICMN)
 #CFLAGS= -O -Olimit 4000 -ieee_with_inexact -std1 -DOSF1 -D_REENTRANT \
  -DMP_NO_MP_WORD $(MPICMN)
+endif
 
+ifeq ($(TARGET),v9SOLARIS)
 #Solaris 64
-#SOLARIS_ASM_FLAGS = -fast -xO5 -xrestrict=%all -xdepend -xchip=ultra -xarch=v9a -KPIC -mt
-#AS_OBJS = mpi_sparc.o mpv_sparc.o
-#MPICMN += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_ASSEMBLY_MULTIPLY 
-#CFLAGS= -O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+SOLARIS_ASM_FLAGS = -fast -xO5 -xrestrict=%all -xdepend -xchip=ultra -xarch=v9a -KPIC -mt
+AS_OBJS = montmulfv9.o mpi_sparc.o mpv_sparc.o
+MPICMN += -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD -DMP_ASSEMBLY_MULTIPLY 
+MPICMN += -DMP_USING_MONT_MULF
+CFLAGS= -O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -DNSS_USE_64 $(MPICMN)
 #CFLAGS= -g -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_8 -D_SVID_GETTOD -xarch=v9 -DXP_UNIX -DNSS_USE_64 $(MPICMN)
+endif
 
+ifeq ($(TARGET),v8SOLARIS)
 #Solaris 32
-#CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
+SOLARIS_ASM_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
+AS_OBJS = montmulfv8.o mpi_sparc.o mpv_sparc32.o
+MPICMN += -DMP_ASSEMBLY_MULTIPLY 
+MPICMN += -DMP_USING_MONT_MULF
+CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -DMP_NO_MP_WORD $(MPICMN)
 #CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
  -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX $(MPICMN)
-#SOLARIS_ASM_FLAGS = -xchip=ultra -xarch=v8plusa -KPIC -mt 
-#AS_OBJS = mpi_sparc.o mpv_sparc32.o
-#MPICMN += -DMP_ASSEMBLY_MULTIPLY 
-#CFLAGS=-O -KPIC -DSVR4 -DSYSV -D__svr4 -D__svr4__ -DSOLARIS -D_REENTRANT \
- -DSOLARIS2_6 -D_SVID_GETTOD -xarch=v8 -DXP_UNIX -DMP_NO_MP_WORD \
- -DMP_ASSEMBLY_MULTIPLY $(MPICMN)
+endif
 
+ifeq ($(TARGET),HPUX)
 #HPUX
 #CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE -Aa +e +DA2.0W +DS2.0 +DChpux -DHPUX11  -DXP_UNIX \
  -DNSS_USE_64 $(MPICMN)
 #CFLAGS= -O -DHPUX10 -D_POSIX_C_SOURCE=199506L -Ae +Z -DHPUX -Dhppa \
  -D_HPUX_SOURCE +DAportable +DS1.1 -DHPUX11 -DXP_UNIX -DMP_NO_MP_WORD $(MPICMN)
+endif
 
+ifeq ($(TARGET),x86LINUX)
 #Linux
-#AS_OBJS = mpi_x86.o
-#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
-#MPICMN += -DMP_MONT_USE_MP_MUL
-#CFLAGS= -O2 -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
+AS_OBJS = mpi_x86.o
+MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_ASSEMBLY_SQUARE -DMP_ASSEMBLY_DIV_2DX1D
+MPICMN += -DMP_MONT_USE_MP_MUL
+CFLAGS= -O2 -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
  -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
  -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT $(MPICMN)
-
 #CFLAGS= -g -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
  -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
  -DXP_UNIX -DDEBUG -UNDEBUG -D_REENTRANT $(MPICMN)
-
 #CFLAGS= -g -fPIC -DLINUX1_2 -Di386 -D_XOPEN_SOURCE -DLINUX2_1 -ansi -Wall \
  -pipe -DLINUX -Dlinux -D_POSIX_SOURCE -D_BSD_SOURCE -DHAVE_STRERROR \
  -DXP_UNIX -UDEBUG -DNDEBUG -D_REENTRANT $(MPICMN)
+endif
 
 ##
 ## Define LIBS to include any libraries you need to link against.
@@ -176,7 +184,7 @@ DOCS=README doc utils/README utils/PRIMES
 
 ## This is the list of tools built by 'make tools'
 TOOLS=gcd invmod isprime lap dec2hex hex2dec primegen prng \
-	basecvt fact exptmod pi makeprime
+	basecvt fact exptmod pi makeprime identest
 
 LIBOBJS = mpprime.o mpmontg.o mplogic.o mpi.o $(AS_OBJS)
 LIBHDRS = mpi-config.h mpi-priv.h mpi.h
@@ -221,11 +229,21 @@ mpprime.o: mpprime.c mpi-priv.h mpprime.h mplogic.h primes.c $(LIBHDRS)
 mpi_mips.o: mpi_mips.s
 	$(CC) -o $@ $(ASFLAGS) -c mpi_mips.s
 
+mpi_sparc.o : montmulf.h
+
 mpv_sparc32.o: mpv_sparc32.S
 	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c mpv_sparc32.S
 
 mpv_sparc.o: vis_64.il mpv_sparc.c
 	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c vis_64.il mpv_sparc.c
+
+montmulfv8.o montmulfv9.o : %.o : %.s 
+	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -c $<
+
+# This rule is used to build the .s sources, which are then hand optimized.
+#montmulfv8.s montmulfv9.s : montmulf%.s : montmulf%.il montmulf.c montmulf.h 
+#	$(CC) -o $@ $(SOLARIS_ASM_FLAGS) -S montmulf$*.il montmulf.c
+
 
 libmpi.a: $(LIBOBJS)
 	ar -cvr libmpi.a $(LIBOBJS)
@@ -310,6 +328,9 @@ clean:
 	rm -f utils/*.o
 	rm -f utils/core
 	rm -f utils/*~ utils/.*~
+
+clobber: clean
+	rm -f $(TOOLS) $(UTILS)
 
 distclean: clean
 	rm -f mptest? mpi-test metime mulsqr karatsuba
