@@ -78,8 +78,9 @@ LOGFILE=${NSPR_TEST_LOGFILE:-$NULL_DEVICE}
 #
 
 TESTS="
-acceptread
 accept
+acceptread
+acceptreademu
 affinity
 alarm
 anonfm
