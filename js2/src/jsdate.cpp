@@ -79,7 +79,7 @@ static float64 msPerMinute = SecondsPerMinute * 1000.0;
 #define msPerSecond     1000.0
 #endif
 
-/* LocalTZA gets set by js_InitDateClass() */
+/* LocalTZA gets set by initDateObject() */
 static float64          LocalTZA;
 /*
  * The following array contains the day of year for the first day of
@@ -1169,18 +1169,136 @@ static JSValue Date_getUTCMilliseconds(Context *cx, const JSValue& thisValue, JS
 }
 
 
+static JSValue Date_setTime(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    float64 *date = Date_getProlog(cx, thisValue);
+    float64 result = argv[0].toNumber(cx).f64;
+    *date = TIMECLIP(result);
+    return JSValue(*date);
+}
 
+static JSValue Date_setYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    float64 t;
+    float64 year;
+    float64 day;
+    float64 result;
 
+    float64 *date = Date_getProlog(cx, thisValue);
+    result = *date;
+    year = argv[0].toNumber(cx).f64;
+    if (!JSDOUBLE_IS_FINITE(year)) {
+	*date = kNaNValue.f64;
+	return JSValue(*date);
+    }
+
+    year = JSValue::float64ToInteger(year);
+
+    if (!JSDOUBLE_IS_FINITE(result)) {
+	t = +0.0;
+    } else {
+	t = LocalTime(result);
+    }
+
+    if (year >= 0 && year <= 99)
+	year += 1900;
+
+    day = MakeDay(year, MonthFromTime(t), DateFromTime(t));
+    result = MakeDate(day, TimeWithinDay(t));
+    result = UTC(result);
+
+    *date = TIMECLIP(result);
+    return JSValue(*date);
+}
+
+JSValue Date_setFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 3, true);
+}
+
+JSValue Date_setUTCFullYear(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 3, false);
+}
+
+JSValue Date_setMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 2, true);
+}
+
+JSValue Date_setUTCMonth(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 2, false);
+}
+
+JSValue Date_setDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 1, true);
+}
+
+JSValue Date_setUTCDate(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 1, false);
+}
+
+JSValue Date_setHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 4, true);
+}
+
+JSValue Date_setUTCHours(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 4, false);
+}
+
+JSValue Date_setMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 3, true);
+}
+
+JSValue Date_setUTCMinutes(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 3, false);
+}
 
 JSValue Date_setSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     return Date_makeTime(cx, thisValue, argv, argc, 2, true);
 }
 
+JSValue Date_setUTCSeconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 2, true);
+}
 
+JSValue Date_setMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 1, true);
+}
 
+JSValue Date_setUTCMilliseconds(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return Date_makeTime(cx, thisValue, argv, argc, 1, true);
+}
 
+// SpiderMonkey has a 'hinted' version:
+#if JS_HAS_VALUEOF_HINT
+JSValue Date_valueOf(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    /* If called directly with no arguments, convert to a time number. */
+    if (argc == 0)
+	return Date_getTime(cx, thisValue, argv, argc);
 
+    /* Convert to number only if the hint was given, otherwise favor string. */
+    if (argc == 1) {
+    	const String *str = argv[0].toString(cx).string;
+	if (str->compare(widenCString("number")) == 0)
+	    return Date_getTime(cx, thisValue, argv, argc);
+    }
+    return Date_toString(cx, thisValue, argv, argc);
+
+}
+#endif
 
 Context::PrototypeFunctions *getDateProtos()
 {
@@ -1205,15 +1323,35 @@ Context::PrototypeFunctions *getDateProtos()
         { "getUTCSeconds",      Number_Type, 0, Date_getUTCSeconds      },
         { "getMilliseconds",    Number_Type, 0, Date_getUTCMilliseconds },
         { "getUTCMilliseconds", Number_Type, 0, Date_getUTCMilliseconds },
-
-        { "toString",           String_Type, 0, Date_toString           },
-        { "toDateString",       String_Type, 0, Date_toDateString       },
-        { "toTimeString",       String_Type, 0, Date_toTimeString       },
+        { "setTime",            Number_Type, 1, Date_setTime            },
+        { "setYear",            Number_Type, 1, Date_setYear            },
+        { "setFullYear",        Number_Type, 1, Date_setFullYear        },
+        { "setUTCFullYear",     Number_Type, 3, Date_setUTCFullYear     },
+        { "setMonth",           Number_Type, 2, Date_setMonth           },
+        { "setUTCMonth",        Number_Type, 2, Date_setUTCMonth        },
+        { "setDate",            Number_Type, 1, Date_setDate            },
+        { "setUTCDate",         Number_Type, 1, Date_setUTCDate         },
+        { "setHours",           Number_Type, 4, Date_setHours           },
+        { "setUTCHours",        Number_Type, 4, Date_setUTCHours        },
+        { "setMinutes",         Number_Type, 3, Date_setMinutes         },
+        { "setUTCMinutes",      Number_Type, 3, Date_setUTCMinutes      },
+        { "setSeconds",         Number_Type, 2, Date_setSeconds         },
+        { "setUTCSeconds",      Number_Type, 2, Date_setUTCSeconds      },
+        { "setMilliseconds",    Number_Type, 1, Date_setMilliseconds    },
+        { "setUTCMilliseconds", Number_Type, 1, Date_setUTCMilliseconds },
         { "toUTCString",        String_Type, 0, Date_toGMTString        },
         { "toLocaleString",     String_Type, 0, Date_toLocaleString     },
         { "toLocaleDateString", String_Type, 0, Date_toLocaleDateString },
         { "toLocaleTimeString", String_Type, 0, Date_toLocaleTimeString },
+        { "toDateString",       String_Type, 0, Date_toDateString       },
+        { "toTimeString",       String_Type, 0, Date_toTimeString       },
         { "toSource",           String_Type, 0, Date_toSource           },
+        { "toString",           String_Type, 0, Date_toString           },
+#if JS_HAS_VALUEOF_HINT
+        { "valueOf",            Number_Type, 0, Date_valueOf            },
+#else
+        { "valueOf",            Number_Type, 0, Date_getTime            },
+#endif
         { NULL }
     };
     return new Context::PrototypeFunctions(&dateProtos[0]);
