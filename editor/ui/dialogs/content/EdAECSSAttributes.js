@@ -19,41 +19,53 @@
  *
  * Contributor(s):
  *   Ben "Count XULula" Goodger
+ *   Daniel Glazman <glazman@netscape.com>
  */
 
 // build attribute list in tree form from element attributes
 function BuildCSSAttributeTable()
 {
-  // get the CSS declaration from DOM 2 ElementCSSInlineStyle
-  var style = gElement.style;
-
-  if (style == undefined)
-  {
-    dump("Inline styles undefined\n");
-    return;
-  }
-
-  var l = style.length;
-  if (l == undefined || l == 0)
-  {
-    if (l == undefined) {
-      dump("Failed to query the number of inline style declarations\n");
-    }
-    return;
-  }
-
-  if (l > 0)
-  {
-    var added = false;
-    for (i = 0; i < l; i++)
+  // we can't trust DOM 2 ElementCSSInlineStyle because gElement can be
+  // outside of the document's tree
+  var styleAttr = gElement.getAttribute("style");
+  // we need the 
+  var editorShell = window.opener.editorShell;
+  if (editorShell) {
+    editorShell = editorShell.QueryInterface(Components.interfaces.nsIEditorShell);
+    var editor = editorShell.editor.QueryInterface(Components.interfaces.nsIHTMLEditor);
+    var styleRule = editor.ParseStyleAttrIntoCSSRule(styleAttr);
+    
+    if (styleRule == undefined)
     {
-      name = style.item(i);
-      value = style.getPropertyValue(name);
-      AddTreeItem( name, value, "CSSAList", CSSAttrs );
+      dump("Inline styles undefined\n");
+      return;
     }
-  }
 
-  ClearCSSInputWidgets();
+    var style = styleRule.style;
+    var declLength = style.length;
+
+    if (declLength == undefined || declLength == 0)
+    {
+      if (declLength == undefined) {
+        dump("Failed to query the number of inline style declarations\n");
+      }
+
+      return;
+    }
+
+    if (declLength > 0)
+    {
+      var added = false;
+      for (i = 0; i < declLength; i++)
+      {
+        name = style.item(i);
+        value = style.getPropertyValue(name);
+        AddTreeItem( name, value, "CSSAList", CSSAttrs );
+      }
+    }
+
+    ClearCSSInputWidgets();
+  }
 }
 
 function onChangeCSSAttribute()

@@ -52,6 +52,8 @@
 
 #include "nsHTMLURIRefObject.h"
 
+#include "nsICSSParser.h"
+#include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMText.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMDocument.h"
@@ -142,6 +144,7 @@ static NS_DEFINE_CID(kCDOMSelectionCID,      NS_DOMSELECTION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 static NS_DEFINE_CID(kCTransitionalDTDCID,  NS_CTRANSITIONAL_DTD_CID);
+static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_FALSE;
@@ -5319,3 +5322,34 @@ nsHTMLEditor::NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
   return PR_FALSE;
 }
 
+NS_IMETHODIMP
+nsHTMLEditor::ParseStyleAttrIntoCSSRule(const PRUnichar *aString, nsIDOMCSSStyleRule **_retval)
+{
+  nsCOMPtr<nsIDOMDocument> domdoc;
+  nsEditor::GetDocument(getter_AddRefs(domdoc));
+  if (!domdoc)
+    return NS_ERROR_UNEXPECTED;
+
+  nsCOMPtr<nsIDocument> doc (do_QueryInterface(domdoc));
+  if (!doc)
+    return NS_ERROR_UNEXPECTED;
+  nsCOMPtr <nsIURI> docURL;
+  doc->GetBaseURL(*getter_AddRefs(docURL));
+  nsCOMPtr<nsICSSParser> css;
+  nsCOMPtr<nsIStyleRule> mRule;
+  nsComponentManager::CreateInstance(kCSSParserCID,
+                                     nsnull,
+                                     NS_GET_IID(nsICSSParser),
+                                     getter_AddRefs(css));
+  NS_ASSERTION(css, "can't get a css parser");
+  if (!css) return NS_ERROR_NULL_POINTER;    
+
+  nsAutoString value(aString);
+  css->ParseStyleAttribute(value, docURL, getter_AddRefs(mRule));
+  nsCOMPtr<nsIDOMCSSStyleRule> styleRule = do_QueryInterface(mRule);
+  if (styleRule) {
+    *_retval = styleRule;
+    NS_ADDREF(*_retval);
+  }
+  return NS_OK;
+}
