@@ -831,7 +831,7 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 
 void nsAccessibleWrap::GetXPAccessibleFor(VARIANT varChild, nsIAccessible **aXPAccessible)
 {
-  aXPAccessible = nsnull;
+  *aXPAccessible = nsnull;
 
   // if its us real easy - this seems to always be the case
   if (varChild.lVal == CHILDID_SELF) {
