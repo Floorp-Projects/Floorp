@@ -26,6 +26,8 @@ typedef unsigned char BYTE;
 
 #define RGB(r,g,b) ((unsigned long) (((BYTE) (r) | ((unsigned long) ((BYTE) (g)) <<8)) | (((unsigned long)(BYTE)(b)) << 16)))
 
+#define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
+
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -385,8 +387,9 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 
 NS_IMETHODIMP nsRenderingContextGTK::SetColor(nscolor aColor)
 {
-  ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, (guint32)aColor);
   mCurrentColor = aColor;
+
+  ::gdk_rgb_gc_set_foreground(mRenderingSurface->gc, NS_TO_GDK_RGB(aColor));
 
   return NS_OK;
 }
@@ -462,14 +465,20 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(nsRect *aBounds,
                                                           PRUint32 aSurfFlags,
                                                           nsDrawingSurface &aSurface)
 {
+  GdkPixmap *pixmap;
+
+  gint attributes_mask;
+    
   if (nsnull == mRenderingSurface) {
     aSurface = nsnull;
     return NS_ERROR_FAILURE;
   }
+ 
+ pixmap = ::gdk_pixmap_new(mRenderingSurface->drawable, aBounds->width, aBounds->height, -1);
+ nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
 
-  nsDrawingSurfaceGTK * surface = new nsDrawingSurfaceGTK();
-
-  surface->drawable = mRenderingSurface->drawable;
+// surface->drawable = mRenderingSurface->drawable;
+  surface->drawable = pixmap;
   surface->gc       = mRenderingSurface->gc;
 
   aSurface = (nsDrawingSurface)surface;
@@ -916,9 +925,9 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
 
-  ::gdk_draw_pixmap(((nsDrawingSurfaceGTK *)aSrcSurf)->drawable,
+  ::gdk_draw_pixmap(destsurf->drawable,
                     ((nsDrawingSurfaceGTK *)aSrcSurf)->gc,
-                    destsurf->drawable,
+                    ((nsDrawingSurfaceGTK *)aSrcSurf)->drawable,
                     x, y,
                     drect.x, drect.y,
                     drect.width, drect.height);
