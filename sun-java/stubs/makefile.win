@@ -28,7 +28,6 @@
 DEPTH = ..\..
 
 DIRS  = jri \
-	include \
-	src
+	include
 
 include <$(DEPTH)\config\rules.mak>
