@@ -53,14 +53,13 @@
 #include "nsIPrefBranch.h"
 #include "nsIPrefBranchInternal.h"
 
-
 #define CARD_NOT_FOUND -1
 #define ALL_ROWS -1
 
 #define PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST "mail.addr_book.lastnamefirst"
 
 // also, our default primary sort
-#define DISPLAY_NAME_COLUMN_ID "DisplayName" 
+#define GENERATED_NAME_COLUMN_ID "GeneratedName" 
 
 // also, our default secondary sort
 #define PRIMARY_EMAIL_COLUMN_ID "PrimaryEmail" 
@@ -84,6 +83,7 @@ nsAbView::nsAbView()
   mMailListAtom = getter_AddRefs(NS_NewAtom("MailList"));
   mSuppressSelectionChange = PR_FALSE;
   mSuppressCountChange = PR_FALSE;
+  mGeneratedNameFormat = 0;
 }
 
 nsAbView::~nsAbView()
@@ -142,6 +142,21 @@ NS_IMETHODIMP nsAbView::GetURI(char **aURI)
   return NS_OK;
 }
 
+nsresult nsAbView::SetGeneratedNameFormatFromPrefs()
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr<nsIPrefBranch> prefBranch;
+  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = prefBranch->GetIntPref(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, &mGeneratedNameFormat);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return rv;
+}
+
 nsresult nsAbView::AddPrefObservers()
 {
   nsresult rv;
@@ -158,8 +173,7 @@ nsresult nsAbView::AddPrefObservers()
 
   rv = pbi->AddObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this, PR_FALSE);
   NS_ENSURE_SUCCESS(rv,rv);
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsAbView::RemovePrefObservers()
@@ -178,8 +192,7 @@ nsresult nsAbView::RemovePrefObservers()
 
   rv = pbi->RemoveObserver(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST, this);
   NS_ENSURE_SUCCESS(rv,rv);
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener, 
@@ -191,6 +204,9 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   mAbViewListener = abViewListener;
 
   rv = AddPrefObservers();
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = SetGeneratedNameFormatFromPrefs();
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr <nsIRDFService> rdfService = do_GetService("@mozilla.org/rdf/rdf-service;1",&rv);
@@ -214,7 +230,7 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
 
 	rv = abSession->AddAddressBookListener(this);
   NS_ENSURE_SUCCESS(rv,rv);
-
+  
   if (mAbViewListener && !mSuppressCountChange) {
     rv = mAbViewListener->OnCountChanged(mCards.Count());
     NS_ENSURE_SUCCESS(rv,rv);
@@ -297,8 +313,8 @@ NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, n
   if (mCards.Count() <= row)
     return NS_OK;
 
-  // "Di" to distinguish "DisplayName" from "Department"
-  if (colID[0] != 'D' || colID[1] != 'i')
+  // "G" == "GeneratedName"
+  if (colID[0] != 'G')
     return NS_OK;
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
@@ -381,9 +397,15 @@ NS_IMETHODIMP nsAbView::GetCellText(PRInt32 row, const PRUnichar *colID, PRUnich
 {
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
 
-  nsresult rv = card->GetCardUnicharValue(colID, _retval);
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsresult rv;
 
+  // "G" == "GeneratedName"
+  if (colID[0] == 'G')
+    rv = card->GetGeneratedName(mGeneratedNameFormat, _retval);
+  else 
+    rv = card->GetCardUnicharValue(colID, _retval);
+
+  NS_ENSURE_SUCCESS(rv,rv);
   return rv;
 }
 
@@ -515,7 +537,7 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 
   nsAutoString sortColumn;
   if (!colID) 
-    sortColumn = NS_LITERAL_STRING(DISPLAY_NAME_COLUMN_ID);  // default sort
+    sortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID);  // default sort
   else 
     sortColumn = colID;
 
@@ -578,10 +600,13 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   nsresult rv;
   nsXPIDLString value;
   // XXX fix me, do this with const to avoid the strcpy
-  rv = abcard->card->GetCardUnicharValue(colID, getter_Copies(value));
+  if (colID[0] == 'G') // "G" == "GeneratedName"
+    rv = abcard->card->GetGeneratedName(mGeneratedNameFormat, getter_Copies(value));
+  else
+    rv = abcard->card->GetCardUnicharValue(colID, getter_Copies(value));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  // XXX be smarter about the key, from an arena
+  // XXX be smarter about the allocation
   PR_FREEIF(abcard->primaryCollationKey);
   rv = CreateCollationKey(value, &(abcard->primaryCollationKey));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -590,7 +615,7 @@ nsresult nsAbView::GenerateCollationKeysForCard(const PRUnichar *colID, AbCard *
   rv = abcard->card->GetCardUnicharValue(NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get(), getter_Copies(value));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  // XXX be smarter about the key, from an arena
+ // XXX be smarter about the allocation
   PR_FREEIF(abcard->secondaryCollationKey);
   rv = CreateCollationKey(value, &(abcard->secondaryCollationKey));
   NS_ENSURE_SUCCESS(rv,rv);
@@ -679,21 +704,24 @@ NS_IMETHODIMP nsAbView::Observe(nsISupports *aSubject, const char *aTopic, const
     nsDependentString prefName(someData);
     
     if (prefName.Equals(NS_LITERAL_STRING(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST))) {
-      // the PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST pref affects how the DisplayName column looks.
-      // so if the DisplayName is our primary or secondary sort,
+      rv = SetGeneratedNameFormatFromPrefs();
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      // the PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST pref affects how the GeneratedName column looks.
+      // so if the GeneratedName is our primary or secondary sort,
       // we need to resort.
       //
       // XXX optimize me
       // PrimaryEmail is always the secondary sort, unless it is currently the
       // primary sort.  So, if PrimaryEmail is the primary sort, 
-      // DisplayName might be the secondary sort.
+      // GeneratedName might be the secondary sort.
       //
       // one day, we can get fancy and remember what the secondary sort is.
       // we we do that, we can fix this code.  at best, it will turn a sort into a invalidate.
       // 
-      // if neither the primary nor the secondary sorts are DisplayName, all we have to do is
-      // invalidate (to show the new DisplayNames), but the sort will not change.
-      if (!nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(DISPLAY_NAME_COLUMN_ID).get()) ||
+      // if neither the primary nor the secondary sorts are GeneratedName, all we have to do is
+      // invalidate (to show the new GeneratedNames), but the sort will not change.
+      if (!nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get()) ||
           !nsCRT::strcmp(mSortColumn.get(), NS_LITERAL_STRING(PRIMARY_EMAIL_COLUMN_ID).get())) {
         rv = SortBy(mSortColumn.get(), mSortDirection.get());
       }

@@ -86,6 +86,7 @@ private:
   nsresult EnumerateCards();
   nsresult AddPrefObservers();
   nsresult RemovePrefObservers();
+  nsresult SetGeneratedNameFormatFromPrefs();
 
   nsCString mURI;
   nsCOMPtr <nsIAbDirectory> mDirectory;
@@ -98,6 +99,7 @@ private:
 
   PRPackedBool mSuppressSelectionChange;
   PRPackedBool mSuppressCountChange;
+  PRInt32 mGeneratedNameFormat;
 };
 
 #endif /* _nsAbView_H_ */
