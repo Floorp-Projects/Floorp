@@ -26,15 +26,7 @@
 #include "nsIProperties.h"
 #include "nsHashtable.h"
 #include "nsAgg.h"
-
-
-#define NS_DIRECTORY_SERVICE_CID                     \
-{ /* f00152d0-b40b-11d3-8c9c-000064657374 */         \
-    0xf00152d0,                                      \
-    0xb40b,                                          \
-    0x11d3,                                          \
-    {0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} \
-}
+#include "nsIFile.h"
 
 #define NS_DIRECTORY_SERVICE_PROGID    "component://netscape/file/directory_service"
 #define NS_DIRECTORY_SERVICE_CLASSNAME "nsIFile Directory Service"
@@ -47,12 +39,7 @@ public:
 
   NS_DECL_AGGREGATED
 
-  // nsIProperties methods:
-  NS_IMETHOD DefineProperty(const char* prop, nsISupports* initialValue);
-  NS_IMETHOD UndefineProperty(const char* prop);
-  NS_IMETHOD GetProperty(const char* prop, nsISupports* *result);
-  NS_IMETHOD SetProperty(const char* prop, nsISupports* value);
-  NS_IMETHOD HasProperty(const char* prop, nsISupports* value); 
+  NS_DECL_NSIPROPERTIES
 
   // nsProperties methods:
   nsDirectoryService(nsISupports* outer);
@@ -62,8 +49,11 @@ public:
   Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
   static PRBool ReleaseValues(nsHashKey* key, void* data, void* closure);
-
+private:
+    static nsDirectoryService* mService;
+  
 };
 
 
 #endif
+

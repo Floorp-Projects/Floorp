@@ -42,6 +42,8 @@ interface nsIRegistry : nsISupports
     void setString(in nsRegistryKey baseKey, in string path, in string value);
     PRInt32 getInt(in nsRegistryKey baseKey, in string path);
     void setInt(in nsRegistryKey baseKey, in string path, in PRInt32 value);
+    PRInt64 getLongLong(in nsRegistryKey baseKey, in string path);
+    void setLongLong(in nsRegistryKey baseKey, in string path, inout PRInt64 value);
 
     nsRegistryKey addSubtree(in nsRegistryKey baseKey, in string path);
     void removeSubtree(in nsRegistryKey baseKey, in string path);

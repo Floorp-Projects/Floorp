@@ -18,7 +18,7 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
-#include "nsIFileSpec.idl"
+#include "nsIFile.idl"
 #include "nsIComponentManager.idl"
 
 [object, uuid(c073cfc0-567c-11d3-aec1-0000f8e25c06)]
@@ -57,7 +57,7 @@ interface nsIComponentLoader : nsISupports {
     /**
      * AutoRegister components in the given directory.
      */
-    void autoRegisterComponents(in long aWhen, in nsIFileSpec aDirectory);
+    void autoRegisterComponents(in long aWhen, in nsIFile aDirectory);
 
     /**
      * AutoRegister the given component.
@@ -66,7 +66,7 @@ interface nsIComponentLoader : nsISupports {
      * attempt to register the component (wrong type) and ``throws'' an
      * NS_FAILED code if there was an error during registration.
      */
-    boolean autoRegisterComponent(in long aWhen, in nsIFileSpec aComponent);
+    boolean autoRegisterComponent(in long aWhen, in nsIFile aComponent);
 
     /**
      * Register any deferred (NS_ERROR_FACTORY_REGISTER_AGAIN) components.

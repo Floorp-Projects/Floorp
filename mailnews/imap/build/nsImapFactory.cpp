@@ -237,9 +237,9 @@ static Components gComponents[] = {
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 NS_IMETHODIMP nsMsgImapModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec* aPath,
-                          const char* registryLocation,
-                          const char* componentType)
+                                            nsIFile* aPath,
+                                            const char* registryLocation,
+                                            const char* componentType)
 {
     nsresult rv = NS_OK;
 
@@ -259,8 +259,8 @@ NS_IMETHODIMP nsMsgImapModule::RegisterSelf(nsIComponentManager *aCompMgr,
 }
 
 NS_IMETHODIMP nsMsgImapModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFileSpec* aPath,
-                            const char* registryLocation)
+                                              nsIFile* aPath,
+                                              const char* registryLocation)
 {
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
@@ -287,7 +287,7 @@ NS_IMETHODIMP nsMsgImapModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *
 static nsMsgImapModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

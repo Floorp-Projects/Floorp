@@ -28,14 +28,15 @@
  * dp Suresh <dp@netscape.com>
  */
 
-#include "prio.h"
-#include "prlink.h"
-#include "nsISupports.h"
-
 #ifndef xcDll_h__
 #define xcDll_h__
 
-class nsIFileSpec;
+#include "prio.h"
+#include "prlink.h"
+#include "nsISupports.h"
+#include "nsIFile.h"
+#include "nsCOMPtr.h"
+
 class nsIModule;
 class nsIServiceManager;
 
@@ -53,9 +54,9 @@ class nsDll
 private:
     char *m_dllName;			// Stores the dllName to load.
 
-    nsIFileSpec *m_dllSpec;	// Filespec representing the component
-	PRUint32 m_modDate;		// last modified time at creation of this object
-	PRUint32 m_size;		// size of the dynamic library at creation of this object
+    nsCOMPtr<nsIFile> m_dllSpec;	    // Filespec representing the component
+	PRInt64 m_modDate;		// last modified time at creation of this object
+	PRInt64 m_size;		// size of the dynamic library at creation of this object
 
 	PRLibrary *m_instance;	// Load instance
 	nsDllStatus m_status;	// holds current status
@@ -68,15 +69,15 @@ private:
     PRBool m_markForUnload;
     char *m_registryLocation;
 
-    void Init(nsIFileSpec *dllSpec);
+    void Init(nsIFile *dllSpec);
     void Init(const char *persistentDescriptor);
 
 public:
  
-	nsDll(nsIFileSpec *dllSpec, const char *registryLocation);
-	nsDll(nsIFileSpec *dllSpec, const char *registryLocation, PRUint32 modDate, PRUint32 fileSize);
+	nsDll(nsIFile *dllSpec, const char *registryLocation);
+	nsDll(nsIFile *dllSpec, const char *registryLocation, PRInt64* modDate, PRInt64* fileSize);
 	nsDll(const char *persistentDescriptor);
-	nsDll(const char *persistentDescriptor, PRUint32 modDate, PRUint32 fileSize);
+	nsDll(const char *persistentDescriptor, PRInt64* modDate, PRInt64* fileSize);
     nsDll(const char *dll, int type /* dummy */);
 
 	~nsDll(void);
@@ -106,17 +107,17 @@ public:
     PRBool HasChanged(void);
 
     // WARNING: DONT FREE string returned.
-	const char *GetNativePath(void);
+    const char *GetDisplayPath(void);
     // WARNING: DONT FREE string returned.
     const char *GetPersistentDescriptorString(void);
     // WARNING: DONT FREE string returned.
     const char *GetRegistryLocation(void) { return m_registryLocation; }
-	PRUint32 GetLastModifiedTime(void) { return(m_modDate); }
-	PRUint32 GetSize(void) { return(m_size); }
+	void GetLastModifiedTime(PRInt64 *val) { *val = m_modDate; }
+	void GetSize(PRInt64 *val) { *val = m_size; }
 	PRLibrary *GetInstance(void) { return (m_instance); }
 
     // NS_RELEASE() is required to be done on objects returned
-    nsresult GetDllSpec(nsIFileSpec **dllSpec);
+    nsresult GetDllSpec(nsIFile **dllSpec);
     nsresult GetModule(nsISupports *servMgr, nsIModule **mobj);
 };
 

@@ -28,6 +28,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 
 #include "nspr.h"
 #include "prlock.h"
@@ -656,7 +657,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsSoftwareUpdateModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -717,7 +718,7 @@ nsSoftwareUpdateModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsSoftwareUpdateModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG
@@ -754,7 +755,7 @@ nsSoftwareUpdateModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnl
 static nsSoftwareUpdateModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* location,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

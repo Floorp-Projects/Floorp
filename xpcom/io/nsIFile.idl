@@ -33,7 +33,6 @@ interface nsISimpleEnumerator;
 [scriptable, uuid(c8c0a080-0868-11d3-915f-d9d889d48e3c)]
 interface nsIFile : nsISupports
 {
-
     /**
      *   Create Types
      *
@@ -42,28 +41,22 @@ interface nsIFile : nsISupports
      */
     const unsigned long NORMAL_FILE_TYPE = 0;
     const unsigned long DIRECTORY_TYPE   = 1;
-    
      
     /**
      *  appendPath
      *
-     *  This function is used for constructing a descendat of the
-     *  current nsIFile.  Non-terminal nodes will be resolved. An 
-     *  error will be returned if a non-terminal is a file 
-     *  (NS_ERROR_FILE_INVALID_PATH).  
+     *  This function is used for constructing a descendant of the
+     *  current nsIFile.  
      *
      *  @param relativePath    
-     *      A unix style string which is intented to be a relative 
-     *      path of the nsIFile.  Starting and trailing '/' will 
-     *      be ignored.  If this path is not a unix style path, an 
-     *      error will be returned (NS_ERROR_FILE_UNRECONGNIZED_PATH).
+     *      A string which is intented to be a child node of the 
+     *      nsIFile.  
      */
+    void append([const] in string node);
 
-    void appendPath([const] in string relativePath);
-
-      /**
-    * Normalize the pathName (e.g. removing .. and . components on Unix).
-    */
+    /**
+     * Normalize the pathName (e.g. removing .. and . components on Unix).
+     */
     void normalize();
 
     /**
@@ -89,11 +82,10 @@ interface nsIFile : nsISupports
   
     void create(in unsigned long type, in unsigned long permissions);
 
-
     /**
      *   Accessor to the leaf name of the file itself. 
      */
-    readonly attribute string leafName;
+    attribute string leafName;
     
     /**
      *  copyTo
@@ -117,7 +109,6 @@ interface nsIFile : nsISupports
      *       for the file to be copied.  This can be nsnull.
      *
      */
-
     void copyTo(in nsIFile newParentDir, [const] in string newName);
      
     /**
@@ -126,7 +117,6 @@ interface nsIFile : nsISupports
      *  This function is identical to copyTo except it, as
      *  the name implies, follows symbolic links.
      */
-
     void copyToFollowingLinks(in nsIFile newParentDir, [const] in string newName);
     
     /**
@@ -220,8 +210,6 @@ interface nsIFile : nsISupports
      */
     boolean isSpecial(); 
     
-
-        
     /**
       * clone()
       *
@@ -233,7 +221,6 @@ interface nsIFile : nsISupports
       *          with.
       *
       */
-    
     nsIFile clone();
 
     /**
@@ -242,11 +229,10 @@ interface nsIFile : nsISupports
     boolean equals(in nsIFile inFile);
     
     /**
-     * Will determine the file is a descendant of the parameter inFile.
+     * Will determine the inFile is a descendant
      * If |recur| is true, it will descend subdirectories looking for 
      */
     boolean isContainedIn(in nsIFile inFile, in boolean recur);
-
 
     /**
      * Parent will be nsnull when this is at the top of the volume.
@@ -267,27 +253,35 @@ interface nsIFile : nsISupports
 #define NS_FILE_PROGID "component://netscape/file"
 #define NS_FILE_CLASSNAME "File Specification"
 
+////////////////////////////////////////////////////////////////////////////////
+// Special Directories
 
-#define NS_ERROR_FILE_UNRECOGNIZED_PATH         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
-#define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
-#define NS_ERROR_FILE_EXECUTION_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
-#define NS_ERROR_FILE_UNKNOWN_TYPE        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
-#define NS_ERROR_FILE_DESTINATION_NOT_DIR    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
-#define NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 6)
-#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
-#define NS_ERROR_FILE_ALREADY_EXISTS         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
-#define NS_ERROR_FILE_INVALID_PATH        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
-#define NS_ERROR_FILE_DISK_FULL           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 10)
-#define NS_ERROR_FILE_CORRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 11)
-#define NS_ERROR_FILE_NOT_DIRECTORY           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 12)
-#define NS_ERROR_FILE_IS_DIRECTORY                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 13)
-#define NS_ERROR_FILE_IS_LOCKED               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 14)
-#define NS_ERROR_FILE_TOO_BIG                      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 15)
-#define NS_ERROR_FILE_NO_DEVICE_SPACE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 16)
-#define NS_ERROR_FILE_NAME_TOO_LONG               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 17)
-#define NS_ERROR_FILE_NOT_FOUND               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 18)
-#define NS_ERROR_FILE_READ_ONLY               NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 19)
-#define NS_ERROR_FILE_DIR_NOT_EMPTY       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 20)
-#define NS_ERROR_FILE_ACCESS_DENIED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 21)
+#include "nsIServiceManager.h"
+#include "nsIProperties.h"
+#include "nsCOMPtr.h"
+
+#define NS_DIRECTORY_SERVICE_CID                     \
+{ /* f00152d0-b40b-11d3-8c9c-000064657374 */         \
+    0xf00152d0,                                      \
+    0xb40b,                                          \
+    0x11d3,                                          \
+    {0x8c, 0x9c, 0x00, 0x00, 0x64, 0x65, 0x73, 0x74} \
+}
+
+inline nsresult
+NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
+{
+    nsresult rv;
+    static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
+    NS_WITH_SERVICE(nsIProperties, serv, kDirectoryServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsISupports> dir;
+    rv = serv->Get(specialDirName, NS_GET_IID(nsIFile), getter_AddRefs(dir));
+    if (NS_FAILED(rv)) return rv;
+
+    *result = (nsIFile*)dir.get();
+    return NS_OK;
+}
 
 %}

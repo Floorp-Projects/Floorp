@@ -26,7 +26,8 @@
 #include "nsIXPConnect.h"
 #include "nsIModule.h"
 #include "nsSupportsArray.h"
-
+#include "nsIFileSpec.h"
+#include "nsIFile.h"
 extern const char mozJSComponentLoaderProgID[];
 extern const char jsComponentTypeName[];
 
@@ -47,14 +48,14 @@ public:
 
  protected:
     nsresult ReallyInit();
-    nsresult AttemptRegistration(nsIFileSpec *component, PRBool deferred);
-    nsresult RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir);
-    JSObject *GlobalForLocation(const char *aLocation, nsIFileSpec *component);
+    nsresult AttemptRegistration(nsIFile *component, PRBool deferred);
+    nsresult RegisterComponentsInDir(PRInt32 when, nsIFile *dir);
+    JSObject *GlobalForLocation(const char *aLocation, nsIFile *component);
     nsIModule *ModuleForLocation(const char *aLocation,
-                                 nsIFileSpec *component);
-    PRBool HasChanged(const char *registryLocation, nsIFileSpec *component);
+                                 nsIFile *component);
+    PRBool HasChanged(const char *registryLocation, nsIFile *component);
     nsresult SetRegistryInfo(const char *registryLocation,
-                             nsIFileSpec *component);
+                             nsIFile *component);
 
     nsIComponentManager* mCompMgr; // weak ref, should make it strong?
     nsCOMPtr<nsIRegistry> mRegistry;

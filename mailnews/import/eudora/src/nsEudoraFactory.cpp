@@ -27,7 +27,7 @@
 #include "nsIRegistry.h"
 #include "nsIImportService.h"
 #include "nsEudoraImport.h"
-
+#include "nsCRT.h"
 #include "EudoraDebugLog.h"
 
 static NS_DEFINE_CID(kEudoraImportCID,    	NS_EUDORAIMPORT_CID);
@@ -65,7 +65,7 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 }
 
 NS_METHOD EudoraRegister(nsIComponentManager *aCompMgr,
-                                            nsIFileSpec *aPath,
+                                            nsIFile *aPath,
                                             const char *registryLocation,
                                             const char *componentType)
 {	
@@ -119,5 +119,4 @@ static nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE("nsEudoraImportModule", components)
-
 

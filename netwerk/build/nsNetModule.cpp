@@ -38,6 +38,7 @@
 #include "nsUnicharStreamLoader.h"
 #include "nsAsyncStreamListener.h"
 #include "nsSyncStreamListener.h"
+#include "nsFileStreams.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 // Module implementation for the net library
@@ -98,7 +99,15 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
     { "Load Group", 
       NS_LOADGROUP_CID,
       "component://netscape/network/load-group",
-      nsLoadGroup::Create }
+      nsLoadGroup::Create },
+    { NS_FILEINPUTSTREAM_CLASSNAME, 
+      NS_FILEINPUTSTREAM_CID,
+      NS_FILEINPUTSTREAM_PROGID,
+      nsFileInputStream::Create },
+    { NS_FILEOUTPUTSTREAM_CLASSNAME, 
+      NS_FILEOUTPUTSTREAM_CID,
+      NS_FILEOUTPUTSTREAM_PROGID,
+      nsFileOutputStream::Create }
 };
 
 NS_IMPL_NSGETMODULE("net", gNetModuleInfo)

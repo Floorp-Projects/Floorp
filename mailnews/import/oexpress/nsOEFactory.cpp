@@ -31,7 +31,7 @@
 #include "nsIRegistry.h"
 #include "nsIImportService.h"
 #include "nsOEImport.h"
-
+#include "nsCRT.h"
 #include "OEDebugLog.h"
 
 static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
@@ -69,9 +69,9 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 }
 
 NS_METHOD OERegister(nsIComponentManager *aCompMgr,
-                                            nsIFileSpec *aPath,
-                                            const char *registryLocation,
-                                            const char *componentType)
+                     nsIFile *aPath,
+                     const char *registryLocation,
+                     const char *componentType)
 {
 	nsresult rv;
 
@@ -122,3 +122,8 @@ static nsModuleComponentInfo components[] = {
 };
 
 NS_IMPL_NSGETMODULE("nsOEImport", components)
+
+
+
+
+

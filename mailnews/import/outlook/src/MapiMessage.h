@@ -24,7 +24,7 @@
 
 #include "nsUInt32Array.h"
 #include "nsString.h"
-
+#include "nsIFileSpec.h"
 #include "MapiApi.h"
 
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -74,6 +74,7 @@
 #include "nsAppleSingleDecoder.h"
 #endif 
 
+#include "nsILocalFile.h"
 
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
@@ -2167,8 +2168,13 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 
 PRInt32 
 nsInstall::OpenJARFile(void)
-{    
-    nsresult rv = mJarFileData->Init(mJarFileLocation);
+{
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file;
+    rv = NS_NewLocalFile(mJarFileLocation, getter_AddRefs(file));       // XXX until mJarFileLocation is an nsIFile
+    if (NS_FAILED(rv))
+        return UNEXPECTED_ERROR;
+    rv = mJarFileData->Init(file);
     if (NS_FAILED(rv))
         return UNEXPECTED_ERROR;
 
@@ -2234,7 +2240,11 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
     // We will overwrite what is in the way.  is this something that we want to do?  
     extractHereSpec->Delete(PR_FALSE);
 
-    nsresult rv = mJarFileData->Extract( nsAutoCString(aJarfile), *extractHereSpec );
+    nsresult rv;
+    nsCOMPtr<nsILocalFile> file;
+    rv = NS_NewLocalFile(*extractHereSpec, getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv))
+        rv = mJarFileData->Extract(nsAutoCString(aJarfile), file);
     if (NS_FAILED(rv)) 
     {
         if (extractHereSpec != nsnull)

@@ -22,7 +22,7 @@
 
 #include "nsIModule.h"
 #include "nsIGenericFactory.h"
-
+#include "nsFileChannel.h"
 #include "nsFileProtocolHandler.h"
 
 static nsModuleComponentInfo components[] = 
@@ -32,6 +32,11 @@ static nsModuleComponentInfo components[] =
       NS_NETWORK_PROTOCOL_PROGID_PREFIX "file", 
       nsFileProtocolHandler::Create
     },
+    { NS_FILECHANNEL_CLASSNAME,
+      NS_FILECHANNEL_CID,  
+      NS_FILECHANNEL_PROGID, 
+      nsFileChannel::Create
+    }
 };
 
 NS_IMPL_NSGETMODULE("nsFileProtocolModule", components);

@@ -30,6 +30,8 @@
 #include "nsIServiceManager.h"
 #include "nsII18nCompatibility.h"
 #include "nsI18nCompatibility.h"
+#include "nsIFile.h"
+#include "nsFileSpec.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kI18nCompatibilityCID, NS_I18NCOMPATIBILITY_CID);

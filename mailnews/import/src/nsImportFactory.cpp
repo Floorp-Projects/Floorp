@@ -24,7 +24,7 @@
 #include "nsIGenericFactory.h"
 #include "nsIImportService.h"
 #include "nsImportMimeEncode.h"
-
+#include "nsCRT.h"
 #include "ImportDebug.h"
 
 
@@ -45,7 +45,7 @@ static nsModuleComponentInfo components[] = {
 	}
 };
 
-//----------------------------------------------------------------------
+
 
 NS_IMPL_NSGETMODULE( "nsImportServiceModule", components)
 

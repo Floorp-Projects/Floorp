@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIFactory.idl"
-#include "nsIFileSpec.idl"
+#include "nsIFile.idl"
 #include "nsIComponentManager.idl"
 
 [scriptable, uuid(7392D032-5371-11d3-994E-00805FD26FEE)]
@@ -38,10 +38,10 @@ interface nsIModule : nsISupports
                         [retval, iid_is(aIID)] out nsQIResult result);
 
     // Component registration
-    void registerSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+    void registerSelf(in nsIComponentManager aCompMgr, in nsIFile location,
                       in string registryLocation, in string componentType);
 
-    void unregisterSelf(in nsIComponentManager aCompMgr, in nsIFileSpec location,
+    void unregisterSelf(in nsIComponentManager aCompMgr, in nsIFile location,
                         in string registryLocation);
 
     // Module load management
@@ -60,11 +60,11 @@ interface nsIModule : nsISupports
 #define NS_GET_MODULE_SYMBOL "NSGetModule"
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *aCompMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* location,
                                           nsIModule** return_cobj);
 
 typedef nsresult (*nsGetModuleProc)(nsIComponentManager *aCompMgr,
-                                    nsIFileSpec* location,
+                                    nsIFile* location,
                                     nsIModule** return_cobj);
 %}
 

@@ -23,6 +23,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupports.h"
 #include "nsIModule.h"
+#include "nsILocalFile.h"
 #include "mozJSComponentLoader.h"
 #include "nsIGenericFactory.h"
 #include "nsIJSRuntimeService.h"
@@ -32,7 +33,6 @@
 #include "nsIAllocator.h"
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
-
 const char mozJSComponentLoaderProgID[] = "moz.jsloader.1";
 const char jsComponentTypeName[] = "text/javascript";
 /* XXX export properly from libxpcom, for now this will let Mac build */
@@ -282,13 +282,13 @@ mozJSComponentLoader::ReallyInit()
 
 NS_IMETHODIMP
 mozJSComponentLoader::AutoRegisterComponents(PRInt32 when,
-                                             nsIFileSpec *aDirectory)
+                                             nsIFile *aDirectory)
 {
     return RegisterComponentsInDir(when, aDirectory);
 }
 
 nsresult
-mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir)
+mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFile *dir)
 {
     nsresult rv;
     PRBool isDir;
@@ -299,38 +299,42 @@ mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir)
     if (!isDir)
         return NS_ERROR_INVALID_ARG;
 
-    nsCOMPtr<nsIDirectoryIterator> dirIterator;
-    rv = mCompMgr->CreateInstanceByProgID(NS_DIRECTORYITERATOR_PROGID, NULL,
-                                  NS_GET_IID(nsIDirectoryIterator),
-                                  getter_AddRefs(dirIterator));
-    if (NS_FAILED(rv))
-        return rv;
-    if (NS_FAILED(rv = dirIterator->Init(dir, PR_FALSE)))
-        return rv;
+    // Create a directory iterator
+    nsCOMPtr<nsISimpleEnumerator> dirIterator;
+    rv = dir->GetDirectoryEntries(getter_AddRefs(dirIterator));
     
-    nsCOMPtr<nsIFileSpec> dirEntry;
-    PRBool more;
-    if (NS_FAILED(rv = dirIterator->Exists(&more)))
-        return rv;
-    while(more) {
-        rv = dirIterator->GetCurrentSpec(getter_AddRefs(dirEntry));
-        if (NS_FAILED(rv))
-            return rv;
-        
-        if (NS_FAILED(rv = dirEntry->IsDirectory(&isDir)))
-            return rv;
+    if (NS_FAILED(rv)) return rv;
+    
+   // whip through the directory to register every file
+    nsIFile *dirEntry = NULL;
+    PRBool more = PR_FALSE;
 
-        if (!isDir) {
-            PRBool registered;
-            rv = AutoRegisterComponent(when, dirEntry, &registered);
-        } else {
-            rv = RegisterComponentsInDir(when, dirEntry);
+    rv = dirIterator->HasMoreElements(&more);
+    if (NS_FAILED(rv)) return rv;
+    while (more == PR_TRUE)
+    {
+        rv = dirIterator->GetNext((nsISupports**)&dirEntry);
+        if (NS_SUCCEEDED(rv))
+        {
+            rv = dirEntry->IsDirectory(&isDir);
+            if (NS_SUCCEEDED(rv))
+            {
+                if (isDir == PR_TRUE)
+                {
+                    // This is a directory. Grovel for components into the directory.
+                    rv = RegisterComponentsInDir(when, dirEntry);
+                }
+                else
+                {
+                    PRBool registered;
+                    // This is a file. Try to register it.
+                    rv = AutoRegisterComponent(when, dirEntry, &registered);
+                }
+            }
+            NS_RELEASE(dirEntry);
         }
-
-        if (NS_FAILED(rv = dirIterator->Next()))
-            return rv;
-        if (NS_FAILED(rv = dirIterator->Exists(&more)))
-            return rv;
+        rv = dirIterator->HasMoreElements(&more);
+        if (NS_FAILED(rv)) return rv;
     }
 
     return NS_OK;
@@ -338,7 +342,7 @@ mozJSComponentLoader::RegisterComponentsInDir(PRInt32 when, nsIFileSpec *dir)
 
 nsresult
 mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
-                                      nsIFileSpec *component)
+                                      nsIFile *component)
 {
     if (!mRegistry.get())
         return NS_OK;           // silent failure
@@ -354,14 +358,15 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
     if (NS_FAILED(rv))
         return rv;
 
-    PRUint32 modDate;
-    if (NS_FAILED(rv = component->GetModDate(&modDate)) ||
-        NS_FAILED(rv = mRegistry->SetInt(key, lastModValueName, modDate)))
+    PRInt64 modDate;
+
+    if (NS_FAILED(rv = component->GetLastModificationDate(&modDate)) ||
+        NS_FAILED(rv = mRegistry->SetLongLong(key, lastModValueName, &modDate)))
         return rv;
 
-    PRUint32 fileSize;
+    PRInt64 fileSize;
     if (NS_FAILED(rv = component->GetFileSize(&fileSize)) ||
-        NS_FAILED(rv = mRegistry->SetInt(key, fileSizeValueName, fileSize)))
+        NS_FAILED(rv = mRegistry->SetLongLong(key, fileSizeValueName, &fileSize)))
         return rv;
 
 #ifdef DEBUG_shaver_off
@@ -374,7 +379,7 @@ mozJSComponentLoader::SetRegistryInfo(const char *registryLocation,
 
 PRBool
 mozJSComponentLoader::HasChanged(const char *registryLocation,
-                                 nsIFileSpec *component)
+                                 nsIFile *component)
 {
 
     /* if we don't have a registry handle, force registration of component */
@@ -386,19 +391,19 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
         return PR_TRUE;
 
     /* check modification date */
-    PRInt32 regTime;
-    if (NS_FAILED(mRegistry->GetInt(key, lastModValueName, &regTime)))
+    PRInt64 regTime, lastTime;
+    if (NS_FAILED(mRegistry->GetLongLong(key, lastModValueName, &regTime)))
         return PR_TRUE;
-    PRBool changed;
-    if (NS_FAILED(component->ModDateChanged(regTime, &changed)) || changed)
+    
+    if (NS_FAILED(component->GetLastModificationDate(&lastTime)) || LL_NE(lastTime, regTime))
         return PR_TRUE;
 
     /* check file size */
-    PRInt32 regSize;
-    if (NS_FAILED(mRegistry->GetInt(key, fileSizeValueName, &regSize)))
+    PRInt64 regSize;
+    if (NS_FAILED(mRegistry->GetLongLong(key, fileSizeValueName, &regSize)))
         return PR_TRUE;
-    PRUint32 size = 0;
-    if (NS_FAILED(component->GetFileSize(&size)) || ((int32)size != regSize))
+    PRInt64 size;
+    if (NS_FAILED(component->GetFileSize(&size)) || LL_NE(size,regSize) )
         return PR_TRUE;
 
     return PR_FALSE;
@@ -406,7 +411,7 @@ mozJSComponentLoader::HasChanged(const char *registryLocation,
 
 NS_IMETHODIMP
 mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
-                                            nsIFileSpec *component,
+                                            nsIFile *component,
                                             PRBool *registered)
 {
     nsresult rv;
@@ -451,7 +456,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
 }
 
 nsresult
-mozJSComponentLoader::AttemptRegistration(nsIFileSpec *component,
+mozJSComponentLoader::AttemptRegistration(nsIFile *component,
                                           PRBool deferred)
 {
     nsXPIDLCString registryLocation;
@@ -506,7 +511,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
     
     for (PRUint32 i = 0; i < count; i++) {
         nsCOMPtr<nsISupports> supports;
-        nsCOMPtr<nsIFileSpec> component;
+        nsCOMPtr<nsIFile> component;
 
         rv = mDeferredComponents.GetElementAt(i, getter_AddRefs(supports));
         if (NS_FAILED(rv))
@@ -541,7 +546,7 @@ mozJSComponentLoader::RegisterDeferredComponents(PRInt32 aWhen,
 
 nsIModule *
 mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
-                                        nsIFileSpec *component)
+                                        nsIFile *component)
 {
     nsIModule *module = nsnull;
     if (!mInitialized &&
@@ -616,7 +621,7 @@ mozJSComponentLoader::ModuleForLocation(const char *registryLocation,
 
 JSObject *
 mozJSComponentLoader::GlobalForLocation(const char *aLocation,
-                                        nsIFileSpec *component)
+                                        nsIFile *component)
 {
     JSObject *obj = nsnull;
     PRBool needRelease = PR_FALSE;
@@ -648,12 +653,26 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         NS_FAILED(cxstack->Push(mContext)))
         return nsnull;
 
+    
+    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
+
+    if (!localFile)
+        return nsnull;
+
     char *location;             // declare before first jump to out:
     jsval retval;
-    nsXPIDLCString nativePath;
-    /* XXX MAC: we use strings as file paths, *sigh* */
-    component->GetNativePath(getter_Copies(nativePath));
-    JSScript *script = JS_CompileFile(mContext, obj, (const char *)nativePath);
+    nsXPIDLCString displayPath;
+    FILE* fileHandle;
+    
+    localFile->GetPath(getter_Copies(displayPath));   
+    rv = localFile->OpenANSIFileDesc("r", &fileHandle);
+    if (NS_FAILED(rv))
+        return nsnull;
+
+    JSScript *script = JS_CompileFileHandle(mContext, obj, (const char *)displayPath, fileHandle);
+    
+    /* JS will close the filehandle after compilation is complete. */
+
     if (!script) {
 #ifdef DEBUG_shaver_off
         fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
@@ -856,7 +875,7 @@ mozJSModule::GetClassObject(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 mozJSModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                              nsIFileSpec* aPath,
+                              nsIFile* aPath,
                               const char* registryLocation,
                               const char* componentType)
 {
@@ -888,7 +907,7 @@ mozJSModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 mozJSModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFileSpec* aPath,
+                            nsIFile* aPath,
                             const char* registryLocation)
 {
 #ifdef DEBUG
@@ -945,7 +964,7 @@ NS_NewJSModule(const char* moduleName,
 }
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
-                                          nsIFileSpec *location,
+                                          nsIFile *location,
                                           nsIModule** result)
 {
     return NS_NewJSModule("mozJSComponentLoader",

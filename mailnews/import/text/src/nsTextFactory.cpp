@@ -71,7 +71,7 @@ nsresult GetImportModulesRegKey( nsIRegistry *reg, nsRegistryKey *pKey)
 }
 
 NS_METHOD TextRegister(nsIComponentManager *aCompMgr,
-                                            nsIFileSpec *aPath,
+                                            nsIFile *aPath,
                                             const char *registryLocation,
                                             const char *componentType)
 {	

@@ -173,7 +173,7 @@ static nsViewModule *gModule = NULL;
 // Module entry point
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsViewModule *viewModule;
@@ -256,9 +256,9 @@ nsViewModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass
 
 NS_IMETHODIMP
 nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec *location,
-                          const char *registryLocation,
-                          const char *componentType)
+                           nsIFile* aPath,
+                           const char *registryLocation,
+                           const char *componentType)
 {
     nsresult rv;
   
@@ -268,19 +268,19 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
     rv = aCompMgr->RegisterComponentSpec(kCViewManager, "View Manager",
                                          "component://netscape/view-manager",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCView, "View",
                                          "component://netscape/view",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCScrollingView, "Scrolling View",
                                          "component://netscape/scrolling-view",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     rv = aCompMgr->RegisterComponentSpec(kCScrollPortView, "Scroll Port View",
                                          "component://netscape/scroll-port-view",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
 #ifdef DEBUG_dp
     printf("done.\n");
 #endif
@@ -289,17 +289,17 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsViewModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                            nsIFileSpec *location,
-                            const char *registryLocation)
+                             nsIFile* aPath,
+                             const char *registryLocation)
 {
     nsresult rv;
-    rv = aCompMgr->UnregisterComponentSpec(kCViewManager, location);
+    rv = aCompMgr->UnregisterComponentSpec(kCViewManager, aPath);
     if (NS_FAILED(rv)) return rv;
-    rv = aCompMgr->UnregisterComponentSpec(kCView, location);
+    rv = aCompMgr->UnregisterComponentSpec(kCView, aPath);
     if (NS_FAILED(rv)) return rv;
-    rv = aCompMgr->UnregisterComponentSpec(kCScrollingView, location);
+    rv = aCompMgr->UnregisterComponentSpec(kCScrollingView, aPath);
     if (NS_FAILED(rv)) return rv;
-    rv = aCompMgr->UnregisterComponentSpec(kCScrollPortView, location);
+    rv = aCompMgr->UnregisterComponentSpec(kCScrollPortView, aPath);
     return rv;
 }
 

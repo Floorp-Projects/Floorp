@@ -28,6 +28,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsCRT.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIGenericFactory.h"
 #include "nsIInputStream.h"
@@ -1213,7 +1214,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsRelatedLinksModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -1246,7 +1247,7 @@ nsRelatedLinksModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsRelatedLinksModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG
@@ -1287,7 +1288,7 @@ nsRelatedLinksModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnloa
 static nsRelatedLinksModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

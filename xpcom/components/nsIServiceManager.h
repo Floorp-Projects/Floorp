@@ -32,7 +32,6 @@
 #endif
 
 class nsIShutdownListener;
-class nsFileSpec;
 
 #define NS_ISERVICEMANAGER_IID                       \
 { /* cf0df3b0-3401-11d2-8163-006008119d7a */         \
@@ -337,7 +336,7 @@ NS_NewServiceManager(nsIServiceManager* *result);
 // directory must contain a "components" directory and a component.reg file.
 
 extern NS_COM nsresult
-NS_InitXPCOM(nsIServiceManager* *result, nsFileSpec* binDirectory);
+NS_InitXPCOM(nsIServiceManager* *result, nsIFile* binDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shutdown of XPCOM. XPCOM hosts an observer (NS_XPCOM_SHUTDOWN_OBSERVER_ID)

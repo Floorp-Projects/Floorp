@@ -30,15 +30,16 @@ interface nsIFileSystem;
 interface nsIEventSinkGetter;
 interface nsIInputStream;
 interface nsIRunnable;
-native nsFileSpec(nsFileSpec&);
+interface nsIFile;
 
 [scriptable, uuid(57211a60-8c45-11d3-93ac-00104ba0fd40)]
 interface nsIFileTransportService : nsISupports
 {
-    [noscript] nsIChannel createTransport(in nsFileSpec spec,       // XXX change to nsIFile later
-                                          in string command,
-                                          in unsigned long bufferSegmentSize,
-                                          in unsigned long bufferMaxSize);
+    nsIChannel createTransport(in nsIFile file,
+                               in long mode,
+                               in string command,
+                               in unsigned long bufferSegmentSize,
+                               in unsigned long bufferMaxSize);
 
     // This version can be used with an existing input stream to serve
     // as a data pump:

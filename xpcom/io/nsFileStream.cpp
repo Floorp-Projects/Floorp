@@ -25,7 +25,6 @@
 //  which does not actually depend on the charT, can be placed here.
 
 #include "nsFileStream.h"
-
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIStringStream.h"

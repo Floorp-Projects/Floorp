@@ -31,12 +31,13 @@
 #include "nsCRT.h"
 #include "nsIFile.h"
 #include "nsILocalFile.h"
+#include "nsILocalFileMac.h"
 #include "nsIFactory.h"
 #include "nsLocalFile.h"
 
 #include <Files.h>
 
-class NS_COM nsLocalFile : public nsILocalFile
+class NS_COM nsLocalFile : public nsILocalFile, public nsILocalFileMac
 {
 public:
     NS_DEFINE_STATIC_CID_ACCESSOR(NS_LOCAL_FILE_CID)
@@ -44,7 +45,7 @@ public:
     nsLocalFile();
     virtual ~nsLocalFile();
 
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -55,25 +56,46 @@ public:
     // nsILocalFile interface
     NS_DECL_NSILOCALFILE
 
+	NS_IMETHOD GetInitType(nsLocalFileMacInitType *type);
+
+	NS_IMETHOD InitWithFSSpec(const FSSpec *fileSpec);
+
+	NS_IMETHOD GetFSSpec(FSSpec *fileSpec);
+	NS_IMETHOD GetResolvedFSSpec(FSSpec *fileSpec);
+
+	NS_IMETHOD SetAppendedPath(const char *aPath);
+	NS_IMETHOD GetAppendedPath(char * *aPath);
+
+	NS_IMETHOD GetFileTypeAndCreator(OSType *type, OSType *creator);
+	NS_IMETHOD SetFileTypeAndCreator(OSType type, OSType creator);
+
 private:
 
     // this is the flag which indicates if I can used cached information about the file
-    PRBool mStatDirty;
+    PRBool		mStatDirty;
+    PRBool      mLastResolveFlag;
 
-    // this string will alway be in native format!
-    nsCString mWorkingPath;
+    // If we're inited with a path then we store it here
+    nsCString	mWorkingPath;
     
+    // Any nodes added with AppendPath if we were initialized with an FSSpec are stored here
+    nsCString	mAppendedPath;
+
     // this will be the resolved path which will *NEVER* be returned to the user
-    nsCString mResolvedPath;
+    nsCString	mResolvedPath;
     
     // The Mac data structure for a file system object
-    FSSpec    mSpec;
+    FSSpec		mSpec;			// This is the raw spec from InitWIthPath or InitWithFSSpec
+    FSSpec		mResolvedSpec;	// This is the spec we've called ResolveAlias on
+    
+    // Is the mResolvedSpec member valid?  Only after we resolve the mSpec or mWorkingPath
+    PRBool		mHaveValidSpec;
+    
+    // It's important we keep track of how we were initialized
+    nsLocalFileMacInitType	mInitType;
     
     void MakeDirty();
-
-    nsresult CopyMove(nsIFile *newParentDir, const char *newName, PRBool followSymlinks, PRBool move);
-    nsresult CopySingleFile(nsIFile *source, nsIFile* dest, const char * newName, PRBool followSymlinks, PRBool move);
-
+    nsresult ResolveAndStat(PRBool resolveTerminal);
 };
 
 #endif

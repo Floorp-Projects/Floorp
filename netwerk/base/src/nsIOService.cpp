@@ -32,9 +32,7 @@
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
 #include "prsystem.h"   // for PR_GetSystemInfo
-#include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 #include "nsLoadGroup.h"
-#include "nsIFileChannel.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
 
@@ -364,40 +362,6 @@ nsIOService::GetUserAgent(PRUnichar* *aUserAgent)
     PR_snprintf(buf, 200, "%.100s/%.90s", mAppCodeName->GetBuffer(), mAppVersion->GetBuffer());
     nsAutoString2 aUA(buf);
     *aUserAgent = aUA.ToNewUnicode();
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::NewChannelFromNativePath(const char *nativePath,
-                                      nsILoadGroup* aLoadGroup,
-                                      nsIInterfaceRequestor* notificationCallbacks,
-                                      nsLoadFlags loadAttributes,
-                                      nsIURI* originalURI,
-                                      PRUint32 bufferSegmentSize,
-                                      PRUint32 bufferMaxSize,
-                                      nsIFileChannel **result)
-{
-    nsresult rv;
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = GetProtocolHandler("file", getter_AddRefs(handler));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIFileProtocolHandler> fileHandler = do_QueryInterface(handler, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsCOMPtr<nsIFileChannel> channel;
-    rv = fileHandler->NewChannelFromNativePath(nativePath, 
-                                               aLoadGroup,
-                                               notificationCallbacks,
-                                               loadAttributes,
-                                               originalURI,
-                                               bufferSegmentSize,
-                                               bufferMaxSize,
-                                               getter_AddRefs(channel));
-    if (NS_FAILED(rv)) return rv;
-    
-    *result = channel;
-    NS_ADDREF(*result);
     return NS_OK;
 }
 

@@ -47,4 +47,4 @@ MODULE = xpcom
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+	$(MAKE_INSTALL) $(DLL) $(DIST)\bin\components

@@ -23,9 +23,8 @@
 #ifndef nsError_h
 #define nsError_h
 
-#ifndef prtypes_h___
+#include "nsCom.h"
 #include "prtypes.h"
-#endif
 
 /**
  * Generic result data type
@@ -216,11 +215,58 @@ typedef PRUint32 nsresult;
 /*@}*/
 
 ////////////////////////////////////////////////////////////////////////////////
+// I/O Errors
+
+/// Stream closed
+#define NS_BASE_STREAM_CLOSED         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 2)
+/// Error from the operating system
+#define NS_BASE_STREAM_OSERROR        NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 3)
+/// Illegal arguments
+#define NS_BASE_STREAM_ILLEGAL_ARGS   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 4)
+/// For unichar streams
+#define NS_BASE_STREAM_NO_CONVERTER   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 5)
+/// For unichar streams
+#define NS_BASE_STREAM_BAD_CONVERSION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 6)
+
+#define NS_BASE_STREAM_WOULD_BLOCK    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_BASE, 7)
+
+
+#define NS_ERROR_FILE_UNRECOGNIZED_PATH         NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 1)
+#define NS_ERROR_FILE_UNRESOLVABLE_SYMLINK      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 2)
+#define NS_ERROR_FILE_EXECUTION_FAILED          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 3)
+#define NS_ERROR_FILE_UNKNOWN_TYPE              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 4)
+#define NS_ERROR_FILE_DESTINATION_NOT_DIR       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 5)
+#define NS_ERROR_FILE_TARGET_DOES_NOT_EXIST     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 6)
+#define NS_ERROR_FILE_COPY_OR_MOVE_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 7)
+#define NS_ERROR_FILE_ALREADY_EXISTS            NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 8)
+#define NS_ERROR_FILE_INVALID_PATH              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 9)
+#define NS_ERROR_FILE_DISK_FULL                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 10)
+#define NS_ERROR_FILE_CORRUPTED                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 11)
+#define NS_ERROR_FILE_NOT_DIRECTORY             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 12)
+#define NS_ERROR_FILE_IS_DIRECTORY              NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 13)
+#define NS_ERROR_FILE_IS_LOCKED                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 14)
+#define NS_ERROR_FILE_TOO_BIG                   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 15)
+#define NS_ERROR_FILE_NO_DEVICE_SPACE           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 16)
+#define NS_ERROR_FILE_NAME_TOO_LONG             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 17)
+#define NS_ERROR_FILE_NOT_FOUND                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 18)
+#define NS_ERROR_FILE_READ_ONLY                 NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 19)
+#define NS_ERROR_FILE_DIR_NOT_EMPTY             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 20)
+#define NS_ERROR_FILE_ACCESS_DENIED             NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_FILES, 21)
+
+////////////////////////////////////////////////////////////////////////////////
+// This will return the nsresult corresponding to the most recent NSPR failure
+// returned by PR_GetError.
+
+extern NS_COM nsresult
+NS_ErrorAccordingToNSPR();
+
+////////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_PC
 #pragma warning(disable: 4251) // 'nsCOMPtr<class nsIInputStream>' needs to have dll-interface to be used by clients of class 'nsInputStream'
 #pragma warning(disable: 4275) // non dll-interface class 'nsISupports' used as base for dll-interface class 'nsIRDFNode'
 #endif
 
-#endif
+////////////////////////////////////////////////////////////////////////////////
 
+#endif

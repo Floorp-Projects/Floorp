@@ -28,7 +28,7 @@
 #include "nsIDBAccessor.h"
 #include "prtypes.h"
 #include "nsILoadGroup.h"
-#include "nsIFileChannel.h" 
+#include "nsIChannel.h" 
 #include "nsNetDiskCache.h"
 
 class nsDiskCacheRecord : public nsINetDataCacheRecord

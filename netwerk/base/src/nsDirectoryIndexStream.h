@@ -23,10 +23,10 @@
 #ifndef nsDirectoryIndexStream_h__
 #define nsDirectoryIndexStream_h__
 
-
-#include "nsFileSpec.h"
+#include "nsIFile.h"
 #include "nsString.h"
 #include "nsIInputStream.h"
+#include "nsCOMPtr.h"
 
 class nsDirectoryIndexStream : public nsIInputStream
 {
@@ -34,16 +34,16 @@ protected:
     nsCAutoString mBuf;
     PRInt32 mOffset;
 
-    nsFileSpec mDir;
-    nsDirectoryIterator* mIter;
+    nsCOMPtr<nsIFile> mDir;
+    nsCOMPtr<nsISimpleEnumerator> mIter;
 
     nsDirectoryIndexStream();
-    nsresult Init(const nsFileSpec& aDir);
+    nsresult Init(nsIFile* aDir);
     virtual ~nsDirectoryIndexStream();
 
 public:
     static nsresult
-    Create(const nsFileSpec& aDir, nsIInputStream** aStreamResult);
+    Create(nsIFile* aDir, nsIInputStream** aStreamResult);
 
     // nsISupportsInterface
     NS_DECL_ISUPPORTS

@@ -22,7 +22,7 @@
 
 #include "nsIRegistry.h"
 #include "nsIEnumerator.h"
-#include "nsSpecialSystemDirectory.h"
+#include "nsDirectoryService.h"
 #include "NSReg.h"
 #include "prmem.h"
 #include "prlock.h"
@@ -30,6 +30,9 @@
 #include "nsCRT.h"
 #include "nsAllocator.h"
 
+#include "nsCOMPtr.h"
+#include "nsILocalFile.h"
+#include "nsIServiceManager.h"
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
 #ifndef EXTRA_THREADSAFE
@@ -321,7 +324,7 @@ NS_IMPL_ISUPPORTS1( nsRegistryValue,        nsIRegistryValue )
 | Vanilla nsRegistry constructor.                                              |
 ------------------------------------------------------------------------------*/
 nsRegistry::nsRegistry() 
-    : mReg(0), mCurRegFile(NULL), mCurRegID(0) {
+    : mReg(0), mCurRegFile(nsnull), mCurRegID(0) {
     NS_INIT_REFCNT();
 #ifdef EXTRA_THREADSAFE
     mregLock = PR_NewLock();
@@ -397,16 +400,26 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
 
     // Ensure existing registry is closed.
     Close();
+    
+    nsresult rv;
+    nsCOMPtr<nsIFile> registryLocation;
 
-    nsSpecialSystemDirectory *registryLocation = NULL;
     PRBool foundReg = PR_FALSE;
     
     switch ( (nsWellKnownRegistry) regid ) {
       case ApplicationComponentRegistry:
-        registryLocation =
-          new nsSpecialSystemDirectory(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentRegistry);
-        if (registryLocation != NULL)
-          foundReg = PR_TRUE;
+        {
+            nsCOMPtr<nsIProperties> directoryService;
+            rv = nsDirectoryService::Create(nsnull, 
+                                            NS_GET_IID(nsIProperties), 
+                                            getter_AddRefs(directoryService));
+            if (NS_FAILED(rv)) return rv;
+            directoryService->Get("xpcom.currentProcess.componentRegistry", NS_GET_IID(nsIFile), 
+                                          (void**)&registryLocation);
+
+            if (registryLocation != nsnull)
+                foundReg = PR_TRUE;
+        }
         break;
 
       default:
@@ -417,16 +430,17 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid ) {
         return NS_ERROR_REG_BADTYPE;
     }
 
-    const char *regFile = registryLocation->GetNativePathCString();
+    char *regFile;
+    registryLocation->GetPath(&regFile);  // dougt fix...
+
 
 #ifdef DEBUG_dp
     printf("nsRegistry: Opening std registry %s\n", regFile);
 #endif /* DEBUG_dp */
+
     PR_Lock(mregLock);
     err = NR_RegOpen((char*)regFile, &mReg );
     PR_Unlock(mregLock);
-    // Cleanup
-    delete registryLocation;
 
     // Store the registry that was opened for optimizing future opens.
     mCurRegID = regid;
@@ -463,7 +477,7 @@ NS_IMETHODIMP nsRegistry::Close() {
         mReg = 0;
         if (mCurRegFile)
           nsCRT::free(mCurRegFile);
-        mCurRegFile = NULL;
+        mCurRegFile = nsnull;
         mCurRegID = 0;
     }
     return regerr2nsresult( err );
@@ -607,6 +621,24 @@ NS_IMETHODIMP nsRegistry::GetInt( nsRegistryKey baseKey, const char *path, PRInt
     return rv;
 }
 
+
+/*---------------------------- nsRegistry::GetLongLong--------------------------
+| This function is just shorthand for fetching a 1-element PRInt64 array.  We  |
+| implement it "manually" using NR_RegGetEntry                                 |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::GetLongLong( nsRegistryKey baseKey, const char *path, PRInt64 *result ) {
+    REGERR err = REGERR_OK;
+    
+    PR_Lock(mregLock);
+    
+    uint32 length = sizeof(PRInt64);
+    err = NR_RegGetEntry( mReg,(RKEY)baseKey,(char*)path,(void*)result,&length);
+    
+    PR_Unlock(mregLock);
+    
+    // Convert status.
+    return regerr2nsresult( err );
+}
 /*---------------------------- nsRegistry::SetInt ------------------------------
 | Write out the value as a one-element PRInt32 array, using NR_RegSetEntry.      |
 ------------------------------------------------------------------------------*/
@@ -620,6 +652,28 @@ NS_IMETHODIMP nsRegistry::SetInt( nsRegistryKey baseKey, const char *path, PRInt
                            REGTYPE_ENTRY_INT32_ARRAY,
                            &value,
                            sizeof value );
+    PR_Unlock(mregLock);
+    // Convert result.
+    return regerr2nsresult( err );
+}
+
+
+
+/*---------------------------- nsRegistry::SetLongLong---------------------------
+| Write out the value as a one-element PRInt64 array, using NR_RegSetEntry.      |
+------------------------------------------------------------------------------*/
+NS_IMETHODIMP nsRegistry::SetLongLong( nsRegistryKey baseKey, const char *path, PRInt64* value ) {
+    REGERR err = REGERR_OK;
+    // Set the contents.
+    PR_Lock(mregLock);
+
+    err = NR_RegSetEntry( mReg,
+                        (RKEY)baseKey,
+                        (char*)path,
+                        REGTYPE_ENTRY_BYTES,
+                        (void*)value,
+                        sizeof(PRInt64) );
+
     PR_Unlock(mregLock);
     // Convert result.
     return regerr2nsresult( err );
@@ -1133,7 +1187,7 @@ nsRegistryNode::nsRegistryNode( HREG hReg, char *name, RKEY childKey )
     : mReg( hReg ), mChildKey( childKey ) {
     NS_INIT_REFCNT();
 
-    PR_ASSERT(name != NULL);
+    PR_ASSERT(name != nsnull);
     strcpy(mName, name);
 
 #ifdef EXTRA_THREADSAFE
@@ -1157,7 +1211,7 @@ nsRegistryNode::~nsRegistryNode()
 | using NR_RegEnumSubkeys.                                                     |
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
-    if (result == NULL) return NS_ERROR_NULL_POINTER;
+    if (result == nsnull) return NS_ERROR_NULL_POINTER;
     // Make sure there is a place to put the result.
     *result = nsCRT::strdup( mName );
     if ( !*result ) return NS_ERROR_OUT_OF_MEMORY;
@@ -1170,7 +1224,7 @@ NS_IMETHODIMP nsRegistryNode::GetName( char **result ) {
 ------------------------------------------------------------------------------*/
 NS_IMETHODIMP nsRegistryNode::GetKey( nsRegistryKey *r_key ) {
     nsresult rv = NS_OK;
-    if (r_key == NULL) return NS_ERROR_NULL_POINTER;
+    if (r_key == nsnull) return NS_ERROR_NULL_POINTER;
     *r_key = mChildKey;
     return rv;
 }
@@ -1298,10 +1352,10 @@ nsRegistryFactory::CreateInstance(nsISupports *aOuter,
     nsresult rv = NS_OK;
     nsRegistry* newRegistry;
 
-    if(aResult == NULL) {
+    if(aResult == nsnull) {
         return NS_ERROR_NULL_POINTER;
     } else {
-        *aResult = NULL;
+        *aResult = nsnull;
     }
 
     if(0 != aOuter) {
@@ -1310,7 +1364,7 @@ nsRegistryFactory::CreateInstance(nsISupports *aOuter,
 
     NS_NEWXPCOM(newRegistry, nsRegistry);
 
-    if(newRegistry == NULL) {
+    if(newRegistry == nsnull) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
 

@@ -32,8 +32,7 @@
 #include "nsIBufferOutputStream.h"
 #include "nsAutoLock.h"
 #include "netCore.h"
-#include "nsFileStream.h"
-#include "nsIFileStream.h"
+#include "nsIFileStreams.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIURL.h"
 #include "prio.h"
@@ -43,9 +42,9 @@
 #include "nsDirectoryIndexStream.h"
 #include "nsEscape.h"
 #include "nsIMIMEService.h"
-#include "prlog.h"
 #include "nsProxyObjectManager.h"
 #include "nsNetUtil.h"
+#include "nsInt64.h"
 
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -88,15 +87,23 @@ public:
         // exhausted". (Conveniently, a filespec will return "0" for a
         // directory's length, so our directory HTTP index stream will
         // just do the right thing.)
-        *contentLength = mSpec.GetFileSize();
+        PRInt64 size;
+        rv = mFile->GetFileSize(&size);
+        if (NS_FAILED(rv)) return rv;
+        *contentLength = nsInt64(size);
         if (! *contentLength)
             *contentLength = -1;
 
-        if (mSpec.IsDirectory()) {
+        PRBool isDir;
+        rv = mFile->IsDirectory(&isDir);
+        if (NS_FAILED(rv)) return rv;
+        if (isDir) {
             *contentType = nsCRT::strdup("application/http-index-format");
         }
         else {
-            char* fileName = mSpec.GetLeafName();
+            char* fileName;
+            rv = mFile->GetLeafName(&fileName);
+            if (NS_FAILED(rv)) return rv;
             if (fileName != nsnull) {
 	            PRInt32 len = nsCRT::strlen(fileName);
 	            const char* ext = nsnull;
@@ -145,44 +152,56 @@ public:
 
     NS_IMETHOD GetInputStream(nsIInputStream * *aInputStream) {
         nsresult rv;
-        if (mSpec.IsDirectory()) {
-            rv = nsDirectoryIndexStream::Create(mSpec, aInputStream);
+        PRBool isDir;
+        rv = mFile->IsDirectory(&isDir);
+        if (NS_FAILED(rv)) return rv;
+        if (isDir) {
+            rv = nsDirectoryIndexStream::Create(mFile, aInputStream);
             PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                    ("nsFileTransport: opening local dir %s for input (%x)",
                     (const char*)mSpec, rv));
             return rv;
         }
-        nsCOMPtr<nsISupports> in;
-        rv = NS_NewTypicalInputFileStream(getter_AddRefs(in), mSpec);
+        rv = NS_NewFileInputStream(mFile, aInputStream);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: opening local file %s for input (%x)",
                 (const char*)mSpec, rv));
-        if (NS_FAILED(rv)) return rv;
-        return in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)aInputStream);
+        return rv;
     }
 
     NS_IMETHOD GetOutputStream(nsIOutputStream * *aOutputStream) {
         nsresult rv;
-        nsCOMPtr<nsISupports> out;
-        if (mSpec.IsDirectory()) {
+        PRBool isDir;
+        rv = mFile->IsDirectory(&isDir);
+        if (NS_FAILED(rv)) return rv;
+        if (isDir) {
             return NS_ERROR_FAILURE;
         }
-        rv = NS_NewTypicalOutputFileStream(getter_AddRefs(out), mSpec);
+        rv = NS_NewFileOutputStream(mFile, 
+                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                    0664,
+                                    aOutputStream);
         PR_LOG(gFileTransportLog, PR_LOG_DEBUG,
                ("nsFileTransport: opening local file %s for output (%x)",
                 (const char*)mSpec, rv));
-        if (NS_FAILED(rv)) return rv;
-        return out->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)aOutputStream);
+        return rv;
     }
 
-    nsLocalFileSystem(nsFileSpec& fileSpec) : mSpec(fileSpec) {
+    nsLocalFileSystem(nsIFile* file) : mFile(file) {
         NS_INIT_REFCNT();
+#ifdef PR_LOGGING
+        (void)mFile->GetPath(&mSpec);
+#endif
     }
 
-    virtual ~nsLocalFileSystem() {}
+    virtual ~nsLocalFileSystem() {
+#ifdef PR_LOGGING
+        if (mSpec) nsCRT::free(mSpec);
+#endif
+    }
 
-    static nsresult Create(nsFileSpec& fileSpec, nsIFileSystem* *result) {
-        nsLocalFileSystem* fs = new nsLocalFileSystem(fileSpec);
+    static nsresult Create(nsIFile* file, nsIFileSystem* *result) {
+        nsLocalFileSystem* fs = new nsLocalFileSystem(file);
         if (fs == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
         NS_ADDREF(fs);
@@ -191,7 +210,10 @@ public:
     }
 
 protected:
-    nsFileSpec mSpec;
+    nsCOMPtr<nsIFile>   mFile;
+#ifdef PR_LOGGING
+    char*               mSpec;
+#endif
 };
 
 NS_IMPL_ISUPPORTS1(nsLocalFileSystem, nsIFileSystem);
@@ -279,6 +301,9 @@ nsFileTransport::nsFileTransport()
       mOffset(0),
       mTotalAmount(-1),
       mTransferAmount(0),
+#ifdef PR_LOGGING
+      mSpec(nsnull),
+#endif
       mBuffer(nsnull)
 {
     NS_INIT_REFCNT();
@@ -295,13 +320,30 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsFileSpec& spec, const char* command,
+nsFileTransport::Init(nsIFile* file, PRInt32 mode, const char* command,
                       PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize)
 {
     nsresult rv;
-    mSpec = spec;
+    mFile = file;
+#if 0
+    nsCOMPtr<nsIFileChannel> channel;
+    rv = NS_NewFileChannel(file,
+                           mode, 
+                           nsnull,      // contentType -- infer
+                           0,           // contentLength -- infer
+                           nsnull,      // loadGroup
+                           nsnull,      // notificationCallbacks
+                           nsIChannel::LOAD_NORMAL,
+                           nsnull,      // originalURI
+                           bufferSegmentSize, 
+                           bufferMaxSize,
+                           getter_AddRefs(channel));
+    if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIFileSystem> fsObj = do_QueryInterface(channel, &rv);
+#else
     nsCOMPtr<nsIFileSystem> fsObj;
-    rv = nsLocalFileSystem::Create(spec, getter_AddRefs(fsObj));
+    rv = nsLocalFileSystem::Create(file, getter_AddRefs(fsObj));
+#endif
     if (NS_FAILED(rv)) return rv;
     return Init(fsObj, command, bufferSegmentSize, bufferMaxSize);
 }
@@ -334,6 +376,12 @@ nsFileTransport::Init(nsIFileSystem* fsObj, const char* command,
         ? bufferSegmentSize : NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE;
     mBufferMaxSize = bufferMaxSize != 0
         ? bufferMaxSize : NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE;
+#ifdef PR_LOGGING
+    if (mFile)
+        (void)mFile->GetPath(&mSpec);
+    else
+        mSpec = nsCRT::strdup("<unknown>");
+#endif
     return rv;
 }
 
@@ -351,6 +399,10 @@ nsFileTransport::~nsFileTransport()
         nsAutoMonitor::DestroyMonitor(mMonitor);
     if (mContentType)
         nsCRT::free(mContentType);
+#ifdef PR_LOGGING
+    if (mSpec)
+        nsCRT::free(mSpec);
+#endif
 }
 
 NS_IMETHODIMP
@@ -479,7 +531,11 @@ nsFileTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     if (mState != CLOSED)
         return NS_ERROR_IN_PROGRESS;
 
-    if (!mSpec.Exists())
+    PRBool exists;
+    rv = mFile->Exists(&exists);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!exists)
         return NS_ERROR_FAILURE;        // XXX probably need NS_BASE_STREAM_FILE_NOT_FOUND or something
 
     rv = NS_NewPipe(getter_AddRefs(mBufferInputStream),
@@ -521,10 +577,15 @@ nsFileTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream **resu
     if (mState != CLOSED)
         return NS_ERROR_IN_PROGRESS;
 
-    nsCOMPtr<nsISupports> str;
-    rv = NS_NewTypicalIOFileStream(getter_AddRefs(str), mSpec);
+    nsCOMPtr<nsIOutputStream> str;
+    rv = NS_NewFileOutputStream(mFile, 
+                                PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                0664,
+                                getter_AddRefs(str));
     if (NS_FAILED(rv)) return rv;
-    rv = str->QueryInterface(NS_GET_IID(nsIOutputStream), (void**)result);
+
+    *result = str;
+    NS_ADDREF(*result);
 
     mOffset = startPosition;
     if (mOffset > 0) {

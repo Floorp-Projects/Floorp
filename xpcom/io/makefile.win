@@ -33,12 +33,13 @@ EXPORTS =                          \
         nsFileSpec.h               \
         nsFileSpecStreaming.h      \
         nsFileStream.h             \
+        nsSpecialSystemDirectory.h \
         nsIFileStream.h            \
         nsIStringStream.h          \
         nsIUnicharInputStream.h    \
-        nsSpecialSystemDirectory.h \
         nsStorageStream.h          \
         nsScriptableInputStream.h  \
+        nsDirectoryService.h       \
         $(NULL)                 
 
 NO_XPT_GEN=1
@@ -46,7 +47,6 @@ XPIDL_MODULE = xpcom_io
 
 XPIDLSRCS =                         \
         .\nsIPipe.idl               \
-        .\nsIFileSpec.idl           \
         .\nsIBaseStream.idl         \
         .\nsIBinaryInputStream.idl  \
         .\nsIBinaryOutputStream.idl \
@@ -56,6 +56,9 @@ XPIDLSRCS =                         \
         .\nsIBufferOutputStream.idl \
         .\nsIScriptableInputStream.idl \
         .\nsIStorageStream.idl      \
+        .\nsIFileSpec.idl           \
+        .\nsIFile.idl               \
+        .\nsILocalFile.idl          \
         $(NULL)
 
 ################################################################################
@@ -74,21 +77,23 @@ LINCS = $(LINCS) -I$(PUBLIC)\raptor     # until we sort out the filespec/widgets
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                       \
+        .\$(OBJDIR)\nsDirectoryService.obj       \
+        .\$(OBJDIR)\nsLocalFileWin.obj           \
         .\$(OBJDIR)\nsBinaryStream.obj           \
         .\$(OBJDIR)\nsEscape.obj                 \
         .\$(OBJDIR)\nsLinebreakConverter.obj     \
-        .\$(OBJDIR)\nsFileSpec.obj               \
-        .\$(OBJDIR)\nsFileSpecImpl.obj           \
-        .\$(OBJDIR)\nsFileSpecStreaming.obj      \
         .\$(OBJDIR)\nsFileStream.obj             \
         .\$(OBJDIR)\nsIFileStream.obj            \
         .\$(OBJDIR)\nsIStringStream.obj          \
         .\$(OBJDIR)\nsSegmentedBuffer.obj        \
         .\$(OBJDIR)\nsPipe2.obj                  \
-        .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         .\$(OBJDIR)\nsStorageStream.obj          \
         .\$(OBJDIR)\nsUnicharInputStream.obj     \
         .\$(OBJDIR)\nsScriptableInputStream.obj  \
+        .\$(OBJDIR)\nsFileSpec.obj               \
+        .\$(OBJDIR)\nsFileSpecImpl.obj           \
+        .\$(OBJDIR)\nsFileSpecStreaming.obj      \
+        .\$(OBJDIR)\nsSpecialSystemDirectory.obj \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

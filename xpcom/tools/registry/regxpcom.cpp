@@ -26,6 +26,7 @@
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
+#include "nsILocalFile.h"
 
 static PRBool gUnreg = PR_FALSE;
 
@@ -51,13 +52,22 @@ void print_err(nsresult err)
 
 nsresult Register(const char *path) 
 { 
-  nsCOMPtr<nsIFileSpec> spec;
-  nsresult res = NS_NewFileSpec(getter_AddRefs(spec));
-  if (NS_FAILED(res)) return res;
-  res = spec->SetNativePath((char *)path);
-  if (NS_FAILED(res)) return res;
-  res = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
-  return res;
+  nsCOMPtr<nsILocalFile> spec;
+  nsresult rv = nsComponentManager::CreateInstance(NS_LOCAL_FILE_PROGID, 
+                                                   nsnull, 
+                                                   nsCOMTypeInfo<nsILocalFile>::GetIID(), 
+                                                   getter_AddRefs(spec));
+
+  if (NS_FAILED(rv) || (!spec)) 
+  {
+      printf("create nsILocalFile failed\n");
+      return NS_ERROR_FAILURE;
+  }
+
+  rv = spec->InitWithPath((char *)path);
+  if (NS_FAILED(rv)) return rv;
+  rv = nsComponentManager::AutoRegisterComponent(nsIComponentManager::NS_Startup, spec);
+  return rv;
 }
 
 nsresult Unregister(const char *path) 

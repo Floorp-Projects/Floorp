@@ -35,6 +35,9 @@ interface nsIBufferOutputStream;
 interface nsIFileChannel;
 interface nsILoadGroup;
 interface nsILoadGroupObserver;
+interface nsIFile;
+interface nsIInputStream;
+interface nsIOutputStream;
 
 [scriptable, uuid(1daf19f0-8ea7-11d3-93ad-00104ba0fd40)]
 interface nsIIOService : nsISupports
@@ -122,18 +125,6 @@ interface nsIIOService : nsISupports
     readonly attribute wstring userAgent;
 
     /**
-     * This convenience routine first looks up the file protocol handler, and
-     * then uses it to construct a file channel from a native path string.
-     */
-    nsIFileChannel newChannelFromNativePath(in string nativePath,
-                                            in nsILoadGroup aLoadGroup,
-                                            in nsIInterfaceRequestor notificationCallbacks,
-                                            in nsLoadFlags loadAttributes,
-                                            in nsIURI originalURI,
-                                            in unsigned long bufferSegmentSize,
-                                            in unsigned long bufferMaxSize);
-
-    /**
      * Utility for protocol implementors -- extracts the scheme from a URL 
      * string, consistently and according to spec.
      * @param urlString - the URL string to parse
@@ -160,6 +151,7 @@ interface nsIIOService : nsISupports
      * causing the dialer to come up).
      */
     attribute boolean offline;
+
 };
 
 %{C++

@@ -1005,3 +1005,5 @@ GC_stdout
 GC_stderr
 GC_address_to_source
 MWUnmangle
+
+FSp_fopen

@@ -504,7 +504,7 @@ static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_LAYOUT_DOCUMENT_LOADER_FACTORY_
 static nsresult
 RegisterTypes(nsIComponentManager* aCompMgr,
               const char* aCommand,
-              nsIFileSpec* aPath,
+              nsIFile* aPath,
               char** aTypes)
 {
   nsresult rv = NS_OK;
@@ -528,7 +528,7 @@ RegisterTypes(nsIComponentManager* aCompMgr,
 
 nsresult
 nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                          nsIFileSpec* aPath)
+                                          nsIFile* aPath)
 {
   nsresult rv;
 
@@ -563,7 +563,7 @@ nsLayoutModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
 
 void
 nsLayoutModule::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                            nsIFileSpec* aPath)
+                                            nsIFile* aPath)
 {
   aCompMgr->UnregisterComponentSpec(kDocumentFactoryImplCID, aPath);
 }

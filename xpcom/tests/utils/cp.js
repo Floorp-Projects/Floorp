@@ -4,11 +4,11 @@ var prefix = "";
 function cp(source, dest, followLinks, newName)
 {
     try {
-    var sourceFile = Components.classes["component://netscape/file/local"].
+    var sourceFile = Components.classes["component://mozilla/file/local"].
 	createInstance(nsILocalFile);
     sourceFile.initWithPath(source);
     
-    var destFile = Components.classes["component://netscape/file/local"].
+    var destFile = Components.classes["component://mozilla/file/local"].
 	createInstance(nsILocalFile);
     destFile.initWithPath(dest);
     
@@ -48,11 +48,11 @@ function cp(source, dest, followLinks, newName)
 function mv(source, dest, followLinks, newName)
 {
     try {
-    var sourceFile = Components.classes["component://netscape/file/local"].
+    var sourceFile = Components.classes["component://mozilla/file/local"].
 	createInstance(nsILocalFile);
     sourceFile.initWithPath(source);
     
-    var destFile = Components.classes["component://netscape/file/local"].
+    var destFile = Components.classes["component://mozilla/file/local"].
 	createInstance(nsILocalFile);
     destFile.initWithPath(dest);
     

@@ -64,7 +64,7 @@
 static _class *g##_class;                                                     \
 extern "C" NS_EXPORT nsresult                                                 \
 NSGetModule(nsIComponentManager *servMgr,                                     \
-            nsIFileSpec* location,                                            \
+            nsIFile* aPath,                                                   \
             nsIModule** aResult)                                              \
 {                                                                             \
     nsresult rv = NS_OK;                                                      \
@@ -303,7 +303,7 @@ NS_IMPL_ISUPPORTS1(className##Module, nsIModule) \
 /* NSRegisterSelf implementation */\
 NS_IMETHODIMP \
 className##Module::RegisterSelf(nsIComponentManager *compMgr, \
-                                nsIFileSpec *path, \
+                                nsIFile* aPath,               \
                                 const char *registryLocation, \
                                 const char *componentType) \
 { \
@@ -314,7 +314,7 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
     if (NS_FAILED(rv)) return rv; \
     /* Register our component. */ \
     rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, \
-                                          progId, path, PR_TRUE, PR_TRUE ); \
+                                          progId, aPath, PR_TRUE, PR_TRUE ); \
     if ( NS_SUCCEEDED( rv ) ) { \
         DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
         if ( autoInit ) { \
@@ -351,7 +351,7 @@ className##Module::RegisterSelf(nsIComponentManager *compMgr, \
 /* UnregisterSelf implementation */ \
 NS_IMETHODIMP \
 className##Module::UnregisterSelf( nsIComponentManager *compMgr, \
-                                   nsIFileSpec* path, \
+                                   nsIFile* aPath,               \
                                    const char *registryLocation) { \
     nsresult rv = NS_OK; \
     if (NS_FAILED(rv)) \
@@ -361,7 +361,7 @@ className##Module::UnregisterSelf( nsIComponentManager *compMgr, \
     } \
  \
     /* Unregister our component. */ \
-    rv = compMgr->UnregisterComponentSpec( className::GetCID(), path ); \
+    rv = compMgr->UnregisterComponentSpec( className::GetCID(), aPath); \
     if ( NS_SUCCEEDED( rv ) ) { \
         DEBUG_PRINTF( PR_STDOUT, #className " unregistration successful\n" ); \
     } else { \

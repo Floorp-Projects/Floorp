@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsIAllocator.h"
 #include "nsString.h"
-#include "nsIFileStream.h"
+#include "nsIFileStreams.h"
 #include "nsIStreamListener.h"
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
@@ -94,11 +94,13 @@ public:
         str += ".bak";
         nsFileSpec spec(origFile);
         spec.SetLeafName(str);
-        nsISupports* out;
-        rv = NS_NewTypicalOutputFileStream(&out, spec);
-        if (NS_FAILED(rv)) return rv;
-        mOut = do_QueryInterface(out);
-        return NS_OK;
+        nsCOMPtr<nsILocalFile> file;
+        rv = NS_NewLocalFile(spec, getter_AddRefs(file));
+        rv = NS_NewFileOutputStream(file, 
+                                    PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                    0664,
+                                    getter_AddRefs(mOut));
+        return rv;
     }
 
     virtual ~MyListener() {
@@ -126,7 +128,10 @@ TestAsyncRead(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsFileSpec fs(fileName);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
+    nsCOMPtr<nsILocalFile> file;
+    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -167,7 +172,12 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     outFile += ".out";
     nsFileSpec fs(outFile);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
+    nsCOMPtr<nsILocalFile> file;
+    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+    rv = fts->CreateTransport(file,
+                              PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                              "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener();
@@ -178,10 +188,12 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     if (NS_FAILED(rv)) return rv;
 
     nsFileSpec spec(fileName);
-    nsCOMPtr<nsISupports> in;
-    rv = NS_NewTypicalInputFileStream(getter_AddRefs(in), spec);
+    nsCOMPtr<nsILocalFile> f;
+    rv = NS_NewLocalFile(spec, getter_AddRefs(f));
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIInputStream> inStr = do_QueryInterface(in);
+    nsCOMPtr<nsIInputStream> inStr;
+    rv = NS_NewFileInputStream(f, getter_AddRefs(inStr));
+    if (NS_FAILED(rv)) return rv;
 
     gDone = PR_FALSE;
     rv = fileTrans->AsyncWrite(inStr, offset, length, nsnull, listener);
@@ -243,7 +255,10 @@ TestAsyncOpen(const char* fileName, PRUint32 offset, PRInt32 length)
 
     nsFileSpec fs(fileName);
     nsIChannel* fileTrans;
-    rv = fts->CreateTransport(fs, "load", 0, 0, &fileTrans);
+    nsCOMPtr<nsILocalFile> file;
+    rv = NS_NewLocalFile(fs, getter_AddRefs(file));
+    if (NS_FAILED(rv)) return rv;
+    rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &fileTrans);
     if (NS_FAILED(rv)) return rv;
 
     MyListener* listener = new MyListener(1);

@@ -79,7 +79,7 @@
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
 #include "nsIHTTPChannel.h"
-#include "nsIFileChannel.h"
+#include "nsIFile.h"
 #include "nsIEventListenerManager.h"
 #include "nsISelectElement.h"
 
@@ -497,8 +497,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(aChannel);
   if (fileChannel) {
     PRTime modDate;
-    
-    rv = fileChannel->GetModDate(&modDate);
+
+    nsCOMPtr<nsIFile> file;
+    rv = fileChannel->GetFile(getter_AddRefs(file));
+    if (NS_FAILED(rv)) { return rv; }
+    rv = file->GetLastModificationDate(&modDate);
     if (NS_FAILED(rv)) { return rv; }
     PRExplodedTime prtime;
     char buf[100];

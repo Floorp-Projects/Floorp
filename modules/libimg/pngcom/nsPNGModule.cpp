@@ -55,8 +55,8 @@ static nsPNGModule *gModule = NULL;
 //////////////////////////////////////////////////////////////////////
 // Module entry point
 
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr, 
+                                          nsIFile* aPath, 
                                           nsIModule** return_cobj)
 {
     nsPNGModule *module;
@@ -169,7 +169,7 @@ nsPNGModule::GetClassObject(nsIComponentManager *aCompMgr, const nsCID & aClass,
 
 NS_IMETHODIMP
 nsPNGModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec *location,
+                          nsIFile* aPath,
                           const char *registryLocation,
                           const char *componentType)
 {
@@ -177,17 +177,17 @@ nsPNGModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(kPNGDecoderCID, 
                                          "Netscape PNGDec", 
                                          "component://netscape/image/decoder&type=image/png",
-                                         location, PR_TRUE, PR_TRUE);
+                                         aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
 NS_IMETHODIMP
 nsPNGModule::UnregisterSelf(nsIComponentManager *aCompMgr,
-                            nsIFileSpec *location,
+                            nsIFile* aPath,
                             const char *registryLocation)
 {
     nsresult rv;
-    rv = aCompMgr->UnregisterComponentSpec(kPNGDecoderCID, location);
+    rv = aCompMgr->UnregisterComponentSpec(kPNGDecoderCID, aPath);
     return rv;
 }
 

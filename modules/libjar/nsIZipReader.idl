@@ -29,7 +29,7 @@
 
 interface nsISimpleEnumerator;
 interface nsIInputStream;
-native nsFileSpec(nsFileSpec&);
+interface nsIFile;
 
 [scriptable, uuid(6ca5e43e-9632-11d3-8cd9-0060b0fc14a3)]
 interface nsIZipEntry : nsISupports
@@ -47,7 +47,7 @@ interface nsIZipReader : nsISupports
     /**
      * Initializes a zip reader after construction.
      */
-    [noscript] void init(in nsFileSpec zipFile);
+    void init(in nsIFile zipFile);
 
     /**
      * Opens a zip reader.
@@ -63,7 +63,7 @@ interface nsIZipReader : nsISupports
     /**
      * Extracts a zip entry into a local file specified by outFile.
      */
-    [noscript] void extract(in string zipEntry, in nsFileSpec outFile);
+    void extract(in string zipEntry, in nsIFile outFile);
 
     /**
      * Returns a nsIZipEntry describing a specified zip entry.

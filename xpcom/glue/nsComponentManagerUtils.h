@@ -109,7 +109,7 @@ public:
   // Manually register a dynamically loaded component.
   // The libraryPersistentDescriptor is what gets passed to the library
   // self register function from ComponentManager. The format of this string
-  // is the same as nsIFileSpec::GetPersistentDescriptorString()
+  // is the same as nsIFile::GetPath()
   //
   // This function will go away in favour of RegisterComponentSpec. In fact,
   // it internally turns around and calls RegisterComponentSpec.
@@ -125,7 +125,7 @@ public:
   static nsresult RegisterComponentSpec(const nsCID &aClass,
                                    const char *aClassName,
                                    const char *aProgID,
-                                   nsIFileSpec *aLibrary,
+                                   nsIFile *aLibrary,
                                    PRBool aReplace,
                                    PRBool aPersist);
 
@@ -150,7 +150,7 @@ public:
 
   // Manually unregister a dynamically loaded component
   static nsresult UnregisterComponentSpec(const nsCID &aClass,
-                                          nsIFileSpec *aLibrarySpec);
+                                          nsIFile *aLibrarySpec);
 
   // Unload dynamically loaded factories that are not in use
   static nsresult FreeLibraries(void);
@@ -158,10 +158,9 @@ public:
   // DLL registration support
 
   // If directory is NULL, then AutoRegister will try registering components
-  // in the default components directory which is got by
-  // nsSpecialSystemDirectory(XPCOM_CurrentProcessComponentDirectory)
-  static nsresult AutoRegister(PRInt32 when, nsIFileSpec* directory);
-  static nsresult AutoRegisterComponent(PRInt32 when, nsIFileSpec *component);
+  // in the default components directory.
+  static nsresult AutoRegister(PRInt32 when, nsIFile* directory);
+  static nsresult AutoRegisterComponent(PRInt32 when, nsIFile *component);
 
   // Is the given CID currently registered?
   static nsresult IsRegistered(const nsCID &aClass,

@@ -29,6 +29,7 @@ interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsILoadGroup;
 interface nsIInterfaceRequestor;
+interface nsIFile;
 
 typedef unsigned long nsLoadFlags;
 
@@ -208,6 +209,7 @@ interface nsIChannel : nsIRequest
 
 };
 
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * nsIInputStreamChannel is an interface that allows for the initialization
@@ -241,3 +243,44 @@ interface nsIInputStreamChannel : nsIChannel
 }
 
 %}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * nsIFileChannel is an interface that allows for the initialization
+ * of a simple nsIChannel that is constructed from a single nsIFile and
+ * associated content type. 
+ */
+[scriptable, uuid(6eef6444-c7e3-11d3-8cda-0060b0fc14a3)]
+interface nsIFileChannel : nsIChannel
+{
+    void init(in nsIFile file,
+              in long mode,
+              in string contentType, 
+              in long contentLength,
+              in nsILoadGroup aLoadGroup,
+              in nsIInterfaceRequestor notificationCallbacks,
+              in nsLoadFlags loadAttributes,
+              in nsIURI originalURI,
+              in unsigned long bufferSegmentSize,
+              in unsigned long bufferMaxSize);
+    
+    readonly attribute nsIFile file;
+};
+
+%{C++
+
+#define NS_FILECHANNEL_CLASSNAME "File Channel"
+#define NS_FILECHANNEL_PROGID "component://netscape/network/file-channel"
+
+#define NS_FILECHANNEL_CID                           \
+{ /* 7036066e-c7e3-11d3-8cda-0060b0fc14a3 */         \
+    0x7036066e,                                      \
+    0xc7e3,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+%}
+
+////////////////////////////////////////////////////////////////////////////////

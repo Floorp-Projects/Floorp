@@ -193,9 +193,9 @@ static Components gComponents[] = {
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 
 NS_IMETHODIMP nsMimeModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                          nsIFileSpec* aPath,
-                          const char* registryLocation,
-                          const char* componentType)
+                                         nsIFile* aPath,
+                                         const char* registryLocation,
+                                         const char* componentType)
 {
     nsresult rv = NS_OK;
 
@@ -215,15 +215,15 @@ NS_IMETHODIMP nsMimeModule::RegisterSelf(nsIComponentManager *aCompMgr,
 }
 
 NS_IMETHODIMP nsMimeModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFileSpec* aPath,
-                            const char* registryLocation)
+                                           nsIFile* aPath,
+                                           const char* registryLocation)
 {
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
     while (cp < end) 
     {
        aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
-        cp++;
+       cp++;
     }
 
     return NS_OK;
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsMimeModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okT
 static nsMimeModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* aPath,
                                           nsIModule** return_cobj)
 {
     nsresult rv = NS_OK;

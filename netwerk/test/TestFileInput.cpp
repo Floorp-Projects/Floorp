@@ -20,8 +20,6 @@
  * Contributor(s): 
  */
 
-#define NSPIPE2
-
 #include "nsIFileTransportService.h"
 #include "nsIStreamListener.h"
 #include "nsIServiceManager.h"
@@ -32,14 +30,11 @@
 #include "prmon.h"
 #include "prcmon.h"
 #include "prio.h"
-#include "nsIFileStream.h"
-#include "nsFileSpec.h"
-#ifndef NSPIPE2
-#include "nsIBuffer.h"
-#else
+#include "nsIFileStreams.h"
+#include "nsILocalFile.h"
+#include "nsNetUtil.h"
 #include "nsIPipe.h"
 #include "nsIBufferOutputStream.h"
-#endif
 #include "nsIBufferInputStream.h"
 #include "nsIRunnable.h"
 #include "nsIThread.h"
@@ -47,6 +42,7 @@
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include <stdio.h>
+#include "nsInt64.h"
 
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -206,38 +202,25 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
 #define NS_FILE_TRANSPORT_BUFFER_SIZE (4*1024)
 
     nsresult rv;
-    nsISupports* fs;
-    nsIInputStream* fileStr = nsnull;
+    nsCOMPtr<nsIInputStream> fileStr;
     nsIBufferInputStream* bufStr = nsnull;
-    nsFileSpec spec(path);
     PRUint32 sourceOffset = 0;
-#ifndef NSPIPE2
-    nsCOMPtr<nsIBuffer> buf;
-#else
     nsCOMPtr<nsIBufferOutputStream> out;
-#endif
+    nsCOMPtr<nsILocalFile> file;
 
     rv = reader->OnStartRequest(nsnull, nsnull);
     if (NS_FAILED(rv)) goto done;       // XXX should this abort the transfer?
 
-    rv = NS_NewTypicalInputFileStream(&fs, spec);
+    rv = NS_NewLocalFile(path, getter_AddRefs(file));
     if (NS_FAILED(rv)) goto done;
 
-    rv = fs->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&fileStr);
-    NS_RELEASE(fs);
+    rv = NS_NewFileInputStream(file, getter_AddRefs(fileStr));
     if (NS_FAILED(rv)) goto done;
 
-#ifndef NSPIPE2
-    rv = NS_NewBuffer(getter_AddRefs(buf), NS_FILE_TRANSPORT_BUFFER_SIZE,
-                      NS_FILE_TRANSPORT_BUFFER_SIZE, nsnull);
-    rv = NS_NewBufferInputStream(&bufStr, buf, PR_TRUE);
-    if (NS_FAILED(rv)) goto done;
-#else
     rv = NS_NewPipe(&bufStr, getter_AddRefs(out), nsnull,
                     NS_FILE_TRANSPORT_BUFFER_SIZE,
                     NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) goto done;
-#endif
 
     /*
     if ( spec.GetFileSize() == 0) goto done;
@@ -246,15 +229,10 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     while (PR_TRUE) {
         PRUint32 amt;
 		    /* id'l change to FillFrom... */
-#if 0
-        rv = bufStr->FillFrom(fileStr, spec.GetFileSize(), &amt);
-#else
-#ifndef NSPIPE2
-        rv = buf->WriteFrom(fileStr, spec.GetFileSize(), &amt);
-#else
-        rv = out->WriteFrom(fileStr, spec.GetFileSize(), &amt);
-#endif
-#endif
+        PRInt64 size;
+        rv = file->GetFileSize(&size);
+        if (NS_FAILED(rv)) break;
+        rv = out->WriteFrom(fileStr, nsInt64(size), &amt);
         if (NS_FAILED(rv) || amt == 0) break;
 
         rv = reader->OnDataAvailable(nsnull, nsnull, bufStr, sourceOffset, amt);
@@ -265,7 +243,6 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
 
   done:
     NS_IF_RELEASE(bufStr);
-    NS_IF_RELEASE(fileStr);
 
     rv = reader->OnStopRequest(nsnull, nsnull, rv, nsnull);
     return rv;
@@ -348,8 +325,12 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
 
     PRDirEntry* entry;
     while ((entry = PR_ReadDir(dir, PR_SKIP_BOTH)) != nsnull) {
-        nsFileSpec spec(dirName);
-        spec += entry->name;
+        nsCOMPtr<nsILocalFile> file;
+        rv = NS_NewLocalFile(dirName, getter_AddRefs(file));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "NS_NewLocalFile failed");
+
+        rv = file->Append(entry->name);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "AppendPath failed");
 
         nsReader* reader = new nsReader();
         NS_ASSERTION(reader, "out of memory");
@@ -369,7 +350,7 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsIChannel* trans;
-        rv = fts->CreateTransport(spec, "load", 0, 0, &trans);
+        rv = fts->CreateTransport(file, PR_RDONLY, "load", 0, 0, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "create failed");
 
         rv = trans->AsyncRead(0, -1, nsnull, listener);

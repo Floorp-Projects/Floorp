@@ -49,10 +49,10 @@ protected:
   void Shutdown();
 
   nsresult RegisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                     nsIFileSpec* aPath);
+                                     nsIFile* aPath);
 
   void UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
-                                   nsIFileSpec* aPath);
+                                   nsIFile* aPath);
 
   PRBool mInitialized;
 //  static nsIFactory* gFactory;

@@ -55,7 +55,7 @@ public:
     nsLocalFile();
     virtual ~nsLocalFile();
 
-    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD nsLocalFileConstructor(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -69,7 +69,7 @@ public:
 private:
 
     // this is the flag which indicates if I can used cached information about the file
-    PRBool mStatDirty;
+    PRBool mDirty;
 
     // this string will alway be in native format!
     nsCString mWorkingPath;

@@ -27,6 +27,8 @@
 #include "nsAgg.h"
 #include "nsCRT.h"
 #include "nsString.h" // REMOVE Later!!
+#include "nsCOMPtr.h"
+#include "nsIFile.h"
 
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
 { /* e3939dc8-29ab-11d3-8cce-0060b0fc14a3 */         \
@@ -36,9 +38,14 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsStdURL : public nsIURL
+class nsStdURL : public nsIFileURL
 {
 public:
+    NS_DECL_AGGREGATED
+    NS_DECL_NSIURI
+    NS_DECL_NSIURL
+    NS_DECL_NSIFILEURL
+
     ////////////////////////////////////////////////////////////////////////////
     // nsStdURL methods:
 
@@ -52,16 +59,6 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-    NS_DECL_AGGREGATED
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIURI methods:
-    NS_DECL_NSIURI
-
-    ////////////////////////////////////////////////////////////////////////////
-    // nsIURL methods:
-    NS_DECL_NSIURL
-
     /* todo move this to protected later */
     nsresult ParsePath(void);
 
@@ -73,8 +70,8 @@ protected:
     // Some handy functions 
     nsresult DupString(char* *o_Dest, const char* i_Src);
     nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
-protected:
 
+protected:
     char*       mScheme;
     char*       mPreHost;
     char*       mHost;
@@ -89,6 +86,9 @@ protected:
 
     char*       mSpec; 
 
+    // If a file was given to SetFile, then this instance variable holds it.
+    // If GetFile is called, we synthesize one and cache it here.
+    nsCOMPtr<nsIFile>   mFile;
 };
 
 inline NS_METHOD

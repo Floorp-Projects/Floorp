@@ -19,6 +19,8 @@
  *
  * Contributor(s): 
  */
+#include "nspr.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsLayoutModule.h"
 #include "nsLayoutCID.h"
@@ -62,7 +64,7 @@
 static nsLayoutModule *gModule = NULL;
 
 extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
-                                          nsIFileSpec* location,
+                                          nsIFile* location,
                                           nsIModule** return_cobj)
 {
   nsresult rv = NS_OK;
@@ -350,7 +352,7 @@ static Components gComponents[] = {
 
 NS_IMETHODIMP
 nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                             nsIFileSpec* aPath,
+                             nsIFile* aPath,
                              const char* registryLocation,
                              const char* componentType)
 {
@@ -382,7 +384,7 @@ nsLayoutModule::RegisterSelf(nsIComponentManager *aCompMgr,
 
 NS_IMETHODIMP
 nsLayoutModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                               nsIFileSpec* aPath,
+                               nsIFile* aPath,
                                const char* registryLocation)
 {
 #ifdef DEBUG

@@ -28,13 +28,13 @@
 #include "nsIJARProtocolHandler.h"
 #include "nsIJARURI.h"
 #include "nsIFileSystem.h"
-#include "nsIFileChannel.h"
+#include "nsIChannel.h"
 #include "nsIZipReader.h"
-#include "nsIFileChannel.h"
+#include "nsIChannel.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
+#include "nsIFile.h"
 
 class nsIFileChannel;
 
@@ -79,7 +79,7 @@ public:
                   PRUint32 bufferMaxSize);
 
     nsresult ExtractJARElement(nsIFileChannel* jarFileChannel);
-    nsresult GetCacheFile(nsFileSpec& cacheFile);
+    nsresult GetCacheFile(nsIFile* *cacheFile);
 
     friend class nsJARDownloadObserver;
 

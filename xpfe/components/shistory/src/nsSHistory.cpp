@@ -25,7 +25,7 @@
 #include "nsSHistory.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
-
+#include "nsString.h"
 
 
 #ifdef XXX_NS_DEBUG       // XXX: we'll need a logging facility for debugging
