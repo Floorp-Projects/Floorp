@@ -916,35 +916,18 @@ GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 NS_IMETHODIMP
 GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 {
-  nsIBrowserWindow *mBrowser;
-  nsIDOMWindow* parent = nsnull;
+  nsIBrowserWindow *mBrowser;  
   
-  GetParent(&parent);
-  if (parent == this) {
-    // We are in a top level window.  Use browser window's bounds.    
-    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-      nsRect r;
-      mBrowser->GetWindowBounds(r);
-      *aOuterWidth = r.width;
-      NS_RELEASE(mBrowser);
-    }
-    else {
-      *aOuterWidth = 0;
-    }
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aOuterWidth = r.width;
+    NS_RELEASE(mBrowser);
   }
   else {
-    // We are in an (i)frame.  Use webshell bounds.    
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      *aOuterWidth = w;
-    }
-    else {
-      *aOuterWidth = 0;
-    }    
+    *aOuterWidth = 0;
   }
-  
-  NS_RELEASE(parent);
+
   return NS_OK;
 }
 
@@ -967,34 +950,16 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 {
   nsIBrowserWindow *mBrowser;
-  nsIDOMWindow* parent = nsnull;
-  
-  GetParent(&parent);
-  if (parent == this) {
-    // We are in a top level window.  Use browser window's bounds.    
-    if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
-      nsRect r;
-      mBrowser->GetWindowBounds(r);
-      *aOuterHeight = r.height;
-      NS_RELEASE(mBrowser);
-    }
-    else {
-      *aOuterHeight = 0;
-    }
+    
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    nsRect r;
+    mBrowser->GetWindowBounds(r);
+    *aOuterHeight = r.height;
+    NS_RELEASE(mBrowser);
   }
   else {
-    // We are in an (i)frame.  Use webshell bounds.    
-    if (mWebShell) {
-      PRInt32 x,y,w,h;
-      mWebShell->GetBounds(x, y, w, h);
-      *aOuterHeight = h;
-    }
-    else {
-      *aOuterHeight = 0;
-    }    
+    *aOuterHeight = 0;
   }
-
-  NS_RELEASE(parent);
   return NS_OK;
 }
 
