@@ -117,6 +117,7 @@ function Startup()
   var shouldSetOKButton = true;
   var dialogElement = document.documentElement;
   if ("arguments" in window) {
+    var ind;
     var folderItem = null;
     var arg;
     if (window.arguments.length < 5)
@@ -135,7 +136,7 @@ function Startup()
       if (window.arguments[2])
         folderItem = bookmarkView.rdf.GetResource(window.arguments[2]);
       if (folderItem) {
-        var ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
+        ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
         bookmarkView.treeBoxObject.selection.select(ind);
       }
       break;
@@ -158,7 +159,7 @@ function Startup()
         gCreateInFolder = window.arguments[2];
         folderItem = bookmarkView.rdf.GetResource(gCreateInFolder);
         if (folderItem) {
-          var ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
+          ind = bookmarkView.treeBuilder.getIndexOfResource(folderItem);
           bookmarkView.treeBoxObject.selection.select(ind);
         }
       }
@@ -216,7 +217,7 @@ function onOK()
   }
   // In Select Folder Mode, do nothing but tell our caller what
   // folder was selected. 
-  if (window.arguments[4] == "selectFolder")
+  if (window.arguments.length > 4 && window.arguments[4] == "selectFolder")
     window.arguments[5].selectedFolder = gCreateInFolder;
   else {
     // Otherwise add a bookmark to the selected folder. 
@@ -254,7 +255,7 @@ function onOK()
     } else {
       url = getNormalizedURL(gFld_URL.value);
       var newBookmark = kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
-      if (window.arguments[4] == "newBookmark") {
+      if (window.arguments.length > 4 && window.arguments[4] == "newBookmark") {
         window.arguments[5].newBookmark = newBookmark;
       }
     }
