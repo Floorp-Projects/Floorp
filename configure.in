@@ -2478,6 +2478,21 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
+dnl = --enable-low-fat
+dnl = 
+dnl = Take out unneeded symbols from the .dynsym of .so files
+dnl = 
+dnl ========================================================
+MOZ_LOW_FAT=
+
+MOZ_ARG_ENABLE_BOOL(low-fat,
+[  --enable-low-fat       Take out unneeded symbols from the .dynsym of .so files ],
+  [MOZ_LOW_FAT=1 ])
+
+dnl ========================================================
+
+dnl ========================================================
+dnl =
 dnl = --with-debug-modules=module1,module1,etc
 dnl = 
 dnl = Enable debug for specific modules only
@@ -2794,7 +2809,6 @@ AC_SUBST(MOZ_EDITOR)
 AC_SUBST(MOZ_BRPROF)
 
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
-AC_SUBST(MOZ_STRIP_NOT_EXPORTED)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
 AC_SUBST(NO_SHARED_LIB)
 AC_SUBST(NO_STATIC_LIB)
@@ -2806,6 +2820,9 @@ AC_SUBST(FULL_STATIC_BUILD)
 AC_SUBST(NO_UNIX_LDAP)
 AC_SUBST(BUILD_IDLC)
 AC_SUBST(MOZ_ENABLE_GTK_MOZILLA)
+
+AC_SUBST(MOZ_LOW_FAT)
+AC_SUBST(MOZ_STRIP_NOT_EXPORTED)
 
 AC_SUBST(MOZ_GLE)
 
