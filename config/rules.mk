@@ -898,13 +898,13 @@ endif # JAVA_OR_NSJVM
 endif
 
 ################################################################################
-# Copy each element of EXPORTS to $(XPDIST)/include
+# Copy each element of EXPORTS to $(PUBLIC)
 
 ifneq ($(EXPORTS),)
-$(XPDIST)/include::
+$(PUBLIC)::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
-export:: $(EXPORTS) $(XPDIST)/include
+export:: $(EXPORTS) $(PUBLIC)
 	$(INSTALL) -m 444 $^
 endif 
 
@@ -945,7 +945,7 @@ $(XPDIST)/idl::
 export:: $(XPIDLSRCS) $(XPDIST)/idl
 	$(INSTALL) -m 444 $^
 
-# generate .h files from into $(XPIDL_GEN_DIR), then export to $(XPDIST)/include;
+# generate .h files from into $(XPIDL_GEN_DIR), then export to $(PUBLIC);
 # warn against overriding existing .h file.  (Added to MAKE_DIRS above.)
 $(XPIDL_GEN_DIR):
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; mkdir $@; else true; fi
@@ -958,7 +958,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(XPIDL_COMPILE)
 	@if test -n "$(findstring $*.h, $(EXPORTS))"; \
 	  then echo "*** WARNING: file $*.h generated from $*.idl overrides $(srcdir)/$*.h"; else true; fi
 
-export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
+export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(PUBLIC)
 	$(INSTALL) -m 444 $^
 
 ifndef NO_GEN_XPT

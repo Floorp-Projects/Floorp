@@ -342,7 +342,7 @@ endif
 # be put in the library directories where it belongs so that it can
 # get exported to dist properly.
 #
-INCLUDES	= $(LOCAL_INCLUDES) -I$(DIST)/include -I$(XPDIST)/include -I$(topsrcdir)/include $(OS_INCLUDES) $(G++INCLUDES)
+INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) -I$(DIST)/include -I$(XPDIST)/include -I$(topsrcdir)/include $(OS_INCLUDES) $(G++INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
@@ -427,7 +427,7 @@ endif
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 
 # all public include files go in subdirectories of PUBLIC:
-PUBLIC		= $(XPDIST)/public
+PUBLIC		= $(XPDIST)/include
 
 ifdef USE_AUTOCONF
 DEPENDENCIES	= .md
