@@ -1441,18 +1441,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
     if (NS_UNCONSTRAINEDSIZE == availableWidth) {
       aContainingBlockWidth = NS_UNCONSTRAINEDSIZE;
     }
-    // a table in quirks mode gets a containing block based on the viewport (less  
-    // body margins, border, padding) if the table is a child of the body.
+    // an element in quirks mode gets a containing block based on the viewport (less  
+    // body margins, border, padding) if the element is a child of the body.
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-      nsCOMPtr<nsIAtom> fType;
-      frame->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::tableFrame == fType.get() ||
-          nsLayoutAtoms::htmlFrameOuterFrame == fType.get()) {
-        nsCompatibility mode;
-        aPresContext->GetCompatibilityMode(&mode);
-        if (eCompatibility_NavQuirks == mode) {
-          aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
-        }
+      nsCompatibility mode;
+      aPresContext->GetCompatibilityMode(&mode);
+      if (eCompatibility_NavQuirks == mode) {
+        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
       }
     }
   }
@@ -1551,8 +1546,34 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // that depends on the content height
     if (eStyleUnit_Percent == heightUnit) {
       if (NS_AUTOHEIGHT == aContainingBlockHeight) {
-        // Interpret the height like 'auto'
-        heightUnit = eStyleUnit_Auto;
+        // this if clause enables %-height on replaced inline frames,
+        // such as images.  See bug 54119.  The else clause "heightUnit = eStyleUnit_Auto;"
+        // used to be called exclusively.
+        if (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == mFrameType) {
+          // Get the containing block reflow state
+          const nsHTMLReflowState* cbrs =
+            GetContainingBlockReflowState(parentReflowState);
+          NS_ASSERTION(nsnull != cbrs, "no containing block");
+          nsCompatibility mode;
+          aPresContext->GetCompatibilityMode(&mode);
+          // in quirks mode, get the cb height using the special quirk method
+          if (eCompatibility_NavQuirks == mode) {
+            aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs);
+          }
+          // in standard mode, use the cb height.  if it's "auto", as will be the case
+          // by default in BODY, use auto height as per CSS2 spec.
+          else 
+          {
+            if (NS_AUTOHEIGHT != cbrs->mComputedHeight)
+              aContainingBlockHeight = cbrs->mComputedHeight;
+            else
+              heightUnit = eStyleUnit_Auto;
+          }
+        }
+        else {
+          // default to interpreting the height like 'auto'
+          heightUnit = eStyleUnit_Auto;
+        }
       }
     }
 
@@ -1849,6 +1870,7 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
           // Use 'min-width' as the value for 'width'
           mComputedWidth = mComputedMinWidth;
         }
+
       }
     }
   } else {
