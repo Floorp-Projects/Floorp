@@ -395,6 +395,9 @@ if (($::FORM{'query_format'} || $::FORM{'format'} || "") eq "create-series") {
     $vars->{'category'} = Bugzilla::Chart::getVisibleSeries();
 }
 
+$vars->{'known_name'} = $cgi->param('known_name');
+
+
 # Add in the defaults.
 $vars->{'default'} = \%default;
 

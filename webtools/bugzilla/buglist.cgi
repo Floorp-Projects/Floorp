@@ -902,6 +902,10 @@ if ($dotweak) {
     }
 }
 
+# If we're editing a stored query, use the existing query name as default for
+# the "Remember search as" field.
+$vars->{'defaultsavename'} = $cgi->param('query_based_on');
+
 
 ################################################################################
 # HTTP Header Generation

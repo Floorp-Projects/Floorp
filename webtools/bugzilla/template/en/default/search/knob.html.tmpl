@@ -21,6 +21,15 @@
   #                 Jouni Heikniemi <jouni@heikniemi.net>
   #%]
 
+[%# INTERFACE:
+  # (incomplete!)
+  # ...
+  # known_name: string. Possibly known stored name for the query being 
+  #                     edited. This value is just passed through in a
+  #                     hidden field.
+  #%]
+        
+        
 [% PROCESS global/variables.none.tmpl %]
 
 [%# This is not necessary for English templates, but useful for localisers. %]
@@ -46,6 +55,10 @@
 
 <p>  
   <input type="submit" value="[% button_name FILTER html %]">
+  [% IF known_name %]
+    <input type="hidden" name="query_based_on" 
+           value="[% known_name FILTER html %]">
+  [% END %]
 </p>
 
 <p>

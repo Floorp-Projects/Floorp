@@ -22,6 +22,7 @@
 [%# INTERFACE:
   # searchtype: string. Type of search - either "series", "saved" or undef.
   # ...
+  # defaultsavename: string. The default name for saving the query.
   #%]
 
 [%############################################################################%]
@@ -159,7 +160,11 @@
     [% END %]
     
     <td valign="middle">
-      <a href="query.cgi?[% urlquerypart FILTER html %]">Edit&nbsp;Search</a>
+      [% editqueryname = searchname OR defaultsavename OR '' %]
+      <a href="query.cgi?[% urlquerypart FILTER html %]
+      [% IF editqueryname != '' %]&amp;known_name=
+        [% editqueryname FILTER url_quote %]
+      [% END %]">Edit&nbsp;Search</a>
     </td>
       
     [% IF searchtype == "saved" %]
@@ -179,7 +184,8 @@
                  value="[% urlquerypart FILTER html %]">
           <input type="hidden" name="cmdtype" value="doit">
           <input type="hidden" name="remtype" value="asnamed">
-          <input type="text" name="newqueryname" size="20"> 
+          <input type="text" name="newqueryname" size="20"
+                 value="[% defaultsavename FILTER html %]"> 
         </form> 
       </td>
     [% END %]  
