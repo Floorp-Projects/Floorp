@@ -40,18 +40,19 @@
 
 [scriptable, uuid(933355f6-1dd2-11b2-a9b0-d335b9e35983)]
 interface nsITXTToHTMLConv : nsIStreamConverter {
+  /**
+   * @param text: Title to set for the HTML document.  Only applicable if
+   *              preFormatHTML(true) is called.
+   * @result      The given title will be used to form an HTML document
+   *              from the plain text document.
+   */
+  void      setTitle(in wstring text);
 
-/**
-  @param text: Title to set for the HTML document.  Only applicable if PreFormatHTML(true)
-               is called.
-  @result      The given title will be used to form an HTML document from the plain text document.
- */
-  void      SetTitle([const] in wstring text);
-
-/**
-  @param value: true to use an HTML header and footer on the document, false to omit it.
-  @result       The document will use a header and footer if vale = true.
- */
-  void      PreFormatHTML(in boolean value);
-
+  /**
+   * @param value: true to use an HTML header and footer on the document,
+   *               false to omit it.
+   * @result       The document will use a header and footer if value is
+   *               true.
+   */
+  void      preFormatHTML(in boolean value);
 };
