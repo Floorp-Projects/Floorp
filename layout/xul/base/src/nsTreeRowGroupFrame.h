@@ -111,7 +111,7 @@ protected:
 
   void GetVisibleRowCount(PRInt32& rowCount, nsIContent* aParent);
 
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
 protected: // Data Members
   nsIFrame* mTopFrame; // The current topmost frame in the view.

@@ -808,12 +808,12 @@ nsBlockFrame::~nsBlockFrame()
 }
 
 NS_IMETHODIMP
-nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsBlockFrame::Destroy(nsIPresContext& aPresContext)
 {
   // Outside bullets are not in our child-list so check for them here
   // and delete them when present.
   if (HaveOutsideBullet()) {
-    mBullet->DeleteFrame(aPresContext);
+    mBullet->Destroy(aPresContext);
     mBullet = nsnull;
   }
 
@@ -822,7 +822,7 @@ nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
   nsLineBox::DeleteLineList(aPresContext, mLines);
   nsLineBox::DeleteLineList(aPresContext, mOverflowLines);
 
-  return nsBlockFrameSuper::DeleteFrame(aPresContext);
+  return nsBlockFrameSuper::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -4252,7 +4252,7 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
             // XXX stop storing pointers to the placeholder in the line list???
             ph->SetOutOfFlowFrame(nsnull);
             floaters->RemoveElementAt(i);
-            aOldFrame->DeleteFrame(aPresContext);
+            aOldFrame->Destroy(aPresContext);
             goto found_it;
           }
         }
@@ -4397,7 +4397,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
       nsFrame::ListTag(stdout, aDeletedFrame);
       printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
 #endif
-      aDeletedFrame->DeleteFrame(*aPresContext);
+      aDeletedFrame->Destroy(*aPresContext);
       aDeletedFrame = nextInFlow;
 
       // If line is empty, remove it now
@@ -4472,7 +4472,7 @@ nsBlockFrame::RemoveFirstLineFrame(nsIPresContext* aPresContext,
 {
   // Strip deleted frame out of the nsFirstLineFrame
   aLineFrame->RemoveFrame2(aPresContext, aDeletedFrame);
-  aDeletedFrame->DeleteFrame(*aPresContext);
+  aDeletedFrame->Destroy(*aPresContext);
 
   // See if the line-frame and its continuations are now empty
   nsFirstLineFrame* lf = (nsFirstLineFrame*) aLineFrame->GetFirstInFlow();

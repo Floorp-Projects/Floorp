@@ -57,7 +57,7 @@ public:
                                       nsStyleChangeList* aChangeList,
                                       PRInt32* aLocalChange) ;
 
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 

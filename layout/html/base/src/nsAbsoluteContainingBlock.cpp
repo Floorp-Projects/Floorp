@@ -27,7 +27,7 @@
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 
 void
-nsAbsoluteContainingBlock::DeleteFrames(nsIPresContext& aPresContext)
+nsAbsoluteContainingBlock::DestroyFrames(nsIPresContext& aPresContext)
 {
   mAbsoluteFrames.DeleteFrames(aPresContext);
 }

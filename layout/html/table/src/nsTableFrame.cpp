@@ -342,10 +342,10 @@ nsTableFrame::~nsTableFrame()
 }
 
 NS_IMETHODIMP
-nsTableFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsTableFrame::Destroy(nsIPresContext& aPresContext)
 {
   mColGroups.DeleteFrames(aPresContext);
-  return nsHTMLContainerFrame::DeleteFrame(aPresContext);
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

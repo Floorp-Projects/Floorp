@@ -603,7 +603,7 @@ PresShell::~PresShell()
   // Revoke any events posted to the event queue that we haven't processed yet
   RevokePostedEvents();
   if (mRootFrame)
-    mRootFrame->DeleteFrame(*mPresContext);
+    mRootFrame->Destroy(*mPresContext);
   if (mDocument)
     mDocument->DeleteShell(this);
   mRefCnt = 0;

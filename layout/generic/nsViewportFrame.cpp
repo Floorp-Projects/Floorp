@@ -44,7 +44,7 @@ static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
  */
 class ViewportFrame : public nsContainerFrame {
 public:
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -109,10 +109,10 @@ NS_NewViewportFrame(nsIFrame** aNewFrame)
 }
 
 NS_IMETHODIMP
-ViewportFrame::DeleteFrame(nsIPresContext& aPresContext)
+ViewportFrame::Destroy(nsIPresContext& aPresContext)
 {
   mFixedFrames.DeleteFrames(aPresContext);
-  return nsContainerFrame::DeleteFrame(aPresContext);
+  return nsContainerFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

@@ -88,8 +88,8 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
-  /** @see nsIFrame::DeleteFrame */
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  /** @see nsIFrame::Destroy */
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   /** helper method for determining if this is a nested table or not 
     * @param aReflowState The reflow state for this inner table frame

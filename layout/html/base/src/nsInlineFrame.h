@@ -55,7 +55,7 @@ public:
                          nsIPresShell& aPresShell,
                          nsIAtom* aListName,
                          nsIFrame* aOldFrame);
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
@@ -249,7 +249,7 @@ extern nsresult NS_NewFirstLineFrame(nsIFrame** aNewFrame);
 class nsPositionedInlineFrame : public nsInlineFrame
 {
 public:
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,

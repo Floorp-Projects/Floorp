@@ -61,7 +61,7 @@ public:
                                  nsIFrame*       aChildList);
   NS_IMETHOD GetAdditionalChildListName(PRInt32   aIndex,
                                         nsIAtom** aListName) const;
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   // Overridden to prevent events from ever going to children of the menu.
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 

@@ -1210,7 +1210,7 @@ void nsTableOuterFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   }
 
   // Delete the next-in-flow frame and adjust it's parent's child count
-  nextInFlow->DeleteFrame(aPresContext);
+  nextInFlow->Destroy(aPresContext);
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(&nextInFlow);

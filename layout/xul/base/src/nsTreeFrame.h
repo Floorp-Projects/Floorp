@@ -45,7 +45,7 @@ public:
   void SlateForReflow() { mSlatedForReflow = PR_TRUE; };
 
   // Overridden methods
-  NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   PRBool RowGroupsShouldBeConstrained() { return PR_TRUE; }
   
   NS_IMETHODIMP Reflow(nsIPresContext&          aPresContext,

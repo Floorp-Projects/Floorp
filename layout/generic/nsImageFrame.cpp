@@ -93,14 +93,14 @@ nsImageFrame::~nsImageFrame()
 }
 
 NS_METHOD
-nsImageFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsImageFrame::Destroy(nsIPresContext& aPresContext)
 {
   NS_IF_RELEASE(mImageMap);
 
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(&aPresContext);
 
-  return nsLeafFrame::DeleteFrame(aPresContext);
+  return nsLeafFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

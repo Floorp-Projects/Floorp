@@ -58,7 +58,7 @@ public:
                              const nsHTMLReflowState& aReflowState,
                              PRBool&                  aWasHandled);
 
-  void DeleteFrames(nsIPresContext& aPresContext);
+  void DestroyFrames(nsIPresContext& aPresContext);
 
   nsresult GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
 

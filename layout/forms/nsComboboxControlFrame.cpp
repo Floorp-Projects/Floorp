@@ -970,11 +970,11 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 
 
 NS_IMETHODIMP
-nsComboboxControlFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsComboboxControlFrame::Destroy(nsIPresContext& aPresContext)
 {
    // Cleanup frames in popup child list
   mPopupFrames.DeleteFrames(aPresContext);
-  return nsAreaFrame::DeleteFrame(aPresContext);
+  return nsAreaFrame::Destroy(aPresContext);
 }
 
 

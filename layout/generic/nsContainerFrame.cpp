@@ -66,7 +66,7 @@ nsContainerFrame::SetInitialChildList(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsContainerFrame::Destroy(nsIPresContext& aPresContext)
 {
   // Prevent event dispatch during destruction
   nsIView* view;
@@ -78,8 +78,8 @@ nsContainerFrame::DeleteFrame(nsIPresContext& aPresContext)
   // Delete the primary child list
   mFrames.DeleteFrames(aPresContext);
 
-  // Base class will delete the frame
-  return nsFrame::DeleteFrame(aPresContext);
+  // Base class will destroy the frame
+  return nsFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP
@@ -480,7 +480,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
   NS_ASSERTION(result, "failed to remove frame");
 
   // Delete the next-in-flow frame
-  nextInFlow->DeleteFrame(aPresContext);
+  nextInFlow->Destroy(aPresContext);
 
 #ifdef NS_DEBUG
   aChild->GetNextInFlow(&nextInFlow);

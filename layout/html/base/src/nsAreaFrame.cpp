@@ -104,10 +104,10 @@ nsAreaFrame::Init(nsIPresContext&  aPresContext,
 }
 
 NS_IMETHODIMP
-nsAreaFrame::DeleteFrame(nsIPresContext& aPresContext)
+nsAreaFrame::Destroy(nsIPresContext& aPresContext)
 {
-  mAbsoluteContainer.DeleteFrames(aPresContext);
-  return nsBlockFrame::DeleteFrame(aPresContext);
+  mAbsoluteContainer.DestroyFrames(aPresContext);
+  return nsBlockFrame::Destroy(aPresContext);
 }
 
 NS_IMETHODIMP

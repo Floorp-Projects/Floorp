@@ -178,8 +178,8 @@ enum nsSpread {
  * there is no order defined between frames in different child lists of
  * the same parent frame.
  *
- * Frames are NOT reference counted. Use the DeleteFrame() member function
- * to delete a frame. The lifetime of the frame hierarchy is bounded by the
+ * Frames are NOT reference counted. Use the Destroy() member function
+ * to destroy a frame. The lifetime of the frame hierarchy is bounded by the
  * lifetime of the presentation shell which owns the frames.
  */
 class nsIFrame : public nsISupports
@@ -210,6 +210,12 @@ public:
                    nsIFrame*        aPrevInFlow) = 0;
 
   /**
+   * Destroys this frame and each of its child frames (recursively calls
+   * Destroy() for each child)
+   */
+  NS_IMETHOD  Destroy(nsIPresContext& aPresContext) = 0;
+
+  /**
    * Called to set the initial list of frames. This happens after the frame
    * has been initialized.
    *
@@ -232,8 +238,8 @@ public:
 
   /**
    * This method is responsible for appending frames to the frame
-   * list.  The implementation should do something with the new frames
-   * and then generate a reflow command.
+   * list.  The implementation should append the frames to the appropriate
+   * child list and then generate a reflow command.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
@@ -250,8 +256,8 @@ public:
 
   /**
    * This method is responsible for inserting frames into the frame
-   * list.  The implementation should do something with the new frames
-   * and then generate a reflow command.
+   * list.  The implementation should insert the new frames into the appropriate
+   * child list and then generate a reflow command.
    *
    * @param   aListName the name of the child list. A NULL pointer for the atom
    *            name means the unnamed principal child list
@@ -286,12 +292,6 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
-
-  /**
-   * Deletes this frame and each of its child frames (recursively calls
-   * DeleteFrame() for each child)
-   */
-  NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext) = 0;
 
   /**
    * Get the content object associated with this frame. Adds a reference to
