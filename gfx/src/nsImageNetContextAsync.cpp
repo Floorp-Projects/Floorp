@@ -258,20 +258,25 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
   PRUint32 nb;
 
   do {
-    max_read = reader->WriteReady(); //ptn temp
-    if (0 == max_read) {
-      break;
+    err = reader->WriteReady(&max_read); //max read is most decoder can handle
+    if(NS_FAILED(err))   //note length tells how much we already have.
+        break;
+
+    if(max_read <= 0){
+            max_read =128;
     }
+
     if (max_read > IMAGE_BUF_SIZE) {
       max_read = IMAGE_BUF_SIZE;
     }
     
     // make sure there's enough data available to decode the image.
+    // put test into WriteReady
     if (mFirstRead && length < 4)
       break;
 
     err = pIStream->Read(mBuffer,
-                         max_read, &nb);
+                         IMAGE_BUF_SIZE, &nb);
     if (err == NS_BASE_STREAM_WOULD_BLOCK) {
       err = NS_OK;
       break;
@@ -284,7 +289,7 @@ ImageConsumer::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUint32 
     if (mFirstRead == PR_TRUE) {
             
       err = reader->FirstWrite((const unsigned char *)mBuffer, nb);
-      mFirstRead = PR_FALSE;
+      mFirstRead = PR_FALSE; //? move after err chk?
       /* 
        * If FirstWrite(...) fails then the image type
        * cannot be determined and the il_container 
