@@ -168,6 +168,8 @@ NS_IMETHODIMP nsImapFlagAndUidState::Reset(PRUint32 howManyLeft)
     PR_CEnterMonitor(this);
 	if (!howManyLeft)
 		fNumberOfMessagesAdded = fNumberDeleted = 0;		// used space is still here
+  if (m_customFlagsHash)
+    m_customFlagsHash->Reset(FreeCustomFlags, nsnull);
     PR_CExitMonitor(this);
 	return NS_OK;
 }
@@ -352,7 +354,7 @@ imapMessageFlagsType nsImapFlagAndUidState::GetMessageFlagsFromUID(PRUint32 uid,
 
 NS_IMETHODIMP nsImapFlagAndUidState::AddUidCustomFlagPair(PRUint32 uid, const char *customFlag)
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   if (!m_customFlagsHash)
     m_customFlagsHash = new nsHashtable(10);
   if (!m_customFlagsHash)
@@ -393,7 +395,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::AddUidCustomFlagPair(PRUint32 uid, const ch
 
 NS_IMETHODIMP nsImapFlagAndUidState::GetCustomFlags(PRUint32 uid, char **customFlags)
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   if (m_customFlagsHash)
   {
     nsPRUint32Key hashKey(uid);
@@ -410,7 +412,7 @@ NS_IMETHODIMP nsImapFlagAndUidState::GetCustomFlags(PRUint32 uid, char **customF
 
 NS_IMETHODIMP nsImapFlagAndUidState::ClearCustomFlags(PRUint32 uid)
 {
-  nsAutoCMonitor(this);
+  nsAutoCMonitor mon(this);
   if (m_customFlagsHash)
   {
     nsPRUint32Key hashKey(uid);
