@@ -968,7 +968,7 @@ IncrementalReflow::AddCommand(nsIPresContext      *aPresContext,
     if (gVerifyReflowFlags & VERIFY_REFLOW_NOISY_RC)
       printf("requeuing command %p because %p was already scheduled "
              "for the same frame",
-             aCommand, target->mReflowCommand);
+             (void*)aCommand, (void*)target->mReflowCommand);
 #endif
 
     return PR_FALSE;
@@ -1200,7 +1200,7 @@ public:
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aModType, 
-                              PRInt32      aHint);
+                              nsChangeHint aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
                              nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer);
@@ -1227,7 +1227,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint);
+                              nsChangeHint aHint);
   NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule);
@@ -2749,7 +2749,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   mFrameManager->GetRootFrame(&rootFrame);
   
   if (root) {
-    MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Reset and start: Frame Creation: PresShell::InitialReflow(), this=%p\n",
+                        (void*)this));
     MOZ_TIMER_RESET(mFrameCreationWatch);
     MOZ_TIMER_START(mFrameCreationWatch);
     CtlStyleWatch(kStyleWatchEnable,mStyleSet);
@@ -2765,13 +2766,15 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     // content object down
     mStyleSet->ContentInserted(mPresContext, nsnull, root, 0);
     VERIFY_STYLE_TREE;
-    MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::InitialReflow(), this=%p\n",
+                        (void*)this));
     MOZ_TIMER_STOP(mFrameCreationWatch);
     CtlStyleWatch(kStyleWatchDisable,mStyleSet);
   }
 
   if (rootFrame) {
-    MOZ_TIMER_DEBUGLOG(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Reset and start: Reflow: PresShell::InitialReflow(), this=%p\n",
+                        (void*)this));
     MOZ_TIMER_RESET(mReflowWatch);
     MOZ_TIMER_START(mReflowWatch);
     // Kick off a top-down reflow
@@ -2831,7 +2834,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     VERIFY_STYLE_TREE;
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
-    MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", this));
+    MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::InitialReflow(), this=%p\n", (void*)this));
     MOZ_TIMER_STOP(mReflowWatch);
 
     mIsReflowing = PR_FALSE;
@@ -3597,7 +3600,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 {  
 #ifdef MOZ_PERF_METRICS
   // Reset style resolution stopwatch maintained by style set
-  MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", this));
+  MOZ_TIMER_DEBUGLOG(("Reset: Style Resolution: PresShell::BeginLoad(), this=%p\n", (void*)this));
   CtlStyleWatch(kStyleWatchReset,mStyleSet);
 #endif  
   mDocumentLoading = PR_TRUE;
@@ -5209,7 +5212,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aModType, 
-                            PRInt32      aHint)
+                            nsChangeHint aHint)
 {
   nsresult rv = NS_OK;
   // XXXwaterson it might be more elegant to wait until after the
@@ -5451,12 +5454,12 @@ PresShell::ReconstructStyleData(PRBool aRebuildRuleTree)
     set->BeginRuleTreeReconstruct();
   }
 
-  PRInt32 frameChange = NS_STYLE_HINT_NONE;
+  nsChangeHint frameChange = NS_STYLE_HINT_NONE;
   frameManager->ComputeStyleChangeFor(mPresContext, rootFrame, 
                                       kNameSpaceID_Unknown, nsnull,
                                       changeList, NS_STYLE_HINT_NONE, frameChange);
 
-  if (frameChange == NS_STYLE_HINT_RECONSTRUCT_ALL)
+  if (frameChange & nsChangeHint_ReconstructDoc)
     set->ReconstructDocElementHierarchy(mPresContext);
   else {
     cssFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
@@ -5514,7 +5517,7 @@ NS_IMETHODIMP
 PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule,
-                            PRInt32 aHint) 
+                            nsChangeHint aHint) 
 {
   WillCauseReflow();
   nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
@@ -7540,7 +7543,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
       nsnull != mIndiFrameCounts && 
       aFrame != nsnull) {
     char * key = new char[16];
-    sprintf(key, "%p", aFrame);
+    sprintf(key, "%p", (void*)aFrame);
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter == nsnull) {
       counter = new IndiReflowCounter(this);
@@ -7568,7 +7571,7 @@ void ReflowCountMgr::PaintCount(const char *    aName,
       nsnull != mIndiFrameCounts && 
       aFrame != nsnull) {
     char * key = new char[16];
-    sprintf(key, "%p", aFrame);
+    sprintf(key, "%p", (void*)aFrame);
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
     if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
       aRenderingContext->PushState();
@@ -7708,13 +7711,13 @@ static void RecurseIndiTotals(nsIPresContext* aPresContext,
   }
 
   char key[16];
-  sprintf(key, "%p", aParentFrame);
+  sprintf(key, "%p", (void*)aParentFrame);
   IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(aHT, key);
   if (counter) {
     counter->mHasBeenOutput = PR_TRUE;
     char * name = ToNewCString(counter->mName);
     for (PRInt32 i=0;i<aLevel;i++) printf(" ");
-    printf("%s - %p   [%d][", name, aParentFrame, counter->mCount);
+    printf("%s - %p   [%d][", name, (void*)aParentFrame, counter->mCount);
     for (PRInt32 inx=0;inx<5;inx++) {
       if (inx != 0) printf(",");
       printf("%d", counter->mCounter.GetTotalByType(nsReflowReason(inx)));
@@ -7738,7 +7741,7 @@ PRIntn ReflowCountMgr::DoSingleIndi(PLHashEntry *he, PRIntn i, void *arg)
   IndiReflowCounter * counter = (IndiReflowCounter *)he->value;
   if (counter && !counter->mHasBeenOutput) {
     char * name = ToNewCString(counter->mName);
-    printf("%s - %p   [%d][", name, counter->mFrame, counter->mCount);
+    printf("%s - %p   [%d][", name, (void*)counter->mFrame, counter->mCount);
     for (PRInt32 inx=0;inx<5;inx++) {
       if (inx != 0) printf(",");
       printf("%d", counter->mCounter.GetTotalByType(nsReflowReason(inx)));

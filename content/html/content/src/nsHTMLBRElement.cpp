@@ -75,7 +75,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -217,7 +217,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
 NS_IMETHODIMP
 nsHTMLBRElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                          PRInt32& aHint) const
+                                          nsChangeHint& aHint) const
 {
   if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     if (nsHTMLAtoms::clear == aAttribute) {

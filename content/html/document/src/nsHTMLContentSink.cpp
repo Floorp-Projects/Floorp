@@ -306,7 +306,7 @@ public:
                               PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aModType, 
-                              PRInt32      aHint) { return NS_OK; }
+                              nsChangeHint aHint) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
 			                       nsIContent* aContainer,
                              PRInt32     aNewIndexInContainer) 
@@ -334,7 +334,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIDocument *aDocument,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) { return NS_OK; }
+                              nsChangeHint aHint) { return NS_OK; }
   NS_IMETHOD StyleRuleAdded(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) { return NS_OK; }

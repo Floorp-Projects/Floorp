@@ -295,7 +295,7 @@ MapAttributesInto(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameManager> fm;
       presShell->GetFrameManager(getter_AddRefs(fm));
       if (fm) {
-        PRInt32 maxChange, minChange = NS_STYLE_HINT_NONE;
+        nsChangeHint maxChange = NS_STYLE_HINT_NONE, minChange = NS_STYLE_HINT_NONE;
         nsStyleChangeList changeList;
         fm->ComputeStyleChangeFor(aPresContext, aCellFrame, kNameSpaceID_None, nsnull,
                                   changeList, minChange, maxChange);

@@ -10311,24 +10311,24 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
   while (0 < count--) {
     nsIFrame* frame;
     nsIContent* content;
-    PRInt32 hint;
+    nsChangeHint hint;
     aChangeList.ChangeAt(count, frame, content, hint);
-    switch (hint) {
-      case NS_STYLE_HINT_RECONSTRUCT_ALL:
-        NS_ERROR("This shouldn't happen");
-        break;
-      case NS_STYLE_HINT_FRAMECHANGE:
-        RecreateFramesForContent(aPresContext, content);
-        break;
-      case NS_STYLE_HINT_REFLOW:
+
+    if (hint & nsChangeHint_ReconstructDoc) {
+      NS_ERROR("This shouldn't happen");
+    }
+    if (hint & nsChangeHint_ReconstructFrame) {
+      RecreateFramesForContent(aPresContext, content);
+    } else {
+      if (hint & nsChangeHint_ReflowFrame) {
         StyleChangeReflow(aPresContext, frame, nsnull);
-        break;
-      case NS_STYLE_HINT_VISUAL:
+      }
+      if (hint & nsChangeHint_RepaintFrame) {
         ApplyRenderingChangeToTree(aPresContext, frame, nsnull);
-        break;
-      case NS_STYLE_HINT_CONTENT:
-      default:
-        break;
+      }
+      if (hint & nsChangeHint_SyncFrameView) {
+        // TBD: split out view sync from ApplyRenderingChange and friends
+      }
     }
   }
   aChangeList.Clear();
@@ -10424,8 +10424,8 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
       if (primaryFrame1) {
         nsStyleChangeList changeList1;
         nsStyleChangeList changeList2;
-        PRInt32 frameChange1 = NS_STYLE_HINT_NONE;
-        PRInt32 frameChange2 = NS_STYLE_HINT_NONE;
+        nsChangeHint frameChange1 = NS_STYLE_HINT_NONE;
+        nsChangeHint frameChange2 = NS_STYLE_HINT_NONE;
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame1, 
                                             kNameSpaceID_Unknown, nsnull,
                                             changeList1, NS_STYLE_HINT_NONE, frameChange1);
@@ -10440,7 +10440,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             ApplyRenderingChangeToTree(aPresContext, primaryFrame1, nsnull);
         }
 
-        if ((frameChange1 != NS_STYLE_HINT_RECONSTRUCT_ALL) && (primaryFrame2)) {
+        if (!(frameChange1 & nsChangeHint_ReconstructDoc) && (primaryFrame2)) {
           frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
                                               kNameSpaceID_Unknown, nsnull,
                                               changeList2, NS_STYLE_HINT_NONE, frameChange2);
@@ -10455,37 +10455,30 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
           }
         }
 
-        if ((frameChange1 == NS_STYLE_HINT_RECONSTRUCT_ALL) || 
-            (frameChange2 == NS_STYLE_HINT_RECONSTRUCT_ALL)) {
+        if ((frameChange1 & nsChangeHint_ReconstructDoc) || 
+            (frameChange2 & nsChangeHint_ReconstructDoc)) {
           result = ReconstructDocElementHierarchy(aPresContext);
         }
         else {
-          switch (frameChange1) {
-            case NS_STYLE_HINT_FRAMECHANGE:
-              result = RecreateFramesForContent(aPresContext, aContent1);
-              changeList1.Clear();
-              break;
-            case NS_STYLE_HINT_REFLOW:
-            case NS_STYLE_HINT_VISUAL:
-            case NS_STYLE_HINT_CONTENT:
+          if (frameChange1 & nsChangeHint_ReconstructFrame) {
+            result = RecreateFramesForContent(aPresContext, aContent1);
+            changeList1.Clear();
+          } else {
+            if (frameChange1 & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
               // let primary frame deal with it
               result = primaryFrame1->ContentStateChanged(aPresContext, aContent1, frameChange1);
-            default:
-              break;
+            }
           }
-          switch (frameChange2) {
-            case NS_STYLE_HINT_FRAMECHANGE:
+
+          if (frameChange2 & nsChangeHint_ReconstructFrame) {
               result = RecreateFramesForContent(aPresContext, aContent2);
               changeList2.Clear();
-              break;
-            case NS_STYLE_HINT_REFLOW:
-            case NS_STYLE_HINT_VISUAL:
-            case NS_STYLE_HINT_CONTENT:
+          } else {
+            if (frameChange2 & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
               // let primary frame deal with it
               result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange2);
               // then process any children that need it
-            default:
-              break;
+            }
           }
           ProcessRestyledFrames(changeList1, aPresContext);
           ProcessRestyledFrames(changeList2, aPresContext);
@@ -10493,7 +10486,7 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
       }
       else if (primaryFrame2) {
         nsStyleChangeList changeList;
-        PRInt32 frameChange = NS_STYLE_HINT_NONE;
+        nsChangeHint frameChange = NS_STYLE_HINT_NONE;
         frameManager->ComputeStyleChangeFor(aPresContext, primaryFrame2, 
                                             kNameSpaceID_Unknown, nsnull,
                                             changeList, NS_STYLE_HINT_NONE, frameChange);
@@ -10507,23 +10500,17 @@ nsCSSFrameConstructor::ContentStatesChanged(nsIPresContext* aPresContext,
             ApplyRenderingChangeToTree(aPresContext, primaryFrame2, nsnull);
         }
 
-        switch (frameChange) {  // max change needed for top level frames
-          case NS_STYLE_HINT_RECONSTRUCT_ALL:
-            result = ReconstructDocElementHierarchy(aPresContext);
-            changeList.Clear();
-            break;
-          case NS_STYLE_HINT_FRAMECHANGE:
-            result = RecreateFramesForContent(aPresContext, aContent2);
-            changeList.Clear();
-            break;
-          case NS_STYLE_HINT_REFLOW:
-          case NS_STYLE_HINT_VISUAL:
-          case NS_STYLE_HINT_CONTENT:
-            // let primary frame deal with it
-            result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange);
-            // then process any children that need it
-          default:
-            break;
+         // max change needed for top level frames
+        if (frameChange & nsChangeHint_ReconstructDoc) {
+          result = ReconstructDocElementHierarchy(aPresContext);
+          changeList.Clear();
+        } else if (frameChange & nsChangeHint_ReconstructFrame) {
+          result = RecreateFramesForContent(aPresContext, aContent2);
+          changeList.Clear();
+        } else if (frameChange & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
+          // let primary frame deal with it
+          result = primaryFrame2->ContentStateChanged(aPresContext, aContent2, frameChange);
+          // then process any children that need it
         }
         ProcessRestyledFrames(changeList, aPresContext);
       }
@@ -10546,7 +10533,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
                                         PRInt32 aNameSpaceID,
                                         nsIAtom* aAttribute,
                                         PRInt32 aModType, 
-                                        PRInt32 aHint)
+                                        nsChangeHint aHint)
 {
   nsresult  result = NS_OK;
 
@@ -10570,10 +10557,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       primaryStyleFrame = styleContextProvider;
   }
 
-  PRBool  reconstruct = PR_FALSE;
-  PRBool  restyle = PR_FALSE;
-  PRBool  reframe = PR_FALSE;
-
 #if 0
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("HTMLStyleSheet::AttributeChanged: content=%p[%s] frame=%p",
@@ -10581,31 +10564,17 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
 #endif
 
   // the style tag has its own interpretation based on aHint 
-  if (NS_STYLE_HINT_UNKNOWN == aHint) { 
+  if (aHint & nsChangeHint_Unknown) { 
     nsCOMPtr<nsIStyledContent> styledContent = do_QueryInterface(aContent);
     if (styledContent) { 
       // Get style hint from HTML content object. 
       styledContent->GetMappedAttributeImpact(aAttribute, aModType, aHint);
     } 
-  } 
-
-  switch (aHint) {
-    default:
-    case NS_STYLE_HINT_RECONSTRUCT_ALL:
-      reconstruct = PR_TRUE;
-    case NS_STYLE_HINT_FRAMECHANGE:
-      reframe = PR_TRUE;
-    case NS_STYLE_HINT_REFLOW:
-    case NS_STYLE_HINT_VISUAL:
-    case NS_STYLE_HINT_UNKNOWN:
-    case NS_STYLE_HINT_CONTENT:
-    case NS_STYLE_HINT_AURAL:
-      restyle = PR_TRUE;
-      break;
-    case NS_STYLE_HINT_NONE:
-    case NS_STYLE_HINT_ATTRCHANGE:
-      break;
   }
+
+  PRBool reconstruct = (aHint & nsChangeHint_ReconstructDoc) != 0;
+  PRBool reframe = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) != 0;
+  PRBool restyle = (aHint & ~(nsChangeHint_AttrChange)) != 0;
 
 #ifdef INCLUDE_XUL
   // The following listbox widget trap prevents offscreen listbox widget
@@ -10712,7 +10681,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
   }
 
   // apply changes
-  if (primaryFrame && aHint == NS_STYLE_HINT_ATTRCHANGE)
+  if (primaryFrame && (aHint & nsChangeHint_AttrChange) && !(aHint & ~(nsChangeHint_AttrChange)))
     result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
   else if (reconstruct) {
     result = ReconstructDocElementHierarchy(aPresContext);
@@ -10724,7 +10693,7 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
     // If there is no frame then there is no point in re-styling it,
     // is there?
     if (primaryFrame) {
-      PRInt32 maxHint = aHint;
+      nsChangeHint maxHint = aHint;
       nsStyleChangeList changeList;
       // put primary frame on list to deal with, re-resolve may update or add next in flows
       changeList.AppendChange(primaryFrame, aContent, maxHint);
@@ -10767,18 +10736,14 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
         maxHint = NS_STYLE_HINT_VISUAL;
       }
 
-      switch (maxHint) {  // maxHint is hint for primary only
-        case NS_STYLE_HINT_RECONSTRUCT_ALL:
-          result = ReconstructDocElementHierarchy(aPresContext);
-          changeList.Clear();
-          break;
-        case NS_STYLE_HINT_FRAMECHANGE:
-          result = RecreateFramesForContent(aPresContext, aContent);
-          changeList.Clear();
-          break;
-        case NS_STYLE_HINT_REFLOW:
-        case NS_STYLE_HINT_VISUAL:
-        case NS_STYLE_HINT_CONTENT:
+      // maxHint is hint for primary only
+      if (maxHint & nsChangeHint_ReconstructDoc) {
+        result = ReconstructDocElementHierarchy(aPresContext);
+        changeList.Clear();
+      } else if (maxHint & nsChangeHint_ReconstructFrame) {
+        result = RecreateFramesForContent(aPresContext, aContent);
+        changeList.Clear();
+      } else if (maxHint & ~(nsChangeHint_AttrChange | nsChangeHint_Aural)) {
           // let the frame deal with it, since we don't know how to
           result = primaryFrame->AttributeChanged(aPresContext, aContent, aNameSpaceID, aAttribute, aModType, maxHint);
 
@@ -10787,8 +10752,6 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
           // them, as well. Currently, inline and block frames don't
           // do anything on this notification, so it's not that big a
           // deal.
-        default:
-          break;
       }
       // handle any children (primary may be on list too)
       ProcessRestyledFrames(changeList, aPresContext);
@@ -10806,7 +10769,7 @@ NS_IMETHODIMP
 nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
                                         nsIStyleSheet* aStyleSheet,
                                         nsIStyleRule* aStyleRule,
-                                        PRInt32 aHint)
+                                        nsChangeHint aHint)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIPresShell> shell;
@@ -10818,26 +10781,15 @@ nsCSSFrameConstructor::StyleRuleChanged(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  PRBool reframe  = PR_FALSE;
-  PRBool reflow   = PR_FALSE;
-  PRBool render   = PR_FALSE;
-  PRBool restyle  = PR_FALSE;
-  switch (aHint) {
-    default:
-    case NS_STYLE_HINT_UNKNOWN:
-    case NS_STYLE_HINT_FRAMECHANGE:
-      reframe = PR_TRUE;
-    case NS_STYLE_HINT_REFLOW:
-      reflow = PR_TRUE;
-    case NS_STYLE_HINT_VISUAL:
-      render = PR_TRUE;
-    case NS_STYLE_HINT_CONTENT:
-    case NS_STYLE_HINT_AURAL:
-      restyle = PR_TRUE;
-      break;
-    case NS_STYLE_HINT_NONE:
-      break;
-  }
+  PRBool reframe = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
+                             | nsChangeHint_Unknown)) != 0;
+  PRBool reflow = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
+                            | nsChangeHint_ReflowFrame | nsChangeHint_Unknown)) != 0;
+  PRBool render = (aHint & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame
+                            | nsChangeHint_ReflowFrame | nsChangeHint_RepaintFrame
+                            | nsChangeHint_Unknown)) != 0;
+  PRBool restyle = (aHint & ~(nsChangeHint_AttrChange)) != 0;
+  // TBD: add "review" to update view?
 
   if (restyle) {
     nsCOMPtr<nsIStyleSet> set;

@@ -416,7 +416,7 @@ static PRBool HasMutationListeners(nsIContent* aContent, PRUint32 aType)
 
 //----------------------------------------------------------------------
 
-static PRInt32
+static nsChangeHint
 StyleHintFor(nsINodeInfo* aNodeInfo)
 {
     nsCOMPtr<nsIAtom> tagName;
@@ -3882,7 +3882,7 @@ nsXULElement::GetInlineStyleRule(nsIStyleRule** aStyleRule)
 
 NS_IMETHODIMP
 nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                       PRInt32& aHint) const
+                                       nsChangeHint& aHint) const
 {
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 

@@ -46,6 +46,7 @@
 #include "nsVoidArray.h"
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
+#include "nsChangeHint.h"
 #include "nsIStyleSet.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -95,8 +96,8 @@ struct nsStyleFont : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Font)
 
-  PRInt32 CalcDifference(const nsStyleFont& aOther) const;
-  static PRInt32 CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
+  nsChangeHint CalcDifference(const nsStyleFont& aOther) const;
+  static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
   
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW;
   void Destroy(nsIPresContext* aContext);
@@ -120,7 +121,7 @@ struct nsStyleColor : public nsStyleStruct {
 
   NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_Color)
 
-  PRInt32 CalcDifference(const nsStyleColor& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleColor& aOther) const;
   
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
@@ -154,7 +155,7 @@ struct nsStyleBackground : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleBackground), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleBackground& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleBackground& aOther) const;
   
   PRUint8 mBackgroundAttachment;  // [reset] See nsStyleConsts.h
   PRUint8 mBackgroundFlags;       // [reset] See nsStyleConsts.h
@@ -192,7 +193,7 @@ struct nsStyleMargin: public nsStyleStruct {
   void Destroy(nsIPresContext* aContext);
 
   void RecalcData();
-  PRInt32 CalcDifference(const nsStyleMargin& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleMargin& aOther) const;
 
   nsStyleSides  mMargin;          // [reset] length, percent, auto, inherit
 
@@ -225,7 +226,7 @@ struct nsStylePadding: public nsStyleStruct {
   void Destroy(nsIPresContext* aContext);
 
   void RecalcData();
-  PRInt32 CalcDifference(const nsStylePadding& aOther) const;
+  nsChangeHint CalcDifference(const nsStylePadding& aOther) const;
   
   nsStyleSides  mPadding;         // [reset] length, percent, inherit
 
@@ -303,7 +304,7 @@ struct nsStyleBorder: public nsStyleStruct {
 
   PRBool IsBorderSideVisible(PRUint8 aSide) const;
   void RecalcData();
-  PRInt32 CalcDifference(const nsStyleBorder& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleBorder& aOther) const;
  
   nsStyleSides  mBorder;          // [reset] length, enum (see nsStyleConsts.h)
   nsStyleSides  mBorderRadius;    // [reset] length, percent, inherit
@@ -475,7 +476,7 @@ struct nsStyleOutline: public nsStyleStruct {
   };
 
   void RecalcData();
-  PRInt32 CalcDifference(const nsStyleOutline& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleOutline& aOther) const;
  
   nsStyleSides  mOutlineRadius;    // [reset] length, percent, inherit
   																// (top=topLeft, right=topRight, bottom=bottomRight, left=bottomLeft)
@@ -558,7 +559,7 @@ struct nsStyleList : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleList), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleList& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleList& aOther) const;
   
   PRUint8   mListStyleType;             // [inherited] See nsStyleConsts.h
   PRUint8   mListStylePosition;         // [inherited] 
@@ -583,7 +584,7 @@ struct nsStylePosition : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStylePosition), this);
   };
 
-  PRInt32 CalcDifference(const nsStylePosition& aOther) const;
+  nsChangeHint CalcDifference(const nsStylePosition& aOther) const;
   
   nsStyleSides  mOffset;                // [reset]
   nsStyleCoord  mWidth;                 // [reset] coord, percent, auto, inherit
@@ -613,7 +614,7 @@ struct nsStyleTextReset : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleTextReset), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleTextReset& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleTextReset& aOther) const;
   
   PRUint8 mTextDecoration;              // [reset] see nsStyleConsts.h
 #ifdef IBMBIDI
@@ -640,7 +641,7 @@ struct nsStyleText : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleText), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleText& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleText& aOther) const;
 
   PRUint8 mTextAlign;                   // [inherited] see nsStyleConsts.h
   PRUint8 mTextTransform;               // [inherited] see nsStyleConsts.h
@@ -673,7 +674,7 @@ struct nsStyleVisibility : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleVisibility), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleVisibility& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleVisibility& aOther) const;
   
   PRUint8 mDirection;                  // [inherited] see nsStyleConsts.h NS_STYLE_DIRECTION_*
   PRUint8   mVisible;                  // [inherited]
@@ -707,7 +708,7 @@ struct nsStyleDisplay : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleDisplay), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleDisplay& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleDisplay& aOther) const;
   
   PRUint8 mDisplay;             // [reset] see nsStyleConsts.h NS_STYLE_DISPLAY_*
   PRUint8 mOriginalDisplay;     // [reset] saved mDisplay for position:absolute/fixed
@@ -762,7 +763,7 @@ struct nsStyleTable: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleTable), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleTable& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleTable& aOther) const;
   
   PRUint8       mLayoutStrategy;// [reset] see nsStyleConsts.h NS_STYLE_TABLE_LAYOUT_*
   PRUint8       mFrame;         // [reset] see nsStyleConsts.h NS_STYLE_TABLE_FRAME_*
@@ -788,7 +789,7 @@ struct nsStyleTableBorder: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleTableBorder), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleTableBorder& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleTableBorder& aOther) const;
   
   PRUint8       mBorderCollapse;// [inherited]
   nsStyleCoord  mBorderSpacingX;// [inherited]
@@ -839,7 +840,7 @@ struct nsStyleQuotes : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleQuotes), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleQuotes& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleQuotes& aOther) const;
 
   
   PRUint32  QuotesCount(void) const { return mQuotesCount; } // [inherited]
@@ -900,7 +901,7 @@ struct nsStyleContent: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleContent), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleContent& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleContent& aOther) const;
 
   PRUint32  ContentCount(void) const  { return mContentCount; } // [reset]
   nsresult  GetContentAt(PRUint32 aIndex, nsStyleContentType& aType, nsString& aContent) const {
@@ -1039,7 +1040,7 @@ struct nsStyleUIReset: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleUIReset), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleUIReset& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleUIReset& aOther) const;
 
   PRUint8   mUserSelect;      // [reset] (selection-style)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
@@ -1064,7 +1065,7 @@ struct nsStyleUserInterface: public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleUserInterface), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleUserInterface& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleUserInterface& aOther) const;
 
   PRUint8   mUserInput;       // [inherited]
   PRUint8   mUserModify;      // [inherited] (modify-content)
@@ -1092,7 +1093,7 @@ struct nsStyleXUL : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleXUL), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleXUL& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleXUL& aOther) const;
   
   PRUint8       mBoxAlign;              // [reset] see nsStyleConsts.h
   PRUint8       mBoxDirection;          // [reset] see nsStyleConsts.h
@@ -1131,7 +1132,7 @@ struct nsStyleSVG : public nsStyleStruct {
     aContext->FreeToShell(sizeof(nsStyleSVG), this);
   };
 
-  PRInt32 CalcDifference(const nsStyleSVG& aOther) const;
+  nsChangeHint CalcDifference(const nsStyleSVG& aOther) const;
 
   // all [inherit]ed
   nsStyleSVGPaint  mFill;

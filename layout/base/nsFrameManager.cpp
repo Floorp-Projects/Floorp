@@ -339,8 +339,8 @@ public:
                                    PRInt32 aAttrNameSpaceID,
                                    nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
-                                   PRInt32 aMinChange,
-                                   PRInt32& aTopLevelChange);
+                                   nsChangeHint aMinChange,
+                                   nsChangeHint& aTopLevelChange);
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                    PRBool &aAffects);
 
@@ -417,8 +417,8 @@ private:
                              PRInt32 aAttrNameSpaceID,
                              nsIAtom* aAttribute,
                              nsStyleChangeList& aChangeList, 
-                             PRInt32 aMinChange,
-                             PRInt32& aResultChange);
+                             nsChangeHint aMinChange,
+                             nsChangeHint& aResultChange);
 
   nsresult RevokePostedEvents();
   CantRenderReplacedElementEvent** FindPostedEventFor(nsIFrame* aFrame);
@@ -1656,16 +1656,15 @@ HasAttributeContent(nsIStyleContext* aStyleContext,
   return result;
 }
 
-static PRInt32
+static nsChangeHint
 CaptureChange(nsIStyleContext* aOldContext, nsIStyleContext* aNewContext,
               nsIFrame* aFrame, nsIContent* aContent,
-              nsStyleChangeList& aChangeList, PRInt32 aMinChange)
+              nsStyleChangeList& aChangeList, nsChangeHint aMinChange)
 {
-  PRInt32 ourChange = NS_STYLE_HINT_NONE;
+  nsChangeHint ourChange = NS_STYLE_HINT_NONE;
   aOldContext->CalcStyleDifference(aNewContext, ourChange);
-  if (aMinChange < ourChange) {
+  if (NS_UpdateHint(aMinChange, ourChange)) {
     aChangeList.AppendChange(aFrame, aContent, ourChange);
-    aMinChange = ourChange;
   }
   return aMinChange;
 }
@@ -1677,8 +1676,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     PRInt32 aAttrNameSpaceID,
                                     nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList, 
-                                    PRInt32 aMinChange,
-                                    PRInt32& aResultChange)
+                                    nsChangeHint aMinChange,
+                                    nsChangeHint& aResultChange)
 {
   // XXXldb get new context from prev-in-flow if possible, to avoid
   // duplication.  (Or should we just let |GetContext| handle that?)
@@ -1773,7 +1772,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
       if (newContext != oldContext) {
         aMinChange = CaptureChange(oldContext, newContext, aFrame, content, aChangeList, aMinChange);
-        if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) { // if frame gets regenerated, let it keep old context
+        if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
+          // if frame gets regenerated, let it keep old context
           aFrame->SetStyleContext(aPresContext, newContext);
         }
         // if old context had image and new context does not have the same image, 
@@ -1789,7 +1789,10 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       }
       else {
         if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
-            aAttribute && (aMinChange < NS_STYLE_HINT_REFLOW) &&
+            aAttribute &&
+            (!(aMinChange &
+               (nsChangeHint_ReflowFrame | nsChangeHint_ReconstructFrame
+                | nsChangeHint_ReconstructDoc))) &&
             HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
           aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
         }
@@ -1821,11 +1824,12 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
             if (oldExtraContext != newExtraContext) {
               aMinChange = CaptureChange(oldExtraContext, newExtraContext, aFrame, 
                                          content, aChangeList, aMinChange);
-              if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) {
+              if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
                 aFrame->SetAdditionalStyleContext(contextIndex, newExtraContext);
               }
             }
             else {
+#if 0
               // XXXldb |oldContext| is null by this point, so this will
               // never do anything.
               if (pseudoTag && pseudoTag != nsHTMLAtoms::mozNonElementPseudo &&
@@ -1833,6 +1837,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
                   HasAttributeContent(oldContext, aAttrNameSpaceID, aAttribute)) {
                 aChangeList.AppendChange(aFrame, content, NS_STYLE_HINT_REFLOW);
               }
+#endif
             }
             NS_RELEASE(newExtraContext);
           }
@@ -1888,7 +1893,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
 
     aResultChange = aMinChange;
 
-    if (aMinChange < NS_STYLE_HINT_FRAMECHANGE) {
+    if (!(aMinChange & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc))) {
       // There is no need to waste time crawling into a frame's children on a frame change.
       // The act of reconstructing frames will force new style contexts to be resolved on all
       // of this frame's descendants anyway, so we want to avoid wasting time processing
@@ -1897,7 +1902,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       // now do children
       PRInt32 listIndex = 0;
       nsIAtom* childList = nsnull;
-      PRInt32 childChange;
+      nsChangeHint childChange;
 
       do {
         nsIFrame* child = nsnull;
@@ -1959,8 +1964,8 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
                                     PRInt32 aAttrNameSpaceID,
                                     nsIAtom* aAttribute,
                                     nsStyleChangeList& aChangeList,
-                                    PRInt32 aMinChange,
-                                    PRInt32& aTopLevelChange)
+                                    nsChangeHint aMinChange,
+                                    nsChangeHint& aTopLevelChange)
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   aTopLevelChange = NS_STYLE_HINT_NONE;
@@ -1975,18 +1980,16 @@ FrameManager::ComputeStyleChangeFor(nsIPresContext* aPresContext,
 #endif
 
   do {
-    PRInt32 frameChange;
+    nsChangeHint frameChange;
     ReResolveStyleContext(aPresContext, frame, nsnull,
                           aAttrNameSpaceID, aAttribute,
                           aChangeList, aMinChange, frameChange);
 #ifdef NS_DEBUG
     VerifyStyleTree(aPresContext, frame, nsnull);
 #endif
-    if (aTopLevelChange < frameChange) {
-      aTopLevelChange = frameChange;
-    }
+    NS_UpdateHint(aTopLevelChange, frameChange);
 
-    if (aTopLevelChange >= NS_STYLE_HINT_FRAMECHANGE) {
+    if (aTopLevelChange & (nsChangeHint_ReconstructDoc | nsChangeHint_ReconstructFrame)) {
       // If it's going to cause a framechange, then don't bother with
       // the continutaions since they'll be clobbered by the frame
       // reconstruct anyway.

@@ -42,6 +42,7 @@
 #include "nsEvent.h"
 #include "nsAString.h"
 #include "nsString.h"
+#include "nsChangeHint.h"
 
 class nsIAtom;
 class nsIArena;
@@ -346,7 +347,7 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType,
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer) = 0;
   NS_IMETHOD ContentInserted(nsIContent* aContainer,
@@ -364,7 +365,7 @@ public:
   // to document observers
   NS_IMETHOD StyleRuleChanged(nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
   NS_IMETHOD StyleRuleAdded(nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) = 0;
   NS_IMETHOD StyleRuleRemoved(nsIStyleSheet* aStyleSheet,

@@ -243,7 +243,7 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType, 
-                              PRInt32 aHint); // See nsStyleConsts fot hint values
+                              nsChangeHint aHint); // See nsStyleConsts fot hint values
 
   // xxx style rules enumeration
 
@@ -251,7 +251,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint); // See nsStyleConsts fot hint values
+                              nsChangeHint aHint); // See nsStyleConsts fot hint values
   NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule);
@@ -1581,7 +1581,7 @@ StyleSetImpl::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aModType, 
-                               PRInt32 aHint)
+                               nsChangeHint aHint)
 {
   return mFrameConstructor->AttributeChanged(aPresContext, aContent, 
                                              aNameSpaceID, aAttribute, aModType, aHint);
@@ -1593,7 +1593,7 @@ NS_IMETHODIMP
 StyleSetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
                                nsIStyleSheet* aStyleSheet,
                                nsIStyleRule* aStyleRule,
-                               PRInt32 aHint)
+                               nsChangeHint aHint)
 {
   return mFrameConstructor->StyleRuleChanged(aPresContext, aStyleSheet, aStyleRule, aHint);
 }

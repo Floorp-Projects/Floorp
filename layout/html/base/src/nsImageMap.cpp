@@ -891,7 +891,6 @@ nsImageMap::UpdateAreas()
   // Get rid of old area data
   FreeAreas();
 
-  nsresult rv = NS_OK;
   PRInt32 i, n;
   PRBool containsBlock = PR_FALSE, containsArea = PR_FALSE;
 
@@ -1155,7 +1154,7 @@ nsImageMap::AttributeChanged(nsIDocument *aDocument,
                              PRInt32      aNameSpaceID,
                              nsIAtom*     aAttribute,
                              PRInt32      aModType, 
-                             PRInt32      aHint)
+                             nsChangeHint aHint)
 {
   // If the parent of the changing content node is our map then update
   // the map.
@@ -1249,7 +1248,7 @@ NS_IMETHODIMP
 nsImageMap::StyleRuleChanged(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet,
                              nsIStyleRule* aStyleRule,
-                             PRInt32 aHint)
+                             nsChangeHint aHint)
 {
   return NS_OK;
 }

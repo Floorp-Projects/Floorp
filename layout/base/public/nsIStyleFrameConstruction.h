@@ -39,6 +39,7 @@
 
 #include "nsISupports.h"
 #include "nsIStyleSet.h"
+#include "nsChangeHint.h"
 
 class nsIPresShell;
 class nsIPresContext;
@@ -225,7 +226,7 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType, 
-                              PRInt32 aHint) = 0;
+                              nsChangeHint aHint) = 0;
 
 
   /////////////// Style change notifications ////////////////// 
@@ -245,7 +246,7 @@ public:
   NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0; // See nsStyleConsts fot hint values
 
   /**
    * A StyleRule has just been added to a style sheet.

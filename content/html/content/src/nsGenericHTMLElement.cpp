@@ -1649,7 +1649,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
     }
 
     // set as string value to avoid another string copy
-    PRBool  impact = NS_STYLE_HINT_NONE;
+    nsChangeHint impact = NS_STYLE_HINT_NONE;
     PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
                                    : PRInt32(nsIDOMMutationEvent::ADDITION);
     GetMappedAttributeImpact(aAttribute, modHint, impact);
@@ -1662,7 +1662,8 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNameSpaceID,
       NS_ENSURE_SUCCESS(result, result);
     }
     result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                          (NS_STYLE_HINT_CONTENT < impact),
+                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
+                                                      | nsChangeHint_Content)) != 0,
                                           this, sheet);
   }
 
@@ -1860,9 +1861,9 @@ PRBool nsGenericHTMLElement::IsEventName(nsIAtom* aName)
           aName == nsLayoutAtoms::onDOMNodeRemoved);
 }
 
-static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
+static nsChangeHint GetStyleImpactFrom(const nsHTMLValue& aValue)
 {
-  PRInt32 hint = NS_STYLE_HINT_NONE;
+  nsChangeHint hint = NS_STYLE_HINT_NONE;
 
   if (eHTMLUnit_ISupports == aValue.GetUnit()) {
     nsCOMPtr<nsISupports> supports(dont_AddRef(aValue.GetISupportsValue()));
@@ -1887,7 +1888,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 {
   nsresult  result = NS_OK;
 
-  PRBool  impact = NS_STYLE_HINT_NONE;
+  nsChangeHint impact = NS_STYLE_HINT_NONE;
   GetMappedAttributeImpact(aAttribute, nsIDOMMutationEvent::MODIFICATION,
                            impact);
   nsCOMPtr<nsIHTMLStyleSheet> sheet;
@@ -1911,7 +1912,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
 
       if (nsHTMLAtoms::style == aAttribute) {
         nsHTMLValue oldValue;
-        PRInt32 oldImpact = NS_STYLE_HINT_NONE;
+        nsChangeHint oldImpact = NS_STYLE_HINT_NONE;
         // Either we have no listeners or it's a real modification. To
         // cover the former case we need to check the return value of
         // GetHTMLAttribute
@@ -1921,9 +1922,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
           oldImpact = GetStyleImpactFrom(oldValue);
         }
         impact = GetStyleImpactFrom(aValue);
-        if (impact < oldImpact) {
-          impact = oldImpact;
-        }
+        NS_UpdateHint(impact, oldImpact);
       }
     }
     sheet = dont_AddRef(GetAttrStyleSheet(mDocument));
@@ -1934,7 +1933,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
       }
       PRInt32 count;
       result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                            (NS_STYLE_HINT_CONTENT < impact),
+                                            (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
+                                                        | nsChangeHint_Content)) != 0,
                                             this, sheet, count);
       if (0 == count) {
         delete mAttributes;
@@ -1991,7 +1991,8 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
     PRInt32 count;
     result = mAttributes->SetAttributeFor(aAttribute, aValue,
-                                          (NS_STYLE_HINT_CONTENT < impact),
+                                          (impact & ~(nsChangeHint_AttrChange | nsChangeHint_Aural
+                                                      | nsChangeHint_Content)) != 0,
                                           this, sheet, count);
     if (0 == count) {
       delete mAttributes;
@@ -2019,7 +2020,7 @@ nsGenericHTMLElement::UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,
     }
   }
 
-  PRInt32 impact = NS_STYLE_HINT_UNKNOWN;
+  nsChangeHint impact = NS_STYLE_HINT_UNKNOWN;
   if (mDocument) {
     if (aNotify) {
       mDocument->BeginUpdate();
@@ -2556,7 +2557,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
 NS_IMETHODIMP
 nsGenericHTMLElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                                PRInt32 aModType,
-                                               PRInt32& aHint) const
+                                               nsChangeHint& aHint) const
 {
   if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
     aHint = NS_STYLE_HINT_CONTENT;
@@ -3498,7 +3499,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
 
 PRBool
 nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
-                                                      PRInt32& aHint)
+                                                      nsChangeHint& aHint)
 {
   if (nsHTMLAtoms::dir == aAttribute) {
     aHint = NS_STYLE_HINT_REFLOW;  // XXX really? possibly FRAMECHANGE?
@@ -3529,7 +3530,7 @@ nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
 
 PRBool
 nsGenericHTMLElement::GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
-                                                     PRInt32& aHint)
+                                                     nsChangeHint& aHint)
 {
   if ((nsHTMLAtoms::width == aAttribute) ||
       (nsHTMLAtoms::height == aAttribute) ||
@@ -3572,7 +3573,7 @@ nsGenericHTMLElement::MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttr
 
 PRBool
 nsGenericHTMLElement::GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
-                                                   PRInt32& aHint)
+                                                   nsChangeHint& aHint)
 {
   if ((nsHTMLAtoms::align == aAttribute)) {
     aHint = NS_STYLE_HINT_FRAMECHANGE;
@@ -3703,7 +3704,7 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
 
 PRBool
 nsGenericHTMLElement::GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
-                                                    PRInt32& aHint)
+                                                    nsChangeHint& aHint)
 {
   if ((nsHTMLAtoms::border == aAttribute)) {
     aHint = NS_STYLE_HINT_REFLOW;
@@ -3774,7 +3775,7 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
 
 PRBool
 nsGenericHTMLElement::GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
-                                                    PRInt32& aHint)
+                                                    nsChangeHint& aHint)
 {
   if ((nsHTMLAtoms::background == aAttribute) ||
       (nsHTMLAtoms::bgcolor == aAttribute)) {

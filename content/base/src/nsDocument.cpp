@@ -2215,7 +2215,7 @@ nsDocument::AttributeChanged(nsIContent* aChild,
                              PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
                              PRInt32 aModType,
-                             PRInt32 aHint)
+                             nsChangeHint aHint)
 {
   NS_ABORT_IF_FALSE(aChild, "Null child!");
 
@@ -2241,7 +2241,7 @@ nsDocument::AttributeChanged(nsIContent* aChild,
 
 NS_IMETHODIMP
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet, nsIStyleRule* aStyleRule,
-                             PRInt32 aHint)
+                             nsChangeHint aHint)
 {
   PRInt32 i;
   // Get new value of count for every iteration in case

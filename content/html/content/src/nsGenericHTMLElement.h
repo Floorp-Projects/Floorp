@@ -223,7 +223,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
 #ifdef DEBUG
@@ -635,7 +635,7 @@ public:
    * @return whether the impact was set
    */
   static PRBool GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
-                                                PRInt32& aHint);
+                                                nsChangeHint& aHint);
 
   /**
    * Get the style impact of image attributes (width, height, hspace and vspace
@@ -646,7 +646,7 @@ public:
    * @return whether the impact was set
    */
   static PRBool GetImageMappedAttributesImpact(const nsIAtom* aAttribute,
-                                               PRInt32& aHint);
+                                               nsChangeHint& aHint);
   /**
    * Get the style impact of image align attributes (align currently).  To be
    * called from GetMappedAttributeImpact().
@@ -656,7 +656,7 @@ public:
    * @return whether the impact was set
    */
   static PRBool GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
-                                             PRInt32& aHint);
+                                             nsChangeHint& aHint);
 
   /**
    * Helper to map the align attribute into a style struct.
@@ -703,7 +703,7 @@ public:
    * @return whether the impact was set
    */
   static PRBool GetImageBorderAttributeImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint);
+                                              nsChangeHint& aHint);
 
   /**
    * Helper to map the background attributes (currently background and bgcolor)
@@ -724,7 +724,7 @@ public:
    * @return whether the impact was set
    */
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
-                                              PRInt32& aHint);
+                                              nsChangeHint& aHint);
 
   /**
    * Get the primary frame for a piece of content.

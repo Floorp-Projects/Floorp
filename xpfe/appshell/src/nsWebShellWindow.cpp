@@ -1588,7 +1588,7 @@ nsWebShellWindow::AttributeChanged(nsIDocument *aDocument,
                                    PRInt32      aNameSpaceID,
                                    nsIAtom*     aAttribute,
                                    PRInt32      aModType, 
-                                   PRInt32      aHint)
+                                   nsChangeHint aHint)
 {
 #if 0
   //printf("AttributeChanged\n");
@@ -1675,7 +1675,7 @@ NS_IMETHODIMP
 nsWebShellWindow::StyleRuleChanged(nsIDocument *aDocument,
                              nsIStyleSheet* aStyleSheet,
                              nsIStyleRule* aStyleRule,
-                             PRInt32 aHint)
+                             nsChangeHint aHint)
 {
   return NS_OK;
 }

@@ -68,7 +68,7 @@ public:
   NS_DECL_NSIDOMHTMLBASEFONTELEMENT
 
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -158,7 +158,7 @@ NS_IMPL_STRING_ATTR(nsHTMLBaseFontElement, Size, size)
 
 NS_IMETHODIMP
 nsHTMLBaseFontElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                PRInt32& aHint) const
+                                                nsChangeHint& aHint) const
 {
   if ((nsHTMLAtoms::color == aAttribute) ||
       (nsHTMLAtoms::face == aAttribute) ||

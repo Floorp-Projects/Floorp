@@ -39,6 +39,7 @@
 #define nsCSSProps_h___
 
 #include "nsString.h"
+#include "nsChangeHint.h"
 
 /*
    Declare the enum list using the magic of preprocessing
@@ -80,7 +81,7 @@ public:
   static PRInt32 SearchKeywordTableInt(PRInt32 aValue, const PRInt32 aTable[]);
   static const nsAFlatCString& SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[]);
 
-  static const PRInt32  kHintTable[];
+  static const nsChangeHint  kHintTable[];
 
   // Keyword/Enum value tables
   static const PRInt32 kAppearanceKTable[];

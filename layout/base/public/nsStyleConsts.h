@@ -41,20 +41,6 @@
 
 // XXX fold this into nsIStyleContext and group by nsStyleXXX struct
 
-// Defines for various style related constants
-
-// Style change hints
-#define NS_STYLE_HINT_UNKNOWN    -1
-#define NS_STYLE_HINT_NONE        0   // change has no impact
-#define NS_STYLE_HINT_ATTRCHANGE  1   // change should cause notification to frame but nothing else
-#define NS_STYLE_HINT_AURAL       2   // change was aural
-#define NS_STYLE_HINT_CONTENT     3   // change was contentual (ie: SRC=)
-#define NS_STYLE_HINT_VISUAL      4   // change was visual only (ie: COLOR=)
-#define NS_STYLE_HINT_REFLOW      5   // change requires reflow (ie: WIDTH=)
-#define NS_STYLE_HINT_FRAMECHANGE 6   // change requires frame change (ie: display:)
-#define NS_STYLE_HINT_RECONSTRUCT_ALL 7 // change requires reconstruction of entire document (ie: style sheet change)
-#define NS_STYLE_HINT_MAX         NS_STYLE_HINT_RECONSTRUCT_ALL
-
 // Indicies into border/padding/margin arrays
 #define NS_SIDE_TOP     0
 #define NS_SIDE_RIGHT   1

@@ -39,6 +39,7 @@
 #define nsIStyledContent_h___
 
 #include "nsIContent.h"
+#include "nsChangeHint.h"
 
 class nsString;
 class nsIStyleRule;
@@ -71,7 +72,7 @@ public:
    * All other attributes return NS_STYLE_HINT_CONTENT
    */
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType, 
-                                      PRInt32& aHint) const = 0;
+                                      nsChangeHint& aHint) const = 0;
 
 };
 

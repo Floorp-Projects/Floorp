@@ -353,7 +353,7 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
     nsCOMPtr<nsIFrameManager> fm;
     presShell->GetFrameManager(getter_AddRefs(fm));
     if (fm) {
-      PRInt32 maxChange, minChange = NS_STYLE_HINT_NONE;
+      nsChangeHint maxChange, minChange = NS_STYLE_HINT_NONE;
       nsStyleChangeList changeList;
       fm->ComputeStyleChangeFor(aPresContext, this,
                                 kNameSpaceID_None, nsMathMLAtoms::fontstyle,

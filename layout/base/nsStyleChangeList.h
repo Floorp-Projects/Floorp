@@ -38,6 +38,8 @@
 #define nsStyleChangeList_h___
 
 #include "nsError.h"
+#include "nsChangeHint.h"
+
 class nsIFrame;
 class nsIContent;
 
@@ -45,7 +47,7 @@ class nsIContent;
 struct nsStyleChangeData {
   nsIFrame*   mFrame;
   nsIContent* mContent;
-  PRInt32     mHint;
+  nsChangeHint mHint;
 };
 
 static const PRUint32 kStyleChangeBufferSize = 10;
@@ -60,9 +62,9 @@ public:
   }
 
   nsresult ChangeAt(PRInt32 aIndex, nsIFrame*& aFrame, nsIContent*& aContent,
-                    PRInt32& aHint) const;
+                    nsChangeHint& aHint) const;
 
-  nsresult AppendChange(nsIFrame* aFrame, nsIContent* aContent, PRInt32 aHint);
+  nsresult AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint);
 
   void Clear(void);
 

@@ -90,7 +90,7 @@ public:
                                nsAString& aResult) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -1508,7 +1508,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
 NS_IMETHODIMP
 nsHTMLTableElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                             PRInt32& aHint) const
+                                             nsChangeHint& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::layout) ||
       (aAttribute == nsHTMLAtoms::cellpadding) ||

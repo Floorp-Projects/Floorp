@@ -73,7 +73,7 @@ public:
                                const nsAString& aValue,
                                nsHTMLValue& aResult);
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
@@ -180,7 +180,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aD
 
 NS_IMETHODIMP
 nsHTMLDListElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                             PRInt32& aHint) const
+                                             nsChangeHint& aHint) const
 {
   if (aAttribute == nsHTMLAtoms::compact) {
     aHint = NS_STYLE_HINT_CONTENT; // handled by ua.css?

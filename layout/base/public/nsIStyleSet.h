@@ -40,6 +40,7 @@
 
 #include <stdio.h>
 #include "nsISupports.h"
+#include "nsChangeHint.h"
 
 class nsIAtom;
 class nsIStyleRule;
@@ -239,13 +240,13 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aModType, 
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
 
   // Style change notifications
   NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule,
-                              PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
+                              nsChangeHint aHint) = 0;
   NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) = 0;

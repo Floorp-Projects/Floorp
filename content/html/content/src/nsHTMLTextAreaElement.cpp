@@ -133,7 +133,7 @@ public:
                                nsHTMLValue& aResult);
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
@@ -619,7 +619,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
 
 NS_IMETHODIMP
 nsHTMLTextAreaElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                PRInt32& aHint) const
+                                                nsChangeHint& aHint) const
 {
   // XXX Bug 50280 - It is unclear why we need to do this here for 
   // rows and cols and why the AttributeChanged method in

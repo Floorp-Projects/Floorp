@@ -39,7 +39,9 @@
 #define nsCSS1Parser_h___
 
 #include "nsISupports.h"
+#include "nsChangeHint.h"
 #include "nsAString.h"
+
 class nsIStyleRule;
 class nsICSSStyleSheet;
 class nsIUnicharInputStream;
@@ -93,7 +95,7 @@ public:
                                        nsIURI*                  aBaseURL,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
-                                       PRInt32*                 aHint) = 0;
+                                       nsChangeHint*            aHint) = 0;
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
                        nsIURI*            aBaseURL,
@@ -103,7 +105,7 @@ public:
                            const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
-                           PRInt32* aHint) = 0;
+                           nsChangeHint* aHint) = 0;
   
   // Charset management method:
   //  Set the charset before calling any of the Parse emthods if you want the 

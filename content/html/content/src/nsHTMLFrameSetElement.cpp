@@ -89,7 +89,7 @@ public:
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                      PRInt32& aHint) const;
+                                      nsChangeHint& aHint) const;
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -113,7 +113,7 @@ private:
    * The style hint to return for the rows/cols attrs in
    * GetMappedAttributeImpact
    */
-  PRInt32          mCurrentRowColHint;
+  nsChangeHint      mCurrentRowColHint;
   /**
    * The parsed representation of the "rows" attribute
    */
@@ -385,7 +385,7 @@ nsHTMLFrameSetElement::AttributeToString(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLFrameSetElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32 aModType,
-                                                PRInt32& aHint) const
+                                                nsChangeHint& aHint) const
 {
   if ((aAttribute == nsHTMLAtoms::rows) ||
       (aAttribute == nsHTMLAtoms::cols)) {

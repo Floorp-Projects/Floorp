@@ -665,7 +665,7 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     } else if (position->mZIndex.GetUnit() == eStyleUnit_Auto) {
       autoZIndex = PR_TRUE;
     } 
-  
+
     vm->SetViewZIndex(aView, autoZIndex, zIndex, oldTopMost);
 
     // There are two types of clipping:
