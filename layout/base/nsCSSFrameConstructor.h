@@ -490,6 +490,7 @@ protected:
                                nsIContent*              aContent,
                                nsIFrame*                aParentFrame,
                                nsIAtom*                 aTag,
+                               PRInt32                  aNameSpaceID,
                                nsIStyleContext*         aStyleContext,
                                nsFrameItems&            aFrameItems);
 
@@ -499,6 +500,7 @@ protected:
                                    nsIContent*              aContent,
                                    nsIFrame*                aParentFrame,
                                    nsIAtom*                 aTag,
+                                   PRInt32                  aNameSpaceID,
                                    nsIStyleContext*         aStyleContext,
                                    nsFrameItems&            aFrameItems,
                                    PRBool                   aXBLBaseTag);
@@ -536,6 +538,7 @@ protected:
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
+                                PRInt32                  aNameSpaceID,
                                 nsIStyleContext*         aStyleContext,
                                 nsFrameItems&            aFrameItems);
 #endif
@@ -547,6 +550,7 @@ protected:
                              nsIContent*              aContent,
                              nsIFrame*                aParentFrame,
                              nsIAtom*                 aTag,
+                             PRInt32                  aNameSpaceID,
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
                              PRBool&                  aHaltProcessing);
@@ -561,6 +565,7 @@ protected:
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
                                 nsIAtom*                 aTag,
+                                PRInt32                  aNameSpaceID,
                                 nsIStyleContext*         aStyleContext,
                                 nsFrameItems&            aFrameItems);
 #endif

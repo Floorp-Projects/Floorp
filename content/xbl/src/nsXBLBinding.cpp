@@ -149,7 +149,7 @@ class nsXBLBinding: public nsIXBLBinding, public nsIScriptObjectOwner
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement);
 
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult);
+  NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag);
 
@@ -912,10 +912,10 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
 }
 
 NS_IMETHODIMP
-nsXBLBinding::GetBaseTag(nsIAtom** aResult)
+nsXBLBinding::GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
   if (mNextBinding)
-    return mNextBinding->GetBaseTag(aResult);
+    return mNextBinding->GetBaseTag(aNameSpaceID, aResult);
 
   // XXX Cache the value as a "base" attribute so that we don't do this
   // check over and over each time the bound element occurs.
@@ -945,7 +945,7 @@ nsXBLBinding::GetBaseTag(nsIAtom** aResult)
           nameSpace->FindNameSpace(prefixAtom, *getter_AddRefs(tagSpace));
           if (tagSpace) {
             // Score! Return the tag.
-          // XXX We should really return the namespace as well.
+            tagSpace->GetNameSpaceID(*aNameSpaceID);
             *aResult = NS_NewAtom(extends); // The addref happens here
           }
         }
@@ -959,8 +959,9 @@ nsXBLBinding::GetBaseTag(nsIAtom** aResult)
 NS_IMETHODIMP
 nsXBLBinding::AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag)
 {
-  if (mNextBinding)
-    mNextBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag);
+// XXX check to see if we inherit anonymous content from a base binding 
+// if (mNextBinding)
+//    mNextBinding->AttributeChanged(aAttribute, aNameSpaceID, aRemoveFlag);
 
   if (!mAttributeTable)
     return NS_OK;

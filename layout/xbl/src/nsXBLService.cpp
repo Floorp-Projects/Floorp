@@ -131,7 +131,7 @@ class nsXBLService: public nsIXBLService
                             PRBool* aMultipleInsertionPoints);
 
   // Gets the object's base class type.  
-  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult);
+  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD AllowScripts(nsIContent* aContent, PRBool* aAllowScripts);
 
@@ -371,7 +371,7 @@ nsXBLService::FlushBindingDocuments()
 }
 
 NS_IMETHODIMP
-nsXBLService::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
+nsXBLService::ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult)
 {
   nsCOMPtr<nsIDocument> document;
   aContent->GetDocument(*getter_AddRefs(document));
@@ -380,9 +380,10 @@ nsXBLService::ResolveTag(nsIContent* aContent, nsIAtom** aResult)
     document->GetBindingManager(getter_AddRefs(bindingManager));
   
     if (bindingManager)
-      return bindingManager->ResolveTag(aContent, aResult);
+      return bindingManager->ResolveTag(aContent, aNameSpaceID, aResult);
   }
 
+  aContent->GetNameSpaceID(*aNameSpaceID);
   aContent->GetTag(*aResult); // Addref happens here.
   return NS_OK;
 }
@@ -465,7 +466,8 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
       if (!value.IsEmpty()) {
         // See if we are extending a builtin tag.
         nsCOMPtr<nsIAtom> tag;
-        (*aResult)->GetBaseTag(getter_AddRefs(tag));
+        PRInt32 dummy;
+        (*aResult)->GetBaseTag(&dummy, getter_AddRefs(tag));
         if (!tag) {
           // We have a base class binding. Load it right now.
           nsCOMPtr<nsIXBLBinding> baseBinding;

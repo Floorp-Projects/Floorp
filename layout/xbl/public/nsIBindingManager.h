@@ -50,7 +50,7 @@ public:
   NS_IMETHOD GetBinding(nsIContent* aContent, nsIXBLBinding** aResult) = 0;
   NS_IMETHOD SetBinding(nsIContent* aContent, nsIXBLBinding* aBinding) = 0;
 
-  NS_IMETHOD ResolveTag(nsIContent* aContent, nsIAtom** aResult) = 0;
+  NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult) = 0;
   NS_IMETHOD GetSingleInsertionPoint(nsIContent* aParent, nsIContent** aResult, 

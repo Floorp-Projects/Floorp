@@ -61,7 +61,7 @@ public:
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallProperties(nsIContent* aBoundElement) = 0;
 
-  NS_IMETHOD GetBaseTag(nsIAtom** aResult) = 0;
+  NS_IMETHOD GetBaseTag(PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   // Called when an attribute changes on a binding.
   NS_IMETHOD AttributeChanged(nsIAtom* aAttribute, PRInt32 aNameSpaceID, PRBool aRemoveFlag) = 0;

@@ -794,9 +794,10 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsresult rv;
     NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
 
-    if (NS_SUCCEEDED(rv) && xblService) 
-      xblService->ResolveTag(content, getter_AddRefs(atom));
-    else
+    if (NS_SUCCEEDED(rv) && xblService) {
+      PRInt32 dummy;
+      xblService->ResolveTag(content, &dummy, getter_AddRefs(atom));
+    } else
       content->GetTag(*getter_AddRefs(atom));
 
     // skip over any splitters
