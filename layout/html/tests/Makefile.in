@@ -42,14 +42,21 @@ else
 EXTRA_DSO_LIBS += raptorgfx
 endif
 
+EXTRA_DSO_LIBS += jsdom
+
 LIBS		= \
 		$(DIST)/lib/libraptorhtmlbase_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libnglhtmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libraptorhtmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorhtmlforms_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libraptorhtmlstyle_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libraptorhtmltable_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libraptorlayout_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libraptorevents_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxmlcontent_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxmldoc_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxulbase_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libraptorxulcontent_s.$(LIB_SUFFIX) \
 		$(MOZ_TIMER_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
