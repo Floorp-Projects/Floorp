@@ -445,6 +445,12 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
 {
   nsReflowStatus status;
                                                   
+#ifdef NS_DEBUG
+  nsFrameState  kidFrameState;
+
+  aKidFrame->GetFrameState(kidFrameState);
+  NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
+#endif
   aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState, status);
 
   if (NS_FRAME_IS_COMPLETE(status)) {
@@ -482,6 +488,13 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
 {
   nsIRunaround*   reflowRunaround;
   nsReflowStatus  status;
+
+#ifdef NS_DEBUG
+  nsFrameState  kidFrameState;
+
+  aKidFrame->GetFrameState(kidFrameState);
+  NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
+#endif
 
   // Get the band for this y-offset and see whether there are any floaters
   // that have changed the left/right edges.

@@ -653,6 +653,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
 
       nsSize maxKidElementSize;
       nsReflowState kidReflowState(eReflowReason_Resize, availSize);
+      kidFrame->WillReflow(*aPresContext);
       result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
       // Place the child since some of it's content fit in us.
@@ -1027,6 +1028,7 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*      aPresContext,
 
       // Reflow the child into the available space
       nsReflowState kidReflowState(eReflowReason_Resize, kidAvailSize);
+      kidFrame->WillReflow(*aPresContext);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
 
       // Did the child fit?
@@ -1242,6 +1244,7 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
       break;
     }
     nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
+    kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
@@ -1448,6 +1451,7 @@ nsTableFrame::ReflowUnmappedChildren(nsIPresContext*      aPresContext,
     // fit or might need continuing.
     nsReflowMetrics kidSize(pKidMaxElementSize);
     nsReflowState   kidReflowState(eReflowReason_Initial, aState.availSize);
+    kidFrame->WillReflow(*aPresContext);
     nsReflowStatus status = ReflowChild(kidFrame,aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
