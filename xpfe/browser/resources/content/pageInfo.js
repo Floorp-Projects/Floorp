@@ -120,7 +120,7 @@ function onLoadPageInfo()
 
     if (tabName)
     {
-      var tabControl = document.getElementById("tabcontrol");
+      var tabControl = document.getElementById("tabbox");
       var tab = document.getElementById(tabName);
 
       if (tabControl && tab)
