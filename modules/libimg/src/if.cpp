@@ -1913,6 +1913,7 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
         return PR_TRUE;
     }
 
+#ifdef xxx
     /* real ugly hack until I figure out the right way to get the presContext from aObserver */
     nsIPresContext* presContext = (nsIPresContext*)(((PRInt32 *)aObserver)[3]);
 
@@ -1930,6 +1931,9 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
         Recycle(host);
         return PR_TRUE;
     }
+#else
+    char* firstHost = PL_strdup(host);
+#endif
 
     /* check to see if we need to block image from loading */
     NS_WITH_SERVICE(nsICookieService, cookieservice, kCookieServiceCID, &rv);
