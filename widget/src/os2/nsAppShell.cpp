@@ -154,8 +154,8 @@ nsresult nsAppShell::Run()
       {
          WinDispatchMsg( mHab, &mQmsg);
       }
-      else
-      {  // WM_QUIT
+      else if( mQmsg.msg == WM_QUIT)
+      {
          if( mQmsg.hwnd)
             // send WM_SYSCOMMAND, SC_CLOSE to window (tasklist close)
             WinSendMsg( mQmsg.hwnd, WM_SYSCOMMAND, MPFROMSHORT(SC_CLOSE), 0);
@@ -164,6 +164,12 @@ nsresult nsAppShell::Run()
             if( mQuitNow) // Don't want to close the app when a window is
                break;     // closed, just when our `Exit' is called.
          }
+      }
+      else
+      {
+         ULONG pmerr = WinGetLastError( mHab);
+         printf( "WinGetMsg failed with error %x -- bailing out!\n", pmerr);
+         break;
       }
 
       if( mDispatchListener)
