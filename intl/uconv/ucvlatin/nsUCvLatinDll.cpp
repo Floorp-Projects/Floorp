@@ -133,6 +133,30 @@ FactoryData g_FactoryData[] =
     "Unicode"
   },
   {
+    &kMacRomanToUnicodeCID,
+    nsMacRomanToUnicode::CreateInstance,
+    "MacRoman",
+    "Unicode"
+  },
+  {
+    &kMacCEToUnicodeCID,
+    nsMacCEToUnicode::CreateInstance,
+    "MacCE",
+    "Unicode"
+  },
+  {
+    &kMacGreekToUnicodeCID,
+    nsMacGreekToUnicode::CreateInstance,
+    "MacGreek",
+    "Unicode"
+  },
+  {
+    &kMacTurkishToUnicodeCID,
+    nsMacTurkishToUnicode::CreateInstance,
+    "MacTurkish",
+    "Unicode"
+  },
+  {
     &kUTF8ToUnicodeCID,
     nsUTF8ToUnicode::CreateInstance,
     "UTF-8",
@@ -143,6 +167,72 @@ FactoryData g_FactoryData[] =
     nsUnicodeToLatin1::CreateInstance,
     "Unicode",
     "ISO-8859-1"
+  },
+  {
+    &kUnicodeToISO88592CID,
+    nsUnicodeToISO88592::CreateInstance,
+    "Unicode",
+    "ISO-8859-2"
+  },
+  {
+    &kUnicodeToISO88597CID,
+    nsUnicodeToISO88597::CreateInstance,
+    "Unicode",
+    "ISO-8859-7"
+  },
+  {
+    &kUnicodeToISO88599CID,
+    nsUnicodeToISO88599::CreateInstance,
+    "Unicode",
+    "ISO-8859-9"
+  },
+  {
+    &kUnicodeToCP1250CID,
+    nsUnicodeToCP1250::CreateInstance,
+    "Unicode",
+    "windows-1250"
+  },
+  {
+    &kUnicodeToCP1252CID,
+    nsUnicodeToCP1252::CreateInstance,
+    "Unicode",
+    "windows-1252"
+  },
+  {
+    &kUnicodeToCP1253CID,
+    nsUnicodeToCP1253::CreateInstance,
+    "Unicode",
+    "windows-1253"
+  },
+  {
+    &kUnicodeToCP1254CID,
+    nsUnicodeToCP1254::CreateInstance,
+    "Unicode",
+    "windows-1254"
+  },
+  {
+    &kUnicodeToMacRomanCID,
+    nsUnicodeToMacRoman::CreateInstance,
+    "Unicode",
+    "MacRoman"
+  },
+  {
+    &kUnicodeToMacCECID,
+    nsUnicodeToMacCE::CreateInstance,
+    "Unicode",
+    "MacCE"
+  },
+  {
+    &kUnicodeToMacGreekCID,
+    nsUnicodeToMacGreek::CreateInstance,
+    "Unicode",
+    "MacGreek"
+  },
+  {
+    &kUnicodeToMacTurkishCID,
+    nsUnicodeToMacTurkish::CreateInstance,
+    "Unicode",
+    "MacTurkish"
   },
   {
     &kUnicodeToUTF8CID,
