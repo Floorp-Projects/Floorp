@@ -54,6 +54,8 @@ public:
   nsImageGTK();
   virtual ~nsImageGTK();
 
+  static void Shutdown();
+
   NS_DECL_ISUPPORTS
 
   /**

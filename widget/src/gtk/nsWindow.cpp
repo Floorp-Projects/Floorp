@@ -124,6 +124,8 @@ static PRBool gRaiseWindows         = PR_TRUE;
 /* cursors cache */
 GdkCursor *nsWindow::gsGtkCursorCache[eCursor_count_up_down + 1];
 
+#define ARRAY_LENGTH(a) (sizeof(a)/sizeof(a[0]))
+
 /* window icon cache */
 struct IconEntry : public PLDHashEntryHdr {
   const char* string;
@@ -355,6 +357,33 @@ nsWindow::~nsWindow()
 
   if (mIsUpdating)
     UnqueueDraw();
+}
+
+/* static */ void
+nsWindow::ReleaseGlobals()
+{
+  if (gXICLookupTable.ops) {
+    PL_DHashTableFinish(&gXICLookupTable);
+    gXICLookupTable.ops = nsnull;
+  }
+  if (sIconCache) {
+    PL_DHashTableDestroy(sIconCache);
+    sIconCache = nsnull;
+  }
+  if (gPreeditFontset) {
+    gdk_font_unref(gPreeditFontset);
+    gPreeditFontset = nsnull;
+  }
+  if (gStatusFontset) {
+    gdk_font_unref(gStatusFontset);
+    gStatusFontset = nsnull;
+  }
+  for (int i = 0; i < ARRAY_LENGTH(gsGtkCursorCache); ++i) {
+    if (gsGtkCursorCache[i]) {
+      gdk_cursor_destroy(gsGtkCursorCache[i]);
+      gsGtkCursorCache[i] = nsnull;
+    }
+  }
 }
 
 NS_IMETHODIMP nsWindow::Destroy(void)
@@ -4287,11 +4316,4 @@ nsWindow::ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr)
   if (entry->string)
     free((void*) entry->string);
   PL_DHashClearEntryStub(aTable, aHdr);
-}
-
-void
-nsWindow::FreeIconCache()
-{
-  if (sIconCache)
-    PL_DHashTableDestroy(sIconCache);
 }

@@ -70,6 +70,8 @@ public:
   nsWindow();
   virtual ~nsWindow();
 
+  static void ReleaseGlobals();
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_IMETHOD           WidgetToScreen(const nsRect &aOldRect, nsRect &aNewRect);
@@ -194,7 +196,6 @@ public:
                                  const PLDHashEntryHdr* aHdr,
                                  const void* aKey);
   static void ClearIconEntry(PLDHashTable* aTable, PLDHashEntryHdr* aHdr);
-  static void FreeIconCache(void);
 
 protected:
 

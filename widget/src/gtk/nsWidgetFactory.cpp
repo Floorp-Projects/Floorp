@@ -232,7 +232,8 @@ static const nsModuleComponentInfo components[] =
 PR_STATIC_CALLBACK(void)
 nsWidgetGTKModuleDtor(nsIModule *self)
 {
-  nsWindow::FreeIconCache();
+  nsWindow::ReleaseGlobals();
+  nsAppShell::ReleaseGlobals();
   nsGtkIMEHelper::Shutdown();
 }
 
