@@ -1847,12 +1847,11 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 
   // Add the map to the document
   mHTMLDocument->AddImageMap(domMap);
-  mCurrentMap = map;
-  mCurrentDOMMap = domMap;
+  mCurrentMap = map;  // holds a reference
+  mCurrentDOMMap = domMap;  // holds a reference
 
   // Add the map content object to the document
   rv = mCurrentContext->AddLeaf(map);
-  NS_RELEASE(map);
   return rv;
 }
 
