@@ -139,8 +139,3 @@ DIST_GARBAGE = config.cache config.log config.status config-defs.h \
 
 include $(topsrcdir)/config/rules.mk
 
-ifndef MOZ_MAIL_NEWS
-export::
-	$(MAKE) -C mailnews export
-endif
-
