@@ -1,0 +1,18 @@
+#
+# This is a list of local files which get copied to the mozilla:dist directory
+#
+
+DefinesMac.h
+DefinesMozilla.h
+
+JavaDefines.h
+
+MacConfigInclude.h
+
+MacPrefix.h
+MacPrefix_debug.h
+
+MacStaticPrefix.h
+MacStaticPrefix_debug.h
+MacSharedPrefix.h
+MacSharedPrefix_debug.h
