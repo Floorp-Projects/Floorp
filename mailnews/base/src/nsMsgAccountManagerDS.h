@@ -26,8 +26,10 @@
 #include "nscore.h"
 #include "nsError.h"
 #include "nsIID.h"
-#include "nsMsgRDFDataSource.h"
 #include "nsCOMPtr.h"
+#include "nsIStringBundle.h"
+
+#include "nsMsgRDFDataSource.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIIncomingServerListener.h"
 #include "nsWeakPtr.h"
@@ -137,10 +139,13 @@ private:
   static PRBool findServerByKey(nsISupports *aElement, void *aData);
 
   nsresult serverHasIdentities(nsIMsgIncomingServer *aServer, PRBool *aResult);
+  nsresult getStringBundle();
 
   static nsCOMPtr<nsISupportsArray> mAccountArcsOut;
   static nsCOMPtr<nsISupportsArray> mAccountRootArcsOut;
   nsWeakPtr mAccountManager;
+
+  nsCOMPtr<nsIStringBundle> mStringBundle;
 
 };
 

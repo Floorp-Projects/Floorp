@@ -46,6 +46,7 @@
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define NC_RDF_PAGETITLE_MAIN     NC_NAMESPACE_URI "PageTitleMain"
 #define NC_RDF_PAGETITLE_SERVER   NC_NAMESPACE_URI "PageTitleServer"
@@ -255,36 +256,36 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
   nsAutoString str("");
   if (property == kNC_Name || property == kNC_FolderTreeName) {
 
-    // XXX these should be localized
-    if (source == kNC_PageTitleMain)
-      str = "Main";
-    
-    else if (source == kNC_PageTitleServer)
-      str = "Server";
+      rv = getStringBundle();
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      nsXPIDLString pageTitle;
+      if (source == kNC_PageTitleServer)
+          mStringBundle->GetStringFromName(nsAutoString("prefPanel-server").GetUnicode(),
+                                           getter_Copies(pageTitle));
+      
+      else if (source == kNC_PageTitleCopies)
+          mStringBundle->GetStringFromName(nsAutoString("prefPanel-copies").GetUnicode(),
+                                           getter_Copies(pageTitle));
 
-    else if (source == kNC_PageTitleCopies)
-      str = "Copies and Folders";
+      else if (source == kNC_PageTitleAdvanced)
+          mStringBundle->GetStringFromName(nsAutoString("prefPanel-advanced").GetUnicode(),
+                                           getter_Copies(pageTitle));
 
-    else if (source == kNC_PageTitleAdvanced)
-      str = "Advanced";
+      else if (source == kNC_PageTitleSMTP)
+          mStringBundle->GetStringFromName(nsAutoString("prefPanel-smtp").GetUnicode(),
+                                           getter_Copies(pageTitle));
 
-    else if (source == kNC_PageTitleSMTP)
-      str = "Outgoing (SMTP) Server";
-    
-    else {
-      nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
-      if (NS_SUCCEEDED(rv)) {
-        PRBool isServer;
-		rv = folder->GetIsServer(&isServer);
-		if(NS_SUCCEEDED(rv) && isServer)
-		{
-			nsXPIDLString prettyName;
-			rv = folder->GetPrettyName(getter_Copies(prettyName));
-			if (NS_SUCCEEDED(rv))
-			  str.Assign(prettyName);
-		}
+      else {
+          nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(source, &rv);
+          if (NS_SUCCEEDED(rv)) {
+              PRBool isServer;
+              rv = folder->GetIsServer(&isServer);
+              if(NS_SUCCEEDED(rv) && isServer)
+                  rv = folder->GetPrettyName(getter_Copies(pageTitle));
+          }
       }
-    }
+      str.Assign((const PRUnichar*)pageTitle);
   }
   else if (property == kNC_PageTag) {
     // do NOT localize these strings. these are the urls of the XUL files
@@ -810,6 +811,23 @@ nsMsgAccountManagerDataSource::findServerByKey(nsISupports *aElement,
     }
     
     return PR_TRUE;
+}
+
+nsresult
+nsMsgAccountManagerDataSource::getStringBundle()
+{
+    if (mStringBundle) return NS_OK;
+
+    nsresult rv;
+
+    nsCOMPtr<nsIStringBundleService> strBundleService =
+        do_GetService(kStringBundleServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = strBundleService->CreateBundle("chrome://messenger/locale/prefs.properties",
+                                        nsnull, // default locale
+                                        getter_AddRefs(mStringBundle));
+    return rv;
 }
 
 NS_IMETHODIMP
