@@ -296,6 +296,7 @@ public:
     const nsHTMLReflowState* mReflowState;
     PRBool mNoWrap;
     PRUint8 mDirection;
+    PRBool mChangedFrameDirection;
 
     nscoord mLeftEdge;
     nscoord mX;
