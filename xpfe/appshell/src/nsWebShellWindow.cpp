@@ -33,10 +33,16 @@
 #include "nsIWidgetController.h"
 #include "nsAppShellCIDs.h"
 
+#include "nsXULCommand.h"
+#include "nsIXULCommand.h"
+
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIDocumentLoader.h"
 
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
@@ -50,6 +56,12 @@ static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_IID(kIWidgetControllerIID,   NS_IWIDGETCONTROLLER_IID);
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
+static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID,        NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,            NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDOMElementIID,         NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIXULCommandIID,         NS_IXULCOMMAND_IID);
 
 
 
@@ -94,8 +106,13 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  if (aIID.Equals(kIDocumentLoaderObserverIID)) {
+    *aInstancePtr = (void*) ((nsIDocumentLoaderObserver*)this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
+    *aInstancePtr = (void*)(nsISupports*)(nsIWebShellContainer*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -162,7 +179,13 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl,
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
   mWebShell->SetContainer(this);
-///  webShell->SetObserver((nsIStreamObserver*)this);
+  //mWebShell->SetObserver((nsIStreamObserver*)this);
+
+  nsIDocumentLoader * docLoader;
+  mWebShell->GetDocumentLoader(docLoader);
+  if (nsnull != docLoader) {
+    docLoader->AddObserver((nsIDocumentLoaderObserver *)this);
+  }
 ///  webShell->SetPrefs(aPrefs);
 
   mWebShell->LoadURL(urlString);
@@ -260,38 +283,193 @@ nsWebShellWindow::ProgressLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
   return NS_OK;
 }
 
+nsIDOMNode * nsWebShellWindow::FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName) 
+{
+  nsIDOMElement * element;
+  aDomDoc->GetDocumentElement(&element);
+  if (nsnull != element) {
+    nsIDOMNode * parent;
+    if (NS_OK == element->QueryInterface(kIDOMNodeIID, (void**) &parent)) {
+      nsIDOMNode * node;
+      parent->GetFirstChild(&node);
+      while (nsnull != node) {
+        nsString name;
+        node->GetNodeName(name);
+        printf("[%s]\n", name.ToNewCString());
+        if (name.Equals(aName)) {
+          NS_ADDREF(node);
+          NS_RELEASE(parent);
+          NS_RELEASE(element);
+          return node;
+        }
+        nsIDOMNode * oldNode = node;
+        oldNode->GetNextSibling(&node);
+        NS_RELEASE(oldNode);
+      }
+      NS_IF_RELEASE(node);
+      NS_RELEASE(parent);
+    }
+    NS_RELEASE(element);
+  }
+  return nsnull;
+}
+
+void nsWebShellWindow::LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc) 
+{
+  nsIDOMNode * parentCmd = FindNamedParentFromDoc(aDOMDoc, nsAutoString("commands"));
+  if (nsnull != parentCmd) {
+    nsIDOMNode * node;
+    parentCmd->GetFirstChild(&node);
+    while (nsnull != node) {
+      nsIDOMElement * element;
+      nsString value;
+      nsString nodeType;
+      nsString name;
+      if (NS_OK == node->QueryInterface(kIDOMNodeIID, (void**) &element)) {
+        element->GetNodeName(nodeType);
+        if (nodeType.Equals("command")) {
+          element->GetAttribute(nsAutoString("name"), name);
+          element->GetAttribute(nsAutoString("onCommand"), value);
+
+          nsXULCommand * xulCmd = new nsXULCommand();
+          xulCmd->SetName(name);
+          xulCmd->SetCommand(value);
+          xulCmd->SetWebShell(aWebShell);
+          xulCmd->SetDOMElement(element);
+          nsIXULCommand * icmd;
+          if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+            mCommands.AppendElement(icmd);
+          }
+          printf("Commands[%s] value[%s]\n", name.ToNewCString(), value.ToNewCString());
+        }
+        NS_RELEASE(element);
+      }
+
+      //node->GetAttribute();
+      nsIDOMNode * oldNode = node;
+      oldNode->GetNextSibling(&node);
+      NS_RELEASE(oldNode);
+    }
+    NS_IF_RELEASE(node);
+
+    NS_RELEASE(parentCmd);
+  }
+
+  // Now install the commands onto the Toolbar GUI Nodes
+  parentCmd = FindNamedParentFromDoc(aDOMDoc, nsAutoString("toolbar"));
+  if (nsnull != parentCmd) {
+    nsAutoString cmdAtom("cmd");
+    nsIDOMNode * node;
+    parentCmd->GetFirstChild(&node);
+    while (nsnull != node) {
+      nsIDOMElement * element;
+      nsAutoString value;
+      nsString nodeCmd;
+      if (NS_OK == node->QueryInterface(kIDOMElementIID, (void**) &element)) {
+        nsString name;
+        element->GetNodeName(name);
+        if (name.Equals(nsAutoString("BUTTON"))) {
+          element->GetAttribute(cmdAtom, nodeCmd);
+          PRInt32 i, n = mCommands.Count();
+          for (i = 0; i < n; i++) {
+            nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
+            nsAutoString cmdName;
+            cmd->GetName(cmdName);
+            printf("Cmd [%s] Node[%s]\n", cmdName.ToNewCString(), nodeCmd.ToNewCString());
+            if (nodeCmd.Equals(cmdName)) {
+              printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
+              cmd->AddUINode(node);
+            }
+          }
+        } else if (name.Equals(nsAutoString("INPUT"))) {
+          nsXULCommand * xulCmd = new nsXULCommand();
+          xulCmd->SetName(name);
+          xulCmd->SetCommand(value);
+          xulCmd->SetWebShell(aWebShell);
+          xulCmd->SetDOMElement(element);
+          nsIXULCommand * icmd;
+          if (NS_OK == xulCmd->QueryInterface(kIXULCommandIID, (void**) &icmd)) {
+            mCommands.AppendElement(icmd);
+          }
+          xulCmd->AddUINode(node);
+          //printf("Linking up cmd to button [%s]\n", cmdName.ToNewCString());
+        }
+        NS_RELEASE(element);
+      }
+
+      //node->GetAttribute();
+      nsIDOMNode * oldNode = node;
+      oldNode->GetNextSibling(&node);
+      NS_RELEASE(oldNode);
+    }
+    NS_IF_RELEASE(node);
+
+    NS_RELEASE(parentCmd);
+  }
+
+  PRInt32 i, n = mCommands.Count();
+  for (i = 0; i < n; i++) {
+    nsIXULCommand* cmd = (nsIXULCommand*) mCommands.ElementAt(i);
+    cmd->SetEnabled(PR_FALSE);
+  }
+
+
+}
+
 NS_IMETHODIMP 
 nsWebShellWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL,
                              PRInt32 aStatus)
 {
-  nsresult rv;
-
-  if (nsnull != mController) {
-    static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
-    static NS_DEFINE_IID(kIDOMDocumentIID,    NS_IDOMDOCUMENT_IID);
-
-    nsIContentViewer* viewer;
-    nsIDocumentViewer* docViewer;
-    nsIDocument* document;
-    nsIDOMDocument* domDocument;
-
-    mWebShell->GetContentViewer(&viewer);
-    rv = viewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer);
-    if (NS_SUCCEEDED(rv)) {
-      rv = docViewer->GetDocument(document);
-      if (NS_SUCCEEDED(rv)) {
-        rv = document->QueryInterface(kIDOMDocumentIID, (void**)&domDocument);
-        if (NS_SUCCEEDED(rv)) {
-          rv = mController->Initialize(domDocument, mWebShell);
-          NS_RELEASE(domDocument);
-        }
-        NS_RELEASE(document);
-      }
-      NS_RELEASE(docViewer);
+ /* nsIWebShell* child = nsnull;
+  if (aShell == mWebShell) {
+    mWebShell->ChildAt(0, child);
+    printf("Child 0 is 0x%x\n", child);
+    NS_IF_RELEASE(child);
+    mWebShell->ChildAt(1, child);
+    printf("Child 1 is 0x%x\n", child);
+    if (nsnull != child) {
+      child->SetObserver((nsIStreamObserver*)this);
+      NS_IF_RELEASE(child);
     }
-    NS_RELEASE(viewer);
   }
+  // browserwindow
+  mWebShell->ChildAt(0, child);
+  if (aShell == child) {
+    int x = 0;
+    //child->SetObserver((nsIStreamObserver*)this);
+  }
+  NS_RELEASE(child);
+*/
+  // Toolbar
+/*  nsIWebShell* child = nsnull;
+  mWebShell->ChildAt(0, child);
+  if (aShell == child) {
+    nsIContentViewer* cv = nsnull;
+    child->GetContentViewer(&cv);
+    if (nsnull != cv) {
+      nsIDocumentViewer* docv = nsnull;
+      cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+      if (nsnull != docv) {
+        nsIDocument * doc;
+        docv->GetDocument(doc);
+        if (nsnull != doc) {
+          nsIDOMDocument * domDoc;
+          if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+            nsIWebShell* targetWS = nsnull;
+            mWebShell->ChildAt(1, targetWS);
+            LoadCommands(targetWS, domDoc);
+            NS_RELEASE(domDoc);
+          }
 
+          NS_RELEASE(doc);
+        }
+        NS_RELEASE(docv);
+      }
+      NS_RELEASE(cv);
+    }
+  }
+  NS_IF_RELEASE(child);
+*/
   return NS_OK;
 }
 
@@ -315,3 +493,136 @@ nsWebShellWindow::FocusAvailable(nsIWebShell* aFocusedWebShell)
   return NS_OK;
 }
 
+
+//----------------------------------------
+//----------------------------------------
+//----------------------------------------
+//----------------------------------------
+// nsIDocumentLoaderObserver implementation
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnStartURLLoad(nsIURL* aURL, const char* aContentType, nsIContentViewer* aViewer)
+{
+  return NS_OK;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
+{
+  printf("*********** OnConnectionsComplete\n");
+  {
+    nsIWebShell* child = nsnull;
+    printf("Main WebShell 0 is 0x%x\n", mWebShell);
+    mWebShell->ChildAt(0, child);
+    printf("Child 0 is 0x%x\n", child);
+    NS_IF_RELEASE(child);
+    mWebShell->ChildAt(1, child);
+    printf("Child 1 is 0x%x\n", child);
+    NS_IF_RELEASE(child);
+  }
+
+  nsIWebShell* child = nsnull;
+  mWebShell->ChildAt(0, child);
+  nsIContentViewer* cv = nsnull;
+  child->GetContentViewer(&cv);
+  if (nsnull != cv) {
+    nsIDocumentViewer* docv = nsnull;
+    cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+    if (nsnull != docv) {
+      nsIDocument * doc;
+      docv->GetDocument(doc);
+      if (nsnull != doc) {
+        nsIDOMDocument * domDoc;
+        if (NS_OK == doc->QueryInterface(kIDOMDocumentIID, (void**) &domDoc)) {
+          nsIWebShell* targetWS = nsnull;
+          mWebShell->ChildAt(1, targetWS);
+          LoadCommands(targetWS, domDoc);
+          NS_RELEASE(domDoc);
+        }
+
+        NS_RELEASE(doc);
+      }
+      NS_RELEASE(docv);
+    }
+    NS_RELEASE(cv);
+  }
+  NS_IF_RELEASE(child);
+
+  return NS_OK;
+}
+
+//----------------------------------------
+
+// Stream observer implementation
+
+/*NS_IMETHODIMP
+nsWebShellWindow::OnProgress(nsIURL* aURL,
+                             PRUint32 aProgress,
+                             PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnStatus(nsIURL* aURL, const PRUnichar* aMsg)
+{
+  return NS_OK;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
+{
+  return NS_OK;
+}
+
+//----------------------------------------
+NS_IMETHODIMP nsWebShellWindow::OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg)
+{
+  {
+    PRUnichar* urlStr;
+    aURL->ToString(&urlStr);
+    nsString s(urlStr);
+    printf("OnStopBinding URL[%s]\n", s.ToNewCString());
+  }
+  if (nsnull != mWebShell) {
+    nsIWebShell* child = nsnull;
+    PRInt32 i, cnt;
+    mWebShell->GetChildCount(cnt);
+    for (i=0;i<cnt;i++) {
+      mWebShell->ChildAt(i, child);
+      if (nsnull != child) {
+
+        nsIContentViewer* cv = nsnull;
+        child->GetContentViewer(&cv);
+        if (nsnull != cv) {
+          nsIDocumentViewer* docv = nsnull;
+          cv->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+          if (nsnull != docv) {
+            nsIDocument * doc;
+            docv->GetDocument(doc);
+            if (nsnull != doc) {
+              PRUnichar* docStr;
+              PRUnichar* urlStr;
+              doc->GetDocumentURL()->ToString(&docStr);
+              aURL->ToString(&urlStr);
+              nsAutoString docAutoStr(docStr);
+              nsAutoString urlAutoStr(urlStr);
+              if (docAutoStr.Equals(urlAutoStr)) {
+                // This child is the child that has just completed loading
+                printf("OnStopBinding Child 0x%x has stopped.\n", child);
+              }
+              delete[] urlStr;
+              delete[] docStr;
+              NS_RELEASE(doc);
+            }
+            NS_RELEASE(docv);
+          }
+          NS_RELEASE(cv);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+*/
