@@ -520,6 +520,10 @@ nsImageFrame::GetImageMap()
       return nsnull;
     }
 
+    // Strip out whitespace in the name for navigator compatability
+    // XXX NAV QUIRK
+    usemap.StripWhitespace();
+
     nsIDocument* doc = nsnull;
     mContent->GetDocument(doc);
     if (nsnull == doc) {
@@ -669,83 +673,87 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
   switch (aEvent->message) {
   case NS_MOUSE_LEFT_BUTTON_UP:
   case NS_MOUSE_MOVE:
-    map = GetImageMap();
-    if ((nsnull != map) || IsServerImageMap()) {
-      nsPoint p;
-      TranslateEventCoords(aPresContext, aEvent->point, p);
-      nsAutoString absURL, target, altText;
-      PRBool suppress;
-      if (nsnull != map) {
-        nsIDocument* doc = nsnull;
-        mContent->GetDocument(doc);
-        nsIURI* docURL = nsnull;
-        if (doc) {
-          docURL = doc->GetDocumentURL();
-          NS_RELEASE(doc);
-        }
-
+    {
+      map = GetImageMap();
+      PRBool isServerMap = IsServerImageMap();
+      if ((nsnull != map) || isServerMap) {
+        nsPoint p;
+        TranslateEventCoords(aPresContext, aEvent->point, p);
+        nsAutoString absURL, target, altText;
+        PRBool suppress;
         PRBool inside = PR_FALSE;
-        if (docURL) {
-          inside = map->IsInside(p.x, p.y, docURL, absURL, target, altText,
-                                 &suppress);
-          NS_RELEASE(docURL);
-        }
-
-        if (inside) {
-          // We hit a clickable area. Time to go somewhere...
-          PRBool clicked = PR_FALSE;
-          if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-            aEventStatus = nsEventStatus_eConsumeDoDefault; 
-            clicked = PR_TRUE;
-          }
-          TriggerLink(aPresContext, absURL, target, clicked);
-        }
-      }
-      else {
-        suppress = GetSuppress();
-        nsIURI* baseURL = nsnull;
-        nsIHTMLContent* htmlContent;
-        if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID,
-                                                  (void**)&htmlContent))) {
-          htmlContent->GetBaseURL(baseURL);
-          NS_RELEASE(htmlContent);
-        }
-        else {
-          nsIDocument* doc;
-          if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
-            doc->GetBaseURL(baseURL);
+        if (nsnull != map) {
+          nsIDocument* doc = nsnull;
+          mContent->GetDocument(doc);
+          nsIURI* docURL = nsnull;
+          if (doc) {
+            docURL = doc->GetDocumentURL();
             NS_RELEASE(doc);
           }
-        }
-
-        // Server side image maps use the href in a containing anchor
-        // element to provide the basis for the destination url.
-        nsAutoString src;
-        if (GetAnchorHREF(src)) {
-#ifndef NECKO
-          nsString empty;
-          NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
-#else
-          NS_MakeAbsoluteURI(src, baseURL, absURL);
-#endif // NECKO
-          NS_IF_RELEASE(baseURL);
-
-          // XXX if the mouse is over/clicked in the border/padding area
-          // we should probably just pretend nothing happened. Nav4
-          // keeps the x,y coordinates positive as we do; IE doesn't
-          // bother. Both of them send the click through even when the
-          // mouse is over the border.
-          if (p.x < 0) p.x = 0;
-          if (p.y < 0) p.y = 0;
-          char cbuf[50];
-          PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
-          absURL.Append(cbuf);
-          PRBool clicked = PR_FALSE;
-          if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
-            aEventStatus = nsEventStatus_eConsumeDoDefault; 
-            clicked = PR_TRUE;
+          
+          if (docURL) {
+            inside = map->IsInside(p.x, p.y, docURL, absURL, target, altText,
+                                   &suppress);
+            NS_RELEASE(docURL);
           }
-          TriggerLink(aPresContext, absURL, target, clicked);
+          
+          if (inside) {
+            // We hit a clickable area. Time to go somewhere...
+            PRBool clicked = PR_FALSE;
+            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+              aEventStatus = nsEventStatus_eConsumeDoDefault; 
+              clicked = PR_TRUE;
+            }
+            TriggerLink(aPresContext, absURL, target, clicked);
+          }
+        }
+        
+        if (!inside && isServerMap) {
+          suppress = GetSuppress();
+          nsIURI* baseURL = nsnull;
+          nsIHTMLContent* htmlContent;
+          if (NS_SUCCEEDED(mContent->QueryInterface(kIHTMLContentIID,
+                                                    (void**)&htmlContent))) {
+            htmlContent->GetBaseURL(baseURL);
+            NS_RELEASE(htmlContent);
+          }
+          else {
+            nsIDocument* doc;
+            if (NS_SUCCEEDED(mContent->GetDocument(doc))) {
+              doc->GetBaseURL(baseURL);
+              NS_RELEASE(doc);
+            }
+          }
+          
+          // Server side image maps use the href in a containing anchor
+          // element to provide the basis for the destination url.
+          nsAutoString src;
+          if (GetAnchorHREF(src)) {
+#ifndef NECKO
+            nsString empty;
+            NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
+#else
+            NS_MakeAbsoluteURI(src, baseURL, absURL);
+#endif // NECKO
+            NS_IF_RELEASE(baseURL);
+            
+            // XXX if the mouse is over/clicked in the border/padding area
+            // we should probably just pretend nothing happened. Nav4
+            // keeps the x,y coordinates positive as we do; IE doesn't
+            // bother. Both of them send the click through even when the
+            // mouse is over the border.
+            if (p.x < 0) p.x = 0;
+            if (p.y < 0) p.y = 0;
+            char cbuf[50];
+            PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
+            absURL.Append(cbuf);
+            PRBool clicked = PR_FALSE;
+            if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+              aEventStatus = nsEventStatus_eConsumeDoDefault; 
+              clicked = PR_TRUE;
+            }
+            TriggerLink(aPresContext, absURL, target, clicked);
+          }
         }
       }
       break;
