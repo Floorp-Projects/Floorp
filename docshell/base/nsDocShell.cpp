@@ -3589,10 +3589,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
     NS_ENSURE_SUCCESS(GetSameTypeParent(getter_AddRefs(parentAsItem)),
                       NS_ERROR_FAILURE);
     nsCOMPtr<nsIDocShell> parent(do_QueryInterface(parentAsItem));
-#ifdef IBMBIDI
-    PRUint32 options;
-    nsIMarkupDocumentViewer *newViewer = nsnull;
-#endif // IBMBIDI
 
     if (mContentViewer || parent) {
         nsCOMPtr<nsIMarkupDocumentViewer> oldMUDV;
@@ -3630,11 +3626,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
             NS_ENSURE_SUCCESS(oldMUDV->
                               GetHintCharacterSetSource(&hintCharsetSource),
                               NS_ERROR_FAILURE);
-#ifdef IBMBIDI
-            NS_ENSURE_SUCCESS(oldMUDV->GetBidiOptions(&options),
-                              NS_ERROR_FAILURE);
-            newViewer = newMUDV.get();
-#endif // IBMBIDI
 
             // set the old state onto the new content viewer
             NS_ENSURE_SUCCESS(newMUDV->SetDefaultCharacterSet(defaultCharset),
@@ -3785,12 +3776,6 @@ nsDocShell::SetupNewViewer(nsIContentViewer * aNewViewer)
         }
     }
 
-#ifdef IBMBIDI
-    if (newViewer) {
-        // set the old state onto the new content viewer
-        NS_ENSURE_SUCCESS(newViewer->SetBidiOptions(options), NS_ERROR_FAILURE);
-    }
-#endif // IBMBIDI
 // XXX: It looks like the LayoutState gets restored again in Embed()
 //      right after the call to SetupNewViewer(...)
 
