@@ -41,6 +41,7 @@
 #include "nsISupportsArray.h"
 
 class nsIAtom;
+class nsPresContext;
 
 // IID for the nsICSSGroupRule interface {5af048aa-1af0-11d3-9d83-0060088f9ff7}
 #define NS_ICSS_GROUP_RULE_IID     \
@@ -65,6 +66,8 @@ public:
   NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex) = 0;
   NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules) = 0;
   NS_IMETHOD  ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew) = 0;
+
+  NS_IMETHOD_(PRBool) UseForPresentation(nsPresContext* aPresContext) = 0;
    
 };
 

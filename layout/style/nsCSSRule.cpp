@@ -61,13 +61,6 @@ NS_IMPL_ADDREF(nsCSSRule)
 NS_IMPL_RELEASE(nsCSSRule)
 
 NS_IMETHODIMP
-nsCSSRule::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  NS_NOTREACHED("nsCSSRule::QueryInterface");
-  return NS_NOINTERFACE;
-}
-
-NS_IMETHODIMP
 nsCSSRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);

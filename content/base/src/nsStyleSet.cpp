@@ -329,23 +329,13 @@ nsStyleSet::EnableQuirkStyleSheet(PRBool aEnable)
   }
 }
 
-struct RulesMatchingData : public ElementRuleProcessorData {
-  RulesMatchingData(nsPresContext* aPresContext,
-                    nsIContent* aContent,
-                    nsRuleWalker* aRuleWalker)
-    : ElementRuleProcessorData(aPresContext, aContent, aRuleWalker),
-      mMedium(aPresContext->Medium())
-  {
-  }
-  nsIAtom*          mMedium;
-};
-
 static PRBool
 EnumRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
-  RulesMatchingData* data = (RulesMatchingData*)aData;
+  ElementRuleProcessorData* data =
+    NS_STATIC_CAST(ElementRuleProcessorData*, aData);
 
-  aProcessor->RulesMatching(data, data->mMedium);
+  aProcessor->RulesMatching(data);
   return PR_TRUE;
 }
 
@@ -588,7 +578,7 @@ nsStyleSet::ResolveStyleFor(nsIContent* aContent,
         mRuleProcessors[eDocSheet]          ||
         mRuleProcessors[eStyleAttrSheet]    ||
         mRuleProcessors[eOverrideSheet]) {
-      RulesMatchingData data(presContext, aContent, mRuleWalker);
+      ElementRuleProcessorData data(presContext, aContent, mRuleWalker);
       FileRules(EnumRulesMatching, &data);
       result = GetContext(presContext, aParentContext, nsnull).get();
 
@@ -624,26 +614,13 @@ nsStyleSet::ResolveStyleForNonElement(nsStyleContext* aParentContext)
 }
 
 
-struct PseudoRulesMatchingData : public PseudoRuleProcessorData {
-  PseudoRulesMatchingData(nsPresContext* aPresContext,
-                          nsIContent* aParentContent,
-                          nsIAtom* aPseudoTag,
-                          nsICSSPseudoComparator* aComparator,
-                          nsRuleWalker* aRuleWalker)
-    : PseudoRuleProcessorData(aPresContext, aParentContent, aPseudoTag,
-                              aComparator, aRuleWalker),
-      mMedium(aPresContext->Medium())
-  {
-  }
-  nsIAtom*                mMedium;
-};
-
 static PRBool
 EnumPseudoRulesMatching(nsIStyleRuleProcessor* aProcessor, void* aData)
 {
-  PseudoRulesMatchingData* data = (PseudoRulesMatchingData*)aData;
+  PseudoRuleProcessorData* data =
+    NS_STATIC_CAST(PseudoRuleProcessorData*, aData);
 
-  aProcessor->RulesMatching(data, data->mMedium);
+  aProcessor->RulesMatching(data);
   return PR_TRUE;
 }
 
@@ -669,7 +646,7 @@ nsStyleSet::ResolvePseudoStyleFor(nsIContent* aParentContent,
         mRuleProcessors[eDocSheet]          ||
         mRuleProcessors[eStyleAttrSheet]    ||
         mRuleProcessors[eOverrideSheet]) {
-      PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
+      PseudoRuleProcessorData data(presContext, aParentContent, aPseudoTag,
                                    aComparator, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
 
@@ -704,7 +681,7 @@ nsStyleSet::ProbePseudoStyleFor(nsIContent* aParentContent,
         mRuleProcessors[eDocSheet]          ||
         mRuleProcessors[eStyleAttrSheet]    ||
         mRuleProcessors[eOverrideSheet]) {
-      PseudoRulesMatchingData data(presContext, aParentContent, aPseudoTag,
+      PseudoRuleProcessorData data(presContext, aParentContent, aPseudoTag,
                                    nsnull, mRuleWalker);
       FileRules(EnumPseudoRulesMatching, &data);
 
@@ -831,10 +808,8 @@ struct StatefulData : public StateRuleProcessorData {
   StatefulData(nsPresContext* aPresContext,
                nsIContent* aContent, PRInt32 aStateMask)
     : StateRuleProcessorData(aPresContext, aContent, aStateMask),
-      mMedium(aPresContext->Medium()),
       mHint(nsReStyleHint(0))
   {}
-  nsIAtom*        mMedium;
   nsReStyleHint   mHint;
 }; 
 
@@ -843,7 +818,7 @@ static PRBool SheetHasStatefulStyle(nsIStyleRuleProcessor* aProcessor,
 {
   StatefulData* data = (StatefulData*)aData;
   nsReStyleHint hint;
-  aProcessor->HasStateDependentStyle(data, data->mMedium, &hint);
+  aProcessor->HasStateDependentStyle(data, &hint);
   data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }
@@ -876,10 +851,8 @@ struct AttributeData : public AttributeRuleProcessorData {
   AttributeData(nsPresContext* aPresContext,
                 nsIContent* aContent, nsIAtom* aAttribute, PRInt32 aModType)
     : AttributeRuleProcessorData(aPresContext, aContent, aAttribute, aModType),
-      mMedium(aPresContext->Medium()),
       mHint(nsReStyleHint(0))
   {}
-  nsIAtom*        mMedium;
   nsReStyleHint   mHint;
 }; 
 
@@ -888,7 +861,7 @@ SheetHasAttributeStyle(nsIStyleRuleProcessor* aProcessor, void *aData)
 {
   AttributeData* data = (AttributeData*)aData;
   nsReStyleHint hint;
-  aProcessor->HasAttributeDependentStyle(data, data->mMedium, &hint);
+  aProcessor->HasAttributeDependentStyle(data, &hint);
   data->mHint = nsReStyleHint(data->mHint | hint);
   return PR_TRUE; // continue
 }

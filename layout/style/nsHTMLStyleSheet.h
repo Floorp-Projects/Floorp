@@ -73,15 +73,11 @@ public:
 #endif
 
   // nsIStyleRuleProcessor API
-  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
-                           nsIAtom* aMedium);
-  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
-                           nsIAtom* aMedium);
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData);
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData);
   NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
-                                    nsIAtom* aMedium,
                                     nsReStyleHint* aResult);
   NS_IMETHOD HasAttributeDependentStyle(AttributeRuleProcessorData* aData,
-                                        nsIAtom* aMedium,
                                         nsReStyleHint* aResult);
 
   nsresult Init(nsIURI* aURL, nsIDocument* aDocument);

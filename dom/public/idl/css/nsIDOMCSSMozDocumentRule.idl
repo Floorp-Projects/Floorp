@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -12,18 +12,18 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is mozilla.org code.
+ * The Original Code is nsIDOMCSSMozDocumentRule.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1999
+ * The Initial Developer of the Original Code is the Mozilla Foundation.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   L. David Baron <dbaron@dbaron.org> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either of the GNU General Public License Version 2 or later (the "GPL"),
- * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
  * under the terms of either the GPL or the LGPL, and not to allow others to
@@ -34,27 +34,22 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-#ifndef nsICSSMediaRule_h___
-#define nsICSSMediaRule_h___
 
-#include "nsICSSGroupRule.h"
-//#include "nsString.h"
+#include "nsIDOMCSSRule.idl"
 
-class nsIAtom;
+/**
+ * Modified version of nsIDOMCSSMediaRule for @-moz-document rules.
+ */
+[scriptable, uuid(4eb9adac-afaf-4b8a-8640-7340863c1587)]
+interface nsIDOMCSSMozDocumentRule : nsIDOMCSSRule
+{
+  readonly attribute nsIDOMCSSRuleList cssRules;
 
-// IID for the nsICSSMediaRule interface {2c1d0110-1a09-11d3-805a-006008159b5a}
-#define NS_ICSS_MEDIA_RULE_IID     \
-{0x2c1d0110, 0x1a09, 0x11d3, {0x80, 0x5a, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+  unsigned long      insertRule(in DOMString rule, 
+                                in unsigned long index)
+                                        raises(DOMException);
+  void               deleteRule(in unsigned long index)
+                                        raises(DOMException);
 
-class nsICSSMediaRule : public nsICSSGroupRule {
-public:
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICSS_MEDIA_RULE_IID)
-
-  NS_IMETHOD  SetMedia(nsISupportsArray* aMedia) = 0;
-  NS_IMETHOD_(PRBool)  UseForMedium(nsIAtom* aMedium) const = 0;
+  // XXX Add access to the URL list.
 };
-
-nsresult
-NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult);
-
-#endif /* nsICSSMediaRule_h___ */

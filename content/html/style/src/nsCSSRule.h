@@ -51,7 +51,13 @@ public:
   nsCSSRule(const nsCSSRule& aCopy);
   virtual ~nsCSSRule(void);
 
-  NS_DECL_ISUPPORTS
+  // for implementing nsISupports
+  nsrefcnt AddRef();
+  nsrefcnt Release();
+protected:
+  nsAutoRefCnt mRefCnt;
+  NS_DECL_OWNINGTHREAD
+public:
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const;
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet);

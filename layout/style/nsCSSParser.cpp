@@ -45,7 +45,7 @@
 #include "nsICSSLoader.h"
 #include "nsICSSStyleRule.h"
 #include "nsICSSImportRule.h"
-#include "nsICSSMediaRule.h"
+#include "nsCSSRules.h"
 #include "nsICSSNameSpaceRule.h"
 #include "nsIUnicharInputStream.h"
 #include "nsICSSStyleSheet.h"
@@ -151,13 +151,16 @@ protected:
   PRBool ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool GatherURL(nsresult& aErrorCode, nsString& aURL);
   PRBool GatherMedia(nsresult& aErrorCode, nsISupportsArray* aMediaAtoms);
   PRBool ProcessImport(nsresult& aErrorCode,
                        const nsString& aURLSpec,
                        nsISupportsArray* aMedia,
                        RuleAppendFunc aAppendFunc,
                        void* aProcessData);
+  PRBool ParseGroupRule(nsresult& aErrorCode, nsICSSGroupRule* aRule, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseMediaRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
+  PRBool ParseMozDocumentRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ParseNameSpaceRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aProcessData);
   PRBool ProcessNameSpace(nsresult& aErrorCode, const nsString& aPrefix, 
                           const nsString& aURLSpec, RuleAppendFunc aAppendFunc,
@@ -979,6 +982,12 @@ PRBool CSSParserImpl::ParseAtRule(nsresult& aErrorCode, RuleAppendFunc aAppendFu
       return PR_TRUE;
     }
   }
+  if (mToken.mIdent.LowerCaseEqualsLiteral("-moz-document")) {
+    if (ParseMozDocumentRule(aErrorCode, aAppendFunc, aData)) {
+      mSection = eCSSSection_General;
+      return PR_TRUE;
+    }
+  }
   if (mToken.mIdent.LowerCaseEqualsLiteral("font-face")) {
     if (ParseFontFaceRule(aErrorCode, aAppendFunc, aData)) {
       mSection = eCSSSection_General;
@@ -1027,6 +1036,29 @@ PRBool CSSParserImpl::ParseCharsetRule(nsresult& aErrorCode, RuleAppendFunc aApp
   }
 
   return PR_TRUE;
+}
+
+PRBool CSSParserImpl::GatherURL(nsresult& aErrorCode, nsString& aURL)
+{
+  if (!GetToken(aErrorCode, PR_TRUE)) {
+    return PR_FALSE;
+  }
+  if (eCSSToken_String == mToken.mType) {
+    aURL = mToken.mIdent;
+    return PR_TRUE;
+  }
+  else if (eCSSToken_Function == mToken.mType && 
+           mToken.mIdent.LowerCaseEqualsLiteral("url") &&
+           ExpectSymbol(aErrorCode, '(', PR_FALSE) &&
+           GetURLToken(aErrorCode, PR_TRUE) &&
+           (eCSSToken_String == mToken.mType ||
+            eCSSToken_URL == mToken.mType)) {
+    aURL = mToken.mIdent;
+    if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+      return PR_TRUE;
+    }
+  }
+  return PR_FALSE;
 }
 
 PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
@@ -1089,10 +1121,6 @@ PRBool CSSParserImpl::GatherMedia(nsresult& aErrorCode,
 // Parse a CSS2 import rule: "@import STRING | URL [medium [, mdeium]]"
 PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc, void* aData)
 {
-  if (!GetToken(aErrorCode, PR_TRUE)) {
-    REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("URI in @import rule"));
-    return PR_FALSE;
-  }
   nsAutoString url;
   nsCOMPtr<nsISupportsArray> media;
   aErrorCode = NS_NewISupportsArray(getter_AddRefs(media));
@@ -1100,38 +1128,23 @@ PRBool CSSParserImpl::ParseImportRule(nsresult& aErrorCode, RuleAppendFunc aAppe
     // Out of memory
     return PR_FALSE;
   }
+
+  if (!GatherURL(aErrorCode, url)) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Expected URI in @import rule but found"));
+    return PR_FALSE;
+  }
   
-  if (eCSSToken_String == mToken.mType) {
-    url = mToken.mIdent;
-    if (GatherMedia(aErrorCode, media)) {
-      if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-        ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
-        return PR_TRUE;
-      }
-    }
+  if (!GatherMedia(aErrorCode, media) ||
+      !ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
+    REPORT_UNEXPECTED_TOKEN(
+      NS_LITERAL_STRING("Unexpected token within @import:"));
+    // don't advance section, simply ignore invalid @import
+    return PR_FALSE;
   }
-  else if ((eCSSToken_Function == mToken.mType) && 
-           (mToken.mIdent.LowerCaseEqualsLiteral("url"))) {
-    if (ExpectSymbol(aErrorCode, '(', PR_FALSE)) {
-      if (GetURLToken(aErrorCode, PR_TRUE)) {
-        if ((eCSSToken_String == mToken.mType) || (eCSSToken_URL == mToken.mType)) {
-          url = mToken.mIdent;
-          if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
-            if (GatherMedia(aErrorCode, media)) {
-              if (ExpectSymbol(aErrorCode, ';', PR_TRUE)) {
-                ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
-                return PR_TRUE;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  REPORT_UNEXPECTED_TOKEN(
-    NS_LITERAL_STRING("Unexpected token within @import:"));
-  // don't advance section, simply ignore invalid @import
-  return PR_FALSE;
+
+  ProcessImport(aErrorCode, url, media, aAppendFunc, aData);
+  return PR_TRUE;
 }
 
 
@@ -1165,8 +1178,55 @@ PRBool CSSParserImpl::ProcessImport(nsresult& aErrorCode,
   return PR_TRUE;
 }
 
+// Parse the {} part of an @media or @-moz-document rule.
+PRBool CSSParserImpl::ParseGroupRule(nsresult& aErrorCode,
+                                     nsICSSGroupRule* aRule,
+                                     RuleAppendFunc aAppendFunc,
+                                     void* aData)
+{
+  // XXXbz this could use better error reporting throughout the method
+  if (!ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
+    return PR_FALSE;
+  }
+
+  // push rule on stack, loop over children
+  if (!PushGroup(aRule)) {
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+    return PR_FALSE;
+  }
+  nsCSSSection holdSection = mSection;
+  mSection = eCSSSection_General;
+
+  for (;;) {
+    // Get next non-whitespace token
+    if (! GetToken(aErrorCode, PR_TRUE)) {
+      REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of @media or @-moz-document rule"));
+      break;
+    }
+    if (mToken.IsSymbol('}')) { // done!
+      UngetToken();
+      break;
+    }
+    if (eCSSToken_AtKeyword == mToken.mType) {
+      SkipAtRule(aErrorCode); // group rules cannot contain @rules
+      continue;
+    }
+    UngetToken();
+    ParseRuleSet(aErrorCode, AppendRuleToSheet, this);
+  }
+  PopGroup();
+
+  if (!ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
+    mSection = holdSection;
+    return PR_FALSE;
+  }
+  (*aAppendFunc)(aRule, aData);
+  return PR_TRUE;
+}
+
 // Parse a CSS2 media rule: "@media medium [, medium] { ... }"
-PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode, RuleAppendFunc aAppendFunc,
+PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode,
+                                     RuleAppendFunc aAppendFunc,
                                      void* aData)
 {
   nsCOMPtr<nsISupportsArray> media;
@@ -1176,54 +1236,85 @@ PRBool CSSParserImpl::ParseMediaRule(nsresult& aErrorCode, RuleAppendFunc aAppen
       // XXXbz this could use better error reporting throughout the method
       PRUint32 count;
       media->Count(&count);
-      if (count > 0 &&
-          ExpectSymbol(aErrorCode, '{', PR_TRUE)) {
-        // push media rule on stack, loop over children
-        nsCOMPtr<nsICSSMediaRule>  rule;
-        NS_NewCSSMediaRule(getter_AddRefs(rule));
-        if (rule) {
-          if (PushGroup(rule)) {
-
-            nsCSSSection holdSection = mSection;
-            mSection = eCSSSection_General;
-
-            for (;;) {
-              // Get next non-whitespace token
-              if (! GetToken(aErrorCode, PR_TRUE)) {
-                REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of @media rule"));
-                break;
-              }
-              if (mToken.IsSymbol('}')) { // done!
-                UngetToken();
-                break;
-              }
-              if (eCSSToken_AtKeyword == mToken.mType) {
-                SkipAtRule(aErrorCode); // @media cannot contain @rules
-                continue;
-              }
-              UngetToken();
-              ParseRuleSet(aErrorCode, AppendRuleToSheet, this);
-            }
-            PopGroup();
-
-            if (ExpectSymbol(aErrorCode, '}', PR_TRUE)) {
-              //  Append first, so when we do SetMedia() the rule
-              //  knows what its stylesheet is.
-              (*aAppendFunc)(rule, aData);
-              rule->SetMedia(media);
-              return PR_TRUE;
-            }
-            mSection = holdSection;
-          }
-        }
-        else {  // failed to create rule, backup and skip block
-          UngetToken();
+      if (count > 0) {
+        nsRefPtr<nsCSSMediaRule> rule(new nsCSSMediaRule());
+        // Append first, so when we do SetMedia() the rule
+        // knows what its stylesheet is.
+        if (rule && ParseGroupRule(aErrorCode, rule, aAppendFunc, aData)) {
+          rule->SetMedia(media);
+          return PR_TRUE;
         }
       }
     }
   }
 
   return PR_FALSE;
+}
+
+// Parse a @-moz-document rule.  This is like an @media rule, but instead
+// of a medium it has a nonempty list of items where each item is either
+// url(), url-prefix(), or domain().
+PRBool CSSParserImpl::ParseMozDocumentRule(nsresult& aErrorCode,
+                                           RuleAppendFunc aAppendFunc,
+                                           void* aData)
+{
+  nsCSSDocumentRule::URL *urls = nsnull;
+  nsCSSDocumentRule::URL **next = &urls;
+  do {
+    if (!GetToken(aErrorCode, PR_TRUE) ||
+        eCSSToken_Function != mToken.mType ||
+        !(mToken.mIdent.LowerCaseEqualsLiteral("url") ||
+          mToken.mIdent.LowerCaseEqualsLiteral("url-prefix") ||
+          mToken.mIdent.LowerCaseEqualsLiteral("domain"))) {
+      REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Expected url(), url-prefix(), or domain() in @-moz-document rule but found"));
+      delete urls;
+      return PR_FALSE;
+    }
+    nsCSSDocumentRule::URL *cur = *next = new nsCSSDocumentRule::URL;
+    if (!cur) {
+      aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+      delete urls;
+      return PR_FALSE;
+    }
+    next = &cur->next;
+    if (mToken.mIdent.LowerCaseEqualsLiteral("url")) {
+      cur->func = nsCSSDocumentRule::eURL;
+    } else if (mToken.mIdent.LowerCaseEqualsLiteral("url-prefix")) {
+      cur->func = nsCSSDocumentRule::eURLPrefix;
+    } else if (mToken.mIdent.LowerCaseEqualsLiteral("domain")) {
+      cur->func = nsCSSDocumentRule::eDomain;
+    }
+
+    if (!ExpectSymbol(aErrorCode, '(', PR_FALSE) ||
+        !GetURLToken(aErrorCode, PR_TRUE) ||
+        (eCSSToken_String != mToken.mType &&
+         eCSSToken_URL != mToken.mType)) {
+      REPORT_UNEXPECTED_TOKEN(
+        NS_LITERAL_STRING("Expected URI in @-moz-document rule but found"));
+      delete urls;
+      return PR_FALSE;
+    }
+    if (!ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
+      delete urls;
+      return PR_FALSE;
+    }
+
+    // We could try to make the URL (as long as it's not domain())
+    // canonical and absolute with NS_NewURI and GetSpec, but I'm
+    // inclined to think we shouldn't.
+    CopyUTF16toUTF8(mToken.mIdent, cur->url);
+  } while (ExpectSymbol(aErrorCode, ',', PR_TRUE));
+
+  nsRefPtr<nsCSSDocumentRule> rule(new nsCSSDocumentRule());
+  if (!rule) {
+    aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+    delete urls;
+    return PR_FALSE;
+  }
+  rule->SetURLs(urls);
+
+  return ParseGroupRule(aErrorCode, rule, aAppendFunc, aData);
 }
 
 // Parse a CSS3 namespace rule: "@namespace [prefix] STRING | URL;"

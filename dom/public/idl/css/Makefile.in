@@ -62,6 +62,7 @@ XPIDLSRCS =					\
 	nsIDOMCSSFontFaceRule.idl		\
 	nsIDOMCSSImportRule.idl			\
 	nsIDOMCSSMediaRule.idl			\
+	nsIDOMCSSMozDocumentRule.idl		\
 	nsIDOMCSSPageRule.idl			\
 	nsIDOMCSSStyleRule.idl			\
 	nsIDOMCSSUnknownRule.idl		\
