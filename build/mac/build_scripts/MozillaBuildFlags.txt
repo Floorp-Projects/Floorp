@@ -51,7 +51,7 @@ soap            0      MOZ_SOAP
 inspector       0
 mailextras      1
 xptlink         0
-psm             0
+psm             0      ENABLE_SMIME
 embedding_test  1
 embedding_test_carbon 0
 carbon          0      TARGET_CARBON
@@ -73,7 +73,7 @@ static_build    0      MOZ_STATIC_COMPONENT_LIBS
 string_debug    0      DEBUG_STRING
 string_stats    0      DEBUG_STRING_STATS
 xpctools        0      XPC_TOOLS_SUPPORT
-smime			0      ENABLE_SMIME
+smime			1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
