@@ -23,7 +23,6 @@
 
 #include "nsIBuffer.h"
 #include "nsIThread.h"
-#include "nsIBaseStream.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsAutoLock.h"
