@@ -157,11 +157,17 @@ NS_IMETHODIMP nsScrollbar::GetMaxRange (PRUint32 & aMaxRange)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsScrollbar::SetPosition (PRUint32 aPos)
 {
-//   if (mAdjustment)
-//     gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
+  // if (mAdjustment)
+  //   gtk_adjustment_set_value (GTK_ADJUSTMENT (mAdjustment), (float) aPos);
 
   if (mAdjustment && mWidget)
   {
+
+    // XXX - pav
+    // this should be working fine, but for some reason we still get the additional value_changed
+    // i'm not sure why, but since we are using GFX scrollbars, this problem doesn't happen.
+    // see bug http://bugzilla.mozilla.org/show_bug.cgi?id=13407 for more details.
+
     //
     // The following bit of code borrowed from gtkrange.c,
     // gtk_range_adjustment_value_changed():
