@@ -27,6 +27,7 @@ XPIDLSRCS =                        \
         .\nsIStreamConverter.idl   \
         .\nsIStreamConverterService.idl \
         .\mozITXTToHTMLConv.idl \
+        .\nsITXTToHTMLConv.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
