@@ -1,6 +1,6 @@
---- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Wed Apr 18 22:39:27 2001
-+++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Wed Apr 18 22:41:09 2001
-@@ -343,123 +343,6 @@
+--- mozilla/xpfe/browser/resources/content/navigatorOverlay.xul.debug	Sun Aug  5 15:44:21 2001
++++ mozilla/xpfe/browser/resources/content/navigatorOverlay.xul	Sun Aug  5 15:44:40 2001
+@@ -337,125 +337,6 @@
    <menu id="tasksMenu"/>
    
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
@@ -84,6 +84,8 @@
 -        <menuitem label="&xptk11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/colorpicker.xul'"/>
 -       </menupopup>
 -      </menu>
+-
+-     <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
 -
 -     <menuitem label="&domviewer.label;" oncommand="window._content.location.href='chrome://communicator/content/domviewer/DOMDataSourceViewer.xul'"/>
 -     <menuitem label="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
