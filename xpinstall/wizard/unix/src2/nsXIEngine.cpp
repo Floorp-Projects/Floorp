@@ -25,21 +25,6 @@
 #include "nsXIEngine.h"
 
 #define CORE_LIB_COUNT 10
-static char sCoreLibs[ CORE_LIB_COUNT * 2 ][ 32 ] = 
-{
-/*      Archive Subdir      File                            */
-/*      --------------      ----                            */
-		"bin/", 			"libjsdom.so", 
-		"bin/", 			"libmozjs.so",
-		"bin/", 			"libnspr4.so",
-		"bin/",				"libplc4.so",
-		"bin/", 			"libplds4.so",
-		"bin/",				"libxpcom.so",
-		"bin/",				"libxpistub.so",
-		"bin/",				"libzlib.so",
-		"bin/components/",	"libxpinstall.so",
-		"bin/components/",	"libjar50.so"
-};
 
 nsXIEngine::nsXIEngine() :
     mTmp(NULL),
@@ -121,38 +106,11 @@ nsXIEngine::Download(int aCustom, nsComponentList *aComps)
 int     
 nsXIEngine::Extract(nsComponent *aXPIEngine)
 {
-    DUMP("Extract");
-   
-    char path[MAXPATHLEN];
-    char bindir[512];
-    char unzipcmd[512];
-    struct stat dummy;
-    int i;
-
-    if (!aXPIEngine || !(aXPIEngine->GetArchive()))
+    if (!aXPIEngine)
         return E_PARAM;
 
-    sprintf(path, "%s/%s", mTmp, aXPIEngine->GetArchive());
-    if (-1 == stat(path, &dummy))
-        return E_NO_DOWNLOAD;
-
-    for (i = 0; i < CORE_LIB_COUNT*2; i++)
-    {
-        // update UI
-        nsInstallDlg::MajorProgressCB(sCoreLibs[i+1], ((i+2)/2),
-            CORE_LIB_COUNT, nsInstallDlg::ACT_EXTRACT);
-
-        sprintf(unzipcmd, "unzip %s -d %s %s%s > /dev/null", 
-                path, mTmp, sCoreLibs[i], sCoreLibs[i+1]);
-        i++;
-        system(unzipcmd);
-    }
-    
-    sprintf(bindir, "%s/%s", mTmp, TMP_EXTRACT_SUBDIR);
-    if (-1 == stat(bindir, &dummy))
-        return E_EXTRACTION;
-
-    return OK;
+    nsZipExtractor *unzip = new nsZipExtractor(mTmp);
+    return unzip->Extract(aXPIEngine, CORE_LIB_COUNT);
 }
 
 int     
@@ -215,7 +173,6 @@ nsXIEngine::MakeUniqueTmpDir()
     int err = OK;
     int i;
     char buf[MAXPATHLEN];
-    char cmd[1030];
     struct stat dummy;
     mTmp = NULL;
 
@@ -230,8 +187,7 @@ nsXIEngine::MakeUniqueTmpDir()
     if (!mTmp) return E_MEM;
 
     sprintf(mTmp, "%s", buf);
-    sprintf(cmd, "mkdir %s", mTmp);
-    system(cmd);
+    mkdir(mTmp, 0755);
 
     return err;
 }
