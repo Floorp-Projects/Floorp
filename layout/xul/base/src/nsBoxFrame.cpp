@@ -2490,7 +2490,7 @@ nsBoxFrame::CreateViewForFrame(nsPresContext*  aPresContext,
     }
 
     // See if the frame has a fixed background attachment
-    if (hasBG && NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment) {
+    if (hasBG && bg->HasFixedBackground()) {
       aForce = PR_TRUE;
       fixedBackgroundAttachment = PR_TRUE;
     }

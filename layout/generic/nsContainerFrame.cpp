@@ -572,8 +572,7 @@ SyncFrameViewGeometryDependentProperties(nsPresContext*  aPresContext,
 
   // background-attachment: fixed is not really geometry dependent, but
   // we set it here because it's cheap to do so
-  PRBool fixedBackground = hasBG &&
-    NS_STYLE_BG_ATTACHMENT_FIXED == bg->mBackgroundAttachment;
+  PRBool fixedBackground = hasBG && bg->HasFixedBackground();
   // If the frame has a fixed background attachment, then indicate that the
   // view's contents should be repainted and not bitblt'd
   vm->SetViewBitBltEnabled(aView, !fixedBackground);
@@ -901,8 +900,7 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
   PRBool hasBackground = 
     nsCSSRendering::FindBackground(aFrame->GetPresContext(),
                                    aFrame, &color, &isCanvas);
-  if (hasBackground &&
-      NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+  if (hasBackground && color->HasFixedBackground()) {
     return PR_TRUE;
   }
     

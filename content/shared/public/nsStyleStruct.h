@@ -187,6 +187,14 @@ struct nsStyleBackground : public nsStyleStruct {
             (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
             (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);
   }
+
+  PRBool HasFixedBackground() const
+  {
+    // We have to take slower codepaths for fixed background attachment,
+    // but we don't want to do that when there's no image.
+    return mBackgroundAttachment == NS_STYLE_BG_ATTACHMENT_FIXED &&
+           mBackgroundImage;
+  }
 };
 
 #define BORDER_COLOR_DEFINED      0x80  
