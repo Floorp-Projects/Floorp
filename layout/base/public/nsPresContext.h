@@ -125,7 +125,7 @@ public:
    * which means "I don't know".
    * <h2>Speculative</h2>
    */
-  virtual nsRect GetVisibleArea() = 0;
+  virtual void GetVisibleArea(nsRect& aResult) = 0;
 
   /**
    * Set the currently visible area. This is the size and location
