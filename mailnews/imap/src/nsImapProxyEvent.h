@@ -215,8 +215,6 @@ public:
     NS_IMETHOD FinishImapConnection(nsIImapProtocol* aProtocol);
     NS_IMETHOD SetImapHostPassword(nsIImapProtocol* aProtocol,
                                    GenericInfo* aInfo);
-    NS_IMETHOD GetPasswordForUser(nsIImapProtocol* aProtocol,
-                                  const char* userName);
     NS_IMETHOD SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                      nsMsgBiffState biffState);
     NS_IMETHOD GetStoredUIDValidity(nsIImapProtocol* aProtocol,
@@ -674,14 +672,6 @@ struct SetImapHostPasswordProxyEvent : public nsImapMiscellaneousSinkProxyEvent
     GenericInfo m_info;
 };
 
-struct GetPasswordForUserProxyEvent : public nsImapMiscellaneousSinkProxyEvent
-{
-    GetPasswordForUserProxyEvent(nsImapMiscellaneousSinkProxy* aProxy,
-                                 const char* userName);
-    virtual ~GetPasswordForUserProxyEvent();
-    NS_IMETHOD HandleEvent();
-    char* m_userName;
-};
 
 struct SetBiffStateAndUpdateProxyEvent : public nsImapMiscellaneousSinkProxyEvent
 {

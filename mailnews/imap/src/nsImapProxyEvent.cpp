@@ -1381,34 +1381,6 @@ nsImapMiscellaneousSinkProxy::SetImapHostPassword(nsIImapProtocol* aProtocol,
     return res;
 }
 
-NS_IMETHODIMP
-nsImapMiscellaneousSinkProxy::GetPasswordForUser(nsIImapProtocol* aProtocol,
-                                             const char* userName)
-{
-    nsresult res = NS_OK;
-    NS_PRECONDITION (userName, "Oops... null userName");
-    if(!userName)
-        return NS_ERROR_NULL_POINTER;
-    NS_ASSERTION (m_protocol == aProtocol, "Ooh ooh, wrong protocol");
-
-    if (PR_GetCurrentThread() == m_thread)
-    {
-        GetPasswordForUserProxyEvent *ev =
-            new GetPasswordForUserProxyEvent(this, userName);
-        if(nsnull == ev)
-            res = NS_ERROR_OUT_OF_MEMORY;
-        else
-		{
-			ev->SetNotifyCompletion(PR_TRUE);
-            ev->PostEvent(m_eventQueue);
-		}
-    }
-    else
-    {
-        res = m_realImapMiscellaneousSink->GetPasswordForUser(aProtocol, userName);
-    }
-    return res;
-}
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
@@ -3091,34 +3063,6 @@ SetImapHostPasswordProxyEvent::HandleEvent()
         m_proxy->m_protocol->NotifyFEEventCompletion();
     return res;
 }
-
-GetPasswordForUserProxyEvent::GetPasswordForUserProxyEvent(
-    nsImapMiscellaneousSinkProxy* aProxy, const char* userName) :
-    nsImapMiscellaneousSinkProxyEvent(aProxy)
-{
-    NS_ASSERTION (userName, "Oops... a null username");
-    if (userName)
-        m_userName = PL_strdup(userName);
-    else
-        m_userName = nsnull;
-}
-
-GetPasswordForUserProxyEvent::~GetPasswordForUserProxyEvent()
-{
-    if (m_userName)
-        PL_strfree(m_userName);
-}
-
-NS_IMETHODIMP
-GetPasswordForUserProxyEvent::HandleEvent()
-{
-    nsresult res = m_proxy->m_realImapMiscellaneousSink->GetPasswordForUser(
-        m_proxy->m_protocol, m_userName);
-    if (m_notifyCompletion)
-        m_proxy->m_protocol->NotifyFEEventCompletion();
-    return res;
-}
-
 
 SetBiffStateAndUpdateProxyEvent::SetBiffStateAndUpdateProxyEvent(
     nsImapMiscellaneousSinkProxy* aProxy, nsMsgBiffState biffState) :
