@@ -108,6 +108,15 @@ pref("print.print_color", true);
 pref("print.print_landscape", false);
 pref("print.print_paper_size", 0);
 
+// print_headerfooter_gap enables platforms to specify an extra "gap" in twips
+// between the H/F and the edge of the paper,  
+// this is used by both Printing and Print Preview
+pref("print.print_headerfooter_gap", 60); // twips
+
+// print_extra_margin enables platforms to specify an extra gap or margin
+// around the content of the page for Print Preview only
+pref("print.print_extra_margin", 0); // twips
+
 pref("font.allow_double_byte_special_chars", true);
 // font names
 
