@@ -16,10 +16,12 @@
  */
 
 
-GOOD :before { min-height: 5pc } 
-GOOD :before { min-height: 15%; } 
-GOOD :before { min-height: none } 
-GOOD :before { min-height: inherit; } 
+GOOD { min-height: 5pc } 
+GOOD { min-height: 15%; } 
+GOOD { min-height: none } 
+GOOD { min-height: inherit; } 
 BAD { min-height: babushka }
 BAD { min-height: auto; }
 BAD { min-height: 4px 10mm; }
+BAD { min-height: -4pc; }
+BAD { min-height: -10%; }

@@ -16,10 +16,10 @@
  */
 
 
-GOOD :before { max-height: 3em } 
-GOOD :before { max-height: 15%; } 
-GOOD :before { max-height: none } 
-GOOD :before { max-height: inherit; } 
+GOOD { max-height: 3em } 
+GOOD { max-height: 15%; } 
+GOOD { max-height: none } 
+GOOD { max-height: inherit; } 
 BAD { max-height: babushka }
 BAD { max-height: auto; }
 BAD { max-height: 4px 4px; }
