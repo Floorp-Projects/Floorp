@@ -1511,7 +1511,7 @@ static PRBool GetWantSplashScreen(int argc, char* argv[], PRBool aDefault)
   int i;
   PRBool dosplash = aDefault;
   // We can't use the command line service here because it isn't running yet
-#if defined(XP_UNIX) && !defined(MOZ_WIDGET_PHOTON) 
+#if defined(XP_UNIX)
   for (i=1; i<argc; i++)
     if ((PL_strcasecmp(argv[i], "-splash") == 0)
         || (PL_strcasecmp(argv[i], "--splash") == 0))
@@ -1682,11 +1682,11 @@ int main(int argc, char* argv[])
 #ifdef MOZ_XUL_APP
   defaultSplash = aAppData.GetSplashEnabled();
 #else
-#ifdef XP_UNIX && !defined(MOZ_WIDGET_PHOTON)
+#ifdef XP_UNIX
   defaultSplash = PR_FALSE;
 #else
   defaultSplash = PR_TRUE;
-#endif /* XP_UNIX && !defined(MOZ_WIDGET_PHOTON) */
+#endif /* XP_UNIX */
 #endif /* MOZ_XUL_APP */
 
   PRBool dosplash = GetWantSplashScreen(argc, argv, defaultSplash);
