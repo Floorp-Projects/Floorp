@@ -1010,7 +1010,7 @@ struct fake_der_cb_argstr
     void *arg;
 };
 
-static PRStatus fake_der_cb(CERTCertificate *c, void *a)
+static SECStatus fake_der_cb(CERTCertificate *c, void *a)
 {
     struct fake_der_cb_argstr *fda = (struct fake_der_cb_argstr *)a;
     return (*fda->callback)(c, &c->derCert, fda->arg);
