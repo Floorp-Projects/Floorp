@@ -316,8 +316,21 @@ HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
       [mOutlineView collapseItem: item];
     else
       [mOutlineView expandItem: item];
-  } else {
-    [[mBrowserWindowController getBrowserWrapper] loadURI:[item url] referrer:nil flags:NSLoadFlagsNone activate:YES];
+  }
+  else {
+    // The history view obeys the app preference for cmd-click -> open in new window or tab
+    if (![item isKindOfClass: [HistoryItem class]])
+      return;
+    NSString* url = [item url];
+    BOOL loadInBackground = [[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.loadInBackground" withSuccess:NULL];
+    if (GetCurrentKeyModifiers() & cmdKey) {
+      if ([[PreferenceManager sharedInstance] getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:NULL])
+        [mBrowserWindowController openNewTabWithURL:url referrer:nil loadInBackground:loadInBackground];
+      else
+        [mBrowserWindowController openNewWindowWithURL:url referrer: nil loadInBackground:loadInBackground];  
+    }
+    else
+      [[mBrowserWindowController getBrowserWrapper] loadURI:url referrer:nil flags:NSLoadFlagsNone activate:YES];
   }
 }
 
