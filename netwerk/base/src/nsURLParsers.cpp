@@ -359,13 +359,16 @@ nsBaseURLParser::ParseFileName(const char *filename, PRInt32 filenameLen,
     if (filenameLen < 0)
         filenameLen = strlen(filename);
 
-    // ignore . at the beginning
-    for (const char *p = filename + filenameLen; p > filename; --p) {
-        if (*p == '.') {
-            // filename = <basename.extension>
-            SET_RESULT(basename, 0, p - filename);
-            SET_RESULT(extension, p + 1 - filename, filenameLen - (p - filename + 1));
-            return NS_OK;
+    // no extension if filename ends with a '.'
+    if (filename[filenameLen-1] != '.') {
+        // ignore '.' at the beginning
+        for (const char *p = filename + filenameLen - 1; p > filename; --p) {
+            if (*p == '.') {
+                // filename = <basename.extension>
+                SET_RESULT(basename, 0, p - filename);
+                SET_RESULT(extension, p + 1 - filename, filenameLen - (p - filename + 1));
+                return NS_OK;
+            }
         }
     }
     // filename = <basename>
