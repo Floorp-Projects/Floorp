@@ -18,7 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
- *                 Brian Ryner <bryner@uiuc.edu>
+ *                 Brian Ryner <bryner@brianryner.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the

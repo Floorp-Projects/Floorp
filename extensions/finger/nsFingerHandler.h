@@ -17,7 +17,7 @@
  * All Rights Reserved.
  *
  * Contributor(s): 
- *  Brian Ryner <bryner@uiuc.edu>
+ *  Brian Ryner <bryner@brianryner.com>
  */
 
 // The finger protocol handler creates "finger" URIs of the form
