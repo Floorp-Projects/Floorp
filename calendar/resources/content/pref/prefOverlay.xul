@@ -63,27 +63,33 @@
    
    <treechildren id="panelChildren">
     <treeitem id="calendarPanel" container="true">
-      <treerow>
-        <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
-      </treerow>
-      <treechildren id="panelChildren">
-       <treeitem id="calendarPublishPanel" container="false">
-         <treerow>
-           <treecell class="treecell-indent" url="chrome://calendar/content/pref/alarmPrefs.xul" label="&calendar.alarms.label;" id="calendarAlarm"/>
-         </treerow>
-       </treeitem>
-		 <treeitem id="calendarPublishPanel" container="false">
-         <treerow>
-           <treecell class="treecell-indent" url="chrome://calendar/content/pref/publishPrefs.xul" label="&calendar.publish.label;" id="calendarPublish"/>
-         </treerow>
- 	</treeitem>
+        <treerow>
+            <treecell class="treecell-indent" url="chrome://calendar/content/pref/calendarPref.xul" label="&calendar.label;" id="calendar"/>
+        </treerow>
+        <treechildren id="panelChildren">
+            <treeitem id="calendarPublishPanel" container="false">
+                <treerow>
+                    <treecell class="treecell-indent" url="chrome://calendar/content/pref/alarmPrefs.xul" label="&calendar.alarms.label;" id="calendarAlarm"/>
+                </treerow>
+            </treeitem>
+		<treeitem id="calendarPublishPanel" container="false">
+            <treerow>
+                <treecell class="treecell-indent" url="chrome://calendar/content/pref/publishPrefs.xul" label="&calendar.publish.label;" id="calendarPublish"/>
+            </treerow>
+ 	    </treeitem>
         <treeitem id="calendarPublishPanel" container="false">
-         <treerow>
-		 <treecell class="treecell-indent" url="chrome://calendar/content/pref/viewPrefs.xul" label="&calendar.views.label;" id="calendarView"/>
-         </treerow>
- 	</treeitem>
+            <treerow>
+		        <treecell class="treecell-indent" url="chrome://calendar/content/pref/viewPrefs.xul" label="&calendar.views.label;" id="calendarView"/>
+            </treerow>
+ 	    </treeitem>
+        <treeitem id="calendarTimezonePanel" container="false">
+            <treerow>
+		        <treecell class="treecell-indent" 
+			        url="chrome://calendar/content/pref/timezonePrefs.xul" 
+			        label="&calendar.timezone.label;" id="timezone"/>
+            </treerow>
+ 	    </treeitem>
      </treechildren>
-
     </treeitem>
   </treechildren>
   

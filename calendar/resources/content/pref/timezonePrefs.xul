@@ -1,0 +1,456 @@
+<?xml version="1.0"?> 
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla Calendar Code.
+   -
+   - The Initial Developer of the Original Code is Mike Potter.
+   - Portions created by the Initial Developer are Copyright (C) 2002
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -  Mike Potter <mikep@oeone.com>
+   -  Students at the University of Charleston, S.C.
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!-- DTD File with all strings specific to the file -->
+<!DOCTYPE page 
+[
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/prefs.dtd" > %dtd1;
+]>
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	onload="parent.initPanel('chrome://calendar/content/pref/timezonePrefs.xul');"
+      headertitle="&calendarPanel.label;">
+
+   <script type="application/x-javascript" src="chrome://calendar/content/dateUtils.js"/>
+   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+   
+ <script type="application/x-javascript">
+       
+      /* 
+      ** NOTE: 
+      ** When you add a pref to this page, you have to add its ID to the following list.
+      */
+       
+      var _elementIDs = [
+      "defaultzone"
+      ];
+
+
+      
+   </script>
+
+
+<groupbox>
+	<caption label="&pref.calendar.timezone.caption;"/>
+	<description>This doesn't yet do anything.</description>
+	<hbox  align="center">
+		<description>&pref.defaultzone.label;</description>
+        <menulist id="defaultzone" preftype="string" prefstring="calendar.timezone.default">
+			<menupopup id="defaultzone">
+<menuitem label="&pref.timezone.Africa.Abidjan;" value="Africa/Abidjan"/>
+<menuitem label="&pref.timezone.Africa.Accra;" value="Africa/Accra"/>
+<menuitem label="&pref.timezone.Africa.Addis_Ababa;" value="Africa/Addis_Ababa"/>
+<menuitem label="&pref.timezone.Africa.Algiers;" value="Africa/Algiers"/>
+<menuitem label="&pref.timezone.Africa.Asmera;" value="Africa/Asmera"/>
+<menuitem label="&pref.timezone.Africa.Bamako;" value="Africa/Bamako"/>
+<menuitem label="&pref.timezone.Africa.Bangui;" value="Africa/Bangui"/>
+<menuitem label="&pref.timezone.Africa.Banjul;" value="Africa/Banjul"/>
+<menuitem label="&pref.timezone.Africa.Bissau;" value="Africa/Bissau"/>
+<menuitem label="&pref.timezone.Africa.Blantyre;" value="Africa/Blantyre"/>
+<menuitem label="&pref.timezone.Africa.Brazzaville;" value="Africa/Brazzaville"/>
+<menuitem label="&pref.timezone.Africa.Bujumbura;" value="Africa/Bujumbura"/>
+<menuitem label="&pref.timezone.Africa.Cairo;" value="Africa/Cairo"/>
+<menuitem label="&pref.timezone.Africa.Casablanca;" value="Africa/Casablanca"/>
+<menuitem label="&pref.timezone.Africa.Ceuta;" value="Africa/Ceuta"/>
+<menuitem label="&pref.timezone.Africa.Conakry;" value="Africa/Conakry"/>
+<menuitem label="&pref.timezone.Africa.Dakar;" value="Africa/Dakar"/>
+<menuitem label="&pref.timezone.Africa.Dar_es_Salaam;" value="Africa/Dar_es_Salaam"/>
+<menuitem label="&pref.timezone.Africa.Djibouti;" value="Africa/Djibouti"/>
+<menuitem label="&pref.timezone.Africa.Douala;" value="Africa/Douala"/>
+<menuitem label="&pref.timezone.Africa.El_Aaiun;" value="Africa/El_Aaiun"/>
+<menuitem label="&pref.timezone.Africa.Freetown;" value="Africa/Freetown"/>
+<menuitem label="&pref.timezone.Africa.Gaborone;" value="Africa/Gaborone"/>
+<menuitem label="&pref.timezone.Africa.Harare;" value="Africa/Harare"/>
+<menuitem label="&pref.timezone.Africa.Johannesburg;" value="Africa/Johannesburg"/>
+<menuitem label="&pref.timezone.Africa.Kampala;" value="Africa/Kampala"/>
+<menuitem label="&pref.timezone.Africa.Khartoum;" value="Africa/Khartoum"/>
+<menuitem label="&pref.timezone.Africa.Kigali;" value="Africa/Kigali"/>
+<menuitem label="&pref.timezone.Africa.Kinshasa;" value="Africa/Kinshasa"/>
+<menuitem label="&pref.timezone.Africa.Lagos;" value="Africa/Lagos"/>
+<menuitem label="&pref.timezone.Africa.Libreville;" value="Africa/Libreville"/>
+<menuitem label="&pref.timezone.Africa.Lome;" value="Africa/Lome"/>
+<menuitem label="&pref.timezone.Africa.Luanda;" value="Africa/Luanda"/>
+<menuitem label="&pref.timezone.Africa.Lubumbashi;" value="Africa/Lubumbashi"/>
+<menuitem label="&pref.timezone.Africa.Lusaka;" value="Africa/Lusaka"/>
+<menuitem label="&pref.timezone.Africa.Malabo;" value="Africa/Malabo"/>
+<menuitem label="&pref.timezone.Africa.Maputo;" value="Africa/Maputo"/>
+<menuitem label="&pref.timezone.Africa.Maseru;" value="Africa/Maseru"/>
+<menuitem label="&pref.timezone.Africa.Mbabane;" value="Africa/Mbabane"/>
+<menuitem label="&pref.timezone.Africa.Mogadishu;" value="Africa/Mogadishu"/>
+<menuitem label="&pref.timezone.Africa.Monrovia;" value="Africa/Monrovia"/>
+<menuitem label="&pref.timezone.Africa.Nairobi;" value="Africa/Nairobi"/>
+<menuitem label="&pref.timezone.Africa.Ndjamena;" value="Africa/Ndjamena"/>
+<menuitem label="&pref.timezone.Africa.Niamey;" value="Africa/Niamey"/>
+<menuitem label="&pref.timezone.Africa.Nouakchott;" value="Africa/Nouakchott"/>
+<menuitem label="&pref.timezone.Africa.Ouagadougou;" value="Africa/Ouagadougou"/>
+<menuitem label="&pref.timezone.Africa.Porto-Novo;" value="Africa/Porto-Novo"/>
+<menuitem label="&pref.timezone.Africa.Sao_Tome;" value="Africa/Sao_Tome"/>
+<menuitem label="&pref.timezone.Africa.Timbuktu;" value="Africa/Timbuktu"/>
+<menuitem label="&pref.timezone.Africa.Tripoli;" value="Africa/Tripoli"/>
+<menuitem label="&pref.timezone.Africa.Tunis;" value="Africa/Tunis"/>
+<menuitem label="&pref.timezone.Africa.Windhoek;" value="Africa/Windhoek"/>
+<menuitem label="&pref.timezone.America.Adak;" value="America/Adak"/>
+<menuitem label="&pref.timezone.America.Anchorage;" value="America/Anchorage"/>
+<menuitem label="&pref.timezone.America.Anguilla;" value="America/Anguilla"/>
+<menuitem label="&pref.timezone.America.Antigua;" value="America/Antigua"/>
+<menuitem label="&pref.timezone.America.Araguaina;" value="America/Araguaina"/>
+<menuitem label="&pref.timezone.America.Aruba;" value="America/Aruba"/>
+<menuitem label="&pref.timezone.America.Asuncion;" value="America/Asuncion"/>
+<menuitem label="&pref.timezone.America.Barbados;" value="America/Barbados"/>
+<menuitem label="&pref.timezone.America.Belem;" value="America/Belem"/>
+<menuitem label="&pref.timezone.America.Belize;" value="America/Belize"/>
+<menuitem label="&pref.timezone.America.Boa_Vista;" value="America/Boa_Vista"/>
+<menuitem label="&pref.timezone.America.Bogota;" value="America/Bogota"/>
+<menuitem label="&pref.timezone.America.Boise;" value="America/Boise"/>
+<menuitem label="&pref.timezone.America.Buenos_Aires;" value="America/Buenos_Aires"/>
+<menuitem label="&pref.timezone.America.Cambridge_Bay;" value="America/Cambridge_Bay"/>
+<menuitem label="&pref.timezone.America.Cancun;" value="America/Cancun"/>
+<menuitem label="&pref.timezone.America.Caracas;" value="America/Caracas"/>
+<menuitem label="&pref.timezone.America.Catamarca;" value="America/Catamarca"/>
+<menuitem label="&pref.timezone.America.Cayenne;" value="America/Cayenne"/>
+<menuitem label="&pref.timezone.America.Cayman;" value="America/Cayman"/>
+<menuitem label="&pref.timezone.America.Chicago;" value="America/Chicago"/>
+<menuitem label="&pref.timezone.America.Chihuahua;" value="America/Chihuahua"/>
+<menuitem label="&pref.timezone.America.Cordoba;" value="America/Cordoba"/>
+<menuitem label="&pref.timezone.America.Costa_Rica;" value="America/Costa_Rica"/>
+<menuitem label="&pref.timezone.America.Cuiaba;" value="America/Cuiaba"/>
+<menuitem label="&pref.timezone.America.Curacao;" value="America/Curacao"/>
+<menuitem label="&pref.timezone.America.Dawson;" value="America/Dawson"/>
+<menuitem label="&pref.timezone.America.Dawson_Creek;" value="America/Dawson_Creek"/>
+<menuitem label="&pref.timezone.America.Denver;" value="America/Denver"/>
+<menuitem label="&pref.timezone.America.Detroit;" value="America/Detroit"/>
+<menuitem label="&pref.timezone.America.Dominica;" value="America/Dominica"/>
+<menuitem label="&pref.timezone.America.Edmonton;" value="America/Edmonton"/>
+<menuitem label="&pref.timezone.America.Eirunepe;" value="America/Eirunepe"/>
+<menuitem label="&pref.timezone.America.El_Salvador;" value="America/El_Salvador"/>
+<menuitem label="&pref.timezone.America.Fortaleza;" value="America/Fortaleza"/>
+<menuitem label="&pref.timezone.America.Glace_Bay;" value="America/Glace_Bay"/>
+<menuitem label="&pref.timezone.America.Godthab;" value="America/Godthab"/>
+<menuitem label="&pref.timezone.America.Goose_Bay;" value="America/Goose_Bay"/>
+<menuitem label="&pref.timezone.America.Grand_Turk;" value="America/Grand_Turk"/>
+<menuitem label="&pref.timezone.America.Grenada;" value="America/Grenada"/>
+<menuitem label="&pref.timezone.America.Guadeloupe;" value="America/Guadeloupe"/>
+<menuitem label="&pref.timezone.America.Guatemala;" value="America/Guatemala"/>
+<menuitem label="&pref.timezone.America.Guayaquil;" value="America/Guayaquil"/>
+<menuitem label="&pref.timezone.America.Guyana;" value="America/Guyana"/>
+<menuitem label="&pref.timezone.America.Halifax;" value="America/Halifax"/>
+<menuitem label="&pref.timezone.America.Havana;" value="America/Havana"/>
+<menuitem label="&pref.timezone.America.Hermosillo;" value="America/Hermosillo"/>
+<menuitem label="&pref.timezone.America.Indiana.Indianapolis;" value="America/Indiana/Indianapolis"/>
+<menuitem label="&pref.timezone.America.Indiana.Knox;" value="America/Indiana/Knox"/>
+<menuitem label="&pref.timezone.America.Indiana.Marengo;" value="America/Indiana/Marengo"/>
+<menuitem label="&pref.timezone.America.Indiana.Vevay;" value="America/Indiana/Vevay"/>
+<menuitem label="&pref.timezone.America.Indianapolis;" value="America/Indianapolis"/>
+<menuitem label="&pref.timezone.America.Inuvik;" value="America/Inuvik"/>
+<menuitem label="&pref.timezone.America.Iqaluit;" value="America/Iqaluit"/>
+<menuitem label="&pref.timezone.America.Jamaica;" value="America/Jamaica"/>
+<menuitem label="&pref.timezone.America.Jujuy;" value="America/Jujuy"/>
+<menuitem label="&pref.timezone.America.Juneau;" value="America/Juneau"/>
+<menuitem label="&pref.timezone.America.Kentucky.Louisville;" value="America/Kentucky/Louisville"/>
+<menuitem label="&pref.timezone.America.Kentucky.Monticello;" value="America/Kentucky/Monticello"/>
+<menuitem label="&pref.timezone.America.La_Paz;" value="America/La_Paz"/>
+<menuitem label="&pref.timezone.America.Lima;" value="America/Lima"/>
+<menuitem label="&pref.timezone.America.Los_Angeles;" value="America/Los_Angeles"/>
+<menuitem label="&pref.timezone.America.Louisville;" value="America/Louisville"/>
+<menuitem label="&pref.timezone.America.Maceio;" value="America/Maceio"/>
+<menuitem label="&pref.timezone.America.Managua;" value="America/Managua"/>
+<menuitem label="&pref.timezone.America.Manaus;" value="America/Manaus"/>
+<menuitem label="&pref.timezone.America.Martinique;" value="America/Martinique"/>
+<menuitem label="&pref.timezone.America.Mazatlan;" value="America/Mazatlan"/>
+<menuitem label="&pref.timezone.America.Mendoza;" value="America/Mendoza"/>
+<menuitem label="&pref.timezone.America.Menominee;" value="America/Menominee"/>
+<menuitem label="&pref.timezone.America.Merida;" value="America/Merida"/>
+<menuitem label="&pref.timezone.America.Mexico_City;" value="America/Mexico_City"/>
+<menuitem label="&pref.timezone.America.Miquelon;" value="America/Miquelon"/>
+<menuitem label="&pref.timezone.America.Monterrey;" value="America/Monterrey"/>
+<menuitem label="&pref.timezone.America.Montevideo;" value="America/Montevideo"/>
+<menuitem label="&pref.timezone.America.Montreal;" value="America/Montreal"/>
+<menuitem label="&pref.timezone.America.Montserrat;" value="America/Montserrat"/>
+<menuitem label="&pref.timezone.America.Nassau;" value="America/Nassau"/>
+<menuitem label="&pref.timezone.America.New_York;" value="America/New_York" selected ="true" />
+<menuitem label="&pref.timezone.America.Nipigon;" value="America/Nipigon"/>
+<menuitem label="&pref.timezone.America.Nome;" value="America/Nome"/>
+<menuitem label="&pref.timezone.America.Noronha;" value="America/Noronha"/>
+<menuitem label="&pref.timezone.America.Panama;" value="America/Panama"/>
+<menuitem label="&pref.timezone.America.Pangnirtung;" value="America/Pangnirtung"/>
+<menuitem label="&pref.timezone.America.Paramaribo;" value="America/Paramaribo"/>
+<menuitem label="&pref.timezone.America.Phoenix;" value="America/Phoenix"/>
+<menuitem label="&pref.timezone.America.Port-au-Prince;" value="America/Port-au-Prince"/>
+<menuitem label="&pref.timezone.America.Port_of_Spain;" value="America/Port_of_Spain"/>
+<menuitem label="&pref.timezone.America.Porto_Velho;" value="America/Porto_Velho"/>
+<menuitem label="&pref.timezone.America.Puerto_Rico;" value="America/Puerto_Rico"/>
+<menuitem label="&pref.timezone.America.Rainy_River;" value="America/Rainy_River"/>
+<menuitem label="&pref.timezone.America.Rankin_Inlet;" value="America/Rankin_Inlet"/>
+<menuitem label="&pref.timezone.America.Recife;" value="America/Recife"/>
+<menuitem label="&pref.timezone.America.Regina;" value="America/Regina"/>
+<menuitem label="&pref.timezone.America.Rio_Branco;" value="America/Rio_Branco"/>
+<menuitem label="&pref.timezone.America.Rosario;" value="America/Rosario"/>
+<menuitem label="&pref.timezone.America.Santiago;" value="America/Santiago"/>
+<menuitem label="&pref.timezone.America.Santo_Domingo;" value="America/Santo_Domingo"/>
+<menuitem label="&pref.timezone.America.Sao_Paulo;" value="America/Sao_Paulo"/>
+<menuitem label="&pref.timezone.America.Scoresbysund;" value="America/Scoresbysund"/>
+<menuitem label="&pref.timezone.America.Shiprock;" value="America/Shiprock"/>
+<menuitem label="&pref.timezone.America.St_Johns;" value="America/St_Johns"/>
+<menuitem label="&pref.timezone.America.St_Kitts;" value="America/St_Kitts"/>
+<menuitem label="&pref.timezone.America.St_Lucia;" value="America/St_Lucia"/>
+<menuitem label="&pref.timezone.America.St_Thomas;" value="America/St_Thomas"/>
+<menuitem label="&pref.timezone.America.St_Vincent;" value="America/St_Vincent"/>
+<menuitem label="&pref.timezone.America.Swift_Current;" value="America/Swift_Current"/>
+<menuitem label="&pref.timezone.America.Tegucigalpa;" value="America/Tegucigalpa"/>
+<menuitem label="&pref.timezone.America.Thule;" value="America/Thule"/>
+<menuitem label="&pref.timezone.America.Thunder_Bay;" value="America/Thunder_Bay"/>
+<menuitem label="&pref.timezone.America.Tijuana;" value="America/Tijuana"/>
+<menuitem label="&pref.timezone.America.Tortola;" value="America/Tortola"/>
+<menuitem label="&pref.timezone.America.Vancouver;" value="America/Vancouver"/>
+<menuitem label="&pref.timezone.America.Whitehorse;" value="America/Whitehorse"/>
+<menuitem label="&pref.timezone.America.Winnipeg;" value="America/Winnipeg"/>
+<menuitem label="&pref.timezone.America.Yakutat;" value="America/Yakutat"/>
+<menuitem label="&pref.timezone.America.Yellowknife;" value="America/Yellowknife"/>
+<menuitem label="&pref.timezone.Antarctica.Casey;" value="Antarctica/Casey"/>
+<menuitem label="&pref.timezone.Antarctica.Davis;" value="Antarctica/Davis"/>
+<menuitem label="&pref.timezone.Antarctica.DumontDUrville;" value="Antarctica/DumontDUrville"/>
+<menuitem label="&pref.timezone.Antarctica.Mawson;" value="Antarctica/Mawson"/>
+<menuitem label="&pref.timezone.Antarctica.McMurdo;" value="Antarctica/McMurdo"/>
+<menuitem label="&pref.timezone.Antarctica.Palmer;" value="Antarctica/Palmer"/>
+<menuitem label="&pref.timezone.Antarctica.South_Pole;" value="Antarctica/South_Pole"/>
+<menuitem label="&pref.timezone.Antarctica.Syowa;" value="Antarctica/Syowa"/>
+<menuitem label="&pref.timezone.Antarctica.Vostok;" value="Antarctica/Vostok"/>
+<menuitem label="&pref.timezone.Arctic.Longyearbyen;" value="Arctic/Longyearbyen"/>
+<menuitem label="&pref.timezone.Asia.Aden;" value="Asia/Aden"/>
+<menuitem label="&pref.timezone.Asia.Almaty;" value="Asia/Almaty"/>
+<menuitem label="&pref.timezone.Asia.Amman;" value="Asia/Amman"/>
+<menuitem label="&pref.timezone.Asia.Anadyr;" value="Asia/Anadyr"/>
+<menuitem label="&pref.timezone.Asia.Aqtau;" value="Asia/Aqtau"/>
+<menuitem label="&pref.timezone.Asia.Aqtobe;" value="Asia/Aqtobe"/>
+<menuitem label="&pref.timezone.Asia.Ashgabat;" value="Asia/Ashgabat"/>
+<menuitem label="&pref.timezone.Asia.Baghdad;" value="Asia/Baghdad"/>
+<menuitem label="&pref.timezone.Asia.Bahrain;" value="Asia/Bahrain"/>
+<menuitem label="&pref.timezone.Asia.Baku;" value="Asia/Baku"/>
+<menuitem label="&pref.timezone.Asia.Bangkok;" value="Asia/Bangkok"/>
+<menuitem label="&pref.timezone.Asia.Beirut;" value="Asia/Beirut"/>
+<menuitem label="&pref.timezone.Asia.Bishkek;" value="Asia/Bishkek"/>
+<menuitem label="&pref.timezone.Asia.Brunei;" value="Asia/Brunei"/>
+<menuitem label="&pref.timezone.Asia.Calcutta;" value="Asia/Calcutta"/>
+<menuitem label="&pref.timezone.Asia.Chungking;" value="Asia/Chungking"/>
+<menuitem label="&pref.timezone.Asia.Colombo;" value="Asia/Colombo"/>
+<menuitem label="&pref.timezone.Asia.Damascus;" value="Asia/Damascus"/>
+<menuitem label="&pref.timezone.Asia.Dhaka;" value="Asia/Dhaka"/>
+<menuitem label="&pref.timezone.Asia.Dili;" value="Asia/Dili"/>
+<menuitem label="&pref.timezone.Asia.Dubai;" value="Asia/Dubai"/>
+<menuitem label="&pref.timezone.Asia.Dushanbe;" value="Asia/Dushanbe"/>
+<menuitem label="&pref.timezone.Asia.Gaza;" value="Asia/Gaza"/>
+<menuitem label="&pref.timezone.Asia.Harbin;" value="Asia/Harbin"/>
+<menuitem label="&pref.timezone.Asia.Hong_Kong;" value="Asia/Hong_Kong"/>
+<menuitem label="&pref.timezone.Asia.Hovd;" value="Asia/Hovd"/>
+<menuitem label="&pref.timezone.Asia.Irkutsk;" value="Asia/Irkutsk"/>
+<menuitem label="&pref.timezone.Asia.Istanbul;" value="Asia/Istanbul"/>
+<menuitem label="&pref.timezone.Asia.Jakarta;" value="Asia/Jakarta"/>
+<menuitem label="&pref.timezone.Asia.Jayapura;" value="Asia/Jayapura"/>
+<menuitem label="&pref.timezone.Asia.Jerusalem;" value="Asia/Jerusalem"/>
+<menuitem label="&pref.timezone.Asia.Kabul;" value="Asia/Kabul"/>
+<menuitem label="&pref.timezone.Asia.Kamchatka;" value="Asia/Kamchatka"/>
+<menuitem label="&pref.timezone.Asia.Karachi;" value="Asia/Karachi"/>
+<menuitem label="&pref.timezone.Asia.Kashgar;" value="Asia/Kashgar"/>
+<menuitem label="&pref.timezone.Asia.Katmandu;" value="Asia/Katmandu"/>
+<menuitem label="&pref.timezone.Asia.Krasnoyarsk;" value="Asia/Krasnoyarsk"/>
+<menuitem label="&pref.timezone.Asia.Kuala_Lumpur;" value="Asia/Kuala_Lumpur"/>
+<menuitem label="&pref.timezone.Asia.Kuching;" value="Asia/Kuching"/>
+<menuitem label="&pref.timezone.Asia.Kuwait;" value="Asia/Kuwait"/>
+<menuitem label="&pref.timezone.Asia.Macao;" value="Asia/Macao"/>
+<menuitem label="&pref.timezone.Asia.Magadan;" value="Asia/Magadan"/>
+<menuitem label="&pref.timezone.Asia.Manila;" value="Asia/Manila"/>
+<menuitem label="&pref.timezone.Asia.Muscat;" value="Asia/Muscat"/>
+<menuitem label="&pref.timezone.Asia.Nicosia;" value="Asia/Nicosia"/>
+<menuitem label="&pref.timezone.Asia.Novosibirsk;" value="Asia/Novosibirsk"/>
+<menuitem label="&pref.timezone.Asia.Omsk;" value="Asia/Omsk"/>
+<menuitem label="&pref.timezone.Asia.Phnom_Penh;" value="Asia/Phnom_Penh"/>
+<menuitem label="&pref.timezone.Asia.Pontianak;" value="Asia/Pontianak"/>
+<menuitem label="&pref.timezone.Asia.Pyongyang;" value="Asia/Pyongyang"/>
+<menuitem label="&pref.timezone.Asia.Qatar;" value="Asia/Qatar"/>
+<menuitem label="&pref.timezone.Asia.Rangoon;" value="Asia/Rangoon"/>
+<menuitem label="&pref.timezone.Asia.Riyadh;" value="Asia/Riyadh"/>
+<menuitem label="&pref.timezone.Asia.Saigon;" value="Asia/Saigon"/>
+<menuitem label="&pref.timezone.Asia.Samarkand;" value="Asia/Samarkand"/>
+<menuitem label="&pref.timezone.Asia.Seoul;" value="Asia/Seoul"/>
+<menuitem label="&pref.timezone.Asia.Shanghai;" value="Asia/Shanghai"/>
+<menuitem label="&pref.timezone.Asia.Singapore;" value="Asia/Singapore"/>
+<menuitem label="&pref.timezone.Asia.Taipei;" value="Asia/Taipei"/>
+<menuitem label="&pref.timezone.Asia.Tashkent;" value="Asia/Tashkent"/>
+<menuitem label="&pref.timezone.Asia.Tbilisi;" value="Asia/Tbilisi"/>
+<menuitem label="&pref.timezone.Asia.Tehran;" value="Asia/Tehran"/>
+<menuitem label="&pref.timezone.Asia.Thimphu;" value="Asia/Thimphu"/>
+<menuitem label="&pref.timezone.Asia.Tokyo;" value="Asia/Tokyo"/>
+<menuitem label="&pref.timezone.Asia.Ujung_Pandang;" value="Asia/Ujung_Pandang"/>
+<menuitem label="&pref.timezone.Asia.Ulaanbaatar;" value="Asia/Ulaanbaatar"/>
+<menuitem label="&pref.timezone.Asia.Urumqi;" value="Asia/Urumqi"/>
+<menuitem label="&pref.timezone.Asia.Vientiane;" value="Asia/Vientiane"/>
+<menuitem label="&pref.timezone.Asia.Vladivostok;" value="Asia/Vladivostok"/>
+<menuitem label="&pref.timezone.Asia.Yakutsk;" value="Asia/Yakutsk"/>
+<menuitem label="&pref.timezone.Asia.Yekaterinburg;" value="Asia/Yekaterinburg"/>
+<menuitem label="&pref.timezone.Asia.Yerevan;" value="Asia/Yerevan"/>
+<menuitem label="&pref.timezone.Atlantic.Azores;" value="Atlantic/Azores"/>
+<menuitem label="&pref.timezone.Atlantic.Bermuda;" value="Atlantic/Bermuda"/>
+<menuitem label="&pref.timezone.Atlantic.Canary;" value="Atlantic/Canary"/>
+<menuitem label="&pref.timezone.Atlantic.Cape_Verde;" value="Atlantic/Cape_Verde"/>
+<menuitem label="&pref.timezone.Atlantic.Faeroe;" value="Atlantic/Faeroe"/>
+<menuitem label="&pref.timezone.Atlantic.Jan_Mayen;" value="Atlantic/Jan_Mayen"/>
+<menuitem label="&pref.timezone.Atlantic.Madeira;" value="Atlantic/Madeira"/>
+<menuitem label="&pref.timezone.Atlantic.Reykjavik;" value="Atlantic/Reykjavik"/>
+<menuitem label="&pref.timezone.Atlantic.South_Georgia;" value="Atlantic/South_Georgia"/>
+<menuitem label="&pref.timezone.Atlantic.St_Helena;" value="Atlantic/St_Helena"/>
+<menuitem label="&pref.timezone.Atlantic.Stanley;" value="Atlantic/Stanley"/>
+<menuitem label="&pref.timezone.Australia.Adelaide;" value="Australia/Adelaide"/>
+<menuitem label="&pref.timezone.Australia.Brisbane;" value="Australia/Brisbane"/>
+<menuitem label="&pref.timezone.Australia.Broken_Hill;" value="Australia/Broken_Hill"/>
+<menuitem label="&pref.timezone.Australia.Darwin;" value="Australia/Darwin"/>
+<menuitem label="&pref.timezone.Australia.Hobart;" value="Australia/Hobart"/>
+<menuitem label="&pref.timezone.Australia.Lindeman;" value="Australia/Lindeman"/>
+<menuitem label="&pref.timezone.Australia.Lord_Howe;" value="Australia/Lord_Howe"/>
+<menuitem label="&pref.timezone.Australia.Melbourne;" value="Australia/Melbourne"/>
+<menuitem label="&pref.timezone.Australia.Perth;" value="Australia/Perth"/>
+<menuitem label="&pref.timezone.Australia.Sydney;" value="Australia/Sydney"/>
+<menuitem label="&pref.timezone.Europe.Amsterdam;" value="Europe/Amsterdam"/>
+<menuitem label="&pref.timezone.Europe.Andorra;" value="Europe/Andorra"/>
+<menuitem label="&pref.timezone.Europe.Athens;" value="Europe/Athens"/>
+<menuitem label="&pref.timezone.Europe.Belfast;" value="Europe/Belfast"/>
+<menuitem label="&pref.timezone.Europe.Belgrade;" value="Europe/Belgrade"/>
+<menuitem label="&pref.timezone.Europe.Berlin;" value="Europe/Berlin"/>
+<menuitem label="&pref.timezone.Europe.Bratislava;" value="Europe/Bratislava"/>
+<menuitem label="&pref.timezone.Europe.Brussels;" value="Europe/Brussels"/>
+<menuitem label="&pref.timezone.Europe.Bucharest;" value="Europe/Bucharest"/>
+<menuitem label="&pref.timezone.Europe.Budapest;" value="Europe/Budapest"/>
+<menuitem label="&pref.timezone.Europe.Chisinau;" value="Europe/Chisinau"/>
+<menuitem label="&pref.timezone.Europe.Copenhagen;" value="Europe/Copenhagen"/>
+<menuitem label="&pref.timezone.Europe.Dublin;" value="Europe/Dublin"/>
+<menuitem label="&pref.timezone.Europe.Gibraltar;" value="Europe/Gibraltar"/>
+<menuitem label="&pref.timezone.Europe.Helsinki;" value="Europe/Helsinki"/>
+<menuitem label="&pref.timezone.Europe.Istanbul;" value="Europe/Istanbul"/>
+<menuitem label="&pref.timezone.Europe.Kaliningrad;" value="Europe/Kaliningrad"/>
+<menuitem label="&pref.timezone.Europe.Kiev;" value="Europe/Kiev"/>
+<menuitem label="&pref.timezone.Europe.Lisbon;" value="Europe/Lisbon"/>
+<menuitem label="&pref.timezone.Europe.Ljubljana;" value="Europe/Ljubljana"/>
+<menuitem label="&pref.timezone.Europe.London;" value="Europe/London"/>
+<menuitem label="&pref.timezone.Europe.Luxembourg;" value="Europe/Luxembourg"/>
+<menuitem label="&pref.timezone.Europe.Madrid;" value="Europe/Madrid"/>
+<menuitem label="&pref.timezone.Europe.Malta;" value="Europe/Malta"/>
+<menuitem label="&pref.timezone.Europe.Minsk;" value="Europe/Minsk"/>
+<menuitem label="&pref.timezone.Europe.Monaco;" value="Europe/Monaco"/>
+<menuitem label="&pref.timezone.Europe.Moscow;" value="Europe/Moscow"/>
+<menuitem label="&pref.timezone.Europe.Nicosia;" value="Europe/Nicosia"/>
+<menuitem label="&pref.timezone.Europe.Oslo;" value="Europe/Oslo"/>
+<menuitem label="&pref.timezone.Europe.Paris;" value="Europe/Paris"/>
+<menuitem label="&pref.timezone.Europe.Prague;" value="Europe/Prague"/>
+<menuitem label="&pref.timezone.Europe.Riga;" value="Europe/Riga"/>
+<menuitem label="&pref.timezone.Europe.Rome;" value="Europe/Rome"/>
+<menuitem label="&pref.timezone.Europe.Samara;" value="Europe/Samara"/>
+<menuitem label="&pref.timezone.Europe.San_Marino;" value="Europe/San_Marino"/>
+<menuitem label="&pref.timezone.Europe.Sarajevo;" value="Europe/Sarajevo"/>
+<menuitem label="&pref.timezone.Europe.Simferopol;" value="Europe/Simferopol"/>
+<menuitem label="&pref.timezone.Europe.Skopje;" value="Europe/Skopje"/>
+<menuitem label="&pref.timezone.Europe.Sofia;" value="Europe/Sofia"/>
+<menuitem label="&pref.timezone.Europe.Stockholm;" value="Europe/Stockholm"/>
+<menuitem label="&pref.timezone.Europe.Tallinn;" value="Europe/Tallinn"/>
+<menuitem label="&pref.timezone.Europe.Tirane;" value="Europe/Tirane"/>
+<menuitem label="&pref.timezone.Europe.Uzhgorod;" value="Europe/Uzhgorod"/>
+<menuitem label="&pref.timezone.Europe.Vaduz;" value="Europe/Vaduz"/>
+<menuitem label="&pref.timezone.Europe.Vatican;" value="Europe/Vatican"/>
+<menuitem label="&pref.timezone.Europe.Vienna;" value="Europe.Vienna"/>
+<menuitem label="&pref.timezone.Europe.Vilnius;" value="Europe/Vilnius"/>
+<menuitem label="&pref.timezone.Europe.Warsaw;" value="Europe/Warsaw"/>
+<menuitem label="&pref.timezone.Europe.Zagreb;" value="Europe/Zagreb"/>
+<menuitem label="&pref.timezone.Europe.Zaporozhye;" value="Europe/Zaporozhye"/>
+<menuitem label="&pref.timezone.Europe.Zurich;" value="Europe/Zurich"/>
+<menuitem label="&pref.timezone.Indian.Antananarivo;" value="Indian/Antananarivo"/>
+<menuitem label="&pref.timezone.Indian.Chagos;" value="Indian/Chagos"/>
+<menuitem label="&pref.timezone.Indian.Christmas;" value="Indian/Christmas"/>
+<menuitem label="&pref.timezone.Indian.Cocos;" value="Indian/Cocos"/>
+<menuitem label="&pref.timezone.Indian.Comoro;" value="Indian/Comoro"/>
+<menuitem label="&pref.timezone.Indian.Kerguelen;" value="Indian/Kerguelen"/>
+<menuitem label="&pref.timezone.Indian.Mahe;" value="Indian/Mahe"/>
+<menuitem label="&pref.timezone.Indian.Maldives;" value="Indian/Maldives"/>
+<menuitem label="&pref.timezone.Indian.Mauritius;" value="Indian/Mauritius"/>
+<menuitem label="&pref.timezone.Indian.Mayotte;" value="Indian/Mayotte"/>
+<menuitem label="&pref.timezone.Indian.Reunion;" value="Indian/Reunion"/>
+<menuitem label="&pref.timezone.Pacific.Apia;" value="Pacific/Apia"/>
+<menuitem label="&pref.timezone.Pacific.Auckland;" value="Pacific/Auckland"/>
+<menuitem label="&pref.timezone.Pacific.Chatham;" value="Pacific/Chatham"/>
+<menuitem label="&pref.timezone.Pacific.Easter;" value="Pacific/Easter"/>
+<menuitem label="&pref.timezone.Pacific.Efate;" value="Pacific/Efate"/>
+<menuitem label="&pref.timezone.Pacific.Enderbury;" value="Pacific/Enderbury"/>
+<menuitem label="&pref.timezone.Pacific.Fakaofo;" value="Pacific/Fakaofo"/>
+<menuitem label="&pref.timezone.Pacific.Fiji;" value="Pacific/Fiji"/>
+<menuitem label="&pref.timezone.Pacific.Funafuti;" value="Pacific/Funafuti"/>
+<menuitem label="&pref.timezone.Pacific.Galapagos;" value="Pacific/Galapagos"/>
+<menuitem label="&pref.timezone.Pacific.Gambier;" value="Pacific/Gambier"/>
+<menuitem label="&pref.timezone.Pacific.Guadalcanal;" value="Pacific/Guadalcanal"/>
+<menuitem label="&pref.timezone.Pacific.Guam;" value="Pacific/Guam"/>
+<menuitem label="&pref.timezone.Pacific.Honolulu;" value="Pacific/Honolulu"/>
+<menuitem label="&pref.timezone.Pacific.Johnston;" value="Pacific/Johnston"/>
+<menuitem label="&pref.timezone.Pacific.Kiritimati;" value="Pacific/Kiritimati"/>
+<menuitem label="&pref.timezone.Pacific.Kosrae;" value="Pacific/Kosrae"/>
+<menuitem label="&pref.timezone.Pacific.Kwajalein;" value="Pacific/Kwajalein"/>
+<menuitem label="&pref.timezone.Pacific.Majuro;" value="Pacific/Majuro"/>
+<menuitem label="&pref.timezone.Pacific.Marquesas;" value="Pacific/Marquesas"/>
+<menuitem label="&pref.timezone.Pacific.Midway;" value="Pacific/Midway"/>
+<menuitem label="&pref.timezone.Pacific.Nauru;" value="Pacific/Nauru"/>
+<menuitem label="&pref.timezone.Pacific.Niue;" value="Pacific/Niue"/>
+<menuitem label="&pref.timezone.Pacific.Norfolk;" value="Pacific/Norfolk"/>
+<menuitem label="&pref.timezone.Pacific.Noumea;" value="Pacific/Noumea"/>
+<menuitem label="&pref.timezone.Pacific.Pago_Pago;" value="Pacific/Pago_Pago"/>
+<menuitem label="&pref.timezone.Pacific.Palau;" value="Pacific/Palau"/>
+<menuitem label="&pref.timezone.Pacific.Pitcairn;" value="Pacific/Pitcairn"/>
+<menuitem label="&pref.timezone.Pacific.Ponape;" value="Pacific/Ponape"/>
+<menuitem label="&pref.timezone.Pacific.Port_Moresby;" value="Pacific/Port_Moresby"/>
+<menuitem label="&pref.timezone.Pacific.Rarotonga;" value="Pacific/Rarotonga"/>
+<menuitem label="&pref.timezone.Pacific.Saipan;" value="Pacific/Saipan"/>
+<menuitem label="&pref.timezone.Pacific.Tahiti;" value="Pacific/Tahiti"/>
+<menuitem label="&pref.timezone.Pacific.Tarawa;" value="Pacific/Tarawa"/>
+<menuitem label="&pref.timezone.Pacific.Tongatapu;" value="Pacific/Tongatapu"/>
+<menuitem label="&pref.timezone.Pacific.Truk;" value="Pacific/Truk"/>
+<menuitem label="&pref.timezone.Pacific.Wake;" value="Pacific/Wake"/>
+<menuitem label="&pref.timezone.Pacific.Wallis;" value="Pacific/Wallis"/>
+<menuitem label="&pref.timezone.Pacific.Yap;" value="Pacific/Yap"/>
+            
+          </menupopup>
+        </menulist>   
+</hbox>
+</groupbox>
+</page>
