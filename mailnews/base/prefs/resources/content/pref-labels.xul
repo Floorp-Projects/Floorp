@@ -65,7 +65,7 @@
   <description>&displayText.label;</description>
 
   <!-- label color: 1 (default red) -->
-  <hbox class="indent" autostretch="never">
+  <hbox class="indent" align="center">
     <textbox
         id="label1TextBox"
         pref="true"
@@ -88,7 +88,7 @@
   </hbox>    
 
   <!-- label color: 2 (default orange) -->
-  <hbox class="indent" autostretch="never">
+  <hbox class="indent" align="center">
     <textbox
         id="label2TextBox"
         pref="true"
@@ -111,7 +111,7 @@
   </hbox>    
 
   <!-- label color: 3 (default green) -->
-  <hbox class="indent" autostretch="never">
+  <hbox class="indent" align="center">
     <textbox
         id="label3TextBox"
         pref="true"
@@ -134,7 +134,7 @@
   </hbox>    
 
   <!-- label color: 4 (default blue) -->
-  <hbox class="indent" autostretch="never">
+  <hbox class="indent" align="center">
     <textbox
         id="label4TextBox"
         pref="true"
@@ -157,7 +157,7 @@
   </hbox>    
 
   <!-- label color: 5 (default purple) -->
-  <hbox class="indent" autostretch="never">
+  <hbox class="indent" align="center">
     <textbox
         id="label5TextBox"
         pref="true"
