@@ -354,6 +354,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mMisplacedContent(0) {
   mTokenizer=0;
   mComputedCRC32=0;
   mExpectedCRC32=0;
+  mSaveBadTokens = PR_FALSE;
 //  DebugDumpContainmentRules2(*this,"c:/temp/DTDRules.new","New CNavDTD Containment Rules");
 }
 
@@ -740,8 +741,9 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
 static
 PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
   int i=0;
-  for(i=aTagStack.mCount-1;i>=0;i--){
-    if(aTagStack.mTags[i]==aTag)
+  int count = aTagStack.mTags->GetSize();
+  for(i=(count-1);i>=0;i--){
+    if(aTagStack[i]==aTag)
       return i;
   }
   return kNotFound;
@@ -759,7 +761,7 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsTagStack& aTagStack) {
  */  
 static
 eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
-  int theTopIndex=aTagStack.mCount;
+  int theTopIndex = aTagStack.mTags->GetSize();
   eHTMLTags thePrevTag=aTagStack.Last();
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
@@ -786,7 +788,7 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
           }
         }
         if(theRootIndex<thePeerIndex) {
-          return aTagStack.mTags[thePeerIndex]; //return the tag that was used in peer test.
+          return aTagStack[thePeerIndex]; //return the tag that was used in peer test.
         }
       }
  
@@ -802,9 +804,9 @@ eHTMLTags FindAutoCloseTargetForStartTag(eHTMLTags aCurrentTag,nsTagStack& aTagS
       }//if
       else if(kNotFound<theRootIndex) {
         //This block handles our fallback cases like: <html><body><center><p>  <- <table> 
-        while((theRootIndex<--theTopIndex) && (!gHTMLElements[aTagStack.mTags[theTopIndex]].CanContain(aCurrentTag))) {
+        while((theRootIndex<--theTopIndex) && (!gHTMLElements[aTagStack[theTopIndex]].CanContain(aCurrentTag))) {
         }
-        return aTagStack.mTags[theTopIndex+1];
+        return aTagStack[theTopIndex+1];
         //return aTagStack.mTags[theRootIndex+1];
       }
 
@@ -1119,6 +1121,39 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   //Only if the parent CANNOT contain the child should we look to see if it's potentially a child
   //of another section. If it is, the cache it for later.
   //  1. Get the root node for the child. See if the ultimate node is the BODY, FRAMESET, HEAD or HTML
+  PRInt32   theTagCount = mBodyContext->GetCount();
+
+  if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
+    eHTMLTags theTag;
+    PRInt32   theBCIndex;
+    PRBool    isNotWhiteSpace = PR_FALSE;
+    PRInt32   attrCount   = aToken->GetAttributeCount();
+    while(theTagCount > 0) {
+      theTag = mBodyContext->TagAt(--theTagCount);
+      if(!gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch)) {
+        if(!gHTMLElements[theTag].CanContain(aChildTag))
+          return result;
+        theBCIndex = theTagCount;
+        break;
+      }
+    }
+    if(!FindTagInSet(aChildTag,gWhitespaceTags,sizeof(gWhitespaceTags)/sizeof(aChildTag))) {
+      isNotWhiteSpace = mSaveBadTokens  = PR_TRUE;
+    }
+    if(mSaveBadTokens &&(isNotWhiteSpace || mBodyContext->mTags.TokenCountAt(theBCIndex) > 0)) {
+      mBodyContext->mTags.SaveToken(aToken,theBCIndex);
+      if(attrCount > 0) {
+        nsCParserNode* theAttrNode = (nsCParserNode*)&aNode;
+        while(attrCount > 0){ 
+           mBodyContext->mTags.SaveToken(theAttrNode->PopAttributeToken(),theBCIndex);
+           attrCount--;
+        }
+      }
+      if(!IsContainer(aChildTag) && isNotWhiteSpace) {
+        mSaveBadTokens = PR_FALSE;
+      }
+    }
+  }
   return result;
 }
 
@@ -1242,15 +1277,15 @@ PRBool HasCloseablePeerAboveRoot(CTagList& aRootTagList,nsTagStack& aTagStack,eH
  */ 
 static
 eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagStack) {
-  int theTopIndex=aTagStack.mCount;
+  int theTopIndex=aTagStack.mTags->GetSize();
   eHTMLTags thePrevTag=aTagStack.Last();
  
   if(nsHTMLElement::IsContainer(aCurrentTag)){
     PRInt32 theChildIndex=GetIndexOfChildOrSynonym(aTagStack,aCurrentTag);
     
     if(kNotFound<theChildIndex) {
-      if(thePrevTag==aTagStack.mTags[theChildIndex]){
-        return aTagStack.mTags[theChildIndex];
+      if(thePrevTag==aTagStack[theChildIndex]){
+        return aTagStack[theChildIndex];
       } 
     
       if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
@@ -1274,7 +1309,7 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
             //at a min., this code is needed for H1..H6
         
           while(theChildIndex<--theTopIndex) {
-            eHTMLTags theNextTag=aTagStack.mTags[theTopIndex];
+            eHTMLTags theNextTag=aTagStack[theTopIndex];
             if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
               if(PR_TRUE==theRootTags->Contains(theNextTag)) {
                 return eHTMLTag_unknown; //we encountered a tag in root list so fail (because we're gated).
@@ -1348,6 +1383,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
         }
         else {
           eHTMLTags theTarget=FindAutoCloseTargetForEndTag(theChildTag,mBodyContext->mTags);
+          if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch)){
+             result = HandleSavedTokensAbove(theTarget);
+          }
           if(eHTMLTag_unknown!=theTarget) {
             result=CloseContainersTo(theTarget,PR_TRUE);
           }
@@ -1356,6 +1394,84 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       break;
   }
   return result;
+}
+
+/**
+ * This method will be triggered when the end of a table is
+ * encountered.  Its primary purpose is to process all the
+ * bad-contents pertaining a particular table. The position
+ * of the table is the token bank ID.
+ *
+ * @update harishd 03/24/99
+ * @param  aTag - This ought to be a table tag
+ *
+ */
+
+nsresult CNavDTD::HandleSavedTokensAbove(eHTMLTags aTag)
+{
+    NS_PRECONDITION(mBodyContext != nsnull && mBodyContext->GetCount() > 0,"invalid context");
+
+    CToken*       theToken;
+    eHTMLTags     theTag;
+    nsDTDContext  temp;
+    PRInt32       attrCount;
+    nsresult      result      = NS_OK;
+    PRInt32       theTopIndex = GetTopmostIndexOf(aTag);
+    PRInt32       theTagCount = mBodyContext->GetCount();
+
+ 
+    if(theTopIndex == kNotFound)
+      return result;
+
+    PRInt32  theBadContentIndex = theTopIndex - 1;
+    PRInt32  theBadTokenCount   = mBodyContext->mTags.TokenCountAt(theBadContentIndex);
+
+    if(theBadTokenCount > 0) {
+      // Pause the main context and switch to the new context.
+      mSink->BeginContext(theBadContentIndex);
+ 
+      // The body context should contain contents only upto the marked position.  
+      for(PRInt32 i=0; i<(theTagCount - theTopIndex); i++)
+        temp.Push(mBodyContext->Pop());
+     
+      // Now flush out all the bad contents.
+      while(theBadTokenCount > 0){
+        theToken       = mBodyContext->mTags.RestoreTokenFrom(theBadContentIndex);
+        if(theToken) {
+          theTag       = (eHTMLTags)theToken->GetTypeID();
+          if(theTag != eHTMLTag_unknown) {
+            attrCount    = theToken->GetAttributeCount();
+            // Put back attributes, which once got popped out, into the tokenizer
+            if(attrCount > 0) {
+              PRInt32 theAttrCount  = 0;
+              for(PRInt32 i=0;i<attrCount; i++){
+                CToken* theAttrToken = mBodyContext->mTags.RestoreTokenFrom(theBadContentIndex);
+                if(theAttrToken) {
+                  mTokenizer->PushTokenFront(theAttrToken);
+                  theAttrCount++;
+                }
+                theBadTokenCount--;
+              }
+              // XXX Hack. Wonder why the attribute count changes, sometimes!!!!!!
+              theToken->SetAttributeCount(theAttrCount);
+            }
+            result = HandleStartToken(theToken);
+          }
+        }
+        theBadTokenCount--;
+      }
+      if(theTopIndex != mBodyContext->GetCount()) {
+         CloseContainersTo(mBodyContext->TagAt(theTopIndex),PR_TRUE);
+      }
+     
+      // Put back tags, in temp context, into body context
+      for(PRInt32 j=0; j<(theTagCount - theTopIndex); j++)
+        mBodyContext->Push(temp.Pop());
+      
+      // Terminate the new context and switch back to the main context
+      mSink->EndContext(theBadContentIndex);
+    }
+    return result;
 }
 
 /**
@@ -1760,6 +1876,11 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
     }
   }
 
+  if(gHTMLElements[aParent].HasSpecialProperty(kBadContentWatch)) {
+    if(!gHTMLElements[aParent].CanContain(aChild)){
+      return PR_TRUE;
+    }
+  }
   return PR_FALSE;
 }
      
@@ -2004,9 +2125,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
       nsTagStack* theStyleStack=mBodyContext->mStyles[theStackPos];
       if(theStyleStack) {
         int theTagPos=0;
-        for(theTagPos=0;theTagPos<theStyleStack->mCount;theTagPos++){
-          if((0==theCount) || (!FindTagInSet(theStyleStack->mTags[theTagPos],theStyles,theCount))) {
-            theStyles[theCount++]=theStyleStack->mTags[theTagPos];
+        int count = theStyleStack->mTags->GetSize();
+        for(theTagPos=0;theTagPos<count;theTagPos++){
+          if((0==theCount) || (!FindTagInSet(theStyleStack->TagAt(theTagPos),theStyles,theCount))) {
+            theStyles[theCount++]=theStyleStack->TagAt(theTagPos);
           }
         }
       }
@@ -2653,11 +2775,13 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   //you have that aren't in the stack...
   nsAutoString  theEmpty;
   CStartToken theToken(theEmpty);
+  PRInt32 count = kPropagationStack.mTags->GetSize();
   if(PR_TRUE==bResult){
-    while(kPropagationStack.mCount>0) {
+    while(count>0) {
       eHTMLTags theTag=kPropagationStack.Pop();
       theToken.SetTypeID(theTag);  //open the container...
       HandleStartToken(&theToken);
+      count--;
     }
     result=NS_OK;
   }
