@@ -1590,7 +1590,7 @@ GlobalWindowImpl::GetBrowserWindowInterface(nsIBrowserWindow*& aBrowser)
   nsresult ret;
   
   nsIWebShell *mRootWebShell;
-  mWebShell->GetRootWebShell(mRootWebShell);
+  mWebShell->GetRootWebShellEvenIfChrome(mRootWebShell);
   if (nsnull != mRootWebShell) {
     nsIWebShellContainer *mRootContainer;
     mRootWebShell->GetContainer(mRootContainer);
