@@ -1076,7 +1076,7 @@ nsHttpChannel::FinalizeCacheEntry()
 {
     LOG(("nsHttpChannel::FinalizeCacheEntry [this=%x]\n", this));
 
-    if (mResponseHeadersModified) {
+    if (mResponseHead && mResponseHeadersModified) {
         // The no-store directive within the 'Cache-Control:' header indicates
         // that we should not store the response in the cache.
         // XXX this should probably be done from within SetResponseHeader.
@@ -2309,11 +2309,11 @@ nsHttpChannel::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult st
     if (mTransaction) {
         NS_RELEASE(mTransaction);
         mTransaction = nsnull;
-
-        // perform any final cache operations before we close the cache entry.
-        if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
-            FinalizeCacheEntry();
     }
+
+    // perform any final cache operations before we close the cache entry.
+    if (mCacheEntry && (mCacheAccess & nsICache::ACCESS_WRITE))
+        FinalizeCacheEntry();
     
     // we don't support overlapped i/o (bug 82418)
 #if 0
