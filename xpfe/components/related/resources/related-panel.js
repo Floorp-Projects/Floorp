@@ -22,10 +22,7 @@
 
  */
 
-// The content window that we're supposed to be observing. This is
-// god-awful fragile. The logic goes something like this. Our parent
-// is the sidebar, whose parent is the content frame, whose frame[1]
-// is the content area.
+// The content window that we're supposed to be observing.
 var ContentWindow = window.content;
 
 // The related links handler
@@ -43,13 +40,53 @@ var Observer = {
         // the RelatedLinks folder is open.
         var root = document.getElementById('NC:RelatedLinks');
 
-        if (root.getAttribute('open') == 'true') {
-            Handler.URL = data;
+        if (root.getAttribute('open') == 'true')
+        {
+        	refetchRelatedLinks(Handler, data);
         }
     }
 }
 
-function Init() {
+
+
+function refetchRelatedLinks(Handler, data)
+{
+	// we can only get related links data on HTTP URLs
+	var newSite = "" + data;
+	if (newSite.indexOf("http://") != 0)
+	{
+		dump("Unable to fetch related links data on non-HTTP URL.\n");
+		return(false);
+	}
+	newSite = newSite.substr(7);			// strip off "http://" prefix
+	var portOffset = newSite.indexOf(":");
+	var slashOffset = newSite.indexOf("/");
+	var theOffset = ((portOffset >=0) && (portOffset <= slashOffset)) ? portOffset : slashOffset;
+	if (theOffset >= 0)	newSite = newSite.substr(0, theOffset);
+
+	var currentSite = "";
+	if (Handler.URL != null)
+	{
+		currentSite = Handler.URL.substr(7);	// strip off "http://" prefix
+		portOffset = currentSite.indexOf(":");
+		slashOffset = currentSite.indexOf("/");
+		theOffset = ((portOffset >=0) && (portOffset <= slashOffset)) ? portOffset : slashOffset;
+		if (theOffset >= 0)	currentSite = currentSite.substr(0, theOffset );
+	}
+
+	dump("Related Links:  Current top-level: " + currentSite + "    new top-level: " + newSite + "\n");
+
+	// only request new related links data if we've got a new web site (hostname change)
+	if (currentSite != newSite)
+	{
+		Handler.URL = data;
+	}
+}
+
+
+
+function Init()
+{
     // Initialize the Related Links panel
 
     // Create a Related Links handler, and install it in the tree
@@ -66,6 +103,7 @@ function Init() {
 }
 
 
+
 function OnDblClick(treeitem, root)
 {
     // Deal with a double-click
@@ -74,7 +112,7 @@ function OnDblClick(treeitem, root)
     // we'll need to go out and fetch related links _now_.
     if (treeitem.getAttribute('id') == 'NC:RelatedLinks' &&
         treeitem.getAttribute('open') != 'true') {
-        Handler.URL = ContentWindow.location;
+	refetchRelatedLinks(Handler, ContentWindow.location);
         return;
     }
 
@@ -121,8 +159,5 @@ function OnDblClick(treeitem, root)
 	catch(ex)
 	{
 	}
-
     ContentWindow.location = id;
 }
-
-
