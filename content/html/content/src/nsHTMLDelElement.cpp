@@ -44,12 +44,12 @@
 #include "nsIPresContext.h"
 
 
-class nsHTMLDelElement : public nsGenericHTMLElement,
+class nsHTMLModElement : public nsGenericHTMLElement,
                          public nsIDOMHTMLModElement
 {
 public:
-  nsHTMLDelElement();
-  virtual ~nsHTMLDelElement();
+  nsHTMLModElement();
+  virtual ~nsHTMLModElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -68,12 +68,12 @@ public:
 };
 
 nsresult
-NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult,
+NS_NewHTMLModElement(nsIHTMLContent** aInstancePtrResult,
                      nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLDelElement* it = new nsHTMLDelElement();
+  nsHTMLModElement* it = new nsHTMLModElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -94,33 +94,35 @@ NS_NewHTMLDelElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLDelElement::nsHTMLDelElement()
+nsHTMLModElement::nsHTMLModElement()
 {
 }
 
-nsHTMLDelElement::~nsHTMLDelElement()
+nsHTMLModElement::~nsHTMLModElement()
 {
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLDelElement, nsGenericElement)
-NS_IMPL_RELEASE_INHERITED(nsHTMLDelElement, nsGenericElement)
+NS_IMPL_ADDREF_INHERITED(nsHTMLModElement, nsGenericElement)
+NS_IMPL_RELEASE_INHERITED(nsHTMLModElement, nsGenericElement)
 
 
-// QueryInterface implementation for nsHTMLDelElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLDelElement, nsGenericHTMLElement)
+// QueryInterface implementation for nsHTMLModElement
+NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLModElement, nsGenericHTMLElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLModElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLDelElement)
+
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLDelElement, del)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLInsElement, ins)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
 
 nsresult
-nsHTMLDelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsHTMLModElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLDelElement* it = new nsHTMLDelElement();
+  nsHTMLModElement* it = new nsHTMLModElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -143,5 +145,5 @@ nsHTMLDelElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_STRING_ATTR(nsHTMLDelElement, Cite, cite)
-NS_IMPL_STRING_ATTR(nsHTMLDelElement, DateTime, datetime)
+NS_IMPL_STRING_ATTR(nsHTMLModElement, Cite, cite)
+NS_IMPL_STRING_ATTR(nsHTMLModElement, DateTime, datetime)

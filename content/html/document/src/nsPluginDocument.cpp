@@ -175,7 +175,7 @@ nsPluginDocument::CreateSyntheticPluginDocument()
                                      kNameSpaceID_None,
                                     getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = NS_NewHTMLSharedLeafElement(getter_AddRefs(mPluginContent), nodeInfo);
+  rv = NS_NewHTMLSharedElement(getter_AddRefs(mPluginContent), nodeInfo);
   if (NS_FAILED(rv)) {
     return rv;
   }

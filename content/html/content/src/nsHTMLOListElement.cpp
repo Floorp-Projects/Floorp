@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 #include "nsIDOMHTMLOListElement.h"
+#include "nsIDOMHTMLDListElement.h"
+#include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
@@ -45,12 +47,14 @@
 #include "nsMappedAttributes.h"
 #include "nsRuleNode.h"
 
-class nsHTMLOListElement : public nsGenericHTMLElement,
-                           public nsIDOMHTMLOListElement
+class nsHTMLSharedListElement : public nsGenericHTMLElement,
+                                public nsIDOMHTMLOListElement,
+                                public nsIDOMHTMLDListElement,
+                                public nsIDOMHTMLUListElement
 {
 public:
-  nsHTMLOListElement();
-  virtual ~nsHTMLOListElement();
+  nsHTMLSharedListElement();
+  virtual ~nsHTMLSharedListElement();
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
@@ -67,6 +71,12 @@ public:
   // nsIDOMHTMLOListElement
   NS_DECL_NSIDOMHTMLOLISTELEMENT
 
+  // nsIDOMHTMLDListElement
+  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
+
+  // nsIDOMHTMLUListElement
+  // fully declared by NS_DECL_NSIDOMHTMLOLISTELEMENT
+
   virtual PRBool ParseAttribute(nsIAtom* aAttribute,
                                 const nsAString& aValue,
                                 nsAttrValue& aResult);
@@ -78,12 +88,12 @@ public:
 };
 
 nsresult
-NS_NewHTMLOListElement(nsIHTMLContent** aInstancePtrResult,
-                       nsINodeInfo *aNodeInfo)
+NS_NewHTMLSharedListElement(nsIHTMLContent** aInstancePtrResult,
+                            nsINodeInfo *aNodeInfo)
 {
   NS_ENSURE_ARG_POINTER(aInstancePtrResult);
 
-  nsHTMLOListElement* it = new nsHTMLOListElement();
+  nsHTMLSharedListElement* it = new nsHTMLSharedListElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -104,39 +114,45 @@ NS_NewHTMLOListElement(nsIHTMLContent** aInstancePtrResult,
 }
 
 
-nsHTMLOListElement::nsHTMLOListElement()
+nsHTMLSharedListElement::nsHTMLSharedListElement()
 {
 }
 
-nsHTMLOListElement::~nsHTMLOListElement()
+nsHTMLSharedListElement::~nsHTMLSharedListElement()
 {
 }
 
 
-NS_IMPL_ADDREF_INHERITED(nsHTMLOListElement, nsGenericElement) 
-NS_IMPL_RELEASE_INHERITED(nsHTMLOListElement, nsGenericElement) 
+NS_IMPL_ADDREF_INHERITED(nsHTMLSharedListElement, nsGenericElement) 
+NS_IMPL_RELEASE_INHERITED(nsHTMLSharedListElement, nsGenericElement) 
 
 
-// QueryInterface implementation for nsHTMLOListElement
-NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOListElement, nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOListElement)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOListElement)
+// QueryInterface implementation for nsHTMLSharedListElement
+NS_HTML_CONTENT_INTERFACE_MAP_AMBIGOUS_BEGIN(nsHTMLSharedListElement,
+                                             nsGenericHTMLElement,
+                                             nsIDOMHTMLOListElement)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLOListElement, ol)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLDListElement, dl)
+  NS_INTERFACE_MAP_ENTRY_IF_TAG(nsIDOMHTMLUListElement, ul)
+
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLOListElement, ol)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLDListElement, dl)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(HTMLUListElement, ul)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
-
 nsresult
-nsHTMLOListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
+nsHTMLSharedListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLOListElement* it = new nsHTMLOListElement();
+  nsHTMLSharedListElement* it = new nsHTMLSharedListElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
+  nsCOMPtr<nsIDOMHTMLOListElement> kungFuDeathGrip(it);
 
   nsresult rv = it->Init(mNodeInfo);
 
@@ -145,7 +161,7 @@ nsHTMLOListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 
   CopyInnerTo(it, aDeep);
 
-  *aReturn = NS_STATIC_CAST(nsIDOMNode *, it);
+  *aReturn = NS_STATIC_CAST(nsIDOMHTMLOListElement *, it);
 
   NS_ADDREF(*aReturn);
 
@@ -153,9 +169,9 @@ nsHTMLOListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 }
 
 
-NS_IMPL_BOOL_ATTR(nsHTMLOListElement, Compact, compact)
-NS_IMPL_INT_ATTR(nsHTMLOListElement, Start, start)
-NS_IMPL_STRING_ATTR(nsHTMLOListElement, Type, type)
+NS_IMPL_BOOL_ATTR(nsHTMLSharedListElement, Compact, compact)
+NS_IMPL_INT_ATTR(nsHTMLSharedListElement, Start, start)
+NS_IMPL_STRING_ATTR(nsHTMLSharedListElement, Type, type)
 
 
 nsHTMLValue::EnumTable kListTypeTable[] = {
@@ -182,27 +198,32 @@ nsHTMLValue::EnumTable kOldListTypeTable[] = {
 };
 
 PRBool
-nsHTMLOListElement::ParseAttribute(nsIAtom* aAttribute,
-                                   const nsAString& aValue,
-                                   nsAttrValue& aResult)
+nsHTMLSharedListElement::ParseAttribute(nsIAtom* aAttribute,
+                                        const nsAString& aValue,
+                                        nsAttrValue& aResult)
 {
-  if (aAttribute == nsHTMLAtoms::type) {
-    return aResult.ParseEnumValue(aValue, kListTypeTable) ||
-           aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
-  }
-  if (aAttribute == nsHTMLAtoms::start) {
-    return aResult.ParseIntValue(aValue);
+  if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
+      mNodeInfo->Equals(nsHTMLAtoms::ul)) {
+    if (aAttribute == nsHTMLAtoms::type) {
+      return aResult.ParseEnumValue(aValue, kListTypeTable) ||
+             aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
+    }
+    if (aAttribute == nsHTMLAtoms::start) {
+      return aResult.ParseIntValue(aValue);
+    }
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
-nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
-                                      const nsHTMLValue& aValue,
-                                      nsAString& aResult) const
+nsHTMLSharedListElement::AttributeToString(nsIAtom* aAttribute,
+                                           const nsHTMLValue& aValue,
+                                           nsAString& aResult) const
 {
-  if (aAttribute == nsHTMLAtoms::type) {
+  if (aAttribute == nsHTMLAtoms::type &&
+      (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
+       mNodeInfo->Equals(nsHTMLAtoms::ul))) {
     PRInt32 v = aValue.GetIntValue();
     switch (v) {
       case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
@@ -244,25 +265,35 @@ MapAttributesIntoRule(const nsMappedAttributes* aAttributes, nsRuleData* aData)
 }
 
 NS_IMETHODIMP_(PRBool)
-nsHTMLOListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
+nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 {
-  static const MappedAttributeEntry attributes[] = {
-    { &nsHTMLAtoms::type },
-    { nsnull }
-  };
+  if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
+      mNodeInfo->Equals(nsHTMLAtoms::ul)) {
+    static const MappedAttributeEntry attributes[] = {
+      { &nsHTMLAtoms::type },
+      { nsnull }
+    };
 
-  static const MappedAttributeEntry* const map[] = {
-    attributes,
-    sCommonAttributeMap,
-  };
+    static const MappedAttributeEntry* const map[] = {
+      attributes,
+      sCommonAttributeMap,
+    };
 
-  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+    return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+  }
+
+  return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
-
 NS_IMETHODIMP
-nsHTMLOListElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsHTMLSharedListElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
+  if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
+      mNodeInfo->Equals(nsHTMLAtoms::ul)) {
+    aMapRuleFunc = &MapAttributesIntoRule;
+  }
+  else {
+    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
+  }
   return NS_OK;
 }

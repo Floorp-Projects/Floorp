@@ -64,12 +64,9 @@ CPPSRCS		= \
 		nsHTMLAppletElement.cpp \
 		nsHTMLAreaElement.cpp \
 		nsHTMLBRElement.cpp \
-		nsHTMLBaseFontElement.cpp \
 		nsHTMLBodyElement.cpp \
 		nsHTMLButtonElement.cpp \
-		nsHTMLDListElement.cpp \
 		nsHTMLDelElement.cpp \
-		nsHTMLDirectoryElement.cpp \
 		nsHTMLDivElement.cpp \
 		nsHTMLFieldSetElement.cpp \
 		nsHTMLFontElement.cpp \
@@ -83,13 +80,11 @@ CPPSRCS		= \
 		nsHTMLIFrameElement.cpp \
 		nsHTMLImageElement.cpp \
 		nsHTMLInputElement.cpp \
-		nsHTMLInsElement.cpp \
 		nsHTMLLIElement.cpp \
 		nsHTMLLabelElement.cpp \
 		nsHTMLLegendElement.cpp \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
-		nsHTMLMenuElement.cpp \
 		nsHTMLMetaElement.cpp \
 		nsHTMLOListElement.cpp \
 		nsHTMLObjectElement.cpp \
@@ -97,10 +92,9 @@ CPPSRCS		= \
 		nsHTMLOptGroupElement.cpp \
 		nsHTMLParagraphElement.cpp \
 		nsHTMLPreElement.cpp \
-		nsHTMLQuoteElement.cpp \
 		nsHTMLScriptElement.cpp \
 		nsHTMLSelectElement.cpp \
-		nsHTMLSharedLeafElement.cpp \
+		nsHTMLSharedElement.cpp \
 		nsHTMLSpanElement.cpp \
 		nsHTMLStyleElement.cpp \
 		nsHTMLTableElement.cpp \
@@ -111,8 +105,6 @@ CPPSRCS		= \
 		nsHTMLTableSectionElement.cpp \
 		nsHTMLTextAreaElement.cpp \
 		nsHTMLTitleElement.cpp \
-		nsHTMLUListElement.cpp \
-		nsHTMLUnknownElement.cpp \
 		$(NULL)
 
 EXPORTS       = \

@@ -1029,10 +1029,8 @@ protected:
 
 
 #define NS_INTERFACE_MAP_ENTRY_IF_TAG(_interface, _tag)                       \
-  if (mNodeInfo->Equals(nsHTMLAtoms::_tag) &&                                 \
-      aIID.Equals(NS_GET_IID(_interface)))                                    \
-    foundInterface = NS_STATIC_CAST(_interface *, this);                      \
-  else
+  NS_INTERFACE_MAP_ENTRY_CONDITIONAL(_interface,                              \
+                                     mNodeInfo->Equals(nsHTMLAtoms::_tag))
 
 
 #define NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_IF_TAG(_class, _tag)         \
@@ -1051,7 +1049,7 @@ protected:
 // Element class factory methods
 
 nsresult
-NS_NewHTMLSharedLeafElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+NS_NewHTMLSharedElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLAnchorElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1066,22 +1064,13 @@ nsresult
 NS_NewHTMLBRElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLBaseFontElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
 NS_NewHTMLBodyElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLButtonElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLDListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
-NS_NewHTMLDelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
-NS_NewHTMLDirectoryElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+NS_NewHTMLModElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLDivElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1124,9 +1113,6 @@ NS_NewHTMLInputElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo,
                        PRBool aFromParser);
 
 nsresult
-NS_NewHTMLInsElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
 NS_NewHTMLLIElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
@@ -1142,13 +1128,10 @@ nsresult
 NS_NewHTMLMapElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLMenuElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
 NS_NewHTMLMetaElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
-NS_NewHTMLOListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
+NS_NewHTMLSharedListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLObjectElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1164,9 +1147,6 @@ NS_NewHTMLParagraphElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLPreElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
-NS_NewHTMLQuoteElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLScriptElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
@@ -1213,9 +1193,6 @@ NS_NewHTMLTheadElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLTitleElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-nsresult
-NS_NewHTMLUListElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 nsresult
 NS_NewHTMLUnknownElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
