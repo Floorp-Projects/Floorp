@@ -4032,8 +4032,12 @@ GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
                                    nsIDOMCSSStyleDeclaration** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
-  NS_ENSURE_ARG_POINTER(aElt);
   *aReturn = nsnull;
+
+  if (!aElt) {
+    NS_ERROR("Don't call getComputedStyle with a null DOMElement reference!");
+    return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
+  }
 
   if (!mDocShell) {
     return NS_OK;
