@@ -90,19 +90,23 @@ sub Save {
     foreach (@lines) {
         chomp;
         if (/^ *([^#;][^=\n\r]*)(?:=(.*))?$/os) {
-            if (defined($$config{$1})) {
-                unless ($seen{$1}) {
-                    my $value = $$config{$1};
+            my $variable = $1;
+            my $value = $2;
+            if (defined($$config{$variable})) {
+                unless ($seen{$variable}) {
+                    $value = $$config{$variable};
                     $value = $$value while ref($value) eq 'REF';
                     if (ref($value) eq 'SCALAR') {
                         if (defined($$value)) {
-                            print FILE $1.'='.$$value."\n";
+                            print FILE $variable.'='.$$value."\n";
                         }
                     } elsif (ref($value) eq 'HASH') {
                         my @keys = keys %$value;
                         if (@keys > 0) {
                             foreach my $item (@keys) {
                                 my $data = $$value{$item};
+                                $item = '' unless defined $item;
+                                $data = '' unless defined $data;
                                 my $delimiter;
                                 foreach ('"','\'','|',':','#','*','<','>','/','[',']','{','}',
                                          '(',')','\\','=','-','@','!','\$','%','&',' ','\`','~') {
@@ -111,34 +115,35 @@ sub Save {
                                         last;
                                     }
                                 }
-                                print FILE "$1=$delimiter$item$delimiter=>$data\n" if defined($delimiter);
+                                print FILE "$variable=$delimiter$item$delimiter=>$data\n"
+                                  if defined($delimiter);
                                 # else, silent data loss... XXX
                             }
                         } else {
-                            print FILE "$1\n";
+                            print FILE "$variable\n";
                         }
                     } elsif (ref($value) eq 'ARRAY') {
                         if (@$value > 0) {
                             foreach my $item (@$value) {
                                 if (defined($item)) {
-                                    print FILE "$1=$item\n";
+                                    print FILE "$variable=$item\n";
                                 } else {
-                                    print FILE "$1=\n";
+                                    print FILE "$variable=\n";
                                 }
                             }
                         } else {
-                            print FILE "$1\n";
+                            print FILE "$variable\n";
                         }
                     } else {
-                        confess("Unsupported data type '".ref($value)."' writing $1 (".$$config{$1}.')');
+                        confess("Unsupported data type '".ref($value)."' writing $variable (".$$config{$variable}.')');
                     }
-                    $seen{$1} = 1;
+                    $seen{$variable} = 1;
                 } # else seen it already
             } else { # unknown
-                if (defined($2)) {
-                    print FILE "$1=$2\n";
+                if (defined($value)) {
+                    print FILE "$variable=$value\n";
                 } else {
-                    print FILE "$1\n";
+                    print FILE "$variable\n";
                 }
             }
         } else {
