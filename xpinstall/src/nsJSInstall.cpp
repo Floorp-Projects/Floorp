@@ -1930,6 +1930,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              const PRUnichar* args,
                              PRUint32 flags,
                              nsIChromeRegistry* reg,
+                             nsIDOMWindowInternal* aParent,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;
@@ -1968,6 +1969,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
   nativeInstallObject->SetInstallURL(nsAutoString(url));
   nativeInstallObject->SetInstallFlags(flags);
   nativeInstallObject->SetChromeRegistry(reg);
+  nativeInstallObject->SetParentDOMWindow(aParent);
 
   JS_SetPrivate(jscontext, installObject, nativeInstallObject);
   nativeInstallObject->SetScriptObject(installObject);

@@ -71,6 +71,7 @@ class nsInstallInfo
                    const PRUnichar* aArgs, 
                    PRUint32         aFlags, 
                    nsIXPIListener*  aListener,
+                   nsIDOMWindowInternal* aParentWindow,
                    nsIChromeRegistry*   aChromeReg);
 
     virtual ~nsInstallInfo();
@@ -82,6 +83,7 @@ class nsInstallInfo
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }
     nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg.get(); }
+    nsIDOMWindowInternal* GetParentDOMWindow()  { return mParent.get(); }
 
   private:
 
@@ -94,6 +96,7 @@ class nsInstallInfo
 
     nsCOMPtr<nsIFile>           mFile;
     nsCOMPtr<nsIXPIListener>    mListener;
+    nsCOMPtr<nsIDOMWindowInternal> mParent;
     nsCOMPtr<nsIChromeRegistry> mChromeReg;
 };
 
@@ -277,6 +280,10 @@ class nsInstall
         void                SetChromeRegistry(nsIChromeRegistry* reg)
                                 { mChromeRegistry = reg; }
 
+        nsIDOMWindowInternal*  GetParentDOMWindow() { return mParent; }
+        void                   SetParentDOMWindow(nsIDOMWindowInternal* parent)
+        { mParent = parent; }
+
         PRBool     GetStatusSent() { return mStatusSent; }
         PRBool     InInstallTransaction(void) { return mInstalledFiles != nsnull; }
 
@@ -302,6 +309,7 @@ class nsInstall
         nsString            mInstallURL;
         PRUint32            mInstallFlags;
         nsIChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
+        nsIDOMWindowInternal* mParent;
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;
