@@ -3131,7 +3131,7 @@ if test "$_USE_CPP_INCLUDE_FLAG"; then
  * Do not edit.
  */
 EOF
-  sort confdefs.h >> $_CONFIG_TEMP
+  sort confdefs.h >> $_CONFIG_TMP
 
   # Only write config-defs.h when something changes (or it doesn't exist)
   if cmp -s $_CONFIG_TMP $_CONFIG_DEFS_H; then
