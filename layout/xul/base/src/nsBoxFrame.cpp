@@ -3346,7 +3346,6 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     char idValue[100];
     id.ToCString(idValue,100);
 */
-    nsRect bounds(0,0,mRect.width, mRect.height);
 
    /// printf("----------Box id = %s-----------\n", idValue);
    // printf("x=%d, r.x=%d r.x + r.width=%d\n",newPoint.x, or.x, or.x + or.width);
