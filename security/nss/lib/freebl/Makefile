@@ -189,22 +189,18 @@ ifeq ($(CPU_ARCH),sparc)
 ifndef NS_USE_GCC
 ifdef USE_HYBRID
     OS_CFLAGS += -xchip=ultra2
-endif
-endif
-ifeq (5.5.1,$(firstword $(sort 5.5.1 $(OS_RELEASE))))
-    SYSV_SPARC = 1
-endif
-ifeq ($(SYSV_SPARC),1)
+endif # USE_HYBRID
+endif # NS_USE_GCC
 SOLARIS_AS = /usr/ccs/bin/as
 ifdef NS_USE_GCC
 ifdef GCC_USE_GNU_LD
 MKSHLIB += -Wl,-Bsymbolic,-z,defs,-z,now,-z,text,--version-script,mapfile.Solaris
 else
 MKSHLIB += -Wl,-B,symbolic,-z,defs,-z,now,-z,text,-M,mapfile.Solaris
-endif
+endif # GCC_USE_GNU_LD
 else
 MKSHLIB += -B symbolic -z defs -z now -z text -M mapfile.Solaris
-endif
+endif # NS_USE_GCC
 ifdef USE_PURE_32
 # this builds for Sparc v8 pure 32-bit architecture
     DEFINES += -DMP_USE_LONG_LONG_MULTIPLY -DMP_USE_UINT_DIGIT -DMP_NO_MP_WORD
@@ -228,14 +224,13 @@ else
     DEFINES  += -DMP_USE_UINT_DIGIT 
     SOLARIS_AS_FLAGS = -xarch=v8plusa -K PIC
 #   ASM_SUFFIX = .S
-endif
-endif
+endif # USE_64
+endif # USE_PURE_32
 ifdef NSS_ENABLE_ECC
 DEFINES  += -DECL_USE_FP
 ECL_SRCS += ecp_fp160.c ecp_fp192.c ecp_fp224.c ecp_fp.c
 ECL_HDRS += ecp_fp.h
-endif
-endif
+endif # NSS_ENABLE_ECC
 else
 # Solaris x86
     DEFINES += -D_X86_
@@ -313,8 +308,6 @@ $(OBJDIR)/$(PROG_PREFIX)mpprime$(OBJ_SUFFIX): primes.c
 
 $(OBJDIR)/ldvector$(OBJ_SUFFIX) $(OBJDIR)/loader$(OBJ_SUFFIX) : loader.h
 
-ifeq ($(SYSV_SPARC),1)
-
 $(OBJDIR)/mpv_sparcv8.o $(OBJDIR)/montmulfv8.o : $(OBJDIR)/%.o : %.s 
 	@$(MAKE_OBJDIR)
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
@@ -324,8 +317,6 @@ $(OBJDIR)/mpv_sparcv9.o $(OBJDIR)/montmulfv9.o : $(OBJDIR)/%.o : %.s
 	$(SOLARIS_AS) -o $@ $(SOLARIS_AS_FLAGS) $<
 
 $(OBJDIR)/mpmontg.o: mpmontg.c montmulf.h
-
-endif
 
 ifdef FREEBL_EXTENDED_BUILD
 
