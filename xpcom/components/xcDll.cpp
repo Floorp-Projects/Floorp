@@ -476,7 +476,7 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             count++;
             start = ofset + 1;
         }
-        while (ofset != -1 && count < 16);
+        while (ofset != -1 && 16 > count); // avoiding vc6.0 compiler issue. count < thinks it is starting a template
     }
 
     // Find the dllname part of the string
