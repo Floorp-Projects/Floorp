@@ -355,6 +355,9 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
   } else {
     gtk_clist_set_selection_mode(GTK_CLIST(mWidget), GTK_SELECTION_BROWSE);
   }
+
+  gtk_clist_column_titles_hide(GTK_CLIST(mWidget);
+
 /*
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmListWidgetClass,
