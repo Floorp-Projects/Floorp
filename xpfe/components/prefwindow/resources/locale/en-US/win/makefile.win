@@ -28,5 +28,7 @@ CHROME_L10N = \
 	.\platformPrefOverlay.dtd \
 	$(NULL)
 
+NO_JAR_AUTO_REG=1
+
 include <$(DEPTH)\config\rules.mak>
 
