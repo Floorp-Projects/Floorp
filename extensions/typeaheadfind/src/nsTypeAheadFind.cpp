@@ -1336,6 +1336,17 @@ nsTypeAheadFind::FindItNow(nsIPresShell *aPresShell,
         return NS_ERROR_FAILURE;
       }
 
+      if (mRepeatingMode == eRepeatingCharReverse ||
+          mRepeatingMode == eRepeatingReverse) {
+        // Reverse mode:
+        // swap start and end points, so that we start
+        // at end of document and go to beginning
+        nsCOMPtr<nsIDOMRange> tempRange;
+        mStartPointRange->CloneRange(getter_AddRefs(tempRange));
+        mStartPointRange = mEndPointRange;
+        mEndPointRange = tempRange;
+      }
+
       continue;
     }
 
