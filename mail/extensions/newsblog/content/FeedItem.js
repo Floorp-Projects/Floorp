@@ -61,11 +61,6 @@ const MESSAGE_TEMPLATE = "\n\
   <head>\n\
     <title>%TITLE%</title>\n\
     <style type=\"text/css\">\n\
-      body {\n\
-        margin: 0;\n\
-        border: none;\n\
-        padding: 0;\n\
-      }\n\
       %STYLE%\n\
     </style>\n\
   </head>\n\
@@ -82,6 +77,11 @@ const REMOTE_CONTENT_TEMPLATE = "\n\
 ";
 
 const REMOTE_STYLE = "\n\
+      body {\n\
+        margin: 0;\n\
+        border: none;\n\
+        padding: 0;\n\
+      }\n\
       iframe {\n\
         position: fixed;\n\
         top: 0;\n\
@@ -102,24 +102,11 @@ const REMOTE_STYLE = "\n\
 // Mozilla bug 97283, which makes it hard to scroll an auto overflow div.
 
 const LOCAL_CONTENT_TEMPLATE = "\n\
-    <div id=\"content\">\n\
       %CONTENT%\n\
-    </div>\n\
 ";
 
-// We pad the top more to account for the space taken up by the toolbar.
-// In theory the top should be padded 1.8em if we want 0.4em of padding between
-// the 1.4em high toolbar and the content, but extra padding seems to get added
-// to the top of the message, so we have to reduce the top padding accordingly.
-
-const LOCAL_STYLE = "\n\
-      #content {\n\
-        margin: 0;\n\
-        border: none;\n\
-        padding: 0.4em;\n\
-        padding-top: 1.8em;\n\
-      }\n\
-";
+// no local style overrides at this time
+const LOCAL_STYLE = "\n";
 
 FeedItem.prototype.store = function() {
     if (this.isStored()) {
