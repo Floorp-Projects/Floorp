@@ -558,6 +558,23 @@ NS_IMETHODIMP GtkMozEmbedChrome::FindItemWithName(const PRUnichar *aName,
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nsnull;
 
+  nsAutoString name(aName);
+  if (name.Length() == 0)
+    return NS_OK;
+  if (name.EqualsIgnoreCase("_blank"))
+    return NS_OK;
+  if (name.EqualsIgnoreCase("_content") && mWebBrowser) {
+    nsCOMPtr<nsIDocShellTreeItem> chromeTreeItem(do_QueryInterface(mWebBrowser));
+    NS_ENSURE_TRUE(chromeTreeItem, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    chromeTreeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeItem> primaryTreeItem;
+    return treeOwner->GetPrimaryContentShell(_retval);
+  }
+
   PRInt32 i = 0;
   PRInt32 numBrowsers = sBrowsers->Count();
 
@@ -568,10 +585,31 @@ NS_IMETHODIMP GtkMozEmbedChrome::FindItemWithName(const PRUnichar *aName,
     NS_ENSURE_SUCCESS(chrome->GetWebBrowser(getter_AddRefs(webBrowser)),
 		      NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(webBrowser));
-    NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+    /* The nsIDocShellTreeItem queried from our webBrowser object 
+     * is just for the chrome. What we want is the content so 
+     * ask the chrome treeitem for the treeOwner, and from the treeOwner
+     * we can ask for the primary content treeItem.
+     */
 
-    docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome *, this), _retval);
+    nsCOMPtr<nsIDocShellTreeItem> chromeTreeItem(do_QueryInterface(webBrowser));
+    NS_ENSURE_TRUE(chromeTreeItem, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    chromeTreeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIDocShellTreeItem> primaryTreeItem;
+    treeOwner->GetPrimaryContentShell(getter_AddRefs(primaryTreeItem));
+    NS_ENSURE_TRUE(primaryTreeItem, NS_ERROR_FAILURE);
+
+    // make sure that the requestor is not what we are about to query.
+    // if we query the requestor we will end up with infinite
+    // recursion.
+    if (aRequestor == primaryTreeItem.get())
+      return NS_OK;
+
+    primaryTreeItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome *,
+							    this), _retval);
     if (*_retval)
       break;
   }
