@@ -36,6 +36,8 @@ GetVersionTable();
 
 confirm_login();
 
+ReconnectToShadowDatabase();
+
 my $action = $cgi->param('action') || 'menu';
 
 if ($action eq "menu") {
