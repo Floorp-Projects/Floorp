@@ -2252,6 +2252,13 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
     return rv;
   }
 
+  if (mType == NS_FORM_INPUT_SUBMIT && value.IsEmpty() &&
+      !HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
+    // Get our default value, which is the same as our default label
+    nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
+                                       "Submit", value);
+  }
+      
   //
   // Submit file if it's input type=file and this encoding method accepts files
   //
