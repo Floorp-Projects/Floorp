@@ -182,8 +182,6 @@ public:
                                                GdkEventVisibility *aEvent);
     void               OnWindowStateEvent(GtkWidget *aWidget,
                                           GdkEventWindowState *aEvent);
-    void               OnClientEvent(GtkWidget *aWidget,
-                                     GdkEventClient *aEvent);
     gboolean           OnDragMotionEvent(GtkWidget       *aWidget,
                                          GdkDragContext  *aDragContext,
                                          gint             aX,
@@ -247,8 +245,6 @@ public:
     void               SetPluginType(PluginType aPluginType);
     void               SetNonXEmbedPluginFocus(void);
     void               LoseNonXEmbedPluginFocus(void);
-
-    void               ThemeChanged(void);
 
     Window             mOldFocusWindow;
 

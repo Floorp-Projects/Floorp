@@ -41,8 +41,6 @@
 
 #include <gtk/gtkcontainer.h>
 
-struct _MozDrawingarea;
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
@@ -61,7 +59,6 @@ struct _MozContainer
 {
     GtkContainer   container;
     GList         *children;
-    GSList        *drawing_areas;
 };
 
 struct _MozContainerClass
@@ -85,11 +82,7 @@ void       moz_container_scroll_update (MozContainer *container,
                                         GtkWidget    *child_widget,
                                         gint          x,
                                         gint          y);
-GSList*    moz_container_get_drawing_areas (MozContainer *container);
-void       moz_container_add_drawing_area (MozContainer *container,
-                                           struct _MozDrawingarea *area);
-void       moz_container_remove_drawing_area (MozContainer *container,
-                                              struct _MozDrawingarea *area);
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

@@ -87,8 +87,6 @@ moz_drawingarea_new (MozDrawingarea *parent, MozContainer *widget_parent)
 
     drawingarea->parent = parent;
 
-    moz_container_add_drawing_area(widget_parent, drawingarea);
-
     if (!parent)
         moz_drawingarea_create_windows(drawingarea,
                                        GTK_WIDGET(widget_parent)->window,
@@ -165,16 +163,11 @@ void
 moz_drawingarea_finalize (GObject *object)
 {
     MozDrawingarea *drawingarea;
-    MozContainer *container;
 
     g_return_if_fail(IS_MOZ_DRAWINGAREA(object));
 
     drawingarea = MOZ_DRAWINGAREA(object);
 
-    gdk_window_get_user_data(drawingarea->clip_window, &container);
-    g_return_if_fail(IS_MOZ_CONTAINER(container));
-
-    moz_container_remove_drawing_area(container, drawingarea);
     gdk_window_destroy(drawingarea->inner_window);
     gdk_window_destroy(drawingarea->clip_window);
 
