@@ -477,15 +477,6 @@ nsDocFactoryImpl::CreateRDFDocument(nsIURL* aURL,
                                                     (void **)&rdfDoc)))
         goto done;
 
-    if (NS_FAILED(rv = nsRepository::CreateInstance(kCRDFHTMLBuilderCID,
-                                                    nsnull,
-                                                    kIRDFContentModelBuilderIID,
-                                                    (void**) &builder)))
-        goto done;
-
-    if (NS_FAILED(rv = rdfDoc->Init(builder)))
-        goto done;
-
     if (NS_FAILED(rv = rdfDoc->QueryInterface(kIDocumentIID, (void**) &doc)))
         goto done;
 
