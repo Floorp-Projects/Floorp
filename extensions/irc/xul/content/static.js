@@ -958,7 +958,7 @@ function playSounds (list)
         setTimeout (playSound, 250 * i, ary[i]);
 }
 
-function playSound (file)
+function playSound(file)
 {
     if (!client.sound || !file)
         return;
@@ -969,13 +969,15 @@ function playSound (file)
     }
     else
     {
-        var uri = Components.classes["@mozilla.org/network/standard-url;1"];
-        uri = uri.createInstance(Components.interfaces.nsIURI);
-        uri.spec = file;
         try
         {
-            client.sound.play (uri);
-        } catch (ex) {
+            var io = Components.classes['@mozilla.org/network/io-service;1'];
+            io = io.createInstance(Components.interfaces.nsIIOService);
+            var uri = io.newURI(file, null, null);
+            client.sound.play(uri);
+        }
+        catch (ex)
+        {
             // ignore exceptions from this pile of code.
         }
     }
