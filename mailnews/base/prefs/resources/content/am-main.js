@@ -109,19 +109,21 @@ function GetSigFolder()
 // broadcasting events.
 function setupSignatureItems()
 { 
-   var broadcaster = document.getElementById("broadcaster_attachSignature");
+   var signature = document.getElementById("identity.signature");
+   var browse = document.getElementById("identity.sigbrowsebutton");
 
    var attachSignature = document.getElementById("identity.attachSignature");
    var checked = attachSignature.checked;
-   var locked = getAccountValueIsLocked(attachSignature);
 
-   if (checked)
-     broadcaster.removeAttribute("disabled");
+   if (checked && !getAccountValueIsLocked(signature))
+     signature.removeAttribute("disabled");
    else
-     broadcaster.setAttribute("disabled", "true");
-   if (locked) {
-     broadcaster.setAttribute("disabled","true");
-   }
+     signature.setAttribute("disabled", "true");
+
+   if (checked && !getAccountValueIsLocked(browse))
+     browse.removeAttribute("disabled");
+   else
+     browse.setAttribute("disabled", "true");
 }
 
 function editVCardCallback(escapedVCardStr)
