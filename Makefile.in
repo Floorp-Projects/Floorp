@@ -62,6 +62,7 @@ endif
 DIRS		+= \
 		include \
 		netwerk \
+		uriloader \
 		modules/libutil \
 		intl \
 		js \
