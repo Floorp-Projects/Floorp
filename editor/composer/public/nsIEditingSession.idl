@@ -45,7 +45,7 @@
 interface nsIEditor;
 interface nsIEditingShell;
 
-[scriptable, uuid(D3B0AA04-F221-11D4-A73C-EAA4BAA8B4FC)]
+[scriptable, uuid(d39fd2b4-3978-45d2-a4be-ba448171b61b)]
 
 interface nsIEditingSession : nsISupports
 {

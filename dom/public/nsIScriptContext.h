@@ -54,9 +54,9 @@ class nsIAtom;
 typedef void (*nsScriptTerminationFunc)(nsISupports* aRef);
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ /* 8f6bca7d-ce42-11d1-b724-00600891d8c9 */ \
-  0x8f6bca7d, 0xce42, 0x11d1, \
-  {0xb7, 0x24, 0x00, 0x60, 0x08, 0x91, 0xd8, 0xc9} }
+{ /* b3fd8821-b46d-4160-913f-cc8fe8176f5f */ \
+  0xb3fd8821, 0xb46d, 0x4160, \
+  {0x91, 0x3f, 0xcc, 0x8f, 0xe8, 0x17, 0x6f, 0x5f} }
 
 /**
  * It is used by the application to initialize a runtime and run scripts.

@@ -48,7 +48,7 @@ interface nsIDownload;
 interface nsIWebBrowserPersist;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
+[scriptable, uuid(f31722c5-4a33-440b-9c7c-3c4ac0c6c723)]
 interface nsIDownloadManager : nsISupports {
 
   // Methods called by clients to carry out various managing functions

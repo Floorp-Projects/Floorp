@@ -39,7 +39,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(f45efbe0-1d52-11d4-8a7c-006008c844c3)]
+[scriptable, uuid(33276f5d-3499-4ab9-acea-d85a9fceeccd)]
 interface nsIDOMCrypto : nsISupports
 {
   readonly attribute DOMString        version;

@@ -47,7 +47,7 @@ interface nsIArray;
 interface nsIRDFResource;
 interface nsITransactionManager;
 
-[scriptable, uuid(a82e9300-e4af-11d2-8fdf-0008c70adc7b)]
+[scriptable, uuid(bd03e58b-61b6-4f85-ad61-33f6a05e29ce)]
 interface nsIBookmarksService : nsISupports
 {
     const unsigned long BOOKMARK_DEFAULT_TYPE   = 0;

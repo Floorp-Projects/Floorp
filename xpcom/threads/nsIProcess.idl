@@ -1,7 +1,7 @@
 #include "nsIFile.idl"
 #include "nsISupports.idl"
 
-[scriptable, uuid(3ed86dbe-d084-11d4-ba7a-00c04fa0d26b)]
+[scriptable, uuid(9da0b650-d07e-4617-a18a-250035572ac8)]
 
 interface nsIProcess : nsISupports
 {

@@ -180,9 +180,9 @@ struct nsCSSSelectorList {
   nsCSSSelectorList* mNext;
 };
 
-// IID for the nsICSSStyleRule interface {7c277af0-af19-11d1-8031-006008159b5a}
+// IID for the nsICSSStyleRule interface {00803ccc-66e8-4ec8-a037-45e901bb5304}
 #define NS_ICSS_STYLE_RULE_IID     \
-{0x7c277af0, 0xaf19, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
+{0x00803ccc, 0x66e8, 0x4ec8, {0xa0, 0x37, 0x45, 0xe9, 0x01, 0xbb, 0x53, 0x04}}
 
 class nsICSSStyleRule : public nsICSSRule {
 public:
