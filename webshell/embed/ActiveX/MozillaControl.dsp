@@ -58,9 +58,9 @@ CFG=MozillaControl - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "NMAKE /f makefile.win"
+# PROP Cmd_Line "NMAKE /f makefile.win control_and_plugin"
 # PROP Rebuild_Opt "/a"
-# PROP Target_File "c:\program files\netscape\communicator\program\plugins\npmozctl.dll"
+# PROP Target_File "M:\moz\mozilla\dist\WIN32_D.OBJ\bin\npmozctl.dll"
 # PROP Bsc_Name "MozillaControl.bsc"
 # PROP Target_Dir ""
 
@@ -122,6 +122,10 @@ SOURCE=.\IEHtmlNode.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ItemContainer.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\LegacyPlugin.cpp
 # End Source File
 # Begin Source File
@@ -131,10 +135,6 @@ SOURCE=.\MozillaBrowser.cpp
 # Begin Source File
 
 SOURCE=.\MozillaControl.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\MozillaControl.def
 # End Source File
 # Begin Source File
 
@@ -226,6 +226,10 @@ SOURCE=.\IEHtmlNode.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ItemContainer.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\MozillaBrowser.h
 # End Source File
 # Begin Source File
@@ -276,6 +280,10 @@ SOURCE=..\..\public\nsIWebShell.h
 # Begin Source File
 
 SOURCE=.\makefile.win
+# End Source File
+# Begin Source File
+
+SOURCE=.\mkctldef.bat
 # End Source File
 # End Target
 # End Project
