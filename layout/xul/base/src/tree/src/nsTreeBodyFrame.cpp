@@ -1786,17 +1786,20 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
 
 nsresult
 nsTreeBodyFrame::GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
-                          nsIStyleContext* aStyleContext, imgIContainer** aResult)
+                          nsIStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult)
 {
   *aResult = nsnull;
 
   const nsAString* imagePtr;
   nsAutoString imageSrc;
   mView->GetImageSrc(aRowIndex, aColID, imageSrc);
-  if (!aUseContext && imageSrc.Length() > 0)
+  if (!aUseContext && imageSrc.Length() > 0) {
     imagePtr = &imageSrc;
+    aAllowImageRegions = PR_FALSE;
+  }
   else {
     // Obtain the URL from the style context.
+    aAllowImageRegions = PR_TRUE;
     const nsStyleList* myList =
       (const nsStyleList*)aStyleContext->GetStyleData(eStyleStruct_List);
     if (myList->mListStyleImage.Length() > 0)
@@ -1899,19 +1902,27 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
   PRBool needWidth = PR_FALSE;
   PRBool needHeight = PR_FALSE;
 
+  // We have to load image even though we already have a size.
+  // Don't change this, otherwise things start to go crazy.
+  PRBool useImageRegion = PR_TRUE;
+  nsCOMPtr<imgIContainer> image;
+  GetImage(aRowIndex, aColID, aUseContext, aStyleContext, useImageRegion, getter_AddRefs(image));
+
   const nsStylePosition* myPosition = (const nsStylePosition*)
         aStyleContext->GetStyleData(eStyleStruct_Position);
   const nsStyleList* myList = (const nsStyleList*)
         aStyleContext->GetStyleData(eStyleStruct_List);
 
-  r.x += myList->mImageRegion.x;
-  r.y += myList->mImageRegion.y;
+  if (useImageRegion) {
+    r.x += myList->mImageRegion.x;
+    r.y += myList->mImageRegion.y;
+  }
 
   if (myPosition->mWidth.GetUnit() == eStyleUnit_Coord)  {
     PRInt32 val = myPosition->mWidth.GetCoordValue();
     r.width += val;
   }
-  else if (myList->mImageRegion.width > 0)
+  else if (useImageRegion && myList->mImageRegion.width > 0)
     r.width += myList->mImageRegion.width;
   else 
     needWidth = PR_TRUE;
@@ -1920,15 +1931,11 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
     PRInt32 val = myPosition->mHeight.GetCoordValue();
     r.height += val;
   }
-  else if (myList->mImageRegion.height > 0)
+  else if (useImageRegion && myList->mImageRegion.height > 0)
     r.height += myList->mImageRegion.height;
   else 
     needHeight = PR_TRUE;
 
-  // We have to load image even though we already have a size.
-  // Don't change this, otherwise things start to go crazy.
-  nsCOMPtr<imgIContainer> image;
-  GetImage(aRowIndex, aColID, aUseContext, aStyleContext, getter_AddRefs(image));
   if (image) {
     if (needWidth || needHeight) {
       // Get the natural image size.
@@ -2590,8 +2597,9 @@ nsTreeBodyFrame::PaintTwisty(PRInt32              aRowIndex,
         AdjustForBorderPadding(twistyContext, imageSize);
 
         // Get the image for drawing.
-        nsCOMPtr<imgIContainer> image; 
-        GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, twistyContext, getter_AddRefs(image));
+        nsCOMPtr<imgIContainer> image;
+        PRBool useImageRegion = PR_TRUE;
+        GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, twistyContext, useImageRegion, getter_AddRefs(image));
         if (image) {
           nsPoint p(twistyRect.x, twistyRect.y);
           
@@ -2664,8 +2672,9 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     AdjustForBorderPadding(imageContext, imageSize);
 
     // Get the image for drawing.
+    PRBool useImageRegion = PR_TRUE;
     nsCOMPtr<imgIContainer> image; 
-    GetImage(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext, getter_AddRefs(image));
+    GetImage(aRowIndex, aColumn->GetID().get(), PR_FALSE, imageContext, useImageRegion, getter_AddRefs(image));
     if (image) {
       nsPoint p(imageRect.x, imageRect.y);
       
@@ -2971,8 +2980,9 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex
         intValue = 100;
 
       meterRect.width = NSToCoordRound((float)intValue / 100 * meterRect.width);
+      PRBool useImageRegion = PR_TRUE;
       nsCOMPtr<imgIContainer> image;
-      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, getter_AddRefs(image));
+      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
       if (image)
         aRenderingContext.DrawTile(image, 0, 0, &meterRect);
       else
@@ -2982,8 +2992,9 @@ NS_IMETHODIMP nsTreeBodyFrame::PaintProgressMeter(PRInt32              aRowIndex
       // Adjust the rect for its border and padding.
       AdjustForBorderPadding(meterContext, meterRect);
 
+      PRBool useImageRegion = PR_TRUE;
       nsCOMPtr<imgIContainer> image;
-      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, getter_AddRefs(image));
+      GetImage(aRowIndex, aColumn->GetID().get(), PR_TRUE, meterContext, useImageRegion, getter_AddRefs(image));
       if (image)
         aRenderingContext.DrawTile(image, 0, 0, &meterRect);
     }

@@ -686,6 +686,21 @@ nsXULTreeBuilder::GetImageSrc(PRInt32 aRow, const PRUnichar* aColID, nsAString& 
     if (aRow < 0 || aRow >= mRows.Count())
         return NS_ERROR_INVALID_ARG;
 
+    // See if any XUL builder observers have an image source to supply.
+    if (mObservers) {
+        PRUint32 count;
+        mObservers->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIXULTreeBuilderObserver> observer;
+            mObservers->QueryElementAt(i, NS_GET_IID(nsIXULTreeBuilderObserver), getter_AddRefs(observer));
+            if (observer) {
+                observer->GetImageSource(aRow, aColID, aResult);
+                if (!aResult.IsEmpty())
+                  return NS_OK;
+            }
+        }
+    }
+
     // Find the <cell> that corresponds to the column we want.
     nsCOMPtr<nsIContent> cell;
     GetTemplateActionCellFor(aRow, aColID, getter_AddRefs(cell));
