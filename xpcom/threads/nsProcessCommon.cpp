@@ -213,13 +213,13 @@ NS_IMETHODIMP
 nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
                PRUint32 *pid)
 {
-    nsresult rv = NS_OK;
+    PRStatus status = PR_SUCCESS;
 
     // make sure that when we allocate we have 1 greater than the
     // count since we need to null terminate the list for the argv to
     // pass into PR_CreateProcess
     char **my_argv = NULL;
-    my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
+    my_argv = (char **)nsMemory::Alloc(sizeof(char *) * (count + 2) );
     if (!my_argv) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -276,27 +276,27 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
             dwRetVal = WaitForSingleObject(procInfo.hProcess, INFINITE);
             if (dwRetVal == WAIT_FAILED) {
                 nsMemory::Free(my_argv);
-                return PR_FAILURE;
+                return NS_ERROR_FAILURE;
             }
             if (GetExitCodeProcess(procInfo.hProcess, &exitCode) == FALSE) {
                 mExitValue = exitCode;
                 nsMemory::Free(my_argv);
-               return PR_FAILURE;
+               return NS_ERROR_FAILURE;
             }
             mExitValue = exitCode;
             CloseHandle(procInfo.hProcess);
         }
         else
-            rv = PR_FAILURE;
+            status = PR_FAILURE;
     } 
     else {
 
         // map return value into success code
 
         if (retVal == TRUE) 
-            rv = PR_SUCCESS;
+            status = PR_SUCCESS;
         else
-            rv = PR_FAILURE;
+            status = PR_FAILURE;
     }
 
 #else // Note, this must not be an #elif ...!
@@ -349,7 +349,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
         }
 
         if (err != noErr) {
-            rv = PR_FAILURE;
+            status = PR_FAILURE;
         }
 
         if (blocking) {
@@ -362,9 +362,9 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
             mProcess = PR_CreateProcess(mTargetPath.get(), my_argv, NULL,
                                         NULL);
             if (mProcess)
-                rv = PR_WaitProcess(mProcess, &mExitValue);
+                status = PR_WaitProcess(mProcess, &mExitValue);
         } else {
-            rv = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL,
+            status = PR_CreateProcessDetached(mTargetPath.get(), my_argv, NULL,
                                           NULL);
         }
     }
@@ -373,7 +373,7 @@ nsProcess::Run(PRBool blocking, const char **args, PRUint32 count,
     // free up our argv
     nsMemory::Free(my_argv);
 
-    if (rv != PR_SUCCESS)
+    if (status != PR_SUCCESS)
         return NS_ERROR_FILE_EXECUTION_FAILED;
 
     return NS_OK;
