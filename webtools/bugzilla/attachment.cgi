@@ -369,8 +369,8 @@ sub viewall
     if (Param("insidergroup") && !(UserInGroup(Param("insidergroup")))) {
         $privacy = "AND isprivate < 1 ";
     }
-    SendSQL("SELECT attach_id, creation_ts, mimetype, description, 
-            ispatch, isobsolete, isprivate 
+    SendSQL("SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
+            mimetype, description, ispatch, isobsolete, isprivate 
             FROM attachments WHERE bug_id = $::FORM{'bugid'} $privacy 
             ORDER BY attach_id");
   my @attachments; # the attachments array

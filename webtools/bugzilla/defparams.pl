@@ -231,6 +231,14 @@ sub check_netmask {
   },
 
   {
+   name => 'timezone',
+   desc => 'The timezone that your SQL server lives in. If set to "" then' .
+           'the timezone can\'t be displayed with the timestamps.',
+   type => 't',
+   default => '',
+  },
+
+  {
    name => 'enablequips',
    desc => 'Controls the appearance of quips at the top of buglists.<ul> ' .
            '<li>on - Bugzilla will display a quip, and lets users add to ' .

@@ -61,7 +61,7 @@
           [% operation.who %]
         </td>
         <td rowspan="[% operation.changes.size %]" valign="top">
-          [% operation.when %]
+          [% operation.when FILTER time %]
         </td>
         [% FOREACH change = operation.changes %]
           [% "</tr><tr>" IF loop.index > 0 %]

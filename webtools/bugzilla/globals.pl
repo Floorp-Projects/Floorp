@@ -1294,7 +1294,7 @@ sub GetLongDescriptionAsText {
     my $result = "";
     my $count = 0;
     my $anyprivate = 0;
-    my ($query) = ("SELECT profiles.login_name, longdescs.bug_when, " .
+    my ($query) = ("SELECT profiles.login_name, DATE_FORMAT(longdescs.bug_when,'%Y.%d.%m %H:%i'), " .
                    "       longdescs.thetext, longdescs.isprivate " .
                    "FROM   longdescs, profiles " .
                    "WHERE  profiles.userid = longdescs.who " .
@@ -1316,7 +1316,7 @@ sub GetLongDescriptionAsText {
         my ($who, $when, $text, $isprivate, $work_time) = (FetchSQLData());
         if ($count) {
             $result .= "\n\n------- Additional Comments From $who".Param('emailsuffix')."  ".
-                time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
+                Bugzilla::Util::format_time($when) . " -------\n";
         }
         if (($isprivate > 0) && Param("insidergroup")) {
             $anyprivate = 1;
@@ -1332,7 +1332,7 @@ sub GetComments {
     my ($id) = (@_);
     my @comments;
     SendSQL("SELECT  profiles.realname, profiles.login_name, 
-                     date_format(longdescs.bug_when,'%Y-%m-%d %H:%i'), 
+                     date_format(longdescs.bug_when,'%Y.%m.%d %H:%i'), 
                      longdescs.thetext, longdescs.work_time,
                      isprivate,
                      date_format(longdescs.bug_when,'%Y%m%d%H%i%s') 
@@ -1793,6 +1793,9 @@ $::template ||= Template->new(
             }
             return $var;
         } ,
+
+        # Format a time for display (more info in Bugzilla::Util)
+        time => \&Bugzilla::Util::format_time,
       } ,
   }
 ) || die("Template creation failed: " . Template->error());

@@ -58,7 +58,7 @@
         [% END %]
       </td>
 
-      <td valign="top">[% a.date %]</td>
+      <td valign="top">[% a.date FILTER time %]</td>
 
       <td valign="top">
         [% IF a.statuses.size == 0 %]

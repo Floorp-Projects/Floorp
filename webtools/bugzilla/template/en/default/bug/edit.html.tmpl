@@ -21,12 +21,13 @@
   #%]
 
 [% filtered_desc = bug.short_desc FILTER html %]
+[% filtered_timestamp = bug.delta_ts FILTER time %]
 [% UNLESS header_done %]
   [% PROCESS global/header.html.tmpl 
     title = "Bug $bug.bug_id - $bug.short_desc"
     h1 = "Bugzilla Bug $bug.bug_id"
     h2 = filtered_desc
-    h3 = "Last modified: $bug.calc_disp_date"
+    h3 = "Last modified: $filtered_timestamp"
     style_urls = [ "css/edit_bug.css" ]
    %]
 [% END %]
@@ -590,7 +591,7 @@
       </b>
     </td>
     <td align="right" width="100%">
-      Opened: [% bug.creation_ts %]
+      Opened: [% bug.creation_ts FILTER time %]
     </td>
   </tr>
 </table>

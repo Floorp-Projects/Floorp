@@ -85,8 +85,7 @@ sub show_bug {
         bug_severity, bugs.component_id, components.name, assigned_to, 
         reporter, bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
-        date_format(creation_ts,'%Y-%m-%d %H:%i'),
-        delta_ts, sum(votes.count), delta_ts calc_disp_date,
+        DATE_FORMAT(creation_ts,'%Y.%m.%d %H:%i'), delta_ts, sum(votes.count),
         estimated_time, remaining_time
     FROM bugs LEFT JOIN votes USING(bug_id), products, components
     WHERE bugs.bug_id = $id
@@ -111,19 +110,10 @@ sub show_bug {
                        "priority", "bug_severity", "component_id", "component", 
                        "assigned_to", "reporter", "bug_file_loc", "short_desc", 
                        "target_milestone", "qa_contact", "status_whiteboard", 
-                       "creation_ts", "delta_ts", "votes", "calc_disp_date", 
+                       "creation_ts", "delta_ts", "votes", 
                        "estimated_time", "remaining_time")
     {
         $value = shift(@row);
-        if ($field eq "calc_disp_date") {
-            # Convert MySQL timestamp (_ts) to datetime format(%Y-%m-%d %H:%i)
-            $disp_date = substr($value,0,4) . '-';
-            $disp_date .= substr($value,4,2) . '-';
-            $disp_date .= substr($value,6,2) . ' ';
-            $disp_date .= substr($value,8,2) . ':';
-            $disp_date .= substr($value,10,2);
-            $value = $disp_date; 
-        }
         $bug{$field} = defined($value) ? $value : "";
     }
 

@@ -25,11 +25,13 @@
 
 package Bugzilla::Util;
 
+use Bugzilla::Config;
+
 use base qw(Exporter);
 @Bugzilla::Util::EXPORT = qw(is_tainted trick_taint detaint_natural
                              html_quote url_quote value_quote
                              lsearch max min
-                             trim);
+                             trim format_time);
 
 use strict;
 
@@ -122,6 +124,36 @@ sub trim {
     return $str;
 }
 
+# Bug 67077
+sub format_time {
+    my ($time) = @_;
+
+    my ($year, $month, $day, $hour, $min);
+    if ($time =~ m/^\d{14}$/) {
+        # We appear to have a timestamp direct from MySQL
+        $year  = substr($time,0,4);
+        $month = substr($time,4,2);
+        $day   = substr($time,6,2);
+        $hour  = substr($time,8,2);
+        $min   = substr($time,10,2);
+    }
+    elsif ($time =~ m/^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2})(:\d{2})?$/) {
+        $year  = $1;
+        $month = $2;
+        $day   = $3;
+        $hour  = $4;
+        $min   = $5;
+    }
+    else {
+        warn "Date/Time format ($time) unrecogonzied";
+    }
+
+    if (defined $year) {
+        $time = "$year-$month-$day $hour:$min " . &::Param('timezone');
+    }
+    return $time;
+}
+
 1;
 
 __END__
@@ -151,6 +183,9 @@ Bugzilla::Util - Generic utility functions for bugzilla
 
   # Functions for trimming variables
   $val = trim(" abc ");
+
+  # Functions for formatting time
+  format_time($time);
 
 =head1 DESCRIPTION
 
@@ -252,3 +287,17 @@ Removes any leading or trailing whitespace from a string. This routine does not
 modify the existing string.
 
 =back
+
+=head2 Formatting Time
+
+=over 4
+
+=item C<format_time($time)>
+
+Takes a time and appends the timezone as defined in editparams.cgi.  This routine
+will be expanded in the future to adjust for user preferences regarding what
+timezone to display times in.  In the future, it may also allow for the time to be
+shown in different formats.
+
+=back
+

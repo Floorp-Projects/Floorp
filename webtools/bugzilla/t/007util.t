@@ -40,9 +40,18 @@ use lib 't';
 use Support::Files;
 
 BEGIN { 
-	use Test::More tests => 10;
+	use Test::More tests => 12;
 	use_ok(Bugzilla::Util);
 }
+
+# We need to override the the Param() function so we can get an expected
+# value when Bugzilla::Utim::format_time calls asks for Param('timezone').
+# This will also prevent the tests from failing on site that do not have a
+# data/params file containing Param('timezone') yet.
+sub myParam {
+    return "TEST" if $_[0] eq 'timezone';
+}
+*::Param = *myParam;
 
 # we don't test the taint functions since that's going to take some more work.
 # XXX: test taint functions
@@ -69,3 +78,9 @@ is(min(@list),2,'min()');
 
 #trim():
 is(trim(" fg<*\$%>+=~~ "),'fg<*$%>+=~~','trim()');
+
+#format_time();
+is(format_time("20021123140436"),'2002-11-23 14:04 TEST','format_time("20021123140436")');
+is(format_time("2002.11.24 00:05:56"),'2002-11-24 00:05 TEST','format_time("2002.11.24 00:05:56")');
+
+

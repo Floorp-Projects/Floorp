@@ -82,6 +82,7 @@ my $provider = Template::Provider->new(
         strike    => sub { return $_ } ,
         url_quote => sub { return $_ } ,
         csv       => sub { return $_ } ,
+        time      => sub { return $_ } ,
     },
 }
 );

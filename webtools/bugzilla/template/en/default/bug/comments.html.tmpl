@@ -44,7 +44,7 @@
         <i>------- Additional Comment
         <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
         <a href="mailto:[% comment.email FILTER html %]">[% comment.name FILTER html %]</a>
-        [%+ comment.time %] 
+        [%+ comment.time FILTER time %] 
         -------
         </i>
       [% END %]

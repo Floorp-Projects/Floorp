@@ -69,8 +69,8 @@ sub query
   # Retrieve a list of attachments for this bug and write them into an array
   # of hashes in which each hash represents a single attachment.
   &::SendSQL("
-              SELECT attach_id, creation_ts, mimetype, description, ispatch, 
-               isobsolete, isprivate, submitter_id
+              SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
+              mimetype, description, ispatch, isobsolete, isprivate, submitter_id
               FROM attachments WHERE bug_id = $bugid ORDER BY attach_id
             ");
   my @attachments = ();
@@ -80,12 +80,6 @@ sub query
     ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, $a{'description'},
      $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'}, $submitter_id) 
         = &::FetchSQLData();
-
-    # Format the attachment's creation/modification date into a standard
-    # format (YYYY-MM-DD HH:MM)
-    if ($a{'date'} =~ /^(\d\d\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $a{'date'} = "$1-$2-$3 $4:$5";
-    }
 
     # Retrieve a list of flags for this attachment.
     $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'} });

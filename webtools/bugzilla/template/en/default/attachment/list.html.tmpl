@@ -50,7 +50,7 @@
         [% END %]
       </td>
 
-      <td valign="top">[% attachment.date %]</td>
+      <td valign="top">[% attachment.date FILTER time %]</td>
 
       [% IF show_attachment_flags %]
         <td valign="top">

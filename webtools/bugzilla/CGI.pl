@@ -812,7 +812,7 @@ sub GetBugActivity {
         SELECT IFNULL(fielddefs.description, bugs_activity.fieldid),
                 fielddefs.name,
                 bugs_activity.attach_id,
-                bugs_activity.bug_when,
+                DATE_FORMAT(bugs_activity.bug_when,'%Y.%m.%d %H:%i'),
                 bugs_activity.removed, bugs_activity.added,
                 profiles.login_name
         FROM bugs_activity LEFT JOIN fielddefs ON 

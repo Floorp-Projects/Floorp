@@ -968,6 +968,7 @@ END
          html_linebreak => sub { return $_; },
          url_quote => sub { return $_; },
          csv => sub { return $_; },
+         time => sub { return $_; },
         },
       }) || die ("Could not create Template Provider: "
                  . Template::Provider->error() . "\n");

@@ -76,7 +76,7 @@ sub queue {
                 flags.attach_id, attachments.description,
                 requesters.realname, requesters.login_name,
                 requestees.realname, requestees.login_name,
-                flags.creation_date,
+                DATE_FORMAT(flags.creation_date,'%Y.%m.%d %H:%i'),
     " . 
     # Select columns that help us weed out secure bugs to which the user
     # should not have access.
