@@ -477,6 +477,14 @@ nsDiskCacheStreamIO::GetContentLength(PRInt32 *contentLength)
 }
 
 
+void
+nsDiskCacheStreamIO::ClearBinding()
+{
+    if (mBinding && mOutStream)
+        Flush();
+    mBinding = nsnull;
+}
+
 nsresult
 nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
 {
@@ -490,13 +498,30 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
     
     // output stream is closing
     if (!mBinding) {    // if we're severed, just clear member variables
+        NS_ASSERTION(!mBufDirty, "oops");
         mOutStream = nsnull;
         outputStream->mStreamIO = nsnull;
         return NS_ERROR_NOT_AVAILABLE;
     }
 
+    rv = Flush();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Flush() failed");
+
+    mOutStream = nsnull;
+    return rv;
+}
+
+nsresult
+nsDiskCacheStreamIO::Flush()
+{
+    NS_ASSERTION(mBinding, "oops");
+
+    if (!mBufDirty)
+        return NS_OK;
+
     // write data to cache blocks, or flush mBuffer to file
-    nsDiskCacheMap *    cacheMap = mDevice->CacheMap();  // get map reference
+    nsDiskCacheMap *cacheMap = mDevice->CacheMap();  // get map reference
+    nsresult rv;
     
     if ((mStreamEnd > kMaxBufferSize) ||
         (mBinding->mCacheEntry->StoragePolicy() == nsICache::STORE_ON_DISK_AS_FILE)) {
@@ -522,7 +547,6 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
         // delete existing storage
         nsDiskCacheRecord * record = &mBinding->mRecord;
         if (record->DataLocationInitialized()) {
-        
             rv = cacheMap->DeleteStorage(record, nsDiskCache::kData);
             if (NS_FAILED(rv)) {
                 NS_WARNING("cacheMap->DeleteStorage() failed.");
@@ -532,7 +556,7 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
     
         // flush buffer to block files
         if (mStreamEnd > 0) {
-            nsresult  rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mBufEnd);
+            rv = cacheMap->WriteDataCacheBlocks(mBinding, mBuffer, mBufEnd);
             if (NS_FAILED(rv)) {
                 NS_WARNING("WriteDataCacheBlocks() failed.");
                 return rv;   // XXX doom cache entry?
@@ -553,7 +577,6 @@ nsDiskCacheStreamIO::CloseOutputStream(nsDiskCacheOutputStream *  outputStream)
         }
     }
     
-    mOutStream = nsnull;
     return NS_OK;
 }
 

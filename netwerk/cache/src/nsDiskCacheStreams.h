@@ -62,7 +62,7 @@ public:
     nsresult    Tell(PRUint32 * position);    
     nsresult    SetEOF();
 
-    void        ClearBinding() { mBinding = nsnull; }
+    void        ClearBinding();
     
     void        IncrementInputStreamCount() { PR_AtomicIncrement(&mInStreamCount); }
     void        DecrementInputStreamCount()
@@ -83,6 +83,7 @@ private:
     PRUint32    WriteToBuffer(const char * buffer, PRUint32 count);
     nsresult    UpdateFileSize();
     void        DeleteBuffer();
+    nsresult    Flush();
 
 
     nsDiskCacheBinding *        mBinding;
