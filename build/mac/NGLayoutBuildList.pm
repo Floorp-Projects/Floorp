@@ -1544,7 +1544,7 @@ sub BuildAppRunner()
 	_copy( $cmd_file_path . "Mozilla_Messenger", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 
-	$cmd_file = "Mozilla Preference";
+	$cmd_file = "Mozilla Preferences";
 	_copy( $cmd_file_path . "Mozilla_Preference", $dist_dir . $cmd_file );
 	MacPerl::SetFileInfo("MOZZ", "CMDL", $dist_dir . $cmd_file);
 }
