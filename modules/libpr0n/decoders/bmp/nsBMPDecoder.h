@@ -45,6 +45,8 @@
 #include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 
+#include <prinrval.h>
+
 #define NS_BMPDECODER_CID \
 { /* {78c61626-4d1f-4843-9364-4652d98ff6e1} */ \
   0x78c61626, \
@@ -91,8 +93,6 @@ struct bitFields {
     PRInt8 blueshift;
 };
 
-#define DOCOPY(dest, src) memcpy(dest, src, sizeof(dest))
-
 #if defined WORDS_BIGENDIAN || defined IS_BIG_ENDIAN
 #define LITTLE_TO_NATIVE16(x) ((((x) & 0xFF) << 8) | ((x) >> 8))
 #define LITTLE_TO_NATIVE32(x) ((((x) & 0xFF) << 24) | \
@@ -137,20 +137,20 @@ private:
 
     /** Sets the pixel data in aDecoded to the given values.
      * The variable passed in as aDecoded will be moved on 3 bytes! */
-    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
-    inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
+     nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aIdx);
+     nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
     /** Sets one or two pixels; it is ensured that aPos is <= mBIH.width
      * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
      * depending on whether one or two pixels are written.
      * @param aData The values for the two pixels
      * @param aPos Current position. Is incremented by one or two. */
-    inline nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
+     nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos);
 
     /** Sets the image data at specified position. mCurLine is used
      * to get the row
      * @param aData The data */
-    inline nsresult SetData(PRUint8* aData);
+     nsresult SetData(PRUint8* aData);
 
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
@@ -176,6 +176,7 @@ private:
 
     void ProcessFileHeader();
     void ProcessInfoHeader();
+    PRIntervalTime mStartDecoding;
 };
 
 
