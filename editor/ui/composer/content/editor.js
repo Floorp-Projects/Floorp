@@ -207,7 +207,7 @@ function IsEditingRenderedHTML()
 
 function IsWebComposer()
 {
-  return document.getElementById("WebComposerWindow") != null;
+  return document.documentElement.id == "editorWindow";
 }
 
 function IsDocumentEditable()
@@ -1803,7 +1803,7 @@ function UpdateWindowTitle()
         windowTitle += " [" + scheme + ":/.../" + filename + "]";
     }
     // Set window title with " - Composer" appended
-    var xulWin = document.getElementById("WebComposerWindow");
+    var xulWin = document.documentElement;
     window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + xulWin.getAttribute("titlemodifier");
 
     // Save changed title in the recent pages data in prefs
