@@ -2074,19 +2074,30 @@ nsLineLayout::AddText(nsIFrame* aTextFrame)
     *mTextRunP = mNewTextRun;
     mTextRunP = &mNewTextRun->mNext;
   }
-  mNewTextRun->mArray.AppendElement(aTextFrame);
 #ifdef DEBUG_ADD_TEXT
-  PRInt32 n = mNewTextRun->mArray.Count();
-  for (PRInt32 i = 0; i < n - 1; i++) {
-    NS_ASSERTION(mNewTextRun->mArray[i] != (void*)aTextFrame, "yikes");
+  {
+    // Check that text-frame is not already there
+    PRInt32 ix = mNewTextRun->mArray.IndexOf((void*)aTextFrame);
+    NS_ASSERTION(ix < 0, "text frame already in text run");
   }
 #endif
-  return NS_OK;/* XXX */
+  mNewTextRun->mArray.AppendElement(aTextFrame);/* XXX out-of-memory */
+  return NS_OK;
 }
 
 void
 nsLineLayout::EndTextRun()
 {
+  if (mNewTextRun) {
+    PRInt32 numTextInRun = mNewTextRun->mArray.Count();
+    if (numTextInRun < 2) {
+      // Don't bother remembering empty text-runs: reset the array
+      // back to zero elements. This effectively prepares this
+      // text-run for the next round. If it turns out there is no next
+      // round then we will get rid of it later in TakeTextRuns.
+      mNewTextRun->mArray.Clear();
+    }
+  }
   mNewTextRun = nsnull;
 }
 
@@ -2097,6 +2108,21 @@ nsLineLayout::TakeTextRuns()
   mTextRuns = nsnull;
   mTextRunP = &mTextRuns;
   mNewTextRun = nsnull;
+
+  // Eliminate any text-runs that are empty
+  nsTextRun** rp = &result;
+  nsTextRun* run = *rp;
+  while (run) {
+    if (0 == run->mArray.Count()) {
+      *rp = run->mNext;
+      delete run;
+    }
+    else {
+      rp = &run->mNext;
+    }
+    run = *rp;
+  }
+
   return result;
 }
 
