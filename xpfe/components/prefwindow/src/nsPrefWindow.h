@@ -30,13 +30,15 @@ class nsPrefWindow
 //    NS_DECL_IAPPSHELLCOMPONENT
 
     // This class implements the nsIFindComponent interface functions.
-	NS_IMETHOD Init(const PRUnichar *id);
-	NS_IMETHOD ShowWindow(nsIDOMWindow *currentFrontWin);
-	NS_IMETHOD ChangePanel(const PRUnichar *url);
-	NS_IMETHOD PanelLoaded(nsIDOMWindow *win);
-	NS_IMETHOD SavePrefs();
-	NS_IMETHOD CancelPrefs();
-	NS_IMETHOD SetSubstitutionVar(PRUint32 stringnum, const char *val);
+	NS_IMETHOD showWindow(
+		const PRUnichar *id,
+		nsIDOMWindow *currentFrontWin,
+		const PRUnichar* panelURL);
+	NS_IMETHOD changePanel(const PRUnichar *url);
+	NS_IMETHOD panelLoaded(nsIDOMWindow *win);
+	NS_IMETHOD savePrefs();
+	NS_IMETHOD cancelPrefs();
+	NS_IMETHOD setSubstitutionVar(PRUint32 stringnum, const char *val);
     
 	enum TypeOfPref
 	{

@@ -665,8 +665,7 @@
     {
     	prefwindow = Components.classes['component://netscape/prefwindow'].createInstance(Components.interfaces.nsIPrefWindow);
 	}
-    prefwindow.Init("navigator.js");
-    prefwindow.ShowWindow(window);
+    prefwindow.showWindow("navigator.js", window, "chrome://pref/content/pref-appearance.xul");
   }
 
   function BrowserViewSource()

@@ -30,8 +30,8 @@
 		<html:td valign="right" width="160">
 			<html:center>					
 				<html:input type="button" align="bottom" value="&helpButton.label;" />				
-				<html:input type="button" align="bottom" value="&cancelButton.label;" onclick="DoCancel();" />				
-				<html:input type="button" align="bottom" value="&okButton.label;" onclick="DoSave();" />
+				<html:input type="button" align="bottom" value="&cancelButton.label;" onclick="prefwindow.cancelPrefs();" />				
+				<html:input type="button" align="bottom" value="&okButton.label;" onclick="prefwindow.savePrefs();" />
 			 </html:center>	  
 		  </html:td>
 	  </html:tr>
