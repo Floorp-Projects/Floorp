@@ -50,9 +50,7 @@ class nsMsgFilePostHelper;
 // it unifies the core networking code for the protocols. My hope is that
 // this will make unification with Necko easier as we'll only have to change
 // this class and not all of the mailnews protocols.
-class NS_MSG_BASE nsMsgProtocol 
-: public nsIStreamListener, 
-  public nsIChannel
+class NS_MSG_BASE nsMsgProtocol : public nsIStreamListener, public nsIChannel
 {
 public:
 	nsMsgProtocol(nsIURI * aURL);
@@ -165,6 +163,8 @@ class NS_MSG_BASE nsMsgAsyncWriteProtocol : public nsMsgProtocol
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
+
+  NS_IMETHOD Cancel(nsresult status);
 
   nsMsgAsyncWriteProtocol(nsIURI * aURL);
   virtual ~nsMsgAsyncWriteProtocol(); 
