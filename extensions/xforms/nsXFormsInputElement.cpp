@@ -234,7 +234,9 @@ nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
 {
   // We need to re-evaluate our instance data binding when our parent
   // changes, since xmlns declarations in effect could have changed.
-  Refresh();
+  if (aNewParent)
+    Refresh();
+
   return NS_OK;
 }
 
