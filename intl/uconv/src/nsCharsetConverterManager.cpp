@@ -49,9 +49,10 @@ struct ConverterInfo
   nsString      * mCharset;
   const nsCID   * mCID;
 
-  ConverterInfo() {}
+  ConverterInfo()
+  :  mCharset(nsnull), mCID(nsnull) {}
 
-  virtual ~ConverterInfo()
+  ~ConverterInfo()
   {
     if (mCharset != NULL) delete mCharset;
   }
