@@ -269,7 +269,13 @@ void _PR_LogCleanup(void)
     PR_LogFlush();
 
 #ifdef _PR_USE_STDIO_FOR_LOGGING
-    if (logFile && logFile != stdout && logFile != stderr) {
+    if (logFile
+        && logFile != stdout
+        && logFile != stderr
+#ifdef XP_PC
+        && logFile != WIN32_DEBUG_FILE
+#endif
+        ) {
         fclose(logFile);
     }
 #else
@@ -355,20 +361,29 @@ PR_IMPLEMENT(PRBool) PR_SetLogFile(const char *file)
 #ifdef XP_PC
     if ( strcmp( file, "WinDebug") == 0)
     {
-        logFile = WIN32_DEBUG_FILE;
-        return(PR_TRUE);
+        newLogFile = WIN32_DEBUG_FILE;
     }
+    else
 #endif
-    newLogFile = fopen(file, "w");
-    if (newLogFile) {
+    {
+        newLogFile = fopen(file, "w");
+        if (!newLogFile)
+            return PR_FALSE;
+
         /* We do buffering ourselves. */
         setvbuf(newLogFile, NULL, _IONBF, 0);
-        if (logFile && logFile != stdout && logFile != stderr) {
-            fclose(logFile);
-        }
-        logFile = newLogFile;
     }
-    return (PRBool) (newLogFile != 0);
+    if (logFile
+        && logFile != stdout
+        && logFile != stderr
+#ifdef XP_PC
+        && logFile != WIN32_DEBUG_FILE
+#endif
+        ) {
+        fclose(logFile);
+    }
+    logFile = newLogFile;
+    return PR_TRUE;
 #else
     PRFileDesc *newLogFile;
 
