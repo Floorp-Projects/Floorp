@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
+#include "nsIAutoCompleteController.idl"
 
 interface nsIAutoCompletePopup;
 
@@ -47,6 +48,11 @@ interface nsIAutoCompleteInput : nsISupports
    */
   readonly attribute nsIAutoCompletePopup popup;
   
+  /*
+   * The controller.
+   */
+  readonly attribute nsIAutoCompleteController controller;
+
   /* 
    * Indicates if the popup is currently open
    */
