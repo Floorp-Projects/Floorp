@@ -1,14 +1,17 @@
-function EditCard() 
+function AbNewCard()
 {
-	var dialog = window.openDialog("chrome://addressbook/content/editcard.xul",
-								   "editCard",
+	var dialog = window.openDialog("chrome://addressbook/content/newcardDialog.xul",
+								   "abNewCard",
 								   "chrome");
 	return dialog;
 }
 
 
-function AbNewCard()
+function AbEditCard()
 {
-	EditCard();
+	var dialog = window.openDialog("chrome://addressbook/content/editcardDialog.xul",
+								   "abEditCard",
+								   "chrome");
+	return dialog;
 }
 

@@ -27,6 +27,8 @@ cardviewPane.js
 addresspanes.html
 editcard.xul
 editcard.js
+newcardDialog.xul
+editcardDialog.xul
 selectaddress.xul
 selectaddress.js
 addressbucket.xul

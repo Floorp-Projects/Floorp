@@ -40,6 +40,8 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/addresspanes.html \
 	$(srcdir)/editcard.xul \
 	$(srcdir)/editcard.js \
+	$(srcdir)/newcardDialog.xul \
+	$(srcdir)/editcardDialog.xul \
 	$(srcdir)/selectaddress.xul \
 	$(srcdir)/selectaddress.js \
 	$(srcdir)/addressbucket.xul \

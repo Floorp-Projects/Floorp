@@ -4,11 +4,6 @@
 
 <!DOCTYPE window
 [
-<!-- Title -->
-	<!ENTITY addressbookWindow.title "New Card">
-
-<!-- Tabs -->
-	
 <!-- Labels -->
 	<!ENTITY Name.tab						"Name"> 
 		<!ENTITY Name.box					"Name"> 
@@ -58,13 +53,8 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		title="&addressbookWindow.title;"
-		class="dialog"
-		width="400" style="height:100%"
+		flex="100%"
 		align="vertical">
-
-	<html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
-	<html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
 	<tabcontrol align="vertical" style="margin: 5px; border: 2px groove white">
 	   <tabbox include="chrome://addressbook/content/nsFrag1.xul" align="horizontal">
@@ -315,16 +305,6 @@
 
 	   </tabpanel> 
 	</tabcontrol>
-
-	<spring style="height:10px"/>
-	
-	<box align="horizontal" flex="100%">
-		<spring flex="100%"/>
-		<titledbutton id="ok" value="OK" class="push" onclick="EditCardOKButton()" />	
-		<spring style="width:10px"/>
-		<titledbutton id="cancel" value="Cancel" class="push" onclick="EditCardCancelButton()" />	
-		<spring style="width:10px"/>
-	</box>
 
 </window>
 

@@ -31,6 +31,8 @@ install::
 	$(MAKE_INSTALL) addresspanes.html 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) editcard.xul		$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) editcard.js			$(DIST)\bin\chrome\addressbook\content\default
+	$(MAKE_INSTALL) newcardDialog.xul	$(DIST)\bin\chrome\addressbook\content\default
+	$(MAKE_INSTALL) editcardDialog.xul	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) selectaddress.xul 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) selectaddress.js 	$(DIST)\bin\chrome\addressbook\content\default
 	$(MAKE_INSTALL) addressbucket.xul 	$(DIST)\bin\chrome\addressbook\content\default
@@ -47,6 +49,8 @@ clobber::
 	rm -f $(DIST)\chrome\addressbook\content\default\addresspanes.html
 	rm -f $(DIST)\chrome\addressbook\content\default\editcard.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\editcard.js
+	rm -f $(DIST)\chrome\addressbook\content\default\newcardDialog.xul
+	rm -f $(DIST)\chrome\addressbook\content\default\editcardDialog.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\selectaddress.xul
 	rm -f $(DIST)\chrome\addressbook\content\default\selectaddress.js
 	rm -f $(DIST)\chrome\addressbook\content\default\addressbucket.xul
