@@ -91,7 +91,7 @@ void SendMsg(ipcIService *ipc, const nsID &target, const char *data, PRUint32 da
 {
     printf("*** sending message: [dataLen=%u]\n", dataLen);
 
-    ipc->SendMessage(target, data, dataLen);
+    ipc->SendMessage(0, target, data, dataLen);
     gMsgCount++;
 }
 

@@ -132,31 +132,22 @@ interface ipcIService : nsISupports
     void setMessageObserver(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
 
     /**
-     * send message asynchronously to the IPC daemon.  there is no guarantee
-     * that the message will be delivered.
-     *
-     * @param aTarget   the target of the message.  this is the ID of the
-     *                  daemon module that should receive this message.
-     * @param aData     the data of the message.
-     * @param aDataLen  the data length of the message.
-     */
-    [noscript] void sendMessage(in nsIDRef       aTarget,
-                                in string        aData,
-                                in unsigned long aDataLen);
-
-    /**
-     * forward message asynchronously via the IPC daemon to another application
-     * process.  there is no guarantee that the message will be delivered.
+     * send message asynchronously to a client or a module in the IPC daemon.
+     * there is no guarantee that the message will be delivered.
      *
      * @param aClientID  the client ID of the foreign application that should
+     *                   receive this message.  pass 0 to send a message to a
+     *                   module in the IPC daemon.
+     * @param aTarget    the target of the message.  if aClientID is 0, then
+     *                   this is the ID of the daemon module that should
      *                   receive this message.
-     * 
-     * other parameters are identical to those for sendMessage.
+     * @param aData      the message data.
+     * @param aDataLen   the message length.
      */
-    [noscript] void forwardMessage(in unsigned long aClientID,
-                                   in nsIDRef       aTarget,
-                                   in string        aData,
-                                   in unsigned long aDataLen);
+    [noscript] void sendMessage(in unsigned long aClientID,
+                                in nsIDRef       aTarget,
+                                in string        aData,
+                                in unsigned long aDataLen);
 };
 
 [scriptable, uuid(e40a4a3c-2dc1-470e-ab7f-5675fe1f1384)]
