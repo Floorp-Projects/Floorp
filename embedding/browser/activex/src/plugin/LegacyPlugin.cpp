@@ -39,11 +39,14 @@
 
 #include "jni.h"
 #include "npapi.h"
+
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #define IMPLEMENT_MozAxPlugin
 #include "MozAxPlugin.h"
 #include "netscape_plugin_Plugin.h"
 #endif
+
+#include "nsISupports.h"
 
 // Plugin types supported
 enum PluginInstanceType
@@ -60,6 +63,9 @@ struct PluginInstanceData {
         CActiveScriptSiteInstance *pScriptSite;
         CControlSiteInstance *pControlSite;
     };
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+    nsISupports *pScriptingPeer;
+#endif
 };
 
 
@@ -366,6 +372,10 @@ NPP_Destroy(NPP instance, NPSavedData** save)
             pSite->Detach();
             pSite->Release();
         }
+        if (pData->pScriptingPeer)
+        {
+            pData->pScriptingPeer->Release();
+        }
     }
     else if (pData->nType == itScript)
     {
@@ -595,6 +605,168 @@ void
 NPP_URLNotify(NPP instance, const char* url, NPReason reason, void* notifyData)
 {
 }
+
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+
+#include "nsIMozAxPlugin.h"
+#include "nsIClassInfo.h"
+
+// We must implement nsIClassInfo because it signals the
+// Mozilla Security Manager to allow calls from JavaScript.
+
+// helper class to implement all necessary nsIClassInfo method stubs
+// and to set flags used by the security system
+class nsClassInfoMozAxPlugin : public nsIClassInfo
+{
+  // These flags are used by the DOM and security systems to signal that 
+  // JavaScript callers are allowed to call this object's scritable methods.
+  NS_IMETHOD GetFlags(PRUint32 *aFlags)
+    {*aFlags = nsIClassInfo::PLUGIN_OBJECT | nsIClassInfo::DOM_OBJECT;
+     return NS_OK;}
+  NS_IMETHOD GetImplementationLanguage(PRUint32 *aImplementationLanguage)
+    {*aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
+     return NS_OK;}
+
+  // The rest of the methods can safely return error codes...
+  NS_IMETHOD GetInterfaces(PRUint32 *count, nsIID * **array)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetHelperForLanguage(PRUint32 language, nsISupports **_retval)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetContractID(char * *aContractID)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassDescription(char * *aClassDescription)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassID(nsCID * *aClassID)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+  NS_IMETHOD GetClassIDNoAlloc(nsCID *aClassIDNoAlloc)
+    {return NS_ERROR_NOT_IMPLEMENTED;}
+};
+
+class nsScriptablePeer : public nsIMozAxPlugin,
+                         public nsClassInfoMozAxPlugin
+{
+    long mRef;
+
+protected:
+    virtual ~nsScriptablePeer();
+
+public:
+    nsScriptablePeer();
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIMOZAXPLUGIN
+};
+
+nsScriptablePeer::nsScriptablePeer()
+{
+    mRef = 0;
+}
+
+nsScriptablePeer::~nsScriptablePeer()
+{
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsISupports
+
+// NOTE: We're not using the helpful NS_IMPL_ISUPPORTS macro because they drag
+//       in dependencies to xpcom that a plugin like ourselves is better off
+//       without.
+
+/* void QueryInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID & uuid, void * *result)
+{
+    if (uuid.Equals(NS_GET_IID(nsISupports)))
+    {
+        *result = NS_STATIC_CAST(void *, this);
+        AddRef();
+        return NS_OK;
+    }
+    else if (uuid.Equals(NS_GET_IID(nsIMozAxPlugin)))
+    {
+        *result = NS_STATIC_CAST(void *, this);
+        AddRef();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+/* [noscript, notxpcom] nsrefcnt AddRef (); */
+NS_IMETHODIMP_(nsrefcnt) nsScriptablePeer::AddRef()
+{
+    mRef++;
+    return NS_OK;
+}
+
+/* [noscript, notxpcom] nsrefcnt Release (); */
+NS_IMETHODIMP_(nsrefcnt) nsScriptablePeer::Release()
+{
+    mRef--;
+    if (mRef <= 0)
+    {
+        delete this;
+    }
+    return NS_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// nsIMozAxPlugin
+
+// the following method will be callable from JavaScript
+NS_IMETHODIMP 
+nsScriptablePeer::X()
+{
+    return NS_OK;
+}
+
+
+// Happy happy fun fun - redefine some NPPVariable values that we might
+// be asked for but not defined by the PluginSDK 
+const int kVarScriptableInstance = 10; // NPPVpluginScriptableInstance
+const int kVarScriptableIID = 11; // NPPVpluginScriptableIID
+
+NPError	NP_LOADDS
+NPP_GetValue(NPP instance, NPPVariable variable, void *value)
+{
+    if (instance == NULL)
+    {
+        return NPERR_INVALID_INSTANCE_ERROR;
+    }
+
+    if (variable == kVarScriptableInstance)
+    {
+        PluginInstanceData *pData = (PluginInstanceData *) instance->pdata;
+        if (!pData->pScriptingPeer)
+        {
+            nsScriptablePeer *peer  = new nsScriptablePeer();
+            peer->AddRef();
+            pData->pScriptingPeer = (nsIMozAxPlugin *) peer;
+        }
+        if (pData->pScriptingPeer)
+        {
+            pData->pScriptingPeer->AddRef();
+            *((nsISupports **) value)= pData->pScriptingPeer;
+            return NPERR_NO_ERROR;
+        }
+    }
+    else if (variable == kVarScriptableIID)
+    {
+	static nsIID kIMozAxPluginIID = NS_IMOZAXPLUGIN_IID;
+        nsIID *piid = (nsIID *) NPN_MemAlloc(sizeof(nsIID));
+        *piid = kIMozAxPluginIID;
+        *((nsIID **) value) = piid;
+        return NPERR_NO_ERROR;
+    }
+
+    return NPERR_GENERIC_ERROR;
+}
+
+NPError	NP_LOADDS
+NPP_SetValue(NPP instance, NPNVariable variable, void *value)
+{
+    return NPERR_GENERIC_ERROR;
+}
+#endif
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 #include "_stubs/MozAxPlugin.c"

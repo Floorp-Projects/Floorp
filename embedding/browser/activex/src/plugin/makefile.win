@@ -20,17 +20,30 @@
 # Contributor(s): 
 
 DLLNAME = npmozax
+MODULE = npmozax
 QUIET =
 DEPTH =..\..\..\..\..
 
 REQUIRES = \
-	java \
-	$(NULL)
+    xpcom \
+    java \
+    $(NULL)
 
+
+# The default is to include control support unless told to do otherwise
+MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
+MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
+# MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
+
+# Path to the Mozilla ActiveX control (some files are copied from there)
+MOZCTLSRC=../control
 
 # Specify the path to the Communicator plugin SDK or get an error message!
+!ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 !ifndef MOZ_PLUGINSDK
-!message Build cannot proceed without knowing where your Plugin SDK is installed.
+!message The build cannot proceed because LiveConnect requires a path to
+!message the PluginSDK.
+!message
 !message Please specify the path to the SDK either by setting the MOZ_PLUGINSDK
 !message environment variable or as a parameter to nmake. e.g.
 !message
@@ -47,71 +60,73 @@ REQUIRES = \
 !message
 !error
 !endif
-
-# The default is to include control support unless told to do otherwise
-MOZ_ACTIVEX_PLUGIN_SUPPORT = 1
-# MOZ_ACTIVEX_PLUGIN_LIVECONNECT = 1
+!endif
 
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 RESFILE = MozActiveX.res
 DEFFILE = npmozax.def
 
-OBJS =                                 \
-	.\$(OBJDIR)\StdAfx.obj             \
-	.\$(OBJDIR)\ControlSite.obj        \
-	.\$(OBJDIR)\ControlSiteIPFrame.obj \
-	.\$(OBJDIR)\ItemContainer.obj      \
-	.\$(OBJDIR)\PropertyBag.obj        \
-#	.\$(OBJDIR)\ActiveXPlugin.obj      \
-#	.\$(OBJDIR)\ActiveXPluginInstance.obj \
-	.\$(OBJDIR)\ActiveScriptSite.obj   \
-	.\$(OBJDIR)\LegacyPlugin.obj       \
-	.\$(OBJDIR)\MozActiveX.obj         \
-	.\$(OBJDIR)\npwin.obj              \
-	$(NULL)
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+XPIDLSRCS= \
+    .\nsIMozAxPlugin.idl          \
+    $(NULL)
+!endif
+
+OBJS = \
+    .\$(OBJDIR)\StdAfx.obj             \
+    .\$(OBJDIR)\ControlSite.obj        \
+    .\$(OBJDIR)\ControlSiteIPFrame.obj \
+    .\$(OBJDIR)\ItemContainer.obj      \
+    .\$(OBJDIR)\PropertyBag.obj        \
+    .\$(OBJDIR)\ActiveScriptSite.obj   \
+    .\$(OBJDIR)\LegacyPlugin.obj       \
+    .\$(OBJDIR)\MozActiveX.obj         \
+    .\$(OBJDIR)\npwin.obj              \
+    $(NULL)
 
 # most of these have to be here for nsSetupRegistry.cpp...
 
-LINCS=  \
+LINCS = \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
-  -I..\control \
-  -I$(MOZ_PLUGINSDK)\include \
-  -I.\_gen \
+    -I..\control \
+    -I$(MOZ_SRC)\include \
+    -I.\_gen \
 !endif
-  $(NULL) 
+    $(NULL) 
 
-LLIBS=                         \
- $(NULL)
+LLIBS = \
+    $(NULL)
 
 WIN_LIBS = \
- comdlg32.lib                   \
- ole32.lib                      \
- oleaut32.lib                   \
- uuid.lib                       \
- shell32.lib                    \
- $(NULL)
+    comdlg32.lib                   \
+    ole32.lib                      \
+    oleaut32.lib                   \
+    uuid.lib                       \
+    shell32.lib                    \
+    $(NULL)
 
+include <$(DEPTH)\config\rules.mak>
+include <$(DEPTH)\config\config.mak>
 
 LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
 LLFLAGS = -SUBSYSTEM:windows /DLL
-
-include <$(DEPTH)\config\rules.mak>
 
 # If LiveConnect is enabled, we need to know where the Java compiler, header file
 # generator and classes live
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-
-LCFLAGS = /D MOZ_ACTIVEX_PLUGIN_LIVECONNECT $(LCFLAGS)
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_LIVECONNECT
 JAVADIR = D:\jdk1.3.1
 JAVAH = $(MOZ_PLUGINSDK)\bin\win32\javah
 JAVAC = $(JAVADIR)\bin\oldjavac
 JAVACLASSES = $(MOZ_PLUGINSDK)\classes\java_30.zip
 CLASSPATH = $(JAVACLASSES);.
-
 !endif
 
+!ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_XPCONNECT
+!endif
 
 !ifdef MOZ_NO_DEBUG_RTL
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
@@ -122,10 +137,14 @@ LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
 !endif
 
 install:: $(DLL)
-	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
+    $(MAKE_INSTALL) $(DLL) $(DIST)\bin
+
+
+clobber::
+    -del $(DEFFILE)
 
 $(DEFFILE) : mkctldef.bat
-	mkctldef.bat $(DEFFILE)
+    mkctldef.bat $(DEFFILE)
 
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 MozAxPlugin.class: MozAxPlugin.java
@@ -148,43 +167,32 @@ MozAxPlugin.class: MozAxPlugin.java
 
 !endif
 
-ActiveScriptSite.cpp: ../control/ActiveScriptSite.cpp
-	-cp ../control/ActiveScriptSite.cpp .
-
-npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
-	-cp -f $(MOZ_PLUGINSDK)/common/npwin.cpp .
+ActiveScriptSite.cpp: $(MOZCTLSRC)/ActiveScriptSite.cpp
+    -cp $(MOZCTLSRC)/ActiveScriptSite.cpp .
 
 MozActiveX.res: MozActiveX.rc resource.h
 
 MozActiveX.cpp: StdAfx.h
 
 LegacyPlugin.cpp: StdAfx.h \
-                  ActiveXPlugin.h \
-                  ActiveXPluginInstance.h \
 !ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
-                  .\_gen\MozAxPlugin.h \
-                  .\_gen\netscape_plugin_Plugin.h \
-                  .\_gen\java_lang_Object.h \
-                  .\_stubs\MozAxPlugin.c        \
+    .\_gen\MozAxPlugin.h            \
+    .\_gen\netscape_plugin_Plugin.h \
+    .\_gen\java_lang_Object.h       \
+    .\_stubs\MozAxPlugin.c          \
 !endif
-                  $(NULL)
+    $(NULL)
 
 StdAfx.cpp : StdAfx.h
 
-ActiveXPlugin.cpp \
-ActiveXPluginInstance.cpp: StdAfx.h ActiveXPlugin.h ActiveXPluginInstance.h
+PropertyBag.cpp : $(MOZCTLSRC)/PropertyBag.cpp
+    -cp $(MOZCTLSRC)/PropertyBag.cpp .
 
-PropertyBag.cpp : ../control/PropertyBag.cpp
-	-cp ../control/PropertyBag.cpp .
+ControlSite.cpp : $(MOZCTLSRC)/ControlSite.cpp
+    -cp $(MOZCTLSRC)/ControlSite.cpp .
 
-ControlSite.cpp : ../control/ControlSite.cpp
-	-cp ../control/ControlSite.cpp .
+ControlSiteIPFrame.cpp : $(MOZCTLSRC)/ControlSiteIPFrame.cpp
+    -cp $(MOZCTLSRC)/ControlSiteIPFrame.cpp .
 
-ControlSiteIPFrame.cpp : ../control/ControlSiteIPFrame.cpp
-	-cp ../control/ControlSiteIPFrame.cpp .
-
-ItemContainer.cpp : ../control/ItemContainer.cpp
-	-cp ../control/ItemContainer.cpp .
-
-clobber::
-	-del $(DEFFILE)
+ItemContainer.cpp : $(MOZCTLSRC)/ItemContainer.cpp
+    -cp $(MOZCTLSRC)/ItemContainer.cpp .
