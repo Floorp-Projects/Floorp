@@ -19,6 +19,16 @@
 #
 # Contributor(s): Stephen Lamm <slamm@mozilla.org>
 
+#
+# Usage:
+#
+# Run this script on lounge.mozilla.org.  To run it there,
+# cd to /opt/webtools/tinderbox and run it without
+# any arguments:  
+#
+#   ./warnings.pl 
+#
+
 use FileHandle;
 
 $tree = 'SeaMonkey';
