@@ -150,8 +150,8 @@ typedef PRUint16 PRUnichar;
 /* ------------------------------------------------------------------------ */
 /* Casting macros for hiding C++ features from older compilers */
 
-/* unix now determines this automatically */
-#ifndef XP_UNIX
+/* unix and beos now determine this automatically */
+#if ! defined XP_UNIX && ! defined XP_BEOS
 #define HAVE_CPP_NEW_CASTS /* we'll be optimistic. */
 #endif
 
