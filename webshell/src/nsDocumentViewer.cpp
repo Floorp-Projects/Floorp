@@ -30,7 +30,10 @@
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
 
+#include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsILinkHandler.h"
+#include "nsIDOMDocument.h"
 
 #include "nsViewsCID.h"
 #include "nsWidgetsCID.h"
@@ -116,8 +119,10 @@ static NS_DEFINE_IID(kWidgetCID,            NS_CHILD_CID);
 
 
 // Interface IDs
+static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID,      NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIViewManagerIID,      NS_IVIEWMANAGER_IID);
 static NS_DEFINE_IID(kIViewIID,             NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID,        NS_ISCROLLABLEVIEW_IID);
@@ -207,6 +212,8 @@ DocumentViewerImpl::BindToDocument(nsISupports *aDoc, const char *aCommand)
 #endif
 
     rv = aDoc->QueryInterface(kIDocumentIID, (void**)&mDocument);
+    if (nsnull != mDocument) {
+    }
     return rv;
 }
 
@@ -286,11 +293,37 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
 
     if (nsnull != mContainer) {
         nsILinkHandler* linkHandler = nsnull;
-
         mContainer->QueryCapability(kILinkHandlerIID, (void**)&linkHandler);
         mPresContext->SetContainer(mContainer);
         mPresContext->SetLinkHandler(linkHandler);
         NS_IF_RELEASE(linkHandler);
+
+#if 0
+        // Set script-context-owner in the document
+        nsIScriptContextOwner* owner = nsnull;
+        mContainer->QueryCapability(kIScriptContextOwnerIID, (void**)&owner);
+        if (nsnull != owner) {
+            aDocument->SetScriptContextOwner(owner);
+            nsIScriptContext* scriptcx = nsnull;
+            owner->GetScriptContext(&scriptcx);
+            if (nsnull != scriptcx) {
+                nsIScriptGlobalObject* global;
+                global = scriptcx->GetGlobalObject();
+                if (nsnull != global) {
+                    nsIDOMDocument *domdoc = nsnull;
+                    aDocument->QueryInterface(kIDOMDocumentIID,
+                                              (void**) &domdoc);
+                    if (nsnull != domdoc) {
+                        global->SetNewDocument(domdoc);
+                        NS_RELEASE(domdoc);
+                    }
+                    NS_RELEASE(global);
+                }
+                NS_RELEASE(scriptcx);
+            }
+            NS_RELEASE(owner);
+        }
+#endif
     }
 
     // Create the ViewManager and Root View...
