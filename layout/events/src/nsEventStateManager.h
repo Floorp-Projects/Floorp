@@ -147,6 +147,8 @@ protected:
   PRInt32 mCurrentTabIndex;
   nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
   PRBool      mConsumeFocusEvents;
+  nsIContent* mFirstBlurEvent;
+  nsIContent* mFirstFocusEvent;
 
   nsIPresContext* mPresContext;      // Not refcnted
   nsIDocument* mDocument;            // [OWNER], but doesn't need to be.

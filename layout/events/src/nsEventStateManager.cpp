@@ -328,6 +328,8 @@ nsEventStateManager::nsEventStateManager()
   mPresContext = nsnull;
   mCurrentTabIndex = 0;
   mLastWindowToHaveFocus = nsnull;
+  mFirstBlurEvent = nsnull;
+  mFirstFocusEvent = nsnull;
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
@@ -351,6 +353,8 @@ nsEventStateManager::~nsEventStateManager()
   NS_IF_RELEASE(mDocument);
 
   NS_IF_RELEASE(mLastWindowToHaveFocus);
+  NS_IF_RELEASE(mFirstBlurEvent);
+  NS_IF_RELEASE(mFirstFocusEvent);
   
   --mInstanceCount;
   if(mInstanceCount == 0) {
@@ -2125,7 +2129,16 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     
   if (nsnull != gLastFocusedPresContext) {
     
-    if (gLastFocusedContent) { 
+    if (gLastFocusedContent && gLastFocusedContent != mFirstBlurEvent) {
+
+      //Store the first blur event we fire and don't refire blur
+      //to that element while the first blur is still ongoing.
+      PRBool clearFirstBlurEvent = PR_FALSE;
+      if (!mFirstBlurEvent) {
+        mFirstBlurEvent = gLastFocusedContent;
+        NS_ADDREF(mFirstBlurEvent);
+        clearFirstBlurEvent = PR_TRUE;
+      }
 
       // Retrieve this content node's pres context. it can be out of sync in
       // the Ender widget case.
@@ -2147,6 +2160,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
         esm->SetFocusedContent(gLastFocusedContent);
         gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
         esm->SetFocusedContent(nsnull);
+      }
+
+      if (clearFirstBlurEvent) {
+        NS_RELEASE(mFirstBlurEvent);
       }
     }
 
@@ -2182,7 +2199,17 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
   NS_IF_ADDREF(aContent);
   NS_IF_ADDREF(aContent);
  
-  if (nsnull != aContent) {
+  if (nsnull != aContent && aContent != mFirstFocusEvent) {
+
+    //Store the first focus event we fire and don't refire focus
+    //to that element while the first focus is still ongoing.
+    PRBool clearFirstFocusEvent = PR_FALSE;
+    if (!mFirstFocusEvent) {
+      mFirstFocusEvent = aContent;
+      NS_ADDREF(mFirstFocusEvent);
+      clearFirstFocusEvent = PR_TRUE;
+    }
+
     //fire focus
     nsEventStatus status = nsEventStatus_eIgnore;
     nsEvent event;
@@ -2202,6 +2229,10 @@ nsEventStateManager::SendFocusBlur(nsIPresContext* aPresContext, nsIContent *aCo
     PRInt32 ec, val = tabIndex.ToInteger(&ec);
     if (NS_OK == ec) {
       mCurrentTabIndex = val;
+    }
+
+    if (clearFirstFocusEvent) {
+      NS_RELEASE(mFirstFocusEvent);
     }
   }
 
