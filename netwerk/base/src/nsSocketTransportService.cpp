@@ -479,6 +479,15 @@ nsSocketTransportService::CreateTransport(const char* aHost,
                                           PRInt32 aPort,
                                           nsIChannel** aResult)
 {
+  return CreateTransport(aHost, aPort, nsnull, aResult);
+}
+
+NS_IMETHODIMP
+nsSocketTransportService::CreateTransport(const char* aHost, 
+                                          PRInt32 aPort,
+                                          const char* aSocketType,
+                                          nsIChannel** aResult)
+{
   nsresult rv = NS_OK;
   nsSocketTransport* transport = nsnull;
 
@@ -491,7 +500,7 @@ nsSocketTransportService::CreateTransport(const char* aHost,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort);
+    rv = transport->Init(this, aHost, aPort, aSocketType);
     if (NS_FAILED(rv)) {
       delete transport;
       transport = nsnull;

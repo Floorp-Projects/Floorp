@@ -33,8 +33,17 @@
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
 
+#ifdef NET_SOCKET_PROVIDER_BUILD
+#include "nsISocketProvider.h"
+#include "nsISocketProviderService.h"
+#endif
+
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 
+#ifdef NET_SOCKET_PROVIDER_BUILD
+static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
+#endif
 
 //
 // This is the State table which maps current state to next state
@@ -120,6 +129,7 @@ nsSocketTransport::nsSocketTransport()
 
   mHostName     = nsnull;
   mPort         = 0;
+  mSocketType   = nsnull;
   mSocketFD     = nsnull;
   mLock         = nsnull;
 
@@ -195,6 +205,10 @@ nsSocketTransport::~nsSocketTransport()
     nsCRT::free(mHostName);
   }
 
+  if (mSocketType) {
+    nsCRT::free(mSocketType);
+  }
+
   if (mSocketFD) {
     PR_Close(mSocketFD);
     mSocketFD = nsnull;
@@ -209,7 +223,8 @@ nsSocketTransport::~nsSocketTransport()
 
 nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
-                                 PRInt32 aPort)
+                                 PRInt32 aPort,
+                                 const char* aSocketType)
 {
   nsresult rv = NS_OK;
 
@@ -227,6 +242,13 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
   else {
     rv = NS_ERROR_NULL_POINTER;
   }
+
+  if (aSocketType) {
+    mSocketType = nsCRT::strdup(aSocketType);
+    if (!mSocketType) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+  } 
 
   //
   // Create the lock used for synchronizing access to the transport instance.
@@ -555,7 +577,30 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
     // Step 1:
     //    Create a new TCP socket structure...
     //
+#ifdef NET_SOCKET_PROVIDER_BUILD
+    if (!mSocketType)
+      {
+      mSocketFD = PR_NewTCPSocket();
+      }
+    else
+      {
+      NS_WITH_SERVICE(nsISocketProviderService,
+                      pProviderService,
+                      kSocketProviderService,
+                      &rv);
+
+      nsCOMPtr<nsISocketProvider> pProvider;
+
+      if (NS_SUCCEEDED(rv))
+        rv = pProviderService->GetSocketProvider(mSocketType, getter_AddRefs(pProvider));
+
+      if (NS_SUCCEEDED(rv))
+        rv = pProvider->NewSocket(&mSocketFD);
+      }
+#else
     mSocketFD = PR_NewTCPSocket();
+#endif
+
     if (mSocketFD) {
       PRSocketOptionData opt;
 

@@ -125,7 +125,8 @@ public:
 
   nsresult Init(nsSocketTransportService* aService,
                 const char* aHost, 
-                PRInt32 aPort);
+                PRInt32 aPort,
+                const char* aSocketType);
   nsresult Process(PRInt16 aSelectFlags);
 
   nsresult CloseConnection(void);
@@ -189,6 +190,7 @@ protected:
 
   char*         mHostName;
   PRInt32       mPort;
+  char*         mSocketType;
 
   nsCOMPtr<nsISupports>       mReadContext;
   nsCOMPtr<nsIStreamListener> mReadListener;

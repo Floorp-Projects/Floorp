@@ -47,6 +47,11 @@ public:
                              PRInt32 aPort,
                              nsIChannel** aResult);
 
+  NS_IMETHOD CreateTransport(const char* aHost, 
+                             PRInt32 aPort,
+                             const char* aSocketType,
+                             nsIChannel** aResult);
+
   NS_IMETHOD Shutdown(void);
 
   // nsIRunnable methods:
