@@ -37,6 +37,7 @@
 #include "nsPrefMigrationCIDs.h"
 #include "nsIPrefMigration.h"
 #include "nsVoidArray.h"
+#include "nsILocalFile.h"
 
 #define SUCCESS    0
 #define RETRY      1
@@ -142,6 +143,7 @@ class nsPrefMigration: public nsIPrefMigration
       nsresult RenameAndMove4xPopFilterFile(nsIFileSpec *profilePath);
       nsresult RenameAndMove4xPopFile(nsIFileSpec * profilePath, const char *fileNameIn4x, const char *fileNameIn5x);
   
+      nsresult DetermineOldPath(nsIFileSpec *profilePath, const char *oldPathName, const char *oldPathEntityName, nsIFileSpec *oldPath);
       nsresult SetPremigratedFilePref(const char *pref_name, nsIFileSpec *filePath);
 #ifdef NEED_TO_COPY_AND_RENAME_NEWSRC_FILES
       nsresult GetPremigratedFilePref(const char *pref_name, nsIFileSpec **filePath);
