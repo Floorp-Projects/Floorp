@@ -494,8 +494,6 @@
 <!ENTITY contextPrint.label "Print...">
 <!ENTITY contextPrint.accesskey "P">
 <!ENTITY contextPrintPreview.label "Print Preview">
-<!ENTITY contextDelete.label "Delete">
-<!ENTITY contextDelete.accesskey "D">
 <!ENTITY contextAddSenderToAddressBook.label "Add Sender To Address Book">
 <!ENTITY contextAddSenderToAddressBook.accesskey "B">
 <!ENTITY contextAddAllToAddressBook.label "Add All To Address Book">
