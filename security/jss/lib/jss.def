@@ -240,6 +240,7 @@ Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineGetKey;
 Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineIsCertificateEntry;
 Java_org_mozilla_jss_provider_java_security_JSSKeyStoreSpi_engineSetKeyEntryNative;
 Java_org_mozilla_jss_CryptoManager_initializeAllNative2;
+Java_org_mozilla_jss_ssl_SocketBase_getLocalAddressNative;
 ;+    local:
 ;+       *;
 ;+};
