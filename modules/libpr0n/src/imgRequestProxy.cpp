@@ -73,10 +73,6 @@ imgRequestProxy::~imgRequestProxy()
 
 nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx)
 {
-  NS_PRECONDITION(aLoadGroup, "no loadgroup");
-  if (!aLoadGroup)
-    return NS_ERROR_NULL_POINTER;
-
   NS_PRECONDITION(request, "no request");
   if (!request)
     return NS_ERROR_NULL_POINTER;
@@ -87,8 +83,10 @@ nsresult imgRequestProxy::Init(imgRequest *request, nsILoadGroup *aLoadGroup, im
   mListener = aObserver;
   mContext = cx;
 
-  aLoadGroup->AddRequest(this, cx);
-  mLoadGroup = aLoadGroup;
+  if (aLoadGroup) {
+    aLoadGroup->AddRequest(this, cx);
+    mLoadGroup = aLoadGroup;
+  }
 
   request->AddProxy(this);
 
@@ -366,6 +364,13 @@ NS_IMETHODIMP imgRequestProxy::OnStopRequest(nsIRequest *request, nsISupports *c
             this, NS_ConvertUCS2toUTF8(name).get()));
   }
 #endif
+
+  /* calling RemoveRequest may cause the document to finish loading,
+     which could result in our death.  We need to make sure that we stay
+     alive long enough to fight another battle... at least until we exit
+     this function.
+   */
+  nsCOMPtr<imgIRequest> kungFuDeathGrip(this);
 
   mLoadGroup->RemoveRequest(this, mContext, statusCode);
   mLoadGroup = nsnull;
