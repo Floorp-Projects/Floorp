@@ -295,7 +295,7 @@ void nsString2::SetCapacity(PRUint32 aLength) {
  */
 char* nsString2::GetBuffer(void) const {
   if(!mMultibyte)
-    return mStr.mCharBuf;
+    return mStr;
   return 0;
 }
 
@@ -307,7 +307,7 @@ char* nsString2::GetBuffer(void) const {
  */
 PRUnichar* nsString2::GetUnicode(void) const {
   if(mMultibyte)
-    return (PRUnichar*)mStr.mUnicharBuf;
+    return (PRUnichar*)mUStr;
   return 0;
 }
 
@@ -334,8 +334,8 @@ PRBool nsString2::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
   PRBool result=PR_FALSE;
   if(anIndex<mLength){
     if(!mMultibyte)
-      mStr.mCharBuf[anIndex]=char(aChar);
-    else mStr.mUnicharBuf[anIndex]=aChar;
+      mStr[anIndex]=char(aChar);
+    else mUStr[anIndex]=aChar;
     result=PR_TRUE;
   }
   return result;
@@ -433,9 +433,9 @@ void nsString2::ToUCS2(PRUint32 aStartOffset){
     if(mMultibyte) {
       PRUint32 theIndex=0;
       for(theIndex=aStartOffset;theIndex<mLength;theIndex++){
-        unsigned char ch = (unsigned char)mStr.mUnicharBuf[theIndex];
-        if( 0x0080 == (0xFFE0 & (mStr.mUnicharBuf[theIndex])) ) // limit to only 0x0080 to 0x009F
-          mStr.mUnicharBuf[theIndex]=gToUCS2[ch];
+        unsigned char ch = (unsigned char)mUStr[theIndex];
+        if( 0x0080 == (0xFFE0 & (mUStr[theIndex])) ) // limit to only 0x0080 to 0x009F
+          mUStr[theIndex]=gToUCS2[ch];
       }
     }
   }
@@ -517,12 +517,12 @@ nsString2& nsString2::ReplaceChar(PRUnichar aSourceChar, PRUnichar aDestChar) {
   PRUint32 theIndex=0;
   for(theIndex=0;theIndex<mLength;theIndex++){
     if(mMultibyte) {
-      if(mStr.mUnicharBuf[theIndex]==aSourceChar)
-        mStr.mUnicharBuf[theIndex]=aDestChar;
+      if(mUStr[theIndex]==aSourceChar)
+        mUStr[theIndex]=aDestChar;
     }
     else {
-      if(mStr.mCharBuf[theIndex]==aSourceChar)
-        mStr.mCharBuf[theIndex]=(char)aDestChar;
+      if(mStr[theIndex]==aSourceChar)
+        mStr[theIndex]=(char)aDestChar;
     }
   }
   return *this;
@@ -596,8 +596,8 @@ nsString2* nsString2::ToNewString() const {
  */
 char* nsString2::ToNewCString() const {
   nsString2 temp(*this,eOneByte);
-  char* result=temp.mStr.mCharBuf;
-  temp.mStr.mCharBuf=0;
+  char* result=temp.mStr;
+  temp.mStr=0;
   return result;
 }
 
@@ -608,8 +608,8 @@ char* nsString2::ToNewCString() const {
  */
 PRUnichar* nsString2::ToNewUnicode() const {
   nsString2 temp(*this,eTwoByte);
-  PRUnichar* result=temp.mStr.mUnicharBuf;
-  temp.mStr.mUnicharBuf=0; 
+  PRUnichar* result=temp.mUStr;
+  temp.mUStr=0; 
   return result;
 }
 
@@ -623,7 +623,7 @@ char* nsString2::ToCString(char* aBuf, PRUint32 aBufLength) const{
   if(aBuf) {
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
-    theTempStr.mStr.mCharBuf=aBuf;
+    theTempStr.mStr=aBuf;
     theTempStr.mCapacity=aBufLength;
     nsStr::Assign(theTempStr,*this,0,mLength,mAgent);
   }
@@ -666,7 +666,7 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   nsAutoString2 theString(*this,eOneByte);
 
   PRInt32   decPt=theString.FindChar(theString,'.',PR_TRUE,0);
-  char*     cp = (kNotFound==decPt) ? theString.mStr.mCharBuf + theString.mLength-1 : theString.mStr.mCharBuf+decPt-1;
+  char*     cp = (kNotFound==decPt) ? theString.mStr + theString.mLength-1 : theString.mStr+decPt-1;
   char      digit=0;
   char      theChar;
 //  PRInt32   theShift=0;
@@ -675,7 +675,7 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   *anErrorCode = (0<theString.mLength) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
 
   // Skip trailing non-numeric...
-  while (cp >= theString.mStr.mCharBuf) {
+  while (cp >= theString.mStr) {
     theChar = toupper(*cp);
     if((theChar>='0') && (theChar<='9')){
       break;
@@ -687,7 +687,7 @@ PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
   }
 
     //now iterate the numeric chars and build our result
-  while(cp>=theString.mStr.mCharBuf) {
+  while(cp>=theString.mStr) {
     theChar=toupper(*cp--);
     if((theChar>='0') && (theChar<='9')){
       digit=theChar-'0';
@@ -845,7 +845,7 @@ nsString2& nsString2::Append(const char* aCString,PRInt32 aCount) {
   if(aCString){
     nsStr theTemp;
     Initialize(theTemp,eOneByte);
-    theTemp.mStr.mCharBuf=(char*)aCString;
+    theTemp.mStr=(char*)aCString;
     theTemp.mLength=nsCRT::strlen(aCString);
     if(-1==aCount) aCount=theTemp.mLength;
     nsStr::Append(*this,theTemp,0,aCount,mAgent);
@@ -864,7 +864,7 @@ nsString2& nsString2::Append(const PRUnichar* aString,PRInt32 aCount) {
   if(aString){
     nsStr theTemp;
     Initialize(theTemp,eTwoByte);
-    theTemp.mStr.mUnicharBuf=(PRUnichar*)aString;
+    theTemp.mUStr=(PRUnichar*)aString;
     theTemp.mLength=nsCRT::strlen(aString);
     if(-1==aCount) aCount=theTemp.mLength;
     nsStr::Append(*this,theTemp,0,aCount,mAgent);
@@ -884,7 +884,7 @@ nsString2& nsString2::Append(char aChar) {
 
   nsStr theTemp;
   Initialize(theTemp,eOneByte);
-  theTemp.mStr.mCharBuf=buf;
+  theTemp.mStr=buf;
   theTemp.mLength=1;
   nsStr::Append(*this,theTemp,0,1,mAgent);
   return *this;
@@ -902,7 +902,7 @@ nsString2& nsString2::Append(PRUnichar aChar) {
 
   nsStr theTemp;
   Initialize(theTemp,eTwoByte);
-  theTemp.mStr.mUnicharBuf=buf;
+  theTemp.mUStr=buf;
   theTemp.mLength=1;
   nsStr::Append(*this,theTemp,0,1,mAgent);
   return *this;
@@ -1020,7 +1020,7 @@ nsString2& nsString2::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
     if(0<aCount) {
       nsStr theTemp;
       nsStr::Initialize(theTemp,eOneByte);
-      theTemp.mStr.mCharBuf=(char*)aCString;
+      theTemp.mStr=(char*)aCString;
       theTemp.mLength=nsCRT::strlen(aCString);
       if(theTemp.mLength){
         nsStr::Insert(*this,anOffset,theTemp,0,aCount,0);
@@ -1067,7 +1067,7 @@ nsString2& nsString2::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 
     if(0<aCount) {
       nsStr theTemp;
       nsStr::Initialize(theTemp,eTwoByte);
-      theTemp.mStr.mUnicharBuf=(PRUnichar*)aString;
+      theTemp.mUStr=(PRUnichar*)aString;
       theTemp.mLength=nsCRT::strlen(aString);
       if(theTemp.mLength){
         nsStr::Insert(*this,anOffset,theTemp,0,aCount,0);
@@ -1092,7 +1092,7 @@ nsString2& nsString2::Insert(PRUnichar aChar,PRUint32 anOffset){
   theBuffer[0]=aChar;
   nsStr theTempStr;
   nsStr::Initialize(theTempStr,eTwoByte);
-  theTempStr.mStr.mUnicharBuf=theBuffer;
+  theTempStr.mUStr=theBuffer;
   theTempStr.mLength=1;
   nsStr::Insert(*this,anOffset,theTempStr,0,1,0);
   return *this;
@@ -1156,7 +1156,7 @@ PRInt32 nsString2::Find(const char* aCString,PRBool aIgnoreCase) const{
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
     theTempStr.mLength=nsCRT::strlen(aCString);
-    theTempStr.mStr.mCharBuf=(char*)aCString;
+    theTempStr.mStr=(char*)aCString;
     result=nsStr::FindSubstr(*this,theTempStr,aIgnoreCase,0);
   }
   return result;
@@ -1177,7 +1177,7 @@ PRInt32 nsString2::Find(const PRUnichar* aString,PRBool aIgnoreCase) const{
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eTwoByte);
     theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mStr.mUnicharBuf=(PRUnichar*)aString;
+    theTempStr.mUStr=(PRUnichar*)aString;
     result=nsStr::FindSubstr(*this,theTempStr,aIgnoreCase,0);
   }
   return result;
@@ -1222,7 +1222,7 @@ PRInt32 nsString2::FindCharInSet(const char* aCStringSet,PRUint32 anOffset) cons
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
     theTempStr.mLength=nsCRT::strlen(aCStringSet);
-    theTempStr.mStr.mCharBuf=(char*)aCStringSet;
+    theTempStr.mStr=(char*)aCStringSet;
     result=nsStr::FindCharInSet(*this,theTempStr,PR_FALSE,anOffset);
   }
   return result;
@@ -1255,7 +1255,7 @@ PRInt32 nsString2::RFindCharInSet(const char* aCStringSet,PRUint32 anOffset) con
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
     theTempStr.mLength=nsCRT::strlen(aCStringSet);
-    theTempStr.mStr.mCharBuf=(char*)aCStringSet;
+    theTempStr.mStr=(char*)aCStringSet;
     result=nsStr::RFindCharInSet(*this,theTempStr,PR_FALSE,anOffset);
   }
   return result;
@@ -1300,7 +1300,7 @@ PRInt32 nsString2::RFind(const char* aString,PRBool aIgnoreCase) const{
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
     theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mStr.mCharBuf=(char*)aString;
+    theTempStr.mStr=(char*)aString;
     result=nsStr::RFindSubstr(*this,theTempStr,aIgnoreCase,0);
   }
   return result;
@@ -1337,7 +1337,7 @@ PRInt32 nsString2::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aLeng
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eOneByte);
     theTempStr.mLength=nsCRT::strlen(aCString);
-    theTempStr.mStr.mCharBuf=(char*)aCString;
+    theTempStr.mStr=(char*)aCString;
     return nsStr::Compare(*this,theTempStr,aLength,aIgnoreCase);
   }
   return 0;
@@ -1357,7 +1357,7 @@ PRInt32 nsString2::Compare(const PRUnichar* aString,PRBool aIgnoreCase,PRInt32 a
     nsStr theTempStr;
     nsStr::Initialize(theTempStr,eTwoByte);
     theTempStr.mLength=nsCRT::strlen(aString);
-    theTempStr.mStr.mUnicharBuf=(PRUnichar*)aString;
+    theTempStr.mUStr=(PRUnichar*)aString;
     return nsStr::Compare(*this,theTempStr,aLength,aIgnoreCase);
   }
   return 0;
@@ -1501,7 +1501,7 @@ PRBool nsString2::Equals(const nsIAtom* aAtom,PRBool aIgnoreCase) const{
   NS_ASSERTION(0!=aAtom,kNullPointerError);
   PRBool result=PR_FALSE;
   if(aAtom){
-    PRInt32 cmp=nsCRT::strcasecmp(mStr.mUnicharBuf,aAtom->GetUnicode());
+    PRInt32 cmp=nsCRT::strcasecmp(mUStr,aAtom->GetUnicode());
     result=PRBool(0==cmp);
   }
   return result;
@@ -1573,7 +1573,6 @@ PRBool nsString2::IsDigit(PRUnichar aChar) {
  ****************************************************************************/
 
 #if 0
-
 class nsStringRecycler {
 public:
   nsStringRecycler() : mDeque(0) {
@@ -1634,7 +1633,7 @@ void nsString2::Recycle(nsString2* aString){
  */
 void nsString2::DebugDump(ostream& aStream) const {
   for(PRUint32 i=0;i<mLength;i++) {
-    aStream <<mStr.mCharBuf[i];
+    aStream <<mStr[i];
   }
   aStream << endl;
 }
@@ -1647,7 +1646,7 @@ void nsString2::DebugDump(ostream& aStream) const {
  */
 ostream& operator<<(ostream& os,nsString2& aString){
   if(PR_FALSE==aString.mMultibyte) {
-    os<<aString.mStr.mCharBuf;
+    os<<aString.mStr;
   }
   else{
     char* theStr=aString.ToNewCString();

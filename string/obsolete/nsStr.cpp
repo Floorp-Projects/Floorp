@@ -66,12 +66,12 @@ char* GetSharedEmptyBuffer() {
  * @return
  */
 void nsStr::Initialize(nsStr& aDest,eCharSize aCharSize) {
-  aDest.mStr.mCharBuf=GetSharedEmptyBuffer();
+  aDest.mStr=GetSharedEmptyBuffer();
   aDest.mLength=0;
   aDest.mCapacity=0;
   aDest.mMultibyte=aCharSize;
   aDest.mOwnsBuffer=0;
-  NS_ASSERTION(aDest.mStr.mCharBuf[0]==0,kFoolMsg);
+  NS_ASSERTION(aDest.mStr[0]==0,kFoolMsg);
 }
 
 /**
@@ -97,7 +97,7 @@ nsIMemoryAgent* GetDefaultAgent(void){
  * @return
  */
 void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
-  if((aDest.mStr.mCharBuf) && (aDest.mStr.mCharBuf!=GetSharedEmptyBuffer())) {
+  if((aDest.mStr) && (aDest.mStr!=GetSharedEmptyBuffer())) {
     if(!anAgent)
       anAgent=GetDefaultAgent();
     
@@ -119,7 +119,7 @@ void nsStr::Destroy(nsStr& aDest,nsIMemoryAgent* anAgent) {
 PRUnichar nsStr::GetCharAt(const nsStr& aDest,PRUint32 anIndex) {
   PRUnichar result=0;
   if((anIndex>=0) && (anIndex<aDest.mLength))  {
-    result=(eTwoByte==aDest.mMultibyte) ? aDest.mStr.mUnicharBuf[anIndex] : aDest.mStr.mCharBuf[anIndex];
+    result=(eTwoByte==aDest.mMultibyte) ? aDest.mUStr[anIndex] : aDest.mStr[anIndex];
   }//if
   return result;
 }
@@ -160,7 +160,7 @@ void nsStr::GrowCapacity(nsStr& aDest,PRUint32 aNewLength,nsIMemoryAgent* anAgen
     } 
     theAgent->Free(aDest);
     aDest.mStr = theTempStr.mStr;
-    theTempStr.mStr.mCharBuf=0; //make sure to null this out so that you don't lose the buffer you just stole...
+    theTempStr.mStr=0; //make sure to null this out so that you don't lose the buffer you just stole...
     aDest.mLength=theTempStr.mLength;
     aDest.mCapacity=theTempStr.mCapacity;
     aDest.mOwnsBuffer=theTempStr.mOwnsBuffer;
@@ -198,7 +198,7 @@ void nsStr::Append(nsStr& aDest,const nsStr& aSource,PRUint32 anOffset,PRInt32 a
     }
 
     //now append new chars, starting at offset
-    (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr.mCharBuf,aDest.mLength,aSource.mStr.mCharBuf,anOffset,theLength);
+    (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDest.mLength,aSource.mStr,anOffset,theLength);
 
     aDest.mLength+=theLength;
     AddNullTerminator(aDest);
@@ -235,10 +235,10 @@ void nsStr::Insert( nsStr& aDest,PRUint32 aDestOffset,const nsStr& aSource,PRUin
           GrowCapacity(aDest,aDest.mLength+theLength,anAgent);
 
             //shift the chars right by theDelta...
-          (*gShiftChars[aDest.mMultibyte][PR_TRUE])(aDest.mStr.mCharBuf,aDest.mLength,aDestOffset,theLength);
+          (*gShiftChars[aDest.mMultibyte][PR_TRUE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
       
           //now insert new chars, starting at offset
-          (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr.mCharBuf,aDestOffset,aSource.mStr.mCharBuf,aSrcOffset,theLength);
+          (*gCopyChars[aSource.mMultibyte][aDest.mMultibyte])(aDest.mStr,aDestOffset,aSource.mStr,aSrcOffset,theLength);
 
           //finally, make sure to update the string length...
           aDest.mLength+=theLength;
@@ -271,7 +271,7 @@ void nsStr::Delete(nsStr& aDest,PRUint32 aDestOffset,PRInt32 aCount,nsIMemoryAge
 
         //if you're here, it means we're cutting chars out of the middle of the string...
         //so shift the chars left by theLength...
-        (*gShiftChars[aDest.mMultibyte][PR_FALSE])(aDest.mStr.mCharBuf,aDest.mLength,aDestOffset,theLength);
+        (*gShiftChars[aDest.mMultibyte][PR_FALSE])(aDest.mStr,aDest.mLength,aDestOffset,theLength);
         aDest.mLength-=theLength;
       }
       else Truncate(aDest,aDestOffset,anAgent);
@@ -301,7 +301,7 @@ void nsStr::Truncate(nsStr& aDest,PRUint32 aDestOffset,nsIMemoryAgent* anAgent){
  */
 void nsStr::ChangeCase(nsStr& aDest,PRBool aToUpper) {
   // somehow UnicharUtil return failed, fallback to the old ascii only code
-  gCaseConverters[aDest.mMultibyte](aDest.mStr.mCharBuf,aDest.mLength,aToUpper);
+  gCaseConverters[aDest.mMultibyte](aDest.mStr,aDest.mLength,aToUpper);
 }
 
 /**
@@ -311,7 +311,7 @@ void nsStr::ChangeCase(nsStr& aDest,PRBool aToUpper) {
  * @return
  */
 void nsStr::StripChars(nsStr& aDest,PRUint32 aDestOffset,PRInt32 aCount,const char* aCharSet){
-  PRUint32 aNewLen=gStripChars[aDest.mMultibyte](aDest.mStr.mCharBuf,aDestOffset,aCount,aCharSet);
+  PRUint32 aNewLen=gStripChars[aDest.mMultibyte](aDest.mStr,aDestOffset,aCount,aCharSet);
   aDest.mLength=aNewLen;
 }
 
@@ -323,7 +323,7 @@ void nsStr::StripChars(nsStr& aDest,PRUint32 aDestOffset,PRInt32 aCount,const ch
  * @return
  */
 void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  PRUint32 aNewLen=gTrimChars[aDest.mMultibyte](aDest.mStr.mCharBuf,aDest.mLength,aSet,aEliminateLeading,aEliminateTrailing);
+  PRUint32 aNewLen=gTrimChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,aSet,aEliminateLeading,aEliminateTrailing);
   aDest.mLength=aNewLen;
 }
 
@@ -334,7 +334,7 @@ void nsStr::Trim(nsStr& aDest,const char* aSet,PRBool aEliminateLeading,PRBool a
  * @return
  */
 void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEliminateLeading,PRBool aEliminateTrailing){
-  PRUint32 aNewLen=gCompressChars[aDest.mMultibyte](aDest.mStr.mCharBuf,aDest.mLength,aSet,aChar,aEliminateLeading,aEliminateTrailing);
+  PRUint32 aNewLen=gCompressChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,aSet,aChar,aEliminateLeading,aEliminateTrailing);
   aDest.mLength=aNewLen;
 }
 
@@ -385,7 +385,7 @@ PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnor
  * @return
  */
 PRInt32 nsStr::FindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRInt32 result=gFindChars[aDest.mMultibyte](aDest.mStr.mCharBuf,aDest.mLength,0,aChar,aIgnoreCase);
+  PRInt32 result=gFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,0,aChar,aIgnoreCase);
   return result;
 }
 
@@ -403,7 +403,7 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
 
   while(++index<aDest.mLength) {
     PRUnichar theChar=GetCharAt(aDest,index);
-    thePos=gFindChars[aSet.mMultibyte](aSet.mStr.mCharBuf,aSet.mLength,0,theChar,aIgnoreCase);
+    thePos=gFindChars[aSet.mMultibyte](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
     if(kNotFound!=thePos)
       return index;
   } //while
@@ -460,7 +460,7 @@ PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgno
  * @return
  */
 PRInt32 nsStr::RFindChar(const nsStr& aDest,const PRUnichar aChar, PRBool aIgnoreCase,PRUint32 anOffset) {
-  PRInt32 result=gRFindChars[aDest.mMultibyte](aDest.mStr.mCharBuf,aDest.mLength,0,aChar,aIgnoreCase);
+  PRInt32 result=gRFindChars[aDest.mMultibyte](aDest.mStr,aDest.mLength,0,aChar,aIgnoreCase);
   return result;
 }
 
@@ -477,7 +477,7 @@ PRInt32 nsStr::RFindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnor
 
   while(--offset>=0) {
     PRUnichar theChar=GetCharAt(aDest,offset);
-    thePos=gRFindChars[aSet.mMultibyte](aSet.mStr.mCharBuf,aSet.mLength,0,theChar,aIgnoreCase);
+    thePos=gRFindChars[aSet.mMultibyte](aSet.mStr,aSet.mLength,0,theChar,aIgnoreCase);
     if(kNotFound!=thePos)
       return offset;
   } //while
@@ -503,7 +503,7 @@ PRInt32 nsStr::Compare(const nsStr& aDest,const nsStr& aSource,PRInt32 aCount,PR
   }
 
   int maxlen=(aSource.mLength<aDest.mLength) ? aDest.mLength : aSource.mLength;
-  PRInt32 result=(*gCompare[aDest.mMultibyte][aSource.mMultibyte])(aDest.mStr.mCharBuf,aSource.mStr.mCharBuf,maxlen,aIgnoreCase);
+  PRInt32 result=(*gCompare[aDest.mMultibyte][aSource.mMultibyte])(aDest.mStr,aSource.mStr,maxlen,aIgnoreCase);
   return result;
 }
 
