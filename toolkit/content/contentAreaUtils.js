@@ -3,7 +3,7 @@
  * area.
  **/
  
-function openNewTabWith(href, linkNode, event, securityCheck)
+function openNewTabWith(href, linkNode, event, securityCheck, postData)
 {
   if (securityCheck)
     urlSecurityCheck(href, document); 
@@ -33,7 +33,7 @@ function openNewTabWith(href, linkNode, event, securityCheck)
 
   // open link in new tab
   var browser = top.document.getElementById("content");  
-  var theTab = browser.addTab(href, getReferrer(document), originCharset);
+  var theTab = browser.addTab(href, getReferrer(document), originCharset, postData);
   if (!loadInBackground)
     browser.selectedTab = theTab;
   
@@ -41,7 +41,7 @@ function openNewTabWith(href, linkNode, event, securityCheck)
     markLinkVisited(href, linkNode);
 }
 
-function openNewWindowWith(href, linkNode, securityCheck) 
+function openNewWindowWith(href, linkNode, securityCheck, postData) 
 {
   if (securityCheck)
     urlSecurityCheck(href, document);
@@ -55,7 +55,7 @@ function openNewWindowWith(href, linkNode, securityCheck)
     charsetArg = "charset=" + window._content.document.characterSet;
 
   var referrer = getReferrer(document);
-  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer);
+  window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", href, charsetArg, referrer, postData);
   
   if (linkNode)
     markLinkVisited(href, linkNode);
