@@ -841,7 +841,6 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
             getTargetsSearchCallback.prototype.callerObject = null;
             getTargetsSearchCallback.prototype.outer = null;
-            getTargetsSearchCallback.prototype.firstResult = true;
 
             getTargetsSearchCallback.prototype.onLDAPMessage = 
                 function(aMessage) {
@@ -850,7 +849,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                " of type " + aMessage.type + "\n\n");
                     }
 
-                    var listHash;
+                    const caller = this.callerObject;
 
                     if (aMessage.type == aMessage.RES_SEARCH_ENTRY) {
                         if (DEBUG) {
@@ -859,90 +858,55 @@ nsLDAPMessageRDFDelegateFactory.prototype =
                                  this.outer.Value + "\n\n");
                         }
 
-                        if (this.firstResult) {
-                            //this.callerObject.beginUpdateBatch();
-                            this.firstResult = false;
-                        }
-
                         // XXX (pvdb) Should get this out of nsILDAPMessage
                         var newURL = "ldap://" + url.host;
                         newURL += (url.port == "" ? "" : ":" + url.port);
                         newURL += ("/" + aMessage.dn + "??base");
                         var newResource = 
-                            this.callerObject.mRdfSvc.GetResource(newURL);
+                            caller.mRdfSvc.GetResource(newURL);
+
+                        // Add the LDAP message for the new resource in our
+                        // messages hashlist. We do this before adding it to
+                        // a query result array (when applicable), so that
+                        // when we onAssert this as a result for a query
+                        // returning multiple results, it is already cached.
+                        // If we wouldn't do this here, we'd start another
+                        // query for this resource.
+                        var messageHash = caller.mMessagesHash;
+                        if (!messageHash.hasOwnProperty(newURL)) {
+                            messageHash[newURL] = aMessage;
+                        }
+
                         if (aKey == "messagelist.ldap") {
-                            listHash = this.callerObject.mMessagesListHash;
+                            // Add the LDAP message to the result array for
+                            // the query resource and onAssert the result
+                            // as a child of the query resource.
+                            var listHash = caller.mMessagesListHash;
                             if (!listHash.hasOwnProperty(this.outer.Value)) {
+                                // No entry for the query resource in the
+                                // results hashlist, let's create one.
                                 listHash[this.outer.Value] = Components.classes
                                     ["@mozilla.org/supports-array;1"].
                                     createInstance(
                                        Components.interfaces.nsISupportsArray);
                             }
-                            //dump("**** adding "+newResource+" ("+newResource.Value+") for "+this.outer.Value+"\n\n");
                             listHash[this.outer.Value].AppendElement(
                                 newResource);
-                        }
-                        
-                        var messageHash = this.callerObject.mMessagesHash;
-                        if (!messageHash.hasOwnProperty(newURL)) {
-                            messageHash[newURL] = aMessage;
-
-                            var attributesCount = {};
-                            var attributes = aMessage.getAttributes(
-                                attributesCount);
-                            for (var i = 0; i < attributesCount.value; i++) {
-
-                                // XXX (pvdb) Limit to cn and mail for now
-                                if (attributes[i] == "cn" || 
-                                    attributes[i] == "mail") { 
-                                    var valuesCount = {};
-                                    var values =  aMessage.getValues(
-                                        attributes[i], valuesCount);
-                                    var property = this.callerObject.mRdfSvc.
-                                        GetResource(LDAPATTR_NAMESPACE_URI + 
-                                                    attributes[i]);
-
-                                    for (var j = 0; j < valuesCount.value; 
-                                         j++) {
-
-                                        var attributeValue = 
-                                            this.callerObject.mRdfSvc.
-                                                GetLiteral(values[j]);
-                                        this.callerObject.mLDAPDataSource.
-                                            onAssert(this.callerObject.
-                                                         mLDAPDataSource, 
-                                                     newResource, property, 
-                                                     attributeValue);
-
-                                    } // XXX (pvdb)
-                                }
-                            }
+                            caller.mLDAPDataSource.onAssert(
+                                caller.mLDAPDataSource, this.outer,
+                                caller.kNC_child, newResource);
+                        } else if (aKey == "message.ldap") {
+                            // XXX - we need to onAssert this resource. However,
+                            // we need to know somehow what the caller wanted
+                            // to use this delegate for, so that we can limit
+                            // the onAssert to what was asked for. This might be
+                            // tricky, as we'd need to keep track of multiple
+                            // "questions" coming in while the LDAP server
+                            // hasn't responded yet.
                         }
                     }
                     else if (aMessage.type == aMessage.RES_SEARCH_RESULT) {
-                        listHash = this.callerObject.mMessagesListHash;
-                        if (listHash.hasOwnProperty(this.outer.Value)
-                           && (listHash[this.outer.Value].Count() == 1)
-                           && (listHash[this.outer.Value].GetElementAt(0)
-                                   .Value == this.outer.Value)) {
-                            delete listHash[this.outer.Value];
-                        }
-                        delete this.callerObject.mInProgressHash[
-                            this.outer.Value];
-                        if (listHash.hasOwnProperty(this.outer.Value)) {
-                            var aArray = listHash[this.outer.Value];
-                            for (var count = 0; count < aArray.Count(); 
-                                 count++) {
-                                newResource = aArray.GetElementAt(count);
-                                this.callerObject.mLDAPDataSource.onAssert(
-                                    this.callerObject.mLDAPDataSource, 
-                                    this.outer, this.callerObject.kNC_child, 
-                                    newResource);
-                            }
-                        }
-                        if (!this.firstResult) {
-                            //this.callerObject.endUpdateBatch();
-                        }
+                        delete caller.mInProgressHash[this.outer.Value];
                     }
                 }
 
@@ -951,22 +915,21 @@ nsLDAPMessageRDFDelegateFactory.prototype =
 
         // end of closure decls; the CreateDelegate code proper begins below
 
+        // XXX - We need to keep track of queries that are in progress for a
+        // message too (cf. mInProgressHash for messagelist's).
+        //
         if (DEBUG) {
             dump("GetDelegate() called with args: \n\t" + aOuter.Value + 
              "\n\t" + aKey + "\n\t" + aIID + "\n\n");
         }
 
         if (aKey == "messagelist.ldap") {
-            if (this.mMessagesListHash.hasOwnProperty(aOuter.Value) &&
-                !this.mInProgressHash.hasOwnProperty(aOuter.Value)) {
-
-                    return (this.mMessagesListHash[aOuter.Value].
+            if (this.mMessagesListHash.hasOwnProperty(aOuter.Value)) {
+                return (this.mMessagesListHash[aOuter.Value].
                             QueryInterface(aIID));
             }
         } else if (aKey == "message.ldap") {
             if (this.mMessagesHash.hasOwnProperty(aOuter.Value)) {
-                // dump("**** returning "+this.mMessagesHash[aOuter.Value].dn+" for "+aOuter.Value+"\n\n");
-
                 return (this.mMessagesHash[aOuter.Value].QueryInterface(aIID));
             }
         }
@@ -977,6 +940,7 @@ nsLDAPMessageRDFDelegateFactory.prototype =
             var url = Components.classes["@mozilla.org/network/ldap-url;1"]
                       .createInstance(Components.interfaces.nsILDAPURL);
             url.spec = aOuter.Value;
+
             // make sure that this if this URL is for a messagelist, it 
             // represents something other than a base search
             //
