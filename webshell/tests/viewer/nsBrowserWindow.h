@@ -29,6 +29,7 @@
 #include "nsVoidArray.h"
 #include "nsCRT.h"
 #include "prtime.h"
+#include "nsFileSpec.h"
 
 #include "nsIXPBaseWindow.h"
 #include "nsPrintSetupDialog.h"
@@ -217,7 +218,7 @@ public:
   nsIWidget* mWindow;
   nsIWebShell* mWebShell;
 
-  nsString mOpenFileDirectory;
+  nsFileSpec mOpenFileDirectory;
 
   PRTime mLoadStartTime;
   PRBool mShowLoadTimes;

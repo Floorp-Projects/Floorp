@@ -721,8 +721,8 @@ nsBrowserWindow::GoTo(const PRUnichar* aURL,const char* aCommand)
 }
 
 
-static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
-					  nsString* aFileName, nsString* aDisplayDirectory)
+static PRBool GetFileFromFileSelector(nsIWidget* aParentWindow,
+					  nsFileSpec& aFileSpec, nsFileSpec& aDisplayDirectory)
 {
   PRBool selectedFileName = PR_FALSE;
   nsIFileWidget *fileWidget;
@@ -740,7 +740,8 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
                           "*.gif; *.jpg; *.jpeg; *.png",
                           "*.*"};
     fileWidget->SetFilterList(5, titles, filters);
-    fileWidget->SetDisplayDirectory(*aDisplayDirectory);
+
+    fileWidget->SetDisplayDirectory(aDisplayDirectory);
     fileWidget->Create(aParentWindow,
 		       title,
 		       eMode_load,
@@ -749,11 +750,11 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
 
     PRUint32 result = fileWidget->Show();
     if (result) {
-      fileWidget->GetFile(*aFileName);
+      fileWidget->GetFile(aFileSpec);
       selectedFileName = PR_TRUE;
     }
  
-    fileWidget->GetDisplayDirectory(*aDisplayDirectory);
+    fileWidget->GetDisplayDirectory(aDisplayDirectory);
     NS_RELEASE(fileWidget);
   }
 
@@ -763,10 +764,10 @@ static PRBool GetFileNameFromFileSelector(nsIWidget* aParentWindow,
 void
 nsBrowserWindow::DoFileOpen()
 {
-  nsAutoString fileName;
-  if (GetFileNameFromFileSelector(mWindow, &fileName, &mOpenFileDirectory)) {
-    nsAutoString fileURL;
-    BuildFileURL(fileName.GetUnicode(), fileURL);
+  nsFileSpec fileSpec;
+  if (GetFileFromFileSelector(mWindow, fileSpec, mOpenFileDirectory)) {
+	nsAutoString fileURL;
+    BuildFileURL(nsString(fileSpec.GetNativePathCString()).GetUnicode(), fileURL);
     // Ask the Web widget to load the file URL
     mWebShell->LoadURL(fileURL.GetUnicode());
     Show();
