@@ -304,8 +304,9 @@ nsresult nsPop3Sink::WriteLineToMailbox(char *buffer)
 nsresult
 nsPop3Sink::IncorporateComplete(void* closure)
 {
-    if (m_outFileStream)
-        *m_outFileStream << LINEBREAK;
+	WriteLineToMailbox(LINEBREAK);
+//    if (m_outFileStream)
+//        *m_outFileStream << LINEBREAK;
 
 #ifdef DEBUG
     printf("Incorporate message complete.\n");
