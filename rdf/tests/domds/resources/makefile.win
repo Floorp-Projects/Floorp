@@ -17,7 +17,7 @@
 
 DEPTH=..\..\..\..
 MODULE=rdfdomds
-SAMPLES_DIR = $(DIST)/bin/res/samples/rdf
+SAMPLES_DIR = $(DIST)/bin/chrome/domviewer/chrome/content/default
 
 include <$(DEPTH)\config\rules.mak>
 

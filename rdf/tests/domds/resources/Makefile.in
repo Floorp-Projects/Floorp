@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= rdfdomds
 
-SAMPLES_DIR	= $(DIST)/bin/res/samples/rdf
+SAMPLES_DIR	= $(DIST)/bin/chrome/domviewer/content/default
 
 RESOURCE_SAMPLES = \
 		DOMDataSourceViewer.xul \
