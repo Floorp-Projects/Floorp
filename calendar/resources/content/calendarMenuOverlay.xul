@@ -92,7 +92,8 @@
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain();" /> 
     <commandset id="tasksCommands"/>
   </commandset>
-
+  
+  
   <!-- Menu -->
   <menubar id="main-menubar" class="chromeclass-menubar">
    <menu id="menu_File">                                                                                                                                          
@@ -111,7 +112,8 @@
       <menupopup id="mppEdit">
          <menuitem id="calendar-edit-preferences" label="Preferences..." oncommand="launchPreferences()"/>                                                     
       </menupopup>                                                                                                                                                 
-   </menu><menu id="tasksMenu"/>
+   </menu>
+   <menu id="windowMenu"/>
   
    <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
 </menubar>
