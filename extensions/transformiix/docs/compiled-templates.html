@@ -10,6 +10,9 @@
       .required {
         font-weight: bold;
       }
+      .TODO {
+        color: red;
+      }
     </style>
   </head>
 
@@ -129,8 +132,10 @@
       </dl>
     </div>
 
-    <h3><a name="attribute-set">xsl:attribute-set</a>(tle)</h3>
-    <div class="section">
+    <h3><a name="attribute-set">xsl:attribute-set</a> (tle)</h3>
+    <div class="section"><span class="TODO">attribute sets are merged,
+	we should pay attention that multiple stylesheet compilers
+	don't mix their content. Order of attributes is relevant, IMHO.</span>
       <dl>
 	<dt>members:</dt>
 	<dd>
@@ -140,7 +145,8 @@
 	  </dl>
 	</dd>
 	<dt>do()</dt>
-	<dd>part of <a href="#import-frame">import frame</a></dd>
+	<dd>merging and stuff needed in the global stylesheet object,
+	  (NOT part of <a href="#import-frame">import frame).</a></dd>
       </dl>
     </div>
 
@@ -189,6 +195,70 @@
 	  value and calls ::comment() in the output handler</dd>
       </dl>
     </div>
+
+    <h3><a name="copy">xsl:copy</a></h3>
+    <div class="section">
+      <dl>
+	<dt>members:</dt>
+	<dd></dd>
+	<dt>do()</dt>
+	<dd>xsl:copy has a <a
+	    href="#attribute-sets">use-attribute-sets</a> attribute,
+	  <span class="TODO">TODO</span></dd>
+      </dl>
+    </div>
+
+    <h3><a name="copy-of">xsl:copy-of</a></h3>
+    <div class="section">
+      <dl>
+	<dt>members:</dt>
+	<dd>
+	  <dl>
+	    <dt class="required">select</dt>
+	    <dd>an expression to be added to the result tree</dd>
+	  </dl>
+	</dd>
+	<dt>do()</dt>
+	<dd>the value of the result is added to the result tree. If
+	  the result is a RTF, the RTF is just fed into the output
+	  handler, if the result is not a nodeset, it is converted
+	  into a string and ::characters is called on the output
+	  handler. For nodesets, the result is a list of source nodes
+	  which have to be interpreted, for example thru the
+	  stylesheet compiler. This has be xslt-blind, that is, xslt
+	  elements in the source must be treated as LRE elements and
+	  copied into the result, instead of generating XSLT
+	  instructions. <span class="TODO">is this all?</span></dd>
+      </dl>
+    </div>
+
+    <h3><a name="decimal-format">xsl:decimal-format</a> (tle)</h3>
+    <div class="section">xsl:decimal-format is stored in the global
+      stylesheet object, import precedence <b>does not</b> apply.</div>
+
+    <h3><a name="element">xsl:element</a></h3>
+    <div class="section">
+      <dl>
+	<dt>members:</dt>
+	<dd>
+	  <dl>
+	    <dt class="required">name</dt> <dd>AVT with QName
+	      value</dd>
+	    <dt>namespace</dt> <dd>AVT with URI value</dd>
+	  </dl>
+	</dd>
+	<dt>do()</dt>
+	<dd>xsl:element has <a
+	    href="#attribute-sets">attribute-set</a>s, <span
+	    class="TODO">todo</span>. Other than that, this just
+	  generates an element. Note that the attributes of this
+	  element have to be discarded, if the name AVT does not
+	  evaluate to a QName.</dd>
+      </dl>
+    </div>
+
+    <h3><a name="fallback">xsl:fallback</a></h3>
+    <div class="section"><span class="TODO">do we care?</span></div>
 
     <h3><a name=""></a></h3>
     <div class="section">
