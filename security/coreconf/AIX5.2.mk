@@ -30,7 +30,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-# Config stuff for AIX5.1
+# Config stuff for AIX5.2
 #
 
 include $(CORE_DEPTH)/coreconf/AIX.mk

@@ -45,9 +45,9 @@ ifeq ($(USE_64), 1)
 endif
 OS_CFLAGS	+= -DAIX4_3
 DSO_LDOPTS	= -brtl -bM:SRE -bnoentry
-MKSHLIB		= $(LD) $(DSO_LDOPTS) -lsvld -L/usr/lpp/xlC/lib -lc -lm
+MKSHLIB		= $(LD) $(DSO_LDOPTS) -blibpath:/usr/lib:/lib -lc -lm
 
-OS_LIBS		+= -L/usr/lpp/xlC/lib -lc -lm
+OS_LIBS		+= -blibpath:/usr/lib:/lib -lc -lm
 ifdef MAPFILE
 DSO_LDOPTS      += -bexport:$(MAPFILE)
 else
