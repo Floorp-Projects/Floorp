@@ -299,14 +299,24 @@ function CheckForWallet()
 // perform a wallet action
 function WalletAction( action ) 
 {
+
+  if (action == "password") {
+    /* process "password" independent of appcore so it can be called from mail */
+    wallet = Components.classes['component://netscape/wallet'];
+    wallet = wallet.getService();
+    wallet = wallet.QueryInterface(Components.interfaces.nsIWalletService);
+    wallet.WALLET_ChangePassword();
+    return;
+  }
+
   if( appCore ) {
     switch( action ) {
       case "safefill":
         appCore.walletPreview(window, window.content);
         break;
-      case "password":
-        appCore.walletChangePassword();
-        break;
+//    case "password":
+//      appCore.walletChangePassword();
+//      break;
       case "quickfill": 
         appCore.walletQuickFillin(window.content);
         break;

@@ -2860,6 +2860,9 @@ void WLLT_ChangePassword() {
 
   /* do nothing if password was never set */
   if (Wallet_KeySize() < 0) {
+    PRUnichar * message = Wallet_Localize("noPasswordToChange");
+    Wallet_Alert(message);
+    Recycle(message);
     return;
   }
 
