@@ -851,7 +851,7 @@ int32 JS::BigInt::quoRem(const BigInt &S)
     uint32 si, z, zs;
 #endif
 
-    int32 n = int32(S.size);
+    uint32 n = S.size;
     ASSERT(size <= n && n);
     if (size < n)
         return 0;
@@ -888,7 +888,7 @@ int32 JS::BigInt::quoRem(const BigInt &S)
             bx = words;
             while (--bxe > bx && !*bxe)
                 --n;
-            size = uint32(n);
+            size = n;
         }
     }
     if (cmp(S) >= 0) {
@@ -921,7 +921,7 @@ int32 JS::BigInt::quoRem(const BigInt &S)
         if (!*bxe) {
             while (--bxe > bx && !*bxe)
                 --n;
-            size = uint32(n);
+            size = n;
         }
     }
     return int32(q);
