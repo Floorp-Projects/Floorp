@@ -519,6 +519,7 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
   // Now, insert it into the editor...
   nsCOMPtr<nsIHTMLEditor> htmlEditor (do_QueryInterface(m_editor));
   nsCOMPtr<nsIPlaintextEditor> textEditor (do_QueryInterface(m_editor));
+  nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
   m_editor->BeginTransaction();
   if ( (aQuoted) )
   {
@@ -531,7 +532,6 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
       m_editor->EndOfDocument();
     }
 
-    nsCOMPtr<nsIEditorMailSupport> mailEditor (do_QueryInterface(m_editor));
     if (!aBuf.IsEmpty() && mailEditor)
     {
       if (aHTMLEditor && !mCiteReference.IsEmpty())
@@ -610,7 +610,10 @@ nsMsgCompose::ConvertAndLoadComposeWindow(nsString& aPrefix,
     {
       if (!aBuf.IsEmpty())
       {
-        textEditor->InsertText(aBuf);
+        if (mailEditor)
+          mailEditor->InsertTextWithQuotations(aBuf);
+        else
+          textEditor->InsertText(aBuf);
         m_editor->EndOfDocument();
       }
 
