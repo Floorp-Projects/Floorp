@@ -129,7 +129,8 @@ nsOutputStream& nsOutputStream::operator << (char c)
 nsOutputStream& nsOutputStream::operator << (const char* s)
 //----------------------------------------------------------------------------------------
 {
-	write(s, strlen(s));
+	if (s)
+		write(s, strlen(s));
 	return *this;
 }
 
