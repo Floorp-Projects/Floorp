@@ -41,40 +41,40 @@ public:
         SPECIAL_BIT       = 0x10,
         TYPE_MASK         = 0xf,
 
-        I8          = 0,
-        I16         = 1,
-        I32         = 2,
-        I64         = 3,
-        U8          = 4,
-        U16         = 5,
-        U32         = 6,
-        U64         = 7,
-        FLOAT       = 8,
-        DOUBLE      = 9,
-        BOOL        = 10,
-        CHAR        = 11,
-        WCHAR       = 12,
-        VOID        = 13,
+        T_I8          = 0,
+        T_I16         = 1,
+        T_I32         = 2,
+        T_I64         = 3,
+        T_U8          = 4,
+        T_U16         = 5,
+        T_U32         = 6,
+        T_U64         = 7,
+        T_FLOAT       = 8,
+        T_DOUBLE      = 9,
+        T_BOOL        = 10,
+        T_CHAR        = 11,
+        T_WCHAR       = 12,
+        T_VOID        = 13,
 
-        P_I8        = IS_POINTER | 0,
-        P_I16       = IS_POINTER | 1,
-        P_I32       = IS_POINTER | 2,
-        P_I64       = IS_POINTER | 3,
-        P_U8        = IS_POINTER | 4,
-        P_U16       = IS_POINTER | 5,
-        P_U32       = IS_POINTER | 6,
-        P_U64       = IS_POINTER | 7,
-        P_FLOAT     = IS_POINTER | 8,
-        P_DOUBLE    = IS_POINTER | 9,
-        P_BOOL      = IS_POINTER | 10,
-        P_CHAR      = IS_POINTER | 11,
-        P_WCHAR     = IS_POINTER | 12,
-        P_VOID      = IS_POINTER | 13,
-        P_IID       = IS_POINTER | 14,
-        STRING      = IS_POINTER | 15,
+        T_P_I8        = IS_POINTER | 0,
+        T_P_I16       = IS_POINTER | 1,
+        T_P_I32       = IS_POINTER | 2,
+        T_P_I64       = IS_POINTER | 3,
+        T_P_U8        = IS_POINTER | 4,
+        T_P_U16       = IS_POINTER | 5,
+        T_P_U32       = IS_POINTER | 6,
+        T_P_U64       = IS_POINTER | 7,
+        T_P_FLOAT     = IS_POINTER | 8,
+        T_P_DOUBLE    = IS_POINTER | 9,
+        T_P_BOOL      = IS_POINTER | 10,
+        T_P_CHAR      = IS_POINTER | 11,
+        T_P_WCHAR     = IS_POINTER | 12,
+        T_P_VOID      = IS_POINTER | 13,
+        T_P_IID       = IS_POINTER | 14,
+        T_STRING      = IS_POINTER | 15,
 
-        INTERFACE     = 16,   /* SPECIAL_BIT | 0 */
-        INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
+        T_INTERFACE     = 16,   /* SPECIAL_BIT | 0 */
+        T_INTERFACE_IS  = 17    /* SPECIAL_BIT | 1 */
     };
 };
 
@@ -117,12 +117,12 @@ public:
     nsXPCType GetType() const {return type;}
     uint8 GetInterfaceIsArgNumber() const
     {
-        NS_PRECONDITION(type == nsXPCType::INTERFACE_IS,"not an interface_is");
+        NS_PRECONDITION(type == nsXPCType::T_INTERFACE_IS,"not an interface_is");
         return interface_is_arg_num;
     }
     nsIInterfaceInfo* GetInterface() const
     {
-        NS_PRECONDITION(type == nsXPCType::INTERFACE,"not an interface");
+        NS_PRECONDITION(type == nsXPCType::T_INTERFACE,"not an interface");
         return interface;
     }
 
