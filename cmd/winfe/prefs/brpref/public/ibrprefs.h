@@ -146,7 +146,6 @@ DECLARE_INTERFACE_(ISmartUpdatePrefs, IUnknown)
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
 
 	// IBrowserPrefs methods
-	STDMETHOD_(LONG,RegPack)(THIS) PURE;
     STDMETHOD_(LONG,Uninstall)(THIS_ char* regPackageName) PURE;
     STDMETHOD_(LONG,EnumUninstall)(THIS_ void** context, char* packageName,
                                     LONG len1, char*regPackageName, LONG len2) PURE;

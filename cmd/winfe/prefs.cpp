@@ -1862,7 +1862,6 @@ class CSmartUpdatePrefs : public ISmartUpdatePrefs {
 		STDMETHODIMP_(ULONG) Release();
 		
         // ISmartUpdatePrefs methods
-	    STDMETHODIMP_(LONG) RegPack();
         STDMETHODIMP_(LONG) Uninstall(char* regPackageName);
         STDMETHODIMP_(LONG) EnumUninstall(void** context, char* packageName,
                                     LONG len1, char*regPackageName, LONG len2);
@@ -1909,12 +1908,6 @@ CSmartUpdatePrefs::Release()
 	}
 
 	return m_uRef;
-}
-
-STDMETHODIMP_(LONG)
-CSmartUpdatePrefs::RegPack()
-{
-	return VR_PackRegistry();
 }
 
 STDMETHODIMP_(LONG)

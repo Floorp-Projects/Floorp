@@ -663,25 +663,6 @@ BOOL
 CSmartUpdatePrefs::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
 {
 	if (id == IDC_BUTTON1 && notifyCode == BN_CLICKED) {
-       	assert(m_pObject);
-		if (m_pObject) {
-            LPADVANCEDPREFS lpAdvancedPrefs;
-
-            if (SUCCEEDED(m_pObject->QueryInterface(IID_IAdvancedPrefs, (void **)&lpAdvancedPrefs))) {
-
-			    LPSMARTUPDATEPREFS lpSmartUpdatePrefs;
-
-			    if (SUCCEEDED(lpAdvancedPrefs->QueryInterface(IID_ISmartUpdatePrefs, (void **)&lpSmartUpdatePrefs))) {
-				    
-				    lpSmartUpdatePrefs->RegPack();
-				    lpSmartUpdatePrefs->Release();
-			    }
-            }
-		}
-
-		return TRUE;
-
-	} else if (id == IDC_BUTTON2 && notifyCode == BN_CLICKED) {
         LPSU_PACKAGEINFO packageInfo = NULL;
 	    HWND			 hList = GetDlgItem(m_hwndDlg, IDC_LIST1);
 	    int				 nIndex = 0;
