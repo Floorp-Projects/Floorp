@@ -33,7 +33,6 @@
 #include "nsISupports.h"
 #include "nsHTMLAtoms.h"
 #include "nsIImage.h"
-#include "nsHTMLImage.h"
 #include "nsStyleUtil.h"
 #include "nsDOMEvent.h"
 #include "nsStyleConsts.h"
