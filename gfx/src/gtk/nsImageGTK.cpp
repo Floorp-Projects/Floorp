@@ -24,7 +24,7 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
-#include "scale.h"
+#include "imgScaler.h"
 
 #include "nsImageGTK.h"
 #include "nsRenderingContextGTK.h"
