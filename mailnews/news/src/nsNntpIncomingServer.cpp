@@ -210,7 +210,7 @@ nsNntpIncomingServer::GetNewsrcRootPath(nsIFileSpec **aNewsrcRootPath)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
     
-    PRBool havePref;
+    PRBool havePref = PR_FALSE;
     nsCOMPtr<nsIFile> localFile;
     nsCOMPtr<nsILocalFile> prefLocal;
     rv = prefs->GetFileXPref(PREF_MAIL_NEWSRC_ROOT, getter_AddRefs(prefLocal));
