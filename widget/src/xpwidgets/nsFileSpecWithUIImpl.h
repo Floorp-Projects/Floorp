@@ -166,7 +166,10 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD Touch ()
 		{ return mBaseFileSpec ? mBaseFileSpec->Touch() : NS_ERROR_NOT_INITIALIZED; }
        
-	/* void rename ([const] in string newLeafName); */
+	/* void truncate (in long aNewLength); */
+	NS_IMETHOD Truncate(PRInt32 aNewLength)
+		{ return mBaseFileSpec ? mBaseFileSpec->Truncate(aNewLength) : NS_ERROR_NOT_INITIALIZED; }
+
 	NS_IMETHOD Rename(const char *newLeafName)
 		{ return mBaseFileSpec ? mBaseFileSpec->Rename(newLeafName) : NS_ERROR_NOT_INITIALIZED; }
 
