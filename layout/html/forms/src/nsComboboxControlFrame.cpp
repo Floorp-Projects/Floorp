@@ -2047,6 +2047,9 @@ nsComboboxControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     }
 
     btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::type, NS_LITERAL_STRING("button"), PR_FALSE);
+    // Set tabindex="-1" so that the button is not tabbable
+    btnContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::tabindex,
+                        NS_LITERAL_STRING("-1"), PR_FALSE);
 
     aChildList.AppendElement(btnContent);
   }
