@@ -183,7 +183,21 @@ nsOutlookCompose::~nsOutlookCompose()
 	NS_IF_RELEASE( m_pMsgSend);
 	NS_IF_RELEASE( m_pListener);
 	NS_IF_RELEASE( m_pMsgFields);
-	NS_IF_RELEASE( m_pIdentity);
+	if (m_pIdentity) {	
+		nsresult rv = m_pIdentity->ClearAllValues();
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to clear values");
+		if (NS_FAILED(rv)) return;
+
+		NS_WITH_PROXIED_SERVICE(nsIMsgAccountManager, accMgr, kMsgAccountMgrCID, NS_UI_THREAD_EVENTQ, &rv);
+        NS_ASSERTION(NS_SUCCEEDED(rv) && accMgr,"failed to get account manager");
+		if (NS_FAILED(rv) || !accMgr) return;
+
+		rv = accMgr->RemoveIdentity(m_pIdentity);
+        NS_ASSERTION(NS_SUCCEEDED(rv),"failed to remove identity");
+		if (NS_FAILED(rv)) return;
+
+	    NS_RELEASE(m_pIdentity);
+	}
 }
 
 nsresult nsOutlookCompose::CreateIdentity( void)
