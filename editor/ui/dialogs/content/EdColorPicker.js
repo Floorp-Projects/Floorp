@@ -201,7 +201,7 @@ function SetCurrentColor(color)
 {
   // TODO: Validate color?
   if(!color) color = "";
-  gColor = color.trimString().toLowerCase();
+  gColor = TrimString(color).toLowerCase();
   if (gColor == "mixed")
     gColor = "";
   gDialog.ColorInput.value = gColor;
@@ -211,8 +211,8 @@ function SetCurrentColor(color)
 function SetColorSwatch()
 {
   // TODO: DON'T ALLOW SPACES?
-  var color = gDialog.ColorInput.value.trimString();
-  if (color.length > 0)
+  var color = TrimString(gDialog.ColorInput.value);
+  if (color)
   {
     gDialog.ColorSwatch.setAttribute("style",("background-color:"+color));
     gDialog.ColorSwatch.removeAttribute("default");
@@ -238,7 +238,7 @@ function ValidateData()
   else
     gColor = gDialog.ColorInput.value;
   
-  gColor = gColor.trimString().toLowerCase();
+  gColor = TrimString(gColor).toLowerCase();
 
   // TODO: Validate the color string!
 

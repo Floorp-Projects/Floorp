@@ -265,7 +265,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   // First make a string with just background color
   var styleValue = backColorStyle+previewBGColor+";";
 
-  var image = gDialog.BackgroundImageInput.value.trimString();
+  var image = TrimString(gDialog.BackgroundImageInput.value);
   if (image)
   {
     if (IsValidImage(image))

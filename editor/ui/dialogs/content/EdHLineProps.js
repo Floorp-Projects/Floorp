@@ -84,7 +84,9 @@ function InitDialog()
   // This sets contents of menulist (adds pixel and percent menuitems elements)
   gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
 
-  align = globalElement.getAttribute("align").toLowerCase();
+  align = globalElement.getAttribute("align");
+  if (align)
+    align = align.toLowerCase();
 
   gDialog.centerAlign.checked = (align == "center" || !align);
   gDialog.rightAlign.checked  = (align == "right");

@@ -94,7 +94,7 @@ function onOK()
   editorShell.EndBatchChanges();
 
   if(titleWasEdited) 
-    window.opener.newTitle = gDialog.TitleInput.value.trimString();
+    window.opener.newTitle = TrimString(gDialog.TitleInput.value);
 
   window.opener.ok = true;
   window.opener.exportToText = gDialog.exportToText.checked;

@@ -120,7 +120,7 @@ function InitDialog()
 {
   // Get image from document
   backgroundImage = globalElement.getAttribute(backgroundStr);
-  if (backgroundImage.length)
+  if (backgroundImage)
   {
     gDialog.BackgroundImageInput.value = backgroundImage;
     gDialog.ColorPreview.setAttribute(styleStr, backImageStyle+backgroundImage+");");
@@ -345,7 +345,7 @@ function ValidateAndPreviewImage(ShowErrorMessage)
   var styleValue = backColorStyle+previewBGColor+";";
 
   var retVal = true;
-  var image = gDialog.BackgroundImageInput.value.trimString();
+  var image = TrimString(gDialog.BackgroundImageInput.value);
   if (image)
   {
     if (IsValidImage(image))

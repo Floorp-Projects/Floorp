@@ -133,7 +133,7 @@ function ValidateNumber(inputWidget, listWidget, minVal, maxVal, element, attNam
   var maxLimit = maxVal;
   var isPercent = false;
 
-  var numString = inputWidget.value.trimString();
+  var numString = TrimString(inputWidget.value);
   if (numString)
   {
     if (listWidget)
@@ -331,10 +331,6 @@ function TrimString(string)
   return string.replace(/(^\s+)|(\s+$)/g, '')
 }
 
-String.prototype.trimString = function() {
-  return this.replace(/(^\s+)|(\s+$)/g, '')
-}
-
 function IsWhitespace(string)
 {
   return /^\s/.test(string);
@@ -367,7 +363,8 @@ function TruncateStringAtWordEnd(string, maxLength, addEllipses)
 // Replace all whitespace characters with supplied character
 // E.g.: Use charReplace = " ", to "unwrap" the string by removing line-end chars
 //       Use charReplace = "_" when you don't want spaces (like in a URL)
-function ReplaceWhitespace(string, charReplace) {
+function ReplaceWhitespace(string, charReplace)
+{
   return string.replace(/(^\s+)|(\s+$)/g,'').replace(/\s+/g,charReplace)
 }
 
@@ -865,7 +862,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
 // Test for valid image by sniffing out the extension
 function IsValidImage(imageName)
 {
-  var image = imageName.trimString();
+  var image = TrimString(imageName);
   if ( !image )
     return false;
 
@@ -1041,8 +1038,12 @@ function GetHTTPEquivMetaElement(name)
         for (var i = 0; i < metaNodes.length; i++)
         {
           var metaNode = metaNodes.item(i);
-          if (metaNode && metaNode.getAttribute("http-equiv").toLowerCase() == name)
-            return metaNode;
+          if (metaNode)
+          {
+            var httpEquiv = metaNode.getAttribute("http-equiv");
+            if (httpEquiv && httpEquiv.toLowerCase() == name)
+              return metaNode;
+          }
         }
       }
     }

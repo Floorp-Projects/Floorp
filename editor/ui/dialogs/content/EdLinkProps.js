@@ -330,7 +330,7 @@ function FillListboxes()
 function doEnabling()
 {
   // We disable Ok button when there's no href text only if inserting a new link
-  var enable = insertNew ? (gDialog.hrefInput.value.trimString().length > 0) : true;
+  var enable = insertNew ? (TrimString(gDialog.hrefInput.value).length > 0) : true;
 
   SetElementEnabledById( "ok", enable);
 }
@@ -426,7 +426,7 @@ function UnselectHeadings()
 // Set attributes on globalElement so they can be accessed by AdvancedEdit()
 function ValidateData()
 {
-  href = gDialog.hrefInput.value.trimString();
+  href = TrimString(gDialog.hrefInput.value);
   if (href)
   {
     // Set the HREF directly on the editor document's anchor node
