@@ -609,8 +609,6 @@ protected:
   // Services are not nsCOMPtr friendly
   nsIPref* mPrefs;
 
-  //Document 'SaveAs' charset
-  nsString						mDocCharset;
   static PRInt32 gInstanceCount;
 
   friend PRBool NSCanUnload(nsISupports* serviceMgr);

@@ -149,7 +149,6 @@ nsEditor::nsEditor()
 ,  mDocDirtyState(-1)
 ,  mDoc(nsnull)
 ,  mPrefs(nsnull)
-,  mDocCharset("ISO-8859-1")
 {
   //initialize member variables here
   NS_INIT_REFCNT();
@@ -415,7 +414,8 @@ NS_IMETHODIMP nsEditor::SaveDocument(PRBool saveAs, PRBool saveCopy)
   	}
   }
 
-  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML, mDocCharset);
+  nsAutoString useDocCharset("");
+  rv = diskDoc->SaveFile(&docFileSpec, replacing, saveCopy, nsIDiskDocument::eSaveFileHTML,useDocCharset);
   
   if (NS_FAILED(rv))
   {
@@ -729,19 +729,48 @@ nsEditor::GetDocumentModified(PRBool *outDocModified)
 NS_IMETHODIMP
 nsEditor::GetDocumentCharacterSet(PRUnichar** characterSet)
 {
-	*characterSet = mDocCharset.ToNewUnicode();
-	return NS_OK;
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> presShell;
+  nsString  character_set;
+
+  if (characterSet==nsnull) return NS_ERROR_NULL_POINTER;
+
+  rv = GetPresShell(getter_AddRefs(presShell));
+  if (NS_SUCCEEDED(rv))
+  {
+    presShell->GetDocument(getter_AddRefs(doc));
+    if (doc ) {
+		rv = doc->GetDocumentCharacterSet(character_set);
+		if (NS_SUCCEEDED(rv)) *characterSet=character_set.ToNewUnicode();
+		return rv;
+	}
+  }
+
+  return rv;
+
 }
 
 NS_IMETHODIMP
 nsEditor::SetDocumentCharacterSet(const PRUnichar* characterSet)
 {
-	if (characterSet!=NULL) {
-		mDocCharset = characterSet;
-		return NS_OK;
-	}
+  nsresult rv;
+  nsCOMPtr<nsIDocument> doc;
+  nsCOMPtr<nsIPresShell> presShell;
+  nsString character_set = characterSet;
 
-	return NS_ERROR_FAILURE;
+  if (characterSet==nsnull) return NS_ERROR_NULL_POINTER;
+
+  rv = GetPresShell(getter_AddRefs(presShell));
+  if (NS_SUCCEEDED(rv))
+  {
+    presShell->GetDocument(getter_AddRefs(doc));
+    if (doc ) {
+		return doc->SetDocumentCharacterSet(character_set);
+	}
+  }
+
+  return rv;
 }
 
 /*
@@ -2883,10 +2912,9 @@ nsEditor::GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
 NS_IMETHODIMP 
 nsEditor::SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList *aTextRangeList)
 {
-	IMETextTxn		*txn;
-	nsresult		result;
-
-	result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&txn); // insert at the current selection
+	IMETextTxn			*txn;
+	
+	nsresult result = CreateTxnForIMEText(aStringToInsert,aTextRangeList,&txn); // insert at the current selection
 	if ((NS_SUCCEEDED(result)) && txn)  {
 		BeginUpdateViewBatch();
 		result = Do(txn);
