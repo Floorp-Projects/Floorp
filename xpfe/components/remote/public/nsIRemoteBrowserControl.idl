@@ -1,3 +1,4 @@
+/*
  * -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
@@ -18,21 +19,14 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Shane Culpepper <pepper@netscape.com>
  */
 
-/*
-
-    The interface to the Remote Browser Component.
-
-*/
+/* The interface to the Remote Browser Component.  */
 
 #include "nsISupports.idl"
 
-%{ C++
-#include "nscore.h" // for PRUnichar
-%}
-
-[scriptable, uuid(BCE83AE2-1DD1-11B2-BC0E-A9E997E21AD2)]
+[scriptable, uuid(048afcc8-1dd2-11b2-bd86-a45b24375deb)]
 interface nsIRemoteBrowserControl : nsISupports
 {
 
@@ -72,11 +66,7 @@ interface nsIRemoteBrowserControl : nsISupports
 
 };
 
-%{ C++
-/* {BCE83AE2-1DD1-11B2-BC0E-A9E997E21AD2} */
-#define NS_REMOTEBROWSERCONTROL_CID \
-{ 0xbce83ae2, 0x1dd1, 0x11b2, { 0xbc, 0x0e, 0xa9, 0xe9, 0x97, 0xe2, 0x1a, 0xd2} }
-
+%{C++
 #define NS_REMOTEBROWSERCONTROL_PROGID \
     "component://netscape/browser/remote-browser-control"
 %}
