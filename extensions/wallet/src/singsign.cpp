@@ -2277,8 +2277,10 @@ SINGSIGN_RememberSignonData (char* URLName, nsVoidArray * signonData)
     if (j<signonData->Count()) {
       data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
       if (si_OkToSave(URLName, data2->value /* username */)) {
-        SI_LoadSignonData(PR_TRUE);
-        si_PutData(URLName, signonData, PR_TRUE);
+        if ((SI_LoadSignonData(PR_TRUE) == 0) && (Wallet_KeySize() >= 0)) {
+          /* user succeeded in unlocking the database */
+          si_PutData(URLName, signonData, PR_TRUE);
+        }
       }
     }
   } else if (passwordCount == 2) {
@@ -2415,7 +2417,7 @@ SINGSIGN_RestoreSignonData (char* URLName, PRUnichar* name, PRUnichar** value, P
   if (user) {
     SI_LoadSignonData(PR_TRUE); /* this destroys user so need to recaculate it */
     user = si_GetUser(URLName, PR_FALSE, nsAutoString(name));
-    if (user) { /* this should always be true but just in case */
+    if (user) { /* will be 0 if user failed to unlock database in SI_LoadSignonData above */
       PRInt32 dataCount = LIST_COUNT(user->signonData_list);
       for (PRInt32 i=0; i<dataCount; i++) {
         data = NS_STATIC_CAST(si_SignonDataStruct*, user->signonData_list->ElementAt(i));
@@ -2453,8 +2455,10 @@ si_RememberSignonDataFromBrowser(const char* URLName, nsAutoString username, nsA
   signonData->AppendElement(data2);
 
   /* Save the signon data */
-  SI_LoadSignonData(PR_TRUE);
-  si_PutData(URLName, signonData, PR_TRUE);
+  if ((SI_LoadSignonData(PR_TRUE) == 0) && (Wallet_KeySize() >= 0)) {
+    /* user succeeded in unlocking the database */
+    si_PutData(URLName, signonData, PR_TRUE);
+  }
 
   /* Deallocate */
   delete data1;
@@ -2493,6 +2497,7 @@ si_RestoreOldSignonDataFromBrowser
     user = si_GetUser(URLName, pickFirstUser, nsAutoString("username"));
   }
   if (!user) {
+    /* user failed to unlock the database in SI_LoadSignonData above */
     si_unlock_signon_list();
     return;
   }
