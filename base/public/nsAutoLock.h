@@ -19,7 +19,7 @@
 
 /*
 
-  A stack-based lock object that makes using PRMontior a bit more
+  A stack-based lock object that makes using PRLock a bit more
   convenient. It acquires the monitor when constructed, and releases
   it when it goes out of scope.
 
@@ -39,13 +39,13 @@
         }
 
         void ThreadSafeMethod(void) {
-            // we're don't hold the monitor yet...
+            // we're don't hold the lock yet...
 
             nsAutoLock lock(mLock);
             // ...but now we do.
 
             // we even can do wacky stuff like return from arbitrary places w/o
-            // worrying about forgetting to release the monitor
+            // worrying about forgetting to release the lock
             if (some_weird_condition)
                 return;
 
@@ -53,14 +53,14 @@
         }
 
         void ThreadSafeBlockScope(void) {
-            // we're not in the monitor here...
+            // we're not in the lock here...
 
             {
                 nsAutoLock lock(mLock);
                 // but we are now, at least until the block scope closes
             }
 
-            // ...now we're not in the monitor anymore
+            // ...now we're not in the lock anymore
         }
     };
 
