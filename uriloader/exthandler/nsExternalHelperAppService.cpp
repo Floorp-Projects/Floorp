@@ -342,11 +342,11 @@ struct nsExtraMimeTypeEntry {
 static nsExtraMimeTypeEntry extraMimeEntries [] =
 {
 #if defined(VMS)
-  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary File", 0, 0 },
 #elif defined(XP_MAC) || defined (XP_MACOSX)// don't define .bin on the mac...use internet config to look that up...
-  { APPLICATION_OCTET_STREAM, "exe", "Binary Executable", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com", "Binary File", 0, 0 },
 #else
-  { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", 0, 0 },
+  { APPLICATION_OCTET_STREAM, "exe,com,bin", "Binary File", 0, 0 },
 #endif
   { APPLICATION_GZIP2, "gz", "gzip", 0, 0 },
   { "application/x-arj", "arj", "ARJ file", 0,0 },
@@ -2208,8 +2208,8 @@ NS_IMETHODIMP nsExternalHelperAppService::GetFromTypeAndExtension(const char *aM
     if (aFileExt && *aFileExt) {
       rv = GetMIMEInfoForExtensionFromDS(aFileExt, *_retval);
       LOG(("Data source: Via ext: retval 0x%08x\n", rv));
-      found = NS_SUCCEEDED(rv);
-      if (found && aMIMEType && *aMIMEType)
+      found = found || NS_SUCCEEDED(rv);
+      if (NS_SUCCEEDED(rv) && aMIMEType && *aMIMEType)
         (*_retval)->SetMIMEType(aMIMEType);
     }
   }
