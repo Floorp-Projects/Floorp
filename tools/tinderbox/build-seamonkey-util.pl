@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.101 $ ';
+$::UtilsVersion = '$Revision: 1.102 $ ';
 
 package TinderUtils;
 
@@ -955,7 +955,7 @@ sub run_all_tests {
 			$test_result = 'success';
 
 			print_log "TinderboxPrint:" .
-			  "<a href=\"http://tegu.mozilla.org/graph/xulwinopen/query.cgi?tbox=" .
+			  "<a title=\"Avg time to open 10 browser windows\" href=\"http://tegu.mozilla.org/graph/xulwinopen/query.cgi?tbox=" .
 				::hostname() . "&autoscale=0&days=0\">Txul:$open_time" . "ms</a>\n";
 
 			if($Settings::TestsPhoneHome) {
@@ -1051,7 +1051,7 @@ sub run_all_tests {
 		# print_log "\n\n  __avg_startuptime,$min_startuptime\n\n";
 		
 		my $min_startuptime_string = sprintf "%.2f", $min_startuptime/1000;
-		my $print_string = "\n\nTinderboxPrint:<a href=\"http://tegu.mozilla.org/graph/startup/query.cgi?tbox=" 
+		my $print_string = "\n\nTinderboxPrint:<a title=\"Best startup time out of 10 startups\"href=\"http://tegu.mozilla.org/graph/startup/query.cgi?tbox=" 
 		  . ::hostname() . "&autoscale=0&days=0\">Ts:" . $min_startuptime_string . "s</a>\n\n";
 		print_log "$print_string";
 
