@@ -417,7 +417,7 @@ function getStackTrace ()
 
     while (frame)
     {
-        var name = frame.functionName ? frame.functionName : "[anonymous]";
+        var name = frame.name ? frame.name : "[anonymous]";
         str += "\n" + name + "@" + frame.lineNumber;
         frame = frame.caller;
     }
