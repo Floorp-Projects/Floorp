@@ -49,6 +49,8 @@ protected:
                             // normally is argc/2.
   PRInt32        mArgc;     // This is argc;
   char **        mArgv;     // This is argv;
+
+  PRBool ArgsMatch(const char *lookingFor, const char *userGave);
 };
 
 #endif

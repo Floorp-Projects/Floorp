@@ -162,6 +162,26 @@ nsCmdLineService::GetProgramName(char ** aResult)
 
 }
 
+PRBool nsCmdLineService::ArgsMatch(const char *lookingFor, const char *userGave)
+{
+    if (!lookingFor || !userGave) return PR_FALSE;
+
+    if (!PL_strcasecmp(lookingFor,userGave)) return PR_TRUE;
+
+#ifdef XP_UNIX
+    /* on unix, we'll allow --mail for -mail */
+    if ((PL_strlen(lookingFor) > 0) && (PL_strlen(userGave) > 1)) {
+        if (!PL_strcasecmp(lookingFor+1,userGave+2) && (lookingFor[0] == '-') && (userGave[0] == '-') && (userGave[1] == '-')) return PR_TRUE;
+    }
+#endif
+#ifdef XP_PC
+    /* on windows /mail is the same as -mail */
+    if ((PL_strlen(lookingFor) > 0) && (PL_strlen(userGave) > 0)) {
+        if (!PL_strcasecmp(lookingFor+1,userGave+1) && (lookingFor[0] == '-') && (userGave[0] == '/')) return PR_TRUE;
+    }
+#endif 
+    return PR_FALSE;
+}
 
 NS_IMETHODIMP
 nsCmdLineService::GetCmdLineValue(const char * aArg, char ** aResult)
@@ -174,7 +194,7 @@ nsCmdLineService::GetCmdLineValue(const char * aArg, char ** aResult)
 
    for (int i = 0; i<mArgCount; i++)
    {
-     if (!PL_strcasecmp(aArg, (char *) mArgList.ElementAt(i))) {
+     if (ArgsMatch(aArg,(char *) mArgList.ElementAt(i))) {
        *aResult = (char *)mArgValueList.ElementAt(i);
         return NS_OK;
      }
