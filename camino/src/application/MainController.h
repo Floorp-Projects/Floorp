@@ -172,4 +172,8 @@
 
 - (void)pumpGeckoEventQueue;
 
+// used by export bookmarks popup to say what file extension should be used on the resulting
+// bookmarks file.
+-(IBAction) setFileExtension:(id)aSender;
+
 @end

@@ -7,12 +7,12 @@
 	<key>IBEditorPositions</key>
 	<dict>
 		<key>13</key>
-		<string>473 541 206 82 0 0 1152 848 </string>
+		<string>469 444 206 82 0 0 1152 848 </string>
 		<key>5</key>
 		<string>432 541 288 82 0 0 1152 848 </string>
 	</dict>
 	<key>IBFramework Version</key>
-	<string>349.0</string>
+	<string>362.0</string>
 	<key>IBOpenObjects</key>
 	<array>
 		<integer>13</integer>

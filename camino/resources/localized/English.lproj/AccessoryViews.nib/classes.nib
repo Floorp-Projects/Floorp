@@ -40,6 +40,7 @@
                 reloadWithCharset = id; 
                 savePage = id; 
                 sendURL = id; 
+                setFileExtension = id; 
                 showHistory = id; 
                 smallerTextSize = id; 
                 toggleBookmarksToolbar = id; 
