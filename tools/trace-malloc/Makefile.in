@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom \
+		  string \
 		  tracemalloc \
 		  $(NULL)
 
@@ -36,7 +37,14 @@ SIMPLECSRCS	+= \
 		tmstats.c \
 		$(NULL)
 
-SIMPLE_PROGRAMS	= $(SIMPLECSRCS:.c=$(BIN_SUFFIX))
+SIMPLECPPSRCS	= \
+		leaksoup.cpp \
+		$(NULL)
+
+SIMPLE_PROGRAMS	= \
+		$(SIMPLECSRCS:.c=$(BIN_SUFFIX)) \
+		$(SIMPLECPPSRCS:.cpp=$(BIN_SUFFIX)) \
+		$(NULL)
 
 CSRCS            = \
 		spacetrace.c \
@@ -57,6 +65,7 @@ EXTRA_DSO_LIBS	= tracemalloc
 LIBS		+= \
 		$(LIBS_DIR) \
 		tmreader.$(OBJ_SUFFIX) \
+		adreader.$(OBJ_SUFFIX) \
 		$(EXTRA_DSO_LIBS) \
 		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
@@ -82,8 +91,8 @@ DEFINES		+= \
 		$(NULL)
 endif
 
-EXTRA_DEPS      = tmreader.$(OBJ_SUFFIX)
-GARBAGE		+= tmreader.$(OBJ_SUFFIX)
+EXTRA_DEPS      = tmreader.$(OBJ_SUFFIX) adreader.$(OBJ_SUFFIX)
+GARBAGE		+= tmreader.$(OBJ_SUFFIX) adreader.$(OBJ_SUFFIX)
 
 include $(topsrcdir)/config/rules.mk
 
