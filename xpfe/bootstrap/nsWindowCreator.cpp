@@ -83,8 +83,15 @@ nsWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
      convention suggests this method only be used when there is no parent
      window (otherwise, just call Open() on the parent). However, we
      should say something, just to be sure: */
-  if (aParent || (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT))
+  NS_ASSERTION(!aParent, "window creator reached with non-null parent");
+  if (aParent)
     return NS_ERROR_INVALID_ARG;
+
+  /* And you really shouldn't be making dependent windows without a parent.
+     But unparented modal (and therefore dependent) windows happen
+     in our codebase, so we allow it after some bellyaching: */
+  if (aChromeFlags & nsIWebBrowserChrome::CHROME_DEPENDENT)
+    NS_WARNING("dependent window created without a parent");
 
   nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
   if (!appShell)
