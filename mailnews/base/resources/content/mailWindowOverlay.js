@@ -33,14 +33,19 @@ var gWindowManagerInterface;
 var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
 
 var gTimelineService = null;
-var gTimelineEnabled = gPrefs.getBoolPref("mailnews.timeline_is_enabled");
-
-try {
-  gTimelineService = Components.classes["@mozilla.org;timeline-service;1"].getService(Components.interfaces.nsITimelineService);
-}
-catch (ex)
-{
-  gTimelineEnabled = false;
+var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
+if (gTimelineEnabled) {
+  try {
+    gTimelineEnabled = gPrefs.getBoolPref("mailnews.timeline_is_enabled");
+    if (gTimelineEnabled) {
+      gTimelineService = 
+        Components.classes["@mozilla.org;timeline-service;1"].getService(Components.interfaces.nsITimelineService);
+    }
+  }
+  catch (ex)
+  {
+    gTimelineEnabled = false;
+  }
 }
 
 // Disable the new account menu item if the account preference is locked.
