@@ -26,7 +26,6 @@ nsUrlListenerManager.h
 nsMsgMailSession.h
 nsMsgFolderCache.h
 nsMsgFolderDataSource.h
-nsMsgMessageDataSource.h
 nsMsgAccount.h
 nsMsgAccountManager.h
 nsMsgRDFDataSource.h
