@@ -1760,32 +1760,33 @@ public class Context {
 
     public final ClassLoader getApplicationClassLoader()
     {
-        if (applicationClassLoader != null) {
-            return applicationClassLoader;
-        }
-        ClassLoader loader = null;
-        if (method_getContextClassLoader != null) {
-            Thread thread = Thread.currentThread();
-            try {
-                loader = (ClassLoader)method_getContextClassLoader.invoke(
-                             thread, ScriptRuntime.emptyArgs);
-            } catch (Exception ex) { }
-        }
-        if (loader != null && !testIfCanUseLoader(loader)) {
-            loader = null;
-        }
-        if (loader == null) {
+        if (applicationClassLoader == null) {
             // If Context was subclassed, the following gets the loader
             // for the subclass which can be different from Rhino loader,
             // but then proper Rhino classes should be accessible through it
             // in any case or JVM class loading is severely broken
-            loader = this.getClass().getClassLoader();
+            Class cxClass = this.getClass();
+            ClassLoader loader = cxClass.getClassLoader();
+            if (method_getContextClassLoader != null) {
+                Thread thread = Thread.currentThread();
+                ClassLoader threadLoader = null;
+                try {
+                    threadLoader = (ClassLoader)method_getContextClassLoader.
+                                       invoke(thread, ScriptRuntime.emptyArgs);
+                } catch (Exception ex) { }
+                if (threadLoader != null && threadLoader != loader) {
+                    if (testIfCanUseLoader(threadLoader, cxClass)) {
+                        // Thread.getContextClassLoader is not cached since
+                        // its caching prevents it from GC which may lead to
+                        // a memory leak and hides updates to
+                        // Thread.getContextClassLoader
+                        return threadLoader;
+                    }
+                }
+            }
+            applicationClassLoader = loader;
         }
-        // The result is not cached since caching
-        // Thread.getContextClassLoader prevents it from GC which
-        // may lead to a memory leak and hides updates to
-        // Thread.getContextClassLoader
-        return loader;
+        return applicationClassLoader;
     }
 
     public void setApplicationClassLoader(ClassLoader loader)
@@ -1795,24 +1796,22 @@ public class Context {
             applicationClassLoader = null;
             return;
         }
-        if (!testIfCanUseLoader(loader)) {
+        if (!testIfCanUseLoader(loader, this.getClass())) {
             throw new IllegalArgumentException(
                 "Loader can not resolve Rhino classes");
         }
         applicationClassLoader = loader;
     }
 
-    private boolean testIfCanUseLoader(ClassLoader loader)
+    private static boolean testIfCanUseLoader(ClassLoader loader, Class cxClass)
     {
-        // If Context was subclussed, cxClass != Context.class
-        Class cxClass = this.getClass();
         // Check that Context or its suclass is accesible from this loader
         Class x = Kit.classOrNull(loader, cxClass.getName());
         if (x != cxClass) {
             // The check covers the case when x == null =>
-            // threadLoader does not know about Rhino or the case
+            // loader does not know about Rhino or the case
             // when x != null && x != cxClass =>
-            // threadLoader loads unrelated Rhino instance
+            // loader loads unrelated Rhino instance
             return false;
         }
         return true;
