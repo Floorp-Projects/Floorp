@@ -4202,7 +4202,9 @@ char* nsImapProtocol::CreateNewLineFromSocket()
             AlertUserEventUsingId(IMAP_NET_TIMEOUT_ERROR);
             break;
         case NS_ERROR_NET_RESET:
-            AlertUserEventUsingId(IMAP_SERVER_DISCONNECTED);
+        case NS_ERROR_NET_INTERRUPT:
+          AlertUserEventUsingId(TestFlag(IMAP_RECEIVED_GREETING) 
+            ? IMAP_SERVER_DISCONNECTED : IMAP_SERVER_DROPPED_CONNECTION);
             break;
         default:
             break;
