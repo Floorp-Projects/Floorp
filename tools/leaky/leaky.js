@@ -3,8 +3,9 @@ function I(event) {
   var it = event.target;
   if (it) {
     var s = it.src;
-    var s1 = s.replace(".gif", "-over.gif");
-    it.src = s1;
+    s = s.replace("-over", "");		// just in case
+    s = s.replace(".gif", "-over.gif");
+    it.src = s;
     lastIn = it;
   }
 }
@@ -12,8 +13,8 @@ function O(event) {
   var it = lastIn;
   if (it) {
     var s = it.src;
-    var s1 = s.replace("-over", "");
-    it.src = s1;
+    s = s.replace("-over", "");
+    it.src = s;
     lastIn = null;
   }
 }

@@ -29,6 +29,7 @@ struct TreeNode {
     symbol = aSymbol;
     nextSibling = NULL;
     descendants = NULL;
+    nextRoot = NULL;
   }
 
   TreeNode* GetDirectDescendant(Symbol* aSymbol);
@@ -41,6 +42,7 @@ struct TreeNode {
 
   TreeNode* descendants;
   TreeNode* nextSibling;
+  TreeNode* nextRoot;
   Symbol* symbol;
 
   u_long bytesLeaked;
@@ -112,6 +114,10 @@ struct leaky {
   u_long highestSymbolAddr;
 
   LoadMapEntry* loadMap;
+
+  TreeNode* rootList;
+
+  StrSet roots;
 
   void usageError();
 
