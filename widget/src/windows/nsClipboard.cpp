@@ -19,12 +19,14 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Sean Echevarria <sean@beatnik.com>
  */
 
 #include "nsClipboard.h"
 #include <windows.h>
 #include <OLE2.h>
 #include <SHLOBJ.H>
+#include <INTSHCUT.H>
 
 #include "nsCOMPtr.h"
 #include "nsDataObj.h"
@@ -698,47 +700,28 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
 
   nsresult loadResult = GetNativeDataOffClipboard(inDataObject, inIndex, GetFormat(kFileMime), outData, outDataLen);
   if ( NS_SUCCEEDED(loadResult) && *outData ) {
-	  // we have a file path in |data|. Create an nsLocalFile object so we can work with it.
+	  // we have a file path in |data|. Is it an internet shortcut or a normal file?
 	  char* filepath = NS_REINTERPRET_CAST(char*, *outData);
-	  nsCOMPtr<nsILocalFile> file;
-    if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
-      if ( IsInternetShortcut(filepath) ) {
-        FILE* shortcutFile = nsnull;
-        file->OpenANSIFileDesc ( "r", &shortcutFile );
-        if ( shortcutFile ) {
-          const int kMaxURLLen = 1000;    // if url can't fit into 1000, then screw it
-          char buffer[MAX_PATH];
+    if ( IsInternetShortcut(filepath) ) {
+      char* buffer = nsnull;
 
-// This will read only internet shortcut files created by NS4 and Mozilla, not
-// real shortcuts (which can have more complicated data formats). The problem is that
-// I'm having problems with ResolveShortcut() giving an error loading the file. If
-// you want to help fix this, it's bug #37412.
-#if 1
-          // skip over prefix
-          fscanf(shortcutFile, "[InternetShortcut]\nURL=", buffer);
+      ResolveShortcut ( filepath, &buffer );     
+      if ( buffer ) {
+        // convert it to unicode and pass it out
+        nsMemory::Free(*outData);
+        nsAutoString urlUnicode;
+        urlUnicode.AssignWithConversion( buffer );
+        *outData = urlUnicode.ToNewUnicode();
+        *outDataLen = strlen(buffer) * sizeof(PRUnichar);
+        nsMemory::Free(buffer);
 
-          // read the actual url
-          fgets(buffer, kMaxURLLen, shortcutFile);
-#else
-          ResolveShortcut ( filepath, buffer );
-#endif
-
-          // convert it to unicode and pass it out
-          nsMemory::Free(*outData);
-          nsAutoString urlUnicode;
-          urlUnicode.AssignWithConversion( buffer );
-          *outData = urlUnicode.ToNewUnicode();
-          *outDataLen = strlen(buffer) * sizeof(PRUnichar);
-
-          dataFound = PR_TRUE;
-        }
-        else {
-          *outData = nsnull;
-          *outDataLen = 0;
-
-        }
+        dataFound = PR_TRUE;
       }
-      else {
+    }
+    else {
+      // we have a normal file, use some Necko objects to get our file path
+	    nsCOMPtr<nsILocalFile> file;
+      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, PR_FALSE, getter_AddRefs(file))) ) {
         nsCOMPtr<nsIFileURL> url ( do_CreateInstance("component://netscape/network/standard-url") );
         if ( url ) {
           // get the file:// url from our native path
@@ -756,42 +739,55 @@ nsClipboard :: FindURLFromLocalFile ( IDataObject* inDataObject, UINT inIndex, v
 
           dataFound = PR_TRUE;
         }
-      } // else regular file
-    }
+      }
+    } // else regular file
   }
 
   return dataFound;
 } // FindURLFromLocalFile
 
 
+//
+// ResolveShortcut
+//
+// Use some Win32 mumbo-jumbo to read in the shortcut file and parse out the URL
+// in references
+//
 void
-nsClipboard :: ResolveShortcut ( const char* inFileName, char* outURL )
+nsClipboard :: ResolveShortcut ( const char* inFileName, char** outURL )
 {
   HRESULT result;
 
-  IShellLink* link = nsnull;
-  result = ::CoCreateInstance ( CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
-                        IID_IShellLink, (void**)&link );
-  if ( SUCCEEDED(result) && link ) {
-    IPersistFile* persistFile = nsnull;
-    result = link->QueryInterface ( IID_IPersistFile, (void**)&persistFile );
-    if ( SUCCEEDED(result) && persistFile ) {
+  IUniformResourceLocator* urlLink = nsnull;
+  result = ::CoCreateInstance ( CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
+                                IID_IUniformResourceLocator, (void**)&urlLink );
+  if ( SUCCEEDED(result) && urlLink ) {
+    IPersistFile* urlFile = nsnull;
+    result = urlLink->QueryInterface (IID_IPersistFile, (void**)&urlFile );
+    if ( SUCCEEDED(result) && urlFile ) {
       WORD wideFileName[MAX_PATH];
       ::MultiByteToWideChar ( CP_ACP, 0, inFileName, -1, wideFileName, MAX_PATH );
-  
-      result = persistFile->Load ( wideFileName, NULL );
-      if ( SUCCEEDED(result) ) {
-        result = link->Resolve ( NULL, SLR_ANY_MATCH );
-        if ( SUCCEEDED(result) ) {
-          char path[MAX_PATH];
-          WIN32_FIND_DATA wfd;
 
-          strcpy ( path, inFileName );
-          result = link->GetPath ( path, MAX_PATH, &wfd, SLGP_SHORTPATH );
-          strcpy ( outURL, path );
+      result = urlFile->Load(wideFileName, STGM_READ);
+      if (SUCCEEDED(result) ) {
+        LPSTR lpTemp = nsnull;
+
+        result = urlLink->GetURL(&lpTemp);
+        if ( SUCCEEDED(result) && lpTemp ) {
+          *outURL = PL_strdup (lpTemp);
+
+          // free the string that GetURL alloc'd
+          IMalloc* pMalloc;
+          result = SHGetMalloc(&pMalloc);
+          if ( SUCCEEDED(result) ) {
+            pMalloc->Free(lpTemp);
+            pMalloc->Release();
+          }
         }
       }
+      urlFile->Release();
     }
+    urlLink->Release();
   }
 
 } // ResolveShortcut
