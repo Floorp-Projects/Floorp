@@ -416,7 +416,6 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                              nsEventStatus* aEventStatus)
 {
   NS_ENSURE_ARG_POINTER(aEventStatus);
-  NS_ENSURE_ARG(aPresContext);
   // Try script event handlers first
   nsresult ret = nsGenericContainerElement::HandleDOMEvent(aPresContext,
                                                            aEvent,
