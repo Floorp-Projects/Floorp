@@ -35,15 +35,15 @@
   ondraggesture="return TopLevelDrag(event);"
   align="vertical">
 
-  <script src="chrome://communicator/content/bookmarks/bm-panel.js" />
-  <script src="chrome://communicator/content/bookmarks/bookmarks.js" />
-  <script src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
-  <script src="chrome://global/content/nsTreeUtils.js"/>
-  <script src="chrome://global/content/strres.js"/>
-  <script src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bm-panel.js" />
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarks.js" />
+  <script type="text/javascript" src="chrome://communicator/content/bookmarks/bookmarksDD.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsTreeUtils.js"/>
+  <script type="text/javascript" src="chrome://global/content/strres.js"/>
+  <script type="text/javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 
 <popupset>
-  <popup id="contextual" oncreate="return fillContextMenu('contextual');" >
+  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" >
 	  <menu />
   </popup>
 </popupset>
