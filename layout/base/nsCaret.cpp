@@ -487,6 +487,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 //-----------------------------------------------------------------------------
 void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordType, nsPoint &viewOffset, nsIView* &outView)
 {
+  if (!caretFrame) return;
 	outView = nsnull;
 	
 	nsIView* theView = nsnull;
@@ -586,7 +587,7 @@ void nsCaret::DrawCaret()
 	NS_ASSERTION(mLastCaretFrame != nsnull, "Should have a frame here");
 	
 	nsPoint		viewOffset(0, 0);
-	nsIView		*drawingView;
+	nsIView		*drawingView = nsnull;
 	GetViewForRendering(mLastCaretFrame, eViewCoordinates, viewOffset, drawingView);
 	
 	if (drawingView)
