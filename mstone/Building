@@ -1,0 +1,24 @@
+Mstone building instructions
+
+For Unix, just "gmake" one of these
+	release		The usual optimized build
+	debug		Debug build includes some asserts
+
+	rpackage	Build the release and package it
+	dpackage	Build the debug version and package it
+
+	unix_OPT	Build a UNIX multi-platform package
+	unix_DBG	Build a UNIX multi-platform debug package
+
+You can build multiple OSes in the same tree.  Debug and optimized
+builds are kept separately.  The unix_??? targets will combine
+whatever OSes are present into a multi-architecture package.
+
+For NT, run autobuild.bat.  This will build and package both the debug
+and optimized versions.  Perl must already be built and installed in \.
+
+
+Helper components
+
+Mstone can build and package perl, gnuplot, and gd.  This is currently
+being re-worked, but should be fixed soon.

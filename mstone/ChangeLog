@@ -1,0 +1,219 @@
+Netscape Mailstone - version 4.15 (Dec 10, 1999)
+
+MailStone 4.15: Changes to since version 4.1
+
+- Setup now checks license acceptance and configures a basic setup.
+  By default, it will also create a user LDIF file with a 'allusers'
+  account.
+
+- All parameters and and testbed information may now be specified in
+  the workload files (*.wld).  New sections: CONFIG, CLIENT, MONITOR,
+  PRETEST, and POSTTEST.  Command line parameters still override the
+  files.  A complete copy of the configuration is saved in
+  results/<TIMESTAMP>/all.wld.
+
+- The '*.pl', '*.tbd', and 'config*' files in ./conf/ are depreciated.
+  These should still work, but the new sections are simpler and more flexible.
+
+- Any CONFIG parameter can now be specified on the command line using
+  the form: 'PARAMETER=value'.  Note that PARAMETER is case
+  insensitive.  No whitespace is allowed before or after the '='.
+
+- The new switch '-l' or CONFIG parameter 'ClientCount' can now
+  specify the total number of clients.  The 'MaxClients' and
+  'MaxThreads' parameters in each CLIENT section control load
+  balancing.  If the 'processes' and 'threads' parameters are set, then
+  the load for that CLIENT section will not be adjusted, but will be
+  taken into account when calculating other CLIENT sections.  If just
+  'processes' is set, then only the thread count will be adjusted.  All
+  hosts in a CLIENT section will run the same number of processes and
+  threads.
+
+- bin/makeusers.pl now creates users, broadcast account, etc.  Numbered passwords 
+  are now suppored.  The new user/password format now replaces '%ld' with
+  the user number to match the rest of mailstone.  The ldif/ directory
+  is obsolete.  Run "perl/bin/perl bin/makeusers.pl -h" for usage.
+
+- NT client machines may now be used from a Unix test master.  See
+  conf/sample.wld for configuration details.
+
+- Commands can now be run for a specified block count, error count, or
+  time (whichever comes first).  Set 'maxBlocks' and/or 'maxErrors'.
+
+- Telemetry logging to /var/tmp/mstone-log.pn.tn is now performed when
+  "telemetry 1" is specified.
+
+- The name used in the "CLIENT" section is now used to match
+  "HOSTS=..." qualifier.  Compatibility with "hostname"  is no
+  longer needed.
+
+- Config values can now use quoted characters such as \n, \r, \t
+
+- Config values can be continued using \ (backslash)
+
+- System configuration information (SYSCONFIG) can now be specified
+  entirely within a workload file by quoting the newlines.
+
+- Config values get enclosing double-quotes stripped
+
+- Preliminary support for HTTP and WMAP (WebMail) testing.
+
+- New table formats are easier to interpret and allow more protocols.
+
+- The new text format report is easier to machine processes.
+
+- The following command line switches are now obsolete: -f, -g, -e, -p,
+  and -l.  The same functionality can be obtained by
+  FREQUENCY=<interval>, GNUPLOT=<path>, RSH=<path>, RCP=<path>, and
+  TEMPDIR=<directory> respectively.
+
+- File backups are now created.  When ./process is run multiple
+  times, the old files are moved to the ./tmp/<TIMESTAMP>/ directory.
+
+- perl has been updated to include full perl5.005_03 install package.
+  Perl support for each architecture is now under the perl/ directory.
+
+
+MailStone 4.1: Changes to since version 4.0
+
+- threads are used on all platforms
+  reduces memory requirements by 10x for large numbers of clients
+  must run as root for maximum connections per process
+
+- massive internal code and script cleanup / rewrite
+  performance improvements for socket handling (blocking)
+  and caching files and name lookups
+
+- filename and path conventions restructuring
+  '/mailstone' hardwired path no longer required
+  mailstone/results/index.html (index of test runs)
+  mailstone/results/<datestamp>/stderr (look here for errors)
+  mailstone/results/<datestamp>/results.html
+  mailstone/results/<datestamp>/results.txt
+  mailstone/results/<datestamp>/work.wld (workload config used)
+  mailstone/results/<datestamp>/testbed.tbd (testbed used)
+  mailstone/results/<datestamp>/summary.csv (per client summary)
+  mailstone/results/<datestamp>/*.gif (graphs)
+  mailstone/tmp/<datestamp>/*.out (raw results from each client)
+  mailstone/conf/*.wld (workload file)
+  mailstone/conf/*.html (machine descriptions for reports)
+  mailstone/data/*.msg (sample test messages)
+
+- periodic statistics reporting allows for trend analysis of
+    many variables per protocol.
+  sampling rate is automatically determined by mailmaster
+  Can now generate on-the-fly reports for above by running "process"
+
+- The accountFormat directive is now obsolete.
+  Use loginFormat and addressFormat instead.
+
+- The numAccounts and beginAccounts directives are now obsolete.
+  Use numLogins, firstLogin, numAddresses, and firstAddress instead.
+
+- The sequentialLogins directive disables random account number selection.
+  This insures a predictable account sequence.
+
+- The checkMailInterval directive for IMAP is now obsolete.
+  Use loopDelay instead.
+
+- The directives idleTime, loopDelay, and numLoops now apply to all
+  protocols.  See the manual for how loopDelay and numLoops are used
+  by each protocol.
+
+- a command directive such as <SMTP> without HOSTS=xxx
+  will now apply to all clients in the testbed
+
+- <include> directive for workload and testbed files (e.g. for user profile)
+
+- workloads are now passed to 'mailclient' through stdin
+  no test specific files need to be copied to client machines
+  more synchonized test startup
+
+- 'setup' script will copy mailclient and test messages (data/*.msg) to
+  each testbed machine in /var/tmp
+
+- 'cleanup' form of setup will remove mailclient and test messages from
+  each testbed machine in /var/tmp
+
+- 'checktime' form of setup will (nearly) simultaneously retrieve time from
+  each client.  This lets you easily check for clock problems.
+
+- 'timesync' form of setup will (nearly) simultaneously set time on
+  each client.  This only works on OSs that support setting seconds
+  through the "date" command.  rdate or ntpdate should be used if available.
+  You must be the root user and be able to rsh as root for timesync to work.
+
+- Improved reports in text and html (formatting and content)
+
+- The text version of the report is now only displayed automatically 
+  if "-v" is given.
+
+- Graphs with more than one protocol will also display a "Total" graph
+
+- The graphs can now be customized for each test (see sample.wld for
+  the default)
+
+- You can now add graphs (in addition to the default or configured
+  ones) by using "process timestamp -a conf/moregraph.wld".
+
+- An informative index of test runs is now generated in results/index.html
+
+- The index is updated while the run is in progress to make checking
+  for errors easier.
+
+- The error log now displays times relative to test start.
+
+- Memory use while processing results has been greatly reduced.
+
+- A summary of the data from each process is now saved in a 
+  Comma-separated-value (CSV) file.  results/timestamp/clients.csv
+
+- A summary of the data over time is now saved in a
+  Comma-separated-value (CSV) file.  results/timestamp/protocol-time.csv
+
+- new gnuplot binary included, can output directly to gif format
+
+- read and write performance numbers now reported separately
+
+- new runtime banners and copyrights (ooh boy)
+
+- idleTime option for IMAP fixed, plus now applies to all commands
+
+- blockTime now sets a delay between command blocks
+
+- Process model is as follows
+
+  User runs the top-level 'mstone' script
+    This calls 'conf/testname.pl' with command line arguments
+      This calls 'mailmaster.pl' with config and command line arguments
+        mailmaster uses 'rsh' or equivalent to launch mailclients
+          mailclient runs on each testbed and forks numprocs
+            each proc spawns numthreads (one per client)
+
+          <run tests> (note: results are being sent continuously)
+
+            threads send results back through sockets to top mailclient
+        mailclient forwards results back over stdout via rsh pipe
+          (for future work - do some data reduction/combining here)
+     mailmaster directs output to each client-<hostname> file
+   mailmaster launches report generator
+
+- sample LDIF fragment for a postmaster entry included
+
+Future ideas:
+
+- Data reduction at each testbed client
+
+- test message generator (plain and MIME styles)
+
+- IMAP (and other protocol) scripting
+
+- Implementation of "throttle"
+
+- More graphs for multiple runs
+
+- Script a series of runs varying one parameter at a time
+
+- More protocols (LDAP, disk, DNS, Calendar)
+
+- Option to drop a fraction of connections
