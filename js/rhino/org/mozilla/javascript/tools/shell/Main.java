@@ -245,6 +245,9 @@ public class Main {
     public static void processSource(Context cx, String filename) {
         SourceTextManager stm = cx.getSourceTextManager();
         if (filename == null || filename.equals("-")) {
+            // Use the interpreter for interactive input
+            cx.setOptimizationLevel(-1);
+            
             BufferedReader in = new BufferedReader
                 (new InputStreamReader(Main.in));
             if(null != stm)
@@ -292,9 +295,14 @@ public class Main {
                     // Already printed message, so just fall through.
                 }
                 catch (EcmaError ee) {
-                    Context.reportError(ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSException",
-                        ee.toString()));
+                    String msg = ToolErrorReporter.getMessage(
+                        "msg.uncaughtJSException", ee.toString());
+                    if (ee.getSourceName() != null) {
+                        Context.reportError(msg, ee.getSourceName(), 
+                                            ee.getLineNumber(), null, 0);
+                    } else {
+                        Context.reportError(msg);
+                    }
                 }
                 catch (JavaScriptException jse) {
                 	// Need to propagate ThreadDeath exceptions.
@@ -360,16 +368,13 @@ public class Main {
                 we.printStackTrace();
             }
             catch (EcmaError ee) {
+                String msg = ToolErrorReporter.getMessage(
+                    "msg.uncaughtJSException", ee.toString());
                 if (ee.getSourceName() != null) {
-                    Object[] args = { ee.getSourceName(), 
-                                      new Integer(ee.getLineNumber()),
-                                      ee.toString() };
-                    Context.reportError(ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSExceptionLine", args));
+                    Context.reportError(msg, ee.getSourceName(), 
+                                        ee.getLineNumber(), null, 0);
                 } else {
-                    Context.reportError(ToolErrorReporter.getMessage(
-                        "msg.uncaughtJSException",
-                        ee.toString()));
+                    Context.reportError(msg);
                 }
             }
             catch (EvaluatorException ee) {
