@@ -303,7 +303,7 @@ var BookmarksMenuController = {
     var target    = BookmarksMenu._target;
     switch (aCommand) {
     case "cmd_bm_expandfolder":
-      BookmarksMenu.expandBTFolder();
+      setTimeout(BookmarksMenu.expandBTFolder, 0);
       break;
     default:
       BookmarksController.doCommand(aCommand, selection, target);
