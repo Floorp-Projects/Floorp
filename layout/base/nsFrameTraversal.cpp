@@ -208,7 +208,15 @@ nsLeafIterator::nsLeafIterator(nsIPresContext* aPresContext, nsIFrame *aStart)
   setLast(aStart);
 }
 
-
+static PRBool
+IsRootFrame(nsIFrame* aFrame)
+{
+  nsCOMPtr<nsIAtom>atom;
+  
+  aFrame->GetFrameType(getter_AddRefs(atom));
+  return (atom.get() == nsLayoutAtoms::canvasFrame) ||
+         (atom.get() == nsLayoutAtoms::rootFrame);
+}
 
 NS_IMETHODIMP
 nsLeafIterator::Next()
@@ -230,8 +238,7 @@ nsLeafIterator::Next()
     result = parent;
   }
   else {
-    nsCOMPtr<nsIAtom>atom;
-    while(parent && NS_SUCCEEDED(parent->GetFrameType(getter_AddRefs(atom))) && atom.get() != nsLayoutAtoms::rootFrame){
+    while(parent && !IsRootFrame(parent)) {
       if (NS_SUCCEEDED(parent->GetNextSibling(&result)) && result){
         parent = result;
         while(NS_SUCCEEDED(parent->FirstChild(mPresContext, nsnull,&result)) && result)
@@ -242,7 +249,9 @@ nsLeafIterator::Next()
         break;
       }
       else
-        if (NS_FAILED(parent->GetParent(&result)) || !result || (NS_SUCCEEDED(result->GetFrameType(getter_AddRefs(atom))) && atom.get() == nsLayoutAtoms::rootFrame)){
+      {
+        parent->GetParent(&result);
+        if (!result || IsRootFrame(result)) {
           result = nsnull;
           break;
         }
@@ -252,6 +261,7 @@ nsLeafIterator::Next()
           if (mExtensive)
             break;
         }
+      }
     }
   }
   setCurrent(result);

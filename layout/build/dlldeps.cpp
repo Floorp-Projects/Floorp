@@ -53,7 +53,7 @@ void XXXNeverCalled()
   NS_NewObjectFrame(ps, &f);
   NS_NewSpacerFrame(ps, &f);
   NS_NewHTMLFramesetFrame(ps, &f);
-  NS_NewRootFrame(ps, &f);
+  NS_NewCanvasFrame(ps, &f);
   NS_NewScrollFrame(ps, &f);
   NS_NewSimplePageSequenceFrame(ps, &f);
   nsINameSpaceManager* nsm;
