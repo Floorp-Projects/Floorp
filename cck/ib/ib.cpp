@@ -990,7 +990,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 		if (!infout)
 			exit( 3 );
 
-		fprintf(infout,"[autorun]\nopen = N6Setup.exe");
+		fprintf(infout,"[autorun]\nopen = setup.exe");
 	}
 	CString component;
 	CString configiniPath = xpiDstPath +"\\config.ini";
