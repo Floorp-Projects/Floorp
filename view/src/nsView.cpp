@@ -705,8 +705,8 @@ void nsView :: SetPosition(nscoord x, nscoord y)
     pwidget = GetOffsetFromWidget(&parx, &pary);
     NS_IF_RELEASE(pwidget);
     
-    mWindow->Move(NSTwipsToIntPixels((x + parx + offx), scale),
-                  NSTwipsToIntPixels((y + pary + offy), scale));
+    mWindow->Move(NSTwipsToIntPixels((x + parx - offx), scale),
+                  NSTwipsToIntPixels((y + pary - offy), scale));
 
     NS_RELEASE(px);
   }
