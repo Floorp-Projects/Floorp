@@ -1733,7 +1733,7 @@ char *fe_GetConfigDir(void)
 		char	*config_dir;
 
 	    int len = strlen(path);
-	    len += strlen("/mozilla");
+	    len += strlen("/mozilla") + 1;
 
 	    config_dir = (char *)XP_CALLOC(len, sizeof(char));
 	    /* we really should use XP_STRN*_SAFE but this is MODULAR_NETLIB */
