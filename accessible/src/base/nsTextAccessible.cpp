@@ -54,7 +54,6 @@ NS_IMPL_ISUPPORTS1(nsAccessibleText, nsIAccessibleText)
 
 nsAccessibleText::nsAccessibleText()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAccessibleText::~nsAccessibleText()

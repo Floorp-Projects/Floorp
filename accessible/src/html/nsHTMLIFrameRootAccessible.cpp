@@ -45,12 +45,7 @@
 #include "nsIDOMDocument.h"
 #include "nsReadableUtils.h"
 
-NS_INTERFACE_MAP_BEGIN(nsHTMLIFrameRootAccessible)
-NS_INTERFACE_MAP_END_INHERITING(nsRootAccessible)
-
-NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
-NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
-
+NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLIFrameRootAccessible, nsRootAccessible);
 NS_IMPL_ISUPPORTS_INHERITED3(nsHTMLIFrameAccessible, nsBlockAccessible, nsIAccessibleDocument, nsIAccessibleHyperText, nsIAccessibleEventReceiver)
 
 nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *aDoc):
@@ -345,8 +340,8 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::RemoveAccessibleEventListener()
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-  nsRootAccessible(aShell), mOuterNode(aNode)
+nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIWeakReference* aShell):
+  nsRootAccessible(aShell)
 {
 }
 
@@ -357,55 +352,11 @@ nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 {
 }
 
-void nsHTMLIFrameRootAccessible::Init()
+NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccRole(PRUint32 *_retval)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mOuterNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (doc) {
-    nsCOMPtr<nsIPresShell> parentShell;
-    doc->GetShellAt(0, getter_AddRefs(parentShell));
-    if (parentShell) {
-      nsCOMPtr<nsIContent> content(do_QueryInterface(mOuterNode));
-      nsIFrame* frame = nsnull;
-      parentShell->GetPrimaryFrameFor(content, &frame);
-      NS_ASSERTION(frame, "No outer frame.");
-      if (!frame)
-        return;
-      frame->GetAccessible(getter_AddRefs(mOuterAccessible));
-      NS_ASSERTION(mOuterAccessible, "Something's wrong - there's no accessible for the outer parent of this frame.");
-    }
-  }
-}
-
-void nsHTMLIFrameRootAccessible::Init(nsIAccessible *aOuterAccessible)
-{
-  if (aOuterAccessible) {
-    mOuterAccessible = aOuterAccessible;
-  }
-}
-
-  /* readonly attribute nsIAccessible accParent; */
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccParent(nsIAccessible **_retval) 
-{ 
-  if (!mOuterAccessible)
-    Init();
-  return mOuterAccessible->GetAccParent(_retval);
-}
-
-  /* nsIAccessible getAccNextSibling (); */
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccNextSibling(nsIAccessible **_retval) 
-{
-  if (!mOuterAccessible)
-    Init();
-  return mOuterAccessible->GetAccNextSibling(_retval);
-}
-
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **_retval) 
-{
-  if (!mOuterAccessible)
-    Init();
-  return mOuterAccessible->GetAccPreviousSibling(_retval);
+  // prevent |this| from being cached by nsAccessible::CacheOptimizations
+  *_retval = ROLE_NOTHING;
+  return NS_OK;
 }
 
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
