@@ -184,7 +184,7 @@ InputConsumer::OnDataAvailable(nsISupports* context,
   char buf[1025];
   PRUint32 amt;
 
-  printf("\n+++ InputConsumer::OnDavaAvailable +++.  Context = %p\n", context);
+  printf("\n+++ InputConsumer::OnDavaAvailable +++.  Context = %p length = %d\n", context, aLength);
   mConnection->Lock();
   do {
     nsresult rv = aIStream->Read(buf, 1024, &amt);
@@ -430,6 +430,8 @@ nsresult TestConnection::WriteBuffer(void)
   PRInt32 size;
   PRUint32 bytesWritten;
 
+  printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
+
   // Create and fill a test buffer of data...
   buffer = (char*)PR_Malloc(mBufferLength + 4);
 
@@ -466,8 +468,6 @@ nsresult TestConnection::WriteBuffer(void)
     else if (mOutStream) {
       rv = mOutStream->Write(buffer, size, &bytesWritten);
     }
-    printf("\n+++ Request is: %c.  Context = %p\n", mBufferChar, mTransport);
-
     PR_Free(buffer);
   } else {
     rv = NS_ERROR_OUT_OF_MEMORY;
