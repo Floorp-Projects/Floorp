@@ -48,7 +48,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getName
     return NULL;
   }
 
-  jstring jname = env->NewString(name.GetUnicode(), name.Length());
+  jstring jname = env->NewString((jchar*) name.GetUnicode(), name.Length());
   if (!jname) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Attr.getName: NewString failed\n"));
@@ -108,7 +108,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_AttrImpl_getValue
     return NULL;
   }
 
-  jstring jval = env->NewString(value.GetUnicode(), value.Length());
+  jstring jval = env->NewString((jchar*) value.GetUnicode(), value.Length());
   if (!jval) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Attr.getValue: NewString failed\n"));

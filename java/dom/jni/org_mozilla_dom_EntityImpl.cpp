@@ -49,7 +49,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getNotationName
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Entity.getNotationName: NewString failed\n"));
@@ -83,7 +83,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getPublicId
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Entity.getPublicId: NewString failed\n"));
@@ -117,7 +117,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_EntityImpl_getSystemId
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Entity.getSystemId: NewString failed\n"));

@@ -221,7 +221,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_events_EventImpl_getType
         return NULL;
     }
 
-    jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+    jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
     if (!jret) {
         JavaDOMGlobals::ThrowException(env,
             "Event.getType: NewString failed");

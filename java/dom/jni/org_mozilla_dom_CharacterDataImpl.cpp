@@ -125,7 +125,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env,  
       "CharacterData.getData: NewString failed");
@@ -313,7 +313,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env, 
       "CharacterData.substringData: NewString failed");

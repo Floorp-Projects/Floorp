@@ -92,7 +92,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getName
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getName: NewString failed\n"));
@@ -167,7 +167,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getPublicId
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getPublicId: NewString failed\n"));
@@ -200,7 +200,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getSystemId
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getSystemId: NewString failed\n"));
@@ -233,7 +233,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_DocumentTypeImpl_getInternalSubse
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("DocumentType.getInternalSubset: NewString failed\n"));

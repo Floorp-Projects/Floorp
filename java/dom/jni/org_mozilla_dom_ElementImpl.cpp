@@ -58,7 +58,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttribute
     return NULL;
   }
 
-  jstring jattr = env->NewString(attr.GetUnicode(), attr.Length());
+  jstring jattr = env->NewString((jchar*) attr.GetUnicode(), attr.Length());
   if (!jattr) {
     JavaDOMGlobals::ThrowException(env,
       "Element.getAttribute: NewString failed");
@@ -190,7 +190,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getTagName
     return NULL;
   }
 
-  jstring jTagName = env->NewString(tagName.GetUnicode(), tagName.Length());
+  jstring jTagName = env->NewString((jchar*) tagName.GetUnicode(), tagName.Length());
   if (!jTagName) {
     JavaDOMGlobals::ThrowException(env,
       "Element.getTagName: NewString failed");
@@ -453,7 +453,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ElementImpl_getAttributeNS
       return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     PR_LOG(JavaDOMGlobals::log, PR_LOG_ERROR, 
 	   ("Element.getAttributeNS: NewString failed\n"));

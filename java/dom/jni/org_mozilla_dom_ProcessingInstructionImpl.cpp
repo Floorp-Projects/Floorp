@@ -50,7 +50,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getData
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env,
       "ProcessingInstruction.getData: NewString failed");
@@ -84,7 +84,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_getTarg
     return NULL;
   }
 
-  jstring jret = env->NewString(ret.GetUnicode(), ret.Length());
+  jstring jret = env->NewString((jchar*) ret.GetUnicode(), ret.Length());
   if (!jret) {
     JavaDOMGlobals::ThrowException(env,
       "ProcessingInstruction.getTarget: NewString failed");

@@ -343,7 +343,7 @@ NS_IMETHODIMP nsJavaDOMImpl::OnStatusChange(nsIWebProgress *aWebProgress,
     if (!jURL) return NS_ERROR_FAILURE;
     // PENDING(edburns): this leaks
 
-    jstring jMessage = env->NewString(cMsg, nsCRT::strlen(cMsg));
+    jstring jMessage = env->NewString((jchar*) cMsg, nsCRT::strlen(cMsg));
     if (!jMessage) return NS_ERROR_FAILURE;
     
     env->CallStaticVoidMethod(domAccessorClass,
@@ -375,7 +375,7 @@ NS_IMETHODIMP nsJavaDOMImpl::doStartDocumentLoad(const PRUnichar *documentName)
   if (!documentName) {
     return NS_ERROR_FAILURE;
   }
-  jstring jURL = env->NewString(documentName, nsCRT::strlen(documentName));
+  jstring jURL = env->NewString((jchar*) documentName, nsCRT::strlen(documentName));
   if (!jURL) return NS_ERROR_FAILURE;
   
   env->CallStaticVoidMethod(domAccessorClass,
