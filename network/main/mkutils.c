@@ -1752,10 +1752,16 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
 									net_citation_style_changed,
 									NULL);
 		  }
-		  PREF_GetIntPref("mail.quoted_style", &value);
-		  CitationFont = (MSG_FONT) value;
-		  CitationSize = 0;
-		  PREF_GetIntPref("mail.quoted_size", &CitationSize);
+          if ( (PREF_OK == PREF_GetIntPref("mail.quoted_style", &value)) ) {
+		    CitationFont = (MSG_FONT) value;
+          } else {
+            CitationFont = MSG_ItalicFont;
+          }
+		  
+          CitationSize = 0;
+          if ( (PREF_OK != PREF_GetIntPref("mail.quoted_size", &CitationSize)) ) {
+              CitationSize = 0;
+          }
 		  FREEIF(CitationColor);
 		  CitationColor = NULL;
 		  PREF_CopyCharPref("mail.citation_color", &CitationColor);

@@ -137,7 +137,6 @@ struct _TCP_ConData {
  */
 # define MAX_DNS_LIST_SIZE 10
 
-
 /* Global TCP connect variables
  */
 PUBLIC u_long NET_SocksHost=0;
@@ -323,7 +322,8 @@ MODULE_PRIVATE int PR_CALLBACK
 NET_DNSExpirationPrefChanged(const char * newpref, void * data)
 {
 	int32 n;
-	PREF_GetIntPref(pref_dnsExpiration, &n);
+    if (PREF_OK != PREF_GetIntPref(pref_dnsExpiration, &n) )
+        n = DEF_DNS_EXPIRATION;
 	NET_SetDNSExpirationPref((int32)n);
 	return PREF_NOERROR;
 }
@@ -1074,14 +1074,14 @@ NET_BeginConnect (CONST char   *url,
 	if(!setupSocks) {
 		setupSocks=TRUE;
 		if (NET_GetProxyStyle() == PROXY_STYLE_MANUAL) {
-			PREF_CopyCharPref("network.hosts.socks_server",&proxy);
-			if (proxy && *proxy) {
-				PREF_GetIntPref("network.hosts.socks_serverport",&iPort);
-				PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
-				NET_SetSocksHost(text);
-			}
-			else {
-				NET_SetSocksHost(proxy); /* NULL is ok */
+            if ( (PREF_OK != PREF_CopyCharPref("network.hosts.socks_server",&proxy))
+                || !proxy || !*proxy ) {
+                NET_SetSocksHost(NULL); /* NULL is ok */
+            } else {
+                if ( PREF_OK == PREF_GetIntPref("network.hosts.socks_serverport",&iPort) ) {
+				    PR_snprintf(text, sizeof(text), "%s:%d", proxy, iPort);  
+				    NET_SetSocksHost(text);
+                }
 			}
 		}
 	}
@@ -1163,8 +1163,8 @@ HG28879
 			/* Tell the FE about the failure */
             int32 len = PL_strlen(XP_GetString(XP_PROGRESS_UNABLELOCATE));
 			char * buf;
-			PREF_CopyCharPref("network.hosts.socks_server",&prefSocksHost);
-			if(prefSocksHost)
+			if( (PREF_OK == PREF_CopyCharPref("network.hosts.socks_server",&prefSocksHost))
+                && prefSocksHost)
 			{
 				len += PL_strlen(prefSocksHost);
 
@@ -1349,6 +1349,7 @@ NET_FinishConnect (CONST char   *url,
         if(status == MK_WAITING_FOR_LOOKUP)
           {
             (*tcp_con_data)->next_state = NET_TCP_FINISH_DNS_LOOKUP;
+            FREE_AND_CLEAR(host_string);
             return(MK_WAITING_FOR_CONNECTION);  /* not connected yet */
           }
         else if (status < 0)

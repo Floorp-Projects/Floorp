@@ -372,8 +372,8 @@ initializeJSCookieFilterStuff()
         return filter_context;
 
     /* If we can't get the mozilla-thread global context just bail */
-    PREF_GetConfigContext(&filter_context);
-    if (!filter_context)
+    if ( (PREF_OK != PREF_GetConfigContext(&filter_context))
+        || !filter_context)
         return NULL;
 
     /* create our "global" object.  We make the message object a child of this */

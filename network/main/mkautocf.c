@@ -776,8 +776,9 @@ NET_InitPacfContext(void)
 
 	if ( first_time == FALSE ) return TRUE;
 
-	PREF_GetConfigContext(&configContext);
-	PREF_GetGlobalConfigObject(&globalConfig);
+    if ( (PREF_OK != PREF_GetConfigContext(&configContext))
+       ||(PREF_OK != PREF_GetGlobalConfigObject(&globalConfig)) )
+       return FALSE;
 
 	proxyConfig = JS_DefineObject(configContext, globalConfig, 
 						"ProxyConfig",
