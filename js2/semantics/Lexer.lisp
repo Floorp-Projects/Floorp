@@ -219,11 +219,16 @@
 (define-character-set '*initial-identifier-character* '(#\$ #\_ (#\A #\Z) (#\a #\z)))
 (define-character-set '*continuing-identifier-character* '(#\$ #\_ (#\0 #\9) (#\A #\Z) (#\a #\z)))
 
+(define-character-set '*white-space-or-line-terminator-char* '((#?0009 #?000D) #\space #?00A0 #?0085 (#?2000 #?200B) #?2028 #?2029 #?3000))
+
 (defun initial-identifier-character? (char)
   (char-in-charset? (predefined-character-set '*initial-identifier-character*) char))
 
 (defun continuing-identifier-character? (char)
   (char-in-charset? (predefined-character-set '*continuing-identifier-character*) char))
+
+(defun white-space-or-line-terminator-char? (char)
+  (char-in-charset? (predefined-character-set '*white-space-or-line-terminator-char*) char))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
