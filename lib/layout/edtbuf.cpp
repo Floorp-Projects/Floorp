@@ -2863,6 +2863,23 @@ EDT_ClipboardResult CEditBuffer::DeleteChar(XP_Bool bForward, XP_Bool bTyping)
                 }
             }
         }
+        // After deleting at a boundary between elements, 
+        // caret is always at the end of the current element
+        // Check for this and move to the beginning of next element 
+        //   and set flag to use format of this element
+        // Note that testing for bForward means Backspace key will
+        ///  always use format of element to the left. 
+        // TODO: Is that the correct thing to to?
+        CEditElement *pNext = m_pCurrent->GetNextSibling();
+        m_bUseCurrentTextFormat = ( bForward && m_pCurrent && m_pCurrent->IsText() &&
+                                    (m_iCurrentOffset == m_pCurrent->Text()->GetLen()) &&
+                                    pNext && pNext->IsText() &&
+                                    pNext->Text()->GetLen() > 0 ) ? TRUE : FALSE;
+        if( m_bUseCurrentTextFormat )
+        {
+            // We need to move insert point so m_pCurrent = pNext;
+            SetInsertPoint(pNext->Leaf(), 0, m_bCurrentStickyAfter);
+        }
     }
     return result;
 }
@@ -3172,16 +3189,15 @@ void CEditBuffer::NavigateChunk( XP_Bool bSelect, intn chunkType, XP_Bool bForwa
     else {
         VALIDATE_TREE(this);
         ClearPhantomInsertPoint();
-        m_bUseCurrentTextFormat = FALSE;
         ClearMove();    /* Arrow keys clear the up/down target position */
         BeginSelection();
         LO_NavigateChunk( m_pContext, chunkType, bSelect, bForward );
         EndSelection();
         DoneTyping();
-        if( !bForward && m_pCurrent && m_pCurrent->IsText() && m_iCurrentOffset == 0 )
-        {
-            m_bUseCurrentTextFormat = TRUE;
-        }
+        // If moving from right to left with arrow or Home,
+        //  then set flag to use format to the right of caret upon next text insert
+        m_bUseCurrentTextFormat = (!bForward && m_pCurrent && m_pCurrent->IsText() 
+                                    && m_iCurrentOffset == 0) ? TRUE : FALSE;
     }
 }
 
@@ -4947,10 +4963,17 @@ void CEditBuffer::SetHREF( char *pHref, char *pExtra ){
 
 // Use this only when setting one attribute at a time
 // Always make Superscript and Subscript mutually exclusive - very tricky!
-void CEditBuffer::FormatCharacter( ED_TextFormat tf ){
+void CEditBuffer::FormatCharacter( ED_TextFormat tf )
+{
     VALIDATE_TREE(this);
     CEditSelection selection;
     GetSelection(selection);
+
+    // If user is setting the format, then they
+    //  will always want to use it instead of the 
+    //  element to the right of the caret
+    m_bUseCurrentTextFormat = FALSE;
+
     if ( selection.IsContainerEnd() )
         return;
 
@@ -5172,6 +5195,11 @@ void CEditBuffer::SetCharacterData( EDT_CharacterData *pData )
     VALIDATE_TREE(this);
     CEditSelection selection;
     GetSelection(selection);
+
+    // We are setting data at caret, so clear flag
+    //  to use style to the right of caret
+    m_bUseCurrentTextFormat = FALSE;
+
     if ( selection.IsContainerEnd() )
         return;
     else if( selection.AnyLeavesSelected() ){
@@ -5273,6 +5301,7 @@ void CEditBuffer::SetCharacterDataAtOffset( EDT_CharacterData *pData,
     CEditSelection sel = PersistentToEphemeral( perSel );
 
     SetCharacterDataSelection( pData, sel, TRUE );
+    m_bUseCurrentTextFormat = FALSE;
 }
 
 void CEditBuffer::SetRefresh( XP_Bool bRefreshOn ){
@@ -11074,7 +11103,6 @@ void CEditBuffer::StartSelection( int32 x, int32 y, XP_Bool doubleClick ){
         LO_Click( m_pContext, x, y, FALSE );
 #endif /* LAYERS */
     }
-    CEditElement *pPrev;
     // If we set caret at beginning of a text element, 
     //  use its formating with next text typed
     m_bUseCurrentTextFormat = (m_pCurrent &&  m_pCurrent->IsText() && m_iCurrentOffset == 0 ) ? TRUE : FALSE;
