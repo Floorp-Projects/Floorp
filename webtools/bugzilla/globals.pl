@@ -501,7 +501,7 @@ sub GenerateVersionTable {
 
     foreach my $i (@list) {
         if (!defined $::components{$i}) {
-            $::components{$i} = "";
+            $::components{$i} = [];
         }
     }
     @::legal_versions = sort {uc($a) cmp uc($b)} keys(%varray);
