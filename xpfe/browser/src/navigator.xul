@@ -176,24 +176,32 @@
 	// rjc: added support for URL shortcuts (3/30/1999)
 
 	// get RDF Core service
+	var rdfCoreFound = false;
 	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (!rdfCore)
+	if (rdfCore)
+	{
+		rdfCoreFound = true;
+	}
+	else
 	{
 		rdfCore = new RDFCore();
-		if (!rdfCore)
+		if (rdfCore)
 		{
-			return(false);
+			rdfCore.Init("RDFCore");
+			XPAppCoresManager.Add(rdfCore);
+			rdfCoreFound = true;
 		}
-		rdfCore.Init("RDFCore");
-		XPAppCoresManager.Add(rdfCore);
 	}
-	var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
-
-	dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
-
-	if ((shortcutURL != null) && (shortcutURL != ""))
+	if (rdfCoreFound == true)
 	{
-		document.getElementById('urlbar').value = shortcutURL;
+		var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
+
+		dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
+
+		if ((shortcutURL != null) && (shortcutURL != ""))
+		{
+			document.getElementById('urlbar').value = shortcutURL;
+		}
 	}
 
 	appCore.loadUrl(document.getElementById('urlbar').value);
