@@ -927,7 +927,7 @@ fun_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             *vp = fp->down->argv[-2];
         else
             *vp = JSVAL_NULL;
-        if (cx->runtime->checkObjectAccess) {
+        if (!JSVAL_IS_PRIMITIVE(*vp) && cx->runtime->checkObjectAccess) {
             id = ATOM_KEY(cx->runtime->atomState.callerAtom);
             if (!cx->runtime->checkObjectAccess(cx, obj, id, JSACC_READ, vp))
                 return JS_FALSE;
