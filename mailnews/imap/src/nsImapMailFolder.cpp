@@ -3734,7 +3734,6 @@ nsImapMailFolder::ParseAdoptedMsgLine(const char *adoptedMessageLine, nsMsgKey u
   return rv;
 }
 
-
 NS_IMETHODIMP
 nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage, 
                                           PRBool markRead,
@@ -3756,78 +3755,18 @@ nsImapMailFolder::NormalEndMsgWriteStream(nsMsgKey uidOfMessage,
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   m_curMsgUid = uidOfMessage;
   res = GetMessageHeader(m_curMsgUid, getter_AddRefs(msgHdr));
-  nsXPIDLCString messageID;
-  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl(do_QueryInterface(imapUrl, &res));
-  nsCOMPtr<nsIMsgWindow> msgWindow;
-  res = msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-  if (msgHdr)
-  {
-    // if we didn't get the message id when we downloaded the message header,
-    // we cons up an md5: message id. If we've done that, set needMsgID to true
-    // so we'll try to extract the message id out of the mime headers for the whole message.
-    msgHdr->GetMessageId(getter_Copies(messageID));
-    if (!strncmp(messageID, "md5:", 4))
-      needMsgID = PR_TRUE;
-    if (markRead || needMsgID)
-    {
-      if (NS_SUCCEEDED(res))
+
+  if (msgHdr && markRead)
       {
         PRBool isRead;
         msgHdr->GetIsRead(&isRead);
-        if (!isRead || needMsgID)
-        {
-          PRUint32 msgFlags, newFlags;
-          msgHdr->GetFlags(&msgFlags);
-
-          if (NS_SUCCEEDED(res))
-          {
-            nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-            res = msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
-            if (NS_SUCCEEDED(res) && mimeHeaders)
-            {
               if (!isRead)
               {
-                nsXPIDLCString mdnDnt;
-                mimeHeaders->ExtractHeader("Disposition-Notification-To",
-                                           PR_FALSE, getter_Copies(mdnDnt));
-                if (mdnDnt.Length() && !(msgFlags & MSG_FLAG_MDN_REPORT_SENT))
-                {
-                  if(NS_SUCCEEDED(res))
-                  {
-                    nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-                    mdnGenerator =
-                      do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &res);
-                    if (mdnGenerator && !(msgFlags & MSG_FLAG_IMAP_DELETED))
-                    {
-                        mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
-                                              msgWindow, this, uidOfMessage, 
-                                              mimeHeaders, PR_FALSE);
-                        msgUrl->SetMimeHeaders(nsnull);
-                    }
-                 }
-                 msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-                 msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-                }
-              }
-              if (needMsgID)
-              {
-                nsXPIDLCString messageID;
-                mimeHeaders->ExtractHeader("Message-Id",
-                                           PR_FALSE, getter_Copies(messageID));
-                if (messageID.Length())
-                  msgHdr->SetMessageId(messageID);
-              }
-            }
-          }
-          if (markRead)
-          {
             msgHdr->MarkRead(PR_TRUE);
             commit = PR_TRUE;
           }
         }
-      }
-    }
-  }
+
   if (commit && mDatabase)
     mDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
 

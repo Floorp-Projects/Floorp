@@ -431,54 +431,7 @@ PRInt32 nsMailboxProtocol::DoneReadingMessage()
     PRBool isRead;
     msgHdr->GetIsRead(&isRead);
     if (NS_SUCCEEDED(rv) && !isRead)
-    {
-      PRUint32 msgFlags, newFlags;
-      msgHdr->GetFlags(&msgFlags);
-      if (msgFlags & MSG_FLAG_MDN_REPORT_NEEDED)
-      {
-        nsCOMPtr<nsIMsgMdnGenerator> mdnGenerator;
-        nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-        
-        mdnGenerator =
-          do_CreateInstance(NS_MSGMDNGENERATOR_CONTRACTID, &rv);
-        
-        // To ensure code works w/o MDN enabled
-        if (NS_SUCCEEDED(rv) && mdnGenerator)
-        {
-          mimeHeaders =
-            do_CreateInstance(NS_IMIMEHEADERS_CONTRACTID, &rv);
-          if (NS_SUCCEEDED(rv) && mimeHeaders)
-          {
-            nsCOMPtr<nsIMsgFolder> msgFolder;
-            msgHdr->GetFolder(getter_AddRefs(msgFolder));
-            nsCOMPtr<nsIMsgMailNewsUrl> msgUrl =
-              do_QueryInterface(m_runningUrl);
-            if (msgUrl) 
-            {
-              nsCOMPtr<nsIMsgWindow> msgWindow;
-              msgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
-              msgHdr->GetMessageKey(&msgKey);
-              nsCOMPtr<nsIMimeHeaders> mimeHeaders;
-              msgUrl->GetMimeHeaders(getter_AddRefs(mimeHeaders));
-              mdnGenerator->Process(nsIMsgMdnGenerator::eDisplayed,
-                msgWindow, msgFolder, msgKey,
-                mimeHeaders, PR_FALSE);
-              msgUrl->SetMimeHeaders(nsnull); 
-              // no longer needed
-            }
-          }
-        }
-        // unsetting MDN_REPORT_NEEDED flag and mark the message as
-        // MDN_REPORT_SENT
-        // There are cases that: a) user wishes not to send MDN, b)
-        // mdn module is not installed, c) the message can be marked
-        // as unread and force it back to the original mdn
-        // needed state. 
-        msgHdr->SetFlags(msgFlags & ~MSG_FLAG_MDN_REPORT_NEEDED);
-        msgHdr->OrFlags(MSG_FLAG_MDN_REPORT_SENT, &newFlags);
-      }
       msgHdr->MarkRead(PR_TRUE);
-    }
   }
   
   return rv;
