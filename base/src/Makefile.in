@@ -60,6 +60,8 @@ CPPSRCS =                       \
     nsQuickSort.cpp		\
     nsPageMgr.cpp		\
     nsBuffer.cpp		\
+    nsByteBufferInputStream.cpp	\
+    nsThread.cpp		\
     nsPipe.cpp			\
     $(NULL)
 
