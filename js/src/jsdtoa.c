@@ -1926,6 +1926,7 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         }
         return JS_TRUE;
     }
+    b = NULL;                           /* initialize for abort protection */
     if (!d) {
       no_digits:
         *decpt = 1;
@@ -1937,6 +1938,9 @@ JS_dtoa(double d, int mode, JSBool biasUp, int ndigits,
         buf[0] = '0'; buf[1] = '\0';  /* copy "0" to buffer */
         if (rve)
             *rve = buf + 1;
+        /* We might have jumped to "no_digits" from below, so we need
+         * to be sure to free "b" to avoid memory leaks. */
+        Bfree(b);
         return JS_TRUE;
     }
 
