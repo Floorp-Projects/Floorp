@@ -1,7 +1,6 @@
 classic.jar:
     skin/classic/global/contents.rdf
     skin/classic/global/autocomplete.css
-    skin/classic/global/browser.css
     skin/classic/global/button.css
     skin/classic/global/checkbox.css
     skin/classic/global/commonDialog.css
