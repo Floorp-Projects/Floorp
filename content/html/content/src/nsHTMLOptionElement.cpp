@@ -297,19 +297,28 @@ NS_IMETHODIMP
 nsHTMLOptionElement::GetText(nsString& aText)
 {
   aText.SetLength(0);
-  nsIDOMNode* node = nsnull;
-  nsresult result = mInner.GetFirstChild(&node);
-  if ((NS_OK == result) && node) {
-    nsIDOMText* domText = nsnull;
-    result = node->QueryInterface(kIDOMTextIID, (void**)&domText);
-    if ((NS_OK == result) && domText) {
-      result = domText->GetData(aText);
-      aText.CompressWhitespace(PR_TRUE, PR_TRUE);
-      NS_RELEASE(domText);
-    }
-    NS_RELEASE(node);
+  PRInt32 numNodes;
+  nsresult rv = mInner.ChildCount(numNodes);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-  return result;
+  for (PRInt32 i = 0; i < numNodes; i++) {
+    nsIContent* node;
+    rv = ChildAt(i, node);
+    if (NS_SUCCEEDED(rv)) {
+      nsIDOMText* domText = nsnull;
+      rv = node->QueryInterface(kIDOMTextIID, (void**)&domText);
+      if (NS_SUCCEEDED(rv) && domText) {
+        rv = domText->GetData(aText);
+        aText.CompressWhitespace(PR_TRUE, PR_TRUE);
+        NS_RELEASE(domText);
+        NS_RELEASE(node);
+        break;
+      }
+      NS_RELEASE(node);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
