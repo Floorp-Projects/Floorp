@@ -676,7 +676,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
     nsCAutoString conid("@mozilla.org/image/decoder;2?type=");
     conid += mContentType;
 
-    mDecoder = do_CreateInstance(conid);
+    mDecoder = do_CreateInstance(conid.get());
 
     if (!mDecoder) {
       PR_LOG(gImgLog, PR_LOG_WARNING,
