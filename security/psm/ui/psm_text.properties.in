@@ -325,11 +325,8 @@ http_error_no_spec_err="No specific error message was reported."
 ;
 ; client auth UI text strings
 ;
-bad_client_auth_title="Authentication Has Failed"
-bad_client_auth_header="No Acceptable Identification"
 client_auth_greeting_string="This site has requested that you identify yourself with a security {glossary certificate,certificate}:"
 
-bad_client_auth_string="However, you have no certificates available that are accepted as valid identification by this site."
 client_auth_header="User Identification Request"
 client_auth_string="Choose a certificate to present as identification:"
 serverCert_not_before="Valid from: "

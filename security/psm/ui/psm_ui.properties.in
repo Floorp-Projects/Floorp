@@ -5578,72 +5578,6 @@ glossary_icon:
 <img SRC="get?baseRef=infojpg" ALT="Glossary Entry" ALIGN=ABSBOTTOM>
 :glossary_icon
 
-;
-; client auth failure top level fram set HTML
-;
-bad_client_auth_type="text/html"
-bad_client_auth_hdrs=""
-bad_client_auth_width=520
-bad_client_auth_height=350
-bad_client_auth_content:
-{frame_set bca,windowclose}
-:bad_client_auth_content
-
-;
-; client auth failure top frame
-;
-bca_top_type="text/html"
-bca_top_hdrs=""
-bca_top_content:
-{top_frame bad_client_auth_header,lockedgif,35,30}
-:bca_top_content
-
-;
-; client auth failure buttons frame
-;
-bca_buttons_type="text/html"
-bca_buttons_hdrs=""
-bca_buttons_content:
-{windowclose_buttons_frame BCAButton,help.htm#1036343}
-:bca_buttons_content
-
-;
-; client auth failure main frame
-;
-bca_main_type="text/html"
-bca_main_hdrs=""
-bca_main_content:
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset={nsm_charset}">
-<SCRIPT></SCRIPT><LINK REL=STYLESHEET TYPE="text/css" HREF="get?baseRef=standalone">
-{disable_right_click_js}
-</head>
-<body class=content alink="#FF0000">
-<p>{client_auth_greeting_string}</p>
-
-<table WIDTH=500px>
-<tr VALIGN=CENTER>
-<td ALIGN=CENTER WIDTH="90px"><img SRC="get?baseRef=certgif" height=60 width=80></td>
-
-<td ALIGN=CENTER VALIGN=TOP>
-{_server_cert_info simple,serverCert_format,serverCert_format}
-
-</td></tr></table>
-
-<HR WIDTH=96% ALIGN=CENTER>
-
-<table>
-<tr VALIGN=CENTER>
-<td align=center width="90px"><img SRC="get?baseRef=nocertgif" height=60 width=80></td>
-<td WIDTH="400">
-<div class=plain>
-{bad_client_auth_string}
-</div>
-</td></tr></table>
-</body>
-</html>
-:bca_main_content
 
 ;
 ; server cert format
@@ -5675,10 +5609,6 @@ serverCert_format:
 </td><td></td></tr></table>
 <!-- %2$s %3$s unused -->
 :serverCert_format
-
-;
-; -- END -- bad_client_auth
-;
 
 ;
 ; client auth top level frame set HTML
