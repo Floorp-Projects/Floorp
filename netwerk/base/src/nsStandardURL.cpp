@@ -279,7 +279,7 @@ nsStandardURL::nsStandardURL(PRBool aSupportsFileURL)
     , mPort(-1)
     , mURLType(URLTYPE_STANDARD)
     , mHostA(nsnull)
-    , mHostEncoding(eEncoding_Unknown)
+    , mHostEncoding(eEncoding_ASCII)
     , mSpecEncoding(eEncoding_Unknown)
     , mMutable(PR_TRUE)
     , mSupportsFileURL(aSupportsFileURL)
@@ -345,6 +345,7 @@ nsStandardURL::Clear()
     mUsername.Reset();
     mPassword.Reset();
     mHost.Reset();
+    mHostEncoding = eEncoding_ASCII;
 
     mPath.Reset();
     mFilepath.Reset();
@@ -366,7 +367,6 @@ nsStandardURL::InvalidateCache(PRBool invalidateCachedFile)
         mFile = 0;
     CRTFREEIF(mHostA);
     mSpecEncoding = eEncoding_Unknown;
-    mHostEncoding = eEncoding_Unknown;
 }
 
 PRBool
@@ -434,6 +434,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
     // escaping is required).
     nsCAutoString encUsername;
     nsCAutoString encPassword;
+    nsCAutoString encHost;
     nsCAutoString encDirectory;
     nsCAutoString encBasename;
     nsCAutoString encExtension;
@@ -468,8 +469,24 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
 
     // do not escape the hostname, if IPv6 address literal, mHost will
     // already point to a [ ] delimited IPv6 address literal.
-    if (mHost.mLen > 0)
-        approxLen += mHost.mLen;
+    // However, perform Unicode normalization on it, as IDN does.
+    mHostEncoding = eEncoding_ASCII;
+    if (mHost.mLen > 0) {
+        const nsCSubstring& tempHost =
+            Substring(spec + mHost.mPos, spec + mHost.mPos + mHost.mLen);
+        if (IsASCII(tempHost))
+            approxLen += mHost.mLen;
+        else {
+            mHostEncoding = eEncoding_UTF8;
+            if (gIDNService &&
+                NS_SUCCEEDED(gIDNService->Normalize(tempHost, encHost)))
+                approxLen += encHost.Length();
+            else {
+                encHost.Truncate();
+                approxLen += mHost.mLen;
+            }
+        }
+    }
 
     //
     // generate the normalized URL string
@@ -498,7 +515,7 @@ nsStandardURL::BuildNormalizedSpec(const char *spec)
         buf[i++] = '@';
     }
     if (mHost.mLen > 0) {
-        i = AppendSegmentToBuf(buf, i, spec, mHost);
+        i = AppendSegmentToBuf(buf, i, spec, mHost, &encHost);
         net_ToLowerCase(buf + mHost.mPos, mHost.mLen);
         if (mPort != -1 && mPort != mDefaultPort) {
             nsCAutoString portbuf;
@@ -929,13 +946,6 @@ nsStandardURL::GetAsciiSpec(nsACString &result)
 NS_IMETHODIMP
 nsStandardURL::GetAsciiHost(nsACString &result)
 {
-    if (mHostEncoding == eEncoding_Unknown) {
-        if (IsASCII(Host()))
-            mHostEncoding = eEncoding_ASCII;
-        else
-            mHostEncoding = eEncoding_UTF8;
-    }
-
     if (mHostEncoding == eEncoding_ASCII) {
         result = Host();
         return NS_OK;
@@ -1283,6 +1293,7 @@ nsStandardURL::SetHost(const nsACString &input)
     }
 
     InvalidateCache();
+    mHostEncoding = eEncoding_ASCII;
 
     if (!(host && *host)) {
         // remove existing hostname
@@ -1306,8 +1317,17 @@ nsStandardURL::SetHost(const nsACString &input)
         host = escapedHost.get();
         len = escapedHost.Length();
     }
-    else
-        len = strlen(host);
+    else {
+        len = flat.Length();
+        if (!IsASCII(flat)) {
+            mHostEncoding = eEncoding_UTF8;
+            if (gIDNService &&
+                NS_SUCCEEDED(gIDNService->Normalize(flat, escapedHost))) {
+                host = escapedHost.get();
+                len = escapedHost.Length();
+            }
+        }
+    }
 
     if (mHost.mLen < 0) {
         mHost.mPos = mAuthority.mPos;
