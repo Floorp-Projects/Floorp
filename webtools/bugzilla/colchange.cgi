@@ -30,6 +30,9 @@ print "Content-type: text/html\n";
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
 
+ConnectToDatabase();
+GetVersionTable();
+
 my @masterlist = ("opendate", "changeddate", "severity", "priority",
                   "platform", "owner", "reporter", "status", "resolution",
                   "component", "product", "version", "project", "os", "votes");
@@ -42,6 +45,9 @@ if (Param("useqacontact")) {
 }
 if (Param("usestatuswhiteboard")) {
     push(@masterlist, "status_whiteboard");
+}
+if (@::legal_keywords) {
+    push(@masterlist, "keywords");
 }
 
 

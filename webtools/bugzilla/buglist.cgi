@@ -27,16 +27,19 @@ use strict;
 require "CGI.pl";
 use Date::Parse;
 
-use vars @::legal_platform,
-    @::versions,
-    @::legal_product,
-    %::MFORM,
+use vars %::MFORM,
     @::components,
-    @::legal_severity,
-    @::legal_priority,
+    @::db,
     @::default_column_list,
+    @::keywordsbyname,
+    @::legal_keywords,
+    @::legal_platform,
+    @::legal_priority,
+    @::legal_product,
     @::legal_resolution_no_dup,
-    @::legal_target_milestone;
+    @::legal_severity,
+    @::legal_target_milestone,
+    @::versions;
 
 
 
@@ -185,7 +188,6 @@ if (defined $::COOKIE{'COLUMNLIST'}) {
 }
 
 my $minvotes;
-my $votecolnum;
 if (defined $::FORM{'votes'}) {
     my $c = trim($::FORM{'votes'});
     if ($c ne "") {
@@ -199,7 +201,6 @@ if (defined $::FORM{'votes'}) {
         if (! (grep {/^votes$/} @collist)) {
             push(@collist, 'votes');
         }
-        $votecolnum = lsearch(\@collist, 'votes');
     }
 }
 
@@ -561,6 +562,8 @@ foreach my $c (@collist) {
         } else {
             $tablestart .= $::title{$c};
         }
+    } elsif ($c eq "keywords") {
+        $tablestart .= "<TH valign=left>Keywords</TH>";
     }
 }
 
@@ -600,19 +603,31 @@ while (@row = FetchSQLData()) {
         pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
         pnl "$bug_id</A> ";
         foreach my $c (@collist) {
-            if (!exists $::needquote{$c}) {
-                next;
+            if (exists $::needquote{$c}) {
+                my $value = shift @row;
+                if (!defined $value) {
+                    next;
+                }
+                if ($::needquote{$c}) {
+                    $value = html_quote($value);
+                } else {
+                    $value = "<nobr>$value</nobr>";
+                }
+                pnl "<td>$value";
+            } elsif ($c eq "keywords") {
+                my $query =
+                    $::db->query("SELECT keyworddefs.name
+                                  FROM keyworddefs, keywords
+                                  WHERE keywords.bug_id = $bug_id
+                                    AND keyworddefs.id = keywords.keywordid
+                                  ORDER BY keyworddefs.name");
+                my @list;
+                my @row;
+                while (@row= $query->fetchrow()) {
+                    push(@list, $row[0]);
+                }
+                pnl("<td>" . join(", ", @list) . "</td>");
             }
-            my $value = shift @row;
-            if (!defined $value) {
-                next;
-            }
-            if ($::needquote{$c}) {
-                $value = html_quote($value);
-            } else {
-                $value = "<nobr>$value</nobr>";
-            }
-            pnl "<td>$value";
         }
         if ($dotweak) {
             my $value = shift @row;
