@@ -1210,7 +1210,7 @@
           } else {
             this.backBrowserGroup = this.replaceGroup(aGroup);
             this.forwardBrowserGroup = [];
-            tab = tabs.firstChild;
+            tab = this.mTabContainer.firstChild;
           }
           return tab;
         ]]>
