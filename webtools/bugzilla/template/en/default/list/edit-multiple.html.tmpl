@@ -289,7 +289,8 @@
     [% knum = knum + 1 %]
     <input id="knob-verify" type="radio" name="knob" value="verify">
     <label for="knob-verify">Mark [% terms.bugs %] as <b>VERIFIED</b></label><br>
-  [% ELSIF bugstatuses.contains('VERIFIED') %]
+  [% END %]
+  [% IF bugstatuses.contains('RESOLVED') || bugstatuses.contains('VERIFIED') %]
     [% knum = knum + 1 %]
     <input id="knob-close" type="radio" name="knob" value="close">
     <label for="knob-close">Mark [% terms.bugs %] as <b>CLOSED</b></label><br>
