@@ -3331,21 +3331,27 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
   // ----- reattach gfx scrollbars ------
   // Gfx scrollframes were created in the root frame but the primary frame map may have been destroyed if a 
   // new style sheet was loaded so lets reattach the frames to their content.
-    if (mGfxScrollFrame)
-    {
-        nsIFrame* scrollPort = nsnull;
-        mGfxScrollFrame->FirstChild(aPresContext, nsnull, &scrollPort);
+  if (mGfxScrollFrame) {
+    nsIFrame* scrollPort = nsnull;
+    mGfxScrollFrame->FirstChild(aPresContext, nsnull, &scrollPort);
 
-        nsIFrame* gfxScrollbarFrame1 = nsnull;
-        nsIFrame* gfxScrollbarFrame2 = nsnull;
-        nsresult rv = scrollPort->GetNextSibling(&gfxScrollbarFrame1);
-        rv = gfxScrollbarFrame1->GetNextSibling(&gfxScrollbarFrame2);
-        nsCOMPtr<nsIContent> content;
-        gfxScrollbarFrame1->GetContent(getter_AddRefs(content));
-        aState.mFrameManager->SetPrimaryFrameFor(content, gfxScrollbarFrame1);
+    nsIFrame* gfxScrollbarFrame1 = nsnull;
+    nsIFrame* gfxScrollbarFrame2 = nsnull;
+    nsresult rv = scrollPort->GetNextSibling(&gfxScrollbarFrame1);
+    if (gfxScrollbarFrame1) {
+      nsCOMPtr<nsIContent> content;
+      gfxScrollbarFrame1->GetContent(getter_AddRefs(content));
+      // XXX This works, but why?
+      aState.mFrameManager->SetPrimaryFrameFor(content, gfxScrollbarFrame1);
+
+      rv = gfxScrollbarFrame1->GetNextSibling(&gfxScrollbarFrame2);
+      if (gfxScrollbarFrame2) {
         gfxScrollbarFrame2->GetContent(getter_AddRefs(content));
+        // XXX This works, but why?
         aState.mFrameManager->SetPrimaryFrameFor(content, gfxScrollbarFrame2);
+      }
     }
+  }
 
   // --------- CREATE AREA OR BOX FRAME -------
   nsCOMPtr<nsIStyleContext>  styleContext;

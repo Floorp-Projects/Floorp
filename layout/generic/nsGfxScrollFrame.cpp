@@ -1085,7 +1085,7 @@ PRBool
 nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScrollAreaSize, PRBool aOnTop, PRBool aHorizontal, PRBool aAdd)
 {
   if (aHorizontal) {
-     if (mNeverHasHorizontalScrollbar)
+     if (mNeverHasHorizontalScrollbar || !mHScrollbarBox)
        return PR_FALSE;
 
      if (aAdd)
@@ -1106,7 +1106,7 @@ nsGfxScrollFrameInner::AddRemoveScrollbar(nsBoxLayoutState& aState, nsRect& aScr
 
      return fit;
   } else {
-     if (mNeverHasVerticalScrollbar)
+     if (mNeverHasVerticalScrollbar || !mVScrollbarBox)
        return PR_FALSE;
 
      if (aAdd)
@@ -1646,6 +1646,9 @@ nsGfxScrollFrameInner::GetScrolledSize(nsIPresContext* aPresContext,
 void
 nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible)
 {
+  if (!aScrollbar)
+    return;
+
   nsIFrame* frame = nsnull;
   aScrollbar->GetFrame(&frame);
 
