@@ -40,6 +40,7 @@ install::
   $(MAKE_INSTALL) $(XPDIST)\include\java\jritypes.h .\include
 
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCom.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComObsolete.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComponentManagerUtils.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCOMPtr.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nscore.h .\include
@@ -48,26 +49,20 @@ install::
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIClassInfo.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIComponentManager.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsID.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIDirectoryService.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIFactory.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIFile.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIID.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIInputStream.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIInterfaceRequestor.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsILocalFile.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIMemory.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIModule.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIObserver.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIOutputStream.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIProgrammingLanguage.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIProperties.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManager.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISimpleEmumerator.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManagerObsolete.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManagerUtils.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupports.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsBase.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsImpl.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsObsolete.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsUtils.h .\include
-  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIWeakReference.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsrootidl.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsTraceRefcnt.h .\include
+  $(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsXPCOM.h .\include
 
   $(MAKE_INSTALL) $(XPDIST)\include\nspr\pratom.h .\include
   $(MAKE_INSTALL) $(XPDIST)\include\nspr\prcpucfg.h .\include
