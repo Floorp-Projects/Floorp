@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslinfo.c,v 1.4 2002/03/22 21:43:42 nelsonb%netscape.com Exp $
+ * $Id: sslinfo.c,v 1.5 2002/08/09 21:53:17 nelsonb%netscape.com Exp $
  */
 #include "ssl.h"
 #include "sslimpl.h"
@@ -161,6 +161,7 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
 {0,CS(SSL_RSA_EXPORT_WITH_RC4_40_MD5),        S_RSA, K_RSA, C_RC4, B_40,  M_MD5, 0, 1, 0, },
 {0,CS(SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5),    S_RSA, K_RSA, C_RC2, B_40,  M_MD5, 0, 1, 0, },
 {0,CS(SSL_FORTEZZA_DMS_WITH_NULL_SHA),        S_KEA, K_KEA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
+{0,CS(SSL_RSA_WITH_NULL_SHA),                 S_RSA, K_RSA, C_NULL,B_0,   M_SHA, 0, 1, 0, },
 {0,CS(SSL_RSA_WITH_NULL_MD5),                 S_RSA, K_RSA, C_NULL,B_0,   M_MD5, 0, 1, 0, },
 
 /* SSL 2 table */
