@@ -17,36 +17,37 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsIEventQueueService_h__
-#define nsIEventQueueService_h__
+#ifndef nsIEventQueue_h__
+#define nsIEventQueue_h__
 
 #include "nsISupports.h"
 #include "prthread.h"
 #include "plevent.h"
-#include "nsIEventQueue.h"
 
-/* a6cf90dc-15b3-11d2-932e-00805f8add32 */
-#define NS_IEVENTQUEUESERVICE_IID \
-{ 0xa6cf90dc, 0x15b3, 0x11d2, \
-  {0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
+// {176AFB41-00A4-11d3-9F2A-00400553EEF0}
+#define NS_IEVENTQUEUE_IID \
+{ 0x176afb41, 0xa4, 0x11d3, { 0x9f, 0x2a, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
 
-class nsIEventQueueService : public nsISupports
+// {13D86C61-00A9-11d3-9F2A-00400553EEF0}
+#define NS_EVENTQUEUE_CID \
+{ 0x13d86c61, 0xa9, 0x11d3, { 0x9f, 0x2a, 0x0, 0x40, 0x5, 0x53, 0xee, 0xf0 } }
+
+class nsIEventQueue : public nsISupports
 {
 public:
-  NS_IMETHOD CreateThreadEventQueue(void) = 0;
-  NS_IMETHOD DestroyThreadEventQueue(void) = 0;
+	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUE_IID; return iid;}
 
-	NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult) = 0;
+  NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
+  NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent) = 0;
+	NS_IMETHOD ProcessPendingEvents() = 0;
 
-	NS_IMETHOD PushThreadEventQueue(void) = 0;
-	NS_IMETHOD PopThreadEventQueue(void) = 0;
+	NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
+	NS_IMETHOD GetEvent(PLEvent** aResult) = 0;
 
-  NS_IMETHOD GetThreadEventQueue(PRThread* aThread, nsIEventQueue** aResult) = 0;
-  
-#ifdef XP_MAC
-// This is ment to be temporary until something better is worked out
- NS_IMETHOD ProcessEvents() = 0;
-#endif
+  NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
+
+	NS_IMETHOD Init() = 0;
+	NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
 };
 
-#endif /* nsIEventQueueService_h___ */
+#endif /* nsIEventQueue_h___ */

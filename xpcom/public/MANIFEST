@@ -29,6 +29,7 @@ plvector.h
 nsXPComFactory.h
 nsXPComCIID.h
 nsXPIDLString.h
+nsIEventQueue.h
 nsIEventQueueService.h
 nsICollection.h
 nsIAllocator.h
