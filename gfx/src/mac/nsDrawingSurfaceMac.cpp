@@ -270,8 +270,8 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
 	// Quick and dirty check to make sure there is some memory available.
 	// GWorld allocations in temp mem can still fail if the heap is totally
 	// full, because some stuff is allocated in the heap
-	const long kReserveHeapFreeSpace = (256 * 1024);
-	const long kReserverHeapContigSpace	= (128 * 1024);
+	const long kReserveHeapFreeSpace = (1024 * 1024);
+	const long kReserveHeapContigSpace	= (512 * 1024);
 
   QDErr		err = noErr;
   long	  totalSpace, contiguousSpace;
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
       // only try the heap if there is enough space
     	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory, just measure it
 
-    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserveHeapContigSpace)
      		::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, 0);
     }
   }
@@ -293,7 +293,7 @@ NS_IMETHODIMP nsDrawingSurfaceMac :: Init(PRUint32 aDepth,PRUint32 aWidth,PRUint
       // only try the heap if there is enough space
     	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory, just measure it
 
-    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+    	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserveHeapContigSpace)
      		::NewGWorld(&offscreenGWorld, depth, &macRect, nsnull, nsnull, 0);
   
       if (!offscreenGWorld)

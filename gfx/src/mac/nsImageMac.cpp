@@ -490,26 +490,45 @@ OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rec
 {
 	*outGWorld = nsnull;
 	
-	// Quick and dirty check to make sure there is some memory available.
-	// GWorld allocations in temp mem can still fail if the heap is totally
-	// full, because some stuff is allocated in the heap
-	const long kReserveHeapFreeSpace = (256 * 1024);
-	const long kReserverHeapContigSpace	= (128 * 1024);
+  // We have to be careful here not to fill the heap with GWorld pieces.
+  // The key to understanding this is that, even if you allocate a GWorld
+  // with the 'useTempMem' flag, it puts data handles in the heap (GDevices,
+  // color tables etc).
+  // 
+  // The strategy is this:
+  //   1. If we have plenty of heap space free, allocate the GWorld in
+  //      the heap.
+  //
+  //   2. When below a certain threshold of free space in the heap,
+  //      allocate GWorlds in temp mem.
+  //
+  //   3. When memory is really tight, refuse to allocate a GWorld at
+  //      all.
+
+  // threshold at which we go to temp mem
+	const long kUseTempMemFreeSpace = (1024 * 1024);
+	const long kUseTempMemContigSpace	= (768 * 1024);
 	
 	long	totalSpace, contiguousSpace;
 	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
 	
-	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+	if (totalSpace > kUseTempMemFreeSpace && contiguousSpace > kUseTempMemContigSpace)
 	{
 		::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
 		if (*outGWorld) return noErr;
 	}
-	
-	::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
-	if (!*outGWorld)
-	  return memFullErr;
 
-	return noErr;
+	// theshold at which we refuse to allocate at all
+	const long kReserveHeapFreeSpace = (512 * 1024);
+	const long kReserveHeapContigSpace	= (384 * 1024);
+	
+	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserveHeapContigSpace)
+	{
+  	::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
+		if (*outGWorld) return noErr;
+	}
+
+	return memFullErr;
 }
 
 
