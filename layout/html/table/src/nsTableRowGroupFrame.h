@@ -66,6 +66,15 @@ public:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect&        aDirtyRect);
 
+  /**
+   * Pass through the event to the correct child frame.
+   * Return PR_TRUE if the event is consumed.
+   * @see nsContainerFrame::HandleEvent
+   */
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+
   /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.
     * <P> rows are not split unless absolutely necessary.

@@ -1374,6 +1374,46 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* we overload this here because rows have children that can span outside of themselves.
+ * so the default "get the child rect, see if it contains the event point" action isn't
+ * sufficient.  We have to ask the row if it has a child that contains the point.
+ */
+PRBool nsTableRowFrame::Contains(nsPoint& aPoint)
+{
+  if (gsDebug) printf("Row %p index %d ::Contains aPoint(%d,%d) and row rect (%d,%d,%d,%d)\n",
+                         this, mRowIndex, 
+                         aPoint.x, aPoint.y,
+                         mRect.x, mRect.y, mRect.width, mRect.height);
+  PRBool result = PR_FALSE;
+  // first, check the row rect and see if the point is in their
+  if (mRect.Contains(aPoint)) {
+    if (gsDebug) printf("%p Row::Contains point.\n");
+    result = PR_TRUE;
+  }
+  // if that fails, check the cells, they might span outside the row rect
+  else {
+    nsIFrame* kid;
+    FirstChild(kid);
+    while (nsnull != kid) {
+      nsRect kidRect;
+      kid->GetRect(kidRect);
+      nsPoint point(aPoint);
+      point.MoveBy(-mRect.x, -mRect.y); // offset the point to check by the row container
+      if (gsDebug) printf("Row %p checking point (%d,%d) vs. cell rect (%d,%d,%d,%d)\n",
+                         point.x, point.y,
+                         kidRect.x, kidRect.y, kidRect.width, kidRect.height);
+      if (kidRect.Contains(point)) {
+        if (gsDebug) printf("cell contains point.\n");
+        result = PR_TRUE;
+        break;
+      }
+      kid->GetNextSibling(kid);
+    }
+  }
+  if (gsDebug) printf("%p Row::Contains returning %d\n", this, result);
+  return result;
+}
+
 /* ----- global methods ----- */
 
 nsresult 
