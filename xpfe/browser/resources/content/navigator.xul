@@ -334,7 +334,7 @@ Contributor(s): ______________________________________. -->
 		  <menuitem value="&searchComputerCmd.label;" oncommand="BrowserReload();"/>
 	  </menupopup>
     </menu>
-    <menu accesskey="g" value="&goMenu.label;">
+    <menu accesskey="g" id="gomenu" value="&goMenu.label;">
 	  <menupopup>
 		  <menuitem id="menuitem-back" value="&goBackCmd.label;" oncommand="BrowserBack();"/>
 		  <menuitem id="menuitem-forward" value="&goForwardCmd.label;" oncommand="BrowserForward();" />
