@@ -16,3 +16,6 @@
   <!ENTITY cmdShowColumnsDialog.label "Columns...">
   <!ENTITY cmdShowColumnsDialog.accesskey "c">
   
+  <!ENTITY cmdDeleteNode.label "Delete">
+  <!ENTITY cmdInspectBrowser.label "Inspect Document">
+  

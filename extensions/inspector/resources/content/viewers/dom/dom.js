@@ -158,6 +158,55 @@ DOMViewer.prototype =
     var item = this.mDOMTree.selectedItems[0];
     this.mPane.onVieweeChanged(this.getNodeFromTreeItem(item));
   },
+  
+  onContextCreate: function(aPP)
+  {
+    var mi, cmd;
+    for (var i = 0; i < aPP.childNodes.length; ++i) {
+      mi = aPP.childNodes[i];
+      if (mi.hasAttribute("observes")) {
+        cmd = document.getElementById(mi.getAttribute("observes"));
+        if (cmd && cmd.hasAttribute("isvalid")) {
+          try {
+            var isValid = new Function(cmd.getAttribute("isvalid"));
+          } catch (ex) { /* die quietly on syntax error in handler */ }
+          if (!isValid())
+            mi.setAttribute("hidden", "true");
+          else
+            mi.removeAttribute("hidden");
+        }
+      }
+    }
+  },
+  
+  cmdDeleteSelectedNode: function()
+  {
+    var node = this.getSelectedNode();
+    node.parentNode.removeChild(node);
+  },
+  
+  cmdInspectBrowserIsValid: function()
+  {
+    var node = viewer.getSelectedNode();
+    if (!node) return false;
+    
+    return node.localName == "browser" || node.localName == "iframe";
+  },
+  
+  cmdInspectBrowser: function()
+  {
+    var node = this.getSelectedNode();
+    if (node.localName == "browser" && node.namespaceURI == kXULNSURI) {
+      // xul browser
+      this.viewee = node.webNavigation.document;
+    } else if (node.localName == "iframe" && node.namespaceURI == kXULNSURI) {
+      // xul iframe
+      this.viewee = node.docShell.contentViewer.DOMDocument;
+    } else if (node.localName == "iframe") {
+      // html iframe
+      this.viewee = node.contentDocument;
+    }
+  },
  
   ////////////////////////////////////////////////////////////////////////////
   //// Searching Methods
@@ -330,6 +379,11 @@ DOMViewer.prototype =
     var res = gRDF.GetResource(aItem.id);
     res = res.QueryInterface(Components.interfaces.nsIDOMDSResource);
     return res ? res.object : null;
+  },
+  
+  getSelectedNode: function()
+  {
+    return this.getNodeFromTreeItem(this.mDOMTree.selectedItems[0]);
   }
 
 };
