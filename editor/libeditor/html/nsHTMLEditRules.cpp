@@ -1286,19 +1286,18 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     const PRUnichar *unicodeBuf = tString.get();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
-    NS_NAMED_LITERAL_STRING(newlineStr, "\n");
+    NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
         
     // for efficiency, break out the pre case seperately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (isPRE || bPlaintext)
     {
-      char newlineChar = '\n';
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)(*inString).Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = tString.FindChar(newlineChar, oldPos);
+        pos = tString.FindChar(nsCRT::LF, oldPos);
 
         if (pos != -1) 
         {
@@ -1332,7 +1331,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     {
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
       NS_NAMED_LITERAL_STRING(spacesStr, "    ");
-      char specialChars[] = {'\t','\n',0};
+      char specialChars[] = {TAB, nsCRT::LF, 0};
       while (unicodeBuf && (pos != -1) && (pos < (PRInt32)inString->Length()))
       {
         PRInt32 oldPos = pos;

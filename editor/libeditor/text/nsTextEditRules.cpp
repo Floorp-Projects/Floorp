@@ -633,13 +633,12 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     // it is to search for both tabs and newlines.
     if (isPRE)
     {
-      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
-      char newlineChar = '\n';
+      NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
       while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = tString.FindChar(newlineChar, oldPos);
+        pos = tString.FindChar(nsCRT::LF, oldPos);
         
         if (pos != -1) 
         {
@@ -703,8 +702,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     else
     {
       NS_NAMED_LITERAL_STRING(tabStr, "\t");
-      NS_NAMED_LITERAL_STRING(newlineStr, "\n");
-      char specialChars[] = {'\t','\n',0};
+      NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
+      char specialChars[] = {TAB, nsCRT::LF, 0};
       nsAutoString tabString(NS_LITERAL_STRING("    "));
       while (unicodeBuf && (pos != -1) && ((PRUint32)pos < tString.Length()))
       {
@@ -1158,7 +1157,6 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   // replace newlines with breaks.  have to do this left to right,
   // since inserting the break can split the text node, and the
   // original node becomes the righthand node.
-  char newlineChar[] = {'\n',0};
   res = arrayOfNodes->Count(&nodeCount);
   if (NS_FAILED(res)) return res;
   for (j = 0; j < nodeCount; j++)
@@ -1173,7 +1171,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
     do 
     {
       textNode->GetData(tempString);
-      offset = tempString.FindCharInSet(newlineChar);
+      offset = tempString.FindChar(nsCRT::LF);
       if (offset == -1) break; // done with this node
       
       // delete the newline
