@@ -44,11 +44,12 @@
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIContent.h"
 #include "nsIEditProperty.h"
-#include "nsIParser.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
+
+#define kNullCh (PRUnichar('\0'))
 
 void
 ChangeCSSInlineStyleTxn::AppendDeclaration(nsAString & aOutputString,
