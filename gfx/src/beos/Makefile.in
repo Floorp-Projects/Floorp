@@ -47,6 +47,8 @@ CPPSRCS		= \
 		nsScreenManagerBeOS.cpp \
 		$(NULL)
 
+REQUIRES	= xpcom string pref widget view intl uconv dom windowwatcher unicharutil
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_GFXONXP

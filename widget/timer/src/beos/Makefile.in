@@ -39,6 +39,8 @@ MODULE_NAME	= nsBeOSTimerModule
 CPPSRCS		+= nsTimerBeOSFactory.cpp
 EXTRA_DSO_LDOPTS = $(MOZ_TK_LDFLAGS) $(MOZ_COMPONENT_LIBS)
 
+REQUIRES = xpcom string
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES	+= $(MOZ_TK_CFLAGS) -I$(srcdir)/..
