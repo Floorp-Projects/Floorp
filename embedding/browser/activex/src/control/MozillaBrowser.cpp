@@ -68,6 +68,7 @@
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLAnchorElement.h"
+#include "nsIDOMNSDocument.h"
 
 #include "nsEmbedAPI.h"
 
@@ -320,7 +321,7 @@ void CMozillaBrowser::ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEven
 //
 // ShowURIPropertyDlg
 //
-void CMozillaBrowser::ShowURIPropertyDlg(const nsString &aURI)
+void CMozillaBrowser::ShowURIPropertyDlg(const nsAString &aURI, const nsAString &aContentType)
 {
     CPropertyDlg dlg;
     CPPageDlg linkDlg;
@@ -328,10 +329,8 @@ void CMozillaBrowser::ShowURIPropertyDlg(const nsString &aURI)
 
     if (aURI.Length() > 0)
     {
-        USES_CONVERSION;
-        linkDlg.mProtocol = "Hypertext Transfer Protocol"; // TODO
-        linkDlg.mType = "HTML Document"; // TODO
-        linkDlg.mURL.AssignWithConversion(aURI);
+        linkDlg.mType = aContentType;
+        linkDlg.mURL = aURI;
     }
 
     dlg.DoModal();
@@ -834,8 +833,14 @@ LRESULT CMozillaBrowser::OnDocumentProperties(WORD wNotifyCode, WORD wID, HWND h
     {
         htmlDoc->GetURL(uri);
     }
+    nsAutoString contentType;
+    nsCOMPtr<nsIDOMNSDocument> doc = do_QueryInterface(ownerDoc);
+    if (doc)
+    {
+        doc->GetContentType(contentType);
+    }
 
-    ShowURIPropertyDlg(uri);
+    ShowURIPropertyDlg(uri, contentType);
 
     return 0;
 }
@@ -930,14 +935,16 @@ LRESULT CMozillaBrowser::OnLinkCopyShortcut(WORD wNotifyCode, WORD wID, HWND hWn
 LRESULT CMozillaBrowser::OnLinkProperties(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled)
 {
     nsAutoString uri;
+    nsAutoString type;
 
     nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement = do_QueryInterface(mContextNode);
     if (anchorElement)
     {
         anchorElement->GetHref(uri);
+        anchorElement->GetType(type); // How many anchors implement this I wonder
     }
 
-    ShowURIPropertyDlg(uri);
+    ShowURIPropertyDlg(uri, type);
 
     return 0;
 }
@@ -1281,14 +1288,14 @@ HRESULT CMozillaBrowser::OnEditorCommand(DWORD nCmdID)
         PRBool bAll = PR_TRUE;
 
         // Set or remove
-        pHtmlEditor->GetInlineProperty(pInlineProperty, nsString(), nsString(), &bFirst, &bAny, &bAll);
+        pHtmlEditor->GetInlineProperty(pInlineProperty, nsAutoString(), nsAutoString(), &bFirst, &bAny, &bAll);
         if (bAny)
         {
-            pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsString());
+            pHtmlEditor->RemoveInlineProperty(pInlineProperty, nsAutoString());
         }
         else
         {
-            pHtmlEditor->SetInlineProperty(pInlineProperty, nsString(), nsString());
+            pHtmlEditor->SetInlineProperty(pInlineProperty, nsAutoString(), nsAutoString());
         }
     }
 

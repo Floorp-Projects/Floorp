@@ -325,9 +325,8 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Address: (URL)",IDC_STATIC,0,68,27,20
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,0,32,185,1
-    LTEXT           "Type:",IDC_STATIC,0,53,19,8
     LTEXT           "type",IDC_TYPE,35,53,149,8
-    LTEXT           "Protocol:",IDC_STATIC,0,38,28,8
+    LTEXT           "Type:",IDC_STATIC,0,38,19,8
     LTEXT           "protocol",IDC_PROTOCOL,35,38,149,8
     EDITTEXT        IDC_ADDRESS,35,68,149,61,ES_MULTILINE | ES_AUTOVSCROLL | 
                     ES_READONLY

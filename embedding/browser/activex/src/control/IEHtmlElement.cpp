@@ -508,7 +508,16 @@ HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_offsetParent(IHTMLElement __RPC_FA
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::put_innerHTML(BSTR v)
 {
-    return E_NOTIMPL;
+    nsCOMPtr<nsIDOMNSHTMLElement> elementHTML = do_QueryInterface(mDOMNode);
+    if (!elementHTML)
+    {
+        return E_UNEXPECTED;
+    }
+
+    USES_CONVERSION;
+    nsAutoString innerHTML(OLE2W(v));
+    elementHTML->SetInnerHTML(innerHTML);
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CIEHtmlElement::get_innerHTML(BSTR __RPC_FAR *p)

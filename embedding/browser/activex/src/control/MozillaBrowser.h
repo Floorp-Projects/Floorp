@@ -417,7 +417,7 @@ protected:
     // User interface methods
     virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
     virtual void ShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode);
-    virtual void ShowURIPropertyDlg(const nsString &aURI);
+    virtual void ShowURIPropertyDlg(const nsAString &aURI, const nsAString &aContentType);
     virtual void NextDlgControl();
     virtual void PrevDlgControl();
 
