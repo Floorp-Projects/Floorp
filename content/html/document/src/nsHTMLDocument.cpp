@@ -1246,7 +1246,8 @@ nsHTMLDocument::AttributeChanged(nsIContent* aContent, PRInt32 aNameSpaceID,
 }
 
 NS_IMETHODIMP 
-nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows)
+nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows,
+                                          PRBool aUpdateViews)
 {
   // Determine if it is safe to flush the sink
   // by determining if it safe to flush all the presshells.
@@ -1274,7 +1275,8 @@ nsHTMLDocument::FlushPendingNotifications(PRBool aFlushReflows)
   }
 
   if (NS_SUCCEEDED(result)) {
-    result = nsDocument::FlushPendingNotifications(aFlushReflows);
+    result = nsDocument::FlushPendingNotifications(aFlushReflows,
+                                                   aUpdateViews);
   }
 
   return result;
