@@ -1339,12 +1339,28 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext)
   MarkTreeAsDirty(aPresContext, treeFrame);
 }
 
-void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling)
+void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex)
 {
   nsIFrame* currFrame = aNextSibling;
 
-  if(aNextSibling == mTopFrame)
-    mTopFrame = nsnull;
+  // this will probably never happen - 
+  // if we haven't created the topframe, it doesn't matter if
+  // content was inserted
+  if (mTopFrame == nsnull) return;
+
+  // if we're inserting content at the top of visible content,
+  // then ignore it because it would go off-screen
+  // except of course in the case of the first row, where we're
+  // actually adding visible content
+  if(aNextSibling == mTopFrame) {
+    if (aIndex == 0)
+      // it's the first row, blow away mTopFrame so it can be
+      // crecreated later
+      mTopFrame = nsnull;
+    else
+      // it's not visible, nothing to do
+      return;
+  }
 
   while (currFrame) {
     nsIFrame* nextFrame;
@@ -1362,10 +1378,11 @@ void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFra
 void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext, 
                                            nsIFrame* aChildFrame)
 {
-  // We need to make sure we update things when content gets removed.
-  // Clear out our top and bottom frames.
-  mTopFrame = mBottomFrame = nsnull;
-
+  
+  // if we're removing the top row, the new top row is the next row
+  if (mTopFrame == aChildFrame)
+    mTopFrame->GetNextSibling(&mTopFrame);
+  
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
 
