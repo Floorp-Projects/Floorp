@@ -9343,9 +9343,6 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
       // Get the correct parentFrame and prevSibling - if a
       // letter-frame is present, use its parent.
       if (parentFrame->GetType() == nsLayoutAtoms::letterFrame) {
-        if (prevSibling)
-          prevSibling = parentFrame;
-
         parentFrame = parentFrame->GetParent();
       }
 
@@ -9378,6 +9375,14 @@ nsCSSFrameConstructor::ContentInserted(nsPresContext*        aPresContext,
 
         return NS_OK;
       }
+
+      // Removing the letterframes messes around with the frame tree, removing
+      // and creating frames.  We need to reget our prevsibling.
+      // See XXX comment the first time we do this in this method....
+      prevSibling = (aIndexInContainer >= 0)
+        ? FindPreviousSibling(shell, container, parentFrame,
+                              aIndexInContainer, aChild)
+        : FindPreviousAnonymousSibling(shell, mDocument, aContainer, aChild);
     }
   }
 
