@@ -3476,6 +3476,9 @@ nsTreeBodyFrame::OnDragOver(nsIDOMEvent* aEvent)
   if ( mDropAllowed && mDragSession )
     mDragSession->SetCanDrop(PR_TRUE);
 
+  // Prevent default handler to fire.
+  aEvent->PreventDefault();
+
   return NS_OK;
 } // OnDragOver
 
