@@ -46,19 +46,19 @@
 		   
 		<!--	&networkHeader.label;  Bug in boxes-->
 			<html:div>
-				<html:input type="radio" id="pref:0:int:network.proxy.type" />
+				<html:input name="directManualOrAuto" type="radio" id="pref:0:int:network.proxy.type" />
 				<html:label for="pref:0:int:network.proxy.type" accesskey="d" tabindex="0">
 				&directTypeRadio.label;
 				</html:label>
 			</html:div>
 			<html:div>
-				<html:input type="radio" id="pref:1:int:network.proxy.type" />
+				<html:input name="directManualOrAuto" type="radio" id="pref:1:int:network.proxy.type" />
 				<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
 				&manualTypeRadio.label;
 				</html:label>
 			</html:div>
 			<html:div>
-				<html:input type="radio" id="pref:2:int:network.proxy.type" />
+				<html:input name="directManualOrAuto" type="radio" id="pref:2:int:network.proxy.type" />
 				<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
 				&autoTypeRadio.label;
 				</html:label>
