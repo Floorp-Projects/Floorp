@@ -1,5 +1,5 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"> -->
-<!-- $Id: security.xml,v 1.2 2004/12/03 22:56:31 jake%bugzilla.org Exp $ -->
+<!-- $Id: security.xml,v 1.3 2004/12/03 23:22:28 jake%bugzilla.org Exp $ -->
 
 <chapter id="security">
 <title>Bugzilla Security</title>
@@ -140,12 +140,11 @@
       have no other reason to access MySQL remotely, then you should disable
       the network access. This, along with the suggestion in
       <xref linkend="security-os-ports"/>, will help protect your system from
-      any remote vulnerabilites in MySQL. This is done using different
-      methods in MySQL versions 3 and 4.
+      any remote vulnerabilites in MySQL.
       </para>
       
-      <example>
-      <title>Disabling Networking in MySQL 3.x</title>
+      <example id="security-mysql-network-ex">
+      <title>Disabling Networking in MySQL</title>
       
         <para>Simply enter the following in <filename>/etc/my.conf</filename>:
         <screen>
@@ -154,12 +153,6 @@
 skip-networking
         </screen>
         </para>
-      </example>
-      
-      <example>
-      <title>Disabling Networking in MySQL 4.x</title>
-      
-        <para>There's a bug in Bugzilla about this</para>
       </example>
       
     </section>
@@ -381,6 +374,8 @@ skip-networking
       </para>
 
       <example id="security-bugzilla-charset-ex">
+      <title>Forcing Bugzilla to output a charset</title>
+
         <para>Locate the following line in
         <filename>Bugzilla/CGI.pm</filename>:
         <programlisting>$self->charset('');</programlisting>
