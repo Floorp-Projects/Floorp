@@ -486,10 +486,19 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 	{
 		if (property == kNC_Child)
 		{
-			BeginSearchRequest(source);
 			if (mInner)
 			{
 				rv = mInner->GetTargets(source, property,tv, targets);
+			}
+			if (NS_SUCCEEDED(rv) && (targets))
+			{
+				// check and see if we already have data for the search in question;
+				// if we do, don't bother doing the search again, otherwise kickstart it
+				PRBool		hasResults = PR_FALSE;
+				if (NS_FAILED((*targets)->HasMoreElements(&hasResults)) || (hasResults == PR_FALSE))
+				{
+					BeginSearchRequest(source);
+				}
 			}
 			return(rv);
 		}
@@ -1040,6 +1049,9 @@ SearchDataSource::GetSearchEngineList()
 								mInner->Assert(kNC_SearchRoot, kNC_Child, searchRes, PR_TRUE);
 
 #if 0
+								// Note: don't save file contents here. Save them when a sort actually begins.
+								// This means we use a lot less memory as we only save datasets that we are using.
+
 								// save file contents
 								nsCOMPtr<nsIRDFLiteral>	dataLiteral;
 								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(dataLiteral))))
