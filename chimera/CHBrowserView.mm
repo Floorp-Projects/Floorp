@@ -1209,7 +1209,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress,
     nsCAutoString saveFile("-sav");
     saveFile += tmpNo;
     saveFile += "tmp";
-    tmpFile->Append(saveFile.get()); 
+    tmpFile->Append(saveFile); 
     
     // Get the post data if we're an HTML doc.
     nsCOMPtr<nsIInputStream> postData;
