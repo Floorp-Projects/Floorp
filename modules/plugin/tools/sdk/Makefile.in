@@ -28,8 +28,8 @@ libs::
 	$(INSTALL) $(XPDIST)/idl/nsISupports.idl ./idl
 	$(INSTALL) $(XPDIST)/idl/nsrootidl.idl ./idl
 
-	$(INSTALL) $(XPDIST)/include/npapi.h ./include
-	$(INSTALL) $(XPDIST)/include/npupp.h ./include
+	$(INSTALL) $(XPDIST)/include/plugin/npapi.h ./include
+	$(INSTALL) $(XPDIST)/include/plugin/npupp.h ./include
 
 	$(MAKE_INSTALL) $(XPDIST)\include\java\jni.h .\include
 	$(MAKE_INSTALL) $(XPDIST)\include\java\jni_md.h .\include
