@@ -705,10 +705,10 @@ PRInt32 nsXIFDTD::HandleCommentToken(CToken* aToken) {
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
  */
 PRInt32 nsXIFDTD::HandleAttributeToken(CToken* aToken) {
+  CAttributeToken*  at = (CAttributeToken*)(aToken);
   NS_PRECONDITION(0!=aToken,kNullToken);
   NS_ERROR("attribute encountered -- this shouldn't happen!");
 
-  CAttributeToken*  at = (CAttributeToken*)(aToken);
   PRInt32 result=kNoError;
   return result;
 }
@@ -1704,6 +1704,18 @@ PRInt32 nsXIFDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
     else return kInterrupted;
   }
 */
+  int attr=0;
+  for(attr=0;attr<aCount;attr++){
+    CToken* theToken=mParser->PeekToken();
+    if(theToken)  {
+      eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+      if(eToken_attribute==theType){
+        mParser->PopToken(); //pop it for real...
+        aNode.AddAttribute(theToken);
+      } 
+    }
+    else return kInterrupted;
+  }
   return kNoError;
 }
 
