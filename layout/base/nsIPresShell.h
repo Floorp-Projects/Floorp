@@ -61,13 +61,15 @@ class nsIArena;
 #define NS_PRESSHELL_SCROLL_ANYWHERE -1
 #define NS_PRESSHELL_SCROLL_IF_NOT_VISIBLE -2
 
-typedef enum SelectionType{SELECTION_NORMAL = 0, 
-                           SELECTION_SPELLCHECK, 
-                           SELECTION_IME_RAWINPUT, 
-                           SELECTION_IME_SELECTEDRAWTEXT, 
-                           SELECTION_IME_CONVERTEDTEXT, 
-                           SELECTION_IME_SELECTEDCONVERTEDTEXT, 
-                           NUM_SELECTIONTYPES} SelectionType;
+typedef enum SelectionType{
+                           SELECTION_NONE = 0,
+                           SELECTION_NORMAL = 1, 
+                           SELECTION_SPELLCHECK = 2, 
+                           SELECTION_IME_RAWINPUT= 4, 
+                           SELECTION_IME_SELECTEDRAWTEXT = 8, 
+                           SELECTION_IME_CONVERTEDTEXT = 16, 
+                           SELECTION_IME_SELECTEDCONVERTEDTEXT = 32, 
+                           NUM_SELECTIONTYPES=6} SelectionType;
 
 typedef enum SelectionRegion{SELECTION_ANCHOR_REGION = 0, 
                              SELECTION_FOCUS_REGION,
