@@ -1258,6 +1258,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           result=HandleDefaultStartToken(aToken,theChildTag,*theNode);
           break;
 
+        case eHTMLTag_userdefined:
+          break;
+
         case eHTMLTag_script:
           theHeadIsParent=(!mHasOpenBody); //intentionally fall through...
           mHasOpenScript=PR_TRUE;
@@ -2838,62 +2841,70 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
 
     RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
     START_TIMER();
-
-    PRBool done=PR_FALSE;
-    nsCParserNode*  theNode=CreateNode();
-    CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
-
-    while(!done) {
-      CToken*   theToken=mTokenizer->PeekToken();
-      if(theToken) {
-        theTag=(eHTMLTags)theToken->GetTypeID();
-        switch(theTag) {
-          case eHTMLTag_newline:
-            mLineNumber++;
-          case eHTMLTag_whitespace:
-            {
-              theToken=mTokenizer->PopToken();
-              theNode->Init(theToken,mLineNumber,0);
-
-              RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-              STOP_TIMER();
-              result=mSink->AddLeaf(*theNode);
-              RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-              START_TIMER();
     
-              if(theRecycler) {
-                theRecycler->RecycleToken(theToken);
+    if(NS_SUCCEEDED(result)) {
+      PRBool done=PR_FALSE;
+      nsCParserNode*  theNode=CreateNode();
+      CTokenRecycler* theRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
+      while(!done && NS_SUCCEEDED(result)) {
+        CToken*   theToken=mTokenizer->PeekToken();
+        if(theToken) {
+          theTag=(eHTMLTags)theToken->GetTypeID();
+          switch(theTag) {
+            case eHTMLTag_newline:
+              mLineNumber++;
+            case eHTMLTag_whitespace:
+              {
+                theToken=mTokenizer->PopToken();
+                theNode->Init(theToken,mLineNumber,0);
+
+                RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                STOP_TIMER();
+              
+                result=mSink->AddLeaf(*theNode);
+
+                if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
+                  if(theRecycler) {
+                     theRecycler->RecycleToken(theToken);
+                  }
+                  else delete theToken;
+                }
+
+                RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                START_TIMER();
               }
-              else delete theToken;
-            }
-            break;
-          case eHTMLTag_text:
-            if(mHasOpenBody && (!mHasOpenHead)) {
-              theToken=mTokenizer->PopToken();
-              theNode->Init(theToken,mLineNumber);
+              break;
+            case eHTMLTag_text:
+              if(mHasOpenBody && (!mHasOpenHead)) {
+                theToken=mTokenizer->PopToken();
+                theNode->Init(theToken,mLineNumber);
 
-              RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-              STOP_TIMER();
-              result=mSink->AddLeaf(*theNode);
-              RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
-              START_TIMER();
+                RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                STOP_TIMER();
+              
+                result=mSink->AddLeaf(*theNode);
 
-              if(theRecycler) {
-                theRecycler->RecycleToken(theToken);
+                if((NS_SUCCEEDED(result))||(NS_ERROR_HTMLPARSER_BLOCK==result)) {
+                  if(theRecycler) {
+                     theRecycler->RecycleToken(theToken);
+                  }
+                  else delete theToken;
+                }
+              
+                RAPTOR_STOPWATCH_DEBUGTRACE(("Start: Parse Time: CNavDTD::AddLeaf(), this=%p\n", this));
+                START_TIMER();
               }
-              else delete theToken;
-            }
-            else done=PR_TRUE;
-            break;
+              else done=PR_TRUE;
+              break;
 
-          default:
-            done=PR_TRUE;
-        } //switch
-      }//if
-      else done=PR_TRUE;
-    } //while
-    RecycleNode(theNode);    
-
+            default:
+              done=PR_TRUE;
+          } //switch
+        }//if
+        else done=PR_TRUE;
+      } //while
+      RecycleNode(theNode);    
+    }
   }
   return result;
 }
