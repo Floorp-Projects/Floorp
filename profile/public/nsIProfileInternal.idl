@@ -89,6 +89,7 @@ interface nsIProfileInternal : nsIProfile {
     void migrateProfile(in wstring profileName);
     void remigrateProfile(in wstring profileName);
     void forgetCurrentProfile();
+    void createDefaultProfile();
 
     /**
      * Returns the actual profile directory
