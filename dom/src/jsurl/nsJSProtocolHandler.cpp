@@ -136,6 +136,11 @@ nsresult nsJSThunk::EvaluateScript()
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
+    // Get the url.
+    nsXPIDLCString url;
+    rv = mURI->GetSpec(getter_Copies(url));
+    if (NS_FAILED(rv)) return rv;
+
     // Get an interface requestor from the channel callbacks.
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     rv = mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
@@ -253,8 +258,8 @@ nsresult nsJSThunk::EvaluateScript()
         rv = scriptContext->EvaluateString(scriptString,
                                            nsnull,      // obj
                                            principal,
-                                           nsnull,      // url
-                                           0,           // line no
+                                           url,         // url
+                                           1,           // line no
                                            nsnull,
                                            result,
                                            &bIsUndefined);
