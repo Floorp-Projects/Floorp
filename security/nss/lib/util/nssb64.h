@@ -34,7 +34,7 @@
 /*
  * Public prototypes for base64 encoding/decoding.
  *
- * $Id: nssb64.h,v 1.1 2000/03/31 19:38:16 relyea%netscape.com Exp $
+ * $Id: nssb64.h,v 1.2 2000/04/06 00:42:49 repka%netscape.com Exp $
  */
 #ifndef _NSSB64_H_
 #define _NSSB64_H_
@@ -89,7 +89,7 @@ NSSBase64Encoder_Destroy (NSSBase64Encoder *data, PRBool abort_p);
  * and the Item will be allocated for you.
  *
  * In any case, the data within the Item will be allocated for you.
- * All allocation will happen out the passed-in "arenaOpt", if non-NULL.
+ * All allocation will happen out of the passed-in "arenaOpt", if non-NULL.
  * If "arenaOpt" is NULL, standard allocation (heap) will be used and
  * you will want to free the result via SECITEM_FreeItem.
  *
@@ -100,7 +100,7 @@ NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
 			const char *inStr, unsigned int inLen);
 
 /*
- * Perform base64 decoding of binary data "inItem" to an ascii string.
+ * Perform base64 encoding of binary data "inItem" to an ascii string.
  * The output buffer may be provided (as "outStrOpt"); you can also pass
  * in a NULL and the buffer will be allocated for you.  The result will
  * be null-terminated, and if the buffer is provided, "maxOutLen" must
@@ -108,7 +108,7 @@ NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
  * supply sufficient space space for the encoded result.  (If "outStrOpt"
  * is NULL, "maxOutLen" is ignored.)
  *
- * If "outStrOpt" is NULL, allocation will happen out the passed-in
+ * If "outStrOpt" is NULL, allocation will happen out of the passed-in
  * "arenaOpt", if *it* is non-NULL, otherwise standard allocation (heap)
  * will be used.
  *
@@ -117,7 +117,7 @@ NSSBase64_DecodeBuffer (PRArenaPool *arenaOpt, SECItem *outItemOpt,
  */
 extern char *
 NSSBase64_EncodeItem (PRArenaPool *arenaOpt, char *outStrOpt,
-		      unsigned int maxOutLen, SECItem *binaryItem);
+		      unsigned int maxOutLen, SECItem *inItem);
 
 SEC_END_PROTOS
 
