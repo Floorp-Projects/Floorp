@@ -56,8 +56,7 @@ enum
 	cmd_Find						= 3000,
 
 	cmd_ViewSource			= 2200,
-	cmd_ViewTreeView,
-	cmd_ViewToolbar,
+	cmd_PrintSetup,
 
 	cmd_DebugMode				= 4000,
 	cmd_ReflowTest,
@@ -239,13 +238,14 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 					status = nsEventStatus_eConsumeNoDefault;
 					break;
 
-				case cmd_ViewSource:			xpID = VIEW_SOURCE;					break;
+				case cmd_ViewSource:			xpID = VIEW_SOURCE;				break;
 				case cmd_Save:			/*n.a.*/						break;
 				case cmd_SaveAs:		/*n.a.*/						break;
 				case cmd_Revert:		/*n.a.*/						break;
 				case cmd_PageSetup:	/*n.a.*/						break;
-				case cmd_Print:					xpID = VIEWER_PRINT;			break;
-				case cmd_Quit:					xpID = VIEWER_EXIT;				break;
+				case cmd_Print:					xpID = VIEWER_PRINT;				break;
+				case cmd_PrintSetup:		xpID = VIEWER_PRINT_SETUP;	break;
+				case cmd_Quit:					xpID = VIEWER_EXIT;					break;
 			}
 			break;
 
