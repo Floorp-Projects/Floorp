@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.5 $ $Date: 2001/10/11 16:34:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.6 $ $Date: 2001/10/11 18:40:33 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -69,7 +69,9 @@ static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.5 $ 
 /* Hm, sadly, I'm using PK11_HashBuf...  Need to get crypto context going to
  * get rid of that
  */
+#ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
+#endif /* NSS_3_4_CODE */
 #include "pk11func.h"
 #include "hasht.h"
 
@@ -150,7 +152,6 @@ nss_cert_type_from_ck_attrib(CK_ATTRIBUTE_PTR attrib)
     default:
 	return NSSCertificateType_Unknown;
     }
-    return NSSCertificateType_Unknown;
 }
 
 static PRStatus
@@ -166,17 +167,18 @@ nssCertificate_SetCertTrust
     CK_OBJECT_CLASS tobjc = CKO_NETSCAPE_TRUST;
     CK_OBJECT_HANDLE tobjID;
     CK_ATTRIBUTE tobj_template[] = {
-	{ CKA_CLASS,          &tobjc, sizeof(CK_OBJECT_CLASS) },
-	{ CKA_CERT_SHA1_HASH, NULL,   0                       }
+	{ CKA_CLASS,          NULL,   0 }, 
+	{ CKA_CERT_SHA1_HASH, NULL,   0 }
     };
     CK_ATTRIBUTE trust_template[] = {
-	{ CKA_TRUST_SERVER_AUTH,      &saTrust, sizeof(CK_TRUST) },
-	{ CKA_TRUST_EMAIL_PROTECTION, &epTrust, sizeof(CK_TRUST) },
-	{ CKA_TRUST_CODE_SIGNING,     &csTrust, sizeof(CK_TRUST) }
+	{ CKA_TRUST_SERVER_AUTH,      NULL, 0 },
+	{ CKA_TRUST_EMAIL_PROTECTION, NULL, 0 },
+	{ CKA_TRUST_CODE_SIGNING,     NULL, 0 }
     };
     unsigned char sha1_hash[SHA1_LENGTH];
     tobj_size = sizeof(tobj_template) / sizeof(tobj_template[0]);
     trust_size = sizeof(trust_template) / sizeof(trust_template[0]);
+    NSS_CK_SET_ATTRIBUTE_VAR(tobj_template, 0, tobjc);
     /* First, use the SHA-1 hash of the cert to locate the trust object */
     /* XXX get rid of this PK11_ call! */
     PK11_HashBuf(SEC_OID_SHA1, sha1_hash, c->encoding.data, c->encoding.size);
@@ -188,6 +190,9 @@ nssCertificate_SetCertTrust
 	return PR_FAILURE;
     }
     /* Then use the trust object to find the trust settings */
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 0, saTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 1, epTrust);
+    NSS_CK_SET_ATTRIBUTE_VAR(trust_template, 2, csTrust);
     nssrv = nssCKObject_GetAttributes(tobjID,
                                       trust_template, trust_size,
                                       NULL, session, c->slot);
@@ -563,11 +568,12 @@ NSSCertificate_GetPublicKey
 {
     PRStatus nssrv;
     CK_ATTRIBUTE pubktemplate[] = {
-	{ CKA_CLASS,   g_ck_class_pubkey.data, g_ck_class_pubkey.size },
-	{ CKA_ID,      NULL,                   0                      },
-	{ CKA_SUBJECT, NULL,                   0                      }
+	{ CKA_CLASS,   NULL, 0 },
+	{ CKA_ID,      NULL, 0 },
+	{ CKA_SUBJECT, NULL, 0 }
     };
     CK_ULONG count = sizeof(pubktemplate) / sizeof(pubktemplate[0]);
+    NSS_CK_SET_ATTRIBUTE_ITEM(pubktemplate, 0, &g_ck_class_pubkey);
     if (c->id.size > 0) {
 	/* CKA_ID */
 	NSS_CK_ITEM_TO_ATTRIBUTE(&c->id, &pubktemplate[1]);

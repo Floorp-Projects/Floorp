@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.6 $ $Date: 2001/10/11 17:05:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.7 $ $Date: 2001/10/11 18:40:31 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -60,23 +60,23 @@ static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.6 $ $Da
 #endif /* BASE_H */
 
 static const CK_BBOOL s_true = CK_TRUE;
-NSS_IMPLEMENT_DATA /* const */ NSSItem
+NSS_IMPLEMENT_DATA const NSSItem
 g_ck_true = { (CK_VOID_PTR)&s_true, sizeof(s_true) };
 
 static const CK_BBOOL s_false = CK_FALSE;
-NSS_IMPLEMENT_DATA /* const */ NSSItem
+NSS_IMPLEMENT_DATA const NSSItem
 g_ck_false = { (CK_VOID_PTR)&s_false, sizeof(s_false) };
 
 static const CK_OBJECT_CLASS s_class_cert = CKO_CERTIFICATE;
-NSS_IMPLEMENT_DATA /* const */ NSSItem
+NSS_IMPLEMENT_DATA const NSSItem
 g_ck_class_cert = { (CK_VOID_PTR)&s_class_cert, sizeof(s_class_cert) };
 
 static const CK_OBJECT_CLASS s_class_pubkey = CKO_PUBLIC_KEY;
-NSS_IMPLEMENT_DATA /* const */ NSSItem
+NSS_IMPLEMENT_DATA const NSSItem
 g_ck_class_pubkey = { (CK_VOID_PTR)&s_class_pubkey, sizeof(s_class_pubkey) };
 
 static const CK_OBJECT_CLASS s_class_privkey = CKO_PRIVATE_KEY;
-NSS_IMPLEMENT_DATA /* const */ NSSItem
+NSS_IMPLEMENT_DATA const NSSItem
 g_ck_class_privkey = { (CK_VOID_PTR)&s_class_privkey, sizeof(s_class_privkey) };
 
 NSS_IMPLEMENT PRStatus 
@@ -193,8 +193,10 @@ nssCKObject_IsAttributeTrue
 )
 {
     CK_BBOOL bool;
-    CK_ATTRIBUTE attr = { attribute, (CK_VOID_PTR)&bool, sizeof(bool) };
+    CK_ATTRIBUTE attr = { 0, NULL, 0 };
     CK_RV ckrv;
+    attr.type = attribute;
+    NSS_CK_SET_ATTRIBUTE_VAR(&attr, 0, bool);
     nssSession_EnterMonitor(session);
     ckrv = CKAPI(slot)->C_GetAttributeValue(session->handle, object, &attr, 1);
     nssSession_ExitMonitor(session);
