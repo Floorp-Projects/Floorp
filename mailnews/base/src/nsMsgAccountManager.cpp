@@ -925,28 +925,48 @@ nsMsgAccountManager::upgradePrefs()
     // identity stuff
     rv = m_prefs->CopyCharPref("mail.identity.useremail", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetEmail(oldstr);
+      if (oldstr) {
+      	identity->SetEmail(oldstr);
+      }
+      else {
+	identity->SetEmail("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
     rv = m_prefs->CopyCharPref("mail.identity.username", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetFullName(oldstr);
+      if (oldstr) {
+      	identity->SetFullName(oldstr);
+      }
+      else {
+	identity->SetFullName("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
     rv = m_prefs->CopyCharPref("mail.identity.reply_to", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetReplyTo(oldstr);
+      if (oldstr) {
+      	identity->SetReplyTo(oldstr);
+      }
+      else {
+	identity->SetReplyTo("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
     rv = m_prefs->CopyCharPref("mail.identity.organization", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetOrganization(oldstr);
+      if (oldstr) {
+      	identity->SetOrganization(oldstr);
+      }
+      else {
+	identity->SetOrganization("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
@@ -958,14 +978,24 @@ nsMsgAccountManager::upgradePrefs()
     
     rv = m_prefs->CopyCharPref("network.hosts.smtp_server", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetSmtpHostname(oldstr);
+      if (oldstr) {
+	identity->SetSmtpHostname(oldstr);
+      }
+      else {
+	identity->SetSmtpHostname("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
     
     rv = m_prefs->CopyCharPref("mail.smtp_name", &oldstr);
     if (NS_SUCCEEDED(rv)) {
-      identity->SetSmtpUsername(oldstr);
+      if (oldstr) {
+      	identity->SetSmtpUsername(oldstr);
+      }
+      else {
+	identity->SetSmtpUsername("");
+      }
       PR_FREEIF(oldstr);
       oldstr = nsnull;
     }
