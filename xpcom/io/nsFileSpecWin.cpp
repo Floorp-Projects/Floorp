@@ -556,7 +556,7 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 {
     PRInt64 int64;
     
-    LL_I2L(int64 , ULONG_MAX);
+    LL_I2L(int64 , LONG_MAX);
 
     char aDrive[_MAX_DRIVE + 2];
 	_splitpath( (const char*)mPath, aDrive, NULL, NULL, NULL);

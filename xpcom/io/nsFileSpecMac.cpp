@@ -1110,7 +1110,7 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 {
     PRInt64 int64;
 
-    LL_I2L(int64 , ULONG_MAX);
+    LL_I2L(int64 , LONG_MAX);
 
     HVolumeParam    pb;
     pb.ioCompletion = nsnull;
