@@ -217,8 +217,6 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   {
     mEditor->DeleteNode(mBogusNode);
     mBogusNode = do_QueryInterface(nsnull);
-    // there is no longer any legit selection, so clear it.
-    aSelection->ClearSelection();
   }
 
   return NS_OK;
