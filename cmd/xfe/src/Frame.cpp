@@ -3326,7 +3326,8 @@ xfe_ExecuteCommand(XFE_Frame* frame,
 		cmd == xfeCmdPaste      ||
 		cmd == xfeCmdDeleteItem ||
 		cmd == xfeCmdSelectAll  ||
-		cmd == xfeCmdUndo) {
+		cmd == xfeCmdUndo       ||
+		cmd == xfeCmdSpacebar) {
 		slow = FALSE;
 	}
 
