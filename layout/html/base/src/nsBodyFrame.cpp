@@ -870,7 +870,7 @@ nsBodyFrame::CreateAbsoluteView(nsIStyleContext* aStyleContext) const
     // the frame the view will be sized and positioned
     view->Init(viewManager, nsRect(0, 0, 0, 0), containingView, nsnull,
                nsnull, nsnull, zIndex, pClip);
-    viewManager->InsertChild(containingView, view, 0);
+    viewManager->InsertChild(containingView, view, zIndex);
     // If the background color is transparent then mark the view as having
     // transparent content.
     // XXX We could try and be smarter about this and check whether there's
