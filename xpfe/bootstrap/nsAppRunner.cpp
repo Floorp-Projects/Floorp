@@ -707,14 +707,12 @@ void DumpHelp(char *appname)
   printf("Usage: %s [ options ... ] [URL]\n", appname);
   printf("       where options include:\n");
   printf("\n");
-  printf("%s-addressbook%sStart with AddressBook window.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-chrome <url>%sOpen chrome url..\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-compose%sStart with mail compose window.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-edit%sStart with editor.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-installer%sStart with 4.x migration window.\n",HELP_SPACER_1,HELP_SPACER_2);
-  printf("%s-mail%sStart with mail window.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-pref%sStart with pref window.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
   printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, appname);
