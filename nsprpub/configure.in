@@ -43,7 +43,7 @@ dnl ========================================================
 dnl = Defaults
 dnl ========================================================
 MOD_MAJOR_VERSION=4
-MOD_MINOR_VERSION=2
+MOD_MINOR_VERSION=3
 MOD_REVISION_VERSION=0
 NSPR_MODNAME=nspr20
 _HAVE_PTHREADS=
@@ -1634,7 +1634,8 @@ mips-sony-newsos*)
     fi
     PR_MD_CSRCS=solaris.c
     LD=/usr/ccs/bin/ld
-    DSO_LDOPTS='-G -h $(notdir $@)'
+    DSO_LDOPTS='-G -h $(notdir $@) -z combreloc -z defs'
+    RESOLVE_LINK_SYMBOLS=1
     if test -n "$GNU_CC"; then
         DSO_CFLAGS=-fPIC
     else
@@ -1704,9 +1705,7 @@ mips-sony-newsos*)
         # 64-bit Solaris requires SPARC V9 architecture, so the following
         # is not needed.
         if test -z "$USE_64"; then
-            ULTRASPARC_LIBRARY=ultrasparc
-            ULTRASPARC_FILTER_LIBRARY=libatomic.so
-            DSO_LDOPTS="$DSO_LDOPTS -f "'$(ULTRASPARC_FILTER_LIBRARY)'
+            ULTRASPARC_LIBRARY=nspr_flt
         fi
     fi
     # Purify requires that binaries linked against nspr also
@@ -2394,7 +2393,6 @@ AC_SUBST(AIX_LINK_OPTS)
 AC_SUBST(NOSUCHFILE)
 AC_SUBST(MOZ_OBJFORMAT)
 AC_SUBST(ULTRASPARC_LIBRARY)
-AC_SUBST(ULTRASPARC_FILTER_LIBRARY)
 
 AC_SUBST(OBJDIR)
 AC_SUBST(OBJDIR_NAME)
@@ -2423,6 +2421,10 @@ lib/libc/Makefile
 lib/libc/include/Makefile 
 lib/libc/src/Makefile 
 lib/tests/Makefile
+pkg/Makefile
+pkg/solaris/Makefile
+pkg/solaris/SUNWpr/Makefile
+pkg/solaris/SUNWprx/Makefile
 pr/Makefile 
 pr/include/Makefile 
 pr/include/md/Makefile 

@@ -98,8 +98,11 @@ $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v9 $<
 else
 $(SHARED_LIBRARY): $(ULTRASPARC_ASOBJS)
-	$(LD) -G -z text -o $@ $(ULTRASPARC_ASOBJS)
-	$(INSTALL) -m 444 $@ $(dist_libdir)
+	$(LD) -G -z text -z endfiltee -o $@ $(ULTRASPARC_ASOBJS)
+	$(INSTALL) -m 444 $@ $(dist_libdir)/cpu/sparcv8plus
+ifneq ($(NSDISTMODE),copy)
+	$(INSTALL) -m 444 $@ ../../cpu/sparcv8plus
+endif
 
 $(ULTRASPARC_ASOBJS): $(ULTRASPARC_ASFILES)
 	/usr/ccs/bin/as -o $@ -K PIC -P -D_ASM -D__STDC__=0 -xarch=v8plus $<

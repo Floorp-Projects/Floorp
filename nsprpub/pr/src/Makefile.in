@@ -69,7 +69,9 @@ ifeq ($(OS_ARCH),SunOS)
 ifeq ($(OS_RELEASE),4.1.3_U1)
 OS_LIBS			= -lm
 else	# 4.1.3_U1
-
+MAPFILE = $(OBJDIR)/nsprmap.sun
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -M $(MAPFILE)
 #
 # In Solaris 2.6 or earlier, -lrt is called -lposix4.
 # 
@@ -81,14 +83,19 @@ LIBRT=-lposix4
 endif
 
 ifdef USE_PTHREADS
-OS_LIBS			= -lpthread -lthread ${LIBRT} -lsocket -lnsl -ldl
+OS_LIBS			= -lpthread -lthread ${LIBRT} -lsocket -lnsl -ldl -lc
 else
 ifdef LOCAL_THREADS_ONLY
-OS_LIBS			= -lsocket -lnsl -ldl
+OS_LIBS			= -lsocket -lnsl -ldl -lc
 else
-OS_LIBS			= -lthread ${LIBRT} -lsocket -lnsl -ldl
+OS_LIBS			= -lthread ${LIBRT} -lsocket -lnsl -ldl -lc
 endif	# LOCAL_THREADS_ONLY
 endif	# USE_PTHREADS
+ifeq ($(OS_TEST),sun4u)
+ifndef USE_64
+DSO_LDOPTS	+= -f \$$ORIGIN/cpu/\$$ISALIST/lib$(ULTRASPARC_LIBRARY)$(LIBRARY_VERSION).so
+endif
+endif	# sun4u
 endif	# 4.1.3_U1
 endif	# SunOS
 
