@@ -35,6 +35,8 @@
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
+static gEatMouseMove = PR_FALSE;
+
 //
 // NS_NewMenuFrame
 //
@@ -252,6 +254,11 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     }
   }
   else if (aEvent->message == NS_MOUSE_MOVE && mMenuParent) {
+    if (gEatMouseMove) {
+      gEatMouseMove = PR_FALSE;
+      return NS_OK;
+    }
+
     // Let the menu parent know we're the new item.
     mMenuParent->SetCurrentMenuItem(this);
 
@@ -296,6 +303,8 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 void 
 nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
 {
+  gEatMouseMove = PR_TRUE;
+
   if (!mIsMenu)
     return;
 

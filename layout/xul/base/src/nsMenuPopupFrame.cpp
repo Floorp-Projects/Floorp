@@ -448,15 +448,22 @@ void
 nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 {
   // This method only gets called if we're open.
-  if (!mCurrentMenu) {
-    // We've been opened, but we haven't had anything selected.
-    // We can't handle LEFT or RIGHT, but our parent can.
-    if (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT)
-      return;
-  }
-
   nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
   
+  if (!mCurrentMenu && (aDirection == NS_VK_RIGHT || aDirection == NS_VK_LEFT)) {
+    // We've been opened, but we haven't had anything selected.
+    // We can handle RIGHT, but our parent handles LEFT.
+    if (aDirection == NS_VK_RIGHT) {
+      nsIFrame* nextItem;
+      GetNextMenuItem(nsnull, &nextItem);
+      if (nextItem) {
+        aHandledFlag = PR_TRUE;
+        SetCurrentMenuItem(nextItem);
+      }
+    }
+    return;
+  }
+
   if (menuFrame) {
     if (menuFrame->IsOpen()) {
       // Give our child a shot.
@@ -487,14 +494,10 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
     aHandledFlag = PR_TRUE;
   }
   else if (mCurrentMenu && menuFrame->IsMenu() && menuFrame->IsOpen()) {
-    aHandledFlag = PR_TRUE;
     if (aDirection == NS_VK_LEFT) {
       // Close it up.
       menuFrame->OpenMenu(PR_FALSE);
-    }
-    else if (aDirection == NS_VK_RIGHT) {
-      // Select the first item.
-      menuFrame->SelectFirstItem();
+      aHandledFlag = PR_TRUE;
     }
   }
 }
