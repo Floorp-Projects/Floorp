@@ -56,6 +56,7 @@ class nsHTMLButtonControlFrame : public nsHTMLContainerFrame,
 {
 public:
   nsHTMLButtonControlFrame();
+  ~nsHTMLButtonControlFrame();
 
 
 

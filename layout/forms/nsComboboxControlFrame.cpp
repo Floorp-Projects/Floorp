@@ -118,7 +118,10 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
   nsCOMPtr<nsIDOMEventReceiver> displayReciever(do_QueryInterface(mDisplayContent));
   displayReciever->RemoveEventListenerByIID((nsIDOMMouseListener *)this, kIDOMMouseListenerIID);
 
-  mFormFrame = nsnull;
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
   NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mDisplayContent);
   NS_IF_RELEASE(mButtonContent);
