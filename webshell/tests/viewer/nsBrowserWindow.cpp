@@ -1230,15 +1230,6 @@ static PRBool GetSaveFileNameFromFileSelector(nsIWidget* aParentWindow,
   return selectedFileName;
 }
 
-void DoFileSave(nsIWidget* aParentWindow, nsString& aFileName)
-{
-
-
-  if () 
-  {
-  }
-}
-
 
 
 
