@@ -174,7 +174,11 @@ function toEditor()
 {
   //TODO: Find and existing editor window using CycleWindow()
   // For now, this opens a new blank window
-  toNewTextEditorWindow();
+//  toNewTextEditorWindow();
+
+// brade commented out above line since this gives a text editor not an html editor
+// add the following line to create editor window or call NewEditorWindow() in globalOverlay.js
+  window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", "about:blank");
 }
 
 function toNewTextEditorWindow()
