@@ -694,7 +694,8 @@ calendarManager.prototype.getRemoteCalendarText = function calMan_getRemoteCalen
    {
       onStreamComplete: function(loader, ctxt, status, resultLength, result)
       {
-         window.setCursor( "default" );
+         // revert from "wait" cursor set by getRemoteCalendarText (below)
+         window.setCursor( "auto" );
 
          var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
          var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -944,7 +945,7 @@ function switchCalendar( event )
       gICalLib.addCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ),
                             calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#type" ));
       
-      window.setCursor( "default" );
+      window.setCursor( "auto" );
       
       calendarNode.setAttribute( "http://home.netscape.com/NC-rdf#active", "true" );
       
@@ -956,7 +957,7 @@ function switchCalendar( event )
 
       gICalLib.removeCalendar( calendarNode.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
       
-      window.setCursor( "default" );
+      window.setCursor( "auto" );
       
       calendarNode.setAttribute( "http://home.netscape.com/NC-rdf#active", "false" );
       

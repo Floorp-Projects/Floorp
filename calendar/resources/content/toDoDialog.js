@@ -335,7 +335,8 @@ function loadCalendarEventDialog()
    var firstFocus = document.getElementById( "title-field" );
    firstFocus.focus();
 
-   opener.setCursor( "default" );
+   // revert cursor from "wait" set in calendar.js editToDo, newToDoCommand
+   opener.setCursor( "auto" );
 }
 
 

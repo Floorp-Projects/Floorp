@@ -122,7 +122,7 @@ function loadOutlookImportDialog()
   boolLabel = document.getElementById( "bool-label" );  
   boolLabel.setAttribute ( "value", args.boolStr + "  =" );
   
-  opener.setCursor( "default" );
+  opener.setCursor( "auto" );
 }
 
 /**

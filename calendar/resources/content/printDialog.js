@@ -101,7 +101,7 @@ function loadCalendarPrintDialog()
   var firstFocus = document.getElementById( "title-field" );
   firstFocus.focus();
 
-  opener.setCursor( "default" );
+  opener.setCursor( "auto" );
 }
 
 

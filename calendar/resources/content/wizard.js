@@ -166,7 +166,7 @@ function doAddEventsToCalendar( calendarEventArray, silent, ServerName )
    }
 
    gICalLib.batchMode = false;
-   window.setCursor( "default" );
+   window.setCursor( "auto" );
 
    document.getElementById( "importing-box" ).setAttribute( "collapsed", "true" );
    document.getElementById( "done-importing-box" ).removeAttribute( "collapsed" );
