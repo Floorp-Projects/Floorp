@@ -211,7 +211,7 @@ sub check_arguments
 		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
-		$PD = "\\";
+		$PD = "/";
 		$bindir = "bin";
 		($debug >= 4) && print " OS: $os\n";
 	} elsif ( $os =~ /unix/i ) {

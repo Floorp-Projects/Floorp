@@ -59,6 +59,7 @@ sub Copy {
   	$altdest = "";
   	$lineno++;
 
+  	s/\\/\//g if ($os eq "MSDOS");  # Convert to posix path
   	s/\;.*//;			# it's a comment, kill it.
   	s/^\s+//;			# nuke leading whitespace
   	s/\s+$//;			# nuke trailing whitespace
@@ -263,9 +264,9 @@ sub do_copyfile
 				$srcdir =~ s/\\/\//g;
 				$PD = "/";
 				$destpath =~ s/$srcdir$PD//g;
-				$destpath =~ s/\//\\/g;
-				$srcdir =~ s/\//\\/g;
-				$PD = "\\";
+				$destpath =~ s/\\/\//g;
+				$srcdir =~ s/\\/\//g;
+				$PD = "/";
 			} else {
 				$destpath =~ s/$srcdir$PD//;
 			}
@@ -488,7 +489,7 @@ sub check_arguments
 		fileparse_set_fstype ($os);
 	} elsif ( $os =~ /dos/i ) {
 		$os = "MSDOS";
-		$PD = "\\";
+		$PD = "/";
 		fileparse_set_fstype ($os);
 	} elsif ( $os =~ /unix/i ) {
 		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS

@@ -90,7 +90,7 @@ void LogISProductInfo(void)
   wsprintf(szBuf, "\n    Product Info:\n");
   UpdateInstallStatusLog(szBuf);
 
-  switch(sgProduct.dwMode)
+  switch(sgProduct.mode)
   {
     case SILENT:
       wsprintf(szBuf, "        Install mode: Silent\n");

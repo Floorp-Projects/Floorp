@@ -29,7 +29,7 @@ HRESULT     TimingCheck(DWORD dwTiming, LPSTR szSection, LPSTR szFile);
 HRESULT     MeetCondition(LPSTR dwSection);
 HRESULT     FileUncompress(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessXpcomFile(void);
-HRESULT     CleanupXpcomFile(void);
+void        CleanupXpcomFile(void);
 HRESULT     ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix);
 HRESULT     FileMove(LPSTR szFrom, LPSTR szTo);
 HRESULT     ProcessMoveFile(DWORD dwTiming, char *szSectionPrefix);
@@ -88,6 +88,7 @@ char        *BuildNumberedString(DWORD dwIndex, char *szInputStringPrefix, char 
 void        GetUserAgentShort(char *szUserAgent, char *szOutUAShort, DWORD dwOutUAShortSize);
 void        CleanupPreviousVersionRegKeys(void);
 DWORD       ParseRestrictedAccessKey(LPSTR szKey);
+LPSTR       GetKeyInfo(LPSTR aKey, LPSTR aOut, DWORD aOutBufSize, DWORD aInfoType);
 void        AppendWinReg(HKEY hkRootKey,
                       LPSTR szKey,
                       LPSTR szName,
@@ -100,6 +101,9 @@ void        AppendWinReg(HKEY hkRootKey,
 HRESULT     CleanupArgsRegistry();
 void        ProcessFileOpsForSelectedComponents(DWORD dwTiming);
 void        ProcessFileOpsForAll(DWORD dwTiming);
+
+#define KEY_INFO_ROOT          0x00000001
+#define KEY_INFO_SUBKEY        0x00000002
 
 #endif /* _IFUNCNS_H_ */
 

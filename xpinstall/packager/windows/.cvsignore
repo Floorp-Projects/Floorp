@@ -29,3 +29,5 @@ inspector.template
 inspector.js
 mozilla-win32-stub-installer.template
 mozilla-win32-stub-installer.js
+gre.js
+gre.template

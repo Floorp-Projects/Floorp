@@ -55,6 +55,7 @@ BOOL      gbUncompressOnly;
 DWORD     dwMode;
 HINSTANCE hInst;
 char      gszWizTempDir[20] = "ns_temp";
+char      gszFileToUncompress[MAX_BUF];
 BOOL      gbAllowMultipleInstalls = FALSE;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -197,6 +198,8 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
   iArgCount    = 0;
   lpszBeginStr = GetFirstNonSpace(lpszCommandLine);
 
+  if(lpszDest)
+    *lpszDest = '\0';
   if(lpszBeginStr == NULL)
     return(NULL);
 
@@ -207,7 +210,6 @@ LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
     exit(1);
   }
 
-  ZeroMemory(lpszDest, iDestSize);
   iStrLength    = lstrlen(lpszBeginStr);
   bFoundQuote   = FALSE;
   bFoundSpace   = TRUE;
@@ -452,7 +454,8 @@ void ParseCommandLine(LPSTR lpszCmdLine)
   int   i;
   int   iArgC;
 
-  ZeroMemory(szCmdLineToSetup, MAX_BUF);
+  *szCmdLineToSetup = '\0';
+  *gszFileToUncompress = '\0';
   dwMode = NORMAL;
   gbUncompressOnly = FALSE;
   iArgC  = GetArgC(lpszCmdLine);
@@ -467,6 +470,12 @@ void ParseCommandLine(LPSTR lpszCmdLine)
     else if((lstrcmpi(szArgVBuf, "-u") == 0) || (lstrcmpi(szArgVBuf, "/u") == 0))
     {
       gbUncompressOnly = TRUE;
+      GetArgV(lpszCmdLine, i + 1, szArgVBuf, sizeof(szArgVBuf));
+      if((*szArgVBuf != '\0') && (*szArgVBuf != '-'))
+      {
+        lstrcpy(gszFileToUncompress, szArgVBuf);
+        ++i; // found filename to uncompress, update 'i' for the next iteration
+      }
     }
     else if((lstrcmpi(szArgVBuf, "-mmi") == 0) || (lstrcmpi(szArgVBuf, "/mmi") == 0))
     {
@@ -650,6 +659,11 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
     CreateDirectoriesAll(szTmpFile);
   }
 
+  if((*gszFileToUncompress != '\0') && (lstrcmpi(lpszName, gszFileToUncompress) != 0))
+    // We have a file to uncompress, but the one found is not the one we want,
+    // so return TRUE to continue looking for the right one.
+    return TRUE;
+
 	// Extract the file
 	hResInfo = FindResource((HINSTANCE)hModule, lpszName, lpszType);
 	hGlobal = LoadResource((HINSTANCE)hModule, hResInfo);
@@ -723,6 +737,11 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 	FreeResource(hResInfo);
   if(lptr)
     free(lptr);
+
+  if((*gszFileToUncompress != '\0') && (lstrcmpi(lpszName, gszFileToUncompress) == 0))
+    // We have a file to uncompress, and we have uncompressed it,
+    // so return FALSE to stop uncompressing any other file.
+    return FALSE;
 
 	return TRUE;  // keep enumerating
 }

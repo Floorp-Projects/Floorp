@@ -37,6 +37,7 @@
 #
 
 use File::Copy;
+use File::Basename;
 use Cwd;
 
 # Make sure there are at least three arguments
@@ -50,31 +51,30 @@ if($#ARGV < 2)
        \n";
 }
 
+$DEPTH = "../../..";
+$topsrcdir        = GetTopSrcDir();
 $inComponentName  = $ARGV[0];
 $inStagePath      = $ARGV[1];
 $inDestPath       = $ARGV[2];
 
-$inStagePath      =~ s/\//\\/g;
-$inDestPath       =~ s/\//\\/g;
-
 # check for existance of staging component path
-if(!(-e "$inStagePath\\$inComponentName"))
+if(!(-e "$inStagePath/$inComponentName"))
 {
-  die "invalid path: $inStagePath\\$inComponentName\n";
+  die "invalid path: $inStagePath/$inComponentName\n";
 }
 
 if($inComponentName =~ /xpcom/i)
 {
   # copy msvcrt.dll to xpcom dir
-  if(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll")
+  if(-e "$topsrcdir/../redist/microsoft/system/msvcrt.dll")
   {
-    system("copy $ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll  $inStagePath\\$inComponentName");
+    copy("$topsrcdir/../redist/microsoft/system/msvcrt.dll", "$inStagePath/$inComponentName");
   }
 
   # copy msvcirt.dll to xpcom dir
-  if(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll")
+  if(-e "$topsrcdir/../redist/microsoft/system/msvcirt.dll")
   {
-    system("copy $ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll $inStagePath\\$inComponentName");
+    copy("$topsrcdir/../redist/microsoft/system/msvcirt.dll", "$inStagePath/$inComponentName");
   }
 }
 
@@ -85,13 +85,13 @@ if(!(-e "$inComponentName.js"))
 }
 
 # delete component .xpi file
-if(-e "$inDestPath\\$inComponentName.xpi")
+if(-e "$inDestPath/$inComponentName.xpi")
 {
-  unlink("$inDestPath\\$inComponentName.xpi");
+  unlink("$inDestPath/$inComponentName.xpi");
 }
-if(-e "$inStagePath\\$inComponentName\\$inComponentName.xpi")
+if(-e "$inStagePath/$inComponentName/$inComponentName.xpi")
 {
-  unlink("$inDestPath\\$inComponentName.xpi");
+  unlink("$inDestPath/$inComponentName.xpi");
 }
 
 # delete install.js
@@ -110,26 +110,37 @@ print "\n Making $inComponentName.xpi...\n";
 
 $saveCwdir = cwd();
 
-copy("$inComponentName.js", "$inStagePath\\$inComponentName\\install.js");
+copy("$inComponentName.js", "$inStagePath/$inComponentName/install.js");
 
 # change directory to where the files are, else zip will store
 # unwanted path information.
-chdir("$inStagePath\\$inComponentName");
-if(system("zip -r $inDestPath\\$inComponentName.xpi *"))
+chdir("$inStagePath/$inComponentName");
+if(system("zip -r $inDestPath/$inComponentName.xpi *"))
 {
   chdir("$saveCwdir");
-  die "\n Error: zip -r $inDestPath\\$inComponentName.xpi *\n";
+  die "\n Error: zip -r $inDestPath/$inComponentName.xpi *\n";
 }
-chdir("$saveCwdir");
 
 # delete install.js
 if(-e "install.js")
 {
   unlink("install.js");
 }
+chdir("$saveCwdir");
 
 print "\n $inComponentName.xpi done!\n";
 
 # end of script
 exit(0);
+
+sub GetTopSrcDir
+{
+  my($rootDir) = dirname($0) . "/$DEPTH";
+  my($savedCwdDir) = cwd();
+
+  chdir($rootDir);
+  $rootDir = cwd();
+  chdir($savedCwdDir);
+  return($rootDir);
+}
 

@@ -36,12 +36,11 @@ NO_DIST_INSTALL	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-#ifdef MOZ_TOOLS
-#libs:: $(PROGRAM)
-#	$(INSTALL) -D $(MOZ_TOOLS)/bin
-#	copy.exe $(PROGRAM) $(MOZ_TOOLS)/bin
-#
-#clean clobber realclean clobber_all::
-#	$(RM) $(MOZ_TOOLS)/bin/$(PROGRAM)
-#endif
+libs:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DIST)/install
 
+install:: $(PROGRAM)
+	$(INSTALL) $(PROGRAM) $(DESTDIR)$(mozappdir)/install
+
+clean clobber realclean clobber_all::
+	$(RM) $(DIST)/install/$(PROGRAM)

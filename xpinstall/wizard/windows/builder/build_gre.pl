@@ -34,58 +34,41 @@
 #    c. run nmake -f makefile.win from the above directory
 #
 
-if($ENV{MOZ_SRC} eq "")
-{
-  print "Error: MOZ_SRC not set!";
-  exit(1);
-}
+use Cwd;
+use File::Copy;
+use File::Path;
+use File::Basename;
 
-$inXpiURL = "";
-$inRedirIniURL = "";
+$DEPTH         = "../../../..";
+$topsrcdir     = GetTopSrcDir();
+$inStagePath   = "$topsrcdir/stage";
+$inDistPath    = "$topsrcdir/dist";
+$inXpiURL      = "ftp://not.supplied.com";
+$inRedirIniURL = $inXpiURL;
+
+# ensure that Packager.pm is in @INC, since we might not be called from
+# mozilla/xpinstall/packager
+push(@INC, "$topsrcdir/../mozilla/xpinstall/packager");
+require StageUtils;
 
 ParseArgv(@ARGV);
-if($inXpiURL eq "")
+
+$DEPTH            = "$topsrcdir" if !defined($DEPTH);
+$cwdBuilder       = "$topsrcdir/xpinstall/wizard/windows/builder";
+$verPartial       = "1.3a.0.";
+$ver              = $verPartial . GetVersion($DEPTH);
+$stageDir         = "$topsrcdir/stage";
+$gDistInstallPath = "$inDistPath/inst_gre";
+$gPackagerPath    = "$topsrcdir/xpinstall/packager";
+
+print "\n";
+print " Building GRE...\n";
+print "\n";
+
+chdir("$gPackagerPath/win_gre");
+if(system("perl makeall.pl $ver -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL"))
 {
-  # archive url not supplied, set it to default values
-  $inXpiURL      = "ftp://not.supplied.com";
-}
-if($inRedirIniURL eq "")
-{
-  # redirect url not supplied, set it to default value.
-  $inRedirIniURL = $inXpiURL;
-}
-
-$DEPTH         = "$ENV{MOZ_SRC}\\mozilla";
-$cwdBuilder    = "$DEPTH\\xpinstall\\wizard\\windows\\builder";
-$cwdBuilder    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
-$cwdGrePkgr    = "$DEPTH\\embedding\\config";
-$cwdGrePkgr    =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
-$cwdDist       = GetCwd("dist",     $DEPTH, $cwdBuilder);
-$cwdDistWin    = GetCwd("distwin",  $DEPTH, $cwdBuilder);
-$cwdInstall    = GetCwd("install",  $DEPTH, $cwdBuilder);
-$cwdPackager   = GetCwd("packager", $DEPTH, $cwdBuilder);
-$verPartial    = "1.3a.0.";
-$ver           = $verPartial . GetVersion($DEPTH);
-
-if(-d "$cwdDist\\stage")
-{
-  system("perl $cwdPackager\\win_gre\\rdir.pl $cwdDist\\stage");
-}
-
-print "stage:  $cwdDist\\stage";
-print "cwdDistWin: $cwdDistWin";
-
-mkdir("$cwdDist\\stage", 775);
-mkdir("$cwdDist\\stage\\gre", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\gre -f $cwdGrePkgr\\basebrowser-win -o dos -v");
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\gre -f $cwdGrePkgr\\gre-win -o dos -v");
-
-
-chdir("$cwdPackager\\win_gre");
-if(system("perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\inst_gre -aurl $inXpiURL -rurl $inRedirIniURL"))
-{
-  print "\n Error: perl makeall.pl $ver $cwdDist\\stage $cwdDistWin\\install $inXpiURL $inRedirIniURL\n";
-  exit(1);
+  die "\n Error: perl makeall.pl $ver -stagePath \"$inStagePath\" -distPath \"$inDistPath\" -aurl $inXpiURL -rurl $inRedirIniURL\n";
 }
 
 chdir($cwdBuilder);
@@ -93,27 +76,17 @@ chdir($cwdBuilder);
 # Copy the .xpi files to the same directory as setup.exe.
 # This is so that setup.exe can find the .xpi files
 # in the same directory and use them.
-#
-# Mozilla-win32-install.exe (a self extracting file) will use the .xpi
-# files from its current directory as well, but it is not a requirement
-# that they exist because it already contains the .xpi files within itself.
+StageUtils::CopyFiles("$gDistInstallPath/xpi", "$gDistInstallPath");
 
-   print "Copy: $cwdInstall\\xpi\\*.* $cwdInstall\n";
-if(system("copy $cwdInstall\\xpi\\*.* $cwdInstall"))
-{
-  print "Error: copy $cwdInstall\\xpi\\*.* $cwdInstall\n";
-  exit(1);
-}
-
-#print "\n";
-#print "**\n";
-#print "*\n";
-#print "*  A self-extracting installer has been built and delivered:\n";
-#print "*\n";
-#print "*      $cwdDistWin\\install\\gre-win32-install.exe\n";
-#print "*\n";
-#print "**\n";
-#print "\n";
+print "\n";
+print "**\n";
+print "*\n";
+print "*  A self-extracting installer has been built and delivered:\n";
+print "*\n";
+print "*      $gDistInstallPath/gre-win32-install.exe\n";
+print "*\n";
+print "**\n";
+print "\n";
 
 exit(0);
 
@@ -123,17 +96,27 @@ sub PrintUsage
 
        options available are:
 
-           -h    - this usage.
+           -h                - this usage.
 
-           -aurl - ftp or http url for where the archives (.xpi, exe, .zip, etx...) are.
-                   ie: ftp://my.ftp.com/mysoftware/version1.0/xpi
+           -stagePath <path> - Full path to where the mozilla stage dir is at.
+                               Default path, if one is not set, is:
+                                 [mozilla]/stage
 
-           -rurl - ftp or http url for where the redirect.ini file is located at.
-                   ie: ftp://my.ftp.com/mysoftware/version1.0
+           -distPath <path>  - Full path to where the mozilla dist dir is at.
+                               Default path, if one is not set, is:
+                                 [mozilla]/dist
+
+           -aurl <url>       - ftp or http url for where the archives (.xpi, exe, .zip, etx...) are.
+                               ie: ftp://my.ftp.com/mysoftware/version1.0/xpi
+
+           -rurl  <url>      - ftp or http url for where the redirect.ini file is located at.
+                               ie: ftp://my.ftp.com/mysoftware/version1.0
                    
-                   This url can be the same as the archive url.
-                   If -rurl is not supplied, it will be assumed that the redirect.ini
-                   file is at -arul.
+                               This url can be the same as the archive url.
+                               If -rurl is not supplied, it will be assumed that the redirect.ini
+                               file is at -arul.
+
+           -DEPTH location of the top of the Mozilla build tree
        \n";
 }
 
@@ -147,6 +130,22 @@ sub ParseArgv
     if($myArgv[$counter] =~ /^[-,\/]h$/i)
     {
       PrintUsage();
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]stagePath$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inStagePath = $myArgv[$counter];
+      }
+    }
+    elsif($myArgv[$counter] =~ /^[-,\/]distPath$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $inDistPath = $myArgv[$counter];
+      }
     }
     elsif($myArgv[$counter] =~ /^[-,\/]aurl$/i)
     {
@@ -165,64 +164,31 @@ sub ParseArgv
         $inRedirIniURL = $myArgv[$counter];
       }
     }
+    elsif($myArgv[$counter] =~ /^[-,\/]depth$/i)
+    {
+      if($#myArgv >= ($counter + 1))
+      {
+        ++$counter;
+        $DEPTH = $myArgv[$counter];
+      }
+    }
+  }
+  PrintUsage() if (!defined($topsrcdir));
+  $tmpdir = get_system_cwd();
+  chdir("$topsrcdir") || die "$topsrcdir: Directory does not exist!\n";
+  $topsrcdir = get_system_cwd();
+  chdir("$tmpdir") || die "$tmpdir: Cannot find our way back home\n";
+  if (defined($DEPTH)) {
+      chdir("$DEPTH") || die "$DEPTH: Directory does not exist!\n";
+      $DEPTH = get_system_cwd();
+      chdir("$tmpdir") || die "$tmpdir: Cannot find our way back home again\n";
   }
 }
 
-sub GetCwd
-{
-  my($whichPath, $depthPath, $returnCwd) = @_;
-  my($distCwd);
-  my($distPath);
-
-  if($whichPath eq "dist")
-  {
-    # verify the existance of path
-    if(!(-e "$depthPath\\dist"))
-    {
-      print "path not found: $depthPath\\dist\n";
-      exit(1);
-    }
-
-    $distPath = "$depthPath\\dist";
-  }
-  elsif($whichPath eq "distwin")
-  {
-    # verify the existance of path
-    if(!(-e "$depthPath\\dist"))
-    {
-      print "path not found: $depthPath\\dist\n";
-      exit(1);
-    }
-
-    $distPath = "$depthPath\\dist";
-  }
-  elsif($whichPath eq "install")
-  {
-    # verify the existance of path
-    if(!(-e "$depthPath\\dist\\inst_gre"))
-    {
-      mkdir("$depthPath\\dist\\inst_gre", 775);
-
-#      print "path not found: $depthPath\\dist\\inst_gre\n";
-#      exit(1);
-    }
-
-    $distPath = "$depthPath\\dist\\inst_gre";
-  }
-  elsif($whichPath eq "packager")
-  {
-    # verify the existance of path
-    if(!(-e "$depthPath\\xpinstall\\packager"))
-    {
-      print "path not found: $depthPath\\xpinstall\\packager\n";
-      exit(1);
-    }
-
-    $distPath = "$depthPath\\xpinstall\\packager";
-  }
-
-  $distPath =~ s/\//\\/g; # convert slashes to backslashes for Dos commands to work
-  return($distPath);
+sub get_system_cwd {
+  my $a = Cwd::getcwd()||`pwd`;
+  chomp($a);
+  return $a;
 }
 
 sub GetVersion
@@ -230,13 +196,17 @@ sub GetVersion
   my($depthPath) = @_;
   my($fileMozilla);
   my($fileMozillaVer);
+  my($distWinPathName);
   my($monAdjusted);
   my($yy);
   my($mm);
   my($dd);
   my($hh);
 
-  $fileMozilla = "$depthPath\\dist\\bin\\mozilla.exe";
+  # determine if build was built via gmake
+  $distWinPathName = "dist";
+
+  $fileMozilla = "$depthPath/$distWinPathName/bin/mozilla.exe";
   # verify the existance of file
   if(!(-e "$fileMozilla"))
   {
@@ -266,3 +236,15 @@ sub GetVersion
   print "y2k compliant version string for $fileMozilla: $fileMozillaVer\n";
   return($fileMozillaVer);
 }
+
+sub GetTopSrcDir
+{
+  my($rootDir) = dirname($0) . "/$DEPTH";
+  my($savedCwdDir) = cwd();
+
+  chdir($rootDir);
+  $rootDir = cwd();
+  chdir($savedCwdDir);
+  return($rootDir);
+}
+

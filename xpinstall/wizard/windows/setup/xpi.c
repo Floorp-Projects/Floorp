@@ -53,6 +53,7 @@ static DWORD            dwTotalArchives;
 char                    szStrProcessingFile[MAX_BUF];
 char                    szStrCopyingFile[MAX_BUF];
 char                    szStrInstalling[MAX_BUF];
+static char             gSavedCwd[MAX_BUF];
 
 static void UpdateGaugeFileProgressBar(unsigned value);
 static void UpdateGaugeArchiveProgressBar(unsigned value);
@@ -67,7 +68,7 @@ struct ExtractFilesDlgInfo
 	int		nArchiveBars;		  // current number of bars to display
 } dlgInfo;
 
-HRESULT InitializeXPIStub()
+HRESULT InitializeXPIStub(char *xpinstallPath)
 {
   char szBuf[MAX_BUF];
   char szXPIStubFile[MAX_BUF];
@@ -75,15 +76,13 @@ HRESULT InitializeXPIStub()
   HANDLE hKernel;
 
   hXPIStubInst = NULL;
+  GetCurrentDirectory(sizeof(gSavedCwd), gSavedCwd);
 
   if(!GetPrivateProfileString("Messages", "ERROR_GETPROCADDRESS", "", szEGetProcAddress, sizeof(szEGetProcAddress), szFileIniInstall))
     return(1);
 
   /* change current directory to where xpistub.dll */
-  lstrcpy(szBuf, siCFXpcomFile.szDestination);
-  AppendBackSlash(szBuf, sizeof(szBuf));
-  lstrcat(szBuf, "bin");
-  chdir(szBuf);
+  SetCurrentDirectory(xpinstallPath);
 
   /* Windows XP SP1 changed DLL search path strategy, setting current dir */
   /* is no longer sufficient. Use SetDLLDirectory() if available */
@@ -91,11 +90,11 @@ HRESULT InitializeXPIStub()
   {
     pfnSetDllPath = (SetDllPathProc)GetProcAddress(hKernel, "SetDllDirectoryA");
     if (pfnSetDllPath)
-      pfnSetDllPath(szBuf);
+      pfnSetDllPath(xpinstallPath);
   }
 
   /* build full path to xpistub.dll */
-  lstrcpy(szXPIStubFile, szBuf);
+  lstrcpy(szXPIStubFile, xpinstallPath);
   AppendBackSlash(szXPIStubFile, sizeof(szXPIStubFile));
   lstrcat(szXPIStubFile, "xpistub.dll");
 
@@ -144,6 +143,7 @@ HRESULT DeInitializeXPIStub()
   if (pfnSetDllPath)
     pfnSetDllPath(NULL);
 
+  SetCurrentDirectory(gSavedCwd);
   return(0);
 }
 
@@ -221,6 +221,7 @@ HRESULT SmartUpdateJars()
   char      szArchive[MAX_BUF];
   char      szMsgSmartUpdateStart[MAX_BUF];
   char      szDlgExtractingTitle[MAX_BUF];
+  char      xpinstallPath[MAX_BUF];
 
   if(!GetPrivateProfileString("Messages", "MSG_SMARTUPDATE_START", "", szMsgSmartUpdateStart, sizeof(szMsgSmartUpdateStart), szFileIniInstall))
     return(1);
@@ -234,7 +235,8 @@ HRESULT SmartUpdateJars()
     exit(1);
 
   ShowMessage(szMsgSmartUpdateStart, TRUE);
-  if(InitializeXPIStub() == WIZ_OK)
+  GetXpinstallPath(xpinstallPath, sizeof(xpinstallPath));
+  if(InitializeXPIStub(xpinstallPath) == WIZ_OK)
   {
     LogISXPInstall(W_START);
     lstrcpy(szBuf, sgProduct.szPath);
@@ -382,7 +384,7 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   char szStrProcessingFileBuf[MAX_BUF];
   char szStrCopyingFileBuf[MAX_BUF];
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     ParsePath((char *)msg, szFilename, sizeof(szFilename), FALSE, PP_FILENAME_ONLY);
 
@@ -470,7 +472,7 @@ UpdateGaugeFileBarber()
 	HWND	hWndGauge;
 	RECT	rect;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
 	  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
     if(dwBarberDirection == BDIR_RIGHT)
@@ -515,7 +517,7 @@ UpdateGaugeFileProgressBar(unsigned value)
 {
 	int	nBars;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     // Figure out how many bars should be displayed
     nBars = dlgInfo.nMaxFileBars * value / 100;
@@ -548,7 +550,7 @@ UpdateGaugeArchiveProgressBar(unsigned value)
 {
 	int	nBars;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     // Figure out how many bars should be displayed
     nBars = dlgInfo.nMaxArchiveBars * value / 100;
@@ -797,7 +799,7 @@ void InitProgressDlg()
 {
 	WNDCLASS	wc;
 
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     memset(&wc, 0, sizeof(wc));
     wc.style          = CS_GLOBALCLASS;
@@ -819,7 +821,7 @@ void InitProgressDlg()
 
 void DeInitProgressDlg()
 {
-  if(sgProduct.dwMode != SILENT)
+  if(sgProduct.mode != SILENT)
   {
     DestroyWindow(dlgInfo.hWndDlg);
     UnregisterClass("GaugeFile", hInst);

@@ -137,6 +137,7 @@ BEGIN
     IDS_ERROR_STRING_LOAD   "Could not load string resource ID %d"
     IDS_ERROR_STRING_NULL   "Null pointer encountered."
     IDS_ERROR_GLOBALALLOC   "Memory allocation error."
+    IDS_ERROR_OUTOFMEMORY   "Out of memory"
 END
 
 #endif    // English (U.S.) resources

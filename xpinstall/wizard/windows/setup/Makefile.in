@@ -49,6 +49,8 @@ CSRCS		= \
 		setup.c \
 		xpi.c \
 		logging.c \
+		supersede.c \
+		version.c \
 
 CPPSRCS		= \
 		shortcut.cpp \

@@ -25,7 +25,7 @@
 #ifndef _XPI_H_
 #define _XPI_H_
 
-HRESULT         InitializeXPIStub(void);
+HRESULT         InitializeXPIStub(char *xpinstallPath);
 HRESULT         DeInitializeXPIStub(void);
 HRESULT         SmartUpdateJars(void);
 void            cbXPIStart(const char *, const char *UIName);

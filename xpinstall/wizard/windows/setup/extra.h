@@ -25,6 +25,8 @@
 #ifndef _EXTRA_H_
 #define _EXTRA_H_
 
+#include "supersede.h"
+
 BOOL              InitDialogClass(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst);
 BOOL              InitInstance(HINSTANCE hInstance, DWORD dwCmdShow);
@@ -160,6 +162,7 @@ DWORD             GetTotalArchivesToDownload();
 void              RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize);
 int               MozCopyStr(LPSTR szSrc, LPSTR szDest, DWORD dwDestBufSize);
 LPSTR             GetFirstNonSpace(LPSTR lpszString);
+LPSTR             MozStrChar(LPSTR lpszString, char c);
 int               GetArgC(LPSTR lpszCommandLine);
 LPSTR             GetArgV(LPSTR lpszCommandLine,
                           int iIndex,
@@ -192,7 +195,6 @@ int               CRCCheckArchivesStartup(char *szCorruptedArchiveList,
                                           DWORD dwCorruptedArchiveListSize,
                                           BOOL bIncludeTempPath);
 BOOL              ResolveForceUpgrade(siC *siCObject);
-BOOL              ResolveSupersede(siC *siCObject);
 void              RestoreInvisibleFlag(siC *siCNode);
 void              RestoreAdditionalFlag(siC *siCNode);
 void              SwapFTPAndHTTP(char *szInUrl, DWORD dwInUrlSize);
@@ -216,7 +218,10 @@ BOOL              ShowAdditionalOptionsDialog(void);
 DWORD             GetPreviousUnfinishedState(void);
 void              RefreshIcons();
 void              NeedToInstallFiles(LPSTR szProdDir);
-void              UpdateGREAppInstallerProgress(int percent);
+void              LaunchOneComponent(siC *siCObject, greInfo *aGre);
+HRESULT           ProcessXpinstallEngine(void);
+void              GetXpinstallPath(char *aPath, int aPathBufSize);
+int               AddGrePathToApplicationAppPathsKey(void);
 
 #endif /* _EXTRA_H_ */
 

@@ -468,7 +468,7 @@ HRESULT FileUncompress(LPSTR szFrom, LPSTR szTo)
   {
     lstrcpy(szBuf, szTo);
     AppendBackSlash(szBuf, sizeof(szBuf));
-    CreateDirectoriesAll(szBuf, FALSE);
+    CreateDirectoriesAll(szBuf, DO_NOT_ADD_TO_UNINSTALL_LOG);
   }
 
   GetCurrentDirectory(MAX_BUF, szBuf);
@@ -494,9 +494,6 @@ HRESULT ProcessXpcomFile()
   char szSource[MAX_BUF];
   char szDestination[MAX_BUF];
   DWORD dwErr;
-
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, TRUE);
 
   if((dwErr = FileUncompress(siCFXpcomFile.szSource, siCFXpcomFile.szDestination)) != FO_SUCCESS)
   {
@@ -527,18 +524,20 @@ HRESULT ProcessXpcomFile()
 
   FileCopy(szSource, szDestination, TRUE, FALSE);
 
-  if(*siCFXpcomFile.szMessage != '\0')
-    ShowMessage(siCFXpcomFile.szMessage, FALSE);
-
   return(FO_SUCCESS);
 }
 
-HRESULT CleanupXpcomFile()
+void CleanupXpcomFile()
 {
+  /* If xpcom file is not used (gre is used instead), then
+   * just return */
+  if(siCFXpcomFile.bStatus != STATUS_ENABLED)
+    return;
+
   if(siCFXpcomFile.bCleanup == TRUE)
     DirectoryRemove(siCFXpcomFile.szDestination, TRUE);
 
-  return(FO_SUCCESS);
+  return;
 }
 
 #define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
@@ -723,6 +722,7 @@ HRESULT FileCopy(LPSTR szFrom, LPSTR szTo, BOOL bFailIfExists, BOOL bDnu)
   if(FileExists(szFrom))
   {
     /* The file in the From file path exists */
+    CreateDirectoriesAll(szTo, !bDnu);
     ParsePath(szFrom, szBuf, sizeof(szBuf), FALSE, PP_FILENAME_ONLY);
     lstrcpy(szToTemp, szTo);
     AppendBackSlash(szToTemp, sizeof(szToTemp));
@@ -1051,7 +1051,7 @@ void UpdateInstallLog(LPSTR szKey, LPSTR szString, BOOL bDnu)
     AppendBackSlash(szFileInstallLog, sizeof(szFileInstallLog));
   }
 
-  CreateDirectoriesAll(szFileInstallLog, FALSE);
+  CreateDirectoriesAll(szFileInstallLog, !bDnu);
   lstrcat(szFileInstallLog, FILE_INSTALL_LOG);
 
   if((fInstallLog = fopen(szFileInstallLog, "a+t")) != NULL)
@@ -1084,7 +1084,7 @@ void UpdateInstallStatusLog(LPSTR szString)
     AppendBackSlash(szFileInstallStatusLog, sizeof(szFileInstallStatusLog));
   }
 
-  CreateDirectoriesAll(szFileInstallStatusLog, FALSE);
+  CreateDirectoriesAll(szFileInstallStatusLog, DO_NOT_ADD_TO_UNINSTALL_LOG);
   lstrcat(szFileInstallStatusLog, FILE_INSTALL_STATUS_LOG);
 
   if((fInstallLog = fopen(szFileInstallStatusLog, "a+t")) != NULL)
@@ -1110,7 +1110,7 @@ void UpdateJSProxyInfo()
     }
     AppendBackSlash(szJSFile, sizeof(szJSFile));
     lstrcat(szJSFile, "defaults\\pref\\");
-    CreateDirectoriesAll(szJSFile, TRUE);
+    CreateDirectoriesAll(szJSFile, ADD_TO_UNINSTALL_LOG);
     lstrcat(szJSFile, FILE_ALL_JS);
 
     if((fJSFile = fopen(szJSFile, "a+t")) != NULL)
@@ -1193,7 +1193,7 @@ HRESULT ProcessCreateDirectory(DWORD dwTiming, char *szSectionPrefix)
     {
       DecryptString(szDestination, szBuf);
       AppendBackSlash(szDestination, sizeof(szDestination));
-      CreateDirectoriesAll(szDestination, TRUE);
+      CreateDirectoriesAll(szDestination, ADD_TO_UNINSTALL_LOG);
     }
 
     ++dwIndex;
@@ -1429,6 +1429,66 @@ DWORD ParseRestrictedAccessKey(LPSTR szKey)
     dwKey = RA_IGNORE;
 
   return(dwKey);
+}
+
+/* Function: GetKeyInfo()
+ *       in: LPSTR aKey, DWORD aOutBufSize, DWORD aInfoType.
+ *      out: LPSTR aOut.
+ *  purpose: To parse a full windows registry key path format:
+ *             [root key]\[subkey]
+ *           It can return either the root key or the subkey depending on
+ *           what's being requested.
+ */
+LPSTR GetKeyInfo(LPSTR aKey, LPSTR aOut, DWORD aOutBufSize, DWORD aInfoType)
+{
+  LPSTR keyCopy = NULL;
+  LPSTR key = NULL;
+
+  *aOut = '\0';
+  if((keyCopy = strdup(aKey)) == NULL)
+    return NULL;
+
+  switch(aInfoType)
+  {
+    case KEY_INFO_ROOT:
+      key = MozStrChar(keyCopy, '\\');
+      if(key == keyCopy)
+      {
+        // root key not found, return NULL
+        free(keyCopy);
+        return NULL;
+      }
+      else if(key)
+        // found '\\' which indicates the end of the root key
+        // and beginning of the subkey.
+        *key = '\0';
+
+      if(MozCopyStr(keyCopy, aOut, aOutBufSize))
+      {
+        free(keyCopy);
+        return NULL;
+      }
+      break;
+
+    case KEY_INFO_SUBKEY:
+      key = MozStrChar(keyCopy, '\\');
+      if(key != NULL)
+        ++key;
+
+      if(!key)
+        // No subkey found.  Assume the entire string is the subkey.
+        key = keyCopy;
+
+      if(MozCopyStr(key, aOut, aOutBufSize))
+      {
+        free(keyCopy);
+        return NULL;
+      }
+      break;
+  }
+
+  free(keyCopy);
+  return(aOut);
 }
 
 HKEY ParseRootKey(LPSTR szRootKey)
@@ -1738,7 +1798,7 @@ LONG CreateWinRegKey(HKEY hkRootKey,
     saveChar = *pointerToBackslashChar;
     *pointerToBackslashChar = '\0';
     // Log the registry only if it was created here
-    _CreateWinRegKey(hkRootKey, szTempKeyPath, bLogForUninstall, bDnu, DO_NOT_LOG_IT);
+    _CreateWinRegKey(hkRootKey, szTempKeyPath, bLogForUninstall, bDnu, DO_NOT_FORCE_ADD_TO_UNINSTALL_LOG);
     *pointerToBackslashChar = saveChar;
     pointerToStrWalker = &pointerToBackslashChar[1];
   }
@@ -1748,7 +1808,7 @@ LONG CreateWinRegKey(HKEY hkRootKey,
   // covers the case where the user deletes the uninstall log file from a
   // previous build where a new install would not log the creation because
   // it already exists.
-  return(_CreateWinRegKey(hkRootKey, szKey, bLogForUninstall, bDnu, LOG_IT));
+  return(_CreateWinRegKey(hkRootKey, szKey, bLogForUninstall, bDnu, FORCE_ADD_TO_UNINSTALL_LOG));
 }
 
 void SetWinReg(HKEY hkRootKey,
@@ -2184,8 +2244,8 @@ HRESULT ProcessProgramFolderShowCmd()
       iShowFolder = SW_SHOWNORMAL;
 
     if(iShowFolder != SW_HIDE)
-      if(sgProduct.dwMode != SILENT)
-        WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, TRUE);
+      if(sgProduct.mode != SILENT)
+        WinSpawn(szProgramFolder, NULL, NULL, iShowFolder, WS_WAIT);
 
     ++dwIndex0;
     BuildNumberedString(dwIndex0, NULL, "Program Folder", szSection0, sizeof(szSection0));
