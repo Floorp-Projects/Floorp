@@ -188,8 +188,10 @@ JSValue Context::invokeFunction(JSFunction *target, const JSValue& thisValue, JS
 
 JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeChain *scopeChain, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
 { 
-    mActivationStack.push(new Activation(mLocals, mStack, mStackTop, mScopeChain,
-                                            mArgumentBase, mThis, NULL, mCurModule));   // use NULL pc value to force interpret loop to exit
+    Activation *prev = new Activation(mLocals, mStack, mStackTop, mScopeChain,
+                                            mArgumentBase, mThis, NULL, mCurModule); // use NULL pc value to force interpret loop to exit
+    uint32 activationHeight = mActivationStack.size();
+    mActivationStack.push(prev);   
     mThis = thisValue;
     if (scopeChain)
         mScopeChain = scopeChain;
@@ -215,14 +217,18 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     try {
         result = interpret(pc, endPC);
     }
-    catch (Exception &x) {
-        Activation *prev = mActivationStack.top();
-        mActivationStack.pop();
-
+    catch (Exception &jsx) {
+        while (mActivationStack.size() != activationHeight)
+            mActivationStack.pop();
+         
         // the following (delete's) are a bit iffy - depends on whether
         // a closure capturing the contents has come along...
 //        if (mThis.isObject())
 //          mScopeChain->popScope();
+        JSValue x;
+        if (jsx.hasKind(Exception::userException)) 
+            x = popValue();
+
         delete[] mStack;
         delete[] mLocals;
         if (scopeChain == NULL)
@@ -230,7 +236,11 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
 
         mCurModule = prev->mModule;
         mStack = prev->mStack;
-        mStackTop = prev->mStackTop;
+        mStackTop = 0;      // we're processing an exception, no need to preserve the stack
+        
+        if (jsx.hasKind(Exception::userException)) 
+            pushValue(x);
+
         if (mCurModule)
             mStackMax = mCurModule->mStackDepth;
         mLocals = prev->mLocals;
@@ -238,9 +248,9 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
         mThis = prev->mThis;
         mScopeChain = prev->mScopeChain;
         delete prev;
-        throw x;
+        throw jsx;
     }
-    Activation *prev = mActivationStack.top();
+    ASSERT(prev == mActivationStack.top());
     mActivationStack.pop();
 
     // the following (delete's) are a bit iffy - depends on whether
@@ -1013,6 +1023,18 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         const String *name = index.toString(this).string;
                         obj->getProperty(this, *name, CURRENT_ATTR);
                     }
+                    // if the result is a method of some kind, bind
+                    // the base object to it
+                    JSValue result = topValue();
+                    if (result.isFunction()) {
+                        popValue();
+                        if (result.function->isConstructor())
+                            // A constructor has to be called with a NULL 'this' in order to prompt it
+                            // to construct the instance object.
+                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, NULL))));
+                        else
+                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, obj))));
+                    }
                 }
                 break;
             case SetElementOp:
@@ -1627,6 +1649,34 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
                 
                 JSValue x;
+                if (curAct != hndlr->mActivation) {
+                    ASSERT(mActivationStack.size() > 0);
+                    Activation *prev;// = mActivationStack.top();
+                    do {
+                        prev = curAct;
+                        if (prev->mPC == NULL) {
+                            // Yikes! the exception is getting thrown across a re-invocation
+                            // of the interpreter loop.
+                            throw jsx;
+                        }
+                        mActivationStack.pop();
+                        curAct = mActivationStack.top();                            
+                    } while (hndlr->mActivation != curAct);
+                    if (jsx.hasKind(Exception::userException))  // snatch the exception before the stack gets clobbered
+                        x = popValue();
+                    mCurModule = prev->mModule;
+                    endPC = mCurModule->mCodeBase + mCurModule->mLength;
+                    mLocals = prev->mLocals;
+                    mStack = prev->mStack;
+                    mStackMax = mCurModule->mStackDepth;
+                    mArgumentBase = prev->mArgumentBase;
+                    mThis = prev->mThis;
+                }
+                else {
+                    if (jsx.hasKind(Exception::userException))
+                        x = popValue();
+                }
+
                 // make sure there's a JS object for the catch clause to work with
                 if (!jsx.hasKind(Exception::userException)) {
                     JSValue argv[1];
@@ -1649,32 +1699,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         break;
                     }
                 }
-                else {
-                    x = popValue();
-                }
                 
-                if (curAct != hndlr->mActivation) {
-                    ASSERT(mActivationStack.size() > 0);
-                    Activation *prev;// = mActivationStack.top();
-                    do {
-                        prev = curAct;
-                        if (prev->mPC == NULL) {
-                            // Yikes! the exception is getting thrown across a re-invocation
-                            // of the interpreter loop.
-                            throw jsx;
-                        }
-                        mActivationStack.pop();
-                        curAct = mActivationStack.top();                            
-                    } while (hndlr->mActivation != curAct);
-                    mCurModule = prev->mModule;
-                    endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                    mLocals = prev->mLocals;
-                    mStack = prev->mStack;
-                    mStackMax = mCurModule->mStackDepth;
-                    mArgumentBase = prev->mArgumentBase;
-                    mThis = prev->mThis;
-                }
-
                 resizeStack(hndlr->mStackSize);
                 pc = hndlr->mPC;
                 pushValue(x);
@@ -2059,7 +2084,7 @@ static JSValue objectSpittingImage(Context * /*cx*/, const JSValue& /*thisValue*
     JSType *t1 = r1.getType();
     JSType *t2 = r2.getType();
 
-    if (t1 != t2) {
+    if ((t1 != t2) || (r1.isObject() != r2.isObject())) {
         return kFalseValue;
     }
     else {

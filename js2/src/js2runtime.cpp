@@ -1788,7 +1788,7 @@ static JSValue Object_Constructor(Context *cx, const JSValue& thisValue, JSValue
     return thatValue;
 }
 
-static JSValue Object_toString(Context *, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+static JSValue Object_toString(Context * /* cx */, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     if (thisValue.isObject())
         return JSValue(new String(widenCString("[object ") + *thisValue.object->getType()->mClassName + widenCString("]")));
@@ -1802,6 +1802,11 @@ static JSValue Object_toString(Context *, const JSValue& thisValue, JSValue * /*
                 NOT_REACHED("Object.prototype.toString on non-object");
                 return kUndefinedValue;
             }
+}
+
+static JSValue Object_valueOf(Context * /* cx */, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    return thisValue;
 }
 
 struct IteratorDongle {
@@ -1975,6 +1980,68 @@ static JSValue Function_hasInstance(Context *cx, const JSValue& thisValue, JSVal
     }
     return kFalseValue;
 }
+
+static JSValue Function_call(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    if (!thisValue.isFunction())
+        cx->reportError(Exception::typeError, "Non-callable object for Function.call");
+
+    JSValue thisArg;
+    if (argc == 0)
+        thisArg = JSValue(cx->getGlobalObject());
+    else {
+        if (argv[0].isUndefined() || argv[0].isNull())
+            thisArg = JSValue(cx->getGlobalObject());
+        else
+            thisArg = JSValue(argv[0].toObject(cx));
+        --argc;
+        ++argv;
+    }
+    return cx->invokeFunction(thisValue.function, thisArg, argv, argc);
+}
+
+static JSValue Function_apply(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    if (!thisValue.isFunction())
+        cx->reportError(Exception::typeError, "Non-callable object for Function.call");
+
+    ContextStackReplacement csr(cx);
+
+    JSValue thisArg;
+    if (argc == 0)
+        thisArg = JSValue(cx->getGlobalObject());
+    else {
+        if (argv[0].isUndefined() || argv[0].isNull())
+            thisArg = JSValue(cx->getGlobalObject());
+        else
+            thisArg = JSValue(argv[0].toObject(cx));
+    }
+    if (argc <= 1) {
+        argv = NULL;
+        argc = 0;
+    }
+    else {
+        if (argv[1].getType() != Array_Type)
+            cx->reportError(Exception::typeError, "Function.apply must have Array type argument list");
+
+        ASSERT(argv[1].isObject());
+        JSObject *argsObj = argv[1].object;
+        argsObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);
+        JSValue result = cx->popValue();
+        argc = (uint32)(result.toUInt32(cx).f64);    
+
+        argv = new JSValue[argc];
+        for (uint32 i = 0; i < argc; i++) {
+            const String *id = numberToString(i);
+            argsObj->getProperty(cx, *id, CURRENT_ATTR);
+            argv[i] = cx->popValue();
+            delete id;
+        }
+    }
+
+    return cx->invokeFunction(thisValue.function, thisArg, argv, argc);
+}
+
 
 static JSValue Number_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
@@ -2609,6 +2676,7 @@ void Context::initBuiltins()
         { "forin",    Object_Type, 0, Object_forin    },
         { "next",     Object_Type, 0, Object_next     },
         { "done",     Object_Type, 0, Object_done     },
+        { "valueOf",  Object_Type, 0, Object_valueOf  },
         { NULL }
     };
     ProtoFunDef functionProtos[] = 
@@ -2616,6 +2684,8 @@ void Context::initBuiltins()
         { "toString",    String_Type, 0, Function_toString },
         { "toSource",    String_Type, 0, Function_toString },
         { "hasInstance", Boolean_Type, 1, Function_hasInstance },
+        { "call",        Object_Type, 1, Function_call },
+        { "apply",       Object_Type, 2, Function_apply },
         { NULL }
     };
     ProtoFunDef numberProtos[] = 
