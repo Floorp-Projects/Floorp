@@ -57,6 +57,7 @@ EXPORTS = \
         nsISupportsUtils.h \
         nsTraceRefcnt.h    \
         nsWeakReference.h  \
+        nsWeakPtr.h        \
         nscore.h           \
 	$(NULL)
 
