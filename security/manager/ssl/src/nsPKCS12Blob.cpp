@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.21 2001/12/16 11:44:44 jaggernaut%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.22 2002/01/16 04:30:55 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -218,8 +218,7 @@ nsPKCS12Blob::LoadCerts(const PRUnichar **certNames, int numCerts)
   }
   /* Add the certs */
   for (int i=0; i<numCerts; i++) {
-    const char *name = NS_ConvertUCS2toUTF8(certNames[i]).get();
-    strcpy(namecpy, name);
+    strcpy(namecpy, NS_ConvertUCS2toUTF8(certNames[i]));
     CERTCertificate *nssCert = PK11_FindCertFromNickname(namecpy, NULL);
     if (!nssCert) {
       if (!handleError())

@@ -403,7 +403,8 @@ nsNSSASN1Outliner::GetCellText(PRInt32 row, const PRUnichar *colID,
 {
   nsCOMPtr<nsIASN1Object> object;
   _retval.SetCapacity(0);
-  char *col = NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(colID).get());
+  NS_ConvertUCS2toUTF8 aUtf8ColID(colID);
+  const char *col = aUtf8ColID.get();
   nsresult rv = NS_OK;
   if (strcmp(col, "certDataCol") == 0) {
     rv = GetASN1ObjectAtIndex(row, mASN1Object,
