@@ -198,3 +198,13 @@ tabpanels {
         color                   : #323642;
 }
 
+.unifinder-remove-button[disabled="true"] .unifinder-button-text,
+.unifinder-remove-button[disabled="true"]:hover .unifinder-button-text,
+.unifinder-remove-button[disabled="true"]:hover:active .unifinder-button-text,
+.unifinder-modify-button[disabled="true"] .unifinder-button-text,
+.unifinder-modify-button[disabled="true"]:hover .unifinder-button-text,
+.unifinder-modify-button[disabled="true"]:hover:active .unifinder-button-text
+{
+		color: #9399AB !important;
+}
+
