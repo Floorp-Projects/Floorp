@@ -768,6 +768,8 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:components:console:resources:content:MANIFEST",		"$global_content_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:components:console:resources:skin:MANIFEST",			"$global_skin_chrome_dir", 0);
 	_InstallResources(":mozilla:xpfe:components:console:resources:locale:en-US:MANIFEST",	"$global_locale_chrome_dir", 0);
+	_InstallResources(":mozilla:xpfe:components:console:MANIFEST",					"${dist_dir}Components");
+
 
 	# XXX autocomplete needs to move somewhere
 	_InstallResources(":mozilla:xpfe:components:autocomplete:resources:skin:MANIFEST",		"$chrome_dir");
