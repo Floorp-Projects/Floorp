@@ -10,8 +10,6 @@ A * {text-decoration: inherit}
 .es-title {color: #999900}
 .draft-title {color: #FF0000}
 .mod-date {font-size: smaller; font-style: italic; text-align: right}
-.sub {font-size: 70%}
-.sub-num {font-size: 70%; font-style: normal}
 .syntax {margin-left: 36pt}
 .indent {margin-left: 36pt}
 .issue {color: #FF0000}
@@ -45,6 +43,7 @@ DT {font-style: italic; margin-top: 3pt}
 VAR, VAR A:link, VAR A:visited {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #336600}
 A:hover VAR, VAR A:hover {color: #003300}
 A:active VAR, VAR A:active {color: #00FF00}
+.var-sub {color: #336600}
 CODE, PRE {font-family: "Courier New", Courier, mono; color: #0000FF}
 PRE {margin-left: 36pt}
 A:hover CODE {color: #3333CC}
@@ -56,21 +55,25 @@ A.control:active, A:active .control {color: #3333FF}
 A.terminal:hover, A:hover .terminal {color: #336666}
 A.terminal:active, A:active .terminal {color: #00FFFF}
 .terminal-keyword {font-weight: bold}
+.terminal-sub {color: #009999}
 .nonterminal, A.nonterminal:link, A.nonterminal:visited, .nonterminal A:link, .nonterminal A:visited {font-family: Georgia, Palatino, "Times New Roman", Times, serif; font-weight: normal; font-style: italic; color: #009900}
 A.nonterminal:hover, .nonterminal A:hover, A:hover .nonterminal {color: #336633}
 A.nonterminal:active, .nonterminal A:active, A:active .nonterminal {color: #00FF00}
-.nonterminal-attribute, .nonterminal-argument {font-style: normal}
+.nonterminal-attribute {font-family: Arial, Helvetica, sans-serif; color: #009900}
+.nonterminal-argument {color: #009900}
+.nonterminal-sub {color: #009900}
 .semantic-keyword {font-family: "Times New Roman", Times, serif; font-weight: bold}
-.type-expression {color: #CC0000}
 .type-name, A.type-name:link, A.type-name:visited {font-family: "Times New Roman", Times, serif; font-variant: small-caps; color: #CC0000}
 A.type-name:hover, A:hover .type-name {color: #990000}
 A.type-name:active, A:active .type-name {color: #FF6666}
+.type-sub {color: #CC0000}
 .tag-name, A.tag-name:link, A.tag-name:visited {font-family: Arial, Helvetica, sans-serif; font-weight: bold; color: #990000}
 A.tag-name:hover, A:hover .tag-name {color: #660000}
 A.tag-name:active, A:active .tag-name {color: #CC3333}
 .field-name, A.field-name:link, A.field-name:visited {font-family: Arial, Helvetica, sans-serif; color: #663333}
 A.field-name:hover, A:hover .field-name {color: #333333}
 A.field-name:active, A:active .field-name {color: #996666}
+.field-sub {color: #663333}
 .global-variable, A.global-variable:link, A.global-variable:visited {font-family: "Times New Roman", Times, serif; color: #006600}
 A.global-variable:hover, A:hover .global-variable {color: #336633}
 A.global-variable:active, A:active .global-variable {color: #00FF00}
@@ -81,3 +84,6 @@ A.action-name:active, A:active .action-name {color: #FF00FF}
 /* Obsolete styles */
 .semantics {margin-left: 9pt; margin-top: 3pt; margin-bottom: 3pt}
 .semantics-next {margin-left: 27pt; margin-bottom: 3pt}
+.sub {font-size: 70%}
+.sub-num {font-size: 70%; font-style: normal}
+.type-expression {color: #CC0000}
