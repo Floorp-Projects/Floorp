@@ -599,7 +599,6 @@ Rights Reserved.
       <menuseparator/>
       <menuitem value="&backCmd.label;" disabled="true" oncommand="MsgGoBack();"/>
       <menuitem value="&forwardCmd.label;" disabled="true" oncommand="MsgGoForward();"/>
-      <menuitem value="5000 message folder test" oncommand="FolderTest5000();"/>
 	  </menupopup>
     </menu>
     <menu value="&msgMenu.label;">

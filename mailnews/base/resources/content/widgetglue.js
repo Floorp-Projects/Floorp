@@ -24,12 +24,6 @@
  * and then calls a function/command in commandglue
  */
  
-var msgComposeType = Components.interfaces.nsIMsgCompType;
-var msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
-var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
-
-var prefs = Components.classes['component://netscape/preferences'].getService();
-prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 
 // Controller object for folder pane
 var FolderPaneController =
@@ -422,7 +416,7 @@ function MsgForwardMessage(event)
   dump("\nMsgForwardMessage from XUL\n");
   var forwardType = 0;
   try {
-  	var forwardType = prefs.GetIntPref("mail.forward_message_mode");
+  	var forwardType = pref.GetIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
   
   if (forwardType == 0)
@@ -897,19 +891,19 @@ function MsgViewIgnoreThread() {}
 
 function MsgViewAllHeaders() 
 {
-	prefs.SetIntPref("mail.show_headers",2);
+	pref.SetIntPref("mail.show_headers",2);
 	MsgReload();
 	return true;
 }
 function MsgViewNormalHeaders() 
 {
-	prefs.SetIntPref("mail.show_headers",1);
+	pref.SetIntPref("mail.show_headers",1);
 	MsgReload();
 	return true;
 }
 function MsgViewBriefHeaders() 
 {
-	prefs.SetIntPref("mail.show_headers",0);
+	pref.SetIntPref("mail.show_headers",0);
 	MsgReload();
 	return true;
 }

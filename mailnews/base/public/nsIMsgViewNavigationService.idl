@@ -56,5 +56,7 @@ interface nsIMsgViewNavigationService : nsISupports {
 						 in boolean wrapAround, in boolean isThreaded);
 
 	void OpenTreeitemAndDescendants(in nsIDOMNode treeitem);
+
+	void EnsureDocumentIsLoaded(in nsIDOMXULDocument document);
 };
 

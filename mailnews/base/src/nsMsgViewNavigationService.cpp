@@ -28,6 +28,7 @@
 #include "nsIMessage.h"
 #include "nsIMsgFolder.h"
 #include "nsIMsgThread.h"
+#include "nsIDocument.h"
 
 
 typedef PRBool (*navigationFunction)(nsIDOMXULElement *message, navigationInfoPtr info);
@@ -555,6 +556,20 @@ nsresult nsMsgViewNavigationService::FindNextMessageUnthreaded(navigationInfoPtr
 		*nextMessage = next;
 	NS_IF_ADDREF(*nextMessage);
 	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgViewNavigationService::EnsureDocumentIsLoaded(nsIDOMXULDocument *xulDocument)
+{
+	nsresult rv;
+
+	nsCOMPtr<nsIDocument> document = do_QueryInterface(xulDocument);
+	if(!document)
+		return NS_ERROR_FAILURE;
+
+	rv = document->FlushPendingNotifications();
+
+	return rv;
+
 }
 
 //Finds the next message in a threaded view.

@@ -24,21 +24,6 @@
  */
 
 
-var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
-msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-var mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
-var accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
-
-var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
-RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-
-var prefs = Components.classes['component://netscape/preferences'].getService();
-prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
-
-var msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
-msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
-
 var gBeforeFolderLoadTime;
 
 function OpenURL(url)
@@ -316,15 +301,80 @@ function UpdateStatusMessageCounts(folder)
 
 }
 
+function SaveThreadPaneSelection()
+{
+	var tree = GetThreadTree();
+	var selectedItems = tree.selectedItems;
+	var numSelected = selectedItems.length;
+
+	var selectionArray = new Array(numSelected);
+
+	for(var i = 0; i < numSelected; i++)
+	{
+		selectionArray[i] = selectedItems[i].getAttribute("id");
+	}
+
+	return selectionArray;
+}
+
+function RestoreThreadPaneSelection(selectionArray)
+{
+	var tree = GetThreadTree();
+	var numSelected = selectionArray.length;
+
+	msgNavigationService.EnsureDocumentIsLoaded(document);
+
+	var messageElement;
+	for(var i = 0 ; i < numSelected; i++)
+	{
+		messageElement = document.getElementById(selectionArray[i]);
+
+		if(!messageElement && messageView.showThreads)
+		{
+			var treeFolder = GetThreadTreeFolder();
+			var folderURI = treeFolder.getAttribute('ref');
+			var folderResource = RDF.GetResource(folderURI);
+			var folder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+
+			var messageResource = RDF.GetResource(selectionArray[i]);
+			var message = messageResource.QueryInterface(Components.interfaces.nsIMessage);
+
+			var topLevelMessage = GetTopLevelMessageForMessage(message, folder);
+			var topLevelResource = topLevelMessage.QueryInterface(Components.interfaces.nsIRDFResource);
+			var topLevelURI = topLevelResource.Value;
+			var topElement = document.getElementById(topLevelURI);
+			if(topElement)
+			{
+				msgNavigationService.OpenTreeitemAndDescendants(topElement);
+			}
+
+			messageElement = document.getElementById(selectionArray[i]);
+
+		}
+		tree.addItemToSelection(messageElement);
+		if(messageElement && (i==0))
+			tree.ensureElementIsVisible(messageElement);
+	}
+
+}
+
 function SortThreadPane(column, sortKey, secondarySortKey)
 {
 	var node = document.getElementById(column);
 	if(!node)
 		return false;
 
-	return SortColumn(node, sortKey, secondarySortKey);
+	var selection = SaveThreadPaneSelection();
+	var beforeSortTime = new Date();
 
+	var result = SortColumn(node, sortKey, secondarySortKey);
+	var afterSortTime = new Date();
+	var timeToSort = (afterSortTime.getTime() - beforeSortTime.getTime())/1000;
 
+	if(showPerformance)
+		dump("timeToSort is " + timeToSort + "seconds\n");
+	RestoreThreadPaneSelection(selection);
+	return result;
 }
 
 function SortFolderPane(column, sortKey)
@@ -596,34 +646,6 @@ function ShowThreads(showThreads)
 	}
 }
 
-function FolderTest5000()
-{
-
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-
-	var childProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#MessageChild");
-
-	var folderResource = RDF.GetResource("mailbox://scottip@nsmail-2.mcom.com/test5000");
-
-	var beforeTime = new Date();
-
-	var messageChildren = folderDataSource.GetTargets(folderResource, childProperty, true);
-
-	var afterGetTargetsTime = new Date();
-	var timeToLoad = (afterGetTargetsTime.getTime() - beforeTime.getTime())/1000;
-	dump("Time to load is " +  timeToLoad + " seconds\n");
-
-	messageChildren = messageChildren.QueryInterface(Components.interfaces.nsISimpleEnumerator);
-
-	while(messageChildren.HasMoreElements())
-	{
-		messageChildren.GetNext();
-	}
-
-	var afterTime = new Date();
-	timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
-	dump("Time to load is " +  timeToLoad + " seconds\n");
-}
 
 function GetNextMessageAfterDelete(messages)
 {

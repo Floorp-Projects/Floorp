@@ -35,6 +35,26 @@ var accountManagerDSProgID = datasourceProgIDPrefix + "msgaccountmanager";
 var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
 var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
+var messenger;
+var accountManagerDataSource;
+var folderDataSource;
+var messageDataSource;
+var pref;
+var statusFeedback;
+var messageView;
+var msgWindow;
+
+var msgComposeService;
+var mailSession;
+var accountManager;
+var RDF;
+var showPerformance;
+var msgNavigationService;
+
+var msgComposeType;
+var msgComposeFormat;
+var Bundle;
+
 var gFolderTree;
 var gThreadTree;
 var gThreadAndMessagePaneSplitter = null;
@@ -46,29 +66,6 @@ var gCurrentFolderToReroot;
 var gCurrentLoadingFolderIsThreaded = false;
 var gCurrentLoadingFolderSortID ="";
 
-
-// get the messenger instance
-var messenger = Components.classes[messengerProgID].createInstance();
-messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-
-//Create datasources
-var accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
-var folderDataSource         = Components.classes[folderDSProgID].createInstance();
-var messageDataSource        = Components.classes[messageDSProgID].createInstance();
-
-var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
-
-//Create windows status feedback
-var statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
-statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
-
-//Create message view object
-var messageView = Components.classes[messageViewProgID].createInstance();
-messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
-
-//Create message window object
-var msgWindow = Components.classes[msgWindowProgID].createInstance();
-msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
 // the folderListener object
 var folderListener = {
@@ -138,6 +135,8 @@ var folderListener = {
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
 				  var beforeScrollToNew = new Date();
+				  msgNavigationService.EnsureDocumentIsLoaded(document);
+
 				  ScrollToFirstNewMessage();
 				  var afterScrollToNew = new Date();
 				  var timeToScroll = (afterScrollToNew.getTime() - beforeScrollToNew.getTime())/1000;
@@ -160,6 +159,9 @@ var folderListener = {
 /* Functions related to startup */
 function OnLoadMessenger()
 {
+  var beforeLoadMessenger = new Date();
+
+  CreateGlobals();
   verifyAccounts();
     
   loadStartPage();
@@ -214,6 +216,15 @@ function OnLoadMessenger()
 	catch (ex) {
 		dump("failed to set the view headers menu item\n");
 	}
+
+	var afterLoadMessenger = new Date();
+
+	var timeToLoad = (afterLoadMessenger.getTime() - beforeLoadMessenger.getTime())/1000;
+	if(showPerformance)
+	{
+	  dump("Time in OnLoadMessger is " +  timeToLoad + " seconds\n");
+	}
+
 }
 
 function OnUnloadMessenger()
@@ -232,6 +243,54 @@ function OnUnloadMessenger()
 	}
 }
 
+
+function CreateGlobals()
+{
+	// get the messenger instance
+	messenger = Components.classes[messengerProgID].createInstance();
+	messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
+
+	//Create datasources
+	accountManagerDataSource = Components.classes[accountManagerDSProgID].createInstance();
+	folderDataSource         = Components.classes[folderDSProgID].createInstance();
+	messageDataSource        = Components.classes[messageDSProgID].createInstance();
+
+	pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
+
+	//Create windows status feedback
+	statusFeedback           = Components.classes[statusFeedbackProgID].createInstance();
+	statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+
+	//Create message view object
+	messageView = Components.classes[messageViewProgID].createInstance();
+	messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
+
+	//Create message window object
+	msgWindow = Components.classes[msgWindowProgID].createInstance();
+	msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
+
+	msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
+	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+
+	mailSession = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession); 
+
+	accountManager = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
+
+	RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
+	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+
+	showPerformance = pref.GetBoolPref('mail.showMessengerPerformance');
+
+	msgNavigationService = Components.classes['component://netscape/messenger/msgviewnavigationservice'].getService();
+	msgNavigationService= msgNavigationService.QueryInterface(Components.interfaces.nsIMsgViewNavigationService);
+
+	msgComposeType = Components.interfaces.nsIMsgCompType;
+	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
+	Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+
+
+
+}
 
 function verifyAccounts() {
     try {
@@ -304,6 +363,9 @@ function loadStartFolder()
 
 		dump('InboxURI = ' + inboxURI + '\n');
 		//first, let's see if it's already in the dom.  This will make life easier.
+		//We need to make sure content is built by this time
+		msgNavigationService.EnsureDocumentIsLoaded(document);
+
 		var inbox = document.getElementById(inboxURI);
 
 		//if it's not here we will have to make sure it's open.
@@ -318,6 +380,7 @@ function loadStartFolder()
 	}
 	catch(ex)
 	{
+		dump(ex);
 		dump('Exception in LoadStartFolder caused by no default account.  We know about this\n');
 	}
 
@@ -510,13 +573,14 @@ function FindMessenger()
 
 function RefreshThreadTreeView()
 {
+	var selection = SaveThreadPaneSelection();
+
 	var currentFolder = GetThreadTreeFolder();  
 	var currentFolderID = currentFolder.getAttribute('ref');
-	//This will make us lose selection when this happens.
-	//need to figure out if we have to save off selection or if
-	//tree widget is responsible for this.
 	ClearThreadTreeSelection();
 	currentFolder.setAttribute('ref', currentFolderID);
+
+	RestoreThreadPaneSelection(selection);
 }
 
 function ClearThreadTreeSelection()
