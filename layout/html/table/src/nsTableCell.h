@@ -127,6 +127,10 @@ public:
 
   virtual void ResetCellMap ();
 
+protected:
+  virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const;
 };
 
 #endif
