@@ -340,7 +340,6 @@ PrintHelpInfo(char **argv)
   fprintf(stderr, "\t-o dirname -- create an output file for the frame dump of each page and put it in <dirname>\n\t\t<dirname> must include the trailing <slash> character appropriate for your OS\n");
   fprintf(stderr, "\t-h # -- the initial height of the viewer window.");
   fprintf(stderr, "\t-w # -- the initial width of the viewer window.");
-  fprintf(stderr, "\t-filter filtername -- make 'Dump Frames' command use the filter <filtername> to alter the output.\n\t\tfiltername = none, dump all frames\n\t\tfiltername = table, dump only table frames\n");
   fprintf(stderr, "\t-C -- enable crawler\n");
   fprintf(stderr, "\t-R filename -- record pages visited in <filename>\n");
   fprintf(stderr, "\t-S domain -- add a domain/host that is safe to crawl (e.g. www.netscape.com)\n");
@@ -465,15 +464,6 @@ nsViewerApp::ProcessArguments(int argc, char** argv)
           exit(-1);
         }
         mCrawler->SetOutputDir(argv[i]);
-      }
-      else if (PL_strcmp(argv[i], "-filter") == 0) {
-        i++;
-        if (i>=argc || nsnull==argv[i] || nsnull==*(argv[i]))
-        {
-          PrintHelpInfo(argv);
-          exit(-1);
-        }
-        mCrawler->SetFilter(argv[i]);
       }
       else if (PL_strcmp(argv[i], "-d") == 0) {
         int delay;

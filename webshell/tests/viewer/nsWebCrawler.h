@@ -35,6 +35,8 @@ class AtomHashTable;
 
 class nsWebCrawler : public nsIStreamObserver {
 public:
+  // Make a new web-crawler for the given viewer. Note: the web
+  // crawler does not addref the viewer.
   nsWebCrawler(nsViewerApp* aViewer);
 
   // nsISupports
@@ -97,10 +99,6 @@ public:
     mMaxPages = aMax;
   }
 
-  /** set the web crawler filter, used for automatical output of frames */
-  void SetFilter(const nsString& aFilter);
-
-  /** set the web crawler filter, used for automatical output of frames */
   void SetOutputDir(const nsString& aOutputDir);
 
   void SetRegressionDir(const nsString& aOutputDir);
@@ -146,7 +144,6 @@ protected:
   nsIAtom* mSrcAttr;
   nsIAtom* mBaseHrefAttr;
   AtomHashTable* mVisited;
-  nsString* mFilter;
   nsString mOutputDir;
 
   PRBool mCrawl;
