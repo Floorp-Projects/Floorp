@@ -47,10 +47,13 @@ extern "C" JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 
 NS_IMPL_ISUPPORTS1(nsXPCWrappedNativeClass, nsIXPCWrappedNativeClass)
 
+#define SET_ERROR_CODE(_y) if(pErr) *pErr = _y
+
 // static
 nsXPCWrappedNativeClass*
 nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
-                                           REFNSIID aIID)
+                                           REFNSIID aIID,
+                                           nsresult* pErr)
 {
     IID2WrappedNativeClassMap* map;
     nsXPCWrappedNativeClass* clazz = nsnull;
@@ -60,32 +63,53 @@ nsXPCWrappedNativeClass::GetNewOrUsedClass(XPCContext* xpcc,
     map = xpcc->GetWrappedNativeClassMap();
     NS_ASSERTION(map,"bad map");
 
+    SET_ERROR_CODE(NS_OK);
+
     clazz = map->Find(aIID);
     if(clazz)
     {
         NS_ADDREF(clazz);
+        return clazz;
     }
-    else
+
+    nsCOMPtr<nsIInterfaceInfoManager> iimgr;
+    if(!(iimgr = nsXPConnect::GetInterfaceInfoManager()))
     {
-        nsIInterfaceInfoManager* iimgr;
-        if(nsnull != (iimgr = nsXPConnect::GetInterfaceInfoManager()))
-        {
-            nsIInterfaceInfo* info;
-            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
-            {
-                PRBool canScript;
-                if(NS_SUCCEEDED(info->IsScriptable(&canScript)) &&
-                   canScript &&
-                   nsXPConnect::IsISupportsDescendent(info))
-                {
-                    clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
-                    if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
-                        NS_RELEASE(clazz);  // nsnulls out 'clazz'
-                }
-                NS_RELEASE(info);
-            }
-            NS_RELEASE(iimgr);
-        }
+        SET_ERROR_CODE(NS_ERROR_FAILURE);
+        return nsnull;
+    }
+
+    nsCOMPtr<nsIInterfaceInfo> info;
+    if(NS_FAILED(iimgr->GetInfoForIID(&aIID, getter_AddRefs(info))))
+    {
+        SET_ERROR_CODE(NS_ERROR_XPC_CANT_GET_INTERFACE_INFO);
+        return nsnull;
+    }
+
+    PRBool canScript;
+    if(NS_FAILED(info->IsScriptable(&canScript)))
+    {
+        SET_ERROR_CODE(NS_ERROR_FAILURE);
+        return nsnull;
+    }
+
+    if(!canScript)
+    {
+        SET_ERROR_CODE(NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE);
+        return nsnull;
+    }
+
+    if(!nsXPConnect::IsISupportsDescendant(info))
+    {
+        SET_ERROR_CODE(NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS);
+        return nsnull;
+    }
+
+    clazz = new nsXPCWrappedNativeClass(xpcc, aIID, info);
+    if(-1 == clazz->mMemberCount) // -1 means 'failed to init'
+    {
+        SET_ERROR_CODE(NS_ERROR_FAILURE);
+        NS_RELEASE(clazz);  // nsnulls out 'clazz'
     }
     return clazz;
 }

@@ -359,7 +359,7 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
                        !(xpcc = nsXPConnect::GetContext(cx)) ||
                        !(wrapper =
                             nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc,
-                                                             iface, *iid)))
+                                                        iface, *iid, pErr)))
                     {
                         return JS_FALSE;
                     }

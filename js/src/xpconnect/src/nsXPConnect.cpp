@@ -253,7 +253,7 @@ nsXPConnect::GetJSThrower(nsXPConnect* xpc /*= nsnull */)
 
 // static
 JSBool
-nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
+nsXPConnect::IsISupportsDescendant(nsIInterfaceInfo* info)
 {
     if(!info)
         return JS_FALSE;
@@ -356,7 +356,8 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
     if(!mContextMap->Find(aJSContext) &&
        nsnull != (xpcc = NewContext(aJSContext, nsnull, JS_FALSE)))
     {
-        wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
+        wrapper = nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
+                                                          aIID, nsnull);
         if(wrapper)
         {
             if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
@@ -478,7 +479,8 @@ nsXPConnect::WrapNative(JSContext* aJSContext,
     if(xpcc)
     {
         nsXPCWrappedNative* wrapper =
-            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, aIID);
+            nsXPCWrappedNative::GetNewOrUsedWrapper(xpcc, aCOMObj, 
+                                                    aIID, nsnull);
         if(wrapper)
         {
             *aWrapper = wrapper;

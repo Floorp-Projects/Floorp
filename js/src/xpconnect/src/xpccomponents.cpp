@@ -195,7 +195,7 @@ nsXPCInterfaces::FillCache(JSContext *cx, JSObject *obj,
         }
 
         rv = is_Interface->
-            QueryInterface(nsCOMTypeInfo<nsIInterfaceInfo>::GetIID(),
+            QueryInterface(NS_GET_IID(nsIInterfaceInfo),
                            (void **)&Interface);
 
         if(!NS_FAILED(rv))

@@ -663,6 +663,7 @@ main(int argc, char **argv)
 
     xpc->AbandonJSContext(jscontext);
     NS_RELEASE(xpc);
+    js_ForceGC(jscontext);
     JS_DestroyContext(jscontext);
     if (!rtsvc) {
         /* no runtime service, so we have to handle shutdown */
