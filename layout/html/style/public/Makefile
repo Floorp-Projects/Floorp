@@ -21,6 +21,7 @@ MODULE = raptor
 
 EXPORTS =               \
         nsICSSParser.h	\
+        nsStyleUtil.h	\
         $(NULL)
 
 include $(DEPTH)/config/config.mk
