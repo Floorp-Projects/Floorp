@@ -1853,16 +1853,16 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
         }
 
         SetCoord(ourPosition->mWidth, position->mWidth, SETCOORD_LPAH, font, aPresContext);
-        SetCoord(ourPosition->mMinWidth, position->mWidth, SETCOORD_LPH, font, aPresContext);
-        if (! SetCoord(ourPosition->mMaxWidth, position->mWidth, SETCOORD_LPH, font, aPresContext)) {
+        SetCoord(ourPosition->mMinWidth, position->mMinWidth, SETCOORD_LPH, font, aPresContext);
+        if (! SetCoord(ourPosition->mMaxWidth, position->mMaxWidth, SETCOORD_LPH, font, aPresContext)) {
           if (eCSSUnit_None == ourPosition->mMaxWidth.GetUnit()) {
             position->mMaxWidth.Reset();
           }
         }
 
         SetCoord(ourPosition->mHeight, position->mHeight, SETCOORD_LPAH, font, aPresContext);
-        SetCoord(ourPosition->mMinHeight, position->mHeight, SETCOORD_LPH, font, aPresContext);
-        if (! SetCoord(ourPosition->mMaxHeight, position->mHeight, SETCOORD_LPH, font, aPresContext)) {
+        SetCoord(ourPosition->mMinHeight, position->mMinHeight, SETCOORD_LPH, font, aPresContext);
+        if (! SetCoord(ourPosition->mMaxHeight, position->mMaxHeight, SETCOORD_LPH, font, aPresContext)) {
           if (eCSSUnit_None == ourPosition->mMaxHeight.GetUnit()) {
             position->mMaxHeight.Reset();
           }
