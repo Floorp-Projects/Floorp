@@ -77,8 +77,6 @@ void main(int argc, char **argv)
   nsIShellInstance * pShellInstance ;
   nsIApplicationShell * pApplicationShell ;
 
-  PL_InitializeEventsLib("");
-
   XtSetLanguageProc(NULL, NULL, NULL);
 
   topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
