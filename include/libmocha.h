@@ -120,6 +120,7 @@ typedef struct MochaDecoder {
 	JSObject	    *environment;
     JSObject	    *crypto;
     JSObject        *pkcs11;
+    JSObject        *background_update;
 
     /*
      * Ad-hoc GC roots.

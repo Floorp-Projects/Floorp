@@ -549,6 +549,9 @@ lm_InitEventClasses(MochaDecoder *decoder);
 extern JSBool
 lm_InitRectClass(MochaDecoder *decoder);
 
+extern JSBool
+lm_InitBackgroundClass(MochaDecoder *decoder);
+
 /* Create an image context for anonymous images. */
 extern JSBool
 lm_NewImageContext(MWContext *context, MochaDecoder *decoder);

@@ -1223,6 +1223,7 @@ LM_PutMochaDecoder(MochaDecoder *decoder)
 #endif
         CLEAR(decoder->environment);
         CLEAR(decoder->pkcs11);
+        CLEAR(decoder->background_update);
 
 
         /* Clear ad-hoc GC roots. */
