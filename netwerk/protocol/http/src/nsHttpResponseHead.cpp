@@ -319,6 +319,33 @@ nsHttpResponseHead::MustValidate()
 {
     LOG(("nsHttpResponseHead::MustValidate ??\n"));
 
+    // Some response codes are cacheable, but the rest are not.  This switch
+    // should stay in sync with the list in nsHttpChannel::ProcessResponse
+    switch (mStatus) {
+        // Success codes
+    case 200:
+    case 203:
+    case 206:
+        // Cacheable redirects
+    case 300:
+    case 301:
+    case 302:
+    case 304:
+    case 307:
+        break;
+        // Uncacheable redirects
+    case 303:
+    case 305:
+        // Other known errors
+    case 401:
+    case 407:
+    case 412:
+    case 416:
+    default:  // revalidate unknown error pages
+        LOG(("Must validate since response is an uncacheable error page\n"));
+        return PR_TRUE;
+    }
+    
     // The no-cache response header indicates that we must validate this
     // cached response before reusing.
     if (NoCache()) {
