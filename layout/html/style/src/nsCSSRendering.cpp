@@ -2461,7 +2461,15 @@ FindCanvasBackground(nsIPresContext* aPresContext,
           nsCOMPtr<nsIDOMHTMLElement> body;
           htmlDoc->GetBody(getter_AddRefs(body));
           nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(body);
-          NS_ASSERTION(bodyContent, "no body node"); // bug 118829
+          // We need to null check the body node (bug 118829) since
+          // there are cases, thanks to the fix for bug 5569, where we
+          // will reflow a document with no body.  In particular, if a
+          // SCRIPT element in the head blocks the parser and then has a
+          // SCRIPT that does "document.location.href = 'foo'", then
+          // nsParser::Terminate will call |DidBuildModel| methods
+          // through to the content sink, which will call |StartLayout|
+          // and thus |InitialReflow| on the pres shell.  See bug 119351
+          // for the ugly details.
           if (bodyContent) {
             nsCOMPtr<nsIPresShell> shell;
             aPresContext->GetShell(getter_AddRefs(shell));
