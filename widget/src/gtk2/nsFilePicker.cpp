@@ -190,7 +190,10 @@ nsFilePicker::LoadSymbolsGTK24()
 void
 nsFilePicker::Shutdown()
 {
-  PR_UnloadLibrary(mGTK24);
+  if (mGTK24) {
+    PR_UnloadLibrary(mGTK24);
+    mGTK24 = nsnull;
+  }
 
   NS_IF_RELEASE(mPrevDisplayDirectory);
 }
