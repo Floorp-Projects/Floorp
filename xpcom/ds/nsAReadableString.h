@@ -682,7 +682,8 @@ basic_nsAReadableString<CharT>::CountChar( CharT c ) const
 #endif
   }
 
-
+#if 0
+  // had to move these definitions into "nsAWritableString.h"
 template <class CharT>
 PRUint32
 basic_nsAReadableString<CharT>::Mid( basic_nsAWritableString<CharT>& aResult, PRUint32 aStartPos, PRUint32 aLengthToCopy ) const
@@ -712,6 +713,7 @@ basic_nsAReadableString<CharT>::Right( basic_nsAWritableString<CharT>& aResult, 
     aLengthToCopy = NS_MIN(myLength, aLengthToCopy);
     return Mid(aResult, myLength-aLengthToCopy, aLengthToCopy);
   }
+#endif
 
 template <class CharT>
 PRInt32
