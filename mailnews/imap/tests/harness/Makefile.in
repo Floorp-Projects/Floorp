@@ -33,6 +33,11 @@ LIBS =	\
 		-L$(DIST)/bin			\
 		-lxpcom					\
 		-lreg					\
+		-lmsgbaseutil				\
+		-lraptorbase				\
+		-lpref					\
+		-lmozjs 				\
+		-lsecfree				\
 		$(NSPR_LIBS)			\
 		$(NULL)
 
