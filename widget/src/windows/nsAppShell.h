@@ -43,7 +43,6 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
     NS_IMETHOD            Exit();
     virtual void* GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
 
     // XXX temporary for Dialog investigation
     NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent);
@@ -52,7 +51,6 @@ class nsAppShell : public nsIAppShell
 
   private:
     nsDispatchListener*     mDispatchListener;
-    nsISelectionMgr         *mSelectionMgr;
 };
 
 #endif // nsAppShell_h__

@@ -43,7 +43,6 @@ class nsDispatchListener {
 };
 
 class nsIWidget;
-class nsISelectionMgr;
 
 /**
  * Application shell used for Test applications
@@ -96,12 +95,6 @@ public:
    */
 
   virtual void* GetNativeData(PRUint32 aDataType) = 0;
-
- /**
-  * Get the selection manager.
-  */
-  
-  virtual nsresult GetSelectionMgr(nsISelectionMgr** aSelectionMgr) = 0;
 
 
 };
