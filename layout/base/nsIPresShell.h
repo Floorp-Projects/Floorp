@@ -44,12 +44,13 @@ class nsIFrameSelection;
 { 0x76e79c60, 0x944e, 0x11d1, \
   {0x93, 0x23, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} }
 
-#define NS_PRESSHELL_SCROLL_TOP      0x00000001
-#define NS_PRESSHELL_SCROLL_BOTTOM   0x00000002
-#define NS_PRESSHELL_SCROLL_LEFT     0x00000004
-#define NS_PRESSHELL_SCROLL_RIGHT    0x00000008
-#define NS_PRESSHELL_SCROLL_ANYWHERE 0x00000010
-#define NS_PRESSHELL_SCROLL_ENTIRE   0x00000020
+// Constants uses for ScrollFrameIntoView() function
+#define NS_PRESSHELL_SCROLL_TOP      0
+#define NS_PRESSHELL_SCROLL_BOTTOM   100
+#define NS_PRESSHELL_SCROLL_LEFT     0
+#define NS_PRESSHELL_SCROLL_RIGHT    100
+#define NS_PRESSHELL_SCROLL_CENTER   50
+#define NS_PRESSHELL_SCROLL_ANYWHERE -1
 
 /**
  * Presentation shell interface. Presentation shells are the
@@ -225,53 +226,34 @@ public:
   /**
    * Scrolls the view of the document so that the frame is displayed at the 
    * top of the window.
-   * @param aFrame           The frame to scroll into view
-   * @param aVOffsetPercent  The percentage to offset aFrame from the view vertically.  
-   *                         Interpretation of aVOffsetPercent is controlled by aVFlags, see below.
-   *                         Legal values are 0..100, with 0 
-   *                         being flush to the (eTop|eBottom) edge, 100 being flush to the other edge.
-   * @param aVFlags          The control flags for vertical scrolling.  
-   *                         Legal values are an OR combination of:
-   *                         NS_PRESSHELL_SCROLL_TOP
-   *                                      position the top of the frame aVOffsetPercent
-   *                                      from the top of the view
-   *                         NS_PRESSHELL_SCROLL_BOTTOM
-   *                                      position the bottom of the frame aVOffsetPercent
-   *                                      from the bottom of the view
-   *                         NS_PRESSHELL_SCROLL_ANYWHERE
-   *                                      if the (eTop|eBottom) of the frame is visible, do nothing 
-   *                                      else scroll the frame according to the other bits 
-   *                         NS_PRESSHELL_SCROLL_ENTIRE
-   *                                      Force the entire frame to be visible, using aVOffsetPercent 
-   *                                      as a starting point, but scrolling the (eTop|eBottom)
-   *                                      of the frame enough for the entire frame to fit in the view, 
-   *                                      if possible 
-   * @param aHOffsetPercent  The percentage to offset aFrame from the view horizontally.  
-   *                         Interpretation of aHOffsetPercent is controlled by aHFlags, see below.
-   *                         Legal values are 0..100, with 0 
-   *                         being flush to the (eLeft|eRight) edge, 100 being flush to the other edge.
-   * @param aHFlags          The control flags for vertical scrolling.  
-   *                         Legal values are an OR combination of:
-   *                         NS_PRESSHELL_SCROLL_LEFT
-   *                                      position the left of the frame aHOffsetPercent
-   *                                      from the left of the view
-   *                         NS_PRESSHELL_SCROLL_RIGHT
-   *                                      Position the right of the frame aHOffsetPercent
-   *                                      from the right of the view
-   *                         NS_PRESSHELL_SCROLL_ANYWHERE
-   *                                      If the (eLeft|eRight) of the frame is visible, do nothing 
-   *                                      else scroll the frame according to the other bits 
-   *                         NS_PRESSHELL_SCROLL_ENTIRE
-   *                                      Force the entire frame to be visible, using aVOffsetPercent 
-   *                                      as a starting point, but scrolling the (eLeft|eRight)
-   *                                      of the frame enough for the entire frame to fit in the view, 
-   *                                      if possible 
+   *
+   * @param aFrame    The frame to scroll into view
+   * @param aVPercent How to align the frame vertically. A value of 0
+   *                    (NS_PRESSHELL_SCROLL_TOP) means the frame's upper edge is
+   *                    aligned with the top edge of the visible area. A value of
+   *                    100 (NS_PRESSHELL_SCROLL_BOTTOM) means the frame's bottom
+   *                    edge is aligned with the bottom edge of the visible area.
+   *                    For values in between, the point "aVPercent" down the frame
+   *                    is placed at the point "aVPercent" down the visible area. A
+   *                    value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
+   *                    vertically. A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
+   *                    the frame the minimum amount necessary in order for the entire
+   *                    frame to be visible vertically (if possible)
+   * @param aHPercent How to align the frame horizontally. A value of 0
+   *                    (NS_PRESSHELL_SCROLL_LEFT) means the frame's left edge is
+   *                    aligned with the left edge of the visible area. A value of
+   *                    100 (NS_PRESSHELL_SCROLL_RIGHT) means the frame's right
+   *                    edge is aligned with the right edge of the visible area.
+   *                    For values in between, the point "aVPercent" across the frame
+   *                    is placed at the point "aVPercent" across the visible area.
+   *                    A value of 50 (NS_PRESSHELL_SCROLL_CENTER) centers the frame
+   *                    horizontally . A value of NS_PRESSHELL_SCROLL_ANYWHERE means move
+   *                    the frame the minimum amount necessary in order for the entire
+   *                    frame to be visible horizontally (if possible)
    */
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
-                                 PRInt32   aVOffsetPercent, 
-                                 PRUint32  aVFlags,
-                                 PRInt32   aHOffsetPercent, 
-                                 PRUint32  aHFlags) const = 0;
+                                 PRIntn   aVPercent, 
+                                 PRIntn   aHPercent) const = 0;
 
   /**
    * Notification sent by a frame informing the pres shell that it is about to
