@@ -2223,7 +2223,7 @@ NS_IMETHODIMP nsExternalAppHandler::Cancel()
   if (!mReceivedDispositionInfo ||
       (mTempFile && action != nsIMIMEInfo::saveToDisk))
   {
-    mTempFile->Remove(PR_TRUE);
+    mTempFile->Remove(PR_FALSE);
     mTempFile = nsnull;
   }
 
