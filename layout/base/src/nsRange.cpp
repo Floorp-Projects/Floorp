@@ -129,20 +129,18 @@ PRBool nsRange::InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2)
   PRBool retval = PR_FALSE;
   nsIContent *cN1 = nsnull;
   nsIContent *cN2 = nsnull;
+  nsIDocument *doc1 = nsnull;
+  nsIDocument *doc2 = nsnull;
   
   nsresult res = GetContentFromDOMNode(aNode1, &cN1);
   if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
   res = GetContentFromDOMNode(aNode2, &cN2);
   if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
   
-  nsIDocument *doc1 = nsnull;
-  nsIDocument *doc2 = nsnull;
-
   res = cN1->GetDocument(doc1);
   if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
   res = cN2->GetDocument(doc2);
   if (!NS_SUCCEEDED(res)) goto inSameDoc_err_label;
-
 
   // Now compare the two documents: is direct comparison safe?
   if (doc1 == doc2)
