@@ -1356,7 +1356,6 @@ nsGenericHTMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                      PRUint32 aFlags,
                                      nsEventStatus* aEventStatus)
 {
-  NS_ENSURE_ARG(aPresContext);
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // Try script event handlers first
