@@ -106,31 +106,12 @@ nsFileChannel::EnsureStream()
         return rv;
     }
 
-    if (mIsDir) {
+    if (mIsDir)
         rv = nsDirectoryIndexStream::Create(file, getter_AddRefs(mStream));
-        if (NS_FAILED(rv)) return rv;
-
-        // set content type
-        if (mConvertToHTML)
-            mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
-        else
-            mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
-    }
-    else {
+    else
         rv = NS_NewLocalFileInputStream(getter_AddRefs(mStream), file);
-        if (NS_FAILED(rv)) return rv;
 
-        // get content type from file extension
-        nsXPIDLCString mimeType;
-        nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
-        if (NS_SUCCEEDED(rv))
-            mime->GetTypeFromFile(file, getter_Copies(mimeType));
-
-        if (mimeType.IsEmpty())
-            mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
-        else
-            mContentType = mimeType;
-    }
+    if (NS_FAILED(rv)) return rv;
 
     // fixup content length
     if (mStream && (mContentLength < 0))
@@ -297,6 +278,32 @@ nsFileChannel::GetSecurityInfo(nsISupports **aSecurityInfo)
 NS_IMETHODIMP
 nsFileChannel::GetContentType(nsACString &aContentType)
 {
+    NS_PRECONDITION(mURL, "Why is this being called?");
+    
+    if (mContentType.IsEmpty()) {
+        if (mIsDir) {
+            if (mConvertToHTML)
+                mContentType = NS_LITERAL_CSTRING(TEXT_HTML);
+            else
+                mContentType = NS_LITERAL_CSTRING(APPLICATION_HTTP_INDEX_FORMAT);
+        } else {
+            // Get content type from file extension
+            nsCOMPtr<nsIFile> file;
+            nsresult rv = mURL->GetFile(getter_AddRefs(file));
+            if (NS_FAILED(rv)) return rv;
+            
+            nsXPIDLCString mimeType;
+            nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1", &rv);
+            if (NS_SUCCEEDED(rv))
+                mime->GetTypeFromFile(file, getter_Copies(mimeType));
+
+            if (mimeType.IsEmpty())
+                mContentType = NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE);
+            else
+                mContentType = mimeType;
+        }
+    }
+    
     aContentType = mContentType;
     return NS_OK;
 }

@@ -120,10 +120,18 @@ nsStringBundle::LoadProperties()
   rv = NS_NewURI(getter_AddRefs(uri), mPropertiesURL);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_OpenURI(getter_AddRefs(in), uri);
+  // We don't use NS_OpenURI because we want to tweak the channel
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel), uri);
   if (NS_FAILED(rv)) return rv;
-    
+
+  nsCOMPtr<nsIInputStream> in;
+  rv = channel->Open(getter_AddRefs(in));
+  if (NS_FAILED(rv)) return rv;
+
+  // It's a string bundle.  We know what MIME type it is!
+  channel->SetContentType(NS_LITERAL_CSTRING("text/plain"));
+  
   NS_TIMELINE_MARK_FUNCTION("loading properties");
 
   NS_ASSERTION(NS_SUCCEEDED(rv) && in, "Error in OpenBlockingStream");
