@@ -70,6 +70,12 @@ function set_assign_to() {
 <form name="Create" id="Create" method="post" action="post_bug.cgi">
 <input type="hidden" name="product" value="[% product FILTER html %]">
 
+[% IF bug_status.size <= 1 %]
+  <input type="hidden" name="bug_status" 
+         value="[% default.bug_status FILTER html %]">
+[% END %]
+
+
 <table cellspacing="2" cellpadding="0" border="0">
 
   <tr>
@@ -169,9 +175,6 @@ function set_assign_to() {
 
     <td colspan="2"></td>
   </tr>
-[% ELSE %]
-  <input type="hidden" name="bug_status" 
-         value="[% default.bug_status FILTER html %]">
 [% END %]
 
   <tr>
