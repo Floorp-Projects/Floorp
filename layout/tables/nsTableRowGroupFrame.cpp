@@ -1520,7 +1520,7 @@ nscoord
 nsTableRowGroupFrame::GetHeightOfRows()
 {
   nsTableFrame* tableFrame = nsnull;
-  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return 0;
 
   nscoord height = 0;
