@@ -46,7 +46,6 @@
 #include "nsFontMetricsOS2.h"
 #include "nsIFontMetrics.h"
 #include "nsTransform2D.h"
-#include "nsPaletteOS2.h"
 #include "nsRegionOS2.h"
 #include "nsGfxCIID.h"
 #include "nsString.h"
@@ -215,7 +214,6 @@ nsRenderingContextOS2::nsRenderingContextOS2()
    NS_INIT_REFCNT();
 
    mContext = nsnull;
-   mPalette = nsnull;
    mSurface = nsnull;
    mFrontSurface = nsnull;
    mColor = NS_RGB( 0, 0, 0);
@@ -254,7 +252,6 @@ nsRenderingContextOS2::~nsRenderingContextOS2()
    // Release surfaces and the palette
    NS_IF_RELEASE(mFrontSurface);
    NS_IF_RELEASE(mSurface);
-   NS_IF_RELEASE(mPalette);
    NS_IF_RELEASE(mFontMetrics);
 }
 
@@ -277,9 +274,13 @@ nsresult nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
    mSurface = surf;
    NS_ADDREF(mSurface);
 
+   mDCOwner = aWindow;
+
    // Grab another reference to the onscreen for later uniformity
    mFrontSurface = mSurface;
    NS_ADDREF(mFrontSurface);
+
+  mContext->GetGammaTable(mGammaTable);
 
    return CommonInit();
 }
@@ -309,11 +310,29 @@ nsresult nsRenderingContextOS2::CommonInit()
    mTMatrix.AddScale( app2dev, app2dev);
    mContext->GetDevUnitsToAppUnits( mP2T);
 
-   ((nsDeviceContextOS2 *) mContext)->GetPalette( mPalette);
+  // If this is a palette device, then select and realize the palette
+  nsPaletteInfo palInfo;
+  mContext->GetPaletteInfo(palInfo);
 
-   mPalette->Select( mSurface->mPS, mContext);
-   mSurface->SetPalette( mPalette);
-   return NS_OK;
+  if (palInfo.isPaletteDevice && palInfo.palette)
+  {
+    ULONG cclr;
+    // Select the palette in the background
+    ::GpiSelectPalette(mSurface->mPS, (HPAL)palInfo.palette);
+    ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+  } else if (!palInfo.isPaletteDevice && palInfo.palette) {
+    GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+                            LCOLF_CONSECRGB, 0,
+                            palInfo.sizePalette, (PLONG) palInfo.palette);
+    free(palInfo.palette);
+    palInfo.palette = nsnull;
+  }
+  else
+  {
+    GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+                            LCOLF_RGB, 0, 0, 0);
+  }
+  return NS_OK;
 }
 
 // PS & drawing surface management -----------------------------------------
@@ -326,8 +345,28 @@ nsresult nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface 
    {
       NS_IF_RELEASE(mSurface);
       mSurface = (nsDrawingSurfaceOS2 *) aSurface;
-      mPalette->Select( mSurface->mPS, mContext);
-      mSurface->SetPalette( mPalette);
+      // If this is a palette device, then select and realize the palette
+      nsPaletteInfo palInfo;
+      mContext->GetPaletteInfo(palInfo);
+    
+      if (palInfo.isPaletteDevice && palInfo.palette)
+      {
+        ULONG cclr;
+        // Select the palette in the background
+        ::GpiSelectPalette(mSurface->mPS, (HPAL)palInfo.palette);
+        ::WinRealizePalette((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW),mSurface->mPS, &cclr);
+      } else if (!palInfo.isPaletteDevice && palInfo.palette) {
+        GpiCreateLogColorTable( mSurface->mPS, LCOL_RESET | LCOL_PURECOLOR,
+                                LCOLF_CONSECRGB, 0,
+                                palInfo.sizePalette, (PLONG) palInfo.palette);
+        free(palInfo.palette);
+        palInfo.palette = nsnull;
+      }
+      else
+      {
+        GpiCreateLogColorTable( mSurface->mPS, LCOL_PURECOLOR,
+                                LCOLF_RGB, 0, 0, 0);
+      }
    }
    else // deselect current offscreen...
    {
@@ -832,7 +871,10 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
       LINEBUNDLE lineBundle;
 
 
-      long lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
+      long gcolor = MK_RGB( mGammaTable[NS_GET_R(mColor)],
+                            mGammaTable[NS_GET_G(mColor)],
+                            mGammaTable[NS_GET_B(mColor)]);
+      long lColor =  GpiQueryColorIndex( mSurface->mPS, 0, gcolor);
 
       long lLineFlags = LBB_COLOR;
       long lAreaFlags = ABB_COLOR;
@@ -840,21 +882,6 @@ void nsRenderingContextOS2::SetupDrawingColor( BOOL bForce)
       areaBundle.lColor = lColor;
       lineBundle.lColor = lColor;
 
-
-      if ( (((nsDeviceContextOS2 *) mContext)->isPrintDC() ) == 1)
-      {
-
-         areaBundle.lBackColor = 0x00FFFFFF;   //OS2TODO
-         lineBundle.lBackColor = 0x00FFFFFF;
-
-         areaBundle.usMixMode     = FM_LEAVEALONE;
-         areaBundle.usBackMixMode = BM_LEAVEALONE;
-
-
-         lLineFlags = lLineFlags | LBB_BACK_COLOR ;
-         lAreaFlags = lAreaFlags | ABB_BACK_COLOR | ABB_MIX_MODE | ABB_BACK_MIX_MODE;
-
-      }
 
       GpiSetAttrs( mSurface->mPS, PRIM_LINE,lLineFlags, 0, (PBUNDLE)&lineBundle);
 
@@ -897,7 +924,10 @@ void nsRenderingContextOS2::SetupFontAndColor( BOOL bForce)
 
       CHARBUNDLE cBundle;
 
-      cBundle.lColor = mPalette->GetGPIColor( mContext, mSurface->mPS, mColor);
+      long gcolor = MK_RGB( mGammaTable[NS_GET_R(mColor)],
+                            mGammaTable[NS_GET_G(mColor)],
+                            mGammaTable[NS_GET_B(mColor)]);
+      cBundle.lColor =  GpiQueryColorIndex( mSurface->mPS, 0, gcolor);
 
       cBundle.usMixMode = FM_OVERPAINT;
 

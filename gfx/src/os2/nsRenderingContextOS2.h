@@ -29,6 +29,7 @@
 #define _nsRenderingContextOS2_h
 
 #include "nsIRenderingContext.h"
+#include "nsFont.h"
 #include "nsCRT.h"
 #include "nsTransform2D.h"
 #include "nscoord.h"
@@ -38,11 +39,9 @@
 
 class nsIDeviceContext;
 class nsIFontMetrics;
-class nsIPaletteOS2;
 class nsString;
 class nsIWidget;
 class nsPoint;
-class nsFont;
 class nsRect;
 
 class GraphicsState;
@@ -238,7 +237,6 @@ protected:
 #endif
 
    nsIDeviceContext    *mContext;         // device context
-   nsIPaletteOS2       *mPalette;         // palette from the dc
    nsDrawingSurfaceOS2 *mSurface;         // draw things here
    nsDrawingSurfaceOS2 *mFrontSurface;    // if offscreen, this is onscreen
    nscolor              mColor;           // current colour
@@ -249,9 +247,12 @@ protected:
    nsIFontMetrics      *mFontMetrics;     // current font
    nsIFontMetrics      *mCurrFontMetrics; // currently selected font
    nscolor              mCurrDrawingColor;// currently selected drawing color
+  PRUint8           *mGammaTable;
    nscolor              mCurrTextColor;   // currently selected text color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
    HDC                  mDC;  
+   nsIWidget            *mDCOwner;
+
 };
 
 inline void nsRenderingContextOS2::GetTargetHeight( PRUint32 &ht)

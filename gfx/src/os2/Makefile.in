@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsScreenOS2.cpp          \
 		nsScreenManagerOS2.cpp          \
 		nsGfxFactoryOS2.cpp \
-		nsPaletteOS2.cpp \
 		$(NULL)
 
 RES_FILE	= $(srcdir)/libprint.res

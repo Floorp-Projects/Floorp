@@ -1,13 +1,14 @@
-/*
- * The contents of this file are subject to the Mozilla Public License
- * Version 1.1 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at
- * http://www.mozilla.org/MPL/
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
- * Software distributed under the License is distributed on an "AS IS"
- * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
- * License for the specific language governing rights and limitations
- * under the License.
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
  *
  * The Original Code is the Mozilla OS/2 libraries.
  *
@@ -15,73 +16,62 @@
  * <john_fairhurst@iname.com>.  Portions created by John Fairhurst are
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
- * Contributor(s): Henry Sobotka <sobotka@axess.com> 2OOO/O2 update
- *
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date             Modified by     Description of modification
- * ----             -----------     ---------------------------
- * 5/31/2000        IBM Corp.       Add method isPrintDC() to class nsDeviceContextOS2 to use in file
- *                                         nsRenderingContextOS2.cpp
- * 06/07/2000       IBM Corp.       Corrected querying of screen and client sizes
+ * Contributor(s):
+ *   Henry Sobotka <sobotka@axess.com> 2OOO/O2 update
+ *   IBM Corp.
  */
 
-// ToDo:
-#include "nsGfxDefs.h"
-#include "libprint.h"
-
-#include "nsDeviceContextSpecOS2.h"
 #include "nsDeviceContextOS2.h"
-#include "nsDrawingSurfaceOS2.h"
-#include "nsPaletteOS2.h"
-#include "nsHashtable.h"
-#include "nsString.h"
-#include "nsFont.h"
+#include "nsRenderingContextOS2.h"
+#include "nsDeviceContextSpecOS2.h"
 #include "il_util.h"
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
+#include "nsIScreenManager.h"
+#include "nsIScreen.h"
 
-// nsDeviceContextOS2 - The graphics state associated with a window.
-// Keep the colour palette for all rendering contexts here; they share
-// it and the widget can do palette-y things.
-//
-// Remember that this thing can be fairly long-lived, linked to a window.
-//
-// It's a bit schizophrenic - really there should be a nsIPrintDC <: nsIDC ...
+#include "nsHashTable.h" // For CreateFontAliasTable()
 
-// Init/Term -----------------------------------------------------------------
+#include "nsGfxDefs.h"
+
+// Size of the color cube
+#define COLOR_CUBE_SIZE       216
 
 #define NOT_SETUP 0x33
 static PRBool gIsWarp4 = NOT_SETUP;
 
-nsDeviceContextOS2::nsDeviceContextOS2() : DeviceContextImpl()
-{
-   // Default for now
-   mSurface = nsnull;
-   mDepth = 0;
-   mPaletteInfo.isPaletteDevice = PR_FALSE;
-   mPaletteInfo.sizePalette = 0;
-   mPaletteInfo.numReserved = 0;
-   mPaletteInfo.palette = nsnull;
-   mPalette = nsnull;
-   mPixelsToTwips = 0;
-   mTwipsToPixels = 0;
-   mPixelScale = 1.0f;
-   mWidth = -1;
-   mHeight = -1;
-   mPrintDC = nsnull;
-   mSpec = nsnull;
-   mCachedClientRect = PR_FALSE;
-   mCachedFullRect = PR_FALSE;
-   mPrintState = nsPrintState_ePreBeginDoc;
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-   // Init module if necessary (XXX find a better way of doing this!)
+PRBool nsDeviceContextOS2::gRound = PR_FALSE;
+PRUint32 nsDeviceContextOS2::sNumberOfScreens = 0;
+
+static char* nav4rounding = "font.size.nav4rounding";
+
+nsDeviceContextOS2 :: nsDeviceContextOS2()
+  : DeviceContextImpl()
+{
+  mSurface = nsnull;
+  mPaletteInfo.isPaletteDevice = PR_FALSE;
+  mPaletteInfo.sizePalette = 0;
+  mPaletteInfo.numReserved = 0;
+  mPaletteInfo.palette = nsnull;
+  mDC = nsnull;
+  mPixelScale = 1.0f;
+  mWidth = -1;
+  mHeight = -1;
+  mSpec = nsnull;
+  mCachedClientRect = PR_FALSE;
+  mCachedFullRect = PR_FALSE;
+#ifdef XP_OS2
+  mPrintState = nsPrintState_ePreBeginDoc;
+#endif
+
+#ifdef XP_OS2 // OS2TODO - GET RID OF THIS!
+   // Init module if necessary
    if( !gModuleData.lDisplayDepth)
       gModuleData.Init();
+#endif
 
   // The first time in we initialize gIsWarp4 flag
   if (NOT_SETUP == gIsWarp4) {
@@ -90,144 +80,163 @@ nsDeviceContextOS2::nsDeviceContextOS2() : DeviceContextImpl()
                      ulValues, sizeof(ulValues));
     gIsWarp4 = (ulValues[0] >= 20) && (ulValues[1] >= 40);
   }
+
+#ifndef XP_OS2
+  nsresult res = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  if (NS_SUCCEEDED(res)) {
+    static PRBool roundingInitialized = PR_FALSE;
+    if (!roundingInitialized) {
+      roundingInitialized = PR_TRUE;
+      PrefChanged(nav4rounding, this);
+    }
+    prefs->RegisterCallback(nav4rounding, PrefChanged, this);
+  }
+#endif
 }
 
 nsDeviceContextOS2::~nsDeviceContextOS2()
 {
-   NS_IF_RELEASE( mSurface);
-   NS_IF_RELEASE( mPalette);
+  if(mDC)
+  {
+     GpiAssociate(mPS, 0);
+     GpiDestroyPS(mPS);
+     PrnCloseDC(mDC);
+  }
 
-   if( mPrintDC)
-   {
-      GpiAssociate( mPS, 0);
-      GpiDestroyPS( mPS);
-      PrnCloseDC( mPrintDC);
-   }
-
-   NS_IF_RELEASE(mSpec);
+  NS_IF_RELEASE(mSpec);
 }
 
 nsresult nsDeviceContextOS2::Init( nsNativeWidget aWidget)
 {
-   HWND hwnd = aWidget ? (HWND)aWidget : HWND_DESKTOP;
-   HDC hdc = WinOpenWindowDC( hwnd);
+  nsresult retval = DeviceContextImpl::Init(aWidget);
 
-   CommonInit( hdc);
+  HWND  hwnd = (HWND)aWidget;
+  HDC   hdc = WinOpenWindowDC(hwnd);
 
-   // Get size - don't know if this is needed for non-print DCs
-   long lCaps[2];
-   DevQueryCaps( hdc, CAPS_WIDTH, 2, lCaps);
-   mWidth = lCaps[0];  // these are in device units...
-   mHeight = lCaps[1];
+  CommonInit(hdc);
 
-   // Don't need to close HDCs obtained from WinOpenWindowDC
+#ifdef XP_OS2 /* OS2TODO - Why are we doing this? These were set in CommonInit */
+  // Get size - don't know if this is needed for non-print DCs
+  long lCaps[2];
+  DevQueryCaps( hdc, CAPS_WIDTH, 2, lCaps);
+  mWidth = lCaps[0];  // these are in device units...
+  mHeight = lCaps[1];
+#endif
 
-   return DeviceContextImpl::Init( aWidget);
+  return retval;
 }
 
 // This version of Init() is called when creating a print DC
 nsresult nsDeviceContextOS2::Init( nsNativeDeviceContext aContext,
                                    nsIDeviceContext *aOrigContext)
 {
-   // These calcs are from the windows version & I'm not 100%
-   // sure what's going on...
+  float origscale, newscale;
+  float t2d, a2d;
 
-   float origscale, newscale;
-   float t2d, a2d;
+  mDC = (HDC)aContext;
 
-   mPrintDC = (HDC)aContext; // we are print dc...
+#ifdef XP_OS2
+  // Create a print PS now.  This is necessary 'cos we need it from
+  // odd places to do font-y things, where the only common reference
+  // point is this DC.  We can't just create a new PS because only one
+  // PS can be associated with a given DC, and we can't get that PS from
+  // the DC (really?).  And it would be slow :-)
+  SIZEL sizel = { 0 , 0 };
+  mPS = GpiCreatePS( 0/*hab*/, mDC, &sizel,
+                     PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+#endif
 
-   // Create a print PS now.  This is necessary 'cos we need it from
-   // odd places to do font-y things, where the only common reference
-   // point is this DC.  We can't just create a new PS because only one
-   // PS can be associated with a given DC, and we can't get that PS from
-   // the DC (really?).  And it would be slow :-)
-   SIZEL sizel = { 0 , 0 };
-   mPS = GpiCreatePS( 0/*hab*/, mPrintDC, &sizel,
-                      PU_PELS | GPIT_MICRO | GPIA_ASSOC);
+  CommonInit( mDC);
 
-   CommonInit( mPrintDC);
+  GetTwipsToDevUnits( newscale);
+  aOrigContext->GetTwipsToDevUnits( origscale);
 
-   GetTwipsToDevUnits( newscale);
-   aOrigContext->GetTwipsToDevUnits( origscale);
+  mPixelScale = newscale / origscale;
 
-   mPixelScale = newscale / origscale;
+  aOrigContext->GetTwipsToDevUnits( t2d);
+  aOrigContext->GetAppUnitsToDevUnits( a2d);
 
-   aOrigContext->GetTwipsToDevUnits( t2d);
-   aOrigContext->GetAppUnitsToDevUnits( a2d);
+  mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
+  mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
 
-   mAppUnitsToDevUnits = (a2d / t2d) * mTwipsToPixels;
-   mDevUnitsToAppUnits = 1.0f / mAppUnitsToDevUnits;
+#ifdef XP_OS2
+  HCINFO hcinfo;
+  PrnQueryHardcopyCaps( mDC, &hcinfo);
+  mWidth = hcinfo.xPels;
+  mHeight = hcinfo.yPels;
+  // XXX hsb says there are margin problems, must be from here...
+  printf( "Got surface of size %d x %d pixels\n", mWidth, mHeight);
+  printf( "mPixelScale = %f\n", mPixelScale);
 
-   HCINFO hcinfo;
-   PrnQueryHardcopyCaps( mPrintDC, &hcinfo);
-   mWidth = hcinfo.xPels;
-   mHeight = hcinfo.yPels;
-   // XXX hsb says there are margin problems, must be from here...
-   printf( "Got surface of size %d x %d pixels\n", mWidth, mHeight);
-   printf( "mPixelScale = %f\n", mPixelScale);
+  // We need to begin a document now, because the client is entitled at
+  // this point to do stuff like create fonts, which required the PS to
+  // be associated with a DC which has been DEVESC_STARTDOC'd.
+  BeginDocument();
+#endif
 
-   // We need to begin a document now, because the client is entitled at
-   // this point to do stuff like create fonts, which required the PS to
-   // be associated with a DC which has been DEVESC_STARTDOC'd.
-   BeginDocument();
-
-   return NS_OK;
+  return NS_OK;
 }
 
-// XXXX Reduce to one call to DevQueryCaps???
-void nsDeviceContextOS2::CommonInit( HDC aDC)
+void nsDeviceContextOS2 :: CommonInit(HDC aDC)
 {
-   // Record palette-potential of device even if it is >8bpp
-   long lCap = 0;
-   DevQueryCaps( aDC, CAPS_ADDITIONAL_GRAPHICS, 1, &lCap);
-   mPaletteInfo.isPaletteDevice = !!(lCap & CAPS_PALETTE_MANAGER);
+  LONG alArray[CAPS_DEVICE_POLYSET_POINTS];
 
-   // Work out the pels-to-twips conversion
-   DevQueryCaps( aDC, CAPS_VERTICAL_FONT_RES, 1, &lCap);
-   mTwipsToPixels = ((float) lCap) / (float)NSIntPointsToTwips(72);
-   mPixelsToTwips = 1.0f / mTwipsToPixels;
+  DevQueryCaps(aDC, CAPS_FAMILY, CAPS_DEVICE_POLYSET_POINTS, alArray);
 
-   // max palette size: level out at COLOR_CUBE_SIZE
-   // (or CAPS_COLORS ?)
-   DevQueryCaps( aDC, CAPS_PHYS_COLORS, 1, &lCap);
-   mPaletteInfo.sizePalette = (PRUint8) (min( lCap, COLOR_CUBE_SIZE));
+  mTwipsToPixels = ((float)alArray[CAPS_VERTICAL_FONT_RES]) / (float)NSIntPointsToTwips(72);
+  mPixelsToTwips = 1.0f / mTwipsToPixels;
 
-   // erm?
-   mPaletteInfo.numReserved = 0;
+  mDepth = alArray[CAPS_COLOR_BITCOUNT];
+  mPaletteInfo.isPaletteDevice = !!(alArray[CAPS_ADDITIONAL_GRAPHICS] & CAPS_PALETTE_MANAGER);
 
-   DevQueryCaps( aDC, CAPS_COLOR_BITCOUNT, 1, &lCap);
-   mDepth = lCap;
+  /* OS2TODO - pref to turn off palette management should set isPaletteDevice to false */
 
-   mClientRect.x = mClientRect.y = 0;
-   DevQueryCaps( aDC, CAPS_HORIZONTAL_RESOLUTION, 1, &lCap);
-   mClientRect.width = lCap;
-   DevQueryCaps( aDC, CAPS_VERTICAL_RESOLUTION, 1, &lCap);
-   mClientRect.height = lCap;
+  if (mPaletteInfo.isPaletteDevice)
+    mPaletteInfo.sizePalette = 256;
 
-   DevQueryCaps( aDC, CAPS_TECHNOLOGY, 1, &lCap);
-   if (lCap & CAPS_TECH_RASTER_DISPLAY) {
-     mClientRect.width = WinQuerySysValue(HWND_DESKTOP, SV_CXFULLSCREEN);
-     mClientRect.height = WinQuerySysValue(HWND_DESKTOP, SV_CYFULLSCREEN);
-   }
+  if (alArray[CAPS_COLORS] >= 20) {
+    mPaletteInfo.numReserved = 20;
+  } else {
+    mPaletteInfo.numReserved = alArray[CAPS_COLORS];
+  } /* endif */
 
-   DeviceContextImpl::CommonInit();
+  mWidth = alArray[CAPS_WIDTH];
+  mHeight = alArray[CAPS_HEIGHT];
+
+  if (alArray[CAPS_TECHNOLOGY] == CAPS_TECH_RASTER_DISPLAY)
+  {
+    // init the screen manager and compute our client rect based on the
+    // screen objects. We'll save the result 
+    nsresult ignore;
+    mScreenManager = do_GetService("component://netscape/gfx/screenmanager", &ignore);   
+    if ( !sNumberOfScreens )
+      mScreenManager->GetNumberOfScreens(&sNumberOfScreens);
+  } // if this dc is not a print device
+
+  DeviceContextImpl::CommonInit();
 }
-
 
 void
-nsDeviceContextOS2::ComputeClientRectUsingScreen ( nsRect* outRect )
+nsDeviceContextOS2 :: ComputeClientRectUsingScreen ( nsRect* outRect )
 {
   if ( !mCachedClientRect ) {
-    // convert to device units
-    outRect->y = NSToIntRound(mClientRect.y * mDevUnitsToAppUnits);
-    outRect->x = NSToIntRound(mClientRect.x * mDevUnitsToAppUnits);
-    outRect->width = NSToIntRound(mClientRect.width * mDevUnitsToAppUnits);
-    outRect->height = NSToIntRound(mClientRect.height * mDevUnitsToAppUnits);
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 x, y, width, height;
+      screen->GetAvailRect ( &x, &y, &width, &height );
+    
+      // convert to device units
+      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
 
-    mCachedClientRect = PR_TRUE;
-    mClientRect = *outRect;
-  } // if we need to recompute the client rect
+      mCachedClientRect = PR_TRUE;
+      mClientRect = *outRect;
+    }
+  }
   else
     *outRect = mClientRect;
 
@@ -235,60 +244,57 @@ nsDeviceContextOS2::ComputeClientRectUsingScreen ( nsRect* outRect )
 
 
 void
-nsDeviceContextOS2::ComputeFullAreaUsingScreen ( nsRect* outRect )
+nsDeviceContextOS2 :: ComputeFullAreaUsingScreen ( nsRect* outRect )
 {
-  outRect->y = 0;
-  outRect->x = 0;
-  outRect->width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
-  outRect->height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  if ( !mCachedFullRect ) {
+    nsCOMPtr<nsIScreen> screen;
+    FindScreen ( getter_AddRefs(screen) );
+    if ( screen ) {
+      PRInt32 x, y, width, height;
+      screen->GetRect ( &x, &y, &width, &height );
+    
+      // convert to device units
+      outRect->y = NSToIntRound(y * mDevUnitsToAppUnits);
+      outRect->x = NSToIntRound(x * mDevUnitsToAppUnits);
+      outRect->width = NSToIntRound(width * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(height * mDevUnitsToAppUnits);
 
+      mWidth = width;
+      mHeight = height;
+      mCachedFullRect = PR_TRUE;
+    }
+  }
+  else {
+      outRect->y = 0;
+      outRect->x = 0;
+      outRect->width = NSToIntRound(mWidth * mDevUnitsToAppUnits);
+      outRect->height = NSToIntRound(mHeight * mDevUnitsToAppUnits);
+  }
+ 
 } // ComputeFullRectUsingScreen
 
 
-// Creation of other gfx objects malarky -------------------------------------
-
-nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+//
+// FindScreen
+//
+// Determines which screen intersects the largest area of the given surface.
+//
+void
+nsDeviceContextOS2 :: FindScreen ( nsIScreen** outScreen )
 {
-   if( !mSurface)
-   {
-      nsDrawingSurface tSurface;
-      aContext.CreateDrawingSurface( nsnull, 0, tSurface);
-      mSurface = (nsDrawingSurfaceOS2 *) tSurface;
-      NS_ADDREF(mSurface);
-   }
+  // optimize for the case where we only have one monitor.
+  static nsCOMPtr<nsIScreen> sPrimaryScreen;
+  if ( !sPrimaryScreen && mScreenManager )
+    mScreenManager->GetPrimaryScreen ( getter_AddRefs(sPrimaryScreen) );  
+  NS_IF_ADDREF(*outScreen = sPrimaryScreen.get());
+  return;
+} // FindScreen
 
-   printf("Dodgy nsDeviceContext::GetDrawingContext() called\n");
-
-   aSurface = mSurface;
-   return NS_OK;
-}
-
-nsresult nsDeviceContextOS2::GetDeviceContextFor( nsIDeviceContextSpec *aDevice,
-                                                  nsIDeviceContext *&aContext)
-{
-   // Prolly want to clean this up xpCom-wise...
-
-   nsDeviceContextOS2 *newCX = new nsDeviceContextOS2;
-   nsDeviceContextSpecOS2 *spec = (nsDeviceContextSpecOS2*) aDevice;
-
-   if (!newCX)
-     return NS_ERROR_OUT_OF_MEMORY;
-
-   aContext = newCX;
-   NS_ADDREF(aContext);
-
-   PRTQUEUE *pq;
-   spec->GetPRTQUEUE( pq);
-
-   HDC hdcPrint = PrnOpenDC( pq, "Mozilla");
-
-   return newCX->Init( (nsNativeDeviceContext) hdcPrint, this);
-}
-
+/* OS2TODO - NOT PORTED */
 // Create a rendering context against our hdc for a printer
 nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aContext)
 {
-   NS_ASSERTION( mPrintDC, "CreateRenderingContext for non-print DC");
+   NS_ASSERTION( mDC, "CreateRenderingContext for non-print DC");
 
    nsIRenderingContext *pContext = new nsRenderingContextOS2;
    if (!pContext)
@@ -315,40 +321,26 @@ nsresult nsDeviceContextOS2::CreateRenderingContext( nsIRenderingContext *&aCont
    return rc;
 }
 
-HPS nsDeviceContextOS2::GetRepresentativePS() const
+NS_IMETHODIMP nsDeviceContextOS2 :: SupportsNativeWidgets(PRBool &aSupportsWidgets)
 {
-   HPS hps;
+  if (nsnull == mDC)
+    aSupportsWidgets = PR_TRUE;
+  else
+    aSupportsWidgets = PR_FALSE;
 
-   if( mPrintDC == 0)
-   {
-      HWND hwnd = mWidget ? (HWND)mWidget : HWND_DESKTOP;
-      hps = WinGetPS( hwnd);
-   }
-   else
-      hps = mPS;
-
-   return hps;
+  return NS_OK;
 }
 
-void nsDeviceContextOS2::ReleaseRepresentativePS( HPS aPS)
+NS_IMETHODIMP nsDeviceContextOS2 :: GetCanonicalPixelScale(float &aScale) const
 {
-   if( mPrintDC == 0)
-      if( !WinReleasePS( aPS))
-         PMERROR( "WinReleasePS (DC)");
-   else
-      /* nop */ ;
+  aScale = mPixelScale;
+  return NS_OK;
 }
 
-// Metrics -------------------------------------------------------------------
-
-// Note that this returns values in app units, as opposed to GetSystemAttr(),
-// which uses device units.
-nsresult nsDeviceContextOS2::GetScrollBarDimensions( float &aWidth, float &aHeight) const
+NS_IMETHODIMP nsDeviceContextOS2 :: GetScrollBarDimensions(float &aWidth, float &aHeight) const
 {
-  aWidth = (float) WinQuerySysValue( HWND_DESKTOP, SV_CXVSCROLL) *
-                   mDevUnitsToAppUnits;
-  aHeight = (float) WinQuerySysValue( HWND_DESKTOP, SV_CYHSCROLL) *
-                    mDevUnitsToAppUnits;
+  aWidth = ::WinQuerySysValue( HWND_DESKTOP, SV_CXVSCROLL) * mDevUnitsToAppUnits;
+  aHeight = ::WinQuerySysValue( HWND_DESKTOP, SV_CYHSCROLL) * mDevUnitsToAppUnits;
   return NS_OK;
 }
 
@@ -554,10 +546,161 @@ NS_IMETHODIMP nsDeviceContextOS2 :: GetSystemAttribute(nsSystemAttrID anID, Syst
   return NS_OK;
 }
 
-//
-// (XXX) the screen object thinks these are in pels, duh. (jmf)
-//
-nsresult nsDeviceContextOS2::GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt32 &aHeight)
+nsresult nsDeviceContextOS2::GetDrawingSurface( nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
+{
+  if (NULL == mSurface) {
+    aContext.CreateDrawingSurface(nsnull, 0, mSurface);
+  }
+
+  aSurface = mSurface;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2 :: CheckFontExistence(const nsString& aFontName)
+{
+  HWND    hwnd = (HWND)mWidget;
+  HPS     hps = ::WinGetPS(hwnd);
+  PRBool  isthere = PR_FALSE;
+
+  char fontName[FACESIZE];
+  aFontName.ToCString( fontName, FACESIZE);
+
+  long lWant = 0;
+  long lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
+                               fontName, &lWant, 0, 0);
+
+  ::WinReleasePS(hps);
+
+  if (lFonts > 0)
+    return NS_OK;
+  else
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2::GetDepth(PRUint32& aDepth)
+{
+  aDepth = mDepth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2::GetILColorSpace(IL_ColorSpace*& aColorSpace)
+{
+  if (nsnull == mColorSpace) {
+    // See if we're dealing with an 8-bit palette device
+    if (8 == mDepth) {
+      // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
+      // than DIB_RGB_COLORS, so make sure the indexes match that of the
+      // GDI physical palette
+      //
+      // Note: the image library doesn't use the reserved colors, so it doesn't
+      // matter what they're set to...
+#ifdef XP_OS2
+      IL_ColorMap* colorMap = IL_NewCubeColorMap(0, 0, COLOR_CUBE_SIZE + 10);
+#else
+      IL_RGB  reserved[10];
+      memset(reserved, 0, sizeof(reserved));
+      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
+#endif
+      if (nsnull == colorMap) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+  
+      // Create a pseudo color space
+      mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
+  
+    } else {
+      IL_RGBBits colorRGBBits;
+    
+      // Create a 24-bit color space
+      colorRGBBits.red_shift = 16;  
+      colorRGBBits.red_bits = 8;
+      colorRGBBits.green_shift = 8;
+      colorRGBBits.green_bits = 8; 
+      colorRGBBits.blue_shift = 0; 
+      colorRGBBits.blue_bits = 8;  
+    
+      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
+    }
+
+    if (nsnull == mColorSpace) {
+      aColorSpace = nsnull;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  // Return the color space
+  aColorSpace = mColorSpace;
+  IL_AddRefToColorSpace(aColorSpace);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
+{
+  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
+  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
+
+  if (NULL == mPaletteInfo.palette) {
+    IL_ColorSpace*  colorSpace;
+    GetILColorSpace(colorSpace);
+
+    if (NI_PseudoColor == colorSpace->type) {
+      // Create a logical palette
+#ifdef XP_OS2
+      PULONG aulTable;
+      ULONG ulCount = COLOR_CUBE_SIZE;
+      aulTable = (PULONG)malloc(ulCount*sizeof(ULONG));
+#else
+      ULONG aulTable[COLOR_CUBE_SIZE+20];
+      ULONG ulCount = COLOR_CUBE_SIZE + 20;
+#endif
+
+#ifndef XP_OS2
+      // First ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
+
+      // Last ten system colors
+      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
+#endif
+  
+      // Now set the color cube entries.
+#ifdef XP_OS2
+      NI_RGB*       map = colorSpace->cmap.map;
+#else
+      NI_RGB*       map = colorSpace->cmap.map + 10;
+#endif
+#ifdef XP_OS2
+      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++, map++) {
+#else
+      for (PRInt32 i = 10; i < COLOR_CUBE_SIZE; i++, map++) {
+#endif
+        aulTable[i] = MK_RGB( map->red, map->green, map->blue);
+      }
+  
+      if (mPaletteInfo.isPaletteDevice) {
+        // Create a GPI palette
+        mPaletteInfo.palette = (void*)::GpiCreatePalette( (HAB)0, NULL, LCOLF_CONSECRGB, ulCount, aulTable );
+        free(aulTable);
+      } else {
+        mPaletteInfo.palette = (void*)aulTable;
+        mPaletteInfo.sizePalette = ulCount;
+      }
+    }
+
+    IL_ReleaseColorSpace(colorSpace);
+  }
+
+  aPaletteInfo.palette = mPaletteInfo.palette;
+  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2 :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
+{
+  aPixel = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight)
 {
   if ( mSpec )
   {
@@ -575,7 +718,7 @@ nsresult nsDeviceContextOS2::GetDeviceSurfaceDimensions( PRInt32 &aWidth, PRInt3
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextOS2::GetRect(nsRect &aRect)
+NS_IMETHODIMP nsDeviceContextOS2 :: GetRect(nsRect &aRect)
 {
   if ( mSpec )
   {
@@ -591,7 +734,8 @@ NS_IMETHODIMP nsDeviceContextOS2::GetRect(nsRect &aRect)
   return NS_OK;
 }
 
-nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
+
+NS_IMETHODIMP nsDeviceContextOS2 :: GetClientRect(nsRect &aRect)
 {
   if ( mSpec )
   {
@@ -607,46 +751,23 @@ nsresult nsDeviceContextOS2::GetClientRect(nsRect &aRect)
   return NS_OK;
 }
 
-nsresult nsDeviceContextOS2::GetDepth( PRUint32& aDepth)
+NS_IMETHODIMP nsDeviceContextOS2 :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+                                                        nsIDeviceContext *&aContext)
 {
-   aDepth = mDepth;
-   return NS_OK;
+  PRTQUEUE *pq;
+
+  aContext = new nsDeviceContextOS2();
+
+  ((nsDeviceContextOS2 *)aContext)->mSpec = aDevice;
+  NS_ADDREF(aDevice);
+
+  ((nsDeviceContextSpecOS2 *)aDevice)->GetPRTQUEUE(pq);
+
+  HDC dc = PrnOpenDC(pq, "Mozilla");
+
+  return ((nsDeviceContextOS2 *)aContext)->Init((nsNativeDeviceContext)dc, this);
 }
 
-// Yuck...
-nsresult nsDeviceContextOS2::SupportsNativeWidgets( PRBool &aSupportsWidgets)
-{
-   aSupportsWidgets = (mPrintDC == 0) ? PR_TRUE : PR_FALSE;
-   return NS_OK;
-}
-
-nsresult nsDeviceContextOS2::GetCanonicalPixelScale( float &aScale) const
-{
-   aScale = mPixelScale;
-   return NS_OK;
-}
-
-// Fonts ---------------------------------------------------------------------
-
-// Rather unfortunate place for this method...
-nsresult nsDeviceContextOS2::CheckFontExistence( const nsString &aFontName)
-{
-   HPS hps = GetRepresentativePS();
-
-   char fontName[ FACESIZE];
-   aFontName.ToCString( fontName, FACESIZE);
-
-   long lWant = 0;
-   long lFonts = GpiQueryFonts( hps, QF_PUBLIC | QF_PRIVATE,
-                                fontName, &lWant, 0, 0);
-
-   ReleaseRepresentativePS( hps);
-
-   return lFonts > 0 ? NS_OK : NS_ERROR_FAILURE;
-}
-
-
-// Font setup - defaults aren't terribly helpful; this may be no better!
 nsresult nsDeviceContextOS2::CreateFontAliasTable()
 {
    nsresult result = NS_OK;
@@ -683,105 +804,13 @@ nsresult nsDeviceContextOS2::CreateFontAliasTable()
    return result;
 }
 
-// Colourspaces and palettes -------------------------------------------------
-
-// Override these so we can use palette manager
-nsresult nsDeviceContextOS2::GetILColorSpace( IL_ColorSpace *&aColorSpace)
-{
-   if( !mColorSpace)
-   {
-      // !! Might want to do something funky for 4bpp displays
-
-      // See if we're dealing with an 8-bit palette device
-      if( (8 == mDepth) && mPaletteInfo.isPaletteDevice)
-      {
-         IL_ColorMap *cMap = IL_NewCubeColorMap( 0, 0, COLOR_CUBE_SIZE);
-         if( !cMap)
-            return NS_ERROR_OUT_OF_MEMORY;
-
-         // Create a pseudo color space
-         mColorSpace = IL_CreatePseudoColorSpace( cMap, 8, 8);
-      }
-      else
-      {
-         IL_RGBBits colorRGBBits;
-
-         // Create a 24-bit color space
-         colorRGBBits.red_shift   = 16;
-         colorRGBBits.red_bits    = 8;
-         colorRGBBits.green_shift = 8;
-         colorRGBBits.green_bits  = 8;
-         colorRGBBits.blue_shift  = 0;
-         colorRGBBits.blue_bits   = 8;
-
-         mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-      }
-
-      if( !mColorSpace)
-      {
-         aColorSpace = nsnull;
-         return NS_ERROR_OUT_OF_MEMORY;
-      }
-   }
-
-   // Return the color space
-   aColorSpace = mColorSpace;
-   IL_AddRefToColorSpace( aColorSpace);
-   return NS_OK;
-}
-
-nsresult nsDeviceContextOS2::GetPaletteInfo( nsPaletteInfo& aPaletteInfo)
-{
-   aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-   aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-   aPaletteInfo.numReserved = mPaletteInfo.numReserved;
-
-   nsresult rc = NS_OK;
-
-   SetupColorMaps();
-
-   aPaletteInfo.palette = mPaletteInfo.palette;
-   return rc;
-}
-
-nsresult nsDeviceContextOS2::GetPalette( nsIPaletteOS2 *&aPalette)
-{
-   nsresult rc = SetupColorMaps();
-   aPalette = mPalette;
-   NS_ADDREF( aPalette);
-   return rc;
-}
-
-nsresult nsDeviceContextOS2::SetupColorMaps()
-{
-   nsresult rc = NS_OK;
-   if( !mPalette)
-   {
-      // Share a single palette between all screen instances; printers need
-      // a separate palette for compatability reasons.
-      if( mPrintDC) rc = NS_CreatePalette( this, mPalette);
-      else mPalette = gModuleData.GetUIPalette( this);
-
-      if( rc == NS_OK)
-         rc = mPalette->GetNSPalette( mPaletteInfo.palette);
-   }
-   return rc;
-}
-
-NS_IMETHODIMP nsDeviceContextOS2::ConvertPixel(nscolor aColor, PRUint32 & aPixel)
-{
-   printf( "Alert: nsDeviceContext::ConvertPixel called\n");
-   aPixel = aColor;
-   return NS_OK;
-}
-
 // Printing ------------------------------------------------------------------
 nsresult nsDeviceContextOS2::BeginDocument()
 {
-   NS_ASSERTION(mPrintDC, "BeginDocument for non-print DC");
+   NS_ASSERTION(mDC, "BeginDocument for non-print DC");
    if( mPrintState == nsPrintState_ePreBeginDoc)
    {
-      PrnStartJob( mPrintDC, "Warpzilla NGLayout job");
+      PrnStartJob( mDC, "Warpzilla NGLayout job");
       printf( "BeginDoc\n");
       mPrintState = nsPrintState_eBegunDoc;
    }
@@ -790,7 +819,7 @@ nsresult nsDeviceContextOS2::BeginDocument()
 
 nsresult nsDeviceContextOS2::EndDocument()
 {
-   PrnEndJob( mPrintDC);
+   PrnEndJob( mDC);
    mPrintState = nsPrintState_ePreBeginDoc;
    printf("EndDoc\n");
    return NS_OK;
@@ -802,7 +831,7 @@ nsresult nsDeviceContextOS2::BeginPage()
       mPrintState = nsPrintState_eBegunFirstPage;
    else
    {
-      PrnNewPage( mPrintDC);
+      PrnNewPage( mDC);
       printf("NewPage");
    }
    return NS_OK;
@@ -816,7 +845,7 @@ nsresult nsDeviceContextOS2::EndPage()
 
 BOOL nsDeviceContextOS2::isPrintDC()
 {
-   if ( mPrintDC == nsnull )
+   if ( mDC == nsnull )
       return 0;
 
    else
