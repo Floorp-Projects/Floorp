@@ -13,6 +13,10 @@
 #include "plstr.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
+#include "nsLayoutCID.h"
+
+// Static IIDs/CIDs. Try to minimize these.
+static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 
 // nsProxyStream 
 // A helper class used for synchronous parsing of URLs.
@@ -126,8 +130,11 @@ protected:
   static nsSupportsHashtable* mBindingTable; // This is a table of all the bindings files 
                                              // we have loaded
                                              // during this session.
- 
+  static nsINameSpaceManager* gNameSpaceManager; // Used to register the XBL namespace
+  static PRInt32  kNameSpaceID_XBL;          // Convenient cached XBL namespace.
+
   static PRUint32 gRefCnt;                   // A count of XBLservice instances.
+
 
 };
 
@@ -137,6 +144,9 @@ protected:
 // Static member variable initialization
 PRUint32 nsXBLService::gRefCnt = 0;
 nsSupportsHashtable* nsXBLService::mBindingTable = nsnull;
+nsINameSpaceManager* nsXBLService::gNameSpaceManager = nsnull;
+
+PRInt32 nsXBLService::kNameSpaceID_XBL;
 
 // Implement our nsISupports methods
 NS_IMPL_ISUPPORTS1(nsXBLService, nsIXBLService)
@@ -147,15 +157,34 @@ nsXBLService::nsXBLService(void)
   NS_INIT_REFCNT();
   gRefCnt++;
   if (gRefCnt == 1) {
+    // Create our binding table.
     mBindingTable = new nsSupportsHashtable();
+
+    // Register the XBL namespace.
+    nsresult rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
+                                                     nsnull,
+                                                     nsCOMTypeInfo<nsINameSpaceManager>::GetIID(),
+                                                     (void**) &gNameSpaceManager);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create namespace manager");
+    if (NS_FAILED(rv)) return;
+
+    // XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
+    static const char kXBLNameSpaceURI[]
+        = "http://www.mozilla.org/xbl";
+
+    rv = gNameSpaceManager->RegisterNameSpace(kXBLNameSpaceURI, kNameSpaceID_XBL);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XBL namespace");
+    if (NS_FAILED(rv)) return;
   }
 }
 
 nsXBLService::~nsXBLService(void)
 {
   gRefCnt--;
-  if (gRefCnt == 0)
+  if (gRefCnt == 0) {
     delete mBindingTable;
+    NS_IF_RELEASE(gNameSpaceManager);
+  }
 }
 
 // This function loads a particular XBL file and installs all of the bindings
