@@ -82,9 +82,9 @@ static nsresult setAttribute( nsIWebShell *shell,
                         // Set the text attribute.
                         rv = elem->SetAttribute( name, value );
                         if ( APP_DEBUG ) {
-                            char *p = value.ToNewCString();
+                          //char *p = value.ToNewCString();
                             //printf( "Set %s %s=\"%s\", rv=0x%08X\n", id, name, p, (int)rv );
-                            delete [] p;
+                          //delete [] p;
                         }
                         if ( rv != NS_OK ) {
                             if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
