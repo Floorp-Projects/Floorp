@@ -144,8 +144,28 @@ function processCreateProfileData( aProfName, aProfDir )
       }
     }
 
+    // Adding code to see if the profile directory already exists....
+    // XXXX - Further modifications like adding propmt dialog are required - XXXX
+    var useExistingDir = false;
+    var fileSpec = Components.classes["component://netscape/filespec"].createInstance();
+    if ( fileSpec )
+        fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
+
+    if (aProfDir == null)
+        fileSpec.nativePath = profile.defaultProfileParentDir.nativePath;
+    else
+        fileSpec.nativePath = aProfDir;
+
+    fileSpec.appendRelativeUnixPath(aProfName);
+
+    if (fileSpec != null) {
+        if (fileSpec.exists()) {
+            useExistingDir = true;
+        }
+    }
+
     dump("*** going to create a new profile called " + aProfName + " in folder: " + aProfDir + "\n");
-		profile.createNewProfile( aProfName, aProfDir );
+		profile.createNewProfile( aProfName, aProfDir, useExistingDir );
 		return true;
   }
   catch(e) {
