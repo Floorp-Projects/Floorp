@@ -481,6 +481,7 @@ public:
                                           int nsprMode = kDefaultMode,
                                           PRIntn accessMode = 00666);
                                       nsInputFileStream(nsIFileSpec* inFile);
+    virtual                           ~nsInputFileStream();
 
     void                              Open(
                                           const nsFileSpec& inFile,
@@ -606,6 +607,7 @@ public:
                                           NS_RELEASE(stream);
                                       }
                                       nsOutputFileStream(nsIFileSpec* inFile);
+    virtual                           ~nsOutputFileStream();
  
     virtual void                      flush();
     virtual void					  abort();
