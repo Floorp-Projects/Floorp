@@ -28,7 +28,7 @@ interface nsIFolder : nsICollection {
         attribute string name;
 
         nsISupports GetChildNamed(in string name);
-        nsIFolder GetParent();
+        attribute nsIFolder parent;
 
         nsIEnumerator GetSubFolders();
 

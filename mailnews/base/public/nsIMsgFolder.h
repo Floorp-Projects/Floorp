@@ -96,11 +96,8 @@ class nsIMsgFolder : public nsIFolder {
   /* boolean ContainsChildNamed (in string name); */
   NS_IMETHOD ContainsChildNamed(const char *name, PRBool *_retval) = 0;
 
-  /* nsIMsgFolder FindParentOf (in nsIMsgFolder childFolder); */
-  NS_IMETHOD FindParentOf(nsIMsgFolder *childFolder, nsIMsgFolder **_retval) = 0;
-
-  /* boolean IsParentOf (in nsIMsgFolder folder, in boolean deep); */
-  NS_IMETHOD IsParentOf(nsIMsgFolder *folder, PRBool deep, PRBool *_retval) = 0;
+  /* boolean IsAncestorOf (in nsIMsgFolder folder); */
+  NS_IMETHOD IsAncestorOf(nsIMsgFolder *folder, PRBool *_retval) = 0;
 
   /* string GenerateUniqueSubfolderName (in string prefix, in nsIMsgFolder otherFolder); */
   NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, nsIMsgFolder *otherFolder, char **_retval) = 0;

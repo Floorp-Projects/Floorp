@@ -9,7 +9,6 @@
 #include "nsICollection.h" /* interface nsICollection */
 #include "nsIFolderListener.h" /* interface nsIFolderListener */
 #include "nsIEnumerator.h" /* interface nsIEnumerator */
-#include "nsID.h" /* interface nsID */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -38,8 +37,9 @@ class nsIFolder : public nsICollection {
   /* nsISupports GetChildNamed (in string name); */
   NS_IMETHOD GetChildNamed(const char *name, nsISupports **_retval) = 0;
 
-  /* nsIFolder GetParent (); */
-  NS_IMETHOD GetParent(nsIFolder **_retval) = 0;
+  /* attribute nsIFolder parent; */
+  NS_IMETHOD GetParent(nsIFolder * *aParent) = 0;
+  NS_IMETHOD SetParent(nsIFolder * aParent) = 0;
 
   /* nsIEnumerator GetSubFolders (); */
   NS_IMETHOD GetSubFolders(nsIEnumerator **_retval) = 0;

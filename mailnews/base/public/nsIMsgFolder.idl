@@ -64,8 +64,7 @@ interface nsIMsgFolder : nsIFolder {
 	void Adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
 	boolean ContainsChildNamed(in string name);
-	nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
-	boolean IsParentOf(in nsIMsgFolder folder, in boolean deep);
+	boolean IsAncestorOf(in nsIMsgFolder folder);
 
 	string GenerateUniqueSubfolderName(in string prefix, in nsIMsgFolder otherFolder);
 
