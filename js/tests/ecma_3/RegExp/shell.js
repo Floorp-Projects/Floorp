@@ -129,11 +129,11 @@ function getState(status, pattern, string)
    * done automatically by pattern.toString(), invoked implicitly below.
    *
    * One would like to simply do: string = string.replace(/(\s)/g, '\$1').
-   * However, the backreference $1 is not a literal string value, 
+   * However, the backreference $1 is not a literal string value,
    * so this method doesn't work.
    *
    * Also tried string = string.replace(/(\s)/g, escape('$1'));
-   * but such a presentation is in hexadecimal form...
+   * but this just inserts the escape of the literal '$1', i.e. '%241'.
    */
   string = string.replace(/\n/g, '\\n');
   string = string.replace(/\r/g, '\\r');
