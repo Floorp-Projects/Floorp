@@ -76,8 +76,8 @@ function ListFields() {
 	if (top.fieldMap == null)
 		return;
 		
-	body = document.getElementById("fieldBody");
-	count = top.fieldMap.mapSize;
+	var body = document.getElementById("fieldBody");
+	var count = top.fieldMap.mapSize;
 	var index;
 	var	i;
 	for (i = 0; i < count; i++) {
