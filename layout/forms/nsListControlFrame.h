@@ -274,6 +274,7 @@ public:
   NS_IMETHOD AboutToDropDown();
   NS_IMETHOD AboutToRollup();
   NS_IMETHOD UpdateSelection();
+  NS_IMETHOD ComboboxUpdateSelection(PRBool aForceUpdate, PRBool aSendEvent);
   NS_IMETHOD SetOverrideReflowOptimization(PRBool aValue) { mOverrideReflowOpt = aValue; return NS_OK; }
   NS_IMETHOD GetOptionsContainer(nsIPresContext* aPresContext, nsIFrame** aFrame);
 
@@ -285,7 +286,6 @@ public:
   NS_IMETHOD OnOptionSelected(nsIPresContext* aPresContext,
                               PRInt32 aIndex,
                               PRBool aSelected);
-  NS_IMETHOD OnOptionTextChanged(nsIDOMHTMLOptionElement* option);
   NS_IMETHOD GetDummyFrame(nsIFrame** aFrame);
   NS_IMETHOD SetDummyFrame(nsIFrame* aFrame);
 
@@ -352,46 +352,41 @@ protected:
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
   void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-  PRBool   IsOptionElement(nsIContent* aContent);
-  PRBool   CheckIfAllFramesHere();
-  PRInt32  GetIndexFromContent(nsIContent *aContent);
-  PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
-  void     GetScrollableView(nsIScrollableView*& aScrollableView);
-
-  // Dropped down stuff
-  void     SetComboboxItem(PRInt32 aIndex);
-  void     ComboboxFinish(PRInt32 aIndex);
   PRBool   IsInDropDownMode();
-
-  // Selection
-  PRBool   SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
-                                       PRInt32 aEndIndex,
-                                       PRBool aValue,
-                                       PRBool aClearAll);
-  PRBool   ToggleOptionSelectedFromFrame(PRInt32 aIndex);
-  PRBool   SingleSelection(PRInt32 aSelectedIndex, PRBool aDoToggle);
-  PRBool   ExtendedSelection(PRInt32 aStartIndex,
+  PRBool   IsOptionElement(nsIContent* aContent);
+  void     SingleSelection(PRInt32 aSelectedIndex, PRBool aDoToggle);
+  void     ExtendedSelection(PRInt32 aStartIndex,
                              PRInt32 aEndIndex,
                              PRBool aClearAll);
-  PRBool   PerformSelection(PRInt32 aSelectedIndex,
+  void     PerformSelection(PRInt32 aSelectedIndex,
                             PRBool aIsShift,
                             PRBool aIsControl);
-  PRBool   HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
+  void     ResetSelectedItem();
+  PRBool   CheckIfAllFramesHere();
+  PRInt32  GetIndexFromContent(nsIContent *aContent);
+  void     HandleListSelection(nsIDOMEvent * aDOMEvent, PRInt32 selectedIndex);
+  PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
+  nsresult SetOptionsSelectedFromFrame(PRInt32 aStartIndex,
+                                         PRInt32 aEndIndex,
+                                         PRBool aValue,
+                                         PRBool aClearAll);
+  nsresult ToggleOptionSelectedFromFrame(PRInt32 aIndex);
+  void     GetScrollableView(nsIScrollableView*& aScrollableView);
 
   // Timer Methods
   nsresult StartUpdateTimer(nsIPresContext * aPresContext);
   void     StopUpdateTimer();
   void     ItemsHaveBeenRemoved(nsIPresContext * aPresContext);
 
-  // fire onChange
-  nsresult FireOnChange();
+  // onChange detection
+  nsresult SelectionChanged();
   
   // Data Members
   nsFormFrame* mFormFrame;
 
   PRInt32      mStartSelectionIndex;
   PRInt32      mEndSelectionIndex;
-  PRPackedBool mChangesSinceDragStart;
+  PRBool       mChangesNotNotified;
 
   PRInt32      mSelectedIndexWhenPoppedDown;
   nsIComboboxControlFrame *mComboboxFrame;
