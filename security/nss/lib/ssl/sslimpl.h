@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.1 2000/03/31 19:35:08 relyea%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.2 2000/05/12 18:43:28 dougt%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -59,7 +59,11 @@
 
 
 #if defined(DEBUG) || defined(TRACE)
+#ifdef __cplusplus
 #define Debug 1
+#else
+extern int Debug;
+#endif
 #else
 #undef Debug
 #endif
@@ -85,7 +89,7 @@
 
 #if defined (DEBUG)
 #ifdef macintosh
-#include ":private:pprthred.h"
+#include "pprthred.h"
 #else
 #include "private/pprthred.h"	/* for PR_InMonitor() */
 #endif

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.2 2000/05/08 23:55:05 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.3 2000/05/12 18:43:25 dougt%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -6312,7 +6312,7 @@ ssl3_ComputeTLSFinished(ssl3CipherSpec *spec,
     	return SECFailure;
 
     rv  = PK11_DigestBegin(prf_context);
-    rv |= PK11_DigestOp(prf_context, label, len);
+    rv |= PK11_DigestOp(prf_context, (const unsigned char *) label, len);
     rv |= PK11_DigestOp(prf_context, hashes->md5, sizeof *hashes);
     rv |= PK11_DigestFinal(prf_context, tlsFinished->verify_data, 
                            &len, sizeof *tlsFinished);

@@ -35,7 +35,7 @@
 #define BASE_H
 
 #ifdef DEBUG
-static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:08 $ $Name:  $";
+static const char BASE_CVS_ID[] = "@(#) $RCSfile: base.h,v $ $Revision: 1.2 $ $Date: 2000/05/12 18:43:25 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -307,6 +307,7 @@ nssArena_deregisterDestructor
   void *arg
 );
 
+extern const NSSError NSS_ERROR_INVALID_ITEM;
 extern const NSSError NSS_ERROR_INVALID_ARENA;
 extern const NSSError NSS_ERROR_NOT_FOUND;
 

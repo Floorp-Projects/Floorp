@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.2 $ $Date: 2000/04/19 21:24:57 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: utf8.c,v $ $Revision: 1.3 $ $Date: 2000/05/12 18:43:28 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -679,7 +679,7 @@ nssUTF8_CopyIntoFixedBuffer
 #endif /* NSSDEBUG */
 
   if( (NSSUTF8 *)NULL == string ) {
-    string = "";
+    string = (unsigned char*) "";
   }
 
   stringSize = nssUTF8_Size(string, (PRStatus *)NULL);

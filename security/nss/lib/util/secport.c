@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.2 2000/04/04 18:27:34 roeber%netscape.com Exp $
+ * $Id: secport.c,v 1.3 2000/05/12 18:43:25 dougt%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -48,6 +48,7 @@
 #include "secerr.h"
 #include "prmon.h"
 #include "nsslocks.h"
+#include "secport.h"
 
 #ifdef DEBUG
 #define THREADMARK
