@@ -2083,7 +2083,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
   PRInt32* ip = indexBuffer.mBuffer;
 
   PRInt32 textLength;
-  nsresult result(NS_OK);
+  nsresult result(NS_ERROR_FAILURE);
   aPos->mResultContent = mContent;//do this right off
   switch (aPos->mAmount){
     case eSelectNoAmount:
@@ -2143,17 +2143,10 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
           start = mContentOffset + mContentLength;
         }
       }
-      if (!found){
-        if (frameUsed){
-          result = frameUsed->PeekOffset(aPos);
-        }
-        else {//reached end ask the frame for help
-          result = nsFrame::PeekOffset(aPos);
-        }
-      }
-      else {
+      if (!found)
+        result = nsFrame::PeekOffset(aPos);
+      else 
         aPos->mResultContent = mContent;
-      }
     }
     break;
 
@@ -2208,8 +2201,6 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
             found = PR_TRUE;
           }
         }
-        frameUsed = GetPrevInFlow();
-        start = -1; //start at end
       }
       else if (aPos->mDirection == eDirNext) {
         tx.Init(this, mContent, aPos->mStartOffset );
@@ -2256,21 +2247,12 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
 #ifdef DEBUGWORDJUMP
       printf("aEatingWS = %s\n" , aPos->mEatingWS ? "TRUE" : "FALSE");
 #endif
-      if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset)){ //gone too far
-        if (frameUsed){
-          aPos->mStartOffset = start;
-          result = frameUsed->PeekOffset(aPos);
-        }
-        else {//reached end ask the frame for help
-          result = nsFrame::PeekOffset(aPos);
-        }
-      }
-      else {
+      if (!found || (aPos->mContentOffset > (mContentOffset + mContentLength)) || (aPos->mContentOffset < mContentOffset))
+        result = nsFrame::PeekOffset(aPos);
+      else 
         aPos->mResultContent = mContent;
-      }
     }
     break;
-
     default:
       result = NS_ERROR_FAILURE; break;
   }
