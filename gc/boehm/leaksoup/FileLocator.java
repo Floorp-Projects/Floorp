@@ -82,7 +82,7 @@ public class FileLocator {
 			// if using blame, hilite the line number of the call, and include the revision.
 			String mozillaPath = fullPath.substring(mozillaIndex);
 			String revision = revisionTable.getRevision(fullPath);
-			String bonsaiPath = mozillaPath + "&rev=" + revision;
+			String bonsaiPath = mozillaPath + (revision.length() > 0 ? "&rev=" + revision : "");
 			if (USE_BLAME) {
 				locationURL = BONSAI_BASE + bonsaiPath + "&mark=" + lineNumber;
 				if (lineAnchor > 10)

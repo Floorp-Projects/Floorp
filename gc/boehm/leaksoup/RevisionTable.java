@@ -48,7 +48,8 @@ public class RevisionTable {
 		if (revision == null) {
 			int lastSlash = path.lastIndexOf('/');
 			String dirPath = path.substring(0, lastSlash + 1);
-			readEntries(dirPath);
+			if (!readEntries(dirPath))
+				revisions.put(path, "");
 			revision = (String) revisions.get(path);
 		}
 		return revision;
@@ -58,18 +59,23 @@ public class RevisionTable {
 	 * Reads all of the entries from a CVS Entries file, and populates
 	 * the hashtable with the revisions, keyed by file paths.
 	 */
-	private void readEntries(String dirPath) throws IOException {
-		String entriesPath = dirPath + "CVS/Entries";
-		BufferedReader entries = new BufferedReader(new InputStreamReader(new FileInputStream(entriesPath)));
-		for (String line = entries.readLine(); line != null; line = entries.readLine()) {
-			if (line.charAt(0) == '/') {
-				int secondSlash = line.indexOf('/', 1);
-				String fileName = line.substring(1, secondSlash);
-				int thirdSlash = line.indexOf('/', secondSlash + 1);
-				String revision = line.substring(secondSlash + 1, thirdSlash);
-				revisions.put(dirPath + fileName, revision);
+	private boolean readEntries(String dirPath) throws IOException {
+		File entriesFile = new File(dirPath + "CVS/Entries");
+		if (entriesFile.exists()) {		
+			BufferedReader entries = new BufferedReader(new InputStreamReader(new FileInputStream(entriesFile)));
+			for (String line = entries.readLine(); line != null; line = entries.readLine()) {
+				if (line.charAt(0) == '/') {
+					int secondSlash = line.indexOf('/', 1);
+					String fileName = line.substring(1, secondSlash);
+					int thirdSlash = line.indexOf('/', secondSlash + 1);
+					String revision = line.substring(secondSlash + 1, thirdSlash);
+					revisions.put(dirPath + fileName, revision);
+				}
 			}
+			entries.close();
+			return true;
 		}
-		entries.close();
+		return false;
 	}
 }
+
