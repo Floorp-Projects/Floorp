@@ -1129,7 +1129,6 @@ case "$target" in
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
-        LIB_PREFIX=
         AC_DEFINE(NO_ANSI_KEYWORDS)
         AC_DEFINE(OS2,4)
         AC_DEFINE(_X86_)
