@@ -52,6 +52,23 @@ nsQueryInterface::operator()( const nsIID& aIID, void** answer ) const
 		else
 			status = NS_ERROR_NULL_POINTER;
 		
+		return status;
+	}
+
+nsresult
+nsQueryInterfaceWithError::operator()( const nsIID& aIID, void** answer ) const
+	{
+		nsresult status;
+		if ( mRawPtr )
+			{
+				status = mRawPtr->QueryInterface(aIID, answer);
+#ifdef NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
+				NS_WARN_IF_FALSE(NS_SUCCEEDED(status), "interface not found---were you expecting that?");
+#endif
+			}
+		else
+			status = NS_ERROR_NULL_POINTER;
+		
 		if ( mErrorPtr )
 			*mErrorPtr = status;
 		return status;
@@ -70,6 +87,24 @@ nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
     if ( rawPtr )
     	NSCAP_ADDREF(this, rawPtr);
     assign_assuming_AddRef(rawPtr);
+	}
+
+void
+nsCOMPtr_base::assign_from_qi( const nsQueryInterface qi, const nsIID& iid )
+	{
+		nsISupports* newRawPtr;
+		if ( NS_FAILED( qi(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+			newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
+	}
+
+void
+nsCOMPtr_base::assign_from_qi_with_error( const nsQueryInterfaceWithError& qi, const nsIID& iid )
+	{
+		nsISupports* newRawPtr;
+		if ( NS_FAILED( qi(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
+			newRawPtr = 0;
+    assign_assuming_AddRef(newRawPtr);
 	}
 
 void
