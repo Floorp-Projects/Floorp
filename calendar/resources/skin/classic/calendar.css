@@ -1170,6 +1170,11 @@
    border-right        : 2px solid #2085c4;
 }
 
+.week-view-hour-box-class[weekselected="true"]
+{
+   background-color: #d5e3f2;
+}
+
 .week-view-hours-only-box-class
 {
    border-bottom        : 1px solid #2085c4;

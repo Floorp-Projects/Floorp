@@ -691,6 +691,50 @@ WeekView.prototype.getVisibleEvent = function( calendarEvent )
 
 /** PRIVATE
 *
+*   Mark the selected date, also unmark the old selection if there was one
+*/
+
+WeekView.prototype.hiliteSelectedDate = function multiweekView_hiliteSelectedDate( )
+{
+   // Clear the old selection if there was one
+
+   this.clearSelectedDate();
+
+   this.clearSelectedEvent();
+
+   // get the events for the day and loop through them
+   var FirstDay = new Date( gHeaderDateItemArray[1].getAttribute( "date" ) );
+   var LastDay  = new Date( gHeaderDateItemArray[7].getAttribute( "date" ) );
+   LastDay.setHours( 23 );
+   LastDay.setMinutes( 59 );
+   LastDay.setSeconds( 59 );
+   var selectedDay = this.calendarWindow.getSelectedDate() ;
+
+   if ( selectedDay.getTime() > FirstDay.getTime() && selectedDay.getTime() < LastDay.getTime() ) 
+   {
+      var ThisDate;
+      //today is visible, get the day index for today
+      for ( var dayIndex = 1; dayIndex <= 7; ++dayIndex )
+      {
+         ThisDate = new Date( gHeaderDateItemArray[dayIndex].getAttribute( "date" ) );
+         if ( ThisDate.getFullYear() == selectedDay.getFullYear()
+                && ThisDate.getMonth() == selectedDay.getMonth()
+                && ThisDate.getDay()   == selectedDay.getDay() ) 
+         {
+            break;
+         }
+      }
+      //dayIndex now contains the box numbers that we need.
+      for ( i = 0; i < 24; i++ ) 
+      {
+         document.getElementById( "week-tree-day-"+(dayIndex-1)+"-item-"+i ).setAttribute( "weekselected", "true" );
+      }
+
+   }
+}
+
+/** PRIVATE
+*
 *  Mark today as selected, also unmark the old today if there was one.
 */
 
@@ -778,10 +822,11 @@ WeekView.prototype.getNewEventDate = function( )
 
 WeekView.prototype.clearSelectedDate = function( )
 {
-   if ( this.selectedBox ) 
+   var SelectedBoxes = document.getElementsByAttribute( "weekselected", "true" );
+   
+   for( var i = 0; i < SelectedBoxes.length; i++ )
    {
-      this.selectedBox.removeAttribute( "eventselected" );
-      this.selectedBox = null;
+      SelectedBoxes[i].removeAttribute( "weekselected" );
    }
 }
 
