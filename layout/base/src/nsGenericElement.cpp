@@ -1332,8 +1332,8 @@ nsGenericElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aComp
 nsresult
 nsGenericElement::GetParent(nsIContent*& aResult) const
 {
-  NS_IF_ADDREF(mParent);
   aResult = mParent;
+  NS_IF_ADDREF(aResult);
   return NS_OK;
 }
 
