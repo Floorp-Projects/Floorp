@@ -30,12 +30,12 @@
 
 /* ::::: tree rows ::::: */
 
-treechildren:-moz-tree-cell-text(user)
+treechildren::-moz-tree-cell-text(user)
 {
   font-weight: bold;
 }
 
-treechildren:-moz-tree-cell-text(locked)
+treechildren::-moz-tree-cell-text(locked)
 {
   font-style: italic;
 }

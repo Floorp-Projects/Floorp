@@ -27,12 +27,12 @@ label.head {
   font-weight: bold;
 }
 
-treechildren:-moz-tree-cell(success yes)
+treechildren::-moz-tree-cell(success yes)
 {
   background-color: green ;
 }
 
-treechildren:-moz-tree-cell(success no)
+treechildren::-moz-tree-cell(success no)
 {
   background-color: red ;
 }
