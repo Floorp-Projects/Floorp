@@ -1566,6 +1566,26 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
 
   if (line->IsInline()) {
     aState.SetFlag(BRS_ISINLINEINCRREFLOW, PR_TRUE);
+
+    if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
+      // We've been asked to compute the maximum width of the block
+      // frame, which ReflowLine() will handle this by performing an
+      // unconstrained reflow on the line. If this incremental reflow
+      // is targeted at a continuing frame, we may have to retarget
+      // it, as the unconstrained reflow can destroy some of the
+      // continuations.
+      //
+      // XXXwaterson if we implement some sort of ``reflow root''
+      // frame, rather than requiring incremental reflows to always
+      // walk from the real root frame, this code may not be needed
+      // anymore. Or will it?
+      NS_ASSERTION(aState.mNextRCFrame, "aState has no mNextRCFrame");
+
+      nsIFrame *prevInFlow;
+      aState.mNextRCFrame->GetPrevInFlow(&prevInFlow);
+      if (prevInFlow)
+        RetargetInlineIncrementalReflow(aState, line, prevInFlow);
+    }
   }
 
   // Just mark this line dirty.  We never need to mark the
@@ -1577,6 +1597,77 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   line->MarkDirty();
 
   return NS_OK;
+}
+
+void
+nsBlockFrame::RetargetInlineIncrementalReflow(nsBlockReflowState &aState,
+                                              line_iterator &aLine,
+                                              nsIFrame *aPrevInFlow)
+{
+  // To retarget the reflow, we'll walk back through the continuations
+  // until we reach the primary frame, or we reach a continuation that
+  // is preceded by a ``hard'' line break.
+  NS_ASSERTION(aLine->Contains(aState.mNextRCFrame),
+               "line doesn't contain the target of the incremental reflow");
+
+  // Now fix aState's mNextRCFrame, keeping track of how many lines we
+  // walk back through.
+  PRInt32 lineCount = 0;
+  do {
+    // XXX this might happen if the block is split; e.g.,
+    // printing or print preview. For now, panic.
+    NS_ASSERTION(aLine != begin_lines(),
+                 "ran out of lines before we ran out of prev-in-flows");
+
+    // Is the previous line a ``hard'' break? If so, stop: these
+    // continuations will be preserved during an unconstrained reflow.
+    // XXXwaterson should this be `!= NS_STYLE_CLEAR_NONE'?
+    --aLine;
+    if (aLine->GetBreakType() == NS_STYLE_CLEAR_LINE)
+      break;
+
+    aState.mNextRCFrame = aPrevInFlow;
+    aState.mNextRCFrame->GetPrevInFlow(&aPrevInFlow);
+
+#ifdef DEBUG
+    // Paranoia. Ensure that the prev-in-flow is really in the
+    // previous line.
+    PRBool dummy;
+    line_iterator check;
+    FindLineFor(aState.mNextRCFrame, &dummy, &check);
+    NS_ASSERTION(check == aLine, "prev-in-flow not in previous linebox");
+#endif
+
+    ++lineCount;
+  } while (aPrevInFlow);
+
+  if (lineCount > 0) {
+    // Fix any frames deeper in the reflow path.
+
+    // Get the reflow path, which is stored as a stack (i.e., the next
+    // frame in the reflow is at the _end_ of the array).
+    nsVoidArray *path = aState.mReflowState.reflowCommand->GetPath();
+
+    for (PRInt32 i = path->Count() - 1; i >= 0; --i) {
+      nsIFrame *frame = NS_STATIC_CAST(nsIFrame *, path->ElementAt(i));
+
+      // Stop if we encounter a non-inline frame in the reflow path.
+      const nsStyleDisplay *display;
+      ::GetStyleData(frame, &display);
+
+      if (NS_STYLE_DISPLAY_INLINE != display->mDisplay)
+        break;
+
+      // Walk back to the primary frame.
+      PRInt32 count = lineCount;
+      nsIFrame *prevInFlow;
+      do {
+        frame->GetPrevInFlow(&prevInFlow);
+      } while (--count >= 0 && prevInFlow && (frame = prevInFlow));
+
+      path->ReplaceElementAt(frame, i);
+    }
+  }
 }
 
 nsresult
@@ -2374,34 +2465,6 @@ nsBlockFrame::DeleteLine(nsBlockReflowState& aState,
   }
 }
 
-static void
-RetargetReflowToPrimaryFrames(nsHTMLReflowCommand *aReflowCommand)
-{
-  // Get the reflow path, which is stored as a stack (i.e., the next
-  // frame in the reflow is at the _end_ of the array).
-  nsVoidArray *path = aReflowCommand->GetPath();
-
-  for (PRInt32 i = path->Count() - 1; i >= 0; --i) {
-    nsIFrame *frame = NS_STATIC_CAST(nsIFrame *, path->ElementAt(i));
-
-    // Stop if we encounter a non-inline frame in the reflow path.
-    const nsStyleDisplay *display;
-    GetStyleData(frame, &display);
-
-    if (NS_STYLE_DISPLAY_INLINE != display->mDisplay)
-      break;
-
-    // Walk back to the primary frame.
-    nsIFrame *prevFrame;
-    do {
-      frame->GetPrevInFlow(&prevFrame);
-    } while (prevFrame && (frame = prevFrame));
-
-    path->ReplaceElementAt(frame, i);
-  }
-}
-
-
 /**
  * Reflow a line. The line will either contain a single block frame
  * or contain 1 or more inline frames. aKeepReflowGoing indicates
@@ -2514,31 +2577,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsCollapsingMargin oldPrevBottomMargin(aState.mPrevBottomMargin);
       PRBool  oldUnconstrainedWidth = aState.GetFlag(BRS_UNCONSTRAINEDWIDTH);
 
-      // If this incremental reflow is targeted at a continuing frame,
-      // we've got to retarget it to the primary frame. The
-      // unconstrained reflow will destroy all of the continuations.
-      //
-      // XXXwaterson if we implement some sort of ``reflow root''
-      // frame, rather than requiring incremental reflows to always
-      // walk from the real root frame, this code may not be needed
-      // anymore. Or will it?
-      if (aState.mNextRCFrame) {
-        NS_ASSERTION(aState.GetFlag(BRS_ISINLINEINCRREFLOW),
-                     "expected to be inline incremental reflow");
-
-        nsIFrame *prevInFlow;
-        aState.mNextRCFrame->GetPrevInFlow(&prevInFlow);
-        if (prevInFlow) {
-          // Fix aState's mNextRCFrame
-          while (prevInFlow) {
-            aState.mNextRCFrame = prevInFlow;
-            aState.mNextRCFrame->GetPrevInFlow(&prevInFlow);
-          }
-
-          // Fix any frames deeper in the reflow path.
-          RetargetReflowToPrimaryFrames(aState.mReflowState.reflowCommand);
-        }
-      }
+#ifdef DEBUG_waterson
+      if (oldUnconstrainedWidth)
+        printf("*** oldUnconstrainedWidth was already set.\n");
+#endif
 
       // When doing this we need to set the block reflow state's
       // "mUnconstrainedWidth" variable to PR_TRUE so if we encounter
