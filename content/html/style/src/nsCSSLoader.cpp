@@ -1217,19 +1217,8 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-        PRBool isLocalFile;
-#ifdef INCLUDE_XUL
-        isLocalFile = (IsChromeURI(urlClone) || IsFileURI(urlClone));
-#else
-        isLocalFile = IsFileURI(urlClone);
-#endif
-        nsLoadFlags loadAttributes;
-        if (isLocalFile)
-          loadAttributes = (nsLoadFlags)nsIChannel::LOAD_NORMAL;
-        else
-          loadAttributes = (nsLoadFlags)nsIChannel::FORCE_RELOAD;
         result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
-                                      nsnull, loadAttributes);
+                                    nsnull, nsIChannel::LOAD_NORMAL);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
