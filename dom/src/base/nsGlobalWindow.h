@@ -246,7 +246,9 @@ protected:
   void EnsureReflowFlushAndPaint();
   nsresult CheckSecurityWidthAndHeight(PRInt32* width, PRInt32* height);
   nsresult CheckSecurityLeftAndTop(PRInt32* left, PRInt32* top);
-  nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
+  static nsresult CheckSecurityIsChromeCaller(PRBool *isChrome);
+  static PRBool IsCallerChrome();
+
   void MakeScriptDialogTitle(const nsAString &aInTitle, nsAString &aOutTitle);
 
   // Helper for window.find()
@@ -310,6 +312,7 @@ protected:
 
   friend class nsDOMScriptableHelper;
   static nsIXPConnect *sXPConnect;
+  static nsIScriptSecurityManager *sSecMan;
 };
 
 /*

@@ -144,9 +144,10 @@
 #include "nsIXBLService.h"
 
 
-static nsIEntropyCollector* gEntropyCollector = nsnull;
-static PRInt32              gRefCnt           = 0;
-nsIXPConnect *GlobalWindowImpl::sXPConnect    = nsnull;
+static nsIEntropyCollector* gEntropyCollector       = nsnull;
+static PRInt32              gRefCnt                 = 0;
+nsIXPConnect *GlobalWindowImpl::sXPConnect          = nsnull;
+nsIScriptSecurityManager *GlobalWindowImpl::sSecMan = nsnull;
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -169,36 +170,6 @@ static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.propert
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
-
-static PRBool IsCallerChrome()
-{
-  nsCOMPtr<nsIDocShell> docShell;
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
-  if (stack) {
-    JSContext *cx = nsnull;
-    stack->Peek(&cx);
-
-    if (cx) {
-      nsCOMPtr<nsIScriptGlobalObject> sgo;
-      nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
-      if (sgo) {
-        sgo->GetDocShell(getter_AddRefs(docShell));
-      }
-    }
-  }
-
-  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
-  if (item) {
-    PRInt32 callerType = nsIDocShellTreeItem::typeChrome;
-    item->GetItemType(&callerType);
-
-    if (callerType != nsIDocShellTreeItem::typeChrome) {
-      return PR_FALSE;
-    }
-  }
-
-  return PR_TRUE;
-}
 
 static PRBool CanSetProperty(const char * prefName)
 {
@@ -251,6 +222,12 @@ GlobalWindowImpl::GlobalWindowImpl() :
                                  nsIXPConnect::GetIID(),
                                  (nsISupports **)&sXPConnect);
   }
+
+  if (!sSecMan) {
+    nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                                 NS_GET_IID(nsIScriptSecurityManager),
+                                 (nsISupports **)&sSecMan);
+  }
 }
 
 GlobalWindowImpl::~GlobalWindowImpl()
@@ -269,6 +246,7 @@ void
 GlobalWindowImpl::ShutDown()
 {
   NS_IF_RELEASE(sXPConnect);
+  NS_IF_RELEASE(sSecMan);
 
 #ifdef DEBUG_jst
   printf ("---- Leaked %d GlobalWindowImpl's\n", gRefCnt);
@@ -1298,11 +1276,10 @@ GlobalWindowImpl::GetOpener(nsIDOMWindowInternal** aOpener)
 {
   *aOpener = nsnull;
   // First, check if we were called from a privileged chrome script
-  nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
   PRBool inChrome;
-  nsresult rv = secMan->SubjectPrincipalIsSystem(&inChrome);
+  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&inChrome);
   if (NS_SUCCEEDED(rv) && inChrome) {
     *aOpener = mOpener;
     NS_IF_ADDREF(*aOpener);
@@ -1710,13 +1687,12 @@ GlobalWindowImpl::CheckSecurityWidthAndHeight(PRInt32* aWidth,
   // This one is easy.  Just ensure the variable is greater than 100;
   if ((aWidth && *aWidth < 100) || (aHeight && *aHeight < 100)) {
     // Check security state for use in determing window dimensions
-    nsCOMPtr<nsIScriptSecurityManager>
-      securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-    NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+    NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
 
     PRBool enabled;
-    nsresult res =
-      securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+    nsresult res = sSecMan->IsCapabilityEnabled("UniversalBrowserWrite",
+                                                &enabled);
 
     if (NS_FAILED(res) || !enabled) {
       //sec check failed
@@ -1738,13 +1714,12 @@ GlobalWindowImpl::CheckSecurityLeftAndTop(PRInt32* aLeft, PRInt32* aTop)
   // This one is harder.  We have to get the screen size and window dimensions.
 
   // Check security state for use in determing window dimensions
-  nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(securityManager, NS_ERROR_FAILURE);
+
+  NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
 
   PRBool enabled;
-  nsresult res =
-    securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
+  nsresult res = sSecMan->IsCapabilityEnabled("UniversalBrowserWrite",
+                                              &enabled);
   if (NS_FAILED(res)) {
     enabled = PR_FALSE;
   }
@@ -2080,6 +2055,7 @@ GlobalWindowImpl::SetTextZoom(float aZoom)
   return NS_ERROR_FAILURE;
 }
 
+// static
 nsresult
 GlobalWindowImpl::CheckSecurityIsChromeCaller(PRBool *aIsChrome)
 {
@@ -2088,17 +2064,28 @@ GlobalWindowImpl::CheckSecurityIsChromeCaller(PRBool *aIsChrome)
   *aIsChrome = PR_FALSE;
  
   // Check if this is a privileged system script
-  nsCOMPtr<nsIScriptSecurityManager> secMan(
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
-  NS_ENSURE_TRUE(secMan, NS_ERROR_FAILURE);
+
+  NS_ENSURE_TRUE(sSecMan, NS_ERROR_FAILURE);
 
   PRBool isChrome = PR_FALSE;
-  nsresult rv = secMan->SubjectPrincipalIsSystem(&isChrome);
+  nsresult rv = sSecMan->SubjectPrincipalIsSystem(&isChrome);
   if (NS_SUCCEEDED(rv)) {
     *aIsChrome = isChrome;
   }
 
   return NS_OK;
+}
+
+// static
+PRBool
+GlobalWindowImpl::IsCallerChrome()
+{
+  PRBool is_caller_chrome = PR_FALSE;
+
+  nsresult rv = CheckSecurityIsChromeCaller(&is_caller_chrome);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  return is_caller_chrome;
 }
 
 void
@@ -2923,6 +2910,10 @@ GlobalWindowImpl::OpenDialog(const nsAString& aUrl,
 NS_IMETHODIMP
 GlobalWindowImpl::OpenDialog(nsIDOMWindow** _retval)
 {
+  if (!IsCallerChrome()) {
+    return NS_ERROR_DOM_SECURITY_ERR;
+  }
+
   NS_ENSURE_STATE(sXPConnect);
 
   nsresult rv = NS_OK;
@@ -4296,16 +4287,8 @@ GlobalWindowImpl::SetTimeoutOrInterval(PRBool aIsInterval, PRInt32 *aReturn)
   timeout->version = ::JS_VersionToString(::JS_GetVersion(cx));
 
   // Get principal of currently executing code, save for execution of timeout
-  nsCOMPtr<nsIScriptSecurityManager>
-    securityManager(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv));
 
-  if (NS_FAILED(rv)) {
-    DropTimeout(timeout);
-    return NS_ERROR_FAILURE;
-  }
-
-  rv =
-    securityManager->GetSubjectPrincipal(getter_AddRefs(timeout->principal));
+  rv = sSecMan->GetSubjectPrincipal(getter_AddRefs(timeout->principal));
 
   if (NS_FAILED(rv)) {
     DropTimeout(timeout);
@@ -4937,7 +4920,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   // get JSContext
   NS_ASSERTION(mContext, "opening window missing its context");
   NS_ASSERTION(mDocument, "opening window missing its document");
-  if (!mContext || !mDocument)
+  if (!mContext || !mDocument || !sSecMan)
     return NS_ERROR_FAILURE;
 
   // get the JSContext from the call stack
@@ -4968,15 +4951,14 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
     }
   }
 
-  rv = NS_NewURI(getter_AddRefs(uriToLoad), nsDependentCString(aURL), nsnull, baseURI);
+  rv = NS_NewURI(getter_AddRefs(uriToLoad), nsDependentCString(aURL), nsnull,
+                 baseURI);
   if (NS_FAILED(rv))
     return rv;
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan;
-
-  if (NS_FAILED(mContext->GetSecurityManager(getter_AddRefs(secMan))) ||
-      NS_FAILED(secMan->CheckLoadURIFromScript(cx, uriToLoad)))
+  if (NS_FAILED(sSecMan->CheckLoadURIFromScript(cx, uriToLoad))) {
     return NS_ERROR_FAILURE;
+  }
 
   return NS_OK;
 }
@@ -5617,23 +5599,27 @@ NavigatorImpl::Preference()
   NS_ENSURE_SUCCESS(rv, rv);
 
   //--Check to see if the caller is allowed to access prefs
-  if (sPrefInternal_id == JSVAL_VOID)
-    sPrefInternal_id = STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
+  if (sPrefInternal_id == JSVAL_VOID) {
+    sPrefInternal_id =
+      STRING_TO_JSVAL(::JS_InternString(cx, "preferenceinternal"));
+  }
 
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   PRUint32 action;
-  if (argc == 1)
+  if (argc == 1) {
       action = nsIXPCSecurityManager::ACCESS_GET_PROPERTY;
-  else
+  } else {
       action = nsIXPCSecurityManager::ACCESS_SET_PROPERTY;
+  }
 
-  rv = secMan->CheckPropertyAccess(cx, nsnull, 
-                                   "Navigator", sPrefInternal_id, action);
-  if (NS_FAILED(rv))
-  {
-      return NS_OK;
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = secMan->CheckPropertyAccess(cx, nsnull, "Navigator", sPrefInternal_id,
+                                   action);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
   }
 
   nsCOMPtr<nsIPref> pref(do_GetService(kPrefServiceCID, &rv));
