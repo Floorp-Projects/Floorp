@@ -21,6 +21,7 @@
 
 1 ICON "retro_n.ico"
 
+#if 0
 VIEWER MENU DISCARDABLE
 {
   POPUP "&File"
@@ -180,5 +181,6 @@ BEGIN
     LTEXT           "",IDC_SITE_NAME,50,25,209,8
     PUSHBUTTON      "&Exit",ID_EXIT,177,53,50,14
 END
+#endif
 
 
