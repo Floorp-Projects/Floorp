@@ -2378,16 +2378,12 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDocShell> docshell;
+  nsCOMPtr<nsIDocShell> docshell = do_QueryReferent(mDocumentContainer);
 
   // Stop current loads targeted at the window this document is in.
-  if (mScriptGlobalObject) {
-    mScriptGlobalObject->GetDocShell(getter_AddRefs(docshell));
-
-    if (docshell) {
-      nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docshell));
-      webnav->Stop(nsIWebNavigation::STOP_NETWORK);
-    }
+  if (mScriptGlobalObject && docshell) {
+    nsCOMPtr<nsIWebNavigation> webnav(do_QueryInterface(docshell));
+    webnav->Stop(nsIWebNavigation::STOP_NETWORK);
   }
 
   nsresult rv = NS_OK;
@@ -2486,32 +2482,18 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
 
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIHTMLContentSink> sink;
-    nsCOMPtr<nsIDocShell> docShell;
-
-    // Get the docshell of our primary presentation shell
-    nsCOMPtr<nsIPresShell> shell = (nsIPresShell*)mPresShells.SafeElementAt(0);
-    if (shell) {
-      nsCOMPtr<nsIPresContext> cx;
-      shell->GetPresContext(getter_AddRefs(cx));
-      nsCOMPtr<nsISupports> container;
-      if (NS_OK == cx->GetContainer(getter_AddRefs(container))) {
-        if (container) {
-          docShell = do_QueryInterface(container);
-        }
-      }
-    }
 
     rv = NS_NewHTMLContentSink(getter_AddRefs(sink), this, aSourceURL,
-                               docShell, channel);
+                               docshell, channel);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    if (NS_OK == rv) {
-      static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
-      nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID, &rv));
-      if(NS_SUCCEEDED(rv)) {
-        mParser->RegisterDTD(theDTD);
-      }
-      mParser->SetContentSink(sink);
+    static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+    nsCOMPtr<nsIDTD> theDTD(do_CreateInstance(kNavDTDCID));
+    if(theDTD) {
+      mParser->RegisterDTD(theDTD);
     }
+
+    mParser->SetContentSink(sink);
   }
 
   // Prepare the docshell and the document viewer for the impending
@@ -2529,6 +2511,7 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   // Add a wyciwyg channel request into the document load group
   NS_ASSERTION(mWyciwygChannel == nsnull, "nsHTMLDocument::OpenCommon(): wyciwyg channel already exists!");
   CreateAndAddWyciwygChannel();
+
   return rv;
 }
 
