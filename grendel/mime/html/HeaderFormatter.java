@@ -209,7 +209,7 @@ abstract class HeaderFormatter {
 //    output.append("<TR><TH VALIGN=BASELINE ALIGN=RIGHT NOWRAP>");
     output.append(localizeHeaderName(header));
 //    output.append(": </TH><TD>");
-    quoteHTML(value);
+//    quoteHTML(value);
     output.append(value);
 //    output.append("</TD></TR>");
     return true;
