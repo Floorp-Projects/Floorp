@@ -65,6 +65,10 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  $(NULL)
 
+#ifdef XP_WIN32
+      REQUIRES += gfx
+#endif
+
 CPPSRCS		= \
 		nsMsgCompFields.cpp \
 		nsSmtpUrl.cpp \

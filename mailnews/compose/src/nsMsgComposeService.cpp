@@ -91,6 +91,12 @@
 #include "nsIContentSink.h"
 #include "mozISanitizingSerializer.h"
 
+#ifdef XP_WIN32
+#include <windows.h>
+#include <shellapi.h>
+#include "nsIWidget.h"
+#endif
+
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
 static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
 // </for>
@@ -699,6 +705,47 @@ nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgCompose
   return OpenWindow(msgComposeWindowURL, params);
 }
 
+// the following two Windows routines are used to ensure new compose windows
+// come to the very front of the desktop, even if the mozilla app is not the application
+// with focus. This situation happens when Simple MAPI is used to invoke the compose window.
+
+#ifdef XP_WIN32 
+// begin shameless copying from nsNativeAppSupportWin
+HWND hwndForComposeDOMWindow( nsISupports *window ) 
+{
+  nsCOMPtr<nsIScriptGlobalObject> ppScriptGlobalObj( do_QueryInterface(window) );
+  if ( !ppScriptGlobalObj )
+      return 0;
+  nsCOMPtr<nsIDocShell> ppDocShell;
+  ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
+  if ( !ppDocShell ) return 0;
+  
+  nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+  if (!ppBaseWindow) return 0;
+
+  nsCOMPtr<nsIWidget> ppWidget;
+  ppBaseWindow->GetMainWidget( getter_AddRefs( ppWidget ) );
+
+  return (HWND)( ppWidget->GetNativeData( NS_NATIVE_WIDGET ) );
+}
+
+static void activateComposeWindow( nsIDOMWindowInternal *win ) 
+{
+  // Try to get native window handle.
+  HWND hwnd = hwndForComposeDOMWindow( win );
+  if ( hwnd ) 
+  {
+    // Restore the window if it is minimized.
+    if ( ::IsIconic( hwnd ) ) 
+      ::ShowWindow( hwnd, SW_RESTORE );
+    // Use the OS call, if possible.
+    ::SetForegroundWindow( hwnd );
+  } else // Use internal method.  
+    win->Focus();
+}
+// end shameless copying from nsNativeAppWinSupport.cpp
+#endif
+
 NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
                                           nsIMsgComposeParams *params,
                                           nsIMsgCompose **_retval)
@@ -720,6 +767,11 @@ NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 	
   rv = msgCompose->Initialize(aWindow, params);
   NS_ENSURE_SUCCESS(rv,rv);
+
+#ifdef XP_WIN32
+  // on windows, ensure the compose window comes up to the front
+  activateComposeWindow(aWindow);
+#endif
 
   NS_IF_ADDREF(*_retval = msgCompose);
  	return rv;
