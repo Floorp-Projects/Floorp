@@ -45,18 +45,14 @@
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
-nsImapMoveCoalescer::nsImapMoveCoalescer(nsImapMailFolder *sourceFolder, nsIMsgWindow *msgWindow)
+nsImapMoveCoalescer::nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow)
 {
-  m_sourceFolder = sourceFolder;
+  m_sourceFolder = sourceFolder; 
   m_msgWindow = msgWindow;
-  NS_IF_ADDREF(msgWindow);
-  if (sourceFolder)
-    NS_ADDREF(sourceFolder);
 }
 
 nsImapMoveCoalescer::~nsImapMoveCoalescer()
 {
-  NS_IF_RELEASE(m_sourceFolder);
   for (PRInt32 i = 0; i < m_sourceKeyArrays.Count(); i++)
   {
     nsMsgKeyArray *keys = (nsMsgKeyArray *) m_sourceKeyArrays.ElementAt(i);
@@ -122,13 +118,13 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
       {
         nsCString messageIds;
         
-        m_sourceFolder->AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
+        nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
         
         destFolder->SetNumNewMessages(keysToAdd->GetSize());
         //destFolder->SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
         destFolder->SetHasNewMessages(PR_TRUE);
         
-        nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface((nsIMsgImapMailFolder *) m_sourceFolder, &rv);
+        nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface(m_sourceFolder, &rv);
         nsCOMPtr <nsIUrlListener> urlListener(do_QueryInterface(sourceSupports));
         
         nsCOMPtr<nsISupportsArray> messages;

@@ -55,17 +55,17 @@ class nsImapMailFolder;
 class nsImapMoveCoalescer 
 {
 public:
-	nsImapMoveCoalescer(nsImapMailFolder *sourceFolder, nsIMsgWindow *msgWindow);
-	virtual ~nsImapMoveCoalescer();
+  nsImapMoveCoalescer(nsIMsgFolder *sourceFolder, nsIMsgWindow *msgWindow);
+  virtual ~nsImapMoveCoalescer();
 
-	nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
-	nsresult PlaybackMoves(nsIEventQueue *eventQueue);
+  nsresult AddMove(nsIMsgFolder *folder, nsMsgKey key);
+  nsresult PlaybackMoves(nsIEventQueue *eventQueue);
 protected:
-	// m_sourceKeySets and m_destFolders are parallel arrays.
-	nsVoidArray					m_sourceKeyArrays;
-	nsCOMPtr <nsISupportsArray> m_destFolders;
+  // m_sourceKeySets and m_destFolders are parallel arrays.
+  nsVoidArray					m_sourceKeyArrays;
+  nsCOMPtr <nsISupportsArray> m_destFolders;
   nsCOMPtr <nsIMsgWindow> m_msgWindow;
-	nsImapMailFolder			*m_sourceFolder;
+  nsCOMPtr <nsIMsgFolder> m_sourceFolder;
 };
 
 #endif // _nsImapMoveCoalescer_H
