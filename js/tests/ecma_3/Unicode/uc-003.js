@@ -33,6 +33,7 @@ function test()
     var c\u0061se = 25;
 
     printStatus ("Escapes in identifiers test.");
+    printBugNumber (23608);
     printBugNumber (23607);
 
     reportCompare (5, eval("\u0041"),
