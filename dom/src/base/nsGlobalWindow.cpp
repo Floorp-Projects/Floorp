@@ -88,6 +88,7 @@
 #include "nsIWebBrowser.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
+#include "nsDOMError.h"
 
 // XXX An unfortunate dependency exists here.
 #include "nsIDOMXULDocument.h"
@@ -158,6 +159,7 @@ NS_INTERFACE_MAP_BEGIN(GlobalWindowImpl)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventReceiver)
    NS_INTERFACE_MAP_ENTRY(nsIDOMEventTarget)
    NS_INTERFACE_MAP_ENTRY(nsPIDOMWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMViewCSS)
    NS_INTERFACE_MAP_ENTRY(nsIDOMAbstractView)
 NS_INTERFACE_MAP_END
 
@@ -2402,6 +2404,23 @@ NS_IMETHODIMP GlobalWindowImpl::Deactivate()
    vm->DispatchEvent(&guiEvent, &status);
 
    return NS_OK;
+}
+
+//*****************************************************************************
+// GlobalWindowImpl::nsIDOMViewCSS
+//*****************************************************************************   
+
+NS_IMETHODIMP GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
+                                                 const nsString& aPseudoElt,
+                                                 nsIDOMCSSStyleDeclaration** aReturn)
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+  *aReturn = nsnull;
+
+  // This is not implemented yet, throw an DOM exception so that the user
+  // doesn't expect this to work.
+
+  return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
 //*****************************************************************************

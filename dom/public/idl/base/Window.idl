@@ -99,3 +99,11 @@ interface AbstractView {
   readonly attribute DocumentView     document;
 };
 
+// Introduced in DOM Level 2:
+interface ViewCSS : AbstractView {
+ /* IID: { 0x0b9341f3, 0x95d4, 0x4fa4, \
+  { 0xad, 0xcd, 0xe1, 0x19, 0xe0, 0xdb, 0x28, 0x89 } } */
+
+  CSSStyleDeclaration getComputedStyle(in Element elt, 
+                                       in DOMString pseudoElt);
+};

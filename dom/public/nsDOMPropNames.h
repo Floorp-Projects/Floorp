@@ -874,6 +874,7 @@
     "uievent.detail", \
     "uievent.inituievent", \
     "uievent.view", \
+    "viewcss.getcomputedstyle", \
     "window.alert", \
     "window.back", \
     "window.blur", \
