@@ -227,7 +227,9 @@ nsHTMLOptionElement::GetSelected(PRBool* aValue)
   *aValue = PR_FALSE;
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(formControlFrame);
+
+  // DO NOT flush pending reflows here
+  GetPrimaryFrame(formControlFrame, PR_FALSE);
 
   if (formControlFrame) {
     PRInt32 indx;
@@ -265,6 +267,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
 {
   nsIFormControlFrame* fcFrame = nsnull;
 
+  // DO NOT flush pending reflows here
   nsresult result = GetPrimaryFrame(fcFrame, PR_FALSE);
 
   if (NS_SUCCEEDED(result) && fcFrame) {
@@ -278,6 +281,7 @@ nsHTMLOptionElement::SetSelected(PRBool aValue)
       GetIndex(&indx);
 
       if (indx >= 0) {
+        // this will flush pending reflows
         return selectFrame->SetOptionSelected(indx, aValue);
       }
     }

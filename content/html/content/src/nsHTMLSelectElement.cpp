@@ -514,7 +514,7 @@ nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
 
-  nsresult rv = GetPrimaryFrame(this, formControlFrame);
+  nsresult rv = GetPrimaryFrame(this, formControlFrame, PR_FALSE);
 
   if (NS_SUCCEEDED(rv)) {
     nsAutoString value;
@@ -637,7 +637,7 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
 
-  GetPrimaryFrame(this, formControlFrame);
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE);
 
   if (formControlFrame) {
     nsAutoString value;

@@ -177,6 +177,7 @@ public:
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD OptionDisabled(nsIContent * aContent);
+  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
@@ -232,7 +233,6 @@ protected:
   void InitTextStr(nsIPresContext* aPresContext, PRBool aUpdate);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
   NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
-  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext); // Default to option 0
 
   void ReflowCombobox(nsIPresContext *         aPresContext,
                       const nsHTMLReflowState& aReflowState,

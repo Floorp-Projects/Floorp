@@ -2030,24 +2030,14 @@ nsComboboxControlFrame::DoneAddingContent(PRBool aIsDone)
 NS_IMETHODIMP
 nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-#ifdef DO_REFLOW_DEBUG
-  printf("**********\n*********AddOption: %d\n", aIndex);
+#ifdef DO_REFLOW_DEBUGXX
+  printf("*********AddOption: %d\n", aIndex);
 #endif
-  nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->AddOption(aPresContext, aIndex);
-    //PRInt32 index;
-    //mListControlFrame->GetSelectedIndex(&index);
-    //UpdateSelection(PR_FALSE, PR_TRUE, index);
-    NS_RELEASE(listFrame);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mDropdownFrame) {
+    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+    rv = lcf->AddOption(aPresContext, aIndex);
   }
-  // If we added the first option, we might need to select it.
-  // We should call MakeSureSomethingIsSelected here, but since it
-  // it changes selection, which currently causes a reframe, and thus
-  // deletes the frame out from under the caller, causing a crash. (Bug 17995)
-  // XXX MakeSureSomethingIsSelected(aPresContext);
   return rv;
 }
   
@@ -2055,16 +2045,11 @@ nsComboboxControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 NS_IMETHODIMP
 nsComboboxControlFrame::RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
-  nsISelectControlFrame* listFrame = nsnull;
-  nsresult rv = mDropdownFrame->QueryInterface(NS_GET_IID(nsISelectControlFrame), 
-                                              (void**)&listFrame);
-  if (NS_SUCCEEDED(rv) && listFrame) {
-    rv = listFrame->RemoveOption(aPresContext, aIndex);
-    NS_RELEASE(listFrame);
+  nsresult rv = NS_ERROR_FAILURE;
+  if (mDropdownFrame != nsnull) {
+    nsListControlFrame * lcf = NS_STATIC_CAST(nsListControlFrame*, mDropdownFrame);
+    rv = lcf->RemoveOption(aPresContext, aIndex);
   }
-  // If we removed the selected option, nothing is selected any more.
-  // Restore selection to option 0 if there are options left.
-  MakeSureSomethingIsSelected(aPresContext);
   return rv;
 }
 

@@ -72,6 +72,11 @@ public:
 
   NS_IMETHOD OptionDisabled(nsIContent * aContent) = 0;
 
+  /**
+   * This only applies to Comboboxes, no-op for ListBoxes
+   */
+  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) = 0;
+
 };
 
 #endif

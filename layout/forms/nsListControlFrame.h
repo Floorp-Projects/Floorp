@@ -55,6 +55,8 @@ class nsVoidArray;
 class nsIScrollableView;
 
 class nsListControlFrame;
+class nsSelectUpdateTimer;
+class nsVoidArray;
 
 #define NS_ILIST_EVENT_LISTENER_IID \
 {/* 45BC6821-6EFB-11d4-B1EE-000064657374*/ \
@@ -152,8 +154,6 @@ protected:
 /**
  * Frame-based listbox.
  */
-#define FIX_FOR_BUG_50376
-
 
 class nsListControlFrame : public nsScrollFrame, 
                            public nsIFormControlFrame, 
@@ -165,6 +165,7 @@ class nsListControlFrame : public nsScrollFrame,
 {
 public:
   friend nsresult NS_NewListControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
+  friend class nsSelectUpdateTimer;
 
    // nsISupports
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
@@ -220,7 +221,7 @@ public:
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset(nsIPresContext* aPresContext);
+  virtual void Reset(nsIPresContext* aPresContext) { ResetList(aPresContext); }
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
@@ -264,6 +265,7 @@ public:
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
   NS_IMETHOD DoneAddingContent(PRBool aIsDone);
   NS_IMETHOD OptionDisabled(nsIContent * aContent);
+  NS_IMETHOD MakeSureSomethingIsSelected(nsIPresContext* aPresContext) { return NS_OK; }
 
   //nsIStatefulFrame
   NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsIPresState** aState);
@@ -311,7 +313,8 @@ protected:
   void       AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &anOldIndex, 
                                        PRBool &aDoSetNewIndex, PRBool &aWasDisabled,
                                        PRInt32 aNumOptions, PRInt32 aDoAdjustInc, PRInt32 aDoAdjustIncNext);
-#ifdef FIX_FOR_BUG_50376
+  virtual void ResetList(nsIPresContext* aPresContext, nsVoidArray * aInxList = nsnull);
+
   // PresState Helper Methods
   nsresult   GetPresStateAndValueArray(nsISupportsArray ** aSuppArray);
   nsresult   SetOptionIntoPresState(nsISupportsArray * aSuppArray, 
@@ -320,7 +323,6 @@ protected:
   nsresult   SetSelectionInPresState(PRInt32 aIndex, PRBool aValue);
   nsresult   RemoveOptionFromPresState(nsISupportsArray * aSuppArray, 
                                        PRInt32            aIndex);
-#endif
 
   nsListControlFrame();
   virtual ~nsListControlFrame();
@@ -343,7 +345,15 @@ protected:
   nsIContent* GetOptionContent(PRInt32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
-  void     SetContentSelected(PRInt32 aIndex, PRBool aSelected);
+  void     SetContentSelected(PRInt32 aIndex, 
+                              PRBool         aSelected,
+                              PRBool         aDoScrollTo = PR_TRUE,
+                              nsIPresShell * aPresShell  = nsnull);
+  void     SetContentSelected(PRInt32        aIndex,
+                              nsIContent *   aContent, 
+                              PRBool         aSelected,
+                              PRBool         aDoScrollTo = PR_TRUE,
+                              nsIPresShell * aPresShell  = nsnull);
   void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   nsresult Deselect();
   nsIFrame *GetOptionFromChild(nsIFrame* aParentFrame);
@@ -372,6 +382,11 @@ protected:
   PRBool   IsLeftButton(nsIDOMEvent* aMouseEvent);
 
   void     GetScrollableView(nsIScrollableView*& aScrollableView);
+
+  // Timer Methods
+  nsresult StartUpdateTimer(nsIPresContext * aPresContext);
+  void     StopUpdateTimer();
+  void     ItemsHaveBeenRemoved(nsIPresContext * aPresContext);
 
   // onChange detection
   nsresult SelectionChanged(nsIContent* aContent);
@@ -416,6 +431,9 @@ protected:
 
   PRInt16 mPassId;
   nsSize mCachedDesiredMaxSize;
+
+  // Update timer
+  nsSelectUpdateTimer * mUpdateTimer;
 
   //Resize Reflow OpitmizationSize;
   nsSize       mCacheSize;
