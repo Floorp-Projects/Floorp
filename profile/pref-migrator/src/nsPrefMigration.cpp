@@ -888,12 +888,9 @@ nsPrefMigration::DoSpecialUpdates(nsFileSpec profilePath)
 {
   nsresult rv;
   
-#if defined(XP_UNIX)
-  printf("TODO: rename imap filter files:  mailrule to rules.dat\n");
-  printf("TODO: rename pop filter file:  mailrule to rules.dat\n");
-#elif defined(XP_MAC)
+#if defined(XP_MAC)
   printf("TODO: move and rename the mail filter files\n"); 
-#endif /* XP_UNIX */
+#endif /* XP_MAC*/
 
   nsFileSpec fs(profilePath);
   fs += PREF_FILE_NAME_IN_5x;
