@@ -36,14 +36,14 @@ sub new {
 
 # open the file for reading
 
-	unless( open( $handle, $filename ) ) {
+	unless( sysopen( $handle, $filename, O_RDONLY ) ) {
 		carp "Can't open $filename $!" ;
 		return ;
 	}
 
 # seek to the end of the file
 
-	sysseek( $handle, 0, 2 ) ;
+	seek( $handle, 0, 2 ) ;
 	$seek_pos = tell( $handle ) ;
 
 # get the size of the first block to read,
@@ -115,13 +115,12 @@ sub readline {
 
 		$seek_pos -= $read_size ;
 		$self->{'seek_pos'} = $seek_pos ;
-		sysseek( $handle, $seek_pos, 0 ) ;
+		seek( $handle, $seek_pos, 0 ) ;
 
 #print "seek $seek_pos\n" ;
 
 # read in the next (previous) block of text
 
-		sysseek($handle, 0, 1);
 		$read_cnt = sysread( $handle, $read_buf, $read_size ) ;
 
 #print "Read <$read_buf>\n" ;
