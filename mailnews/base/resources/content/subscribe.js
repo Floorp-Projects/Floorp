@@ -102,9 +102,9 @@ function subscribeCancel()
 	return true;
 }
 
-function SetState(uri,state,stateStr)
+function SetState(uri,name,state,stateStr)
 {
-	dump("SetState(" + uri +"," + state + "," + stateStr + ")\n");
+	dump("SetState(" + uri +"," + name + "," + state + "," + stateStr + ")\n");
 	if (!uri || !stateStr) return;
 
 	try {
@@ -168,7 +168,7 @@ function SetSubscribeState(state)
 		dump(uri + "\n");
 		name = group.getAttribute('name');
 		dump(name + "\n");
-		SetState(uri,state,stateStr);
+		SetState(uri,name,state,stateStr);
 	}
   }
   catch (ex) {
@@ -191,7 +191,8 @@ function ReverseStateFromNode(node)
 	}
 	
 	var uri = node.getAttribute('id');
-	SetState(uri, state, stateStr);
+	var	name = node.getAttribute('name');
+	SetState(uri, name, state, stateStr);
 }
 
 function ReverseState(uri)
