@@ -1075,8 +1075,8 @@ nsCString::Compare( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) co
     return result;
   }
 
-PRInt32
-nsString::CompareWithConversion( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) const
+PRBool
+nsString::EqualsIgnoreCase( const char* aString, PRInt32 aCount ) const
   {
     PRUint32 strLen = nsCharTraits<char>::length(aString);
 
@@ -1089,7 +1089,7 @@ nsString::CompareWithConversion( const char* aString, PRBool aIgnoreCase, PRInt3
       compareCount = aCount;
 
     PRInt32 result =
-        nsBufferRoutines<PRUnichar>::compare(mData, aString, compareCount, aIgnoreCase);
+        nsBufferRoutines<PRUnichar>::compare(mData, aString, compareCount, PR_TRUE);
 
     if (result == 0 &&
           (aCount < 0 || strLen < PRUint32(aCount) || mLength < PRUint32(aCount)))
@@ -1099,15 +1099,9 @@ nsString::CompareWithConversion( const char* aString, PRBool aIgnoreCase, PRInt3
         // that the longer string is greater.
 
         if (mLength != strLen)
-          result = (mLength < strLen) ? -1 : 1;
+          result = 1; // Arbitrarily using any number != 0
       }
-    return result;
-  }
-
-PRBool
-nsString::EqualsWithConversion( const char* aString, PRBool aIgnoreCase, PRInt32 aCount ) const
-  {
-    return CompareWithConversion(aString, aIgnoreCase, aCount) == 0;
+    return result == 0;
   }
 
   /**

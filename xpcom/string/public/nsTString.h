@@ -241,10 +241,7 @@ class nsTString_CharT : public nsTSubstring_CharT
 
 #ifdef CharT_is_char
       NS_COM PRInt32 Compare( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
-#else
-      NS_COM PRInt32 CompareWithConversion( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
 #endif
-
 
 
         /**
@@ -260,11 +257,7 @@ class nsTString_CharT : public nsTSubstring_CharT
         return Compare(aString, PR_TRUE, aCount) == 0;
       }
 #else
-      NS_COM PRBool EqualsWithConversion( const char* aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1 ) const;
-      PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const
-        {
-          return EqualsWithConversion(aString, PR_TRUE, aCount);
-        }
+      PRBool EqualsIgnoreCase( const char* aString, PRInt32 aCount=-1 ) const;
 
 
         /**
