@@ -56,7 +56,6 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj \
          .\$(OBJDIR)\nsRenderingContextImpl.obj \
 	 .\$(OBJDIR)\nsScriptableRegion.obj \
          .\$(OBJDIR)\nsPrintOptionsImpl.obj \
-         .\$(OBJDIR)\nsPrintSettingsImpl.obj \
          $(NULL)
 
 
