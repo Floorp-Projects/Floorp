@@ -57,7 +57,7 @@ Contributor(s):
     </vbox>
   </hbox>
   <hbox flex="1">
-    <vbox>
+    <vbox align="start">
       <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;" accesskey="&caseSensitiveCheckbox.accesskey;"/>
       <checkbox id="dialog.wrap" label="&wrapCheckbox.label;" accesskey="&wrapCheckbox.accesskey;"/>
     </vbox>
