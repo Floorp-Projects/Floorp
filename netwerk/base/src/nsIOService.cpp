@@ -28,6 +28,7 @@
 #include "nsCOMPtr.h"
 #include "prprf.h"
 #include "prmem.h"      // for PR_Malloc
+#include "prsystem.h"   // for PR_GetSystemInfo
 #include <ctype.h>      // for isalpha
 #include "nsIFileProtocolHandler.h"     // for NewChannelFromNativePath
 #include "nsLoadGroup.h"
@@ -50,33 +51,23 @@ nsresult
 nsIOService::Init()
 {
 
-    // XXX this is a hack. These strings need to come from somewhere else
-
     // initialize the version and app components
-    // XXX we're forcing these to be single byte strings for now.
     mAppName = new nsCString("Netscape");
     if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
     mAppCodeName = new nsCString("Mozilla");
     if (!mAppCodeName) return NS_ERROR_OUT_OF_MEMORY;
     mAppVersion = new nsCString();
     if (!mAppVersion) return NS_ERROR_OUT_OF_MEMORY;
-    mAppLanguage = new nsCString("en");
+    mAppLanguage = new nsCString("en-US");
     if (!mAppLanguage) return NS_ERROR_OUT_OF_MEMORY;
-#ifdef XP_MAC
-    mAppPlatform = new nsCString("Mac");
-#elif WIN32
-    mAppPlatform = new nsCString("Win32");
-#else
-    mAppPlatform = new nsCString("Unix");
-#endif
-    if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
 
-    // build up the app version
-    mAppVersion->Append("5.0 [");
-    mAppVersion->Append(*mAppLanguage);
-    mAppVersion->Append("] (");
-    mAppVersion->Append(*mAppPlatform);
-    mAppVersion->Append("; I)");
+    char platformBuf[SYS_INFO_BUFFER_LENGTH];
+    PRStatus status = PR_GetSystemInfo(PR_SI_SYSNAME, platformBuf, sizeof(char) * SYS_INFO_BUFFER_LENGTH);
+    if (PR_FAILURE == status)
+        return NS_ERROR_FAILURE;
+
+    mAppPlatform = new nsCString(platformBuf);
+    if (!mAppPlatform) return NS_ERROR_OUT_OF_MEMORY;
 
     return NS_OK;
 }
@@ -295,6 +286,19 @@ nsIOService::GetAppVersion(PRUnichar* *aAppVersion)
     return NS_OK;
 }
 
+// This guy needs to be called each time one of it's comprising pieces changes.
+nsresult
+nsIOService::BuildAppVersion() {
+    // build up the app version
+    mAppVersion->Truncate();
+    mAppVersion->Append("5.0 [");
+    mAppVersion->Append(*mAppLanguage);
+    mAppVersion->Append("] (");
+    mAppVersion->Append(*mAppPlatform);
+    mAppVersion->Append("; I)");
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsIOService::GetAppName(PRUnichar* *aAppName)
 {
@@ -312,12 +316,9 @@ nsIOService::GetLanguage(PRUnichar* *aLanguage)
 NS_IMETHODIMP
 nsIOService::SetLanguage(PRUnichar* aLanguage)
 {
-    char *lang = nsnull;
-    nsString2 langStr(aLanguage);
-    lang = langStr.ToNewCString();
+    nsCString lang(aLanguage);
     mAppLanguage->SetString(lang);
-    nsAllocator::Free(lang);
-    return NS_OK;
+    return BuildAppVersion();
 }
 
 NS_IMETHODIMP
