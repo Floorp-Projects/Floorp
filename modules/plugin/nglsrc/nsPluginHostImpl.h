@@ -21,6 +21,7 @@
 
 #include "xp_core.h"
 #include "nsIPluginManager.h"
+#include "nsIPluginManager2.h"
 #include "nsIPluginHost.h"
 #include "nsCRT.h"
 #include "prlink.h"
@@ -52,7 +53,8 @@ public:
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
 
-class nsPluginHostImpl : public nsIPluginManager, public nsIPluginHost
+class nsPluginHostImpl : public nsIPluginManager2,
+                         public nsIPluginHost
 {
 public:
   nsPluginHostImpl();
@@ -90,9 +92,6 @@ public:
           PRBool forceJSEnabled = PR_FALSE,
           PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
-  NS_IMETHOD
-  FindProxyForURL(const char* url, char* *result);
-
   //nsIPluginHost interface
 
   NS_IMETHOD
@@ -122,6 +121,41 @@ public:
 
   NS_IMETHOD
   NewPluginStream(nsIStreamListener *&aStreamListener, nsIPluginInstance *aInstance, void *aNotifyData);
+
+  //nsIPluginManager2 interface
+
+  NS_IMETHOD
+  BeginWaitCursor(void);
+
+  NS_IMETHOD
+  EndWaitCursor(void);
+
+  NS_IMETHOD
+  SupportsURLProtocol(const char* protocol, PRBool *result);
+
+  NS_IMETHOD
+  NotifyStatusChange(nsIPlugin* plugin, nsresult errorStatus);
+  
+  NS_IMETHOD
+  FindProxyForURL(const char* url, char* *result);
+
+  NS_IMETHOD
+  RegisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+  
+  NS_IMETHOD
+  UnregisterWindow(nsIEventHandler* handler, nsPluginPlatformWindowRef window);
+
+  NS_IMETHOD
+  AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt16 *result);
+
+  NS_IMETHOD
+  DeallocateMenuID(nsIEventHandler* handler, PRInt16 menuID);
+
+  NS_IMETHOD
+  HasAllocatedMenuID(nsIEventHandler* handler, PRInt16 menuID, PRBool *result);
+
+  NS_IMETHOD
+  ProcessNextEvent(PRBool *bEventHandled);
 
   //nsIFactory interface
 
