@@ -25,16 +25,14 @@
 
     <handlers>
       <handler event="command" phase="capturing"
-        action="if (event.originalTarget.localName == 'menuitem') this.selectedItem = event.originalTarget;"/>
+        action="if (event.target.parentNode.parentNode == this) this.selectedItem = event.target;"/>
         
       <handler event="popupshowing">
         <![CDATA[
-          if (event.target.parentNode == this && this.selectedItem) {
+          if (event.target.parentNode == this && this.selectedItem)
             // Not ready for auto-setting the active child in hierarchies yet.
             // For now, only do this when the outermost menupopup opens.
-            var menuBox = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-            menuBox.activeChild = this.selectedItem;
-          }
+            this.menuBoxObject.activeChild = this.selectedInternal;
         ]]>
       </handler>
     </handlers>
@@ -49,22 +47,17 @@
           <![CDATA[
             this.setAttribute('sizetopopup', 'pref');
             
-            if (this.childNodes.length) {
-              // if there was a previously selected item, be sure to set our internal
-              // selection memory to that item so we can un-set it properly later on
-              var arr = this.firstChild.getElementsByAttribute('selected', 'true');
-              if (arr.length)
-                this.selectedInternal = arr[0];
-              
-              if (!this.label && this.childNodes.length) {
-                if (!arr.length && this.value)
-                  arr = this.firstChild.getElementsByAttribute('value', this.value);
+            var popup = this.menupopup;
+            if (popup) {
+              var arr = popup.getElementsByAttribute('selected', 'true');
+
+              if (!arr.length && this.value)
+                arr = popup.getElementsByAttribute('value', this.value);
                 
-                if (arr.length)
-                  this.selectedItem = arr[0];
-                else
-                  this.selectedIndex = 0;
-              }
+              if (arr.length)
+                this.selectedItem = arr[0];
+              else
+                this.selectedIndex = 0;
             }
           ]]>
         </body>
@@ -73,10 +66,10 @@
       <property name="value" onget="return this.getAttribute('value');">
         <setter>
           <![CDATA[
-            var arr;
-
-            if (this.childNodes.length)
-              arr = this.firstChild.getElementsByAttribute('value', val);
+            var arr = null;
+            var popup = this.menupopup;
+            if (popup)
+              arr = popup.getElementsByAttribute('value', val);
 
             if (arr && arr.length)
               this.selectedItem = arr[0];
@@ -99,10 +92,24 @@
                                        return val;"
                                 onget="return this.hasAttribute('disabled');"/>
 
-      <property name="open" onset="if (val) this.setAttribute('open',true); 
-                                       else this.removeAttribute('open');
-                                       return val;"
-                                onget="return this.hasAttribute('open');"/>
+      <property name="open" onset="this.menuBoxObject.openMenu(val);
+                                   return val;"
+                            onget="return this.hasAttribute('open');"/>
+
+      <property name="menupopup" readonly="true">
+        <getter>
+          <![CDATA[
+            var popup = this.firstChild;
+            while (popup && popup.localName != "menupopup")
+              popup = popup.nextSibling;
+            return popup;
+          ]]>
+        </getter>
+      </property>
+
+      <field name="menuBoxObject" readonly="true">
+        this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject)
+      </field>
 
       <field name="selectedInternal">
         null
@@ -112,29 +119,27 @@
         <getter>
           <![CDATA[
             // Quick and dirty. We won't deal with hierarchical menulists yet.
-            if (!this.selectedItem)
+            if (!this.selectedItem ||
+                !this.selectedInternal.parentNode ||
+                this.selectedInternal.parentNode.parentNode != this)
               return -1;
 
-            var children = this.selectedItem.parentNode.childNodes;
-            for (var i = 0; i < children.length; i++) {
-              if (children[i] == this.selectedItem)
-                return i;
-            }
+            var children = this.selectedInternal.parentNode.childNodes;
+            var i = children.length;
+            while (i--)
+              if (children[i] == this.selectedInternal)
+                break;
 
-            return -1;
+            return i;
           ]]>
         </getter>
         <setter>
           <![CDATA[
-            if (val < 0)
+            var popup = this.menupopup;
+            if (popup && 0 <= val && val < popup.childNodes.length)
+              this.selectedItem = popup.childNodes[val];
+            else
               this.selectedItem = null;
-            else {
-              var curr = this.firstChild;
-              while (curr && curr.localName != 'menupopup')
-                curr = curr.nextSibling;
-              if (curr && val < curr.childNodes.length)
-                this.selectedItem = curr.childNodes[val];
-            }
             return val;    
           ]]>
         </setter>
@@ -178,16 +183,14 @@
         <parameter name="value"/>
         <body>
         <![CDATA[
-          var popup = this.getElementsByTagName("menupopup")[0];
-          if (popup) {
-            var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-            var item = document.createElementNS(XULNS, "menuitem");
-            item.setAttribute("label", label);
-            item.setAttribute("value", value);
-            popup.appendChild(item);
-            return item;
-          }
-          return null;
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var popup = this.menupopup ||
+                      this.appendChild(document.createElementNS(XULNS, "menupopup"));
+          var item = document.createElementNS(XULNS, "menuitem");
+          item.setAttribute("label", label);
+          item.setAttribute("value", value);
+          popup.appendChild(item);
+          return item;
         ]]>
         </body>
       </method>
@@ -198,20 +201,17 @@
         <parameter name="value"/>
         <body>
         <![CDATA[
-          var popup = this.getElementsByTagName("menupopup")[0];
-          if (popup) {
-            var XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-            var item = document.createElementNS(XULNS, "menuitem");
-            item.setAttribute("label", label);
-            item.setAttribute("value", value);
-            var before = popup.childNodes[index];
-            if (before)
-              popup.insertBefore(item, before);
-            else
-              popup.appendChild(item);
-            return item;
-          }
-          return null;
+          const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+          var popup = this.menupopup ||
+                      this.appendChild(document.createElementNS(XULNS, "menupopup"));
+          var item = document.createElementNS(XULNS, "menuitem");
+          item.setAttribute("label", label);
+          item.setAttribute("value", value);
+          if (index < popup.childNodes.length)
+            popup.insertBefore(item, popup.childNodes[index]);
+          else
+            popup.appendChild(item);
+          return item;
         ]]>
         </body>
       </method>
@@ -220,14 +220,24 @@
         <parameter name="index"/>
         <body>
         <![CDATA[
-          var popup = this.getElementsByTagName("menupopup")[0];
-          if (popup) {
+          var popup = this.menupopup;
+          if (popup && 0 <= index && index < popup.childNodes.length) {
             var remove = popup.childNodes[index];
-            if (remove)
-              popup.removeChild(remove);
+            popup.removeChild(remove);
             return remove;
           }
           return null;
+        ]]>
+        </body>
+      </method>
+
+      <method name="removeAllItems">
+        <body>
+        <![CDATA[
+          this.selectedInternal = null;
+          var popup = this.menupopup;
+          if (popup)
+            this.removeChild(popup);
         ]]>
         </body>
       </method>
@@ -245,8 +255,8 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
-      <xul:hbox class="menulist-editable-box" flex="1">
-        <html:input flex="1" class="menulist-editable-input" allowevents="true"
+      <xul:hbox class="menulist-editable-box textbox-input-box" flex="1">
+        <html:input class="menulist-editable-input" flex="1" anonid="input" allowevents="true"
                     xbl:inherits="value=label,disabled"/>
       </xul:hbox>
       <xul:dropmarker class="menulist-dropmarker" type="menu"/>
@@ -265,18 +275,16 @@
             return "";
 
           // Find and select the menuitem that matches inputField's "value"
-          var inputVal = this.inputField.value;
-          var arr;
+          var arr = null;
+          var popup = this.menupopup;
 
-          if (this.childNodes.length)
-            arr = this.firstChild.getElementsByAttribute('label', inputVal);
+          if (popup)
+            arr = popup.getElementsByAttribute('label', this.inputField.value);
 
           if (arr && arr.length)
             this.setSelectionInternal(arr[0]);
           else
             this.setSelectionInternal(null);
-
-          return inputVal;
         ]]>
         </body>
       </method>
@@ -296,35 +304,25 @@
 
             this.selectedInternal = val;
 
-            //Do NOT change the "value", which is owned by inputField
-            if (!this.selectedInternal) {
-              this.removeAttribute('src');
-              return val;
-            }
-            val.setAttribute('selected', 'true');
-            this.setAttribute('src', val.getAttribute('src'));
+            if (val)
+              val.setAttribute('selected', 'true');
 
+            //Do NOT change the "value", which is owned by inputField
             return val;
           ]]>
         </body>
       </method>
 
-      <field name="inputField" readonly="true">
-       <![CDATA[
-        var v = document.getAnonymousNodes(this);
-        var input = null;
-        for (var i = 0; i < v.length; i++) {
-          try {
-            var l = v[i].getElementsByTagNameNS("http://www.w3.org/1999/xhtml", "input");
-            if (l.length > 0) {
-              input = l[0];
-              break;
-            }
-          } catch (e) {} 
-        }
-        input;
-      ]]>
-      </field>
+      <field name="mInputField">null</field>
+      
+      <property name="inputField" readonly="true">
+        <getter><![CDATA[
+          if (!this.mInputField)    
+            this.mInputField = document.getAnonymousElementByAttribute(this, "anonid", "input");
+          return this.mInputField;
+        ]]></getter>
+      </property>
+
       <property name="label"      onset="this.inputField.value = val; return val;"
                                   onget="return this.inputField.value;"/>
 
@@ -378,82 +376,56 @@
                        else this.removeAttribute('disableautoselect'); return val;"
                 onget="return this.hasAttribute('disableautoselect');"/>
 
-      <property name="open">
-        <getter>
-          <![CDATA[
-            return this.getAttribute('open') == 'true';
-          ]]>
-        </getter>
-        <setter>
-          <![CDATA[
-            var popups = this.getElementsByTagNameNS(
-                      "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                      "menupopup");
-            if (!popups || popups.length == 0)
-              return val;
-            
-            if (val) {    // open the popup
-              popups[0].showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
-              this._selectInputFieldValueInList();
-              this.setAttribute('open', 'true');
-            }
-            else {        // hide the popup
-              popups[0].hidePopup();
-              this.removeAttribute('open');
-            }
-            return val;
-          ]]>
-        </setter>
-      </property>
+      <method name="select">
+        <body>
+          this.inputField.select();
+        </body>
+      </method>
     </implementation>
 
     <handlers>
       <handler event="focus" phase="capturing">
-      <![CDATA[
-        if (!this.hasAttribute('focused')) 
-        {
-          this.setAttribute('focused','true');
-          this.suppressFocusBlur = true;
-          if (document.commandDispatcher.focusedElement != this.inputField) 
-            this.inputField.focus();
-          this.suppressFocusBlur = false;
-        }
-      ]]>
+        <![CDATA[
+          if (!this.hasAttribute('focused')) {
+            if (document.commandDispatcher.focusedElement != this.inputField) 
+              this.inputField.focus();
+            this.setAttribute('focused','true');
+          }
+        ]]>
       </handler>
       
       <handler event="blur" phase="capturing">
-      <![CDATA[
-        if (!this.suppressFocusBlur && this.hasAttribute('focused')) {
+        <![CDATA[
           this.removeAttribute('focused');
-        }
-      ]]>
+        ]]>
       </handler>
 
       <handler event="popupshowing">
         <![CDATA[
-          // BUG in Classic skin: doesn't shift focus when popup is opened
-          //   so force it to inputField here
+          // editable menulists elements aren't in the focus order,
+          // so when the popup opens we need to force the focus to the inputField
           if (event.target.parentNode == this) {
             if (document.commandDispatcher.focusedElement != this.inputField) 
               this.inputField.focus();
 
-            if (this.selectedItem) {
+            if (this.selectedItem)
               // Not ready for auto-setting the active child in hierarchies yet.
               // For now, only do this when the outermost menupopup opens.
-              var menuBox = this.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
-              menuBox.activeChild = this.selectedItem;
-            }
+              this.menuBoxObject.activeChild = this.selectedInternal;
           }
         ]]>
       </handler>
 
       <handler event="keypress">
         <![CDATA[
-          // open popup if key is up or down
-          if (event.keyCode == KeyEvent.DOM_VK_UP || event.keyCode == KeyEvent.DOM_VK_DOWN ||
-              (event.keyCode == KeyEvent.DOM_VK_F4 && !event.altKey && !event.ctrlKey && !event.shiftKey)) {
-            event.preventDefault();
-            this.open = true;
+          // open popup if key is up arrow, down arrow, or F4
+          if (!event.ctrlKey && !event.shiftKey) {
+            if (event.keyCode == KeyEvent.DOM_VK_UP ||
+                event.keyCode == KeyEvent.DOM_VK_DOWN ||
+                (event.keyCode == KeyEvent.DOM_VK_F4 && !event.altKey)) {
+              event.preventDefault();
+              this.open = true;
+            }
           }
         ]]>
       </handler>
