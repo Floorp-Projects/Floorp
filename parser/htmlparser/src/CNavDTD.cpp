@@ -1064,7 +1064,20 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
   if(gHTMLElements[aTag].mSkipTarget) { 
     result=CollectSkippedContent(aNode,theAttrCount); 
   } 
-  
+
+  //this little gem creates a special attribute for the editor team to use.
+  //The attribute only get's applied to unknown tags, and is used by ender
+  //(during editing) to display a special icon for unknown tags.
+
+  if(eHTMLTag_userdefined==aTag) {
+    CAttributeToken* theToken= (CAttributeToken*)mTokenRecycler->CreateTokenOfType(eToken_attribute,aTag);
+    if(theToken) {
+      theToken->mTextKey.AssignWithConversion("-moz-userdefined");
+      aNode.AddAttribute(theToken);    
+    }
+  }
+
+
   STOP_TIMER()
   MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::WillHandleStartTag(), this=%p\n", this));
 
@@ -1088,7 +1101,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNode
 
     STOP_TIMER()
 
-    if(eHTMLTag_meta==aTag) { 
+      if(eHTMLTag_meta==aTag) {  
       PRInt32 theCount=aNode.GetAttributeCount(); 
       if(1<theCount){ 
   
