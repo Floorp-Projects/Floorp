@@ -107,6 +107,9 @@ EXTRA_DSO_LIBS		= gkgfx
 ifdef MOZ_OJI
 EXTRA_DSO_LIBS		+= jsj
 endif
+ifdef MOZ_PERF_METRICS
+EXTRA_DSO_LIBS		+= mozutil_s
+endif
 
 XP_DIST_LIBS		= \
 			$(EXTRA_DSO_LIBS) \
