@@ -10,7 +10,8 @@
         onload="parent.onPanelLoaded('am-server.xul');"
         align="vertical">
 
-  <html:script src="chrome://messenger/content/am-server.js"/>
+  <script src="chrome://messenger/content/am-server.js"/>
+  <script src="chrome://global/content/strres.js"/>
 
   <html:input type="hidden" name="server.type" id="server.type"/>
   <html:input type="hidden" name="server.hostName" id="server.hostName"/>

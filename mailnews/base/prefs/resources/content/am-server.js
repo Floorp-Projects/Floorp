@@ -18,9 +18,11 @@
  * Rights Reserved.
  */
 
-function onInit() {
-    initServerType();
+var stringBundle;
 
+function onInit() {
+    stringBundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+    initServerType();
 }
 
 function onPreInit(account, accountValues)
@@ -35,25 +37,10 @@ function initServerType() {
   var serverType = document.getElementById("server.type").value;
   
   var verboseName;
-  var index;
-  if (serverType == "pop3") {
-      verboseName = "POP Mail Server";
-      index = 0;
-  } else if (serverType == "imap") {
-      verboseName = "IMAP Mail Server";
-      index = 1;
-  } else if (serverType == "nntp") {
-      verboseName = "Newsgroup server (NNTP)";
-      index = 2;
-  } else if (serverType == "none") {
-      verboseName = "Local Mail store";
-      index = 3;
-  }
 
-  //  if (index != undefined) {
-  //      var deck = document.getElementById("serverdeck");
-  //      deck.setAttribute("index", index);
-  //  }
+  var propertyName = "serverType-" + serverType;
+
+  verboseName = stringBundle.GetStringFromName(propertyName);
 
   var hostname = document.getElementById("server.hostName").value;
   var username = document.getElementById("server.username").value;
@@ -87,10 +74,12 @@ function hideShowControls(serverType)
         if (!div) continue;
 
         // hide unsupported server type
-        if (controlType == serverType)
-            div.style.display = "block";
-        else
-            div.style.display = "none";
+        if (control.type.toLowerCase() != "hidden") {
+            if (controlType == serverType)
+                div.style.display = "block";
+            else
+                div.style.display = "none";
+        }
     }
 
     var serverPrefContainer = document.getElementById("serverPrefContainer");
