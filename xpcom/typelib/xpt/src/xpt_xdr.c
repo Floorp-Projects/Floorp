@@ -62,7 +62,7 @@ CheckForRepeat(XPTCursor *cursor, void **addrp, XPTPool pool, PRUint32 len,
   ((cursor)->state->pool->data[CURS_POOL_OFFSET(cursor)])
 
 #if defined(DEBUG_shaver) || defined(DEBUG_jband) || defined(DEBUG_mccabe)
-#define DBG(x) printf##x
+#define DBG(x) printf x
 #else
 #define DBG(x) (0)
 #endif
