@@ -593,7 +593,7 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(
 #endif
 			::LocalToGlobal(&topLeft(macRect));
 			::LocalToGlobal(&botRight(macRect));
-			mTopLevelWidget->Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+			mTopLevelWidget->Resize(macRect.right - macRect.left + 1, macRect.bottom - macRect.top + 1, PR_FALSE);
 			break;
 		}
 
