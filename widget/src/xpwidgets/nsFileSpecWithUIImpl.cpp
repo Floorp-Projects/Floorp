@@ -107,6 +107,8 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     nsFileDlgResults result = fileWidget->PutFile(nsnull, winTitle, spec);
     if (result != nsFileDlgResults_OK)
     {
+      if (result == nsFileDlgResults_Cancel)
+        return NS_ERROR_ABORT;
       if (spec.Exists() && result != nsFileDlgResults_Replace)
         return NS_FILE_FAILURE;
     }
