@@ -1389,3 +1389,4 @@ void nsDocLoaderImpl::DumpChannelInfo()
   printf("\nCurrent=%d   Total=%d\n====\n", current, max);
 }
 #endif /* 0 */
+
