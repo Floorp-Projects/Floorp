@@ -1,11 +1,11 @@
 /* gzio.c -- IO on .gz files
- * Copyright (C) 1995-1998 Jean-loup Gailly.
+ * Copyright (C) 1995-2002 Jean-loup Gailly.
  * For conditions of distribution and use, see copyright notice in zlib.h
  *
  * Compile this file with -DNO_DEFLATE to avoid the compression code.
  */
 
-/* @(#) $Id: gzio.c,v 3.3 2001/06/30 23:37:53 leaf%mozilla.org Exp $ */
+/* @(#) $Id: gzio.c,v 3.4 2002/03/14 22:18:36 seawood%netscape.com Exp $ */
 
 #include <stdio.h>
 

@@ -1,5 +1,5 @@
 /* trees.c -- output deflated data using Huffman coding
- * Copyright (C) 1995-1998 Jean-loup Gailly
+ * Copyright (C) 1995-2002 Jean-loup Gailly
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 
@@ -29,7 +29,7 @@
  *          Addison-Wesley, 1983. ISBN 0-201-06672-6.
  */
 
-/* @(#) $Id: trees.c,v 3.2 2001/06/30 23:38:02 leaf%mozilla.org Exp $ */
+/* @(#) $Id: trees.c,v 3.3 2002/03/14 22:18:39 seawood%netscape.com Exp $ */
 
 /* #define GEN_TREES_H */
 
