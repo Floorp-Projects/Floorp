@@ -146,26 +146,13 @@ js_hash_scope_lookup(JSContext *cx, JSScope *scope, jsid id, JSHashNumber hash)
     return sym;
 }
 
-#ifdef DEBUG
-#define REDEFINING_SYMBOL(sym)          (!(sym)->scope)
-#define START_REDEFINING_SYMBOL(sym)    ((sym)->scope = NULL)
-#define END_REDEFINING_SYMBOL(sym)      ((sym)->scope = scope)
-#else
-#define REDEFINING_SYMBOL(sym)          JS_FALSE
-#define START_REDEFINING_SYMBOL(sym)    /* nothing */
-#define END_REDEFINING_SYMBOL(sym)      /* nothing */
-#endif
-
 #define SCOPE_ADD(PRIV, CLASS_SPECIFIC_CODE)                                  \
     JS_BEGIN_MACRO                                                            \
 	if (sym) {                                                            \
 	    if (sym->entry.value == sprop)                                    \
 		return sym;                                                   \
-	    if (sym->entry.value) {                                           \
-                START_REDEFINING_SYMBOL(sym);                                 \
+	    if (sym->entry.value)                                             \
 		js_free_symbol(PRIV, &sym->entry, HT_FREE_VALUE);             \
-                END_REDEFINING_SYMBOL(sym);                                   \
-            }                                                                 \
 	} else {                                                              \
 	    CLASS_SPECIFIC_CODE                                               \
 	    sym->scope = scope;                                               \
@@ -598,9 +585,6 @@ js_DropScopeProperty(JSContext *cx, JSScope *scope, JSScopeProperty *sprop)
     if (sprop) {
 	JS_ASSERT(sprop->nrefs > 0);
 	if (--sprop->nrefs == 0) {
-            JS_ASSERT(REDEFINING_SYMBOL(sprop->symbols) ||
-                      !scope->ops->lookup(cx, scope, sym_id(sprop->symbols),
-                                          js_HashId(sym_id(sprop->symbols))));
 	    js_DestroyScopeProperty(cx, scope, sprop);
 	    sprop = NULL;
 	}
