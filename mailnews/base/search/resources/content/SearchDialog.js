@@ -134,9 +134,6 @@ var gSearchNotificationListener =
     onNewSearch: function()
     {
       gSearchStopButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
-//        if (gThreadTree)
-//            gThreadTree.clearItemSelection();
-
       document.commandDispatcher.updateCommands('mail-search');
       gStatusFeedback.showProgress(0);
       gStatusFeedback.showStatusString(gSearchBundle.getString("searchingMessage"));
@@ -172,6 +169,24 @@ var gFolderListener = {
     }
 }
 
+function HideSearchColumn(id)
+{
+  var col = document.getElementById(id);
+  if (col) {
+    col.setAttribute("hidden","true");
+    col.setAttribute("ignoreincolumnpicker","true");
+  }
+}
+
+function ShowSearchColumn(id)
+{
+  var col = document.getElementById(id);
+  if (col) {
+    col.removeAttribute("hidden");
+    col.removeAttribute("ignoreincolumnpicker");
+  }
+}
+
 function searchOnLoad()
 {
   initializeSearchWidgets();
@@ -188,23 +203,18 @@ function searchOnLoad()
   document.commandDispatcher.updateCommands('mail-search');
   moveToAlertPosition();
 
-  // hide the thread related columns.  you can't thread search results
-  var threadCol = document.getElementById("threadCol");
-  threadCol.setAttribute("hidden","true");
-  threadCol.setAttribute("ignoreincolumnpicker","true");
-
-  var totalCol = document.getElementById("totalCol");
-  totalCol.setAttribute("hidden","true");
-  totalCol.setAttribute("ignoreincolumnpicker","true");
-
-  var unreadCol = document.getElementById("unreadCol");
-  unreadCol.setAttribute("hidden","true");
-  unreadCol.setAttribute("ignoreincolumnpicker","true");
-
-  // we want to show this column for search
-  var locationCol = document.getElementById("locationCol");
-  locationCol.removeAttribute("hidden");
-  locationCol.removeAttribute("ignoreincolumnpicker");
+  // hide and remove these columns from the column picker.  you can't thread search results
+  HideSearchColumn("threadCol"); // since you can't thread search results
+  HideSearchColumn("totalCol"); // since you can't thread search results
+  HideSearchColumn("unreadCol"); // since you can't thread search results
+  HideSearchColumn("unreadButtonColHeader");
+  HideSearchColumn("statusCol");
+  HideSearchColumn("sizeCol");
+  HideSearchColumn("flaggedCol");
+  HideSearchColumn("totalCol");
+  
+  // we want to show the location column for search
+  ShowSearchColumn("locationCol");
 }
 
 function searchOnUnload()
@@ -215,9 +225,11 @@ function searchOnUnload()
 
     gMailSession.RemoveFolderListener(gSearchSessionFolderListener);
 	gSearchSession.removeFolderListener(gFolderListener);
-
+	
+    if (gSearchView) {
 	gSearchView.close();
 	gSearchView = null;
+    }
 
     // release this early because msgWindow holds a weak reference
     msgWindow.rootDocShell = null;
@@ -226,7 +238,6 @@ function searchOnUnload()
 function initializeSearchWindowWidgets()
 {
     gFolderPicker = document.getElementById("searchableFolders");
-//    gThreadTree = document.getElementById("threadTree");
     gSearchStopButton = document.getElementById("search-button");
     gStatusBar = document.getElementById('statusbar-icon');
 
@@ -236,7 +247,6 @@ function initializeSearchWindowWidgets()
 
     // functionality to enable/disable buttons using nsSearchResultsController
     // depending of whether items are selected in the search results thread pane.
-//    gThreadTree.controllers.appendController(nsSearchResultsController);
     top.controllers.insertControllerAt(0, nsSearchResultsController);
 }
 
@@ -340,8 +350,6 @@ function onSearch()
     gSearchSession.search(msgWindow);
     // refresh the tree after the search starts, because initiating the
     // search will cause the datasource to clear itself
-//    gThreadTree.setAttribute("ref", gThreadTree.getAttribute("ref"));
-//    dump("Kicking it off with " + gThreadTree.getAttribute("ref") + "\n");
 }
 
 function AddSubFolders(folder) {
