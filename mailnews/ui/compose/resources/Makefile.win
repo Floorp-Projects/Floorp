@@ -22,12 +22,10 @@ IGNORE_MANIFEST=1
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
-	$(MAKE_INSTALL) Compose.html $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ComposeToolbar.xml $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) Compose.xul $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ComposeFrame.html $(DIST)\bin\res\samples
 
-clobber::
-	rm -f $(DIST)\bin\res\samples\Compose.html
-	rm -f $(DIST)\bin\res\samples\ComposeToolbar.xml
+	rm -f $(DIST)\bin\$(DLLNAME)
+	rm -f $(DIST)\bin\res\samples\Compose.xul
 	rm -f $(DIST)\bin\res\samples\ComposeFrame.html
 

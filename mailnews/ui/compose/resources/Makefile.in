@@ -28,8 +28,7 @@ include $(topsrcdir)/config/rules.mk
 
 
 EXPORT_RESOURCE_SAMPLES = \
-	./Compose.html \
-	./ComposeToobar.xml \
+	./Compose.xul \
 	./ComposeFrame.html \
 	$(NULL)
 
