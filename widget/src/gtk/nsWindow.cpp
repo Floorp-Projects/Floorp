@@ -357,13 +357,11 @@ NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 a
 // Set this component dimension
 //
 //-------------------------------------------------------------------------
-void nsWindow::SetBounds(const nsRect &aRect)
+NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
 {
-  mBounds.x      = aRect.x;
-  mBounds.y      = aRect.y;
-  mBounds.width  = aRect.width;
-  mBounds.height = aRect.height;
+  mBounds = aRect;
   //Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, PR_TRUE);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
