@@ -7360,62 +7360,65 @@ nsCSSFrameConstructor::ReconstructDocElementHierarchy(nsPresContext* aPresContex
       nsIFrame* docElementFrame =
         state.mFrameManager->GetPrimaryFrameFor(rootContent);
         
-      // Clear the hash tables that map from content to frame and out-of-flow
-      // frame to placeholder frame
-      state.mFrameManager->ClearPrimaryFrameMap();
-      state.mFrameManager->ClearPlaceholderFrameMap();
-      state.mFrameManager->ClearUndisplayedContentMap();
+      // Remove any existing fixed items: they are always on the
+      // FixedContainingBlock.  Note that this has to be done before we call
+      // ClearPlaceholderFrameMap(), since RemoveFixedItems uses the
+      // placeholder frame map.
+      rv = RemoveFixedItems(aPresContext, shell, state.mFrameManager);
+      if (NS_SUCCEEDED(rv)) {
+        // Clear the hash tables that map from content to frame and out-of-flow
+        // frame to placeholder frame
+        state.mFrameManager->ClearPrimaryFrameMap();
+        state.mFrameManager->ClearPlaceholderFrameMap();
+        state.mFrameManager->ClearUndisplayedContentMap();
 
-      // Take the docElementFrame, and remove it from its parent. For
-      // HTML, we'll be removing the Area frame from the Canvas; for
-      // XUL, we'll remove the GfxScroll or Box from the RootBoxFrame.
-      //
-      // The three possible structures (at least the ones observed so
-      // far, see bugs 70258 and 93558) are:
-      //
-      // (HTML)
-      //    ScrollBoxFrame(html)<
-      //     ScrollPortFrame(html)<
-      //      Canvas(-1)<
-      //       Area(html)<
-      //        (etc.)
-      //
-      // (XUL #1)
-      //    RootBoxFrame(window)<
-      //     GfxScroll<
-      //      ScrollBoxFrame(window)<
-      //       ScrollPortFrame(window)<
-      //        (etc.)
-      //
-      // (XUL #2)
-      //    RootBox<
-      //     Box<
-      //      (etc.)
-      //
-      if (docElementFrame) {
-        nsIFrame* docParentFrame = docElementFrame->GetParent();
+        // Take the docElementFrame, and remove it from its parent. For
+        // HTML, we'll be removing the Area frame from the Canvas; for
+        // XUL, we'll remove the GfxScroll or Box from the RootBoxFrame.
+        //
+        // The three possible structures (at least the ones observed so
+        // far, see bugs 70258 and 93558) are:
+        //
+        // (HTML)
+        //    ScrollBoxFrame(html)<
+        //     ScrollPortFrame(html)<
+        //      Canvas(-1)<
+        //       Area(html)<
+        //        (etc.)
+        //
+        // (XUL #1)
+        //    RootBoxFrame(window)<
+        //     GfxScroll<
+        //      ScrollBoxFrame(window)<
+        //       ScrollPortFrame(window)<
+        //        (etc.)
+        //
+        // (XUL #2)
+        //    RootBox<
+        //     Box<
+        //      (etc.)
+        //
+        if (docElementFrame) {
+          nsIFrame* docParentFrame = docElementFrame->GetParent();
 
 #ifdef MOZ_XUL
-        // If we're in a XUL document, then we need to crawl up to the
-        // RootBoxFrame and remove _its_ child.
-        nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
-        if (xuldoc) {
-          nsCOMPtr<nsIAtom> frameType;
-          while (docParentFrame && !IsRootBoxFrame(docParentFrame)) {
-            docElementFrame = docParentFrame;
-            docParentFrame = docParentFrame->GetParent();
+          // If we're in a XUL document, then we need to crawl up to the
+          // RootBoxFrame and remove _its_ child.
+          nsCOMPtr<nsIXULDocument> xuldoc = do_QueryInterface(mDocument);
+          if (xuldoc) {
+            nsCOMPtr<nsIAtom> frameType;
+            while (docParentFrame && !IsRootBoxFrame(docParentFrame)) {
+              docElementFrame = docParentFrame;
+              docParentFrame = docParentFrame->GetParent();
+            }
           }
-        }
 #endif
 
-        NS_ASSERTION(docParentFrame, "should have a parent frame");
-        if (docParentFrame) {
-          // Remove the old document element hieararchy
-          rv = state.mFrameManager->RemoveFrame(docParentFrame, nsnull, 
-                                                docElementFrame);
-          if (NS_SUCCEEDED(rv)) {
-            // Remove any existing fixed items: they are always on the FixedContainingBlock
-            rv = RemoveFixedItems(aPresContext, shell, state.mFrameManager);
+          NS_ASSERTION(docParentFrame, "should have a parent frame");
+          if (docParentFrame) {
+            // Remove the old document element hieararchy
+            rv = state.mFrameManager->RemoveFrame(docParentFrame, nsnull, 
+                                                  docElementFrame);
             if (NS_SUCCEEDED(rv)) {
               // Create the new document element hierarchy
               nsIFrame*                 newChild;
@@ -13344,6 +13347,21 @@ nsresult nsCSSFrameConstructor::RemoveFixedItems(nsPresContext* aPresContext,
     do {
       fixedChild = mFixedContainingBlock->GetFirstChild(nsLayoutAtoms::fixedList);
       if (fixedChild) {
+        // Remove the placeholder so it doesn't end up sitting about pointing
+        // to the removed fixed frame.
+        nsIFrame *placeholderFrame;
+        aPresShell->GetPlaceholderFrameFor(fixedChild, &placeholderFrame);
+        NS_ASSERTION(placeholderFrame, "no placeholder for fixed-pos frame");
+        nsIFrame* placeholderParent = placeholderFrame->GetParent();
+        DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
+                             placeholderFrame);
+        rv = aFrameManager->RemoveFrame(placeholderParent, nsnull,
+                                        placeholderFrame);
+        if (NS_FAILED(rv)) {
+          NS_WARNING("Error removing placeholder for fixed frame in RemoveFixedItems");
+          break;
+        }
+
         DeletingFrameSubtree(aPresContext, aPresShell, aFrameManager,
                              fixedChild);
         rv = aFrameManager->RemoveFrame(mFixedContainingBlock,
