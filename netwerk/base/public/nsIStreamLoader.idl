@@ -55,6 +55,11 @@ interface nsIStreamLoader : nsISupports
      * Gets the number of bytes read so far.
      */
     readonly attribute unsigned long numBytesRead;
+
+    /**
+     * Gets the owner of this file
+     */
+    readonly attribute nsISupports owner;
 };
 
 %{C++
