@@ -45,7 +45,16 @@ namespace JavaScript {
             ASSERT((*i)->itsOffset >= 0);
             ASSERT((*i)->itsOffset < iCode->size());
         }
-    #endif            
+    #endif
+
+        for (InstructionIterator ii = iCode->begin(); ii != iCode->end(); ii++) {            
+            if ((*ii)->itsOp == BRANCH)
+                static_cast<Branch *>(*ii)->itsOperand1 = labels[static_cast<Branch *>(*ii)->itsOperand1]->itsOffset;
+            else 
+                if ((*ii)->itsOp == BRANCH_COND)
+                    static_cast<BranchCond *>(*ii)->itsOperand1 = labels[static_cast<BranchCond *>(*ii)->itsOperand1]->itsOffset;
+        }
+
         return iCode;
     }
 
