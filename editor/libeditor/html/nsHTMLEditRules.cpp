@@ -400,6 +400,13 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
       if (NS_FAILED(res)) return res;
     }
     
+    // if we created a new block, make sure selection lands in it
+    if (mNewBlock)
+    {
+      res = PinSelectionToNewBlock(selection);
+      mNewBlock = 0;
+    }
+
     // adjust selection for insert text, html paste, and delete actions
     if ((action == nsEditor::kOpInsertText) || 
         (action == nsEditor::kOpInsertIMEText) ||
@@ -410,10 +417,15 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
       res = AdjustSelection(selection, aDirection);
       if (NS_FAILED(res)) return res;
     }
+    
   }
 
   // detect empty doc
   res = CreateBogusNodeIfNeeded(selection);
+  
+  // adjust selection HINT if needed
+  if (NS_FAILED(res)) return res;
+  res = CheckInterlinePosition(selection);
   return res;
 }
 
@@ -1841,135 +1853,140 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   }
   if (endNode.get() != startNode.get())
   {
-    // block parents the same?  use default deletion
-    nsCOMPtr<nsIDOMNode> leftParent;
-    nsCOMPtr<nsIDOMNode> rightParent;
-    if (IsBlockNode(startNode))
-      leftParent = startNode;
-    else
-      leftParent = mHTMLEditor->GetBlockNodeParent(startNode);
-    if (IsBlockNode(endNode))
-      rightParent = endNode;
-    else
-      rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
-    if (leftParent.get() == rightParent.get()) return NS_OK;
-    
-    // deleting across blocks
-    // are the blocks of same type?
-    
-    // are the blocks siblings?
-    nsCOMPtr<nsIDOMNode> leftBlockParent;
-    nsCOMPtr<nsIDOMNode> rightBlockParent;
-    leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
-    rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
-
-    // MOOSE: this could conceivably screw up a table.. fix me.
-    if (   (leftBlockParent.get() == rightBlockParent.get())
-        && (mHTMLEditor->NodesSameType(leftParent, rightParent))  )
     {
-      if (nsHTMLEditUtils::IsParagraph(leftParent))
-      {
-        // first delete the selection
-        *aHandled = PR_TRUE;
-        res = mHTMLEditor->DeleteSelectionImpl(aAction);
-        if (NS_FAILED(res)) return res;
-        // then join para's, insert break
-        res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
-        if (NS_FAILED(res)) return res;
-        // fix up selection
-        res = aSelection->Collapse(selNode,selOffset);
-        return res;
-      }
-      if (nsHTMLEditUtils::IsListItem(leftParent)
-          || nsHTMLEditUtils::IsHeader(leftParent))
-      {
-        // first delete the selection
-        *aHandled = PR_TRUE;
-        res = mHTMLEditor->DeleteSelectionImpl(aAction);
-        if (NS_FAILED(res)) return res;
-        // join blocks
-        res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
-        if (NS_FAILED(res)) return res;
-        // fix up selection
-        res = aSelection->Collapse(selNode,selOffset);
-        return res;
-      }
-    }
+      // track end location of where we are deleting
+      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, address_of(endNode), &endOffset);
     
-    // else blocks not same type, or not siblings.  Delete everything except
-    // table elements.
-    *aHandled = PR_TRUE;
-    nsCOMPtr<nsIEnumerator> enumerator;
-    nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
-    res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
-    if (NS_FAILED(res)) return res;
-    if (!enumerator) return NS_ERROR_UNEXPECTED;
+      // block parents the same?  use default deletion
+      nsCOMPtr<nsIDOMNode> leftParent;
+      nsCOMPtr<nsIDOMNode> rightParent;
+      if (IsBlockNode(startNode))
+        leftParent = startNode;
+      else
+        leftParent = mHTMLEditor->GetBlockNodeParent(startNode);
+      if (IsBlockNode(endNode))
+        rightParent = endNode;
+      else
+        rightParent = mHTMLEditor->GetBlockNodeParent(endNode);
+      if (leftParent.get() == rightParent.get()) return NS_OK;
+      
+      // deleting across blocks
+      // are the blocks of same type?
+      
+      // are the blocks siblings?
+      nsCOMPtr<nsIDOMNode> leftBlockParent;
+      nsCOMPtr<nsIDOMNode> rightBlockParent;
+      leftParent->GetParentNode(getter_AddRefs(leftBlockParent));
+      rightParent->GetParentNode(getter_AddRefs(rightBlockParent));
 
-    for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
-    {
-      nsCOMPtr<nsISupports> currentItem;
-      res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+      // MOOSE: this could conceivably screw up a table.. fix me.
+      if (   (leftBlockParent.get() == rightBlockParent.get())
+          && (mHTMLEditor->NodesSameType(leftParent, rightParent))  )
+      {
+        if (nsHTMLEditUtils::IsParagraph(leftParent))
+        {
+          // first delete the selection
+          *aHandled = PR_TRUE;
+          res = mHTMLEditor->DeleteSelectionImpl(aAction);
+          if (NS_FAILED(res)) return res;
+          // then join para's, insert break
+          res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
+          if (NS_FAILED(res)) return res;
+          // fix up selection
+          res = aSelection->Collapse(selNode,selOffset);
+          return res;
+        }
+        if (nsHTMLEditUtils::IsListItem(leftParent)
+            || nsHTMLEditUtils::IsHeader(leftParent))
+        {
+          // first delete the selection
+          *aHandled = PR_TRUE;
+          res = mHTMLEditor->DeleteSelectionImpl(aAction);
+          if (NS_FAILED(res)) return res;
+          // join blocks
+          res = mHTMLEditor->JoinNodeDeep(leftParent,rightParent,address_of(selNode),&selOffset);
+          if (NS_FAILED(res)) return res;
+          // fix up selection
+          res = aSelection->Collapse(selNode,selOffset);
+          return res;
+        }
+      }
+      
+      // else blocks not same type, or not siblings.  Delete everything except
+      // table elements.
+      *aHandled = PR_TRUE;
+      nsCOMPtr<nsIEnumerator> enumerator;
+      nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(aSelection));
+      res = selPriv->GetEnumerator(getter_AddRefs(enumerator));
       if (NS_FAILED(res)) return res;
-      if (!currentItem) return NS_ERROR_UNEXPECTED;
+      if (!enumerator) return NS_ERROR_UNEXPECTED;
 
-      // build a list of nodes in the range
-      nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-      nsCOMPtr<nsISupportsArray> arrayOfNodes;
-      nsTrivialFunctor functor;
-      nsDOMSubtreeIterator iter;
-      res = iter.Init(range);
-      if (NS_FAILED(res)) return res;
-      res = iter.MakeList(functor, address_of(arrayOfNodes));
-      if (NS_FAILED(res)) return res;
-  
-      // now that we have the list, delete non table elements
-      PRUint32 listCount;
-      PRUint32 j;
-      nsCOMPtr<nsIDOMNode> somenode;
-      nsCOMPtr<nsISupports> isupports;
-
-      arrayOfNodes->Count(&listCount);
-      for (j = 0; j < listCount; j++)
+      for (enumerator->First(); NS_OK!=enumerator->IsDone(); enumerator->Next())
       {
-        isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-        somenode = do_QueryInterface(isupports);
-        res = DeleteNonTableElements(somenode);
-        arrayOfNodes->RemoveElementAt(0);
-      }
-    }
+        nsCOMPtr<nsISupports> currentItem;
+        res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+        if (NS_FAILED(res)) return res;
+        if (!currentItem) return NS_ERROR_UNEXPECTED;
+
+        // build a list of nodes in the range
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsISupportsArray> arrayOfNodes;
+        nsTrivialFunctor functor;
+        nsDOMSubtreeIterator iter;
+        res = iter.Init(range);
+        if (NS_FAILED(res)) return res;
+        res = iter.MakeList(functor, address_of(arrayOfNodes));
+        if (NS_FAILED(res)) return res;
     
-    // check endopints for possible text deletion.
-    // we can assume that if text node is found, we can
-    // delete to end or to begining as appropriate,
-    // since the case where both sel endpoints in same
-    // text node was already handled (we wouldn't be here)
-    if ( mHTMLEditor->IsTextNode(startNode) )
-    {
-      // delete to last character
-      nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-      PRUint32 len;
-      nodeAsText = do_QueryInterface(startNode);
-      nodeAsText->GetLength(&len);
-      if (len > (PRUint32)startOffset)
-      {
-        res = mHTMLEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
-        if (NS_FAILED(res)) return res;
+        // now that we have the list, delete non table elements
+        PRUint32 listCount;
+        PRUint32 j;
+        nsCOMPtr<nsIDOMNode> somenode;
+        nsCOMPtr<nsISupports> isupports;
+
+        arrayOfNodes->Count(&listCount);
+        for (j = 0; j < listCount; j++)
+        {
+          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
+          somenode = do_QueryInterface(isupports);
+          res = DeleteNonTableElements(somenode);
+          arrayOfNodes->RemoveElementAt(0);
+        }
       }
-    }
-    if ( mHTMLEditor->IsTextNode(endNode) )
-    {
-      // delete to first character
-      nsCOMPtr<nsIDOMCharacterData>nodeAsText;
-      nodeAsText = do_QueryInterface(endNode);
-      if (endOffset)
+      
+      // check endopints for possible text deletion.
+      // we can assume that if text node is found, we can
+      // delete to end or to begining as appropriate,
+      // since the case where both sel endpoints in same
+      // text node was already handled (we wouldn't be here)
+      if ( mHTMLEditor->IsTextNode(startNode) )
       {
-        res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
-        if (NS_FAILED(res)) return res;
+        // delete to last character
+        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+        PRUint32 len;
+        nodeAsText = do_QueryInterface(startNode);
+        nodeAsText->GetLength(&len);
+        if (len > (PRUint32)startOffset)
+        {
+          res = mHTMLEditor->DeleteText(nodeAsText,startOffset,len-startOffset);
+          if (NS_FAILED(res)) return res;
+        }
+      }
+      if ( mHTMLEditor->IsTextNode(endNode) )
+      {
+        // delete to first character
+        nsCOMPtr<nsIDOMCharacterData>nodeAsText;
+        nodeAsText = do_QueryInterface(endNode);
+        if (endOffset)
+        {
+          res = mHTMLEditor->DeleteText(nodeAsText,0,endOffset);
+          if (NS_FAILED(res)) return res;
+        }
       }
     }
     if (aAction == nsIEditor::eNext)
     {
-      res = aSelection->Collapse(endNode,0);
+      res = aSelection->Collapse(endNode,endOffset);
     }
     else
     {
@@ -2100,6 +2117,8 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     res = mHTMLEditor->CreateNode(itemType, theList, 0, getter_AddRefs(theListItem));
     if (NS_FAILED(res)) return res;
+    // remember our new block for postprocessing
+    mNewBlock = theListItem;
     // put selection in new list item
     res = aSelection->Collapse(theListItem,0);
     selectionResetter.Abort();  // to prevent selection reseter from overriding us.
@@ -2254,6 +2273,8 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(*aListType, curParent, offset, getter_AddRefs(curList));
       if (NS_FAILED(res)) return res;
+      // remember our new block for postprocessing
+      mNewBlock = curList;
       // curList is now the correct thing to put curNode in
       prevListItem = 0;
     }
@@ -2431,6 +2452,8 @@ nsHTMLEditRules::WillMakeBasicBlock(nsISelection *aSelection,
     if (NS_FAILED(res)) return res;
     res = mHTMLEditor->CreateNode(*aBlockType, parent, offset, getter_AddRefs(theBlock));
     if (NS_FAILED(res)) return res;
+    // remember our new block for postprocessing
+    mNewBlock = theBlock;
     // delete anything that was in the list of nodes
     nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> curNode;
@@ -2530,6 +2553,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
     if (NS_FAILED(res)) return res;
     res = mHTMLEditor->CreateNode(quoteType, parent, offset, getter_AddRefs(theBlock));
     if (NS_FAILED(res)) return res;
+    // remember our new block for postprocessing
+    mNewBlock = theBlock;
     // delete anything that was in the list of nodes
     nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> curNode;
@@ -2587,6 +2612,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
         res = mHTMLEditor->CreateNode(listTag, curParent, offset, getter_AddRefs(curList));
         if (NS_FAILED(res)) return res;
         // curList is now the correct thing to put curNode in
+        // remember our new block for postprocessing
+        mNewBlock = curList;
       }
       // tuck the node into the end of the active list
       PRUint32 listLen;
@@ -2607,6 +2634,8 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
         if (NS_FAILED(res)) return res;
         res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
         if (NS_FAILED(res)) return res;
+        // remember our new block for postprocessing
+        mNewBlock = curQuote;
         
 /* !!!!!!!!!!!!!!!  TURNED OFF PER BUG 33213 !!!!!!!!!!!!!!!!!!!!
         // set style to not have unwanted vertical margins
@@ -3134,6 +3163,8 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     }
     res = mHTMLEditor->CreateNode(divType, parent, offset, getter_AddRefs(theDiv));
     if (NS_FAILED(res)) return res;
+    // remember our new block for postprocessing
+    mNewBlock = theDiv;
     // set up the alignment on the div
     nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(theDiv);
     nsAutoString attr; attr.AssignWithConversion("align");
@@ -3203,6 +3234,8 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
       if (NS_FAILED(res)) return res;
+      // remember our new block for postprocessing
+      mNewBlock = curDiv;
       // set up the alignment on the div
       nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(curDiv);
       nsAutoString attr; attr.AssignWithConversion("align");
@@ -4918,6 +4951,9 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
       if (NS_FAILED(res)) return res;
       res = mHTMLEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curBlock));
       if (NS_FAILED(res)) return res;
+      // remember our new block for postprocessing
+      mNewBlock = curBlock;
+      // note: doesn't matter if we set mNewBlock multiple times.
     }
       
     PRUint32 blockLen;
@@ -5179,6 +5215,9 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsAReadab
         if (NS_FAILED(res)) return res;
         res = mHTMLEditor->CreateNode(*aBlockTag, curParent, offset, getter_AddRefs(curBlock));
         if (NS_FAILED(res)) return res;
+        // remember our new block for postprocessing
+        mNewBlock = curBlock;
+        // note: doesn't matter if we set mNewBlock multiple times.
       }
       
       // if curNode is a Break, replace it with a return if we are going to <pre>
@@ -5395,6 +5434,111 @@ nsHTMLEditRules::AdjustWhitespace(nsISelection *aSelection)
   
   // ask whitespace object to tweak nbsp's
   return nsWSRunObject(mHTMLEditor, selNode, selOffset).AdjustWhitespace();
+}
+
+nsresult 
+nsHTMLEditRules::PinSelectionToNewBlock(nsISelection *aSelection)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  PRBool bCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed) return res;
+
+  // get the (collapsed) selection location
+  nsCOMPtr<nsIDOMNode> selNode, temp;
+  PRInt32 selOffset;
+  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return res;
+  temp = selNode;
+  
+  // use ranges and mRangeHelper to compare sel point to new block
+  nsCOMPtr<nsIDOMRange> range = do_CreateInstance(kRangeCID);
+  res = range->SetStart(selNode, selOffset);
+  if (NS_FAILED(res)) return res;
+  res = range->SetEnd(selNode, selOffset);
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIContent> block (do_QueryInterface(mNewBlock));
+  if (!block) return NS_ERROR_NO_INTERFACE;
+  PRBool nodeBefore, nodeAfter;
+  res = mHTMLEditor->mRangeHelper->CompareNodeToRange(block, range, &nodeBefore, &nodeAfter);
+  if (NS_FAILED(res)) return res;
+  
+  if (nodeBefore && nodeAfter)
+    return NS_OK;  // selection is inside block
+  else if (nodeBefore)
+  {
+    // selection is after block.  put at end of block.
+    nsCOMPtr<nsIDOMNode> tmp = mNewBlock;
+    mHTMLEditor->GetLastEditableChild(mNewBlock, address_of(tmp));
+    PRUint32 endPoint;
+    if (mHTMLEditor->IsTextNode(tmp) || mHTMLEditor->IsContainer(tmp))
+    {
+      res = nsEditor::GetLengthOfDOMNode(tmp, endPoint);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMNode> tmp2;
+      res = nsEditor::GetNodeLocation(tmp, address_of(tmp2), (PRInt32*)&endPoint);
+      if (NS_FAILED(res)) return res;
+      tmp = tmp2;
+      endPoint++;  // want to be after this node
+    }
+    return aSelection->Collapse(tmp, (PRInt32)endPoint);
+  }
+  else
+  {
+    // selection is before block.  put at start of block.
+    nsCOMPtr<nsIDOMNode> tmp = mNewBlock;
+    mHTMLEditor->GetFirstEditableChild(mNewBlock, address_of(tmp));
+    PRInt32 offset;
+    if (!(mHTMLEditor->IsTextNode(tmp) || mHTMLEditor->IsContainer(tmp)))
+    {
+      nsCOMPtr<nsIDOMNode> tmp2;
+      res = nsEditor::GetNodeLocation(tmp, address_of(tmp2), &offset);
+      if (NS_FAILED(res)) return res;
+      tmp = tmp2;
+    }
+    return aSelection->Collapse(tmp, 0);
+  }
+}
+
+nsresult 
+nsHTMLEditRules::CheckInterlinePosition(nsISelection *aSelection)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISelection> selection(aSelection);
+  nsCOMPtr<nsISelectionPrivate> selPriv(do_QueryInterface(selection));
+
+  // if the selection isn't collapsed, do nothing.
+  PRBool bCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed) return res;
+
+  // get the (collapsed) selection location
+  nsCOMPtr<nsIDOMNode> selNode, node;
+  PRInt32 selOffset;
+  res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(selNode), &selOffset);
+  if (NS_FAILED(res)) return res;
+  
+  // are we after a block?  If so try set caret to following content
+  mHTMLEditor->GetPriorHTMLSibling(selNode, selOffset, address_of(node));
+  if (node && IsBlockNode(node))
+  {
+    selPriv->SetInterlinePosition(PR_TRUE);
+    return NS_OK;
+  }
+
+  // are we before a block?  If so try set caret to prior content
+  mHTMLEditor->GetNextHTMLSibling(selNode, selOffset, address_of(node));
+  if (node && IsBlockNode(node))
+  {
+    selPriv->SetInterlinePosition(PR_FALSE);
+    return NS_OK;
+  }
+  return NS_OK;
 }
 
 nsresult 

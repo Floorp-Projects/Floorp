@@ -357,9 +357,14 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
 
     // Loop over the node list and paste the nodes:
     PRBool bDidInsert = PR_FALSE;
-    nsCOMPtr<nsIDOMNode> lastInsertNode, insertedContextParent;
+    nsCOMPtr<nsIDOMNode> parentBlock, lastInsertNode, insertedContextParent;
     PRUint32 listCount, j;
     nodeList->Count(&listCount);
+    if (IsBlockNode(parentNode))
+      parentBlock = parentNode;
+    else
+      parentBlock = GetBlockNodeParent(parentNode);
+      
     for (j=0; j<listCount; j++)
     {
       nsCOMPtr<nsISupports> isupports = dont_AddRef(nodeList->ElementAt(j));
@@ -425,8 +430,26 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAReadableString &
           curNode->GetFirstChild(getter_AddRefs(child));
         }
       }
+      // check for pre's going into pre's.  
+      else if (nsHTMLEditUtils::IsPre(parentBlock) && nsHTMLEditUtils::IsPre(curNode))
+      {
+        nsCOMPtr<nsIDOMNode> child, tmp;
+        curNode->GetFirstChild(getter_AddRefs(child));
+        while (child)
+        {
+          res = InsertNodeAtPoint(child, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
+          if (NS_SUCCEEDED(res)) 
+          {
+            bDidInsert = PR_TRUE;
+            lastInsertNode = child;
+            offsetOfNewNode++;
+          }
+          curNode->GetFirstChild(getter_AddRefs(child));
+        }
+      }
       else
       {
+        
         // try to insert
         res = InsertNodeAtPoint(curNode, address_of(parentNode), &offsetOfNewNode, PR_TRUE);
         if (NS_SUCCEEDED(res)) 
