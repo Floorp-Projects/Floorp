@@ -190,6 +190,7 @@ FeedItem.prototype.isStored = function() {
   }
   if (!folder) {
     debug(this.feed.name + " folder doesn't exist; creating");
+		debug("creating " + this.feed.name + "as child of " + server.rootMsgFolder + "\n");
     server.rootMsgFolder.createSubfolder(this.feed.name, getMessageWindow());
     debug(this.identity + " not stored (folder didn't exist)");
     return false;

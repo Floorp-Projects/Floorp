@@ -47,6 +47,7 @@ function doAdd() {
         // If we're here, it's probably because the folder doesn't exist yet,
         // so create it.
         debug("folder for new feed " + feed.title + " doesn't exist; creating");
+				debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
         server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
 				folder = server.rootMsgFolder.FindSubFolder(feed.name);
 				var msgdb = folder.getMsgDatabase(null);
@@ -178,20 +179,21 @@ function doRemove() {
             // XXX Should we check for other feeds using the folder and delete it
             // if there aren't any?  What if the user is using the folder
             // for other purposes?
-            //var server = getIncomingServer();
-            //var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
-            //var folderResource = server.rootMsgFolder.getChildNamed(title.Value).QueryInterface(Components.interfaces.nsIRDFResource);
-            //var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
-            //try {
-            //    // If the folder still exists, then it wasn't deleted,
-            //    // which means the user answered "no" to the question of whether
-            //    // they wanted to move the folder into the trash.  That probably
-            //    // means they changed their minds about removing the feed,
-            //    // so don't remove it.
-            //    folder = server.rootMsgFolder.getChildNamed(feed.name);
-            //    if (folder) return;
-            //}
-            //catch (e) {}
+            var server = getIncomingServer();
+            var openerResource = server.rootMsgFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+            var folderResource = server.rootMsgFolder.getChildNamed(title.Value).QueryInterface(Components.interfaces.nsIRDFResource);
+            var foo = window.opener.messenger.DeleteFolders(window.opener.GetFolderDatasource(), openerResource, folderResource);
+            try {
+                // If the folder still exists, then it wasn't deleted,
+                // which means the user answered "no" to the question of whether
+                // they wanted to move the folder into the trash.  That probably
+                // means they changed their minds about removing the feed,
+                // so don't remove it.
+                folder = server.rootMsgFolder.getChildNamed(feed.name);
+                if (folder) 
+									return;
+            }
+            catch (e) {}
             ds.Unassert(resource, DC_TITLE, title, true);
         }
 

@@ -237,23 +237,14 @@ function getAccount() {
   if (gFzAccount)
     return gFzAccount;
 
-  var accounts = accountManager.accounts;
-  accounts = accounts.QueryInterface(Components.interfaces.nsICollection);
-
-  for ( var i=0 ; i<accounts.Count() ; i++ ) {
-    var account = accounts.GetElementAt(i);
-    account = account.QueryInterface(Components.interfaces.nsIMsgAccount);
-    if (account.incomingServer.prettyName == SERVER_NAME) {
-      gFzAccount = account;
-      return gFzAccount;
-    }
-  }
-
-  // If we made it this far there's no "Feeds" account yet, so let's create one.
-  debug("no account; creating one...");
-  gFzAccount = createAccount();
-
-  return gFzAccount;
+	try {
+		gFzAccount = accountManager.FindAccountForServer(getIncomingServer());
+	}
+	catch (ex) {
+		debug("no incoming server or account; creating account...");
+		gFzAccount = createAccount();
+	}
+	return gFzAccount;
 }
 
 function createAccount() {
