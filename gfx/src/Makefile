@@ -37,7 +37,7 @@ CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
 EXPORTS=nsColor.h nsColorNames.h nsCoord.h nsFont.h nsRect.h nsPoint.h \
     nsSize.h nsMargin.h nsTransform2D.h nsIRenderingContext.h \
     nsIFontMetrics.h nsIImageManager.h nsIImageGroup.h nsIImageRequest.h \
-    nsIImageObserver.h nsIDeviceContext.h nsIFontCache.h nsIImage.h \
+    nsIImageObserver.h nsIDeviceContext.h nsIFontCache.h nsIImage.h nsIBlender.h \
     nsGfxCIID.h nsIRegion.h
 
 include $(DEPTH)/config/rules.mk

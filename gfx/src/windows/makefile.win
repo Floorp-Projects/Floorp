@@ -32,6 +32,7 @@ OBJS =                                  \
 	.\$(OBJDIR)\nsRenderingContextWin.obj         \
 	.\$(OBJDIR)\nsFontMetricsWin.obj          \
 	.\$(OBJDIR)\nsImageWin.obj          \
+	.\$(OBJDIR)\nsBlenderWin.obj				\
 	.\$(OBJDIR)\nsRegionWin.obj          \
 	.\$(OBJDIR)\nsGfxFactoryWin.obj          \
 	$(NULL)
