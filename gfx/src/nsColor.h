@@ -59,6 +59,11 @@ extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const char* aBuf, nscolor* aResult)
 // from the xfe which was written originally by Eric Bina. So there.
 extern "C" NS_GFX_(void) NS_Get3DColors(nscolor aResult[2], nscolor aColor);
 
+// To determin colors based on the background brightness
+extern "C" NS_GFX_(void) NS_GetSpecial3DColors(nscolor aResult[2],
+											   nscolor aBackgroundColor,
+											   nscolor aElementColor);
+
 // Special method to brighten a Color and have it shift to white when
 // fully saturated.
 extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
@@ -66,5 +71,8 @@ extern "C" NS_GFX_(nscolor) NS_BrightenColor(nscolor inColor);
 // Special method to darken a Color and have it shift to black when
 // darkest component underflows
 extern "C" NS_GFX_(nscolor) NS_DarkenColor(nscolor inColor);
+
+// Determins brightness for a specific color
+extern "C" NS_GFX_(int) NS_GetBrightness(PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue);
 
 #endif /* nsColor_h___ */
