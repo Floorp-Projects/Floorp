@@ -556,8 +556,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
                                              nsIStyleContext* aBlockSC,
                                              const nsReflowState& aReflowState,
                                              PRBool aComputeMaxElementSize)
-  : nsReflowState(aBlock, *aReflowState.parentReflowState,
-                  aReflowState.maxSize),
+  : nsReflowState(aReflowState),
     mLineLayout(aPresContext, aSpaceManager),
     mInlineLayout(mLineLayout, aBlock, aBlockSC)
 {
