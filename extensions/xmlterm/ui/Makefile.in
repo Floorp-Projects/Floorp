@@ -33,21 +33,33 @@
 
 # makefile for xmlterm/ui directory
 
-ifdef STAND_ALONE
-DEPTH      = ..
-topsrcdir  = ..
-VPATH      = .
-srcdir     = .
-include $(topsrcdir)/config/autoconf.mk
-else
 DEPTH      = ../../..
 topsrcdir  = @top_srcdir@
 VPATH      = @srcdir@
 srcdir     = @srcdir@
 include $(DEPTH)/config/autoconf.mk
-endif
 
-DIRS = content skin
+CHROME_DIR	= xmlterm
+
+CHROME_CONTENT	= \
+		xmlterm.html \
+		xmlterm.xul \
+		xmlterm2.xul \
+		XMLTermChrome.js \
+		XMLTermCommands.js \
+		xmltermTips.html \
+		xmltermAbout.html \
+		xmltblank.html \
+		$(NULL)
+
+CHROME_SKIN	= \
+		xmlterm.css \
+		xmltpage.css \
+		wheel.gif \
+		$(NULL)
+
+CHROME_L10N	= \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
