@@ -181,12 +181,12 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue, REFNSIID aIID, ns
         }
     }
     
-    nsISupports *realObject;
+    nsCOMPtr<nsISupports> realObject;
     
     // we need to do make sure that we addref the passed in object as well as ensure
     // that it is of the requested IID;
     
-    rv = aObj->QueryInterface(aIID, (void**)&realObject);
+    rv = aObj->QueryInterface(aIID, getter_AddRefs(realObject));
 
     if ( NS_FAILED( rv ) )
         return rv;
