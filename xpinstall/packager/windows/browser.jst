@@ -45,7 +45,7 @@ var fileComponentRegStr;
 var fileComponentReg;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Seamonkey", "", "$Version$"); 
+err    = startInstall("Mozilla Seamonkey", "Browser", "$Version$"); 
 logComment("startInstall: " + err);
 
 communicatorFolder = getFolder("Communicator");
@@ -54,7 +54,8 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if(verifyDiskSpace(communicatorFolder, srDest) == true)
 {
-  err = addDirectory("Program",
+  setPackageFolder(communicatorFolder);
+  err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
                      communicatorFolder, // Where to put this file (Returned from GetFolder) 

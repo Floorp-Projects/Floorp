@@ -286,6 +286,62 @@ HRESULT Initialize(HINSTANCE hInstance)
   return(0);
 }
 
+void OutputSetupTitleHack(HDC hDC)
+{
+  COLORREF  crTitle;
+  HFONT     hfontTmp;
+  HFONT     hfontOld;
+  int       nHeightOffset;
+  int       nHeight;
+  int       iLine0x;
+  int       iLine0y;
+  int       iLine1x;
+  int       iLine1y;
+  int       iLine2x;
+  int       iLine2y;
+
+  SetBkMode(hDC, TRANSPARENT);
+  nHeightOffset = -MulDiv(36, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+  nHeight       = -MulDiv(12, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+
+  hfontTmp = CreateFont(nHeight,
+                        0,
+                        0,
+                        0,
+                        FW_BOLD,
+                        0,
+                        0,
+                        0,
+                        DEFAULT_CHARSET,
+                        OUT_DEFAULT_PRECIS,
+                        0,
+                        PROOF_QUALITY,
+                        DEFAULT_PITCH | FF_DONTCARE,
+                        "");
+  if(hfontTmp)
+  {
+      hfontOld = SelectObject(hDC, hfontTmp);
+  }
+
+  crTitle = GetTextColor(hDC);
+  iLine0x = 23;
+  iLine0y = 30;
+  iLine1x = iLine0x;
+  iLine1y = iLine0y - nHeightOffset + 5;
+  iLine2x = iLine1x;
+  iLine2y = iLine1y - nHeightOffset + 5;
+
+  /* Set shadow color to black and draw shadow */
+  if(SetTextColor(hDC, 0) == CLR_INVALID)
+    PrintError("Invalid Color", ERROR_CODE_SHOW);
+
+  /* draw text */
+  TextOut(hDC, iLine1x, iLine1y, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+
+  SelectObject(hDC, hfontOld);
+  DeleteObject(hfontTmp);
+}
+
 void OutputSetupTitle(HDC hDC)
 {
   COLORREF  crTitle;
@@ -335,7 +391,7 @@ void OutputSetupTitle(HDC hDC)
 
   /* draw shadow */
   TextOut(hDC, iLine0x + 5, iLine0y + 5, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
-  TextOut(hDC, iLine1x + 5, iLine1y + 5, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+//  TextOut(hDC, iLine1x + 5, iLine1y + 5, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
   TextOut(hDC, iLine2x + 5, iLine2y + 5, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
 
   /* Set font color and draw; color format is 0x00bbggrr - where b is blue, g is green, and r is red */
@@ -345,11 +401,13 @@ void OutputSetupTitle(HDC hDC)
 
   /* draw text */
   TextOut(hDC, iLine0x, iLine0y, sgProduct.szSetupTitle0, lstrlen(sgProduct.szSetupTitle0));
-  TextOut(hDC, iLine1x, iLine1y, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
+//  TextOut(hDC, iLine1x, iLine1y, sgProduct.szSetupTitle1, lstrlen(sgProduct.szSetupTitle1));
   TextOut(hDC, iLine2x, iLine2y, sgProduct.szSetupTitle2, lstrlen(sgProduct.szSetupTitle2));
 
   SelectObject(hDC, hfontOld);
   DeleteObject(hfontTmp);
+
+  OutputSetupTitleHack(hDC);
 }
 
 HRESULT SdArchives(LPSTR szFileIdi, LPSTR szDownloadDir)

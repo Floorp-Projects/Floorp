@@ -4,7 +4,7 @@ var err;
 var communicatorFolder;
 
 srDest = $SpaceRequired$:bin;
-err    = startInstall("Mozilla Mail", "", "$Version$"); 
+err    = startInstall("Mozilla Mail", "Mail", "$Version$"); 
 logComment("startInstall: " + err);
 // check return value
 checkError(err);
@@ -14,7 +14,8 @@ logComment("communicatorFolder: " + communicatorFolder);
 
 if(verifyDiskSpace(communicatorFolder, srDest) == true)
 {
-  err = addDirectory("Program",
+  setPackageFolder(communicatorFolder);
+  err = addDirectory("",
                      "$Version$",
                      "bin",              // dir name in jar to extract 
                      communicatorFolder, // Where to put this file (Returned from GetFolder) 
