@@ -1067,19 +1067,18 @@ class BodyCodegen
 
     private void initBodyGeneration()
     {
-        if (scriptOrFn.getType() == Token.FUNCTION) {
-            fnCurrent = OptFunctionNode.get(scriptOrFn);
-        } else {
-            fnCurrent = null;
-        }
-
         isTopLevel = (scriptOrFn == codegen.scriptOrFnNodes[0]);
 
-        inDirectCallFunction = (fnCurrent == null) ? false
-                                   : fnCurrent.isTargetOfDirectCall();
-
-        hasVarsInRegs = (fnCurrent != null
-                         && !fnCurrent.fnode.requiresActivation());
+        if (scriptOrFn.getType() == Token.FUNCTION) {
+            fnCurrent = OptFunctionNode.get(scriptOrFn);
+            hasVarsInRegs = !fnCurrent.fnode.requiresActivation();
+            inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
+            if (inDirectCallFunction && !hasVarsInRegs) Codegen.badTree();
+        } else {
+            fnCurrent = null;
+            hasVarsInRegs = false;
+            inDirectCallFunction = false;
+        }
 
         locals = new boolean[MAX_LOCALS];
 
@@ -1103,18 +1102,18 @@ class BodyCodegen
      */
     private void generatePrologue()
     {
-        int directParameterCount = -1;
         if (inDirectCallFunction) {
-            directParameterCount = scriptOrFn.getParamCount();
+            int directParameterCount = scriptOrFn.getParamCount();
             // 0 is reserved for function Object 'this'
             // 1 is reserved for context
             // 2 is reserved for parentScope
             // 3 is reserved for script 'this'
-            short jReg = 4;
+            if (firstFreeLocal != 4) Kit.codeBug();
             for (int i = 0; i != directParameterCount; ++i) {
                 OptLocalVariable lVar = fnCurrent.getVar(i);
-                lVar.assignJRegister(jReg);
-                jReg += 3;  // 3 is 1 for Object parm and 2 for double parm
+                lVar.assignJRegister(firstFreeLocal);
+                // 3 is 1 for Object parm and 2 for double parm
+                firstFreeLocal += 3;
             }
             if (!fnCurrent.getParameterNumberContext()) {
                 // make sure that all parameters are objects
@@ -1137,7 +1136,7 @@ class BodyCodegen
             }
         }
 
-        if (fnCurrent != null && directParameterCount == -1
+        if (fnCurrent != null && !inDirectCallFunction
             && (!compilerEnv.isUseDynamicScope()
                 || fnCurrent.fnode.getIgnoreDynamicScope()))
         {
@@ -1151,13 +1150,9 @@ class BodyCodegen
             cfw.addAStore(variableObjectLocal);
         }
 
-        if (directParameterCount > 0) {
-            for (int i = 0; i < (3 * directParameterCount); i++)
-                reserveWordLocal(i + 4);               // reserve 'args'
-        }
         // reserve 'args[]'
-        argsLocal = reserveWordLocal(directParameterCount <= 0
-                                     ? 4 : (3 * directParameterCount) + 4);
+        argsLocal = firstFreeLocal++;
+        localsMax = firstFreeLocal;
 
         if (fnCurrent == null) {
             // See comments in visitRegexp
@@ -1183,7 +1178,7 @@ class BodyCodegen
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
             int parmCount = scriptOrFn.getParamCount();
-            if (parmCount > 0 && directParameterCount < 0) {
+            if (parmCount > 0 && !inDirectCallFunction) {
                 // Set up args array
                 // check length of arguments, pad if need be
                 cfw.addALoad(argsLocal);
@@ -1200,24 +1195,27 @@ class BodyCodegen
                 cfw.markLabel(label);
             }
 
+            int paramCount = fnCurrent.fnode.getParamCount();
+            int varCount = fnCurrent.fnode.getParamAndVarCount();
+
             // REMIND - only need to initialize the vars that don't get a value
             // before the next call and are used in the function
             short firstUndefVar = -1;
-            for (int i = 0; i < fnCurrent.getVarCount(); i++) {
+            for (int i = 0; i != varCount; ++i) {
                 OptLocalVariable lVar = fnCurrent.getVar(i);
                 short reg = -1;
-                if (lVar.isNumber()) {
-                    reg = getNewWordPairLocal();
-                    cfw.addPush(0.0);
-                    cfw.addDStore(reg);
-                } else if (lVar.isParameter()) {
-                    if (directParameterCount < 0) {
+                if (i < paramCount) {
+                    if (!inDirectCallFunction) {
                         reg = getNewWordLocal();
                         cfw.addALoad(argsLocal);
                         cfw.addPush(i);
                         cfw.add(ByteCode.AALOAD);
                         cfw.addAStore(reg);
                     }
+                } else if (lVar.isNumber()) {
+                    reg = getNewWordPairLocal();
+                    cfw.addPush(0.0);
+                    cfw.addDStore(reg);
                 } else {
                     reg = getNewWordLocal();
                     if (firstUndefVar == -1) {
@@ -1246,25 +1244,6 @@ class BodyCodegen
 
             // Skip creating activation object.
             return;
-        }
-
-        if (directParameterCount > 0) {
-            // We're going to create an activation object, so we
-            // need to get an args array with all the arguments in it.
-
-            cfw.addALoad(argsLocal);
-            cfw.addPush(directParameterCount);
-            addOptRuntimeInvoke("padStart",
-                                "([Ljava/lang/Object;I)[Ljava/lang/Object;");
-            cfw.addAStore(argsLocal);
-            for (int i=0; i < directParameterCount; i++) {
-                cfw.addALoad(argsLocal);
-                cfw.addPush(i);
-                // "3" is 1 for Object parm and 2 for double parm, and
-                // "4" is to account for the context, etc. parms
-                cfw.addALoad(3 * i + 4);
-                cfw.add(ByteCode.AASTORE);
-            }
         }
 
         String debugVariableName;
@@ -1311,7 +1290,7 @@ class BodyCodegen
 
         // default is to generate debug info
         if (compilerEnv.isGenerateDebugInfo()) {
-            cfw.addVariableDescriptor(debugVariableName, "Ljava/lang/Object;", cfw.getCurrentCodeOffset(), variableObjectLocal);
+            cfw.addVariableDescriptor(debugVariableName, "Lorg/mozilla/javascript/Scriptable;", cfw.getCurrentCodeOffset(), variableObjectLocal);
         }
 
         if (fnCurrent == null) {
@@ -1823,13 +1802,25 @@ class BodyCodegen
                 }
                 break;
 
-              case Token.GETVAR: {
-                OptLocalVariable lVar = OptLocalVariable.get(node);
-                visitGetVar(lVar,
-                            node.getIntProp(Node.ISNUMBER_PROP, -1) != -1,
-                            node.getString());
-              }
-              break;
+              case Token.GETVAR:
+                if (hasVarsInRegs) {
+                    OptLocalVariable lVar = OptLocalVariable.get(node);
+                    if (lVar == null) {
+                        lVar = fnCurrent.getVar(node.getString());
+                    }
+                    loadVarReg(lVar, node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
+                } else {
+                    cfw.addALoad(variableObjectLocal);
+                    cfw.addPush(node.getString());
+                    cfw.addALoad(variableObjectLocal);
+                    addScriptRuntimeInvoke(
+                        "getProp",
+                        "(Ljava/lang/Object;"
+                        +"Ljava/lang/String;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;");
+                }
+                break;
 
               case Token.SETVAR:
                 visitSetVar(node, child, true);
@@ -2745,7 +2736,7 @@ class BodyCodegen
                     cfw.addPush("number");
                     return;
                 }
-                visitGetVar(lVar, false, name);
+                loadVarReg(lVar, false);
                 addScriptRuntimeInvoke("typeof",
                                        "(Ljava/lang/Object;"
                                        +")Ljava/lang/String;");
@@ -2763,17 +2754,18 @@ class BodyCodegen
     private void visitIncDec(Node node, boolean isInc)
     {
         Node child = node.getFirstChild();
-        if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-            OptLocalVariable lVar = OptLocalVariable.get(child);
-            short reg = lVar.getJRegister();
-            cfw.addDLoad(reg);
-            cfw.add(ByteCode.DUP2);
-            cfw.addPush(1.0);
-            cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
-            cfw.addDStore(reg);
-        } else {
-            int childType = child.getType();
-            if (hasVarsInRegs && childType == Token.GETVAR) {
+        switch (child.getType()) {
+          case Token.GETVAR:
+            if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                OptLocalVariable lVar = OptLocalVariable.get(child);
+                short reg = lVar.getJRegister();
+                cfw.addDLoad(reg);
+                cfw.add(ByteCode.DUP2);
+                cfw.addPush(1.0);
+                cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
+                cfw.addDStore(reg);
+                break;
+            } else if (hasVarsInRegs) {
                 OptLocalVariable lVar = OptLocalVariable.get(child);
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
@@ -2785,37 +2777,46 @@ class BodyCodegen
                 cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
                 addDoubleWrap();
                 cfw.addAStore(reg);
-            } else if (childType == Token.GETPROP) {
-                Node getPropChild = child.getFirstChild();
-                generateCodeFromNode(getPropChild, node);
-                generateCodeFromNode(getPropChild.getNext(), node);
-                cfw.addALoad(variableObjectLocal);
-                cfw.addPush(isInc);
-                addScriptRuntimeInvoke("postIncrDecr",
-                                       "(Ljava/lang/Object;"
-                                       +"Ljava/lang/String;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
-                                       +"Z)Ljava/lang/Object;");
-            } else if (childType == Token.GETELEM) {
-                Node getPropChild = child.getFirstChild();
-                generateCodeFromNode(getPropChild, node);
-                generateCodeFromNode(getPropChild.getNext(), node);
-                cfw.addALoad(variableObjectLocal);
-                cfw.addPush(isInc);
-                addScriptRuntimeInvoke("postIncrDecrElem",
-                                       "(Ljava/lang/Object;"
-                                       +"Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
-                                       +"Z)Ljava/lang/Object;");
-            } else {
-                cfw.addALoad(variableObjectLocal);
-                cfw.addPush(child.getString());          // push name
-                cfw.addPush(isInc);
-                addScriptRuntimeInvoke("postIncrDecr",
-                                       "(Lorg/mozilla/javascript/Scriptable;"
-                                       +"Ljava/lang/String;"
-                                       +"Z)Ljava/lang/Object;");
+                break;
             }
+            // fallthrough
+          case Token.NAME:
+            cfw.addALoad(variableObjectLocal);
+            cfw.addPush(child.getString());          // push name
+            cfw.addPush(isInc);
+            addScriptRuntimeInvoke("postIncrDecr",
+                "(Lorg/mozilla/javascript/Scriptable;"
+                +"Ljava/lang/String;"
+                +"Z)Ljava/lang/Object;");
+            break;
+          case Token.GETPROP: {
+            Node getPropChild = child.getFirstChild();
+            generateCodeFromNode(getPropChild, node);
+            generateCodeFromNode(getPropChild.getNext(), node);
+            cfw.addALoad(variableObjectLocal);
+            cfw.addPush(isInc);
+            addScriptRuntimeInvoke("postIncrDecr",
+                                   "(Ljava/lang/Object;"
+                                   +"Ljava/lang/String;"
+                                   +"Lorg/mozilla/javascript/Scriptable;"
+                                   +"Z)Ljava/lang/Object;");
+            break;
+          }
+          case Token.GETELEM: {
+            Node getElemChild = child.getFirstChild();
+            generateCodeFromNode(getElemChild, node);
+            generateCodeFromNode(getElemChild.getNext(), node);
+            cfw.addALoad(variableObjectLocal);
+            cfw.addPush(isInc);
+            addScriptRuntimeInvoke("postIncrDecrElem",
+                                   "(Ljava/lang/Object;"
+                                   +"Ljava/lang/Object;"
+                                   +"Lorg/mozilla/javascript/Scriptable;"
+                                   +"Z)Ljava/lang/Object;");
+            break;
+          }
+          default:
+            Codegen.badTree();
         }
     }
 
@@ -3213,55 +3214,37 @@ class BodyCodegen
             +")Ljava/lang/Object;");
     }
 
-    private void visitGetVar(OptLocalVariable lVar, boolean isNumber,
-                             String name)
+    private void loadVarReg(OptLocalVariable lVar, boolean isNumber)
     {
-        // TODO: Clean up use of lVar here and in set.
-        if (hasVarsInRegs && lVar == null)
-            lVar = fnCurrent.getVar(name);
-        if (lVar != null) {
-            short reg = lVar.getJRegister();
-            if (lVar.isParameter() && inDirectCallFunction &&
-                !itsForcedObjectParameters)
-            {
-/*
-    Remember that here the isNumber flag means that we want to
-    use the incoming parameter in a Number context, so test the
-    object type and convert the value as necessary.
-
-*/
-                if (isNumber) {
-                    dcpLoadAsNumber(reg);
-                } else {
-                    dcpLoadAsObject(reg);
-                }
+        short reg = lVar.getJRegister();
+        if (lVar.isParameter() && inDirectCallFunction &&
+            !itsForcedObjectParameters)
+        {
+            // Remember that here the isNumber flag means that we want to
+            // use the incoming parameter in a Number context, so test the
+            // object type and convert the value as necessary.
+            if (isNumber) {
+                dcpLoadAsNumber(reg);
             } else {
-                if (lVar.isNumber())
-                    cfw.addDLoad(reg);
-                else
-                    cfw.addALoad(reg);
+                dcpLoadAsObject(reg);
             }
-            return;
+        } else {
+            if (lVar.isNumber())
+                cfw.addDLoad(reg);
+            else
+                cfw.addALoad(reg);
         }
+        return;
 
-        cfw.addALoad(variableObjectLocal);
-        cfw.addPush(name);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke(
-            "getProp",
-            "(Ljava/lang/Object;"
-            +"Ljava/lang/String;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +")Ljava/lang/Object;");
     }
 
     private void visitSetVar(Node node, Node child, boolean needValue)
     {
-        OptLocalVariable lVar = OptLocalVariable.get(node);
-        // XXX is this right? If so, clean up.
-        if (hasVarsInRegs && lVar == null)
-            lVar = fnCurrent.getVar(child.getString());
-        if (lVar != null) {
+        if (hasVarsInRegs) {
+            OptLocalVariable lVar = OptLocalVariable.get(node);
+            if (lVar == null) {
+                lVar = fnCurrent.getVar(child.getString());
+            }
             generateCodeFromNode(child.getNext(), node);
             short reg = lVar.getJRegister();
             if (lVar.isParameter()
@@ -3608,13 +3591,6 @@ class BodyCodegen
         }
         throw Context.reportRuntimeError("Program too complex " +
                                          "(out of locals)");
-    }
-
-    private short reserveWordLocal(int local)
-    {
-        if (getNewWordLocal() != local)
-            throw new RuntimeException("Local allocation error");
-        return (short) local;
     }
 
     private short getNewWordLocal()
