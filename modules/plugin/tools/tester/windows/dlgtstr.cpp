@@ -38,7 +38,6 @@
 #include "xp.h"
 
 #include <windowsx.h>
-#include <assert.h>
 
 #include "resource.h"
 
@@ -62,6 +61,13 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
         pPlugin->updatePrefs(gp_mode, sg_manual);
       }
       break;
+    case IDC_EDIT_LOG_FILE_NAME:
+      if(codeNotify == EN_CHANGE)
+      {
+        char szString[256];
+        Edit_GetText(GetDlgItem(hWnd, IDC_EDIT_LOG_FILE_NAME), szString, sizeof(szString));
+        pPlugin->updatePrefs(gp_logfile, FALSE, szString);
+      }
     case IDC_RADIO_MODE_AUTO:
       if((codeNotify == BN_CLICKED) && (IsDlgButtonChecked(hWnd, IDC_RADIO_MODE_AUTO) == BST_CHECKED))
       {
@@ -77,13 +83,6 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
       pLogger->clearTarget();
       pLogger->clearLog();
       break;
-    case IDC_EDIT_LOG_FILE_NAME:
-      if(codeNotify == EN_CHANGE)
-      {
-        char szString[256];
-        Edit_GetText(GetDlgItem(hWnd, IDC_EDIT_LOG_FILE_NAME), szString, sizeof(szString));
-        pPlugin->updatePrefs(gp_logfile, FALSE, szString);
-      }
       break;
     case IDC_CHECK_LOG_TO_FILE:
       if(codeNotify == BN_CLICKED)
@@ -112,6 +111,10 @@ static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
                                                         && (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));
         pLogger->setShowImmediatelyFlag(IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG) == BST_CHECKED);
       }
+      break;
+    case IDC_CHECK_REMEMBER_LAST:
+      if(codeNotify == BN_CLICKED)
+        pPlugin->updatePrefs(gp_rememberlast, IsDlgButtonChecked(hWnd, IDC_CHECK_REMEMBER_LAST) == BST_CHECKED);
       break;
     default:
       break;
@@ -146,6 +149,7 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   EnableWindow(GetDlgItem(hWnd, IDC_CHECK_SHOW_LOG), (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));
 
   CheckDlgButton(hWnd, IDC_CHECK_SHOW_LOG, (pPlugin->m_Pref_bFlushNow) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hWnd, IDC_CHECK_REMEMBER_LAST, (pPlugin->m_Pref_bRememberLastCall) ? BST_CHECKED : BST_UNCHECKED);
 
   EnableWindow(GetDlgItem(hWnd, IDC_BUTTON_FLUSH), (BST_UNCHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_SHOW_LOG))
                                                   && (BST_CHECKED == IsDlgButtonChecked(hWnd, IDC_CHECK_LOG_TO_FRAME)));

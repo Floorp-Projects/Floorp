@@ -40,7 +40,7 @@
 
 void EnableWindowNow(HWND hWnd, BOOL bEnable);
 void ShowWindowNow(HWND hWnd, int iShow);
-void fillAPIComboBox(HWND hWndCombo);
+void fillAPIComboBoxAndSetSel(HWND hWndCombo, int iSel);
 void updateUI(HWND hWnd);
 void onGo(HWND hWnd);
 void onPaste(HWND hWndToPasteTo);

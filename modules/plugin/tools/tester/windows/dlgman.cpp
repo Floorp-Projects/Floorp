@@ -43,13 +43,17 @@
 
 #include "plugin.h"
 #include "helpers.h"
+#include "guiprefs.h"
+#include "winutils.h"
+#include "xp.h"
 
 extern CLogger * pLogger;
 
 static void onCommand(HWND hWnd, int id, HWND hWndCtl, UINT codeNotify)
 {
   CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
-  assert(pPlugin != NULL);
+  if (!pPlugin)
+    return;
 
   switch (id)
   {
@@ -175,12 +179,31 @@ static BOOL onInitDialog(HWND hWnd, HWND hWndFocus, LPARAM lParam)
   CPlugin * pPlugin = (CPlugin *)lParam;
   SetWindowLong(hWnd, DWL_USER, (long)pPlugin);
 
-  fillAPIComboBox(GetDlgItem(hWnd, IDC_COMBO_API_CALL));
+  // look at the last used API call if needed
+  int iSel = 0;
+  if (pPlugin && pPlugin->m_Pref_bRememberLastCall) {
+    char szFileName[_MAX_PATH];
+    GetINIFileName(pPlugin->getInstance(), szFileName, sizeof(szFileName));
+    iSel = XP_GetPrivateProfileInt(SECTION_PREFERENCES, KEY_LAST_API_CALL, 0, szFileName);
+  }
+  fillAPIComboBoxAndSetSel(GetDlgItem(hWnd, IDC_COMBO_API_CALL), iSel);
   updateUI(hWnd);
 
-  int iTopMargin = 160;
+  int iTopMargin = 188;
   SetWindowPos(hWnd, NULL, 0,iTopMargin, 0,0, SWP_NOZORDER | SWP_NOSIZE);
   return TRUE;
+}
+
+static void onDestroy(HWND hWnd)
+{
+  CPlugin * pPlugin = (CPlugin *)GetWindowLong(hWnd, DWL_USER);
+  if(pPlugin && pPlugin->m_Pref_bRememberLastCall) {
+    // save last API call if needed
+    char szFileName[_MAX_PATH];
+    GetINIFileName(pPlugin->getInstance(), szFileName, sizeof(szFileName));
+    int iSel = ComboBox_GetCurSel(GetDlgItem(hWnd, IDC_COMBO_API_CALL));
+    XP_WritePrivateProfileInt(SECTION_PREFERENCES, KEY_LAST_API_CALL, iSel, szFileName);
+  }
 }
 
 BOOL CALLBACK NP_LOADDS ManualDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -191,6 +214,9 @@ BOOL CALLBACK NP_LOADDS ManualDlgProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
       return (BOOL)HANDLE_WM_INITDIALOG(hWnd, wParam, lParam, onInitDialog);
     case WM_COMMAND:
       HANDLE_WM_COMMAND(hWnd, wParam, lParam, onCommand);
+      break;
+    case WM_DESTROY:
+      HANDLE_WM_DESTROY(hWnd, wParam, lParam, onDestroy);
       break;
 
     default:

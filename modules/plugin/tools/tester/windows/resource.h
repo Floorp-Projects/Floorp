@@ -42,6 +42,7 @@
 #define IDC_CHECK_LOG_TO_FILE           1042
 #define IDC_CHECK_LOG_TO_FRAME          1043
 #define IDC_STATIC_REPETITIONS_LEFT     1044
+#define IDC_CHECK_REMEMBER_LAST         1045
 #define IDC_STATIC_REPETITIONS_LABEL    1046
 
 // Next default values for new objects

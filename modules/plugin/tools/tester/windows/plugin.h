@@ -53,7 +53,8 @@ typedef enum
   gp_scriptfile,
   gp_tofile,
   gp_toframe,
-  gp_flush
+  gp_flush,
+  gp_rememberlast
 }GUIPrefs;
 
 class CPlugin : public CPluginBase
@@ -81,6 +82,7 @@ public:
   BOOL m_Pref_bToFile;
   BOOL m_Pref_bToFrame;
   BOOL m_Pref_bFlushNow;
+  BOOL m_Pref_bRememberLastCall;
 
 // public interface
 public:
