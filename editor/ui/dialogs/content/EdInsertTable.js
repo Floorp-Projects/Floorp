@@ -34,7 +34,7 @@ function Startup()
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of button text and "percentChar" variable
   dialog.widthInput.value = InitPixelOrPercentPopupButton(tableElement, "width", "pixelOrPercentButton");
-  dialog.borderInput.value = 5; //tableElement.getAttribute("border");
+  dialog.borderInput.value = tableElement.getAttribute("border");
 
   // Set default number to 1 row, 2 columns:
   dialog.rowsInput.value = 1;
