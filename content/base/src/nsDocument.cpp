@@ -932,6 +932,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
     else {
       nsDocHeaderData* data = mHeaderData;
       nsDocHeaderData** lastPtr = &mHeaderData;
+      PRBool found = PR_FALSE;
       do {  // look for existing and replace
         if (data->mField == aHeaderField) {
           if (!aData.IsEmpty()) {
@@ -942,13 +943,13 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
             data->mNext = nsnull;
             delete data;
           }
-          return NS_OK;
+          found = PR_TRUE;
         }
         lastPtr = &(data->mNext);
         data = data->mNext;
-      } while (nsnull != data);
-      // didn't find, append
-      if (!aData.IsEmpty()) {
+      } while (data && !found);
+      if (!aData.IsEmpty() && !found) {
+        // didn't find, append
         *lastPtr = new nsDocHeaderData(aHeaderField, aData);
       }
     }
@@ -956,22 +957,20 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsAReadableString& aData)
       // switch alternate style sheets based on default
       nsAutoString type;
       nsAutoString title;
-      nsAutoString textHtml;
-      textHtml.Assign(NS_LITERAL_STRING("text/html"));
       PRInt32 index;
 
-      mCSSLoader->SetPreferredSheet(nsAutoString(aData));
+      mCSSLoader->SetPreferredSheet(aData);
 
       PRInt32 count = mStyleSheets.Count();
       for (index = 0; index < count; index++) {
         nsIStyleSheet* sheet = (nsIStyleSheet*)mStyleSheets.ElementAt(index);
         sheet->GetType(type);
-        if (!type.Equals(textHtml)) {
+        if (!type.Equals(NS_LITERAL_STRING("text/html"))) {
           sheet->GetTitle(title);
           if (!title.IsEmpty()) {  // if sheet has title
-            nsAutoString data(aData);
-            PRBool disabled = (aData.IsEmpty() || 
-                               !title.EqualsIgnoreCase(data));
+            PRBool disabled = (aData.IsEmpty() ||
+                               Compare(title, aData,
+                                       nsCaseInsensitiveStringComparator()) != 0);
             SetStyleSheetDisabledState(sheet, disabled);
           }
         }

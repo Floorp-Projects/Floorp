@@ -24,6 +24,7 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsAReadableString.h"
 
 class nsIAtom;
 class nsString;
@@ -52,7 +53,7 @@ public:
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive) = 0;
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode) = 0;
-  NS_IMETHOD SetPreferredSheet(const nsString& aTitle) = 0;
+  NS_IMETHOD SetPreferredSheet(const nsAReadableString& aTitle) = 0;
 
   // Get/Recycle a CSS parser for general use
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,

@@ -215,7 +215,7 @@ public:
 
   NS_IMETHOD SetCaseSensitive(PRBool aCaseSensitive);
   NS_IMETHOD SetQuirkMode(PRBool aQuirkMode);
-  NS_IMETHOD SetPreferredSheet(const nsString& aTitle);
+  NS_IMETHOD SetPreferredSheet(const nsAReadableString& aTitle);
 
   NS_IMETHOD GetParserFor(nsICSSStyleSheet* aSheet,
                           nsICSSParser** aParser);
@@ -520,7 +520,7 @@ CSSLoaderImpl::SetQuirkMode(PRBool aQuirkMode)
 }
 
 NS_IMETHODIMP
-CSSLoaderImpl::SetPreferredSheet(const nsString& aTitle)
+CSSLoaderImpl::SetPreferredSheet(const nsAReadableString& aTitle)
 {
   mPreferredSheet = aTitle;
 
