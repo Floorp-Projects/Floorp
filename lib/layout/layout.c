@@ -4012,7 +4012,7 @@ static intn hooked_status = 0;
 static PA_Tag *hooked_tag = NULL;
 
 #ifdef DOM
-static char *element_names[] = {
+char *element_names[] = {
     "NONE",
     "TEXT",
     "LINEFEED",
@@ -4057,6 +4057,11 @@ DumpNodeElements(DOM_Node *node)
     fprintf(stderr, "%s %s elements:",
             PA_TagString(ELEMENT_PRIV(node)->tagtype),
             node->name ? node->name : "");
+    if (ELEMENT_PRIV(node)->tagtype == P_TABLE_ROW ||
+        ELEMENT_PRIV(node)->tagtype == P_TABLE_DATA) {
+        fprintf(stderr, " <NOT REALLY AN ELEMENT>\n");
+        return;
+    }
     eptr = ELEMENT_PRIV(node)->ele_start;
     if (!eptr) {
         fprintf(stderr, " <none> (SHOULD REMOVE FROM TREE!)\n");

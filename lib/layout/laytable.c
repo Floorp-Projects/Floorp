@@ -3628,6 +3628,14 @@ lo_BeginTableCellAttributes(MWContext *context,
 		return;
 	}
 
+#if DOM
+    /*
+     * Unsafe cast, but code that operates on the Nodes will
+     * know that <TD> elements need special care.
+     */
+    lo_SetNodeElement(state, (LO_Element *)table_cell);
+#endif
+
 	if (state->is_a_subdoc != SUBDOC_NOT) 
 	{
 		table_cell->in_nested_table = TRUE;
@@ -4340,6 +4348,15 @@ lo_BeginTableRowAttributes(MWContext *context,
 	{
 		return;
 	}
+#if DOM
+    /*
+     * So this is a little unsafe, on the surface.
+     * The code that does the reordering of LO_Elements will have to
+     * think important, special-case thoughts about <TR> nodes,
+     * but that's OK.
+     */
+    lo_SetNodeElement(state, (LO_Element *)table_row);
+#endif
 
 	/* copied to lo_UpdateTableStateForBeginRow()
 	table_row->row_done = FALSE; 
@@ -4656,6 +4673,10 @@ lo_BeginTableAttributes(MWContext *context,
 	
 	table_ele->FE_Data = NULL;
 	table_ele->anchor_href = state->current_anchor;
+
+#if DOM
+    lo_SetNodeElement(state, (LO_Element *)table_ele);
+#endif
 
 	/*
 	 * Default to the current alignment

@@ -5478,7 +5478,7 @@ void lo_AppendTextToBlock ( MWContext *context, lo_DocState *state, LO_TextBlock
 			block = lo_CurrentTextBlock ( context, state );
 			}
 		}
-	
+
 	/* OPTIMIZATION: If the parser could tell us if we have a split
 	 * buffer then we could intelligently set parseAllText here and
 	 * not buffer words that we think may be split across a buffer but

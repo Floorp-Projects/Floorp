@@ -2561,6 +2561,51 @@ lo_CheckNameList(MWContext *context, lo_DocState *state, int32 min_id)
 	}
 }
 
+#if DOM
+extern char *element_names[];
+
+/* Wire the element to the DOM Node data for DOM-driven feedback. */
+void
+lo_SetNodeElement(lo_DocState *state, LO_Element *element)
+{
+    LO_Element *eptr;
+    DOM_Node *node = CURRENT_NODE(state);
+
+#ifdef DEBUG_shaver
+    fprintf(stderr, "lo_SetNodeElement: state %x: ", state);
+    if (!node)
+        fprintf(stderr, "NULL node\n");
+    else if (node->type == NODE_TYPE_DOCUMENT)
+        fprintf(stderr, "NODE_TYPE_DOCUMENT node\n");
+#endif
+    if (node && node->type != NODE_TYPE_DOCUMENT) {
+        XP_ASSERT(!ELEMENT_PRIV(node)->ele_end);
+        eptr = ELEMENT_PRIV(node)->ele_start;
+        if (!eptr) {
+            /* this the first element for this node, so mark it */
+            ELEMENT_PRIV(node)->ele_start = element;
+#ifdef DEBUG_shaver
+            fprintf(stderr, "giving node %s element %s\n",
+                    ELEMENT_PRIV(node)->tagtype ?
+                    PA_TagString(ELEMENT_PRIV(node)->tagtype) : "TEXT",
+                    element->type > 0 &&
+                    element->type <= 31 ? element_names[element->type]
+                    : "UNKNOWN", state);
+#endif
+        } else {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "node %s %s already has element %s\n",
+                    ELEMENT_PRIV(node)->tagtype ?
+                    PA_TagString(ELEMENT_PRIV(node)->tagtype) : "TEXT",
+                    node->name ? node->name : "NULL",
+                    element->type > 0 &&
+                    element->type <= 31 ? element_names[element->type]
+                    : "UNKNOWN");
+#endif
+        }
+    }
+}
+#endif
 
 void
 lo_AppendToLineList(MWContext *context, lo_DocState *state,
@@ -2584,16 +2629,7 @@ lo_AppendToLineList(MWContext *context, lo_DocState *state,
 		state->current_span = NULL;
 	}
 
-        /* Wire the element to the DOM Node data for DOM-driven feedback. */
-         
-        if (CURRENT_NODE(state) &&
-            CURRENT_NODE(state)->type != NODE_TYPE_DOCUMENT) {
-            XP_ASSERT(!ELEMENT_PRIV(CURRENT_NODE(state))->ele_end);
-            eptr = ELEMENT_PRIV(CURRENT_NODE(state))->ele_start;
-            if (!eptr)
-                /* this the first element for this node, so mark it */
-                ELEMENT_PRIV(CURRENT_NODE(state))->ele_start = element;
-        }
+        lo_SetNodeElement(state, element);
 #endif
 	
 	if (state->current_named_anchor != NULL) {

@@ -658,8 +658,6 @@ typedef struct lo_DocState_struct {
 #ifdef DOM
 	Bool in_span;
 	PA_Block current_span;
-    void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
-    void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
 #endif
 } lo_DocState;
 
@@ -852,6 +850,10 @@ struct lo_TopState_struct {
 #ifdef DEBUG_ScriptPlugin
 	char * mimetype;
 #endif 
+#ifdef DOM
+    void /*DOM_Node*/ *top_node;     /* top of the DOM_Node tree */
+    void /*DOM_Node*/ *current_node; /* active node (only during tree gen) */
+#endif
 };
 
 /* Script type codes, stored in top_state->in_script. */
@@ -1158,6 +1160,9 @@ extern void lo_relayout_recycle(MWContext *context, lo_DocState *state,
                 LO_Element *elist);
 extern LO_Element *lo_NewElement(MWContext *, lo_DocState *, intn,
 				ED_Element *, intn edit_offset);
+#if DOM
+extern void lo_SetNodeElement(lo_DocState *, LO_Element *);
+#endif
 extern void lo_AppendToLineList(MWContext *, lo_DocState *, LO_Element *,int32);
 extern void lo_SetLineArrayEntry(lo_DocState *, LO_Element *, int32);
 extern LO_Element *lo_FirstElementOfLine(MWContext *, lo_DocState *, int32);
