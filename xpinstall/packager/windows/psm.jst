@@ -1,0 +1,65 @@
+function updateWindowsRegistry(psmPath)
+{
+  var winReg = getWinRegistry();
+  if(winReg != null)
+  {
+    winReg.setRootKey(winReg.HKEY_LOCAL_MACHINE);
+    subKey    = "SOFTWARE\\$CompanyName$";
+    err       = winReg.createKey(subKey, "");
+
+    subKey    = "SOFTWARE\\$CompanyName$\\Personal Security Manager";
+    err       = winReg.createKey(subKey, "");
+
+    subKey    = "SOFTWARE\\$CompanyName$\\Personal Security Manager\\Main";
+    valueName = "Install Directory";
+    err       = winReg.createKey(subKey, "");
+    err       = winReg.setValueString(subKey, valueName, psmPath);
+  }
+  else
+  {
+    logComment("getWinRegsitry() failed: " + winReg);
+  }
+}
+
+// main
+var srDest;
+var err;
+var fProgram;
+
+$Ren8dot3List$
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall("Personal Security Manager", "Personal Security Manager", "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  setPackageFolder(fProgram);
+
+  $Ren8dot3Call$
+
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() returned: " + err);
+
+  // check return value
+  if(err == SUCCESS)
+  {
+    updateWindowsRegistry(fProgram);
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+// end main

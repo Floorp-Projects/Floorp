@@ -81,6 +81,7 @@ if(!(-d "$inStagePath"))
 @gComponentList = ("xpcom",
                    "browser",
                    "mail",
+                   "psm",
                    "chatzilla",
                    "deflenus",
                    "langenus");
