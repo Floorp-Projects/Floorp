@@ -583,10 +583,12 @@ void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 //--------------------------------
 
 struct RuleCascadeData {
-  RuleCascadeData(void)
+  RuleCascadeData(nsIAtom *aMedium)
     : mWeightedRules(nsnull),
       mRuleHash(),
-      mStateSelectors()
+      mStateSelectors(),
+      mMedium(aMedium),
+      mNext(nsnull)
   {
     NS_NewISupportsArray(&mWeightedRules);
   }
@@ -598,6 +600,9 @@ struct RuleCascadeData {
   nsISupportsArray* mWeightedRules;
   RuleHash          mRuleHash;
   nsVoidArray       mStateSelectors;
+
+  nsCOMPtr<nsIAtom> mMedium;
+  RuleCascadeData*  mNext; // for a different medium
 };
 
 // -------------------------------
@@ -645,7 +650,7 @@ protected:
 
   nsISupportsArray* mSheets;
 
-  nsHashtable*      mMediumCascadeTable;
+  RuleCascadeData*  mRuleCascades;
 };
 
 // -------------------------------
@@ -2636,7 +2641,7 @@ NS_HTML nsresult
 
 CSSRuleProcessor::CSSRuleProcessor(void)
   : mSheets(nsnull),
-    mMediumCascadeTable(nsnull)
+    mRuleCascades(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -3596,6 +3601,8 @@ CSSRuleProcessor::HasStateDependentStyle(nsIPresContext* aPresContext,
 }
 
 
+// XXXldb WHY IS THIS NOT |#ifdef DEBUG| ???????
+
 struct CascadeSizeEnumData {
 
   CascadeSizeEnumData(nsISizeOfHandler *aSizeOfHandler, 
@@ -3651,15 +3658,13 @@ PRBool WeightedRulesSizeEnumFunc( nsISupports *aRule, void *aData )
 }
 
 static 
-PRBool PR_CALLBACK CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aData)
+void CascadeSizeEnumFunc(RuleCascadeData *cascade, CascadeSizeEnumData *pData)
 {
-  RuleCascadeData* cascade = (RuleCascadeData *)  aCascade;
-  CascadeSizeEnumData *pData = (CascadeSizeEnumData *)aData;
   NS_ASSERTION(cascade && pData, "null arguments not supported");
 
   // see if the cascade has already been counted
   if(!(pData->uniqueItems->AddItem(cascade))){
-    return PR_TRUE;
+    return;
   }
   // record the size of the cascade data itself
   PRUint32 localSize = sizeof(RuleCascadeData);
@@ -3677,14 +3682,13 @@ PRBool PR_CALLBACK CascadeSizeEnumFunc(nsHashKey* aKey, void *aCascade, void *aD
     CascadeSizeEnumData stateData2(pData->handler,pData->uniqueItems,weightedRulesSizeTag);
     cascade->mWeightedRules->EnumerateForwards(WeightedRulesSizeEnumFunc, &stateData2);
   }
-  return PR_TRUE;
 }
 
 /******************************************************************************
 * SizeOf method:
 *
 *  Self (reported as CSSRuleProcessor's size): 
-*    1) sizeof(*this) + mMediumCascadeTable hashtable overhead
+*    1) sizeof(*this)
 *
 *  Contained / Aggregated data (not reported as CSSRuleProcessor's size):
 *    1) Delegate to the StyleSheets in the mSheets collection
@@ -3704,8 +3708,6 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
     return;
   }
 
-  PRUint32 localSize=0;
-
   // create a tag for this instance
   nsCOMPtr<nsIAtom> tag;
   tag = getter_AddRefs(NS_NewAtom("CSSRuleProcessor"));
@@ -3714,7 +3716,7 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // collect sizes for the data
   // - mSheets
-  // - mMediumCascadeTable  
+  // - mRuleCascades
 
   // sheets first
   if(mSheets && uniqueItems->AddItem(mSheets)){
@@ -3731,16 +3733,13 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 
   // and for the medium cascade table we account for the hash table overhead,
   // and then compute the sizeof each rule-cascade in the table
-  if(mMediumCascadeTable){
-    PRUint32 count;
-    count = mMediumCascadeTable->Count();
-    localSize = sizeof(PLHashTable);
-    if(count > 0){
-      aSize += sizeof(PLHashEntry) * count;
-      // now go ghrough each RuleCascade in the table
-      nsCOMPtr<nsIAtom> tag2 = getter_AddRefs(NS_NewAtom("RuleCascade"));
-      CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
-      mMediumCascadeTable->Enumerate(CascadeSizeEnumFunc, &data);
+  {
+    nsCOMPtr<nsIAtom> tag2 = getter_AddRefs(NS_NewAtom("RuleCascade"));
+    CascadeSizeEnumData data(aSizeOfHandler, uniqueItems, tag2);
+    for (RuleCascadeData *cascadeData = mRuleCascades;
+	 cascadeData;
+	 cascadeData = cascadeData->mNext) {
+      CascadeSizeEnumFunc(cascadeData, &data);
     }
   }
   
@@ -3748,19 +3747,14 @@ void CSSRuleProcessor::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   aSizeOfHandler->AddSize(tag,aSize);
 }
 
-static PRBool PR_CALLBACK DeleteRuleCascade(nsHashKey* aKey, void* aValue, void* closure)
-{
-  delete ((RuleCascadeData*)aValue);
-  return PR_TRUE;
-}
-
 NS_IMETHODIMP
 CSSRuleProcessor::ClearRuleCascades(void)
 {
-  if (mMediumCascadeTable) {
-    mMediumCascadeTable->Enumerate(DeleteRuleCascade, nsnull);
-    delete mMediumCascadeTable;
-    mMediumCascadeTable = nsnull;
+  RuleCascadeData *data = mRuleCascades;
+  while (data) {
+    RuleCascadeData *next = data->mNext;
+    delete data;
+    data = next;
   }
   return NS_OK;
 }
@@ -3954,31 +3948,24 @@ static void PutRulesInList(nsSupportsHashtable* aRuleArrays,
 RuleCascadeData*
 CSSRuleProcessor::GetRuleCascade(nsIAtom* aMedium)
 {
-  DependentAtomKey mediumKey(aMedium);
-  RuleCascadeData* cascade = nsnull;
-
-  if (mMediumCascadeTable) {
-    cascade = (RuleCascadeData*)mMediumCascadeTable->Get(&mediumKey);
+  RuleCascadeData **cascadep = &mRuleCascades;
+  RuleCascadeData *cascade;
+  while ((cascade = *cascadep)) {
+    if (cascade->mMedium == aMedium)
+      return cascade;
   }
 
-  if (! cascade) {
-    if (mSheets) {
-      if (! mMediumCascadeTable) {
-        mMediumCascadeTable = new nsHashtable();
-      }
-      if (mMediumCascadeTable) {
-        cascade = new RuleCascadeData();
-        if (cascade) {
-          mMediumCascadeTable->Put(&mediumKey, cascade);
+  if (mSheets) {
+    cascade = new RuleCascadeData(aMedium);
+    if (cascade) {
+      *cascadep = cascade;
 
-          CascadeEnumData data(aMedium);
-          mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
-          PutRulesInList(&data.mRuleArrays, cascade->mWeightedRules);
+      CascadeEnumData data(aMedium);
+      mSheets->EnumerateForwards(CascadeSheetRulesInto, &data);
+      PutRulesInList(&data.mRuleArrays, cascade->mWeightedRules);
 
-          cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
-          cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
-        }
-      }
+      cascade->mWeightedRules->EnumerateBackwards(BuildHashEnum, &(cascade->mRuleHash));
+      cascade->mWeightedRules->EnumerateBackwards(BuildStateEnum, &(cascade->mStateSelectors));
     }
   }
   return cascade;
