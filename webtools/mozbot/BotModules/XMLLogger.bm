@@ -94,7 +94,8 @@ sub DoLog {
                 # wohay, we have a candidate!
                 # now check for possible blockers...
                 unless ($self->isBlocked($event)) {
-                    $self->WriteMessage($event->{'channel'},
+                    $self->WriteMessage($event->{'time'},
+                                        $event->{'channel'},
                                         $event->{'from'},
                                         $event->{'fulldata'},
                                         $messageType);
@@ -119,12 +120,12 @@ sub isBlocked {
 
 sub WriteMessage {
     my $self = shift;
-    my ($channel, $from, $message, $messageType) = @_;
+    my ($time, $channel, $from, $message, $messageType) = @_;
     # Open the log file and append the message
     $channel = $self->sanitiseChannelName($channel);
     my $logName = $self->getLogFilename("$channel.xml.part");
     if (open(LOG, ">>$logName")) {
-        my $msgtime = $self->logdate($event->{'time'});
+        my $msgtime = $self->logdate($time);
         # sanitise the output
         $_ = $self->escapeXML($_) for ($messageType, $channel, $from, $msgtime, $message);
         print LOG "<$messageType channel=\"$channel\" nick=\"$from\" time=\"$msgtime\">$message</$messageType>\n";
