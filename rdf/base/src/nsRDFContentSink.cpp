@@ -821,7 +821,7 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
 
         // XXX you can't specify both, but we'll just pick up the
         // first thing that was specified and ignore the other.
-
+        
         if (attr.Equals(kTagRDF_about)) {
             nsAutoString uri = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(uri);
@@ -836,16 +836,12 @@ RDFContentSinkImpl::GetIdAboutAttribute(const nsIParserNode& aNode,
             if (NS_FAILED(rv = mRDFService->GetResource(docURI, aResource)))
                 return rv;
 
-            nsAutoString uri(docURI);
             nsAutoString tag = aNode.GetValueAt(i);
             nsRDFParserUtils::StripAndConvert(tag);
 
-            if (uri.Last() != '#' && tag.First() != '#')
-                uri.Append('#');
+            rdf_PossiblyMakeAbsolute(docURI, tag);
 
-            uri.Append(tag);
-
-            return mRDFService->GetUnicodeResource(uri, aResource);
+            return mRDFService->GetUnicodeResource(tag, aResource);
         }
 
         if (attr.Equals(kTagRDF_aboutEach)) {

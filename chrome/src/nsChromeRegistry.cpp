@@ -47,6 +47,8 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, base);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, main);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
 
+DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Description);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsChromeRegistry : public nsIChromeRegistry, public nsIRDFObserver {
@@ -352,7 +354,10 @@ nsChromeRegistry::GetChromeResource(nsString& aResult,
         NS_ERROR("Unable to obtain a base resource.");
         return rv;
     }
-    
+
+    if (chromeBase == nsnull)
+      return NS_OK;
+
     nsCOMPtr<nsIRDFResource> resource;
     nsCOMPtr<nsIRDFLiteral> literal;
 
