@@ -153,6 +153,24 @@ static void TranslateLineEnding(nsString& data)
   data.SetLength(wPtr - sPtr);
 }
 
+static void GetTopmostMsgWindowCharacterSet(nsXPIDLString& charset)
+{
+  // HACK: if we are replying to a message and that message used a charset over ride
+  // (as specified in the top most window (assuming the reply originated from that window)
+  // then use that over ride charset instead of the charset specified in the message
+  nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));          
+  if (mailSession)
+  {
+    nsCOMPtr<nsIMsgWindow>    msgWindow;
+    mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+    if (msgWindow)
+    {
+      nsXPIDLString mailCharset;
+      msgWindow->GetMailCharacterSet(getter_Copies(charset));
+    }
+  }
+}
+
 nsMsgCompose::nsMsgCompose()
 {
 #if defined(DEBUG_ducarroz)
@@ -1022,23 +1040,13 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
         {
           mQuotingToFollow = PR_TRUE;
 
-          // HACK: if we are replying to a message and that message used a charset over ride
-          // (as specified in the top most window (assuming the reply originated from that window)
-          // then use that over ride charset instead of the charset specified in the message
-	        nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(NS_MSGMAILSESSION_CONTRACTID));          
-          if (mailSession)
+          // use a charset of the original message
+          nsXPIDLString mailCharset;
+          GetTopmostMsgWindowCharacterSet(mailCharset);
+          if (mailCharset && (* (const PRUnichar *) mailCharset) )
           {
-            nsCOMPtr<nsIMsgWindow>    msgWindow;
-          	mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-            if (msgWindow)
-            {
-              nsXPIDLString mailCharset;
-              msgWindow->GetMailCharacterSet(getter_Copies(mailCharset));
-              if (mailCharset && (* (const PRUnichar *) mailCharset) ) {
-                charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
-                charsetOverride = PR_TRUE;
-              }
-            }
+            charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
+            charsetOverride = PR_TRUE;
           }
           
           // get an original charset, used for a label, UTF-8 is used for the internal processing
@@ -1084,7 +1092,16 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
           subjectStr.Append("[Fwd: ");
           subjectStr.Append(subject);
           subjectStr.Append("]");
-        
+
+          // use a charset of the original message
+          nsXPIDLString mailCharset;
+          GetTopmostMsgWindowCharacterSet(mailCharset);
+          if (mailCharset && (* (const PRUnichar *) mailCharset) )
+          {
+            charset = PL_strdup(NS_ConvertUCS2toUTF8(mailCharset).get());
+            charsetOverride = PR_TRUE;
+          }
+
           rv = mimeConverter->DecodeMimeHeader(subjectStr.get(), 
                                                getter_Copies(decodedString),
                                                charset, charsetOverride);
