@@ -75,11 +75,19 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+#ifdef NECKO
+  // nsIStreamObserver methods:
+  NS_IMETHOD OnStartBinding(nsISupports *ctxt);
+  NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+  NS_IMETHOD OnStartRequest(nsISupports *ctxt) { return NS_OK; } 
+  NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg) { return NS_OK; } 
+#else
   // nsIStreamObserver
   NS_IMETHOD OnStartBinding(nsIURI* aURL, const char *aContentType);
   NS_IMETHOD OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax);
   NS_IMETHOD OnStatus(nsIURI* aURL, const PRUnichar* aMsg);
   NS_IMETHOD OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg);
+#endif
 
 protected:
 
@@ -1058,7 +1066,7 @@ TempObserver::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-
+#ifndef NECKO
 NS_IMETHODIMP
 TempObserver::OnProgress(nsIURI* aURL, PRUint32 aProgress, PRUint32 aProgressMax)
 {
@@ -1082,9 +1090,14 @@ TempObserver::OnStatus(nsIURI* aURL, const PRUnichar* aMsg)
 #endif
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
+#ifdef NECKO
+TempObserver::OnStartBinding(nsISupports *ctxt)
+#else
 TempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
+#endif
 {
 #if 0
   fputs("Loading ", stdout);
@@ -1095,7 +1108,11 @@ TempObserver::OnStartBinding(nsIURI* aURL, const char *aContentType)
 }
 
 NS_IMETHODIMP
+#ifdef NECKO
+TempObserver::OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
+#else
 TempObserver::OnStopBinding(nsIURI* aURL, nsresult status, const PRUnichar* aMsg)
+#endif
 {
 #if 0
   fputs("Done loading ", stdout);

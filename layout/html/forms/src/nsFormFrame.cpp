@@ -781,7 +781,11 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
   nsIDocument* doc = nsnull;
   mContent->GetDocument(doc);
 
+#ifdef NECKO
+  char* spec;
+#else
   const char* spec;
+#endif
   while (doc) {
     docURL = doc->GetDocumentURL();
     if (nsnull != docURL) {
@@ -789,6 +793,9 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
       if (PL_strcmp(spec, "about:blank")) {
         break;
       }
+#ifdef NECKO
+      nsCRT::free(spec);
+#endif
     }
     doc = GetParentHTMLFrameDocument(doc);
   }
@@ -797,6 +804,9 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
     PL_strcpy(URLName, spec);
     NS_IF_RELEASE(docURL);
   }
+#ifdef NECKO
+  nsCRT::free(spec);
+#endif
 #endif
 
 #ifdef SingleSignon

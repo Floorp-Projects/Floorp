@@ -268,7 +268,11 @@ nsNativeTextControlFrame::PostCreateWidget(nsIPresContext* aPresContext,
       docURL = doc->GetDocumentURL();
       NS_RELEASE(doc);
       if (nsnull != docURL) {
+#ifdef NECKO
+        char* spec;
+#else
         const char* spec;
+#endif
         (void)docURL->GetSpec(&spec);
         if (nsnull != spec) {
           URLName = (char*)PR_Malloc(PL_strlen(spec)+1);

@@ -39,6 +39,7 @@
 #ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsNeckoUtil.h"
 #else
 #include "nsIPostToServer.h"  
 #include "nsIURLGroup.h"
@@ -1010,9 +1011,16 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
   // PCB: This is the domain name of the server that produced this document. Can we just
   // extract it from the URL? What about proxy servers, etc.?
   if (nsnull != mDocumentURL) {
+#ifdef NECKO
+    char* hostName;
+#else
     const char* hostName;
+#endif
     mDocumentURL->GetHost(&hostName);
     aDomain.SetString(hostName);
+#ifdef NECKO
+    nsCRT::free(hostName);
+#endif
   } else {
     aDomain.SetLength(0);
   }
@@ -1023,10 +1031,19 @@ NS_IMETHODIMP
 nsHTMLDocument::GetURL(nsString& aURL)
 {
   if (nsnull != mDocumentURL) {
+#ifdef NECKO
+    char* str;
+    mDocumentURL->GetSpec(&str);
+#else
     PRUnichar* str;
     mDocumentURL->ToString(&str);
+#endif
     aURL = str;
-    delete str;
+#ifdef NECKO
+    nsCRT::free(str);
+#else
+    delete[] str;
+#endif
   }
   return NS_OK;
 }
@@ -1337,8 +1354,8 @@ nsHTMLDocument::Open()
 
   // XXX For the non-script Open case, we have to make
   // up a URL.
-#ifndef NECKO
-  result = NS_NewURL(&sourceURL, "about:blank");
+#ifdef NECKO
+  result = NS_NewURI(&sourceURL, "about:blank");
 #else
   result = NS_NewURL(&sourceURL, "about:blank");
 #endif // NECKO

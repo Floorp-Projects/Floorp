@@ -21,7 +21,9 @@
 #include "nsDocument.h"
 #include "nsIArena.h"
 #include "nsIURL.h"
-#ifndef NECKO
+#ifdef NECKO
+#include "nsILoadGroup.h"
+#else
 #include "nsIURLGroup.h"
 #endif
 #include "nsString.h"
@@ -631,9 +633,7 @@ nsDocument::nsDocument()
   mArena = nsnull;
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
-#ifndef NECKO
-  mDocumentURLGroup = nsnull;
-#endif
+  mDocumentLoadGroup = nsnull;
   mCharacterSet = "ISO-8859-1";
   mParentDocument = nsnull;
   mRootContent = nsnull;
@@ -677,9 +677,7 @@ nsDocument::~nsDocument()
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
-#ifndef NECKO
-  NS_IF_RELEASE(mDocumentURLGroup);
-#endif
+  NS_IF_RELEASE(mDocumentLoadGroup);
 
   mParentDocument = nsnull;
 
@@ -843,9 +841,7 @@ nsDocument::Reset(nsIURI *aURL)
     mDocumentTitle = nsnull;
   }
   NS_IF_RELEASE(mDocumentURL);
-#ifndef NECKO
-  NS_IF_RELEASE(mDocumentURLGroup);
-#endif
+  NS_IF_RELEASE(mDocumentLoadGroup);
 
   // Delete references to sub-documents
   PRInt32 index = mSubDocuments.Count();
@@ -895,7 +891,7 @@ nsDocument::Reset(nsIURI *aURL)
     NS_ADDREF(aURL);
 
 #ifndef NECKO
-    rv = aURL->GetURLGroup(&mDocumentURLGroup);
+    rv = aURL->GetURLGroup(&mDocumentLoadGroup);
 #endif
   }
 
@@ -933,13 +929,15 @@ nsDocument::GetContentType(nsString& aContentType) const
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-#ifndef NECKO
-nsIURLGroup* nsDocument::GetDocumentURLGroup() const
-{
-  NS_IF_ADDREF(mDocumentURLGroup);
-  return mDocumentURLGroup;
-}
+#ifdef NECKO
+NS_IMETHODIMP_(nsILoadGroup*) nsDocument::GetDocumentLoadGroup() const
+#else
+nsIURLGroup* nsDocument::GetDocumentLoadGroup() const
 #endif
+{
+  NS_IF_ADDREF(mDocumentLoadGroup);
+  return mDocumentLoadGroup;
+}
 
 NS_IMETHODIMP
 #ifdef NECKO

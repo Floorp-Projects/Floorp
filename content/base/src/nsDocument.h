@@ -130,11 +130,16 @@ public:
    */
   NS_IMETHOD GetContentType(nsString& aContentType) const;
 
-#ifndef NECKO
+#ifdef NECKO
+  /**
+   * Return the load group for the document. May return null.
+   */
+  NS_IMETHOD_(nsILoadGroup*) GetDocumentLoadGroup() const;
+#else
   /**
    * Return the URLGroup for the document. May return null.
    */
-  virtual nsIURLGroup* GetDocumentURLGroup() const;
+  virtual nsIURLGroup* GetDocumentLoadGroup() const;
 #endif
 
   /**
@@ -444,8 +449,10 @@ protected:
   nsIArena* mArena;
   nsString* mDocumentTitle;
   nsIURI* mDocumentURL;
-#ifndef NECKO
-  nsIURLGroup* mDocumentURLGroup;
+#ifdef NECKO
+  nsILoadGroup* mDocumentLoadGroup;
+#else
+  nsIURLGroup* mDocumentLoadGroup;
 #endif
   nsString mCharacterSet;
   nsIDocument* mParentDocument;
