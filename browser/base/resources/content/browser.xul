@@ -709,7 +709,7 @@ Contributor(s): ______________________________________. -->
       <toolbarseparator/>
       <toolbarbutton id="search-button" class="toolbarbutton-1"
                      label="&searchButton.label;" persist="hidden"
-                     oncommand="openPanel('chrome://communicator/content/search/search-panel.xul',
+                     oncommand="openPanel('chrome://browser/content/search/search-panel.xul',
                                           this.getAttribute('label'));"/>
       <toolbarseparator/>
       <toolbarbutton id="print-button" class="toolbarbutton-1"
