@@ -2,21 +2,42 @@
 <body>
 <h1>Posting test</h1>
 <script>
-var x = document.implementation.createDocument("", "test", null);
-x.documentElement.appendChild(document.createTextNode("Foo"));
+const WSTRING_CONTRACTID = "@mozilla.org/supports-wstring;1";
+
+var sendPlainTextData = false; // you can only create the text string if you can bybass security
+
+var x;
+if (!sendPlainTextData) {
+  x = document.implementation.createDocument("", "test", null);
+  x.documentElement.appendChild(document.createTextNode("Foo"));
+}
 
 var p = new XMLHttpRequest();
+
 function myfunc()
 {
-   var s = new XMLSerializer()
-   var d = p.responseXML;
-   str = s.serializeToString(d);
+   var s = new XMLSerializer();
+   var str;
+   if (!sendPlainTextData) {
+     var d = p.responseXML;
+     str = s.serializeToString(d);
+   } else {
+     str = p.responseText;
+   }
    alert(str);
    alert(p.getAllResponseHeaders());
 }
+
 p.onload = myfunc;
-p.open("POST", "http://blueviper/cgi-bin/echo.cgi");
-p.send(x);
+p.open("POST", "http://blueviper/cgi-bin/echo_xml.cgi");
+
+if (!sendPlainTextData) {
+  p.send(x);
+} else {
+  var mystr = Components.classes[WSTRING_CONTRACTID].createInstance(Components.interfaces.nsISupportsWString);
+  mystr.data = "Heikki's data";
+  p.send(mystr);
+}
 </script>
 </body>
 </html>

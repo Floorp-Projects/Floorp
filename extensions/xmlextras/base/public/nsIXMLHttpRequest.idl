@@ -83,6 +83,14 @@ interface nsIXMLHttpRequest : nsISupports {
   readonly attribute nsIDOMDocument responseXML;
 
   /**
+   * The response to the HTTP request as text. 
+   * NULL if the request is unsuccessful or
+   * has not yet been sent.
+   */
+  readonly attribute wstring responseText;
+
+
+  /**
    * The status of the response to the HTTP request.
    */
   readonly attribute unsigned long status;
