@@ -345,6 +345,11 @@ NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
 	if(NS_FAILED(rv))
 		return rv;
 
+  if (!hdr)
+  {
+    *firstNewMessage = nsnull;
+    return NS_ERROR_FAILURE;
+  }
 	rv = CreateMessageFromMsgDBHdr(hdr, firstNewMessage);
 	if(NS_FAILED(rv))
 		return rv;
@@ -432,6 +437,11 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
               if (!mInitializedFromCache)
               {
                 folderInfo->GetFlags((PRInt32 *)&mFlags);
+#ifdef DEBUG_bienvenu
+                nsXPIDLString name;
+                GetName(getter_Copies(name));
+                NS_ASSERTION(nsCRT::strcmp(name, "Trash") || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+#endif
                 mInitializedFromCache = PR_TRUE;
               }
 

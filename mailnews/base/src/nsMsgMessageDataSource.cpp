@@ -970,10 +970,10 @@ nsresult nsMsgMessageDataSource::OnChangeStatusString(nsIRDFResource *resource, 
   NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = createStatusNodeFromFlag(newFlag, getter_AddRefs(newNode), PR_TRUE);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
 	rv = NotifyPropertyChanged(resource, kNC_StatusString, newNode);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 	
 	return rv;
 }
@@ -1399,6 +1399,8 @@ nsMsgMessageDataSource::createStatusNodeFromFlag(PRUint32 flags, /*nsAutoString 
 		*node = (needDisplayString) ? kNewLiteralDisplayString : kNewLiteral;
 	else if(flags & MSG_FLAG_READ)
 		*node = (needDisplayString) ? kReadLiteralDisplayString : kReadLiteral;
+
+  NS_IF_ADDREF(*node);
 	return rv;
 }
 
