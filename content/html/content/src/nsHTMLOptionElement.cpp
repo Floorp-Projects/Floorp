@@ -505,10 +505,10 @@ nsHTMLOptionElement::GetText(nsAWritableString& aText)
 
         if (!text.IsEmpty()) {
           aText.Assign(text);
+          break;
         }
       }
 
-      break;
     }
   }
 
