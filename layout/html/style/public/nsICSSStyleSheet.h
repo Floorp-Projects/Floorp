@@ -21,8 +21,9 @@
 #include "nslayout.h"
 #include "nsIStyleSheet.h"
 
-class nsICSSStyleRule;
+class nsICSSRule;
 class nsIDOMNode;
+class nsINameSpace;
 
 // IID for the nsICSSStyleSheet interface {8f83b0f0-b21a-11d1-8031-006008159b5a}
 #define NS_ICSS_STYLE_SHEET_IID     \
@@ -32,25 +33,28 @@ class nsICSSStyleSheet : public nsIStyleSheet {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICSS_STYLE_SHEET_IID; return iid; }
 
-  virtual PRBool ContainsStyleSheet(nsIURL* aURL) const = 0;
+  NS_IMETHOD  ContainsStyleSheet(nsIURL* aURL) const = 0;
 
-  virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+  NS_IMETHOD  AppendStyleSheet(nsICSSStyleSheet* aSheet) = 0;
   NS_IMETHOD  InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex) = 0;
 
-  virtual void PrependStyleRule(nsICSSStyleRule* aRule) = 0;
-  virtual void AppendStyleRule(nsICSSStyleRule* aRule) = 0;
+  NS_IMETHOD  PrependStyleRule(nsICSSRule* aRule) = 0;
+  NS_IMETHOD  AppendStyleRule(nsICSSRule* aRule) = 0;
 
-  virtual PRInt32   StyleRuleCount(void) const = 0;
-  virtual nsresult  GetStyleRuleAt(PRInt32 aIndex, nsICSSStyleRule*& aRule) const = 0;
+  NS_IMETHOD  StyleRuleCount(PRInt32& aCount) const = 0;
+  NS_IMETHOD  GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const = 0;
 
-  virtual PRInt32   StyleSheetCount(void) const = 0;
-  virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
+  NS_IMETHOD  StyleSheetCount(PRInt32& aCount) const = 0;
+  NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
   NS_IMETHOD  Init(nsIURL* aURL) = 0;
   NS_IMETHOD  SetTitle(const nsString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  ClearMedia(void) = 0;
   NS_IMETHOD  SetOwningNode(nsIDOMNode* aOwningNode) = 0;
+
+  // get head of namespace chain for sheet
+  NS_IMETHOD  GetNameSpace(nsINameSpace*& aNameSpace) const = 0;
 
   NS_IMETHOD  Clone(nsICSSStyleSheet*& aClone) const = 0;
 
