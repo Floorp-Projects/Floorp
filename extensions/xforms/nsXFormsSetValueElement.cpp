@@ -65,32 +65,36 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
   if (!mElement)
     return NS_OK;
   
-  nsCOMPtr<nsIDOMNode> dommodel = nsXFormsUtils::GetModel(mElement);
-  
-  if (!dommodel)
+  nsCOMPtr<nsIDOMNode> model;
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    nsXFormsUtils:: EvaluateNodeBinding(mElement,
+                                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                        NS_LITERAL_STRING("ref"),
+                                        EmptyString(),
+                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                        getter_AddRefs(model),
+                                        getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIModelElementPrivate> modelPriv = do_QueryInterface(model);
+  if (!result | !modelPriv)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMNode> singleNode;
+  result->GetSingleNodeValue(getter_AddRefs(singleNode));
+  if (!singleNode)
     return NS_OK;
 
   nsAutoString value;
-  mElement->GetAttribute(NS_LITERAL_STRING("value"), value);
-  if (!value.IsEmpty()) {
-    nsCOMPtr<nsIXFormsModelElement> model(do_QueryInterface(dommodel));
-    if (!model)
-      return NS_OK;
+  nsAutoString valueAttr;
+  mElement->GetAttribute(NS_LITERAL_STRING("value"), valueAttr);
 
-    // Get the instance data and evaluate the xpath expression.
-    // XXXfixme when xpath extensions are implemented (instance())
-
-    nsCOMPtr<nsIDOMDocument> instanceDoc;
-    model->GetInstanceDocument(EmptyString(),
-                               getter_AddRefs(instanceDoc));
-    if (!instanceDoc)
-      return NS_OK;
-
-    nsCOMPtr<nsIDOMElement> docElement;
-    instanceDoc->GetDocumentElement(getter_AddRefs(docElement));
-
+  if(!valueAttr.IsEmpty()) {
+    // According to the XForms Errata, the context node for the XPath expression
+    //   stored in @value should be the node that setvalue is bound to.
     nsCOMPtr<nsIDOMXPathResult> xpResult =
-      nsXFormsUtils::EvaluateXPath(value, docElement, mElement,
+      nsXFormsUtils::EvaluateXPath(valueAttr, singleNode, mElement,
                                    nsIDOMXPathResult::STRING_TYPE);
     if (!xpResult)
       return NS_OK;
@@ -101,52 +105,27 @@ nsXFormsSetValueElement::HandleAction(nsIDOMEvent* aEvent,
     n3->GetTextContent(value);
   }
 
-  nsCOMPtr<nsIDOMNode> model;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils:: EvaluateNodeBinding(mElement,
-                                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                        NS_LITERAL_STRING("ref"),
-                                        EmptyString(),
-                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                        getter_AddRefs(model),
-                                        getter_AddRefs(bindElement));
+  nsXFormsMDGEngine* MDG;
+  modelPriv->GetMDG(&MDG);
+  if (!MDG)
+    return NS_ERROR_FAILURE;
 
-  if (!result)
-    return NS_OK;
+  PRBool changed;
+  rv = MDG->SetNodeValue(singleNode, value, PR_TRUE, &changed);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIDOMNode> singleNode;
-  result->GetSingleNodeValue(getter_AddRefs(singleNode));
-  if (!singleNode)
-    return NS_OK;
-
-  PRUint16 nodeType = 0;
-  singleNode->GetNodeType(&nodeType);
-
-  switch (nodeType) {
-    case nsIDOMNode::ATTRIBUTE_NODE:
-    case nsIDOMNode::TEXT_NODE:
-      singleNode->SetNodeValue(value);
-      break;
-    case nsIDOMNode::ELEMENT_NODE:
-        nsCOMPtr<nsIDOM3Node> node = do_QueryInterface(singleNode);
-        NS_ASSERTION(node, "DOM Nodes must support DOM3 interfaces");
-        node->SetTextContent(value);
-        break;
+  if (changed) {
+    if (aParentAction) {
+      aParentAction->SetRecalculate(model, PR_TRUE);
+      aParentAction->SetRevalidate(model, PR_TRUE);
+      aParentAction->SetRefresh(model, PR_TRUE);
+    } else {
+      nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
+      nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
+      nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
+    }
   }
-  
-  //XXX Mark the node changed
-  
-  if (aParentAction) {
-    aParentAction->SetRecalculate(dommodel, PR_TRUE);
-    aParentAction->SetRevalidate(dommodel, PR_TRUE);
-    aParentAction->SetRefresh(dommodel, PR_TRUE);
-  }
-  else {
-    nsXFormsUtils::DispatchEvent(dommodel, eEvent_Recalculate);
-    nsXFormsUtils::DispatchEvent(dommodel, eEvent_Revalidate);
-    nsXFormsUtils::DispatchEvent(dommodel, eEvent_Refresh);
-  }
+
   return NS_OK;
 }
 

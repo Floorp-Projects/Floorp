@@ -72,9 +72,10 @@
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
 #include "nsAutoPtr.h"
+#include "nsArray.h"
 
-#ifdef DEBUG_beaufour
-#include "nsIDOMSerializer.h"
+#ifdef DEBUG
+//#define DEBUG_MODEL
 #endif
 
 //------------------------------------------------------------------------------
@@ -436,12 +437,44 @@ nsXFormsModelElement::Recalculate()
   printf("nsXFormsModelElement::Recalculate()\n");
 #endif
   
-  nsAutoPtr<nsXFormsMDGSet> changedNodes(new nsXFormsMDGSet());
-  // TODO: Handle changed nodes. That is, dispatch events, etc.
+  return mMDG.Recalculate(&mChangedNodes);
+}
 
-  nsXFormsMDGSet* ptr = changedNodes.get();
+void
+nsXFormsModelElement::DispatchEvents(nsIXFormsControl *aControl,
+                                     nsIDOMNode       *aNode)
+{
+  nsCOMPtr<nsIDOMElement> element;
+  aControl->GetElement(getter_AddRefs(element));
+  
+  const nsXFormsNodeState* ns = mMDG.GetNodeState(aNode);
 
-  return mMDG.Recalculate(&ptr);
+  if (!element || !ns) {
+#ifdef DEBUG_beaufour
+    printf("nsXFormsModelElement::DispatchEvents(): Could not get element or node state for node!\n");
+#endif
+    return;
+  }
+
+  if (ns->ShouldDispatchValid()) {
+    nsXFormsUtils::DispatchEvent(element,
+                                 ns->IsValid() ? eEvent_Valid : eEvent_Invalid);
+  }
+  if (ns->ShouldDispatchReadonly()) {
+    nsXFormsUtils::DispatchEvent(element,
+                                 ns->IsReadonly() ? eEvent_Readonly : eEvent_Readwrite);
+  }
+  if (ns->ShouldDispatchRequired()) {
+    nsXFormsUtils::DispatchEvent(element,
+                                 ns->IsRequired() ? eEvent_Required : eEvent_Optional);
+  }
+  if (ns->ShouldDispatchRelevant()) {
+    nsXFormsUtils::DispatchEvent(element,
+                                 ns->IsRelevant() ? eEvent_Enabled : eEvent_Disabled);
+  }
+  if (ns->ShouldDispatchValueChanged()) {
+    nsXFormsUtils::DispatchEvent(element, eEvent_ValueChanged);
+  }
 }
 
 NS_IMETHODIMP
@@ -451,19 +484,109 @@ nsXFormsModelElement::Revalidate()
   printf("nsXFormsModelElement::Revalidate()\n");
 #endif
 
-#ifdef DEBUG_beaufour
-  // Dump instance document to stdout
-  nsresult rv;
-  nsCOMPtr<nsIDOMSerializer> serializer(do_CreateInstance(NS_XMLSERIALIZER_CONTRACTID, &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  /// @note Prerequisite: Both changed nodes and dependencies are sorted in
+  /// ascending order!
 
-  // TODO: Should use SerializeToStream and write directly to stdout...
-  nsAutoString instanceString;
-  rv = serializer->SerializeToString(mInstanceDocument, instanceString);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
-  printf("Instance data:\n%s\n", NS_ConvertUCS2toUTF8(instanceString).get());
+#ifdef DEBUG_MODEL
+  printf("Changed nodes:\n");
+  for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
+    nsCOMPtr<nsIDOMNode> node = mChangedNodes.GetNode(j);
+    nsAutoString name;
+    node->GetNodeName(name);
+    printf("\t%s\n", NS_ConvertUCS2toUTF8(name).get());
+  }
 #endif
+
+  // Iterate over all form controls
+  PRInt32 controlCount = mFormControls.Count();
+  for (PRInt32 i = 0; i < controlCount; ++i) {
+    nsIXFormsControl* control = NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i]);
+    /// @todo If a control is removed because of previous control has been
+    /// refreshed, we do, obviously, not need to refresh it. So mFormControls
+    /// should have weak bindings to the controls I guess? (XXX)
+    ///
+    /// This could happen for \<repeatitem\>s for example.
+    if (!control) {
+      continue;
+    }
+
+    // Get bound node
+    nsCOMPtr<nsIDOMNode> boundNode;
+    control->GetBoundNode(getter_AddRefs(boundNode));
+
+    // Get dependencies
+    nsCOMPtr<nsIArray> deps;
+    control->GetDependencies(getter_AddRefs(deps));    
+    PRUint32 depCount = 0;
+    if (deps) {
+      deps->GetLength(&depCount);
+    }
+
+#ifdef DEBUG_MODEL
+    nsCOMPtr<nsIDOMElement> controlElement;
+    control->GetElement(getter_AddRefs(controlElement));
+    if (controlElement) {
+      printf("Checking control: ");      
+      //DBG_TAGINFO(controlElement);
+      nsAutoString boundName;
+      if (boundNode)
+        boundNode->GetNodeName(boundName);
+      printf("\tBound to: '%s', dependencies: %d\n",
+             NS_ConvertUCS2toUTF8(boundName).get(),
+             depCount);
+    }
+#endif
+
+    nsCOMPtr<nsIDOMNode> curDep, curChanged;
+    PRUint32 depPos = 0;
+    /// @bug This should be set to PR_FALSE! (XXX)
+    ///      Setting it to PR_TRUE rebinds all controls all the time
+    ///      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278368
+    PRBool rebind = PR_TRUE;
+    PRBool refresh = PR_FALSE;
+
+    for (PRInt32 j = 0; j < mChangedNodes.Count(); ++j) {
+      curChanged = mChangedNodes.GetNode(j);
+
+      if (curChanged == boundNode) {
+        refresh = PR_TRUE;
+        // We cannot break here, as we need to to check for any changed
+        // dependencies
+      }
+
+      if (depPos == depCount) {
+        continue;
+      }
+
+      while (depPos < depCount && (void*) curChanged > (void*) curDep) {
+        curDep = do_QueryElementAt(deps, depPos);
+        ++depPos;
+      }
+
+      if (curDep == curChanged) {
+        rebind = PR_TRUE;
+        break;
+      }
+    }
+
+#ifdef DEBUG_MODEL
+    printf("\trebind: %d, refresh: %d\n", rebind, refresh);    
+#endif    
+
+    if (rebind) {
+      control->Bind();
+      control->GetBoundNode(getter_AddRefs(boundNode));
+    }
+    if (rebind || refresh) {
+      DispatchEvents(control, boundNode);
+      ///
+      /// @todo Should be moved to Refresh() (XXX)
+      control->Refresh();
+    }
+  }
+
+  mChangedNodes.Clear();
+  mMDG.ClearDispatchFlags();
 
   return NS_OK;
 }
@@ -475,11 +598,9 @@ nsXFormsModelElement::Refresh()
   printf("nsXFormsModelElement::Refresh()\n");
 #endif
 
-  // refresh all of our form controls
-  PRInt32 controlCount = mFormControls.Count();
-  for (PRInt32 i = 0; i < controlCount; ++i) {
-    NS_STATIC_CAST(nsIXFormsControl*, mFormControls[i])->Refresh();
-  }
+  /// @todo Any refreshing is for the moment done in Revalidate(), so we do
+  /// not need to do anything here. But the refreshing part should probably
+  /// be moved to Refresh()... (XXX)
 
   return NS_OK;
 }
@@ -649,6 +770,14 @@ nsXFormsModelElement::FindInstanceElement(const nsAString &aID,
   return NS_OK;
 }
 
+nsresult
+nsXFormsModelElement::GetMDG(nsXFormsMDGEngine **aMDG)
+{
+  if (aMDG)
+    *aMDG = &mMDG;
+  return NS_OK;
+}
+
 // internal methods
 
 already_AddRefed<nsIDOMDocument>
@@ -702,7 +831,7 @@ nsXFormsModelElement::FinishConstruction()
     if (localName.EqualsLiteral("bind")) {
       child->GetNamespaceURI(namespaceURI);
       if (namespaceURI.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-        if (!ProcessBind(xpath, firstInstanceRoot, nsnull,
+        if (!ProcessBind(xpath, firstInstanceRoot, 1, 1,
                          nsCOMPtr<nsIDOMElement>(do_QueryInterface(child)))) {
           return NS_OK;
         }
@@ -768,7 +897,8 @@ ReleaseExpr(void    *aElement,
 PRBool
 nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                   nsIDOMNode           *aContextNode,
-                                  nsIDOMXPathResult    *aOuterNodeset,
+                                  PRInt32              aContextPosition,
+                                  PRInt32              aContextSize,
                                   nsIDOMElement        *aBindElement)
 {
   // Get the model item properties specified by this <bind>.
@@ -803,27 +933,28 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
   nsAutoString expr;
   aBindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
   if (expr.IsEmpty()) {
-    result = aOuterNodeset;
-  } else {
-    rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
-                              nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                              nsnull, getter_AddRefs(result));
-    if (NS_FAILED(rv)) {
-      nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
-      return PR_FALSE; // dispatch a binding exception
-    }
-    
+    expr = NS_LITERAL_STRING(".");
   }
+  ///
+  /// @todo use aContextSize and aContextPosition in evaluation (XXX)
+  rv = aEvaluator->Evaluate(expr, aContextNode, resolver,
+                            nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                            nsnull, getter_AddRefs(result));
+  if (NS_FAILED(rv))
+    return PR_FALSE; // dispatch a binding exception
+
   NS_ENSURE_TRUE(result, PR_FALSE);
 
   PRUint32 snapLen;
   rv = result->GetSnapshotLength(&snapLen);
   NS_ENSURE_SUCCESS(rv, rv);
   
+
+  // Iterate over resultset
   nsXFormsMDGSet set;
   nsCOMPtr<nsIDOMNode> node;
-  PRInt32 contextPosition = 1;
-  for (PRUint32 snapItem = 0; snapItem < snapLen; ++snapItem) {
+  PRUint32 snapItem;
+  for (snapItem = 0; snapItem < snapLen; ++snapItem) {
     rv = result->SnapshotItem(snapItem, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -832,10 +963,10 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
       continue;
     }
     
+
+    // Apply MIPs
     nsXFormsXPathParser parser;
     nsXFormsXPathAnalyzer analyzer(aEvaluator, resolver);
-    
-    // We must check whether the properties already exist on the node.
     for (int j = 0; j < eModel__count; ++j) {
       if (props[j]) {
         nsCOMPtr<nsIContent> content = do_QueryInterface(node, &rv);
@@ -862,40 +993,39 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
         
         // Insert into MDG
         rv = mMDG.AddMIP((ModelItemPropName) j, expr, &set, parser.UsesDynamicFunc(),
-                         node, contextPosition++, snapLen);
+                         node, snapItem + 1, snapLen);
         NS_ENSURE_SUCCESS(rv, rv);
       }
     }
-  }
 
-  // Now evaluate any child <bind> elements.
-  nsCOMPtr<nsIDOMNode> childContext;
-  result->SnapshotItem(0, getter_AddRefs(childContext));
 
-  nsCOMPtr<nsIDOMNodeList> children;
-  aBindElement->GetChildNodes(getter_AddRefs(children));
-  if (children) {
-    PRUint32 childCount = 0;
-    children->GetLength(&childCount);
+    // Now evaluate any child <bind> elements.
+    nsCOMPtr<nsIDOMNodeList> children;
+    aBindElement->GetChildNodes(getter_AddRefs(children));
+    if (children) {
+      PRUint32 childCount = 0;
+      children->GetLength(&childCount);
+      
+      nsCOMPtr<nsIDOMNode> child;
+      nsAutoString value;
+      
+      for (PRUint32 k = 0; k < childCount; ++k) {
+        children->Item(k, getter_AddRefs(child));
+        if (child) {
+          child->GetLocalName(value);
+          if (!value.EqualsLiteral("bind"))
+            continue;
+          
+          child->GetNamespaceURI(value);
+          if (!value.EqualsLiteral(NS_NAMESPACE_XFORMS))
+            continue;
 
-    nsCOMPtr<nsIDOMNode> child;
-    nsAutoString value;
-
-    for (PRUint32 k = 0; k < childCount; ++k) {
-      children->Item(k, getter_AddRefs(child));
-      if (child) {
-        child->GetLocalName(value);
-        if (!value.EqualsLiteral("bind"))
-          continue;
-
-        child->GetNamespaceURI(value);
-        if (!value.EqualsLiteral(NS_NAMESPACE_XFORMS))
-          continue;
-
-        if (!ProcessBind(aEvaluator, childContext, result,
-                         nsCOMPtr<nsIDOMElement>(do_QueryInterface(child))))
-          return PR_FALSE;
-
+          if (!ProcessBind(aEvaluator, node,
+                           snapItem + 1, snapLen,
+                           nsCOMPtr<nsIDOMElement>(do_QueryInterface(child))))
+            return PR_FALSE;
+          
+        }
       }
     }
   }

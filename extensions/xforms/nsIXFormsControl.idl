@@ -38,6 +38,10 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
+interface nsIDOMNode;
+interface nsIDOMElement;
+
 /**
  * Interface implemented by all XForms form control classes.
  */
@@ -45,8 +49,42 @@
 interface nsIXFormsControl : nsISupports
 {
   /**
+   * This tells the form control to update its node binding based on the
+   * current instance data.
+   */
+  void bind();
+
+  /**
    * This tells the form control to update its state based on the current
    * instance data.
    */
   void refresh();
+
+  /**
+   * The instance node that the control is bound to.
+   */
+  readonly attribute nsIDOMNode boundNode;
+
+  /**
+   * The instance nodes that the control depend on.
+   *
+   * In other words, all the instance nodes that could influence which node
+   * the control is bound to (mBoundNode). For example:
+   * If a node has @ref="/share[@owner = /me]", it depends on all /share
+   * nodes, all @owned attributes on /share nodes, and all /me nodes.
+   *
+   * @note The array MUST be sorted, pointer-order, ascending.
+   *
+   * @bug Should use nsCOMArray
+   *      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278369
+   */
+  readonly attribute nsIArray dependencies;
+
+  /**
+   * Get the element that should receive events for the control.
+   *
+   * @todo This should not be necessary, we should send directly to the
+   * control (XXX)
+   */
+  readonly attribute nsIDOMElement element;
 };

@@ -65,6 +65,9 @@ class nsXFormsControl;
  * initializing the model and its controls.
  *
  * @see http://www.w3.org/TR/xforms/slice3.html#structure-model
+ *
+ * @todo We need to dispatch the initial (default) events to controls (XXX)
+ *
  */
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
@@ -103,10 +106,18 @@ private:
 
   NS_HIDDEN_(PRBool)   ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                    nsIDOMNode           *aContextNode,
-                                   nsIDOMXPathResult    *aOuterNodeset,
+                                   PRInt32              aContextPosition,
+                                   PRInt32              aContextSize,
                                    nsIDOMElement        *aBindElement);
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
+
+  /**
+   * Dispatch the necessary events to a control, aControl, when the instance
+   * node, aNode, it is bound to changes state.
+   */
+  NS_HIDDEN_(void)     DispatchEvents(nsIXFormsControl *aControl,
+                                      nsIDOMNode       *aNode);
 
   // Returns true when all external documents have been loaded
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount
@@ -121,7 +132,11 @@ private:
   PRInt32 mSchemaTotal;
   PRInt32 mPendingInstanceCount;
 
+  /** The MDG for this model */
   nsXFormsMDGEngine mMDG;
+
+  /** List of changed nodes, ie. nodes that have not been informed about changes yet */
+  nsXFormsMDGSet    mChangedNodes;
 
   // This flag indicates whether or not the document fired DOMContentLoaded
   PRBool mDocumentLoaded;

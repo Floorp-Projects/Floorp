@@ -44,9 +44,6 @@ nsXFormsMDGSet::MakeUnique()
 {
   array.Sort(sortFunc, nsnull);
 
-  // TODO: Assuming that moving element x, will delete x, and move list "one to the left",
-  // ie. x = x+1, x+1=x+2, ... etc.
-  // Is that correct?
   PRInt32 pos = 0;
   nsIDOMNode* node;
   while (pos + 1 < array.Count()) {
@@ -91,6 +88,10 @@ nsXFormsMDGSet::AddSet(nsXFormsMDGSet& aSet)
   return PR_TRUE;
 }
 
+
+///
+/// @todo Is in fact a getter, should addref? (XXX)
+/// AddRef it, and use already_AddRefed<nsIDOMNode>
 nsIDOMNode*
 nsXFormsMDGSet::GetNode(const PRInt32 aIndex) const {
   return NS_STATIC_CAST(nsIDOMNode*, array[aIndex]);

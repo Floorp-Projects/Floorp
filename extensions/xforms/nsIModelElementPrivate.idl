@@ -41,6 +41,7 @@
 interface nsIXFormsControl;
 interface nsISchemaType;
 interface nsIInstanceElementPrivate;
+interface nsXFormsMDGEngine;
 
 /**
  * Private interface implemented by the model element for other
@@ -75,4 +76,12 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
    * Locate the instance element child with the given id.
    */
   nsIInstanceElementPrivate findInstanceElement(in AString id);
+
+  /**
+   * The model's MDG.
+   *
+   * @bug nsXFormsMDGEngine is not an interface.
+   *      @see https://bugzilla.mozilla.org/show_bug.cgi?id=278370
+   */
+  readonly attribute nsXFormsMDGEngine MDG;
 };

@@ -41,13 +41,15 @@
 #include "nsIDOMXPathResult.h"
 
 #ifdef DEBUG
-// #define DEBUG_XF_ANALYZER
+//#define DEBUG_XF_ANALYZER
 #endif
 
 MOZ_DECL_CTOR_COUNTER(nsXFormsXPathAnalyzer)
 
-nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIDOMXPathEvaluator* aEvaluator, nsIDOMXPathNSResolver* aResolver)
-  : mEvaluator(aEvaluator), mResolver(aResolver)
+nsXFormsXPathAnalyzer::nsXFormsXPathAnalyzer(nsIDOMXPathEvaluator  *aEvaluator,
+                                             nsIDOMXPathNSResolver *aResolver)
+  : mEvaluator(aEvaluator),
+    mResolver(aResolver)
 {
   MOZ_COUNT_CTOR(nsXFormsXPathAnalyzer);
 }
@@ -58,15 +60,17 @@ nsXFormsXPathAnalyzer::~nsXFormsXPathAnalyzer()
 }
 
 nsresult
-nsXFormsXPathAnalyzer::Analyze(nsIDOMNode* aContextNode, const nsXFormsXPathNode* aNode,
-                               nsIDOMXPathExpression* aExpression, const nsAString* aExprString,
-                               nsXFormsMDGSet* aSet)
+nsXFormsXPathAnalyzer::Analyze(nsIDOMNode              *aContextNode,
+                               const nsXFormsXPathNode *aNode,
+                               nsIDOMXPathExpression   *aExpression,
+                               const nsAString         *aExprString,
+                               nsXFormsMDGSet          *aSet)
 {
-  NS_ENSURE_TRUE(aContextNode, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aNode, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aExpression, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aExprString, NS_ERROR_INVALID_ARG);
-  NS_ENSURE_TRUE(aSet, NS_ERROR_INVALID_ARG);
+  NS_ENSURE_ARG(aContextNode);
+  NS_ENSURE_ARG(aNode);
+  NS_ENSURE_ARG(aExpression);
+  NS_ENSURE_ARG(aExprString);
+  NS_ENSURE_ARG(aSet);
 
   mCurExpression = aExpression;
   mCurExprString = aExprString;
@@ -84,13 +88,17 @@ nsXFormsXPathAnalyzer::Analyze(nsIDOMNode* aContextNode, const nsXFormsXPathNode
 #endif
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // Besides making the set a set, it also makes it sorted.
+  aSet->MakeUnique();
+
   return NS_OK;
 }
 
 
 nsresult
-nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode* aContextNode, const nsXFormsXPathNode* aNode,
-                                          PRUint32 aIndent)
+nsXFormsXPathAnalyzer::AnalyzeRecursively(nsIDOMNode              *aContextNode,
+                                          const nsXFormsXPathNode *aNode,
+                                          PRUint32                aIndent)
 {
   nsXFormsXPathNode* t;
   nsAutoString xp;

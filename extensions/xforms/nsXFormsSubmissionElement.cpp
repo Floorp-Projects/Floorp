@@ -523,15 +523,16 @@ nsresult
 nsXFormsSubmissionElement::GetSelectedInstanceData(nsIDOMNode **result)
 {
   nsCOMPtr<nsIDOMNode> model;
-  nsCOMPtr<nsIDOMElement> bind;
-  nsCOMPtr<nsIDOMXPathResult> xpRes =
+  nsCOMPtr<nsIDOMXPathResult> xpRes;
+  nsresult rv =
     nsXFormsUtils::EvaluateNodeBinding(mElement, 0,
                                        NS_LITERAL_STRING("ref"),
                                        NS_LITERAL_STRING("/"),
                                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
                                        getter_AddRefs(model),
-                                       getter_AddRefs(bind));
-  if (!xpRes)
+                                       getter_AddRefs(xpRes));
+
+  if (NS_FAILED(rv) || !xpRes)
     return NS_ERROR_UNEXPECTED;
 
   return xpRes->GetSingleNodeValue(result);

@@ -36,8 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXFormsStubElement.h"
-#include "nsIXFormsControl.h"
+#include "nsXFormsControlStub.h"
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDOMFocusListener.h"
 #include "nsVoidArray.h"
@@ -55,13 +54,10 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventTarget.h"
 
-class nsXFormsSelectElement : public nsXFormsXMLVisualStub,
-                              public nsIXFormsControl,
+class nsXFormsSelectElement : public nsXFormsControlStub,
                               public nsIDOMEventListener
 {
 public:
-  nsXFormsSelectElement() : mElement(nsnull) {}
-
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIXTFXMLVisual overrides
@@ -73,9 +69,7 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
-  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD WillRemoveChild(PRUint32 aIndex);
@@ -84,7 +78,7 @@ public:
   NS_IMETHOD DoneAddingChildren();
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Refresh();
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER
@@ -97,7 +91,6 @@ private:
 
   nsCOMPtr<nsIDOMElement> mLabel;
   nsCOMPtr<nsIDOMHTMLSelectElement> mSelect;
-  nsIDOMElement *mElement;
   nsVoidArray mOptions;
 };
 
@@ -111,24 +104,14 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsSelectElement,
 NS_IMETHODIMP
 nsXFormsSelectElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
-                                nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
+  nsXFormsControlStub::OnCreated(aWrapper);
+
+  aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED |
                                 nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD |
                                 nsIXTFElement::NOTIFY_BEGIN_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN);
-
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-
-  // It's ok to keep pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as we null out mElement in
-  // OnDestroyed, it will always be valid.
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
   // Our anonymous content structure will look like this:
   //
@@ -139,7 +122,7 @@ nsXFormsSelectElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   //
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("label"),
@@ -213,24 +196,13 @@ nsXFormsSelectElement::GetInsertionPoint(nsIDOMElement **aPoint)
 NS_IMETHODIMP
 nsXFormsSelectElement::OnDestroyed()
 {
-  mElement = nsnull;
-
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(mSelect);
   if (NS_LIKELY(targ != nsnull)) {
     targ->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
     targ->RemoveEventListener(NS_LITERAL_STRING("change"), this, PR_FALSE);
   }
 
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSelectElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  // We need to re-evaluate our instance data binding when our parent
-  // changes, since xmlns declarations in effect could have changed.
-  if (aNewParent)
-    Refresh();
+  nsXFormsControlStub::OnDestroyed();
 
   return NS_OK;
 }
@@ -239,36 +211,14 @@ NS_IMETHODIMP
 nsXFormsSelectElement::WillSetAttribute(nsIAtom *aName,
                                         const nsAString &aValue)
 {
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMNode> model;
-    nsCOMPtr<nsIDOMElement> bind, context;
+  nsXFormsControlStub::WillSetAttribute(aName, aValue);
 
-    nsXFormsUtils::GetNodeContext(mElement,
-                                  nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                  getter_AddRefs(model),
-                                  getter_AddRefs(bind),
-                                  getter_AddRefs(context));
-
-    if (model) {
-      nsCOMPtr<nsIModelElementPrivate> modelPrivate = do_QueryInterface(model);
-      modelPrivate->RemoveFormControl(this);
-    }
-  } else if (aName == nsXFormsAtoms::appearance) {
+  if (aName == nsXFormsAtoms::appearance) {
     //    if (aValue.EqualsLiteral("full")) {
       // XXX todo
     //    }
 
     mSelect->SetSize(4);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSelectElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    Refresh();
   }
 
   return NS_OK;
@@ -346,52 +296,40 @@ nsXFormsSelectElement::Refresh()
     mSelect->SetSelectedIndex(-1);
   }
 
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
+  nsCOMPtr<nsIDOMXPathResult> result;
+  rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                          nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                          getter_AddRefs(result));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
+  if (result)
+    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
 
-  if (model) {
-    model->AddFormControl(this);
+  if (!mBoundNode)
+    return NS_OK;
 
-    nsCOMPtr<nsIDOMNode> resultNode;
-    if (result)
-      result->GetSingleNodeValue(getter_AddRefs(resultNode));
+  nsCOMPtr<nsIDOMNodeList> children;
+  mBoundNode->GetChildNodes(getter_AddRefs(children));
 
-    if (!resultNode)
-      return NS_OK;
+  if (!children)
+    return NS_OK;
 
-    nsCOMPtr<nsIDOMNodeList> children;
-    resultNode->GetChildNodes(getter_AddRefs(children));
+  nsCOMPtr<nsIDOMNode> child;
+  children->GetLength(&childCount);
 
-    if (!children)
-      return NS_OK;
+  for (PRUint32 k = 0; k < childCount; ++k) {
+    children->Item(k, getter_AddRefs(child));
 
-    nsCOMPtr<nsIDOMNode> child;
-    PRUint32 childCount;
-    children->GetLength(&childCount);
-
-    for (PRUint32 i = 0; i < childCount; ++i) {
-      children->Item(i, getter_AddRefs(child));
-
-      PRUint16 nodeType;
-      child->GetNodeType(&nodeType);
-      switch (nodeType) {
+    PRUint16 nodeType;
+    child->GetNodeType(&nodeType);
+    switch (nodeType) {
       case nsIDOMNode::TEXT_NODE:
-        {
-          nsAutoString nodeValue;
-          child->GetNodeValue(nodeValue);
-          SelectItemsInList(nodeValue);
-        }
-        break;
+      {
+        nsAutoString nodeValue;
+        child->GetNodeValue(nodeValue);
+        SelectItemsInList(nodeValue);
+      }
+      break;
 
       case nsIDOMNode::ELEMENT_NODE:
         SelectCopiedItem(child);
@@ -399,7 +337,6 @@ nsXFormsSelectElement::Refresh()
 
       default:
         break;
-      }
     }
   }
 
@@ -421,27 +358,10 @@ nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
   if ((isIncremental && type.EqualsLiteral("change")) ||
       (!isIncremental && type.EqualsLiteral("blur"))) {
 
-    // Update the instance data with our selected items.
-    nsCOMPtr<nsIDOMNode> modelNode;
-    nsCOMPtr<nsIDOMElement> bindElement;
-
-    nsCOMPtr<nsIDOMXPathResult> result =
-      nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                         nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                         NS_LITERAL_STRING("ref"),
-                                         EmptyString(),
-                                         nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                         getter_AddRefs(modelNode),
-                                         getter_AddRefs(bindElement));
-
-
-    nsCOMPtr<nsIDOMNode> resultNode;
-    if (result)
-      result->GetSingleNodeValue(getter_AddRefs(resultNode));
-
-    if (!resultNode)
+    if (!mBoundNode)
       return NS_OK;
 
+    // Update the instance data with our selected items.
     nsCOMPtr<nsIDOMNodeList> children;
     nsresult rv = mElement->GetChildNodes(getter_AddRefs(children));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -455,7 +375,7 @@ nsXFormsSelectElement::HandleEvent(nsIDOMEvent *aEvent)
       children->Item(i, getter_AddRefs(child));
       childItem = do_QueryInterface(child);
       if (childItem) {
-        childItem->WriteSelectedItems(resultNode);
+        childItem->WriteSelectedItems(mBoundNode);
       }
     }
   }

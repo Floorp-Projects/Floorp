@@ -46,16 +46,13 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsIXTFXMLVisualWrapper.h"
-#include "nsIXFormsControl.h"
-#include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsControlStub.h"
 
-class nsXFormsTriggerElement : public nsXFormsXMLVisualStub,
-                               public nsIXFormsControl
+class nsXFormsTriggerElement : public nsXFormsControlStub
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSIXFORMSCONTROL
 
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
@@ -64,11 +61,11 @@ public:
   NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
 
-  nsXFormsTriggerElement() : mElement(nsnull) {}
+  // nsIXFormsControl
+  NS_IMETHOD Refresh();
 
 protected:
   nsCOMPtr<nsIDOMHTMLButtonElement> mButton;
-  nsIDOMElement *mElement;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsTriggerElement,
@@ -123,7 +120,7 @@ nsXFormsTriggerElement::GetInsertionPoint(nsIDOMElement **aElement)
   return NS_OK;
 }
 
-// other methods
+// nsIXFormsControl
 
 NS_IMETHODIMP
 nsXFormsTriggerElement::Refresh()
@@ -145,6 +142,14 @@ public:
 NS_IMETHODIMP
 nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 {
+  nsresult rv;
+  
+  rv = nsXFormsControlStub::HandleDefault(aEvent, aHandled);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (aHandled) {
+    return NS_OK;
+  }
+
   nsAutoString type;
   aEvent->GetType(type);
   if (!(*aHandled = type.EqualsLiteral("DOMActivate")))
@@ -171,7 +176,7 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   docEvent->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   NS_ENSURE_STATE(event);
 
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING("xforms-submit"), PR_TRUE, PR_TRUE);
+  rv = event->InitEvent(NS_LITERAL_STRING("xforms-submit"), PR_TRUE, PR_TRUE);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   PRBool unused;

@@ -95,15 +95,14 @@ NS_IMETHODIMP
 nsXFormsValueElement::GetValue(nsAString &aValue)
 {
   nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                     nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                     NS_LITERAL_STRING("ref"),
+                                     EmptyString(),
+                                     nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                     getter_AddRefs(modelNode),
+                                     getter_AddRefs(result));
 
   if (result) {
     nsCOMPtr<nsIDOMNode> singleNode;

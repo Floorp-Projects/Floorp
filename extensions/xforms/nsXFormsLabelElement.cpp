@@ -41,29 +41,24 @@
  * This constructs an anonymous \<span\> to hold the inline content.
  */
 
-#include "nsXFormsStubElement.h"
-#include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
-#include "nsIXFormsControl.h"
-#include "nsIXTFXMLVisualWrapper.h"
+#include "nsXFormsControlStub.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
+#include "nsIXTFXMLVisualWrapper.h"
 #include "nsString.h"
 
-class nsXFormsLabelElement : public nsXFormsXMLVisualStub,
-                             public nsIXFormsControl
+class nsXFormsLabelElement : public nsXFormsControlStub
 {
 public:
-  nsXFormsLabelElement() : mElement(nsnull) { }
-
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Refresh();
 
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
@@ -73,9 +68,6 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
 
   // nsIXTFElement overrides
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aNewValue);
-  NS_IMETHOD AttributeRemoved(nsIAtom *aName);
-  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD ChildRemoved(PRUint32 aIndex);
@@ -83,7 +75,6 @@ public:
 private:
   NS_HIDDEN_(void) RefreshLabel();
 
-  nsIDOMElement *mElement;
   nsCOMPtr<nsIDOMElement> mOuterSpan;
   nsCOMPtr<nsIDOMElement> mInnerSpan;
 };
@@ -95,30 +86,21 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsLabelElement,
 NS_IMETHODIMP
 nsXFormsLabelElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_PARENT_CHANGED |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_REMOVED |
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aWrapper->SetNotificationMask(kStandardNotificationMask |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_REMOVED);
 
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-
-  // It's ok to keep a weak pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as wel null out mElement in
-  // OnDestroyed, it will always be valid.
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-
   // Create the span that will hold our text.
   nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
-  nsresult rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                                        NS_LITERAL_STRING("span"),
-                                        getter_AddRefs(mOuterSpan));
+  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
+                               NS_LITERAL_STRING("span"),
+                               getter_AddRefs(mOuterSpan));
 
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -155,39 +137,6 @@ nsXFormsLabelElement::GetInsertionPoint(nsIDOMElement **aPoint)
 }
 
 NS_IMETHODIMP
-nsXFormsLabelElement::AttributeSet(nsIAtom *aName, const nsAString &aNewValue)
-{
-  if (aName == nsXFormsAtoms::ref ||
-      aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::bind) {
-    RefreshLabel();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsLabelElement::AttributeRemoved(nsIAtom *aName)
-{
-  if (aName == nsXFormsAtoms::ref ||
-      aName == nsXFormsAtoms::model ||
-      aName == nsXFormsAtoms::bind) {
-    RefreshLabel();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsLabelElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  if (aNewParent)
-    RefreshLabel();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXFormsLabelElement::ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex)
 {
   RefreshLabel();
@@ -219,27 +168,20 @@ nsXFormsLabelElement::RefreshLabel()
   // or linking attributes are present, we don't want to show the inline text
   // at all.
 
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
-
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                       getter_AddRefs(result));
 
   nsAutoString labelValue;
   PRBool foundValue = PR_FALSE;
 
-  if (result) {
-    nsCOMPtr<nsIDOMNode> singleNode;
-    result->GetSingleNodeValue(getter_AddRefs(singleNode));
+  if (NS_SUCCEEDED(rv) && result) {
+    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
 
-    if (singleNode) {
-      nsXFormsUtils::GetNodeValue(singleNode, labelValue);
+    if (mBoundNode) {
+      nsXFormsUtils::GetNodeValue(mBoundNode, labelValue);
       foundValue = PR_TRUE;
     }
   }
@@ -262,6 +204,8 @@ nsXFormsLabelElement::RefreshLabel()
     mInnerSpan->RemoveAttribute(NS_LITERAL_STRING("style"));
   }
 }
+
+// nsIXFormsControl
 
 NS_IMETHODIMP
 nsXFormsLabelElement::Refresh()

@@ -12,16 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Mozilla XForms support.
+ * The Original Code is Mozilla XForms Schema Validation.
  *
  * The Initial Developer of the Original Code is
- * Novell, Inc.
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
- * the Initial Developer. All Rights Reserved.
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *  Allan Beaufour <abeaufour@novell.com>
- *  David Landwehr <dlandwehr@novell.com>
+ *   Doron Rosenberg <doronr@us.ibm.com> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -37,45 +36,44 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nscore.h"
-#include "nsCOMPtr.h"
-#include "nsXFormsXPathNode.h"
-#include "nsIDOMXPathExpression.h"
-#include "nsIDOMXPathEvaluator.h"
-#include "nsIDOMXPathNSResolver.h"
-#include "nsXFormsMDGSet.h"
-#include "nsIDOMNode.h"
-#include "nsCOMPtr.h"
-#include "nsString.h"
+// XPCOM includes
+#include "nsIServiceManager.h"
 
-/**
- * This class analyzes an XPath Expression parse tree (nsXFormsXPathNode), and
- * returns all the nodes that the expression depends on.
- * 
- * @note Should be reimplemented and moved to Transformiix
- * @note This class is not thread safe (mCur.*)
- */
-class nsXFormsXPathAnalyzer {
-private:
-  nsCOMPtr<nsIDOMXPathEvaluator>  mEvaluator;
-  nsCOMPtr<nsIDOMXPathNSResolver> mResolver;
+#include "nsISchemaValidator.h"
+#include "nsXFormsSchemaValidator.h"
 
-  nsXFormsMDGSet                 *mCurSet;
-  nsCOMPtr<nsIDOMXPathExpression> mCurExpression;
-  const nsAString                *mCurExprString;
+#define NS_SCHEMAVALIDATOR_CONTRACTID "@mozilla.org/schemavalidator;1"
 
-  nsresult AnalyzeRecursively(nsIDOMNode              *aContextNode,
-                              const nsXFormsXPathNode *aNode,
-                              PRUint32                 aIndent);
+nsXFormsSchemaValidator::nsXFormsSchemaValidator()
+{
+  mSchemaValidator = do_GetService(NS_SCHEMAVALIDATOR_CONTRACTID);
+}
 
-public:
-  nsXFormsXPathAnalyzer(nsIDOMXPathEvaluator  *aEvaluator,
-                        nsIDOMXPathNSResolver *aResolver);
-  ~nsXFormsXPathAnalyzer();
-  
-  nsresult Analyze(nsIDOMNode              *aContextNode,
-                   const nsXFormsXPathNode *aNode,
-                   nsIDOMXPathExpression   *aExpression,
-                   const nsAString         *aExprString,
-                   nsXFormsMDGSet          *aSet);
-};
+nsresult nsXFormsSchemaValidator::LoadSchema(nsISchema* aSchema)
+{
+  NS_ENSURE_TRUE(mSchemaValidator, NS_ERROR_UNEXPECTED);
+
+  return mSchemaValidator->LoadSchema(aSchema);
+}
+
+PRBool nsXFormsSchemaValidator::ValidateString(const nsAString & aValue,
+  const nsAString & aType, const nsAString & aNamespace)
+{
+  PRBool isValid = PR_FALSE;
+
+  NS_ENSURE_TRUE(mSchemaValidator, isValid);
+  mSchemaValidator->ValidateString(aValue, aType, aNamespace, &isValid);
+
+  return isValid;
+}
+
+PRBool nsXFormsSchemaValidator::Validate(nsIDOMNode* aElement)
+{
+  PRBool isValid = PR_FALSE;
+
+  NS_ENSURE_TRUE(mSchemaValidator, isValid);
+  mSchemaValidator->Validate(aElement, &isValid);
+
+  return isValid;
+}
+

@@ -236,15 +236,14 @@ nsXFormsItemSetElement::Refresh()
   // content and insert the cloned content as children of the HTML option.
 
   nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("nodeset"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsXFormsUtils::EvaluateNodeBinding(mElement,
+                                     nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                     NS_LITERAL_STRING("nodeset"),
+                                     EmptyString(),
+                                     nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                                     getter_AddRefs(modelNode),
+                                     getter_AddRefs(result));
   if (!result)
     return;
 

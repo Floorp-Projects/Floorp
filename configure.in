@@ -4110,7 +4110,7 @@ dnl ========================================================
 dnl = Enable compilation of specific extension modules
 dnl ========================================================
 
-MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions"
+MOZ_EXTENSIONS_ALL=" cookie wallet content-packs xml-rpc xmlextras help p3p pref transformiix venkman inspector irc universalchardet typeaheadfind webservices spellcheck gnomevfs negotiateauth sroaming xmlterm datetime finger cview layout-debug tasks sql xforms permissions schema-validation"
 
 MOZ_ARG_ENABLE_STRING(extensions,
 [  --enable-extensions     Enable extensions],
@@ -4164,13 +4164,18 @@ if test `echo "$MOZ_EXTENSIONS" | grep -c tridentprofile` -ne 0; then
   fi
 fi
 
-dnl xforms requires xtf and webservices
+dnl xforms requires xtf and webservices and schema-validation
 if test -z "$MOZ_XTF" && test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0; then
     AC_MSG_WARN([Cannot build XForms without XTF support.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c webservices` -eq 0; then
     AC_MSG_WARN([Cannot build XForms without webservices.  Removing XForms from MOZ_EXTENSIONS.])
+    MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
+fi
+
+if test `echo "$MOZ_EXTENSIONS" | grep -c xforms` -ne 0 && test `echo "$MOZ_EXTENSIONS" | grep -c schema-validation` -eq 0; then
+    AC_MSG_WARN([Cannot build XForms without schema validation.  Removing XForms from MOZ_EXTENSIONS.])
     MOZ_EXTENSIONS=`echo $MOZ_EXTENSIONS | sed -e 's|xforms||g'`
 fi
 

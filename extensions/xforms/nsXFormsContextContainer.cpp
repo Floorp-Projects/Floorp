@@ -48,9 +48,8 @@
 #include "nsIDOMSerializer.h"
 #include "nsIDOMXPathResult.h"
 
-#include "nsIXFormsControl.h"
+#include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
-#include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
 
 #ifdef DEBUG
@@ -64,20 +63,14 @@
  * an "unrolled" \<repeat\> or \<itemset\>. @see nsXFormsRepeatElement and
  * nsXFormsItemSetElement.
  *
- * @todo Should this class inherit from nsIXFormsControl? (XXX)
- *
  * @todo Support ::repeat-item and ::repeat-index pseudo-elements. (XXX)
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsContextContainer : public nsIXFormsControl,
-                                  public nsXFormsXMLVisualStub,
-                                  public nsIXFormsContextControl
+class nsXFormsContextContainer : public nsXFormsControlStub,
+                                 public nsIXFormsContextControl
 {
 protected:
-  /** The DOM element for the node */
-  nsCOMPtr<nsIDOMElement> mElement;
-
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMElement> mHTMLElement;
 
@@ -98,7 +91,7 @@ public:
   NS_IMETHOD OnDestroyed();
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Refresh();
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
@@ -214,7 +207,7 @@ nsXFormsContextContainer::GetContext(nsAString& aModelID,
   return NS_OK;
 }
 
-// nsXFormsControl
+// nsIXFormsControl
 nsresult
 nsXFormsContextContainer::Refresh()
 {

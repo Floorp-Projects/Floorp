@@ -49,11 +49,9 @@
 #include "nsIXTFXMLVisual.h"
 #include "nsIXTFXMLVisualWrapper.h"
 
-#include "nsIXFormsControl.h"
+#include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
 #include "nsIModelElementPrivate.h"
-#include "nsXFormsAtoms.h"
-#include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
 
 #ifdef DEBUG
@@ -74,31 +72,18 @@
  *
  * @bug If a group only has a model attribute, the group fails to set this for
  * children, as it is impossible to distinguish between a failure and absence
- * of binding attributes when calling EvaluateNodeBinding().
+ * of binding attributes when calling ProcessNodeBinding().
  */
-class nsXFormsGroupElement : public nsIXFormsControl,
-                             public nsXFormsXMLVisualStub,
+class nsXFormsGroupElement : public nsXFormsControlStub,
                              public nsIXFormsContextControl
 {
 protected:
-  /** The DOM element for the node */
-  nsCOMPtr<nsIDOMElement> mElement;
-
   /** The UI HTML element used to represent the tag */
   nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
-
-  /** Have DoneAddingChildren() been called? */
-  PRBool mDoneAddingChildren;
-
-  /** The context node for the children of this element */
-  nsCOMPtr<nsIDOMElement> mContextNode;
 
   /** The current ID of the model node is bound to */
   nsString mModelID;
 
-  /** Process element */
-  nsresult Process();
-      
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -115,12 +100,9 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD DoneAddingChildren();
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Refresh();
 
   // nsIXFormsContextControl
   NS_DECL_NSIXFORMSCONTEXTCONTROL
@@ -134,7 +116,6 @@ NS_IMPL_ISUPPORTS_INHERITED2(nsXFormsGroupElement,
 MOZ_DECL_CTOR_COUNTER(nsXFormsGroupElement)
 
 nsXFormsGroupElement::nsXFormsGroupElement()
-  : mElement(nsnull)
 {
   MOZ_COUNT_CTOR(nsXFormsGroupElement);
 }
@@ -152,17 +133,12 @@ nsXFormsGroupElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   printf("nsXFormsGroupElement::OnCreated(aWrapper=%p)\n", (void*) aWrapper);
 #endif
 
-  // Initialize member(s)
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  mDoneAddingChildren = PR_FALSE;
-  
   // Create HTML tag
   nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
   nsCOMPtr<nsIDOMElement> domElement;
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
@@ -172,11 +148,6 @@ nsXFormsGroupElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   mHTMLElement = do_QueryInterface(domElement);
   NS_ENSURE_TRUE(mHTMLElement, NS_ERROR_FAILURE);
   
-  // Setup which notifications to receive
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE);
-
   return NS_OK;
 }
 
@@ -200,103 +171,45 @@ NS_IMETHODIMP
 nsXFormsGroupElement::OnDestroyed()
 {
   mHTMLElement = nsnull;
-  mContextNode = nsnull;
-  mElement = nsnull;
-
-  return NS_OK;
+  return nsXFormsControlStub::OnDestroyed();
 }
+
+// nsIXFormsControl
 
 NS_IMETHODIMP
-nsXFormsGroupElement::WillSetAttribute(nsIAtom *aName, const nsAString& aNewValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
-    if (model) {
-      model->RemoveFormControl(this);
-    }
-  }
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsGroupElement::AttributeSet(nsIAtom *aName, const nsAString& aNewValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    Refresh();
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsGroupElement::DoneAddingChildren()
-{
-#ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::DoneAddingChildren()\n");
-#endif
-
-  mDoneAddingChildren = PR_TRUE;
-  Refresh();
-
-  return NS_OK;
-}
-
-// nsXFormsControl
-nsresult
 nsXFormsGroupElement::Refresh()
 {
 #ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::Refresh(mDoneAddingChildren=%d)\n", mDoneAddingChildren);
+  printf("nsXFormsGroupElement::Refresh()\n");
 #endif
-  
-  nsresult rv = NS_OK;
-  if (mDoneAddingChildren) {
-    rv = Process();
-  }
-  return rv;
-}
 
-// nsXFormsGroupElement
-nsresult
-nsXFormsGroupElement::Process()
-{
-#ifdef DEBUG_XF_GROUP
-  printf("nsXFormsGroupElement::Process()\n");
-#endif
+  if (!mHTMLElement) 
+    return NS_OK;
 
   mModelID.Truncate();
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
-    
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-  
-  if (model) {
-    model->AddFormControl(this);
-  }
-  
-  if (!result)
-    return NS_ERROR_FAILURE;
 
+  nsCOMPtr<nsIModelElementPrivate> modelNode;
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                       getter_AddRefs(result),
+                       getter_AddRefs(modelNode));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!result) {
+    return NS_OK;
+  }
+
+  
   // Get model ID
   nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
   NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
   modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
 
   // Get context node, if any  
-  nsCOMPtr<nsIDOMNode> singleNode;
-  result->GetSingleNodeValue(getter_AddRefs(singleNode));
-  mContextNode = do_QueryInterface(singleNode);
-  NS_ENSURE_TRUE(mContextNode, NS_ERROR_FAILURE);
+  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
+  NS_ENSURE_STATE(mBoundNode);
   
   return NS_OK;
 }
@@ -319,19 +232,12 @@ nsXFormsGroupElement::GetContext(nsAString&      aModelID,
 #endif
   NS_ENSURE_ARG(aContextSize);
   NS_ENSURE_ARG(aContextPosition);
-  
-  /** @todo Not too elegant to call Process() here, but DoneAddingChildren is,
-   *        logically, called on children before us.  We need a notification
-   *        that goes from the document node and DOWN, where the controls
-   *        should Refresh().
-   */
+
   *aContextPosition = 1;
   *aContextSize = 1;
 
-  nsresult rv = Process();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_IF_ADDREF(*aContextNode = mContextNode);
+  if (mBoundNode && aContextNode)
+    CallQueryInterface(mBoundNode, aContextNode); // addrefs
   aModelID = mModelID;
   
   return NS_OK;

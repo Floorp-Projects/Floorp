@@ -49,6 +49,8 @@ class nsIDOMElement;
 class nsIXFormsModelElement;
 class nsIURI;
 class nsString;
+class nsXFormsMDGSet;
+class nsIMutableArray;
 
 #define NS_NAMESPACE_XFORMS              "http://www.w3.org/2002/xforms"
 #define NS_NAMESPACE_XHTML               "http://www.w3.org/1999/xhtml"
@@ -105,6 +107,15 @@ enum nsXFormsEvent {
   eEvent_ComputeException
 };
 
+struct EventData
+{
+  const char *name;
+  PRBool      canCancel;
+  PRBool      canBubble;
+};
+
+extern const EventData sXFormsEventsEntries[41];
+
 /**
  * This class has static helper methods that don't fit into a specific place
  * in the class hierarchy.
@@ -131,11 +142,14 @@ public:
     Init();
 
   /**
-   * Locate the model that is a parent of |aElement|.  This method walks up the
-   * content tree looking for the containing model.
+   * Locate the model that is a parent of |aBindElement|.  This method walks
+   * up the content tree looking for the containing model.
+   *
+   * @return                  Whether it's a reference to an outermost bind
    */
-  static NS_HIDDEN_(void)
-    GetParentModel(nsIDOMElement *aElement, nsIDOMNode **aModel);
+  static NS_HIDDEN_(PRBool)
+    GetParentModel(nsIDOMElement *aBindElement,
+                   nsIDOMNode   **aModel);
 
   /**
    * Find the evaluation context for an element.
@@ -148,13 +162,17 @@ public:
    * @param aElementFlags     Flags describing characteristics of aElement
    * @param aModel            The \<model\> for the element
    * @param aBindElement      The \<bind\> the element is bound to (if any)
+   * @param aOuterBind        Whether the \<bind\> is an outermost bind
    * @param aContextNode      The context node for the element
+   * @param aContextPosition  The context position for the element
+   * @param aContextSize      The context size for the element
    */
   static NS_HIDDEN_(nsresult)
     GetNodeContext(nsIDOMElement  *aElement,
                    PRUint32        aElementFlags,
                    nsIDOMNode    **aModel,
                    nsIDOMElement **aBindElement,
+                   PRBool         *aOuterBind,
                    nsIDOMElement **aContextNode,
                    PRInt32        *aContextPosition = nsnull,
                    PRInt32        *aContextSize = nsnull);
@@ -175,38 +193,33 @@ public:
   /**
    * Evaluate a 'bind' or |aBindingAttr| attribute on |aElement|.
    * |aResultType| is used as the desired result type for the XPath evaluation.
-   * The model and bind elements (if applicable) are located as part of this
-   * evaluation, and are returned (addrefed) in |aModel| and |aBind|.
+   *
+   * The model element (if applicable) is located as part of this evaluation,
+   * and returned (addrefed) in |aModel|
    *
    * The return value is an XPathResult as returned from
    * nsIDOMXPathEvaluator::Evaluate().
    */
-  static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
-    EvaluateNodeBinding(nsIDOMElement  *aElement,
-                        PRUint32        aElementFlags,
-                        const nsString &aBindingAttr,
-                        const nsString &aDefaultRef,
-                        PRUint16        aResultType,
-                        nsIDOMNode    **aModel,
-                        nsIDOMElement **aBind);
-
-
-  /**
-   * Given a bind element |aElement|, return the nodeset that it applies to.
-   * |aResultType| is used as the desired result type for the XPath
-   * evaluation.
-   */
-  static NS_HIDDEN_(already_AddRefed<nsIDOMXPathResult>)
-    EvaluateNodeset(nsIDOMElement *aElement, PRUint16 aResultType);
+  static NS_HIDDEN_(nsresult)
+    EvaluateNodeBinding(nsIDOMElement      *aElement,
+                        PRUint32            aElementFlags,
+                        const nsString     &aBindingAttr,
+                        const nsString     &aDefaultRef,
+                        PRUint16            aResultType,
+                        nsIDOMNode        **aModel,
+                        nsIDOMXPathResult **aResult,
+                        nsIMutableArray    *aDeps = nsnull);
 
   /**
-   * Given a bind element |aElement|, find the context node to be used
-   * for evaluating its nodeset.
+   * Given a bind element |aBindElement|, find the model and the context node
+   * for it. |aOuterBind| tells whether the bind element is an outermost bind.
    */
-  static NS_HIDDEN_(already_AddRefed<nsIDOMNode>)
+  static NS_HIDDEN_(nsresult)
     FindBindContext(nsIDOMElement         *aBindElement,
-                    nsIXFormsModelElement *aModelElement);
-
+                    PRBool                *aOuterBind,
+                    nsIDOMNode           **aModel,
+                    nsIDOMElement        **aContextNode);
+  
   /**
    * Convenience method for doing XPath evaluations.  This gets a
    * nsIDOMXPathEvaluator from |aContextNode|'s ownerDocument, and calls
@@ -219,7 +232,8 @@ public:
                   nsIDOMNode      *aResolverNode,
                   PRUint16         aResultType,
                   PRInt32          aContextPosition = 1,
-                  PRInt32          aContextSize = 1);
+                  PRInt32          aContextSize = 1,
+                  nsXFormsMDGSet  *aSet = nsnull);
 
   /**
    * Given a node in the instance data, get its string value according

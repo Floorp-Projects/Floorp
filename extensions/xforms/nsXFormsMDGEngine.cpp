@@ -47,7 +47,15 @@
 #include "nsDeque.h"
 
 #ifdef DEBUG
-// #define DEBUG_XF_MDG
+//#  define DEBUG_XF_MDG
+  const char* gMIPNames[] = {"type",
+                             "r/o",
+                             "req",
+                             "rel",
+                             "calc",
+                             "const",
+                             "p3ptype"
+  };
 #endif
 
 /* ------------------------------------ */
@@ -55,9 +63,11 @@
 /* ------------------------------------ */
 MOZ_DECL_CTOR_COUNTER(nsXFormsMDGNode)
 
-nsXFormsMDGNode::nsXFormsMDGNode(nsIDOMNode* aNode, const ModelItemPropName aType)
-  : mDirty (PR_TRUE), mHasExpr(PR_FALSE), mContextNode(aNode), mCount(0), mType(aType),
-    mContextSize(0), mContextPosition(0), mDynFunc(PR_FALSE), mNext(nsnull)
+nsXFormsMDGNode::nsXFormsMDGNode(nsIDOMNode             *aNode,
+                                 const ModelItemPropName aType)
+  : mDirty (PR_TRUE), mHasExpr(PR_FALSE), mContextNode(aNode),
+    mCount(0), mType(aType), mContextSize(0), mContextPosition(0),
+    mDynFunc(PR_FALSE), mNext(nsnull)
 {
   MOZ_COUNT_CTOR(nsXFormsMDGNode);
 }
@@ -68,8 +78,10 @@ nsXFormsMDGNode::~nsXFormsMDGNode()
 }
 
 void
-nsXFormsMDGNode::SetExpression(nsIDOMXPathExpression* aExpression, PRBool aDynFunc,
-                               PRInt32 aContextPosition, PRInt32 aContextSize)
+nsXFormsMDGNode::SetExpression(nsIDOMXPathExpression *aExpression,
+                               PRBool                 aDynFunc,
+                               PRInt32                aContextPosition,
+                               PRInt32                aContextSize)
 {
   mHasExpr = PR_TRUE;
   mDynFunc = aDynFunc;
@@ -126,7 +138,7 @@ nsresult
 nsXFormsMDGEngine::Init()
 {
   nsresult rv = NS_ERROR_FAILURE;
-  if (mNodeToFlag.Init() && mNodeToMDG.Init()) {
+  if (mNodeStates.Init() && mNodeToMDG.Init()) {
     rv = NS_OK;
   }
   
@@ -134,9 +146,13 @@ nsXFormsMDGEngine::Init()
 }
 
 nsresult
-nsXFormsMDGEngine::AddMIP(PRInt32 aType, nsIDOMXPathExpression* aExpression,
-                    nsXFormsMDGSet* aDependencies, PRBool aDynFunc, nsIDOMNode* aContextNode,
-                    PRInt32 aContextPos, PRInt32 aContextSize)
+nsXFormsMDGEngine::AddMIP(PRInt32                aType,
+                          nsIDOMXPathExpression *aExpression,
+                          nsXFormsMDGSet        *aDependencies,
+                          PRBool                 aDynFunc,
+                          nsIDOMNode            *aContextNode,
+                          PRInt32                aContextPos,
+                          PRInt32                aContextSize)
 {
   NS_ENSURE_ARG(aContextNode);
   NS_ENSURE_ARG(aExpression);
@@ -144,28 +160,31 @@ nsXFormsMDGEngine::AddMIP(PRInt32 aType, nsIDOMXPathExpression* aExpression,
 #ifdef DEBUG_XF_MDG
   nsAutoString nodename;
   aContextNode->GetNodeName(nodename);
-  printf("nsXFormsMDGEngine::AddMIP(aContextNode=%s, aExpression=n/a, aDependencies=|%d|,\n",
+  printf("nsXFormsMDGEngine::AddMIP(aContextNode=%s, aExpression=%p, aDependencies=|%d|,\n",
          NS_ConvertUCS2toUTF8(nodename).get(),
+         (void*) aExpression,
          aDependencies->Count());
-  printf("                          aContextPos=%d, aContextSize=%d, aType=%d, aType=%d,\n",
-         aContextPos, aContextSize, aType, aType);
-  printf("                          aDynFunc=%d)\n",
-         aDynFunc);
+  printf("                          aContextPos=%d, aContextSize=%d, aType=%s, aDynFunc=%d)\n",
+         aContextPos, aContextSize, gMIPNames[aType], aDynFunc);
 #endif
-  nsXFormsMDGNode* newnode = GetNode(aContextNode, (ModelItemPropName) aType, PR_TRUE);
+  nsXFormsMDGNode* newnode = GetNode(aContextNode,
+                                     (ModelItemPropName) aType,
+                                     PR_TRUE);
   
   if (!newnode) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   
   if (newnode->HasExpr()) {
-    // MIP already in the graph. That is. there is already a MIP of the same
+    // MIP already in the graph. That is, there is already a MIP of the same
     // type for this node, which is illegal.
     // Example: <bind nodeset="x" required="true()" required="false()"/>
     return NS_ERROR_ABORT;
   }
-  
-  newnode->SetExpression(aExpression, aDynFunc, aContextPos, aContextSize);
+
+  if (aExpression) {
+    newnode->SetExpression(aExpression, aDynFunc, aContextPos, aContextSize);
+  }
   
   // Add dependencies
   if (aDependencies) {
@@ -198,42 +217,88 @@ nsXFormsMDGEngine::AddMIP(PRInt32 aType, nsIDOMXPathExpression* aExpression,
 nsresult
 nsXFormsMDGEngine::MarkNodeAsChanged(nsIDOMNode* aContextNode)
 {
-  SetFlagBits(aContextNode, MDG_FLAG_ALL_DISPATCH, PR_TRUE);
+  nsXFormsNodeState* ns = GetNCNodeState(aContextNode);
+  NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
 
-  nsXFormsMDGNode* n = GetNode(aContextNode, eModel_calculate);
+  ns->Set(kFlags_ALL_DISPATCH, PR_TRUE);
+
+  nsXFormsMDGNode* n = GetNode(aContextNode, eModel_type, PR_FALSE);
   if (n) {
-    n->MarkDirty();
-  }
-
-  // Add constraint to trigger validation of node 
-  n = GetNode(aContextNode, eModel_constraint, PR_FALSE);
-  if (!n) {
+    while (n) {
+      n->MarkDirty();
+      n = n->mNext;
+    }
+  } else {
+    // Add constraint to trigger validation of node 
     n = GetNode(aContextNode, eModel_constraint, PR_TRUE);
     if (!n) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    n->MarkDirty();
     NS_ENSURE_TRUE(mGraph.AppendElement(n), NS_ERROR_OUT_OF_MEMORY);
   }
-
-  n->MarkDirty();
 
   NS_ENSURE_TRUE(mMarkedNodes.AddNode(aContextNode), NS_ERROR_FAILURE);
 
   return NS_OK;
 }
 
-nsresult
-nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
+#ifdef DEBUG_beaufour
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+void
+nsXFormsMDGEngine::PrintDot(const char* aFile)
 {
-  NS_ENSURE_ARG_POINTER(aChangedNodes);
+  FILE *FD = stdout;
+  if (aFile) {
+    FD = fopen(aFile, "w");
+  }
+  fprintf(FD, "digraph {\n");
+  for (PRInt32 i = 0; i < mGraph.Count(); ++i) {
+    nsXFormsMDGNode* g = NS_STATIC_CAST(nsXFormsMDGNode*, mGraph[i]);
+    if (g) {
+      nsAutoString domNodeName;
+      g->mContextNode->GetNodeName(domNodeName);
+      
+      if (g->IsDirty()) {
+        fprintf(FD, "\t%s [color=red];\n",
+                NS_ConvertUCS2toUTF8(domNodeName).get());
+      }
 
-  nsXFormsMDGSet* changedNodes = *aChangedNodes;
-
-#ifdef DEBUG_XF_MDG
-  printf("nsXFormsMDGEngine::Recalculcate(aChangedNodes=|%d|)\n", changedNodes->Count());
+      for (PRInt32 j = 0; j < g->mSuc.Count(); ++j) {
+        nsXFormsMDGNode* sucnode = NS_STATIC_CAST(nsXFormsMDGNode*,
+                                                  g->mSuc[j]);
+        if (sucnode) {
+          nsAutoString sucName;
+          sucnode->mContextNode->GetNodeName(sucName);
+          fprintf(FD, "\t%s -> %s [label=\"%s\"];\n",
+                  NS_ConvertUCS2toUTF8(sucName).get(),
+                  NS_ConvertUCS2toUTF8(domNodeName).get(),
+                  gMIPNames[sucnode->mType]);
+        }
+      }
+    }
+  }
+  fprintf(FD, "}\n");
+  if (FD) {
+    fclose(FD);
+  }
+}
 #endif
 
-  NS_ENSURE_TRUE(changedNodes->AddSet(mMarkedNodes), NS_ERROR_OUT_OF_MEMORY);
+nsresult
+nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
+{
+  NS_ENSURE_ARG(aChangedNodes);
+
+#ifdef DEBUG_XF_MDG
+  printf("nsXFormsMDGEngine::Recalculcate(aChangedNodes=|%d|)\n",
+         aChangedNodes->Count());
+#endif
+
+  NS_ENSURE_TRUE(aChangedNodes->AddSet(mMarkedNodes), NS_ERROR_OUT_OF_MEMORY);
 
   mMarkedNodes.Clear();
   
@@ -242,9 +307,9 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
   mFirstCalculate = mJustRebuilt;
 
 #ifdef DEBUG_XF_MDG
-  printf("\taChangedNodes: %d\n", changedNodes->Count());
-  printf("\tmNodeToMDG:    %d\n", mNodeToFlag.Count());
-  printf("\tmNodeToFlag:   %d\n", mNodeToFlag.Count());
+  printf("\taChangedNodes: %d\n", aChangedNodes->Count());
+  printf("\tmNodeToMDG:    %d\n", mNodeToMDG.Count());
+  printf("\tmNodeStates:   %d\n", mNodeStates.Count());
   printf("\tGraph nodes:   %d\n", mGraph.Count());
 #endif
   
@@ -259,19 +324,26 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
       continue;
     }
 
+    NS_ASSERTION(g->mCount == 0,
+                 "nsXFormsMDGEngine::Calculcate(): Graph node with mCount != 0");
+
 #ifdef DEBUG_XF_MDG
     nsAutoString domNodeName;
     g->mContextNode->GetNodeName(domNodeName);
-
+    
     printf("\tNode #%d: This=%p, Dirty=%d, DynFunc=%d, Type=%d, Count=%d, Suc=%d, CSize=%d, CPos=%d, Next=%p, domnode=%s\n",
-           i, (void*) g, g->IsDirty(), g->mDynFunc, g->mType, g->mCount, g->mSuc.Count(),
-           g->mContextSize, g->mContextPosition, (void*) g->mNext, NS_ConvertUCS2toUTF8(domNodeName).get());
+           i, (void*) g, g->IsDirty(), g->mDynFunc, g->mType,
+           g->mCount, g->mSuc.Count(), g->mContextSize, g->mContextPosition,
+           (void*) g->mNext, NS_ConvertUCS2toUTF8(domNodeName).get());
 #endif
 
     // Ignore node if it is not dirty
     if (!g->IsDirty()) {
       continue;
     }
+
+    nsXFormsNodeState* ns = GetNCNodeState(g->mContextNode);
+    NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
     
     PRBool constraint = PR_TRUE;
     // Find MIP-type and handle it accordingly
@@ -279,7 +351,10 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
     case eModel_calculate:
       if (g->HasExpr()) {
         nsISupports* retval;
-        rv = g->mExpression->Evaluate(g->mContextNode, nsIDOMXPathResult::STRING_TYPE, nsnull, &retval);
+        rv = g->mExpression->Evaluate(g->mContextNode,
+                                      nsIDOMXPathResult::STRING_TYPE,
+                                      nsnull,
+                                      &retval);
         NS_ENSURE_SUCCESS(rv, rv);
         
         nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(retval);
@@ -291,11 +366,12 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
 
         rv = SetNodeValue(g->mContextNode, nodeval, PR_FALSE, nsnull); 
         if (NS_SUCCEEDED(rv)) {
-          NS_ENSURE_TRUE(changedNodes->AddNode(g->mContextNode), NS_ERROR_FAILURE);
+          NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+                         NS_ERROR_FAILURE);
         }
       }
 
-      OrFlag(g->mContextNode, MDG_FLAG_DISPATCH_VALUE_CHANGED);// | MDG_FLAG_DISPATCH_READONLY_CHANGED | MDG_FLAG_DISPATCH_VALID_CHANGED | MDG_FLAG_DISPATCH_RELEVANT_CHANGED);
+      ns->Set(eFlag_DISPATCH_VALUE_CHANGED, PR_TRUE);
       break;
       
     case eModel_constraint:
@@ -303,36 +379,52 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
         rv = BooleanExpression(g, constraint);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      // TODO: Schema validity should be checked here
-            
-      if ((GetFlag(g->mContextNode) & MDG_FLAG_CONSTRAINT) > 0 != constraint) {
-        SetFlagBits(g->mContextNode, MDG_FLAG_CONSTRAINT, constraint);
-        SetFlagBits(g->mContextNode, MDG_FLAG_DISPATCH_VALID_CHANGED, PR_TRUE);
-        NS_ENSURE_TRUE(changedNodes->AddNode(g->mContextNode), NS_ERROR_FAILURE);
+      ///
+      /// @todo Schema validity should be checked here (XXX)
+              
+      if (ns->IsConstraint() != constraint) {
+        ns->Set(eFlag_CONSTRAINT, constraint);
+        ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
+        NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+                       NS_ERROR_FAILURE);
       }
       break;
       
     case eModel_readonly:
       if (g->HasExpr()) {
-        rv = ComputeMIPWithInheritance(MDG_FLAG_READONLY, MDG_FLAG_DISPATCH_READONLY_CHANGED, MDG_FLAG_INHERITED_READONLY, g, changedNodes);
+        rv = ComputeMIPWithInheritance(eFlag_READONLY,
+                                       eFlag_DISPATCH_READONLY_CHANGED,
+                                       eFlag_INHERITED_READONLY,
+                                       g,
+                                       aChangedNodes);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       break;
       
     case eModel_relevant:
       if (g->HasExpr()) {
-        rv = ComputeMIPWithInheritance(MDG_FLAG_RELEVANT, MDG_FLAG_DISPATCH_RELEVANT_CHANGED, MDG_FLAG_INHERITED_RELEVANT, g, changedNodes);
+        rv = ComputeMIPWithInheritance(eFlag_RELEVANT,
+                                       eFlag_DISPATCH_RELEVANT_CHANGED,
+                                       eFlag_INHERITED_RELEVANT,
+                                       g,
+                                       aChangedNodes);
         NS_ENSURE_SUCCESS(rv, rv);
       }
       break;
       
     case eModel_required:
-      PRBool didChange;
-      rv = ComputeMIP(MDG_FLAG_REQUIRED, MDG_FLAG_DISPATCH_REQUIRED_CHANGED, g, didChange);
-      NS_ENSURE_SUCCESS(rv, rv);
+      if (g->HasExpr()) {
+        PRBool didChange;
+        rv = ComputeMIP(eFlag_REQUIRED,
+                        eFlag_DISPATCH_REQUIRED_CHANGED,
+                        g,
+                        didChange);
+        NS_ENSURE_SUCCESS(rv, rv);
       
-      if (g->HasExpr() && didChange) {
-        NS_ENSURE_TRUE(changedNodes->AddNode(g->mContextNode), NS_ERROR_FAILURE);
+        if (didChange) {
+          NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
+                         NS_ERROR_FAILURE);
+        }
       }
       break;
       
@@ -355,12 +447,12 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* * aChangedNodes)
 
     g->MarkClean();
   }
-  changedNodes->MakeUnique();
+  aChangedNodes->MakeUnique();
   
 #ifdef DEBUG_XF_MDG
-  printf("\taChangedNodes: %d\n", changedNodes->Count());
-  printf("\tmNodeToMDG:    %d\n", mNodeToFlag.Count());
-  printf("\tmNodeToFlag:   %d\n", mNodeToFlag.Count());
+  printf("\taChangedNodes: %d\n", aChangedNodes->Count());
+  printf("\tmNodeToMDG:    %d\n", mNodeToMDG.Count());
+  printf("\tmNodeStates:   %d\n", mNodeStates.Count());
   printf("\tGraph nodes:   %d\n", mGraph.Count());
 #endif
 
@@ -378,17 +470,17 @@ nsXFormsMDGEngine::Rebuild()
   mFirstCalculate = PR_FALSE;
 
   mGraph.Clear();
-  mNodeToFlag.Clear();
+  mNodeStates.Clear();
 
   nsDeque sortedNodes(nsnull);
 
 #ifdef DEBUG_XF_MDG
   printf("\tmNodesInGraph: %d\n", mNodesInGraph);
   printf("\tmNodeToMDG:    %d\n", mNodeToMDG.Count());
-  printf("\tmNodeToFlag:   %d\n", mNodeToFlag.Count());
+  printf("\tmNodeStates:   %d\n", mNodeStates.Count());
 #endif
 
-  // Initial scan for nsXFormsMDGNodes with no dependencies (count == 0)
+  // Initial scan for nsXFormsMDGNodes with no dependencies (mCount == 0)
   PRUint32 entries = mNodeToMDG.EnumerateRead(AddStartNodes, &sortedNodes);
   if (entries != mNodeToMDG.Count()) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -402,7 +494,8 @@ nsXFormsMDGEngine::Rebuild()
   nsXFormsMDGNode* node;
   while ((node = NS_STATIC_CAST(nsXFormsMDGNode*, sortedNodes.Pop()))) {
     for (PRInt32 i = 0; i < node->mSuc.Count(); ++i) {
-      nsXFormsMDGNode* sucNode = NS_STATIC_CAST(nsXFormsMDGNode*, node->mSuc[i]);
+      nsXFormsMDGNode* sucNode = NS_STATIC_CAST(nsXFormsMDGNode*,
+                                                node->mSuc[i]);
       NS_ASSERTION(sucNode, "XForms: NULL successor node");
 
       sucNode->mCount--;
@@ -432,7 +525,7 @@ nsresult
 nsXFormsMDGEngine::ClearDispatchFlags()
 {
   mJustRebuilt = PR_FALSE;
-  return AndFlags(MDG_FLAGMASK_NOT_DISPATCH) ? NS_OK : NS_ERROR_FAILURE;
+  return AndFlags(kFlags_NOT_DISPATCH) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -446,7 +539,7 @@ nsXFormsMDGEngine::Clear() {
 
   mNodeToMDG.Clear();
 
-  mNodeToFlag.Clear();
+  mNodeStates.Clear();
   
   mGraph.Clear();
   
@@ -456,7 +549,8 @@ nsXFormsMDGEngine::Clear() {
 }
 
 nsresult
-nsXFormsMDGEngine::GetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue)
+nsXFormsMDGEngine::GetNodeValue(nsIDOMNode *aContextNode,
+                                nsAString  &aNodeValue)
 {
   nsresult rv;
   nsCOMPtr<nsIDOMNode> childNode;
@@ -497,8 +591,8 @@ nsXFormsMDGEngine::GetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue)
     break;
           
   default:
-    // Asked for a node which cannot have a text child
-    // TODO: Should return more specific error?
+    /// Asked for a node which cannot have a text child
+    /// @todo Should return more specific error? (XXX)
     return NS_ERROR_ILLEGAL_VALUE;
     break;
   }
@@ -507,15 +601,21 @@ nsXFormsMDGEngine::GetNodeValue(nsIDOMNode* aContextNode, nsAString& aNodeValue)
 }
 
 nsresult
-nsXFormsMDGEngine::SetNodeValue(nsIDOMNode* aContextNode, const nsAString& aNodeValue,
-                                PRBool aMarkNode, PRBool* aNodeChanged)
+nsXFormsMDGEngine::SetNodeValue(nsIDOMNode       *aContextNode,
+                                const nsAString  &aNodeValue,
+                                PRBool            aMarkNode,
+                                PRBool           *aNodeChanged)
 {
   if (aNodeChanged) {
     *aNodeChanged = PR_FALSE;
   }
 
-  if (IsReadonly(aContextNode)) {
-    // TODO: Better feedback for readonly nodes?
+  const nsXFormsNodeState* ns = GetNodeState(aContextNode);
+  NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
+
+  if (ns->IsReadonly()) {
+    ///
+    /// @todo Better feedback for readonly nodes? (XXX)
     return NS_OK;
   }
 
@@ -524,13 +624,21 @@ nsXFormsMDGEngine::SetNodeValue(nsIDOMNode* aContextNode, const nsAString& aNode
   nsresult rv = aContextNode->GetNodeType(&nodeType);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsAutoString oldValue;
+  rv = GetNodeValue(aContextNode, oldValue);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (oldValue.Equals(aNodeValue)) {
+    return NS_OK;
+  }
+
   switch(nodeType) {
   case nsIDOMNode::ATTRIBUTE_NODE:
   case nsIDOMNode::TEXT_NODE:
   case nsIDOMNode::CDATA_SECTION_NODE:
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
   case nsIDOMNode::COMMENT_NODE:
-    // TODO: Check existing value, and ignore if same??
+    ///
+    /// @todo Check existing value, and ignore if same?? (XXX)
     rv = aContextNode->SetNodeValue(aNodeValue);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -561,8 +669,8 @@ nsXFormsMDGEngine::SetNodeValue(nsIDOMNode* aContextNode, const nsAString& aNode
     break;
           
   default:
-    // Unsupported nodeType
-    // TODO: Should return more specific error?
+    /// Unsupported nodeType
+    /// @todo Should return more specific error? (XXX)
     return NS_ERROR_ILLEGAL_VALUE;
     break;
   }
@@ -578,79 +686,39 @@ nsXFormsMDGEngine::SetNodeValue(nsIDOMNode* aContextNode, const nsAString& aNode
   return NS_OK;
 }
 
-
-//             Bit test functions
-/**
- * @TODO needs Schema support
- */
-PRBool
-nsXFormsMDGEngine::IsValid(nsIDOMNode* aContextNode)
+const nsXFormsNodeState*
+nsXFormsMDGEngine::GetNodeState(nsIDOMNode *aContextNode)
 {
-  return Test(aContextNode, MDG_FLAG_CONSTRAINT);
+  return GetNCNodeState(aContextNode);
 }
-
-PRBool
-nsXFormsMDGEngine::IsConstraint(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_CONSTRAINT);
-}
-
-PRBool
-nsXFormsMDGEngine::ShouldDispatchValid(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_DISPATCH_VALID_CHANGED);
-}
-
-PRBool
-nsXFormsMDGEngine::IsReadonly(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_READONLY | MDG_FLAG_INHERITED_READONLY);
-}
-
-PRBool
-nsXFormsMDGEngine::ShouldDispatchReadonly(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_DISPATCH_READONLY_CHANGED);
-}
-
-
-PRBool
-nsXFormsMDGEngine::IsRelevant(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_RELEVANT | MDG_FLAG_INHERITED_RELEVANT);
-}
-
-PRBool
-nsXFormsMDGEngine::ShouldDispatchRelevant(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_DISPATCH_RELEVANT_CHANGED);
-}
-
-PRBool
-nsXFormsMDGEngine::IsRequired(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_REQUIRED);
-}
-
-PRBool
-nsXFormsMDGEngine::ShouldDispatchRequired(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_DISPATCH_REQUIRED_CHANGED);
-}
-
-PRBool
-nsXFormsMDGEngine::ShouldDispatchValueChanged(nsIDOMNode* aContextNode)
-{
-  return Test(aContextNode, MDG_FLAG_DISPATCH_VALUE_CHANGED);
-}
-
 
 /**********************************************/
 /*              Private functions             */
 /**********************************************/
+nsXFormsNodeState*
+nsXFormsMDGEngine::GetNCNodeState(nsIDOMNode *aContextNode)
+{
+  nsXFormsNodeState* ns = nsnull;
+
+  if (aContextNode && !mNodeStates.Get(aContextNode, &ns)) {
+    ns = new nsXFormsNodeState(kFlags_DEFAULT |
+                               ((mJustRebuilt && mFirstCalculate) ? kFlags_INITIAL_DISPATCH : 0));
+    NS_ASSERTION(ns, "Could not create new nsXFormsNodeState");
+
+    if (!mNodeStates.Put(aContextNode, ns)) {
+      NS_ERROR("Could not insert new nsXFormsNodeState");
+      delete ns;
+      return nsnull;
+    }    
+    aContextNode->AddRef();
+  }
+  return ns;
+}
+
 nsresult
-nsXFormsMDGEngine::CreateNewChild(nsIDOMNode* aContextNode, const nsAString& aNodeValue,
-                            nsIDOMNode* aBeforeNode)
+nsXFormsMDGEngine::CreateNewChild(nsIDOMNode      *aContextNode,
+                                  const nsAString &aNodeValue,
+                                  nsIDOMNode      *aBeforeNode)
 {
   nsresult rv;
 
@@ -664,16 +732,21 @@ nsXFormsMDGEngine::CreateNewChild(nsIDOMNode* aContextNode, const nsAString& aNo
   
   nsCOMPtr<nsIDOMNode> newNode;
   if (aBeforeNode) {
-    rv = aContextNode->InsertBefore(textNode, aBeforeNode, getter_AddRefs(newNode));
+    rv = aContextNode->InsertBefore(textNode,
+                                    aBeforeNode,
+                                    getter_AddRefs(newNode));
   } else {
-    rv = aContextNode->AppendChild(textNode, getter_AddRefs(newNode));
+    rv = aContextNode->AppendChild(textNode,
+                                   getter_AddRefs(newNode));
   }
 
   return rv;
 }
 
 PLDHashOperator
-nsXFormsMDGEngine::DeleteLinkedNodes(nsISupports *aKey, nsAutoPtr<nsXFormsMDGNode>& aNode, void* aArg)
+nsXFormsMDGEngine::DeleteLinkedNodes(nsISupports                *aKey,
+                                     nsAutoPtr<nsXFormsMDGNode> &aNode,
+                                     void                       *aArg)
 {
   if (!aNode) {
     NS_WARNING("nsXFormsMDGEngine::DeleteLinkedNodes() called with aNode == nsnull!");
@@ -692,19 +765,22 @@ nsXFormsMDGEngine::DeleteLinkedNodes(nsISupports *aKey, nsAutoPtr<nsXFormsMDGNod
 }
 
 nsXFormsMDGNode*
-nsXFormsMDGEngine::GetNode(nsIDOMNode* aDomNode, ModelItemPropName aType, PRBool aCreate)
+nsXFormsMDGEngine::GetNode(nsIDOMNode       *aDomNode,
+                           ModelItemPropName aType,
+                           PRBool            aCreate)
 {
   nsIDOMNode* nodeKey = aDomNode;
   nsXFormsMDGNode* nd = nsnull;
 
 #ifdef DEBUG_XF_MDG
-  printf("nsXFormsMDGEngine::GetNode(aDomNode=%p, aType=%d, aCreate=%d)\n", (void*) nodeKey, aType, aCreate);
+  printf("nsXFormsMDGEngine::GetNode(aDomNode=%p, aType=%s, aCreate=%d)\n",
+         (void*) nodeKey, gMIPNames[aType], aCreate);
 #endif
   
 
   // Find correct type
-  if (mNodeToMDG.Get(nodeKey, &nd)) {
-    while (nd && nd->mType != aType) {
+  if (mNodeToMDG.Get(nodeKey, &nd) && aType != eModel_type) {
+    while (nd && aType != nd->mType) {
       nd = nd->mNext;
     }
   } 
@@ -731,12 +807,12 @@ nsXFormsMDGEngine::GetNode(nsIDOMNode* aDomNode, ModelItemPropName aType, PRBool
 #endif
       nd_exists->mNext = nd;
     } else {
-      nodeKey->AddRef();
       if (!mNodeToMDG.Put(nodeKey, nd)) {
         delete nd;
         NS_ERROR("Could not insert new node in HashTable!");
         return nsnull;
       }
+      nodeKey->AddRef();
     }
 
     mNodesInGraph++;
@@ -745,10 +821,14 @@ nsXFormsMDGEngine::GetNode(nsIDOMNode* aDomNode, ModelItemPropName aType, PRBool
 }
 
 PLDHashOperator 
-nsXFormsMDGEngine::AddStartNodes(nsISupports *aKey, nsXFormsMDGNode* aNode, void* aDeque)
+nsXFormsMDGEngine::AddStartNodes(nsISupports     *aKey,
+                                 nsXFormsMDGNode *aNode,
+                                 void            *aDeque)
 {
 #ifdef DEBUG_XF_MDG
-  printf("nsXFormsMDGEngine::AddStartNodes(aKey=n/a, aNode=%p, aDeque=%p)\n", (void*) aNode, aDeque);
+  printf("nsXFormsMDGEngine::AddStartNodes(aKey=n/a, aNode=%p, aDeque=%p)\n",
+         (void*) aNode,
+         aDeque);
 #endif
 
   nsDeque* deque = NS_STATIC_CAST(nsDeque*, aDeque);
@@ -759,7 +839,8 @@ nsXFormsMDGEngine::AddStartNodes(nsISupports *aKey, nsXFormsMDGNode* aNode, void
   
   while (aNode) {
     if (aNode->mCount == 0) {
-      // Is it not possible to check error condition?
+      ///
+      /// @todo Is it not possible to check error condition? (XXX)
       deque->Push(aNode);
     }
     aNode = aNode->mNext;
@@ -769,60 +850,23 @@ nsXFormsMDGEngine::AddStartNodes(nsISupports *aKey, nsXFormsMDGNode* aNode, void
 }
 
 PLDHashOperator 
-nsXFormsMDGEngine::AndFlag(nsISupports *aKey, PRUint16& aFlag, void* aMask)
+nsXFormsMDGEngine::AndFlag(nsISupports                  *aKey,
+                           nsAutoPtr<nsXFormsNodeState> &aState,
+                           void                         *aMask)
 {
   PRUint16* andMask = NS_STATIC_CAST(PRUint16*, aMask);
   if (!andMask) {
     return PL_DHASH_STOP;
   }
-  aFlag &= *andMask;
+  *aState &= *andMask;
   return PL_DHASH_NEXT;
 }
 
 PRBool
 nsXFormsMDGEngine::AndFlags(PRUint16 aAndMask)
 {
-  PRUint32 entries = mNodeToFlag.Enumerate(AndFlag, &aAndMask);
-  return (entries == mNodeToFlag.Count()) ? PR_TRUE : PR_FALSE;
-}
-
-PRUint16
-nsXFormsMDGEngine::GetFlag(nsIDOMNode* aDomNode)
-{
-  PRUint16 flag = MDG_FLAG_DEFAULT | (mJustRebuilt && mFirstCalculate ? MDG_FLAG_INITIAL_DISPATCH : 0);
-
-  // If node is found, flag is modified, if not flag is untouched
-  mNodeToFlag.Get(aDomNode, &flag);
-
-  return flag;
-}
-
-void
-nsXFormsMDGEngine::SetFlag(nsIDOMNode* aDomNode, PRUint16 aFlag)
-{
-  nsIDOMNode *nodeKey = aDomNode;
-  nodeKey->AddRef();
-  mNodeToFlag.Put(nodeKey, aFlag);
-}
-    
-void
-nsXFormsMDGEngine::OrFlag(nsIDOMNode* aDomNode, PRInt16 aFlag)
-{
-  PRUint16 fl = GetFlag(aDomNode);
-  fl |= aFlag;
-  SetFlag(aDomNode, fl);
-}
-
-void
-nsXFormsMDGEngine::SetFlagBits(nsIDOMNode* aDomNode, PRUint16 aBits, PRBool aOn)
-{
-  PRUint32 fl = GetFlag(aDomNode);
-  if (aOn) {
-    fl |= aBits;
-  } else {
-    fl &= ~aBits;
-  }
-  SetFlag(aDomNode, fl);
+  PRUint32 entries = mNodeStates.Enumerate(AndFlag, &aAndMask);
+  return (entries == mNodeStates.Count()) ? PR_TRUE : PR_FALSE;
 }
 
 
@@ -830,12 +874,17 @@ nsresult
 nsXFormsMDGEngine::BooleanExpression(nsXFormsMDGNode* aNode, PRBool& state)
 {
   NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_TRUE(aNode->mExpression, NS_ERROR_FAILURE);
   
-  // TODO: Use aNode->contextPosition and aNode->contextSize!
+  /// @todo Use aNode->contextPosition and aNode->contextSize (XXX)
+  /// @see https://bugzilla.mozilla.org/show_bug.cgi?id=265460
   nsISupports* retval;
   nsresult rv;
 
-  rv = aNode->mExpression->Evaluate(aNode->mContextNode, nsIDOMXPathResult::BOOLEAN_TYPE, nsnull, &retval);
+  rv = aNode->mExpression->Evaluate(aNode->mContextNode,
+                                    nsIDOMXPathResult::BOOLEAN_TYPE,
+                                    nsnull,
+                                    &retval);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIDOMXPathResult> xpath_res = do_QueryInterface(retval);
@@ -847,35 +896,43 @@ nsXFormsMDGEngine::BooleanExpression(nsXFormsMDGNode* aNode, PRBool& state)
 }
 
 nsresult
-nsXFormsMDGEngine::ComputeMIP(PRUint16 aStateFlag, PRUint16 aDispatchFlag, nsXFormsMDGNode* aNode, PRBool& aDidChange)
+nsXFormsMDGEngine::ComputeMIP(eFlag_t          aStateFlag,
+                              eFlag_t          aDispatchFlag,
+                              nsXFormsMDGNode *aNode,
+                              PRBool          &aDidChange)
 {
-  NS_ENSURE_ARG_POINTER(aNode);
+  NS_ENSURE_ARG(aNode);
+
+  aDidChange = PR_FALSE;
+
+  if (!aNode->mExpression)
+    return NS_OK;
+
+  nsXFormsNodeState* ns = GetNCNodeState(aNode->mContextNode);
+  NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
   
-  PRUint32 word = GetFlag(aNode->mContextNode);
   PRBool state;
   nsresult rv = BooleanExpression(aNode, state);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  PRBool cstate = ((word & aStateFlag) != 0) ? PR_TRUE : PR_FALSE;
+  PRBool cstate = ns->Test(aStateFlag);  
   
-  if (state) {
-    word |= aStateFlag;
-  } else {
-    word &= ~aStateFlag;
-  }
+  ns->Set(aStateFlag, state);
 
   aDidChange = (state != cstate) ? PR_TRUE : PR_FALSE;
   if (aDidChange) {
-    word |= aDispatchFlag;
+    ns->Set(aDispatchFlag, PR_TRUE);
   }
-
-  SetFlag(aNode->mContextNode, word);
   
   return NS_OK;
 }
 
 nsresult
-nsXFormsMDGEngine::ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDispatchFlag, PRUint16 aInheritanceFlag, nsXFormsMDGNode* aNode, nsXFormsMDGSet* aSet)
+nsXFormsMDGEngine::ComputeMIPWithInheritance(eFlag_t          aStateFlag,
+                                             eFlag_t          aDispatchFlag,
+                                             eFlag_t          aInheritanceFlag,
+                                             nsXFormsMDGNode *aNode,
+                                             nsXFormsMDGSet  *aSet)
 {
   nsresult rv;
   PRBool didChange;
@@ -883,27 +940,32 @@ nsXFormsMDGEngine::ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDisp
   NS_ENSURE_SUCCESS(rv, rv);
   
   if (didChange) {
-    PRUint16 flag = GetFlag(aNode->mContextNode);
-    PRBool state = ((flag & aStateFlag) != 0) ? PR_TRUE : PR_FALSE;
-    if (   (aStateFlag == MDG_FLAG_READONLY && (flag & aInheritanceFlag) == 0)
-        || (aStateFlag == MDG_FLAG_RELEVANT && (flag & aInheritanceFlag) > 0)  )
+    nsXFormsNodeState* ns = GetNCNodeState(aNode->mContextNode);
+    NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
+    if (   !(aStateFlag == eFlag_READONLY && ns->Test(aInheritanceFlag))
+        ||  (aStateFlag == eFlag_RELEVANT && ns->Test(aInheritanceFlag)) )
     {
-      NS_ENSURE_TRUE(aSet->AddNode(aNode->mContextNode), NS_ERROR_FAILURE);
-      rv = AttachInheritance(aSet, aNode->mContextNode, state, aStateFlag);
+      NS_ENSURE_TRUE(aSet->AddNode(aNode->mContextNode),
+                     NS_ERROR_FAILURE);
+      rv = AttachInheritance(aSet,
+                             aNode->mContextNode,
+                             ns->Test(aStateFlag),
+                             aStateFlag);
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsresult
-nsXFormsMDGEngine::AttachInheritance(nsXFormsMDGSet* aSet, nsIDOMNode* aSrc, PRBool aState, PRUint16 aStateFlag)
+nsXFormsMDGEngine::AttachInheritance(nsXFormsMDGSet *aSet,
+                                     nsIDOMNode     *aSrc,
+                                     PRBool          aState,
+                                     eFlag_t         aStateFlag)
 {
   NS_ENSURE_ARG(aSrc);
   
   nsCOMPtr<nsIDOMNode> node;
-  PRUint32 flag;
-  PRBool cstate;
   nsresult rv;
   PRBool updateNode = PR_FALSE;
 
@@ -919,42 +981,44 @@ nsXFormsMDGEngine::AttachInheritance(nsXFormsMDGSet* aSet, nsIDOMNode* aSrc, PRB
     rv = childList->Item(i, getter_AddRefs(node));
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
-    
-    flag = GetFlag(node);
 
-    cstate = ((flag & aStateFlag) != 0) ? PR_TRUE : PR_FALSE;
+    nsXFormsNodeState *ns = GetNCNodeState(node);
+    NS_ENSURE_TRUE(ns, NS_ERROR_FAILURE);
 
-    if (aStateFlag == MDG_FLAG_RELEVANT) {
-      if (aState == PR_FALSE) { // The nodes are getting irrelevant
-        if ((flag & MDG_FLAG_INHERITED_RELEVANT) != 0 && cstate) {
-          flag &= ~MDG_FLAG_INHERITED_RELEVANT;
-          flag |= MDG_FLAG_DISPATCH_RELEVANT_CHANGED;
+    PRBool curState = ns->Test(aStateFlag);    
+
+    if (aStateFlag == eFlag_RELEVANT) {
+      if (!aState) { // The nodes are getting irrelevant
+        if (ns->Test(eFlag_INHERITED_RELEVANT) && curState) {
+          ns->Set(eFlag_INHERITED_RELEVANT, PR_FALSE);
+          ns->Set(eFlag_DISPATCH_RELEVANT_CHANGED, PR_TRUE);
           updateNode = PR_TRUE;
         }
       } else { // The nodes are becoming relevant
-        if (cstate) {
-          flag |= MDG_FLAG_DISPATCH_RELEVANT_CHANGED; // Relevant has changed from inheritance
-          flag |= MDG_FLAG_INHERITED_RELEVANT; // Clear the flag for inheritance
+        if (curState) {
+          // Relevant has changed from inheritance
+          ns->Set(eFlag_DISPATCH_RELEVANT_CHANGED, PR_TRUE);
+          ns->Set(eFlag_INHERITED_RELEVANT, PR_TRUE);
           updateNode = PR_TRUE;
         }
       }
-    } else if (aStateFlag == MDG_FLAG_READONLY) {
+    } else if (aStateFlag == eFlag_READONLY) {
       if (aState) { // The nodes are getting readonly
-        if ((flag & MDG_FLAG_INHERITED_READONLY) == 0 && cstate == PR_FALSE) {
-          flag |= MDG_FLAG_INHERITED_READONLY | MDG_FLAG_DISPATCH_READONLY_CHANGED;
+        if (!ns->Test(eFlag_INHERITED_READONLY) && curState == PR_FALSE) {
+          ns->Set(eFlag_INHERITED_READONLY | eFlag_DISPATCH_READONLY_CHANGED,
+                  PR_TRUE);
           updateNode = PR_TRUE;
         }
       } else { // The nodes are getting readwrite
-        if (cstate) {
-          flag |= MDG_FLAG_DISPATCH_READONLY_CHANGED;
-          flag &= ~MDG_FLAG_INHERITED_READONLY;
+        if (curState) {
+          ns->Set(eFlag_DISPATCH_READONLY_CHANGED, PR_TRUE);
+          ns->Set(eFlag_INHERITED_READONLY, PR_FALSE);
           updateNode = PR_TRUE;
         }
       }
     }
     
     if (updateNode) {
-      SetFlag(node, flag);
       rv = AttachInheritance(aSet, node, aState, aStateFlag);
       NS_ENSURE_SUCCESS(rv, rv);
       NS_ENSURE_TRUE(aSet->AddNode(node), NS_ERROR_FAILURE);
@@ -977,29 +1041,3 @@ nsXFormsMDGEngine::Invalidate()
   return NS_OK;
 }
 
-PRBool
-nsXFormsMDGEngine::TestAndClear(nsIDOMNode* aDomNode, PRUint16 aFlag)
-{
-  PRUint16 fl = GetFlag(aDomNode);
-  PRUint16 test = fl & aFlag;
-  fl &= ~aFlag;
-  SetFlag(aDomNode, fl);
-  return (test != 0) ? PR_TRUE : PR_FALSE;
-}
-
-PRBool
-nsXFormsMDGEngine::TestAndSet(nsIDOMNode* aDomNode, PRUint16 aFlag)
-{
-  PRUint16 fl = GetFlag(aDomNode);
-  PRUint16 test = fl & aFlag;
-  fl |= aFlag;
-  SetFlag(aDomNode, fl);
-  return (test != 0) ? PR_TRUE : PR_FALSE;
-}
-
-PRBool
-nsXFormsMDGEngine::Test(nsIDOMNode* aDomNode, PRUint16 aFlag)
-{
-  PRUint16 fl = GetFlag(aDomNode);
-  return (fl & aFlag != 0) ? PR_TRUE : PR_FALSE;
-}

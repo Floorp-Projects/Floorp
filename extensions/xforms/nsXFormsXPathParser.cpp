@@ -41,11 +41,15 @@
 #include "nscore.h"
 
 /*
- * (TODO) GIANT hack. Without exceptions everything had to be rewritten, and
- * that was to overdo it a bit, when the code probably does not survive...
+ * @todo GIANT hack. Without exceptions everything had to be rewritten, and
+ * that was to overdo it a bit, when the code probably does not survive... (XXX)
  */
 void
-XPathCompilerException(const char* aMsg, nsAString& aExpression, PRInt32 aOffset = -1, PRInt32 aLength = -1) {
+XPathCompilerException(const char *aMsg,
+                       nsAString  &aExpression,
+                       PRInt32     aOffset = -1,
+                       PRInt32     aLength = -1)
+{
   printf("XPathCompilerException: %s, %s [o: %d, l: %d]\n",
          aMsg,
          NS_ConvertUCS2toUTF8(aExpression).get(), aOffset, aLength);

@@ -43,60 +43,15 @@
 #include "nscore.h"
 #include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsDataHashtable.h"
 #include "nsVoidArray.h"
 
 #include "nsIDOMNode.h"
 
 #include "nsXFormsTypes.h"
 #include "nsXFormsMDGSet.h"
+#include "nsXFormsNodeState.h"
 
 class nsIDOMXPathExpression;
-
-/**
- * Flags, etc.
- * 
- * TODO: Convert to enum?
- */
-const PRUint16 MDG_FLAG_READONLY                    = 1 << 1;
-const PRUint16 MDG_FLAG_CONSTRAINT                  = 1 << 2;
-const PRUint16 MDG_FLAG_RELEVANT                    = 1 << 3;
-const PRUint16 MDG_FLAG_REQUIRED                    = 1 << 4;
-const PRUint16 MDG_FLAG_SCHEMA_VALID                = 1 << 5;
-const PRUint16 MDG_FLAG_VALID                       = 1 << 6;
-const PRUint16 MDG_FLAG_INHERITED_RELEVANT          = 1 << 7;
-const PRUint16 MDG_FLAG_INHERITED_READONLY          = 1 << 8;
-const PRUint16 MDG_FLAG_DISPATCH_VALUE_CHANGED      = 1 << 9;
-const PRUint16 MDG_FLAG_DISPATCH_READONLY_CHANGED   = 1 << 10;
-const PRUint16 MDG_FLAG_DISPATCH_VALID_CHANGED      = 1 << 11;
-const PRUint16 MDG_FLAG_DISPATCH_RELEVANT_CHANGED   = 1 << 12;
-const PRUint16 MDG_FLAG_DISPATCH_REQUIRED_CHANGED   = 1 << 13;
-const PRUint16 MDG_FLAG_DISPATCH_CONSTRAINT_CHANGED = 1 << 14;
-
-const PRUint16 MDG_FLAGMASK_NOT_DISPATCH = ~(MDG_FLAG_DISPATCH_VALUE_CHANGED | \
-                                             MDG_FLAG_DISPATCH_READONLY_CHANGED |\
-                                             MDG_FLAG_DISPATCH_VALID_CHANGED |\
-                                             MDG_FLAG_DISPATCH_RELEVANT_CHANGED |\
-                                             MDG_FLAG_DISPATCH_REQUIRED_CHANGED |\
-                                             MDG_FLAG_DISPATCH_CONSTRAINT_CHANGED);
-
-const PRUint16 MDG_FLAG_DEFAULT = MDG_FLAG_CONSTRAINT | \
-                                  MDG_FLAG_RELEVANT |\
-                                  MDG_FLAG_INHERITED_RELEVANT;
-
-const PRUint16 MDG_FLAG_INITIAL_DISPATCH = MDG_FLAG_DISPATCH_READONLY_CHANGED |\
-                                           MDG_FLAG_DISPATCH_VALID_CHANGED |\
-                                           MDG_FLAG_DISPATCH_RELEVANT_CHANGED |\
-                                           MDG_FLAG_DISPATCH_REQUIRED_CHANGED;
-                       
-const PRUint16 MDG_FLAG_ALL_DISPATCH = MDG_FLAG_DISPATCH_READONLY_CHANGED |\
-                                       MDG_FLAG_DISPATCH_VALID_CHANGED |\
-                                       MDG_FLAG_DISPATCH_RELEVANT_CHANGED |\
-                                       MDG_FLAG_DISPATCH_REQUIRED_CHANGED |\
-                                       MDG_FLAG_DISPATCH_VALUE_CHANGED |\
-                                       MDG_FLAG_DISPATCH_CONSTRAINT_CHANGED;
-                       
-
 
 /**
  * Data structure for nodes in the graph.
@@ -146,7 +101,8 @@ public:
    * @param aNode            The context node
    * @param aType            The type of node (calculate, readonly, etc.)
    */ 
-  nsXFormsMDGNode(nsIDOMNode* aNode, const ModelItemPropName aType);
+  nsXFormsMDGNode(nsIDOMNode             *aNode,
+                  const ModelItemPropName aType);
   
   /** Destructor */
   ~nsXFormsMDGNode();
@@ -159,8 +115,10 @@ public:
    * @param aContextPosition The context position for the expression
    * @param aContextSize     The context size for the expression
    */
-  void SetExpression(nsIDOMXPathExpression* aExpression, PRBool aDynFunc,
-                     PRInt32 aContextPosition, PRInt32 aContextSize);
+  void SetExpression(nsIDOMXPathExpression *aExpression,
+                     PRBool                 aDynFunc,
+                     PRInt32                aContextPosition,
+                     PRInt32                aContextSize);
                      
   /** Does node have an expression? */
   PRBool HasExpr() const;
@@ -187,34 +145,34 @@ public:
  * each of the attributes (readonly, calculate, etc.) for a nsIDOMNode. These graph
  * nodes are owned by the mNodeToMDG hash table, which maps from a nsIDOMNode to
  * the first node in a single-linked list (mNext) of nodes for the same nsIDOMNode.
+ *
+ * @todo Merge SetNodeValue() with nsXFormsUtils::SetNodeValue() (XXX)
  */
 class nsXFormsMDGEngine
 {
 protected:
-  /**
-   * Maps from nsIDOMNode to nsXFormsMDGNode(s)
-   */
+  /** Maps from nsIDOMNode to nsXFormsMDGNode */
   nsClassHashtable<nsISupportsHashKey, nsXFormsMDGNode> mNodeToMDG; 
   
-  /**
-   * Maps from nsIDOMNode to flag (MDG_FLAG_*)
-   */
-  nsDataHashtable<nsISupportsHashKey, PRUint16> mNodeToFlag;
+  /** Maps from nsIDOMNode to nsXFormsNodeState */
+  nsClassHashtable<nsISupportsHashKey, nsXFormsNodeState> mNodeStates;
+
+  /** Default node state */
+  nsXFormsNodeState mDefaultState;
   
-  /**
-   * True when Rebuild() has been run, but not ClearDispatchFlags()
-   */
+  /** True when Rebuild() has been run, but not ClearDispatchFlags() */
   PRBool mJustRebuilt;
   
-  /**
-   * True when last Calculate() was run when mJustRebuilded was true.
-   */
+  /** True when last Calculate() was run when mJustRebuilt was true. */
   PRBool mFirstCalculate;
   
   /** The actual MDG */
   nsVoidArray mGraph;
   
-  /** Set of nodes that are marked as changed, and should be included in recalculation */
+  /**
+   * Set of nodes that are marked as changed, and should be included in
+   * recalculation
+   */
   nsXFormsMDGSet mMarkedNodes;
   
   /** Number of nodes in the graph */
@@ -227,18 +185,36 @@ protected:
    * Used by Clear() and ~ to delete the linked nodes in mNodeToMDG, the hash table
    * itself handles the main nodes.
    */
-  static PLDHashOperator PR_CALLBACK DeleteLinkedNodes(nsISupports *aKey, nsAutoPtr<nsXFormsMDGNode>& aNode, void* aArg);
+  static PLDHashOperator PR_CALLBACK
+    DeleteLinkedNodes(nsISupports                *aKey,
+                      nsAutoPtr<nsXFormsMDGNode> &aNode,
+                      void                       *aArg);
   
   /**
    * Used by Rebuild() to find the start nodes for mGraph, that is nodes
    * where mCount == 0.
    */
-  static PLDHashOperator PR_CALLBACK AddStartNodes(nsISupports *aKey, nsXFormsMDGNode* aNode, void* aDeque);
+  static PLDHashOperator PR_CALLBACK
+    AddStartNodes(nsISupports     *aKey,
+                  nsXFormsMDGNode *aNode,
+                  void            *aDeque);
   
   /**
-   * Used by AndFlags() to boolean AND all flags with aMask.
+   * Used by AndFlags() to boolean AND _all_ flags with aMask.
    */
-  static PLDHashOperator PR_CALLBACK AndFlag(nsISupports *aKey, PRUint16& aFlag, void* aMask);
+  static PLDHashOperator PR_CALLBACK
+    AndFlag(nsISupports                  *aKey,
+            nsAutoPtr<nsXFormsNodeState> &aState,
+            void                         *aMask);
+
+  /**
+   * Get non-const (NC) node state for a node, create a new node state if
+   * necessary.
+   *
+   * @param aContextNode      The node to get the state for
+   * @return                  The state (owned by nsXFormsMDGEngine)
+   */
+  nsXFormsNodeState* GetNCNodeState(nsIDOMNode *aContextNode);
 
   /**
    * Inserts a new text child for aContextNode.
@@ -247,58 +223,30 @@ protected:
    * @param aNodeValue       The value of the new node
    * @param aBeforeNode      If non-null, insert new node before this node
    */
-  nsresult CreateNewChild(nsIDOMNode* aContextNode, const nsAString& aNodeValue, nsIDOMNode* aBeforeNode = nsnull);
+  nsresult CreateNewChild(nsIDOMNode      *aContextNode,
+                          const nsAString &aNodeValue,
+                          nsIDOMNode      *aBeforeNode = nsnull);
 
   /**
    * Retrieve a node from the graph.
    * 
    * @param aDomNode         The DOM node to retrieve
    * @param aType            The type to retrieve (readonly, calculate, etc)
-   * @param aCreate          Create the node and insert it into the graph if it does not exist?
+   * @param aCreate          Create the node and insert it into the graph
+   *                         if it does not exist?
    * @return                 The node, nsnull if not found and aCreate != PR_TRUE
    */
-  nsXFormsMDGNode* GetNode(nsIDOMNode* aDomNode, ModelItemPropName aType, PRBool aCreate = PR_TRUE);
-  
-  /**
-   * Sets the flag for a node.
-   * 
-   * @param aDomNode         The node
-   * @param aFlag            The flag
-   */
-  void     SetFlag(nsIDOMNode* aDomNode, PRUint16 aFlag);
-  
-  /**
-   * Boolean OR the existing flag on the node with a new flag
-   * 
-   * @param aDomNode         The node
-   * @param aFlag            The new flag
-   */
-  void     OrFlag(nsIDOMNode* aDomNode, PRInt16 aFlag);
-  
-  /**
-   * Retrieve the flag for a node.
-   * 
-   * @param aDomNode         The node
-   * @return                 The flag
-   */
-  PRUint16 GetFlag(nsIDOMNode* aDomNode);
+  nsXFormsMDGNode* GetNode(nsIDOMNode       *aDomNode,
+                           ModelItemPropName aType,
+                           PRBool            aCreate = PR_TRUE);
 
   /**
-   * Sets a bit in the flag for a node
-   * 
-   * @param aDomNode         The node
-   * @param aBit             The bit position to set
-   * @param aOn              The bit value
-   */
-  void     SetFlagBits(nsIDOMNode* aDomNode, PRUint16 aBit, PRBool aOn);
-  
-  /**
-   * Boolean AND all flags with a mask.
+   * Boolean AND _all_ flags with a mask.
    * 
    * @param aAndMask         The mask
    * @return                 Did operation succeed?
    */
-  PRBool     AndFlags(PRUint16 aAndMask);
+  PRBool   AndFlags(PRUint16 aAndMask);
   
   /**
    * Evaluates the expression for the given node and returns the boolean result.
@@ -306,7 +254,8 @@ protected:
    * @param aNode            The node to evaluate
    * @param res              The result of the evaluation
    */
-  nsresult BooleanExpression(nsXFormsMDGNode* aNode, PRBool& res);
+  nsresult BooleanExpression(nsXFormsMDGNode *aNode,
+                             PRBool          &aRes);
   
   /**
    * Compute MIP value for node types with boolean result (all except calculate)
@@ -316,7 +265,10 @@ protected:
    * @param aNode            The context node
    * @param aDidChange       Was the node changed?
    */
-  nsresult ComputeMIP(PRUint16 aStateFlag, PRUint16 aDispatchFlag, nsXFormsMDGNode* aNode, PRBool& aDidChange);
+  nsresult ComputeMIP(eFlag_t          aStateFlag,
+                      eFlag_t          aDispatchFlag,
+                      nsXFormsMDGNode *aNode,
+                      PRBool          &aDidChange);
   
   /**
    * Same as ComputeMIP(), but also handles any inheritance of attributes.
@@ -327,7 +279,11 @@ protected:
    * @param aNode            The context node
    * @param aSet             Set of the nodes influenced by operation
    */
-  nsresult ComputeMIPWithInheritance(PRUint16 aStateFlag, PRUint16 aDispatchFlag, PRUint16 aInheritanceFlag, nsXFormsMDGNode* aNode, nsXFormsMDGSet* aSet);
+  nsresult ComputeMIPWithInheritance(eFlag_t          aStateFlag,
+                                     eFlag_t          aDispatchFlag,
+                                     eFlag_t          aInheritanceFlag,
+                                     nsXFormsMDGNode *aNode,
+                                     nsXFormsMDGSet  *aSet);
 
   /**
    * Attaches inheritance to all children of a given node
@@ -337,47 +293,23 @@ protected:
    * @param aState           The state of the flag
    * @param aStateFlag       The flag
    */
-  nsresult AttachInheritance(nsXFormsMDGSet* aSet, nsIDOMNode* aSrc, PRBool aState, PRUint16 aStateFlag);
+  nsresult AttachInheritance(nsXFormsMDGSet *aSet,
+                             nsIDOMNode     *aSrc,
+                             PRBool          aState,
+                             eFlag_t         aStateFlag);
 
   /**
    * Invalidate the information, ie. mark all nodes as dirty.
    */
   nsresult Invalidate();
   
-  /**
-   * Get flag value for node and clear flag.
-   * 
-   * @param aDomNode         The node
-   * @param aFlag            The flag
-   * @return                 The flag value
-   */
-  PRBool TestAndClear(nsIDOMNode* aDomNode, PRUint16 aFlag);
-
-  /**
-   * Get flag value for node and set flag.
-   * 
-   * @param aDomNode         The node
-   * @param aFlag            The flag
-   * @return                 The flag value
-   */
-  PRBool TestAndSet(nsIDOMNode* aDomNode, PRUint16 aFlag);
-
-  /**
-   * Get flag value for node
-   * 
-   * @param aDomNode         The node
-   * @param aFlag            The flag
-   * @return                 The flag value
-   */
-  PRBool Test(nsIDOMNode* aDomNode, PRUint16 aFlag);
-
 public:
   /**
    * Constructor
    */
   nsXFormsMDGEngine();
-  
-  /**
+
+  /*
    * Destructor
    */
   ~nsXFormsMDGEngine();
@@ -398,15 +330,22 @@ public:
    * @param aContextPos      The context positions of aExpression
    * @param aContextSize     The context size for aExpression
    */
-  /* void addMIP (in long aType, in nsIDOMXPathExpression aExpression, in nsXFormsMDGSet aDependencies, in boolean aDynFunc, in nsIDOMNode aContextNode, in long aContextPos, in long aContextSize); */
-  nsresult AddMIP(PRInt32 aType, nsIDOMXPathExpression *aExpression, nsXFormsMDGSet *aDependencies, PRBool aDynFunc, nsIDOMNode *aContextNode, PRInt32 aContextPos, PRInt32 aContextSize);
+  nsresult AddMIP(PRInt32                aType,
+                  nsIDOMXPathExpression *aExpression,
+                  nsXFormsMDGSet        *aDependencies,
+                  PRBool                 aDynFunc,
+                  nsIDOMNode            *aContextNode,
+                  PRInt32                aContextPos,
+                  PRInt32                aContextSize);
 
   /**
    * Recalculate the MDG.
    * 
    * @param aChangedNodes    Returns the nodes that was changed during recalculation.
+   *
+   * @note aChangedNodes are unique and sorted in pointer-order, ascending.
    */
-  nsresult Recalculate(nsXFormsMDGSet **aChangedNodes);
+  nsresult Recalculate(nsXFormsMDGSet *aChangedNodes);
 
   /**
    * Rebuilds the MDG.
@@ -438,7 +377,10 @@ public:
    * @param aMarkNode        Whether to mark node as changed
    * @param aNodeChanged     Was node changed?
    */
-  nsresult SetNodeValue(nsIDOMNode *aContextNode, const nsAString & aNodeValue, PRBool aMarkNode, PRBool *aNodeChanged);
+  nsresult SetNodeValue(nsIDOMNode      *aContextNode,
+                        const nsAString &aNodeValue,
+                        PRBool           aMarkNode = PR_TRUE,
+                        PRBool          *aNodeChanged = nsnull);
 
   /**
    * Get the value of a node. (used by nsXFormsMDG)
@@ -446,27 +388,26 @@ public:
    * @param aContextNode     The node to get the value for
    * @param aNodeValue       The value of the node
    */
-  nsresult GetNodeValue(nsIDOMNode *aContextNode, nsAString & aNodeValue);
+  nsresult GetNodeValue(nsIDOMNode *aContextNode,
+                        nsAString  &aNodeValue);
 
-  PRBool IsConstraint(nsIDOMNode *aContextNode);
+  /**
+   * External interface of GetNCNodeState(), returns const pointer to the node
+   * state.
+   *
+   * @param aContextNode      The node to get the state for
+   * @return                  The state (owned by nsXFormsMDGEngine)
+   */
+  const nsXFormsNodeState* GetNodeState(nsIDOMNode *aContextNode);
 
-  PRBool IsValid(nsIDOMNode *aContextNode);
-
-  PRBool ShouldDispatchValid(nsIDOMNode *aContextNode);
-
-  PRBool IsReadonly(nsIDOMNode *aContextNode);
-
-  PRBool ShouldDispatchReadonly(nsIDOMNode *aContextNode);
-
-  PRBool IsRelevant(nsIDOMNode *aContextNode);
-
-  PRBool ShouldDispatchRelevant(nsIDOMNode *aContextNode);
-
-  PRBool IsRequired(nsIDOMNode *aContextNode);
-
-  PRBool ShouldDispatchRequired(nsIDOMNode *aContextNode);
-
-  PRBool ShouldDispatchValueChanged(nsIDOMNode *aContextNode);
+#ifdef DEBUG_beaufour
+  /**
+   * Write MDG graph to a file in GraphViz dot format.
+   *
+   * @param aFile             Filename to write to (nsnull = stdout)
+   */
+  void PrintDot(const char* aFile = nsnull);
+#endif
 };
 
 #endif

@@ -36,7 +36,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsXFormsStubElement.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOM3Node.h"
 #include "nsIDOMElement.h"
@@ -46,10 +45,10 @@
 #include "nsIXTFXMLVisualWrapper.h"
 #include "nsIDOMDocument.h"
 #include "nsIXFormsControl.h"
+#include "nsXFormsControlStub.h"
 #include "nsISchema.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsXFormsAtoms.h"
 #include "nsAutoPtr.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMFocusListener.h"
@@ -57,13 +56,13 @@
 #include "nsIModelElementPrivate.h"
 #include "nsIContent.h"
 #include "nsIDOMXPathExpression.h"
+#include "nsXFormsMDGEngine.h"
 
 /**
  * Implementation of the \<input\>, \<secret\>, and \<textarea\> elements.
  */
-class nsXFormsInputElement : public nsXFormsXMLVisualStub,
-                             public nsIDOMFocusListener,
-                             public nsIXFormsControl
+class nsXFormsInputElement : public nsIDOMFocusListener,
+                             public nsXFormsControlStub
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -77,13 +76,10 @@ public:
 
   // nsIXTFElement overrides
   NS_IMETHOD OnDestroyed();
-  NS_IMETHOD DocumentChanged(nsIDOMDocument *aNewDocument);
-  NS_IMETHOD ParentChanged(nsIDOMElement *aNewParent);
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Bind();
+  NS_IMETHOD Refresh();
 
   // nsIDOMEventListener
   NS_IMETHOD HandleEvent(nsIDOMEvent *aEvent);
@@ -98,16 +94,15 @@ public:
     eType_TextArea
   };
 
+  // nsXFormsInputElement
   nsXFormsInputElement(ControlType aType)
-    : mElement(nsnull)
-    , mType(aType)
+    : mType(aType)
     {}
 
 private:
-  nsCOMPtr<nsIDOMElement> mLabel;
-  nsCOMPtr<nsIDOMElement> mControl;
-  nsIDOMElement *mElement;
-  ControlType mType;
+  nsCOMPtr<nsIDOMElement>          mLabel;
+  nsCOMPtr<nsIDOMElement>          mControl;
+  ControlType                      mType;
 };
 
 NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
@@ -121,20 +116,8 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsInputElement,
 NS_IMETHODIMP
 nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_DOCUMENT_CHANGED |
-                                nsIXTFElement::NOTIFY_PARENT_CHANGED);
-
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-
-  // It's ok to keep a weak pointer to mElement.  mElement will have an
-  // owning reference to this object, so as long as we null out mElement in
-  // OnDestroyed, it will always be valid.
-
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Our anonymous content structure will look like this:
   //
@@ -144,7 +127,7 @@ nsXFormsInputElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
   // </label>
 
   nsCOMPtr<nsIDOMDocument> domDoc;
-  node->GetOwnerDocument(getter_AddRefs(domDoc));
+  mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
   domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
                           NS_LITERAL_STRING("label"),
@@ -218,53 +201,7 @@ nsXFormsInputElement::OnDestroyed()
     targ->RemoveEventListener(NS_LITERAL_STRING("blur"), this, PR_FALSE);
   }
 
-  mElement = nsnull;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::DocumentChanged(nsIDOMDocument *aNewDocument)
-{
-  // We need to re-evaluate our instance data binding when our document
-  // changes, since our context can change
-  if (aNewDocument)
-    Refresh();  
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::ParentChanged(nsIDOMElement *aNewParent)
-{
-  // We need to re-evaluate our instance data binding when our parent changes,
-  // since xmlns declarations or our context could have changed.
-  if (aNewParent)
-    Refresh();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
-    if (model)
-      model->RemoveFormControl(this);
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsInputElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    Refresh();
-  }
+  nsXFormsControlStub::OnDestroyed();
 
   return NS_OK;
 }
@@ -286,27 +223,7 @@ nsXFormsInputElement::Focus(nsIDOMEvent *aEvent)
 NS_IMETHODIMP
 nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
 {
-  if (!mControl)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
-
-  if (!result)
-    return NS_OK;
-
-  nsCOMPtr<nsIDOMNode> singleNode;
-  result->GetSingleNodeValue(getter_AddRefs(singleNode));
-
-  if (!singleNode)
+  if (!mControl && !mBoundNode && !mMDG)
     return NS_OK;
 
   nsAutoString value;
@@ -330,82 +247,76 @@ nsXFormsInputElement::Blur(nsIDOMEvent *aEvent)
     }
   }
 
-  nsXFormsUtils::SetNodeValue(singleNode, value);
+  PRBool changed;
+  nsresult rv = mMDG->SetNodeValue(mBoundNode, value, PR_TRUE, &changed);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (changed) {
+    nsCOMPtr<nsIDOMNode> model = nsXFormsUtils::GetModel(mElement);
+ 
+    if (model) {
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Recalculate);
+      NS_ENSURE_SUCCESS(rv, rv);
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Revalidate);
+      NS_ENSURE_SUCCESS(rv, rv);        
+      rv = nsXFormsUtils::DispatchEvent(model, eEvent_Refresh);
+      NS_ENSURE_SUCCESS(rv, rv);        
+    }
+  }
+
   return NS_OK;
 }
 
 // nsIXFormsControl
 
 NS_IMETHODIMP
-nsXFormsInputElement::Refresh()
+nsXFormsInputElement::Bind()
 {
   if (!mControl)
     return NS_OK;
-
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
-
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-
-  // @bug / todo: If \<input\> has binding attributes that are invalid, we
-  // should clear the content. But the content should be left if the element
-  // is unbound.
-  // @see https://bugzilla.mozilla.org/show_bug.cgi?id=265216
-  if (!model)
-    return NS_OK;
-
-  model->AddFormControl(this);
-
-  nsCOMPtr<nsIDOMNode> resultNode;
-  if (result)
-    result->GetSingleNodeValue(getter_AddRefs(resultNode));
-
-  if (!resultNode)
-    return NS_OK;
-
-  // find out if the control should be made readonly
-  PRBool isReadOnly = PR_FALSE;
-  nsCOMPtr<nsIContent> nodeContent = do_QueryInterface(resultNode);
-  if (nodeContent) {
-    nsIDOMXPathExpression *expr =
-      NS_STATIC_CAST(nsIDOMXPathExpression*,
-                     nodeContent->GetProperty(nsXFormsAtoms::readonly));
-
-    if (expr) {
-      expr->Evaluate(mElement,
-                     nsIDOMXPathResult::BOOLEAN_TYPE, nsnull,
-                     getter_AddRefs(result));
-      if (result) {
-        result->GetBooleanValue(&isReadOnly);
-      }
-    }
+  
+  mBoundNode = nsnull;
+  
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv = ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                                   nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                   getter_AddRefs(result));
+  
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (result) {
+    result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
   }
-
-  // get the text value for the control
+  
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsXFormsInputElement::Refresh()
+{
+  if (!mControl && !mMDG)
+    return NS_OK;
+  
   nsAutoString text;
-  nsXFormsUtils::GetNodeValue(resultNode, text);
+  PRBool readonly = GetReadOnlyState();    
+  if (mBoundNode) {
+    nsXFormsUtils::GetNodeValue(mBoundNode, text);
+  }
 
   if (mType == eType_TextArea) {
     nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea = do_QueryInterface(mControl);
     NS_ENSURE_STATE(textArea);
 
     textArea->SetValue(text);
-    textArea->SetReadOnly(isReadOnly);
+    textArea->SetReadOnly(readonly);  
   } else {
     nsCOMPtr<nsIDOMHTMLInputElement> input = do_QueryInterface(mControl);
     NS_ENSURE_STATE(input);
 
     if (mType == eType_Input) {
       nsCOMPtr<nsISchemaType> type;
-      model->GetTypeForControl(this, getter_AddRefs(type));
+      /// @todo: Enable type support. This will be moved away from the model,
+      /// will it not? (XXX)
+      // model->GetTypeForControl(this, getter_AddRefs(type));
       nsCOMPtr<nsISchemaBuiltinType> biType = do_QueryInterface(type);
       PRUint16 typeValue = nsISchemaBuiltinType::BUILTIN_TYPE_STRING;
       if (biType)
@@ -425,7 +336,7 @@ nsXFormsInputElement::Refresh()
       input->SetValue(text);
     }
 
-    input->SetReadOnly(isReadOnly);
+    input->SetReadOnly(readonly);
   }
 
   return NS_OK;

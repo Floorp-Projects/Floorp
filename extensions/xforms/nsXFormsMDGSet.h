@@ -52,6 +52,8 @@
  * 
  * The class owns the nsIDOMNodes that it stores, and manages the reference
  * counters automatically.
+ *
+ * @todo Use nsIMutableArray of some sort instead! (XXX)
  */
 class nsXFormsMDGSet {
 private:

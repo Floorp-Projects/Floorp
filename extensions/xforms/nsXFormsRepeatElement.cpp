@@ -56,11 +56,10 @@
 #include "nsIDOMHTMLDivElement.h"
 #include "nsIDOMXPathResult.h"
 
-#include "nsIXFormsControl.h"
+#include "nsXFormsControlStub.h"
 #include "nsIXFormsContextControl.h"
 #include "nsXFormsAtoms.h"
 #include "nsXFormsModelElement.h"
-#include "nsXFormsStubElement.h"
 #include "nsXFormsUtils.h"
 
 #ifdef DEBUG
@@ -121,13 +120,9 @@
  *       \<html:table xforms:repeat-nodeset="..."\>
  *       @see http://www.w3.org/TR/xforms/index-all.html#ui.repeat.via.attrs
  */
-class nsXFormsRepeatElement : public nsIXFormsControl,
-                              public nsXFormsXMLVisualStub
+class nsXFormsRepeatElement : public nsXFormsControlStub
 {
 protected:
-  /** The DOM element for the node */
-  nsCOMPtr<nsIDOMElement> mElement;
-
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMHTMLDivElement> mHTMLElement;
 
@@ -148,9 +143,6 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  /** Constructor */
-  nsXFormsRepeatElement();
-
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
   
@@ -164,18 +156,13 @@ public:
   NS_IMETHOD DoneAddingChildren();
 
   // nsIXFormsControl
-  NS_DECL_NSIXFORMSCONTROL
+  NS_IMETHOD Refresh();
 };
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsRepeatElement,
                              nsXFormsXMLVisualStub,
                              nsIXFormsControl)
 
-
-nsXFormsRepeatElement::nsXFormsRepeatElement()
-  : mElement(nsnull)
-{
-}
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
@@ -246,7 +233,9 @@ nsXFormsRepeatElement::WillSetAttribute(nsIAtom *aName, const nsAString &aValue)
   printf("nsXFormsRepeatElement::WillSetAttribute(aName=%p, aValue='%s')\n", (void*) aName, NS_ConvertUCS2toUTF8(aValue).get());
 #endif
   
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
+  if (aName == nsXFormsAtoms::bind ||
+      aName == nsXFormsAtoms::nodeset ||
+      aName == nsXFormsAtoms::model) {
     nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
 
     nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);    
@@ -265,7 +254,9 @@ nsXFormsRepeatElement::AttributeSet(nsIAtom *aName, const nsAString &aValue)
   printf("nsXFormsRepeatElement::AttributeSet(aName=%p, aValue=%s)\n", (void*) aName, NS_ConvertUCS2toUTF8(aValue).get());
 #endif
 
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::nodeset) {
+  if (aName == nsXFormsAtoms::bind ||
+      aName == nsXFormsAtoms::nodeset ||
+      aName == nsXFormsAtoms::model) {
     Refresh();
   }
 
@@ -288,7 +279,8 @@ nsXFormsRepeatElement::DoneAddingChildren()
 
 
 // nsXFormsControl
-nsresult
+
+NS_IMETHODIMP
 nsXFormsRepeatElement::Refresh()
 {
 #ifdef DEBUG_XF_REPEAT
@@ -310,134 +302,125 @@ nsXFormsRepeatElement::Refresh()
   }
 
   // Get the nodeset we are bound to
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("nodeset"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsCOMPtr<nsIModelElementPrivate> model;
+  rv = ProcessNodeBinding(NS_LITERAL_STRING("nodeset"),
+                          nsIDOMXPathResult::ORDERED_NODE_SNAPSHOT_TYPE,
+                          getter_AddRefs(result),
+                          getter_AddRefs(model));
 
-  if (!result) {
-    return NS_OK;
+  if (NS_FAILED(rv) | !result) {
+    return rv;
   }
                                          
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-  
   /// @todo The result should be a _homogenous_ collection (spec. 9.3.1),
   /// do/can/should we check this? (XXX)
   PRUint32 contextSize;
   rv = result->GetSnapshotLength(&contextSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (model) {
-    model->AddFormControl(this);
-    if (result && contextSize > 0) {
-      // Get model ID
-      nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
-      NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
-      nsAutoString modelID;
-      modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
+  if (model && contextSize > 0) {
+    // Get model ID
+    nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(model);
+    NS_ENSURE_TRUE(modelElement, NS_ERROR_FAILURE);
+    nsAutoString modelID;
+    modelElement->GetAttribute(NS_LITERAL_STRING("id"), modelID);
 
-      // Get attributes
-      PRUint32 startIndex;
-      rv = GetIntAttr(NS_LITERAL_STRING("startIndex"),
-                      (PRInt32*) &startIndex,
-                      nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER);
-      if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_NOT_AVAILABLE) {
-          startIndex = 1;
-        } else {
-          return rv;
-        }
+    // Get attributes
+    PRUint32 startIndex;
+    rv = GetIntAttr(NS_LITERAL_STRING("startIndex"),
+                    (PRInt32*) &startIndex,
+                    nsISchemaBuiltinType::BUILTIN_TYPE_POSITIVEINTEGER);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        startIndex = 1;
+      } else {
+        return rv;
       }
+    }
       
-      PRUint32 number;
-      rv = GetIntAttr(NS_LITERAL_STRING("number"),
-                      (PRInt32*) &number,
-                      nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER);
-      if (NS_FAILED(rv)) {
-        if (rv == NS_ERROR_NOT_AVAILABLE) {
-          number = contextSize;
-        } else {
-          return rv;
-        }
+    PRUint32 number;
+    rv = GetIntAttr(NS_LITERAL_STRING("number"),
+                    (PRInt32*) &number,
+                    nsISchemaBuiltinType::BUILTIN_TYPE_NONNEGATIVEINTEGER);
+    if (NS_FAILED(rv)) {
+      if (rv == NS_ERROR_NOT_AVAILABLE) {
+        number = contextSize;
+      } else {
+        return rv;
       }
-      // Get DOM document
-      nsCOMPtr<nsIDOMDocument> domDoc;
-      rv = mHTMLElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    }
+    // Get DOM document
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    rv = mHTMLElement->GetOwnerDocument(getter_AddRefs(domDoc));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsAutoString strSize;
+    strSize.AppendInt(contextSize);
+
+    // The spec. states the following for startIndex: "Optional 1-based
+    // initial value of the repeat index", I interpret this as "start
+    // showing element at position |startIndex|". So I iterate over the
+    // interval [max(1, startIndex),min(contextSize, number + startIndex)[
+    for (PRUint32 i = NS_MAX((PRUint32) 1, startIndex);
+         i < NS_MIN(contextSize + 1, number + startIndex);
+         ++i) {
+      // Create <contextcontainer>
+      nsCOMPtr<nsIDOMElement> riElement;
+      rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/2002/xforms"),
+                                   NS_LITERAL_STRING("contextcontainer"),
+                                   getter_AddRefs(riElement));
+      NS_ENSURE_SUCCESS(rv, rv);
+      
+      // Set context size, context position, and model as attributes
+      if (!modelID.IsEmpty()) {
+        riElement->SetAttribute(NS_LITERAL_STRING("model"), modelID);
+      }  
+      nsAutoString strPos; strPos.AppendInt(i);
+      riElement->SetAttribute(NS_LITERAL_STRING("contextposition"), strPos);
+      riElement->SetAttribute(NS_LITERAL_STRING("contextsize"), strSize);
+
+      // Get and set context node
+      nsCOMPtr<nsIXFormsContextControl> riContext = do_QueryInterface(riElement);
+      NS_ENSURE_TRUE(riContext, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDOMNode> contextNode;
+      rv = result->SnapshotItem(i - 1, getter_AddRefs(contextNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+        
+      nsCOMPtr<nsIDOMElement> contextElement = do_QueryInterface(contextNode);
+      NS_ENSURE_TRUE(contextElement, NS_ERROR_FAILURE);
+        
+      rv = riContext->SetContextNode(contextElement);
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsAutoString strSize;
-      strSize.AppendInt(contextSize);
-
-      // The spec. states the following for startIndex: "Optional 1-based
-      // initial value of the repeat index", I interpret this as "start
-      // showing element at position |startIndex|". So I iterate over the
-      // interval [max(1, startIndex),min(contextSize, number + startIndex)[
-      for (PRUint32 i = NS_MAX((PRUint32) 1, startIndex);
-           i < NS_MIN(contextSize + 1, number + startIndex);
-           ++i) {
-        // Create <contextcontainer>
-        nsCOMPtr<nsIDOMElement> riElement;
-        rv = domDoc->CreateElementNS(NS_LITERAL_STRING("http://www.w3.org/2002/xforms"),
-                                     NS_LITERAL_STRING("contextcontainer"),
-                                     getter_AddRefs(riElement));
-        NS_ENSURE_SUCCESS(rv, rv);
-      
-        // Set context size, context position, and model as attributes
-        if (!modelID.IsEmpty()) {
-          riElement->SetAttribute(NS_LITERAL_STRING("model"), modelID);
-        }  
-        nsAutoString strPos; strPos.AppendInt(i);
-        riElement->SetAttribute(NS_LITERAL_STRING("contextposition"), strPos);
-        riElement->SetAttribute(NS_LITERAL_STRING("contextsize"), strSize);
-
-        // Get and set context node
-        nsCOMPtr<nsIXFormsContextControl> riContext = do_QueryInterface(riElement);
-        NS_ENSURE_TRUE(riContext, NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIDOMNode> contextNode;
-        rv = result->SnapshotItem(i - 1, getter_AddRefs(contextNode));
+      // Iterate over template children, clone them, and append them to <contextcontainer>
+      nsCOMPtr<nsIDOMNode> child;
+      rv = mElement->GetFirstChild(getter_AddRefs(child));
+      NS_ENSURE_SUCCESS(rv, rv);
+      while (child) {
+        nsCOMPtr<nsIDOMNode> childClone;
+        rv = child->CloneNode(PR_TRUE, getter_AddRefs(childClone));
         NS_ENSURE_SUCCESS(rv, rv);
         
-        nsCOMPtr<nsIDOMElement> contextElement = do_QueryInterface(contextNode);
-        NS_ENSURE_TRUE(contextElement, NS_ERROR_FAILURE);
-        
-        rv = riContext->SetContextNode(contextElement);
+        nsCOMPtr<nsIDOMNode> newNode;
+        rv = riElement->AppendChild(childClone, getter_AddRefs(newNode));
         NS_ENSURE_SUCCESS(rv, rv);
-
-        // Iterate over template children, clone them, and append them to <contextcontainer>
-        nsCOMPtr<nsIDOMNode> child;
-        rv = mElement->GetFirstChild(getter_AddRefs(child));
-        NS_ENSURE_SUCCESS(rv, rv);
-        while (child) {
-          nsCOMPtr<nsIDOMNode> childClone;
-          rv = child->CloneNode(PR_TRUE, getter_AddRefs(childClone));
-          NS_ENSURE_SUCCESS(rv, rv);
         
-          nsCOMPtr<nsIDOMNode> newNode;
-          rv = riElement->AppendChild(childClone, getter_AddRefs(newNode));
-          NS_ENSURE_SUCCESS(rv, rv);
-        
-          rv = child->GetNextSibling(getter_AddRefs(newNode));
-          NS_ENSURE_SUCCESS(rv, rv);
-          child = newNode;
-        }
-
-        // Append node
-        nsCOMPtr<nsIDOMNode> domNode;
-        rv = mHTMLElement->AppendChild(riElement, getter_AddRefs(domNode));
+        rv = child->GetNextSibling(getter_AddRefs(newNode));
         NS_ENSURE_SUCCESS(rv, rv);
-
-        // There is an awfull lot of evaluating being done by all the
-        // children, as they are created and inserted into the different
-        // places in the DOM, the only refresh necessary is the one when they
-        // are appended in mHTMLElement.
+        child = newNode;
       }
+
+      // Append node
+      nsCOMPtr<nsIDOMNode> domNode;
+      rv = mHTMLElement->AppendChild(riElement, getter_AddRefs(domNode));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // There is an awfull lot of evaluating being done by all the
+      // children, as they are created and inserted into the different
+      // places in the DOM, the only refresh necessary is the one when they
+      // are appended in mHTMLElement.
     }
   }
  

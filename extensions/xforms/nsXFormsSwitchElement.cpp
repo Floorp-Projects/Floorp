@@ -50,10 +50,8 @@
 
 #include "nsIXTFXMLVisualWrapper.h"
 
-#include "nsXFormsAtoms.h"
 #include "nsXFormsUtils.h"
-#include "nsIXFormsControl.h"
-#include "nsXFormsStubElement.h"
+#include "nsXFormsControlStub.h"
 #include "nsIModelElementPrivate.h"
 #include "nsIXFormsSwitchElement.h"
 #include "nsIXFormsCaseElement.h"
@@ -68,18 +66,15 @@
  * nsXFormsGroupElement.
  */
 
-class nsXFormsSwitchElement : public nsXFormsXMLVisualStub,
-                              public nsIXFormsSwitchElement,
+class nsXFormsSwitchElement : public nsIXFormsSwitchElement,
                               public nsIXFormsContextControl,
-                              public nsIXFormsControl
+                              public nsXFormsControlStub
 {
 public:
   nsXFormsSwitchElement();
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD WillSetAttribute(nsIAtom *aName, const nsAString &aValue);
-  NS_IMETHOD AttributeSet(nsIAtom *aName, const nsAString &aValue);
   NS_IMETHOD ChildInserted(nsIDOMNode *aChild, PRUint32 aIndex);
   NS_IMETHOD ChildAppended(nsIDOMNode *aChild);
   NS_IMETHOD WillRemoveChild(PRUint32 aIndex);
@@ -91,8 +86,9 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aPoint);
 
   NS_DECL_NSIXFORMSSWITCHELEMENT
-  
-  NS_DECL_NSIXFORMSCONTROL
+
+  // nsIXFormsControl
+  NS_IMETHOD Refresh();
 
   NS_DECL_NSIXFORMSCONTEXTCONTROL
 
@@ -123,11 +119,9 @@ private:
 
   nsresult Process();
 
-  nsIDOMElement* mElement;
   nsCOMPtr<nsIDOMElement> mVisual;
   nsCOMPtr<nsIDOMElement> mSelected;
   PRBool mDoneAddingChildren;
-  nsCOMPtr<nsIDOMElement> mContextNode;
   nsString mModelID;
 };
 
@@ -144,24 +138,21 @@ NS_IMPL_ISUPPORTS_INHERITED3(nsXFormsSwitchElement,
 NS_IMETHODIMP
 nsXFormsSwitchElement::OnCreated(nsIXTFXMLVisualWrapper *aWrapper)
 {
-  aWrapper->SetNotificationMask(nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
-                                nsIXTFElement::NOTIFY_ATTRIBUTE_SET |
-                                nsIXTFElement::NOTIFY_WILL_SET_ATTRIBUTE |
+  nsresult rv = nsXFormsControlStub::OnCreated(aWrapper);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aWrapper->SetNotificationMask(kStandardNotificationMask |
+                                nsIXTFElement::NOTIFY_DONE_ADDING_CHILDREN |
                                 nsIXTFElement::NOTIFY_CHILD_APPENDED |
                                 nsIXTFElement::NOTIFY_CHILD_INSERTED |
                                 nsIXTFElement::NOTIFY_WILL_REMOVE_CHILD);
 
-  nsCOMPtr<nsIDOMElement> node;
-  aWrapper->GetElementNode(getter_AddRefs(node));
-  mElement = node;
-  NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
-
   nsCOMPtr<nsIDOMDocument> domDoc;
   mElement->GetOwnerDocument(getter_AddRefs(domDoc));
 
-  nsresult rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
-                                        NS_LITERAL_STRING("div"),
-                                        getter_AddRefs(mVisual));
+  rv = domDoc->CreateElementNS(NS_LITERAL_STRING(NS_NAMESPACE_XHTML),
+                               NS_LITERAL_STRING("div"),
+                               getter_AddRefs(mVisual));
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
@@ -186,29 +177,8 @@ nsXFormsSwitchElement::OnDestroyed()
   mVisual = nsnull;
   mElement = nsnull;
   mSelected = nsnull;
-  mContextNode = nsnull;
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsXFormsSwitchElement::WillSetAttribute(nsIAtom *aName, const nsAString& aNewValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    nsCOMPtr<nsIDOMNode> modelNode = nsXFormsUtils::GetModel(mElement);
-    nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-    if (model)
-      model->RemoveFormControl(this);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsSwitchElement::AttributeSet(nsIAtom *aName, const nsAString& aNewValue)
-{
-  if (aName == nsXFormsAtoms::bind || aName == nsXFormsAtoms::ref) {
-    Refresh();
-  }
-  return NS_OK;
+  return nsXFormsControlStub::OnDestroyed();
 }
 
 NS_IMETHODIMP
@@ -254,7 +224,9 @@ nsXFormsSwitchElement::DoneAddingChildren()
   return NS_OK;
 }
 
-nsresult
+// nsIXFormsControl
+
+NS_IMETHODIMP
 nsXFormsSwitchElement::Refresh()
 {
   nsresult rv = NS_OK;
@@ -264,27 +236,26 @@ nsXFormsSwitchElement::Refresh()
   return rv;
 }
 
+// nsXFormsSwitchElement
+
 nsresult
 nsXFormsSwitchElement::Process()
 {
   mModelID.Truncate();
-  nsCOMPtr<nsIDOMNode> modelNode;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    nsXFormsUtils::EvaluateNodeBinding(mElement,
-                                       nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                                       NS_LITERAL_STRING("ref"),
-                                       EmptyString(),
-                                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                                       getter_AddRefs(modelNode),
-                                       getter_AddRefs(bindElement));
 
-  nsCOMPtr<nsIModelElementPrivate> model = do_QueryInterface(modelNode);
-
-  if (model)
-    model->AddFormControl(this);
-
-  NS_ENSURE_TRUE(result, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIModelElementPrivate> modelNode;
+  nsCOMPtr<nsIDOMXPathResult> result;
+  nsresult rv =
+    ProcessNodeBinding(NS_LITERAL_STRING("ref"),
+                       nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                       getter_AddRefs(result),
+                       getter_AddRefs(modelNode));
+  
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  if (!result) {
+    return NS_OK;
+  }
 
   // Get model ID
   nsCOMPtr<nsIDOMElement> modelElement = do_QueryInterface(modelNode);
@@ -292,10 +263,7 @@ nsXFormsSwitchElement::Process()
   modelElement->GetAttribute(NS_LITERAL_STRING("id"), mModelID);
 
   // Get context node, if any  
-  nsCOMPtr<nsIDOMNode> singleNode;
-  result->GetSingleNodeValue(getter_AddRefs(singleNode));
-  mContextNode = do_QueryInterface(singleNode);
-  NS_ENSURE_TRUE(mContextNode, NS_ERROR_FAILURE);
+  result->GetSingleNodeValue(getter_AddRefs(mBoundNode));
 
   return NS_OK;
 }
@@ -323,10 +291,8 @@ nsXFormsSwitchElement::GetContext(nsAString&      aModelID,
   *aContextPosition = 1;
   *aContextSize = 1;
 
-  nsresult rv = Process();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_IF_ADDREF(*aContextNode = mContextNode);
+  if (mBoundNode && aContextNode)
+    CallQueryInterface(mBoundNode, aContextNode); // addrefs
   aModelID = mModelID;
 
   return NS_OK;

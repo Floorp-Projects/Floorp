@@ -60,6 +60,7 @@ class nsXFormsAtoms
   static NS_HIDDEN_(nsIAtom *) model;
   static NS_HIDDEN_(nsIAtom *) selected;
   static NS_HIDDEN_(nsIAtom *) appearance;
+  static NS_HIDDEN_(nsIAtom *) value;
 
   static NS_HIDDEN_(void) InitAtoms();
 

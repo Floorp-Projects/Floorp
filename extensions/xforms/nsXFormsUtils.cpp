@@ -50,7 +50,9 @@
 #include "nsIDOMXPathNSResolver.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
+#include "nsIModelElementPrivate.h"
 #include "nsIXFormsModelElement.h"
+#include "nsIXFormsControl.h"
 
 #include "nsIXFormsContextControl.h"
 #include "nsIDOMDocumentEvent.h"
@@ -58,21 +60,22 @@
 #include "nsIDOMEventTarget.h"
 #include "nsDataHashtable.h"
 
+#include "nsAutoPtr.h"
+#include "nsXFormsXPathAnalyzer.h"
+#include "nsXFormsXPathParser.h"
+#include "nsXFormsXPathNode.h"
+#include "nsXFormsMDGSet.h"
+#include "nsIDOMXPathExpression.h"
+#include "nsArray.h"
+
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsServiceManagerUtils.h"
 
-struct EventData
-{
-  const char *name;
-  PRBool      canCancel;
-  PRBool      canBubble;
-};
-
 #define CANCELABLE 0x01
 #define BUBBLES    0x02
 
-static const EventData sXFormsEventsEntries[] = {
+const EventData sXFormsEventsEntries[41] = {
   { "xforms-model-construct",      PR_FALSE, PR_TRUE  },
   { "xforms-model-construct-done", PR_FALSE, PR_TRUE  },
   { "xforms-ready",                PR_FALSE, PR_TRUE  },
@@ -184,13 +187,15 @@ nsXFormsUtils::Init()
   return NS_OK;
 }
 
-/* static */ void
-nsXFormsUtils::GetParentModel(nsIDOMElement *aElement, nsIDOMNode **aModel)
+/* static */ PRBool
+nsXFormsUtils::GetParentModel(nsIDOMElement *aBindElement,
+                              nsIDOMNode   **aModel)
 {
+  PRBool res = PR_TRUE;
   nsCOMPtr<nsIDOMNode> modelWrapper;
 
   // Walk up the tree looking for the containing model.
-  aElement->GetParentNode(getter_AddRefs(modelWrapper));
+  aBindElement->GetParentNode(getter_AddRefs(modelWrapper));
 
   nsAutoString localName, namespaceURI;
   nsCOMPtr<nsIDOMNode> temp;
@@ -205,9 +210,15 @@ nsXFormsUtils::GetParentModel(nsIDOMElement *aElement, nsIDOMNode **aModel)
 
     temp.swap(modelWrapper);
     temp->GetParentNode(getter_AddRefs(modelWrapper));
+
+    // Model is not the immediate parent, this is a reference to a nested
+    // (invalid) bind
+    res = PR_FALSE;
   }
   *aModel = nsnull;
   modelWrapper.swap(*aModel);
+
+  return res;
 }
 
 /**
@@ -223,12 +234,14 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
                               PRUint32        aElementFlags,
                               nsIDOMNode    **aModel,
                               nsIDOMElement **aBindElement,
+                              PRBool         *aOuterBind,
                               nsIDOMElement **aContextNode,
                               PRInt32        *aContextPosition,
                               PRInt32        *aContextSize)
 {
   *aBindElement = nsnull;
   NS_ENSURE_ARG(aElement);
+  NS_ENSURE_ARG(aOuterBind);
   NS_ENSURE_ARG_POINTER(aContextNode);
 
   // Find correct model element
@@ -238,18 +251,24 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
 
   nsAutoString bindId;
   aElement->GetAttribute(NS_LITERAL_STRING("bind"), bindId);
-  ///
-  /// @todo: Is there a need for ELEMENT_WITH_BIND_ATTR?
   if (!bindId.IsEmpty()) {
     // CASE 1: Use @bind
     domDoc->GetElementById(bindId, aBindElement);
+    NS_ENSURE_STATE(*aBindElement);
 
-    if (*aBindElement)
-      GetParentModel(*aBindElement, aModel);
+    // Context size and position are always 1
+    if (aContextSize)
+      *aContextSize = 1;
+    if (aContextPosition)
+      *aContextPosition = 1;
+    
+    return FindBindContext(*aBindElement,
+                           aOuterBind,
+                           aModel,
+                           aContextNode);
+  }
 
-    // Error: There was a bind attribute, but it did not lead us to a model.
-    NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
-  } else if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
+  if (aElementFlags & ELEMENT_WITH_MODEL_ATTR) {
     // CASE 2: Use @model
     // If bind did not set model, and the element has a model attribute we use this
     nsAutoString modelId;
@@ -259,12 +278,13 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
       nsCOMPtr<nsIDOMElement> modelElement;
       domDoc->GetElementById(modelId, getter_AddRefs(modelElement));
       NS_IF_ADDREF(*aModel = modelElement);
-
+      
       // Not tag found for that ID
       NS_ENSURE_TRUE(*aModel, NS_ERROR_FAILURE);
     }
   }
 
+  // Search for a parent setting context for us
   nsresult rv = FindParentContext(aElement,
                                   aModel,
                                   aContextNode,
@@ -273,8 +293,10 @@ nsXFormsUtils::GetNodeContext(nsIDOMElement  *aElement,
   // CASE 3/4: Use parent's model / first model in document.
   // If FindParentContext() does not find a parent context but |aModel| is not
   // set, it sets the model to the first model in the document.
+  
+  NS_ENSURE_SUCCESS(rv, rv);    
 
-  return rv;
+  return NS_OK;
 }
 
 /* static */ already_AddRefed<nsIDOMNode>
@@ -286,14 +308,16 @@ nsXFormsUtils::GetModel(nsIDOMElement  *aElement,
   nsCOMPtr<nsIDOMNode> model;
   nsCOMPtr<nsIDOMElement> contextNode;
   nsCOMPtr<nsIDOMElement> bind;
-  
-  nsresult rv = GetNodeContext(aElement,
-                               aElementFlags,
-                               getter_AddRefs(model),
-                               getter_AddRefs(bind),
-                               getter_AddRefs(contextNode));
+  PRBool outerbind;
 
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  GetNodeContext(aElement,
+                 aElementFlags,
+                 getter_AddRefs(model),
+                 getter_AddRefs(bind),
+                 &outerbind,
+                 getter_AddRefs(contextNode));
+
+  NS_ENSURE_TRUE(model, nsnull);
 
   nsIDOMNode *result = nsnull;
   if (model)
@@ -307,7 +331,8 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
                              nsIDOMNode      *aResolverNode,
                              PRUint16         aResultType,
                              PRInt32          aContextPosition,
-                             PRInt32          aContextSize)
+                             PRInt32          aContextSize,
+                             nsXFormsMDGSet  *aSet)
 {
   nsCOMPtr<nsIDOMDocument> doc;
   aContextNode->GetOwnerDocument(getter_AddRefs(doc));
@@ -320,177 +345,164 @@ nsXFormsUtils::EvaluateXPath(const nsAString &aExpression,
   eval->CreateNSResolver(aResolverNode, getter_AddRefs(resolver));
   NS_ENSURE_TRUE(resolver, nsnull);
 
+  nsCOMPtr<nsIDOMXPathExpression> expression;
+  eval->CreateExpression(aExpression,
+                         resolver,
+                         getter_AddRefs(expression));
+  NS_ENSURE_TRUE(expression, nsnull);
+   
   ///
   /// @todo Evaluate() should use aContextPosition and aContextSize
   nsCOMPtr<nsISupports> supResult;
-  eval->Evaluate(aExpression, aContextNode, resolver, aResultType, nsnull,
-                 getter_AddRefs(supResult));
+  expression->Evaluate(aContextNode,
+                       aResultType,
+                       nsnull,
+                       getter_AddRefs(supResult));
 
   nsIDOMXPathResult *result = nsnull;
-  if (supResult)
+  if (supResult) {
+    /// @todo beaufour: This is somewhat "hackish". Hopefully, this will
+    /// improve when we integrate properly with Transformiix (XXX)
+    /// @see http://bugzilla.mozilla.org/show_bug.cgi?id=265212
+    if (aSet) {
+      nsXFormsXPathParser parser;
+      nsXFormsXPathAnalyzer analyzer(eval, resolver);
+      nsAutoPtr<nsXFormsXPathNode> xNode(parser.Parse(aExpression));
+
+      nsresult rv = analyzer.Analyze(aContextNode,
+                                     xNode,
+                                     expression,
+                                     &aExpression,
+                                     aSet);
+      NS_ENSURE_SUCCESS(rv, nsnull);
+    }
     CallQueryInterface(supResult, &result);  // addrefs
+  }
+
   return result;
 }
 
-/* static */ already_AddRefed<nsIDOMNode>
-nsXFormsUtils::FindBindContext(nsIDOMElement         *aElement,
-                               nsIXFormsModelElement *aModel)
+/* static */ nsresult
+nsXFormsUtils::FindBindContext(nsIDOMElement         *aBindElement,
+                               PRBool                *aOuterBind,
+                               nsIDOMNode           **aModel,
+                               nsIDOMElement        **aContextNode)
 {
-  // Figure out the context node for this <bind>.
-  // The outermost bind has the root element of the [first] instance document
-  // as its context node.  For inner binds, the first node in the nodeset
-  // of the parent is used as the context node.
+  // 1) Find the model for the bind
+  *aOuterBind = GetParentModel(aBindElement, aModel);
+  NS_ENSURE_STATE(*aModel);
 
-  nsCOMPtr<nsIDOMNode> modelNode = do_QueryInterface(aModel);
+  // 2) Find the context node
+  nsCOMPtr<nsIXFormsModelElement> modelInt = do_QueryInterface(*aModel);
+  NS_ENSURE_STATE(modelInt);
 
-  nsCOMPtr<nsIDOMNode> parentNode;
-  aElement->GetParentNode(getter_AddRefs(parentNode));
-  if (!parentNode)
-    return nsnull; // illegal, a bind must be contained in a model.
-
-  if (parentNode == modelNode) {
-    // This is the outermost bind.
-    nsCOMPtr<nsIDOMDocument> instanceDoc;
-    aModel->GetInstanceDocument(EmptyString(),
+  nsCOMPtr<nsIDOMDocument> instanceDoc;
+  modelInt->GetInstanceDocument(NS_LITERAL_STRING(""),
                                 getter_AddRefs(instanceDoc));
-    if (!instanceDoc)
-      return nsnull;
+  NS_ENSURE_STATE(instanceDoc);
 
-    nsIDOMElement *docElement = nsnull;
-    instanceDoc->GetDocumentElement(&docElement);  // addrefs
-    return docElement;
-  }
+  instanceDoc->GetDocumentElement(aContextNode);  // addrefs
+  NS_ENSURE_STATE(*aContextNode);
 
-  // The context node is the first node in the nodeset of the parent bind.
-  nsCOMPtr<nsIDOMXPathResult> parentNodeSet =
-    EvaluateNodeset(nsCOMPtr<nsIDOMElement>(do_QueryInterface(parentNode)),
-                    nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE);
-
-  nsIDOMNode *nodeResult = nsnull;
-  if (parentNodeSet)
-    parentNodeSet->GetSingleNodeValue(&nodeResult);  // addrefs
-
-  return nodeResult;
+  return NS_OK;
 }
 
-/* static */ already_AddRefed<nsIDOMXPathResult>
-nsXFormsUtils::EvaluateNodeset(nsIDOMElement *aElement, PRUint16 aResultType)
+/* static */ nsresult
+nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement      *aElement,
+                                   PRUint32            aElementFlags,
+                                   const nsString     &aBindingAttr,
+                                   const nsString     &aDefaultRef,
+                                   PRUint16            aResultType,
+                                   nsIDOMNode        **aModel,
+                                   nsIDOMXPathResult **aResult,
+                                   nsIMutableArray    *aDeps)
 {
-  // The first thing we need to do is ensure that we have a nodeset attribute.
-  // If we don't, we walk up and check for it on outer bind elements.
-  // While we're walking up, we also locate the model element.
-
-  nsCOMPtr<nsIXFormsModelElement> model;
-  nsCOMPtr<nsIDOMElement> bindElement, element = aElement;
-  nsCOMPtr<nsIDOMNode> temp;
-  nsAutoString nodeset;
-
-  while (element) {
-    model = do_QueryInterface(element);
-    if (model)
-      break;
-
-    if (!bindElement) {
-      element->GetAttribute(NS_LITERAL_STRING("nodeset"), nodeset);
-      if (!nodeset.IsEmpty()) {
-        // Verify that this is a <bind> element;
-        nsAutoString value;
-        element->GetNamespaceURI(value);
-        if (value.EqualsLiteral(NS_NAMESPACE_XFORMS)) {
-          element->GetLocalName(value);
-          if (value.EqualsLiteral("bind")) {
-            bindElement = element;
-          }
-        }
-      }
-    }
-
-    element->GetParentNode(getter_AddRefs(temp));
-    element = do_QueryInterface(temp);
-  }
-
-  if (!bindElement || !model)
-    return nsnull;
-
-  nsCOMPtr<nsIDOMNode> contextNode = FindBindContext(bindElement, model);
-  if (!contextNode)
-    return nsnull;
-
-  return EvaluateXPath(nodeset, contextNode, bindElement, aResultType);
-}
-
-/* static */ already_AddRefed<nsIDOMXPathResult>
-nsXFormsUtils::EvaluateNodeBinding(nsIDOMElement  *aElement,
-                                   PRUint32        aElementFlags,
-                                   const nsString &aBindingAttr,
-                                   const nsString &aDefaultRef,
-                                   PRUint16        aResultType,
-                                   nsIDOMNode    **aModel,
-                                   nsIDOMElement **aBind)
-{
-  if (!aElement || !aBind || !aModel) {
+  if (!aElement || !aModel || !aResult) {
     return nsnull;
   }
 
-  *aBind = nsnull;
   *aModel = nsnull;
+  *aResult = nsnull;
 
   nsCOMPtr<nsIDOMElement> contextNode;
+  nsCOMPtr<nsIDOMElement> bindElement;
+  PRBool outerBind;
   PRInt32 contextPosition;
   PRInt32 contextSize;
   nsresult rv = GetNodeContext(aElement,
                                aElementFlags,
                                aModel,
-                               aBind,
+                               getter_AddRefs(bindElement),
+                               &outerBind,
                                getter_AddRefs(contextNode),
                                &contextPosition,
                                &contextSize);
 
-  NS_ENSURE_SUCCESS(rv, nsnull);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  // If there is a bind element, we just evaluate its nodeset.
-  if (*aBind)
-    return EvaluateNodeset(*aBind, aResultType);
-
-  // If not, we expect there to be a |aBindingAttr| attribute.
   nsAutoString expr;
-  aElement->GetAttribute(aBindingAttr, expr);
+  if (bindElement) {
+    if (!outerBind) {
+      // "When you refer to @id on a nested bind it returns an emtpy nodeset
+      // because it has no meaning. The XForms WG will assign meaning in the
+      // future."
+      // @see http://www.w3.org/MarkUp/Group/2004/11/f2f/2004Nov11#resolution6
 
-  if (expr.IsEmpty())
-  {
-    if (aDefaultRef.IsEmpty())
-      return nsnull;
-    expr.Assign(aDefaultRef);
-  } 
-
-  if (!contextNode) {
-    nsCOMPtr<nsIDOMDocument> instanceDoc;
-    nsCOMPtr<nsIXFormsModelElement> model = do_QueryInterface(*aModel);
-    if (!model) {
-      // The referenced model is not actually a model element, or does not exist.
-      return nsnull;
+      return NS_OK;
+    } else {
+      // If there is a (outer) bind element, we retrive its nodeset.
+      bindElement->GetAttribute(NS_LITERAL_STRING("nodeset"), expr);
     }
-    
-    model->GetInstanceDocument(EmptyString(),
-                               getter_AddRefs(instanceDoc));
-    
-    if (!instanceDoc)
-      return nsnull;
-    
-    instanceDoc->GetDocumentElement(getter_AddRefs(contextNode));
-    
+  } else {
+    // If there's no bind element, we expect there to be a |aBindingAttr| attribute.
+    aElement->GetAttribute(aBindingAttr, expr);
+
+    if (expr.IsEmpty())
+    {
+      if (aDefaultRef.IsEmpty())
+        return NS_OK;
+
+      expr.Assign(aDefaultRef);
+    } 
+
     if (!contextNode) {
-      return nsnull;   // this will happen if the doc is still loading
+      nsCOMPtr<nsIDOMDocument> instanceDoc;
+      nsCOMPtr<nsIXFormsModelElement> model = do_QueryInterface(*aModel);
+      
+      NS_ENSURE_STATE(model); // The referenced model is not actually a model element, or does not exist.
+    
+      model->GetInstanceDocument(NS_LITERAL_STRING(""),
+                                 getter_AddRefs(instanceDoc));
+    
+      NS_ENSURE_STATE(instanceDoc);
+    
+      instanceDoc->GetDocumentElement(getter_AddRefs(contextNode));
+    
+      if (!contextNode) {
+        return NS_OK;   // this will happen if the doc is still loading
+      }
     }
   }
 
   // Evaluate |expr|
-  return EvaluateXPath(expr,
-                       contextNode,
-                       aElement,
-                       aResultType,
-                       contextSize,
-                       contextPosition);
+  nsXFormsMDGSet set;
+  nsCOMPtr<nsIDOMXPathResult> res = EvaluateXPath(expr,
+                                                  contextNode,
+                                                  aElement,
+                                                  aResultType,
+                                                  contextSize,
+                                                  contextPosition,
+                                                  aDeps ? &set : nsnull);
+
+  if (res && aDeps) {
+    for (PRInt32 i = 0; i < set.Count(); ++i) {
+      aDeps->AppendElement(set.GetNode(i), PR_FALSE);
+    }
+  }
+
+  res.swap(*aResult); // exchanges ref
+
+  return NS_OK;
 }
 
 /* static */ void
@@ -645,6 +657,8 @@ nsXFormsUtils::SetNodeValue(nsIDOMNode* aDataNode, const nsString& aNodeValue)
   }
 }
 
+///
+/// @todo Use this consistently, or delete? (XXX)
 /* static */ PRBool
 nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
                                          nsString& aValue)
@@ -652,16 +666,17 @@ nsXFormsUtils::GetSingleNodeBindingValue(nsIDOMElement* aElement,
   if (!aElement)
     return PR_FALSE;
   nsCOMPtr<nsIDOMNode> model;
-  nsCOMPtr<nsIDOMElement> bindElement;
-  nsCOMPtr<nsIDOMXPathResult> result =
-    EvaluateNodeBinding(aElement,
-                        nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
-                        NS_LITERAL_STRING("ref"),
-                        EmptyString(),
-                        nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
-                        getter_AddRefs(model),
-                        getter_AddRefs(bindElement));
-  if (!result)
+  nsCOMPtr<nsIDOMXPathResult> result;
+  
+  nsresult rv = EvaluateNodeBinding(aElement,
+                                    nsXFormsUtils::ELEMENT_WITH_MODEL_ATTR,
+                                    NS_LITERAL_STRING("ref"),
+                                    EmptyString(),
+                                    nsIDOMXPathResult::FIRST_ORDERED_NODE_TYPE,
+                                    getter_AddRefs(model),
+                                    getter_AddRefs(result));
+
+  if (NS_FAILED(rv) || !result)
     return PR_FALSE;
 
   nsCOMPtr<nsIDOMNode> singleNode;
