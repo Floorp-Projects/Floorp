@@ -50,9 +50,22 @@
 
 /* ::::: msg header buttons ::::: */
 
-#attachmentButton {
-  margin: 0px;
+#expandedAttachmentBox {
+  width: 20em;
+  height: 0px;
   list-style-image: url("chrome://messenger/skin/icons/attach.gif");
+}
+
+#attachmentTree {
+  margin: 3px 0px;
+  border: none;
+  height: 0px;
+  width: 20em;
+}
+
+#attachmentText
+{
+  font-weight: bold;
 }
 
 /* ::::: msg header captions ::::: */
