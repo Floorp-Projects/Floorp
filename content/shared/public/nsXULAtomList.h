@@ -40,6 +40,7 @@ XUL_ATOM(spinner, "spinner")
 XUL_ATOM(scrollbar, "scrollbar")
 XUL_ATOM(slider, "slider")
 XUL_ATOM(colorpicker, "colorpicker")
+XUL_ATOM(palettename, "palettename")
 XUL_ATOM(fontpicker, "fontpicker")
 XUL_ATOM(radio, "radio")
 XUL_ATOM(text, "text")
@@ -107,4 +108,3 @@ XUL_ATOM(collapse, "collapse")
 
 XUL_ATOM(widget, "widget")
 XUL_ATOM(window, "window")
-
