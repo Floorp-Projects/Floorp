@@ -46,6 +46,10 @@ Rights Reserved.
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 
+<keyset id="subscribeKeys">
+  <key id="space" key=" " oncommand="SubscribeSpaceHit()"/>
+</keyset>
+
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>
       <column flex="1"/>

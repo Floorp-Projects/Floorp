@@ -1,4 +1,5 @@
 var gSubscribeTree = null;
+var gSearchOutliner;
 var okCallback = null;
 var gChangeTable = {};
 var gServerURI = null;
@@ -177,10 +178,11 @@ function SubscribeOnLoad()
   //dump("SubscribeOnLoad()\n");
   gSubscribeBundle = document.getElementById("bundle_subscribe");
 	
-  gSubscribeTree = document.getElementById('subscribetree');
-  gSearchOutlinerBoxObject = document.getElementById("searchOutliner").boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
-  gNameField = document.getElementById('namefield');
-  gNameFieldLabel = document.getElementById('namefieldlabel');
+  gSubscribeTree = document.getElementById("subscribetree");
+  gSearchOutliner = document.getElementById("searchOutliner");
+  gSearchOutlinerBoxObject = gSearchOutliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);
+  gNameField = document.getElementById("namefield");
+  gNameFieldLabel = document.getElementById("namefieldlabel");
   gSubscribeDeck = document.getElementById("subscribedeck");
 
   msgWindow = Components.classes[msgWindowContractID].createInstance(Components.interfaces.nsIMsgWindow);
@@ -505,3 +507,48 @@ function CleanUpSearchView()
     gSearchView = null;
   }
 }
+
+function SubscribeTreeOrSearchOutlinerHasFocus()
+{
+  var currentNode = top.document.commandDispatcher.focusedElement;
+  while (currentNode) {
+    if (currentNode === gSubscribeTree ||
+        currentNode === gSearchOutliner)
+      return true;
+    currentNode = currentNode.parentNode;
+  }
+
+  return false;
+}
+
+function SubscribeSpaceHit()
+{
+  // if the subscribe tree / search outliner
+  // doesn't have focus, return.
+  // the space should be processed as it might be
+  // for the quick search text field, or for a button.
+  if (!SubscribeTreeOrSearchOutlinerHasFocus())
+    return;
+
+  var i;
+
+  if (InSearchMode()) {
+    var outlinerSelection = gSearchView.selection; 
+    for (i=0;i<outlinerSelection.getRangeCount();i++) {
+      var start = new Object;
+      var end = new Object;
+      outlinerSelection.getRangeAt(i,start,end);
+      for (var k=start.value;k<=end.value;k++)
+        ReverseStateFromRow(k);
+
+      // force a repaint
+      InvalidateSearchOutliner();
+    }
+  }
+  else {
+    var groupList = gSubscribeTree.selectedItems;
+    for (i=0;i<groupList.length;i++)
+      ReverseStateFromNode(groupList[i]);
+  }
+}
+
