@@ -897,7 +897,7 @@ nsDiskCacheDevice::ClearDiskCache()
 
 
 // function passed to PR_CreateThread
-void
+static void PR_CALLBACK
 DoDeleteFileList(void *arg)
 {
     nsCOMArray<nsIFile> * fileList = NS_STATIC_CAST(nsCOMArray<nsIFile> *, arg);
