@@ -78,6 +78,7 @@ public:
                                     void* closure);
     nsresult AsyncReadJARElement();
     nsresult GetCacheFile(nsIFile* *cacheFile);
+    nsresult EnsureZipReader();
 
     friend class nsJARDownloadObserver;
 
