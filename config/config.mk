@@ -144,6 +144,11 @@ endif
 NS_CONFIG_MK	= 1
 
 #
+# Force a final install pass so we can build tests properly.
+#
+LIBS_NEQ_INSTALL = 1
+
+#
 # Provide the means to easily override our tool directory locations.
 #
 ifdef NETSCAPE_HIERARCHY
