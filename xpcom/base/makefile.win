@@ -45,6 +45,7 @@ EXPORTS =                  \
 	nsISupportsImpl.h  \
         nsISupportsObsolete.h  \
         nsISupportsUtils.h \
+        nsIWeakReferenceUtils.h  \
         nsTraceRefcnt.h    \
         nsWeakReference.h  \
         nsWeakPtr.h        \
