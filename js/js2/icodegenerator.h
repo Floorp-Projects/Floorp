@@ -338,8 +338,8 @@ namespace JavaScript {
               forBody(bodyLabel), forConditionStream(icg->get_iCode()),
               forIncrementStream(icg->get_iCode()) {}
 
-    }; /* namespace IGC */
+    } /* namespace IGC */
     
-}; /* namespace JavaScript */
+} /* namespace JavaScript */
 
 #endif /* icodegenerator_h */

@@ -220,9 +220,9 @@ namespace JavaScript {
         // a stack of JSFrames.
         typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
         
-    }; /* namespace JSTypes */
+    } /* namespace JSTypes */
     
-}; /* namespace JavaScript */
+} /* namespace JavaScript */
 
 
 #endif /* jstypes_h */
