@@ -406,7 +406,8 @@
             // Determining whether or not the selection is mutable is handled by
             // the deletion routine.
             type = this.mOuter.getTypeAtIndex(this.mOuter.firstSelectedIndex);
-            if (type != this.mOuter.NC_NS + "Bookmark" && type != this.mOuter.NC_NS + "BookmarkSeparator" && type != this.mOuter.NC_NS + "Folder")
+            if (type != this.mOuter.NC_NS + "Bookmark" && type != this.mOuter.NC_NS + "BookmarkSeparator" &&
+                type != this.mOuter.NC_NS + "Folder" && type != this.mOuter.NC_NS + "IEFavoriteFolder")
               return false;
             return bo.selection.count >= 1;
           case "cmd_bm_selectAll":
@@ -1182,8 +1183,8 @@
                         "bm_properties"];
             break;
           case "http://home.netscape.com/NC-rdf#IEFavoriteFolder":
-            commands = ["bm_openfolder", "bm_openinnewwindow", "bm_separator",
-                        "bm_copy"];
+            commands = ["bm_openfolder", "bm_separator",
+                        "bm_delete"];
             break;
           case "http://home.netscape.com/NC-rdf#IEFavorite":
             commands = ["bm_open", "bm_openinnewwindow", /* "bm_openinnewtab", */ "bm_separator",
