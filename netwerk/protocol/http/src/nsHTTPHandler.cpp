@@ -253,10 +253,9 @@ NS_METHOD
 nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
                       nsIURI **result)
 {
-    //todo clean this up...
     nsresult rv;
 
-    nsIURI* url;
+    nsIURI* url = nsnull;
     if (aBaseURI)
     {
         rv = aBaseURI->Clone(&url);
@@ -265,20 +264,16 @@ nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     }
     else
     {
-        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&url);
+        rv = nsComponentManager::CreateInstance(kStandardUrlCID, nsnull, nsCOMTypeInfo<nsIURI>::GetIID(),
+                                                (void**)&url);
         if (NS_FAILED(rv)) return rv;
         rv = url->SetSpec((char*)aSpec);
     }
-    if (NS_FAILED(rv)) return rv;
-
-    nsIURI* realUrl = nsnull;
-    
-    rv = url->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&realUrl);
-    if (NS_FAILED(rv)) return rv;
-
-    *result= realUrl;
-    NS_ADDREF(*result);
-
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(url);
+        return rv;
+    }
+    *result = url;
     return rv;
 }
 
