@@ -153,7 +153,7 @@ NS_IMETHODIMP mozMySpell::GetLanguage(PRUnichar * *aLanguage)
 {
   nsresult res=NS_OK;
   NS_PRECONDITION(aLanguage != nsnull, "null ptr");
-  if(aLanguage){
+  if(!aLanguage){
     res = NS_ERROR_NULL_POINTER;
   }
   else{
