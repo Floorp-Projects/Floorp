@@ -2358,7 +2358,7 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 
 	mdbYarn	messageIdYarn;
 
-	messageIdYarn.mYarn_Buf = msgID.GetBuffer();
+	messageIdYarn.mYarn_Buf = (void*)msgID.GetBuffer();
 	messageIdYarn.mYarn_Fill = PL_strlen(msgID.GetBuffer());
 	messageIdYarn.mYarn_Form = 0;
 	messageIdYarn.mYarn_Size = messageIdYarn.mYarn_Fill;
