@@ -42,11 +42,13 @@ MISCDEP=$(LLIBS)
 
 OBJS=   \
 	.\$(OBJDIR)\mkreg.obj	\
+	.\$(OBJDIR)\mkbuf.obj	\
 	$(NULL)
 
 
 CSRCS =	\
 	mkreg.c	\
+	mkbuf.c \
 	$(NULL)
 
 MODULE=network
@@ -58,7 +60,8 @@ EXTRA_LIBS=
 
 REQUIRES= network
 EXPORTS= \
-	 mkreg.h \
+	mkreg.h \
+	mkbuf.h \
 	$(NULL);
 
 C_OBJS = \
@@ -69,6 +72,9 @@ C_OBJS = \
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
 	-I$(PUBLIC)\network \
+!ifdef SMART_MAIL
+	-I$(DEPTH)\lib\xp \
+!endif
 	$(NULL)
 #!endif
 
