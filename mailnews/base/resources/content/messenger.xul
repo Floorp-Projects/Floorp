@@ -31,6 +31,7 @@ Rights Reserved.
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/securityOverlay.xul"?>
 
 <!DOCTYPE window [
 <!ENTITY % messengerDTD SYSTEM "chrome://messenger/locale/messenger.dtd" >
@@ -43,16 +44,16 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-		title="&messengerWindow.title;"
+        title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
-		onload="OnLoadMessenger()"
-		onunload="OnUnloadMessenger()"
-		align="vertical"
+        onload="OnLoadMessenger()"
+        onunload="OnUnloadMessenger()"
+        orient="vertical"
         width="750"
         height="500"
         persist="width height screenX screenY"
-		windowtype="mail:3pane">
+        windowtype="mail:3pane">
 
 
 <script src="chrome://global/content/strres.js"></script>
@@ -131,15 +132,17 @@ Rights Reserved.
      
 			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"/>
 
-			<splitter id="gray_horizontal_splitter" collapse="after" persist="state"
-			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
+			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"
+                id="threadpane-splitter" orient="vertical" autostretch="never">
+        <grippy/>
+      </splitter>
 			
 			<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
 				<toolbox id="msgHeaderView"/>
     
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
-			<statusbar id="status-bar">
+			<statusbar id="status-bar" class="mailwindow-statusbar">
 				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
 				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
 			</statusbar>
