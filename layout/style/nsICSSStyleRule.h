@@ -42,6 +42,8 @@
 //#include <stdio.h>
 #include "nsICSSRule.h"
 #include "nsString.h"
+#include "nsCSSProps.h"
+#include "nsCSSValue.h"
 
 class nsISizeOfHandler;
 
@@ -167,6 +169,9 @@ public:
   virtual void SetWeight(PRInt32 aWeight) = 0;
 
   virtual nsIStyleRule* GetImportantRule(void) = 0;
+
+  // Hook for inspector.
+  virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue);
 };
 
 extern NS_EXPORT nsresult
