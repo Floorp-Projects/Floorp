@@ -218,14 +218,67 @@ function getAccountValue(account, accountValues, type, slot) {
 
   // fill in the slot from the account if necessary
   if (accountValues[type][slot]== undefined) {
-    //    dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
-    var source;
-    if (type == "identity")
+    dump("Array->Form: lazily reading in the " + slot + " from the " + type + "\n");
+    var source = null;
+    if (type == "identity") {
       source = account.defaultIdentity;
-    if (type == "server")
+    }
+    else if (type == "server") {
+	dump(account);
+	dump(account.incomingServer);
       source = account.incomingServer;
+    }
+    else if (type == "pop3server") {
+	var server= account.incomingServer; 
+	var check = server.type + "server";
+	if (check == type) {
+		source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer); 
+	}
+	else {
+		dump("error: " + check + " vs " + type + "\n");
+	}
+    }
+    else if (type == "imapserver") {
+	var server= account.incomingServer; 
+	var check = server.type + "server";
+	if (check == type) {
+		source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer); 
+	}
+	else {
+		dump("error: " + check + " vs " + type + "\n");
+	}
+    }
+    else if (type == "noneserver") {
+	var server= account.incomingServer; 
+	var check = server.type + "server";
+	if (check == type) {
+		source = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
+	}
+	else {
+		dump("error: " + check + " vs " + type + "\n");
+	}
+    }
+    else if (type == "nntpserver") {
+	var server= account.incomingServer; 
+	var check = server.type + "server";
+	if (check == type) {
+		source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer); 
+	}
+	else {
+		dump("error: " + check + " vs " + type + "\n");
+	}
+    }
+    else { 
+	// do nothing
+    }
 
-    accountValues[type][slot] = source[slot];
+    if (source) {
+    	accountValues[type][slot] = source[slot];
+    }
+    else {
+	dump("error getting: (" + type + "," + slot + ")\n");
+	accountValues[type][slot] = null;
+    }
   }
   var value = accountValues[type][slot];
   //  dump("Array->Form: accountValues[" + type + "][" + slot + "] = " + value + "\n");
