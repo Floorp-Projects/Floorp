@@ -41,7 +41,6 @@
 #include "xptinfo.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIPluginInstance.h"
-#include "nsIScriptablePlugin.h"
 #include "nsIXPConnect.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMHTMLEmbedElement.h"
@@ -70,10 +69,7 @@ public:
   NS_DECL_IDOMHTMLEMBEDELEMENT
 
   // nsIJSScriptObject
-  NS_IMETHOD GetScriptObject(nsIScriptContext* aContext,
-                             void** aScriptObject);
-  NS_IMETHOD SetScriptObject(void *aScriptObject);
-
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
   virtual PRBool    AddProperty(JSContext *aContext, JSObject *aObj, 
                         jsval aID, jsval *aVp);
   virtual PRBool    DeleteProperty(JSContext *aContext, JSObject *aObj, 
@@ -98,7 +94,6 @@ protected:
 
 protected:
   nsGenericHTMLLeafElement mInner;
-  PRBool mReflectedPlugin;
 };
 
 nsresult
@@ -119,7 +114,6 @@ nsHTMLEmbedElement::nsHTMLEmbedElement(nsINodeInfo *aNodeInfo)
 {
   NS_INIT_REFCNT();
   mInner.Init(this, aNodeInfo);
-  mReflectedPlugin = PR_FALSE;
 }
 
 nsHTMLEmbedElement::~nsHTMLEmbedElement()
@@ -302,109 +296,6 @@ nsHTMLEmbedElement::GetPluginInstance(nsIPluginInstance** aPluginInstance)
 
 /***************************************************************************/
 
-/*
- * For plugins, we want to expose both attributes of the plugin tag
- * and any scriptable methods that the plugin itself exposes.  To do
- * this, we get the plugin object itself (the XPCOM object) and wrap
- * it as a scriptable object via xpconnect.  We then set the original
- * node element, which exposes the DOM node methods, as the javascript
- * prototype object of that object.  Then we get both sets of methods, and
- * plugin methods can potentially override DOM methods.
- */
-NS_IMETHODIMP
-nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
-                                    void** aScriptObject)
-{
-  if (mReflectedPlugin)
-    return mInner.GetScriptObject(aContext, aScriptObject);
-
-  nsresult rv;
-  *aScriptObject = nsnull;
-  
-  // Get the JS object corresponding to this dom node.  This will become
-  // the javascript prototype object of the object we eventually reflect to the
-  // DOM.
-  JSObject* elementObject = nsnull;
-  rv = mInner.GetScriptObject(aContext, (void**)&elementObject);
-  if (NS_FAILED(rv) || !elementObject)
-    return rv;
-
-  nsCOMPtr<nsIPluginInstance> pi;
-  rv = GetPluginInstance(getter_AddRefs(pi));
-
-  // Check that the plugin object has the nsIScriptablePlugin
-  // interface, describing how to expose it to JavaScript.  Given this
-  // interface, use it to get the scriptable peer object (possibly the
-  // plugin object itself) and the scriptable interface to expose it
-  // with.
-  nsIID *scriptableInterface = nsnull;
-  nsCOMPtr<nsISupports> scriptablePeer;
-  if (NS_SUCCEEDED(rv) && pi) {
-    nsCOMPtr<nsIScriptablePlugin> spi(do_QueryInterface(pi));
-    if (spi) {
-      rv = spi->GetScriptableInterface(&scriptableInterface);
-      if (NS_SUCCEEDED(rv) && scriptableInterface)
-        rv = spi->GetScriptablePeer(getter_AddRefs(scriptablePeer));
-    }
-  }
-
-  if (NS_FAILED(rv) || !scriptableInterface || !scriptablePeer) {
-    // Fall back to returning the element object.
-    *aScriptObject = elementObject;
-    return NS_OK;
-  }
-
-  // Find an appropriate parent object to use when wrapping.
-  JSObject* parentObject;
-  nsCOMPtr<nsIScriptObjectOwner> owner;
-  if (mInner.mParent) {
-    owner = do_QueryInterface(mInner.mParent);
-  } else if (mInner.mDocument) {
-    owner = do_QueryInterface(mInner.mDocument);
-  }
-  if (owner) {
-    rv = owner->GetScriptObject(aContext, (void **)&parentObject);
-  }
-  if (NS_FAILED(rv) || !parentObject) // Fall back to using element object.
-    parentObject = elementObject;
-
-  // Wrap it.
-  JSObject* interfaceObject; // XPConnect-wrapped peer object, when we get it.
-  JSContext *cx = (JSContext *)aContext->GetNativeContext();
-  nsCOMPtr<nsIXPConnect> xpc =
-    do_GetService(nsIXPConnect::GetCID()); 
-  if (cx && xpc) {
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
-    if (NS_SUCCEEDED(xpc->WrapNative(cx, parentObject,
-                                     scriptablePeer, *scriptableInterface,
-                                     getter_AddRefs(holder))) && holder && 
-        NS_SUCCEEDED(holder->GetJSObject(&interfaceObject)) && interfaceObject) {
-      *aScriptObject = interfaceObject;
-    }
-  }
-  
-  // If we got an xpconnect-wrapped plugin object, set its' prototype to the
-  // element object.
-  if (!*aScriptObject || !JS_SetPrototype(cx, interfaceObject, elementObject)) {
-    *aScriptObject = elementObject; // fall back
-    return NS_OK;
-  }
-
-  // Cache it.
-  if (NS_SUCCEEDED(mInner.SetScriptObject(*aScriptObject)))
-    mReflectedPlugin = PR_TRUE;
-
-  return NS_OK;
-}
-
-// TODO: if this method ever gets called, it will destroy the prototype type
-// chain.
-NS_IMETHODIMP
-nsHTMLEmbedElement::SetScriptObject(void *aScriptObject)
-{
-       return mInner.SetScriptObject(aScriptObject);
-}
-
 // nsIJSScriptObject
 
 PRBool    
@@ -419,8 +310,6 @@ nsHTMLEmbedElement::DeleteProperty(JSContext *aContext, JSObject *aObj, jsval aI
   return mInner.DeleteProperty(aContext, aObj, aID, aVp);
 }
 
-// Allow access to arbitrary XPCOM interfaces supported by the plugin
-// via a pluginObject.nsISomeInterface notation.
 PRBool    
 nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj, jsval aID, jsval *aVp)
 {
