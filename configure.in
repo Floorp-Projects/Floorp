@@ -741,7 +741,7 @@ case "$target" in
     _PEDANTIC=
     _IGNORE_LONG_LONG_WARNINGS=
     case $OS_RELEASE in
-	4.*)
+	4.*|5.*)
             STRIP="$STRIP -d"
             ;;
 	*)
