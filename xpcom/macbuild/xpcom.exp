@@ -27,6 +27,7 @@ Reset__11nsHashtableFv		# nsHashtable::Reset()
 Remove__11nsHashtableFP9nsHashKey		# nsHashtable::Remove(nsHashKey*)
 Get__11nsHashtableFP9nsHashKey		# nsHashtable::Get(nsHashKey*)
 Put__11nsHashtableFP9nsHashKeyPv		# nsHashtable::Put(nsHashKey*,void*)
+Exists__11nsHashtableFP9nsHashKey		# nsHashtable::Exists(nsHashKey*)
 __dt__11nsHashtableFv		# nsHashtable::~nsHashtable()
 __ct__11nsHashtableFUii		# nsHashtable::nsHashtable(unsigned int, PRBool)
 __dt__9nsHashKeyFv		# nsHashKey::~nsHashKey()
@@ -107,6 +108,20 @@ AddRef__13nsTraceRefcntFPvUlPCci
 begin_assignment__13nsCOMPtr_baseFv
 assign_with_QueryInterface__13nsCOMPtr_baseFP11nsISupportsRC4nsIDPUi
 assign_with_AddRef__13nsCOMPtr_baseFP11nsISupports
+
+# nsSupportsArrayEnumerator
+NS_NewISupportsArrayEnumerator__FP16nsISupportsArrayPP26nsIBidirectionalEnumerator		# NS_NewISupportsArrayEnumerator(nsISupportsArray*,nsIBidirectionalEnumerator**)
+Prev__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::Prev()
+Last__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::Last()
+IsDone__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::IsDone()
+CurrentItem__25nsSupportsArrayEnumeratorFPP11nsISupports		# nsSupportsArrayEnumerator::CurrentItem(nsISupports**)
+Next__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::Next()
+First__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::First()
+QueryInterface__25nsSupportsArrayEnumeratorFRC4nsIDPPv		# nsSupportsArrayEnumerator::QueryInterface(const nsID&,void**)
+Release__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::Release()
+AddRef__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::AddRef()
+__dt__25nsSupportsArrayEnumeratorFv		# nsSupportsArrayEnumerator::~nsSupportsArrayEnumerator()
+__ct__25nsSupportsArrayEnumeratorFP16nsISupportsArray		# nsSupportsArrayEnumerator::nsSupportsArrayEnumerator(nsISupportsArray*)
 
 # nsXPIDLString
 __ct__13nsXPIDLStringFv
