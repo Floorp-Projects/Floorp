@@ -28,12 +28,13 @@
 #include "nsReadableUtils.h"
 #include "nsIOutputStream.h"
 
-NS_IMPL_ISUPPORTS2(nsCacheEntryDescriptor, nsICacheEntryDescriptor, nsITransport)
+NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor, nsICacheEntryDescriptor)
 
 
 nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
                                                nsCacheAccessMode accessGranted)
-    : mCacheEntry(entry), mAccessGranted(accessGranted)
+    : mCacheEntry(entry),
+      mAccessGranted(accessGranted)
 {
   NS_INIT_ISUPPORTS();
   PR_INIT_CLIST(this);
@@ -207,7 +208,7 @@ nsCacheEntryDescriptor::GetTransport(nsITransport ** result)
     if (!mCacheEntry)                  return NS_ERROR_NOT_AVAILABLE;
     if (!mCacheEntry->IsStreamData())  return NS_ERROR_CACHE_DATA_IS_NOT_STREAM;
 
-    NS_ADDREF(*result = this);
+    NS_ADDREF(*result = &mTransportWrapper);
     return NS_OK;
 }
 
@@ -260,6 +261,7 @@ nsCacheEntryDescriptor::SetStoragePolicy(nsCacheStoragePolicy policy)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::GetFile(nsIFile ** result)
 {
@@ -268,6 +270,27 @@ nsCacheEntryDescriptor::GetFile(nsIFile ** result)
     
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMETHODIMP
+nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    return mCacheEntry->GetSecurityInfo(result);
+}
+
+
+NS_IMETHODIMP
+nsCacheEntryDescriptor::SetSecurityInfo(nsISupports * securityInfo)
+{
+    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+
+    mCacheEntry->SetSecurityInfo(securityInfo);
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::Doom()
@@ -353,195 +376,128 @@ nsCacheEntryDescriptor::GetMetaDataEnumerator(nsISimpleEnumerator ** result)
 }
 
 
-NS_IMETHODIMP
-nsCacheEntryDescriptor::GetSecurityInfo(nsISupports ** result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+/******************************************************************************
+ * nsCacheTransportWrapper
+ ******************************************************************************/
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+// XXX NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor::nsTransportWrapper, nsITransport);
+NS_IMPL_QUERY_INTERFACE1(nsCacheEntryDescriptor::nsTransportWrapper, nsITransport)
+
+
+//  special AddRef and Release, because we are part of the descriptor
+#define GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(_this) \
+        ((nsCacheEntryDescriptor*)((char*)(_this) - \
+                                   offsetof(nsCacheEntryDescriptor, mTransportWrapper)))
+
+NS_IMETHODIMP_(nsrefcnt) nsCacheEntryDescriptor::
+nsTransportWrapper::AddRef(void)
+{
+    return GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this)->AddRef();
+}
+
+NS_IMETHODIMP_(nsrefcnt) nsCacheEntryDescriptor::
+nsTransportWrapper::Release(void)
+{
+    return GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this)->Release();
 }
 
 
-NS_IMETHODIMP
-nsCacheEntryDescriptor::GetNotificationCallbacks(nsIInterfaceRequestor **result)
+nsresult nsCacheEntryDescriptor::
+nsTransportWrapper::EnsureTransportWithAccess(nsCacheAccessMode  mode)
 {
-    NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    nsresult  rv = NS_OK;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+    nsCacheEntryDescriptor * descriptor = GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this);
+    if (!descriptor->mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
+    if (!descriptor->mAccessGranted & mode) {
+        rv = (mode == nsICache::ACCESS_READ) ?
+            NS_ERROR_CACHE_READ_ACCESS_DENIED : NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
+        return rv;
+    }
 
-
-NS_IMETHODIMP
-nsCacheEntryDescriptor::SetNotificationCallbacks(nsIInterfaceRequestor *requestor,
-                                                 PRBool isBackground)
-{
-    if (!mCacheEntry)       return NS_ERROR_NOT_AVAILABLE;
-
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsCacheEntryDescriptor::OpenInputStream(PRUint32           offset,
-                                        PRUint32           count,
-                                        PRUint32           flags,
-                                        nsIInputStream  ** result)
-{
-    NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    if (!(mAccessGranted & nsICache::ACCESS_READ))
-        return NS_ERROR_CACHE_READ_ACCESS_DENIED;
     if (!mTransport) {
         nsresult rv;
         rv = nsCacheService::GlobalInstance()->
-            GetTransportForEntry(mCacheEntry,
-                                 mAccessGranted,
+            GetTransportForEntry(descriptor->mCacheEntry,
+                                 descriptor->mAccessGranted,
                                  getter_AddRefs(mTransport));
         if (NS_FAILED(rv))  return rv;
     }
-    
-    return mTransport->OpenInputStream(offset, count, flags, result);
-}
-
-
-/**
- * nsCacheOutputStream - a wrapper for nsIOutputstream to track the amount of data
- *                       written to a cache entry.
- */
-class nsCacheOutputStream : public nsIOutputStream {
-    nsCacheEntryDescriptor* mDescriptor;
-    nsCOMPtr<nsIOutputStream> mOutput;
-public:
-    NS_DECL_ISUPPORTS
-
-    nsCacheOutputStream(nsCacheEntryDescriptor* descriptor, nsIOutputStream* output)
-        : mDescriptor(nsnull), mOutput(output)
-    {
-        NS_INIT_ISUPPORTS();
-        NS_ADDREF(mDescriptor = descriptor);
-    }
-    
-    virtual ~nsCacheOutputStream()
-    {
-        NS_RELEASE(mDescriptor);
-    }
-    
-    nsresult Init();
-
-    NS_IMETHOD Close() { return mOutput->Close(); }
-    NS_IMETHOD Flush() { return mOutput->Flush(); }
-    NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *_retval);
-    NS_IMETHOD WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
-    NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
-    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) { return mOutput->GetNonBlocking(aNonBlocking); }
-    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking) { return mOutput->SetNonBlocking(aNonBlocking); }
-    NS_IMETHOD GetObserver(nsIOutputStreamObserver * *aObserver) { return mOutput->GetObserver(aObserver); }
-    NS_IMETHOD SetObserver(nsIOutputStreamObserver * aObserver) { return mOutput->SetObserver(aObserver); }
-
-private:
-    nsresult OnWrite(PRUint32 count);
-};
-NS_IMPL_ISUPPORTS1(nsCacheOutputStream, nsIOutputStream);
-
-nsresult
-nsCacheOutputStream::Init()
-{
-    nsCacheAccessMode mode;
-    nsresult rv = mDescriptor->GetAccessGranted(&mode);
-    if (NS_FAILED(rv)) return rv;
-    if (mode == nsICache::ACCESS_WRITE) {
-        nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
-        if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
-        nsCacheDevice* device = cacheEntry->CacheDevice();
-        if (!device) return NS_ERROR_NOT_AVAILABLE;
-        // the entry has been truncated to zero bytes, inform the device.
-        PRInt32 delta = -cacheEntry->DataSize();
-        rv = device->OnDataSizeChange(cacheEntry, delta);
-        cacheEntry->SetDataSize(0);
-    }
-    return rv;
-}
-
-NS_IMETHODIMP
-nsCacheOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
-{
-    nsresult rv = OnWrite(count);
-    if (NS_FAILED(rv)) return rv;
-    return mOutput->Write(buf, count, _retval);
-}
-
-NS_IMETHODIMP
-nsCacheOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
-{
-    nsresult rv = OnWrite(count);
-    if (NS_FAILED(rv)) return rv;
-    return mOutput->WriteFrom(inStr, count, _retval);
-}
-
-NS_IMETHODIMP
-nsCacheOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    nsresult rv = OnWrite(count);
-    if (NS_FAILED(rv)) return rv;
-    return mOutput->WriteSegments(reader, closure, count, _retval);
-}
-
-nsresult
-nsCacheOutputStream::OnWrite(PRUint32 count)
-{
-    // XXX if count > 2^31 error_write_too_big
-    return mDescriptor->RequestDataSizeChange((PRInt32)count);
-
-#if 0
-    nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
-    if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
-    nsCacheDevice* device = cacheEntry->CacheDevice();
-    if (!device) return NS_ERROR_NOT_AVAILABLE;
-    nsresult rv = device->OnDataSizeChange(cacheEntry, count);
-    if (NS_FAILED(rv)) return rv;
-    cacheEntry->SetDataSize(cacheEntry->DataSize() + count);
     return NS_OK;
-#endif
 }
 
 
-static nsresult NS_NewCacheOutputStream(nsIOutputStream ** result,
-                                        nsCacheEntryDescriptor * descriptor,
-                                        nsIOutputStream * output)
+static nsresult NS_NewOutputStreamWrapper(nsIOutputStream **       result,
+                                          nsCacheEntryDescriptor * descriptor,
+                                          nsIOutputStream *        output)
 {
-    nsCacheOutputStream* cacheOutput = new nsCacheOutputStream(descriptor, output);
+    nsCacheEntryDescriptor::nsOutputStreamWrapper* cacheOutput =
+        new nsCacheEntryDescriptor::nsOutputStreamWrapper(descriptor, output);
     if (!cacheOutput) return NS_ERROR_OUT_OF_MEMORY;
+
     nsCOMPtr<nsISupports> ref(cacheOutput);
-    nsresult rv = cacheOutput->Init();
+    nsresult              rv = cacheOutput->Init();
     if (NS_FAILED(rv)) return rv;
+
     NS_ADDREF(*result = cacheOutput);
     return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
-                                         PRUint32            count,
-                                         PRUint32            flags,
-                                         nsIOutputStream  ** result)
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::GetSecurityInfo(nsISupports ** securityInfo)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::GetNotificationCallbacks(nsIInterfaceRequestor **result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    if (!(mAccessGranted & nsICache::ACCESS_WRITE))
-        return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
+    // if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    nsresult rv;
-    if (!mTransport) {
-        rv = nsCacheService::GlobalInstance()->
-            GetTransportForEntry(mCacheEntry,
-                                 mAccessGranted,
-                                 getter_AddRefs(mTransport));
-        if (NS_FAILED(rv))  return rv;
-    }
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
-    // XXX allow more than one output stream at a time on a descriptor?    
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::SetNotificationCallbacks(nsIInterfaceRequestor *requestor,
+                                                 PRBool isBackground)
+{
+    //    if (!mCacheEntry)       return NS_ERROR_NOT_AVAILABLE;
+
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::OpenInputStream(PRUint32           offset,
+                                    PRUint32           count,
+                                    PRUint32           flags,
+                                    nsIInputStream  ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsresult  rv = EnsureTransportWithAccess(nsICache::ACCESS_READ);
+    if (NS_FAILED(rv)) return rv;
+    
+    return mTransport->OpenInputStream(offset, count, flags, result);
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::OpenOutputStream(PRUint32            offset,
+                                     PRUint32            count,
+                                     PRUint32            flags,
+                                     nsIOutputStream  ** result)
+{
+    NS_ENSURE_ARG_POINTER(result);
+
+    nsresult  rv = EnsureTransportWithAccess(nsICache::ACCESS_WRITE);
+    if (NS_FAILED(rv))  return rv;
+
+    // XXX allow more than one output stream at a time on a descriptor?  Why?  
 
     // Create the underlying output stream using the wrapped transport.
     nsCOMPtr<nsIOutputStream> output;    
@@ -552,59 +508,119 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
     // to maintain the cache entry's size, and to inform the cache device. Eventually,
     // this mechanism will provide a way for the cache device to enforce space limits,
     // and to drive cache entry eviction.
-    return NS_NewCacheOutputStream(result, this, output);
+    nsCacheEntryDescriptor * descriptor = GET_DESCRIPTOR_FROM_TRANSPORT_WRAPPER(this);
+    return NS_NewOutputStreamWrapper(result, descriptor, output);
 }
 
-NS_IMETHODIMP
-nsCacheEntryDescriptor::AsyncRead(nsIStreamListener * listener,
-                                  nsISupports *       ctxt,
-                                  PRUint32            offset,
-                                  PRUint32            count,
-                                  PRUint32            flags,
-                                  nsIRequest       ** result)
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::AsyncRead(nsIStreamListener * listener,
+                              nsISupports *       ctxt,
+                              PRUint32            offset,
+                              PRUint32            count,
+                              PRUint32            flags,
+                              nsIRequest       ** result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    if (!(mAccessGranted & nsICache::ACCESS_READ))
-        return NS_ERROR_CACHE_READ_ACCESS_DENIED;
-    if (!mTransport) {
-        nsresult rv;
-        rv = nsCacheService::GlobalInstance()->
-            GetTransportForEntry(mCacheEntry,
-                                 mAccessGranted,
-                                 getter_AddRefs(mTransport));
-        if (NS_FAILED(rv))  return rv;
-    }
+
+    nsresult  rv = EnsureTransportWithAccess(nsICache::ACCESS_READ);
+    if (NS_FAILED(rv))  return rv;
     
     return mTransport->AsyncRead(listener, ctxt, offset, count, flags, result);
 }
 
 
-NS_IMETHODIMP
-nsCacheEntryDescriptor::AsyncWrite(nsIStreamProvider * provider,
-                                   nsISupports *       ctxt,
-                                   PRUint32            offset, 
-                                   PRUint32            count, 
-                                   PRUint32            flags, 
-                                   nsIRequest       ** result)
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsTransportWrapper::AsyncWrite(nsIStreamProvider * provider,
+                               nsISupports *       ctxt,
+                               PRUint32            offset, 
+                               PRUint32            count, 
+                               PRUint32            flags, 
+                               nsIRequest       ** result)
 {
     // we're not planning on implementing this
     return NS_ERROR_NOT_IMPLEMENTED;
 
 #if 0
     NS_ENSURE_ARG_POINTER(result);
-    if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
-    if (!(mAccessGranted & nsICache::ACCESS_WRITE))
-        return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
-    if (!mTransport) {
-        nsresult rv;
-        rv = nsCacheService::GlobalInstance()->
-            GetTransportForEntry(mCacheEntry,
-                                 mAccessGranted,
-                                 getter_AddRefs(mTransport));
-        if (NS_FAILED(rv))  return rv;
-    }
+
+    nsresult rv = EnsureTransportWithAccess(nsICache::ACCESS_WRITE);
+    if (NS_FAILED(rv)) return rv;
     
     return mTransport->AsyncWrite(provider, ctxt, offset, count, flags, result);
 #endif
 }
+
+
+/******************************************************************************
+ * nsCacheOutputStream - a wrapper for nsIOutputstream to track the amount of
+ *                       data written to a cache entry.
+ ******************************************************************************/
+
+NS_IMPL_ISUPPORTS1(nsCacheEntryDescriptor::nsOutputStreamWrapper, nsIOutputStream);
+
+nsresult nsCacheEntryDescriptor::
+nsOutputStreamWrapper::Init()
+{
+    nsCacheAccessMode mode;
+    nsresult rv = mDescriptor->GetAccessGranted(&mode);
+    if (NS_FAILED(rv)) return rv;
+
+    if (mode == nsICache::ACCESS_WRITE) {
+        nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
+        if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
+
+        nsCacheDevice* device = cacheEntry->CacheDevice();
+        if (!device) return NS_ERROR_NOT_AVAILABLE;
+
+        // the entry has been truncated to zero bytes, inform the device.
+        PRInt32 delta = -cacheEntry->DataSize();
+        rv = device->OnDataSizeChange(cacheEntry, delta);
+        cacheEntry->SetDataSize(0);
+    }
+    return rv;
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsOutputStreamWrapper::Write(const char * buf,
+                             PRUint32     count,
+                             PRUint32 *   result)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->Write(buf, count, result);
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsOutputStreamWrapper::WriteFrom(nsIInputStream * inStr,
+                                 PRUint32         count,
+                                 PRUint32 *       result)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->WriteFrom(inStr, count, result);
+}
+
+
+NS_IMETHODIMP nsCacheEntryDescriptor::
+nsOutputStreamWrapper::WriteSegments(nsReadSegmentFun  reader,
+                                    void *            closure,
+                                    PRUint32          count,
+                                    PRUint32 *        result)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->WriteSegments(reader, closure, count, result);
+}
+
+
+nsresult nsCacheEntryDescriptor::
+nsOutputStreamWrapper::OnWrite(PRUint32 count)
+{
+    // XXX if count > 2^31 error_write_too_big
+    return mDescriptor->RequestDataSizeChange((PRInt32)count);
+}
+
+

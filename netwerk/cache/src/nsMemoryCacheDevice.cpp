@@ -25,11 +25,21 @@
 #include "nsICacheService.h"
 #include "nsIComponentManager.h"
 #include "nsNetCID.h"
+#include "nsIObserverService.h"
+#include "nsIPref.h"
+
 
 static NS_DEFINE_CID(kStorageTransportCID, NS_STORAGETRANSPORT_CID);
 
+const char *gMemoryCacheSizePref = "browser.cache.memory_cache_size";
+
 nsMemoryCacheDevice::nsMemoryCacheDevice()
-    : mCurrentTotal(0)
+    : mHardLimit(0),
+      mSoftLimit(0),
+      mTotalSize(0),
+      mInactiveSize(0),
+      mEntryCount(0),
+      mMaxEntryCount(0)
 {
     PR_INIT_CLIST(&mEvictionList);
 }
@@ -37,6 +47,30 @@ nsMemoryCacheDevice::nsMemoryCacheDevice()
 nsMemoryCacheDevice::~nsMemoryCacheDevice()
 {
     // XXX dealloc all memory
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        prefs->UnregisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
+    }
+}
+
+
+int PR_CALLBACK
+nsMemoryCacheDevice::MemoryCacheSizeChanged(const char * pref, void * closure)
+{
+    nsresult  rv;
+    PRUint32   softLimit = 0;
+    nsMemoryCacheDevice * device = (nsMemoryCacheDevice *)closure;
+
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    if (NS_FAILED(rv))  return rv;
+
+    rv = prefs->GetIntPref(gMemoryCacheSizePref, (PRInt32 *)&softLimit);
+    
+    PRUint32 hardLimit = softLimit + 1024*1024*2;  // XXX find better limit than +2Meg
+    rv = device->AdjustMemoryLimits(softLimit, hardLimit);
+
+    return 0; // XXX what are we supposed to return?
 }
 
 
@@ -48,6 +82,23 @@ nsMemoryCacheDevice::Init()
     rv = mMemCacheEntries.Init();
 
     // XXX read user prefs for memory cache limits
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
+    if (NS_FAILED(rv))  return rv;
+
+    rv = prefs->RegisterCallback(gMemoryCacheSizePref, MemoryCacheSizeChanged, this);
+    if (NS_FAILED(rv))  return rv;
+
+    // Initialize the pref
+    MemoryCacheSizeChanged(gMemoryCacheSizePref, this);
+
+    // Register as a memory pressure observer
+    NS_WITH_SERVICE(nsIObserverService,
+                    observerService,
+                    NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        // XXX rv = observerServcie->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+    }
+    // Ignore failure of memory pressure registration
 
     return rv;
 }
@@ -165,7 +216,56 @@ nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
     return NS_OK;
 }
 
+
+nsresult
+nsMemoryCacheDevice::AdjustMemoryLimits(PRUint32  softLimit, PRUint32  hardLimit)
+{
+    mSoftLimit = softLimit;
+    mHardLimit = hardLimit;
+
+    if ((mTotalSize > mHardLimit) || (mInactiveSize > softLimit)) {
+        // XXX rv = EvictEntries();
+    }
+    return NS_OK;
+}
+
+
+nsresult
+nsMemoryCacheDevice::EvictEntries(void)
+{
+    nsCacheEntry * entry;
+    nsresult       rv = NS_OK;
+
+    entry = (nsCacheEntry *)PR_LIST_HEAD(&mEvictionList);
+    while (entry != &mEvictionList) {
+        if (entry->IsInUse()) {
+            entry = (nsCacheEntry *)PR_NEXT_LINK(entry);
+            continue;
+        }
+
+        // remove entry from our hashtable
+        rv = mMemCacheEntries.RemoveEntry(entry);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveEntry() failed?");
+
+        // remove entry from the eviction list
+        PR_REMOVE_AND_INIT_LINK(entry);
+        
+        // update statistics
+        PRUint32 memoryRecovered = entry->DataSize() + entry->MetaDataSize();
+        mTotalSize    -= memoryRecovered;
+        mInactiveSize -= memoryRecovered;
+        --mEntryCount;
+        delete entry;
+
+        if ((mTotalSize < mHardLimit) && (mInactiveSize < mSoftLimit))
+            break;
+    }
+
+    return NS_OK;
+}
+
+
+
 // XXX need methods for enumerating entries
 
 
-// XXX check entry->IsInUse() before evicting.
