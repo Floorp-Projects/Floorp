@@ -726,6 +726,35 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   }
   return NS_OK;
 }
+
+#ifdef ClientWallet
+void
+GetVcardName(nsIFormControlFrame& aFormControlFrame, nsString& aVCardName) 
+{
+  aVCardName = "";
+  nsIFrame* frame = nsnull;
+  nsresult rv = aFormControlFrame.QueryInterface(kIFrameIID, (void**)&frame);
+  if (NS_SUCCEEDED(rv) && frame) {
+    nsIContent* content = nsnull;
+    rv = frame->GetContent(&content);
+    if (NS_SUCCEEDED(rv) && content) {
+      nsIHTMLContent* htmlContent = nsnull;
+      rv = content->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
+      if (NS_SUCCEEDED(rv) && htmlContent) {
+        nsHTMLValue value;
+        if (NS_CONTENT_ATTR_HAS_VALUE == htmlContent->GetHTMLAttribute(nsHTMLAtoms::vcard_name, value)) {
+          if (eHTMLUnit_String == value.GetUnit()) {
+            value.GetStringValue(aVCardName);
+          }
+        }
+        NS_RELEASE(htmlContent);
+      }
+      NS_RELEASE(content);
+    }
+  }
+}
+#endif
+
 #define CRLF "\015\012"   
 void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
@@ -811,19 +840,18 @@ void nsFormFrame::ProcessAsURLEncoded(PRBool isPost, nsString& aData, nsIFormCon
 				child->GetType(&type);
 #endif
 #ifdef ClientWallet
-                              if (OKToCapture && (NS_FORM_INPUT_TEXT == type)) {
-                                      nsString vcard("");
-/* following line is awaiting karneze to implement GetAttrib */
-//                                      child->GetAttrib(NS_NewAtom("VCARD_NAME"), &vcard);
-                                      nsIWalletService *service;
-                                      nsresult res = nsServiceManager::GetService(kWalletServiceCID,
-                                              kIWalletServiceIID,
-                                              (nsISupports **)&service);
-                                      if ((NS_OK == res) && (nsnull != service)) {
-                                              res = service->WALLET_Capture(doc, *names, *values, vcard);
-                                              NS_RELEASE(service);
-                                      }
-                              }
+        if (OKToCapture && (NS_FORM_INPUT_TEXT == type)) {
+          nsString vcard("");
+          GetVcardName(*child, vcard);
+          nsIWalletService *service;
+          nsresult res = nsServiceManager::GetService(kWalletServiceCID,
+                                                      kIWalletServiceIID,
+                                                      (nsISupports **)&service);
+          if ((NS_OK == res) && (nsnull != service)) {
+            res = service->WALLET_Capture(doc, *names, *values, vcard);
+            NS_RELEASE(service);
+          }
+        }
 #endif
 #ifdef SingleSignon
 				if ((type == NS_FORM_INPUT_PASSWORD) || (type == NS_FORM_INPUT_TEXT)) {

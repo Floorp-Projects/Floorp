@@ -300,6 +300,7 @@ public:
   static nsIAtom* value;
   static nsIAtom* valuetype;
   static nsIAtom* variable;
+  static nsIAtom* vcard_name;
   static nsIAtom* version;
   static nsIAtom* verticalFramesetBorderPseudo;
   static nsIAtom* visibility;
