@@ -82,7 +82,8 @@ NS_METHOD nsScrollbar::CreateNative (PtWidget_t * parentWindow)
   PtSetArg( &arg[0], Pt_ARG_ORIENTATION, mOrientation, 0 );
   PtSetArg( &arg[1], Pt_ARG_POS, &pos, 0 );
   PtSetArg( &arg[2], Pt_ARG_DIM, &dim, 0 );
-  mWidget = PtCreateWidget( PtScrollbar, parentWindow, 3, arg );
+  PtSetArg( &arg[3], Pt_ARG_FLAGS, 0, Pt_GETS_FOCUS);
+  mWidget = PtCreateWidget( PtScrollbar, parentWindow, 4, arg );
   if( mWidget )
   {
     res = NS_OK;
