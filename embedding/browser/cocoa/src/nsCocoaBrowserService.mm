@@ -43,6 +43,7 @@
 #include "NSBrowserView.h"
 #include "nsCRT.h"
 
+PRInt32 nsCocoaBrowserService::sNumBrowser = 0;
 nsAlertController* nsCocoaBrowserService::sController = nsnull;
 nsCocoaBrowserService* nsCocoaBrowserService::sSingleton = nsnull;
 
@@ -54,7 +55,7 @@ nsCocoaBrowserService::nsCocoaBrowserService()
 
 nsCocoaBrowserService::~nsCocoaBrowserService()
 {
-  TermEmbedding();
+  NS_TermEmbedding();
 }
 
 NS_IMPL_ISUPPORTS3(nsCocoaBrowserService,
@@ -66,6 +67,7 @@ nsresult
 nsCocoaBrowserService::InitEmbedding()
 {
   if (sSingleton) {
+    sNumBrowsers++;
     return NS_OK;
   }
 
@@ -83,6 +85,7 @@ nsCocoaBrowserService::InitEmbedding()
     return NS_ERROR_OUT_OF_MEMORY;
   }
   NS_ADDREF(sSingleton);
+  sNumBrowsers = 1;
 
   nsresult rv = NS_InitEmbedding(nsnull, nsnull);
   if (NS_FAILED(rv)) {
@@ -117,7 +120,9 @@ nsCocoaBrowserService::InitEmbedding()
 void
 nsCocoaBrowserService::TermEmbedding()
 {
-  NS_TermEmbedding();
+  if (--sNumBrowsers == 0) {
+    NS_RELEASE(sSingleton);
+  }
 }
 
 #define NS_ALERT_NIB_NAME "alert"

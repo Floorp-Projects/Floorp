@@ -63,6 +63,7 @@ public:
   nsAlertController* GetAlertController();
 
 private:
+  static PRUint32 sNumBrowsers;
   static nsCocoaBrowserService* sSingleton;
   static nsAlertController* sController;
 };
