@@ -2533,7 +2533,7 @@ jsdService::Off (void)
     mOn = PR_FALSE;
 
 #ifdef DEBUG
-    printf ("+++ JavaScript debuging hooks removed.\n");
+    printf ("+++ JavaScript debugging hooks removed.\n");
 #endif
 
     return NS_OK;
