@@ -38,13 +38,25 @@ nsScannerString::nsScannerString(PRUnichar* aStorageStart,
 }
 
 void
-nsScannerString::InsertBuffer(PRUnichar* aStorageStart, 
-                              PRUnichar* aDataEnd, 
-                              PRUnichar* aStorageEnd)
+nsScannerString::InsertData(const PRUnichar* aDataStart, 
+                            const PRUnichar* aDataEnd)
+  /*
+   * Warning: this routine manipulates the shared buffer list in an unexpected way.
+   *  The original design did not really allow for insertions, but this call promises
+   *  that if called for a point after then end of all extant token strings, that no token string
+   *  nor the work string will be invalidated.
+   */
 {
-  // XXX This is where insertion of a buffer at the head 
-  // of the buffer list will take place pending checkins
-  // from scc.
+  mBufferList->SplitBuffer(mStart, nsSharedBufferList::kSplitCopyRightData);
+    // splitting to the right keeps the work string and any extant token pointing to and
+    //  holding a reference count on the same buffer
+
+  Buffer* new_buffer = nsSharedBufferList::NewSingleAllocationBuffer(aDataStart, aDataEnd-aDataStart, 0);
+    // make a new buffer with all the data to insert...
+    //  BULLSHIT ALERT: we may have empty space to re-use in the split buffer, measure the cost
+    //  of this and decide if we should do the work to fill it
+
+  mBufferList->LinkBuffer(mStart.mBuffer, new_buffer, mStart.mBuffer->mNext);
 }
 
 void
