@@ -57,7 +57,7 @@
 
       <rows>
 
-        <row>
+        <row align="center">
           <html>&namePrefix.label;</html>
           <menulist id="name.prefix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -67,7 +67,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&nameFirst.label;</html>
           <menulist id="name.first" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -77,7 +77,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&nameMiddle.label;</html>
           <menulist id="name.middle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -87,7 +87,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&nameLast.label;</html>
           <menulist id="name.last" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -97,7 +97,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&nameSuffix.label;</html>
           <menulist id="name.suffix" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">

@@ -67,11 +67,11 @@
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
                           label="&treehead.cookiedomain.label;"
-                          onclick="return Wallet_ColumnSort('0', 'cookieList');"/>
+                          onclick="return CookieColumnSort('0', 'cookieList');"/>
                 <treecell class="treecell-header
                           sortDirectionIndicator"
                           label="&treehead.cookiename.label;"
-                          onclick="return Wallet_ColumnSort('1', 'cookieList');"/>
+                          onclick="return CookieColumnSort('1', 'cookieList');"/>
               </treerow>          
             </treehead>
             <treechildren id="cookieList" flex="1"/>
@@ -85,27 +85,27 @@
                 <column flex="1"/>
               </columns>
               <rows>
-                <row>
+                <row align="center">
                   <text value="&props.name.label;"/>
                   <textbox id="ifl_name" readonly="true"/>
                 </row>
-                <row>
+                <row align="center">
                   <text value="&props.value.label;"/>
                   <textbox id="ifl_value" readonly="true"/>
                 </row>
-                <row>
+                <row align="center">
                   <text id="ifl_isDomain" value="&props.domain.label;"/>
                   <textbox id="ifl_host" readonly="true"/>
                 </row>
-                <row>
+                <row align="center">
                   <text value="&props.path.label;"/>
                   <textbox id="ifl_path" readonly="true"/>
                 </row>
-                <row>
+                <row align="center">
                   <text value="&props.secure.label;"/>
                   <textbox id="ifl_isSecure" readonly="true"/>
                 </row>
-                <row>
+                <row align="center">
                   <text value="&props.expires.label;"/>
                   <textbox id="ifl_expires" readonly="true"/>
                 </row>

@@ -67,7 +67,7 @@
 
       <rows>
 
-        <row>
+        <row align="center">
           <html>&phoneDay.label;</html>
           <text value="("/>
           <menulist id="phone.loccode" editable="true" autoSelectMenuitem="false"
@@ -99,7 +99,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&phoneEve.label;</html>
           <text value="("/>
           <menulist id="altphone.loccode" editable="true" autoSelectMenuitem="false"
@@ -131,7 +131,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&phoneFax.label;</html>
           <text value="("/>
           <menulist id="fax.loccode" editable="true" autoSelectMenuitem="false"
@@ -156,7 +156,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&phoneCell.label;</html>
           <text value="("/>
           <menulist id="mobile.loccode" editable="true" autoSelectMenuitem="false"
@@ -181,7 +181,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&phonePager.label;</html>
           <text value="("/>
           <menulist id="pager.loccode" editable="true" autoSelectMenuitem="false"

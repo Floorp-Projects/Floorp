@@ -56,7 +56,7 @@
 
       <rows>
 
-        <row>
+        <row align="center">
           <html>&employName.label;</html>
           <menulist id="business.companyname" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -66,7 +66,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&employTitle.label;</html>
           <menulist id="business.jobtitle" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -76,7 +76,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&employDepartment.label;</html>
           <menulist id="business.department" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">

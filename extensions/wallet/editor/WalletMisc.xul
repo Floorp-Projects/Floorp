@@ -59,7 +59,7 @@
 
       <rows>
 
-        <row>
+        <row align="center">
           <html>&miscSS.label;</html>
           <hbox>
             <menulist id="socsec.prefix" editable="true" autoSelectMenuitem="false" flex="33%" width="0"
@@ -85,9 +85,9 @@
           </hbox>
         </row>
 
-        <row>
+        <row align="center">
           <html>&miscLicense.label;</html>
-          <hbox>
+          <hbox align="center">
             <menulist id="license.number" editable="true" autoSelectMenuitem="false" flex="70" width="0"
                       onchange="Append(this)">
               <menupopup onpopupshowing="Append(this.parentNode)">
@@ -105,7 +105,7 @@
           </hbox>
         </row>
 
-        <row>
+        <row align="center">
           <html>&miscMaiden.label;</html>
           <menulist id="mothersmaidenname" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -115,9 +115,9 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&miscBirthday.label;</html>
-          <hbox>
+          <hbox align="center">
             <text value="&miscBirthdayMonth.label;" />
             <menulist id="bdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
@@ -142,9 +142,9 @@
           </hbox>
         </row>
 
-        <row>
+        <row align="center">
           <html>&miscAnniv.label;</html>
-          <hbox>
+          <hbox align="center">
             <text value="&miscAnnivMonth.label;" />
             <menulist id="anniv.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">

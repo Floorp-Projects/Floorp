@@ -57,7 +57,7 @@
 
       <rows>
 
-        <row>
+        <row align="center">
           <html>&creditType.label;</html>
           <menulist id="card.type" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -67,7 +67,7 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&creditNumber.label;</html>
           <menulist id="card.number" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
@@ -77,9 +77,9 @@
           </menulist>
         </row>
 
-        <row>
+        <row align="center">
           <html>&creditExpires.label;</html>
-          <hbox>
+          <hbox align="center">
             <text value="&creditExpiresMonth.label;" />
             <menulist id="card.expdate.month" editable="true" autoSelectMenuitem="false" flex="40%" width="0"
                       onchange="Append(this)">
@@ -97,7 +97,7 @@
           </hbox>
         </row>
 
-        <row>
+        <row align="center">
           <html>&creditName.label;</html>
           <menulist id="card.name" editable="true" autoSelectMenuitem="false"
                     onchange="Append(this)">
