@@ -2516,7 +2516,6 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                     icalcomponent_add_component( newcalendar, icalcomponent_new_clone( icaltimezone_get_component ( timezone ) ) );
                 nsMemory::Free( tzid );
             }
-            icalcomponent_add_property( vevent, prop );
             m_end->m_datetime.is_date = false; //Because currently we depend on m_datetime being a complete datetime value.
         } else {
             if( tzid ) {
@@ -2536,8 +2535,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
                 nsMemory::Free( tzid );
             } else 
                 prop = icalproperty_new_dtend( m_end->m_datetime );
-            icalcomponent_add_property( vevent, prop );
         }
+        icalcomponent_add_property( vevent, prop );
     }
 
     if( starttzid )
