@@ -53,6 +53,7 @@
 #include "nsInstallExecute.h"
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
+#include "nsInstallResources.h"
 #ifdef NECKO
 #include "nsNeckoUtil.h"
 #endif
@@ -2239,8 +2240,10 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
 		if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
 		{
 			nsAppleSingleDecoder *asd = new nsAppleSingleDecoder(&extractedSpec, &finalSpec);
-		
-			OSErr decodeErr = asd->Decode();
+            OSErr decodeErr = fnfErr;
+
+            if (asd)
+                decodeErr = asd->Decode();
 		
 			if (decodeErr != noErr)
 			{			
@@ -2287,6 +2290,7 @@ char*
 nsInstall::GetResourcedString(const nsString& aResName)
 {
     nsString rscdStr = "";
+    PRBool bStrBdlSuccess = PR_FALSE;
 
     if (mStringBundle)
     {   
@@ -2294,9 +2298,25 @@ nsInstall::GetResourcedString(const nsString& aResName)
         PRUnichar *ucRscdStr = nsnull;
         nsresult rv = mStringBundle->GetStringFromName(ucResName, &ucRscdStr);
         if (NS_SUCCEEDED(rv))
+        {
+            bStrBdlSuccess = PR_TRUE;
             rscdStr = ucRscdStr;
+        }
     }
-
+    
+    /*
+    ** We don't have a string bundle, the necessary libs, or something went wrong
+    ** so we failover to hardcoded english strings so we log something rather
+    ** than nothing due to failure above: always the case for the Install Wizards.
+    */
+    if (!bStrBdlSuccess)
+    {
+        char *cResName = aResName.ToNewCString();
+        rscdStr = nsInstallResources::GetDefaultVal(cResName);
+        if (cResName)
+            Recycle(cResName);
+    }
+    
     return rscdStr.ToNewCString();
 }
 

@@ -42,6 +42,7 @@
 #include "nsXPITriggerInfo.h"
 #include "nsXPInstallManager.h"
 #include "nsInstallProgressDialog.h"
+#include "nsInstallResources.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileStream.h"
 #include "nsProxyObjectManager.h"
@@ -152,16 +153,35 @@ nsXPInstallManager::InitManager(nsXPITriggerInfo* aTriggers)
         if ( NS_SUCCEEDED(rv) )
         {
             nsCOMPtr<nsIPrompt> prompt( do_QueryInterface(wbwin, &rv) );
-            if ( NS_SUCCEEDED(rv) && prompt && mStringBundle )
+            if ( NS_SUCCEEDED(rv) && prompt )
             {
+                PRBool bStrBdlSuccess = PR_FALSE;
                 nsString rsrcName = "ShouldWeInstallMsg";
-                const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
-                PRUnichar* ucRsrcVal = nsnull;
-                rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
-                if (NS_SUCCEEDED(rv) && ucRsrcVal)
+
+                if (mStringBundle)
                 {
-                    prompt->Confirm( ucRsrcVal, &OKtoInstall);
-                    nsCRT::free(ucRsrcVal);
+                    const PRUnichar* ucRsrcName = rsrcName.GetUnicode();
+                    PRUnichar* ucRsrcVal = nsnull;
+                    rv = mStringBundle->GetStringFromName(ucRsrcName, &ucRsrcVal);
+                    if (NS_SUCCEEDED(rv) && ucRsrcVal)
+                    {
+                        prompt->Confirm( ucRsrcVal, &OKtoInstall);
+                        nsCRT::free(ucRsrcVal);
+                        bStrBdlSuccess = PR_TRUE;
+                    }
+                }
+
+                /* failover to default english strings */
+                if (!bStrBdlSuccess)
+                {
+                    char *cResName = rsrcName.ToNewCString();
+                    nsString resVal = nsInstallResources::GetDefaultVal(cResName);
+
+                    if (!resVal.IsEmpty())
+                        prompt->Confirm( resVal.GetUnicode(), &OKtoInstall );
+
+                    if (cResName)
+                        Recycle(cResName);
                 }
             }
         }
