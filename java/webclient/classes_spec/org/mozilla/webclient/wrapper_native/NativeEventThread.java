@@ -226,14 +226,15 @@ public void run()
             
             if (null != listenersToAdd && !listenersToAdd.isEmpty()) {
                 tempEnum = listenersToAdd.elements();
-                    while (tempEnum.hasMoreElements()) {
-                        nativeAddListener(nativeWebShell,
-                                          (WebclientEventListener)
-                                          tempEnum.nextElement());
-                    }
-                    listenersToAdd.clear();
+
+                while (tempEnum.hasMoreElements()) {
+                    WebclientEventListener tempListener = (WebclientEventListener)
+                                                             tempEnum.nextElement();
+                    nativeAddListener(nativeWebShell,tempListener);
                 }
-                doRemoveListeners();
+                listenersToAdd.clear();
+            }
+            doRemoveListeners();
             
         }
     }
@@ -268,9 +269,12 @@ private void doRemoveListeners()
                 }
             }
             else {
-                throw new UnimplementedException("Webclient nativeRemoveListener not yet implemented");
+                //                throw new UnimplementedException("Webclient nativeRemoveListener not yet implemented");
+
+                nativeRemoveListener(nativeWebShell, 
+                                     (WebclientEventListener) listenerObj);
+
             }
-            
         }
         listenersToRemove.clear();
     }
@@ -422,6 +426,15 @@ public native void nativeProcessEvents(int webShellPtr);
 
 public native void nativeAddListener(int webShellPtr,
                                      WebclientEventListener typedListener);
+
+/**
+
+ * Called from Java to allow the native code to remove a listener.
+
+ */ 
+
+public native void nativeRemoveListener(int webShellPtr, 
+                                   WebclientEventListener typedListener);
 
 /**
 

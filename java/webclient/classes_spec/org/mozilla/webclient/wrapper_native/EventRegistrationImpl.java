@@ -90,8 +90,6 @@ public EventRegistrationImpl(WrapperFactory yourFactory,
 
 public void delete()
 {
-    // this removes all listeners
-    nativeEventThread.removeListener(null);
     nativeEventThread = null;
     
     super.delete();
@@ -127,11 +125,12 @@ public void removeDocumentLoadListener(DocumentLoadListener listener)
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
-    
-    throw new UnimplementedException("\nUnimplementedException -----\n API Function EventRegistration.removeDocumentLoadListener has not yet been implemented.\n");
-    
-    //    synchronized(myBrowserControl) {
-    //    }
+    Assert.assert(null != nativeEventThread);
+    ParameterCheck.nonNull(listener);
+   
+    synchronized(myBrowserControl) {
+        nativeEventThread.removeListener(listener);
+    }
 }
 
 public void addMouseListener(MouseListener listener)
@@ -160,11 +159,12 @@ public void removeMouseListener(MouseListener listener)
     ParameterCheck.nonNull(listener);
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
+    Assert.assert(null != nativeEventThread);
+    ParameterCheck.nonNull(listener);
     
-    throw new UnimplementedException("\nUnimplementedException -----\n API Function EventRegistration.removeMouseListener has not yet been implemented.\n");
-    
-    //    synchronized(myBrowserControl) {
-    //    }
+    synchronized(myBrowserControl) {
+        nativeEventThread.removeListener((WebclientEventListener)listener);
+    }
 }
 
 // ----VERTIGO_TEST_START
@@ -179,7 +179,7 @@ public static void main(String [] args)
 
     Log.setApplicationName("EventRegistrationImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.7 2000/07/22 02:48:25 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: EventRegistrationImpl.java,v 1.8 2000/07/26 20:03:09 ashuk%eng.sun.com Exp $");
 
     try {
         org.mozilla.webclient.BrowserControlFactory.setAppData(args[0]);

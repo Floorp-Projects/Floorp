@@ -700,9 +700,13 @@ CBrowserContainer::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
             ::Recycle(urlStr);
         }
     }  
+
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], urlJStr);
+                         DocumentLoader_maskValues[START_DOCUMENT_LOAD_EVENT_MASK], 
+                         urlJStr);
+    
 
     if (urlJStr) {
         ::util_DeleteStringUTF(mInitContext->env, (jstring) urlJStr);
@@ -747,7 +751,10 @@ CBrowserContainer::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel *aCha
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[END_DOCUMENT_LOAD_EVENT_MASK], 
+                         nsnull);
+    
+
 	return NS_OK; 
 } 
 
@@ -768,7 +775,9 @@ CBrowserContainer::OnStartURLLoad(nsIDocumentLoader* loader, nsIChannel* aChanne
 
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[START_URL_LOAD_EVENT_MASK], 
+                         nsnull);
+    
     
 	return NS_OK; 
 } 
@@ -787,9 +796,12 @@ CBrowserContainer::OnProgressURLLoad(nsIDocumentLoader* loader, nsIChannel* aCha
     }
 #endif
 
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, mDocTarget, 
-                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], nsnull);
+                         DocumentLoader_maskValues[PROGRESS_URL_LOAD_EVENT_MASK], 
+                         nsnull);
+    
 
 	return NS_OK;
 } 
@@ -818,11 +830,12 @@ CBrowserContainer::OnStatusURLLoad(nsIDocumentLoader* loader,
     JNIEnv *env = (JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2);
     jstring statusMessage = ::util_NewString(env, (const jchar *) 
                                              aMsg.GetUnicode(), length);
-    
+
     util_SendEventToJava(mInitContext->env, mInitContext->nativeEventThread, 
                          mDocTarget, 
                          DocumentLoader_maskValues[STATUS_URL_LOAD_EVENT_MASK], 
                          (jobject) statusMessage);
+    
     
     if (statusMessage) {
         ::util_DeleteString(mInitContext->env, statusMessage);
@@ -850,6 +863,7 @@ CBrowserContainer::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel, 
                          mInitContext->nativeEventThread, mDocTarget, 
                          DocumentLoader_maskValues[END_URL_LOAD_EVENT_MASK], nsnull);
     
+    
 	return NS_OK; 
 } 
 
@@ -870,11 +884,14 @@ CBrowserContainer::MouseDown(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_DOWN_EVENT_MASK], 
                          properties);
+    
+
 	return NS_OK; 
 }
 
@@ -888,11 +905,14 @@ CBrowserContainer::MouseUp(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_UP_EVENT_MASK], 
                          properties);
+    
+    
 	return NS_OK; 
 }
 
@@ -915,6 +935,8 @@ CBrowserContainer::MouseClick(nsIDOMEvent* aMouseEvent)
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_CLICK_EVENT_MASK], 
                          properties);
+    
+
 	return NS_OK; 
 }
 
@@ -938,6 +960,8 @@ CBrowserContainer::MouseDblClick(nsIDOMEvent* aMouseEvent)
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_DOUBLE_CLICK_EVENT_MASK], 
                          properties);
+    
+
 	return NS_OK; 
 }
 
@@ -951,11 +975,14 @@ CBrowserContainer::MouseOver(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_OVER_EVENT_MASK], 
                          properties);
+    
+    
 	return NS_OK; 
 }
 
@@ -969,11 +996,14 @@ CBrowserContainer::MouseOut(nsIDOMEvent* aMouseEvent)
     PR_ASSERT(nsnull != aMouseEvent);
     
     getPropertiesFromEvent(aMouseEvent);
+
     util_SendEventToJava(mInitContext->env, 
                          mInitContext->nativeEventThread, 
                          mMouseTarget, 
                          DOMMouseListener_maskValues[MOUSE_OUT_EVENT_MASK], 
                          properties);
+    
+    
 	return NS_OK; 
 }
 
@@ -994,6 +1024,7 @@ NS_IMETHODIMP CBrowserContainer::AddMouseListener(jobject target)
                                                 DOMMouseListener_maskNames, 
                                                 DOMMouseListener_maskValues);
     }
+
     mMouseTarget = target;
 
     return rv;
@@ -1011,10 +1042,38 @@ NS_IMETHODIMP CBrowserContainer::AddDocumentLoadListener(jobject target)
                                                 DocumentLoader_maskNames, 
                                                 DocumentLoader_maskValues);
     }
+
     mDocTarget = target;
 
     return rv;
 }
+
+NS_IMETHODIMP CBrowserContainer::RemoveMouseListener()
+{
+    nsresult rv = NS_OK;
+    if (!mInitContext->initComplete) {
+        return NS_ERROR_FAILURE;
+    }
+
+
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mMouseTarget);
+    mMouseTarget = nsnull;
+    return rv;
+}
+
+NS_IMETHODIMP CBrowserContainer::RemoveDocumentLoadListener()
+{
+    nsresult rv = NS_OK;
+    if (!mInitContext->initComplete) {
+        return NS_ERROR_FAILURE;
+    }
+
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mDocTarget);
+    mDocTarget = nsnull;
+    return rv;
+}
+
+
 
 NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
 {
@@ -1024,9 +1083,14 @@ NS_IMETHODIMP CBrowserContainer::RemoveAllListeners()
         mDomEventTarget->RemoveEventListener(eTypeUni, this, PR_FALSE);
         nsCRT::free(eTypeUni);
         mDomEventTarget = nsnull;
-    }
+    }   
+
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mDocTarget);
+    ::util_DeleteGlobalRef((JNIEnv *) JNU_GetEnv(gVm, JNI_VERSION_1_2), mMouseTarget);
+
     mMouseTarget = nsnull;
     mDocTarget = nsnull;
+
     return NS_OK;
 }
 

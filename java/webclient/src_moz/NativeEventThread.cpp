@@ -307,6 +307,52 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         break;
     }
 
+    return;
+}
+
+
+JNIEXPORT void JNICALL 
+Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveListener
+(JNIEnv *env, jobject obj, jint webShellPtr, jobject typedListener)
+{
+    WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
+    if (initContext == nsnull) {
+        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed to nativeRemoveListener");
+        return;
+    }
+    
+    jclass clazz = nsnull;
+    int listenerType = 0;
+
+    while (nsnull != gSupportedListenerInterfaces[listenerType]) {
+        if (nsnull == 
+            (clazz = 
+             ::util_FindClass(env, 
+                              gSupportedListenerInterfaces[listenerType]))) {
+            return;
+        }
+        if (::util_IsInstanceOf(env, typedListener, clazz)) {
+            // We've got a winner!
+            break;
+        }
+        listenerType++;
+    }
+    
+    if (LISTENER_NOT_FOUND == (LISTENER_CLASSES) listenerType) {
+        ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeRemoveListener(): can't find listener \n\tclass for argument");
+        return;
+    }
+
+    PR_ASSERT(initContext->browserContainer);
+    
+    switch(listenerType) {
+    case DOCUMENT_LOAD_LISTENER:
+        initContext->browserContainer->RemoveDocumentLoadListener(); 
+        break;
+    case MOUSE_LISTENER:
+        initContext->browserContainer->RemoveMouseListener(); 
+        break;
+    }
 }
 
 JNIEXPORT void JNICALL 
@@ -315,11 +361,11 @@ Java_org_mozilla_webclient_wrapper_1native_NativeEventThread_nativeRemoveAllList
     WebShellInitContext *initContext = (WebShellInitContext *)webShellPtr;
 
     if (initContext == nsnull) {
-        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed tonativeRemoveAllListeners");
+        ::util_ThrowExceptionToJava(env, "Exception: null initContext passed to nativeRemoveAllListeners");
         return;
     }
 
-    //   removeAllListeners(env, initContext);
+    initContext->browserContainer->RemoveAllListeners();
 }
 
 /**
