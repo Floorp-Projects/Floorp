@@ -998,10 +998,16 @@ interpret_dollar(JSContext *cx, jschar *dp, ReplaceData *rdata, size_t *skip)
     uintN num, tmp;
     JSString *str;
 
-    /* Allow a real backslash (literal "\\") to escape "$1" etc. */
     JS_ASSERT(*dp == '$');
-    if (dp > rdata->repstr->chars && dp[-1] == '\\')
-	return NULL;
+    
+    /* 
+     * Allow a real backslash (literal "\\") to escape "$1" etc.
+     *   Do this for versions less than 1.5 (ECMA 3) only
+     */
+    if (cx->version != JSVERSION_DEFAULT &&
+	    cx->version <= JSVERSION_1_4)
+        if (dp > rdata->repstr->chars && dp[-1] == '\\')
+	    return NULL;
 
     /* Interpret all Perl match-induced dollar variables. */
     res = &cx->regExpStatics;

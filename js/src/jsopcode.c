@@ -2041,16 +2041,34 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		xval = ATOM_BYTES(atom);
 		lval = POP_STR();
 	      do_initprop:
-		todo = Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
-			      lval,
+#ifdef OLD_GETTER_SETTER
+                todo = Sprint(&ss->sprinter, "%s%s%s%s%s:%s",
+                              lval,
                               (lval[1] != '\0') ? ", " : "",
-			      xval,
+                              xval,
                               (lastop == JSOP_GETTER || lastop == JSOP_SETTER)
                               ? " " : "",
                               (lastop == JSOP_GETTER) ? js_getter_str :
                               (lastop == JSOP_SETTER) ? js_setter_str :
                               "",
                               rval);
+#else
+                if (lastop == JSOP_GETTER || lastop == JSOP_SETTER) {
+                    todo = Sprint(&ss->sprinter, "%s%s%s %s%s",
+                              lval,
+                              (lval[1] != '\0') ? ", " : "",
+                              (lastop == JSOP_GETTER) 
+                              ? js_get_str : js_set_str,
+                              xval,
+                              rval + strlen(js_function_str) + 1);
+                } else {
+                    todo = Sprint(&ss->sprinter, "%s%s%s:%s",
+                              lval,
+                              (lval[1] != '\0') ? ", " : "",
+                              xval,
+                              rval);
+                }
+#endif
 		break;
 
 	      case JSOP_INITELEM:

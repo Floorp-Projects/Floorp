@@ -516,15 +516,25 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 if (attrs & JSPROP_GETTER) {
                     val[valcnt] = (jsval)
                         SPROP_GETTER((JSScopeProperty *)prop, obj2);
+#ifdef OLD_GETTER_SETTER
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
+#else
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.getAtom);
+#endif
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
                     val[valcnt] = (jsval)
                         SPROP_SETTER((JSScopeProperty *)prop, obj2);
+#ifdef OLD_GETTER_SETTER
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
+#else
+                    gsop[valcnt] =
+                        ATOM_TO_STRING(cx->runtime->atomState.setAtom);
+#endif
                     valcnt++;
                 }
             } else {
@@ -571,6 +581,15 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             argv[1+j] = STRING_TO_JSVAL(valstr);
             vchars = valstr->chars;
             vlength = valstr->length;
+
+#ifndef OLD_GETTER_SETTER
+            /* Remove 'function ' from beginning of valstr*/
+            if (gsop[j]) {
+                int n = strlen(js_function_str) + 1;
+                vchars += n;
+                vlength -= n;
+            }
+#endif
 
             /* If val[j] is a non-sharp object, consider sharpening it. */
             vsharp = NULL;
@@ -619,6 +638,7 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
             comma = ", ";
 
+#ifdef OLD_GETTER_SETTER
             js_strncpy(&chars[nchars], idstr->chars, idstr->length);
             nchars += idstr->length;
 #if JS_HAS_GETTER_SETTER
@@ -629,7 +649,17 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
             }
 #endif
             chars[nchars++] = ':';
-
+#else
+            if (gsop[j]) {
+                js_strncpy(&chars[nchars], gsop[j]->chars, gsop[j]->length);
+                nchars += gsop[j]->length;
+                chars[nchars++] = ' ';
+            }
+            js_strncpy(&chars[nchars], idstr->chars, idstr->length);
+            nchars += idstr->length;
+            if (!gsop[j])
+                chars[nchars++] = ':';
+#endif
             if (vsharplength) {
                 js_strncpy(&chars[nchars], vsharp, vsharplength);
                 nchars += vsharplength;
@@ -938,6 +968,55 @@ obj_propertyIsEnumerable(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 #endif /* JS_HAS_NEW_OBJ_METHODS */
 
+#if JS_HAS_GETTER_SETTER
+static JSBool
+obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
+{
+    JSAtom *atom;
+    jsval fval = argv[1];
+
+    if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			     JSMSG_BAD_GETTER_OR_SETTER,
+                             js_getter_str);
+	return JS_FALSE;
+    } 
+
+    atom = js_ValueToStringAtom(cx, argv[0]);
+    if (!atom)
+	return JS_FALSE;
+
+    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, 
+                                    (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                                    NULL, JSPROP_GETTER, NULL);
+}
+
+static JSBool
+obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
+{
+    JSAtom *atom;
+    jsval fval = argv[1];
+
+    if (JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+			     JSMSG_BAD_GETTER_OR_SETTER,
+                             js_setter_str);
+	return JS_FALSE;
+    }
+
+    atom = js_ValueToStringAtom(cx, argv[0]);
+    if (!atom)
+	return JS_FALSE;
+
+    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,  NULL, 
+                                   (JSPropertyOp) JSVAL_TO_OBJECT(argv[1]),
+                                   JSPROP_SETTER, NULL);
+}
+#endif /* JS_HAS_GETTER_SETTER */
+
+
 static JSFunctionSpec object_methods[] = {
 #if JS_HAS_TOSOURCE
     {js_toSource_str,         js_obj_toSource,        0, 0, OBJ_TOSTRING_EXTRA},
@@ -953,6 +1032,10 @@ static JSFunctionSpec object_methods[] = {
     {"hasOwnProperty",        obj_hasOwnProperty,     1,0,0},
     {"isPrototypeOf",         obj_isPrototypeOf,      1,0,0},
     {"propertyIsEnumerable",  obj_propertyIsEnumerable, 1,0,0},
+#endif
+#if JS_HAS_GETTER_SETTER
+    {"__defineGetter__",      obj_defineGetter,       2,0,0},
+    {"__defineSetter__",      obj_defineSetter,       2,0,0},
 #endif
     {0,0,0,0,0}
 };

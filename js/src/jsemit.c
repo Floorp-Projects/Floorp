@@ -2239,10 +2239,10 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
         op = JSOP_CALL;
       emit_call:
         pn2 = pn->pn_head;
-        if (JSVERSION_IS_ECMA(cx->version) &&
-            pn2->pn_op == JSOP_NAME &&
+        if (pn2->pn_op == JSOP_NAME &&
             pn2->pn_atom == cx->runtime->atomState.evalAtom) {
-            op = JSOP_EVAL;
+            if (JSVERSION_IS_ECMA(cx->version))
+                op = JSOP_EVAL;
             cg->treeContext.flags |= TCF_FUN_HEAVYWEIGHT;
         }
 
