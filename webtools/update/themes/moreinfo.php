@@ -321,6 +321,7 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
         ?>
         <?php if (mysql_num_rows($sql_result)>"0") { ?>
         </a>
+        <strong><a href="?<?php echo"".uriparams()."&amp;id=$id&amp;page=previews"; ?>">More Previews&#187;</a></strong>
         <?php } ?>
         </p>
         <?php

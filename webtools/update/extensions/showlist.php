@@ -393,7 +393,7 @@ echo"<h2 class=\"first\"><A HREF=\"moreinfo.php?".uriparams()."&amp;id=$id\">$na
         echo"<p class=\"screenshot\">\n";
 
             list($width, $height, $attr) = getimagesize("$websitepath"."$previewuri");
-            echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id&amp;page=previews\"><img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
+            echo"<a href=\"moreinfo.php?".uriparams()."&amp;id=$id\"><img src=\"$previewuri\" height=$height width=$width alt=\"$name preview - $caption\" title=\"$caption\"></a>\n";
 
         echo"</p>\n";
         $preview_minheight=$height-50;
