@@ -219,7 +219,7 @@ function LoadMessage(messageNode)
               just uncomment the next line:
          setTitleFromFolder(message.GetMsgFolder(), message.subject);
       */
-      setTitleFromFolder(message.GetMsgFolder(), null);
+      setTitleFromFolder(message.GetMsgFolder(), "Mail - Netscape");
     }
 
 	  gCurrentDisplayedMessage = uri;
