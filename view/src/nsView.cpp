@@ -69,7 +69,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
           result = nsEventStatus_eConsumeNoDefault;
         }
 
-        NS_RELEASE(rootView);
+        NS_IF_RELEASE(rootView);
         NS_RELEASE(presContext);
         NS_RELEASE(vm);
 
