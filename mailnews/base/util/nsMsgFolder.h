@@ -80,6 +80,7 @@ public:
   NS_IMETHOD RemoveFolderListener(nsIFolderListener * listener);
   NS_IMETHOD GetParent(nsIFolder * *aParent);
   NS_IMETHOD SetParent(nsIFolder * aParent);
+  NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
 
 
   // nsIMsgFolder methods:

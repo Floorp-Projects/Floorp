@@ -29,6 +29,7 @@
 #include "prenv.h"
 
 class nsParseNewMailState;
+class nsIFolder;
 
 class nsPop3Sink : public nsIPop3Sink
 {
@@ -55,6 +56,8 @@ public:
     NS_IMETHOD SetPopServer(nsIPop3IncomingServer *server);
     NS_IMETHOD GetPopServer(nsIPop3IncomingServer* *server);
 
+	nsresult	GetServerFolder(nsIFolder **aFolder);
+
     static char*  GetDummyEnvelope(void);
     
 protected:
@@ -73,7 +76,7 @@ protected:
 #ifdef DEBUG
     PRInt32 m_fileCounter;
 #endif
-    nsOutputFileStream* m_outFileStream;
+    nsIOFileStream* m_outFileStream;
 };
 
 #endif

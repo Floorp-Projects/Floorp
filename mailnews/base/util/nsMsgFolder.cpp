@@ -164,6 +164,12 @@ nsMsgFolder::GetSubFolders(nsIEnumerator* *result)
   return mSubFolders->Enumerate(result);
 }
 
+NS_IMETHODIMP 
+nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **folder)
+{
+	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP
 nsMsgFolder::GetHasSubFolders(PRBool *_retval)
 {

@@ -19,7 +19,8 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIPref.h"
 #include "msgCore.h"
-
+#include "nsIFolder.h"
+#include "nsCOMPtr.h"
 /*
  * base class for nsIMsgIncomingServer - derive your class from here
  * if you want to get some free implementation
@@ -71,6 +72,10 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
 
   NS_IMETHOD GetLocalPath(char * *aLocalPath);
   NS_IMETHOD SetLocalPath(char * aLocalPath);
+
+  NS_IMETHOD GetRootFolder(nsIFolder * *aRootFolder);
+  NS_IMETHOD SetRootFolder(nsIFolder * aRootFolder);
+
   
 private:
   nsIPref *m_prefs;
@@ -80,6 +85,7 @@ protected:
   char *getPrefName(const char *serverKey, const char *pref);
   char *getDefaultPrefName(const char *pref);
   
+  nsCOMPtr <nsIFolder> m_rootFolder;
   nsresult getCharPref(const char *pref, char **);
   nsresult getDefaultCharPref(const char *pref, char **);
   nsresult setCharPref(const char *pref, char *);

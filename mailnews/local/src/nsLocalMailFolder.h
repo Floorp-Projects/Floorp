@@ -107,6 +107,7 @@ public:
 	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
 	NS_IMETHOD EndCopy(PRBool copySucceeded);
 
+	NS_IMETHOD FindSubFolder(const char *subFolderName, nsIFolder **folder);
 
 protected:
 	nsresult ParseFolder(nsFileSpec& path);

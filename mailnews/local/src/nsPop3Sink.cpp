@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <time.h>
 #include "nsParseMailbox.h"
+#include "nsIFolder.h"
+#include "nsIMsgIncomingServer.h"
 
 NS_IMPL_ISUPPORTS(nsPop3Sink, nsIPop3Sink::GetIID());
 
@@ -112,7 +114,7 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
 
     nsFileSpec fileSpec(m_mailDirectory);
     fileSpec += "Inbox";
-    m_outFileStream = new nsOutputFileStream(fileSpec, 
+    m_outFileStream = new nsIOFileStream(fileSpec, 
                                              PR_WRONLY | PR_CREATE_FILE);
 	if (m_outFileStream)
 		m_outFileStream->seek(fileSpec.GetFileSize());
@@ -122,7 +124,11 @@ nsPop3Sink::BeginMailDelivery(PRBool* aBool)
     m_newMailParser = new nsParseNewMailState;
     if (m_newMailParser == nsnull)
       return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = m_newMailParser->Init(fileSpec);
+
+	nsCOMPtr <nsIFolder> serverFolder;
+	nsresult res = GetServerFolder(getter_AddRefs(serverFolder));
+
+    nsresult rv = m_newMailParser->Init(serverFolder, fileSpec, m_outFileStream);
     if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG
@@ -212,6 +218,21 @@ nsPop3Sink::GetPopServer(nsIPop3IncomingServer* *server)
     *server = m_popServer;
     if (*server) NS_ADDREF(*server);
     return NS_OK;
+}
+
+nsresult
+nsPop3Sink::GetServerFolder(nsIFolder **aFolder)
+{
+    if (!aFolder) 
+		return NS_ERROR_NULL_POINTER;
+	if (m_popServer)
+	{
+		nsCOMPtr <nsIMsgIncomingServer> incomingServer = do_QueryInterface(m_popServer);
+		if (incomingServer)
+			return incomingServer->GetRootFolder(aFolder);
+	}
+	*aFolder = nsnull;
+	return NS_ERROR_NULL_POINTER;
 }
 
 char*

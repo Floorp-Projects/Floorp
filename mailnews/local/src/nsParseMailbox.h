@@ -31,16 +31,18 @@
 
 
 #ifdef DEBUG_bienvenu
-//#define DOING_FILTERS
+#define DOING_FILTERS
 #endif
 
 class nsFileSpec;
 class nsByteArray;
 class nsOutputFileStream;
+class nsIOFileStream;
 class nsInputFileStream;
 class nsIMsgFilter;
 class MSG_FolderInfoMail;
 class nsIMsgFilterList;
+class nsIFolder;
 
 
 /* Used for the various things that parse RFC822 headers...
@@ -232,7 +234,7 @@ public:
 	nsParseNewMailState();
 	virtual ~nsParseNewMailState();
 
-    nsresult Init(nsFileSpec &folder);
+    nsresult Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream);
 
 	virtual void	DoneParsingFolder();
 	virtual void	SetUsingTempDB(PRBool usingTempDB, char *tmpDBName);
@@ -256,14 +258,16 @@ protected:
 #ifdef DOING_FILTERS
 	virtual void	ApplyFilters(PRBool *pMoved);
 	virtual nsIMsgFolder *GetTrashFolder();
-	virtual int		MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+	virtual nsresult	MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   nsIMsgFilter *filter);
 	virtual	int			MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr);
 			void		LogRuleHit(nsIMsgFilter *filter, nsIMsgDBHdr *msgHdr);
 	nsCOMPtr <nsIMsgFilterList> m_filterList;
+	nsCOMPtr <nsIFolder> m_rootFolder;
 	nsOutputFileStream	*m_logFile;
+	nsIOFileStream		*m_inboxFileStream;
 #endif // DOING_FILTERS
 	char				*m_tmpdbName;				// Temporary filename of new database
 	PRBool				m_usingTempDB;
@@ -294,7 +298,7 @@ protected:
 	virtual void			ApplyFilters(PRBool *pMoved);
 	
 	virtual MSG_FolderInfoMail *GetTrashFolder();
-	virtual int		MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+	virtual nsresult		MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   nsIMsgFilter *filter);

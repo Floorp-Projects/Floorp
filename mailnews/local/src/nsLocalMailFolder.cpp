@@ -43,8 +43,8 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsString2.h"
 #include "nsLocalFolderSummarySpec.h"
-
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
@@ -1005,6 +1005,41 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   }
   aPathName = *mPath;
   return NS_OK;
+}
+
+// OK, this is kind of silly, but for now, we'll just tack the subFolderName
+// onto our URI, and ask RDF to find it for us.
+NS_IMETHODIMP 
+nsMsgLocalMailFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
+{
+	nsresult rv = NS_OK;
+	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+  
+	if(NS_FAILED(rv)) 
+		return rv;
+
+	nsString2 uri(eOneByte);
+	uri.Append(mURI);
+	uri.Append('/');
+
+	uri.Append(subFolderName);
+
+	nsCOMPtr<nsIRDFResource> res;
+	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
+	if (NS_FAILED(rv))
+		return rv;
+
+	nsCOMPtr<nsIFolder> folder(do_QueryInterface(res, &rv));
+	if (NS_FAILED(rv))
+		return rv;
+	if (aFolder)
+	{
+		*aFolder = folder;
+		NS_ADDREF(*aFolder);
+		return NS_OK;
+	}
+	else
+		return NS_ERROR_NULL_POINTER;
 }
 
 NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages)

@@ -1286,15 +1286,18 @@ nsParseNewMailState::nsParseNewMailState()
     , m_logFile(nsnull)
 #endif
 {
+	m_inboxFileStream = nsnull;
 }
 
 nsresult
-nsParseNewMailState::Init(nsFileSpec &folder)
+nsParseNewMailState::Init(nsIFolder *rootFolder, nsFileSpec &folder, nsIOFileStream *inboxFileStream)
 {
     nsresult rv;
 	m_mailboxName = nsCRT::strdup(folder);
 
 	m_position = folder.GetFileSize();
+	m_rootFolder = rootFolder;
+	m_inboxFileStream = inboxFileStream;
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
 	nsCOMPtr<nsIMsgDatabase> mailDB;
@@ -1520,7 +1523,6 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 			else if (filterType == nsMsgFilterInboxRule)
 			{
 				nsresult matchTermStatus = NS_OK;
-				nsIMsgFilter	*filter;
 
 				{
 #ifdef HAVE_PORT
@@ -1654,7 +1656,7 @@ void nsParseNewMailState::ApplyFilters(PRBool *pMoved)
 							msgHdr->OrFlags(MSG_FLAG_WATCHED, &newFlags);
 							break;
 						case nsMsgFilterActionChangePriority:
-							msgHdr->SetPriority(*(nsMsgPriority *) &value));
+							msgHdr->SetPriority(*(nsMsgPriority *) &value);
 							break;
 						default:
 							break;
@@ -1683,76 +1685,70 @@ int nsParseNewMailState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 	return 0;
 }
 
-int nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   nsIMsgFilter *filter)
 {
 	int err = 0;
-	XP_File		destFid;
-	XP_File		sourceFid = m_file;
+	nsIOFileStream *destFile;
 
 	// Make sure no one else is writing into this folder
-	nsIMsgFolder *lockedFolder = m_mailMaster->FindMailFolder (destFolder, FALSE /*create*/);
+	nsCOMPtr <nsIFolder> destIFolder;
+	nsCOMPtr <nsIMsgFolder> lockedFolder;
+	m_rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
+	lockedFolder = do_QueryInterface(destIFolder);
+
 	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (this)) != 0)
 		return err;
 
-	if (sourceFid == 0)
-	{
-		sourceFid = XP_FileOpen(m_mailboxName,
-										xpMailFolder, XP_FILE_READ_BIN);
-	}
-	XP_ASSERT(sourceFid != 0);
-	if (sourceFid == 0)
+	NS_ASSERTION(m_inboxFileStream != 0, "no input file stream");
+	if (m_inboxFileStream == 0)
 	{
 #ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
+		NS_ASSERTION(PR_FALSE, "couldn't get source file in move filter");
 #endif
 		if (lockedFolder)
 			lockedFolder->ReleaseSemaphore (this);
 
-		return MK_MSG_FOLDER_UNREADABLE;	// ### dmb
+		return NS_MSG_FOLDER_UNREADABLE;	// ### dmb
 	}
 
 	PRUint32 messageOffset;
 
 	mailHdr->GetMessageOffset(&messageOffset);
-	XP_FileSeek (sourceFid, messageOffset, SEEK_SET);
+	m_inboxFileStream->seek(PR_SEEK_SET, messageOffset);
 	int newMsgPos;
 
-	destFid = XP_FileOpen(destFolder, xpMailFolder, XP_FILE_APPEND_BIN);
+	nsFileSpec destDBSpec(destFolder);
+	destFile = new nsIOFileStream(destDBSpec, PR_WRONLY | PR_CREATE_FILE);
 
-	if (!destFid) 
+	if (!destFile) 
 	{
 #ifdef DEBUG_bienvenu
-		XP_ASSERT(FALSE);
+		NS_ASSERTION(PR_FALSE, "out of memory");
 #endif
 		if (lockedFolder)
 			lockedFolder->ReleaseSemaphore (this);
-		XP_FileClose (sourceFid);
-		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
+		return  NS_MSG_ERROR_WRITING_MAIL_FOLDER;
 	}
 
-	if (!XP_FileSeek (destFid, 0, SEEK_END))
-	{
-		newMsgPos = ftell (destFid);
-	}
-	else
-	{
-		XP_ASSERT(FALSE);
-		if (lockedFolder)
-			lockedFolder->ReleaseSemaphore (this);
-		XP_FileClose (destFid);
-		XP_FileClose (sourceFid);
-		return  MK_MSG_ERROR_WRITING_MAIL_FOLDER;
-	}
+	destFile->seek(PR_SEEK_END, 0);
+	newMsgPos = destFile->tell();
 
-	nsCOMPtr <nsIMsgDatabase> mailDb = nsnull;
+	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+	nsCOMPtr<nsIMsgDatabase> destMailDB;
+	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
+	if (NS_SUCCEEDED(rv) && mailDBFactory)
+	{
+		nsFileSpec destDBSpec(destFolder);
+		rv = mailDBFactory->Open(destDBSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
+	}
+	NS_ASSERTION(destMailDB, "failed to open mail db parsing folder");
 	// don't force upgrade in place - open the db here before we start writing to the 
 	// destination file because XP_Stat can return file size including bytes written...
-	nsresult msgErr = nsMailDatabase::Open (destFolder, TRUE, &mailDb);	
 	PRUint32 length;
-	mailHdr->SetMessageSize(&length);
+	mailHdr->GetMessageSize(&length);
 
 	m_ibuffer_size = 10240;
 	m_ibuffer = nsnull;
@@ -1766,26 +1762,26 @@ int nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	NS_ASSERTION(m_ibuffer != nsnull, "couldn't get memory to move msg");
 	while ((length > 0) && m_ibuffer)
 	{
-		PRUint32 nRead = XP_FileRead (m_ibuffer, length > m_ibuffer_size ? m_ibuffer_size  : length, sourceFid);
+		PRUint32 nRead = m_inboxFileStream->read (m_ibuffer, length > m_ibuffer_size ? m_ibuffer_size  : length);
 		if (nRead == 0)
 			break;
 		
 		// we must monitor the number of bytes actually written to the file. (mscott)
-		if (XP_FileWrite (m_ibuffer, nRead, destFid) != nRead) 
+		if (destFile->write(m_ibuffer, nRead) != nRead) 
 		{
-			XP_FileClose(sourceFid);
-			XP_FileClose(destFid);     
+			destFile->close();     
 
 			// truncate  destination file in case message was partially written
-			XP_FileTruncate(destFolder,xpMailFolder,newMsgPos);
+			// ### how to do this with a stream?
+//			destFile->truncate(destFolder,xpMailFolder,newMsgPos);
 
 			if (lockedFolder)
 				lockedFolder->ReleaseSemaphore(this);
 
-			if (mailDb)
-				mailDb->Close(PR_TRUE);
+			if (destMailDB)
+				destMailDB->Close(PR_TRUE);
 
-			return MK_MSG_ERROR_WRITING_MAIL_FOLDER;   // caller (ApplyFilters) currently ignores error conditions
+			return NS_MSG_ERROR_WRITING_MAIL_FOLDER;   // caller (ApplyFilters) currently ignores error conditions
 		}
 			
 		length -= nRead;
@@ -1794,12 +1790,12 @@ int nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	NS_ASSERTION(length == 0, "didn't read all of original message in filter move");
 
 	// if we have made it this far then the message has successfully been written to the new folder
-	// now add the header to the mailDb.
-	if (NS_SUCCEEDED(msgErr))
+	// now add the header to the destMailDB.
+	if (NS_SUCCEEDED(rv))
 	{
 		nsIMsgDBHdr *newHdr = nsnull;
 
-		msgErr = mailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, &newHdr);
+		nsresult msgErr = destMailDB->CopyHdrFromExistingHdr(newMsgPos, mailHdr, &newHdr);
 		if (NS_SUCCEEDED(msgErr) && newHdr)
 		{
 			PRUint32 newFlags;
@@ -1807,41 +1803,41 @@ int nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 			newHdr->SetMessageKey (newMsgPos); 
 			newHdr->OrFlags(MSG_FLAG_NEW, &newFlags);
 
-			msgErr = mailDb->AddNewHdrToDB (newHdr, m_updateAsWeGo);
+			msgErr = destMailDB->AddNewHdrToDB (newHdr, m_updateAsWeGo);
 		}
 	}
 	else
 	{
-		if (mailDb)
+		if (destMailDB)
 		{
-			mailDb->Close(PR_TRUE);
-			mailDb = nsnull;
+			destMailDB->Close(PR_TRUE);
+			destMailDB = nsnull;
 		}
 	}
 
-	XP_FileClose(sourceFid);
-	XP_FileClose(destFid);
-	int truncRet = XP_FileTruncate(m_mailboxName, xpMailFolder, mailHdr->GetMessageOffset());
-	XP_ASSERT(truncRet >= 0);
+	destFile->close();
+	// How are we going to do this with a stream?
+//	int truncRet = XP_FileTruncate(m_mailboxName, xpMailFolder, messageOffset);
+//	NS_ASSERTION(truncRet >= 0, "unable to truncate file");
 
 	if (lockedFolder)
 		lockedFolder->ReleaseSemaphore (this);
 
-	// tell outgoing parser that we've truncated the Inbox
-	m_parseMsgState->Init(mailHdr->GetMessageOffset());
-	nsIMsgFolder *folder = m_mailMaster->FindMailFolder(destFolder, FALSE);
+	// tell parser that we've truncated the Inbox
+	mailHdr->GetMessageOffset(&messageOffset);
+	nsParseMailMessageState::Init(messageOffset);
 
-	if (folder)
-		folder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+	if (lockedFolder)
+		lockedFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
 
-	if (mailDb != nsnull)
+	if (destMailDB != nsnull)
 	{
 		// update the folder size so we won't reparse.
-		UpdateDBFolderInfo(mailDb, destFolder);
-		if (folder != nsnull)
-			folder->SummaryChanged();
+		UpdateDBFolderInfo(destMailDB, destFolder);
+		if (lockedFolder != nsnull)
+			lockedFolder->SummaryChanged();
 
-		mailDb->Close(PR_TRUE);
+		destMailDB->Close(PR_TRUE);
 	}
 	// We are logging the hit with the old mailHdr, which should work, as long
 	// as LogRuleHit doesn't assume the new hdr.
@@ -1930,12 +1926,12 @@ int ParseIMAPMailboxState::MarkFilteredMessageRead(nsIMsgDBHdr *msgHdr)
 }
 
 
-int ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
+nsresult ParseIMAPMailboxState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
 											   char *destFolder,
 											   nsIMsgFilter *filter)
 {
-	int err = eUNKNOWN;
+	nsresult err = NS_OK;
 	
 	if (fUrlQueue && fUrlQueue->GetPane())
 	{

@@ -64,6 +64,22 @@ nsMsgIncomingServer::SetKey(char * serverKey)
     return rv;
 }
     
+NS_IMETHODIMP
+nsMsgIncomingServer::SetRootFolder(nsIFolder * aRootFolder)
+{
+	m_rootFolder = aRootFolder;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgIncomingServer::GetRootFolder(nsIFolder * *aRootFolder)
+{
+	if (!aRootFolder)
+		return NS_ERROR_NULL_POINTER;
+	*aRootFolder = m_rootFolder;
+	NS_ADDREF(*aRootFolder);
+	return NS_OK;
+}
     
 char *
 nsMsgIncomingServer::getPrefName(const char *serverKey,

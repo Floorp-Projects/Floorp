@@ -381,6 +381,12 @@ nsMsgAccountManagerDataSource::createServerResources(nsISupports *element,
   rv = rdf->GetResource(serverUri, getter_AddRefs(serverResource));
   if (NS_FAILED(rv)) return PR_TRUE;
 
+  // make incoming server know about its root server folder so we 
+  // can find sub-folders given an incoming server.
+  nsCOMPtr <nsIFolder> serverFolder = do_QueryInterface(serverResource);
+  if (serverFolder)
+	server->SetRootFolder(serverFolder);
+
   // add the resource to the array
   rv = servers->AppendElement(serverResource);
   if (NS_FAILED(rv)) return PR_TRUE;
