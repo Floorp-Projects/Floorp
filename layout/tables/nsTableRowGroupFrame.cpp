@@ -1818,7 +1818,7 @@ nsTableRowGroupFrame::FindFrameAt(PRInt32 aLineNumber, nscoord aX, nsIFrame** aF
 }
 
 NS_IMETHODIMP
-nsTableRowGroupFrame::GetNextSibling(nsIFrame*& aFrame, PRInt32 aLineNumber)
+nsTableRowGroupFrame::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
 {
   NS_ENSURE_ARG_POINTER(aFrame);
 
