@@ -81,6 +81,11 @@ private:
                    const PRUnichar *messageName,
                    const PRUnichar *showAgainName);
   
+  NSString *GetCommonDialogLocaleString(const char *s);
+  NSString *GetButtonStringFromFlags(PRUint32 btnFlags, PRUint32 btnIDAndShift,
+                                     const PRUnichar *btnTitle);
+
+  nsCOMPtr<nsIStringBundle> mCommonDialogStringBundle;
   nsCOMPtr<nsIStringBundle> mSecurityStringBundle;
   
   static nsCocoaBrowserService* sSingleton;
