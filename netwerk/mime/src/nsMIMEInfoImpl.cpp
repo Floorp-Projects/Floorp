@@ -39,6 +39,7 @@ nsMIMEInfoImpl::InExtensions(nsIAtom* anIAtom) {
     nsString2 extension;
     anIAtom->ToString(extension);
     
+    // XXX this is broken. need to use gessner's tokenizer stuff to delimit the commas
     if (mFileExtensions.Find(extension) == -1)
         return PR_FALSE;
     return PR_TRUE;
