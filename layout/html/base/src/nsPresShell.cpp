@@ -5018,7 +5018,17 @@ struct ReflowEvent : public PLEvent {
       PRBool isBatching;
       ps->SetReflowEventStatus(PR_FALSE);
       ps->GetReflowBatchingStatus(&isBatching);
-      if (!isBatching) ps->ProcessReflowCommands(PR_TRUE);
+      if (!isBatching) {
+        nsCOMPtr<nsIViewManager> viewManager;
+        // Set a kung fu death grip on the view manager associated with the pres shell
+        // before processing that pres shell's reflow commands.  Fixes bug 54868.
+        presShell->GetViewManager(getter_AddRefs(viewManager));
+        ps->ProcessReflowCommands(PR_TRUE);
+
+        // Now, explicitly release the pres shell before the view manager
+        presShell = nsnull;
+        viewManager = nsnull;
+      }
     }
     else
       mPresShell = 0;
