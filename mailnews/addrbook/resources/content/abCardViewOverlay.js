@@ -88,13 +88,8 @@ function DisplayCardViewPane(abNode)
 	var visible;
 	
 	// set fields in card view pane
-	// FIX ME - waiting for bug fix... cvSetVisible(data.CardViewBox, true);
-	
+
 	cvSetNode(data.CardTitle, "Card for " + card.DisplayName);
-	
-	// FIX ME!
-	// Code needs to be fixed to make the entire box visible or not.  Current hack just hides
-	// the header of the section that should be visible.
 	
 	// Name section
 	cvSetNode(data.cvhName, name);
@@ -130,12 +125,16 @@ function DisplayCardViewPane(abNode)
 	visible = cvSetCityStateZip(data.cvWorkCityStZip, card.WorkCity, card.WorkState, card.WorkZipCode) || visible;
 	visible = cvSetNode(data.cvWorkCountry, card.WorkCountry) || visible;
 	cvSetVisible(data.cvhWork, visible);
+
+	// make the card view box visible
+	cvSetVisible(top.cvData.CardViewBox, true);
 }
 
 function ClearCardViewPane()
 {
-	// FIX ME - waiting for bug fix...cvSetVisible(data.CardViewBox, false);
+	cvSetVisible(top.cvData.CardViewBox, false);
 
+	/* can remove this code now that boxes handle display:none
 	// HACK - we need to be able to set the entire box or div to display:none when bug fixed
 	var data = top.cvData;
 
@@ -149,6 +148,7 @@ function ClearCardViewPane()
 	// Home section
 	cvSetVisible(data.cvhHome, false);
 	cvSetVisible(data.cvHomeAddress, false);
+	cvSetVisible(data.cvHomeAddress2, false);
 	cvSetVisible(data.cvHomeCityStZip, false);
 	cvSetVisible(data.cvHomeCountry, false);
 	// Other section
@@ -171,8 +171,11 @@ function ClearCardViewPane()
 	cvSetVisible(data.cvDepartment, false);
 	cvSetVisible(data.cvCompany, false);
 	cvSetVisible(data.cvWorkAddress, false);
+	cvSetVisible(data.cvWorkAddress2, false);
 	cvSetVisible(data.cvWorkCityStZip, false);
 	cvSetVisible(data.cvWorkCountry, false);
+	
+	*/
 }
 
 function cvSetNodeWithLabel(node, label, text)
