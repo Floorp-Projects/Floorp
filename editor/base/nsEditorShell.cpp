@@ -823,6 +823,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
   
+  // now all the listeners are set up, we can call PostCreate
+  rv = editor->PostCreate();
+  if (NS_FAILED(rv)) return rv;
+  
 #if 0
   // get the URL of the page we are editing
   // does not work currently, because file URL has /usr/local/bin crap in it.

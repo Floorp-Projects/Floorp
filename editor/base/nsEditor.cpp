@@ -596,12 +596,19 @@ nsEditor::Init(nsIDOMDocument *aDoc, nsIPresShell* aPresShell)
   // Set the selection to the beginning:
   BeginningOfDocument();
 
+  NS_POSTCONDITION(mDoc && mPresShell, "bad state");
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsEditor::PostCreate()
+{
   // update the UI with our state
   NotifyDocumentListeners(eDocumentCreated);
   NotifyDocumentListeners(eDocumentStateChanged);
   
-  NS_POSTCONDITION(mDoc && mPresShell, "bad state");
-
   return NS_OK;
 }
 
