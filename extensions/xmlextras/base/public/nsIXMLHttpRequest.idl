@@ -149,8 +149,8 @@ interface nsIXMLHttpRequest : nsISupports {
    * the request is not sent until the <code>send</code> method 
    * is invoked.
    *
-   * @param method The HTTP method - either "POST" or "GET". Ignored
-   *               if the URL is not a HTTP URL.
+   * @param method The HTTP method, for example "POST" or "GET". Ignored
+   *               if the URL is not a HTTP(S) URL.
    * @param url The URL to which to send the request.
    * @param async Whether the request is synchronous or asynchronous
    *              i.e. whether send returns only after the response
