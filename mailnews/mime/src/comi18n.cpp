@@ -1214,7 +1214,7 @@ static PRInt32 INTL_ConvertToUnicode(const char* from_charset, const char* aBuff
     res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
     if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
       PRInt32 srcLen = aLength;
-      res = decoder->Length(aBuffer, 0, srcLen, &unicharLength);
+      res = decoder->GetMaxLength(aBuffer, srcLen, &unicharLength);
       // allocale an output buffer
       unichars = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
       if (unichars != nsnull) {
@@ -1465,7 +1465,7 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
   PRInt32 dstLength = 0;
   char *dstPtr;
 
-  res = decoder->Length(inBuffer, 0, srcLen, &unicharLength);
+  res = decoder->GetMaxLength(inBuffer, srcLen, &unicharLength);
   // allocate temporary buffer to hold unicode string
   unichars = new PRUnichar[unicharLength];
   if (unichars == nsnull) {
