@@ -89,7 +89,7 @@ public:
     nsresult
     AddWidgetItem(nsIContent* aMenuItemElement,
                   nsIRDFResource* aProperty,
-                  nsIRDFResource* aValue);
+                  nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
 
     nsresult 
     GetRootWidgetAtom(nsIAtom** aResult) {
