@@ -396,7 +396,7 @@ function DocumentHasBeenSaved()
 function CheckAndSaveDocument(reasonToSave, allowDontSave)
 {
   var document = editorShell.editorDocument;
-  if (!editorShell.documentModified)
+  if (!editorShell.documentModified && !gHTMLSourceChanged)
     return true;
 
   // call window.focus, since we need to pop up a dialog
@@ -422,15 +422,19 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   						  null, null,
   						  (allowDontSave ? window.editorShell.GetString("DontSave") : null),
   						  null, {value:0}, result);
-   if (result.value == 0)
-   {
-     // Save
-     var success = window.editorShell.saveDocument(false, false, editorShell.contentsMIMEType);
-     return success;
-   }
 
-   if (result.value == 2) // "Don't Save"
-     return true;
+  if (result.value == 0)
+  {
+    // Save, but first finish HTML source mode
+    if (gHTMLSourceChanged)
+      FinishHTMLSource();
+
+    var success = window.editorShell.saveDocument(false, false, editorShell.contentsMIMEType);
+    return success;
+  }
+
+  if (result.value == 2) // "Don't Save"
+    return true;
 
   // Default or result.value == 1 (Cancel)
   return false;
