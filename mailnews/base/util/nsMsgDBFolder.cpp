@@ -453,17 +453,23 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 	nsresult rv = NS_OK;
 
 	PRUint32 changedFlags = oldFlags ^ newFlags;
-	if((changedFlags & MSG_FLAG_READ) || (changedFlags & MSG_FLAG_REPLIED)
-		|| (changedFlags & MSG_FLAG_FORWARDED) || (changedFlags & MSG_FLAG_IMAP_DELETED)
-		|| (changedFlags & MSG_FLAG_NEW) || (changedFlags & MSG_FLAG_OFFLINE))
+   
+    if((changedFlags & MSG_FLAG_READ)  && (changedFlags & MSG_FLAG_NEW))
+    {
+      //..so..if the msg is read in the folder and the folder has new msgs clear the account level and status bar biffs.
+      rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
+      rv = SetBiffState(newFlags);
+    }
+    else if(changedFlags & (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED
+      | MSG_FLAG_IMAP_DELETED | MSG_FLAG_NEW | MSG_FLAG_OFFLINE))
 	{
-		rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
-	}
-	else if((changedFlags & MSG_FLAG_MARKED))
-	{
-		rv = NotifyPropertyFlagChanged(item, kFlaggedAtom, oldFlags, newFlags);
-	}
-		return rv;
+      rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
+    }
+    else if((changedFlags & MSG_FLAG_MARKED))
+    {
+      rv = NotifyPropertyFlagChanged(item, kFlaggedAtom, oldFlags, newFlags);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder:: DownloadMessagesForOffline(nsISupportsArray *messages, nsIMsgWindow *)
