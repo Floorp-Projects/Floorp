@@ -45,7 +45,7 @@
 //#include "nsEscape.h"
 
 #include "nsIEventQueueService.h"
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);

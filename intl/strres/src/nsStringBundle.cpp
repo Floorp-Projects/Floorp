@@ -24,7 +24,7 @@
 #include "nsID.h"
 #include "nsFileSpec.h"
 #include "nsString.h"
-#include "nsIPersistentProperties.h"
+#include "nsIPersistentProperties2.h"
 #include "nsIStringBundle.h"
 #include "nscore.h"
 #include "nsILocale.h"
