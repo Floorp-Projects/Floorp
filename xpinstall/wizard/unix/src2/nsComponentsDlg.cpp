@@ -246,8 +246,6 @@ nsComponentsDlg::Parse(nsINIParser *aParser)
             currDepComp = mCompList->GetCompByShortDesc(currDepName);
             if (!currDepComp) // unexpected dependee name
                 continue;
-            currDepComp->SetSelected(); 
-            currDepComp->DepAddRef();
 
             currIdxComp->AddDependee(currDepName);
         }
