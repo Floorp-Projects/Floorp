@@ -37,7 +37,11 @@
 // Other
 #include "nsIWebBrowser.h"
 
+#include <vector>
+using namespace std;
+
 class CBrowserWindow;
+class CBrowserShell;
 
 class CWebBrowserChrome : public nsIWebBrowserChrome,
                            public nsIWebProgressListener,
@@ -59,12 +63,14 @@ protected:
    CWebBrowserChrome();
    virtual ~CWebBrowserChrome();
 
-   void BrowserWindow(CBrowserWindow* aBrowserWindow);
-   CBrowserWindow* BrowserWindow();
+   CBrowserWindow*& BrowserWindow();
+   CBrowserShell*& BrowserShell();
 
 protected:
    CBrowserWindow*  mBrowserWindow;
-   nsCOMPtr<nsIWebBrowser> mWebBrowser;
+   CBrowserShell*   mBrowserShell;
+   
+   static vector<CWebBrowserChrome*> mgBrowserList;
 };
 
 #endif /* __CWebBrowserChrome__ */
