@@ -670,7 +670,9 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *off
         if (NS_SUCCEEDED(rv))
           rv = (*aFileStream)->Read(startOfMsg, sizeof(startOfMsg), &bytesRead);
 
-        if (NS_FAILED(rv) || bytesRead != sizeof(startOfMsg) || strncmp(startOfMsg, "From ", 5))
+        // check if message starts with From, or is a draft and starts with FCC
+        if (NS_FAILED(rv) || bytesRead != sizeof(startOfMsg) || 
+          (strncmp(startOfMsg, "From ", 5) && (! (mFlags & MSG_FOLDER_FLAG_DRAFTS) || strncmp(startOfMsg, "FCC", 3))))
         {
           if (mDatabase)
             mDatabase->MarkOffline(msgKey, PR_FALSE, nsnull);
