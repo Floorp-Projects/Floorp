@@ -249,18 +249,18 @@ sub print_table_body {
 
 sub print_bloat_delta {
   my ($value, $compare) = @_;
-  my $units = ' ';
+  my $units = 'B';
   $value = $value || 0;
   $compare = $compare || 0;
 
   if ($value >= 1000000) {
     $value = int($value / 1000000);
     $min =   int($min / 1000000);
-    $units = 'M';
-  } elsif ($value >= 1000) {
+    $units = 'MB';
+  } elsif ($value >= 10000) {
     $value = int($value / 1000);
     $min =   int($min / 1000);
-    $units = 'K';
+    $units = 'KB';
   }
 
   # Took out colors because the numbers jump around too much. -slamm
