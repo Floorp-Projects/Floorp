@@ -2896,7 +2896,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
         }
       }
     }
-  } else 
+  } else {
 #if 0 // XXX - this is a partial fix for Bug 29990
     if (mButtonDown) {
     PRBool multipleSelections = PR_FALSE;
@@ -2916,6 +2916,7 @@ nsListControlFrame::MouseMove(nsIDOMEvent* aMouseEvent)
     }
   }
 #endif
+  }
   return NS_OK;
 }
 

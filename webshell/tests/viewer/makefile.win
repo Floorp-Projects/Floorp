@@ -111,6 +111,7 @@ WIN_LIBS= \
   shell32.lib               \
   ole32.lib                  \
   imm32.lib                  \
+  uuid.lib                   \
   comdlg32.lib
 
 LLFLAGS=-SUBSYSTEM:CONSOLE
