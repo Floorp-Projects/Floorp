@@ -230,15 +230,11 @@ ifdef DIRS
 LOOP_OVER_DIRS		=					\
 	@for d in $(DIRS); do					\
 		$(UPDATE_TITLE);				\
-		if test -f $$d/Makefile; then			\
-			set $(EXIT_ON_ERROR);			\
-			echo "cd $$d; $(MAKE) $@";		\
-			oldDir=`pwd`;				\
-			cd $$d; $(MAKE) $@; cd $$oldDir;	\
-			set +e;					\
-		else						\
-			echo "Skipping non-directory $$d...";	\
-		fi;						\
+		set $(EXIT_ON_ERROR);				\
+		echo "cd $$d; $(MAKE) $@";			\
+		oldDir=`pwd`;					\
+		cd $$d; $(MAKE) $@; cd $$oldDir;		\
+		set +e;						\
 		$(CLICK_STOPWATCH);				\
 	done
 endif
@@ -295,6 +291,17 @@ all_platforms:: $(NFSPWD)
 
 $(NFSPWD):
 	cd $(@D); $(MAKE) $(@F)
+endif
+
+# Target to only regenerate makefiles
+makefiles: $(SUBMAKEFILES)
+ifdef DIRS
+	@for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
+		$(UPDATE_TITLE);				\
+		oldDir=`pwd`;					\
+		echo "cd $$d; $(MAKE) $@";			\
+		cd $$d; $(MAKE) $@; cd $$oldDir;		\
+	done
 endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS)
@@ -686,14 +693,10 @@ endif #STRICT_CPLUSPLUS_SUFFIX
 
 ifdef DIRS
 $(DIRS)::
-	@if test -d $@; then				\
-		set $(EXIT_ON_ERROR);			\
-		echo "cd $@; $(MAKE)";			\
-		cd $@; $(MAKE);				\
-		set +e;					\
-	else						\
-		echo "Skipping non-directory $@...";	\
-	fi;						\
+	@set $(EXIT_ON_ERROR);			\
+	echo "cd $@; $(MAKE)";			\
+	cd $@; $(MAKE);				\
+	set +e;					\
 	$(CLICK_STOPWATCH)
 endif
 
@@ -705,7 +708,8 @@ endif
 Makefile: Makefile.in
 	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH)
 
-$(SUBMAKEFILES): % : %.in
+# VPATH does not work on some machines in this case, so add $(srcdir)
+$(SUBMAKEFILES): % : $(srcdir)/%.in
 	@$(PERL) $(topsrcdir)/build/autoconf/make-makefile -d $(DEPTH) $@
 
 ###############################################################################
@@ -1296,7 +1300,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs realclean run_viewer run_apprunner $(DIRS) FORCE
+.PHONY: all all_platforms alltags boot checkout clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner $(DIRS) FORCE
 
 # Used as a dependency to force targets to rebuild
 FORCE:
