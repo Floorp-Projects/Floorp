@@ -4,7 +4,7 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/MPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
@@ -67,7 +67,7 @@ function refresh_xalan() {
 function populate_xalan() {
   var upper=pop_last+pop_chunk;
   var current,test,i,j, lName, re=/\/err\//;
-  var searchField = matchFieldTag.getAttribute("data");
+  var searchField = matchFieldTag.getAttribute("value");
   var matchValue = matchNameTag.value;
   if (matchValue.length==0) matchValue='.';
   var matchRE = new RegExp(matchValue);
@@ -76,8 +76,8 @@ function populate_xalan() {
     test = xalan_elems.childNodes.item(2*i+1);
     if (!test.getAttribute("file").match(re)){
       current.setAttribute("id", test.getAttribute("file"));
-      current.childNodes.item(1).setAttribute("value",
-  	  test.getAttribute("file"));
+      current.childNodes.item(1).setAttribute("label",
+      test.getAttribute("file"));
       for (j=1;j<test.childNodes.length;j+=2){
         lName = test.childNodes.item(j).localName;
         if (lName=="purpose")
@@ -85,7 +85,7 @@ function populate_xalan() {
                              test.childNodes.item(j).firstChild.nodeValue);
         if (lName=="comment")
           current.childNodes.item(3).setAttribute("value",
-  	                         test.childNodes.item(j).firstChild.nodeValue);
+                             test.childNodes.item(j).firstChild.nodeValue);
       }
       if (matchRE.test(current.childNodes.item(searchField)
                        .getAttribute("value"))) target.appendChild(current);
@@ -138,7 +138,7 @@ function hide_checked(yes){
 }
 
 function select(){
-  var searchField = matchFieldTag.getAttribute("data");
+  var searchField = matchFieldTag.getAttribute("value");
   var matchRE = new RegExp(matchNameTag.value);
   var nds = target.childNodes;
   for (i=1;i<nds.length;i++){

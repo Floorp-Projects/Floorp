@@ -60,9 +60,9 @@
    <text class="header label" value="&pageInfo.description;"/>
    <tabcontrol id="tabcontrol" flex="1">
     <tabbox id="tabbox">
-      <tab id="generalTab" value="&pageInfo.generalTab;"/>
-      <tab id="formsTab" value="&pageInfo.formsTab;" hidden="true" />
-      <tab id="imagesTab" value="&pageInfo.imagesTab;" hidden="true" />
+      <tab id="generalTab" label="&pageInfo.generalTab;"/>
+      <tab id="formsTab" label="&pageInfo.formsTab;" hidden="true" />
+      <tab id="imagesTab" label="&pageInfo.imagesTab;" hidden="true" />
       <!-- Others added by overlay -->
     </tabbox>
     <tabpanel id="tabpanel" flex="1">
@@ -107,9 +107,9 @@
         </treecolgroup>
         <treehead>
           <treerow>
-            <treecell value="&pageInfo.formAction;" class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.formMethod;" class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.formName;"   class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.formAction;" class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.formMethod;" class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.formName;"   class="treecell-header treecell-inset-header"/>
           </treerow>
         </treehead>
         <treechildren id="formChildren" flex="1"/>
@@ -131,10 +131,10 @@
         </treecolgroup>
         <treehead>
           <treerow>
-            <treecell value="&pageInfo.imageURL;"     class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.imageWidth;"   class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.imageHeight;"  class="treecell-header treecell-inset-header"/>
-            <treecell value="&pageInfo.imageAltText;" class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.imageURL;"     class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.imageWidth;"   class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.imageHeight;"  class="treecell-header treecell-inset-header"/>
+            <treecell label="&pageInfo.imageAltText;" class="treecell-header treecell-inset-header"/>
           </treerow>
         </treehead>        
         <treechildren id="imagesChildren" flex="1"/>

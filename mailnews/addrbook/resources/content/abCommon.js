@@ -23,7 +23,7 @@ var ResultsPaneController =
     switch (command) {
       case "cmd_selectAll":
         return true;
-      
+
       case "cmd_delete":
       case "button_delete":
         var numSelected = 0;
@@ -36,7 +36,7 @@ var ResultsPaneController =
             goSetMenuValue(command, "valueCards");
         }
         return (numSelected > 0);
-      
+
       default:
         return false;
     }
@@ -58,7 +58,7 @@ var ResultsPaneController =
         break;
     }
   },
-  
+
   onEvent: function(event)
   {
     // on blur events set the menu item texts back to the normal values
@@ -118,7 +118,7 @@ var DirPaneController =
         break;
     }
   },
-  
+
   onEvent: function(event)
   {
     // on blur events set the menu item texts back to the normal values
@@ -138,7 +138,7 @@ function SetupCommandUpdateHandlers()
   // dir pane
   if (dirTree)
     dirTree.controllers.appendController(DirPaneController);
-  
+
   // results pane
   if (resultsTree)
     resultsTree.controllers.appendController(ResultsPaneController);
@@ -150,7 +150,7 @@ function AbNewCard()
   var selectedAB = 0;
   if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
     selectedAB = dirTree.selectedItems[0].getAttribute("id");
-    
+
   goNewCardDialog(selectedAB);
 }
 
@@ -179,19 +179,19 @@ function AbNewMessage()
 {
   var msgComposeType = Components.interfaces.nsIMsgCompType;
   var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
-  var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService(); 
-  msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
+  var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
+  msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
   msgComposeService.OpenComposeWindowWithValues(null, msgComposeType.New, msgComposFormat.Default,
                                                 GetSelectedAddresses(), null, null,
-                                                null, null, null, null, null); 
-} 
+                                                null, null, null, null, null);
+}
 
 function GetSelectedAddresses()
 {
   var item, uri, rdf, cardResource, card;
   var selectedAddresses = "";
-  
+
   rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
@@ -205,7 +205,7 @@ function GetSelectedAddresses()
       selectedAddresses += "\"" + card.displayName + "\" <" + card.primaryEmail + ">";
     }
   }
-  return selectedAddresses;  
+  return selectedAddresses;
 }
 
 
@@ -248,7 +248,7 @@ function DirPaneSelectionChange()
 function ChangeDirectoryByDOMNode(dirNode)
 {
   var uri = dirNode.getAttribute("id");
-  
+
   if (resultsTree) {
     if (uri != resultsTree.getAttribute("ref")) {
       ClearResultsTreeSelection();
@@ -264,7 +264,7 @@ function ResultsPaneSelectionChange()
 {
   if ("gUpdateCardView" in top)
     top.gUpdateCardView();
-  
+
   if ("gDialogResultsPaneSelectionChanged" in top)
     top.gDialogResultsPaneSelectionChanged();
 }
@@ -286,7 +286,7 @@ function RedrawResultsTree()
 function RememberResultsTreeSelection()
 {
   var selectionArray = 0;
-  
+
   if (resultsTree) {
     var selectedItems = resultsTree.selectedItems;
     var numSelected = selectedItems.length;
@@ -342,7 +342,7 @@ function GetResultsTreeChildren()
 function GetResultsTreeItem(row)
 {
   var treechildren = GetResultsTreeChildren();
-  
+
   if (treechildren && row > 0) {
     var treeitems = treechildren.getElementsByTagName("treeitem");
     if (treeitems && treeitems.length >= row)
@@ -364,9 +364,9 @@ function SortResultPane(column, sortKey)
     sortDirection = "descending";
   else
     sortDirection = "ascending";
-  
+
   UpdateSortIndicator(column, sortDirection);
- 
+
   DoSort(column, sortKey, sortDirection);
 
   SaveSortSetting(column, sortKey, sortDirection);
@@ -379,13 +379,13 @@ function DoSort(column, key, direction)
   var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
   if (!isupports)
     return false;
-  
+
   var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
   if (!xulSortService)
     return false;
 
   var node = document.getElementById(column);
-  
+
   if (node) {
     var selectionArray = RememberResultsTreeSelection();
     if (selectionArray.length) {
@@ -402,7 +402,7 @@ function DoSort(column, key, direction)
       catch(ex) {
         dump("failed to do sort\n");
       }
-    } 
+    }
   }
   return true;
 }
@@ -412,21 +412,21 @@ function SortToPreviousSettings()
     var ref = resultsTree.getAttribute("ref");
     var folder = document.getElementById(ref);
     if (folder) {
-      var column = folder.getAttribute("sortColumn");  
+      var column = folder.getAttribute("sortColumn");
       var key = folder.getAttribute("sortKey");
       var direction = folder.getAttribute("sortDirection");
-      
+
       if (!column || !key) {
         column = "NameColumn";
         key = "http://home.netscape.com/NC-rdf#Name";
       }
       if (!direction)
         direction = "ascending";
-      
+
       UpdateSortIndicator(column,direction);
-      
+
       DoSort(column, key, direction);
-    }  
+    }
   }
 }
 
@@ -436,19 +436,19 @@ function SaveSortSetting(column, key, direction)
     var ref = resultsTree.getAttribute("ref");
     var folder = document.getElementById(ref);
     if (folder) {
-      folder.setAttribute("sortColumn", column);  
+      folder.setAttribute("sortColumn", column);
       folder.setAttribute("sortKey", key);
       folder.setAttribute("sortDirection", direction);
-    }  
+    }
   }
 }
 
 //------------------------------------------------------------
-// Sets the column header sort icon based on the requested 
+// Sets the column header sort icon based on the requested
 // column and direction.
-// 
+//
 // Notes:
-// (1) This function relies on the first part of the 
+// (1) This function relies on the first part of the
 //     <treecell id> matching the <treecol id>.  The treecell
 //     id must have a "Header" suffix.
 // (2) By changing the "sortDirection" attribute, a different
@@ -460,7 +460,7 @@ function UpdateSortIndicator(column,sortDirection)
   // Find the <treerow> element
   var treerow = document.getElementById("headRow");
   var id = column + "Header";
-  
+
   if (treerow) {
     // Grab all of the <treecell> elements
     var treecell = treerow.getElementsByTagName("treecell");
@@ -488,7 +488,7 @@ function AbNewList()
   var selectedAB = 0;
   if (dirTree && dirTree.selectedItems && (dirTree.selectedItems.length == 1))
     selectedAB = dirTree.selectedItems[0].getAttribute("id");
-    
+
   window.openDialog("chrome://messenger/content/addressbook/abMailListDialog.xul",
                     "",
                     "chrome,titlebar,resizeable=no",

@@ -36,11 +36,11 @@ searchTermContainer.prototype = {
     internalSearchTerm : '',
     internalBooleanAnd : '',
 
-    // this.searchTerm: the actual nsIMsgSearchTerm object 
+    // this.searchTerm: the actual nsIMsgSearchTerm object
     get searchTerm() { return this.internalSearchTerm; },
     set searchTerm(val) {
         this.internalSearchTerm = val;
-        
+
         var term = val;
         // val is a nsIMsgSearchTerm
         var searchAttribute=this.searchattribute;
@@ -51,7 +51,7 @@ searchTermContainer.prototype = {
         if (searchAttribute) searchAttribute.value = term.attrib;
         if (searchOperator) searchOperator.value = val.op;
         if (searchValue) searchValue.value = term.value;
-        
+
         this.booleanAnd = val.booleanAnd;
         return val;
     },
@@ -103,21 +103,21 @@ searchTermContainer.prototype = {
     set booleanAnd(val) {
         // whenever you set this, all nodes in booleanNodes
         // are updated to reflect the string
-        
+
         if (this.internalBooleanAnd == val) return val;
         this.internalBooleanAnd = val;
-        
+
         var booleanNodes = this.booleanNodes;
         if (!booleanNodes) return val;
-        
+
         var stringBundle = this.stringBundle;
         var andString = val ? "And" : "Or";
         for (var i=0; i<booleanNodes.length; i++) {
-            try {              
+            try {
                 var staticString =
                     stringBundle.getString("search" + andString + i);
                 if (staticString && staticString.length>0)
-                    booleanNodes[i].setAttribute("value", staticString);
+                    booleanNodes[i].setAttribute("label", staticString);
             } catch (ex) { /* no error, means string not found */}
         }
         return val;
@@ -159,12 +159,12 @@ function initializeBooleanWidgets() {
     if (firstTerm)
         booleanAnd = firstTerm.booleanAnd;
 
-    // target radio items have data="and" or data="or"
+    // target radio items have value="and" or value="or"
     targetValue = "or";
     if (booleanAnd) targetValue = "and";
-    
-    targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("data", targetValue)[0];
-    
+
+    targetElement = gSearchBooleanRadiogroup.getElementsByAttribute("value", targetValue)[0];
+
     gSearchBooleanRadiogroup.selectedItem = targetElement;
 }
 
@@ -181,7 +181,7 @@ function initializeSearchRows(scope, searchTerms)
 function onMore(event)
 {
     if(gTotalSearchTerms==1)
-	gSearchLessButton .removeAttribute("disabled", "false");
+  gSearchLessButton .removeAttribute("disabled", "false");
     createSearchRow(gTotalSearchTerms++, gSearchScope, null);
 }
 
@@ -206,7 +206,7 @@ function booleanChanged(event) {
     // search terms
 
     var newBoolValue =
-        (event.target.getAttribute("data") == "and") ? true : false;
+        (event.target.getAttribute("value") == "and") ? true : false;
     for (var i=0; i<gSearchTerms.length; i++) {
         var searchTerm = gSearchTerms[i];
         searchTerm.booleanAnd = newBoolValue;
@@ -239,7 +239,7 @@ function createSearchRow(index, scope, searchTerm)
     // is this necessary?
     //searchTermElement.id = "searchTerm" + index;
     gSearchTerms[gSearchTerms.length] = searchTermObj;
-    
+
     searchTermObj.searchattribute = searchAttr;
     searchTermObj.searchoperator = searchOp;
     searchTermObj.searchvalue = searchVal;
@@ -247,7 +247,7 @@ function createSearchRow(index, scope, searchTerm)
     // now invalidate the newly created items because they've been inserted
     // into the document, and XBL bindings will be inserted in their place
     //searchAttr = searchOp = searchVal = undefined;
-    
+
     // and/or string handling:
     // this is scary - basically we want to take every other
     // treecell, (note the i+=2) which will be a text label,
@@ -260,7 +260,7 @@ function createSearchRow(index, scope, searchTerm)
         stringNodes[j++] = treecells[i];
     }
     searchTermObj.booleanNodes = stringNodes;
-    
+
     gSearchRowContainer.appendChild(searchrow);
 
     searchTermObj.searchScope = scope;
@@ -269,7 +269,7 @@ function createSearchRow(index, scope, searchTerm)
     if (searchTerm) {
         searchTermObj.searchTerm = searchTerm;
     }
-    
+
     // here, we don't have a searchTerm, so it's probably a new element -
     // we'll initialize the .booleanAnd from the existing setting in
     // the UI
@@ -278,7 +278,7 @@ function createSearchRow(index, scope, searchTerm)
 
 }
 
-// creates a <treerow> using the array treeCellChildren as 
+// creates a <treerow> using the array treeCellChildren as
 // the children of each treecell
 function constructRow(treeCellChildren)
 {
@@ -286,7 +286,7 @@ function constructRow(treeCellChildren)
     var row = document.createElement("treerow");
     for (var i = 0; i<treeCellChildren.length; i++) {
       var treecell = document.createElement("treecell");
-      
+
       // it's ok to have empty cells
       if (treeCellChildren[i]) {
           treecell.setAttribute("allowevents", "true");
@@ -325,7 +325,7 @@ function removeSearchRow(index)
     } else {
         //dump("That wasn't real. ignoring \n");
     }
-    
+
     treeItemRow.parentNode.removeChild(treeItemRow);
     // remove it from the list of terms - XXX this does it?
     // remove the last element
@@ -335,7 +335,7 @@ function removeSearchRow(index)
 function getBooleanAnd()
 {
     if (gSearchBooleanRadiogroup.selectedItem)
-        return (gSearchBooleanRadiogroup.selectedItem.getAttribute("data") == "and") ? true : false;
+        return (gSearchBooleanRadiogroup.selectedItem.getAttribute("value") == "and") ? true : false;
 
     // default to false
     return false;

@@ -37,8 +37,8 @@
 
   <popupset id="psPopups">
     <popup id="ppDOMContext" oncreate="viewer.onContextCreate(this)">
-      <menuitem value="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
-      <menuitem value="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
+      <menuitem label="&cmdDeleteNode.label;" observes="cmdDeleteNode"/>
+      <menuitem label="&cmdInspectBrowser.label;" observes="cmdInspectBrowser"/>
     </popup>
   </popupset>
 

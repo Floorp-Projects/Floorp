@@ -44,13 +44,13 @@ function HistoryInit() {
     gDeleteByHostname = document.getElementById("cmd_deleteByHostname");
     gDeleteByDomain =   document.getElementById("cmd_deleteByDomain");
     gHistoryBundle =    document.getElementById("historyBundle");
-    
+
     var treeController = new nsTreeController(gHistoryTree);
     var historyController = new nsHistoryController;
     gHistoryTree.controllers.appendController(historyController);
 
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
-    
+
     var children = document.getElementById('treechildren-bookmarks');
     if (children.firstChild)
         gHistoryTree.selectItem(children.firstChild);
@@ -77,7 +77,7 @@ function historyOnSelect(event)
         var url = selection[0].id;
         // matches scheme://(hostname)...
         match = url.match(/.*:\/\/([^\/:]*)/);
-        
+
         if (match && match.length>1)
             gLastHostname = match[1];
     }
@@ -127,8 +127,8 @@ nsHistoryController.prototype =
             text =
                 gHistoryBundle.stringBundle.formatStringFromName(stringId,
                                                                  [ gLastHostname ], 1);
-            gDeleteByHostname.setAttribute("value", text);
-            
+            gDeleteByHostname.setAttribute("label", text);
+
             break;
         case "cmd_deleteByDomain":
             if (gLastDomain) {
@@ -139,7 +139,7 @@ nsHistoryController.prototype =
             }
             text = gHistoryBundle.stringBundle.formatStringFromName(stringId,
                                                                     [ gLastDomain ], 1);
-            gDeleteByDomain.setAttribute("value", text);
+            gDeleteByDomain.setAttribute("label", text);
         }
         return enabled;
     },
@@ -150,11 +150,11 @@ nsHistoryController.prototype =
         case "cmd_deleteByHostname":
             gGlobalHistory.removePagesFromHost(gLastHostname, false)
             return true;
-            
+
         case "cmd_deleteByDomain":
             gGlobalHistory.removePagesFromHost(gLastDomain, true)
             return true;
-            
+
         default:
             return false;
         }
@@ -166,11 +166,11 @@ nsHistoryController.prototype =
 var historyDNDObserver = {
   onDragStart: function (aEvent)
   {
-    var title = aEvent.target.getAttribute("value");
+    var title = aEvent.target.getAttribute("label");
     var uri = aEvent.target.parentNode.parentNode.id;
     if (aEvent.target.localName != "treecell")     // make sure we have something to drag
       return null;
-      
+
     var htmlString = "<A HREF='" + uri + "'>" + title + "</A>";
     var flavourList = { };
     flavourList["text/unicode"] = { width: 2, data: uri };
@@ -194,7 +194,7 @@ function OpenURL(event, node, root)
     if (event.metaKey)
         // if metaKey is down, open in a new browser window
         window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", id );
-    else 
+    else
         openTopWin(url);
     return true;
 }

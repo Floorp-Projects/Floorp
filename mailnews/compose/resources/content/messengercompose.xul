@@ -88,28 +88,28 @@
 </commands>
 
 <broadcasterset id="broadcasterset">
-	<!-- File Menu -->
-	<broadcaster id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
-	<broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
-	<broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
-	<broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
-	<broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
-	<broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
-	<broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
-	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
-	<broadcaster id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
-	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
-	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
-<!--NYI	<broadcaster id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
-	<broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
-	<broadcaster id="cmd_quit"/>
+  <!-- File Menu -->
+  <broadcaster id="cmd_new" oncommand="goDoCommand('cmd_newMessage')"/>
+  <broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
+  <broadcaster id="cmd_attachPage" oncommand="goDoCommand('cmd_attachPage')"/>
+  <broadcaster id="cmd_close" oncommand="goDoCommand('cmd_close')"/>
+  <broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
+  <broadcaster id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')"/>
+  <broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
+  <broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
+  <broadcaster id="cmd_sendButton" oncommand="goDoCommand('cmd_sendButton')"/>
+  <broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
+  <broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
+<!--NYI <broadcaster id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
+  <broadcaster id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
+  <broadcaster id="cmd_quit"/>
 
-	<!-- Edit Menu -->
-	<!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
-	<!--broadcaster id="cmd_find"/-->
-	<!--broadcaster id="cmd_findNext"/-->
-	<broadcaster id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
-	<broadcaster id="cmd_preferences" oncommand="goDoCommand('cmd_preferences')"/>
+  <!-- Edit Menu -->
+  <!--broadcaster id="cmd_pasteQuote"/  DO NOT INCLUDE THOSE PBROCASTER ESLE THE EDIT MENU WILL BE BROKEN! -->
+  <!--broadcaster id="cmd_find"/-->
+  <!--broadcaster id="cmd_findNext"/-->
+  <broadcaster id="cmd_account" oncommand="goDoCommand('cmd_account')"/>
+  <broadcaster id="cmd_preferences" oncommand="goDoCommand('cmd_preferences')"/>
 
   <!-- View Menu -->
   <broadcaster id="cmd_showComposeToolbar" oncommand="goDoCommand('cmd_showComposeToolbar')"/>
@@ -176,33 +176,33 @@
   <!--broadcaster id="cmd_editTable"/-->
   
   <!-- Options Menu -->
-	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
-	<broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
-	<!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
-	<broadcaster id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
+  <broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
+  <broadcaster id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
+  <!-- broadcaster id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
+  <broadcaster id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
 
-	<broadcaster id="Editor:Throbber" busy="false"/>
+  <broadcaster id="Editor:Throbber" busy="false"/>
 </broadcasterset>
 
 <broadcaster id="args" value="editorType=default"/>
 
 <popupset>
-	<popup id="TextColorPopup"/>
-	<popup id="BackColorPopup"/>
+  <popup id="TextColorPopup"/>
+  <popup id="BackColorPopup"/>
 </popupset>
 <popupset id="aTooltipSet"/>
 
 <keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_close"/>
-	<key id="key_save"  key="&saveCmd.key;" observes="cmd_saveDefault" modifiers="accel"/>
-	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
-	<!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
-	<key id="key_print"  key="&printCmd.key;" observes="cmd_print" modifiers="accel"/>
-	<key id="key_quit"/>
-	
-	<!-- Edit Menu -->
+  <!-- File Menu -->
+  <key id="key_newNavigator"/>
+  <key id="key_close"/>
+  <key id="key_save"  key="&saveCmd.key;" observes="cmd_saveDefault" modifiers="accel"/>
+  <!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
+  <!-- key id="key_sendLater" xulkey="true" keycode="&sendLaterCmd.keycode;" shift="true" observes="cmd_sendLater"/ -->
+  <key id="key_print"  key="&printCmd.key;" observes="cmd_print" modifiers="accel"/>
+  <key id="key_quit"/>
+  
+  <!-- Edit Menu -->
   <key id="key_undo"/>
   <key id="key_redo"/>
   <key id="key_cut"/>
@@ -211,10 +211,10 @@
   <key id="pastequotationkb"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-	<key id="key_find"  key="&findCmd.key;"  observes="cmd_find" modifiers="accel"/>
-	<key id="key_findNext"  key="&findAgainCmd.key;" observes="cmd_findNext" modifiers="accel"/>
+  <key id="key_find"  key="&findCmd.key;"  observes="cmd_find" modifiers="accel"/>
+  <key id="key_findNext"  key="&findAgainCmd.key;" observes="cmd_findNext" modifiers="accel"/>
   
-	<!-- Format Menu -->
+  <!-- Format Menu -->
   <key id="boldkb"/>
   <key id="italickb"/>
   <key id="underlinekb"/>
@@ -227,10 +227,10 @@
   <key id="decreasefontsizekb"/>
   <key id="increasefontsizekb"/>
 
-	<!-- Options Menu -->
-	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
+  <!-- Options Menu -->
+  <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
   <key id="key_checkspelling"  key="&checkSpellingCmd.key;" observes="cmd_spelling"  modifiers="accel"/>
-	
+  
 </keyset>
 
 <popupset>
@@ -242,32 +242,32 @@
     <menubar id="compose-menubar">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem value="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
+          <menuitem label="&newMessage.label;" accesskey="&newMessage.accesskey;" key="key_newMessage" oncommand="goOpenNewMessage();"/>
           <menu id="menu_New">
             <menupopup id="menu_NewPopup">
               <menuitem id="menu_newNavigator"/>
               <menuitem id="menu_newEditor"/>
             </menupopup>
           </menu>
-          <menuitem value="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
-          <menuitem value="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
+          <menuitem label="&attachFileCmd.label;" accesskey="&attachFileCmd.accesskey;" observes="cmd_attachFile"/>
+          <menuitem label="&attachPageCmd.label;" accesskey="&attachPageCmd.accesskey;" observes="cmd_attachPage"/>
           <menuseparator/>
           <menuitem id="menu_close"/>
-          <menuitem value="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" observes="cmd_saveDefault"/>
-          <menu value="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
+          <menuitem label="&saveCmd.label;" accesskey="&saveCmd.accesskey;" key="key_save" observes="cmd_saveDefault"/>
+          <menu label="&saveAsCmd.label;" accesskey="&saveAsCmd.accesskey;">
             <menupopup>
-              <menuitem value="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
+              <menuitem label="&saveAsFileCmd.label;" accesskey="&saveAsFileCmd.accesskey;" observes="cmd_saveAsFile"/>
               <menuseparator/>
-              <menuitem value="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
-              <menuitem value="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
+              <menuitem label="&saveAsDraftCmd.label;" accesskey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
+              <menuitem label="&saveAsTemplateCmd.label;" accesskey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
             </menupopup>
           </menu>
           <menuseparator/>
-          <menuitem value="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
-          <menuitem value="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
+          <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" observes="cmd_sendNow"/>
+          <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" observes="cmd_sendLater"/>
           <menuseparator/>
-<!--NYI          <menuitem value="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" observes="cmd_printSetup"/>   -->
-          <menuitem id="printMenuItem" value="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" observes="cmd_print"/>
+<!--NYI          <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" observes="cmd_printSetup"/>   -->
+          <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" observes="cmd_print"/>
           <menuseparator/>
         </menupopup>
       </menu>
@@ -284,11 +284,11 @@
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
-          <menuitem value="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
-          <menuitem value="&replaceCmd.label;" observes="cmd_replace"/>
+          <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
+          <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
+          <menuitem label="&replaceCmd.label;" observes="cmd_replace"/>
           <menuseparator/>
-          <menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
+          <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
           <menuitem id="menu_preferences" observes="cmd_preferences"/>
         </menupopup>
       </menu>
@@ -298,13 +298,13 @@
             <menupopup>
               <menuitem id="menu_showComposeToolbar"
                         type="checkbox"
-                        value="&showComposeToolbarCmd.label;"
+                        label="&showComposeToolbarCmd.label;"
                         observes="cmd_showComposeToolbar"
                         accesskey="&showComposeToolbarCmd.accesskey;"
                         checked="true"/>
               <menuitem id="menu_showFormatToolbar"
                         type="checkbox"
-                        value="&showFormatToolbarCmd.label;"
+                        label="&showFormatToolbarCmd.label;"
                         observes="cmd_showFormatToolbar"
                         accesskey="&showFormatToolbarCmd.accesskey;"
                         checked="true"/>
@@ -319,7 +319,7 @@
   
       <menu id="insertMenu" observes="cmd_insert"/>
 
-      <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
+      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
         <menupopup id="formatMenuPopup">
           <menu id="tableMenu"/>
           <menuseparator/>
@@ -328,44 +328,44 @@
         </menupopup>
       </menu>
   
-      <menu value="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
-        <menupopup>	
-          <menuitem value="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
-          <menuitem value="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
-          <!--menuitem value="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->	
-          <menuitem value="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
+      <menu label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
+        <menupopup> 
+          <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" observes="cmd_selectAddress"/>
+          <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
+          <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" observes="cmd_quoteMessage"/-->  
+          <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" observes="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
-          <menu value="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" observes="cmd_outputFormat">
+          <menu label="&outputFormatMenu.label;" accesskey="&outputFormatMenu.accesskey;" observes="cmd_outputFormat">
             <menupopup>
-              <menuitem type="radio" name="output_format" value="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="1" checked="true"/>
-              <menuitem type="radio" name="output_format" value="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="2"/>
-              <menuitem type="radio" name="output_format" value="&htmlFormatCmd.label;" accesskey="&htmlFormatCmd.accesskey;" id="3"/>
-              <menuitem type="radio" name="output_format" value="&bothFormatCmd.label;" accesskey="&bothFormatCmd.accesskey;" id="4"/>
+              <menuitem type="radio" name="output_format" label="&autoFormatCmd.label;" accesskey="&autoFormatCmd.accesskey;" id="1" checked="true"/>
+              <menuitem type="radio" name="output_format" label="&plainTextFormatCmd.label;" accesskey="&plainTextFormatCmd.accesskey;" id="2"/>
+              <menuitem type="radio" name="output_format" label="&htmlFormatCmd.label;" accesskey="&htmlFormatCmd.accesskey;" id="3"/>
+              <menuitem type="radio" name="output_format" label="&bothFormatCmd.label;" accesskey="&bothFormatCmd.accesskey;" id="4"/>
             </menupopup>
           </menu>
-          <menu value="&priorityMenu.label;" accesskey="&priorityMenu.accesskey;" oncommand="PriorityMenuSelect(event.target);">
+          <menu label="&priorityMenu.label;" accesskey="&priorityMenu.accesskey;" oncommand="PriorityMenuSelect(event.target);">
             <menupopup>
-              <menuitem type="radio" name="priority" value="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" id="lowest"/>
-              <menuitem type="radio" name="priority" value="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" id="low"/>
-              <menuitem type="radio" name="priority" value="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" id="normal" checked="true"/>
-              <menuitem type="radio" name="priority" value="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" id="high"/>
-              <menuitem type="radio" name="priority" value="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="highest"/>
+              <menuitem type="radio" name="priority" label="&lowestPriorityCmd.label;" accesskey="&lowestPriorityCmd.accesskey;" id="lowest"/>
+              <menuitem type="radio" name="priority" label="&lowPriorityCmd.label;" accesskey="&lowPriorityCmd.accesskey;" id="low"/>
+              <menuitem type="radio" name="priority" label="&normalPriorityCmd.label;" accesskey="&normalPriorityCmd.accesskey;" id="normal" checked="true"/>
+              <menuitem type="radio" name="priority" label="&highPriorityCmd.label;" accesskey="&highPriorityCmd.accesskey;" id="high"/>
+              <menuitem type="radio" name="priority" label="&highestPriorityCmd.label;" accesskey="&highestPriorityCmd.accesskey;" id="highest"/>
             </menupopup>
           </menu>
-          <menu value="&fileCarbonCopyCmd.label;" accesskey="&fileCarbonCopyCmd.accesskey;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" ignore="http://home.netscape.com/NC-rdf#MessageChild">
+          <menu label="&fileCarbonCopyCmd.label;" accesskey="&fileCarbonCopyCmd.accesskey;" id="fccMenu" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" ignore="http://home.netscape.com/NC-rdf#MessageChild">
             <menupopup/>
             <template> 
               <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
                 <menupopup>
-                  <!--menuitem value="[current selection]" disabled="true"/>
+                  <!--menuitem label="[current selection]" disabled="true"/>
                   <menuseparator/-->
-                  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  <menu uri="..."  class="folderMenuItem" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                         BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                         IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
                         ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                     <menupopup>
-                      <menuitem uri="..." value="&fileHereMenu.label;"
+                      <menuitem uri="..." label="&fileHereMenu.label;"
                                 oncommand="MessageFcc(event.target)"
                                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -379,7 +379,7 @@
               <rule nc:CanFileMessages="false" nc:ServerType="nntp"/>
               <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
                 <menupopup>
-                  <menu uri="..."  class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  <menu uri="..."  class="folderMenuItem" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                         BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                         IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
@@ -390,7 +390,7 @@
               </rule>
               <rule nc:CanFileMessages="true">
                 <menupopup>
-                  <menuitem uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  <menuitem uri="..." class="folderMenuItem" label="rdf:http://home.netscape.com/NC-rdf#Name"
                             oncommand="MessageFcc(event.target)" 
                             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
@@ -399,10 +399,10 @@
                 </menupopup>
               </rule>
             </template>
-          </menu>	    
+          </menu>     
           <!--menuseparator/>
-          <menuitem value="&addSignatureCmd.label;" disabled="true" oncommand=""/>    	
-          <menuitem value="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->    	
+          <menuitem label="&addSignatureCmd.label;" disabled="true" oncommand=""/>      
+          <menuitem label="&attachVCardCmd.label;" disabled="true" accesskey="&attachVCardCmd.accesskey;" oncommand="AttachVCard()"/-->     
         </menupopup>
       </menu>
       <!--menu id="debugMenu"/-->
@@ -413,29 +413,29 @@
     <toolbar class="toolbar-primary chromeclass-toolbar" id="composeToolbar" persist="collapsed">
       <box id="toolbar_button_box">
        <button class="button-toolbar-2 top" 
-               id="button-send" value="&sendButton.label;"
+               id="button-send" label="&sendButton.label;"
                tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" 
                observes="cmd_sendButton"
-               now_value="&sendButton.label;"
+               now_label="&sendButton.label;"
                now_tooltiptext="&sendButton.tooltip;"
-               later_value="&sendLaterCmd.label;"
+               later_label="&sendLaterCmd.label;"
                later_tooltiptext=""
                />
        <toolbarseparator class="toolbarseparator-primary"/>
        <button class="button-toolbar-2 top" 
-               id="button-address" value="&addressButton.label;" 
+               id="button-address" label="&addressButton.label;" 
                tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" 
                observes="cmd_selectAddress"/>
        <button class="button-toolbar-2 top" 
-               id="button-attach" value="&attachButton.label;" 
+               id="button-attach" label="&attachButton.label;" 
                tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" 
                observes="cmd_attachFile"/>
        <button class="button-toolbar-2 top" 
-               id="spellingButton" value="&spellingButton.label;" 
+               id="spellingButton" label="&spellingButton.label;" 
                observes="cmd_spelling"/>
        <toolbarseparator class="toolbarseparator-primary"/>
        <button class="button-toolbar-2 top" 
-               id="button-save" value="&saveButton.label;" 
+               id="button-save" label="&saveButton.label;" 
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                observes="cmd_saveDefault"/>
        <spring flex="1"/>
@@ -453,7 +453,7 @@
         <box orient="vertical" flex="75">
           <box autostretch="never">
             <text class="label" value="&fromAddr.label;"/>
-            <menulist id="msgIdentity" value="..." flex="1" oncommand="LoadIdentity(false);">
+            <menulist id="msgIdentity" label="..." flex="1" oncommand="LoadIdentity(false);">
               <menupopup id="msgIdentityPopup"/>
             </menulist>
           </box> 
@@ -508,7 +508,7 @@
     
       <menubutton id="InsertPopupButton"/>
 
-	  <menu id="smileButtonMenu"/>
+    <menu id="smileButtonMenu"/>
 
       <spring flex="1"/>
     </toolbar>
@@ -525,7 +525,7 @@
   <statusbar id="status-bar">
     <statusbarpanel id="offline-status" onclick="setTimeout('UpdateOfflineState()', 0)"/> 
     <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
-    <statusbarpanel id="statusText" flex="1" value="&defaultStatusText.label;"/>
+    <statusbarpanel id="statusText" flex="1" label="&defaultStatusText.label;"/>
   </statusbar>
 
   <box id="taskbar"/>

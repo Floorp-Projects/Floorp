@@ -32,62 +32,62 @@
     <text id="foldertooltipText"/>
 </popup>
 
-	<tree datasources="rdf:null"
-	      id="folderTree" class="mail-folders"
-		  onselect="top.FolderPaneSelectionChange();"
-		  onblur="goOnEvent(this,'blur')" dd-nodropbetweenrows="true"
-		ondragover="return DragOverTree(event);"
-		ondraggesture="return BeginDragFolderTree(event);"
-		ondragdrop="return DropOnFolderTree(event);"
-		onclick="FolderPaneOnClick(event);"> 
+  <tree datasources="rdf:null"
+        id="folderTree" class="mail-folders"
+      onselect="top.FolderPaneSelectionChange();"
+      onblur="goOnEvent(this,'blur')" dd-nodropbetweenrows="true"
+    ondragover="return DragOverTree(event);"
+    ondraggesture="return BeginDragFolderTree(event);"
+    ondragdrop="return DropOnFolderTree(event);"
+    onclick="FolderPaneOnClick(event);"> 
 
-	  <template>
-	  	<rule>
-	      <treechildren flex="1">
-			<treeitem class="folderTreeItem" uri="..." 
-			  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-			  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-			  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-			  IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
-	          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-			  HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
-			  NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
-			  SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
-			  CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
-			  CanCompact="rdf:http://home.netscape.com/NC-rdf#CanCompact"
-			  CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
-			  CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
-			  CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
-			  NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"
-			  persist="open viewType viewFlags sortOrder sortType">
-		  	  <treerow class="tree-folder-row" 
+    <template>
+      <rule>
+        <treechildren flex="1">
+      <treeitem class="folderTreeItem" uri="..." 
+        SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+        BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+        IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+        IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+            ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+        HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+        NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
+        SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+        CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
+        CanCompact="rdf:http://home.netscape.com/NC-rdf#CanCompact"
+        CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
+        CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
+        CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
+        NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"
+        persist="open viewType viewFlags sortOrder sortType">
+          <treerow class="tree-folder-row" 
                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-			             HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
-			             NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect">
-					<treecell tooltip="folderTooltip" indent="true" class="treecell-indent tree-cell-folderpane-icon" 
-                    value="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
+                   HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                   NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect">
+          <treecell tooltip="folderTooltip" indent="true" class="treecell-indent tree-cell-folderpane-icon" 
+                    label="rdf:http://home.netscape.com/NC-rdf#FolderTreeName"
                     SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-			              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-			              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-			              IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
-						  NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
-	                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
-			              HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
-			              SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
-			              CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
+                    BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                    IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                    IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
+              NewMessages="rdf:http://home.netscape.com/NC-rdf#NewMessages"
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    HasUnreadMessages="rdf:http://home.netscape.com/NC-rdf#HasUnreadMessages"
+                    SubfoldersHaveUnreadMessages="rdf:http://home.netscape.com/NC-rdf#SubfoldersHaveUnreadMessages"
+                    CanRename="rdf:http://home.netscape.com/NC-rdf#CanRename"
                           CanCompact="rdf:http://home.netscape.com/NC-rdf#CanCompact"
-			              CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
-			              CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
-			              CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
-			              NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
-		  		</treerow>
-			</treeitem>
-	       </treechildren>
-		</rule>
-	  </template>
+                    CanCreateSubfolders="rdf:http://home.netscape.com/NC-rdf#CanCreateSubfolders"
+                    CanSubscribe="rdf:http://home.netscape.com/NC-rdf#CanSubscribe"
+                    CanFileMessages="rdf:http://home.netscape.com/NC-rdf#CanFileMessages"
+                    NoSelect="rdf:http://home.netscape.com/NC-rdf#NoSelect"/>
+          </treerow>
+      </treeitem>
+         </treechildren>
+    </rule>
+    </template>
 
     <treecolgroup>
-	  <treecol persist="width" width="3*" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
+    <treecol persist="width" width="3*" flex="1" id="FolderColumn" resource="http://home.netscape.com/NC-rdf#FolderTreeName"/>
     </treecolgroup>
 
           <treehead>
@@ -95,6 +95,6 @@
             </treerow>
           </treehead>
 
-	</tree>
+  </tree>
 
 </overlay>

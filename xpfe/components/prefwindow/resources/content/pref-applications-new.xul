@@ -74,7 +74,7 @@
         <spring/>
         <box>
           <spring flex="1"/>
-          <button value="&browse.label;" accesskey="&browse.accesskey;" 
+          <button label="&browse.label;" accesskey="&browse.accesskey;" 
                   oncommand="chooseApp();"/>
         </box>
       </row>
@@ -84,7 +84,7 @@
   <separator class="thin"/>
   
   <box autostretch="never">
-    <checkbox id="outgoingDefault" value="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
+    <checkbox id="outgoingDefault" label="&outgoingDefault.label;" accesskey="&outgoingDefault.accesskey;" disabled="true"/>
   </box>
   
   <separator/>

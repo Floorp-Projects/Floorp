@@ -57,7 +57,7 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-    <title><text value="&walletHeader.label;"/></title>
+    <label value="&walletHeader.label;"/>
     <html>&walletDescription.label;</html>
 <!--
     <box autostretch="never">
@@ -68,14 +68,14 @@
     </box>
 -->
     <box autostretch="never">
-      <checkbox id="walletCaptureForms" value="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
+      <checkbox id="walletCaptureForms" label="&walletEnabled.label;" accesskey="&walletEnabled.accesskey;"
                 pref="true" preftype="bool" prefstring="wallet.captureForms"
                 prefattribute="checked"/>
     </box>
     <box autostretch="never" halign="right">
-      <button class="dialog" value="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
+      <button class="dialog" label="&viewWallet.label;" accesskey="&viewWallet.accesskey;" 
               oncommand="viewWallet();"/>
-      <button class="dialog" value="&viewWalletSites.label;" accesskey="&viewWalletSites.accesskey;" 
+      <button class="dialog" label="&viewWalletSites.label;" accesskey="&viewWalletSites.accesskey;" 
               oncommand="viewWalletSites();"/>
     </box>
   </titledbox>

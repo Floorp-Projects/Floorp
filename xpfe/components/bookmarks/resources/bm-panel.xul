@@ -50,7 +50,7 @@
 
 <popupset>
   <popup id="contextual" oncreate="return fillContextMenu('contextual', 'bookmarksTree');" context="">
-	  <menu />
+    <menu />
   </popup>
 </popupset>
 
@@ -71,7 +71,7 @@
                   <treeindentation/><separator flex="100%" align="center" class="groove" />
                 </treecell>
               </treerow>
-            </treeitem>  		
+            </treeitem>     
           </treechildren>
         </rule>
 
@@ -83,7 +83,7 @@
               loading="rdf:http://home.netscape.com/NC-rdf#loading">
               <treerow>
                 <treecell class="treecell-indent"
-                  value="rdf:http://home.netscape.com/NC-rdf#Name"
+                  label="rdf:http://home.netscape.com/NC-rdf#Name"
                   src="rdf:http://home.netscape.com/NC-rdf#Icon"
                   web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                   rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -102,7 +102,7 @@
   <treehead>
     <treerow id="headRow">
       <treecell class="treecell-header treecell-header-sidebarpanel sortDirectionIndicator" 
-                value="&tree.header.name.label;" 
+                label="&tree.header.name.label;" 
                 onclick="return TriStateColumnSort('NameColumn');" observes="NameColumn" />
     </treerow>
   </treehead>

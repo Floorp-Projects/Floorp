@@ -23,7 +23,7 @@ Rights Reserved.
 
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script language="JavaScript" src="chrome://messenger/content/messengercompose/addressingWidgetOverlay.js"/>
 
@@ -41,19 +41,19 @@ Rights Reserved.
     </treecolgroup>
   
     <treechildren flex="1" id="addressWidgetBody">
-    	<treeitem>
-    		<treerow>
-    			<treecell class="treecell-addressingWidget" allowevents="true">
+      <treeitem>
+        <treerow>
+          <treecell class="treecell-addressingWidget" allowevents="true">
             <menulist id="msgRecipientType#1" class="aw-menulist menulist-compact" flex="1"
                       onclick="awNotAnEmptyArea(event)" 
                       oncommand="awSetAutoComplete(this.id.slice(this.id.lastIndexOf('#') + 1));">
               <menupopup>
-                <menuitem data="addr_to" value="&toAddr.label;"/>
-                <menuitem data="addr_cc" value="&ccAddr.label;"/>
-                <menuitem data="addr_bcc" value="&bccAddr.label;"/>
-                <menuitem data="addr_reply" value="&replyAddr.label;"/>
-                <menuitem data="addr_newsgroups" value="&newsgroupsAddr.label;"/>
-                <menuitem data="addr_followup" value="&followupAddr.label;"/>
+                <menuitem value="addr_to" label="&toAddr.label;"/>
+                <menuitem value="addr_cc" label="&ccAddr.label;"/>
+                <menuitem value="addr_bcc" label="&bccAddr.label;"/>
+                <menuitem value="addr_reply" label="&replyAddr.label;"/>
+                <menuitem value="addr_newsgroups" label="&newsgroupsAddr.label;"/>
+                <menuitem value="addr_followup" label="&followupAddr.label;"/>
               </menupopup>
             </menulist>
           </treecell>
@@ -66,10 +66,10 @@ Rights Reserved.
                        onkeydown="awRecipientKeyDown(event, this)"
                        autocomplete="true" timeout="300"
                        searchSessionType="addrbook" displayMenu="true"/>
-    			</treecell>
-    		</treerow>
-    	</treeitem>
-    	
+          </treecell>
+        </treerow>
+      </treeitem>
+      
     </treechildren>
   </tree>
 </overlay>

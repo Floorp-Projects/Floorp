@@ -33,7 +33,7 @@
         class="color-dialog"
         title="&window.title;" 
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');">
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-colors.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -46,8 +46,8 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <box>
-		<titledbox orient="vertical" flex="1" id="pageColours">
-			<title><text value="&color;"/></title>
+    <titledbox orient="vertical" flex="1" id="pageColours">
+      <label value="&color;"/>
       <box>
         <text class="label" value="&textColor.label;" accesskey="&textColor.accesskey;" for="foregroundtextmenu"/>
         <spring flex="1"/>
@@ -62,13 +62,13 @@
       </box>
       <separator class="thin"/>
       <box autostretch="never">
-        <checkbox id="browserUseSystemColors" value="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
+        <checkbox id="browserUseSystemColors" label="&useSystemColors.label;" accesskey="&useSystemColors.accesskey;"
                 pref="true" preftype="bool" prefstring="browser.display.use_system_colors" prefattribute="checked"/>
       </box>
     </titledbox>
       
     <titledbox orient="vertical" flex="1">
-      <title><text value="&links;"/></title>
+      <label value="&links;"/>
       <box>
         <text class="label" value="&linkColor.label;" accesskey="&linkColor.accesskey;" for="unvisitedlinkmenu"/>
         <spring flex="1"/>
@@ -83,20 +83,20 @@
       </box>
       <separator class="thin"/>
       <box autostretch="never">
-    		<checkbox id="browserUnderlineAnchors" value="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
+        <checkbox id="browserUnderlineAnchors" label="&underlineLinks.label;" accesskey="&underlineLinks.accesskey;"
                   pref="true" preftype="bool" prefstring="browser.underline_anchors" prefattribute="checked"/>
       </box>
     </titledbox>
   </box>
   
   <titledbox orient="vertical">
-  	<html>&someProvColors;</html>
+    <html>&someProvColors;</html>
   
     <radiogroup id="browserUseDocumentColors" orient="vertical" autostretch="never" 
                 pref="true" preftype="bool" prefstring="browser.display.use_document_colors"
-                prefattribute="data">
-      <radio group="browserUseDocumentColors" data="true" value="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
-      <radio group="browserUseDocumentColors" data="false" value="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
+                prefattribute="value">
+      <radio group="browserUseDocumentColors" value="true" label="&alwaysUseDocumentColors.label;" accesskey="&alwaysUseDocumentColors.accesskey;"/>
+      <radio group="browserUseDocumentColors" value="false" label="&useMyColors.label;" accesskey="&useMyColors.label;"/>        
     </radiogroup>
     
   </titledbox>

@@ -62,10 +62,10 @@
 							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell allowevents="true">
-							<button class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <button class="iconic" flex="1" crop="right" align="left" src="rdf:http://home.netscape.com/NC-rdf#Icon" label="rdf:http://home.netscape.com/NC-rdf#Name" />
 						</treecell>
 						<treecell allowevents="true">
-							<button flex="1" crop="right" align="left" value="rdf:http://home.netscape.com/NC-rdf#Description" />
+              <button flex="1" crop="right" align="left" label="rdf:http://home.netscape.com/NC-rdf#Description" />
 						</treecell>
 					</treerow>
 				</treeitem>
@@ -74,9 +74,9 @@
 
 			<treehead>
 				<treerow>
-					<treecell value="&checkbox.column.label;"/>
-					<treecell observes="NameColumn" value="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending"/>
-					<treecell observes="DescColumn" value="&description.column.label;" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('DescColumn');" />
+          <treecell label="&checkbox.column.label;"/>
+          <treecell observes="NameColumn" label="&engine.column.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn');" sortActive="true" sortDirection="ascending"/>
+          <treecell observes="DescColumn" label="&description.column.label;" resource="http://home.netscape.com/NC-rdf#Description" resource2="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('DescColumn');" />
 				</treerow>
 			</treehead>
 		</tree>

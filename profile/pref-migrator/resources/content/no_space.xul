@@ -56,9 +56,9 @@ Contributor(s):
 
   <separator class="thin"/>
   <box class="selection" id="RetryNewCancelButtons">
-      <button class="dialog push" id="retry" default="true" value="&buttonRetry.label;" onclick="OnRetry();"/> 
-      <button class="dialog push" id="createNew" value="&buttonCreateNew.label;"  onclick="OnCreateNew();" />
-      <button class="dialog push" id="cancel" value="&buttonCancel.label;"  onclick="OnCancel();" />
+      <button class="dialog push" id="retry" default="true" label="&buttonRetry.label;" oncommand="OnRetry();"/> 
+      <button class="dialog push" id="createNew" label="&buttonCreateNew.label;"  oncommand="OnCreateNew();" />
+      <button class="dialog push" id="cancel" label="&buttonCancel.label;"  oncommand="OnCancel();" />
   </box>
 
 </window>

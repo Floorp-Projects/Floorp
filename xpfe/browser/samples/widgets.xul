@@ -54,55 +54,55 @@
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 1:" for="nerp1"/>
     <textbox flex="1" id="nerp1" disabled="true" value="disabled"/>
-    <button value="Test Property APIs" oncommand="testProperty('nerp1');"/>
+    <button label="Test Property APIs" oncommand="testProperty('nerp1');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2"/>
     <textbox flex="1" id="nerp2" readonly="true" value="readonly"/>
-    <button value="Test Property APIs" oncommand="testProperty('nerp2');"/>
+    <button label="Test Property APIs" oncommand="testProperty('nerp2');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 2:" for="nerp2r"/>
     <textbox flex="1" id="nerp2r" readonly="true" disabled="true" value="readonly disabled"/>
-    <button value="Test Property APIs" oncommand="testProperty('nerp2r');"/>
+    <button label="Test Property APIs" oncommand="testProperty('nerp2r');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 3:" for="nerp3"/>
     <textbox flex="1" id="nerp3" value="regular"/>
-    <button value="Test Property APIs" oncommand="testProperty('nerp3');"/>
+    <button label="Test Property APIs" oncommand="testProperty('nerp3');"/>
   </box>
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 5:" for="nerp4"/>
-    <menubutton value="regular menubutton">
+    <menubutton label="regular menubutton">
       <menupopup>
-        <menuitem value="foo 1"/>
-        <menuitem value="foo 2"/>
-        <menuitem value="foo 3"/>
+        <menuitem label="foo 1"/>
+        <menuitem label="foo 2"/>
+        <menuitem label="foo 3"/>
       </menupopup>
     </menubutton>
-    <menubutton value="disabled menubutton" disabled="true">
+    <menubutton label="disabled menubutton" disabled="true">
       <menupopup>
-        <menuitem value="foo 1"/>
-        <menuitem value="foo 2"/>
-        <menuitem value="foo 3"/>
+        <menuitem label="foo 1"/>
+        <menuitem label="foo 2"/>
+        <menuitem label="foo 3"/>
       </menupopup>
     </menubutton>    
   </box>
   
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 5:" for="nerp4"/>
-    <menulist value="regular menulist">
+    <menulist label="regular menulist">
       <menupopup>
-        <menuitem value="foo 1"/>
-        <menuitem value="foo 2"/>
-        <menuitem value="foo 3"/>
+        <menuitem label="foo 1"/>
+        <menuitem label="foo 2"/>
+        <menuitem label="foo 3"/>
       </menupopup>
     </menulist>
-    <menulist value="disabled menulist" disabled="true">
+    <menulist label="disabled menulist" disabled="true">
       <menupopup>
-        <menuitem value="foo 1"/>
-        <menuitem value="foo 2"/>
-        <menuitem value="foo 3"/>
+        <menuitem label="foo 1"/>
+        <menuitem label="foo 2"/>
+        <menuitem label="foo 3"/>
       </menupopup>
     </menulist>    
   </box>  
@@ -113,22 +113,22 @@
       <textbox flex="1"/>
       <box orient="vertical" autostretch="never">
         <box flex="1">
-          <checkbox value="Checkbox 1" id="checkbox1"/>
+          <checkbox label="Checkbox 1" id="checkbox1"/>
           <spring flex="1"/>
-          <button value="Test Property APIs" oncommand="testProperty('checkbox1');"/>
+          <button label="Test Property APIs" oncommand="testProperty('checkbox1');"/>
         </box>
-        <checkbox value="Checkbox 2" disabled="true" checked="true"/>
-        <checkbox value="Checkbox 3"/>
+        <checkbox label="Checkbox 2" disabled="true" checked="true"/>
+        <checkbox label="Checkbox 3"/>
       </box>
       <separator class="groove"/>
       <radiogroup id="group" orient="vertical">
         <box>
-          <radio group="group" value="Radio 1" id="radio1"/>
+          <radio group="group" label="Radio 1" id="radio1"/>
           <spring flex="1"/>
-          <button value="Test Property APIs" oncommand="testProperty('radio1');"/>
+          <button label="Test Property APIs" oncommand="testProperty('radio1');"/>
         </box>
-        <radio group="group" value="Radio 2"/>
-        <radio group="group" value="Radio 3" disabled="true" checked="true"/>
+        <radio group="group" label="Radio 2"/>
+        <radio group="group" label="Radio 3" disabled="true" checked="true"/>
       </radiogroup>
     </box>
   </box>
@@ -137,9 +137,9 @@
   
   <box autostretch="never" valign="center">
     <text class="label" value="Foo Label 7:"/>
-    <button value="Standard XUL Button"/>
-    <button class="dialog" value="Dialog XUL Button"/>
-    <button class="dialog" disabled="true" default="true" value="Disabled Button"/>
+    <button label="Standard XUL Button"/>
+    <button class="dialog" label="Dialog XUL Button"/>
+    <button class="dialog" disabled="true" default="true" label="Disabled Button"/>
   </box>
         
   <separator/>
@@ -151,7 +151,7 @@
     </box>
     <textbox id="textarea" rows="3" multiline="true" value="Regular multiline textbox"/>
     <box orient="vertical">
-      <button value="Test Property APIs" oncommand="testProperty('textarea');"/>
+      <button label="Test Property APIs" oncommand="testProperty('textarea');"/>
       <spring flex="1"/>
     </box>
   </box>
@@ -190,7 +190,7 @@
   
   <box autostretch="never" valign="center">
     <progressmeter id="normal" mode="normal" flex="1"/>
-    <button value="Advance Progress" oncommand="advanceProgress();"/>
+    <button label="Advance Progress" oncommand="advanceProgress();"/>
   </box>
   
   <separator/>

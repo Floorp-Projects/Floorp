@@ -6,18 +6,18 @@
           
   <binding id="menubutton-toolbar-top">
     <content>
-	   <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
-	      <xul:button class="classic-simplebutton" allowevents="true" flex="1"
-                  inherits="value,src,accesskey,crop,disabled,oncommand=buttonaction" 
+     <xul:box class="classic-simplebutton-box" autostretch="never" flex="1">
+        <xul:button class="classic-simplebutton" allowevents="true" flex="1"
+                  inherits="label,src,accesskey,crop,disabled,oncommand=buttonaction" 
                   onmousedown="this.parentNode.setAttribute('buttondown','true');"
                   onmouseup="this.parentNode.removeAttribute('buttondown');"
                   onmouseover="this.parentNode.setAttribute('buttonover','true');"
                   onmouseout="this.parentNode.removeAttribute('buttonover');"/>
        </xul:box>
        <xul:box class="classic-dropmarker-box" autostretch="never" valign="middle" inherits="disabled">
-    	    <xul:image class="classic-dropmarker" inherits="disabled"/>
+          <xul:image class="classic-dropmarker" inherits="disabled"/>
        </xul:box>
-	   <children includes="menupopup"/>
+     <children includes="menupopup"/>
     </content>
   </binding>
   
@@ -25,7 +25,7 @@
     <content autostretch="never">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
-        <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>
+        <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
       </xul:box>
     </content>
   </binding>
@@ -34,7 +34,7 @@
     <content orient="vertical" autostretch="never" halign="middle">
       <xul:image class="classic-simplebutton-icon" inherits="src"/>
       <xul:box orient="vertical" class="classic-simplebutton-textbox" autostretch="never" flex="1">
-        <xul:text class="classic-simplebutton-text" inherits="value,accesskey,crop"/>
+        <xul:text class="classic-simplebutton-text" inherits="value=label,accesskey,crop"/>
       </xul:box>
     </content>
   </binding>

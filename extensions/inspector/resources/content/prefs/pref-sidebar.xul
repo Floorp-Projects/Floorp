@@ -20,7 +20,7 @@
     </box>
     <box id="bxSidebarNotInstalled" collapsed="true" flex="1" orient="vertical">
       <text value="The sidebar panel is not currently installed.  Click the 'Install' button to add it to your sidebar."/>
-      <button value="Install" onclick="gSidebarPrefs.installSidebar()"/>
+      <button label="Install" onclick="gSidebarPrefs.installSidebar()"/>
     </box>
   </box>
 </window>

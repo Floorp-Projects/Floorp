@@ -29,13 +29,13 @@ function commonDialogOnLoad()
 {
   doSetOKCancel(commonDialogOnOK, commonDialogOnCancel, commonDialogOnButton2, commonDialogOnButton3);
   gCommonDialogParam = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
-	
+
   // display the main text
   var messageText = gCommonDialogParam.GetString(0);
   var messageParent = document.getElementById("info.box");
   var messageParagraphs = messageText.split("\n");
   var i;
-  
+
   for (i = 0; i < messageParagraphs.length; i++) {
     var htmlNode = document.createElement("html");
     //htmlNode.setAttribute("style", "max-width: 45em;");
@@ -43,60 +43,60 @@ function commonDialogOnLoad()
     htmlNode.appendChild(text);
     messageParent.appendChild(htmlNode);
   }
-  
-  setElementText("info.header", gCommonDialogParam.GetString(3), true); 
-    
+
+  setElementText("info.header", gCommonDialogParam.GetString(3), true);
+
   // set the window title
   window.title = gCommonDialogParam.GetString(12);
-  
-  // set the icon	
+
+  // set the icon
   var iconElement = document.getElementById("info.icon");
   var iconURL = gCommonDialogParam.GetString(2);
   if (iconURL)
     iconElement.setAttribute("src", iconURL);
-  
+
   // set the number of command buttons
   var nButtons = gCommonDialogParam.GetInt(2);
   if (nButtons == 1) hideElementById("cancel");
   switch (nButtons) {
     case 4:
       unHideElementByID("Button3");
-      setElementText("Button3", gCommonDialogParam.GetString(11));
+      document.getElementById("Button3").label = gCommonDialogParam.GetString(11);
       // fall through
     case 3:
       unHideElementByID("Button2");
-      setElementText("Button2", gCommonDialogParam.GetString(10));
+      document.getElementById("Button2").label = gCommonDialogParam.GetString(10);
       // fall through
     default:
     case 2:
       var string = gCommonDialogParam.GetString(8);
       if (string)
-        setElementText("ok", string);
+        document.getElementById("ok").label = string;
       // fall through
     case 1:
       string = gCommonDialogParam.GetString(9);
       if (string)
-        setElementText("cancel", string);
+        document.getElementById("cancel").label = string;
       break;
   }
 
   // initialize the checkbox
   setCheckbox(gCommonDialogParam.GetString(1), gCommonDialogParam.GetInt(1));
-	
+
   // initialize the edit fields
   var nEditFields = gCommonDialogParam.GetInt(3);
-  
+
   switch (nEditFields) {
     case 2:
       var containerID, fieldID, labelID;
-      
+
       if (gCommonDialogParam.GetInt(4) == 1) {
         // two password fields ('password' and 'retype password')
         var password2Container = document.getElementById("password2EditField");
         password2Container.removeAttribute("collapsed");
         var password2Field = document.getElementById("dialog.password2");
         password2Field.value = gCommonDialogParam.GetString(7);
-        
+
         var password2Label = gCommonDialogParam.GetString(5);
         if (password2Label)
           setElementText("password2.text", password2Label);
@@ -120,11 +120,11 @@ function commonDialogOnLoad()
         fieldID = "dialog.loginname";
         labelID = "login.text";
       }
-          
+
       unHideElementByID(containerID);
       var field = document.getElementById(fieldID);
       field.value = gCommonDialogParam.GetString(6);
-          
+
       var label = gCommonDialogParam.GetString(4);
       if (label)
         setElementText(labelID, label);
@@ -142,13 +142,13 @@ function commonDialogOnLoad()
         fieldID = "dialog.loginname";
         setElementText("login.text", gCommonDialogParam.GetString(4));
       }
-      
+
       unHideElementByID(containerID);
       field = document.getElementById(fieldID);
       field.value = gCommonDialogParam.GetString(6);
       field.focus();
       break;
-  }	
+  }
 
   // set the pressed button to cancel to handle the case where the close box is pressed
   gCommonDialogParam.SetInt(0, 1);
@@ -170,10 +170,10 @@ function commonDialogOnLoad()
 
 function setCheckbox(aChkMsg, aChkValue)
 {
-  if (aChkMsg) {	
+  if (aChkMsg) {
     var checkboxElement = document.getElementById("checkbox");
     unHideElementByID("checkboxContainer");
-    checkboxElement.setAttribute("value", aChkMsg);
+    checkboxElement.label = aChkMsg;
     checkboxElement.checked = aChkValue > 0 ? true : false;
   }
 }

@@ -33,10 +33,10 @@ try {
   // not critical, remain silent
 }
 
-function onLoad() 
+function onLoad()
 {
   bundle = srGetStrBundle("chrome://communicator/locale/openLocation.properties");
-  
+
   dialog                = new Object;
   dialog.input          = document.getElementById("dialog.input");
   dialog.help           = document.getElementById("dialog.help");
@@ -44,54 +44,54 @@ function onLoad()
   dialog.openAppList    = document.getElementById("openAppList");
   dialog.openTopWindow  = document.getElementById("currentWindow");
   dialog.openEditWindow = document.getElementById("editWindow");
-  
+
   browser = window.arguments[0];
   if (!browser) {
     // No browser supplied - we are calling from Composer
     dialog.openAppList.selectedItem = dialog.openEditWindow;
     dialog.openTopWindow.setAttribute("disabled", "true");
-  } 
+  }
   else {
     dialog.openAppList.selectedItem = dialog.openTopWindow;
   }
-  
+
   // change OK button text to 'open'
-  dialog.open.setAttribute("value", bundle.GetStringFromName("openButtonLabel"));
+  dialog.open.label = bundle.GetStringFromName("openButtonLabel");
 
   doSetOKCancel(open, 0, 0, 0);
-  
+
   dialog.input.focus();
   if (pref) {
     try {
-      var data = pref.GetIntPref("general.open_location.last_window_choice");
-      var element = dialog.openAppList.getElementsByAttribute("data", data)[0];
+      var value = pref.GetIntPref("general.open_location.last_window_choice");
+      var element = dialog.openAppList.getElementsByAttribute("value", value)[0];
       if (element)
         dialog.openAppList.selectedItem = element;
-      dialog.input.value = pref.CopyUnicharPref("general.open_location.last_url");     
+      dialog.input.value = pref.CopyUnicharPref("general.open_location.last_url");
     }
     catch(ex) {
     }
     if (dialog.input.value)
       dialog.input.select(); // XXX should probably be done automatically
   }
-  
+
   doEnabling();
 }
 
-function doEnabling() 
+function doEnabling()
 {
     dialog.open.disabled = !dialog.input.value;
 }
 
-function open() 
+function open()
 {
   var url = browser.getShortcutOrURI(dialog.input.value);
   try {
-    switch (dialog.openAppList.data) {
+    switch (dialog.openAppList.value) {
       case "0":
         browser.loadURI(url);
         break;
-      case "1": 
+      case "1":
         window.opener.delayedOpenWindow(getBrowserURL(), "all,dialog=no", url);
         break;
       case "2":
@@ -103,10 +103,10 @@ function open()
   }
   catch(exception) {
   }
-  
+
   if (pref) {
     pref.SetUnicharPref("general.open_location.last_url", dialog.input.value);
-    pref.SetIntPref("general.open_location.last_window_choice", dialog.openAppList.data);
+    pref.SetIntPref("general.open_location.last_window_choice", dialog.openAppList.value);
   }
 
   // Delay closing slightly to avoid timing bug on Linux.
@@ -114,20 +114,20 @@ function open()
   return false;
 }
 
-function createInstance(contractid, iidName) 
+function createInstance(contractid, iidName)
 {
   var iid = Components.interfaces[iidName];
   return Components.classes[contractid].createInstance(iid);
 }
 
 const nsIFilePicker = Components.interfaces.nsIFilePicker;
-function onChooseFile() 
+function onChooseFile()
 {
   try {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
     fp.init(window, bundle.GetStringFromName("chooseFileDialogTitle"), nsIFilePicker.modeOpen);
 
-    if (dialog.openAppList.data == "2") {
+    if (dialog.openAppList.value == "2") {
       // When loading into Composer, direct user to prefer HTML files and text files,
       // so we call separately to control the order of the filter list
       fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText);
@@ -135,7 +135,7 @@ function onChooseFile()
       fp.appendFilters(nsIFilePicker.filterAll);
     }
     else {
-      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText | 
+      fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterText |
                        nsIFilePicker.filterAll | nsIFilePicker.filterImages | nsIFilePicker.filterXML);
     }
 
@@ -143,6 +143,6 @@ function onChooseFile()
       dialog.input.value = fp.fileURL.spec;
   }
   catch(ex) {
-  }  
-  doEnabling();  
+  }
+  doEnabling();
 }

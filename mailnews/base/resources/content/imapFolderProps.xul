@@ -29,22 +29,22 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/folderProps.dtd">
 
 <window
-	xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="&folderProps.windowtitle.label;"
-	onload="folderPropsOnLoad()" style="width: 36em;"
-	class="dialog" orient="vertical">
+  xmlns:html="http://www.w3.org/1999/xhtml"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  title="&folderProps.windowtitle.label;"
+  onload="folderPropsOnLoad()" style="width: 36em;"
+  class="dialog" orient="vertical">
  
-	<script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
-	<script language="JavaScript" src="chrome://messenger/content/folderProps.js"></script>
+  <script language="Javascript" src="chrome://global/content/globalOverlay.js"></script>
+  <script language="JavaScript" src="chrome://messenger/content/folderProps.js"></script>
 
 <keyset id="keyset"/>  
   
 <tabcontrol orient="vertical">
   <tabbox>
-    <tab id="GeneralTab" value="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
-    <tab id="DownloadTab" value="&download.label;" accesskey="&download.accesskey;"/>
-    <tab id="folderCharsetTab" value="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
+    <tab id="GeneralTab" label="&generalInfo.label;" accesskey="&generalInfo.accesskey;"/>
+    <tab id="DownloadTab" label="&download.label;" accesskey="&download.accesskey;"/>
+    <tab id="folderCharsetTab" label="&folderCharsetTab.label;" accesskey="&folderCharsetTab.accesskey;"/>
   </tabbox>
   <tabpanel id="folderPropTabPanel">
   	<box orient="vertical">
@@ -53,25 +53,25 @@
   			<textbox id="name" readonly="true" />
   		</box>
   
-  	</box>
+    </box>
 
-	<titledbox orient="vertical">
+  <titledbox orient="vertical">
 
-		<titledbox orient="vertical">
+    <titledbox orient="vertical">
 
-			<checkbox id="selectForDownload" value="&download.check.label;" />
-		</titledbox>
-	</titledbox>
+      <checkbox id="selectForDownload" label="&download.check.label;" />
+    </titledbox>
+  </titledbox>
 
     <box orient="vertical">
       <menulist id="folderCharsetList" ref="NC:DecodersRoot" datasources="rdf:charset-menu"> 
         <template>
           <menupopup>
-            <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
           </menupopup>
         </template>
       </menulist> 
-      <checkbox id="folderCharsetOverride" value="&folderCharsetOverride.label;" />
+      <checkbox id="folderCharsetOverride" label="&folderCharsetOverride.label;" />
     </box>
  
   </tabpanel>

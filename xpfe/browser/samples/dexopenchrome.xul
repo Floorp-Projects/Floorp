@@ -64,67 +64,67 @@
     <columns><column/><column/></columns>
     <rows>
       <row>
-        <checkbox id="all" value="all"/>
-        <checkbox id="all-ex" value="explicit"/>
+        <checkbox id="all" label="all"/>
+        <checkbox id="all-ex" label="explicit"/>
       </row>
       <row>
-        <checkbox id="close" value="close"/>
-        <checkbox id="close-ex" value="explicit"/>
+        <checkbox id="close" label="close"/>
+        <checkbox id="close-ex" label="explicit"/>
       </row>
       <row>
-        <checkbox id="titlebar" value="titlebar"/>
-        <checkbox id="titlebar-ex" value="explicit"/>
+        <checkbox id="titlebar" label="titlebar"/>
+        <checkbox id="titlebar-ex" label="explicit"/>
       </row>
       <row>
-        <checkbox id="resizable" value="resizable"/>
+        <checkbox id="resizable" label="resizable"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="scrollbars" value="scrollbars"/>
+        <checkbox id="scrollbars" label="scrollbars"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="alwaysRaised" value="raised"/>
+        <checkbox id="alwaysRaised" label="raised"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="alwaysLowered" value="lowered"/>
+        <checkbox id="alwaysLowered" label="lowered"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="menubar" value="menubar"/>
+        <checkbox id="menubar" label="menubar"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="toolbar" value="toolbar"/>
+        <checkbox id="toolbar" label="toolbar"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="status" value="status"/>
+        <checkbox id="status" label="status"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="location" value="location"/>
+        <checkbox id="location" label="location"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="chrome" value="chrome"/>
+        <checkbox id="chrome" label="chrome"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="dialog" value="dialog"/>
-        <checkbox id="dialog-ex" value="explicit"/>
+        <checkbox id="dialog" label="dialog"/>
+        <checkbox id="dialog-ex" label="explicit"/>
       </row>
       <row>
-        <checkbox id="modal" value="modal"/>
+        <checkbox id="modal" label="modal"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="dependent" value="dependent"/>
+        <checkbox id="dependent" label="dependent"/>
         <spring/>
       </row>
       <row>
-        <checkbox id="centerscreen" value="centered"/>
+        <checkbox id="centerscreen" label="centered"/>
         <spring/>
       </row>
     </rows>
@@ -141,12 +141,12 @@
     <columns><column/><column/></columns>
     <rows>
       <row>
-        <button value="HTML Window" onclick="OpenWindow('html')"/>
-        <button value="XUL Window" onclick="OpenWindow('xul')"/>
+        <button label="HTML Window" onclick="OpenWindow('html')"/>
+        <button label="XUL Window" onclick="OpenWindow('xul')"/>
       </row>
       <row>
-        <button value="HTML Dialog" onclick="OpenDialog('html')"/>
-        <button value="XUL Dialog" onclick="OpenDialog('xul')"/>
+        <button label="HTML Dialog" onclick="OpenDialog('html')"/>
+        <button label="XUL Dialog" onclick="OpenDialog('xul')"/>
       </row>
     </rows>
   </grid>

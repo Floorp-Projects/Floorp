@@ -1488,14 +1488,14 @@ nsMenuFrame::OnCreate()
           }
 
           nsAutoString commandValue, menuValue;
-          commandContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, commandValue);
-          grandChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, menuValue);
+          commandContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue);
+          grandChild->GetAttribute(kNameSpaceID_None, nsXULAtoms::value, menuValue);
           if (!commandValue.Equals(menuValue)) {
             // The menu's value state needs to be updated to match the command.
             // Note that (unlike the disabled state) if the command has *no* value, we
             // assume the menu is supplying its own.
             if (!commandValue.IsEmpty()) 
-              grandChild->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, commandValue, PR_TRUE);
+              grandChild->SetAttribute(kNameSpaceID_None, nsXULAtoms::value, commandValue, PR_TRUE);
           }
         }
       }

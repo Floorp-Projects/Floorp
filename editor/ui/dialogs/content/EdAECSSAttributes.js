@@ -30,7 +30,7 @@ function BuildCSSAttributeTable()
     }
   }
 }
-  
+
 // add an attribute to the tree widget
 function onAddCSSAttribute()
 {
@@ -47,7 +47,7 @@ function onAddCSSAttribute()
   if ( AddTreeItem ( name, value, "CSSAList", CSSAttrs ) ) {
     dialog.AddCSSAttributeNameInput.value = "";
     dialog.AddCSSAttributeValueInput.value = "";
-  } 
+  }
   dialog.AddCSSAttributeNameInput.focus();
   doCSSEnabling();
 }
@@ -70,11 +70,11 @@ function UpdateCSSAttributes()
   for(var i = 0; i < CSSAList.childNodes.length; i++)
   {
     var item = CSSAList.childNodes[i];
-    var name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    var name = TrimString(item.firstChild.firstChild.getAttribute("label"));
     var value = TrimString(item.firstChild.lastChild.firstChild.value);
     // this code allows users to be sloppy in typing in values, and enter
-    // things like "foo: " and "bar;". This will trim off everything after the 
-    // respective character. 
+    // things like "foo: " and "bar;". This will trim off everything after the
+    // respective character.
     if(name.indexOf(":") != -1)
       name = name.substring(0,name.lastIndexOf(":"));
     if(value.indexOf(";") != -1)

@@ -50,7 +50,7 @@ Rights Reserved.
     <separator/>
     
     <titledbox>
-      <title value="&passwordTitle.label;"/>
+      <label value="&passwordTitle.label;"/>
       <html>&savePasswordDesc.label;</html>
       <html>&savePasswordLabel.label;</html>
       <checkbox wsm_persist="true" oncommand="onSavePassword(event.target)"

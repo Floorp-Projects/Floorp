@@ -49,7 +49,7 @@
       <xul:treeindentation/>
       <xul:image class="tree-cell-twisty" twisty="true" inherits="hidden=notwisty" allowevents="true"/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -79,7 +79,7 @@
               var field = document.createElementNS(kXULNS, "textbox");
               field.className = "textbox-inline-edit";
               field.setAttribute("flex", "1");
-              field.setAttribute("value", box.firstChild.getAttribute("value"));
+              field.setAttribute("value", box.firstChild.getAttribute("label"));
               box.appendChild(field);
               field.addEventListener("keydown", this.fieldKeyDown, false);
               field.addEventListener("change", this.fieldChange, false);
@@ -131,7 +131,7 @@
           if (aEvent.keyCode == 27) {
             cell.valueIsRejected = true;
             for (i = 0; i < cell._observers["reject"].length; ++i) 
-              cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.value), "reject");
+              cell._observers["reject"][i].callback(cell._observers["reject"][i].params.concat(box.lastChild.label), "reject");
             if ("setMode" in cell) 
               cell.setMode("normal");
           }
@@ -149,7 +149,7 @@
           var box = nodes[nodes.length-1];
           if (!cell.valueIsRejected) {
             for (var i = 0; i < cell._observers["accept"].length; ++i)
-              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.value), "accept");
+              cell._observers["accept"][i].callback(cell._observers["accept"][i].params.concat(box.lastChild.label), "accept");
             cell.setMode("normal");
           }
         ]]>
@@ -166,7 +166,7 @@
       <xul:image class="tree-cell-primary-icon-inline-edit-folder" inherits="src"/>
       <xul:box class="inline-edit-cell-box" flex="1">
         <xul:text class="inline-edit-cell-text" 
-                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+                  inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:box>
     </content>
   </binding>
@@ -178,7 +178,7 @@
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
       <xul:box class="inline-edit-cell-box" flex="1">
         <xul:text class="tree-cell-text" 
-                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+                  inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:box>
     </content>
   </binding>
@@ -188,7 +188,7 @@
     <content autostretch="never">
       <xul:box class="inline-edit-cell-box" flex="1">
         <xul:text class="tree-cell-text" 
-                  inherits="crop,value,align,mode" flex="1" crop="right"/>
+                  inherits="crop,value=label,align,mode" flex="1" crop="right"/>
       </xul:box>
     </content>
   </binding>
@@ -197,7 +197,7 @@
     <content autostretch="never">
       <xul:treeindentation/>
       <xul:image class="tree-cell-primary-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -207,21 +207,21 @@
 
   <binding id="treecell">
     <content autostretch="never">
-       <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+       <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
   <binding id="treecell-align-right">
     <content autostretch="never">
       <xul:spring flex="5"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
   <binding id="treecell-iconic">
     <content autostretch="never">
       <xul:image class="tree-cell-icon" inherits="src"/>
-      <xul:text class="tree-cell-text" inherits="crop,value,align" flex="1" crop="right"/>
+      <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>
 
@@ -235,7 +235,7 @@
     <content>
       <xul:box class="treecell-header-box" flex="1" autostretch="never">
         <xul:image class="tree-header-image" inherits="src"/>
-        <xul:text class="tree-header-text" inherits="crop,value,disabled" flex="1" crop="right"/>
+        <xul:text class="tree-header-text" inherits="crop,value=label,disabled" flex="1" crop="right"/>
         <xul:image class="tree-header-sortdirection"/>
       </xul:box>
     </content>
@@ -252,10 +252,10 @@
   <binding id="tree">
     <content>
       <children>
-	    <xul:treecolgroup>
-		  <xul:treecol flex="1"/>
-		</xul:treecolgroup>
-	  </children>
+      <xul:treecolgroup>
+      <xul:treecol flex="1"/>
+    </xul:treecolgroup>
+    </children>
       <xul:treerows class="tree-container-treerows" inherits="dragover,dragdroptree">
         <children includes="treehead|treechildren"/>
       </xul:treerows> 
@@ -417,7 +417,7 @@
                this.removeItemFromSelection(this.selectedItems[l-1]);
              if ( l <= 2 )
                this.isDownSelection=0;
-	   }
+     }
            else {
              this.addItemToSelection(n);
              this.isUpSelection=1;
@@ -435,7 +435,7 @@
            this.ensureElementIsVisible(n);
            if ( this.isUpSelection) {
              if ( l > 1 )
-	       this.removeItemFromSelection(this.selectedItems[l-1]);
+         this.removeItemFromSelection(this.selectedItems[l-1]);
              if ( l <= 2 )
                this.isUpSelection=0;
            }
@@ -624,7 +624,7 @@
   <binding id="listhead" extends="xul:treehead">
     <content>
       <xul:treerow>
-        <xul:treecell inherits="value" class="listcell-header"/>
+        <xul:treecell inherits="label" class="listcell-header"/>
       </xul:treerow>
     </content>
   </binding>
@@ -632,7 +632,7 @@
   <binding id="listitem" extends="xul:treeitem">
     <content>
       <xul:treerow>
-        <xul:treecell inherits="value" class="listcell-text"/>
+        <xul:treecell inherits="label" class="listcell-text"/>
       </xul:treerow>
     </content>
   </binding>

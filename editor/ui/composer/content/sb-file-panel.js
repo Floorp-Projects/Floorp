@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *    Ben Goodger
  */
 
@@ -30,21 +30,21 @@ function FileProperties()
   var tree = document.getElementById('fileTree');
 
   if (tree.selectedItems.length >= 1) {
-	// don't bother showing properties on bookmark separators
-	var type = tree.selectedItems[0].getAttribute('type');
+  // don't bother showing properties on bookmark separators
+  var type = tree.selectedItems[0].getAttribute('type');
     if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator") {
-		var props = window.open("chrome://communicator/content/bookmarks/bm-props.xul",
+    var props = window.open("chrome://communicator/content/bookmarks/bm-props.xul",
                                 "BookmarkProperties", "chrome,menubar,resizable");
-		props.BookmarkURL = tree.selectedItems[0].getAttribute("id");
-	}
+    props.BookmarkURL = tree.selectedItems[0].getAttribute("id");
+  }
   } else {
-    dump("nothing selected!\n"); 
+    dump("nothing selected!\n");
   }
 }
 
 function OpenSearch(tabName)
 {
-	window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
+  window.openDialog("resource:/res/samples/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName);
 }
 
 function OpenURL(event, node)
@@ -70,39 +70,39 @@ function OpenURL(event, node)
         return(false);
     }
 
-	try
-	{
-		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		if (url.indexOf("file://") == 0)
-		{
-			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-			if (rdf)
-			{
-				var fileSys = rdf.GetDataSource("rdf:files");
-				if (fileSys)
-				{
-					var src = rdf.GetResource(url, true);
-					var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-					var target = fileSys.GetTarget(src, prop, true);
-					if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-					if (target)	target = target.Value;
-					if (target)	url = target;
-					
-				}
-			}
-		}
-	}
-	catch(ex)
-	{
-	}
+  try
+  {
+    // add support for IE favorites under Win32, and NetPositive URLs under BeOS
+    if (url.indexOf("file://") == 0)
+    {
+      var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+      if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+      if (rdf)
+      {
+        var fileSys = rdf.GetDataSource("rdf:files");
+        if (fileSys)
+        {
+          var src = rdf.GetResource(url, true);
+          var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+          var target = fileSys.GetTarget(src, prop, true);
+          if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          if (target) target = target.Value;
+          if (target) url = target;
+
+        }
+      }
+    }
+  }
+  catch(ex)
+  {
+  }
 
     if(top.isEditor != undefined) {
         if(top.editorShell) {
-            var ext = getFileExtension(url);    
+            var ext = getFileExtension(url);
             // look at the extension of the file to see what should be done
             // with it. Note that this is a typically windowsey approach. will
-            // rdf:files hold a reference to the actual file type? (Mac?) 
+            // rdf:files hold a reference to the actual file type? (Mac?)
             switch(ext) {
             // XXX Crude, but it will do for now.
             case "gif":
@@ -116,7 +116,7 @@ function OpenURL(event, node)
             case "html":
             case "xul":
                 toEditor(url);
-                break;               
+                break;
             case "js":
                 EditorInsertJSFile(url);
                 break;
@@ -133,14 +133,14 @@ function OpenURL(event, node)
     } else {
         window.open(url,'bookmarks');
     }
-    
+
     dump("OpenURL(" + url + ")\n");
 
     return(true);
 }
 
 // returns the extension of a specified file URL
-function getFileExtension(url) 
+function getFileExtension(url)
 {
     return url.substring(url.lastIndexOf(".")+1,url.length).toLowerCase();
 }
@@ -155,7 +155,7 @@ function DoSingleClick(event, node)
 {
   var type = node.parentNode.parentNode.getAttribute('type');
   var selected = node.parentNode.parentNode.getAttribute('selected');
-  
+
   if (gEditNode == node) {
     // Only start an inline edit if it is the second consecutive click
     // on the same node that is not already editing or a separator.
@@ -265,7 +265,7 @@ function CloseEditNode(saveChangeFlag)
             var propertyName = "http://home.netscape.com/NC-rdf#Name";
             var propertyNode = RDF.GetResource(propertyName, true);
             dump("  replacing value of property '" + propertyName + "'\n");
-            
+
             // get the URI
             var theNode = saveNode;
             var bookmarkURL = "";
@@ -387,7 +387,7 @@ function fillContextMenu(name,node)
 
     var url = GetFileURL(node);
     var ext = getFileExtension(url);
-        
+
     // remove the menu node (which tosses all of its kids);
     // do this in case any old command nodes are hanging around
     var menuNode = popupNode.childNodes[0];
@@ -402,7 +402,7 @@ function fillContextMenu(name,node)
     {
         // note: deleted all the doContextCmd stuff from bookmarks.
         menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
-        menuItem.setAttribute("value","Insert Image");
+        menuItem.setAttribute("label","Insert Image");
         // menuItem.setAttribute("onaction","AutoInsertImage(\'" + url + "\')");
         parent.appendChild(menuItem);
     }
@@ -424,32 +424,32 @@ function GetFileURL(node)
         return(false);
     }
 
-	try
-	{
-		// add support for IE favorites under Win32, and NetPositive URLs under BeOS
-		if (url.indexOf("file://") == 0)
-		{
-			var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-			if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-			if (rdf)
-			{
-				var fileSys = rdf.GetDataSource("rdf:files");
-				if (fileSys)
-				{
-					var src = rdf.GetResource(url, true);
-					var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
-					var target = fileSys.GetTarget(src, prop, true);
-					if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
-					if (target)	target = target.Value;
-					if (target)	url = target;
-					
-				}
-			}
-		}
-	}
-	catch(ex)
-	{
-	}
+  try
+  {
+    // add support for IE favorites under Win32, and NetPositive URLs under BeOS
+    if (url.indexOf("file://") == 0)
+    {
+      var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+      if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+      if (rdf)
+      {
+        var fileSys = rdf.GetDataSource("rdf:files");
+        if (fileSys)
+        {
+          var src = rdf.GetResource(url, true);
+          var prop = rdf.GetResource("http://home.netscape.com/NC-rdf#URL", true);
+          var target = fileSys.GetTarget(src, prop, true);
+          if (target) target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+          if (target) target = target.Value;
+          if (target) url = target;
+
+        }
+      }
+    }
+  }
+  catch(ex)
+  {
+  }
     return url;
 }
 
@@ -457,88 +457,88 @@ function GetFileURL(node)
 
 function doContextCmd(cmdName)
 {
-	dump("doContextCmd start: cmd='" + cmdName + "'\n");
+  dump("doContextCmd start: cmd='" + cmdName + "'\n");
 
-	var treeNode = document.getElementById("bookmarksTree");
-	if (!treeNode)    return(false);
-	var db = treeNode.database;
-	if (!db)    return(false);
+  var treeNode = document.getElementById("bookmarksTree");
+  if (!treeNode)    return(false);
+  var db = treeNode.database;
+  if (!db)    return(false);
 
-	var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	if (!compositeDB)    return(false);
+  var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  if (!compositeDB)    return(false);
 
-	var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	if (!isupports)    return(false);
-	var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!rdf)    return(false);
+  var isupports = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+  if (!isupports)    return(false);
+  var rdf = isupports.QueryInterface(Components.interfaces.nsIRDFService);
+  if (!rdf)    return(false);
 
-	// need a resource for the command
-	var cmdResource = rdf.GetResource(cmdName);
-	if (!cmdResource)        return(false);
-	cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
-	if (!cmdResource)        return(false);
+  // need a resource for the command
+  var cmdResource = rdf.GetResource(cmdName);
+  if (!cmdResource)        return(false);
+  cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
+  if (!cmdResource)        return(false);
 
-	var select_list = treeNode.getElementsByAttribute("selected", "true");
-	if (select_list.length < 1)    return(false);
+  var select_list = treeNode.getElementsByAttribute("selected", "true");
+  if (select_list.length < 1)    return(false);
 
-	dump("# of Nodes selected: " + select_list.length + "\n\n");
+  dump("# of Nodes selected: " + select_list.length + "\n\n");
 
-	// set up selection nsISupportsArray
-	var selectionInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
-	var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+  // set up selection nsISupportsArray
+  var selectionInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
+  var selectionArray = selectionInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-	// set up arguments nsISupportsArray
-	var argumentsInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
-	var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
+  // set up arguments nsISupportsArray
+  var argumentsInstance = Components.classes["@mozilla.org/supports-array;1"].createInstance();
+  var argumentsArray = argumentsInstance.QueryInterface(Components.interfaces.nsISupportsArray);
 
-	// get argument (parent)
-	var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
-	if (!parentArc)        return(false);
+  // get argument (parent)
+  var parentArc = rdf.GetResource("http://home.netscape.com/NC-rdf#parent");
+  if (!parentArc)        return(false);
 
-	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-	{
-		var node = select_list[nodeIndex];
-		if (!node)    break;
-		var	uri = node.getAttribute("ref");
-		if ((uri) || (uri == ""))
-		{
-			uri = node.getAttribute("id");
-		}
-		if (!uri)    return(false);
+  for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
+  {
+    var node = select_list[nodeIndex];
+    if (!node)    break;
+    var uri = node.getAttribute("ref");
+    if ((uri) || (uri == ""))
+    {
+      uri = node.getAttribute("id");
+    }
+    if (!uri)    return(false);
 
-		var rdfNode = rdf.GetResource(uri);
-		if (!rdfNode)    break;
+    var rdfNode = rdf.GetResource(uri);
+    if (!rdfNode)    break;
 
-		// add node into selection array
-		selectionArray.AppendElement(rdfNode);
+    // add node into selection array
+    selectionArray.AppendElement(rdfNode);
 
-		// get the parent's URI
-		var parentURI="";
-		var	theParent = node;
-		while (theParent)
-		{
-			theParent = theParent.parentNode;
+    // get the parent's URI
+    var parentURI="";
+    var theParent = node;
+    while (theParent)
+    {
+      theParent = theParent.parentNode;
 
-			parentURI = theParent.getAttribute("ref");
-			if ((!parentURI) || (parentURI == ""))
-			{
-				parentURI = theParent.getAttribute("id");
-			}
-			if (parentURI != "")	break;
-		}
-		if (parentURI == "")    return(false);
+      parentURI = theParent.getAttribute("ref");
+      if ((!parentURI) || (parentURI == ""))
+      {
+        parentURI = theParent.getAttribute("id");
+      }
+      if (parentURI != "")  break;
+    }
+    if (parentURI == "")    return(false);
 
-		var parentNode = rdf.GetResource(parentURI, true);
-		if (!parentNode)	return(false);
+    var parentNode = rdf.GetResource(parentURI, true);
+    if (!parentNode)  return(false);
 
-		// add parent arc and node into arguments array
-		argumentsArray.AppendElement(parentArc);
-		argumentsArray.AppendElement(parentNode);
-	}
+    // add parent arc and node into arguments array
+    argumentsArray.AppendElement(parentArc);
+    argumentsArray.AppendElement(parentNode);
+  }
 
-	// do the command
-	compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
+  // do the command
+  compositeDB.DoCommand( selectionArray, cmdResource, argumentsArray );
 
-	dump("doContextCmd ends.\n\n");
-	return(true);
+  dump("doContextCmd ends.\n\n");
+  return(true);
 }

@@ -5,35 +5,35 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/messenger.dtd">
 <window id="open-save-attachment"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	flex="100%" class="dialog" title="&openSaveAttachment.title;" 
-	align="vertical" onload="onLoad();" onclose="onCancel();" >
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  flex="100%" class="dialog" title="&openSaveAttachment.title;" 
+  align="vertical" onload="onLoad();" onclose="onCancel();" >
 
-	<script src="chrome://messenger/content/openSaveAttachment.js"/>
+  <script src="chrome://messenger/content/openSaveAttachment.js"/>
 
-	<box width="360px">
-		<box orient="vertical">
-			<image class="question-icon"/>
-			<spring flex="1"/>
-		</box>
-		<box width="10px" />
-	    <box orient="vertical" flex="1">
-			<separator class="thin"/>
-			<box id="documentNameBox">
-				<text value="&openSaveAttachmentHeading.label;" />
-			</box>
-			<separator class="thin"/>
-			<html>&openSaveAttachmentWarning.label;</html>
-			<separator class="thin"/>
-			<text value="&openSaveAttachmentToDo.label;" />
-			<separator class="thin"/>
-			<radiogroup orient="vertical" id="openSaveGroup">
-				<radio group="openSaveGroup" value="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
-				<radio group="openSaveGroup" id="saveIt" value="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
-			</radiogroup>
-			<separator class="thin"/>
-		</box>
-	</box>
-	<separator class="thin"/>
-	<box id="okCancelButtons"/>
+  <box width="360px">
+    <box orient="vertical">
+      <image class="question-icon"/>
+      <spring flex="1"/>
+    </box>
+    <box width="10px" />
+      <box orient="vertical" flex="1">
+      <separator class="thin"/>
+      <box id="documentNameBox">
+        <text value="&openSaveAttachmentHeading.label;" />
+      </box>
+      <separator class="thin"/>
+      <html>&openSaveAttachmentWarning.label;</html>
+      <separator class="thin"/>
+      <text value="&openSaveAttachmentToDo.label;" />
+      <separator class="thin"/>
+      <radiogroup orient="vertical" id="openSaveGroup">
+        <radio group="openSaveGroup" label="&openSaveAttachmentOpen.label;" oncommand="onOpen();" />
+        <radio group="openSaveGroup" id="saveIt" label="&openSaveAttachmentSave.label;" oncommand="onSave();" checked="true"/>
+      </radiogroup>
+      <separator class="thin"/>
+    </box>
+  </box>
+  <separator class="thin"/>
+  <box id="okCancelButtons"/>
 </window>

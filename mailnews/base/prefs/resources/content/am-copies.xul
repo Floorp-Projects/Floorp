@@ -26,12 +26,12 @@
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
   
   <titledbox orient="vertical">
-    <title value="&sendingPrefix.label;"/>
+    <label value="&sendingPrefix.label;"/>
   
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.doFcc" value="&fccMailFolder.label;"/>
+      <checkbox wsm_persist="true" id="identity.doFcc" label="&fccMailFolder.label;"/>
       <spring flex="1"/>
-  	  <menulist id="msgFccFolderPicker" flex="1"/>
+      <menulist id="msgFccFolderPicker" flex="1"/>
     </box>
   
     <box autostretch="never">
@@ -39,13 +39,13 @@
     </box>
       
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.bccOthers" value="&bccAddress.label;"/>
+      <checkbox wsm_persist="true" id="identity.bccOthers" label="&bccAddress.label;"/>
       <textbox wsm_persist="true" id="identity.bccList" flex="1"/>
     </box>
   </titledbox>
   
   <titledbox orient="vertical">
-    <title value="&specialFolderTitle.label;"/>
+    <label value="&specialFolderTitle.label;"/>
     <grid>
       <columns>
         <column flex="1"/>
@@ -65,7 +65,7 @@
       </rows>
     </grid>
     <box autostretch="never">
-      <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" value="&saveMessageDlg.label;"/>
+      <checkbox wsm_persist="true" id="identity.showSaveMsgDlg" label="&saveMessageDlg.label;"/>
     </box>
   </titledbox>
 

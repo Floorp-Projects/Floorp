@@ -16,7 +16,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 top.MAX_RECIPIENTS = 0;
@@ -27,10 +27,10 @@ var selectElementIndexTable = null;
 
 var test_addresses_sequence = false;
 if (prefs)
-	try {
-		test_addresses_sequence = prefs.GetBoolPref("mail.debug.test_addresses_sequence");
-	}
-	catch (ex) {}
+  try {
+    test_addresses_sequence = prefs.GetBoolPref("mail.debug.test_addresses_sequence");
+  }
+  catch (ex) {}
 
 function awInputElementName()
 {
@@ -50,11 +50,11 @@ function awGetSelectItemIndex(itemData)
 {
     if (selectElementIndexTable == null)
     {
-	    selectElementIndexTable = new Object();
-	    var selectElem = document.getElementById("msgRecipientType#1");
+      selectElementIndexTable = new Object();
+      var selectElem = document.getElementById("msgRecipientType#1");
         for (var i = 0; i < selectElem.childNodes[0].childNodes.length; i ++)
     {
-            var aData = selectElem.childNodes[0].childNodes[i].getAttribute("data");
+            var aData = selectElem.childNodes[0].childNodes[i].getAttribute("value");
             selectElementIndexTable[aData] = i;
         }
     }
@@ -63,106 +63,106 @@ function awGetSelectItemIndex(itemData)
 
 function Recipients2CompFields(msgCompFields)
 {
-	if (msgCompFields)
-	{
-		var i = 1;
-		var addrTo = "";
-		var addrCc = "";
-		var addrBcc = "";
-		var addrReply = "";
-		var addrNg = "";
-		var addrFollow = "";
-		var addrOther = "";
-		var to_Sep = "";
-		var cc_Sep = "";
-		var bcc_Sep = "";
-		var reply_Sep = "";
-		var ng_Sep = "";
-		var follow_Sep = "";
+  if (msgCompFields)
+  {
+    var i = 1;
+    var addrTo = "";
+    var addrCc = "";
+    var addrBcc = "";
+    var addrReply = "";
+    var addrNg = "";
+    var addrFollow = "";
+    var addrOther = "";
+    var to_Sep = "";
+    var cc_Sep = "";
+    var bcc_Sep = "";
+    var reply_Sep = "";
+    var ng_Sep = "";
+    var follow_Sep = "";
 
     var inputField;
-	    while ((inputField = awGetInputElement(i)))
-	    {
-	    	var fieldValue = inputField.value;
+      while ((inputField = awGetInputElement(i)))
+      {
+        var fieldValue = inputField.value;
 
-	    	if (fieldValue == null)
-	    	  fieldValue = inputField.getAttribute("value");
+        if (fieldValue == null)
+          fieldValue = inputField.getAttribute("value");
 
-	    	if (fieldValue != "")
-	    	{
-			    switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
-	    		{
-	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";					break;
-	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";					break;
-	    			case "addr_bcc"			: addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";				break;
-	    			case "addr_reply"		: addrReply += reply_Sep + fieldValue; reply_Sep = ",";			break;
-	    			case "addr_newsgroups"	: addrNg += ng_Sep + fieldValue; ng_Sep = ",";					break;
-	    			case "addr_followup"	: addrFollow += follow_Sep + fieldValue; follow_Sep = ",";		break;
-					case "addr_other"		: addrOther += other_header + ": " + fieldValue + "\n"; 		break;
-	    		}
-	    	}
-	    	i ++;
-	    }
-      
-    	msgCompFields.to = addrTo;
-    	msgCompFields.cc = addrCc;
-    	msgCompFields.bcc = addrBcc;
-    	msgCompFields.replyTo = addrReply;
-    	msgCompFields.newsgroups = addrNg;
-    	msgCompFields.followupTo = addrFollow;
+        if (fieldValue != "")
+        {
+          switch (awGetPopupElement(i).selectedItem.getAttribute("value"))
+          {
+            case "addr_to"      : addrTo += to_Sep + fieldValue; to_Sep = ",";          break;
+            case "addr_cc"      : addrCc += cc_Sep + fieldValue; cc_Sep = ",";          break;
+            case "addr_bcc"     : addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";       break;
+            case "addr_reply"   : addrReply += reply_Sep + fieldValue; reply_Sep = ",";     break;
+            case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";          break;
+            case "addr_followup"  : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";    break;
+          case "addr_other"   : addrOther += other_header + ": " + fieldValue + "\n";     break;
+          }
+        }
+        i ++;
+      }
+
+      msgCompFields.to = addrTo;
+      msgCompFields.cc = addrCc;
+      msgCompFields.bcc = addrBcc;
+      msgCompFields.replyTo = addrReply;
+      msgCompFields.newsgroups = addrNg;
+      msgCompFields.followupTo = addrFollow;
       msgCompFields.otherRandomHeaders = addrOther;
-	}
-	else
-		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
+  }
+  else
+    dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
 }
 
 function CompFields2Recipients(msgCompFields, msgType)
 {
-	if (msgCompFields)
-	{
-	    var treeChildren = document.getElementById('addressWidgetBody');
-	    var newTreeChildrenNode = treeChildren.cloneNode(false);
-	    var templateNode = treeChildren.firstChild;
-		
-		top.MAX_RECIPIENTS = 0;
+  if (msgCompFields)
+  {
+      var treeChildren = document.getElementById('addressWidgetBody');
+      var newTreeChildrenNode = treeChildren.cloneNode(false);
+      var templateNode = treeChildren.firstChild;
 
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.replyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.to, false), "addr_to", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.cc, false), "addr_cc", newTreeChildrenNode, templateNode);
-		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.bcc, false), "addr_bcc", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.otherRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.newsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
-		awSetInputAndPopup(msgCompFields.followupTo, "addr_followup", newTreeChildrenNode, templateNode);
-		
-		//If it's a new message, we need to add an extrat empty recipient.
-		var msgComposeType = Components.interfaces.nsIMsgCompType;
-		if (msgType == msgComposeType.New || top.MAX_RECIPIENTS == 0)
-		    _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-		dump("replacing child in comp fields 2 recips \n");
-	    var parent = treeChildren.parentNode;
-	    parent.replaceChild(newTreeChildrenNode, treeChildren);
+    top.MAX_RECIPIENTS = 0;
+
+    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.replyTo, false), "addr_reply", newTreeChildrenNode, templateNode);
+    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.to, false), "addr_to", newTreeChildrenNode, templateNode);
+    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.cc, false), "addr_cc", newTreeChildrenNode, templateNode);
+    awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.bcc, false), "addr_bcc", newTreeChildrenNode, templateNode);
+    awSetInputAndPopup(msgCompFields.otherRandomHeaders, "addr_other", newTreeChildrenNode, templateNode);
+    awSetInputAndPopup(msgCompFields.newsgroups, "addr_newsgroups", newTreeChildrenNode, templateNode);
+    awSetInputAndPopup(msgCompFields.followupTo, "addr_followup", newTreeChildrenNode, templateNode);
+
+    //If it's a new message, we need to add an extrat empty recipient.
+    var msgComposeType = Components.interfaces.nsIMsgCompType;
+    if (msgType == msgComposeType.New || top.MAX_RECIPIENTS == 0)
+        _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
+    dump("replacing child in comp fields 2 recips \n");
+      var parent = treeChildren.parentNode;
+      parent.replaceChild(newTreeChildrenNode, treeChildren);
       awFitDummyRows();
         setTimeout("awFinishCopyNodes();", 0);
-	}
+  }
 }
 
 function awSetInputAndPopupValue(inputElem, inputValue, popupElem, popupValue, rowNumber)
 {
-	// remove leading spaces
-	while (inputValue && inputValue[0] == " " )
-		inputValue = inputValue.substring(1, inputValue.length);
-	
+  // remove leading spaces
+  while (inputValue && inputValue[0] == " " )
+    inputValue = inputValue.substring(1, inputValue.length);
+
   inputElem.setAttribute("value", inputValue);
   inputElem.value = inputValue;
 
   popupElem.selectedItem = popupElem.childNodes[0].childNodes[awGetSelectItemIndex(popupValue)];
-  
+
   if (rowNumber >= 0)
   {
     inputElem.setAttribute("id", "msgRecipient#" + rowNumber);
-  	popupElem.setAttribute("id", "msgRecipientType#" + rowNumber);
-	}
-  
+    popupElem.setAttribute("id", "msgRecipientType#" + rowNumber);
+  }
+
   _awSetAutoComplete(popupElem, inputElem);
 }
 
@@ -182,22 +182,22 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
 
 function awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
 {
-	if ( inputValue && popupValue )
-	{
-		var addressArray = inputValue.split(",");
-		
-		for ( var index = 0; index < addressArray.length; index++ )
-		    _awSetInputAndPopup(addressArray[index], popupValue, parentNode, templateNode);
-	}
+  if ( inputValue && popupValue )
+  {
+    var addressArray = inputValue.split(",");
+
+    for ( var index = 0; index < addressArray.length; index++ )
+        _awSetInputAndPopup(addressArray[index], popupValue, parentNode, templateNode);
+  }
 }
 
 function awSetInputAndPopupFromArray(inputArray, popupValue, parentNode, templateNode)
 {
-	if ( inputArray && popupValue )
-	{
-		for ( var index = 0; index < inputArray.count; index++ )
-		    _awSetInputAndPopup(inputArray.StringAt(index), popupValue, parentNode, templateNode);
-	}
+  if ( inputArray && popupValue )
+  {
+    for ( var index = 0; index < inputArray.count; index++ )
+        _awSetInputAndPopup(inputArray.StringAt(index), popupValue, parentNode, templateNode);
+  }
 }
 
 function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
@@ -208,12 +208,12 @@ function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
   var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
   if (! recipientArray)
     return;
-  
+
   for ( var index = 0; index < recipientArray.count; index++ )
     for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
     {
       var popup = awGetPopupElement(row);
-      if (popup.selectedItem.getAttribute("data") == recipientType)
+      if (popup.selectedItem.getAttribute("value") == recipientType)
       {
         var input = awGetInputElement(row);
         if (input.value == recipientArray.StringAt(index))
@@ -222,7 +222,7 @@ function awRemoveRecipients(msgCompFields, recipientType, recipientsList)
           break;
         }
       }
-    } 
+    }
 }
 
 function awAddRecipients(msgCompFields, recipientType, recipientsList)
@@ -233,7 +233,7 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
   var recipientArray = msgCompFields.SplitRecipients(recipientsList, false);
   if (! recipientArray)
     return;
-  
+
   for ( var index = 0; index < recipientArray.count; index++ )
   {
     for (var row = 1; row <= top.MAX_RECIPIENTS; row ++)
@@ -243,7 +243,7 @@ function awAddRecipients(msgCompFields, recipientType, recipientsList)
     }
     if (row > top.MAX_RECIPIENTS)
       awAppendNewRow(false);
-  
+
     awSetInputAndPopupValue(awGetInputElement(row), recipientArray.StringAt(index), awGetPopupElement(row), recipientType, row);
 
     /* be sure we still have an empty row left at the end */
@@ -259,39 +259,39 @@ function awTestRowSequence()
 {
   /*
     This function is for debug and testing purpose only, normal user should not run it!
-    
+
     Everytime we insert or delete a row, we must be sure we didn't break the ID sequence of
     the addressing widget rows. This function will run a quick test to see if the sequence still ok
-    
+
     You need to define the pref mail.debug.test_addresses_sequence to true in order to activate it
   */
-  
-	if (! test_addresses_sequence)
-	  return true;
- 
+
+  if (! test_addresses_sequence)
+    return true;
+
   /* debug code to verify the sequence still good */
-	var body = document.getElementById('addressWidgetBody');
-	var treeitems = body.getElementsByTagName('treeitem');
-	if (treeitems.length == top.MAX_RECIPIENTS )
-	{
-	  for (var i = 1; i <= treeitems.length; i ++)
-	  {
-			var item = treeitems[i - 1];
+  var body = document.getElementById('addressWidgetBody');
+  var treeitems = body.getElementsByTagName('treeitem');
+  if (treeitems.length == top.MAX_RECIPIENTS )
+  {
+    for (var i = 1; i <= treeitems.length; i ++)
+    {
+      var item = treeitems[i - 1];
       var inputID = item.getElementsByTagName(awInputElementName())[0].getAttribute("id").split("#")[1];
       var popupID = item.getElementsByTagName(awSelectElementName())[0].getAttribute("id").split("#")[1];
       if (inputID != i || popupID != i)
       {
-	      dump("#ERROR: sequence broken at row " + i + ", inputID=" + inputID + ", popupID=" + popupID + "\n");
-	      break;
-	    }
-		}
+        dump("#ERROR: sequence broken at row " + i + ", inputID=" + inputID + ", popupID=" + popupID + "\n");
+        break;
+      }
+    }
     dump("---SEQUENCE OK---\n");
-    return true;		
-	}
-	else
-	  dump("#ERROR: treeitems.length(" + treeitems.length + ") != top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
+    return true;
+  }
+  else
+    dump("#ERROR: treeitems.length(" + treeitems.length + ") != top.MAX_RECIPIENTS(" + top.MAX_RECIPIENTS + ")\n");
 
-	return false;
+  return false;
 }
 
 function awCleanupRows()
@@ -307,7 +307,7 @@ function awCleanupRows()
     else
     {
       inputElem.setAttribute("id", "msgRecipient#" + rowID);
-  	  awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
+      awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
       rowID ++;
     }
   }
@@ -320,14 +320,14 @@ function awDeleteRow(rowToDelete)
   /* When we delete a row, we must reset the id of others row in order to not break the sequence */
   var maxRecipients = top.MAX_RECIPIENTS;
   var rowID = rowToDelete;
-  
+
   awRemoveRow(rowToDelete);
 
   for (var row = rowToDelete + 1; row <= maxRecipients; row ++)
   {
     awGetInputElement(row).setAttribute("id", "msgRecipient#" + rowID);
-  	awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
-  	rowID ++;
+    awGetPopupElement(row).setAttribute("id", "msgRecipientType#" + rowID);
+    rowID ++;
   }
 
   awTestRowSequence();
@@ -338,43 +338,43 @@ function awClickEmptySpace(targ, setFocus)
   if (targ.localName != 'treechildren')
     return;
 
-	dump("awClickEmptySpace\n");
-	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+  dump("awClickEmptySpace\n");
+  var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
-	if ( lastInput && lastInput.value )
-		awAppendNewRow(setFocus);
-	else
-		if (setFocus)
-			awSetFocus(top.MAX_RECIPIENTS, lastInput);
+  if ( lastInput && lastInput.value )
+    awAppendNewRow(setFocus);
+  else
+    if (setFocus)
+      awSetFocus(top.MAX_RECIPIENTS, lastInput);
 }
 
 function awReturnHit(inputElement)
 {
-	var row = awGetRowByInputElement(inputElement);
-	var nextInput = awGetInputElement(row+1);
+  var row = awGetRowByInputElement(inputElement);
+  var nextInput = awGetInputElement(row+1);
 
-	if ( !nextInput )
+  if ( !nextInput )
   {
     if ( inputElement.value )
-			awAppendNewRow(true);
+      awAppendNewRow(true);
     else // No adress entered, switch to Subject field
     {
-		  var subjectField = document.getElementById( 'msgSubject' );
-			subjectField.select();
-		  subjectField.focus();
+      var subjectField = document.getElementById( 'msgSubject' );
+      subjectField.select();
+      subjectField.focus();
     }
   }
-	else
+  else
   {
     nextInput.select();
-		awSetFocus(row+1, nextInput);
+    awSetFocus(row+1, nextInput);
   }
 }
 
 function awDeleteHit(inputElement)
 {
   var row = awGetRowByInputElement(inputElement);
-  
+
   /* 1. don't delete the row if it's the last one remaining, just reset it! */
   if (top.MAX_RECIPIENTS <= 1)
   {
@@ -389,44 +389,44 @@ function awDeleteHit(inputElement)
     awSetFocus(1, awGetInputElement(2))   /* We have to cheat a little bit because the focus will */
                                           /* be set asynchronusly after we delete the current row, */
                                           /* therefore the row number still the same! */
-                                                
+
   /* 3. Delete the row */
   awDeleteRow(row);
 }
 
 function awInputChanged(inputElement)
 {
-	dump("awInputChanged\n");
-//	AutoCompleteAddress(inputElement);
+  dump("awInputChanged\n");
+//  AutoCompleteAddress(inputElement);
 
-	//Do we need to add a new row?
-	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
-	if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
-		awAppendNewRow(false);
-	top.doNotCreateANewRow = false;
+  //Do we need to add a new row?
+  var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+  if ( lastInput && lastInput.value && !top.doNotCreateANewRow)
+    awAppendNewRow(false);
+  top.doNotCreateANewRow = false;
 }
 
 function awAppendNewRow(setFocus)
 {
-	var body = document.getElementById('addressWidgetBody');
-	var treeitem1 = awGetTreeItem(1);
-	
-	if ( body && treeitem1 )
-	{
-	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("data");
+  var body = document.getElementById('addressWidgetBody');
+  var treeitem1 = awGetTreeItem(1);
+
+  if ( body && treeitem1 )
+  {
+      var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).selectedItem.getAttribute("value");
 
     var nextDummy = awGetNextDummyRow();
-		var newNode = awCopyNode(treeitem1, body, nextDummy);
+    var newNode = awCopyNode(treeitem1, body, nextDummy);
     if (nextDummy) body.removeChild(nextDummy);
-    
-		top.MAX_RECIPIENTS++;
+
+    top.MAX_RECIPIENTS++;
 
         var input = newNode.getElementsByTagName(awInputElementName());
         if ( input && input.length == 1 )
         {
-   			  input[0].setAttribute("value", "");
-    	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
-          
+          input[0].setAttribute("value", "");
+          input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
+
           // We always clone the first row.  The problem is that the first row
           // could be focused.  When we clone that row, we end up with a cloned
           // XUL textbox that has a focused attribute set.  Therefore we think
@@ -438,20 +438,20 @@ function awAppendNewRow(setFocus)
           // is never copied when the node is cloned.
           if (input[0].getAttribute('focused') != '')
             input[0].removeAttribute('focused');
-    	  }
+        }
         var select = newNode.getElementsByTagName(awSelectElementName());
         if ( select && select.length == 1 )
         {
             select[0].selectedItem = select[0].childNodes[0].childNodes[awGetSelectItemIndex(lastRecipientType)];
-    	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
-    	    if (input)
+          select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+          if (input)
             _awSetAutoComplete(select[0], input[0]);
-    	}
+      }
 
-		// focus on new input widget
-		if (setFocus && input[0] )
-			awSetFocus(top.MAX_RECIPIENTS, input[0]);
-	}
+    // focus on new input widget
+    if (setFocus && input[0] )
+      awSetFocus(top.MAX_RECIPIENTS, input[0]);
+  }
 }
 
 
@@ -469,59 +469,59 @@ function awGetInputElement(row)
 
 function awGetTreeRow(row)
 {
-	var body = document.getElementById('addressWidgetBody');
-	
-	if ( body && row > 0)
-	{
-		var treerows = body.getElementsByTagName('treerow');
-		if ( treerows && treerows.length >= row )
-			return treerows[row-1];
-	}
-	return 0;
+  var body = document.getElementById('addressWidgetBody');
+
+  if ( body && row > 0)
+  {
+    var treerows = body.getElementsByTagName('treerow');
+    if ( treerows && treerows.length >= row )
+      return treerows[row-1];
+  }
+  return 0;
 }
 
 function awGetTreeItem(row)
 {
-	var body = document.getElementById('addressWidgetBody');
-	
-	if ( body && row > 0)
-	{
-		var treeitems = body.getElementsByTagName('treeitem');
-		if ( treeitems && treeitems.length >= row )
-			return treeitems[row-1];
-	}
-	return 0;
+  var body = document.getElementById('addressWidgetBody');
+
+  if ( body && row > 0)
+  {
+    var treeitems = body.getElementsByTagName('treeitem');
+    if ( treeitems && treeitems.length >= row )
+      return treeitems[row-1];
+  }
+  return 0;
 }
 
 function awGetRowByInputElement(inputElement)
 {
-	if ( inputElement )
-	{
-		var treerow;
-		var inputElementTreerow = inputElement.parentNode.parentNode;
-		
-		if ( inputElementTreerow )
-		{
-			for ( var row = 1;  (treerow = awGetTreeRow(row)); row++ )
-			{
-				if ( treerow == inputElementTreerow )
-					return row;
-			}
-		}
-	}
-	return 0;
+  if ( inputElement )
+  {
+    var treerow;
+    var inputElementTreerow = inputElement.parentNode.parentNode;
+
+    if ( inputElementTreerow )
+    {
+      for ( var row = 1;  (treerow = awGetTreeRow(row)); row++ )
+      {
+        if ( treerow == inputElementTreerow )
+          return row;
+      }
+    }
+  }
+  return 0;
 }
 
 
 // Copy Node - copy this node and insert ahead of the (before) node.  Append to end if before=0
 function awCopyNode(node, parentNode, beforeNode)
 {
-	var newNode = node.cloneNode(true);
-	
-	if ( beforeNode )
-		parentNode.insertBefore(newNode, beforeNode);
-	else
-		parentNode.appendChild(newNode);
+  var newNode = node.cloneNode(true);
+
+  if ( beforeNode )
+    parentNode.insertBefore(newNode, beforeNode);
+  else
+    parentNode.appendChild(newNode);
 
     return newNode;
 }
@@ -530,50 +530,50 @@ function awCopyNode(node, parentNode, beforeNode)
 
 function awRemoveRow(row)
 {
-	var body = document.getElementById('addressWidgetBody');
-	
-	awRemoveNodeAndChildren(body, awGetTreeItem(row));
+  var body = document.getElementById('addressWidgetBody');
+
+  awRemoveNodeAndChildren(body, awGetTreeItem(row));
   awFitDummyRows();
-  
-	top.MAX_RECIPIENTS --;
+
+  top.MAX_RECIPIENTS --;
 }
 
 function awRemoveNodeAndChildren(parent, nodeToRemove)
 {
-	// children of nodes
-	var childNode;
-	
-	while ( nodeToRemove.childNodes && nodeToRemove.childNodes.length )
-	{
-		childNode = nodeToRemove.childNodes[0];
-	
-		awRemoveNodeAndChildren(nodeToRemove, childNode);
-	}
-	
-	parent.removeChild(nodeToRemove);
+  // children of nodes
+  var childNode;
+
+  while ( nodeToRemove.childNodes && nodeToRemove.childNodes.length )
+  {
+    childNode = nodeToRemove.childNodes[0];
+
+    awRemoveNodeAndChildren(nodeToRemove, childNode);
+  }
+
+  parent.removeChild(nodeToRemove);
 }
 
 function awSetFocus(row, inputElement)
 {
-	top.awRow = row;
-	top.awInputElement = inputElement;
-	top.awFocusRetry = 0;
-	setTimeout("_awSetFocus();", 0);
+  top.awRow = row;
+  top.awInputElement = inputElement;
+  top.awFocusRetry = 0;
+  setTimeout("_awSetFocus();", 0);
 }
 
 function _awSetFocus()
 {
-	var tree = document.getElementById('addressingWidgetTree');
-	try
-	{
-		var theNewRow = awGetTreeRow(top.awRow);
-		//temporary patch for bug 26344
-		awFinishCopyNode(theNewRow);
+  var tree = document.getElementById('addressingWidgetTree');
+  try
+  {
+    var theNewRow = awGetTreeRow(top.awRow);
+    //temporary patch for bug 26344
+    awFinishCopyNode(theNewRow);
 
     //Warning: firstVisibleRow is zero base but top.awRow is one base!
     var firstVisibleRow = tree.getIndexOfFirstVisibleRow();
     var numOfVisibleRows = tree.getNumberOfVisibleRows();
-  
+
     //Do we need to scroll in order to see the selected row?
     if (top.awRow <= firstVisibleRow)
       tree.scrollToIndex(top.awRow - 1);
@@ -581,19 +581,19 @@ function _awSetFocus()
       if (top.awRow - 1 >= (firstVisibleRow + numOfVisibleRows))
         tree.scrollToIndex(top.awRow - numOfVisibleRows);
 
-		top.awInputElement.focus();
-	}
-	catch(ex)
-	{
-		top.awFocusRetry ++;
-		if (top.awFocusRetry < 3)
-		{
-			dump("_awSetFocus failed, try it again...\n");
-			setTimeout("_awSetFocus();", 0);
-		}
-		else
-			dump("_awSetFocus failed, forget about it!\n");
-	}
+    top.awInputElement.focus();
+  }
+  catch(ex)
+  {
+    top.awFocusRetry ++;
+    if (top.awFocusRetry < 3)
+    {
+      dump("_awSetFocus failed, try it again...\n");
+      setTimeout("_awSetFocus();", 0);
+    }
+    else
+      dump("_awSetFocus failed, forget about it!\n");
+  }
 }
 
 
@@ -613,9 +613,9 @@ function awFinishCopyNodes()
 
 function awTabFromRecipient(element, event)
 {
-	//If we are le last element in the tree, we don't want to create a new row.
-	if (element == awGetInputElement(top.MAX_RECIPIENTS))
-		top.doNotCreateANewRow = true;
+  //If we are le last element in the tree, we don't want to create a new row.
+  if (element == awGetInputElement(top.MAX_RECIPIENTS))
+    top.doNotCreateANewRow = true;
 }
 
 function awGetNumberOfRecipients()
@@ -625,93 +625,93 @@ function awGetNumberOfRecipients()
 
 function DragOverTree(event)
 {
-	var validFlavor = false;
-	var dragSession = null;
-	var retVal = true;
+  var validFlavor = false;
+  var dragSession = null;
+  var retVal = true;
 
-	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-	if (dragService) 
-		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-	if (!dragService)	return(false);
+  var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
+  if (dragService)
+    dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+  if (!dragService) return(false);
 
-	dragSession = dragService.getCurrentSession();
-	if (!dragSession)	return(false);
+  dragSession = dragService.getCurrentSession();
+  if (!dragSession) return(false);
 
-	if (dragSession.isDataFlavorSupported("text/nsabcard"))	validFlavor = true;
-	//XXX other flavors here...
+  if (dragSession.isDataFlavorSupported("text/nsabcard")) validFlavor = true;
+  //XXX other flavors here...
 
-	// touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
-	if (validFlavor)
-	{
-		//XXX this is really slow and likes to refresh N times per second.
-		var rowGroup = event.target.parentNode.parentNode;
-		rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
-		dragSession.canDrop = true;
-		// necessary??
-		retVal = false; // do not propagate message
-	}
-	return(retVal);
+  // touch the attribute on the rowgroup to trigger the repaint with the drop feedback.
+  if (validFlavor)
+  {
+    //XXX this is really slow and likes to refresh N times per second.
+    var rowGroup = event.target.parentNode.parentNode;
+    rowGroup.setAttribute ( "dd-triggerrepaint", 0 );
+    dragSession.canDrop = true;
+    // necessary??
+    retVal = false; // do not propagate message
+  }
+  return(retVal);
 }
 
 function DropOnAddressingWidgetTree(event)
 {
-	dump("DropOnTree\n");
-	var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	if (rdf)   
-		rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
-	if (!rdf) return(false);
+  dump("DropOnTree\n");
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+  if (rdf)
+    rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+  if (!rdf) return(false);
 
-	var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
-	if (dragService) 
-		dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
-	if (!dragService)	return(false);
-	
-	var dragSession = dragService.getCurrentSession();
-	if ( !dragSession )	return(false);
+  var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
+  if (dragService)
+    dragService = dragService.QueryInterface(Components.interfaces.nsIDragService);
+  if (!dragService) return(false);
 
-	var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
-	if ( !trans ) return(false);
-	trans.addDataFlavor("text/nsabcard");
+  var dragSession = dragService.getCurrentSession();
+  if ( !dragSession ) return(false);
 
-	for ( var i = 0; i < dragSession.numDropItems; ++i )
-	{
-		dragSession.getData ( trans, i );
-		dataObj = new Object();
-		bestFlavor = new Object();
-		len = new Object();
-		trans.getAnyTransferData ( bestFlavor, dataObj, len );
-		if ( dataObj )	dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
-		if ( !dataObj )	continue;
+  var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+  if ( !trans ) return(false);
+  trans.addDataFlavor("text/nsabcard");
 
-		// pull the URL out of the data object
-		var sourceID = dataObj.data.substring(0, len.value);
-		if (!sourceID)	continue;
+  for ( var i = 0; i < dragSession.numDropItems; ++i )
+  {
+    dragSession.getData ( trans, i );
+    dataObj = new Object();
+    bestFlavor = new Object();
+    len = new Object();
+    trans.getAnyTransferData ( bestFlavor, dataObj, len );
+    if ( dataObj )  dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
+    if ( !dataObj ) continue;
 
-		var cardResource = rdf.GetResource(sourceID);
-		var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-		var address = "\"" + card.name + "\" <" + card.primaryEmail + ">";
-		dump("    Address #" + i + " = " + address + "\n");
+    // pull the URL out of the data object
+    var sourceID = dataObj.data.substring(0, len.value);
+    if (!sourceID)  continue;
 
-		DropRecipient(address); 
-		
-	}
+    var cardResource = rdf.GetResource(sourceID);
+    var card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+    var address = "\"" + card.name + "\" <" + card.primaryEmail + ">";
+    dump("    Address #" + i + " = " + address + "\n");
 
-	return(false);
+    DropRecipient(address);
+
+  }
+
+  return(false);
 }
 
-function DropRecipient(recipient) 
-{ 
-    awClickEmptySpace(true);    //that will automatically set the focus on a new available row, and make sure is visible 
-    var lastInput = awGetInputElement(top.MAX_RECIPIENTS); 
-    lastInput.value = recipient; 
-    awAppendNewRow(true); 
+function DropRecipient(recipient)
+{
+    awClickEmptySpace(true);    //that will automatically set the focus on a new available row, and make sure is visible
+    var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
+    lastInput.value = recipient;
+    awAppendNewRow(true);
 }
 
 function _awSetAutoComplete(selectElem, inputElem)
 {
-	if (selectElem.data != 'addr_newsgroups' && selectElem.data != 'addr_followup')
-		inputElem.disableAutocomplete = false;
-	else
+  if (selectElem.value != 'addr_newsgroups' && selectElem.value != 'addr_followup')
+    inputElem.disableAutocomplete = false;
+  else
     inputElem.disableAutocomplete = true;
 }
 
@@ -763,7 +763,7 @@ function awKeyDown(event, treeElement)
       if (inputs && inputs.length == 1)
         awDeleteHit(inputs[0]);
     }
-    break;   
+    break;
   }
 }
 
@@ -775,14 +775,14 @@ var gAWRowHeight = 0;
 function awFitDummyRows()
 {
   awCalcContentHeight();
-  awCreateOrRemoveDummyRows();  
+  awCreateOrRemoveDummyRows();
 }
 
 function awCreateOrRemoveDummyRows()
 {
   var body = document.getElementById("addressWidgetBody");
   var bodyHeight = body.boxObject.height;
-  
+
   // remove rows to remove scrollbar
   var kids = body.childNodes;
   for (var i = kids.length-1; gAWContentHeight > bodyHeight && i >= 0; --i) {
@@ -831,10 +831,10 @@ function awCreateDummyItem(aParent)
 
   awCreateDummyCell(trow);
   awCreateDummyCell(trow);
-  
+
   if (aParent)
     aParent.appendChild(titem);
-  
+
   return titem;
 }
 
@@ -844,13 +844,13 @@ function awCreateDummyCell(aParent)
   cell.setAttribute("class", "treecell-addressingWidget dummy-row-cell");
   if (aParent)
     aParent.appendChild(cell);
-  
+
   return cell;
 }
 
 function awDummyRow_onclick() {
   // pass click event back to handler
-  awClickEmptySpace(document.getElementById("addressWidgetBody"), true); 
+  awClickEmptySpace(document.getElementById("addressWidgetBody"), true);
 }
 
 function awGetNextDummyRow()
@@ -869,8 +869,8 @@ function awSizerListen()
 {
   // when splitter is clicked, fill in necessary dummy rows each time the mouse is moved
   awCalcContentHeight(); // precalculate
-  document.addEventListener("mousemove", awSizerMouseMove, true);  
-  document.addEventListener("mouseup", awSizerMouseUp, false);  
+  document.addEventListener("mousemove", awSizerMouseMove, true);
+  document.addEventListener("mouseup", awSizerMouseUp, false);
 }
 
 function awSizerMouseMove()
@@ -880,7 +880,7 @@ function awSizerMouseMove()
 
 function awSizerMouseUp()
 {
-  document.removeEventListener("mousemove", awSizerMouseUp, false);  
-  document.removeEventListener("mouseup", awSizerMouseUp, false);  
+  document.removeEventListener("mousemove", awSizerMouseUp, false);
+  document.removeEventListener("mouseup", awSizerMouseUp, false);
 }
 

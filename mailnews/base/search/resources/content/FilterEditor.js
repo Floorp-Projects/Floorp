@@ -43,7 +43,7 @@ function filterEditorOnLoad()
     initializeFilterWidgets();
 
     gFilterBundle = document.getElementById("bundle_filter");
-    
+
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
         if ("filter" in args) {
@@ -68,15 +68,15 @@ function onOk()
 {
     if (isDuplicateFilterNameExists())
     {
-        var commonDialogsService 
+        var commonDialogsService
             = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-        commonDialogsService 
+        commonDialogsService
             = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
         if (commonDialogsService)
         {
             commonDialogsService.Alert(window,
-                gFilterBundle.getString("cannotHaveDuplicateFilterTitle"), 
+                gFilterBundle.getString("cannotHaveDuplicateFilterTitle"),
                 gFilterBundle.getString("cannotHaveDuplicateFilterMessage")
             );
         }
@@ -141,13 +141,13 @@ function initializeDialog(filter)
     var selectedPriority;
     gFilterNameElement.value = filter.filterName;
 
-    gActionElement.selectedItem=gActionElement.getElementsByAttribute("data", filter.action)[0];
+    gActionElement.selectedItem=gActionElement.getElementsByAttribute("value", filter.action)[0];
     showActionElementFor(gActionElement.selectedItem);
 
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
         // preselect target folder
         // there are multiple sub-items that have given attribute
-        var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
+        var targets = gActionTargetElement.getElementsByAttribute("value", filter.actionTargetFolderUri);
 
         if (targets && targets.length > 0) {
             var target = targets[0];
@@ -158,14 +158,14 @@ function initializeDialog(filter)
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {
         // initialize priority
-        selectedPriority = gActionPriority.getElementsByAttribute("data", filter.actionPriority);
+        selectedPriority = gActionPriority.getElementsByAttribute("value", filter.actionPriority);
 
         if (selectedPriority && selectedPriority.length > 0) {
             selectedPriority = selectedPriority[0];
             gActionPriority.selectedItem = selectedPriority;
         }
     }
-        
+
 
     var scope = getScope(filter);
     setSearchScope(scope);
@@ -191,18 +191,18 @@ function saveFilter() {
     }
 
     var targetUri;
-    var action = gActionElement.selectedItem.getAttribute("data");
-    
+    var action = gActionElement.selectedItem.getAttribute("value");
+
     if (action == nsMsgFilterAction.MoveToFolder) {
         if (gActionTargetElement)
-            targetUri = gActionTargetElement.selectedItem.getAttribute("data");
+            targetUri = gActionTargetElement.selectedItem.getAttribute("value");
         if (!targetUri || targetUri == "") {
             str = gFilterBundle.getString("mustSelectFolder");
             window.alert(str);
             return false;
         }
     }
-    
+
     else if (action == nsMsgFilterAction.ChangePriority) {
         if (!gActionPriority.selectedItem) {
             str = gFilterBundle.getString("mustSelectPriority");
@@ -211,7 +211,7 @@ function saveFilter() {
         }
     }
 
-    // this must happen after everything has 
+    // this must happen after everything has
     if (!gFilter) {
         gFilter = gFilterList.createFilter(gFilterNameElement.value);
         isNewFilter = true;
@@ -225,10 +225,10 @@ function saveFilter() {
     if (action == nsMsgFilterAction.MoveToFolder)
         gFilter.actionTargetFolderUri = targetUri;
     else if (action == nsMsgFilterAction.ChangePriority)
-        gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("data");
+        gFilter.actionPriority = gActionPriority.selectedItem.getAttribute("value");
 
     saveSearchTerms(gFilter.searchTerms, gFilter);
-    
+
     if (isNewFilter) {
         // new filter - insert into gFilterList
         gFilterList.insertFilterAt(0, gFilter);
@@ -258,7 +258,7 @@ function showActionElementFor(menuitem)
 
 function GetFirstSelectedMsgFolder()
 {
-    var selectedFolder = gActionTargetElement.selectedItem.getAttribute("data");
+    var selectedFolder = gActionTargetElement.selectedItem.getAttribute("value");
 
     var msgFolder = GetMsgFolderFromUri(selectedFolder);
     return msgFolder;

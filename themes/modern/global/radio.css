@@ -50,7 +50,7 @@ radio:focus {
 
 /* ..... disabled state ..... */
 
-radio[disabled="true"][value] > .internal-box > .checkbox-label {
+radio[disabled="true"][label] > .internal-box > .checkbox-label {
   color: #85959E;
 }
 
@@ -71,7 +71,7 @@ radio > .internal-box > .checkbox-icon {
   list-style-image: inherit;
 }
 
-radio[value] > .internal-box > .checkbox-label {
+radio[label] > .internal-box > .checkbox-label {
   margin: 0px;
   padding: 2px;
 }

@@ -45,7 +45,7 @@ function onLoad()
     editButton       = document.getElementById("editButton");
     deleteButton     = document.getElementById("deleteButton");
     setDefaultButton = document.getElementById("setDefaultButton");
-    
+
     refreshServerList();
 
     doSetOKCancel(onOk, 0);
@@ -99,7 +99,7 @@ function updateButtons()
         setDefaultButton.setAttribute("disabled", "true");
     } else {
         editButton.removeAttribute("disabled");
-        
+
         // can't delete default server
         var server = getSelectedServer();
         if (smtpService.defaultServer == server) {
@@ -167,8 +167,8 @@ function createSmtpTreeItem(server, isDefault)
     var hostname = server.hostname;
     if (isDefault)
         hostname += " " + gMessengerBundle.getString("defaultServerTag");
-    
-    treecell.setAttribute("value", hostname);
+
+    treecell.setAttribute("label", hostname);
     treeitem.setAttribute("key", server.key);
     // give it some unique id
     treeitem.id = "smtpServer." + server.key;
@@ -195,6 +195,6 @@ function getSelectedServer()
 {
     var serverKey = serverList.selectedItems[0].getAttribute("key");
     var server = smtpService.getServerByKey(serverKey);
-    
+
     return server;
 }

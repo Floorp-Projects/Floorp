@@ -28,10 +28,10 @@ Rights Reserved.
 
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&fieldMapExport.title;"
-		class="dialog"
+    class="dialog"
         style="padding:0px"
         onload="OnLoadFieldMapExport()"
         align="vertical">
@@ -39,73 +39,73 @@ Rights Reserved.
 <html:script src="chrome://messenger/content/fieldMapExport.js"/>
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-	<box align="horizontal">
-	
-		<spring style="width:3em"/>
-		
-		<!-- field list -->
-		<box align="vertical">
-			<spring style="height:1em"/>
-			<html:div id="fieldLabel">Ye old fields</html:div>
-			<spring style="height:.5em"/>
-				
-			<box align="vertical" style="border: 1px inset white">
-				<html:div style="width:10em; height:200px" flex="1">
-					<tree id="fieldList" style="width:100%; height:100%" onselect="FieldSelectionChanged()">
+  <box align="horizontal">
+  
+    <spring style="width:3em"/>
+    
+    <!-- field list -->
+    <box align="vertical">
+      <spring style="height:1em"/>
+      <html:div id="fieldLabel">Ye old fields</html:div>
+      <spring style="height:.5em"/>
+        
+      <box align="vertical" style="border: 1px inset white">
+        <html:div style="width:10em; height:200px" flex="1">
+          <tree id="fieldList" style="width:100%; height:100%" onselect="FieldSelectionChanged()">
                                                 <treecolgroup>
-						  <treecol flex="1"/>
+              <treecol flex="1"/>
                                                 </treecolgroup>
-						<treechildren id="fieldBody" flex="1"/>
-					</tree>
-				</html:div>
-			</box>
-						
-			<spring style="height:1.5em"/>
-			
-		</box>
-		
-		<spring style="width: 1em"/>
+            <treechildren id="fieldBody" flex="1"/>
+          </tree>
+        </html:div>
+      </box>
+            
+      <spring style="height:1.5em"/>
+      
+    </box>
+    
+    <spring style="width: 1em"/>
 
-		<box align="vertical" style="height:270px">
-			<spring flex="50%"/>
-			<button class="dialog push" onclick="OnAddExport()" value="&fieldMapExport.add;"/>
-			<button class="dialog push" onclick="OnAddAllExport()" value="&fieldMapExport.addAll;"/>
-			<spring flex="50%"/>
-		</box>
+    <box align="vertical" style="height:270px">
+      <spring flex="50%"/>
+      <button class="dialog push" onclick="OnAddExport()" label="&fieldMapExport.add;"/>
+      <button class="dialog push" onclick="OnAddAllExport()" label="&fieldMapExport.addAll;"/>
+      <spring flex="50%"/>
+    </box>
 
-		<spring style="width:1em"/>
+    <spring style="width:1em"/>
 
-		<!-- export list -->
-		<box align="vertical">
-			<spring style="height:1em"/>
-			<html:div id="exportLabel">Export fields</html:div>
-			<spring style="height:.5em"/>
-				
-			<box align="vertical" style="border: 1px inset white">
-				<html:div style="width:10em; height:200px" flex="1">
-					<tree	id="exportList" style="width:100%; height:100%" 
-							onselect="ExportSelectionChanged()"
-							onkeyup="if (event.keyCode == 8) return( DeleteExportItems());"
-							ondragover="return DragOverTree(event);"
-							ondraggesture="return BeginDrag( event, true);"
-							ondragdrop="return DropOnTree( event);">
-						<treecol style="width:100%"/>
-						<treechildren id="exportBody"/>
-					</tree>
-				</html:div>
-			</box>
-						
-			<spring style="height:1.5em"/>
-			
-		</box>
-	
-		<spring style="width:3em"/>
+    <!-- export list -->
+    <box align="vertical">
+      <spring style="height:1em"/>
+      <html:div id="exportLabel">Export fields</html:div>
+      <spring style="height:.5em"/>
+        
+      <box align="vertical" style="border: 1px inset white">
+        <html:div style="width:10em; height:200px" flex="1">
+          <tree id="exportList" style="width:100%; height:100%" 
+              onselect="ExportSelectionChanged()"
+              onkeyup="if (event.keyCode == 8) return( DeleteExportItems());"
+              ondragover="return DragOverTree(event);"
+              ondraggesture="return BeginDrag( event, true);"
+              ondragdrop="return DropOnTree( event);">
+            <treecol style="width:100%"/>
+            <treechildren id="exportBody"/>
+          </tree>
+        </html:div>
+      </box>
+            
+      <spring style="height:1.5em"/>
+      
+    </box>
+  
+    <spring style="width:3em"/>
 
-	</box>
+  </box>
 
-	<!-- OK & Cancel buttons -->
-	<box id="okCancelButtons"/>
+  <!-- OK & Cancel buttons -->
+  <box id="okCancelButtons"/>
 
 </window>

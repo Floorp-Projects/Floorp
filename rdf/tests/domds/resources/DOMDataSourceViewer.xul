@@ -16,15 +16,15 @@
            onkeypress="if (event.keyCode == 13) loadUrl();"/>
   <box>
     <text value="Show:"/>
-    <checkbox oncommand="setMode('content', event.target.checked);" value="Content"/>
-    <checkbox oncommand="setMode('dom', event.target.checked);" value="DOM"/>
-    <checkbox oncommand="setMode('frame', event.target.checked);" value="Frames"/>
-    <checkbox oncommand="setMode('leaf', event.target.checked);" value="OOB data"/>
+    <checkbox oncommand="setMode('content', event.target.checked);" label="Content"/>
+    <checkbox oncommand="setMode('dom', event.target.checked);" label="DOM"/>
+    <checkbox oncommand="setMode('frame', event.target.checked);" label="Frames"/>
+    <checkbox oncommand="setMode('leaf', event.target.checked);" label="OOB data"/>
     
   </box>
   <box align="horizontal">
-    <button onclick="loadUrl();" value="Load"/>
-    <button onclick="refreshTree();" value="Refresh"/>
+    <button onclick="loadUrl();" label="Load"/>
+    <button onclick="refreshTree();" label="Refresh"/>
   </box>
 <tree
   datasources="rdf:domds"
@@ -36,8 +36,8 @@
         <treeitem uri="..."
           Type="rdf:http://home.netscape.com/NC-rdf#Type">
           <treerow>
-            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-            <treecell value="rdf:http://home.netscape.com/NC-rdf#Value"/>
+            <treecell indent="true" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            <treecell label="rdf:http://home.netscape.com/NC-rdf#Value"/>
           </treerow>
         </treeitem>
       </treechildren>
@@ -51,8 +51,8 @@
   <treecol style="width: 50%" id="ValueColumn" resource="http://home.netscape.com/NC-rdf#Value"/>
   <treehead>
     <treerow>
-      <treecell value="Name"/>
-      <treecell value="Value"/>
+      <treecell label="Name"/>
+      <treecell label="Value"/>
     </treerow>
   </treehead>
 </tree>

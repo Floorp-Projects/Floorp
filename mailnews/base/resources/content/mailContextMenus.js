@@ -10,10 +10,10 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
@@ -24,410 +24,410 @@
 
 function fillThreadPaneContextMenu()
 {
-	var numSelected = GetNumSelectedMessages();
+  var numSelected = GetNumSelectedMessages();
 
-	var isNewsgroup = false;
-	var selectedMessage = null;
+  var isNewsgroup = false;
+  var selectedMessage = null;
 
-	if(numSelected >= 0) {
-		selectedMessage = GetFirstSelectedMessage();
-		isNewsgroup = IsNewsMessage(selectedMessage);
-	}
-
-
-	SetupNewMessageWindowMenuItem("threadPaneContext-openNewWindow", numSelected, false);
-	SetupEditAsNewMenuItem("threadPaneContext-editAsNew", numSelected, false);
-
-	ShowMenuItem("threadPaneContext-sep-open", (numSelected <= 1));
-
-	SetupReplyToSenderMenuItem("threadPaneContext-replySender", numSelected, false);
-	SetupReplyToNewsgroupMenuItem("threadPaneContext-replyNewsgroup", numSelected, isNewsgroup, false);
-	SetupReplyAllMenuItem("threadPaneContext-replyAll", numSelected, false);
-	SetupForwardMenuItem("threadPaneContext-forward", numSelected, false);
-	SetupForwardAsAttachmentMenuItem("threadPaneContext-forwardAsAttachment", numSelected, false);
-
-	ShowMenuItem("threadPaneContext-sep-reply", true);
-
-	SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
-	SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
-	SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
-	SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
-	SetupDeleteMenuItem("threadPaneContext-delete", numSelected, isNewsgroup, false);
-	SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
-	SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
+  if(numSelected >= 0) {
+    selectedMessage = GetFirstSelectedMessage();
+    isNewsgroup = IsNewsMessage(selectedMessage);
+  }
 
 
-	ShowMenuItem("threadPaneContext-sep-edit", (numSelected <= 1));
+  SetupNewMessageWindowMenuItem("threadPaneContext-openNewWindow", numSelected, false);
+  SetupEditAsNewMenuItem("threadPaneContext-editAsNew", numSelected, false);
 
-	return(true);
+  ShowMenuItem("threadPaneContext-sep-open", (numSelected <= 1));
+
+  SetupReplyToSenderMenuItem("threadPaneContext-replySender", numSelected, false);
+  SetupReplyToNewsgroupMenuItem("threadPaneContext-replyNewsgroup", numSelected, isNewsgroup, false);
+  SetupReplyAllMenuItem("threadPaneContext-replyAll", numSelected, false);
+  SetupForwardMenuItem("threadPaneContext-forward", numSelected, false);
+  SetupForwardAsAttachmentMenuItem("threadPaneContext-forwardAsAttachment", numSelected, false);
+
+  ShowMenuItem("threadPaneContext-sep-reply", true);
+
+  SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
+  SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
+  SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
+  SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
+  SetupDeleteMenuItem("threadPaneContext-delete", numSelected, isNewsgroup, false);
+  SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
+  SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
+
+
+  ShowMenuItem("threadPaneContext-sep-edit", (numSelected <= 1));
+
+  return(true);
 }
 
 function SetupNewMessageWindowMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupEditAsNewMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupReplyToSenderMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1)&& !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupReplyToNewsgroupMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
-	EnableMenuItem(menuID,  (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1) && isNewsgroup && !forceHide);
+  EnableMenuItem(menuID,  (numSelected == 1));
 }
 
 function SetupReplyAllMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupForwardMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID,  (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
+  ShowMenuItem(menuID,  (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected > 0));
 }
 
 function SetupForwardAsAttachmentMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID,  (numSelected > 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected > 1));
+  ShowMenuItem(menuID,  (numSelected > 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected > 1));
 }
 
 function SetupMoveMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 {
-	ShowMenuItem(menuID, !isNewsgroup && !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
+  ShowMenuItem(menuID, !isNewsgroup && !forceHide);
+  EnableMenuItem(menuID, (numSelected > 0));
 }
 
 function SetupCopyMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
+  ShowMenuItem(menuID, !forceHide);
+  EnableMenuItem(menuID, (numSelected > 0));
 }
 
 function SetupSaveAsMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, (numSelected == 1));
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, (numSelected == 1));
 }
 
 function SetupPrintMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, !forceHide);
-	EnableMenuItem(menuID, (numSelected > 0));
+  ShowMenuItem(menuID, !forceHide);
+  EnableMenuItem(menuID, (numSelected > 0));
 }
 
 function SetupDeleteMenuItem(menuID, numSelected, isNewsgroup, forceHide)
 {
-	var showMenuItem = !forceHide;
+  var showMenuItem = !forceHide;
 
-	ShowMenuItem(menuID, showMenuItem);
-	if(showMenuItem)
-	{
-		EnableMenuItem(menuID, (numSelected > 0));
-		if(!isNewsgroup)
-		{
-			SetMenuItemValue(menuID, gMessengerBundle.getString("delete"));
-			SetMenuItemAccessKey(menuID, gMessengerBundle.getString("deleteAccessKey"));
-		}
-		else
-		{
-			SetMenuItemValue(menuID, gMessengerBundle.getString("cancel"));
-			SetMenuItemAccessKey(menuID, gMessengerBundle.getString("cancelAccessKey"));
-		}
-	}
+  ShowMenuItem(menuID, showMenuItem);
+  if(showMenuItem)
+  {
+    EnableMenuItem(menuID, (numSelected > 0));
+    if(!isNewsgroup)
+    {
+      SetMenuItemLabel(menuID, gMessengerBundle.getString("delete"));
+      SetMenuItemAccessKey(menuID, gMessengerBundle.getString("deleteAccessKey"));
+    }
+    else
+    {
+      SetMenuItemLabel(menuID, gMessengerBundle.getString("cancel"));
+      SetMenuItemAccessKey(menuID, gMessengerBundle.getString("cancelAccessKey"));
+    }
+  }
 }
 
 function SetupAddSenderToABMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, false);
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, false);
 }
 
 function SetupAddAllToABMenuItem(menuID, numSelected, forceHide)
 {
-	ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
-	EnableMenuItem(menuID, false);
+  ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
+  EnableMenuItem(menuID, false);
 }
 
 function fillFolderPaneContextMenu()
 {
-	var tree = GetFolderTree();
-	var selectedItems = tree.selectedItems;
-	var numSelected = selectedItems.length;
+  var tree = GetFolderTree();
+  var selectedItems = tree.selectedItems;
+  var numSelected = selectedItems.length;
 
     var popupNode = document.getElementById('folderPaneContext');
 
-	var targetFolder = document.popupNode.parentNode.parentNode;
-	if (targetFolder.getAttribute('selected') != 'true')
-	{
+  var targetFolder = document.popupNode.parentNode.parentNode;
+  if (targetFolder.getAttribute('selected') != 'true')
+  {
       tree.selectItem(targetFolder);
     }
 
-	var isServer = targetFolder.getAttribute('IsServer') == 'true';
-	var serverType = targetFolder.getAttribute('ServerType');
-	var specialFolder = targetFolder.getAttribute('SpecialFolder');
-	var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
+  var isServer = targetFolder.getAttribute('IsServer') == 'true';
+  var serverType = targetFolder.getAttribute('ServerType');
+  var specialFolder = targetFolder.getAttribute('SpecialFolder');
+  var canSubscribeToFolder = (serverType == "nntp") || (serverType == "imap");
     var isNewsgroup = !isServer && serverType == 'nntp';
-	var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
+  var canGetMessages =  (isServer && (serverType != "nntp") && (serverType !="none")) || isNewsgroup;
 
-	ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
-	EnableMenuItem("folderPaneContext-getMessages", true);
+  ShowMenuItem("folderPaneContext-getMessages", (numSelected <= 1) && canGetMessages);
+  EnableMenuItem("folderPaneContext-getMessages", true);
 
-	ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
-	EnableMenuItem("folderPaneContext-openNewWindow", (true));
+  ShowMenuItem("folderPaneContext-openNewWindow", (numSelected <= 1) && !isServer);
+  EnableMenuItem("folderPaneContext-openNewWindow", (true));
 
-	SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
-	SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+  SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+  SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
     SetupCompactMenuItem(targetFolder, numSelected);
 
-	ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
-	EnableMenuItem("folderPaneContext-emptyTrash", true);
+  ShowMenuItem("folderPaneContext-emptyTrash", (numSelected <= 1) && (specialFolder == 'Trash'));
+  EnableMenuItem("folderPaneContext-emptyTrash", true);
 
-	ShowMenuItem("folderPaneContext-sendUnsentMessages", (numSelected <= 1) && (specialFolder == 'Unsent Messages'));
-	EnableMenuItem("folderPaneContext-sendUnsentMessages", true);
+  ShowMenuItem("folderPaneContext-sendUnsentMessages", (numSelected <= 1) && (specialFolder == 'Unsent Messages'));
+  EnableMenuItem("folderPaneContext-sendUnsentMessages", true);
 
-	ShowMenuItem("folderPaneContext-sep-edit", (numSelected <= 1));
+  ShowMenuItem("folderPaneContext-sep-edit", (numSelected <= 1));
 
-	SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
+  SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder);
 
-	ShowMenuItem("folderPaneContext-subscribe",	(numSelected <=	1) && canSubscribeToFolder);
-	EnableMenuItem("folderPaneContext-subscribe", true);
+  ShowMenuItem("folderPaneContext-subscribe", (numSelected <= 1) && canSubscribeToFolder);
+  EnableMenuItem("folderPaneContext-subscribe", true);
 
-// News	folder context menu	=============================================
+// News folder context menu =============================================
 
-	ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) &&	canSubscribeToFolder &&	isNewsgroup);
-	EnableMenuItem("folderPaneContext-newsUnsubscribe",	true);
-	ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) &&	isNewsgroup);
-	EnableMenuItem("folderPaneContext-markAllRead",	true);
+  ShowMenuItem("folderPaneContext-newsUnsubscribe", (numSelected <= 1) && canSubscribeToFolder && isNewsgroup);
+  EnableMenuItem("folderPaneContext-newsUnsubscribe", true);
+  ShowMenuItem("folderPaneContext-markAllRead", (numSelected <= 1) && isNewsgroup);
+  EnableMenuItem("folderPaneContext-markAllRead", true);
 
-// End of News folder context menu =======================================	
+// End of News folder context menu =======================================
 
-	ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
-	EnableMenuItem("folderPaneContext-searchMessages", true);
+  ShowMenuItem("folderPaneContext-searchMessages", (numSelected<=1));
+  EnableMenuItem("folderPaneContext-searchMessages", true);
 
-	return(true);
+  return(true);
 }
 
 function SetupRenameMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
 {
-	var isSpecialFolder = specialFolder != 'none';
-	var isMail = serverType != 'nntp';
-	var canRename = (targetFolder.getAttribute('CanRename') == "true");
+  var isSpecialFolder = specialFolder != 'none';
+  var isMail = serverType != 'nntp';
+  var canRename = (targetFolder.getAttribute('CanRename') == "true");
 
-	ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && (specialFolder == "none") && canRename);
-	EnableMenuItem("folderPaneContext-rename", !isServer);
+  ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && (specialFolder == "none") && canRename);
+  EnableMenuItem("folderPaneContext-rename", !isServer);
 
-	if(canRename)
-	{
-		SetMenuItemValue("folderPaneContext-rename", gMessengerBundle.getString("renameFolder"));
-	}
+  if(canRename)
+  {
+    SetMenuItemLabel("folderPaneContext-rename", gMessengerBundle.getString("renameFolder"));
+  }
 }
 
 function SetupRemoveMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
 {
-	var isMail = serverType != 'nntp';
-	var isSpecialFolder = specialFolder != "none";
-	//Can't currently delete Accounts or special folders.
-	var showRemove = (numSelected <=1) && (isMail && !isSpecialFolder) && !isServer;
+  var isMail = serverType != 'nntp';
+  var isSpecialFolder = specialFolder != "none";
+  //Can't currently delete Accounts or special folders.
+  var showRemove = (numSelected <=1) && (isMail && !isSpecialFolder) && !isServer;
 
 
-	ShowMenuItem("folderPaneContext-remove", showRemove);
-	EnableMenuItem("folderPaneContext-remove", true);
+  ShowMenuItem("folderPaneContext-remove", showRemove);
+  EnableMenuItem("folderPaneContext-remove", true);
 
-	if(isMail && !isSpecialFolder)
-	{
-		SetMenuItemValue("folderPaneContext-remove", gMessengerBundle.getString("removeFolder"));
-	}
+  if(isMail && !isSpecialFolder)
+  {
+    SetMenuItemLabel("folderPaneContext-remove", gMessengerBundle.getString("removeFolder"));
+  }
 }
 
 function SetupCompactMenuItem(targetFolder, numSelected)
 {
     var canCompact = (targetFolder.getAttribute('CanCompact') == "true");
-	ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
-	EnableMenuItem("folderPaneContext-compact", true );
+  ShowMenuItem("folderPaneContext-compact", (numSelected <=1) && canCompact);
+  EnableMenuItem("folderPaneContext-compact", true );
 
-	if(canCompact)
-	{
-		SetMenuItemValue("folderPaneContext-compact", gMessengerBundle.getString("compactFolder"));
-	}
+  if(canCompact)
+  {
+    SetMenuItemLabel("folderPaneContext-compact", gMessengerBundle.getString("compactFolder"));
+  }
 }
 
 function SetupNewMenuItem(targetFolder, numSelected, isServer, serverType, specialFolder)
 {
-	var canCreateNew = targetFolder.getAttribute('CanCreateSubfolders') == 'true';
-	var isInbox = specialFolder == "Inbox";
+  var canCreateNew = targetFolder.getAttribute('CanCreateSubfolders') == 'true';
+  var isInbox = specialFolder == "Inbox";
 
-	var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
-	ShowMenuItem("folderPaneContext-new", showNew);
-	EnableMenuItem("folderPaneContext-new", true);
-	if(showNew)
-	{
-		if(isServer || isInbox)
-			SetMenuItemValue("folderPaneContext-new", gMessengerBundle.getString("newFolder"));
-		else
-			SetMenuItemValue("folderPaneContext-new", gMessengerBundle.getString("newSubfolder"));
-	}
+  var showNew = ((numSelected <=1) && (serverType != 'nntp') && canCreateNew) || isInbox;
+  ShowMenuItem("folderPaneContext-new", showNew);
+  EnableMenuItem("folderPaneContext-new", true);
+  if(showNew)
+  {
+    if(isServer || isInbox)
+      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newFolder"));
+    else
+      SetMenuItemLabel("folderPaneContext-new", gMessengerBundle.getString("newSubfolder"));
+  }
 }
 
 function ShowMenuItem(id, showItem)
 {
-	var item = document.getElementById(id);
-	if(item)
-	{
-		var showing = (item.getAttribute('hidden') !='true');
-		if(showItem != showing)
-			item.setAttribute('hidden', showItem ? '' : 'true');
-	}
+  var item = document.getElementById(id);
+  if(item)
+  {
+    var showing = (item.getAttribute('hidden') !='true');
+    if(showItem != showing)
+      item.setAttribute('hidden', showItem ? '' : 'true');
+  }
 }
 
 function EnableMenuItem(id, enableItem)
 {
-	var item = document.getElementById(id);
-	if(item)
-	{
-		var enabled = (item.getAttribute('disabled') !='true');
-		if(enableItem != enabled)
-		{
-			item.setAttribute('disabled', enableItem ? '' : 'true');
-		}
-	}
+  var item = document.getElementById(id);
+  if(item)
+  {
+    var enabled = (item.getAttribute('disabled') !='true');
+    if(enableItem != enabled)
+    {
+      item.setAttribute('disabled', enableItem ? '' : 'true');
+    }
+  }
 }
 
-function SetMenuItemValue(id, value)
+function SetMenuItemLabel(id, label)
 {
-	var item = document.getElementById(id);
-	if(item)
-		item.setAttribute('value', value);
+  var item = document.getElementById(id);
+  if(item)
+    item.setAttribute('label', label);
 
 }
 
 function SetMenuItemAccessKey(id, accessKey)
 {
-	var item = document.getElementById(id);
-	if(item)
-		item.setAttribute('accesskey', accessKey);
+  var item = document.getElementById(id);
+  if(item)
+    item.setAttribute('accesskey', accessKey);
 
 }
 
 function fillMessagePaneContextMenu(contextMenu)
 {
-	var message = GetLoadedMessage();
-	var numSelected = (message) ? 1 : 0;
+  var message = GetLoadedMessage();
+  var numSelected = (message) ? 1 : 0;
 
-	var isNewsgroup = false;
+  var isNewsgroup = false;
 
-	if (numSelected == 1) {
-		isNewsgroup = IsNewsMessage(message);
+  if (numSelected == 1) {
+    isNewsgroup = IsNewsMessage(message);
     }
 
-	var hideMailItems = AreBrowserItemsShowing();
+  var hideMailItems = AreBrowserItemsShowing();
 
-	SetupEditAsNewMenuItem("messagePaneContext-editAsNew", numSelected, (numSelected == 0 || hideMailItems));
-	SetupReplyToSenderMenuItem("messagePaneContext-replySender", numSelected, (numSelected == 0 || hideMailItems));
-	SetupReplyToNewsgroupMenuItem("messagePaneContext-replyNewsgroup", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
-	SetupReplyAllMenuItem("messagePaneContext-replyAll" , numSelected, (numSelected == 0 || hideMailItems));
-	SetupForwardMenuItem("messagePaneContext-forward", numSelected, (numSelected == 0 || hideMailItems));
-	SetupForwardAsAttachmentMenuItem("threadPaneContext-forwardAsAttachment", numSelected, hideMailItems);
-	SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
-	SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0 || hideMailItems));
-	SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
-	SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
-	SetupDeleteMenuItem("messagePaneContext-delete", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
-	SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
-	SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
+  SetupEditAsNewMenuItem("messagePaneContext-editAsNew", numSelected, (numSelected == 0 || hideMailItems));
+  SetupReplyToSenderMenuItem("messagePaneContext-replySender", numSelected, (numSelected == 0 || hideMailItems));
+  SetupReplyToNewsgroupMenuItem("messagePaneContext-replyNewsgroup", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
+  SetupReplyAllMenuItem("messagePaneContext-replyAll" , numSelected, (numSelected == 0 || hideMailItems));
+  SetupForwardMenuItem("messagePaneContext-forward", numSelected, (numSelected == 0 || hideMailItems));
+  SetupForwardAsAttachmentMenuItem("threadPaneContext-forwardAsAttachment", numSelected, hideMailItems);
+  SetupMoveMenuItem("messagePaneContext-moveMenu", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
+  SetupCopyMenuItem("messagePaneContext-copyMenu", numSelected, (numSelected == 0 || hideMailItems));
+  SetupSaveAsMenuItem("messagePaneContext-saveAs", numSelected, (numSelected == 0 || hideMailItems));
+  SetupPrintMenuItem("messagePaneContext-print", numSelected, (numSelected == 0 || hideMailItems));
+  SetupDeleteMenuItem("messagePaneContext-delete", numSelected, isNewsgroup, (numSelected == 0 || hideMailItems));
+  SetupAddSenderToABMenuItem("messagePaneContext-addSenderToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
+  SetupAddAllToABMenuItem("messagePaneContext-addAllToAddressBook", numSelected, (numSelected == 0 || hideMailItems));
 
-	//Figure out separators
-	ShowMenuItem("messagePaneContext-sep-open", ShowMessagePaneOpenSeparator());
-	ShowMenuItem("messagePaneContext-sep-reply", ShowMessagePaneReplySeparator());
-	ShowMenuItem("messagePaneContext-sep-edit", ShowMessagePaneEditSeparator());
-	ShowMenuItem("messagePaneContext-sep-link", ShowMessagePaneLinkSeparator());
-	ShowMenuItem("messagePaneContext-sep-image", ShowMessagePaneImageSeparator());
-	ShowMenuItem("messagePaneContext-sep-copy", ShowMessagePaneCopySeparator());
+  //Figure out separators
+  ShowMenuItem("messagePaneContext-sep-open", ShowMessagePaneOpenSeparator());
+  ShowMenuItem("messagePaneContext-sep-reply", ShowMessagePaneReplySeparator());
+  ShowMenuItem("messagePaneContext-sep-edit", ShowMessagePaneEditSeparator());
+  ShowMenuItem("messagePaneContext-sep-link", ShowMessagePaneLinkSeparator());
+  ShowMenuItem("messagePaneContext-sep-image", ShowMessagePaneImageSeparator());
+  ShowMenuItem("messagePaneContext-sep-copy", ShowMessagePaneCopySeparator());
 }
 
 function AreBrowserItemsShowing()
 {
-	return(IsMenuItemShowingWithStyle("context-openlink") ||
-		IsMenuItemShowingWithStyle("context-editlink") ||
-		IsMenuItemShowingWithStyle("context-viewimage") ||
-		IsMenuItemShowingWithStyle("context-copylink") ||
-		IsMenuItemShowingWithStyle("context-copyimage") ||
-		IsMenuItemShowingWithStyle("context-savelink") ||
-		IsMenuItemShowingWithStyle("context-saveimage") ||
-		IsMenuItemShowingWithStyle("context-bookmarklink"));
+  return(IsMenuItemShowingWithStyle("context-openlink") ||
+    IsMenuItemShowingWithStyle("context-editlink") ||
+    IsMenuItemShowingWithStyle("context-viewimage") ||
+    IsMenuItemShowingWithStyle("context-copylink") ||
+    IsMenuItemShowingWithStyle("context-copyimage") ||
+    IsMenuItemShowingWithStyle("context-savelink") ||
+    IsMenuItemShowingWithStyle("context-saveimage") ||
+    IsMenuItemShowingWithStyle("context-bookmarklink"));
 }
 
 function ShowMessagePaneOpenSeparator()
 {
-	return(IsMenuItemShowingWithStyle("context-selectall") ||
-		IsMenuItemShowingWithStyle("context-copy"));
+  return(IsMenuItemShowingWithStyle("context-selectall") ||
+    IsMenuItemShowingWithStyle("context-copy"));
 }
 
 function ShowMessagePaneReplySeparator()
 {
-	return (IsMenuItemShowing("messagePaneContext-replySender") ||
-		IsMenuItemShowing("messagePaneContext-replyNewsgroup") ||
-		IsMenuItemShowing("messagePaneContext-replyAll") ||
-		IsMenuItemShowing("messagePaneContext-forward") ||
-		IsMenuItemShowing("messagePaneContext-editAsNew"));
+  return (IsMenuItemShowing("messagePaneContext-replySender") ||
+    IsMenuItemShowing("messagePaneContext-replyNewsgroup") ||
+    IsMenuItemShowing("messagePaneContext-replyAll") ||
+    IsMenuItemShowing("messagePaneContext-forward") ||
+    IsMenuItemShowing("messagePaneContext-editAsNew"));
 }
 
 function ShowMessagePaneEditSeparator()
 {
-	return (IsMenuItemShowing("messagePaneContext-moveMenu") ||
-		IsMenuItemShowing("messagePaneContext-copyMenu") ||
-		IsMenuItemShowing("messagePaneContext-saveAs") ||
-		IsMenuItemShowing("messagePaneContext-print") ||
-		IsMenuItemShowing("messagePaneContext-delete"));
+  return (IsMenuItemShowing("messagePaneContext-moveMenu") ||
+    IsMenuItemShowing("messagePaneContext-copyMenu") ||
+    IsMenuItemShowing("messagePaneContext-saveAs") ||
+    IsMenuItemShowing("messagePaneContext-print") ||
+    IsMenuItemShowing("messagePaneContext-delete"));
 }
 
 function ShowMessagePaneLinkSeparator()
 {
-	return (IsMenuItemShowingWithStyle("context-openlink") ||
-		IsMenuItemShowingWithStyle("context-editlink"));
+  return (IsMenuItemShowingWithStyle("context-openlink") ||
+    IsMenuItemShowingWithStyle("context-editlink"));
 }
 
 function ShowMessagePaneImageSeparator()
 {
-	return (IsMenuItemShowingWithStyle("context-viewimage"));
+  return (IsMenuItemShowingWithStyle("context-viewimage"));
 }
 
 function ShowMessagePaneCopySeparator()
 {
-	return (IsMenuItemShowingWithStyle("context-copylink") ||
-		IsMenuItemShowingWithStyle("context-copyimage"));
+  return (IsMenuItemShowingWithStyle("context-copylink") ||
+    IsMenuItemShowingWithStyle("context-copyimage"));
 }
 
 function IsMenuItemShowing(menuID)
 {
 
-	var item = document.getElementById(menuID);
-	if(item)
-	{
-		return(item.getAttribute('hidden') !='true');
-	}
-	return false;
+  var item = document.getElementById(menuID);
+  if(item)
+  {
+    return(item.getAttribute('hidden') !='true');
+  }
+  return false;
 }
 
 function IsMenuItemShowingWithStyle(menuID)
 {
-	var item = document.getElementById(menuID);
-	if(item)
-	{
-		var style = item.getAttribute( "style" );
-		return ( style.indexOf( "display:none;" ) == -1 )
-	}
-	return false;
+  var item = document.getElementById(menuID);
+  if(item)
+  {
+    var style = item.getAttribute( "style" );
+    return ( style.indexOf( "display:none;" ) == -1 )
+  }
+  return false;
 }

@@ -27,7 +27,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/subscribe.dtd">
 
 
-<window xmlns:NC="http://home.netscape.com/NC-rdf#"	
+<window xmlns:NC="http://home.netscape.com/NC-rdf#" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&subscribeDialog.title;"
         orient="vertical"
@@ -46,7 +46,7 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/mailWindow.js"/>
 <script language="JavaScript" src="chrome://messenger/content/subscribe.js"/>
 
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
   <grid flex="1" style="width: 40em; height: 25em;">
     <columns>
@@ -73,7 +73,7 @@ Rights Reserved.
                 <template>
                   <rule NC:CanSubscribe="true">
                     <menupopup>
-                      <menuitem class="subscribeMenuItem menuitem-iconic" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
+                      <menuitem class="subscribeMenuItem menuitem-iconic" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
                     </menupopup>
                   </rule>
                 </template>
@@ -91,8 +91,8 @@ Rights Reserved.
         <separator class="thin"/>
         <spring/>
       </row>
-	    <row flex="1">
-        <tree class="inset"	flex="1"
+      <row flex="1">
+        <tree class="inset" flex="1"
               id="subscribetree"
               datasources="rdf:null"
               onclick="SubscribeOnClick(event);"> 
@@ -101,9 +101,9 @@ Rights Reserved.
               <treechildren flex="1">
                 <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                   <treerow>
-                    <treecell indent="true" class="treecell-indent tree-cell-subscribe-icon" value="rdf:http://home.netscape.com/NC-rdf#LeafName"  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                    <treecell indent="true" class="treecell-indent tree-cell-subscribe-icon" label="rdf:http://home.netscape.com/NC-rdf#LeafName"  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
                     <treecell class="treecell-image subscribedcol" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed" allowevents="true"/>
-                    <treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+                    <treecell label="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -118,29 +118,27 @@ Rights Reserved.
             <treecol persist="hidden width" width="0" flex="1" id="TotalMessagesColumn" resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
           </treecolgroup>
     
-          <treehead>	
+          <treehead>  
             <treerow id="headRow">
-              <treecell class="treecell-header outset" id="foldersheaderlabel" value="..." />
-              <treecell class="treecell-header outset" value="&subscribedHeader.label;"/>
-              <treecell class="treecell-header outset" value="&messagesHeader.label;"/>
+              <treecell class="treecell-header outset" id="foldersheaderlabel" label="..." />
+              <treecell class="treecell-header outset" label="&subscribedHeader.label;"/>
+              <treecell class="treecell-header outset" label="&messagesHeader.label;"/>
             </treerow>
-          </treehead>	
+          </treehead> 
         </tree>
-      	<box orient="vertical">
-          <button id="subscribe" class="dialog" value="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
-          <button id="unsubscribe" class="dialog" value="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
-          <button id="refresh" class="dialog" value="&refreshButton.label;" oncommand="Refresh()"/>
-          <button id="stop" class="dialog" value="&stopButton.label;" oncommand="Stop()"/>
+        <box orient="vertical">
+          <button id="subscribe" class="dialog" label="&subscribeButton.label;" oncommand="SetSubscribeState(true)"/>
+          <button id="unsubscribe" class="dialog" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
+          <button id="refresh" class="dialog" label="&refreshButton.label;" oncommand="Refresh()"/>
+          <button id="stop" class="dialog" label="&stopButton.label;" oncommand="Stop()"/>
           <spring flex="1"/>
         </box>
       </row>
     </rows>
   </grid>
-
+  
   <separator/>
 
   <box id="okCancelButtons"/>
-
-<statusbar id="status-bar" class="chromeclass-status"/>
 
 </window>

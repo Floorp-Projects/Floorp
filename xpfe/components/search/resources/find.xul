@@ -5,48 +5,48 @@
 
 <window title="&window.title.label;" 
         class="dialog" orient="vertical"
-	      xmlns:html="http://www.w3.org/1999/xhtml"
-	      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<script type="application/x-javascript" src="chrome://communicator/content/search/find.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/find.js"/>
 
   <box autostretch="never" halign="left">
     <text class="label" value="&search1.label;"/>
     <menulist id="datasource">
       <menupopup>
-        <menuitem value="&bookmarks.label;" data="rdf:bookmarks"/>
-        <menuitem value="&history.label;" data="rdf:history"/>
+        <menuitem label="&bookmarks.label;" value="rdf:bookmarks"/>
+        <menuitem label="&history.label;" value="rdf:history"/>
       </menupopup>
     </menulist>
     <text class="label" value="&search2.label;"/>
-	</box>
+  </box>
   
   <box autostretch="never" halign="left">
     <menulist id="match">
       <menupopup>
-        <menuitem value="&name.label;" data="http://home.netscape.com/NC-rdf#Name"/>
-        <menuitem value="&url.label;" data="http://home.netscape.com/NC-rdf#URL"/>
-        <menuitem value="&shortcut.label;" data="http://home.netscape.com/NC-rdf#ShortcutURL"/>
-        <menuitem value="&description.label;" data="http://home.netscape.com/NC-Description"/>
+        <menuitem label="&name.label;" value="http://home.netscape.com/NC-rdf#Name"/>
+        <menuitem label="&url.label;" value="http://home.netscape.com/NC-rdf#URL"/>
+        <menuitem label="&shortcut.label;" value="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+        <menuitem label="&description.label;" value="http://home.netscape.com/NC-Description"/>
       </menupopup>
     </menulist>
     <menulist id="method">
       <menupopup>
-        <menuitem value="&contains.label;" data="contains"/>
-        <menuitem value="&startswith.label;" data="startswith"/>
-        <menuitem value="&endswith.label;" data="endswith"/>
-        <menuitem value="&is.label;" data="is"/>
-        <menuitem value="&isnot.label;" data="isnot"/>
-        <menuitem value="&doesntcontain.label;" data="doesntcontain"/>
+        <menuitem label="&contains.label;" value="contains"/>
+        <menuitem label="&startswith.label;" value="startswith"/>
+        <menuitem label="&endswith.label;" value="endswith"/>
+        <menuitem label="&is.label;" value="is"/>
+        <menuitem label="&isnot.label;" value="isnot"/>
+        <menuitem label="&doesntcontain.label;" value="doesntcontain"/>
       </menupopup>
     </menulist>
     <textbox id="findtext" type="text" width="20" onkeypress="if (event.keyCode == 13) { doFind(); }" />
-    <button value="&search.button.label;" oncommand="doFind();"/>
+    <button label="&search.button.label;" oncommand="doFind();"/>
   </box>          
           
   <box autostretch="never" halign="left">
-    <button id="SaveSearch" disabled="true" value="&save.button.label;" oncommand="saveSearch();"/>
-	</box>
+    <button id="SaveSearch" disabled="true" label="&save.button.label;" oncommand="saveSearch();"/>
+  </box>
 
 </window>

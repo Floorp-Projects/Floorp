@@ -54,7 +54,7 @@
   <popupset id="aTooltipSet" />
 
   <titledbox orient="vertical">
-    <title value="&locationBox.label;"/>
+    <label value="&locationBox.label;"/>
     <!--/////// Src URL and ALT Text //////-->
     <grid>
       <columns><column/><column/><column/></columns>
@@ -132,19 +132,19 @@
       <box orient="vertical">
         <!-- //////// Image Dimensions //////// -->
         <titledbox orient="vertical" flex="1">
-          <title id="dimensionsLabel" value="&dimensionsBox.label;"/>
+          <label id="dimensionsLabel" value="&dimensionsBox.label;"/>
           <box>
             <radiogroup id="imgSizeGroup" orient="vertical">
               <radio
                 group   = "imgSizeGroup"
                 id      = "actualSizeRadio" 
-                value   = "&actualSizeRadio.label;"
+                label   = "&actualSizeRadio.label;"
                 tooltip = "aTooltip" tooltiptext="&actualSizeRadio.tooltip;"
                 oncommand = "SetActualSize()"/>
               <radio
                 group   = "imgSizeGroup"
                 id      = "customSizeRadio" 
-                value   = "&customSizeRadio.label;"
+                label   = "&customSizeRadio.label;"
                 tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
                 oncommand = "doDimensionEnabling();" />
             </radiogroup>
@@ -198,20 +198,20 @@
         </titledbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <titledbox orient="vertical" flex="1">
-           <title id="imagemapLabel" value="&imagemapBox.label;"/>
+           <label id="imagemapLabel" value="&imagemapBox.label;"/>
            <box flex="1">
             <button
               class   = "dialog"
               id      = "editImageMap"
               oncommand = "editImageMap()"
               tooltip = "aTooltip" tooltiptext="&editImageMapButton.tooltip;"
-              value   = "&editImageMapButton.label;"
+              label   = "&editImageMapButton.label;"
               flex    = "1"/>
             <button
               class   = "dialog"
               id      = "removeImageMap"
               oncommand = "removeImageMap()"
-              value   = "&removeImageMapButton.label;"
+              label   = "&removeImageMapButton.label;"
               flex    = "1"/>
             </box>
           <spring class="spacer"/>
@@ -222,22 +222,22 @@
       <box orient="vertical" flex="1">
         <!--//////// Alignment ////////-->
         <titledbox flex="1" orient="vertical">
-          <title id="alignLabel" value="&alignment.label;"/>
+          <label id="alignLabel" value="&alignment.label;"/>
           <spring class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
             <menupopup valign="middle">
-              <menuitem class="align-menu" data="top" value="&topPopup.value;"/>
-              <menuitem class="align-menu" data="center" value="&centerPopup.value;"/>
-              <menuitem class="align-menu" data="bottom" value="&bottomPopup.value;"/>
-              <menuitem class="align-menu" data="left" value="&wrapLeftPopup.value;"/>
-              <menuitem class="align-menu" data="right" value="&wrapRightPopup.value;"/>
+              <menuitem class="align-menu" value="top" label="&topPopup.value;"/>
+              <menuitem class="align-menu" value="center" label="&centerPopup.value;"/>
+              <menuitem class="align-menu" value="bottom" label="&bottomPopup.value;"/>
+              <menuitem class="align-menu" value="left" label="&wrapLeftPopup.value;"/>
+              <menuitem class="align-menu" value="right" label="&wrapRightPopup.value;"/>
             </menupopup>
           </menulist>
         </titledbox>
 
         <!--//////// Borders and Spacing ////////-->
         <titledbox flex="1">
-          <title id="spacingLabel" value="&spacingBox.label;"/>
+          <label id="spacingLabel" value="&spacingBox.label;"/>
           <grid>
             <columns><column/><column/><column/></columns>
             <rows>

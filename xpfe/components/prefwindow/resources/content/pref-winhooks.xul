@@ -47,42 +47,42 @@
 
         <!-- File types -->
         <titledbox>
-            <title value="&files.label;"/>
+            <label value="&files.label;"/>
             <box orient="vertical" flex="1">
                 <html>
                     &files.text;
                 </html>
                 <box class="indent">
                   <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingHTML" value="&html.label;" accesskey="&html.accesskey;"/>
-                    <checkbox id="isHandlingXML"  value="&xml.label;" accesskey="&xml.accesskey;"/>
-                    <checkbox id="isHandlingXUL"  value="&xul.label;" accesskey="&xul.accesskey;"/>
+                    <checkbox id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;"/>
+                    <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
+                    <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;"/>
                   </box>
                   <box orient="vertical" autostretch="never" flex="1">
-                    <checkbox id="isHandlingJPEG" value="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
-                    <checkbox id="isHandlingGIF"  value="&gif.label;" accesskey="&gif.accesskey;"/>
-                    <checkbox id="isHandlingPNG"  value="&png.label;" accesskey="&png.accesskey;"/>
+                    <checkbox id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
+                    <checkbox id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
+                    <checkbox id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
                   </box>
                 </box>
             </box>
         </titledbox>
         <!-- Internet Shortcuts -->
         <titledbox>
-            <title value="&shortcuts.label;"/>
+            <label value="&shortcuts.label;"/>
             <box orient="vertical" autostretch="never" flex="1">
                 <html>
                     &shortcuts.text;
                 </html>
-                <checkbox id="isHandlingHTTP"   value="&http.label;" accesskey="&http.accesskey;" class="indent"/>
-                <checkbox id="isHandlingHTTPS"  value="&https.label;" accesskey="&https.accesskey;" class="indent"/>
-                <checkbox id="isHandlingFTP"    value="&ftp.label;" accesskey="&ftp.accesskey;" class="indent"/>
-                <checkbox id="isHandlingCHROME" value="&chrome.label;" accesskey="&chrome.accesskey;" class="indent"/>
+                <checkbox id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;" class="indent"/>
+                <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;" class="indent"/>
+                <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;" class="indent"/>
+                <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;" class="indent"/>
 		 <checkbox id="isHandlingGOPHER" value="&gopher.label;" accesskey="&gopher.accesskey;" class="indent"/>
             </box>
         </titledbox>
         <!-- Misc -->
         <box autostretch="never">
-          <checkbox id="showDialog" value="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
+          <checkbox id="showDialog" label="&showDialog.label;" accesskey="&showDialog.accesskey;"/>
         </box>
 
 </window>

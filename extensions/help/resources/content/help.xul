@@ -31,19 +31,19 @@
 
         <button id="helpBackButton"
                 class="button-toolbar-1 top"
-                value="&backBtn.label;"
+                label="&backBtn.label;"
                 tooltiptext="&backBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goBack();"/>
         <button id="helpForwardButton"
                 class="button-toolbar-1 top"
-                value="&fwdBtn.label;"
+                label="&fwdBtn.label;"
                 tooltiptext="&fwdBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goForward();"/>
         <button id="helpHomeButton"
                 class="button-toolbar-1 top"
-                value="&homeBtn.label;"
+                label="&homeBtn.label;"
                 tooltiptext="&homeBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goHome();"/>
@@ -71,8 +71,8 @@
 
         <tabcontrol orient="vertical" flex="1">
           <tabbox orient="horizontal">
-            <tab value="Contents"/>
-            <tab value="Index"/>
+            <tab label="Contents"/>
+            <tab label="Index"/>
           </tabbox>
           <tabpanel flex="1">
             <box id="help-toc">
@@ -103,7 +103,7 @@
                         <treeitem uri="?subheading">
                           <treerow>
                             <treecell class="treecell-indent"
-                                      value="?name"
+                                      label="?name"
                                       helplink="?link"
                                       onclick="loadURI(this.getAttribute('helplink'));"/>
                           </treerow>

@@ -49,15 +49,15 @@ Contributor(s):
   <box class="box-smallheader" title="&pane.title;"/>
 
   <titledbox orient="vertical">
-    <title><text value="&windowSettings.label;"/></title>
+    <label value="&windowSettings.label;"/>
     
     <box autostretch="never">
       <text class="label" value="&selectWindowLayout.label;"/>
       <spring flex="1"/>
       <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
-                  prefattribute="data">
-        <radio group="mailPaneConfig" class="iconic" data="0" id="classic"/>
-        <radio group="mailPaneConfig" class="iconic" data="1" id="wide"/>
+                  prefattribute="value">
+        <radio group="mailPaneConfig" class="iconic" value="0" id="classic"/>
+        <radio group="mailPaneConfig" class="iconic" value="1" id="wide"/>
       </radiogroup>
     </box>
     
@@ -65,17 +65,17 @@ Contributor(s):
 
     <separator class="thin"/>
     <box autostretch="never">
-      <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;"
+      <checkbox id="mailnewsConfirmMoveFoldersToTrash" label="&confirmMove.label;"
                 pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
                 prefattribute="checked"/>
     </box>
 
-	</titledbox>
+  </titledbox>
 
-	<titledbox orient="vertical">
-    <title><text value="&messengerStartPage.label;"/></title>
+  <titledbox orient="vertical">
+    <label value="&messengerStartPage.label;"/>
       <box autostretch="never">
-        <checkbox allowevents="true" id="mailnewsStartPageEnabled" value="&enableStartPage.label;"
+        <checkbox allowevents="true" id="mailnewsStartPageEnabled" label="&enableStartPage.label;"
                   pref="true" preftype="bool" prefstring="mailnews.start_page.enabled"
                   prefattribute="checked"/>
       </box>
@@ -90,20 +90,20 @@ Contributor(s):
       </box>
 
     <box autostretch="never" halign="right">
-      <button class="dialog" value="&useDefault.label;" accesskey="&useDefault.accesskey;"
+      <button class="dialog" label="&useDefault.label;" accesskey="&useDefault.accesskey;"
               oncommand="setHomePageToDefaultPage('mailnewsStartPageUrl');" />
      </box>
 
-	</titledbox>
-	
+  </titledbox>
+  
   <!-- Sound notification for new mail -->    
         <titledbox orient="vertical">
-	  <title><text value="&newMessage.label;"/></title>
-	  <box autostretch="never">
-            <checkbox allowevents="true" id="newMailNotification" value="&playSound.label;"
-	              pref="true" preftype="bool" prefstring="mail.biff.play_sound"
-	              prefattribute="checked" accesskey="&playSound.accesskey;" />
-          </box>	            
+    <label value="&newMessage.label;"/>
+    <box autostretch="never">
+            <checkbox allowevents="true" id="newMailNotification" label="&playSound.label;"
+                pref="true" preftype="bool" prefstring="mail.biff.play_sound"
+                prefattribute="checked" accesskey="&playSound.accesskey;" />
+          </box>              
         </titledbox>
   
 </window>

@@ -27,40 +27,40 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
 
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		xmlns:nc="http://home.netscape.com/NC-rdf#"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		title="&mailListWindow.title;"
-		class="dialog"
-		onload="OnLoadMailList()"
+    xmlns:nc="http://home.netscape.com/NC-rdf#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    title="&mailListWindow.title;"
+    class="dialog"
+    onload="OnLoadMailList()"
         ondragover="return DragOverTree(event);"
         ondragdrop="return DropOnAddressListTree(event);"
-		align="vertical">
+    align="vertical">
 
   <stringbundleset id="stringbundleset"/>
 
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-	<box orient="horizontal" autostretch="never" valign="center">
-		<text for="abPopup" value="&addToAddressBook.label;"/>
-		<menulist id="abPopup">
-			<menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
-				<template> 
-				<rule nc:IsMailList="false">
-					<menuitem uri="..."
-					          value="rdf:http://home.netscape.com/NC-rdf#DirName"
-					          data="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
-				</rule>
-				</template> 
-			</menupopup>
-		</menulist>
-	</box>
+  <box orient="horizontal" autostretch="never" valign="center">
+    <text for="abPopup" value="&addToAddressBook.label;"/>
+    <menulist id="abPopup">
+      <menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
+        <template> 
+        <rule nc:IsMailList="false">
+          <menuitem uri="..."
+                    label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                    value="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+        </rule>
+        </template> 
+      </menupopup>
+    </menulist>
+  </box>
 
-	<spring style="height:1em"/>
+  <spring style="height:1em"/>
 
-	<box id="editlist"/>
-		
-	<spring style="height:1em"/>
-		
-	<box id="okCancelButtons"/>
+  <box id="editlist"/>
+    
+  <spring style="height:1em"/>
+    
+  <box id="okCancelButtons"/>
 
 </window>

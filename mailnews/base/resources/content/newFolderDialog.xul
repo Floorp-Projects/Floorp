@@ -69,8 +69,8 @@
       <separator class="thin"/>
 
       <radiogroup id="folderGroup">
-        <radio group="folderGroup" oncommand="onFoldersOnly();" value="&foldersOnly.label;"/>
-        <radio group="folderGroup" oncommand="onMessagesOnly();" value="&messagesOnly.label;" checked="true"/>
+        <radio group="folderGroup" oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
+        <radio group="folderGroup" oncommand="onMessagesOnly();" label="&messagesOnly.label;" checked="true"/>
         <spring flex="100%"/>
       </radiogroup>
 

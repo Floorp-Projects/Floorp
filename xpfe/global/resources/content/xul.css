@@ -188,12 +188,8 @@ titledbox {
   -moz-binding: url(chrome://global/content/xulBindings.xml#titledbox);
 }
 
-titledbox[value] {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#titledboxvalue);
-}
-
-title {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#title);
+label {
+  -moz-binding: url(chrome://global/content/xulBindings.xml#label);
 }
 
 /******* ToolBox & ToolBar *******/

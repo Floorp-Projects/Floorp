@@ -7,27 +7,27 @@
   <treechildren id="panelChildren">
     <treeitem container="true" open="true" position="3">
       <treerow>       
-        <treecell indent="true" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
+        <treecell indent="true" url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
       </treerow>
       <treechildren id="messengerChildren">
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
+            <treecell indent="true" url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://messengercompose/content/pref-composing_messages.xul" value="&composingMessages.label;"/> 
+            <treecell indent="true" url="chrome://messengercompose/content/pref-composing_messages.xul" label="&composingMessages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://messengercompose/content/pref-formatting.xul" value="&format.label;"/> 
+            <treecell indent="true" url="chrome://messengercompose/content/pref-formatting.xul" label="&format.label;"/> 
           </treerow>
         </treeitem>
         <treeitem open="true">
           <treerow>
-            <treecell indent="true" url="chrome://messenger/content/pref-receipts.xul" value="&return.label;"/> 
+            <treecell indent="true" url="chrome://messenger/content/pref-receipts.xul" label="&return.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>

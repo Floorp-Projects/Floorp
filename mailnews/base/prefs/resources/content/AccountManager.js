@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -66,11 +66,11 @@ var setDefaultButton;
 // perform initialization here
 function onLoad() {
   gPrefsBundle = document.getElementById("bundle_prefs");
-  
+
   var selectedServer;
   if (window.arguments && window.arguments[0])
     selectedServer = window.arguments[0].server;
-  
+
   accountArray = new Array;
   RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
@@ -79,7 +79,7 @@ function onLoad() {
   smtpService =
     Components.classes["@mozilla.org/messengercompose/smtp;1"].getService(Components.interfaces.nsISmtpService);
   accounttree = document.getElementById("accounttree");
-  
+
   doSetOKCancel(onOk, 0);
 
   newAccountButton = document.getElementById("newAccountButton");
@@ -94,22 +94,22 @@ function onLoad() {
 function sortAccountList(accounttree)
 {
   var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService(Components.interfaces.nsIXULSortService);
-  
+
   xulSortService.Sort(accounttree, 'http://home.netscape.com/NC-rdf#FolderTreeName?sort=true', 'ascending');
 }
 
 function selectServer(server)
 {
   var selectedItem;
-  
+
   if (server)
     selectedItem = document.getElementById(server.serverURI);
 
   if (!selectedItem)
     selectedItem = getFirstAccount();
-  
+
   accounttree.selectItem(selectedItem);
-  
+
   var result = getServerIdAndPageIdFromTree(accounttree);
   if (result) {
     updateButtons(accounttree,result.serverId);
@@ -126,7 +126,7 @@ function getFirstAccount()
 
 function findFirstTreeItem(tree) {
   var children = tree.childNodes;
-  
+
   var treechildren;
   for (var i=0;i<children.length; i++) {
     if (children[i].localName == "treechildren") {
@@ -161,7 +161,7 @@ function onSave() {
     dump("ERROR: " + pendingPageId + " hasn't loaded yet! Not saving.\n");
     return;
   }
-  
+
   // make sure the current visible page is saved
   savePage(currentServerId);
 
@@ -190,31 +190,31 @@ function onDuplicateAccount() {
             var server = account.incomingServer;
             var type = server.type;
 
-			var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
-			canDuplicate = protocolinfo.canDuplicate;
+      var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+      canDuplicate = protocolinfo.canDuplicate;
         }
         else {
             canDuplicate = false;
         }
 
         if (canDuplicate) {
-			try {
+      try {
               accountManager.duplicateAccount(account);
             }
-			catch (ex) {
-				var alertText = gPrefsBundle.getString("failedDuplicateAccount");
-                window.alert(alertText); 
-			}
+      catch (ex) {
+        var alertText = gPrefsBundle.getString("failedDuplicateAccount");
+                window.alert(alertText);
+      }
         }
     }
-}         
+}
 
 function onSetDefault(event) {
   if (event.target.getAttribute("disabled") == "true") return;
 
   var result = getServerIdAndPageIdFromTree(accounttree);
   if (!result) return;
-  
+
   var account = getAccountFromServerId(result.serverId);
   if (!account) return;
 
@@ -226,14 +226,14 @@ function onDeleteAccount(event) {
 
     if (event.target.getAttribute("disabled") == "true") return;
 
-	var result = getServerIdAndPageIdFromTree(accounttree);
+  var result = getServerIdAndPageIdFromTree(accounttree);
     if (!result) return;
-    
+
     var account = getAccountFromServerId(result.serverId);
     if (!account) return;
 
     var server = account.incomingServer;
-    var type = server.type; 
+    var type = server.type;
 
     var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     var canDelete = protocolinfo.canDelete;
@@ -245,13 +245,13 @@ function onDeleteAccount(event) {
     var confirmDeleteAccount =
       gPrefsBundle.getString("confirmDeleteAccount");
     if (!window.confirm(confirmDeleteAccount)) return;
-    
+
     try {
       // clear cached data out of the account array
       if (accountArray[result.serverId])
         accountArray[result.serverId] = null;
       currentServerId = currentPageId = null;
-      
+
       accountManager.removeAccount(account);
       selectServer(null);
     }
@@ -266,7 +266,7 @@ function saveAccount(accountValues, account)
 {
   var identity = null;
   var server = null;
-  
+
   if (account) {
     identity = account.defaultIdentity;
     server = account.incomingServer;
@@ -284,18 +284,18 @@ function saveAccount(accountValues, account)
         dest = server;
       else if (type == "pop3")
         dest = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-      
+
       else if (type == "imap")
         dest = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
-      
+
       else if (type == "none")
-        dest = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
-      
+        dest = server.QueryInterface(Components.interfaces.nsINoIncomingServer);
+
       else if (type == "nntp")
         dest = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
       else if (type == "smtp")
         dest = smtpService.defaultServer;
-      
+
       } catch (ex) {
         // don't do anything, just means we don't support that
       }
@@ -324,15 +324,15 @@ function updateButtons(tree,serverId) {
   //dump("account = " + account + "\n");
 
   if (account) {
-	var server = account.incomingServer;
-	var type = server.type;
+  var server = account.incomingServer;
+  var type = server.type;
 
     if (account.identities.Count() < 1)
       canSetDefault = false;
-    
-	//dump("servertype = " + type + "\n");
 
-	var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
+  //dump("servertype = " + type + "\n");
+
+  var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     canDuplicate = protocolinfo.canDuplicate;
     canDelete = protocolinfo.canDelete;
     if (!canDelete) {
@@ -340,21 +340,21 @@ function updateButtons(tree,serverId) {
     }
   }
   else {
-	// HACK
-	// if account is null, we have either selected a SMTP server, or there is a problem
-	// either way, we don't want the user to be able to delete it or duplicate it
+  // HACK
+  // if account is null, we have either selected a SMTP server, or there is a problem
+  // either way, we don't want the user to be able to delete it or duplicate it
     canSetDefault = false;
-	canDelete = false;
-	canDuplicate = false;
+  canDelete = false;
+  canDuplicate = false;
   }
 
   if (tree.selectedItems.length < 1)
     canDuplicate = canSetDefault = canDelete = false;
-  
+
   setEnabled(duplicateButton, canDuplicate);
   setEnabled(setDefaultButton, canSetDefault);
   setEnabled(deleteButton, canDelete);
-  
+
 }
 
 function setEnabled(control, enabled)
@@ -382,16 +382,16 @@ function onAccountClick(tree) {
 
   //dump("sputter:"+bug51546CurrentPage+","+bug51546CurrentServerId+":"+result.pageId+","+result.serverId+"\n");
   if ((bug51546CurrentPage == result.pageId) && (bug51546CurrentServerId == result.serverId)) {
-	//dump("workaround for #51546\n");
-	return;
+  //dump("workaround for #51546\n");
+  return;
   }
-  
+
   bug51546CurrentPage = result.pageId;
   bug51546CurrentServerId = result.serverId;
-  
+
   if (result) {
-	  showPage(result.serverId, result.pageId);
-	  updateButtons(tree,result.serverId);
+    showPage(result.serverId, result.pageId);
+    updateButtons(tree,result.serverId);
   }
 }
 
@@ -407,29 +407,29 @@ function showPage(serverId, pageId) {
 
   // save the previous page
   savePage(currentServerId);
-  
+
   // loading a complete different page
   if (pageId != currentPageId) {
-    
+
     // prevent overwriting with bad stuff
     currentServerId = currentPageId = null;
-    
+
     pendingServerId=serverId;
     pendingPageId=pageId;
     loadPage(pageId);
   }
-  
+
   // same page, different server
   else if (serverId != currentServerId) {
     restorePage(pageId, serverId);
   }
-  
+
 }
 
 // page has loaded
 function onPanelLoaded(pageId) {
   if (pageId != pendingPageId) {
-    
+
     // if we're reloading the current page, we'll assume the
     // page has asked itself to be completely reloaded from
     // the prefs. to do this, clear out the the old entry in
@@ -458,13 +458,13 @@ function loadPage(pageId)
 // save the values of the widgets to the given server
 //
 function savePage(serverId) {
-  
+
   if (!serverId) return;
 
   // tell the page that it's about to save
   if (top.frames["contentFrame"].onSave)
       top.frames["contentFrame"].onSave();
-  
+
   var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements();
 
@@ -490,7 +490,7 @@ function setAccountValue(accountValues, type, slot, value) {
     accountValues[type] = new Array;
 
   //dump("Form->Array: accountValues[" + type + "][" + slot + "] = " + value + "\n");
-  
+
   accountValues[type][slot] = value;
 }
 
@@ -514,22 +514,22 @@ function getAccountValue(account, accountValues, type, slot) {
 
     else if (type == "pop3")
       source = server.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
-    
+
     else if (type == "imap")
       source = server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
-    
+
     else if (type == "none")
-      source = server.QueryInterface(Components.interfaces.nsINoIncomingServer); 
+      source = server.QueryInterface(Components.interfaces.nsINoIncomingServer);
 
     else if (type == "nntp")
       source = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
 
     else if (type == "smtp")
         source = smtpService.defaultServer;
-    
+
     } catch (ex) {
     }
-    
+
     if (source) {
       accountValues[type][slot] = source[slot];
     }
@@ -553,7 +553,7 @@ function restorePage(pageId, serverId) {
 
   if (top.frames["contentFrame"].onPreInit)
     top.frames["contentFrame"].onPreInit(account, accountValues);
-  
+
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].id) {
@@ -590,9 +590,9 @@ function getFormElementValue(formElement) {
   }
 
   else if (type == "radiogroup" || type=="menulist") {
-    return formElement.selectedItem.data;
+    return formElement.selectedItem.value;
   }
-  
+
   else if (type == "textbox" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
@@ -622,7 +622,7 @@ function getFormElementValue(formElement) {
     if (val) return val;
     else return null;
   }
-  
+
   else {
     return formElement.value;
   }
@@ -637,7 +637,7 @@ function getFormElementValue(formElement) {
 // sets the value of a widget
 //
 function setFormElementValue(formElement, value) {
-  
+
   //formElement.value = formElement.defaultValue;
   //  formElement.checked = formElement.defaultChecked;
   var type = formElement.localName;
@@ -652,11 +652,11 @@ function setFormElementValue(formElement, value) {
         formElement.checked = !value;
       else
         formElement.checked = value;
-    }     
+    }
   }
 
   else if (type == "radiogroup" || type =="menulist") {
-    
+
     var selectedItem;
     if (value == undefined) {
       if (type == "radiogroup")
@@ -665,8 +665,8 @@ function setFormElementValue(formElement, value) {
         selectedItem = formElement.firstChild.firstChild;
     }
     else
-      selectedItem = formElement.getElementsByAttribute("data", value)[0];
-    
+      selectedItem = formElement.getElementsByAttribute("value", value)[0];
+
     formElement.selectedItem = selectedItem;
   }
   // handle nsIFileSpec
@@ -696,7 +696,7 @@ function setFormElementValue(formElement, value) {
       } catch (ex) {
         dump("Still need to fix uninitialized nsIFile problem!\n");
       }
-      
+
     } else {
       if (formElement.defaultValue)
         formElement.value = formElement.defaultValue;
@@ -704,14 +704,14 @@ function setFormElementValue(formElement, value) {
         formElement.value = "";
     }
   }
-      
+
   else if (type == "text") {
     if (value == null || value == undefined)
       formElement.removeAttribute("value");
     else
       formElement.setAttribute("value",value);
   }
-  
+
   // let the form figure out what to do with it
   else {
     if (value == undefined) {
@@ -750,12 +750,12 @@ function getAccountFromServerId(serverId) {
 //
 function getPageFormElements() {
  try {
-	var pageElements =
+  var pageElements =
       top.frames["contentFrame"].document.getElementsByAttribute("wsm_persist", "true");
-	return pageElements;
+  return pageElements;
  }
  catch (ex) {
-	dump("getPageFormElements() failed: " + ex + "\n");
+  dump("getPageFormElements() failed: " + ex + "\n");
  }
  return null;
 }
@@ -765,11 +765,11 @@ function getPageFormElements() {
 //
 function getValueArrayFor(serverId) {
   if (serverId == undefined) serverId="global";
-  
+
   if (accountArray[serverId] == null) {
     accountArray[serverId] = new Array;
   }
-  
+
   return accountArray[serverId];
 }
 
@@ -798,7 +798,7 @@ function getServerIdAndPageIdFromTree(tree)
   if (servernode.localName != "treeitem") {
     servernode = node;
   }
-  serverId = servernode.getAttribute('id');  
+  serverId = servernode.getAttribute('id');
 
   return {"serverId": serverId, "pageId": pageId }
 }

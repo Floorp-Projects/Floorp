@@ -50,21 +50,21 @@
 
   <!-- navigator starts with -->  
   <titledbox>
-    <title value="&navRadio;"/>
+    <label value="&navRadio;"/>
     
     <radiogroup id="startupPage" autostretch="never" orient="vertical"
                 pref="true" preftype="int" prefstring="browser.startup.page"
-                prefattribute="data">
-      <radio group="startupPage" data="0" value="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
-      <radio group="startupPage" data="1" value="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
-      <radio group="startupPage" data="2" value="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
+                prefattribute="value">
+      <radio group="startupPage" value="0" label="&blankPageRadio.label;" accesskey="&blankPageRadio.accesskey;"/>
+      <radio group="startupPage" value="1" label="&homePageRadio.label;" accesskey="&homePageRadio.accesskey;"/>
+      <radio group="startupPage" value="2" label="&lastPageRadio.label;" accesskey="&lastPageRadio.accesskey;"/>
     </radiogroup>
 
   </titledbox>
 
   <!-- homepage specification -->
   <titledbox orient="vertical">
-    <title value="&header2.label;"/>
+    <label value="&header2.label;"/>
     <html>&homePageIntro.label;</html>
     <box autostretch="never">
       <text class="label" value="&location.label;" accesskey="&location.accesskey;" for="browserStartupHomepage"/>
@@ -74,16 +74,16 @@
                                                when we support fancy formatted local filenames -->
     </box>
     <box autostretch="never" halign="right">
-      <button class="dialog" value="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
+      <button class="dialog" label="&useCurrent.label;" accesskey="&useCurrent.accesskey;"
               oncommand="setHomePageToCurrentPage('browserStartupHomepage');"/>
-      <button class="dialog" value="&browseFile.label;" accesskey="&browseFile.accesskey;"
+      <button class="dialog" label="&browseFile.label;" accesskey="&browseFile.accesskey;"
               oncommand="prefNavSelectFile('browserStartupHomepage', 'choosehomepage', false );"/>
     </box>
   </titledbox>
   
   <!-- toolbar buttons customization -->
   <titledbox flex="1" orient="vertical">
-    <title value="&header3.label;"/>
+    <label value="&header3.label;"/>
     <html>&toolbarIntro.label;</html>
     <tree flex="1" class="dialog inset" style="-moz-user-focus:ignore !important;">
       <treecolgroup>
@@ -95,7 +95,7 @@
             <treecell>
               <checkbox allowevents="true"
                         id="bookmarksButton"
-                        value="&bookmarksButton.label;"
+                        label="&bookmarksButton.label;"
                         pref="true"
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.bookmarks"
@@ -108,7 +108,7 @@
             <treecell>
               <checkbox allowevents="true"
                         id="goButton"
-                        value="&goButton.label;"
+                        label="&goButton.label;"
                         pref="true"
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.go"
@@ -121,7 +121,7 @@
             <treecell>
               <checkbox allowevents="true"
                         id="homeButton"
-                        value="&homeButton.label;"
+                        label="&homeButton.label;"
                         pref="true"
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.home"
@@ -134,7 +134,7 @@
             <treecell>
               <checkbox allowevents="true"
                         id="printButton"
-                        value="&printButton.label;"
+                        label="&printButton.label;"
                         pref="true"
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.print"
@@ -147,7 +147,7 @@
             <treecell>
               <checkbox allowevents="true"
                         id="searchButton"
-                        value="&searchButton.label;"
+                        label="&searchButton.label;"
                         pref="true"
                         preftype="bool"
                         prefstring="browser.toolbars.showbutton.search"

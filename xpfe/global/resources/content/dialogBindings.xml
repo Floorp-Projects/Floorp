@@ -36,7 +36,7 @@
   <binding id="status">
     <content>
       <xul:box class="box-status-bg toolbar-standard" flex="1">
-        <xul:text class="box-status-text" inherits="value"/>
+        <xul:text class="box-status-text" inherits="label"/>
         <xul:spring flex="1"/>
         <xul:text class="box-status-progress" inherits="value=progress"/>
       </xul:box>  

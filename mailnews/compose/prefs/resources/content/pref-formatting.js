@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -49,11 +49,11 @@ function Init()
   //Initialize the broadcaster value so that you can use it later
   htmlobj.domain_pref            = document.getElementById('mailhtmldomain');
   plainobj.domain_pref           = document.getElementById('mailplaintextdomain');
-  htmlobj.tree_node              = document.getElementById('html_domains'); 
-  htmlobj.treeroot_node          = document.getElementById('html_domains_root'); 
-  plainobj.tree_node             = document.getElementById('plaintext_domains'); 
+  htmlobj.tree_node              = document.getElementById('html_domains');
+  htmlobj.treeroot_node          = document.getElementById('html_domains_root');
+  plainobj.tree_node             = document.getElementById('plaintext_domains');
   plainobj.treeroot_node         = document.getElementById('plaintext_domains_root');
-  
+
   //Get the values of the Add Domain Dlg boxes and store it in the objects
   var AddDomainDlg               = document.getElementById('domaindlg');
   htmlobj.DlgTitle               = AddDomainDlg.getAttribute("htmldlg_title");
@@ -82,17 +82,17 @@ function AddDomain(obj)
     ))
       DomainName = result.value.replace(/ /g,"");
   }
-      
+
   if (DomainName) {
     var objPrime;
     if (obj.id == "html")
       objPrime = plainobj;
-    else 
+    else
       objPrime = htmlobj;
     if (!DomainAlreadyPresent(obj, DomainName, true))
       if(!DomainAlreadyPresent(objPrime, DomainName, false)) {
       AddTreeItem(obj.treeroot_node, DomainName);
-	  }
+    }
   }
 
   UpdateSavePrefString(obj);
@@ -100,26 +100,26 @@ function AddDomain(obj)
 
 function AddTreeItem(treeRoot, domainTitle)
 {
-	try { 
+  try {
 
-			// Create a treerow for the new Domain
-			var item = document.createElement('treeitem');
-			var row  = document.createElement('treerow');
-			var cell = document.createElement('treecell');
+      // Create a treerow for the new Domain
+      var item = document.createElement('treeitem');
+      var row  = document.createElement('treerow');
+      var cell = document.createElement('treecell');
 
-			// Copy over the attributes
-			cell.setAttribute('value', domainTitle);
+      // Copy over the attributes
+      cell.setAttribute('label', domainTitle);
 
-			// Add it to the active languages tree
-			item.appendChild(row);
+      // Add it to the active languages tree
+      item.appendChild(row);
       row.appendChild(cell);
-			treeRoot.appendChild(item);
+      treeRoot.appendChild(item);
 
-	} //try
+  } //try
 
-	catch (ex) {
-		dump("*** Failed to add item: " + domainTitle + "\n");
-	} //catch 
+  catch (ex) {
+    dump("*** Failed to add item: " + domainTitle + "\n");
+  } //catch
 
 }
 
@@ -127,11 +127,11 @@ function DomainAlreadyPresent(obj, domain_name, dup)
 {
   var errorTitle;
   var errorMsg;
-  var pref_string = obj.domain_pref.getAttribute('value');
+  var pref_string = obj.domain_pref.getAttribute('label');
   var found = false;
   try {
     var arrayOfPrefs = pref_string.split(',');
-    if (arrayOfPrefs) 
+    if (arrayOfPrefs)
       for (var i = 0; i < arrayOfPrefs.length; i++) {
         var str = arrayOfPrefs[i].replace(/ /g,"");
         if (str == domain_name) {
@@ -139,7 +139,7 @@ function DomainAlreadyPresent(obj, domain_name, dup)
           errorTitle = document.getElementById("domainerrdlg").getAttribute("domainerrdlg_title");
           if(dup)
           errorMsg = document.getElementById("domainerrdlg").getAttribute("duperr");
-          else 
+          else
           errorMsg = document.getElementById("domainerrdlg").getAttribute("dualerr");
           var errorMessage = errorMsg.replace(/@string@/, domain_name);
           if (commonDialogsService)
@@ -166,47 +166,47 @@ function RemoveDomains(obj)
   var deleted_all = false;
 
   while (obj.tree_node.selectedItems.length > 0) {
-    
-	var selectedNode = obj.tree_node.selectedItems[0];
+
+  var selectedNode = obj.tree_node.selectedItems[0];
     nextNode = selectedNode.nextSibling;
-    
-	if (!nextNode) 
-	  
-    if (selectedNode.previousSibling) 
-		nextNode = selectedNode.previousSibling;
-    
+
+  if (!nextNode)
+
+    if (selectedNode.previousSibling)
+    nextNode = selectedNode.previousSibling;
+
     var row  =  selectedNode.firstChild;
     var cell =  row.firstChild;
 
-  	row.removeChild(cell);
-	  selectedNode.removeChild(row);
+    row.removeChild(cell);
+    selectedNode.removeChild(row);
     obj.treeroot_node.removeChild(selectedNode);
 
    } //while
-  
+
   if (nextNode) {
     obj.tree_node.selectItem(nextNode)
   } //if
 
   UpdateSavePrefString(obj);
-} 
+}
 
 function LoadDomains(obj)
 {
   try {
-	  var arrayOfPrefs = obj.domain_pref.getAttribute('value').split(',');
-  } 
-  catch (ex) {
-	  dump("failed to split the preference string!\n");
+    var arrayOfPrefs = obj.domain_pref.getAttribute('value').split(',');
   }
-	
-  if (arrayOfPrefs) 
+  catch (ex) {
+    dump("failed to split the preference string!\n");
+  }
+
+  if (arrayOfPrefs)
     for (var i = 0; i < arrayOfPrefs.length; i++) {
 
       var str = arrayOfPrefs[i].replace(/ /g,"");
       if (str) {
         AddTreeItem(obj.treeroot_node, str);
-	    } //if 
+      } //if
     } //for
 }
 
@@ -219,18 +219,18 @@ function UpdateSavePrefString(obj)
 
     var row  =  item.firstChild;
     var cell =  row.firstChild;
-    var domainid = cell.getAttribute('value');
-	  if (domainid.length > 1) {
-	  
+    var domainid = cell.getAttribute('label');
+    if (domainid.length > 1) {
+
           num_domains++;
 
-		  //separate >1 domains by commas
-		  if (num_domains > 1) {
-			  pref_string = pref_string + "," + domainid;
-		  } else {
-			  pref_string = domainid;
-		  } //if
-	  } //if
+      //separate >1 domains by commas
+      if (num_domains > 1) {
+        pref_string = pref_string + "," + domainid;
+      } else {
+        pref_string = domainid;
+      } //if
+    } //if
   }//for
 
   obj.domain_pref.setAttribute("value", pref_string);

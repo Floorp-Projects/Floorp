@@ -42,28 +42,28 @@ function initSmtpSettings(server) {
     gSmtpUseUsername = document.getElementById("smtp.useUsername");
     gSmtpAuthMethod = document.getElementById("smtp.authMethod");
     gSmtpTrySSL = document.getElementById("smtp.trySSL");
-    
+
     if (server) {
         gSmtpHostname.value = server.hostname;
         gSmtpUsername.value = server.username;
         gSmtpAuthMethod.setAttribute("value", server.authMethod);
 
-        var elements = gSmtpTrySSL.getElementsByAttribute("data", server.trySSL);
+        var elements = gSmtpTrySSL.getElementsByAttribute("value", server.trySSL);
         if (elements.length == 0)
-            elements = gSmtpTrySSL.getElementsByAttribute("data", "1");
+            elements = gSmtpTrySSL.getElementsByAttribute("value", "1");
         gSmtpTrySSL.selectedItem = elements[0];
     } else {
         gSmtpAuthMethod.setAttribute("value", "1");
         gSmtpTrySSL.selectedItem =
-            gSmtpTrySSL.getElementsByAttribute("data", "1")[0];
+            gSmtpTrySSL.getElementsByAttribute("value", "1")[0];
     }
 
     if (gSmtpAuthMethod.getAttribute("value") == "1")
         gSmtpUseUsername.checked = true;
-    
+
     //dump("gSmtpAuthMethod = <" + gSmtpAuthMethod.localName + ">\n");
     //dump("gSmtpAuthMethod.value = " + gSmtpAuthMethod.getAttribute("value") + "\n");
-    
+
     onUseUsername(gSmtpUseUsername, false);
     updateControls();
 }
@@ -83,7 +83,7 @@ function saveSmtpSettings(server)
         //dump("Saved authmethod = " + server.authMethod +
         //     " but checked = " + gSmtpUseUsername.checked + "\n");
         server.username = gSmtpUsername.value;
-        server.trySSL = gSmtpTrySSL.selectedItem.data;
+        server.trySSL = gSmtpTrySSL.selectedItem.value;
     }
 }
 
@@ -101,7 +101,7 @@ function onUseUsername(checkbox, dofocus)
         gSmtpUsername.value = "";
         gSmtpUsername.setAttribute("disabled", "true");
         gSmtpUsernameLabel.setAttribute("disabled", "true");
-    }        
+    }
 }
 
 function updateControls() {

@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -28,15 +28,15 @@ var reorderDownButton;
 const nsMsgFilterMotion = Components.interfaces.nsMsgFilterMotion;
 
 var gFilterBundle;
-var gCommonDialogsService; 
+var gCommonDialogsService;
 
 function onLoad()
 {
     rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
-    gCommonDialogsService 
+    gCommonDialogsService
          = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
-    gCommonDialogsService 
+    gCommonDialogsService
         = gCommonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
 
     gFilterBundle = document.getElementById("bundle_filter");
@@ -47,10 +47,10 @@ function onLoad()
     reorderDownButton = document.getElementById("reorderDownButton");
 
     doSetOKCancel(onOk, null);
-    
+
     updateButtons();
 
-    // get the selected server if it can have filters.    
+    // get the selected server if it can have filters.
     var firstItem = getSelectedServerForFilters();
 
     // if the selected server cannot have filters, get the default server
@@ -96,7 +96,7 @@ function onToggleEnabled(event)
     while (item && item.localName != "treeitem") {
         item = item.parentNode;
     }
-    
+
     var filterResource = rdf.GetUnicodeResource(item.id);
     var filter = filterResource.GetDelegate("filter",
                                             Components.interfaces.nsIMsgFilter);
@@ -110,9 +110,9 @@ function selectServer(uri)
     // update the server menu
     var serverMenu = document.getElementById("serverMenu");
     var menuitems = serverMenu.getElementsByAttribute("id", uri);
-    
+
     serverMenu.selectedItem = menuitems[0];
-    
+
     setServer(uri);
 }
 
@@ -137,7 +137,7 @@ function currentFilter()
 function currentFilterList()
 {
     var serverMenu = document.getElementById("serverMenu");
-    var serverUri = serverMenu.data;
+    var serverUri = serverMenu.value;
 
     var filterList = rdf.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
 
@@ -152,7 +152,7 @@ function onFilterSelect(event)
 function onEditFilter() {
     var selectedFilter = currentFilter();
     var args = {filter: selectedFilter};
-    
+
     window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
     if ("refresh" in args && args.refresh)
@@ -163,7 +163,7 @@ function onNewFilter()
 {
     var curFilterList = currentFilterList();
     var args = {filterList: curFilterList};
-    
+
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable", args);
 
   if ("refresh" in args && args.refresh)
@@ -178,7 +178,7 @@ function onDeleteFilter()
     if (!filterList) return;
 
     var confirmStr = gFilterBundle.getString("deleteFilterConfirmation");
-    
+
     if (!window.confirm(confirmStr)) return;
 
     filterList.removeFilter(filter);
@@ -211,7 +211,7 @@ function refreshFilterList() {
     if (!tree) return;
 
     var selection;
-    
+
     var selectedItems = tree.selectedItems;
     if (selectedItems && selectedItems.length >0)
         selection = tree.selectedItems[0].id;
@@ -242,7 +242,7 @@ function updateButtons()
     } else {
         reorderUpButton.disabled = true;
         reorderDownButton.disabled = true;
-    }                      
+    }
 }
 
 /**
@@ -257,10 +257,10 @@ function getSelectedServerForFilters()
     if (args && args[0] && selectedFolder)
     {
         var msgFolder = selectedFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
-        try 
+        try
         {
             var rootFolder = msgFolder.rootFolder;
-            if (rootFolder.isServer) 
+            if (rootFolder.isServer)
             {
                 var server = rootFolder.server;
 
@@ -270,7 +270,7 @@ function getSelectedServerForFilters()
                 }
             }
         }
-        catch (ex) 
+        catch (ex)
         {
             //dump("**** exception: "+ex+"\n");
             //dump("**** !!!!!!! NOT A VALID msgfolder\n");
@@ -288,7 +288,7 @@ function getServerThatCanHaveFilters()
 {
     var firstItem = null;
 
-    var accountManager 
+    var accountManager
         = Components.classes["@mozilla.org/messenger/account-manager;1"].
             getService(Components.interfaces.nsIMsgAccountManager);
 
@@ -299,7 +299,7 @@ function getServerThatCanHaveFilters()
     if (defaultIncomingServer.canHaveFilters) {
         firstItem = defaultIncomingServer.serverURI;
     }
-    // if it cannot, check all accounts to find a server 
+    // if it cannot, check all accounts to find a server
     // that can have filters
     else
     {
@@ -308,7 +308,7 @@ function getServerThatCanHaveFilters()
         var index = 0;
         for (index = 0; index < numServers; index++)
         {
-            var currentServer 
+            var currentServer
             = allServers.GetElementAt(index).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
 
             if (currentServer.canHaveFilters)
@@ -325,5 +325,5 @@ function getServerThatCanHaveFilters()
 function onFilterDoubleClick(event)
 {
     onEditFilter();
-}                                                                                                                                                                                                                                                                                                                                                                                                                 
+}
 

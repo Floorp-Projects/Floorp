@@ -22,9 +22,9 @@
   <textbox imap_persist="true" id="serverDirectory"/>
 </box>
 
-<checkbox imap_persist="true" id="usingSubscription" value="&usingSubscription.label;"/>
+<checkbox imap_persist="true" id="usingSubscription" label="&usingSubscription.label;"/>
 
-<checkbox imap_persist="true" id="dualUseFolders" value="&dualUseFolders.label;"/>
+<checkbox imap_persist="true" id="dualUseFolders" label="&dualUseFolders.label;"/>
 
 <separator class="groove"/>
 
@@ -61,7 +61,7 @@
   <rows>
     <row>
       <separator class="indent"/>
-      <checkbox imap_persist="true" id="overrideNamespaces" value="&overrideNamespaces.label;"/>
+      <checkbox imap_persist="true" id="overrideNamespaces" label="&overrideNamespaces.label;"/>
     </row>
   </rows>
 </grid>

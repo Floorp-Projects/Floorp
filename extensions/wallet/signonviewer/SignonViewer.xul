@@ -46,10 +46,10 @@
            
   <tabcontrol flex="1" orient="vertical">
     <tabbox orient="horizontal">
-      <tab id="signonTab" value="&tab.signonsstored.label;"/>
-      <tab id="signonSitesTab" value="&tab.signonsnotstored.label;"/>
-      <tab id="nopreview" value="&tab.nopreview.label;"/>
-      <tab id="nocapture" value="&tab.nocapture.label;"/>
+      <tab id="signonTab" label="&tab.signonsstored.label;"/>
+      <tab id="signonSitesTab" label="&tab.signonsnotstored.label;"/>
+      <tab id="nopreview" label="&tab.nopreview.label;"/>
+      <tab id="nocapture" label="&tab.nocapture.label;"/>
     </tabbox>
     <tabpanel id="panel" flex="1">
       <!-- saved signons -->
@@ -67,10 +67,10 @@
             <treehead>
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
-                          value="&treehead.site.label;"
+                          label="&treehead.site.label;"
                           onclick="return Wallet_ColumnSort('0', 'savesignonlist');"/>
                 <treecell class="treecell-header sortDirectionIndicator"
-                          value="&treehead.username.label;"
+                          label="&treehead.username.label;"
                           onclick="return Wallet_ColumnSort('1', 'savesignonlist');"/>
               </treerow>          
             </treehead>
@@ -79,9 +79,9 @@
           <separator class="thin"/>
           <box>
             <button id="removeSignon" disabled="true" class="dialog push"
-                          value="&remove.label;" oncommand="DeleteSignon();"/>
+                          label="&remove.label;" oncommand="DeleteSignon();"/>
             <button id="removeAllSignons" class="dialog push"
-                          value="&removeall.label;"
+                          label="&removeall.label;"
                           oncommand="DeleteAllSignons();"/>
           </box>
       </box>
@@ -98,7 +98,7 @@
             <treehead>
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
-                          value="&treehead.site.label;"
+                          label="&treehead.site.label;"
                           onclick="return Wallet_ColumnSort('0', 'ignoredlist');"/>
               </treerow>          
             </treehead>
@@ -107,9 +107,9 @@
           <separator class="thin"/>
           <box>
             <button id="removeIgnoredSite" disabled="true" class="dialog push"
-                          value="&remove.label;" oncommand="DeleteIgnoredSite();"/>
+                          label="&remove.label;" oncommand="DeleteIgnoredSite();"/>
             <button id="removeAllSites" class="dialog push"
-                          value="&removeall.label;"
+                          label="&removeall.label;"
                           oncommand="DeleteAllSites();"/>
           </box>
       </box>
@@ -127,7 +127,7 @@
             <treehead>
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
-                          value="&treehead.site.label;"
+                          label="&treehead.site.label;"
                           onclick="return Wallet_ColumnSort('0', 'nopreviewlist');"/>
               </treerow>          
             </treehead>
@@ -136,9 +136,9 @@
           <separator class="thin"/>
           <box>
             <button id="removeNoPreview" disabled="true" class="dialog push"
-                          value="&remove.label;" oncommand="DeleteNoPreviewForm();"/>
+                          label="&remove.label;" oncommand="DeleteNoPreviewForm();"/>
             <button id="removeAllNopreviews" class="dialog push"
-                          value="&removeall.label;"
+                          label="&removeall.label;"
                           oncommand="DeleteAllNopreviews();"/>
           </box>
       </box>
@@ -155,7 +155,7 @@
             <treehead>
               <treerow>
                 <treecell class="treecell-header sortDirectionIndicator"
-                          value="&treehead.site.label;"
+                          label="&treehead.site.label;"
                           onclick="return Wallet_ColumnSort('0', 'nocapturelist');"/>
               </treerow>          
             </treehead>
@@ -164,9 +164,9 @@
           <separator class="thin"/>
           <box>
             <button id="removeNoCapture" disabled="true" class="dialog push"
-                          value="&remove.label;" oncommand="DeleteNoCaptureForm();"/>
+                          label="&remove.label;" oncommand="DeleteNoCaptureForm();"/>
             <button id="removeAllNocaptures" class="dialog push"
-                          value="&removeall.label;"
+                          label="&removeall.label;"
                           oncommand="DeleteAllNocaptures();"/>
           </box>
       </box>

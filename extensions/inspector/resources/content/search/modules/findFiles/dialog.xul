@@ -25,10 +25,10 @@
     <box autostretch="never">
       <text id="txSearchPath" value="&txSearchPath.label;"/>
       <textbox id="txfSearchPath" style="width: 25em;" persist="true"/>
-      <button id="btnSearchPathBrowser" value="Browse" onclick="dialog.browse()" persist="true"/>
+      <button id="btnSearchPathBrowser" label="Browse" onclick="dialog.browse()" persist="true"/>
     </box>
     <box autostretch="never">
-      <checkbox id="cbRecurse" value="&cbRecurse.label;"/>
+      <checkbox id="cbRecurse" label="&cbRecurse.label;"/>
     </box>    
   </box>
 

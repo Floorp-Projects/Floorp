@@ -11,57 +11,57 @@
   <popupset id="ppsGlobalPopupset">
     <popup id="ppSearchResults">
       <!--
-        <menuitem id="ppSearchResults-view" value="&cmdViewSearchItem.label;" observes="cmdViewSearchItem"/>
-        <menuitem id="ppSearchResults-edit" value="&cmdEditSearchItem.label;" observes="cmdEditSearchItem"/>
+        <menuitem id="ppSearchResults-view" label="&cmdViewSearchItem.label;" observes="cmdViewSearchItem"/>
+        <menuitem id="ppSearchResults-edit" label="&cmdEditSearchItem.label;" observes="cmdEditSearchItem"/>
       -->
       <menuseparator id="ppSearchResults-insertion"/>
-      <menuitem id="ppSearchResults-copyLine" value="&cmdCopySearchItemLine.label;" observes="cmdCopySearchItemLine"/>
-      <menuitem id="ppSearchResults-copyAll" value="&cmdCopySearchItemAll.label;" observes="cmdCopySearchItemAll"/>
-      <menuitem id="ppSearchResults-save" value="&cmdSaveSearchItemText.label;" observes="cmdSaveSearchItemText"/>
+      <menuitem id="ppSearchResults-copyLine" label="&cmdCopySearchItemLine.label;" observes="cmdCopySearchItemLine"/>
+      <menuitem id="ppSearchResults-copyAll" label="&cmdCopySearchItemAll.label;" observes="cmdCopySearchItemAll"/>
+      <menuitem id="ppSearchResults-save" label="&cmdSaveSearchItemText.label;" observes="cmdSaveSearchItemText"/>
       <menuseparator/>
-      <menuitem id="ppSearchResults-clear" value="&cmdClearSearch.label;" observes="cmdClearSearch"/>
-      <menuitem id="ppSearchResults-hide" value="&cmdHideSearchItems.label;" observes="cmdToggleSearch"/>
+      <menuitem id="ppSearchResults-clear" label="&cmdClearSearch.label;" observes="cmdClearSearch"/>
+      <menuitem id="ppSearchResults-hide" label="&cmdHideSearchItems.label;" observes="cmdToggleSearch"/>
     </popup>
   </popupset>
 
   <menupopup id="mppFile">
-    <menuitem value="&cmdShowOpenURLDialog.label;..." accesskey="&cmdShowOpenURLDialog.accesskey;" observes="cmdShowOpenURLDialog"/>
+    <menuitem label="&cmdShowOpenURLDialog.label;..." accesskey="&cmdShowOpenURLDialog.accesskey;" observes="cmdShowOpenURLDialog"/>
     <menuseparator/>
-    <menuitem value="&cmdExit.label;" accesskey="&cmdExit.accesskey;" observes="cmdExit"/>
+    <menuitem label="&cmdExit.label;" accesskey="&cmdExit.accesskey;" observes="cmdExit"/>
   </menupopup>
 
   <menupopup id="mppEdit">
-    <menuitem value="&cmdUndo.label;" accesskey="&cmdUndo.accesskey;" observes="cmdUndo"/>
-    <menuitem value="&cmdRedo.label;" accesskey="&cmdRedo.accesskey;" observes="cmdRedo"/>
+    <menuitem label="&cmdUndo.label;" accesskey="&cmdUndo.accesskey;" observes="cmdUndo"/>
+    <menuitem label="&cmdRedo.label;" accesskey="&cmdRedo.accesskey;" observes="cmdRedo"/>
     <menuseparator/>
-    <menuitem value="&cmdCut.label;" accesskey="&cmdCut.accesskey;" observes="cmdCut"/>
-    <menuitem value="&cmdCopy.label;" accesskey="&cmdCopy.accesskey;" observes="cmdCopy"/>
-    <menuitem value="&cmdPaste.label;" accesskey="&cmdPaste.accesskey;" observes="cmdPaste"/>
-    <menuitem value="&cmdDelete.label;" accesskey="&cmdDelete.accesskey;" observes="cmdDelete"/>
+    <menuitem label="&cmdCut.label;" accesskey="&cmdCut.accesskey;" observes="cmdCut"/>
+    <menuitem label="&cmdCopy.label;" accesskey="&cmdCopy.accesskey;" observes="cmdCopy"/>
+    <menuitem label="&cmdPaste.label;" accesskey="&cmdPaste.accesskey;" observes="cmdPaste"/>
+    <menuitem label="&cmdDelete.label;" accesskey="&cmdDelete.accesskey;" observes="cmdDelete"/>
     <menuseparator/>
-    <menuitem value="&cmdPrefs.label;..." accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
+    <menuitem label="&cmdPrefs.label;..." accesskey="&cmdPrefs.accesskey;" observes="cmdShowPrefsDialog"/>
   </menupopup>
 
   <menupopup id="mppSearch" oncreate="inspector.initPopup(this)">
     <menuseparator/>
-    <menu value="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
+    <menu label="&mnSearchPlugins.label;" accesskey="&mnSearchPlugins.accesskey;">
       <menupopup id="mppSearchPlugins">
-        <menuitem value="&cmdRunSearch.label;" accesskey="&cmdRunSearch.accesskey;" observes="cmdRunSearch"/>
+        <menuitem label="&cmdRunSearch.label;" accesskey="&cmdRunSearch.accesskey;" observes="cmdRunSearch"/>
       </menupopup>
     </menu>
   </menupopup>
 
   <menupopup id="mppView" >
-    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
-    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleBrowser.label;" observes="cmdToggleBrowser"/>
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdToggleSearch.label;" observes="cmdToggleSearch"/>
     <menuseparator/>
-    <menuitem class="menuitem-iconic" type="checkbox" value="&cmdFlashSelected.label;" observes="cmdFlashSelected"/>
+    <menuitem class="menuitem-iconic" type="checkbox" label="&cmdFlashSelected.label;" observes="cmdFlashSelected"/>
   </menupopup>
 
   <menupopup id="mppHelp">
-    <menuitem value="&cmdNotes.label;" accesskey="&cmdNotes.accesskey;" observes="cmdShowNotes"/>
+    <menuitem label="&cmdNotes.label;" accesskey="&cmdNotes.accesskey;" observes="cmdShowNotes"/>
     <menuseparator/>
-    <menuitem value="&cmdAbout.label;" accesskey="&cmdAbout.accesskey;" observes="cmdShowAbout"/>
+    <menuitem label="&cmdAbout.label;" accesskey="&cmdAbout.accesskey;" observes="cmdShowAbout"/>
   </menupopup>
 
 </overlay>

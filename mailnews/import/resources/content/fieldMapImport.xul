@@ -28,55 +28,55 @@ Rights Reserved.
 
 
 <window xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&fieldMapImport.title;"
-		class="dialog"
+    class="dialog"
         onload="OnLoadFieldMapImport()"
         align="vertical">
 
   <script type="text/javascript" src="chrome://messenger/content/fieldMapImport.js"/>
 
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-	<!-- field list -->
-	<box id="fieldList-box" align="vertical">
-		<tree	id="fieldList" flex="1"
-				ondragover="return DragOverTree(event);"
-				ondraggesture="return BeginDrag( event);"
-				ondragdrop="return DropOnTree( event);">
+  <!-- field list -->
+  <box id="fieldList-box" align="vertical">
+    <tree id="fieldList" flex="1"
+        ondragover="return DragOverTree(event);"
+        ondraggesture="return BeginDrag( event);"
+        ondragdrop="return DropOnTree( event);">
       <treecolgroup>
-			  <treecol flex="35" style="width:0px"/>
-			  <treecol flex="65" id="dataColumn" style="width:0px"/>
+        <treecol flex="35" style="width:0px"/>
+        <treecol flex="65" id="dataColumn" style="width:0px"/>
       </treecolgroup>
 
-			<treehead>
-				<treerow id="headRow">
-					<treecell id="fieldNameHeader" value="&fieldMapImport.fieldListTitle;"/>
-					<treecell id="sampleDataHeader" value="&fieldMapImport.dataTitle;"/>
-				</treerow>
-			</treehead>
+      <treehead>
+        <treerow id="headRow">
+          <treecell id="fieldNameHeader" label="&fieldMapImport.fieldListTitle;"/>
+          <treecell id="sampleDataHeader" label="&fieldMapImport.dataTitle;"/>
+        </treerow>
+      </treehead>
 
-			<treechildren id="fieldBody" flex="1"/>
-		</tree>
-	</box>
-	
-	<spring style="height: .5em"/>
+      <treechildren id="fieldBody" flex="1"/>
+    </tree>
+  </box>
+  
+  <spring style="height: .5em"/>
 
-	<box align="horizontal">
-		<spring flex="50%"/>
-		<button class="dialog" id="previous" oncommand="OnPreviousRecord()" value="&fieldMapImport.previous;"/>
-		<spring style="width: 2em"/>
-		<text value="&fieldMapImport.recordNumber;"/>
-		<spring style="width: 1em"/>
-		<text id="recordNumber"/>
-		<spring style="width: 2em"/>
-		<button class="dialog" id="next" oncommand="OnNextRecord()" value="&fieldMapImport.next;"/>
-		<spring flex="50%"/>		
-	</box>
+  <box align="horizontal">
+    <spring flex="50%"/>
+    <button class="dialog" id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
+    <spring style="width: 2em"/>
+    <text value="&fieldMapImport.recordNumber;"/>
+    <spring style="width: 1em"/>
+    <text id="recordNumber"/>
+    <spring style="width: 2em"/>
+    <button class="dialog" id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
+    <spring flex="50%"/>    
+  </box>
 
-	<spring style="height: 2em"/>
+  <spring style="height: 2em"/>
 
-	<!-- OK & Cancel buttons -->
-	<box id="okCancelButtons"/>
+  <!-- OK & Cancel buttons -->
+  <box id="okCancelButtons"/>
 
 </window>

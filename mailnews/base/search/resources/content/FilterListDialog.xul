@@ -57,7 +57,7 @@ Rights Reserved.
                      ref="msgaccounts:/">
             <template>
               <rule nc:SupportsFilters="true">
-                <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                <menuitem uri="..." value="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
               </rule>
             </template>
           </menupopup>
@@ -82,9 +82,9 @@ Rights Reserved.
             <treehead>
               <treerow>
                 <treecell class="treecell-header treecell-inset-header" 
-                          persist="hidden width" value="&nameColumn.label;"/>
+                          persist="hidden width" label="&nameColumn.label;"/>
                 <treecell class="treecell-header treecell-inset-header" 
-                          persist="hidden width" value="&activeColumn.label;"/>
+                          persist="hidden width" label="&activeColumn.label;"/>
               </treerow>
             </treehead>
 
@@ -94,7 +94,7 @@ Rights Reserved.
                   <treeitem uri="..." open="true"
                             Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled">
                     <treerow >
-                      <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                      <treecell indent="true" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                       <treecell allowevents="true"
                                 class="enabledcol treecell-image"
                                 Enabled="rdf:http://home.netscape.com/NC-rdf#Enabled"
@@ -121,13 +121,13 @@ Rights Reserved.
           <spring flex="1"/>
         </box>
         <box orient="vertical">
-          <button id="newButton" value="&newButton.label;" oncommand="onNewFilter();"/>
-          <button id="editButton" value="&editButton.label;" oncommand="onEditFilter();"/>
-          <button id="deleteButton" value="&deleteButton.label;" oncommand="onDeleteFilter();"/>
+          <button id="newButton" label="&newButton.label;" oncommand="onNewFilter();"/>
+          <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
+          <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
           <spring flex="1"/>
           <!-- take out for PR2
-            <button value="&runFiltersNow.label;" width="0em"/>
-            <button oncommand="DumpDOM(document.getElementById('filterTree'));" value="dump"/>
+            <button label="&runFiltersNow.label;" width="0em"/>
+            <button oncommand="DumpDOM(document.getElementById('filterTree'));" label="dump"/>
           -->
         </box>
       </row>

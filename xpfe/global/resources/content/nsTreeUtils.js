@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Peter Annema <disttsc@bart.nl>
  *   Blake Ross <blakeross@telocity.com>
  *   Alec Flett <alecf@netscape.com>
@@ -74,7 +74,7 @@ function doSort(sortColName, naturalOrderResource)
 
     try {
         var isupports = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
-        var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);   
+        var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
     }
     catch(ex) {
         dump(ex);
@@ -248,7 +248,7 @@ function fillViewMenu(popup)
   var columns = document.getElementById('theColumns');
   var head = document.getElementById('headRow');
   var skip_column = document.getElementById('popupCell');
-      
+
   var name_template = get_localized_string("SortMenuItem");
   var tree_column = head.firstChild;
   var column_node = columns.firstChild;
@@ -258,18 +258,18 @@ function fillViewMenu(popup)
       if (firstTime) {
           if (skip_column != tree_column && tree_column.getAttribute("collapsed") != "true") {
               // Construct an entry for each cell in the row.
-              var column_name = tree_column.getAttribute("value");
+              var column_name = tree_column.getAttribute("label");
               var item = document.createElement("menuitem");
               item.setAttribute("type", "radio");
               item.setAttribute("name", "sort_column");
               if (column_name == "")
-                  column_name = tree_column.getAttribute("display");             
+                  column_name = tree_column.getAttribute("display");
               var name = name_template.replace(/%NAME%/g, column_name);
               var id = column_node.id;
-              item.setAttribute("value", name);
+              item.setAttribute("label", name);
               item.setAttribute("oncommand", "SetSortColumn('"+id+"', true);");
               item.setAttribute("column_id", id);
-              
+
               popup.insertBefore(item, fill_before);
           }
       }
@@ -306,7 +306,7 @@ function fillContextMenu(name, treeName)
     if (!treeNode) return false;
     var db = treeNode.database;
     if (!db) return false;
-    
+
     var compositeDB = db.QueryInterface(Components.interfaces.nsIRDFDataSource);
     if (!compositeDB) return false;
 
@@ -428,10 +428,10 @@ function fillContextMenu(name, treeName)
             }
             continue;
         }
-    
+
         lastWasSep = false;
 
-        var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource, 
+        var cmdNameNode = compositeDB.GetTarget(cmdResource, rdfNameResource,
                                                 true);
         if (!cmdNameNode) break;
         var cmdNameLiteral = cmdNameNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -440,7 +440,7 @@ function fillContextMenu(name, treeName)
         if (!cmdName) break;
 
         var newMenuItem = document.createElement("menuitem");
-        newMenuItem.setAttribute("value", cmdName);
+        newMenuItem.setAttribute("label", cmdName);
         popupNode.appendChild(newMenuItem);
         // Work around bug #26402 by setting "oncommand" attribute
         // AFTER appending menuitem
@@ -484,7 +484,7 @@ function fillContextMenu(name, treeName)
             // And then add a "Properties" menu items
             var propMenuName = get_localized_string("BookmarkProperties");
             var aMenuItem = document.createElement("menuitem");
-            aMenuItem.setAttribute("value", propMenuName);
+            aMenuItem.setAttribute("label", propMenuName);
             popupNode.appendChild(aMenuItem);
             // Work around bug # 26402 by setting "oncommand" attribute
             // AFTER appending menuitem

@@ -47,7 +47,7 @@
   padding: 1px 2px 1px 2px;
 }
 
-.button-toolbar[value] > .button-internal-box > .button-icon {
+.button-toolbar[label] > .button-internal-box > .button-icon {
   margin-right: 2px;
 }
 

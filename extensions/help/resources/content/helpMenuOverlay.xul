@@ -5,15 +5,15 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
   <menupopup id="helpPopup">
-    <menuitem value="Mozilla Help System" 
-	oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />   
+    <menuitem label="Mozilla Help System" 
+  oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul');" />   
   
        <!-- example: context-passing menuitem
-      	  "key" object at top of help.js has key->document pairs 
-	  note the cgi-like suffix of the url. help window's init() grabs it as
-	  window.location.search -->
-       <!--menuitem value="Gimme Mail!"
-	  oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul?mail');" /-->
+          "key" object at top of help.js has key->document pairs 
+    note the cgi-like suffix of the url. help window's init() grabs it as
+    window.location.search -->
+       <!--menuitem label="Gimme Mail!"
+    oncommand="toOpenWindowByType('mozilla:help', 'chrome://help/content/help.xul?mail');" /-->
   </menupopup>
   
 </overlay>

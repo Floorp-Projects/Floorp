@@ -7,11 +7,11 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	flex="100%"
-	class="color-dialog"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  flex="100%"
+  class="color-dialog"
   onload="onLoad();"
-	orient="vertical">
+  orient="vertical">
 
   <script language="javascript" src="am-smtp.js"/>
 
@@ -29,7 +29,7 @@
   
   <box>
     <spring flex="1"/>
-    <button value="&advanced.label;" oncommand="onAdvanced(event);"/>
+    <button label="&advanced.label;" oncommand="onAdvanced(event);"/>
   </box>
   
   </titledbox>

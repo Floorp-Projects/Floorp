@@ -53,40 +53,40 @@ resource:///irc/tests/test3.xul
 
 <toolbox>
   <menubar>
-    <menu value="Options">
+    <menu label="Options">
       <menupopup>
-        <menuitem id="menu-dmessages" value="Debug Messages"
+        <menuitem id="menu-dmessages" label="Debug Messages"
                   oncommand="onToggleTraceHook()"/>
-        <menuitem id="menu-munger" value="Munger" oncommand="onToggleMunger()"
+        <menuitem id="menu-munger" label="Munger" oncommand="onToggleMunger()"
                   checked="true"/>
-        <menuitem id="menu-viewicons" value="Icons in View Buttons" 
+        <menuitem id="menu-viewicons" label="Icons in View Buttons" 
                   checked="true" oncommand="onNotImplemented();"/>
         <menuseparator/>
-        <menu value="Style">
+        <menu label="Style">
           <menupopup>
-           <menuitem value="Default"
+           <menuitem label="Default"
                      oncommand="onDoStyleChange('default')"/>
-           <menuitem value="Marble"
+           <menuitem label="Marble"
                      oncommand="onDoStyleChange('marble')"/>
-           <menuitem value="Loud"
+           <menuitem label="Loud"
                      oncommand="onDoStyleChange('loud')"/>
            <menuseparator/>
-           <menuitem value="Other..."
+           <menuitem label="Other..."
                      oncommand="onDoStyleChange('other')"/>
           </menupopup>
         </menu>
       </menupopup>
     </menu>
-    <menu value="Views">
+    <menu label="Views">
       <menupopup>
-        <menu value="Current View">
+        <menu label="Current View">
           <menupopup>
-            <menuitem value="Hide" oncommand="onHideCurrentView();"/>
-            <menuitem value="Clear" oncommand="onClearCurrentView();"/>
-            <menuitem value="Delete" oncommand="onDeleteCurrentView();"/>
+            <menuitem label="Hide" oncommand="onHideCurrentView();"/>
+            <menuitem label="Clear" oncommand="onClearCurrentView();"/>
+            <menuitem label="Delete" oncommand="onDeleteCurrentView();"/>
           </menupopup>
         </menu>
-        <menuitem value="Logging..." enabled="false"
+        <menuitem label="Logging..." enabled="false"
                   oncommand="onNotImplemented();"/>
       </menupopup>
     </menu>

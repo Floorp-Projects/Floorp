@@ -20,13 +20,13 @@
  * Contributor(s):
  *  Seth Spitzer <sspitzer@netscape.com>
  *  Ben Goodger <ben@netscape.com>
- */  
+ */
 
 var newmessages = "";
 var newsgroupname = "";
 var gNewsBundle;
 var prefs = Components.classes['@mozilla.org/preferences;1'].getService();
-prefs = prefs.QueryInterface(Components.interfaces.nsIPref); 
+prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 
 var serverid = null;
 var markreadElement = null;
@@ -59,9 +59,9 @@ function OnLoad()
 
         // this is not i18n friendly, fix this
         var infotext = downloadHeadersInfoText1 + " " + args.articleCount + " " + downloadHeadersInfoText2;
-        setText('info',infotext); 
+        setText('info',infotext);
         var okbutton = document.getElementById("ok");
-        okbutton.setAttribute("value", okButtonText);
+        okbutton.setAttribute("label", okButtonText);
         setText("newsgroupLabel", args.groupName);
     }
 
@@ -77,7 +77,7 @@ function OnLoad()
 function setText(id, value) {
     var element = document.getElementById(id);
     if (!element) return;
-    if (element.hasChildNodes())  
+    if (element.hasChildNodes())
         element.removeChild(element.firstChild);
     var textNode = document.createTextNode(value);
     element.appendChild(textNode);

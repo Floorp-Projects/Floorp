@@ -4,9 +4,9 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/AccountManager.dtd" >
-<window	id="account-manager" 
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		title="&accountManagerTitle.label;"
+<window id="account-manager" 
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title="&accountManagerTitle.label;"
         orient="vertical"
         class="dialog"
         width="620" height="470"
@@ -17,9 +17,9 @@
 <script type="text/javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="text/javascript" src="chrome://messenger/content/AccountManager.js"/>
 
-	<keyset id="keyset"/>
+  <keyset id="keyset"/>
 
-	<box flex="1">
+  <box flex="1">
     <box orient="vertical" flex="1">
       <tree datasources="rdf:msgaccountmanager" style="width:0px" flex="1"
             containment="http://home.netscape.com/NC-rdf#Settings"
@@ -40,21 +40,21 @@
                         PageTag="rdf:http://home.netscape.com/NC-rdf#PageTag">
                 <treerow >
                   <treecell class="treecell-indent"
-                            value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                            label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                 </treerow>
               </treeitem>
             </treechildren>
           </rule>
         </template>
       </tree>
-      <button value="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
-      <button value="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
+      <button label="&newAccountButton.label;" oncommand="onNewAccount(event);" id="newAccountButton"/>
+      <button label="&setDefaultButton.label;" oncommand="onSetDefault(event);" disabled="true" id="setDefaultButton"/>
   
       <box >
         <!-- taking out for PR2
-          <button class="dialog" disabled="true" value="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
+          <button class="dialog" disabled="true" label="&duplicateButton.label;" id="duplicateButton" oncommand="onDuplicateAccount();" flex="50%"/>
         -->
-        <button class="dialog" disabled="true" value="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
+        <button class="dialog" disabled="true" label="&deleteButton.label;" oncommand="onDeleteAccount(event);" id="deleteButton" flex="50%"/>
       </box>
     </box>
   

@@ -52,20 +52,21 @@ Rights Reserved.
     <textbox flex="1" id="filterName"/>
   </box>
 
-  <titledbox value="&conditions.label;" orient="vertical">
+  <titledbox orient="vertical">
+    <label value="&conditions.label;"/>
     <text value="&conditionDesc.label;"/>
     <box id="searchTermListBox" flex="1"/>
   </titledbox>
 
   <titledbox autostretch="never" orient="horizontal">
-    <title value="&filterAction.label;"/>
+    <label value="&filterAction.label;"/>
     <box orient="horizontal" flex="1">
       <menulist id="actionMenu" oncommand="onActionChanged(event)">
         <menupopup>
-          <menuitem data="1" actionvalueindex="0" value="&moveToFolder.label;"/>
-          <menuitem data="2" actionvalueindex="1" value="&changePriority.label;"/>
-          <menuitem data="3" actionvalueindex="2" value="&delete.label;"/>
-          <menuitem data="4" actionvalueindex="2" value="&markRead.label;"/>
+          <menuitem value="1" actionvalueindex="0" label="&moveToFolder.label;"/>
+          <menuitem value="2" actionvalueindex="1" label="&changePriority.label;"/>
+          <menuitem value="3" actionvalueindex="2" label="&delete.label;"/>
+          <menuitem value="4" actionvalueindex="2" label="&markRead.label;"/>
         </menupopup>
       </menulist>
       <deck id="actionValueDeck" flex="1">
@@ -74,16 +75,16 @@ Rights Reserved.
         <menulist id="actionValuePriority" flex="1">
           <menupopup>
             <!-- see MailNewsTypes2.idl -->
-            <menuitem data="6" value="&highestPriorityCmd.label;"/>
-            <menuitem data="5" value="&highPriorityCmd.label;"/>
-            <menuitem data="4" value="&normalPriorityCmd.label;"/>
-            <menuitem data="3" value="&lowPriorityCmd.label;"/>
-            <menuitem data="2" value="&lowestPriorityCmd.label;"/>
+            <menuitem value="6" label="&highestPriorityCmd.label;"/>
+            <menuitem value="5" label="&highPriorityCmd.label;"/>
+            <menuitem value="4" label="&normalPriorityCmd.label;"/>
+            <menuitem value="3" label="&lowPriorityCmd.label;"/>
+            <menuitem value="2" label="&lowestPriorityCmd.label;"/>
           </menupopup>
         </menulist>
         <text id="actionValueNone" flex="1"/>
       </deck>
-        <button id="newFolderButton" value="&newFolderButton.label;" oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
+        <button id="newFolderButton" label="&newFolderButton.label;" oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
     </box>
   </titledbox>
 

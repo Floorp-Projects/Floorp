@@ -128,12 +128,12 @@
         </getter>
       </property>
 
-      <!-- value forwards to the internal menulist's "data" attribute -->
-      <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('data');">
+      <!-- value forwards to the internal menulist's "value" attribute -->
+      <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('value');">
         <setter>
           <![CDATA[
             var menulist = document.getAnonymousNodes(this)[0];
-            var dataItems = menulist.getElementsByAttribute("data", val);
+            var dataItems = menulist.getElementsByAttribute("value", val);
             if (dataItems.length > 0)
                 menulist.selectedItem = dataItems[0];
 
@@ -159,8 +159,8 @@
             var menulist = document.getAnonymousNodes(this)[0];
             var popup = menulist.firstChild;
 
-            // save our old "data" so we can restore it later
-            var oldData = menulist.data;
+            // save our old "value" so we can restore it later
+            var oldData = menulist.value;
 
             // remove the old popup children
             while (popup.hasChildNodes())
@@ -170,8 +170,8 @@
             for (var i=0; i<menuItemIds.length; i++) {
               // create the menuitem
               var menuitem = document.createElement("menuitem");
-              menuitem.setAttribute("value", menuItemStrings[i]);
-              menuitem.setAttribute("data", menuItemIds[i]);
+              menuitem.setAttribute("label", menuItemStrings[i]);
+              menuitem.setAttribute("value", menuItemIds[i]);
               popup.appendChild(menuitem);
 
               // try to restore the selection
@@ -195,7 +195,7 @@
             var targets = this.targets;
             if (targets) {
               for (var i=0; i< targets.length; i++) {
-                targets[i].parentValue = menulist.data;
+                targets[i].parentValue = menulist.value;
               }
             }
           ]]>
@@ -271,19 +271,19 @@
       <xul:textbox flex="1" class="search-value-textbox"/>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem data="2" stringTag="priorityLowest" class="search-value-menuitem"/>
-          <xul:menuitem data="3" stringTag="priorityLow" class="search-value-menuitem"/>
-          <xul:menuitem data="4" stringTag="priorityNormal" class="search-value-menuitem"/>
-          <xul:menuitem data="5" stringTag="priorityHigh" class="search-value-menuitem"/>
-          <xul:menuitem data="6" stringTag="priorityHighest" class="search-value-menuitem"/>
+          <xul:menuitem value="2" stringTag="priorityLowest" class="search-value-menuitem"/>
+          <xul:menuitem value="3" stringTag="priorityLow" class="search-value-menuitem"/>
+          <xul:menuitem value="4" stringTag="priorityNormal" class="search-value-menuitem"/>
+          <xul:menuitem value="5" stringTag="priorityHigh" class="search-value-menuitem"/>
+          <xul:menuitem value="6" stringTag="priorityHighest" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem data="2" stringTag="replied" class="search-value-menuitem"/>
-          <xul:menuitem data ="1" stringTag="read" class="search-value-menuitem"/>
-          <xul:menuitem data ="1048576" stringTag="new" class="search-value-menuitem"/>
-          <xul:menuitem data ="65536" stringTag="forwarded" class="search-value-menuitem"/>
+          <xul:menuitem value="2" stringTag="replied" class="search-value-menuitem"/>
+          <xul:menuitem value ="1" stringTag="read" class="search-value-menuitem"/>
+          <xul:menuitem value ="1048576" stringTag="new" class="search-value-menuitem"/>
+          <xul:menuitem value ="65536" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
     </content>
@@ -322,13 +322,13 @@
           this.searchAttribute = attrib;
           if (attrib == nsMsgSearchAttrib.Priority) {
             var matchingPriority =
-                children[1].getElementsByAttribute("data", val.priority);
+                children[1].getElementsByAttribute("value", val.priority);
             if (matchingPriority.length > 0)
                 children[1].selectedItem = matchingPriority[0];
           }
           else if (attrib == nsMsgSearchAttrib.MsgStatus) {
             var matchingStatus =
-              children[2].getElementsByAttribute("data", val.status);
+              children[2].getElementsByAttribute("value", val.status);
             if (matchingStatus.length > 0) 
               children[2].selectedItem = matchingStatus[0];
           }
@@ -350,10 +350,10 @@
 
             searchValue.attrib = searchAttribute;
             if (searchAttribute == nsMsgSearchAttrib.Priority) {
-               searchValue.priority = children[1].selectedItem.data;
+               searchValue.priority = children[1].selectedItem.value;
             }
             else if (searchAttribute == nsMsgSearchAttrib.MsgStatus)
-               searchValue.status = children[2].selectedItem.data;
+               searchValue.status = children[2].selectedItem.value;
             else if (searchAttribute == nsMsgSearchAttrib.AgeInDays)
                searchValue.age = children[0].value;
             else
@@ -381,7 +381,8 @@
               var node = children[i];
               var stringTag = node.getAttribute("stringTag");
               if (stringTag) {
-                node.setAttribute("value", bundle.GetStringFromName(stringTag));
+                var attr = (node.tagName == "text") ? "value" : "label";
+                node.setAttribute(attr, bundle.GetStringFromName(stringTag));
               }
             }
           ]]>

@@ -48,14 +48,14 @@
   <keyset id="keyset"/>
 
   <box orient="vertical">
-    <titledbox orient="vertical"><title align="left" value="&documentTitleTitle.label;"/>
+    <titledbox orient="vertical"><label align="left" value="&documentTitleTitle.label;"/>
       <!-- Text labels filled in from editor.properties -->
       <text id="EnterTitleLabel" class="label"/> 
 	    <textbox id="TitleInput" flex="1" oninput="TitleChanged();"/>
       <html id="TitleHelp" class="label wrap" style="width:1em" flex="1"/>
     </titledbox>
 
-    <titledbox orient="vertical"><title value="&documentCharsetTitle.label;"/>
+    <titledbox orient="vertical"><label value="&documentCharsetTitle.label;"/>
       <text class="label" value="&documentCharsetDesc.label;"/>
       <box flex="1">
         <tree class="list" id="CharsetTree" rows="10" flex="1" onselect="SelectCharset();">
@@ -65,5 +65,5 @@
     </titledbox>
   </box>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+  <box id="okCancelButtons"/> 
 </window>

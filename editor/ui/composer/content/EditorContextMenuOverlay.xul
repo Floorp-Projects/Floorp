@@ -31,72 +31,72 @@
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
    oncreate="EditorFillContextMenu(event, this);" 
-	 ondestroy="EditorCleanupContextMenu(event, this);">
-		<menuitem id="menu_undo_cm"   value="&undoCmd.label;" accesskey="&undo.accesskey;"  observes="cmd_undo"/>
-		<menuitem id="menu_redo_cm"   value="&redoCmd.label;" accesskey="&redo.accesskey;"  observes="cmd_redo"/>
+   ondestroy="EditorCleanupContextMenu(event, this);">
+    <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;"  observes="cmd_undo"/>
+    <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;"  observes="cmd_redo"/>
     <menuseparator id="undoredo-separator"/>
-		
-    <menuitem id="menu_cut_cm"    value="&cutCmd.label;"    accesskey="&cut.accesskey;"    observes="cmd_cut"/>
-		<menuitem id="menu_copy_cm"   value="&copyCmd.label;"   accesskey="&copy.accesskey;"   observes="cmd_copy"/>
-		<menuitem id="menu_paste_cm"  value="&pasteCmd.label;"  accesskey="&paste.accesskey;"  observes="cmd_paste"/>
-		<menuitem id="menu_delete_cm" value="&deleteCmd.label;" accesskey="&delete.accesskey;" observes="cmd_delete"/>
-		<menuseparator id="edit-separator"/>
     
-    <menuitem id="menu_selectAll_cm" value="&selectAllCmd.label;" accesskey="&selectall.accesskey;" 
+    <menuitem id="menu_cut_cm"    label="&cutCmd.label;"    accesskey="&cut.accesskey;"    observes="cmd_cut"/>
+    <menuitem id="menu_copy_cm"   label="&copyCmd.label;"   accesskey="&copy.accesskey;"   observes="cmd_copy"/>
+    <menuitem id="menu_paste_cm"  label="&pasteCmd.label;"  accesskey="&paste.accesskey;"  observes="cmd_paste"/>
+    <menuitem id="menu_delete_cm" label="&deleteCmd.label;" accesskey="&delete.accesskey;" observes="cmd_delete"/>
+    <menuseparator id="edit-separator"/>
+    
+    <menuitem id="menu_selectAll_cm" label="&selectAllCmd.label;" accesskey="&selectall.accesskey;" 
           observes="cmd_selectAll"/>
-		<menuseparator id="selectAll-separator"/>
+    <menuseparator id="selectAll-separator"/>
     
-    <!-- Value and accesskey set at runtime from strings -->
+    <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeStylesMenuitem_cm"
           observes="cmd_removeStyles"/>
-    <menuitem id="createLink_cm" value="&createLinkCmd.label;" accesskey="&createlink.accesskey;"
+    <menuitem id="createLink_cm" label="&createLinkCmd.label;" accesskey="&createlink.accesskey;"
           observes="cmd_link" />
-    <!-- Value and accesskey set at runtime from strings -->
+    <!-- label and accesskey set at runtime from strings -->
     <menuitem id="removeLinksMenuitem_cm" observes="cmd_removeLinks"/>
-		<menuseparator id="styles-separator"/>
+    <menuseparator id="styles-separator"/>
 
-    <!-- Value and accesskey are set in InitObjectProperties -->
+    <!-- label and accesskey are set in InitObjectProperties -->
     <menuitem id="objectProperties_cm" observes="cmd_objectProperties"/>
     <menuitem id="menu_saveImage_cm"/>
     <menuseparator id="property-separator"/>
 
     <!-- Can't get submenus to load from a shared overlay -->
-    <menu id="tableInsertMenu_cm" value="&tableInsertMenu2.label;" accesskey="&tableinsertmenu.accesskey;">
+    <menu id="tableInsertMenu_cm" label="&tableInsertMenu2.label;" accesskey="&tableinsertmenu.accesskey;">
       <menupopup>
-        <menuitem value="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
+        <menuitem label="&insertTableCmd.label;"    accesskey="&tabletable.accesskey;"        observes="cmd_InsertTable"/>
         <menuseparator />
-        <menuitem value="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"          observes="cmd_InsertRowAbove"/>
-        <menuitem value="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"     observes="cmd_InsertRowBelow"/>
+        <menuitem label="&tableRowAbove.label;"     accesskey="&tablerow.accesskey;"          observes="cmd_InsertRowAbove"/>
+        <menuitem label="&tableRowBelow.label;"     accesskey="&tablerowbelow.accesskey;"     observes="cmd_InsertRowBelow"/>
         <menuseparator />
-        <menuitem value="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"       observes="cmd_InsertColumnBefore"/>
-        <menuitem value="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;"  observes="cmd_InsertColumnAfter"/>
+        <menuitem label="&tableColumnBefore.label;" accesskey="&tablecolumn.accesskey;"       observes="cmd_InsertColumnBefore"/>
+        <menuitem label="&tableColumnAfter.label;"  accesskey="&tablecolumnafter.accesskey;"  observes="cmd_InsertColumnAfter"/>
         <menuseparator />
-        <menuitem value="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
-        <menuitem value="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
+        <menuitem label="&tableCellBefore.label;"   accesskey="&tablecell.accesskey;"         observes="cmd_InsertCellBefore"/>
+        <menuitem label="&tableCellAfter.label;"    accesskey="&tablecellafter.accesskey;"    observes="cmd_InsertCellAfter"/>
       </menupopup>
     </menu>
-    <menu id="tableSelectMenu_cm" value="&tableSelectMenu2.label;" accesskey="&tableselectmenu.accesskey;">
+    <menu id="tableSelectMenu_cm" label="&tableSelectMenu2.label;" accesskey="&tableselectmenu.accesskey;">
       <menupopup>
-        <menuitem id="menu_SelectTable"    value="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
-        <menuitem id="menu_SelectRow"      value="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
-        <menuitem id="menu_SelectColumn"   value="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
-        <menuitem id="menu_SelectCell"     value="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
-        <menuitem id="menu_SelectAllCells" value="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
+        <menuitem id="menu_SelectTable"    label="&tableTable.label;"    accesskey="&tabletable.accesskey;"    observes="cmd_SelectTable"    />
+        <menuitem id="menu_SelectRow"      label="&tableRow.label;"      accesskey="&tablerow.accesskey;"      observes="cmd_SelectRow"      />
+        <menuitem id="menu_SelectColumn"   label="&tableColumn.label;"   accesskey="&tablecolumn.accesskey;"   observes="cmd_SelectColumn"   />
+        <menuitem id="menu_SelectCell"     label="&tableCell.label;"     accesskey="&tablecell.accesskey;"     observes="cmd_SelectCell"     />
+        <menuitem id="menu_SelectAllCells" label="&tableAllCells.label;" accesskey="&tableallcells.accesskey;" observes="cmd_SelectAllCells" />
       </menupopup>
     </menu>
-    <menu id="tableDeleteMenu_cm" value="&tableDeleteMenu2.label;" accesskey="&tabledeletemenu.accesskey;">
+    <menu id="tableDeleteMenu_cm" label="&tableDeleteMenu2.label;" accesskey="&tabledeletemenu.accesskey;">
       <menupopup>
-        <menuitem id="menu_DeleteTable"         value="&tableTable.label;"        accesskey="&tabletable.accesskey;"          observes="cmd_DeleteTable"/>
-        <menuitem id="menu_DeleteRow"           value="&tableRows.label;"         accesskey="&tablerow.accesskey;"            observes="cmd_DeleteRow"/>
-        <menuitem id="menu_DeleteColumn"        value="&tableColumns.label;"      accesskey="&tablecolumn.accesskey;"         observes="cmd_DeleteColumn"/>
-        <menuitem id="menu_DeleteCell"          value="&tableCells.label;"        accesskey="&tablecell.accesskey;"           observes="cmd_DeleteCell"/>
-        <menuitem id="menu_DeleteCellContents"  value="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"   observes="cmd_DeleteCellContents"/>
+        <menuitem id="menu_DeleteTable"         label="&tableTable.label;"        accesskey="&tabletable.accesskey;"          observes="cmd_DeleteTable"/>
+        <menuitem id="menu_DeleteRow"           label="&tableRows.label;"         accesskey="&tablerow.accesskey;"            observes="cmd_DeleteRow"/>
+        <menuitem id="menu_DeleteColumn"        label="&tableColumns.label;"      accesskey="&tablecolumn.accesskey;"         observes="cmd_DeleteColumn"/>
+        <menuitem id="menu_DeleteCell"          label="&tableCells.label;"        accesskey="&tablecell.accesskey;"           observes="cmd_DeleteCell"/>
+        <menuitem id="menu_DeleteCellContents"  label="&tableCellContents.label;" accesskey="&tablecellcontents.accesskey;"   observes="cmd_DeleteCellContents"/>
       </menupopup>
     </menu>
-    <!-- menu value is set in InitTableMenu -->
-    <menuitem id="joinTableCells_cm"   value="&tableJoinCells.label;" accesskey="&tablejoincells.accesskey;" observes="cmd_JoinTableCells"/>
-    <menuitem id="splitTableCell_cm"   value="&tableSplitCell.label;" accesskey="&tablesplitcell.accesskey;" observes="cmd_SplitTableCell"/>
-    <menuitem id="tableOrCellColor_cm" value="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
+    <!-- menu label is set in InitTableMenu -->
+    <menuitem id="joinTableCells_cm"   label="&tableJoinCells.label;" accesskey="&tablejoincells.accesskey;" observes="cmd_JoinTableCells"/>
+    <menuitem id="splitTableCell_cm"   label="&tableSplitCell.label;" accesskey="&tablesplitcell.accesskey;" observes="cmd_SplitTableCell"/>
+    <menuitem id="tableOrCellColor_cm" label="&tableOrCellColor.label;" accesskey="&tableOrCellColor.accesskey;" observes="cmd_TableOrCellColor"/>
  </popup>
 </popupset>
 

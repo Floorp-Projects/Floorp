@@ -43,7 +43,7 @@
   This is the id that the menuitem will be appended to.  see tasksOverlay.xul
 -->
 <menupopup id="toolsPopup">
-	<menuitem position="5" value="&cviewCmd.label;" oncommand="toCView()"/>
+  <menuitem position="5" label="&cviewCmd.label;" oncommand="toCView()"/>
 </menupopup>
 
 </overlay>

@@ -63,8 +63,8 @@
 
   <menu id="menu_textZoom" accesskey="&textZoomMenu.accesskey;" hidden="true">
     <menupopup id="menu_textZoomPopup" oncreate="updateTextZoomMenu();">
-      <menuitem key="key_textZoomReduce"  value="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" observes="cmd_textZoomReduce"/>
-      <menuitem key="key_textZoomEnlarge" value="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;" observes="cmd_textZoomEnlarge"/>
+      <menuitem key="key_textZoomReduce"  label="&textZoomReduceCmd.label;"  accesskey="&textZoomReduceCmd.accesskey;" observes="cmd_textZoomReduce"/>
+      <menuitem key="key_textZoomEnlarge" label="&textZoomEnlargeCmd.label;" accesskey="&textZoomEnlargeCmd.accesskey;" observes="cmd_textZoomEnlarge"/>
       <menuseparator/>
       <menuseparator id="menu_textZoomInsertBefore"/>
       <menuitem id="menu_textZoomOther" type="radio" name="textZoom" accesskey="&textZoomOtherCmd.accesskey;" oncommand="setTextZoomOther();"/>

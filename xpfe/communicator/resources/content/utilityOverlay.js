@@ -31,25 +31,25 @@
  **/
 function setOfflineStatus(aToggleFlag)
 {
-  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}", 
+  var ioService = nsJSComponentManager.getServiceByID("{9ac9e770-18bc-11d3-9337-00104ba0fd40}",
                                                       "nsIIOService");
   var broadcaster = document.getElementById("Communicator:WorkMode");
   if (aToggleFlag)
     ioService.offline = !ioService.offline;
 
-  var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");                                                      
+  var bundle = srGetStrBundle("chrome://communicator/locale/utilityOverlay.properties");
   if (ioService.offline && broadcaster)
     {
       broadcaster.setAttribute("offline", "true");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("offlineTooltip"));
-      broadcaster.setAttribute("value", bundle.GetStringFromName("goonline"));
+      broadcaster.setAttribute("label", bundle.GetStringFromName("goonline"));
       FillInTooltip(broadcaster);
     }
   else if (broadcaster)
     {
       broadcaster.removeAttribute("offline");
       broadcaster.setAttribute("tooltiptext", bundle.GetStringFromName("onlineTooltip"));
-      broadcaster.setAttribute("value", bundle.GetStringFromName("gooffline"));
+      broadcaster.setAttribute("label", bundle.GetStringFromName("gooffline"));
       FillInTooltip(broadcaster);
     }
 }
@@ -82,10 +82,10 @@ function goPageSetup()
 
 function goEditCardDialog(abURI, card, okCallback)
 {
-	window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
-					  "",
-					  "chrome,resizeable=no,modal,titlebar",
-					  {abURI:abURI, card:card, okCallback:okCallback});
+  window.openDialog("chrome://messenger/content/addressbook/abEditCardDialog.xul",
+            "",
+            "chrome,resizeable=no,modal,titlebar",
+            {abURI:abURI, card:card, okCallback:okCallback});
 }
 
 function goPreferences(containerID, paneURL, itemID)
@@ -99,52 +99,52 @@ function goPreferences(containerID, paneURL, itemID)
     prefWindowModalityPref = true;
   }
   var modality = prefWindowModalityPref ? "yes" : "no";
-  
+
   var prefWindow = openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", "chrome,titlebar,modal=" + modality+ ",resizable=yes", paneURL, containerID, itemID);
 }
 
 function goToggleToolbar( id, elementID )
 {
-	var toolbar = document.getElementById( id );
-	var element = document.getElementById( elementID );
-	if ( toolbar )
-	{
-	 	var attribValue = toolbar.getAttribute("hidden") ;
-	
-		if ( attribValue == "true" )
-		{
-			toolbar.setAttribute("hidden", "false" );
-			if ( element )
-				element.setAttribute("checked","true")
-		}
-		else
-		{
-			toolbar.setAttribute("hidden", true );
-			if ( element )
-				element.setAttribute("checked","false")
-		}
-		document.persist(id, 'hidden');
-		document.persist(elementID, 'checked');
-	}
+  var toolbar = document.getElementById( id );
+  var element = document.getElementById( elementID );
+  if ( toolbar )
+  {
+    var attribValue = toolbar.getAttribute("hidden") ;
+
+    if ( attribValue == "true" )
+    {
+      toolbar.setAttribute("hidden", "false" );
+      if ( element )
+        element.setAttribute("checked","true")
+    }
+    else
+    {
+      toolbar.setAttribute("hidden", true );
+      if ( element )
+        element.setAttribute("checked","false")
+    }
+    document.persist(id, 'hidden');
+    document.persist(elementID, 'checked');
+  }
 }
 
 
 function goClickThrobber( urlPref )
 {
-	var url;
-	try {
-		var pref = Components.classes["@mozilla.org/preferences;1"].getService();
-		if( pref )
-		pref = pref.QueryInterface( Components.interfaces.nsIPref );
-		url = pref.getLocalizedUnicharPref(urlPref);
-	}
+  var url;
+  try {
+    var pref = Components.classes["@mozilla.org/preferences;1"].getService();
+    if( pref )
+    pref = pref.QueryInterface( Components.interfaces.nsIPref );
+    url = pref.getLocalizedUnicharPref(urlPref);
+  }
 
-	catch(e) {
-		url = null;
-	}
+  catch(e) {
+    url = null;
+  }
 
-	if ( url )
-		openTopWin(url);
+  if ( url )
+    openTopWin(url);
 }
 
 
@@ -164,26 +164,26 @@ function openTopWin( url )
      needs to use this function with chrome controls */
   /* also, do we want to limit the number of help windows that can be spawned? */
     if ((url == null) || (url == "")) return;
-    
+
     // xlate the URL if necessary
     if (url.indexOf("urn:") == 0)
     {
         url = xlateURL(url);        // does RDF urn expansion
     }
-    
+
     // avoid loading "", since this loads a directory listing
     if (url == "") {
         url = "about:blank";
     }
-    
+
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
     var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
- 
+
     var topWindowOfType = windowManagerInterface.getMostRecentWindow( "navigator:browser" );
     if ( topWindowOfType )
     {
         topWindowOfType.focus();
-		topWindowOfType._content.location.href = url;
+    topWindowOfType._content.location.href = url;
     }
     else
     {
@@ -204,42 +204,42 @@ function goAboutDialog()
     defaultAboutState = false;
   }
   if( defaultAboutState )
-  	window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
-  else 
+    window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+  else
     window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'chrome://global/locale/about.html' );
 }
 
 
 function goUpdateGlobalEditMenuItems()
 {
-	goUpdateCommand('cmd_undo');
-	goUpdateCommand('cmd_redo');
-	goUpdateCommand('cmd_cut');
-	goUpdateCommand('cmd_copy');
-	goUpdateCommand('cmd_paste');
-	goUpdateCommand('cmd_selectAll');
-	goUpdateCommand('cmd_delete');
+  goUpdateCommand('cmd_undo');
+  goUpdateCommand('cmd_redo');
+  goUpdateCommand('cmd_cut');
+  goUpdateCommand('cmd_copy');
+  goUpdateCommand('cmd_paste');
+  goUpdateCommand('cmd_selectAll');
+  goUpdateCommand('cmd_delete');
 }
 
 // update menu items that rely on the current selection
 function goUpdateSelectEditMenuItems()
 {
-	goUpdateCommand('cmd_cut');
-	goUpdateCommand('cmd_copy');
-	goUpdateCommand('cmd_delete');
+  goUpdateCommand('cmd_cut');
+  goUpdateCommand('cmd_copy');
+  goUpdateCommand('cmd_delete');
 }
 
 // update menu items that relate to undo/redo
 function goUpdateUndoEditMenuItems()
 {
-	goUpdateCommand('cmd_undo');
-	goUpdateCommand('cmd_redo');
+  goUpdateCommand('cmd_undo');
+  goUpdateCommand('cmd_redo');
 }
 
 // update menu items that depend on clipboard contents
 function goUpdatePasteMenuItems()
 {
-	goUpdateCommand('cmd_paste');
+  goUpdateCommand('cmd_paste');
 }
 
 // This used to be BrowserNewEditorWindow in navigator.js
@@ -301,7 +301,7 @@ function editPage(url, launchWindow, delay)
       }
     }
   }
-  
+
   // Create new Composer window
   if (delay)
     launchWindow.delayedOpenWindow("chrome://editor/content", "chrome,all,dialog=no", url);

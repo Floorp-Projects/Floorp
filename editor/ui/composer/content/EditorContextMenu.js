@@ -10,10 +10,10 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
@@ -41,7 +41,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   // Set appropriate text for join cells command
   InitJoinCellMenuitem("joinTableCells_cm");
 
-  // Update enable states for all table commands  
+  // Update enable states for all table commands
   goUpdateTableMenuItems(document.getElementById("composerTableMenuItems"));
 
   // Loop through all children to hide disabled items
@@ -55,17 +55,17 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   // Remove separators if all items in immediate group above are hidden
   // A bit complicated to account if multiple groups are completely hidden!
-  var haveUndo = 
+  var haveUndo =
     IsMenuItemShowing("menu_undo_cm") ||
     IsMenuItemShowing("menu_redo_cm");
 
-  var haveEdit = 
+  var haveEdit =
     IsMenuItemShowing("menu_cut_cm")   ||
-		IsMenuItemShowing("menu_copy_cm")  ||
-		IsMenuItemShowing("menu_paste_cm") ||
-		IsMenuItemShowing("menu_delete_cm");
+    IsMenuItemShowing("menu_copy_cm")  ||
+    IsMenuItemShowing("menu_paste_cm") ||
+    IsMenuItemShowing("menu_delete_cm");
 
-  var haveStyle = 
+  var haveStyle =
     IsMenuItemShowing("removeStylesMenuitem_cm") ||
     IsMenuItemShowing("createLink_cm") ||
     IsMenuItemShowing("removeLinksMenuitem_cm");
@@ -77,28 +77,28 @@ function EditorFillContextMenu(event, contextMenuNode)
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
   ShowMenuItem("edit-separator", haveEdit || haveUndo);
-	             
 
-  //The following is for the 'save image (imagename)' contextmenuitem 
+
+  //The following is for the 'save image (imagename)' contextmenuitem
   var isImage = (objectName=="img");
   ShowMenuItem("menu_saveImage_cm", isImage);
 
   if (isImage)   //we have an image
-  { 
+  {
      var saveImageMenuItem= document.getElementById("menu_saveImage_cm");
 
-     var imagePtr = window.editorShell.GetSelectedElement(objectName);     
+     var imagePtr = window.editorShell.GetSelectedElement(objectName);
      var imageName = extractFileNameFromUrl(imagePtr.getAttribute("src"));
 
      var menutext = window.editorShell.GetString("SaveImageAs").replace(/%NAME%/,imageName);
 
-     saveImageMenuItem.setAttribute('value',menutext);
+     saveImageMenuItem.setAttribute('label',menutext);
 
-     var onCommand = "savePage('"+ imagePtr.getAttribute("src") + "',true)";  
-     saveImageMenuItem.setAttribute('oncommand',onCommand);   
+     var onCommand = "savePage('"+ imagePtr.getAttribute("src") + "',true)";
+     saveImageMenuItem.setAttribute('oncommand',onCommand);
   }
 
-  // Note: Item "menu_selectAll_cm" and 
+  // Note: Item "menu_selectAll_cm" and
   // following separator are ALWAYS enabled,
   // so there will always be 1 separator here
 
@@ -159,7 +159,7 @@ function ShowMenuItem(id, showItem)
   {
     //var showing = (item.getAttribute("collapsed") !="true");
     //if(showItem != showing ? "true" : "")
-		  item.setAttribute("collapsed", showItem ? "" : "true");
+      item.setAttribute("collapsed", showItem ? "" : "true");
   }
   else
     dump("ShowMenuItem: item id="+id+" not found\n");
@@ -167,11 +167,11 @@ function ShowMenuItem(id, showItem)
 
 function IsMenuItemShowing(menuID)
 {
-	var item = document.getElementById(menuID);
-	if(item)
-	{
+  var item = document.getElementById(menuID);
+  if(item)
+  {
     var show = item.getAttribute("collapsed") != "true";
-		return(item.getAttribute("collapsed") !="true");
-	}
-	return false;
+    return(item.getAttribute("collapsed") !="true");
+  }
+  return false;
 }

@@ -47,7 +47,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never">
-    <title><text value="&credit.title;"/></title>
+    <label value="&credit.title;"/>
     <grid class="indent" flex="1">
 
       <columns>
@@ -62,7 +62,7 @@
           <menulist id="card.type" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -72,7 +72,7 @@
           <menulist id="card.number" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -84,14 +84,14 @@
             <menulist id="card.expdate.month" editable="true" flex="40%" width="0"
                       onchange="Append(this)" onmousedown="Append(this)">
               <menupopup>
-                <menuitem value="" len="0"/>
+                <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
             <html>&creditExpiresYear.label;</html>
             <menulist id="card.expdate.year" editable="true" flex="60%" width="0"
                       onchange="Append(this)" onmousedown="Append(this)">
               <menupopup>
-                <menuitem value="" len="0"/>
+                <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
           </box>
@@ -102,7 +102,7 @@
           <menulist id="card.name" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>

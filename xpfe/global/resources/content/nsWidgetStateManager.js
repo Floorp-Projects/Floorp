@@ -1,5 +1,5 @@
 /* -*- Mode: Java; tab-width: 2; c-basic-offset: 2; -*-
- * 
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -28,15 +28,15 @@ var wsm;
 
 function nsWidgetStateManager ( aFrameID )
   {
-   
-    this.dataManager = 
+
+    this.dataManager =
       {
         /** Persisted Data Hash Table
          *  Page_ID -> Element_ID -> Property -> Value
          **/
         pageData: [],
 
-        setPageData: 
+        setPageData:
           function ( aPageTag, aDataObject )
             {
               this.pageData[aPageTag] = aDataObject;
@@ -49,7 +49,7 @@ function nsWidgetStateManager ( aFrameID )
                 this.pageData[aPageTag] = [];
               return this.pageData[aPageTag];
             },
-        
+
         setItemData:
           function ( aPageTag, aItemID, aDataObject )
             {
@@ -57,8 +57,8 @@ function nsWidgetStateManager ( aFrameID )
                 this.pageData[aPageTag] = [];
               this.pageData[aPageTag][aItemID] = aDataObject;
             },
-            
-        getItemData:  
+
+        getItemData:
           function ( aPageTag, aItemID )
             {
               if( !(aItemID in this.pageData[aPageTag]) )
@@ -66,18 +66,18 @@ function nsWidgetStateManager ( aFrameID )
               return this.pageData[aPageTag][aItemID];
             }
       }
-  
+
     this.contentID    = aFrameID;
-    
+
     wsm               = this;
 
     /** Element Handlers
      *  Provides default get and set handler functions for supported
      *  widgets. Clients can override or add new widgets.
      **/
-    this.handlers     = 
+    this.handlers     =
       {
-        menulist: 
+        menulist:
           {  get: wsm.get_Menulist,    set: wsm.set_Menulist      },
         radiogroup:
           {  get: wsm.get_Radiogroup,  set: wsm.set_Radiogroup    },
@@ -88,19 +88,19 @@ function nsWidgetStateManager ( aFrameID )
         default_handler:
           {  get: wsm.get_Default,     set: wsm.set_Default       }
       }
-   
+
     // extra attributes to scan and save.
     this.attributes   = [];
-  } 
-  
-nsWidgetStateManager.prototype = 
+  }
+
+nsWidgetStateManager.prototype =
   {
     get contentArea()
-      { 
-        return window.frames[ this.contentID ]; 
+      {
+        return window.frames[ this.contentID ];
       },
 
-    savePageData: 
+    savePageData:
       function ( aPageTag )
         {
           if (!(aPageTag in this.dataManager.pageData))
@@ -113,7 +113,7 @@ nsWidgetStateManager.prototype =
               this.dataManager.setPageData( aPageTag, dataObject );
             }
 
-            // Automatic element retrieval. This is done in two ways. 
+            // Automatic element retrieval. This is done in two ways.
             // 1) if an element id array is present in the document, this is
             //    used to build a list of elements to persist. <-- performant
             // 2) otherwise, all elements with 'wsm_persist' set to true
@@ -130,12 +130,12 @@ nsWidgetStateManager.prototype =
                     } else {
                       // see bug #40329. People forget this too often, and it breaks Prefs
                       dump("*** FIX ME: '_elementIDs' in '" + this.contentArea.location.href.split('/').pop() +
-                           "' contains a reference to a non-existent element ID '" + 
+                           "' contains a reference to a non-existent element ID '" +
                            this.contentArea._elementIDs[i] + "'.\n");
                     }
                   }
               }
-            else 
+            else
               {
                 elements = this.contentArea.document.getElementsByAttribute( "wsm_persist", "true" );
               }
@@ -150,7 +150,7 @@ nsWidgetStateManager.prototype =
                 this.dataManager.pageData[aPageTag][elementID].localName = elementType;
                 // persist attributes
                 var get_Func = (elementType in this.handlers) ?
-                                this.handlers[elementType].get : 
+                                this.handlers[elementType].get :
                                 this.handlers.default_handler.get;
                 this.dataManager.setItemData( aPageTag, elementID, get_Func( elementID ) );
               }
@@ -165,11 +165,11 @@ nsWidgetStateManager.prototype =
               this.contentArea.SetFields( pageData );
               return;
             }
-          
+
           for( var elementID in pageData )
             {
               var element = this.contentArea.document.getElementById( elementID );
-              if( element ) 
+              if( element )
                 {
                   var elementType = element.localName;
                   var set_Func = (elementType in this.handlers) ?
@@ -179,8 +179,8 @@ nsWidgetStateManager.prototype =
                 }
             }
         },
-  
-  
+
+
     /** Widget Get/Set Function Implementations
      *  These can be overridden by the client.
      **/
@@ -195,7 +195,7 @@ nsWidgetStateManager.prototype =
                 }
             }
         },
-        
+
     generic_Get:
       function ( aElement )
         {
@@ -213,10 +213,10 @@ nsWidgetStateManager.prototype =
                   dataObject[attributes[i]] = aElement.getAttribute( attributes[i] );
                 }
               return dataObject;
-            }        
+            }
             return null;
         },
-  
+
     // <menulist>
     set_Menulist:
       function ( aElementID, aDataObject )
@@ -225,12 +225,12 @@ nsWidgetStateManager.prototype =
           // set all generic properties
           wsm.generic_Set( element, aDataObject );
           // set menulist specific properties
-          if( 'data' in aDataObject )
-            { 
-              element.selectedItem = element.getElementsByAttribute( "data", aDataObject.data )[0];
+          if( 'value' in aDataObject )
+            {
+              element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
             }
         },
-        
+
     get_Menulist:
       function ( aElementID )
         {
@@ -240,25 +240,25 @@ nsWidgetStateManager.prototype =
           // retrieve all menulist specific attributes
           if( dataObject )
             {
-              dataObject.data = element.getAttribute( "data" );
+              dataObject.value = element.getAttribute( "value" );
               return dataObject;
             }
           return null;
         },
 
-    // <radiogroup>        
+    // <radiogroup>
     set_Radiogroup:
       function ( aElementID, aDataObject )
         {
-          
+
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
-          if( 'data' in aDataObject )
-            { 
-              element.selectedItem = element.getElementsByAttribute( "data", aDataObject.data )[0];
+          if( 'value' in aDataObject )
+            {
+              element.selectedItem = element.getElementsByAttribute( "value", aDataObject.value )[0];
             }
         },
-    
+
     get_Radiogroup:
       function ( aElementID )
         {
@@ -266,12 +266,12 @@ nsWidgetStateManager.prototype =
           var dataObject = wsm.generic_Get( element );
           if( dataObject )
             {
-              dataObject.data = element.getAttribute( "data" );
+              dataObject.value = element.getAttribute( "value" );
               return dataObject;
             }
           return null;
         },
-        
+
     // <textbox>
     set_Textbox:
       function ( aElementID, aDataObject )
@@ -279,7 +279,7 @@ nsWidgetStateManager.prototype =
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
         },
-     
+
     get_Textbox:
       function ( aElementID )
         {
@@ -288,12 +288,11 @@ nsWidgetStateManager.prototype =
           if( dataObject )
             {
               dataObject.value = wsm.contentArea.document.getElementById( aElementID ).value;
-              //dataObject.data = wsm.contentArea.document.getElementById( aElementID ).data;
               return dataObject;
             }
           return null;
         },
-     
+
     // <checkbox>
     set_Checkbox:
       function ( aElementID, aDataObject )
@@ -301,14 +300,14 @@ nsWidgetStateManager.prototype =
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
         },
-    
+
     get_Checkbox:
       function ( aElementID )
         {
           var element = wsm.contentArea.document.getElementById( aElementID );
           var dataObject = wsm.generic_Get( element );
           if( dataObject )
-            { 
+            {
               dataObject.checked = wsm.contentArea.document.getElementById( aElementID ).checked;
               return dataObject;
             }
@@ -322,7 +321,7 @@ nsWidgetStateManager.prototype =
           var element = wsm.contentArea.document.getElementById( aElementID );
           wsm.generic_Set( element, aDataObject );
         },
-    
+
     get_Default:
       function ( aElementID )
         {
@@ -332,7 +331,7 @@ nsWidgetStateManager.prototype =
         }
   }
 
-  
+
 /* it will be dark soon */
 /* MANOS MADE ME PERMANENT! */
 /* there is no way out of here */

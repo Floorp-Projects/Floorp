@@ -129,10 +129,10 @@ function doPrintToFile( value )
 function doPrintRange( value )
 {
   if ( value) {
-    dialog.frompageInput.removeAttribute("disabled"); 
-    dialog.frompageLabel.removeAttribute("disabled"); 
-    dialog.topageInput.removeAttribute("disabled"); 
-    dialog.topageLabel.removeAttribute("disabled"); 
+    dialog.frompageInput.removeAttribute("disabled");
+    dialog.frompageLabel.removeAttribute("disabled");
+    dialog.topageInput.removeAttribute("disabled");
+    dialog.topageLabel.removeAttribute("disabled");
   } else {
     dialog.frompageInput.setAttribute("disabled","true" );
     dialog.frompageLabel.setAttribute("disabled","true" );
@@ -253,7 +253,7 @@ function loadDialog()
 
   dialog.allpagesRadio.checked = true;
   if ( print_selection_radio_enabled) {
-    dialog.selectionRadio.removeAttribute("disabled"); 
+    dialog.selectionRadio.removeAttribute("disabled");
   } else {
     dialog.selectionRadio.setAttribute("disabled","true" );
   }
@@ -269,8 +269,7 @@ function loadDialog()
   dialog.cmdInput.value    = print_command;
   dialog.fileInput.value   = print_file;
 
-  dialog.print.setAttribute("value",
-  document.getElementById("printButton").getAttribute("value"));
+  dialog.print.label = document.getElementById("printButton").getAttribute("label");
 
   if (doDebug) {
     dump("print_howToEnableUI: "+print_howToEnableUI+"\n");
@@ -280,11 +279,11 @@ function loadDialog()
   if (print_howToEnableUI == gPrintOptInterface.kFrameEnableAll) {
     // XXX this is just temporary until we have impemented "AsIs"
     dialog.aslayedoutRadio.setAttribute("disabled","true" );
-    //dialog.aslayedoutRadio.removeAttribute("disabled"); 
+    //dialog.aslayedoutRadio.removeAttribute("disabled");
 
-    dialog.selectedframeRadio.removeAttribute("disabled"); 
-    dialog.eachframesepRadio.removeAttribute("disabled"); 
-    dialog.printrangeGroupLabel.removeAttribute("disabled"); 
+    dialog.selectedframeRadio.removeAttribute("disabled");
+    dialog.eachframesepRadio.removeAttribute("disabled");
+    dialog.printrangeGroupLabel.removeAttribute("disabled");
 
     // initialize radio group
     dialog.selectedframeRadio.checked = true;
@@ -300,7 +299,7 @@ function loadDialog()
 
     // initialize
     dialog.eachframesepRadio.checked = true;
-    
+
   } else {
     dialog.aslayedoutRadio.setAttribute("disabled","true" );
     dialog.selectedframeRadio.setAttribute("disabled","true" );
@@ -417,7 +416,7 @@ function onChooseFile()
   }
   try {
     var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-    fp.init(window, document.getElementById("fpDialog").getAttribute("value"), nsIFilePicker.modeSave);
+    fp.init(window, document.getElementById("fpDialog").getAttribute("label"), nsIFilePicker.modeSave);
     fp.appendFilters(nsIFilePicker.filterAll);
     fp.show();
     if (fp.file && fp.file.path.length > 0) {

@@ -110,19 +110,19 @@
     <menubar id="main-menubar">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
-          <menuitem value="&command.newBookmark.label;" 
+          <menuitem label="&command.newBookmark.label;" 
                     accesskey="&command.newBookmark.accesskey;"
                     observes="cmd_newbookmark"/>
-          <menuitem value="&command.newFolder.label;" observes="cmd_newfolder"/>
-          <menuitem value="&command.newSeparator.label;" observes="cmd_newseparator"/>
+          <menuitem label="&command.newFolder.label;" observes="cmd_newfolder"/>
+          <menuitem label="&command.newSeparator.label;" observes="cmd_newseparator"/>
           <menuseparator/>
           <menuitem id="menu_close"/>
           <menuseparator/>
-          <menuitem value="&menuitem.import.label;" observes="cmd_import"/>
-          <menuitem value="&menuitem.export.label;" observes="cmd_export"/>
+          <menuitem label="&menuitem.import.label;" observes="cmd_import"/>
+          <menuitem label="&menuitem.export.label;" observes="cmd_export"/>
           <menuseparator/>
           <menuitem observes="cmd_properties" key="bm_key_properties" 
-                    value="&command.properties.label;" 
+                    label="&command.properties.label;" 
                     accesskey="&command.properties.accesskey;" />
           <menuseparator/>
         </menupopup>
@@ -138,7 +138,7 @@
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menu id="file-bookmarks-menu" value="&command.fileBookmark.label;"
+          <menu id="file-bookmarks-menu" label="&command.fileBookmark.label;"
                 accesskey="&command.fileBookmark.accesskey;"
                 ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
                 template="file-bookmarks-template">
@@ -146,7 +146,7 @@
           </menu>
           <menuseparator/>pp
           <menuitem observes="cmd_find" key="bm_key_find"
-                    value="&menuitem.find.label;" 
+                    label="&menuitem.find.label;" 
                     accesskey="&menuitem.find.accesskey;"/>
           <menuseparator/>
           <menuitem id="menu_preferences" 
@@ -157,39 +157,39 @@
       <menu id="menu_View">
         <menupopup oncreate="fillViewMenu(this)">
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
-                    value="&menuitem.view.command.toolbar.label;"
+                    label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
                     oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar');"/>
           <menuseparator/>
           <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
-                    value="&menuitem.view.unsorted.label;" 
+                    label="&menuitem.view.unsorted.label;" 
                     accesskey="&menuitem.view.unsorted.accesskey;"
                     oncommand="return SetSortDirection('natural');"/>
           <menuseparator id="fill_after_this_node" collapsed="true" />
           <menuseparator id="fill_before_this_node"/>
           <menuitem type="radio" name="sort_direction" id="sort_ascending"
-                    value="&menuitem.view.ascending.label;" 
+                    label="&menuitem.view.ascending.label;" 
                     accesskey="&menuitem.view.ascending.accesskey;"
                     oncommand="return SetSortDirection('ascending');"/>
           <menuitem type="radio" name="sort_direction" id="sort_descending"
-                    value="&menuitem.view.descending.label;" 
+                    label="&menuitem.view.descending.label;" 
                     accesskey="&menuitem.view.descending.accesskey;"
                     oncommand="return SetSortDirection('descending');"/>
           <menuseparator/>
-          <menu value="&menuitem.view.show_columns.label;" 
+          <menu label="&menuitem.view.show_columns.label;" 
                 accesskey="&menuitem.view.show_columns.accesskey;">
             <menupopup oncreate="BuildTreePopup(document.getElementById('theColumns'), 
                                                 document.getElementById('headRow'), this,
                                                 document.getElementById('popupCell'))"/>
           </menu>
           <menuseparator/>
-          <menuitem value="&menuitem.newbookmarkfolder.label;" 
+          <menuitem label="&menuitem.newbookmarkfolder.label;" 
                     observes="cmd_setnewbookmarkfolder"
                     accesskey="&menuitem.newbookmarkfolder.accesskey;"/>
-          <menuitem value="&menuitem.newinternetsearchfolder.label;"
+          <menuitem label="&menuitem.newinternetsearchfolder.label;"
                     observes="cmd_setnewsearchfolder"
                     accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
-          <menuitem value="&menuitem.personaltoolbarfolder.label;"    
+          <menuitem label="&menuitem.personaltoolbarfolder.label;"    
                     observes="cmd_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
@@ -199,12 +199,12 @@
     </menubar>
 
     <toolbar id="command-toolbar" tbautostretch="always">
-      <button class="button-toolbar" id="newfolder" value="&command.newFolder.label;" 
+      <button class="button-toolbar" id="newfolder" label="&command.newFolder.label;" 
               observes="cmd_newfolder"/>
-      <button class="button-toolbar" id="newseparator" value="&command.newSeparator.label;" 
+      <button class="button-toolbar" id="newseparator" label="&command.newSeparator.label;" 
               observes="cmd_newseparator"/>
       <toolbarseparator/>
-      <menubutton id="file-bookmarks" value="&command.fileBookmark.label;"
+      <menubutton id="file-bookmarks" label="&command.fileBookmark.label;"
                   crop="right" class="button-toolbar" 
                   ref="NC:BookmarksRoot" datasources="rdf:bookmarks"
                   template="file-bookmarks-template"
@@ -214,7 +214,7 @@
           <rule iscontainer="true">
             <menupopup ondestroy="fileButton.onPopupDestroy(event);">
               <menu uri="rdf:*" persist="open" class="menu-iconic bookmark-item"
-                    value="rdf:http://home.netscape.com/NC-rdf#Name"
+                    label="rdf:http://home.netscape.com/NC-rdf#Name"
                     src="rdf:http://home.netscape.com/NC-rdf#Icon"
                     rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                     loading="rdf:http://home.netscape.com/NC-rdf#loading"/>
@@ -224,11 +224,11 @@
         <menupopup oncreate="fileButton.createPopupHeader(event);"/>
       </menubutton>
       <toolbarseparator/>
-      <button class="button-toolbar" id="properties" value="&command.properties.label;"
+      <button class="button-toolbar" id="properties" label="&command.properties.label;"
               observes="cmd_properties"/>
-      <button class="button-toolbar" id="rename" value="&command.rename.label;"
+      <button class="button-toolbar" id="rename" label="&command.rename.label;"
               observes="cmd_rename"/>
-      <button class="button-toolbar" id="delete" value="&command.delete.label;"
+      <button class="button-toolbar" id="delete" label="&command.delete.label;"
               observes="cmd_delete"/>
     </toolbar>
   </toolbox>
@@ -259,7 +259,7 @@
               <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
               <treecell autostretch="never"><separator class="groove" flex="1"/></treecell>
             </treerow>
-          </treeitem>  		
+          </treeitem>     
         </treechildren>
       </rule>
   
@@ -271,20 +271,20 @@
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
               <treecell class="treecell-indent treecell-editable"
-                        editable="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
                         loading="rdf:http://home.netscape.com/NC-rdf#loading" />
               <treecell crop="right" class="treecell-editable" editable="true"
-                        value="rdf:http://home.netscape.com/NC-rdf#URL"/>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
+                        label="rdf:http://home.netscape.com/NC-rdf#URL"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"
                         class="treecell-editable" editable="true"/>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Description"
                         class="treecell-editable" editable="true"/>
-              <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-              <treecell value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-              <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
+              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
+              <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -338,31 +338,31 @@
     <treehead>
       <treerow id="headRow">
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.name.label;"
+                  label="&tree.header.name.label;"
                   onclick="return TriStateColumnSort('Name');"
                   observes="Name" />
         <treecell class="treecell-header sortDirectionIndicator" 
-                  value="&tree.header.url.label;"
+                  label="&tree.header.url.label;"
                   onclick="return TriStateColumnSort('URL');"
                   observes="URL" />
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.shortcut.label;"
+                  label="&tree.header.shortcut.label;"
                   onclick="return TriStateColumnSort('ShortcutURL');"
                   observes="ShortcutURL" />
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.description.label;" 
+                  label="&tree.header.description.label;" 
                   onclick="return TriStateColumnSort('Description');"
                   observes="Description" />
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.lastvisit.label;"
+                  label="&tree.header.lastvisit.label;"
                   onclick="return TriStateColumnSort('LastVisitDate');"
                   observes="LastVisitDate" />
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.addedon.label;"
+                  label="&tree.header.addedon.label;"
                   onclick="return TriStateColumnSort('BookmarkAddDate');"
                   observes="BookmarkAddDate" />
         <treecell class="treecell-header sortDirectionIndicator"
-                  value="&tree.header.lastmod.label;" 
+                  label="&tree.header.lastmod.label;" 
                   onclick="return TriStateColumnSort('LastModifiedDate');" 
                   observes="LastModifiedDate" />
         <treecell class="treecell-header" allowevents="true" id="popupCell">

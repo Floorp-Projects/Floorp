@@ -13,7 +13,7 @@
         class="dialog"
         orient="vertical">
 
-	<script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://global/content/unknownContent.js"/>
 
   <box>
@@ -32,7 +32,7 @@
   <separator class="groove"/>
     
   <box autostretch="never">
-    <button class="dialog" id="dialog.more" value="&dialogMore.label;" oncommand="more()"/>
+    <button class="dialog" id="dialog.more" label="&dialogMore.label;" oncommand="more()"/>
     <spring flex="1"/>
     <box id="okCancelButtons"/>
   </box>

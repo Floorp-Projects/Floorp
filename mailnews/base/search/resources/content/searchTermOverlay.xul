@@ -33,8 +33,8 @@
 
     <radiogroup class="indent" id="booleanAndGroup" autostretch="never"
                 selectedItem="or" oncommand="booleanChanged(event);">
-      <radio group="booleanAndGroup" data="and" value="&matchAll.label;"/>
-      <radio group="booleanAndGroup" checked="true" data="or" value="&matchAny.label;"/>
+      <radio group="booleanAndGroup" value="and" label="&matchAll.label;"/>
+      <radio group="booleanAndGroup" checked="true" value="or" label="&matchAny.label;"/>
     </radiogroup>
 
     <separator class="thin"/>
@@ -74,9 +74,9 @@
           </treeitem>
           <treeitem>
             <treerow>
-              <treecell value="the.."/>
-              <treecell value="contains.."/>
-              <treecell value="text here"/>
+              <treecell label="the.."/>
+              <treecell label="contains.."/>
+              <treecell label="text here"/>
             </treerow>
           </treeitem>
         -->
@@ -85,8 +85,8 @@
       </tree>
     </box>
     <box>
-      <button id="more" value="&more.label;" oncommand="onMore(event);"/>
-      <button id="less" value="&less.label;" disabled="true" oncommand="onLess(event);"/>
+      <button id="more" label="&more.label;" oncommand="onMore(event);"/>
+      <button id="less" label="&less.label;" disabled="true" oncommand="onLess(event);"/>
     </box>
   </box>
 

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  */
 
 /* universal global variables */
@@ -30,7 +30,7 @@ var bundle = null; // string bundle
 var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletEditor.properties";
 
 /* wallet-specific global variables */
-    
+
 var schemas = [];
 var schemasLength;
 var entries = [];
@@ -224,7 +224,7 @@ function InitSelectedEntries() {
   ClearSelectedEntries();
   var entrytree = document.getElementById("entrytree");
   var selitems = entrytree.selectedItems;
-  for(var i = 0; i < selitems.length; i++) { 
+  for(var i = 0; i < selitems.length; i++) {
     selectedEntries[i] = entrytree.selectedItems[i];
   }
   var sorted = false;
@@ -248,7 +248,7 @@ function InitSelectedSynonyms() {
   ClearSelectedSynonyms();
   var synonymtree = document.getElementById("synonymtree");
   var selitems = synonymtree.selectedItems;
-  for(var i = 0; i < selitems.length; i++) { 
+  for(var i = 0; i < selitems.length; i++) {
     selectedSynonyms[i] = synonymtree.selectedItems[i];
   }
   var sorted = false;
@@ -443,7 +443,7 @@ function ViewSchema()
   var i;
   for(i = 0; i < schemasLength; i++)
   {
-    AddItem("schemalist", [strings[entries[schemas[i]]]], "tree_", i); 
+    AddItem("schemalist", [strings[entries[schemas[i]]]], "tree_", i);
   }
 }
 
@@ -466,7 +466,7 @@ function ViewEntries()
         if ((strings[entries[i]+1])[0] != '~') {
           text += " (encrypted)";
         }
-        AddItem("entrieslist", [text], "tree_", i-first); 
+        AddItem("entrieslist", [text], "tree_", i-first);
       }
     }
     SchemaSelected();
@@ -625,7 +625,7 @@ function AddSchema0() {
   for (i=entriesLength; i>entryIndex; i--) {
     entries[i] = entries[i-1];
   }
-  
+
   stringIndex = entries[entryIndex];
   if (stringIndex == stringsLength) {
     stringIndex--;
@@ -637,7 +637,7 @@ function AddSchema0() {
   entries[entryIndex] = stringIndex;
 }
 
-/* low-level add-entry routine */ 
+/* low-level add-entry routine */
 function AddEntry0() {
   var i;
   var schemaId = document.getElementById("schematree").selectedItems[0].getAttribute("id");
@@ -869,7 +869,7 @@ function AddItem(children,cells,prefix,idfier)
   {
     var cell  = document.createElement("treecell");
     cell.setAttribute("class", "propertylist");
-    cell.setAttribute("value", cells[i])
+    cell.setAttribute("label", cells[i])
     row.appendChild(cell);
   }
   item.appendChild(row);

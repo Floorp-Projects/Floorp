@@ -30,8 +30,8 @@
          <treechildren flex="1">
            <treeitem uri="?child">
              <treerow>
-               <treecell class="treecell-indent" value="?drink" flex="1" />
-               <treecell value="?givenname" flex="1" />
+               <treecell class="treecell-indent" label="?drink" flex="1" />
+               <treecell label="?givenname" flex="1" />
              </treerow>
            </treeitem>
          </treechildren>
@@ -47,8 +47,8 @@
 
   <treehead>
     <treerow id="headRow">
-      <treecell value="Drink" flex="1" />
-      <treecell value="Given Name" flex="1" />
+      <treecell label="Drink" flex="1" />
+      <treecell label="Given Name" flex="1" />
     </treerow>
    </treehead>
   </tree>

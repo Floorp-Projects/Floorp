@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -26,7 +26,7 @@ var secureUIContractID         = "@mozilla.org/secure_browser_ui;1";
 
 
 var prefContractID             = "@mozilla.org/preferences;1";
-var msgWindowContractID		   = "@mozilla.org/messenger/msgwindow;1";
+var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 
 var messenger;
 var pref;
@@ -51,7 +51,7 @@ var messageDSContractID        = datasourceContractIDPrefix + "mailnewsmessages"
 
 var accountManagerDataSource;
 var folderDataSource;
- 
+
 var messagesBox = null;
 var accountCentralBox = null;
 var gAccountCentralLoaded = false;
@@ -64,27 +64,27 @@ var gIsEditableMsgFolder = false;
 
 function OnMailWindowUnload()
 {
-	var mailSession = Components.classes[mailSessionContractID].getService();
-	if(mailSession)
-	{
-		mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
-		if(mailSession)
-		{
-			mailSession.RemoveFolderListener(folderListener);
-		}
-	}
+  var mailSession = Components.classes[mailSessionContractID].getService();
+  if(mailSession)
+  {
+    mailSession = mailSession.QueryInterface(Components.interfaces.nsIMsgMailSession);
+    if(mailSession)
+    {
+      mailSession.RemoveFolderListener(folderListener);
+    }
+  }
 
-	mailSession.RemoveMsgWindow(msgWindow);
-	messenger.SetWindow(null, null);
+  mailSession.RemoveMsgWindow(msgWindow);
+  messenger.SetWindow(null, null);
 
-	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
+  var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+  msgDS.window = null;
 
-	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = null;
+  msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+  msgDS.window = null;
 
 
-	msgWindow.closeWindow();
+  msgWindow.closeWindow();
 
 }
 
@@ -99,7 +99,7 @@ function CreateMailWindowGlobals()
   //Create windows status feedback
   // set the JS implementation of status feedback before creating the c++ one..
   window.MsgStatusFeedback = new nsMsgStatusFeedback();
-  // double register the status feedback object as the xul browser window implementation 
+  // double register the status feedback object as the xul browser window implementation
   window.XULBrowserWindow = window.MsgStatusFeedback;
 
   statusFeedback           = Components.classes[statusFeedbackContractID].createInstance();
@@ -111,7 +111,7 @@ function CreateMailWindowGlobals()
   {
     // if the client isn't built with psm enabled then we won't have a secure UI to monitor the lock icon
     // so be sure to wrap this in a try / catch clause...
-    try 
+    try
     {
       var secureUI = Components.classes[secureUIContractID].createInstance();
       // we may not have a secure UI if psm isn't installed!
@@ -124,31 +124,31 @@ function CreateMailWindowGlobals()
     catch (ex) {}
   }
 
-	window.MsgWindowCommands = new nsMsgWindowCommands();
+  window.MsgWindowCommands = new nsMsgWindowCommands();
 
-	//Create message window object
-	msgWindow = Components.classes[msgWindowContractID].createInstance();
-	msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
+  //Create message window object
+  msgWindow = Components.classes[msgWindowContractID].createInstance();
+  msgWindow = msgWindow.QueryInterface(Components.interfaces.nsIMsgWindow);
 
-	msgComposeService = Components.classes['@mozilla.org/messengercompose;1'].getService();
-	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
+  msgComposeService = Components.classes['@mozilla.org/messengercompose;1'].getService();
+  msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-	mailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession); 
+  mailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
 
-	accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+  accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
 
-	RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+  RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
+  RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
 
-	msgComposeType = Components.interfaces.nsIMsgCompType;
-	msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
+  msgComposeType = Components.interfaces.nsIMsgCompType;
+  msgComposeFormat = Components.interfaces.nsIMsgCompFormat;
 
-	gMessengerBundle = document.getElementById("bundle_messenger");
+  gMessengerBundle = document.getElementById("bundle_messenger");
   gBrandBundle = document.getElementById("bundle_brand");
 
-	//Create datasources
-	accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
-	folderDataSource         = Components.classes[folderDSContractID].createInstance();
+  //Create datasources
+  accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
+  folderDataSource         = Components.classes[folderDSContractID].createInstance();
 
   messagesBox       = document.getElementById("messagesBox");
   accountCentralBox = document.getElementById("accountCentralBox");
@@ -157,50 +157,50 @@ function CreateMailWindowGlobals()
 
 function InitMsgWindow()
 {
-	msgWindow.statusFeedback = statusFeedback;
-	msgWindow.msgHeaderSink = messageHeaderSink;
-	msgWindow.SetDOMWindow(window);
-	mailSession.AddMsgWindow(msgWindow);
+  msgWindow.statusFeedback = statusFeedback;
+  msgWindow.msgHeaderSink = messageHeaderSink;
+  msgWindow.SetDOMWindow(window);
+  mailSession.AddMsgWindow(msgWindow);
 }
 
 function AddDataSources()
 {
 
-	accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	//to move menu item
-	SetupMoveCopyMenus('moveMenu', accountManagerDataSource, folderDataSource);
+  accountManagerDataSource = accountManagerDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  //to move menu item
+  SetupMoveCopyMenus('moveMenu', accountManagerDataSource, folderDataSource);
 
-	//to copy menu item
-	SetupMoveCopyMenus('copyMenu', accountManagerDataSource, folderDataSource);
+  //to copy menu item
+  SetupMoveCopyMenus('copyMenu', accountManagerDataSource, folderDataSource);
 
 
-	//To FileButton menu
-	SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
+  //To FileButton menu
+  SetupMoveCopyMenus('button-file', accountManagerDataSource, folderDataSource);
 
-	//To move and copy menus in message pane context
-	SetupMoveCopyMenus("messagePaneContext-copyMenu", accountManagerDataSource, folderDataSource);
-	SetupMoveCopyMenus("messagePaneContext-moveMenu", accountManagerDataSource, folderDataSource);
+  //To move and copy menus in message pane context
+  SetupMoveCopyMenus("messagePaneContext-copyMenu", accountManagerDataSource, folderDataSource);
+  SetupMoveCopyMenus("messagePaneContext-moveMenu", accountManagerDataSource, folderDataSource);
 
-	//Add statusFeedback
+  //Add statusFeedback
 
-	var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
+  var msgDS = folderDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+  msgDS.window = msgWindow;
 
-	msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
-	msgDS.window = msgWindow;
+  msgDS = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgRDFDataSource);
+  msgDS.window = msgWindow;
 
-}	
+}
 
 function SetupMoveCopyMenus(menuid, accountManagerDataSource, folderDataSource)
 {
-	var menu = document.getElementById(menuid);
-	if(menu)
-	{
-		menu.database.AddDataSource(accountManagerDataSource);
-		menu.database.AddDataSource(folderDataSource);
-		menu.setAttribute('ref', 'msgaccounts:/');
-	}
+  var menu = document.getElementById(menuid);
+  if(menu)
+  {
+    menu.database.AddDataSource(accountManagerDataSource);
+    menu.database.AddDataSource(folderDataSource);
+    menu.setAttribute('ref', 'msgaccounts:/');
+  }
 }
 function dumpProgress() {
     var broadcaster = document.getElementById("Messenger:LoadingProgress");
@@ -217,7 +217,7 @@ function nsMsgStatusFeedback()
 {
 }
 
-nsMsgStatusFeedback.prototype = 
+nsMsgStatusFeedback.prototype =
 {
   // global variables for status / feedback information....
   startTime  : 0,
@@ -236,8 +236,8 @@ nsMsgStatusFeedback.prototype =
       if (!this.statusTextFld ) this.statusTextFld = document.getElementById("statusText");
       if (!this.statusBar) this.statusBar = document.getElementById("statusbar-icon");
       if(!this.throbber)   this.throbber = document.getElementById("navigator-throbber");
-	    if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
-	    if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
+      if(!this.stopButton) this.stopButton = document.getElementById("button-stop");
+      if(!this.stopMenu)   this.stopMenu = document.getElementById("stopMenuitem");
     },
 
   // nsIXULBrowserWindow implementation
@@ -269,10 +269,10 @@ nsMsgStatusFeedback.prototype =
   QueryInterface : function(iid)
    {
      if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
-	   return this;
+     return this;
      if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
       return this;
-	  throw Components.results.NS_NOINTERFACE;
+    throw Components.results.NS_NOINTERFACE;
      return null;
     },
 
@@ -282,8 +282,8 @@ nsMsgStatusFeedback.prototype =
       this.ensureStatusFields();
       if ( statusText == "" )
         statusText = defaultStatus;
-      this.statusTextFld.value = statusText;
-	},
+      this.statusTextFld.label = statusText;
+  },
   _startMeteors : function()
     {
       this.ensureStatusFields();
@@ -293,16 +293,16 @@ nsMsgStatusFeedback.prototype =
 
       // Turn progress meter on.
       this.statusBar.setAttribute("mode","undetermined");
-      
-      // turn throbber on 
+
+      // turn throbber on
       this.throbber.setAttribute("busy", true);
 
       //turn on stop button and menu
-	  this.stopButton.setAttribute("disabled", false);
-	  this.stopMenu.setAttribute("disabled", false);
-      
+    this.stopButton.setAttribute("disabled", false);
+    this.stopMenu.setAttribute("disabled", false);
+
       // Remember when loading commenced.
-      this.startTime = (new Date()).getTime();     
+      this.startTime = (new Date()).getTime();
     },
   startMeteors : function()
     {
@@ -311,7 +311,7 @@ nsMsgStatusFeedback.prototype =
       // and the meteors aren't spinning, then kick off a start
       if (!this.startTimeoutID && !this.meteorsSpinning)
         this.startTimeoutID = setTimeout('window.MsgStatusFeedback._startMeteors();', 500);
-      
+
       // since we are going to start up the throbber no sense in processing
       // a stop timeout...
       if (this.stopTimeoutID)
@@ -319,12 +319,12 @@ nsMsgStatusFeedback.prototype =
         clearTimeout(this.stopTimeoutID);
         this.stopTimeoutID = null;
       }
-	},
+  },
    _stopMeteors : function()
     {
       this.ensureStatusFields();
-	    // Record page loading time.
-	    var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
+      // Record page loading time.
+      var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
       var msg = gMessengerBundle.getFormattedString("documentDoneTime",
                                                     [ elapsed ]);
       this.showStatusString(msg);
@@ -335,9 +335,9 @@ nsMsgStatusFeedback.prototype =
       // Turn progress meter off.
       this.statusBar.setAttribute("mode","normal");
       this.statusBar.value = 0;  // be sure to clear the progress bar
-      this.statusBar.progresstext = "";
-	    this.stopButton.setAttribute("disabled", true);
-	    this.stopMenu.setAttribute("disabled", true);
+      this.statusBar.label = "";
+      this.stopButton.setAttribute("disabled", true);
+      this.stopMenu.setAttribute("disabled", true);
 
       this.meteorsSpinning = false;
       this.stopTimeoutID = null;
@@ -353,7 +353,7 @@ nsMsgStatusFeedback.prototype =
         clearTimeout(this.startTimeoutID);
         this.startTimeoutID = null;
       }
-        
+
       // if we have no more pending starts and we don't have a stop timeout already in progress
       // AND the meteors are currently running then fire a stop timeout to shut them down.
       if (this.pendingStartRequests == 0 && !this.stopTimeoutID)
@@ -361,20 +361,20 @@ nsMsgStatusFeedback.prototype =
         if (this.meteorsSpinning)
           this.stopTimeoutID = setTimeout('window.MsgStatusFeedback._stopMeteors();', 500);
       }
-	},
+  },
   showProgress : function(percentage)
     {
       this.ensureStatusFields();
       if (percentage >= 0)
       {
         this.statusBar.setAttribute("mode", "normal");
-        this.statusBar.value = percentage; 
-        this.statusBar.progresstext = Math.round(percentage) + "%";
+        this.statusBar.value = percentage;
+        this.statusBar.label = Math.round(percentage) + "%";
       }
     },
   closeWindow : function(percent)
     {
-	}
+  }
 }
 
 
@@ -382,45 +382,45 @@ function nsMsgWindowCommands()
 {
 }
 
-nsMsgWindowCommands.prototype = 
+nsMsgWindowCommands.prototype =
 {
-	QueryInterface : function(iid)
-	{
-		if(iid.equals(Components.interfaces.nsIMsgWindowCommands))
-			return this;
-		throw Components.results.NS_NOINTERFACE;
+  QueryInterface : function(iid)
+  {
+    if(iid.equals(Components.interfaces.nsIMsgWindowCommands))
+      return this;
+    throw Components.results.NS_NOINTERFACE;
         return null;
-	},
-	SelectFolder: function(folderUri)
-	{
+  },
+  SelectFolder: function(folderUri)
+  {
 
-		SelectFolder(folderUri);
+    SelectFolder(folderUri);
 
-	},
-	SelectMessage: function(messageUri)
-	{
-		SelectMessage(messageUri);
-	}
+  },
+  SelectMessage: function(messageUri)
+  {
+    SelectMessage(messageUri);
+  }
 }
 
 function StopUrls()
 {
-	msgWindow.StopUrls();
+  msgWindow.StopUrls();
 }
 
 function loadStartPage() {
     try {
-		var startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
-        
-		if (startpageenabled) {
-			var startpage = pref.getLocalizedUnicharPref("mailnews.start_page.url");
+    var startpageenabled= pref.GetBoolPref("mailnews.start_page.enabled");
+
+    if (startpageenabled) {
+      var startpage = pref.getLocalizedUnicharPref("mailnews.start_page.url");
             if (startpage != "") {
                 window.frames["messagepane"].location = startpage;
                 //dump("start message pane with: " + startpage + "\n");
-				ClearMessageSelection();
+        ClearMessageSelection();
             }
         }
-	}
+  }
     catch (ex) {
         dump("Error loading start page.\n");
         return;
@@ -430,14 +430,14 @@ function loadStartPage() {
 // Display AccountCentral page when users clicks on the Account Folder.
 // When AccountCentral page need to be shown, we need to hide
 // the box containing threadPane, splitter and messagePane.
-// Load iframe in the AccountCentral box with corresponding page 
+// Load iframe in the AccountCentral box with corresponding page
 function ShowAccountCentral()
 {
-    try 
+    try
     {
         var acctCentralPage = pref.getLocalizedUnicharPref("mailnews.account_central_page.url");
         switch (gPaneConfig)
-        {    
+        {
             case 0:
                 messagesBox.setAttribute("collapsed", "true");
                 accountCentralBox.removeAttribute("collapsed");
@@ -458,7 +458,7 @@ function ShowAccountCentral()
                 break;
         }
     }
-    catch (ex) 
+    catch (ex)
     {
         dump("Error loading AccountCentral page -> " + ex + "\n");
         return;
@@ -467,13 +467,13 @@ function ShowAccountCentral()
 
 // Display thread and message panes with splitter when user tries
 // to read messages by clicking on msgfolders. Hide AccountCentral
-// box and display message box. 
+// box and display message box.
 function HideAccountCentral()
 {
-    try 
+    try
     {
         switch (gPaneConfig)
-        {    
+        {
             case 0:
                 accountCentralBox.setAttribute("collapsed", "true");
                 messagesBox.removeAttribute("collapsed");
@@ -492,7 +492,7 @@ function HideAccountCentral()
                 break;
         }
     }
-    catch (ex) 
+    catch (ex)
     {
         dump("Error hiding AccountCentral page -> " + ex + "\n");
         return;
@@ -500,7 +500,7 @@ function HideAccountCentral()
 }
 
 // Given the server, open the twisty and the set the selection
-// on inbox of that server 
+// on inbox of that server
 function OpenInboxForServer(server)
 {
     try {
@@ -509,9 +509,9 @@ function OpenInboxForServer(server)
         var inboxFolder    = GetInboxFolder(server);
         var folderTree     = GetFolderTree();
         var inboxFolderUri = document.getElementById(inboxFolder.URI);
-        ChangeSelection(folderTree, inboxFolderUri); 
+        ChangeSelection(folderTree, inboxFolderUri);
         GetMessagesForInboxOnServer(server);
-    } 
+    }
     catch (ex) {
         dump("Error opening inbox for server -> " + ex + "\n");
         return;

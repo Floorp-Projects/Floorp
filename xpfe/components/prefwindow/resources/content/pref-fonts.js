@@ -1,4 +1,4 @@
-try 
+try
   {
     var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"].createInstance();
     if( enumerator )
@@ -8,7 +8,7 @@ try
 
     var pref = Components.classes["@mozilla.org/preferences;1"].getService( Components.interfaces.nsIPref );
   }
-catch(e) 
+catch(e)
   {
   }
 
@@ -22,7 +22,7 @@ var gPrefutilitiesBundle;
 function GetFields()
   {
     var dataObject = [];
-    
+
     // store data for language independent widgets
     var lists = ["selectLangs", "defaultFont"];
     for( var i = 0; i < lists.length; i++ )
@@ -30,21 +30,21 @@ function GetFields()
         if( !dataObject.dataEls )
           dataObject.dataEls = [];
         dataObject.dataEls[ lists[i] ] = [];
-        dataObject.dataEls[ lists[i] ].data = document.getElementById( lists[i] ).data;
+        dataObject.dataEls[ lists[i] ].value = document.getElementById( lists[i] ).value;
       }
-      
-    dataObject.defaultFont = document.getElementById( "defaultFont" ).data;
+
+    dataObject.defaultFont = document.getElementById( "defaultFont" ).value;
     dataObject.fontDPI = document.getElementById( "browserScreenResolution" ).value;
     dataObject.useDocFonts = document.getElementById( "browserUseDocumentFonts" ).checked ? 0 : 1;
 
     // save current state for language dependent fields and store
     saveState();
     dataObject.languageData = languageData;
-    
-    return dataObject;        
+
+    return dataObject;
   }
 
-// manual data setting function for PrefWindow  
+// manual data setting function for PrefWindow
 function SetFields( aDataObject )
   {
     languageData = aDataObject.languageData ? aDataObject.languageData : languageData ;
@@ -54,20 +54,20 @@ function SetFields( aDataObject )
     for( var i = 0; i < lists.length; i++ )
       {
         var element = document.getElementById( lists[i] );
-        if( aDataObject.dataEls ) 
+        if( aDataObject.dataEls )
           {
-            element.data = aDataObject.dataEls[ lists[i] ].data;
-            element.selectedItem = element.getElementsByAttribute( "data", aDataObject.dataEls[ lists[i] ].data )[0];
+            element.value = aDataObject.dataEls[ lists[i] ].value;
+            element.selectedItem = element.getElementsByAttribute( "value", aDataObject.dataEls[ lists[i] ].value )[0];
           }
-        else 
+        else
           {
             var prefstring = element.getAttribute( "prefstring" );
             var preftype = element.getAttribute( "preftype" );
             if( prefstring && preftype )
               {
                 var prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
-                element.data = prefvalue;
-                element.selectedItem = element.getElementsByAttribute( "data", prefvalue )[0];
+                element.value = prefvalue;
+                element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
               }
           }
       }
@@ -90,34 +90,36 @@ function SetFields( aDataObject )
         if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
           useDocFontsCheckbox.checked = prefvalue ? false : true ;
       }
-  }  
-  
+  }
+
 function Startup()
   {
     variableSize = document.getElementById( "sizeVar" );
     fixedSize    = document.getElementById( "sizeMono" );
     languageList = document.getElementById( "selectLangs" );
 
+    bundle = srGetStrBundle("chrome://communicator/locale/pref/prefutilities.properties");
+
     gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
-  
+
     // register our ok callback function
     parent.hPrefWindow.registerOKCallbackFunc( saveFontPrefs );
-    
+
     // eventually we should detect the default language and select it by default
     selectLanguage();
   }
-  
+
 function listElement( aListID )
   {
     this.listElement = document.getElementById( aListID );
   }
-  
-listElement.prototype = 
+
+listElement.prototype =
   {
-    clearList: 
+    clearList:
       function ()
         {
-          // remove the menupopup node child of the menulist. 
+          // remove the menupopup node child of the menulist.
           this.listElement.removeChild( this.listElement.firstChild );
         },
 
@@ -127,32 +129,32 @@ listElement.prototype =
           var menuItemNode = document.createElement( "menuitem" );
           if( menuItemNode )
             {
-              menuItemNode.setAttribute( "value", aString );
+              menuItemNode.setAttribute( "label", aString );
               this.listElement.firstChild.appendChild( menuItemNode );
             }
         },
-    
+
     appendStrings:
       function ( aDataObject )
         {
           var popupNode = document.createElement( "menupopup" );
           faces = aDataObject.toString().split(",");
-          faces.sort();                
+          faces.sort();
           for( var i = 0; i < faces.length; i++ )
             {
               if( faces[i] == "" )
                 {
-                  this.listElement.setAttribute( "data", faces[i] );
-                  this.listElement.setAttribute("value",
-                                                gPrefutilitiesBundle.getString("nofontsforlang"));
+                  this.listElement.setAttribute( "value", faces[i] );
+                  this.listElement.setAttribute( "label",
+                                                gPrefutilitiesBundle.getString("nofontsforlang") );
                   this.listElement.setAttribute( "disabled", "true" );
                   gNoFontsForThisLang = true; // hack, hack hack!
                 }
               else
                 {
                   var itemNode = document.createElement( "menuitem" );
-                  itemNode.setAttribute( "data", faces[i] );
                   itemNode.setAttribute( "value", faces[i] );
+                  itemNode.setAttribute( "label", faces[i] );
                   this.listElement.removeAttribute( "disabled" );
                   gNoFontsForThisLang = false; // hack, hack hack!
                   popupNode.appendChild( itemNode );
@@ -171,7 +173,7 @@ function saveFontPrefs()
         saveState();
         parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"] = GetFields();
       }
-      
+
     // saving font prefs
     var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-fonts.xul"];
     var pref = parent.hPrefWindow.pref;
@@ -181,7 +183,7 @@ function saveFontPrefs()
           {
             var fontPrefString = "font.name." + type + "." + language;
             var currValue = "";
-            try 
+            try
               {
                 currValue = pref.CopyUnicharPref( fontPrefString );
               }
@@ -194,7 +196,7 @@ function saveFontPrefs()
         var variableSizePref = "font.size.variable." + language;
         var fixedSizePref = "font.size.fixed." + language;
         var currVariableSize = 12, currFixedSize = 12;
-        try 
+        try
           {
             currVariableSize = pref.GetIntPref( variableSizePref );
             currFixedSize = pref.GetIntPref( fixedSizePref );
@@ -205,14 +207,14 @@ function saveFontPrefs()
         if( currVariableSize != dataObject.languageData[language].variableSize )
           pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
         if( currFixedSize != dataObject.languageData[language].fixedSize )
-          pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );            
+          pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
       }
 
-    // font scaling 
+    // font scaling
     var fontDPI       = parseInt( dataObject.fontDPI );
     var documentFonts = dataObject.useDocFonts;
     var defaultFont   = dataObject.defaultFont;
-    
+
     try
       {
         var currDPI = pref.GetIntPref( "browser.display.screen_resolution" );
@@ -231,7 +233,7 @@ function saveFontPrefs()
         pref.SetUnicharPref( "font.default", defaultFont );
       }
   }
-  
+
 function saveState()
   {
     for( var i = 0; i < fontTypes.length; i++ )
@@ -244,44 +246,44 @@ function saveState()
         // save data for the previous language
         if( currentLanguage && languageData[currentLanguage] &&
             languageData[currentLanguage].types )
-          languageData[currentLanguage].types[fontTypes[i]] = document.getElementById( fontTypes[i] ).data;
+          languageData[currentLanguage].types[fontTypes[i]] = document.getElementById( fontTypes[i] ).value;
       }
 
     if( currentLanguage && languageData[currentLanguage] &&
-        languageData[currentLanguage].types ) 
+        languageData[currentLanguage].types )
       {
-        languageData[currentLanguage].variableSize = parseInt( variableSize.data );
-        languageData[currentLanguage].fixedSize = parseInt( fixedSize.data );
+        languageData[currentLanguage].variableSize = parseInt( variableSize.value );
+        languageData[currentLanguage].fixedSize = parseInt( fixedSize.value );
       }
-  }  
-  
+  }
+
 function selectLanguage()
   {
     // save current state
     saveState();
-    
+
     if( !currentLanguage )
-      currentLanguage = languageList.data;
-          
+      currentLanguage = languageList.value;
+
     for( var i = 0; i < fontTypes.length; i++ )
       {
         // build and populate the font list for the newly chosen font type
         var selectElement = new listElement( fontTypes[i] );
         selectElement.clearList();
-        selectElement.appendStrings( enumerator.EnumerateFonts( languageList.data, fontTypes[i], fontCount ) );
-        
-        if( languageData[languageList.data] )
+        selectElement.appendStrings( enumerator.EnumerateFonts( languageList.value, fontTypes[i], fontCount ) );
+
+        if( languageData[languageList.value] )
           {
             // data exists for this language, pre-select items based on this information
-            var dataElements = selectElement.listElement.getElementsByAttribute( "data", languageData[languageList.data].types[fontTypes[i]] );
+            var dataElements = selectElement.listElement.getElementsByAttribute( "value", languageData[languageList.value].types[fontTypes[i]] );
             var selectedItem = dataElements.length ? dataElements[0] : null;
-            if (!gNoFontsForThisLang) 
+            if (!gNoFontsForThisLang)
               {
                 selectElement.listElement.selectedItem = selectedItem;
                 variableSize.removeAttribute("disabled");
                 fixedSize.removeAttribute("disabled");
-                variableSize.selectedItem = variableSize.getElementsByAttribute( "data", languageData[languageList.data].variableSize )[0];
-                fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", languageData[languageList.data].fixedSize )[0];
+                variableSize.selectedItem = variableSize.getElementsByAttribute( "value", languageData[languageList.value].variableSize )[0];
+                fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", languageData[languageList.value].fixedSize )[0];
               }
             else
               {
@@ -291,26 +293,26 @@ function selectLanguage()
           }
         else
           {
-            try 
+            try
               {
-                var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.data;
+                var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
                 var selectVal = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
-                var dataEls = selectElement.listElement.getElementsByAttribute( "data", selectVal );
+                var dataEls = selectElement.listElement.getElementsByAttribute( "value", selectVal );
                 selectedItem = dataEls.length ? dataEls[0] : null;
                 if (selectedItem)
                   {
-                    selectElement.listElement.data = selectVal;
+                    selectElement.listElement.value = selectVal;
                     selectElement.listElement.selectedItem = selectedItem;
-                    var variableSizePref = "font.size.variable." + languageList.data;
-                    var fixedSizePref = "font.size.fixed." + languageList.data;
+                    var variableSizePref = "font.size.variable." + languageList.value;
+                    var fixedSizePref = "font.size.fixed." + languageList.value;
                     var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
                     var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
                     variableSize.removeAttribute("disabled");
-                    variableSize.data = sizeVarVal;
-                    variableSize.selectedItem = variableSize.getElementsByAttribute( "data", sizeVarVal )[0];
+                    variableSize.value = sizeVarVal;
+                    variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
                     fixedSize.removeAttribute("disabled");
-                    fixedSize.data = sizeFixedVal;
-                    fixedSize.selectedItem = fixedSize.getElementsByAttribute( "data", sizeFixedVal )[0];
+                    fixedSize.value = sizeFixedVal;
+                    fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
                   }
                 else
                   {
@@ -320,10 +322,10 @@ function selectLanguage()
               }
             catch(e)
               {
-                // if we don't find an existing pref, it's no big deal. 
+                // if we don't find an existing pref, it's no big deal.
               }
           }
       }
-    currentLanguage = languageList.data;
+    currentLanguage = languageList.value;
   }
 

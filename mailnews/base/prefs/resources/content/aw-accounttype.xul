@@ -46,9 +46,9 @@ Rights Reserved.
     <separator/>
     <radiogroup orient="vertical" 
                 name="acctyperadio" id="acctyperadio" >
-      <radio id="mailaccount" group="acctyperadio" data="mailaccount"
+      <radio id="mailaccount" group="acctyperadio" value="mailaccount"
              wsm_persist="true"
-             value="&accountTypeMail.label;"/>
+             label="&accountTypeMail.label;"/>
   
       <box orient="vertical"
            datasources="rdf:ispdefaults" 
@@ -59,14 +59,14 @@ Rights Reserved.
           <rule nc:wizardShow="true">
             <radio group="acctyperadio" uri="..."
                       wsm_persist="true"
-                      data="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
-                      value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+                      value="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                      label="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
           </rule>
        </template>
       </box>
-      <radio group="acctyperadio" id="newsaccount" data="newsaccount"
+      <radio group="acctyperadio" id="newsaccount" value="newsaccount"
              wsm_persist="true"
-             value="&accountTypeNews.label;"/>
+             label="&accountTypeNews.label;"/>
     </radiogroup>
   </box>
 

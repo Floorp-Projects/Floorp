@@ -24,16 +24,16 @@
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-irc.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-	    	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         align="vertical" title="&window.title;"
-  		  onload="if( parent.handle ) parent.handle.onpageload( 'pref-irc' ); else parent.queuedTag = 'pref-irc';">
+        onload="if( parent.handle ) parent.handle.onpageload( 'pref-irc' ); else parent.queuedTag = 'pref-irc';">
 
-	<box class="header" align="horizontal">  
-    <button class="left-header-text" value="&lHeader;"/>
-	  <spring class="header-spring" flex="1"/>
-	  <button class="right-header-text" value="&rHeader;"/>
-	</box>
+  <box class="header" align="horizontal">  
+    <button class="left-header-text" label="&lHeader;"/>
+    <spring class="header-spring" flex="1"/>
+    <button class="right-header-text" label="&rHeader;"/>
+  </box>
 
 <html:fieldset style="width: 100%;">
 

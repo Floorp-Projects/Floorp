@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *   Ben "Count XULula" Goodger
  */
 
@@ -27,7 +27,7 @@ const PERFORMANCE_BOOSTS      = false;
 
 /**************       NAMESPACES       ***************/
 const XUL_NS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
- 
+
 /**************         GLOBALS         **************/
 
 var tagname     = null; // element.nodeName;
@@ -35,12 +35,12 @@ var element     = null; // handle for the actual element
 
 var HTMLAttrs   = [];   // html attributes
 var CSSAttrs    = [];   // css attributes
-var JSEAttrs    = [];   // js events 
+var JSEAttrs    = [];   // js events
 
-var HTMLRAttrs  = [];   // removed html attributes                              
-//var CSSRAttrs   = [];   // removed css attributes                               
-var JSERAttrs   = [];   // removed js events                                    
-                                                                                                                                                   
+var HTMLRAttrs  = [];   // removed html attributes
+//var CSSRAttrs   = [];   // removed css attributes
+var JSERAttrs   = [];   // removed js events
+
 var gSelecting = false; // To prevent recursive selection
 var dialog;
 
@@ -50,7 +50,7 @@ var dialog;
  * function   : void Startup();
  * parameters : none
  * returns    : none
- * desc.      : startup and initialisation, prepares dialog. 
+ * desc.      : startup and initialisation, prepares dialog.
  **/
 function Startup()
 {
@@ -68,7 +68,7 @@ function Startup()
   element = window.arguments[1];
   if (!element || element == undefined) {
     dump("Advanced Edit: Element to edit not supplied\n");
-    window.close();  
+    window.close();
   }
 
   // place the tag name in the header
@@ -91,7 +91,7 @@ function Startup()
   BuildHTMLAttributeTable();
   BuildCSSAttributeTable();
   BuildJSEAttributeTable();
- 
+
   // size the dialog properly
   window.sizeToContent();
 
@@ -139,7 +139,7 @@ function CheckAttributeNameSimilarity(attName, attArray)
 {
   for(var i = 0; i < attArray.length; i++)
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
+    if(attName.toLowerCase() == attArray[i].toLowerCase())
       return false;
   }
   return true;
@@ -149,14 +149,14 @@ function CheckAttributeNameSimilarity(attName, attArray)
  * function   : bool CheckAttributeNotRemoved ( string attName, array attArray );
  * parameters : attribute to look for, array of deleted attributes
  * returns    : false if attribute already exists, true if it does not
- * desc.      : check to see if the attribute is in the array marked for removal 
+ * desc.      : check to see if the attribute is in the array marked for removal
  *              before updating the final object
  **/
 function CheckAttributeNotRemoved( attName, attArray )
 {
-  for( var i = 0; i < attArray.length; i++ ) 
+  for( var i = 0; i < attArray.length; i++ )
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
+    if(attName.toLowerCase() == attArray[i].toLowerCase())
       return false;
   }
   return true;
@@ -172,7 +172,7 @@ function RemoveAttribute( treeId )
 {
   var tree = document.getElementById(treeId);
   if (!tree) return;
-  
+
   var kids = tree.lastChild;  // treechildren element of tree
   var newIndex = tree.selectedIndex;
 
@@ -191,7 +191,7 @@ function RemoveAttribute( treeId )
           newIndex--;
         RemoveNameFromAttArray(attr, HTMLAttrs);
         break;
-      case "CSSATree":   
+      case "CSSATree":
         // We write a completely new "style" string, so we don't need "remove" array
         //CSSRAttrs[CSSRAttrs.length] = attr;
         if (newIndex >= (CSSAttrs.length-1))
@@ -203,7 +203,7 @@ function RemoveAttribute( treeId )
         if (newIndex >= (JSEAttrs.length-1))
           newIndex--;
         RemoveNameFromAttArray(attr, JSEAttrs);
-        break;      
+        break;
       default: break;
     }
 
@@ -219,11 +219,11 @@ function RemoveNameFromAttArray(attName, attArray)
 {
   for (var i=0; i < attArray.length; i++)
   {
-    if(attName.toLowerCase() == attArray[i].toLowerCase()) 
+    if(attName.toLowerCase() == attArray[i].toLowerCase())
     {
       // Remove 1 array item
       attArray.splice(i,1);
-      break; 
+      break;
     }
   }
 }
@@ -245,7 +245,7 @@ function doSelect(e)
       } else if ( selitems[i].nodeName == "treecell" )
         selitems[i].removeAttribute("class","FocusSelected");
     }
-  
+
     cell.setAttribute("class","FocusSelected");
     input.setAttribute("class","FocusSelected");
     SetTextboxFocus(input);
@@ -262,20 +262,20 @@ function AddTreeItem ( name, value, treekidsId, attArray, valueCaseFunc )
   var treerow     = document.createElementNS ( XUL_NS, "treerow" );
   var attrcell    = document.createElementNS ( XUL_NS, "treecell" );
   attrcell.setAttribute( "class", "propertylist" );
-  attrcell.setAttribute( "value", name );
+  attrcell.setAttribute( "label", name );
   // Modify treerow selection to better show focus in textbox
   treeitem.setAttribute( "class", "ae-selection");
 
   treerow.appendChild ( attrcell );
-  
+
   if ( !valueCaseFunc ) {
     // no handling function provided, create default cell.
     var valCell = CreateCellWithField ( name, value );
     if (!valCell) return null;
     treerow.appendChild ( valCell );
-  } else 
+  } else
     valueCaseFunc();  // run user specified function for adding content
-  
+
   treeitem.appendChild ( treerow );
   treekids.appendChild ( treeitem );
   return treeitem;
@@ -322,7 +322,7 @@ function SelectTreeItem(tree)
 {
   // Prevent infinite loop -- SetTextboxFocusById triggers recursive call
   if (gSelecting) return;
-  gSelecting = true;  
+  gSelecting = true;
   if (tree && tree.selectedItems && tree.selectedItems.length)
   {
     // 2nd cell (value column) contains the textbox
@@ -339,6 +339,6 @@ function SelectTreeItem(tree)
 // todo: implement attribute parsing, e.g. colorpicker appending, etc.
 function AttributeParser( name, value )
 {
-  
+
 }
 

@@ -1,5 +1,5 @@
 /* -*- Mode: Java; tab-width: 4; c-basic-offset: 4; -*-
- * 
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
  * compliance with the NPL.  You may obtain a copy of the NPL at
@@ -26,16 +26,16 @@ function initPanel() {
     window.queuedTag = tag;
     window.queuedTagPending = true;
   }
-} 
- 
-window.doneLoading = false; 
+}
+
+window.doneLoading = false;
 var walletViewerInterface = null;
 var walletServiceInterface = null;
 var bundle = null; // string bundle
 var JS_STRINGS_FILE = "chrome://communicator/locale/wallet/WalletEditor.properties";
 var schemaToValue = [];
 var BREAK = "|";
- 
+
 function nsWalletViewer(frame_id)
 {
   if (!frame_id) {
@@ -43,8 +43,8 @@ function nsWalletViewer(frame_id)
   }
   this.contentFrame = frame_id
   this.cancelHandlers = [];
-  this.okHandlers = [];  
-    
+  this.okHandlers = [];
+
   // set up window
   this.onload();
 }
@@ -73,26 +73,26 @@ nsWalletViewer.prototype =
         doSetOKCancel(this.onOK, this.onCancel);
       },
 
-      init: 
+      init:
         function() {
           if (window.queuedTagPending) {
             this.onpageload(window.queuedTag);
           }
           this.closeBranches("pnameID");
         },
-                  
+
       onOK:
         function() {
           for(var i = 0; i < hWalletViewer.okHandlers.length; i++) {
             hWalletViewer.okHandlers[i]();
           }
-              
+
           var tag = document.getElementById(hWalletViewer.contentFrame).getAttribute("tag");
           hWalletViewer.savePageData(tag);
           hWalletViewer.saveAllData();
           close();
         },
-        
+
       onCancel:
         function() {
           for(var i = 0; i < hWalletViewer.cancelHandlers.length; i++) {
@@ -110,15 +110,15 @@ nsWalletViewer.prototype =
         function(aFunctionReference) {
           this.cancelHandlers[this.cancelHandlers.length] = aFunctionReference;
         },
-          
+
       saveAllData:
         function() {
           ReturnOutput();
-        },                        
+        },
 
       savePageData:
         function(tag) {
-          /* collect the list of menuItem values */
+          /* collect the list of menuItem labels */
           var elementIDs = window.frames[this.contentFrame]._elementIDs;
           for(var i = 0; i < elementIDs.length; i++) {
             var values = "";
@@ -133,7 +133,7 @@ nsWalletViewer.prototype =
             for (var menuItem = menuPopup.firstChild;
                  menuItem != menuPopup.lastChild; /* skip empty item at end of list */
                  menuItem = menuItem.nextSibling) {
-              values += (menuItem.getAttribute("value") + BREAK);
+              values += (menuItem.getAttribute("label") + BREAK);
             }
             schemaToValue[tag+elementIDs[i]] = values;
           }
@@ -147,7 +147,7 @@ nsWalletViewer.prototype =
           var oldURL = document.getElementById(this.contentFrame).getAttribute("src");
           var oldTag = document.getElementById(this.contentFrame).getAttribute("tag");
 
-          this.savePageData(oldTag);      // save data from the current page. 
+          this.savePageData(oldTag);      // save data from the current page.
 
           var newURL = selectedItem.firstChild.firstChild.getAttribute("url");
           var newTag = selectedItem.firstChild.firstChild.getAttribute("tag");
@@ -156,20 +156,20 @@ nsWalletViewer.prototype =
             document.getElementById(this.contentFrame).setAttribute("tag", newTag);
           }
         },
-              
-      onpageload: 
+
+      onpageload:
         function(aPageTag) {
           if ('Startup' in window.frames[ this.contentFrame ]) {
             window.frames[ this.contentFrame ].Startup();
           }
 
-          /* restore the list of menuItem values */
+          /* restore the list of menuItem labels */
           var elementIDs = window.frames[this.contentFrame]._elementIDs;
           for(var i = 0; i < elementIDs.length; i++) {
             var menuList = window.frames[this.contentFrame].document.getElementById(elementIDs[i]);
             if (!menuList) {
               dump("*** FIX ME: '_elementIDs' in '" + aPageTag +
-                   "' contains a reference to a non-existent element ID '" + 
+                   "' contains a reference to a non-existent element ID '" +
                    elementIDs[i] + "'.\n");
               return;
             }
@@ -188,7 +188,7 @@ nsWalletViewer.prototype =
               for (var j = 0; j<strings.length-1; j++) {
                 var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
                 if (menuItem) {
-                  menuItem.setAttribute("value", strings[j]);
+                  menuItem.setAttribute("label", strings[j]);
                   menuItem.setAttribute("len", strings[j].length);
                   menuPopup.insertBefore(menuItem, menuPopup.lastChild);
                 }
@@ -230,13 +230,13 @@ nsWalletViewer.prototype =
     if (!thisMenuItem) {
       return;
     }
-    thisMenuItem.setAttribute('value',thisMenuList.value);
+    thisMenuItem.setAttribute('label',thisMenuList.label);
 
     /* determine previous size of textbox */
     var len = Number(thisMenuItem.getAttribute("len"));
 
     /* update previous size */
-    var newLen = thisMenuItem.getAttribute("value").length;
+    var newLen = thisMenuItem.getAttribute("label").length;
     thisMenuItem.setAttribute("len", newLen);
 
     /* obtain parent element */
@@ -273,7 +273,7 @@ nsWalletViewer.prototype =
     if (!menuItem) {
       return;
     }
-    menuItem.setAttribute("value", "");
+    menuItem.setAttribute("label", "");
     menuItem.setAttribute("len", "0");
     thisMenuPopup.appendChild(menuItem);
 

@@ -42,7 +42,7 @@
         </xul:box>
         <xul:box class="radio-text-container" flex="1" autostretch="never">
           <xul:image class="radio-icon" inherits="src,disabled"/>
-          <xul:html class="radio-text" inherits="value,accesskey,crop,disabled" flex="1">
+          <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1">
             <children/>
           </xul:html>
         </xul:box>          
@@ -59,7 +59,7 @@
           </xul:box>
         </xul:box>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
-        <xul:html class="checkbox-text" inherits="value,accesskey,crop,disabled" flex="1">
+        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1">
           <children/>
         </xul:html>
       </xul:box>
@@ -78,7 +78,7 @@
     <content>
       <xul:scrollbarbutton type="decrement" inherits="sborient=align"/>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
-	      <xul:thumb inherits="align,src" flex="1"/>
+        <xul:thumb inherits="align,src" flex="1"/>
       </xul:slider>
       <xul:scrollbarbutton type="increment" inherits="sborient=align"/>
     </content>
@@ -94,8 +94,8 @@
 
   <binding id="slider">
     <content>
-	    <xul:button class="slider-button"/>
-  	</content>
+      <xul:button class="slider-button"/>
+    </content>
   </binding>
   
   <binding id="grippy">
@@ -120,7 +120,7 @@
         <xul:image/>
       </xul:box>
       <xul:spring class="menuitem-iconic-spring"/>
-      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value,accesskey,crop" crop="right"/>
+      <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
   </binding>
@@ -145,14 +145,14 @@
   <binding id="toolbarbutton-left" extends="chrome://global/content/xulBindings.xml#buttonleft">
     <content autostretch="never">
       <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-left-text" inherits="value,crop"/>
+      <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
     </content>
   </binding>  
 
   <binding id="toolbarbutton-top" extends="chrome://global/content/xulBindings.xml#buttontop">
     <content autostretch="never" orient="vertical">
       <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-top-text" inherits="value,crop"/>
+      <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
     </content>
   </binding>  
   

@@ -25,9 +25,9 @@
 
   <popupset id="psPopups">
     <popup id="ppAttrContext">
-      <menuitem value="New Attribute" oncommand="viewer.cmdNewAttribute()"/>
-      <menuitem value="Edit" oncommand="viewer.cmdEditSelectedAttribute()"/>
-      <menuitem value="Delete" oncommand="viewer.cmdDeleteSelectedAttribute()"/>
+      <menuitem label="New Attribute" oncommand="viewer.cmdNewAttribute()"/>
+      <menuitem label="Edit" oncommand="viewer.cmdEditSelectedAttribute()"/>
+      <menuitem label="Delete" oncommand="viewer.cmdDeleteSelectedAttribute()"/>
     </popup>
   </popupset>
 
@@ -71,8 +71,8 @@
     
     <treehead>
       <treerow>
-        <treecell class="treecell-header" value="Name"/>
-        <treecell class="treecell-header" value="Value"/>
+        <treecell class="treecell-header" label="Name"/>
+        <treecell class="treecell-header" label="Value"/>
       </treerow>
     </treehead>
 
@@ -94,8 +94,8 @@
           <treechildren>
             <treeitem uri="?node">
               <treerow>
-                <treecell value="?nodeName" ins-type="name"/>
-                <treecell value="?nodeValue" class="treecell-editable" ins-type="value"/>
+                <treecell label="?nodeName" ins-type="name"/>
+                <treecell label="?nodeValue" class="treecell-editable" ins-type="value"/>
               </treerow>
             </treeitem>
           </treechildren>

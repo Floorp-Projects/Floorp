@@ -33,33 +33,33 @@
 <script type="text/javascript" src="xulTxTools.js" />
 <script type="text/javascript" src="DumpDOM.js" />
 <box align="horizontal">
-  <button value="load tests" oncommand="refresh_xalan()" />
-  <button value="check all" oncommand="check(true)" />
-  <button value="uncheck all" oncommand="check(false)" />
-  <button value="invert checks" oncommand="invert_check()" />
-  <button value="hide checked" oncommand="hide_checked(true)" />
-  <button value="hide unchecked" oncommand="hide_checked(false)" />
-  <button value="run checked tests" oncommand="dump_checked()" />
+  <button label="load tests" oncommand="refresh_xalan()" />
+  <button label="check all" oncommand="check(true)" />
+  <button label="uncheck all" oncommand="check(false)" />
+  <button label="invert checks" oncommand="invert_check()" />
+  <button label="hide checked" oncommand="hide_checked(true)" />
+  <button label="hide unchecked" oncommand="hide_checked(false)" />
+  <button label="run checked tests" oncommand="dump_checked()" />
 </box>
 <box align="horizontal">
   <text value="Xalan base directory: " class="head" />
   <textbox id="xalan_base" persist="value"/>
-  <button value="browse..." oncommand="browse_base_dir()" />
+  <button label="browse..." oncommand="browse_base_dir()" />
 </box>
 <box align="horizontal">
-<titledbox align="horizontal"><title value="search" />
-  <button value="Search for " oncommand="select()"/>
+<titledbox align="horizontal"><label value="search" />
+  <button label="Search for " oncommand="select()"/>
   <textbox style="width: 10em;" id="search-name" persist="value" /><text value=" in " />
   <menulist id="search-field" persist="data">
     <menupopup>
-      <menuitem data="1" value="Name" />
-      <menuitem data="2" value="Purpose" />
-      <menuitem data="3" value="Comment" />
+      <menuitem value="1" label="Name" />
+      <menuitem value="2" label="Purpose" />
+      <menuitem value="3" label="Comment" />
     </menupopup>
   </menulist>
 </titledbox>
 <spring flex="1" /></box>
-<box align="horizontal"><titledbox align="horizontal"><title value="stats" />
+<box align="horizontal"><titledbox align="horizontal"><label value="stats" />
   <text value="tests run: "/><text id="tests_run" value="0" />
   <text value="  tests passed: "/><text id="tests_passed" value="0"/>
   <text value="  tests failed: "/><text id="tests_failed" value="0"/>
@@ -77,10 +77,10 @@
   
     <rows id="xalan_grid">
       <row flex="1">
-  	<text value=" " class="head"/> 
-  	<text value="Name" class="head"/> 
-  	<text value="Purpose" class="head"/> 
-  	<text value="Comment" class="head"/> 
+    <text value=" " class="head"/> 
+    <text value="Name" class="head"/> 
+    <text value="Purpose" class="head"/> 
+    <text value="Comment" class="head"/> 
       </row> 
     </rows> 
   </grid>

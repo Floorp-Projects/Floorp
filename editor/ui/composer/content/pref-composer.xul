@@ -29,10 +29,10 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/pref-composer.dtd" >
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical" 
-  		  onload="parent.initPanel('chrome://editor/content/pref-composer.xul');">
+        onload="parent.initPanel('chrome://editor/content/pref-composer.xul');">
 
   <!-- We need these for separator "thin" class -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
@@ -50,8 +50,8 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <!-- Recent files menu -->
-	<titledbox orient="vertical">
-    <title value="&recentFiles.title;"/>
+  <titledbox orient="vertical">
+    <label value="&recentFiles.title;"/>
     <box align="horizontal" valign="middle">
       <text value="&documentsInMenu;"/>
       <textbox
@@ -66,41 +66,41 @@
         prefattribute="value"
       />
     </box>
-	</titledbox>
+  </titledbox>
 
 <!-- HTML formatting on output -->
-	<titledbox orient="vertical">
-    <title value="&savingFiles.title;"/>
+  <titledbox orient="vertical">
+    <label value="&savingFiles.title;"/>
     <spring class="spacer"/>
     <radiogroup orient="vertical" autostretch="never"
       id            = "preserveFormatting"
       pref          = "true"
       preftype      = "bool"
       prefstring    = "editor.prettyprint"
-      prefattribute = "data">
+      prefattribute = "value">
       <radio 
         group      = "preserveFormatting"
-        data       = "false"
-        value      = "&preserveExistingFormatting;" 
+        value       = "false"
+        label      = "&preserveExistingFormatting;" 
         accesskey  = "&preserveExistingFormatting.accesskey;"
         tooltip    = "aTooltip"
         tooltiptext= "&preserveExistingFormatting.tooltip;"
       />
       <radio 
         group      = "preserveFormatting" 
-        data       = "true"
-        value      = "&reformat.label;" 
+        value       = "true"
+        label      = "&reformat.label;" 
         accesskey  = "&reformat.accesskey;"
         tooltip    = "aTooltip"
         tooltiptext= "&reformat.tooltip;"
       />
     </radiogroup>
-	</titledbox>
-	
+  </titledbox>
+  
   <titledbox orient="vertical" autostretch="never">
-    <title value="&tableEditing.label;"/>
+    <label value="&tableEditing.label;"/>
     <checkbox 
-      value     = "&maintainTableStructure.label;"
+      label     = "&maintainTableStructure.label;"
       id        = "maintainTableStructure" 
       accesskey = "&maintainStructure.accesskey;"
       tooltip   = "aTooltip" tooltiptext="&maintainTableStructure.tooltip;"
@@ -121,19 +121,19 @@
           pref     = "true"
           preftype = "int"
           prefstring="editor.table.delete_key"
-          prefattribute="data">
-        <radio group="tableDeleteKey" data="0" value="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
-        <radio group="tableDeleteKey" data="1" value="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
+          prefattribute="value">
+        <radio group="tableDeleteKey" value="0" label="&deleteCell.label;" accesskey="&deleteCell.accesskey;"/>
+        <radio group="tableDeleteKey" value="1" label="&deleteContent.label;" accesskey="&deleteContent.accesskey;" />
       </radiogroup>
     </box>
   </titledbox>
 
 <!-- Take out Auto-Save; not supported at this time
-	<titledbox orient="vertical">
-    <title value="&saving;"/>
+  <titledbox orient="vertical">
+    <label value="&saving;"/>
     <box align="horizontal" valign="middle">
       <checkbox 
-        value      = "&AutoSaveCheck;"
+        label      = "&AutoSaveCheck;"
         id         = "shouldAutoSave"
         pref       = "true" 
         preftype   = "bool" 
@@ -154,16 +154,16 @@
       />
       <text value="&minText;" />
     </box>
-	</titledbox>
+  </titledbox>
 -->
 
 <!-- External Editors are not supported at this time
-		<titledbox orient="vertical">
-					<title value="&exterLegend.label;"/> 
+    <titledbox orient="vertical">
+          <label value="&exterLegend.label;"/> 
     <box>
       <checkbox 
         name  = "htmlSourceEditorCheckbox"
-        value = "&htmlSource;"
+        label = "&htmlSource;"
         pref       = "true" 
         preftype   = "int" 
         prefindex  = "0" 
@@ -178,14 +178,14 @@
       <button 
         class = "dialog" 
         name  = ""
-        value = "&chooseButton.label;"
+        label = "&chooseButton.label;"
       />
     </box>
 
     <box>
       <checkbox 
         name  = "htmlImageEditorCheckbox" 
-        value = "&imageeditor;"
+        label = "&imageeditor;"
         pref       = "true" 
         preftype   = "int" 
         prefindex  = "0" 
@@ -198,7 +198,7 @@
         preftype   = "string" 
         prefstring = "editor.image_editor"
       />
-      <button class="dialog" value="&chooseButton.label;" />
+      <button class="dialog" label="&chooseButton.label;" />
     </box> 
 
   </titledbox>

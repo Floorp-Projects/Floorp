@@ -5,54 +5,54 @@
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/custreceipt.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		title="&window.title;"
-		class="dialog"
-		align="vertical">
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    title="&window.title;"
+    class="dialog"
+    align="vertical">
 
-	<box align="vertical" style="width:100%">
-	<box orient="horizontal" style="width:100%">
-			<spring flex="1"/>
+  <box align="vertical" style="width:100%">
+  <box orient="horizontal" style="width:100%">
+      <spring flex="1"/>
      <text class="label" value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" for="NotInToCc"/>
       <menulist id="NotInToCc" pref="true" preftype="int" prefstring="mail.mdn.report.not_in_to_cc"
-                prefattribute="data">
+                prefattribute="value">
         <menupopup>
-          <menuitem data="0" value="&neverSend.label;"/>
-          <menuitem data="1" value="&automatically.label;"/>
-          <menuitem data="2" value="&askMe.label;"/>
+          <menuitem value="0" label="&neverSend.label;"/>
+          <menuitem value="1" label="&automatically.label;"/>
+          <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-	</box>
+  </box>
 
-	<box orient="horizontal" style="width:100%">
-			<spring flex="1"/>
+  <box orient="horizontal" style="width:100%">
+      <spring flex="1"/>
       <text class="label" value="&outside.label;" accesskey="&outside.accesskey;" for="OutsideDomain"/>
       <menulist id="OutsideDomain" pref="true" preftype="int" prefstring="mail.mdn.report.outside_domain"
-                prefattribute="data">
+                prefattribute="value">
         <menupopup>
-          <menuitem data="0" value="&neverSend.label;"/>
-          <menuitem data="1" value="&automatically.label;"/>
-          <menuitem data="2" value="&askMe.label;"/>
+          <menuitem value="0" label="&neverSend.label;"/>
+          <menuitem value="1" label="&automatically.label;"/>
+          <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-	</box>
+  </box>
 
-	<box orient="horizontal" style="width:100%">
- 			<spring flex="1"/>
+  <box orient="horizontal" style="width:100%">
+      <spring flex="1"/>
      <text class="label" value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
       <menulist id="Other" pref="true" preftype="int" prefstring="mail.mdn.report.other"
-                prefattribute="data">
+                prefattribute="value">
         <menupopup>
-          <menuitem data="0" value="&neverSend.label;"/>
-          <menuitem data="1" value="&automatically.label;"/>
-          <menuitem data="2" value="&askMe.label;"/>
+          <menuitem value="0" label="&neverSend.label;"/>
+          <menuitem value="1" label="&automatically.label;"/>
+          <menuitem value="2" label="&askMe.label;"/>
         </menupopup>
       </menulist>
-	</box>
-	</box>
+  </box>
+  </box>
 
-	<spring style="height:1em"/>
-		
-	<box id="okCancelButtons"/>
+  <spring style="height:1em"/>
+    
+  <box id="okCancelButtons"/>
 
 </window>

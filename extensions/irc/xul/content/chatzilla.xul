@@ -63,20 +63,20 @@
 
 <popupset>
     <popup id="userlistPopup" oncommand="onUserListPopupClick(event)">
-        <menuitem value="&op.value;" accesskey="&op.accesskey;" code="/op" />
-        <menuitem value="&deop.value;" accesskey="&deop.accesskey;"
+        <menuitem label="&op.value;" accesskey="&op.accesskey;" code="/op" />
+        <menuitem label="&deop.value;" accesskey="&deop.accesskey;"
           code="/deop" />
-        <menuitem value="&voice.value;" accesskey="&voice.accesskey;"
+        <menuitem label="&voice.value;" accesskey="&voice.accesskey;"
           code="/voice" />
-        <menuitem value="&devoice.value;" accesskey="&devoice.accesskey;"
-          code="/devoice" />	
-        <menuitem value="&kick.value;" accesskey="&kick.accesskey;"
+        <menuitem label="&devoice.value;" accesskey="&devoice.accesskey;"
+          code="/devoice" />  
+        <menuitem label="&kick.value;" accesskey="&kick.accesskey;"
           code="/kick" />
 <!--
-		<menuitem value="&kick2.value;" accesskey="&kick2.accesskey;"
+    <menuitem label="&kick2.value;" accesskey="&kick2.accesskey;"
           code="/kick" />
  -->
-		<menuitem value="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
+    <menuitem label="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
     </popup>
 </popupset>
 
@@ -84,31 +84,31 @@
   <menubar id="main-menubar" persist="collapsed">
     <menu id="menu_File">
       <menupopup id="menu_FilePopup">
-        <menu value="Options">
+        <menu label="Options">
           <menupopup>
 
-            <menuitem id="menu-view-toolbar" value="Show Toolbar" 
+            <menuitem id="menu-view-toolbar" label="Show Toolbar" 
               type="checkbox" oncommand="onToggleVisibility('toolbar');"/>
-            <menuitem id="menu-view-info" value="Show Userlist" 
+            <menuitem id="menu-view-info" label="Show Userlist" 
               type="checkbox" oncommand="onToggleVisibility('info');"/>
-            <menuitem id="menu-view-status" value="Show Statusbar" 
+            <menuitem id="menu-view-status" label="Show Statusbar" 
               type="checkbox" oncommand="onToggleVisibility('status');"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-munger" value="Enable Smileys"
+            <menuitem id="menu-munger" label="Enable Smileys"
               oncommand="onToggleMunger()" type="checkbox"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-dmessages" value="Debug Messages"
+            <menuitem id="menu-dmessages" label="Debug Messages"
               oncommand="onToggleTraceHook()" type="checkbox"/>
 
             <menuseparator/>
 
-            <menuitem id="menu-settings-save-now" value="Save Settings Now"
+            <menuitem id="menu-settings-save-now" label="Save Settings Now"
               oncommand="writeIRCPrefs()"/>
-            <menuitem id="menu-settings-autosave" value="Save Settings On Exit"
+            <menuitem id="menu-settings-autosave" label="Save Settings On Exit"
               oncommand="onToggleSaveOnExit()" type="checkbox"/>
 
           </menupopup>
@@ -118,14 +118,14 @@
         <menuitem id="menu_close"/>
       </menupopup>
     </menu>
-    <menu value="View">
+    <menu label="View">
       <menupopup>
 
        <!-- hide vs delete nuances are too vague
-        <menuitem value="Hide" oncommand="onHideCurrentView();"/>
+        <menuitem label="Hide" oncommand="onHideCurrentView();"/>
        -->
-        <menuitem value="Clear this view" oncommand="onClearCurrentView();"/>
-        <menuitem value="Delete this view" oncommand="onDeleteCurrentView();"/>
+        <menuitem label="Clear this view" oncommand="onClearCurrentView();"/>
+        <menuitem label="Delete this view" oncommand="onDeleteCurrentView();"/>
 
       </menupopup>
     </menu>
@@ -179,15 +179,15 @@
             <treerow crop="right">
               <treecell id="usercol-op"
                 resource="http://home.netscape.com/NC-irc#op"
-                class="treecell-header sortDirectionIndicator" value="O"
+                class="treecell-header sortDirectionIndicator" label="O"
                 onclick="return onSortCol('usercol-op');"/>
               <treecell id="usercol-voice"
                 resource="http://home.netscape.com/NC-irc#voice"
-                class="treecell-header sortDirectionIndicator" value="V"
+                class="treecell-header sortDirectionIndicator" label="V"
                 onclick="return onSortCol('usercol-voice');"/>
               <treecell id="usercol-nick"
                 resource="http://home.netscape.com/NC-irc#nick"
-                class="treecell-header sortDirectionIndicator" value="Nick"
+                class="treecell-header sortDirectionIndicator" label="Nick"
                 onclick="return onSortCol('usercol-nick');"/>
             </treerow>
           </treehead>

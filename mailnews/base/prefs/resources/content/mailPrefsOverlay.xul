@@ -30,7 +30,7 @@
   <!-- javascript toggle for mail/news -->
   <titledbox id="advancedSettings">
     <checkbox id="javascriptAllowMailNews" position="3"
-              value="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
+              label="&enbJsCheckMailNews.label;" accesskey="&enbJsCheckMailNews.accesskey;"
               pref="true" preftype="bool" prefstring="javascript.allow.mailnews"
               prefattribute="checked"/>
   </titledbox>
@@ -38,7 +38,7 @@
   <!-- mail startup toggle -->
   <titledbox id="generalStartupPreferences">           
     <checkbox id="generalStartupMail" wsm_persist="true" position="3"
-              value="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
+              label="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </titledbox>
@@ -47,27 +47,27 @@
   <treechildren id="panelChildren">
     <treeitem container="true" open="true" id="mailnews" position="3">
       <treerow>       
-        <treecell class="treecell-indent" url="chrome://messenger/content/pref-mailnews.xul" value="&mail.label;"/> 
+        <treecell class="treecell-indent" url="chrome://messenger/content/pref-mailnews.xul" label="&mail.label;"/> 
       </treerow>
       <treechildren id="messengerChildren">
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/pref-viewing_messages.xul" value="&viewingMessages.label;"/> 
+            <treecell class="treecell-indent" url="chrome://messenger/content/pref-viewing_messages.xul" label="&viewingMessages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" value="&composingMessages.label;"/> 
+            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-composing_messages.xul" label="&composingMessages.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-formatting.xul" value="&format.label;"/> 
+            <treecell class="treecell-indent" url="chrome://messenger/content/messengercompose/pref-formatting.xul" label="&format.label;"/> 
           </treerow>
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" value="&address.label;"/> 
+            <treecell class="treecell-indent" url="chrome://messenger/content/addressbook/pref-addressing.xul" label="&address.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>

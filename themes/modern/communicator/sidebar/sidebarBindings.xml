@@ -8,7 +8,7 @@
     <content>
       <xul:image class="box-texttab-left"/>
       <xul:box class="box-texttab-text-container" autostretch="never" flex="1">
-        <xul:text class="box-texttab-text" inherits="value" crop="right"/>
+        <xul:text class="box-texttab-text" inherits="value=label" crop="right"/>
       </xul:box>
       <xul:image class="box-texttab-right"/>
     </content>

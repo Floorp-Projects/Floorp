@@ -34,16 +34,16 @@ Rights Reserved.
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns:nc="http://home.netscape.com/NC-rdf#"
-		    title="&messengerWindow.title;"
+        title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
         titlemenuseparator="&titleSeperator.label;"
-		    onload="OnLoadMessageWindow()"
-		    onunload="OnUnloadMessageWindow()"
-		    align="vertical"
+        onload="OnLoadMessageWindow()"
+        onunload="OnUnloadMessageWindow()"
+        align="vertical"
         width="750"
         height="500"
         persist="width height screenX screenY sizemode"
-		    windowtype="mail:messageWindow">
+        windowtype="mail:messageWindow">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_brand" src="chrome://global/locale/brand.properties"/>
@@ -77,40 +77,40 @@ Rights Reserved.
     <commandset id="mailToolbarItems"/>
   </commands>
 
-	<stringbundleset id="stringbundleset"/>
+  <stringbundleset id="stringbundleset"/>
 
-	<broadcasterset id="broadcasterset"/>
-	<keyset id="keyset"/>
+  <broadcasterset id="broadcasterset"/>
+  <keyset id="keyset"/>
 
-	<popupset>
-		<popup id="emailAddressPopup" popupanchor="bottomleft">
-			<menuitem value="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
-			<menuitem value="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
-		</popup>
+  <popupset>
+    <popup id="emailAddressPopup" popupanchor="bottomleft">
+      <menuitem label="&AddToAddressBook.label;" oncommand="AddNodeToAddressBook(document.popupNode)"/>
+      <menuitem label="&SendMailTo.label;" oncommand="SendMailToNode(document.popupNode)"/>
+    </popup>
     
     <popup id="allHeadersPopup"  oncreate="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">
-		  <box id="allHeadersPopupContainer"/>
-	  </popup>
+      <box id="allHeadersPopupContainer"/>
+    </popup>
 
-		<popup id="messagePaneContext"/>
-	</popupset>
-	<popupset id="aTooltipSet"/>
+    <popup id="messagePaneContext"/>
+  </popupset>
+  <popupset id="aTooltipSet"/>
 
 
-	<toolbox id="mailToolbarToolbox">
+  <toolbox id="mailToolbarToolbox">
     <menubar id="mailMenubar"/>
   </toolbox>
   
-	<!-- msg header view -->
-	<box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
-		<toolbox id="msgHeaderView"/>
+  <!-- msg header view -->
+  <box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
+    <toolbox id="msgHeaderView"/>
 
-		<!-- message view -->
-		<browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
-	</box>	
+    <!-- message view -->
+    <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
+  </box>  
 
 
-	<statusbar id="status-bar" class="chromeclass-status"/>
-	<box id="taskbar" class="toolbox-bottom"/>
+  <statusbar id="status-bar" class="chromeclass-status"/>
+  <box id="taskbar" class="toolbox-bottom"/>
 
 </window>

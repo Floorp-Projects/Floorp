@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -26,7 +26,7 @@ var gMessengerBundle;
 function goUpdateMailMenuItems(commandset)
 {
 //  dump("Updating commands for " + commandset.id + "\n");
-    
+
   for (var i = 0; i < commandset.childNodes.length; i++)
   {
     var commandID = commandset.childNodes[i].getAttribute("id");
@@ -62,7 +62,7 @@ function file_attachments()
         return false;
     if (apChild.childNodes.length){
         if ( amParent.childNodes.length )
-            amParent.removeChild(amParent.childNodes[0]); 
+            amParent.removeChild(amParent.childNodes[0]);
         amParent.appendChild(apChild);
         amParent.removeAttribute('hidden');
     }
@@ -282,7 +282,7 @@ function GetMessagesForInboxOnServer(server)
     GetNewMessages(folders, compositeDataSource);
 }
 
-function MsgGetMessage() 
+function MsgGetMessage()
 {
     var folders = GetSelectedMsgFolders();
     var compositeDataSource = GetCompositeDataSource("GetNewMessages");
@@ -292,21 +292,21 @@ function MsgGetMessage()
 function MsgGetMessagesForAllServers(defaultServer)
 {
     // now log into any server
-    try 
+    try
     {
         var allServers = accountManager.allServers;
-     
-        for (var i=0;i<allServers.Count();i++) 
+
+        for (var i=0;i<allServers.Count();i++)
         {
             var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
             var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-            if (protocolinfo.canLoginAtStartUp && currentServer.loginAtStartUp) 
+            if (protocolinfo.canLoginAtStartUp && currentServer.loginAtStartUp)
             {
-                if (defaultServer && defaultServer.equals(currentServer)) 
+                if (defaultServer && defaultServer.equals(currentServer))
                 {
                     dump(currentServer.serverURI + "...skipping, already opened\n");
                 }
-                else 
+                else
                 {
                     // Check to see if there are new messages on the server
                     currentServer.PerformBiff();
@@ -314,44 +314,44 @@ function MsgGetMessagesForAllServers(defaultServer)
             }
         }
     }
-    catch(ex) 
+    catch(ex)
     {
         dump(ex + "\n");
     }
 }
 
-/** 
+/**
   * Get messages for all those accounts which have the capability
   * of getting messages and have session password available i.e.,
-  * curretnly logged in accounts. 
-  */  
+  * curretnly logged in accounts.
+  */
 function MsgGetMessagesForAllAuthenticatedAccounts()
 {
-    try 
+    try
     {
         var allServers = accountManager.allServers;
-     
-        for (var i=0;i<allServers.Count();i++) 
+
+        for (var i=0;i<allServers.Count();i++)
         {
             var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-            var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + 
+            var protocolinfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" +
                                  currentServer.type].getService(Components.interfaces.nsIMsgProtocolInfo);
-            if (protocolinfo.canGetMessages && currentServer.password) 
+            if (protocolinfo.canGetMessages && currentServer.password)
             {
                 // Get new messages now
                 GetMessagesForInboxOnServer(currentServer);
             }
         }
     }
-    catch(ex) 
+    catch(ex)
     {
         dump(ex + "\n");
     }
 }
 
-/** 
+/**
   * Get messages for the account selected from Menu dropdowns.
-  */  
+  */
 function MsgGetMessagesForAccount(aEvent)
 {
     if (!aEvent)
@@ -420,7 +420,7 @@ function MsgMoveMessage(destFolder)
     destUri = destFolder.getAttribute('id');
     destResource = RDF.GetResource(destUri);
     destMsgFolder = destResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-    
+
     // we don't move news messages, we copy them
     if (isNewsURI(gDBView.msgFolder.URI)) {
       gDBView.doCommandWithFolder(nsMsgViewCommandType.copyMessages, destMsgFolder);
@@ -428,11 +428,11 @@ function MsgMoveMessage(destFolder)
     else {
       SetNextMessageAfterDelete();
       gDBView.doCommandWithFolder(nsMsgViewCommandType.moveMessages, destMsgFolder);
-    } 
+    }
   }
   catch (ex) {
     dump("MsgMoveMessage failed: " + ex + "\n");
-  }   
+  }
 }
 
 function MsgNewMessage(event)
@@ -444,7 +444,7 @@ function MsgNewMessage(event)
     ComposeMessage(msgComposeType.New, msgComposeFormat.OppositeOfDefault, loadedFolder, messageArray);
   else
     ComposeMessage(msgComposeType.New, msgComposeFormat.Default, loadedFolder, messageArray);
-} 
+}
 
 function MsgReplyMessage(event)
 {
@@ -453,7 +453,7 @@ function MsgReplyMessage(event)
 
   if(server && server.type == "nntp")
     MsgReplyGroup(event);
-  else 
+  else
     MsgReplySender(event);
 }
 
@@ -479,7 +479,7 @@ function MsgReplyGroup(event)
     ComposeMessage(msgComposeType.ReplyToGroup, msgComposeFormat.Default, loadedFolder, messageArray);
 }
 
-function MsgReplyToAllMessage(event) 
+function MsgReplyToAllMessage(event)
 {
   var loadedFolder = GetLoadedMsgFolder();
   var messageArray = GetSelectedMessages();
@@ -496,7 +496,7 @@ function MsgForwardMessage(event)
   try {
       forwardType = pref.GetIntPref("mail.forward_message_mode");
   } catch (e) {dump ("failed to retrieve pref mail.forward_message_mode");}
-  
+
   if (forwardType == 0)
       MsgForwardAsAttachment(event);
   else
@@ -576,10 +576,10 @@ function getDestinationFolder(preselectedFolder, server)
     var destinationFolder = null;
 
     var isCreateSubfolders = preselectedFolder.canCreateSubfolders;
-    if (!isCreateSubfolders) 
+    if (!isCreateSubfolders)
     {
         var tmpDestFolder = server.RootFolder;
-        destinationFolder 
+        destinationFolder
           = tmpDestFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
         var verifyCreateSubfolders = null;
@@ -588,13 +588,13 @@ function getDestinationFolder(preselectedFolder, server)
 
         // in case the server cannot have subfolders,
         // get default account and set its incoming server as parent folder
-        if (!verifyCreateSubfolders) 
+        if (!verifyCreateSubfolders)
         {
             try {
                 var account = accountManager.defaultAccount;
                 var defaultServer = account.incomingServer;
                 var tmpDefaultFolder = defaultServer.RootFolder;
-                var defaultFolder 
+                var defaultFolder
                   = tmpDefaultFolder.QueryInterface(Components.interfaces.nsIMsgFolder);
 
                 var checkCreateSubfolders = null;
@@ -632,7 +632,7 @@ function ConfirmUnsubscribe(folder)
 
     var commonDialogService = nsJSComponentManager.getService("@mozilla.org/appshell/commonDialogs;1",
                                                                     "nsICommonDialogs");
-    return commonDialogService.Confirm(window, titleMsg, dialogMsg);    
+    return commonDialogService.Confirm(window, titleMsg, dialogMsg);
 }
 
 function MsgUnsubscribe()
@@ -643,7 +643,7 @@ function MsgUnsubscribe()
     }
 }
 
-function MsgSaveAsFile() 
+function MsgSaveAsFile()
 {
     if (gDBView.numSelected == 1) {
         SaveAsFile(gDBView.URIForFirstSelectedMessage);
@@ -651,7 +651,7 @@ function MsgSaveAsFile()
 }
 
 
-function MsgSaveAsTemplate() 
+function MsgSaveAsTemplate()
 {
     var folder = GetLoadedMsgFolder();
     if (gDBView.numSelected == 1) {
@@ -671,7 +671,7 @@ function MsgOpenNewWindowForFolder(folderUri)
     if(folderUri)
     {
         var layoutType = pref.GetIntPref("mail.pane_config");
-        
+
         if(layoutType == 0)
             window.openDialog( "chrome://messenger/content/messenger.xul", "_blank", "chrome,all,dialog=no", folderUri );
         else
@@ -716,7 +716,7 @@ function MsgOpenNewWindowForMessage(messageUri, folderUri)
     }
 }
 
-function CloseMailWindow() 
+function CloseMailWindow()
 {
     //dump("\nClose from XUL\nDo something...\n");
     window.close();
@@ -749,12 +749,12 @@ function MsgMarkAllRead()
 
 function MsgDownloadFlagged()
 {
-	gDBView.doCommand(nsMsgViewCommandType.downloadFlaggedForOffline);
+  gDBView.doCommand(nsMsgViewCommandType.downloadFlaggedForOffline);
 }
 
 function MsgDownloadSelected()
 {
-	gDBView.doCommand(nsMsgViewCommandType.downloadSelectedForOffline);
+  gDBView.doCommand(nsMsgViewCommandType.downloadSelectedForOffline);
 }
 
 function MsgMarkThreadAsRead()
@@ -770,56 +770,56 @@ function MsgMarkThreadAsRead()
     }
 }
 
-function MsgViewPageSource() 
+function MsgViewPageSource()
 {
     var messages = GetSelectedMessages();
     ViewPageSource(messages);
 }
 
-function MsgFind() 
+function MsgFind()
 {
     messenger.find();
 }
 
-function MsgFindAgain() 
+function MsgFindAgain()
 {
     messenger.findAgain();
 }
 
-function MsgSearchMessages() 
+function MsgSearchMessages()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
     window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome,resizable", { folder: preselectedFolder });
 }
 
-function MsgFilters() 
+function MsgFilters()
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
     window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome,resizable", { folder: preselectedFolder });
 }
 
-function MsgViewAllHeaders() 
+function MsgViewAllHeaders()
 {
     pref.SetIntPref("mail.show_headers",2);
     MsgReload();
     return true;
 }
 
-function MsgViewNormalHeaders() 
+function MsgViewNormalHeaders()
 {
     pref.SetIntPref("mail.show_headers",1);
     MsgReload();
     return true;
 }
 
-function MsgViewBriefHeaders() 
+function MsgViewBriefHeaders()
 {
     pref.SetIntPref("mail.show_headers",0);
     MsgReload();
     return true;
 }
 
-function MsgReload() 
+function MsgReload()
 {
     ReloadMessage();
 }
@@ -829,7 +829,7 @@ function MsgStop()
     StopUrls();
 }
 
-function MsgSendUnsentMsg() 
+function MsgSendUnsentMsg()
 {
     var folder = GetFirstSelectedMsgFolder();
     if(folder) {
@@ -845,7 +845,7 @@ function PrintEnginePrint()
     if (numMessages == 0) {
         dump("PrintEnginePrint(): No messages selected.\n");
         return false;
-    }  
+    }
 
     printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
                                                         "",
@@ -860,14 +860,14 @@ function IsMailFolderSelected()
     var numFolders = selectedFolders.length;
     if(numFolders !=1)
         return false;
-        
+
     var folder = selectedFolders[0];
     if (!folder)
         return false;
-    
+
     var server = folder.server;
     var serverType = server.type;
-    
+
     if((serverType == "nntp"))
         return false;
     else return true;
@@ -879,21 +879,21 @@ function IsGetNewMessagesEnabled()
     var numFolders = selectedFolders.length;
     if(numFolders !=1)
         return false;
-        
+
     var folder = selectedFolders[0];
     if (!folder)
         return false;
-    
+
     var server = folder.server;
     var isServer = folder.isServer;
     var serverType = server.type;
-    
+
     if(isServer && (serverType == "nntp"))
         return false;
     else if(serverType == "none")
         return false;
     else
-        return true;    
+        return true;
 }
 
 function IsGetNextNMessagesEnabled()
@@ -906,16 +906,16 @@ function IsGetNextNMessagesEnabled()
     var folder = selectedFolders[0];
     if (!folder)
         return false;
-   
+
     var server = folder.server;
     var serverType = server.type;
-   
+
     var menuItem = document.getElementById("menu_getnextnmsg");
     if((serverType == "nntp")) {
         var newsServer = server.QueryInterface(Components.interfaces.nsINntpIncomingServer);
-        var menuValue = gMessengerBundle.getFormattedString("getNextNMessages",
+        var menuLabel = gMessengerBundle.getFormattedString("getNextNMessages",
                                                             [ newsServer.maxArticles ]);
-        menuItem.setAttribute("value",menuValue);
+        menuItem.setAttribute("label",menuLabel);
         menuItem.setAttribute("hidden","false");
         return true;
     }
@@ -940,7 +940,7 @@ function IsCompactFolderEnabled()
         return false;
 
     var folder = selectedFolders[0];
-    if (!folder) 
+    if (!folder)
         return false;
 
     return (folder.getAttribute('CanCompact') == "true");
@@ -959,7 +959,7 @@ function SetUpToolbarButtons(uri)
 
     if(!gMarkButton) gMarkButton = document.getElementById("button-mark");
     if(!gDeleteButton) gDeleteButton = document.getElementById("button-delete");
-    
+
     var buttonToHide = null;
     var buttonToShow = null;
 

@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Ben Goodger
  */
 
@@ -59,7 +59,7 @@ var gone_i                = "";
 var bundle                = null;
 // CHANGE THIS WHEN MOVING FILES - strings localization file!
 var JS_STRINGS_FILE       = "chrome://communicator/locale/wallet/CookieViewer.properties";
-    
+
 // function : <CookieViewer.js>::Startup();
 // purpose  : initialises the cookie viewer dialog
 function Startup()
@@ -67,7 +67,7 @@ function Startup()
   // xpconnect to cookieviewer interface
   cookieviewer = Components.classes["@mozilla.org/cookieviewer/cookieviewer-world;1"].createInstance();
   cookieviewer = cookieviewer.QueryInterface(Components.interfaces.nsICookieViewer);
-  // intialise string bundle for 
+  // intialise string bundle for
   bundle = srGetStrBundle(JS_STRINGS_FILE);
 
   // install imageblocker tab if instructed to do so by the "imageblocker.enabled" pref
@@ -109,7 +109,7 @@ function Startup()
     pref = null;
   }
 
- 
+
   loadCookies();
   loadPermissions();
   loadImages();
@@ -136,7 +136,7 @@ function CreateCookieList()
     cookies[count].secure     = cookieList[i+6];
     cookies[count].expire     = cookieList[i+7];
     count++;
-  }  
+  }
 }
 
 // function : <CookieViewer.js>::Cookie();
@@ -168,7 +168,7 @@ function loadCookies()
     var domain = cookies[i].domain;
     if(domain.charAt(0) == ".")   // get rid of the ugly dot on the start of some domains
       domain = domain.substring(1,domain.length);
-    AddItem("cookielist", [domain,cookies[i].name], "tree_", cookies[i].number); 
+    AddItem("cookielist", [domain,cookies[i].name], "tree_", cookies[i].number);
   }
   if (cookies.length == 0) {
     document.getElementById("removeAllCookies").setAttribute("disabled","true");
@@ -177,7 +177,7 @@ function loadCookies()
 
 // function : <CookieViewer.js>::ViewSelectedCookie();
 // purpose  : displays information about the selected cookie in the info fieldset
-function ViewCookieSelected( e ) 
+function ViewCookieSelected( e )
 {
   var cookie = null;
   var cookietree = document.getElementById("cookietree");
@@ -188,10 +188,10 @@ function ViewCookieSelected( e )
     selItemsMax = true;
   if( cookietree.selectedItems.length )
     document.getElementById("removeCookies").removeAttribute("disabled","true");
-    
+
   if( ( e.type == "keypress" || e.type == "select" ) && e.target.selectedItems.length )
     cookie = cookietree.selectedItems[0];
-  if( e.type == "click" ) 
+  if( e.type == "click" )
     cookie = e.target.parentNode.parentNode;
 
   if( !cookie || cookie.getAttribute("id").indexOf("tree_") == -1)
@@ -203,7 +203,7 @@ function ViewCookieSelected( e )
       break;
     }
   }
-  var props = [cookies[idx].number, cookies[idx].name, cookies[idx].value, 
+  var props = [cookies[idx].number, cookies[idx].name, cookies[idx].value,
                cookies[idx].domaintype, cookies[idx].domain, cookies[idx].path,
                cookies[idx].secure, cookies[idx].expire];
 
@@ -213,7 +213,7 @@ function ViewCookieSelected( e )
   {
     if(i == 3) {
       var dtypecell = document.getElementById("ifl_domaintype");
-      dtypecell.setAttribute("value", cookies[idx].domaintype+":");
+      dtypecell.setAttribute("label", cookies[idx].domaintype+":");
       continue;
     }
     var field = document.getElementById(rows[i]);
@@ -233,10 +233,10 @@ function DeleteCookieSelected() {
   gone_c += DeleteItemSelected("cookietree", "tree_", "cookielist");
   // set fields
   rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(k = 0; k < rows.length; k++) 
+  for(k = 0; k < rows.length; k++)
   {
     var row = document.getElementById(rows[k]);
-    row.setAttribute("value","");
+    row.setAttribute("label","");
   }
   if( !document.getElementById("cookietree").selectedItems.length ) {
     if( !document.getElementById("removeCookies").disabled ) {
@@ -255,10 +255,10 @@ function DeleteAllCookies() {
   gone_c += DeleteAllItems(cookies.length, "tree_", "cookielist");
   // set fields
   var rows = ["ifl_name","ifl_value","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
-  for(var k = 0; k < rows.length; k++) 
+  for(var k = 0; k < rows.length; k++)
   {
     var row = document.getElementById(rows[k]);
-    row.setAttribute("value","");
+    row.setAttribute("label","");
   }
   if( !document.getElementById("removeCookies").disabled ) {
     document.getElementById("removeCookies").setAttribute("disabled", "true")
@@ -286,7 +286,7 @@ function HandleKeyPress( e )
 // will restore deleted cookies when I get around to filling it in.
 function RestoreCookies()
 {
-  // todo  
+  // todo
 }
 
 /*** =================== PERMISSIONS CODE =================== ***/
@@ -304,7 +304,7 @@ function CreatePermissionList()
     permissions[count].type       = permStr.substring(0,1);
     permissions[count].domain     = permStr.substring(1,permStr.length);
     count++;
-  }  
+  }
 }
 
 // function : <CookieViewer.js>::Permission();
@@ -334,7 +334,7 @@ function loadPermissions()
     if(permissions[i].type == "+")
       contentStr = bundle.GetStringFromName("can");
     else if(permissions[i].type == "-")
-      contentStr = bundle.GetStringFromName("cannot");    
+      contentStr = bundle.GetStringFromName("cannot");
     AddItem("permissionslist",[domain,contentStr],"permtree_",permissions[i].number)
   }
   if (permissions.length == 0) {
@@ -387,7 +387,7 @@ function CreateImageList()
     images[count].type       = imgStr.substring(0,1);
     images[count].domain     = imgStr.substring(1,imgStr.length);
     count++;
-  }  
+  }
 }
 
 // function : <CookieViewer.js>::Image();
@@ -410,12 +410,12 @@ function loadImages()
   CreateImageList();   // builds an object array from imagestream
   for(var i = 0; i < images.length; i++)
   {
-   var contentStr; 
+   var contentStr;
    var domain = images[i].domain;
     if(images[i].type == "+")
       contentStr = bundle.GetStringFromName("canImages");
     else if(images[i].type == "-")
-      contentStr = bundle.GetStringFromName("cannotImages");    
+      contentStr = bundle.GetStringFromName("cannotImages");
     AddItem("imageslist",[domain,contentStr],"imgtree_",images[i].number)
   }
   if (images.length == 0) {
@@ -458,7 +458,7 @@ function DeleteAllImages() {
 // function : <CookieViewer.js>::doOKButton();
 // purpose  : saves the changed settings and closes the dialog.
 function onOK(){
-  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i + 
+  var result = "|goneC|" + gone_c + "|goneP|" + gone_p  + "|goneI|" + gone_i +
                "|block|" + document.getElementById("checkbox").checked +"|";
   cookieviewer.SetValue(result, window);
   return true;
@@ -477,7 +477,7 @@ function AddItem(children,cells,prefix,idfier)
   {
     var cell  = document.createElement("treecell");
     cell.setAttribute("class", "propertylist");
-    cell.setAttribute("value", cells[i])
+    cell.setAttribute("label", cells[i])
     row.appendChild(cell);
   }
   item.appendChild(row);
@@ -493,14 +493,14 @@ function DeleteItemSelected(tree, prefix, kids) {
   var rv = "";
   var cookietree = document.getElementById(tree);
   var selitems = cookietree.selectedItems;
-  for(i = 0; i < selitems.length; i++) 
-  { 
+  for(i = 0; i < selitems.length; i++)
+  {
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
     var itemid = parseInt(selitems[i].getAttribute("id").substring(prefix.length,selitems[i].getAttribute("id").length));
     rv += (itemid + ",");
   }
-  for(i = 0; i < delnarray.length; i++) 
-  { 
+  for(i = 0; i < delnarray.length; i++)
+  {
     document.getElementById(kids).removeChild(delnarray[i]);
   }
   return rv;
@@ -511,8 +511,8 @@ function DeleteItemSelected(tree, prefix, kids) {
 function DeleteAllItems(length, prefix, kids) {
   var delnarray = [];
   var rv = "";
-  for(var i = 0; i < length; i++) 
-  { 
+  for(var i = 0; i < length; i++)
+  {
     if (document.getElementById(prefix+i) != null) {
       document.getElementById(kids).removeChild(document.getElementById(prefix+i));
       rv += (i + ",");

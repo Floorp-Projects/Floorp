@@ -79,10 +79,10 @@ function FillHistoryMenu(aParent, aMenu)
 function executeUrlBarHistoryCommand( aTarget )
   {
     var index = aTarget.getAttribute("index");
-    var value = aTarget.getAttribute("value");
-    if (index != "nothing_available" && value)
+    var label = aTarget.getAttribute("label");
+    if (index != "nothing_available" && label)
       {
-        loadURI(getShortcutOrURI(value));
+        loadURI(getShortcutOrURI(label));
       }
   }
 
@@ -115,23 +115,23 @@ function createUBHistoryMenu( aParent )
 
 function addToUrlbarHistory()
 {
-	var urlToAdd = gURLBar.value;
-	if (!urlToAdd)
-	   return;
-	if (localstore) {
+  var urlToAdd = gURLBar.value;
+  if (!urlToAdd)
+     return;
+  if (localstore) {
        var entries = rdfc.MakeSeq(localstore, rdf.GetResource("nc:urlbar-history"));
        if (!entries)
-          return;       
+          return;
        var elements = entries.GetElements();
        if (!elements)
-          return;         
+          return;
        var index = 0;
        // create the nsIURI objects for comparing the 2 urls
        var uriToAdd = Components.classes["@mozilla.org/network/standard-url;1"]
                             .createInstance(Components.interfaces.nsIURI);
        uriToAdd.spec = urlToAdd;
        var rdfUri = Components.classes["@mozilla.org/network/standard-url;1"]
-                          .createInstance(Components.interfaces.nsIURI); 
+                          .createInstance(Components.interfaces.nsIURI);
        while(elements.hasMoreElements()) {
           entry = elements.getNext();
           if (entry) {
@@ -144,10 +144,10 @@ function addToUrlbarHistory()
                  // Remove it from its current position.
                  // It is inserted to the top after the while loop.
                  entries.RemoveElementAt(index, true);
-                 break;                 
-             }             
-          }    
-       }   // while     
+                 break;
+             }
+          }
+       }   // while
 
        var entry = rdf.GetLiteral(urlToAdd);
        // Otherwise, we've got a new URL in town. Add it!
@@ -155,27 +155,27 @@ function addToUrlbarHistory()
        // Insert it to the beginning of the list.
        entries.InsertElementAt(entry, 1, true);
 
-       // Remove any expired history items so that we don't let 
+       // Remove any expired history items so that we don't let
        // this grow without bound.
        for (index = entries.GetCount(); index > MAX_HISTORY_ITEMS; --index) {
            entries.RemoveElementAt(index, true);
         }  // for
    }  // localstore
 }
- 
-function createMenuItem( aParent, aIndex, aValue)
+
+function createMenuItem( aParent, aIndex, aLabel)
   {
     var menuitem = document.createElement( "menuitem" );
-    menuitem.setAttribute( "value", aValue );
+    menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
     aParent.appendChild( menuitem );
   }
 
-function createCheckboxMenuItem( aParent, aIndex, aValue, aChecked)
+function createCheckboxMenuItem( aParent, aIndex, aLabel, aChecked)
   {
     var menuitem = document.createElement( "menuitem" );
     menuitem.setAttribute( "type", "checkbox" );
-    menuitem.setAttribute( "value", aValue );
+    menuitem.setAttribute( "label", aLabel );
     menuitem.setAttribute( "index", aIndex );
     if (aChecked==true)
       menuitem.setAttribute( "checked", "true" );
@@ -188,7 +188,7 @@ function deleteHistoryItems(aParent)
     for (var i = 0; i < children.length; i++ )
       {
         var index = children[i].getAttribute( "index" );
-        if (index) 		 
+        if (index)
           aParent.removeChild( children[i] );
       }
   }

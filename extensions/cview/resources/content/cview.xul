@@ -73,43 +73,43 @@
 -->
   <popupset>
     <popup id="interfacePopup">
-	  <menuitem value="LXR filename lookup"
+    <menuitem label="LXR filename lookup"
         oncommand="onLXRIFCLookup(event,'find?string=');"/>
-	  <menuitem value="LXR text lookup"
+    <menuitem label="LXR text lookup"
         oncommand="onLXRIFCLookup(event, 'search?string=');"/>
     </popup>
   </popupset>
 
   <toolbox>
     <menubar id="main-menubar">
-      <menu id="view-menu" value="View">
+      <menu id="view-menu" label="View">
         <menupopup>
-          <menu value="Components">
+          <menu label="Components">
             <menupopup>
-              <menuitem id="menu-cmp-show-all" value="All" checked="true"
+              <menuitem id="menu-cmp-show-all" label="All" checked="true"
                 type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
               <menuitem id="menu-cmp-show-contains"
-                value="Containing..." type="checkbox"
+                label="Containing..." type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
               <menuitem id="menu-cmp-show-starts-with"
-                value="Starting with..." type="checkbox"
+                label="Starting with..." type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
             </menupopup>
           </menu>
-          <menu value="Interfaces">
+          <menu label="Interfaces">
             <menupopup>
-              <menuitem id="menu-ifc-show-all" value="All" checked="true"
+              <menuitem id="menu-ifc-show-all" label="All" checked="true"
                 type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
               <menuitem id="menu-ifc-show-contains"
-                value="Containing..." type="checkbox"
+                label="Containing..." type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
               <menuitem id="menu-ifc-show-starts-with"
-                value="Starting with..." type="checkbox"
+                label="Starting with..." type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
               <menuitem id="menu-ifc-show-implemented-by"
-                value="Implemented by selected component" 
+                label="Implemented by selected component" 
                 type="checkbox"
                 oncommand="onChangeDisplayMode(event);"/>
             </menupopup>
@@ -181,11 +181,11 @@
         <treerow>
           <treecell id="componentcol-contractid" flex="1"
             resource="http://www.mozilla.org/NC-xpcom#contractid"
-            class="treecell-header sortDirectionIndicator" value="ContractID"
+            class="treecell-header sortDirectionIndicator" label="ContractID"
             onclick="return onSortCol('componentcol-contractid');"/>
           <treecell id="componentcol-clsid" flex="1"
             resource="http://www.mozilla.org/NC-xpcom#clsid"
-            class="treecell-header sortDirectionIndicator" value="CLSID"
+            class="treecell-header sortDirectionIndicator" label="CLSID"
             onclick="return onSortCol('componentcol-clsid');"/>
         </treerow>
       </treehead>
@@ -236,11 +236,11 @@
         <treerow>
           <treecell id="interfacecol-iname"
             resource="http://www.mozilla.org/NC-xpcom#iname"
-            class="treecell-header sortDirectionIndicator" value="Interface"
+            class="treecell-header sortDirectionIndicator" label="Interface"
             onclick="return onSortCol('interfacecol-iname');"/>
           <treecell id="interfacecol-iid"
             resource="http://www.mozilla.org/NC-xpcom#iid"
-            class="treecell-header sortDirectionIndicator" value="IID"
+            class="treecell-header sortDirectionIndicator" label="IID"
             onclick="return onSortCol('interfacecol-iid');"/>
         </treerow>
       </treehead>

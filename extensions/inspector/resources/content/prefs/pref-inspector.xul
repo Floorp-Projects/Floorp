@@ -32,7 +32,7 @@
 
   <box id="bxGeneralPrefs">
     <titledbox>
-      <title><text value="Element Blinking"/></title>
+      <label value="Element Blinking"/>
       <box orient="vertical">
         <grid>
           <columns>
@@ -74,7 +74,7 @@
           </rows>
         </grid>
         <box autostretch="never">
-          <checkbox id="cbElOn" value="Blink Selected Element"
+          <checkbox id="cbElOn" label="Blink Selected Element"
               pref="true" preftype="bool" prefstring="inspector.blink.on" prefattribute="checked"/>
         </box>
       </box>

@@ -17,7 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *   Ben Goodger <ben@netscape.com> (Original Author, v2.0)
  *   Peter Annema <disttsc@bart.nl>
  *   Blake Ross   <blakeross@telocity.com>
@@ -25,8 +25,8 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Get the two bookmarks utility libraries running, attach controllers, focus
-// tree widget, etc. 
-function Startup() 
+// tree widget, etc.
+function Startup()
 {
   // Create the Bookmarks Shell
   var bookmarksTree = document.getElementById("bookmarksTree");
@@ -36,7 +36,7 @@ function Startup()
   bookmarksTree.controllers.appendController(gBookmarksShell.controller);
 
   const windowNode = document.getElementById("bookmark-window");
-  // If we've been opened with a parameter, root the tree on it. 
+  // If we've been opened with a parameter, root the tree on it.
   if ("arguments" in window && window.arguments[0]) {
     bookmarksTree.setAttribute("ref", window.arguments[0]);
     const krNameArc = gBookmarksShell.RDF.GetResource(NC_NS + "Name");
@@ -48,10 +48,10 @@ function Startup()
   }
   else {
     // There's a better way of doing this, but for the initial revision just
-    // using the root folder in the bookmarks window will do. 
-    // For the next milestone I'd like to move this either into the bookmarks 
+    // using the root folder in the bookmarks window will do.
+    // For the next milestone I'd like to move this either into the bookmarks
     // service or some other higher level datasource so that it can be accessed
-    // from everywhere. 
+    // from everywhere.
     const kRDF = gBookmarksShell.RDF;
     const krNavCenter = kRDF.GetResource("NC:NavCenter");
     const kRDFCUtilsContractID = "@mozilla.org/rdf/container-utils;1";
@@ -70,35 +70,35 @@ function Startup()
     kBMDS.Assert(krBookmarksRoot, krName, klBookmarksRootName, true);
     kNC_NavCenter.AppendElement(krBookmarksRoot);
     windowNode.setAttribute("title", rootfoldername);
-    
+
     /* Blue Sky
     const krHistoryRoot = kRDF.GetResource("NC:HistoryRoot");
     const klHistoryRootName = kRDF.GetLiteral("Browsing History");
     const kHistory = kRDF.GetDataSource("rdf:history");
     kHistory.Assert(krHistoryRoot, krName, klHistoryRootName, true);
     kNC_NavCenter.AppendElement(krHistoryRoot);
-    */    
-    
+    */
+
     const krType = kRDF.GetResource(RDF_NS + "type");
     const krFolderType = kRDF.GetResource(NC_NS + "Folder");
     gBookmarksShell.db.Assert(krNavCenter, krType, krFolderType, true);
   }
-  
+
   // Update to the last sort.
   RefreshSort();
-  
-  // Initialize the tree widget. 
+
+  // Initialize the tree widget.
   var children = document.getElementById("treechildren-bookmarks");
   if (children.firstChild) {
     bookmarksTree.selectItem(children.firstChild);
     children.firstChild.setAttribute("open", "true");
   }
-  
+
   // XXX templates suck ASS
   var node = document.getElementById("NC:BookmarksRoot");
   if (node.localName == "menubutton")
     node.removeAttribute("open");
-  
+
   bookmarksTree.focus();
 }
 
@@ -109,37 +109,37 @@ function Shutdown ()
   win.setAttribute("x", screenX);
   win.setAttribute("y", screenY);
   win.setAttribute("height", outerHeight);
-  win.setAttribute("width", outerWidth);  
+  win.setAttribute("width", outerWidth);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// Class representing the bookmarks window's tree. This subclasses BookmarksTree, 
-// which contains methods generic to any tree-like bookmarks UI representation. 
-// This class contains data specific to the tree in this window, e.g. number of 
-// clicks required to load a bookmark, which differs from other bookmarks tree 
-// implementations (such as sidebar). 
-function BookmarksWindowTree (aCompositeDataSource) 
-{ 
-  // 'db' is used by the base class. 
+// Class representing the bookmarks window's tree. This subclasses BookmarksTree,
+// which contains methods generic to any tree-like bookmarks UI representation.
+// This class contains data specific to the tree in this window, e.g. number of
+// clicks required to load a bookmark, which differs from other bookmarks tree
+// implementations (such as sidebar).
+function BookmarksWindowTree (aCompositeDataSource)
+{
+  // 'db' is used by the base class.
   this.db = aCompositeDataSource;
   this.id = "bookmarksTree";
 }
 
 BookmarksWindowTree.prototype = {
   __proto__: BookmarksTree.prototype,
-  
+
   /////////////////////////////////////////////////////////////////////////////
-  // Number of clicks to activate a bookmark. 
+  // Number of clicks to activate a bookmark.
   openClickCount: 2,
-  
+
   /////////////////////////////////////////////////////////////////////////////
   // Open Bookmark in new window
   openNewWindow: true,
 
   /////////////////////////////////////////////////////////////////////////////
   // Selection change (clicks, key navigation) in the tree update the statusbar
-  // with the current item's URL. 
-  treeSelect: function (aEvent) 
+  // with the current item's URL.
+  treeSelect: function (aEvent)
   {
     document.commandDispatcher.updateCommands("tree-select");
     const kBookmarksTree = document.getElementById("bookmarksTree");
@@ -161,46 +161,46 @@ BookmarksWindowTree.prototype = {
         catch (e) {
         }
       }
-      else 
+      else
         displayValue = LITERAL(this.db, currItem, NC_NS + "URL");
-      if (displayValue.substring(0, 3) == "NC:") 
+      if (displayValue.substring(0, 3) == "NC:")
         displayValue = "";
     }
-    kStatusBar.setAttribute("value", displayValue);
+    kStatusBar.label = displayValue;
   }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 // This will not work properly until drag & drop is asynchronous and allows
-// events to be processed during a drag. 
+// events to be processed during a drag.
 var fileButton = {
   menuIsOpen: { },
-  
+
   onDragOver: function (aEvent, aFlavour, aDragSession)
   {
     const kMBO = Components.interfaces.nsIMenuBoxObject;
     var target = aEvent.target;
     if (!(target.id in fileButton.menuIsOpen))
       fileButton.menuIsOpen[target.id] = false;
-    
+
     if (!fileButton.menuIsOpen[target.id] &&
         (target.localName == "menu" || target.localName == "menubutton")) {
       var mBO = target.boxObject.QueryInterface(kMBO);
       mBO.openMenu(true);
       fileButton.menuIsOpen[target.id] = true;
-    }    
+    }
     if (target.localName == "menu" || target.localName == "menuitem") {
       var parentMenu = target.parentNode.parentNode;
       var parentBO = parentMenu.boxObject.QueryInterface(kMBO);
       parentBO.activeChild = target;
     }
   },
-  
+
   onPopupDestroy: function (aEvent)
   {
     fileButton.menuIsOpen[aEvent.target.parentNode.id] = false;
   },
-  
+
   createPopupHeader: function (aEvent)
   {
     const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -213,9 +213,9 @@ var fileButton = {
       var bo = target.boxObject.QueryInterface(Components.interfaces.nsIMenuBoxObject);
       bo.openMenu(true);
     }
-    if (parentNode.firstChild && 
+    if (parentNode.firstChild &&
         parentNode.firstChild.getAttribute("x-generated") == "true") {
-      // clear out cruft. 
+      // clear out cruft.
       parentNode.removeChild(target.firstChild);
       parentNode.removeChild(target.firstChild);
     }
@@ -244,12 +244,12 @@ var fileButton = {
     str = gBookmarksShell.getLocaleString("file_in");
     str = str.replace(/%folder_name%/, nameVal);
     menuitem.setAttribute("folder-uri", uri);
-    menuitem.setAttribute("value", str);
+    menuitem.setAttribute("label", str);
     menuitem.setAttribute("x-generated", "true");
-    parentNode.insertBefore(menuitem, target.firstChild);    
+    parentNode.insertBefore(menuitem, target.firstChild);
     menuitem.addEventListener("command", fileButton.fileBookmarks, false);
   },
-  
+
   fileBookmarks: function (aEvent)
   {
     var bookmarksTree = document.getElementById("bookmarksTree");
@@ -259,7 +259,7 @@ var fileButton = {
 
     if ("beginBatch" in this)
       this.beginBatch();
-    for (var i = 0; i < bookmarksTree.selectedItems.length; ++i) {  
+    for (var i = 0; i < bookmarksTree.selectedItems.length; ++i) {
       var currItem = bookmarksTree.selectedItems[i];
       var currURI = NODE_ID(currItem);
       var parent = gBookmarksShell.findRDFNode(currItem, false);
@@ -271,7 +271,7 @@ var fileButton = {
       this.endBatch();
     gBookmarksShell.flushDataSource();
   },
-  
+
   _flavourSet: null,
   getSupportedFlavours: function ()
   {

@@ -33,8 +33,8 @@
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorHLineProperties.dtd">
 
 <window class="dialog" title="&windowTitle.label;"
-	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	 xmlns:html="http://www.w3.org/1999/xhtml"
+   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+   xmlns:html="http://www.w3.org/1999/xhtml"
    onload = "Startup()"
    orient="vertical">
 
@@ -48,7 +48,7 @@
   <keyset id="keyset"/>
   <popupset id="aTooltipSet" />
   
-  <titledbox orient="vertical"><title value="&dimensionsBox.label;"/>
+  <titledbox orient="vertical"><label value="&dimensionsBox.label;"/>
     <grid>
       <columns><column/><column/><column /></columns>
       <rows>
@@ -65,19 +65,19 @@
         </row>
       </rows>
     </grid>        
-    <checkbox id="3dShading" value="&threeDShading.label;" />
+    <checkbox id="3dShading" label="&threeDShading.label;" />
   </titledbox>
-  <titledbox><title align="left" value="&alignmentBox.label;"/>
+  <titledbox><label align="left" value="&alignmentBox.label;"/>
     <radiogroup id="alignmentGroup" orient="horizontal">
       <spring class="spacer"/>
-      <radio group="alignmentGroup" id="leftAlign" value="&leftRadio.value;" />
-      <radio group="alignmentGroup" id="centerAlign" value="&centerRadio.value;" />
-      <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;" />
+      <radio group="alignmentGroup" id="leftAlign" label="&leftRadio.value;" />
+      <radio group="alignmentGroup" id="centerAlign" label="&centerRadio.value;" />
+      <radio group="alignmentGroup" id="rightAlign" label="&rightRadio.value;" />
     </radiogroup>
   </titledbox>
   <spring class="spacer"/>
   <box>
-    <button class="dialog"  id="SaveDefault" value="&saveSettings.label;" 
+    <button class="dialog"  id="SaveDefault" label="&saveSettings.label;" 
          oncommand="onSaveDefault()"
          tooltip="aTooltip" tooltiptext="&saveSettings.tooltip;" />
     <spring flex="1"/>

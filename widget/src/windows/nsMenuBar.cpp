@@ -154,7 +154,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 			nsString menuAccessKey = " ";
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.Equals("menu")) {
-              menuElement->GetAttribute(nsAutoString("value"), menuName);
+              menuElement->GetAttribute(nsAutoString("label"), menuName);
 			  menuElement->GetAttribute(nsAutoString("accesskey"), menuAccessKey);
               // Don't create the whole menu yet, just add in the top level names
               

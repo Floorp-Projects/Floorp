@@ -31,8 +31,8 @@
         <treechildren flex="1">
           <treeitem id="treechildren" uri="...">
             <treerow>
-              <treecell value="rdf:http://www.mozilla.org/rdf/chrome#displayName"
-                        data="rdf:http://www.mozilla.org/rdf/chrome#name"/>
+              <treecell label="rdf:http://www.mozilla.org/rdf/chrome#displayName"
+                        value="rdf:http://www.mozilla.org/rdf/chrome#name"/>
             </treerow>
           </treeitem>
         </treechildren>

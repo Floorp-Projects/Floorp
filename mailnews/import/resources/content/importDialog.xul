@@ -39,8 +39,8 @@ Rights Reserved.
   <stringbundle id="bundle_importMsgs" src="chrome://messenger/locale/importMsgs.properties"/>
   <script type="text/javascript" src="chrome://messenger/content/importDialog.js"/>
 
-	<keyset id="keyset"/>
-	
+  <keyset id="keyset"/>
+  
   <box class="box-header" id="header"
        title="&importTitle.label;"
        description="&importDesc.label;"/>
@@ -53,13 +53,13 @@ Rights Reserved.
       <html>&select.label;</html>
       <separator class="thin"/>
       <radiogroup id="importFields" orient="vertical" class="indent" autostretch="never">
-    		<radio group="importFields" data="addressbook" id="addressbookRadio" value="&importDialog.addressbookTitle;"/>
-    		<radio group="importFields" data="mail" id="mailRadio" value="&importDialog.mailTitle;"/>
-  	  	<radio group="importFields" data="settings" id="settingsRadio" value="&importDialog.settingsTitle;"/>
+        <radio group="importFields" value="addressbook" id="addressbookRadio" label="&importDialog.addressbookTitle;"/>
+        <radio group="importFields" value="mail" id="mailRadio" label="&importDialog.mailTitle;"/>
+        <radio group="importFields" value="settings" id="settingsRadio" label="&importDialog.settingsTitle;"/>
       </radiogroup>
     </box>
     <box class="wizard-box" orient="vertical">
-		  <html>&selectDescription.label;</html>
+      <html>&selectDescription.label;</html>
       <tree class="inset" id="moduleList" flex="3" onselect="ImportSelectionChanged(); enableAdvance();" 
             style="height: 0px;">
         <treecolgroup>
@@ -68,12 +68,12 @@ Rights Reserved.
         <treechildren id="bucketBody" flex="1"/>
       </tree>
       <html id="description" class="box-padded" flex="1"/>
-		</box>
+    </box>
     <box class="wizard-box" orient="vertical">
       <spring flex="1"/>
       <titledbox orient="vertical">
-        <title id="progressTitle" value="Title"/>
-      	<text class="label indent" id="progressStatus" value="Processing"/>
+        <label id="progressTitle" value="Title"/>
+        <text class="label indent" id="progressStatus" value="Processing"/>
         <box class="box-padded" orient="vertical">
           <progressmeter id="progressMeter" mode="normal" value="5"/>
         </box>
@@ -85,7 +85,7 @@ Rights Reserved.
         <html id="results" flex="1"/>
       </box>
     </box>
-	</deck>
+  </deck>
 
   <separator/>
   
@@ -93,14 +93,14 @@ Rights Reserved.
   
   <box class="box-padded">
     <spring flex="1"/>
-    <button id="back" value="&back.label;" disabled="true"
+    <button id="back" label="&back.label;" disabled="true"
             oncommand="back();"/>
-    <button id="forward" value="&forward.label;" nextval="&forward.label;" finishedval="&finish.label;" 
+    <button id="forward" label="&forward.label;" nextval="&forward.label;" finishedval="&finish.label;" 
             oncommand="next();"/>
     <separator orient="vertical"/>
-    <button id="cancel" value="&cancel.label;"
+    <button id="cancel" label="&cancel.label;"
             oncommand="close();"/>
   </box>
-	
+  
 
 </window>

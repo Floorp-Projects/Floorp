@@ -38,9 +38,7 @@
 
   <keyset id="keyset"/>
            
-  <title>
-    <text id="heading"/>
-  </title>
+  <label id="heading"/>
 
   <spring style="height: 20px;"/>
 

@@ -630,7 +630,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   nsString menuitemName;
   nsString menuitemCmd;
 
-  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuitemName);
   menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -760,7 +760,7 @@ void nsWebShellWindow::LoadSubMenu(
   nsIDOMNode *    menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
@@ -959,7 +959,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
             if (menuNodeType.EqualsWithConversion("menu")) {
-              menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
+              menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
 
 #ifdef DEBUG_rods
               printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks

@@ -15,11 +15,11 @@
 </keyset>
 
 <broadcasterset id="broadcasterset">
-  <broadcaster id="Tasks:IRC" value="&ircCmd.label;" oncommand="toIRC();"/>
+  <broadcaster id="Tasks:IRC" label="&ircCmd.label;" oncommand="toIRC();"/>
 </broadcasterset>
 
 <menupopup id="taskPopup">
-	<menuitem
+  <menuitem
         position="7"
         accesskey="&ircCmd.accesskey;"
         key="key_irc"

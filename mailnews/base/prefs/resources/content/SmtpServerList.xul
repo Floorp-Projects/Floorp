@@ -56,13 +56,13 @@
   </tree>
   <box orient="vertical">
     <button id="addButton"
-       oncommand="onAdd(event);" value="&smtpListAdd.label;"/>
+       oncommand="onAdd(event);" label="&smtpListAdd.label;"/>
     <button id="editButton" disabled="true"
-       oncommand="onEdit(event);" value="&smtpListEdit.label;"/>
+       oncommand="onEdit(event);" label="&smtpListEdit.label;"/>
     <button id="deleteButton" disabled="true"
-       oncommand="onDelete(event);" value="&smtpListDelete.label;"/>
+       oncommand="onDelete(event);" label="&smtpListDelete.label;"/>
     <button id="setDefaultButton" disabled="true"
-       oncommand="onSetDefault(event);" value="&smtpListSetDefault.label;"/>
+       oncommand="onSetDefault(event);" label="&smtpListSetDefault.label;"/>
   </box>
 </box>
 

@@ -47,7 +47,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never">
-    <title><text value="&name.title;"/></title>
+    <label value="&name.title;"/>
     <grid class="indent" flex="1">
 
       <columns>
@@ -62,7 +62,7 @@
           <menulist id="name.prefix" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -72,7 +72,7 @@
           <menulist id="name.first" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -82,7 +82,7 @@
           <menulist id="name.middle" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -92,7 +92,7 @@
           <menulist id="name.last" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -103,7 +103,7 @@
                     onchange="Append(this)" onmousedown="Append(this)">
 
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>

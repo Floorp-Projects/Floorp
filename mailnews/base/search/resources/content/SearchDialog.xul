@@ -66,14 +66,14 @@ Rights Reserved.
   <dummy class="usesMailWidgets"/>
   <box flex="1" orient="vertical">
     
-    <titledbox value="&conditions.label;" orient="vertical" class="dialog box-padded" flex="1">
-
+    <titledbox orient="vertical" class="dialog box-padded" flex="1">
+      <label value="&conditions.label;"/>
       <box autostretch="never">
         <text class="label" value="&searchHeading.label;"/>
         <menulist id="searchableFolders" flex="2"
                 oncommand="onChooseFolder(event);"/>
         <spring flex="1"/>
-          <checkbox id="checkSearchSubFolders" value="&searchSubfolders.label;" checked="true"/>
+          <checkbox id="checkSearchSubFolders" label="&searchSubfolders.label;" checked="true"/>
       </box>
       <separator/>
       <text class="label" value="&conditionDesc.label;"/>
@@ -83,8 +83,8 @@ Rights Reserved.
         
         <box orient="vertical">
            <spring flex="1"/>
-           <button value="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>
-           <button value="&resetButton.label;" oncommand="onReset(event);"/>
+           <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>
+           <button label="&resetButton.label;" oncommand="onReset(event);"/>
            <spring flex="1"/>
          </box>
       </box>
@@ -92,15 +92,16 @@ Rights Reserved.
     
     <splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
     
-    <titledbox value="&results.label;" orient="vertical" class="dialog box-padded" flex="1">
+    <titledbox orient="vertical" class="dialog box-padded" flex="1">
+       <label value="&results.label;"/>
        <box id="searchTermListBox" orient="vertical" flex="1">
             <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
        </box>
     </titledbox>
     
     <box autostretch="never" align="right">
-      <button value="&openButton.label;" id="openButton" observes="cmd_open"/>
-      <button value="&closeButton.label;" oncommand="window.close();"/>
+      <button label="&openButton.label;" id="openButton" observes="cmd_open"/>
+      <button label="&closeButton.label;" oncommand="window.close();"/>
     </box>
   
   </box>

@@ -33,16 +33,16 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMainWindow.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		id="addressbookWindow"
-		height="450"
-		width="750"
-		align="vertical"
-		title="&addressbookWindow.title;"
-		windowtype="mail:addressbook"
-		persist="width height screenX screenY sizemode"
-		onload="OnLoadAddressBook()">
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    id="addressbookWindow"
+    height="450"
+    width="750"
+    align="vertical"
+    title="&addressbookWindow.title;"
+    windowtype="mail:addressbook"
+    persist="width height screenX screenY sizemode"
+    onload="OnLoadAddressBook()">
 
   <stringbundleset id="stringbundleset">
     <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
@@ -56,44 +56,44 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/msgPrintEngine.js"/>
 
 <commands id="commands">
-	<commandset id="CommandUpdate_AddressBook"
-				commandupdater="true"
-				events="focus,tree-select"
-				oncommandupdate="CommandUpdate_AddressBook()"/>
-	
-	<commandset id="globalEditMenuItems"/>
+  <commandset id="CommandUpdate_AddressBook"
+        commandupdater="true"
+        events="focus,tree-select"
+        oncommandupdate="CommandUpdate_AddressBook()"/>
+  
+  <commandset id="globalEditMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
-	<!-- File Menu -->
-	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newEditor"/>
-	<broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
- 	<broadcaster id="cmd_close" oncommand="AbClose()"/>
- 	<broadcaster id="cmd_quit"/>
-	<!-- Edit Menu -->
-	<broadcaster id="cmd_delete"
-				 valueAddressBook="&deleteAbCmd.label;"
-				 valueCard="&deleteCardCmd.label;"
-				 valueCards="&deleteCardsCmd.label;"/>
-	<broadcaster id="cmd_CardProperties" oncommand="AbEditCard();"/>
-	<broadcaster id='button_delete'/>
-	<broadcaster id='cmd_selectAll'/>
-	<broadcaster id="cmd_preferences"/>
+  <!-- File Menu -->
+  <broadcaster id="cmd_newNavigator"/>
+  <broadcaster id="cmd_newEditor"/>
+  <broadcaster id="cmd_PrintCard" oncommand="AbPrintCard()"/>
+  <broadcaster id="cmd_close" oncommand="AbClose()"/>
+  <broadcaster id="cmd_quit"/>
+  <!-- Edit Menu -->
+  <broadcaster id="cmd_delete"
+         valueAddressBook="&deleteAbCmd.label;"
+         valueCard="&deleteCardCmd.label;"
+         valueCards="&deleteCardsCmd.label;"/>
+  <broadcaster id="cmd_CardProperties" oncommand="AbEditCard();"/>
+  <broadcaster id='button_delete'/>
+  <broadcaster id='cmd_selectAll'/>
+  <broadcaster id="cmd_preferences"/>
 
   <broadcaster id="broadcaster-throbber" busy="false"/>
 </broadcasterset>
 
 <keyset id="keyset">
-	<!-- File Menu -->
-	<key id="key_newNavigator"/>
-	<key id="key_PrintCard"  key="&printCardViewCmd.key;" observes="cmd_PrintCard"  modifiers="accel"/>
-	<key id="key_close"/>
-	<key id="key_quit"/>
-	<!-- Edit Menu -->
-	<key id="key_delete"/>
-	<key id="key_selectAll"/>
-	<key id="key_CardProperties" key="&cardPropertiesCmd.key;" observes="cmd_CardProperties" modifiers="accel"/>
+  <!-- File Menu -->
+  <key id="key_newNavigator"/>
+  <key id="key_PrintCard"  key="&printCardViewCmd.key;" observes="cmd_PrintCard"  modifiers="accel"/>
+  <key id="key_close"/>
+  <key id="key_quit"/>
+  <!-- Edit Menu -->
+  <key id="key_delete"/>
+  <key id="key_selectAll"/>
+  <key id="key_CardProperties" key="&cardPropertiesCmd.key;" observes="cmd_CardProperties" modifiers="accel"/>
 </keyset>
 
 <popupset id="aTooltipSet"/>
@@ -102,11 +102,11 @@ Rights Reserved.
 	<menubar id="ab-menubar">
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
-				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
+        <menuitem label="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
 				<menu id="menu_New">
 					<menupopup id="menu_NewPopup">
-						<menuitem value="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
-						<menuitem value="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
+            <menuitem label="&newListCmd.label;" accesskey="&newListCmd.accesskey;" oncommand="AbNewList()"/>
+            <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
 						<menuseparator/>
 						<menuitem id="menu_newNavigator"/>
   					<menuitem id="menu_newEditor"/>
@@ -115,9 +115,9 @@ Rights Reserved.
 				<menuseparator/>
 				<menuitem id="menu_close"/>
 				<menuseparator/>
-				<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
+        <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
 				<menuseparator/>
-				<menuitem value="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" observes="cmd_PrintCard"/>
+        <menuitem label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" observes="cmd_PrintCard"/>
 				<menuseparator/>
 			</menupopup>
 		</menu>
@@ -128,7 +128,7 @@ Rights Reserved.
 			<menuseparator/>
 			<menuitem id="menu_selectAll"/>
 			<menuseparator/>
-			<menuitem value="&cardPropertiesCmd.label;"
+      <menuitem label="&cardPropertiesCmd.label;"
 			          accesskey="&cardPropertiesCmd.accesskey;"
 				  key="key_CardProperties"
 				  observes="cmd_CardProperties"/>
@@ -142,7 +142,7 @@ Rights Reserved.
 				<menu id="menu_Toolbars">
 					<menupopup>
 						<menuitem id="menu_showAbToolbar"
-								  value="&showAbToolbarCmd.label;"
+                  label="&showAbToolbarCmd.label;"
 								  accesskey="&showAbToolbarCmd.accesskey;"
 								  oncommand="goToggleToolbar('abToolbar', 'menu_showAbToolbar')"
 								  checked="true" type="checkbox"/>
@@ -154,34 +154,34 @@ Rights Reserved.
 					<menupopup>
 						<menuitem type="radio" name="shownameas"
 								  id="firstLastCmd"
-								  value="&firstLastCmd.label;"
+                  label="&firstLastCmd.label;"
 								  accesskey="&firstLastCmd.accesskey;"
 								  oncommand="SetNameColumn('firstLastCmd')"/>
 						<menuitem type="radio" name="shownameas"
 								  id="lastFirstCmd"
-								  value="&lastFirstCmd.label;"
+                  label="&lastFirstCmd.label;"
 								  accesskey="&lastFirstCmd.accesskey;"
 								  oncommand="SetNameColumn('lastFirstCmd')"/>
 						<menuitem type="radio" name="shownameas"
 								  id="displayNameCmd"
-								  value="&displayNameCmd.label;"
+                  label="&displayNameCmd.label;"
 								  accesskey="&displayNameCmd.accesskey;"
 								  oncommand="SetNameColumn('displayNameCmd')"/>
 					</menupopup>
 				</menu>
-				<menu value="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
+        <menu label="&sortMenu.label;" accesskey="&sortMenu.accesskey;">
 				    <menupopup>
-						<menuitem value="&sortByNameCmd.label;"
+            <menuitem label="&sortByNameCmd.label;"
 								  id="cmd_SortByName"
 								  disabled="true"
 								  accesskey="&SortByName.accesskey;"
 								  oncommand="top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#DisplayName')" name="sortas" type="radio" checked="true"/>
-						<menuitem value="&sortByEmailCmd.label;"
+            <menuitem label="&sortByEmailCmd.label;"
 								  id="cmd_SortByEmail"
 								  disabled="true"
 								  accesskey="&SortByEmail.accesskey;"
 								  oncommand="top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail')" name="sortas" type="radio"/>
-						<menuitem value="&sortByWorkPhoneCmd.label;"
+            <menuitem label="&sortByWorkPhoneCmd.label;"
 								  id="cmd_SortByWorkPhone"
 								  disabled="true"
 								  accesskey="&SortByWorkPhone.accesskey;"
@@ -204,11 +204,11 @@ Rights Reserved.
 	<!-- toolbar -->
 		<toolbar class="toolbar-primary" id="abToolbar" persist="collapsed">
 			<box id="toolbar_button_box">
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newcard" value="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newlist" value="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
+        <button class="button-toolbar-2 top" orient="vertical" id="button-newcard" label="&newcardButton.label;" tooltip="aTooltip" tooltiptext="&newcardButton.tooltip;" oncommand="AbNewCard();"/>
+        <button class="button-toolbar-2 top" orient="vertical" id="button-newlist" label="&newlistButton.label;" tooltip="aTooltip" tooltiptext="&newlistButton.tooltip;" oncommand="AbNewList();"/>
             	<toolbarseparator class="toolbarseparator-primary"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-editcard" value="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
-				<button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" value="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
+        <button class="button-toolbar-2 top" orient="vertical" id="button-editcard" label="&editButton.label;" tooltip="aTooltip" tooltiptext="&editButton.tooltip;" oncommand="AbEditCard();"/>
+        <button class="button-toolbar-2 top" orient="vertical" id="button-newmessage" label="&newmsgButton.label;" tooltip="aTooltip" tooltiptext="&newmsgButton.tooltip;" oncommand="AbNewMessage();"/>
 				<button class="button-toolbar-2 top" orient="vertical" id="button-delete" disabled="true" observes="button_delete" value="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
 				<box orient="vertical" flex="100%">
@@ -218,51 +218,55 @@ Rights Reserved.
 					<spring flex="1"/--> 
 				</box>
 
-				<!--button id="button_stop" class="other28" align="top" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
-				<button id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
+        <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
+        <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
 			</box>
+
+        <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>
+        <button id="button_search" class="other28" align="top" label="&searchButton.label;" disabled="true" tooltip="aTooltip" tooltiptext="&searchButton.tooltip;" oncommand="AbSearch()"/-->
+      </box>
 
       <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("addressbook.throbber.url")'>
         <observes element="broadcaster_throbber" attribute="busy"/>
       </button>
-		</toolbar>
-	</toolbox>
+    </toolbar>
+  </toolbox>
 
-	<!-- The main address book three pane -->
-	<box orient="horizontal" flex="100%" style="min-width:150px">
-		<!-- sidebar with dir tree -->
-		<box id="sidebar-box">
-				<sidebarheader type="box" class="sidebarheader-main" value="&addressbook-sidebar-header.label;"/>
-			
-			<tree id="dirTree" flex="1000"/>
-		</box>
-		<splitter id="sidebar-splitter" collapse="before" persist="state"/>
-		
-		<box orient="vertical" flex="100%" style="min-width:100px">
+  <!-- The main address book three pane -->
+  <box orient="horizontal" flex="100%" style="min-width:150px">
+    <!-- sidebar with dir tree -->
+    <box id="sidebar-box">
+        <sidebarheader type="box" class="sidebarheader-main" label="&addressbook-sidebar-header.label;"/>
+      
+      <tree id="dirTree" flex="1000"/>
+    </box>
+    <splitter id="sidebar-splitter" collapse="before" persist="state"/>
+    
+    <box orient="vertical" flex="100%" style="min-width:100px">
 
-			<!-- results tree -->
-			<box id="results_box" flex="1" orient="vertical">
-				<tree id="resultsTree" flex="1" style="height:0px"/>
-			</box>
-			
-			<splitter id="results-splitter" collapse="after" persist="state"
+      <!-- results tree -->
+      <box id="results_box" flex="1" orient="vertical">
+        <tree id="resultsTree" flex="1" style="height:0px"/>
+      </box>
+      
+      <splitter id="results-splitter" collapse="after" persist="state"
               orient="vertical" autostretch="never">
         <grippy/>
       </splitter>
-			
-			<!-- card view -->
+      
+      <!-- card view -->
       <box id="CardViewOuterBox" flex="1">
-  			<box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
+        <box id="CardViewBox" style="height:170px; min-height:1px; min-width:1px"/>
       </box>
-		
+    
       <box id="status-bar">
           <text id="statusText" class="status-bar" align="left" flex="100%" value="&statusText.label;"/>
-      </box>		
+      </box>    
 
-		</box>
-		
-	</box>
-	
-	<box id="taskbar" class="toolbox-bottom"/>
+    </box>
+    
+  </box>
+  
+  <box id="taskbar" class="toolbox-bottom"/>
 
 </window>

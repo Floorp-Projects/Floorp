@@ -4231,7 +4231,7 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
 
     if (aAttribute == nsXULAtoms::value || aAttribute == nsXULAtoms::flex ||
-        aAttribute == nsXULAtoms::progresstext) {
+        aAttribute == nsXULAtoms::label) {
       // VERY IMPORTANT! This has a huge positive performance impact!
       aHint = NS_STYLE_HINT_ATTRCHANGE;
     }

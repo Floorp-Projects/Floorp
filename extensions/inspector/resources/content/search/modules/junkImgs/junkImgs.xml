@@ -14,8 +14,8 @@
   </columns>
 
   <contextmenu>
-    <xul:menuitem value="View..." oncommand="this.search.cmdViewItem()" isEnabled="return true"/>
-    <xul:menuitem value="Delete File" oncommand="this.search.cmdDeleteItems()" isEnabled="return true"/>
+    <xul:menuitem label="View..." oncommand="this.search.cmdViewItem()" isEnabled="return true"/>
+    <xul:menuitem label="Delete File" oncommand="this.search.cmdDeleteItems()" isEnabled="return true"/>
   </contextmenu>
 
   <implementation>

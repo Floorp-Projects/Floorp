@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  *    Ben Goodger
  */
 
@@ -142,7 +142,7 @@ function Startup()
   dialog.CellStyleCheckbox = document.getElementById("CellStyleCheckbox");
   dialog.TextWrapCheckbox = document.getElementById("TextWrapCheckbox");
   dialog.CellColorCheckbox = document.getElementById("CellColorCheckbox");
-  
+
   TabPanel = document.getElementById("TabPanel");
   var TableTab = document.getElementById("TableTab");
   var CellTab = document.getElementById("CellTab");
@@ -169,7 +169,7 @@ function Startup()
     // Tells us whether cell, row, or column is selected
     SelectedCellsType = editorShell.GetSelectedCellsType(TableElement);
     SetSpanEnable();
-    
+
     // Ignore types except Cell, Row, and Column
     if (SelectedCellsType < SELECT_CELL || SelectedCellsType > SELECT_COLUMN)
       SelectedCellsType = SELECT_CELL;
@@ -183,7 +183,7 @@ function Startup()
     curRowIndex = editorShell.GetRowIndex(CellElement);
     curColIndex = editorShell.GetColumnIndex(CellElement);
 
-    // We save the current colspan to quickly 
+    // We save the current colspan to quickly
     //  move selection from from cell to cell
     if (GetCellData(curRowIndex, curColIndex))
       curColSpan = cellData.colSpan;
@@ -192,13 +192,13 @@ function Startup()
     SetSelectionButtons();
 
     // Starting TabPanel name is passed in
-    if (window.arguments[1] == "CellPanel") 
+    if (window.arguments[1] == "CellPanel")
     {
       currentPanel = CellPanel;
 
       //Set index for starting panel on the <tabpanel> element
       TabPanel.setAttribute("index", CellPanel);
-  
+
       // Trigger setting of style for the tab widgets
       CellTab.setAttribute("selected", "true");
       TableTab.removeAttribute("selected");
@@ -212,7 +212,7 @@ function Startup()
   {
     // Use table element for Advanced Edit dialog
     globalElement = globalTableElement;
-    
+
     // We may call this with table selected, but no cell,
     //  so disable the Cell Properties tab
     if(!CellElement)
@@ -237,7 +237,7 @@ function Startup()
     dialog.NextButton.setAttribute("disabled", "true");
   }
 
-  // User can change these via textboxes  
+  // User can change these via textboxes
   newRowCount = rowCount;
   newColCount = colCount;
 
@@ -252,7 +252,7 @@ function Startup()
   CellDataChanged = false;
 
   if (currentPanel == CellPanel)
-    dialog.SelectionList.focus(); 
+    dialog.SelectionList.focus();
   else
     SetTextboxFocus(dialog.TableRowsInput);
 
@@ -278,7 +278,7 @@ function InitDialog()
     dialog.TableAlignList.selectedIndex = 2;
   else // Default = left
     dialog.TableAlignList.selectedIndex = 0;
-  
+
   // Be sure to get caption from table in doc, not the copied "globalTableElement"
   TableCaptionElement = TableElement.caption;
   var index = 0;
@@ -292,9 +292,9 @@ function InitDialog()
       index = 1;
   }
   dialog.TableCaptionList.selectedIndex = index;
-  
+
   TableColor = globalTableElement.bgColor;
-  SetColor("tableBackgroundCW", TableColor); 
+  SetColor("tableBackgroundCW", TableColor);
 
   InitCellPanel();
 }
@@ -322,7 +322,7 @@ function InitCellPanel()
     previousValue = dialog.ColSpanInput.value;
     dialog.ColSpanInput.value = globalCellElement.getAttribute("colspan");
     dialog.ColSpanCheckbox.checked = AdvancedEditUsed && previousValue != dialog.ColSpanInput.value;
-    
+
     var previousIndex = dialog.CellVAlignList.selectedIndex;
     var valign = globalCellElement.vAlign.toLowerCase();
     if (valign == topStr)
@@ -334,7 +334,7 @@ function InitCellPanel()
 
     dialog.CellVAlignCheckbox.checked = AdvancedEditUsed && previousValue != dialog.CellVAlignList.selectedIndex;
 
-    
+
     previousIndex = dialog.CellHAlignList.selectedIndex;
 
     alignWasChar = false;
@@ -357,14 +357,14 @@ function InitCellPanel()
         //  unless they change the alignment by using the menulist
         alignWasChar = true;
         // Fall through to use show default alignment in menu
-      default:  
+      default:
         // Default depends on cell type (TH is "center", TD is "left")
-        dialog.CellHAlignList.selectedIndex = 
+        dialog.CellHAlignList.selectedIndex =
           (globalCellElement.nodeName.toLowerCase() == "th") ? 1 : 0;
         break;
     }
 
-    dialog.CellHAlignCheckbox.checked = AdvancedEditUsed && 
+    dialog.CellHAlignCheckbox.checked = AdvancedEditUsed &&
       previousIndex != dialog.CellHAlignList.selectedIndex;
 
     previousIndex = dialog.CellStyleList.selectedIndex;
@@ -376,11 +376,11 @@ function InitCellPanel()
     dialog.TextWrapCheckbox.checked = AdvancedEditUsed && previousIndex != dialog.TextWrapList.selectedIndex;
 
     previousValue = CellColor;
-    SetColor("cellBackgroundCW", globalCellElement.bgColor); 
+    SetColor("cellBackgroundCW", globalCellElement.bgColor);
     dialog.CellColorCheckbox.checked = AdvancedEditUsed && CellColor != globalCellElement.bgColor;
     CellColor = globalCellElement.bgColor;
-    
-    // We want to set this true in case changes came 
+
+    // We want to set this true in case changes came
     //   from Advanced Edit dialog session (must assume something changed)
     CellDataChanged = true;
   }
@@ -400,10 +400,10 @@ function GetCellData(rowIndex, colIndex)
     cellData = new Object;
 
   try {
-    cellData.cell = 
-      editorShell.GetCellDataAt(TableElement, rowIndex, colIndex, 
+    cellData.cell =
+      editorShell.GetCellDataAt(TableElement, rowIndex, colIndex,
                                 startRowIndexObj, startColIndexObj,
-                                rowSpanObj, colSpanObj, 
+                                rowSpanObj, colSpanObj,
                                 actualRowSpanObj, actualColSpanObj, isSelectedObj);
     // We didn't find a cell
     if (!cellData.cell) return false;
@@ -412,13 +412,13 @@ function GetCellData(rowIndex, colIndex)
     return false;
   }
 
-  cellData.startRowIndex = startRowIndexObj.value;  
-  cellData.startColIndex = startColIndexObj.value;  
-  cellData.rowSpan = rowSpanObj.value;  
-  cellData.colSpan = colSpanObj.value;  
-  cellData.actualRowSpan = actualRowSpanObj.value;  
-  cellData.actualColSpan = actualColSpanObj.value;  
-  cellData.isSelected = isSelectedObj.value;  
+  cellData.startRowIndex = startRowIndexObj.value;
+  cellData.startColIndex = startColIndexObj.value;
+  cellData.rowSpan = rowSpanObj.value;
+  cellData.colSpan = colSpanObj.value;
+  cellData.actualRowSpan = actualRowSpanObj.value;
+  cellData.actualColSpan = actualColSpanObj.value;
+  cellData.isSelected = isSelectedObj.value;
   return true;
 }
 
@@ -512,9 +512,9 @@ function SetColor(ColorWellID, color)
       dialog.TableInheritColor.removeAttribute("collapsed");
     }
     SetCheckbox('CellColorCheckbox');
-  }    
+  }
 
-  setColorWell(ColorWellID, color); 
+  setColorWell(ColorWellID, color);
 }
 
 function ChangeSelectionToFirstCell()
@@ -582,7 +582,7 @@ function MoveSelection(forward)
     // Cell or column:
     if (!forward)
       newColIndex--;
-      
+
     if (SelectedCellsType == SELECT_CELL)
     {
       // Skip to next cell
@@ -615,8 +615,8 @@ function MoveSelection(forward)
         else
           // ...or the last row
           newRowIndex = lastRowIndex;
-        
-        inRow = true;  
+
+        inRow = true;
       }
     }
     else if (newColIndex > lastColIndex)
@@ -635,10 +635,10 @@ function MoveSelection(forward)
           // ...or the first row
           newRowIndex = 0;
 
-        inRow = true;  
+        inRow = true;
       }
     }
-  }  
+  }
 
   // Get the cell at the new location
   do {
@@ -731,7 +731,7 @@ function DoCellSelection()
     gSelectedCellCount = countObj.value;
   else
     gSelectedCellCount = 0;
-  
+
   // Currently, we can only allow advanced editing on ONE cell element at a time
   //   else we ignore CSS, JS, and HTML attributes not already in dialog
   SetElementEnabledById("AdvancedEditButton2", gSelectedCellCount == 1);
@@ -775,7 +775,7 @@ function SwitchPanel(newPanel)
     //Set index for starting panel on the <tabpanel> element
     TabPanel.setAttribute("index", newPanel);
     if (newPanel == CellPanel)
-    {    
+    {
       // Trigger setting of style for the tab widgets
       CellTab.setAttribute("selected", "true");
       TableTab.removeAttribute("selected");
@@ -817,7 +817,7 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
       SetTextboxFocus(inputWidget);
       error = true;
     }
-    else      
+    else
     {
       if (isPercent)
         numString += "%";
@@ -825,14 +825,14 @@ function ValidateNumber(inputWidgetID, listWidget, minVal, maxVal, element, attN
         element.setAttribute(attName, numString);
     }
   } else if (element) {
-    element.removeAttribute(attName);  
+    element.removeAttribute(attName);
   }
   return numString;
 }
 
 function SetAlign(listID, defaultValue, element, attName)
 {
-  var value = document.getElementById(listID).selectedItem.data;
+  var value = document.getElementById(listID).selectedItem.value;
   if (value == defaultValue)
     element.removeAttribute(attName);
   else
@@ -849,7 +849,7 @@ function ValidateTableData()
   if (error) return false;
 
 
-  ValidateNumber("TableWidthInput", dialog.TableWidthUnits, 
+  ValidateNumber("TableWidthInput", dialog.TableWidthUnits,
                  1, maxPixels, globalTableElement, "width");
   if (error) return false;
 
@@ -876,18 +876,18 @@ function ValidateCellData()
 
   if (dialog.CellHeightCheckbox.checked)
   {
-    ValidateNumber("CellHeightInput", dialog.CellHeightUnits, 
+    ValidateNumber("CellHeightInput", dialog.CellHeightUnits,
                     1, maxPixels, globalCellElement, "height");
     if (error) return false;
   }
 
   if (dialog.CellWidthCheckbox.checked)
   {
-    ValidateNumber("CellWidthInput", dialog.CellWidthUnits, 
+    ValidateNumber("CellWidthInput", dialog.CellWidthUnits,
                    1, maxPixels, globalCellElement, "width");
     if (error) return false;
   }
-  
+
   if (dialog.RowSpanCheckbox.checked && dialog.RowSpanCheckbox.disabled != "true")
   {
     // Note that span = 0 is allowed and means "span entire row/col"
@@ -904,7 +904,7 @@ function ValidateCellData()
 
   if (dialog.CellHAlignCheckbox.checked)
   {
-    var hAlign = dialog.CellHAlignList.selectedItem.data;
+    var hAlign = dialog.CellHAlignList.selectedItem.value;
 
     // Horizontal alignment is complicated by "char" type
     // We don't change current values if user didn't edit alignment
@@ -913,7 +913,7 @@ function ValidateCellData()
       globalCellElement.removeAttribute(charStr);
 
       // Always set "align" attribute,
-      //  so the default "left" is effective in a cell 
+      //  so the default "left" is effective in a cell
       //  when parent row has align set.
       globalCellElement.setAttribute("align", hAlign);
     }
@@ -921,8 +921,8 @@ function ValidateCellData()
 
   if (dialog.CellVAlignCheckbox.checked)
   {
-    // Always set valign (no default in 2nd param) so 
-    //  the default "middle" is effective in a cell 
+    // Always set valign (no default in 2nd param) so
+    //  the default "middle" is effective in a cell
     //  when parent row has valign set.
     SetAlign("CellVAlignList", "", globalCellElement, "valign");
   }
@@ -942,7 +942,7 @@ function ValidateData()
 {
   var result;
   var savePanel = currentPanel;
-  
+
   // Validate current panel first
   if (currentPanel == TablePanel)
   {
@@ -1001,9 +1001,9 @@ function ChangeIntTextbox(textboxID, checkboxID)
 function CloneAttribute(destElement, srcElement, attr)
 {
   var value = srcElement.getAttribute(attr);
-  
+
   // Use editorShell methods since we are always
-  //  modifying a table in the document and 
+  //  modifying a table in the document and
   //  we need transaction system for undo
   if (!value || value.length == 0)
     editorShell.RemoveAttribute(destElement, attr);
@@ -1023,7 +1023,7 @@ function ConfirmDeleteCells()
 
 function ApplyTableAttributes()
 {
-  var newAlign = dialog.TableCaptionList.selectedItem.data;
+  var newAlign = dialog.TableCaptionList.selectedItem.value;
   if (!newAlign) newAlign = "";
 
   if (TableCaptionElement)
@@ -1038,7 +1038,7 @@ function ApplyTableAttributes()
       // Remove existing caption
       editorShell.DeleteElement(TableCaptionElement);
       TableCaptionElement = null;
-    } 
+    }
     else if( align != newAlign)
     {
       if (align == "top") // This is default, so don't explicitly set it
@@ -1046,7 +1046,7 @@ function ApplyTableAttributes()
       else
         editorShell.SetAttribute(TableCaptionElement, "align", newAlign);
     }
-  } 
+  }
   else if (newAlign != "")
   {
     // Create and insert a caption:
@@ -1055,7 +1055,7 @@ function ApplyTableAttributes()
     {
       if (newAlign != "top")
         TableCaptionElement.setAttribute("align", newAlign);
-      
+
       // Insert it into the table - caption is always inserted as first child
       editorShell.InsertElement(TableCaptionElement, TableElement, 0);
 
@@ -1226,7 +1226,7 @@ function ApplyCellAttributes()
   if (gSelectedCellCount == 1)
   {
     // When only one cell is selected, simply clone entire element,
-    //  thus CSS and JS from Advanced edit is copied    
+    //  thus CSS and JS from Advanced edit is copied
     editorShell.CloneAttributes(selectedCell, globalCellElement);
 
     if (dialog.CellStyleCheckbox.checked)
@@ -1234,19 +1234,19 @@ function ApplyCellAttributes()
       var currentStyleIndex = (selectedCell.nodeName.toLowerCase() == "th") ? 1 : 0;
       if (dialog.CellStyleList.selectedIndex != currentStyleIndex)
       {
-        // Switch cell types 
+        // Switch cell types
         // (replaces with new cell and copies attributes and contents)
         selectedCell = editorShell.SwitchTableCellHeaderType(selectedCell);
       }
     }
   }
-  else 
+  else
   {
     // Apply changes to all selected cells
     //XXX THIS DOESN'T COPY ADVANCED EDIT CHANGES!
     while (selectedCell)
     {
-      ApplyAttributesToOneCell(selectedCell); 
+      ApplyAttributesToOneCell(selectedCell);
       selectedCell = editorShell.GetNextSelectedCell();
     }
   }
@@ -1286,7 +1286,7 @@ function ApplyAttributesToOneCell(destElement)
 
     if (newStyleIndex != currentStyleIndex)
     {
-      // Switch cell types 
+      // Switch cell types
       // (replaces with new cell and copies attributes and contents)
       destElement = editorShell.SwitchTableCellHeaderType(destElement);
     }
@@ -1301,7 +1301,7 @@ function SetCloseButton()
   // Change text on "Cancel" button after Apply is used
   if (!ApplyUsed)
   {
-    document.getElementById("cancel").setAttribute("value",GetString("Close"));
+    document.getElementById("cancel").setAttribute("label",GetString("Close"));
     ApplyUsed = true;
   }
 }

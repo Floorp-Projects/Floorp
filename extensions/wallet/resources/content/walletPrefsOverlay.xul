@@ -31,14 +31,14 @@
       <treerow>
         <treecell class="treecell-indent"
                   url="chrome://wallet/content/pref-wallet.xul"
-                  value="&wallet.label;"/> 
+                  label="&wallet.label;"/> 
       </treerow>
     </treeitem>
     <treeitem position="2">
       <treerow>
         <treecell class="treecell-indent"
                   url="chrome://wallet/content/pref-passwords.xul"
-                  value="&passwords.label;"/> 
+                  label="&passwords.label;"/> 
       </treerow>
     </treeitem>
   </treechildren>

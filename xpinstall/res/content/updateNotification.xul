@@ -19,11 +19,11 @@ function ShowUpdateFromResource( node )
 
 
 <menupopup id="taskPopup">
-    <menu value="&updateNotification.label;" datasources="rdf:xpinstall-update-notifier" ref="http://home.netscape.com/NC-rdf#SoftwareNotificationRoot">
+    <menu label="&updateNotification.label;" datasources="rdf:xpinstall-update-notifier" ref="http://home.netscape.com/NC-rdf#SoftwareNotificationRoot">
         <template>
             <rule>
                 <menupopup>                                                     
-                    <menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#name" updateURL="rdf:http://home.netscape.com/NC-rdf#url" oncommand="ShowUpdateFromResource( event.target )"/>
+                    <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#name" updateURL="rdf:http://home.netscape.com/NC-rdf#url" oncommand="ShowUpdateFromResource( event.target )"/>
                 </menupopup>                                                          
             </rule>                                                                 
         </template>                                                               

@@ -107,7 +107,7 @@
                     <treeitem uri="rdf:*" persist="open" class="bookmark-item"
                               rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
                       <treerow>
-                        <treecell value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"
                                   class="treecell-indent treecell-editable" editable="true"
                                   src="rdf:http://home.netscape.com/NC-rdf#Icon"
                                   rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -120,9 +120,9 @@
               <treechildren id="folderKids" flex="1"/>
             </tree>
             <box orient="vertical">
-              <button value="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
+              <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
                       oncommand="createNewFolder();"/>
-              <button value="&button.defaultfolder.label;" 
+              <button label="&button.defaultfolder.label;" 
                       accesskey="&button.defaultfolder.accesskey;"
                       oncommand="useDefaultFolder();"/>
             </box>
@@ -137,7 +137,7 @@
   <box valign="bottom">
     <box autostretch="never">
       <checkbox id="dontaskagain" 
-                value="&alwayscreateinfolder.label;"
+                label="&alwayscreateinfolder.label;"
                 accesskey="&alwayscreateinfolder.accesskey;"/>
     </box>
     <spring flex="1"/>  

@@ -31,10 +31,10 @@
 ]>
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-		    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="color-dialog"
         orient="vertical"
-  		  onload="parent.initPanel('chrome://communicator/content/bookmarks/pref-bookmarks.xul');">
+        onload="parent.initPanel('chrome://communicator/content/bookmarks/pref-bookmarks.xul');">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -87,10 +87,10 @@
   <box class="box-smallheader" title="&lHeader;"/>
   
   <titledbox orient="vertical">
-  	<title value="&filingBookmarks.label;"/>
+    <label value="&filingBookmarks.label;"/>
     <html flex="1">&autoFile.label;</html>
     <box autostretch="never">
-      <checkbox id="enableAutoFile" value="&enableAutoFile.label;"
+      <checkbox id="enableAutoFile" label="&enableAutoFile.label;"
                 pref="true" preftype="bool" prefstring="browser.bookmarks.add_without_dialog"
                 prefattribute="checked" valign="top"/>
     </box>
@@ -98,15 +98,15 @@
     <html flex="1">&defaultFolder.label;</html>
     <box autostretch="never">
       <textbox readonly="true" id="defaultFolder" crop="right" flex="1"/>
-      <button value="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
+      <button label="&chooseDefaultFolder.label;" accesskey="&chooseDefaultFolder.accesskey;"
               oncommand="chooseDefaultFolder();"/>
     </box>
   </titledbox>
 
   <titledbox orient="vertical" autostretch="never">
-    <title value="&extendedDataViews.label;"/>
+    <label value="&extendedDataViews.label;"/>
     <html>&extendedDataExplanation.label;</html>
-    <checkbox id="showExtendedData" value="&showExtendedData.label;"
+    <checkbox id="showExtendedData" label="&showExtendedData.label;"
               accesskey="&showExtendedData.accesskey;"
               pref="true" preftype="bool" prefstring="browser.bookmarks.show_extended_data"
               prefattribute="checked"/>

@@ -83,16 +83,16 @@ Contributors:
   <spring class="spacer"/>
 
   <titledbox>
-  <title value="&serverSettings.label;"/>
+  <label value="&serverSettings.label;"/>
   <box orient="vertical" flex="1">
-  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"/>
-  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.loginAtStartUp" hidefor="nntp" value="&loginAtStartup.label;"/>
+  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.isSecure" label="&isSecure.label;" hidefor="pop3" oncommand="secureSelect();"/>
+  <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.loginAtStartUp" hidefor="nntp" label="&loginAtStartup.label;"/>
 <!--
   <checkbox iscontrolcontainer="true" hidable="true" wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
   <box orient="horizontal" autostretch="never">
-    <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;" oncommand="setupBiffUI();"/>
+    <checkbox wsm_persist="true" id="server.doBiff" label="&biffStart.label;" oncommand="setupBiffUI();"/>
     <textbox wsm_persist="true" id="server.biffMinutes" size="3" observes="broadcaster_doBiff"/>
     <text class="label" id="biffEnd" for="server.biffMinutes" value="&biffEnd.label;" observes="broadcaster_doBiff"/>
   </box>
@@ -100,16 +100,16 @@ Contributors:
   <box orient="vertical" iscontrolcontainer="true" autostretch="never">
     <checkbox hidable="true" class="indent" hidefor="imap,nntp"
               wsm_persist="true" id="server.downloadOnBiff"
-              value="&downloadOnBiff.label;" observes="broadcaster_doBiff"/>
+              label="&downloadOnBiff.label;" observes="broadcaster_doBiff"/>
 
     <checkbox wsm_persist="true" id="pop3.leaveMessagesOnServer"
-              value="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"/>
+              label="&leaveOnServer.label;" oncommand="setupMailOnServerUI();"/>
 
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
-              value="&deleteOnServer.label;"/>
+              label="&deleteOnServer.label;"/>
   </box>
   <box iscontrolcontainer="true" autostretch="never">
-    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
+    <checkbox hidable="true" hidefor="imap,nntp" wsm_persist="true" label="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
     <textbox wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
   </box>
@@ -119,9 +119,9 @@ Contributors:
     <text class="label" value="&deleteMessagePrefix.label;"/>
     <menulist hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.deleteModel">
       <menupopup>
-        <menuitem data="1" value="&modelMoveToTrash.label;"/>
-        <menuitem data="0" value="&modelMarkDeleted.label;"/>
-        <menuitem data="2" value="&modelDeleteImmediately.label;"/>
+        <menuitem value="1" label="&modelMoveToTrash.label;"/>
+        <menuitem value="0" label="&modelMarkDeleted.label;"/>
+        <menuitem value="2" label="&modelDeleteImmediately.label;"/>
       </menupopup>
     </menulist>
     <spring flex="1"/>
@@ -129,14 +129,14 @@ Contributors:
   <separator class="thin"/>
 
   <checkbox hidable="true" hidefor="pop3,nntp" wsm_persist="true" id="imap.cleanupInboxOnExit"
-            value="&expungeOnExit.label;" iscontrolcontainer="true"/>
+            label="&expungeOnExit.label;" iscontrolcontainer="true"/>
   <checkbox hidable="true" hidefor="nntp" wsm_persist="true" id="server.emptyTrashOnExit" 
-            value="&emptyTrashOnExit.label;" iscontrolcontainer="true"/>
+            label="&emptyTrashOnExit.label;" iscontrolcontainer="true"/>
 
   <box iscontrolcontainer="true" flex="1">
     <box flex="1">
       <spring flex="1"/>
-      <button value="&advancedButton.label;"
+      <button label="&advancedButton.label;"
               oncommand="openImapAdvanced(event);"/>
     </box>
 
@@ -152,7 +152,7 @@ Contributors:
   <!-- NNTP -->
   <box iscontrolcontainer="true" orient="horizontal">
     <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.notifyOn"
-                value="&maxMessagesStart.label;"/>
+                label="&maxMessagesStart.label;"/>
     <box iscontrolcontainer="true" autostretch="never">
       <textbox wsm_persist="true" id="nntp.maxArticles" size="6"/>
       <text class="label" for="nntp.maxArticles" value="&maxMessagesEnd.label;"/>
@@ -161,11 +161,11 @@ Contributors:
 <!-- take out for now - bug 45079
     <box iscontrolcontainer="true" flex="100%">
       <titledbox orient="vertical">
-         <title><text class="header label" value="&abbreviate.label;"/></title>
+         <label class="header label" value="&abbreviate.label;"/>
 
          <radiogroup hidable="true" hidefor="pop3,imap" orient="vertical" wsm_persist="true" id="nntp.abbreviate">
-           <radio group="nntp.abbreviate" wsm_persist="true" data="true" value="&abbreviateOn.label;"/>
-           <radio group="nntp.abbreviate" wsm_persist="true" data="false" value="&abbreviateOff.label;"/>
+           <radio group="nntp.abbreviate" wsm_persist="true" value="true" label="&abbreviateOn.label;"/>
+           <radio group="nntp.abbreviate" wsm_persist="true" value="false" label="&abbreviateOff.label;"/>
          </radiogroup>
       </titledbox>
   </box>

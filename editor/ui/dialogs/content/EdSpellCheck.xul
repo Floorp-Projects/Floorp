@@ -58,7 +58,7 @@
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
         <box valign="middle" autostretch="never">
           <textbox id="ReplaceWord" oninput="ChangeReplaceWord()" style="width: 14em"/>
-          <button id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+          <button id="CheckWord" oncommand="CheckWord()" label="&checkwordButton.label;"/>
         </box>
       </row>
     </rows>
@@ -76,18 +76,18 @@
           <columns><column style="min-width: 8em"/><column style="min-width: 8em"/></columns>
           <rows>
             <row>
-              <button class="dialog" id="Ignore" oncommand="Ignore()" value="&ignoreButton.label;"/>
-              <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" value="&ignoreAllButton.label;"/>
+              <button class="dialog" id="Ignore" oncommand="Ignore()" label="&ignoreButton.label;"/>
+              <button class="dialog" id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
             </row>
             <row>
-              <button class="dialog" id="Replace" oncommand="Replace()" value="&changeButton.label;"/>
-              <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
+              <button class="dialog" id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
+              <button class="dialog" id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
             </row>
             <spring class="bigspacer"/>
             <text class="label" value="&userDictionary.label;"/>
             <row>
-              <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" value="&addToUserDictionaryButton.label;"/>
-              <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" value="&editUserDictionaryButton.label;"/>
+              <button class="dialog" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;"/>
+              <button class="dialog" id="EditDictionary"  oncommand="EditDictionary()" label="&editUserDictionaryButton.label;"/>
             </row>
           </rows> 
         </grid>
@@ -100,8 +100,8 @@
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>
           <!-- contents are appended by JS -->
         <box flex="1">
-          <button class="dialog" id="Recheck" flex="1" value="&recheckButton.label;" oncommand="Recheck()"/>
-          <button class="dialog" id="Close"   flex="1" value="&closeButton.label;"   oncommand="onClose()"/>
+          <button class="dialog" id="Recheck" flex="1" label="&recheckButton.label;" oncommand="Recheck()"/>
+          <button class="dialog" id="Close"   flex="1" label="&closeButton.label;"   oncommand="onClose()"/>
         </box>
       </row>
     </rows>

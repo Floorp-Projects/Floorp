@@ -34,7 +34,7 @@ Contributor(s):
 <!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-  		  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         orient="vertical"
         title="&downloadWindow.title;"
@@ -113,7 +113,7 @@ Contributor(s):
     
     <box id="CancelButton">
       <spring flex="1"/>
-      <button class="dialog" id="cancel" value="&dialogCancel.label;" onclick="doCancelButton()"/>
+      <button class="dialog" id="cancel" label="&dialogCancel.label;" onclick="doCancelButton()"/>
       <spring flex="1"/>
     </box>
 

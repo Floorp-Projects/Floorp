@@ -19,7 +19,7 @@
     <!-- The command node cmd_editSendPage is in editorOverlay.xul. 
          Implementation is in ComposerCommands.js
     -->
-    <menuitem id="menu_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" observes="cmd_editSendPage" position="14"/>
+    <menuitem id="menu_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" observes="cmd_editSendPage" position="14"/>
   </menupopup>
 
 </overlay>

@@ -42,15 +42,15 @@ Rights Reserved.
   <box class="box-wizardcontent" orient="vertical" flex="1">
 
     <titledbox orient="vertical">
-      <title value="&incomingServerTitle.label;"/>
+      <label value="&incomingServerTitle.label;"/>
       <html>&incomingServerTypeDesc.label;</html>
       <separator class="thin"/>
       <box autostretch="never">
         <text class="label" style="width: 8em;" value="&incomingServerTypeLabel.label;" for="servertype"/>
         <menulist id="servertype" wsm_persist="true">
           <menupopup>
-            <menuitem data="pop3" value="&popType.label;"/>
-            <menuitem data="imap" value="&imapType.label;"/>
+            <menuitem value="pop3" label="&popType.label;"/>
+            <menuitem value="imap" label="&imapType.label;"/>
           </menupopup>
         </menulist>
       </box>
@@ -64,7 +64,7 @@ Rights Reserved.
     </titledbox>
 
     <titledbox orient="vertical" id="noSmtp">
-      <title value="&smtpServerTitle.label;"/>
+      <label value="&smtpServerTitle.label;"/>
       <html>&smtpServerDesc.label;</html>
       <separator class="thin"/>
       <box autostretch="never">

@@ -22,7 +22,7 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abCardOverlay.dtd">
 
 <overlay id="editcardOverlay"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_addressBook" src="chrome://messenger/locale/addressbook/addressBook.properties"/>
@@ -34,9 +34,9 @@ Rights Reserved.
 
 	<tabcontrol orient="vertical" style="margin:5px">
 	   <tabbox id="abTabBox">
-	      <tab value="&Name.tab;"/>
-	      <tab value="&Address.tab;"/>
-	      <tab value="&Other.tab;"/>
+        <tab label="&Name.tab;"/>
+        <tab label="&Address.tab;"/>
+        <tab label="&Other.tab;"/>
 	   </tabbox>
 	   
 	   <tabpanel id="abTabPanel" flex="1">
@@ -45,7 +45,7 @@ Rights Reserved.
 			<box index="name" align="vertical" flex="1">
 				
 				<titledbox orient="vertical" flex="1">
-					<title value="&Name.box;"/>
+          <label value="&Name.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<box orient="horizontal">
@@ -80,9 +80,7 @@ Rights Reserved.
 				</titledbox>
 
 				<titledbox orient="vertical" flex="1">
-					<title>
-						<text value="&Internet.box;"/>
-					</title>
+          <label value="&Internet.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<box orient="horizontal">
@@ -105,9 +103,9 @@ Rights Reserved.
 							</box>
 							<menulist id="PreferMailFormatPopup">
 								<menupopup>
-									<menuitem data="0" value="&Unknown.label;"/>
-									<menuitem data="1" value="&PlainText.label;"/>
-									<menuitem data="2" value="&HTML.label;"/>
+                  <menuitem value="0" label="&Unknown.label;"/>
+                  <menuitem value="1" label="&PlainText.label;"/>
+                  <menuitem value="2" label="&HTML.label;"/>
 								</menupopup>
 							</menulist>
 						</box>
@@ -115,7 +113,7 @@ Rights Reserved.
 				</titledbox>
 
 				<titledbox orient="vertical" flex="1">
-					<title value="&Phones.box;"/>
+          <label value="&Phones.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<box orient="horizontal">
@@ -161,7 +159,7 @@ Rights Reserved.
 			<box index="address" align="vertical" flex="1">
 				
 				<titledbox orient="vertical" flex="1">
-					<title value="&Home.box;"/>
+          <label value="&Home.box;"/>
 		
 					<box align="vertical" style="width:100%">
 		
@@ -214,7 +212,7 @@ Rights Reserved.
 				</titledbox>
 
 				<titledbox orient="vertical" style="width:100%">
-					<title value="&Work.box;"/>
+          <label value="&Work.box;"/>
 		
 					<box align="vertical" style="width:100%">
 		
@@ -312,19 +310,17 @@ Rights Reserved.
 				</box>
 
 				<titledbox orient="vertical" style="width:100%">
-					<title>
-						<text value="&Notes.box;"/>
-					</title>
+          <label value="&Notes.box;"/>
 		
 					<box align="vertical" style="width:100%">
 						<textbox id="Notes" multiline="true" rows="15" wrap="virtual"/>
 					</box>
 				</titledbox>
 
-			</box>
+      </box>
 
-	   </tabpanel> 
-	</tabcontrol>
+     </tabpanel> 
+  </tabcontrol>
 </box>
 
 </overlay>

@@ -47,27 +47,27 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical">
-    <title value="&authorName.label;"/>
+    <label value="&authorName.label;"/>
     <textbox id="editorAuthor" flex="1"
                pref="true" preftype="string" prefstring="editor.author"
                prefattribute="value"/>
   </titledbox>
 
   <titledbox orient="vertical">
-    <title value="&pageColorHeader;"/> 
+    <label value="&pageColorHeader;"/> 
     <box orient="horizontal">
       <box orient="vertical">
         <radiogroup id="useCustomColors" orient="vertical" autostretch="never"  
                     pref="true" preftype="bool" prefstring="editor.use_custom_colors"
-                    prefattribute="data">
+                    prefattribute="value">
           <radio group="useCustomColors" id="DefaultColorsRadio"
-              data="false" 
-              value="&defaultColorsRadio.label;" 
+              value="false" 
+              label="&defaultColorsRadio.label;" 
               accesskey="&defaultColors.accesskey;"
               oncommand="UseDefaultColors();"/>
           <text class="label" value="&defaultColorsMsg.label;" style="margin-left: 26px"/>
           <radio group="useCustomColors" id="CustomColorsRadio" 
-              data="true" value="&customColorsRadio.label;"
+              value="true" label="&customColorsRadio.label;"
               accesskey="&customColors.accesskey;" 
               oncommand="UseCustomColors()"/>
         </radiogroup>
@@ -79,8 +79,8 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Text" value="&normalText.label;&colon.character;" />
                 <stack>
-                  <button id="TextButton" class="dialog color-button" onclick="GetColorAndUpdate('textCW');"/>
-    	            <box autostretch="never" valign="middle" mousethrough="always">
+                  <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
+                  <box autostretch="never" valign="middle" mousethrough="always">
                     <spring flex="1"/>
                     <spring id="textCW" class="color-well"/>
                     <spring flex="1"/>
@@ -91,8 +91,8 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Link" value="&linkText.label;&colon.character;" />
                 <stack>
-                  <button id="LinkButton" class="dialog color-button" onclick="GetColorAndUpdate('linkCW');"/>
-    	            <box autostretch="never" valign="middle" mousethrough="always">
+                  <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
+                  <box autostretch="never" valign="middle" mousethrough="always">
                     <spring flex="1"/>
                     <spring id="linkCW" class="color-well"/>
                     <spring flex="1"/>
@@ -103,8 +103,8 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Active" value="&activeLinkText.label;&colon.character;" />
                 <stack>
-                  <button id="ActiveLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('activeCW');"/>
-    	            <box autostretch="never" valign="middle" mousethrough="always">
+                  <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
+                  <box autostretch="never" valign="middle" mousethrough="always">
                     <spring flex="1"/>
                     <spring id="activeCW" class="color-well"/>
                     <spring flex="1"/>
@@ -115,8 +115,8 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Visited" value ="&visitedLinkText.label;&colon.character;" />
                 <stack>
-                  <button id="VisitedLinkButton" class="dialog color-button" onclick="GetColorAndUpdate('visitedCW');"/>
-    	            <box autostretch="never" valign="middle" mousethrough="always">
+                  <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
+                  <box autostretch="never" valign="middle" mousethrough="always">
                     <spring flex="1"/>
                     <spring id="visitedCW" class="color-well"/>
                     <spring flex="1"/>
@@ -127,8 +127,8 @@
               <row valign="middle" autostretch="never">
                 <text class="label" id="Background" value="&background.label;" />
                 <stack>
-                  <button id="BackgroundButton" class="dialog color-button" onclick="GetColorAndUpdate('backgroundCW');"/>
-    	            <box autostretch="never" valign="middle" mousethrough="always">
+                  <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
+                  <box autostretch="never" valign="middle" mousethrough="always">
                     <spring flex="1"/>
                     <spring id="backgroundCW" class="color-well"/>
                     <spring flex="1"/>
@@ -159,10 +159,10 @@
     <text class="label" value="&backgroundImage.label;" accesskey="&backgroundImage.accesskey;"/>
     <box valign="middle" autostretch="never">
       <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage();" style="min-width : 16em"/>
-      <button class="dialog" value="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
+      <button class="dialog" label="&chooseFile.label;" accesskey="&chooseFile.accesskey;" 
               oncommand="ChooseImageFile()"/>
       <data id="backgroundImageData" pref="true" preftype="string" prefstring="editor.default_background_image" prefattribute="value"/>
     </box>
 
- 	</titledbox>
+  </titledbox>
 </window>

@@ -17,7 +17,7 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *    Sammy Ford
  *    Dan Haddix (dan6992@hotmail.com)
  *    John Ratke (jratke@owc.net)
@@ -79,23 +79,23 @@ function EditorOnLoad()
 {
     // See if argument was passed.
     if ( window.arguments && window.arguments[0] ) {
-        // Opened via window.openDialog with URL as argument.    
+        // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
-    
+
     WebCompose = true;
     window.tryToClose = EditorCanClose;
 
     // Continue with normal startup.
     EditorStartup('html', document.getElementById("content-frame"));
 }
-  
+
 function TextEditorOnLoad()
 {
     // See if argument was passed.
     if ( window.arguments && window.arguments[0] ) {
-        // Opened via window.openDialog with URL as argument.    
+        // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
         document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
     }
@@ -112,7 +112,7 @@ function PageIsEmptyAndUntouched()
 // before it's loaded.
 var DocumentStateListener =
 {
-  NotifyDocumentCreated: function() 
+  NotifyDocumentCreated: function()
   {
     // Call EditorSetDefaultPrefs first so it gets the default author before initing toolbars
     EditorSetDefaultPrefs();
@@ -128,7 +128,7 @@ var DocumentStateListener =
     if (!("InsertCharWindow" in window))
       window.InsertCharWindow = null;
   },
-  
+
   NotifyDocumentWillBeDestroyed: function() {},
   NotifyDocumentStateChanged:function( isNowDirty )
   {
@@ -136,7 +136,7 @@ var DocumentStateListener =
        another document is opened */
     if (isNowDirty)
       docWasModified = true;
-    
+
     // hack! Should not need this updateCommands, but there is some controller
     //  bug that this works around. ??
     // comment out the following line because it cause 41573 IME problem on Mac
@@ -180,12 +180,12 @@ function EditorStartup(editorType, editorElement)
 
   // set up our global prefs object
   GetPrefsService();
- 
-  // Startup also used by other editor users, such as Message Composer 
+
+  // Startup also used by other editor users, such as Message Composer
   EditorSharedStartup();
 
   // Commands specific to the Composer Application window,
-  //  (i.e., not embeded editors) 
+  //  (i.e., not embeded editors)
   //  such as file-related commands, HTML Source editing, Edit Modes...
   SetupComposerWindowCommands();
 
@@ -218,7 +218,7 @@ function EditorSharedStartup()
   gContentWindow = window._content;
 
   gIsWindows = navigator.appVersion.indexOf("Win") != -1;
-  gIsUNIX = (navigator.appVersion.indexOf("X11") || 
+  gIsUNIX = (navigator.appVersion.indexOf("X11") ||
              navigator.appVersion.indexOf("nux")) != -1;
   gIsMac = !gIsWindows && !gIsUNIX;
   //dump("IsWin="+gIsWindows+", IsUNIX="+gIsUNIX+", IsMac="+gIsMac+"\n");
@@ -245,10 +245,10 @@ function EditorSharedStartup()
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
 
-  // Use global prefs if EditorStartup already run, 
+  // Use global prefs if EditorStartup already run,
   //   else get service for other editor users
   if (!gPrefs) GetPrefsService();
-  
+
   // Use browser colors as initial values for editor's default colors
   var BrowserColors = GetDefaultBrowserColors();
   if (BrowserColors)
@@ -281,7 +281,7 @@ function GetDefaultBrowserColors()
   // Use OS colors for text and background if explicitly asked or pref is not set
   if (!colors.TextColor)
     colors.TextColor = "windowtext";
-  
+
   if (!colors.BackgroundColor)
     colors.BackgroundColor = "window";
 
@@ -320,11 +320,11 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
     return false;
 
   // returns true if found; false if an error or not found
-  
+
   var windowManager = Components.classes["@mozilla.org/rdf/datasource;1?name=window-mediator"].getService();
   if ( !windowManager )
     return false;
-  
+
   var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
   if ( !windowManagerInterface )
     return false;
@@ -338,12 +338,12 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
     var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
     if ( window )
     {
-	    if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
-	    {
-	      window.focus();
-	      return true;
-	    }
-	  }
+      if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
+      {
+        window.focus();
+        return true;
+      }
+    }
   }
 
   // not found
@@ -371,15 +371,15 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   var document = editorShell.editorDocument;
   if (!editorShell.documentModified)
     return true;
-  
+
   var title = window.editorShell.editorDocument.title;
   if (!title)
     title = GetString("untitled");
-      
+
   var dialogTitle = window.editorShell.GetString("SaveDocument");
   var dialogMsg = window.editorShell.GetString("SaveFilePrompt");
   dialogMsg = (dialogMsg.replace(/%title%/,title)).replace(/%reason%/,reasonToSave);
-  
+
   var result = {value:0};
   commonDialogsService.UniversalDialog(
     window,
@@ -402,14 +402,14 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
     0,
     result
     );
-   
-   if (result.value == 0) 
+
+   if (result.value == 0)
    {
      // Save
      var success = window.editorShell.saveDocument(false, false, "text/html");
      return success;
    }
-   
+
    if (result.value == 2) // "Don't Save"
      return true;
 
@@ -427,7 +427,7 @@ function delayedOpenWindow(chrome, flags, url)
   {
     // We are opening an editor window
     // First, switch to another editor window if already editing this page
-    // *** 1/12/01: The only caller to delayedOpenWindow 
+    // *** 1/12/01: The only caller to delayedOpenWindow
     //     (editPage in utilityOverlay.js) already does this
 //    if (FindAndSelectEditorWindowWithURL(url)) return;
 
@@ -473,7 +473,7 @@ function EditorCanClose()
 
 function EditorSetDocumentCharacterSet(aCharset)
 {
-  if(editorShell) 
+  if(editorShell)
   {
     editorShell.SetDocumentCharacterSet(aCharset);
     if( editorShell.editorDocument.location != "about:blank")
@@ -491,7 +491,7 @@ function updateCharsetPopupMenu(menuPopup)
     for (var i = 0; i < menuPopup.childNodes.length; i++)
     {
       var menuItem = menuPopup.childNodes[i];
-		menuItem.setAttribute('disabled', 'true');
+    menuItem.setAttribute('disabled', 'true');
     }
   }
 }
@@ -514,12 +514,12 @@ function onParagraphFormatChange(paraMenuList, commandID)
   // force match with "normal"
   if (state == "body")
     state = "";
-  
+
   if (state == "mixed")
   {
     //Selection is the "mixed" ( > 1 style) state
     paraMenuList.selectedItem = null;
-    paraMenuList.setAttribute("value",GetString('Mixed'));
+    paraMenuList.setAttribute("label",GetString('Mixed'));
   }
   else
   {
@@ -528,7 +528,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
     for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
-      if (menuItem.data == state)
+      if (menuItem.value == state)
       {
         paraMenuList.selectedItem = menuItem;
         break;
@@ -555,7 +555,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
   {
     //Selection is the "mixed" ( > 1 style) state
     fontFaceMenuList.selectedItem = null;
-    fontFaceMenuList.setAttribute("value",GetString('Mixed'));
+    fontFaceMenuList.setAttribute("label",GetString('Mixed'));
   }
   else
   {
@@ -564,7 +564,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
     for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
-      if (menuItem.getAttribute("value") && (menuItem.data.toLowerCase() == state.toLowerCase()))
+      if (menuItem.getAttribute("label") && (menuItem.value.toLowerCase() == state.toLowerCase()))
       {
         fontFaceMenuList.selectedItem = menuItem;
         break;
@@ -577,7 +577,7 @@ function EditorSelectFontSize()
 {
   var select = document.getElementById("FontSizeSelect");
   if (select)
-  { 
+  {
     if (select.selectedIndex == -1)
       return;
 
@@ -589,13 +589,13 @@ function onFontSizeChange(fontSizeMenulist, commandID)
 {
   // If we don't match anything, set to "0 (normal)"
   var newIndex = 2;
-	var size = fontSizeMenulist.getAttribute("size");
+  var size = fontSizeMenulist.getAttribute("size");
   if ( size == "mixed")
   {
     // No single type selected
     newIndex = -1;
   }
-  else 
+  else
   {
     for (var i = 0; i < gFontSizeNames.length; i++)
     {
@@ -612,11 +612,11 @@ function onFontSizeChange(fontSizeMenulist, commandID)
 
 function EditorSetFontSize(size)
 {
-  if( size == "0" || size == "normal" || 
+  if( size == "0" || size == "normal" ||
       size == "medium" )
   {
     editorShell.RemoveTextProperty("font", "size");
-    // Also remove big and small, 
+    // Also remove big and small,
     //  else it will seem like size isn't changing correctly
     editorShell.RemoveTextProperty("small", "");
     editorShell.RemoveTextProperty("big", "");
@@ -670,7 +670,7 @@ function initFontFaceMenu(menuPopup)
     for (var i = 3; i < children.length; i++)
     {
       var menuItem = children[i];
-      var faceType = menuItem.getAttribute("data");
+      var faceType = menuItem.getAttribute("value");
 
       if (faceType)
       {
@@ -685,7 +685,7 @@ function initFontFaceMenu(menuPopup)
     // Check the default item if no other item was checked
     // note that no item is checked in the case of "mixed" selection
     children[0].setAttribute("checked", !fontWasFound);
-  }    
+  }
 }
 
 function initFontSizeMenu(menuPopup)
@@ -733,9 +733,9 @@ function initFontSizeMenu(menuPopup)
     for (var i = -2; i <= 3; i++)
     {
       menuItem = children[menuIndex];
-      
+
       // Skip over medium since it'll be set below.
-      // If font size=0 is actually set, we'll toggle it off below if 
+      // If font size=0 is actually set, we'll toggle it off below if
       // we enter this loop in this case.
       if (menuItem && (i != 0))
       {
@@ -745,14 +745,14 @@ function initFontSizeMenu(menuPopup)
         menuItem.setAttribute("checked", allHas.value);
         // ...but remember if ANY of of selection had size set
         sizeWasFound |= anyHas.value;
-      }      
+      }
       menuIndex++;
     }
-    
+
     // if no size was found, then check default (medium)
     // note that no item is checked in the case of "mixed" selection
     children[mediumIndex].setAttribute("checked", !sizeWasFound);
-  }    
+  }
  }
 
 function onFontColorChange()
@@ -768,7 +768,7 @@ function onFontColorChange()
       if (!color)
         color = gDefaultTextColor;
 
-      button.setAttribute("style", "background-color:"+color); 
+      button.setAttribute("style", "background-color:"+color);
     }
   }
 }
@@ -785,7 +785,7 @@ function onBackgroundColorChange()
       if (!color)
         color = gDefaultBackgroundColor;
 
-      button.setAttribute("style", "background-color:"+color); 
+      button.setAttribute("style", "background-color:"+color);
     }
   }
 }
@@ -808,7 +808,7 @@ function GetBackgroundElementWithColor()
     {
       gColorObj.Type = "Cell";
       gColorObj.CellColor = gColorObj.BackgroundColor;
-      
+
       // Get any color that might be on parent table
       var table = GetParentTable(element);
       gColorObj.TableColor = table.getAttribute("bgcolor");
@@ -848,7 +848,7 @@ function EditorSelectColor(colorType)
   var table;
   var currentColor = "";
   var commandNode;
-  
+
   if (!colorType)
     colorType = "";
 
@@ -885,7 +885,7 @@ function EditorSelectColor(colorType)
     }
     else if (colorType == "Table" && gColorObj.Type == "Page")
       return;
-    
+
     if (colorType == "" && gColorObj.Type == "Cell")
     {
       // Using empty string for requested type means
@@ -911,7 +911,7 @@ function EditorSelectColor(colorType)
   {
     if (currentColor != gColorObj.TextColor)
       window.editorShell.SetTextProperty("font", "color", gColorObj.TextColor);
-  
+
     // Update the command state (this will trigger color button update)
     goUpdateCommand("cmd_fontColor");
   }
@@ -932,10 +932,10 @@ function EditorSelectColor(colorType)
             window.editorShell.RemoveAttribute(table, "bgcolor");
         }
       }
-    } 
+    }
     else if (currentColor != gColorObj.BackgroundColor)
       window.editorShell.SetBackgroundColor(gColorObj.BackgroundColor);
-    
+
     goUpdateCommand("cmd_backgroundColor");
   }
   window._content.focus();
@@ -954,8 +954,8 @@ function GetParentTable(element)
   return node;
 }
 
-/*TODO: We need an oncreate hook to do enabling/disabling for the 
-        Format menu. There should be code like this for the 
+/*TODO: We need an oncreate hook to do enabling/disabling for the
+        Format menu. There should be code like this for the
         object-specific "Properties" item
 */
 
@@ -967,7 +967,7 @@ function GetObjectForProperties()
   if (element)
     return element;
 
-  // Find nearest parent of selection anchor node 
+  // Find nearest parent of selection anchor node
   //   that is a link, list, table cell, or table
 
   var anchorNode = editorShell.editorSelection.anchorNode;
@@ -1051,15 +1051,15 @@ function SetEditMode(mode)
         }
       }
 
-      // We can't monitor changes while in HTML Source, 
-      //   so the nsSaveCommand::isCommandEnabled() will always return true 
+      // We can't monitor changes while in HTML Source,
+      //   so the nsSaveCommand::isCommandEnabled() will always return true
       //   when in HTML Source mode
       goUpdateCommand("cmd_save");
 
       // Get the entire document's source string
 
       var flags = gOutputEncodeEntities;
-      // 
+      //
       var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
       if (prettyPrint)
         flags |= gOutputFormatted;
@@ -1070,7 +1070,7 @@ function SetEditMode(mode)
       gSourceContentWindow.value = source.slice(start);
       gSourceContentWindow.focus();
     }
-    else if (previousMode == DisplayModeSource) 
+    else if (previousMode == DisplayModeSource)
     {
       // We are comming from edit source mode,
       //   so transfer that back into the document
@@ -1121,8 +1121,8 @@ function CollapseItem(id, collapse)
   var item = document.getElementById(id);
   if (item)
   {
-	  if(collapse != (item.getAttribute("collapsed") == "true"))
-		  item.setAttribute("collapsed", collapse ? "true" : "");
+    if(collapse != (item.getAttribute("collapsed") == "true"))
+      item.setAttribute("collapsed", collapse ? "true" : "");
   }
 }
 
@@ -1131,8 +1131,8 @@ function DisableItem(id, disable)
   var item = document.getElementById(id);
   if (item)
   {
-	  if(disable != (item.getAttribute("disabled") == "true"))
-		  item.setAttribute("disabled", disable ? "true" : "");
+    if(disable != (item.getAttribute("disabled") == "true"))
+      item.setAttribute("disabled", disable ? "true" : "");
   }
 }
 
@@ -1150,8 +1150,8 @@ function SetDisplayMode(mode)
     // Save the last non-source mode so we can cancel source editing easily
     if (mode != DisplayModeSource)
       PreviousNonSourceDisplayMode = mode;
-  
-  
+
+
     // Editorshell does the style sheet loading/unloading
     editorShell.SetDisplayMode(mode);
 
@@ -1180,7 +1180,7 @@ function SetDisplayMode(mode)
 
       gSourceContentWindow.focus();
     }
-    else 
+    else
     {
       // Switch to the normal editor (first in the deck)
       gContentWindowDeck.setAttribute("index","0");
@@ -1220,7 +1220,7 @@ function SetDisplayMode(mode)
     }
     if (menuID)
       document.getElementById(menuID).setAttribute("checked","true");
-    
+
     return true;
   }
   return false;
@@ -1296,14 +1296,14 @@ function EditorInitEditMenu()
     document.getElementById("menu_clear").setAttribute("acceltext", GetString("Del"));
 */
 
-  //TODO: We should modify the Paste menuitem to build a submenu 
+  //TODO: We should modify the Paste menuitem to build a submenu
   //      with multiple paste format types
 }
 
 function EditorOpenUrl(url)
 {
   if (!url)
-    return; 
+    return;
 
   // if the existing window is untouched, just load there
   if (!FindAndSelectEditorWindowWithURL(url))
@@ -1314,11 +1314,11 @@ function EditorOpenUrl(url)
     }
     else
     {
-  	  // open new window
+      // open new window
       window.openDialog("chrome://editor/content",
-  	                    "_blank",
-  	                    "chrome,dialog=no,all",
-  	                    url);
+                        "_blank",
+                        "chrome,dialog=no,all",
+                        url);
     }
   }
 }
@@ -1329,8 +1329,8 @@ function BuildRecentMenu(savePrefs)
   if (!gPrefs) return;
 
   var popup = document.getElementById("menupopup_RecentFiles");
-  if (!popup || !window.editorShell || 
-      !window.editorShell.editorDocument) 
+  if (!popup || !window.editorShell ||
+      !window.editorShell.editorDocument)
     return;
 
   // Delete existing menu
@@ -1342,7 +1342,7 @@ function BuildRecentMenu(savePrefs)
   var curTitle = window.editorShell.editorDocument.title;
   var curUrl = window.editorShell.editorDocument.location;
   var newDoc = (curUrl == "about:blank");
-  var historyCount = 10; 
+  var historyCount = 10;
   try { historyCount = gPrefs.GetIntPref("editor.history.url_maximum"); } catch(e) {}
   var titleArray = new Array(historyCount);
   var urlArray   = new Array(historyCount);
@@ -1365,7 +1365,7 @@ function BuildRecentMenu(savePrefs)
 
     if (!url)
       break;
-    
+
     // Skip over current URL
     if (url != curUrl)
     {
@@ -1376,11 +1376,11 @@ function BuildRecentMenu(savePrefs)
 
       // Save in array for prefs
       if (savePrefs && arrayIndex < historyCount)
-      {    
+      {
         titleArray[arrayIndex] = title;
         urlArray[arrayIndex] = url;
         arrayIndex++;
-      }      
+      }
     }
   }
 
@@ -1432,11 +1432,11 @@ function AppendRecentMenuitem(menupopup, title, url, menuIndex)
       if (title)
         itemString += "]";
 
-      menuItem.setAttribute("value", itemString);
-      menuItem.setAttribute("data", url);
+      menuItem.setAttribute("label", itemString);
+      menuItem.setAttribute("value", url);
       if (accessKey != " ")
-        menuItem.setAttribute("accesskey", accessKey); 
-      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('data'))"); 
+        menuItem.setAttribute("accesskey", accessKey);
+      menuItem.setAttribute("oncommand", "EditorOpenUrl(getAttribute('value'))");
       menupopup.appendChild(menuItem);
     }
   }
@@ -1525,7 +1525,7 @@ function InitObjectPropertiesMenuitem(id)
         }
         break;
     }
-    menuStr = menuStr.replace(/%obj%/,objStr);        
+    menuStr = menuStr.replace(/%obj%/,objStr);
   }
   else
   {
@@ -1535,7 +1535,7 @@ function InitObjectPropertiesMenuitem(id)
     menuStr = menuStr.replace(/%obj%/,"").replace(/^\s+/, "");
 
   }
-  menuItem.setAttribute("value", menuStr);
+  menuItem.setAttribute("label", menuStr);
   menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
   return name;
 }
@@ -1547,14 +1547,14 @@ function InitParagraphMenu()
   var IDSuffix;
 
   // PROBLEM: When we get blockquote, it masks other styles contained by it
-  // We need a separate method to get blockquote state  
+  // We need a separate method to get blockquote state
 
   // We use "x" as uninitialized paragraph state
   if (!state || state == "x")
     IDSuffix = "bodyText" // No paragraph container
   else
     IDSuffix = state;
-  
+
   // Set "radio" check on one item, but...
   var menuItem = document.getElementById("menu_"+IDSuffix);
   menuItem.setAttribute("checked", "true");
@@ -1600,7 +1600,7 @@ function InitAlignMenu()
     IDSuffix = "left"
   else
     IDSuffix = state;
-  
+
   var menuItem = document.getElementById("menu_"+IDSuffix);
   menuItem.setAttribute("checked", "true");
 
@@ -1638,7 +1638,7 @@ function EditorSetDefaultPrefs()
   {
     domdoc.replaceChild(newdoctype, domdoc.doctype);
   }
-  
+
   // search for head; we'll need this for meta tag additions
   var headelement = 0;
   var headnodelist = domdoc.getElementsByTagName("head");
@@ -1650,12 +1650,12 @@ function EditorSetDefaultPrefs()
       headelement = headnodelist.item(0);
     }
   }
-  
+
   // search for author meta tag.
   // if one is found, don't do anything.
-  // if not, create one and make it a child of the head tag 
+  // if not, create one and make it a child of the head tag
   //   and set its content attribute to the value of the editor.author preference.
-  
+
   var nodelist = domdoc.getElementsByTagName("meta");
   if ( nodelist )
   {
@@ -1739,7 +1739,7 @@ function EditorSetDefaultPrefs()
       var active_link_color;
       var followed_link_color;
       var background_color;
-    
+
       try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
       try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
       try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
@@ -1761,7 +1761,7 @@ function EditorSetDefaultPrefs()
 
       if (link_color)
         bodyelement.setAttribute("link", link_color);
-      if (active_link_color) 
+      if (active_link_color)
         bodyelement.setAttribute("alink", active_link_color);
       if (followed_link_color)
         bodyelement.setAttribute("vlink", followed_link_color);
@@ -1817,19 +1817,19 @@ function EditorReflectDocState()
 {
   var docState = window.editorShell.documentStatus;
   var stateString;
-  
+
   if (docState == 0) {
     stateString = "unmodified";
   } else {
     stateString = "modified";
   }
-  
+
   var oldModified = documentModified;
   documentModified = (window.editorShell.documentStatus != 0);
-  
+
   if (oldModified != documentModified)
     UpdateSaveButton(documentModified);
-  
+
   return true;
 }
 
@@ -1914,7 +1914,7 @@ function onStateButtonUpdate(button, commmandID, onState)
 function onStyleChange(theStyle)
 {
   //dump("in onStyleChange with " + theStyle + "\n");
-  
+
   var broadcaster = document.getElementById("cmd_" + theStyle);
   var isOn = broadcaster.getAttribute("state");
 
@@ -1956,7 +1956,7 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
     colorWell = document.getElementById(ColorWellID);
 
   var colorPicker = document.getElementById(ColorPickerID);
-  if (colorPicker) 
+  if (colorPicker)
   {
     // Extract color from colorPicker and assign to colorWell.
     var color = colorPicker.getAttribute("color");
@@ -1964,10 +1964,10 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
     if (colorWell && color)
     {
       // Use setAttribute so colorwell can be a XUL element, such as button
-      colorWell.setAttribute("style", "background-color: " + color); 
+      colorWell.setAttribute("style", "background-color: " + color);
     }
   }
-  //TODO: Trigger UI update to get color from the current caret/selection  
+  //TODO: Trigger UI update to get color from the current caret/selection
   return color;
 }
 
@@ -1980,7 +1980,7 @@ function IsSpellCheckerInstalled()
   if (gSoughtSpellChecker)
     return gHaveSpellChecker;
 
-  var spellcheckerClass = Components.classes["@mozilla.org/spellchecker;1"]; 
+  var spellcheckerClass = Components.classes["@mozilla.org/spellchecker;1"];
   gHaveSpellChecker = (spellcheckerClass != null);
   gSoughtSpellChecker = true;
   dump("Have SpellChecker = "+gHaveSpellChecker+"\n");
@@ -1995,7 +1995,7 @@ function IsFindInstalled()
   if (gSoughtFind)
     return gHaveFind;
 
-  var findClass = Components.classes["@mozilla.org/appshell/component/find;1"]; 
+  var findClass = Components.classes["@mozilla.org/appshell/component/find;1"];
   gHaveFind = (findClass != null);
   gSoughtFind = true;
   dump("Have Find = "+gHaveFind+"\n");
@@ -2018,11 +2018,11 @@ function RemoveInapplicableUIElements()
     findMenuItem = document.getElementById("menu_findnext");
     if (findMenuItem)
       findMenuItem.setAttribute("hidden", "true");
-    
+
     var replaceMenuItem = document.getElementById("menu_replace");
     if (replaceMenuItem)
       replaceMenuItem.setAttribute("hidden", "true");
-    
+
     var findSepItem  = document.getElementById("sep_find");
     if (findSepItem)
       findSepItem.parentNode.removeChild(findSepItem);
@@ -2034,7 +2034,7 @@ function RemoveInapplicableUIElements()
     var spellingButton = document.getElementById("spellingButton");
     if (spellingButton)
       spellingButton.setAttribute("hidden", "true");
-    
+
     var spellingMenuItem = document.getElementById("menu_checkspelling");
     if (spellingMenuItem)
       spellingMenuItem.setAttribute("hidden", "true");
@@ -2050,17 +2050,17 @@ function GetPrefsService()
   // Store the prefs object
   try {
     var prefsService = Components.classes["@mozilla.org/preferences;1"];
-    if (prefsService) 
+    if (prefsService)
       prefsService = prefsService.getService();
     if (prefsService)
-      gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);    
+      gPrefs = prefsService.QueryInterface(Components.interfaces.nsIPref);
 
     if (!gPrefs)
       dump("failed to get prefs service!\n");
   }
   catch(ex)
   {
-	  dump("failed to get prefs service!\n");
+    dump("failed to get prefs service!\n");
   }
 }
 
@@ -2094,7 +2094,7 @@ function InitJoinCellMenuitem(id)
   else
     menuText = GetString("JoinCellToRight");
 
-  menuItem.setAttribute("value",menuText);
+  menuItem.setAttribute("label",menuText);
   menuItem.setAttribute("accesskey",GetString("JoinCellAccesskey"));
 }
 
@@ -2103,39 +2103,39 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId)
   // Change wording of menuitems depending on selection
   var stylesItem = document.getElementById(removeStylesId);
   var linkItem = document.getElementById(removeLinksId);
-  
+
   var isCollapsed = editorShell.editorSelection.isCollapsed;
   if (stylesItem)
   {
-    stylesItem.setAttribute("value", isCollapsed ? GetString("StopTextStyles") : GetString("RemoveTextStyles"));
+    stylesItem.setAttribute("label", isCollapsed ? GetString("StopTextStyles") : GetString("RemoveTextStyles"));
     stylesItem.setAttribute("accesskey", GetString("RemoveTextStylesAccesskey"));
   }
   if (linkItem)
   {
-    linkItem.setAttribute("value", isCollapsed ? GetString("StopLinks") : GetString("RemoveLinks"));
+    linkItem.setAttribute("label", isCollapsed ? GetString("StopLinks") : GetString("RemoveLinks"));
     linkItem.setAttribute("accesskey", GetString("RemoveLinksAccesskey"));
     // Note: disabling text style is a pain since there are so many - forget it!
 
-    // Disable if not in a link, but always allow "Remove" 
-    //  if selection isn't collapsed since we only look at anchor node 
+    // Disable if not in a link, but always allow "Remove"
+    //  if selection isn't collapsed since we only look at anchor node
     DisableItem(removeLinksId, isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
   }
 }
 
 function goUpdateTableMenuItems(commandset)
 {
-  var enabled = false; 
+  var enabled = false;
 
   var enabledIfTable = false;
   if (window.editorShell && window.editorShell.documentEditable)
   {
     var selectedCountObj = new Object();
     var tagNameObj = new Object();
-    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);  
+    var element = editorShell.GetSelectedOrParentTableElement(tagNameObj, selectedCountObj);
     if (element)
     {
       // Value when we need to have a selected table or inside a table
-      enabledIfTable = true;  
+      enabledIfTable = true;
 
       // All others require being inside a cell or selected cell
       enabled = (tagNameObj.value == "td");
@@ -2154,7 +2154,7 @@ function goUpdateTableMenuItems(commandset)
       {
         // Call the update method in the command class
         goUpdateCommand(commandID);
-      } 
+      }
       // Directly set with the values calculated here
       else if (commandID == "cmd_DeleteTable" ||
                commandID == "cmd_NormalizeTable" ||
@@ -2253,10 +2253,10 @@ function EditorOnFocus()
 
 function SwitchInsertCharToThisWindow(windowWithDialog)
 {
-  if (windowWithDialog && "InsertCharWindow" in windowWithDialog && 
+  if (windowWithDialog && "InsertCharWindow" in windowWithDialog &&
       windowWithDialog.InsertCharWindow)
   {
-	  // Move dialog association to the current window
+    // Move dialog association to the current window
     window.InsertCharWindow = windowWithDialog.InsertCharWindow;
     windowWithDialog.InsertCharWindow = null;
 
@@ -2274,20 +2274,20 @@ function SwitchInsertCharToThisWindow(windowWithDialog)
 function FindEditorWithInsertCharDialog()
 {
   // Find window with an InsertCharsWindow and switch association to this one
-	var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-	var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-	var enumerator = windowManagerInterface.getEnumerator( null );
+  var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
+  var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+  var enumerator = windowManagerInterface.getEnumerator( null );
 
-	while ( enumerator.hasMoreElements()  )
-	{
-		var  tempWindow = enumerator.getNext();
+  while ( enumerator.hasMoreElements()  )
+  {
+    var  tempWindow = enumerator.getNext();
 
-		if (tempWindow != window && "InsertCharWindow" in tempWindow && 
+    if (tempWindow != window && "InsertCharWindow" in tempWindow &&
         tempWindow.InsertCharWindow)
-		{
+    {
       return tempWindow;
-		}
-	}
+    }
+  }
   return null;
 }
 
@@ -2316,29 +2316,29 @@ function EditorFindOrCreateInsertCharWindow()
 //   or close it if none found  (May be a mail composer)
 function SwitchInsertCharToAnotherEditorOrClose()
 {
-	if ("InsertCharWindow" in window && window.InsertCharWindow)
+  if ("InsertCharWindow" in window && window.InsertCharWindow)
   {
     var windowManager = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService();
-	  var	windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
-	  var enumerator = windowManagerInterface.getEnumerator( null );
+    var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
+    var enumerator = windowManagerInterface.getEnumerator( null );
 
     // TODO: Fix this to search for command controllers and look for "cmd_InsertChars"
     // For now, detect just Web Composer and HTML Mail Composer
-	  while ( enumerator.hasMoreElements()  )
-	  {
-		  var  tempWindow = enumerator.getNext();
-		  if (tempWindow != window && tempWindow.editorShell &&
+    while ( enumerator.hasMoreElements()  )
+    {
+      var  tempWindow = enumerator.getNext();
+      if (tempWindow != window && tempWindow.editorShell &&
           tempWindow.gIsHTMLEditor || tempWindow.editorShell.editorType == "htmlmail")
 //          tempWindow.editorShell.editorDocument.commandDispatcher.getControllerForCommand("cmd_InsertChars"))
-		  {
+      {
         tempWindow.InsertCharWindow = window.InsertCharWindow;
         window.InsertCharWindow = null;
 
         tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
         tempWindow.InsertCharWindow.opener = tempWindow;
         return;
-		  }
-	  }
+      }
+    }
     // Didn't find another editor - close the dialog
     window.InsertCharWindow.close();
   }

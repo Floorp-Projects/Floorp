@@ -78,12 +78,12 @@ function UpdateJSEAttributes()
       element.removeAttribute(name);
     else continue; // doesn't exist, so don't bother removing it.
   }
-  
+
   // Add events
   for( i = 0; i < JSEAList.childNodes.length; i++)
   {
     var item = JSEAList.childNodes[i];
-    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    name = TrimString(item.firstChild.firstChild.getAttribute("label"));
     value = TrimString(item.firstChild.lastChild.firstChild.value);
 
     // set the event handler

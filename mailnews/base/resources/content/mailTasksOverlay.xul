@@ -16,23 +16,23 @@
     // which is included by most clients. 
     function toMessengerWindow()
       {
-	var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
+  var pref = Components.classes["@mozilla.org/preferences;1"].getService(Components.interfaces.nsIPref);
         var windowDoc = "chrome://messenger/content/messenger.xul";
-      	try
+        try
           {
-    	    	var layoutType = pref.GetIntPref("mail.pane_config");
-    			  windowDoc = !layoutType ? "chrome://messenger/content/messenger.xul" : 
+            var layoutType = pref.GetIntPref("mail.pane_config");
+            windowDoc = !layoutType ? "chrome://messenger/content/messenger.xul" : 
                                           "chrome://messenger/content/mail3PaneWindowVertLayout.xul";
-    	    }
-    	  catch(ex)
-    	    {
-    	    }
-		    toOpenWindowByType("mail:3pane", windowDoc);
+          }
+        catch(ex)
+          {
+          }
+        toOpenWindowByType("mail:3pane", windowDoc);
       }
     
     function toAddressBook() 
       {
-    	  toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
+        toOpenWindowByType("mail:addressbook", "chrome://messenger/content/addressbook/addressbook.xul");
       }
     
     function toNewsgroups() 
@@ -42,7 +42,7 @@
 
     function toImport()
       {
-      	window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
+        window.openDialog("chrome://messenger/content/importDialog.xul","importDialog","chrome, modal, titlebar", {importType: "addressbook"});
       }
 
   ]]>
@@ -54,7 +54,7 @@
 
 
   <broadcasterset id="broadcasterset">
-    <broadcaster id="Tasks:Mail" value="&messengerCmd.label;" oncommand="toMessengerWindow();"/>
+    <broadcaster id="Tasks:Mail" label="&messengerCmd.label;" oncommand="toMessengerWindow();"/>
   </broadcasterset>
   
 

@@ -49,7 +49,7 @@
           HideImage();
         }
       } catch(e) {
-	HideImage();
+  HideImage();
         dump("imageblocker.enabled pref is missing from all.js\n");
       }
     }
@@ -94,42 +94,42 @@
 
   <!-- tasksOverlay menu items -->
   <menupopup  id="personalManagers"> 
-    <menu value="&cookieCookieManager.label;"
+    <menu label="&cookieCookieManager.label;"
                 accesskey="&cookieCookieManager.accesskey;"
                 position="1">
       <menupopup>
-        <menuitem value="&cookieDisplayCookiesCmd.label;"
+        <menuitem label="&cookieDisplayCookiesCmd.label;"
                   accesskey="&cookieDisplayCookiesCmd.accesskey;" 
                   oncommand="viewCookies();"/> 
-        <menuitem id="AllowCookies" value="&cookieAllowCookiesCmd.label;"
+        <menuitem id="AllowCookies" label="&cookieAllowCookiesCmd.label;"
                   accesskey="&cookieAllowCookiesCmd.accesskey;" 
                   msg="&cookieAllowCookiesMsg.label;"
                   oncommand="CookieImageAction('cookieAllow');"/> 
-        <menuitem id="BlockCookies" value="&cookieBlockCookiesCmd.label;"
+        <menuitem id="BlockCookies" label="&cookieBlockCookiesCmd.label;"
                   accesskey="&cookieBlockCookiesCmd.accesskey;" 
                   msg="&cookieBlockCookiesMsg.label;"
                   oncommand="CookieImageAction('cookieBlock');"/> 
       </menupopup>
     </menu>
-    <menu value="&cookieImageManager.label;"
+    <menu label="&cookieImageManager.label;"
           accesskey="&cookieImageManager.accesskey;" id="image"
           position="2">
       <menupopup oncreate="CheckForImage()">
-        <menuitem value="&cookieDisplayImagesCmd.label;"
+        <menuitem label="&cookieDisplayImagesCmd.label;"
                   accesskey="&cookieDisplayImagesCmd.accesskey;" 
                   oncommand="viewImages();"/> 
-        <menuitem id="AllowImages" value="&cookieAllowImagesCmd.label;"
+        <menuitem id="AllowImages" label="&cookieAllowImagesCmd.label;"
                   accesskey="&cookieAllowImagesCmd.accesskey;" 
                   msg="&cookieAllowImagesMsg.label;"
                   oncommand="CookieImageAction('imageAllow');"/> 
-        <menuitem id="BlockImages" value="&cookieBlockImagesCmd.label;"
+        <menuitem id="BlockImages" label="&cookieBlockImagesCmd.label;"
                   accesskey="&cookieBlockImagesCmd.accesskey;" 
                   msg="&cookieBlockImagesMsg.label;"
                   oncommand="CookieImageAction('imageBlock');"/> 
       </menupopup>
     </menu>
     <menuseparator insertbefore="lastInPersonalManagers"/>
-    <menuitem value="&cookieTutorialCmd.label;"
+    <menuitem label="&cookieTutorialCmd.label;"
               accesskey="&cookieTutorialCmd.accesskey;"
               oncommand="viewTutorial();"
               insertbefore="lastInPersonalManagers"/>

@@ -56,12 +56,12 @@
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox orient="vertical" id="advancedSettings">
-    <title value="&advancedTitle.label;"/>
+    <label value="&advancedTitle.label;"/>
     <vbox autostretch="never" id="contentEnablingBox">
-      <checkbox id="advancedJavaAllow" value="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+      <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="security.enable_java"
                 prefattribute="checked"/>
-      <checkbox id="javascriptEnabled" value="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
+      <checkbox id="javascriptEnabled" label="&enbJsCheck.label;" accesskey="&enbJsCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="javascript.enabled"
                 prefattribute="checked"/>
     </vbox>
@@ -71,7 +71,7 @@
       <separator/>
     </vbox>
     <vbox autostretch="never">
-      <checkbox id="advancedMailFTP" value="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+      <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
                 pref="true" preftype="bool" prefstring="advanced.mailftp"
                 prefattribute="checked" oncommand="ftpCheck();"/>
     </vbox>

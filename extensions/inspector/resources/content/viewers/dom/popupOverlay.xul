@@ -8,13 +8,13 @@
   <popupset id="ppsGlobalPopupset">
     <menupopup id="ppViewerContext-dom">
       <menuitem id="item:find"
-        value="&cmdShowFindDialog.label;"
+        label="&cmdShowFindDialog.label;"
         accesskey="&cmdShowFindDialog.accesskey;"
         key="key:find"
         observes="cmd:find"/>
 
       <menuitem id="item:findNext"
-        value="&cmdFindNext.label;"
+        label="&cmdFindNext.label;"
         key="key:findNext"
         observes="cmd:findNext"/>
 
@@ -23,14 +23,14 @@
       <menuitem id="item:toggleAnon"
         class="menuitem-iconic"
         type="checkbox"
-        value="&cmdToggleAnonContent.label;"
+        label="&cmdToggleAnonContent.label;"
         accesskey="&cmdToggleAnonContent.accesskey;"
         observes="cmd:toggleAnon"/>
 
       <menuseparator/>
 
       <menuitem id="item:showColumns"
-        value="&cmdShowColumnsDialog.label;"
+        label="&cmdShowColumnsDialog.label;"
         accesskey="&cmdShowColumnsDialog.accesskey;"
         observes="cmd:showColumns"/>
 
@@ -40,20 +40,20 @@
   <menupopup id="mppSearch">
 
     <menuitem id="item:find" position="1"
-      value="&cmdShowFindDialog.label;"
+      label="&cmdShowFindDialog.label;"
       accesskey="&cmdShowFindDialog.accesskey;"
       key="key:find"
       observes="cmd:find"/>
 
     <menuitem id="item:findNext" position="2"
-      value="&cmdFindNext.label;"
+      label="&cmdFindNext.label;"
       key="key:findNext"
       observes="cmd:findNext"/>
     
     <menuseparator position="3"/>
 
     <menuitem id="item:selectByClick" position="4"
-      value="&cmdSelectByClick.label;"
+      label="&cmdSelectByClick.label;"
       accesskey="&cmdSelectByClick.accesskey;"
       observes="cmd:selectByClick"/>
   </menupopup>
@@ -62,7 +62,7 @@
     <menuitem id="item:toggleAnon"
       class="menuitem-iconic"
       type="checkbox"
-      value="&cmdToggleAnonContent.label;"
+      label="&cmdToggleAnonContent.label;"
       accesskey="&cmdToggleAnonContent.accesskey;"
       observes="cmd:toggleAnon"/>
   </menupopup>

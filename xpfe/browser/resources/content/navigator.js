@@ -197,8 +197,8 @@ nsXULBrowserWindow.prototype =
 
     // check the current value so we don't trigger an attribute change
     // and cause needless (slow!) UI updates
-    if (statusTextFld.getAttribute("value") != text) {
-      statusTextFld.setAttribute("value", text);
+    if (statusTextFld.label != text) {
+      statusTextFld.label = text;
     }
   },
 
@@ -407,11 +407,11 @@ nsButtonPrefListener.prototype =
     // verify that we're changing a button pref
     if (topic != "nsPref:changed") return;
     if (prefName.substr(0, this.domain.length) != this.domain) return;
-    
+
     var buttonName = prefName.substr(this.domain.length+1);
     var buttonId = buttonName + "-button";
     var button = document.getElementById(buttonId);
-    
+
     var show = pref.GetBoolPref(prefName);
     if (show)
       button.setAttribute("hidden","false");
@@ -454,7 +454,7 @@ function Startup()
   appCore.setWebShellWindow(window);
 
   gURLBar = document.getElementById("urlbar");
-   
+
   // set the offline/online mode
   setOfflineStatus();
 
@@ -536,7 +536,7 @@ function Startup()
       _content.focus();
     else
       gURLBar.focus();
-     
+
     // Perform default browser checking.
     checkForDefaultBrowser();
   }
@@ -574,7 +574,7 @@ function Shutdown()
   // unregister us as a pref listener
   pref.removeObserver(window.buttonPrefListener.domain,
                       window.buttonPrefListener);
-  
+
   // Close the app core.
   if (appCore)
     appCore.close();
@@ -612,14 +612,14 @@ function gotoHistoryIndex(aEvent)
     return false;
   }
   return true;
-  
+
 }
 
 function BrowserBack()
 {
   try {
     getWebNavigation().goBack();
-  } 
+  }
   catch(ex) {
   }
   UpdateBackForwardButtons();
@@ -629,7 +629,7 @@ function BrowserForward()
 {
   try {
     getWebNavigation().goForward();
-  } 
+  }
   catch(ex) {
   }
   UpdateBackForwardButtons();
@@ -649,7 +649,7 @@ function BrowserStop()
 {
   try {
     getWebNavigation().stop();
-  } 
+  }
   catch(ex) {
   }
 }
@@ -727,7 +727,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   // var url = getWebNavigation().currentURI.spec;
   var url = _content.location.href;
 
-  //Check to see if search string contains "://" or ".". 
+  //Check to see if search string contains "://" or ".".
   //If it does treat as url and match for pattern
   var urlmatch= /:\/\/|\./ ;
   var result = urlmatch.test(searchStr);
@@ -741,7 +741,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
   // Fallback to a default url (one that we can get sidebar search results for)
   if (!defaultSearchURL)
     defaultSearchURL = fallbackDefaultSearchURL;
-  
+
   //Check to see if content url equals url in location bar.
   //If they match then go to default search URL engine
 
@@ -752,7 +752,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
       loadURI(gNavigatorRegionBundle.getString("otherSearchURL"));
 
   } else {
-  
+
   //Check to see if location bar field is a url
   //If it is a url go to URL.  A Url is "://" or "." as commented above
   //Otherwise search on entry
@@ -799,7 +799,7 @@ function OpenSearch(tabName, forceDialogFlag, searchStr)
         }
         loadURI(defaultSearchURL);
       }
-     } 
+     }
     }
   }
 
@@ -1142,7 +1142,7 @@ var consoleListener = {
       var statusbarDisplay = document.getElementById("statusbar-display");
       statusbarDisplay.setAttribute("error", "true");
       statusbarDisplay.addEventListener("click", loadErrorConsole, true);
-      statusbarDisplay.value = gNavigatorBundle.getString("jserror");
+      statusbarDisplay.label = gNavigatorBundle.getString("jserror");
       this.isShowingError = true;
     }
   },
@@ -1194,13 +1194,13 @@ function clearErrorNotification()
   consoleListener.isShowingError = false;
 }
 
-var urlWidgetService = null; 
-try {                                                                                
-  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]             
-                               .getService(Components.interfaces.nsIUrlWidget); 
-} catch (ex) {                                                           
-}                                                                               
- 
+var urlWidgetService = null;
+try {
+  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
+                               .getService(Components.interfaces.nsIUrlWidget);
+} catch (ex) {
+}
+
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
 function postURLToNativeWidget()
 {
@@ -1310,7 +1310,7 @@ function stylesheetFillPopup(forDocument, menuPopup, itemNoOptStyles)
 
       if (!lastWithSameTitle) {
         var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("value", currentStyleSheet.title);
+        menuItem.setAttribute("label", currentStyleSheet.title);
         menuItem.setAttribute("data", currentStyleSheet.title);
         menuItem.setAttribute("type", "radio");
         menuItem.setAttribute("checked", !currentStyleSheet.disabled);

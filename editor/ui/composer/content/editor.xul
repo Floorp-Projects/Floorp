@@ -100,7 +100,7 @@
     <broadcaster id="Editor:Throbber" busy="false"/>
   </broadcasterset>
 
-	<!-- keys are appended from the overlay -->
+  <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
   <toolbox class="toolbox-top" id="EditorToolbox">
@@ -108,7 +108,7 @@
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
-    <menu id="viewMenu" value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
+    <menu id="viewMenu" label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>
@@ -124,7 +124,7 @@
  
     <menu id="insertMenu"/>
 
-    <menu id="formatMenu" value="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
+    <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatmenu.accesskey;">
       <menupopup id="formatMenuPopup">
         <menuitem id="objectProperties"/>
         <menuitem id="colorsAndBackground"/>
@@ -235,11 +235,11 @@
 
     <box id="EditModeToolbar" hidden="true" autostretch="never" valign="middle" persist="hidden collapsed">
       <tabbox id="EditModeTabbox" class="tabbox-bottom" flex="1">
-     	<tab id="NormalModeButton"/>
-      	<tab id="TagModeButton"/>
-      	<tab id="SourceModeButton"/>
-      	<tab id="PreviewModeButton"/>
-	  </tabbox>
+      <tab id="NormalModeButton"/>
+        <tab id="TagModeButton"/>
+        <tab id="SourceModeButton"/>
+        <tab id="PreviewModeButton"/>
+    </tabbox>
     </box>
 
     <!-- Some of this is from globarOverlay.xul -->
@@ -248,7 +248,7 @@
       <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0">
           <observes element="Editor:Throbber" attribute="busy"/>
       </progressmeter>
-      <statusbarpanel id="statusText" value="&statusText.label;" flex="1" crop="right"/>
+      <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
     </statusbar>
     
   </box> <!-- appcontent -->

@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -92,16 +92,16 @@ var nsSearchResultsController =
 }
 
 // nsIMsgSearchNotify object
-var gSearchNotificationListener = 
+var gSearchNotificationListener =
 {
-    onSearchHit: function(header, folder) 
+    onSearchHit: function(header, folder)
     {
         gNumOfSearchHits++;
     },
 
-    onSearchDone: function(status) 
+    onSearchDone: function(status)
     {
-        gButton.setAttribute("value", gSearchBundle.getString("labelForSearchButton"));
+        gButton.setAttribute("label", gSearchBundle.getString("labelForSearchButton"));
 
         var statusMsg;
         // if there are no hits, it means no matches were found in the search.
@@ -118,10 +118,10 @@ var gSearchNotificationListener =
         gStatusFeedback.showStatusString(statusMsg);
         gStatusBar.setAttribute("mode","normal");
     },
-	
-    onNewSearch: function() 
+
+    onNewSearch: function()
     {
-      gButton.setAttribute("value", gSearchBundle.getString("labelForStopButton"));
+      gButton.setAttribute("label", gSearchBundle.getString("labelForStopButton"));
 //        if (gThreadTree)
 //            gThreadTree.clearItemSelection();
 
@@ -143,10 +143,10 @@ function searchOnLoad()
 
   if (window.arguments && window.arguments[0])
       selectFolder(window.arguments[0].folder);
-  
+
   onMore(null);
   document.commandDispatcher.updateCommands('mail-search');
-	moveToAlertPosition();
+  moveToAlertPosition();
 }
 
 
@@ -191,7 +191,7 @@ function getFirstItemByTag(root, tag)
     var node;
     if (root.localName == tag)
         return root;
-    
+
     if (root.childNodes) {
         for (node = root.firstChild; node; node=node.nextSibling) {
             if (node.localName != "template") {
@@ -209,14 +209,14 @@ function selectFolder(folder) {
         // walk folders to find first menuitem
         var firstMenuitem = getFirstItemByTag(gFolderPicker, "menuitem");
         gFolderPicker.selectedItem = firstMenuitem;
-            
+
     } else {
-        // the URI of the folder is in the data attribute of the menuitem
+        // the URI of the folder is in the value attribute of the menuitem
         var folderResource =
             folder.QueryInterface(Components.interfaces.nsIRDFResource);
-        
+
         var elements =
-            gFolderPicker.getElementsByAttribute("data", folderResource.Value);
+            gFolderPicker.getElementsByAttribute("value", folderResource.Value);
         if (elements && elements.length)
             gFolderPicker.selectedItem = elements[0];
     }
@@ -233,7 +233,7 @@ function updateSearchFolderPicker() {
     gCurrentFolder =
         RDF.GetResource(selectedItem.id).QueryInterface(nsIMsgFolder);
 
-    
+
     setSearchScope(GetScopeForFolder(gCurrentFolder));
 
 }
@@ -266,32 +266,32 @@ function onSearch(event)
 }
 
 function AddSubFolders(folder) {
-	if (folder.hasSubFolders)
-	{
-		var subFolderEnumerator = folder.GetSubFolders();
-		var done = false;
-		while (!done)
-		{
-			var next = subFolderEnumerator.currentItem();
-			if (next)
-			{
-				var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
-				if (nextFolder)
-				{
-					gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
-					AddSubFolders(nextFolder);
-				}
-			}
-			try 
-			{
-				subFolderEnumerator.next();
-			 } 
-			 catch (ex) 
-			 {
-				  done = true;
-			 }
-		}
-	}
+  if (folder.hasSubFolders)
+  {
+    var subFolderEnumerator = folder.GetSubFolders();
+    var done = false;
+    while (!done)
+    {
+      var next = subFolderEnumerator.currentItem();
+      if (next)
+      {
+        var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
+        if (nextFolder)
+        {
+          gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
+          AddSubFolders(nextFolder);
+        }
+      }
+      try
+      {
+        subFolderEnumerator.next();
+       }
+       catch (ex)
+       {
+          done = true;
+       }
+    }
+  }
 }
 
 function GetScopeForFolder(folder) {
@@ -307,7 +307,7 @@ var nsMsgViewFlagsType = Components.interfaces.nsMsgViewFlagsType;
 var nsMsgViewCommandType = Components.interfaces.nsMsgViewCommandType;
 
 function goUpdateSearchItems(commandset)
-{   
+{
   for (var i = 0; i < commandset.childNodes.length; i++)
   {
     var commandID = commandset.childNodes[i].getAttribute("id");
@@ -321,48 +321,48 @@ function goUpdateSearchItems(commandset)
 function nsMsgSearchCommandUpdater()
 {}
 
-nsMsgSearchCommandUpdater.prototype = 
+nsMsgSearchCommandUpdater.prototype =
 {
   updateCommandStatus : function()
     {
       // the back end is smart and is only telling us to update command status
       // when the # of items in the selection has actually changed.
-		  document.commandDispatcher.updateCommands('mail-search');
+      document.commandDispatcher.updateCommands('mail-search');
     },
 
   QueryInterface : function(iid)
    {
      if(iid.equals(Components.interfaces.nsIMsgDBViewCommandUpdater))
-	    return this;
-	  
+      return this;
+
      throw Components.results.NS_NOINTERFACE;
      return null;
    }
 }
-    
+
 function setupDatasource() {
 
     RDF = Components.classes[rdfServiceContractID].getService(Components.interfaces.nsIRDFService);
     gSearchView = Components.classes["@mozilla.org/messenger/msgdbview;1?type=search"].createInstance(Components.interfaces.nsIMsgDBView);
     var count = new Object;
     var cmdupdator = new nsMsgSearchCommandUpdater();
-    
+
     gSearchView.init(messenger, msgWindow, cmdupdator);
     gSearchView.open(null, nsMsgViewSortType.byId, nsMsgViewSortOrder.ascending, nsMsgViewFlagsType.kNone, count);
 
     var outlinerView = gSearchView.QueryInterface(Components.interfaces.nsIOutlinerView);
     if (outlinerView)
-    {     
+    {
       var outliner = GetThreadOutliner();
-      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView; 
+      outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
     }
 
     // the thread pane needs to use the search datasource (to get the
     // actual list of messages) and the message datasource (to get any
     // attributes about each message)
     gSearchSession = Components.classes[searchSessionContractID].createInstance(Components.interfaces.nsIMsgSearchSession);
-    
-    
+
+
     // the datasource is a listener on the search results
     gViewSearchListener = gSearchView.QueryInterface(Components.interfaces.nsIMsgSearchNotify);
     gSearchSession.registerListener(gViewSearchListener);
@@ -380,14 +380,14 @@ function setupSearchListener()
 function onTesting(event)
 {
     var testattr;
-    
+
     DumpDOM(document.getElementById("searchTermTree"));
     testattr = document.getElementById("searchAttr");
     testelement(testattr);
 
     testattr = document.getElementById("searchAttr0");
     testelement(testattr);
-    
+
     testattr = document.getElementById("searchAttr99");
     testelement(testattr);
 
@@ -429,7 +429,7 @@ function setMsgDatasourceWindow(ds, msgwindow)
 // used to toggle functionality for Search/Stop button.
 function onSearchButton(event)
 {
-    if (event.target.value == gSearchBundle.getString("labelForSearchButton"))
+    if (event.target.label == gSearchBundle.getString("labelForSearchButton"))
         onSearch(event);
     else
         onSearchStop(event);

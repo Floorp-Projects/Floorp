@@ -30,8 +30,8 @@
       </property>
     </implementation>
     <handlers>
-	  <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
-	  <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
+    <handler event="focus" action="this.outlinerBoxObject.focused = true;"/>
+    <handler event="blur" action="this.outlinerBoxObject.focused = false;"/>
       <handler event="keypress" keycode="vk_enter">
         <![CDATA[
          if (this.currentIndex == -1)
@@ -476,7 +476,7 @@
     <content>
       <xul:box class="outlinercol-box" flex="1" autostretch="never">
         <xul:image class="outliner-image" inherits="src"/>
-        <xul:text class="outlinercol-text" inherits="crop,value" flex="1" crop="right"/>
+        <xul:text class="outlinercol-text" inherits="crop,value=label" flex="1" crop="right"/>
         <xul:image class="outlinercol-sortdirection"/>
       </xul:box>
     </content>
@@ -521,13 +521,13 @@
                if (currCol != this) {
                  // Construct an entry for each cell in the row.
                  if (firstTime) {
-                     var columnName = currCol.getAttribute("value");
+                     var columnName = currCol.getAttribute("label");
                      popupChild = document.createElement("menuitem");
                      popupChild.setAttribute("type", "checkbox");
-                     popupChild.setAttribute("value", columnName);
+                     popupChild.setAttribute("label", columnName);
                      if (columnName == "") {
                        var display = currCol.getAttribute("display");
-                       popupChild.setAttribute("value", display);
+                       popupChild.setAttribute("label", display);
                      }
                      popupChild.setAttribute("colid", currCol.id);
                      popupChild.setAttribute("oncommand",

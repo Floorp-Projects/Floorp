@@ -23,57 +23,57 @@ Rights Reserved.
 
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
-	<tree id="resultsTree"
-		  class="abResults" 
-		  datasources="rdf:addressdirectory rdf:addresscard"
-		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-		  onblur="goOnEvent(this,'blur')"
-		  onclick="clickResultsTree(event);"
-		  containment="http://home.netscape.com/NC-rdf#CardChild"
-		  allownegativeassertions="false"
+  <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
+  <tree id="resultsTree"
+      class="abResults" 
+      datasources="rdf:addressdirectory rdf:addresscard"
+      onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+      onblur="goOnEvent(this,'blur')"
+      onclick="clickResultsTree(event);"
+      containment="http://home.netscape.com/NC-rdf#CardChild"
+      allownegativeassertions="false"
           coalesceduplicatearcs="false"
           ondragover="return DragOverTree(event);"
           ondraggesture="return BeginDragResultTree(event);"
           ondragdrop="return DropOnResultTree(event);"
           multiple="true">
 
-		<template>
-			<rule>
-				<treechildren flex="1">
-					<treeitem uri="...">
-						<treerow id="AbRows">
-					    	<treecell class="treecell-iconic cardicon" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
-					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
-					    	<treecell value="rdf:http://home.netscape.com/NC-rdf#Company"/>
-						</treerow>
-					</treeitem>
-				</treechildren>
-			</rule>
-		</template>
+    <template>
+      <rule>
+        <treechildren flex="1">
+          <treeitem uri="...">
+            <treerow id="AbRows">
+                <treecell class="treecell-iconic cardicon" label="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                <treecell label="rdf:http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+                <treecell label="rdf:http://home.netscape.com/NC-rdf#WorkPhone"/>
+                <treecell label="rdf:http://home.netscape.com/NC-rdf#Company"/>
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
 
-		<treecolgroup id="theColumns">
-			<treecol persist="hidden width"  flex="2" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
-			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width" flex="3" id="EmailColumn" resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
-			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width"  flex="2" id="WorkPhoneColumn" resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
-			<splitter class="tree-splitter"/>
-			<treecol persist="hidden width"  flex="2" id="OrganizationColumn" resource="http://home.netscape.com/NC-rdf#Company"/>
-		</treecolgroup>
-		
-		<treehead>
-			<treerow id="headRow">
-				<treecell id="NameColumnHeader" value="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
-				<treecell id="EmailColumnHeader" value="&emailColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
-				<treecell id="WorkPhoneColumnHeader" value="&workPhoneColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
-				<treecell id="OrganizationColumnHeader" value="&organizationColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
-			</treerow>
-		</treehead>
+    <treecolgroup id="theColumns">
+      <treecol persist="hidden width"  flex="2" id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name"/>
+      <splitter class="tree-splitter"/>
+      <treecol persist="hidden width" flex="3" id="EmailColumn" resource="http://home.netscape.com/NC-rdf#PrimaryEmail"/>
+      <splitter class="tree-splitter"/>
+      <treecol persist="hidden width"  flex="2" id="WorkPhoneColumn" resource="http://home.netscape.com/NC-rdf#WorkPhone"/>
+      <splitter class="tree-splitter"/>
+      <treecol persist="hidden width"  flex="2" id="OrganizationColumn" resource="http://home.netscape.com/NC-rdf#Company"/>
+    </treecolgroup>
+    
+    <treehead>
+      <treerow id="headRow">
+        <treecell id="NameColumnHeader" label="&nameColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('NameColumn', 'http://home.netscape.com/NC-rdf#Name');"/>
+        <treecell id="EmailColumnHeader" label="&emailColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('EmailColumn', 'http://home.netscape.com/NC-rdf#PrimaryEmail');"/>
+        <treecell id="WorkPhoneColumnHeader" label="&workPhoneColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('WorkPhoneColumn', 'http://home.netscape.com/NC-rdf#WorkPhone');"/>
+        <treecell id="OrganizationColumnHeader" label="&organizationColumn.label;" class="sortDirectionIndicator treecell-header treecell-inset-header" onclick="return top.SortResultPane('OrganizationColumn', 'http://home.netscape.com/NC-rdf#Company');"/>
+      </treerow>
+    </treehead>
 
-	</tree>
+  </tree>
 
 </overlay>

@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -46,20 +46,20 @@ function OpenURL(url)
 
 function GetMsgFolderFromNode(folderNode)
 {
-	var folderURI = folderNode.getAttribute("id");
-	return GetMsgFolderFromURI(folderURI);
+  var folderURI = folderNode.getAttribute("id");
+  return GetMsgFolderFromURI(folderURI);
 }
 
 function GetMsgFolderFromURI(folderURI)
 {
-	var folderResource = RDF.GetResource(folderURI);
-	if(folderResource)
-	{
-		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
-		return msgFolder;
-	}
+  var folderResource = RDF.GetResource(folderURI);
+  if(folderResource)
+  {
+    var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    return msgFolder;
+  }
 
-	return null;
+  return null;
 }
 
 function GetServer(uri)
@@ -76,26 +76,26 @@ function GetServer(uri)
 }
 
 function LoadMessageByUri(uri)
-{  
+{
     dump("XXX LoadMessageByUri " + uri + " vs " + gCurrentDisplayedMessage + "\n");
-	if(uri != gCurrentDisplayedMessage)
-	{
+  if(uri != gCurrentDisplayedMessage)
+  {
         dump("fix this, get the nsIMsgDBHdr and the nsIMsgFolder from the uri...\n");
 /*
-		var resource = RDF.GetResource(uri);
-		var message = resource.QueryInterface(Components.interfaces.nsIMessage); 
-		if (message)
-			setTitleFromFolder(message.msgFolder, message.mimef2DecodedSubject);
+    var resource = RDF.GetResource(uri);
+    var message = resource.QueryInterface(Components.interfaces.nsIMessage);
+    if (message)
+      setTitleFromFolder(message.msgFolder, message.mimef2DecodedSubject);
 
-		var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
-		if (message.msgFolder.server.downloadOnBiff)
-			message.msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
+    var nsIMsgFolder = Components.interfaces.nsIMsgFolder;
+    if (message.msgFolder.server.downloadOnBiff)
+      message.msgFolder.biffState = nsIMsgFolder.nsMsgBiffState_NoMail;
 */
 
-		gCurrentDisplayedMessage = uri;
-		gHaveLoadedMessage = true;
-		OpenURL(uri);
-	}
+    gCurrentDisplayedMessage = uri;
+    gHaveLoadedMessage = true;
+    OpenURL(uri);
+  }
 
 }
 
@@ -147,7 +147,7 @@ function setTitleFromFolder(msgfolder, subject)
                 end = identity.email;
             } catch (ex) {
             }
-            
+
         }
 
         title += msgfolder.prettyName;
@@ -174,14 +174,14 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
       dump("error setting title: " + ex + "\n");
   }
 
-  
+
   //if it's a server, clear the threadpane and don't bother trying to load.
   if(msgfolder.isServer) {
     ClearThreadPane();
 
     // Load AccountCentral page here.
-    ShowAccountCentral(); 
-	return;
+    ShowAccountCentral();
+  return;
   }
   else
   {
@@ -189,7 +189,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     {
       gDisplayStartupPage = true;
       msgfolder.server.displayStartupPage = false;
-    } 
+    }
   }
 
   // If the user clicks on msgfolder, time to display thread pane and message pane.
@@ -198,8 +198,8 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
   {
       HideAccountCentral();
   }
-   
-  if (showPerformance) { 
+
+  if (showPerformance) {
     gBeforeFolderLoadTime = new Date();
   }
 
@@ -208,36 +208,36 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
 
   if(msgfolder.manyHeadersToDownload())
   {
-	try
-	{
-		SetBusyCursor(window, true);
-		gCurrentFolderToReroot = uri;
-		gCurrentLoadingFolderViewFlags = viewFlags;
-		gCurrentLoadingFolderViewType = viewType;
-		gCurrentLoadingFolderSortType = sortType;
-		gCurrentLoadingFolderSortOrder = sortOrder;
-		msgfolder.startFolderLoading();
-		msgfolder.updateFolder(msgWindow);
-	}
-	catch(ex)
-	{
+  try
+  {
+    SetBusyCursor(window, true);
+    gCurrentFolderToReroot = uri;
+    gCurrentLoadingFolderViewFlags = viewFlags;
+    gCurrentLoadingFolderViewType = viewType;
+    gCurrentLoadingFolderSortType = sortType;
+    gCurrentLoadingFolderSortOrder = sortOrder;
+    msgfolder.startFolderLoading();
+    msgfolder.updateFolder(msgWindow);
+  }
+  catch(ex)
+  {
         SetBusyCursor(window, false);
         dump("Error loading with many headers to download: " + ex + "\n");
-	}
+  }
   }
   else
   {
     SetBusyCursor(window, true);
-	gCurrentFolderToReroot = "";
-	gCurrentLoadingFolderViewFlags = 0;  // is this correct?
-	gCurrentLoadingFolderSortType = 0;  // is this correct?
-	gCurrentLoadingFolderSortOrder = 0;  // is this correct?
+  gCurrentFolderToReroot = "";
+  gCurrentLoadingFolderViewFlags = 0;  // is this correct?
+  gCurrentLoadingFolderSortType = 0;  // is this correct?
+  gCurrentLoadingFolderSortOrder = 0;  // is this correct?
     gCurrentLoadingFolderViewType = 0;  // is this correct?
-	RerootFolder(uri, msgfolder, viewType, viewFlags, sortType, sortOrder);
+  RerootFolder(uri, msgfolder, viewType, viewFlags, sortType, sortOrder);
 
-	//Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
-	//notification before folder has actually changed.
-	msgfolder.updateFolder(msgWindow);
+  //Need to do this after rerooting folder.  Otherwise possibility of receiving folder loaded
+  //notification before folder has actually changed.
+  msgfolder.updateFolder(msgWindow);
   }
 
   document.commandDispatcher.updateCommands('mail-toolbar');
@@ -256,7 +256,7 @@ function isNewsURI(uri)
 function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
 {
   dump('In reroot folder\n');
-	
+
   // workaround for #39655
   gFolderJustSwitched = true;
 
@@ -281,10 +281,10 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
    }
   }
 */
-  //the new folder being selected should have its biff state get cleared.   
+  //the new folder being selected should have its biff state get cleared.
   if(newFolder)
   {
-    newFolder.biffState = 
+    newFolder.biffState =
           Components.interfaces.nsIMsgFolder.nsMsgBiffState_NoMail;
   }
 
@@ -298,7 +298,7 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // null this out, so we don't try sort.
   gDBView = null;
 
-  // if this is the drafts folder, the sent folder or the send later folder, 
+  // if this is the drafts folder, the sent folder or the send later folder,
   // set the columns like it was the sent folder
   SetSentFolderColumns(IsSpecialFolder(newFolder, MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_DRAFTS | MSG_FOLDER_FLAG_QUEUE));
   // now create the db view, which will sort it.
@@ -307,9 +307,9 @@ function RerootFolder(uri, newFolder, viewType, viewFlags, sortType, sortOrder)
   // that should have initialized gDBView, now re-root the thread pane
   var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
   if (outlinerView)
-  {     
+  {
     var outliner = GetThreadOutliner();
-    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView; 
+    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
   }
 
   SetUpToolbarButtons(uri);
@@ -325,21 +325,21 @@ function SwitchView(command)
     case "cmd_viewUnreadMsgs":
 
       viewFlags = viewFlags | nsMsgViewFlagsType.kUnreadOnly;
-      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags, 
+      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
             nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
     break;
     case "cmd_viewAllMsgs":
       viewFlags = viewFlags & ~nsMsgViewFlagsType.kUnreadOnly;
-      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags, 
+      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
             nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
     break;
     case "cmd_viewThreadsWithUnread":
-      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay, 
+      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
             nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
 
     break;
     case "cmd_viewWatchedThreadsWithUnread":
-      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowWatchedThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay, 
+      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowWatchedThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
             nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
    break;
     case "cmd_viewKilledThreads":
@@ -349,89 +349,89 @@ function SwitchView(command)
   // that should have initialized gDBView, now re-root the thread pane
   var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
   if (outlinerView)
-  {     
+  {
     var outliner = GetThreadOutliner();
-    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView; 
+    outliner.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject).view = outlinerView;
     dump('set outliner view\n');
   }
 }
 
 function SetSentFolderColumns(isSentFolder)
 {
-	var senderColumn = document.getElementById("senderCol");
+  var senderColumn = document.getElementById("senderCol");
 
-	if(isSentFolder)
-	{
-		senderColumn.setAttribute("value", gMessengerBundle.getString("recipientColumnHeader"));
-	}
-	else
-	{
-		senderColumn.setAttribute("value", gMessengerBundle.getString("senderColumnHeader"));
-	}
+  if(isSentFolder)
+  {
+    senderColumn.setAttribute("label", gMessengerBundle.getString("recipientColumnHeader"));
+  }
+  else
+  {
+    senderColumn.setAttribute("label", gMessengerBundle.getString("senderColumnHeader"));
+  }
 }
 
 function SetNewsFolderColumns(isNewsFolder)
 {
   dump("fix me, I need to show lines or size depending on if the folder is news or not\n");
-/* 
-	var sizeColumn = document.getElementById("SizeColumnHeader");
+/*
+  var sizeColumn = document.getElementById("SizeColumnHeader");
   var sizeColumnTemplate = document.getElementById("SizeColumnTemplate");
 
   var memoryColumnHeader = document.getElementById("MemoryColumn");
 
   if (isNewsFolder)
-  { 
-     sizeColumn.setAttribute("value",gMessengerBundle.getString("linesColumnHeader"));
+  {
+     sizeColumn.setAttribute("label",gMessengerBundle.getString("linesColumnHeader"));
      sizeColumn.setAttribute("onclick", "return top.MsgSortByLines();");
-     sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Lines");
+     sizeColumnTemplate.setAttribute("label", "rdf:http://home.netscape.com/NC-rdf#Lines");
      memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Lines");
   }
   else
   {
-     sizeColumn.setAttribute("value", gMessengerBundle.getString("sizeColumnHeader"));
+     sizeColumn.setAttribute("label", gMessengerBundle.getString("sizeColumnHeader"));
      sizeColumn.setAttribute("onclick", "return top.MsgSortBySize();");
-     sizeColumnTemplate.setAttribute("value", "rdf:http://home.netscape.com/NC-rdf#Size");
+     sizeColumnTemplate.setAttribute("label", "rdf:http://home.netscape.com/NC-rdf#Size");
      memoryColumnHeader.setAttribute("resource","http://home.netscape.com/NC-rdf#Size");
   }
 */
-} 
-        
-        
+}
+
+
 
 function UpdateStatusMessageCounts(folder)
 {
-	var unreadElement = GetUnreadCountElement();
-	var totalElement = GetTotalCountElement();
-	if(folder && unreadElement && totalElement)
-	{
-		var numUnread =
+  var unreadElement = GetUnreadCountElement();
+  var totalElement = GetTotalCountElement();
+  if(folder && unreadElement && totalElement)
+  {
+    var numUnread =
             gMessengerBundle.getFormattedString("unreadMsgStatus",
                                                 [ folder.getNumUnread(false)]);
-		var numTotal =
+    var numTotal =
             gMessengerBundle.getFormattedString("totalMsgStatus",
                                                 [folder.getTotalMessages(false)]);
 
-		unreadElement.setAttribute("value", numUnread);
-		totalElement.setAttribute("value", numTotal);
+    unreadElement.setAttribute("label", numUnread);
+    totalElement.setAttribute("label", numTotal);
 
-	}
+  }
 
 }
 
 function SaveThreadPaneSelection()
 {
-	var tree = GetThreadTree();
-	var selectedItems = tree.selectedItems;
-	var numSelected = selectedItems.length;
+  var tree = GetThreadTree();
+  var selectedItems = tree.selectedItems;
+  var numSelected = selectedItems.length;
 
-	var selectionArray = new Array(numSelected);
+  var selectionArray = new Array(numSelected);
 
-	for(var i = 0; i < numSelected; i++)
-	{
-		selectionArray[i] = selectedItems[i].getAttribute("id");
-	}
+  for(var i = 0; i < numSelected; i++)
+  {
+    selectionArray[i] = selectedItems[i].getAttribute("id");
+  }
 
-	return selectionArray;
+  return selectionArray;
 }
 
 // XXX remove this?
@@ -566,7 +566,7 @@ function CreateBareDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
   }
 
   if (!sortType) {
-    if (isNews) { 
+    if (isNews) {
       // news defaults to threaded mode
       sortType = nsMsgViewSortType.byThread;
     }
@@ -602,7 +602,7 @@ function CreateDBView(msgFolder, viewType, viewFlags, sortType, sortOrder)
     gDBView.supressMsgDisplay = true;
   else
     gDBView.supressMsgDisplay = false;
-    
+
   var colID = ConvertSortTypeToColumnID(sortType);
   if (colID) {
     var column = document.getElementById(colID);
@@ -632,11 +632,11 @@ function SetViewFlags(viewFlags)
 }
 
 //------------------------------------------------------------
-// Sets the column header sort icon based on the requested 
+// Sets the column header sort icon based on the requested
 // column and direction.
-// 
+//
 // Notes:
-// (1) This function relies on the first part of the 
+// (1) This function relies on the first part of the
 //     <treecell id> matching the <treecol id>.  The treecell
 //     id must have a "Header" suffix.
 // (2) By changing the "sortDirection" attribute, a different
@@ -651,86 +651,86 @@ function UpdateSortIndicator(column,sortDirection)
 function UpdateSortMenu(currentSortColumn)
 {
 /*
-	UpdateSortMenuitem(currentSortColumn, "sortByDateMenuitem", "DateColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortByFlagMenuitem", "FlaggedButtonColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortByOrderReceivedMenuitem", "OrderReceivedColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortByPriorityMenuitem", "PriorityColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortBySenderMenuitem", "AuthorColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "MemoryColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortByStatusMenuitem", "StatusColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortBySubjectMenuitem", "SubjectColumn");
-	UpdateSortMenuitem(currentSortColumn, "sortByUnreadMenuitem", "UnreadButtonColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByDateMenuitem", "DateColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByFlagMenuitem", "FlaggedButtonColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByOrderReceivedMenuitem", "OrderReceivedColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByPriorityMenuitem", "PriorityColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortBySenderMenuitem", "AuthorColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortBySizeMenuitem", "MemoryColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByStatusMenuitem", "StatusColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortBySubjectMenuitem", "SubjectColumn");
+  UpdateSortMenuitem(currentSortColumn, "sortByUnreadMenuitem", "UnreadButtonColumn");
 */
 }
 
 function UpdateSortMenuitem(currentSortColumnID, menuItemID, columnID)
 {
-	var menuItem = document.getElementById(menuItemID);
-	if(menuItem)
-	{
-		menuItem.setAttribute("checked", currentSortColumnID == columnID);
-	}
+  var menuItem = document.getElementById(menuItemID);
+  if(menuItem)
+  {
+    menuItem.setAttribute("checked", currentSortColumnID == columnID);
+  }
 }
 
 function SortFolderPane(column, sortKey)
 {
-	var node = FindInSidebar(window, column);
-	if(!node)
-	{
-		dump('Couldnt find sort column\n');
-		return false;
-	}
-	SortColumn(node, sortKey, null, null);
-	//Remove the sortActive attribute because we don't want this pane to have any
-	//sort styles.
-	node.setAttribute("sortActive", "false");
-	return true;
+  var node = FindInSidebar(window, column);
+  if(!node)
+  {
+    dump('Couldnt find sort column\n');
+    return false;
+  }
+  SortColumn(node, sortKey, null, null);
+  //Remove the sortActive attribute because we don't want this pane to have any
+  //sort styles.
+  node.setAttribute("sortActive", "false");
+  return true;
 }
 
 function SortColumn(node, sortKey, secondarySortKey, direction)
 {
 	var xulSortService = Components.classes["@mozilla.org/xul/xul-sort-service;1"].getService();
 
-	if (xulSortService)
-	{
-		xulSortService = xulSortService.QueryInterface(Components.interfaces.nsIXULSortService);
-		if (xulSortService)
-		{
-			// sort!!!
-			var sortDirection;
-			if(direction)
-				sortDirection = direction;
-			else
-			{
-				var currentDirection = node.getAttribute('sortDirection');
-				if (currentDirection == "ascending")
-						sortDirection = "descending";
-				else if (currentDirection == "descending")
-						sortDirection = "ascending";
-				else    sortDirection = "ascending";
-			}
+  if (xulSortService)
+  {
+    xulSortService = xulSortService.QueryInterface(Components.interfaces.nsIXULSortService);
+    if (xulSortService)
+    {
+      // sort!!!
+      var sortDirection;
+      if(direction)
+        sortDirection = direction;
+      else
+      {
+        var currentDirection = node.getAttribute('sortDirection');
+        if (currentDirection == "ascending")
+            sortDirection = "descending";
+        else if (currentDirection == "descending")
+            sortDirection = "ascending";
+        else    sortDirection = "ascending";
+      }
 
-			try
-			{
-				if(secondarySortKey)
-					node.setAttribute('resource2', secondarySortKey);
-				xulSortService.Sort(node, sortKey, sortDirection);
-			}
-			catch(e)
-			{
-                		//dump("Sort failed: " + e + "\n");
-			}
-		}
-	}
+      try
+      {
+        if(secondarySortKey)
+          node.setAttribute('resource2', secondarySortKey);
+        xulSortService.Sort(node, sortKey, sortDirection);
+      }
+      catch(e)
+      {
+                    //dump("Sort failed: " + e + "\n");
+      }
+    }
+  }
 
 }
 
 function GetSelectedFolderResource()
 {
-	var folderTree = GetFolderTree();
-	var selectedFolderList = folderTree.selectedItems;
-	var selectedFolder = selectedFolderList[0];
-	var uri = selectedFolder.getAttribute('id');
+  var folderTree = GetFolderTree();
+  var selectedFolderList = folderTree.selectedItems;
+  var selectedFolder = selectedFolderList[0];
+  var uri = selectedFolder.getAttribute('id');
 
 	var folderResource = RDF.GetResource(uri);
 	return folderResource;
@@ -751,15 +751,15 @@ function OnClickThreadAndMessagePaneSplitter()
   }
 
 /*
-	dump("We are in OnClickThreadAndMessagePaneSplitter()\n");
-	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
-	//collapsed is the previous state so we know we are opening.
-	if(collapsed)
+  dump("We are in OnClickThreadAndMessagePaneSplitter()\n");
+  var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
+  //collapsed is the previous state so we know we are opening.
+  if(collapsed)
   {
-		LoadSelectionIntoMessagePane();	
+    LoadSelectionIntoMessagePane();
     setTimeout("PositionThreadPane();",0);
    }
-*/                
+*/
 }
 
 function PositionThreadPane()
@@ -767,11 +767,11 @@ function PositionThreadPane()
     dump("XXX need for cross folder navigation. fix me: PositionThreadPane()\n");
 /*
        var tree = GetThreadTree();
-  
+
        var selArray = tree.selectedItems;
-           
+
        if ( selArray && (selArray.length > 0))
-       try { 
+       try {
        tree.ensureElementIsVisible(selArray[0]);
        }
        catch(e) { }
@@ -780,25 +780,25 @@ function PositionThreadPane()
 
 function FolderPaneSelectionChange()
 {
-	var tree = GetFolderTree();
-	if(tree)
-	{
-		var selArray = tree.selectedItems;
-		if ( selArray && (selArray.length == 1) )
+  var tree = GetFolderTree();
+  if(tree)
+  {
+    var selArray = tree.selectedItems;
+    if ( selArray && (selArray.length == 1) )
     {
-    	ChangeFolderByDOMNode(selArray[0]);
+      ChangeFolderByDOMNode(selArray[0]);
     }
-		else
-		{
-			ClearThreadPane();
-		}
-	}
+    else
+    {
+      ClearThreadPane();
+    }
+  }
 
   if (!gAccountCentralLoaded)
     ClearMessagePane();
   if (gDisplayStartupPage)
   {
-    loadStartPage(); 
+    loadStartPage();
     gDisplayStartupPage = false;
   }
 }
@@ -819,33 +819,33 @@ function OpenToFolder(item, folderURI)
 	if(item.nodeType != Node.ELEMENT_NODE)
 		return null;
 
-	var uri = item.getAttribute('id');
-	dump(uri);
-	dump('\n');
-	if(uri == folderURI)
-	{
-		dump('found folder: ' + uri);
-		dump('\n');
-		return item;
-	}
+  var uri = item.getAttribute('id');
+  dump(uri);
+  dump('\n');
+  if(uri == folderURI)
+  {
+    dump('found folder: ' + uri);
+    dump('\n');
+    return item;
+  }
 
-	var children = item.childNodes;
-	var length = children.length;
-	var i;
-	dump('folder ' + uri);
-	dump('has ' + length);
-	dump('children\n');
-	for(i = 0; i < length; i++)
-	{
-		var child = children[i];
-		var folder = OpenToFolder(child, folderURI);
-		if(folder)
-		{
-			child.setAttribute('open', 'true');
-			return folder;
-		}
-	}
-	return null;
+  var children = item.childNodes;
+  var length = children.length;
+  var i;
+  dump('folder ' + uri);
+  dump('has ' + length);
+  dump('children\n');
+  for(i = 0; i < length; i++)
+  {
+    var child = children[i];
+    var folder = OpenToFolder(child, folderURI);
+    if(folder)
+    {
+      child.setAttribute('open', 'true');
+      return folder;
+    }
+  }
+  return null;
 }
 
 function IsSpecialFolder(msgFolder, flags)
@@ -862,8 +862,8 @@ function SelectNextMessage(nextMessage)
 {
     dump("XXX implement SelectNextMessage()\n");
 /*
-	var tree = GetThreadTree();
-	ChangeSelection(tree, nextMessage);
+  var tree = GetThreadTree();
+  ChangeSelection(tree, nextMessage);
 */
 }
 
@@ -879,7 +879,7 @@ function GetSelectTrashUri(folder)
         var rootFolder = msgFolder.rootFolder;
         var numFolder;
         var out = new Object();
-        var trashFolder = rootFolder.getFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, out); 
+        var trashFolder = rootFolder.getFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 1, out);
         numFolder = out.value;
         if (trashFolder) {
             return trashFolder.URI;
@@ -918,5 +918,5 @@ function MsgToggleWorkOffline()
     // should use progress window here. params are:
     // download news, download mail, send unsent messages, go offline when done, msg window
     offlineManager.synchronizeForOffline(true, true, true, true, msgWindow);
-  } 
+  }
 }

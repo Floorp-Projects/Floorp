@@ -22,44 +22,44 @@ Rights Reserved.
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abDirTreeOverlay.dtd">
 
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-	<!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
-	<tree id="dirTree" 
-		  class="abDirectory" 
-		  ref="abdirectory://"
-		  datasources="rdf:addressdirectory"
-		  containment="http://home.netscape.com/NC-rdf#child"
-		  ignore="http://home.netscape.com/NC-rdf#CardChild"
-		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
-		  onblur="goOnEvent(this,'blur')"
-		  allownegativeassertions="false"
+  <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
+  <tree id="dirTree" 
+      class="abDirectory" 
+      ref="abdirectory://"
+      datasources="rdf:addressdirectory"
+      containment="http://home.netscape.com/NC-rdf#child"
+      ignore="http://home.netscape.com/NC-rdf#CardChild"
+      onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
+      onblur="goOnEvent(this,'blur')"
+      allownegativeassertions="false"
           coalesceduplicatearcs="false"
           multiple="true"
           ondragover="return DragOverTree(event);"
           ondragdrop="return DropOnDirectoryTree(event);">
-		
-		<template>
-			<rule>
-	          <treechildren>
-				<treeitem uri="..."
-					IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
+    
+    <template>
+      <rule>
+            <treechildren>
+        <treeitem uri="..."
+          IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"
                                         persist="sortColumn sortKey sortDirection">
-				  <treerow>
-				    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#DirName"
-								     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
-				  </treerow>
-				</treeitem>
-	          </treechildren>
-			</rule>
-		</template>
+          <treerow>
+            <treecell indent="true" class="treecell-indent" label="rdf:http://home.netscape.com/NC-rdf#DirName"
+                     IsMailList="rdf:http://home.netscape.com/NC-rdf#IsMailList"/>
+          </treerow>
+        </treeitem>
+            </treechildren>
+      </rule>
+    </template>
 
                 <treecolgroup>
-		  <treecol resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
+      <treecol resource="http://home.netscape.com/NC-rdf#DirName" flex="1"/>
                 </treecolgroup>
 
-		<treechildren id="dirTreeBody" flex="1">
-		</treechildren>
-	</tree>
+    <treechildren id="dirTreeBody" flex="1">
+    </treechildren>
+  </tree>
 
 </overlay>

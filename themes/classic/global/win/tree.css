@@ -7,7 +7,11 @@
  **/
 tree 
   {
-    border-spacing        : 0px;
+    border-spacing        : 0px;     
+    border-top            : 1px solid ThreeDShadow;                             
+    border-right          : 1px solid ThreeDHighlight;                          
+    border-bottom         : 1px solid ThreeDHighlight;                          
+    border-left           : 1px solid ThreeDShadow; 
     background-color      : -moz-field;
     color                 : WindowText;    
   }
@@ -18,7 +22,7 @@ tree
     padding               : 0px;
   }  
   
-tree.inset > .tree-container-treerows
+.tree-container-treerows
   {
     border-top            : 1px solid ThreeDDarkShadow;
     border-right          : 1px solid ThreeDLightShadow;

@@ -87,12 +87,12 @@
   </html:script>
 
   <box align="horizontal">
-    <button onclick="ToBeetle();" value="To Beetle" />
-    <button onclick="ToPrev();" value="To Previous Sibling" />
-    <button onclick="ToNext();" value="To Next Sibling" />
-    <button onclick="ToParent();" value="To Parent" />
-    <button onclick="ToFirstChild();" value="To First Child" />
-    <button onclick="ToLastChild();" value="To Last Child" />
+    <button onclick="ToBeetle();" label="To Beetle" />
+    <button onclick="ToPrev();" label="To Previous Sibling" />
+    <button onclick="ToNext();" label="To Next Sibling" />
+    <button onclick="ToParent();" label="To Parent" />
+    <button onclick="ToFirstChild();" label="To First Child" />
+    <button onclick="ToLastChild();" label="To Last Child" />
   </box>
 
 <!--  <tree id="tree" flex="100%" datasources="rdf:bookmarks rdf:mailnewsfolders rdf:msgaccountmanager" style="height:100%;"> -->
@@ -108,28 +108,28 @@
     <treechildren id="1" flex="1">
       <treeitem id="treeroot" ref="NC:BookmarksRoot" open="true">
         <treerow>
-          <treecell value="Bookmarks" />
+          <treecell label="Bookmarks" />
           <treecell />
         </treerow>
 
         <treechildren id="2" open="true">
           <treeitem id="beetle">
             <treerow>
-              <treecell value="XUL Child #1 (Beetle)" />
+              <treecell label="XUL Child #1 (Beetle)" />
               <treecell />
             </treerow>
 
             <treechildren id="3" open="true">
               <treeitem id="4">
                 <treerow id="4_1">
-                  <treecell id="4_1_1" value="XUL Child #1.1" />
+                  <treecell id="4_1_1" label="XUL Child #1.1" />
                   <treecell id="4_1_2" />
                 </treerow>
               </treeitem>
 
               <treeitem id="5">
                 <treerow id="5_1">
-                  <treecell id="5_1_1" value="XUL Child #1.2" />
+                  <treecell id="5_1_1" label="XUL Child #1.2" />
                   <treecell id="5_1_2" />
                 </treerow>
               </treeitem>
@@ -138,7 +138,7 @@
 
           <treeitem id="6">
             <treerow id="6_1">
-              <treecell id="6_1_1" value="XUL Child #2" />
+              <treecell id="6_1_1" label="XUL Child #2" />
               <treecell id="6_1_2" />
             </treerow>
           </treeitem>

@@ -68,8 +68,8 @@ var Listener = {
 
 <box orient="vertical">
 <spring flex="1"/>
-<button value="Call Async." onclick="callAsync()"/>
-<button value="Call Sync." onclick="callSync()"/>
+<button label="Call Async." onclick="callAsync()"/>
+<button label="Call Sync." onclick="callSync()"/>
 <spring flex="1"/>
 </box>
 </window>

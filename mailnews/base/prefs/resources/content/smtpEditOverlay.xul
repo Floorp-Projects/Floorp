@@ -42,7 +42,7 @@
            of smtp.useUsername -->
       <text hidden="true" id="smtp.authMethod" wsm_persist="true"/>
       <box autostretch="never">
-      <checkbox id="smtp.useUsername" value="&alwaysUseUsername.label;"
+      <checkbox id="smtp.useUsername" label="&alwaysUseUsername.label;"
                 oncommand="onUseUsername(event.target,true);"/>
       </box>                
       <box orient="vertical" style="margin-left: 2em">
@@ -53,13 +53,13 @@
       </box>
      </box>
      <box autostretch="never">
-	<text class="label" value="&isSecure.label;"/>
+  <text class="label" value="&isSecure.label;"/>
      </box>
      <radiogroup id="smtp.trySSL">
        <hbox style="margin-left: 2em">
-	 <radio group="smtp.trySSL" data="0" value="&neverSecure.label;" id="smtp.neverSecure"/>
-         <radio group="smtp.trySSL" data="1" value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
-         <radio group="smtp.trySSL" data="2" value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
+         <radio group="smtp.trySSL" value="0" label="&neverSecure.label;" id="smtp.neverSecure"/>
+         <radio group="smtp.trySSL" value="1" label="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
+         <radio group="smtp.trySSL" value="2" label="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
        </hbox>
      </radiogroup>
   </box>

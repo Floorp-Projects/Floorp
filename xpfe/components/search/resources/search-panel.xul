@@ -19,7 +19,7 @@
   Rights Reserved.
  
   Contributor(s): 
-	Blake Ross <blakeross@telocity.com>
+  Blake Ross <blakeross@telocity.com>
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -44,7 +44,7 @@
   
   <popupset>
     <popup id="contextual" oncreate="return fillContextMenu('contextual', 'Tree');" >
-    	<menu />
+      <menu />
     </popup>
   </popupset>
  
@@ -54,28 +54,28 @@
         <textbox id="sidebar-search-text" flex="1"
                    onkeypress="if (event.keyCode == 13) doSearch();"
                    oninput="doEnabling();" />
-        <button id="searchButton" value="&search.button.label;"
+        <button id="searchButton" label="&search.button.label;"
                 disabled="true" oncommand="doSearch();"/>
       </box>
       <vbox autostretch="never">
         <vbox id="categoryBox" autostretch="never">
-          <box>	  
+          <box>   
             <text class="label" value="&within.label;" />
             <menulist id="categoryList" ref="NC:SearchCategoryRoot"
                       datasources="rdf:null" oncommand="switchTab(1);" >
               <template>
                 <menupopup>
                   <menuitem id="chooseCat" uri="rdf:*" oncommand="chooseCategory(this);" 
-                            data="rdf:http://home.netscape.com/NC-rdf#category"
-                            value="rdf:http://home.netscape.com/NC-rdf#title"/>
+                            value="rdf:http://home.netscape.com/NC-rdf#category"
+                            label="rdf:http://home.netscape.com/NC-rdf#title"/>
                 </menupopup>
               </template>
         
               <menupopup id="categoryPopup">
-                <menuitem data="NC:SearchEngineRoot" value="&allengines.label;"
+                <menuitem value="NC:SearchEngineRoot" label="&allengines.label;"
                           oncommand="chooseCategory(this);"/>
                 <menuseparator />
-                <menuitem value="&customize.menuitem.label;" data="NC:SearchEngineRoot"
+                <menuitem label="&customize.menuitem.label;" value="NC:SearchEngineRoot"
                           oncommand="chooseCategory(this); doCustomize();"/>
                 <menuseparator />
               </menupopup>
@@ -121,7 +121,7 @@
                   <treerow class="searchresult">
                     <treecell class="treecell-iconic searchresult-cell" 
                               src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                              value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                              label="rdf:http://home.netscape.com/NC-rdf#Name"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -132,7 +132,7 @@
           <treehead>
             <treerow>
               <treecell class="treecell-header sortDirectionIndicator" 
-                        observes="SortNameColumn" value="&results.label;" 
+                        observes="SortNameColumn" label="&results.label;" 
                         resource="http://home.netscape.com/NC-rdf#Name" 
                         onclick="return doSort('SortNameColumn', 'http://home.netscape.com/NC-rdf#PageRank');" 
                         sortActive="true" sortDirection="ascending" flex="1"/>
@@ -149,7 +149,7 @@
         <box>
           <spring flex="1" />
           <button class="button-slimline" id="saveQueryButton"
-                  value="&savesearch.button.label;" oncommand="return saveSearch();"/>
+                  label="&savesearch.button.label;" oncommand="return saveSearch();"/>
           <spring flex="1" />
         </box>
       </vbox>
@@ -168,7 +168,7 @@
                       <checkbox oncommand="saveEngines();" allowevents="true"
                                 loading="rdf:http://home.netscape.com/NC-rdf#loading"
                                 src="rdf:http://home.netscape.com/NC-rdf#Icon"
-                                value="rdf:http://home.netscape.com/NC-rdf#Name" flex="1"/>
+                                label="rdf:http://home.netscape.com/NC-rdf#Name" flex="1"/>
                     </treecell>
                   </treerow>
                 </treeitem>
@@ -184,7 +184,7 @@
           <treehead>
             <treerow>
               <treecell class="treecell-header sortDirectionIndicator" 
-                        observes="EngineColumn" value="&engine.column.label;"
+                        observes="EngineColumn" label="&engine.column.label;"
                         resource="http://home.netscape.com/NC-rdf#Name"
                         sortActive="true" sortDirection="ascending"
                         onclick="return doSort('EngineColumn', null);"/>

@@ -1,23 +1,23 @@
-/* 
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *  
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *  
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
- * 
- * Contributor(s): 
+ *
+ * Contributor(s):
  */
 
 var MisspelledWord;
@@ -96,7 +96,7 @@ function Startup()
 
   // Get the first misspelled word and setup all UI
   NextWord();
-  
+
   // Clear flag that determines message when
   //  no misspelled word is found
   //  (different message when used for the first time)
@@ -180,7 +180,7 @@ function InitLanguageMenu(curLang)
     if (curLang && dictList[i] == curLang)
       defaultIndex = i;
 
-    AppendValueAndDataToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
+    AppendLabelAndValueToMenulist(dialog.LanguageMenulist, menuStr, dictList[i]);
   }
 
   // Now make sure the correct item in the menu list is selected.
@@ -195,7 +195,7 @@ function DoEnabling()
   {
     // No more misspelled words
     dialog.MisspelledWord.setAttribute("value",GetString( firstTime ? "NoMisspelledWord" : "CheckSpellingDone"));
-    
+
     dialog.ReplaceButton.removeAttribute("default");
     dialog.IgnoreButton.removeAttribute("default");
     dialog.CloseButton.setAttribute("default","true");
@@ -238,15 +238,15 @@ function SetWidgetsForMisspelledWord()
   dialog.MisspelledWord.setAttribute("value",MisspelledWord);
 
 
-  // Initial replace word is misspelled word 
+  // Initial replace word is misspelled word
   dialog.ReplaceWordInput.value = MisspelledWord;
   PreviousReplaceWord = MisspelledWord;
 
   // This sets dialog.ReplaceWordInput to first suggested word in list
   FillSuggestedList();
-  
+
   DoEnabling();
-  
+
   if (MisspelledWord)
     SetTextboxFocus(dialog.ReplaceWordInput);
 }
@@ -406,7 +406,7 @@ function FillSuggestedList()
         count++;
       }
     } while (word.length > 0);
-    
+
     var len = list.getAttribute("length");
 
     if (count == 0) {

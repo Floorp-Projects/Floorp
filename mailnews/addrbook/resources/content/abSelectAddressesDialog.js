@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- * 
+ *
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- * 
+ *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -41,199 +41,199 @@ function OnLoadSelectAddress()
   prefixCc = gAddressBookBundle.getString("prefixCc") + ": ";
   prefixBcc = gAddressBookBundle.getString("prefixBcc") + ": ";
 
-	InitCommonJS();
+  InitCommonJS();
 
-	var toAddress="", ccAddress="", bccAddress="";
+  var toAddress="", ccAddress="", bccAddress="";
 
-	doSetOKCancel(SelectAddressOKButton, 0);
+  doSetOKCancel(SelectAddressOKButton, 0);
 
-	top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
-	top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
+  top.addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance();
+  top.addressbook = top.addressbook.QueryInterface(Components.interfaces.nsIAddressBook);
 
-	top.gDialogResultsPaneSelectionChanged = DialogResultsPaneSelectionChanged;
+  top.gDialogResultsPaneSelectionChanged = DialogResultsPaneSelectionChanged;
 
-	// look in arguments[0] for parameters
-	if (window.arguments && window.arguments[0])
-	{
-		// keep parameters in global for later
-		if ( window.arguments[0].composeWindow )
-			top.composeWindow = window.arguments[0].composeWindow;
-		if ( window.arguments[0].msgCompFields )
-			top.msgCompFields = window.arguments[0].msgCompFields;
-		if ( window.arguments[0].toAddress )
-			toAddress = window.arguments[0].toAddress;
-		if ( window.arguments[0].ccAddress )
-			ccAddress = window.arguments[0].ccAddress;
-		if ( window.arguments[0].bccAddress )
-			bccAddress = window.arguments[0].bccAddress;
-			
-		dump("onload top.composeWindow: " + top.composeWindow + "\n");
-		dump("onload toAddress: " + toAddress + "\n");
+  // look in arguments[0] for parameters
+  if (window.arguments && window.arguments[0])
+  {
+    // keep parameters in global for later
+    if ( window.arguments[0].composeWindow )
+      top.composeWindow = window.arguments[0].composeWindow;
+    if ( window.arguments[0].msgCompFields )
+      top.msgCompFields = window.arguments[0].msgCompFields;
+    if ( window.arguments[0].toAddress )
+      toAddress = window.arguments[0].toAddress;
+    if ( window.arguments[0].ccAddress )
+      ccAddress = window.arguments[0].ccAddress;
+    if ( window.arguments[0].bccAddress )
+      bccAddress = window.arguments[0].bccAddress;
 
-		// put the addresses into the bucket
-		AddAddressFromComposeWindow(toAddress, prefixTo);
-		AddAddressFromComposeWindow(ccAddress, prefixCc);
-		AddAddressFromComposeWindow(bccAddress, prefixBcc);
-	}
-	
-	SelectFirstAddressBook();
-	
-	DialogResultsPaneSelectionChanged();
-	DialogBucketPaneSelectionChanged();
+    dump("onload top.composeWindow: " + top.composeWindow + "\n");
+    dump("onload toAddress: " + toAddress + "\n");
+
+    // put the addresses into the bucket
+    AddAddressFromComposeWindow(toAddress, prefixTo);
+    AddAddressFromComposeWindow(ccAddress, prefixCc);
+    AddAddressFromComposeWindow(bccAddress, prefixBcc);
+  }
+
+  SelectFirstAddressBook();
+
+  DialogResultsPaneSelectionChanged();
+  DialogBucketPaneSelectionChanged();
 }
 
 function AddAddressFromComposeWindow(addresses, prefix)
 {
-	if ( addresses )
-	{
-		var addressArray = addresses.split(",");
-		
-		for ( var index = 0; index < addressArray.length; index++ )
-		{
-			// remove leading spaces
-			while ( addressArray[index][0] == " " )
-				addressArray[index] = addressArray[index].substring(1, addressArray[index].length);
-			
-			AddAddressIntoBucket(prefix + addressArray[index]);
-		}
-	}
+  if ( addresses )
+  {
+    var addressArray = addresses.split(",");
+
+    for ( var index = 0; index < addressArray.length; index++ )
+    {
+      // remove leading spaces
+      while ( addressArray[index][0] == " " )
+        addressArray[index] = addressArray[index].substring(1, addressArray[index].length);
+
+      AddAddressIntoBucket(prefix + addressArray[index]);
+    }
+  }
 }
 
 
 function SelectAddressOKButton()
 {
-	var body = document.getElementById('bucketBody');
-	var item, row, cell, text, colon,email;
-	var toAddress="", ccAddress="", bccAddress="", emptyEmail="";
+  var body = document.getElementById('bucketBody');
+  var item, row, cell, text, colon,email;
+  var toAddress="", ccAddress="", bccAddress="", emptyEmail="";
 
-	for ( var index = 0; index < body.childNodes.length; index++ )
-	{
-		item = body.childNodes[index];
-		if ( item.childNodes && item.childNodes.length )
-		{
-			row = item.childNodes[0];
-			if (  row.childNodes &&  row.childNodes.length )
-			{
-				cell = row.childNodes[0];
-				text = cell.getAttribute('value');
-				email = cell.getAttribute('email');
-				if ( text )
-				{
-					switch ( text[0] )
-					{
-						case prefixTo[0]:
-							if ( toAddress )
-								toAddress += ", ";
-							toAddress += text.substring(prefixTo.length, text.length);
-							break;
-						case prefixCc[0]:
-							if ( ccAddress )
-								ccAddress += ", ";
-							ccAddress += text.substring(prefixCc.length, text.length);
-							break;
-						case prefixBcc[0]:
-							if ( bccAddress )
-								bccAddress += ", ";
-							bccAddress += text.substring(prefixBcc.length, text.length);
-							break;
-					}
-				}
-				if(!email)
-				{
-					if (emptyEmail)
-						emptyEmail +=", ";
-						emptyEmail += text.substring(prefixTo.length, text.length-2);
-				}
-			}
-		}
-	}
-	if(emptyEmail)
-	{	
-		var alertText = gAddressBookBundle.getString("emptyEmailCard");
-		alert(alertText + emptyEmail);
-		return false;
-	}
-	// reset the UI in compose window
-	msgCompFields.SetTo(toAddress);
-	msgCompFields.SetCc(ccAddress);
-	msgCompFields.SetBcc(bccAddress);
-	top.composeWindow.CompFields2Recipients(top.msgCompFields);
-	
-	return true;
+  for ( var index = 0; index < body.childNodes.length; index++ )
+  {
+    item = body.childNodes[index];
+    if ( item.childNodes && item.childNodes.length )
+    {
+      row = item.childNodes[0];
+      if (  row.childNodes &&  row.childNodes.length )
+      {
+        cell = row.childNodes[0];
+        text = cell.getAttribute('label');
+        email = cell.getAttribute('email');
+        if ( text )
+        {
+          switch ( text[0] )
+          {
+            case prefixTo[0]:
+              if ( toAddress )
+                toAddress += ", ";
+              toAddress += text.substring(prefixTo.length, text.length);
+              break;
+            case prefixCc[0]:
+              if ( ccAddress )
+                ccAddress += ", ";
+              ccAddress += text.substring(prefixCc.length, text.length);
+              break;
+            case prefixBcc[0]:
+              if ( bccAddress )
+                bccAddress += ", ";
+              bccAddress += text.substring(prefixBcc.length, text.length);
+              break;
+          }
+        }
+        if(!email)
+        {
+          if (emptyEmail)
+            emptyEmail +=", ";
+            emptyEmail += text.substring(prefixTo.length, text.length-2);
+        }
+      }
+    }
+  }
+  if(emptyEmail)
+  {
+    var alertText = gAddressBookBundle.getString("emptyEmailCard");
+    alert(alertText + emptyEmail);
+    return false;
+  }
+  // reset the UI in compose window
+  msgCompFields.SetTo(toAddress);
+  msgCompFields.SetCc(ccAddress);
+  msgCompFields.SetBcc(bccAddress);
+  top.composeWindow.CompFields2Recipients(top.msgCompFields);
+
+  return true;
 }
 
 function SelectAddressToButton()
 {
-	AddSelectedAddressesIntoBucket(prefixTo);
+  AddSelectedAddressesIntoBucket(prefixTo);
 }
 
 function SelectAddressCcButton()
 {
-	AddSelectedAddressesIntoBucket(prefixCc);
+  AddSelectedAddressesIntoBucket(prefixCc);
 }
 
 function SelectAddressBccButton()
 {
-	AddSelectedAddressesIntoBucket(prefixBcc);
+  AddSelectedAddressesIntoBucket(prefixBcc);
 }
 
 function AddSelectedAddressesIntoBucket(prefix)
 {
-	var item, uri, rdf, cardResource, card, address;
-	var email ="";
-	rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+  var item, uri, rdf, cardResource, card, address;
+  var email ="";
+  rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
+  rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
 
-	if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )
-	{
-		for ( item = 0; item < resultsTree.selectedItems.length; item++ )
-		{
-			uri = resultsTree.selectedItems[item].getAttribute('id');
-			cardResource = rdf.GetResource(uri);
-			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
-			if (card.isMailList)
-			{
-				address = prefix + "\"" + card.name + "\" <" + card.name + ">";
-				email = card.name;
-			}
-			else 
-			{
-				address = prefix + "\"" + card.name + "\" <" + card.primaryEmail + ">";
-				email = card.primaryEmail;
-			}
-			AddAddressIntoBucket(address,email);
-		}
-	}	
+  if ( resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length )
+  {
+    for ( item = 0; item < resultsTree.selectedItems.length; item++ )
+    {
+      uri = resultsTree.selectedItems[item].getAttribute('id');
+      cardResource = rdf.GetResource(uri);
+      card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+      if (card.isMailList)
+      {
+        address = prefix + "\"" + card.name + "\" <" + card.name + ">";
+        email = card.name;
+      }
+      else
+      {
+        address = prefix + "\"" + card.name + "\" <" + card.primaryEmail + ">";
+        email = card.primaryEmail;
+      }
+      AddAddressIntoBucket(address,email);
+    }
+  }
 }
 
 function AddAddressIntoBucket(address,email)
 {
-	var body = document.getElementById("bucketBody");
-	
-	var item = document.createElement('treeitem');
-	var row = document.createElement('treerow');
-	var cell = document.createElement('treecell');
-	cell.setAttribute('value', address);
-	cell.setAttribute('email',email);
-	
-	row.appendChild(cell);
-	item.appendChild(row);
-	body.appendChild(item);
+  var body = document.getElementById("bucketBody");
+
+  var item = document.createElement('treeitem');
+  var row = document.createElement('treerow');
+  var cell = document.createElement('treecell');
+  cell.setAttribute('label', address);
+  cell.setAttribute('email',email);
+
+  row.appendChild(cell);
+  item.appendChild(row);
+  body.appendChild(item);
 }
 
 function RemoveSelectedFromBucket()
 {
-	var bucketTree = document.getElementById("addressBucket");
-	if ( bucketTree )
-	{
-		var body = document.getElementById("bucketBody");
-		
-		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
-		{
-			for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
-				body.removeChild(bucketTree.selectedItems[item]);
-		}	
-	}	
+  var bucketTree = document.getElementById("addressBucket");
+  if ( bucketTree )
+  {
+    var body = document.getElementById("bucketBody");
+
+    if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
+    {
+      for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
+        body.removeChild(bucketTree.selectedItems[item]);
+    }
+  }
 }
 
 /* Function: DialogResultsPaneSelectionChanged()
@@ -247,26 +247,26 @@ function RemoveSelectedFromBucket()
 
 function DialogResultsPaneSelectionChanged()
 {
-	var resultsTree = document.getElementById("resultsTree");
-	var editButton = document.getElementById("edit");
-	var toButton = document.getElementById("toButton");
-	var ccButton = document.getElementById("ccButton");
-	var bccButton = document.getElementById("bccButton");
-	
-	if (editButton && toButton && ccButton && bccButton && resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length) 
-	{
-		editButton.removeAttribute("disabled");
-		toButton.removeAttribute("disabled");
-		ccButton.removeAttribute("disabled");
-		bccButton.removeAttribute("disabled");
-	} 
-	else 
-	{ 
-		editButton.setAttribute("disabled", "true");
-		toButton.setAttribute("disabled", "true");
-		ccButton.setAttribute("disabled", "true");
-		bccButton.setAttribute("disabled", "true");
-	}
+  var resultsTree = document.getElementById("resultsTree");
+  var editButton = document.getElementById("edit");
+  var toButton = document.getElementById("toButton");
+  var ccButton = document.getElementById("ccButton");
+  var bccButton = document.getElementById("bccButton");
+
+  if (editButton && toButton && ccButton && bccButton && resultsTree && resultsTree.selectedItems && resultsTree.selectedItems.length)
+  {
+    editButton.removeAttribute("disabled");
+    toButton.removeAttribute("disabled");
+    ccButton.removeAttribute("disabled");
+    bccButton.removeAttribute("disabled");
+  }
+  else
+  {
+    editButton.setAttribute("disabled", "true");
+    toButton.setAttribute("disabled", "true");
+    ccButton.setAttribute("disabled", "true");
+    bccButton.setAttribute("disabled", "true");
+  }
 }
 
 /* Function: DialogBucketPaneSelectionChanged()
@@ -280,13 +280,13 @@ function DialogResultsPaneSelectionChanged()
 
 function DialogBucketPaneSelectionChanged()
 {
-	var bucketTree = document.getElementById("addressBucket");
-	var removeButton = document.getElementById("remove");
-	
-	if (removeButton && bucketTree && bucketTree.selectedItems && bucketTree.selectedItems.length)
-		removeButton.removeAttribute("disabled");
-	else 
-		removeButton.setAttribute("disabled", "true");
+  var bucketTree = document.getElementById("addressBucket");
+  var removeButton = document.getElementById("remove");
+
+  if (removeButton && bucketTree && bucketTree.selectedItems && bucketTree.selectedItems.length)
+    removeButton.removeAttribute("disabled");
+  else
+    removeButton.setAttribute("disabled", "true");
 }
 
 

@@ -66,8 +66,8 @@ Contributor(s):
 
                     <treehead>
                         <treerow>
-                            <treecell id="moduleName" class="treecell-header" value="&moduleName.label;" />
-                            <treecell id="moduleSource" class="treecell-header" value="&moduleSource.label;"/>
+                            <treecell id="moduleName" class="treecell-header" label="&moduleName.label;" />
+                            <treecell id="moduleSource" class="treecell-header" label="&moduleSource.label;"/>
                         </treerow>
                     </treehead>
 

@@ -13,14 +13,14 @@
         title="&internetresults.title;"
         context="disallowcontext">
 
-	<popupset>
-		<popup id="disallowcontext" oncreate="return false;" />
-	</popupset>
+  <popupset>
+    <popup id="disallowcontext" oncreate="return false;" />
+  </popupset>
 
-	<script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
-	<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
-	<script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
-	<script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/internetresults.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/search/shared.js"/>
 
   <box id="multi-results-header"> 
     <text value="&results.header.label;"/>
@@ -29,28 +29,28 @@
   <box id="engineTabs" autostretch="never"
        ref="NC:SearchResultsSitesRoot" datasources="rdf:internetsearch" 
        style="overflow: none; min-width: 1px;">
-  	<template>
-	  	<button class="engineTabs button-toolbar-3 button-slimline" uri="..." 
+    <template>
+      <button class="engineTabs button-toolbar-3 button-slimline" uri="..." 
               oncommand="doEngineClick(event, this);" crop="right" 
               src="rdf:http://home.netscape.com/NC-rdf#StatusIcon" 
-              value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              label="rdf:http://home.netscape.com/NC-rdf#Name" 
               loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-  	</template>
-	  <button class="engineTabs button-toolbar-3 button-slimline" id="allEngines" 
-            oncommand="doEngineClick(event, this);" value="&allresults.title.label;"
+    </template>
+    <button class="engineTabs button-toolbar-3 button-slimline" id="allEngines" 
+            oncommand="doEngineClick(event, this);" label="&allresults.title.label;"
             toggled="true"/>
-	  <separator orient="vertical"/>
-	  <text value="&viewbyprovider.label;"/>
-	  <separator orient="vertical" class="thin"/>
+    <separator orient="vertical"/>
+    <text value="&viewbyprovider.label;"/>
+    <separator orient="vertical" class="thin"/>
   </box>
 
   <popupset>
-	  <popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
-		  <menu/>
-  	</popup>
-	</popupset>
-	<tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
-		onselect="treeSelect(event);" onclick="treeClick(event);">
+    <popup id="contextual" oncreate="return fillContextMenu('contextual', 'internetresultstree');" >
+      <menu/>
+    </popup>
+  </popupset>
+  <tree id="internetresultstree" ref="" flex="1" datasources="rdf:internetsearch" context="contextual"
+    onselect="treeSelect(event);" onclick="treeClick(event);">
 
   <treecolgroup>
     <treecol id="NameColumn" resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
@@ -81,86 +81,86 @@
              resource2="http://home.netscape.com/NC-rdf#Name" flex="1"/>
   </treecolgroup>
 
-		<template>
-			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-				<treechildren flex="1">
-  				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-  					<treerow>
-  						<treecell>
-  							<separator class="groove"/>
-  						</treecell>
-  					</treerow>
-  				</treeitem>  	
-				</treechildren>	
-			</rule>
-			<rule>
-				<treechildren flex="1">
-  				<treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
-  					<treerow>
-  						<treecell class="treecell-iconic" crop="right"
+    <template>
+      <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+        <treechildren flex="1">
+          <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell>
+                <separator class="groove"/>
+              </treecell>
+            </treerow>
+          </treeitem>   
+        </treechildren> 
+      </rule>
+      <rule>
+        <treechildren flex="1">
+          <treeitem uri="..." rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
+            <treerow>
+              <treecell class="treecell-iconic" crop="right"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon" 
-                        value="rdf:http://home.netscape.com/NC-rdf#Name" />
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#PageRank" />
-  						<treecell>
-  							<progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
+                        label="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#PageRank" />
+              <treecell>
+                <progressmeter align="horizontal" value="rdf:http://home.netscape.com/NC-rdf#Relevance" mode="normal" />
                 <text crop="right" value="rdf:http://home.netscape.com/NC-rdf#Relevance"/>
-  						</treecell>
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Price" />
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Availability" />
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Date" />
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Site" />
-  						<treecell crop="right" value="rdf:http://home.netscape.com/NC-rdf#Engine" />
-  					</treerow>
-  				</treeitem>
-				</treechildren>
-			</rule>
-		</template>
+              </treecell>
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Price" />
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Availability" />
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Date" />
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Site" />
+              <treecell crop="right" label="rdf:http://home.netscape.com/NC-rdf#Engine" />
+            </treerow>
+          </treeitem>
+        </treechildren>
+      </rule>
+    </template>
 
-		<treehead>
-			<treerow>
-				<treecell id="NameCell" class="treecell-header sortDirectionIndicator"
-					value="&name.column.label;" observes="NameColumn"
-					resource="http://home.netscape.com/NC-rdf#Name"
-					onclick="return doSort('NameColumn', null);" />
-				<treecell id="PageRankCell" class="treecell-header sortDirectionIndicator"
-					value="&pagerank.column.label;" observes="PageRankColumn"
-					resource="http://home.netscape.com/NC-rdf#PageRank"
-					onclick="return doSort('PageRankColumn', null);" />
-				<treecell id="RelevanceCell" class="treecell-header sortDirectionIndicator"
-					value="&relevance.column.label;" observes="RelevanceColumn"
-					resource="http://home.netscape.com/NC-rdf#Relevance"
-					onclick="return doSort('RelevanceColumn', null);" />
-				<treecell id="PriceCell" class="treecell-header sortDirectionIndicator"
-					value="&price.column.label;" observes="PriceColumn"
-					resource="http://home.netscape.com/NC-rdf#Price"
-					onclick="return doSort('PriceColumn', null);" />
-				<treecell id="AvailabilityCell" class="treecell-header sortDirectionIndicator"
-					value="&availability.column.label;" observes="AvailabilityColumn"
-					resource="http://home.netscape.com/NC-rdf#Availability"
-					onclick="return doSort('AvailabilityColumn', null);" />
-				<treecell id="DateCell" class="treecell-header sortDirectionIndicator"
-					value="&date.column.label;" observes="DateColumn"
-					resource="http://home.netscape.com/NC-rdf#Date"
-					onclick="return doSort('DateColumn', null);" />
-				<treecell id="SiteCell" class="treecell-header sortDirectionIndicator"
-					value="&site.column.label;" observes="SiteColumn"
-					resource="http://home.netscape.com/NC-rdf#Site"
-					onclick="return doSort('SiteColumn', null);" />
-				<treecell id="EngineCell" class="treecell-header sortDirectionIndicator"
-					value="&engine.column.label;" observes="EngineColumn"
-					resource="http://home.netscape.com/NC-rdf#Engine"
-					onclick="return doSort('EngineColumn', null);" />
+    <treehead>
+      <treerow>
+        <treecell id="NameCell" class="treecell-header sortDirectionIndicator"
+          label="&name.column.label;" observes="NameColumn"
+          resource="http://home.netscape.com/NC-rdf#Name"
+          onclick="return doSort('NameColumn', null);" />
+        <treecell id="PageRankCell" class="treecell-header sortDirectionIndicator"
+          label="&pagerank.column.label;" observes="PageRankColumn"
+          resource="http://home.netscape.com/NC-rdf#PageRank"
+          onclick="return doSort('PageRankColumn', null);" />
+        <treecell id="RelevanceCell" class="treecell-header sortDirectionIndicator"
+          label="&relevance.column.label;" observes="RelevanceColumn"
+          resource="http://home.netscape.com/NC-rdf#Relevance"
+          onclick="return doSort('RelevanceColumn', null);" />
+        <treecell id="PriceCell" class="treecell-header sortDirectionIndicator"
+          label="&price.column.label;" observes="PriceColumn"
+          resource="http://home.netscape.com/NC-rdf#Price"
+          onclick="return doSort('PriceColumn', null);" />
+        <treecell id="AvailabilityCell" class="treecell-header sortDirectionIndicator"
+          label="&availability.column.label;" observes="AvailabilityColumn"
+          resource="http://home.netscape.com/NC-rdf#Availability"
+          onclick="return doSort('AvailabilityColumn', null);" />
+        <treecell id="DateCell" class="treecell-header sortDirectionIndicator"
+          label="&date.column.label;" observes="DateColumn"
+          resource="http://home.netscape.com/NC-rdf#Date"
+          onclick="return doSort('DateColumn', null);" />
+        <treecell id="SiteCell" class="treecell-header sortDirectionIndicator"
+          label="&site.column.label;" observes="SiteColumn"
+          resource="http://home.netscape.com/NC-rdf#Site"
+          onclick="return doSort('SiteColumn', null);" />
+        <treecell id="EngineCell" class="treecell-header sortDirectionIndicator"
+          label="&engine.column.label;" observes="EngineColumn"
+          resource="http://home.netscape.com/NC-rdf#Engine"
+          onclick="return doSort('EngineColumn', null);" />
 
-			</treerow>
-		</treehead>
+      </treerow>
+    </treehead>
 
-	</tree>
+  </tree>
 
-	<splitter id="results-splitter" persist="state" collapse="after" orient="vertical" autostretch="never">
+  <splitter id="results-splitter" persist="state" collapse="after" orient="vertical" autostretch="never">
     <grippy/>
   </splitter>
   <box class="double-box-top" flex="1">
-  	<iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
+    <iframe id="content" flex="1" src="chrome://communicator/locale/search/default.htm"/>
   </box>
   
 </window>

@@ -51,8 +51,8 @@
   <box id="dirbox">
     <html class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
     <box orient="vertical" valign="top">
-      <button value="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
-      <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
+      <button label="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
+      <button id="useDefault" label="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
     </box>
   </box>
 
@@ -61,7 +61,7 @@
   <box autostretch="never">
     <html id="finishtext">&pnl2.finish.text;</html> 
     <spring flex="1"/>
-    <button value="&langSelection.label;" oncommand="showLangDialog();"/>
+    <button label="&langSelection.label;" oncommand="showLangDialog();"/>
   </box>
 
   <!--spring flex="1"/-->

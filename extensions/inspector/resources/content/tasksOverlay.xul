@@ -9,13 +9,13 @@
     
     function launchInspector()
     {
-    	toOpenWindowByType("inspector", "chrome://inspector/content");
+      toOpenWindowByType("inspector", "chrome://inspector/content");
     }
 
   </script>
 
   <broadcasterset id="broadcasterset">
-    <broadcaster id="Tasks:Inspector" value="&inspectorTaskCmd.label;" oncommand="launchInspector();"/>
+    <broadcaster id="Tasks:Inspector" label="&inspectorTaskCmd.label;" oncommand="launchInspector();"/>
   </broadcasterset>
 
 <!--

@@ -54,7 +54,7 @@
             item = item.parentNode;
 
           var editor = this.getEditorElement(aTreecell);
-          editor.setAttribute("value", aTreecell.getAttribute("value"));
+          editor.setAttribute("value", aTreecell.getAttribute("label"));
           aTreecell.parentNode.replaceChild(editor, aTreecell);
 
           this.mEditing = true;
@@ -76,7 +76,7 @@
             var ed = this.mEditingEditor;
             var ev = ed.value;
             var cancel = this.onAfterEdit({ newValue: ev, editingNode: cell, editingItem: this.mEditingItem });
-            if (!aCancel && !cancel) cell.setAttribute("value", ev);
+            if (!aCancel && !cancel) cell.setAttribute("label", ev);
             ed.parentNode.replaceChild(cell, ed);
             this.mEditing = false;
             this.focus();

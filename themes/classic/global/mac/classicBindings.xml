@@ -41,7 +41,7 @@
           </xul:box>
         </xul:box>
         <xul:image class="radio-icon" inherits="src,disabled"/>
-        <xul:html class="radio-text" inherits="value,accesskey,crop,disabled" flex="1">
+        <xul:html class="radio-text" inherits="value=label,accesskey,crop,disabled" flex="1">
           <children/>
         </xul:html>
       </xul:box>
@@ -57,7 +57,7 @@
           </xul:box>
         </xul:box>
         <xul:image class="checkbox-icon" inherits="src,disabled"/>
-        <xul:html class="checkbox-text" inherits="value,accesskey,crop,disabled" flex="1">
+        <xul:html class="checkbox-text" inherits="value=label,accesskey,crop,disabled" flex="1">
           <children/>
         </xul:html>
       </xul:box>
@@ -70,9 +70,9 @@
         <xul:spring flex="1"/>
         <xul:box>
             <xul:spring flex="1"/>
-		    <xul:image inherits="src"/>
-		    <xul:spring flex="1"/>
-	    </xul:box>
+        <xul:image inherits="src"/>
+        <xul:spring flex="1"/>
+      </xul:box>
         <xul:spring flex="1"/>
       </xul:box>
     </content>
@@ -81,20 +81,20 @@
   <binding id="scrollbar" extends="chrome://global/content/scrollbarBindings.xml#scrollbar">
     <content>
       <xul:scrollbarbutton sbattr="scrollbar-up-top" type="decrement" inherits="sborient=align">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
-	    <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=align">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
+        <xul:image inherits="src"/>
+      </xul:scrollbarbutton>
+      <xul:scrollbarbutton sbattr="scrollbar-down-top" type="increment" collapsed="true" inherits="sborient=align">
+        <xul:image inherits="src"/>
+      </xul:scrollbarbutton>
       <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
-	      <xul:thumb sbattr="scrollbar-thumb" inherits="align,src" flex="1"/>
+        <xul:thumb sbattr="scrollbar-thumb" inherits="align,src" flex="1"/>
       </xul:slider>
       <xul:scrollbarbutton sbattr="scrollbar-up-bottom" type="decrement" collapsed="true" inherits="sborient=align">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
+        <xul:image inherits="src"/>
+      </xul:scrollbarbutton>
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=align">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
+        <xul:image inherits="src"/>
+      </xul:scrollbarbutton>
     </content>
   </binding>
   
@@ -108,8 +108,8 @@
   
   <binding id="slider">
     <content>
-	    <xul:button class="slider-button"/>
-  	</content>
+      <xul:button class="slider-button"/>
+    </content>
   </binding>
   
   <binding id="grippy">
@@ -132,7 +132,7 @@
     <content>
       <xul:box class="treeheader-box" flex="1" autostretch="never">
         <xul:image class="treeheader-icon" inherits="src,loading"/>
-        <xul:text class="treeheader-text" inherits="value,crop" crop="right"/>
+        <xul:text class="treeheader-text" inherits="value=label,crop" crop="right"/>
       </xul:box>
     </content>
   </binding>
@@ -150,7 +150,7 @@
       <xul:box class="menubutton-icon-box">
         <xul:image inherits="src" class="menubutton-icon-image"/>
       </xul:box>
-	  <children includes="menupopup"/>
+    <children includes="menupopup"/>
     </content>
   </binding>
 
@@ -159,7 +159,7 @@
       <xul:box class="menubutton-icon-box" autostretch="never">
         <xul:image inherits="src" class="menubutton-icon-image"/>
       </xul:box>
-	  <children includes="menupopup"/>
+    <children includes="menupopup"/>
     </content>
   </binding>
 
@@ -167,8 +167,8 @@
     <content>
       <xul:spring class="tab-image-left" inherits="selected"/>
       <xul:box flex="1" class="tab-image-middle" orient="horizontal" align="center" inherits="selected" autostretch="never">
-	      <xul:image class="tab-left"/>
-    	  <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+        <xul:image class="tab-left"/>
+        <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:box>
       <xul:spring class="tab-image-right" inherits="selected"/>
     </content>
@@ -177,13 +177,13 @@
   <binding id="tabbox" extends="chrome://global/content/tabBindings.xml#tabbox">
     <content>
       <xul:spring class="tab-border-top-left-cap"/>
-	  <xul:spring class="tab-border-top-left"/>
-	  <xul:box inherits="align">
-		  <children/>
-	  </xul:box>
-	  <xul:spring class="tab-border-top-right" flex="1"/>
-	  <xul:spring class="tab-border-top-right-cap"/>
-	</content>
+    <xul:spring class="tab-border-top-left"/>
+    <xul:box inherits="align">
+      <children/>
+    </xul:box>
+    <xul:spring class="tab-border-top-right" flex="1"/>
+    <xul:spring class="tab-border-top-right-cap"/>
+  </content>
   </binding>
   
   <binding id="largeheader" extends="chrome://communicator/content/dialogBindings.xml#largeheader">
@@ -203,14 +203,14 @@
   <binding id="toolbarbutton-left" extends="chrome://global/content/xulBindings.xml#buttonleft">
     <content autostretch="never">
       <xul:image class="toolbarbutton-left-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-left-text" inherits="value,crop"/>
+      <xul:text class="toolbarbutton-left-text" inherits="value=label,crop"/>
     </content>
   </binding>  
 
   <binding id="toolbarbutton-top" extends="chrome://global/content/xulBindings.xml#buttontop">
     <content autostretch="never" orient="vertical">
       <xul:image class="toolbarbutton-top-icon" inherits="src,disabled"/>
-      <xul:text class="toolbarbutton-top-text" inherits="value,crop"/>
+      <xul:text class="toolbarbutton-top-text" inherits="value=label,crop"/>
     </content>
   </binding>  
 

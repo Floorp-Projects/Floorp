@@ -47,8 +47,8 @@
   <box id="TableOrCellGroup" valign="middle" autostretch="never" collapsed="true">
     <text value="&background.label;"/>
     <radiogroup id="1" orient="horizontal">
-      <radio group="1" id="TableRadio" value="&table.label;"/>
-      <radio group="1" id="CellRadio"  value="&cell.label;"/>
+      <radio group="1" id="TableRadio" label="&table.label;"/>
+      <radio group="1" id="CellRadio"  label="&cell.label;"/>
   </radiogroup>
   </box>
   <colorpicker id="ColorPicker" palettename="standard" 
@@ -57,14 +57,14 @@
 <!-- Web palette is not implemented???
   <box valign="middle" autostretch="never">
     <text class="label" value="&palette.label;"/>
-    <radio id="StandardPalette" value="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
-    <radio id="WebPalette" value="&webPalette.label;" oncommand="ChangePalette('web')"/>
+    <radio id="StandardPalette" label="&standardPalette.label;" oncommand="ChangePalette('standard')"/>
+    <radio id="WebPalette" label="&webPalette.label;" oncommand="ChangePalette('web')"/>
   </box>
 -->
   <spring class="spacer"/>
   <box orient="vertical" flex="1">
     <stack valign="middle" autostretch="never">
-      <button id="LastPickedButton" class="dialog" value="&lastPickedColor.label;" 
+      <button id="LastPickedButton" class="dialog" label="&lastPickedColor.label;" 
         style="margin-left:0px; margin-right: 0px;"
         onclick="SelectLastPickedColor();"/>
       <box style="margin-left: 5px"  mousethrough="always">
@@ -86,11 +86,11 @@
       <spring flex="1"/>
       <spring id="ColorPickerSwatch"/>
       <spring flex="1"/>
-      <button id="DefaultColorButton" class="dialog" value="&default.label;" 
+      <button id="DefaultColorButton" class="dialog" label="&default.label;" 
         style="margin-right:0px;" oncommand="RemoveColor()"/>
     </box>
   </box>
   <separator class="groove"/>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/> 
+  <box id="okCancelButtons"/> 
 </window>

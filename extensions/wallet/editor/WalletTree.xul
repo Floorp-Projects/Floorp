@@ -45,7 +45,7 @@
       
   <treehead name="tree">
     <treerow>
-      <treecell class="treecell-header outset" url="__header" value="&categoryHeader;"/>
+      <treecell class="treecell-header outset" url="__header" label="&categoryHeader;"/>
     </treerow>
   </treehead>
 
@@ -53,37 +53,37 @@
 
     <treeitem container="true" open="true" id="primary">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletPrimary.xul" value="&primary.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletPrimary.xul" label="&primary.label;"/> 
       </treerow>
       <treechildren>
         <treeitem id="pnameID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletName.xul" value="&pname.label;"/>
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletName.xul" label="&pname.label;"/>
           </treerow>
         </treeitem>
         <treeitem id="paddressID">
           <treerow>
-            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&paddress.label;"/> 
+            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletAddress.xul" label="&paddress.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="pphoneID">
           <treerow>
-            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&pphone.label;"/> 
+            <treecell class="treecell-indent" tag="home." url="chrome://communicator/content/wallet/WalletPhone.xul" label="&pphone.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="pcreditID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletCredit.xul" value="&pcredit.label;"/> 
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletCredit.xul" label="&pcredit.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="pemployID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletEmploy.xul" value="&pemploy.label;"/> 
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletEmploy.xul" label="&pemploy.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="pmiscID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletMisc.xul" value="&pmisc.label;"/> 
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletMisc.xul" label="&pmisc.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -91,22 +91,22 @@
 
     <treeitem container="true" open="true" id="shipping">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletShipping.xul" value="&shipping.label;"/> 
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletShipping.xul" label="&shipping.label;"/> 
       </treerow>
       <treechildren>
         <treeitem id="snameID">
           <treerow>
-            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletName.xul" value="&sname.label;"/> 
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletName.xul" label="&sname.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="saddressID">
           <treerow>
-            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&saddress.label;"/> 
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletAddress.xul" label="&saddress.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="sphoneID">
           <treerow>
-            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&sphone.label;"/> 
+            <treecell class="treecell-indent" tag="shipto." url="chrome://communicator/content/wallet/WalletPhone.xul" label="&sphone.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -114,22 +114,22 @@
 
     <treeitem container="true" open="true" id="billing">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletBilling.xul" value="&billing.label;"/>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletBilling.xul" label="&billing.label;"/>
       </treerow>
       <treechildren>
         <treeitem id="bnameID">
           <treerow>
-            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletName.xul" value="&bname.label;"/> 
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletName.xul" label="&bname.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="baddressID">
           <treerow>
-            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletAddress.xul" value="&baddress.label;"/> 
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletAddress.xul" label="&baddress.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="bphoneID">
           <treerow>
-            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletPhone.xul" value="&bphone.label;"/> 
+            <treecell class="treecell-indent" tag="billto." url="chrome://communicator/content/wallet/WalletPhone.xul" label="&bphone.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>
@@ -137,17 +137,17 @@
 
     <treeitem container="true" open="true" id="other">
       <treerow>
-        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletOther.xul" value="&other.label;"/>
+        <treecell class="treecell-indent" url="chrome://communicator/content/wallet/WalletOther.xul" label="&other.label;"/>
       </treerow>
       <treechildren>
         <treeitem id="concatenatedID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletConcatenated.xul" value="&concatenated.label;"/> 
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletConcatenated.xul" label="&concatenated.label;"/> 
           </treerow>
         </treeitem>
         <treeitem id="urlspecificID">
           <treerow>
-            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletUrlspecific.xul" value="&urlspecific.label;"/> 
+            <treecell class="treecell-indent" tag="" url="chrome://communicator/content/wallet/WalletUrlspecific.xul" label="&urlspecific.label;"/> 
           </treerow>
         </treeitem>
       </treechildren>

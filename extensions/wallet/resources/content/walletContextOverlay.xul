@@ -65,19 +65,19 @@
 
   <popup id="contentAreaContextMenu">
     <menuitem id="context-formshow"
-              value="&formshowCmd.label;"
+              label="&formshowCmd.label;"
               accesskey=""
               oncommand="formShow();"
               style="display:none;"
               insertafter="context-paste"/>
     <menuitem id="context-capture"
-              value="&captureCmd.label;"
+              label="&captureCmd.label;"
               accesskey=""
               oncommand="formCapture();"
               style="display:none;"
               insertafter="context-paste"/>
     <menuitem id="context-prefill"
-              value="&prefillCmd.label;"
+              label="&prefillCmd.label;"
               accesskey=""
               oncommand="formPrefill();"
               style="display:none;"

@@ -48,7 +48,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never">
-    <title><text value="&address.title;"/></title>
+    <label value="&address.title;"/>
     <grid class="indent" flex="1">
 
       <columns>
@@ -63,7 +63,7 @@
           <menulist id="street.line1" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -73,7 +73,7 @@
           <menulist id="street.line2" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -83,7 +83,7 @@
           <menulist id="street.line3" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -93,7 +93,7 @@
           <menulist id="city" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -103,7 +103,7 @@
           <menulist id="state" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -114,14 +114,14 @@
           <menulist id="postalcode.prefix" editable="true" flex="55%" width="0"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           <text value="__"/>
           <menulist id="postalcode.suffix" editable="true" flex="45%" width="0"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
           </box>
@@ -132,7 +132,7 @@
           <menulist id="country" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -142,7 +142,7 @@
           <menulist id="email" editable="true"
                     onchange="Append(this)" onmousedown="Append(this)">
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>
@@ -153,7 +153,7 @@
                     onchange="Append(this)" onmousedown="Append(this)">
 
             <menupopup>
-              <menuitem value="" len="0"/>
+              <menuitem label="" len="0"/>
             </menupopup>
           </menulist>
         </row>

@@ -21,7 +21,7 @@
 
         <xul:box class="button-text-box" autostretch="never">
          <xul:image class="button-icon-mid" inherits="src"/>
-         <xul:text class="button-text-mid" inherits="default,disabled,value,crop,accesskey"/>
+         <xul:text class="button-text-mid" inherits="default,disabled,value=label,crop,accesskey"/>
        </xul:box>
      </xul:stack>
       
@@ -65,13 +65,13 @@
 
         <xul:box class="menulist-text-box" autostretch="never">
           <xul:image class="menulist-icon-mid" inherits="src"/>
-          <xul:text class="menulist-text-mid" inherits="disabled,value,crop,accesskey" flex="1"/>
+          <xul:text class="menulist-text-mid" inherits="disabled,value=label,crop,accesskey" flex="1"/>
         </xul:box>
       </xul:stack>
       
       <xul:stack class="menulist-stack-right">
         <xul:box class="menulist-box-right" inherits="disabled" orient="vertical">
-      		<xul:spring class="menulist-right-top" inherits="disabled"/>
+          <xul:spring class="menulist-right-top" inherits="disabled"/>
           <xul:spring class="menulist-right-mid" inherits="disabled" flex="1"/>
           <xul:spring class="menulist-right-btm" inherits="disabled"/>
         </xul:box>
@@ -90,7 +90,7 @@
       <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
         <xul:spring flex="1"/>
-        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+        <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
       </xul:box>
       <children includes="menupopup"/>
     </content>
@@ -161,7 +161,7 @@
           <xul:box class="tab-image-mid-top" inherits="selected"/>
           <xul:box class="tab-image-mid-mid" orient="horizontal" align="center" autostretch="never" flex="1">
             <xul:image class="tab-left"/>
-            <xul:text flex="1" inherits="value,crop,accesskey" crop="right" class="tab-text"/>
+            <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
           </xul:box>
           <xul:box class="tab-image-mid-btm" inherits="selected"/>
         </xul:box>

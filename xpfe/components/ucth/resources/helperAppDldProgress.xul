@@ -32,7 +32,7 @@ Contributor(s):
 <!DOCTYPE window SYSTEM "chrome://global/locale/downloadProgress.dtd">
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
-  		  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
         orient="vertical"
         title="&downloadWindow.title;"
@@ -111,7 +111,7 @@ Contributor(s):
         <separator/>
         <row>
           <hbox flex="1">
-            <checkbox id="keepProgressDialogUp" value="&keepProgressDialogUpMsg.label;"/>
+            <checkbox id="keepProgressDialogUp" label="&keepProgressDialogUpMsg.label;"/>
           </hbox>
         </row>
       </rows>
@@ -120,10 +120,10 @@ Contributor(s):
     <separator/>
     
     <box id="CancelButton">
-      <button class="dialog" id="cancel" value="&dialogCancel.label;" oncommand="doCancelButton()"/>
+      <button class="dialog" id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <spring flex="1"/>
-      <button class="dialog" id="open" value="&open.label;" disabled="true" oncommand="doOpen()"/>
-      <button class="dialog" id="openFolder" value="&openFolder.label;" disabled="true" oncommand="doOpenFolder()"/>      
+      <button class="dialog" id="open" label="&open.label;" disabled="true" oncommand="doOpen()"/>
+      <button class="dialog" id="openFolder" label="&openFolder.label;" disabled="true" oncommand="doOpenFolder()"/>      
     </box>
 
 </window>

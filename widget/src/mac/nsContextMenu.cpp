@@ -523,7 +523,7 @@ void nsContextMenu::LoadMenuItem(
   nsString menuitemCmd;
 
   menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), disabled);
-  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuitemName);
+  menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuitemName);
   menuitemElement->GetAttribute(NS_ConvertASCIItoUCS2("cmd"), menuitemCmd);
   // Create nsMenuItem
   nsIMenuItem * pnsMenuItem = nsnull;
@@ -574,7 +574,7 @@ void nsContextMenu::LoadSubMenu(
   nsIDOMNode    * menuNode)
 {
   nsString menuName;
-  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
+  menuElement->GetAttribute(NS_ConvertASCIItoUCS2("label"), menuName);
   //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu

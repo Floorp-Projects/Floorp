@@ -27,7 +27,7 @@
     <separator class="thin"/>
     
     <titledbox orient="vertical" flex="1" style="width: 20em !important;">
-      <title value="&identityTitle.label;"/>
+      <label value="&identityTitle.label;"/>
       <html>&identityDesc.label;</html>
       <separator class="thin"/>
       <grid flex="1">
@@ -56,25 +56,25 @@
       </grid>
 
       <box autostretch="never">
-        <checkbox wsm_persist="true" id="identity.attachSignature" value="&signature.label;" flex="1"/>
+        <checkbox wsm_persist="true" id="identity.attachSignature" label="&signature.label;" flex="1"/>
       </box>
       <box autostretch="never" class="indent">
         <textbox wsm_persist="true" id="identity.signature" datatype="nsILocalFile" flex="1" name="identity.signature"/>
-        <button class="dialog push" name="browse" type="button" value="&choose.label;"  
+        <button class="dialog push" name="browse" type="button" label="&choose.label;"  
                 oncommand="prefNavSelectFile('identity.signature', 'choosefile', true)"/>
       </box>
 
       <separator class="thin"/>
       
       <box autostretch="never">
-        <checkbox wsm_persist="true" id="identity.composeHtml" value="&useHtml.label;"/>
+        <checkbox wsm_persist="true" id="identity.composeHtml" label="&useHtml.label;"/>
       </box>
 
       <spring flex="1"/>
 
       <box>
         <spring flex="1"/>
-        <button onclick="onAdvanced();" value="&advancedButton.label;"/>
+        <button oncommand="onAdvanced();" label="&advancedButton.label;"/>
         <text hidden="true" wsm_persist="true" id="identity.smtpServerKey"/>
       </box>
 

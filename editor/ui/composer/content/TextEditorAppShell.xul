@@ -55,7 +55,7 @@
     <commandset id="globalEditMenuItems"/>
     <commandset id="selectEditMenuItems"/>
     <commandset id="undoEditMenuItems"/>
-	<commandset id="clipboardEditMenuItems"/>
+  <commandset id="clipboardEditMenuItems"/>
 
     <commandset id="commonEditorMenuItems"/>
     <commandset id="composerEditMenuItems"/>
@@ -74,14 +74,14 @@
     <broadcaster id="Editor:Throbber" busy="false"/>
   </broadcasterset>
 
-	<!-- keys are appended from the overlay -->
+  <!-- keys are appended from the overlay -->
   <keyset id="keyset"/>
 
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
 
-    <menu value="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
+    <menu label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
       <menu id="viewToolbar"/>

@@ -69,9 +69,9 @@
   <broadcasterset id="broadcasterset"/>
   
   <box id="panel-bar" class="toolbar">
-    <button class="button-toolbar" value="&command.addBookmark.label;"
+    <button class="button-toolbar" label="&command.addBookmark.label;"
             oncommand="gBookmarksShell.addBookmark();"/>
-    <button class="button-toolbar" value="&command.manageBookmarks.label;"
+    <button class="button-toolbar" label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
   </box>
   
@@ -93,7 +93,7 @@
               <treecell autostretch="never"><treeindentation/>
                         <separator class="groove" flex="1"/></treecell>
             </treerow>
-          </treeitem>  		
+          </treeitem>     
         </treechildren>
       </rule>
   
@@ -105,7 +105,7 @@
                     loading="rdf:http://home.netscape.com/NC-rdf#loading">
             <treerow>
               <treecell class="treecell-indent treecell-editable"
-                        editable="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                        editable="true" label="rdf:http://home.netscape.com/NC-rdf#Name"
                         src="rdf:http://home.netscape.com/NC-rdf#Icon"
                         web:status="rdf:http://home.netscape.com/WEB-rdf#status"
                         rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
@@ -126,7 +126,7 @@
     <treehead>
       <treerow id="headRow">
         <treecell class="treecell-header sortDirectionIndicator treecell-header-sidebarpanel"
-                  value="&tree.header.name.label;"
+                  label="&tree.header.name.label;"
                   onclick="return TriStateColumnSort('Name');"
                   observes="Name" />
       </treerow>

@@ -48,38 +48,38 @@ Rights Reserved.
 </stringbundleset>
 
 <commandset id="mailFileMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-file"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
+            commandupdater="true"
+            events="create-menu-file"
+            oncommandupdate="goUpdateMailMenuItems(this)">
 
     <command id="cmd_getNewMessages" oncommand="goDoCommand('cmd_getNewMessages')" disabled="true"/>
     <command id="cmd_close" oncommand="CloseMailWindow()"/>
     <command id="cmd_open" oncommand="goDoCommand('cmd_open')"/>
-	  
+    
     <command id="cmd_file" disabled="true"/>
 
-	  <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
-	  <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
-	  <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" />
-	  <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
-	  <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
-	  <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
+    <command id="cmd_emptyTrash" oncommand="goDoCommand('cmd_emptyTrash')" disabled="true"/>
+    <command id="cmd_compactFolder" oncommand="goDoCommand('cmd_compactFolder')" disabled="true"/>
+    <command id="cmd_toggleWorkOffline" oncommand="goDoCommand('cmd_toggleWorkOffline')" />
+    <command id="cmd_synchronizeOffline" oncommand="goDoCommand('cmd_synchronizeOffline')" disabled="true"/>
+    <command id="cmd_downloadFlagged" oncommand="goDoCommand('cmd_downloadFlagged')" disabled="true"/>
+    <command id="cmd_downloadSelected" oncommand="goDoCommand('cmd_downloadSelected')" disabled="true"/>
     <command id="cmd_getMsgsForAuthAccounts" 
              oncommand="goDoCommand('cmd_getMsgsForAuthAccounts'); event.preventBubble()" 
              disabled="true"/>
-	  
+    
     <command id="cmd_openMessage" oncommand="goDoCommand('cmd_openMessage')" disabled="true"/>
-	  <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
-	  <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
-	  <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>	  
-	  <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
+    <command id="cmd_print" oncommand="goDoCommand('cmd_print')" disabled="true"/>
+    <command id="cmd_saveAsFile" oncommand="goDoCommand('cmd_saveAsFile')" disabled="true"/>
+    <command id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')" disabled="true"/>    
+    <command id="cmd_getNextNMessages" oncommand="goDoCommand('cmd_getNextNMessages')" disabled="true"/>
     <command id="cmd_renameFolder" oncommand="goDoCommand('cmd_renameFolder')" />
 </commandset>
 
 <commandset id="mailViewMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-view"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
+            commandupdater="true"
+            events="create-menu-view"
+            oncommandupdate="goUpdateMailMenuItems(this)">
 
    <command id="cmd_viewPageSource" oncommand="goDoCommand('cmd_viewPageSource')" disabled="true"/>
    <command id="cmd_setFolderCharset" oncommand="goDoCommand('cmd_setFolderCharset')" />
@@ -87,90 +87,90 @@ Rights Reserved.
 
    <command id="cmd_expandAllThreads" oncommand="goDoCommand('cmd_expandAllThreads')" disabled="true"/>
    <command id="cmd_collapseAllThreads" oncommand="goDoCommand('cmd_collapseAllThreads')" disabled="true"/>
-	 <command id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
-	 <command id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
-	 <command id="cmd_viewThreadsWithUnread" oncommand="goDoCommand('cmd_viewThreadsWithUnread')" disabled="true"/>
-	 <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
-	 <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
+   <command id="cmd_viewAllMsgs" oncommand="goDoCommand('cmd_viewAllMsgs')" disabled="true"/>
+   <command id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
+   <command id="cmd_viewThreadsWithUnread" oncommand="goDoCommand('cmd_viewThreadsWithUnread')" disabled="true"/>
+   <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
+   <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
 
 </commandset>
 
 <commandset id="mailEditMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-edit"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
+            commandupdater="true"
+            events="create-menu-edit"
+            oncommandupdate="goUpdateMailMenuItems(this)">
 
-	<command id="cmd_undo"
-	       valueDeleteMsg="&undoDeleteMsgCmd.label;"
-				 valueMoveMsg="&undoMoveMsgCmd.label;"
-				 valueCopyMsg="&undoCopyMsgCmd.label;"
-				 valueDefault="&undoDefaultCmd.label;"/>
-	<command id="cmd_redo"
-	       valueDeleteMsg="&redoDeleteMsgCmd.label;"
-				 valueMoveMsg="&redoMoveMsgCmd.label;"
-				 valueCopyMsg="&redoCopyMsgCmd.label;"
-				 valueDefault="&redoDefaultCmd.label;"/>
-	<command id="cmd_cut"/>
-	<command id="cmd_copy"/>
-	<command id="cmd_paste"/>
-	<command id="cmd_delete"
+  <command id="cmd_undo"
+         valueDeleteMsg="&undoDeleteMsgCmd.label;"
+         valueMoveMsg="&undoMoveMsgCmd.label;"
+         valueCopyMsg="&undoCopyMsgCmd.label;"
+         valueDefault="&undoDefaultCmd.label;"/>
+  <command id="cmd_redo"
+         valueDeleteMsg="&redoDeleteMsgCmd.label;"
+         valueMoveMsg="&redoMoveMsgCmd.label;"
+         valueCopyMsg="&redoCopyMsgCmd.label;"
+         valueDefault="&redoDefaultCmd.label;"/>
+  <command id="cmd_cut"/>
+  <command id="cmd_copy"/>
+  <command id="cmd_paste"/>
+  <command id="cmd_delete"
          valueFolder="&deleteFolderCmd.label;"
          valueNewsgroup="&unsubscribeNewsgroupCmd.label;"
          valueMessage="&deleteMsgCmd.label;"
          valueNewsMessage="&cancelNewsMsgCmd.label;"
          valueMessages="&deleteMsgsCmd.label;"/>
-	<command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
-	<command id="cmd_selectAll"/>
+  <command id="cmd_editDraft" oncommand="goDoCommand('cmd_editDraft')" disabled="true"/>
+  <command id="cmd_selectAll"/>
 </commandset>
 
 <commandset id="mailSearchMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-search"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
-	<command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
-	<command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
+            commandupdater="true"
+            events="create-menu-search"
+            oncommandupdate="goUpdateMailMenuItems(this)">
+  <command id="cmd_find" oncommand="goDoCommand('cmd_find')" disabled="true"/>
+  <command id="cmd_findAgain" oncommand="goDoCommand('cmd_findAgain')" disabled="true"/>
 </commandset>
 
 <commandset id="mailGoMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-go"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
+            commandupdater="true"
+            events="create-menu-go"
+            oncommandupdate="goUpdateMailMenuItems(this)">
 
-	<command id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
-	<command id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
-	<command id="cmd_nextFlaggedMsg" oncommand="goDoCommand('cmd_nextFlaggedMsg')" disabled="true"/>
-	<command id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
-	<command id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
-	<command id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
-	<command id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
+  <command id="cmd_nextMsg" oncommand="goDoCommand('cmd_nextMsg')" disabled="true"/>
+  <command id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
+  <command id="cmd_nextFlaggedMsg" oncommand="goDoCommand('cmd_nextFlaggedMsg')" disabled="true"/>
+  <command id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
+  <command id="cmd_previousMsg" oncommand="goDoCommand('cmd_previousMsg')" disabled="true"/>
+  <command id="cmd_previousUnreadMsg" oncommand="goDoCommand('cmd_previousUnreadMsg')" disabled="true"/>
+  <command id="cmd_previousFlaggedMsg" oncommand="goDoCommand('cmd_previousFlaggedMsg')" disabled="true"/>
 </commandset>
 
 <commandset id="mailMessageMenuItems"
-     				commandupdater="true"
-		  			events="create-menu-message"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
-	<command id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
-	<command id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
-	<command id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
-	<command id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
-	<command id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
-	<command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
-	<command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
-	<command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
+            commandupdater="true"
+            events="create-menu-message"
+            oncommandupdate="goUpdateMailMenuItems(this)">
+  <command id="cmd_reply" oncommand="goDoCommand('cmd_reply')"/>
+  <command id="cmd_replySender" oncommand="goDoCommand('cmd_replySender')"/>
+  <command id="cmd_replyGroup" oncommand="goDoCommand('cmd_replyGroup')"/>
+  <command id="cmd_replyall" oncommand="goDoCommand('cmd_replyall')"/>
+  <command id="cmd_forward" oncommand="goDoCommand('cmd_forward')"/>
+  <command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
+  <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
+  <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
   
-	<command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
-	<command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
-	<command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
-	<command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
-	<command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
-	<command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
+  <command id="cmd_markAsRead" oncommand="goDoCommand('cmd_markAsRead'); event.preventBubble()" disabled="true"/>
+  <command id="cmd_markAllRead" oncommand="goDoCommand('cmd_markAllRead'); event.preventBubble()" disabled="true"/>
+  <command id="cmd_markThreadAsRead" oncommand="goDoCommand('cmd_markThreadAsRead'); event.preventBubble()" disabled="true"/>
+  <command id="cmd_markAsFlagged" oncommand="goDoCommand('cmd_markAsFlagged'); event.preventBubble()" disabled="true"/>
+  <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
+  <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
 
 </commandset>
 
 <commandset id="mailToolbarItems"
-     				commandupdater="true"
-		  			events="mail-toolbar"
-			    	oncommandupdate="goUpdateMailMenuItems(this)">
+            commandupdater="true"
+            events="mail-toolbar"
+            oncommandupdate="goUpdateMailMenuItems(this)">
   
   <command id="button_reply"/>
   <command id="button_replyall"/>
@@ -184,13 +184,13 @@ Rights Reserved.
 </commandset>
 
 <broadcasterset id="broadcasterset">
-	<!-- File Menu -->
-	<broadcaster id="cmd_newNavigator"/>
-	<broadcaster id="cmd_newEditor"/>
- 	<broadcaster id="cmd_quit"/>
+  <!-- File Menu -->
+  <broadcaster id="cmd_newNavigator"/>
+  <broadcaster id="cmd_newEditor"/>
+  <broadcaster id="cmd_quit"/>
   <broadcaster id="cmd_pageSetup"/>
 
-	<!-- Edit Menu -->
+  <!-- Edit Menu -->
 </broadcasterset>
 
 <keyset id="keyset">
@@ -223,19 +223,19 @@ Rights Reserved.
   <key id="key_editAsNew" key="&editMsgAsNewCmd.key;"              oncommand="goDoCommand('cmd_editAsNew')" modifiers="accel"/>
   <key id="key_watchThread" key="&watchThreadMenu.key;"            oncommand="goDoCommand('cmd_watchThread')" modifiers="accel"/>
   <key id="key_killThread" key="&killThreadMenu.key;"              oncommand="goDoCommand('cmd_killThread')" />
-	<key id="key_openMessage" key="&openMessageWindowCmd.key;"       oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
-	<key id="key_print" key="&printCmd.key;"                         oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
-	<key id="key_saveAsFile" key="&saveAsFileCmd.key;"               oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
-	<key id="key_viewPageSource" key="&pageSourceCmd.key;"           oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
-	<key id="key_getNewMessages" key="&getNewMsgCmd.key;"            oncommand="goDoCommand('cmd_getNewMessages')" modifiers="accel"/>
+  <key id="key_openMessage" key="&openMessageWindowCmd.key;"       oncommand="goDoCommand('cmd_openMessage')" modifiers="accel"/>
+  <key id="key_print" key="&printCmd.key;"                         oncommand="goDoCommand('cmd_print')" modifiers="accel"/>
+  <key id="key_saveAsFile" key="&saveAsFileCmd.key;"               oncommand="goDoCommand('cmd_saveAsFile')" modifiers="accel"/>
+  <key id="key_viewPageSource" key="&pageSourceCmd.key;"           oncommand="goDoCommand('cmd_viewPageSource')" modifiers="accel"/>
+  <key id="key_getNewMessages" key="&getNewMsgCmd.key;"            oncommand="goDoCommand('cmd_getNewMessages')" modifiers="accel"/>
         <key id="key_getAllNewMessages" 
              key="&getAllNewMsgCmd.key;"  
              oncommand="goDoCommand('cmd_getMsgsForAuthAccounts');"
              modifiers="accel, shift"/>
-	<key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
-	<key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
+  <key id="key_find" key="&findCmd.key;"  oncommand="goDoCommand('cmd_find')" modifiers="accel"/>
+  <key id="key_findAgain" key="&findAgainCmd.key;"   oncommand="goDoCommand('cmd_findAgain')" modifiers="accel"/>
 
-	<!-- Tab Keys -->
+  <!-- Tab Keys -->
         <key id="tabpaneCounterClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('counter-clockwise');"
              modifiers="shift"/>
         <key id="tabpaneClockwise" keycode="VK_TAB" oncommand="SwitchPaneFocus('clockwise');"/>
@@ -243,453 +243,453 @@ Rights Reserved.
 
 </keyset>
 
-	<popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
-		<menuitem id="threadPaneContext-openNewWindow"
-			  value="&contextOpenNewWindow.label;"
-			  accesskey="&contextOpenNewWindow.accesskey;"
-			  oncommand="MsgOpenNewWindowForMessage();"/>
-		<menuseparator id="threadPaneContext-sep-open"/>
-		<menuitem id="threadPaneContext-replySender"
-			  value="&contextReplySender.label;"
-			  accesskey="&contextReplySender.accesskey;"
-			  oncommand="MsgReplySender(event);"/>
-		<menuitem id="threadPaneContext-replyNewsgroup"
-			  value="&contextReplyNewsgroup.label;"
-			  accesskey="&contextReplyNewsgroup.accesskey;"
-			  oncommand="MsgReplyGroup(event);"/>
-		<menuitem id="threadPaneContext-replyAll"
-			  value="&contextReplyAll.label;"
-			  accesskey="&contextReplyAll.accesskey;"
-			  oncommand="MsgReplyToAllMessage(event);"/>
-		<menuitem id="threadPaneContext-forward"
-			  value="&contextForward.label;"
-			  accesskey="&contextForward.accesskey;"
-			  oncommand="MsgForwardMessage(event);"/>
-		<menuitem id="threadPaneContext-forwardAsAttachment"
-			  value="&contextForwardAsAttachment.label;"
-			  accesskey="&contextForwardAsAttachment.accesskey;"
-			  oncommand="MsgForwardAsAttachment(event);"/>
-		<menuitem id="threadPaneContext-editAsNew"
-			  value="&contextEditAsNew.label;"
-			  accesskey="&contextEditAsNew.accesskey;"
-			  oncommand="MsgEditMessageAsNew();"/>
-		<menuseparator id="threadPaneContext-sep-reply"/>
-		<menu id="threadPaneContext-moveMenu"
-			  value="&contextMoveMsgMenu.label;"
-			  accesskey="&contextMoveMsgMenu.accesskey;"
-			  datasources="rdf:null"
-			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template> 
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-									oncommand="MsgMoveMessage(event.target)"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-				</rule>
-			</template>
-		</menu>
-		<menu id="threadPaneContext-copyMenu"
-			value="&contextCopyMsgMenu.label;"
-			accesskey="&contextCopyMsgMenu.accesskey;"
-			datasources="rdf:null" 
-			ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template>
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-									oncommand="MsgCopyMessage(event.target)"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-							oncommand="MsgCopyMessage(event.target)" 
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-			  </rule>
-			</template>
-		</menu>
-		<menuitem id="threadPaneContext-saveAs"
-			  value="&contextSaveAs.label;"
-			  accesskey="&contextSaveAs.accesskey;"
-			  oncommand="MsgSaveAsFile();"/>
-		<menuitem id="threadPaneContext-print"
-			  value="&contextPrint.label;"
-			  accesskey="&contextPrint.accesskey;"
-			  oncommand="PrintEnginePrint();"/>
-		<menuitem id="threadPaneContext-delete"
-			  value="&contextDelete.label;"
-			  accesskey="&contextDelete.accesskey;"
-			  oncommand="MsgDeleteMessage(false, false);"/>
-	</popup>
+  <popup id="threadPaneContext" oncreate="return fillThreadPaneContextMenu();" >
+    <menuitem id="threadPaneContext-openNewWindow"
+        label="&contextOpenNewWindow.label;"
+        accesskey="&contextOpenNewWindow.accesskey;"
+        oncommand="MsgOpenNewWindowForMessage();"/>
+    <menuseparator id="threadPaneContext-sep-open"/>
+    <menuitem id="threadPaneContext-replySender"
+        label="&contextReplySender.label;"
+        accesskey="&contextReplySender.accesskey;"
+        oncommand="MsgReplySender(event);"/>
+    <menuitem id="threadPaneContext-replyNewsgroup"
+        label="&contextReplyNewsgroup.label;"
+        accesskey="&contextReplyNewsgroup.accesskey;"
+        oncommand="MsgReplyGroup(event);"/>
+    <menuitem id="threadPaneContext-replyAll"
+        label="&contextReplyAll.label;"
+        accesskey="&contextReplyAll.accesskey;"
+        oncommand="MsgReplyToAllMessage(event);"/>
+    <menuitem id="threadPaneContext-forward"
+        label="&contextForward.label;"
+        accesskey="&contextForward.accesskey;"
+        oncommand="MsgForwardMessage(event);"/>
+    <menuitem id="threadPaneContext-forwardAsAttachment"
+        label="&contextForwardAsAttachment.label;"
+        accesskey="&contextForwardAsAttachment.accesskey;"
+        oncommand="MsgForwardAsAttachment(event);"/>
+    <menuitem id="threadPaneContext-editAsNew"
+        label="&contextEditAsNew.label;"
+        accesskey="&contextEditAsNew.accesskey;"
+        oncommand="MsgEditMessageAsNew();"/>
+    <menuseparator id="threadPaneContext-sep-reply"/>
+    <menu id="threadPaneContext-moveMenu"
+        label="&contextMoveMsgMenu.label;"
+        accesskey="&contextMoveMsgMenu.accesskey;"
+        datasources="rdf:null"
+        ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template> 
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                  oncommand="MsgMoveMessage(event.target)"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menu id="threadPaneContext-copyMenu"
+      label="&contextCopyMsgMenu.label;"
+      accesskey="&contextCopyMsgMenu.accesskey;"
+      datasources="rdf:null" 
+      ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template>
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                  oncommand="MsgCopyMessage(event.target)"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
+              oncommand="MsgCopyMessage(event.target)" 
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menuitem id="threadPaneContext-saveAs"
+        label="&contextSaveAs.label;"
+        accesskey="&contextSaveAs.accesskey;"
+        oncommand="MsgSaveAsFile();"/>
+    <menuitem id="threadPaneContext-print"
+        label="&contextPrint.label;"
+        accesskey="&contextPrint.accesskey;"
+        oncommand="PrintEnginePrint();"/>
+    <menuitem id="threadPaneContext-delete"
+        label="&contextDelete.label;"
+        accesskey="&contextDelete.accesskey;"
+        oncommand="MsgDeleteMessage(false, false);"/>
+  </popup>
 
     <popup id="folderPaneContext" oncreate="return fillFolderPaneContextMenu();" >
-    		<menuitem id="folderPaneContext-openNewWindow"
-			  value="&folderContextOpenNewWindow.label;"
-			  accesskey="&folderContextOpenNewWindow.accesskey;"
-			  oncommand="MsgOpenNewWindowForFolder(null);"/>
-		<menuitem id="folderPaneContext-subscribe"
-			  value="&folderContextSubscribe.label;"
-			  accesskey="&folderContextSubscribe.accesskey;"
-			  oncommand="MsgSubscribe();"/>
-		<menuitem id="folderPaneContext-newsUnsubscribe"
-			  value="&folderContextUnsubscribe.label;"
-			  accesskey="&folderContextUnsubscribe.accesskey;"
-			  oncommand="MsgUnsubscribe();"/>
-		<menuitem id="folderPaneContext-getMessages"
-			  value="&folderContextGetMessages.label;"
-			  accesskey="&folderContextGetMessages.accesskey;"
-			  oncommand="MsgGetMessage();"/>
-		<menuitem id="folderPaneContext-markAllRead"
-			  value="&folderContextMarkNewsgroupRead.label;"
-			  accesskey="&folderContextMarkNewsgroupRead.accesskey;"
-			  oncommand="MsgMarkAllRead();"/>
-		<menuitem id="folderPaneContext-new"
-			  value="&folderContextNew.label;"
-			  accesskey="&folderContextNew.accesskey;"
-			  oncommand="MsgNewFolder(NewFolder);"/>
-		<menuitem id="folderPaneContext-rename"
-			  value="&folderContextRename.label;"
-			  accesskey="&folderContextRename.accesskey;"
-			  oncommand="MsgRenameFolder();"/>
+        <menuitem id="folderPaneContext-openNewWindow"
+        label="&folderContextOpenNewWindow.label;"
+        accesskey="&folderContextOpenNewWindow.accesskey;"
+        oncommand="MsgOpenNewWindowForFolder(null);"/>
+    <menuitem id="folderPaneContext-subscribe"
+        label="&folderContextSubscribe.label;"
+        accesskey="&folderContextSubscribe.accesskey;"
+        oncommand="MsgSubscribe();"/>
+    <menuitem id="folderPaneContext-newsUnsubscribe"
+        label="&folderContextUnsubscribe.label;"
+        accesskey="&folderContextUnsubscribe.accesskey;"
+        oncommand="MsgUnsubscribe();"/>
+    <menuitem id="folderPaneContext-getMessages"
+        label="&folderContextGetMessages.label;"
+        accesskey="&folderContextGetMessages.accesskey;"
+        oncommand="MsgGetMessage();"/>
+    <menuitem id="folderPaneContext-markAllRead"
+        label="&folderContextMarkNewsgroupRead.label;"
+        accesskey="&folderContextMarkNewsgroupRead.accesskey;"
+        oncommand="MsgMarkAllRead();"/>
+    <menuitem id="folderPaneContext-new"
+        label="&folderContextNew.label;"
+        accesskey="&folderContextNew.accesskey;"
+        oncommand="MsgNewFolder(NewFolder);"/>
+    <menuitem id="folderPaneContext-rename"
+        label="&folderContextRename.label;"
+        accesskey="&folderContextRename.accesskey;"
+        oncommand="MsgRenameFolder();"/>
         <menuitem id="folderPaneContext-compact"
-              value="&folderContextCompact.label;"
+              label="&folderContextCompact.label;"
               accesskey="&folderContextCompact.accesskey;"
-			  oncommand="MsgCompactFolder(false);"/>          //for one folder only
-		<menuitem id="folderPaneContext-remove"
-			  value="&folderContextRemove.label;"
-			  accesskey="&folderContextRemove.accesskey;"
-			  oncommand="MsgDeleteFolder();"/>
-		<menuitem id="folderPaneContext-emptyTrash"
-			  value="&folderContextEmptyTrash.label;"
-			  accesskey="&folderContextEmptyTrash.accesskey;"
-			  oncommand="MsgEmptyTrash();"/>
-		<menuitem id="folderPaneContext-sendUnsentMessages"
-			  value="&folderContextSendUnsentMessages.label;"
-			  accesskey="&folderContextSendUnsentMessages.accesskey;"
-			  oncommand="MsgSendUnsentMsg();"/>
-		<menuseparator id="folderPaneContext-sep-edit"/>
-		<menuitem id="folderPaneContext-searchMessages"
-			  value="&folderContextSearchMessages.label;"
-			  accesskey="&folderContextSearchMessages.accesskey;"
-			  oncommand="MsgSearchMessages();"/>
-		<menuitem id="folderPaneContext-properties"
-			  value="&folderContextProperties.label;"
-			  accesskey="&folderContextProperties.accesskey;"
-			  oncommand="MsgFolderProperties();"/>
-	</popup>
+        oncommand="MsgCompactFolder(false);"/>          //for one folder only
+    <menuitem id="folderPaneContext-remove"
+        label="&folderContextRemove.label;"
+        accesskey="&folderContextRemove.accesskey;"
+        oncommand="MsgDeleteFolder();"/>
+    <menuitem id="folderPaneContext-emptyTrash"
+        label="&folderContextEmptyTrash.label;"
+        accesskey="&folderContextEmptyTrash.accesskey;"
+        oncommand="MsgEmptyTrash();"/>
+    <menuitem id="folderPaneContext-sendUnsentMessages"
+        label="&folderContextSendUnsentMessages.label;"
+        accesskey="&folderContextSendUnsentMessages.accesskey;"
+        oncommand="MsgSendUnsentMsg();"/>
+    <menuseparator id="folderPaneContext-sep-edit"/>
+    <menuitem id="folderPaneContext-searchMessages"
+        label="&folderContextSearchMessages.label;"
+        accesskey="&folderContextSearchMessages.accesskey;"
+        oncommand="MsgSearchMessages();"/>
+    <menuitem id="folderPaneContext-properties"
+        label="&folderContextProperties.label;"
+        accesskey="&folderContextProperties.accesskey;"
+        oncommand="MsgFolderProperties();"/>
+  </popup>
 
-	<popup id="messagePaneContext"   
-	 oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
+  <popup id="messagePaneContext"   
+   oncreate="gMessagePaneContextMenu = new nsContextMenu(this); return fillMessagePaneContextMenu(gMessagePaneContextMenu);"
      ondestroy="contextMenu.onDestroy(); contextMenu = null;">
         <menuitem id="context-openlink"
-                  value="&openLinkCmd.label;"
+                  label="&openLinkCmd.label;"
                   accesskey="&openLinkCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.openLink();"/>
         <menuitem id="context-editlink"
-                  value="&editLinkCmd.label;"
+                  label="&editLinkCmd.label;"
                   accesskey="&editLinkCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.editLink();"/>
         <menuseparator id="messagePaneContext-sep-link"/>
         <menuitem id="context-selectall"
-                  value="&selectAllCmd.label;"
+                  label="&selectAllCmd.label;"
                   accesskey="&selectAllCmd.accesskey;"
                   observes="cmd_selectAll"/>
         <menuitem id="context-copy"
-                  value="&copyCmd.label;"
+                  label="&copyCmd.label;"
                   accesskey="&copyCmd.accesskey;"
                   observes="cmd_copy"/>
-		<menuseparator id="messagePaneContext-sep-open"/>
-		<menuitem id="messagePaneContext-replySender"
-			  value="&contextReplySender.label;"
-			  accesskey="&contextReplySender.accesskey;"
-			  oncommand="MsgReplySender(event);"/>
-		<menuitem id="messagePaneContext-replyNewsgroup"
-			  value="&contextReplyNewsgroup.label;"
-			  accesskey="&contextReplyNewsgroup.accesskey;"
-			  oncommand="MsgReplyMessage(event);"/>
-		<menuitem id="messagePaneContext-replyAll"
-			  value="&contextReplyAll.label;"
-			  accesskey="&contextReplyAll.accesskey;"
-			  oncommand="MsgReplyToAllMessage(event);"/>
-		<menuitem id="messagePaneContext-forward"
-			  value="&contextForward.label;"
-			  accesskey="&contextForward.accesskey;"
-			  oncommand="MsgForwardMessage(event);"/>
-		<menuitem id="messagePaneContext-editAsNew"
-			  value="&contextEditAsNew.label;"
-			  accesskey="&contextEditAsNew.accesskey;"
-			  oncommand="MsgEditMessageAsNew();"/>
-		<menuseparator id="messagePaneContext-sep-reply"/>
-		<menu id="messagePaneContext-moveMenu"
-			  value="&contextMoveMsgMenu.label;"
-			  accesskey="&contextMoveMsgMenu.accesskey;"
-			  datasources="rdf:null"
-			  ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template> 
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-									oncommand="MsgMoveMessage(event.target)"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-				</rule>
-			</template>
-		</menu>
-		<menu id="messagePaneContext-copyMenu"
-			value="&contextCopyMsgMenu.label;"
-			accesskey="&contextCopyMsgMenu.accesskey;"
-			datasources="rdf:null" 
-			ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template>
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-									oncommand="MsgCopyMessage(event.target)"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-									SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-							oncommand="MsgCopyMessage(event.target)" 
-							SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-			  </rule>
-			</template>
-		</menu>
-		<menuitem id="messagePaneContext-saveAs"
-			  value="&contextSaveAs.label;"
-			  accesskey="&contextSaveAs.accesskey;"
-			  oncommand="MsgSaveAsFile();"/>
-		<menuitem id="messagePaneContext-print"
-			  value="&contextPrint.label;"
-			  accesskey="&contextPrint.accesskey;"
-			  oncommand="PrintEnginePrint();"/>
-		<menuitem id="messagePaneContext-delete"
-			  oncommand="MsgDeleteMessage(false, false);"/>
-		<menuseparator id="messagePaneContext-sep-edit"/>
+    <menuseparator id="messagePaneContext-sep-open"/>
+    <menuitem id="messagePaneContext-replySender"
+        label="&contextReplySender.label;"
+        accesskey="&contextReplySender.accesskey;"
+        oncommand="MsgReplySender(event);"/>
+    <menuitem id="messagePaneContext-replyNewsgroup"
+        label="&contextReplyNewsgroup.label;"
+        accesskey="&contextReplyNewsgroup.accesskey;"
+        oncommand="MsgReplyMessage(event);"/>
+    <menuitem id="messagePaneContext-replyAll"
+        label="&contextReplyAll.label;"
+        accesskey="&contextReplyAll.accesskey;"
+        oncommand="MsgReplyToAllMessage(event);"/>
+    <menuitem id="messagePaneContext-forward"
+        label="&contextForward.label;"
+        accesskey="&contextForward.accesskey;"
+        oncommand="MsgForwardMessage(event);"/>
+    <menuitem id="messagePaneContext-editAsNew"
+        label="&contextEditAsNew.label;"
+        accesskey="&contextEditAsNew.accesskey;"
+        oncommand="MsgEditMessageAsNew();"/>
+    <menuseparator id="messagePaneContext-sep-reply"/>
+    <menu id="messagePaneContext-moveMenu"
+        label="&contextMoveMsgMenu.label;"
+        accesskey="&contextMoveMsgMenu.accesskey;"
+        datasources="rdf:null"
+        ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template> 
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                  oncommand="MsgMoveMessage(event.target)"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menu id="messagePaneContext-copyMenu"
+      label="&contextCopyMsgMenu.label;"
+      accesskey="&contextCopyMsgMenu.accesskey;"
+      datasources="rdf:null" 
+      ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template>
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                  oncommand="MsgCopyMessage(event.target)"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+                  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
+              oncommand="MsgCopyMessage(event.target)" 
+              SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+              BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+              IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+              ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menuitem id="messagePaneContext-saveAs"
+        label="&contextSaveAs.label;"
+        accesskey="&contextSaveAs.accesskey;"
+        oncommand="MsgSaveAsFile();"/>
+    <menuitem id="messagePaneContext-print"
+        label="&contextPrint.label;"
+        accesskey="&contextPrint.accesskey;"
+        oncommand="PrintEnginePrint();"/>
+    <menuitem id="messagePaneContext-delete"
+        oncommand="MsgDeleteMessage(false, false);"/>
+    <menuseparator id="messagePaneContext-sep-edit"/>
         <menuitem id="context-viewimage"
-                  value="&viewImageCmd.label;"
+                  label="&viewImageCmd.label;"
                   accesskey="&viewImageCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.viewImage();"/>
         <menuseparator id="messagePaneContext-sep-image"/>
         <menuitem id="context-copylink"
-                  value="&copyLinkCmd.label;"
+                  label="&copyLinkCmd.label;"
                   accesskey="&copyLinkCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.copyLink();"/>
         <menuitem id="context-copyimage"
-                  value="&copyImageCmd.label;"
+                  label="&copyImageCmd.label;"
                   accesskey="&copyImageCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.copyImage();"/>
         <menuseparator id="messagePaneContext-sep-copy"/>
         <menuitem id="context-savelink"
-                  value="&saveLinkCmd.label;"
+                  label="&saveLinkCmd.label;"
                   accesskey="&saveLinkCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.saveLink();"/>
         <menuitem id="context-saveimage"
                   accesskey="&saveImageCmd.accesskey;"
                   oncommand="gMessagePaneContextMenu.saveImage();"/>
         <menuitem id="context-bookmarklink"
-                  value="&bookmarkLinkCmd.label;"
+                  label="&bookmarkLinkCmd.label;"
                   accesskey="&bookmarkLinkCmd.accesskey;"
                   oncommand="addBookmark(gMessagePaneContextMenu.linkURL(),
                                          gMessagePaneContextMenu.linkText());"/>
@@ -697,56 +697,56 @@ Rights Reserved.
 </popup>
 
 <menubar id="mailMenubar">
-	<menu id="menu_File" >
-		<menupopup id="menu_FilePopup" oncreate="file_init();">
-			<menuitem value="&newMsgCmd.label;"
-			accesskey="&newMsgCmd.accesskey;"
-			key="key_newMessage"
-			oncommand="MsgNewMessage(event);"/>
-			<menu id="menu_New">
-				<menupopup id="menu_NewPopup">
-					<menuitem value="&newFolderCmd.label;"
+  <menu id="menu_File" >
+    <menupopup id="menu_FilePopup" oncreate="file_init();">
+      <menuitem label="&newMsgCmd.label;"
+      accesskey="&newMsgCmd.accesskey;"
+      key="key_newMessage"
+      oncommand="MsgNewMessage(event);"/>
+      <menu id="menu_New">
+        <menupopup id="menu_NewPopup">
+          <menuitem label="&newFolderCmd.label;"
                      oncommand="MsgNewFolder(NewFolder);"
                      accesskey="&newFolderCmd.accesskey;"/>
-					<menuitem value="&newAccountCmd.label;"
+          <menuitem label="&newAccountCmd.label;"
                      accesskey="&newAccountCmd.accesskey;"
                      oncommand="MsgAccountWizard();"/>
-					<menuseparator/>
-					<menuitem id="menu_newNavigator"/>
-					<menuitem id="menu_newEditor"/>
-				</menupopup>
-			</menu>
-			<menuitem id="openMessageWindowMenuitem" value="&openMessageWindowCmd.label;"
-				observes="cmd_openMessage"
-				accesskey="&openMessageWindowCmd.accesskey;"
-				key="key_openMessage"/>
-			<menu id="fileAttachmentMenu" value="&openAttachmentCmd.label;"/>
-			<menuseparator/>
-			<menuitem id="menu_close"/>
-			<menu value="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
-				<menupopup>
-					<menuitem value="&saveAsFileCmd.label;"
-					 accesskey="&saveAsFileCmd.accesskey;"
-					 key="key_saveAsFile"
-					 observes="cmd_saveAsFile"/>
-					<menuitem value="&saveAsTemplateCmd.label;"
-					 accesskey="&saveAsTemplateCmd.accesskey;"
-					 observes="cmd_saveAsTemplate"/>
-				</menupopup>
-			</menu>
-			<menuseparator/>
-			<menuitem value="&getNewMsgCmd.label;"
-			 accesskey="&getNewMsgCmd.accesskey;"
-			 key="key_getNewMessages"
-			 observes="cmd_getNewMessages"/>
-                        <menu value="&getNewMsgForCmd.label;" 
+          <menuseparator/>
+          <menuitem id="menu_newNavigator"/>
+          <menuitem id="menu_newEditor"/>
+        </menupopup>
+      </menu>
+      <menuitem id="openMessageWindowMenuitem" label="&openMessageWindowCmd.label;"
+        observes="cmd_openMessage"
+        accesskey="&openMessageWindowCmd.accesskey;"
+        key="key_openMessage"/>
+      <menu id="fileAttachmentMenu" label="&openAttachmentCmd.label;"/>
+      <menuseparator/>
+      <menuitem id="menu_close"/>
+      <menu label="&saveAsMenu.label;" accesskey="&saveAsMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&saveAsFileCmd.label;"
+           accesskey="&saveAsFileCmd.accesskey;"
+           key="key_saveAsFile"
+           observes="cmd_saveAsFile"/>
+          <menuitem label="&saveAsTemplateCmd.label;"
+           accesskey="&saveAsTemplateCmd.accesskey;"
+           observes="cmd_saveAsTemplate"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem label="&getNewMsgCmd.label;"
+       accesskey="&getNewMsgCmd.accesskey;"
+       key="key_getNewMessages"
+       observes="cmd_getNewMessages"/>
+                        <menu label="&getNewMsgForCmd.label;" 
                               accesskey="&getNewMsgForCmd.accesskey;"
                               datasources="rdf:msgaccountmanager"
                               containment="http://home.netscape.com/NC-rdf#child"
                               ref="msgaccounts:/"
                               observes="cmd_getNewMessages">
                             <menupopup>
-                                <menuitem value="&getAllNewMsgCmd.label;" 
+                                <menuitem label="&getAllNewMsgCmd.label;" 
                                           key="key_getAllNewMessages"
                                           observes="cmd_getMsgsForAuthAccounts"/>
                                 <menuseparator/>
@@ -755,381 +755,381 @@ Rights Reserved.
                                 <rule nc:CanGetMessages="true">
                                     <menupopup>
                                         <menuitem uri="..." 
-                                                  data="..." 
-                                                  value="rdf:http://home.netscape.com/NC-rdf#Name" 
+                                                  value="..." 
+                                                  label="rdf:http://home.netscape.com/NC-rdf#Name" 
                                                   oncommand="MsgGetMessagesForAccount(event)"/>
                                     </menupopup>
                                 </rule>
                             </template>
                             <menupopup/>
                         </menu>
-			<menuitem id="menu_getnextnmsg" value="&getNextNMsgCmd.label;"
-			 observes="cmd_getNextNMessages"/>
-			<menuitem value="&sendUnsentCmd.label;"
-			 accesskey="&sendUnsentCmd.accesskey;"
-			 oncommand="MsgSendUnsentMsg();"/>
-			<menuitem value="&subscribeCmd.label;"
-			 accesskey="&subscribeCmd.accesskey;"
-			 oncommand="MsgSubscribe();"/>
-			 <menuseparator/>
-			<menuitem id="menu_renameFolder" value="&renameFolder.label;"
+      <menuitem id="menu_getnextnmsg" label="&getNextNMsgCmd.label;"
+       observes="cmd_getNextNMessages"/>
+      <menuitem label="&sendUnsentCmd.label;"
+       accesskey="&sendUnsentCmd.accesskey;"
+       oncommand="MsgSendUnsentMsg();"/>
+      <menuitem label="&subscribeCmd.label;"
+       accesskey="&subscribeCmd.accesskey;"
+       oncommand="MsgSubscribe();"/>
+       <menuseparator/>
+      <menuitem id="menu_renameFolder" label="&renameFolder.label;"
              accesskey="&renameFolder.accesskey;"
              observes="cmd_renameFolder"/>
-			<menuitem id="menu_emptyTrash" value="&emptyTrashCmd.label;"
+      <menuitem id="menu_emptyTrash" label="&emptyTrashCmd.label;"
              accesskey="&emptyTrashCmd.accesskey;"
              observes="cmd_emptyTrash"/>
-            <menuitem id="menu_compactFolder" value="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
-			<menuseparator id="trashMenuSeparator"/>
-			<menuitem value="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
-			<menuseparator/>
-			<menu value="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
-				<menupopup>
-          <menuitem value="&workOfflineCmd.label;"
+            <menuitem id="menu_compactFolder" label="&compactFolders.label;" accesskey="&compactFolder.accesskey;" observes="cmd_compactFolder"/>
+      <menuseparator id="trashMenuSeparator"/>
+      <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport();"/>
+      <menuseparator/>
+      <menu label="&offlineMenu.label;" accesskey="&offlineMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&workOfflineCmd.label;"
            accesskey="&workOfflineCmd.accesskey;"
            observes="cmd_toggleWorkOffline"/>
-          <menuitem value="&synchronizeOfflineCmd.label;" 
+          <menuitem label="&synchronizeOfflineCmd.label;" 
            accesskey="&synchronizeOfflineCmd.accesskey;"
            observes="cmd_synchronizeOffline"/>
-					<menuitem value="&downloadFlaggedCmd.label;"
-					 accesskey="&downloadFlaggedCmd.accesskey;"
-					 observes="cmd_downloadFlagged"/>
-					<menuitem value="&downloadSelectedCmd.label;"
-					 accesskey="&downloadSelectedCmd.accesskey;"
-					 observes="cmd_downloadSelected"/>
-				</menupopup>
-			</menu>
-			<menuseparator/>
-			<menuitem id="printMenuItem" key="key_print" value="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
-			<menuseparator/>
-		</menupopup>
-	</menu>
+          <menuitem label="&downloadFlaggedCmd.label;"
+           accesskey="&downloadFlaggedCmd.accesskey;"
+           observes="cmd_downloadFlagged"/>
+          <menuitem label="&downloadSelectedCmd.label;"
+           accesskey="&downloadSelectedCmd.accesskey;"
+           observes="cmd_downloadSelected"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <menuitem id="printMenuItem" key="key_print" label="&printCmd.label;" accesskey="&printCmd.accesskey;" observes="cmd_print"/>
+      <menuseparator/>
+    </menupopup>
+  </menu>
 
-	<menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
-		<menupopup oncreate="InitEditMessagesMenu()">
-			<menuitem id="menu_undo" value="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
-			<menuitem id="menu_redo" value="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
-			<menuseparator/>
-			<menuitem id="menu_cut"/>
-			<menuitem id="menu_copy"/>
-			<menuitem id="menu_paste"/>
-			<menuitem id="menu_delete"/>
-			<menuitem value="&editDraftCmd.label;" 
-					  accesskey="&editDraftCmd.accesskey;" 
-					  observes="cmd_editDraft"/>
-			<menuseparator/>
-			<menuitem id="menu_selectAll"/>
-			<menuseparator/>
-			<menuitem value="&filtersCmd.label;"
+  <menu id="menu_Edit" oncommand="CommandUpdate_UndoRedo();">
+    <menupopup oncreate="InitEditMessagesMenu()">
+      <menuitem id="menu_undo" label="&undoDefaultCmd.label;" accesskey="&undoDefaultCmd.accesskey;" key="key_undo" observes="cmd_undo" oncommand="Undo()"/>
+      <menuitem id="menu_redo" label="&redoDefaultCmd.label;" accesskey="&redoDefaultCmd.accesskey;" key="key_redo" observes="cmd_redo" oncommand="Redo()"/>
+      <menuseparator/>
+      <menuitem id="menu_cut"/>
+      <menuitem id="menu_copy"/>
+      <menuitem id="menu_paste"/>
+      <menuitem id="menu_delete"/>
+      <menuitem label="&editDraftCmd.label;" 
+            accesskey="&editDraftCmd.accesskey;" 
+            observes="cmd_editDraft"/>
+      <menuseparator/>
+      <menuitem id="menu_selectAll"/>
+      <menuseparator/>
+      <menuitem label="&filtersCmd.label;"
                       accesskey="&filtersCmd.accesskey;"
                       oncommand="MsgFilters();"/>
-            <menuitem value="&folderPropsCmd.label;"
+            <menuitem label="&folderPropsCmd.label;"
                       accesskey="&folderPropsCmd.accesskey;"
                       oncommand="MsgFolderProperties();"/>
-			<menuseparator/>
-			<menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
-			<menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
-		</menupopup>
-	</menu>
+      <menuseparator/>
+      <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" oncommand="MsgAccountManager();"/>
+      <menuitem id="menu_preferences" oncommand="goPreferences('messenger.xul', 'chrome://messenger/content/pref-mailnews.xul','mailnews')"/>
+    </menupopup>
+  </menu>
 
-	<menu id="menu_View">
-		<menupopup id="menu_View_Popup" oncreate="view_init()">
-			<menu id="menu_Toolbars">
-				<menupopup>
-					<menuitem id="menu_showMessengerToolbar"
-					 type="checkbox"
-					 value="&showMessengerToolbarCmd.label;"
-					 accesskey="&showMessengerToolbarCmd.accesskey;"
-					 oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
-					 checked="true"/>
-					<menuitem type="checkbox" id="menu_showTaskbar"/>
-				</menupopup>
-			</menu>
-			<menuitem id="menu_showMessage"
-			 type="checkbox"
-			 value="&showMessageCmd.label;"
-			 accesskey="&showMessageCmd.accesskey;"
-			 oncommand="MsgToggleMessagePane();"/>
-			<menuseparator/>
-			<menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" value="&sortMenu.label;">
-				<menupopup>
-					<menuitem id="sortByDateMenuitem" type="checkbox" value="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
-					<menuitem id="sortByFlagMenuitem" type="checkbox" value="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
-					<menuitem id="sortByOrderReceivedMenuitem" type="checkbox" value="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
-					<menuitem id="sortByPriorityMenuitem" type="checkbox" value="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" oncommand="MsgSortByPriority()"/>
-					<menuitem id="sortBySenderMenuitem" type="checkbox" value="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" oncommand="MsgSortBySender()"/>
-					<menuitem id="sortBySizeMenuitem" type="checkbox" value="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" oncommand="MsgSortBySize()"/>
-					<menuitem id="sortByStatusMenuitem" type="checkbox" value="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
-					<menuitem id="sortBySubjectMenuitem" type="checkbox" value="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
-					<menuitem id="sortByUnreadMenuitem" type="checkbox" value="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
-				</menupopup>
-			</menu>
-			<menu value="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;">
-				<menupopup oncreate="InitViewMessagesMenu()">
-					<menuitem id="viewAllMessagesMenuItem" type="checkbox" value="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
-					<menuitem id="viewUnreadMessagesMenuItem" type="checkbox" value="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
-					<menuitem id="viewThreadsWithUnreadMenuItem" type="checkbox" value="&threadsWithUnreadCmd.label;" accesskey="&threadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewThreadsWithUnread"/>
-					<menuitem id="viewWatchedThreadsWithUnreadMenuItem" type="checkbox" value="&watchedThreadsWithUnreadCmd.label;" accesskey="&watchedThreadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewWatchedThreadsWithUnread"/>
-					<menuseparator/>
-					<menuitem id="menu_showThreads"
-					 type="checkbox"
-					 value="&threadsMsgsCmd.label;"
-					 accesskey="&threadsMsgsCmd.accesskey;"
-					 observes="cmd_sortByThread"/>
-					<menuseparator/>
-					<menuitem value="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
-					<menuitem value="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
-				</menupopup>
-			</menu>
-			<menu id="viewheadersmenu" value="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
-				<menupopup>
-					<menuitem id="viewallheaders"
-					 type="radio"
-					 name="viewheadergroup"
-					 value="&headersAllCmd.label;"
-					 accesskey="&headersAllCmd.accesskey;"
-					 oncommand="MsgViewAllHeaders();"/>
-					<menuitem id="viewnormalheaders"
-					 checked="true"
-					 type="radio"
-					 name="viewheadergroup"
-					 value="&headersNormalCmd.label;"
-					 accesskey="&headersNormalCmd.accesskey;"
-					 oncommand="MsgViewNormalHeaders();"/>
-				</menupopup>
-			</menu>
-			<menuseparator/>
-			<!-- overlayed from viewZoomOverlay.xul -->
-			<menu id="menu_textZoom"/>
-			<menuseparator><observes element="menu_textZoom" attribute="hidden"/></menuseparator>
-			<menuitem value="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
-			<menuitem id="stopMenuitem" value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
-			<menuseparator/>
-			<menuitem value="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
-			<menuseparator/>
-			<menuitem value="&folderCharset.label;" accesskey="&folderCharset.accesskey;" observes="cmd_setFolderCharset"/>
-			<menu id = "mailviewCharsetMenu" />
-		</menupopup>
-	</menu>
-	<menu value="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
-		<menupopup  oncreate="InitSearchMessagesMenu();">
-			<menuitem value="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
-			<menuitem value="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
-			<menuseparator/>
-			<menuitem value="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
-			<menuseparator/>
-			<menuitem value="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0/ssearch.html')"/>
-			<menuitem value="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
-		</menupopup>
-	</menu>
-	<menu value="&goMenu.label;" accesskey="&goMenu.accesskey;">
-		<menupopup  oncreate="InitGoMessagesMenu();">
-			<menu id="goNextMenu" value="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
-				<menupopup>
-					<menuitem value="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
-					<menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"/>
-					<menuitem value="&nextFlaggedMsgCmd.label;" accesskey="&nextFlaggedMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
-					<menuseparator/>
-					<menuitem value="&nextUnreadThread.label;" key="key_nextUnreadThread" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"/>
-				</menupopup>
-			</menu>
-			<menu id="goPreviousMenu" value="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
-				<menupopup>
-					<menuitem value="&prevMsgCmd.label;" key="key_previousMsg" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"/>
-					<menuitem value="&prevUnreadMsgCmd.label;" key="key_previousUnreadMsg" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"/>
-					<menuitem value="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
-				</menupopup>
-			</menu>
-			<menuseparator id="goNextSeparator"/>
-			<menuitem value="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
-		</menupopup>
-	</menu>
+  <menu id="menu_View">
+    <menupopup id="menu_View_Popup" oncreate="view_init()">
+      <menu id="menu_Toolbars">
+        <menupopup>
+          <menuitem id="menu_showMessengerToolbar"
+           type="checkbox"
+           label="&showMessengerToolbarCmd.label;"
+           accesskey="&showMessengerToolbarCmd.accesskey;"
+           oncommand="goToggleToolbar('msgToolbar', 'menu_showMessengerToolbar')"
+           checked="true"/>
+          <menuitem type="checkbox" id="menu_showTaskbar"/>
+        </menupopup>
+      </menu>
+      <menuitem id="menu_showMessage"
+       type="checkbox"
+       label="&showMessageCmd.label;"
+       accesskey="&showMessageCmd.accesskey;"
+       oncommand="MsgToggleMessagePane();"/>
+      <menuseparator/>
+      <menu id="viewSortMenu" accesskey="&sortMenu.accesskey;" label="&sortMenu.label;">
+        <menupopup>
+          <menuitem id="sortByDateMenuitem" type="checkbox" label="&sortByDateCmd.label;" accesskey="&sortByDateCmd.accesskey;" oncommand="MsgSortByDate()"/>
+          <menuitem id="sortByFlagMenuitem" type="checkbox" label="&sortByFlagCmd.label;" accesskey="&sortByFlagCmd.accesskey;" oncommand="MsgSortByFlagged()"/>
+          <menuitem id="sortByOrderReceivedMenuitem" type="checkbox" label="&sortByOrderReceivedCmd.label;"  accesskey="&sortByOrderReceivedCmd.accesskey;" oncommand="MsgSortByOrderReceived()"/>
+          <menuitem id="sortByPriorityMenuitem" type="checkbox" label="&sortByPriorityCmd.label;" accesskey="&sortByPriorityCmd.accesskey;" oncommand="MsgSortByPriority()"/>
+          <menuitem id="sortBySenderMenuitem" type="checkbox" label="&sortBySenderCmd.label;" accesskey="&sortBySenderCmd.accesskey;" oncommand="MsgSortBySender()"/>
+          <menuitem id="sortBySizeMenuitem" type="checkbox" label="&sortBySizeCmd.label;" accesskey="&sortBySizeCmd.accesskey;" oncommand="MsgSortBySize()"/>
+          <menuitem id="sortByStatusMenuitem" type="checkbox" label="&sortByStatusCmd.label;" accesskey="&sortByStatusCmd.accesskey;" oncommand="MsgSortByStatus()"/>
+          <menuitem id="sortBySubjectMenuitem" type="checkbox" label="&sortBySubjectCmd.label;" accesskey="&sortBySubjectCmd.accesskey;" oncommand="MsgSortBySubject()"/>
+          <menuitem id="sortByUnreadMenuitem" type="checkbox" label="&sortByUnreadCmd.label;"  accesskey="&sortByUnreadCmd.accesskey;" oncommand="MsgSortByUnread()"/>
+        </menupopup>
+      </menu>
+      <menu label="&msgsMenu.label;" id="viewMessagesMenu" accesskey="&msgsMenu.accesskey;">
+        <menupopup oncreate="InitViewMessagesMenu()">
+          <menuitem id="viewAllMessagesMenuItem" type="checkbox" label="&allMsgsCmd.label;" accesskey="&allMsgsCmd.accesskey;" disabled="true" observes="cmd_viewAllMsgs"/>
+          <menuitem id="viewUnreadMessagesMenuItem" type="checkbox" label="&unreadMsgsCmd.label;" accesskey="&unreadMsgsCmd.accesskey;" disabled="true" observes="cmd_viewUnreadMsgs"/>
+          <menuitem id="viewThreadsWithUnreadMenuItem" type="checkbox" label="&threadsWithUnreadCmd.label;" accesskey="&threadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewThreadsWithUnread"/>
+          <menuitem id="viewWatchedThreadsWithUnreadMenuItem" type="checkbox" label="&watchedThreadsWithUnreadCmd.label;" accesskey="&watchedThreadsWithUnreadCmd.accesskey;" disabled="true" observes="cmd_viewWatchedThreadsWithUnread"/>
+          <menuseparator/>
+          <menuitem id="menu_showThreads"
+           type="checkbox"
+           label="&threadsMsgsCmd.label;"
+           accesskey="&threadsMsgsCmd.accesskey;"
+           observes="cmd_sortByThread"/>
+          <menuseparator/>
+          <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" disabled="true" observes="cmd_expandAllThreads"/>
+          <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" disabled="true" observes="cmd_collapseAllThreads"/>
+        </menupopup>
+      </menu>
+      <menu id="viewheadersmenu" label="&headersMenu.label;" accesskey="&headersMenu.accesskey;">
+        <menupopup>
+          <menuitem id="viewallheaders"
+           type="radio"
+           name="viewheadergroup"
+           label="&headersAllCmd.label;"
+           accesskey="&headersAllCmd.accesskey;"
+           oncommand="MsgViewAllHeaders();"/>
+          <menuitem id="viewnormalheaders"
+           checked="true"
+           type="radio"
+           name="viewheadergroup"
+           label="&headersNormalCmd.label;"
+           accesskey="&headersNormalCmd.accesskey;"
+           oncommand="MsgViewNormalHeaders();"/>
+        </menupopup>
+      </menu>
+      <menuseparator/>
+      <!-- overlayed from viewZoomOverlay.xul -->
+      <menu id="menu_textZoom"/>
+      <menuseparator><observes element="menu_textZoom" attribute="hidden"/></menuseparator>
+      <menuitem label="&reloadCmd.label;" accesskey="&reloadCmd.accesskey;" observes="cmd_reload"/>
+      <menuitem id="stopMenuitem" label="&stopCmd.label;" accesskey="&stopCmd.accesskey;" disabled="true" oncommand="MsgStop();"/>
+      <menuseparator/>
+      <menuitem label="&pageSourceCmd.label;" key="key_viewPageSource" accesskey="&pageSourceCmd.accesskey;" observes="cmd_viewPageSource"/>
+      <menuseparator/>
+      <menuitem label="&folderCharset.label;" accesskey="&folderCharset.accesskey;" observes="cmd_setFolderCharset"/>
+      <menu id = "mailviewCharsetMenu" />
+    </menupopup>
+  </menu>
+  <menu label="&searchMenu.label;" accesskey="&searchMenu.accesskey;">
+    <menupopup  oncreate="InitSearchMessagesMenu();">
+      <menuitem label="&findCmd.label;" key="key_find" accesskey="&findCmd.accesskey;" observes="cmd_find"/>
+      <menuitem label="&findAgainCmd.label;" key="key_findAgain" accesskey="&findAgainCmd.accesskey;" observes="cmd_findAgain"/>
+      <menuseparator/>
+      <menuitem label="&searchMailCmd.label;" accesskey="&searchMailCmd.accesskey;" oncommand="MsgSearchMessages();"/>
+      <menuseparator/>
+      <menuitem label="&searchInternetCmd.label;" accesskey="&searchInternetCmd.accesskey;" oncommand="openTopWin('http://home.netscape.com/bookmark/6_0/ssearch.html')"/>
+      <menuitem label="&searchBookmarksCmd.label;" accesskey="&searchBookmarksCmd.accesskey;" oncommand="window.openDialog('chrome://communicator/content/bookmarks/bm-find.xul', 'FindBookmarksWindow', 'dialog=no,close,chrome,resizable');"/>
+    </menupopup>
+  </menu>
+  <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;">
+    <menupopup  oncreate="InitGoMessagesMenu();">
+      <menu id="goNextMenu" label="&nextMenu.label;" accesskey="&nextMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&nextMsgCmd.label;" key="key_nextMsg" accesskey="&nextMsgCmd.accesskey;" observes="cmd_nextMsg"/>
+          <menuitem label="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.accesskey;" observes="cmd_nextUnreadMsg"/>
+          <menuitem label="&nextFlaggedMsgCmd.label;" accesskey="&nextFlaggedMsgCmd.accesskey;" observes="cmd_nextFlaggedMsg"/>
+          <menuseparator/>
+          <menuitem label="&nextUnreadThread.label;" key="key_nextUnreadThread" accesskey="&nextUnreadThreadCmd.accesskey;" observes="cmd_nextUnreadThread"/>
+        </menupopup>
+      </menu>
+      <menu id="goPreviousMenu" label="&prevMenu.label;" accesskey="&prevMenu.accesskey;">
+        <menupopup>
+          <menuitem label="&prevMsgCmd.label;" key="key_previousMsg" accesskey="&previousMsgCmd.accesskey;" observes="cmd_previousMsg"/>
+          <menuitem label="&prevUnreadMsgCmd.label;" key="key_previousUnreadMsg" accesskey="&previousUnreadMsgCmd.accesskey;" observes="cmd_previousUnreadMsg"/>
+          <menuitem label="&prevFlaggedMsgCmd.label;" accesskey="&previousFlaggedMsgCmd.accesskey;" observes="cmd_previousFlaggedMsg"/>
+        </menupopup>
+      </menu>
+      <menuseparator id="goNextSeparator"/>
+      <menuitem label="&startPageCmd.label;" accesskey="&startPageCmd.accesskey;" oncommand="HideMessageHeaderPane();loadStartPage();"/>
+    </menupopup>
+  </menu>
   
-  <menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
-	<menupopup oncreate="InitMessageMenu();">
-		<menuitem value="&newMsgCmd.label;"
-		accesskey="&newMsgCmd.accesskey;"
-		key="key_newMessage"
-		oncommand="MsgNewMessage(event);"/>
-		<menuitem id="replyMainMenu" value="&replyMsgCmd.label;" 
-			accesskey="&replyMsgCmd.accesskey;"
-			key="key_reply"
-			observes="cmd_reply"/>
-		<menuitem id="replySenderMainMenu" value="&replySenderCmd.label;" 
-			accesskey="&replySenderCmd.accesskey;"
-			observes="cmd_replySender"/>
-		<menuitem id="replyNewsgroupMainMenu" value="&replyNewsgroupCmd.label;" 
-			accesskey="&replyNewsgroupCmd.accesskey;"
-			key="key_reply"
-			observes="cmd_replyGroup"/>
-		<menuitem value="&replyToAllMsgCmd.label;"
-			accesskey="&replyToAllMsgCmd.accesskey;"
-			key="key_replyall"
-			observes="cmd_replyall"/>
-		<menuitem value="&forwardMsgCmd.label;"
-			accesskey="&forwardMsgCmd.accesskey;"
-			key="key_forward"
-			observes="cmd_forward"/>
- 		<menu value="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
-			<menupopup>
-				<menuitem value="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" observes="cmd_forwardInline"/>
-				<menuitem value="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
-			</menupopup>
-		</menu>
-        <menuitem value="&editMsgAsNewCmd.label;"
+  <menu label="&msgMenu.label;" accesskey="&msgMenu.accesskey;" >
+  <menupopup oncreate="InitMessageMenu();">
+    <menuitem label="&newMsgCmd.label;"
+    accesskey="&newMsgCmd.accesskey;"
+    key="key_newMessage"
+    oncommand="MsgNewMessage(event);"/>
+    <menuitem id="replyMainMenu" label="&replyMsgCmd.label;" 
+      accesskey="&replyMsgCmd.accesskey;"
+      key="key_reply"
+      observes="cmd_reply"/>
+    <menuitem id="replySenderMainMenu" label="&replySenderCmd.label;" 
+      accesskey="&replySenderCmd.accesskey;"
+      observes="cmd_replySender"/>
+    <menuitem id="replyNewsgroupMainMenu" label="&replyNewsgroupCmd.label;" 
+      accesskey="&replyNewsgroupCmd.accesskey;"
+      key="key_reply"
+      observes="cmd_replyGroup"/>
+    <menuitem label="&replyToAllMsgCmd.label;"
+      accesskey="&replyToAllMsgCmd.accesskey;"
+      key="key_replyall"
+      observes="cmd_replyall"/>
+    <menuitem label="&forwardMsgCmd.label;"
+      accesskey="&forwardMsgCmd.accesskey;"
+      key="key_forward"
+      observes="cmd_forward"/>
+    <menu label="&forwardAsMenu.label;" accesskey="&forwardAsMenu.accesskey;">
+      <menupopup>
+        <menuitem label="&forwardAsInline.label;" accesskey="&forwardAsInline.accesskey;" observes="cmd_forwardInline"/>
+        <menuitem label="&forwardAsAttachmentCmd.label;" accesskey="&forwardAsAttachmentCmd.accesskey;" observes="cmd_forwardAttachment"/>
+      </menupopup>
+    </menu>
+        <menuitem label="&editMsgAsNewCmd.label;"
             accesskey="&editMsgAsNewCmd.accesskey;"
             key="key_editAsNew"
             observes="cmd_editAsNew"/>
-		<menuseparator/>
-		<menu value="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
-		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template> 
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-								 oncommand="MsgMoveMessage(event.target)"
-								 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-								 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-								 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-								 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-				</rule>
-			</template>
-		</menu>
-		<menu value="&copyMsgMenu.label;" accesskey="&copyMsgMenu.accesskey;" id="copyMenu" datasources="rdf:null"
-		 ignore="http://home.netscape.com/NC-rdf#MessageChild">
-			<menupopup/>
-			<template>
-			<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" 
-								 oncommand="MsgCopyMessage(event.target)"
-								 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-								 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-								 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-								 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-				</rule>
-				<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-							<menupopup/>
-						</menu>
-					</menupopup>
-				</rule>
-				<rule nc:CanFileMessages="true">
-					<menupopup>
-						<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-						 oncommand="MsgCopyMessage(event.target)" 
-						 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-						 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-						 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-						 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-					</menupopup>
-				</rule>
-			</template>
-		</menu>
-		<menuseparator/>
-		<menu value="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMark()">
-			<menupopup>
-				<menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
-				<menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
-				<menuitem value="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
-				<menuseparator/>
-				<menuitem type="checkbox" id="markFlaggedMenuItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
-			</menupopup>
-		</menu>
-    <menuitem value="&killThreadMenu.label;"
+    <menuseparator/>
+    <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
+     ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template> 
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                 oncommand="MsgMoveMessage(event.target)"
+                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menu label="&copyMsgMenu.label;" accesskey="&copyMsgMenu.accesskey;" id="copyMenu" datasources="rdf:null"
+     ignore="http://home.netscape.com/NC-rdf#MessageChild">
+      <menupopup/>
+      <template>
+      <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" 
+                 oncommand="MsgCopyMessage(event.target)"
+                 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+        </rule>
+        <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+              <menupopup/>
+            </menu>
+          </menupopup>
+        </rule>
+        <rule nc:CanFileMessages="true">
+          <menupopup>
+            <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
+             oncommand="MsgCopyMessage(event.target)" 
+             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+          </menupopup>
+        </rule>
+      </template>
+    </menu>
+    <menuseparator/>
+    <menu label="&markMenu.label;" accesskey="&markMenu.accesskey;" oncreate="InitMessageMark()">
+      <menupopup>
+        <menuitem type="checkbox" key="key_toggleRead" id="markReadMenuItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead"/>
+        <menuitem label="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
+        <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
+        <menuseparator/>
+        <menuitem type="checkbox" id="markFlaggedMenuItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+      </menupopup>
+    </menu>
+    <menuitem label="&killThreadMenu.label;"
         accesskey="&killThreadMenu.accesskey;"
         key="key_killThread"
         id="killThread"
         observes="cmd_killThread"/>
-    <menuitem value="&watchThreadMenu.label;"
+    <menuitem label="&watchThreadMenu.label;"
         accesskey="&watchThreadMenu.accesskey;"
         key="key_watchThread"
         id="watchThread"
         observes="cmd_watchThread"/>
-	</menupopup>
+  </menupopup>
 </menu>
 
 <menu id="tasksMenu"/>
@@ -1138,17 +1138,17 @@ Rights Reserved.
 </menubar>
 
 <toolbox id="mailToolbarToolbox">
-	<toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
-		<box id="toolbar_button_box">
+  <toolbar class="toolbar-primary chromeclass-toolbar" id="msgToolbar" persist="collapsed">
+    <box id="toolbar_button_box">
                         <menubutton class="menubutton-dual toolbar top" id="button-getmsg" 
-                                    value="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
+                                    label="&getMsgButton.label;" crop="right" tooltip="aTooltip" 
                                     tooltiptext="&getMsgButton.tooltip;" 
                                     observes="button_getNewMessages" datasources="rdf:msgaccountmanager" 
                                     oncommand="goDoCommand('cmd_getNewMessages')"
                                     containment="http://home.netscape.com/NC-rdf#child" 
                                     ref="msgaccounts:/">
                             <menupopup>
-                                <menuitem value="&getAllNewMsgCmd.label;" 
+                                <menuitem label="&getAllNewMsgCmd.label;" 
                                           observes="cmd_getMsgsForAuthAccounts"/>
                                 <menuseparator/>
                             </menupopup>
@@ -1156,117 +1156,117 @@ Rights Reserved.
                                 <rule nc:CanGetMessages="true">
                                     <menupopup>
                                         <menuitem uri="..." 
-                                                  data="..." 
-                                                  value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                                  value="..." 
+                                                  label="rdf:http://home.netscape.com/NC-rdf#Name"
                                                   oncommand="MsgGetMessagesForAccount(event);"/>
                                     </menupopup>
                                 </rule>
                             </template>
                             <menupopup/>
                         </menubutton>
-			<button class="button-toolbar-2 top" id="button-newmsg" value="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
-			<toolbarseparator class="toolbarseparator-primary"/>
-			<button class="button-toolbar-2 top" id="button-reply" value="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button-replyall" value="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
-			<button class="button-toolbar-2 top" id="button-forward" value="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
-			<toolbarseparator class="toolbarseparator-primary"/>
-			<menubutton class="button-toolbar-2 top" id="button-file" observes="button_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" value="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;">
-				<template> 
-				<rule nc:NoSelect="true" iscontainer="true" isempty="false">
-					<menupopup>
-						<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name">
-							<menupopup>
-								<menuitem uri="..." value="&fileHereMenu.label;" disabled="true"/>
-								<menuseparator/>
-							</menupopup>
-						</menu>
-					</menupopup>
-				</rule> 
-				<rule nc:NoSelect="true">
-					<menupopup>
-						<menuitem uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
-					</menupopup>
-				</rule>
-					<rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
-						<menupopup>
-							<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-								<menupopup>
-									<menuitem uri="..." value="&fileHereMenu.label;" 
-									 oncommand="MsgMoveMessage(event.target)"
-									 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-									 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-									 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-									 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
-									<menuseparator/>
-								</menupopup>
-							</menu>
-						</menupopup>
-					</rule>
-					<rule nc:CanFileMessages="false" nc:ServerType="nntp">
-					<!-- don't show nntp servers in the file and copies menus -->
-					</rule>
-					<rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
-					<!-- note, there is no "file here" -->
-						<menupopup>
-							<menu uri="..."  class="folderMenuItem menu-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name"
-							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
-								<menupopup/>
-							</menu>
-						</menupopup>
-					</rule>
-					<rule nc:CanFileMessages="true">
-						<menupopup>
-							<menuitem uri="..." class="folderMenuItem menuitem-iconic" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
-							 SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
-							 BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
-							 IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-							 ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
-						</menupopup>
-					</rule>
-				</template>
-				<menupopup/>
-			</menubutton>
-			<button class="button-toolbar-2 top" id="button-next" value="&nextButton.label;"  oncommand="goDoCommand('cmd_nextUnreadMsg')" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
-			<button class="button-toolbar-2 top" id="button-delete" value="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
-      <menubutton class="menubutton-dual toolbar top" id="button-mark" value="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
+      <button class="button-toolbar-2 top" id="button-newmsg" label="&newMsgButton.label;" tooltip="aTooltip" tooltiptext="&newMsgButton.tooltip;" oncommand="MsgNewMessage(event)"/>
+      <toolbarseparator class="toolbarseparator-primary"/>
+      <button class="button-toolbar-2 top" id="button-reply" label="&replyButton.label;" tooltip="aTooltip" tooltiptext="&replyButton.tooltip;" observes="button_reply" oncommand="MsgReplyMessage(event)"/>
+      <button class="button-toolbar-2 top" id="button-replyall" label="&replyAllButton.label;" tooltip="aTooltip" tooltiptext="&replyAllButton.tooltip;" observes="button_replyall" oncommand="MsgReplyToAllMessage(event)"/>
+      <button class="button-toolbar-2 top" id="button-forward" label="&forwardButton.label;" tooltip="aTooltip"  tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
+      <toolbarseparator class="toolbarseparator-primary"/>
+      <menubutton class="button-toolbar-2 top" id="button-file" observes="button_file" datasources="rdf:null" ignore="http://home.netscape.com/NC-rdf#MessageChild" label="&fileButton.label;" tooltip="aTooltip" tooltiptext="&fileButton.tooltip;">
+        <template> 
+        <rule nc:NoSelect="true" iscontainer="true" isempty="false">
+          <menupopup>
+            <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menupopup>
+                <menuitem uri="..." label="&fileHereMenu.label;" disabled="true"/>
+                <menuseparator/>
+              </menupopup>
+            </menu>
+          </menupopup>
+        </rule> 
+        <rule nc:NoSelect="true">
+          <menupopup>
+            <menuitem uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" disabled="true"/>
+          </menupopup>
+        </rule>
+          <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                <menupopup>
+                  <menuitem uri="..." label="&fileHereMenu.label;" 
+                   oncommand="MsgMoveMessage(event.target)"
+                   SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+                   BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+                   IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                   ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" />
+                  <menuseparator/>
+                </menupopup>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule nc:CanFileMessages="false" nc:ServerType="nntp">
+          <!-- don't show nntp servers in the file and copies menus -->
+          </rule>
+          <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
+          <!-- note, there is no "file here" -->
+            <menupopup>
+              <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
+                <menupopup/>
+              </menu>
+            </menupopup>
+          </rule>
+          <rule nc:CanFileMessages="true">
+            <menupopup>
+              <menuitem uri="..." class="folderMenuItem menuitem-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="MsgMoveMessage(event.target)" 
+               SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
+               BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+               IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+               ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+            </menupopup>
+          </rule>
+        </template>
+        <menupopup/>
+      </menubutton>
+      <button class="button-toolbar-2 top" id="button-next" label="&nextButton.label;"  oncommand="goDoCommand('cmd_nextUnreadMsg')" tooltip="aTooltip" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
+      <button class="button-toolbar-2 top" id="button-delete" label="&deleteButton.label;"  tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
+      <menubutton class="menubutton-dual toolbar top" id="button-mark" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   crop="right" observes="button_mark" tooltip="aTooltip" tooltiptext="&markButton.tooltip;">  
             <menupopup oncreate="InitMessageMark()">
-                <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" value="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
-                <menuitem value="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
-                <menuitem value="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
+                <menuitem type="checkbox" key="key_toggleRead" id="markReadToolbarItem" label="&markAsReadCmd.label;" accesskey="&markAsReadCmd.accesskey;" observes="cmd_markAsRead" default="true" />
+                <menuitem label="&markThreadAsReadCmd.label;"  accesskey="&markThreadAsReadCmd.accesskey;" observes="cmd_markThreadAsRead"/>
+                <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
                 <menuseparator/>
-                <menuitem type="checkbox" id="markFlaggedToolbarItem" value="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+                <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
             </menupopup>
-  	  </menubutton>
-      <menubutton class="menubutton-dual toolbar top" id="button-print" value="&printButton.label;" 
+      </menubutton>
+      <menubutton class="menubutton-dual toolbar top" id="button-print" label="&printButton.label;" 
                   crop="right" observes="button_print" oncommand="goDoCommand('cmd_print')" tooltip="aTooltip" tooltiptext="&printButton.tooltip;">  
-     	  <menupopup id="printMenu">
-    			<menuitem value="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
+        <menupopup id="printMenu">
+          <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
           </menupopup>
-  	  </menubutton>
-			<button class="button-toolbar-2 top" id="button-stop" value="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
-			<spring flex="1"/>
+      </menubutton>
+      <button class="button-toolbar-2 top" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
+      <spring flex="1"/>
             <box id="throbber-box" autostretch="never">
-  	            <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
+                <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")'/>
             </box>
-		</box>
-	</toolbar>
+    </box>
+  </toolbar>
 </toolbox>
 
 <statusbar id="status-bar"> 
-	<box position="1" flex="1">
-		<statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
-		<progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
-		<statusbarpanel id="statusText" value="&statusText.label;" crop="right" flex="1"/> 
-	</box>
-	<statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
+  <box position="1" flex="1">
+    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
+    <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
+  </box>
+  <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
 </statusbar> 
 <box id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
 

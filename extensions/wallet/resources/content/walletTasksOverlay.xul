@@ -46,10 +46,10 @@
         if (this.pref.GetBoolPref("wallet.crypto")) {
           elementOn = document.getElementById("obscure");
           elementOff = document.getElementById("encrypt");
-	} else {
+  } else {
           elementOn = document.getElementById("encrypt");
           elementOff = document.getElementById("obscure");
-	}
+  }
         elementOn.setAttribute("disabled","false");
         elementOff.setAttribute("disabled","true");
       }
@@ -162,64 +162,64 @@
               NotCaptured = "&NotCaptured;"
               noPrefills = "&noPrefills;"
               oncreate="CheckForWallet()"> 
-    <menu value="&walletPasswordManager.label;"
+    <menu label="&walletPasswordManager.label;"
           accesskey="&walletPasswordManager.accesskey;"
           position="1">
       <menupopup oncreate="CheckForEncrypt()">
-        <menuitem value="&walletDisplaySignonsCmd.label;"
+        <menuitem label="&walletDisplaySignonsCmd.label;"
                   accesskey="&walletDisplaySignonsCmd.accesskey;"
                   oncommand="WalletDialog('signon');"/> 
-        <menuitem value="&walletChangePasswordCmd.label;"
+        <menuitem label="&walletChangePasswordCmd.label;"
                   accesskey="&walletChangePasswordCmd.accesskey;"
                   oncommand="WalletAction('password');"/>
-        <menuitem value="&walletExpirePasswordCmd.label;"
+        <menuitem label="&walletExpirePasswordCmd.label;"
                   accesskey="&walletExpirePasswordCmd.accesskey;"
                   oncommand="WalletAction('expire');"/>
         <menuseparator/>
-        <menuitem value="&walletEncryptCmd.label;"
+        <menuitem label="&walletEncryptCmd.label;"
                   id="encrypt"
                   accesskey="&walletEncryptCmd.accesskey;" 
                   oncommand="WalletAction('encrypt');"/>
-        <menuitem value="&walletObscureCmd.label;"
+        <menuitem label="&walletObscureCmd.label;"
                   id="obscure"
                   accesskey="&walletObscureCmd.accesskey;" 
                   oncommand="WalletAction('obscure');"/>
-        <menuitem value="&walletClearCmd.label;"
+        <menuitem label="&walletClearCmd.label;"
                   id="clear"
                   accesskey="&walletClearCmd.accesskey;" 
                   oncommand="WalletAction('clear');"/>
       </menupopup>
     </menu>
-    <menu value="&walletFormManager.label;"
+    <menu label="&walletFormManager.label;"
           accesskey="&walletFormManager.accesskey;"
           id="wallet"
           position="2">
       <menupopup>
-        <menuitem value="&walletContentsCmd.label;"
+        <menuitem label="&walletContentsCmd.label;"
                   accesskey="&walletContentsCmd.accesskey;"
                   id="walleteditor"
                   oncommand="WalletDialog('wallet');"/> 
-        <menuitem value="&walletSitesCmd.label;"
+        <menuitem label="&walletSitesCmd.label;"
                   accesskey="&walletSitesCmd.accesskey;"
                   id="walletsites"
                   oncommand="WalletDialog('walletsites');"/> 
         <menuseparator/>
 <!--
-        <menuitem value="&walletSafeFillCmd.label;"
+        <menuitem label="&walletSafeFillCmd.label;"
                   accesskey="&walletSafeFillCmd.accesskey;"
                   id="walletSafeFill"
                   oncommand="WalletAction('safefill');"/> 
-        <menuitem value="&walletQuickFillCmd.label;"
+        <menuitem label="&walletQuickFillCmd.label;"
                   accesskey="&walletQuickFillCmd.accesskey;"
                   id="walletQuickFill"
                   oncommand="WalletAction('quickfill');"/> 
-        <menuitem value="&walletRequestToCaptureCmd.label;"
+        <menuitem label="&walletRequestToCaptureCmd.label;"
                   accesskey="&walletRequestToCaptureCmd.accesskey;"
                   id="walletCapture"
                   oncommand="WalletAction('capture');"/> 
         <menuseparator/>
 -->
-        <menuitem value="&walletSamplesCmd.label;"
+        <menuitem label="&walletSamplesCmd.label;"
                   accesskey="&walletSamplesCmd.accesskey;"
                   id="walletSamples"
                   oncommand="WalletDialog('samples');"/> 

@@ -19,9 +19,9 @@
       if (appCore != null) {
         dump("BrowserAppCore has been created.\n");
         appCore.Init("BrowserAppCore");
-	      appCore.setContentWindow(window.frames[0]);
-	      appCore.setWebShellWindow(window);
-	      appCore.setToolbarWindow(window);
+        appCore.setContentWindow(window.frames[0]);
+        appCore.setWebShellWindow(window);
+        appCore.setToolbarWindow(window);
         appCore.setDisableCallback("DoDisableButtons();");
         appCore.setEnableCallback("DoEnableButtons();");
         dump("Adding BrowserAppCore to AppCoreManager...\n");
@@ -56,7 +56,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Going Back\n");
+      dump("Going Back\n");
       appCore.back();
       RefreshUrlbar();
     } else {
@@ -68,9 +68,9 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Going Forward\n");
+      dump("Going Forward\n");
       appCore.forward();
-	  RefreshUrlbar();
+    RefreshUrlbar();
     } else {
       dump("BrowserAppCore has not been created!\n");
     }
@@ -96,14 +96,14 @@
     }
 
     window.frames[0].location.href = url;
-	RefreshUrlbar();
+  RefreshUrlbar();
   }
 
   function BrowserNewWindow()
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Opening New Window\n");
+      dump("Opening New Window\n");
       appCore.newWindow();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -147,7 +147,7 @@
     dump("BrowserPrintPreview\n");
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Changing Icons\n");
+      dump("Changing Icons\n");
       appCore.printPreview();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -173,7 +173,7 @@
   {
     appCore = XPAppCoresManager.Find("BrowserAppCore");  
     if (appCore != null) {
-	    dump("Exiting\n");
+      dump("Exiting\n");
       appCore.exit();
     } else {
       dump("BrowserAppCore has not been created!\n");
@@ -182,45 +182,45 @@
 
   function BrowserLoadURL()
   {
-	appCore = XPAppCoresManager.Find("BrowserAppCore");
-	if (appCore == null)
-	{
-		dump("BrowserAppCore has not been initialized\n");
-		return;
-	}
+  appCore = XPAppCoresManager.Find("BrowserAppCore");
+  if (appCore == null)
+  {
+    dump("BrowserAppCore has not been initialized\n");
+    return;
+  }
 
-	// rjc: added support for URL shortcuts (3/30/1999)
+  // rjc: added support for URL shortcuts (3/30/1999)
 
-	// get RDF Core service
-	var rdfCoreFound = false;
-	var rdfCore = XPAppCoresManager.Find("RDFCore");
-	if (rdfCore)
-	{
-		rdfCoreFound = true;
-	}
-	else
-	{
-		rdfCore = new RDFCore();
-		if (rdfCore)
-		{
-			rdfCore.Init("RDFCore");
-			XPAppCoresManager.Add(rdfCore);
-			rdfCoreFound = true;
-		}
-	}
-	if (rdfCoreFound == true)
-	{
-		var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
+  // get RDF Core service
+  var rdfCoreFound = false;
+  var rdfCore = XPAppCoresManager.Find("RDFCore");
+  if (rdfCore)
+  {
+    rdfCoreFound = true;
+  }
+  else
+  {
+    rdfCore = new RDFCore();
+    if (rdfCore)
+    {
+      rdfCore.Init("RDFCore");
+      XPAppCoresManager.Add(rdfCore);
+      rdfCoreFound = true;
+    }
+  }
+  if (rdfCoreFound == true)
+  {
+    var shortcutURL = rdfCore.findBookmarkShortcut(document.getElementById('urlbar').value);
 
-		dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
+    dump("FindBookmarkShortcut: in='" + document.getElementById('urlbar').value + "'  out='" + shortcutURL + "'\n");
 
-		if ((shortcutURL != null) &amp;&amp; (shortcutURL != ""))
-		{
-			document.getElementById('urlbar').value = shortcutURL;
-		}
-	}
+    if ((shortcutURL != null) &amp;&amp; (shortcutURL != ""))
+    {
+      document.getElementById('urlbar').value = shortcutURL;
+    }
+  }
 
-	appCore.loadUrl(document.getElementById('urlbar').value);
+  appCore.loadUrl(document.getElementById('urlbar').value);
       
   }
 
@@ -336,23 +336,23 @@
   <menubar>
       <menu name="File">
       <menuitem name="New Browser Window" onclick="BrowserNewWindow();"/>
-      	<menu name="New">
-      		<menuitem name="Mail Message" onclick="MsgNewMessage();"/>
-		      <menuitem name="Chat Window" onclick=""/>
-		      <separator />
-		      <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
-		      <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
-    		</menu>
+        <menu name="New">
+          <menuitem name="Mail Message" onclick="MsgNewMessage();"/>
+          <menuitem name="Chat Window" onclick=""/>
+          <separator />
+          <menuitem name="Blank Page" onclick="BrowserNewWindow();"/>
+          <menuitem name="Page Using Template..." onclick="BrowserNewWindow();"/>
+          <menuitem name="Page Using Draft..." onclick="BrowserNewWindow();"/>
+        </menu>
       <menuitem name="Open" onclick="BrowserNewWindow();"/>
       <separator />
       <menuitem name="Send Page" onclick="BrowserReload();"/>
-	   <menuitem name="Edit Page" onclick="BrowserReload();" />
-	   <separator />
+     <menuitem name="Edit Page" onclick="BrowserReload();" />
+     <separator />
       <menu name="Offline">
-	      <menuitem name="Go Offline" onclick="BrowserReload();"/>
-	      <separator />
-	      <menuitem name="Synchronize..." onclick="BrowserReload();"/>
+        <menuitem name="Go Offline" onclick="BrowserReload();"/>
+        <separator />
+        <menuitem name="Synchronize..." onclick="BrowserReload();"/>
       </menu>
       <separator />
       <menuitem name="Print Setup" onclick=""/>
@@ -362,7 +362,7 @@
       <menuitem name="Close" onclick="BrowserClose();"/>
       <menuitem name="Quit" onclick="BrowserExit();"/>
     </menu>
-	<menu name="Edit"> 
+  <menu name="Edit"> 
       <menuitem name="Undo" onclick="BrowserReload();"/> 
       <menuitem name="Redo" onclick="BrowserReload();"/> 
       <separator /> 
@@ -379,7 +379,7 @@
           <menuitem name="Wallet Contents" onclick="WalletEditor();"/> 
           <separator /> 
           <menuitem name="Samples" onclick="WalletSamples();"/> 
-	  </menu> 
+    </menu> 
       <separator /> 
       <menuitem name="Select All" onclick="BrowserReload();"/> 
       <separator /> 
@@ -394,11 +394,11 @@
       <menuitem name="Reduce Text Size" onclick="BrowserReload();"/>
       <separator />
       <menu name="Use Stylesheet" onclick="BrowserReload();">
-	      <menuitem name="Default" onclick="BrowserReload();"/>
-	      <separator />
-	      <menuitem name="Easy Reading" onclick="BrowserReload();"/>
-	      <menuitem name="Maximum Information" onclick="BrowserReload();"/>
-	      <menuitem name="Bizarre" onclick="BrowserReload();"/>
+        <menuitem name="Default" onclick="BrowserReload();"/>
+        <separator />
+        <menuitem name="Easy Reading" onclick="BrowserReload();"/>
+        <menuitem name="Maximum Information" onclick="BrowserReload();"/>
+        <menuitem name="Bizarre" onclick="BrowserReload();"/>
       </menu>
       <separator />
       <menuitem name="Reload" onclick="BrowserReload();"/>
@@ -409,28 +409,28 @@
       <menuitem name="Page Info" onclick="BrowserReload();"/>
       <separator />
       <menu name="Translate">
-	      <menuitem name="French To English" onclick="BrowserReload();"/>
-	      <menuitem name="German To English" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To English" onclick="BrowserReload();"/>
-	      <separator />
-	      <menuitem name="English To French" onclick="BrowserReload();"/>
-	      <menuitem name="German To French" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To French" onclick="BrowserReload();"/>
-	      <separator />
-	      <menuitem name="English To German" onclick="BrowserReload();"/>
-	      <menuitem name="French To German" onclick="BrowserReload();"/>
-	      <menuitem name="Spanish To German" onclick="BrowserReload();"/>
-	      <separator />
-	      <menuitem name="English To Spanish" onclick="BrowserReload();"/>
-	      <menuitem name="French To Spanish" onclick="BrowserReload();"/>
-	      <menuitem name="German To Spanish" onclick="BrowserReload();"/>
+        <menuitem name="French To English" onclick="BrowserReload();"/>
+        <menuitem name="German To English" onclick="BrowserReload();"/>
+        <menuitem name="Spanish To English" onclick="BrowserReload();"/>
+        <separator />
+        <menuitem name="English To French" onclick="BrowserReload();"/>
+        <menuitem name="German To French" onclick="BrowserReload();"/>
+        <menuitem name="Spanish To French" onclick="BrowserReload();"/>
+        <separator />
+        <menuitem name="English To German" onclick="BrowserReload();"/>
+        <menuitem name="French To German" onclick="BrowserReload();"/>
+        <menuitem name="Spanish To German" onclick="BrowserReload();"/>
+        <separator />
+        <menuitem name="English To Spanish" onclick="BrowserReload();"/>
+        <menuitem name="French To Spanish" onclick="BrowserReload();"/>
+        <menuitem name="German To Spanish" onclick="BrowserReload();"/>
     </menu>
       <menu name="Character Set">
-	      <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
-	      <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
-	      <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
-	      <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
-	   </menu>
+        <menuitem name="Latin1" onclick="BrowserSetDocumentCharacterSet('ISO-8859-1');"/>
+        <menuitem name="ISO-2022-JP" onclick="BrowserSetDocumentCharacterSet('ISO-2022-JP');"/>
+        <menuitem name="Shift_JIS" onclick="BrowserSetDocumentCharacterSet('Shift_JIS');"/>
+        <menuitem name="EUC-JP" onclick="BrowserSetDocumentCharacterSet('EUC-JP');"/>
+     </menu>
     </menu>
     <menu name="Search">
       <menuitem name="Find On This page..." onclick="BrowserReload();"/>
@@ -458,12 +458,12 @@
       <menuitem name="Previous Site n" onclick="BrowserBack();"/>
     </menu>
     <menu name="Bookmarks" onclick="OpenBookmarkURL(event.target)" 
-						   datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
-		<menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].location.href,window.frames[0].document.title);"/>
-		<menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
-		<separator/>
-	</menu>
-	 <menu name="Tasks">
+               datasources="rdf:bookmarks" id="NC:BookmarksRoot" open="true">
+    <menuitem name="Add Current Page" onclick="BrowserAddBookmark(window.frames[0].location.href,window.frames[0].document.title);"/>
+    <menuitem name="Manage Bookmarks..." onclick="BrowserEditBookmarks();"/>
+    <separator/>
+  </menu>
+   <menu name="Tasks">
       <menuitem name="Navigator" onclick="BrowserReload();"/>
       <menuitem name="Messenger" onclick="OpenMessenger();" />
       <menuitem name="Editor"    onclick="OpenEditor();" />
@@ -476,10 +476,10 @@
       <menuitem name="Services D" onclick="BrowserReload();"/>
       <separator />
       <menu name="Tools">
-	      <menuitem name="Plugins Info" onclick="BrowserReload();"/>
-	      <menuitem name="Server Tools" onclick="BrowserReload();" />
-	      <menuitem name="Java/JS Console" onclick="BrowserReload();"/>
-	      <menuitem name="JavaScript Debugger" onclick="BrowserReload();"/>
+        <menuitem name="Plugins Info" onclick="BrowserReload();"/>
+        <menuitem name="Server Tools" onclick="BrowserReload();" />
+        <menuitem name="Java/JS Console" onclick="BrowserReload();"/>
+        <menuitem name="JavaScript Debugger" onclick="BrowserReload();"/>
       </menu>
       <separator />
       <menuitem name="Security Info" onclick="BrowserReload();"/>
@@ -498,11 +498,11 @@
       <menuitem name="Software Updates" onclick="BrowserReload();"/>
       <menuitem name="Technical Support" onclick="BrowserReload();"/>
       <menuitem name="Release Notes" 
-	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+              onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
       
       <separator />
       <menuitem name="About Communicator Prototype" 
-	            onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
+              onclick="window.frames[0].location.href='http://www.mozilla.org/projects/seamonkey/release-notes/index.html'"/>
     </menu>
 
     // Menu for testing.
@@ -514,7 +514,7 @@
         <menuitem name="Netscape"  onclick="window.frames[0].location.href='http://www.netscape.com'"/>
       </menu>
 
-	  <menu name="Viewer">  // Viewer tests.
+    <menu name="Viewer">  // Viewer tests.
         <menuitem name="Demo #0"  onclick="window.frames[0].location.href='resource:/res/samples/test0.html'"/>
         <menuitem name="Demo #1"  onclick="window.frames[0].location.href='resource:/res/samples/test1.html'"/>
         <menuitem name="Demo #2"  onclick="window.frames[0].location.href='resource:/res/samples/test2.html'"/>
@@ -542,13 +542,13 @@
   
   <box id="outer-box" align="vertical">
   <box align="horizontal" style="margin: 5px;">
-	<box align="vertical" flex="100%">
-	<spring flex="100%"/>
-	<html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
-	  onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
-	<spring flex="100%"/>
-	</box>
-	<button id="Throbber" onclick="window.frames[0].home()">
+  <box align="vertical" flex="100%">
+  <spring flex="100%"/>
+  <html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
+    onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
+  <spring flex="100%"/>
+  </box>
+  <button id="Throbber" onclick="window.frames[0].home()">
      <observes element="Browser:Throbber" attribute="busy"/>
   </button>
    </box>
@@ -557,39 +557,39 @@
 
    <toolbox align="horizontal">
     <toolbar class="main-bar" align="vertical">
-		  <button id="back-button" align="bottom" value="Back" onclick="BrowserBack()">	
-				  <observes element="canGoBack" attribute="disabled"/>			
-	      </button>
+      <button id="back-button" align="bottom" label="Back" onclick="BrowserBack()"> 
+          <observes element="canGoBack" attribute="disabled"/>      
+        </button>
 
-	      <button id="forward-button" align="bottom" value="Forward" 
-				onclick="BrowserForward()">
-				  <observes element="canGoForward" attribute="disabled"/>
-	      </button>
+        <button id="forward-button" align="bottom" label="Forward" 
+        onclick="BrowserForward()">
+          <observes element="canGoForward" attribute="disabled"/>
+        </button>
 
-	      <button id="reload-button" align="bottom" value="Reload" 
-				  onclick="window.frames[0].location.reload()">
-				  <observes element="canReload" attribute="disabled"/>
-	      </button>
+        <button id="reload-button" align="bottom" label="Reload" 
+          onclick="window.frames[0].location.reload()">
+          <observes element="canReload" attribute="disabled"/>
+        </button>
 
-	      <button id="stop-button" align="bottom" value="Stop" 
-				onclick="window.frames[0].stop()">
-	        <observes element="canStop" attribute="disabled"/>
-	      </button>
-	  
-	      <button id="print-button" align="bottom" value="Print"  
-				onclick="">
-	        <observes element="canPrint" attribute="disabled"/>
-	      </button>
+        <button id="stop-button" align="bottom" label="Stop" 
+        onclick="window.frames[0].stop()">
+          <observes element="canStop" attribute="disabled"/>
+        </button>
+    
+        <button id="print-button" align="bottom" label="Print"  
+        onclick="">
+          <observes element="canPrint" attribute="disabled"/>
+        </button>
 
-	</toolbar>
+  </toolbar>
 
     <toolbar class="main-bar" align="vertical">
-    	<button id="home-button" align="bottom" value="Home" 
-			onclick="BrowserHome()"/>
-		<button id="netscape-button" align="bottom" value="Netscape" 
-			onclick="window.frames[0].location.href='http://my.netscape.com'"/>
-		<spring flex="100%"/>
-	</toolbar>
+      <button id="home-button" align="bottom" label="Home" 
+      onclick="BrowserHome()"/>
+    <button id="netscape-button" align="bottom" label="Netscape" 
+      onclick="window.frames[0].location.href='http://my.netscape.com'"/>
+    <spring flex="100%"/>
+  </toolbar>
   </toolbox>
   
 
@@ -606,7 +606,7 @@
                 var text = status.getAttribute("text");
                 var statusText = document.getElementById("statusText");
                 if ( statusText ) {
-                    statusText.setAttribute( "value", text );
+                    statusText.setAttribute( "label", text );
                 }
                 /*
                 if ( bindCount == 0 ) {
@@ -678,7 +678,7 @@
                 // Turn off progress meter.
                 var meter  = document.getElementById("Browser:LoadingProgress");
                 var status = document.getElementById("Browser:Status");
-                status.setAttribute("value","Document: Done");
+                status.setAttribute("label","Document: Done");
                 meter.setAttribute("value","0");
                 meter.setAttribute("mode","normal");
             }
@@ -697,7 +697,7 @@
                 if ( mode == "normal" ) {
                     var status = document.getElementById("Browser:Status");
                     if ( status ) {
-                        status.setAttribute("value","Document: Done");
+                        status.setAttribute("label","Document: Done");
                     }
                 }
             }
@@ -722,53 +722,53 @@
     <broadcaster id="Browser:Security" secure="false"/>
     <broadcaster id="Browser:Throbber" busy="false"/>
     
-    <button value="[Notification Component]" onclick="doTests()"/>
+    <button label="[Notification Component]" onclick="doTests()"/>
 
-	<box id="security-box" class="insecure" align="horizontal" flex="100%">
-		<box align="vertical" style="width:100px">
-			<spring flex="100%"/>
-			<progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
-				<observes element="Browser:LoadingProgress" attribute="mode"/>
-				<observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
-			</progressmeter>
-			<spring flex="100%"/>
-		</box>
+  <box id="security-box" class="insecure" align="horizontal" flex="100%">
+    <box align="vertical" style="width:100px">
+      <spring flex="100%"/>
+      <progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
+        <observes element="Browser:LoadingProgress" attribute="mode"/>
+        <observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
+      </progressmeter>
+      <spring flex="100%"/>
+    </box>
 
-		<button id="statusText" align="right" flex="1%" value="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
-					   <observes element="Browser:Status" attribute="value" onbroadcast="onStatus()"/>			
-		</button>
+    <button id="statusText" align="right" flex="1%" label="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
+             <observes element="Browser:Status" attribute="label" onbroadcast="onStatus()"/>      
+    </button>
 
-		<spring flex="100%"/>
+    <spring flex="100%"/>
 
-		<button align="right" value="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
-		</button>
+    <button align="right" label="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
+    </button>
 
-		<button id="security-button" class="insecure" value="Secure Conn" align="right" onclick="securityOff();"/>
+    <button id="security-button" class="insecure" label="Secure Conn" align="right" onclick="securityOff();"/>
      </box>
   </box>
 
   <toolbox>
-	  <toolbar id="taskbar">
-	  	  <box align="horizontal">
-  	 	     <button align="left" class="popup"  value="Web" />
-  	 	     <button align="left" class="popup"  value="Mail" />
-  	 	     <button align="left" class="popup"  value="Chat" />
-		  </box>
-		  <spring flex="100%"/>
-	 	  <box align="horizontal">
-  	 		<button align="left"  class="popup"  value="DayPlanner" />
-  	 		<button align="left"  class="popup"  value="Shopping" />
-  	 		<button align="left"  class="popup"  value="My Desk" />
+    <toolbar id="taskbar">
+        <box align="horizontal">
+           <button align="left" class="popup"  label="Web" />
+           <button align="left" class="popup"  label="Mail" />
+           <button align="left" class="popup"  label="Chat" />
+      </box>
+      <spring flex="100%"/>
+      <box align="horizontal">
+        <button align="left"  class="popup"  label="DayPlanner" />
+        <button align="left"  class="popup"  label="Shopping" />
+        <button align="left"  class="popup"  label="My Desk" />
           </box>
-		  <spring flex="100%"/>
-	   	  <box align="horizontal">
-  			<button align="left" class="popup" value="Open Windows" />
-  	 		<button align="left" id="mini-nav" value="" />
-  	 		<button align="left" id="mini-mail" value="" onclick="OpenMessenger()"/>
-  	 		<button align="left" id="mini-addr" value="" />
-  	 		<button align="left" id="mini-comp" value="" />
-	      </box>
-	  </toolbar>
-	</toolbox>
+      <spring flex="100%"/>
+        <box align="horizontal">
+        <button align="left" class="popup" label="Open Windows" />
+        <button align="left" id="mini-nav" label="" />
+        <button align="left" id="mini-mail" label="" onclick="OpenMessenger()"/>
+        <button align="left" id="mini-addr" label="" />
+        <button align="left" id="mini-comp" label="" />
+        </box>
+    </toolbar>
+  </toolbox>
   </box>
 </window>

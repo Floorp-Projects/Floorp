@@ -255,7 +255,7 @@ function (force_reload)
       // Pick sandboxed, or unsandboxed iframe
       var iframe = panel.get_iframe();
       var load_state;
-      
+
       if (selected_id == id) {
         is_after_selected = 1
         debug("item("+ii/2+") selected");
@@ -281,7 +281,7 @@ function (force_reload)
           iframe.setAttribute('loadstate', 'loading');
           iframe.addEventListener('load', panel_loader, true);
         }
-      } else { 
+      } else {
         debug("item("+ii/2+")");
         header.removeAttribute('selected');
         content.setAttribute('collapsed','true');
@@ -383,7 +383,7 @@ function ()
 function sb_panel_is_excluded(node)
 {
   var exclude = node.getAttribute('exclude');
-  return ( exclude && exclude != '' && 
+  return ( exclude && exclude != '' &&
            exclude.indexOf(sidebarObj.component) != -1 );
 }
 sbPanel.prototype.is_excluded =
@@ -447,7 +447,7 @@ function ()
 //   Currently this happens when the customize panel dialog is closed.
 //////////////////////////////////////////////////////////////////
 var panel_observer = {
-  onAssert : function(ds,src,prop,target) { 
+  onAssert : function(ds,src,prop,target) {
     //debug ("observer: assert");
     // "refresh" is asserted by select menu and by customize.js.
     if (prop == RDF.GetResource(NC + "refresh")) {
@@ -494,7 +494,7 @@ function sidebar_overlay_init() {
   sidebarObj.panels = new sbPanelList('sidebar-panels');
   sidebarObj.datasource_uri = get_sidebar_datasource_uri();
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
-  
+
   sidebarObj.master_datasources = "";
   sidebarObj.master_datasources = get_remote_datasource_url();
   sidebarObj.master_datasources += " chrome://communicator/content/sidebar/local-panels.rdf";
@@ -513,7 +513,7 @@ function sidebar_overlay_init() {
     if (sidebar_menuitem) {
       sidebar_menuitem.setAttribute('checked', 'true');
     }
-    
+
     if (sidebarObj.never_built) {
       sidebarObj.never_built = false;
 
@@ -528,13 +528,13 @@ function sidebar_overlay_init() {
         debug("Showing the panels splitter");
         sidebar_panels_splitter.removeAttribute('hidden');
       }
-      
+
       // Add the user's current panel choices to the template builder,
       // which will aggregate it with the other datasources that describe
       // the individual panel's title, customize URL, and content URL.
       var panels = document.getElementById('sidebar-panels');
       panels.database.AddDataSource(RDF.GetDataSource(sidebarObj.datasource_uri));
-      
+
       debug("Adding observer to database.");
       panels.database.AddObserver(panel_observer);
 
@@ -669,7 +669,7 @@ function get_remote_datasource_url() {
         var syslocale = Components.classes[locale_contractid].getService();
         syslocale = syslocale.QueryInterface(Components.interfaces.nsILocaleService);
         locale = syslocale.GetLocaleComponentForUserAgent();
-	  } catch(ex) {
+    } catch(ex) {
         debug("Unable to get system locale. What now? "+ex);
       }
     }
@@ -711,7 +711,7 @@ function SidebarSelectPanel(header, should_popopen, should_unhide) {
   if (!panel) {
     return false;
   }
-  
+
   var popopen = false;
   var unhide = false;
 
@@ -776,7 +776,7 @@ function SidebarCustomize() {
       gDisableCustomize = true;
 
       var panels = document.getElementById('sidebar-panels');
-      
+
       customizeWindow = window.openDialog(
                          'chrome://communicator/content/sidebar/customize.xul',
                          '_blank','centerscreen,chrome,resizable',
@@ -894,10 +894,10 @@ function SidebarBuildPickerPopup() {
   for (var ii=3; ii < menu.childNodes.length; ii++) {
     var panel_menuitem = menu.childNodes.item(ii);
     if (sb_panel_is_excluded(panel_menuitem)) {
-      debug(ii+": "+panel_menuitem.getAttribute('value')+ ": excluded; uncheck.");
+      debug(ii+": "+panel_menuitem.getAttribute('label')+ ": excluded; uncheck.");
       panel_menuitem.removeAttribute('checked');
     } else {
-      debug(ii+": "+panel_menuitem.getAttribute('value')+ ": included; check.");
+      debug(ii+": "+panel_menuitem.getAttribute('label')+ ": included; check.");
       panel_menuitem.setAttribute('checked', 'true');
     }
   }
@@ -942,7 +942,7 @@ function SidebarTogglePanel(panel_menuitem) {
                                      RDF.GetLiteral(sidebarObj.component));
     } else {
       debug("New exclude string: " + new_exclude);
-      exclude_target = 
+      exclude_target =
         sidebarObj.datasource.GetTarget(RDF.GetResource(panel_id),
                                         RDF.GetResource(NC + "exclude"),
                                         true);
@@ -975,7 +975,7 @@ function SidebarCleanUpExpandCollapse() {
 function PersistHeight() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the last drag has been committed.
-  // May want to do something smarter here like only force it if the 
+  // May want to do something smarter here like only force it if the
   // height has really changed.
   setTimeout("document.persist('sidebar-panels-splitter-box','height');",100);
 }

@@ -61,7 +61,7 @@
         row.appendChild(menuList);
         rows.appendChild(row);
 
-        menuItem.setAttribute("value", "");
+        menuItem.setAttribute("label", "");
         menuItem.setAttribute("len","0");
         menuList.setAttribute("id", schema);
         menuList.setAttribute("editable", "true");
@@ -85,7 +85,7 @@
           src="chrome://communicator/content/wallet/WalletViewer.js"/>
   
   <titledbox class="tabpanel" autostretch="never" orient="vertical">
-    <title><text value="&urlspecific.title;"/></title>
+    <label value="&urlspecific.title;"/>
 
     <grid class="indent">
       <columns>

@@ -39,8 +39,8 @@
 
   <tabcontrol id="tbcInspectorSidebar" flex="1">
     <tabbox>
-      <tab value="Document"/>
-      <tab value="Node"/>
+      <tab label="Document"/>
+      <tab label="Node"/>
     </tabbox>
     <tabpanel flex="1">
       <box id="bxDocPane" flex="1" orient="vertical">

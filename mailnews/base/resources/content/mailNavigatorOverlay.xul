@@ -34,8 +34,8 @@
 
   <!-- navigator specific commands -->
   <broadcasterset id="broadcasterset">
-  	<broadcaster id="cmd_sendPage" value="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
-  	<broadcaster id="Browser:SendLink" value="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
+    <broadcaster id="cmd_sendPage" label="&sendPage.label;" accesskey="&sendPage.accesskey;" oncommand="sendPage();"/>
+    <broadcaster id="Browser:SendLink" label="&sendLinkCmd.label;" accesskey="&sendLinkCmd.accesskey;" oncommand="sendLink(window._content.location.href, window._content.document.title);"/>
   </broadcasterset>
          
   <!-- navigator specific UI items -->
@@ -46,7 +46,7 @@
 
   <menupopup id="menu_FilePopup">
     <menuitem id="menu_sendPage" observes="cmd_sendPage" position="11"/>
-	  <menuitem id="menu_sendLink" observes="Browser:SendLink" position="12"/>
+    <menuitem id="menu_sendLink" observes="Browser:SendLink" position="12"/>
   </menupopup>
   
 </overlay>

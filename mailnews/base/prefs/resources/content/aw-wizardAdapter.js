@@ -22,7 +22,7 @@
  */
 
 var gFieldList;
-         
+
 function GetFields()
 {
     dump("wizardAdapter: GetFields()\n");
@@ -34,7 +34,7 @@ function GetFields()
         var field=gFieldList[i];
 
         if (field.parentNode.tagName == "template") continue;
-        
+
         dump("    for field <" + field.tagName + ">\n");
         var obj = new Object;
         obj.id = field.id;
@@ -43,10 +43,10 @@ function GetFields()
             field.tagName == "checkbox")
             obj.value = field.checked;
         else if (field.tagName == "menulist")
-            obj.value = field.selectedItem.data;
+            obj.value = field.selectedItem.value;
         else
             obj.value = field.value;
-        
+
         dump("    returning " + obj.id + " and " + obj.value + " value=" + field.value + "\n");
         fields[field.id] = obj;
     }
@@ -79,7 +79,7 @@ function SetFields(id, value)
         field.tagName == "checkbox")
         field.checked = value;
     else if (field.tagName == "menulist") {
-        var menuitems = field.getElementsByAttribute("data", value);
+        var menuitems = field.getElementsByAttribute("value", value);
         if (menuitems && menuitems.length)
             field.selectedItem = menuitems[0];
     }

@@ -74,9 +74,9 @@
         <separator/>
         <box>
           <box orient="vertical" flex="1" id="managebuttons">
-            <button id="newbutton" value="&newButton.label;" oncommand="CreateProfileWizard();"/>
-            <button id="renbutton" value="&renameButton.label;" oncommand="RenameProfile();"/>
-            <button id="delbutton" value="&deleteButton.label;" oncommand="ConfirmDelete();"/>
+            <button id="newbutton" label="&newButton.label;" oncommand="CreateProfileWizard();"/>
+            <button id="renbutton" label="&renameButton.label;" oncommand="RenameProfile();"/>
+            <button id="delbutton" label="&deleteButton.label;" oncommand="ConfirmDelete();"/>
           </box>
           <spring flex="2"/>
         </box>
@@ -95,20 +95,20 @@
         </treecolgroup>
         <treehead>
           <treerow>
-            <treecell class="treecell-header outset" value="&availprofiles.label;"/>
+            <treecell class="treecell-header outset" label="&availprofiles.label;"/>
           </treerow>
         </treehead>
         <treechildren id="profilekids" flex="1"/>
       </tree>    
       <box autostretch="never">
-        <checkbox id="offlineState" value="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
+        <checkbox id="offlineState" label="&offlineState.label;" accesskey="&offlineState.accesskey;"/> 
       </box>
     </box>
   </box>
   
   <box class="selection">
     <separator class="thin" orient="vertical"/>
-    <button id="manage" value="&manage.label;" onclick="SwitchProfileManagerMode();"/>
+    <button id="manage" label="&manage.label;" oncommand="SwitchProfileManagerMode();"/>
     <spring flex="1"/>
     <box id="okCancelButtons"/>
     <separator class="thin" orient="vertical"/>

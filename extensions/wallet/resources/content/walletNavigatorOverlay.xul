@@ -94,7 +94,7 @@
 
 <!-- form toolbar is out
   <broadcasterset id="broadcasterset">
-    <broadcaster id="cmd_viewformtoolbar" value="&formbarCmd.label;"
+    <broadcaster id="cmd_viewformtoolbar" label="&formbarCmd.label;"
                  accesskey="&formbarCmd.accesskey;" class="menuitem-iconic"
                  type="checkbox" checked="true"
                  oncommand="goToggleFormToolbar('formToolbar','cmd_viewformtoolbar');"/>
@@ -112,17 +112,17 @@
   <!-- edit menu -->
   <menupopup id="menu_Edit_Popup" oncreate="initEditItems();">
     <menuitem id="edit_formshow"
-              value="&formshowCmd.label;"
+              label="&formshowCmd.label;"
               accesskey="&formshowCmd.accesskey;"
               oncommand="formShow();"
               insertafter="menu_selectAll"/>
     <menuitem id="edit_capture"
-              value="&captureCmd.label;"
+              label="&captureCmd.label;"
               accesskey="&captureCmd.accesskey;"
               oncommand="formCapture();"
               insertafter="menu_selectAll"/>
     <menuitem id="edit_prefill"
-              value="&prefillCmd.label;"
+              label="&prefillCmd.label;"
               accesskey="&prefillCmd.accesskey;"
               oncommand="formPrefill();"
               insertafter="menu_selectAll"/>
@@ -143,7 +143,7 @@
               id="formPrefill"
               crop="right"
               oncommand="formPrefill();"
-              value="  &formPrefill.label;  "
+              label="  &formPrefill.label;  "
               tooltip="aTooltip"
               tooltiptext="&formPrefill.tooltip;"/>
       <toolbarseparator/>
@@ -151,7 +151,7 @@
               id="formCapture"
               crop="right"
               oncommand="formCapture();"
-              value="  &formCapture.label;  "
+              label="  &formCapture.label;  "
               tooltip="aTooltip"
               tooltiptext="&formCapture.tooltip;"/>
       <toolbarseparator/>
@@ -159,7 +159,7 @@
               id="formShow"
               crop="right"
               oncommand="formShow(); initToolbarItems();"
-              value="  &formView.label;  "
+              label="  &formView.label;  "
               tooltip="aTooltip"
               tooltiptext="&formView.tooltip;"/>
       <toolbarseparator/>

@@ -34,37 +34,37 @@
         <treechildren id="zoneChildren" flex="1">  
           <treeitem open="true">
             <treerow>
-              <treecell value="&default.label;"/>
+              <treecell label="&default.label;"/>
             </treerow>
             <treechildren id="defaultChildren">
               <treeitem>
                 <treerow>
-                  <treecell indent="true" value="&allWebsites.label;"/>
+                  <treecell indent="true" label="&allWebsites.label;"/>
                 </treerow>
               </treeitem>
             </treechildren>
           </treeitem>
           <treeitem open="true">
             <treerow>
-              <treecell value="&trusted.label;"/>
+              <treecell label="&trusted.label;"/>
             </treerow>
             <treechildren id="trustedChildren"/>
           </treeitem>
           <treeitem open="true">
             <treerow>
-              <treecell value="&annoyances.label;"/>
+              <treecell label="&annoyances.label;"/>
             </treerow>
           </treeitem>
           <treeitem open="true">
             <treerow>
-              <treecell value="&restricted.label;"/>
+              <treecell label="&restricted.label;"/>
             </treerow>
           </treeitem>
         </treechildren>
       </tree>
   
       <box orient="vertical">
-        <button class="dialog" value="&addSite.label;" accesskey="&addSite.accesskey;"
+        <button class="dialog" label="&addSite.label;" accesskey="&addSite.accesskey;"
                 oncommand="addSite();"/>
         <spring flex="1"/>              
       </box>    
@@ -77,7 +77,7 @@
     </box>
   
     <box autostretch="never">
-      <button class="dialog" value="&settings.label;" accesskey="&settings.accesskey;"
+      <button class="dialog" label="&settings.label;" accesskey="&settings.accesskey;"
               oncommand="settings();"/>
     </box>
 
