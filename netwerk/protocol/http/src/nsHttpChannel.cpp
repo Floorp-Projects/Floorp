@@ -377,6 +377,10 @@ nsHttpChannel::ProcessResponse()
     LOG(("nsHttpChannel::ProcessResponse [this=%x httpStatus=%u]\n",
         this, httpStatus));
 
+    // notify nsIHttpNotify implementations
+    rv = nsHttpHandler::get()->OnExamineResponse(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
+
     // handle different server response categories
     switch (httpStatus) {
     case 200:
@@ -449,10 +453,6 @@ nsHttpChannel::ProcessNormal()
         mResponseHead->SetHeader(nsHttp::Content_Encoding, nsnull); 
     }
 
-    // notify nsIHttpNotify implementations
-    rv = nsHttpHandler::get()->OnExamineResponse(this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "OnExamineResponse failed");
-
     rv = mListener->OnStartRequest(this, mListenerContext);
     if (NS_FAILED(rv)) return rv;
 
@@ -504,9 +504,6 @@ nsHttpChannel::ProcessNotModified()
     // in the background, since we can most likely reuse the connection.
     mPrevTransaction = mTransaction;
     mTransaction = nsnull;
-
-    // notify nsIHttpNotify implementations as response headers may have changed
-    nsHttpHandler::get()->OnExamineResponse(this);
 
     mCachedContentIsValid = PR_TRUE;
     return ReadFromCache();
@@ -1040,9 +1037,6 @@ nsHttpChannel::ProcessRedirection(PRUint32 redirectType)
     if (!location)
         return NS_ERROR_FAILURE;
 
-    // notify nsIHttpNotify implementations before this channel goes away
-    nsHttpHandler::get()->OnExamineResponse(this);
-
     LOG(("redirecting to: %s\n", location));
 
     nsresult rv;
@@ -1172,6 +1166,12 @@ nsHttpChannel::ProcessAuthentication(PRUint32 httpStatus)
     mTransaction->Cancel(NS_BINDING_REDIRECTED);
     mPrevTransaction = mTransaction;
     mTransaction = nsnull;
+
+    // notify nsIHttpNotify implementations.. the server response could
+    // have included cookies that must be sent with this authentication
+    // attempt (bug 84794).
+    rv = nsHttpHandler::get()->OnModifyRequest(this);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "OnModifyRequest failed");
    
     // and create a new one...
     rv = SetupTransaction();
@@ -2033,9 +2033,8 @@ nsHttpChannel::SetResponseHeader(const char *header, const char *value)
         return NS_ERROR_NOT_AVAILABLE;
 
     nsresult rv = mResponseHead->SetHeader(atom, value);
-    if (NS_SUCCEEDED(rv)) {
+    if (NS_SUCCEEDED(rv))
         rv = nsHttpHandler::get()->OnExamineResponse(this);
-    }
     return rv;
 }
 
