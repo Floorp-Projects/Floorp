@@ -56,7 +56,20 @@ function Startup() {
       menuItem.setAttribute("selected", "true");
     }
     menuItem.setAttribute("label", prefillList[i+2]);
-    menuPopup.appendChild(menuItem);
+
+    /* avoid making duplicate entries in the same menulist */
+    var child = menuPopup.firstChild;
+    var alreadyThere = false;
+    while (child) {
+      if (child.getAttribute("label") == prefillList[i+2]) {
+        alreadyThere = true;
+        break;
+      }
+      child = child.nextSibling;
+    }
+    if (!alreadyThere) {
+      menuPopup.appendChild(menuItem);
+    }
 
     if(count == 0) {
       var menuList = document.createElement("menulist");
