@@ -91,7 +91,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 
     if( cliphdr ) {
       PRUint32   i=0, index=0;
-      nsString  *df;
       void      *data = nsnull;
       PRUint32   dataLen;
 
@@ -167,8 +166,10 @@ nsClipboard::GetNativeClipboardData( nsITransferable * aTransferable, PRInt32 aW
     PRUint32      dataLen;
 
     clipPtr = PhClipboardPasteStart( 1 );
+	if(!clipPtr)
+	   return NS_ERROR_FAILURE;
 
-    for ( PRUint32 i = 0; i < cnt; ++i ) {
+	for ( PRUint32 i = 0; i < cnt; ++i ) {
       nsCOMPtr<nsISupports> genericFlavor;
       flavorList->GetElementAt ( i, getter_AddRefs(genericFlavor) );
       nsCOMPtr<nsISupportsString> currentFlavor ( do_QueryInterface(genericFlavor) );
@@ -189,6 +190,7 @@ nsClipboard::GetNativeClipboardData( nsITransferable * aTransferable, PRInt32 aW
 					int len_unicode;
 					PRUnichar *unicode;
 					nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode( (char*) data, dataLen, &unicode, &len_unicode );
+			        len_unicode--;
 					len_unicode *= 2;
 
 #if 0
@@ -224,7 +226,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
                                     PRInt32 aWhichClipboard, 
                                     PRBool * outResult) {
 
-  nsresult res = NS_ERROR_FAILURE;
+  nsresult res = NS_OK;
   * outResult = PR_FALSE;
 
  // Walk through flavors and see which flavor matches the one being pasted:
@@ -236,8 +238,6 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
     void         *clipPtr;
     PhClipHeader  cliptype;
     PhClipHeader *cliphdr;
-    void         *data = nsnull;
-    PRUint32      dataLen;
 
     clipPtr = PhClipboardPasteStart( 1 );
 	if(nsnull == clipPtr)

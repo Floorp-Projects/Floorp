@@ -58,7 +58,7 @@ our_photon_input_add (int               fd,
                       PtFdProc_t        event_processor_callback,
                       void		         *data)
 {
-  int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL), 
+  int err = PtAppAddFd(NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ),
                        event_processor_callback,data);
   if (err != 0)
   {
@@ -137,13 +137,8 @@ static int event_processor_callback(int fd, void *data, unsigned mode)
 
 NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 {
-  char *home=nsnull;
-  char *path=nsnull;
-
   if (!PhWidLog)
-  {
     PhWidLog =  PR_NewLogModule("PhWidLog");
-  }
 
   int argc = bac ? *bac : 0;
   char **argv = bav;

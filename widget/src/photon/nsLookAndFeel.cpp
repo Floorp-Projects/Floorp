@@ -57,22 +57,22 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   switch (aID) 
   {
 	  case eColor_WindowBackground:
-		aColor = PH_TO_NS_RGB(Pg_WHITE);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_WindowForeground:
-		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_WidgetBackground:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_WidgetForeground:
-		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_WidgetSelectBackground:
 		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_WidgetSelectForeground:
-		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_Widget3DHighlight:
 		aColor = PH_TO_NS_RGB(Pg_WHITE);
@@ -101,10 +101,10 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_YELLOW);
 		break;
 	  case eColor_appworkspace:
-		aColor = PH_TO_NS_RGB(Pg_BLACK);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_background:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_captiontext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
@@ -128,23 +128,23 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		aColor = PH_TO_NS_RGB(Pg_DGREY);
 		break;
 	  case eColor_infobackground:
-		aColor = PH_TO_NS_RGB(0xfeffb1); // popup yellow
+		aColor = PH_TO_NS_RGB(Pg_BALLOONCOLOR); // popup yellow
 		break;
 	  case eColor_infotext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;
 	  case eColor_menu:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_menutext:
 		aColor = PH_TO_NS_RGB(Pg_BLACK);
 		break;
 	  case eColor_scrollbar:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 	  case eColor_threedface:
 	  case eColor_buttonface:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 
 	  case eColor_buttonhighlight:
@@ -166,16 +166,15 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 		break;
 
 	  case eColor_threedlightshadow:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 
 	  case eColor_window:
 		aColor = PH_TO_NS_RGB(Pg_WHITE);
 		break;
 
-
 	  case eColor_windowframe:
-		aColor = PH_TO_NS_RGB(Pg_GREY);
+		aColor = PH_TO_NS_RGB(Pg_LGREY);
 		break;
 
 	  case eColor_windowtext:
@@ -194,7 +193,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	  break;
 
 	case eColor__moz_dialog:
-	  aColor = PH_TO_NS_RGB(Pg_GREY);
+	  aColor = PH_TO_NS_RGB(Pg_LGREY);
 	  break;
 
 	case eColor__moz_dialogtext:
@@ -202,7 +201,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 	  break;
 
 	case eColor__moz_dragtargetzone:
-	  aColor = PH_TO_NS_RGB(Pg_GREY);
+	  aColor = PH_TO_NS_RGB(Pg_LGREY);
 	  break;
 
   	default:
