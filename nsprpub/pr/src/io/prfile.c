@@ -155,6 +155,7 @@ static PRInt64 PR_CALLBACK FileAvailable64(PRFileDesc *fd)
     return result;
 }
 
+#if defined(XP_UNIX) || defined(WIN32)
 static PRInt32 PR_CALLBACK PipeAvailable(PRFileDesc *fd)
 {
 	PRInt32 rv;
@@ -168,6 +169,19 @@ static PRInt64 PR_CALLBACK PipeAvailable64(PRFileDesc *fd)
     LL_I2L(rv, _PR_MD_PIPEAVAILABLE(fd));
 	return rv;		
 }
+#else
+static PRInt32 PR_CALLBACK PipeAvailable(PRFileDesc *fd)
+{
+    return -1;
+}
+
+static PRInt64 PR_CALLBACK PipeAvailable64(PRFileDesc *fd)
+{
+    PRInt64 rv;
+    LL_I2L(rv, -1); 
+    return rv;
+}
+#endif
 
 static PRStatus PR_CALLBACK PipeSync(PRFileDesc *fd)
 {
