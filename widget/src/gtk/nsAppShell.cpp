@@ -47,7 +47,6 @@ nsAppShell::nsAppShell()
 {
   mRefCnt = 0;
   mDispatchListener = 0;
-  mSelectionMgr = 0;
 }
 
 //-------------------------------------------------------------------------
@@ -254,9 +253,5 @@ NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
   return NS_OK;
 }
 
-NS_METHOD
-nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
-{
-  return NS_OK;
-}
+
 

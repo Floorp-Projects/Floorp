@@ -49,11 +49,9 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD		Exit();
     NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*	GetNativeData(PRUint32 aDataType);
-    NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
 
   private:
     nsDispatchListener	*mDispatchListener;
-    nsISelectionMgr     *mSelectionMgr;
 
   protected:
       nsIEventQueueService * mEventQService;

@@ -46,11 +46,10 @@ class nsAppShell : public nsIAppShell
   NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
   NS_IMETHOD            Exit();
   virtual void *        GetNativeData(PRUint32 aDataType);
-  NS_IMETHOD            GetSelectionMgr(nsISelectionMgr** aSelectionMgr);
   
  private:
   nsDispatchListener*     mDispatchListener;
-  nsISelectionMgr         *mSelectionMgr;
+
 protected:
   nsIEventQueueService * mEventQueueService;
 };

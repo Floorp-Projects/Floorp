@@ -57,7 +57,6 @@
 #include "nsIXMLDocument.h"
 #include "nsIScrollableView.h"
 #include "nsIDOMSelectionListener.h"
-#include "nsISelectionMgr.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsHTMLContentSinkStream.h"

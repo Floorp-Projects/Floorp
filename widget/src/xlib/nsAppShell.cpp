@@ -222,8 +222,3 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   return nsnull;
 }
 
-NS_METHOD
-nsAppShell::GetSelectionMgr(nsISelectionMgr** aSelectionMgr)
-{
-  return NS_OK;
-}

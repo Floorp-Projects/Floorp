@@ -43,7 +43,6 @@ class nsDispatchListener {
 };
 
 class nsIWidget;
-class nsISelectionMgr;
 
 /**
  * Application shell used for Test applications
@@ -115,12 +114,6 @@ public:
    */
   NS_IMETHOD EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
                                   PRBool *aForWindow) = 0;
- /**
-  * Get the selection manager.
-  */
-  
-  NS_IMETHOD GetSelectionMgr(nsISelectionMgr** aSelectionMgr) = 0;
-
 
 };
 
