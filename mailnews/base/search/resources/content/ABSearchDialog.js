@@ -104,6 +104,7 @@ function onAbSearchReset(event)
   CloseAbView();
 
   onReset(event);
+  gStatusText.setAttribute("label", "");
 }
 
 function SelectDirectory(aURI) 
