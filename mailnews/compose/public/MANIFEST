@@ -20,14 +20,11 @@
 #[installed by xpidl] nsIMsgCompFields.h
 
 nsIMsgSend.h
-nsIMsgCompose.h
 nsMsgComposeFact.h
 nsMsgCompFieldsFact.h
 nsMsgSendFact.h
 nsISmtpUrl.h
 nsISmtpService.h
 MsgCompGlue.h
-nsIComposer.h
-nsIMsgSendLater.h
 nsMsgSendLaterFact.h
 nsMsgComposeBE.h
