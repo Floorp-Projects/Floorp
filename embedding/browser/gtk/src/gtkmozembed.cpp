@@ -874,7 +874,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   object_class->type,
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, progress_all),
 		   gtk_marshal_NONE__POINTER_INT_INT,
-		   GTK_TYPE_NONE, 3, GTK_TYPE_POINTER,
+		   GTK_TYPE_NONE, 3, GTK_TYPE_STRING,
 		   GTK_TYPE_INT, GTK_TYPE_INT);
   moz_embed_signals[NET_STATE] =
     gtk_signal_new("net_state",
@@ -889,7 +889,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   object_class->type,
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, net_state_all),
 		   gtk_marshal_NONE__POINTER_INT_INT,
-		   GTK_TYPE_NONE, 3, GTK_TYPE_POINTER,
+		   GTK_TYPE_NONE, 3, GTK_TYPE_STRING,
 		   GTK_TYPE_INT, GTK_TYPE_UINT);
   moz_embed_signals[NET_START] =
     gtk_signal_new("net_start",
@@ -932,7 +932,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   object_class->type,
 		   GTK_SIGNAL_OFFSET(GtkMozEmbedClass, open_uri),
 		   gtk_marshal_BOOL__POINTER,
-		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
+		   GTK_TYPE_BOOL, 1, GTK_TYPE_STRING);
   moz_embed_signals[SIZE_TO] =
     gtk_signal_new("size_to",
 		   GTK_RUN_LAST,
