@@ -701,6 +701,9 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext* aPresContext,
   mWebShell->SetMarginHeight(GetMarginHeight(aPresContext, content));
   nsCompatibility mode;
   aPresContext->GetCompatibilityMode(&mode);
+  // Current and initial scrolling is set so that all succeeding docs
+  // will use the scrolling value set here, regardless if scrolling is
+  // set by viewing a particular document (e.g. XUL turns off scrolling)
   mWebShell->SetScrolling(GetScrolling(content, mode));
   nsString frameName;
   if (GetName(content, frameName)) {
@@ -896,18 +899,6 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext*          aPresContext,
 
         if (NS_SUCCEEDED(rv)) {
           rv = mWebShell->LoadURL(absURL.GetUnicode());  // URL string with a default nsnull value for post Data
-          if (NS_SUCCEEDED(rv))
-          { // tell the content viewer that it's an HTML frame
-            nsCOMPtr<nsIContentViewer> cv;
-            mWebShell->GetContentViewer(getter_AddRefs(cv));
-            if (cv) 
-            {
-              nsCOMPtr<nsIMarkupDocumentViewer> muCV = do_QueryInterface(cv);            
-              if (muCV) {
-                muCV->SetIsFrame(PR_TRUE);
-              }
-            }
-          }
         }
       }
     }
