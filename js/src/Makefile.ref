@@ -87,6 +87,10 @@ DEFINES += -DPERLCONNECT -D_GNU_SOURCE
 PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
 PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
 
+# perl erroneously reports compiler flag -rdynamic (interpreted by ld
+# as -r) when it really meant -export-dynamic.
+PERLLDFLAGS := $(subst -rdynamic,-export-dynamic,$(PERLLDFLAGS))
+
 CFLAGS += $(PERLCFLAGS)
 LDFLAGS += $(PERLLDFLAGS)
 endif
