@@ -262,11 +262,23 @@ nsComboboxControlFrame::~nsComboboxControlFrame()
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
   }
-  NS_IF_RELEASE(mPresContext);
   NS_IF_RELEASE(mButtonContent);
 
   nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  NS_IF_RELEASE(mPresContext);
 }
+
+NS_IMETHODIMP
+nsComboboxControlFrame::Destroy(nsIPresContext* aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+  if (mFormFrame) {
+    mFormFrame->RemoveFormControlFrame(*this);
+    mFormFrame = nsnull;
+  }
+  return nsHTMLContainerFrame::Destroy(aPresContext);
+}
+
 
 //--------------------------------------------------------------
 // Frames are not refcounted, no need to AddRef
