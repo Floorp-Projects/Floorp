@@ -556,6 +556,10 @@ SOURCE=..\..\windows\makeall.pl
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE=..\makecfgini.pl
+# End Source File
 # End Group
 # Begin Group "browserscripts"
 
