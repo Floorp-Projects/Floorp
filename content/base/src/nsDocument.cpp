@@ -2438,11 +2438,27 @@ nsDocument::GetElementById(const nsAString & elementId,
 }
 
 NS_IMETHODIMP
-nsDocument::Load(const nsAString& aUrl)
+nsDocument::GetAsync(PRBool *aAsync)
+{
+  NS_ERROR("nsDocument::GetAsync() should be overriden by subclass!");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::SetAsync(PRBool aAsync)
+{
+  NS_ERROR("nsDocument::SetAsync() should be overriden by subclass!");
+
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsDocument::Load(const nsAString& aUrl, PRBool *aReturn)
 {
   NS_ERROR("nsDocument::Load() should be overriden by subclass!");
 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2450,7 +2466,7 @@ nsDocument::EvaluateFIXptr(const nsAString& aExpression, nsIDOMRange **aRange)
 {
   NS_ERROR("nsDocument::EvaluateFIXptr() should be overriden by subclass!");
 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
@@ -2459,7 +2475,7 @@ nsDocument::EvaluateXPointer(const nsAString& aExpression,
 {
   NS_ERROR("nsDocument::EvaluateXPointer() should be overriden by subclass!");
 
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    

@@ -49,6 +49,7 @@
 #include "nsIScriptContext.h"
 #include "nsIHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
+#include "nsIEventQueueService.h"
 
 class nsIParser;
 class nsIDOMNode;
@@ -154,9 +155,13 @@ protected:
   PRInt32 mCountCatalogSheets;
   nsString mBaseTarget;
 
+  nsCOMPtr<nsIEventQueueService> mEventQService;
+
   nsCOMPtr<nsIScriptContext> mScriptContext;
   PRPackedBool mCrossSiteAccessEnabled;
   PRPackedBool mLoadedAsData;
+  PRPackedBool mAsync;
+  PRPackedBool mLoopingForSyncLoad;
 
   PRUint8 mXMLDeclarationBits;
 };

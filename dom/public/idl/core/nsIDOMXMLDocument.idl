@@ -44,7 +44,21 @@ interface nsIXPointerResult;
 [scriptable, uuid(8816d003-e7c8-4065-8827-829b8d07b6e0)]
 interface nsIDOMXMLDocument : nsIDOMDocument
 {
-  void                      load(in DOMString url);
+  // DOM Level 3 Load & Save, DocumentLS
+  // http://www.w3.org/TR/DOM-Level-3-LS/load-save.html#LS-DocumentLS
+  /**
+   * Whether to load synchronously or asynchronously.
+   * The default is async==true.
+   */
+  attribute boolean            async;
+ 
+  /**
+   * Load an XML document.
+   *
+   * @param  url URL to an XML document.
+   * @return     True if load successfull.
+   */
+  boolean                      load(in DOMString url);
 
  /**
   * Evaluate FIXptr expression. FIXptr is a W3C NOTE, see
