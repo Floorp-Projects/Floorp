@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Status nadawka">
 <!ENTITY newtodo.duetime.warning    "Waš startowy čas je po wašim kónčnym času.">
 <!ENTITY newtodo.duedate.warning    "Waš startowy datum je po wašim kónčnym datumje.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Sće wy wěsty, zo chceće podawk z sćěhowacym titlom wotstronić?" >        
 <!ENTITY calendar.confirm.deleteuntitledevent "Sće wy wěsty, zo chceće tutón podawk bjez titla wotstronić?" >

@@ -152,6 +152,7 @@
 <!ENTITY newtodo.status.longlabel "Status da Tarefa">
 <!ENTITY newtodo.duetime.warning    "Sua hora de in&#xED;cio &#xE9; ap&#xF4;s a sua hora prevista para t&#xE9;rmino.">
 <!ENTITY newtodo.duedate.warning    "Sua data de in&#xED;cio &#xE9; ap&#xF4;s a sua data prevista para t&#xE9;rmino.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Voc&#xEA; tem certeza de que quer apagar o seguinte evento: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Voc&#xEA; tem certeza de que quer apagar este evento sem t&#xED;tulo?" >

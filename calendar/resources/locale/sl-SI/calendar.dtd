@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Stanje opravka">
 <!ENTITY newtodo.duetime.warning    "Pričetek je po času roka opravka.">
 <!ENTITY newtodo.duedate.warning    "Datum pričetka je po roku opravka.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Želite res zbrisati dogodek: ">
 <!ENTITY calendar.confirm.deleteuntitledevent "Želite res zbrisati ta neimenovani dogodek?">

@@ -147,6 +147,7 @@
 <!ENTITY newtodo.status.longlabel "Estado de la tarea">
 <!ENTITY newtodo.duetime.warning    "Lahora de inicio es posterior a la de final">
 <!ENTITY newtodo.duedate.warning    "La fecha de inicio es posterior a la de final">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "¿Está seguro de que quiere borrar este evento titulado: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "¿Está seguro de que quiere borrar este evento sin título?" >

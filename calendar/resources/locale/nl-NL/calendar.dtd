@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Taakstatus">
 <!ENTITY newtodo.duetime.warning    "Uw starttijd valt na uw vervaltijd.">
 <!ENTITY newtodo.duedate.warning    "Uw startdatum valt na uw vervaldatum.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Weet u zeker dat u de volgende naamloze gebeurtenis wilt verwijderen?" >

@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Stav úlohy">
 <!ENTITY newtodo.duetime.warning    "Čas štartu je po čase ukončenia.">
 <!ENTITY newtodo.duedate.warning    "Dátum štartu je po dátume ukončenia.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Skutočne chcete odstrániť udalosť nazvanú: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Skutočne chcete odstrániť túto nepomenovanú udalosť?" >

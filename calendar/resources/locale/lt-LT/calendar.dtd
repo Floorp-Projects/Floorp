@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Task Status">
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Ar tikrai norite pašalinti įvykį: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Ar tikrai norite pašalinti šį neįvardytą įvykį?" >

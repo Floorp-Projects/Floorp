@@ -152,6 +152,7 @@
 <!ENTITY newtodo.status.longlabel "Uppgiftsstatus">
 <!ENTITY newtodo.duetime.warning    "Din starttid är efter din förfallotid.">
 <!ENTITY newtodo.duedate.warning    "Ditt startdatum är efter ditt förfallodatum.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Är du säker på att du vill radera händelsen med titeln: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Är du säker på att du vill radera denna händelse utan namn?" >

@@ -147,6 +147,7 @@
 <!ENTITY newtodo.status.longlabel "Status zadania">
 <!ENTITY newtodo.duetime.warning    "Godzina rozpoczęcia zadania jest po jego zakończeniu.">
 <!ENTITY newtodo.duedate.warning    "Data rozpoczęcia zadania jest po jego zakończeniu.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Jesteś pewien, że chcesz usunąć wydarzenie zatytułowane: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Jesteś pewien, że chcesz usunąć to niezatytułowane wydarzenie?" >

@@ -148,6 +148,7 @@
 <!ENTITY newtodo.status.longlabel "Aufgaben-Status">
 <!ENTITY newtodo.duetime.warning    "Ihre Startzeit ist nach Ihrer Endzeit.">
 <!ENTITY newtodo.duedate.warning    "Ihr Startdatum ist nach Ihrem Enddatum.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Wollen Sie dieses Ereignis wirklich löschen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Wollen Sie dieses unbenannte Ereignis wirklich löschen?" >

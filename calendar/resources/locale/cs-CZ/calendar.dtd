@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Stav úkolu">
 <!ENTITY newtodo.duetime.warning    "Zvolený počáteční čas je po konečném čase.">
 <!ENTITY newtodo.duedate.warning    "Zvolené počáteční datum je po konečném datu.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Skutečně chcete vymazat událost pojmenovanou: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Skutečně chcete vymazat tuto nepojmenovanou událost?" >

@@ -151,6 +151,7 @@
 <!ENTITY newtodo.status.longlabel "Statws y Dasg">
 <!ENTITY newtodo.duetime.warning    "Mae eich amser cychwyn ar ôl eich amser cyflawni.">
 <!ENTITY newtodo.duedate.warning    "Mae eich dyddiad cychwyn ar ôl eich dyddiad cyflawni.">
+<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
 
 <!ENTITY calendar.confirm.deleteevent "Ydych chi'n siwr eich bod am ddileu'r digwyddiad: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Ydych chi'n siwr eich bod am ddileu'r digwyddiad di-enw?" >
