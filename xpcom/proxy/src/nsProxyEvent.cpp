@@ -38,6 +38,8 @@
 
 #include "nsIAtom.h"  //hack!  Need a way to define a component as threadsafe (ie. sta).
 
+//#define NESTED_Q
+
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
         
 static void* EventHandler(PLEvent *self);
@@ -214,6 +216,8 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 {
     NS_INIT_REFCNT();
     
+    nsServiceManager::GetService(kEventQueueServiceCID, NS_GET_IID(nsIEventQueueService), getter_AddRefs(mEventQService));
+
     mRealObject      = realObject;
     mDestQueue       = do_QueryInterface(destQueue);
     mProxyType       = proxyType;
@@ -223,6 +227,8 @@ nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISup
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32  proxyType, const nsCID &aClass,  nsISupports *aDelegate,  const nsIID &aIID)
 {
     NS_INIT_REFCNT();
+
+    nsServiceManager::GetService(kEventQueueServiceCID, NS_GET_IID(nsIEventQueueService), getter_AddRefs(mEventQService));
 
     nsComponentManager::CreateInstance(aClass, 
                                        aDelegate,
@@ -257,35 +263,35 @@ nsProxyObject::GetQueue()
     return mDestQueue; 
 }
 
+
+static long counter = 0;
+
 nsresult
 nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
 {
-    if (proxyInfo == nsnull) return NS_ERROR_NULL_POINTER;
-
+    if (proxyInfo == nsnull || mEventQService == nsnull) 
+        return NS_ERROR_NULL_POINTER;
+    
     PRBool eventLoopCreated = PR_FALSE;
     nsresult rv; 
-//---------------------  
-//This block of code should be a function of the EventQueueServices
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-    if (NS_FAILED(rv))
-        return rv;
 
     nsCOMPtr<nsIEventQueue> eventQ;
-    rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+    rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     if (NS_FAILED(rv))
     {
-        rv = eventQService->CreateThreadEventQueue();
+        rv = mEventQService->CreateThreadEventQueue();
         eventLoopCreated = PR_TRUE;
         if (NS_FAILED(rv))
             return rv;
         
-        rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
+        rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(eventQ));
     }
+#ifdef NESTED_Q
     else
     {
-        eventQ = 0;
-        rv = eventQService->PushThreadEventQueue(getter_AddRefs(eventQ));
+        rv = mEventQService->PushThreadEventQueue(getter_AddRefs(eventQ));
     }
+#endif
 
     if (NS_FAILED(rv))
         return rv;
@@ -310,17 +316,20 @@ nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
 
     if (eventLoopCreated)
     {
-         eventQService->DestroyThreadEventQueue();
+         mEventQService->DestroyThreadEventQueue();
          eventQ = 0;
     }
+#ifdef NESTED_Q
     else
     {
         nsIEventQueue *dumbAddref = eventQ;
         NS_ADDREF(dumbAddref);  // PopThreadEventQueue released the nsCOMPtr, 
-                                // then we crash while leaving this functions.
-        eventQService->PopThreadEventQueue(dumbAddref);  // this is totally evil
+                            // then we crash while leaving this functions.
+        mEventQService->PopThreadEventQueue(dumbAddref);  // this is totally evil
     }
+#endif
 
+    
     return rv;
 }
         
@@ -612,11 +621,9 @@ AutoProxyParameterList(PRUint32 methodIndex, nsXPTMethodInfo *methodInfo, nsXPTC
                         }
                         else
                         {
-                            NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv);
-                            if ( NS_FAILED( rv ) )  
-                                return rv;
+                            if (mEventQService == nsnull) return NS_ERROR_NULL_POINTER;
 
-                            rv = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
+                            rv = mEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, &eventQ);
                             if ( NS_FAILED( rv ) )
                             {
                                 // the caller does not have an eventQ of their own.  bad.

@@ -28,6 +28,7 @@
 #include "nsISupports.h"
 #include "nsIFactory.h"
 
+#include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 #include "plevent.h"
 #include "prtypes.h"
@@ -104,6 +105,7 @@ private:
     
     nsCOMPtr<nsISupports>     mRealObject;       /* the non-proxy object that this event is referring to. 
                                                     This is a strong ref. */
+    nsCOMPtr<nsIEventQueueService> mEventQService;
 
     nsresult convertMiniVariantToVariant(nsXPTMethodInfo   * methodInfo, 
                                          nsXPTCMiniVariant * params, 
