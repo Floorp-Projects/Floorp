@@ -538,6 +538,9 @@ sub get_engine_command {
     } elsif ($opt_engine_type =~ /^sm(opt|debug)$/) {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;
+    }  elsif ($opt_engine_type =~ /^dd(opt|debug)$/) {
+        &dd ("getting dikdik engine command.");
+        $retval = &get_dd_engine_command;
     } else {
         die ("Unknown engine type selected, '$opt_engine_type'.\n");
     }
@@ -679,6 +682,62 @@ sub get_sm_engine_command {
   
     return $retval;
     
+}
+
+#
+# get the shell command used to run dikdik
+#
+sub get_dd_engine_command {
+    my $retval;
+
+    if ($opt_shell_path) {
+        # if the user provided a path to the shell, return that -
+        $retval = $opt_shell_path;
+
+    } else {
+        my $dir;
+        my $os;
+        my $debug;
+        my $opt;
+        my $exe;
+
+        $dir = $opt_suite_path . "../cpp/";
+
+        if ($os_type eq "MAC") {
+            #
+            # On the Mac, the debug and opt builds lie in the same directory -
+            #
+            $os = "macbuild:";
+            $debug = "";
+            $opt = "";
+            $exe = "JS2";
+        } elsif ($os_type eq "WIN") {
+            $os = "winbuild/";
+            $debug = "DikDik_shell___Win32_Debug/";
+            $opt = "Release/";
+            $exe = "DikDik_shell.exe";
+        } else {
+            $os = "";
+            $debug = "";
+            $opt = "";    # <<<----- XXX THIS IS NOT RIGHT! CHANGE IT!
+            $exe = "dikdik";
+        }
+
+
+        if ($opt_engine_type eq "dddebug") {
+            $retval = &xp_path($dir . $os . $debug . $exe);
+        } else {
+            $retval = &xp_path($dir . $os . $opt . $exe);
+        }
+
+
+        if (($os_type ne "MAC") && !(-x $retval)) {
+            # mac doesn't seem to deal with -x correctly
+            die ($retval . " is not a valid executable on this system.\n");
+        }
+    }
+
+    return $retval;
 }
 
 #
