@@ -36,14 +36,19 @@ function wrapString(str)
     return wrapper;
 }
 
-var data = wrapString("javascript");
-var entry = openCacheEntry("javascript", "theme:button");
-entry.cacheElement = data;
-entry.markValid();
-entry.close();
+function test()
+{
+    var data = wrapString("javascript");
+    var entry = openCacheEntry("javascript", "theme:button");
+    entry.cacheElement = data;
+    entry.markValid();
+    entry.close();
 
-var newEntry = openCacheEntry("javascript", "theme:button");
-if (newEntry.cacheElement === data)
-    print("object cache works.");
-else
-    print("object cache failed.");
+    var newEntry = openCacheEntry("javascript", "theme:button");
+    if (newEntry.cacheElement === data)
+        print("object cache works.");
+    else
+        print("object cache failed.");
+}
+
+test();
