@@ -22,15 +22,26 @@
 DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+VPATH		= @srcdir@;@srcdir@/os2
+else
 VPATH		= @srcdir@:@srcdir@/unix
+endif
 
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
 
-include $(DEPTH)/config/autoconf.mk
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+OSDIR	= os2
+else
+OSDIR	= unix
+endif
 
 EXPORTS = 	nsExternalHelperAppService.h \
-		unix/nsOSHelperAppService.h \
+		$(OSDIR)/nsOSHelperAppService.h \
 		nsHelperAppRDF.h	    \
 			$(NULL)
 
@@ -44,8 +55,8 @@ CPPSRCS	= \
 	nsExternalHelperAppService.cpp	\
 	nsOSHelperAppService.cpp	\
 	$(NULL)
-	
-	
+
+
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
@@ -54,5 +65,5 @@ include $(topsrcdir)/config/rules.mk
 
 # tmp fix for vpath changes
 export::
-	$(RM) -f unix/*.o
+	$(RM) -f $(OSDIR)/*.o
 
