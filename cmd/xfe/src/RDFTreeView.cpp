@@ -984,8 +984,6 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
       gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNbackground, pixel); ac++;
-         XtSetArg(av[ac], XmNcellBackground, pixel); ac++;
-         XtSetArg(av[ac], XmNblankBackground, pixel); ac++;
       }
    }
 
@@ -997,7 +995,6 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
       gotit = fe_GetPixelFromRGBString(getContext(), (char *) data, &pixel);
       if (gotit) {
          XtSetArg(av[ac], XmNforeground, pixel); ac++;
-         XtSetArg(av[ac], XmNcellForeground, pixel); ac++;
       }
    }
 
