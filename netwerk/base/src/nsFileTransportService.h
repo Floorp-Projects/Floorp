@@ -45,6 +45,7 @@ public:
                           nsIStreamObserver* observer,
                           const char* path,
                           nsITransport* *result);
+    NS_IMETHOD Shutdown();
 
     // nsFileTransportService methods:
     nsFileTransportService();

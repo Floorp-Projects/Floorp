@@ -23,6 +23,7 @@ DIRS=            \
 	base     \
 	build    \
 	protocol \
+	test     \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

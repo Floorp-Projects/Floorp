@@ -86,4 +86,10 @@ nsFileTransportService::AsyncWrite(PLEventQueue* appEventQueue,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsFileTransportService::Shutdown()
+{
+    return mPool->Shutdown();
+}
+
 ////////////////////////////////////////////////////////////////////////////////

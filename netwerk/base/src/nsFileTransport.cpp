@@ -24,7 +24,7 @@
 #include "nscore.h"
 #include "nsIFileStream.h"
 #include "nsFileSpec.h"
-#include "nsIByteBuffer.h"
+#include "nsIByteBufferInputStream.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -118,10 +118,8 @@ nsFileTransport::Run(void)
     nsresult rv;
     nsISupports* fs;
     nsFileSpec spec(mPath);
-    PRUint32 count;
     nsIInputStream* fileStr = nsnull;
-    nsIByteBuffer* buf = nsnull;
-    nsIInputStream* inStr = nsnull;
+    nsIByteBufferInputStream* bufStr = nsnull;
 
     rv = mListener->OnStartBinding(mConnection);  // always send the start notification
 
@@ -131,38 +129,25 @@ nsFileTransport::Run(void)
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewByteBuffer(&buf, nsnull, NS_FILE_TRANSPORT_BUFFER_SIZE);
+    rv = NS_NewByteBufferInputStream(NS_FILE_TRANSPORT_BUFFER_SIZE, &bufStr);
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewByteBufferInputStream(buf, &inStr);
-    if (NS_FAILED(rv)) goto done;
-
-    rv = fileStr->GetLength(&count);
-    if (NS_FAILED(rv)) goto done;
-
-    while (count > 0) {
-        // check if the user canceled:
-        if (mCanceled) {
-            rv = NS_BINDING_ABORTED;
+    while (PR_TRUE) {
+        PRUint32 amt;
+        rv = bufStr->Fill(fileStr, &amt);
+        if (rv == NS_BASE_STREAM_EOF || amt == 0) {
+            rv = NS_OK;
             break;
         }
-
-        // reuse the buffer each time around
-        PRUint32 amt = PR_MIN(NS_FILE_TRANSPORT_BUFFER_SIZE, count);
-        PRInt32 filledAmt = buf->Fill(&rv, fileStr, 0);
-        if (NS_FAILED(rv)) goto done;
+        if (NS_FAILED(rv)) break;
 
         // and feed the buffer to the application via the byte buffer stream:
-        rv = mListener->OnDataAvailable(mConnection, inStr, count);
-        if (NS_FAILED(rv)) goto done;
-
-        count -= filledAmt;
+        rv = mListener->OnDataAvailable(mConnection, bufStr, amt);      // XXX maybe amt should be bufStr->GetLength()
+        if (NS_FAILED(rv)) break;
     }
 
   done:
-    inStr->Close();
-    NS_IF_RELEASE(buf);
-    NS_IF_RELEASE(inStr);
+    NS_IF_RELEASE(bufStr);
     NS_IF_RELEASE(fileStr);
 
     // XXX where do we get the error message?
