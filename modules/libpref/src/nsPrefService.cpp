@@ -251,7 +251,8 @@ NS_IMETHODIMP nsPrefService::ResetUserPrefs()
 NS_IMETHODIMP nsPrefService::SavePrefFile(nsIFile *aFile)
 {
   if (nsnull == aFile) {
-    return savePrefFile(mCurrentFile);
+    // It's possible that we never got a prefs file.
+    return mCurrentFile ? savePrefFile(mCurrentFile) : NS_OK;
   } else {
     return savePrefFile(aFile);
   }

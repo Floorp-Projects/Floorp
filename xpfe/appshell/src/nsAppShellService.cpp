@@ -80,7 +80,8 @@ nsAppShellService::nsAppShellService() :
   mDeleteCalled( PR_FALSE ),
   mSplashScreen( nsnull ),
   mNativeAppSupport( nsnull ),
-  mShuttingDown( PR_FALSE )
+  mShuttingDown( PR_FALSE ),
+  mQuitOnLastWindowClosing( PR_TRUE )
 {
   NS_INIT_REFCNT();
 }
@@ -810,21 +811,33 @@ nsAppShellService::UnregisterTopLevelWindow(nsIXULWindow* aWindow)
 	 if (!hiddenWin)
 		 Quit();
   #else
-    // Check to see if we're in server mode, first.
-    if ( mNativeAppSupport ) {
-        PRBool serverMode = PR_FALSE;
-        mNativeAppSupport->GetIsServerMode( &serverMode );
-        if ( serverMode ) {
-            // Then don't quit.
-            return NS_OK;
-        }
-    }
+    // Check to see if we should quit in this case.
+    PRBool serverMode = PR_FALSE;
+    if (mNativeAppSupport)
+        mNativeAppSupport->GetIsServerMode(&serverMode);
+    if (!mQuitOnLastWindowClosing || serverMode)
+        return NS_OK;
+
     Quit();
   #endif 
   }
   return rv;
 }
 
+NS_IMETHODIMP
+nsAppShellService::GetQuitOnLastWindowClosing(PRBool *aQuitOnLastWindowClosing)
+{
+    NS_ENSURE_ARG_POINTER(aQuitOnLastWindowClosing);
+    *aQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAppShellService::SetQuitOnLastWindowClosing(PRBool aQuitOnLastWindowClosing)
+{
+    mQuitOnLastWindowClosing = aQuitOnLastWindowClosing;
+    return NS_OK;
+}
 
 
 //-------------------------------------------------------------------------

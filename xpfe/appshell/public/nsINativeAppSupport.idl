@@ -143,6 +143,12 @@
  *                 mode is currently Win32-only (and may really only make
  *                 sense there) and is intended to be initiated from the
  *                 Windows startup folder at system initialization.
+ *
+ *  needsProfileUI - Boolean attribute used when running in "server mode."
+ *                   If the "server mode" caused profile dialogs to be
+ *                   suppressed, this should be set to true. When the server
+ *                   starts a real session, it will call on the profile mgr
+ *                   to do what it needed to do when this attribute is true.
  */
 
 interface nsIDOMWindow;
@@ -161,4 +167,5 @@ interface nsINativeAppSupport : nsISupports {
     // Server mode.
     attribute boolean isServerMode;
     void startServerMode();
+    attribute boolean needsProfileUI;
 };

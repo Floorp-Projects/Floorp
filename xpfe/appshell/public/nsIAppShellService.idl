@@ -171,4 +171,12 @@ interface nsIAppShellService : nsISupports
    * only once per application session.
    */
   void HideSplashScreen();
+  
+  /**
+   * We may need to show a XUL dialog before there are any other windows.
+   * In this case we don't nescesarily want to quit when it is closed.
+   * Use with extreme caution.
+   */
+   
+  attribute boolean quitOnLastWindowClosing;
 };
