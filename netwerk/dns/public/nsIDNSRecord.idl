@@ -36,7 +36,7 @@
 
 #include "nsISupports.idl"
 
-[ptr] native PRNetAddrStar(union PRNetAddr);
+native PRNetAddr(union PRNetAddr);
 
 /**
  * nsIDNSRecord
@@ -63,7 +63,7 @@ interface nsIDNSRecord : nsISupports
      * @throws NS_ERROR_NOT_AVAILABLE if there is not another IP address in
      * the record.
      */
-    [noscript] void getNextAddr(in PRUint16 port, in PRNetAddrStar addr);
+    [noscript] PRNetAddr getNextAddr(in PRUint16 port);
 
     /**
      * this function returns the value of the next IP address as a
