@@ -1835,19 +1835,15 @@ enum BWCOpenDest {
   [mBookmarkViewController addItem: self isFolder: aIsFolder URL:aURL title:aTitle];
 }
 
-// if bookmarks are visible, but say no if selection required and there isn't one
-// if bookmarks aren't visible, or selection not required, then value for allowMultipleSelection is ignored
-- (BOOL)bookmarksAreVisible:(BOOL)inRequireSelection allowMultipleSelection:(BOOL)allowMultipleSelection
+- (BOOL)bookmarkManagerIsVisible
 {
-  BOOL bookmarksShowing = [mContentView isBookmarkManagerVisible];
-  // trying to make this logic as clear as possible
-  if (bookmarksShowing && inRequireSelection) {
-    bookmarksShowing = [mBookmarkViewController haveSelectedRow];
-    if (bookmarksShowing && !allowMultipleSelection) {
-      bookmarksShowing = [mBookmarkViewController numberOfSelectedRows] <= 1;
-    }
-  }
-  return bookmarksShowing;
+  return [mContentView isBookmarkManagerVisible];
+}
+
+- (BOOL)singleBookmarkIsSelected
+{
+  if (![mContentView isBookmarkManagerVisible]) return NO;
+  return ([mBookmarkViewController numberOfSelectedRows] == 1);
 }
 
 - (IBAction)bookmarkPage: (id)aSender
@@ -2674,7 +2670,7 @@ enum BWCOpenDest {
 
 - (BOOL)canGetInfo
 {
-  return [self bookmarksAreVisible:YES allowMultipleSelection:NO];
+  return [self singleBookmarkIsSelected];
 }
 
 - (BOOL)shouldShowBookmarkToolbar

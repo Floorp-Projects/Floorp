@@ -419,7 +419,7 @@ static unsigned int TableViewSolidVerticalGridLineMask = 1;
   // container (bookmark menu, toolbar bookmarks, etc), clear the item panel's selection entirely,
   // which will fall back to checking the selected container panel's selection. If 
   // the manager is visible, don't muck with the selection.
-  if (![mBrowserWindowController bookmarksAreVisible:NO allowMultipleSelection:NO]) {
+  if (![mBrowserWindowController bookmarkManagerIsVisible]) {
     [self displayBookmarkInOutlineView:parentFolder];
     long parentRow = [mItemPane rowForItem:parentFolder];   // will be -1 if top-level container
     if (parentRow >= 0)

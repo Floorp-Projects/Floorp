@@ -711,7 +711,7 @@ const int kReuseWindowOnAE = 2;
     browserController = (BrowserWindowController*)[[self getFrontmostBrowserWindow] windowController];
     
   if (browserController) {
-    if ([browserController bookmarksAreVisible:NO allowMultipleSelection:NO])
+    if ([browserController bookmarkManagerIsVisible])
       [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Hide All Bookmarks", @"")];
     else
       [mToggleSidebarMenuItem setTitle:NSLocalizedString(@"Show All Bookmarks", @"")];
