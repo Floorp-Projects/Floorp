@@ -28,3 +28,4 @@ TestServMgr
 nsIFileEnumerator
 nsIFileTest
 TestCallTemplates
+TestDeque
