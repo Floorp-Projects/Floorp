@@ -1771,24 +1771,28 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
 
   // The 1st reflow processes the needs of the reflow command
   switch (aReflowState.reason) {
-    case eReflowReason_Initial: {
-      if (!HadInitialReflow()) { 
+    case eReflowReason_Initial: 
+    case eReflowReason_StyleChange: {
+      if ((eReflowReason_Initial == aReflowState.reason) && HadInitialReflow()) {
+        // XXX put this back in when bug 70150 is fixed
+        // NS_ASSERTION(PR_FALSE, "intial reflow called twice");
+      }
+      else {
         // Check for an overflow list, and append any row group frames being pushed
         MoveOverflowToChildList(aPresContext);
 
         if (!mPrevInFlow) { // only do pass1 on a first in flow
           if (IsAutoLayout()) {     
             // only do pass1 reflow on an auto layout table
-            nsTableReflowState reflowState(aReflowState, *this, eReflowReason_Initial,
+            nsReflowReason reason = (eReflowReason_Initial == aReflowState.reason)
+                                    ? eReflowReason_Initial : eReflowReason_StyleChange;
+            nsTableReflowState reflowState(aReflowState, *this, reason,
                                            NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE); 
             // reflow the children
             ReflowChildren(aPresContext, reflowState, !HaveReflowedColGroups(), PR_FALSE, aStatus);
           }
           mTableLayoutStrategy->Initialize(aPresContext, aReflowState);
         }
-      }
-      else { // XXX put this back in when bug 70150 is fixed
-        // NS_ASSERTION(PR_FALSE, "intial reflow called twice");
       }
       if (!mPrevInFlow) {
         SetHadInitialReflow(PR_TRUE);
@@ -1811,10 +1815,6 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
       NS_ASSERTION(NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth, "this doesn't do anything");
       SetNeedStrategyBalance(PR_TRUE); 
       break; 
-    case eReflowReason_StyleChange:    
-      NS_ASSERTION(HadInitialReflow(), "intial reflow not called");
-      SetNeedStrategyInit(PR_TRUE); // assume the worse
-      break;
     default:
       break;
   }
