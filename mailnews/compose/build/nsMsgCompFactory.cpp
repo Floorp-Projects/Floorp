@@ -134,8 +134,6 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		return NS_ERROR_NULL_POINTER;  
 
 	*aResult = NULL;  
-  
-	nsISupports *inst = nsnull;
 
 	// ClassID check happens here
 	// Whenever you add a new class that supports an interface, plug it in here!!!
@@ -147,60 +145,44 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 	// So, if you add a component here and it doesn't ref count when you create it then you might
 	// have a problem....
 	
-	if (mClassID.Equals(kCSmtpServiceCID)) {
+	if (mClassID.Equals(kCSmtpServiceCID)) 
+	{
 		nsSmtpService * smtpService = new nsSmtpService();
 		// okay now turn around and give inst a handle on it....
-		smtpService->QueryInterface(kISupportsIID, (void **) &inst);
+		return smtpService->QueryInterface(kISupportsIID, aResult);
 	}
 	// do they want an Message Compose interface ?
-	else if (mClassID.Equals(kCMsgComposeCID)) {
-		res = NS_NewMsgCompose((nsIMsgCompose **) &inst);
-		if (res != NS_OK) return res;   
+	else if (mClassID.Equals(kCMsgComposeCID)) 
+	{
+		return NS_NewMsgCompose(aIID, aResult);
 	}
 
 	// do they want an Message Compose Fields interface ?
-	else if (mClassID.Equals(kCMsgCompFieldsCID)) {
-		res = NS_NewMsgCompFields((nsIMsgCompFields **) &inst);
-		if (res != NS_OK) return res;   
+	else if (mClassID.Equals(kCMsgCompFieldsCID)) 
+	{
+		return NS_NewMsgCompFields(aIID, aResult);
 	}
 
 	// do they want an Message Send interface ?
-	else if (mClassID.Equals(kCMsgSendCID)) {
-		res = NS_NewMsgSend((nsIMsgSend **) &inst);
-		if (res != NS_OK) return res;  
+	else if (mClassID.Equals(kCMsgSendCID)) 
+	{
+		return NS_NewMsgSend(aIID, aResult);
 	}
-
 	// do they want an Compose AppCore interface ?
-    else if (mClassID.Equals(kCComposeAppCoreCID)) {
-        res = NS_NewComposeAppCore((nsIDOMComposeAppCore **)&inst);
-		if (res != NS_OK) return res;  
+    else if (mClassID.Equals(kCComposeAppCoreCID)) 
+	{
+        return NS_NewComposeAppCore(aIID, aResult);
     }
-
 	else if (mClassID.Equals(kCComposerBootstrapCID)) 
 	{
-		res = NS_NewComposerBootstrap((nsIAppShellService**)&inst, mServiceManager);
-		if (NS_FAILED(res)) return res;
+		return NS_NewComposerBootstrap(aIID, aResult, mServiceManager);
 	}
 	else if (mClassID.Equals(kCComposerCID)) 
 	{
-		res = NS_NewComposer((nsIComposer**)&inst);
-		if (NS_FAILED(res)) return res;
+		return NS_NewComposer(aIID, aResult);
 	}
 
-
-	// End of checking the interface ID code....
-	if (inst) {
-		// so we now have the class that supports the desired interface...we need to turn around and
-		// query for our desired interface.....
-		res = inst->QueryInterface(aIID, aResult);
-		NS_RELEASE(inst); // because creating picked up an extra ref count...
-		if (res != NS_OK)  // if the query interface failed for some reason, then the object did not get ref counted...delete it.
-			delete inst;
-	}
-	else
-		res = NS_ERROR_OUT_OF_MEMORY;
-
-  return res;  
+	return NS_NOINTERFACE;  
 }  
 
 nsresult nsMsgComposeFactory::LockFactory(PRBool aLock)  
