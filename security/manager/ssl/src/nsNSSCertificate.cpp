@@ -3719,9 +3719,9 @@ nsNSSCertificateDB::getCertNames(CERTCertList *certList,
         if (sc) *sc = DELIM;
       }
       nsAutoString certname = NS_ConvertASCIItoUCS2(namestr);
-      certstr.AppendWithConversion(DELIM);
+      certstr.Append(DELIM);
       certstr += certname;
-      certstr.AppendWithConversion(DELIM);
+      certstr.Append(DELIM);
       certstr += keystr;
       tmpArray[i++] = ToNewUnicode(certstr);
     }
