@@ -254,7 +254,7 @@
       <menu id="menu_Help"/>
     </menubar>
 
-    <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
+    <toolbar class="chromeclass-toolbar" id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
       <toolbarbutton id="newfolder" label="&button.newFolder.label;"
                      accesskey="&button.newFolder.accesskey;"
                      command="cmd_bm_newfolder"/>
