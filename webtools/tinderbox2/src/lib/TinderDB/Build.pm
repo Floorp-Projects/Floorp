@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.49 $ 
-# $Date: 2002/05/06 21:55:17 $ 
+# $Revision: 1.50 $ 
+# $Date: 2002/05/06 22:08:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -429,6 +429,9 @@ sub trim_db_history {
   my ($self, $tree, ) = (@_);
   
   my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
+
+  my ($oldest_inactive_time) = $main::TIME - $main::SECONDS_PER_DAY;
+
   my (@all_build_names);
 
   # compute averages.
@@ -445,8 +448,11 @@ sub trim_db_history {
       
       my ($rec) = $recs->[$db_index];
 
+      # If the runtime/deadtime is zero, it should still be counted in
+      # the average.  All we care about is 'success'.
+
       if ( 
-           ($rec->{'runtime'}) &&
+           (defined($rec->{'runtime'})) &&
            ($rec->{'status'} eq 'success') && 
            ($#run_times < $NUM_OF_AVERAGE) &&
            1) {
@@ -454,7 +460,7 @@ sub trim_db_history {
       }
       
       if ( 
-           ($rec->{'deadtime'}) &&
+           (defined($rec->{'deadtime'})) &&
            ($rec->{'status'} eq 'success') && 
            ($#dead_times < $NUM_OF_AVERAGE) &&
            1) {
@@ -500,7 +506,7 @@ sub trim_db_history {
     
     if ( 
          !(defined($rec)) ||
-         ($rec->{'starttime'} < $last_time) ||
+         ( $rec->{'starttime'} < $oldest_inactive_time ) ||
          0) {
         delete $DATABASE{$tree}{$buildname};
     }
