@@ -137,15 +137,18 @@ XSLTProcessor::XSLTProcessor() {
     xslTypes.put(WHEN,            new XSLType(XSLType::WHEN));
     xslTypes.put(WITH_PARAM,      new XSLType(XSLType::WITH_PARAM));
 
-    //-- proprietary debug elements
-    xslTypes.put("expr-debug", new XSLType(XSLType::EXPR_DEBUG));
+    // Create default expressions
+    ExprParser parser;
+    String node("node()");
+    mNodeExpr = parser.createExpr(node);
+
 } //-- XSLTProcessor
 
 /**
  * Default destructor
 **/
 XSLTProcessor::~XSLTProcessor() {
-    //-- currently does nothing, but added for future use
+    delete mNodeExpr;
 } //-- ~XSLTProcessor
 
 #ifndef TX_EXE
@@ -740,7 +743,7 @@ Document* XSLTProcessor::process
     Document* result = new Document();
 
     //-- create a new ProcessorState
-    ProcessorState ps(xmlDocument, xslDocument, *result);
+    ProcessorState ps(&xmlDocument, &xslDocument, result);
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -786,7 +789,7 @@ void XSLTProcessor::process
     Document* result = new Document();
 
     //-- create a new ProcessorState
-    ProcessorState ps(xmlDocument, xslDocument, *result);
+    ProcessorState ps(&xmlDocument, &xslDocument, result);
 
     //-- add error observers
     ListIterator* iter = errorObservers.iterator();
@@ -1077,11 +1080,9 @@ void XSLTProcessor::processAction
     else if (nodeType == Node::ELEMENT_NODE) {
 
         String nodeName = xslAction->getNodeName();
-        PatternExpr* pExpr = 0;
         Expr* expr = 0;
 
         Element* actionElement = (Element*)xslAction;
-        ps->pushAction(actionElement);
 
         switch ( getElementType(nodeName, ps) ) {
 
@@ -1090,15 +1091,18 @@ void XSLTProcessor::processAction
             {
                 const String& mode =
                     actionElement->getAttribute(MODE_ATTR);
-                String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
-                if (selectAtt.isEmpty())
-                    selectAtt = "node()";
-                expr = ps->getExpr(selectAtt);
-                if (!expr) {
-                    // XXX ErrorReport: out of memory
+                if (actionElement->hasAttr(txXSLTAtoms::select,
+                                           kNameSpaceID_None))
+                    expr = ps->getExpr(actionElement,
+                                       ProcessorState::SelectAttr);
+                else
+                    expr = mNodeExpr;
+
+                if (!expr)
                     break;
-                }
+
                 ExprResult* exprResult = expr->evaluate(node, ps);
+
                 NodeSet* nodeSet = 0;
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
@@ -1218,7 +1222,11 @@ void XSLTProcessor::processAction
                                                ps)) {
                             case XSLType::WHEN :
                             {
-                                expr = ps->getExpr(xslTemplate->getAttribute(TEST_ATTR));
+                                expr = ps->getExpr(xslTemplate,
+                                                   ProcessorState::TestAttr);
+                                if (!expr)
+                                    break;
+
                                 ExprResult* result = expr->evaluate(node, ps);
                                 if (result && result->booleanValue()) {
                                     processChildren(node, xslTemplate, ps);
@@ -1264,8 +1272,10 @@ void XSLTProcessor::processAction
             //-- xsl:copy-of
             case XSLType::COPY_OF:
             {
-                String selectAtt = actionElement->getAttribute(SELECT_ATTR);
-                Expr* expr = ps->getExpr(selectAtt);
+                expr = ps->getExpr(actionElement, ProcessorState::SelectAttr);
+                if (!expr)
+                    break;
+
                 ExprResult* exprResult = expr->evaluate(node, ps);
                 xslCopyOf(exprResult, ps);
                 delete exprResult;
@@ -1321,17 +1331,11 @@ void XSLTProcessor::processAction
             //-- xsl:for-each
             case XSLType::FOR_EACH :
             {
-                String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
-
-                if (selectAtt.isEmpty())
-                {
-                    notifyError("missing required select attribute for xsl:for-each");
+                expr = ps->getExpr(actionElement, ProcessorState::SelectAttr);
+                if (!expr)
                     break;
-                }
 
-                pExpr = ps->getPatternExpr(selectAtt);
-
-                ExprResult* exprResult = pExpr->evaluate(node, ps);
+                ExprResult* exprResult = expr->evaluate(node, ps);
                 NodeSet* nodeSet = 0;
                 if ( exprResult->getResultType() == ExprResult::NODESET ) {
                     nodeSet = (NodeSet*)exprResult;
@@ -1386,10 +1390,9 @@ void XSLTProcessor::processAction
             // xsl:if
             case XSLType::IF :
             {
-                String selectAtt = actionElement->getAttribute(TEST_ATTR);
-                expr = ps->getExpr(selectAtt);
-                //-- check for Error
-                    /* add later when we create ErrResult */
+                expr = ps->getExpr(actionElement, ProcessorState::TestAttr);
+                if (!expr)
+                    break;
 
                 ExprResult* exprResult = expr->evaluate(node, ps);
                 if ( exprResult->booleanValue() ) {
@@ -1494,52 +1497,13 @@ void XSLTProcessor::processAction
                 ps->addToResultTree(text);
                 break;
             }
-            case XSLType::EXPR_DEBUG: //-- proprietary debug element
-            {
-                String exprAtt = actionElement->getAttribute(EXPR_ATTR);
-                Expr* expr = ps->getExpr(exprAtt);
-                ExprResult* exprResult = expr->evaluate(node, ps);
-                String data("expr debug: ");
-                expr->toString(data);
-#if 0
-                // XXX DEBUG OUTPUT
-                cout << data << endl;
-#endif
-                data.clear();
-#if 0
-                // XXX DEBUG OUTPUT
-                cout << "result: ";
-#endif
-                if ( exprResult ) {
-                    switch ( exprResult->getResultType() ) {
-                        case  ExprResult::NODESET:
-#if 0
-                            // XXX DEBUG OUTPUT
-                            cout << "#NodeSet - ";
-#endif
-                        default:
-                            exprResult->stringValue(data);
-#if 0
-                            // XXX DEBUG OUTPUT
-                            cout << data;
-#endif
-                            break;
-                    }
-                }
-#if 0
-                // XXX DEBUG OUTPUT
-                cout << endl;
-#endif
-
-                delete exprResult;
-                break;
-            }
             //-- xsl:value-of
             case XSLType::VALUE_OF :
             {
-                String selectAtt = actionElement->getAttribute(SELECT_ATTR);
+                expr = ps->getExpr(actionElement, ProcessorState::SelectAttr);
+                if (!expr)
+                    break;
 
-                Expr* expr = ps->getExpr(selectAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
                 String value;
                 if ( !exprResult ) {
@@ -1632,10 +1596,8 @@ void XSLTProcessor::processAction
 #endif
                 break;
         } //-- switch
-        ps->popAction();
     } //-- end if (element)
 
-    //cout << "XSLTProcessor#processAction [exit]\n";
 } //-- processAction
 
 /**
@@ -1821,9 +1783,12 @@ void XSLTProcessor::processDefaultTemplate(Node* node,
         case Node::ELEMENT_NODE :
         case Node::DOCUMENT_NODE :
         {
-            Expr* expr = ps->getPatternExpr("node()");
-            ExprResult* exprResult = expr->evaluate(node, ps);
-            if ( exprResult->getResultType() != ExprResult::NODESET ) {
+            if (!mNodeExpr)
+                break;
+
+            ExprResult* exprResult = mNodeExpr->evaluate(node, ps);
+            if (!exprResult ||
+                exprResult->getResultType() != ExprResult::NODESET) {
                 notifyError("None-nodeset returned while processing default template");
                 delete exprResult;
                 return;
@@ -1941,9 +1906,10 @@ ExprResult* XSLTProcessor::processVariable
     }
 
     //-- check for select attribute
-    Attr* attr = xslVariable->getAttributeNode(SELECT_ATTR);
-    if ( attr ) {
-        Expr* expr = ps->getExpr(attr->getValue());
+    if (xslVariable->hasAttr(txXSLTAtoms::select, kNameSpaceID_None)) {
+        Expr* expr = ps->getExpr(xslVariable, ProcessorState::SelectAttr);
+        if (!expr)
+            return new StringResult("unable to process variable");
         return expr->evaluate(node, ps);
     }
     else if (xslVariable->hasChildNodes()) {
@@ -1958,7 +1924,7 @@ ExprResult* XSLTProcessor::processVariable
         return nodeSet;
     }
     else {
-      return new StringResult("");
+        return new StringResult("");
     }
 } //-- processVariable
 
@@ -2113,7 +2079,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
     Document* resultDocument = new Document(aOutputDoc);
 
     //-- create a new ProcessorState
-    ProcessorState* ps = new ProcessorState(*sourceDocument, *xslDocument, *resultDocument);
+    ProcessorState* ps = new ProcessorState(sourceDocument,
+                                            xslDocument,
+                                            resultDocument);
 
     //-- add error observers
 
