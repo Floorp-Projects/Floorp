@@ -293,7 +293,7 @@ nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = (void*)(nsISupports*)this;
     NS_ADDREF_THIS();
     return NS_OK;

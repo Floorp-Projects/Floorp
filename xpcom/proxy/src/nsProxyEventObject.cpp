@@ -51,7 +51,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 
      nsISupports* rootObject;
     // always find the native root
-    if(NS_FAILED(aObj->QueryInterface(nsISupports::GetIID(), (void**)&rootObject)))
+    if(NS_FAILED(aObj->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(), (void**)&rootObject)))
         return NULL;
 
 
@@ -96,7 +96,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
         else
         {
             // just a root proxy
-            nsProxyEventClass* rootClazz = nsProxyEventClass::GetNewOrUsedClass(nsISupports::GetIID());
+            nsProxyEventClass* rootClazz = nsProxyEventClass::GetNewOrUsedClass(nsCOMTypeInfo<nsISupports>::GetIID());
             if(!rootClazz)
             {
                 goto return_wrapper;
@@ -242,7 +242,7 @@ nsProxyEventObject::Release(void)
 nsProxyEventObject*
 nsProxyEventObject::Find(REFNSIID aIID)
 {
-    if(aIID.Equals(nsISupports::GetIID()))
+    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
         return mRoot;
 
     nsProxyEventObject* cur = mRoot;

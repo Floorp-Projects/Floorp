@@ -53,7 +53,7 @@ NS_IMETHODIMP nsMsgFilterService::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_ERROR_NULL_POINTER;  
 
     if (aIID.Equals(nsIMsgFilterService::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIMsgFilterService*, this);   
         NS_ADDREF_THIS();
         return NS_OK;

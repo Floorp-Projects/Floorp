@@ -42,7 +42,7 @@ nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
         return NS_ERROR_NULL_POINTER;                                        
     }                                                                      
     if (aIID.Equals(nsIAllocator::GetIID()) || 
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (void*) this; 
         AddRef(); 
         return NS_OK; 
@@ -53,13 +53,13 @@ nsAllocatorImpl::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr
 NS_METHOD
 nsAllocatorImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
-    if (outer && !aIID.Equals(nsISupports::GetIID()))
+    if (outer && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
         return NS_NOINTERFACE;   // XXX right error?
     nsAllocatorImpl* mm = new nsAllocatorImpl(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mm->AddRef();
-    if (aIID.Equals(nsISupports::GetIID()))
+    if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
         *aInstancePtr = mm->GetInner();
     else
         *aInstancePtr = mm;

@@ -74,7 +74,7 @@ void EventQueueStack::SetNext(EventQueueStack* aStack)
 ////////////////////////////////////////////////////////////////////////////////
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS(EventQueueEntry,nsISupports::GetIID());
+NS_IMPL_ISUPPORTS(EventQueueEntry,nsCOMTypeInfo<nsISupports>::GetIID());
 
 EventQueueEntry::EventQueueEntry()
 {

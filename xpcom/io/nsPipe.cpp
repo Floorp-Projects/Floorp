@@ -110,7 +110,7 @@ nsBufferInputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (aIID.Equals(nsIBufferInputStream::GetIID()) ||
         aIID.Equals(nsIInputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = this;
         NS_ADDREF_THIS();
         return NS_OK;
@@ -365,7 +365,7 @@ nsBufferOutputStream::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (aIID.Equals(nsIBufferOutputStream::GetIID()) ||
         aIID.Equals(nsIOutputStream::GetIID()) ||
         aIID.Equals(nsIBaseStream::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = this;
         NS_ADDREF_THIS();
         return NS_OK;

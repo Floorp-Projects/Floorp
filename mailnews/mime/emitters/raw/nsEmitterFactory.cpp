@@ -94,7 +94,7 @@ nsRawEmitterFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = NULL;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(::nsISupports::GetIID()))    
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
     *aResult = (void *)(nsISupports*)this;   
   else if (aIID.Equals(nsIFactory::GetIID()))   
     *aResult = (void *)(nsIFactory*)this;   

@@ -1327,7 +1327,7 @@ CPluginManager::QueryInterface(const nsIID& iid, void** ptr)
         AddRef();                                                            
         return NS_OK;                                                        
     }
-    if (iid.Equals(nsIPluginManager::GetIID()) || iid.Equals(nsISupports::GetIID())) {
+    if (iid.Equals(nsIPluginManager::GetIID()) || iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *ptr = (void*) ((nsIPluginManager*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        
@@ -1581,7 +1581,7 @@ CPluginInstancePeer::QueryInterface(const nsIID& iid, void** ptr)
         AddRef();                                                            
         return NS_OK;                                                        
     }                                                                      
-    if (iid.Equals(nsIPluginTagInfo::GetIID()) || iid.Equals(nsISupports::GetIID())) {                                      
+    if (iid.Equals(nsIPluginTagInfo::GetIID()) || iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
         *ptr = (void*) ((nsIPluginTagInfo*)this);                        
         AddRef();                                                            
         return NS_OK;                                                        

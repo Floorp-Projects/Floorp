@@ -42,7 +42,7 @@ nsJSIID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::GetIID()) ||
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||
       aIID.Equals(nsIJSID::GetIID()) ||
       aIID.Equals(nsIJSIID::GetIID())) {
     *aInstancePtr = (void*) this;
@@ -353,7 +353,7 @@ CIDCreateInstanceScriptable::Call(JSContext *cx, JSObject *obj,
         }
     }
     if(!piid)
-        piid = &nsISupports::GetIID();
+        piid = &(nsCOMTypeInfo<nsISupports>::GetIID());
 
     nsISupports* inst;
     nsresult rv;
@@ -573,7 +573,7 @@ CIDGetServiceScriptable::Call(JSContext *cx, JSObject *obj,
         }
     }
     if(!piid)
-        piid = &nsISupports::GetIID();
+        piid = &(nsCOMTypeInfo<nsISupports>::GetIID());
 
     nsISupports* srvc;
     nsresult rv;
@@ -664,7 +664,7 @@ nsJSCID::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(nsISupports::GetIID()) ||
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||
       aIID.Equals(nsIJSID::GetIID()) ||
       aIID.Equals(nsIJSCID::GetIID())) {
     *aInstancePtr = (void*) this;

@@ -52,7 +52,7 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \
   }                                                                      \
-  if (aIID.Equals(nsISupports::GetIID())) {                              \
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {               \
     *aInstancePtr = (void*) ((nsISupports*)this);                        \
     NS_ADDREF_THIS();                                                    \
     return NS_OK;                                                        \

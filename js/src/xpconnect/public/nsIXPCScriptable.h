@@ -463,7 +463,7 @@ nsresult _class::QueryInterface(REFNSIID aIID, void** aInstancePtr)      \
   if (NULL == aInstancePtr) {                                            \
     return NS_ERROR_NULL_POINTER;                                        \
   }                                                                      \
-  if (aIID.Equals(nsISupports::GetIID()) ||                              \
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||               \
       aIID.Equals(_class::GetIID())) {                                   \
     *aInstancePtr = (void*) this;                                        \
     NS_ADDREF_THIS();                                                    \

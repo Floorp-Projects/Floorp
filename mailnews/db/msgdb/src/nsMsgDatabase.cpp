@@ -384,7 +384,7 @@ NS_IMETHODIMP nsMsgDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 
     if (aIID.Equals(nsIMsgDatabase::GetIID()) ||
         aIID.Equals(nsIDBChangeAnnouncer::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIMsgDatabase*, this);   
         NS_ADDREF_THIS();
         return NS_OK;

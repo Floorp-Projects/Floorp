@@ -60,7 +60,7 @@ nsEditFactory::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER; 
   } 
   if (aIID.Equals(nsIFactory::GetIID()) ||
-    aIID.Equals(nsISupports::GetIID())) {
+    aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     *aInstancePtr = (void*) this; 
     AddRef();  
     return NS_OK; 
@@ -82,7 +82,7 @@ nsEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult
   nsISupports *obj = nsnull;
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
-  if (aOuter && !aIID.Equals(nsISupports::GetIID()))
+  if (aOuter && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
     return NS_NOINTERFACE;   // XXX right error?
 
 

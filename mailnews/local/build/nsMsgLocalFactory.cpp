@@ -93,7 +93,7 @@ nsresult nsMsgLocalFactory::QueryInterface(const nsIID &aIID, void **aResult)
   *aResult = nsnull;   
 
   // we support two interfaces....nsISupports and nsFactory.....
-  if (aIID.Equals(::nsISupports::GetIID()))    
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
     *aResult = (void *)(nsISupports*)this;   
   else if (aIID.Equals(nsIFactory::GetIID()))   
     *aResult = (void *)(nsIFactory*)this;   
@@ -194,7 +194,7 @@ nsresult nsMsgLocalFactory::CreateInstance(nsISupports * /* aOuter */, const nsI
 	else if (mClassID.Equals(kParseMailMsgStateCID))
 		rv = NS_NewParseMailMessageState(aIID, aResult);
   else if (mClassID.Equals(kPop3IncomingServerCID))
-    rv = NS_NewPop3IncomingServer(nsISupports::GetIID(), aResult);
+    rv = NS_NewPop3IncomingServer(nsCOMTypeInfo<nsISupports>::GetIID(), aResult);
 	
   else
 		rv = NS_NOINTERFACE;

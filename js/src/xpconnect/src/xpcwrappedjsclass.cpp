@@ -223,7 +223,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
                                              void** aInstancePtr)
 {
-    if(aIID.Equals(nsISupports::GetIID()))
+    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
     {
         // asking for nsISupports... no problem
         nsXPCWrappedJS* root = self->GetRootWrapper();
@@ -299,7 +299,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
 JSObject*
 nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
 {
-    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsISupports::GetIID());
+    JSObject* result = CallQueryInterfaceOnJSObject(aJSObj, nsCOMTypeInfo<nsISupports>::GetIID());
     return result ? result : aJSObj;
 }
 

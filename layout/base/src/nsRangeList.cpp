@@ -398,7 +398,7 @@ nsRangeListIterator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   // XXX shouldn't this just do mRangeList->QueryInterface instead of
   // having a complete copy of that method here? What about AddRef and
   // Release? shouldn't they be delegated too?
-  if (aIID.Equals(nsISupports::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     nsIDOMSelection* tmp = mRangeList;
     *aInstancePtr = (void*)tmp;
     NS_ADDREF(mRangeList);
@@ -527,7 +527,7 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     *aInstancePtr = (void *)iterator;
     return iterator->AddRef();
   }
-  if (aIID.Equals(((nsISupports *)((nsIFrameSelection *)this))->GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     // use *first* base class for ISupports
     nsIFrameSelection* tmp1 = this;
     nsISupports* tmp2 = tmp1;

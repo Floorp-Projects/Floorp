@@ -48,7 +48,7 @@ NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
         return NS_ERROR_NULL_POINTER;  
 
     if (aIID.Equals(nsIMsgFilterList::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID()))
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
 	{
         *aResult = NS_STATIC_CAST(nsMsgFilterList*, this);   
         NS_ADDREF_THIS();

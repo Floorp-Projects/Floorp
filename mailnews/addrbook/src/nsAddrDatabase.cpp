@@ -141,7 +141,7 @@ NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
 
     if (aIID.Equals(nsIAddrDatabase::GetIID()) ||
         aIID.Equals(nsIAddrDBAnnouncer::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIAddrDatabase*, this);   
         NS_ADDREF_THIS();
         return NS_OK;

@@ -74,7 +74,7 @@ nsObserver::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (aInstancePtr == nsnull)
         return NS_ERROR_NULL_POINTER;
     if (aIID.Equals(nsIObserver::GetIID()) ||
-        aIID.Equals(nsISupports::GetIID())) {
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (nsIObserver*)this;
         NS_ADDREF_THIS();
         return NS_OK;

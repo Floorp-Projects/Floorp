@@ -93,7 +93,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                 nsID* iid;
                 if(NS_SUCCEEDED(oldest->GetIID(&iid))) 
                 {
-                    isISupportsDescendent = iid->Equals(nsISupports::GetIID());
+                    isISupportsDescendent = iid->Equals(nsCOMTypeInfo<nsISupports>::GetIID());
                     nsAllocator::Free(iid);
                 }
                 NS_RELEASE(oldest);
@@ -245,7 +245,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
                                           REFNSIID aIID,
                                           void** aInstancePtr)
 {
-    if(aIID.Equals(nsISupports::GetIID()))
+    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
     {
         nsProxyEventObject* root = self->GetRootProxyObject();
         *aInstancePtr = (void*) root;
@@ -280,7 +280,7 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
 nsProxyEventObject*
 nsProxyEventClass::GetRootProxyObject(nsProxyEventObject* anObject)
 {
-    nsProxyEventObject* result = CallQueryInterfaceOnProxy(anObject, nsISupports::GetIID());
+    nsProxyEventObject* result = CallQueryInterfaceOnProxy(anObject, nsCOMTypeInfo<nsISupports>::GetIID());
     return result ? result : anObject;
 }
 

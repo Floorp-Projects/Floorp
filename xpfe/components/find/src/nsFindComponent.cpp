@@ -738,6 +738,6 @@ nsFindComponent::ResetContext( nsISupports *aContext,
 }
 
 // nsFindComponent::Context implementation...
-NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsISupports::GetIID() )
+NS_IMPL_ISUPPORTS( nsFindComponent::Context, nsCOMTypeInfo<nsISupports>::GetIID() )
 
 NS_IMPL_IAPPSHELLCOMPONENT( nsFindComponent, nsIFindComponent, NS_IFINDCOMPONENT_PROGID )

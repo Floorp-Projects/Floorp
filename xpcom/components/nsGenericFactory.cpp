@@ -37,7 +37,7 @@ NS_METHOD nsGenericFactory::QueryInterface(const nsIID& aIID, void** aInstancePt
     }                                                                      
     if (aIID.Equals(nsIGenericFactory::GetIID()) ||
         aIID.Equals(nsIFactory::GetIID()) ||
-    	aIID.Equals(nsISupports::GetIID())) {
+    	aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aInstancePtr = (nsIGenericFactory*) this;
         NS_ADDREF_THIS();
         return NS_OK; 

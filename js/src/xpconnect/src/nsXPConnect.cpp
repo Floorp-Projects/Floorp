@@ -144,7 +144,7 @@ nsXPConnect::IsISupportsDescendent(nsIInterfaceInfo* info)
     nsID* iid;
     if(NS_SUCCEEDED(oldest->GetIID(&iid)))
     {
-        retval = iid->Equals(nsISupports::GetIID());
+        retval = iid->Equals(nsCOMTypeInfo<nsISupports>::GetIID());
         nsAllocator::Free(iid);
     }
     NS_RELEASE(oldest);

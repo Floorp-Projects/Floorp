@@ -2361,7 +2361,7 @@ nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupT
                 (void)infoList->CurrentItem(&hostInfoSupports);
                 
 				nsIMsgFolder *groupInHostInfo=nsnull;
-                rv = hostInfoSupports->QueryInterface(::nsISupports::GetIID(),
+                rv = hostInfoSupports->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
                                                       (void **)&groupInHostInfo);
 #endif
 #ifdef HAVE_PANE
@@ -2387,7 +2387,7 @@ nsNNTPHost::ReorderGroup(nsINNTPNewsgroup *groupToMove, nsINNTPNewsgroup *groupT
 			{
 				m_groups->InsertElementAt(groupToMove, idxInData); // the index has to be the same, right?
                 nsISupports* groupSupports;
-                groupToMove->QueryInterface(::nsISupports::GetIID(),
+                groupToMove->QueryInterface(nsCOMTypeInfo<nsISupports>::GetIID(),
                                             (void **)&groupSupports);
 //XXX				infoList->InsertElementAt(groupSupports, idxInHostInfo);
                 NS_RELEASE(groupSupports);
