@@ -78,7 +78,7 @@ function getBestIdentity(identities, optionalHint)
     var tempID;
     for (id = 0; id < identities.Count(); id++) { 
       tempID = identities.GetElementAt(id).QueryInterface(Components.interfaces.nsIMsgIdentity);
-      if (optionalHint.search(tempID.email) >= 0) {
+      if (optionalHint.search(tempID.email.toLowerCase()) >= 0) {
         identity = tempID;
         break;
       }
@@ -99,7 +99,7 @@ function getBestIdentity(identities, optionalHint)
         // extract out the partial domain
         var start = tempID.email.lastIndexOf("@"); // be sure to include the @ sign in our search to reduce the risk of false positives
   
-        if (optionalHint.search(tempID.email.slice(start, tempID.email.length)) >= 0) {
+        if (optionalHint.search(tempID.email.slice(start, tempID.email.length).toLowerCase()) >= 0) {
           identity = tempID;
           break;
         }
