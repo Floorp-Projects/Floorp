@@ -464,7 +464,6 @@ NS_IMETHODIMP
 EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 			   const PRUnichar *aTipText)
 {
-#if 0
   nsAutoString tipText ( aTipText );
   const char* tipString = ToNewCString(tipText), *font = "TextFont08";
   PtArg_t args[10];
@@ -493,7 +492,7 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
   PtSetArg(&args[n++], Pt_ARG_POS, &pos, 0);
   PtSetArg(&args[n++], Pt_ARG_DIM, &dim, 0);
 	PtSetArg( &args[n++], Pt_ARG_REGION_OPAQUE,   Ph_EV_EXPOSE, Ph_EV_EXPOSE);
-  sTipWindow = PtCreateWidget(PtRegion, window, n, args);
+  sTipWindow = PtCreateWidget(PtRegion, Pt_NO_PARENT, n, args);
 
   n = 0;
   pos.x = pos.y = 0;
@@ -513,7 +512,6 @@ EmbedWindow::OnShowTooltip(PRInt32 aXCoords, PRInt32 aYCoords,
 
   nsMemory::Free( (void*)tipString );
 
-#endif
   return NS_OK;
 }
 
