@@ -1313,7 +1313,7 @@ function ClearAttachmentMenu(popup)
 { 
   if ( popup ) 
   { 
-     while ( popup.childNodes.length > 2 ) 
+     while ( popup.childNodes[0].localName == 'menu' )
        popup.removeChild(popup.childNodes[0]); 
   } 
 }
