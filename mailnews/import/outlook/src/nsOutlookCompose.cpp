@@ -38,6 +38,8 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgAccountManager.h"
 
+#include "nsNetCID.h"
+
 #include "nsOutlookCompose.h"
 
 #include "OutlookDebugLog.h"
