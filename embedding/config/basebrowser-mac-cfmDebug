@@ -235,7 +235,6 @@ Components:nsIStringBundle.xpt
 
 ; required prefs files
 defaults:pref:all.js
-defaults:pref:initpref.js
 defaults:pref:macprefs.js
 
 ; uriloader

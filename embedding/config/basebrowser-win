@@ -252,7 +252,6 @@ components\strres.dll
 
 ; required prefs files
 defaults\pref\all.js
-defaults\pref\initpref.js
 defaults\pref\winpref.js
 
 ; uriloader
