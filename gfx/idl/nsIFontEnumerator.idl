@@ -52,4 +52,10 @@ interface nsIFontEnumerator : nsISupports
     @return bool do we have a font for this language group
    */
   void HaveFontFor(in string aLangGroup, [retval] out boolean aResult);
+
+  /* 
+   * update the global font list
+   * @param None
+   */
+  void UpdateFontList();
 };

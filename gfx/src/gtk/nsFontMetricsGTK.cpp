@@ -3817,3 +3817,9 @@ nsFontEnumeratorGTK::HaveFontFor(const char* aLangGroup, PRBool* aResult)
   // Finish me - ftang
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFontEnumeratorGTK::UpdateFontList()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

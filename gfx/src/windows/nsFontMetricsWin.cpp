@@ -93,6 +93,7 @@ static void GenerateMultiByte(nsCharSetInfo* aSelf);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+static int gInitializedGlobalFonts = 0;
 PRUint32* nsFontMetricsWin::gEmptyMap = nsnull;
 
 nsGlobalFont* nsFontMetricsWin::gGlobalFonts = nsnull;
@@ -191,7 +192,6 @@ FreeGlobals(void)
   }
 
   if (nsFontMetricsWin::gGlobalFonts) {
-    //while all cmap is freed, gGlobalFonts's pointer should be freed
     for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
       delete nsFontMetricsWin::gGlobalFonts[i].name;
     }
@@ -2065,7 +2065,6 @@ CompareGlobalFonts(const void* aArg1, const void* aArg2, void* aClosure)
 nsGlobalFont*
 nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
 {
-  static int gInitializedGlobalFonts = 0;
   if (!gInitializedGlobalFonts) {
     gInitializedGlobalFonts = 1;
     LOGFONT logFont;
@@ -4703,5 +4702,31 @@ nsFontEnumeratorWin::HaveFontFor(const char* aLangGroup, PRBool* aResult)
        return NS_OK;
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsFontEnumeratorWin::UpdateFontList()
+{
+  // delete gGlobalFont
+  if (nsFontMetricsWin::gGlobalFonts) {
+    for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
+      delete nsFontMetricsWin::gGlobalFonts[i].name;
+    }
+    PR_Free(nsFontMetricsWin::gGlobalFonts);
+    nsFontMetricsWin::gGlobalFonts = nsnull;
+    gGlobalFontsAlloc = 0;
+    nsFontMetricsWin::gGlobalFontsCount = 0;
+    gInitializedGlobalFonts = 0;
+  }
+
+  // reconstruct gGlobalFont
+  HDC dc = ::GetDC(nsnull);
+  if (!nsFontMetricsWin::InitializeGlobalFonts(dc)) {
+    ::ReleaseDC(nsnull, dc);
+    return NS_ERROR_FAILURE;
+  }
+  ::ReleaseDC(nsnull, dc);
+  
   return NS_OK;
 }

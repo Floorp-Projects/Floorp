@@ -2122,3 +2122,10 @@ nsFontEnumeratorQT::HaveFontFor(const char *aLangGroup,PRBool *aResult)
   // Finish me
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsFontEnumeratorQT::UpdateFontList()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
