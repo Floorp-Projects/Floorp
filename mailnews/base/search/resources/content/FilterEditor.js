@@ -25,6 +25,7 @@
 var gFilter;
 
 // cache the key elements we need
+var gFilterList;
 var gFilterNameElement;
 var gActionElement;
 var gActionTargetElement;
@@ -43,9 +44,9 @@ function filterEditorOnLoad()
 
     Bundle = srGetStrBundle("chrome://messenger/locale/filter.properties");
     
-    if (window.arguments && window.arguments[0]) {
+    if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
-        if (args.filter) {
+        if ("filter" in args) {
             gFilter = window.arguments[0].filter;
 
             initializeDialog(gFilter);
@@ -96,32 +97,20 @@ function onOk()
 function isDuplicateFilterNameExists()
 {
     var args = window.arguments[0];
-    var myFilterList = args.filterList;
-    var numOfFilters;
-
+    var myFilterList;
     var filterName= gFilterNameElement.value;
-    var currentFilter;
-    var alreadyExists = false;
-	if (myFilterList) 
-	{
-		numOfFilters = myFilterList.filterCount;
-	} 
-	else 
-		return false;
 
-    for (var i = 0; i < numOfFilters; i++)
-    {
-        currentFilter = (myFilterList.getFilterAt(i)).filterName;
-        if (filterName == currentFilter)
+    if ("filterList" in args)
+        myFilterList = args.filterList;
+
+    if (myFilterList) {
+        for (var i = 0; i < myFilterList.filterCount; i++)
         {
-            alreadyExists = true;
-            break;
+            if (filterName == myFilterList.getFilterAt(i).filterName)
+                return true;
         }
     }
 
-    if (alreadyExists)
-        return true;
-    else
         return false;
 }
 
@@ -156,7 +145,7 @@ function initializeDialog(filter)
     showActionElementFor(gActionElement.selectedItem);
 
     if (filter.action == nsMsgFilterAction.MoveToFolder) {
-        dump("pre-selecting target folder: " + filter.actionTargetFolderUri + "\n");
+        // preselect target folder
         // there are multiple sub-items that have given attribute
         var targets = gActionTargetElement.getElementsByAttribute("data", filter.actionTargetFolderUri);
 
@@ -168,7 +157,7 @@ function initializeDialog(filter)
 						}
         }
     } else if (filter.action == nsMsgFilterAction.ChangePriority) {
-        dump("initializing priority..\n");
+        // initialize priority
         selectedPriority = gActionPriority.getElementsByAttribute("data", filter.actionPriority);
 
         if (selectedPriority && selectedPriority.length > 0) {
@@ -190,7 +179,6 @@ function initializeDialog(filter)
 // move to overlay
 
 function saveFilter() {
-
     var isNewFilter;
 		var str;
 
@@ -202,15 +190,12 @@ function saveFilter() {
         return false;
     }
 
-
     var targetUri;
     var action = gActionElement.selectedItem.getAttribute("data");
-    dump("Action = " + action + "\n");
     
     if (action == nsMsgFilterAction.MoveToFolder) {
         if (gActionTargetElement)
             targetUri = gActionTargetElement.selectedItem.getAttribute("data");
-        //dump("folder target = " + gActionTargetElement.selectedItem + "\n");
         if (!targetUri || targetUri == "") {
             str = Bundle.GetStringFromName("mustSelectFolder");
             window.alert(str);
@@ -245,7 +230,7 @@ function saveFilter() {
     saveSearchTerms(gFilter.searchTerms, gFilter);
     
     if (isNewFilter) {
-        dump("new filter.. inserting into " + gFilterList + "\n");
+        // new filter - insert into gFilterList
         gFilterList.insertFilterAt(0, gFilter);
     }
 
@@ -268,6 +253,5 @@ function onActionChanged(event)
 function showActionElementFor(menuitem)
 {
     if (!menuitem) return;
-    dump("showActionElementFor(" + menuitem.getAttribute("actionvalueindex") + ")\n");
     gActionValueDeck.setAttribute("index", menuitem.getAttribute("actionvalueindex"));
 }
