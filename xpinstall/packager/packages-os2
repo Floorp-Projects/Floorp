@@ -281,7 +281,6 @@ bin/chrome/help.jar
 bin/chrome/comm.jar
 bin/chrome/content-packs.jar
 bin/chrome/toolkit.jar
-bin/chrome/forms.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/chromelist.txt

@@ -609,7 +609,6 @@ sub ProcessJarManifests()
     CreateJarFromManifest(":mozilla:extensions:wallet:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:intl:uconv:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:htmlparser:src:jar.mn", $chrome_dir, \%jars);
-    CreateJarFromManifest(":mozilla:layout:html:forms:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:document:src:xbl-marquee:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:forms:src:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:layout:html:base:src:jar.mn", $chrome_dir, \%jars);
