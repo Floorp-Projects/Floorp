@@ -43,16 +43,17 @@ function Startup()
   dialog.heightInput.value = hLineElement.getAttribute("height");
   width = hLineElement.getAttribute("width");
 
-  // This assumes initial button text is "pixels"
+  // This assumes initial button text is "percent"
   // Search for a "%" character
   percentIndex = width.search(/%/);
   if (percentIndex > 0) {
-//TODO: Change the text on the titledbutton - HOW DO I DO THIS?
-//    dialog.pixelOrPercentButton.value = "percent";
     percentChar = "%";
     // Strip out the %
     width = width.substr(0, percentIndex);
+  } else {
+    dialog.pixelOrPercentButton.setAttribute("value","pixels");
   }
+
   dialog.widthInput.value = width;
 
   align = hLineElement.getAttribute("align");
@@ -77,10 +78,10 @@ function SetPixelOrPercent(percentString)
   dump("SetPixelOrPercent. PercentChar="+percentChar+"\n");
 
   if (percentChar == "%") {
-//    dialog.pixelOrPercentButton.value = "percent";
+    dialog.pixelOrPercentButton.setAttribute("value","percent");
     dump("TODO: Set button text to PERCENT\n");
   } else {
-//    dialog.pixelOrPercentButton.value = "pixels";
+    dialog.pixelOrPercentButton.setAttribute("value","pixels");
     dump("TODO: Set button text to PIXELS\n");
   }
   
@@ -108,6 +109,7 @@ function ValidateData()
     dialog.heightInput.focus();
     return false;
   }
+  dump("Setting height="+height+"\n");
   hLineElement.setAttribute("height", height);
 
   var maxLimit;
@@ -144,8 +146,11 @@ function ValidateData()
   return true;
 }
 
-function OnOK()
+function onOK()
 {
+  // Since we only edit existing HLines, 
+  //  ValidateData will set the new attributes
+  //   so there's nothing else to do
   if (ValidateData()) {
     window.close();
     dump("CLOSING EdHLineProps\n");

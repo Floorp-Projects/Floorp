@@ -142,3 +142,6 @@ input[type="file"] {
   font-size: 8pt;
 }
 
+titledbutton.PixelOrPercent {
+  min-width: 7em;
+}
