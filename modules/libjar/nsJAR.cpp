@@ -1167,15 +1167,15 @@ nsZipReaderCache::nsZipReaderCache()
 NS_IMETHODIMP
 nsZipReaderCache::Init(PRUint32 cacheSize)
 {
-  nsresult rv;
   mCacheSize = cacheSize; 
   
 // Register as a memory pressure observer 
   nsCOMPtr<nsIObserverService> os = 
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (NS_SUCCEEDED(rv))   
+           do_GetService("@mozilla.org/observer-service;1");
+  if (os)
   {
-    rv = os->AddObserver(this, "memory-pressure", PR_TRUE);
+    os->AddObserver(this, "memory-pressure", PR_TRUE);
+    os->AddObserver(this, "chrome-flush-caches", PR_TRUE);
   }
 // ignore failure of the observer registration.
 
@@ -1369,7 +1369,7 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
                           const char *aTopic, 
                           const PRUnichar *aSomeData)
 {
-  if (nsCRT::strcmp(aTopic, "memory-pressure") == 0) {
+  if (strcmp(aTopic, "memory-pressure") == 0) {
     nsAutoLock lock(mLock);
     while (PR_TRUE) {
       nsHashKey* flushable = nsnull;
@@ -1383,7 +1383,11 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
       printf("flushed something from the jar cache\n");
 #endif
     }
-  }  
+  }
+  else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
+    mZips.Enumerate(DropZipReaderCache, nsnull);
+    mZips.Reset();
+  }
   return NS_OK;
 }
 
