@@ -28,6 +28,7 @@
 #include "MRJContext.h"
 #include "MRJFrame.h"
 #include "MRJConsole.h"
+#include "EmbeddedFramePluginInstance.h"
 
 #include "nsIServiceManager.h"
 #include "nsIAllocator.h"
@@ -187,6 +188,21 @@ NS_METHOD MRJPlugin::CreateInstance(nsISupports *aOuter, const nsIID& aIID, void
 		return NS_ERROR_FAILURE;
 	}
 	return NS_NOINTERFACE;
+}
+
+NS_METHOD MRJPlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, const char* aPluginMIMEType, void **aResult)
+{
+	nsresult result = NS_NOINTERFACE;
+	if (::strcmp(aPluginMIMEType, NS_JVM_MIME_TYPE) == 0)
+		result = CreateInstance(aOuter, aIID, aResult);
+	else if (::strcmp(aPluginMIMEType, "application/x-java-frame") == 0) {
+		// create a special plugin instance that manages an embedded frame.
+		EmbeddedFramePluginInstance* instance = new EmbeddedFramePluginInstance();
+		nsresult result = instance->QueryInterface(aIID, aResult);
+		if (result != NS_OK)
+			delete instance;
+	}
+	return result;
 }
 
 NS_METHOD MRJPlugin::Initialize()
