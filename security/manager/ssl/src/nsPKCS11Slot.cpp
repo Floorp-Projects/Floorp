@@ -347,3 +347,32 @@ nsPKCS11ModuleDB::ListModules(nsIEnumerator **_retval)
   return rv;
 }
 
+/* void toggleFIPSMode (); */
+NS_IMETHODIMP nsPKCS11ModuleDB::ToggleFIPSMode()
+{
+  // The way to toggle FIPS mode in NSS is extremely obscure.
+  // Basically, we delete the internal module, and voila it
+  // gets replaced with the opposite module, ie if it was 
+  // FIPS before, then it becomes non-FIPS next.
+  SECMODModule *internal;
+
+  // This function returns us a pointer to a local copy of 
+  // the internal module stashed in NSS.  We don't want to
+  // delete it since it will cause much pain in NSS.
+  internal = SECMOD_GetInternalModule();
+  if (!internal)
+    return NS_ERROR_FAILURE;
+
+  SECStatus srv = SECMOD_DeleteInternalModule(internal->commonName);
+  if (srv != SECSuccess)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+/* readonly attribute boolean isFIPSEnabled; */
+NS_IMETHODIMP nsPKCS11ModuleDB::GetIsFIPSEnabled(PRBool *aIsFIPSEnabled)
+{
+  *aIsFIPSEnabled = PK11_IsFIPS();
+  return NS_OK;
+}

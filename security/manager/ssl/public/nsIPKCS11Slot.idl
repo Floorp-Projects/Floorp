@@ -94,5 +94,8 @@ interface nsIPKCS11ModuleDB : nsISupports
 
   nsIEnumerator listModules();
 
+  void toggleFIPSMode();
+
+  readonly attribute boolean isFIPSEnabled;
 };
 

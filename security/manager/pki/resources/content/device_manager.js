@@ -71,6 +71,20 @@ function LoadModules()
       modules.next();
     } catch (e) { done = true; }
   }
+  /* Set the text on the fips button */
+  SetFIPSButtonText();
+}
+
+function SetFIPSButtonText()
+{
+  var fipsButton = document.getElementById("fipsbutton");
+  var label;
+  if (secmoddb.isFIPSEnabled) {
+   label = bundle.GetStringFromName("disable_fips"); 
+  } else {
+   label = bundle.GetStringFromName("enable_fips"); 
+  }
+  fipsButton.setAttribute("label", label);
 }
 
 /* Add a module to the tree.  slots is the array of slots in the module,
@@ -350,4 +364,16 @@ function showTokenInfo()
              selected_token.tokenHWVersion, "tok_hwv");
   AddInfoRow(bundle.GetStringFromName("devinfo_fwversion"),
              selected_token.tokenFWVersion, "tok_fwv");
+}
+
+function toggleFIPS()
+{
+  secmoddb.toggleFIPSMode();
+  //Remove the existing listed modules so that re-fresh doesn't 
+  //display the module that just changed.
+  var device_list = document.getElementById("device_list");
+  while (device_list.firstChild)
+    device_list.removeChild(device_list.firstChild);
+
+  LoadModules();
 }
