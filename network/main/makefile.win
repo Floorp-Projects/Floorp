@@ -44,7 +44,6 @@ OBJS=   \
 	.\$(OBJDIR)\jscookie.obj	\
 	.\$(OBJDIR)\mkautocf.obj	\
 	.\$(OBJDIR)\mkconect.obj	\
-	.\$(OBJDIR)\mkformat.obj	\
 	.\$(OBJDIR)\mkfsort.obj		\
 	.\$(OBJDIR)\mkhelp.obj		\
 	.\$(OBJDIR)\mkinit.obj		\
@@ -100,7 +99,6 @@ EXTRA_LIBS=
 
 REQUIRES= foo parse jtools java zlib nspr dbm util network js security
 EXPORTS= mkstream.h \
-	 mkformat.h \
 	 mkparse.h \
 	 mkfsort.h \
 	 mksort.h \

@@ -28,6 +28,7 @@ DEPTH=..
 
 DIRS= \
 	main \
+	mimetype \
 	cache \
 	protocol \
 	cnvts \

@@ -41,7 +41,7 @@ MISCDEP=$(LLIBS)
 OBJS=   \
 	.\$(OBJDIR)\mkfile.obj		\
 	$(NULL)
-	
+
 
 CSRCS =	\
 	mkfile.c	\
@@ -64,13 +64,15 @@ EXPORTS= fileurl.h
 # use LINCS on win32 for now since REQUIRES seems to be broken
 #!if "$(MOZ_BITS)" != "16"
 LINCS= \
-    -I$(XPDIST)\public\nspr2 	\
-    -I$(XPDIST)\public\util	\
-    -I$(XPDIST)\public\java	\
-    -I$(XPDIST)\public\pref	\
-    -I$(XPDIST)\public\js	\
-    -I$(XPDIST)\public\jtools   \
-    -I$(XPDIST)\public\network 
+    -I$(PUBLIC)\nspr2 	\
+    -I$(PUBLIC)\util	\
+    -I$(PUBLIC)\java	\
+    -I$(PUBLIC)\pref	\
+    -I$(PUBLIC)\js	\
+    -I$(PUBLIC)\jtools  \
+    -I$(PUBLIC)\network \
+    -I$(PUBLIC)\mimetype \
+    $(NULL)
 #!endif
 
 include <$(DEPTH)\config\rules.mak> 
