@@ -905,8 +905,8 @@ function AttachFile()
 	// Get a local file, converted into URL format
 	try {
 		var filePicker = Components.classes["component://netscape/filespecwithui"].createInstance();
-                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);     
-		currentAttachment = filePicker.chooseFile(Bundle.GetStringFromName("&chooseFileToAttach;"));
+    filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+		currentAttachment = filePicker.chooseFile(Bundle.GetStringFromName("chooseFileToAttach"));
 	}
 	catch (ex) {
 		dump("failed to get the local file to attach\n");
