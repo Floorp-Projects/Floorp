@@ -108,6 +108,16 @@ def get_credentials(bugzilla):
         error("missing .netrc file %s" % str(e).split()[-1])
     ret = credentials.authenticators(authenticate_on)
     if not ret:
+        # Okay, the literal string passed in failed. Just to make sure,
+        # try adding/removing a slash after the address and looking
+        # again. We don't know what format was used in .netrc, which is
+        # why this rather hackish approach is necessary.
+        if bugzilla[-1] == "/":
+            authenticate_on = '"' + bugzilla[:-1] + '"'
+        else:
+            authenticate_on = '"' + bugzilla + '/"'
+        ret = credentials.authenticators(authenticate_on)
+    if not ret:
         # Apparently, an invalid machine URL will cause credentials == None
         error("no credentials for Bugzilla instance at %s" % bugzilla)
     return ret
