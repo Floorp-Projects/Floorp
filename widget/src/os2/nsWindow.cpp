@@ -3269,8 +3269,12 @@ NS_METHOD nsWindow::SetTitle(const nsString& aTitle)
            title[outlen] = '\0';
          }
        }
-       WinSetWindowText( GetMainWindow(),
-                        title );
+       if (mFrameWnd) {
+         HWND hwndTitleBar = (HWND)WinQueryProperty(mFrameWnd, "hwndTitleBar");
+         WinSetWindowText( hwndTitleBar, title );
+       } else {
+         WinSetWindowText( mWnd, title );
+       }
        delete [] title;
      }
    }
