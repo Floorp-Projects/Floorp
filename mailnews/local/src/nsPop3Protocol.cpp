@@ -642,9 +642,12 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
         m_pop3Server->GetLimitMessageSize(&limitMessageSize);
         if (limitMessageSize)
         {
-            m_pop3Server->GetMaxMessageSize(&m_pop3ConData->size_limit);
-            if (m_pop3ConData->size_limit == 0) // default value
+            PRInt32 max_size = 0;
+            m_pop3Server->GetMaxMessageSize(&max_size);
+            if (max_size == 0) // default value
                 m_pop3ConData->size_limit = 50 * 1024;
+            else
+                m_pop3ConData->size_limit = max_size * 1024;
         }
 	}
 
