@@ -1129,6 +1129,25 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext& aPresContext)
   }
 }
 
+void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext& aPresContext, nsIFrame* aNextSibling)
+{
+  nsIFrame* currFrame = aNextSibling;
+
+  if(aNextSibling == mTopFrame)
+    mTopFrame = nsnull;
+
+  while (currFrame) {
+    nsIFrame* nextFrame;
+    currFrame->GetNextSibling(&nextFrame);
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, currFrame);
+    mFrames.DestroyFrame(aPresContext, currFrame);
+    currFrame = nextFrame;
+    //printf("Nuked one off the end.\n");
+  }
+  OnContentAdded(aPresContext);
+	
+}
+
 void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext, 
                                            nsIFrame* aChildFrame)
 {
