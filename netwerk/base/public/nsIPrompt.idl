@@ -46,21 +46,6 @@ interface nsIPrompt : nsISupports
                          out boolean checkValue);
 
     /**
-     * Puts up a dialog with Yes and No buttons.
-     * @return true for OK, false for Cancel
-     */
-    boolean confirmYN(in wstring text);
-
-    /**
-     * Puts up a dialog with Yes and No buttons, and
-     * a message with a single checkbox.
-     * @return true for OK, false for Cancel
-     */
-    boolean confirmCheckYN(in wstring text,
-                         in wstring checkMsg,
-                         out boolean checkValue);
-
-    /**
      * Puts up a text input dialog with OK and Cancel buttons.
      * @return true for OK, false for Cancel
      */
@@ -91,4 +76,30 @@ interface nsIPrompt : nsISupports
     				 in  PRUint32 inCount,
     				 [array,size_is(inCount) ] in string inList, 
                      out long outSelection );    
+
+
+    /**
+     * Put up a universal dialog
+     */
+    void UniversalDialog
+      (in wstring inTitleMessage,
+      in wstring inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+      in wstring inMsg, /* main message for dialog */
+      in wstring inCheckboxMsg, /* message for checkbox */
+      in wstring inButton0Text, /* text for first button */
+      in wstring inButton1Text, /* text for second button */
+      in wstring inButton2Text, /* text for third button */
+      in wstring inButton3Text, /* text for fourth button */
+      in wstring inEditfield1Msg, /*message for first edit field */
+      in wstring inEditfield2Msg, /* message for second edit field */
+      inout wstring inoutEditfield1Value, /* initial and final value for first edit field */
+      inout wstring inoutEditfield2Value, /* initial and final value for second edit field */
+      in wstring inIConURL, /* url of icon to be displayed in dialog */
+      inout boolean inoutCheckboxState, /* initial and final state of checkbox */
+      in PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+      in PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+      in PRInt32 inEditField1Password, /* ??? */
+      out PRInt32 outButtonPressed); /* number of button that was pressed (0 to 3) */
+
+
 };

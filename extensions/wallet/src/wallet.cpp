@@ -722,25 +722,44 @@ Wallet_Confirm(PRUnichar * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_ConfirmYN(PRUnichar * szMessage)
-{
-  PRBool retval = PR_TRUE; /* default value */
-
+Wallet_ConfirmYN(PRUnichar * szMessage) {
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return retval;
+    return PR_FALSE;
   }
 
-  const nsString message = szMessage;
-  retval = PR_FALSE; /* in case user exits dialog by clicking X */
-#ifdef YN_DIALOGS_FIXED
-  res = dialog->ConfirmYN(message.GetUnicode(), &retval);
-#else
-  res = dialog->Confirm(message.GetUnicode(), &retval);
-#endif
-  return retval;
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * yes_string = Wallet_Localize("Yes");
+  PRUnichar * no_string = Wallet_Localize("No");
+  PRUnichar * confirm_string = Wallet_Localize("Confirm");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    confirm_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    NULL, /* This is the checkbox message */
+    yes_string, /* first button text */
+    no_string, /* second button text */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    NULL, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL, /* icon: question mark by default */
+    NULL, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    0, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(yes_string);
+  Recycle(no_string);
+  Recycle(confirm_string);
+  return (buttonPressed == 0);
 }
+
 
 PUBLIC PRInt32
 Wallet_3ButtonConfirm(PRUnichar * szMessage)
@@ -748,31 +767,49 @@ Wallet_3ButtonConfirm(PRUnichar * szMessage)
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
-    return 1; /* default value is yes */
+    return 0; /* default value is NO */
   }
 
-  const nsString message = szMessage;
-#ifdef YesNoNeverDialogExists
-  PRInt32 retval = 0; /* in case user exits dialog by clicking X */
-  res = dialog->3ButtonConfirm(message.GetUnicode(), &retval);
-  return retval;
-#else
-  PRBool retval = PR_TRUE; /* default value */
-#ifdef YN_DIALOGS_FIXED
-  res = dialog->ConfirmYN(message.GetUnicode(), &retval);
-#else
-  res = dialog->Confirm(message.GetUnicode(), &retval);
-#endif
-  if (retval) {
-    return 1; /* user said yes */
-  } 
-  const nsString message2 = "Remember this decision for this site?";
-  res = dialog->Confirm(message2.GetUnicode(), &retval);
-  if (retval) {
-    return -1; /* user said never */
+  PRInt32 buttonPressed = 1; /* default of NO if user exits dialog by clickin X */
+  PRUnichar * yes_string = Wallet_Localize("Yes");
+  PRUnichar * no_string = Wallet_Localize("No");
+  PRUnichar * never_string = Wallet_Localize("Never");
+  PRUnichar * confirm_string = Wallet_Localize("Confirm");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    confirm_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    NULL, /* This is the checkbox message */
+    yes_string, /* first button text */
+    no_string, /* second button text */
+    never_string, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    NULL, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    NULL, /* initial and final value of checkbox */
+    3, /* number of buttons */
+    0, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(yes_string);
+  Recycle(no_string);
+  Recycle(never_string);
+  Recycle(confirm_string);
+
+  if (buttonPressed == 0) {
+    return 1; /* YES button pressed */
+  } else if (buttonPressed == 1) {
+    return 0; /* NO button pressed */
+  } else if (buttonPressed == 2) {
+    return -1; /* NEVER button pressed */
+  } else {
+    return 0; /* should never happen */
   }
-  return 0; /* user said no */  
-#endif
 }
 
 PUBLIC void
@@ -790,93 +827,135 @@ Wallet_Alert(PRUnichar * szMessage)
 }
 
 PUBLIC PRBool
-Wallet_CheckConfirmYN(PRUnichar * szMessage, char * szCheckMessage, PRBool* checkValue)
-{
-  PRBool retval = PR_TRUE; /* default value */
-
+Wallet_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
     *checkValue = 0;
-    return retval;
+    return PR_FALSE;
   }
 
-  const nsString message = szMessage;
-  const nsString checkMessage = szCheckMessage;
-  retval = PR_FALSE; /* in case user exits dialog by clicking X */
-#ifdef YN_DIALOGS_FIXED
-  res = dialog->ConfirmCheckYN(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
-#else
-  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
-#endif
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * yes_string = Wallet_Localize("Yes");
+  PRUnichar * no_string = Wallet_Localize("No");
+  PRUnichar * confirm_string = Wallet_Localize("Confirm");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    confirm_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    szCheckMessage, /* This is the checkbox message */
+    yes_string, /* first button text */
+    no_string, /* second button text */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    NULL, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    0, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
   if (NS_FAILED(res)) {
     *checkValue = 0;
   }
   if (*checkValue!=0 && *checkValue!=1) {
     *checkValue = 0; /* this should never happen but it is happening!!! */
   }
-  return retval;
+  Recycle(yes_string);
+  Recycle(no_string);
+  Recycle(confirm_string);
+  return (buttonPressed == 0);
 }
 
-char * wallet_GetString(PRUnichar * szMessage)
+char * wallet_GetString(PRUnichar * szMessage, PRUnichar * szMessage1)
 {
   nsString password;
-  PRBool retval;
-
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
     return NULL;     // XXX should return the error
   }
 
-  const nsString message = szMessage;
-  PRUnichar* pwd;
-  retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->PromptPassword(message.GetUnicode(), nsnull /* window title */, &pwd, &retval);
+  PRUnichar* pwd = NULL;
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    NULL, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    szMessage1, /* first edit field label */
+    NULL, /* second edit field label */
+    &pwd, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    NULL, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    1, /* number of edit fields */
+    1, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+
   if (NS_FAILED(res)) {
     return NULL;
   }
   password = pwd;
   delete[] pwd;
 
-  if (retval) {
+  if (buttonPressed == 0) {
     return password.ToNewCString();
   } else {
     return NULL; /* user pressed cancel */
   }
 }
 
-char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRBool& matched)
+char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage1, PRUnichar * szMessage2, PRBool& matched)
 {
   nsString password, password2;
-  PRBool retval;
-
   nsresult res;  
   NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
   if (NS_FAILED(res)) {
     return NULL;     // XXX should return the error
   }
 
-  const nsString message = szMessage;
-  const nsString message2 = szMessage2;
-  PRUnichar* pwd;
-  PRUnichar* pwd2;
-  retval = PR_FALSE; /* in case user exits dialog by clicking X */
+  PRUnichar* pwd = NULL;
+  PRUnichar* pwd2 = NULL;
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * prompt_string = Wallet_Localize("PromptForPassword");
 
-#ifdef PROMPT_DOUBLE_PASSWORD
-  res = dialog->PromptDoublePassword
-    (message.GetUnicode(), message2.GetUnicode(), &pwd, &pwd2, &retval);
-#else
-  res = dialog->PromptPassword(message.GetUnicode(), nsnull /* window title */, &pwd, &retval);
-  if (NS_FAILED(res)) {
-    return NULL;
-  }
-  if (!retval) {
-    delete[] pwd;
-    return NULL; /* user pressed cancel */
-  }
-  res = dialog->PromptPassword(message2.GetUnicode(), nsnull /* window title */, &pwd2, &retval);
-#endif
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    prompt_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    NULL, /* This is the checkbox message */
+    NULL, /* first button text, becomes OK by default */
+    NULL, /* second button text, becomes CANCEL by default */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    szMessage1, /* first edit field label */
+    szMessage2, /* second edit field label */
+    &pwd, /* first edit field initial and final value */
+    &pwd2, /* second edit field initial and final value */
+    NULL,  /* icon: question mark by default */
+    NULL, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    2, /* number of edit fields */
+    1, /* is first edit field a password field */
+    &buttonPressed);
+
+  Recycle(prompt_string);
+
   if (NS_FAILED(res)) {
     return NULL;
   }
@@ -886,7 +965,7 @@ char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRB
   delete[] pwd2;
   matched = (password == password2);
 
-  if (retval) {
+  if (buttonPressed == 0) {
     return password.ToNewCString();
   } else {
     return NULL; /* user pressed cancel */
@@ -1233,11 +1312,12 @@ Wallet_SetKey(PRBool isNewkey) {
 
   if (Wallet_KeySize() < 0) { /* no key has yet been established */
     PRUnichar * message = Wallet_Localize("firstPassword");
+    PRUnichar * message1 = Wallet_Localize("enterPassword");
     PRUnichar * message2 = Wallet_Localize("confirmPassword");
     PRUnichar * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
     PRBool matched;
     for (;;) {
-      newkey = wallet_GetDoubleString(message, message2, matched);
+      newkey = wallet_GetDoubleString(message, message1, message2, matched);
       if ((newkey != NULL) && matched) {
         break; /* break out of loop if both passwords matched */
       }
@@ -1245,6 +1325,7 @@ Wallet_SetKey(PRBool isNewkey) {
       if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
         Recycle(mismatch);
         Recycle(message);
+        Recycle(message1);
         Recycle(message2);
         keyCancel = PR_TRUE;
         return FALSE; /* user does not want to try again */
@@ -1252,9 +1333,11 @@ Wallet_SetKey(PRBool isNewkey) {
     }
     PR_FREEIF(mismatch);
     PR_FREEIF(message);
+    Recycle(message1);
     PR_FREEIF(message2);
   } else { /* key has previously been established */
     PRUnichar * message;
+    PRUnichar * message1 = Wallet_Localize("enterPassword");
     PRUnichar * message2 = Wallet_Localize("confirmPassword");
     PRUnichar * mismatch = Wallet_Localize("confirmFailed_TryAgain?");
     PRBool matched;
@@ -1269,7 +1352,7 @@ Wallet_SetKey(PRBool isNewkey) {
     } else { /* ask the user for his key */
       if (isNewkey) { /* user is changing his password */
         for (;;) {
-          newkey = wallet_GetDoubleString(message, message2, matched);
+          newkey = wallet_GetDoubleString(message, message1, message2, matched);
           if ((newkey != NULL) && matched) {
             break; /* break out of loop if both passwords matched */
           }
@@ -1277,16 +1360,18 @@ Wallet_SetKey(PRBool isNewkey) {
           if ((newkey == NULL) || (!Wallet_Confirm(mismatch))) {
             Recycle(mismatch);
             Recycle(message);
+            Recycle(message1);
             Recycle(message2);
             keyCancel = PR_TRUE;
             return FALSE; /* user does not want to try again */
           }    
         }
       } else {
-        newkey = wallet_GetString(message);
+        newkey = wallet_GetString(message, message1);
       }
       if (newkey == NULL) {
         Recycle(message);
+        Recycle(message1);
         Recycle(message2);
         Recycle(mismatch);
         keyCancel = PR_TRUE;
@@ -1294,6 +1379,7 @@ Wallet_SetKey(PRBool isNewkey) {
       }
     }
     Recycle(message);
+    Recycle(message1);
     Recycle(message2);
     Recycle(mismatch);
   }

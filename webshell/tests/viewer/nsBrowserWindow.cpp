@@ -2191,26 +2191,10 @@ nsBrowserWindow::Confirm(const PRUnichar *text,
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::ConfirmYN(const PRUnichar *text,
-                           PRBool *result)
-{
-  return Confirm(text, result);
-}
-
-NS_IMETHODIMP
 nsBrowserWindow::ConfirmCheck(const PRUnichar *text,
                               const PRUnichar *checkMsg,
                               PRBool *checkValue,
                               PRBool *result)
-{
-  return Confirm(text, result);
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::ConfirmCheckYN(const PRUnichar *text,
-                         const PRUnichar *checkMsg,
-                         PRBool *checkValue,
-                         PRBool *result)
 {
   return Confirm(text, result);
 }
@@ -2296,6 +2280,34 @@ nsresult nsBrowserWindow::Select(const PRUnichar *, const PRUnichar *, PRUint32 
 {
 	return NS_OK;
 }
+
+NS_IMETHODIMP nsBrowserWindow::UniversalDialog
+	(const PRUnichar *inTitleMessage,
+	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+	const PRUnichar *inMsg, /* main message for dialog */
+	const PRUnichar *inCheckboxMsg, /* message for checkbox */
+	const PRUnichar *inButton0Text, /* text for first button */
+	const PRUnichar *inButton1Text, /* text for second button */
+	const PRUnichar *inButton2Text, /* text for third button */
+	const PRUnichar *inButton3Text, /* text for fourth button */
+	const PRUnichar *inEditfield1Msg, /*message for first edit field */
+	const PRUnichar *inEditfield2Msg, /* message for second edit field */
+	PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
+	PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
+	const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
+		/* examples are
+		   "chrome://global/skin/question-icon.gif" for question mark,
+		   "chrome://global/skin/alert-icon.gif" for exclamation mark
+		*/
+	PRBool *inoutCheckboxState, /* initial and final state of check box */
+	PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+	PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+	PRInt32 inEditField1Password, /* is first edit field a password field */
+	PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
+{
+	return NS_OK;
+}
+
 
 //----------------------------------------
 
