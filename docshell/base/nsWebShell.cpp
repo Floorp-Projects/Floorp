@@ -63,6 +63,7 @@ typedef unsigned long HMTX;
 #include "nsNetUtil.h"
 #include "nsIProtocolHandler.h"
 #include "nsIDNSService.h"
+#include "nsISocketProvider.h"
 #include "nsIRefreshURI.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
@@ -1233,6 +1234,23 @@ nsresult nsWebShell::EndPageLoad(nsIWebProgress *aProgress,
 
       nsXPIDLString messageStr;
       rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("redirectLoop").get(),
+                                           getter_Copies(messageStr));
+      if (NS_FAILED(rv)) return rv;
+
+      prompter->Alert(nsnull, messageStr);
+    }
+    else if (aStatus == NS_ERROR_UNKNOWN_SOCKET_TYPE) {
+      nsCOMPtr<nsIPrompt> prompter;
+      nsCOMPtr<nsIStringBundle> stringBundle;
+
+      rv = GetPromptAndStringBundle(getter_AddRefs(prompter),
+                                    getter_AddRefs(stringBundle));
+      if (!stringBundle) {
+        return rv;
+      }
+
+      nsXPIDLString messageStr;
+      rv = stringBundle->GetStringFromName(NS_LITERAL_STRING("unknownSocketType").get(),
                                            getter_Copies(messageStr));
       if (NS_FAILED(rv)) return rv;
 
