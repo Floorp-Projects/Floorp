@@ -421,12 +421,14 @@ nsWebShell::ReleaseChildren()
   mChildren.Clear();
 }
 
-NS_IMPL_ADDREF(nsWebShell)
-NS_IMPL_RELEASE(nsWebShell)
+NS_IMPL_THREADSAFE_ADDREF(nsWebShell)
+NS_IMPL_THREADSAFE_RELEASE(nsWebShell)
 
 nsresult
 nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+  nsresult rv = NS_NOINTERFACE;
+
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
@@ -472,10 +474,24 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (nsnull != mInnerWindow) {
-    return mInnerWindow->QueryInterface(aIID, aInstancePtr);
+
+#if defined(NS_DEBUG) 
+  /*
+   * Check for the debug-only interface indicating thread-safety
+   */
+  static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
+  if (aIID.Equals(kIsThreadsafeIID)) {
+    return NS_OK;
   }
-  return NS_NOINTERFACE;
+#endif /* NS_DEBUG */
+
+  NS_LOCK_INSTANCE();
+  if (nsnull != mInnerWindow) {
+    rv = mInnerWindow->QueryInterface(aIID, aInstancePtr);
+  }
+  NS_UNLOCK_INSTANCE();
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -1682,8 +1698,10 @@ nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
     /* Create the timer. */
     if (NS_OK == NS_NewTimer(&timer)) {
         /* Add the timer to our array. */
+        NS_LOCK_INSTANCE();
         mRefreshments.AppendElement(timer);
         timer->Init(nsWebShell::RefreshURLCallback, data, millis);
+        NS_UNLOCK_INSTANCE();
     }
 
     return NS_OK;
@@ -1691,12 +1709,15 @@ nsWebShell::RefreshURL(nsIURL* aURL, PRInt32 millis, PRBool repeat)
 
 NS_IMETHODIMP
 nsWebShell::CancelRefreshURLTimers(void) {
-    PRInt32 count = mRefreshments.Count();
+    PRInt32 count;
     PRInt32 tmp=0;
     nsITimer* timer;
     refreshData* data = nsnull;
 
     /* Right now all we can do is cancel all the timers for this webshell. */
+    NS_LOCK_INSTANCE();
+
+    count = mRefreshments.Count();
     while (tmp < count) {
         timer=(nsITimer*)mRefreshments.ElementAt(tmp);
         /* ditch the mem allocated in/to data */
@@ -1715,6 +1736,7 @@ nsWebShell::CancelRefreshURLTimers(void) {
         }
         tmp++;
     }
+    NS_UNLOCK_INSTANCE();
 
     return NS_OK;
 }
