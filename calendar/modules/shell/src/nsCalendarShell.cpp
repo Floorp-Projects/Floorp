@@ -486,17 +486,17 @@ nsresult nsCalendarShell::Logon()
         GetCAPIPassword(), 
         mCAPISession);
   
-  char* psHandle = mpLoggedInUser->GetUserName().GetBuffer();
+  JulianString sHandle = mpLoggedInUser->GetUserName();
   
   if (nsCurlParser::eCAPI == theURL.GetProtocol())
-
   {
     nsX400Parser x(theURL.GetExtra());
     x.Delete("ND");
-    x.GetValue(&psHandle);
+    x.GetValue(sHandle);
+    sHandle.Prepend(":");   // this is disgusting. we must get cst to fix this
   }
 
-  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,psHandle,0,&mCAPIHandle);
+  s = m_SessionMgr.GetAt(0L)->mCapi->CAPI_GetHandle(mCAPISession,sHandle.GetBuffer(),0,&mCAPIHandle);
 
   if (CAPI_ERR_OK != s)
     return NS_OK;
