@@ -435,7 +435,7 @@ nsRDFElement::GetTagName(nsString& aTagName)
 
 
 NS_IMETHODIMP
-nsRDFElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+nsRDFElement::GetAttribute(const nsString& aName, nsString& aReturn)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -443,7 +443,7 @@ nsRDFElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
 
 
 NS_IMETHODIMP
-nsRDFElement::SetDOMAttribute(const nsString& aName, const nsString& aValue)
+nsRDFElement::SetAttribute(const nsString& aName, const nsString& aValue)
 {
     PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -844,6 +844,25 @@ nsRDFElement::GetTag(nsIAtom*& aResult) const
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsRDFElement::ParseAttributeString(const nsString& aStr, 
+                                   nsIAtom*& aName, 
+                                   PRInt32& aNameSpaceID)
+{
+  // XXX Need to implement
+  aName = nsnull;
+  aNameSpaceID = kNameSpaceID_None;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFElement::GetNameSpacePrefix(PRInt32 aNameSpaceID, 
+                                 nsIAtom*& aPrefix)
+{
+  // XXX Need to implement
+  aPrefix = nsnull;
+  return NS_OK;
+}
 
 // XXX attribute code swiped from nsGenericContainerElement
 // this class could probably just use nsGenericContainerElement
@@ -1219,6 +1238,21 @@ nsRDFElement::GetRangeList(nsVoidArray*& aResult) const
 
 ////////////////////////////////////////////////////////////////////////
 // nsIXMLContent
+
+NS_IMETHODIMP 
+nsRDFElement::SetContainingNameSpace(nsINameSpace* aNameSpace)
+{
+  // XXX Need to implement
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsRDFElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
+{
+  // XXX Need to implement
+  aNameSpace = nsnull;  
+  return NS_OK;
+}
 
 NS_IMETHODIMP 
 nsRDFElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
