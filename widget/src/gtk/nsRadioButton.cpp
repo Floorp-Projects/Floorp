@@ -101,7 +101,7 @@ void nsRadioButton::InitCallbacks(char * aName)
   InstallButtonReleaseSignal(mRadioButton);
 
   // These are needed so that the events will go to us and not our parent.
-  AddToEventMask(mRadioButton,
+  AddToEventMask(mWidget,
                  GDK_BUTTON_PRESS_MASK |
                  GDK_BUTTON_RELEASE_MASK |
                  GDK_ENTER_NOTIFY_MASK |
