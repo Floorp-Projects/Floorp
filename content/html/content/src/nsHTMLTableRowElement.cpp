@@ -91,7 +91,7 @@ nsTableCellCollection::GetLength(PRUint32* aLength)
 
       if ((nsHTMLAtoms::td == childTag.get()) ||
           (nsHTMLAtoms::th == childTag.get())) {
-        *aLength++;
+        (*aLength)++;
       }
 
       childIndex++;
