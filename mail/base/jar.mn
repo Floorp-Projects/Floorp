@@ -46,8 +46,6 @@ messenger.jar:
 +    content/messenger/mailMessengerOverlay.xul                                 (content/mailMessengerOverlay.xul)
 +    content/messenger/mailMessengerComposeOverlay.xul                          (content/mailMessengerComposeOverlay.xul)
 +    content/messenger/mailWidgets.xml                                          (content/mailWidgets.xml)
-+    content/messenger/platformMailnewsOverlay.xul                              (content/win/platformMailnewsOverlay.xul)
-+    content/messenger/platformMailOverlay.xul                                  (content/win/platformMailOverlay.xul)
 +    content/messenger/mail-offline.js                                          (content/mail-offline.js)
  
 
