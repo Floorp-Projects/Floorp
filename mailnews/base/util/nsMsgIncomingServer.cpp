@@ -503,7 +503,7 @@ nsMsgIncomingServer::SetFileValue(const char* prefname,
   rv = NS_FileSpecToIFile(&tempSpec, getter_AddRefs(prefLocal));
   if (NS_FAILED(rv)) return rv;
 
-  rv = m_prefBranch->SetComplexValue(fullPrefName.get(), NS_GET_IID(nsIFileSpec),
+  rv = m_prefBranch->SetComplexValue(fullPrefName.get(), NS_GET_IID(nsILocalFile),
                                      prefLocal);
   if (NS_FAILED(rv)) return rv;
 
