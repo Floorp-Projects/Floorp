@@ -84,14 +84,14 @@ static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static const char *sJSStackContractID="@mozilla.org/js/xpc/ContextStack;1";
 
 /****************************************************************
- ************************* WindowInfo ***************************
+ ******************** nsWatcherWindowEntry **********************
  ****************************************************************/
 
 class nsWindowWatcher;
 
-struct WindowInfo {
+struct nsWatcherWindowEntry {
 
-  WindowInfo(nsIDOMWindow *inWindow, nsIWebBrowserChrome *inChrome) {
+  nsWatcherWindowEntry(nsIDOMWindow *inWindow, nsIWebBrowserChrome *inChrome) {
 #ifdef USEWEAKREFS
     mWindow = getter_AddRefs(NS_GetWeakReference(inWindow));
 #else
@@ -100,9 +100,9 @@ struct WindowInfo {
     mChrome = inChrome;
     ReferenceSelf();
   }
-  ~WindowInfo() {}
+  ~nsWatcherWindowEntry() {}
 
-  void InsertAfter(WindowInfo *inOlder);
+  void InsertAfter(nsWatcherWindowEntry *inOlder);
   void Unlink();
   void ReferenceSelf();
 
@@ -113,11 +113,11 @@ struct WindowInfo {
 #endif
   nsIWebBrowserChrome       *mChrome;
   // each struct is in a circular, doubly-linked list
-  WindowInfo                *mYounger, // next younger in sequence
+  nsWatcherWindowEntry      *mYounger, // next younger in sequence
                             *mOlder;
 };
 
-void WindowInfo::InsertAfter(WindowInfo *inOlder)
+void nsWatcherWindowEntry::InsertAfter(nsWatcherWindowEntry *inOlder)
 {
   if (inOlder) {
     mOlder = inOlder;
@@ -131,28 +131,28 @@ void WindowInfo::InsertAfter(WindowInfo *inOlder)
   }
 }
 
-void WindowInfo::Unlink() {
+void nsWatcherWindowEntry::Unlink() {
 
   mOlder->mYounger = mYounger;
   mYounger->mOlder = mOlder;
   ReferenceSelf();
 }
 
-void WindowInfo::ReferenceSelf() {
+void nsWatcherWindowEntry::ReferenceSelf() {
 
   mYounger = this;
   mOlder = this;
 }
 
 /****************************************************************
- ********************* nsWindowEnumerator ***********************
+ ****************** nsWatcherWindowEnumerator *******************
  ****************************************************************/
 
-class nsWindowEnumerator : public nsISimpleEnumerator {
+class nsWatcherWindowEnumerator : public nsISimpleEnumerator {
 
 public:
-  nsWindowEnumerator(nsWindowWatcher *inWatcher);
-  virtual ~nsWindowEnumerator();
+  nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher);
+  virtual ~nsWatcherWindowEnumerator();
   NS_IMETHOD HasMoreElements(PRBool *retval);
   NS_IMETHOD GetNext(nsISupports **retval);
 
@@ -161,18 +161,18 @@ public:
 private:
   friend class nsWindowWatcher;
 
-  WindowInfo *FindNext();
-  void WindowRemoved(WindowInfo *inInfo);
+  nsWatcherWindowEntry *FindNext();
+  void WindowRemoved(nsWatcherWindowEntry *inInfo);
 
-  nsWindowWatcher *mWindowWatcher;
-  WindowInfo      *mCurrentPosition;
+  nsWindowWatcher      *mWindowWatcher;
+  nsWatcherWindowEntry *mCurrentPosition;
 };
 
-NS_IMPL_ADDREF(nsWindowEnumerator);
-NS_IMPL_RELEASE(nsWindowEnumerator);
-NS_IMPL_QUERY_INTERFACE1(nsWindowEnumerator, nsISimpleEnumerator);
+NS_IMPL_ADDREF(nsWatcherWindowEnumerator);
+NS_IMPL_RELEASE(nsWatcherWindowEnumerator);
+NS_IMPL_QUERY_INTERFACE1(nsWatcherWindowEnumerator, nsISimpleEnumerator);
 
-nsWindowEnumerator::nsWindowEnumerator(nsWindowWatcher *inWatcher)
+nsWatcherWindowEnumerator::nsWatcherWindowEnumerator(nsWindowWatcher *inWatcher)
   : mWindowWatcher(inWatcher),
     mCurrentPosition(inWatcher->mOldestWindow)
 {
@@ -181,14 +181,14 @@ nsWindowEnumerator::nsWindowEnumerator(nsWindowWatcher *inWatcher)
   mWindowWatcher->AddRef();
 }
 
-nsWindowEnumerator::~nsWindowEnumerator()
+nsWatcherWindowEnumerator::~nsWatcherWindowEnumerator()
 {
   mWindowWatcher->RemoveEnumerator(this);
   mWindowWatcher->Release();
 }
 
 NS_IMETHODIMP
-nsWindowEnumerator::HasMoreElements(PRBool *retval)
+nsWatcherWindowEnumerator::HasMoreElements(PRBool *retval)
 {
   if (!retval)
     return NS_ERROR_INVALID_ARG;
@@ -198,7 +198,7 @@ nsWindowEnumerator::HasMoreElements(PRBool *retval)
 }
 	
 NS_IMETHODIMP
-nsWindowEnumerator::GetNext(nsISupports **retval)
+nsWatcherWindowEnumerator::GetNext(nsISupports **retval)
 {
   if (!retval)
     return NS_ERROR_INVALID_ARG;
@@ -224,10 +224,10 @@ nsWindowEnumerator::GetNext(nsISupports **retval)
   return NS_OK;
 }
 
-WindowInfo *
-nsWindowEnumerator::FindNext()
+nsWatcherWindowEntry *
+nsWatcherWindowEnumerator::FindNext()
 {
-  WindowInfo *info;
+  nsWatcherWindowEntry *info;
 
   if (!mCurrentPosition)
     return 0;
@@ -237,7 +237,7 @@ nsWindowEnumerator::FindNext()
 }
 
 // if a window is being removed adjust the iterator's current position
-void nsWindowEnumerator::WindowRemoved(WindowInfo *inInfo) {
+void nsWatcherWindowEnumerator::WindowRemoved(nsWatcherWindowEntry *inInfo) {
 
   if (mCurrentPosition == inInfo)
     mCurrentPosition = mCurrentPosition != inInfo->mYounger ?
@@ -746,7 +746,7 @@ nsWindowWatcher::GetWindowEnumerator(nsISimpleEnumerator** _retval)
     return NS_ERROR_INVALID_ARG;
 
   nsAutoLock lock(mListLock);
-  nsWindowEnumerator *enumerator = new nsWindowEnumerator(this);
+  nsWatcherWindowEnumerator *enumerator = new nsWatcherWindowEnumerator(this);
   if (enumerator)
     return CallQueryInterface(enumerator, _retval);
 
@@ -798,19 +798,19 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
 
-  WindowInfo *info;
+  nsWatcherWindowEntry *info;
   nsAutoLock lock(mListLock);
 
   // if we already have an entry for this window, adjust
   // its chrome mapping and return
-  info = FindWindowInfo(aWindow);
+  info = FindWindowEntry(aWindow);
   if (info) {
     info->mChrome = aChrome;
     return NS_OK;
   }
   
   // create a window info struct and add it to the list of windows
-  info = new WindowInfo(aWindow, aChrome);
+  info = new nsWatcherWindowEntry(aWindow, aChrome);
   if (!info)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -833,12 +833,12 @@ nsWindowWatcher::AddWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *aChrome)
 NS_IMETHODIMP
 nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
 {
-  // find the corresponding WindowInfo, remove it
+  // find the corresponding nsWatcherWindowEntry, remove it
 
   if (!aWindow)
     return NS_ERROR_INVALID_ARG;
 
-  WindowInfo *info = FindWindowInfo(aWindow);
+  nsWatcherWindowEntry *info = FindWindowEntry(aWindow);
   if (info) {
     RemoveWindow(info);
     return NS_OK;
@@ -847,12 +847,12 @@ nsWindowWatcher::RemoveWindow(nsIDOMWindow *aWindow)
   return NS_ERROR_INVALID_ARG;
 }
 
-WindowInfo *
-nsWindowWatcher::FindWindowInfo(nsIDOMWindow *aWindow)
+nsWatcherWindowEntry *
+nsWindowWatcher::FindWindowEntry(nsIDOMWindow *aWindow)
 {
-  // find the corresponding WindowInfo
-  WindowInfo *info,
-             *listEnd;
+  // find the corresponding nsWatcherWindowEntry
+  nsWatcherWindowEntry *info,
+                       *listEnd;
 #ifdef USEWEAKREFS
   nsresult    rv;
   PRBool      found;
@@ -885,7 +885,7 @@ nsWindowWatcher::FindWindowInfo(nsIDOMWindow *aWindow)
 #endif
 }
 
-nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
+nsresult nsWindowWatcher::RemoveWindow(nsWatcherWindowEntry *inInfo)
 {
   PRInt32  ctr,
            count = mEnumeratorList.Count();
@@ -895,7 +895,7 @@ nsresult nsWindowWatcher::RemoveWindow(WindowInfo *inInfo)
     // notify the enumerators
     nsAutoLock lock(mListLock);
     for (ctr = 0; ctr < count; ++ctr) 
-      ((nsWindowEnumerator*)mEnumeratorList[ctr])->WindowRemoved(inInfo);
+      ((nsWatcherWindowEnumerator*)mEnumeratorList[ctr])->WindowRemoved(inInfo);
 
     // remove the element from the list
     if (inInfo == mOldestWindow)
@@ -934,7 +934,7 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
   *_retval = 0;
 
   nsAutoLock lock(mListLock);
-  WindowInfo *info = FindWindowInfo(aWindow);
+  nsWatcherWindowEntry *info = FindWindowEntry(aWindow);
   if (info) {
     *_retval = info->mChrome;
     NS_IF_ADDREF(*_retval);
@@ -943,14 +943,14 @@ nsWindowWatcher::GetChromeForWindow(nsIDOMWindow *aWindow, nsIWebBrowserChrome *
 }
 
 PRBool
-nsWindowWatcher::AddEnumerator(nsWindowEnumerator* inEnumerator)
+nsWindowWatcher::AddEnumerator(nsWatcherWindowEnumerator* inEnumerator)
 {
   // (requires a lock; assumes it's called by someone holding the lock)
   return mEnumeratorList.AppendElement(inEnumerator);
 }
 
 PRBool
-nsWindowWatcher::RemoveEnumerator(nsWindowEnumerator* inEnumerator)
+nsWindowWatcher::RemoveEnumerator(nsWatcherWindowEnumerator* inEnumerator)
 {
   // (requires a lock; assumes it's called by someone holding the lock)
   return mEnumeratorList.RemoveElement(inEnumerator);
