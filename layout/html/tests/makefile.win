@@ -49,6 +49,7 @@ LLIBS=				\
  $(DIST)\lib\raptorhtmldoc_s.lib	\
  $(DIST)\lib\raptorhtmlstyle_s.lib	\
  $(DIST)\lib\raptorhtmltable_s.lib	\
+ $(DIST)\lib\raptorhtmlpars.lib	\
  $(DIST)\lib\raptorlayout_s.lib	\
  $(DIST)\lib\raptorgfxwin.lib	\
  $(DIST)\lib\raptorbase.lib	\
