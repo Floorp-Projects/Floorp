@@ -25,13 +25,17 @@
 
 #include "nsFormControlFrame.h"
 #include "nsHTMLButtonControlFrame.h"
+#include "nsCOMPtr.h"
+#include "nsIAnonymousContentCreator.h"
 
 // Class which implements the input[type=button, reset, submit] and
 // browse button for input[type=file].
 // The label for button is specified through generated content
 // in the ua.css file.
 
-class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame {
+class nsGfxButtonControlFrame : public nsHTMLButtonControlFrame,
+                                public nsIAnonymousContentCreator
+{
 public:
   nsGfxButtonControlFrame();
 
@@ -57,7 +61,13 @@ public:
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
+  NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
+
  
+  // nsIAnonymousContentCreator
+  NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
+                                    nsISupportsArray& aChildList);
+
 protected:
   NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
                                                    const nsHTMLReflowState& aSuggestedReflowState);
@@ -65,15 +75,26 @@ protected:
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus);
+  NS_IMETHOD GetDefaultLabel(nsString& aLabel);
+  NS_IMETHOD ButtonLocalize(char* aKey, nsString& oVal);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
+
 
   virtual PRBool IsReset(PRInt32 type);
   virtual PRBool IsSubmit(PRInt32 type);
+  virtual PRBool IsBrowse(PRInt32 type); // Browse button of file input
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
 
   nscoord mSuggestedWidth;
   nscoord mSuggestedHeight;
+  nsCOMPtr<nsITextContent> mTextContent;
+  nsString mUpdateValue;
 };
 
 
