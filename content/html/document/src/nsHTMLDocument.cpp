@@ -244,22 +244,22 @@ void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet
   }
 }
 
-nsresult
-nsHTMLDocument::CreateElement(nsString& aTagName, 
-                              nsIDOMAttributeList* aAttributes, 
-                              nsIDOMElement** aElement)
+NS_IMETHODIMP    
+nsHTMLDocument::CreateElement(const nsString& aTagName, 
+                              nsIDOMNamedNodeMap* aAttributes, 
+                              nsIDOMElement** aReturn)
 {
   nsIHTMLContent* content;
   nsresult rv = NS_CreateHTMLElement(&content, aTagName);
   if (NS_OK != rv) {
     return rv;
   }
-  rv = content->QueryInterface(kIDOMElementIID, (void**)aElement);
+  rv = content->QueryInterface(kIDOMElementIID, (void**)aReturn);
   return rv;
 }
 
-nsresult
-nsHTMLDocument::CreateTextNode(nsString &aData, nsIDOMText** aTextNode)
+NS_IMETHODIMP
+nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
 {
   nsIHTMLContent* text = nsnull;
   nsresult        rv = NS_NewHTMLText(&text, aData, aData.Length());

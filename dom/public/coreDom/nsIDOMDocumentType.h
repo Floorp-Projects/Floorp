@@ -17,40 +17,32 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMNodeIterator_h__
-#define nsIDOMNodeIterator_h__
+#ifndef nsIDOMDocumentType_h__
+#define nsIDOMDocumentType_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNodeIterator;
-class nsIDOMNode;
+class nsIDOMNamedNodeMap;
+class nsIDOMDocumentType;
 
-#define NS_IDOMNODEITERATOR_IID \
-{ 0x6f7652e9,  0xee43, 0x11d1, \
+#define NS_IDOMDOCUMENTTYPE_IID \
+{ 0x6f7652e6,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMNodeIterator : public nsISupports {
+class nsIDOMDocumentType : public nsISupports {
 public:
 
-  NS_IMETHOD    GetLength(PRUint32* aReturn)=0;
+  NS_IMETHOD    GetName(nsString& aName)=0;
+  NS_IMETHOD    SetName(const nsString& aName)=0;
 
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aReturn)=0;
-
-  NS_IMETHOD    GetNextNode(nsIDOMNode** aReturn)=0;
-
-  NS_IMETHOD    GetPreviousNode(nsIDOMNode** aReturn)=0;
-
-  NS_IMETHOD    ToFirst(nsIDOMNode** aReturn)=0;
-
-  NS_IMETHOD    ToLast(nsIDOMNode** aReturn)=0;
-
-  NS_IMETHOD    MoveTo(PRInt32 aN, nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetEntities(nsIDOMNamedNodeMap** aEntities)=0;
+  NS_IMETHOD    SetEntities(nsIDOMNamedNodeMap* aEntities)=0;
 };
 
-extern nsresult NS_InitNodeIteratorClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptNodeIterator(nsIScriptContext *aContext, nsIDOMNodeIterator *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDocumentType(nsIScriptContext *aContext, nsIDOMDocumentType *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMNodeIterator_h__
+#endif // nsIDOMDocumentType_h__

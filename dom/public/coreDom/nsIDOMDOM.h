@@ -28,19 +28,19 @@ class nsIDOMDocument;
 class nsIDOMDOM;
 
 #define NS_IDOMDOM_IID \
-{ 0x6f7652e6,  0xee43, 0x11d1, \
+{ 0x6f7652e7,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMDOM : public nsISupports {
 public:
 
-  NS_IMETHOD    CreateDocument(nsString& aType, nsIDOMDocument** aReturn)=0;
+  NS_IMETHOD    CreateDocument(const nsString& aType, nsIDOMDocument** aReturn)=0;
 
-  NS_IMETHOD    HasFeature(nsString& aFeature, PRBool* aReturn)=0;
+  NS_IMETHOD    HasFeature(const nsString& aFeature, PRBool* aReturn)=0;
 };
 
 extern nsresult NS_InitDOMClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptDOM(nsIScriptContext *aContext, nsIDOMDOM *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDOM(nsIScriptContext *aContext, nsIDOMDOM *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMDOM_h__

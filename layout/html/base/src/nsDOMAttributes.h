@@ -20,7 +20,7 @@
 #define nsDOMAttributes_h__
 
 #include "nsIDOMAttribute.h"
-#include "nsIDOMAttributeList.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsIScriptObjectOwner.h"
 
 class nsIContent;
@@ -28,7 +28,7 @@ class nsIHTMLContent;
 
 class nsDOMAttribute : public nsIDOMAttribute, public nsIScriptObjectOwner {
 public:
-  nsDOMAttribute(nsString &aName, nsString &aValue);
+  nsDOMAttribute(const nsString &aName, const nsString &aValue);
   virtual ~nsDOMAttribute();
 
   NS_DECL_ISUPPORTS
@@ -37,12 +37,29 @@ public:
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMAttribute interface
-  NS_IMETHOD GetName(nsString &aName);
-  NS_IMETHOD GetValue(nsString &aValue);
-  NS_IMETHOD SetValue(nsString &aValue);
-  NS_IMETHOD GetSpecified(PRBool *aSpecified);
-  NS_IMETHOD SetSpecified(PRBool specified);
-  NS_IMETHOD ToString(nsString &aString);
+  NS_IMETHOD    GetSpecified(PRBool* aSpecified);
+  NS_IMETHOD    SetSpecified(PRBool aSpecified);
+  NS_IMETHOD    GetName(nsString& aReturn);
+  NS_IMETHOD    GetValue(nsString& aReturn);
+
+  // nsIDOMNode interface
+  NS_IMETHOD    GetNodeName(nsString& aNodeName);
+  NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
+  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
+  NS_IMETHOD    GetNodeType(PRInt32* aNodeType);
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);
+  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
 
 private:
   nsString *mName;
@@ -51,22 +68,22 @@ private:
 };
 
 
-class nsDOMAttributeList : public nsIDOMAttributeList, public nsIScriptObjectOwner {
+class nsDOMAttributeMap : public nsIDOMNamedNodeMap, public nsIScriptObjectOwner {
 public:
-  nsDOMAttributeList(nsIHTMLContent &aContent);
-  virtual ~nsDOMAttributeList();
+  nsDOMAttributeMap(nsIHTMLContent &aContent);
+  virtual ~nsDOMAttributeMap();
 
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD ResetScriptObject();
 
-  // nsIDOMAttributeList interface
-  NS_IMETHOD GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute);
-  NS_IMETHOD SetAttribute(nsIDOMAttribute *aAttribute);
-  NS_IMETHOD Remove(nsString &attrName, nsIDOMAttribute** aAttribute);
-  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute);
-  NS_IMETHOD GetLength(PRUint32 *aLength);
+  // nsIDOMNamedNodeMap interface
+  NS_IMETHOD    GetLength(PRUint32* aSize);
+  NS_IMETHOD    GetNamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    SetNamedItem(nsIDOMNode* aNode);
+  NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
 private:
   nsIHTMLContent &mContent;

@@ -17,36 +17,26 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMAttributeList_h__
-#define nsIDOMAttributeList_h__
+#ifndef nsIDOMCDATASection_h__
+#define nsIDOMCDATASection_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMText.h"
 
-class nsIDOMAttributeList;
-class nsIDOMAttribute;
+class nsIDOMCDATASection;
 
-#define NS_IDOMATTRIBUTELIST_IID \
+#define NS_IDOMCDATASECTION_IID \
 { 0x6f7652e1,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMAttributeList : public nsISupports {
+class nsIDOMCDATASection : public nsIDOMText {
 public:
-
-  NS_IMETHOD    GetAttribute(nsString& aAttrName, nsIDOMAttribute** aReturn)=0;
-
-  NS_IMETHOD    SetAttribute(nsIDOMAttribute* aAttr)=0;
-
-  NS_IMETHOD    Remove(nsString& aAttrName, nsIDOMAttribute** aReturn)=0;
-
-  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMAttribute** aReturn)=0;
-
-  NS_IMETHOD    GetLength(PRUint32* aReturn)=0;
 };
 
-extern nsresult NS_InitAttributeListClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptAttributeList(nsIScriptContext *aContext, nsIDOMAttributeList *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptCDATASection(nsIScriptContext *aContext, nsIDOMCDATASection *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMAttributeList_h__
+#endif // nsIDOMCDATASection_h__

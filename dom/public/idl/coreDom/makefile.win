@@ -22,19 +22,22 @@ MODULE=raptor
 
 IDLSRCS =  \
 	Attribute.idl  \
-	AttributeList.idl \
+	CDATASection.idl \
 	Comment.idl \
+	Data.idl \
 	DOM.idl \
 	Document.idl \
-	DocumentContext.idl \
 	DocumentFragment.idl \
+	DocumentType.idl \
 	Element.idl \
+	NamedNodeMap.idl \
 	Node.idl \
-	NodeIterator.idl \
-	PI.idl \
-	Text.idl \
-        TreeIterator.idl
+	NodeList.idl \
+	ProcessingInstruction.idl \
+	Text.idl
 
+
+XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom
 JSSTUB_DESTDIR=$(DEPTH)\dom\src
 
 GENXDIR=genx
@@ -58,4 +61,5 @@ export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
 	$(IDLC) -d $(GENJSDIR) -j $(IDLSRCS)
 
 install::
+	for %g in ($(IDLSRCS:.idl=.h)) do $(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM%g $(XPCOM_DESTDIR)
 	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)

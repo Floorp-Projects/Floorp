@@ -49,13 +49,18 @@ public:
   virtual void MapAttributesInto(nsIStyleContext* aContext,
                                  nsIPresContext* aPresContext);
 
-  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes(PRBool *aReturn);
-  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, 
-                                            nsIDOMNode *oldChild);
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD    GetFirstChild(nsIDOMNode **aFirstChild);
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, 
+                             nsIDOMNode* aRefChild, 
+                             nsIDOMNode** aReturn);
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, 
+                             nsIDOMNode* aOldChild, 
+                             nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, 
+                            nsIDOMNode** aReturn);
 
 protected:
   nsHTMLContainer();

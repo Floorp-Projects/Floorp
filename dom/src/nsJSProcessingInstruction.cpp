@@ -25,34 +25,32 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMDocument.h"
-#include "nsIDOMDocumentContext.h"
+#include "nsIDOMProcessingInstruction.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentContextIID, NS_IDOMDOCUMENTCONTEXT_IID);
+static NS_DEFINE_IID(kIProcessingInstructionIID, NS_IDOMPROCESSINGINSTRUCTION_IID);
 
-NS_DEF_PTR(nsIDOMDocument);
-NS_DEF_PTR(nsIDOMDocumentContext);
+NS_DEF_PTR(nsIDOMProcessingInstruction);
 
 //
-// DocumentContext property ids
+// ProcessingInstruction property ids
 //
-enum DocumentContext_slots {
-  DOCUMENTCONTEXT_DOCUMENT = -11
+enum ProcessingInstruction_slots {
+  PROCESSINGINSTRUCTION_TARGET = -11,
+  PROCESSINGINSTRUCTION_DATA = -12
 };
 
 /***********************************************************************/
 //
-// DocumentContext Properties Getter
+// ProcessingInstruction Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentContext *a = (nsIDOMDocumentContext*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -61,27 +59,26 @@ GetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENTCONTEXT_DOCUMENT:
+      case PROCESSINGINSTRUCTION_TARGET:
       {
-        nsIDOMDocument* prop;
-        if (NS_OK == a->GetDocument(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
+        nsAutoString prop;
+        if (NS_OK == a->GetTarget(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case PROCESSINGINSTRUCTION_DATA:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetData(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
         }
         else {
           return JS_FALSE;
@@ -106,12 +103,12 @@ GetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// DocumentContext Properties Setter
+// ProcessingInstruction Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetProcessingInstructionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMDocumentContext *a = (nsIDOMDocumentContext*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -120,27 +117,34 @@ SetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENTCONTEXT_DOCUMENT:
+      case PROCESSINGINSTRUCTION_TARGET:
       {
-        nsIDOMDocument* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIDocumentIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Document");
-            return JS_FALSE;
-          }
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
         }
         else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
+          prop.SetString((const char *)nsnull);
         }
       
-        a->SetDocument(prop);
-        if (prop) NS_RELEASE(prop);
+        a->SetTarget(prop);
+        
+        break;
+      }
+      case PROCESSINGINSTRUCTION_DATA:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetData(prop);
+        
         break;
       }
       default:
@@ -161,12 +165,12 @@ SetDocumentContextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// DocumentContext finalizer
+// ProcessingInstruction finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeDocumentContext(JSContext *cx, JSObject *obj)
+FinalizeProcessingInstruction(JSContext *cx, JSObject *obj)
 {
-  nsIDOMDocumentContext *a = (nsIDOMDocumentContext*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -182,12 +186,12 @@ FinalizeDocumentContext(JSContext *cx, JSObject *obj)
 
 
 //
-// DocumentContext enumerate
+// ProcessingInstruction enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateDocumentContext(JSContext *cx, JSObject *obj)
+EnumerateProcessingInstruction(JSContext *cx, JSObject *obj)
 {
-  nsIDOMDocumentContext *a = (nsIDOMDocumentContext*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -202,12 +206,12 @@ EnumerateDocumentContext(JSContext *cx, JSObject *obj)
 
 
 //
-// DocumentContext resolve
+// ProcessingInstruction resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveDocumentContext(JSContext *cx, JSObject *obj, jsval id)
+ResolveProcessingInstruction(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMDocumentContext *a = (nsIDOMDocumentContext*)JS_GetPrivate(cx, obj);
+  nsIDOMProcessingInstruction *a = (nsIDOMProcessingInstruction*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -223,55 +227,56 @@ ResolveDocumentContext(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for DocumentContext
+// class for ProcessingInstruction
 //
-JSClass DocumentContextClass = {
-  "DocumentContext", 
+JSClass ProcessingInstructionClass = {
+  "ProcessingInstruction", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetDocumentContextProperty,
-  SetDocumentContextProperty,
-  EnumerateDocumentContext,
-  ResolveDocumentContext,
+  GetProcessingInstructionProperty,
+  SetProcessingInstructionProperty,
+  EnumerateProcessingInstruction,
+  ResolveProcessingInstruction,
   JS_ConvertStub,
-  FinalizeDocumentContext
+  FinalizeProcessingInstruction
 };
 
 
 //
-// DocumentContext class properties
+// ProcessingInstruction class properties
 //
-static JSPropertySpec DocumentContextProperties[] =
+static JSPropertySpec ProcessingInstructionProperties[] =
 {
-  {"document",    DOCUMENTCONTEXT_DOCUMENT,    JSPROP_ENUMERATE},
+  {"target",    PROCESSINGINSTRUCTION_TARGET,    JSPROP_ENUMERATE},
+  {"data",    PROCESSINGINSTRUCTION_DATA,    JSPROP_ENUMERATE},
   {0}
 };
 
 
 //
-// DocumentContext class methods
+// ProcessingInstruction class methods
 //
-static JSFunctionSpec DocumentContextMethods[] = 
+static JSFunctionSpec ProcessingInstructionMethods[] = 
 {
   {0}
 };
 
 
 //
-// DocumentContext constructor
+// ProcessingInstruction constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-DocumentContext(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+ProcessingInstruction(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_TRUE;
 }
 
 
 //
-// DocumentContext class initialization
+// ProcessingInstruction class initialization
 //
-nsresult NS_InitDocumentContextClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -280,20 +285,23 @@ nsresult NS_InitDocumentContextClass(nsIScriptContext *aContext, void **aPrototy
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "DocumentContext", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "ProcessingInstruction", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
+    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &DocumentContextClass,      // JSClass
-                         DocumentContext,            // JSNative ctor
+                         &ProcessingInstructionClass,      // JSClass
+                         ProcessingInstruction,            // JSNative ctor
                          0,             // ctor args
-                         DocumentContextProperties,  // proto props
-                         DocumentContextMethods,     // proto funcs
+                         ProcessingInstructionProperties,  // proto props
+                         ProcessingInstructionMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -316,11 +324,11 @@ nsresult NS_InitDocumentContextClass(nsIScriptContext *aContext, void **aPrototy
 
 
 //
-// Method for creating a new DocumentContext JavaScript object
+// Method for creating a new ProcessingInstruction JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptDocumentContext(nsIScriptContext *aContext, nsIDOMDocumentContext *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptProcessingInstruction(nsIScriptContext *aContext, nsIDOMProcessingInstruction *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptDocumentContext");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptProcessingInstruction");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
@@ -340,12 +348,12 @@ extern "C" NS_DOM NS_NewScriptDocumentContext(nsIScriptContext *aContext, nsIDOM
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitDocumentContextClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitProcessingInstructionClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &DocumentContextClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &ProcessingInstructionClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
     JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);

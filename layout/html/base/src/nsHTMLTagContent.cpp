@@ -26,6 +26,7 @@
 #include "nsString.h"
 #include "prprf.h"
 #include "nsDOMAttributes.h"
+#include "nsIDOMDocument.h"
 #include "nsILinkHandler.h"
 #include "nsIPresContext.h"
 #include "nsIURL.h"
@@ -35,6 +36,7 @@
 
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 
 nsHTMLTagContent::nsHTMLTagContent()
@@ -384,6 +386,9 @@ nsIStyleRule* nsHTMLTagContent::GetStyleRule(void)
   return result;
 }
 
+//
+// Implementation of nsIScriptObjectOwner interface
+//
 nsresult nsHTMLTagContent::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
@@ -394,90 +399,179 @@ nsresult nsHTMLTagContent::GetScriptObject(nsIScriptContext *aContext, void** aS
   return res;
 }
 
-nsresult nsHTMLTagContent::GetNodeType(PRInt32 *aType)
+//
+// Implementation of nsIDOMNode interface
+//
+NS_IMETHODIMP    
+nsHTMLTagContent::GetNodeName(nsString& aNodeName)
 {
-  *aType = nsHTMLContent::ELEMENT;
+  return GetTagName(aNodeName);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetNodeValue(nsString& aNodeValue)
+{
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::GetParentNode(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+nsHTMLTagContent::SetNodeValue(const nsString& aNodeValue)
 {
-  return nsHTMLContent::GetParentNode(aNode);
-}
-
-nsresult nsHTMLTagContent::GetChildNodes(nsIDOMNodeIterator **aIterator)
-{
-  return nsHTMLContent::GetChildNodes(aIterator);
-}
-
-nsresult nsHTMLTagContent::HasChildNodes(PRBool *aReturn)
-{
-  return nsHTMLContent::HasChildNodes(aReturn);
-}
-
-nsresult nsHTMLTagContent::GetFirstChild(nsIDOMNode **aNode)
-{
-  return nsHTMLContent::GetFirstChild(aNode);
-}
-
-nsresult nsHTMLTagContent::GetPreviousSibling(nsIDOMNode **aNode)
-{
-  return nsHTMLContent::GetPreviousSibling(aNode);
-}
-
-nsresult nsHTMLTagContent::GetNextSibling(nsIDOMNode **aNode)
-{
-  return nsHTMLContent::GetNextSibling(aNode);
-}
-
-nsresult nsHTMLTagContent::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
-{
-  return nsHTMLContent::InsertBefore(newChild, refChild);
-}
-
-nsresult nsHTMLTagContent::ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild)
-{
-  return nsHTMLContent::ReplaceChild(newChild, oldChild);
-}
-
-nsresult nsHTMLTagContent::RemoveChild(nsIDOMNode *oldChild)
-{
-  return nsHTMLContent::RemoveChild(oldChild);
-}
-
-nsresult nsHTMLTagContent::GetTagName(nsString &aName)
-{
-  if (nsnull != mTag) {
-    mTag->ToString(aName);
-  }
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::GetAttributes(nsIDOMAttributeList **aAttributeList)
+NS_IMETHODIMP    
+nsHTMLTagContent::GetNodeType(PRInt32* aNodeType)
 {
-  NS_PRECONDITION(nsnull != aAttributeList, "null pointer argument");
+  *aNodeType = nsHTMLContent::ELEMENT;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{
+  NS_PRECONDITION(nsnull != aAttributes, "null pointer argument");
   if (nsnull != mAttributes) {
-    *aAttributeList = new nsDOMAttributeList(*this);
+    // XXX Should we create a new one every time or should we
+    // cache one after we create it? If we find that this is
+    // something that's called often, we might need to do the
+    // latter.
+    *aAttributes = new nsDOMAttributeMap(*this);
   }
   else {
-    *aAttributeList = nsnull;
+    *aAttributes = nsnull;
   }
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::GetDOMAttribute(nsString &aName, nsString &aValue)
+// XXX Currently implemented as a call to document.CreateElement().
+// This requires that the content actually have a document, which
+// might not be the case if it isn't yet part of the tree.
+NS_IMETHODIMP    
+nsHTMLTagContent::CloneNode(nsIDOMNode** aReturn)
 {
-  GetAttribute(aName, aValue);
+  nsIDOMDocument *doc;
+  nsresult res = NS_OK; 
+  nsAutoString tag_name;
+  nsIDOMNamedNodeMap *attr_map;
+
+  if ((nsnull == mDocument) || (nsnull == mTag)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  res = mDocument->QueryInterface(kIDOMDocumentIID, (void **)&doc);
+  if (NS_OK != res) {
+    return res;
+  }
+
+  mTag->ToString(tag_name);
+  // XXX Probably not the most efficient way to pass along attribute
+  // information.
+  GetAttributes(&attr_map);
+
+  res = doc->CreateElement(tag_name, attr_map, (nsIDOMElement **)aReturn);
+
+  NS_RELEASE(doc);
+
+  return res;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+{
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetParentNode(nsIDOMNode** aParentNode)
+{
+  return nsHTMLContent::GetParentNode(aParentNode);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  return nsHTMLContent::GetChildNodes(aChildNodes);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetHasChildNodes(PRBool* aHasChildNodes)
+{
+  return nsHTMLContent::GetHasChildNodes(aHasChildNodes);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetFirstChild(nsIDOMNode** aFirstChild)
+{
+  return nsHTMLContent::GetFirstChild(aFirstChild);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetLastChild(nsIDOMNode** aLastChild)
+{
+  return nsHTMLContent::GetLastChild(aLastChild);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
+{
+  return nsHTMLContent::GetPreviousSibling(aPreviousSibling);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::GetNextSibling(nsIDOMNode** aNextSibling)
+{
+  return nsHTMLContent::GetNextSibling(aNextSibling);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::InsertBefore(aNewChild, aRefChild, aReturn);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::ReplaceChild(aNewChild, aOldChild, aReturn);
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::RemoveChild(aOldChild, aReturn);
+}
+
+
+//
+// Implementation of nsIDOMElement interface
+//
+NS_IMETHODIMP    
+nsHTMLTagContent::GetTagName(nsString& aTagName)
+{
+  if (nsnull != mTag) {
+    mTag->ToString(aTagName);
+  }
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::SetDOMAttribute(nsString &aName, nsString &aValue)
+NS_IMETHODIMP    
+nsHTMLTagContent::GetDOMAttribute(const nsString& aName, nsString& aReturn)
+{
+  GetAttribute(aName, aReturn);
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLTagContent::SetDOMAttribute(const nsString& aName, const nsString& aValue)
 {
   SetAttribute(aName, aValue);
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::RemoveAttribute(nsString &aName)
+NS_IMETHODIMP    
+nsHTMLTagContent::RemoveAttribute(const nsString& aName)
 {
   nsAutoString upper;
   aName.ToUpperCase(upper);
@@ -486,17 +580,19 @@ nsresult nsHTMLTagContent::RemoveAttribute(nsString &aName)
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::GetAttributeNode(nsString &aName, nsIDOMAttribute **aAttribute)
+NS_IMETHODIMP    
+nsHTMLTagContent::GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn)
 {
   nsAutoString value;
   if(eContentAttr_NotThere != GetAttribute(aName, value)) {
-    *aAttribute = new nsDOMAttribute(aName, value);
+    *aReturn = new nsDOMAttribute(aName, value);
   }
 
   return NS_OK;
 }
 
-nsresult nsHTMLTagContent::SetAttributeNode(nsIDOMAttribute *aAttribute)
+NS_IMETHODIMP    
+nsHTMLTagContent::SetAttributeNode(nsIDOMAttribute* aAttribute)
 {
   NS_PRECONDITION(nsnull != aAttribute, "null attribute");
   
@@ -516,7 +612,8 @@ nsresult nsHTMLTagContent::SetAttributeNode(nsIDOMAttribute *aAttribute)
   return res;
 }
 
-nsresult nsHTMLTagContent::RemoveAttributeNode(nsIDOMAttribute *aAttribute)
+NS_IMETHODIMP    
+nsHTMLTagContent::RemoveAttributeNode(nsIDOMAttribute* aAttribute)
 {
   NS_PRECONDITION(nsnull != aAttribute, "null attribute");
   
@@ -536,12 +633,14 @@ nsresult nsHTMLTagContent::RemoveAttributeNode(nsIDOMAttribute *aAttribute)
   return res;
 }
 
-nsresult nsHTMLTagContent::Normalize()
+NS_IMETHODIMP    
+nsHTMLTagContent::GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsHTMLTagContent::GetElementsByTagName(nsString &aName,nsIDOMNodeIterator **aIterator)
+NS_IMETHODIMP    
+nsHTMLTagContent::Normalize()
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

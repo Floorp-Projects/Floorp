@@ -1,4 +1,3 @@
-      interface Comment : Node {
-        attribute wstring        data;
-      };
+   interface Comment : Data {
+   };
 

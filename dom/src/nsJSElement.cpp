@@ -25,25 +25,28 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMAttributeList.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMNodeIterator.h"
 #include "nsIDOMAttribute.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIAttributeListIID, NS_IDOMATTRIBUTELIST_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kINodeIteratorIID, NS_IDOMNODEITERATOR_IID);
 static NS_DEFINE_IID(kIAttributeIID, NS_IDOMATTRIBUTE_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIDOMAttributeList);
 NS_DEF_PTR(nsIDOMElement);
-NS_DEF_PTR(nsIDOMNodeIterator);
 NS_DEF_PTR(nsIDOMAttribute);
+NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// Element property ids
+//
+enum Element_slots {
+  ELEMENT_TAGNAME = -11
+};
 
 /***********************************************************************/
 //
@@ -61,7 +64,19 @@ GetElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case ELEMENT_TAGNAME:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetTagName(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -169,91 +184,6 @@ ResolveElement(JSContext *cx, JSObject *obj, jsval id)
       NS_RELEASE(object);
     }
   }
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetTagName
-//
-PR_STATIC_CALLBACK(JSBool)
-ElementGetTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsAutoString nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetTagName(nativeRet)) {
-      return JS_FALSE;
-    }
-
-    JSString *jsstring = JS_NewUCStringCopyN(cx, nativeRet, nativeRet.Length());
-    // set the return value
-    *rval = STRING_TO_JSVAL(jsstring);
-  }
-  else {
-    JS_ReportError(cx, "Function getTagName requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetAttributes
-//
-PR_STATIC_CALLBACK(JSBool)
-ElementGetAttributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMAttributeList* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetAttributes(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getAttributes requires 0 parameters");
-    return JS_FALSE;
-  }
-
   return JS_TRUE;
 }
 
@@ -566,7 +496,7 @@ ElementGetElementsByTagName(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 {
   nsIDOMElement *nativeThis = (nsIDOMElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMNodeIterator* nativeRet;
+  nsIDOMNodeList* nativeRet;
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
@@ -672,6 +602,7 @@ JSClass ElementClass = {
 //
 static JSPropertySpec ElementProperties[] =
 {
+  {"tagName",    ELEMENT_TAGNAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -681,8 +612,6 @@ static JSPropertySpec ElementProperties[] =
 //
 static JSFunctionSpec ElementMethods[] = 
 {
-  {"getTagName",          ElementGetTagName,     0},
-  {"getAttributes",          ElementGetAttributes,     0},
   {"getDOMAttribute",          ElementGetDOMAttribute,     1},
   {"setDOMAttribute",          ElementSetDOMAttribute,     2},
   {"removeAttribute",          ElementRemoveAttribute,     1},
@@ -758,7 +687,7 @@ nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new Element JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptElement");
   JSObject *proto;

@@ -24,16 +24,17 @@ DEFINES = -D_IMPL_NS_DOM
 CPPSRCS =				\
 	nsJSEnvironment.cpp		\
 	nsJSNode.cpp		\
+	nsJSData.cpp		\
 	nsJSDocument.cpp	\
 	nsJSDocumentFragment.cpp\
 	nsJSElement.cpp		\
+	nsJSNamedNodeMap.cpp	\
+	nsJSNodeList.cpp	\
 	nsJSText.cpp		\
-	nsJSNodeIterator.cpp\
 	nsJSAttribute.cpp	\
-	nsJSAttributeList.cpp\
-	nsJSWindow.cpp\
-	nsJSNavigator.cpp \
-	nsGlobalWindow.cpp \
+	nsJSWindow.cpp          \
+	nsJSNavigator.cpp       \
+	nsGlobalWindow.cpp      \
 	$(NULL)
 
 MODULE = raptor

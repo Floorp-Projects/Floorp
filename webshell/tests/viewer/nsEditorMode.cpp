@@ -79,7 +79,7 @@ nsresult nsDeleteLast()
     mText->GetData(mStr);
     mLength = mStr.Length();
     if (mLength > 0) {
-      mText->Delete(mLength-1, 1);
+      mText->Remove(mLength-1, 1);
     }
     NS_RELEASE(mText);
   }
@@ -99,7 +99,7 @@ nsresult GetFirstTextNode(nsIDOMNode *aNode, nsIDOMNode **aRetNode)
   aNode->GetNodeType(&mType);
 
   if (aNode->ELEMENT == mType) {
-    if (NS_OK == aNode->HasChildNodes(&mCNodes) && PR_TRUE == mCNodes) {
+    if (NS_OK == aNode->GetHasChildNodes(&mCNodes) && PR_TRUE == mCNodes) {
       nsIDOMNode *mNode, *mSibNode;
 
       aNode->GetFirstChild(&mNode);

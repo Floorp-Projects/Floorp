@@ -17,17 +17,31 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-// Find the BODY element
 function findBody(node)
 {
-  // XXX A better way to do this would be to use getElementsByTagName(), but
-  // it isn't implemented yet...
-  if (node.getTagName() == "BODY") {
-    return node;
+  if (node.nodeType != Node.ELEMENT) {
+    return null;
   }
-
-  var children = node.getChildNodes()
-  return findBody(children.getNextNode())
+  var children = node.childNodes;
+  if (children == null) {
+    return null;
+  }
+  var length = children.length;
+  var child = null;
+  var count = 0;
+  while (count < length) {
+    child = children.item(count);
+    if (child.tagName == "BODY") {
+      dump("BODY found");
+      return child;
+    }
+    var body = findBody(child);
+    if (null != body) {
+      return body;
+    }
+    count++;
+  }
+  return null;
 }
 
 // Given the body element, find the first table element
@@ -35,16 +49,22 @@ function findTable(body)
 {
   // XXX A better way to do this would be to use getElementsByTagName(), but
   // it isn't implemented yet...
-  var children = body.getChildNodes()
-  var child = children.getNextNode()
-  while (child) {
-    if (child.getNodeType() == 2) {
-      if (child.getTagName() == "TABLE") {
+  var children = body.childNodes
+  if (children == null) {
+    return null;
+  }
+  var length = children.length;
+  var child = null;
+  var count = 0;
+  while (count < length) {
+    child = children.item(count);
+    if (child.nodeType == Node.ELEMENT) {
+      if (child.tagName == "TABLE") {
+        dump("TABLE found");
         break;
       }
     }
-
-    child = children.getNextNode()
+    count++;
   }
 
   return child;
@@ -55,16 +75,21 @@ function findTableBody(table)
 {
   // XXX A better way to do this would be to use getElementsByTagName(), but
   // it isn't implemented yet...
-  var children = table.getChildNodes()
-  var child = children.getNextNode()
-  while (child) {
-    if (child.getNodeType() == 2) {
-      if (child.getTagName() == "TBODY") {
+  var children = table.childNodes
+  if (children == null) {
+    return null;
+  }
+  var length = children.length;
+  var child = null;
+  var count = 0;
+  while (count < length) {
+    child = children.item(count);
+    if (child.nodeType == Node.ELEMENT) {
+      if (child.tagName == "TBODY") {
         break;
       }
     }
-
-    child = children.getNextNode()
+    count++;
   }
 
   return child;
@@ -77,13 +102,13 @@ function changeCell(table)
   var body = findTableBody(table)
 
   // The table body's first child is a table row
-  var row = body.getFirstChild()
+  var row = body.firstChild
 
   // The row's first child is a table cell
-  var cell = row.getFirstChild()
+  var cell = row.firstChild
 
   // Get the cell's text
-  var text = cell.getFirstChild()
+  var text = cell.firstChild
 
   // Append some text
   text.append(" NEW TEXT")

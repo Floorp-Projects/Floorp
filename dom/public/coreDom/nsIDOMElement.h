@@ -25,41 +25,38 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMNode.h"
 
-class nsIDOMAttributeList;
 class nsIDOMElement;
-class nsIDOMNodeIterator;
 class nsIDOMAttribute;
+class nsIDOMNodeList;
 
 #define NS_IDOMELEMENT_IID \
-{ 0x6f7652e7,  0xee43, 0x11d1, \
+{ 0x6f7652e8,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMElement : public nsIDOMNode {
 public:
 
-  NS_IMETHOD    GetTagName(nsString& aReturn)=0;
+  NS_IMETHOD    GetTagName(nsString& aTagName)=0;
 
-  NS_IMETHOD    GetAttributes(nsIDOMAttributeList** aReturn)=0;
+  NS_IMETHOD    GetDOMAttribute(const nsString& aName, nsString& aReturn)=0;
 
-  NS_IMETHOD    GetDOMAttribute(nsString& aName, nsString& aReturn)=0;
+  NS_IMETHOD    SetDOMAttribute(const nsString& aName, const nsString& aValue)=0;
 
-  NS_IMETHOD    SetDOMAttribute(nsString& aName, nsString& aValue)=0;
+  NS_IMETHOD    RemoveAttribute(const nsString& aName)=0;
 
-  NS_IMETHOD    RemoveAttribute(nsString& aName)=0;
-
-  NS_IMETHOD    GetAttributeNode(nsString& aName, nsIDOMAttribute** aReturn)=0;
+  NS_IMETHOD    GetAttributeNode(const nsString& aName, nsIDOMAttribute** aReturn)=0;
 
   NS_IMETHOD    SetAttributeNode(nsIDOMAttribute* aNewAttr)=0;
 
   NS_IMETHOD    RemoveAttributeNode(nsIDOMAttribute* aOldAttr)=0;
 
-  NS_IMETHOD    GetElementsByTagName(nsString& aTagname, nsIDOMNodeIterator** aReturn)=0;
+  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)=0;
 
   NS_IMETHOD    Normalize()=0;
 };
 
 extern nsresult NS_InitElementClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptElement(nsIScriptContext *aContext, nsIDOMElement *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMElement_h__

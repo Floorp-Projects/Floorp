@@ -17,29 +17,32 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMDocumentContext_h__
-#define nsIDOMDocumentContext_h__
+#ifndef nsIDOMProcessingInstruction_h__
+#define nsIDOMProcessingInstruction_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMNode.h"
 
-class nsIDOMDocument;
-class nsIDOMDocumentContext;
+class nsIDOMProcessingInstruction;
 
-#define NS_IDOMDOCUMENTCONTEXT_IID \
-{ 0x6f7652e4,  0xee43, 0x11d1, \
+#define NS_IDOMPROCESSINGINSTRUCTION_IID \
+{ 0x6f7652ec,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMDocumentContext : public nsISupports {
+class nsIDOMProcessingInstruction : public nsIDOMNode {
 public:
 
-  NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument)=0;
-  NS_IMETHOD    SetDocument(nsIDOMDocument* aDocument)=0;
+  NS_IMETHOD    GetTarget(nsString& aTarget)=0;
+  NS_IMETHOD    SetTarget(const nsString& aTarget)=0;
+
+  NS_IMETHOD    GetData(nsString& aData)=0;
+  NS_IMETHOD    SetData(const nsString& aData)=0;
 };
 
-extern nsresult NS_InitDocumentContextClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitProcessingInstructionClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptDocumentContext(nsIScriptContext *aContext, nsIDOMDocumentContext *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptProcessingInstruction(nsIScriptContext *aContext, nsIDOMProcessingInstruction *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMDocumentContext_h__
+#endif // nsIDOMProcessingInstruction_h__

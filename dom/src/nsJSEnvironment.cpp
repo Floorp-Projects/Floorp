@@ -25,8 +25,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMText.h"
 #include "nsIDOMAttribute.h"
-#include "nsIDOMAttributeList.h"
-#include "nsIDOMNodeIterator.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMNodeList.h"
 
 const uint32 gGCSize = 4L * 1024L * 1024L;
 const size_t gStackSize = 8192;
@@ -115,8 +115,8 @@ nsresult nsJSContext::InitClasses()
       NS_OK == NS_InitDocumentClass(this, nsnull) &&
       NS_OK == NS_InitTextClass(this, nsnull) &&
       NS_OK == NS_InitAttributeClass(this, nsnull) &&
-      NS_OK == NS_InitAttributeListClass(this, nsnull) &&
-      NS_OK == NS_InitNodeIteratorClass(this, nsnull)) {
+      NS_OK == NS_InitNamedNodeMapClass(this, nsnull) &&
+      NS_OK == NS_InitNodeListClass(this, nsnull)) {
     res = NS_OK;
   }
 
@@ -154,7 +154,7 @@ nsIScriptContext* nsJSEnvironment::GetNewContext()
 }
 
 
-extern "C" NS_DOM NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext)
+extern "C" NS_DOM nsresult NS_CreateContext(nsIScriptGlobalObject *aGlobal, nsIScriptContext **aContext)
 {
   nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();
   *aContext = environment->GetNewContext();

@@ -35,12 +35,6 @@ static NS_DEFINE_IID(kICommentIID, NS_IDOMCOMMENT_IID);
 
 NS_DEF_PTR(nsIDOMComment);
 
-//
-// Comment property ids
-//
-enum Comment_slots {
-  COMMENT_DATA = -11
-};
 
 /***********************************************************************/
 //
@@ -58,19 +52,7 @@ GetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case COMMENT_DATA:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetData(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -103,21 +85,7 @@ SetCommentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case COMMENT_DATA:
-      {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
-        }
-        else {
-          prop.SetString((const char *)nsnull);
-        }
-      
-        a->SetData(prop);
-        
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -219,7 +187,6 @@ JSClass CommentClass = {
 //
 static JSPropertySpec CommentProperties[] =
 {
-  {"data",    COMMENT_DATA,    JSPROP_ENUMERATE},
   {0}
 };
 
@@ -261,7 +228,7 @@ nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitDataClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context
@@ -296,7 +263,7 @@ nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new Comment JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptComment(nsIScriptContext *aContext, nsIDOMComment *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptComment(nsIScriptContext *aContext, nsIDOMComment *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptComment");
   JSObject *proto;

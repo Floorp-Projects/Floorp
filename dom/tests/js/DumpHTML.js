@@ -22,21 +22,21 @@
 //
 function html(node)
 {
-    var type = node.getNodeType()
+    var type = node.nodeType;
     if (type == Node.ELEMENT) {
 
         // open tag
-        dump("<" + node.getTagName())
+        dump("<" + node.tagName)
 
         // dump the attributes if any
-        attributes = node.getAttributes()
+        attributes = node.attributes;
         if (null != attributes) {
-            var countAttrs = attributes.getLength()
+            var countAttrs = attributes.length;
             var index = 0
             while(index < countAttrs) {
-                att = attributes.item(index)
+                att = attributes.item(index);
                 if (null != att) {
-                    dump(" " + att.toString())
+                    dump(" " + att.value)
                 }
                 index++
             }
@@ -46,18 +46,17 @@ function html(node)
         dump(">")
 
         // recursively dump the children
-        if (node.hasChildNodes()) {
+        if (node.hasChildNodes) {
             // get the children
-            var children = node.getChildNodes()
-            var length = children.getLength()
-            var child = children.getNextNode()
+            var children = node.childNodes;
+            var length = children.length;
             var count = 0;
             while(count < length) {
+                child = children.item(count)
                 html(child)
-                child = children.getNextNode()
                 count++
             }
-            dump("</" + node.getTagName() + ">");
+            dump("</" + node.tagName + ">");
         }
 
         

@@ -251,25 +251,39 @@ public:
   // nsIScriptObjectOwner interface
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
 
+  // nsIDOMNode interface
+  NS_IMETHOD    GetNodeName(nsString& aNodeName);
+  NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
+  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue);
+  NS_IMETHOD    GetNodeType(PRInt32* aNodeType);
+  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn);
+  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+
+  // nsIDOMData interface
+  NS_IMETHOD    GetData(nsString& aData);
+  NS_IMETHOD    SetData(const nsString& aData);
+  NS_IMETHOD    GetSize(PRUint32* aSize);
+  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn);
+  NS_IMETHOD    Append(const nsString& aData);
+  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData);
+  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount);
+  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, 
+                        const nsString& aData);
+
   // nsIDOMText interface
-  NS_IMETHOD GetNodeType(PRInt32 *aType);
-  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
-  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes(PRBool *aReturn);
-  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
-  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, 
-                          nsIDOMNode *oldChild);
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
-  NS_IMETHOD GetData(nsString& aString);
-  NS_IMETHOD SetData(nsString& aString);
-  NS_IMETHOD Append(nsString& aData);
-  NS_IMETHOD Insert(PRInt32 offset, nsString& aData);
-  NS_IMETHOD Delete(PRInt32 offset, PRInt32 count);
-  NS_IMETHOD Replace(PRInt32 offset, PRInt32 count, nsString& aData);
-  NS_IMETHOD Splice(nsIDOMElement *element, PRInt32 offset, PRInt32 count);
+  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn);
+  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
@@ -1328,6 +1342,7 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
 //----------------------------------------------------------------------
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
 Text::Text(const PRUnichar* aText, PRInt32 aLength)
@@ -1370,6 +1385,11 @@ nsresult Text::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   }
   if (aIID.Equals(kIDOMNodeIID)) {
     *aInstancePtr = (void*)(nsIDOMNode*)(nsIDOMText*)this;
+    nsHTMLContent::AddRef();
+    return NS_OK;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)(nsIDOMText*)this;
     nsHTMLContent::AddRef();
     return NS_OK;
   }
@@ -1477,76 +1497,147 @@ nsresult Text::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 //
 // nsIDOMText interface
 //
-nsresult Text::GetNodeType(PRInt32 *aType)
+NS_IMETHODIMP    
+Text::GetNodeName(nsString& aNodeName)
 {
-  *aType = nsHTMLContent::TEXT;
+  aNodeName.SetString("#text");
   return NS_OK;
 }
 
-nsresult Text::GetParentNode(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+Text::GetNodeValue(nsString& aNodeValue)
 {
-  return nsHTMLContent::GetParentNode(aNode);
+  return GetData(aNodeValue);
 }
 
-nsresult Text::GetChildNodes(nsIDOMNodeIterator **aIterator)
+NS_IMETHODIMP    
+Text::SetNodeValue(const nsString& aNodeValue)
 {
-  return nsHTMLContent::GetChildNodes(aIterator);
+  return SetData(aNodeValue);
 }
 
-nsresult Text::HasChildNodes(PRBool *aReturn)
+NS_IMETHODIMP    
+Text::GetNodeType(PRInt32* aNodeType)
 {
-  return nsHTMLContent::HasChildNodes(aReturn);
+  *aNodeType = nsHTMLContent::TEXT;
+  return NS_OK;
 }
 
-nsresult Text::GetFirstChild(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+Text::CloneNode(nsIDOMNode** aReturn)
 {
-  return nsHTMLContent::GetFirstChild(aNode);
+  Text *newText;
+  nsresult res;
+  
+  res = NS_NewHTMLText((nsIHTMLContent**)&newText, mText, mLength);
+  if (NS_OK != res) {
+    return res;
+  }
+  
+  res = newText->QueryInterface(kIDOMTextIID, (void **)aReturn);
+  NS_RELEASE(newText);
+  if (NS_OK != res) {
+    return res;
+  }
+
+  return NS_OK;
 }
 
-nsresult Text::GetPreviousSibling(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+Text::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
 {
-  return nsHTMLContent::GetPreviousSibling(aNode);
+  // XXX TBI
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult Text::GetNextSibling(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+Text::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 {
-  return nsHTMLContent::GetNextSibling(aNode);
+  return nsHTMLContent::GetAttributes(aAttributes);
 }
 
-nsresult Text::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
+NS_IMETHODIMP    
+Text::GetParentNode(nsIDOMNode** aParentNode)
 {
-  return nsHTMLContent::InsertBefore(newChild, refChild);
+  return nsHTMLContent::GetParentNode(aParentNode);
 }
 
-nsresult Text::ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+Text::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  return nsHTMLContent::ReplaceChild(newChild, oldChild);
+  return nsHTMLContent::GetChildNodes(aChildNodes);
 }
 
-nsresult Text::RemoveChild(nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+Text::GetHasChildNodes(PRBool* aHasChildNodes)
 {
-  return nsHTMLContent::RemoveChild(oldChild);
+  return nsHTMLContent::GetHasChildNodes(aHasChildNodes);
 }
 
-nsresult
-Text::GetData(nsString& aString)
+NS_IMETHODIMP    
+Text::GetFirstChild(nsIDOMNode** aFirstChild)
+{
+  return nsHTMLContent::GetFirstChild(aFirstChild);
+}
+
+NS_IMETHODIMP    
+Text::GetLastChild(nsIDOMNode** aLastChild)
+{
+  return nsHTMLContent::GetLastChild(aLastChild);
+}
+
+NS_IMETHODIMP    
+Text::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
+{
+  return nsHTMLContent::GetPreviousSibling(aPreviousSibling);
+}
+
+NS_IMETHODIMP    
+Text::GetNextSibling(nsIDOMNode** aNextSibling)
+{
+  return nsHTMLContent::GetNextSibling(aNextSibling);
+}
+
+NS_IMETHODIMP    
+Text::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::InsertBefore(aNewChild, aRefChild, aReturn);
+}
+
+NS_IMETHODIMP    
+Text::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::ReplaceChild(aNewChild, aOldChild, aReturn);
+}
+
+NS_IMETHODIMP    
+Text::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return nsHTMLContent::RemoveChild(aOldChild, aReturn);
+}
+
+//
+// nsIDOMData interface
+//
+NS_IMETHODIMP    
+Text::GetData(nsString& aData)
 {
   if (nsnull != mText) {
-    aString.SetString(mText, mLength);
+    aData.SetString(mText, mLength);
   }
   return NS_OK;
 }
 
-nsresult
-Text::SetData(nsString& aString)
+NS_IMETHODIMP    
+Text::SetData(const nsString& aData)
 {
   if (mText) {
     delete[] mText;
     mText = nsnull;
   }
 
-  mLength = aString.Length();
-  mText = aString.ToNewUnicode();
+  mLength = aData.Length();
+  mText = aData.ToNewUnicode();
 
   // Notify the document that the text changed
   if (nsnull != mDocument) {
@@ -1555,62 +1646,81 @@ Text::SetData(nsString& aString)
   return NS_OK;
 }
 
-nsresult
-Text::Append(nsString& aData)
+NS_IMETHODIMP    
+Text::GetSize(PRUint32* aSize)
+{
+  *aSize = mLength;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+Text::Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn)
+{
+  if (nsnull != mText) {
+    if ((aStart < (PRUint32)mLength) && (aEnd < (PRUint32)mLength)) {
+      aReturn.SetString(mText + aStart, (aEnd - aStart));
+    }
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+Text::Append(const nsString& aData)
 {
   return Replace(mLength, 0, aData);
 }
 
-nsresult
-Text::Insert(PRInt32 offset, nsString& aData)
+NS_IMETHODIMP    
+Text::Insert(PRUint32 aOffset, const nsString& aData)
 {
-  return Replace(offset, 0, aData);
+  return Replace(aOffset, 0, aData);
 }
 
-nsresult
-Text::Delete(PRInt32 offset, PRInt32 count)
+NS_IMETHODIMP    
+Text::Remove(PRUint32 aOffset, PRUint32 aCount)
 {
   nsAutoString empty;
-  return Replace(offset, count, empty);
+  return Replace(aOffset, aCount, empty);
 }
 
-nsresult
-Text::Replace(PRInt32 offset, PRInt32 count, nsString& aData)
+NS_IMETHODIMP    
+Text::Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData)
 {
   // sanitize arguments
-  if (offset < 0) {
-    offset = 0;
+  if (aOffset < 0) {
+    aOffset = 0;
   }
-  if (offset > mLength) {
-    offset = mLength;
+  if (aOffset > (PRUint32)mLength) {
+    aOffset = mLength;
   }
-  if (count < 0) {
-    count = 0;
+  if (aCount < 0) {
+    aCount = 0;
   }
 
   // Allocate new buffer
-  PRInt32 endOffset = offset + count;
+  PRInt32 endOffset = aOffset + aCount;
   if (endOffset > mLength) {
-    count = mLength - offset;
+    aCount = mLength - aOffset;
     endOffset = mLength;
   }
   PRInt32 dataLength = aData.Length();
-  PRInt32 newLength = mLength - count + dataLength;
+  PRInt32 newLength = mLength - aCount + dataLength;
   PRUnichar* to = new PRUnichar[newLength ? newLength : 1];
   if (nsnull == to) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   // Copy over appropriate data
-  if (0 != offset) {
-    nsCRT::memcpy(to, mText, sizeof(PRUnichar) * offset);
+  if (0 != aOffset) {
+    nsCRT::memcpy(to, mText, sizeof(PRUnichar) * aOffset);
   }
   if (0 != dataLength) {
-    nsCRT::memcpy(to + offset, aData.GetUnicode(),
+    nsCRT::memcpy(to + aOffset, aData.GetUnicode(),
                   sizeof(PRUnichar) * dataLength);
   }
   if (endOffset != mLength) {
-    nsCRT::memcpy(to + offset + dataLength, mText + endOffset,
+    nsCRT::memcpy(to + aOffset + dataLength, mText + endOffset,
                   sizeof(PRUnichar) * (mLength - endOffset));
   }
 
@@ -1629,8 +1739,15 @@ Text::Replace(PRInt32 offset, PRInt32 count, nsString& aData)
   return NS_OK;
 }
 
-nsresult
-Text::Splice(nsIDOMElement* element, PRInt32 offset, PRInt32 count)
+// nsIDOMText interface
+NS_IMETHODIMP    
+Text::SplitText(PRUint32 aOffset, nsIDOMText** aReturn)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP    
+Text::JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

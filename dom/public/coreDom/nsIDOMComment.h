@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMNode.h"
+#include "nsIDOMData.h"
 
 class nsIDOMComment;
 
@@ -31,15 +31,12 @@ class nsIDOMComment;
 { 0x6f7652e2,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMComment : public nsIDOMNode {
+class nsIDOMComment : public nsIDOMData {
 public:
-
-  NS_IMETHOD    GetData(nsString& aData)=0;
-  NS_IMETHOD    SetData(nsString& aData)=0;
 };
 
 extern nsresult NS_InitCommentClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptComment(nsIScriptContext *aContext, nsIDOMComment *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptComment(nsIScriptContext *aContext, nsIDOMComment *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMComment_h__

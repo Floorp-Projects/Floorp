@@ -176,22 +176,22 @@ function testText(text)
 
 function findText(container)
 {
-  if (container.hasChildNodes()) {
+  if (container.hasChildNodes) {
     // Find the first piece of text in the container or one of it's
     // children and return it
-    var children = container.getChildNodes();
-    var length = children.getLength();
-    var child = children.getNextNode();
+    var children = container.childNodes;
+    var length = children.length;
+    var child = null;
     var count = 0;
     while (count < length) {
-      if (child.getNodeType() == Node.TEXT) {
+      child = children.item(count);
+      if (child.nodeType == Node.TEXT) {
         return child;
       }
       var text = findText(child);
       if (null != text) {
         return text;
       }
-      child = children.getNextNode();
       count++;
     }
   }
@@ -200,11 +200,29 @@ function findText(container)
 
 function findBody(node)
 {
-  if (node.getTagName() == "BODY") {
-    return node;
+  if (node.nodeType != Node.ELEMENT) {
+    return null;
   }
-  var children = node.getChildNodes();
-  return findBody(children.getNextNode());
+  var children = node.childNodes;
+  if (children == null) {
+    return null;
+  }
+  var length = children.length;
+  var child = null;
+  var count = 0;
+  while (count < length) {
+    child = children.item(count);
+    if (child.tagName == "BODY") {
+      dump("BODY found");
+      return child;
+    }
+    var body = findBody(child);
+    if (null != body) {
+      return body;
+    }
+    count++;
+  }
+  return null;
 }
 
 var body = findBody(document.documentElement)

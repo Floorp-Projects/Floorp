@@ -27,66 +27,54 @@ function dump2(msg, parent, child)
 {
   dump(msg);
   dump(" parent=");
-  dump(parent.getTagName());
+  dump(parent.tagName);
   dump(" child=");
-  dump((child.getNodeType() != Node.TEXT)  ? child.getTagName() : "(text)");
+  dump((child.nodeType != Node.TEXT)  ? child.tagName : "(text)");
 
   dump(" kids: ");
-  var children = parent.getChildNodes();
-  var length = children.getLength();
-  var child = children.getNextNode();
+  var children = parent.childNodes;
+  var length = children.length;
+  var child = null;
   var count = 0;
   while (count < length) {
-    dump((child.getNodeType() != Node.TEXT)  ? child.getTagName() : "(text)");
+    child = children.item(count);
+    dump((child.nodeType != Node.TEXT)  ? child.tagName : "(text)");
     dump(",");
     count++;
-    child = children.getNextNode();
   }
 
   dump("\n");
 }
 
-function nthChildOf(node, n)
-{
-  var children = node.getChildNodes();
-  var length = children.getLength();
-  var child = children.getNextNode();
-  var count = 0;
-  while ((count < length) && (count < n)) {
-    count++;
-    child = children.getNextNode();
-  }
-  return child;
-}
 
 function firstChildOf(node)
 {
-  var children = node.getChildNodes();
-  return nthChildOf(node, 0);
+  return node.childNodes.item(0);
 }
 
 function middleChildOf(node)
 {
-  var children = node.getChildNodes();
-  return nthChildOf(node, Math.floor(children.getLength() / 2));
+  var children = node.childNodes;
+  return children.item(Math.floor(children.length / 2));
 }
 
 function lastChildOf(node)
 {
-  var children = node.getChildNodes();
-  return nthChildOf(node, children.getLength() - 1)
+  var children = node.childNodes;
+  return children.item(children.length - 1)
 }
 
 function findContainer(node, name)
 {
-  dump("Looking in " + node.getTagName() + " for " + name + "\n");
-  var children = node.getChildNodes();
-  var length = children.getLength();
-  var child = children.getNextNode();
+  dump("Looking in " + node.tagName + " for " + name + "\n");
+  var children = node.childNodes;
+  var length = children.length;
+  var child = null;
   var count = 0;
   while (count < length) {
-    if (child.getNodeType() != Node.TEXT) {
-      if (child.getTagName() == name) {
+    child = children.item(count);
+    if (child.nodeType != Node.TEXT) {
+      if (child.tagName == name) {
         return child;
       }
       var body = findContainer(child, name);
@@ -94,7 +82,6 @@ function findContainer(node, name)
         return body;
       }
     }
-    child = children.getNextNode();
     count++;
   }
   return null;

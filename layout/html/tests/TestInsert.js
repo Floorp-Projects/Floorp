@@ -25,19 +25,19 @@ function trace(msg)
 
 function findBody(node)
 {
-  var children = node.getChildNodes();
-  var length = children.getLength();
-  var child = children.getNextNode();
+  var children = node.childNodes;
+  var length = children.length;
+  var child = null;
   var count = 0;
   while (count < length) {
-    if (child.getTagName() == "BODY") {
+    child = children.item(count);
+    if (child.tagName == "BODY") {
       return child;
     }
     var body = findBody(child);
     if (null != body) {
       return body;
     }
-    child = children.getNextNode();
     count++;
   }
   return null;
@@ -46,13 +46,13 @@ function findBody(node)
 function TestInsert(parent, child)
 {
   var childTag = "(text)";
-  if (child.getNodeType() != Node.TEXT) {
-    childTag = child.getTagName();
+  if (child.nodeType != Node.TEXT) {
+    childTag = child.tagName;
   }
 
   // Insert a piece of text before the span; this tests insertion at the
   // beginning
-  trace("insert before [" + parent.getTagName() + "," + childTag + "]");
+  trace("insert before [" + parent.tagName + "," + childTag + "]");
   count++;
   var beforeText = document.createTextNode("before ");
   parent.insertBefore(beforeText, child);

@@ -24,11 +24,12 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMNodeIterator;
+class nsIDOMNamedNodeMap;
 class nsIDOMNode;
+class nsIDOMNodeList;
 
 #define NS_IDOMNODE_IID \
-{ 0x6f7652e8,  0xee43, 0x11d1, \
+{ 0x6f7652ea,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMNode : public nsISupports {
@@ -37,34 +38,51 @@ public:
     DOCUMENT = 1,
     ELEMENT = 2,
     ATTRIBUTE = 3,
-    PI = 4,
+    PROCESSING_INSTRUCTION = 4,
     COMMENT = 5,
-    TEXT = 6
+    TEXT = 6,
+    CDATA_SECTION = 7,
+    DOCUMENT_FRAGMENT = 8,
+    ENTITY_DECLARATION = 9,
+    ENTITY_REFERENCE = 10
   };
 
-  NS_IMETHOD    GetNodeType(PRInt32* aReturn)=0;
+  NS_IMETHOD    GetNodeName(nsString& aNodeName)=0;
 
-  NS_IMETHOD    GetParentNode(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetNodeValue(nsString& aNodeValue)=0;
+  NS_IMETHOD    SetNodeValue(const nsString& aNodeValue)=0;
 
-  NS_IMETHOD    GetChildNodes(nsIDOMNodeIterator** aReturn)=0;
+  NS_IMETHOD    GetNodeType(PRInt32* aNodeType)=0;
 
-  NS_IMETHOD    HasChildNodes(PRBool* aReturn)=0;
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode)=0;
 
-  NS_IMETHOD    GetFirstChild(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes)=0;
 
-  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes)=0;
 
-  NS_IMETHOD    GetNextSibling(nsIDOMNode** aReturn)=0;
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild)=0;
 
-  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)=0;
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild)=0;
 
-  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)=0;
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling)=0;
 
-  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild)=0;
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling)=0;
+
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes)=0;
+
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    CloneNode(nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)=0;
 };
 
 extern nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptNode(nsIScriptContext *aContext, nsIDOMNode *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptNode(nsIScriptContext *aContext, nsIDOMNode *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMNode_h__

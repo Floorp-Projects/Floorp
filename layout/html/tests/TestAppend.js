@@ -25,19 +25,19 @@ function trace(msg)
 
 function findBody(node)
 {
-  var children = node.getChildNodes();
-  var length = children.getLength();
-  var child = children.getNextNode();
+  var children = node.childNodes;
+  var length = children.length;
+  var child = null;
   var count = 0;
   while (count < length) {
-    if (child.getTagName() == "BODY") {
+    child = children.item(count);
+    if (child.tagName == "BODY") {
       return child;
     }
     var body = findBody(child);
     if (null != body) {
       return body;
     }
-    child = children.getNextNode();
     count++;
   }
   return null;

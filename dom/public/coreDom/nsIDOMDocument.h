@@ -25,55 +25,50 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMDocumentFragment.h"
 
-class nsIDOMAttributeList;
 class nsIDOMElement;
-class nsIDOMPI;
-class nsIDOMNodeIterator;
 class nsIDOMDocument;
-class nsIDOMTreeIterator;
+class nsIDOMProcessingInstruction;
+class nsIDOMNamedNodeMap;
 class nsIDOMAttribute;
 class nsIDOMNode;
 class nsIDOMText;
-class nsIDOMDocumentContext;
+class nsIDOMDocumentType;
+class nsIDOMDocumentFragment;
 class nsIDOMComment;
+class nsIDOMNodeList;
 
 #define NS_IDOMDOCUMENT_IID \
-{ 0x6f7652e3,  0xee43, 0x11d1, \
+{ 0x6f7652e4,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMDocument : public nsIDOMDocumentFragment {
 public:
 
-  NS_IMETHOD    GetDocumentType(nsIDOMNode** aDocumentType)=0;
-  NS_IMETHOD    SetDocumentType(nsIDOMNode* aDocumentType)=0;
+  NS_IMETHOD    GetDocumentType(nsIDOMDocumentType** aDocumentType)=0;
+
+  NS_IMETHOD    GetProlog(nsIDOMNodeList** aProlog)=0;
+
+  NS_IMETHOD    GetEpilog(nsIDOMNodeList** aEpilog)=0;
 
   NS_IMETHOD    GetDocumentElement(nsIDOMElement** aDocumentElement)=0;
-  NS_IMETHOD    SetDocumentElement(nsIDOMElement* aDocumentElement)=0;
 
-  NS_IMETHOD    GetDocumentContext(nsIDOMDocumentContext** aDocumentContext)=0;
-  NS_IMETHOD    SetDocumentContext(nsIDOMDocumentContext* aDocumentContext)=0;
+  NS_IMETHOD    CreateElement(const nsString& aTagName, nsIDOMNamedNodeMap* aAttributes, nsIDOMElement** aReturn)=0;
 
-  NS_IMETHOD    CreateDocumentContext(nsIDOMDocumentContext** aReturn)=0;
+  NS_IMETHOD    CreateDocumentFragment(nsIDOMDocumentFragment** aReturn)=0;
 
-  NS_IMETHOD    CreateElement(nsString& aTagName, nsIDOMAttributeList* aAttributes, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn)=0;
 
-  NS_IMETHOD    CreateTextNode(nsString& aData, nsIDOMText** aReturn)=0;
+  NS_IMETHOD    CreateComment(const nsString& aData, nsIDOMComment** aReturn)=0;
 
-  NS_IMETHOD    CreateComment(nsString& aData, nsIDOMComment** aReturn)=0;
+  NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn)=0;
 
-  NS_IMETHOD    CreatePI(nsString& aName, nsString& aData, nsIDOMPI** aReturn)=0;
+  NS_IMETHOD    CreateAttribute(const nsString& aName, nsIDOMNode* aValue, nsIDOMAttribute** aReturn)=0;
 
-  NS_IMETHOD    CreateAttribute(nsString& aName, nsIDOMNode* aValue, nsIDOMAttribute** aReturn)=0;
-
-  NS_IMETHOD    CreateAttributeList(nsIDOMAttributeList** aReturn)=0;
-
-  NS_IMETHOD    CreateTreeIterator(nsIDOMNode* aNode, nsIDOMTreeIterator** aReturn)=0;
-
-  NS_IMETHOD    GetElementsByTagName(nsString& aTagname, nsIDOMNodeIterator** aReturn)=0;
+  NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn)=0;
 };
 
 extern nsresult NS_InitDocumentClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptDocument(nsIScriptContext *aContext, nsIDOMDocument *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDocument(nsIScriptContext *aContext, nsIDOMDocument *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMDocument_h__

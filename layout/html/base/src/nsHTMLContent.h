@@ -119,15 +119,17 @@ public:
   NS_IMETHOD ResetScriptObject();
 
   // nsIDOMNode interface
-  NS_IMETHOD GetParentNode(nsIDOMNode **aNode);
-  NS_IMETHOD GetChildNodes(nsIDOMNodeIterator **aIterator);
-  NS_IMETHOD HasChildNodes(PRBool *aReturn);
-  NS_IMETHOD GetFirstChild(nsIDOMNode **aNode);
-  NS_IMETHOD GetPreviousSibling(nsIDOMNode **aNode);
-  NS_IMETHOD GetNextSibling(nsIDOMNode **aNode);
-  NS_IMETHOD InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild);
-  NS_IMETHOD ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild);
-  NS_IMETHOD RemoveChild(nsIDOMNode *oldChild);
+  NS_IMETHOD    GetParentNode(nsIDOMNode** aParentNode);
+  NS_IMETHOD    GetChildNodes(nsIDOMNodeList** aChildNodes);
+  NS_IMETHOD    GetHasChildNodes(PRBool* aHasChildNodes);
+  NS_IMETHOD    GetFirstChild(nsIDOMNode** aFirstChild);
+  NS_IMETHOD    GetLastChild(nsIDOMNode** aLastChild);
+  NS_IMETHOD    GetPreviousSibling(nsIDOMNode** aPreviousSibling);
+  NS_IMETHOD    GetNextSibling(nsIDOMNode** aNextSibling);
+  NS_IMETHOD    GetAttributes(nsIDOMNamedNodeMap** aAttributes);
+  NS_IMETHOD    InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
+  NS_IMETHOD    RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn);
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);

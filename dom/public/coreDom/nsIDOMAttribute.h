@@ -23,6 +23,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMNode.h"
 
 class nsIDOMAttribute;
 
@@ -30,22 +31,19 @@ class nsIDOMAttribute;
 { 0x6f7652e0,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMAttribute : public nsISupports {
+class nsIDOMAttribute : public nsIDOMNode {
 public:
 
-  NS_IMETHOD    GetValue(nsString& aValue)=0;
-  NS_IMETHOD    SetValue(nsString& aValue)=0;
+  NS_IMETHOD    GetName(nsString& aName)=0;
 
   NS_IMETHOD    GetSpecified(PRBool* aSpecified)=0;
   NS_IMETHOD    SetSpecified(PRBool aSpecified)=0;
 
-  NS_IMETHOD    GetName(nsString& aReturn)=0;
-
-  NS_IMETHOD    ToString(nsString& aReturn)=0;
+  NS_IMETHOD    GetValue(nsString& aValue)=0;
 };
 
 extern nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptAttribute(nsIScriptContext *aContext, nsIDOMAttribute *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsIDOMAttribute *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMAttribute_h__

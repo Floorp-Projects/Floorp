@@ -366,7 +366,7 @@ nsresult NS_InitDOMClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new DOM JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptDOM(nsIScriptContext *aContext, nsIDOMDOM *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptDOM(nsIScriptContext *aContext, nsIDOMDOM *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptDOM");
   JSObject *proto;

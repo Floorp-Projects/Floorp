@@ -17,41 +17,41 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMNavigator_h__
-#define nsIDOMNavigator_h__
+#ifndef nsIDOMData_h__
+#define nsIDOMData_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
+#include "nsIDOMNode.h"
 
-class nsIDOMNavigator;
+class nsIDOMData;
 
-#define NS_IDOMNAVIGATOR_IID \
-{ 0x6f7652ee,  0xee43, 0x11d1, \
+#define NS_IDOMDATA_IID \
+{ 0x6f7652e3,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMNavigator : public nsISupports {
+class nsIDOMData : public nsIDOMNode {
 public:
 
-  NS_IMETHOD    GetUserAgent(nsString& aUserAgent)=0;
+  NS_IMETHOD    GetData(nsString& aData)=0;
+  NS_IMETHOD    SetData(const nsString& aData)=0;
 
-  NS_IMETHOD    GetAppCodeName(nsString& aAppCodeName)=0;
+  NS_IMETHOD    GetSize(PRUint32* aSize)=0;
 
-  NS_IMETHOD    GetAppVersion(nsString& aAppVersion)=0;
+  NS_IMETHOD    Substring(PRUint32 aStart, PRUint32 aEnd, nsString& aReturn)=0;
 
-  NS_IMETHOD    GetAppName(nsString& aAppName)=0;
+  NS_IMETHOD    Append(const nsString& aData)=0;
 
-  NS_IMETHOD    GetLanguage(nsString& aLanguage)=0;
+  NS_IMETHOD    Insert(PRUint32 aOffset, const nsString& aData)=0;
 
-  NS_IMETHOD    GetPlatform(nsString& aPlatform)=0;
+  NS_IMETHOD    Remove(PRUint32 aOffset, PRUint32 aCount)=0;
 
-  NS_IMETHOD    GetSecurityPolicy(nsString& aSecurityPolicy)=0;
-
-  NS_IMETHOD    JavaEnabled(PRBool* aReturn)=0;
+  NS_IMETHOD    Replace(PRUint32 aOffset, PRUint32 aCount, const nsString& aData)=0;
 };
 
-extern nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitDataClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptNavigator(nsIScriptContext *aContext, nsIDOMNavigator *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptData(nsIScriptContext *aContext, nsIDOMData *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMNavigator_h__
+#endif // nsIDOMData_h__

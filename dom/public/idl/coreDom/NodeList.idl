@@ -1,0 +1,5 @@
+   interface NodeList {
+     Node                      item(in unsigned long index);
+     readonly attribute unsigned long   length;
+   };
+

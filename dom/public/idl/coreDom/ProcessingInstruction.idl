@@ -1,0 +1,4 @@
+   interface ProcessingInstruction : Node {
+     attribute wstring         target;
+     attribute wstring         data;
+   };

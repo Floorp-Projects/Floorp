@@ -579,7 +579,7 @@ nsresult NS_InitWindowClass(nsIScriptContext *aContext,
 //
 // Method for creating a new Window JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null arg");
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
