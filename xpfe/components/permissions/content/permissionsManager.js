@@ -22,7 +22,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 const nsIPermissionManager = Components.interfaces.nsIPermissionManager;
-const popupType = nsIPermissionManager.POPUP_TYPE;
+const popupType = "popup";
 
 var permissionManager = null;
 

@@ -149,7 +149,7 @@ const gPopupPermListener = {
   }
 };
 
-const POPUP_TYPE = 2;
+const POPUP_TYPE = "popup";
 const gPopupPrefListener =
 {
   domain: "dom.disable_open_during_load",
