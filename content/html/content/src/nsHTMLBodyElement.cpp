@@ -293,9 +293,9 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
                        nsIPresContext* aPresContext)
 {
   if (mPart) {
-    nsStyleMargin* marginStyle = (nsStyleMargin*)(aContext->GetMutableStyleData(eStyleStruct_Margin));
+    nsStyleSpacing* styleSpacing = (nsStyleSpacing*)(aContext->GetMutableStyleData(eStyleStruct_Spacing));
 
-    if (nsnull != marginStyle) {
+    if (nsnull != styleSpacing) {
       nsHTMLValue   value;
       PRInt32       attrCount;
       float         p2t;
@@ -313,8 +313,8 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
             bodyMarginWidth = 0;
           }
           nsStyleCoord  widthCoord(bodyMarginWidth);
-          marginStyle->mMargin.SetLeft(widthCoord);
-          marginStyle->mMargin.SetRight(widthCoord);
+          styleSpacing->mMargin.SetLeft(widthCoord);
+          styleSpacing->mMargin.SetRight(widthCoord);
         }
 
         mPart->GetHTMLAttribute(nsHTMLAtoms::marginheight, value);
@@ -325,8 +325,8 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
           }
       
           nsStyleCoord  heightCoord(bodyMarginHeight);
-          marginStyle->mMargin.SetTop(heightCoord);
-          marginStyle->mMargin.SetBottom(heightCoord);
+          styleSpacing->mMargin.SetTop(heightCoord);
+          styleSpacing->mMargin.SetBottom(heightCoord);
         }
       }
 
@@ -363,14 +363,14 @@ BodyRule::MapStyleInto(nsIMutableStyleContext* aContext,
 
             if ((0 > bodyMarginWidth) && (frameMarginWidth >= 0)) {
               nsStyleCoord widthCoord(frameMarginWidth);
-              marginStyle->mMargin.SetLeft(widthCoord);
-              marginStyle->mMargin.SetRight(widthCoord);
+              styleSpacing->mMargin.SetLeft(widthCoord);
+              styleSpacing->mMargin.SetRight(widthCoord);
             }
 
             if ((0 > bodyMarginHeight) && (frameMarginHeight >= 0)) {
               nsStyleCoord heightCoord(frameMarginHeight);
-              marginStyle->mMargin.SetTop(heightCoord);
-              marginStyle->mMargin.SetBottom(heightCoord);
+              styleSpacing->mMargin.SetTop(heightCoord);
+              styleSpacing->mMargin.SetBottom(heightCoord);
             }
           }
           NS_RELEASE(container);

@@ -9490,10 +9490,10 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     if (! view) { // if frame has view, will already be invalidated
       // XXX Instead of calling this we should really be calling
       // Invalidate on on the nsFrame (which does this)
-      const nsStyleOutline* outline;
-      aFrame->GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline);
+      const nsStyleSpacing* spacing;
+      aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
       nscoord width;
-      outline->GetOutlineWidth(width);
+      spacing->GetOutlineWidth(width);
       if (width > 0) {
         invalidRect.Inflate(width, width);
       }

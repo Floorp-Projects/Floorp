@@ -844,15 +844,15 @@ nsComputedDOMStyle::GetMargin(nsAWritableString& aMargin)
 nsresult GetMargins(nsIFrame *aFrame, nscoord& left, nscoord& top,
                     nscoord& right, nscoord& bottom)
 {
-  const nsStyleBorder* border;
+  const nsStyleSpacing* spacing;
   nsStyleCoord coord;
-  frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-  if (border) {
-    if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-      origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+  frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  if (spacing) {
+    if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+      origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
     }
-    if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-      origin.y += border->mBorder.GetTop(coord).GetCoordValue();
+    if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+      origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
     }
   }
 }
@@ -1267,33 +1267,31 @@ nsComputedDOMStyle::GetAbsoluteFrameRect(nsIFrame *aFrame, nsRect& aRect)
   }
 
   // For the origin, add in the border for the frame
-  const nsStyleBorder* border;
-  const nsStylePadding* padding;
+  const nsStyleSpacing* spacing;
   nsStyleCoord coord;
-  aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-  aFrame->GetStyleData(eStyleStruct_Padding, (const nsStyleStruct*&)padding);
-  if (border && padding) {
-    if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-      origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
-      aRect.width -= border->mBorder.GetLeft(coord).GetCoordValue();
-      //aRect.width -= margin->mMargin.GetLeft(coord).GetCoordValue();
-      aRect.width -= padding->mPadding.GetLeft(coord).GetCoordValue();
+  aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  if (spacing) {
+    if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+      origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
+      aRect.width -= spacing->mBorder.GetLeft(coord).GetCoordValue();
+      //aRect.width -= spacing->mMargin.GetLeft(coord).GetCoordValue();
+      aRect.width -= spacing->mPadding.GetLeft(coord).GetCoordValue();
     }
-    if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-      origin.y += border->mBorder.GetTop(coord).GetCoordValue();
-      aRect.height -= border->mBorder.GetTop(coord).GetCoordValue();
-      //aRect.height -= margin->mMargin.GetTop(coord).GetCoordValue();
-      aRect.height -= padding->mPadding.GetTop(coord).GetCoordValue();
+    if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+      origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
+      aRect.height -= spacing->mBorder.GetTop(coord).GetCoordValue();
+      //aRect.height -= spacing->mMargin.GetTop(coord).GetCoordValue();
+      aRect.height -= spacing->mPadding.GetTop(coord).GetCoordValue();
     }
-    if (eStyleUnit_Coord == border->mBorder.GetRightUnit()) {
-      aRect.width -= border->mBorder.GetRight(coord).GetCoordValue();
-      //aRect.width -= margin->mMargin.GetRight(coord).GetCoordValue();
-      aRect.width -= padding->mPadding.GetRight(coord).GetCoordValue();
+    if (eStyleUnit_Coord == spacing->mBorder.GetRightUnit()) {
+      aRect.width -= spacing->mBorder.GetRight(coord).GetCoordValue();
+      //aRect.width -= spacing->mMargin.GetRight(coord).GetCoordValue();
+      aRect.width -= spacing->mPadding.GetRight(coord).GetCoordValue();
     }
-    if (eStyleUnit_Coord == border->mBorder.GetBottomUnit()) {
-      aRect.height -= border->mBorder.GetBottom(coord).GetCoordValue();
-      //aRect.height -= margin->mMargin.GetBottom(coord).GetCoordValue();
-      aRect.height -= padding->mPadding.GetBottom(coord).GetCoordValue();
+    if (eStyleUnit_Coord == spacing->mBorder.GetBottomUnit()) {
+      aRect.height -= spacing->mBorder.GetBottom(coord).GetCoordValue();
+      //aRect.height -= spacing->mMargin.GetBottom(coord).GetCoordValue();
+      aRect.height -= spacing->mPadding.GetBottom(coord).GetCoordValue();
     }
   }
 

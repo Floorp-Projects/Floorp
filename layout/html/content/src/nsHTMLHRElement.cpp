@@ -207,22 +207,22 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
     aAttributes->GetAttribute(nsHTMLAtoms::align, value);
     if (eHTMLUnit_Enumerated == value.GetUnit()) {
       // Map align attribute into auto side margins
-      nsStyleMargin* margin = (nsStyleMargin*)
-        aContext->GetMutableStyleData(eStyleStruct_Margin);
+      nsStyleSpacing* spacing = (nsStyleSpacing*)
+        aContext->GetMutableStyleData(eStyleStruct_Spacing);
       nsStyleCoord otto(eStyleUnit_Auto);
       nsStyleCoord zero(nscoord(0));
       switch (value.GetIntValue()) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
-        margin->mMargin.SetLeft(zero);
-        margin->mMargin.SetRight(otto);
+        spacing->mMargin.SetLeft(zero);
+        spacing->mMargin.SetRight(otto);
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
-        margin->mMargin.SetLeft(otto);
-        margin->mMargin.SetRight(zero);
+        spacing->mMargin.SetLeft(otto);
+        spacing->mMargin.SetRight(zero);
         break;
       case NS_STYLE_TEXT_ALIGN_CENTER:
-        margin->mMargin.SetLeft(otto);
-        margin->mMargin.SetRight(otto);
+        spacing->mMargin.SetLeft(otto);
+        spacing->mMargin.SetRight(otto);
         break;
       }
     }

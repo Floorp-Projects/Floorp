@@ -715,28 +715,28 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
         }
 
         // For the origin, add in the border for the frame
-        const nsStyleBorder* border;
+        const nsStyleSpacing* spacing;
         nsStyleCoord coord;
-        frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-        if (border) {
-          if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-            origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+        frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        if (spacing) {
+          if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+            origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
           }
-          if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-            origin.y += border->mBorder.GetTop(coord).GetCoordValue();
+          if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+            origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
           }
         }
 
         // And subtract out the border for the parent
         if (parent) {
-          const nsStyleBorder* parentBorder;
-          parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)parentBorder);
-          if (parentBorder) {
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
-              origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
+          const nsStyleSpacing* parentSpacing;
+          parent->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)parentSpacing);
+          if (parentSpacing) {
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetLeftUnit()) {
+              origin.x -= parentSpacing->mBorder.GetLeft(coord).GetCoordValue();
             }
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
-              origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetTopUnit()) {
+              origin.y -= parentSpacing->mBorder.GetTop(coord).GetCoordValue();
             }
           }
         }
@@ -2911,8 +2911,8 @@ nsGenericHTMLElement::MapImageAttributesInto(const nsIHTMLMappedAttributes* aAtt
   aPresContext->GetScaledPixelsToTwips(&p2t);
   nsStylePosition* pos = (nsStylePosition*)
     aContext->GetMutableStyleData(eStyleStruct_Position);
-  nsStyleMargin* margin = (nsStyleMargin*)
-    aContext->GetMutableStyleData(eStyleStruct_Margin);
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    aContext->GetMutableStyleData(eStyleStruct_Spacing);
 
   // width: value
   aAttributes->GetAttribute(nsHTMLAtoms::width, value);
@@ -2939,13 +2939,13 @@ nsGenericHTMLElement::MapImageAttributesInto(const nsIHTMLMappedAttributes* aAtt
   if (value.GetUnit() == eHTMLUnit_Pixel) {
     nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
     nsStyleCoord c(twips);
-    margin->mMargin.SetLeft(c);
-    margin->mMargin.SetRight(c);
+    spacing->mMargin.SetLeft(c);
+    spacing->mMargin.SetRight(c);
   }
   else if (value.GetUnit() == eHTMLUnit_Percent) {
     nsStyleCoord c(value.GetPercentValue(), eStyleUnit_Percent);
-    margin->mMargin.SetLeft(c);
-    margin->mMargin.SetRight(c);
+    spacing->mMargin.SetLeft(c);
+    spacing->mMargin.SetRight(c);
   }
 
   // vspace: value
@@ -2953,13 +2953,13 @@ nsGenericHTMLElement::MapImageAttributesInto(const nsIHTMLMappedAttributes* aAtt
   if (value.GetUnit() == eHTMLUnit_Pixel) {
     nscoord twips = NSIntPixelsToTwips(value.GetPixelValue(), p2t);
     nsStyleCoord c(twips);
-    margin->mMargin.SetTop(c);
-    margin->mMargin.SetBottom(c);
+    spacing->mMargin.SetTop(c);
+    spacing->mMargin.SetBottom(c);
   }
   else if (value.GetUnit() == eHTMLUnit_Percent) {
     nsStyleCoord c(value.GetPercentValue(), eStyleUnit_Percent);
-    margin->mMargin.SetTop(c);
-    margin->mMargin.SetBottom(c);
+    spacing->mMargin.SetTop(c);
+    spacing->mMargin.SetBottom(c);
   }
 }
 
@@ -2990,21 +2990,21 @@ nsGenericHTMLElement::MapImageAlignAttributeInto(const nsIHTMLMappedAttributes* 
       aContext->GetMutableStyleData(eStyleStruct_Display);
     nsStyleText* text = (nsStyleText*)
       aContext->GetMutableStyleData(eStyleStruct_Text);
-    nsStyleMargin* margin = (nsStyleMargin*)
-      aContext->GetMutableStyleData(eStyleStruct_Margin);
+    nsStyleSpacing* spacing = (nsStyleSpacing*)
+      aContext->GetMutableStyleData(eStyleStruct_Spacing);
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
     nsStyleCoord three(NSIntPixelsToTwips(3, p2t));
     switch (align) {
       case NS_STYLE_TEXT_ALIGN_LEFT:
         display->mFloats = NS_STYLE_FLOAT_LEFT;
-        margin->mMargin.SetLeft(three);
-        margin->mMargin.SetRight(three);
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
         break;
       case NS_STYLE_TEXT_ALIGN_RIGHT:
         display->mFloats = NS_STYLE_FLOAT_RIGHT;
-        margin->mMargin.SetLeft(three);
-        margin->mMargin.SetRight(three);
+        spacing->mMargin.SetLeft(three);
+        spacing->mMargin.SetRight(three);
         break;
       default:
         text->mVerticalAlign.SetIntValue(align, eStyleUnit_Enumerated);
@@ -3053,39 +3053,38 @@ nsGenericHTMLElement::MapImageBorderAttributeInto(const nsIHTMLMappedAttributes*
 
   // Fixup border-padding sums: subtract out the old size and then
   // add in the new size.
-  nsStyleBorder* border = (nsStyleBorder*)
-    aContext->GetMutableStyleData(eStyleStruct_Border);
-
+  nsStyleSpacing* spacing = (nsStyleSpacing*)
+    aContext->GetMutableStyleData(eStyleStruct_Spacing);
   nsStyleCoord coord;
   coord.SetCoordValue(twips);
-  border->mBorder.SetTop(coord);
-  border->mBorder.SetRight(coord);
-  border->mBorder.SetBottom(coord);
-  border->mBorder.SetLeft(coord);
+  spacing->mBorder.SetTop(coord);
+  spacing->mBorder.SetRight(coord);
+  spacing->mBorder.SetBottom(coord);
+  spacing->mBorder.SetLeft(coord);
 
-	border->SetBorderStyle(0,NS_STYLE_BORDER_STYLE_SOLID);
-	border->SetBorderStyle(1,NS_STYLE_BORDER_STYLE_SOLID);
-	border->SetBorderStyle(2,NS_STYLE_BORDER_STYLE_SOLID);
-	border->SetBorderStyle(3,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(0,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(1,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(2,NS_STYLE_BORDER_STYLE_SOLID);
+	spacing->SetBorderStyle(3,NS_STYLE_BORDER_STYLE_SOLID);
 
 
   // Use supplied colors if provided, otherwise use color for border
   // color
   if (nsnull != aBorderColors) {
-    border->SetBorderColor(0, aBorderColors[0]);
-  	border->SetBorderColor(1, aBorderColors[1]);
-	  border->SetBorderColor(2, aBorderColors[2]);
-	  border->SetBorderColor(3, aBorderColors[3]);
+    spacing->SetBorderColor(0, aBorderColors[0]);
+  	spacing->SetBorderColor(1, aBorderColors[1]);
+	  spacing->SetBorderColor(2, aBorderColors[2]);
+	  spacing->SetBorderColor(3, aBorderColors[3]);
   }
   else {
     // Color is inherited from "color"
     const nsStyleColor* styleColor = (const nsStyleColor*)
       aContext->GetStyleData(eStyleStruct_Color);
     nscolor color = styleColor->mColor;
-    border->SetBorderColor(0, color);
-    border->SetBorderColor(1, color);
-    border->SetBorderColor(2, color);
-    border->SetBorderColor(3, color);
+    spacing->SetBorderColor(0, color);
+    spacing->SetBorderColor(1, color);
+    spacing->SetBorderColor(2, color);
+    spacing->SetBorderColor(3, color);
   }
 }
 

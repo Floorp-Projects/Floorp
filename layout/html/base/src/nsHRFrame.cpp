@@ -133,15 +133,15 @@ HRuleFrame::Paint(nsIPresContext*      aPresContext,
   if (!noShadeAttribute) {
     nsRect rect(x0, y0, width, height);
 
-    const nsStyleBorder* border = (const nsStyleBorder*)
-      mStyleContext->GetStyleData(eStyleStruct_Border);
+    const nsStyleSpacing* spacing = 
+      (nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     color = (nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
     
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext,
                                     this,aDirtyRect, rect, *color, 
-                                    *border, 0, 0);
+                                    *spacing, 0, 0);
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext,
-                                this,aDirtyRect, rect, *border,
+                                this,aDirtyRect, rect, *spacing,
                                 mStyleContext, 0);
   } else {
     nscolor colors[2]; 

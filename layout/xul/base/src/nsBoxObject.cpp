@@ -185,28 +185,28 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
         }
   
         // For the origin, add in the border for the frame
-        const nsStyleBorder* border;
+        const nsStyleSpacing* spacing;
         nsStyleCoord coord;
-        frame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
-        if (border) {
-          if (eStyleUnit_Coord == border->mBorder.GetLeftUnit()) {
-            origin.x += border->mBorder.GetLeft(coord).GetCoordValue();
+        frame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+        if (spacing) {
+          if (eStyleUnit_Coord == spacing->mBorder.GetLeftUnit()) {
+            origin.x += spacing->mBorder.GetLeft(coord).GetCoordValue();
           }
-          if (eStyleUnit_Coord == border->mBorder.GetTopUnit()) {
-            origin.y += border->mBorder.GetTop(coord).GetCoordValue();
+          if (eStyleUnit_Coord == spacing->mBorder.GetTopUnit()) {
+            origin.y += spacing->mBorder.GetTop(coord).GetCoordValue();
           }
         }
 
         // And subtract out the border for the parent
         if (parent) {
-          const nsStyleBorder* parentBorder;
-          parent->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)parentBorder);
-          if (parentBorder) {
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetLeftUnit()) {
-              origin.x -= parentBorder->mBorder.GetLeft(coord).GetCoordValue();
+          const nsStyleSpacing* parentSpacing;
+          parent->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)parentSpacing);
+          if (parentSpacing) {
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetLeftUnit()) {
+              origin.x -= parentSpacing->mBorder.GetLeft(coord).GetCoordValue();
             }
-            if (eStyleUnit_Coord == parentBorder->mBorder.GetTopUnit()) {
-              origin.y -= parentBorder->mBorder.GetTop(coord).GetCoordValue();
+            if (eStyleUnit_Coord == parentSpacing->mBorder.GetTopUnit()) {
+              origin.y -= parentSpacing->mBorder.GetTop(coord).GetCoordValue();
             }
           }
         }

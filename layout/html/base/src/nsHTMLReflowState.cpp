@@ -179,12 +179,8 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
                       (const nsStyleStruct*&)mStylePosition);
   frame->GetStyleData(eStyleStruct_Display,
                       (const nsStyleStruct*&)mStyleDisplay);
-  frame->GetStyleData(eStyleStruct_Border,
-                      (const nsStyleStruct*&)mStyleBorder);
-  frame->GetStyleData(eStyleStruct_Margin,
-                      (const nsStyleStruct*&)mStyleMargin);
-  frame->GetStyleData(eStyleStruct_Padding,
-                      (const nsStyleStruct*&)mStylePadding);
+  frame->GetStyleData(eStyleStruct_Spacing,
+                      (const nsStyleStruct*&)mStyleSpacing);
   frame->GetStyleData(eStyleStruct_Text,
                       (const nsStyleStruct*&)mStyleText);
   mFrameType = DetermineFrameType(frame, mStylePosition, mStyleDisplay);
@@ -479,10 +475,10 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
   
     // Subtract off for border and padding. If it can't be computed because
     // it's percentage based (for example) then just ignore it
-    nsStyleBorderPadding  bPad;
-    nsMargin              borderPadding;
-    aFrame->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
-    if (bPad.GetBorderPadding(borderPadding)) {
+    nsStyleSpacing*  spacing;
+    nsMargin         borderPadding;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    if (spacing->GetBorderPadding(borderPadding)) {
       aContentArea.left += borderPadding.left;
       aContentArea.top += borderPadding.top;
       aContentArea.right -= borderPadding.right;
@@ -538,55 +534,55 @@ nsHTMLReflowState::CalculateHorizBorderPaddingMargin(nscoord aContainingBlockWid
   nsMargin  border, padding, margin;
 
   // Get the border
-  if (!mStyleBorder->GetBorder(border)) {
+  if (!mStyleSpacing->GetBorder(border)) {
     // CSS2 has no percentage borders
     border.SizeTo(0, 0, 0, 0);
   }
 
   // See if the style system can provide us the padding directly
-  if (!mStylePadding->GetPadding(padding)) {
+  if (!mStyleSpacing->GetPadding(padding)) {
     nsStyleCoord left, right;
 
     // We have to compute the left and right values
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetLeftUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetLeftUnit()) {
       padding.left = 0;  // just ignore
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetLeftUnit(),
-                             mStylePadding->mPadding.GetLeft(left),
+                             mStyleSpacing->mPadding.GetLeftUnit(),
+                             mStyleSpacing->mPadding.GetLeft(left),
                              padding.left);
     }
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetRightUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetRightUnit()) {
       padding.right = 0;  // just ignore
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetRightUnit(),
-                             mStylePadding->mPadding.GetRight(right),
+                             mStyleSpacing->mPadding.GetRightUnit(),
+                             mStyleSpacing->mPadding.GetRight(right),
                              padding.right);
     }
   }
 
   // See if the style system can provide us the margin directly
-  if (!mStyleMargin->GetMargin(margin)) {
+  if (!mStyleSpacing->GetMargin(margin)) {
     nsStyleCoord left, right;
 
     // We have to compute the left and right values
-    if ((eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit()) ||
-        (eStyleUnit_Inherit == mStyleMargin->mMargin.GetLeftUnit())) {
+    if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) ||
+        (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetLeftUnit())) {
       margin.left = 0;  // just ignore
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStyleMargin->mMargin.GetLeftUnit(),
-                             mStyleMargin->mMargin.GetLeft(left),
+                             mStyleSpacing->mMargin.GetLeftUnit(),
+                             mStyleSpacing->mMargin.GetLeft(left),
                              margin.left);
     }
-    if ((eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit()) ||
-        (eStyleUnit_Inherit == mStyleMargin->mMargin.GetRightUnit())) {
+    if ((eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit()) ||
+        (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetRightUnit())) {
       margin.right = 0;  // just ignore
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStyleMargin->mMargin.GetRightUnit(),
-                             mStyleMargin->mMargin.GetRight(right),
+                             mStyleSpacing->mMargin.GetRightUnit(),
+                             mStyleSpacing->mMargin.GetRight(right),
                              margin.right);
     }
   }
@@ -847,10 +843,10 @@ nsHTMLReflowState::CalculateHypotheticalBox(nsIPresContext*    aPresContext,
   // The specified offsets are relative to the absolute containing block's padding
   // edge, and our current values are relative to the border edge so translate
   nsMargin              border;
-  const nsStyleBorder* borderStyle;
+  const nsStyleSpacing* spacing;
 
-  aAbsoluteContainingBlockFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)borderStyle);
-  if (!borderStyle->GetBorder(border)) {
+  aAbsoluteContainingBlockFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+  if (!spacing->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
   }
   aHypotheticalBox.mLeft -= border.left;
@@ -968,8 +964,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
 
     } else {
       // Calculate any 'auto' margin values
-      PRBool  marginLeftIsAuto = (eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit());
-      PRBool  marginRightIsAuto = (eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit());
+      PRBool  marginLeftIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit());
+      PRBool  marginRightIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit());
       PRInt32 availMarginSpace = availContentSpace - mComputedWidth;
 
       if (marginLeftIsAuto) {
@@ -1171,8 +1167,8 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext* aPresContext,
 
     } else {
       // Calculate any 'auto' margin values
-      PRBool  marginTopIsAuto = (eStyleUnit_Auto == mStyleMargin->mMargin.GetTopUnit());
-      PRBool  marginBottomIsAuto = (eStyleUnit_Auto == mStyleMargin->mMargin.GetBottomUnit());
+      PRBool  marginTopIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetTopUnit());
+      PRBool  marginBottomIsAuto = (eStyleUnit_Auto == mStyleSpacing->mMargin.GetBottomUnit());
       PRInt32 availMarginSpace = availContentSpace - mComputedHeight;
 
       if (marginTopIsAuto) {
@@ -1535,7 +1531,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     // inline-non-replaced elements
     ComputeMargin(aContainingBlockWidth, cbrs);
     ComputePadding(aContainingBlockWidth, cbrs);
-    if (!mStyleBorder->GetBorder(mComputedBorderPadding)) {
+    if (!mStyleSpacing->GetBorder(mComputedBorderPadding)) {
       // CSS2 has no percentage borders
       mComputedBorderPadding.SizeTo(0, 0, 0, 0);
     }
@@ -1862,10 +1858,10 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
           mComputedWidth = 0; // XXX temp fix for trees
         } else if (nsLayoutAtoms::tableFrame == fType.get()) {
           mComputedWidth = NS_SHRINKWRAPWIDTH;
-          if (eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit()) {
+          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit()) {
             mComputedMargin.left = NS_AUTOMARGIN;
           }
-          if (eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit()) {
+          if (eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit()) {
             mComputedMargin.right = NS_AUTOMARGIN;
           }
         } else {
@@ -2001,9 +1997,9 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
   // Determine the left and right margin values. The width value
   // remains constant while we do this.
   PRBool isAutoLeftMargin =
-    eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit();
+    eStyleUnit_Auto == mStyleSpacing->mMargin.GetLeftUnit();
   PRBool isAutoRightMargin =
-    eStyleUnit_Auto == mStyleMargin->mMargin.GetRightUnit();
+    eStyleUnit_Auto == mStyleSpacing->mMargin.GetRightUnit();
 
   // Calculate how much space is available for margins
   nscoord availMarginSpace = aAvailWidth - aComputedWidth -
@@ -2295,42 +2291,42 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth,
                                  const nsHTMLReflowState* aContainingBlockRS)
 {
   // If style style can provide us the margin directly, then use it.
-  if (!mStyleMargin->GetMargin(mComputedMargin)) {
+  if (!mStyleSpacing->GetMargin(mComputedMargin)) {
     // We have to compute the value
     if (NS_UNCONSTRAINEDSIZE == aContainingBlockWidth) {
       mComputedMargin.left = 0;
       mComputedMargin.right = 0;
 
-      if (eStyleUnit_Coord == mStyleMargin->mMargin.GetLeftUnit()) {
+      if (eStyleUnit_Coord == mStyleSpacing->mMargin.GetLeftUnit()) {
         nsStyleCoord left;
         
-        mStyleMargin->mMargin.GetLeft(left),
+        mStyleSpacing->mMargin.GetLeft(left),
         mComputedMargin.left = left.GetCoordValue();
       }
-      if (eStyleUnit_Coord == mStyleMargin->mMargin.GetRightUnit()) {
+      if (eStyleUnit_Coord == mStyleSpacing->mMargin.GetRightUnit()) {
         nsStyleCoord right;
         
-        mStyleMargin->mMargin.GetRight(right),
+        mStyleSpacing->mMargin.GetRight(right),
         mComputedMargin.right = right.GetCoordValue();
       }
 
     } else {
       nsStyleCoord left, right;
 
-      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetLeftUnit()) {
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetLeftUnit()) {
         mComputedMargin.left = aContainingBlockRS->mComputedMargin.left;
       } else {
         ComputeHorizontalValue(aContainingBlockWidth,
-                               mStyleMargin->mMargin.GetLeftUnit(),
-                               mStyleMargin->mMargin.GetLeft(left),
+                               mStyleSpacing->mMargin.GetLeftUnit(),
+                               mStyleSpacing->mMargin.GetLeft(left),
                                mComputedMargin.left);
       }
-      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetRightUnit()) {
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetRightUnit()) {
         mComputedMargin.right = aContainingBlockRS->mComputedMargin.right;
       } else {
         ComputeHorizontalValue(aContainingBlockWidth,
-                               mStyleMargin->mMargin.GetRightUnit(),
-                               mStyleMargin->mMargin.GetRight(right),
+                               mStyleSpacing->mMargin.GetRightUnit(),
+                               mStyleSpacing->mMargin.GetRight(right),
                                mComputedMargin.right);
       }
     }
@@ -2341,20 +2337,20 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth,
       // According to the CSS2 spec, margin percentages are
       // calculated with respect to the *height* of the containing
       // block when in a paginated context.
-      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetTopUnit()) {
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetTopUnit()) {
         mComputedMargin.top = aContainingBlockRS->mComputedMargin.top;
       } else {
         ComputeVerticalValue(rs2->mComputedHeight,
-                             mStyleMargin->mMargin.GetTopUnit(),
-                             mStyleMargin->mMargin.GetTop(top),
+                             mStyleSpacing->mMargin.GetTopUnit(),
+                             mStyleSpacing->mMargin.GetTop(top),
                              mComputedMargin.top);
       }
-      if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetBottomUnit()) {
+      if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetBottomUnit()) {
         mComputedMargin.bottom = aContainingBlockRS->mComputedMargin.bottom;
       } else {
         ComputeVerticalValue(rs2->mComputedHeight,
-                             mStyleMargin->mMargin.GetBottomUnit(),
-                             mStyleMargin->mMargin.GetBottom(bottom),
+                             mStyleSpacing->mMargin.GetBottomUnit(),
+                             mStyleSpacing->mMargin.GetBottom(bottom),
                              mComputedMargin.bottom);
       }
     }
@@ -2367,20 +2363,20 @@ nsHTMLReflowState::ComputeMargin(nscoord aContainingBlockWidth,
         mComputedMargin.bottom = 0;
 
       } else {
-        if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetTopUnit()) {
+        if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetTopUnit()) {
           mComputedMargin.top = aContainingBlockRS->mComputedMargin.top;
         } else {
           ComputeHorizontalValue(aContainingBlockWidth,
-                                 mStyleMargin->mMargin.GetTopUnit(),
-                                 mStyleMargin->mMargin.GetTop(top),
+                                 mStyleSpacing->mMargin.GetTopUnit(),
+                                 mStyleSpacing->mMargin.GetTop(top),
                                  mComputedMargin.top);
         }
-        if (eStyleUnit_Inherit == mStyleMargin->mMargin.GetBottomUnit()) {
+        if (eStyleUnit_Inherit == mStyleSpacing->mMargin.GetBottomUnit()) {
           mComputedMargin.bottom = aContainingBlockRS->mComputedMargin.bottom;
         } else {
           ComputeHorizontalValue(aContainingBlockWidth,
-                                 mStyleMargin->mMargin.GetBottomUnit(),
-                                 mStyleMargin->mMargin.GetBottom(bottom),
+                                 mStyleSpacing->mMargin.GetBottomUnit(),
+                                 mStyleSpacing->mMargin.GetBottom(bottom),
                                  mComputedMargin.bottom);
         }
       }
@@ -2394,43 +2390,43 @@ nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth,
 
 {
   // If style can provide us the padding directly, then use it.
-  if (!mStylePadding->GetPadding(mComputedPadding)) {
+  if (!mStyleSpacing->GetPadding(mComputedPadding)) {
     // We have to compute the value
     nsStyleCoord left, right, top, bottom;
 
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetLeftUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetLeftUnit()) {
       mComputedPadding.left = aContainingBlockRS->mComputedPadding.left;
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetLeftUnit(),
-                             mStylePadding->mPadding.GetLeft(left),
+                             mStyleSpacing->mPadding.GetLeftUnit(),
+                             mStyleSpacing->mPadding.GetLeft(left),
                              mComputedPadding.left);
     }
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetRightUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetRightUnit()) {
       mComputedPadding.right = aContainingBlockRS->mComputedPadding.right;
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetRightUnit(),
-                             mStylePadding->mPadding.GetRight(right),
+                             mStyleSpacing->mPadding.GetRightUnit(),
+                             mStyleSpacing->mPadding.GetRight(right),
                              mComputedPadding.right);
     }
 
     // According to the CSS2 spec, percentages are calculated with respect to
     // containing block width for padding-top and padding-bottom
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetTopUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetTopUnit()) {
       mComputedPadding.top = aContainingBlockRS->mComputedPadding.top;
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetTopUnit(),
-                             mStylePadding->mPadding.GetTop(top),
+                             mStyleSpacing->mPadding.GetTopUnit(),
+                             mStyleSpacing->mPadding.GetTop(top),
                              mComputedPadding.top);
     }
-    if (eStyleUnit_Inherit == mStylePadding->mPadding.GetBottomUnit()) {
+    if (eStyleUnit_Inherit == mStyleSpacing->mPadding.GetBottomUnit()) {
       mComputedPadding.bottom = aContainingBlockRS->mComputedPadding.bottom;
     } else {
       ComputeHorizontalValue(aContainingBlockWidth,
-                             mStylePadding->mPadding.GetBottomUnit(),
-                             mStylePadding->mPadding.GetBottom(bottom),
+                             mStyleSpacing->mPadding.GetBottomUnit(),
+                             mStyleSpacing->mPadding.GetBottom(bottom),
                              mComputedPadding.bottom);
     }
   }

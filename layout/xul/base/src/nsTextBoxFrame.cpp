@@ -210,10 +210,9 @@ nsTextBoxFrame::Paint(nsIPresContext*      aPresContext,
     if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 
         // remove the border and padding
-        nsStyleBorderPadding  bPad;
-        mStyleContext->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
+        const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
         nsMargin border(0,0,0,0);
-        bPad.GetBorderPadding(border);
+        spacing->GetBorderPadding(border);
 
         nsRect textRect(0,0,mRect.width, mRect.height);
         textRect.Deflate(border);

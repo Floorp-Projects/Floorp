@@ -94,9 +94,9 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   nsMargin im(0,0,0,0);
   GetInset(im);
   nsMargin border(0,0,0,0);
-  nsStyleBorderPadding  bPad;
-  aFrame->GetStyle(eStyleStruct_BorderPaddingShortcut, (nsStyleStruct&)bPad);
-  bPad.GetBorderPadding(borderPadding);
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+  mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  spacing->GetBorderPadding(border);
   r.Deflate(im);
   r.Deflate(border);    
 
