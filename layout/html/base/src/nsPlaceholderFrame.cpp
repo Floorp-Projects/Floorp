@@ -44,19 +44,26 @@ nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
 }
 
 nsPlaceholderFrame::nsPlaceholderFrame(nsIContent* aContent, nsIFrame* aParent)
-  : nsFrame(aContent, aParent)
+  : nsContainerFrame(aContent, aParent)
 {
-  mAnchoredItem = nsnull;
 }
 
 nsPlaceholderFrame::~nsPlaceholderFrame()
 {
 }
 
-NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
-                                     nsReflowMetrics&     aDesiredSize,
-                                     const nsReflowState& aReflowState,
-                                     nsReflowStatus&      aStatus)
+NS_IMETHODIMP
+nsPlaceholderFrame::IsSplittable(nsSplittableType& aIsSplittable) const
+{
+  aIsSplittable = NS_FRAME_NOT_SPLITTABLE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
+                           nsReflowMetrics&     aDesiredSize,
+                           const nsReflowState& aReflowState,
+                           nsReflowStatus&      aStatus)
 {
   // Get the floater container in which we're inserted
   nsIFrame*             containingBlock;
@@ -73,28 +80,41 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
   NS_ASSERTION(nsnull != container, "no floater container");
 
   // Have we created the anchored item yet?
-  if (nsnull == mAnchoredItem) {
+  if (nsnull == mFirstChild) {
     // If the content object is a container then wrap it in a body pseudo-frame
-    if (mContent->CanContainChildren()) {
-      nsBodyFrame::NewFrame(&mAnchoredItem, mContent, this);
+
+    // XXX begin hack
+    PRBool select = PR_FALSE;
+    nsIAtom* atom = mContent->GetTag();
+    nsAutoString tmp;
+    if (nsnull != atom) {
+      atom->ToString(tmp);
+      if (tmp.EqualsIgnoreCase("select")) {
+        select = PR_TRUE;
+      }
+    }
+    // XXX end hack
+
+    if (mContent->CanContainChildren() && !select) {
+      nsBodyFrame::NewFrame(&mFirstChild, mContent, this);
 
       // Use our style context for the pseudo-frame
-      mAnchoredItem->SetStyleContext(aPresContext, mStyleContext);
-
+      mFirstChild->SetStyleContext(aPresContext, mStyleContext);
     } else {
       // Create the anchored item
       nsIContentDelegate* delegate = mContent->GetDelegate(aPresContext);
       nsresult rv = delegate->CreateFrame(aPresContext, mContent,
                                           mGeometricParent, mStyleContext,
-                                          mAnchoredItem);
+                                          mFirstChild);
       NS_RELEASE(delegate);
       if (NS_OK != rv) {
         return rv;
       }
     }
+    mChildCount = 1;
 
-    // Compute the available space for the floater. Use the default 'auto' width
-    // and height values
+    // Compute the available space for the floater. Use the default
+    // 'auto' width and height values
     nsSize  kidAvailSize(0, NS_UNCONSTRAINEDSIZE);
     nsSize  styleSize;
     PRIntn  styleSizeFlags = nsCSSLayout::GetStyleSize(aPresContext, aReflowState,
@@ -112,15 +132,15 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // Resize reflow the anchored item into the available space
     // XXX Check for complete?
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mAnchoredItem, aReflowState, kidAvailSize,
+    nsReflowState   reflowState(mFirstChild, aReflowState, kidAvailSize,
                                 eReflowReason_Initial);
-    mAnchoredItem->WillReflow(*aPresContext);
-    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
+    mFirstChild->WillReflow(*aPresContext);
+    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    mFirstChild->SizeTo(desiredSize.width, desiredSize.height);
 
     // Now notify our containing block that there's a new floater
-    container->AddFloater(aPresContext, mAnchoredItem, this);
-    mAnchoredItem->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    container->AddFloater(aPresContext, mFirstChild, this);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   } else {
     // XXX This causes anchored-items sizes to get fixed up; this is
@@ -128,65 +148,16 @@ NS_METHOD nsPlaceholderFrame::Reflow(nsIPresContext*      aPresContext,
     // of the incremental reflow methods and propagating things down
     // properly to the contained frame.
     nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
+    nsReflowState   reflowState(mFirstChild, aReflowState, aReflowState.maxSize,
                                 eReflowReason_Resize);
-    mAnchoredItem->WillReflow(*aPresContext);
-    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
-    container->PlaceFloater(aPresContext, mAnchoredItem, this);
-    mAnchoredItem->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
+    mFirstChild->WillReflow(*aPresContext);
+    mFirstChild->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+    mFirstChild->SizeTo(desiredSize.width, desiredSize.height);
+    container->PlaceFloater(aPresContext, mFirstChild, this);
+    mFirstChild->DidReflow(*aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-}
-
-NS_METHOD
-nsPlaceholderFrame::ChildCount(PRInt32& aChildCount) const
-{
-  aChildCount = 1;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const
-{
-  aFrame = (0 == aIndex) ? mAnchoredItem : nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const
-{
-  aIndex = (aChild == mAnchoredItem) ? 0 : -1;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::FirstChild(nsIFrame*& aFirstChild) const
-{
-  aFirstChild = mAnchoredItem;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const
-{
-  aNextChild = nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const
-{
-  aPrevChild = nsnull;
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::LastChild(nsIFrame*& aLastChild) const
-{
-  aLastChild = mAnchoredItem;
-  return NS_OK;
 }
 
 NS_METHOD nsPlaceholderFrame::ListTag(FILE* out) const
@@ -195,44 +166,5 @@ NS_METHOD nsPlaceholderFrame::ListTag(FILE* out) const
   PRInt32 contentIndex;
   GetContentIndex(contentIndex);
   fprintf(out, "(%d)@%p", contentIndex, this);
-  return NS_OK;
-}
-
-NS_METHOD
-nsPlaceholderFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  PRInt32 i;
-
-  // Indent
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-
-  // Output the tag
-  ListTag(out);
-  nsIView* view;
-  GetView(view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
-    NS_RELEASE(view);
-  }
-
-  // Output the rect
-  out << mRect;
-
-  // Output the children
-  if (nsnull != mAnchoredItem) {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("<\n", out);
-    mAnchoredItem->List(out, aIndent + 1);
-    for (i = aIndent; --i >= 0; ) fputs("  ", out);
-    fputs(">\n", out);
-  } else {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("<>\n", out);
-  }
-
   return NS_OK;
 }
