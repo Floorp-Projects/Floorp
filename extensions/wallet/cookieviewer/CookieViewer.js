@@ -125,14 +125,23 @@ function loadCookies()
 
 // function : <CookieViewer.js>::ViewSelectedCookie();
 // purpose  : displays information about the selected cookie in the info fieldset
-function ViewCookieSelected(node) 
+function ViewCookieSelected( e ) 
 {
+  var cookie = null;
   var cookietree = document.getElementById("cookietree");
+  var selItemsMax = false;
   if(cookietree.nodeName != "tree")
     return false;
   if(cookietree.selectedItems.length > 1)
-    return false;
-  cookie = node;
+    selItemsMax = true;
+  if( cookietree.selectedItems.length )
+    document.getElementById("removeCookies").removeAttribute("disabled","true");
+    
+  if( e.type == "keypress" )
+    cookie = cookietree.selectedItems[0];
+  if( e.type == "click" ) 
+    cookie = e.target.parentNode.parentNode;
+
   if(cookie.getAttribute("id").indexOf("tree_") == -1)
     return false;
   var idx = parseInt(cookie.getAttribute("id").substring(5,cookie.getAttribute("id").length));
@@ -150,7 +159,7 @@ function ViewCookieSelected(node)
     [null,"ifl_name","ifl_value","ifl_domaintype","ifl_domain","ifl_path","ifl_secure","ifl_expires"];
   for(i = 1; i < props.length; i++)
   {
-    if(i == 3) {
+    if( !selItemsMax && i == 3) {
       var dtypecell = document.getElementById("ifl_domaintype");
       if(dtypecell.hasChildNodes()) {
         dtypecell.removeChild(dtypecell.lastChild);
@@ -161,7 +170,7 @@ function ViewCookieSelected(node)
     }
     var field = document.getElementById(rows[i]);
     var content = props[i];
-    field.value = content;
+    field.value = ( !selItemsMax ) ? content : "";  // multiple selections clear fields.
     if(rows[i] == "ifl_expires") break;
   }
 }
@@ -177,6 +186,22 @@ function DeleteCookieSelected() {
   {
     var row = document.getElementById(rows[k]);
     row.setAttribute("value","");
+  }
+}
+
+function HandleKeyPress( e )
+{
+  switch ( e.which )
+  {
+  case 13:  // enter
+  case 32:  // spacebar
+    ViewCookieSelected( e );
+    break;
+  case 46:  // delete
+    DeleteCookieSelected();
+    break;
+  default:
+    break;
   }
 }
 
@@ -227,6 +252,13 @@ function loadPermissions()
       contentStr = bundle.GetStringFromName("cannot");    
     AddItem("permissionslist",[domain,contentStr],"permtree_",permissions[i].number)
   }
+}
+
+function ViewPermissionSelected()
+{
+  var permissiontree = document.getElementById("permissionstree");
+  if( permissiontree.selectedItems.length )
+    document.getElementById("removePermissions").removeAttribute("disabled","true");
 }
 
 /*** =================== GENERAL CODE =================== ***/
