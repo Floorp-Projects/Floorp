@@ -77,7 +77,7 @@ public:
   nsresult Init();
 
   nsDownloadManager();
-  virtual ~nsDownloadManager();
+  ~nsDownloadManager();
 
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
@@ -104,16 +104,21 @@ private:
 };
 
 class nsDownload : public nsIDownload,
-                   public nsIWebProgressListener
+                   public nsIWebProgressListener,
+                   public nsIObserver
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSITRANSFER
   NS_DECL_NSIDOWNLOAD
+  NS_DECL_NSIOBSERVER
   NS_DECL_ISUPPORTS
 
   nsDownload(nsDownloadManager* aManager, nsIURI* aTarget, nsIURI* aSource);
   ~nsDownload();
+
+  nsresult Suspend();
+  nsresult Resume();
 
   void SetDialogListener(nsIWebProgressListener* aInternalListener) {
     mDialogListener = aInternalListener;

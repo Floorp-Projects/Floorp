@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -48,7 +49,7 @@ interface nsIDownload;
 interface nsIWebBrowserPersist;
 interface nsIMIMEInfo;
 
-[scriptable, uuid(f31722c5-4a33-440b-9c7c-3c4ac0c6c723)]
+[scriptable, uuid(17d403cc-364a-482c-b77e-914a0ecbf7a1)]
 interface nsIDownloadManager : nsISupports {
 
   // Methods called by clients to carry out various managing functions
@@ -72,7 +73,6 @@ interface nsIDownloadManager : nsISupports {
   *
   * @return The newly created download item with the passed-in properties.
   */
-  
   nsIDownload addDownload(in nsIURI aSource,
                           in nsIURI aTarget,
                           in wstring aDisplayName,
@@ -87,7 +87,6 @@ interface nsIDownloadManager : nsISupports {
   *
   *  @return The download with the specified path.
   */
-
   nsIDownload getDownload(in AUTF8String aTargetPath);
 
   /**
@@ -101,8 +100,39 @@ interface nsIDownloadManager : nsISupports {
   * @param aTargetPath           The target path of the download to
   *                              be cancelled.
   */
-
   void cancelDownload(in AUTF8String aTargetPath);
+
+  /**
+   * Pause a download to allow later resumal. This may or may not close
+   * the network connection. In either case, new data won't be received.
+   *
+   * @param aDownload Download to pause, as returned by getDownload or
+   *                  addDownload.
+   *
+   * Trying to pause a download that is already paused will throw
+   * NS_ERROR_NOT_AVAILABLE.
+   * NS_ERROR_UNEXPECTED may be thrown to indicate an internal error.
+   * Any exception defined by nsIRequest::Suspend may be thrown.
+   * No other exceptions will be thrown.
+   */
+  void pauseDownload(in nsIDownload aDownload);
+
+  /**
+   * Resume a previously paused download.
+   * @param aTargetPath Target path of the download to be resumed.
+   *
+   * @throws NS_ERROR_NOT_RESUMABLE If resuming is not supported for this
+   *                                entity, or if the entity has changed since
+   *                                the download was paused
+   * @throws NS_ERROR_NOT_AVAILABLE If no such download exists, or if the
+   *                                download was not paused, or if the
+   *                                download is finished already.
+   * In addition, this may throw NS_ERROR_OUT_OF_MEMORY, or any error defined by
+   * nsIResumableChannel::setEntityID, nsIResumableChannel::asyncOpenAt,
+   * nsIRequest::Resume, or nsIIOService::newChannel.
+   * Also, NS_ERROR_UNEXPECTED may be thrown to indicate an internal error.
+   */
+  void resumeDownload(in AUTF8String aTargetPath);
 
   /**
   * Removes the download with the specified target path if it's not
@@ -112,7 +142,6 @@ interface nsIDownloadManager : nsISupports {
   * @param aTargetPath           The target path of the download to
   *                              be removed.
   */
-
   void removeDownload(in AUTF8String aTargetPath);
 
   // UI-related methods
@@ -125,7 +154,6 @@ interface nsIDownloadManager : nsISupports {
   *                  if, for example, you want the window to select a
   *                  certain download (optional).
   */
-
   void open(in nsIDOMWindow aParent, in nsIDownload aDownload);
 
   /**
