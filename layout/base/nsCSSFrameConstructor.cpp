@@ -1615,8 +1615,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
         }        
         InitAndRestoreFrame(aPresContext, aState, aContent, 
                             aFrame, pseudoStyleContext, nsnull, containerFrame);
-        nsHTMLContainerFrame::CreateViewForFrame(aPresContext, containerFrame,
-                                                 pseudoStyleContext, nsnull, PR_FALSE);
 
         // Mark the frame as being associated with generated content
         nsFrameState  frameState;
@@ -1641,7 +1639,6 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresShell*        aPresShe
           result = CreateGeneratedFrameFor(aPresContext, mDocument, containerFrame,
                                            aContent, textStyleContext,
                                            styleContent, contentIndex, &frame);
-          // Non-elements can't possibly have a view, so don't bother checking
           if (NS_SUCCEEDED(result) && frame) {
             // Add it to the list of child frames
             childFrames.AddChild(frame);
@@ -2618,8 +2615,6 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
   if (NS_FAILED(rv)) return rv;
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       parentFrame, aStyleContext, nsnull, aNewFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
 
   nsFrameItems childItems;
   // pass in aTableCreator so ProcessChildren will call TableProcessChildren
@@ -2681,8 +2676,6 @@ nsCSSFrameConstructor::ConstructTableRowGroupFrame(nsIPresShell*            aPre
     if (NS_FAILED(rv)) return rv;
     InitAndRestoreFrame(aPresContext, aState, aContent, parentFrame, 
                         aStyleContext, nsnull, aNewFrame);
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                             aStyleContext, nsnull, PR_FALSE);
   }
 
   if (!aIsPseudo) {
@@ -2794,8 +2787,6 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresShell*            aPresShel
   if (NS_FAILED(rv)) return rv;
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       parentFrame, aStyleContext, nsnull, aNewFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
   if (!aIsPseudo) {
     nsFrameItems childItems;
     nsIFrame* captionFrame;
@@ -2925,9 +2916,6 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*            aPresShe
   // Initialize the table cell frame
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       parentFrame, aStyleContext, nsnull, aNewCellOuterFrame);
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewCellOuterFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
-
   // Create a block frame that will format the cell's content
   rv = aTableCreator.CreateTableCellInnerFrame(&aNewCellInnerFrame);
 
@@ -13528,12 +13516,11 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   nsFrameConstructorSaveState absoluteSaveState;  // definition cannot be inside next block
                                                   // because the object's destructor is significant
                                                   // this is part of the fix for bug 42372
-
-  // Any inline frame might need a view (because of opacity, or fixed background)
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
-
   if (aIsPositioned) {                            
+    // Relatively positioned frames need a view
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aNewFrame,
+                                             aStyleContext, nsnull, PR_FALSE);
+
     // Relatively positioned frames becomes a container for child
     // frames that are positioned
     aState.PushAbsoluteContainingBlock(aNewFrame, absoluteSaveState);
@@ -13640,10 +13627,13 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
 
   InitAndRestoreFrame(aPresContext, aState, aContent, 
                       aParentFrame, blockSC, nsnull, blockFrame);  
-  // Any frame might need a view (e.g. for opacity, or background-attachment:fixed
-  nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
-                                           aStyleContext, nsnull, PR_FALSE);
+
+
   if (aIsPositioned) {
+    // Relatively positioned frames need a view
+    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, blockFrame,
+                                             aStyleContext, nsnull, PR_FALSE);
+
     // Move list2's frames into the new view
     nsIFrame* oldParent;
     list2->GetParent(&oldParent);
@@ -13672,11 +13662,11 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         aParentFrame, aStyleContext, nsnull, inlineFrame);
 
-    // Any frame might need a view
-    nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
-                                             aStyleContext, nsnull, PR_FALSE);
-
     if (aIsPositioned) {
+      // Relatively positioned frames need a view
+      nsHTMLContainerFrame::CreateViewForFrame(aPresContext, inlineFrame,
+                                               aStyleContext, nsnull, PR_FALSE);
+
       // Move list3's frames into the new view
       nsIFrame* oldParent;
       list3->GetParent(&oldParent);
