@@ -57,7 +57,9 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_ref = nsnull;
     m_spec = nsnull;
     m_search = nsnull;
- 
+
+	m_filePath = nsnull;
+
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
 }
@@ -66,6 +68,9 @@ nsMailboxUrl::~nsMailboxUrl()
 {
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
+
+	if (m_filePath)
+		delete m_filePath;
 
     PR_FREEIF(m_spec);
     PR_FREEIF(m_protocol);
@@ -144,6 +149,13 @@ nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 	}
 	NS_UNLOCK_INSTANCE();
 	return  NS_OK;
+}
+
+nsresult nsMailboxUrl::GetFilePath(const nsFilePath ** aFilePath)
+{
+	if (aFilePath)
+		*aFilePath = m_filePath;
+	return NS_OK;
 }
 
 nsresult nsMailboxUrl::SetErrorMessage (char * errorMessage)
@@ -433,6 +445,11 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 
     delete cSpec;
 
+	if (m_filePath)
+		delete m_filePath;
+
+	m_filePath = new nsFilePath(m_file);
+
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
@@ -530,6 +547,10 @@ nsresult nsMailboxUrl::SetFile(const char *aNewFile)
     NS_LOCK_INSTANCE();
     m_file = nsCRT::strdup(aNewFile);
     ReconstructSpec();
+	if (m_filePath)
+		delete m_filePath;
+	m_filePath = new nsFilePath(m_file);
+
     NS_UNLOCK_INSTANCE();
     return NS_OK;
 }

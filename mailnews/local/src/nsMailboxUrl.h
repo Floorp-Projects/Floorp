@@ -21,6 +21,7 @@
 
 #include "nsIMailboxUrl.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
+#include "nsFileSpec.h"
 
 class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL
 {
@@ -73,7 +74,8 @@ public:
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
-
+	
+	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath);
 
     // nsMailboxUrl
 
@@ -101,9 +103,9 @@ protected:
 	char		*m_search;
 	char		*m_errorMessage;
     
-    nsISupports*    m_container;
+    nsISupports	*m_container;
 
-	char		* m_fileName; /* if the message to post is a file, we store the file name here...*/
+	nsFilePath	*m_filePath; 
 
 	void ReconstructSpec(void);
 };
