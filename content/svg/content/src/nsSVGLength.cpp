@@ -48,6 +48,7 @@
 #include "nsIWeakReference.h"
 #include "nsReadableUtils.h"
 #include "nsTextFormatter.h"
+#include "nsCRT.h"
 #include <math.h>
 
 ////////////////////////////////////////////////////////////////////////

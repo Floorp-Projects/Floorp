@@ -43,6 +43,7 @@
 #include "prdtoa.h"
 #include "nsSVGAtoms.h"
 #include "nsReadableUtils.h"
+#include "nsCRT.h"
 
 nsresult
 nsSVGTransformList::Create(const nsAString& aValue,
