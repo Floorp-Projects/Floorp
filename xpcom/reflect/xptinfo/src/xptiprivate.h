@@ -629,6 +629,7 @@ public:
     nsresult GetIIDShared(const nsIID * *iid);
     nsresult IsFunction(PRBool *_retval);
     nsresult HasAncestor(const nsIID * iid, PRBool *_retval);
+    nsresult GetIIDForParamNoAlloc(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIID *iid);
 
     //////////////////////
 
@@ -721,6 +722,7 @@ public:
     NS_IMETHOD GetIIDShared(const nsIID * *iid) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIIDShared(iid); }
     NS_IMETHOD IsFunction(PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsFunction(_retval); }
     NS_IMETHOD HasAncestor(const nsIID * iid, PRBool *_retval) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->HasAncestor(iid, _retval); }
+    NS_IMETHOD GetIIDForParamNoAlloc(PRUint16 methodIndex, const nsXPTParamInfo * param, nsIID *iid) { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIIDForParamNoAlloc(methodIndex, param, iid); }
 
 public:
     xptiInterfaceInfo(xptiInterfaceEntry* entry);

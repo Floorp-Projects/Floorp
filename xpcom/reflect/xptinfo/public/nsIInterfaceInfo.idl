@@ -129,5 +129,9 @@ interface nsIInterfaceInfo : nsISupports
     PRBool isFunction();
 
     PRBool hasAncestor(in nsIIDPtr iid);
+
+    [notxpcom] nsresult getIIDForParamNoAlloc(in PRUint16 methodIndex, 
+                                              [const] in nsXPTParamInfoPtr param,
+                                              out nsIID iid);
 };
 

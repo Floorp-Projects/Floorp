@@ -2015,8 +2015,7 @@ private:
                                      uint16 methodIndex,
                                      const nsXPTType& type,
                                      nsXPTCMiniVariant* params,
-                                     JSBool* iidIsOwned,
-                                     nsID** result);
+                                     nsID* result);
 
     void CleanupPointerArray(const nsXPTType& datum_type,
                              JSUint32 array_count,

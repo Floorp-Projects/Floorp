@@ -463,6 +463,19 @@ xptiInterfaceEntry::GetIIDForParam(uint16 methodIndex,
     return entry->GetIID(iid);
 }
 
+nsresult
+xptiInterfaceEntry::GetIIDForParamNoAlloc(PRUint16 methodIndex, 
+                                          const nsXPTParamInfo * param, 
+                                          nsIID *iid)
+{
+    xptiInterfaceEntry* entry;
+    nsresult rv = GetEntryForParam(methodIndex, param, &entry);
+    if(NS_FAILED(rv))
+        return rv;
+    *iid = entry->mIID;    
+    return NS_OK;
+}
+
 // this is a private helper
 nsresult
 xptiInterfaceEntry::GetTypeInArray(const nsXPTParamInfo* param,
