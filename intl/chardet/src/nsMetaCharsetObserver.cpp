@@ -260,7 +260,7 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                       contenttype.get(),
                       contenttype.Length()))
           )) &&
-         ((0==nsCRT::strcasecmp(contentValue,texthtml.get())) ||
+         ((0==nsCRT::strncasecmp(contentValue,texthtml.get(),texthtml.Length())) ||
           (((contentValue[0]=='\'') ||
             (contentValue[0]=='\"'))&&
            (0==nsCRT::strncasecmp(contentValue+1,
