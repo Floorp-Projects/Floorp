@@ -223,7 +223,7 @@ PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
     if (0 != ready)
     {
 #ifndef BSD_SELECT
-        free(socks);
+        PR_Free(socks);
 #endif
         return ready;  /* no need to block */
     }
@@ -372,7 +372,7 @@ retry:
     }
 
 #ifndef BSD_SELECT
-    free(socks);
+    PR_Free(socks);
 #endif
     return ready;
 }
