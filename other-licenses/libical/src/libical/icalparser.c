@@ -3,7 +3,7 @@
   FILE: icalparser.c
   CREATOR: eric 04 August 1999
   
-  $Id: icalparser.c,v 1.6 2002/09/06 18:34:32 mostafah%oeone.com Exp $
+  $Id: icalparser.c,v 1.7 2004/09/15 20:30:09 mostafah%oeone.com Exp $
   $Locker:  $
     
  The contents of this file are subject to the Mozilla Public License
@@ -876,6 +876,11 @@ icalcomponent* icalparser_add_line(icalparser* parser,
 	    } else {
 		/* Error. Failed to parse the parameter*/
 		/* 'tail' defined above */
+                /* The following ifdef block has been added by Mozilla Calendar in order to
+                have the option of being flexible towards unsupported parameters */
+                #ifndef ICAL_ERRORS_ARE_FATAL
+                continue;
+                #endif;
 		insert_error(tail, str, "Cant parse parameter name",
 			     ICAL_XLICERRORTYPE_PARAMETERNAMEPARSEERROR);
 		tail = 0;
