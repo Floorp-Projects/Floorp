@@ -501,6 +501,12 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 
     aHandledFlag = PR_TRUE;
   }
+  else if (aDirection == NS_VK_LEFT && mCurrentMenu &&
+           menuFrame->IsMenu()) {
+    // Close it up.
+    aHandledFlag = PR_TRUE;
+    menuFrame->OpenMenu(PR_FALSE);
+  }
 }
 
 NS_IMETHODIMP
