@@ -36,21 +36,17 @@
 #include "nsINntpUrl.h"
 
 #include "nsCRT.h"
-#include "xp.h"     // XXX remove!
 
 #include "rosetta.h"
 #include HG40855
 
-#include "allxpstr.h"
 #include "prtime.h"
 #include "prlog.h"
 #include "prerror.h"
 #include "nsEscape.h"
 
-#include "fe_proto.h"
 #include "prprf.h"
 #include "merrors.h"
-/* #include HG09893 */
 
 /* include event sink interfaces for news */
 
@@ -65,43 +61,12 @@
 
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
-/* for XP_GetString() */
-#include "xpgetstr.h"
-extern int MK_MALFORMED_URL_ERROR;
-extern int MK_NEWS_ERROR_FMT;
-extern int MK_NNTP_CANCEL_CONFIRM;
-extern int MK_NNTP_CANCEL_DISALLOWED;
-extern int MK_NNTP_NOT_CANCELLED;
-extern int MK_OUT_OF_MEMORY;
-extern int XP_CONFIRM_SAVE_NEWSGROUPS;
-extern int XP_HTML_ARTICLE_EXPIRED;
-extern int XP_HTML_NEWS_ERROR;
-extern int XP_PROGRESS_READ_NEWSGROUPINFO;
-extern int XP_PROGRESS_RECEIVE_ARTICLE;
-extern int XP_PROGRESS_RECEIVE_LISTARTICLES;
-extern int XP_PROGRESS_RECEIVE_NEWSGROUP;
-extern int XP_PROGRESS_SORT_ARTICLES;
-extern int XP_PROGRESS_READ_NEWSGROUP_COUNTS;
-extern int XP_THERMO_PERCENT_FORM;
-extern int XP_PROMPT_ENTER_USERNAME;
-extern int MK_BAD_NNTP_CONNECTION;
-extern int MK_NNTP_AUTH_FAILED;
-extern int MK_NNTP_ERROR_MESSAGE;
-extern int MK_NNTP_NEWSGROUP_SCAN_ERROR;
-extern int MK_NNTP_SERVER_ERROR;
-extern int MK_NNTP_SERVER_NOT_CONFIGURED;
-HG25431
-extern int MK_TCP_READ_ERROR;
-extern int MK_TCP_WRITE_ERROR;
-extern int MK_NNTP_CANCEL_ERROR;
-extern int XP_CONNECT_NEWS_HOST_CONTACTED_WAITING_FOR_REPLY;
-extern int XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS;
-extern int XP_GARBAGE_COLLECTING;
-extern int XP_MESSAGE_SENT_WAITING_NEWS_REPLY;
-extern int MK_MSG_DELIV_NEWS;
-extern int MK_MSG_COLLABRA_DISABLED;
-extern int MK_MSG_EXPIRE_NEWS_ARTICLES;
-extern int MK_MSG_HTML_IMAP_NO_CACHED_BODY;
+extern "C"
+{
+char * NET_SACopy (char **destination, const char *source);
+char * NET_SACat (char **destination, const char *source);
+
+}
 
 static NS_DEFINE_IID(kIWebShell, NS_IWEB_SHELL_IID);
 static NS_DEFINE_CID(kNntpUrlCID, NS_NNTPURL_CID);
@@ -267,6 +232,116 @@ static char * last_username=0;
 static char * last_username_hostname=0;
 
 /* end of globals I'd like to move somewhere else */
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// TEMPORARY HARD CODED FUNCTIONS 
+///////////////////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
+char *XP_AppCodeName = "Mozilla";
+#else
+const char *XP_AppCodeName = "Mozilla";
+#endif
+#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
+
+/*
+ * This function takes an error code and associated error data
+ * and creates a string containing a textual description of
+ * what the error is and why it happened.
+ *
+ * The returned string is allocated and thus should be freed
+ * once it has been used.
+ *
+ * This function is defined in mkmessag.c.
+ */
+char * NET_ExplainErrorDetails (int code, ...)
+{
+	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
+	return rv;
+}
+
+char * NET_SACopy (char **destination, const char *source)
+{
+	if(*destination)
+	  {
+	    PR_Free(*destination);
+		*destination = 0;
+	  }
+    if (! source)
+	  {
+        *destination = NULL;
+	  }
+    else 
+	  {
+        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+        if (*destination == NULL) 
+ 	        return(NULL);
+
+        PL_strcpy (*destination, source);
+      }
+    return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+char * NET_SACat (char **destination, const char *source)
+{
+    if (source && *source)
+      {
+        if (*destination)
+          {
+            int length = PL_strlen (*destination);
+            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+            if (*destination == NULL)
+            return(NULL);
+
+            PL_strcpy (*destination + length, source);
+          }
+        else
+          {
+            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+            if (*destination == NULL)
+                return(NULL);
+
+             PL_strcpy (*destination, source);
+          }
+      }
+    return *destination;
+}
+
+char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
+{
+	char *result = (char*) PR_Malloc (PL_strlen(commandSpecificData) + 1);
+	if (result)
+	{
+		char *resultPtr = result;
+		while (1)
+		{
+			char ch = *commandSpecificData++;
+			if (!ch)
+				break;
+			if (ch == '\\')
+			{
+				char scratchBuf[3];
+				scratchBuf[0] = (char) *commandSpecificData++;
+				scratchBuf[1] = (char) *commandSpecificData++;
+				scratchBuf[2] = '\0';
+				int accum = 0;
+				sscanf (scratchBuf, "%X", &accum);
+				*resultPtr++ = (char) accum;
+			}
+			else
+				*resultPtr++ = ch;
+		}
+		*resultPtr = '\0';
+	}
+	return result;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////
+// END OF TEMPORARY HARD CODED FUNCTIONS 
+///////////////////////////////////////////////////////////////////////////////////////////
+
 
 nsNNTPProtocol::nsNNTPProtocol(nsIURL * aURL, nsITransport * transportLayer)
 {
@@ -467,7 +542,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
   if (messageID && commandSpecificData && !PL_strcmp (commandSpecificData, "?cancel"))
 	cancel = TRUE;
 
-  StrAllocCopy(m_path, messageID);
+  NET_SACopy(&m_path, messageID);
 
   /* make sure the user has a news host configured */
 #if UNREADY_CODE
@@ -499,7 +574,7 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL, nsISupports * aConsumer)
 #endif
       /*	  PR_ASSERT (!group && !message_id && !commandSpecificData); */
 	  m_typeWanted = NEWS_POST;
-	  StrAllocCopy(m_path, "");
+	  NET_SACopy(&m_path, "");
 	}
   else 
 	if (messageID)
@@ -942,115 +1017,6 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 // End of nsIStreamListenerSupport
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
-#ifdef XP_WIN
-char *XP_AppCodeName = "Mozilla";
-#else
-const char *XP_AppCodeName = "Mozilla";
-#endif
-#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
-
-/*
- * This function takes an error code and associated error data
- * and creates a string containing a textual description of
- * what the error is and why it happened.
- *
- * The returned string is allocated and thus should be freed
- * once it has been used.
- *
- * This function is defined in mkmessag.c.
- */
-char * NET_ExplainErrorDetails (int code, ...)
-{
-	char * rv = PR_smprintf("%s", "Error descriptions not implemented yet");
-	return rv;
-}
-
-char * NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    XP_FREE(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-char * NET_SACat (char **destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (*destination)
-          {
-            int length = PL_strlen (*destination);
-            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-            if (*destination == NULL)
-            return(NULL);
-
-            PL_strcpy (*destination + length, source);
-          }
-        else
-          {
-            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (*destination == NULL)
-                return(NULL);
-
-             PL_strcpy (*destination, source);
-          }
-      }
-    return *destination;
-}
-
-char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
-{
-	char *result = (char*) PR_Malloc (PL_strlen(commandSpecificData) + 1);
-	if (result)
-	{
-		char *resultPtr = result;
-		while (1)
-		{
-			char ch = *commandSpecificData++;
-			if (!ch)
-				break;
-			if (ch == '\\')
-			{
-				char scratchBuf[3];
-				scratchBuf[0] = (char) *commandSpecificData++;
-				scratchBuf[1] = (char) *commandSpecificData++;
-				scratchBuf[2] = '\0';
-				int accum = 0;
-				sscanf (scratchBuf, "%X", &accum);
-				*resultPtr++ = (char) accum;
-			}
-			else
-				*resultPtr++ = ch;
-		}
-		*resultPtr = '\0';
-	}
-	return result;
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////
-// END OF TEMPORARY HARD CODED FUNCTIONS 
-///////////////////////////////////////////////////////////////////////////////////////////
-
 PRInt32 nsNNTPProtocol::ReadLine(nsIInputStream * inputStream, PRUint32 length, char ** line)
 {
 	// I haven't looked into writing this yet. We have a couple of possibilities:
@@ -1186,7 +1152,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	}
 
-    StrAllocCopy(m_responseText, line+4);
+    NET_SACopy(&m_responseText, line+4);
 
 	m_previousResponseCode = m_responseCode;
 
@@ -1661,7 +1627,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 
 	if(m_typeWanted == NEWS_POST)
       {  /* posting to the news group */
-        StrAllocCopy(command, "POST");
+        NET_SACopy(&command, "POST");
       }
     else if(m_typeWanted == READ_NEWS_RC)
       {
@@ -1704,7 +1670,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		PR_FormatTimeUSEnglish(small_buf, sizeof(small_buf), 
                                "NEWGROUPS %y%m%d %H%M%S", &expandedTime);
 		
-        StrAllocCopy(command, small_buf);
+        NET_SACopy(&command, small_buf);
 
 	}
     else if(m_typeWanted == LIST_WANTED)
@@ -1736,12 +1702,12 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 			rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 			if (NS_SUCCEEDED(rv) && xactive)
 			{
-				StrAllocCopy(command, "LIST XACTIVE");
+				NET_SACopy(&command, "LIST XACTIVE");
 				SetFlag(NNTP_USE_FANCY_NEWSGROUP);
 			}
 			else
 			{
-				StrAllocCopy(command, "LIST");
+				NET_SACopy(&command, "LIST");
 			}
 		}
 	}
@@ -1755,7 +1721,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
         char * group_name;
         nsresult rv=NS_ERROR_NULL_POINTER;
 
-        StrAllocCopy(command, "GROUP ");
+        NET_SACopy(&command, "GROUP ");
         if (m_newsgroup)
             rv = m_newsgroup->GetName(&group_name);
         slash = PL_strchr(group_name, '/');
@@ -1767,8 +1733,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
             (void) sscanf(slash+1, "%d-%d", &m_firstArticle, &m_lastArticle);
 		}
 
-        StrAllocCopy (m_currentGroup, group_name);
-        StrAllocCat(command, m_currentGroup);
+        NET_SACopy (&m_currentGroup, group_name);
+        NET_SACat(&command, m_currentGroup);
       }
 	else if (m_typeWanted == SEARCH_WANTED)
 	{
@@ -1784,7 +1750,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 				char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 				if (allocatedCommand)
 				{
-					StrAllocCopy (command, allocatedCommand);
+					NET_SACopy (&command, allocatedCommand);
 					PR_Free(allocatedCommand);
 				}
 			}
@@ -1797,9 +1763,9 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
             char *group_name;
             
 			/* for XPAT, we have to GROUP into the group before searching */
-			StrAllocCopy (command, "GROUP ");
+			NET_SACopy(&command, "GROUP ");
             rv = m_newsgroup->GetName(&group_name);
-            StrAllocCat (command, group_name);
+            NET_SACat (&command, group_name);
 			m_nextState = NNTP_RESPONSE;
 			m_nextStateAfterResponse = NNTP_XPAT_SEND;
 		}
@@ -1828,7 +1794,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 			char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 			if (allocatedCommand)
 			{
-				StrAllocCopy (command, allocatedCommand);
+				NET_SACopy(&command, allocatedCommand);
 				PR_Free(allocatedCommand);
 			}
 		}
@@ -1848,17 +1814,17 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
     else  /* article or cancel */
 	{
 		if (m_typeWanted == CANCEL_WANTED)
-			StrAllocCopy(command, "HEAD ");
+			NET_SACopy(&command, "HEAD ");
 		else
-			StrAllocCopy(command, "ARTICLE ");
+			NET_SACopy(&command, "ARTICLE ");
 		if (*m_path != '<')
-			StrAllocCat(command,"<");
-		StrAllocCat(command, m_path);
+			NET_SACat(&command,"<");
+		NET_SACat(&command, m_path);
 		if (PL_strchr(command+8, '>')==0) 
-			StrAllocCat(command,">");
+			NET_SACat(&command,">");
 	}
 
-    StrAllocCat(command, CRLF);
+    NET_SACat(&command, CRLF);
 	status = SendData(command);
     PR_Free(command);
 
@@ -2163,8 +2129,8 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
       m_newsgroup->GetUsername(&username);
 	  if (username && *username)
 	  {
-		StrAllocCopy(last_username, username);
-		StrAllocCopy(last_username_hostname, m_hostName);
+		NET_SACopy(&last_username, username);
+		NET_SACopy(&last_username_hostname, m_hostName);
 		/* use it for only once */
         m_newsgroup->SetUsername(NULL);
 	  }
@@ -2192,9 +2158,9 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 		if(colon)
 			*colon = '\0';
 
-		StrAllocCopy(username, m_hostName);
-		StrAllocCopy(last_username, m_hostName);
-		StrAllocCopy(last_username_hostname, cp+1);
+		NET_SACopy(&username, m_hostName);
+		NET_SACopy(&last_username, m_hostName);
+		NET_SACopy(&last_username_hostname, cp+1);
 
 		*cp = '@';
 
@@ -2208,7 +2174,7 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	  {
 		if( last_username_hostname &&
 			!PL_strcasecmp(last_username_hostname, m_hostName) )
-			StrAllocCopy(username, last_username);
+			NET_SACopy(&username, last_username);
 		else
 			net_news_last_username_probably_valid = PR_FALSE;
 	  }
@@ -2241,8 +2207,8 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	  }
 	  else 
 	  {
-		StrAllocCopy(last_username, username);
-		StrAllocCopy(last_username_hostname, m_hostName);
+		NET_SACopy(&last_username, username);
+		NET_SACopy(&last_username_hostname, m_hostName);
 	  }
 	} // !username
 
@@ -2254,9 +2220,9 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 	}
 #endif
 
-	StrAllocCopy(command, "AUTHINFO user ");
-	StrAllocCat(command, username);
-	StrAllocCat(command, CRLF);
+	NET_SACopy(&command, "AUTHINFO user ");
+	NET_SACopy(&command, username);
+	NET_SACopy(&command, CRLF);
 
 	status = SendData(command);
 
@@ -2317,7 +2283,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 #endif
 		{
             m_newsgroup->GetPassword(&password);
+#ifdef UNREADY_CODE
             password = HG63218 (password);
+#endif
             m_newsgroup->SetPassword(NULL);
 		}
 
@@ -2331,7 +2299,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
             m_newsgroup->GetPassword(&password);
             password = HG63218 (password);
 #else
-            StrAllocCopy(password, last_password);
+            NET_SACopy(&password, last_password);
 #endif
           }
         else if ((cp = PL_strchr(m_hostName, '@')) != NULL)
@@ -2347,9 +2315,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			  {
                 *colon = '\0';
     
-            	StrAllocCopy(password, colon+1);
-            	StrAllocCopy(last_password, colon+1);
-            	StrAllocCopy(last_password_hostname, cp+1);
+            	NET_SACopy(&password, colon+1);
+            	NET_SACopy(&last_password, colon+1);
+            	NET_SACopy(&last_password_hostname, cp+1);
 
                 *colon = ':';
 			  }
@@ -2381,8 +2349,8 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		}
 		else 
 		{
-		  StrAllocCopy(last_password, password);
-		  StrAllocCopy(last_password_hostname, m_hostName);
+		  NET_SACopy(&last_password, password);
+		  NET_SACopy(&last_password_hostname, m_hostName);
 		}
 
 #ifdef CACHE_NEWSGRP_PASSWORD
@@ -2397,9 +2365,9 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		}
 #endif
 
-		StrAllocCopy(command, "AUTHINFO pass ");
-		StrAllocCat(command, password);
-		StrAllocCat(command, CRLF);
+		NET_SACopy(&command, "AUTHINFO pass ");
+		NET_SACat(&command, password);
+		NET_SACat(&command, CRLF);
 	
 		status = SendData(command);
 
@@ -3277,7 +3245,11 @@ PRInt32 nsNNTPProtocol::DisplayNewsRC()
 			
 			PR_snprintf (thisGroup, sizeof(thisGroup), "%ld", (long) m_newsRCListIndex);
 			PR_snprintf (totalGroups, sizeof(totalGroups), "%ld", (long) m_newsRCListCount);
+#ifdef UNREADY_CODE
 			statusText = PR_smprintf (XP_GetString(XP_THERMO_PERCENT_FORM), thisGroup, totalGroups);
+#else
+			statusText = nsnull;
+#endif
 			if (statusText)
 			{
 #ifdef UNREADY_CODE
@@ -3497,7 +3469,7 @@ PRInt32 nsNNTPProtocol::Cancel()
 	if (!ok)
 	{
 		status = MK_NNTP_CANCEL_DISALLOWED;
-		m_runningURL->SetErrorMessage(nsCRT::strdup(XP_GetString(status)));
+		m_runningURL->SetErrorMessage(PL_strdup("not implemented"));
 		m_nextState = NEWS_ERROR; /* even though it worked */
 		ClearFlag(NNTP_PAUSE_FOR_READ);
 		goto FAIL;
@@ -3620,11 +3592,11 @@ PRInt32 nsNNTPProtocol::XPATSend()
 		char *command = NULL;
 		char *unescapedCommand = NULL;
 		char *endOfTerm = NULL;
-		StrAllocCopy (command, ++thisTerm);
+		NET_SACopy (&command, ++thisTerm);
 		endOfTerm = PL_strchr(command, '/');
 		if (endOfTerm)
 			*endOfTerm = '\0';
-		StrAllocCat (command, CRLF);
+		NET_SACat(&command, CRLF);
 	
 		unescapedCommand = MSG_UnEscapeSearchUrl(command);
 
