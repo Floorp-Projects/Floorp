@@ -1771,7 +1771,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             rv = nsImapURI2FullName(kImapRootURI, hostname, uri, getter_Copies(name));
             nsCAutoString onlineCName(name);
             if (m_hierarchyDelimiter != '/')
-              onlineCName.ReplaceChar('/', char(m_hierarchyDelimiter));
+              onlineCName.ReplaceChar('/',  char(m_hierarchyDelimiter));
             m_onlineFolderName.Assign(onlineCName); 
             autoOnlineName.AssignWithConversion(onlineCName.get());
           }
@@ -4335,13 +4335,8 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         case nsIImapUrl::nsImapSubscribe:
           if (NS_SUCCEEDED(aExitCode) && msgWindow)
           {
-#ifdef DEBUG_bienvenu
-            nsXPIDLCString urlSpec;
             nsXPIDLCString canonicalFolderName;
-            aUrl->GetSpec(getter_Copies(urlSpec));
             imapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(canonicalFolderName));
-            printf("stop running subscribe folderName %s\n", (const char *) canonicalFolderName);
-#endif
             nsCOMPtr <nsIMsgFolder> rootFolder;
             nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
             if(NS_SUCCEEDED(rv) && rootFolder)
