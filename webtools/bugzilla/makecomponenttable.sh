@@ -121,6 +121,13 @@ insert into components (value, program, initialowner, initialqacontact) values (
 insert into components (value, program, initialowner, initialqacontact) values ("PerLDAP", "Directory", "leif@netscape.com", "");
 insert into components (value, program, initialowner, initialqacontact) values ("LDAP Tools", "Directory", "chuckb@netscape.com", "");
 
+insert into components (value, program, initialowner) values ("Front end", "Grendel", "grail@cafebabe.org");
+insert into components (value, program, initialowner) values ("IMAP", "Grendel", "edwin@woudt.nl");
+insert into components (value, program, initialowner) values ("POP", "Grendel", "edwin@woudt.nl");
+insert into components (value, program, initialowner) values ("SMTP", "Grendel", "edwin@woudt.nl");
+insert into components (value, program, initialowner) values ("NNTP", "Grendel", "edwin@woudt.nl");
+insert into components (value, program, initialowner) values ("Address Book", "Grendel", "talisman@anamorphic.com");
+
 
 insert into components (value, program, initialowner, initialqacontact, description) values ("Networking", "MailNews", "mscott@netscape.com", "lchiang@netscape.com", "Integration with libnet, protocol support for POP3, IMAP4, SMTP, NNTP and LDAP");
 insert into components (value, program, initialowner, initialqacontact, description) values ("Database", "MailNews", "davidmc@netscape.com", "lchiang@netscape.com", "Persistent storage of address books and mail/news summary files");

@@ -38,6 +38,7 @@ insert into versions (value, program) values ("other", "Browser");
 insert into versions (value, program) values ("other", "Calendar");
 insert into versions (value, program) values ("other", "CCK");
 insert into versions (value, program) values ("other", "Directory");
+insert into versions (value, program) values ("other", "Grendel");
 insert into versions (value, program) values ("other", "MailNews");
 insert into versions (value, program) values ("other", "MozillaClassic");
 insert into versions (value, program) values ("1998-03-31", "MozillaClassic");

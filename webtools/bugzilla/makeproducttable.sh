@@ -40,6 +40,7 @@ insert into products (product, description, milestoneurl) values ("Browser", 'Fo
 insert into products (product, description) values ("Calendar", 'For bugs about the <a href="http://www.mozilla.org/projects/calendar">Calendar</a> project');
 insert into products (product, description) values ("CCK", 'For bugs about the <a href="http://www.mozilla.org/projects/cck">Client Customization Kit<a> project');
 insert into products (product, description) values ("Directory", 'For bugs about the <a href="http://www.mozilla.org/directory">Directory (LDAP)</a> project');
+insert into products (product, description) values ("Grendel", 'For bugs about the <a href="http://www.mozilla.org/projects/grendel/">Grendel</a> java-based mail/news reader');
 insert into products (product, description) values ("MailNews", 'For bugs about the <a href="http://www.mozilla.org/mailnews/index.html">Mozilla Mail/News</a> project');
 insert into products (product, description, disallownew) values ("MozillaClassic", "For bugs about the Mozilla web browser", 1);
 insert into products (product, description) values ("Webtools", 'For bugs about the web-based tools that mozilla.org uses.  This include Bugzilla (problems you are having with this bug system itself), <a href="http://www.mozilla.org/bonsai.html">Bonsai</a>, and <a href="http://www.mozilla.org/tinderbox.html">Tinderbox</a>.');
