@@ -47,9 +47,6 @@
 
   <script type="application/x-javascript" src="chrome://browser/content/pref/pref-extensions.js"/>
 
-  <stringbundle id="bundle_prefutilities"
-                src="chrome://browser/locale/pref/prefutilities.properties"/>
-      
   <vbox flex="1">
     <label value="&extensionTitle.label;"/>
     
@@ -75,13 +72,13 @@
     <vbox flex="1" class="inset extensionInfoArea" style="overflow:auto;">
       <label class="header" id="extDisplayName" value=""/>
       <hbox pack="start">
-        <label id="extAuthor" tooltip="&author.tooltip;" onclick="visitLink(event, true);"/>
+        <label id="extAuthor" tooltip="&author.tooltip;" onclick="parent.visitLink(event);"/>
       </hbox>
       <description id="extDescription" flex="1"/>
     </vbox>
     <separator/>
     <hbox align="center">
-      <html:a class="themesLink" link="http://texturizer.net/phoenix/extensions.html" onclick="visitLink(event, false);"
+      <html:a class="themesLink" link="http://texturizer.net/phoenix/extensions.html" onclick="parent.visitLink(event);"
           style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;">&getNewExtensions.label;</html:a>
       <spacer flex="1"/>
       <button disabled="true" id="extensionSettings" label="&extensionSettings.label;" oncommand="showSettings();"/>

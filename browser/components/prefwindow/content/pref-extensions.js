@@ -128,19 +128,3 @@ function showSettings()
     window.openDialog(selectedItem.getAttribute("settingsURL"), "", "chrome,dialog,modal");
 }
 
-function visitLink (aEvent, aAuthor)
-{
-  var msg = "";
-  if (aAuthor)
-    msg = "prefCloseThemeAuthorLinkMsg";
-  else
-    msg = "prefCloseThemeNewExtensionLinkMsg";
-
-  var node = aEvent.target;
-  while (node.nodeType != Node.ELEMENT_NODE)
-    node = node.parentNode;
-
-  var url = node.getAttribute("link");
-  if (url != "")
-    parent.visitLink("prefCloseThemeLinkTitle", msg, url);
-}

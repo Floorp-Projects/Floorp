@@ -88,7 +88,7 @@
     <vbox class="inset extensionInfoArea" style="overflow: auto;">
       <label class="header" id="displayName" value=""/>
       <hbox pack="start">
-        <label id="author" onclick="visitLink(event, true);" tooltip="&author.tooltip;"/>
+        <label id="author" onclick="parent.visitLink(event);" tooltip="&author.tooltip;"/>
       </hbox>
 
       <description>
@@ -100,7 +100,7 @@
     
     <hbox align="center">
       <html:a class="themesLink" id="themesLink" link="http://texturizer.net/phoenix/themes.html"
-          style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;" onclick="visitLink(event, false);">&getNewThemes.label;</html:a>
+          style="padding-left:4px; display: block;" tooltip="&getnew.tooltip;" onclick="parent.visitLink(event);">&getNewThemes.label;</html:a>
       <spacer flex="1"/>    
       <button id="uninstallSkin" label="&uninstallSkin.label;" oncommand="uninstallSkin();"/>
     </hbox>

@@ -60,26 +60,18 @@
       hPrefWindow.switchPage(newURL, newTag);
   }    
 
-  function visitLink(aTitle, aMsg, aURL)
+  function visitLink(aEvent)
   {
-    var prefbundle = document.getElementById("bundle_prefutilities");
-    var title = prefbundle.getString(aTitle);
-    var msg = prefbundle.getString(aMsg);
-    
-    var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-    var flags = promptService.BUTTON_TITLE_OK * promptService.BUTTON_POS_0;
-    flags += promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1;
+    var node = aEvent.target;
+    while (node.nodeType != Node.ELEMENT_NODE)
+      node = node.parentNode;
 
-    rv = promptService.confirmEx(window, title, msg, flags, null, null, null, null, { value: 0 });
-    
-    if (rv == 0) {
-      window.opener.openNewWindowWith(aURL, null, false);
-      document.documentElement.acceptDialog();
-    }
+    var url = node.getAttribute("link");
+    if (url != "")
+      window.opener.openNewWindowWith(url, null, false);
   }
-  
+
   ]]>
-  
   </script>        
         
   <stringbundle id="bundle_prefutilities"
