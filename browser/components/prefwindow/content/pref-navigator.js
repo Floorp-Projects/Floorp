@@ -89,12 +89,13 @@ function onOK() {
   // Replace pipes with commas to look nicer.
   parent.homepage = parent.homepage.replace(/\|/g,', ');
   
-  try {
+  var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
+  var windowManagerInterface = windowManager.QueryInterface(Components.interfaces.nsIWindowMediator);
+  var eb = windowManagerInterface.getEnumerator("navigator:browser");
+  while (eb.hasMoreElements()) {
     // Update the home button tooltip.
-    top.opener.document.getElementById("home-button").setAttribute("tooltiptext", parent.homepage);
-  }
-  catch(ex) {
-    // Maybe we opened prefs from somewhere else
+    var domWin = eb.getNext().QueryInterface(Components.interfaces.nsIDOMWindow);
+    domWin.document.getElementById("home-button").setAttribute("tooltiptext", parent.homepage);
   }
 }
 
