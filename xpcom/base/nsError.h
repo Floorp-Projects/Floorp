@@ -74,6 +74,7 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_EDITOR     17
 #define NS_ERROR_MODULE_XPCONNECT  18
 #define NS_ERROR_MODULE_PROFILE    19
+#define NS_ERROR_MODULE_LDAP       20
 
 /**
  * @name Standard Error Handling Macros
