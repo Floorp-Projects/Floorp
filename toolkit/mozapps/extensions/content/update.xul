@@ -49,11 +49,15 @@
 <dialog id="updateProgress" title="&update.title;" 
         style="width: 30em;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        buttons="cancel" onload="gUpdateDialog.init();" oncancel="onCancelUpdateCheck();">
-
+        buttons="cancel" 
+        onload="gUpdateDialog.init();" 
+        onunload="gUpdateDialog.uninit();"
+        oncancel="onCancelUpdateCheck();">
+        
   <script type="application/x-javascript" src="chrome://mozapps/content/extensions/update.js"/>
   
   <stringbundleset id="updateSet">
+    <stringbundle id="brandStrings" src="chrome://global/locale/brand.properties"/>
     <stringbundle id="extensionsStrings" src="chrome://mozapps/locale/extensions/extensions.properties"/>
   </stringbundleset>
 
