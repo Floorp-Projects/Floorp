@@ -24,7 +24,7 @@ MODULE		= msgbase
 include $(DEPTH)/config/autoconf.mk
 XPIDLSRCS =				  \
 		nsICopyMessageListener.idl	\
-		nsICopyMessageStreamListener.idl \
+		nsICopyMsgStreamListener.idl \
 		nsIMessenger.idl	\
 		nsIFolder.idl		\
 		nsIFolderListener.idl	\
