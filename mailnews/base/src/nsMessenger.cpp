@@ -1842,9 +1842,12 @@ nsresult nsSaveMsgListener::InitializeDownload(nsIRequest * aRequest, PRInt32 aB
         {
           PRTime timeDownloadStarted = PR_Now();
 
+          nsCOMPtr<nsIURI> outputURI;
+          NS_NewFileURI(getter_AddRefs(outputURI), outputFile);
+
           nsCOMPtr<nsIURI> url;
           channel->GetURI(getter_AddRefs(url));
-          rv = dl->Init(url, outputFile, nsnull, mimeinfo, timeDownloadStarted, nsnull);
+          rv = dl->Init(url, outputURI, nsnull, mimeinfo, timeDownloadStarted, nsnull);
 
           dl->SetObserver(this);
           // now store the web progresslistener 

@@ -1818,9 +1818,11 @@ nsresult nsExternalAppHandler::InitializeDownload(nsIDownload* aDownload)
 {
   nsresult rv;
   
-  nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
+  nsCOMPtr<nsIURI> target;
+  rv = NS_NewFileURI(getter_AddRefs(target), mFinalFileDestination);
+  if (NS_FAILED(rv)) return rv;
   
-  rv = aDownload->Init(mSourceUrl, local, nsnull,
+  rv = aDownload->Init(mSourceUrl, target, nsnull,
                        mMimeInfo, mTimeDownloadStarted, nsnull);
   if (NS_FAILED(rv)) return rv;
   

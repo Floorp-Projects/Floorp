@@ -1043,39 +1043,18 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject, nsIURI
 
 nsresult nsWebBrowserPersist::GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aLocalFile) const
 {
-    NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aLocalFile);
-
-    *aLocalFile = nsnull;
-    nsresult rv = NS_OK;
-
-    PRBool isFile = PR_FALSE;
-    aURI->SchemeIs("file", &isFile);
-    if (!isFile)
-        return NS_OK;
+    nsresult rv;
 
     nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
-    if (NS_FAILED(rv) || !fileURL)
-    {
-        return NS_ERROR_MALFORMED_URI;
-    }
+    if (NS_FAILED(rv))
+        return rv;
 
     nsCOMPtr<nsIFile> file;
     rv = fileURL->GetFile(getter_AddRefs(file));
-    if (NS_FAILED(rv) || !file)
-    {
-        return NS_ERROR_FAILURE;
-    }
+    if (NS_SUCCEEDED(rv))
+        rv = CallQueryInterface(file, aLocalFile);
 
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(file, &rv);
-    if (NS_FAILED(rv) || !localFile)
-    {
-        return NS_ERROR_FAILURE;
-    }
-
-    *aLocalFile = localFile;
-    NS_ADDREF(*aLocalFile);
-    return NS_OK;
+    return rv;
 }
 
 nsresult nsWebBrowserPersist::AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const
@@ -2147,27 +2126,16 @@ nsresult
 nsWebBrowserPersist::MakeOutputStream(
     nsIURI *aURI, nsIOutputStream **aOutputStream)
 {
-    NS_ENSURE_ARG_POINTER(aURI);
-    NS_ENSURE_ARG_POINTER(aOutputStream);
+    nsresult rv;
 
-    PRBool isFile = PR_FALSE;
-    aURI->SchemeIs("file", &isFile);
-    
-    if (isFile)
-    {
-        nsCOMPtr<nsILocalFile> localFile;
-        GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
-        NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
-        nsresult rv = MakeOutputStreamFromFile(localFile, aOutputStream);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+    nsCOMPtr<nsILocalFile> localFile;
+    GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
+    if (localFile)
+        rv = MakeOutputStreamFromFile(localFile, aOutputStream);
     else
-    {
-        nsresult rv = MakeOutputStreamFromURI(aURI, aOutputStream);
-        NS_ENSURE_SUCCESS(rv, rv);
-    }
+        rv = MakeOutputStreamFromURI(aURI, aOutputStream);
 
-    return NS_OK;
+    return rv;
 }
 
 nsresult
@@ -2320,14 +2288,23 @@ nsWebBrowserPersist::EnumFixRedirect(nsHashKey *aKey, void *aData, void* closure
 void
 nsWebBrowserPersist::CalcTotalProgress()
 {
+    mTotalCurrentProgress = 0;
+    mTotalMaxProgress = 0;
+
     if (mOutputMap.Count() > 0)
     {
         // Total up the progress of each output stream
-        mTotalCurrentProgress = 0;
-        mTotalMaxProgress = 0;
         mOutputMap.Enumerate(EnumCalcProgress, this);
     }
-    else
+
+    if (mUploadList.Count() > 0)
+    {
+        // Total up the progress of each upload
+        mUploadList.Enumerate(EnumCalcUploadProgress, this);
+    }
+
+    // XXX this code seems pretty bogus and pointless
+    if (mTotalCurrentProgress == 0 && mTotalMaxProgress == 0)
     {
         // No output streams so we must be complete
         mTotalCurrentProgress = 10000;
@@ -2340,8 +2317,14 @@ nsWebBrowserPersist::EnumCalcProgress(nsHashKey *aKey, void *aData, void* closur
 {
     nsWebBrowserPersist *pthis = (nsWebBrowserPersist *) closure;
     OutputData *data = (OutputData *) aData;
-    pthis->mTotalCurrentProgress += data->mSelfProgress;
-    pthis->mTotalMaxProgress += data->mSelfProgressMax;
+
+    // only count toward total progress if destination file is local
+    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(data->mFile);
+    if (fileURL)
+    {
+        pthis->mTotalCurrentProgress += data->mSelfProgress;
+        pthis->mTotalMaxProgress += data->mSelfProgressMax;
+    }
     return PR_TRUE;
 }
 

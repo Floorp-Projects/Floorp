@@ -86,7 +86,7 @@ interface nsIDownloadManager : nsISupports {
    */
   nsIDownload addDownload(in short aDownloadType, 
                           in nsIURI aSource,
-                          in nsILocalFile aTarget,
+                          in nsIURI aTarget,
                           in wstring aDisplayName,
                           in wstring aIconURL,
                           in nsIMIMEInfo aMIMEInfo,

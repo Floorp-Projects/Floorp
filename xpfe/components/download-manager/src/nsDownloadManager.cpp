@@ -61,7 +61,7 @@
 #include "nsIProfileChangeStatus.h"
 #include "nsISound.h"
 #include "nsIPrefService.h"
-#include "nsIURL.h"
+#include "nsIFileURL.h"
 
 /* Outstanding issues/todo:
  * 1. Implement pause/resume.
@@ -87,6 +87,28 @@ static nsIRDFResource* gNC_StatusText = nsnull;
 static nsIRDFService* gRDFService = nsnull;
 
 static PRInt32 gRefCnt = 0;
+
+/**
+ * This function extracts the local file path corresponding to the given URI.
+ */
+static nsresult
+GetFilePathUTF8(nsIURI *aURI, nsACString &aResult)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aURI, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIFile> file;
+  rv = fileURL->GetFile(getter_AddRefs(file));
+  if (NS_FAILED(rv)) return rv;
+
+  nsAutoString path;
+  rv = file->GetPath(path);
+  if (NS_SUCCEEDED(rv))
+    CopyUTF16toUTF8(path, aResult);
+  return rv;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
@@ -397,7 +419,7 @@ nsDownloadManager::AssertProgressInfoFor(const nsACString& aTargetPath)
 
 NS_IMETHODIMP
 nsDownloadManager::AddDownload(nsIURI* aSource,
-                               nsILocalFile* aTarget,
+                               nsIURI* aTarget,
                                const PRUnichar* aDisplayName,
                                nsIMIMEInfo *aMIMEInfo,
                                PRInt64 aStartTime,
@@ -418,13 +440,17 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   NS_ADDREF(*aDownload = internalDownload);
 
-  // the persistent descriptor of the target is the unique identifier we use
-  nsAutoString path;
-  rv = aTarget->GetPath(path);
+  // the path of the target is the unique identifier we use
+  nsCOMPtr<nsILocalFile> targetFile;
+  rv = internalDownload->GetTargetFile(getter_AddRefs(targetFile));
   if (NS_FAILED(rv)) return rv;
 
-  NS_ConvertUCS2toUTF8 utf8Path(path);
-  
+  nsAutoString path;
+  rv = targetFile->GetPath(path);
+  if (NS_FAILED(rv)) return rv;
+
+  NS_ConvertUTF16toUTF8 utf8Path(path);
+
   nsCOMPtr<nsIRDFResource> downloadRes;
   gRDFService->GetResource(utf8Path, getter_AddRefs(downloadRes));
 
@@ -446,7 +472,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
   // Set and assert the "pretty" (display) name of the download
   nsAutoString displayName; displayName.Assign(aDisplayName);
   if (displayName.IsEmpty()) {
-    aTarget->GetLeafName(displayName);
+    targetFile->GetLeafName(displayName);
   }
   internalDownload->SetDisplayName(displayName.get());
  
@@ -740,7 +766,7 @@ nsDownloadManager::OpenProgressDialogFor(nsIDownload* aDownload, nsIDOMWindow* a
   aDownload->GetSource(getter_AddRefs(source));
 
   // target...
-  nsCOMPtr<nsILocalFile> target;
+  nsCOMPtr<nsIURI> target;
   aDownload->GetTarget(getter_AddRefs(target));
   
   // helper app...
@@ -797,21 +823,19 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
   nsresult rv;
   if (nsCRT::strcmp(aTopic, "oncancel") == 0) {
     nsCOMPtr<nsIProgressDialog> dialog = do_QueryInterface(aSubject);
-    nsCOMPtr<nsILocalFile> target;
+    nsCOMPtr<nsIURI> target;
     dialog->GetTarget(getter_AddRefs(target));
-    
-    nsAutoString path;
-    rv = target->GetPath(path);
-    if (NS_FAILED(rv)) return rv;
 
-    NS_ConvertUCS2toUTF8 utf8Path(path);
+    nsCAutoString path;
+    rv = GetFilePathUTF8(target, path); 
+    if (NS_FAILED(rv)) return rv;
     
-    nsDownload* download = mCurrDownloads.GetWeak(utf8Path);
+    nsDownload* download = mCurrDownloads.GetWeak(path);
     if (download) {
       // unset dialog since it's closing
       download->SetDialog(nsnull);
       
-      return CancelDownload(utf8Path);  
+      return CancelDownload(path);  
     }
   }
   else if (nsCRT::strcmp(aTopic, "profile-approve-change") == 0) {
@@ -887,10 +911,10 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownload
 
-NS_IMPL_ISUPPORTS2(nsDownload, nsIDownload, nsIWebProgressListener)
+NS_IMPL_ISUPPORTS3(nsDownload, nsIDownload, nsITransfer, nsIWebProgressListener)
 
 nsDownload::nsDownload(nsDownloadManager* aManager,
-                       nsILocalFile* aTarget,
+                       nsIURI* aTarget,
                        nsIURI* aSource) :
                          mDownloadManager(aManager),
                          mTarget(aTarget),
@@ -906,11 +930,11 @@ nsDownload::nsDownload(nsDownloadManager* aManager,
 
 nsDownload::~nsDownload()
 {  
-  nsAutoString path;
-  nsresult rv = mTarget->GetPath(path);
+  nsCAutoString path;
+  nsresult rv = GetFilePathUTF8(mTarget, path);
   if (NS_FAILED(rv)) return;
 
-  mDownloadManager->AssertProgressInfoFor(NS_ConvertUCS2toUTF8(path));
+  mDownloadManager->AssertProgressInfoFor(path);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -938,12 +962,12 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   mLastUpdate = now;
 
   if (mDownloadState == NOTSTARTED) {
-    nsAutoString path;
-    nsresult rv = mTarget->GetPath(path);
+    nsCAutoString path;
+    nsresult rv = GetFilePathUTF8(mTarget, path);
     if (NS_FAILED(rv)) return rv;
 
     mDownloadState = DOWNLOADING;
-    mDownloadManager->DownloadStarted(NS_ConvertUCS2toUTF8(path));
+    mDownloadManager->DownloadStarted(path);
   }
 
   if (aMaxTotalProgress > 0)
@@ -1003,10 +1027,10 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 {   
   if (NS_FAILED(aStatus)) {
     mDownloadState = FAILED;
-    nsAutoString path;
-    nsresult rv = mTarget->GetPath(path);
+    nsCAutoString path;
+    nsresult rv = GetFilePathUTF8(mTarget, path);
     if (NS_SUCCEEDED(rv))
-      mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path), aMessage);
+      mDownloadManager->DownloadEnded(path, aMessage);
   }
 
   if (mListener)
@@ -1104,11 +1128,11 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
         }
       }
 
-      nsAutoString path;
-      rv = mTarget->GetPath(path);
+      nsCAutoString path;
+      rv = GetFilePathUTF8(mTarget, path);
       // can't do an early return; have to break reference cycle below
       if (NS_SUCCEEDED(rv)) {
-        mDownloadManager->DownloadEnded(NS_ConvertUCS2toUTF8(path), nsnull);
+        mDownloadManager->DownloadEnded(path, nsnull);
       }
     }
 
@@ -1155,7 +1179,7 @@ nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::Init(nsIURI* aSource,
-                 nsILocalFile* aTarget,
+                 nsIURI* aTarget,
                  const PRUnichar* aDisplayName,
                  nsIMIMEInfo *aMIMEInfo,
                  PRInt64 aStartTime,
@@ -1175,11 +1199,11 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
 
   nsCOMPtr<nsIRDFLiteral> nameLiteral;
   nsCOMPtr<nsIRDFResource> res;
-  nsAutoString path;
-  nsresult rv = mTarget->GetPath(path);
+  nsCAutoString path;
+  nsresult rv = GetFilePathUTF8(mTarget, path);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetUnicodeResource(path, getter_AddRefs(res));
+  gRDFService->GetResource(path, getter_AddRefs(res));
   
   gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
   ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);
@@ -1195,7 +1219,7 @@ nsDownload::GetDisplayName(PRUnichar** aDisplayName)
 }
 
 NS_IMETHODIMP
-nsDownload::GetTarget(nsILocalFile** aTarget)
+nsDownload::GetTarget(nsIURI** aTarget)
 {
   *aTarget = mTarget;
   NS_IF_ADDREF(*aTarget);
@@ -1268,4 +1292,19 @@ nsDownload::GetMIMEInfo(nsIMIMEInfo** aMIMEInfo)
   *aMIMEInfo = mMIMEInfo;
   NS_IF_ADDREF(*aMIMEInfo);
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDownload::GetTargetFile(nsILocalFile** aTargetFile)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(mTarget, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIFile> file;
+  rv = fileURL->GetFile(getter_AddRefs(file));
+  if (NS_SUCCEEDED(rv))
+    rv = CallQueryInterface(file, aTargetFile);
+  return rv;
 }

@@ -56,7 +56,7 @@ const dlObserver = {
 
 function selectDownload(aDownload)
 {
-  var dlElt = document.getElementById(aDownload.target.path);
+  var dlElt = document.getElementById(aDownload.targetFile.path);
   var dlIndex = gDownloadView.contentView.getIndexOfItem(dlElt);
   gDownloadView.treeBoxObject.selection.select(dlIndex);
   gDownloadView.treeBoxObject.ensureRowIsVisible(dlIndex);
