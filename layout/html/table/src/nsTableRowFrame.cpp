@@ -101,11 +101,11 @@ void nsTableCellReflowState::FixUp(const nsSize& aAvailSpace)
 
 nsTableRowFrame::nsTableRowFrame()
   : nsHTMLContainerFrame(),
-    mTallestCell(0),
     mAllBits(0)
 {
   mBits.mMinRowSpan = 1;
   mBits.mRowIndex   = 0;
+  ResetTallestCell();
 }
 
 NS_IMETHODIMP
@@ -365,15 +365,57 @@ nsTableRowFrame::DidResize(nsIPresContext* aPresContext,
   // Let our base class do the usual work
 }
 
-void nsTableRowFrame::ResetMaxChildHeight()
+/** returns the height of the tallest child in this row (ignoring any cell with rowspans) */
+nscoord nsTableRowFrame::GetTallestCell() const
 {
-  mTallestCell=0;
+  return mTallestCell;
 }
 
-void nsTableRowFrame::SetMaxChildHeight(nscoord aChildHeight)
+void 
+nsTableRowFrame::ResetTallestCell()
 {
-  if (mTallestCell<aChildHeight)
-    mTallestCell = aChildHeight;
+  mTallestCell = 0;
+}
+
+void
+nsTableRowFrame::SetTallestCell(nscoord           aHeight,
+                                nsTableFrame*     aTableFrame,
+                                nsTableCellFrame* aCellFrame)
+{
+  NS_ASSERTION((aTableFrame && aCellFrame) || (!aTableFrame && !aCellFrame), "invalid call");
+
+  if ((aHeight != NS_UNCONSTRAINEDSIZE) &&
+      (aHeight > mTallestCell)) {
+    PRInt32 rowSpan = (!aTableFrame) ? 1 : aTableFrame->GetEffectiveRowSpan(*aCellFrame);
+    if (rowSpan == 1) {
+      mTallestCell = aHeight;
+    }
+  }
+}
+
+void 
+nsTableRowFrame::CalcTallestCell()
+{
+  nsTableFrame* tableFrame = nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if (NS_FAILED(rv)) return;
+
+  nscoord cellSpacingX = tableFrame->GetCellSpacingX();
+  mTallestCell = 0;
+
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
+    nsCOMPtr<nsIAtom> frameType;
+    kidFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableCellFrame == frameType.get()) {
+      PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*kidFrame);
+      if (rowSpan == 1) {
+        nscoord availWidth = ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth();
+        nsSize desSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
+        CalculateCellActualSize(kidFrame, desSize.width, desSize.height, availWidth);
+        SetTallestCell(desSize.height);
+      }
+    }
+  }
 }
 
 static
@@ -548,12 +590,6 @@ nsTableRowFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_ERROR_FAILURE;
 }
 
-/** returns the height of the tallest child in this row (ignoring any cell with rowspans) */
-nscoord nsTableRowFrame::GetTallestChild() const
-{
-  return mTallestCell;
-}
-
 /* GetMinRowSpan is needed for deviant cases where every cell in a row has a rowspan > 1.
  * It sets mMinRowSpan, which is used in FixMinCellHeight and PlaceChild
  */
@@ -626,41 +662,6 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*      aPresContext,
       aMaxElementSize->height = PR_MAX(aMaxElementSize->height, aKidMaxElementSize->height);
     }
   }
-
-// XXX this will be fixed when row spans deal with dead rows
-#if 0
-  // this accounts for cases where all cells in a row have a rowspan>1
-  // XXX  "numColsInThisRow==numColsInTable" probably isn't the right metric to use here
-  //      the point is to skip a cell who's span effects another row, maybe use cellmap?
-  PRInt32 numColsInThisRow = GetMaxColumns();
-  PRInt32 numColsInTable = aReflowState.tableFrame->GetColCount();
-  if ((1==rowSpan) || (mMinRowSpan == rowSpan && numColsInThisRow==numColsInTable))
-  {
-    // Update maxCellHeight
-    if (aKidRect.height > aReflowState.maxCellHeight)
-      aReflowState.maxCellHeight = aKidRect.height;
-
-    // Update maxCellVertSpace
-    nsMargin margin;
-
-    if (aReflowState.tableFrame->GetCellMarginData((nsTableCellFrame *)aKidFrame, margin) == NS_OK)
-    {
-      nscoord height = aKidRect.height + margin.top + margin.bottom;
-  
-      if (height > aReflowState.maxCellVertSpace)
-        aReflowState.maxCellVertSpace = height;
-    }
-  }
-#else
-  if (1 == rowSpan) {
-    // Update maxCellHeight
-    if (aDesiredSize.height > aReflowState.maxCellHeight)
-      aReflowState.maxCellHeight = aDesiredSize.height;
-
-    // Update maxCellVertSpace
-    aReflowState.maxCellVertSpace = PR_MAX(aDesiredSize.height, aReflowState.maxCellVertSpace);
-  }
-#endif
 }
 
 // Calculate the cell's actual size given its pass2 desired width and height.
@@ -668,10 +669,10 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*      aPresContext,
 // needed for backwards compatibility.
 // Modifies the desired width and height that are passed in.
 nsresult
-nsTableRowFrame::CalculateCellActualSize(nsIFrame*             aCellFrame,
-                                         nscoord&              aDesiredWidth,
-                                         nscoord&              aDesiredHeight,
-                                         nscoord               aAvailWidth)
+nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
+                                         nscoord&  aDesiredWidth,
+                                         nscoord&  aDesiredHeight,
+                                         nscoord   aAvailWidth)
 {
   nscoord                specifiedHeight = 0;
   const nsStylePosition* position;
@@ -707,13 +708,10 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame*             aCellFrame,
   // specified height
   if (specifiedHeight > aDesiredHeight)
     aDesiredHeight = specifiedHeight;
-
-  // begin special Nav4 compatibility code for the width
-  if (0 == aDesiredWidth)
-  {
+ 
+  if (0 == aDesiredWidth) { // special Nav4 compatibility code for the width
     aDesiredWidth = aAvailWidth;
-  }
-  // end special Nav4 compatibility code
+  } 
 
   return NS_OK;
 }
@@ -758,7 +756,8 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
     return NS_OK;
   }
 
-  nsresult rv=NS_OK;
+  nsresult rv = NS_OK;
+  ResetTallestCell();
 
   nsSize  localKidMaxElementSize(0,0);
   nsSize* kidMaxElementSize = (aDesiredSize.maxElementSize) ? &localKidMaxElementSize : nsnull;
@@ -946,6 +945,7 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
         // logic needed for backwards compatibility
         CalculateCellActualSize(kidFrame, desiredSize.width, 
                                 desiredSize.height, availWidth);
+        SetTallestCell(desiredSize.height, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
   
         // Place the child
         PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize,
@@ -971,12 +971,10 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
       aReflowState.x += cellSpacingX;
   }
 
-  SetMaxChildHeight(aReflowState.maxCellHeight);  // remember height of tallest child who doesn't have a row span
-
   // Return our desired size. Note that our desired width is just whatever width
   // we were given by the row group frame
-  aDesiredSize.width = aReflowState.x;
-  aDesiredSize.height = aReflowState.maxCellVertSpace;  
+  aDesiredSize.width  = aReflowState.x;
+  aDesiredSize.height = GetTallestCell();  
 #ifdef DEBUG_karnaze
   nscoord overAllocated = aDesiredSize.width - aReflowState.reflowState.availableWidth;
   if (overAllocated > 0) {
@@ -1004,6 +1002,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
                                PRBool               aDoSiblings)
 {
   nsresult  rv = NS_OK;
+  ResetTallestCell();
+
   // Place our children, one at a time, until we are out of children
   nsSize    kidMaxElementSize(0,0);
   nscoord   x = 0;
@@ -1060,8 +1060,11 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
 
       // Place the child
       x += cellSpacingX;
+      // XXX do we need to call CalculateCellActualSize?
       PlaceChild(aPresContext, aReflowState, kidFrame, kidSize, x, 0,
                  aDesiredSize.maxElementSize, &kidMaxElementSize);
+      SetTallestCell(aDesiredSize.height, aReflowState.tableFrame, (nsTableCellFrame*)kidFrame);
+
       x += kidSize.width + cellSpacingX;
     }
     else
@@ -1076,11 +1079,9 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
       break;
   }
 
-  SetMaxChildHeight(aReflowState.maxCellHeight);  // remember height of tallest child who doesn't have a row span
-
   // Return our desired size
-  aDesiredSize.width = x;
-  aDesiredSize.height = aReflowState.maxCellVertSpace;   
+  aDesiredSize.width  = x;
+  aDesiredSize.height = GetTallestCell();  
 
   return rv;
 }
@@ -1114,23 +1115,6 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
         // Update maxCellHeight and maxVertCellSpace. When determining this we
         // don't include cells that span rows
         PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame &)*frame);
-        if (PRInt32(mBits.mMinRowSpan) == rowSpan) {
-          // Get the cell's desired height the last time it was reflowed
-          nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
-
-          // See if it has a specified height that overrides the desired size.
-          // Note: we don't care about the width so don't compute the column
-          // width and just pass in the desired width for the available width
-          CalculateCellActualSize(frame, desiredSize.width, desiredSize.height, desiredSize.width);
-
-          // Update maxCellHeight
-          if (desiredSize.height > aReflowState.maxCellHeight) {
-            aReflowState.maxCellHeight = desiredSize.height;
-          }
-  
-          // Update maxCellVertHeight
-          aReflowState.maxCellVertSpace = PR_MAX(desiredSize.height, aReflowState.maxCellVertSpace);
-        }
 
         // Recover the max element size if requested
         if (aMaxElementSize) {
@@ -1160,7 +1144,8 @@ NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext*       aPresContext,
                                              nsReflowStatus&       aStatus)
 {
   nsresult  rv = NS_OK;
-
+  CalcTallestCell(); // need to recalculate it based on last reflow sizes
+ 
   // determine if this frame is the target or not
   nsIFrame *target=nsnull;
   rv = aReflowState.reflowState.reflowCommand->GetTarget(target);
@@ -1274,29 +1259,30 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     nsSize              kidMaxElementSize;
     // Unless this is a fixed-layout table, then have the cell incrementally
     // update its maximum width. XXX should not skip if the cell is in the 1st row
-    nsHTMLReflowMetrics desiredSize(&kidMaxElementSize,
-                                    aReflowState.tableFrame->IsAutoLayout() ?
-                                    NS_REFLOW_CALC_MAX_WIDTH : 0);
-    nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
-                                          aNextFrame, kidAvailSize);
+    nsHTMLReflowMetrics cellMet(&kidMaxElementSize, aReflowState.tableFrame->IsAutoLayout() ?
+                                NS_REFLOW_CALC_MAX_WIDTH : 0);
+    nsTableCellReflowState kidRS(aPresContext, aReflowState.reflowState,
+                                 aNextFrame, kidAvailSize);
 
     // Remember the current desired size, we'll need it later
-    nsSize  oldMinSize = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
-    nscoord oldMaximumWidth = ((nsTableCellFrame*)aNextFrame)->GetMaximumWidth();
+    nsSize  oldCellMinSize      = ((nsTableCellFrame*)aNextFrame)->GetPass1MaxElementSize();
+    nscoord oldCellMaximumWidth = ((nsTableCellFrame*)aNextFrame)->GetMaximumWidth();
+    nsSize  oldCellDesSize      = ((nsTableCellFrame*)aNextFrame)->GetDesiredSize();
     
     // Reflow the cell passing it the incremental reflow command. We can't pass
     // in a max width of NS_UNCONSTRAINEDSIZE, because the max width must match
     // the width of the previous reflow...
-    rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
+    rv = ReflowChild(aNextFrame, aPresContext, cellMet, kidRS,
                      aReflowState.x, 0, 0, aStatus);
+    nsSize initCellDesSize(cellMet.width, cellMet.height);
     
     // Update the cell layout data.. If the cell's maximum width changed,
     // then inform the table that its maximum width needs to be recomputed
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
-    if (desiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+    if (cellMet.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
       // If the cell is not auto-width, then the natural width is the
       // desired width. XXX what about Pct width?
-      PRBool  isAutoWidth = eStyleUnit_Auto == kidReflowState.mStylePosition->mWidth.GetUnit();
+      PRBool  isAutoWidth = eStyleUnit_Auto == kidRS.mStylePosition->mWidth.GetUnit();
       
       if (!isAutoWidth) {
         // Reset the natural width to be the desired width
@@ -1304,10 +1290,10 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
         // layout strategy will compute a different maximum content width than we
         // computed for the initial reflow. That's because the table layout
         // strategy doesn't check whether the cell is auto-width...
-        desiredSize.mMaximumWidth = PR_MIN(desiredSize.mMaximumWidth, desiredSize.width);
+        cellMet.mMaximumWidth = PR_MIN(cellMet.mMaximumWidth, cellMet.width);
       }
-      ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(desiredSize.mMaximumWidth);
-      if (oldMaximumWidth != desiredSize.mMaximumWidth) {
+      ((nsTableCellFrame *)aNextFrame)->SetMaximumWidth(cellMet.mMaximumWidth);
+      if (oldCellMaximumWidth != cellMet.mMaximumWidth) {
         aReflowState.tableFrame->InvalidateMaximumWidth();
       }
     }
@@ -1315,28 +1301,65 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // Now that we know the minimum and preferred widths see if the column
     // widths need to be rebalanced
     if (!aReflowState.tableFrame->ColumnsAreValidFor(*(nsTableCellFrame*)aNextFrame,
-                                                     oldMinSize.width,
-                                                     oldMaximumWidth)) {
+                                                     oldCellMinSize.width,
+                                                     oldCellMaximumWidth)) {
       // The column widths need to be rebalanced. Tell the table to rebalance
       // the column widths
       aReflowState.tableFrame->InvalidateColumnWidths();
-    }
-  
+    } 
+
     // Calculate the cell's actual size given its pass2 size. This function
     // takes into account the specified height (in the style), and any special
     // logic needed for backwards compatibility
-    CalculateCellActualSize(aNextFrame, desiredSize.width, desiredSize.height, cellAvailWidth);
+    CalculateCellActualSize(aNextFrame, cellMet.width, cellMet.height, cellAvailWidth);
 
+    // if the cell got shorter and it may have been the tallest, recalc the tallest cell
+    PRBool tallestCellGotShorter = PR_FALSE;
+    if (initCellDesSize.height < oldCellDesSize.height) {
+      nscoord width  = initCellDesSize.width;
+      nscoord height = initCellDesSize.height;
+      CalculateCellActualSize(aNextFrame, width, height, cellAvailWidth); // considers style
+      nscoord tallest = GetTallestCell();
+      if ((height == tallest) && (cellMet.height < tallest)) {
+        tallestCellGotShorter = PR_TRUE;
+      }
+    }
+    if (tallestCellGotShorter) {
+      CalcTallestCell();
+    }
+    else {
+      SetTallestCell(cellMet.height, aReflowState.tableFrame, (nsTableCellFrame*)aNextFrame);
+    }
+
+    // if the cell's desired size didn't changed, our height is unchanged
+    aDesiredSize.mNothingChanged = PR_FALSE;
+    if ((initCellDesSize.width  == oldCellDesSize.width) && 
+        (initCellDesSize.height == oldCellDesSize.height)) {
+      aDesiredSize.height = mRect.height;
+      aDesiredSize.mNothingChanged = PR_TRUE;
+    }
+    else {
+      aDesiredSize.height = GetTallestCell();
+    }
+    PRInt32 rowSpan = aReflowState.tableFrame->GetEffectiveRowSpan((nsTableCellFrame&)*aNextFrame);
+    cellMet.height = (rowSpan == 1) ? aDesiredSize.height : PR_MAX(aDesiredSize.height, cellMet.height);
     // Now place the child
-    PlaceChild(aPresContext, aReflowState, aNextFrame, desiredSize, aReflowState.x,
+    PlaceChild(aPresContext, aReflowState, aNextFrame, cellMet, aReflowState.x,
                0, aDesiredSize.maxElementSize, &kidMaxElementSize);
 
-    SetMaxChildHeight(aReflowState.maxCellHeight);
 
     // Return our desired size. Note that our desired width is just whatever width
     // we were given by the row group frame
-    aDesiredSize.width = aReflowState.availSize.width;
-    aDesiredSize.height = aReflowState.maxCellVertSpace;
+    aDesiredSize.width  = aReflowState.availSize.width;
+    if (!aDesiredSize.mNothingChanged) {
+      if (aDesiredSize.height == mRect.height) { // our height didn't change
+        ((nsTableCellFrame *)aNextFrame)->VerticallyAlignChild(aPresContext, aReflowState.reflowState);
+        nsRect dirtyRect;
+        aNextFrame->GetRect(dirtyRect);
+        dirtyRect.height = mRect.height;
+        Invalidate(aPresContext, dirtyRect);
+      }
+    }
   }
   else
   { // pass reflow to unknown frame child
@@ -1381,9 +1404,6 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->height = 0;
   }
 
-  // Initialize our internal data
-  ResetMaxChildHeight();
-
   // Create a reflow state
   nsTableFrame *tableFrame=nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -1414,8 +1434,8 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
       RowReflowState rowResizeReflowState(resizeReflowState, tableFrame);
       rv = ResizeReflow(aPresContext, aDesiredSize, rowResizeReflowState, aStatus);
     }
-    GetMinRowSpan(tableFrame);
-    FixMinCellHeight(tableFrame);
+    //GetMinRowSpan(tableFrame);
+    //FixMinCellHeight(tableFrame);
     aStatus = NS_FRAME_COMPLETE;
     break;
 

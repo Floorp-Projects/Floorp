@@ -541,6 +541,8 @@ nsTableOuterFrame::InvalidateDamage(nsIPresContext* aPresContext,
                                     PRBool          aInnerChanged,
                                     PRBool          aCaptionChanged)
 {
+  if (!aInnerChanged && !aCaptionChanged) return;
+
   nsRect damage;
   if (aInnerChanged && aCaptionChanged) {
     damage = nsRect(0, 0, aOuterSize.width, aOuterSize.height);
@@ -1003,7 +1005,7 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
   nsReflowStatus capStatus; // don't let the caption cause incomplete
   OuterReflowChild(aPresContext, mCaptionFrame, aOuterRS, captionMet, &availWidth, captionSize, 
                    captionMargin, captionPadding, eReflowReason_Incremental, capStatus);
- 
+
   nsMargin innerMargin, innerPadding;
   nsPoint  innerOrigin;
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
@@ -1026,6 +1028,8 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
     }
   }
 
+  nsRect prevInnerRect;
+  mInnerTableFrame->GetRect(prevInnerRect);
   nsPoint captionOrigin;
   if (needInnerReflow) {
     nsSize innerSize;
@@ -1059,7 +1063,8 @@ nsTableOuterFrame::IR_TargetIsCaptionFrame(nsIPresContext*           aPresContex
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerPadding, captionMargin);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-  InvalidateDamage(aPresContext, captionSide, desSize, needInnerReflow, PR_TRUE);
+  PRBool innerMoved = (innerOrigin.x != prevInnerRect.x) || (innerOrigin.y != prevInnerRect.y);
+  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE);
   return rv;
 }
 
@@ -1107,8 +1112,10 @@ nsTableOuterFrame::IR_ReflowDirty(nsIPresContext*           aPresContext,
     aDesiredSize.width  = innerRect.XMost() + innerMargin.right;
     aDesiredSize.height = innerRect.YMost() + innerMargin.bottom; 
     sizeSet = PR_TRUE;
-    // Repaint our entire bounds
-    Invalidate(aPresContext, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
+    // Repaint the inner's entire bounds if it moved
+    if ((innerRect.x != innerOrigin.x) || (innerRect.y != innerOrigin.y)) {
+      Invalidate(aPresContext, nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
+    }
   }
   if (!sizeSet) {
     // set our desired size to what it was before
@@ -1189,10 +1196,14 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
   nsMargin captionMargin(0,0,0,0);
   nsSize   captionSize(0,0);
   nsSize   containSize = GetContainingBlockSize(aOuterRS);
-  PRBool   reflowedCaption = PR_FALSE;
+  PRBool   captionMoved = PR_FALSE;
   // if there is a caption and the width or height of the inner table changed 
   // from a reflow, then reflow or move the caption as needed
   if (mCaptionFrame) {
+    nsPoint captionOrigin;
+    nsRect prevCaptionRect;
+    mCaptionFrame->GetRect(prevCaptionRect);
+
     if (priorInnerRect.width != innerMet.width) {
       nsMargin ignorePadding;
       // XXX only need to reflow if the caption is auto width
@@ -1204,7 +1215,6 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
                             captionSize, captionMargin, ignorePadding, eReflowReason_Resize, capStatus);
       if (NS_FAILED(rv)) return rv;
 
-      nsPoint captionOrigin;
       GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
                        innerMargin, captionSize, captionMargin, captionOrigin);
       FinishReflowChild(mCaptionFrame, aPresContext, captionMet,
@@ -1212,12 +1222,10 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
 
       GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
-      reflowedCaption = PR_TRUE;
     }
     else {
       // reposition the caption frame if necessary and set the inner's origin
       captionSize = GetFrameSize(*mCaptionFrame);
-      nsPoint captionOrigin;
       nsMargin captionPadding;
       GetMarginPadding(aPresContext, aOuterRS, mCaptionFrame, captionMargin, 
                        captionPadding);
@@ -1226,6 +1234,12 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
       GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
                      captionMargin, innerSize, innerMargin, innerOrigin);
       MoveFrameTo(aPresContext, mCaptionFrame, captionOrigin.x, captionOrigin.y); 
+    }
+    if ((captionOrigin.x != prevCaptionRect.x) || (captionOrigin.x != prevCaptionRect.x)) {
+      captionMoved = PR_TRUE;
+    }
+    if ((captionOrigin.x != prevCaptionRect.x) || (captionOrigin.x != prevCaptionRect.x)) {
+      captionMoved = PR_TRUE;
     }
   }
   else {
@@ -1238,7 +1252,7 @@ nsTableOuterFrame::IR_InnerTableReflow(nsIPresContext*           aPresContext,
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerPadding, captionMargin);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-  InvalidateDamage(aPresContext, captionSide, desSize, PR_TRUE, reflowedCaption);
+  InvalidateDamage(aPresContext, captionSide, desSize, PR_FALSE, captionMoved);
 
   return rv;
 }
@@ -1277,8 +1291,10 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
   ZeroAutoMargin(capAdjMargin);
 
   nsMargin innerMargin, innerPadding;
+  nsPoint innerOrigin;
   nsSize containSize = GetContainingBlockSize(aOuterRS);
-  PRBool reflowedInner = PR_FALSE;
+  nsRect prevInnerRect;
+  mInnerTableFrame->GetRect(prevInnerRect);
   // XXX: caption align = left|right ignored here!
   // if the caption's MES + margins > outer width, reflow the inner table
   if (mMinCaptionWidth + capAdjMargin.left + capAdjMargin.right > mRect.width) {
@@ -1290,7 +1306,6 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
                           eReflowReason_Resize, aStatus);
     if (NS_FAILED(rv)) return rv;
 
-    nsPoint innerOrigin;
     GetInnerOrigin(aPresContext, captionSide, containSize, captionSize, 
                    captionMargin, innerSize, innerMargin, innerOrigin);
     rv = FinishReflowChild(mInnerTableFrame, aPresContext, innerMet,
@@ -1298,7 +1313,6 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
     if (NS_FAILED(rv)) return rv;
     GetCaptionOrigin(aPresContext, captionSide, containSize, innerSize, 
                      innerMargin, captionSize, captionMargin, captionOrigin);
-    reflowedInner = PR_TRUE;
   }
   else {
     // reposition the inner frame if necessary and set the caption's origin
@@ -1318,7 +1332,8 @@ nsTableOuterFrame::IR_CaptionInserted(nsIPresContext*           aPresContext,
 
   UpdateReflowMetrics(captionSide, aDesiredSize, innerMargin, innerPadding, captionMargin);
   nsSize desSize(aDesiredSize.width, aDesiredSize.height);
-  InvalidateDamage(aPresContext, captionSide, desSize, reflowedInner, PR_TRUE);
+  PRBool innerMoved = (innerOrigin.x != prevInnerRect.x) || (innerOrigin.y != prevInnerRect.y);
+  InvalidateDamage(aPresContext, captionSide, desSize, innerMoved, PR_TRUE);
 
   return rv;
 }

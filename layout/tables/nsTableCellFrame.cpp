@@ -764,6 +764,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     }
     firstKid->GetOrigin(kidOrigin);
   }
+
   if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
@@ -844,8 +845,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   FinishReflowChild(firstKid, aPresContext, kidSize,
                     kidOrigin.x, kidOrigin.y, 0);
     
-  // Return our size and our result
-
   // first, compute the height which can be set w/o being restricted by aMaxSize.height
   nscoord cellHeight = kidSize.height;
   if (NS_UNCONSTRAINEDSIZE != cellHeight) {
