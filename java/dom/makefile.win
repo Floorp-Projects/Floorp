@@ -23,7 +23,6 @@ DEPTH=..\..
 IGNORE_MANIFEST=1
 DIRS = jni
 
-JAVAHOME=$(JDKHOME)
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 !ifdef JAVA_DOM_OJI_ENABLE
 DEFINES=$(DEFINES) -DJAVA_DOM_OJI_ENABLE
@@ -37,7 +36,6 @@ CPPSRCS= \
 	JavaDOMSecurityContext.cpp \
 !endif
 	nsJavaDOMImpl.cpp \
-	nsJavaDOMModule.cpp \
  $(NULL)
 
 CPP_OBJS= \
@@ -45,7 +43,6 @@ CPP_OBJS= \
 	.\$(OBJDIR)\JavaDOMSecurityContext.obj \
 !endif
 	.\$(OBJDIR)\nsJavaDOMImpl.obj \
-	.\$(OBJDIR)\nsJavaDOMModule.obj \
  $(NULL)
 
 EXPORTS = \
@@ -53,8 +50,8 @@ EXPORTS = \
 
 !ifndef JAVA_DOM_OJI_ENABLE
 LINCS= \
-	-I$(JAVAHOME)\include \
-	-I$(JAVAHOME)\include\win32
+	-I$(JDKHOME)\include \
+	-I$(JDKHOME)\include\win32
 !endif
 
 MAKE_OBJ_TYPE = DLL
@@ -70,7 +67,7 @@ LLIBS=	\
 !ifdef JAVA_DOM_OJI_ENABLE
         $(DIST)\lib\oji.lib \
 !else
-	$(JAVAHOME)\lib\jvm.lib \
+	$(JDKHOME)\lib\jvm.lib \
 !endif
 	$(DIST)\lib\xpcom.lib \
 	$(LIBNSPR) 

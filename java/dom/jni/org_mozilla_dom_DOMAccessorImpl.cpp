@@ -43,7 +43,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_register
 		rv));
       }
     }
-    nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
   }
 }
 
@@ -78,7 +77,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_DOMAccessorImpl_unregister
 		rv));
       }
     }
-    nsServiceManager::ReleaseService(kDocLoaderServiceCID, docLoaderService);
   }
 }
 

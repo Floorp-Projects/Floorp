@@ -98,7 +98,7 @@ export:: classes
 #XXX - assume that DOM2 java-bindings are in CLASSPATH 
 classes:
 	@echo "Making java classes ..."
-	$(JAVAHOME)\bin\javac -d $(JAVA_DESTPATH) *.java
+	$(JDKHOME)\bin\javac -d $(JAVA_DESTPATH) *.java
 
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin

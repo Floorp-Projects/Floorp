@@ -22,13 +22,17 @@
 #include "prenv.h"
 #include "nsISupportsUtils.h"
 #include "nsIURL.h"
+#include "nsIChannel.h"
 #include "nsIDocument.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDOMDocument.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsJavaDOMImpl.h"
+
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 
 #ifdef JAVA_DOM_OJI_ENABLE
 #include "ProxyJNI.h"
@@ -51,7 +55,7 @@ static const char* describe_type(int type);
 #ifdef JAVA_DOM_OJI_ENABLE
 static NS_DEFINE_CID(kJVMManagerCID,NS_JVMMANAGER_CID);
 #endif
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIDocShellIID, NS_IDOCSHELL_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJavaDOMIID, NS_IJAVADOM_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -60,6 +64,26 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_I
 
 NS_IMPL_ADDREF(nsJavaDOMImpl);
 NS_IMPL_RELEASE(nsJavaDOMImpl);
+
+
+#define NS_JAVADOM_PROGID \
+"component://netscape/blackwood/java-dom"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJavaDOMImpl)
+
+static  nsModuleComponentInfo components[] = 
+{
+    {
+        "Java DOM",
+        NS_JAVADOM_CID,
+        NS_JAVADOM_PROGID,
+        nsJavaDOMImplConstructor
+    }
+};
+
+NS_IMPL_NSGETMODULE("JavaDOMModule",components);
+
+
 
 NS_IMETHODIMP nsJavaDOMImpl::QueryInterface(REFNSIID aIID, void** aInstance)
 {
@@ -225,7 +249,7 @@ PRBool nsJavaDOMImpl::Cleanup(JNIEnv* env)
 
 nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 {
-  nsIWebShell* webshell = nsnull;
+  nsIDocShell* docshell = nsnull;
   nsISupports* container = nsnull;
   nsIContentViewer* contentv = nsnull;
   nsIDocumentViewer* docv = nsnull;
@@ -234,9 +258,9 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 
   nsresult rv = loader->GetContainer(&container);
   if (NS_SUCCEEDED(rv) && container)
-    rv = container->QueryInterface(kIWebShellIID, (void**) &webshell);
-      if (NS_SUCCEEDED(rv) && webshell) 
-        rv = webshell->GetContentViewer(&contentv);
+    rv = container->QueryInterface(kIDocShellIID, (void**) &docshell);
+      if (NS_SUCCEEDED(rv) && docshell) 
+        rv = docshell->GetContentViewer(&contentv);
 
   if (NS_SUCCEEDED(rv) && contentv) {
     rv = contentv->QueryInterface(kIDocumentViewerIID,
@@ -257,7 +281,7 @@ nsIDOMDocument* nsJavaDOMImpl::GetDocument(nsIDocumentLoader* loader)
 	  "documentViewer=%x, document=%x, "
 	  "domDocument=%x, error=%x\n", 
 	  (unsigned) (void*) container, 
-	  (unsigned) (void*) webshell, 
+	  (unsigned) (void*) docshell, 
 	  (unsigned) (void*) contentv, 
 	  (unsigned) (void*) docv, 
 	  (unsigned) (void*) document, 
