@@ -1197,7 +1197,7 @@ PRBool
 nsSVGSVGElement::IsEventName(nsIAtom* aName)
 {
   return IsGraphicElementEventName(aName) ||
-         aName == nsSVGAtoms::onclick;
+         aName == nsSVGAtoms::onload;
 }
 
 //----------------------------------------------------------------------
