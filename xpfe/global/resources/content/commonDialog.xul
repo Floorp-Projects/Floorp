@@ -43,9 +43,9 @@
       </vbox>
   
       <!-- checkbox -->
-      <hbox id="checkboxContainer" collapsed="true">
+      <vbox id="checkboxContainer" align="start" collapsed="true">
         <checkbox id="checkbox" oncommand="onCheckboxClick(this);"/>
-      </hbox>
+      </vbox>
     </vbox>
   </hbox>
 
