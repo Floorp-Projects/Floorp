@@ -421,12 +421,13 @@ XFE_NavCenterView::createTree()
 										 this, m_contextData);
 	
 	_rdftree->setStandAloneState(_isStandalone);
-	
-//  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_FIXED);
-//  	_rdftree->setHtmlPaneHeightFixed(10);
 
-//  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_PERCENT);
-//  	_rdftree->setHtmlPaneHeightPercent(50);
+    /*	
+  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_FIXED);
+  	_rdftree->setHtmlPaneHeightFixed(10);
+    */
+  	_rdftree->setHtmlPaneSizing(XFE_HTML_PANE_PERCENT);
+  	_rdftree->setHtmlPaneHeightPercent(50);
 
 }
 //////////////////////////////////////////////////////////////////////////
