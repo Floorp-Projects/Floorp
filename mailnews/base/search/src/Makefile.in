@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbase
+XPIDL_MODULE	= msgsearch
 LIBRARY_NAME	= msgsearch_s
 REQUIRES	= xpcom mailnews msgdb msgbaseutil necko mime appshell msgimap rdf msglocal intl locale pref js timer msgnews txmgr
 

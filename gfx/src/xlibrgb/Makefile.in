@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xlibrgb
+XPIDL_MODULE	= layout
 LIBRARY_NAME	= xlibrgb
 
 CSRCS		= xlibrgb.c

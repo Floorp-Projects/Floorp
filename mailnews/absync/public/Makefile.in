@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= absyncsvc
+XPIDL_MODULE	= absync
 
 EXPORTS		= \
 		$(NULL)

@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= xmlextras
+XPIDL_MODULE	= xmlsoap
 
 XPIDLSRCS	= \
 		nsISOAPCall.idl  		\
