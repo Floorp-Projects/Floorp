@@ -427,7 +427,14 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
 
-  NS_ADDREF(*aFile = mFile);
+
+  nsCOMPtr<nsILocalFile> file(do_CreateInstance("component://mozilla/file/local"));
+    
+  NS_ENSURE_TRUE(file, NS_ERROR_FAILURE);
+
+  file->InitWithPath(nsCAutoString(mFile));
+
+  NS_ADDREF(*aFile = file);
 
   return NS_OK;
 }
