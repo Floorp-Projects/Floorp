@@ -22,7 +22,8 @@
 #include "uapp.h"
 #include "uerrmgr.h"
 #include "PascalString.h"
-#include "MercutioAPI.h"
+#include <LAppearanceMBAR.h>
+//#include "MercutioAPI.h"
 
 #include "CTargetedUpdateMenuRegistry.h"
 
@@ -137,6 +138,7 @@ void LMenuSharingAttachment::ExecuteSelf( MessageT inMessage, void* ioParam)
 		command = cmd_Nothing;
 		ch = (*ev).message & charCodeMask;
 		menubar = LMenuBar::GetCurrentMenuBar();
+		
 		if (menubar->CouldBeKeyCommand(*ev))
 		{
 			// I moved this in here so it is only called when the command key is down.
@@ -147,15 +149,13 @@ void LMenuSharingAttachment::ExecuteSelf( MessageT inMessage, void* ioParam)
 			// (CFrontApp::GetApplication())->LApplication::UpdateMenus();
 			// myoung: Don't do this here.
 
-			//	Use code similar to CFrontApp::EventKeyDown which calls MDEF_MenuKey
-			//	instead of calling LMenuBar::FindKeyCommand which calls MenuKey.
-			//	DDM 06-JUN-96
-			Int32 theMenuChoice = MDEF_MenuKey(ev->message, ev->modifiers, ::GetMenu(666));
+			// MacOS8 can do the weird key combos for us w/out Mercutio.
+			SInt32 unused;
+			LAppearanceMBAR* amMenuBar = dynamic_cast<LAppearanceMBAR*>(menubar);
+			if ( amMenuBar )
+				command = amMenuBar->FindKeyCommand ( *ev, unused );
 			
-			if (HiWord(theMenuChoice) != 0)
-			{
-				command = LMenuBar::GetCurrentMenuBar()->FindCommand(HiWord(theMenuChoice), LoWord(theMenuChoice));
-				
+			if ( command ) {
 				if (LCommander::IsSyntheticCommand(command,menuId, menuItem))
 				{
 					if (SharedMenuHit (menuId, menuItem))// someone is running a script from a commandKey
