@@ -65,6 +65,10 @@ public:
 	// from nsIMailboxUrl:
 	NS_IMETHOD SetMailboxParser(nsIStreamListener * aConsumer);
 	NS_IMETHOD GetMailboxParser(nsIStreamListener ** aConsumer);
+	NS_IMETHOD SetFilePath(const nsFilePath& aFilePath);
+	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath);
+//	NS_IMPL_CLASS_GETSET(MessageID, PRUint32, m_messageID);
+	NS_IMPL_CLASS_GETSET(MailboxAction, nsMailboxAction, m_mailboxAction);
 
 	// from nsIMsgMailNewsUrl:
 	NS_IMPL_CLASS_GETSET(RunningUrlFlag, PRBool, m_runningUrl);
@@ -72,8 +76,6 @@ public:
 	NS_IMETHOD SetErrorMessage (char * errorMessage);
 	// caller must free using PR_FREE
 	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
-	
-	NS_IMETHOD GetFilePath(const nsFilePath ** aFilePath);
 
     // nsMailboxUrl
 
@@ -105,9 +107,12 @@ protected:
     
     nsISupports	*m_container;
 
+	nsMailboxAction m_mailboxAction; // the action this url represents...parse mailbox, display messages, etc.
 	nsFilePath	*m_filePath; 
+	PRUint32	m_messageID;
 
 	void ReconstructSpec(void);
+	nsresult ParseSearchPart();
 };
 
 #endif // nsMailboxUrl_h__

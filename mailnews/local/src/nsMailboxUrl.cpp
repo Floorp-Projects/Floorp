@@ -29,9 +29,7 @@
 #include "nsINetService.h"  /* XXX: NS_FALSE */
 
 #include "nsString.h"
-#include "prmem.h"
-#include "plstr.h"
-#include "prprf.h"
+#include "nsEscape.h"
 #include "nsCRT.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -58,7 +56,9 @@ nsMailboxUrl::nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
     m_spec = nsnull;
     m_search = nsnull;
 
+	m_mailboxAction = nsMailboxActionParseMailbox;
 	m_filePath = nsnull;
+	m_messageID = 0;
 
 	m_runningUrl = PR_FALSE;
 
@@ -160,6 +160,17 @@ nsresult nsMailboxUrl::GetFilePath(const nsFilePath ** aFilePath)
 	return NS_OK;
 }
 
+nsresult nsMailboxUrl::SetFilePath(const nsFilePath& aFilePath)
+{
+	NS_LOCK_INSTANCE();
+	if (m_filePath)
+		delete m_filePath;
+	m_filePath = new nsFilePath(aFilePath);
+
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;	
+}
+
 nsresult nsMailboxUrl::SetErrorMessage (char * errorMessage)
 {
 	NS_LOCK_INSTANCE();
@@ -228,6 +239,32 @@ NS_METHOD nsMailboxUrl::GetURLInfo(URL_Struct_** aResult) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsresult nsMailboxUrl::ParseSearchPart()
+{
+	// add code to this function to decompose everything past the '?'.....
+	if (m_search)
+	{
+		// right now ?id= is the only valid search part we support...this will grow
+		// as we add more...
+		if (PL_strncmp(m_search, "id=", 3) == 0) 
+		{
+			char * id = PL_strdup(m_search + 3); // make a copy so we can unescape the copy
+			id = nsUnescape(m_search+3);
+			if (id)
+			{
+				m_messageID = atoi(id);
+				PR_Free(id);
+			}
+			
+			// the action for this mailbox must be a display message...
+			m_mailboxAction = nsMailboxActionDisplayMessage;
+		}
+
+	}
+
+	return NS_OK;
+}
+
 // XXX recode to use nsString api's
 // XXX don't bother with port numbers
 // XXX don't bother with ref's
@@ -276,6 +313,15 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
         return NS_OK;
     }
 
+    // Strip out the ? stuff....
+    char* search = strpbrk(cSpec, "?");
+    if (nsnull != search)
+	{
+        search++; // advance past the question mark
+        // The rest is the search..copy it so we can parse it later...
+		if (search)
+			m_search = PL_strdup(search);
+    }
 
     // The URL is considered absolute if and only if it begins with a
     // protocol spec. A protocol spec is an alphanumeric string of 1 or
@@ -451,6 +497,12 @@ nsresult nsMailboxUrl::ParseURL(const nsString& aSpec, const nsIURL* aURL)
 		delete m_filePath;
 
 	m_filePath = new nsFilePath(m_file);
+
+	// we need to set the mailbox action type that this url represented....
+	// if we had a search field then we parsed it and it set the mailbox state...
+	// otherwise there was no search part to the urlSpec so we should manually set the
+	// parse mailbox action (which is the default)
+	m_mailboxAction = nsMailboxActionParseMailbox;
 
     NS_UNLOCK_INSTANCE();
     return NS_OK;
