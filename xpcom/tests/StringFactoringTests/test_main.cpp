@@ -652,5 +652,5 @@ main()
     else
       cout << "FAILED one or more tests." << endl;
 
-  	return 0;
+  	return tests_failed;
   }
