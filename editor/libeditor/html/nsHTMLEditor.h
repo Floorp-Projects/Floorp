@@ -200,6 +200,9 @@ public:
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
 
+  /** Inherited from nsEditor with special cases for some html nodes **/
+  NS_IMETHOD InsertFormattingForNode(nsIDOMNode* aNode);
+
   NS_IMETHOD Undo(PRUint32 aCount);
   NS_IMETHOD Redo(PRUint32 aCount);
 
