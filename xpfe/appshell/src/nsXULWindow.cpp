@@ -58,6 +58,10 @@
 #include "nsIWebShellWindow.h"
 #include "nsWebShellWindow.h" // get rid of this one, too...
 
+#define SIZEMODE_NORMAL    NS_LITERAL_STRING("normal")
+#define SIZEMODE_MAXIMIZED NS_LITERAL_STRING("maximized")
+#define SIZEMODE_MINIMIZED NS_LITERAL_STRING("minimized")
+
 // CIDs
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -73,8 +77,9 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
    mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
-   mShowAfterLoad(PR_FALSE), mIntrinsicallySized(PR_FALSE),
-   mCenterAfterLoad(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
+   mShowAfterLoad(PR_FALSE), mSizeMode(nsSizeMode_Normal),
+   mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
+   mZlevel(nsIXULWindow::normalZ)
    
 {
 	NS_INIT_REFCNT();
@@ -661,16 +666,15 @@ void nsXULWindow::OnChromeLoaded()
       Center(nsnull, PR_TRUE, PR_FALSE);
 
    if(mShowAfterLoad)
+      {
+      mWindow->SetSizeMode(mSizeMode);
       SetVisibility(PR_TRUE);
+      }
 }
 
 NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition, 
    PRBool aSize)
 {
-/* NB: we'll want to pay attention to the "sizemode" attribute (maximizing
-   the window if it asks) someday after the widget implementations know how
-   to do that.
-*/
    nsCOMPtr<nsIDOMElement> docShellElement;
    GetWindowDOMElement(getter_AddRefs(docShellElement));
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
@@ -736,6 +740,18 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
 
       if((specCX != curCX) || (specCY != curCY))
          SetSize(specCX, specCY, PR_FALSE);
+
+      if(NS_SUCCEEDED(docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString)))
+         {
+         mSizeMode = nsSizeMode_Normal;
+         /* ignore request to minimize, to not confuse novices
+         if (sizeString.Equals(SIZEMODE_MINIMIZED))
+            mSizeMode = nsSizeMode_Minimized;
+         */
+         if (sizeString.Equals(SIZEMODE_MAXIMIZED))
+            mSizeMode = nsSizeMode_Maximized;
+         // defer telling the widget until we're visible
+         }
       }
 
    return NS_OK;
@@ -820,17 +836,16 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
          }
       }
 
-   if (aSizeMode && persistString.Find("sizemode") >= 0) {
-      PRInt32 sizemode;
-      if (NS_FAILED(mWindow->GetSizeMode(&sizemode)))
-        sizemode = nsSizeMode_Normal;
-      sizeString.AssignWithConversion("n");
-      if (sizemode == nsSizeMode_Minimized)
-        sizeString.AssignWithConversion("m");
-      else if (sizemode == nsSizeMode_Maximized)
-        sizeString.AssignWithConversion("M");
+   if (aSizeMode && persistString.Find("sizemode") >= 0)
+      {
+      if (sizeMode == nsSizeMode_Minimized)
+        sizeString.Assign(SIZEMODE_MINIMIZED);
+      else if (sizeMode == nsSizeMode_Maximized)
+        sizeString.Assign(SIZEMODE_MAXIMIZED);
+      else
+        sizeString.Assign(SIZEMODE_NORMAL);
       docShellElement->SetAttribute(NS_ConvertASCIItoUCS2("sizemode"), sizeString);
-   }
+      }
 
    return NS_OK;
 }
