@@ -248,10 +248,6 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     event.eventStructType = NS_EVENT;
 
     switch(type) {
-    case NS_FORM_INPUT_BUTTON:
-      event.message = NS_MOUSE_LEFT_CLICK;
-      mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
-      break;
     case NS_FORM_INPUT_RESET:
       event.message = NS_FORM_RESET;
       mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
