@@ -768,6 +768,11 @@ nsXBLBinding::InstallProperties(nsIContent* aBoundElement)
                                         PR_FALSE,
                                         &myFunc);
         }
+
+        //we are done with args, time to free the strings therein
+        for (j = 0; j < argCount; j++) {
+          nsAllocator::Free(args[j]);
+        }
       }
       else if (tagName.get() == kPropertyAtom) {
         // Obtain our name attribute.
