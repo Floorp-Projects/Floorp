@@ -290,17 +290,6 @@ ifdef NSPRPUB_DIR
 	$(MAKE) -C $(NSPRPUB_DIR)
 endif
 
-# Ugly OS/2 gmake hack - create myconfig.mk and myrules.mk if they aren't there
-ifeq ($(OS_ARCH),OS2)
-export::
-	if test ! -f config/myrules.mk; then
-		touch config/myrules.mk
-	fi
-	if test ! -f config/myconfig.mk; then
-		touch config/myconfig.mk
-	fi
-endif
-
 # For modules.mk standalone build
 export::
 	+$(LOOP_OVER_EXPORT_DIRS)
