@@ -92,7 +92,7 @@ enum Window_slots {
   WINDOW_HISTORY = -6,
   WINDOW_PARENT = -7,
   WINDOW_TOP = -8,
-  WINDOW_CONTENT = -9,
+  WINDOW__CONTENT = -9,
   WINDOW_SIDEBAR = -10,
   WINDOW_MENUBAR = -11,
   WINDOW_TOOLBAR = -12,
@@ -831,10 +831,10 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// content Property Getter
+// _content Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowcontentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+Window_contentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
 
@@ -847,13 +847,13 @@ WindowcontentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_FALSE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW__CONTENT, PR_FALSE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
           nsIDOMWindow* prop;
-          rv = a->GetContent(&prop);
+          rv = a->Get_content(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -864,10 +864,10 @@ WindowcontentGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// content Property Setter
+// _content Property Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-WindowcontentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+Window_contentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
 
@@ -880,13 +880,13 @@ WindowcontentSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
   if (!secMan)
       return PR_FALSE;
-  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_CONTENT, PR_TRUE);
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW__CONTENT, PR_TRUE);
   if (NS_FAILED(rv)) {
     return nsJSUtils::nsReportError(cx, obj, rv);
   }
 
 
-  JS_DefineProperty(cx, obj, "content", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  JS_DefineProperty(cx, obj, "_content", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
   return PR_TRUE;
 }
 
@@ -2759,7 +2759,7 @@ static JSPropertySpec WindowProperties[] =
   {"history",    WINDOW_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"content",    WINDOW_CONTENT,    JSPROP_ENUMERATE, WindowcontentGetter, WindowcontentSetter},
+  {"_content",    WINDOW__CONTENT,    JSPROP_ENUMERATE, Window_contentGetter, Window_contentSetter},
   {"sidebar",    WINDOW_SIDEBAR,    JSPROP_ENUMERATE, WindowsidebarGetter, WindowsidebarSetter},
   {"menubar",    WINDOW_MENUBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"toolbar",    WINDOW_TOOLBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},

@@ -926,6 +926,7 @@
     "uievent.inituievent", \
     "uievent.view", \
     "viewcss.getcomputedstyle", \
+    "window._content", \
     "window.alert", \
     "window.back", \
     "window.blur", \
@@ -935,7 +936,6 @@
     "window.close", \
     "window.closed", \
     "window.confirm", \
-    "window.content", \
     "window.controllers", \
     "window.crypto", \
     "window.defaultstatus", \

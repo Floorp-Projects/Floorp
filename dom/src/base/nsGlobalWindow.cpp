@@ -578,7 +578,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
   return ret;
 }
 
-NS_IMETHODIMP GlobalWindowImpl::GetContent(nsIDOMWindow** aContent)
+NS_IMETHODIMP GlobalWindowImpl::Get_content(nsIDOMWindow** aContent)
 {
   *aContent = nsnull;
 
