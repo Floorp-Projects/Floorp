@@ -31,8 +31,9 @@
 #include "nsRDFCID.h"
 
 
-#include <sys/types.h>
-#include <sys/stat.h>
+// Candice - Removed to allow it to build on Mac
+//#include <sys/types.h>
+//#include <sys/stat.h>
 
 #if defined(XP_MAC) && defined(CompareString)
 	#undef CompareString
@@ -326,7 +327,10 @@ nsIMdbFactory *nsAddrDatabase::GetMDBFactory()
 	static nsIMdbFactory *gMDBFactory = NULL;
 	if (!gMDBFactory)
 	{
+// Candice - Removed to allow it to build on Mac
+#if 0
 		gMDBFactory = MakeMdbFactory(); //new nsIMdbFactory;
+#endif
 	}
 	return gMDBFactory;
 }
@@ -491,7 +495,8 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 		if (NS_SUCCEEDED(ret))
 		{
 			nsIMdbThumb *thumb;
-			struct stat st;
+// Candice - Removed to allow it to build on Mac
+//			struct stat st;
 			char	*nativeFileName = nsCRT::strdup(dbName);
 
 			if (!nativeFileName)
@@ -503,9 +508,10 @@ NS_IMETHODIMP nsAddrDatabase::OpenMDB(const char *dbName, PRBool create)
 #if defined(XP_PC) || defined(XP_MAC)
 			UnixToNative(nativeFileName);
 #endif
-			if (stat(nativeFileName, &st)) 
+// Candice - Removed to allow it to build on Mac
+/*			if (stat(nativeFileName, &st)) 
 				ret = NS_ERROR_FAILURE;  // check: use the right error code later
-			else
+			else*/
 			{
 				mdbOpenPolicy inOpenPolicy;
 				mdb_bool	canOpen;
