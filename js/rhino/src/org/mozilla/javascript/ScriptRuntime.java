@@ -2162,6 +2162,7 @@ public class ScriptRuntime {
             return Class.forName(className);
         } catch  (ClassNotFoundException ex) {
         } catch  (SecurityException ex) {
+        } catch  (LinkageError ex) {
         } catch (IllegalArgumentException e) {
             // Can be thrown if name has characters that a class name
             // can not contain
@@ -2175,6 +2176,7 @@ public class ScriptRuntime {
             return loader.loadClass(className);
         } catch (ClassNotFoundException ex) {
         } catch (SecurityException ex) {
+        } catch  (LinkageError ex) {
         } catch (IllegalArgumentException e) {
             // Can be thrown if name has characters that a class name
             // can not contain
@@ -2187,6 +2189,7 @@ public class ScriptRuntime {
         try {
             return cl.newInstance();
         } catch (SecurityException x) {
+        } catch  (LinkageError ex) {
         } catch (InstantiationException x) {
         } catch (IllegalAccessException x) {
         }
