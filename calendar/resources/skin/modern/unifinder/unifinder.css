@@ -35,41 +35,16 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/*--------------------------------------------------------------------
- * Style for toolbar grippy
- * THIS SHOULD BE MOVED TO A GLOBAL PLACE
- *-------------------------------------------------------------------*/
-
-
 toolbarseparator { 
   margin: 0px 0.2em;
   border-right: 1px solid #ffffff;
   width: 0px;
 }
 
-.collapsed-tray-holder {
-  background-color:	#e5e5ec;
-  height: 11px;
-  border-bottom		    : 1px solid #000000;
-}
-
 #unifinder-toolbar
 {
 	height: 33px !important;
    background-color       : #dde3eb;
-}
-
-
-.unifinder-tabs-spacer
-{
-   min-height : 5px;
-   border-bottom : 1px solid #c7d0d9;
-   background-color : #d0dff0;
-}
-
-.tabs-right-cap {
-  background: none;
-  width: 0px;
 }
 
 /* ::::: tabpanels ::::: */
@@ -83,10 +58,6 @@ tabpanels {
 /*--------------------------------------------------------------------
  * Style for image buttons - Override a couple of settings
  *      in the normal buttontop
- * THIS SHOULD BE MOVED TO A GLOBAL PLACE
- * UNIFINDER DOES NOT USE THIS ANYMORE, BUT LOTS OF OTHER THINGS 
- * IN APPS RELY ON IT - THERE IS A MUCH MUCH BETTER WAY TO DO THIS!!!
- * - GS Sept, 2001
  *-------------------------------------------------------------------*/
   
 .four-state-image-button
@@ -96,25 +67,6 @@ tabpanels {
    border              : 0px;
    -moz-user-focus     : ignore !important;
 }
-
-.four-state-image-button-18
-{
-   -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
-   margin              : 0px;
-   border              : 0px;
-   max-height          : 18px;
-   -moz-user-focus     : ignore !important;
-}
-
-.four-state-image-button-12
-{
-   -moz-binding        : url("chrome://calendar/content/penBindings.xml#penButton");
-   margin              : 0px;
-   border              : 0px;
-   max-height          : 12px;
-   -moz-user-focus     : ignore !important;
-}
-
 
 .unifinder-tab-box
 {
@@ -133,17 +85,6 @@ tabpanels {
 	overflow: never;
    margin-bottom          : 1px;
 }
-
-/* Make space around the little dialog items in some tabs, like the search field and label */
-
-.unifinder-sub-control-box-class
-{
-   margin-top     : 5px;
-   margin-bottom  : 5px;
-   margin-left    : 15px;
-   margin-right   : 5px;
-}
-
 
 /* :SIGH: override the tree selection from tree.css, wish there was a better way */
 
