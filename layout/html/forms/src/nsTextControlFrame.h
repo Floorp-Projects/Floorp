@@ -47,7 +47,7 @@ public:
 
   virtual const nsIID& GetIID();
 
-  NS_IMETHOD GetText(nsString* aValue);
+  NS_IMETHOD GetText(nsString* aValue, PRBool aInitialValue);
 
   virtual void EnterPressed(nsIPresContext& aPresContext) ;
 
