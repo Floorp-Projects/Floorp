@@ -33,7 +33,7 @@ use vars %::param,
     %::param_default,
     @::param_list;
 
-
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";

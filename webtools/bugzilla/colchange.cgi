@@ -34,6 +34,7 @@ use vars qw(
 
 require "CGI.pl";
 
+ConnectToDatabase();
 quietly_check_login();
 
 print "Content-type: text/html\n";
@@ -41,7 +42,6 @@ print "Content-type: text/html\n";
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
 
-ConnectToDatabase();
 GetVersionTable();
 
 my @masterlist = ("opendate", "changeddate", "severity", "priority",

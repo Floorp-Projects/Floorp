@@ -53,6 +53,7 @@ use vars qw(%versions
           %superusergroupset
           $next_bug);
 
+ConnectToDatabase();
 my $whoid = confirm_login();
 
 my $requiremilestone = 0;
@@ -123,8 +124,6 @@ CheckFormFieldDefined(\%::FORM, 'component');
 if ( Param("usetargetmilestone") ) {
   CheckFormFieldDefined(\%::FORM, 'target_milestone');
 }
-
-ConnectToDatabase();
 
 #
 # This function checks if there is a comment required for a specific

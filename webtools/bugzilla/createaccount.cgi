@@ -42,6 +42,9 @@ ConnectToDatabase();
 
 # If we're using LDAP for login, then we can't create a new account here.
 if(Param('useLDAP')) {
+  # Just in case someone already has an account, let them get the correct
+  # footer on the error message
+  quietly_check_login();
   DisplayError("This site is using LDAP for authentication.  Please contact 
                 an LDAP administrator to get a new account created.",
                "Can't create LDAP accounts");

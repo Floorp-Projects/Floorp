@@ -50,6 +50,7 @@ sub sillyness {
 # Use global template variables.
 use vars qw($vars $template);
 
+ConnectToDatabase();
 confirm_login();
 
 
@@ -89,7 +90,6 @@ if (defined $::FORM{'maketemplate'}) {
 }
 
 umask 0;
-ConnectToDatabase();
 
 # Some sanity checking
 if(Param("usebuggroupsentry") && GroupExists($product)) {

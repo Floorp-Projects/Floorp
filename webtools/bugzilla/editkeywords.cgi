@@ -108,6 +108,7 @@ sub Validate ($$) {
 # Preliminary checks:
 #
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";

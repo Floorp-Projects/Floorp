@@ -66,13 +66,27 @@ ConnectToDatabase();
 # Data and Security Validation
 ################################################################################
 
+# Whether or not the user wants to change multiple bugs.
+my $dotweak = $::FORM{'tweak'} ? 1 : 0;
+
+# Log the user in
+if ($dotweak) {
+    confirm_login();
+    if (!UserInGroup("editbugs")) {
+        DisplayError("Sorry, you do not have sufficient privileges to edit
+                      multiple bugs.");
+        exit;
+    }
+    GetVersionTable();
+}
+else {
+    quietly_check_login();
+}
+
 # Determine the format in which the user would like to receive the output.
 # Uses the default format if the user did not specify an output format;
 # otherwise validates the user's choice against the list of available formats.
 my $format = ValidateOutputFormat($::FORM{'format'}, "list");
-
-# Whether or not the user wants to change multiple bugs.
-my $dotweak = $::FORM{'tweak'} ? 1 : 0;
 
 # Use server push to display a "Please wait..." message for the user while
 # executing their query if their browser supports it and they are viewing
@@ -136,20 +150,6 @@ if ($::FORM{'cmdtype'} eq 'runnamed') {
     # with the HTTP headers.
     $filename =~ s/\s//;
 }
-
-if ($dotweak) {
-    confirm_login();
-    if (!UserInGroup("editbugs")) {
-        DisplayError("Sorry, you do not have sufficient privileges to edit
-                      multiple bugs.");
-        exit;
-    }
-    GetVersionTable();
-}
-else {
-    quietly_check_login();
-}
-
 
 ################################################################################
 # Utilities

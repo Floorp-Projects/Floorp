@@ -37,6 +37,7 @@ unless ( Param("move-enabled") ) {
 }
 
 ConnectToDatabase();
+confirm_login();
 
 sub Log {
     my ($str) = (@_);
@@ -80,7 +81,6 @@ if ( !defined $::FORM{'buglist'} ) {
   exit;
 }
 
-confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
 my $movers = Param("movers");
 $movers =~ s/\w?,\w?/|/g;

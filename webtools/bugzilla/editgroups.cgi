@@ -29,6 +29,7 @@ use lib ".";
 
 require "CGI.pl";
 
+ConnectToDatabase();
 confirm_login();
 
 print "Content-type: text/html\n\n";

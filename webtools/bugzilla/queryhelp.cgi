@@ -32,6 +32,8 @@ use lib qw(.);
 require "CGI.pl";
 
 ConnectToDatabase();
+quietly_check_login();
+
 GetVersionTable();
 
 print "Content-type: text/html\n\n";
@@ -558,8 +560,6 @@ user with the proper permissions can edit these keywords. The following is a lis
 stored on this version of Bugzilla:
 };
 
-ConnectToDatabase();
-
 my $tableheader = qq{
 <p><table border="1" cellpadding="4" cellspacing="0">
 <tr bgcolor="#6666FF">
@@ -609,7 +609,6 @@ while (MoreSQLData()) {
 
 print "</table><p>\n";
 
-quietly_check_login();
 
 if (UserInGroup("editkeywords")) {
     print qq{<p><a href="editkeywords.cgi">Edit keywords</a>\n};

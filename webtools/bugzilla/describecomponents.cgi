@@ -34,9 +34,9 @@ use lib qw(.);
 require "CGI.pl";
 
 ConnectToDatabase();
-GetVersionTable();
-
 quietly_check_login();
+
+GetVersionTable();
 
 if (!defined $::FORM{'product'}) {
     # Reference to a subset of %::proddesc, which the user is allowed to see

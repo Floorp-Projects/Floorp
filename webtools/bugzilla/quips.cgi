@@ -34,6 +34,11 @@ use lib qw(.);
 
 require "CGI.pl";
 
+# Even though quips aren't (yet) in the database, we need to check
+# logins for the footer
+ConnectToDatabase();
+quietly_check_login();
+
 my $action = $::FORM{'action'} || "";
 
 if ($action eq "show") {

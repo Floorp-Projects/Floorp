@@ -29,12 +29,10 @@ use vars qw(
 );
 
 ConnectToDatabase();
+quietly_check_login();
 
 # Needed for $::anyvotesallowed
 GetVersionTable();
-
-# Check to see if the user has logged in yet.
-quietly_check_login();
 
 ###############################################################################
 # Main Body Execution

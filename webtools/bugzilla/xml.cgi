@@ -32,14 +32,15 @@ require "CGI.pl";
 
 use vars qw($template $vars);
 
+ConnectToDatabase();
+quietly_check_login();
+
 if (!defined $::FORM{'id'} || !$::FORM{'id'}) {
     print "Content-Type: text/html\n\n";
     $template->process("bug/choose-xml.html.tmpl", $vars)
       || ThrowTemplateError($template->error());
     exit;
 }
-
-quietly_check_login();
 
 my $exporter = $::COOKIE{"Bugzilla_login"} || undef;
 

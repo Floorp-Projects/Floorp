@@ -359,6 +359,8 @@ sub DoPermissions {
 ###############################################################################
 # Live code (not subroutine definitions) starts here
 ###############################################################################
+
+ConnectToDatabase();
 confirm_login();
 
 GetVersionTable();
