@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.14 2000/10/11 07:12:45 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.15 2000/10/11 07:21:38 wtc%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -1126,7 +1126,7 @@ main(int argc, char **argv)
     /*if (outFile == stdout && mode != DECODE) {*/
     if (outFile == stdout) {
 	/* If we're going to write binary data to stdout, we must put stdout
-	** into O_BINARY mode or else outgoing \r\n's will become \n's.
+	** into O_BINARY mode or else outgoing \n's will become \r\n's.
 	*/
 	int smrv = _setmode(_fileno(stdout), _O_BINARY);
 	if (smrv == -1) {
