@@ -32,7 +32,7 @@
  *
  * Private Key Database code
  *
- * $Id: keydb.c,v 1.22 2002/06/14 17:29:56 relyea%netscape.com Exp $
+ * $Id: keydb.c,v 1.23 2002/06/18 16:41:41 relyea%netscape.com Exp $
  */
 
 #include "lowkeyi.h"
@@ -877,7 +877,7 @@ openNewDB(const char *appName, const char *prefix, const char *dbname,
 	    } else {
 		db_Copy(handle->db, updatedb);
 		(updatedb->close)(updatedb);
-		db_FinishTransaction(updatedb,PR_FALSE);
+		db_FinishTransaction(handle->db,PR_FALSE);
 		return SECSuccess;
 	    }
 	}
