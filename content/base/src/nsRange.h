@@ -159,7 +159,8 @@ public:
                                       nsIDOMNode** farthestAncestor);
 
   /**
-   *  Utility routine to compare two "points", were a point is a node/offset pair
+   *  Utility routine to compare two "points", where a point is a
+   *  node/offset pair
    *  Returns -1 if point1 < point2, 1, if point1 > point2,
    *  0 if error or if point1 == point2.
    */
