@@ -299,6 +299,13 @@ MapAttributesInto(nsIPresContext* aPresContext,
         nsStyleChangeList changeList;
         fm->ComputeStyleChangeFor(aPresContext, aCellFrame, kNameSpaceID_None, nsnull,
                                   changeList, minChange, maxChange);
+#ifdef DEBUG
+        // Use the parent frame to make sure we catch in-flows and such
+        nsIFrame* parentFrame;
+        aCellFrame->GetParent(&parentFrame);
+        fm->DebugVerifyStyleTree(aPresContext,
+                                 parentFrame ? parentFrame : aCellFrame);
+#endif
       }
     }
   }

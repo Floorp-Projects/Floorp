@@ -1165,6 +1165,30 @@ public:
                      PRBool aIsPre,
                      PRBool* aResult) = 0;
 
+  /**
+   * IsGeneratedContentFrame returns whether a frame corresponds to
+   * generated content
+   *
+   * @return whether the frame correspods to generated content
+   */
+  PRBool IsGeneratedContentFrame() {
+    return (mState & NS_FRAME_GENERATED_CONTENT) != 0;
+  }
+
+  /**
+   * IsPseudoFrame returns whether a frame is a pseudo frame (eg an
+   * anonymous table-row frame created for a CSS table-cell without an
+   * enclosing table-row.
+   *
+   * @param aParentContent the content node corresponding to the parent frame
+   * @return whether the frame is a pseudo frame
+   */   
+  PRBool IsPseudoFrame(nsIContent* aParentContent) {
+    return mContent == aParentContent;
+  }
+
+
+  
   virtual void* GetProperty(nsIPresContext* aPresContext,
                             nsIAtom*        aPropertyName,
                             PRBool          aRemoveProperty) const = 0;

@@ -358,6 +358,13 @@ nsMathMLTokenFrame::SetTextStyle(nsIPresContext* aPresContext)
       fm->ComputeStyleChangeFor(aPresContext, this,
                                 kNameSpaceID_None, nsMathMLAtoms::fontstyle,
                                 changeList, minChange, maxChange);
+#ifdef DEBUG
+      // Use the parent frame to make sure we catch in-flows and such
+      nsIFrame* parentFrame;
+      GetParent(&parentFrame);
+      fm->DebugVerifyStyleTree(aPresContext,
+                               parentFrame ? parentFrame : this);
+#endif
     }
   }
 }

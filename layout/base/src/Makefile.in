@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsIntervalSet.cpp \
 		nsLayoutDebugger.cpp \
 		nsLayoutHistoryState.cpp \
+		nsLayoutUtils.cpp \
 		nsPresContext.cpp \
 		nsPresState.cpp \
 		nsPrintContext.cpp \
