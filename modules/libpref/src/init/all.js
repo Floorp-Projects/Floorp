@@ -650,7 +650,6 @@ pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=cu
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
-pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 pref("wallet.captureForms",                 true);
