@@ -295,6 +295,9 @@ nsFtpConnectionThread::Process() {
                     // that the max number of users has been reached...
                     mState = FTP_COMMAND_CONNECT;
                     mNextState = FTP_S_USER;
+		    if (mIPv6Checked) {
+			mIPv6Checked = PR_FALSE;
+		    }
                 } else {
                     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("%x Process() - ERROR\n", mURL.get()));
                     rv = StopProcessing();
