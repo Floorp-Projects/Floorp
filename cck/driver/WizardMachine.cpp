@@ -576,7 +576,10 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 	NewNode->localVars->image = buffer;
 	GetPrivateProfileString(varSection, "Visibility", "", buffer, MAX_SIZE, iniFile);
 	NewNode->localVars->visibility = buffer;
-		
+	GetPrivateProfileString(varSection, "Version", "", buffer, MAX_SIZE, iniFile);
+	if (strcmp(buffer,"") != 0)
+		SetGlobal("Version",buffer);
+	
 	NewNode->navControls = new CONTROLS;
 	GetPrivateProfileString(navCtrlSection, "OnNext", "", buffer, MAX_SIZE, iniFile);
 	NewNode->navControls->onNextAction = buffer;

@@ -35,7 +35,6 @@ Gopherportno=0
 HTTPportno=0
 SSLportno=0
 SOCKSportno=0
-Version=7.0
 lPlatform=Windows
 Language=English-United States (enus)
 ClientVersion=7.0
