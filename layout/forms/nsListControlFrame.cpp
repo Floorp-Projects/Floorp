@@ -1587,7 +1587,7 @@ nsListControlFrame::AddOption(PRInt32 aIndex)
 
   if (1 == numOptions || mSelectedIndex == kNothingSelected || selectedIndex != mSelectedIndex) {
     mSelectedIndex = selectedIndex;
-    if (nsnull != mComboboxFrame) {
+    if (mComboboxFrame) {
       mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
     }
   } else {
@@ -1705,6 +1705,9 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
     // figures out the first selected item from the content
     PRInt32 selectedIndex;
     GetSelectedIndexFromDOM(&selectedIndex);
+    if ((kNothingSelected == selectedIndex) && (mComboboxFrame)) {
+      selectedIndex = 0;
+    }
     aValue.Append(selectedIndex, 10);
     //aValue.Append(mSelectedIndex, 10);
 
