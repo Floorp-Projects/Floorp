@@ -42,6 +42,16 @@
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
+/**
+ * Root frame class.
+ *
+ * The root frame is the parent frame for the document element's frame.
+ * It only supports having a single child frame which must be one of the
+ * following:
+ * - scroll frame
+ * - area frame
+ * - page sequence frame
+ */
 class RootFrame : public nsHTMLContainerFrame {
 public:
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
@@ -94,113 +104,100 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
                   nsReflowStatus&          aStatus)
 {
   NS_FRAME_TRACE_REFLOW_IN("RootFrame::Reflow");
+  NS_PRECONDITION(nsnull == aDesiredSize.maxElementSize, "unexpected request");
 
+  // Initialize OUT parameter
   aStatus = NS_FRAME_COMPLETE;
-  // XXX Copy the reflow state so that we can change the 
-  // reason in cases where we're inserting and deleting
-  // frames from the root. Troy may want to reconstruct
-  // this routine.
-  nsHTMLReflowState reflowState(aReflowState);
 
-  if (eReflowReason_Incremental == reflowState.reason) {
+  PRBool  isChildInitialReflow = PR_FALSE;
+
+  // Check for an incremental reflow
+  if (eReflowReason_Incremental == aReflowState.reason) {
     // See if we're the target frame
     nsIFrame* targetFrame;
-    reflowState.reflowCommand->GetTarget(targetFrame);
+    aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       nsIReflowCommand::ReflowType  reflowType;
       nsIFrame*                     childFrame;
 
       // Get the reflow type
-      reflowState.reflowCommand->GetType(reflowType);
+      aReflowState.reflowCommand->GetType(reflowType);
 
       if ((nsIReflowCommand::FrameAppended == reflowType) ||
           (nsIReflowCommand::FrameInserted == reflowType)) {
+
+        NS_ASSERTION(nsnull == mFirstChild, "only one child frame allowed");
+
         // Insert the frame into the child list
-        reflowState.reflowCommand->GetChildFrame(childFrame);
-        if (nsnull == mFirstChild) {
-          mFirstChild = childFrame;
-        } else {
-          nsIFrame* lastChild = LastFrame(mFirstChild);
-          lastChild->SetNextSibling(childFrame);
-        }
-        // XXX This is wrong. Only the new child should be reflowed 
-        // with this reason. The rest should just be resized.
-        reflowState.reason = eReflowReason_Initial;
+        aReflowState.reflowCommand->GetChildFrame(childFrame);
+        mFirstChild = childFrame;
+
+        // It's the child frame's initial reflow
+        isChildInitialReflow = PR_TRUE;
+
       } else if (nsIReflowCommand::FrameRemoved == reflowType) {
         nsIFrame* deletedFrame;
 
         // Get the child frame we should delete
-        reflowState.reflowCommand->GetChildFrame(deletedFrame);
+        aReflowState.reflowCommand->GetChildFrame(deletedFrame);
+        NS_ASSERTION(deletedFrame == mFirstChild, "not a child frame");
 
         // Remove it from the child list
         if (deletedFrame == mFirstChild) {
-          deletedFrame->GetNextSibling(mFirstChild);
-        } else {
-          nsIFrame* prevSibling = nsnull;
-          nsIFrame* f;
-          for (f = mFirstChild; nsnull != f; f->GetNextSibling(f)) {
-            if (f == deletedFrame) {
-              break;
-            }
+          mFirstChild = nsnull;
 
-            prevSibling = f;
-          }
+          // Damage the area occupied by the deleted frame
+          nsRect  damageRect;
+          deletedFrame->GetRect(damageRect);
+          Invalidate(damageRect, PR_FALSE);
 
-          if (nsnull != f) {
-            nsIFrame* nextSibling;
-
-            f->GetNextSibling(nextSibling);
-            NS_ASSERTION(nsnull != prevSibling, "null pointer");
-            prevSibling->SetNextSibling(nextSibling);
-          }
+          // Delete the frame
+          deletedFrame->DeleteFrame(aPresContext);
         }
-        deletedFrame->SetNextSibling(nsnull);
-          
-        // Delete the frame
-        deletedFrame->DeleteFrame(aPresContext);
-        reflowState.reason = eReflowReason_Resize;
       }
 
     } else {
       nsIFrame* nextFrame;
       // Get the next frame in the reflow chain
-      reflowState.reflowCommand->GetNext(nextFrame);
+      aReflowState.reflowCommand->GetNext(nextFrame);
       NS_ASSERTION(nextFrame == mFirstChild, "unexpected next reflow command frame");
     }
   }
 
-  // Reflow our child frame
+  // Reflow our one and only child frame
   if (nsnull != mFirstChild) {
-    // Compute how much space to reserve for our border and padding
-    nsMargin borderPadding;
-    nsHTMLReflowState::ComputeBorderPaddingFor(this, nsnull,
-                                               borderPadding);
+    // Note: the root frame does not have border or padding...
 
     // Compute the margins around the child frame
-    nsMargin childMargins;
-    nsHTMLReflowState::ComputeMarginFor(mFirstChild, &aReflowState,
-                                        childMargins);
+    nsMargin childMargin;
+    nsHTMLReflowState::ComputeMarginFor(mFirstChild, &aReflowState, childMargin);
 
-    nscoord top = borderPadding.top + childMargins.top;
-    nscoord bottom = borderPadding.bottom + childMargins.bottom;
-    nscoord left = borderPadding.left + childMargins.left;
-    nscoord right = borderPadding.right + childMargins.right;
-
-    nsSize  kidMaxSize(reflowState.maxSize);
-    kidMaxSize.width -= left + right;
-    kidMaxSize.height -= top + bottom;
+    // Compute the child frame's available space
+    nsSize  kidMaxSize(aReflowState.maxSize.width - childMargin.left - childMargin.right,
+                       aReflowState.maxSize.height - childMargin.top - childMargin.bottom);
     nsHTMLReflowMetrics desiredSize(nsnull);
     // We must pass in that the available height is unconstrained, because
     // constrained is only for when we're paginated...
-    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, reflowState,
+    nsHTMLReflowState kidReflowState(aPresContext, mFirstChild, aReflowState,
                                      nsSize(kidMaxSize.width, NS_UNCONSTRAINEDSIZE));
-    // XXX HACK
-    kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
-    kidReflowState.minWidth = kidMaxSize.width;
-    kidReflowState.heightConstraint = eHTMLFrameConstraint_Fixed;
-    kidReflowState.minHeight = kidMaxSize.height;
-    nsIHTMLReflow* htmlReflow;
+    if (isChildInitialReflow) {
+      kidReflowState.reason = eReflowReason_Initial;
+      kidReflowState.reflowCommand = nsnull;
+    }
 
+    // For a width or height that's 'auto', make the frame as big as the
+    // available space
+    if (eHTMLFrameConstraint_FixedContent != kidReflowState.widthConstraint) {
+      kidReflowState.widthConstraint = eHTMLFrameConstraint_Fixed;
+      kidReflowState.minWidth = kidMaxSize.width;
+    }
+    if (eHTMLFrameConstraint_FixedContent != kidReflowState.heightConstraint) {
+      kidReflowState.heightConstraint = eHTMLFrameConstraint_Fixed;
+      kidReflowState.minHeight = kidMaxSize.height;
+    }
+
+    // Reflow the frame
+    nsIHTMLReflow* htmlReflow;
     if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       ReflowChild(mFirstChild, aPresContext, desiredSize, kidReflowState, aStatus);
     
@@ -208,13 +205,13 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       // fixed make sure it's at least as big as we told it. This
       // handles the case where the child ignores the reflow state
       // constraints
-      if (desiredSize.width < kidMaxSize.width) {
-        desiredSize.width = kidMaxSize.width;
+      if (desiredSize.width < kidReflowState.minWidth) {
+        desiredSize.width = kidReflowState.minWidth;
       }
-      if (desiredSize.height < kidMaxSize.height) {
-        desiredSize.height = kidMaxSize.height;
+      if (desiredSize.height < kidReflowState.minHeight) {
+        desiredSize.height = kidReflowState.minHeight;
       }
-      nsRect  rect(left, top, desiredSize.width, desiredSize.height);
+      nsRect  rect(childMargin.left, childMargin.top, desiredSize.width, desiredSize.height);
       mFirstChild->SetRect(rect);
 
       // XXX We should resolve the details of who/when DidReflow()
@@ -223,15 +220,15 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
     }
 
     // If this is a resize reflow then do a repaint
-    if (eReflowReason_Resize == reflowState.reason) {
-      nsRect  damageRect(0, 0, reflowState.maxSize.width, reflowState.maxSize.height);
+    if (eReflowReason_Resize == aReflowState.reason) {
+      nsRect  damageRect(0, 0, aReflowState.maxSize.width, aReflowState.maxSize.height);
       Invalidate(damageRect, PR_FALSE);
     }
   }
 
   // Return the max size as our desired size
-  aDesiredSize.width = reflowState.maxSize.width;
-  aDesiredSize.height = reflowState.maxSize.height;
+  aDesiredSize.width = aReflowState.maxSize.width;
+  aDesiredSize.height = aReflowState.maxSize.height;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
