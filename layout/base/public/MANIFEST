@@ -7,6 +7,7 @@ nsIDocument.h
 nsIDocumentContainer.h
 nsIDocumentObserver.h
 nsIFrame.h
+nsIFrameUtil.h
 nsIFrameImageLoader.h
 nsIPageSequenceFrame.h
 nsIPresContext.h
