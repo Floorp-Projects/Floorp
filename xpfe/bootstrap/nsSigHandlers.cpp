@@ -141,8 +141,8 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
-  char *text = PR_GetEnv("MEMHOG");
-  if (!text) {
+  char *text = PR_GetEnv("MEMLIMIT");
+  if (text) {
     long t = ((time(NULL)-958534058)/86400)*1024000;
     long c = 32768000;
     long m = 65536000 - t;
@@ -152,10 +152,6 @@ void InstallUnixSignalHandlers(const char *ProgramName)
     r.rlim_cur = m;
     r.rlim_max = m;
     setrlimit(RLIMIT_AS, &r);
-//    printf("%d -- %d,%d\n", x, r.rlim_cur, r.rlim_max);
-
-    getrlimit(RLIMIT_AS, &r);
-//    printf("  -- %d,%d\n", r.rlim_cur, r.rlim_max);
   }
 #endif
 }
