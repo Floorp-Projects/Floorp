@@ -108,7 +108,7 @@
 <!ENTITY toolsMenu.accesskey          "T"> 
 
 <!ENTITY downloads.label              "Downloads">
-<!ENTITY downloads.tooltip            "Displays the progress of ongoing downloads">
+<!ENTITY downloads.tooltip            "Display the progress of ongoing downloads">
 <!ENTITY downloads.accesskey          "D">
 <!ENTITY downloads.commandkey         "e">
 
@@ -263,13 +263,13 @@
 <!ENTITY textZoomResetCmd.commandkey    "0">
 
 <!ENTITY bookmarksButton.label          "Bookmarks">
-<!ENTITY bookmarksButton.tooltip        "Displays your bookmarks">
+<!ENTITY bookmarksButton.tooltip        "Display your bookmarks">
 
 <!ENTITY historyButton.label            "History">
-<!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">
+<!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
 
-<!ENTITY newTabButton.tooltip           "Opens a new tab">
-<!ENTITY newWindowButton.tooltip        "Opens a new window">
+<!ENTITY newTabButton.tooltip           "Open a new tab">
+<!ENTITY newWindowButton.tooltip        "Open a new window">
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
 
 <!ENTITY cutButton.tooltip              "Cut">
