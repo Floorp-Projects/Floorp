@@ -24,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.262 $ ';
+$::UtilsVersion = '$Revision: 1.263 $ ';
 
 package TinderUtils;
 
@@ -1104,7 +1104,7 @@ sub get_profile_dir {
         }
         $profile_dir =~ s|\\|/|g;
         if ($Settings::VendorName) {
-          $profile_dir = <"$profile_dir*">;
+          ($profile_dir) = <"$profile_dir*">;
         }
     } elsif ($Settings::OS eq "BeOS") {
         $profile_dir = "/boot/home/config/settings/Mozilla/$Settings::MozProfileName";
@@ -1114,7 +1114,7 @@ sub get_profile_dir {
         # *nix
         if ($Settings::VendorName) {
           $profile_dir = "$build_dir/.".lc($Settings::VendorName)."/".lc($Settings::ProductName)."/$Settings::MozProfileName";
-          $profile_dir = <"$profile_dir*">;
+          ($profile_dir) = <$profile_dir*>;
         }
         else {
           $profile_dir = "$build_dir/.".lc($Settings::ProductName)."/$Settings::MozProfileName";
@@ -1633,7 +1633,7 @@ sub run_all_tests {
       # Call get_profile_dir again, so it can find the extension-salted
       # profile directory under the profile root.
 
-      $profile_dir = get_profile_dir($build_dir);
+      $profiledir = get_profile_dir($build_dir);
 
       #
       # Find the prefs file, remember we have that random string now
