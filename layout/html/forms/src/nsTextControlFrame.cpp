@@ -1543,7 +1543,7 @@ nsTextControlFrame::ReflowStandard(nsPresContext*          aPresContext,
 {
   // get the css size and let the frame use or override it
   nsSize minSize;
-  nsresult rv = CalculateSizeStandard(aPresContext, aReflowState.rendContext,
+  nsresult rv = CalculateSizeStandard(aPresContext, aReflowState,
                                       aDesiredSize, minSize);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1582,7 +1582,7 @@ nsTextControlFrame::ReflowStandard(nsPresContext*          aPresContext,
 
 nsresult
 nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
-                                          nsIRenderingContext*  aRendContext,
+                                          const nsHTMLReflowState& aReflowState,
                                           nsSize&               aDesiredSize,
                                           nsSize&               aMinSize)
 {
@@ -1590,15 +1590,16 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
   aDesiredSize.height = CSS_NOTSET;
 
   // Get leading and the Average/MaxAdvance char width 
-  nscoord fontHeight  = 0;
+  nscoord lineHeight  = 0;
   nscoord charWidth   = 0;
   nscoord charMaxAdvance  = 0;
 
   nsCOMPtr<nsIFontMetrics> fontMet;
   nsresult rv = nsFormControlHelper::GetFrameFontFM(this, getter_AddRefs(fontMet));
   NS_ENSURE_SUCCESS(rv, rv);
-  aRendContext->SetFont(fontMet);
-  fontMet->GetHeight(fontHeight);
+  nsIRenderingContext* rendContext = aReflowState.rendContext;
+  rendContext->SetFont(fontMet);
+  lineHeight = aReflowState.CalcLineHeight(aPresContext, rendContext, aReflowState.frame);
   fontMet->GetAveCharWidth(charWidth);
   fontMet->GetMaxAdvance(charMaxAdvance);
 
@@ -1645,7 +1646,7 @@ nsTextControlFrame::CalculateSizeStandard(nsPresContext*       aPresContext,
 
   // Set the height equal to total number of rows (times the height of each
   // line, of course)
-  aDesiredSize.height = fontHeight * GetRows();
+  aDesiredSize.height = lineHeight * GetRows();
 
   // Set minimum size equal to desired size.  We are form controls.  We are Gods
   // among elements.  We do not yield for anybody, not even a table cell.  None
