@@ -40,6 +40,7 @@ REQUIRES	= xpcom \
 		  webBrowser_core \
 		  windowwatcher \
 		  content \
+                  appcomps \
 		  gfx \
 		  history \
 		  $(NULL)
