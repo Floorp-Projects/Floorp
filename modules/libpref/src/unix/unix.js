@@ -367,6 +367,7 @@ pref("print.xprint.font.rejectfontpattern",
 pref("print.xprint.font.force_outline_scaled_fonts", true);
 
 /* PostScript print module prefs */
+// pref("print.postscript.enabled",      true);
 pref("print.postscript.paper_size",    "letter");
 pref("print.postscript.orientation",   "portrait");
 pref("print.postscript.print_command", "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
