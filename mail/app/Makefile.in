@@ -42,7 +42,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DEFINES += -DTHUNDERBIRD_ICO=\"$(DIST)/branding/mozilla.ico\"
+DEFINES += -DTHUNDERBIRD_ICO=\"$(DIST)/branding/thunderbird.ico\"
 
 DIRS		= profile
 
@@ -177,8 +177,8 @@ export::
 ifndef MOZ_USE_OFFICIAL_BRANDING
 	$(NSINSTALL) -D $(DIST)/branding
 ifeq ($(OS_ARCH),WINNT)
-	cp $(srcdir)/mozilla.ico   $(DIST)/branding/mozilla.ico
-	cp $(srcdir)/mozilla.ico   $(DIST)/branding/app.ico
+	cp $(srcdir)/thunderbird.ico   $(DIST)/branding/thunderbird.ico
+	cp $(srcdir)/thunderbird.ico   $(DIST)/branding/app.ico
 endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/macbuild/mach.icns  $(DIST)/branding/mach.icns
