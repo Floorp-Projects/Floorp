@@ -1,0 +1,135 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="Author" content="Scott Furman">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (WinNT; I) [Netscape]">
+   <title>Electrical Fire README</title>
+</head>
+<body>
+
+<h1>
+1. What is Electrical Fire ?</h1>
+Electrical Fire is the code name for a multi-platform Just-In-Time Java
+compiler (JIT).&nbsp; For more information, see the <a href="http://www.mozilla.org/ef/index.html">Electrical
+Fire homepage </a>.
+<h1>
+2. How to build Electrical Fire on Windows</h1>
+
+<h2>
+2.1 Requirements</h2>
+
+<blockquote>The canonical development environment for Windows platforms
+is NT 4.0.&nbsp; (It's probable that Win95/98 work, but it has not been
+tested.)&nbsp; The following tools need to be installed:
+<ul>
+<li>
+MSVC 5.0.</li>
+
+<li>
+GNU Tools for Microsoft Windows, located:</li>
+
+<ul>
+<li>
+<a href="http://www.cygnus.com/misc/gnu-win32">Cygnus</a></li>
+
+<li>
+<a href="http://www.gnu.org/order/ftp.html">GNU home page</a></li>
+
+<li>
+<a href="ftp://prep.ai.mit.edu/pub/gnu">MIT</a></li>
+
+<br>&nbsp;</ul>
+Specifically, you'll need:
+<ul><tt>cp.exe</tt>
+<br><tt>rm.exe</tt>
+<br><tt>uname.exe</tt>
+<br><tt>flex.exe</tt>
+<br><tt>bison.exe</tt>
+<br>&nbsp;</ul>
+
+<li>
+Netscape has internally modified version of gmake, shmsdos and win32gnu
+that we use to get around some problems we were having keeping in sync
+with the Unix version of gmake. This version of gmake can be found in the
+Windows Build Tools package, which can be ftp'd from
+<a href="http://www.mozilla.org/download-mozilla.html">the
+Mozilla Download page</a>. The three files you will need are:</li>
+
+<ul><tt>gmake.exe</tt>
+<br><tt>shmsdos.exe</tt>
+<br><tt>uname.exe</tt>
+<br>&nbsp;</ul>
+
+<li>
+Download the BURG tool: <a href="ftp://ftp.cs.arizona.edu/people/todd/burg.shar.Z">ftp://ftp.cs.arizona.edu/people/todd/burg.shar.Z</a>
+You'll need to download this file on a unix box, since this is distributed
+as a shell archive.&nbsp; Put the resulting files in the mozilla/ef/tools/Burg
+directory.&nbsp; (We can eliminate this download step if we can get permission
+to redistribute BURG.)</li>
+
+<li>
+Obtain jvmdi.h:&nbsp; <a href="http://java.sun.com/products/jdk/1.2/">Download
+JDK1.2</a> from Sun.&nbsp; After installing, copy the jvmdi.h file into
+the mozilla/ef/Debugger directory.&nbsp; (We can eliminate this download
+step if we can get Sun to give us permission to redistribute the file,
+the way they've done for us with jni.h)</li>
+</ul>
+</blockquote>
+
+<h2>
+2.2 Get the code</h2>
+
+<blockquote>Download the code using <a href="http://www.mozilla.org/cvs.html">CVS</a>:</blockquote>
+
+<blockquote>
+<blockquote>cvs co mozilla/ef
+<br>cvs co mozilla/nsprpub
+<p>(Need to add a CVS module for EF)</blockquote>
+</blockquote>
+
+<h2>
+2.3 Setup the Build Environment</h2>
+
+<blockquote>
+<li>
+Set your <tt>MOZ_TOOLS</tt> environment variable to point to the parent
+directory of the GNU tools 'bin' directory. The build looks for MOZ_TOOLS\bin\gmake.exe,
+so make sure that the gmake.exe from the Windows Build Tools package resides
+there, e.g.</li>
+
+<ul><tt>set MOZ_TOOLS=C:\moztools</tt></ul>
+
+<li>
+Create a <tt>\tmp</tt> directory for temporary files in the root of the
+drive which you are using to build, e.g. <tt>D:\tmp</tt>.&nbsp; (You must
+do this even if you have <tt>TEMP</tt> or <tt>TMP</tt> environment variables
+that point to another directory, as <tt>bison</tt> ignores these variables).</li>
+
+<li>
+Add the mozilla\dist\$(OBJDIR)\bin directory to your <tt>PATH</tt></li>
+</blockquote>
+
+<h2>
+2.4 Build ElectricalFire</h2>
+
+<ul>
+<li>
+Build the NSPR library:</li>
+
+<ul><tt>cd mozilla\nsprpub<br>
+gmake</tt></ul>
+
+<li>
+Start MSVC 5.0 and load the following workspace</li>
+
+<ul>
+<pre><tt>mozilla\ef\Driver\StandAloneJava\winbuild\ElectricalFire.dsw</tt></pre>
+</ul>
+
+<li>
+Under MSVC's Build menu, select "Build electricalfire.exe"</li>
+</ul>
+
+</body>
+</html>

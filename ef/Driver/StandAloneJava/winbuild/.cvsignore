@@ -1,0 +1,10 @@
+*.plg
+*.opt
+*.ncb
+*.dsw
+*.html
+genfiles
+Debug
+Release
+electric
+
