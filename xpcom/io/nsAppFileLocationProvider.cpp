@@ -80,7 +80,13 @@
 #define NS_ENV_PLUGINS_DIR          "EnvPlugins"    // env var MOZ_PLUGIN_PATH
 #define NS_USER_PLUGINS_DIR         "UserPlugins"
 
-#if XP_MAC
+#if defined(XP_MAC)
+#define NS_MACOSX_USER_PLUGIN_DIR   "OSXUserPlugins"
+#define NS_MACOSX_LOCAL_PLUGIN_DIR  "OSXLocalPlugins"
+#define NS_MAC_CLASSIC_PLUGIN_DIR   "MacSysPlugins"
+#endif
+
+#if defined(XP_MAC)
 #define DEFAULTS_DIR_NAME           NS_LITERAL_CSTRING("Defaults")
 #define DEFAULTS_PREF_DIR_NAME      NS_LITERAL_CSTRING("Pref")
 #define DEFAULTS_PROFILE_DIR_NAME   NS_LITERAL_CSTRING("Profile")
@@ -130,6 +136,13 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     NS_ENSURE_ARG(prop);
     *_retval = nsnull;
     *persistant = PR_TRUE;
+
+#if defined (XP_MAC)
+    short foundVRefNum;
+    long foundDirID;
+    FSSpec fileSpec;
+    nsCOMPtr<nsILocalFileMac> macFile;
+#endif
     
     if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
@@ -188,6 +201,41 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
+#if defined(XP_MAC)
+    else if (nsCRT::strcmp(prop, NS_MACOSX_USER_PLUGIN_DIR) == 0)
+    {
+        if (!(::FindFolder(kUserDomain,
+                           kInternetPlugInFolderType,
+                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
+            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
+            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+            if (NS_SUCCEEDED(rv))
+                localFile = macFile;
+        }
+    }
+    else if (nsCRT::strcmp(prop, NS_MACOSX_LOCAL_PLUGIN_DIR) == 0)
+    {
+        if (!(::FindFolder(kLocalDomain,
+                           kInternetPlugInFolderType,
+                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
+            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
+            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+            if (NS_SUCCEEDED(rv))
+                localFile = macFile;
+        }
+    }
+    else if (nsCRT::strcmp(prop, NS_MAC_CLASSIC_PLUGIN_DIR) == 0)
+    {
+        if (!(::FindFolder(kOnAppropriateDisk,
+                           kInternetPlugInFolderType,
+                           kDontCreateFolder, &foundVRefNum, &foundDirID)) &&
+            !(::FSMakeFSSpec(foundVRefNum, foundDirID, "\p", &fileSpec))) {
+            rv = NS_NewLocalFileWithFSSpec(&fileSpec, PR_TRUE, getter_AddRefs(macFile));
+            if (NS_SUCCEEDED(rv))
+                localFile = macFile;
+        }
+    }
+#else
     else if (nsCRT::strcmp(prop, NS_ENV_PLUGINS_DIR) == 0)
     {
         const char *pathVar = PR_GetEnv("MOZ_PLUGIN_PATH");
@@ -200,6 +248,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
+#endif
     else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
@@ -385,25 +434,23 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
     NS_DECL_ISUPPORTS
 
     /**
-     * aKeyList is a list of properties which are provided by aProvider
+     * aKeyList is a null-terminated list of properties which are provided by aProvider
      * They do not need to be publicly defined keys.
      */
     nsAppDirectoryEnumerator(nsIDirectoryServiceProvider *aProvider,
-                             const char* aKeyList[],
-                             PRInt32 aNumKeys) :
+                             const char* aKeyList[]) :
         mProvider(aProvider),
-        mKeyList(aKeyList),
-        mCurrentIndex(0), mMaxIndex(aNumKeys)
+        mCurrentKey(aKeyList)
     {
         NS_INIT_REFCNT();
     }
 
     NS_IMETHOD HasMoreElements(PRBool *result) 
     {
-        while (!mNext && (mCurrentIndex < mMaxIndex))
+        while (!mNext && *mCurrentKey)
         {
             PRBool dontCare;
-            (void)mProvider->GetFile(mKeyList[mCurrentIndex++], &dontCare, getter_AddRefs(mNext));
+            (void)mProvider->GetFile(*mCurrentKey++, &dontCare, getter_AddRefs(mNext));
         }
         *result = mNext != nsnull;
         return NS_OK;
@@ -432,8 +479,7 @@ class nsAppDirectoryEnumerator : public nsISimpleEnumerator
 
   protected:
     nsIDirectoryServiceProvider *mProvider;
-    const char** mKeyList;
-    PRInt32      mCurrentIndex, mMaxIndex;
+    const char** mCurrentKey;
     nsCOMPtr<nsIFile> mNext;
 };
 
@@ -449,12 +495,21 @@ nsAppFileLocationProvider::GetFiles(const char *prop, nsISimpleEnumerator **_ret
     if (!nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR_LIST))
     {
 #ifdef XP_MAC
-        static const char* keys[] = { NS_APP_PLUGINS_DIR };
+        static const char* osXKeys[] = { NS_APP_PLUGINS_DIR, NS_MACOSX_USER_PLUGIN_DIR, NS_MACOSX_LOCAL_PLUGIN_DIR, nsnull };
+        static const char* os9Keys[] = { NS_APP_PLUGINS_DIR, NS_MAC_CLASSIC_PLUGIN_DIR, nsnull };
+        static const char** keys;
+        
+        if (!keys) {
+            OSErr err;
+            long response;
+            err = ::Gestalt(gestaltSystemVersion, &response); 
+            keys = (!err && response >= 0x00001000) ? osXKeys : os9Keys;
+        }
 #else
-        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR };
+        static const char* keys[] = { NS_ENV_PLUGINS_DIR, NS_USER_PLUGINS_DIR, NS_APP_PLUGINS_DIR, nsnull };
 #endif
 
-        *_retval = new nsAppDirectoryEnumerator(this, keys, sizeof(keys) / sizeof(keys[0]));
+        *_retval = new nsAppDirectoryEnumerator(this, keys);
         NS_IF_ADDREF(*_retval);
         rv = *_retval ? NS_OK : NS_ERROR_OUT_OF_MEMORY;        
     }
