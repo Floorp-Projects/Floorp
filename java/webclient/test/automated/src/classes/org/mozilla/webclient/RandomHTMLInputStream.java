@@ -219,6 +219,8 @@ public int read(byte[] b, int off, int len) throws IOException
             catch (Exception e) {
                 throw new IOException("RandomHTMLInputStream: Can't notify listeners");
             }
+            available = -1;
+            return numRead;
         }
         else {
             

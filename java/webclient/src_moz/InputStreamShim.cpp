@@ -118,12 +118,14 @@ nsresult InputStreamShim::doReadFromJava()
     }
 
     // if we have all our data, give the error appropriate result
-    if (0 == mAvailable ||
+    if (mAvailable <= 0 ||
         (0 != mCountFromJava && 
          (((PRUint32)mContentLength) == mCountFromJava))) {
         mDoClose = PR_TRUE;
-        doClose();
-        rv = NS_ERROR_NOT_AVAILABLE;
+        rv = doClose();
+        if (0 == mAvailableForMozilla) {
+            rv = NS_ERROR_NOT_AVAILABLE;
+        }
         goto DRFJ_CLEANUP;
     }
     
@@ -150,12 +152,15 @@ nsresult InputStreamShim::doReadFromJava()
         rv = NS_ERROR_FAILURE;
         goto DRFJ_CLEANUP;
     }
-    if (0 == mAvailable ||
+    if (mAvailable <= 0 ||
         (0 != mCountFromJava && 
          (((PRUint32)mContentLength) == mCountFromJava))) {
         mDoClose = PR_TRUE;
-        doClose();
-        rv = NS_ERROR_NOT_AVAILABLE;
+        rv = doClose();
+        if (0 == mAvailableForMozilla) {
+            rv = NS_ERROR_NOT_AVAILABLE;
+        }
+
         goto DRFJ_CLEANUP;
     }
 
@@ -192,7 +197,7 @@ InputStreamShim::doAvailable(void)
     if (!(mid = env->GetMethodID(streamClass, "available", "()I"))) {
         return rv;
     }
-    mAvailable = (PRUint32) env->CallIntMethod(mJavaStream, mid);
+    mAvailable = (PRInt32) env->CallIntMethod(mJavaStream, mid);
     if (env->ExceptionOccurred()) {
         env->ExceptionDescribe();
         env->ExceptionClear();
@@ -462,7 +467,7 @@ InputStreamShim::ReadSegments(nsWriteSegmentFun writer, void * aClosure,
 
     PR_Lock(mLock);
 
-    PRUint32 bytesToWrite = mAvailableForMozilla;
+    PRInt32 bytesToWrite = mAvailableForMozilla;
     PRUint32 bytesWritten;
     PRUint32 totalBytesWritten = 0;
 

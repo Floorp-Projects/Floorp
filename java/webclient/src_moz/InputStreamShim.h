@@ -148,7 +148,7 @@ protected:
 
      */
 
-    PRUint32 mAvailable;
+    PRInt32 mAvailable;
 
     /**
 
@@ -157,7 +157,7 @@ protected:
 
      */
 
-    PRUint32 mAvailableForMozilla;
+    PRInt32 mAvailableForMozilla;
 
     /**
 
