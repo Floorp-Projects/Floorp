@@ -129,7 +129,7 @@ NS_IMETHODIMP nsWindow::Update()
 
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Scroll()\n"));
+  PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWindow::Scroll()\n"));
   mScrollX += aDx;
   mScrollY += aDy;
   
@@ -151,6 +151,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
               childWindow->GetBounds(bounds);
               bounds.x += aDx;
               bounds.y += aDy;
+              PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWindow::Scroll moving child to %d, %d\n", bounds.x, bounds.y));
               childWindow->Move(bounds.x, bounds.y);
             }
         } while (NS_SUCCEEDED(children->Next()));                       
