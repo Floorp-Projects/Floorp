@@ -41,6 +41,7 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
+#include "nsCRT.h"
 
 #include "calIEvent.h"
 #include "calBaseCID.h"
@@ -106,7 +107,7 @@ protected:
         return SetProperty(kind, val);
     }
 
-
+    void ClearAllProperties(icalproperty_kind kind);
 
     icalcomponent              *mComponent;
     nsCOMPtr<calIcalComponent>  mParent;
@@ -115,13 +116,8 @@ protected:
 nsresult
 calIcalComponent::SetProperty(icalproperty_kind kind, icalvalue *val)
 {
-    icalproperty *prop =
-        icalcomponent_get_first_property(mComponent, kind);
-    if (prop) {
-        icalcomponent_remove_property(mComponent, prop);
-        icalproperty_free(prop);
-    }
-    prop = icalproperty_new(kind);
+    ClearAllProperties(kind);
+    icalproperty *prop = icalproperty_new(kind);
     if (!prop) {
         icalvalue_free(val);
         return NS_ERROR_OUT_OF_MEMORY;
@@ -254,6 +250,65 @@ DATE_ATTRIBUTE(StampTime, DTSTAMP)
 DATE_ATTRIBUTE(LastModified, LASTMODIFIED)
 DATE_ATTRIBUTE(CreatedTime, CREATED)
 DATE_ATTRIBUTE(CompletedTime, COMPLETED)
+
+NS_IMETHODIMP
+calIcalComponent::GetAttendees(PRUint32 *count, char ***attendees)
+{
+    char **attlist = nsnull;
+    PRUint32 attcount = 0;
+    for (icalproperty *prop =
+             icalcomponent_get_first_property(mComponent, ICAL_ATTENDEE_PROPERTY);
+         prop;
+         prop = icalcomponent_get_next_property(mComponent, ICAL_ATTENDEE_PROPERTY)) {
+        attcount++;
+        char **newlist = 
+            NS_STATIC_CAST(char **,
+                           NS_Realloc(attlist, attcount * sizeof(char *)));
+        if (!newlist)
+            goto oom;
+        attlist = newlist;
+        attlist[attcount - 1] = nsCRT::strdup(icalproperty_get_attendee(prop));
+        if (!attlist[attcount - 1])
+            goto oom;
+    }
+
+    *attendees = attlist;
+    *count = attcount;
+    return NS_OK;
+
+ oom:
+    for (PRUint32 i = 0; i < attcount - 1; i++)
+        NS_Free(attlist[i]);
+    NS_Free(attlist);
+    return NS_ERROR_OUT_OF_MEMORY;
+}
+
+void
+calIcalComponent::ClearAllProperties(icalproperty_kind kind)
+{
+    for (icalproperty *prop =
+             icalcomponent_get_first_property(mComponent, kind),
+             *next;
+         prop;
+         prop = next) {
+        next = icalcomponent_get_next_property(mComponent, kind);
+        icalcomponent_remove_property(mComponent, prop);
+    }
+}
+
+NS_IMETHODIMP
+calIcalComponent::SetAttendees(PRUint32 count, const char **attendees)
+{
+    ClearAllProperties(ICAL_ATTENDEE_PROPERTY);
+    for (PRUint32 i = 0; i < count; i++) {
+        icalproperty *prop = icalproperty_new_attendee(attendees[i]);
+        if (!prop)
+            return NS_ERROR_OUT_OF_MEMORY;
+        icalcomponent_add_property(mComponent, prop);
+    }
+
+    return NS_OK;
+}
 
 NS_IMPL_ISUPPORTS1(calICSService, calIICSService)
 

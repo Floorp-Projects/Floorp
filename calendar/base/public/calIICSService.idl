@@ -109,6 +109,11 @@ interface calIIcalComponent : nsISupports
     attribute calIDateTime createdTime;
     attribute calIDateTime completedTime;
     attribute calIDateTime lastModified;
+
+    void getAttendees(out PRUint32 count,
+                      [array,size_is(count),retval] out string attendees);
+    void setAttendees(in PRUint32 count,
+                      [array,size_is(count)] in string attendees);
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
