@@ -2815,18 +2815,29 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
                      nsRect& aUsedRect,
                      nsIPresContext* aPresContext, nsPeekOffsetStruct* aPos)
 {
+  if (!aFrame)
+    return NS_ERROR_UNEXPECTED;
   nsresult rv = NS_ERROR_FAILURE;
   PRBool found = PR_FALSE;
   while (!found)  // I have no idea why this loop exists.  Mike?
   {
     nsIFrame *nextFrame = aFrame;
+    nsIFrame *currentFrame = aFrame;
     PRInt32 i;
     for (i=1; i<aLineFrameCount && nextFrame; i++) //already have 1st frame
+    {
+		  currentFrame = nextFrame;
       // If we do GetNextSibling, we don't go far enough
       // (is aLineFrameCount too small?)
       // If we do GetNextInFlow, we hit a null.
-      nextFrame->GetNextSibling(&nextFrame);
-
+      currentFrame->GetNextSibling(&nextFrame);
+    }
+    if (!nextFrame) //premature leaving of loop.
+    {
+      nextFrame = currentFrame; //back it up. lets show a warning
+      NS_WARNING("lineFrame Count lied to us from nsILineIterator!\n");
+    }
+	
     nsPoint offsetPoint; //used for offset of result frame
     nsIView * view; //used for call of get offset from view
     nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
