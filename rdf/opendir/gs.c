@@ -89,6 +89,7 @@ void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resour
     while (n < size) {
 	char c = string[n++]; 
 	if (!wsCharp(c) && (c != '/')) {
+		char* str = &string[n-1];
 	    next = (TNS) findChildOfChar(prev, c);
             if (!next) {
               next = (TNS)fgetMem(sizeof(TrieNodeStruct));
@@ -100,16 +101,20 @@ void RDFGS_AddSearchIndex (RDFT db, char* string, RDF_Resource label, RDF_Resour
 	} else if (next) {
 	    addTarget(db, next, label, target);
 	    prev = gRootNode;
-            next = 0;
+        next = 0;
 	}
     }
-    if (next)  addTarget(db, next, label, target);
+    if (next)  {
+		addTarget(db, next, label, target);
+		prev = gRootNode;
+        next = 0;
+	}
 }    
 
 void
 countChildren (TNS node, size_t *n) {
   TNS ch;
-  if (node->targets) *n++;
+  if (node->targets) (*n)++;
   ch = node->child;
   while (ch) {
     countChildren(ch, n);
@@ -161,6 +166,10 @@ RDF_Resource RDFGS_NextValue (RDF_Cursor c) {
       if ((!c->s) || (c->s == currentTTS->label)) {
         RDF_Resource ans =currentTTS->target;
         currentTTS = c->pdata = currentTTS->next;
+		if (!currentTTS) {
+			currentTNS = ((TNS*)c->pdata1)[c->count++]; 
+			if (currentTNS) c->pdata = currentTNS->targets;
+		}
         return ans;
       } 
       c->pdata = currentTTS =  currentTTS->next;
