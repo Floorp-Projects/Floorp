@@ -35,10 +35,12 @@
 #include "nsXPIDLString.h"
 
 #include "nsIMsgMailSession.h"
+#include "nsIMsgCopyService.h"
 #include "nsMsgBaseCID.h"
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kMsgMailSessionCID,					NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kMsgCopyServiceCID,		NS_MSGCOPYSERVICE_CID);
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -881,7 +883,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 
 	nsCOMPtr<nsISupports> srcFolderSupports = getter_AddRefs(arguments->ElementAt(0));
-	nsCOMPtr<nsIRDFResource> srcFolder(do_QueryInterface(srcFolderSupports));
+	nsCOMPtr<nsIMsgFolder> srcFolder(do_QueryInterface(srcFolderSupports));
 	if(!srcFolder)
 		return NS_ERROR_FAILURE;
 
@@ -903,6 +905,12 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 	}
 	//Call copyservice with dstFolder, srcFolder, messages, isMove, and txnManager
+	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
+	if(NS_SUCCEEDED(rv))
+	{
+		copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, txnMgr);
+
+	}
 	return NS_OK;
 }
 
