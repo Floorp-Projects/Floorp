@@ -324,7 +324,7 @@ NS_IMETHODIMP nsSmtpService::NewURI(const nsACString &aSpec,
           rv = utf8Converter->ConvertURISpecToUTF8(aSpec, aOriginCharset, utf8Spec);
     }
 
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv) && !utf8Spec.IsEmpty())
       mailtoUrl->SetSpec(utf8Spec);
     else
       mailtoUrl->SetSpec(aSpec);
