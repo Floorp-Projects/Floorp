@@ -1,20 +1,30 @@
-To install 
+Currently this is Alpha/Beta code, because no one but me is using it
+yet (and even I am not using all the features I have tested). If you
+are not really comfortable coding in perl I suggest you wait until
+more people are using it and we get the minor kinks worked out of the
+code and documentation.
+
+
+To install:
 
 1) read and edit the variables found in the files ./src/lib/*,
-	 particularly TreeData.pm and FileStructure.pm
+	 particularly TinderConfig.pm, TreeData.pm, and FileStructure.pm
 
 2) run ./configure
 
 3) run make
 
-4) run make install
+4) run the test programs as described in /build/test/ReadMe to ensure
+that you have configured the program correctly.
 
-5) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
+5) run make install
+
+6) set up a cron job to run $prefix/bin/tinder.cgi --daemon-mode 
 	every five minutes
 
-6) set up $prefix/bin/processmail to recieve the incoming tinderbox mail
+7) set up $prefix/bin/processmail to recieve the incoming tinderbox mail
 
-7) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
+8) if you are using VC_CVS.pm then you will need to put a ~/.cvspass
 for tinderbox to use.  Log into the CVS repository yourself, once for
 each tree you have defined.  This must be done exactly as you wrote it
 in TreeData.  Then copy your ~/.cvspass into tinderbox home directory.
@@ -22,6 +32,6 @@ This is the REAL home of the Tinderbox daemon, as listed in
 /etc/passwd/ and set in the $HOME environmental variable for
 tinder.cgi.
 
-8) setup the build machines to mail their build logs 
+9) setup the build machines to mail their build logs 
 	(with tinderbox variables on the top) to the web server machine.
 
