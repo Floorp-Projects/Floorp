@@ -386,11 +386,24 @@ nsCookiePermission::CanSetCookie(nsIURI     *aURI,
                                              countFromHost, foundCookie,
                                              &rememberDecision, aResult);
       if (NS_FAILED(rv)) return rv;
+      
+      if (*aResult == nsICookiePromptService::ACCEPT_SESSION_COOKIE)
+        *aIsSession = PR_TRUE;
 
       if (rememberDecision) {
-        mPermMgr->Add(aURI, kPermissionType,
-                      *aResult ? (PRUint32) nsIPermissionManager::ALLOW_ACTION
-                               : (PRUint32) nsIPermissionManager::DENY_ACTION);
+        switch (*aResult) {
+          case nsICookiePromptService::DENY_COOKIE:
+            mPermMgr->Add(aURI, kPermissionType, (PRUint32) nsIPermissionManager::DENY_ACTION);
+            break;
+          case nsICookiePromptService::ACCEPT_COOKIE:
+            mPermMgr->Add(aURI, kPermissionType, (PRUint32) nsIPermissionManager::ALLOW_ACTION);
+            break;
+          case nsICookiePromptService::ACCEPT_SESSION_COOKIE:
+            mPermMgr->Add(aURI, kPermissionType, ACCESS_SESSION);
+            break;
+          default:
+            break;
+        }
       }
     }
   }

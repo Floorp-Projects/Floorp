@@ -64,7 +64,7 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
                                     PRInt32 aCookiesFromHost,
                                     PRBool aChangingCookie,
                                     PRBool *aRememberDecision,
-                                    PRBool *aAccept)
+                                    PRInt32 *aAccept)
 {
   nsresult rv;
 
@@ -104,11 +104,11 @@ nsCookiePromptService::CookieDialog(nsIDOMWindow *aParent,
   if (NS_FAILED(rv)) return rv;
 
   // get back output parameters
-  // GetInt returns a PRInt32; we need to sanitize it into PRBool
   PRBool tempValue;
   block->GetInt(nsICookieAcceptDialog::ACCEPT_COOKIE, &tempValue);
-  *aAccept = (tempValue == 1);
-
+  *aAccept = tempValue;
+  
+  // GetInt returns a PRInt32; we need to sanitize it into PRBool
   block->GetInt(nsICookieAcceptDialog::REMEMBER_DECISION, &tempValue);
   *aRememberDecision = (tempValue == 1);
 

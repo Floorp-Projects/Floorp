@@ -37,6 +37,7 @@
 const nsICookieAcceptDialog = Components.interfaces.nsICookieAcceptDialog;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsICookie = Components.interfaces.nsICookie;
+const nsICookiePromptService = Components.interfaces.nsICookiePromptService;
 
 var params; 
 var cookieBundle;
@@ -165,8 +166,11 @@ function showhideinfo()
 
 function cookieAccept()
 {
-  // say that the cookie was accepted
-  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 1); 
+  // the cookie was accepted, now check whether it should be session-only and return accordingly
+  if (document.getElementById('acceptSession').checked)
+    params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_SESSION_COOKIE); 
+  else
+    params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.ACCEPT_COOKIE); 
   // And remember that when needed
   params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
   window.close();
@@ -175,7 +179,7 @@ function cookieAccept()
 function cookieDeny()
 {
   // say that the cookie was rejected
-  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, 0); 
+  params.SetInt(nsICookieAcceptDialog.ACCEPT_COOKIE, nsICookiePromptService.DENY_COOKIE); 
   // And remember that when needed
   params.SetInt(nsICookieAcceptDialog.REMEMBER_DECISION, document.getElementById('persistDomainAcceptance').checked);
   window.close();
