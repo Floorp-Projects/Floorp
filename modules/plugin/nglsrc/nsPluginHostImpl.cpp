@@ -1795,7 +1795,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopRequest(nsIRequest *request,
   if (!pathAndFilename)
     mPluginStreamInfo->GetLocalCachedFile(getter_Copies(pathAndFilename));
 
-  if (!pathAndFilename) {
+  if (!pathAndFilename || 0 == *pathAndFilename) {
     // see if it is a file channel.
     nsCOMPtr<nsIFileChannel> fileChannel = do_QueryInterface(request);
     if (fileChannel)
