@@ -227,9 +227,9 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
     nsCOMPtr <nsIDBFolderInfo> newsGroupInfo;
 	rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
 	if (NS_SUCCEEDED(rv) && newsGroupInfo) {
-      nsAutoString knownArtsString;
+      nsXPIDLCString knownArtsString;
       nsMsgKey mark;
-      newsGroupInfo->GetKnownArtsSet(&knownArtsString);
+      newsGroupInfo->GetKnownArtsSet(getter_Copies(knownArtsString));
       
       rv = newsGroupInfo->GetHighWater(&mark);
       NS_ENSURE_SUCCESS(rv,rv);
@@ -239,9 +239,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
       if (m_knownArts.set) {
         delete m_knownArts.set;
       }
-      nsCAutoString knownartstringC;
-      knownartstringC.AssignWithConversion(knownArtsString);
-      m_knownArts.set = nsMsgKeySet::Create(knownartstringC.get());
+      m_knownArts.set = nsMsgKeySet::Create(knownArtsString.get());
     }
     else
     {	
@@ -406,37 +404,36 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow *aMsgWindow,
 nsresult
 nsNNTPNewsgroupList::AddToKnownArticles(PRInt32 first, PRInt32 last)
 {
-	int		status;
-   
-    if (!m_knownArts.set) 
-	{
-		m_knownArts.set = nsMsgKeySet::Create();
-
-		if (!m_knownArts.set) {
-		  return NS_ERROR_OUT_OF_MEMORY;
-		}
-
-	}
-
-	status = m_knownArts.set->AddRange(first, last);
-
-	if (m_newsDB) {
-		nsresult rv = NS_OK;
-		nsCOMPtr <nsIDBFolderInfo> newsGroupInfo;
-		rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
-		if (NS_SUCCEEDED(rv) && newsGroupInfo) {
-			char *output;
+  int		status;
+  
+  if (!m_knownArts.set) 
+  {
+    m_knownArts.set = nsMsgKeySet::Create();
+    
+    if (!m_knownArts.set) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+  }
+  
+  status = m_knownArts.set->AddRange(first, last);
+  
+  if (m_newsDB) {
+    nsresult rv = NS_OK;
+    nsCOMPtr <nsIDBFolderInfo> newsGroupInfo;
+    rv = m_newsDB->GetDBFolderInfo(getter_AddRefs(newsGroupInfo));
+    if (NS_SUCCEEDED(rv) && newsGroupInfo) {
+      char *output;
       status = m_knownArts.set->Output(&output);
-			if (output) {
-				nsAutoString str; str.AssignWithConversion(output);
-				newsGroupInfo->SetKnownArtsSet(&str);
+      if (output) {
+        newsGroupInfo->SetKnownArtsSet(output);
         nsMemory::Free(output);
-			}
-			output = nsnull;
-		}
-	}
-
-	return status;
+      }
+      output = nsnull;
+    }
+  }
+  
+  return status;
 }
 
 

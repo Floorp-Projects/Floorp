@@ -886,14 +886,14 @@ NS_IMETHODIMP nsDBFolderInfo::SetSortOrder(nsMsgViewSortOrderValue aSortOrder)
 }
 
 
-NS_IMETHODIMP nsDBFolderInfo::SetKnownArtsSet(nsString *newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::SetKnownArtsSet(const char *newsArtSet)
 {
-	return SetProperty(kKnownArtsSetColumnName, newsArtSet);
+  return m_mdb->SetProperty(m_mdbRow, kKnownArtsSetColumnName, newsArtSet);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString *newsArtSet)
+NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(char **newsArtSet)
 {
-	return GetProperty(kKnownArtsSetColumnName, newsArtSet);
+  return m_mdb->GetProperty(m_mdbRow, kKnownArtsSetColumnName, newsArtSet);
 }
 
 	// get arbitrary property, aka row cell value.
@@ -901,6 +901,11 @@ NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(nsString *newsArtSet)
 NS_IMETHODIMP	nsDBFolderInfo::GetProperty(const char *propertyName, nsString *resultProperty)
 {
   return m_mdb->GetPropertyAsNSString(m_mdbRow, propertyName, resultProperty);
+}
+
+NS_IMETHODIMP	nsDBFolderInfo::SetCharPtrProperty(const char *aPropertyName, const char *aPropertyValue)
+{
+  return m_mdb->SetProperty(m_mdbRow, aPropertyName, aPropertyValue);
 }
 
 // Caller must PR_FREEIF resultProperty.

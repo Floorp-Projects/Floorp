@@ -46,64 +46,65 @@
 [scriptable, uuid(5cb11c00-cb8b-11d2-8d67-00805f8a6617)]
 
 interface  nsIDBFolderInfo : nsISupports {
-	attribute long Flags;
-	long		  OrFlags(in long flags);
-	long		  AndFlags(in long flags);
-	void	  SetHighWater(in nsMsgKey highwater, in boolean force);
-	attribute nsMsgKey HighWater;
-	attribute nsMsgKey ExpiredMark;
-	attribute unsigned long FolderSize;
-	attribute nsMsgKey LastMessageLoaded;
-	attribute unsigned long FolderDate;
-	void ChangeNumNewMessages(in long delta);
-	void ChangeNumMessages(in long delta);
+  attribute long Flags;
+  long  OrFlags(in long flags);
+  long  AndFlags(in long flags);
+  void  SetHighWater(in nsMsgKey highwater, in boolean force);
+  attribute nsMsgKey HighWater;
+  attribute nsMsgKey ExpiredMark;
+  attribute unsigned long FolderSize;
+  attribute nsMsgKey LastMessageLoaded;
+  attribute unsigned long FolderDate;
+  void ChangeNumNewMessages(in long delta);
+  void ChangeNumMessages(in long delta);
 
   // ChangeNumVisibleMessages, NumNewMessages and NumMessages will never return negative numbers. 0 means 'no msgs'.
-	void ChangeNumVisibleMessages(in long delta);
-	attribute long NumNewMessages;
-	attribute long NumMessages;
+  void ChangeNumVisibleMessages(in long delta);
+  attribute long NumNewMessages;
+  attribute long NumMessages;
 
-	attribute long expungedBytes;
-	attribute long NumVisibleMessages;
-	attribute long ImapUidValidity;
-	attribute unsigned long Version;
-	attribute long ImapTotalPendingMessages;
-	attribute long ImapUnreadPendingMessages;
-	attribute wchar IMAPHierarchySeparator;
+  attribute long expungedBytes;
+  attribute long NumVisibleMessages;
+  attribute long ImapUidValidity;
+  attribute unsigned long Version;
+  attribute long ImapTotalPendingMessages;
+  attribute long ImapUnreadPendingMessages;
+  attribute wchar IMAPHierarchySeparator;
 
   attribute nsMsgViewTypeValue viewType;
   attribute nsMsgViewFlagsTypeValue viewFlags;
   attribute nsMsgViewSortTypeValue sortType;
   attribute nsMsgViewSortOrderValue sortOrder;
 
-    void ChangeExpungedBytes(in long delta);
+  void ChangeExpungedBytes(in long delta);
 
-	void GetCharPtrProperty(in string propertyName, out string resultProperty);
-	void SetUint32Property(in string propertyName, in unsigned long propertyValue);
-	void GetUint32Property(in string propertyName, out unsigned long result, in unsigned long defaultValue);
-	void getBooleanProperty(in string propertyName, out boolean result, in boolean defaultValue);
+  void GetCharPtrProperty(in string propertyName, out string resultProperty);
+  void SetCharPtrProperty(in string aPropertyName, in string aPropertyValue);
+  void SetUint32Property(in string propertyName, in unsigned long propertyValue);
+  void GetUint32Property(in string propertyName, out unsigned long result, in unsigned long defaultValue);
+  void getBooleanProperty(in string propertyName, out boolean result, in boolean defaultValue);
   void setBooleanProperty(in string propertyName, in boolean aPropertyValue);
-	void	GetTransferInfo(out nsIDBFolderInfo transferInfo);
-	void	InitFromTransferInfo(in nsIDBFolderInfo transferInfo);
+  void	GetTransferInfo(out nsIDBFolderInfo transferInfo);
+  void	InitFromTransferInfo(in nsIDBFolderInfo transferInfo);
 
-	[noscript] void GetCharacterSet(in nsString charSet, out boolean usedDefault);
-	[noscript] void SetCharacterSet(in wstring charSet);
-	void GetCharacterSetOverride(out boolean characterSetOverride);
-	void SetCharacterSetOverride(in boolean characterSetOverride);
+  [noscript] void getCharacterSet(in nsString charSet, out boolean usedDefault);
+  [noscript] void setCharacterSet(in wstring charSet);
+  void getCharacterSetOverride(out boolean characterSetOverride);
+  void setCharacterSetOverride(in boolean characterSetOverride);
 
-			   void GetCharPtrCharacterSet(out string result);
+  void getCharPtrCharacterSet(out string result);
 
-	[noscript] void GetLocale(in nsString result);
-	[noscript] void SetLocale(in nsString locale);
-    
-	[noscript] void SetMailboxName(in nsString newBoxName);
-	[noscript] void GetMailboxName(in nsString boxName);
+  [noscript] void getLocale(in nsString result);
+  [noscript] void setLocale(in nsString locale);
+
+  [noscript] void setMailboxName(in nsString newBoxName);
+  [noscript] void getMailboxName(in nsString boxName);
 
 
-	[noscript] void GetProperty(in string propertyName, in nsString resultProperty);
-	[noscript] void SetProperty(in string propertyName, in nsString propertyStr);
-	[noscript] void SetKnownArtsSet(in nsString newsArtSet);
-	[noscript] void GetKnownArtsSet(in nsString newsArtSet);
+  [noscript] void getProperty(in string propertyName, in nsString resultProperty);
+  [noscript] void setProperty(in string propertyName, in nsString propertyStr);
+
+  attribute string knownArtsSet;
 };
 
 

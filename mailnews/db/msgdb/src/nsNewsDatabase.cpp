@@ -193,6 +193,14 @@ nsresult nsNewsDatabase::ForceClosed()
 
 nsresult nsNewsDatabase::Commit(nsMsgDBCommit commitType)
 {
+  if (m_dbFolderInfo && m_readSet)
+  {
+    // let's write out our idea of the read set so we can compare it with that of
+    // the .rc file next time we start up.
+    nsXPIDLCString readSet;
+    m_readSet->Output(getter_Copies(readSet));
+    m_dbFolderInfo->SetCharPtrProperty("readSet", readSet.get());
+  }
   return nsMsgDatabase::Commit(commitType);
 }
 
@@ -362,16 +370,27 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
 
 NS_IMETHODIMP nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
 {
-  nsMsgKey lowWater, highWater;
-  GetLowWaterArticleNum(&lowWater);
-  GetHighWaterArticleNum(&highWater);
-	if (lowWater > 2)
-		m_readSet->AddRange(1, lowWater - 1);
-	nsresult err = nsMsgDatabase::MarkAllRead(thoseMarked);
-	if (NS_SUCCEEDED(err) && 1 <= highWater)
-		m_readSet->AddRange(1, highWater);	// mark everything read in newsrc.
+  nsMsgKey lowWater = nsMsgKey_None, highWater;
+  nsXPIDLCString knownArts;
+  if (m_dbFolderInfo)
+  {
+    m_dbFolderInfo->GetKnownArtsSet(getter_Copies(knownArts));
+    nsMsgKeySet *knownKeys = nsMsgKeySet::Create(knownArts);
+    if (knownKeys)
+      lowWater = knownKeys->GetFirstMember();
 
-	return err;
+    delete knownKeys;
+  }
+  if (lowWater == nsMsgKey_None)
+    GetLowWaterArticleNum(&lowWater);
+  GetHighWaterArticleNum(&highWater);
+  if (lowWater > 2)
+    m_readSet->AddRange(1, lowWater - 1);
+  nsresult err = nsMsgDatabase::MarkAllRead(thoseMarked);
+  if (NS_SUCCEEDED(err) && 1 <= highWater)
+    m_readSet->AddRange(1, highWater);	// mark everything read in newsrc.
+  
+  return err;
 }
 
 nsresult nsNewsDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)

@@ -2022,15 +2022,15 @@ NS_IMETHODIMP nsMsgDatabase::MarkHdrRead(nsIMsgDBHdr *msgHdr, PRBool bRead,
 {
   nsresult rv = NS_OK;
   PRBool	isRead = PR_TRUE;
-  PRUint32      msgFlags;
+  PRBool        isReadInDB;
 
-  (void) msgHdr->GetFlags(&msgFlags);
+  nsMsgDatabase::IsHeaderRead(msgHdr, &isReadInDB);
   IsHeaderRead(msgHdr, &isRead);
   // if the flag is already correct in the db, don't change it.
   // Check msg flags as well as IsHeaderRead in case it's a newsgroup
   // and the msghdr flags are out of sync with the newsrc settings.
   // (we could override this method for news db's, but it's a trivial fix here.
-  if (!!isRead != !!bRead || (msgFlags & MSG_FLAG_READ != 0) != !!isRead)
+  if (bRead != isRead || isRead != isReadInDB)
   {
     nsCOMPtr <nsIMsgThread> threadHdr;
     nsMsgKey msgKey;
