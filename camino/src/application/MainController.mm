@@ -57,6 +57,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsEmbedAPI.h"
+#include "nsString.h"
 
 #include "nsIWebBrowserChrome.h"
 #include "nsIServiceManager.h"
