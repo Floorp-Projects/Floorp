@@ -45,13 +45,8 @@
 #include "nsICSSDeclaration.h"
 #include "nsIHTMLCSSStyleSheet.h"
 
-#include "nsHTMLTokens.h"
 #include "nsITextContent.h"
-
-#include "nsHTMLValue.h"
 #include "nsXIFConverter.h"
-
-#include "nsHTMLTags.h"
 
 #include "nsSelection.h"
 #include "nsIDOMText.h"
