@@ -187,12 +187,10 @@ protected:
 
   nsresult CreateMozBR(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<nsIDOMNode> *outBRNode);
 
-#ifdef IBMBIDI
   nsresult CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode, 
                                      PRInt32               aSelOffset, 
                                      nsIEditor::EDirection aAction,
                                      PRBool               *aCancel);
-#endif // IBMBIDI
 
   // data members
   nsPlaintextEditor   *mEditor;        // note that we do not refcount the editor
