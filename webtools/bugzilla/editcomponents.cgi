@@ -772,7 +772,7 @@ if ($action eq 'update') {
 
     if ($component ne $componentold) {
         unless ($component) {
-            print "Sorry, I can't delete the product name.";
+            print "Sorry, but a component must have a name.";
             PutTrailer($localtrailer);
             SendSQL("UNLOCK TABLES");
             exit;
@@ -795,7 +795,7 @@ if ($action eq 'update') {
                    AND program=" . SqlQuote($product));
 
         unlink "data/versioncache";
-        print "Updated product name.<BR>\n";
+        print "Updated component name.<BR>\n";
     }
     SendSQL("UNLOCK TABLES");
 
