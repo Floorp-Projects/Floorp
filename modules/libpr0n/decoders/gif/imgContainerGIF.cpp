@@ -30,25 +30,22 @@
 #include "nsIImage.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "gfxIImageFrame.h"
 #include "nsMemory.h"
-#include "nsITimer.h"
 
 NS_IMPL_ISUPPORTS2(imgContainerGIF, imgIContainer, nsITimerCallback)
 
 //******************************************************************************
-imgContainerGIF::imgContainerGIF() :
-  mObserver(nsnull),
-  mSize(0,0),
-  mFirstFrameRefreshArea(),
-  mCurrentDecodingFrameIndex(0),
-  mCurrentAnimationFrameIndex(0),
-  mLastCompositedFrameIndex(-1),
-  mCurrentFrameIsFinishedDecoding(PR_FALSE),
-  mDoneDecoding(PR_FALSE),
-  mAnimating(PR_FALSE),
-  mAnimationMode(kNormalAnimMode),
-  mLoopCount(-1)
+imgContainerGIF::imgContainerGIF()
+  : mObserver(nsnull)
+  , mSize(0,0)
+  , mFirstFrameRefreshArea()
+  , mCurrentDecodingFrameIndex(0)
+  , mCurrentAnimationFrameIndex(0)
+  , mLastCompositedFrameIndex(-1)
+  , mDoneDecoding(PR_FALSE)
+  , mAnimating(PR_FALSE)
+  , mAnimationMode(kNormalAnimMode)
+  , mLoopCount(-1)
 {
   /* member initializers and constructor code */
 }
@@ -131,80 +128,12 @@ NS_IMETHODIMP imgContainerGIF::GetFrameAt(PRUint32 index,
 /* void appendFrame (in gfxIImageFrame item); */
 NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
 {
-  // If we don't have a composite frame already allocated, make sure that our container
-  // size is the same the frame size. Otherwise, we'll either need the composite frame
-  // for animation compositing (GIF) or for filling in with a background color.
-  // XXX IMPORTANT: this means that the frame should be initialized BEFORE appending to container
+  NS_ASSERTION(item, "imgContainerGIF::AppendFrame: item is null");
+  if (!item)
+    return NS_ERROR_NULL_POINTER;
+
   PRUint32 numFrames = inlinedGetNumFrames();
-
-  if (!mCompositingFrame) {
-    nsRect frameRect;
-    item->GetRect(frameRect);
-    // We used to create a compositing frame if any frame was smaller than the logical
-    // image size. You could create a single frame that was 10x10 in the middle of
-    // an 20x20 logical screen and have the extra screen space filled by the image
-    // background color. However, it turns out that neither NS4.x nor IE correctly
-    // support this, and as a result there are many GIFs out there that look "wrong"
-    // when this is correctly supported. So for now, we only create a compositing frame
-    // if we have more than one frame in the image.
-    if(/*(frameRect.x != 0) ||
-       (frameRect.y != 0) ||
-       (frameRect.width != mSize.width) ||
-       (frameRect.height != mSize.height) ||*/
-       (numFrames >= 1)) // Not sure if I want to create a composite frame for every anim. Could be smarter.
-    {
-      mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-      mCompositingFrame->Init(0, 0, mSize.width, mSize.height, gfxIFormats::RGB_A1, 24);
-
-      nsCOMPtr<gfxIImageFrame> firstFrame;
-      inlinedGetFrameAt(0, getter_AddRefs(firstFrame));
-
-      gfx_color backgroundColor, transColor;
-      if (NS_SUCCEEDED(firstFrame->GetTransparentColor(&transColor))) {
-        mCompositingFrame->SetTransparentColor(transColor);
-      }
-
-      if (NS_SUCCEEDED(firstFrame->GetBackgroundColor(&backgroundColor))) {
-        mCompositingFrame->SetBackgroundColor(backgroundColor);
-      }
-
-      PRInt32 timeout;
-      // Set timeout because StartAnimation reads it
-      if (NS_SUCCEEDED(firstFrame->GetTimeout(&timeout)))
-        mCompositingFrame->SetTimeout(timeout);
-
-      PRInt32 x;
-      PRInt32 y;
-      PRInt32 width;
-      PRInt32 height;
-      firstFrame->GetX(&x);
-      firstFrame->GetY(&y);
-      firstFrame->GetWidth(&width);
-      firstFrame->GetHeight(&height);
-
-      BlackenFrame(mCompositingFrame);
-      firstFrame->DrawTo(mCompositingFrame, x, y, width, height);
-      SetMaskVisibility(mCompositingFrame, PR_FALSE);
-      BuildCompositeMask(mCompositingFrame, firstFrame);
-    }
-  }
-
-  mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
-  if (numFrames > 0) {
-    // If this is our second frame, init a timer so we don't display
-    // the next frame until the delay timer has expired for the current
-    // frame.
-    if (!mAnimating)
-      StartAnimation();
-    mCurrentDecodingFrameIndex++;
-
-    // Calculate mFirstFrameRefreshArea
-    // Some gifs are huge but only have a small area that they animate
-    // We only need to refresh that small area when Frame 0 comes around again
-    nsRect itemRect;
-    item->GetRect(itemRect);
-    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, itemRect);
-  } else {
+  if (numFrames == 0) {
     // First Frame
     // If we dispose of the first frame by clearing it, then the
     // First Frame's refresh area is all of itself.
@@ -214,9 +143,22 @@ NS_IMETHODIMP imgContainerGIF::AppendFrame(gfxIImageFrame *item)
     if (frameDisposalMethod == DISPOSE_CLEAR ||
         frameDisposalMethod == DISPOSE_RESTORE_PREVIOUS)
       item->GetRect(mFirstFrameRefreshArea);
+  } else {
+    // Calculate mFirstFrameRefreshArea
+    // Some gifs are huge but only have a small area that they animate
+    // We only need to refresh that small area when Frame 0 comes around again
+    nsRect itemRect;
+    item->GetRect(itemRect);
+    mFirstFrameRefreshArea.UnionRect(mFirstFrameRefreshArea, itemRect);
   }
 
-  mCurrentFrameIsFinishedDecoding = PR_FALSE;
+  mFrames.AppendElement(NS_STATIC_CAST(nsISupports*, item));
+
+  // If this is our second frame, start the animation.
+  // Must be called after AppendElement because StartAnimation checks for > 1
+  // frame
+  if (numFrames == 1)
+    StartAnimation();
 
   return NS_OK;
 }
@@ -233,8 +175,9 @@ NS_IMETHODIMP imgContainerGIF::RemoveFrame(gfxIImageFrame *item)
 NS_IMETHODIMP imgContainerGIF::EndFrameDecode(PRUint32 aFrameNum,
                                               PRUint32 aTimeout)
 {
-  // It is now okay to start the timer for the next frame in the animation
-  mCurrentFrameIsFinishedDecoding = PR_TRUE;
+  // Assume there's another frame.
+  // aFrameNum is 1 based, mCurrentDecodingFrameIndex is 0 based.
+  mCurrentDecodingFrameIndex = aFrameNum;
   return NS_OK;
 }
 
@@ -274,15 +217,15 @@ NS_IMETHODIMP imgContainerGIF::SetAnimationMode(PRUint16 aAnimationMode)
 {
   NS_ASSERTION(aAnimationMode == imgIContainer::kNormalAnimMode ||
                aAnimationMode == imgIContainer::kDontAnimMode ||
-               aAnimationMode == imgIContainer::kLoopOnceAnimMode, 
+               aAnimationMode == imgIContainer::kLoopOnceAnimMode,
                "Wrong Animation Mode is being set!");
 
   if (mAnimationMode == kNormalAnimMode &&
-      (aAnimationMode == kDontAnimMode || 
+      (aAnimationMode == kDontAnimMode ||
        aAnimationMode == kLoopOnceAnimMode)) {
     StopAnimation();
   } else if (aAnimationMode == kNormalAnimMode &&
-             (mAnimationMode == kDontAnimMode || 
+             (mAnimationMode == kDontAnimMode ||
               mAnimationMode == kLoopOnceAnimMode)) {
     mAnimationMode = aAnimationMode;
     StartAnimation();
@@ -406,297 +349,336 @@ NS_IMETHODIMP imgContainerGIF::Notify(nsITimer *timer)
   nsCOMPtr<imgIContainerObserver> observer(do_QueryReferent(mObserver));
   if (!observer) {
     // the imgRequest that owns us is dead, we should die now too.
-    this->StopAnimation();
+    StopAnimation();
     return NS_OK;
   }
 
-  nsCOMPtr<gfxIImageFrame> nextFrame;
-  PRInt32 timeout = 100;
   PRInt32 numFrames = inlinedGetNumFrames();
   if (!numFrames)
     return NS_OK;
 
-  // If we're done decoding the next frame, go ahead and display it now and reinit
-  // the timer with the next frame's delay time.
-  PRInt32 previousAnimationFrameIndex = mCurrentAnimationFrameIndex;
-  if (mCurrentFrameIsFinishedDecoding && !mDoneDecoding) {
-    // If we have the next frame in the sequence set the timer callback from it
-    inlinedGetFrameAt(mCurrentAnimationFrameIndex+1, getter_AddRefs(nextFrame));
-    if (nextFrame) {
-      // Go to next frame in sequence
-      nextFrame->GetTimeout(&timeout);
-      mCurrentAnimationFrameIndex++;
-    } else {
-      // twiddle our thumbs
-      inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-      if(!nextFrame) return NS_OK;
+  nsCOMPtr<gfxIImageFrame> nextFrame;
+  PRInt32 previousFrameIndex = mCurrentAnimationFrameIndex;
+  PRInt32 nextFrameIndex = mCurrentAnimationFrameIndex + 1;
+  PRInt32 timeout = 0;
 
-      nextFrame->GetTimeout(&timeout);
-    }
-  } else if (mDoneDecoding){
-    if ((numFrames-1) == mCurrentAnimationFrameIndex) {
+  // If we're done decoding the next frame, go ahead and display it now and
+  // reinit the timer with the next frame's delay time.
+  if (mDoneDecoding || (nextFrameIndex < mCurrentDecodingFrameIndex)) {
+    if (numFrames == nextFrameIndex) {
+      // End of Animation
+
       // If animation mode is "loop once", it's time to stop animating
       if (mAnimationMode == kLoopOnceAnimMode || mLoopCount == 0) {
-        this->StopAnimation();
+        StopAnimation();
         return NS_OK;
+      } else {
+        // We may have used mCompositingFrame to build a frame, and then copied
+        // it back into mFrames[..].  If so, delete composite to save memory
+        if (mCompositingFrame && mLastCompositedFrameIndex == -1)
+          mCompositingFrame = nsnull;
       }
 
-      // Go back to the beginning of the animation
-      inlinedGetFrameAt(0, getter_AddRefs(nextFrame));
-      if(!nextFrame) return NS_OK;
-
-      mCurrentAnimationFrameIndex = 0;
-      nextFrame->GetTimeout(&timeout);
-      if(mLoopCount > 0)
+      nextFrameIndex = 0;
+      if (mLoopCount > 0)
         mLoopCount--;
-    } else {
-      mCurrentAnimationFrameIndex++;
-      inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-      if(!nextFrame) return NS_OK;
-
-      nextFrame->GetTimeout(&timeout);
     }
-  } else {
-    inlinedGetFrameAt(mCurrentAnimationFrameIndex, getter_AddRefs(nextFrame));
-    if(!nextFrame) return NS_OK;
+
+    if (NS_FAILED(inlinedGetFrameAt(nextFrameIndex,
+                                    getter_AddRefs(nextFrame)))) {
+      // something wrong with the next frame, skip it
+      mCurrentAnimationFrameIndex = nextFrameIndex;
+      mTimer->SetDelay(100);
+      return NS_OK;
+    }
+    nextFrame->GetTimeout(&timeout);
+
+  } else if (nextFrameIndex == mCurrentDecodingFrameIndex) {
+    // Uh oh, the frame we want to show is currently being decoded (partial)
+    // Wait a bit and try again
+    mTimer->SetDelay(100);
+    return NS_OK;
+  } else { //  (nextFrameIndex > mCurrentDecodingFrameIndex)
+    // We shouldn't get here. However, if we are requesting a frame
+    // that hasn't been decoded yet, go back to the last frame decoded
+    NS_WARNING("imgContainerGIF::Notify()  Frame is passed decoded frame");
+    nextFrameIndex = mCurrentDecodingFrameIndex;
+    if (NS_FAILED(inlinedGetFrameAt(nextFrameIndex,
+                                    getter_AddRefs(nextFrame)))) {
+      // something wrong with the next frame, skip it
+      mCurrentAnimationFrameIndex = nextFrameIndex;
+      mTimer->SetDelay(100);
+      return NS_OK;
+    }
+    nextFrame->GetTimeout(&timeout);
   }
 
-  if(timeout > 0)
+  if (timeout > 0)
     mTimer->SetDelay(timeout);
   else
-    this->StopAnimation();
+    StopAnimation();
 
   nsRect dirtyRect;
   nsCOMPtr<gfxIImageFrame> frameToUse;
 
-  if (mCurrentAnimationFrameIndex == 0) {
+  if (nextFrameIndex == 0) {
     frameToUse = nextFrame;
     dirtyRect = mFirstFrameRefreshArea;
-  } else if (mCompositingFrame &&
-             (previousAnimationFrameIndex != mCurrentAnimationFrameIndex)) {
-    // update the composited frame
-    DoComposite(getter_AddRefs(frameToUse), &dirtyRect, previousAnimationFrameIndex, mCurrentAnimationFrameIndex);
   } else {
-    frameToUse = nextFrame;
-    nextFrame->GetRect(dirtyRect);
+    nsCOMPtr<gfxIImageFrame> prevFrame;
+    if (NS_FAILED(inlinedGetFrameAt(previousFrameIndex,
+                                    getter_AddRefs(prevFrame))))
+      return NS_OK;
+
+    // Change frame and announce it
+    if (NS_FAILED(DoComposite(getter_AddRefs(frameToUse), &dirtyRect,
+                              prevFrame, nextFrame, nextFrameIndex))) {
+      // something went wrong, move on to next
+      NS_WARNING("imgContainerGIF: Composing Frame Failed\n");
+      mCurrentAnimationFrameIndex = nextFrameIndex;
+      return NS_OK;
+    }
   }
+  // Set mCurrentAnimationFrameIndex at the last possible moment
+  mCurrentAnimationFrameIndex = nextFrameIndex;
   // Refreshes the screen
   observer->FrameChanged(this, nsnull, frameToUse, &dirtyRect);
   return NS_OK;
 }
+
 //******************************************************************************
 // DoComposite gets called when the timer for animation get fired and we have to
 // update the composited frame of the animation.
-void imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
-                                  nsRect* aDirtyRect,
-                                  PRInt32 aPrevFrame, PRInt32 aNextFrame)
+NS_IMETHODIMP imgContainerGIF::DoComposite(gfxIImageFrame** aFrameToUse,
+                                           nsRect* aDirtyRect,
+                                           gfxIImageFrame* aPrevFrame,
+                                           gfxIImageFrame* aNextFrame,
+                                           PRInt32 aNextFrameIndex)
 {
-  NS_ASSERTION(aDirtyRect, "DoComposite aDirtyRect is null");
-  NS_ASSERTION(mCompositingFrame, "DoComposite mCompositingFrame is null");
+  NS_ASSERTION(aDirtyRect, "imgContainerGIF::DoComposite aDirtyRect is null");
+  NS_ASSERTION(aPrevFrame, "imgContainerGIF::DoComposite aPrevFrame is null");
+  NS_ASSERTION(aNextFrame, "imgContainerGIF::DoComposite aNextFrame is null");
+  NS_ASSERTION(aFrameToUse, "imgContainerGIF::DoComposite aFrameToUse is null");
 
-  *aFrameToUse = nsnull;
-
-  PRUint32 numFrames = inlinedGetNumFrames();
-  PRInt32 nextFrameIndex = aNextFrame;
-  PRInt32 prevFrameIndex = aPrevFrame;
-
-  if (PRUint32(nextFrameIndex) >= numFrames) nextFrameIndex = numFrames - 1;
-  if (PRUint32(prevFrameIndex) >= numFrames) prevFrameIndex = numFrames - 1;
-
-  nsCOMPtr<gfxIImageFrame> prevFrame;
-  inlinedGetFrameAt(prevFrameIndex, getter_AddRefs(prevFrame));
-
-  nsCOMPtr<gfxIImageFrame> nextFrame;
-  inlinedGetFrameAt(nextFrameIndex, getter_AddRefs(nextFrame));
-
-  PRInt32 x;
-  PRInt32 y;
-  PRInt32 width;
-  PRInt32 height;
-  nextFrame->GetX(&x);
-  nextFrame->GetY(&y);
-  nextFrame->GetWidth(&width);
-  nextFrame->GetHeight(&height);
-
-  PRInt32 nextFrameDisposalMethod;
-  nextFrame->GetFrameDisposalMethod(&nextFrameDisposalMethod);
   PRInt32 prevFrameDisposalMethod;
-  prevFrame->GetFrameDisposalMethod(&prevFrameDisposalMethod);
+  aPrevFrame->GetFrameDisposalMethod(&prevFrameDisposalMethod);
+
+  if (prevFrameDisposalMethod == DISPOSE_RESTORE_PREVIOUS &&
+      !mCompositingPrevFrame)
+    prevFrameDisposalMethod = DISPOSE_CLEAR;
+
+  // Optimization: Skip compositing if the previous frame wants to clear the
+  //               whole image
+  if (prevFrameDisposalMethod == DISPOSE_CLEAR_ALL) {
+    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+    *aFrameToUse = aNextFrame;
+    NS_ADDREF(*aFrameToUse);
+    return NS_OK;
+  }
 
   nsRect prevFrameRect;
-  prevFrame->GetRect(prevFrameRect);
+  aPrevFrame->GetRect(prevFrameRect);
+  PRBool isFullPrevFrame = (prevFrameRect.x == 0 && prevFrameRect.y == 0 &&
+                            prevFrameRect.width == mSize.width &&
+                            prevFrameRect.height == mSize.height);
 
-  // Copy previous frame into mCompositingFrame before we put the new frame on
-  // top. Assumes that the previous frame represents a full frame (it could be
-  // smaller in size than the container, as long as the frame before it erased
-  // itself)
-  // Note: 1st frame never gets into DoComposite(), so (aNextFrameIndex - 1) 
-  // will always be a valid frame number.
-  if (mLastCompositedFrameIndex != nextFrameIndex - 1 &&
-      mLastCompositedFrameIndex != nextFrameIndex &&
-      prevFrameDisposalMethod != DISPOSE_RESTORE_PREVIOUS) {
-    BlackenFrame(mCompositingFrame);
-    prevFrame->DrawTo(mCompositingFrame, prevFrameRect.x, prevFrameRect.y,
-                      prevFrameRect.width, prevFrameRect.height);
-
-    SetMaskVisibility(mCompositingFrame, PR_FALSE);
-    BuildCompositeMask(mCompositingFrame, prevFrame);
+  // Optimization: Skip compositing if the previous frame is the same size as
+  //               container and it's clearing itself
+  if (isFullPrevFrame && prevFrameDisposalMethod == DISPOSE_CLEAR) {
+    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+    *aFrameToUse = aNextFrame;
+    NS_ADDREF(*aFrameToUse);
+    return NS_OK;
   }
 
+  PRInt32 nextFrameDisposalMethod;
+  nsRect nextFrameRect;
+  aNextFrame->GetFrameDisposalMethod(&nextFrameDisposalMethod);
+  aNextFrame->GetRect(nextFrameRect);
+  PRBool isFullNextFrame = (nextFrameRect.x == 0 && nextFrameRect.y == 0 &&
+                            nextFrameRect.width == mSize.width &&
+                            nextFrameRect.height == mSize.height);
+
+  PRBool nextFrameHasAlpha;
+  PRUint32 aBPR;
+  nextFrameHasAlpha = NS_SUCCEEDED(aNextFrame->GetAlphaBytesPerRow(&aBPR));
+
+  // Optimization: Skip compositing if this frame is the same size as the
+  //               container and it's fully drawing over prev frame (no alpha)
+  if (isFullNextFrame &&
+      (nextFrameDisposalMethod != DISPOSE_RESTORE_PREVIOUS) &&
+      !nextFrameHasAlpha) {
+
+    aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+    *aFrameToUse = aNextFrame;
+    NS_ADDREF(*aFrameToUse);
+    return NS_OK;
+  }
+
+  // Calculate area that needs updating
   switch (prevFrameDisposalMethod) {
     default:
-    case 0: // DISPOSE_NOT_SPECIFIED
-    case 1: // DISPOSE_KEEP Leave previous frame in the framebuffer
-      *aFrameToUse = mCompositingFrame;
-      NS_ADDREF(*aFrameToUse);
-
-      (*aDirtyRect).x = x;
-      (*aDirtyRect).y = y;
-      (*aDirtyRect).width = width;
-      (*aDirtyRect).height = height;
-      break;
-    case 2: // DISPOSE_OVERWRITE_BGCOLOR Overwrite with background color
-      {
-        PRInt32 xDispose;
-        PRInt32 yDispose;
-        PRInt32 widthDispose;
-        PRInt32 heightDispose;
-        prevFrame->GetX(&xDispose);
-        prevFrame->GetY(&yDispose);
-        prevFrame->GetWidth(&widthDispose);
-        prevFrame->GetHeight(&heightDispose);
-
-        *aFrameToUse = mCompositingFrame;
-        NS_ADDREF(*aFrameToUse);
-
-        if (mLastCompositedFrameIndex != nextFrameIndex) {
-          // Blank out previous frame area (both color & Mask/Alpha)
-          BlackenFrame(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
-          SetMaskVisibility(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose, PR_FALSE);
-        }
-
-        // Calculate area that we need to redraw
-        // which is the combination of the previous frame and this one
-
-        // This is essentially nsRect::UnionRect()
-        nscoord xmost1 = x + width;
-        nscoord xmost2 = xDispose + widthDispose;
-        nscoord ymost1 = y + height;
-        nscoord ymost2 = yDispose + heightDispose;
-
-        (*aDirtyRect).x = PR_MIN(x, xDispose);
-        (*aDirtyRect).y = PR_MIN(y, yDispose);
-        (*aDirtyRect).width = PR_MAX(xmost1, xmost2) - (*aDirtyRect).x;
-        (*aDirtyRect).height = PR_MAX(ymost1, ymost2) - (*aDirtyRect).y;
-      }
+    case DISPOSE_NOT_SPECIFIED:
+    case DISPOSE_KEEP:
+      *aDirtyRect = nextFrameRect;
       break;
 
-    case 3:
-    case 4:
-    // Keep prev frame, but overwrite previous frame with this one? Let's just overwrite.
-    // Gif Specs say bit 4 (our value 4), but all gif generators I've seen use bit2 & bit3 (our value 3)
-      if (mLastCompositedFrameIndex != nextFrameIndex) {
-        PRInt32 xDispose;
-        PRInt32 yDispose;
-        PRInt32 widthDispose;
-        PRInt32 heightDispose;
-        prevFrame->GetX(&xDispose);
-        prevFrame->GetY(&yDispose);
-        prevFrame->GetWidth(&widthDispose);
-        prevFrame->GetHeight(&heightDispose);
+    case DISPOSE_CLEAR:
+      // Calc area that needs to be redrawn (the combination of previous and
+      // this frame)
+      // XXX - This could be done with multiple framechanged calls
+      //       Having prevFrame way at the top of the image, and nextFrame
+      //       way at the bottom, and both frames being small, we'd be
+      //       telling framechanged to refresh the whole image when only two
+      //       small areas are needed.
+      aDirtyRect->UnionRect(nextFrameRect, prevFrameRect);
+      break;
 
+    case DISPOSE_RESTORE_PREVIOUS:
+      aDirtyRect->SetRect(0, 0, mSize.width, mSize.height);
+      break;
+  }
+
+  // Optimization:
+  //   Skip compositing if the last composited frame is this frame
+  //   (Only one composited frame was made for this animation.  Example:
+  //    Only Frame 3 of a 10 frame GIF required us to build a composite frame
+  //    On the second loop of the GIF, we do not need to rebuild the frame
+  //    since it's still sitting in mCompositingFrame)
+  if (mLastCompositedFrameIndex == aNextFrameIndex) {
+    *aFrameToUse = mCompositingFrame;
+    NS_ADDREF(*aFrameToUse);
+    return NS_OK;
+  }
+
+  PRBool needToBlankComposite = PR_FALSE;
+
+  // Create the Compositing Frame
+  if (!mCompositingFrame) {
+    nsresult rv;
+    mCompositingFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2", &rv);
+    if (NS_FAILED(rv))
+      return rv;
+    rv = mCompositingFrame->Init(0, 0, mSize.width, mSize.height,
+                                 gfxIFormats::RGB_A1, 24);
+    if (NS_FAILED(rv)) {
+      NS_WARNING("Failed to init mCompositingFrame!\n");
+      mCompositingFrame = nsnull;
+      return rv;
+    }
+    needToBlankComposite = PR_TRUE;
+  }
+
+  // Copy previous frame into mCompositingFrame before we put the new frame on top
+  // Assumes that the previous frame represents a full frame (it could be
+  // smaller in size than the container, as long as the frame before it erased
+  // itself)
+  // Note: Frame 1 never gets into DoComposite(), so (aNextFrameIndex - 1) will
+  // always be a valid frame number.
+  if (mLastCompositedFrameIndex != aNextFrameIndex - 1 &&
+      prevFrameDisposalMethod != DISPOSE_RESTORE_PREVIOUS) {
+
+    // XXX If we had a method of drawing a section of a frame into another, we
+    //     could optimize further:
+    //     if aPrevFrameIndex == 1 && mLastCompositedFrameIndex <> -1,
+    //     only mFirstFrameRefreshArea needs to be drawn back to composite
+    if (isFullPrevFrame) {
+      CopyFrameImage(aPrevFrame, mCompositingFrame);
+    } else {
+      BlackenFrame(mCompositingFrame);
+      SetMaskVisibility(mCompositingFrame, PR_FALSE);
+      aPrevFrame->DrawTo(mCompositingFrame, prevFrameRect.x, prevFrameRect.y,
+                         prevFrameRect.width, prevFrameRect.height);
+
+      BuildCompositeMask(mCompositingFrame, aPrevFrame);
+      needToBlankComposite = PR_FALSE;
+    }
+  }
+
+  // Dispose of previous
+  switch (prevFrameDisposalMethod) {
+    case DISPOSE_CLEAR:
+      if (needToBlankComposite) {
+        // If we just created the composite, it could have anything in it's
+        // buffers. Clear them
+        BlackenFrame(mCompositingFrame);
+        SetMaskVisibility(mCompositingFrame, PR_FALSE);
+        needToBlankComposite = PR_FALSE;
+      } else {
         // Blank out previous frame area (both color & Mask/Alpha)
-        BlackenFrame(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
-        SetMaskVisibility(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose, PR_FALSE);
-
-        if (mCompositingPrevFrame) {
-          // It would be nice to just draw the area we need.
-          // but for now, draw whole frame
-          mCompositingPrevFrame->DrawTo(mCompositingFrame, 0, 0, mSize.width, mSize.height);
-          BuildCompositeMask(mCompositingFrame, mCompositingPrevFrame);
-
-          // destroy only if we don't need it for this one
-          if (nextFrameDisposalMethod != 3 && nextFrameDisposalMethod != 4)
-            mCompositingPrevFrame = nsnull;
-        }
+        BlackenFrame(mCompositingFrame, prevFrameRect);
+        SetMaskVisibility(mCompositingFrame, prevFrameRect, PR_FALSE);
       }
+      break;
 
-      (*aDirtyRect).x = 0;
-      (*aDirtyRect).y = 0;
-      (*aDirtyRect).width = mSize.width;
-      (*aDirtyRect).height = mSize.height;
+    case DISPOSE_RESTORE_PREVIOUS:
+      // It would be better to copy only the area changed back to
+      // mCompositingFrame.
+      if (mCompositingPrevFrame) {
+        CopyFrameImage(mCompositingPrevFrame, mCompositingFrame);
+
+        // destroy only if we don't need it for this frame's disposal
+        if (nextFrameDisposalMethod != DISPOSE_RESTORE_PREVIOUS)
+          mCompositingPrevFrame = nsnull;
+      } else {
+        BlackenFrame(mCompositingFrame);
+        SetMaskVisibility(mCompositingFrame, PR_FALSE);
+      }
       break;
   }
 
-
-  // Check if the frame we are composing wants the previous image restored afer it is done
-  // Don't store it (again) if last frame wanted it's image restored too
-  if ((nextFrameDisposalMethod == 3 || nextFrameDisposalMethod == 4) && prevFrameDisposalMethod != 3 && prevFrameDisposalMethod != 4) {
+  // Check if the frame we are composing wants the previous image restored afer
+  // it is done. Don't store it (again) if last frame wanted it's image restored
+  // too
+  if ((nextFrameDisposalMethod == DISPOSE_RESTORE_PREVIOUS) &&
+      (prevFrameDisposalMethod != DISPOSE_RESTORE_PREVIOUS)) {
     // We are storing the whole image.
-    // It would be better if we just stored the area that nextFrame is going to overwrite.
-    mCompositingPrevFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
-
-    gfx_format format;
-    mCompositingFrame->GetFormat(&format);
-
-    mCompositingPrevFrame->Init(0, 0, mSize.width, mSize.height, format, 24);
-
-    PRUint8* aDataSrc;
-    PRUint8* aDataDest;
-    PRUint32 aDataLengthSrc;
-    PRUint32 aDataLengthDest;
-
-    // Copy Image Over
-    mCompositingPrevFrame->SetTransparentColor(0);
-    if (NS_SUCCEEDED(mCompositingPrevFrame->LockImageData())) {
-      mCompositingFrame->GetImageData(&aDataSrc, &aDataLengthSrc);
-      mCompositingPrevFrame->GetImageData(&aDataDest, &aDataLengthDest);
-      if (aDataLengthDest == aDataLengthSrc)
-        memcpy(aDataDest, aDataSrc, aDataLengthSrc);
-
-      // Tell the image that it's data has been updated
-      nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mCompositingPrevFrame));
-      if (ireq) {
-        nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
-        nsRect r(0, 0, mSize.width, mSize.height);
-        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-      }
-      mCompositingPrevFrame->UnlockImageData();
+    // It would be better if we just stored the area that nextFrame is going to
+    // overwrite.
+    if (!mCompositingPrevFrame) {
+      nsresult rv;
+      mCompositingPrevFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2",
+                                                &rv);
+      if (NS_FAILED(rv))
+        return rv;
+      rv = mCompositingPrevFrame->Init(0, 0, mSize.width, mSize.height,
+                                       gfxIFormats::RGB_A1, 24);
+      if (NS_FAILED(rv))
+        return rv;
     }
+    CopyFrameImage(mCompositingFrame, mCompositingPrevFrame);
+  }
 
-    // Copy Alpha/Mask Over
-    if (NS_SUCCEEDED(mCompositingPrevFrame->LockAlphaData())) {
-      mCompositingFrame->GetAlphaData(&aDataSrc, &aDataLengthSrc);
-      mCompositingPrevFrame->GetAlphaData(&aDataDest, &aDataLengthDest);
-      if (aDataLengthDest == aDataLengthSrc)
-        memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+  // blit next frame into it's correct spot
+  aNextFrame->DrawTo(mCompositingFrame, nextFrameRect.x, nextFrameRect.y,
+                     nextFrameRect.width, nextFrameRect.height);
+  // put the mask in
+  BuildCompositeMask(mCompositingFrame, aNextFrame);
+  // Set timeout of CompositeFrame to timeout of frame we just composed
+  // Bug 177948
+  PRInt32 timeout;
+  aNextFrame->GetTimeout(&timeout);
+  mCompositingFrame->SetTimeout(timeout);
 
-      mCompositingPrevFrame->UnlockAlphaData();
+  if (isFullNextFrame && mAnimationMode == kNormalAnimMode && mLoopCount != 0) {
+    // We have a composited full frame
+    // Store the composited frame into the mFrames[..] so we don't have to
+    // continuously re-build it
+    // Then set the previous frame's disposal to CLEAR_ALL so we just draw the
+    // frame next time around
+    if (CopyFrameImage(mCompositingFrame, aNextFrame)) {
+      aPrevFrame->SetFrameDisposalMethod(DISPOSE_CLEAR_ALL);
+      mLastCompositedFrameIndex = -1;
+      *aFrameToUse = aNextFrame;
+      NS_ADDREF(*aFrameToUse);
+      return NS_OK;
     }
   }
 
-  if (mLastCompositedFrameIndex != nextFrameIndex) {
-    // blit next frame into it's correct spot
-    nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
-    // put the mask in
-    BuildCompositeMask(mCompositingFrame, nextFrame);
-    mLastCompositedFrameIndex = nextFrameIndex;
-  }
-}
+  mLastCompositedFrameIndex = aNextFrameIndex;
+  *aFrameToUse = mCompositingFrame;
+  NS_ADDREF(*aFrameToUse);
 
-//******************************************************************************
-NS_IMETHODIMP imgContainerGIF::NewFrameData(gfxIImageFrame *aFrame,
-                                            const nsRect * aRect)
-{
-  if (mLastCompositedFrameIndex == mCurrentAnimationFrameIndex &&
-      mCurrentAnimationFrameIndex > 0 &&
-      mCurrentAnimationFrameIndex == mCurrentDecodingFrameIndex) {
-    // Update the composite frame
-    PRInt32 x;
-    aFrame->GetX(&x);
-    aFrame->DrawTo(mCompositingFrame, x, aRect->y, aRect->width, aRect->height);
-    BuildCompositeMask(mCompositingFrame, aFrame);
-  }
   return NS_OK;
 }
 
@@ -761,7 +743,7 @@ void imgContainerGIF::BuildCompositeMask(gfxIImageFrame *aCompositingFrame,
   // Exit if overlay is beyond the area of the composite
   if (widthComposite <= overlayXOffset || heightComposite <= overlayYOffset)
     return;
-    
+
   const PRUint32 width  = PR_MIN(widthOverlay,
                                  widthComposite - overlayXOffset);
   const PRUint32 height = PR_MIN(heightOverlay,
@@ -1060,3 +1042,57 @@ void imgContainerGIF::BlackenFrame(gfxIImageFrame *aFrame,
   aFrame->UnlockImageData();
 }
 
+
+//******************************************************************************
+// Whether we succeed or fail will not cause a crash, and there's not much
+// we can do about a failure, so there we don't return a nsresult
+PRBool imgContainerGIF::CopyFrameImage(gfxIImageFrame *aSrcFrame,
+                                       gfxIImageFrame *aDstFrame)
+{
+  PRUint8* aDataSrc;
+  PRUint8* aDataDest;
+  PRUint32 aDataLengthSrc;
+  PRUint32 aDataLengthDest;
+
+  if (!aSrcFrame || !aDstFrame)
+    return PR_FALSE;
+
+  if (NS_FAILED(aDstFrame->LockImageData()))
+    return PR_FALSE;
+
+  // Copy Image Over
+  aSrcFrame->GetImageData(&aDataSrc, &aDataLengthSrc);
+  aDstFrame->GetImageData(&aDataDest, &aDataLengthDest);
+  if (!aDataDest || !aDataSrc || aDataLengthDest != aDataLengthSrc) {
+    aDstFrame->UnlockImageData();
+    return PR_FALSE;
+  }
+  memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+  aDstFrame->UnlockImageData();
+
+  // Copy Alpha/Mask Over
+  // If no mask, lockAlpha will tell us
+  if (NS_SUCCEEDED(aDstFrame->LockAlphaData())) {
+    aSrcFrame->GetAlphaData(&aDataSrc, &aDataLengthSrc);
+    aDstFrame->GetAlphaData(&aDataDest, &aDataLengthDest);
+    if (aDataDest && aDataSrc && aDataLengthDest == aDataLengthSrc)
+      memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+    else
+      memset(aDataDest, 0xFF, aDataLengthDest);
+
+    aDstFrame->UnlockAlphaData();
+  }
+
+  // Tell the image that it's data has been updated
+  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aDstFrame));
+  if (!ireq)
+    return PR_FALSE;
+  nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+  if (!img)
+    return PR_FALSE;
+  nsRect r;
+  aDstFrame->GetRect(r);
+  img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+
+  return PR_TRUE;
+}
