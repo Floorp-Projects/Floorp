@@ -1796,6 +1796,21 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
   return res;
 }
 
+
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/16/00 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextPh::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                                                    nscoord aWidth,nscoord aHeight)
+{
+
+  return NS_OK;
+}
+
+
+
 NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,

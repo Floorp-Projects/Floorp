@@ -582,6 +582,22 @@ public:
    */
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
 
+
+
+  /**
+   * Copy an image to the RenderingContext in a tiled manner
+   * @param aImage image to copy
+   * @param aX0 starting x
+   * @param aY0 starting y
+   * @param aX1 ending x
+   * @param aY1 ending y
+   * @param aWidth tile width
+   * @param aHeight tile height
+   */
+  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
+                        nscoord aWidth,nscoord aHeight) = 0;
+
+
   /**
    * Copy offscreen pixelmap to this RenderingContext.
    * @param aSrcSurf drawing surface to copy bits from
