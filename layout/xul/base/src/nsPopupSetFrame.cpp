@@ -609,7 +609,8 @@ nsPopupSetFrame::ActivatePopup(PRBool aActivateFlag)
       // reflow will cause the popup to show itself again. (bug 71219)
       nsCOMPtr<nsIDocument> doc;
       content->GetDocument(*getter_AddRefs(doc));
-      doc->FlushPendingNotifications();
+      if ( doc )
+        doc->FlushPendingNotifications();
          
       // make sure we hide the popup. We can't assume that we'll have a view
       // since we could be cleaning up after someone that didn't correctly 
