@@ -59,7 +59,7 @@ status = inSection(3);
 pattern = /(\S+)????(.*)/;
 string= 'Test this';
 actualmatch = string.match(pattern);
-expectedmatch = Array(string, cnEmptyString, string);
+expectedmatch = Array(string, undefined, string);
 addThis();
 
 status = inSection(4);

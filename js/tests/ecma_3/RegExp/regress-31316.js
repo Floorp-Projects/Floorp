@@ -45,7 +45,7 @@ status = inSection(1);
 pattern = /<([^\/<>][^<>]*[^\/])>|<([^\/<>])>/;
 string = '<p>Some<br />test</p>';
 actualmatch = string.match(pattern);
-expectedmatch = Array('<p>', cnEmptyString, 'p');
+expectedmatch = Array('<p>', undefined, 'p');
 addThis();
 
 

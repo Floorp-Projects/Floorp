@@ -69,7 +69,7 @@ pattern = /^(A)?(A.*)$/;
     status = inSection(3);
     string = 'A';
     actualmatch = string.match(pattern);
-    expectedmatch = Array('A', cnEmptyString, 'A'); // 'altruistic' case: see above
+    expectedmatch = Array('A', undefined, 'A'); // 'altruistic' case: see above
     addThis();
 
 
@@ -92,7 +92,7 @@ var strR = 'aaAAaaaf;lrlrzs';
     status = inSection(6);
     string =  strL + 'A' + strR;
     actualmatch = string.match(pattern);
-    expectedmatch = Array('A' + strR, cnEmptyString, 'A' + strR); // 'altruistic' case: see above
+    expectedmatch = Array('A' + strR, undefined, 'A' + strR); // 'altruistic' case: see above
     addThis();
 
 

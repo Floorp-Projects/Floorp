@@ -64,7 +64,7 @@
 
     // 'Hi Bob'.match(new RegExp('(Rob)|(Bob)|(Robert)|(Bobby)'))
 	testcases[count++] = new TestCase ( SECTION, "'Hi Bob'.match(new RegExp('(Rob)|(Bob)|(Robert)|(Bobby)'))",
-	                                    String(["Bob","","Bob"]), String('Hi Bob'.match(new RegExp('(Rob)|(Bob)|(Robert)|(Bobby)'))));
+	                                    String(["Bob",undefined,"Bob", undefined, undefined]), String('Hi Bob'.match(new RegExp('(Rob)|(Bob)|(Robert)|(Bobby)'))));
 
     // 'abcdef'.match(new RegExp('abc|bcd|cde|def'))
 	testcases[count++] = new TestCase ( SECTION, "'abcdef'.match(new RegExp('abc|bcd|cde|def'))",
@@ -72,7 +72,7 @@
 
     // 'Hi Bob'.match(/(Rob)|(Bob)|(Robert)|(Bobby)/)
 	testcases[count++] = new TestCase ( SECTION, "'Hi Bob'.match(/(Rob)|(Bob)|(Robert)|(Bobby)/)",
-	                                    String(["Bob","","Bob"]), String('Hi Bob'.match(/(Rob)|(Bob)|(Robert)|(Bobby)/)));
+	                                    String(["Bob",undefined,"Bob", undefined, undefined]), String('Hi Bob'.match(/(Rob)|(Bob)|(Robert)|(Bobby)/)));
 
     // 'abcdef'.match(/abc|bcd|cde|def/)
 	testcases[count++] = new TestCase ( SECTION, "'abcdef'.match(/abc|bcd|cde|def/)",
