@@ -111,6 +111,7 @@ nsSpaceManager::nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame)
   MOZ_COUNT_CTOR(nsSpaceManager);
   mX = mY = 0;
   mFrameInfoMap = nsnull;
+  mSavedStates = nsnull;
 }
 
 void
@@ -128,6 +129,14 @@ nsSpaceManager::~nsSpaceManager()
   MOZ_COUNT_DTOR(nsSpaceManager);
   mBandList.Clear();
   ClearFrameInfo();
+
+  NS_ASSERTION(!mSavedStates, "states remaining on state stack");
+
+  while (mSavedStates){
+    SpaceManagerState *state = mSavedStates;
+    mSavedStates = state->mNext;
+    delete state;
+  }
 }
 
 // static
@@ -981,6 +990,92 @@ nsSpaceManager::ClearRegions()
 {
   ClearFrameInfo();
   mBandList.Clear();
+}
+
+void
+nsSpaceManager::PushState()
+{
+  // This is a quick and dirty push implementation, which
+  // only saves the (x,y) and last frame in the mFrameInfoMap
+  // which is enough info to get us back to where we should be
+  // when pop is called.
+  //
+  // The alternative would be to make full copies of the contents
+  // of mBandList and mFrameInfoMap and restore them when pop is
+  // called, but I'm not sure it's worth the effort/bloat at this
+  // point, since this push/pop mechanism is only used to undo any
+  // floaters that were added during the unconstrained reflow
+  // in nsBlockReflowContext::DoReflowBlock(). (See bug 96736)
+  //
+  // It should also be noted that the state for mFloatDamage is
+  // intentionally not saved or restored in PushState() and PopState(),
+  // since that could lead to bugs where damage is missed/dropped when
+  // we move from position A to B (during the intermediate incremental
+  // reflow mentioned above) and then from B to C during the subsequent
+  // reflow. In the typical case A and C will be the same, but not always.
+  // Allowing mFloatDamage to accumulate the damage incurred during both
+  // reflows ensures that nothing gets missed.
+
+  SpaceManagerState *state = new SpaceManagerState;
+
+  NS_ASSERTION(state, "PushState() failed!");
+
+  if (!state) {
+    return;
+  }
+
+  state->mX = mX;
+  state->mY = mY;
+
+  if (mFrameInfoMap) {
+    state->mLastFrame = mFrameInfoMap->mFrame;
+  }
+
+  // Now that we've saved our state, add it to mSavedStates.
+
+  state->mNext = mSavedStates;
+  mSavedStates = state;
+}
+
+void
+nsSpaceManager::PopState()
+{
+  // This is a quick and dirty pop implementation, to
+  // match the current implementation of PushState(). The
+  // idea here is to remove any frames that have been added
+  // to the mFrameInfoMap since the last call to PushState().
+
+  NS_ASSERTION(mSavedStates, "Invalid call to PopState()!");
+
+  if (!mSavedStates) {
+    return;
+  }
+
+  // mFrameInfoMap is LIFO so keep removing what it points
+  // to until we hit mLastFrame.
+
+  while (mFrameInfoMap && mFrameInfoMap->mFrame != mSavedStates->mLastFrame) {
+    RemoveRegion(mFrameInfoMap->mFrame);
+  }
+
+  // If we trip this assertion it means that someone added
+  // PushState()/PopState() calls around code that actually
+  // removed mLastFrame from mFrameInfoMap, which means our
+  // state is now out of sync with what we thought it should be.
+
+  NS_ASSERTION(((mSavedStates->mLastFrame && mFrameInfoMap) ||
+               (!mSavedStates->mLastFrame && !mFrameInfoMap)),
+               "Unexpected outcome!");
+
+  mX = mSavedStates->mX;
+  mY = mSavedStates->mY;
+
+  // Now that we've restored our state, pop the topmost
+  // state and delete it.
+
+  SpaceManagerState *state = mSavedStates;
+  mSavedStates = mSavedStates->mNext;
+  delete state;
 }
 
 #ifdef DEBUG

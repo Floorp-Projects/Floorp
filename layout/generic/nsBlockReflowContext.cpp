@@ -544,6 +544,8 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   // See if this is the child's initial reflow and we are supposed to
   // compute our maximum width
   if (mComputeMaximumWidth && (eReflowReason_Initial == aReason)) {
+    mOuterReflowState.mSpaceManager->PushState();
+
     nscoord oldAvailableWidth = aReflowState.availableWidth;
     nscoord oldComputedWidth = aReflowState.mComputedWidth;
 
@@ -563,6 +565,8 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
     aReflowState.availableWidth = oldAvailableWidth;
     aReflowState.mComputedWidth = oldComputedWidth;
     aReason = eReflowReason_Resize;
+
+    mOuterReflowState.mSpaceManager->PopState();
   }
 
   rv = aFrame->Reflow(mPresContext, mMetrics, aReflowState,
