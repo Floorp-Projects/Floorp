@@ -63,6 +63,13 @@ dom/public/css/Makefile
 dom/public/events/Makefile
 dom/public/range/Makefile
 dom/public/html/Makefile
+dom/public/idl/Makefile
+dom/public/idl/base/Makefile
+dom/public/idl/coreDom/Makefile
+dom/public/idl/css/Makefile
+dom/public/idl/events/Makefile
+dom/public/idl/html/Makefile
+dom/public/idl/range/Makefile
 dom/src/Makefile
 dom/src/base/Makefile
 dom/src/build/Makefile
