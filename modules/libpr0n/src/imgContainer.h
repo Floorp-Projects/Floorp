@@ -66,9 +66,34 @@ public:
   virtual ~imgContainer();
 
 private:
+
+  inline PRUint32 inlinedGetNumFrames() {
+    PRUint32 nframes;
+    mFrames.Count(&nframes);
+    return nframes;
+  }
+
+  inline nsresult inlinedGetFrameAt(PRUint32 index, gfxIImageFrame **_retval) {
+    *_retval = NS_STATIC_CAST(gfxIImageFrame*, mFrames.ElementAt(index));
+    if (!*_retval) return NS_ERROR_FAILURE;
+    return NS_OK;
+  }
+
+  inline nsresult inlinedGetCurrentFrame(gfxIImageFrame **_retval) {
+    if (mCompositingFrame) {
+      *_retval = mCompositingFrame;
+      NS_ADDREF(*_retval);
+      return NS_OK;
+    }
+
+    return inlinedGetFrameAt(mCurrentAnimationFrameIndex, _retval);
+  }
+
   /* additional members */
   nsSupportsArray mFrames;
   nsSize mSize;
+  nsWeakPtr mObserver;
+
   PRUint32 mCurrentDecodingFrameIndex; // 0 to numFrames-1
   PRUint32 mCurrentAnimationFrameIndex; // 0 to numFrames-1
   PRBool   mCurrentFrameIsFinishedDecoding;
@@ -76,12 +101,12 @@ private:
   PRBool   mAnimating;
   PRUint16 mAnimationMode;
   PRInt32  mLoopCount;
-  
-  nsWeakPtr mObserver;
+
+private:
 
   // GIF specific bits
   nsCOMPtr<nsITimer> mTimer;
-  
+
   // GIF animations will use the mCompositingFrame to composite images
   // and just hand this back to the caller when it is time to draw the frame.
   nsCOMPtr<gfxIImageFrame> mCompositingFrame;
