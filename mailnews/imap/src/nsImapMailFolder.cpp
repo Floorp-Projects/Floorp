@@ -886,10 +886,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages)
                 break;
             }
             else
-            {
-				if (aName);
-					delete [] aName;
-            }
+				delete [] aName;
         }
         rv = aEnumerator->Next();
     }
