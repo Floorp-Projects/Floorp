@@ -65,7 +65,10 @@
 #include "rdfutil.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULDocument.h"
+#include "nsIXULDocumentInfo.h"
 #include "nsIContentViewerContainer.h"
+#include "nsIDocumentLoader.h"
+#include "nsIWebshell.h"
 
 // XXX These are needed as scaffolding until we get to a more
 // DOM-based solution.
@@ -84,6 +87,7 @@ static NS_DEFINE_IID(kIRDFObserverIID,            NS_IRDFOBSERVER_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,            NS_IRDFRESOURCE_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIXULDocumentInfoIID,        NS_IXULDOCUMENTINFO_IID);
 
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID,  NS_RDFCOMPOSITEDATASOURCE_CID);
@@ -91,7 +95,8 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFTreeBuilderCID,          NS_RDFTREEBUILDER_CID);
 static NS_DEFINE_CID(kRDFMenuBuilderCID,          NS_RDFMENUBUILDER_CID);
 static NS_DEFINE_CID(kRDFToolbarBuilderCID,       NS_RDFTOOLBARBUILDER_CID);
-static NS_DEFINE_CID(kCXULDocumentCID,            NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kXULDocumentCID,             NS_XULDOCUMENT_CID);
+static NS_DEFINE_CID(kXULDocumentInfoCID,         NS_XULDOCUMENTINFO_CID);
 
 ////////////////////////////////////////////////////////////////////////
 // standard vocabulary items
@@ -581,18 +586,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
         // Build a URL object from the attribute's value.
-        nsCOMPtr<nsIURL>  includeURL;
-        NS_NewURL(getter_AddRefs(includeURL), includeSrc);
-
-        nsCOMPtr<nsIDocument> subDocument;
-        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kCXULDocumentCID,
-                                                    nsnull,
-                                                    kIDocumentIID,
-                                                    (void **)getter_AddRefs(subDocument)))) {
-            NS_ERROR("Unable to initialize a XUL fragment's subdocument.");
-            return rv;
-        }
-
+        
         nsCOMPtr<nsIDocument> parentDoc;
         aElement->GetDocument(*getter_AddRefs(parentDoc));
 
@@ -600,11 +594,7 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             NS_ERROR("Unable to retrieve parent document for a subdocument.");
             return rv;
         }
-
-        subDocument->SetParentDocument(parentDoc);
-        parentDoc->AddSubDocument(subDocument);
-
-        nsCOMPtr<nsIStreamListener> streamListener;
+    
         nsCOMPtr<nsIContentViewerContainer> container;
         nsCOMPtr<nsIXULParentDocument> xulParentDocument;
         xulParentDocument = do_QueryInterface(parentDoc);
@@ -623,15 +613,6 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             NS_ERROR("Unable to retrieve the command from parent document.");
             return rv;
         }
-
-        char* commandChars = command.ToNewCString();
-
-        nsCOMPtr<nsIXULChildDocument> xulChildDocument;
-        xulChildDocument = do_QueryInterface(subDocument);
-        if (xulChildDocument == nsnull) {
-            NS_ERROR("Unable to retrieve a XUL child document.");
-            return rv;
-        }
         
         nsCOMPtr<nsIDOMXULElement> xulElement;
         xulElement = do_QueryInterface(aElement);
@@ -646,14 +627,49 @@ RDFXULBuilderImpl::CreateContents(nsIContent* aElement)
             NS_ERROR("The fragment root doesn't have an RDF resource behind it.");
             return rv;
         }
-        xulChildDocument->SetFragmentRoot(rdfResource);
-
-        if (NS_FAILED(rv = subDocument->StartDocumentLoad(includeURL, container, getter_AddRefs(streamListener), 
-                                                          commandChars))) {
-            NS_ERROR("Unable to kick off XUL subdocument's document load.");
-            delete [] commandChars;
+        
+        nsCOMPtr<nsIXULDocumentInfo> docInfo;
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULDocumentInfoCID,
+                                                              nsnull,
+                                                              kIXULDocumentInfoIID,
+                                                              (void**) getter_AddRefs(docInfo)))) {
+            NS_ERROR("unable to create document info object");
             return rv;
         }
+        
+        if (NS_FAILED(rv = docInfo->Init(parentDoc, rdfResource))) {
+            NS_ERROR("unable to initialize doc info object.");
+            return rv;
+        }
+        
+        nsCOMPtr<nsISupports> supportsInfo;
+        supportsInfo = do_QueryInterface(docInfo);
+
+        // Turn the content viewer into a webshell
+        nsCOMPtr<nsIWebShell> webshell;
+        webshell = do_QueryInterface(container);
+        if (webshell == nsnull) {
+            NS_ERROR("this isn't a webshell. we're in trouble.");
+            return rv;
+        }
+
+        nsCOMPtr<nsIDocumentLoader> docLoader;
+        if (NS_FAILED(rv = webshell->GetDocumentLoader(*getter_AddRefs(docLoader)))) {
+            NS_ERROR("unable to obtain the document loader to kick off the load.");
+            return rv;
+        }
+
+        char* commandChars = command.ToNewCString();
+
+        docLoader->LoadDocument(includeSrc,
+                                commandChars,
+                                container,
+                                nsnull,
+                                nsnull,
+                                nsnull,
+                                nsURLReload,
+                                0);//,
+                                //supportsInfo.get());
 
         delete [] commandChars;
     }

@@ -877,7 +877,7 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         return rv;
     }
       
-    // Create various data sources and builders, but only do this if we're
+    // Create the composite data source and builder, but only do this if we're
     // not a XUL fragment.
     if (mFragmentRoot == nsnull) {
 

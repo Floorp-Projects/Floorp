@@ -8,4 +8,5 @@ nsIRDFDocument.h
 nsIXULSortService.h
 nsIXULParentDocument.h
 nsIXULChildDocument.h
+nsIXULDocumentInfo.h
 

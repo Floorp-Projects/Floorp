@@ -42,8 +42,9 @@ CPPSRCS =				\
 	nsRDFXULBuilder.cpp		\
 	nsXULAttributes.cpp		\
 	nsXULDocument.cpp               \
-        nsXULSortService.cpp            \
+    nsXULSortService.cpp            \
 	nsXULTreeElement.cpp		\
+	nsXULDocumentInfo.cpp		\
 	$(NULL)
 
 EXPORTS = \
