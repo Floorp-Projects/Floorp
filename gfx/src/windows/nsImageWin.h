@@ -227,7 +227,8 @@ private:
 
   // for Set/GetColorMap
   HPALETTE            mHPalette;
-  HBITMAP             mHBitmap;           // the GDI bitmap
+  HBITMAP             mHBitmap;           // the GDI bitmaps
+  HBITMAP             mAlphaHBitmap;
   LPBITMAPINFOHEADER  mBHead;             // BITMAPINFOHEADER
 
 };
