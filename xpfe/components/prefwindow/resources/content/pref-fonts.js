@@ -130,7 +130,10 @@ function SetFields( aDataObject )
         userResolution.removeAttribute("hidden");
         screenResolution.selectedItem = userResolution;   
       }
-    
+    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.screen_resolution" ) ) {
+        screenResolution.disabled = true;
+    }
+
     var useDocFontsCheckbox = document.getElementById( "browserUseDocumentFonts" );
     if( aDataObject.useDocFonts != undefined )
       useDocFontsCheckbox.checked = aDataObject.useDocFonts ? true : false;
@@ -140,6 +143,9 @@ function SetFields( aDataObject )
         if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
           useDocFontsCheckbox.checked = prefvalue ? true : false ;
       }
+    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.use_document_fonts" ) ) {
+        useDocFontsCheckbox.disabled = true;
+    }
   }
 
 function Startup()
@@ -172,6 +178,12 @@ function Startup()
     resolution = document.getElementById( "defaultResolution" );
     resolution.setAttribute( "value", "96" );
     resolution.setAttribute( "label", dpi.replace(/\$val/, "96" ) );
+
+    // This prefstring is a contrived pref whose sole purpose is to lock some
+    // elements in this panel.  The value of the pref is not used and does not matter.
+    if ( parent.hPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
+      disableAllFontElements();
+    }
   }
 
 function listElement( aListID )
@@ -367,7 +379,6 @@ function selectLanguage()
           {
 
             if (strDefaultFontFace) {
-            
                 //initialze pref panel only if font faces are available for this language family
 
                 var selectVal;
@@ -391,6 +402,7 @@ function selectLanguage()
 
                 variableSize.removeAttribute("disabled");
                 fixedSize.removeAttribute("disabled");
+
 
                 try {
                     var variableSizePref = "font.size.variable." + languageList.value;
@@ -505,3 +517,18 @@ function onCancel()
       window.arguments[0].newdpi = -1;
       return true;
   }
+
+// disable font items, but not the browserUseDocumentFonts checkbox nor the resolution
+// menulist
+function disableAllFontElements()
+  {
+      var doc_ids = [ "selectLangs", "proportionalFont",
+                      "sizeVar", "serif", "sans-serif",
+                      "cursive", "fantasy", "monospace",
+                      "sizeMono" ];
+      for (i=0; i<doc_ids.length; i++) {
+          element = document.getElementById( doc_ids[i] );
+          element.disabled = true;
+      }
+  }
+
