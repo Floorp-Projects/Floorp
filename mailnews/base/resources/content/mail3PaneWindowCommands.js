@@ -760,6 +760,9 @@ function SetupCommandUpdateHandlers()
 function IsSendUnsentMsgsEnabled(folderResource)
 {
   var identity;
+
+  if (messenger.sendingUnsentMsgs) // if we're currently sending unsent msgs, disable this cmd.
+    return false;
   try {
     if (folderResource) {
       // if folderResource is non-null, it is
