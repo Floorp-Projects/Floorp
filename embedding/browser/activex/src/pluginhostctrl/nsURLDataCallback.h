@@ -95,18 +95,20 @@ struct _WriteData
 /////////////////////////////////////////////////////////////////////////////
 // nsURLDataCallback
 class ATL_NO_VTABLE nsURLDataCallback : 
-	public CComObjectRootEx<CComMultiThreadModel>,
+    public CComObjectRootEx<CComMultiThreadModel>,
     public CWindowImpl<nsURLDataCallback, CWindow, CNullTraits>,
-	public CComCoClass<nsURLDataCallback, &CLSID_NULL>,
-	public IBindStatusCallback
+    public CComCoClass<nsURLDataCallback, &CLSID_NULL>,
+    public IBindStatusCallback,
+    public IAuthenticate
 {
 public:
-	nsURLDataCallback();
+    nsURLDataCallback();
 
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(nsURLDataCallback)
-	COM_INTERFACE_ENTRY(IBindStatusCallback)
+    COM_INTERFACE_ENTRY(IBindStatusCallback)
+    COM_INTERFACE_ENTRY(IAuthenticate)
 END_COM_MAP()
 
     DECLARE_WND_CLASS(_T("MozStreamWindow"))
@@ -206,6 +208,13 @@ public:
     virtual HRESULT STDMETHODCALLTYPE OnObjectAvailable( 
         /* [in] */ REFIID riid,
         /* [iid_is][in] */ IUnknown __RPC_FAR *punk);
+
+// IAuthenticate
+public:
+    virtual HRESULT STDMETHODCALLTYPE Authenticate( 
+        /* [out] */ HWND __RPC_FAR *phwnd,
+        /* [out] */ LPWSTR __RPC_FAR *pszUsername,
+        /* [out] */ LPWSTR __RPC_FAR *pszPassword);
 };
 
 #endif //__NSURLDATACALLBACK_H_

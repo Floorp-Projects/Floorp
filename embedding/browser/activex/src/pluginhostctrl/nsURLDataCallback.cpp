@@ -493,7 +493,7 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
     }
     else
     {
-		pbindinfo->dwBindVerb = BINDVERB_GET;
+        pbindinfo->dwBindVerb = BINDVERB_GET;
     }
 
     return S_OK ;
@@ -599,5 +599,40 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnObjectAvailable(
     /* [in] */ REFIID riid,
     /* [iid_is][in] */ IUnknown __RPC_FAR *punk)
 {
+    return S_OK;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// IAuthenticate implementation
+
+HRESULT STDMETHODCALLTYPE nsURLDataCallback::Authenticate( 
+    /* [out] */ HWND __RPC_FAR *phwnd,
+    /* [out] */ LPWSTR __RPC_FAR *pszUsername,
+    /* [out] */ LPWSTR __RPC_FAR *pszPassword)
+{
+    ATLTRACE(_T("nsURLDataCallback::Authenticate()\n"));
+
+    // Caller wants to pose a password dialog so get a parent HWND for it.
+    *phwnd = HWND_DESKTOP;
+    if (m_pOwner)
+    {
+        *phwnd = m_pOwner->m_hWnd;
+        CComPtr<IWebBrowserApp> cpBrowser;
+        m_pOwner->GetWebBrowserApp(&cpBrowser);
+        if (cpBrowser)
+        {
+            long hwnd = NULL;
+            cpBrowser->get_HWND(&hwnd);
+            if (hwnd)
+            {
+                *phwnd = (HWND) hwnd;
+            }
+        }
+    }
+
+    // Caller will figure these out for itself
+    *pszUsername = NULL;
+    *pszPassword = NULL;
+    
     return S_OK;
 }
