@@ -60,7 +60,13 @@ public:
   static char *
   default_nickname(CERTCertificate *cert, nsIInterfaceRequestor* ctx);
 
+  static nsresult 
+  ImportValidCACerts(int numCACerts, SECItem *CACerts, nsIInterfaceRequestor *ctx);
+
 private:
+
+  static nsresult
+  ImportValidCACertsInList(CERTCertList *certList, nsIInterfaceRequestor *ctx);
 
   void getCertNames(CERTCertList *certList,
                     PRUint32      type, 
