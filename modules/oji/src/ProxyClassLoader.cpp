@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s):  Patrick Beard <beard@netscape.com>
+ * Contributor(s):
+ *     Patrick Beard <beard@netscape.com> (original author)
  */
 
 #include "ProxyClassLoader.h"
@@ -34,8 +35,11 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectPrincipal.h"
 #include "nsNetUtil.h"
-#include "nsIByteBuffer.h"
 
+/**
+ * Obtain the URL of the document of the currently running script. This will
+ * be used as the default location to download classes from.
+ */
 static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
 {
     nsIScriptContext* scriptContext = NS_REINTERPRET_CAST(nsIScriptContext*, JS_GetContextPrivate(cx));
@@ -55,6 +59,14 @@ static nsresult getScriptCodebase(JSContext* cx, nsIURI* *result)
     return NS_ERROR_FAILURE;
 }
 
+/**
+ * Obtain the netscape.oji.ProxyClassLoader instance associated with the
+ * document of the currently running script. For now, store a LiveConnect
+ * wrapper for this instance in window.navigator.javaclasses. There
+ * hopefully aren't any security concerns with exposing this to scripts,
+ * as the constructor is private, and the class loader itself can
+ * only load classes from the document's URL and below.
+ */
 static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
 {
     // get the current JSContext from the context stack service.
@@ -121,26 +133,23 @@ static nsresult getScriptClassLoader(JNIEnv* env, jobject* classloader)
     return NS_OK;
 }
 
-/**
- * Obtain the URL of the document base of the current JSContext. This will
- * be used as the default location to download classes from.
- */
 jclass ProxyFindClass(JNIEnv* env, const char* name)
 {
     do {
-        nsresult rv;
+        // TODO:  prevent recursive call to ProxyFindClass, if netscape.oji.ProxyClassLoader
+        // isn't found by getScriptClassLoader().
         jobject classloader;
-        rv = getScriptClassLoader(env, &classloader);
+        nsresult rv = getScriptClassLoader(env, &classloader);
         if (NS_FAILED(rv)) break;
 
         jclass netscape_oji_ProxyClassLoader = env->GetObjectClass(classloader);
         jmethodID loadClassID = env->GetMethodID(netscape_oji_ProxyClassLoader, "loadClass",
                                                  "(Ljava/lang/String;Z)Ljava/lang/Class;");
+        env->DeleteLocalRef(netscape_oji_ProxyClassLoader);
         if (!loadClassID) {
             env->ExceptionClear();
             break;
         }
-        env->DeleteLocalRef(netscape_oji_ProxyClassLoader);
         jstring jname = env->NewStringUTF(name);
         jvalue jargs[2]; jargs[0].l = jname, jargs[1].z = JNI_TRUE;
         jclass c = (jclass) env->CallObjectMethodA(classloader, loadClassID, jargs);
