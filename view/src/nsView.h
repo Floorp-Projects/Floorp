@@ -157,15 +157,16 @@ public:
    * Called to indicate that the specified event should be handled
    * by the view. This method should return nsEventStatus_eConsumeDoDefault
    * or nsEventStatus_eConsumeNoDefault if the event has been handled.
+   *
+   * This is a hook giving the view a chance to handle the event specially.
+   * By default we just bounce the event back to the view manager for display
+   * list processing.
+   *
    * @param event event to process
-   * @param aEventFlags see nsIView.h for flag definitions
    * @result processing status
    */
-  NS_IMETHOD  HandleEvent(nsGUIEvent *event, 
-                          PRUint32 aEventFlags,
-                          nsEventStatus* aStatus,
-                          PRBool aForceHandle,
-                          PRBool& aHandled);
+  virtual nsEventStatus HandleEvent(nsViewManager* aVM, nsGUIEvent *aEvent, PRBool aCaptured);
+
   /**
    * Called to indicate that the position of the view has been changed.
    * The specified coordinates are in the parent view's coordinate space.
@@ -314,6 +315,8 @@ public: // NOT in nsIView, so only available in view module
   nsView* GetParent() const { return mParent; }
   nsZPlaceholderView* GetZParent() const { return mZParent; }
   nsViewManager* GetViewManager() const { return mViewManager; }
+  nsViewVisibility GetVisibility() const { return mVis; }
+  void* GetClientData() const { return mClientData; }
 
   PRInt32 GetChildCount() const { return mNumKids; }
   nsView* GetChild(PRInt32 aIndex) const;
@@ -332,7 +335,6 @@ public: // NOT in nsIView, so only available in view module
 
 protected:
   virtual ~nsView();
-  //
   virtual nsresult LoadWidget(const nsCID &aClassIID);
 
 protected:

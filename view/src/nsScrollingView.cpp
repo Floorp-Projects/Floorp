@@ -62,7 +62,7 @@ public:
   ScrollBarView(nsScrollingView *aScrollingView);
   ~ScrollBarView();
 
-  NS_IMETHOD  HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags, nsEventStatus* aStatus, PRBool aForceHandle, PRBool& handled);
+  nsEventStatus HandleEvent(nsViewManager* aVM, nsGUIEvent *aEvent, PRBool aCaptured);
 
   // Do not set the visibility of the ScrollbarView using SetVisibility. Instead it 
   // must be marked as visible or hidden using SetEnabled. 
@@ -97,12 +97,8 @@ ScrollBarView::~ScrollBarView()
 {
 }
 
-NS_IMETHODIMP ScrollBarView::HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags,
-                                           nsEventStatus* aStatus, PRBool aForceHandle, PRBool& aHandled)
+nsEventStatus ScrollBarView::HandleEvent(nsViewManager* aVM, nsGUIEvent *aEvent, PRBool aCaptured)
 {
-  NS_ENSURE_ARG_POINTER(aStatus);
-  *aStatus = nsEventStatus_eIgnore;
-
   switch (aEvent->message)
   {
     case NS_SCROLLBAR_POS:
@@ -112,15 +108,14 @@ NS_IMETHODIMP ScrollBarView::HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlag
     case NS_SCROLLBAR_LINE_PREV:
       NS_ASSERTION((nsnull != mScrollingView), "HandleEvent() called after the ScrollingView has been destroyed.");
       if (nsnull != mScrollingView)
-        mScrollingView->HandleScrollEvent(aEvent, aEventFlags);
-      *aStatus = nsEventStatus_eConsumeNoDefault;
-      break;
+        mScrollingView->HandleScrollEvent(aEvent, 0);
+      return nsEventStatus_eConsumeNoDefault;
 
     default:
       break;
   }
 
-  return NS_OK;
+  return nsEventStatus_eIgnore;
 }
 
 void ScrollBarView::SetEnabled(PRBool aEnabled) 
