@@ -17,7 +17,7 @@
 * All Rights Reserved.
 *
 * Contributor(s): pschwartau@netscape.com
-* Date: 08 August 2001
+* Date: 30 August 2001
 *
 * SUMMARY: Regression test for bug 97646
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=97646
