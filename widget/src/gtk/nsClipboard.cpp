@@ -741,10 +741,10 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   g_print("  aInfo == %d -", aInfo);
 #endif
 
-  char* dataFlavor;
+  char* dataFlavor = nsnull;
 
   // switch aInfo (atom) to our enum
-  int type = TARGET_NONE;
+  int type = (int)aInfo;
   for (int i=0; i < TARGET_LAST; i++)
   {
     if (sSelTypes[i] == aInfo)
