@@ -83,11 +83,6 @@ interface nsIDocShell : nsISupports
 	[noscript]void setDocument(in nsIDOMDocument document, in nsIDOMElement rootNode);
 
 	/*
-	The current document that is loaded in the DocShell.
-	*/
-	readonly attribute nsIDOMDocument document;
-
-	/*
 	The current URI that is loaded.
 	*/
 	readonly attribute nsIURI currentURI;
