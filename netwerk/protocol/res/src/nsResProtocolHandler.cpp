@@ -140,9 +140,6 @@ nsResProtocolHandler::Init()
     rv = SetSpecialDir("", NS_XPCOM_CURRENT_PROCESS_DIR);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SetSpecialDir("currentdir", NS_OS_CURRENT_WORKING_DIR);
-    if (NS_FAILED(rv)) return rv;
-
     rv = SetSpecialDir("currentdrive", NS_OS_DRIVE_DIR);
     if (NS_FAILED(rv)) return rv;
 
