@@ -62,17 +62,8 @@ public:
     {
         ++mRefCnt;
     }
-    void Release()
-    {
-        if (--mRefCnt == 0) {
-            if (mRecycler) {
-                mRecycler->recycle(this);
-            }
-            else {
-                delete this;
-            }
-        }
-    }
+    
+    void Release(); // Implemented in txResultRecycler.cpp
 
     /**
      * Returns the type of ExprResult represented
