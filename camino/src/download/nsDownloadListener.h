@@ -46,7 +46,6 @@
 
 #include "nsString.h"
 #include "nsIDownload.h"
-#include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIURI.h"
 #include "nsILocalFile.h"
@@ -57,8 +56,7 @@
 // maybe this should replace nsHeaderSniffer too?
 
 class nsDownloadListener :  public CHDownloader,
-                            public nsIDownload,
-                            public nsIWebProgressListener
+                            public nsIDownload
 {
 public:
             nsDownloadListener();
