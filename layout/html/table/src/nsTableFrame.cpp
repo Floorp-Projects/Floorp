@@ -1384,7 +1384,9 @@ void nsTableFrame::ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_RIGHT].ElementAt(aRowIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    if (cellFrame) {
+      tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    }
     mBorderEdges->mMaxBorderWidth.right = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.right);
     // since the table is our right neightbor, we need to factor in the table's horizontal borders.
     // can't compute that length here because we don't know how thick top and bottom borders are
@@ -1603,7 +1605,9 @@ void nsTableFrame::ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
   {
     nsBorderEdge * tableBorder = (nsBorderEdge *)(mBorderEdges->mEdges[NS_SIDE_BOTTOM].ElementAt(aColIndex));
     *tableBorder = border;
-    tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    if (cellFrame) {
+      tableBorder->mInsideNeighbor = cellFrame->mBorderEdges;
+    }
     mBorderEdges->mMaxBorderWidth.bottom = PR_MAX(border.mWidth, mBorderEdges->mMaxBorderWidth.bottom);
     // since the table is our bottom neightbor, we need to factor in the table's vertical borders.
     PRInt32 lastColIndex = mCellMap->GetColCount()-1;
