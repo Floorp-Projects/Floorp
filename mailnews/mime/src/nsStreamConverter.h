@@ -73,7 +73,8 @@ private:
   nsCOMPtr<nsIMimeEmitter>      mEmitter;       // emitter being used...
   nsCOMPtr<nsIURI>              mURI;           // URI being processed
   nsMimeOutputType              mOutputType;    // the output type we should use for the operation
-  PRBool						mAlreadyKnowOutputType;
+  PRBool						            mAlreadyKnowOutputType;
+  PRUnichar *                   mDesiredOutputType; // the output content type passed into AsyncConvertData..
 
   void                          *mBridgeStream; // internal libmime data stream
   PRInt32                       mTotalRead;     // Counter variable

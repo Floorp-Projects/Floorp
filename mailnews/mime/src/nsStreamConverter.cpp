@@ -287,18 +287,12 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
     }
     else
     {
-      // Ok, we are adding a pref to turn on the new XUL header output. If this 
-      // pref is true, then we will use the new quoting, otherwise, we default to
-      // the old split display quoting.
-      //
-      nsresult    rv;
-      PRBool      mimeXULOutput = PR_TRUE;
+      // okay, we are just doing a regular message display url
+      // since we didn't have any special extensions after the url...
+      // we need to know if we need to use the text/xul or text/html emitter.
+      // check the desired output content type that was passed into AsyncConvertData.
 
-      NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-      if (NS_SUCCEEDED(rv) && prefs) 
-        rv = prefs->GetBoolPref(PREF_MAIL_MIME_XUL_OUTPUT, &mimeXULOutput);
-
-      if (mimeXULOutput)
+      if (mDesiredOutputType && nsCRT::strcasecmp(mDesiredOutputType, "text/xul") == 0)
       {
         PR_FREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/xul");
@@ -306,9 +300,9 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
       }
       else
       {
-        mWrapperOutput = PR_TRUE;
         PR_FREEIF(mOutputFormat);
         mOutputFormat = nsCRT::strdup("text/html");
+        *aNewType = nsMimeOutput::nsMimeMessageBodyDisplay;
       }
     }
   }
@@ -326,6 +320,7 @@ nsresult
 nsStreamConverter::InternalCleanup(void)
 {
   PR_FREEIF(mOutputFormat);
+  nsCRT::free(mDesiredOutputType);
   if (mBridgeStream)
   {
     bridge_destroy_stream(mBridgeStream);
@@ -374,6 +369,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	nsresult rv = NS_OK;
 
 	mOutListener = aOutListener;
+  mDesiredOutputType = nsnull;
 
 	// mscott --> we need to look at the url and figure out what the correct output type is...
 	nsMimeOutputType newType;
@@ -812,18 +808,7 @@ NS_IMETHODIMP nsStreamConverter::AsyncConvertData(const PRUnichar *aFromType, co
     aChannel = do_QueryInterface(aCtxt, &rv);
   }
 
-	if (!mAlreadyKnowOutputType && aToType)
-  {
-    // when displaying a message, if aToType is text/xul we want to use the xul emitter,
-    // if the aToType is text/html, we want to use the new html display emitter....this is the only
-    // way I can think of to allow us to toggle back and forth...based on how the user wants the content.
-    if (nsCRT::strcasecmp(aToType, "text/html") == 0)
-    {
-        mOutputType = nsMimeOutput::nsMimeMessageBodyDisplay;
-        mAlreadyKnowOutputType = PR_TRUE;
-    }
-
-  }
+  mDesiredOutputType = nsCRT::strdup(aToType);
 
 	NS_ASSERTION(aChannel && NS_SUCCEEDED(rv), "mailnews mime converter has to have the channel passed in...");
 	if (NS_FAILED(rv)) return rv;
