@@ -65,7 +65,7 @@ class nsIToolkit;
  * Base of all GTK+ native widgets.
  */
 
-class nsWidget : public nsBaseWidget, nsIKBStateControl
+class nsWidget : public nsBaseWidget, public nsIKBStateControl
 {
 public:
   nsWidget();
