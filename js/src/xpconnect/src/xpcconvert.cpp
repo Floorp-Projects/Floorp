@@ -90,7 +90,7 @@ static uint8 xpc_reflectable_flags[XPC_FLAG_COUNT] = {
     XPC_MK_FLAG(  1  ,  1  ,   1 ,  0 ), /* T_WCHAR             */
     XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_VOID              */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_IID               */
-    XPC_MK_FLAG(  0  ,  0  ,   0 ,  0 ), /* T_DOMSTRING         */
+    XPC_MK_FLAG(  0  ,  1  ,   0 ,  0 ), /* T_DOMSTRING         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_CHAR_STR          */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_WCHAR_STR         */
     XPC_MK_FLAG(  0  ,  1  ,   0 ,  1 ), /* T_INTERFACE         */
@@ -347,9 +347,35 @@ XPCConvert::NativeData2JS(JSContext* cx, jsval* d, const void* s,
             }
 
         case nsXPTType::T_DOMSTRING:
-            // XXX implement DOMSTRING
-            XPC_LOG_ERROR(("XPCConvert::NativeData2JS : DOMSTRING params not supported"));
-            return JS_FALSE;
+            {
+                const nsAReadableString* p = *((const nsAReadableString**)s);
+                if(!p)
+                    break;
+                
+                PRUint32 length = p->Length();
+                
+                jschar* chars = (jschar *) 
+                    JS_malloc(cx, (length + 1) * sizeof(jschar));
+                if(!chars)
+                    return JS_FALSE;        
+
+                if(length && !CopyUnicodeTo(*p, 0, (PRUnichar*)chars, length))
+                {
+                    JS_free(cx, chars);
+                    return JS_FALSE;        
+                }
+                
+                chars[length] = 0;
+                
+                JSString* str;
+                if(!(str = JS_NewUCString(cx, chars, length)))
+                {
+                    JS_free(cx, chars);
+                    return JS_FALSE;        
+                }
+                *d = STRING_TO_JSVAL(str);
+                break;
+            }
 
         case nsXPTType::T_CHAR_STR:
             {
@@ -586,9 +612,74 @@ XPCConvert::JSData2Native(JSContext* cx, void* d, jsval s,
         }
 
         case nsXPTType::T_DOMSTRING:
-            // XXX implement DOMSTRING
-            XPC_LOG_ERROR(("XPCConvert::JSData2Native : DOMSTRING params not supported"));
-            return JS_FALSE;
+        {
+            static const NS_NAMED_LITERAL_STRING(sEmptyString, "");
+            static const NS_NAMED_LITERAL_STRING(sNullString, "null");
+            static const NS_NAMED_LITERAL_STRING(sVoidString, "undefined");
+
+            const PRUnichar* chars;
+            PRUint32 length;
+            JSBool isNewString = JS_FALSE;
+
+            if(JSVAL_IS_VOID(s))
+            {
+               chars  = sVoidString.get();
+               length = sVoidString.Length();
+            }
+            else if(JSVAL_IS_NULL(s))
+            {
+                // XXX We don't yet have a way to represent a null nsAXXXString
+                // XXX Do we *want* to use "null"?
+               chars  = sNullString.get();
+               length = sNullString.Length();
+            }
+            else 
+            {
+                JSString* str = JS_ValueToString(cx, s);
+                if(!str)
+                    return JS_FALSE;
+
+                length = (PRUint32) JS_GetStringLength(str);
+                if(length)
+                {
+                    chars = (const PRUnichar*) JS_GetStringChars(str);
+                    if(!chars)
+                        return JS_FALSE;
+                    if(STRING_TO_JSVAL(str) != s)
+                        isNewString = JS_TRUE;
+                }
+                else
+                {
+                    chars = sEmptyString.get();
+                }
+            }
+
+            NS_ASSERTION(chars, "I must be really confused");
+            
+            if(useAllocator)
+            {
+                nsAReadableString* rs;
+                
+                // If the underlying JSString may have been created in the 
+                // JS_ValueToString call, then we need to make a copied string
+                // to avoid the possibility of the string data being gc'd before
+                // we are done.
+                if(isNewString)
+                    rs = new nsString(chars, length);
+                else
+                    rs = new nsLiteralString(chars, length);
+                
+                if(!rs)
+                    return JS_FALSE;
+                *((nsAReadableString**)d) = rs;
+            }
+            else
+            {
+                nsAWritableString* ws = *((nsAWritableString**)d);
+                ws->Assign(chars);
+            }
+            return JS_TRUE;
+        }
 
         case nsXPTType::T_CHAR_STR:
         {

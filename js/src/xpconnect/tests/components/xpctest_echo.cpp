@@ -102,6 +102,22 @@ NS_IMETHODIMP xpctestEcho::In2OutOneInt(int input, int* output)
     return NS_OK;
 }
 
+/* DOMString In2OutOneDOMString (in DOMString input); */
+NS_IMETHODIMP xpctestEcho::In2OutOneDOMString(const nsAReadableString & input, 
+                                              nsAWritableString & _retval)
+{
+    _retval.Assign(input);
+    return NS_OK;
+}
+
+/* DOMString EchoIn2OutOneDOMString (in DOMString input); */
+NS_IMETHODIMP xpctestEcho::EchoIn2OutOneDOMString(const nsAReadableString & input, nsAWritableString & _retval)
+{
+    if(mReceiver)
+        return mReceiver->EchoIn2OutOneDOMString(input, _retval);
+    return NS_OK;
+}
+
 NS_IMETHODIMP xpctestEcho::In2OutAddTwoInts(int input1,
                                        int input2,
                                        int* output1,

@@ -70,6 +70,12 @@ receiver.SendManyTypes = function()
             receiver_results[i] = arguments[i];
     };
 
+receiver.EchoIn2OutOneDOMString = function(input)
+    {
+        // print("EchoIn2OutOneDOMString called with: "+input);
+        return input;        
+    };
+
 echo.SetReceiver(receiver);
 
 ////////////////////
@@ -216,6 +222,31 @@ for(i = 0; i < 16; i++) {
 
 if(all_ok)
     print("SendInOutManyTypes - passed");
+
+////////////////////
+
+var test_string3 = "And this is yet again some other string 3";
+var test_string4 = "And this is yet again some other string 4";
+
+print("In2OutOneDOMString - "+(
+       echo.In2OutOneDOMString(test_string3) == test_string3
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneDOMString - "+(
+       echo.EchoIn2OutOneDOMString(test_string4) == test_string4
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneDOMString of empty string - "+(
+       echo.EchoIn2OutOneDOMString("") == ""
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneDOMString of null - "+(
+       echo.EchoIn2OutOneDOMString(null) == "null"
+       ? "passed" : "failed"));
+
+print("EchoIn2OutOneDOMString of undefined - "+(
+       echo.EchoIn2OutOneDOMString(this.propertyThatDoesNotExist) == "undefined"
+       ? "passed" : "failed"));
 
 ////////////////////
 // check exceptions on xpcom error code
@@ -373,7 +404,7 @@ foo = bar = iface = clazz = null;
 print(".......................................");
 print("simple speed tests...");
 
-var iterations = 1000;
+var iterations = 5000;
 
 var receiver2 = new Object();
 receiver2.SetReceiver = function() {};
@@ -462,6 +493,8 @@ send_params = null;
 start_time = null;
 test_string = null;
 test_string2 = null;
+test_string3 = null;
+test_string4 = null;
 nsNativeEcho = null;
 gc();
 gc();

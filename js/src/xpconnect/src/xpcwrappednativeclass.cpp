@@ -271,15 +271,6 @@ nsXPCWrappedNativeClass::BuildMemberDescriptors(XPCContext* xpcc)
     return JS_TRUE;
 }
 
-/*
-void
-nsXPCWrappedNativeClass::XPCContextBeingDestroyed()
-{
-    DestroyMemberDescriptors();
-    mXPCContext = nsnull;
-}
-*/
-
 void
 nsXPCWrappedNativeClass::DestroyMemberDescriptors()
 {
@@ -666,7 +657,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     for(i = 0; i < paramCount; i++)
     {
         nsXPTCVariant* dp = &dispatchParams[i];
-        dp->flags = 0;
+        dp->ClearFlags();
         dp->val.p = nsnull;
     }
 
@@ -693,7 +684,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(type_tag == nsXPTType::T_INTERFACE)
         {
-            dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
+            dp->SetValIsInterface();
         }
 
         // set 'src' to be the object from which we get the value and
@@ -701,7 +692,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
         if(param.IsOut())
         {
-            dp->flags |= nsXPTCVariant::PTR_IS_DATA;
+            dp->SetPtrIsData();
             dp->ptr = &dp->val;
 
             if(!param.IsRetval() &&
@@ -720,7 +711,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                !param.IsShared())
             {
                 useAllocator = JS_TRUE;
-                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                dp->SetValIsAllocated();
             }
 
             if(!param.IsIn())
@@ -728,14 +719,43 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
         }
         else
         {
-            src = argv[i];
-
-            if(type.IsPointer() &&
-               type_tag == nsXPTType::T_IID)
+            if(type.IsPointer())
             {
-                useAllocator = JS_TRUE;
-                dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                switch(type_tag)
+                {
+                case nsXPTType::T_IID:
+                    dp->SetValIsAllocated();
+                    useAllocator = JS_TRUE;
+                    break;
+
+                case nsXPTType::T_DOMSTRING:
+                    dp->SetValIsDOMString();
+                    if(param.IsDipper())
+                    {
+                        // Is an 'out' DOMString. Make a new nsAWritableString
+                        // now and then continue in order to skip the call to
+                        // JSData2Native
+                        if(!(dp->val.p = new nsString()))
+                        {
+                            JS_ReportOutOfMemory(cx);
+                            goto done;
+                        }
+                        continue;
+                    }
+                    // else...
+                    
+                    // Is an 'in' DOMString. Set 'useAllocator' to indicate
+                    // that JSData2Native should allocate a new 
+                    // nsAReadableString.           
+                    useAllocator = JS_TRUE;
+                    break;
+                }
             }
+
+            // Do this *after* the above because in the case where we have a
+            // "T_DOMSTRING && IsDipper()" then argv might be null since this
+            // is really an 'out' param masquerading as an 'in' param.
+            src = argv[i];
         }
 
         if(type_tag == nsXPTType::T_INTERFACE &&
@@ -788,7 +808,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(isArray)
             {
-                dp->flags |= nsXPTCVariant::VAL_IS_ARRAY;
+                dp->SetValIsArray();
 
                 if(NS_FAILED(mInfo->GetTypeForParam(vtblIndex, &param, 1,
                                                     &datum_type)))
@@ -802,7 +822,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(datum_type.IsInterfacePointer())
             {
-                dp->flags |= nsXPTCVariant::VAL_IS_IFACE;
+                dp->SetValIsInterface();
             }
 
             // set 'src' to be the object from which we get the value and
@@ -810,7 +830,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
 
             if(param.IsOut())
             {
-                dp->flags |= nsXPTCVariant::PTR_IS_DATA;
+                dp->SetPtrIsData();
                 dp->ptr = &dp->val;
 
                 if(!param.IsRetval() &&
@@ -828,7 +848,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                    (isArray || !param.IsShared()))
                 {
                     useAllocator = JS_TRUE;
-                    dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                    dp->SetValIsAllocated();
                 }
 
                 if(!param.IsIn())
@@ -842,7 +862,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
                    datum_type.TagPart() == nsXPTType::T_IID)
                 {
                     useAllocator = JS_TRUE;
-                    dp->flags |= nsXPTCVariant::VAL_IS_OWNED;
+                    dp->SetValIsAllocated();
                 }
             }
 
@@ -940,7 +960,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     for(i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
-        if(!param.IsOut())
+        if(!param.IsOut() && !param.IsDipper())
             continue;
 
         const nsXPTType& type = param.GetType();
@@ -1054,7 +1074,7 @@ done:
             if(dp->IsValArray())
             {
                 // going to have to cleanup the array and perhaps its contents
-                if(dp->IsValOwned() || dp->IsValInterface())
+                if(dp->IsValAllocated() || dp->IsValInterface())
                 {
                     // we need to figure out how many elements are present.
                     JSUint32 array_count;
@@ -1067,7 +1087,7 @@ done:
                         NS_ASSERTION(0,"failed to get array length, we'll leak here");
                         continue;
                     }
-                    if(dp->IsValOwned())
+                    if(dp->IsValAllocated())
                     {
                         void** a = (void**)p;
                         for(JSUint32 k = 0; k < array_count; k++)
@@ -1089,10 +1109,12 @@ done:
                 // always free the array itself
                 nsMemory::Free(p);
             }
-            else if(dp->IsValOwned())
+            else if(dp->IsValAllocated())
                 nsMemory::Free(p);
             else if(dp->IsValInterface())
                 ((nsISupports*)p)->Release();
+            else if(dp->IsValDOMString())
+                delete (nsAReadableString*)p;
         }
     }
 

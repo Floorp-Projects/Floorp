@@ -47,6 +47,7 @@
 #include "nsIGenericFactory.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
+#include "nsAWritableString.h"
 #include <stdio.h>
 
 #include "xpctest.h"

@@ -52,6 +52,7 @@
 #include "nsMemory.h"
 #include "nsIXPCSecurityManager.h"
 #include "nsICategoryManager.h"
+#include "nsAWritableString.h"
 
 #include "jsapi.h"
 #include "jsgc.h"   // for js_ForceGC

@@ -99,15 +99,24 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
     {
         // these are bitflags!
         PTR_IS_DATA  = 0x1, // ptr points to 'real' data in val
-        VAL_IS_OWNED = 0x2, // val.p holds alloc'd ptr that must be freed
+        VAL_IS_ALLOCD= 0x2, // val.p holds alloc'd ptr that must be freed
         VAL_IS_IFACE = 0x4, // val.p holds interface ptr that must be released
-        VAL_IS_ARRAY = 0x8  // val.p holds a pointer to an array needing cleanup
+        VAL_IS_ARRAY = 0x8, // val.p holds a pointer to an array needing cleanup
+        VAL_IS_DOMSTR= 0x10 // val.p holds a pointer to domstring needing cleanup
     };
 
+    void ClearFlags()        {flags = 0;}
+    void SetPtrIsData()      {flags |= PTR_IS_DATA;}
+    void SetValIsAllocated() {flags |= VAL_IS_ALLOCD;}
+    void SetValIsInterface() {flags |= VAL_IS_IFACE;}
+    void SetValIsArray()     {flags |= VAL_IS_ARRAY;}
+    void SetValIsDOMString() {flags |= VAL_IS_DOMSTR;}
+
     PRBool IsPtrData()      const {return (PRBool) (flags & PTR_IS_DATA);}
-    PRBool IsValOwned()     const {return (PRBool) (flags & VAL_IS_OWNED);}
+    PRBool IsValAllocated() const {return (PRBool) (flags & VAL_IS_ALLOCD);}
     PRBool IsValInterface() const {return (PRBool) (flags & VAL_IS_IFACE);}
     PRBool IsValArray()     const {return (PRBool) (flags & VAL_IS_ARRAY);}
+    PRBool IsValDOMString() const {return (PRBool) (flags & VAL_IS_DOMSTR);}
 
     void Init(const nsXPTCMiniVariant& mv, const nsXPTType& t, PRUint8 f)
     {
