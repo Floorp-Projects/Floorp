@@ -1832,6 +1832,21 @@ dnl Where the NSPR sutff gets installed: $DIST/{bin,lib,include}
 dnl 
 MOZ_NSPRENV_DIST=`pwd`/dist
 
+dnl 
+dnl MAKE
+dnl
+dnl NSPR is not safe for gnu make -jX (where X > 1) builds.  Force make
+dnl in NSPR to be 'make -j1' - or just 'make'
+dnl 
+dnl Only set this if 'make' is found.
+
+_make_try=`make -v 2> /dev/null`
+
+if test "$_make_try"
+then
+	MOZ_NSPRENV_OVERRIDE_MAKE=make
+fi
+
 AC_SUBST(MOZ_NSPRENV_USE_PTHREADS)
 AC_SUBST(MOZ_NSPRENV_BUILD_OPT)
 AC_SUBST(MOZ_NSPRENV_NS_USE_GCC)
@@ -1839,6 +1854,7 @@ AC_SUBST(MOZ_NSPRENV_NO_MDUPDATE)
 AC_SUBST(MOZ_NSPRENV_NS_USE_NATIVE)
 AC_SUBST(MOZ_NSPRENV_MOZILLA_CLIENT)
 AC_SUBST(MOZ_NSPRENV_DIST)
+AC_SUBST(MOZ_NSPRENV_OVERRIDE_MAKE)
 fi
 dnl ========================================================
 
