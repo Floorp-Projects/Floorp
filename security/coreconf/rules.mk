@@ -383,14 +383,22 @@ WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+ifeq ($(OS_TARGET),OS2)
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+else
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd | sed -e 's|/cygdrive/\(.\)/|\1:/|g;')/$<)
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
 
 $(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 ifdef USE_NT_C_SYNTAX
-	$(CC) -Fo$@ -c $(CFLAGS) $<
+ifeq ($(OS_TARGET),OS2)
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+else
+	$(CC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd | sed -e 's|/cygdrive/\(.\)/|\1:/|g;')/$<)
+endif
 else
 	$(CC) -o $@ -c $(CFLAGS) $<
 endif
@@ -418,7 +426,11 @@ $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+ifeq ($(OS_TARGET),OS2)
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+else
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd | sed -e 's|/cygdrive/\(.\)/|\1:/|g;')/$<)
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
@@ -438,7 +450,11 @@ ifdef STRICT_CPLUSPLUS_SUFFIX
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $<
+ifeq ($(OS_TARGET),OS2)
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd)/$<)
+else
+	$(CCC) -Fo$@ -c $(CFLAGS) $(if $(findstring :,$<),$<,$(shell pwd | sed -e 's|/cygdrive/\(.\)/|\1:/|g;')/$<)
+endif
 else
 	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
