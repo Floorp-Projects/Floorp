@@ -72,7 +72,7 @@ sub show_bug {
       exit;
     }
     
-    my %user;
+    my %user = %{$vars->{'user'}};
     my %bug;
 
     # Populate the bug hash with the info we get directly from the DB.
@@ -309,7 +309,6 @@ sub show_bug {
 
     # Add the bug and user hashes to the variables
     $vars->{'bug'} = \%bug;
-    $vars->{'user'} = \%user;
 
     # Generate and return the UI (HTML page) from the appropriate template.
     $template->process("bug/edit.html.tmpl", $vars)
