@@ -33,6 +33,9 @@ interface nsIDOMXULElement : nsIDOMElement {};
 [scriptable, uuid(a6cf90ec-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMXULTreeElement : nsIDOMXULElement {};
 
+[scriptable, uuid(f3c50361-14fe-11d3-bf87-00105a1b0627)]
+interface nsIDOMXULFocusTracker : nsISupports {};
+
 %{C++
 #endif
 %}

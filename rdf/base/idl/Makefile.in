@@ -36,6 +36,8 @@ XPIDLSRCS = \
 	nsIRDFService.idl		\
 	nsIRDFXMLDataSource.idl		\
 	nsIRDFXMLSource.idl		\
+	nsIController			\
+	nsIGenericCommandSet	\
 	xulstubs.idl			\
 	$(NULL)
 
