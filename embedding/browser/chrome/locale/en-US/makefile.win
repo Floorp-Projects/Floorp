@@ -25,7 +25,7 @@ CHROME_DIR=packages\embedding
 CHROME_L10N_DIR=browser\locale
 
 CHROME_L10N = \
-	.\browser.dtd \
+	.\embedding.dtd \
 	$(NULL)
 
 #EXPORT_PREF_CONTENT = \
