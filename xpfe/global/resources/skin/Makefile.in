@@ -78,6 +78,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/taskbar-navigator.gif \
 		$(srcdir)/taskbar-tab-minimized.gif \
 		$(srcdir)/taskbar-tab.gif \
+		$(srcdir)/taskbar-tab-hover.gif \
 		$(srcdir)/taskbar-popup-arrow.gif \
 		$(srcdir)/button28-bg-active.gif \
 		$(srcdir)/button28-bg-disabled.gif \
