@@ -36,6 +36,7 @@ EXPORT_RESOURCE_SAMPLES = \
         profile.css \
         profileManager.css \
         profileicon-large.gif \
+        mac-users.gif \
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

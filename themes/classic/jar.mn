@@ -38,6 +38,7 @@ skins/classic.jar:
     communicator/skin/directory/file-icon-sel.gif                (communicator/directory/file-icon-sel.gif)
     communicator/skin/directory/file-icon.gif                    (communicator/directory/file-icon.gif)
     communicator/skin/profile/migrate.gif                        (communicator/profile/migrate.gif)
+    communicator/skin/profile/mac-users.gif                      (communicator/profile/mac-users.gif)
     communicator/skin/profile/newProfile1_2.css                  (communicator/profile/newProfile1_2.css)
     communicator/skin/profile/profile.css                        (communicator/profile/profile.css)
     communicator/skin/profile/profileManager.css                 (communicator/profile/profileManager.css)
