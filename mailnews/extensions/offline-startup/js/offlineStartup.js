@@ -57,16 +57,14 @@ var nsOfflineStartup =
 
       var prefs = Components.classes["@mozilla.org/preferences-service;1"].
         getService(Components.interfaces.nsIPrefBranch);
+      var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
   
       gOfflineStartupMode = prefs.getIntPref(kOfflineStartupPref);
 
     if (gOfflineStartupMode == kRememberLastState)
     {    
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"].
-        getService(Components.interfaces.nsIPrefBranch);
       var offline = !prefs.getBoolPref("network.online");
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-        ioService.offline = offline;
+      ioService.offline = offline;
       var observerService = Components.
         classes["@mozilla.org/observer-service;1"].
         getService(Components.interfaces.nsIObserverService);
@@ -96,11 +94,7 @@ var nsOfflineStartup =
         button0Text, button1Text, null, null, checkVal);
       debug ("result = " + result + "\n");
       if (result == 1)
-      {
-        var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
         ioService.offline = true;
-      }
-
     }
   },
 
