@@ -672,7 +672,7 @@ nsIRenderingContext* nsWindow::GetRenderingContext()
 
   if (GetNativeData(NS_NATIVE_WIDGET)) 
   	{
-    nsresult  res;
+    nsresult  res = NS_OK;
     
     static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
@@ -1101,29 +1101,37 @@ Point		hitpt;
 nsWindow* 
 nsWindow::FindWidgetHit(Point aThePoint)
 {
-nsWindow	*thewindow = this;
-nsWindow	*deeperwindow;
+nsWindow	*child = this;
+nsWindow	*deeperWindow;
 
-	// traverse through all the nsWindows to find out who got hit, lowest level of course
-	if (mChildren) 
-		{
-    mChildren->ResetToLast();
-    while(thewindow)
-    	{
-	    if (thewindow->ptInWindow(aThePoint.h,aThePoint.v) ) 
+	if (this->ptInWindow(aThePoint.h,aThePoint.v))
+	{
+		// traverse through all the nsWindows to find out who got hit, lowest level of course
+		if (mChildren) 
+			{
+	    mChildren->ResetToLast();
+	    child = (nsWindow*)mChildren->Previous();
+	    while(child)
 	    	{
-	    	// go down this windows list
-	    	deeperwindow = thewindow->FindWidgetHit(aThePoint);
-	    	if (deeperwindow)
-	    		return(deeperwindow);
-	    	else
-	    		return(thewindow);
-	    	}
-	    thewindow = (nsWindow*)mChildren->Previous();	
-	    }
-		}
-
-	return(thewindow);
+	    	nsRect rect;
+	    	GetBounds(rect);
+	    	aThePoint.h += rect.x;
+	    	aThePoint.v += rect.y;
+		    if (child->ptInWindow(aThePoint.h,aThePoint.v) ) 
+		    	{
+		    	// go down this windows list
+		    	deeperWindow = child->FindWidgetHit(aThePoint);
+		    	if (deeperWindow)
+		    		return(deeperWindow);
+		    	else
+		    		return(child);
+		    	}
+		    child = (nsWindow*)mChildren->Previous();	
+		    }
+			}
+			return this;
+	}
+	return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -1339,6 +1347,7 @@ nsWindow::Enumerator::~Enumerator()
 	if (mChildrens) 
 		{
 		delete[] mChildrens;
+		mChildrens = nsnull;
 		}
 }
 
@@ -1349,10 +1358,13 @@ nsWindow::Enumerator::~Enumerator()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::Enumerator::Next()
 {
-	if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
-		return mChildrens[mCurrentPosition++];
-
-  return NULL;
+	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
+	if (mChildrens != nsnull)
+	{
+		if (mCurrentPosition < mArraySize && mChildrens[mCurrentPosition]) 
+			return mChildrens[mCurrentPosition++];
+	}
+  return nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -1362,9 +1374,12 @@ nsIWidget* nsWindow::Enumerator::Next()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::Enumerator::Previous()
 {
-	if ((mCurrentPosition >=0) && (mCurrentPosition < mArraySize) && (mChildrens[mCurrentPosition])) 
-		return mChildrens[mCurrentPosition--];
-
+	NS_ASSERTION(mChildrens != nsnull,"it is not valid to call this method on an empty list");
+	if (mChildrens != nsnull)
+	{
+		if ((mCurrentPosition >=0) && (mCurrentPosition < mArraySize) && (mChildrens[mCurrentPosition])) 
+			return mChildrens[mCurrentPosition--];
+	}
   return NULL;
 }
 
@@ -1399,7 +1414,7 @@ PRInt32	pos;
 
   if (aWinWidget) 
   	{
-    for (pos = 0; pos < mArraySize && mChildrens[pos]; pos++);
+    for (pos = 0; pos < mArraySize && mChildrens[pos]; pos++){};
     if (pos == mArraySize) 
         GrowArray();
     mChildrens[pos] = aWinWidget;
@@ -1415,7 +1430,7 @@ PRInt32	pos;
 void nsWindow::Enumerator::Remove(nsIWidget* aWinWidget)
 {
     int pos;
-    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++);
+    for(pos = 0; mChildrens[pos] && (mChildrens[pos] != aWinWidget); pos++){};
     if (mChildrens[pos] == aWinWidget) 
     	{
       memcpy(mChildrens + pos, mChildrens + pos + 1, mArraySize - pos - 1);
