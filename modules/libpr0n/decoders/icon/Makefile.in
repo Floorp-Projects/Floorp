@@ -82,10 +82,13 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsIconURI.cpp \
-		nsIconDecoder.cpp \
 		nsIconModule.cpp \
 		nsIconProtocolHandler.cpp \
 		$(NULL)
+		
+ifeq (,$(filter-out Darwin OS2,$(OS_ARCH)))
+CPPSRCS	+= nsIconDecoder.cpp
+endif
 
 XPIDLSRCS	= nsIIconURI.idl
 
