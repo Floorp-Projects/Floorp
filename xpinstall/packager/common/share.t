@@ -53,3 +53,40 @@ function deleteThisFolder(dirKey, folder)
     return(false);
 }
 
+// OS type detection
+// which platform?
+function getPlatform()
+{
+  var platformStr;
+  var platformNode;
+
+  if('platform' in Install)
+  {
+    platformStr = new String(Install.platform);
+
+    if (!platformStr.search(/^Macintosh/))
+      platformNode = 'mac';
+    else if (!platformStr.search(/^Win/))
+      platformNode = 'win';
+    else
+      platformNode = 'unix';
+  }
+  else
+  {
+    var fOSMac  = getFolder("Mac System");
+    var fOSWin  = getFolder("Win System");
+
+    logComment("fOSMac: "  + fOSMac);
+    logComment("fOSWin: "  + fOSWin);
+
+    if(fOSMac != null)
+      platformNode = 'mac';
+    else if(fOSWin != null)
+      platformNode = 'win';
+    else
+      platformNode = 'unix';
+  }
+
+  return platformNode;
+}
+
