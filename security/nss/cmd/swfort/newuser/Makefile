@@ -52,17 +52,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 #######################################################################
 
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
-
-EXTRA_LIBS = \
-	../../../lib/fortcrypt/$(OBJDIR)/cilib.lib \
-	$(NULL)
-else
 
 EXTRA_LIBS += \
-	../../../lib/fortcrypt/$(OBJDIR)/cilib.$(LIB_SUFFIX) \
-	$(NULL)
-endif
+	$(shell $(MAKE) -C ../../../lib/fortcrypt --no-print-directory cilib_name) \
 
 include ../../platlibs.mk
 
