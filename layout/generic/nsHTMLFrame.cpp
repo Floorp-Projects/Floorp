@@ -38,6 +38,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"
 #include "nsIAreaFrame.h"
+#include "nsLayoutAtoms.h"
 
 // Interface IDs
 static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
@@ -71,6 +72,13 @@ public:
     return NS_OK;
   }
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::rootFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   // XXX Temporary hack...
@@ -339,6 +347,15 @@ RootFrame::HandleEvent(nsIPresContext& aPresContext,
     nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+RootFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::rootFrame; 
+  NS_ADDREF(*aType);
   return NS_OK;
 }
 

@@ -43,9 +43,17 @@ nsIAtom* nsLayoutAtoms::colGroupList;
 nsIAtom* nsLayoutAtoms::fixedList;
 nsIAtom* nsLayoutAtoms::floaterList;
 
+// pseudo tag names for non-element content
 nsIAtom* nsLayoutAtoms::commentTagName;
 nsIAtom* nsLayoutAtoms::textTagName;
 nsIAtom* nsLayoutAtoms::viewportPseudo;
+
+// frame types
+nsIAtom* nsLayoutAtoms::areaFrame;
+nsIAtom* nsLayoutAtoms::pageFrame;
+nsIAtom* nsLayoutAtoms::rootFrame;
+nsIAtom* nsLayoutAtoms::scrollFrame;
+nsIAtom* nsLayoutAtoms::viewportFrame;
 
 static nsrefcnt gRefCnt;
 
@@ -76,6 +84,12 @@ void nsLayoutAtoms::AddrefAtoms()
     commentTagName = NS_NewAtom("__moz_comment");
     textTagName = NS_NewAtom("__moz_text");
     viewportPseudo = NS_NewAtom(":-moz-viewport");
+
+    areaFrame = NS_NewAtom("AreaFrame");
+    pageFrame = NS_NewAtom("PageFrame");
+    rootFrame = NS_NewAtom("RootFrame");
+    scrollFrame = NS_NewAtom("ScrollFrame");
+    viewportFrame = NS_NewAtom("ViewportFrame");
   }
   ++gRefCnt;
 }
@@ -108,6 +122,12 @@ void nsLayoutAtoms::ReleaseAtoms()
     NS_RELEASE(commentTagName);
     NS_RELEASE(textTagName);
     NS_RELEASE(viewportPseudo);
+    
+    NS_RELEASE(areaFrame);
+    NS_RELEASE(pageFrame);
+    NS_RELEASE(rootFrame);
+    NS_RELEASE(scrollFrame);
+    NS_RELEASE(viewportFrame);
   }
 }
 

@@ -22,9 +22,10 @@
 #include "nsHTMLContainerFrame.h"
 
 /**
- * The scroll frame creates and manages the scrolling view. It creates
- * a nsScrollViewFrame which handles padding and rendering of the
- * background.
+ * The scroll frame creates and manages the scrolling view
+ *
+ * It only supports having a single child frame that typically is an area
+ * frame, but doesn't have to be. The child frame must have a view, though
  */
 class nsScrollFrame : public nsHTMLContainerFrame {
 public:
@@ -50,6 +51,13 @@ public:
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::scrollFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   NS_IMETHOD ReResolveStyleContext(nsIPresContext*  aPresContext, 

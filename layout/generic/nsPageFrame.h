@@ -33,6 +33,13 @@ public:
                                     nsIStyleContext* aStyleContext,
                                     nsIFrame*&       aContinuingFrame);
 
+  /**
+   * Get the "type" of the frame
+   *
+   * @see nsLayoutAtoms::pageFrame
+   */
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  
   // Debugging
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
 };

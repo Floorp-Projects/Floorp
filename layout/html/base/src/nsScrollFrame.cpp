@@ -32,6 +32,7 @@
 #include "nsWidgetsCID.h"
 #include "nsIAreaFrame.h"
 #include "nsScrollFrame.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kScrollingViewCID, NS_SCROLLING_VIEW_CID);
@@ -522,6 +523,15 @@ PRIntn
 nsScrollFrame::GetSkipSides() const
 {
   return 0;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::scrollFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -679,6 +679,15 @@ nsAreaFrame::ReflowAbsoluteFrames(nsIPresContext&          aPresContext,
   }
 }
 
+NS_IMETHODIMP
+nsAreaFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::areaFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
 /////////////////////////////////////////////////////////////////////////////
 // Diagnostics
 
