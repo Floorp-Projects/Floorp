@@ -41,87 +41,93 @@
         
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox flex="1">
+  <groupbox orient="vertical" flex="1">
     <label value="&descript;"/>
-    
-    <vbox flex="1">
-      <text class="label" value="&fileTypes.label;"/>
-      <tree id="appTree" class="inset" flex="1" style="width: 0px; height: 0px;"
-            datasources="rdf:null" ref="urn:mimetypes"
-            onselect="selectApplication();">
-        <treecolgroup>
-          <treecol flex="1"/>
-        </treecolgroup>
-        <template>
-          <rule>
-            <conditions>
-              <content uri="?uri"/>
-              <!-- the RDF Seq of MIME types -->
-              <triple subject="?uri" object="?MIME-types"
-                      predicate="http://home.netscape.com/NC-rdf#MIME-types"/>
-              <!-- each MIME type -->
-              <member container="?MIME-types" child="?type"/>
-              <!-- MIME type value -->
-              <triple subject="?type" object="?value"
-                      predicate="http://home.netscape.com/NC-rdf#value"/>
-              <triple subject="?type" object="?editable"
-                      predicate="http://home.netscape.com/NC-rdf#editable"/>
-            </conditions>
-            <action> 
-              <treechildren flex="1">
-                <treeitem uri="?type">
-                  <treerow>
-                    <treecell label="?value"/>
-                  </treerow>
-                </treeitem>
-              </treechildren>
-            </action>
-          </rule>        
-        </template>
-      </tree>
-    </vbox>
-    
-    <vbox>
-      <button id="newTypeButton" 
-              label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
-              oncommand="newType();"
-              pref="true" preftype="bool"
-              prefstring="pref.application.disable_button.new_type" prefattribute="disabled"/>
-      <button id="editButton" 
-              label="&editButton.label;" accesskey="&editButton.accesskey;" 
-              oncommand="editType();"
-              pref="true" preftype="bool"
-              prefstring="pref.application.disable_button.edit" prefattribute="disabled"/>
-      <button id="removeButton" 
-              label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
-              oncommand="removeType();"
-              pref="true" preftype="bool"
-              prefstring="pref.application.disable_button.remove" prefattribute="disabled"/>
-    </vbox>
+    <text class="label" value="&fileTypes.label;"/>
+    <hbox flex="1">
+      <vbox flex="1">
+        <tree id="appTree" class="inset" flex="1"
+              datasources="rdf:null" ref="urn:mimetypes"
+              onselect="selectApplication();">
+          <treecolgroup>
+            <treecol flex="1"/>
+          </treecolgroup>
+          <template>
+            <rule>
+              <conditions>
+                <content uri="?uri"/>
+                <!-- the RDF Seq of MIME types -->
+                <triple subject="?uri" object="?MIME-types"
+                        predicate="http://home.netscape.com/NC-rdf#MIME-types"/>
+                <!-- each MIME type -->
+                <member container="?MIME-types" child="?type"/>
+                <!-- MIME type value -->
+                <triple subject="?type" object="?value"
+                        predicate="http://home.netscape.com/NC-rdf#value"/>
+                <triple subject="?type" object="?editable"
+                        predicate="http://home.netscape.com/NC-rdf#editable"/>
+              </conditions>
+              <action> 
+                <treechildren flex="1">
+                  <treeitem uri="?type">
+                    <treerow>
+                      <treecell label="?value"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </action>
+            </rule>        
+          </template>
+        </tree>
+        <hbox>
+          <image id="contentTypeImage"/>
+          <grid orient="horizontal">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <text class="label" value="&exten;"/>
+                <text class="label" id="extension"/>
+              </row>
+              <row>
+                <text class="label" value="&mimeType;"/>
+                <text class="label" id="mimeType"/>
+              </row>
+              <row>
+                <text class="label" value="&handle;"/>
+                <text class="label" id="handler"/>
+              </row>
+            </rows>
+          </grid>
+        </hbox>
+      </vbox>    
+      <vbox>
+        <button id="newTypeButton" 
+                label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
+                oncommand="newType();"
+                pref="true" preftype="bool"
+                prefstring="pref.application.disable_button.new_type" prefattribute="disabled"/>
+        <button id="editButton" 
+                label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                oncommand="editType();"
+                pref="true" preftype="bool"
+                prefstring="pref.application.disable_button.edit" prefattribute="disabled"/>
+        <button id="removeButton" 
+                label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
+                oncommand="removeType();"
+                pref="true" preftype="bool"
+                prefstring="pref.application.disable_button.remove" prefattribute="disabled"/>
+      </vbox>
+    </hbox>
   </groupbox>
-    
-  <groupbox orient="vertical">
-    <label value="&file;"/>
-    <grid flex="1">
-      <columns>
-        <column/>
-        <column flex="1"/>
-      </columns>
-      <rows>
-        <row>
-          <text class="label" value="&exten;"/>
-          <text class="label" id="extension"/>
-        </row>
-        <row>
-          <text class="label" value="&mimeType;"/>
-          <text class="label" id="mimeType"/>
-        </row>
-        <row>
-          <text class="label" value="&handle;"/>
-          <text class="label" id="handler"/>
-        </row>
-      </rows>
-    </grid>
+  <groupbox flex="1">
+    <label value="&fileOpening.label;"/>
+    <html flex="1">&resetText.label;</html>
+    <separator orient="vertical"/>
+    <hbox autostretch="never">
+      <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
+    </hbox>
   </groupbox>
-  
 </window>
