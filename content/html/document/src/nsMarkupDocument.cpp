@@ -33,7 +33,7 @@
 #include "nsICSSDeclaration.h"
 #include "nsIHTMLCSSStyleSheet.h"
 #include "nsHTMLValue.h"
-#include "nsXIFConverter.h"
+#include "nsIXIFConverter.h"
 
 #include "nsIPresShell.h"
 
@@ -89,16 +89,16 @@ nsMarkupDocument::CreateShell(nsIPresContext* aContext,
  *  @param   aConverter -- the XIFConverter where all output is being written
  *  @param   aSelector -- the Object to be converted to XIF
  */
-void nsMarkupDocument::CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyleRule& aRule)
+void nsMarkupDocument::CSSSelectorsToXIF(nsIXIFConverter* aConverter, nsICSSStyleRule& aRule)
 {
   nsAutoString selectors;
 
   aRule.GetSourceSelectorText(selectors);
-  aConverter.BeginCSSSelectors();
+  aConverter->BeginCSSSelectors();
  
-  aConverter.AddCSSSelectors(selectors);
+  aConverter->AddCSSSelectors(selectors);
 
-  aConverter.EndCSSSelectors();
+  aConverter->EndCSSSelectors();
 }
 
 
@@ -109,12 +109,12 @@ void nsMarkupDocument::CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyle
  *  @param   aConverter -- the XIFConverter where all output is being written
  *  @param   aDeclaration -- the Object to be converted to XIF
  */
-void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration)
+void nsMarkupDocument::CSSDeclarationToXIF(nsIXIFConverter* aConverter, nsICSSDeclaration& aDeclaration)
 {
   nsAutoString  list;
   nsAutoString  decl;
 
-  aConverter.BeginCSSDeclarationList();
+  aConverter->BeginCSSDeclarationList();
   aDeclaration.ToString(list);
 
   PRInt32 start = 0;
@@ -132,21 +132,21 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
       nsAutoString  property;
       nsAutoString  value;
 
-      aConverter.BeginCSSDeclaration();
+      aConverter->BeginCSSDeclaration();
       if (-1 < colon) {
         decl.Left(property, colon);
         property.StripWhitespace();
         decl.Right(value, (decl.Length() - colon) - 2);
-        aConverter.AddCSSDeclaration(property, value);
+        aConverter->AddCSSDeclaration(property, value);
       }
 
-      aConverter.EndCSSDeclaration();
+      aConverter->EndCSSDeclaration();
     }
 
     start = ++semiColon;
     semiColon = list.FindChar(';', PR_FALSE,start);
   }
-  aConverter.EndCSSDeclarationList();
+  aConverter->EndCSSDeclarationList();
 }
 
 
@@ -157,7 +157,7 @@ void nsMarkupDocument::CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDec
  *  @param   aConverter -- the XIFConverter where all output is being written
  *  @param   aDeclaration -- the Object to be converted to XIF
  */
-void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
+void nsMarkupDocument::StyleSheetsToXIF(nsIXIFConverter* aConverter)
 {
  
   PRInt32     count = GetNumberOfStyleSheets();
@@ -194,12 +194,12 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
         cssSheet->StyleRuleCount(ruleCount);
         if (ruleCount > 0)
         {
-          aConverter.BeginCSSStyleSheet();
+          aConverter->BeginCSSStyleSheet();
           for (ruleIndex = 0; ruleIndex < ruleCount; ruleIndex++)
           {
             if (NS_OK == cssSheet->GetStyleRuleAt(ruleIndex, rule))
             {
-              aConverter.BeginCSSRule();
+              aConverter->BeginCSSRule();
 
               if (nsnull != rule)
               {
@@ -219,10 +219,10 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
                 NS_IF_RELEASE(rule);
               } // ruleAt
 
-              aConverter.EndCSSRule();
+              aConverter->EndCSSRule();
             } // for loop
           }
-          aConverter.EndCSSStyleSheet();
+          aConverter->EndCSSStyleSheet();
         } // if ruleCount > 0
         NS_RELEASE(cssSheet);
       } // css_sheet
@@ -232,7 +232,7 @@ void nsMarkupDocument::StyleSheetsToXIF(nsXIFConverter& aConverter)
 }
 
 
-void nsMarkupDocument::FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode)
+void nsMarkupDocument::FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode)
 {
   nsIContent* content = nsnull;
   nsresult    isContent = aNode->QueryInterface(kIContentIID, (void**)&content);

@@ -53,7 +53,7 @@ public:
     * NOTE: we may way to place the result in a stream,
     * but we will use a string for now -- gpk
   */
-  virtual void FinishConvertToXIF(nsXIFConverter& aConverter, nsIDOMNode* aNode);
+  virtual void FinishConvertToXIF(nsIXIFConverter* aConverter, nsIDOMNode* aNode);
   
   // XXX Temp hack: moved from nsDocument
   NS_IMETHOD CreateShell(nsIPresContext* aContext,
@@ -62,9 +62,9 @@ public:
                          nsIPresShell** aInstancePtrResult);
 
 protected:
-  virtual void CSSSelectorsToXIF(nsXIFConverter& aConverter, nsICSSStyleRule& aRule);
-  virtual void CSSDeclarationToXIF(nsXIFConverter& aConverter, nsICSSDeclaration& aDeclaration);
-  virtual void StyleSheetsToXIF(nsXIFConverter& aConverter);
+  virtual void CSSSelectorsToXIF(nsIXIFConverter* aConverter, nsICSSStyleRule& aRule);
+  virtual void CSSDeclarationToXIF(nsIXIFConverter* aConverter, nsICSSDeclaration& aDeclaration);
+  virtual void StyleSheetsToXIF(nsIXIFConverter* aConverter);
 
 
 private:

@@ -100,6 +100,9 @@
 #include "nsIPref.h"
 #include "nsLayoutUtils.h"
 
+#include "nsIDocumentEncoder.h" //for outputting selection
+
+
 #define DETECTOR_PROGID_MAX 127
 static char g_detector_progid[DETECTOR_PROGID_MAX + 1];
 static PRBool gInitDetector = PR_FALSE;
@@ -2490,7 +2493,7 @@ nsHTMLDocument::GetSelection(nsString& aReturn)
     consoleService->LogStringMessage(NS_ConvertASCIItoUCS2("Depricated method document.getSelection() called, use window.getSelection() in stead!").GetUnicode());
   }
 
-  return domSelection->ToString(aReturn);
+  return domSelection->ToString(NS_ConvertASCIItoUCS2("text/plain"), nsIDocumentEncoder::OutputFormatted |nsIDocumentEncoder::OutputSelectionOnly, 0, aReturn);
 }
 
 NS_IMETHODIMP    
