@@ -128,6 +128,9 @@ DIRS =                         \
 
 include <$(DEPTH)\config\rules.mak>
 
+export::
+	$(PERL) $(DEPTH)\config\purge-old-headers.pl $(XPDIST)\include
+
 #//------------------------------------------------------------------------
 #//
 #// MOZILLA_OFFICIAL junk: rebase and splitsym for binary release
