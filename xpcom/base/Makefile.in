@@ -104,9 +104,13 @@ override NO_STATIC_LIB=
 
 include $(topsrcdir)/config/rules.mk
 
+CHROME_DIR=locales/en-US
+
 DEFINES		+= -D_IMPL_NS_COM
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES		+= -D_BSD_SOURCE
 endif
 
+install:: 
+	cp xpcom.properties $(CHROME_DIST)/$(CHROME_L10N_DIR)/global/locale/
