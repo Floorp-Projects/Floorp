@@ -167,9 +167,7 @@ function LoadDirectories(popup)
               item.setAttribute("value", arrayOfDirectories[i]);
               popup.appendChild(item);
             }
-            gAvailDirectories[j] = new Array(2);
-            gAvailDirectories[j][0] = arrayOfDirectories[i];
-            gAvailDirectories[j][1] = description;
+            gAvailDirectories[j] = {value:arrayOfDirectories[i], label:description};
             j++;
           }
         }
@@ -230,9 +228,9 @@ function LoadDirectories(popup)
           // set it the first one in the list of directories 
           // if we have  atleast one directory.
           // or else set it to ""
-          if (gAvailDirectories.length >= 1) {
-            directoriesList.label = gAvailDirectories[0][1];
-            directoriesList.value = gAvailDirectories[0][0];
+          if (gAvailDirectories.length) {
+            directoriesList.label = gAvailDirectories[0].label;
+            directoriesList.value = gAvailDirectories[0].value;
             directoriesList.removeAttribute("disabled");
           }
           else {
@@ -271,11 +269,11 @@ function LoadDirectories(popup)
         directoriesList.label = description;
         directoriesList.value = directoryServer;
       }
-      else if(gAvailDirectories.length >= 1) {
-         directoriesList.label = gAvailDirectories[0][1];
-         directoriesList.value = gAvailDirectories[0][0];
+      else if(gAvailDirectories.length) {
+         directoriesList.label = gAvailDirectories[0].label;
+         directoriesList.value = gAvailDirectories[0].value;
          gPrefInt.setCharPref("ldap_2.autoComplete.directoryServer", 
-                              gAvailDirectories[0][0]);
+                              gAvailDirectories[0].value);
       }
       else {
         directoriesList.label = "";
@@ -311,8 +309,8 @@ function LoadDirectoriesTree(tree)
       row  = document.createElement('treerow');
       cell = document.createElement('treecell');
 
-      cell.setAttribute('label', gAvailDirectories[i][1]);
-      cell.setAttribute('string', gAvailDirectories[i][0]);
+      cell.setAttribute('label', gAvailDirectories[i].label);
+      cell.setAttribute('string', gAvailDirectories[i].value);
 
       row.appendChild(cell);
       item.appendChild(row);
@@ -447,7 +445,7 @@ function onAccept()
       var allIdentities = am.allIdentities;
       var identitiesCount = allIdentities.Count();
       var identityServer = new Array();
-      var currentIdenity = null;
+      var currentIdentity = null;
       var j=0;
       for (j=0; j< identitiesCount; j++) {
         currentIdentity = allIdentities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
