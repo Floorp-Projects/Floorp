@@ -203,9 +203,7 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
                                                       PRBool  aDisplayStyle,
                                                       PRBool  aCompressed)
 {
-  PRBool displayStyle = NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
-  PRBool compressed = NS_MATHML_IS_COMPRESSED(mPresentationData.flags);
-
+  PRBool compressed;
   nsIFrame* childFrame = mFrames.FirstChild();
   while (nsnull != childFrame) {
     if (!IsOnlyWhitespace(childFrame)) {
@@ -214,33 +212,19 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
         (NS_GET_IID(nsIMathMLFrame), (void**)&aMathMLFrame);
       if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
         if (0 == aIndex++) {
-          // update numerator
-          if (displayStyle) {
-            // switch to text with current compression
-            aMathMLFrame->UpdatePresentationData(0, PR_FALSE, compressed);
-          }
-          else {
-            // apply the default rule
-            aMathMLFrame->UpdatePresentationData
-              (aScriptLevelIncrement, aDisplayStyle, aCompressed);
-          }
+          // numerator uses default compression
+          compressed = aCompressed;
         }
         else {
-          // update denominator
-          if (displayStyle) {
-            // switch to text with compression
-            aMathMLFrame->UpdatePresentationData(0, PR_FALSE, PR_TRUE);
-          }
-          else {
-            // apply the default rule
-            aMathMLFrame->UpdatePresentationData
-              (aScriptLevelIncrement, aDisplayStyle, aCompressed);
-          }
+          // denominator is 'compressed' (means 'prime' style in App. G, TeXbook)
+          compressed = PR_TRUE;
         }
-
+        // update
+        aMathMLFrame->UpdatePresentationData
+          (aScriptLevelIncrement, aDisplayStyle, compressed);
         // propagate down the subtrees
         aMathMLFrame->UpdatePresentationDataFromChildAt
-          (0, aScriptLevelIncrement, aDisplayStyle, aCompressed);
+          (0, aScriptLevelIncrement, aDisplayStyle, compressed);
       }
     }
     childFrame->GetNextSibling(&childFrame);
@@ -355,7 +339,6 @@ nsMathMLmfracFrame::Place(nsIPresContext*      aPresContext,
   }
   else {
     // Rule 15d, App. G, TeXbook
-//    GetAxisHeight (fm, axisHeight);
     GetAxisHeight(aRenderingContext, fm, axisHeight);
 
     // min clearance between numerator or denominator and middle of bar

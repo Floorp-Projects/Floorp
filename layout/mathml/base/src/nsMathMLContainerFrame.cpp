@@ -391,8 +391,8 @@ nsMathMLContainerFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   }
   else if (aString.EqualsWithConversion("verythinmathspace"))
   {
-  	i = 2; 
-  	namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
+    i = 2; 
+    namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
   }
   else if (aString.EqualsWithConversion("thinmathspace"))
   {
@@ -401,23 +401,23 @@ nsMathMLContainerFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
   }
   else if (aString.EqualsWithConversion("mediummathspace"))
   {
-  	i = 4;
-  	namedspaceAtom = nsMathMLAtoms::mediummathspace_;
+    i = 4;
+    namedspaceAtom = nsMathMLAtoms::mediummathspace_;
   }
   else if (aString.EqualsWithConversion("thickmathspace"))
   {
-  	i = 5;
-  	namedspaceAtom = nsMathMLAtoms::thickmathspace_;
+    i = 5;
+    namedspaceAtom = nsMathMLAtoms::thickmathspace_;
   }
   else if (aString.EqualsWithConversion("verythickmathspace"))
   {
-  	i = 6;
-  	namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
+    i = 6;
+    namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
   }
   else if (aString.EqualsWithConversion("veryverythickmathspace"))
   {
-  	i = 7;
-  	namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
+    i = 7;
+    namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
   }
 
   if (0 != i) 
@@ -911,10 +911,11 @@ nsMathMLContainerFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement,
     mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
   else
     mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-  if (aCompressed)
+  if (aCompressed) {
+    // 'compressed' means 'prime' style in App. G, TeXbook
+    // (the flag retains its value once it is set)
     mPresentationData.flags |= NS_MATHML_COMPRESSED;
-  else
-    mPresentationData.flags &= ~NS_MATHML_COMPRESSED;
+  }
   return NS_OK;
 }
 
@@ -1124,7 +1125,8 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext* aPresConte
               // look ahead for the next smallest font size that will be in the subtree
               smallestFontIndex = nsStyleUtil::FindNextSmallerFontSize(smallestFontSize, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
               smallestFontSize = nsStyleUtil::CalcFontPointSize(smallestFontIndex, (PRInt32)defaultFont.size, scaleFactor, aPresContext);
-//printf("About to move to fontsize:%dpt(%dtwips)\n", 
+//((nsFrame*)childFrame)->ListTag(stdout);
+//printf(" About to move to fontsize:%dpt(%dtwips)\n", 
 //NSTwipsToFloorIntPoints(smallestFontSize), smallestFontSize);
               if (smallestFontSize < scriptminsize) {
                 // don't bother doing any work
@@ -1252,7 +1254,7 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   // its scriptlevel and displaystyle. If the parent later wishes to increment
   // with other values, it will do so in its SetInitialChildList() method.
  
-  mPresentationData.flags = NS_MATHML_DISPLAYSTYLE;
+  mPresentationData.flags = 0;
   mPresentationData.scriptLevel = 0;
   mPresentationData.mstyle = nsnull;
 
@@ -1272,6 +1274,16 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
     else
       mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   }
+  else {
+    // see if our parent has 'display: block'
+    // XXX should we restrict this to the top level <math> parent ?
+    const nsStyleDisplay* display;
+    aParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+    if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    }
+  }
+
   return rv;
 }
 
