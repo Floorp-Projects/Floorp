@@ -31,9 +31,12 @@ var gOfflinePromptsBundle;
 var nsPrefBranch = null;
 var gOfflineManager;
 var gWindowManagerInterface;
-var gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
+var gPrefs = null;
 var gPrintSettings = null;
 
+var gTimelineEnabled = false;
+
+/*
 var gTimelineService = null;
 var gTimelineEnabled = ("@mozilla.org;timeline-service;1" in Components.classes);
 if (gTimelineEnabled) {
@@ -49,6 +52,7 @@ if (gTimelineEnabled) {
     gTimelineEnabled = false;
   }
 }
+*/
 
 var disallow_classes_no_html = 1; /* the user preference,
      if HTML is not allowed. I assume, that the user could have set this to a
@@ -862,6 +866,8 @@ function MsgReplyToAllMessage(event)
 
 function MsgForwardMessage(event)
 {
+  if (!gPrefs)
+    gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
   var forwardType = 0;
   try {
     forwardType = gPrefs.getIntPref("mail.forward_message_mode");
@@ -1218,6 +1224,8 @@ function MsgFilters(emailAddress)
 
 function MsgViewAllHeaders()
 {
+    if (!gPrefs)
+      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",2);
     MsgReload();
     return true;
@@ -1225,6 +1233,8 @@ function MsgViewAllHeaders()
 
 function MsgViewNormalHeaders()
 {
+    if (!gPrefs)
+      Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",1);
     MsgReload();
     return true;
@@ -1232,6 +1242,8 @@ function MsgViewNormalHeaders()
 
 function MsgViewBriefHeaders()
 {
+    if (!gPrefs)
+      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setIntPref("mail.show_headers",0);
     MsgReload();
     return true;
@@ -1239,6 +1251,8 @@ function MsgViewBriefHeaders()
 
 function MsgBodyAllowHTML()
 {
+    if (!gPrefs)
+      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
     gPrefs.setIntPref("mailnews.display.html_as", 0);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers", 0);
@@ -1248,6 +1262,8 @@ function MsgBodyAllowHTML()
 
 function MsgBodySanitized()
 {
+    if (!gPrefs)
+      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", false);
     gPrefs.setIntPref("mailnews.display.html_as", 3);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
@@ -1258,6 +1274,8 @@ function MsgBodySanitized()
 
 function MsgBodyAsPlaintext()
 {
+    if (!gPrefs)
+      gPrefs = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefBranch);
     gPrefs.setBoolPref("mailnews.display.prefer_plaintext", true);
     gPrefs.setIntPref("mailnews.display.html_as", 1);
     gPrefs.setIntPref("mailnews.display.disallow_mime_handlers",
