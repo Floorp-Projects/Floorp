@@ -781,6 +781,8 @@
     "selection.collapsetoend", \
     "selection.collapsetostart", \
     "selection.containsnode", \
+    "selection.sethint", \
+    "selection.gethint", \
     "selection.deletefromdocument", \
     "selection.endbatchchanges", \
     "selection.extend", \

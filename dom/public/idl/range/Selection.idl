@@ -34,7 +34,8 @@
 		
 		void		addSelectionListener(in SelectionListener newListener);
 		void		removeSelectionListener(in SelectionListener listenerToRemove);
-		
+		void        setHint(in boolean right);
+		boolean     getHint();
 		noscript xpidl nsIEnumerator    getEnumerator();
 
                 DOMString       toString();
