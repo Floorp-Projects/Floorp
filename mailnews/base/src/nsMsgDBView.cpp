@@ -2195,7 +2195,8 @@ nsMsgDBView::ApplyCommandToIndices(nsMsgViewCommandTypeValue command, nsMsgViewI
     // in the last callback.
     //  
     if ( command == nsMsgViewCommandType::junk
-         || command == nsMsgViewCommandType::unjunk ) {
+         || command == nsMsgViewCommandType::unjunk ) 
+    {
 
         // get the folder from the first item (if it's the search view, 
         // only one item can be touched at a time; if a regular folder view,
@@ -2610,6 +2611,13 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
         uri, oldUserClassification, aNewClassification, mMsgWindow, this);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // this routine is only reached if the user someone touched the UI
+    // and told us the junk status of this message.
+    // Set origin first so that listeners on the junkscore will
+    // know the correct origin.
+    rv = SetStringPropertyByIndex(aIndex, "junkscoreorigin", "user");
+    NS_ASSERTION(NS_SUCCEEDED(rv), "SetStringPropertyByIndex failed");
+
     // set the junk score on the message itself
     // 
     rv = SetStringPropertyByIndex(
@@ -2617,11 +2625,6 @@ nsresult nsMsgDBView::SetJunkScoreByIndex(nsIJunkMailPlugin *aJunkPlugin,
         aNewClassification == nsIJunkMailPlugin::JUNK ? "100" : "0");
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // this routine is only reached if the user someone touched the UI
-    // and told us the junk status of this message.
-    //
-    rv = SetStringPropertyByIndex(aIndex, "junkscoreorigin", "user");
-    NS_ASSERTION(NS_SUCCEEDED(rv), "SetStringPropertyByIndex failed");
     return rv;
 }
 

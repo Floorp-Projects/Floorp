@@ -106,6 +106,47 @@ nsresult nsMsgQuickSearchDBView::OnNewHeader(nsMsgKey newKey, nsMsgKey aParentKe
   return NS_OK;
 }
 
+NS_IMETHODIMP nsMsgQuickSearchDBView::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, 
+                                       PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
+{
+  nsresult rv = nsMsgDBView::OnKeyChange(aKeyChanged, aOldFlags, aNewFlags, aInstigator);
+  // flags haven't really changed - check if the message is newly classified as junk 
+  if ((aOldFlags == aNewFlags) && (aOldFlags & MSG_FLAG_NEW)) 
+  {
+    nsCOMPtr <nsIMsgDBHdr> msgHdr;
+    rv = m_db->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgHdr));
+    if (NS_SUCCEEDED(rv) && msgHdr != nsnull)
+    {
+      nsXPIDLCString junkScoreStr;
+      (void) msgHdr->GetStringProperty("junkscore", getter_Copies(junkScoreStr));
+      if (atoi(junkScoreStr.get()) > 50)
+      {
+        nsXPIDLCString originStr;
+        (void) msgHdr->GetStringProperty("junkscoreorigin", 
+                                       getter_Copies(originStr));
+
+        // if this was classified by the plugin, see if we're supposed to
+        // show junk mail
+        if (originStr.get()[0] == 'p') 
+        {
+          PRBool match=PR_FALSE;
+          nsCOMPtr <nsIMsgSearchSession> searchSession = do_QueryReferent(m_searchSession);
+          if (searchSession)
+            searchSession->MatchHdr(msgHdr, m_db, &match);
+          if (!match)
+          {
+            // remove hdr from view
+            nsMsgViewIndex deletedIndex = m_keys.FindIndex(aKeyChanged);
+            if (deletedIndex != nsMsgViewIndex_None)
+              RemoveByIndex(deletedIndex);
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
 NS_IMETHODIMP
 nsMsgQuickSearchDBView::GetSearchSession(nsIMsgSearchSession* *aSession)
 {
