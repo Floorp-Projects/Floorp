@@ -236,3 +236,12 @@
 
 <!ENTITY openLocationCmd.label          "Open Location">
 <!ENTITY openLocationCmd.accesskey      "L">
+
+<!ENTITY downloadsButton.label          "Downloads">
+<!ENTITY downloadsButton.tooltip        "Displays the progress of ongoing downloads">
+
+<!ENTITY bookmarksButton.label          "Bookmarks">
+<!ENTITY bookmarksButton.tooltip        "Displays your bookmarks">
+
+<!ENTITY historyButton.label            "History">
+<!ENTITY historyButton.tooltip          "Displays pages you've viewed recently">

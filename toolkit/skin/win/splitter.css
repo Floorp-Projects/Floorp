@@ -35,15 +35,11 @@ splitter {
   cursor: e-resize;
   border: 2px solid;
   -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-right-colors: transparent;
   -moz-border-bottom-colors: ThreeDShadow ThreeDLightShadow;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
-  min-width: 8px;
+  -moz-border-left-colors: ThreeDShadow ThreeDHighlight;
+  min-width: 5px;
   background-color: ThreeDFace;
-}
-
-splitter[state="dragging"] {
-  background-image: url("chrome://global/skin/splitter/drag-bg.gif");
 }
 
 /* ::::: splitter (horizontal) ::::: */

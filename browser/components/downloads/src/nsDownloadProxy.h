@@ -45,7 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
 
-#define DOWNLOAD_MANAGER_BEHAVIOR_PREF "browser.downloadmanager.behavior"
+#define USE_PROGRESS_DIALOGS_PREF "browser.downloads.useProgressDialogs"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
@@ -70,15 +70,13 @@ public:
     rv = dm->AddDownload(aSource, aTarget, aDisplayName, aMIMEInfo, aStartTime, aPersist, getter_AddRefs(mInner));
     if (NS_FAILED(rv)) return rv;
 
-    PRInt32 behavior = 0;
     nsCOMPtr<nsIPrefService> prefs = do_GetService("@mozilla.org/preferences-service;1", &rv);
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
-    branch->GetIntPref(DOWNLOAD_MANAGER_BEHAVIOR_PREF, &behavior);
-    if (behavior == 0)
-      return dm->Open(nsnull, this);
-    if (behavior == 1) {
+    PRBool useProgressDialogs = PR_TRUE;
+    branch->GetBoolPref(USE_PROGRESS_DIALOGS_PREF, &useProgressDialogs);
+    if (useProgressDialogs) {
       nsCAutoString path;
       rv = aTarget->GetNativePath(path);
       if (NS_FAILED(rv)) return rv;

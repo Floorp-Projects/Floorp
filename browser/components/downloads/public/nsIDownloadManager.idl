@@ -47,6 +47,7 @@ interface nsILocalFile;
 interface nsIDownload;
 interface nsIWebBrowserPersist;
 interface nsIMIMEInfo;
+interface nsIRDFDataSource;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
@@ -122,17 +123,6 @@ interface nsIDownloadManager : nsISupports {
   // UI-related methods
 
   /**
-  * Opens the Download Manager front end.
-  *
-  * @param aParent The parent, or opener, of the front end (optional).
-  * @param aDownload A download to pass to the manager window.  Useful
-  *                  if, for example, you want the window to select a
-  *                  certain download (optional).
-  */
-
-  void open(in nsIDOMWindow aParent, in nsIDownload aDownload);
-
-  /**
   * Opens an individual progress dialog displaying progress for the download.
   *
   * @param aPersistentDescriptor The persistent descriptor of the download to
@@ -144,13 +134,6 @@ interface nsIDownloadManager : nsISupports {
   void openProgressDialogFor(in string aPersistentDescriptor, in nsIDOMWindow aParent);
 
   /**
-  * Called when the download manager front end is closed.  Useful for
-  * third party managers to let us know when they've closed.
-  */
-
-  void onClose();
-  
-  /**
   * Indicate that a batch update (e.g. mass removal) is about to start.
   */
 
@@ -161,6 +144,8 @@ interface nsIDownloadManager : nsISupports {
   */
   
   void endBatchUpdate();
+  
+  readonly attribute nsIRDFDataSource datasource;
 };
 
 

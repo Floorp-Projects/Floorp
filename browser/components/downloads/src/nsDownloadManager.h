@@ -47,7 +47,6 @@
 #include "nsIRDFRemoteDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIDOMDocument.h"
-#include "nsIDOMEventListener.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
 #include "nsIURI.h"
@@ -59,17 +58,16 @@
 #include "nsIStringBundle.h"
 #include "nsIProgressDialog.h"
 #include "nsIMIMEInfo.h"
- 
+#include "nsITimer.h"
+
 enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED };
 
 class nsDownloadManager : public nsIDownloadManager,
-                          public nsIDOMEventListener,
                           public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
-  NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
   nsresult Init();
@@ -77,28 +75,33 @@ public:
   nsDownloadManager();
   virtual ~nsDownloadManager();
 
+  static void PR_CALLBACK DownloadCallback(nsITimer *aTimer, void *aClosure);
+  static PRInt32 PR_CALLBACK CancelAllDownloads(nsHashKey* aKey, void* aData, void* aClosure);
+  nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage); 
+
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
-  nsresult GetInternalListener(nsIDownloadProgressListener** aInternalListener);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
   nsresult AssertProgressInfo();
-  nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
   nsresult DownloadStarted(const char* aPersistentDescriptor);
-  nsresult DownloadEnded(const char* aPersistentDescriptor, const PRUnichar* aMessage);
-  PRBool MustUpdateUI() { if (mDocument) return PR_TRUE; return PR_FALSE; }
+  nsresult AssertProgressInfoFor(const char* aPersistentDescriptor);
 
 private:
   nsCOMPtr<nsIRDFDataSource> mDataSource;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIRDFContainer> mDownloadsContainer;
-  nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
   PRInt32 mBatches;
   nsHashtable mCurrDownloads;
 
   friend class nsDownload;
+};
+
+struct DownloadClosure {
+  nsDownloadManager* DownloadManager;
+  nsCString path;
 };
 
 class nsDownload : public nsIDownload,
@@ -140,6 +143,7 @@ private:
   nsCOMPtr<nsIProgressDialog> mDialog;
   nsCOMPtr<nsIObserver> mObserver;
   nsCOMPtr<nsIMIMEInfo> mMIMEInfo;
+  
   DownloadState mDownloadState;
 
   PRInt32 mPercentComplete;
@@ -147,6 +151,7 @@ private:
   PRInt32 mMaxBytes;
   PRInt64 mStartTime;
   PRTime mLastUpdate;
+  nsCOMPtr<nsITimer> mTimer;
 
   friend class nsDownloadManager;
 };

@@ -1,0 +1,4 @@
+download {
+  -moz-binding: url('chrome://browser/content/downloads/download-bindings.xml#download');
+  -moz-box-orient: vertical;
+}

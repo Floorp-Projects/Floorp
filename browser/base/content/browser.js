@@ -59,6 +59,7 @@ var gIgnoreFocus = false;
 var gIgnoreClick = false;
 var gToolbarMode = "icons";
 var gIconSize = "";
+var gMustLoadSidebar = false;
 
 var gPrefService = null;
 
@@ -319,6 +320,24 @@ function Startup()
     }
   }
   
+  if (window.opener) {
+    var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
+    if (!openerSidebarBox.hidden) {
+      gMustLoadSidebar = true;
+      var sidebarBox = document.getElementById("sidebar-box");
+      sidebarBox.hidden = false;
+      var sidebarSplitter = document.getElementById("sidebar-splitter");
+      sidebarSplitter.hidden = false;
+
+      var sidebarTitle = document.getElementById("sidebar-title");
+      sidebarTitle.setAttribute("value", window.opener.document.getElementById("sidebar-title").getAttribute("value"));
+      sidebarBox.setAttribute("width", openerSidebarBox.boxObject.width);
+      var sidebarButton = openerSidebarBox.getAttribute("button");
+      document.getElementById(sidebarButton).checked = true;
+      sidebarBox.setAttribute("button", sidebarButton);
+    }
+  }
+  
   // called when we go into full screen, even if it is 
   // initiated by a web page script
   addEventListener("fullscreen", onFullScreen, false);
@@ -339,6 +358,11 @@ function Startup()
 
 function delayedStartup(aElt)
 {
+  if (gMustLoadSidebar) {
+    var sidebar = document.getElementById("sidebar");
+    sidebar.setAttribute("src", window.opener.document.getElementById("sidebar").getAttribute("src"));
+  }
+  
   // Perform default browser checking (after window opens).
   checkForDefaultBrowser();
 
@@ -2434,7 +2458,7 @@ function toDownloadManager()
     dlmgrWindow.focus();
   }
   else {
-    window.openDialog("chrome://browser/content/downloadmanager/downloadmanager.xul", "Downloads", "chrome");
+    window.openDialog("chrome://browser/content/downloads/downloadmanager.xul", "Downloads", "chrome,extrachrome,resizable,scrollbars,toolbar,dialog=no");
   }
 }
   
@@ -3140,27 +3164,33 @@ nsBrowserContentListener.prototype =
     parentContentListener: null
 }
 
-function openSidebar(aElt) {
+function toggleSidebar(aElt) {
+  var sidebarBox = document.getElementById("sidebar-box");
   var sidebar = document.getElementById("sidebar");
+  var sidebarTitle = document.getElementById("sidebar-title");
   var sidebarSplitter = document.getElementById("sidebar-splitter");
 
   if (aElt.checked) {
     aElt.checked = false;
-    sidebar.hidden = true;
+    sidebarBox.hidden = true;
     sidebarSplitter.hidden = true;
     return;
   }
   
   aElt.checked = true;
 
-  if (sidebar.hidden) {
-    // Can't use .hidden = false here, since that will remove the attr.
-    // and we need it to exist so we can persist its value.
-    sidebar.setAttribute("hidden", "false");
-    sidebarSplitter.setAttribute("hidden", "false");
+  if (sidebarBox.hidden) {
+    sidebarBox.hidden = false;
+    sidebarSplitter.hidden = false;
   }
+  
   var url = aElt.getAttribute("sidebarurl");
+  var title = aElt.getAttribute("sidebartitle");
+  if (!title)
+    title = aElt.getAttribute("label");
   sidebar.setAttribute("src", url);
+  sidebarBox.setAttribute("button", aElt.id);
+  sidebarTitle.setAttribute("value", title);
 }
 
 function goPreferences(containerID, paneURL, itemID)
