@@ -1127,7 +1127,7 @@ nsTextControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (void*)(nsITextControlFrame*) this;
     return NS_OK;
   }
-  if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider))) {
+  if (aIID.Equals(NS_GET_IID(nsIScrollableViewProvider)) && IsScrollable()) {
     *aInstancePtr = (void*)(nsIScrollableViewProvider*) this;
     return NS_OK;
   }
@@ -3093,20 +3093,8 @@ NS_IMETHODIMP
 nsTextControlFrame::GetScrollableView(nsIPresContext* aPresContext,
                                       nsIScrollableView** aView)
 {
-  nsresult rv = NS_OK;
   *aView = mScrollableView;
-  if (mScrollableView && !IsScrollable()) {
-    nsIView *view = 0;
-    nsIScrollableView* scrollableView = 0;
-    rv = mScrollableView->QueryInterface(NS_GET_IID(nsIView), (void**)&view);
-    while (view) {
-      rv = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
-      if (NS_SUCCEEDED(rv) && scrollableView)
-        *aView = scrollableView;
-      view = view->GetParent();
-    }
-  }
-  return rv;
+  return NS_OK;
 }
 
 PRBool
