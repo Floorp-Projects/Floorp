@@ -40,6 +40,7 @@
 #include "nsEscape.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "nsSupportsArray.h"
 
 #include "nsCExternalHandlerService.h"
 
@@ -156,6 +157,15 @@ struct UploadData
     }
 };
 
+struct CleanupData
+{
+    nsCOMPtr<nsILocalFile> mFile;
+    // Snapshot of what the file actually is at the time of creation so that if
+    // it transmutes into something else later on it can be ignored. For example,
+    // catch files that turn into dirs or vice versa.
+    PRPackedBool mIsDirectory;
+};
+
 // Maximum file length constant. The max file name length is
 // volume / server dependent but it is difficult to obtain
 // that information. Instead this constant is a reasonable value that
@@ -212,7 +222,7 @@ nsWebBrowserPersist::nsWebBrowserPersist() :
 
 nsWebBrowserPersist::~nsWebBrowserPersist()
 {
-    CleanUp();
+    Cleanup();
 }
 
 //*****************************************************************************
@@ -1515,16 +1525,32 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         {
             if (localDataPath)
             {
-                localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755);
                 PRBool exists = PR_FALSE;
-                PRBool isDirectory = PR_FALSE;
+                PRBool haveDir = PR_FALSE;
+
                 localDataPath->Exists(&exists);
-                localDataPath->IsDirectory(&isDirectory);
-                if (!exists || !isDirectory)
+                if (exists)
+                {
+                    localDataPath->IsDirectory(&haveDir);
+                }
+                if (!haveDir && NS_SUCCEEDED(localDataPath->Create(nsILocalFile::DIRECTORY_TYPE, 0755)))
+                {
+                    haveDir = PR_TRUE;
+                }
+                if (!haveDir)
                 {
                     EndDownload(NS_ERROR_FAILURE);
                     mCurrentBaseURI = oldBaseURI;
                     return NS_ERROR_FAILURE;
+                }
+                if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
+                {
+                    // Add to list of things to delete later if all goes wrong
+                    CleanupData *cleanupData = new CleanupData;
+                    NS_ENSURE_TRUE(cleanupData, NS_ERROR_OUT_OF_MEMORY);
+                    cleanupData->mFile = localDataPath;
+                    cleanupData->mIsDirectory = PR_TRUE;
+                    mCleanupList.AppendElement(cleanupData);
                 }
             }
         }
@@ -1643,7 +1669,7 @@ nsresult nsWebBrowserPersist::SaveDocuments()
     return rv;
 }
 
-void nsWebBrowserPersist::CleanUp()
+void nsWebBrowserPersist::Cleanup()
 {
     mURIMap.Enumerate(EnumCleanupURIMap, this);
     mURIMap.Reset();
@@ -1658,7 +1684,122 @@ void nsWebBrowserPersist::CleanUp()
         delete docData;
     }
     mDocList.Clear();
+    for (i = 0; i < mCleanupList.Count(); i++)
+    {
+        CleanupData *cleanupData = (CleanupData *) mCleanupList.ElementAt(i);
+        delete cleanupData;
+    }
+    mCleanupList.Clear();
     mFilenameList.Clear();
+}
+
+void nsWebBrowserPersist::CleanupLocalFiles()
+{
+    // Two passes, the first pass cleans up files, the second pass tests
+    // for and then deletes empty directories. Directories that are not
+    // empty after the first pass must contain files from something else
+    // and are not deleted.
+    int pass;
+    for (pass = 0; pass < 2; pass++)
+    {
+        PRUint32 i;
+        for (i = 0; i < mCleanupList.Count(); i++)
+        {
+            CleanupData *cleanupData = (CleanupData *) mCleanupList.ElementAt(i);
+            nsCOMPtr<nsILocalFile> file = cleanupData->mFile;
+
+            // Test if the dir / file exists (something in an earlier loop
+            // may have already removed it)
+            PRBool exists = PR_FALSE;
+            file->Exists(&exists);
+            if (!exists)
+                continue;
+
+            // Test if the file has changed in between creation and deletion
+            // in some way that means it should be ignored
+            PRBool isDirectory = PR_FALSE;
+            file->IsDirectory(&isDirectory);
+            if (isDirectory != cleanupData->mIsDirectory)
+                continue; // A file has become a dir or vice versa !
+
+            if (pass == 0 && !isDirectory)
+            {
+                file->Remove(PR_FALSE);
+            }
+            else if (pass == 1 && isDirectory) // Directory
+            {
+                // Directories are more complicated. Enumerate through
+                // children looking for files. Any files created by the
+                // persist object would have been deleted by the first
+                // pass so if there are any there at this stage, the dir
+                // cannot be deleted because it has someone else's files
+                // in it. Empty child dirs are deleted but they must be
+                // recursed through to ensure they are actually empty.
+
+                PRBool isEmptyDirectory = PR_TRUE;
+                nsSupportsArray dirStack;
+                PRUint32 stackSize = 0;
+
+                // Push the top level enum onto the stack
+                nsCOMPtr<nsISimpleEnumerator> pos;
+                if (NS_SUCCEEDED(file->GetDirectoryEntries(getter_AddRefs(pos))))
+                    dirStack.AppendElement(pos);
+
+                while (isEmptyDirectory &&
+                    NS_SUCCEEDED(dirStack.Count(&stackSize)) && stackSize > 0)
+                {
+                    // Pop the last element
+                    nsCOMPtr<nsISimpleEnumerator> curPos;
+                    dirStack.GetElementAt(stackSize - 1, getter_AddRefs(curPos));
+                    dirStack.RemoveElementAt(stackSize - 1);
+                    
+                    // Test if the enumerator has any more files in it
+                    PRBool hasMoreElements = PR_FALSE;
+                    curPos->HasMoreElements(&hasMoreElements);
+                    if (!hasMoreElements)
+                    {
+                        continue;
+                    }
+
+                    // Child files automatically make this code drop out,
+                    // while child dirs keep the loop going.
+                    nsCOMPtr<nsISupports> child;
+                    curPos->GetNext(getter_AddRefs(child));
+                    NS_ASSERTION(child, "No child element, but hasMoreElements says otherwise");
+                    if (!child)
+                        continue;
+                    nsCOMPtr<nsILocalFile> childAsFile = do_QueryInterface(child);
+                    NS_ASSERTION(childAsFile, "This should be a file but isn't");
+
+                    PRBool childIsSymlink = PR_FALSE;
+                    childAsFile->IsSymlink(&childIsSymlink);
+                    PRBool childIsDir = PR_FALSE;
+                    childAsFile->IsDirectory(&childIsDir);                           
+                    if (!childIsDir || childIsSymlink)
+                    {
+                        // Some kind of file or symlink which means dir
+                        // is not empty so just drop out.
+                        isEmptyDirectory = PR_FALSE;
+                        break;
+                    }
+                    // Push parent enumerator followed by child enumerator
+                    nsCOMPtr<nsISimpleEnumerator> childPos;
+                    childAsFile->GetDirectoryEntries(getter_AddRefs(childPos));
+                    dirStack.AppendElement(curPos);
+                    if (childPos)
+                        dirStack.AppendElement(childPos);
+
+                }
+                dirStack.Clear();
+
+                // If after all that walking the dir is deemed empty, delete it
+                if (isEmptyDirectory)
+                {
+                    file->Remove(PR_TRUE);
+                }
+            }
+        }
+    }
 }
 
 nsresult
@@ -2043,6 +2184,16 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
 
     NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);
 
+    if (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE)
+    {
+        // Add to cleanup list in event of failure
+        CleanupData *cleanupData = new CleanupData;
+        NS_ENSURE_TRUE(cleanupData, NS_ERROR_OUT_OF_MEMORY);
+        cleanupData->mFile = aFile;
+        cleanupData->mIsDirectory = PR_FALSE;
+        mCleanupList.AppendElement(cleanupData);
+    }
+
     return NS_OK;
 }
 
@@ -2069,9 +2220,15 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
         mPersistResult = aResult;
     }
 
+    // Do file cleanup if required
+    if (NS_FAILED(aResult) && (mPersistFlags & PERSIST_FLAGS_CLEANUP_ON_FAILURE))
+    {
+        CleanupLocalFiles();
+    }
+
     // Cleanup the channels
     mCompleted = PR_TRUE;
-    CleanUp();
+    Cleanup();
 }
 
 /* Hack class to get access to nsISupportsKey's protected mKey member */

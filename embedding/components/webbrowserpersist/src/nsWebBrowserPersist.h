@@ -89,7 +89,8 @@ protected:
 
 // Private members
 private:
-    void CleanUp();
+    void Cleanup();
+    void CleanupLocalFiles();
     nsresult GetValidURIFromObject(nsISupports *aObject, nsIURI **aURI) const;
     nsresult GetLocalFileFromURI(nsIURI *aURI, nsILocalFile **aLocalFile) const;
     nsresult AppendPathToURI(nsIURI *aURI, const nsAString & aPath) const;
@@ -177,6 +178,7 @@ private:
     nsHashtable               mUploadList;
     nsHashtable               mURIMap;
     nsVoidArray               mDocList;
+    nsVoidArray               mCleanupList;
     nsCStringArray            mFilenameList;
     PRPackedBool              mFirstAndOnlyUse;
     PRPackedBool              mCancel;
