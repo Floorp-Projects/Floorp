@@ -117,8 +117,14 @@ public:
     PushFrame(aFrame);
   }
 
+#ifndef MOZ_MATHML
   void VerticalAlignFrames(nsLineBox* aLineBox,
                            nsSize& aMaxElementSizeResult);
+#else
+  void VerticalAlignFrames(nsLineBox* aLineBox,
+                           nsSize& aMaxElementSizeResult,
+                           nscoord& aLineBoxAscent);
+#endif
 
   PRBool TrimTrailingWhiteSpace();
 
