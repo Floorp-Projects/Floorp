@@ -100,28 +100,6 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: aFont.style = <%d>\n", aFont.style));
 	PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: aFont.size = <%d>\n", aFont.size));
 
-#ifndef PHOTON2_ONLY
-    /* Now match the Face name requested with a face Photon has */
-    fontcount = PfQueryFonts('a', PHFONT_ALL_FONTS, fDetails, MAX_FONTDETAIL);
-    if (fontcount >= MAX_FONTDETAIL)
-    {
-	  printf("nsFontMetricsPh::Init Font Array should be increased! fontcount=%d\n",fontcount);
-    }
-
-    if (fontcount)
-    {
- 	  for(index=0; index < fontcount; index++)
- 	  {
-        PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsFontMetricsPh::Init comparing <%s> with <%s>\n", str, fDetails[index].desc));
-	    if (strncmp(str, fDetails[index].desc, strlen(str)) == 0)
-	    {
-          ret_code = NS_OK;
-		  break;	  
-	    }
-      }
-	}
-#endif
-
 	mFont = new nsFont(aFont);
 	mLangGroup = aLangGroup;
 	mDeviceContext = (nsDeviceContextPh *) aContext;
@@ -152,7 +130,6 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
     	
 	NSFontSuffix[0] = nsnull;
 
-#if defined(PHOTON2_ONLY)
 	unsigned int uiFlags = 0L;
 
 	if(aFont.weight > NS_FONT_WEIGHT_NORMAL)
@@ -163,37 +140,12 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 
 	//uiFlags |= PF_STYLE_ANTIALIAS;	// kedl, for now this looks really bad
 
-
 	if(PfGenerateFontName((const uchar_t *)str, uiFlags, sizePoints, (uchar_t *)NSFullFontName) == NULL)
 	{
 		printf("Name generate failed:  %s, %d, %d\n", str, uiFlags, sizePoints);
 		PfGenerateFontName((const uchar_t *)"Courier 10 Pitch BT", 
 			uiFlags, sizePoints, (uchar_t *)NSFullFontName);
 	}
-#else
-    if (ret_code == NS_OK)
-      sprintf(NSFontName, "%s%d",fDetails[index].stem, sizePoints);
-	else
-    {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: Unknown font using helv\n"));
-      sprintf(NSFontName, "helv%d",sizePoints);		/* default font! should be a pref.*/
-    }
-
-//    if (aFont.weight >= NS_FONT_WEIGHT_BOLD)  /* this is more correct! */
-    if (aFont.weight > NS_FONT_WEIGHT_NORMAL)
-    {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: set font BOLD\n"));
-	  strcat(NSFontSuffix,"b");
-    }
-	
-    if (aFont.style & NS_FONT_STYLE_ITALIC)
-   {
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsFontMetricsPh::Init with nsFont: set font ITALIC\n"));
-	  strcat(NSFontSuffix,"i");
-   }	
-
-   sprintf(NSFullFontName, "%s%s", NSFontName, NSFontSuffix);
-#endif
 
 	/* Once the Photon Font String is built get the attributes */
 	FontQueryInfo fontInfo;

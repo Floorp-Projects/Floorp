@@ -165,10 +165,6 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   mImage.size.w        = mWidth;
   mImage.size.h        = mHeight;
   mImage.palette_tag   = 0; // REVISIT - A CRC value for PhRelay ???
-#ifdef PHOTON1_ONLY
-  mImage.xscale        = 1; // scaling is integral only
-  mImage.yscale        = 1;
-#endif
   mImage.format        = 0; // not used
   mImage.flags         = 0;
   mImage.ghost_bpl     = 0;
@@ -504,7 +500,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   PhPoint_t pos = { aX, aY };
   int       err;
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d m*âç  ask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
   //printf("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl);
 
   if( mAlphaBits )

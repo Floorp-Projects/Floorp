@@ -66,6 +66,7 @@ public:
 
   /* The GC is not ref counted, make sure you know what your doing */
   PhGC_t     *GetGC(void);
+  PhDrawContext_t     *GetDC(void);
 
   /* Is this Drawing Surface Active? */
   PRBool      IsActive();
@@ -78,8 +79,10 @@ private:
 
   PRBool			mIsOffscreen;
   PhGC_t        	*mGC;
-  PmMemoryContext_t *mMC;
+//xyz  PmMemoryContext_t *mMC;
+  PdOffscreenContext_t *mMC;
   PhDrawContext_t	*mDrawContext;
+  PhDrawContext_t	*moldDrawContext;
   
   PRUint32			mWidth;
   PRUint32			mHeight;
