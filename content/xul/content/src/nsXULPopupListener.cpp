@@ -101,6 +101,7 @@ protected:
 
     virtual nsresult LaunchPopup(nsIDOMEvent* anEvent);
     virtual nsresult LaunchPopup(PRInt32 aClientX, PRInt32 aClientY) ;
+    virtual void ClosePopup ( ) ;
 
     nsresult FindDocumentForNode(nsIDOMNode* inNode, nsIDOMXULDocument** outDoc) ;
 
@@ -140,9 +141,8 @@ XULPopupListenerImpl::XULPopupListenerImpl(void)
 
 XULPopupListenerImpl::~XULPopupListenerImpl(void)
 {
-  //XXX do we need to close the popup here? Will we get the right events as
-  //XXX the topLevel window is going away when the closebox is pressed?
-
+  ClosePopup();
+  
 #ifdef DEBUG_REFS
     --gInstanceCount;
     fprintf(stdout, "%d - RDF: XULPopupListenerImpl\n", gInstanceCount);
@@ -315,6 +315,15 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
   if ( popupType != eXULPopupType_tooltip )
     return NS_OK;
   
+  ClosePopup();
+  return NS_OK;
+    
+} // MouseOut
+
+
+void
+XULPopupListenerImpl :: ClosePopup ( )
+{
   if ( mTooltipTimer ) {
     mTooltipTimer->Cancel();
     mTooltipTimer = nsnull;
@@ -339,10 +348,8 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
     if ( doc )
       doc->SetTooltipNode(nsnull);
   }
-  
-  return NS_OK;
-  
-} // MouseOut
+
+} // ClosePopup
 
 
 //
