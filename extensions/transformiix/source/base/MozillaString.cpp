@@ -537,8 +537,22 @@ MBool String::isEqual(const String& data) const
     return MB_FALSE;
   else
   {
-    if (ptrNSString->EqualsWithConversion((PRUnichar *)data.toUnicode(),
-                            PR_FALSE, data.length()) == PR_TRUE)
+    if (ptrNSString->EqualsWithConversion(data.getConstNSString()) == PR_TRUE)
+      return MB_TRUE;
+    else
+      return MB_FALSE;
+  }
+}
+
+MBool String::isEqualIgnoreCase(const String& data) const
+{
+  if (this == &data)
+    return MB_TRUE;
+  else if (length() != data.length())
+    return MB_FALSE;
+  else
+  {
+    if (ptrNSString->EqualsIgnoreCase(data.getConstNSString()) == PR_TRUE)
       return MB_TRUE;
     else
       return MB_FALSE;

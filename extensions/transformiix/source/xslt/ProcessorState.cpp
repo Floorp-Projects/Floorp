@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.15 2001/01/22 09:39:54 kvisco%ziplink.net Exp $
+ * $Id: ProcessorState.cpp,v 1.16 2001/01/22 20:23:50 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.15 $ $Date: 2001/01/22 09:39:54 $
+ * @version $Revision: 1.16 $ $Date: 2001/01/22 20:23:50 $
 **/
 
 #include "ProcessorState.h"
@@ -191,6 +191,9 @@ void ProcessorState::addTemplate(Element* xslTemplate) {
 MBool ProcessorState::addToResultTree(Node* node) {
 
     Node* current = nodeStack->peek();
+#ifdef MOZ_XSL
+    String nameSpaceURI, name, localName;
+#endif
 
     switch (node->getNodeType()) {
 
@@ -200,9 +203,8 @@ MBool ProcessorState::addToResultTree(Node* node) {
             Element* element = (Element*)current;
             Attr* attr = (Attr*)node;
 #ifdef MOZ_XSL
-            String nameSpaceURI, name;
             name = attr->getName();
-            getNameSpaceURI(name, nameSpaceURI);
+            getResultNameSpaceURI(name, nameSpaceURI);
             // XXX HACK (pvdb) Workaround for BUG 51656 Html rendered as xhtml
             if (getOutputFormat()->isHTMLOutput()) {
                 name.toLowerCase();
@@ -227,6 +229,19 @@ MBool ProcessorState::addToResultTree(Node* node) {
                     current->appendChild(wrapper);
                     current = wrapper;
                 }
+#ifdef MOZ_XSL
+                else {
+                    // Checking if we should set the output method to HTML
+                    name = node->getNodeName();
+                    XMLUtils::getLocalPart(name, localName);
+                    if (localName.isEqualIgnoreCase(HTML)) {
+                        setOutputMethod(HTML);
+                        // XXX HACK (pvdb) Workaround for BUG 51656 
+                        // Html rendered as xhtml
+                        name.toLowerCase();
+                    }
+                }
+#endif
             }
             current->appendChild(node);
             break;

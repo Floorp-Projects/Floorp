@@ -207,6 +207,9 @@ class String : public MITREObject
 
     virtual MBool isEqual(const String& data) const; //Check equality between
                                                      //strings
+#ifdef MOZ_XSL
+    virtual MBool isEqualIgnoreCase(const String& data) const;
+#endif
 
     //Returns index of last occurrence of data
     virtual Int32 lastIndexOf(UNICODE_CHAR data) const;

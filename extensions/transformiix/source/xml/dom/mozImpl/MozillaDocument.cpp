@@ -130,7 +130,7 @@ Element* Document::getDocumentElement()
 }
 
 /**
- * Call nsIDOMDocument::GetDocumentElement to get the document's DocumentType.
+ * Call nsIDOMDocument::GetDoctype to get the document's DocumentType.
  *
  * @return the DocumentType
  */

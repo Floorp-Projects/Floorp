@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *
- * $Id: StringFunctionCall.cpp,v 1.6 2001/01/12 20:06:37 axel%pike.org Exp $
+ * $Id: StringFunctionCall.cpp,v 1.7 2001/01/22 20:23:47 axel%pike.org Exp $
  */
 
 /**
  * StringFunctionCall
  * A representation of the XPath String funtions
  * @author <A HREF="mailto:kvisco@ziplink.net">Keith Visco</A>
- * @version $Revision: 1.6 $ $Date: 2001/01/12 20:06:37 $
+ * @version $Revision: 1.7 $ $Date: 2001/01/22 20:23:47 $
 **/
 
 #include "FunctionLib.h"
@@ -254,8 +254,8 @@ ExprResult* StringFunctionCall::evaluate(Node* context, ContextState* cs) {
                 for (i = 0; i < size; i++) {
                     Int32 idx = oldChars.indexOf(chars[i]);
                     if (idx >= 0) {
-                        UNICODE_CHAR nchar = newChars.charAt(idx);
-                        if (nchar != -1) src.append(nchar);
+                        if (idx<newChars.length())
+                            src.append(newChars.charAt(idx));
                     }
                     else src.append(chars[i]);
                 }

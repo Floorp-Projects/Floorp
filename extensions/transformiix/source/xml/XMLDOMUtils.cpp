@@ -21,13 +21,13 @@
  * Keith Visco 
  *    -- original author.
  *
- * $Id: XMLDOMUtils.cpp,v 1.9 2001/01/22 09:32:40 kvisco%ziplink.net Exp $
+ * $Id: XMLDOMUtils.cpp,v 1.10 2001/01/22 20:23:44 axel%pike.org Exp $
  */
 
 /**
  * XMLDOMUtils
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.9 $ $Date: 2001/01/22 09:32:40 $
+ * @version $Revision: 1.10 $ $Date: 2001/01/22 20:23:44 $
 **/
 
 #include "XMLDOMUtils.h"
@@ -86,7 +86,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
 #ifdef MOZ_XSL
             String name, nameSpaceURI;
             name = element->getNodeName();
-            resolver->getNameSpaceURI(name, nameSpaceURI);
+            resolver->getResultNameSpaceURI(name, nameSpaceURI);
             Element* newElement = owner->createElementNS(nameSpaceURI, name);
 #else
             Element* newElement = owner->createElement(element->getNodeName());
@@ -98,7 +98,7 @@ Node* XMLDOMUtils::copyNode(Node* node, Document* owner, NamespaceResolver* reso
                 for ( i = 0; i < attList->getLength(); i++ ) {
                     Attr* attr = (Attr*) attList->item(i);
 #ifdef MOZ_XSL
-                    resolver->getNameSpaceURI(attr->getName(), nameSpaceURI);
+                    resolver->getResultNameSpaceURI(attr->getName(), nameSpaceURI);
                     newElement->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
 #else
                     newElement->setAttribute(attr->getName(), attr->getValue());
