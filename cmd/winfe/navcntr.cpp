@@ -111,7 +111,41 @@ void notifyProcedure (HT_Notification ns, HT_Resource n, HT_Event whatHappened)
 	else if (whatHappened == HT_EVENT_NODE_VPROP_CHANGED && HT_TopNode(theView) == n)
 	{
 		// Top level node changed its name/icon.  Need to change the button text, window title bar, and 
-		// embedded nav menu bar.
+		// embedded nav menu bar. Also need to update the current tree view and the column headers. (Whew!)
+		CSelectorButton* pButton = (CSelectorButton*)HT_GetViewFEData(theView);
+		if (pButton && pButton->m_hWnd)
+		{
+			// Invalidate the button.
+			pButton->Invalidate();
+
+			// Invalidate the title bar.
+			CFrameWnd* pFrame = pButton->GetParentFrame();
+			if (pFrame->IsKindOf(RUNTIME_CLASS(CNSNavFrame)))
+			{
+				CNSNavFrame* pNavFrame = (CNSNavFrame*)pFrame;
+				if (pNavFrame)
+				{
+					// Invalidate the title bar.
+					CNavMenuBar* pBar = pNavFrame->GetNavMenuBar();
+					if (pBar)
+						pBar->Invalidate();
+					
+					// Invalidate the tree view.
+					CRDFContentView* theOutlinerView = (CRDFContentView*)pButton->GetTreeView();
+					if (theOutlinerView)
+					{
+						CRDFOutlinerParent* pParent = (CRDFOutlinerParent*)(theOutlinerView->GetOutlinerParent());
+						if (pParent)
+						{
+							pParent->Invalidate();
+							COutliner* pOutliner = pParent->GetOutliner();
+							if (pOutliner)
+								pOutliner->Invalidate();
+						}
+					}
+				}
+			}
+		}
 	}
 	else if (whatHappened == HT_EVENT_NODE_EDIT && HT_TopNode(theView) == n)
 	{
