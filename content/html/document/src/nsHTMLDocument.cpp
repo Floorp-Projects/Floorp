@@ -107,6 +107,8 @@ static PRBool gPlugDetector = PR_FALSE;
 const PRInt32 kForward  = 0;
 const PRInt32 kBackward = 1;
 
+//#define DEBUG_charset
+
 
 //#define rickgdebug 1
 #ifdef rickgdebug
@@ -471,6 +473,11 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
             rv = calias->GetPreferred(theCharset, preferred);
             if(NS_SUCCEEDED(rv))
             {
+#ifdef DEBUG_charset
+ 							char* cCharset = charset.ToNewCString();
+							printf("From HTTP Header, charset = %s\n", cCharset);
+ 							Recycle(cCharset);
+ #endif
               charset = preferred;
               charsetSource = kCharsetFromHTTPHeader;
             }
@@ -542,6 +549,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   		rv = muCV->GetDefaultCharacterSet(&defaultCharsetFromWebShell);
     }
     if(NS_SUCCEEDED(rv)) {
+#ifdef DEBUG_charset
+   		nsAutoString d(defaultCharsetFromWebShell);
+ 			char* cCharset = d.ToNewCString();
+ 			printf("From default charset, charset = %s\n", cCharset);
+ 			Recycle(cCharset);
+ #endif
       charset = defaultCharsetFromWebShell;
       Recycle(defaultCharsetFromWebShell);
       charsetSource = kCharsetFromUserDefault;
@@ -551,12 +564,22 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       rv = muCV->GetHintCharacterSet(&requestCharset);
       if(NS_SUCCEEDED(rv)) {
         rv = muCV->GetHintCharacterSetSource((PRInt32*)(&requestCharsetSource));
+ 		        if(kCharsetUninitialized != requestCharsetSource) {
+ 		            muCV->SetHintCharacterSetSource((PRInt32)(kCharsetUninitialized));
+ 		  			}
       }
     }
     if(NS_SUCCEEDED(rv)) 
     {
       if(requestCharsetSource > charsetSource) 
       {
+#ifdef DEBUG_charset
+				nsAutoString d(requestCharset);
+			  char* cCharset = d.ToNewCString();
+			  printf("From request charset, charset = %s req=%d->%d\n", 
+			  		cCharset, charsetSource, requestCharsetSource);
+			  Recycle(cCharset);
+#endif
         charsetSource = requestCharsetSource;
         charset = requestCharset;
         Recycle(requestCharset);
@@ -570,6 +593,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       }
 		  if(NS_SUCCEEDED(rv) && (nsnull != forceCharsetFromWebShell)) 
       {
+#ifdef DEBUG_charset
+				nsAutoString d(forceCharsetFromWebShell);
+			  char* cCharset = d.ToNewCString();
+			  printf("From force, charset = %s \n", cCharset);
+			  Recycle(cCharset);
+#endif
 				charset = forceCharsetFromWebShell;
         Recycle(forceCharsetFromWebShell);
 				//TODO: we should define appropriate constant for force charset
@@ -670,6 +699,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     NS_IF_RELEASE(oldFilter);
     NS_IF_RELEASE(cdetflt);
 
+#ifdef DEBUG_charset
+	  char* cCharset = charset.ToNewCString();
+	  printf("set to parser charset = %s source %d\n", 
+		  		cCharset, charsetSource);
+				  Recycle(cCharset);
+#endif
     mParser->SetDocumentCharset( charset, charsetSource);
     mParser->SetCommand(aCommand);
     // create the content sink
