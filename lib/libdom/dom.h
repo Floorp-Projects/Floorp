@@ -209,15 +209,28 @@ DOM_PopNode(DOM_Node *node);
  * data is for use by the underlying embedding, to keep it from having to parse
  * "value" every time.  Dirty is set to true when a set operation happens
  * through the DOM interface, and the embedding can key on that to reparse
- * "value", and reset data and dirty.
+ * "value", and reset data and dirty.  The "dtor" is called when the entry
+ * is destroyed.  It should return JS_TRUE if it's OK to free the entry, and
+ * JS_FALSE otherwise.
  */
+
+struct DOM_AttributeEntry;      /* forward decl */
+
+typedef JSBool(*DOM_DataParser)(const char *str, uint32 *data, void *closure);
+typedef JSBool(*DOM_DataDestructor)(DOM_AttributeEntry *entry);
 
 struct DOM_AttributeEntry {
     const char *name;
     const char *value;
     uint32 data;
     JSBool dirty;
+    DOM_DataDestructor dtor;
 };
+
+JSBool
+DOM_GetCleanEntryData(JSContext *cx, DOM_AttributeEntry *entry,
+                      DOM_DataParser parser, DOM_DataDestructor dtor,
+                      uint32 *data, void *closure);
 
 struct DOM_Element {
     DOM_Node            node;
@@ -252,11 +265,6 @@ JSBool
 DOM_SetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
                         const char *value);
 
-typedef JSBool(*DOM_DataParser)(const char *str, uint32 *data, void *closure);
-
-JSBool
-DOM_GetCleanEntryData(JSContext *cx, DOM_AttributeEntry *entry,
-                      DOM_DataParser parser, uint32 *data, void *closure);
 
 /*
  * Set the attributes from a pair of synchronized lists.

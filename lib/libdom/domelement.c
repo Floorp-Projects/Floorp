@@ -239,9 +239,11 @@ DestroyAttrs(JSContext *cx, DOM_Element *element)
     DOM_AttributeEntry *entry;
     for (i = 0; i < element->nattrs; i++) {
         entry = element->attrs + i;
-        JS_free(cx, (char *)entry->name);
-        JS_free(cx, (char *)entry->value);
-        JS_free(cx, entry);
+        if (!entry->dtor || entry->dtor(entry)) {
+            JS_free(cx, (char *)entry->name);
+            JS_free(cx, (char *)entry->value);
+            JS_free(cx, entry);
+        }
     }
     JS_free(cx, element->attrs);
     element->attrs = NULL;
@@ -300,12 +302,14 @@ DOM_GetElementAttribute(JSContext *cx, DOM_Element *element, const char *name,
 
 JSBool
 DOM_GetCleanEntryData(JSContext *cx, DOM_AttributeEntry *entry,
-                      DOM_DataParser parser, uint32 *data, void *closure)
+                      DOM_DataParser parser, DOM_DataDestructor dtor,
+                      uint32 *data, void *closure)
 {
     if (entry->dirty) {
         uint32 newdata;
         if (!parser(entry->value, &newdata, closure))
             return JS_FALSE;
+        entry->dtor = dtor;
         entry->data = newdata;
         entry->dirty = JS_FALSE;
     }
