@@ -27,8 +27,9 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "prlog.h"
-#include "prclist.h"
-#include "prio.h"
+#include "prclist.h" 
+#include "prio.h" 
+#include "prsystem.h" // Directory Separator 
 
 #include "nsDiskModule.h"
 #include "nsCacheObject.h"
@@ -444,6 +445,7 @@ char* FullFilename(const char* i_Filename)
             return 0;
     }
     PL_strcpy(g_FullFilename, nsCachePref::GetInstance()->DiskCacheFolder());
+    PL_strcat(g_FullFilename, (const char*)PR_GetDirectorySepartor()); //spelling check later as nspr fixes it. 
     PL_strcat(g_FullFilename, i_Filename);
     return g_FullFilename;
 }

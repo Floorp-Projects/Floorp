@@ -29,6 +29,7 @@
 
 //#include "nsISupports.h"
 #include "prtypes.h"
+#include "prlog.h"
 
 class nsCachePref //: public nsISupports
 {
@@ -90,6 +91,57 @@ private:
     char*                   m_DiskCacheFolder;
     PRUint32                m_BkgSleepTime;
 };
+
+inline
+PRUint32 nsCachePref::DiskCacheSize()
+{
+    return m_DiskCacheSize;
+}
+
+inline
+void nsCachePref::DiskCacheSize(const PRUint32 i_Size)
+{
+    m_DiskCacheSize = i_Size;
+}
+
+inline
+PRBool nsCachePref::DiskCacheSSL(void)
+{
+    return m_bDiskCacheSSL;
+}
+
+inline
+void nsCachePref::DiskCacheSSL(PRBool bSet)
+{
+    m_bDiskCacheSSL = bSet;
+}
+
+inline
+const char* 
+nsCachePref::DiskCacheFolder(void)
+{
+    PR_ASSERT(m_DiskCacheFolder);
+    return m_DiskCacheFolder;
+}
+
+inline
+PRUint32 nsCachePref::MemCacheSize()
+{
+    return m_MemCacheSize;
+}
+
+inline
+void nsCachePref::MemCacheSize(const PRUint32 i_Size)
+{
+    m_MemCacheSize = i_Size;
+}
+
+inline
+PRBool nsCachePref::RevalidateInBkg(void)
+{
+    return m_bRevalidateInBkg;
+}
+
 
 #endif // nsCachePref_h__
 
