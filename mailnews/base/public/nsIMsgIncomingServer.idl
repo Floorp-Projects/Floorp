@@ -43,7 +43,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string username;
 
   /* server type, i.e. "pop3", "imap", "nntp", etc */
-  readonly attribute string type;
+  attribute string type;
 
   /* should we remember the password? */
   attribute boolean rememberPassword;

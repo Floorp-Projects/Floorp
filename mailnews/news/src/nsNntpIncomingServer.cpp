@@ -25,20 +25,22 @@ NS_IMPL_ISUPPORTS_INHERITED(nsNntpIncomingServer,
 
                             
 
-nsNntpIncomingServer::nsNntpIncomingServer() :
-    m_rootFolderPath(0)
+nsNntpIncomingServer::nsNntpIncomingServer()
 {    
     NS_INIT_REFCNT();
 }
 
 nsNntpIncomingServer::~nsNntpIncomingServer()
 {
-    PR_FREEIF(m_rootFolderPath);
 }
 
 NS_IMPL_SERVERPREF_STR(nsNntpIncomingServer,
                        RootFolderPath,
                        "directory")
+    
+NS_IMPL_SERVERPREF_STR(nsNntpIncomingServer,
+                       NewsrcFilePath,
+                       "newsrc.file")
 
 nsresult
 nsNntpIncomingServer::GetServerURI(char **uri)

@@ -280,11 +280,6 @@ nsMsgIncomingServer::SetPrettyName(char *value) {
   return setCharPref("name", value);
 }
 
-NS_IMETHODIMP
-nsMsgIncomingServer::GetType(char* *aType) {
-  return getCharPref("type", aType);
-}
-
 // use the convenience macros to implement the accessors
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, HostName, "hostname");
 NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Username, "userName");
@@ -292,8 +287,8 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Password, "password");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DoBiff, "check_new_mail");
 NS_IMPL_SERVERPREF_INT(nsMsgIncomingServer, BiffMinutes, "check_time");
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, RememberPassword, "remember_password");
-NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, LocalPath, "directory")
-
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, LocalPath, "directory");
+NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, Type, "type");
 
 /* what was this called in 4.x? */
 // pref("mail.pop3_gets_new_mail",				true);

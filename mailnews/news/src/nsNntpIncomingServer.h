@@ -44,10 +44,10 @@ public:
     NS_IMETHOD GetRootFolderPath(char **);
     NS_IMETHOD SetRootFolderPath(char *);
 
-    NS_IMETHOD GetServerURI(char * *uri);
+    NS_IMETHOD GetNewsrcFilePath(char **);
+    NS_IMETHOD SetNewsrcFilePath(char *);
     
-private:
-    char *m_rootFolderPath;
+    NS_IMETHOD GetServerURI(char * *uri);
 };
 
 #endif

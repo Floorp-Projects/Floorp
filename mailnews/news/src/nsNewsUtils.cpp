@@ -163,9 +163,14 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   char *localPath;
   if (NS_SUCCEEDED(rv))
     rv = server->GetLocalPath(&localPath);
+
+#ifdef DEBUG_NEWS
+  printf("local path = %s\n", localPath);
+#endif
   if (NS_SUCCEEDED(rv)) {
     pathResult = localPath;
   }
+  // mismatched free?
   if (localPath) PL_strfree(localPath);
 
   if (NS_FAILED(rv)) {
@@ -173,6 +178,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
     return rv;
   }
 
+#if FATFILEINPREFS
   // create pathResult if it doesn't exist
   // at this point, pathResult should be something like
   // .../News, ...\News, ...:News)
@@ -191,6 +197,7 @@ nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   // create pathResult if it doesn't exist
   // at this point, pathResult should be something like
   // ../News/host-<hostname>, ...\News\host-<hostname>, ...:News:host-<hostname>
+#endif /* FATFILEINPREFS */
   if (!pathResult.Exists())
     pathResult.CreateDir();
   

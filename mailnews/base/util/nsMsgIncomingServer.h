@@ -51,8 +51,9 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer {
   NS_IMETHOD GetUsername(char * *aUserName);
   NS_IMETHOD SetUsername(char * aUserName);
 
-  /* attribute boolean rememberPassword; */
+  /* attribute string type; */
   NS_IMETHOD GetType(char * *aType);
+  NS_IMETHOD SetType(char * aType);
   
   /* attribute boolean rememberPassword; */
   NS_IMETHOD GetRememberPassword(PRBool *aRememberPassword);

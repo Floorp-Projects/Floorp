@@ -312,8 +312,29 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 #ifdef DEBUG_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
+#if FATFILEINPREFS
     nsFileSpec newsrcFile("");
     rv = GetNewsrcFile(hostname, path, newsrcFile);
+#else
+    char *newsrcFilePathStr = nsnull;
+    
+    //Are we assured this is the server for this folder?
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+  
+    nsCOMPtr<nsINntpIncomingServer> nntpServer;
+    rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+                                getter_AddRefs(nntpServer));
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = nntpServer->GetNewsrcFilePath(&newsrcFilePathStr);
+    if (NS_FAILED(rv)) return rv;
+      
+    nsFileSpec newsrcFile(newsrcFilePathStr);
+    PR_FREEIF(newsrcFilePathStr);
+    newsrcFilePathStr = nsnull;
+#endif /* FATFILEINPREFS */
     if (NS_SUCCEEDED(rv)) {
 #ifdef DEBUG_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
@@ -1234,15 +1255,14 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
   
   nsCOMPtr<nsINntpIncomingServer> nntpServer;
   rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
-                              (void **)&nntpServer);
-  if (NS_SUCCEEDED(rv)) {
+                              getter_AddRefs(nntpServer));
+  if (NS_FAILED(rv)) return rv;
+  
 #ifdef DEBUG_NEWS
-    printf("Getting new news articles....\n");
+  printf("Getting new news articles....\n");
 #endif
-    rv = nntpService->GetNewNews(nntpServer, mURI, nsnull, nsnull);
-  }
+  rv = nntpService->GetNewNews(nntpServer, mURI, nsnull, nsnull);
   return rv;
-
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDBHdr, nsIMessage **message)

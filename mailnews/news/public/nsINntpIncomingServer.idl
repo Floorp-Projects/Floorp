@@ -20,6 +20,7 @@
 
 [scriptable, uuid(21ea0654-f773-11d2-8aec-004005263078)]
 interface nsINntpIncomingServer : nsISupports {
+    attribute string newsrcFilePath;
 };
 
 

@@ -93,5 +93,8 @@ interface nsIMsgAccountManager : nsISupports {
 
   /* unload accounts frees all the account manager data structures */
   void UnloadAccounts();
+
+  /* search for 4.x prefs, and migrate to 5.0 prefs */
+  void MigratePrefs();
 };
 
