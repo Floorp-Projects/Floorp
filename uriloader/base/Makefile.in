@@ -29,17 +29,21 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= uriloader
 LIBRARY_NAME	= uriloaderbase_s
 
-CPPSRCS = 									\
-				nsURILoader.cpp 			\
+CPPSRCS = 							\
+				nsURILoader.cpp 		\
+				nsDocLoader.cpp			\
 				$(NULL)
-XPIDLSRCS = 								\
+XPIDLSRCS = 							\
 				nsIContentHandler.idl 		\
 				nsIURIContentListener.idl 	\
-				nsIURILoader.idl	 		\
-				nsCURILoader.idl			\
+				nsIURILoader.idl	 	\
+				nsCURILoader.idl		\
+				nsIDocumentLoader.idl		\
+				nsIDocumentLoaderObserver.idl 	\
 				$(NULL)
-EXPORTS = 									\
-				nsURILoader.h	 			\
+EXPORTS = 							\
+				nsURILoader.h	 		\
+				nsDocLoader.h			\
 				$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
