@@ -1586,6 +1586,12 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::object == aTag) {
         rv = NS_NewObjectFrame(aNewFrame);
+        //rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
+        nsIFrame *blockFrame;
+        NS_NewBlockFrame(blockFrame, 0);
+        blockFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
+        aNewFrame = blockFrame;
+        processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::body == aTag) {
         rv = NS_NewBodyFrame(aNewFrame, NS_BODY_THE_BODY|NS_BODY_NO_AUTO_MARGINS);
