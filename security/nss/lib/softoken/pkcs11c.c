@@ -2619,15 +2619,16 @@ nsc_SetupHMACKeyGen(CK_MECHANISM_PTR pMechanism, NSSPKCS5PBEParameter **pbe)
 	return CKR_HOST_MEMORY;
     }
 
+    params->poolp = arena;
     params->ivLen = 0;
     params->pbeType = NSSPKCS5_PKCS12_V2;
     params->hashType = HASH_AlgSHA1;
     params->encAlg = SEC_OID_SHA1; /* any invalid value */
     params->is2KeyDES = PR_FALSE;
     params->keyID = pbeBitGenIntegrityKey;
+    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
     params->iter = pbe_params->ulIteration;
 
-    pbe_params = (CK_PBE_PARAMS *)pMechanism->pParameter;
     salt.data = (unsigned char *)pbe_params->pSalt;
     salt.len = (unsigned int)pbe_params->ulSaltLen;
     rv = SECITEM_CopyItem(arena,&params->salt,&salt);
