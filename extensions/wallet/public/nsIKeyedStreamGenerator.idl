@@ -1,0 +1,44 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *  thayes@netscape.com
+ *  dp@netscape.com
+ *  sspitzer@netscape.com
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(746bdcde-1dd2-11b2-b114-bf359be651fd)]
+interface nsIKeyedStreamGenerator: nsISupports {
+  /* information about what type of stream this generates */
+  readonly attribute string signature;      
+  
+  /* consumer will be a nsIPasswordSink for now, but not limited to that. */
+  void setup(in long salt, in nsISupports consumer);    
+    
+  /* the "quality level" of this stream 
+   * why a float?  if we assign 1 and 2, what do we do when something comes
+   * along that is in between? 
+   */
+  readonly attribute float level;           
+  
+  /* get the byte at position "index" in the stream */
+  octet getByte(in long index);  
+};
