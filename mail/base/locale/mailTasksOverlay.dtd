@@ -23,3 +23,6 @@
 
 <!ENTITY tasksMenu.label "Tools">
 <!ENTITY tasksMenu.accesskey "T"> 
+
+<!ENTITY windowMenu.label "Window">
+<!ENTITY windowMenu.accesskey "W">

@@ -93,6 +93,11 @@
     <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')" disabled="true"/>
     <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" valueDefault="&deleteCmd.label;" disabled="true"/>
     <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')" disabled="true"/>
+#ifdef XP_MACOSX
+    <!-- Mac Window menu -->
+    <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+    <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
+#endif
 </commandset>
 
 <broadcasterset id="abBroadcasters">
@@ -135,6 +140,11 @@
   <key keycode="VK_F6" oncommand="SwitchPaneFocus(event);"/>
 
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
+#ifdef XP_MACOSX
+
+  <!-- Mac Window keys -->
+  <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
+#endif
 </keyset>
 
 <popup id="dirTreeContext">
@@ -390,8 +400,12 @@
     
         <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
           <menupopup id="taskPopup">
+        
+        <!-- Moving the messengerCmd menu item item to the Window menu on the Mac -->
+#ifndef XP_MACOSX
             <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
             <menuseparator />  
+#endif
             <menuitem label="&searchAddressesCmd.label;" 
                       accesskey="&searchAddressesCmd.accesskey;"
                       id="menu_search_addresses" 
@@ -403,6 +417,30 @@
                       oncommand="openOptionsDialog('mailnews', 'chrome://messenger/content/addressbook/pref-addressing.xul', 'mailaddressbookpref')"/>
           </menupopup>
         </menu>
+
+#ifdef XP_MACOSX
+        <menu id="windowMenu" label="&windowMenu.label;" accesskey="&windowMenu.accesskey;"
+            datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+            onpopupshown="checkFocusedWindow();">
+            <template>
+            <rule>
+                <menupopup>
+                <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio"
+                            oncommand="ShowWindowFromResource(event.target)"/>
+                </menupopup>
+            </rule>
+            </template>
+            <menupopup id="windowPopup">
+              <menuitem label="&zoomWindow.label;" disabled="true"/>
+              <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
+              <menuseparator/>
+              <menuitem label="&bringAllToFront.label;" disabled="true"/>
+              <menuseparator/>
+              <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
+              <menuseparator id="sep-window-list"/>  
+            </menupopup>
+        </menu>
+#endif
 
         <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
           <menupopup id="menu_HelpPopup">

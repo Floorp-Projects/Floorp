@@ -167,6 +167,12 @@
 <!ENTITY preferencesCmd.key "O">
 <!ENTITY preferencesCmd.accesskey "O">
 
+<!--  Mac OS X Window Menu -->
+<!ENTITY minimizeWindow.key "m">
+<!ENTITY minimizeWindow.label "Minimize Window">
+<!ENTITY bringAllToFront.label "Bring All to Front">
+<!ENTITY zoomWindow.label "Zoom Window"> 
+
 <!-- Help Menu -->
 <!ENTITY helpMenu.label "Help">
 <!ENTITY helpMenu.accesskey "H"> 

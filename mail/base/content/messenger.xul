@@ -94,6 +94,9 @@
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
   <commandset id="tasksCommands"/>
+#ifdef XP_MACOSX
+  <commandset id="macWindowMenuItems"/>
+#endif
 </commandset>
 
 <broadcasterset id="mailBroadcasters">

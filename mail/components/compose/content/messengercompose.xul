@@ -135,6 +135,14 @@
   <!-- Options Menu -->
   <command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/>
   <command id="cmd_insert"/>
+
+#ifdef XP_MACOSX
+  <!-- Mac Window menu -->
+  <command id="minimizeWindow" label="&minimizeWindow.label;" disabled="true"/>
+  <command id="Tasks:Mail" oncommand="toMessengerWindow();"/>
+  <command id="Tasks:AddressBook" oncommand="toAddressBook();"/>
+#endif
+
 </commandset>
 
 <broadcasterset id="composeBroadcasters">
@@ -190,7 +198,14 @@
   <key keycode="VK_F6" oncommand="SwitchElementFocus(event);" modifiers="control,shift"/>
   <key keycode="VK_F6" oncommand="SwitchElementFocus(event);" modifiers="shift"/>
   <key keycode="VK_F6" oncommand="SwitchElementFocus(event);"/>
+
+#ifdef XP_MACOSX
+  <!-- Mac Window Menu -->
+  <key id="key_minimizeWindow" command="minimizeWindow" key="&minimizeWindow.key;" modifiers="accel"/>
+#endif
+
 </keyset>
+
 <keyset id="editorKeys"/>
 
 <popup id="msgComposeContext" onpopupshowing="updateEditItems();">
@@ -431,14 +446,41 @@
 
       <menu id="tasksMenu" label="&tasksMenu.label;" accesskey="&tasksMenu.accesskey;">
           <menupopup id="taskPopup">
+            <!-- Moving the first two items to the Window menu on the Mac -->
+#ifndef XP_MACOSX
             <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" oncommand="toMessengerWindow();" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
             <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" oncommand="toAddressBook();" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
             <menuseparator/>
+#endif
             <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
             <menuitem id="menu_preferences" label="&preferencesCmd.label;" accesskey="&preferencesCmd.accesskey;"
                       oncommand="openOptionsDialog('mailcomposepref', 'chrome://messenger/content/messengercompose/pref-composing_messages.xul', 'mailcomposepref');"/>
          </menupopup>
       </menu>
+
+#ifdef XP_MACOSX
+      <menu id="windowMenu" label="&windowMenu.label;" accesskey="&windowMenu.accesskey;"
+          datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot"
+          onpopupshown="checkFocusedWindow();">
+          <template>
+          <rule>
+              <menupopup>
+              <menuitem uri="rdf:*" label="rdf:http://home.netscape.com/NC-rdf#Name" type="radio" oncommand="ShowWindowFromResource(event.target)"/>
+              </menupopup>
+          </rule>
+          </template>
+          <menupopup id="windowPopup">
+            <menuitem label="&zoomWindow.label;" disabled="true"/>
+            <menuitem command="minimizeWindow" key="key_minimizeWindow"/>
+            <menuseparator/>
+            <menuitem label="&bringAllToFront.label;" disabled="true"/>
+            <menuseparator/>
+              <menuitem accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail" id="tasksMenuMail" class="menuitem-iconic icon-mail16 menu-iconic"/>
+              <menuitem label="&addressBookCmd.label;" accesskey="&addressBookCmd.accesskey;" key="key_addressbook" command="Tasks:AddressBook" id="tasksMenuAddressBook" class="menuitem-iconic icon-addressbook16 menu-iconic"/>
+            <menuseparator id="sep-window-list"/>
+          </menupopup>
+      </menu>
+#endif
       
       <menu label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
         <menupopup id="menu_HelpPopup">

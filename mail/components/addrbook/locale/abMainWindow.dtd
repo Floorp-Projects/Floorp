@@ -225,3 +225,9 @@
 
 <!-- Status Bar -->
 <!ENTITY statusText.label "">
+
+<!--  Mac OS X Window Menu -->
+<!ENTITY minimizeWindow.key "m">
+<!ENTITY minimizeWindow.label "Minimize Window">
+<!ENTITY bringAllToFront.label "Bring All to Front">
+<!ENTITY zoomWindow.label "Zoom Window">

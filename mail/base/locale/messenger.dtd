@@ -561,3 +561,9 @@
 <!ENTITY statusText.label "Done">
 <!ENTITY unreadCountText.label "Unread: ">
 <!ENTITY totalCountText.label " Total: ">
+
+<!--  Mac OS X Window Menu -->
+<!ENTITY minimizeWindow.key "m">
+<!ENTITY minimizeWindow.label "Minimize Window">
+<!ENTITY bringAllToFront.label "Bring All to Front">
+<!ENTITY zoomWindow.label "Zoom Window">

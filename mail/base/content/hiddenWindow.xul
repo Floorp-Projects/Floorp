@@ -92,6 +92,7 @@
         events="focus"
         oncommandupdate="FocusRingUpdate_Mail()"/>
   <commandset id="tasksCommands"/>
+  <commandset id="macWindowMenuItems"/>
 </commandset>
 
   <!-- it's the whole mailWindowOverlay.xul menubar! hidden windows need to

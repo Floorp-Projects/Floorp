@@ -127,3 +127,42 @@ function openOptionsDialog(containerID, paneURL, itemID)
     openDialog("chrome://communicator/content/pref/pref.xul","PrefWindow", 
                "chrome,titlebar,resizable=yes", paneURL, containerID, itemID);
 }
+
+# Macintosh window menu functions
+#ifdef XP_MACOSX
+const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
+
+function checkFocusedWindow()
+{
+  var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
+
+  var sep = document.getElementById("sep-window-list");
+  // Using double parens to avoid warning
+  while ((sep = sep.nextSibling)) {
+    var url = sep.getAttribute('id');
+    var win = windowManagerDS.getWindowForResource(url);
+    if (win == window) {
+      sep.setAttribute("checked", "true");
+      break;
+    }
+  }
+}
+
+function toOpenWindow( aWindow )
+{
+  aWindow.document.commandDispatcher.focusedWindow.focus();
+}
+
+function ShowWindowFromResource( node )
+{
+    var windowManagerDS = Components.classes['@mozilla.org/rdf/datasource;1?name=window-mediator'].getService(nsIWindowDataSource);
+    
+    var desiredWindow = null;
+    var url = node.getAttribute('id');
+    desiredWindow = windowManagerDS.getWindowForResource( url );
+    if ( desiredWindow )
+    {
+            toOpenWindow(desiredWindow);
+    }
+}
+#endif
