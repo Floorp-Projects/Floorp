@@ -59,10 +59,13 @@ nsresult HTML2text(int toHTML)
   while ((c = getchar()) != EOF)
     inString += c;
 
-  //printf("Input string is: %s\n-------------------- \n",
-  //       inString.ToNewCString());
+#if 0
+  printf("Input string is: %s\n-------------------- \n",
+         inString.ToNewCString());
+  printf("------------------------------------\n");
+#endif
 
-    // Create a parser
+  // Create a parser
   nsIParser* parser;
    rv = nsComponentManager::CreateInstance(kParserCID, nsnull,
                                            kIParserIID,(void**)&parser);
@@ -74,6 +77,7 @@ nsresult HTML2text(int toHTML)
 
   nsIHTMLContentSink* sink = nsnull;
 
+  // Create the appropriate output sink
   if (toHTML)
     rv = NS_New_HTML_ContentSinkStream(&sink, &outString, 0);
 
@@ -113,6 +117,7 @@ nsresult HTML2text(int toHTML)
 
 int main(int argc, char** argv)
 {
+  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, 0);
   NS_SetupRegistry();
 
   if (argc > 1 && argv[1][0] == '-' && argv[1][1] == 'h')
