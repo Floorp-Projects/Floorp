@@ -486,31 +486,39 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   }
 
   if (nsHTMLAtoms::style == aAttribute) {
-    // XXX the style sheet language is a document property that
-    // should be used to lookup the style sheet parser to parse the
-    // attribute.
-    nsICSSParser* css;
-    result = NS_NewCSSParser(&css);
-    if (NS_OK != result) {
-      return result;
-    }
-
-    nsIURL* docURL = nsnull;
+    PRBool isCSS = PR_TRUE;
     if (nsnull != mDocument) {
-      mDocument->GetBaseURL(docURL);
+      nsAutoString  styleType;
+      mDocument->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
+      if (0 < styleType.Length()) {
+        isCSS = styleType.EqualsIgnoreCase("text/css");
+      }
     }
+    if (isCSS) {
+      nsICSSParser* css;
+      result = NS_NewCSSParser(&css);
+      if (NS_OK != result) {
+        return result;
+      }
 
-    nsIStyleRule* rule;
-    result = css->ParseDeclarations(aValue, docURL, rule);
-    NS_IF_RELEASE(docURL);
-    if ((NS_OK == result) && (nsnull != rule)) {
-      result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
-      NS_RELEASE(rule);
+      nsIURL* docURL = nsnull;
+      if (nsnull != mDocument) {
+        mDocument->GetBaseURL(docURL);
+      }
+
+      nsIStyleRule* rule;
+      result = css->ParseDeclarations(aValue, docURL, rule);
+      NS_IF_RELEASE(docURL);
+      if ((NS_OK == result) && (nsnull != rule)) {
+        result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
+        NS_RELEASE(rule);
+      }
+      else {
+        result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
+      }
+      NS_RELEASE(css);
+      return NS_OK;
     }
-    else {
-      result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
-    }
-    NS_RELEASE(css);
   }
   else {
     // Check for event handlers
@@ -542,47 +550,48 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
     else if (nsHTMLAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
-   
-    nsHTMLValue val;
-    nsIHTMLContent* htmlContent;
-    
-    result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
-    if (NS_OK != result) {
-      return result;
-    }
-    if (NS_CONTENT_ATTR_NOT_THERE !=
-        htmlContent->StringToAttribute(aAttribute, aValue, val)) {
-      // string value was mapped to nsHTMLValue, set it that way
-      result = SetHTMLAttribute(aAttribute, val, aNotify);
-      NS_RELEASE(htmlContent);
-      return result;
-    }
-    else {
-      // set as string value to avoid another string copy
-      if (nsnull != mDocument) {  // set attr via style sheet
-        nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
-        if (nsnull != sheet) {
-          result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent, mAttributes);
-          NS_RELEASE(sheet);
-        }
-      }
-      else {  // manage this ourselves and re-sync when we connect to doc
-        result = EnsureWritableAttributes(htmlContent, mAttributes, PR_TRUE);
-        if (nsnull != mAttributes) {
-          PRInt32   count;
-          result = mAttributes->SetAttribute(aAttribute, aValue, count);
-          if (0 == count) {
-            ReleaseAttributes(mAttributes);
-          }
-        }
-      }
-    }
+  }
+ 
+  nsHTMLValue val;
+  nsIHTMLContent* htmlContent;
+  
+  result = mContent->QueryInterface(kIHTMLContentIID, (void **)&htmlContent);
+  if (NS_OK != result) {
+    return result;
+  }
+  if (NS_CONTENT_ATTR_NOT_THERE !=
+      htmlContent->StringToAttribute(aAttribute, aValue, val)) {
+    // string value was mapped to nsHTMLValue, set it that way
+    result = SetHTMLAttribute(aAttribute, val, aNotify);
     NS_RELEASE(htmlContent);
-
-    if (aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+    return result;
+  }
+  else {
+    // set as string value to avoid another string copy
+    if (nsnull != mDocument) {  // set attr via style sheet
+      nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
+      if (nsnull != sheet) {
+        result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent, mAttributes);
+        NS_RELEASE(sheet);
+      }
+    }
+    else {  // manage this ourselves and re-sync when we connect to doc
+      result = EnsureWritableAttributes(htmlContent, mAttributes, PR_TRUE);
+      if (nsnull != mAttributes) {
+        PRInt32   count;
+        result = mAttributes->SetAttribute(aAttribute, aValue, count);
+        if (0 == count) {
+          ReleaseAttributes(mAttributes);
+        }
+      }
     }
   }
+  NS_RELEASE(htmlContent);
+
+  if (aNotify && (nsnull != mDocument)) {
+    mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+  }
+
   return result;
 }
 
