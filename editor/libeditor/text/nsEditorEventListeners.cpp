@@ -174,6 +174,11 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
   
+  // DOM event handling happens in two passes, the client pass and the system
+  // pass.  We do all of our processing in the system pass, to allow client handlers
+  // the opporunity to cancel events and prevent typing in the editor.  If the client
+  // pass cancelled the event, defaultPrevented will be true below.
+
   nsCOMPtr<nsIDOMNSUIEvent> nsUIEvent = do_QueryInterface(aKeyEvent);
   if(nsUIEvent) 
   {
@@ -181,22 +186,6 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     nsUIEvent->GetPreventDefault(&defaultPrevented);
     if(defaultPrevented)
       return NS_OK;
-  }
-
-  // DOM event handling happens in two passes, the client pass and the system
-  // pass.  All system handlers need to move eventually to the system pass
-  // but due to inconsistencies that would create with XBL handlers they
-  // need to stay here for now and continue to process command keys.  Character
-  // generation, however, should be handled in the second system pass to allow
-  // proper cancellation of character generating events.
-  PRBool isSystemPass = PR_FALSE;
-  nsCOMPtr<nsIPrivateDOMEvent> privDOMEvent(do_QueryInterface(aKeyEvent));
-  if (privDOMEvent) {
-    nsEvent* innerEvent;
-    privDOMEvent->GetInternalNSEvent(&innerEvent);
-    if (innerEvent) {
-      isSystemPass = innerEvent->flags & NS_EVENT_FLAG_SYSTEM_EVENT;
-    }
   }
 
   // we should check a flag here to see if we should be using built-in key bindings
@@ -222,8 +211,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
   // if there is no charCode, then it's a key that doesn't map to a character,
   // so look for special keys using keyCode.
-  // Also, process these keys only during the Client Pass of the event loop.
-  if (0 != keyCode && !isSystemPass)
+  if (0 != keyCode)
   {
     PRBool isAnyModifierKeyButShift;
     nsresult rv;
@@ -304,9 +292,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
     }
   }
 
-  if (isSystemPass)
-    textEditor->HandleKeyPress(keyEvent);
-
+  textEditor->HandleKeyPress(keyEvent);
   return NS_OK; // we don't PreventDefault() here or keybindings like control-x won't work 
 }
 
