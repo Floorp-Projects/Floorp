@@ -135,13 +135,4 @@ GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMa
   }
 }
 
-GdkGC *nsGCCache::GetClipGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion)
-{
-  return GetGCFromDW(window, gcv, flags, clipRegion);
-}
-
-GdkGC *nsGCCache::GetGC(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags)
-{
-  return GetGCFromDW(window, gcv, flags, NULL);
-}
 

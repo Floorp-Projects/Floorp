@@ -488,12 +488,6 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   return NS_OK;
 }
 
-
-GdkGC *nsRenderingContextGTK::GetGC()
-{
-  return mGC;
-}
-
 void nsRenderingContextGTK::UpdateGC()
 {
   GdkGCValues values;
@@ -1892,24 +1886,3 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif /* FONT_SWITCHING */
 #endif /* MOZ_MATHML */
-
-NS_IMETHODIMP nsRenderingContextGTK::ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h )
-{
-  if ( y < -32766 ) {
-    y = -32766;
-  }
-
-  if ( y + h > 32766 ) {
-    h  = 32766 - y;
-  }
-
-  if ( x < -32766 ) {
-    x = -32766;
-  }
-
-  if ( x + w > 32766 ) {
-    w  = 32766 - x;
-  }
-
-  return NS_OK;
-}
