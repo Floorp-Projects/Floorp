@@ -185,7 +185,9 @@ char* nsWinRegItem::toString()
   if (result)
   {
       result->Append(*keyString);
-      resultCString = result->ToNewCString();
+      resultCString = new char[result->Length() + 1];
+      if(resultCString != nsnull)
+          result->ToCString(resultCString, result->Length() + 1);
   }
   
   if (keyString) delete keyString;

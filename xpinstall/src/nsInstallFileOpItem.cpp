@@ -957,7 +957,7 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
   mTarget->Spawn((const char **)&cParams[0], 1);
 
   if(cParams[0])
-    delete(cParams[0]);
+    Recycle(cParams[0]);
 
   // We don't care if it succeeded or not since we
   // don't wait for the process to end anyways.
@@ -1279,9 +1279,9 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
   }
 
   if(cDescription)
-    delete(cDescription);
+    Recycle(cDescription);
   if(cParams)
-    delete(cParams);
+    Recycle(cParams);
 #endif
 
   return ret;

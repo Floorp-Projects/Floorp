@@ -88,7 +88,9 @@ char* nsWinProfileItem::toString()
   result->AppendWithConversion("=");
   result->Append(*mValue);
 
-  resultCString = result->ToNewCString();
+  resultCString = new char[result->Length() + 1];
+  if(resultCString != nsnull)
+      result->ToCString(resultCString, result->Length() + 1);
   
   if (result)   delete result;
   if (filename) delete filename;
