@@ -54,7 +54,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
+libs realchrome::
 	@$(REGCHROME) content communicator comm.jar
 	@$(REGCHROME) locale en-US/communicator en-US.jar
 

@@ -56,6 +56,8 @@ include $(topsrcdir)/config/rules.mk
 
 libs::
 	$(INSTALL) $(srcdir)/resources/content/mdn.js $(DIST)/bin/defaults/pref
+
+libs realchrome::
 	@$(REGCHROME) content messenger-mdn messenger.jar
 	@$(REGCHROME) locale en-US/messenger-mdn en-US.jar
 

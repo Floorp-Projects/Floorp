@@ -58,7 +58,7 @@ CHROME_PLATFORM = unix
 endif
 endif
 
-libs::
+libs realchrome::
 	@$(REGCHROME) locale en-US/navigator-platform en-$(CHROME_PLATFORM).jar
 
 install::

@@ -55,7 +55,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-libs::
+libs realchrome::
 	@$(REGCHROME) content messenger-views messenger.jar
 
 install::
