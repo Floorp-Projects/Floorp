@@ -49,6 +49,10 @@
 #include "nsMsgCopy.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
+#include "nsIPrompt.h"
+#include "nsIURI.h"
+#include "nsISmtpUrl.h"
+#include "nsIChannel.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
@@ -176,7 +180,17 @@ nsMsgSendLater::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult s
   }
   else
   {
-    nsMsgDisplayMessageByID(NS_ERROR_QUEUED_DELIVERY_FAILED);
+    // extract the prompt object to use for the alert from the url....
+    nsCOMPtr<nsIURI> uri; 
+    nsCOMPtr<nsIPrompt> promptObject;
+    if (channel)
+    {
+      channel->GetURI(getter_AddRefs(uri));
+      nsCOMPtr<nsISmtpUrl> smtpUrl (do_QueryInterface(uri));
+      if (smtpUrl)
+        smtpUrl->GetPrompt(getter_AddRefs(promptObject));
+    } 
+    nsMsgDisplayMessageByID(promptObject, NS_ERROR_QUEUED_DELIVERY_FAILED);
     
     // Getting the data failed, but we will still keep trying to send the rest...
     rv = StartNextMailFileSend();
@@ -402,7 +416,8 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     }
     else
     {
-      nsMsgDisplayMessageByID(NS_ERROR_SEND_FAILED);
+      // shame we can't get access to a prompt interface from here...=(
+      nsMsgDisplayMessageByID(nsnull, NS_ERROR_SEND_FAILED);
     }
 
     // Regardless, we will still keep trying to send the rest...

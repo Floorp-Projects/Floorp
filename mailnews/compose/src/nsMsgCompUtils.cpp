@@ -207,7 +207,7 @@ nsMsgStripLine (char * string)
 char * 
 mime_generate_headers (nsMsgCompFields *fields,
 									     const char *charset,
-									     nsMsgDeliverMode deliver_mode, PRInt32 *status)
+									     nsMsgDeliverMode deliver_mode, nsIPrompt * aPrompt, PRInt32 *status)
 {
   nsresult rv;
   *status = 0;
@@ -221,9 +221,9 @@ mime_generate_headers (nsMsgCompFields *fields,
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
 	PRBool isDraft =
-    deliver_mode == nsIMsgSend::nsMsgSaveAsDraft ||
-    deliver_mode == nsIMsgSend::nsMsgSaveAsTemplate ||
-    deliver_mode == nsIMsgSend::nsMsgQueueForLater;
+  deliver_mode == nsIMsgSend::nsMsgSaveAsDraft ||
+  deliver_mode == nsIMsgSend::nsMsgSaveAsTemplate ||
+  deliver_mode == nsIMsgSend::nsMsgQueueForLater;
 
 	const char* pFrom;
 	const char* pTo;
@@ -644,7 +644,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     if (NS_OK == nsMsgI18NConvertToUnicode(msgCompHeaderInternalCharset(), pSubject, u) &&
         !nsMsgI18Ncheck_data_in_charset_range(charset, u)) {
       PRBool proceedTheSend;
-      rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+      rv = nsMsgAskBooleanQuestionByID(aPrompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
       if (!proceedTheSend) {
         *status = NS_ERROR_BUT_DONT_SHOW_ALERT;
         return nsnull;

@@ -23,9 +23,11 @@
 #ifndef _nsMsgPrompts_H_
 #define _nsMsgPrompts_H_
 
-nsresult      nsMsgDisplayMessageByID(PRInt32 msgID);
-nsresult      nsMsgDisplayMessageByString(const PRUnichar * msg);
-nsresult      nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer);
-nsresult      nsMsgAskBooleanQuestionByString(const PRUnichar * msg, PRBool *answer);
+class nsIPrompt;
+
+nsresult      nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID);
+nsresult      nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg);
+nsresult      nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer);
+nsresult      nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer);
 
 #endif /* _nsMsgPrompts_H_ */

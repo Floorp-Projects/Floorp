@@ -85,14 +85,18 @@ const char *XP_AppCodeName = "Mozilla";
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
 /* based on in NET_ExplainErrorDetails in mkmessag.c */
-nsresult nsExplainErrorDetails(int code, ...)
+nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 {
+  NS_ENSURE_ARG(aSmtpUrl);
+
 	nsresult rv;
 	va_list args;
 	
-	NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
+  nsCOMPtr<nsIPrompt> dialog;
+  aSmtpUrl->GetPrompt(getter_AddRefs(dialog));
+  NS_ENSURE_TRUE(dialog, NS_ERROR_FAILURE);
 
-	PRUnichar *  msg;
+  PRUnichar *  msg;
 	nsXPIDLString eMsg;
   nsCOMPtr<nsIMsgStringService> smtpBundle = do_GetService(NS_MSG_SMTPSTRINGSERVICE_PROGID);
 
@@ -114,7 +118,8 @@ nsresult nsExplainErrorDetails(int code, ...)
 			break;
 	}
 
-	if (msg) {
+	if (msg) 
+  {
 		rv = dialog->Alert(nsnull, msg);
 		nsTextFormatter::smprintf_free(msg);
 	}
@@ -463,7 +468,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
     m_nextState = SMTP_ERROR_DONE;
     ClearFlag(SMTP_PAUSE_FOR_READ);
 
-	  nsresult rv = nsExplainErrorDetails(NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
+	  nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SMTP_SERVER_ERROR, (const char*)m_responseText);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
     m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -474,7 +479,7 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
      */
   if(status < 0)
 	{
-    nsresult rv = nsExplainErrorDetails(NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
+    nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_TCP_READ_ERROR, PR_GetOSError());
 	  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
 	  m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -998,7 +1003,7 @@ PRInt32 nsSmtpProtocol::SendMailResponse()
 
     if(m_responseCode != 250)
 	{
-		nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText);
+		nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_FROM_COMMAND, (const char*)m_responseText);
 		NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
 		m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1059,7 +1064,7 @@ PRInt32 nsSmtpProtocol::SendRecipientResponse()
 
 	if(m_responseCode != 250 && m_responseCode != 251)
 	{
-                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
+                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_RCPT_COMMAND, (const char*)m_responseText);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
                 m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1102,7 +1107,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
     char * command=0;   
 
     if((m_responseCode != 354) && (m_responseCode != 250)) {
-                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
+                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_DATA_COMMAND, (const char*)m_responseText);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
                 m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1247,7 +1252,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 {
 
     if((m_responseCode != 354) && (m_responseCode != 250)) {
-                nsresult rv = nsExplainErrorDetails(NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
+                nsresult rv = nsExplainErrorDetails(m_runningURL, NS_ERROR_SENDING_MESSAGE, (const char*)m_responseText);
                 NS_ASSERTION(NS_SUCCEEDED(rv), "failed to explain SMTP error");
 
                 m_urlErrorState = NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -1649,6 +1654,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
 {
   nsCOMPtr<nsISmtpServer> smtpServer;
   m_runningURL->GetSmtpServer(getter_AddRefs(smtpServer));
+  
   NS_ENSURE_TRUE(smtpServer, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(m_logonRedirector, NS_ERROR_FAILURE);
 
@@ -1660,9 +1666,12 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
   m_logonRedirector = nsnull; // we don't care about it anymore
 	
   // step (2) alert the user about the error
-  nsCOMPtr<nsIPrompt> dialog (do_GetService(kCNetSupportDialogCID));
-  if (dialog && pErrMsg && pErrMsg[0]) {
-    dialog->Alert(nsnull, pErrMsg);
+  nsCOMPtr<nsIPrompt> dialog;
+  if (m_runningURL && pErrMsg && pErrMsg[0]) 
+  {
+    m_runningURL->GetPrompt(getter_AddRefs(dialog));
+    if (dialog)
+      dialog->Alert(nsnull, pErrMsg);
   }
 
   // step (3) if they entered a bad password, forget about it!
@@ -1673,8 +1682,9 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionError(const PRUnichar *pErrMsg, 
   // error occurred and we aren't sending the message...in our case, this will
   // force the user back into the compose window and they can try to send it 
   // again.
-  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
+  
   // this will cause another dialog to get thrown up....
+  nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(m_runningURL);
 	mailNewsUrl->SetUrlState(PR_FALSE /* stopped running url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER);
 	return NS_OK;
 }

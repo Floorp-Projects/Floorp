@@ -863,7 +863,8 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
     else
       printfString = nsTextFormatter::smprintf(msg, "?");
 
-    nsMsgAskBooleanQuestionByString(printfString, &keepOnGoing);
+    // it's a shame we don't have access to an appropriate nsIPrompt object here...=(
+    nsMsgAskBooleanQuestionByString(nsnull, printfString, &keepOnGoing);
     PR_FREEIF(printfString);
 
     if (!keepOnGoing)
@@ -981,7 +982,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  int status = next->SnarfAttachment(mCompFields);
 		  if (NS_FAILED(status))
 			{
-			  m_mime_delivery_state->Fail(status, 0);
+			  m_mime_delivery_state->Fail(nsnull, status, 0);
 			  m_mime_delivery_state->NotifyListenersOnStopSending(nsnull, status, 0, nsnull);
 			  return NS_ERROR_UNEXPECTED;
 			}
@@ -995,7 +996,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// the exit routine and terminating the delivery.
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, aMsg);
+		  m_mime_delivery_state->Fail(nsnull, status, aMsg);
 		  m_mime_delivery_state->NotifyListenersOnStopSending(nsnull, status, aMsg, nsnull);
 	      return NS_ERROR_UNEXPECTED;
 		}
@@ -1004,7 +1005,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		  status = m_mime_delivery_state->GatherMimeAttachments ();
 	        if (NS_FAILED(status))
 	        {
-	          m_mime_delivery_state->Fail(status, aMsg);
+	          m_mime_delivery_state->Fail(nsnull, status, aMsg);
 			  m_mime_delivery_state->NotifyListenersOnStopSending(nsnull, status, aMsg, nsnull);
 			  return NS_ERROR_UNEXPECTED;
 			}
@@ -1016,7 +1017,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 		// then report that error and continue 
 	  if (NS_FAILED(status))
 		{
-		  m_mime_delivery_state->Fail(status, aMsg);
+		  m_mime_delivery_state->Fail(nsnull, status, aMsg);
 		}
 	}
 

@@ -33,7 +33,6 @@
 #include "nsIMsgSend.h"
 #include "nsIStreamListener.h"
 #include "nsIMimeHeaders.h"
-#include "nsIDocShell.h"
 #include "nsIBaseWindow.h"
 #include "nsIAbDirectory.h"
 
@@ -108,8 +107,7 @@ class nsMsgCompose : public nsIMsgCompose
 	nsMsgComposeSendListener      *m_sendListener;
 	nsIEditorShell                *m_editor;
 	nsIDOMWindow                  *m_window;
-    nsCOMPtr<nsIDocShell>          m_docShell;
-    nsCOMPtr<nsIBaseWindow>        m_baseWindow;
+  nsCOMPtr<nsIBaseWindow>        m_baseWindow;
 	nsMsgCompFields               *m_compFields;
 	nsCOMPtr<nsIMsgIdentity>      m_identity;
 	PRBool						  m_composeHTML;
@@ -126,7 +124,7 @@ class nsMsgCompose : public nsIMsgCompose
 	PRBool						            mQuotingToFollow; // Quoting indicator
 	nsMsgDocumentStateListener    *mDocumentListener;
 	MSG_ComposeType				  mType;		//Message type
-    nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
+  nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
     
   friend class QuotingOutputStreamListener;
 	friend class nsMsgDocumentStateListener;

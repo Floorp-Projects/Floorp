@@ -168,6 +168,7 @@
 class nsMsgSendPart;
 class nsMsgCopy;
 class nsMsgDeliveryListener;
+class nsIPrompt;
 
 class nsMsgComposeAndSend : public nsIMsgSend
 {
@@ -191,13 +192,21 @@ public:
   nsMsgComposeAndSend();
 	virtual     ~nsMsgComposeAndSend();
 
+  // When you send a message, the compose window goes away. So when you show alerts AFTER 
+  // we've dimissed the compose window, we want to parent them off an existing window for modality purposes.
+  // Ideally, when we create the compose window, we'll remember the dom window that created us
+  // and we'll pass the nsIPrompt associated that window around into this class. But that isn't happening right now
+  // So for now, I'm going to wrap all of that into this function which will have a temporary implementation
+  // for extracting the top most window and using that prompt interface...
+  void GetDefaultPrompt(nsIPrompt ** aPrompt);
+
   // Delivery and completion callback routines...
   NS_IMETHOD  DeliverMessage();
   NS_IMETHOD  DeliverFileAsMail();
   NS_IMETHOD  DeliverFileAsNews();
   void        DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode);
   void        DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso);
-  void        DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckForMail);
+  void        DoDeliveryExitProcessing(nsIURI * aUrl, nsresult aExitCode, PRBool aCheckForMail);
 
   nsresult    DoFcc();
   nsresult    StartMessageCopyOperation(nsIFileSpec        *aFileSpec, 
@@ -205,7 +214,7 @@ public:
                                         char			   *dest_uri);
 
   void	      Clear();
-  void	      Fail(nsresult failure_code, const PRUnichar * error_msg);
+  void	      Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUnichar * error_msg);
 
   NS_METHOD   SendToMagicFolder (nsMsgDeliverMode flag);
   nsresult    QueueForLater();
@@ -292,7 +301,6 @@ public:
   //
   // All vars necessary for this implementation
   //
-  nsIDocShell *mDocShell; // Weak reference
   nsMsgKey                  m_messageKey;        // jt -- Draft/Template support; newly created key
   nsCOMPtr<nsIMsgIdentity>  mUserIdentity;
   nsCOMPtr<nsMsgCompFields> mCompFields;         // All needed composition fields (header, etc...)

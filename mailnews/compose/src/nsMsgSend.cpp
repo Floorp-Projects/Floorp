@@ -66,10 +66,12 @@
 #include "nsTextFormatter.h"
 #include "nsIWebShell.h"
 #include "nsIPrompt.h"
+#include "nsINetSupportDialogService.h"
 #include "nsIAppShellService.h"
 #include "nsMailHeaders.h"
 #include "nsIDocShell.h"
 #include "nsMimeTypes.h"
+#include "nsISmtpUrl.h"
 
 // This will go away once select is passed a prompter interface
 #include "nsAppShellCIDs.h" // TODO remove later
@@ -88,6 +90,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
+static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID); 
 
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
@@ -207,14 +210,24 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
   mMessageWarningSize = 0;
-  mDocShell = nsnull;
 
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 nsMsgComposeAndSend::~nsMsgComposeAndSend()
 {
 	Clear();
+}
+
+void nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
+{
+
+  nsCOMPtr<nsIMsgWindow>    msgWindow;
+  nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(kMsgMailSessionCID));
+  mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+
+  if (msgWindow)
+      msgWindow->GetPromptDialog(aPrompt);
 }
 
 void 
@@ -411,6 +424,9 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 											// what headers to append/set to the main 
 											// message body.)
 
+  nsCOMPtr<nsIPrompt> promptObject; // only used if we have to show an alert here....
+  GetDefaultPrompt(getter_AddRefs(promptObject));
+
 	char *hdrs = 0;
 	PRBool maincontainerISrelatedpart = PR_FALSE;
 
@@ -601,7 +617,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   {
 		status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
     if (mGUINotificationEnabled)
-      nsMsgDisplayMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
+      nsMsgDisplayMessageByID(promptObject, NS_MSG_UNABLE_TO_OPEN_TMP_FILE);
 		goto FAIL;
 	}
   
@@ -838,7 +854,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   /* Write out the message headers.
    */
 	headers = mime_generate_headers (mCompFields, mCompFields->GetCharacterSet(),
-								                   m_deliver_mode, &status);
+								                   m_deliver_mode, promptObject, &status);
 	if (status < 0) 
 		goto FAIL;
 
@@ -1046,7 +1062,7 @@ FAIL:
 		if (status < 0) 
 		{
 			m_status = status;
-			Fail (status, nsnull);
+			Fail (nsnull, status, nsnull);
 		}
 	}
 
@@ -1296,7 +1312,9 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 
       if (NS_ERROR_UENC_NOMAPPING == rv) {
         PRBool proceedTheSend;
-        rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+        nsCOMPtr<nsIPrompt> prompt;
+        GetDefaultPrompt(getter_AddRefs(prompt));
+        rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
         if (!proceedTheSend) {
           PR_FREEIF(attachment1_body);
           PR_FREEIF(outCString);
@@ -2691,10 +2709,13 @@ nsMsgComposeAndSend::DeliverMessage()
 
       if (printfString)
       {
-        nsMsgAskBooleanQuestionByString(printfString, &abortTheSend);
+        nsCOMPtr<nsIPrompt> prompt;
+        GetDefaultPrompt(getter_AddRefs(prompt));
+
+        nsMsgAskBooleanQuestionByString(prompt, printfString, &abortTheSend);
         if (!abortTheSend)
         {
-          Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
+          Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, printfString);
           PR_FREEIF(printfString);
           return NS_ERROR_FAILURE;
         }
@@ -2753,12 +2774,16 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 						   (mCompFields->GetCc() ? PL_strlen (mCompFields->GetCc())  + 10 : 0) +
 						   (mCompFields->GetBcc() ? PL_strlen (mCompFields->GetBcc()) + 10 : 0) +
 						   10);
+  
+  nsCOMPtr<nsIPrompt> promptObject;
+  GetDefaultPrompt(getter_AddRefs(promptObject));
+
 	if (!buf) 
   {
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(NS_ERROR_OUT_OF_MEMORY, getter_Copies(eMsg));
     
-    Fail(NS_ERROR_OUT_OF_MEMORY, eMsg);
+    Fail(promptObject, NS_ERROR_OUT_OF_MEMORY, eMsg);
     NotifyListenersOnStopSending(nsnull, NS_ERROR_OUT_OF_MEMORY, nsnull, nsnull);
     return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -2830,7 +2855,7 @@ nsMsgComposeAndSend::DeliverFileAsMail()
     if (!mMailSendListener)
     {
       if (mGUINotificationEnabled)
-        nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
+        nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2841,27 +2866,18 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 	  nsCOMPtr<nsIFileSpec> aFileSpec;
 	  NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(aFileSpec));
 
-    // rhp: we don't always have a mDocShell...
-    nsCOMPtr<nsIPrompt> netPrompt;
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-    if (webShell)
-    {
-      netPrompt = do_GetInterface(webShell, &rv);
-    }
-    else
-    {
-      NS_WITH_SERVICE(nsIAppShellService, appshellservice, kAppShellServiceCID, &rv);
-      if(NS_SUCCEEDED(rv)) 
-      {
-        nsCOMPtr<nsIXULWindow>          xulWindow;
+    // we used to get the prompt from the compose window and we'd pass that in
+    // to the smtp protocol as the prompt to use. But when you send a message,
+    // we dismiss the compose window.....so you are parenting off of a window that
+    // isn't there. To have it work correctly I think we want the alert dialogs to be modal
+    // to the top most mail window...after all, that's where we are going to be sending status
+    // update information too....
 
-        appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
-        if (xulWindow)
-        {
-          netPrompt = do_GetInterface(xulWindow, &rv);
-        }
-      }
-    }
+    nsCOMPtr<nsIPrompt> netPrompt;
+    GetDefaultPrompt(getter_AddRefs(netPrompt));
+    
+    if (!netPrompt)
+      netPrompt = do_GetService(kCNetSupportDialogCID);
 
     // Tell the user we are sending the message!
     nsXPIDLString msg; 
@@ -2883,6 +2899,8 @@ nsMsgComposeAndSend::DeliverFileAsNews()
   nsresult rv = NS_OK;
   if (!(mCompFields->GetNewsgroups()))
     return rv;
+  nsCOMPtr<nsIPrompt> promptObject;
+  GetDefaultPrompt(getter_AddRefs(promptObject));
 
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
 
@@ -2894,7 +2912,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
     if (!mNewsPostListener)
     {
       if (mGUINotificationEnabled)
-        nsMsgDisplayMessageByID(NS_ERROR_SENDING_MESSAGE);
+        nsMsgDisplayMessageByID(promptObject, NS_ERROR_SENDING_MESSAGE);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -2908,17 +2926,17 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	rv = NS_NewFileSpecWithSpec(*mTempFileSpec, getter_AddRefs(fileToPost));
 	if (NS_FAILED(rv)) return rv;
 
-    // Tell the user we are posting the message!
-    nsXPIDLString msg; 
-    mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
-    SetStatusMessage( msg );
+  // Tell the user we are posting the message!
+  nsXPIDLString msg; 
+  mComposeBundle->GetStringByID(NS_MSG_POSTING_MESSAGE, getter_Copies(msg));
+  SetStatusMessage( msg );
 
 	nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
 	if (NS_FAILED(rv)) return rv;
 
 	if (!mailSession) return NS_ERROR_FAILURE;
 
-    nsCOMPtr<nsIMsgWindow>    msgWindow;
+  nsCOMPtr<nsIMsgWindow>    msgWindow;
 
 	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
 	if(NS_FAILED(rv))
@@ -2934,7 +2952,7 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 }
 
 void 
-nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
+nsMsgComposeAndSend::Fail(nsIPrompt * aPrompt, nsresult failure_code, const PRUnichar * error_msg)
 {
   if (NS_FAILED(failure_code))
   {
@@ -2944,9 +2962,9 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
       if (mGUINotificationEnabled)
       {
 	      if (!error_msg)
-	        nsMsgDisplayMessageByID(failure_code);
+	        nsMsgDisplayMessageByID(aPrompt, failure_code);
 	      else
-	        nsMsgDisplayMessageByString(error_msg);
+	        nsMsgDisplayMessageByString(aPrompt, error_msg);
       }
     }
   }
@@ -2961,7 +2979,7 @@ nsMsgComposeAndSend::Fail(nsresult failure_code, const PRUnichar * error_msg)
 }
 
 void
-nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckForMail)
+nsMsgComposeAndSend::DoDeliveryExitProcessing(nsIURI * aUri, nsresult aExitCode, PRBool aCheckForMail)
 {
   // If we fail on the news delivery, no sense in going on so just notify
   // the user and exit.
@@ -2974,7 +2992,12 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(aExitCode, getter_Copies(eMsg));
     
-    Fail(aExitCode, eMsg);
+    // we need a prompt interface for the alert.....but the compose window is currently hidden...
+    // so try to use the prompt interface associated with the smtp url...
+    nsCOMPtr<nsISmtpUrl> smtpUrl (do_QueryInterface(aUri));
+    nsCOMPtr<nsIPrompt> prompt;
+    smtpUrl->GetPrompt(getter_AddRefs(prompt));
+    Fail(prompt, aExitCode, eMsg);
     NotifyListenersOnStopSending(nsnull, aExitCode, nsnull, nsnull);
     return;
   }
@@ -3032,14 +3055,14 @@ nsMsgComposeAndSend::DoDeliveryExitProcessing(nsresult aExitCode, PRBool aCheckF
 void
 nsMsgComposeAndSend::DeliverAsMailExit(nsIURI *aUrl, nsresult aExitCode)
 {
-  DoDeliveryExitProcessing(aExitCode, PR_FALSE);
+  DoDeliveryExitProcessing(aUrl, aExitCode, PR_FALSE);
   return;
 }
 
 void
 nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode, PRBool sendMailAlso)
 {
-  DoDeliveryExitProcessing(aExitCode, sendMailAlso);
+  DoDeliveryExitProcessing(aUrl, aExitCode, sendMailAlso);
   return;
 }
 
@@ -3302,6 +3325,8 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
     mComposeBundle->GetStringByID(NS_MSG_START_COPY_MESSAGE_FAILED, getter_Copies(msg));
 
   SetStatusMessage( msg );
+  nsCOMPtr<nsIPrompt> prompt;
+  GetDefaultPrompt(getter_AddRefs(prompt));
 
   // Ok, now to support a second copy operation, we need to figure
   // out which copy request just finished. If the user has requested
@@ -3331,11 +3356,11 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
 
         nsXPIDLString eMsg; 
         mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-        Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+        Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
         if (mGUINotificationEnabled)
         {
-          nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+          nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
           if (!oopsGiveMeBackTheComposeWindow)
             rv = NS_OK;
           else
@@ -3356,11 +3381,11 @@ nsMsgComposeAndSend::NotifyListenersOnStopCopy(nsresult aStatus)
 
     nsXPIDLString eMsg; 
     mComposeBundle->GetStringByID(NS_MSG_FAILED_COPY_OPERATION, getter_Copies(eMsg));
-    Fail(NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
+    Fail(prompt, NS_ERROR_BUT_DONT_SHOW_ALERT, eMsg);
 
     if (mGUINotificationEnabled)
     {
-      nsMsgAskBooleanQuestionByString(eMsg, &oopsGiveMeBackTheComposeWindow);
+      nsMsgAskBooleanQuestionByString(prompt, eMsg, &oopsGiveMeBackTheComposeWindow);
       if (!oopsGiveMeBackTheComposeWindow)
     	  aStatus = NS_OK;
     }
@@ -4172,17 +4197,5 @@ nsMsgComposeAndSend::SetGUINotificationState(PRBool aEnableFlag)
 {
   mGUINotificationEnabled = aEnableFlag;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgComposeAndSend::SetDocShell(nsIDocShell *aDocShell)
-{
-    // Yes we are not doing AddRef() here!!!!
-    // Why? I am just doing what nsMsgCompose was doing. There seems have a
-    // reason not using nsCOMPtr and not ref counting it. This is bad, bad,
-    // bad. We need to come back to solve this very soon.
-    if (!aDocShell) return NS_ERROR_NULL_POINTER;
-    mDocShell = aDocShell;
-    return NS_OK;
 }
 

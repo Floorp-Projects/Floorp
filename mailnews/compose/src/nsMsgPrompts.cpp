@@ -31,7 +31,7 @@
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 nsresult
-nsMsgDisplayMessageByID(PRInt32 msgID)
+nsMsgDisplayMessageByID(nsIPrompt * aPrompt, PRInt32 msgID)
 {
   nsresult rv;
 
@@ -41,27 +41,30 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
   if (composebundle)
   {
     composebundle->GetStringByID(msgID, getter_Copies(msg));
-    rv = nsMsgDisplayMessageByString(msg);
+    rv = nsMsgDisplayMessageByString(aPrompt, msg);
   }
   return rv;
 }
 
 nsresult
-nsMsgDisplayMessageByString(const PRUnichar * msg)
+nsMsgDisplayMessageByString(nsIPrompt * aPrompt, const PRUnichar * msg)
 {
   nsresult rv;
+  nsCOMPtr<nsIPrompt> prompt = aPrompt;
 
   if ((!msg) || (!*msg))
     return NS_ERROR_INVALID_ARG;
-
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-  rv = dialog->Alert(nsnull, msg);
+  
+  if (!prompt)
+    prompt = do_GetService(kNetSupportDialogCID);
+  
+  if (prompt)
+    rv = prompt->Alert(nsnull, msg);
   return NS_OK;
 }
 
 nsresult
-nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
+nsMsgAskBooleanQuestionByID(nsIPrompt * aPrompt, PRInt32 msgID, PRBool *answer)
 {
   nsCOMPtr<nsIMsgStringService> composebundle (do_GetService(NS_MSG_COMPOSESTRINGSERVICE_PROGID));
   nsXPIDLString msg;
@@ -69,24 +72,24 @@ nsMsgAskBooleanQuestionByID(PRInt32 msgID, PRBool *answer)
   if (composebundle)
   {
     composebundle->GetStringByID(msgID, getter_Copies(msg));
-    nsMsgAskBooleanQuestionByString(msg, answer);
+    nsMsgAskBooleanQuestionByString(aPrompt, msg, answer);
   }
 
   return NS_OK;
 }     
 
 nsresult
-nsMsgAskBooleanQuestionByString(const PRUnichar * msg, PRBool *answer)
+nsMsgAskBooleanQuestionByString(nsIPrompt * aPrompt, const PRUnichar * msg, PRBool *answer)
 {
   nsresult rv;
   PRInt32 result;
+  nsCOMPtr<nsIPrompt> dialog = aPrompt;
 
   if ((!msg) || (!*msg))
     return NS_ERROR_INVALID_ARG;
-
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);  
-  if (NS_FAILED(rv))
-    return NS_ERROR_FACTORY_NOT_LOADED;
+  
+  if (!dialog)
+    dialog = do_GetService(kNetSupportDialogCID);
   
   if (dialog) 
   {

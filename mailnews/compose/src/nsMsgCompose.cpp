@@ -68,6 +68,7 @@
 #include "nsIIOService.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgBaseCID.h"
+#include "nsIPrompt.h"
 
 // Defines....
 static NS_DEFINE_CID(kMsgQuoteCID, NS_MSGQUOTE_CID);
@@ -387,19 +388,19 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 	if (aWindow)
 	{
 		m_window = aWindow;
+    nsCOMPtr<nsIDocShell> docshell;
 		nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWindow));
 		if (!globalObj)
 			return NS_ERROR_FAILURE;
 		
-		globalObj->GetDocShell(getter_AddRefs(m_docShell));
-                            \
-        nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(m_docShell));
-        nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-        rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-        if (NS_FAILED(rv)) return rv;
+		globalObj->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
+    nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+    rv = treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+    if (NS_FAILED(rv)) return rv;
 
-        m_baseWindow = do_QueryInterface(treeOwner);
-    }
+    m_baseWindow = do_QueryInterface(treeOwner);
+  }
 	
 	switch (format)
 	{
@@ -529,8 +530,6 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
       char        *bodyString = (char *)m_compFields->GetBody();
       PRInt32     bodyLength;
       char        *attachment1_type = TEXT_HTML;  // we better be "text/html" at this point
-      
-      mMsgSend->SetDocShell(m_docShell);
 
       if (!mEntityConversionDone)
       {
@@ -636,6 +635,11 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 {
 	nsresult rv = NS_OK;
 
+  // i'm assuming the compose window is still up at this point...
+  nsCOMPtr<nsIPrompt> prompt;
+  if (m_window)
+     m_window->GetPrompter(getter_AddRefs(prompt));
+
 	if (m_editor && m_compFields && !m_composeHTML)
 	{
     // The plain text compose window was used
@@ -667,7 +671,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
           // body contains multilingual data, confirm send to the user
           if (NS_ERROR_UENC_NOMAPPING == rv) {
             PRBool proceedTheSend;
-            rv = nsMsgAskBooleanQuestionByID(NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
+            rv = nsMsgAskBooleanQuestionByID(prompt, NS_MSG_MULTILINGUAL_SEND, &proceedTheSend);
             if (!proceedTheSend) {
               PR_FREEIF(outCString);
               return NS_ERROR_BUT_DONT_SHOW_ALERT;
@@ -695,8 +699,8 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
-    	if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
-			nsMsgDisplayMessageByID(rv);
+    if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
+		nsMsgDisplayMessageByID(prompt, rv);
 	}
 	
 	return rv;
@@ -795,7 +799,13 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 	{
 		ShowWindow(PR_TRUE);
     if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
-			nsMsgDisplayMessageByID(rv);
+    {
+      // i'm assuming the compose window is still up at this point...
+      nsCOMPtr<nsIPrompt> prompt;
+      if (m_window)
+        m_window->GetPrompter(getter_AddRefs(prompt));
+			nsMsgDisplayMessageByID(prompt, rv);
+    }
 	}
 	return rv;
 }
