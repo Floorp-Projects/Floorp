@@ -34,7 +34,7 @@ REQUIRES	= xpcom necko
 
 CPPSRCS		= \
 		nsKeywordProtocolHandler.cpp \
-		nsKeywordProtocolFactory.cpp \
+		nsKeywordModule.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
