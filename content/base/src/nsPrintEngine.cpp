@@ -1223,12 +1223,9 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
 
   mPrt->mPrintSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
 
-  // override any UI that wants to PrintPreview any selection
-  PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages;
-  mPrt->mPrintSettings->GetPrintRange(&printRangeType);
-  if (printRangeType == nsIPrintSettings::kRangeSelection) {
-    mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
-  }
+  // override any UI that wants to PrintPreview any selection or page range
+  // we want to view every page in PrintPreview each time
+  mPrt->mPrintSettings->SetPrintRange(nsIPrintSettings::kRangeAllPages);
 
   mPrt->mPrintDC = mDeviceContext;
 
