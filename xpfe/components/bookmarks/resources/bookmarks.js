@@ -623,8 +623,15 @@ function OpenURL(event, node, root)
     if (url.substring(0, 3) == "NC:")
         return false;
 
-    // get right sized window
-    window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+    if (event.altKey)
+    {
+        BookmarkProperties();
+    }
+    else
+    {
+        // get right sized window
+        window.openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
+    }
     return true;
 }
 
