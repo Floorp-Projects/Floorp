@@ -166,7 +166,7 @@ NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIView *aView, nsIRende
   return rv;
 }
 
-NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext)
+NS_IMETHODIMP DeviceContextImpl::CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext)
 {
 #ifdef NS_PRINT_PREVIEW
   // AltDC NEVER use widgets to create their DCs
@@ -246,7 +246,7 @@ nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, 
 #endif
 }
 
-nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsDrawingSurface aSurface)
+nsresult DeviceContextImpl::InitRenderingContext(nsIRenderingContext *aContext, nsIDrawingSurface* aSurface)
 {
 #ifdef NS_PRINT_PREVIEW
   // there are a couple of cases where the kUseAltDCFor_CREATERC_xxx flag has been turned off

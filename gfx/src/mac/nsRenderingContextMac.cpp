@@ -146,7 +146,7 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 //------------------------------------------------------------------------
 
 // should only be called for an offscreen drawing surface, without an offset or clip region
-NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface)
 {
 	// make sure all allocations in the constructor succeeded.
 	if (nsnull == mFrontSurface)
@@ -374,7 +374,7 @@ NS_IMETHODIMP nsRenderingContextMac::UnlockDrawingSurface(void)
 //------------------------------------------------------------------------
 
 
-NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {  
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
 
@@ -388,7 +388,7 @@ NS_IMETHODIMP nsRenderingContextMac::SelectOffScreenDrawingSurface(nsDrawingSurf
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsDrawingSurface *aSurface)
+NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {  
 	*aSurface = mCurrentSurface;
 	// on Mac, select it too, to ensure that the port gets set correct for
@@ -399,7 +399,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetDrawingSurface(nsDrawingSurface *aSurfac
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
@@ -493,7 +493,7 @@ NS_IMETHODIMP nsRenderingContextMac::CopyOffScreenBits(nsDrawingSurface aSrcSurf
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
 {
 	aSurface = nsnull;
 
@@ -522,7 +522,7 @@ NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(const nsRect& aBounds,
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsIDrawingSurface* aSurface)
 {
 	if (!aSurface)
 		return NS_ERROR_FAILURE;

@@ -63,16 +63,16 @@ public:
 	virtual nsColorMap *GetColorMap() { return nsnull; }
 
 	// The heavy lifting
-	NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+	NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 		PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-	NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+	NS_IMETHOD Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
 		PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 		PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
 	NS_IMETHOD DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord aDY,
 		nscoord aDWidth, nscoord aDHeight);
  	
-	NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface, 
+	NS_IMETHOD DrawTile(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, 
 		PRInt32 aSXOffset, PRInt32 aSYOffset, PRInt32 aPadX, PRInt32 aPadY,
 		const nsRect &aTileRect); 
 	
@@ -97,8 +97,8 @@ private:
 	void ComputePaletteSize(PRIntn nBitCount);
 
 protected:
-	void CreateImage(nsDrawingSurface aSurface);
-	nsresult BuildImage(nsDrawingSurface aDrawingSurface);
+	void CreateImage(nsIDrawingSurface* aSurface);
+	nsresult BuildImage(nsIDrawingSurface* aDrawingSurface);
 	
 private:
 	BBitmap *mImage;

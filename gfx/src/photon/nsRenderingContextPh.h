@@ -75,7 +75,7 @@ public:
    NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
 
 	 inline
-   NS_IMETHODIMP Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+   NS_IMETHODIMP Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface)
 		{
 		mContext = aContext;
 		NS_IF_ADDREF(mContext);
@@ -117,14 +117,14 @@ public:
 		}
    
 	 inline
-   NS_IMETHODIMP SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+   NS_IMETHODIMP SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 		{ mSurface = ( nsnull==aSurface ) ? mOffscreenSurface : (nsDrawingSurfacePh *) aSurface;
 			mSurfaceDC = mSurface->Select( );
 			return NS_OK;
 		}
 
 	 inline
-   NS_IMETHODIMP GetDrawingSurface(nsDrawingSurface *aSurface) { *aSurface = (void *) mSurface; return NS_OK; }
+   NS_IMETHODIMP GetDrawingSurface(nsIDrawingSurface* *aSurface) { *aSurface = mSurface; return NS_OK; }
 
 	 inline
    NS_IMETHODIMP GetHints(PRUint32& aResult)
@@ -203,10 +203,10 @@ public:
    NS_IMETHODIMP GetCurrentTransform(nsTransform2D *&aTransform) { aTransform = mTranMatrix; return NS_OK; }
 
    
-   NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface);
+   NS_IMETHOD CreateDrawingSurface(const nsRect &aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface);
 
 	 inline
-   NS_IMETHODIMP DestroyDrawingSurface(nsDrawingSurface aDS)
+   NS_IMETHODIMP DestroyDrawingSurface(nsIDrawingSurface* aDS)
 		{ nsDrawingSurfacePh *surf = (nsDrawingSurfacePh *) aDS;
 			NS_IF_RELEASE(surf);
 			return NS_OK;
@@ -345,7 +345,7 @@ public:
 
    NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
    
-   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+   NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
 								const nsRect &aDestBounds, PRUint32 aCopyFlags);
 
 	 inline

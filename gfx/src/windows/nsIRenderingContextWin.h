@@ -57,7 +57,7 @@ public:
    * @param aSurface out parameter for new drawing surface
    * @result error status
    */
-  NS_IMETHOD CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface) = 0;
+  NS_IMETHOD CreateDrawingSurface(HDC aDC, nsIDrawingSurface* &aSurface) = 0;
 };
 
 #endif /* nsIRenderingContextWin_h___ */

@@ -132,7 +132,7 @@ void nsGraphicState::Clear()
 
 //------------------------------------------------------------------------
 
-void nsGraphicState::Init(nsDrawingSurface aSurface)
+void nsGraphicState::Init(nsIDrawingSurface* aSurface)
 {
 	// retrieve the grafPort
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);

@@ -185,7 +185,7 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
-                                          nsDrawingSurface aSurface)
+                                          nsIDrawingSurface* aSurface)
 {
   mContext = aContext;
   NS_IF_ADDREF(mContext);
@@ -246,7 +246,7 @@ NS_IMETHODIMP nsRenderingContextGTK::UnlockDrawingSurface(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {
   if (nsnull == aSurface)
     mSurface = mOffscreenSurface;
@@ -256,7 +256,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SelectOffScreenDrawingSurface(nsDrawingSurf
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsDrawingSurface *aSurface)
+NS_IMETHODIMP nsRenderingContextGTK::GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {
   *aSurface = mSurface;
   return NS_OK;
@@ -794,7 +794,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetCurrentTransform(nsTransform2D *&aTransf
 
 NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(const nsRect &aBounds,
                                                           PRUint32 aSurfFlags,
-                                                          nsDrawingSurface &aSurface)
+                                                          nsIDrawingSurface* &aSurface)
 {
   if (nsnull == mSurface) {
     aSurface = nsnull;
@@ -818,12 +818,12 @@ NS_IMETHODIMP nsRenderingContextGTK::CreateDrawingSurface(const nsRect &aBounds,
     rv = NS_ERROR_FAILURE;
   }
 
-  aSurface = (nsDrawingSurface)surf;
+  aSurface = surf;
 
   return rv;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
+NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsIDrawingSurface* aDS)
 {
   nsDrawingSurfaceGTK *surf = (nsDrawingSurfaceGTK *) aDS;
 
@@ -1334,7 +1334,7 @@ nsRenderingContextGTK::DrawString(const nsString& aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+nsRenderingContextGTK::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                          const nsRect &aDestBounds,
                                          PRUint32 aCopyFlags)
@@ -1446,7 +1446,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(imgIContainer *aImage, const nsRe
   return nsRenderingContextImpl::DrawImage(aImage, aSrcRect, aDestRect);
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+NS_IMETHODIMP nsRenderingContextGTK::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
 {
   // Do not cache the backbuffer. On GTK it is more efficient to allocate
   // the backbuffer as needed and it doesn't cause a performance hit. @see bug 95952

@@ -58,7 +58,7 @@ public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
 	void				Clear();
-	void				Init(nsDrawingSurface aSurface);
+	void				Init(nsIDrawingSurface* aSurface);
 	void				Init(CGrafPtr aPort);
 	void				Init(nsIWidget* aWindow);
 	void				Duplicate(nsGraphicState* aGS);	// would you prefer an '=' operator? <anonymous>

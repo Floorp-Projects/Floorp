@@ -82,7 +82,7 @@ private:
   nsRect mBufferRect;
   GdkPixbuf *mBuffer;
   nsRect mLockRect;
-  nsDrawingSurface mTempSurface;
+  nsIDrawingSurface* mTempSurface;
 };
 
 /** @} */
@@ -194,7 +194,7 @@ nsSVGLibartBitmapGdk::LockRenderingContext(const nsRect& rect, nsIRenderingConte
   
   nsDrawingSurfaceGTK *surface=nsnull;
   mRenderingContext->CreateDrawingSurface(rect, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS,
-                                          (nsDrawingSurface&)surface);
+                                          (nsIDrawingSurface*&)surface);
   NS_ASSERTION(surface, "could not create drawing surface");
 
   // copy from pixbuf to surface
@@ -225,7 +225,7 @@ nsSVGLibartBitmapGdk::UnlockRenderingContext()
 { 
   NS_ASSERTION(mTempSurface, "no temporary surface. multiple unlock calls?");
   nsDrawingSurfaceGTK *surface=nsnull;
-  mRenderingContext->GetDrawingSurface((nsDrawingSurface*)&surface);
+  mRenderingContext->GetDrawingSurface((nsIDrawingSurface**)&surface);
   NS_ASSERTION(surface, "null surface");
 
   mRenderingContext->PopState();
@@ -247,7 +247,7 @@ nsSVGLibartBitmapGdk::Flush()
 {
 
   nsDrawingSurfaceGTK *surface=nsnull;
-  mRenderingContext->GetDrawingSurface((nsDrawingSurface*)&surface);
+  mRenderingContext->GetDrawingSurface((nsIDrawingSurface**)&surface);
   NS_ASSERTION(surface, "null drawing surface");
 
   GdkDrawable *drawable = surface->GetDrawable();

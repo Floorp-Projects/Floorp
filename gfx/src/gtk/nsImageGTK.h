@@ -69,11 +69,11 @@ public:
   virtual nsColorMap* GetColorMap();
 
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
-                  nsDrawingSurface aSurface,
+                  nsIDrawingSurface* aSurface,
                   PRInt32 aX, PRInt32 aY,
                   PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD Draw(nsIRenderingContext &aContext,
-                  nsDrawingSurface aSurface,
+                  nsIDrawingSurface* aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
@@ -81,7 +81,7 @@ public:
                          nscoord aDWidth, nscoord aDHeight);
 
   NS_IMETHOD DrawTile(nsIRenderingContext &aContext,
-                      nsDrawingSurface aSurface,
+                      nsIDrawingSurface* aSurface,
                       PRInt32 aSXOffset, PRInt32 aSYOffset,
                       PRInt32 aPadX, PRInt32 aPadY,
                       const nsRect &aTileRect);
@@ -156,14 +156,14 @@ private:
                              unsigned width, unsigned height,
                              XImage *ximage, unsigned char *readData, unsigned char *srcData);
   inline void DrawComposited(nsIRenderingContext &aContext,
-                             nsDrawingSurface aSurface,
+                             nsIDrawingSurface* aSurface,
                              PRInt32 srcWidth, PRInt32 srcHeight,
                              PRInt32 dstWidth, PRInt32 dstHeight,
                              PRInt32 dstOrigX, PRInt32 dstOrigY,
                              PRInt32 aDX, PRInt32 aDY,
                              PRInt32 aDWidth, PRInt32 aDHeight);
   inline void DrawCompositeTile(nsIRenderingContext &aContext,
-                                nsDrawingSurface aSurface,
+                                nsIDrawingSurface* aSurface,
                                 PRInt32 aSX, PRInt32 aSY,
                                 PRInt32 aSWidth, PRInt32 aSHeight,
                                 PRInt32 aDX, PRInt32 aDY,

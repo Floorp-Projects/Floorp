@@ -225,7 +225,7 @@ NS_IMETHODIMP nsRenderingContextPS :: UnlockDrawingSurface(void)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
-nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {
   return NS_OK;
 }
@@ -235,7 +235,7 @@ nsRenderingContextPS :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP
-nsRenderingContextPS :: GetDrawingSurface(nsDrawingSurface *aSurface)
+nsRenderingContextPS :: GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {
   *aSurface = nsnull;
   return NS_OK;
@@ -565,7 +565,7 @@ nsRenderingContextPS :: GetCurrentTransform(nsTransform2D *&aTransform)
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+nsRenderingContextPS :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
 {
   return NS_OK;   // offscreen test
 }
@@ -575,7 +575,7 @@ nsRenderingContextPS :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSu
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DestroyDrawingSurface(nsDrawingSurface aDS)
+nsRenderingContextPS :: DestroyDrawingSurface(nsIDrawingSurface* aDS)
 {
   return NS_OK;   // offscreen test
 }
@@ -1288,7 +1288,7 @@ nsRenderingContextPS::GetBoundingMetrics(const PRUnichar*   aString,
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
-NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+NS_IMETHODIMP nsRenderingContextPS :: CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)

@@ -399,7 +399,7 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
 
 NS_IMETHODIMP
 nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
-                              nsDrawingSurface aSurface)
+                              nsIDrawingSurface* aSurface)
 {
   NS_PRECONDITION(PR_FALSE == mInitialized, "double init");
 
@@ -570,7 +570,7 @@ NS_IMETHODIMP nsRenderingContextWin :: UnlockDrawingSurface(void)
 }
 
 NS_IMETHODIMP
-nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {
   nsresult  rv;
 
@@ -617,7 +617,7 @@ nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface
 }
 
 NS_IMETHODIMP
-nsRenderingContextWin :: GetDrawingSurface(nsDrawingSurface *aSurface)
+nsRenderingContextWin :: GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {
   *aSurface = mSurface;
   return NS_OK;
@@ -1006,7 +1006,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetCurrentTransform(nsTransform2D *&aTran
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
 {
   nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
 
@@ -1017,12 +1017,12 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(const nsRect& aBound
     surf->Init(mMainDC, aBounds.width, aBounds.height, aSurfFlags);
   }
 
-  aSurface = (nsDrawingSurface)surf;
+  aSurface = surf;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
+NS_IMETHODIMP nsRenderingContextWin :: DestroyDrawingSurface(nsIDrawingSurface* aDS)
 {
   nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)aDS;
 
@@ -2369,7 +2369,7 @@ nsRenderingContextWin::GetBoundingMetrics(const PRUnichar*   aString,
 }
 #endif // MOZ_MATHML
 
-NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSurf,
+NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsIDrawingSurface* aSrcSurf,
                                                          PRInt32 aSrcX, PRInt32 aSrcY,
                                                          const nsRect &aDestBounds,
                                                          PRUint32 aCopyFlags)
@@ -2734,7 +2734,7 @@ void nsRenderingContextWin :: PushClipState(void)
   }
 }
 
-NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface)
+NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsIDrawingSurface* &aSurface)
 {
   nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
 
@@ -2744,7 +2744,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsDrawingSu
     surf->Init(aDC);
   }
 
-  aSurface = (nsDrawingSurface)surf;
+  aSurface = surf;
 
   return NS_OK;
 }
@@ -2792,7 +2792,7 @@ nsRenderingContextWin::ConditionRect(nsRect& aSrcRect, RECT& aDestRect)
 
 
 NS_IMETHODIMP 
-nsRenderingContextWin::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+nsRenderingContextWin::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
 {
   // Do not cache the backbuffer. On WIN32 it is faster to get allocate
   // the backbuffer as needed. @see bug 95952

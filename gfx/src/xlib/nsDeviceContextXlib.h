@@ -55,7 +55,7 @@ public:
     {return (DeviceContextImpl::CreateRenderingContext(aView, aContext)); }
   NS_IMETHOD  CreateRenderingContext(nsIWidget *aWidget, nsIRenderingContext *&aContext)
     {return (DeviceContextImpl::CreateRenderingContext(aWidget, aContext)); }
-  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) 
+  NS_IMETHOD  CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext) 
     {return (DeviceContextImpl::CreateRenderingContext(aSurface, aContext));}
   NS_IMETHOD  CreateRenderingContextInstance(nsIRenderingContext *&aContext);
 
@@ -96,7 +96,7 @@ private:
   nsresult             CommonInit(void);
   PRBool               mWriteable;
   PRUint32             mNumCells;
-  nsDrawingSurface     mSurface;
+  nsIDrawingSurface*     mSurface;
   XlibRgbHandle       *mXlibRgbHandle;
   Display *            mDisplay;
   Screen *             mScreen;

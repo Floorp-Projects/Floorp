@@ -229,12 +229,12 @@ public:
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) = 0;
 
   /**
-   * Create a rendering context and initialize it from an nsDrawingSurface
-   * @param nsDrawingSurface widget to initialize context from
+   * Create a rendering context and initialize it from an nsIDrawingSurface*
+   * @param nsIDrawingSurface* widget to initialize context from
    * @param aContext out parameter for new rendering context
    * @return error status
    */
-  NS_IMETHOD  CreateRenderingContext(nsDrawingSurface aSurface, nsIRenderingContext *&aContext) = 0;
+  NS_IMETHOD  CreateRenderingContext(nsIDrawingSurface* aSurface, nsIRenderingContext *&aContext) = 0;
 
   /**
    * Create a rendering context and initialize it from an nsIWidget

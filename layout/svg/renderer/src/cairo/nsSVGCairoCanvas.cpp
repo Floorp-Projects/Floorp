@@ -111,7 +111,7 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   NS_ASSERTION(mMozContext, "empty rendering context");
 
   nsDrawingSurfaceGTK *surface;
-  ctx->GetDrawingSurface((nsDrawingSurface*)&surface);
+  ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
   surface->GetSize(&mWidth, &mHeight);
   GdkDrawable *drawable = surface->GetDrawable();
 

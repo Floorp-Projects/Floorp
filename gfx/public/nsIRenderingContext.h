@@ -99,9 +99,6 @@ typedef enum
 
 //----------------------------------------------------------------------
 
-//a cross platform way of specifying a native rendering context
-typedef void * nsDrawingSurface;
-
 // RenderingContext interface
 class nsIRenderingContext : public nsISupports
 {
@@ -125,7 +122,7 @@ public:
    * @param aSurface the surface to draw into
    * @result The result of the initialization, NS_Ok if no errors
    */
-  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface) = 0;
 
   /**
    * Reset the rendering context
@@ -165,13 +162,13 @@ public:
    *        if nsnull, the original drawing surface obtained at initialization
    *        should be selected.
    */
-  NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) = 0;
+  NS_IMETHOD SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface) = 0;
 
   /**
    * Get the currently selected drawing surface
    * @param aSurface out parameter for the current drawing surface
    */
-  NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface) = 0;
+  NS_IMETHOD GetDrawingSurface(nsIDrawingSurface* *aSurface) = 0;
 
   /**
    * Returns in aResult any rendering hints that the context has.
@@ -330,15 +327,15 @@ public:
    *                if nsnull then a bitmap will not be created and associated
    *                with the new drawing surface
    * @param aSurfFlags see bottom of nsIRenderingContext.h
-   * @return A nsDrawingSurface
+   * @return A nsIDrawingSurface*
    */
-  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface) = 0;
+  NS_IMETHOD CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface) = 0;
 
   /**
    * Destroy a drawing surface created by CreateDrawingSurface()
    * @param aDS A drawing surface to destroy
    */
-  NS_IMETHOD DestroyDrawingSurface(nsDrawingSurface aDS) = 0;
+  NS_IMETHOD DestroyDrawingSurface(nsIDrawingSurface* aDS) = 0;
 
   /**
    * Draw a line
@@ -680,7 +677,7 @@ public:
    * @param aDestBounds Destination rectangle to copy to
    * @param aCopyFlags see below
    */
-  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+  NS_IMETHOD CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
@@ -698,7 +695,7 @@ public:
    * @param aMaxSize maximum size that may be requested for the backbuffer
    * @param aBackbuffer drawing surface used as the backbuffer
    */
-  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer) = 0;
+  NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer) = 0;
 
   /**
    * Release a drawing surface used as the backbuffer

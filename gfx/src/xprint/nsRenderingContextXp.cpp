@@ -101,9 +101,9 @@ NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIWidget *
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+NS_IMETHODIMP nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface)
 {
-  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)\n"));
+  PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface)\n"));
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -129,14 +129,14 @@ nsRenderingContextXp::UnlockDrawingSurface(void)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsRenderingContextXp::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::SelectOffScreenDrawingSurface()\n"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::GetDrawingSurface(nsDrawingSurface *aSurface)
+nsRenderingContextXp::GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::GetDrawingSurface()\n"));
   *aSurface = nsnull;
@@ -144,7 +144,7 @@ nsRenderingContextXp::GetDrawingSurface(nsDrawingSurface *aSurface)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+nsRenderingContextXp::CreateDrawingSurface(const nsRect& aBounds, PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CreateDrawingSurface()\n"));
   aSurface = nsnull;
@@ -185,7 +185,7 @@ NS_IMETHODIMP nsRenderingContextXp::DrawImage(imgIContainer *aImage, const nsRec
 }
 
 NS_IMETHODIMP
-nsRenderingContextXp::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+nsRenderingContextXp::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                         const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("nsRenderingContextXp::CopyOffScreenBits()\n"));

@@ -255,7 +255,7 @@ private:
   PRBool BuildRenderingDisplayList(nsIView* aRootView,
     const nsRegion& aRegion, nsVoidArray* aDisplayList, PLArenaPool &aPool);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC,
-                   const nsRegion& aRegion, nsDrawingSurface aRCSurface,
+                   const nsRegion& aRegion, nsIDrawingSurface* aRCSurface,
                    const nsVoidArray& aDisplayList);
 
   void RenderDisplayListElement(DisplayListElement2* element,
@@ -269,7 +269,7 @@ private:
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
   BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC, PRBool aBorrowContext,
-                                         nsDrawingSurface aBorrowSurface, PRBool aNeedAlpha,
+                                         nsIDrawingSurface* aBorrowSurface, PRBool aNeedAlpha,
                                          const nsRect& aArea);
 
   void ReparentViews(DisplayZTreeNode* aNode, nsHashtable &);

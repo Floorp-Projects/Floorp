@@ -226,7 +226,7 @@ void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect
  *  See documentation in nsImageMac.h
  *  @update 
  */
-NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY,
+NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface, PRInt32 aSX, PRInt32 aSY,
                  PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   Rect                srcRect, dstRect, maskRect;
@@ -430,7 +430,7 @@ NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface a
  *  @update 
  */
 NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, 
-                 nsDrawingSurface aSurface,
+                 nsIDrawingSurface* aSurface,
                  PRInt32 aX, PRInt32 aY, 
                  PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -1393,7 +1393,7 @@ nsImageMac::MakeIconType(PRInt32 aHeight, PRInt32 aDepth, PRBool aMask)
 }
 
 nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)
@@ -1452,7 +1452,7 @@ nsresult nsImageMac::SlowTile(nsIRenderingContext &aContext,
 // work when printing).
 
 nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    const nsRect &aTileRect)
 {
@@ -1728,7 +1728,7 @@ nsresult nsImageMac::DrawTileQuickly(nsIRenderingContext &aContext,
 
 
 NS_IMETHODIMP nsImageMac::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)

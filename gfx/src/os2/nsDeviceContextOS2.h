@@ -98,7 +98,7 @@ protected:
   PRBool mCachedFullRect;
   PRBool mPrintingStarted;
 
-  nsDrawingSurface      mSurface;
+  nsIDrawingSurface*      mSurface;
   PRUint32              mDepth;  // bit depth of device
   PRBool                mIsPaletteDevice;
   PRInt32               mWidth;

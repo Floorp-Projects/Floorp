@@ -240,7 +240,7 @@ nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
 
 NS_IMETHODIMP
 nsRenderingContextOS2::Init( nsIDeviceContext *aContext,
-                             nsDrawingSurface aSurface)
+                             nsIDrawingSurface* aSurface)
 {
    mContext = aContext;
    NS_IF_ADDREF(mContext);
@@ -332,7 +332,7 @@ NS_IMETHODIMP nsRenderingContextOS2::UnlockDrawingSurface()
 }
 
 NS_IMETHODIMP
-nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface aSurface)
+nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsIDrawingSurface* aSurface)
 {
    if (aSurface != mSurface)
    {
@@ -359,10 +359,8 @@ nsRenderingContextOS2::SelectOffScreenDrawingSurface( nsDrawingSurface aSurface)
    return NS_OK;
 }
 
-// !! This is a bit dodgy; nsDrawingSurface *really* needs to be XP-comified
-// !! properly...
 NS_IMETHODIMP
-nsRenderingContextOS2::GetDrawingSurface( nsDrawingSurface *aSurface)
+nsRenderingContextOS2::GetDrawingSurface( nsIDrawingSurface* *aSurface)
 {
    *aSurface = mSurface;
    return NS_OK;
@@ -784,7 +782,7 @@ NS_IMETHODIMP nsRenderingContextOS2::GetCurrentTransform( nsTransform2D *&aTrans
 // position oughtn't to be ignored, but for all intents & purposes can be.
 //
 NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(const nsRect& aBounds,
-                             PRUint32 aSurfFlags, nsDrawingSurface &aSurface)
+                             PRUint32 aSurfFlags, nsIDrawingSurface* &aSurface)
 {
    nsresult rc = NS_ERROR_FAILURE;
 
@@ -798,7 +796,7 @@ NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(const nsRect& aBounds,
    if(NS_SUCCEEDED(rc))
    {
       NS_ADDREF(surf);
-      aSurface = (void*)((nsDrawingSurfaceOS2 *) surf);
+      aSurface = surf;
    }
    else
       delete surf;
@@ -806,7 +804,7 @@ NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(const nsRect& aBounds,
    return rc;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(HPS aPS, nsDrawingSurface &aSurface, nsIWidget *aWidget)
+NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(HPS aPS, nsIDrawingSurface* &aSurface, nsIWidget *aWidget)
 {
   nsWindowSurface *surf = new nsWindowSurface();
 
@@ -816,12 +814,12 @@ NS_IMETHODIMP nsRenderingContextOS2::CreateDrawingSurface(HPS aPS, nsDrawingSurf
     surf->Init(aPS, aWidget);
   }
 
-  aSurface = (nsDrawingSurface)surf;
+  aSurface = surf;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextOS2::DestroyDrawingSurface( nsDrawingSurface aDS)
+NS_IMETHODIMP nsRenderingContextOS2::DestroyDrawingSurface( nsIDrawingSurface* aDS)
 {
    nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2 *) aDS;
    nsresult rc = NS_ERROR_NULL_POINTER;
@@ -2254,7 +2252,7 @@ nsRenderingContextOS2::GetBoundingMetrics(const PRUnichar*   aString,
 #endif // MOZ_MATHML
 
 NS_IMETHODIMP nsRenderingContextOS2::CopyOffScreenBits(
-                     nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                     nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                      const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
    NS_ASSERTION( aSrcSurf && mSurface && mMainSurface, "bad surfaces");

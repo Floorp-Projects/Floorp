@@ -57,7 +57,7 @@ public:
    * @param aSurface out parameter for new drawing surface
    * @result error status
    */
-  NS_IMETHOD CreateDrawingSurface(HPS aPS, nsDrawingSurface &aSurface, nsIWidget *aWidget) = 0;
+  NS_IMETHOD CreateDrawingSurface(HPS aPS, nsIDrawingSurface* &aSurface, nsIWidget *aWidget) = 0;
 };
 
 #endif /* nsIRenderingContextOS2_h___ */

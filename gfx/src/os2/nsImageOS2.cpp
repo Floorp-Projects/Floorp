@@ -258,7 +258,7 @@ void nsImageOS2::BuildBlenderLookup (void)
 }
 
 nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
-                           nsDrawingSurface aSurface,
+                           nsIDrawingSurface* aSurface,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -293,7 +293,7 @@ void nsImageOS2 :: DrawComposited24(unsigned char *aBits,
 }
 
 NS_IMETHODIMP 
-nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+nsImageOS2 :: Draw(nsIRenderingContext &aContext, nsIDrawingSurface* aSurface,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -713,7 +713,7 @@ nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInf
  *  @update 3/16/00 dwc
  */
 NS_IMETHODIMP nsImageOS2::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
+                                   nsIDrawingSurface* aSurface,
                                    PRInt32 aSXOffset, PRInt32 aSYOffset,
                                    PRInt32 aPadX, PRInt32 aPadY,
                                    const nsRect &aTileRect)

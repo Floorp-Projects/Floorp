@@ -88,7 +88,7 @@ private:
   Bitmap *mOffscreenBitmap;
   Graphics *mOffscreenGraphics;
   HDC mOffscreenHDC;
-  nsDrawingSurface mTempBuffer; // temp storage for during DC locking
+  nsIDrawingSurface* mTempBuffer; // temp storage for during DC locking
 #endif
 };
 

@@ -5036,7 +5036,7 @@ PRBool nsWindow::OnPaint(HDC aDC)
 
               if (NS_OK == event.renderingContext->QueryInterface(NS_GET_IID(nsIRenderingContextWin), (void **)&winrc))
               {
-                nsDrawingSurface surf;
+                nsIDrawingSurface* surf;
 
                 //i know all of this seems a little backwards. i'll fix it, i swear. MMP
 

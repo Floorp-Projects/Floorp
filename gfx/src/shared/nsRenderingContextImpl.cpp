@@ -43,7 +43,7 @@
 #include <stdlib.h>
 
 
-nsDrawingSurface nsRenderingContextImpl::gBackbuffer = nsnull;
+nsIDrawingSurface* nsRenderingContextImpl::gBackbuffer = nsnull;
 nsRect nsRenderingContextImpl::gBackbufferBounds = nsRect(0, 0, 0, 0);
 nsSize nsRenderingContextImpl::gLargestRequestedSize = nsSize(0, 0);
 
@@ -72,7 +72,7 @@ nsRenderingContextImpl :: ~nsRenderingContextImpl()
 }
 
 
-NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
 {
   // Default implementation assumes the backbuffer will be cached.
   // If the platform implementation does not require the backbuffer to
@@ -81,7 +81,7 @@ NS_IMETHODIMP nsRenderingContextImpl::GetBackbuffer(const nsRect &aRequestedSize
   return AllocateBackbuffer(aRequestedSize, aMaxSize, aBackbuffer, PR_TRUE);
 }
 
-nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer, PRBool aCacheBackbuffer)
+nsresult nsRenderingContextImpl::AllocateBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer, PRBool aCacheBackbuffer)
 {
   nsRect newBounds;
   nsresult rv = NS_OK;
@@ -284,7 +284,7 @@ NS_IMETHODIMP nsRenderingContextImpl::DrawImage(imgIContainer *aImage, const nsR
   if (!img) return NS_ERROR_FAILURE;
 
   nsIDrawingSurface *surface = nsnull;
-  GetDrawingSurface((void**)&surface);
+  GetDrawingSurface(&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
   // For Bug 87819
@@ -366,7 +366,7 @@ nsRenderingContextImpl::DrawTile(imgIContainer *aImage,
   if (!img) return NS_ERROR_FAILURE;
 
   nsIDrawingSurface *surface = nsnull;
-  GetDrawingSurface((void**)&surface);
+  GetDrawingSurface(&surface);
   if (!surface) return NS_ERROR_FAILURE;
 
   /* bug 113561 - frame can be smaller than container */

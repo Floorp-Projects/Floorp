@@ -199,7 +199,7 @@ nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIWidget *aWindow)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface)
+nsRenderingContextXlib::Init(nsIDeviceContext* aContext, nsIDrawingSurface* aSurface)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContxtXlib::Init(DeviceContext, DrawingSurface)\n"));
 
@@ -342,7 +342,7 @@ nsRenderingContextXlib::UnlockDrawingSurface(void)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
+nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsIDrawingSurface* aSurface)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SelectOffScreenDrawingSurface()\n"));
   if (nsnull == aSurface)
@@ -354,7 +354,7 @@ nsRenderingContextXlib::SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::GetDrawingSurface(nsDrawingSurface *aSurface)
+nsRenderingContextXlib::GetDrawingSurface(nsIDrawingSurface* *aSurface)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetDrawingSurface()\n"));
   *aSurface = mSurface;
@@ -758,7 +758,7 @@ nsRenderingContextXlib::GetCurrentTransform(nsTransform2D *&aTransform)
 NS_IMETHODIMP
 nsRenderingContextXlib::CreateDrawingSurface(const nsRect& aBounds,
                                              PRUint32 aSurfFlags,
-                                             nsDrawingSurface &aSurface)
+                                             nsIDrawingSurface* &aSurface)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CreateDrawingSurface()\n"));
 
@@ -779,13 +779,13 @@ nsRenderingContextXlib::CreateDrawingSurface(const nsRect& aBounds,
     rv = surf->Init(mXlibRgbHandle, mGC, aBounds.width, aBounds.height, aSurfFlags);    
   }
 
-  aSurface = (nsDrawingSurface)surf;
+  aSurface = surf;
 
   return rv;
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::DestroyDrawingSurface(nsDrawingSurface aDS)
+nsRenderingContextXlib::DestroyDrawingSurface(nsIDrawingSurface* aDS)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DestroyDrawingSurface()\n"));
   nsIDrawingSurfaceXlib *surf = NS_STATIC_CAST(nsIDrawingSurfaceXlib *, aDS);;
@@ -2280,7 +2280,7 @@ nsRenderingContextXlib::DrawString(const nsString& aString,
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+nsRenderingContextXlib::CopyOffScreenBits(nsIDrawingSurface* aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                           const nsRect &aDestBounds, PRUint32 aCopyFlags)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::CopyOffScreenBits()\n"));
@@ -2517,7 +2517,7 @@ nsRenderingContextXlib::DrawImage(imgIContainer *aImage, const nsRect & aSrcRect
 }
 
 NS_IMETHODIMP
-nsRenderingContextXlib::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer)
+nsRenderingContextXlib::GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsIDrawingSurface* &aBackbuffer)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::GetBackbuffer()\n"));
   /* Do not cache the backbuffer. On X11 it is more efficient to allocate
