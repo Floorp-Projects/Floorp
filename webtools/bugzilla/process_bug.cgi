@@ -903,6 +903,7 @@ The changes made were:
                 $origCcString .= ",$old"; # make sure to send mail to people
                                           # if they are going to no longer get
                                           # updates about this bug.
+                $old = "" if $old == 0;
             }
             if ($col eq 'product') {
                 RemoveVotes($id, 0,
