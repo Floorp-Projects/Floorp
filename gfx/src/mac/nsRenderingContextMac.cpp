@@ -29,6 +29,7 @@
 #include "nsIEnumerator.h"
 #include "nsRegionMac.h"
 #include "nsGraphicState.h"
+#include "nsGraphicsImpl.h"
 
 #include "nsTransform2D.h"
 #include "nsVoidArray.h"
@@ -49,18 +50,21 @@
 
 class StPortSetter {
 public:
-	StPortSetter(WindowPtr destWindowPort)
+	StPortSetter(GrafPtr newPort)
+		: mNewPort(newPort), mOldPort(qd.thePort)
 	{
-		::GetPort(&mOldPort);
-		::SetPortWindowPort(destWindowPort);
+		if (mOldPort != newPort)
+			::SetPort(newPort);
 	}
-				
+	
 	~StPortSetter()
 	{
-		::SetPort(mOldPort);
+		if (mOldPort != mNewPort)
+			::SetPort(mOldPort);
 	}
 
 protected:
+	GrafPtr		mNewPort;
 	GrafPtr		mOldPort;
 };
 
@@ -625,9 +629,10 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRect(const nsRect& aRect, nsClipComb
 	}
 	sNativeRegionPool.ReleaseRegion(rectRgn);
 
-	StartDraw();
+	{
+		StPortSetter setter(mPort);
 		::SetClip(clipRgn);
-	EndDraw();
+	}
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
@@ -685,9 +690,11 @@ NS_IMETHODIMP nsRenderingContextMac::SetClipRegion(const nsIRegion& aRegion, nsC
 		break;
 	}
 
-	StartDraw();
+		
+	{
+		StPortSetter setter(mPort);
 		::SetClip(clipRgn);
-	EndDraw();
+	}
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
@@ -743,7 +750,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetClipRegion(nsIRegion **aRegion)
 
 NS_IMETHODIMP nsRenderingContextMac::SetColor(nscolor aColor)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	#define COLOR8TOCOLOR16(color8)	 ((color8 << 8) | color8)
 
@@ -756,8 +763,6 @@ NS_IMETHODIMP nsRenderingContextMac::SetColor(nscolor aColor)
 
 	mChanges |= kColorChanged;
   	
-	EndDraw();
-
 	return NS_OK;
 }
 
@@ -853,7 +858,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetCurrentTransform(nsTransform2D *&aTransf
 
 NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	mGS->mTMatrix.TransformCoord(&aX0,&aY0);
 	mGS->mTMatrix.TransformCoord(&aX1,&aY1);
@@ -871,8 +876,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 	::MoveTo(aX0, aY0);
 	::Line(diffX, diffY);
 
-	EndDraw();
-
 	return NS_OK;
 }
 
@@ -880,7 +883,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawLine(nscoord aX0, nscoord aY0, nscoord 
 
 NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	PRUint32   i;
 	PRInt32    x,y;
@@ -898,7 +901,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolyline(const nsPoint aPoints[], PRInt
 		::LineTo(x,y);
 	}
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -931,7 +933,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac::DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 	
 	nscoord x,y,w,h;
 	Rect	therect;
@@ -945,7 +947,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawRect(nscoord aX, nscoord aY, nscoord aW
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::FrameRect(&therect);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -960,7 +961,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect	therect;
@@ -975,7 +976,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aW
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::PaintRect(&therect);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -983,7 +983,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aW
 
 NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	PRUint32   i;
 	PolyHandle thepoly;
@@ -991,7 +991,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 
 	thepoly = ::OpenPoly();
 	if (nsnull == thepoly) {
-		EndDraw();
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -1013,8 +1012,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 	::FramePoly(thepoly);
 	::KillPoly(thepoly);
 
-	EndDraw();
-
 	return NS_OK;
 }
 
@@ -1022,7 +1019,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 
 NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	PRUint32   i;
 	PolyHandle thepoly;
@@ -1030,7 +1027,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 
 	thepoly = ::OpenPoly();
 	if (nsnull == thepoly) {
-		EndDraw();
 		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
@@ -1050,7 +1046,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 	::PaintPoly(thepoly);
 	::KillPoly(thepoly);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1065,7 +1060,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac::DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect    therect;
@@ -1079,7 +1074,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawEllipse(nscoord aX, nscoord aY, nscoord
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::FrameOval(&therect);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1094,7 +1088,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac::FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect    therect;
@@ -1108,7 +1102,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillEllipse(nscoord aX, nscoord aY, nscoord
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::PaintOval(&therect);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1125,7 +1118,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextMac::DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect    therect;
@@ -1139,7 +1132,6 @@ NS_IMETHODIMP nsRenderingContextMac::DrawArc(nscoord aX, nscoord aY, nscoord aWi
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::FrameArc(&therect,aStartAngle,aEndAngle);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1156,7 +1148,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextMac::FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect	therect;
@@ -1170,7 +1162,6 @@ NS_IMETHODIMP nsRenderingContextMac::FillArc(nscoord aX, nscoord aY, nscoord aWi
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::PaintArc(&therect,aStartAngle,aEndAngle);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1222,7 +1213,7 @@ NS_IMETHODIMP nsRenderingContextMac::GetWidth(const char *aString, nscoord &aWid
 NS_IMETHODIMP
 nsRenderingContextMac::GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	// set native font and attributes
 	SetPortTextState();
@@ -1234,7 +1225,6 @@ nsRenderingContextMac::GetWidth(const char* aString, PRUint32 aLength, nscoord& 
 	short textWidth = ::TextWidth(aString, 0, aLength);
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
 
-	EndDraw();
 	return NS_OK;
 }
 
@@ -1242,26 +1232,22 @@ nsRenderingContextMac::GetWidth(const char* aString, PRUint32 aLength, nscoord& 
 
 NS_IMETHODIMP nsRenderingContextMac::GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
-	StartDraw();
- 	nsresult res = NS_OK;
- 	res = SetPortTextState();
- 	if(NS_FAILED(res))
- 		goto end_of_func;
+	StPortSetter setter(mPort);
+	
+ 	nsresult rv = SetPortTextState();
+ 	if (NS_FAILED(rv))
+ 		return rv;
 
 	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
 	
-	if (nsnull == mGS->mFontMetrics) {
- 		res = NS_ERROR_NULL_POINTER;
- 		goto end_of_func;		
-	}	
-	res = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
-	if(NS_SUCCEEDED(res))
-    	res = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
-    
-end_of_func:  
-    EndDraw();
-	return res;
+	if (nsnull == mGS->mFontMetrics)
+ 		return NS_ERROR_NULL_POINTER;
 
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+	if (NS_SUCCEEDED(rv))
+    	rv = mUnicodeRenderingToolkit.GetWidth(aString, aLength, aWidth, aFontID);
+    
+	return rv;
 }
 
 
@@ -1273,8 +1259,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
                                          nscoord aX, nscoord aY,
                                          const nscoord* aSpacing)
 {
-	nsresult res = NS_OK;
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	PRInt32 x = aX;
 	PRInt32 y = aY;
@@ -1312,11 +1297,10 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const char *aString, PRUint32 aL
 				delete[] spacing;
 		}
 		else
-			res =  NS_ERROR_OUT_OF_MEMORY;
+			return NS_ERROR_OUT_OF_MEMORY;
 	}
 
-	EndDraw();
-	return res;
+	return NS_OK;
 }
 
 
@@ -1327,27 +1311,22 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const PRUnichar *aString, PRUint
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
- 	nsresult res = NS_OK;
- 	res = SetPortTextState();
- 	if(NS_FAILED(res))
- 		goto end_of_func;
+ 	nsresult rv = SetPortTextState();
+ 	if (NS_FAILED(rv))
+ 		return rv;
 
 	NS_PRECONDITION(mGS->mFontMetrics != nsnull, "No font metrics in SetPortTextState");
 	
-	if (nsnull == mGS->mFontMetrics) {
+	if (nsnull == mGS->mFontMetrics)
 		return NS_ERROR_NULL_POINTER;
- 		goto end_of_func;
-	}	
-	res = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
-	if(NS_SUCCEEDED(res))
-		res = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
+	
+	rv = mUnicodeRenderingToolkit.PrepareToDraw(mP2T, mContext, mGS,mPort);
+	if (NS_SUCCEEDED(rv))
+		rv = mUnicodeRenderingToolkit.DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 
-end_of_func:
-
-    EndDraw();
-	return res;        
+	return rv;        
 }
 
 //------------------------------------------------------------------------
@@ -1356,11 +1335,8 @@ NS_IMETHODIMP nsRenderingContextMac::DrawString(const nsString& aString,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
- 	nsresult rv = DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
-	return rv;
+ 	return DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 }
-
-
 
 
 #pragma mark -
@@ -1395,33 +1371,27 @@ NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, nscoord aX, nsc
 
 NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nsRect sr = aSRect;
 	nsRect dr = aDRect;
 	mGS->mTMatrix.TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
 	mGS->mTMatrix.TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
 
-	nsresult result =  aImage->Draw(*this, mCurrentSurface, sr.x, sr.y, sr.width, sr.height,
-									dr.x, dr.y, dr.width, dr.height);
-
-	EndDraw();
-	return result;
+	return aImage->Draw(*this, mCurrentSurface, sr.x, sr.y, sr.width, sr.height,
+						dr.x, dr.y, dr.width, dr.height);
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac::DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nsRect tr = aRect;
 	mGS->mTMatrix.TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
-	nsresult result = aImage->Draw(*this, mCurrentSurface, tr.x, tr.y, tr.width, tr.height);
-
-	EndDraw();
-	return result;
+	return aImage->Draw(*this, mCurrentSurface, tr.x, tr.y, tr.width, tr.height);
 }
 
 NS_IMETHODIMP nsRenderingContextMac::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
@@ -1436,7 +1406,7 @@ NS_IMETHODIMP nsRenderingContextMac::InvertRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+	StPortSetter setter(mPort);
 
 	nscoord x,y,w,h;
 	Rect	therect;
@@ -1450,7 +1420,15 @@ NS_IMETHODIMP nsRenderingContextMac::InvertRect(nscoord aX, nscoord aY, nscoord 
 	::SetRect(&therect, pinToShort(x), pinToShort(y), pinToShort(x + w), pinToShort(y + h));
 	::InvertRect(&therect);
 
-	EndDraw();
 	return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextMac::GetGraphics(nsIGraphics* *aGraphics)
+{
+	NS_ASSERTION((aGraphics != nsnull), "aGraphics is NULL");
+	nsCOMPtr<nsIGraphics> graphics = new nsGraphicsImpl(this);
+	if (graphics)
+		return graphics->QueryInterface(NS_GET_IID(nsIGraphics), (void**)aGraphics);
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
+}

@@ -91,6 +91,8 @@ public:
   NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD InvertRect(const nsRect& aRect);
+  NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
@@ -125,8 +127,7 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
-  NS_IMETHOD InvertRect(const nsRect& aRect);
-  NS_IMETHOD InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD GetGraphics(nsIGraphics* *aGraphics);
 
   //locals
   NS_IMETHOD SetPortTextState();
@@ -143,37 +144,21 @@ protected:
 
 	void 			SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, PRUint32 aChanges = kEverythingChanged);
 
-	// NOTE:  StartDraw()/EndDraw() don't nest properly. This could be a problem.
-	GrafPtr		mOldPort;
-
-	inline void	StartDraw()
-	{
-			::GetPort(&mOldPort);
-			NS_ASSERTION((mPort != nsnull), "mPort is null");
-			::SetPort(mPort);
-	}
-
-	inline void	EndDraw()
-	{
-		::SetPort(mOldPort);
-	}
-
 protected:
-	float             		mP2T; 								// Pixel to Twip conversion factor
+	float             		mP2T;				// Pixel to Twip conversion factor
 	nsIDeviceContext *		mContext;
 
-	GrafPtr						mSavePort;
-	Rect							mSavePortRect;
+	GrafPtr					mSavePort;
+	Rect					mSavePortRect;
 
-	nsDrawingSurfaceMac*			mFrontSurface;
-	nsDrawingSurfaceMac*			mCurrentSurface;	// pointer to the current surface
+	nsDrawingSurfaceMac*	mFrontSurface;
+	nsDrawingSurfaceMac*	mCurrentSurface;	// pointer to the current surface
 
-	GrafPtr						mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
-	nsGraphicState *	mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
+	GrafPtr					mPort;				// current grafPort - shortcut for mCurrentSurface->GetPort()
+	nsGraphicState *		mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
 	nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
-	nsVoidArray *			mGSStack;		// GraphicStates stack, used for PushState/PopState
-	PRUint32					mChanges;		// bit mask of attributes that have changed since last Push().
+	nsVoidArray *			mGSStack;			// GraphicStates stack, used for PushState/PopState
+	PRUint32				mChanges;			// bit mask of attributes that have changed since last Push().
 };
-
 
 #endif /* nsRenderingContextMac_h___ */
