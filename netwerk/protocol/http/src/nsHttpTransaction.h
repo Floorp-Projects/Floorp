@@ -84,7 +84,8 @@ public:
     nsresult OnStopTransaction(nsresult);
 
 private:
-    nsresult ParseLine(char *line);
+    void     ParseLine(char *line);
+    void     ParseLineSegment(char *seg, PRUint32 len);
     nsresult ParseHead(char *, PRUint32 count, PRUint32 *countRead);
     nsresult HandleContent(char *, PRUint32 count, PRUint32 *countRead);
 

@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Darin Fisher <darin@netscape.com> (original author)
+ *   Andreas M. Schneider <clarence@clarence.de>
  */
 
 #include "nsHttpHandler.h"
@@ -200,12 +201,65 @@ nsHttpTransaction::OnStopTransaction(nsresult status)
     return NS_OK;
 }
 
-nsresult
+void
 nsHttpTransaction::ParseLine(char *line)
+{
+    LOG(("nsHttpTransaction::ParseLine [%s]\n", line));
+
+    if (!mHaveStatusLine) {
+        mResponseHead->ParseStatusLine(line);
+        mHaveStatusLine = PR_TRUE;
+        // XXX this should probably never happen
+        if (mResponseHead->Version() == NS_HTTP_VERSION_0_9)
+            mHaveAllHeaders = PR_TRUE;
+    }
+    else
+        mResponseHead->ParseHeaderLine(line);
+}
+
+void
+nsHttpTransaction::ParseLineSegment(char *segment, PRUint32 len)
 {
     NS_PRECONDITION(!mHaveAllHeaders, "already have all headers");
 
-    LOG(("nsHttpTransaction::ParseLine [%s]\n", line));
+    if (!mLineBuf.IsEmpty() && mLineBuf.Last() == '\n') {
+        // if this segment is a continuation of the previous...
+        if (*segment == ' ' || *segment == '\t') {
+            // trim off the new line char
+            mLineBuf.Truncate(mLineBuf.Length() - 1);
+            mLineBuf.Append(segment, len);
+        }
+        else {
+            // trim off the new line char and parse the line
+            mLineBuf.Truncate(mLineBuf.Length() - 1);
+            ParseLine((char *) mLineBuf.get());
+            // stuff the segment into the line buf
+            mLineBuf.Assign(segment, len);
+        }
+    }
+    else
+        mLineBuf.Append(segment, len);
+
+    // a line buf with only a new line char signifies the end of headers.
+    if (mLineBuf.First() == '\n') {
+        mHaveAllHeaders = PR_TRUE;
+        mLineBuf.Truncate();
+    }
+}
+
+nsresult
+nsHttpTransaction::ParseHead(char *buf,
+                             PRUint32 count,
+                             PRUint32 *countRead)
+{
+    PRUint32 len;
+    char *eol;
+
+    LOG(("nsHttpTransaction::ParseHead [count=%u]\n", count));
+
+    *countRead = 0;
+
+    NS_PRECONDITION(!mHaveAllHeaders, "oops");
     
     // allocate the response head object if necessary
     if (!mResponseHead) {
@@ -214,68 +268,49 @@ nsHttpTransaction::ParseLine(char *line)
             return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    if (!mHaveStatusLine) {
-        mResponseHead->ParseStatusLine(line);
+    // if we don't have a status line and the line buf is empty, then
+    // this must be the first time we've been called.
+    if (!mHaveStatusLine && mLineBuf.IsEmpty() &&
+            PL_strncasecmp(buf, "HTTP", PR_MIN(count, 4)) != 0) {
+        // XXX this check may fail for certain 0.9 content if we haven't
+        // received at least 4 bytes of data.
+        mResponseHead->ParseStatusLine("");
         mHaveStatusLine = PR_TRUE;
-        if (mResponseHead->Version() == NS_HTTP_VERSION_0_9)
-            mHaveAllHeaders = PR_TRUE;
-    }
-    else if (*line == '\0')
         mHaveAllHeaders = PR_TRUE;
-    else
-        mResponseHead->ParseHeaderLine(line);
-    return NS_OK;
-}
-
-nsresult
-nsHttpTransaction::ParseHead(char *buf,
-                             PRUint32 count,
-                             PRUint32 *countRead)
-{
-    char *eol;
-
-    LOG(("nsHttpTransaction::ParseHead [count=%u]\n", count));
-
-    *countRead = 0;
-
-    NS_PRECONDITION(!mHaveAllHeaders, "oops");
+        return NS_OK;
+    }
+    // otherwise we can assume that we don't have a HTTP/0.9 response.
 
     while ((eol = PL_strnchr(buf, '\n', count - *countRead)) != nsnull) {
         // found line in range [buf:eol]
-        *eol = 0;
+        len = eol - buf + 1;
 
-        // actually, in range [buf:eol-1]
+        *countRead += len;
+
+        // actually, the line is in the range [buf:eol-1]
         if ((eol > buf) && (*(eol-1) == '\r'))
-            *(eol-1) = 0;
+            len--;
 
-        // we may have a partial line to complete...
-        if (!mLineBuf.IsEmpty()) {
-            mLineBuf.Append(buf);
-            ParseLine((char *) mLineBuf.get());
-            mLineBuf.SetLength(0);
-        }
-        else
-            ParseLine(buf);
+        buf[len-1] = '\n';
+        ParseLineSegment(buf, len);
 
-        *countRead += (eol + 1 - buf);
-        NS_ASSERTION(*countRead <= count, "oops");
+        if (mHaveAllHeaders)
+            return NS_OK;
 
         // skip over line
         buf = eol + 1;
-
-        if (mHaveAllHeaders)
-            break;
     }
 
-    if (!mHaveAllHeaders && (count > *countRead)) {
-        // remember this partial line
-        mLineBuf.Assign(buf, count - *countRead);
+    // do something about a partial header line
+    if (!mHaveAllHeaders && (len = count - *countRead)) {
         *countRead = count;
-
-        LOG(("partial line [%s]\n", mLineBuf.get()));
+        // ignore a trailing carriage return, and don't bother calling
+        // ParseLineSegment if buf only contains a carriage return.
+        if ((buf[len-1] == '\r') && (--len == 0))
+            return NS_OK;
+        ParseLineSegment(buf, len);
     }
 
-    // read something
     return NS_OK;
 }
 
@@ -556,27 +591,16 @@ nsHttpTransaction::Read(char *buf, PRUint32 count, PRUint32 *bytesWritten)
 
     // we may not have read all of the headers yet...
     if (!mHaveAllHeaders) {
-        PRUint32 offset = 0, bytesConsumed;
+        PRUint32 bytesConsumed = 0;
 
-        while (count) {
-            bytesConsumed = 0;
+        rv = ParseHead(buf, count, &bytesConsumed);
+        if (NS_FAILED(rv)) return rv;
 
-            rv = ParseHead(buf + offset, count, &bytesConsumed);
-            if (NS_FAILED(rv)) return rv;
+        count -= bytesConsumed;
 
-            count -= bytesConsumed;
-            offset += bytesConsumed;
-
-            // see if we're done reading headers
-            if (mHaveAllHeaders) {
-                LOG(("have all response headers\n"));
-                break;
-            }
-        }
-
-        if (count) {
+        if (count && bytesConsumed) {
             // buf has some content in it; shift bytes to top of buf.
-            memmove(buf, buf + offset, count);
+            memmove(buf, buf + bytesConsumed, count);
         }
     }
 
