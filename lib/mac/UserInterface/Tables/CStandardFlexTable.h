@@ -31,6 +31,7 @@
 #include <LListener.h>
 //#include <QAP_Assist.h>
 
+#include "NetscapeDragFlavors.h"
 #include "LTableViewHeader.h"
 	// Need LTableHeader here, need the whole thing in the .cp file.
 	// Might as well go the whole hog.
@@ -38,7 +39,6 @@
 class CStandardFlexTable;
 class CClickTimer;
 class CInlineEditField;
-
 
 //========================================================================================
 class CTableHeaderListener : public LListener
@@ -55,7 +55,7 @@ protected:
 class CInlineEditorListener : public LListener
 {
 public:
-	CInlineEditorListener ( CStandardFlexTable* inTable ) : mTable(inTable) { }
+	CInlineEditorListener( CStandardFlexTable* inTable ) : mTable(inTable) { }
 protected:
 	void ListenToMessage(MessageT inMessage, void *ioParam);
 	CStandardFlexTable* mTable;
@@ -79,6 +79,7 @@ private:
 	friend class CTableHeaderListener;
 	friend class CClickTimer;
 	friend class CInlineEditorListener;
+	friend class CDeferredInlineEditTask;
 public:
 	enum {
 		class_ID = 'sfTb',
@@ -100,17 +101,19 @@ public:
 	virtual Boolean 	GetNotifyOnSelectionChange();
 	void				SetRightmostVisibleColumn(UInt16 inLastDesiredColumn);
 
-		// an externally public way to tell the table to begin an inplace edit. This is
-		// useful when handling menu commands, etc and not mouse clicks in the table.
 	void				DoInlineEditing ( const STableCell & inCell ) ;
+		// a public way to tell the table to begin an in-place edit. This is
+		// useful when handling menu commands, etc and not mouse clicks in the table.
 	
-	virtual void		RefreshCellRange(
-							const STableCell	&inTopLeft,
-							const STableCell	&inBotRight); // Overridden to fix a bug in PP.
-
 protected:
-	enum { kMinRowHeight = 18, kDistanceFromIconToText = 5, kIconMargin = 4, kIndentPerLevel = 10,
-			kIconWidth = 16 };
+	enum {
+		kMinRowHeight = 18
+	,	kDistanceFromIconToText = 5
+	,	kDropIconWastedSpace = 4
+	,	kIconMargin = 1
+	,	kIndentPerLevel = 14
+	,	kIconWidth = 16
+	};
 
 	// for in-place editing, give the CInlineEditor this paneID.
 	enum { paneID_InlineEdit = 'EDIT' } ;
@@ -130,36 +133,66 @@ protected:
 	virtual void		DrawSelf();		
 	virtual Boolean		HandleKeyPress(const EventRecord &inKeyEvent);
 
+	virtual void		RefreshCellRange(
+							const STableCell	&inTopLeft,
+							const STableCell	&inBotRight); // Overridden to fix a bug in PP.
 	virtual void		Click(SMouseDownEvent &inMouseDown);
 	virtual void		BeTarget();
 	virtual void		DontBeTarget();
+// ------------------------------------------------------------
+// CEXTable Refugees
+// ------------------------------------------------------------
+public:
+	void				SelectScrollCell(const STableCell &inCell)
+						{
+							SelectCell(inCell);
+							ScrollCellIntoFrame(inCell);						
+						}
+	
+	void				RefreshRowRange(TableIndexT inStartRow, TableIndexT inEndRow);
+	void				ReadSavedTableStatus(LStream *inStatusData);
+	void				WriteSavedTableStatus(LStream *outStatusData);
 
 // ------------------------------------------------------------
 // Sorting
 // ------------------------------------------------------------
+protected:
 	virtual void		ChangeSort(const LTableHeader::SortChange* inSortChange);
 
 // ------------------------------------------------------------
 // Selection, MouseDowns
 // ------------------------------------------------------------
+public:
+	void				SetFancyDoubleClick(Boolean inFancy) { mFancyDoubleClick = inFancy; }
+
+protected:
 	virtual Boolean		ClickSelect(
 								const STableCell		&inCell,
 								const SMouseDownEvent	&inMouseDown);
+
 	virtual void		ClickSelf(const SMouseDownEvent &inMouseDown);
+
+	Boolean				HandleFancyDoubleClick(
+								const STableCell		&inCell,
+								const SMouseDownEvent	&inMouseDown);
+
 	virtual Boolean		ClickDropFlag(
 								const STableCell	&inCell,
 								const SMouseDownEvent &inMouseDown);
 	virtual Boolean		CellSelects(const STableCell& inCell) const;
-	virtual Boolean		CellWantsClick ( const STableCell & /*inCell*/ ) const { return false; }
-	void				SetFancyDoubleClick(Boolean inFancy) { mFancyDoubleClick = inFancy; }
+	virtual Boolean		CellWantsClick( const STableCell & /*inCell*/ ) const { return false; }
 	void				SetHiliteDisabled(Boolean inDisable) { mHiliteDisabled = inDisable; }
-	virtual void 		HandleSelectionTracking ( const SMouseDownEvent & inMouseDown ) ;
-	virtual void		TrackSelection ( const SMouseDownEvent & inMouseDown ) ;
-	virtual Boolean 	HitCellHotSpot ( const STableCell &inCell, 
+	virtual void 		HandleSelectionTracking( const SMouseDownEvent & inMouseDown ) ;
+	virtual void		TrackSelection( const SMouseDownEvent & inMouseDown ) ;
+	virtual Boolean 	HitCellHotSpot( const STableCell &inCell, 
 											const Rect &inTotalSelectionRect ) ;
-	virtual void		UnselectCellsNotInSelectionOutline ( const Rect & selectionRect ) ;
+
+	// the the cell rect in local coords even if scrolled out the the view
+	virtual void		GetLocalCellRectAnywhere( const STableCell	&inCell, Rect &outCellRect) const;
+
+	virtual void		UnselectCellsNotInSelectionOutline( const Rect & selectionRect ) ;
 		// override to turn off selection outline tracking
-	virtual Boolean		TableDesiresSelectionTracking ( ) { return true; }
+	virtual Boolean		TableDesiresSelectionTracking( ) { return true; }
 								
 	virtual const TableIndexT*	GetUpdatedSelectionList(TableIndexT& outSelectionSize);
 							// Returns a ONE-BASED list of TableIndexT, as it should.
@@ -169,6 +202,7 @@ protected:
 public:
 	Boolean				GetNextSelectedRow(TableIndexT& inOutAfterRow) const;
 	Boolean				GetLastSelectedRow(TableIndexT& inOutBeforeRow) const;
+	
 protected:
 	void				SelectRow(TableIndexT inRow);
 	void				ScrollRowIntoFrame(TableIndexT inRow);
@@ -195,7 +229,7 @@ protected:
 	virtual void		InlineEditorTextChanged( ) { }
 	virtual void		InlineEditorDone( ) { }
 	virtual void		DoInlineEditing( const STableCell &inCell, Rect & inTextRect );
-	virtual bool		CanDoInlineEditing( ) { return true; }
+	virtual Boolean		CanDoInlineEditing( ) { return true; }
 	
 	virtual void		DrawCell(
 							const STableCell		&inCell,
@@ -242,7 +276,7 @@ protected:
 // ------------------------------------------------------------
 protected:
 	virtual void		SetCellExpansion(const STableCell& /* inCell */, Boolean /* inExpand */) {}
-	virtual Boolean		CellHasDropFlag(const STableCell& /* inCell */, Boolean& /* outIsExpanded */) const { return true; }											
+	virtual Boolean		CellHasDropFlag(const STableCell& /* inCell */, Boolean& /* outIsExpanded */) const { return false; }											
 	virtual Boolean		CellInitiatesDrag(const STableCell& /* inCell */) const { return false; }											
 	virtual	void		GetDropFlagRect( const Rect& inLocalCellRect,
 										 Rect&		 outFlagRect) const;
@@ -252,9 +286,21 @@ protected:
 // ------------------------------------------------------------
 // Drag Support
 // ------------------------------------------------------------
-	virtual void		DragSelection(const STableCell& inCell, const SMouseDownEvent &inMouseDown);
-	virtual void		AddSelectionToDrag(DragReference inDragRef, RgnHandle inDragRgn);
-	virtual void		AddRowDataToDrag(	TableIndexT		/* inRow */,
+	virtual OSErr			DragSelection(
+								const STableCell& inCell,
+								const SMouseDownEvent &inMouseDown);
+	virtual OSErr			DragRow(
+								TableIndexT				inRow, 
+								const SMouseDownEvent&	inMouseDown);
+	virtual void			AddSelectionToDrag(
+								DragReference inDragRef,
+								RgnHandle inDragRgn);
+	virtual void			AddRowToDrag(
+								TableIndexT inRow,
+								DragReference inDragRef,
+								RgnHandle inDragRgn);
+	virtual void			AddRowDataToDrag(
+								TableIndexT		/* inRow */,
 											DragReference	/* inDragRef */	) {};
 	virtual void		InsideDropArea(DragReference inDragRef);
 	virtual void		EnterDropArea(DragReference inDragRef, Boolean inDragHasLeftSender);
@@ -274,9 +320,16 @@ protected:
 	virtual Boolean		RowCanAcceptDropBetweenAbove(
 							DragReference	inDragRef,
 							TableIndexT		inDropRow);
-	virtual Boolean		RowIsContainer ( const TableIndexT & /* inRow */ ) const { return false; }
-	void ComputeItemDropAreas ( const Rect & inLocalCellRect, Rect & oTop, Rect & oBottom ) ;
-	void ComputeFolderDropAreas ( const Rect & inLocalCellRect, Rect & oTop, Rect & oBottom ) ;
+	virtual Boolean		RowIsContainer(
+							const TableIndexT & /* inRow */ ) const { return false; }
+	void				ComputeItemDropAreas(
+							const Rect& inLocalCellRect,
+							Rect& outTop,
+							Rect& outBottom );
+	void				ComputeFolderDropAreas(
+							const Rect & inLocalCellRect,
+							Rect& outTop,
+							Rect& outBottom );
 
 // ------------------------------------------------------------
 // Miscellany
@@ -329,7 +382,7 @@ public:
 // ------------------------------------------------------------
 #if defined(QAP_BUILD)		
 public:
-	virtual void		QapGetListInfo (PQAPLISTINFO pInfo);
+	virtual void		QapGetListInfo(PQAPLISTINFO pInfo);
 	virtual Ptr			QapAddCellToBuf(Ptr pBuf, Ptr pLimit, const STableCell& sTblCell);
 	virtual void		GetQapRowText(TableIndexT inRow, char* outText, UInt16 inMaxBufferLength) const;
 #endif
@@ -354,6 +407,7 @@ protected:
 	RGBColor			mDropColor;	
 	Boolean				mIsInternalDrop;		// a drop of one row on another ?
 	Boolean				mIsDropBetweenRows;		// changing order
+	Boolean				mAllowDropAfterLastRow;	// true to allow drops in the whitespace after the table
 	
 	CInlineEditField*	mNameEditor;			// used for inline editing
 	TableIndexT			mRowBeingEdited;

@@ -22,11 +22,14 @@
    For more information on RDF, look at the RDF section of www.mozilla.org
 */
 
+/*
+  XXX Someone needs to get this up to speed again
+*/
+#if 0
 #ifdef MOZ_LDAP
 
 #include "ldap2rdf.h"
 #include "utils.h"
-
 
 	/* statics */
 static PRHashTable	*ldap2rdfHash;
@@ -39,7 +42,7 @@ static PRBool		ldap2rdfInitedp = 0;
 RDFT
 MakeLdapStore (char* url)
 {
-  RDF_Translator ntr = (RDF_Translator)getMem(sizeof(RDF_TranslatorStruct));
+  RDFT ntr = (RDFT)getMem(sizeof(RDF_TranslatorStruct));
   ntr->assert = ldapAssert;
   ntr->unassert = ldapUnassert;
   ntr->getSlotValue = ldapGetSlotValue;
@@ -543,3 +546,5 @@ ldapContainerp (RDF_Resource u)
 
 
 #endif /* MOZ_LDAP */
+#endif 
+

@@ -28,6 +28,29 @@
 #include "winli.h"
 #include "cast.h"
 
+/* XXX - Talk to Dhiren, He'll need to deal with this in merge */
+#ifndef MOZ_LOC_INDEP
+pw_ptr PW_Create( MWContext * parent, 		/* Parent window, can be NULL */
+				PW_WindowType type			/* What kind of window ? Modality, etc */
+				)
+{
+	return NULL;
+}
+
+void PW_SetCancelCallback(pw_ptr pw,
+							PW_CancelCallback cancelcb,
+                            void * cancelClosure){}
+void PW_Show(pw_ptr pw){}
+void PW_Hide(pw_ptr pw){}
+void PW_Destroy(pw_ptr pw){}
+void PW_SetWindowTitle(pw_ptr pw, const char * title){}
+void PW_SetLine1(pw_ptr pw, const char * text){}
+void PW_SetLine2(pw_ptr pw, const char * text){}
+void PW_SetProgressText(pw_ptr pw, const char * text){}
+void PW_SetProgressRange(pw_ptr pw, int32 minimum, int32 maximum){}
+void PW_SetProgressValue(pw_ptr pw, int32 value){}
+
+#else
 pw_ptr PW_Create( MWContext * parent, 		/* Parent window, can be NULL */
 				PW_WindowType type			/* What kind of window ? Modality, etc */
 				)
@@ -152,5 +175,6 @@ void PW_SetProgressValue(pw_ptr pw, int32 value)
 	}
 }
 
+#endif 
 #endif 
 

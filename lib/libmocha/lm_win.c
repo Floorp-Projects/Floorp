@@ -20,6 +20,7 @@
  *
  * Brendan Eich, 9/8/95
  */
+#include "rosetta.h"
 #include "lm.h"
 #include "xp.h"
 #include "xpgetstr.h"
@@ -266,11 +267,8 @@ win_getProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
 
       case WIN_SECURE:
-        status = ET_GetSecurityStatus(context);
-        if (status == SSL_SECURITY_STATUS_ON_LOW || status == SSL_SECURITY_STATUS_ON_HIGH)
-            *vp = JSVAL_TRUE;
-        else
-            *vp = JSVAL_FALSE;
+      	*vp = JSVAL_FALSE;
+      	HG99882
         break;
 
       case WIN_LOADING:

@@ -2925,7 +2925,7 @@ lo_RelayoutCaptionSubdoc(MWContext *context, lo_DocState *state, lo_TableCaption
 	lo_cleanup_state(context, old_state);
 	*/
 
-#if 0    /* Doesn't need to happen any more because we do non-destructive reflow
+#if 0    /* Doesn't need to happen any more because we do non-destructive reflow */
 	/*
 	 * Save our parent's state levels
 	 */
@@ -5179,7 +5179,7 @@ lo_BeginTableAttributes(MWContext *context,
     table->backdrop.url = NULL;
     table->backdrop.tile_mode = LO_TILE_BOTH;
 
-	/* Copied to lo_InitTableRecord()
+	/* Copied to lo_InitTableRecord() */
 	/*
 	table->rows = 0;
 	table->cols = 0;

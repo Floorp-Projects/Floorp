@@ -31,6 +31,7 @@ typedef void *JRIGlobalRef;
 typedef JRIGlobalRef jglobal;
 
 typedef struct jarrayArrayStruct*		jarrayArray;
+typedef jint		JRIFieldID;
 typedef jint		JRIMethodID;
 
 typedef enum JRIConstant {

@@ -16,19 +16,13 @@
  * Reserved.
  */
 
-
 #include "xp.h"
 #include "mime.h"
-#include "mkutils.h"
-/* there used to be problems including msgcom.h with mime.h having to do with
-	differing prototypes for some of the msg_linebuffer calls, but that
-	seems to be fixed.And we need msgcom.h for win16
-*/
+#include "prefapi.h"
 #include "msgcom.h"
 #include "libi18n.h"
-
-/* for XP_GetString() */
 #include "xpgetstr.h"
+
 extern int MK_MSG_NO_RETURN_ADDRESS;
 extern int MK_MSG_NO_RETURN_ADDRESS_AT;
 extern int MK_MSG_NO_RETURN_ADDRESS_DOT;
@@ -160,6 +154,11 @@ MISC_ValidateReturnAddress (MWContext *context, const char *addr)
   char *at;
   char *dot;
   char *fmt = 0;
+  XP_Bool validate;
+
+  PREF_GetBoolPref("mail.identity.validate_addr", &validate);
+
+  if ( !validate ) return 0;
 
 #if defined(XP_WIN) || defined(XP_OS2)
   if(FE_IsAltMailUsed(context)) 

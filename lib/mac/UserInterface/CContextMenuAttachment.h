@@ -63,16 +63,19 @@ public:
 		EClickState				outResult;
 	};
 
-	virtual Boolean Execute ( MessageT inMessage, void *ioParam ) ;
+		enum { kDefaultDelay = -1};
 
-protected:
-
-	enum { kContextualCursorID = 6610 } ;
-	
-	EClickState				WaitMouseAction(
+	// Public utility method
+	static EClickState		WaitMouseAction(
 								const Point& 			inInitialPoint,
 								Int32					inWhen,
-								Int32					inDelay);
+								Int32					inDelay = kDefaultDelay);
+protected:
+
+	enum { kContextualCursorID = 6610 };
+	
+	virtual Boolean			Execute( MessageT inMessage, void *ioParam );
+
 	virtual void			ExecuteSelf(
 								MessageT				inMessage,
 								void*					ioParam);
@@ -82,9 +85,9 @@ protected:
 	virtual UInt16			PruneMenu(LMenu* inMenu);
 	
 	// override to do something other than read in a menu from the resource fork
-	virtual LMenu*			BuildMenu ( ) ;
+	virtual LMenu*			BuildMenu( ) ;
 
-	virtual void ChangeCursor ( const EventRecord* inEvent ) ;
+	virtual void			ChangeCursor( const EventRecord* inEvent );
 	
 //----
 // Data

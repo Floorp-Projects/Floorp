@@ -98,9 +98,21 @@ extern char *MimeHeaders_get(MimeHeaders *hdrs,
    would return "us-ascii".
 
    Returns NULL if there is no match, or if there is an allocation failure.
+
+	RFC2231 - MIME Parameter Value and Encoded Word Extensions: Character Sets,
+	Languages, and Continuations
+
+	RFC2231 has added the character sets, languages, and continuations mechanism.
+	charset, and language information may also be returned to the caller.
+	For example,
+	MimeHeaders_get_parameter("text/plain; name*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A", "name")
+	MimeHeaders_get_parameter("text/plain; name*0*=us-ascii'en-us'This%20is%20; CRLFLWSPname*1*=%2A%2A%2Afun%2A%2A%2A", "name")
+	would return "This is ***fun***" and *charset = "us-ascii", *language = "en-us"
  */
 extern char *MimeHeaders_get_parameter (const char *header_value,
-										const char *parm_name);
+										const char *parm_name,
+										char **charset,
+										char **language);
 
 extern MimeHeaders *MimeHeaders_copy (MimeHeaders *srcHeaders);
 
@@ -448,6 +460,9 @@ struct MimeDisplayOptions
 									 unique random number every time, to keep
 									 evil people from writing javascript code
 									 to hack it. */
+
+  XP_Bool missing_parts;	/* Whether or not this message is going to contain
+							   missing parts (from IMAP Mime Parts On Demand) */
 
 };
 

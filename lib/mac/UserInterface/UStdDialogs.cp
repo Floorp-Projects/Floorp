@@ -37,8 +37,6 @@ const	PaneIDT	okAlertBtnID = 900;
 const	PaneIDT	cancelAlertBtnID = 901;
 
 
-
-
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	StStdDialogHandler
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -232,6 +230,20 @@ void StStdDialogHandler::SetText(PaneIDT id, ConstStr255Param value)
 {
 	GetPane(id)->SetDescriptor(value);
 }
+
+void StStdDialogHandler::CopyNumberValue(PaneIDT fromPaneId, PaneIDT toPaneId)
+{
+	GetPane(toPaneId)->SetValue(GetControl(fromPaneId)->GetValue());
+}
+
+void StStdDialogHandler::CopyTextValue(PaneIDT fromPaneId, PaneIDT toPaneId)
+{
+	Str255		theValueText;
+	
+	GetPane(fromPaneId)->GetDescriptor(theValueText);
+	GetPane(toPaneId)->SetDescriptor(theValueText);
+}
+
 
 void StStdDialogHandler::SetNumberText(PaneIDT id, SInt32 value)
 {

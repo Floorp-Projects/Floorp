@@ -18,7 +18,7 @@
 
 
 /*
- *  np.h $Revision: 3.2 $
+ *  np.h $Revision: 3.3 $
  *  Prototypes for functions exported by libplugin and called by the FEs or other XP libs.
  *  Prototypes for functions exported by the FEs and called by libplugin are in nppg.h.
  */
@@ -117,6 +117,10 @@ extern void             NPL_Complete(NET_StreamClass *stream);
 extern void             NPL_Abort(NET_StreamClass *stream, int status);
 extern XP_Bool          NPL_IsEmbedWindowed(NPEmbeddedApp *app);
 extern void				NPL_URLExit(URL_Struct *urls, int status, MWContext *cx);
+
+#ifdef XP_MAC
+extern XP_Bool			NPL_IsForcingRedraw();
+#endif
 
 #ifdef ANTHRAX
 extern char**			NPL_FindAppletsForType(const char* typeToFind);

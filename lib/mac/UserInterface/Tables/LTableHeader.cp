@@ -64,7 +64,7 @@ LTableHeader::LTableHeader( LStream *inStream )
 	ResIDT theBevelTraitsID;
 	
 	mColumnData = NULL;
-	mColumnCount = mLastVisibleColumn = 0;
+	mColumnCount = mLastShowableColumn = mLastVisibleColumn = 0;
 	
 	*inStream >> mHeaderFlags;
 		
@@ -134,6 +134,11 @@ void LTableHeader::DrawSelf()
 		Rect		sect;
 	
 		LocateColumn(i, r);
+		
+		// Hack to tidy up 1-pixel offset of last header
+		if (i == mLastVisibleColumn)
+			r.right ++;
+		
 		SColumnData* cData = GetColumnData(i);
 		
 		// Checking against the update rgn is necessary because we sometimes
@@ -172,7 +177,7 @@ void LTableHeader::DrawSelf()
 		DrawColumnBackground(r, false);
 	}
 	CalcLocalFrameRect(r);
-	r.left = r.right - kColumnHidingWidgetWidth;
+	r.left = r.right - kColumnHidingWidgetWidth + 1;
 	DrawColumnBackground(r, false);
 
 	// Draw the column hiding widget
@@ -183,12 +188,12 @@ void LTableHeader::DrawSelf()
 		r.bottom -= 1; // Hate this, but the position had to be adjusted. - jrm.
 		r.left -= 1;		
 		if (mLastVisibleColumn <= 1) 
-			if (mColumnCount == 1)
-				iconID = kColumnHiderDisabledIcon;
+			if (mLastShowableColumn == 1)
+				iconID = kColumnHiderDisabledIcon; // neither hide nor show possible
 			else
-				iconID = kColumnHiderHideDisabledIcon;
+				iconID = kColumnHiderHideDisabledIcon; // show is possible
 		else
-			if (mLastVisibleColumn == mColumnCount)
+			if (mLastVisibleColumn == mLastShowableColumn)
 				iconID = kColumnHiderShowDisabledIcon;
 			else	
 				iconID = kColumnHiderEnabledIcon;	
@@ -254,11 +259,11 @@ Boolean LTableHeader::IsInHorizontalSizeArea(
 	SInt16 left = inLocalPt.h + 2;
 	SInt16 right = inLocalPt.h - 2;
 	
-	// Start at the division between the first and second columns
+	// start at the division between the first and second columns
 	// Go up to the division between the last visible and the following one,
 	// if there is one.
 	SInt16 lastColumnToCheck = mLastVisibleColumn;
-	if (mColumnCount > mLastVisibleColumn)
+	if (mLastShowableColumn > mLastVisibleColumn)
 		lastColumnToCheck++;
 	SColumnData* cRightNeigbor = *mColumnData + 1;
 	for (outLeftColumn = 1;
@@ -300,7 +305,7 @@ void LTableHeader::Click(SMouseDownEvent &inEvent)
 		// Handle clicks in the column hiding widget
 		if (CanHideColumns() && (inEvent.whereLocal.h > GetHeaderWidth())) 
 		{
-			if (mColumnCount == 1 && mLastVisibleColumn == 1)
+			if (mLastShowableColumn == 1 && mLastVisibleColumn == 1)
 				return; // no hiding/showing possible.
 			// The right arrow hides the rightmost column and the left arrow
 			// shows it.
@@ -310,7 +315,7 @@ void LTableHeader::Click(SMouseDownEvent &inEvent)
 				: leftSide;
 			if (mLastVisibleColumn > 1 && side == rightSide)
 				ShowHideRightmostColumn(false); // hide
-			else if (mLastVisibleColumn < mColumnCount && side == leftSide)
+			else if (mLastVisibleColumn < mLastShowableColumn && side == leftSide)
 				ShowHideRightmostColumn(true); // show.
 		}
 		else
@@ -546,7 +551,7 @@ void LTableHeader::ResizeColumn(
 	else if (inLeftColumnDelta < 0)
 	{
 		// Move as many columns onscreen as will fit
-		while (mLastVisibleColumn + 1 <= mColumnCount
+		while (mLastVisibleColumn + 1 <= mLastShowableColumn
 				&& GetWidthOfRange(inLeftColumn + 1, mLastVisibleColumn + 1) <= newSpace)
 		{
 			mLastVisibleColumn++;
@@ -640,7 +645,7 @@ void LTableHeader::ShowHideRightmostColumn(Boolean inShow)
 //	mLastVisibleColumn is the rightmost visible column.
 //-----------------------------------
 {
-	Assert_((inShow && mLastVisibleColumn < mColumnCount) ||
+	Assert_((inShow && mLastVisibleColumn < mLastShowableColumn) ||
 			(!inShow && mLastVisibleColumn > 1));
 					
 	ColumnIndexT savedLastVisibleColumn = mLastVisibleColumn;
@@ -778,13 +783,15 @@ Boolean LTableHeader::RedistributeSpace(
 	// OK, if we get this far, then some columns were able to resize
 	// (sumOfWidths != inOldSpace), and there's merely a rounding error to adjust.
 	int signedUnit = roundingError < 0 ? -1 : +1;
-#ifdef DEBUG
-	int maxRound =  (inToColumn - inFromColumn + 2) / 2;
+//#ifdef DEBUG
+//	int maxRound =  (inToColumn - inFromColumn + 2) / 2;
 //	Assert_(roundingError * signedUnit <= maxRound);
-#endif
+//#endif
 	static int rovingIndex = 0;
 	const Int16 initialError = roundingError;
 	const int initialIndex = rovingIndex;
+	Int16		panicCount = 0;
+	
 	while (roundingError)
 	{
 		rovingIndex++;
@@ -801,6 +808,9 @@ Boolean LTableHeader::RedistributeSpace(
 			cData->columnWidth += signedUnit;
 			roundingError -= signedUnit;
 		}
+		
+		if (++panicCount > 100)
+			break;
 	}
 	return true;
 } // LTableHeader::RedistributeSpace
@@ -1277,6 +1287,14 @@ Boolean	LTableHeader::CanColumnSort(ColumnIndexT inColumn) const
 }
 
 //-----------------------------------
+Boolean	LTableHeader::CanColumnShow(ColumnIndexT inColumn) const
+//-----------------------------------
+{
+	CheckLegal(inColumn);
+	return GetColumnData(inColumn)->CanShow();
+}
+
+//-----------------------------------
 LTableHeader::ColumnIndexT LTableHeader::GetSortedColumn(PaneIDT &outHeaderPane) const
 //-----------------------------------
 { 
@@ -1360,6 +1378,16 @@ void LTableHeader::ReadColumnState( LStream * inStream, Boolean inMoveHeaders)
 
 		StHandleLocker locker((Handle)mColumnData);
 		inStream->GetBytes(*mColumnData, dataSize);
+
+		// find the last showable column
+		for (UInt16 i = 1; i <= mColumnCount; i++)
+		{
+			// non-showing cols must be at the end
+			Assert_( CanColumnShow(i) ? true : i > mLastVisibleColumn);
+
+			if (CanColumnShow(i))
+				mLastShowableColumn = i;
+		}
 
 		ConvertWidthsToAbsolute();
 		ComputeColumnPositions();

@@ -908,7 +908,7 @@ static int OutputButtons(MimeObject *obj, XP_Bool basic, VObject *v)
 	if (!obj->options->output_vcard_buttons_p)
 		return status;
 
-	vCard = writeMemVObjects(0, &len, v, FALSE);
+	vCard = writeMemVObjects(0, &len, v);
 
 	if (!vCard)
 		return MK_OUT_OF_MEMORY;

@@ -376,7 +376,16 @@ void CToolTipPane::ForceInPortFrame(
 		theHOffset = theWindowPortFrame.left - ioTipFrame.left;		// bump it to the right
 		
 	if (ioTipFrame.bottom > theWindowPortFrame.bottom)
-		theVOffset = theWindowPortFrame.bottom - ioTipFrame.bottom;	// bump it up
+	{
+		Point mouseLocal;
+		GetMouse(&mouseLocal);
+		theVOffset = mouseLocal.v - 1 - ioTipFrame.bottom;	// bump it up
+//	WAS:	theVOffset = theWindowPortFrame.bottom - ioTipFrame.bottom;	// bump it up
+//			The original version left the mouse within the tooltip frame.  This
+//			led to the tooltip being deleted every null event, because CMouseDispatcher
+//			would calculate that the pane that the mouse was in was the tooltip pane
+//			itself.  Solution: move the pane up above the mouse position.
+	}
 	else if (ioTipFrame.top < theWindowPortFrame.top)
 		theVOffset = theWindowPortFrame.top - ioTipFrame.top;			// bump it down
 

@@ -72,6 +72,8 @@ class CSimpleTextView : public CWASTEEdit
 //		friend class LTextEditHandler;	//	this will be going away!
 
 		private:
+							typedef 			CWASTEEdit		Inherited;
+							
 		
 														CSimpleTextView();	//	Must use parameters
 		
@@ -109,9 +111,13 @@ class CSimpleTextView : public CWASTEEdit
 			virtual	void 					SetInitialTraits(ResIDT inTextTraitsID);
 			virtual	void					SetInitialText(ResIDT inTextID);
 			
-			virtual Boolean				IsReadOnly();
+			virtual Boolean					IsReadOnly();
 			virtual void					SetReadOnly( const Boolean inFlag );
 			
+			virtual void					SetTabSelectsAll ( const Boolean inTabIntoFieldSelectsAll )
+																								{
+																									mTabIntoFieldSelectsAll = inTabIntoFieldSelectsAll;
+																								};
 			// Commands
 					
 			void									Save( const FSSpec	&inFileSpec );
@@ -119,6 +125,8 @@ class CSimpleTextView : public CWASTEEdit
 		protected:
 
 			virtual void					ClickSelf( const SMouseDownEvent &inMouseDown);
+			virtual Boolean			 		HandleKeyPress( const EventRecord &	inKeyEvent);
+			
 			virtual void					BeTarget();
 			virtual void					DontBeTarget();
 		
@@ -132,6 +140,9 @@ class CSimpleTextView : public CWASTEEdit
 			static WETSMPreUpdateUPP			sPreUpdateUPP;
 			static CSimpleTextView				*sTargetView;
 			
+		private:
+			
+			Boolean								mTabIntoFieldSelectsAll;
 	};
 
 

@@ -24,15 +24,15 @@
 	#pragma import on
 #endif
 
-#include <LTextColumn.h>
+#include "CTextColumn.h"
 #include <LCommander.h>
 
-class	CTextTable : public LTextColumn, public LCommander
+class	CTextTable : public CTextColumn, public LCommander
 {
 public:
 	enum 				{ class_ID = 'Txtb' };
 	
-	typedef	LTextColumn super;
+	typedef	CTextColumn super;
 	
 						CTextTable(
 									LStream*	inStream);

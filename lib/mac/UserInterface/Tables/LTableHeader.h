@@ -138,14 +138,20 @@ public:
 			{
 				return (flags & kColumnDoesNotDisplayTitle) == 0;
 			}
+		Boolean			CanShow() const
+			{
+				return (flags & kColumnDoesNotShow) == 0;
+			}
+
 		private:
 			enum 
 			{
-				kColumnDoesNotSort		=	1<<0
-			,	kColumnDoesNotResize	=	1<<1
-			,	kColumnSuppressSortIcon	=	1<<2
-			,	kColumnDoesNotMove		=	1<<3
-			,	kColumnDoesNotDisplayTitle	= 1<<4
+				kColumnDoesNotSort			=	1<<0
+			,	kColumnDoesNotResize		=	1<<1
+			,	kColumnSuppressSortIcon		=	1<<2
+			,	kColumnDoesNotMove			=	1<<3
+			,	kColumnDoesNotDisplayTitle	=	1<<4
+			,	kColumnDoesNotShow			=	1<<5
 			};
 		public:
 			enum  { kMinWidth = 16 };
@@ -216,9 +222,11 @@ protected:
 	//
 	Boolean			CanColumnResize(ColumnIndexT inColumn) 			const;
 	Boolean			CanColumnSort(ColumnIndexT inColumn) 			const;
+	Boolean			CanColumnShow(ColumnIndexT inColumn) 			const;
 	Boolean			ColumnHasSortIcon(ColumnIndexT inColumn) 		const;
 	Boolean			CanHideColumns() 								const;
 
+#ifdef Debug_Signal
 	void 			CheckVisible(ColumnIndexT inIndex) const
 		{
 			Assert_(inIndex > 0 && inIndex <= mLastVisibleColumn);
@@ -231,14 +239,19 @@ protected:
 		{
 			Assert_(inIndex >= 0 && inIndex <= mColumnCount);
 		}
-	
+#else
+	void 			CheckVisible(ColumnIndexT /*inIndex*/) const { }
+	void 			CheckLegal(ColumnIndexT /*inIndex*/) const { }
+	void 			CheckLegalHigh(ColumnIndexT /*inIndex*/) const { }
+#endif //Debug_Signal
+
 	LPane*	GetColumnPane(ColumnIndexT inColumn);
 
 protected:
 	enum	
 	{ 
 	 	kColumnMargin 				= 2,
-	 	kColumnHidingWidgetWidth 	= 15
+	 	kColumnHidingWidgetWidth 	= 16
 	};
 
 	HeaderFlags			mHeaderFlags;
@@ -247,6 +260,7 @@ protected:
 	SBevelColorDesc		mSortedBevel;
 
 	ColumnIndexT		mColumnCount;		// 1-based count of all columns
+	ColumnIndexT		mLastShowableColumn;	// 1-based count of cols that can show
 	ColumnIndexT		mLastVisibleColumn;	// 1-based index of rightmost visible column
 	ColumnIndexT		mSortedColumn;		// 1-based index of sorted columns
 	Boolean				mSortedBackwards;

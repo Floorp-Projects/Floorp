@@ -37,4 +37,20 @@ class CTableKeyAttachment : public LKeyScrollAttachment
 								void			*ioParam);
 
 		CSpecialTableView*		mTableView; // safe cast of the view in the base class.
+		
+		Boolean					mGettingKeyUps;		// true if the app is receiving keyups
+};
+
+// a key attachment class that is optimized for row-selection tables
+class CTableRowKeyAttachment : public CTableKeyAttachment
+{
+	public:
+							CTableRowKeyAttachment(CSpecialTableView* inView);
+		virtual				~CTableRowKeyAttachment();
+		
+	protected:
+
+		virtual void		ExecuteSelf(
+								MessageT		inMessage,
+								void			*ioParam);
 };

@@ -21,6 +21,7 @@
 #ifndef _MSGNET_H_
 #define _MSGNET_H_
 #include "msgcom.h"
+#include "dirprefs.h"
 
 XP_BEGIN_PROTOS
 
@@ -35,6 +36,7 @@ extern void MSG_RecordImapMessageFlags(MSG_Pane* pane,
 /* notify libmsg of deleted messages */
 extern void MSG_ImapMsgsDeleted(MSG_Pane *urlPane,
 								const char *onlineMailboxName,
+								const char *hostName,
 								XP_Bool deleteAllMsgs, 
                     			const char *doomedKeyString);
 
@@ -52,6 +54,9 @@ extern void MSG_InterruptImapFolderLoad(MSG_Pane *urlPane, const char *hostName,
 
 /* find a reference or NULL to the specified imap folder */
 extern MSG_FolderInfo* MSG_FindImapFolder(MSG_Pane *urlPane, const char *hostName, const char *onlineFolderPath);
+
+/* Used to kill connections after removing them from the cache so biff wont hang around them */
+extern void MSG_IMAP_KillConnection(TNavigatorImapConnection *imapConnection);
 
 /* If there is a cached connection, for this folder, uncache it and return it */
 extern TNavigatorImapConnection* MSG_UnCacheImapConnection(MSG_Master* master, const char *host, const char *folderName);
@@ -71,6 +76,9 @@ extern void MSG_SetUserAuthenticated (MSG_Master* master, XP_Bool bAuthenticated
 extern XP_Bool MSG_IsUserAuthenticated (MSG_Master* master);
 
 extern void MSG_SetMailAccountURL(MSG_Master* master, const char *urlString);
+extern void MSG_SetHostMailAccountURL(MSG_Master* master, const char *hostName, const char *urlString);
+extern void MSG_SetHostManageListsURL(MSG_Master* master, const char *hostName, const char *urlString);
+extern void MSG_SetHostManageFiltersURL(MSG_Master* master, const char *hostName, const char *urlString);
 
 extern const char *MSG_GetMailAccountURL(MSG_Master* master);
 
@@ -103,8 +111,11 @@ extern const char *MSG_GetIMAPHostPassword(MSG_Master *master, const char *hostN
 extern void MSG_SetIMAPHostPassword(MSG_Master *master, const char *hostName, const char *password);
 extern int MSG_GetIMAPHostIsUsingSubscription(MSG_Master *master, const char *hostName, XP_Bool *usingSubscription);
 extern XP_Bool MSG_GetIMAPHostDeleteIsMoveToTrash(MSG_Master *master, const char *hostName);
+extern MSG_FolderInfo *MSG_GetTrashFolderForHost(MSG_IMAPHost *host);
 extern int IMAP_AddIMAPHost(const char *hostName, XP_Bool usingSubscription, XP_Bool overrideNamespaces,
-							const char *personalNamespacePrefix, const char *publicNamespacePrefixes, const char *otherUsersNamespacePrefixes);
+							const char *personalNamespacePrefix, const char *publicNamespacePrefixes, 
+							const char *otherUsersNamespacePrefixes, XP_Bool haveAdminUrl);
+extern XP_Bool MSG_GetIMAPHostIsSecure(MSG_Master *master, const char *hostName);
 
 typedef enum
 {	MSG_NotRunning		= 0x00000000
@@ -145,6 +156,9 @@ extern MSG_Pane* MSG_GetParentPane(MSG_Pane* progresspane);
 
 /* do an imap biff of the imap inbox */
 extern void MSG_ImapBiff(MWContext* context, MSG_Prefs* prefs);
+extern MWContext *MSG_GetBiffContext();
+
+extern void MSG_SetFolderAdminURL(MSG_Master *master, const char *hostName, const char*mailboxName, const char *url);
 
 /* The NNTP module of netlib calls these to feed XOVER data to the message
    library, in response to a news:group.name URL having been opened.
@@ -484,6 +498,10 @@ extern int NET_parse_news_url (const char *url,
 					char **command_specific_dataP);
 
 extern char *MSG_GetArbitraryHeadersForHost(MSG_Master *master, const char *hostName);
+
+/* Directory Server Replication
+ */
+extern XP_Bool NET_ReplicateDirectory(MSG_Pane *pane, DIR_Server *server);
 
 XP_END_PROTOS
 

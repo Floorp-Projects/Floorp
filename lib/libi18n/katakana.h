@@ -23,5 +23,6 @@
 
 MODULE_PRIVATE void INTL_SjisHalf2FullKana(unsigned char *inbuf, uint32 inlen, unsigned char *outbuf, uint32 *byteused);
 MODULE_PRIVATE void INTL_EucHalf2FullKana(unsigned char *inbuf, uint32 inlen, unsigned char *outbuf, uint32 *byteused);
+MODULE_PRIVATE XP_Bool INTL_GetSendHankakuKana(void);
 
 #endif /* KATAKANA_H */

@@ -147,6 +147,30 @@ void CTabControl::DoLoadTabs(ResIDT inTabDescResID)
 //	¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
+void CTabControl::SetTabEnable(ResIDT inPageResID, Boolean inEnable)
+{
+	CTabInstance* theTab;
+	LArrayIterator theIter(mTabs, LArrayIterator::from_Start);
+	while (theIter.Next(&theTab))
+	{
+		if (theTab->mMessage == inPageResID)
+		{
+			if (theTab->mEnabled != inEnable)
+			{
+				theTab->mEnabled = inEnable;
+				FocusDraw();
+				DrawSelf();		// because it's not sufficient to DrawOneTab(theTab)
+				break;
+			}
+		}
+	}
+}
+
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
 void CTabControl::Draw(RgnHandle inSuperDrawRgnH)
 {
 	Rect theFrame;
@@ -605,7 +629,7 @@ void CTabControl::DrawTopBevel(CTabInstance* inTab)
 //	¥	DrawBottomBevel
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CTabControl::DrawBottomBevel(CTabInstance* inTab, Boolean	inCurrentTab)
+void CTabControl::DrawBottomBevel(CTabInstance* inTab, Boolean	/* inCurrentTab */)
 {
 	const Rect& theTabFrame = inTab->mFrame;
 	switch (mOrientation)
@@ -724,6 +748,12 @@ Int16 CTabControl::FindHotSpot(Point inPoint) const
 			{
 			if (theTab == mCurrentTab)
 				continue;
+				
+			if (! theTab->mEnabled)
+				{
+				::SysBeep(1);
+				break;
+				}
 				
 			if (::PtInRgn(inPoint, theTab->mMask))
 				{
@@ -901,6 +931,7 @@ void CTabControl::DeactivateSelf(void)
 CTabInstance::CTabInstance()
 {
 	mMask = NULL;
+	mEnabled = true;
 }
 
 CTextTabInstance::CTextTabInstance(const STabDescriptor& inDesc)
@@ -933,6 +964,9 @@ void CTextTabInstance::DrawTitle(CTabInstance* inCurrentTab, ResIDT inTitleTrait
 			::OffsetRect(&theFrame, 0, 1);
 		}
 		
+		if (! mEnabled)
+			(**theTraitsHandle).mode |= grayishTextOr;
+
 		{
 			StHandleLocker theLocker((Handle)theTraitsHandle);
 			UTextTraits::SetPortTextTraits(*theTraitsHandle);
@@ -967,6 +1001,9 @@ void CIconTabInstance::DrawTitle(CTabInstance* inCurrentTab, ResIDT /*inTitleTra
 	{
 		::OffsetRect(&theFrame, 0, 1);
 	}	
+	if (! mEnabled)
+		transform |= kTransformDisabled;
+
 	::PlotIconID(&theFrame, kAlignAbsoluteCenter, transform, mIconID);
 }
 

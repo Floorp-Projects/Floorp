@@ -31,13 +31,14 @@
 #include "CPatternProgressBar.h"
 #include "UDesktop.h"
 
-#define PW_WINDOW_ID 5102
+#define kProgressStandardWindowID	5050
+#define kProgressModalWindowID		5051
 
 class CProgressMac: public LListener {
 
 public:
-	LWindow * fWindow;
-	LCaption * fLine1, * fLine2, * fLine3;
+	LWindow 		*fWindow;
+	LCaption 		*fLine1, *fLine2, *fLine3;
 	CPatternProgressBar * fProgress;
 	
 	PW_CancelCallback fCancelcb;
@@ -73,36 +74,26 @@ public:
 
 CProgressMac::CProgressMac(PW_WindowType type)
 {
+	ResIDT		windowID;
+	
 	fCancelcb = NULL;
 	fCancelClosure = NULL;
-	
-// Create the window
-// Our default resource stores an application modal, need to change the resource
-// before loading it in
-
-
-	SWINDResourceH	theWIND = NULL;
-	
-	if ( type == pwStandard )
+		
+	switch (type)
 	{
-		theWIND = (SWINDResourceH) ::GetResource('WIND', PW_WINDOW_ID);
-		if ( theWIND )
-		{
-			HLock( (Handle)theWIND );
-			(*theWIND)->procID = 4;
-		}
+		case pwApplicationModal:
+			windowID = kProgressModalWindowID;
+			break;
+		case pwStandard:
+			windowID = kProgressStandardWindowID;
+			break;
+		default:
+			XP_ASSERT(false);		// invalid window type
 	}
-	LCommander::SetDefaultCommander(CFrontApp::GetApplication());
 	
-	fWindow = LWindow::CreateWindow( PW_WINDOW_ID, NULL );
+	fWindow = LWindow::CreateWindow( windowID, (type == pwApplicationModal) ? NULL : LCommander::GetTopCommander());
 	ThrowIfNil_(fWindow);
 	
-	if ( type == pwStandard )
-	{
-		(*theWIND)->procID = 5;	// revert
-		HUnlock( (Handle)theWIND );
-	}
-
 	fLine1 = (LCaption*)fWindow->FindPaneByID('LIN1');
 	fLine2 = (LCaption*)fWindow->FindPaneByID('LIN2');
 	fLine3 = (LCaption*)fWindow->FindPaneByID('LIN3');
@@ -291,3 +282,4 @@ void PW_SetProgressValue(pw_ptr pw, int32 value)
 }
 
 #pragma export off
+

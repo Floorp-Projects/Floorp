@@ -59,7 +59,7 @@ void CNotificationAttachment::ExecuteSelf(
 
 void CNotificationAttachment::Post(void)
 {
-	OSErr theErr = ::GetIconSuite(&mIconSuite, 170, svAllSmallData);
+	OSErr theErr = ::GetIconSuite(&mIconSuite, 128, svAllSmallData);
 	ThrowIfOSErr_(theErr);
 
 	::HNoPurge(mIconSuite);

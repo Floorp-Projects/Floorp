@@ -24,9 +24,11 @@
 #include "mimei.h"
 #include "xpgetstr.h"
 #include "libi18n.h"
+#include "mime.h"
 
 #ifndef MOZILLA_30
 # include "msgcom.h"
+#include "imap.h"
 #include "prefapi.h"
 #endif /* !MOZILLA_30 */
 
@@ -38,6 +40,7 @@ extern int MK_MSG_USER_WROTE;
 extern int MK_MSG_UNSPECIFIED_TYPE;
 extern int MK_MSG_XSENDER_INTERNAL;
 extern int MK_MSG_ADDBOOK_MOUSEOVER_TEXT;
+extern int MK_MSG_SHOW_ATTACHMENT_PANE;
 
 extern int MK_MIMEHTML_DISP_SUBJECT;
 extern int MK_MIMEHTML_DISP_RESENT_COMMENTS;
@@ -61,6 +64,9 @@ extern int MK_MIMEHTML_DISP_MESSAGE_ID;
 extern int MK_MIMEHTML_DISP_RESENT_MESSAGE_ID;
 extern int MK_MIMEHTML_DISP_BCC;
 extern int MK_MIMEHTML_SHOW_SECURITY_ADVISOR;
+extern int MK_MIMEHTML_VERIFY_SIGNATURE;
+extern int MK_MIMEHTML_DOWNLOAD_STATUS_HEADER;
+extern int MK_MIMEHTML_DOWNLOAD_STATUS_NOT_DOWNLOADED;
 
 extern int MK_MIMEHTML_ENC_AND_SIGNED;
 extern int MK_MIMEHTML_SIGNED;
@@ -70,7 +76,11 @@ extern int MK_MIMEHTML_ENC_SIGNED_BAD;
 extern int MK_MIMEHTML_SIGNED_BAD;
 extern int MK_MIMEHTML_ENCRYPTED_BAD;
 extern int MK_MIMEHTML_CERTIFICATES_BAD;
+extern int MK_MIMEHTML_SIGNED_UNVERIFIED;
 
+
+char *
+strip_continuations(char *original);
 
 
 
@@ -477,9 +487,11 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 }
 
 char *
-MimeHeaders_get_parameter (const char *header_value, const char *parm_name)
+MimeHeaders_get_parameter (const char *header_value, const char *parm_name, 
+						   char **charset, char **language)
 {
   const char *str;
+  char *s = NULL; /* parm value to be returned */
   int32 parm_len;
   if (!header_value || !parm_name || !*header_value || !*parm_name)
 	return 0;
@@ -487,6 +499,9 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name)
   /* The format of these header lines is
 	 <token> [ ';' <token> '=' <token-or-quoted-string> ]*
    */
+
+  if (charset) *charset = NULL;
+  if (language) *language = NULL;
 
   str = header_value;
   parm_len = XP_STRLEN(parm_name);
@@ -552,12 +567,101 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name)
 	  if (token_end - token_start == parm_len &&
 		  !strncasecomp(token_start, parm_name, parm_len))
 		{
-		  char *s = (char *) XP_ALLOC ((value_end - value_start) + 1);
+		  s = (char *) XP_ALLOC ((value_end - value_start) + 1);
 		  if (! s) return 0;  /* MK_OUT_OF_MEMORY */
 		  XP_MEMCPY (s, value_start, value_end - value_start);
 		  s [value_end - value_start] = 0;
+		  /* if the parameter spans across multiple lines we have to strip out the
+			 line continuation -- jht 4/29/98 */
+		  strip_continuations(s);
 		  return s;
 		}
+	  else if (token_end - token_start > parm_len &&
+			   !strncasecomp(token_start, parm_name, parm_len) &&
+			   *(token_start+parm_len) == '*')
+	  {
+		  /* RFC2231 - The legitimate parm format can be:
+			 title*=us-ascii'en-us'This%20is%20weired.
+			    or
+			 title*0*=us-ascii'en'This%20is%20weired.%20We
+			 title*1*=have%20to%20support%20this.
+			 title*3="Else..."
+			    or
+			 title*0="Hey, what you think you are doing?"
+			 title*1="There is no charset and language info."
+		   */
+		  const char *cp = token_start+parm_len+1; /* 1st char pass '*' */
+		  XP_Bool needUnescape = *(token_end-1) == '*';
+		  if ((*cp == '0' && needUnescape) || (token_end-token_start == parm_len+1))
+		  {
+			  const char *s_quote1 = XP_STRCHR(value_start, 0x27);
+			  const char *s_quote2 = s_quote1 ? XP_STRCHR(s_quote1+1, 0x27) : NULL;
+			  XP_ASSERT(s_quote1 && s_quote2);
+			  if (charset && s_quote1 > value_start && s_quote1 < value_end)
+			  {
+				  *charset = (char *) XP_ALLOC(s_quote1-value_start+1);
+				  if (*charset)
+				  {
+					  XP_MEMCPY(*charset, value_start, s_quote1-value_start);
+					  *(*charset+(s_quote1-value_start)) = 0;
+				  }
+			  }
+			  if (language && s_quote1 && s_quote2 && s_quote2 > s_quote1+1 &&
+				  s_quote2 < value_end)
+			  {
+				  *language = (char *) XP_ALLOC(s_quote2-(s_quote1+1)+1);
+				  if (*language)
+				  {
+					  XP_MEMCPY(*language, s_quote1+1, s_quote2-(s_quote1+1));
+					  *(*language+(s_quote2-(s_quote1+1))) = 0;
+				  }
+			  }
+			  if (s_quote2 && s_quote2+1 < value_end)
+			  {
+				  XP_ASSERT(!s);
+				  s = (char *) XP_ALLOC(value_end-(s_quote2+1)+1);
+				  if (s)
+				  {
+					  XP_MEMCPY(s, s_quote2+1, value_end-(s_quote2+1));
+					  *(s+(value_end-(s_quote2+1))) = 0;
+					  if (needUnescape)
+					  {
+						  NET_UnEscape(s);
+						  if (token_end-token_start == parm_len+1)
+							  return s; /* we done; this is the simple case of
+										   encoding charset and language info
+										 */
+					  }
+				  }
+			  }
+		  }
+		  else if (XP_IS_DIGIT(*cp))
+		  {
+			  int32 len = 0;
+			  char *ns = NULL;
+			  if (s)
+			  {
+				  len = XP_STRLEN(s);
+				  ns = (char *) XP_REALLOC(s, len+(value_end-value_start)+1);
+				  if (!ns)
+					  FREEIF(s);
+				  else if (ns != s)
+					  s = ns;
+			  }
+			  else if (*cp == '0') /* must be; otherwise something is wrong */
+			  {
+				  s = (char *) XP_ALLOC(value_end-value_start+1);
+			  }
+			  /* else {} something is really wrong; out of memory */
+			  if (s)
+			  {
+				  XP_MEMCPY(s+len, value_start, value_end-value_start);
+				  *(s+len+(value_end-value_start)) = 0;
+				  if (needUnescape)
+					  NET_UnEscape(s+len);
+			  }
+		  }
+	  }
 
 	  /* str now points after the end of the value.
 		 skip over whitespace, ';', whitespace. */
@@ -565,7 +669,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name)
 	  if (*str == ';') str++;
 	  while (XP_IS_SPACE (*str)) str++;
 	}
-  return 0;
+  return s;
 }
 
 
@@ -615,16 +719,24 @@ MimeHeaders_default_mailto_link_generator (const char *dest, void *closure,
 
 static char *mime_escape_quotes (char *src)
 {
-	/* Make sure any single or double quote is escaped with a backslash */
+	/* Make sure quotes are escaped with a backslash */
 	char *dst = XP_ALLOC((2 * XP_STRLEN(src)) + 1);
 	if (dst)
 	{
 		char *walkDst = dst;
 		while (*src)
 		{
-			if (*src == '\'' || *src == '\"' ) /* is it a quote? */
+			/* here's a big hack. double quotes, even if escaped, produce JS errors, 
+			 * so we'll just whack a double quote into a single quote. This string
+			 * is just eye candy anyway.
+			 */
+			if (*src == '\"') 
+				*src = '\'';
+
+			if (*src == '\'') /* is it a quote? */
 				if (walkDst == dst || *(src-1) != '\\')  /* is it escaped? */
 					*walkDst++ = '\\';
+
 			*walkDst++ = *src++;
 		}
 		*walkDst = '\0';
@@ -817,6 +929,9 @@ MimeHeaders_write_random_header_1 (MimeHeaders *hdrs,
   char *converted = 0;
   int32 converted_length = 0;
 
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
+
   if (!contents && subject_p)
 	contents = "";
   else if (!contents)
@@ -964,6 +1079,8 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
   int32 contents_length;
   char *converted = 0;
   char *out;
+  const char* orig_name = name;
+
   if (!contents)
 	return 0;
 
@@ -1121,7 +1238,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 					arg = 0;
 #else  /* !MOZILLA_30 */
 					fn = MimeHeaders_default_addbook_link_generator;
-					arg = NULL; /* ###phil fix this &extraAnchorText; */
+					arg = &extraAnchorText; 
 #endif /* !MOZILLA_30 */
 				  }
 				else
@@ -1195,7 +1312,7 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, const char *name,
 				XP_FREE (extraAnchorText);
 #ifndef MOZILLA_30
 			/* Begin hack of out of envelope XSENDER info */
-			if (name && !strcasecomp(name, HEADER_FROM)) { 
+			if (orig_name && !strcasecomp(orig_name, HEADER_FROM)) { 
 				char * statusLine = MimeHeaders_get (hdrs, HEADER_X_MOZILLA_STATUS, FALSE, FALSE);
 				uint16 flags =0;
 
@@ -1277,6 +1394,10 @@ MimeHeaders_write_id_header_1 (MimeHeaders *hdrs, const char *name,
   int status = 0;
   int32 contents_length;
   char *out;
+
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
+
   if (!contents)
 	return 0;
 
@@ -1463,7 +1584,12 @@ MimeHeaders_write_id_header (MimeHeaders *hdrs, const char *name,
 							 XP_Bool show_ids, MimeDisplayOptions *opt)
 {
   int status = 0;
-  char *contents = MimeHeaders_get (hdrs, name, FALSE, TRUE);
+  char *contents = NULL;
+  
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
+
+  contents = MimeHeaders_get (hdrs, name, FALSE, TRUE);
   if (!contents) return 0;
   status = MimeHeaders_write_id_header_1 (hdrs, name, contents, show_ids, opt);
   XP_FREE(contents);
@@ -1525,6 +1651,9 @@ MimeHeaders_write_interesting_headers (MimeHeaders *hdrs,
   const char **rest;
   XP_Bool did_from = FALSE;
   XP_Bool did_resent_from = FALSE;
+
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
 
   status = MimeHeaders_grow_obuffer (hdrs, 200);
   if (status < 0) return status;
@@ -1664,6 +1793,9 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   int status;
   int i;
   XP_Bool wrote_any_p = FALSE;
+
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
 
   /* One shouldn't be trying to read headers when one hasn't finished
 	 parsing them yet... but this can happen if the message ended
@@ -1969,6 +2101,8 @@ MimeHeaders_write_microscopic_headers (MimeHeaders *hdrs,
 	  if (status < 0) goto FAIL;
 	  status = MimeHeaders_write_address_header (hdrs, HEADER_CC, opt);
 	  if (status < 0) goto FAIL;
+	  status = MimeHeaders_write_address_header (hdrs, HEADER_BCC, opt);
+	  if (status < 0) goto FAIL;
 	  status = MimeHeaders_write_news_header (hdrs, HEADER_NEWSGROUPS, opt);
 	  if (status < 0) goto FAIL;
 	}
@@ -1991,6 +2125,9 @@ MimeHeaders_write_citation_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   const char *fmt = 0;
   char *converted = 0;
   int32 converted_length = 0;
+
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
 
   if (!opt || !opt->output_fn)
 	return 0;
@@ -2144,11 +2281,14 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
   int status = 0;
   XP_Bool wrote_any_p = FALSE;
 
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
+
   if (!opt || !opt->output_fn) return 0;
 
   FREEIF(hdrs->munged_subject);
 
-  status = MimeHeaders_grow_obuffer (hdrs, 210);
+  status = MimeHeaders_grow_obuffer (hdrs, /*210*/ 750);
   if (status < 0) return status;
 
   if (opt->fancy_headers_p) {
@@ -2194,14 +2334,16 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 	if (!opt->nice_html_only_p && opt->fancy_links_p) {
 		if (opt->attachment_icon_layer_id == 0) {
 			static int32 randomid = 1; /* Not very random. ### */
+			char *mouseOverStatusString = XP_GetString(MK_MSG_SHOW_ATTACHMENT_PANE);
 			opt->attachment_icon_layer_id = randomid;
 			XP_SPRINTF(hdrs->obuffer + XP_STRLEN(hdrs->obuffer),
 					   "</TD><TD VALIGN=TOP><LAYER LOCKED name=noattach-%ld>"
 					   "</LAYER><ILAYER LOCKED name=attach-%ld visibility=hide>"
-					   "<a href=mailbox:displayattachments>"
+					   "<a href=mailbox:displayattachments onMouseOver=\"window.status='%s'; return true\">"
 					   "<IMG SRC=internal-attachment-icon BORDER=0>"
 					   "</a></ilayer>",
-					   (long) randomid, (long) randomid);
+					   (long) randomid, (long) randomid,
+					   mouseOverStatusString);
 			randomid++;
 		}
 	}
@@ -2236,7 +2378,22 @@ MimeHeaders_write_headers_html (MimeHeaders *hdrs, MimeDisplayOptions *opt)
 }
 
 
-
+/* Returns TRUE if we should show colored tags on attachments.
+   Useful for IMAP MIME parts on demand, because it shows a different
+   color for undownloaded parts. */
+static XP_Bool
+MimeHeaders_getShowAttachmentColors()
+{
+	static XP_Bool gotPref = FALSE;
+	static XP_Bool showColors = FALSE;
+	if (!gotPref)
+	{
+		PREF_GetBoolPref("mailnews.color_tag_attachments", &showColors);
+		gotPref = TRUE;
+	}
+	return showColors;
+}
+
 /* For drawing the tables that represent objects that can't be displayed
    inline.
  */
@@ -2251,11 +2408,17 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 								 const char *body)
 {
   int status = 0;
-  char *type = 0, *desc = 0, *enc = 0, *icon = 0, *type_desc = 0;
+  char *type = 0, *desc = 0, *enc = 0, *icon = 0, *type_desc = 0, *partColor = 0;
+  XP_Bool downloaded = TRUE;
+
+  XP_ASSERT(hdrs);
+  if (!hdrs) return -1;
 
   type = (content_type
 		  ? XP_STRDUP(content_type)
 		  : MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, TRUE, FALSE));
+
+  downloaded = opt->missing_parts ? (MimeHeaders_get(hdrs, IMAP_EXTERNAL_CONTENT_HEADER, FALSE, FALSE) == NULL) : TRUE;
 
   if (type && *type && opt)
 	{
@@ -2288,8 +2451,18 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 									XP_STRLEN(hdrs->obuffer)); \
 		 if (status < 0) goto FAIL; } while (0)
 
-  PUT_STRING ("<TABLE CELLPADDING=8 CELLSPACING=1 BORDER=1>"
-			  "<TR><TD NOWRAP>");
+  PUT_STRING ("<TABLE CELLPADDING=2 CELLSPACING=0 BORDER=1><TR>");
+  if (MimeHeaders_getShowAttachmentColors())
+  {
+      /* For IMAP MIME parts on demand */
+	  partColor = downloaded ? "#00CC00" : "#FFCC00";
+
+	  PUT_STRING ("<TD NOWRAP WIDTH=\"5\" BGCOLOR=\"");
+	  PUT_STRING (partColor);
+	  PUT_STRING ("\"><TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>");
+	  PUT_STRING ("<TR><TD NOWRAP VALIGN=CENTER></TD></TR></TABLE></TD>");
+  }
+  PUT_STRING ("<TD NOWRAP>");
 
   if (icon)
 	{
@@ -2414,6 +2587,18 @@ MimeHeaders_write_attachment_box(MimeHeaders *hdrs,
 		  FREEIF(desc);
 		  PUT_STRING(HEADER_END_JUNK);
 		}
+
+	  if (!downloaded)
+	    {
+		  const char *downloadStatus_hdr = XP_GetString(MK_MIMEHTML_DOWNLOAD_STATUS_HEADER);
+		  const char *downloadStatus = XP_GetString(MK_MIMEHTML_DOWNLOAD_STATUS_NOT_DOWNLOADED);
+		  PUT_STRING(HEADER_START_JUNK);
+		  PUT_STRING(downloadStatus_hdr);
+		  PUT_STRING(HEADER_MIDDLE_JUNK);
+		  PUT_STRING(downloadStatus);
+		  PUT_STRING(HEADER_END_JUNK);		  
+	    }
+
 	  PUT_STRING ("</TABLE>");
 	}
   if (body) PUT_STRING(body);
@@ -2460,13 +2645,14 @@ char *
 MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 							  XP_Bool signed_p,
 							  XP_Bool good_p,
+							  XP_Bool unverified_p,
 							  XP_Bool close_parent_stamp_p,
 							  const char *stamp_url)
 {
   const char *open = ("%s"
 					  "<P>"
 				      "<CENTER>"
-			            "<TABLE CELLPADDING=3 CELLSPACING=1 BORDER=1>"
+			            "<TABLE CELLPADDING=3 CELLSPACING=0 BORDER=1>"
 			              "<TR>"
 			                "<TD ALIGN=RIGHT VALIGN=BOTTOM BGCOLOR=\"white\">"
 			                  "%s<IMG SRC=\"%s\" BORDER=0 ALT=\"S/MIME\">%s"
@@ -2490,10 +2676,18 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
   const char *parent_close_early = 0;
   const char *parent_close_late = 0;
   char *result = 0;
-
   /* Neither encrypted nor signed means "certs only". */
 
-  if (encrypted_p && signed_p && good_p)				/* 111 */
+  if (unverified_p)
+  {
+	  /* an unverified signature can never occur with an encrypted
+	     message;  by nature, an unverified signature implies
+		 that not all parts were downloaded.  Therefore, the
+		 message could not have been encrypted. */
+	  middle_key = MK_MIMEHTML_SIGNED_UNVERIFIED;
+	  img_src = "internal-smime-signed-bad";
+  }
+  else if (encrypted_p && signed_p && good_p)				/* 111 */
 	{
 	  middle_key = MK_MIMEHTML_ENC_AND_SIGNED;
 	  img_src = "internal-smime-encrypted-signed";
@@ -2562,7 +2756,11 @@ MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 
   if (stamp_url)
 	{
-	  const char *stamp_text = XP_GetString(MK_MIMEHTML_SHOW_SECURITY_ADVISOR);
+	  const char *stamp_text = 0;
+	  if (unverified_p)
+		  stamp_text = XP_GetString(MK_MIMEHTML_VERIFY_SIGNATURE);
+	  else
+		  stamp_text = XP_GetString(MK_MIMEHTML_SHOW_SECURITY_ADVISOR);
 	  href_open = PR_smprintf("<A HREF=\"%s\""
 							  " onMouseOver=\"window.status='%s';"
 							  " return true\">",
@@ -2700,7 +2898,7 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
   s = MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, FALSE, FALSE);
   if (s)
 	{
-	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME);
+	  name = MimeHeaders_get_parameter(s, HEADER_PARM_FILENAME, NULL, NULL);
 	  XP_FREE(s);
 	}
 
@@ -2709,7 +2907,7 @@ MimeHeaders_get_name(MimeHeaders *hdrs)
 	  s = MimeHeaders_get(hdrs, HEADER_CONTENT_TYPE, FALSE, FALSE);
 	  if (s)
 	  {
-		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME);
+		  name = MimeHeaders_get_parameter(s, HEADER_PARM_NAME, NULL, NULL);
 		  XP_FREE(s);
 	  }
   }

@@ -25,6 +25,9 @@
 */
 #include "intlpriv.h"
 #include "pintlcmp.h"
+#if defined(XP_MAC)
+#include <TextUtils.h>
+#endif
 
 #define CHECK_CSID_AND_ASSERT(csid)	\
 { \
@@ -373,6 +376,259 @@ PUBLIC XP_Bool	INTL_StrEndWith(
 }
 
 
+#ifdef MOZ_MAIL_NEWS
+
+
+#if defined(XP_WIN32)
+/* 
+ * Set locale to the system default locale. 
+ */
+static char *system_default_locale_string = NULL;
+static void SetLocaleToSystemDefaultLocale(void)
+{
+	char *str;
+
+	if (system_default_locale_string == NULL)
+	{
+		if (system_default_locale_string = (char *) malloc(128))
+			GetLocaleInfo(LOCALE_SYSTEM_DEFAULT, LOCALE_SENGLANGUAGE, system_default_locale_string, 128);
+	}
+	str = setlocale(LC_COLLATE, system_default_locale_string);
+}
+#endif /* XP_WIN32 */
+
+#if defined(XP_WIN32)
+static char *FEINTL_CreateCollationKeyUsingOS(const char *in_string, int16 wincsid)
+{
+	char *out_string = NULL;
+	size_t tmp_len;
+	
+	/* Currently only supports Latin1. */
+	if (wincsid != CS_ASCII && wincsid != CS_LATIN1 && wincsid != CS_DEFAULT)
+		return NULL;
+
+	/* Prepare a larger buffer for a sort key. */
+	tmp_len = XP_STRLEN(in_string)*4;
+
+	/* Set up the system defualt locale */
+	SetLocaleToSystemDefaultLocale();
+
+	if (out_string = (unsigned char *) XP_ALLOC(tmp_len))
+	{
+		size_t rt;
+		*out_string = '\0';
+		rt = strxfrm(out_string, in_string, tmp_len);
+
+		/* Realloc the buffer if it's smaller and try again. */
+		if (rt > tmp_len)
+		{
+			tmp_len = rt;
+			if (out_string = (unsigned char *) XP_REALLOC((void *) out_string, tmp_len))
+				rt = strxfrm(out_string, in_string, tmp_len);
+		}
+
+		/* Return the output of strxfrm if success. */
+		if (rt != (size_t)-1 && *out_string)
+			out_string = out_string;
+		else
+			XP_FREEIF(out_string);
+	}
+
+	return out_string;
+}
+#endif /* XP_WIN32 */
+#if defined(XP_MAC)
+static char *FEINTL_CreateCollationKeyUsingOS(const char *in_string, int16 wincsid)
+{
+	char *out_string = NULL;
+	char *temp_string;
+	int in_string_len = XP_STRLEN(in_string);
+	int i;
+	
+	/* Currently only supports Latin1. */
+	if (wincsid != CS_ASCII && wincsid != CS_LATIN1 && wincsid != CS_DEFAULT)
+		return NULL;
+
+	/* INTL_ConvertLineWithoutAutoDetect may alter input string. */
+	temp_string = XP_STRDUP(in_string);
+	if (temp_string != NULL)
+	{
+		/* Convert to MacRoman. */
+		out_string = (char *) INTL_ConvertLineWithoutAutoDetect (wincsid, CS_MAC_ROMAN, (unsigned char *) temp_string, in_string_len);
+		/* Set the converted string if conversion was applied and the input string was not altered. */
+		if (out_string != NULL && out_string != temp_string)
+		{
+			XP_FREE(temp_string);
+			temp_string = out_string;
+		}
+		out_string = (char *) XP_ALLOC(in_string_len * 2 + 1);
+		if (out_string != NULL)
+		{
+			/* Copy original string. */
+			for (i = 0; i < in_string_len; i++)
+				out_string[i*2+1] = temp_string[i];
+			UppercaseStripDiacritics(temp_string, in_string_len, FontToScript(1));
+			/* Copy uppercased string. */
+			for (i = 0; i < in_string_len; i++)
+				out_string[i*2] = temp_string[i];
+			/* Terminate the string. */
+			out_string[in_string_len * 2] = '\0';
+		}
+		XP_FREE(temp_string);
+	}
+
+	return out_string;
+}
+#endif /* XP_MAC */
+#if defined(XP_UNIX)
+static char *FEINTL_CreateCollationKeyUsingOS(const char *in_string, int16 wincsid)
+{
+	return NULL;
+}
+#endif /* XP_UNIX */
+
+static char *INTL_CreateCollationKeyUsingOS(const char *in_string, int16 wincsid)
+{
+	char *out_string;
+	unsigned char *tmp;
+
+	/* Create a collatable string */
+	if (INTL_CharSetType(wincsid) == SINGLEBYTE)
+	{
+		/* Front End call to create a collation key. */
+		out_string = FEINTL_CreateCollationKeyUsingOS(in_string, wincsid);
+		if (out_string)
+			return out_string;
+
+		/* Otherwise just lowercase the string. */
+		out_string = XP_STRDUP(in_string);
+		tmp = (unsigned char *) out_string;
+		while (*tmp)
+		{
+			*tmp = (unsigned char) XP_TO_LOWER((int)*tmp);
+			tmp++;
+		}
+	}
+	else if (wincsid & MULTIBYTE)
+	{
+		out_string = XP_STRDUP(in_string);
+		tmp = (unsigned char *) out_string;
+		while (*tmp)
+		{
+			/* Lower case for Ascii */
+			if (*tmp < 128)
+			{
+				*tmp = (unsigned char) XP_TO_LOWER((int)*tmp);
+				tmp++;
+			}
+			else
+			{
+				int bytes = INTL_CharLen(wincsid, tmp);
+				/* ShiftJIS specific, shift hankaku kana in front of zenkaku. */
+				if (wincsid == CS_SJIS)
+				{
+					if (*tmp >= 0xA0 && *tmp < 0xE0)
+					{
+						*tmp -= (0xA0 - 0x81);
+					}
+					else if (*tmp >= 0x81 && *tmp < 0xA0)
+					{
+						*tmp += (0xA0 - 0x81);
+					} 
+				}
+				tmp += bytes;
+			}
+		}
+	}
+
+	return out_string;
+}
+
+#if defined(LIBNLS_COLLATE)
+static Collation	*collation = NULL;
+static char *INTL_CreateCollationKeyUsingLibNLS(const char *in_string, int16 wincsid)
+{
+	return NULL;
+}
+#endif /* LIBNLS_COLLATE */
+
+/*
+ * Create a collation key using default system locale. 
+ */
+PUBLIC char *INTL_CreateCollationKeyByDefaultLocale(const char *in_string, int16 wincsid, int32 collation_flag)
+{
+	char *out_string;
+
+	/* For future enhancement */
+	collation_flag = 0;
+
+	/* CS_DEFAULT is not accepted by i18n unicode converter. 
+	 * In future, this should be taken care by the caller.
+	 */
+	if (CS_DEFAULT == wincsid)
+		wincsid = CS_LATIN1;
+
+	/* Create a collation key. */
+#if defined(LIBNLS_COLLATE)
+	out_string = INTL_CreateCollationKeyUsingLibNLS(in_string);
+#else
+	out_string = INTL_CreateCollationKeyUsingOS(in_string, wincsid);
+#endif
+
+	return out_string;
+}
+
+/*
+ * Compare two collation keys. 
+ */
+PUBLIC int INTL_Compare_CollationKey(const char *key1, const char *key2)
+{
+	return XP_MEMCMP((const void *) key1, (const void *) key2, XP_STRLEN(key1));
+}
+
+/*
+ * Decode, convert and create a message header. Then create and return a collatable string. 
+ */
+PUBLIC char *INTL_DecodeMimePartIIAndCreateCollationKey(const char *header, int16 wincsid, int32 collation_flag) 
+{
+	char *temp_string;
+	char *decoded_string;
+	char *out_string;
+
+	/* For future enhancement */
+	collation_flag = 0;
+
+	/* Allocate the temp string because INTL_DecodeMimePartIIStr may alter input string. */
+	temp_string = XP_STRDUP(header);
+	if (temp_string == NULL)
+		return NULL;
+
+	/* Decode and Convert */
+	decoded_string = INTL_DecodeMimePartIIStr(temp_string, wincsid, FALSE);
+
+	/* Free the temp string. */
+	if (decoded_string != temp_string)
+		XP_FREE(temp_string);
+	/* No decode or conversion done, allocate for out string. */
+	if (decoded_string == NULL)
+		decoded_string = XP_STRDUP(header);
+	if (decoded_string == NULL)
+		return NULL;
+
+	/* Create a collation key. */
+	out_string = INTL_CreateCollationKeyByDefaultLocale(decoded_string, wincsid, collation_flag);
+
+	/* Return decoded string in case no collation key created. */
+	if (out_string != NULL)
+		XP_FREE(decoded_string);
+	else
+		out_string = decoded_string;
+
+
+    return out_string; 
+} 
+
+#endif  /* MOZ_MAIL_NEWS */
 
 
 

@@ -54,6 +54,8 @@ StMercutioMDEFTextState::SetUpForMercurtioMDEF()
     ::TextFont(systemFont);
     ::TextSize(0);
 
+/*	duh. this does exactly what we just did.
+
 	if (UEnvironment::HasFeature(env_SupportsColor))
 	{
         ::GetCWMgrPort(&mWMgrCPort);
@@ -63,7 +65,7 @@ StMercutioMDEFTextState::SetUpForMercurtioMDEF()
         ::TextFont(systemFont);
         ::TextSize(0);
 	}
-	
+*/	
 	::SetPort(mPort);
 }
 
@@ -78,12 +80,14 @@ StMercutioMDEFTextState::Restore()
     ::TextFont(mWMgrFont);
     ::TextSize(mWMgrSize);
 
+/*	duh. this does exactly what we just did.
 	if (UEnvironment::HasFeature(env_SupportsColor))
 	{
         ::SetPort((GrafPtr)mWMgrCPort);
         ::TextFont(mCWMgrFont);
         ::TextSize(mCWMgrSize);
 	}
+*/
 
     ::SetPort(mPort);
 }
@@ -138,9 +142,9 @@ StSysFontState::Restore()
 
 void
 StSysFontState::SetTextTraits(
-	ResIDT inTextTraitsID)
+	ResIDT inTextTraitsID )
 {
-	TextTraitsH traitsH = UTextTraits::LoadTextTraits ( 130 );
+	TextTraitsH traitsH = UTextTraits::LoadTextTraits ( inTextTraitsID );
 	if ( traitsH ) 
 	{
 		// Bug #64133 kellys
@@ -149,6 +153,7 @@ StSysFontState::SetTextTraits(
 			::LMSetSysFontFam ( ::GetScriptVariable(::FontToScript(1), smScriptAppFond) );
 		else
 			::LMSetSysFontFam ( (**traitsH).fontNumber );
+			
 		::LMSetSysFontSize ( (**traitsH).size );
 		::LMSetLastSPExtra ( -1L );
 	}

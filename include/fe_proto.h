@@ -144,6 +144,12 @@ extern void FE_ClearConnectSelect(MWContext * win_id, int fd);
 extern void FE_SetFileReadSelect(MWContext * win_id, int fd);
 extern void FE_ClearFileReadSelect(MWContext * win_id, int fd);
 
+#if defined(XP_UNIX)
+/* Are we in CallNetlibAllTheTime mode? Called by security only
+ */
+extern XP_Bool XFE_IsCallNetlibAllTheTime();
+#endif
+
 /* tell the front end to call ProcessNet as often as possible
  * This superseeds FE_SetCallNetlibAllTheTime
  */
@@ -303,6 +309,10 @@ extern void FE_NetStatus (MWContext *context, void *request, Net_RequestStatus s
 extern void FE_Progress (MWContext *context, const char * Msg);
 
 extern void FE_Alert (MWContext * context, const char * Msg);
+
+#ifdef XP_UNIX
+extern void FE_Alert_modal (MWContext * context, const char * Msg);
+#endif
 
 #if defined(XP_MAC)||defined(XP_UNIX)
 extern void FE_Message (MWContext * context, const char * Msg);
@@ -1271,11 +1281,6 @@ extern int WFE_DoCompuserveAuthenticate(MWContext *context,
 
 extern char *WFE_BuildCompuserveAuthString(URL_Struct *URL_s);
 
-/* Way to attempt to keep the application messages flowing 
- * when need to block a return value.
- */
-extern void FEU_StayingAlive(void);
-
 /* convert logical pixels to device pixels */
 extern int32  FE_LPtoDPoint(MWContext * context, int32 logicalPoint);
 
@@ -1293,6 +1298,11 @@ extern void	FE_MochaImageGroupObserver(XP_Observable observable,
  * we get the first window up. This function is need if FIPS140 is turned on.
  */
 MWContext * FE_GetInitContext(void);
+
+/* Way to attempt to keep the application messages flowing 
+ * when need to block a return value.
+ */
+extern void FEU_StayingAlive(void);
 
 #ifdef XP_UNIX
 /* Get the dimensions of an icon in pixels for the PostScript front end. */

@@ -391,9 +391,9 @@ VObject* nextVObject(VObjectIterator *i);
 extern void printVObject(XP_File fp,VObject *o);
 void printVObject_(XP_File fp, VObject *o, int level);
 extern void writeVObject(XP_File fp, VObject *o);
-void writeVObject_(OFile *fp, VObject *o, XP_Bool expandSpaces);
+void writeVObject_(OFile *fp, VObject *o);
 char* writeMemVObject(char *s, int *len, VObject *o);
-char* writeMemVObjects(char *s, int *len, VObject *list, XP_Bool expandSpaces);
+char* writeMemVObjects(char *s, int *len, VObject *list);
 
 const char* lookupStr(const char *s);
 

@@ -1878,6 +1878,12 @@ pa_FetchDocData(MWContext *window_id)
 	return(doc_data);
 }
 
+XP_Bool ValidateDocData(MWContext *window_id)
+{
+	if (pa_FetchDocData(window_id))
+		return TRUE;
+	return FALSE;
+}
 
 static Bool
 pa_RemoveDocData(pa_DocData *target_doc_data)

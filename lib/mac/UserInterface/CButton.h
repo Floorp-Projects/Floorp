@@ -22,10 +22,6 @@
 
 #include <LControl.h>
 
-#if defined(QAP_BUILD)
-#include <QAP_Assist.h>
-#endif
-
 #include "MPaneEnablerPolicy.h"
 
 // abstract base class for button controls
@@ -51,11 +47,6 @@ class CButton : public LControl, public MPaneEnablerPolicy
 		
 		virtual void		SetGraphicID(ResIDT inResID);
 		virtual	ResIDT		GetGraphicID(void) const;
-		
-//#if defined(QAP_BUILD)
-//		virtual void		QapGetContents (PWCINFO pwc, short *pCount, short max);
-//		virtual void		QapGetCDescriptorMax (char * cp_buf, short s_max);
-//#endif
 		
 		virtual	void 		Draw(RgnHandle inSuperDrawRgnH);
 

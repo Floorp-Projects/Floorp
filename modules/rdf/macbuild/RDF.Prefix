@@ -23,5 +23,9 @@
 //
 //
 
+<<<<<<< RDF.Prefix
 #include "MacPrefix_debug.h"
+=======
+#include "MacPrefix.h"
+>>>>>>> 3.1.16.2
 #include "RDFConfig.h"

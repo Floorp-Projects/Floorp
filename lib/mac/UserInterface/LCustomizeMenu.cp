@@ -35,7 +35,7 @@ LCustomizeMenu::LCustomizeMenu()
 //
 //	Size
 //
-void LCustomizeMenu::Size(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item)
+void LCustomizeMenu::Size(MenuHandle menu, MenuDefUPP* /* root */, Rect * /* rect */, Point /* hitPt */, short * /* item */)
 {
 	fItemCount = ::CountMItems(menu);
 	int maxWidth = fTextMargin + 4;
@@ -105,7 +105,7 @@ short LCustomizeMenu::MeasureItemCommand(short command)
 //
 //	Draw
 //
-void LCustomizeMenu::Draw(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item)
+void LCustomizeMenu::Draw(MenuHandle menu, MenuDefUPP* /* root */, Rect *rect, Point /* hitPt */, short * /* item */)
 {
 	Assert_(fItemCount != 0);
 	Assert_(fItemHeight != 0);	
@@ -130,7 +130,7 @@ void LCustomizeMenu::DrawItemSeperator(Rect& itemrect )
 //	DrawItemIcon
 //	¥¥ÊUnsupport Yet
 //
-void LCustomizeMenu::DrawItemIcon(Rect& itemrect, short iconindex)
+void LCustomizeMenu::DrawItemIcon(Rect& /* itemrect */, short /* iconindex */)
 {
 	Assert_(FALSE);
 	// We current do not support Icon
@@ -138,7 +138,7 @@ void LCustomizeMenu::DrawItemIcon(Rect& itemrect, short iconindex)
 //
 //	DrawItemCommand
 //
-void LCustomizeMenu::DrawItemCommand(Rect& itemrect, short cmd)
+void LCustomizeMenu::DrawItemCommand(Rect& /* itemrect */, short cmd)
 {
 	::DrawChar(17);
 	::DrawChar(cmd);
@@ -147,7 +147,7 @@ void LCustomizeMenu::DrawItemCommand(Rect& itemrect, short cmd)
 //	DrawItemSubmenuIndicator
 //	¥¥ÊUnsupport Yet
 //
-void LCustomizeMenu::DrawItemSubmenuIndicator(Rect& itemrect)
+void LCustomizeMenu::DrawItemSubmenuIndicator(Rect& /* itemrect */)
 {
 	Assert_(FALSE);
 	// We current do not support SubmenuIndicator
@@ -230,14 +230,14 @@ void LCustomizeMenu::MoveToItemMarkPosition(Rect& itemrect)
 //
 //	DrawItemText
 //
-void LCustomizeMenu::DrawItemText(Rect& itemrect, Str255 itemtext )
+void LCustomizeMenu::DrawItemText(Rect& /* itemrect */, Str255 itemtext )
 {
 	::DrawString(itemtext);	
 }
 //
 //	DrawItemMark
 //
-void LCustomizeMenu::DrawItemMark(Rect& itemrect, short mark )
+void LCustomizeMenu::DrawItemMark(Rect& /* itemrect */, short mark )
 {
 	::DrawChar(mark);
 }
@@ -306,7 +306,7 @@ void LCustomizeMenu::DrawItem(MenuHandle menu, int item, Rect& itemrect )
 //
 //	Choose
 //
-void LCustomizeMenu::Choose(MenuHandle menu, MenuDefUPP* root, Rect *rect, Point hitPt, short *item)
+void LCustomizeMenu::Choose(MenuHandle menu, MenuDefUPP* /* root */, Rect *rect, Point hitPt, short *item)
 {
 	int olditem = *item;
 	*item = 0;

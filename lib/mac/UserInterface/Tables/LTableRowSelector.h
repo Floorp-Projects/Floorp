@@ -66,6 +66,9 @@ public:
 	TableIndexT			GetSelectedRowCount() const { return mSelectedRowCount; }
 	virtual void 		DoSelect(TableIndexT inRow, Boolean inSelect, Boolean inHilite, Boolean inNotify = false);	
 
+	virtual void		MakeSelectionRegion(RgnHandle ioRgnHandle, TableIndexT hiliteColumn);
+	virtual void		SetSelectionFromRegion(RgnHandle inRgnHandle);
+	
 protected:
 	virtual void DoSelectAll(Boolean inSelect, Boolean inNotify);		
 	void DoSelectRange(TableIndexT inFrom, TableIndexT inTo, Boolean inSelect, Boolean inNotify);
@@ -78,9 +81,5 @@ protected:
 	TableIndexT			mExtensionRow;
 	Boolean				mAllowMultiple;
 	TableIndexT 		mSelectedRowCount;
-	RgnHandle			mAddToSelection;
-	RgnHandle			mRemoveFromSelection;
-	RgnHandle			mInvertSelection;
-
 };
 

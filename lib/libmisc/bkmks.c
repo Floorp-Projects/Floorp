@@ -16,6 +16,10 @@
  * Reserved.
  */
 
+/* If you add code to this file, make sure it still builds on win16 debug - its 
+ * code segment is too big.
+ */
+
 #include "bkmks.h"
 #include "net.h"
 #include "xp_mcom.h"
@@ -29,9 +33,10 @@
 #include "xp_qsort.h"
 #include "intl_csi.h"
 
-/* N.B. If you add code to this file, make sure it still builds on win16 debug - its 
-   code segment is too big.
-*/
+#ifdef XP_MAC
+#pragma warn_unusedarg off
+#pragma warn_possunwant off
+#endif
 
 #define INTL_SORT 1
 #ifdef INTL_SORT	/* Added by ftang */
@@ -90,6 +95,9 @@ extern int XP_ADDRBOOK_HEADER;
 #define BMLIST_COOKIE			"<!DOCTYPE NETSCAPE-Bookmark-file-1>"
 #define BM_ADDR_LIST_COOKIE		"<!DOCTYPE NETSCAPE-Addressbook-file-1>"
 #define READ_BUFFER_SIZE		2048
+#define WRITE_BUFFER_SIZE		1848 /* Make this a few hundred less than
+                                        read buffer so we can be sure to
+                                        read the bookmarks back properly */
 #define DEF_NAME				"Personal Bookmarks" /* L10N? This doesn't seem to be used. */
 
 #ifdef FREEIF
@@ -2390,23 +2398,22 @@ bm_read_url(MWContext* context, XP_File fp, char* buffer, char* ptr,
 	  end = strcasestr(gtr_than, "</A>");
 	  if (end) {
 		*end = '\0';
-		StrAllocCopy(new_item->name, XP_StripLine(gtr_than + 1));
-		/* terminate at beginning of name since there
-		   is nothing interesting after that */
-		*gtr_than = '\0';
-	  } else {
-		StrAllocCopy(new_item->name,
-					 XP_StripLine(gtr_than + 1));
+      } else {
+        /* This must be a long title.
+         * Don't bother using the rest if it.
+         */
+        char *dumpbuf = (char*) XP_ALLOC(READ_BUFFER_SIZE);
+		while (XP_FileReadLine(dumpbuf, READ_BUFFER_SIZE, fp)) {
+          if (strchr(dumpbuf, '\n'))
+            break;
+        }
+        XP_FREE(dumpbuf);
+      }
+      StrAllocCopy(new_item->name, XP_StripLine(gtr_than + 1));
 
-		/* what happens if this breaks??  this is bogus stuff I don't
-		   know what to do with */
-		XP_FileReadLine(buffer, READ_BUFFER_SIZE, fp);
-		end = strcasestr(buffer, "</A>");
-
-		if (end) *end = '\0';
-
-		StrAllocCat(new_item->name, XP_StripLine(buffer));
-	  }
+      /* terminate at beginning of name since there
+         is nothing interesting after that */
+      *gtr_than = '\0';
 	}
 
 	parseString = endQuote + 1;
@@ -2772,8 +2779,12 @@ bm_WriteAsHTML(MWContext* context, XP_File fp, BM_Entry* item, int32 level,
 static int
 bm_write_ok(const char* str, int length, XP_File fp)
 {
-  if (length < 0) length = XP_STRLEN(str);
-  if ((int) XP_FileWrite(str, length, fp) < length) return -1;
+  if (length < 0)
+    length = XP_STRLEN(str);
+  if (length > WRITE_BUFFER_SIZE)
+    length = WRITE_BUFFER_SIZE;
+  if ((int) XP_FileWrite(str, length, fp) < length)
+    return -1;
   return 0;
 }
 
@@ -2998,6 +3009,8 @@ bm_write_address( char *pszAddress, XP_File fp )
     WRITE( pszBuf, -1, fp );
     
     XP_FREE( pszBuf );
+
+    return 0;
 }
 
 /* writes out a URL entry to look like:
@@ -3605,7 +3618,7 @@ BM_InsertItemInHeaderOrAfterItem(	MWContext* context,
   bm_end_batch(context);
 }
 
-void remove_to(MWContext* context, BM_Entry* entry, void* to)
+static void remove_to(MWContext* context, BM_Entry* entry, void* to)
 {
 	BM_Entry*		moveTo = (BM_Entry*)to;
 	BM_Entry*		parent;
@@ -7161,7 +7174,7 @@ void BM_ObeyCommand(MWContext* context, BM_CommandType command)
   case BM_Cmd_Sort_LastVisit:
   case BM_Cmd_Sort_LastVisit_Asc:
   case BM_Cmd_Sort_Natural:
-	bm_SortSelected( context, command-BM_Cmd_Sort_Name );
+	bm_SortSelected( context, (BM_SortType)(command-BM_Cmd_Sort_Name) );
 	break;
 
   case BM_Cmd_InsertBookmark:

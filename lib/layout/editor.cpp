@@ -24,6 +24,7 @@
 #ifdef EDITOR
 
 #include "editor.h"
+#include "rosetta.h"
 
 #include "fsfile.h"
 // For XP Strings
@@ -678,8 +679,10 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
                 if( bSavePassword ){    
                     // PROBLEM: If password was wrong, user may have
                     // enterred it in prompted dialog, but we dont know that one!
-                    PREF_SetCharPref("editor.publish_last_pass",SECNAV_MungeString(pPassword));
+                    char * pass = HG99875(pPassword);
+                    PREF_SetCharPref("editor.publish_last_pass",pass);
 			        PREF_SetBoolPref("editor.publish_save_password",TRUE);
+                    XP_FREE(pass);
                 } else {
 			        PREF_SetBoolPref("editor.publish_save_password",FALSE);
                 }

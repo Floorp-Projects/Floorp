@@ -162,8 +162,6 @@ PUBLIC int16 INTL_DefaultMailCharSetID(int16 csid)
 	intlmime_init_csidmap();
 	retcsid = intlmime_map_csid(cs_mime_csidmap_tbl, csid);
 
-	if(retcsid == CS_KSC_8BIT)
-		retcsid = CS_2022_KR;
 	return retcsid;
 }
 
@@ -173,6 +171,8 @@ PUBLIC int16 INTL_DefaultNewsCharSetID(int16 csid)
 	if (csid == 0)
 		csid = INTL_DefaultDocCharSetID(0);
 	csid &= ~CS_AUTO;
+	if (csid == CS_KSC_8BIT)
+		return CS_KSC_8BIT;
 	intlmime_init_csidmap();
 	return intlmime_map_csid(cs_mime_csidmap_tbl, csid);
 }
@@ -226,24 +226,6 @@ PRIVATE void intlmime_update_csidmap(int16 csid_key, int16 csid_target)
 			mapp->csid_target = csid_target;
 		}
 }
-
-#if 0
-/* callback routine invoked by prefapi when the pref value changes */
-MODULE_PRIVATE
-int PR_CALLBACK intlmime_get_mail_strictly_mime(const char * newpref, void * data)
-{
-	XP_Bool	mail_strictly_mime = FALSE;
-
-	if (PREF_NOERROR == PREF_GetBoolPref("mail.strictly_mime", &mail_strictly_mime))
-	{
-		intlmime_update_csidmap(CS_UTF8, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-		intlmime_update_csidmap(CS_UCS2, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-		intlmime_update_csidmap(CS_UCS2_SWAP, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-	}
-	
-	return PREF_NOERROR;
-}
-#endif
 #endif /* MOZ_MAIL_NEWS */
 
 #if defined(MOZ_MAIL_COMPOSE) || defined(MOZ_MAIL_NEWS)
@@ -254,53 +236,39 @@ intlmime_init_csidmap()
 
 	if(initialized)
 		return;
-
-#if 0 /* UTF-8 is sent as UTF-8 regardless of the pref setting. */
-        {
-	  XP_Bool	mail_strictly_mime;
-	  /* modify csidmap for UTF-8 if the pref is not strictly mime */
-	  if (PREF_NOERROR == PREF_GetBoolPref("mail.strictly_mime", &mail_strictly_mime))
-  	  {
-		intlmime_update_csidmap(CS_UTF8, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-		intlmime_update_csidmap(CS_UCS2, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-		intlmime_update_csidmap(CS_UCS2_SWAP, mail_strictly_mime ? CS_UTF7 : CS_UTF8);
-		/* to detect pref change */
-		PREF_RegisterCallback("mail.strictly_mime", intlmime_get_mail_strictly_mime, NULL);
-	  }
-        }
-#endif
 		
     /* Speical Hack for Cyrllic */
     /* We need to know wheater we should send KOI8-R or ISO-8859-5 */
 
 	{
-		cs_csid_map_t * mapp;
 		static const char* pref_mailcharset_cyrillic = "intl.mailcharset.cyrillic";
-		char *mailcharset_cyrillic = NULL;
-		int16 mailcsid_cyrillic = CS_UNKNOWN;
+		static const char* pref_mailcharset_korean = "intl.mailcharset.korean";
+		char *mailcharset_pref = NULL;
+		int16 mailcsid_pref = CS_UNKNOWN;
 
 		if( PREF_NOERROR == PREF_CopyCharPref(pref_mailcharset_cyrillic, 
-								&mailcharset_cyrillic))
+								&mailcharset_pref))
 		{
-			mailcsid_cyrillic = INTL_CharSetNameToID(mailcharset_cyrillic);
-			XP_FREE(mailcharset_cyrillic);
+			mailcsid_pref = INTL_CharSetNameToID(mailcharset_pref);
+			XP_FREE(mailcharset_pref);
 
-			if(CS_UNKNOWN != mailcsid_cyrillic)
+			if(CS_UNKNOWN != mailcsid_pref)
 			{
-				for(mapp = cs_mime_csidmap_tbl ; 
-					mapp->csid_key != 0 ; 
-					mapp++) 
-				{
-					if (
-						(mapp->csid_key == CS_KOI8_R) ||  
-						(mapp->csid_key == CS_8859_5) ||
-						(mapp->csid_key == CS_MAC_CYRILLIC) || 
-						(mapp->csid_key == CS_CP_1251) 
-			  		 ) 
-					{
-						mapp->csid_target = mailcsid_cyrillic;
-					}
-				}
+				intlmime_update_csidmap(CS_KOI8_R, mailcsid_pref);
+				intlmime_update_csidmap(CS_8859_5, mailcsid_pref);
+				intlmime_update_csidmap(CS_MAC_CYRILLIC, mailcsid_pref);
+				intlmime_update_csidmap(CS_CP_1251, mailcsid_pref);
+			}
+		}
+		if( PREF_NOERROR == PREF_CopyCharPref(pref_mailcharset_korean, 
+								&mailcharset_pref))
+		{
+			mailcsid_pref = INTL_CharSetNameToID(mailcharset_pref);
+			XP_FREE(mailcharset_pref);
+
+			if(CS_UNKNOWN != mailcsid_pref)
+			{
+				intlmime_update_csidmap(CS_KSC_8BIT, mailcsid_pref);
 			}
 		}
 	}
@@ -556,6 +524,9 @@ PRIVATE XP_Bool intlmime_is_mime_part2_header(const char *header)
 }
 
 extern char *strip_continuations(char *original);
+extern unsigned char *XP_WordWrapWithPrefix(int charset, unsigned char *str,
+											int maxColumn, int checkQuoting,
+											const char *prefix, int addCRLF);
 
 PRIVATE
 char *intl_decode_mime_part2_str(const char *header, int wincsid, XP_Bool dontConvert)
@@ -1045,6 +1016,23 @@ PRIVATE char * intlmime_encode_mail_address(int wincsid, const char *src, CCCDat
 					if( len > iThreshold )
 						len = ResetLen( iThreshold, begin, (int16)wincsid );
 
+					if ( iThreshold <= 1 )
+					{
+						/* Certain trashed mailboxes were causing an
+						** infinite loop at this point, so we need a way of
+						** getting out of trouble.
+						**
+						** BEFORE:    iThreshold was becoming 1, then 0, and
+						**            we were looping indefinitely.
+						** AFTER:     Now, first there will be
+						**            an assert in the previous call to ResetLen,
+						**            then we'll do that again on the repeat pass,
+						**            then we'll exit more or less gracefully.
+						**    - bug #83204, an oldie but goodie.
+						**    - jrm 98/03/25
+						*/
+						return NULL;
+					}
 					buf1 = (char *) cvtfunc(obj, (unsigned char *)begin, len);
 					iBufLen = XP_STRLEN( buf1 );
 					XP_ASSERT( iBufLen > 0 );
@@ -1253,7 +1241,8 @@ char *intl_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUseMime, i
 	
 	/* check to see if subject are all ascii or not */
 	if(intlmime_only_ascii_str(subject))
-		return NULL;
+		return (char *) XP_WordWrapWithPrefix(mail_csid, (unsigned char *)
+											  subject, maxLineLen, 0, " ", 1);
 		
 	if (mail_csid != wincsid)
 	{
@@ -1287,6 +1276,16 @@ char *intl_EncodeMimePartIIStr(char *subject, int16 wincsid, XP_Bool bUseMime, i
 				buf = (unsigned char *)cvtfunc(obj, (unsigned char*)newbuf, iSrcLen);
 				if(buf != (unsigned char*)newbuf)
 					XP_FREE(newbuf);
+				/* time for wrapping long line */
+				if (buf)
+				{
+					newbuf = (char*) buf;
+					buf = XP_WordWrapWithPrefix(mail_csid, (unsigned char *)
+												newbuf, maxLineLen, 0, " ", 1);
+
+					if (buf != (unsigned char*) newbuf)
+						XP_FREE(newbuf);
+				}
 			}
 		}
 	}

@@ -206,9 +206,9 @@ void CSimpleDividedView::FinishCreateSelf()
 //		¥ AdaptToSuperFrameSize
 // ---------------------------------------------------------------------------
 // Do not want to move the view around 
-void CSimpleDividedView::AdaptToSuperFrameSize(Int32 inSurrWidthDelta,
-										Int32 inSurrHeightDelta,
-										Boolean inRefresh)
+void CSimpleDividedView::AdaptToSuperFrameSize(Int32 /* inSurrWidthDelta */,
+										Int32 /* inSurrHeightDelta */,
+										Boolean /* inRefresh */)
 {
 	ReadjustConstraints();
 }
@@ -291,7 +291,7 @@ void CSimpleDividedView::ClickSelf(const SMouseDownEvent	&inMouseDown)
 // ---------------------------------------------------------------------------
 // Standard vert/horizontal sliders
 
-void CSimpleDividedView::AdjustCursorSelf(Point inPortPt, const EventRecord&	inMacEvent )
+void CSimpleDividedView::AdjustCursorSelf(Point /* inPortPt */, const EventRecord& /* inMacEvent */ )
 {
 	ResIDT cursID = fIsVertical ? VERT_CURSOR : HORI_CURSOR;
 	CursHandle h = GetCursor (cursID);

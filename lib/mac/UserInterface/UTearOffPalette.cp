@@ -1040,7 +1040,7 @@ void CTearOffManager::CloseFloatingWindow(ResIDT inWinID)
 // Opens the Floating Window
 
 void CTearOffManager::OpenFloatingWindow(	ResIDT inWinID,
-											Point inTopLeft,
+											Point /* inTopLeft */,
 											Boolean inSideways,
 											UInt8 visibility,
 											Str255 &title)

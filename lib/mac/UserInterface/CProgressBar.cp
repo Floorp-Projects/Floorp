@@ -61,7 +61,6 @@ void CProgressBar::FinishCreateSelf(void)
 	PixMapHandle theMap = (**mPolePattern).patMap;
 	mPatWidth = RectWidth((*theMap)->bounds);
 	
-//	SetValueRange(Range32T(0,100));
 	mValueRange = 100;
 }
 
@@ -123,7 +122,9 @@ void CProgressBar::DrawSelf(void)
 	::GetAuxWin(thePort, &theAuxHandle);
 	CTabHandle theColorTable = (**theAuxHandle).awCTable;
 
-	RGBColor theWindowBack = UGraphicGizmos::FindInColorTable(theColorTable, wContentColor);
+	RGBColor theWindowBack;
+
+	UGraphicGizmos::FindInColorTable(theColorTable, wContentColor, theWindowBack);
 
 	RGBColor theBodyColor, theFrameColor, theBarColor;
 #if 0
@@ -261,13 +262,3 @@ void CProgressBar::SetValue(Int32 inValue)
 			Draw(NULL);
 		}
 }
-
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-#if 0
-void CProgressBar::SetValueRange(const Range32T& inRange)
-{
-	mValueRange = inRange;
-}
-#endif

@@ -442,7 +442,17 @@ struct URL_Struct_ {
    
     	    load_background,              /* Load in the "background".
                                              Suppress thermo, progress, etc. */
-			mailto_post;				  /* is this a mailto: post? */
+			mailto_post,				  /* is this a mailto: post? */
+			allow_content_change,		  /* Set to TRUE if we are allowed to change the
+										     content that it is displayed to the user.
+											 Currently only used for IMAP partial fetches. */
+			content_modified,			  /* TRUE if the content of this URL has been modified
+										     internally.  Used for IMAP partial fetches. */
+			open_new_window_specified,	  /* TRUE if the invoker of the URL has specifically
+											 set the open_new_window bit - otherwise, msg_GetURL
+											 will clear it. */
+			open_new_window;			  /* TRUE if the invoker of the URL wants a new window 
+											 to open */
 #ifdef XP_CPLUSPLUS
     class MSG_Pane                *msg_pane; 
 #else
@@ -577,6 +587,7 @@ typedef struct _cdata {
     Bool  	   is_new;	/* indicate if this is 
 				   added by user via helper */
     char*	   src_string;  /* For output use */
+	char*	   pref_name; /* If the mimetype came from preferences */
 } NET_cdataStruct;
 
 
@@ -672,6 +683,7 @@ typedef struct _mdata {
 #define SUN_ATTACHMENT						"x-sun-attachment"
 
 #define TEXT_ENRICHED						"text/enriched"
+#define TEXT_CALENDAR						"text/calendar"
 #define TEXT_HTML							"text/html"
 #define TEXT_MDL							"text/mdl"
 #define TEXT_PLAIN							"text/plain"
@@ -939,6 +951,15 @@ NET_ProxyAutoConfig(int fmt, void *data_obj, URL_Struct *URL_s, MWContext *w);
 /* set the host to be used as an SMTP relay
  */
 extern void NET_SetMailRelayHost(char * host);
+
+
+/* Silly utility routine to send a message without user interaction. */
+
+extern int
+NET_SendMessageUnattended(MWContext* context, char* to, char* subject,
+						  char* otherheaders, char* body);
+
+
 
 /* add coordinates to the URL address
  * in the form url?x,y
@@ -1288,6 +1309,33 @@ extern int
 FE_StartAsyncDNSLookup(MWContext *context, char * host_port, void ** hoststruct_ptr_ptr, int sock);
 #endif
 
+extern void NET_DownloadAutoAdminCfgFile();
+
+#ifdef MOZ_LI
+
+/* LDAP METHOD IDs for URL_s->method */
+#define LDAP_SEARCH_METHOD	100 /* Address book search */
+#define LDAP_LI_SEARCH_METHOD	101 /* Get LDAPMessage* results from a LDAP URL to search */
+#define LDAP_LI_ADD_METHOD	102 /* Add an entry given LDAPMods */
+#define LDAP_LI_MOD_METHOD	103 /* Modify an entry given LDAPMods */
+#define LDAP_LI_DEL_METHOD	104 /* Delete an entry given the DN */
+#define LDAP_LI_PUTFILE_METHOD	105 /* Put a file into a given DN and attribute, given a local path */
+#define LDAP_LI_GETFILE_METHOD	106 /* Retreive an attribute into a local file, given DN and attribute */
+#define LDAP_LI_ADDGLM_METHOD 107 /* Add an entry, then return the result
+								   *  of a search for the modified entry's
+								   *  modifyTimeStamp attribute
+								   */
+#define LDAP_LI_MODGLM_METHOD 108 /* Modify an entry, then return the result
+								   *  of a search for the modified entry's
+								   *  modifyTimeStamp attribute
+								   */
+#define LDAP_LI_GETLASTMOD_METHOD 109 /* Return an entry's modifyTimeStamp attribute.
+								       * Any attributes specified in the URL will be ignored
+									   */
+#define LDAP_LI_BIND_METHOD 110		/* Bind as a particular user DN to an ldap server. 
+									 */
+#endif
+
 /*
  * NET_GetURL is called to begin the transfer of a URL
  *
@@ -1583,10 +1631,27 @@ extern void NET_CleanupFileFormat(char *filename);
 extern void NET_CleanupFileFormat(void);
 #endif
 
+/* reads HTTP cookies from disk
+ *
+ * on entry pass in the name of the file to read
+ *
+ * returns 0 on success -1 on failure.
+ *
+ */
+extern int NET_ReadCookies(char * filename);
+
+/* removes all cookies structs from the cookie list */
+extern void
+NET_RemoveAllCookies();
 
 /* initialize the netlibrary
  */
 extern int NET_InitNetLib(int socket_buffer_size, int max_number_of_connections);
+
+/*
+finish the netlib startup stuff - needed if li is on
+*/
+extern void NET_FinishInitNetLib();
 
 /* reads a mailcap file and adds entries to the
  * external viewers converter list
@@ -2038,6 +2103,9 @@ extern void NET_PlusToSpace(char *str);
 #define MARIMBA_TYPE_URL	    37
 #define INTERNAL_CERTLDAP_TYPE_URL 38
 #define ADDRESS_BOOK_LDAP_TYPE_URL 39
+#define LDAP_REPLICATION_TYPE_URL  40
+#define LDAP_QUERY_DSE_TYPE_URL    41
+#define CALLBACK_TYPE_URL		42
 
 #define LAST_URL_TYPE 40  /* defines the max number of URL types there are */
 

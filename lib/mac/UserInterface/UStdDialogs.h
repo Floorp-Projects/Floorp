@@ -107,6 +107,8 @@ class StStdDialogHandler : public StDialogHandler
 		void				SetNumberText(PaneIDT id, SInt32 value);
 		void				GetText(PaneIDT id, Str255 value);
 		SInt32				GetNumberText(PaneIDT id);
+		void 				CopyTextValue(PaneIDT fromPaneId, PaneIDT toPaneId);
+		void				CopyNumberValue(PaneIDT fromPaneId, PaneIDT toPaneId);
 
 	protected:
 

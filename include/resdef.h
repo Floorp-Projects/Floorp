@@ -21,8 +21,11 @@
 
 #include "xp_core.h"
 
+#ifdef XP_MAC
+#define RES_OFFSET 4000
+#else
 #define RES_OFFSET 7000
-
+#endif
 
 #ifndef RESOURCE_STR
 

@@ -34,7 +34,7 @@
 #include "np.h"
 #include "prefapi.h"
 #include "pa_parse.h"
-#include "netcache.h"
+/* #include "netcache.h" */
 #include "secnav.h"
 
 

@@ -122,6 +122,9 @@ void PW_DestroyProgressContext(MWContext * context);
 
 void PW_AssociateWindowWithContext(MWContext * context, pw_ptr pw);
 
+pw_ptr PW_GetAssociatedWindowForContext(MWContext *context);
+
 XP_END_PROTOS
 
 #endif
+

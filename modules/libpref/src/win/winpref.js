@@ -18,10 +18,10 @@
 
 platform.windows = true;
 
-pref("browser.bookmark_window_showwindow",  1);     // SW_NORMAL
-pref("mailnews.folder_window_showwindow",   1);     // SW_NORMAL
-pref("mailnews.thread_window_showwindow",   1);     // SW_NORMAL
-pref("mailnews.message_window_showwindow",  1);     // SW_NORMAL
+pref("browser.bookmark_window_showwindow",  1);		// SW_NORMAL
+pref("mailnews.folder_window_showwindow",   1);		// SW_NORMAL
+pref("mailnews.thread_window_showwindow",   1);		// SW_NORMAL
+pref("mailnews.message_window_showwindow",  1);		// SW_NORMAL
 
 pref("browser.bookmark_columns_win",        "");
 pref("mailnews.folder_columns_win",         "");
@@ -32,7 +32,7 @@ pref("news.category_columns_win",           "");
 
 pref("custtoolbar.personal_toolbar_folder",                     "x234htz7");
 pref("custtoolbar.has_toolbar_folder",                          true);
-pref("custtoolbar.personal_toolbar.Version",                     "");
+pref("custtoolbar.personal_toolbar.Version",                    "");
 pref("custtoolbar.Browser.Navigation_Toolbar.position",         0);
 pref("custtoolbar.Browser.Navigation_Toolbar.showing",          true);
 pref("custtoolbar.Browser.Navigation_Toolbar.open",             true);
@@ -81,10 +81,10 @@ pref("intl.font2.win.fixed_font",   "Courier New");
 pref("intl.font2.win.fixed_size",   10);
 
 pref("intl.font260.win.mimecharset",    "Shift_JIS");
-pref("intl.font260.win.prop_font",  "Times New Roman");
-pref("intl.font260.win.prop_size",  10);
-pref("intl.font260.win.fixed_font", "Courier New");
-pref("intl.font260.win.fixed_size", 10);
+pref("intl.font260.win.prop_font",      "Times New Roman");
+pref("intl.font260.win.prop_size",      10);
+pref("intl.font260.win.fixed_font",     "Courier New");
+pref("intl.font260.win.fixed_size",     10);
 
 pref("intl.font263.win.mimecharset",    "big5");
 pref("intl.font263.win.prop_font",  "Times New Roman");
@@ -140,9 +140,15 @@ pref("intl.font254.win.prop_size",  12);
 pref("intl.font254.win.fixed_font", "Courier New");
 pref("intl.font254.win.fixed_size", 10);
 
-pref("taskbar.x",                           -1);
+pref("taskbar.x",                           -1); 
 pref("taskbar.y",                           -1);
 pref("taskbar.floating",                    true);
 pref("taskbar.horizontal",                  false);
 pref("taskbar.ontop",                       true);
 pref("taskbar.button_style",                -1);
+
+pref("netinst.profile.show_profile_wizard", true); 
+
+//The following pref is internal to Communicator. Please
+//do *not* place it in the docs...
+pref("netinst.profile.show_dir_overwrite_msg",  true); 

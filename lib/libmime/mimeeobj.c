@@ -115,15 +115,27 @@ MimeExternalObject_parse_begin (MimeObject *obj)
 	  char *id = 0;
 	  char *id_url = 0;
 	  char *id_name = 0;
+	  char *id_imap = 0;
 	  XP_Bool all_headers_p = obj->options->headers == MimeHeadersAll;
 
 	  id = mime_part_address (obj);
+	  if (obj->options->missing_parts)
+		id_imap = mime_imap_part_address (obj);
 	  if (! id) return MK_OUT_OF_MEMORY;
 
       if (obj->options && obj->options->url)
 		{
 		  const char *url = obj->options->url;
-		  id_url = mime_set_url_part(url, id, TRUE);
+		  if (id_imap && id)
+		  {
+			/* if this is an IMAP part. */
+			id_url = mime_set_url_imap_part(url, id_imap, id);
+		  }
+		  else
+		  {
+			/* This is just a normal MIME part as usual. */
+			id_url = mime_set_url_part(url, id, TRUE);
+		  }
 		  if (!id_url)
 			{
 			  XP_FREE(id);

@@ -64,7 +64,8 @@
 
 void CInlineEditField::SetDescriptor(ConstStr255Param inDescriptor) {
 
-	inherited::SetDescriptor(inDescriptor);
+	Inherited::SetDescriptor(inDescriptor);
+	
 	
 	if (mGrowableBorder)
 		AdjustFrameWidthToText();
@@ -134,7 +135,7 @@ void CInlineEditField::UpdateEdit(ConstStr255Param inEditText, const SPoint32 *i
 
 void CInlineEditField::FinishCreateSelf(void) {
 	
-	inherited::FinishCreateSelf();
+	Inherited::FinishCreateSelf();
 	
 	Hide();	// Should be invisible to start
 
@@ -156,7 +157,7 @@ void CInlineEditField::ResizeFrameBy(Int16 inWidthDelta, Int16 inHeightDelta, Bo
 
 	if ( !inWidthDelta && !inHeightDelta ) return;
 	
-	inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
+	Inherited::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
 	
 	if ( inRefresh && mGrowableBorder) {
 		Rect portRect, refreshRect;
@@ -215,7 +216,7 @@ Boolean CInlineEditField::HandleKeyPress(const EventRecord &inKeyEvent) {
 		}
 	}
 	
-	return inherited::HandleKeyPress(inKeyEvent);
+	return Inherited::HandleKeyPress(inKeyEvent);
 }
 
 
@@ -227,7 +228,7 @@ void CInlineEditField::DontBeTarget(void) {
 
 	StValueChanger<Boolean> change(mGivingUpTarget, true);
 
-	inherited::DontBeTarget();
+	Inherited::DontBeTarget();
 
 	PaneIDT paneID = mPaneID;
 	BroadcastMessage(msg_HidingInlineEditField, &paneID);
@@ -254,7 +255,7 @@ void CInlineEditField::HideSelf(void) {
 
 void CInlineEditField::TakeOffDuty(void) {
 
-	inherited::TakeOffDuty();
+	Inherited::TakeOffDuty();
 	
 	mOnDuty = triState_Off;	// Taking our chain off duty means that we are hidden and
 							// should no longer be in the chain of command.

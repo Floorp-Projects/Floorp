@@ -41,6 +41,7 @@
 #include "jsatom.h"
 #include "jsscope.h"
 
+#ifdef JAVA
 /* Needed to access private method; making method public would be
    security hole */
 #define IMPLEMENT_netscape_security_PrivilegeManager
@@ -56,6 +57,7 @@
 #endif /* XP_MAC */
 #include "netscape_security_Privilege.h"
 #include "netscape_security_Target.h"
+#endif
 
 extern JRIEnv * LJ_JSJ_CurrentEnv(JSContext * cx);
 extern char *LJ_GetAppletScriptOrigin(JRIEnv *env);
@@ -447,7 +449,9 @@ lm_GetSubjectOriginURL(JSContext *cx)
  * them is so expensive.
  */
 typedef struct SharedZig {
+#ifdef JAVA
     ZIG *zig;
+#endif
     int32 refCount;
     JRIGlobalRef zigObjectRef;
 } SharedZig;

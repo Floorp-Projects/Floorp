@@ -91,7 +91,8 @@ void CPatternButton::DrawButtonContent(void)
 
 void CPatternButton::DrawButtonGraphic(void)
 {
-	bool useMouseOverIcon = false;
+	Boolean		useMouseOverIcon = false;
+	
 	mIconTransform = kTransformNone;
 	
 	if (IsEnabled() && IsActive())
@@ -99,23 +100,31 @@ void CPatternButton::DrawButtonGraphic(void)
 		if (!IsBehaviourButton() && (GetValue() == Button_On))
 		{
 			// do something different if IsTrackInside()
-			//theNewID += 2;
+			//theNewID += 1;
 		}
-		else if (IsTrackInside())
+		else if (IsTrackInside()) {
+			//theNewID += 1;
 			mIconTransform = kTransformSelected;
-		else if (IsMouseInFrame())
+		}
+		else if (IsMouseInFrame()) {
 			useMouseOverIcon = true;
+		}
 	}
-	else
+	else {
+		//theNewID += 1;
 		mIconTransform = kTransformDisabled;
+	}
 
-	ResIDT theIconID;
-	if ( useMouseOverIcon ) {
+	ResIDT		theIconID;
+	
+	if (useMouseOverIcon) {
 		theIconID = GetGraphicID();
 		SetGraphicID(theIconID + 2);
 	}
+	
 	CToolbarButton::DrawButtonGraphic();
-	if ( useMouseOverIcon )
+	
+	if (useMouseOverIcon) 
 		SetGraphicID(theIconID);
 }
 

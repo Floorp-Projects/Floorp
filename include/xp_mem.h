@@ -71,19 +71,10 @@ XP_END_PROTOS
 #define XP_ALLOC(size)          WIN16_malloc(size)
 #else
 
-#if defined(DEBUG) && defined(MOZILLA_CLIENT)
-/* Check that we never allocate anything greater than 64K.  If we ever tried,
-   Win16 would choke, and we'd like to find out about it on some other platform
-   (like, one where we have a working debugger). */
-/* This code used to call abort. Unfortunately, on Windows, abort() doesn't
- * go to the debugger. Instead, it silently quits the program.
- * So use XP_ASSERT(FALSE) instead.
- */
-
-#define XP_CHECK_ALLOC_SIZE(size)	((size) <= 0xFFFF ? size : (XP_ASSERT(FALSE), (size)))
-#else
+/* this used to check for < 64K for win16, but we don't need it anymore! 
+	I'll leave the define in case someone else has another check they want to try.
+*/
 #define XP_CHECK_ALLOC_SIZE(size)	size
-#endif
 
 #define XP_REALLOC(ptr, size)   realloc(ptr, XP_CHECK_ALLOC_SIZE(size))
 #define XP_ALLOC(size)          malloc(XP_CHECK_ALLOC_SIZE(size))

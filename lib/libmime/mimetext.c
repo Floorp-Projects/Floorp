@@ -73,7 +73,7 @@ MimeInlineText_initialize (MimeObject *obj)
 									  FALSE, FALSE);
 		  if (ct)
 			{
-			  text->charset = MimeHeaders_get_parameter (ct, "charset");
+			  text->charset = MimeHeaders_get_parameter (ct, "charset", NULL, NULL);
 			  XP_FREE(ct);
 			}
 

@@ -63,6 +63,7 @@
 #define PR_PATH_SEPARATOR		':'
 #define PR_PATH_SEPARATOR_STR		":"
 #define GCPTR
+
 typedef int (*FARPROC)();
 
 /*

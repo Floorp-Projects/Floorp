@@ -33,14 +33,9 @@ class CToolbarButton
 	:	public CButton
 {
 	public:
-		enum {
-			eMode_IconsOnly = 0,
-			eMode_TextOnly,
-			eMode_IconsAndText
-		};
 
-		enum {	defaultMode = eMode_IconsAndText	};
-
+		// button types enum is in CToolbarModeManager.h
+		
 		enum {	class_ID = 'TbBt' };
 		
 							CToolbarButton(LStream* inStream);

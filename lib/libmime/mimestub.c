@@ -912,7 +912,7 @@ NET_MakeAbsoluteURL(char * absolute_url, char * relative_url)
 	   NET_MakeAbsoluteURL("news://h/123@4", "456@7") => "news://h/456@7".
 	 */
 	base_type = NET_URL_Type(absolute_url);
-	if (base_type == MAILBOX_TYPE_URL &&
+	if ((base_type == MAILBOX_TYPE_URL || base_type == IMAP_TYPE_URL) &&
 		*relative_url != '#' &&
 		*relative_url != '?')
 	  {

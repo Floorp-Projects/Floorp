@@ -19,6 +19,8 @@
 
 DEPTH		= ../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE		= xp
 LIBRARY_NAME	= xp
 
@@ -55,6 +57,10 @@ REQUIRES	= js nspr dbm security img util jtools layer java lay style pref rdf
 
 ifeq ($(STAND_ALONE_JAVA),1)
 CSRCS		= xp_qsort.c
+endif
+
+ifeq ($(MOZ_MAIL_NEWS),1)
+CSRCS		+= xp_md5.c
 endif
 
 include $(DEPTH)/config/rules.mk

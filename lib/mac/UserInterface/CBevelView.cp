@@ -46,8 +46,9 @@ CBevelView::CBevelView(LStream *inStream)
 	
 	if (theBevelResID != 0)
 		{
-		StResource theBevelRes(ResType_BevelDescList, theBevelResID);
+		StResource theBevelRes(ResType_BevelDescList, theBevelResID, false, false);		//don't throw on failure
 
+		if (theBevelRes.mResourceH != NULL)
 			{
 				StHandleLocker theLock(theBevelRes);
 				LDataStream theBevelStream(*theBevelRes.mResourceH, ::GetHandleSize(theBevelRes));

@@ -37,7 +37,7 @@ include <$(DEPTH)/config/liteness.mak>
 #//
 #// Specify any "command" targets. (ie. DIRS, INSTALL_FILES, ...)
 #// (these must come before the common makefiles are included)
-#// 
+#//
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
@@ -74,6 +74,10 @@ DIRS=                   \
 	rdf				\
     schedulr	\
 	xml	\
+!ifdef MOZ_CALENDAR
+	calendar \
+	libnls \
+!endif
 	oji
 
 #//------------------------------------------------------------------------

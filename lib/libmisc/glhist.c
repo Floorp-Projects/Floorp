@@ -524,6 +524,7 @@ GH_UpdateGlobalHistory(URL_Struct * URL_s)
 		!strncasecomp(URL_s->address, "javascript:", 11) ||
 		!strncasecomp(URL_s->address, "livescript:", 11) ||
 		!strncasecomp(URL_s->address, "mailbox:", 8) ||
+		!strncasecomp(URL_s->address, "imap:", 5) ||
 		!strncasecomp(URL_s->address, "mailto:", 7) ||
 		!strncasecomp(URL_s->address, "mocha:", 6) ||
 		!strncasecomp(URL_s->address, "news:", 5) ||

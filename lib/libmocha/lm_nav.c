@@ -20,6 +20,7 @@
  *
  * Brendan Eich, 11/16/95
  */
+#include "rosetta.h"
 #include "lm.h"
 #include "prmem.h"
 #ifdef JAVA
@@ -349,8 +350,7 @@ lm_DefineNavigator(MochaDecoder *decoder)
     nav->appPlatform = JS_NewStringCopyZ(cx, XP_AppPlatform);
     JS_LockGCThing(cx, nav->appPlatform);
 
-    nav->securityPolicy = JS_NewStringCopyZ(cx, SECNAV_GetPolicyNameString());
-    JS_LockGCThing(cx, nav->securityPolicy);
+	HG99881
 
 
     /* Ask lm_plgin.c to create objects for plug-in and MIME-type arrays */

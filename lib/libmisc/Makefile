@@ -29,6 +29,7 @@ CSRCS		= \
 		bkmks.c \
 		shist.c \
 		hotlist.c \
+		dirprefs.c \
 		$(NULL)
 
 REQUIRES	= net msg js dbm nspr img util layer pref ldap security
@@ -36,7 +37,7 @@ REQUIRES	= net msg js dbm nspr img util layer pref ldap security
 include $(DEPTH)/config/config.mk
 
 ifdef MOZ_MAIL_NEWS
-CSRCS		+= mime.c dirprefs.c
+CSRCS		+= mime.c
 endif
 
 include $(DEPTH)/config/rules.mk

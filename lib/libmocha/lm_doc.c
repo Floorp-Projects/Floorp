@@ -20,6 +20,7 @@
  *
  * Brendan Eich, 9/8/95
  */
+#include "rosetta.h"
 #include "lm.h"
 #include "prtypes.h"
 #include "plhash.h"
@@ -1009,16 +1010,7 @@ doc_open_stream(JSContext *cx, MochaDecoder *decoder, JSObject *doc_obj,
     stream = 0;
     cached_url = 0;
 
-    /* If the writer is secure, pass its security info into the cache. */
-    running = JS_GetPrivate(cx, JS_GetGlobalObject(cx));
-    he = SHIST_GetCurrent(&running->window_context->hist);
-    if (he && he->security_on) {
-        /* Copy security stuff (checking for malloc failure) */
-        url_struct->security_on = he->security_on;
-        url_struct->sec_info = SECNAV_CopySSLSocketStatus(he->sec_info);
-        if (he->sec_info && !url_struct->sec_info)
-            goto bad;
-    }
+	HG99880
 
     /* If we're opening a stream for the window's document */
     if (doc->layer_id == LO_DOCUMENT_LAYER_ID) {

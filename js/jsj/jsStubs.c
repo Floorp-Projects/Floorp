@@ -32,12 +32,14 @@
 #include "prthread.h"
 #include "prlog.h"
 
+#ifdef JAVA
 #define IMPLEMENT_netscape_javascript_JSObject
 #include "netscape_javascript_JSObject.h"
 #ifndef XP_MAC
 #include "netscape_javascript_JSException.h"
 #else
 #include "n_javascript_JSException.h"
+#endif
 #endif
 
 

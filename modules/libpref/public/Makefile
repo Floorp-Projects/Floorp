@@ -19,6 +19,6 @@ DEPTH	= ../../..
 
 MODULE	= pref
 
-EXPORTS	= prefapi.h prefldap.h
+EXPORTS= prefapi.h prefldap.h
 
 include $(DEPTH)/config/rules.mk

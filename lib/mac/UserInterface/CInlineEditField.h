@@ -59,9 +59,9 @@
 
 class CInlineEditField : public LBroadcasterEditField {
 
-#if !defined(__MWERKS__) || (__MWERKS__ >= 0x2000)
-	typedef LBroadcasterEditField inherited;
-#endif
+
+	typedef LBroadcasterEditField Inherited;
+
 
 public:
 

@@ -42,8 +42,7 @@ char * pw_PromptPassword(MWContext * context, const char * Msg);
 void pw_EnableClicking(MWContext * context);
 void pw_AllConnectionsComplete(MWContext * context);
 void pw_SetProgressBarPercent(MWContext *context, int32 percent);
-void pw_SetCallNetlibAllTheTime(MWContext *context);
-void pw_ClearCallNetlibAllTheTime(MWContext *context);
+
 
 /* This struct encapsulates the data we need to store in our progress context */
 
@@ -80,8 +79,8 @@ MWContext * PW_CreateProgressContext()
 	if (newMWContext == NULL)
 		return NULL;
 
-//	XP_AddContextToList(newMWContext);
 	newMWContext->type = MWContextProgressModule;
+	XP_AddContextToList(newMWContext);
 	XP_InitializeContext(newMWContext);
 // Assign all the functions
 	newMWContext->funcs = (ContextFuncs*) XP_ALLOC(sizeof(ContextFuncs));
@@ -102,11 +101,8 @@ MWContext * PW_CreateProgressContext()
 	newMWContext->funcs->EnableClicking = pw_EnableClicking;
 	newMWContext->funcs->AllConnectionsComplete = pw_AllConnectionsComplete;
 	newMWContext->funcs->SetProgressBarPercent = pw_SetProgressBarPercent;
-	newMWContext->funcs->SetCallNetlibAllTheTime = pw_SetCallNetlibAllTheTime;
-	newMWContext->funcs->ClearCallNetlibAllTheTime = pw_ClearCallNetlibAllTheTime;
 
-
-        newMWContext->mime_data = (struct MimeDisplayData *)p_context;  /* Hackily overloading a part of MWContext */
+    newMWContext->prInfo = (PrintInfo *)p_context;  /* Hackily overloading a part of MWContext */
 	return newMWContext;
 }
 
@@ -114,8 +110,8 @@ void PW_DestroyProgressContext(MWContext * context)
 {
 	if (context)
 	{
-//		XP_RemoveContextFromList(context);
-		pw_ptr pw = ((pw_environment *)(context->mime_data))->progressWindow;
+		XP_RemoveContextFromList(context);
+		pw_ptr pw = ((pw_environment *)(context->prInfo))->progressWindow;
 		XP_FREEIF( context->funcs);
 		XP_FREEIF(context);
 	}
@@ -123,7 +119,7 @@ void PW_DestroyProgressContext(MWContext * context)
 
 void PW_AssociateWindowWithContext(MWContext * context, pw_ptr pw)
 {
-	pw_environment * e = (pw_environment *)(context->mime_data);
+	pw_environment * e = (pw_environment *)(context->prInfo);
 	XP_Bool doReset;
 
 	if (context->type != MWContextProgressModule)
@@ -140,6 +136,19 @@ void PW_AssociateWindowWithContext(MWContext * context, pw_ptr pw)
 	}
 }
 
+pw_ptr PW_GetAssociatedWindowForContext(MWContext *context)
+{
+	pw_environment * e = (pw_environment *)(context->prInfo);
+
+	if (context->type != MWContextProgressModule)
+	{
+		XP_ASSERT(FALSE);
+		return NULL;
+	}
+
+	return e->progressWindow;
+}
+
 #ifdef XP_MAC
 #pragma export off
 #endif
@@ -147,7 +156,7 @@ void PW_AssociateWindowWithContext(MWContext * context, pw_ptr pw)
 
 void pw_Progress(MWContext * cx, const char *msg)
 {
-	pw_ptr pw = ((pw_environment *)(cx->mime_data))->progressWindow;
+	pw_ptr pw = ((pw_environment *)(cx->prInfo))->progressWindow;
 	if (pw)
 		PW_SetLine2(pw, msg);
 }
@@ -159,7 +168,7 @@ void pw_Alert(MWContext * /*cx*/, const char *msg)
 
 void pw_GraphProgressInit(MWContext *context, URL_Struct* /*URL_s*/, int32 content_length)
 {
-	pw_environment * pe = (pw_environment *)context->mime_data;
+	pw_environment * pe = (pw_environment *)context->prInfo;
 	
 	pe->outstandingURLs += 1;
 
@@ -170,11 +179,16 @@ void pw_GraphProgressInit(MWContext *context, URL_Struct* /*URL_s*/, int32 conte
 	
 	if (pe->outstandingURLs == 1)	/* First URL got started, set the start time */
 		pe->start_time_secs = XP_TIME();
+
+	if ( pe->progressWindow )
+	{
+		PW_SetProgressRange( pe->progressWindow, 0, pe->total_bytes);
+	}			
 }
 
 void pw_GraphProgressDestroy(MWContext *context, URL_Struct* /*URL_s*/, int32 /*content_length*/, int32 /*total_bytes_read*/)
 {
-	pw_environment * pe = (pw_environment *)context->mime_data;
+	pw_environment * pe = (pw_environment *)context->prInfo;
 	pe->outstandingURLs -= 1;
 		
 	if ( pe->outstandingURLs == 0)
@@ -192,77 +206,103 @@ void pw_GraphProgressDestroy(MWContext *context, URL_Struct* /*URL_s*/, int32 /*
 	}
 }
 
-void pw_GraphProgress(MWContext *context, URL_Struct* /*URL_s*/, int32 /*bytes_received*/, int32 bytes_since_last_time, int32 /*content_length*/)
+void pw_GraphProgress(MWContext *context, URL_Struct* /*URL_s*/, int32 /*bytes_received*/, int32 bytes_since_last_time, int32 content_length)
 {
-	pw_environment * pe = (pw_environment *)context->mime_data;
+	pw_environment * pe = (pw_environment *)context->prInfo;
 	const char * progressText;
 
 	pe->bytes_received += bytes_since_last_time;
 	if (pe->progressWindow)
 	{
-		progressText = XP_ProgressText( pe->hasUnknownSizeURLs ? 0 : pe->total_bytes, 
+		// should document the use of content length, may need another for li verify.
+		if (content_length == -2) {
+			char * output = NULL;
+			output = (char*) XP_ALLOC( 300 );
+			if ( !output ) {
+				progressText= NULL;
+				PW_SetLine2( pe->progressWindow, progressText);
+			} else {
+				// REMIND  put the text in the xp strings bucket for l10n
+				sprintf(output, "Synchronizing item %d of %d.", pe->bytes_received,pe->total_bytes); 
+				PW_SetLine2( pe->progressWindow, output);
+				if (pe->total_bytes > 0) {
+					sprintf(output, "%d%%.", (pe->bytes_received * 100) / pe->total_bytes); 
+					PW_SetProgressText( pe->progressWindow, output);
+				}
+				XP_FREE(output);
+			}
+		}
+		else {
+			progressText = XP_ProgressText( pe->hasUnknownSizeURLs ? 0 : pe->total_bytes, 
 									pe->bytes_received, 
 									pe->start_time_secs,
 									XP_TIME());
-		PW_SetProgressText( pe->progressWindow, progressText);
+			PW_SetProgressText( pe->progressWindow, progressText);
+		}
+
+		PW_SetProgressValue( pe->progressWindow, pe->bytes_received );
 	}
 }
 
 void pw_SetProgressBarPercent(MWContext *context, int32 percent)
 {
-	pw_environment * pe = (pw_environment *)context->mime_data;
+	pw_environment * pe = (pw_environment *)context->prInfo;
 	if (pe->progressWindow)
 	{
 		PW_SetProgressValue( pe->progressWindow, percent);
 	}
 }
 
-XP_Bool pw_Confirm(MWContext* /*context*/, const char* /*Msg*/)
+XP_Bool pw_Confirm(MWContext* context, const char* msg)
 {
+//#if defined(XP_MAC) || defined(XP_UNIX)
+//	return XP_Confirm( context, msg );
+//#else
 	XP_ASSERT(FALSE);
 	return FALSE;
-//	return FE_Confirm(NULL, Msg);
+//#endif
 }
 
-char* pw_Prompt(MWContext * /*context*/, const char * /*Msg*/, const char * /*dflt*/)
+char* pw_Prompt(MWContext * /*context*/, const char * Msg, const char * dflt)
 {
+//#if defined(XP_MAC)
+//	return XP_Prompt(NULL, Msg, dflt);
+//#else
 	XP_ASSERT(FALSE);
 	return NULL;
-//	return FE_Prompt(NULL, Msg, dflt);
+//#endif
 }
 
 char* pw_PromptWithCaption(MWContext * /*context */, const char * /* caption */, const char * /*Msg*/, const char * /*dflt*/)
 {
+	XP_ASSERT(FALSE);
 	return NULL;	// FE_PromptWithCaption(NULL, caption, Msg, dflt);
 }
 
-XP_Bool pw_PromptUsernameAndPassword(MWContext *,const char * /* prompt */,char ** /* username */ , char ** /* password */)
+XP_Bool pw_PromptUsernameAndPassword(MWContext * c,const char * prompt,char ** username, char ** password)
 {
-	//return FE_PromptUsernameAndPassword(NULL, prompt, username, password);
+//#if defined(XP_MAC) || defined(XP_UNIX)
+//	return XP_PromptUsernameAndPassword(c, prompt, username, password);
+//#else
+	XP_ASSERT(FALSE);
 	return FALSE;
+//#endif
 }
 
-char * pw_PromptPassword(MWContext * /*context*/, const char * /*Msg*/)
+char * pw_PromptPassword(MWContext *context, const char * Msg)
 {
-	// return FE_PromptPassword(NULL, Msg);
+//#if defined(XP_MAC) || defined(XP_UNIX)
+//	return XP_PromptPassword(context, Msg);
+//#else
+	XP_ASSERT(FALSE);
 	return NULL;
+//#endif
 }
-
 void pw_EnableClicking(MWContext * /*context*/)
 {
 }
 
 void pw_AllConnectionsComplete(MWContext * /*context*/)
 {
-}
-
-void pw_SetCallNetlibAllTheTime(MWContext * /*context*/)
-{
-	XP_ASSERT(FALSE);
-}
-
-void pw_ClearCallNetlibAllTheTime(MWContext * /*context*/)
-{
-	XP_ASSERT(FALSE);
 }
 

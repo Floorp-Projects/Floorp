@@ -23,6 +23,7 @@
 #ifndef _MSGCOM_H_
 #define _MSGCOM_H_
 
+#include "rosetta.h"
 #include "libmime.h"
 
 #define SUBSCRIBE_USE_OLD_API
@@ -67,10 +68,6 @@
 #include "xp_core.h"
 #include "ntypes.h"
 #include "msgtypes.h"
-
-
-
-
 
 /* ===========================================================================
    						COMMAND NUMBERS
@@ -211,16 +208,19 @@ typedef enum
 
   MSG_Redo,						/* ftm: Redoes the last undone operation. */
 
-  MSG_DeleteMessage,			/* tm, mm: Causes the given messages to be
+  MSG_Delete,
+
+  MSG_DeleteMessage = MSG_Delete,	/* tm, mm: Causes the given messages to be
 								   deleted. */
 
-  MSG_DeleteFolder,				/* fm, tm: Causes the given folders to be
+  MSG_DeleteFolder /* = MSG_Delete */,	/* fm, tm: Causes the given folders to be
 								   deleted. */
 
   MSG_CancelMessage,			/* tn, mn: Causes the given messages to be
 								   cancelled, if possible. */
 
-  MSG_DeleteMessageNoTrash,		/* tm, mm: Causes the given messages to be
+  MSG_DeleteNoTrash,
+  MSG_DeleteMessageNoTrash = MSG_DeleteNoTrash,		/* tm, mm: Causes the given messages to be
 								   deleted w/o getting copied to trash. */
 
   /* MESSAGE MENU
@@ -245,8 +245,13 @@ typedef enum
   MSG_ReplyToAll,				/* t,m: E-mail (& possibly post) a reply to
 								   everyone who saw this message. */
   MSG_ForwardMessage,			/* t,m: Forward these messages to someone. */
+  MSG_ForwardMessageAttachment, /* t,m: Forward these messages as attachment
+									 to someone. */
   MSG_ForwardMessageQuoted,		/* t,m: Forward this message, quoting it
 								   inline. */
+  MSG_ForwardMessageInline,		/* t,m: Forward this message inline including
+								   inline attaachments if possible*/
+  
   MSG_MarkMessagesRead,			/* t,m: Mark the message as read. */
   MSG_MarkMessagesUnread,		/* t,m: Mark the message as unread. */
   MSG_ToggleMessageRead,		/* t,m: Toggle whether the message has been
@@ -470,13 +475,29 @@ typedef enum
 								   have some overlap, but all the indices are
 								   invalid.  The "where" and "num" parameters
 								   are unused. */
-  MSG_NotifyAll				/* Everything changed.  We're now not
+  MSG_NotifyAll,				/* Everything changed.  We're now not
 								   displaying anything like what we were; we
 								   probably opened a new folder or something.
 								   The FE needs to forget anything it ever knew
 								   about what was being displayed, and start
 								   over.  The "where" and "num" parameters are
 								   unused.  */
+  MSG_NotifyLDAPTotalContentChanged,
+							    /* Introduced for the address book to support
+								   virtual list views.  The total number of
+								   entries on the LDAP directory has changed
+								   and the FE must update its scrollbar.  The
+								   "num" parameter contains the total number of
+								   entries on the LDAP server. */
+  MSG_NotifyNewTopIndex         /* Introduced for the address book to support
+								   virtual list views.  The virtual list view
+								   cache data has changed and the FE view may
+								   be out of date.  The view should be updated
+								   so that the first/top index in the view is
+								   the index in the "where" parameter.  The
+								   scrollbar should be updated to match the new
+								   position. */
+
 } MSG_NOTIFY_CODE;
 
 /* How has a pane changed? Used in calls to FE_PaneChanged. If the
@@ -518,6 +539,8 @@ typedef enum
 
 	MSG_PaneNotifyNewFolderFailed,    /* Sent when a new folder creation attempt
 										fails */
+	MSG_PaneNotifySafeToSelectFolder,	/* sent to a folder pane when a folder operation has 
+										   finished and it's safe to select another folder */
 	MSG_PaneNotifyIMAPClosed,         /* Sent to a folder or message pane when
 										the IMAP connection with which it is
 										associated is closing. */
@@ -526,7 +549,14 @@ typedef enum
 										 selection in order to prevent interruption */
 	MSG_PaneChanged,				   /* Introduced for the 2 pane Address Book. Contents have changed through
 										  another pane. This pane's data is no longer up to date */
-	MSG_PaneClose					   /* Introduced for the 2 pane AB. This pane needs to be closed */
+	MSG_PaneClose,					   /* Introduced for the 2 pane AB. This pane needs to be closed */
+	MSG_PaneNotifyTypeDownCompleted,	   /* Introduced for the 2 pane AB. The type down asynch operation requested on this
+									      pane has been completed. The attached int32 is a MSG_ViewIndex which corresponds to
+										  the type down index result value */
+	MSG_PaneNotifyStartSearching,     /* Introduced for new address book. FEs should mark the pane as searching, add any appropriate UI
+									     work such as a cylon, etc. */
+	MSG_PaneNotifyStopSearching       /* Introduced for new address book. FEs should mark the pane as no longer searching and turn off any
+									     search related UI stuff such as a cylon, etc. */
 } MSG_PANE_CHANGED_NOTIFY_CODE;
 
 
@@ -908,7 +938,8 @@ typedef enum {
   AB_CONTAINERPANE,
   AB_ABPANE,
   AB_MAILINGLISTPANE,
-  AB_PERSONENTRYPANE
+  AB_PERSONENTRYPANE,
+  AB_PICKERPANE
 } MSG_PaneType;
 
 
@@ -993,6 +1024,13 @@ class MSG_Host;
 typedef struct MSG_Host *MSG_Host;
 #endif /* XP_CPLUSPLUS */
 
+/* used by Address Book to describe a particular address book */
+
+#ifdef XP_CPLUSPLUS
+class AB_ContainerInfo;
+#else
+typedef struct AB_ContainerInfo AB_ContainerInfo;
+#endif
 
 /* used in MWContext to communicate IMAP stuff between libmsg and libnet */
 
@@ -1090,15 +1128,8 @@ typedef struct MSG_AttachedFile
   uint32 null_count;
   uint32 max_line_length;
   
-  XP_Bool decrypted_p;	/* S/MIME -- when attaching a message that was
-						   encrypted, it's necessary to decrypt it first
-						   (since nobody but the original recipient can read
-						   it -- if you forward it to someone in the raw, it
-						   will be useless to them.)  This flag indicates
-						   whether decryption occurred, so that libmsg can
-						   issue appropriate warnings about doing a cleartext
-						   forward of a message that was originally encrypted.
-						 */
+  HG68452
+
 } MSG_AttachedFile;
 
 
@@ -1322,7 +1353,7 @@ void MSG_CleanupFolders(MSG_Pane *pane);
 void MSG_OnIdle(void);
 
 
-int32 MSG_SetLibNeoCacheSize(int32 newCacheSize);
+int32 MSG_SetDBCacheSize(int32 newCacheSize);
 
 /* Initialize the mail/news universe.  A MSG_Master* object must be created
    before anything else can be done.  Only one MSG_Master* object can exist at
@@ -1491,11 +1522,24 @@ extern void* MSG_GetFEData(MSG_Pane* pane);
 
 extern XP_Bool FE_IsAltMailUsed(MWContext * context);
 
-/* Routine to bring up the IMAP Subscription Upgrade dialog box	*/
-/* Return value based on selection:  Automatic = 0, Custom = 1 */
+typedef enum {
+	MSG_IMAPUpgradeAutomatic,	/* automatically try to upgrade */
+	MSG_IMAPUpgradeCustom,		/* the user will select folders manually */
+	MSG_IMAPUpgradeDont			/* Cancel or error - don't upgrade now */
+} MSG_IMAPUpgradeType;
 
-extern int FE_PromptIMAPSubscriptionUpgrade (MWContext * context);
+#if defined(XP_WIN) || defined (XP_MAC) || defined(XP_UNIX)
+#define FE_IMPLEMENTS_IMAP_SUBSCRIBE_UPGRADE
+#endif
 
+#ifdef FE_IMPLEMENTS_IMAP_SUBSCRIBE_UPGRADE
+
+/* Routine to bring up the IMAP Subscription Upgrade dialog box.
+   context is the context of the parent of this dialog box;
+   hostName is the name of the IMAP host which will be upgraded.
+*/
+extern MSG_IMAPUpgradeType FE_PromptIMAPSubscriptionUpgrade (MWContext * context, const char *hostName);
+#endif
 
 /*  This function is called by the backend to notify the frontend details about 
 	new mail state so that the FE can notify the stand-alone biff that something
@@ -1511,6 +1555,13 @@ typedef enum {
 										know if FE_SetBiffInfo is defined */
 extern uint32 FE_SetBiffInfo(MSG_BiffInfoType type, uint32 data);
 #endif
+
+/* The imap delete model */
+typedef enum {
+	MSG_IMAPDeleteIsIMAPDelete,		/* delete with a big red x */
+	MSG_IMAPDeleteIsMoveToTrash,	/* delete moves message to the trash */
+	MSG_IMAPDeleteIsDeleteNoTrash	/* delete is shift delete - don't create or use trash */
+} MSG_IMAPDeleteModel;
 
 /* run the url in the given pane. This will set the msg_pane member
    in url, interrupt the context, and then call FE_GetURL */
@@ -1551,6 +1602,11 @@ extern MWContext* MSG_GetContext(MSG_Pane* pane);
 
 extern MSG_Prefs* MSG_GetPrefs(MSG_Pane* pane);
 
+/* This function MUST be called by the startup wizard.  It writes out the correct "profile age"
+   value into this user's pref file.  This value determines which upgrade steps still need to be
+   done. */
+
+extern void MSG_WriteNewProfileAge();
 
 /* Returns the MSG_Prefs* object that is being used to determine the
    preferences for this master object. */
@@ -1657,8 +1713,26 @@ extern void MSG_StoreNavigatorIMAPConnectionInMoveState(MWContext *context,
 
 extern XP_Bool MSG_DisplayingRecipients(MSG_Pane* threadpane);
 
+/* For the new AB stuff, we need to know which address book we are adding the senders to.
+	Because we are adding this extra argument, we had to pull it out of MSG_Command
+	and make a new API */
 
+extern int MSG_AddToAddressBook(MSG_Pane* pane, 
+								MSG_CommandType command, 
+								MSG_ViewIndex* indices, 
+								int32 numIndices,
+								AB_ContainerInfo * destAB);
 
+/* We also provide a status function to support this command */
+extern int MSG_AddToAddressBookStatus(MSG_Pane* pane, 
+									  MSG_CommandType command, 
+									  MSG_ViewIndex* indices, 
+									  int32 numIndices, 
+									  XP_Bool *selectable_p, 
+									  MSG_COMMAND_CHECK_STATE *selected_p,
+									  const char **display_string, 
+									  XP_Bool *plural_p, 
+									  AB_ContainerInfo * destAB);
 
 /* The msg library calls FE_ListChangeStarting() to tell the front end that the
    contents of the message or folder list are about to change.  It means that
@@ -1857,6 +1931,7 @@ extern int MSG_ResultsRecipients(MSG_Pane* composepane,
 
 extern void MSG_SetPostDeliveryActionInfo (MSG_Pane* pane, 
 										   void *actionInfo);
+extern uint32 MSG_GetActionInfoFlags (void *actionInfo);
 
 /* Setting the preloaded attachments to a compose window. Drafts only */
 extern int MSG_SetPreloadedAttachments ( MSG_Pane *composepane,
@@ -1926,7 +2001,7 @@ extern XP_Bool MSG_GetNoInlineAttachments(MSG_Prefs* prefs);
 	1 pane or 2
 	Configured for off-line use
 	I think these can be represented with bits. If wrong, we'll have
-	to change this. They should be stored in the database, NeoFolderInfo obj,
+	to change this. They should be stored in the database, DBFolderInfo obj,
 	and cached in MSG_FolderInfo.
 */
 #define MSG_FOLDER_PREF_OFFLINE 0x00000001
@@ -1960,6 +2035,8 @@ extern int32 MSG_GetFolderPrefFlags(MSG_FolderInfo *info);
  */
 extern void MSG_SetFolderCSID(MSG_FolderInfo *info, int16 csid);
 extern int16 MSG_GetFolderCSID(MSG_FolderInfo *info);
+extern void MSG_SetLastMessageLoaded(MSG_FolderInfo *info, MessageKey lastMessageLoaded);
+extern MessageKey MSG_GetLastMessageLoaded(MSG_FolderInfo *info);
 
 typedef enum MSG_AdminURLType
 {
@@ -2011,13 +2088,15 @@ typedef enum
 {	MSG_Drag_Not_Allowed	= 0x00000000
 ,	MSG_Require_Copy		= 0x00000001
 ,	MSG_Require_Move		= 0x00000002
-,	MSG_Default_Drag		= 0xFFFFFFFF
+,	MSG_Default_Drag		= -1      /* used to be 0xFFFFFFF but this broke HP Unix build...*/
 } MSG_DragEffect;
 
 /* Status calls.
    Caller passes in requested action.  If it's a required action, the returned value
    will be the request value, or MSG_Drag_Not_Allowed.  If it's a default drag request,
-   the returned value will show whether the drag should be interpreted as a move or copy. */
+   the returned value will show whether the drag should be interpreted as a move or copy.
+   If numIndices is 0, this simply returns the status when trying to drop an arbitrary message
+   on the given destination folder. */
 extern MSG_DragEffect MSG_DragMessagesStatus(MSG_Pane* pane, const MSG_ViewIndex* indices,
 								int32 numindices, const char *folder, MSG_DragEffect request);
 extern MSG_DragEffect MSG_DragMessagesIntoFolderStatus(MSG_Pane* pane,
@@ -2085,7 +2164,8 @@ extern MSG_NewsHost* MSG_GetNewsHostFromMSGHost(MSG_Host *host);
    if it is a MSG_IMAPHost.  Otherwise, returns NULL. */
 extern MSG_IMAPHost* MSG_GetIMAPHostFromMSGHost(MSG_Host *host);
 
-
+extern MSG_IMAPHost* MSG_GetIMAPHostByName(MSG_Master *master, const char *hostName);
+extern void	MSG_ReorderIMAPHost(MSG_Master *master, MSG_IMAPHost *host, MSG_IMAPHost *afterHost /* NULL = pos 0 */);
 
 /* this should be in msgnet.h, but winfe uses it - this is dangerous in 
    a multiple host world.
@@ -2144,6 +2224,7 @@ extern MSG_IMAPHost* MSG_GetDefaultIMAPHost(MSG_Master* master);
    this operation before making this call. */
 
 extern int MSG_DeleteIMAPHost(MSG_Master* master, MSG_IMAPHost* host);
+extern int MSG_DeleteIMAPHostByName(MSG_Master* master, const char *hostname);
 
 /* Get info about a host. */
 
@@ -2303,8 +2384,9 @@ extern void MSG_GetHeaderPurgingInfo(MSG_FolderInfo *newsGroup,
   for those folders so configured.
 */
 extern int MSG_DownloadForOffline(MSG_Master *master, MSG_Pane *pane);
-extern int MSG_GoOffline(MSG_Master *master, MSG_Pane *pane, XP_Bool downloadDiscussions, XP_Bool getNewMail, XP_Bool sendOutbox);
+extern int MSG_GoOffline(MSG_Master *master, MSG_Pane *pane, XP_Bool downloadDiscussions, XP_Bool getNewMail, XP_Bool sendOutbox, XP_Bool getDirectories);
 extern int MSG_DownloadFolderForOffline(MSG_Master *master, MSG_Pane *pane, MSG_FolderInfo *folder);
+extern int MSG_SynchronizeOffline(MSG_Master *master, MSG_Pane *pane, XP_Bool downloadDiscussions, XP_Bool getNewMail, XP_Bool sendOutbox, XP_Bool getDirectories, XP_Bool goOffline);
 
 
 /* ===========================================================================
@@ -2353,7 +2435,21 @@ extern MSG_ViewIndex MSG_GetFolderIndexForInfo(MSG_Pane *folderpane,
 extern MSG_FolderInfo* MSG_GetFolderInfo(MSG_Pane* folderpane,
 										 MSG_ViewIndex index);
 
+
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_UNIX)
+#define FE_IMPLEMENTS_NEW_GET_FOLDER_INFO
+#endif
+
+#ifdef FE_IMPLEMENTS_NEW_GET_FOLDER_INFO
+/* Returns a MSG_FolderInfo* given a URL for that folder.
+   Pass in TRUE for forGetUrl if this call is being used to get a MSG_FolderInfo* for opening it.
+   Otherwise (if just getting the MSG_FolderInfo* for information, such as in the preferences),
+   pass in FALSE.
+ */
+extern MSG_FolderInfo* MSG_GetFolderInfoFromURL(MSG_Master* master, const char *url, XP_Bool forGetUrl);
+#else
 extern MSG_FolderInfo* MSG_GetFolderInfoFromURL(MSG_Master* master, const char *url);
+#endif
 
 /* returns folder info of host owning this folder*/
 MSG_FolderInfo* GetHostFolderInfo(MSG_FolderInfo* info); 
@@ -2480,7 +2576,14 @@ extern int MSG_CreateMailFolderWithPane (MSG_Pane *invokingPane, MSG_Master *mas
    Returns the MSG_FolderInfo for the suggested parent, given the currently selected folder or host. 
    Returns NULL if current is NULL. 
 */ 
-extern MSG_FolderInfo *MSG_SuggestNewFolderParent(MSG_FolderInfo *current); 
+extern MSG_FolderInfo *MSG_SuggestNewFolderParent(MSG_FolderInfo *current, MSG_Master *master); 
+
+
+/* FEs should call this to determine if a given folder (f) can contain subfolders.
+   This can be called with an arbitrary MSG_FolderInfo, but only (currently) really does anything
+   interesting if it is a mail folder. */
+extern XP_Bool MSG_GetCanCreateSubfolderOfFolder(MSG_FolderInfo *f);
+
 
 /* Call this from the new folder properties UI */
 extern int MSG_RenameMailFolder (MSG_Pane *folderPane, MSG_FolderInfo *folder,
@@ -2541,59 +2644,46 @@ typedef enum
   MSG_BIFF_Unknown				/* We dunno whether there is new mail. */
 } MSG_BIFF_STATE;
 
+/* START OBSOLETE Biff functions, NIKI dawg took charge here to do multi-server biffing
+   These will be removed soon so do not use */
 
 /* Register and unregister biff callback functions */
 typedef void (*MSG_BIFF_CALLBACK)(MSG_BIFF_STATE oldState, MSG_BIFF_STATE newState);
-
 extern void MSG_RegisterBiffCallback( MSG_BIFF_CALLBACK cb );
-
 extern void MSG_UnregisterBiffCallback();
-
 /* Get and set the current biff state */
-
 extern MSG_BIFF_STATE MSG_GetBiffState();
-
 extern void MSG_SetBiffStateAndUpdateFE(MSG_BIFF_STATE newState);
-
-
 /* Set the preference of how often to run biff.  If zero is passed in, then
    never check. */
-
 extern void MSG_SetBiffInterval(int32 seconds);
-
-
-
 #ifdef XP_UNIX
 /* Set the file to stat, instead of using pop3.  This is for the Unix movemail
    nonsense.  If the filename is NULL (the default), then use pop3. */
 extern void MSG_SetBiffStatFile(const char* filename);
 #endif
-
-
-
-/* Initialize the biff context.  Note that biff contexts exist entirely
-   independent of mail contexts; it's up to the FE to decide what order they
-   get created and stuff. */
-
-extern int MSG_BiffInit(MWContext* context, MSG_Prefs* prefs);
-
-
-/* The biff context is about to go away.  The FE must call this first to
-   clean up. */
-
-extern int MSG_BiffCleanupContext(MWContext* context);
-
-
 /* Causes a biff check to occur immediately.  This gets caused
    automatically by MSG_SetBiffInterval or whenever libmsg gets new mail. */
-
 extern void MSG_BiffCheckNow(MWContext* context);
-
-
 /* Tell the FE to render in all the right places this latest knowledge as to
    whether we have new mail waiting. */
 extern void FE_UpdateBiff(MSG_BIFF_STATE state);
+/* END OBSOLETE functions */
 
+/* The following functions are still used to initialize and kill the Biff Master */
+
+/*
+	Initialize the biff master object (MSG_Biff_Master).  As folders are created we
+	add these as NikiBiff objects to the Biff master. Niki is my Old English Sheepdog, but
+	other than being a dog has nothing else to do with Biff.
+	The biff master takes care of the objects, their timers and so on. The objects
+	are used to see if new mail is available at a particular server or folder.
+*/
+
+extern int MSG_BiffInit(MWContext* context, MSG_Prefs* prefs);
+extern int MSG_BiffCleanupContext(MWContext* context);		/* cleanup */
+extern void MSG_Biff_Master_FE_Progress(MWContext *context, char *msg);
+extern XP_Bool MSG_Biff_Master_NikiCallingGetNewMail();
 
 
 /* ===========================================================================
@@ -2613,13 +2703,8 @@ extern XP_Bool MSG_RequiresComposeWindow (const char *url);
 
 /* If this URL requires a particular kind of window, and this is not
    that kind of window, then we need to find or create one.
- */
-extern XP_Bool MSG_NewWindowRequired (MWContext *context, const char *url);
-
-/* If this URL requires a particular kind of window, and this is not
-   that kind of window, then we need to find or create one.
    This routine takes a URL_Struct, which allows it to be smarter than
-   the above routine.
+   the obsolete routine which takes a url string.
  */
 extern XP_Bool MSG_NewWindowRequiredForURL (MWContext *context, URL_Struct *urlStruct);
 
@@ -2639,6 +2724,10 @@ extern MSG_PaneType MSG_PaneTypeForURL(const char *url);
    is - this is so we know whether there is room to incorporate new mail.  */
 extern uint32 FE_DiskSpaceAvailable (MWContext* context, const char* dir);
 
+/* Counts bytes for a POP3 message being downloaded and returns TRUE if it is
+	too early to have a message ended because we found CRLF.CRLF
+*/
+extern XP_Bool NET_POP3TooEarlyForEnd(int32 len);
 
 /* ===========================================================================
    							SECURE MAIL
@@ -2721,8 +2810,7 @@ extern MSG_Pane* MSG_ComposeMessage(MWContext *old_context,
 									const char *attachment,
 									const char *newspost_url,
 									const char *body,
-									XP_Bool encrypt_p,
-									XP_Bool sign_p,
+									HG00282
 									XP_Bool force_plain_text,
 									const char* html_part);
 
@@ -2741,9 +2829,8 @@ extern MSG_CompositionFields* MSG_CreateCompositionFields(
 									const char *other_random_headers,
 									const char *priority,
 									const char *attachment,
-									const char *newspost_url,
-									XP_Bool encrypt_p,
-									XP_Bool sign_p);
+									const char *newspost_url
+									HG66663);
 
 extern void MSG_DestroyCompositionFields(MSG_CompositionFields *fields);
 
@@ -3080,9 +3167,14 @@ extern char * MSG_ReformatRFC822Addresses (const char *line);
 
    Addresses are considered to be the same if they contain the same mailbox
    part (case-insensitive.)  Real names and other comments are not compared.
+
+   removeAliasesToMe allows the address parser to use the preference which
+   contains regular expressions which also mean 'me' for the purpose of
+   stripping the user's email address(es) out of addrs
  */
 extern char *MSG_RemoveDuplicateAddresses (const char *addrs,
-										   const char *other_addrs);
+										   const char *other_addrs,
+										   XP_Bool removeAliasesToMe);
 
 
 /* Given an e-mail address and a person's name, cons them together into a
@@ -3109,6 +3201,35 @@ extern MWContext* FE_GetAddressBookContext(MSG_Pane* pane, XP_Bool viewnow);
 	This is only called from the address book. */
 
 extern int MSG_NotifyChangeDirectoryServers();
+
+/* Given a folder info, returns a newly allocated string containing a description
+   of the folder rights for a given folder.  It is the caller's responsibility
+   to free this string.
+   Returns NULL if we could not get ACL rights information for this folder.
+ */
+
+extern char *MSG_GetACLRightsStringForFolder(MSG_FolderInfo *folder);
+
+
+/* Given a folder info, returns a newly allocated string with the folder
+   type name.  For instance, "Personal Folder", "Public Folder", etc.
+   It is the caller's responsibility to free this string.
+   Returns NULL if we could not get the a type for this folder.
+ */
+
+extern char *MSG_GetFolderTypeName(MSG_FolderInfo *folder);
+
+/* Given a folder info, returns a newly allocated string containing a description
+   of the folder type.  For instance, "This is a personal mail folder that you have shared."
+   It is the caller's responsibility to free this string.
+   Returns NULL if we could not get the a type for this folder.
+ */
+
+extern char *MSG_GetFolderTypeDescription(MSG_FolderInfo *folder);
+
+/* Returns TRUE if the given IMAP host supports the sharing of folders. */
+
+extern XP_Bool MSG_GetHostSupportsSharing(MSG_IMAPHost *host);
 
 XP_END_PROTOS
 

@@ -27,10 +27,6 @@
 #include <UTextTraits.h>
 #include <LStream.h>
 
-#if defined(QAP_BUILD)
-#include <QAP_Assist.h>
-#endif
-
 #include "UGraphicGizmos.h"
 #include "CButton.h"
 #include "StSetBroadcasting.h"
@@ -53,28 +49,6 @@
 //	¥	Class CButton
 //	¥¥¥	
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-/*
-#if defined(QAP_BUILD)
-void
-CButton::QapGetContents (PWCINFO pwc, short *pCount, short max)
-{
-	QapAddViewItem (pwc, pCount, WT_ASSIST_ITEM, WC_PUSH_BUTTON);
-}
-
-void
-CButton::QapGetCDescriptorMax (char * cp_buf, short s_max)
-{
-	Str255	controlTitle;
-	short	sMinLen;
-	
-	GetDescriptor(controlTitle);
-	
-	memset (cp_buf, 0, s_max);
-	sMinLen = ((short)controlTitle[0] < s_max ? (short)controlTitle[0] : s_max);
-	strncpy (cp_buf, (const char *)&controlTitle[1], sMinLen);
-}
-#endif
-*/
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	CButton
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ

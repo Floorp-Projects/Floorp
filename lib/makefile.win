@@ -29,6 +29,8 @@
 #//------------------------------------------------------------------------
 DEPTH=..
 
+include <$(DEPTH)\config\config.mak>
+
 #//------------------------------------------------------------------------
 #//
 #// Specify any "command" targets. (ie. DIRS, INSTALL_FILES, ...)
@@ -43,6 +45,11 @@ DIRS=   libi18n htmldlgs libparse layout libstyle
 !ifdef MOZ_OJI
 DIRS=   $(DIRS) plugin
 !endif
+DIRS= $(DIRS) \
+!ifdef MOZ_MAIL_NEWS
+	libaddr \
+!endif
+	libparse
 
 #//------------------------------------------------------------------------
 #//

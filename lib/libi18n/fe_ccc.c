@@ -78,6 +78,8 @@ PRIVATE int16 intl_CharLen_SingleByte(unsigned char ch);
 #define INTL_CHARLEN_CNS_8BIT 	3
 #define INTL_CHARLEN_UTF8 		4
 #define INTL_CHARLEN_SINGLEBYTE 5
+/* a conversion flag for JIS, set if converting hankaku (1byte) kana to zenkaku (2byte) */
+#define INTL_SEND_HANKAKU_KANA	128
 
 PRIVATE intl_CharLenFunc intl_char_len_func[]=
 {
@@ -1193,3 +1195,26 @@ int   INTL_MenuFontID() {
 }
 
 #endif /* XP_OS2 */
+
+
+#if defined(MOZ_MAIL_NEWS)
+/*
+ * Access a conversion flag for hankaku->zenkaku kana conversion for mail.
+ */
+XP_Bool INTL_GetCCCCvtflag_SendHankakuKana(CCCDataObject obj)
+{
+	return ((CS_JIS == (INTL_GetCCCToCSID(obj) & ~CS_AUTO)) && 
+				(INTL_SEND_HANKAKU_KANA & INTL_GetCCCCvtflag(obj)));
+}
+
+void INTL_SetCCCCvtflag_SendHankakuKana(CCCDataObject obj, XP_Bool flag)
+{
+	int32 cvtflag;
+	if (CS_JIS == (INTL_GetCCCToCSID(obj) & ~CS_AUTO))
+	{
+		cvtflag = INTL_GetCCCCvtflag(obj);
+		cvtflag = flag ? (INTL_SEND_HANKAKU_KANA | cvtflag) : (~INTL_SEND_HANKAKU_KANA & cvtflag);
+		INTL_SetCCCCvtflag(obj, cvtflag);
+	}
+}
+#endif  /* MOZ_MAIL_NEWS */

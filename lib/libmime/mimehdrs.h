@@ -84,6 +84,7 @@ extern char *MimeHeaders_close_crypto_stamp(void);
 extern char *MimeHeaders_make_crypto_stamp(XP_Bool encrypted_p,
 										   XP_Bool signed_p,
 										   XP_Bool good_p,
+										   XP_Bool unverified_p,
 										   XP_Bool close_parent_stamp_p,
 										   const char *stamp_url);
 

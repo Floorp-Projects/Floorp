@@ -49,6 +49,12 @@ void CMouseDispatcher::ExecuteSelf(
 	if (theEvent->what == kHighLevelEvent)
 		return;
 
+	// Don't process mouse position for update events (otherwise, tooltip
+	// panes that are drawn under the mouse position get deleted before
+	// the update event even gets processed - jrm 98/05/05.
+	if (theEvent->what == updateEvt)
+		return;
+
 	LPane* theCurrentPane = nil;
 	LPane* theLastPane = LPane::GetLastPaneMoused();
 

@@ -52,6 +52,10 @@ static np_handle *np_alist = NULL;
 
 int np_debug = 0;
 
+#ifdef XP_MAC
+XP_Bool gForcingRedraw = FALSE;
+#endif /* XP_MAC */
+
 NPNetscapeFuncs npp_funcs;
 
 /*
@@ -2106,6 +2110,16 @@ npn_invalidateregion(NPP npp, NPRegion invalidRegion)
     }
 }
 
+#ifdef XP_MAC
+/*
+	Used only in CHTMLView::GetCurrentPort().  
+*/
+XP_Bool NPL_IsForcingRedraw()
+{
+	return gForcingRedraw;
+}
+#endif /* XP_MAC */
+
 void NP_EXPORT
 npn_forceredraw(NPP npp)
 {
@@ -2116,7 +2130,13 @@ npn_forceredraw(NPP npp)
     }
     
     if (instance && !instance->windowed) {
+#ifdef XP_MAC
+    	gForcingRedraw = TRUE;
+#endif /* XP_MAC */
         CL_CompositeNow(CL_GetLayerCompositor(instance->layer));
+#ifdef XP_MAC
+        gForcingRedraw = FALSE;
+#endif /* XP_MAC */
     }
 }
 

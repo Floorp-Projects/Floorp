@@ -38,11 +38,11 @@ public:
 private:
     GrafPtr     mPort;
     GrafPtr		mWMgrPort;
-    CGrafPtr	mWMgrCPort;
+   // CGrafPtr	mWMgrCPort;
     Int16		mWMgrFont;
     Int16		mWMgrSize;
-    Int16		mCWMgrFont;
-    Int16		mCWMgrSize;
+    //Int16		mCWMgrFont;
+    //Int16		mCWMgrSize;
 };
 
 class	StSysFontState
@@ -54,7 +54,7 @@ public:
 	void		Save();
 	void		Restore();
 	
-	void		SetTextTraits(ResIDT inTextTraitsID);
+	void		SetTextTraits(ResIDT inTextTraitsID = 130);
 
 private:
 	Int16		mFont;

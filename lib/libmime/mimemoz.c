@@ -31,8 +31,13 @@
 #include "mimemsig.h"
 #include "mimecryp.h"
 #ifndef MOZILLA_30
+#include "mimemrel.h"
+#include "mimemalt.h"
 # include "xpgetstr.h"
 # include "mimevcrd.h"  /* for MIME_VCardConverter */
+#ifdef MOZ_CALENDAR
+# include "mimecal.h"   /* for MIME_JulianConverter */
+#endif
 # include "edt.h"
   extern int XP_FORWARDED_MESSAGE_ATTACHMENT;
 #endif /* !MOZILLA_30 */
@@ -42,70 +47,28 @@
 #include "prprf.h"
 #include "intl_csi.h"
 
+#if defined(XP_UNIX) || defined(XP_WIN32)
+#if	defined(MOZ_CALENDAR)
+    #define JULIAN_EXISTS 1		/* Julian isn't working on mac yet */
+#endif
+#endif
+
+
+#ifdef JULIAN_EXISTS
+#include "julianform.h"
+#endif
+
 #ifdef HAVE_MIME_DATA_SLOT
 # define LOCK_LAST_CACHED_MESSAGE
 #endif
 
-/* Interface between netlib and the top-level message/rfc822 parser:
-   MIME_MessageConverter()
- */
+extern int MK_UNABLE_TO_OPEN_TMP_FILE;
 
-struct mime_stream_data {           /* This struct is the state we pass around
-                                       amongst the various stream functions
-                                       used by MIME_MessageConverter().
-                                     */
-
-  URL_Struct *url;                  /* The URL this is all coming from. */
-  int format_out;
-  MWContext *context;
-  NET_StreamClass *stream;          /* The stream to which we write output */
-  NET_StreamClass *istream;   /* The stream we're writing out image data,
-                                                                  if any. */
-  MimeObject *obj;                  /* The root parser object */
-  MimeDisplayOptions *options;      /* Data for communicating with libmime.a */
-
-  /* These are used by FO_QUOTE_HTML_MESSAGE stuff only: */
-  int16 lastcsid;                   /* csid corresponding to above. */
-  int16 outcsid;                    /* csid passed to EDT_PasteQuoteINTL */
-
-#ifndef MOZILLA_30
-  uint8 rand_buf[6];                /* Random number used in the MATCH
-                                       attribute of the ILAYER tag
-                                       pair that encapsulates a
-                                       text/html part.  (The
-                                       attributes must match on the
-                                       ILAYER and the closing
-                                       /ILAYER.)  This is used to
-                                       prevent stray layer tags (or
-                                       maliciously placed ones) inside
-                                       an email message allowing the
-                                       message to escape from its
-                                       encapsulated environment. */
-#endif /* MOZILLA_30 */
-    
-#ifdef DEBUG_terry
-    XP_File logit;              /* Temp file to put generated HTML into. */
-#endif
-};
+/* Arrgh.  Why isn't this in a reasonable header file somewhere???  ###tw */
+extern char * NET_ExplainErrorDetails (int code, ...);
 
 
-struct MimeDisplayData {            /* This struct is what we hang off of
-                                       MWContext->mime_data, to remember info
-                                       about the last MIME object we've
-                                       parsed and displayed.  See
-                                       MimeGuessURLContentName() below.
-                                     */
-  MimeObject *last_parsed_object;
-  char *last_parsed_url;
-
-#ifdef LOCK_LAST_CACHED_MESSAGE
-  char *previous_locked_url;
-#endif /* LOCK_LAST_CACHED_MESSAGE */
-
-#ifndef MOZILLA_30
-  MSG_Pane* last_pane;
-#endif /* MOZILLA_30 */
-};
+#include "mimedisp.h"
 
 
 #ifndef MOZILLA_30
@@ -121,7 +84,7 @@ static XP_Bool MIME_PrefDataValid = 0; /* 0: First time. */
 #endif
 
 /* #### defined in libmsg/msgutils.c */
-extern NET_StreamClass * 
+extern NET_StreamClass *
 msg_MakeRebufferingStream (NET_StreamClass *next_stream,
                            URL_Struct *url,
                            MWContext *context);
@@ -237,7 +200,7 @@ mime_convert_rfc1522 (const char *input_line, int32 input_length,
       line[input_length] = 0;
     }
 
-  converted = IntlDecodeMimePartIIStr(line, 
+  converted = IntlDecodeMimePartIIStr(line,
       INTL_DocToWinCharSetID(INTL_DefaultDocCharSetID(msd->context)), FALSE);
 
   if (line != input_line)
@@ -347,7 +310,7 @@ mime_display_stream_write (NET_StreamClass *stream,
                            int32 size)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream->data_object;
-  MimeObject *obj = (msd ? msd->obj : 0);  
+  MimeObject *obj = (msd ? msd->obj : 0);
   if (!obj) return -1;
   return obj->class->parse_buffer((char *) buf, size, obj);
 }
@@ -356,7 +319,7 @@ mime_display_stream_write (NET_StreamClass *stream,
 static unsigned int
 mime_display_stream_write_ready (NET_StreamClass *stream)
 {
-  struct mime_stream_data *msd = (struct mime_stream_data *) stream->data_object;  
+  struct mime_stream_data *msd = (struct mime_stream_data *) stream->data_object;
   if (msd->istream) {
       return msd->istream->is_write_ready (msd->istream);
   } else if (msd->stream)
@@ -372,7 +335,7 @@ static void
 mime_display_stream_complete (NET_StreamClass *stream)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream->data_object;
-  MimeObject *obj = (msd ? msd->obj : 0);  
+  MimeObject *obj = (msd ? msd->obj : 0);
   if (obj)
     {
       int status;
@@ -468,7 +431,7 @@ static void
 mime_display_stream_abort (NET_StreamClass *stream, int status)
 {
   struct mime_stream_data *msd = (struct mime_stream_data *) stream->data_object;
-  MimeObject *obj = (msd ? msd->obj : 0);  
+  MimeObject *obj = (msd ? msd->obj : 0);
   if (obj)
     {
       if (!obj->closed_p)
@@ -502,12 +465,16 @@ mime_display_stream_abort (NET_StreamClass *stream, int status)
         }
     }
 
-  if (msd->stream)
-    {
-      msd->stream->abort (msd->stream, status);
-      XP_FREE (msd->stream);
-    }
-  XP_FREE(msd);
+  XP_ASSERT(msd); /* Crash was happening here - jrm */
+  if (msd)
+  {
+      if (msd->stream)
+      {
+          msd->stream->abort (msd->stream, status);
+          XP_FREE (msd->stream);
+      }
+      XP_FREE(msd);
+  }
 }
 
 
@@ -516,7 +483,7 @@ mime_display_stream_abort (NET_StreamClass *stream, int status)
 
 static unsigned int
 mime_insert_html_write_ready(NET_StreamClass *stream)
-{	
+{
   return MAX_WRITE_READY;
 }
 
@@ -525,7 +492,7 @@ mime_insert_html_put_block(NET_StreamClass *stream, const char* str, int32 lengt
 {
   struct mime_stream_data* msd = (struct mime_stream_data*) stream->data_object;
   char* s = (char*) str;
-  char c = s[length];  
+  char c = s[length];
   XP_ASSERT(msd);
   if (!msd) return -1;
   if (c) {
@@ -533,7 +500,7 @@ mime_insert_html_put_block(NET_StreamClass *stream, const char* str, int32 lengt
   }
   /* s is in the outcsid encoding at this point. That was done in
    * mime_insert_html_convert_charset */
-  EDT_PasteQuoteINTL(msd->context, s, msd->outcsid); 
+  EDT_PasteQuoteINTL(msd->context, s, msd->outcsid);
   if (c) {
     s[length] = c;
   }
@@ -544,7 +511,7 @@ mime_insert_html_put_block(NET_StreamClass *stream, const char* str, int32 lengt
 static void
 mime_insert_html_complete(NET_StreamClass *stream)
 {
-  struct mime_stream_data* msd = (struct mime_stream_data*) stream->data_object;  
+  struct mime_stream_data* msd = (struct mime_stream_data*) stream->data_object;
   XP_ASSERT(msd);
   if (!msd) return;
   EDT_PasteQuote(msd->context, "</BLOCKQUOTE>");
@@ -563,7 +530,7 @@ mime_insert_html_complete(NET_StreamClass *stream)
 
 static void
 mime_insert_html_abort(NET_StreamClass *stream, int status)
-{	
+{
   mime_insert_html_complete(stream);
 }
 
@@ -630,7 +597,7 @@ mime_make_output_stream(const char *content_type,
     /* Special case here.  Make a stream that just jams data directly
        into our editor context.  No calling of NET_StreamBuilder for me;
        I don't really understand it anyway... */
-    
+
     XP_ASSERT(msd);
     if (msd) {
       stream = XP_NEW_ZAP(NET_StreamClass);
@@ -670,10 +637,10 @@ mime_make_output_stream(const char *content_type,
      right application will get launched when the file is clicked on, etc.)
 
      [mwelch: I'm not adding FO_EDT_SAVE_IMAGE here, because the editor, to
-     the best of my knowledge, never spools out a message per se; such a message 
-     would be filed as an attachment (FO_CACHE_AND_MAIL_TO), independent of the 
-     editor. In addition, we want to drill down as far as we can within a quoted 
-     message, in order to identify whatever part has been requested (usually an 
+     the best of my knowledge, never spools out a message per se; such a message
+     would be filed as an attachment (FO_CACHE_AND_MAIL_TO), independent of the
+     editor. In addition, we want to drill down as far as we can within a quoted
+     message, in order to identify whatever part has been requested (usually an
      image, sound, applet, or other inline data).]
 
      In 3.0b7 and earlier, we did this for *all* types.  On 9-Aug-96 jwz and
@@ -732,8 +699,10 @@ mime_make_output_stream(const char *content_type,
   }
 
   stream = NET_StreamBuilder (format_out, url, context);
-  if (stream)
+  if (stream && (context->type != MWContextMessageComposition))
   {
+    /* Bug #110565: do not change the stream to a rebuffering stream
+       when we have a Mail Compose context */
     NET_StreamClass * buffer = msg_MakeRebufferingStream(stream, url, context);
     if (buffer)
       stream = buffer;
@@ -893,7 +862,7 @@ mime_output_init_fn (const char *type,
               = free object-1
               = save object-2 in context->mime_data
               = done with object-2; free nothing.
-            
+
             Look at message-1, then look at message-1-part-A:
               The flow of control in this case is somewhat different:
 
@@ -992,7 +961,7 @@ mime_PrefsChangeCallback(const char* prefname, void* data)
 #endif /* !MOZILLA_30 */
 
 
-NET_StreamClass * 
+NET_StreamClass *
 MIME_MessageConverter (int format_out, void *closure,
                        URL_Struct *url, MWContext *context)
 {
@@ -1021,7 +990,10 @@ MIME_MessageConverter (int format_out, void *closure,
 #if defined(XP_WIN) || defined(XP_OS2)
   msd->logit = XP_FileOpen("C:\\temp\\twtemp.html", xpTemporary, XP_FILE_WRITE);
 #endif
+#if defined(XP_UNIX)
+  msd->logit = XP_FileOpen("/tmp/twtemp.html", xpTemporary, XP_FILE_WRITE);
 #endif
+#endif /* DEBUG_terry */
   msd->url = url;
   msd->context = context;
   msd->format_out = format_out;
@@ -1052,7 +1024,7 @@ MIME_MessageConverter (int format_out, void *closure,
       XP_FREE (opt2);
       url->fe_data = 0;
       msd->options->attachment_icon_layer_id = 0; /* Sigh... */
-    }
+  }
 
   /* Set the defaults, based on the context, and the output-type.
    */
@@ -1069,7 +1041,7 @@ MIME_MessageConverter (int format_out, void *closure,
       format_out == FO_CACHE_AND_PRESENT)
     msd->options->output_vcard_buttons_p = TRUE;
 #endif /* !MOZILLA_30 */
- 
+
   if (format_out == FO_PRESENT ||
       format_out == FO_CACHE_AND_PRESENT) {
     msd->options->fancy_links_p = TRUE;
@@ -1221,7 +1193,7 @@ MIME_MessageConverter (int format_out, void *closure,
   if (format_out == FO_QUOTE_HTML_MESSAGE) {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
     msd->options->dont_touch_citations_p = TRUE;
-  } else 
+  } else
 #endif
     msd->options->charset_conversion_fn = mime_convert_charset;
   msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
@@ -1475,7 +1447,7 @@ mime_image_write_buffer(char *buf, int32 size, void *image_closure)
    be returned.  (This string will be relative to the URL in the window.)
    Else, returns NULL.
  */
-static char *
+char *
 mime_extract_relative_part_address(MWContext *context, const char *url)
 {
   char *url1 = 0, *url2 = 0, *part = 0, *result = 0;    /* free these */
@@ -1723,11 +1695,74 @@ mime_get_main_object(MimeObject* obj)
 }
 
 
+XP_Bool MimeObjectChildIsMessageBody(MimeObject *obj,
+									 XP_Bool *isAlternativeOrRelated)
+{
+	char *disp = 0;
+	XP_Bool bRet = FALSE;
+	MimeObject *firstChild = 0;
+	MimeContainer *container = (MimeContainer*) obj;
+
+	if (isAlternativeOrRelated)
+		*isAlternativeOrRelated = FALSE;
+
+	if (!container ||
+		!mime_subclass_p(obj->class,
+						 (MimeObjectClass*) &mimeContainerClass))
+	{
+		return bRet;
+	}
+	else if (mime_subclass_p(obj->class, (MimeObjectClass*)
+							 &mimeMultipartRelatedClass))
+	{
+		if (isAlternativeOrRelated)
+			*isAlternativeOrRelated = TRUE;
+		return bRet;
+	}
+	else if (mime_subclass_p(obj->class, (MimeObjectClass*)
+							 &mimeMultipartAlternativeClass))
+	{
+		if (isAlternativeOrRelated)
+			*isAlternativeOrRelated = TRUE;
+		return bRet;
+	}
+
+	if (container->children)
+		firstChild = container->children[0];
+
+	if (!firstChild ||
+		!firstChild->content_type ||
+		!firstChild->headers)
+		return bRet;
+
+	disp = MimeHeaders_get (firstChild->headers,
+							HEADER_CONTENT_DISPOSITION,
+							TRUE,
+							FALSE);
+	if (disp /* && !strcasecomp (disp, "attachment") */)
+		bRet = FALSE;
+	else if (!strcasecomp (firstChild->content_type, TEXT_PLAIN) ||
+			 !strcasecomp (firstChild->content_type, TEXT_HTML) ||
+			 !strcasecomp (firstChild->content_type, TEXT_MDL) ||
+			 !strcasecomp (firstChild->content_type, MULTIPART_ALTERNATIVE) ||
+			 !strcasecomp (firstChild->content_type, MULTIPART_RELATED) ||
+			 !strcasecomp (firstChild->content_type, MESSAGE_NEWS) ||
+			 !strcasecomp (firstChild->content_type, MESSAGE_RFC822))
+		bRet = TRUE;
+	else
+		bRet = FALSE;
+	FREEIF(disp);
+	return bRet;
+}
+
+
 int
 MimeGetAttachmentCount(MWContext* context)
 {
   MimeObject* obj;
   MimeContainer* cobj;
+  XP_Bool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+
   XP_ASSERT(context);
   if (!context ||
       !context->mime_data ||
@@ -1735,15 +1770,20 @@ MimeGetAttachmentCount(MWContext* context)
     return 0;
   }
   obj = mime_get_main_object(context->mime_data->last_parsed_object);
-  if (!mime_subclass_p(obj->class, (MimeObjectClass*) &mimeContainerClass)) {
-
+  if (!mime_subclass_p(obj->class, (MimeObjectClass*) &mimeContainerClass))
     return 0;
-  }
+
   cobj = (MimeContainer*) obj;
-  return cobj->nchildren - 1;   /* ### Hardcoding subtraction of one isn't
-                                 quite right; we have to look at the first
-                                 object and decide whether it is the body or
-                                 the first attachment on a NULL body. */
+
+  isMsgBody = MimeObjectChildIsMessageBody(obj,
+										   &isAlternativeOrRelated);
+
+  if (isAlternativeOrRelated)
+	  return 0;
+  else if (isMsgBody)
+	  return cobj->nchildren - 1;
+  else
+	  return cobj->nchildren;
 }
 
 
@@ -1757,6 +1797,8 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
   int32 i;
   char* disp;
   char c;
+  XP_Bool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+
   if (!data) return 0;
   *data = NULL;
   XP_ASSERT(context);
@@ -1769,6 +1811,11 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
   if (!mime_subclass_p(obj->class, (MimeObjectClass*) &mimeContainerClass)) {
     return 0;
   }
+  isMsgBody = MimeObjectChildIsMessageBody(obj,
+										   &isAlternativeOrRelated);
+  if (isAlternativeOrRelated)
+	  return 0;
+
   cobj = (MimeContainer*) obj;
   n = cobj->nchildren;          /* This is often too big, but that's OK. */
   if (n <= 0) return n;
@@ -1779,12 +1826,32 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
   if (XP_STRCHR(context->mime_data->last_parsed_url, '?')) {
     c = '&';
   }
-  for (i=1 /*###ick, see above*/ ; i<cobj->nchildren ; i++, tmp++) {
+
+  /* let's figure out where to start */
+  if (isMsgBody)
+	  i = 1;
+  else
+	  i = 0;
+
+  for ( ; i<cobj->nchildren ; i++, tmp++) {
     MimeObject* child = cobj->children[i];
     char* part = mime_part_address(child);
+	char* imappart = NULL;
     if (!part) return MK_OUT_OF_MEMORY;
-    tmp->url = PR_smprintf("%s%cpart=%s", context->mime_data->last_parsed_url,
+	if (obj->options->missing_parts)
+		imappart = mime_imap_part_address (child);
+	if (imappart)
+	{
+		tmp->url = mime_set_url_imap_part(context->mime_data->last_parsed_url, imappart, part);
+	}
+	else
+	{
+		tmp->url = mime_set_url_part(context->mime_data->last_parsed_url, part, TRUE);
+	}
+	/*
+	tmp->url = PR_smprintf("%s%cpart=%s", context->mime_data->last_parsed_url,
                            c, part);
+	*/
     if (!tmp->url) return MK_OUT_OF_MEMORY;
     tmp->real_type = child->content_type ?
       XP_STRDUP(child->content_type) : NULL;
@@ -1792,7 +1859,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
     disp = MimeHeaders_get(child->headers, HEADER_CONTENT_DISPOSITION,
                            FALSE, FALSE);
     if (disp) {
-      tmp->real_name = MimeHeaders_get_parameter(disp, "filename");
+      tmp->real_name = MimeHeaders_get_parameter(disp, "filename", NULL, NULL);
 	  if (tmp->real_name)
 	  {
 		char *fname = NULL;
@@ -1809,8 +1876,23 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
                        FALSE, FALSE);
     if (disp)
     {
-      tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE);
-      tmp->x_mac_creator= MimeHeaders_get_parameter(disp, PARAM_X_MAC_CREATOR);
+      tmp->x_mac_type   = MimeHeaders_get_parameter(disp, PARAM_X_MAC_TYPE, NULL, NULL);
+      tmp->x_mac_creator= MimeHeaders_get_parameter(disp, PARAM_X_MAC_CREATOR, NULL, NULL);
+	  if (!tmp->real_name || *tmp->real_name == 0)
+	  {
+		XP_FREEIF(tmp->real_name);
+		tmp->real_name = MimeHeaders_get_parameter(disp, "name", NULL, NULL);
+		if (tmp->real_name)
+		{
+			char *fname = NULL;
+			fname = mime_decode_filename(tmp->real_name);
+			if (fname && fname != tmp->real_name)
+			{
+				XP_FREE(tmp->real_name);
+				tmp->real_name = fname;
+			}
+		}
+	  }
       XP_FREE(disp);
     }
     tmp->description = MimeHeaders_get(child->headers,
@@ -1818,7 +1900,7 @@ MimeGetAttachmentList(MWContext* context, MSG_AttachmentData** data)
                                        FALSE, FALSE);
 #ifndef MOZILLA_30
     if (tmp->real_type && !strcasecomp(tmp->real_type, MESSAGE_RFC822) &&
-        (!tmp->real_name || *tmp->real_name))
+        (!tmp->real_name || *tmp->real_name == 0))
     {
         StrAllocCopy(tmp->real_name, XP_GetString(XP_FORWARDED_MESSAGE_ATTACHMENT));
     }
@@ -1864,7 +1946,7 @@ MimeDestroyContextData(MWContext *context)
   csi = LO_GetDocumentCharacterSetInfo(context);
   if (csi)
 	  INTL_SetCSIMimeCharset(csi, NULL);
-  
+
   if (!context->mime_data) return;
 
   if (context->mime_data->last_parsed_object)
@@ -1944,7 +2026,7 @@ struct mime_richtext_data {
   XP_Bool enriched_p;
 };
 
-static int 
+static int
 mime_richtext_stream_fn (char *buf, int32 size, void *closure)
 {
   struct mime_richtext_data *mrd = (struct mime_richtext_data *) closure;
@@ -1965,7 +2047,7 @@ mime_richtext_write_line (char* line, int32 size, void *closure)
 static int
 mime_richtext_write (NET_StreamClass *stream, const char* buf, int32 size)
 {
-  struct mime_richtext_data *data = (struct mime_richtext_data *) stream->data_object;  
+  struct mime_richtext_data *data = (struct mime_richtext_data *) stream->data_object;
   return msg_LineBuffer (buf, size, &data->ibuffer, &data->ibuffer_size,
                          &data->ibuffer_fp, FALSE, mime_richtext_write_line,
                          data);
@@ -1974,7 +2056,7 @@ mime_richtext_write (NET_StreamClass *stream, const char* buf, int32 size)
 static unsigned int
 mime_richtext_write_ready (NET_StreamClass *stream)
 {
-  struct mime_richtext_data *data = (struct mime_richtext_data *) stream->data_object;  
+  struct mime_richtext_data *data = (struct mime_richtext_data *) stream->data_object;
   if (data->stream)
     return ((*data->stream->is_write_ready)
             (data->stream));
@@ -1985,7 +2067,7 @@ mime_richtext_write_ready (NET_StreamClass *stream)
 static void
 mime_richtext_complete (NET_StreamClass *stream)
 {
-  struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream->data_object;  
+  struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream->data_object;
   if (!mrd) return;
   FREEIF(mrd->obuffer);
   if (mrd->stream)
@@ -1999,7 +2081,7 @@ mime_richtext_complete (NET_StreamClass *stream)
 static void
 mime_richtext_abort (NET_StreamClass *stream, int status)
 {
-  struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream->data_object;  
+  struct mime_richtext_data *mrd = (struct mime_richtext_data *) stream->data_object;
   if (!mrd) return;
   FREEIF(mrd->obuffer);
   if (mrd->stream)
@@ -2011,7 +2093,7 @@ mime_richtext_abort (NET_StreamClass *stream, int status)
 }
 
 
-static NET_StreamClass * 
+static NET_StreamClass *
 MIME_RichtextConverter_1 (int format_out, void *closure,
                           URL_Struct *url, MWContext *context,
                           XP_Bool enriched_p)
@@ -2058,14 +2140,14 @@ MIME_RichtextConverter_1 (int format_out, void *closure,
   return stream;
 }
 
-NET_StreamClass * 
+NET_StreamClass *
 MIME_RichtextConverter (int format_out, void *closure,
                         URL_Struct *url, MWContext *context)
 {
   return MIME_RichtextConverter_1 (format_out, closure, url, context, FALSE);
 }
 
-NET_StreamClass * 
+NET_StreamClass *
 MIME_EnrichedTextConverter (int format_out, void *closure,
                             URL_Struct *url, MWContext *context)
 {
@@ -2099,7 +2181,7 @@ MIME_DisplayAttachmentPane(MWContext* context)
 /* This struct is the state we used in MIME_VCardConverter() */
 struct mime_vcard_data {
     URL_Struct *url;                         /* original url */
-    int format_out;                          /* intended output format; 
+    int format_out;                          /* intended output format;
                                               should be TEXT-VCARD */
     MWContext *context;
     NET_StreamClass *stream;                 /* not used for now */
@@ -2112,7 +2194,7 @@ mime_vcard_write (NET_StreamClass *stream,
               const char *buf,
               int32 size )
 {
-  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;  
+  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;
   XP_ASSERT ( vcd );
 
   if ( !vcd || !vcd->obj ) return -1;
@@ -2123,7 +2205,7 @@ mime_vcard_write (NET_StreamClass *stream,
 static unsigned int
 mime_vcard_write_ready (NET_StreamClass *stream)
 {
-  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;  
+  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;
   XP_ASSERT (vcd);
 
   if (!vcd) return MAX_WRITE_READY;
@@ -2136,18 +2218,18 @@ mime_vcard_write_ready (NET_StreamClass *stream)
 static void
 mime_vcard_complete (NET_StreamClass *stream)
 {
-  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;  
-  
+  struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;
+
   XP_ASSERT (vcd);
 
   if (!vcd) return;
-  
+
   if (vcd->obj) {
     int status;
 
     status = vcd->obj->class->parse_eof ( vcd->obj, FALSE );
     vcd->obj->class->parse_end( vcd->obj, status < 0 ? TRUE : FALSE );
-    
+
     mime_free (vcd->obj);
     vcd->obj = 0;
 
@@ -2163,21 +2245,21 @@ static void
 mime_vcard_abort (NET_StreamClass *stream, int status )
 {
   struct mime_vcard_data *vcd = (struct mime_vcard_data *) stream->data_object;
-  
+
   XP_ASSERT (vcd);
   if (!vcd) return;
-  
+
   if (vcd->obj) {
       int status;
-      
+
       if ( !vcd->obj->closed_p )
           status = vcd->obj->class->parse_eof ( vcd->obj, TRUE );
       if ( !vcd->obj->parsed_p )
           vcd->obj->class->parse_end( vcd->obj, TRUE );
-      
+
       mime_free (vcd->obj);
       vcd->obj = 0;
-   
+
       if (vcd->stream) {
           vcd->stream->abort (vcd->stream, status);
           XP_FREE( vcd->stream );
@@ -2214,7 +2296,7 @@ MIME_VCardConverter ( int format_out,
 
     if (!next_stream) return 0;
 
-    
+
     vcd = XP_NEW_ZAP (struct mime_vcard_data);
     if (!vcd) {
         XP_FREE (next_stream);
@@ -2259,7 +2341,7 @@ MIME_VCardConverter ( int format_out,
         XP_FREE ( vcd );
         return 0;
     }
-  
+
     obj->options = vcd->options;
     vcd->obj = obj;
 
@@ -2298,3 +2380,245 @@ MIME_VCardConverter ( int format_out,
 }
 
 #endif /* !MOZILLA_30 */
+
+
+
+int
+MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
+				char* otherheaders, char* body)
+{
+	struct mime_stream_data* msd =
+		(struct mime_stream_data*) options->stream_closure;
+	return NET_SendMessageUnattended(msd->context, to, subject,
+									 otherheaders, body);
+}
+
+
+int
+mime_TranslateCalendar(char* caldata, char** html)
+{
+#ifdef JULIAN_EXISTS
+    static XP_Bool initialized = FALSE;
+    void* closure;
+    if (!initialized) {
+	Julian_Form_Callback_Struct jcbs;
+
+		jcbs.callbackurl = NET_CallbackURLCreate;
+		jcbs.callbackurlfree = NET_CallbackURLFree;
+		jcbs.ParseURL = NET_ParseURL;
+		jcbs.MakeNewWindow = FE_MakeNewWindow;
+		jcbs.CreateURLStruct = NET_CreateURLStruct;
+		jcbs.StreamBuilder = NET_StreamBuilder;
+		jcbs.SACopy = NET_SACopy;
+
+                /* John Sun added 4-22-98 */
+                jcbs.SendMessageUnattended = NET_SendMessageUnattended;
+                jcbs.DestroyWindow = FE_DestroyWindow;
+
+                jcbs.GetString = XP_GetString;
+
+		jf_Initialize(&jcbs);
+		initialized = TRUE;
+    }
+    closure = jf_New(caldata);
+    *html = jf_getForm(closure);
+    jf_Destroy(closure);
+    return 0;
+#else
+    *html = XP_STRDUP("<b>Can't handle calendar data on this platform yet</b>");
+    return 0;
+#endif /* JULIAN_EXISTS */
+}
+
+
+
+/*
+ *
+ * MIME_JulianConverter Stream handler stuff
+ *
+ */
+
+#ifdef MOZ_CALENDAR
+struct mime_calendar_data {
+    URL_Struct *url;                         /* original url */
+    int format_out;                          /* intended output format; should be TEXT-CALENDAR */
+    MWContext *context;
+    NET_StreamClass *stream;                 /* not used for now */
+    MimeDisplayOptions *options;             /* data for communicating with libmime.a */
+    MimeObject *obj;                         /* The root */
+};
+
+
+static int mime_calendar_write (void *stream, const char *buf, int32 size )
+{
+  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;
+  XP_ASSERT ( cald );
+
+  if ( !cald || !cald->obj ) return -1;
+
+  return cald->obj->class->parse_line ((char *) buf, size, cald->obj);
+}
+
+static unsigned int mime_calendar_write_ready (void *stream)
+{
+  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;
+  XP_ASSERT (cald);
+
+  if (!cald) return MAX_WRITE_READY;
+  if (cald->stream)
+    return cald->stream->is_write_ready ( cald->stream->data_object );
+  else
+    return MAX_WRITE_READY;
+}
+
+static void mime_calendar_complete (void *stream)
+{
+  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;
+
+  XP_ASSERT (cald);
+
+  if (!cald) return;
+
+  if (cald->obj) {
+    int status;
+
+    status = cald->obj->class->parse_eof ( cald->obj, FALSE );
+    cald->obj->class->parse_end( cald->obj, status < 0 ? TRUE : FALSE );
+
+    mime_free (cald->obj);
+    cald->obj = 0;
+
+    if (cald->stream) {
+      cald->stream->complete (cald->stream->data_object);
+      XP_FREE( cald->stream );
+      cald->stream = 0;
+    }
+  }
+}
+
+static void mime_calendar_abort (void *stream, int status )
+{
+  struct mime_calendar_data *cald = (struct mime_calendar_data *) stream;
+
+  XP_ASSERT (cald);
+  if (!cald) return;
+
+  if (cald->obj) {
+      int status;
+
+      if ( !cald->obj->closed_p )
+          status = cald->obj->class->parse_eof ( cald->obj, TRUE );
+      if ( !cald->obj->parsed_p )
+          cald->obj->class->parse_end( cald->obj, TRUE );
+
+      mime_free (cald->obj);
+      cald->obj = 0;
+
+      if (cald->stream) {
+          cald->stream->abort (cald->stream->data_object, status);
+          XP_FREE( cald->stream );
+          cald->stream = 0;
+      }
+  }
+  XP_FREE (cald);
+}
+
+extern NET_StreamClass * MIME_JulianConverter (int format_out, void *closure, URL_Struct *url, MWContext *context )
+{
+    int status = 0;
+    NET_StreamClass * stream = NULL;
+    NET_StreamClass * next_stream = NULL;
+    struct mime_calendar_data *cald = NULL;
+    MimeObject *obj;
+
+    XP_ASSERT (url && context);
+    if ( !url || !context ) return NULL;
+
+    next_stream = mime_make_output_stream (TEXT_HTML, 0, 0, 0, 0,
+                format_out, url, context, NULL);
+
+    if (!next_stream) return 0;
+
+    cald = XP_NEW_ZAP (struct mime_calendar_data);
+    if (!cald) {
+        XP_FREE (next_stream);
+        return 0;
+    }
+
+    cald->url = url;
+    cald->context = context;
+    cald->format_out = format_out;
+    cald->stream = next_stream;
+
+    cald->options = XP_NEW_ZAP ( MimeDisplayOptions );
+
+    if ( !cald->options ) {
+        XP_FREE (next_stream);
+        XP_FREE ( cald );
+        return 0;
+    }
+
+    cald->options->write_html_p        = TRUE;
+    cald->options->output_fn           = mime_output_fn;
+    if (format_out == FO_PRESENT ||
+        format_out == FO_CACHE_AND_PRESENT)
+    cald->options->output_vcard_buttons_p = FALSE;
+
+#ifdef MIME_DRAFTS
+    cald->options->decompose_file_p = FALSE; /* new field in MimeDisplayOptions */
+#endif /* MIME_DRAFTS */
+
+    cald->options->url = url->address;
+    cald->options->stream_closure = cald;
+    cald->options->html_closure = cald;
+
+    obj = mime_new ( (MimeObjectClass *) &mimeInlineTextCalendarClass,
+        (MimeHeaders *) NULL,
+        TEXT_CALENDAR );
+
+    if ( !obj ) {
+        FREEIF( cald->options->part_to_load );
+        XP_FREE ( next_stream );
+        XP_FREE ( cald->options );
+        XP_FREE ( cald );
+        return 0;
+    }
+
+    obj->options = cald->options;
+    cald->obj = obj;
+
+    stream = XP_NEW_ZAP ( NET_StreamClass );
+    if ( !stream ) {
+        FREEIF ( cald->options->part_to_load );
+        XP_FREE ( next_stream );
+        XP_FREE ( cald->options );
+        XP_FREE ( cald );
+        XP_FREE ( obj );
+        return 0;
+    }
+
+    stream->name = "MIME To Calendar Converter Stream";
+    stream->complete = mime_calendar_complete;
+    stream->abort = mime_calendar_abort;
+    stream->put_block = mime_calendar_write;
+    stream->is_write_ready = mime_calendar_write_ready;
+    stream->data_object = cald;
+    stream->window_id = context;
+
+    status = obj->class->initialize ( obj );
+    if ( status >= 0 )
+        status = obj->class->parse_begin ( obj );
+    if ( status < 0 ) {
+        XP_FREE ( stream );
+        FREEIF( cald->options->part_to_load );
+        XP_FREE ( next_stream );
+        XP_FREE ( cald->options );
+        XP_FREE ( cald );
+        XP_FREE ( obj );
+        return 0;
+    }
+
+    return stream;
+}
+#endif
+

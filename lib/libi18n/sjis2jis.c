@@ -18,7 +18,7 @@
 /*	sjis2jis.c	*/
 
 #include "intlpriv.h"
-#ifdef XP_MAC
+#if defined(MOZ_MAIL_NEWS)
 #include "katakana.h"
 #endif
 
@@ -82,8 +82,8 @@ mz_sjis2jis(	CCCDataObject		obj,
  	register unsigned char	*sjisep, *toep;		/* end of buffers		*/
  	int32					uncvtlen;
 	unsigned char *uncvtbuf = INTL_GetCCCUncvtbuf(obj);
-#ifdef FEATURE_KATAKANA
- 	unsigned char outbuf[2];					/* for half-width kana */
+#if defined(MOZ_MAIL_NEWS)
+  	unsigned char kanabuf[2];					/* for half-width kana */
  	uint32	byteused;							/* for half-width kana */
 #endif
 	
@@ -153,18 +153,26 @@ WHILELOOP:
 
  		} else if (*sjisp < 0xE0) {
 										/* SJIS half-width katakana		*/
-#ifdef FEATURE_KATAKANA
- 			if (INTL_GetCCCJismode(obj) != JIS_208_83) {
- 				Ins208_83_ESC(tobufp, obj);
- 			}
-			INTL_SjisHalf2FullKana(sjisp, (uint32)sjisep - (uint32)sjisp + 1, outbuf, &byteused);
-														/* SJIS Katakana is 0x8340-0x8396 */
- 			*tobufp++ = ((outbuf[0] - 0x70) << 1) - 1;	/* assign 1st byte */
-			if (outbuf[1] > 0x7F)										
-				*tobufp++ = outbuf[1] - 0x20;
-			else							
-				*tobufp++ = outbuf[1] - 0x1F;
-			sjisp += byteused;
+#if defined(MOZ_MAIL_NEWS)
+			if (!INTL_GetCCCCvtflag_SendHankakuKana(obj)) {
+ 				if (INTL_GetCCCJismode(obj) != JIS_208_83) {
+ 					Ins208_83_ESC(tobufp, obj);
+ 				}
+				INTL_SjisHalf2FullKana(sjisp, (uint32)sjisep - (uint32)sjisp + 1, kanabuf, &byteused);
+															/* SJIS Katakana is 0x8340-0x8396 */
+ 				*tobufp++ = ((kanabuf[0] - 0x70) << 1) - 1;	/* assign 1st byte */
+				if (kanabuf[1] > 0x7F)										
+					*tobufp++ = kanabuf[1] - 0x20;
+				else							
+					*tobufp++ = kanabuf[1] - 0x1F;
+				sjisp += byteused;
+			} else {
+	 			if (INTL_GetCCCJismode(obj) != JIS_HalfKana) {
+	 				InsHalfKana_ESC(tobufp, obj);
+	 			}
+	 			*tobufp++ = *sjisp & 0x7F;
+				sjisp++;
+ 	 		}
 #else
  			if (INTL_GetCCCJismode(obj) != JIS_HalfKana) {
  				InsHalfKana_ESC(tobufp, obj);

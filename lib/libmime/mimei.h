@@ -85,6 +85,8 @@
       |     |     |     |--- MimeInlineTextEnriched
       |     |	  |
       |     |	  |--- MimeInlineTextVCard
+      |     |	  |
+      |     |	  |--- MimeInlineTextCalendar
       |     |
       |     |--- MimeInlineImage
       |     |
@@ -231,6 +233,7 @@ typedef struct MimeObjectClass MimeObjectClass;
 # define mimeInlineTextRichtext	  mimeInlineTextRichtext16
 # define mimeInlineTextEnriched	  mimeInlineTextEnriched16
 # define mimeInlineTextVCard	  mimeInlineTextVCard16
+# define mimeInlineTextCalendar	  mimeInlineTextCalendar16
 # define mimeInlineImage		  mimeInlineImage16
 # define mimeExternalObject		  mimeExternalObject16
 # define mimeExternalBody		  mimeExternalBody16
@@ -291,11 +294,22 @@ extern XP_Bool mime_typep(MimeObject *obj, MimeObjectClass *class);
  */
 extern char *mime_part_address(MimeObject *obj);
 
+/* Returns a string describing the location of the *IMAP* part (like "2.5.3").
+   This is not a full URL, just a part-number.
+   This part is explicitly passed in the X-Mozilla-IMAP-Part header.
+   Return value must be freed by the caller.
+ */
+extern char *mime_imap_part_address(MimeObject *obj);
+
 /* Puts a part-number into a URL.  If append_p is true, then the part number
    is appended to any existing part-number already in that URL; otherwise,
    it replaces it.
  */
 extern char *mime_set_url_part(const char *url, char *part, XP_Bool append_p);
+
+/* Puts an *IMAP* part-number into a URL.
+ */
+extern char *mime_set_url_imap_part(const char *url, char *part, char *libmimepart);
 
 
 /* Given a part ID, looks through the MimeObject tree for a sub-part whose ID
@@ -436,7 +450,16 @@ extern int MK_OUT_OF_MEMORY;
    half-thought-out, and so on.  But the current "attachment panel" needs to be
    destroyed, and this is the only hope. */
 #define JS_ATTACHMENT_MUMBO_JUMBO
+
+extern XP_Bool MimeObjectChildIsMessageBody(MimeObject *obj,
+											XP_Bool *isAlterOrRelated);
+
 #endif /* MOZILLA_30 */
+
+/* Sends some mail, without user interaction. */
+extern int
+MimeSendMessage(MimeDisplayOptions* options, char* to, char* subject,
+				char* otherheaders, char* body);
 
 
 /* #### These ought to be in libxp or nspr, not libmsg...

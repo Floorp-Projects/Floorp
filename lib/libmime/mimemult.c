@@ -21,6 +21,7 @@
  */
 
 #include "mimemult.h"
+#include "mime.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMultipart, MimeMultipartClass,
@@ -85,7 +86,7 @@ MimeMultipart_initialize (MimeObject *object)
 
   ct = MimeHeaders_get (object->headers, HEADER_CONTENT_TYPE, FALSE, FALSE);
   mult->boundary = (ct
-					? MimeHeaders_get_parameter (ct, HEADER_PARM_BOUNDARY)
+					? MimeHeaders_get_parameter (ct, HEADER_PARM_BOUNDARY, NULL, NULL)
 					: 0);
   FREEIF(ct);
   mult->state = MimeMultipartPreamble;
@@ -321,10 +322,23 @@ MimeMultipart_create_child(MimeObject *obj)
 					->output_child_p(obj, body));
   if (body->output_p)
 	{
+#ifdef JS_ATTACHMENT_MUMBO_JUMBO
+	  int attachment_count = 0;
+	  XP_Bool isMsgBody = FALSE, isAlternativeOrRelated = FALSE;
+#endif
 	  status = body->class->parse_begin(body);
 	  if (status < 0) return status;
 #ifdef JS_ATTACHMENT_MUMBO_JUMBO
-	  if (cont->nchildren > 1 &&
+	  isMsgBody = MimeObjectChildIsMessageBody
+		                        (obj, &isAlternativeOrRelated); 
+	  if (isAlternativeOrRelated)
+		  attachment_count = 0;
+	  else if (isMsgBody)
+		  attachment_count = cont->nchildren - 1;
+	  else
+		  attachment_count = cont->nchildren;
+
+	  if (attachment_count &&
 		  obj->options && !obj->options->nice_html_only_p &&
 		  obj->options->attachment_icon_layer_id) {
 		/* This is not the first child, so it's an attachment.  Cause the
@@ -344,6 +358,12 @@ MimeMultipart_create_child(MimeObject *obj)
 		  else if (XP_STRSTR(body->content_type, "text/html"))
 			  showIcon = FALSE;
 		  else if (XP_STRSTR(body->content_type, "message/rfc822"))
+			  showIcon = FALSE;
+		  else if (XP_STRSTR(body->content_type, "multipart/signed"))
+			  showIcon = FALSE;
+		  else if (XP_STRSTR(body->content_type, "application/x-pkcs7-signature"))
+			  showIcon = FALSE;
+		  else if (XP_STRSTR(body->content_type, "multipart/mixed"))
 			  showIcon = FALSE;
 
 		  if (showIcon)

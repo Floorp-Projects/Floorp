@@ -24,6 +24,8 @@
 #include "CSharedPatternWorld.h"
 #include "CTargetedUpdateMenuRegistry.h"
 
+#include "PascalString.h"
+
 // This class overrides CPatternButtonPopup to provide a popup menu which
 // changes the descriptor based on the menu selection
 // assumes left-justified text in DrawButtonTitle()
@@ -141,7 +143,11 @@ CPatternButtonPopupText::DrawButtonTitle(void)
 	if (IsTrackInside())
 		::RGBForeColor(&UGAColorRamp::GetWhiteColor());
 
-	UGraphicGizmos::PlaceStringInRect(mTitle, mCachedTitleFrame, teFlushLeft, teCenter);
+	CStr255			truncTitle(mTitle);
+	
+	::TruncString( mFrameSize.width - (gsPopup_ArrowButtonWidth + 5), truncTitle, smTruncEnd);
+	
+	UGraphicGizmos::PlaceStringInRect(truncTitle, mCachedTitleFrame, teFlushLeft, teCenter);
 	
 	DrawPopupArrow();
 }

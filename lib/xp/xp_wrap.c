@@ -57,10 +57,18 @@ do \
 	*out++ = b; \
 } while (0)
 
+#undef OUTPUTSTR
+#define OUTPUTSTR(s) \
+do \
+{ \
+	const char *p = s; \
+    while(*p) {OUTPUT(*p); p++;} \
+} while (0)
+ 
 
 #undef OUTPUT_MACHINE_NEW_LINE
 #if defined(XP_WIN) || defined(XP_OS2)
-#define OUTPUT_MACHINE_NEW_LINE() \
+#define OUTPUT_MACHINE_NEW_LINE(c) \
 do \
 { \
 	OUTPUT(CR); \
@@ -68,18 +76,28 @@ do \
 } while (0)
 #else
 #ifdef XP_MAC
-#define OUTPUT_MACHINE_NEW_LINE() OUTPUT(CR)
+#define OUTPUT_MACHINE_NEW_LINE(c) \
+do \
+{ \
+	OUTPUT(CR); \
+	if (c) OUTPUT(LF); \
+} while (0)
 #else
-#define OUTPUT_MACHINE_NEW_LINE() OUTPUT(LF)
+#define OUTPUT_MACHINE_NEW_LINE(c) \
+do \
+{ \
+	if (c) OUTPUT(CR); \
+	OUTPUT(LF); \
+} while (0)
 #endif
 #endif
 
 
 #undef OUTPUT_NEW_LINE
-#define OUTPUT_NEW_LINE() \
+#define OUTPUT_NEW_LINE(c) \
 do \
 { \
-	OUTPUT_MACHINE_NEW_LINE(); \
+	OUTPUT_MACHINE_NEW_LINE(c); \
 	beginningOfLine = in; \
 	currentColumn = 0; \
 	lastBreakablePos = NULL; \
@@ -87,7 +105,7 @@ do \
 
 
 #undef NEW_LINE
-#define NEW_LINE() \
+#define NEW_LINE(c) \
 do \
 { \
 	if ((*in == CR) && (*(in + 1) == LF)) \
@@ -98,12 +116,13 @@ do \
 	{ \
 		in++; \
 	} \
-	OUTPUT_NEW_LINE(); \
+	OUTPUT_NEW_LINE(c); \
 } while (0)
 
 
-unsigned char *
-XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
+static unsigned char *
+xp_word_wrap(int charset, unsigned char *str, int maxColumn, int checkQuoting,
+			const char *prefix, int addCRLF)
 {
 	unsigned char	*beginningOfLine;
 	int		byteWidth;
@@ -146,7 +165,8 @@ XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
 			}
 			if (*in)
 			{
-				NEW_LINE();
+				NEW_LINE(addCRLF);
+				if (prefix) OUTPUTSTR(prefix);
 			}
 			else
 			{
@@ -169,7 +189,8 @@ XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
 						OUTPUT(*p++);
 					}
 				}
-				NEW_LINE();
+				NEW_LINE(addCRLF);
+				if (prefix) OUTPUTSTR(prefix);
 				continue;
 			}
 			byteWidth = INTL_CharLen(charset, in);
@@ -189,38 +210,43 @@ XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
 					{
 						OUTPUT(*p++);
 					}
+					if (addCRLF && (*end == ' ' || *end == '\t'))
+					{
+						OUTPUT(*end);
+					}
 					in = lastBreakablePos;
-					OUTPUT_NEW_LINE();
+					OUTPUT_NEW_LINE(addCRLF);
+					if (prefix) OUTPUTSTR(prefix);
 					continue;
 				}
 			}
 			if
 			(
-			  (
-			    ((in[0] == ' ') || (in[0] == '\t')) &&
-			    ((in[1] != ' ') && (in[1] != '\t'))
-			  ) ||
-			  (
-			    (INTL_CharSetType(charset) == MULTIBYTE) &&
-			    (
-			      ((!(in[0] & 0x80)) && (in[1] & 0x80)) ||
-			      (
-				(in[0] & 0x80) &&
-				(INTL_KinsokuClass(charset, in) !=
-					PROHIBIT_END_OF_LINE) &&
-				(!(in[byteWidth] & 0x80))
-			      ) ||
-			      (
-				(in[0] & 0x80) &&
-				(INTL_KinsokuClass(charset, in) !=
-					PROHIBIT_END_OF_LINE) &&
-				(in[byteWidth] & 0x80) &&
-				(INTL_KinsokuClass(charset, &in[byteWidth]) !=
-					PROHIBIT_BEGIN_OF_LINE)
-			      )
-			    )
-			  )
-			)
+				(
+					((in[0] == ' ') || (in[0] == '\t')) &&
+					((in[1] != ' ') && (in[1] != '\t'))
+					) ||
+				(
+					(INTL_CharSetType(charset) == MULTIBYTE) &&
+					(
+						((!(in[0] & 0x80)) && (in[1] & 0x80)) ||
+						(
+							(in[0] & 0x80) &&
+							(INTL_KinsokuClass((int16)charset, in) !=
+							 PROHIBIT_END_OF_LINE) &&
+							(!(in[byteWidth] & 0x80))
+							) ||
+						(
+							(in[0] & 0x80) &&
+							(INTL_KinsokuClass((int16)charset, in) !=
+							 PROHIBIT_END_OF_LINE) &&
+							(in[byteWidth] & 0x80) &&
+							(INTL_KinsokuClass((int16)charset, &in[byteWidth]) !=
+							 PROHIBIT_BEGIN_OF_LINE)
+							)
+						)
+					)
+				)
 			{
 				lastBreakablePos = in + byteWidth;
 			}
@@ -243,6 +269,18 @@ XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
 	return ret;
 }
 
+unsigned char *
+XP_WordWrap(int charset, unsigned char *str, int maxColumn, int checkQuoting)
+{
+	return xp_word_wrap(charset, str, maxColumn, checkQuoting, NULL, 0);
+}
+
+unsigned char *
+XP_WordWrapWithPrefix(int charset, unsigned char *str, int maxColumn,
+					  int checkQuoting, const char *prefix, int addCRLF)
+{
+	return xp_word_wrap(charset, str, maxColumn, checkQuoting, prefix, addCRLF);
+}
 
 #else /* XP_WORD_WRAP_NEW_CODE */
 

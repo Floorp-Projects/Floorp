@@ -303,6 +303,31 @@ int16	      FE_WinCSID(iDocumentContext );
 int16 *intl_GetFontCharSets(void);
 
 
+/** 
+ * Access a conversion flag for hankaku->zenkaku kana conversion for mail. 
+ * 
+ * The conversion flag for JIS, set if converting hankaku (1byte) kana to zenkaku (2byte).
+ * The flag is needed in order to control the conversion. Kana conversion should be applied
+ * only when sending a mail and converters do not know if they are called for mail sending.
+ * 
+ * @param obj          Character code converter. 
+ * @return TRUE if convert to zenkaku (2byte). 
+ * @see INTL_SetCCCCvtflag_SendHankakuKana  
+ */ 
+MODULE_PRIVATE XP_Bool INTL_GetCCCCvtflag_SendHankakuKana(CCCDataObject obj);
+/** 
+ * Access a conversion flag for hankaku->zenkaku kana conversion for mail. 
+ * 
+ * The conversion flag for JIS, set if converting hankaku (1byte) kana to zenkaku (2byte).
+ * The flag is needed in order to control the conversion. Kana conversion should be applied
+ * only when sending a mail and converters do not know if they are called for mail sending.
+ * 
+ * @param obj          Character code converter. 
+ * @see INTL_GetCCCCvtflag_SendHankakuKana  
+ */ 
+MODULE_PRIVATE void INTL_SetCCCCvtflag_SendHankakuKana(CCCDataObject obj, XP_Bool flag);
+
+
 XP_END_PROTOS
 
 

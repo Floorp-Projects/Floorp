@@ -21,6 +21,7 @@
 #include "xp.h"
 #include "intl_csi.h"
 #include "libi18n.h"
+#include "katakana.h"
 
 int16  PeekMetaCharsetTag (char *, uint32);
 
@@ -277,6 +278,9 @@ INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned
 {
       CCCDataObject selfObj;
       int16 p_doc_csid = CS_DEFAULT;
+#if defined(MOZ_MAIL_NEWS)
+	  int16 mail_news_csid;
+#endif
 	  CCCFunc cvtfunc;
 	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
 
@@ -368,6 +372,10 @@ INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned
 				 }
 			  }
       }
+#if defined(MOZ_MAIL_NEWS)
+      mail_news_csid = (intl_message_to_newsgroup ? INTL_DefaultNewsCharSetID(p_doc_csid) :
+                                        INTL_DefaultMailCharSetID(p_doc_csid));
+#endif
       /* Now, we get the converter */
       (void) INTL_GetCharCodeConverter(p_doc_csid, 
 #ifdef MOZ_MAIL_NEWS
@@ -378,6 +386,17 @@ INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned
                                         INTL_DefaultMailCharSetID(p_doc_csid), 
 #endif /* MOZ_MAIL_NEWS */
                                        selfObj);
+#if defined(MOZ_MAIL_NEWS)
+      /* If we sending JIS then listen the pref setting and decide if we convert 
+       * hankaku (1byte) to zenkaku (2byte) kana. The flag to be checked in 
+       * euc2jis and sjis2jis.
+       */
+      if (CS_JIS == mail_news_csid && INTL_GetSendHankakuKana())
+      {
+          INTL_SetCCCCvtflag_SendHankakuKana(selfObj, TRUE);
+      }
+#endif
+      
       /* If the cvtfunc == NULL, we don't need to do conversion */
 	  cvtfunc = INTL_GetCCCCvtfunc(selfObj);
       if(! (cvtfunc) )

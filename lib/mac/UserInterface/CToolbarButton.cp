@@ -17,6 +17,7 @@
  */
 
 #include "CToolbarButton.h"
+#include "CToolbarModeManager.h"
 #include "UGraphicGizmos.h"
 
 // "Magic" constants
@@ -26,7 +27,7 @@ const Int16 cTextOnlyHeight = 21;
 
 CToolbarButton::CToolbarButton(LStream* inStream)
 	:	CButton(inStream),
-		mCurrentMode(defaultMode),
+		mCurrentMode(CToolbarModeManager::defaultToolbarMode),
 		mOriginalWidth(0),
 		mOriginalHeight(0)
 {
@@ -60,10 +61,10 @@ void CToolbarButton::DrawSelf()
 
 	DrawButtonContent();
 
-	if (mCurrentMode != eMode_IconsOnly && mTitle.Length() > 0)
+	if (mCurrentMode != eTOOLBAR_ICONS && mTitle.Length() > 0)
 		DrawButtonTitle();
 
-	if (mCurrentMode != eMode_TextOnly && GetGraphicID() != 0)
+	if (mCurrentMode != eTOOLBAR_TEXT && GetGraphicID() != 0)
 		DrawButtonGraphic();
 			
 	if (!IsEnabled() || !IsActive())
@@ -88,17 +89,17 @@ Boolean CToolbarButton::ChangeMode(Int8 inNewMode, SDimension16& outDimensionDel
 
 	switch (inNewMode)
 	{
-		case eMode_IconsOnly:
+		case eTOOLBAR_ICONS:
 			outDimensionDeltas.width = cIconOnlyWidth - oldDimensions.width;
 			outDimensionDeltas.height = cIconOnlyHeight - oldDimensions.height;
 			break;
 		
-		case eMode_TextOnly:
+		case eTOOLBAR_TEXT:
 			outDimensionDeltas.width = mOriginalWidth - oldDimensions.width;
 			outDimensionDeltas.height = cTextOnlyHeight - oldDimensions.height;
 			break;
 		
-		case eMode_IconsAndText:
+		case eTOOLBAR_TEXT_AND_ICONS:
 			outDimensionDeltas.width = mOriginalWidth - oldDimensions.width;
 			outDimensionDeltas.height = mOriginalHeight - oldDimensions.height;
 			break;
@@ -114,7 +115,7 @@ Boolean CToolbarButton::ChangeMode(Int8 inNewMode, SDimension16& outDimensionDel
 
 void CToolbarButton::DrawButtonTitle(void)
 {
-	if (mCurrentMode == eMode_TextOnly && (!IsActive() || !IsEnabled()))
+	if (mCurrentMode == eTOOLBAR_TEXT && (!IsActive() || !IsEnabled()))
 		::TextMode(grayishTextOr);  // this is so light you cant see it.
 
 	CButton::DrawButtonTitle();
@@ -148,7 +149,7 @@ void CToolbarButton::CalcTitleFrame(void)
 	mCachedTitleFrame.right = mCachedTitleFrame.left + ::StringWidth(mTitle);;
 	mCachedTitleFrame.bottom = mCachedTitleFrame.top + theInfo.ascent + theInfo.descent + theInfo.leading;;
 
-	if (mCurrentMode != eMode_TextOnly)
+	if (mCurrentMode != eTOOLBAR_TEXT)
 	{
 		UGraphicGizmos::AlignRectOnRect(mCachedTitleFrame, mCachedButtonFrame, mTitleAlignment);
 		UGraphicGizmos::PadAlignedRect(mCachedTitleFrame, mTitlePadPixels, mTitleAlignment);

@@ -110,6 +110,8 @@ NET_MimeMakePartialEncodingConverterStream (int          format_out,
 
 extern int MIME_HasAttachments(MWContext *context);
 
+#define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
+
 XP_END_PROTOS
 
 #endif /* mime.h */

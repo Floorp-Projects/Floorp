@@ -24,6 +24,7 @@
 #ifdef EDITOR
 
 #include "editor.h"
+#include "rosetta.h"
 
 typedef struct PA_AmpEsc_struct {
         char *str;
@@ -5547,7 +5548,7 @@ char * EDT_GetDefaultPublishURL(MWContext * pMWContext, char **ppFilename, char 
         }
 
         if( pPassword && *pPassword ){
-            *ppPassword = SECNAV_UnMungeString(pPassword);
+            *ppPassword = HG99879(pPassword);
             XP_FREE(pPassword);
         }
     }
@@ -5596,7 +5597,7 @@ EDT_GetPublishingHistory(unsigned n,
 		XP_SPRINTF(prefname, "editor.publish_password_%d", n);
 
 		if (PREF_CopyCharPref(prefname, &prefvalue) != -1 && prefvalue && *prefvalue) {
-			*password_r = SECNAV_UnMungeString(prefvalue);
+			*password_r = HG99879(prefvalue);
 		} else {
 			*password_r = NULL;
 		}

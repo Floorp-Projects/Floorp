@@ -49,7 +49,7 @@ CPatternTabControl::~CPatternTabControl()
 //-----------------------------------
 void CPatternTabControl::DrawOneTabBackground(
 	RgnHandle inRegion,
-	Boolean inCurrentTab)
+	Boolean /* inCurrentTab */)
 //-----------------------------------
 {
 	Point theAlignment;
@@ -60,7 +60,7 @@ void CPatternTabControl::DrawOneTabBackground(
 } // CPatternTabControl::DrawOneTabBackground
 
 //-----------------------------------
-void CPatternTabControl::DrawOneTabFrame(RgnHandle inRegion, Boolean inCurrentTab)
+void CPatternTabControl::DrawOneTabFrame(RgnHandle inRegion, Boolean /* inCurrentTab */)
 //-----------------------------------
 {
 	::FrameRgn(inRegion);

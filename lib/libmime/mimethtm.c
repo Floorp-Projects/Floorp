@@ -61,6 +61,13 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 	  char *base_hdr = MimeHeaders_get (obj->headers, HEADER_CONTENT_BASE,
 										FALSE, FALSE);
 
+    /* rhp - for MHTML Spec changes!!! */
+    if (!base_hdr)
+    {
+      base_hdr = MimeHeaders_get (obj->headers, "Content-Location", FALSE, FALSE);
+    }
+    /* rhp - for MHTML Spec changes!!! */
+
       /* Encapsulate the entire text/html part inside an in-flow
          layer.  This will provide it a private coordinate system and
          prevent it from escaping the bounds of its clipping so that

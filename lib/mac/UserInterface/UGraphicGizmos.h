@@ -193,14 +193,16 @@ class UGraphicGizmos
 								RGBColor		&outLightTinge,
 								RGBColor		&outDarkTinge);
 								
-		static RGBColor FindInColorTable(
-								CTabHandle 	inColorTable,
-								Int16 			inColorID);
+		static void		FindInColorTable(
+								CTabHandle 		inColorTable,
+								Int16 			inColorID,
+								RGBColor&		outColor);
 		
-		static RGBColor MixColor(
+		static void		MixColor(
 								const RGBColor& inLightColor,
 								const RGBColor&	inDarkColor,
-								Int16 inShade);
+								Int16 			inShade,
+								RGBColor&		outColor);
 	
 		static void		DrawArithPattern(
 								const Rect& 		inFrame,

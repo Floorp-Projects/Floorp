@@ -111,7 +111,7 @@ void CPaneEnabler::UpdatePanes()
 } // CPaneEnabler::UpdatePanes
 
 //-----------------------------------
-void CPaneEnabler::ExecuteSelf(MessageT inMessage, void*)
+void CPaneEnabler::ExecuteSelf(MessageT /* inMessage */, void*)
 //-----------------------------------
 {
 	MPaneEnablerPolicy*	thePolicy	= dynamic_cast<MPaneEnablerPolicy*>(mPane);

@@ -143,6 +143,16 @@ LTableRowSelector::DoSelect(	const TableIndexT 	inRow,
 	if (inRow < 1 || inRow > GetCount())
 		return;
 	
+	// Make sure for a single selector only 1 row is selected
+	if ( inSelect && !mAllowMultiple )
+	{
+		if ( mSelectedRowCount > 0 )
+		{
+			DoSelectAll(false, false);
+			mSelectedRowCount = 0; // to be safe
+		}
+	}
+	
 	char oldRowValue;
 	FetchItemAt(inRow, &oldRowValue);
 	char newRowValue = (inSelect) ? 1 : 0;		
@@ -211,7 +221,7 @@ LTableRowSelector::DoSelectAll(Boolean inSelect, Boolean inNotify)
 	UInt32 nCols, nRows;
 	mTableView->GetTableSize(nRows, nCols);
 
-	if (nRows) // Prevents bug: DoSelectRange won't check!
+	if (nRows > 0) // Prevents bug: DoSelectRange won't check!
 		DoSelectRange(1, nRows, inSelect, inNotify);
 	else
 	{
@@ -462,3 +472,68 @@ LTableRowSelector::RemoveRows(	Uint32		inHowMany,
 	if (selectionChanged)
 		mTableView->SelectionChanged();
 }								
+
+void
+LTableRowSelector::MakeSelectionRegion(RgnHandle ioRgnHandle, TableIndexT hiliteColumn)
+{
+	Assert_(ioRgnHandle);
+	
+	::SetEmptyRgn(ioRgnHandle);
+	
+	Boolean			inSelection = false;
+	TableIndexT		selectionStart;
+	TableIndexT 	nRows = GetCount();
+	
+	StRegion		tempRgn;
+	
+	for (TableIndexT row = 1; row <= nRows; row ++)
+	{
+		Boolean		rowSelected;
+		
+		FetchItemAt(row, &rowSelected);
+		
+		// I'm trying to reduce the number of region operations here
+		if (rowSelected && !inSelection)		// start of selection group
+		{
+			selectionStart = row;
+			inSelection = true;
+		
+		} else if (!rowSelected && inSelection)	// end of selection group
+		{
+			Rect	selectRect = {selectionStart, hiliteColumn, row, hiliteColumn + 1};
+			
+			::RectRgn(tempRgn, &selectRect);
+			::UnionRgn(tempRgn, ioRgnHandle, ioRgnHandle);
+			inSelection = false;
+		}
+	}
+	// do the last group if necessary
+	if (inSelection)
+	{
+		Rect	selectRect = {selectionStart, hiliteColumn, nRows + 1, hiliteColumn + 1};
+			
+		::RectRgn(tempRgn, &selectRect);
+		::UnionRgn(tempRgn, ioRgnHandle, ioRgnHandle);
+	}
+}
+
+
+void
+LTableRowSelector::SetSelectionFromRegion(RgnHandle inRgnHandle)
+{
+	Assert_(inRgnHandle);
+
+	TableIndexT 	nRows = GetCount();
+	
+	UnselectAllCells();
+	
+	STableCell		theCell(1, 1);
+	
+	for (theCell.row = 1; theCell.row <= nRows; theCell.row ++)
+	{
+		Point	thePoint = { /* cast */theCell.row, 1};		//v, h
+		
+		if ( ::PtInRgn(thePoint, inRgnHandle) )
+			DoSelect(theCell.row, true, true, true);
+	}
+}

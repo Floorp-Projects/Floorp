@@ -67,7 +67,7 @@ class CTabControl : public LControl
 										Boolean			inRefresh);
 										
 		virtual void			DoLoadTabs(ResIDT inTabDescResID);
-		
+		virtual void			SetTabEnable(ResIDT inPageResID, Boolean inEnable);
 		
 	protected:
 
@@ -151,6 +151,7 @@ class CTabInstance
 		Rect					mShadeFrame;
 		Int16					mWidth;
 		TString<Str63> 			mTitle;	
+		Boolean					mEnabled;
 };
 
 class CTextTabInstance: public CTabInstance

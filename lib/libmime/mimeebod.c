@@ -155,7 +155,11 @@ MimeExternalBody_make_url(const char *ct,
 						  const char *svr, const char *subj, const char *body)
 {
   char *s;
-  if (!strcasecomp(at, "ftp") || !strcasecomp(at, "anon-ftp"))
+  if (!at)
+    {
+	  return 0;
+    }
+  else if (!strcasecomp(at, "ftp") || !strcasecomp(at, "anon-ftp"))
 	{
 	  if (!site || !name)
 		return 0;
@@ -281,17 +285,17 @@ MimeExternalBody_parse_eof (MimeObject *obj, XP_Bool abort_p)
 
 	  if (!ct) return MK_OUT_OF_MEMORY;
 
-	  at   = MimeHeaders_get_parameter(ct, "access-type");
-	  exp  = MimeHeaders_get_parameter(ct, "expiration");
-	  size = MimeHeaders_get_parameter(ct, "size");
-	  perm = MimeHeaders_get_parameter(ct, "permission");
-	  dir  = MimeHeaders_get_parameter(ct, "directory");
-	  mode = MimeHeaders_get_parameter(ct, "mode");
-	  name = MimeHeaders_get_parameter(ct, "name");
-	  site = MimeHeaders_get_parameter(ct, "site");
-	  svr  = MimeHeaders_get_parameter(ct, "server");
-	  subj = MimeHeaders_get_parameter(ct, "subject");
-	  url  = MimeHeaders_get_parameter(ct, "url");
+	  at   = MimeHeaders_get_parameter(ct, "access-type", NULL, NULL);
+	  exp  = MimeHeaders_get_parameter(ct, "expiration", NULL, NULL);
+	  size = MimeHeaders_get_parameter(ct, "size", NULL, NULL);
+	  perm = MimeHeaders_get_parameter(ct, "permission", NULL, NULL);
+	  dir  = MimeHeaders_get_parameter(ct, "directory", NULL, NULL);
+	  mode = MimeHeaders_get_parameter(ct, "mode", NULL, NULL);
+	  name = MimeHeaders_get_parameter(ct, "name", NULL, NULL);
+	  site = MimeHeaders_get_parameter(ct, "site", NULL, NULL);
+	  svr  = MimeHeaders_get_parameter(ct, "server", NULL, NULL);
+	  subj = MimeHeaders_get_parameter(ct, "subject", NULL, NULL);
+	  url  = MimeHeaders_get_parameter(ct, "url", NULL, NULL);
 	  FREEIF(ct);
 
 	  /* the *internal* content-type */
@@ -498,7 +502,7 @@ MimeExternalBody_displayable_inline_p (MimeObjectClass *class,
 									   MimeHeaders *hdrs)
 {
   char *ct = MimeHeaders_get (hdrs, HEADER_CONTENT_TYPE, FALSE, FALSE);
-  char *at = MimeHeaders_get_parameter(ct, "access-type");
+  char *at = MimeHeaders_get_parameter(ct, "access-type", NULL, NULL);
   XP_Bool inline_p = FALSE;
 
   if (!at)

@@ -447,6 +447,14 @@ extern void XP_UpdateParentContext(MWContext * context);
 extern int XP_GetSecurityStatus(MWContext *pContext);
 extern int XP_ContextCount(MWContextType cxType, XP_Bool bTopLevel);
 
+extern char *XP_PromptPassword(MWContext *pContext, const char *pMessage);
+extern char *XP_Prompt(MWContext *pContext, const char *pMessage, const char * pDef);
+extern PRBool XP_PromptUsernameAndPassword (MWContext * window_id,
+					  const char *  message,
+					  char **       username,
+					  char **       password);
+extern PRBool XP_Confirm( MWContext * c, const char * msg);
+
 XP_END_PROTOS
 
 # endif /* _PROTO_H_ */

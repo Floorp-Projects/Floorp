@@ -1205,7 +1205,7 @@ Boolean UGraphicGizmos::GetTingeColorsFromColorTable (
 //	¥	FindInColorTable
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-RGBColor UGraphicGizmos::FindInColorTable(CTabHandle inColorTable, Int16 inColorID)
+void UGraphicGizmos::FindInColorTable(CTabHandle inColorTable, Int16 inColorID, RGBColor &outColor)
 {
 	RGBColor theFoundColor = { 0, 0, 0 };
 	
@@ -1218,17 +1218,18 @@ RGBColor UGraphicGizmos::FindInColorTable(CTabHandle inColorTable, Int16 inColor
 			}
 		}
 	
-	return theFoundColor;
+	outColor = theFoundColor;
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	MixColor
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-RGBColor UGraphicGizmos::MixColor(
+void UGraphicGizmos::MixColor(
 	const RGBColor& inLightColor,
 	const RGBColor&	inDarkColor,
-	Int16 inShade)
+	Int16 			inShade,
+	RGBColor&		outColor)
 {
 	RGBColor theMixedColor;
 	
@@ -1241,7 +1242,7 @@ RGBColor UGraphicGizmos::MixColor(
 	theMixedColor.green = (Int32) (inLightColor.green - inDarkColor.green) * inShade / 15 + inDarkColor.green;
 	theMixedColor.blue  = (Int32) (inLightColor.blue  - inDarkColor.blue)  * inShade / 15 + inDarkColor.blue;
 
-	return theMixedColor;
+	outColor = theMixedColor;
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ

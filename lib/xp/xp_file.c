@@ -130,6 +130,7 @@ XP_File XP_FileOpen( const char* name, XP_FileType type,
 
 
 	case xpProxyConfig:
+	case xpJSConfig:
 	case xpSocksConfig:
 	case xpNewsRC:
 	case xpSNewsRC:
@@ -696,6 +697,12 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		name = buf;
 		break;
 	  }
+	case xpJSConfig:
+	  {
+		sprintf(buf, "%.900s/failover.jsc", conf_dir);
+		name = buf;
+		break;
+	  }
 	case xpTemporary:
 	  {
 		if (*name != '/')
@@ -836,6 +843,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 	case xpMimeTypes:
 	case xpSocksConfig:
 	case xpMailFolder:
+    case xpUserPrefs:
 #ifdef BSDI
 	    /* In bsdi, mkdir fails if the directory name is terminated
 	     * with a '/'. - dp
@@ -1020,9 +1028,13 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 	case xpNewsSort:
 		sprintf(buf, "%.800s/xover-cache/%.128snetscape-newsrule", conf_dir, name);
 		break;
+
 	case xpMailSort:
 #ifndef OLD_UNIX_FILES
-	  sprintf(buf, "%.900s/mailrule", conf_dir);
+		if (name && strlen(name) > 0) 
+			sprintf(buf, "%.900s/imap/%s/mailrule", conf_dir, name);
+		else
+			sprintf(buf, "%.900s/mailrule", conf_dir);
 #else  /* OLD_UNIX_FILES */
 	  sprintf(buf, "%.900s/.netscape-mailrule", conf_dir);
 #endif /* OLD_UNIX_FILES */
@@ -1530,12 +1542,15 @@ int XP_MakeDirectoryR(const char* name, XP_FileType type)
 {
 	char separator;
 	int result = 0;
+    int skipfirst;
 	char * finalName;
 	
-#if defined(XP_WIN) || defined(XP_OS2)
+#ifdef XP_WIN
 	separator = '\\';
+    skipfirst = 3;
 #elif defined XP_UNIX
 	separator = '/';
+    skipfirst = 1;
 #endif
 	finalName = WH_FileName(name, type);
 	if ( finalName )
@@ -1544,17 +1559,24 @@ int XP_MakeDirectoryR(const char* name, XP_FileType type)
 		char * currentEnd;
 		int err = 0;
 		XP_StatStruct s;
-		dirPath = XP_STRDUP( finalName );
-		if (dirPath == NULL)
-			return -1;
+        dirPath = XP_STRDUP( finalName ); /* XXX: why?! */
+        if (dirPath == NULL) 
+        {
+            XP_FREE( finalName );
+            return -1;
+        }
 
-		currentEnd = XP_STRCHR(dirPath, separator);
+#ifdef XP_WIN
+        /* WH_FileName() must return a drive letter else skipfirst is bogus */
+        XP_ASSERT( dirPath[1] == ':' );
+#endif
+        currentEnd = XP_STRCHR(dirPath + skipfirst, separator);
 		/* Loop through every part of the directory path */
 		while (currentEnd != 0)
 		{
 			char savedChar;
-			savedChar = currentEnd[1];
-			currentEnd[1] = 0;
+			savedChar = currentEnd[0];
+			currentEnd[0] = 0;
 			if ( XP_Stat(dirPath, &s, xpURL ) != 0)
 				err = XP_MakeDirectory(dirPath, xpURL);
 			if ( err != 0)
@@ -1562,7 +1584,7 @@ int XP_MakeDirectoryR(const char* name, XP_FileType type)
 				XP_ASSERT( FALSE );	/* Could not create the directory? */
 				break;
 			}
-			currentEnd[1] = savedChar;
+			currentEnd[0] = savedChar;
 			currentEnd = XP_STRCHR( &currentEnd[1], separator);
 		}
 		if ( err == 0 )

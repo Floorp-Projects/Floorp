@@ -69,7 +69,8 @@ include $(DEPTH)/config/rules.mk
 DEFINES		+= -DDLL_SUFFIX=\"$(DLL_SUFFIX)\"
 
 EMBED_CFLAGS	= $(CFLAGS) -I$(DEPTH)/lib/plugin
-TAINT_CFLAGS	= $(CFLAGS) -I$(DEPTH)/lib/libjar -I$(DEPTH)/sun-java/netscape/security/_jri
+TAINT_CFLAGS	= $(CFLAGS) -I$(DEPTH)/lib/libjar -I$(DEPTH)/sun-java/netscape/security/_jri \
+		-I$(DEPTH)/dist/public/security
 
 ifneq ($(OS_ARCH),OS2)
 $(OBJDIR)/lm_embed.o: lm_embed.c

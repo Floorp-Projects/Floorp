@@ -57,6 +57,7 @@ CSRCS		= autokr.c \
 		  dblower.c \
 		  kinsokud.c \
 		  kinsokuf.c \
+		  katakana.c \
 		  $(NULL)
 
 REQUIRES	= i18n dbm nspr img util layer pref js

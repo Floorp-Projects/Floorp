@@ -28,7 +28,7 @@ CButtonEnablerReloadStop::CButtonEnablerReloadStop(LStream* inStream)
 	// ta da!
 }
 
-void CButtonEnablerReloadStop::ExecuteSelf(MessageT inMessage, void *ioParam)
+void CButtonEnablerReloadStop::ExecuteSelf(MessageT /* inMessage */, void * /* ioParam */)
 {
 	LControl*	theControl		= dynamic_cast<LControl*>(mPane);
 	LCommander* theTarget		= LCommander::GetTarget();

@@ -17,6 +17,7 @@
  */
 
 #include "xp.h"
+#include "xpgetstr.h"
 #include "libi18n.h"
 #include "xp_time.h"
 #include "msgcom.h"
@@ -28,7 +29,14 @@
 
 extern int MK_UNABLE_TO_OPEN_TMP_FILE;
 extern int MK_MIME_ERROR_WRITING_FILE;
-
+extern int MK_MIMEHTML_DISP_SUBJECT;
+extern int MK_MIMEHTML_DISP_DATE;
+extern int MK_MIMEHTML_DISP_FROM;
+extern int MK_MIMEHTML_DISP_ORGANIZATION;
+extern int MK_MIMEHTML_DISP_TO;
+extern int MK_MIMEHTML_DISP_CC;
+extern int MK_MIMEHTML_DISP_NEWSGROUPS;
+extern int MK_MIMEHTML_DISP_BCC;
 
 int 
 mime_decompose_file_init_fn ( void *stream_closure,
@@ -42,6 +50,9 @@ mime_decompose_file_output_fn ( char *buf,
 
 int
 mime_decompose_file_close_fn ( void *stream_closure );
+
+extern char *
+strip_continuations(char *original);
 
 /* This struct is the state we used in MIME_ToDraftConverter() */
 struct mime_draft_data {
@@ -179,6 +190,76 @@ mime_draft_process_attachments ( struct mime_draft_data *mdd,
 
 }
 
+static void mime_fix_up_html_address( char **addr)
+{
+	/* We need to replace paired <> they are treated as HTML tag */
+	if (addr && *addr && 
+		XP_STRCHR(*addr, '<') && XP_STRCHR(*addr, '>'))
+	{
+		char *lt = NULL;
+		int32 newLen = 0;
+		do 
+		{
+			newLen = XP_STRLEN(*addr) + 3 + 1;
+			*addr = (char *) XP_REALLOC(*addr, newLen);
+			XP_ASSERT (*addr);
+			lt = XP_STRCHR(*addr, '<');
+			XP_ASSERT(lt);
+			XP_MEMCPY(lt+4, lt+1, newLen - 4 - (lt - *addr));
+			*lt++ = '&';
+			*lt++ = 'l';
+			*lt++ = 't';
+			*lt = ';';
+		} while (XP_STRCHR(*addr, '<'));
+	}
+}
+
+static void  mime_intl_mimepart_2_str(char **str, int16 mcsid)
+{
+	if (str && *str)
+	{
+		char *newStr = (char *) IntlDecodeMimePartIIStr
+			(*str, INTL_DocToWinCharSetID(mcsid), FALSE);
+		if (newStr && newStr != *str)
+		{
+			FREEIF(*str);
+			*str = newStr;
+		}
+		else
+		{
+			strip_continuations(*str);
+		}
+	}
+}
+
+static void mime_intl_insert_message_header(char **body, char**hdr_value,
+											char *hdr_str, 
+											int html_hdr_id,
+											int16 mailcsid,
+											XP_Bool htmlEdit)
+{
+	const char *newName = NULL;
+
+	if (!body || !hdr_value || !hdr_str)
+		return;
+	mime_intl_mimepart_2_str(hdr_value, mailcsid);
+	if (htmlEdit)
+		StrAllocCat(*body, LINEBREAK "<BR><B>");
+	else
+		StrAllocCat(*body, LINEBREAK);
+	newName = XP_GetStringForHTML(html_hdr_id, mailcsid, hdr_str);
+	if (!newName)
+		newName = hdr_str;
+	StrAllocCat(*body, newName);
+	if (htmlEdit)
+		StrAllocCat(*body, ":</B> ");
+	else
+		StrAllocCat(*body, ": ");
+	StrAllocCat(*body, *hdr_value);
+}
+
+
+
 static void
 mime_parse_stream_complete (NET_StreamClass *stream)
 {
@@ -241,122 +322,48 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 
   /* time to bring up the compose windows with all the info gathered */
 
-  if ( mdd->headers ) {
-	char *newString = NULL;
-
-	repl = MimeHeaders_get(mdd->headers, HEADER_REPLY_TO, FALSE, FALSE);
+  if ( mdd->headers )
+  {
 	subj = MimeHeaders_get(mdd->headers, HEADER_SUBJECT,  FALSE, FALSE);
+	repl = MimeHeaders_get(mdd->headers, HEADER_REPLY_TO, FALSE, FALSE);
 	to   = MimeHeaders_get(mdd->headers, HEADER_TO,       FALSE, TRUE);
 	cc   = MimeHeaders_get(mdd->headers, HEADER_CC,       FALSE, TRUE);
 	bcc   = MimeHeaders_get(mdd->headers, HEADER_BCC,       FALSE, TRUE);
-
+	
 	/* These headers should not be RFC-1522-decoded. */
 	grps = MimeHeaders_get(mdd->headers, HEADER_NEWSGROUPS,  FALSE, TRUE);
 	foll = MimeHeaders_get(mdd->headers, HEADER_FOLLOWUP_TO, FALSE, TRUE);
+		
+	host = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_NEWSHOST, FALSE, FALSE);
+	if (!host)
+		host = MimeHeaders_get(mdd->headers, HEADER_NNTP_POSTING_HOST, FALSE, FALSE);
+		
 	id   = MimeHeaders_get(mdd->headers, HEADER_MESSAGE_ID,  FALSE, FALSE);
 	refs = MimeHeaders_get(mdd->headers, HEADER_REFERENCES,  FALSE, TRUE);
 	priority = MimeHeaders_get(mdd->headers, HEADER_X_PRIORITY, FALSE, FALSE);
 
-	host = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_NEWSHOST, FALSE, FALSE);
-	if (!host)
-	  host = MimeHeaders_get(mdd->headers, HEADER_NNTP_POSTING_HOST, FALSE, FALSE);
-
-	{
-		if (repl) 
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							 repl, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != repl) 
-			{
-				FREEIF (repl);
-				repl = newString;
-			}
-		}
-		if (subj)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							subj, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != repl) 
-			{
-				FREEIF (subj);
-				subj = newString;
-			}
-		}
-		if (to)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							to, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != repl) 
-			{
-				FREEIF (to);
-				to = newString;
-			}
-		}
-		if (cc)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							cc, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != cc) 
-			{
-				FREEIF (cc);
-				cc = newString;
-			}
-		}
-		if (bcc)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							bcc, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != bcc) 
-			{
-				FREEIF (bcc);
-				bcc = newString;
-			}
-		}
-		if (grps)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							grps, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != grps) 
-			{
-				FREEIF (grps);
-				grps = newString;
-			}
-		}
-		if (foll)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							foll, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != foll) 
-			{
-				FREEIF (foll);
-				foll = newString;
-			}
-		}
-		if (host)
-		{
-			newString = (char *)IntlDecodeMimePartIIStr(
-							host, INTL_DocToWinCharSetID(mdd->mailcsid), FALSE);
-			if (newString && newString != host) 
-			{
-				FREEIF (host);
-				repl = newString;
-			}
-		}
-	}
+	mime_intl_mimepart_2_str(&repl, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&to, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&cc, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&bcc, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&grps, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&foll, mdd->mailcsid);
+	mime_intl_mimepart_2_str(&host, mdd->mailcsid);
 
 	if (host) {
 		char *secure = NULL;
-
+		
 		secure = strcasestr(host, "secure");
 		if (secure) {
 			*secure = 0;
 			news_host = PR_smprintf ("snews://%s", host);
 		}
 		else {
-			news_host = PR_smprintf ("news://%s", host);
+		news_host = PR_smprintf ("news://%s", host);
 		}
 	}
-	  
+
+	mime_intl_mimepart_2_str(&subj, mdd->mailcsid);
 
 	fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
 										  org, subj, refs, 0, priority, 0, news_host,
@@ -365,13 +372,17 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 	draftInfo = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_DRAFT_INFO, FALSE, FALSE);
 	if (draftInfo && fields) {
 		char *parm = 0;
-		parm = MimeHeaders_get_parameter(draftInfo, "vcard");
+		parm = MimeHeaders_get_parameter(draftInfo, "vcard", NULL, NULL);
 		if (parm && !XP_STRCMP(parm, "1"))
-			MSG_SetCompFieldsBoolHeader(fields, MSG_ATTACH_VCARD_BOOL_HEADER_MASK, TRUE);
+			MSG_SetCompFieldsBoolHeader(fields,
+										MSG_ATTACH_VCARD_BOOL_HEADER_MASK,
+										TRUE);
 		else
-			MSG_SetCompFieldsBoolHeader(fields, MSG_ATTACH_VCARD_BOOL_HEADER_MASK, FALSE);
+			MSG_SetCompFieldsBoolHeader(fields,
+										MSG_ATTACH_VCARD_BOOL_HEADER_MASK,
+										FALSE);
 		FREEIF(parm);
-		parm = MimeHeaders_get_parameter(draftInfo, "receipt");
+		parm = MimeHeaders_get_parameter(draftInfo, "receipt", NULL, NULL);
 		if (parm && !XP_STRCMP(parm, "0"))
 			MSG_SetCompFieldsBoolHeader(fields,
 										MSG_RETURN_RECEIPT_BOOL_HEADER_MASK,
@@ -386,17 +397,21 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 			MSG_SetCompFieldsReceiptType(fields, (int32) receiptType);
 		}
 		FREEIF(parm);
-		parm = MimeHeaders_get_parameter(draftInfo, "uuencode");
+		parm = MimeHeaders_get_parameter(draftInfo, "uuencode", NULL, NULL);
 		if (parm && !XP_STRCMP(parm, "1"))
-			MSG_SetCompFieldsBoolHeader(fields, MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, TRUE);
+			MSG_SetCompFieldsBoolHeader(fields,
+										MSG_UUENCODE_BINARY_BOOL_HEADER_MASK,
+										TRUE);
 		else
-			MSG_SetCompFieldsBoolHeader(fields, MSG_UUENCODE_BINARY_BOOL_HEADER_MASK, FALSE);
+			MSG_SetCompFieldsBoolHeader(fields,
+										MSG_UUENCODE_BINARY_BOOL_HEADER_MASK,
+										FALSE);
 		FREEIF(parm);
-		parm = MimeHeaders_get_parameter(draftInfo, "html");
+		parm = MimeHeaders_get_parameter(draftInfo, "html", NULL, NULL);
 		if (parm)
 			sscanf(parm, "%d", &htmlAction);
 		FREEIF(parm);
-		parm = MimeHeaders_get_parameter(draftInfo, "linewidth");
+		parm = MimeHeaders_get_parameter(draftInfo, "linewidth", NULL, NULL);
 		if (parm)
 			sscanf(parm, "%d", &lineWidth);
 		FREEIF(parm);
@@ -404,57 +419,69 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 	}
 
 	if (mdd->messageBody) {
-	  char *body;
-	  XP_StatStruct st;
-	  XP_File file;
-	  MSG_EditorType editorType = MSG_DEFAULT;
+		char *body;
+		XP_StatStruct st;
+		uint32 bodyLen = 0;
+		XP_File file;
+		MSG_EditorType editorType = MSG_DEFAULT;
 
-	  st.st_size = 0;
-	  XP_Stat (mdd->messageBody->file_name, &st, xpFileToPost);
-	  body = XP_ALLOC (st.st_size + 1);
-	  XP_MEMSET (body, 0, st.st_size+1);
-
-	  file = XP_FileOpen (mdd->messageBody->file_name, xpFileToPost, XP_FILE_READ_BIN);
-	  XP_FileRead (body, st.st_size+1, file);
-	  XP_FileClose(file);
-
-	  if (mdd->messageBody->type && *mdd->messageBody->type)
-	  {
-		  if( XP_STRSTR(mdd->messageBody->type, "text/html") != NULL )
-			  editorType = MSG_HTML_EDITOR;
-		  else if ( XP_STRSTR(mdd->messageBody->type, "text/plain") != NULL )
-			  editorType = MSG_PLAINTEXT_EDITOR;
-	  }
-
-	  {
-		CCCDataObject conv = INTL_CreateCharCodeConverter();
-		if(conv) {
-			if (INTL_GetCharCodeConverter(mdd->mailcsid, INTL_DocToWinCharSetID(mdd->mailcsid), conv)) {
-				char *newBody = NULL;
-				newBody = (char *)INTL_CallCharCodeConverter(
-					conv, (unsigned char *) body, (int32) st.st_size+1);
-				if (newBody) {
-				/* CharCodeConverter return the char* to the orginal string
-				   we don't want to free body in that case */
-					if( newBody != body)
-						FREEIF(body);
-					body = newBody;
+		st.st_size = 0;
+		XP_Stat (mdd->messageBody->file_name, &st, xpFileToPost);
+		bodyLen = st.st_size;
+		body = XP_ALLOC (bodyLen + 1);
+		if (body)
+		{
+			XP_MEMSET (body, 0, bodyLen+1);
+			
+			file = XP_FileOpen (mdd->messageBody->file_name, xpFileToPost,
+								XP_FILE_READ_BIN); 
+			XP_FileRead (body, bodyLen, file);
+			XP_FileClose(file);
+			
+			if (mdd->messageBody->type && *mdd->messageBody->type)
+			{
+				if( XP_STRSTR(mdd->messageBody->type, "text/html") != NULL )
+					editorType = MSG_HTML_EDITOR;
+				else if ( XP_STRSTR(mdd->messageBody->type, "text/plain") != NULL )
+					editorType = MSG_PLAINTEXT_EDITOR;
+			}
+			else
+			{
+				editorType = MSG_PLAINTEXT_EDITOR;
+			}
+		  
+			{
+				CCCDataObject conv = INTL_CreateCharCodeConverter();
+				if(conv) {
+					if (INTL_GetCharCodeConverter(mdd->mailcsid,
+							 INTL_DocToWinCharSetID(mdd->mailcsid), conv))
+					{
+						char *newBody = NULL;
+						newBody = (char *)INTL_CallCharCodeConverter(
+							conv, (unsigned char *) body, (int32) bodyLen);
+						if (newBody) {
+							/* CharCodeConverter return the char* to the orginal string
+							   we don't want to free body in that case */
+							if( newBody != body)
+								FREEIF(body);
+							body = newBody;
+						}
+					}
+					INTL_DestroyCharCodeConverter(conv);
 				}
 			}
-			INTL_DestroyCharCodeConverter(conv);
 		}
-	  }
-
-	  cpane = FE_CreateCompositionPane (mdd->context, fields, body, editorType);
-
-	  XP_FREE (body);
-	  mime_free_attachments (mdd->messageBody, 1);
+		  
+		cpane = FE_CreateCompositionPane (mdd->context, fields, body, editorType);
+		
+		XP_FREE (body);
+		mime_free_attachments (mdd->messageBody, 1);
 	}
 	else
 	{
 		cpane = FE_CreateCompositionPane(mdd->context, fields, NULL, MSG_DEFAULT);
 	}
-
+	
 	if (cpane)
 	{
 		/* clear the message body in case someone store the signature string in it */
@@ -462,23 +489,24 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 		MSG_SetHTMLAction(cpane, (MSG_HTMLComposeAction) htmlAction);
 		if (lineWidth > 0)
 			MSG_SetLineWidth(cpane, lineWidth);
-
+		
 		if ( mdd->attachments_count) 
-		  mime_draft_process_attachments (mdd, cpane);
+			mime_draft_process_attachments (mdd, cpane);
 	}
   }
   else
   {
 	  fields = MSG_CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-										    org, subj, refs, 0, priority, 0, news_host,
-										    MSG_GetMailEncryptionPreference(), 
+											org, subj, refs, 0, priority, 0, news_host,
+											MSG_GetMailEncryptionPreference(), 
 											MSG_GetMailSigningPreference());
 	  if (fields)
-		cpane = FE_CreateCompositionPane(mdd->context, fields, NULL, MSG_DEFAULT);
+		  cpane = FE_CreateCompositionPane(mdd->context, fields, NULL, MSG_DEFAULT);
   }
-
-  if (cpane) {
-	  if ( mdd->url->fe_data && (mdd->format_out != FO_CMDLINE_ATTACHMENTS) ) 
+	
+  if (cpane && mdd->url->fe_data) 
+  {
+	  if ( mdd->format_out != FO_CMDLINE_ATTACHMENTS ) 
 	  {
 		  MSG_SetPostDeliveryActionInfo (cpane, mdd->url->fe_data);
 	  }
@@ -487,20 +515,20 @@ mime_parse_stream_complete (NET_StreamClass *stream)
 		  MSG_SetAttachmentList ( cpane, (MSG_AttachmentData*)(mdd->url->fe_data));
 	  }
   }
-
-
+  
+  
   if ( mdd->headers )
-     MimeHeaders_free ( mdd->headers );
-
+	  MimeHeaders_free ( mdd->headers );
+  
   if (mdd->attachments)
-	/* do not call mime_free_attachments just use FREEIF()  */
-    FREEIF ( mdd->attachments );
-
+	  /* do not call mime_free_attachments just use FREEIF()  */
+	  FREEIF ( mdd->attachments );
+  
   if (fields)
 	  MSG_DestroyCompositionFields(fields);
-
+  
   XP_FREE (mdd);
-
+  
   FREEIF(host);
   FREEIF(to_and_cc);
   FREEIF(re_subject);
@@ -516,7 +544,7 @@ mime_parse_stream_complete (NET_StreamClass *stream)
   FREEIF(foll);
   FREEIF(priority);
   FREEIF(draftInfo);
-
+  
 }
 
 static void
@@ -614,7 +642,7 @@ mime_decompose_file_init_fn ( void *stream_closure,
 	char *charset = NULL, *contentType = NULL;
 	contentType = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, FALSE, FALSE);
 	if (contentType) {
-		charset = MimeHeaders_get_parameter(contentType, "charset");
+		charset = MimeHeaders_get_parameter(contentType, "charset", NULL, NULL);
 		mdd->mailcsid = INTL_CharSetNameToID(charset);
 		FREEIF(charset);
 		FREEIF(contentType);
@@ -684,15 +712,15 @@ mime_decompose_file_init_fn ( void *stream_closure,
   if (parm_value) {
 	  char *boundary = NULL;
 	  char *tmp_value = NULL;
-	  boundary = MimeHeaders_get_parameter(parm_value, "boundary");
+	  boundary = MimeHeaders_get_parameter(parm_value, "boundary", NULL, NULL);
 	  if (boundary)
 		  tmp_value = PR_smprintf("; boundary=\"%s\"", boundary);
 	  if (tmp_value)
 		  StrAllocCat(newAttachment->type, tmp_value);
 	  newAttachment->x_mac_type = 
-		  MimeHeaders_get_parameter(parm_value, "x-mac-type");
+		  MimeHeaders_get_parameter(parm_value, "x-mac-type", NULL, NULL);
 	  newAttachment->x_mac_creator = 
-		  MimeHeaders_get_parameter(parm_value, "x-mac-creator");
+		  MimeHeaders_get_parameter(parm_value, "x-mac-creator", NULL, NULL);
 	  FREEIF(parm_value);
 	  FREEIF(boundary);
 	  FREEIF(tmp_value);

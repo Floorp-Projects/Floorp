@@ -136,6 +136,13 @@ MimeMultipartRelated_initialize(MimeObject* obj)
 	MimeMultipartRelated* relobj = (MimeMultipartRelated*) obj;
 	relobj->base_url = MimeHeaders_get(obj->headers, "Content-Base",
 									   FALSE, FALSE);
+  /* rhp: need this for supporting Content-Location */
+  if (!relobj->base_url)
+  {
+    relobj->base_url = MimeHeaders_get(obj->headers, "Content-Location",
+      FALSE, FALSE);
+  }
+  /* rhp: need this for supporting Content-Location */
 
 	/* I used to have code here to test if the type was text/html.  Then I
 	   added multipart/alternative as being OK, too.  Then I found that the
@@ -232,17 +239,82 @@ escape_for_mrel_subst(char *inURL)
 	}
 	return output;
 }
+/* rhp - need to support start parameter */
+#define HEADER_PARM_START "start"     /* this goes in libmime.h */
+
+static XP_Bool
+MimeStartParamExists(MimeObject *obj, MimeObject* child)
+{
+  char *ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE, FALSE, FALSE);
+  char *st = (ct
+              ? MimeHeaders_get_parameter(ct, HEADER_PARM_START, NULL, NULL)
+              : 0);
+  if (!st)
+    return FALSE;
+
+  FREEIF(st);
+  FREEIF(ct);
+  return TRUE;
+}
+
+static XP_Bool
+MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
+{
+  XP_Bool rval = FALSE;
+  char *ct, *st, *cst;
+
+  ct = MimeHeaders_get (obj->headers, HEADER_CONTENT_TYPE, FALSE, FALSE);
+  st = (ct
+        ? MimeHeaders_get_parameter(ct, HEADER_PARM_START, NULL, NULL)
+        : 0);
+  if (!st)
+    return FALSE;
+
+  cst = MimeHeaders_get(child->headers, "Content-ID", FALSE, FALSE);
+  if (!cst)
+    rval = FALSE;
+  else
+  {
+		char *tmp = cst;
+    if (*tmp == '<') 
+    {
+      int length;
+      tmp++;
+      length = XP_STRLEN(tmp);
+      if (length > 0 && tmp[length - 1] == '>') 
+      {
+        tmp[length - 1] = '\0';
+      }
+    }
+
+    rval = (!XP_STRCMP(st, tmp));
+  }
+
+  FREEIF(st);
+  FREEIF(ct);
+  FREEIF(cst);
+  return rval;
+}
+/* rhp - gotta support the "start" parameter */
 
 static XP_Bool
 MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 {
 	MimeMultipartRelated *relobj = (MimeMultipartRelated *) obj;
-	if (relobj->head_loaded) {
+
+  /* rhp - Changed from "if (relobj->head_loaded)" alone to support the 
+           start parameter
+   */
+  if (
+       (relobj->head_loaded) || 
+       (MimeStartParamExists(obj, child) && !MimeThisIsStartPart(obj, child)) 
+     )
+  {
 		/* This is a child part.  Just remember the mapping between the URL
 		   it represents and the part-URL to get it back. */
 		char* location = MimeHeaders_get(child->headers, "Content-Location",
 										 FALSE, FALSE);
-		if (!location) {
+    if (!location) {
 			char* tmp = MimeHeaders_get(child->headers, "Content-ID",
 										FALSE, FALSE);
 			if (tmp) {
@@ -258,13 +330,21 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 				location = PR_smprintf("cid:%s", tmp2);
 				XP_FREE(tmp);
 			}
-		}
-		if (location) {
-			char* base_url = MimeHeaders_get(child->headers, "Content-Base",
+    }
+
+ 		if (location) {
+      char *absolute;
+			char *base_url = MimeHeaders_get(child->headers, "Content-Base",
 											 FALSE, FALSE);
-			char* absolute =
-				NET_MakeAbsoluteURL(base_url ? base_url : relobj->base_url,
-									location);
+      /* rhp: need this for supporting Content-Location */
+      if (!base_url)
+      {
+        base_url = MimeHeaders_get(child->headers, "Content-Location", FALSE, FALSE);
+      }
+      /* rhp: need this for supporting Content-Location */
+
+      absolute = NET_MakeAbsoluteURL(base_url ? base_url : relobj->base_url, location);
+
 			FREEIF(base_url);
 			XP_FREE(location);
 			if (absolute) {
@@ -280,6 +360,36 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 					    if (XP_STRCHR(part, ' ') || XP_STRCHR(part, '>') || XP_STRCHR(part, '%'))
 						  temp = escape_for_mrel_subst(part);
 						XP_Puthash(relobj->hash, absolute, temp);
+
+            /* rhp - If this part ALSO has a Content-ID we need to put that into
+                     the hash table and this is what this code does
+             */
+            {
+              char *tloc;
+              char *tmp = MimeHeaders_get(child->headers, "Content-ID", FALSE, FALSE);
+              if (tmp) 
+              {
+                char* tmp2 = tmp;
+                if (*tmp2 == '<') 
+                {
+                  int length;
+                  tmp2++;
+                  length = XP_STRLEN(tmp2);
+                  if (length > 0 && tmp2[length - 1] == '>') 
+                  {
+                    tmp2[length - 1] = '\0';
+                  }
+                }
+                
+                tloc = PR_smprintf("cid:%s", tmp2);
+                XP_FREE(tmp);
+                if (tloc)
+                {
+                  XP_Puthash(relobj->hash, tloc, XP_STRDUP(temp));
+                }
+              }
+            }
+            /*  rhp - End of putting more stuff into the hash table */
 
 						/* The value string that is added to the hashtable will be deleted
 						   by the hashtable at destruction time. So if we created an
@@ -299,6 +409,13 @@ MimeMultipartRelated_output_child_p(MimeObject *obj, MimeObject* child)
 		relobj->buffered_hdrs = MimeHeaders_copy(child->headers);
 		base_url = MimeHeaders_get(child->headers, "Content-Base",
 								   FALSE, FALSE);
+    /* rhp: need this for supporting Content-Location */
+    if (!base_url)
+    {
+      base_url = MimeHeaders_get(child->headers, "Content-Location", FALSE, FALSE);
+    }
+    /* rhp: need this for supporting Content-Location */
+
 		if (base_url) {
 			/* If the head object has a base_url associated with it, use
 			   that instead of any base_url that may have been associated
@@ -544,7 +661,7 @@ flush_tag(MimeMultipartRelated* relobj)
 				*ptr2 = '\0';
 				
 				/* Construct a URL out of the word. */
-				absolute = NET_MakeAbsoluteURL(relobj->base_url, buf);
+        absolute = NET_MakeAbsoluteURL(relobj->base_url, buf);
 
 				/* See if we have a mailbox part URL
 				   corresponding to this cid. */
@@ -563,6 +680,35 @@ flush_tag(MimeMultipartRelated* relobj)
 				/* Restore the character that we nulled. */
 				*ptr2 = c;
 			}
+      /* rhp - if we get here, we should still check against the hash table! */
+      else 
+      {
+        char holder = *ptr2;
+        char *realout;
+
+        *ptr2 = '\0';
+    
+        /* Construct a URL out of the word. */
+				absolute = NET_MakeAbsoluteURL(relobj->base_url, buf);
+
+        /* See if we have a mailbox part URL
+				   corresponding to this cid. */
+        if (absolute)
+				  realout = XP_Gethash(relobj->hash, absolute, NULL);
+        else
+          realout = XP_Gethash(relobj->hash, buf, NULL);
+
+        *ptr2 = holder;
+        FREEIF(absolute);
+
+        if (realout)
+        {
+          status = real_write(relobj, realout, XP_STRLEN(realout));
+					if (status < 0) return status;
+					buf = ptr2; /* skip over the cid: URL we substituted */
+        }
+      }
+      /* rhp - if we get here, we should still check against the hash table! */
 
 			/* Advance to the beginning of the next word, or to
 			   the end of the value string. */

@@ -26,16 +26,14 @@
 //#include <VStyleSet.h>
 //#include <VOTextModel.h>
 
-//#include <StClasses.h>
 #include <UCursor.h>
 
 #include "CSpellChecker.h"
-
-#include "resgui.h"
+#include "resgui.h" // for emSignature
 
 //#include "Textension.h"
 
-#pragma global_optimizer off
+//#pragma global_optimizer off			//why???
 
 
 Boolean 							CSimpleTextView::sInitialized 	= false;
@@ -57,6 +55,7 @@ CSimpleTextView::CSimpleTextView()
 
 		Assert_( false );	//	Must use parameters
 
+		mTabIntoFieldSelectsAll = true;		//default behaviour
 	}
 
 
@@ -68,6 +67,9 @@ CSimpleTextView::CSimpleTextView( LStream *inStream )
 		
 		if ( !sInitialized )
 			Initialize();
+
+		
+		mTabIntoFieldSelectsAll = true;		//default behaviour
 
 /*			
 		mTextParms = NULL;
@@ -156,7 +158,7 @@ CSimpleTextView::FinishCreateSelf( void )
 			}
 */
 			
-		CWASTEEdit::FinishCreateSelf();
+		Inherited::FinishCreateSelf();
 
 	}
 
@@ -232,6 +234,7 @@ void CSimpleTextView::NoteOverNewThing(LManipulator *inThing)
 Boolean 
 CSimpleTextView::ObeyCommand( CommandT inCommand, void *ioParam )
 	{
+		Boolean		cmdHandled = true;
 	
 		switch (inCommand)
 			{
@@ -243,10 +246,22 @@ CSimpleTextView::ObeyCommand( CommandT inCommand, void *ioParam )
 					break;
 		#endif // MOZ_SPELLCHK
 				
+				// handle msg_TabSelect ourselves, because we don't want the CWASTEEdit
+				// select all behaviour
+				case msg_TabSelect:
+					if ( ! mTabIntoFieldSelectsAll )
+					{
+						// do nothing
+						break;
+					}
+					// else
+					// fallthrough for default behaviour
+					
 				default:
-					return CWASTEEdit::ObeyCommand(inCommand, ioParam);
+					cmdHandled = Inherited::ObeyCommand(inCommand, ioParam);
 			}
 	
+		return cmdHandled;
 	}
 
 
@@ -261,7 +276,7 @@ CSimpleTextView::ClickSelf( const SMouseDownEvent &inMouseDown )
 		if ( !IsTarget() )
 			SwitchTarget( this );
 	
-		CWASTEEdit::ClickSelf( inMouseDown );
+		Inherited::ClickSelf( inMouseDown );
 		
 	}
 
@@ -282,7 +297,17 @@ CSimpleTextView::BeTarget()
 				
 			}
 			
-		CWASTEEdit::BeTarget();
+		//Inherited::BeTarget();
+		// ugly copy and paste because I don't want to change CWASTEEdit
+		// but want to override its scroller activation behaviour
+
+		if (FocusDraw()) {				// Show active selection
+			WEActivate( GetWEHandle() );
+		}
+		
+		StartIdling();
+
+		ProtectSelection();
 			
 	}
 	
@@ -303,7 +328,14 @@ CSimpleTextView::DontBeTarget()
 				
 			}
 			
-		CWASTEEdit::DontBeTarget();
+		// Inherited::DontBeTarget();
+		// ugly copy and paste because I don't want to change CWASTEEdit
+		// but want to override its scroller activation behaviour
+		
+			if (FocusDraw()) {				// Show inactive selection
+				WEDeactivate( GetWEHandle() );
+			}
+			StopIdling();					// Stop flashing the cursor
 	
 	}
 	
@@ -324,12 +356,31 @@ void CSimpleTextView::FindCommandStatus( 	CommandT 	inCommand,
 		#endif // MOZ_SPELLCHK
 				
 				default:
-					CWASTEEdit::FindCommandStatus(inCommand, outEnabled, 
+					Inherited::FindCommandStatus(inCommand, outEnabled, 
 											outUsesMark, outMark, outName);
 			}
 	
 	}
 
+Boolean CSimpleTextView::HandleKeyPress( const EventRecord &	inKeyEvent)
+	{
+		Boolean			commandKeyDown = (inKeyEvent.modifiers & cmdKey) != 0;
+		Int16				theKey = inKeyEvent.message & charCodeMask;
+		
+		if (commandKeyDown && ( theKey == char_Tab) )
+		{
+			// strip out the command key modifier so the tab group handles it
+			const_cast<EventRecord *>(& inKeyEvent)->modifiers &= ~cmdKey;
+			
+			// send it up to the supercommander (the window) to handle
+			return LCommander::HandleKeyPress( inKeyEvent );
+			
+		}
+		else
+		{
+			return Inherited::HandleKeyPress( inKeyEvent );
+		}
+	}
 
 void	CSimpleTextView::Save( const FSSpec	&inFileSpec )
 	{
@@ -359,11 +410,10 @@ void	CSimpleTextView::Save( const FSSpec	&inFileSpec )
 	}
 
 
-pascal void
-CSimpleTextView::TSMPreUpdate( WEReference inWE )
+pascal void CSimpleTextView::TSMPreUpdate( WEReference )
 	{
 	
-//  AHHHH!!! Why didn't these wankers allow us to pass in a context
+//  AHHHH!!! Why didn't they allow us to pass in a context
 //  pointer? Now I have to maintain this stupid sTargetView item.
 
 		Assert_( sTargetView != NULL );

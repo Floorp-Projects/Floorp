@@ -33,7 +33,7 @@ with copyright holders.
 **
 **	(c) COPYRIGHT MIT 1995.
 **	Please first read the full copyright statement in the file COPYRIGH.
-**	@(#) $Id: htstring.c,v 3.1 1998/03/28 03:32:07 ltabb Exp $
+**	@(#) $Id: htstring.c,v 3.2 1998/06/22 21:20:29 spider Exp $
 **
 **	Original version came with listserv implementation.
 **	Version TBL Oct 91 replaces one which modified the strings.
@@ -73,9 +73,9 @@ PUBLIC int WWW_TraceFlag = 0;		/* Global trace flag for ALL W3 code */
 /*	if ((diff = TOLOWER(*a) - TOLOWER(*b)))                         */
 /*	    return diff;                                                */
 /*    }                                                                 */
-/*    if (*a) return 1;			/* a was longer than b          */
-/*    if (*b) return -1;			/* a was shorter than b */
-/*    return 0;	 			/* Exact match                  */
+/*    if (*a) return 1;			*/ /* a was longer than b          */
+/*    if (*b) return -1;		*/	/* a was shorter than b */
+/*    return 0;	 			    */ /* Exact match                  */
 /*}                                                                     */
 /************************************************************************/
 /* --- END removed by mharmsen@netscape.com on 7/9/97 --- */
@@ -93,12 +93,12 @@ PUBLIC int WWW_TraceFlag = 0;		/* Global trace flag for ALL W3 code */
 /*	                                                              */
 /*	for(p=a, q=b;; p++, q++) {                                    */
 /*	    int diff;                                                 */
-/*	    if (p == a+n) return 0;	/*   Match up to n characters */
+/*	    if (p == a+n) return 0;	*/  /*   Match up to n characters */
 /*	    if (!(*p && *q)) return *p - *q;                          */
 /*	    diff = TOLOWER(*p) - TOLOWER(*q);                         */
 /*	    if (diff) return diff;                                    */
 /*	}                                                             */
-/*	/*NOTREACHED                                                  */
+/*	NOTREACHED                                                  */
 /*}                                                                   */
 /**********************************************************************/
 /* --- END removed by mharmsen@netscape.com on 7/9/97 --- */
