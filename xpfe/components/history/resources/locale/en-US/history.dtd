@@ -11,6 +11,7 @@
 <!ENTITY deleteCmd.label            "Delete">
 <!ENTITY selAllCmd.label            "Select All">
 <!ENTITY findHisCmd.label           "Search History...">
+<!ENTITY findHisCmd.commandkey      "f">
 <!ENTITY findHisCmd.accesskey       "s">
 <!ENTITY historyWindowTitle.label   "History">
 <!ENTITY menuitem.view.unsorted.label "Unsorted">
