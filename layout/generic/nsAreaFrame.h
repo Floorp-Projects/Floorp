@@ -19,7 +19,6 @@
 #define nsAreaFrame_h___
 
 #include "nsBlockFrame.h"
-#include "nsISpaceManager.h"
 #include "nsVoidArray.h"
 #include "nsIAreaFrame.h"
 #include "nsAbsoluteContainingBlock.h"
@@ -50,12 +49,6 @@ public:
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   
   // nsIFrame
-  NS_IMETHOD Init(nsIPresContext&  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow);
-
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
@@ -111,14 +104,10 @@ public:
   // nsIAreaFrame
   NS_IMETHOD GetPositionedInfo(nscoord& aXMost, nscoord& aYMost) const;
 
-  NS_IMETHOD GetSpaceManager(nsISpaceManager** aSpaceManagerResult);
-
 protected:
   nsAreaFrame();
-  virtual ~nsAreaFrame();
 
 private:
-  nsSpaceManager*           mSpaceManager;
   nsAbsoluteContainingBlock mAbsoluteContainer;
   nsRect                    mCombinedArea;
 };
