@@ -128,6 +128,8 @@ NS_NewSplitterFrame ( nsIFrame** aNewFrame );
 nsresult
 NS_NewMenuPopupFrame ( nsIFrame** aNewFrame );
 
+nsresult
+NS_NewMenuFrame ( nsIFrame** aNewFrame );
 #endif
 
 //static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
@@ -3023,12 +3025,12 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
 
     // Menu Construction    
     else if (aTag == nsXULAtoms::xpmenu) {
-      // XXX Will eventually make a derived class box frame
+      // A derived class box frame
       // that has custom reflow to prevent menu children
       // from becoming part of the flow.
       processChildren = PR_TRUE; // Will need this to be custom.
       isReplaced = PR_TRUE;
-      rv = NS_NewBoxFrame(&newFrame);
+      rv = NS_NewMenuFrame(&newFrame);
     }
     else if (aTag == nsXULAtoms::xpmenubar) {
       // XXX Will be a derived class toolbar frame.
@@ -3042,7 +3044,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       rv = NS_NewTitledButtonFrame(&newFrame);
     }
     else if (aTag == nsXULAtoms::xpmenuchildren) {
-      // XXX Will be its own frame that derives from
+      // This is its own frame that derives from
       // box.
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
