@@ -84,7 +84,7 @@ int main()
             do {
                 status = PerformScheduledTasks(reg);
                 if (status != DONE)
-                   DoSleep(15000);
+                   DosSleep(15000);
             } while (status == TRY_LATER);
         }
         NR_ShutdownRegistry();
