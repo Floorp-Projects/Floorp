@@ -128,7 +128,7 @@
         [% formaturl = "report.cgi?$switchbase&width=$width&height=$height" _ 
                        "&action=wrap" %]
         [% FOREACH other_format = formats %]
-          [% NEXT IF other_format.name == "pie" AND row_field %]
+          [% NEXT IF other_format.name == "pie" AND row_field AND col_field %]
           [% UNLESS other_format.name == format %]
             <a href="[% formaturl %]&amp;format=[% other_format.name %]">
           [% END %]
