@@ -619,7 +619,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:layout:build:MANIFEST",                          "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST",                    "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:base:public:MANIFEST_IDL",                "$distdirectory:idl:");
-    InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",              "$distdirectory:layout:");
+    # InstallFromManifest(":mozilla:layout:html:document:src:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:public:MANIFEST",              "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:style:src:MANIFEST",                 "$distdirectory:layout:");
     InstallFromManifest(":mozilla:layout:html:base:src:MANIFEST",                  "$distdirectory:layout:");
