@@ -56,6 +56,8 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMElementCSSInlineStyle.h"
+#include "nsIDOMWindow.h"
+#include "nsIDOMDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIFocusController.h"
 #include "nsMappedAttributes.h"
@@ -3348,6 +3350,179 @@ nsGenericHTMLFormElement::FindAndSetForm()
     SetForm(form);  // always succeeds
   }
 }
+
+//----------------------------------------------------------------------
+
+nsGenericHTMLFrameElement::nsGenericHTMLFrameElement()
+{
+}
+
+nsGenericHTMLFrameElement::~nsGenericHTMLFrameElement()
+{
+  if (mFrameLoader) {
+    mFrameLoader->Destroy();
+  }
+}
+
+NS_INTERFACE_MAP_BEGIN(nsGenericHTMLFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLFrameElement)
+  NS_INTERFACE_MAP_ENTRY(nsIChromeEventHandler)
+  NS_INTERFACE_MAP_ENTRY(nsIFrameLoaderOwner)
+NS_INTERFACE_MAP_END_INHERITING(nsGenericHTMLElement)
+
+nsresult
+nsGenericHTMLFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
+{
+  NS_PRECONDITION(aContentDocument, "Null out param");
+  *aContentDocument = nsnull;
+
+  nsCOMPtr<nsIDOMWindow> win;
+  GetContentWindow(getter_AddRefs(win));
+
+  if (!win) {
+    return NS_OK;
+  }
+
+  return win->GetDocument(aContentDocument);
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
+{
+  NS_PRECONDITION(aContentWindow, "Null out param");
+  *aContentWindow = nsnull;
+
+  nsresult rv = EnsureFrameLoader();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mFrameLoader) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIDocShell> doc_shell;
+  mFrameLoader->GetDocShell(getter_AddRefs(doc_shell));
+
+  nsCOMPtr<nsIDOMWindow> win(do_GetInterface(doc_shell));
+  win.swap(*aContentWindow);
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLFrameElement::EnsureFrameLoader()
+{
+  if (!GetParent() || !mDocument || mFrameLoader) {
+    // If frame loader is there, we just keep it around, cached
+    return NS_OK;
+  }
+
+  nsresult rv = NS_NewFrameLoader(getter_AddRefs(mFrameLoader));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = mFrameLoader->Init(this);
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::GetFrameLoader(nsIFrameLoader **aFrameLoader)
+{
+  NS_IF_ADDREF(*aFrameLoader = mFrameLoader);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::SetFrameLoader(nsIFrameLoader *aFrameLoader)
+{
+  mFrameLoader = aFrameLoader;
+
+  return NS_OK;
+}
+
+nsresult
+nsGenericHTMLFrameElement::LoadSrc()
+{
+  nsresult rv = EnsureFrameLoader();
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mFrameLoader) {
+    return NS_OK;
+  }
+
+  rv = mFrameLoader->LoadFrame();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to load URL");
+
+  return rv;
+}
+
+void
+nsGenericHTMLFrameElement::SetParent(nsIContent *aParent)
+{
+  nsGenericHTMLElement::SetParent(aParent);
+
+  // When parent is being set to null on the element's destruction, do not
+  // call LoadSrc().
+  if (!GetParent() || !mDocument) {
+    return;
+  }
+
+  LoadSrc();
+}
+
+void
+nsGenericHTMLFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
+                                       PRBool aCompileEventHandlers)
+{
+  const nsIDocument *old_doc = mDocument;
+
+  nsGenericHTMLElement::SetDocument(aDocument, aDeep,
+                                    aCompileEventHandlers);
+
+  if (!aDocument && mFrameLoader) {
+    // This iframe is being taken out of the document, destroy the
+    // iframe's frame loader (doing that will tear down the window in
+    // this iframe).
+
+    mFrameLoader->Destroy();
+
+    mFrameLoader = nsnull;
+  }
+
+  // When document is being set to null on the element's destruction,
+  // or when the document is being set to what the document already
+  // is, do not call LoadSrc().
+  if (GetParent() && aDocument && aDocument != old_doc) {
+    LoadSrc();
+  }
+}
+
+nsresult
+nsGenericHTMLFrameElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
+                                   nsIAtom* aPrefix, const nsAString& aValue,
+                                   PRBool aNotify)
+{
+  nsresult rv = nsGenericHTMLElement::SetAttr(aNameSpaceID, aName, aPrefix,
+                                              aValue, aNotify);
+  
+  if (NS_SUCCEEDED(rv) && aNameSpaceID == kNameSpaceID_None &&
+      aName == nsHTMLAtoms::src) {
+    return LoadSrc();
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGenericHTMLFrameElement::HandleChromeEvent(nsIPresContext* aPresContext,
+                                             nsEvent* aEvent,
+                                             nsIDOMEvent** aDOMEvent,
+                                             PRUint32 aFlags, 
+                                             nsEventStatus* aEventStatus)
+{
+  return HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags,aEventStatus);
+}
+
+//----------------------------------------------------------------------
 
 void
 nsGenericHTMLElement::SetElementFocus(PRBool aDoFocus)
