@@ -837,14 +837,13 @@ END_COM_MAP()
         //
         nsAutoString scriptString(code);
         NS_NAMED_LITERAL_CSTRING(url, "javascript:axplugin");
-        nsAutoString result;
         rv = scriptContext->EvaluateString(scriptString,
                                            nsnull,      // obj
                                            principal,
                                            url.get(),   // url
                                            1,           // line no
                                            nsnull,
-                                           &result,
+                                           nsnull,
                                            nsnull);
 
         if (NS_FAILED(rv))
