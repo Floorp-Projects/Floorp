@@ -116,6 +116,8 @@ for my $msg (sort { $a <=> $b } $folder->message_list) {
     my $from = $1;
     $news  =~ /^Subject: ([^\n]+)/m;
     my $subject = $1;
+    $subject =~ s/</&lt;/g;
+    $subject =~ s/>/&gt;/g;
     $news  =~ /^Date: ([^\n]+)/m;
     my $date = $1;
 
