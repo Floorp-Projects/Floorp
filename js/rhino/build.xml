@@ -39,6 +39,8 @@ Requires Ant version 1.2
     <available classname="com.ibm.bsf.BSFEngine" property="bsf.present"/>
     <available file="${src.debugger}/AbstractCellEditor.java"
                property="swing-ex-available"/>
+    <available classname="java.lang.reflect.Proxy"
+               property="jdk1.3"/>
   </target>
 
   <target name="init" depends="properties">
@@ -109,6 +111,7 @@ Requires Ant version 1.2
            deprecation="on"
            debug="${debug}">
       <exclude name="**/BSFJavaScriptEngine.java" unless="bsf.present"/>
+      <exclude name="**/debugger/*.java" unless="jdk1.3"/>
     </javac>
   </target>
 
@@ -137,7 +140,8 @@ Requires Ant version 1.2
   <target name="copy-source" depends="prepare">
     <copy todir="${dist.src}">
       <fileset dir="${src.dir}"
-               includes="org/**/*.java,org/**/*.properties" />
+               includes="org/**/*.java,org/**/*.properties" 
+               excludes="**/AbstractCellEditor.java,**/TreeTableModel.java,**/AbstractTreeTableModel.java,**/TreeTableModelAdapter.java,**/JTreeTable.java" />
     </copy>
   </target>
 
@@ -190,7 +194,7 @@ Requires Ant version 1.2
              windowtitle="${Name}" />
   </target>
 
-  <target name="package" depends="jar,copy-all,javadoc">
+  <target name="package" depends="copy-all,jar,javadoc">
     <delete file="${src.dir}/${dist.file}" />
     <zip zipfile="${src.dir}/${dist.file}"
          basedir="${build.dir}" 
