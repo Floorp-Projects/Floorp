@@ -916,7 +916,7 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
     if (mDocument) {
       //printf("DEBUG: getting uri from document (%p)\n", mDocument.get());
 
-      nsIURI *uri = mDocument->GetDocumentURL();
+      nsIURI *uri = mDocument->GetDocumentURI();
 
       if (uri) {
         //printf("DEBUG: getting spec fro uri (%p)\n", uri.get());
