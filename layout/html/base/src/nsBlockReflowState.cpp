@@ -149,6 +149,7 @@ struct nsBlockReflowState : public nsFrameReflowState {
   nsInlineReflow* mInlineReflow;
 
   nsISpaceManager* mSpaceManager;
+  nscoord mSpaceManagerX, mSpaceManagerY;
   nsBlockFrame* mBlock;
   nsBlockFrame* mNextInFlow;
 
@@ -162,9 +163,6 @@ struct nsBlockReflowState : public nsFrameReflowState {
 
   nscoord mBottomEdge;          // maximum Y
 
-  nscoord mBulletPadding;// XXX Get rid of these
-  nscoord mLeftPadding;// XXX Get rid of these
-
   PRBool mUnconstrainedWidth;
   PRBool mUnconstrainedHeight;
   nscoord mY;
@@ -175,7 +173,6 @@ struct nsBlockReflowState : public nsFrameReflowState {
   LineData* mFreeList;
 
   nsVoidArray mPendingFloaters;
-  nscoord mSpaceManagerX, mSpaceManagerY;
 
   LineData* mCurrentLine;
   LineData* mPrevLine;
@@ -1297,7 +1294,9 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 
   mSpaceManager = aSpaceManager;
 
-  // Save away the outer coordinate system origin for later
+  // Translate into our content area and then save the 
+  // coordinate system origin for later.
+  mSpaceManager->Translate(mBorderPadding.left, mBorderPadding.top);
   mSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mPresContext = aPresContext;
@@ -1311,38 +1310,19 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
 #ifdef NS_DEBUG
   if (!mUnconstrainedWidth && (maxSize.width > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n",
-           maxSize.width, maxSize.height);
+    printf(": bad parent: maxSize WAS %d,%d\n", maxSize.width, maxSize.height);
     maxSize.width = NS_UNCONSTRAINEDSIZE;
     mUnconstrainedWidth = PR_TRUE;
   }
   if (!mUnconstrainedHeight && (maxSize.height > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n",
-           maxSize.width, maxSize.height);
+    printf(": bad parent: maxSize WAS %d,%d\n", maxSize.width, maxSize.height);
     maxSize.height = NS_UNCONSTRAINEDSIZE;
     mUnconstrainedHeight = PR_TRUE;
   }
 #endif
 
   mTextAlign = mStyleText->mTextAlign;
-
-// XXX get rid of this hack (if possible!)
-  mBulletPadding = 0;
-#if XXX_fix_me
-  if (NS_STYLE_DISPLAY_LIST_ITEM == mStyleDisplay->mDisplay) {
-    const nsStyleList* sl = (const nsStyleList*)
-      aBlockSC->GetStyleData(eStyleStruct_List);
-    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
-      mLineLayout.mListPositionOutside = PR_TRUE;
-      mBulletPadding = GetParentLeftPadding(aReflowState.parentReflowState);
-    }
-  }
-
-  nsMargin padding;
-  mStyleSpacing->CalcPaddingFor(mBlock, padding);
-  mLeftPadding = padding.left;
-#endif
 
   nscoord lr = mBorderPadding.left + mBorderPadding.right;
   mY = mBorderPadding.top;
@@ -1377,9 +1357,6 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
     mBottomEdge -= mBorderPadding.bottom;
   }
 
-  // Now translate in by our border and padding
-  mSpaceManager->Translate(mBorderPadding.left, mBorderPadding.top);
-
   mPrevChild = nsnull;
   mFreeList = nsnull;
   mPrevLine = nsnull;
@@ -1412,9 +1389,8 @@ nsBlockReflowState::GetAvailableSpace()
   // Verify that the caller setup the coordinate system properly
   nscoord wx, wy;
   sm->GetTranslation(wx, wy);
-  nscoord cx = mSpaceManagerX + mBorderPadding.left;
-  nscoord cy = mSpaceManagerY + mBorderPadding.top;
-  NS_ASSERTION((wx == cx) && (wy == cy), "bad coord system");
+  NS_ASSERTION((wx == mSpaceManagerX) && (wy == mSpaceManagerY),
+               "bad coord system");
 #endif
 
   // Fill in band data for the specific Y coordinate. Because the
@@ -1426,7 +1402,7 @@ nsBlockReflowState::GetAvailableSpace()
   // In addition, we need to use the entire available area
   // (represented by mBorderArea) so that the band data is completely
   // relative in size to our upper left corner.
-  sm->GetBandData(mY - mBorderPadding.top, mBorderArea, mCurrentBand);
+  sm->GetBandData(mY - mBorderPadding.top, mContentArea, mCurrentBand);
 
   // Compute the bounding rect of the available space, i.e. space
   // between any left and right floaters.
@@ -2817,10 +2793,6 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState, nsIFrame* aFrame)
     // border/padding applied to it so add that in.
     x = aState.mCurrentBand.availSpace.x + aState.mBorderPadding.left;
     availWidth = aState.mCurrentBand.availSpace.width;
-    if (NS_UNCONSTRAINEDSIZE != availWidth) {
-      availWidth -= aState.mBorderPadding.left + aState.mBorderPadding.right;
-    }
-
     if (aState.mUnconstrainedHeight) {
       availHeight = NS_UNCONSTRAINEDSIZE;
     }
@@ -2831,7 +2803,6 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState, nsIFrame* aFrame)
   }
   aState.mInlineReflow->Init(x, aState.mY, availWidth, availHeight);
   aState.mInlineReflowPrepared = PR_TRUE;
-//XXXaFrame->ListTag(stdout); printf(": prepare-inline-reflow: running-margin=%d\n", aState.mRunningMargin);
 }
 
 PRBool
@@ -3000,7 +2971,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     if (NS_FRAME_IS_COMPLETE(aReflowResult)) {
       aFrame->GetNextSibling(aFrame);
       aLine->SetLastContentIsComplete();
-//XXXListTag(stdout); printf(": exit reflow-inline-frame #1 (reflowStatus=%x)\n", aReflowResult);
       return PR_TRUE;
     }
 
@@ -3055,7 +3025,6 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   if (NS_IS_REFLOW_ERROR(rv)) {
     aReflowResult = nsInlineReflowStatus(rv);
   }
-//XXXListTag(stdout); printf(": exit reflow-inline-frame #2 (reflowStatus=%x)\n", aReflowResult);
   return PR_FALSE;
 }
 
@@ -3839,8 +3808,8 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
     // before placing the floater.
     nscoord ox, oy;
     mSpaceManager->GetTranslation(ox, oy);
-    nscoord dx = ox - (mSpaceManagerX + mBorderPadding.left);
-    nscoord dy = oy - (mSpaceManagerY + mBorderPadding.top);
+    nscoord dx = ox - mSpaceManagerX;
+    nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
     PlaceFloater(aPlaceholder);
 
@@ -3848,9 +3817,7 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder)
     GetAvailableSpace();
     mInlineReflow->UpdateBand(mCurrentBand.availSpace.x + mBorderPadding.left,
                               mY,
-// XXX how do I know what to use here??? mContentArea.width or this?
-                              mCurrentBand.availSpace.width -
-                              mBorderPadding.left - mBorderPadding.right,
+                              mCurrentBand.availSpace.width,
                               mCurrentBand.availSpace.height);
 
     // Restore coordinate system
@@ -3885,6 +3852,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
         child->GetSize(size);
         if (size.width > 0) {
           // We found a non-zero sized child frame that precedes aFrame
+mBlock->ListTag(stdout); printf(": !left-most: size=%d,%d", size); child->ListTag(stdout); printf("\n");
           return PR_FALSE;
         }
         child->GetNextSibling(child);
@@ -3903,6 +3871,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
         child->GetSize(size);
         if (size.width > 0) {
           // We found a non-zero sized child frame that precedes aFrame
+mBlock->ListTag(stdout); printf(": !left-most: size=%d,%d", size); child->ListTag(stdout); printf("\n");
           return PR_FALSE;
         }
         child->GetNextSibling(child);
@@ -3951,8 +3920,13 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
   nsMargin floaterMargin;
   floaterSpacing->CalcMarginFor(floater, floaterMargin);
 
-  // Compute the size of the region that will impact the space manager
-  region.y = mY;
+  // Compute the size of the region that will impact the space
+  // manager. Note that the x,y coordinates are computed <b>relative
+  // to the translation in the spacemanager</b> which means that the
+  // impacted region will be <b>inside</b> the border/padding area.
+  region.y = mY - mBorderPadding.top;
+  region.width += floaterMargin.left + floaterMargin.right;
+  region.height += floaterMargin.top + floaterMargin.bottom;
   switch (floaterDisplay->mFloats) {
   default:
     NS_NOTYETIMPLEMENTED("Unsupported floater type");
@@ -3960,43 +3934,24 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder)
 
   case NS_STYLE_FLOAT_LEFT:
     region.x = mCurrentBand.availSpace.x;
-    region.width += mBulletPadding;/* XXX */
     break;
 
   case NS_STYLE_FLOAT_RIGHT:
     region.x = mCurrentBand.availSpace.XMost() - region.width;
-    region.x -= floaterMargin.right;
-    if (region.x < 0) {
+    if (region.x < 0) {    // XXX do this?
       region.x = 0;
     }
+    break;
   }
 
   // Factor in the floaters margins
-  region.width += floaterMargin.left + floaterMargin.right;
-  region.height += floaterMargin.top + floaterMargin.bottom;
   sm->AddRectRegion(floater, region);
 
-  // Set the origin of the floater in world coordinates
-  nscoord worldX = mSpaceManagerX;
-  nscoord worldY = mSpaceManagerY;
-  if (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats) {
-    floater->MoveTo(region.x + worldX + floaterMargin.left,
-                    region.y + worldY + floaterMargin.top);
-    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-       ("nsBlockReflowState::PlaceFloater: right, placeHolder=%p xy=%d,%d worldxy=%d,%d",
-        aPlaceholder, region.x + worldX + floaterMargin.left,
-        region.y + worldY + floaterMargin.top,
-        worldX, worldY));
-  }
-  else {
-    floater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,/* XXX */
-                    region.y + worldY + floaterMargin.top);
-    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-       ("nsBlockReflowState::PlaceFloater: left, placeHolder=%p xy=%d,%d worldxy=%d,%d",
-        aPlaceholder, region.x + worldX + floaterMargin.left + mBulletPadding,/* XXX */
-        region.y + worldY + floaterMargin.top,
-        worldX, worldY));
-  }
+  // Set the origin of the floater frame, in frame coordinates. These
+  // coordinates are <b>not</b> relative to the spacemanager
+  // translation, therefore we have to factor in our border/padding.
+  floater->MoveTo(mSpaceManagerX + floaterMargin.left + region.x,
+                  mSpaceManagerY + floaterMargin.top + region.y);
 }
 
 /**
