@@ -37,7 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-//#define DEBUG_FIND 1
+#define DEBUG_FIND 1
 
 #include "nsFind.h"
 #include "nsContentCID.h"
@@ -67,11 +67,13 @@ static NS_DEFINE_IID(kRangeCID, NS_RANGE_CID);
 
 // Sure would be nice if we could just get these from somewhere else!
 PRInt32 nsFind::sInstanceCount = 0;
-nsIAtom* nsFind::sScriptAtom = nsnull;
 nsIAtom* nsFind::sTextAtom = nsnull;
-nsIAtom* nsFind::sCommentAtom = nsnull;
 nsIAtom* nsFind::sImgAtom = nsnull;
 nsIAtom* nsFind::sHRAtom = nsnull;
+nsIAtom* nsFind::sCommentAtom = nsnull;
+nsIAtom* nsFind::sScriptAtom = nsnull;
+nsIAtom* nsFind::sSelectAtom = nsnull;
+nsIAtom* nsFind::sTextareaAtom = nsnull;
 
 NS_IMPL_ISUPPORTS1(nsFind, nsIFind)
 
@@ -87,11 +89,13 @@ nsFind::nsFind()
   // Initialize the atoms if they aren't already:
   if (sInstanceCount <= 0)
   {
-    sScriptAtom = NS_NewAtom("script");
     sTextAtom = NS_NewAtom("__moz_text");
-    sCommentAtom = NS_NewAtom("__moz_comment");
     sImgAtom = NS_NewAtom("img");
     sHRAtom = NS_NewAtom("hr");
+    sCommentAtom = NS_NewAtom("__moz_comment");
+    sScriptAtom = NS_NewAtom("script");
+    sSelectAtom = NS_NewAtom("select");
+    sTextareaAtom = NS_NewAtom("textarea");
   }
   ++sInstanceCount;
 }
@@ -102,11 +106,13 @@ nsFind::~nsFind()
 
   if (sInstanceCount <= 1)
   {
-    NS_IF_RELEASE(sScriptAtom);
     NS_IF_RELEASE(sTextAtom);
-    NS_IF_RELEASE(sCommentAtom);
     NS_IF_RELEASE(sImgAtom);
     NS_IF_RELEASE(sHRAtom);
+    NS_IF_RELEASE(sCommentAtom);
+    NS_IF_RELEASE(sScriptAtom);
+    NS_IF_RELEASE(sSelectAtom);
+    NS_IF_RELEASE(sTextareaAtom);
   }
   --sInstanceCount;
 }
@@ -423,6 +429,13 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
         aSearchRange->GetStartOffset(&startOffset);
         aStartPoint->GetEndContainer(getter_AddRefs(endNode));
         aStartPoint->GetEndOffset(&endOffset);
+        // XXX Needs work:
+        // Problem with this approach: if there is a match which starts
+        // just before the current selection and continues into the selection,
+        // we will miss it, because our search algorithm only starts
+        // searching from the end of the word, so we would have to
+        // search the current selection but discount any matches
+        // that fall entirely inside it.
       } else {     // forward
         aStartPoint->GetStartContainer(getter_AddRefs(startNode));
         aStartPoint->GetStartOffset(&startOffset);
@@ -490,6 +503,9 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
 
     // If we ever cross a block node, flush the queue --
     // we don't match patterns extending across block boundaries.
+    // But we can't depend on this test here now, because the iterator
+    // doesn't give us the parent going in and going out, and we
+    // need it both times to depend on this.
     //if (IsBlockNode(content))
     //  ClearQ();
 
@@ -515,7 +531,7 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
           // What should we do if node is not an nsIContent?
           // Should we loop until we find something that is?
           // In practice, this doesn't seem to cause problems.
-          NS_ASSERTION(content, "Find: Node is not content\n");
+          //NS_ASSERTION(content, "Find: Node is not content\n");
         }
 #endif
       }
@@ -587,7 +603,10 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
     return PR_TRUE;
   nsIAtom *atomPtr = atom.get();
 
-  return (sScriptAtom == atomPtr || sCommentAtom == atomPtr);
+  // We may not need to skip comment nodes,
+  // now that IsTextNode distinguishes them from real text nodes.
+  return (sScriptAtom == atomPtr || sCommentAtom == atomPtr
+          || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
 
 #else /* HAVE_BIDI_ITERATOR */
   // Temporary: eventually we will have an iterator to do this,
@@ -608,7 +627,8 @@ PRBool nsFind::SkipNode(nsIContent* aContent)
     //printf("Atom name is %s\n", 
     //       NS_LossyConvertUCS2toASCII(atomName).get());
     nsIAtom *atomPtr = atom.get();
-    if (atomPtr == sScriptAtom || atomPtr == sCommentAtom)
+    if (atomPtr == sScriptAtom || atomPtr == sCommentAtom
+        || sSelectAtom == atomPtr || sTextareaAtom == atomPtr)
     {
 #ifdef DEBUG_FIND
       printf("Skipping node: ");
@@ -752,12 +772,7 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
           return PR_FALSE;
         }
 
-        // mIterOffset, if set, is the range's idea of an offset,
-        // and points between characters.  But when translated
-        // to a string index, it points to a character.  If we're
-        // going backward, this is one character too late and
-        // we'll match part of our last pattern.
-        offset = mIterOffset - (mFindBackward ? 1 : 0);
+        offset = mIterOffset;
 
         // We have a new text content.  If its block parent is different
         // from the block parent of the last text content, then we
@@ -765,10 +780,20 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
         // across block boundaries.
         nsCOMPtr<nsIDOMNode> blockParent;
         GetBlockParent(mIterNode, getter_AddRefs(blockParent));
-        if (blockParent && (blockParent != mLastBlockParent))
+#ifdef DEBUG_FIND
+        printf("New node: old blockparent = %p, new = %p\n",
+               (void*)mLastBlockParent.get(), (void*)blockParent.get());
+#endif
+        if (blockParent != mLastBlockParent)
         {
+#ifdef DEBUG_FIND
+          printf("Different block parent!\n");
+#endif
           ClearQ();
           mLastBlockParent = blockParent;
+          // End any pending match:
+          matchAnchorTC = nsnull;
+          pindex = (mFindBackward ? aPatLen : 0);
         }
 
         // Push mIterNode onto the queue:
@@ -777,18 +802,29 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
       }
       if (tc == nsnull)         // Out of nodes
         return PR_FALSE;
-#ifdef DEBUG_FIND
-      else printf("Got something from the queue\n");
-#endif
 
       nsresult rv = tc->GetText(&frag);
       if (NS_FAILED(rv)) continue;
+      // mIterOffset, if set, is the range's idea of an offset,
+      // and points between characters.  But when translated
+      // to a string index, it points to a character.  If we're
+      // going backward, this is one character too late and
+      // we'll match part of our previous pattern.
       if (offset >= 0)
-        restart = offset;
+        restart = offset - (mFindBackward ? 1 : 0);
       else if (mFindBackward)
         restart = frag->GetLength()-1;
       else
         restart = 0;
+      // If this is outside the bounds of the string, then skip this node:
+      if (restart < 0 || restart > frag->GetLength()-1)
+      {
+#ifdef DEBUG_FIND
+        printf("At the end of a text node -- skipping to the next\n");
+#endif
+        frag = 0;
+        continue;
+      }
       findex = restart;
 #ifdef DEBUG_FIND
       printf("Starting from offset %d\n", findex);
@@ -852,8 +888,8 @@ PRBool nsFind::FindInQ(const PRUnichar* aPatStr, PRInt32 aPatLen,
     PRUnichar c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
     PRUnichar patc = aPatStr[pindex];
 #ifdef DEBUG_FIND
-    printf("Comparing '%c'=%x to '%c' (%d of %d)%s\n",
-           (char)c, (int)c, patc, pindex, aPatLen,
+    printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
+           (char)c, (int)c, patc, pindex, aPatLen, findex,
            inWhitespace ? " (inWhitespace)" : "");
 #endif
 

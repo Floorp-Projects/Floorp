@@ -69,11 +69,16 @@ public:
 
 protected:
   static PRInt32 sInstanceCount;
-  static nsIAtom* sScriptAtom;
+
+  // HTML tags we treat specially
   static nsIAtom* sTextAtom;
-  static nsIAtom* sCommentAtom;
   static nsIAtom* sImgAtom;
   static nsIAtom* sHRAtom;
+  // Nodes we skip
+  static nsIAtom* sCommentAtom;
+  static nsIAtom* sScriptAtom;
+  static nsIAtom* sSelectAtom;
+  static nsIAtom* sTextareaAtom;
 
   // Parameters set from the interface:
   //nsCOMPtr<nsIDOMRange> mRange;   // search only in this range
