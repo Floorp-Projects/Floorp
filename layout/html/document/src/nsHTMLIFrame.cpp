@@ -20,6 +20,7 @@
 #include "nsLeafFrame.h"
 #include "nsIWebWidget.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsRepository.h"
 #include "nsIStreamListener.h"
@@ -27,12 +28,19 @@
 #include "nsIDocument.h"
 #include "nsIWebFrame.h"
 #include "nsIView.h"
+#include "nsIViewManager.h"
+#include "nsWidgetsCID.h"
+#include "nsViewsCID.h"
+#include "nsHTMLAToms.h"
 
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMNOTIFICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebWidgetIID, NS_IWEBWIDGET_IID);
 static NS_DEFINE_IID(kIWebFrameIID, NS_IWEBFRAME_IID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
+static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+static NS_DEFINE_IID(kCViewCID, NS_VIEW_CID);
+static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 // XXX temporary until doc manager/loader is in place
 class TempObserver : public nsIStreamListener
@@ -97,7 +105,7 @@ protected:
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
 
-  void CreateWebWidget(nscoord aWidgth, nscoord aHeight, nsString& aURL); 
+  void CreateWebWidget(nsSize aSize, nsString& aURL); 
 
   nsIWebWidget* mWebWidget;
 
@@ -113,6 +121,9 @@ public:
                                 nsIStyleContext* aStyleContext,
                                 nsIFrame*&       aResult);
 
+  void GetSize(float aPixelsToTwips, nsSize& aSize);
+  PRBool GetURL(nsString& aURLSpec);
+
 #if 0
   virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aValue) const;
@@ -123,7 +134,7 @@ public:
 protected:
   nsHTMLIFrame(nsIAtom* aTag);
   virtual  ~nsHTMLIFrame();
-  
+
   friend nsresult NS_NewHTMLIFrame(nsIHTMLContent** aInstancePtrResult,
                                    nsIAtom* aTag);
 
@@ -205,51 +216,13 @@ float nsHTMLIFrameFrame::GetTwipsToPixels()
 NS_METHOD
 nsHTMLIFrameFrame::MoveTo(nscoord aX, nscoord aY)
 {
-printf("MoveTo %d %d \n", aX, aY);
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    mRect.x = aX;
-    mRect.y = aY;
-    if (mWebWidget) {
-      float t2p = GetTwipsToPixels();
-      mWebWidget->Move(NS_TO_INT_ROUND(t2p * aX),
-                       NS_TO_INT_ROUND(t2p * aY));
-    }
-#if 0
-    // Let the view know
-    nsIView* view = nsnull;
-    GetView(view);
-    if (nsnull != view) {
-      // Position view relative to it's parent, not relative to our
-      // parent frame (our parent frame may not have a view). Also,
-      // inset the view by the border+padding if present
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      view->SetPosition(origin.x, origin.y);
-      NS_IF_RELEASE(parentWithView);
-      NS_RELEASE(view);
-    }
-#endif
-  }
-  return NS_OK;
+  return nsLeafFrame::MoveTo(aX, aY);
 }
 
 NS_METHOD
 nsHTMLIFrameFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 {
-  mRect.width = aWidth;
-  mRect.height = aHeight;
-#if 0
-  // Let the view know the correct size
-  nsIView* view = nsnull;
-  GetView(view);
-  if (nsnull != view) {
-    // XXX combo boxes need revision, they cannot have their height altered
-    view->SetDimensions(aWidth, aHeight);
-    NS_RELEASE(view);
-  }
-#endif
-  return NS_OK;
+  return nsLeafFrame::SizeTo(aWidth, aWidth);
 }
 
 NS_IMETHODIMP
@@ -257,7 +230,7 @@ nsHTMLIFrameFrame::Paint(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
                          const nsRect& aDirtyRect)
 {
-  //mWebWidget->Show();
+  mWebWidget->Show();
   return NS_OK;
 }
 
@@ -277,8 +250,9 @@ void TempMakeAbsURL(nsIContent* aContent, nsString& aRelURL, nsString& aAbsURL)
   NS_IF_RELEASE(docURL);
 }
 
-void nsHTMLIFrameFrame::CreateWebWidget(nscoord aWidth, nscoord aHeight, nsString& aURL) 
+void nsHTMLIFrameFrame::CreateWebWidget(nsSize aSize, nsString& aURL) 
 {
+  // create the web widget
   NSRepository::CreateInstance(kCWebWidgetCID, nsnull, kIWebWidgetIID, (void**)&mWebWidget);
 
   if (nsnull == mWebWidget) {
@@ -287,15 +261,16 @@ void nsHTMLIFrameFrame::CreateWebWidget(nscoord aWidth, nscoord aHeight, nsStrin
   }
   nsresult result;
 
-  // Get the parent web widget
+  // Get the parent web widget, set the parentage
   nsIFrame* parent;
-  GetGeometricParent(parent);
+  GetGeometricParent(parent);  // don't need to release
   nsIWebWidget* parentWebWidget = nsnull;
   while (nsnull != parent) {
-    nsIWebFrame* webFrame;
+    nsIWebFrame* webFrame; 
     result = parent->QueryInterface(kIWebFrameIID, (void**)&webFrame);
     if (NS_OK == result) {
       parentWebWidget = webFrame->GetWebWidget();
+      NS_RELEASE(webFrame);
       break;
     } 
     parent->GetGeometricParent(parent);
@@ -305,30 +280,50 @@ void nsHTMLIFrameFrame::CreateWebWidget(nscoord aWidth, nscoord aHeight, nsStrin
   }
   mWebWidget->SetContainer(parentWebWidget);
 
+  // Get the view manager, conversion
+  float t2p = 0.0f;
+  nsIViewManager* viewMan = nsnull;
+
   nsIPresContext* presContext = parentWebWidget->GetPresContext();
+  t2p = presContext->GetTwipsToPixels();
+  nsIPresShell *presShell = presContext->GetShell();     
+	viewMan = presShell->GetViewManager();  
+  NS_RELEASE(presShell);
+  NS_RELEASE(presContext);
+  NS_RELEASE(parentWebWidget);
 
-  float t2p = presContext->GetTwipsToPixels();
 
-  nsIView* parentWithView;
+  // create, init, set the parent of the view
+  nsIView* view;
+	result = NSRepository::CreateInstance(kCViewCID, nsnull, kIViewIID,
+                                        (void **)&view);
+	if (NS_OK != result) {
+	  NS_ASSERTION(0, "Could not create view for nsHTMLIFrame"); 
+    return;
+	}
+
+  nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(origin, parentWithView);
-  //view->SetPosition(origin.x, origin.y);
-  NS_IF_RELEASE(parentWithView);
-  //NS_RELEASE(view);
+  GetOffsetFromView(origin, parView);  
+  nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
-  
-  nsRect rect(NS_TO_INT_ROUND(origin.x * t2p), NS_TO_INT_ROUND(origin.y * t2p), 
-              NS_TO_INT_ROUND(aWidth * t2p), NS_TO_INT_ROUND(aHeight * t2p));
-  nsIWidget* parentWin;
-  GetWindow(parentWin);
-  mWebWidget->Init(parentWin->GetNativeData(NS_NATIVE_WINDOW), rect);
-  NS_IF_RELEASE(parentWin);
+  result = view->Init(viewMan, viewBounds, parView, &kCChildCID);
+  viewMan->InsertChild(parView, view, 0);
+  NS_RELEASE(viewMan);
+  NS_RELEASE(parView);
+ 
+  // init the web widget
+  nsIWidget* widget = view->GetWidget();
+  NS_RELEASE(view);
+  nsRect webBounds(0, 0, NS_TO_INT_ROUND(aSize.width * t2p), 
+                   NS_TO_INT_ROUND(aSize.height * t2p));
+  mWebWidget->Init(widget->GetNativeData(NS_NATIVE_WINDOW), webBounds);
+  NS_RELEASE(widget);
 
   // load the document
   nsString absURL;
   TempMakeAbsURL(mContent, aURL, absURL);
   mWebWidget->LoadURL(absURL, mTempObserver);
-  //mWebWidget->Show();
 }
 
 NS_IMETHODIMP
@@ -340,8 +335,11 @@ nsHTMLIFrameFrame::Reflow(nsIPresContext*      aPresContext,
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
 
   if (nsnull == mWebWidget) {
-    nsAutoString url("test9a.html");
-    CreateWebWidget(aDesiredSize.width, aDesiredSize.height, url);
+    nsHTMLIFrame* content = (nsHTMLIFrame*)mContent;
+    nsAutoString url;
+    content->GetURL(url);
+    nsSize size(aDesiredSize.width, aDesiredSize.height);
+    CreateWebWidget(size, url);
     mWebWidget->Show();
   }
   aStatus = NS_FRAME_COMPLETE;
@@ -353,9 +351,10 @@ nsHTMLIFrameFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
                                   nsReflowMetrics& aDesiredSize)
 {
-  float p2t = aPresContext->GetPixelsToTwips();
-  aDesiredSize.width  = (int) (p2t * 200);
-  aDesiredSize.height = (int) (p2t * 200);
+  nsSize size;
+  ((nsHTMLIFrame*)mContent)->GetSize(aPresContext->GetPixelsToTwips(), size);
+  aDesiredSize.width  = size.width;
+  aDesiredSize.height = size.height;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 }
@@ -382,6 +381,52 @@ nsHTMLIFrame::CreateFrame(nsIPresContext*  aPresContext,
   }
   aResult = frame;
   return NS_OK;
+}
+
+void nsHTMLIFrame::GetSize(float aPixelsToTwips, nsSize& aSize)
+{
+  aSize.width  = 200;
+  aSize.height = 200;
+
+  PRInt32 status;
+  nsHTMLValue  htmlVal;
+  nsAutoString stringVal;
+  PRInt32 intVal;
+
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::width, htmlVal))) {
+    if (eHTMLUnit_String == htmlVal.GetUnit()) {
+      htmlVal.GetStringValue(stringVal);
+      intVal = stringVal.ToInteger(&status);
+      if (NS_OK == status) {
+        aSize.width = intVal;
+      }
+    }
+  }
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::height, htmlVal))) {
+    if (eHTMLUnit_String == htmlVal.GetUnit()) {
+      htmlVal.GetStringValue(stringVal);
+      intVal = stringVal.ToInteger(&status);
+      if (NS_OK == status) {
+        aSize.height = intVal;
+      }
+    }
+  }
+
+  aSize.width  = (nscoord)(aSize.width * aPixelsToTwips + 0.5);
+  aSize.height = (nscoord)(aSize.height * aPixelsToTwips + 0.5);
+}
+
+PRBool nsHTMLIFrame::GetURL(nsString& aURLSpec)
+{
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == (GetAttribute(nsHTMLAtoms::src, value))) {
+    if (eHTMLUnit_String == value.GetUnit()) {
+      value.GetStringValue(aURLSpec);
+      return PR_TRUE;
+    }
+  }
+  aURLSpec.SetLength(0);
+  return PR_FALSE;
 }
 
 nsresult

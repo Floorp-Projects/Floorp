@@ -140,6 +140,8 @@ install:: $(TARGETS)
 	$(INSTALL) samples/test8siz.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test8sca.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/test8tab.html $(DIST)/bin/res/samples
+	$(INSTALL) samples/test9.html $(DIST)/bin/res/samples
+	$(INSTALL) samples/test9a.html $(DIST)/bin/res/samples
 	$(INSTALL) samples/raptor.jpg $(DIST)/bin/res/samples
 	$(INSTALL) samples/Anieyes.gif $(DIST)/bin/res/samples
 	$(INSTALL) samples/gear1.gif $(DIST)/bin/res/samples
@@ -157,6 +159,11 @@ clobber::
 	rm -f $(DIST)/bin/res/samples/test6.html
 	rm -f $(DIST)/bin/res/samples/test7.html
 	rm -f $(DIST)/bin/res/samples/test8.html
+	rm -f $(DIST)/bin/res/samples/test8siz.html
+	rm -f $(DIST)/bin/res/samples/test8sca.html
+	rm -f $(DIST)/bin/res/samples/test8tab.html
+	rm -f $(DIST)/bin/res/samples/test9.html
+	rm -f $(DIST)/bin/res/samples/test9a.html
 	rm -f $(DIST)/bin/res/samples/raptor.jpg
 	rm -f $(DIST)/bin/res/samples/Anieyes.gif
 	rm -f $(DIST)/bin/res/samples/gear1.gif
