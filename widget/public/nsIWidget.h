@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsColor.h"
 #include "nsIMouseListener.h"
+#include "nsIMenuListener.h"
 #include "nsIImage.h"
 
 #include "prthread.h"
@@ -446,6 +447,15 @@ class nsIWidget : public nsISupports {
 
     NS_IMETHOD AddMouseListener(nsIMouseListener * aListener) = 0;
 
+    /**
+     * Adds a menu listener to this widget
+     * Any existing menu listener is replaced
+     *
+     * @param aListener menu listener to add to this widget.
+     */
+
+    NS_IMETHOD AddMenuListener(nsIMenuListener * aListener) = 0;
+    
     /**
      * Return the widget's toolkit
      *
