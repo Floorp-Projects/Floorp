@@ -191,9 +191,22 @@ void RuleHash::AppendRule(nsICSSStyleRule* aRule)
 void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass, 
                                  RuleEnumFunc aFunc, void* aData)
 {
-  RuleValue*  tagValue = ((nsnull != aTag) ? (RuleValue*)mTagTable.Get(&RuleKey(aTag)) : nsnull);
-  RuleValue*  idValue = ((nsnull != aID) ? (RuleValue*)mIdTable.Get(&RuleKey(aID)) : nsnull);
-  RuleValue*  classValue = ((nsnull != aClass) ? (RuleValue*)mClassTable.Get(&RuleKey(aClass)) : nsnull);
+  RuleValue*  tagValue = nsnull;
+  RuleValue*  idValue = nsnull;
+  RuleValue*  classValue = nsnull;
+
+  if (nsnull != aTag) {
+    RuleKey tagKey(aTag);
+    tagValue = (RuleValue*)mTagTable.Get(&tagKey);
+  }
+  if (nsnull != aID) {
+    RuleKey idKey(aID);
+    idValue = (RuleValue*)mIdTable.Get(&idKey);
+  }
+  if (nsnull != aClass) {
+    RuleKey classKey(aClass);
+    classValue = (RuleValue*)mClassTable.Get(&classKey);
+  }
 
   PRInt32 tagIndex    = ((nsnull != tagValue)   ? tagValue->mIndex    : mRuleCount);
   PRInt32 idIndex     = ((nsnull != idValue)    ? idValue->mIndex     : mRuleCount);
@@ -220,7 +233,8 @@ void RuleHash::EnumerateAllRules(nsIAtom* aTag, nsIAtom* aID, nsIAtom* aClass,
 
 void RuleHash::EnumerateTagRules(nsIAtom* aTag, RuleEnumFunc aFunc, void* aData)
 {
-  RuleValue*  value = (RuleValue*)mTagTable.Get(&RuleKey(aTag));
+  RuleKey tagKey(aTag);
+  RuleValue*  value = (RuleValue*)mTagTable.Get(&tagKey);
 
   while (nsnull != value) {
     (*aFunc)(value->mRule, aData);
