@@ -176,6 +176,9 @@ private:
   nsresult GetTextAlign(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
   nsresult GetTextDecoration(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);  
 
+  // Display properties
+  nsresult GetVisibility(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
+
   nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
@@ -500,15 +503,20 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
     case eCSSProperty_outline_color:
       rv = GetOutlineColor(frame, *getter_AddRefs(val)); break;
 
-	  // Text properties
+      // Text properties
     case eCSSProperty_text_align:
       rv = GetTextAlign(frame, *getter_AddRefs(val)); break;
-	case eCSSProperty_text_decoration:
-      rv = GetTextDecoration(frame, *getter_AddRefs(val)); break;
 
-	  // List properties
-	case eCSSProperty_list_style_image:
+    case eCSSProperty_text_decoration:
+      rv = GetTextDecoration(frame, *getter_AddRefs(val)); break;
+      
+      // List properties
+    case eCSSProperty_list_style_image:
       rv = GetListStyleImage(frame, *getter_AddRefs(val)); break; 
+
+      // Display properties
+    case eCSSProperty_visibility:
+      rv = GetVisibility(frame, *getter_AddRefs(val)); break;
 
       // Z-Index property
     case eCSSProperty_z_index:
@@ -1375,6 +1383,30 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
   
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
 	                         (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetVisibility(nsIFrame *aFrame,
+                                  nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleVisibility* visibility=nsnull;
+  GetStyleData(eStyleStruct_Visibility,(const nsStyleStruct*&)visibility,aFrame);
+  
+  if(visibility) {
+    const nsCString& value=
+      nsCSSProps::SearchKeywordTable(visibility->mVisible,
+                                     nsCSSProps::kVisibilityKTable);
+    val->SetString(value);
+  }
+  else {
+    val->SetString("");
+  }
+  
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+                             (void **)&aValue);
 }
 
 #if 0

@@ -2390,7 +2390,7 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsAReadableString& aString,
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (tmp.Length() && tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+    if (tmp.Length() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else {
@@ -2428,7 +2428,7 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsAReadableString&
   }
   if (NS_OK == ec) {
     if (val < 0) val = 0;
-    if (tmp.Length() && tmp.Last() == '%') {/* XXX not 100% compatible with ebina's code */
+    if (tmp.Length() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else if (tmp.Length() && tmp.Last() == '*') {
