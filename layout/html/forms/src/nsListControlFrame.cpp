@@ -2938,6 +2938,10 @@ nsListControlFrame::AboutToRollup()
     // whatever it was before it was dropped down.
     if (index != mSelectedIndex) {
       ResetSelectedItem();
+    } else {
+      if (IsInDropDownMode() == PR_TRUE) {
+        mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE, PR_TRUE); 
+      }
     }
   }
   return NS_OK;
@@ -3089,7 +3093,7 @@ void nsListControlFrame::ResetSelectedItem()
   if (mIsAllFramesHere) {
     ToggleSelected(mSelectedIndexWhenPoppedDown);  
     if (IsInDropDownMode() == PR_TRUE) {
-      mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE); 
+      mComboboxFrame->ListWasSelected(mPresContext, PR_TRUE, PR_FALSE); 
     }
   }
 }
@@ -3194,7 +3198,7 @@ nsListControlFrame::MouseUp(nsIDOMEvent* aMouseEvent)
         SetContentSelected(mSelectedIndex, PR_TRUE);  
       }
       if (mComboboxFrame) {
-        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE); 
+        mComboboxFrame->ListWasSelected(mPresContext, PR_FALSE, PR_TRUE); 
       } 
       mouseEvent->clickCount = 1;
     } else {
@@ -3828,7 +3832,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         if (IsInDropDownMode() == PR_TRUE) {
           PRBool isDroppedDown;
           mComboboxFrame->IsDroppedDown(&isDroppedDown);
-          mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown);
+          mComboboxFrame->ListWasSelected(mPresContext, isDroppedDown, PR_TRUE);
         } else {
 	        UpdateSelection(PR_TRUE, PR_FALSE, mContent);
 	      }

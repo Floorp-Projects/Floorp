@@ -1885,7 +1885,7 @@ nsComboboxControlFrame::GetDropDown(nsIFrame** aDropDownFrame)
 }
 
 NS_IMETHODIMP
-nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate) // Added "aForceUpdate" for Bug 42661
+nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aForceUpdate, PRBool aSendEvent) // Added "aForceUpdate" for Bug 42661
 {
   if (aPresContext == nsnull) {
     aPresContext = mPresContext;
@@ -1896,7 +1896,7 @@ nsComboboxControlFrame::ListWasSelected(nsIPresContext* aPresContext, PRBool aFo
   PRInt32 indx;
   mListControlFrame->GetSelectedIndex(&indx);
 
-  UpdateSelection(PR_TRUE, aForceUpdate, indx); // Added "aForceUpdate" for Bug 42661
+  UpdateSelection(aSendEvent, aForceUpdate, indx); // Added "aForceUpdate" for Bug 42661
 
   return NS_OK;
 }
