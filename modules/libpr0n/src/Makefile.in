@@ -36,8 +36,6 @@ CPPSRCS		= ImageCache.cpp \
 			imgRequest.cpp        \
 			imgRequestProxy.cpp
 
-EXPORTS		= ImageLogging.h
-
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
