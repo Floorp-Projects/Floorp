@@ -12,7 +12,7 @@
 # for the specific language governing rights and limitations under the
 # License.
 #
-# The Original Code is Firebird Help Source Code.
+# The Original Code is Firefox Help Source Code.
 #
 # The Initial Developer of the Original Code is
 # Ian Oeschger.
@@ -21,6 +21,8 @@
 #
 # Contributor(s):
 #   R.J. Keller <rlk@trfenv.com>
+#   Steffen Wilberg <steffen.wilberg@web.de>
+#
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
 # the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -73,7 +75,7 @@
       <menuitem command="cmd_CustomizeToolbars"
                 label="&viewCustomizeToolbar.label;"
                 accesskey="&viewCustomizeToolbar.accesskey;"/>
-    </popup>    
+    </popup>
     <broadcasterset id="helpBroadcasters">
         <broadcaster id="canGoBack"    disabled="true"/>
         <broadcaster id="canGoForward" disabled="true"/>
@@ -85,25 +87,36 @@
         <command id="Help:Back" oncommand="goBack();"       observes="canGoBack"/>
         <command id="Help:Forward" oncommand="goForward();" observes="canGoForward"/>
         <command id="Help:Find" oncommand="helpBrowser.find();"/>
-        <command id="Help:FindAgain" oncommand="helpBrowser.findAgain();"/>      
-	<command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
-	 <command id="cmd_closeWindow" oncommand="close();"/>
+        <command id="Help:FindAgain" oncommand="helpBrowser.findAgain();"/>
+        <command id="Help:FindPrevious" oncommand="helpBrowser.findPrevious();"/>
+        <command id="Help:ToggleSidebar" oncommand="toggleSidebar();"/>
+        <command id="cmd_closeWindow" oncommand="close();"/>
         <command id="cmd_textZoomReduce" oncommand="ZoomManager.prototype.getInstance().reduce();"/>
         <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
         <command id="cmd_CustomizeToolbars" oncommand="CustomizeToolbar('help-toolbox');"/>
     </commandset>
-    <commandset id="clipboardEditMenuItems"/>
-    <commandset id="viewZoomCommands"/>
     <keyset id="keys">
-        <key id="key_close"/>
+        <key id="goHome"      keycode="VK_HOME"  command="Help:Home" modifiers="alt"/>
+#ifdef XP_MACOSX
+        <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="accel"/>
+        <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="accel"/>
+#else
+        <key id="goBackKb"    keycode="VK_LEFT"  command="Help:Back" modifiers="alt"/>
+        <key id="goForwardKb" keycode="VK_RIGHT" command="Help:Forward" modifiers="alt"/>
+        <key keycode="VK_BACK" command="Help:Back"/>
+        <key keycode="VK_BACK" command="Help:Forward" modifiers="shift"/>
+#endif
         <key id="printKb" key="&printCmd.commandkey;" oncommand="print();"
             modifiers="accel"/>
-        <keyset id="viewZoomKeys"/>
-        <keyset id="navigationKeys"/>
         <key id="key_find" key="&findOnCmd.commandkey;"
             command="Help:Find" modifiers="accel"/>
         <key id="key_findAgain" key="&findAgainCmd.commandkey;"
             command="Help:FindAgain" modifiers="accel"/>
+        <key id="key_findPrevious" key="&findAgainCmd.commandkey;"
+            command="Help:FindPrevious" modifiers="accel,shift"/>
+        <key keycode="VK_F3" command="Help:FindAgain"/>
+        <key keycode="VK_F3" command="Help:FindPrevious" modifiers="shift"/>
+        <key keycode="VK_F5" oncommand="reload();"/>
         <key id="key_closeWindow" key="&closeWindow.commandkey;"
             command="cmd_closeWindow" modifiers="accel"/>
         <key id="key_closeWindow2" keycode="VK_ESCAPE"
@@ -117,9 +130,9 @@
         <key id="key_textZoomReset" key="&textZoomResetCmd.commandkey;"
             oncommand="ZoomManager.prototype.getInstance().reset();" modifiers="accel"/>
         <key id="key_toggleSidebar" keycode="VK_F9" command="Help:ToggleSidebar"/>
-        <key id="key_viewNextHelpPanel" keycode="VK_TAB" 
+        <key id="key_viewNextHelpPanel" keycode="VK_TAB"
              oncommand="showRelativePanel(true);" modifiers="control"/>
-        <key id="key_viewPrevHelpPanel" keycode="VK_TAB" 
+        <key id="key_viewPrevHelpPanel" keycode="VK_TAB"
              oncommand="showRelativePanel(false);" modifiers="control,shift"/>
     </keyset>
     <stringbundle id="bundle_viewZoom"/>
@@ -131,9 +144,9 @@
     <vbox flex="1">
 
         <toolbox id="help-toolbox" class="toolbox-top" mode="icons" iconsize="small" customizable="true">
-            
+
             <toolbarpalette id="HelpToolbarPalette">
-            
+
                 <toolbarbutton id="help-sidebar-button"
                 	class="toolbarbutton-1"
                 	customizeable="true" label="&sidebarBtn.label;"
@@ -166,7 +179,7 @@
                     command="cmd_textZoomReduce"/>
                 <toolbarbutton id="help-zoom-large-button"
                     class="toolbarbutton-1" label="&textZoomEnlargeBtn.label;"
-                    command="cmd_textZoomEnlarge"/>    
+                    command="cmd_textZoomEnlarge"/>
                 <toolbarbutton id="help-print-button" class="browserButton"
                     label="&printButton.label;"
                     oncommand="print();"
@@ -175,7 +188,7 @@
                     label="&cmd_CustomizeToolbars.label;"
                     command="cmd_CustomizeToolbars"
                     tooltiptext="&customizeButton.tooltip;"/>
-                
+
                 <toolbaritem id="throbber-box" title="&throbberItem.title;"
                     align="center" pack="center">
                   <button id="help-throbber" tooltiptext="&throbber.tooltip;"
@@ -187,7 +200,7 @@
                     customizable="true"
                     defaultset="help-sidebar-button,separator,help-back-button,help-forward-button,help-home-button,separator,help-toolbar-customization,spring,help-print-button,separator,spacer,throbber-box"
                     context="toolbar-context-menu"/>
-	    <toolbarset id="customToolbars"/>
+            <toolbarset id="customToolbars"/>
         </toolbox>
 
         <hbox flex="1">
@@ -292,7 +305,7 @@
                 <vbox id="help-search-panel" hidden="true" flex="1">
                     <hbox align="center">
                         <textbox id="findText" flex="1" oninput="doEnabling();"
-                            onkeypress="if ((event.keyCode 
+                            onkeypress="if ((event.keyCode
                                 == KeyEvent.DOM_VK_ENTER) || (event.keyCode
                                 == KeyEvent.DOM_VK_RETURN))
                                 doFind();"/>
@@ -345,7 +358,7 @@
                     label="&toctab.label;"
                     oncommand="showPanel('help-toc')"
                     accesskey="&toctab.accesskey;"/>
-                <tree id="help-toc-panel" class="focusring" 
+                <tree id="help-toc-panel" class="focusring"
                         flex="1"  hidecolumnpicker="true"
                         datasources="rdf:null"
                         containment="http://home.netscape.com/NC-rdf#subheadings"

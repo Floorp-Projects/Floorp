@@ -19,8 +19,9 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#      brantgurganus2001@cherokeescouting.org
-#      rlk@trfenv.com
+#      Brant Gurganus <brantgurganus2001@cherokeescouting.org>
+#      R.J. Keller <rlk@trfenv.com>
+#      Steffen Wilberg <steffen.wilberg@web.de>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -329,6 +330,28 @@ function goBack() {
   } catch (e)
   {
   }
+}
+
+/* copied from browser.js */
+function BrowserReloadWithFlags(reloadFlags) {
+    /* First, we'll try to use the session history object to reload so 
+     * that framesets are handled properly. If we're in a special 
+     * window (such as view-source) that has no session history, fall 
+     * back on using the web navigation's reload method.
+     */
+
+    var webNav = getWebNavigation();
+    try {
+      var sh = webNav.sessionHistory;
+      if (sh)
+        webNav = sh.QueryInterface(Components.interfaces.nsIWebNavigation);
+    } catch (e) {
+    }
+
+    try {
+      webNav.reload(reloadFlags);
+    } catch (e) {
+    }
 }
 
 function reload() {
