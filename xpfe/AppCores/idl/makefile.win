@@ -33,7 +33,6 @@ IDLSRCS= \
 	BaseAppCore.idl     \
 	BrowserAppCore.idl  \
 	DOMPropsCore.idl    \
-	EditorAppCore.idl   \
 	RDFCore.idl         \
 	ProfileCore.idl     \
 	ToolkitCore.idl
