@@ -284,14 +284,21 @@ main(int argc, char **argv)
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
 
     secDir = SECU_ConfigDirectory(secDir);
-    rv = NSS_Init(secDir);
-    if (rv != SECSuccess) {
-	fprintf(stderr, "NSS_Init failed.\n");
-	exit(1);
+    if (strcmp(nickname, "none")) {
+	rv = NSS_Init(secDir);
+	if (rv != SECSuccess) {
+	    fprintf(stderr, "NSS_Init failed.\n");
+	    exit(1);
+	}
+	certdb = CERT_GetDefaultCertDB();
+	keydb  = SECKEY_GetDefaultKeyDB();
+    } else {
+	rv = NSS_NoDB_Init(secDir);
+	if (rv != SECSuccess) {
+	    fprintf(stderr, "NSS_Init failed.\n");
+	    exit(1);
+	}
     }
-    certdb = CERT_GetDefaultCertDB();
-    keydb  = SECKEY_GetDefaultKeyDB();
-
     if (doPub) {
 	if (!strcmp(nickname, "none")) {
 	    pubKey = getDefaultRSAPublicKey();
