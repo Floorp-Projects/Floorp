@@ -24,6 +24,7 @@
 #ifndef nsOutlinerRowTestNode_h__
 #define nsOutlinerRowTestNode_h__
 
+#include "nscore.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsRuleNetwork.h"
 #include "nsIRDFResource.h"
@@ -74,7 +75,7 @@ public:
             return "nsOutlinerRowTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return PLHashNumber(mResource.get()) >> 2; }
+            return PLHashNumber(NS_PTR_TO_INT32(mResource.get())) >> 2; }
 
         virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

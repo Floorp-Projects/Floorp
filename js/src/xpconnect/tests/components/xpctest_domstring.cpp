@@ -68,7 +68,7 @@ xpcTestDOMString::HereHaveADOMString(const nsAReadableString &str)
 {
     const nsSharedBufferHandle<PRUnichar> *handle;
     handle = str.GetSharedBufferHandle();
-    if (!handle || int(handle) == 1)
+    if (!handle || NS_PTR_TO_INT32(handle) == 1)
         return NS_ERROR_INVALID_ARG;
     
     if (mHandle)

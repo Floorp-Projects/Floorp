@@ -24,6 +24,7 @@
 #ifndef nsRDFConMemberTestNode_h__
 #define nsRDFConMemberTestNode_h__
 
+#include "nscore.h"
 #include "nsRDFTestNode.h"
 #include "nsIRDFDataSource.h"
 #include "nsFixedSizeAllocator.h"
@@ -94,8 +95,8 @@ public:
             return "nsRDFConMemberTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return PLHashNumber(mContainer.get()) ^
-                (PLHashNumber(mMember.get()) >> 12); }
+            return PLHashNumber(NS_PTR_TO_INT32(mContainer.get())) ^
+                (PLHashNumber(NS_PTR_TO_INT32(mMember.get())) >> 12); }
 
         virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

@@ -22,7 +22,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
-
+#include "nscore.h"
 #include "nsXInstaller.h"
 #include "logo.xpm"
 
@@ -428,7 +428,7 @@ ErrorHandler(int aErr, const char* aErrMsg)
 void
 ErrDlgOK(GtkWidget *aWidget, gpointer aData)
 {
-    int err = (int) aData;
+    int err = NS_PTR_TO_INT32(aData);
     
     if (sErrDlg)
     {

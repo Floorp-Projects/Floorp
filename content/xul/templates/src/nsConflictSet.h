@@ -24,6 +24,7 @@
 #ifndef nsConflictSet_h__
 #define nsConflictSet_h__
 
+#include "nscore.h"
 #include "plhash.h"
 #include "nsTemplateMatch.h"
 #include "nsTemplateMatchSet.h"
@@ -389,7 +390,7 @@ protected:
         } }
 
     static PLHashNumber PR_CALLBACK HashBindingElement(const void* aSupport) {
-        return PLHashNumber(aSupport) >> 3; }
+        return PLHashNumber(NS_PTR_TO_INT32(aSupport)) >> 3; }
         
     static PRIntn PR_CALLBACK CompareBindingElements(const void* aLeft, const void* aRight) {
         return aLeft == aRight; }

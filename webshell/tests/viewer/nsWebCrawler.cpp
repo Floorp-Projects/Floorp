@@ -26,6 +26,7 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsWebCrawler.h"
 #include "nsViewerApp.h"
@@ -67,7 +68,7 @@ static NS_DEFINE_IID(kIXMLContentIID, NS_IXMLCONTENT_IID);
 static PLHashNumber
 HashKey(nsIAtom* key)
 {
-  return (PLHashNumber) key;
+  return NS_PTR_TO_INT32(key);
 }
 
 static PRIntn
@@ -116,7 +117,7 @@ AtomHashTable::~AtomHashTable()
 const void*
 AtomHashTable::Get(nsIAtom* aKey)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   if (nsnull != he) {
@@ -133,7 +134,7 @@ AtomHashTable::Get(nsIAtom* aKey)
 const void*
 AtomHashTable::Put(nsIAtom* aKey, const void* aData)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   if (nsnull != he) {
@@ -153,7 +154,7 @@ AtomHashTable::Put(nsIAtom* aKey, const void* aData)
 const void*
 AtomHashTable::Remove(nsIAtom* aKey)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   void* oldValue = nsnull;

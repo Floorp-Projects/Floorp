@@ -35,6 +35,7 @@
 
 /* Private maps (hashtables). */
 
+#include "nscore.h"
 #include "xpcprivate.h"
 
 /***************************************************************************/
@@ -87,7 +88,7 @@ HashNativeKey(JSDHashTable *table, const void *key)
         NS_ASSERTION(Addition, "bad key");
         // This would be an XOR like below. 
         // But "0 ^ x == x". So it does not matter.
-        h = (JSHashNumber) Addition >> 2;
+        h = (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
     }
     else
     {
@@ -99,15 +100,15 @@ HashNativeKey(JSDHashTable *table, const void *key)
             for(PRUint16 i = 0; i < count; i++)
             {
                 if(i == Position)
-                    h ^= (JSHashNumber) Addition >> 2;
+                    h ^= (JSHashNumber) NS_PTR_TO_INT32(Addition) >> 2;
                 else
-                    h ^= (JSHashNumber) *(Current++) >> 2;
+                    h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
             }
         }
         else
         {
             for(PRUint16 i = 0; i < count; i++)
-                h ^= (JSHashNumber) *(Current++) >> 2;
+                h ^= (JSHashNumber) NS_PTR_TO_INT32(*(Current++)) >> 2;
         }
     }
 

@@ -340,7 +340,7 @@ CViewSourceHTML::CViewSourceHTML() : mFilename(), mTags(), mErrors() {
 
   //set this to 1 if you want to see errors in your HTML markup.
   char* theEnvString = PR_GetEnv("MOZ_VALIDATE_HTML"); 
-  mShowErrors=PRBool(theEnvString);
+  mShowErrors=PRBool(theEnvString != nsnull);
 
 #ifdef DUMP_TO_FILE
   gDumpFile = fopen(gDumpFileName,"w");

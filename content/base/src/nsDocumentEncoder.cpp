@@ -666,9 +666,9 @@ nsDocumentEncoder::SerializeRangeNodes(nsIDOMRange* aRange,
       nsCOMPtr<nsIDOMNode> childAsNode;
       PRInt32 startOffset = 0, endOffset = -1;
       if (startNode == content)
-        startOffset = NS_REINTERPRET_CAST(PRInt32, mStartOffsets[mStartRootIndex - aDepth]);
+        startOffset = NS_PTR_TO_INT32(mStartOffsets[mStartRootIndex - aDepth]);
       if (endNode == content)
-        endOffset = NS_REINTERPRET_CAST(PRInt32, mEndOffsets[mEndRootIndex - aDepth]);
+        endOffset = NS_PTR_TO_INT32(mEndOffsets[mEndRootIndex - aDepth]) ;
       // generated content will cause offset values of -1 to be returned.  
       PRInt32 j, childCount=0;
       rv = content->ChildCount(childCount);

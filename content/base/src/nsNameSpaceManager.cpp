@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nscore.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsHashtable.h"
@@ -103,7 +104,7 @@ static PRInt32 FindNameSpaceID(const nsAReadableString& aURI)
   nsStringKey key(aURI);
   void* value = gURIToIDTable->Get(&key);
   if (nsnull != value) {
-    return PRInt32(value);
+    return NS_PTR_TO_INT32(value);
   }
   return kNameSpaceID_Unknown;
 }

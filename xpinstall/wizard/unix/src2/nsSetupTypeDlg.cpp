@@ -22,6 +22,7 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
+#include "nscore.h"
 #include "nsSetupTypeDlg.h"
 #include "nsXInstaller.h"
 
@@ -690,7 +691,7 @@ nsSetupTypeDlg::RadBtnToggled(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("RadBtnToggled");
     
-    gCtx->opt->mSetupType = (int) aData;
+    gCtx->opt->mSetupType = NS_PTR_TO_INT32(aData);
 }
 
 int

@@ -27,6 +27,7 @@
  * Date             Modified by     Description of modification
  * 04/20/2000       IBM Corp.      OS/2 VisualAge build.
  */
+#include "nscore.h"
 #include "nsIFrameManager.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
@@ -2408,7 +2409,7 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
 static PLHashNumber
 HashKey(void* key)
 {
-  return (PLHashNumber)key;
+  return NS_PTR_TO_INT32(key);
 }
 
 static PRIntn
@@ -2437,7 +2438,7 @@ FrameHashTable::~FrameHashTable()
 void*
 FrameHashTable::Get(void* aKey)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   if (he) {
@@ -2449,7 +2450,7 @@ FrameHashTable::Get(void* aKey)
 void*
 FrameHashTable::Put(void* aKey, void* aData)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   if (he) {
@@ -2464,7 +2465,7 @@ FrameHashTable::Put(void* aKey, void* aData)
 void*
 FrameHashTable::Remove(void* aKey)
 {
-  PRInt32 hashCode = (PRInt32) aKey;
+  PRInt32 hashCode = NS_PTR_TO_INT32(aKey);
   PLHashEntry** hep = PL_HashTableRawLookup(mTable, hashCode, aKey);
   PLHashEntry* he = *hep;
   void* oldValue = nsnull;
@@ -2721,7 +2722,7 @@ UndisplayedMap::GetEntryFor(nsIContent* aParentContent)
   if (mLastLookup && (aParentContent == (*mLastLookup)->key)) {
     return mLastLookup;
   }
-  PLHashNumber hashCode = (PLHashNumber)(void*)aParentContent;
+  PLHashNumber hashCode = NS_PTR_TO_INT32(aParentContent);
   PLHashEntry** entry = PL_HashTableRawLookup(mTable, hashCode, aParentContent);
   if (*entry) {
     mLastLookup = entry;
@@ -2754,7 +2755,7 @@ UndisplayedMap::AppendNodeFor(UndisplayedNode* aNode, nsIContent* aParentContent
     node->mNext = aNode;
   }
   else {
-    PLHashNumber hashCode = (PLHashNumber)(void*)aParentContent;
+    PLHashNumber hashCode = NS_PTR_TO_INT32(aParentContent);
     PL_HashTableRawAdd(mTable, entry, hashCode, aParentContent, aNode);
     mLastLookup = nsnull; // hashtable may have shifted bucket out from under us
   }

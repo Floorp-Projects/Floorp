@@ -24,6 +24,7 @@
 
 #include <limits.h>
 
+#include "nscore.h"
 #include "nsDiskCacheBinding.h"
 
 
@@ -52,7 +53,7 @@ GetKey(PLDHashTable * /*table*/, PLDHashEntryHdr * header)
 static PLDHashNumber PR_CALLBACK
 HashKey( PLDHashTable *table, const void *key)
 {
-    return (PLDHashNumber) key;
+    return (PLDHashNumber) NS_PTR_TO_INT32(key);
 }
 
 
@@ -62,7 +63,7 @@ MatchEntry(PLDHashTable *              /* table */,
             const void *                  key)
 {
     HashTableEntry * hashEntry = (HashTableEntry *) header;
-    return (hashEntry->mBinding->mRecord.HashNumber() == (PLDHashNumber) key);
+    return (hashEntry->mBinding->mRecord.HashNumber() == (PLDHashNumber) NS_PTR_TO_INT32(key));
 }
 
 static void PR_CALLBACK

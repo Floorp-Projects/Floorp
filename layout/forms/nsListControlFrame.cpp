@@ -20,6 +20,7 @@
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsListControlFrame.h"
 #include "nsFormControlFrame.h" // for COMPARE macro
@@ -273,7 +274,7 @@ public:
 
     PRInt32 count = mInxArray.Count();
     for (PRInt32 i=0;i<count;i++) {
-      PRInt32 inx = (PRInt32)mInxArray[i];
+      PRInt32 inx = NS_PTR_TO_INT32(mInxArray[i]);
       if (inx > aInx) {
         mInxArray.ReplaceElementAt((void*)(inx+(aInserted?1:-1)), i);
       }

@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nscore.h"
 #include "nsICSSDeclaration.h"
 #include "nsString.h"
 #include "nsCRT.h"
@@ -4619,7 +4620,7 @@ CSSDeclarationImpl::ToString(nsAWritableString& aString)
     PRInt32 count = mOrder->Count();
     PRInt32 index;
     for (index = 0; index < count; index++) {
-      nsCSSProperty property = (nsCSSProperty)(PRInt32)mOrder->ElementAt(index);
+      nsCSSProperty property = (nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(index));
       if (0 <= property) {
         aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(property)));
         aString.Append(NS_LITERAL_STRING(": "));
@@ -4791,7 +4792,7 @@ CSSDeclarationImpl::GetNthProperty(PRUint32 aIndex, nsAWritableString& aReturn)
 {
   aReturn.Truncate();
   if (nsnull != mOrder) {
-    nsCSSProperty property = (nsCSSProperty)(PRInt32)mOrder->ElementAt(aIndex);
+    nsCSSProperty property = (nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(aIndex));
     if (0 <= property) {
       aReturn.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(property)));
     }
@@ -4812,7 +4813,7 @@ CSSDeclarationImpl::GetStyleImpact(PRInt32* aHint) const
     PRInt32 count = mOrder->Count();
     PRInt32 index;
     for (index = 0; index < count; index++) {
-      nsCSSProperty property = (nsCSSProperty)(PRInt32)mOrder->ElementAt(index);
+      nsCSSProperty property = (nsCSSProperty)NS_PTR_TO_INT32(mOrder->ElementAt(index));
       if (eCSSProperty_UNKNOWN < property) {
         if (hint < nsCSSProps::kHintTable[property]) {
           hint = nsCSSProps::kHintTable[property];

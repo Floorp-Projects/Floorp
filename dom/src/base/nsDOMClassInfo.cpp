@@ -21,6 +21,7 @@
  *   Johnny Stenback <jst@netscape.com> (original author)
  */
 
+#include "nscore.h"
 #include "nsDOMClassInfo.h"
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
@@ -4458,7 +4459,7 @@ nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
   nsCOMPtr<nsIDOMHistory> history(do_QueryInterface(aNative));
 
-  return history->Item(PRUint32(aNative), aResult);
+  return history->Item(NS_PTR_TO_INT32(aNative), aResult);
 }
 
 

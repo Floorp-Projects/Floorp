@@ -22,6 +22,7 @@
  * Mitch Stoltz
  * Steve Morse
  */
+#include "nscore.h"
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptObjectPrincipal.h"
@@ -55,7 +56,6 @@
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
-#include "nscore.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIPrompt.h"
@@ -219,7 +219,7 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
 #ifdef DEBUG_mstoltz
         printf("Cached ");
 #endif
-        secLevel = (PRInt32)*aPolicy;
+        secLevel = NS_PTR_TO_INT32(*aPolicy);
     }
     else
     {

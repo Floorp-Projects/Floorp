@@ -595,7 +595,7 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *pJavaObject,  void* principalsArra
       handle->js_obj = js_obj;
       handle->rt = JS_GetRuntime(cx);
     }
-    *pobj = (jsobject)handle;
+    *pobj = (jsobject)NS_PTR_TO_INT32(handle);
     /* FIXME:  what if the window is explicitly disposed of, how do we
        notify Java? */
 #endif

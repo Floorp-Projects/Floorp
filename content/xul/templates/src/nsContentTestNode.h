@@ -24,6 +24,7 @@
 #ifndef nsContentTestNode_h__
 #define nsContentTestNode_h__
 
+#include "nscore.h"
 #include "nsRuleNetwork.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIAtom.h"
@@ -76,7 +77,7 @@ public:
             return "nsContentTestNode::Element"; }
 
         virtual PLHashNumber Hash() const {
-            return PLHashNumber(mContent.get()) >> 2; }
+            return PLHashNumber(NS_PTR_TO_INT32(mContent.get())) >> 2; }
 
         virtual PRBool Equals(const MemoryElement& aElement) const {
             if (aElement.Type() == Type()) {

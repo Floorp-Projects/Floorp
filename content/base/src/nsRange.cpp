@@ -24,6 +24,7 @@
  * nsRange.cpp: Implementation of the nsIDOMRange object.
  */
 
+#include "nscore.h"
 #include "nsRange.h"
 
 #include "nsIDOMNode.h"
@@ -769,8 +770,8 @@ PRBool nsRange::IsIncreasing(nsIDOMNode* aStartN, PRInt32 aStartOffset,
   // or the first common ancestor from the leaf perspective
   numStartAncestors++;
   numEndAncestors++;
-  commonNodeStartOffset = (PRInt32)mStartAncestorOffsets->ElementAt(numStartAncestors);
-  commonNodeEndOffset   = (PRInt32)mEndAncestorOffsets->ElementAt(numEndAncestors);
+  commonNodeStartOffset = NS_PTR_TO_INT32(mStartAncestorOffsets->ElementAt(numStartAncestors));
+  commonNodeEndOffset   = NS_PTR_TO_INT32(mEndAncestorOffsets->ElementAt(numEndAncestors));
   
   if (commonNodeStartOffset > commonNodeEndOffset) 
     return PR_FALSE;

@@ -20,6 +20,7 @@
  * Mitch Stoltz
  */
 
+#include "nscore.h"
 #include "nsBasePrincipal.h"
 #include "nsScriptSecurityManager.h"
 #include "nsString.h"
@@ -88,7 +89,7 @@ nsBasePrincipal::CanEnableCapability(const char *capability, PRInt16 *result)
         int len = space ? space - start : nsCRT::strlen(start);
         nsCAutoString capString(start, len);
         nsCStringKey key(capString);
-        PRInt16 value = (PRInt16)(PRInt32)mCapabilities->Get(&key);
+        PRInt16 value = (PRInt16)NS_PTR_TO_INT32(mCapabilities->Get(&key));
         if (value == 0)
             value = nsIPrincipal::ENABLE_UNKNOWN;
         if (value < *result)
@@ -265,7 +266,7 @@ PR_STATIC_CALLBACK(PRBool)
 AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
 {
     CapabilityList* capList = (CapabilityList*)capListPtr;
-    PRInt16 value = (PRInt16)(PRInt32)aData;
+    PRInt16 value = (PRInt16)NS_PTR_TO_INT32(aData);
     nsCStringKey* key = (nsCStringKey *)aKey;
     if (value == nsIPrincipal::ENABLE_GRANTED)
     {
@@ -390,7 +391,7 @@ nsBasePrincipal::Read(nsIObjectInputStream* aStream)
 PR_STATIC_CALLBACK(nsresult)
 WriteScalarValue(nsIObjectOutputStream* aStream, void* aData)
 {
-    PRUint32 value = (PRUint32) aData;
+    PRUint32 value = NS_PTR_TO_INT32(aData);
 
     return aStream->Write32(value);
 }

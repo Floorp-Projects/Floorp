@@ -21,6 +21,7 @@
  *   Chris Waterson <waterson@netscape.com>
  */
 
+#include "nscore.h"
 #include "nsTemplateMatchSet.h"
 #include "nsTemplateRule.h"
 
@@ -66,7 +67,7 @@ nsTemplateMatchRefSet::HashEntry(PLDHashTable* aTable, const void* aKey)
 {
     const nsTemplateMatch* match = NS_STATIC_CAST(const nsTemplateMatch*, aKey);
     return PLDHashNumber(Instantiation::Hash(&(match->mInstantiation)))
-        ^ (PLDHashNumber(match->mRule) >> 2);
+        ^ (PLDHashNumber(NS_PTR_TO_INT32(match->mRule)) >> 2);
 }
 
 PRBool PR_CALLBACK

@@ -19,6 +19,7 @@
  *
  * Contributor(s):
  */
+#include "nscore.h"
 #include "nsGenericHTMLElement.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
@@ -4175,7 +4176,7 @@ nsGenericHTMLLeafFormElement::SetParent(nsIContent* aParent)
 {
   nsresult rv = NS_OK;
 
-  PRBool old_parent = (PRBool)mParent;
+  PRBool old_parent = NS_PTR_TO_INT32(mParent);
 
   if (NS_SUCCEEDED(rv)) {
     rv = nsGenericElement::SetParent(aParent);

@@ -21,6 +21,7 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Jacek Piskozub <piskozub@iopan.gda.pl>
  */
+#include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLContainerFrame.h"
@@ -2576,7 +2577,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetBorderHorizSpace(PRUint32 *result)
 
 NS_IMETHODIMP nsPluginInstanceOwner::GetUniqueID(PRUint32 *result)
 {
-  *result = (PRUint32)mContext;
+  *result = NS_PTR_TO_INT32(mContext);
   return NS_OK;
 }
 

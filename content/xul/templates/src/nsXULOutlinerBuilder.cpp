@@ -27,6 +27,7 @@
  *   model to compute the cell text. We could make this be better.
  */
 
+#include "nscore.h"
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsILocalStore.h"
@@ -1434,7 +1435,7 @@ nsXULOutlinerBuilder::OpenSubtreeOf(nsOutlinerRows::Subtree* aSubtree,
     // Now recursively deal with any open sub-containers that just got
     // inserted
     for (PRInt32 i = 0; i < open.Count(); ++i) {
-        PRInt32 index = PRInt32(open[i]);
+        PRInt32 index = NS_PTR_TO_INT32(open[i]);
 
         nsOutlinerRows::Subtree* child =
             mRows.EnsureSubtreeFor(aSubtree, index);
