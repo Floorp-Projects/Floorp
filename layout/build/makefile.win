@@ -73,6 +73,7 @@ LLIBS=					\
 !endif
  $(DIST)\lib\raptorxulbase_s.lib \
  $(DIST)\lib\raptorxulcontent_s.lib	\
+ $(DIST)\lib\raptorxbl_s.lib \
 !ifdef MOZ_MATHML
  $(DIST)\lib\raptormathmlbase_s.lib \
  $(DIST)\lib\raptormathmlcontent_s.lib	\
