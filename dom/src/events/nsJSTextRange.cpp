@@ -298,7 +298,6 @@ TextRangeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_FALSE;
   }
 
-  JSBool rBool = JS_FALSE;
   nsIDOMTextRange* nativeRet;
   PRUint32 b0;
 
