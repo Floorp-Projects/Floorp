@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Mitch Stoltz
  * Steve Morse
  */
 #include "nsScriptSecurityManager.h"
@@ -584,16 +585,24 @@ nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI,
     nsCOMPtr<nsIPrincipal> principal = 
       do_QueryInterface((nsBasePrincipal*)codebase, &rv);
     NS_RELEASE(codebase);
-    if (NS_FAILED(rv))
-        return rv;
+    if (NS_FAILED(rv)) return rv;
 
     if (mPrincipals) {
         // Check to see if we already have this principal.
         nsIPrincipalKey key(principal);
-        nsCOMPtr<nsIPrincipal> p2 = (nsIPrincipal *) mPrincipals->Get(&key);
-        if (p2) 
-            principal = p2;
+        nsCOMPtr<nsIPrincipal> fromTable = (nsIPrincipal *) mPrincipals->Get(&key);
+        if (fromTable) 
+            principal = fromTable;
     }
+
+    //-- Bundle this codebase principal into an aggregate principal
+    nsAggregatePrincipal* agg = new nsAggregatePrincipal();
+    if (!agg) return NS_ERROR_OUT_OF_MEMORY;
+    rv = agg->SetCodebase(principal);
+    if (NS_FAILED(rv)) return rv;
+    principal = do_QueryInterface((nsBasePrincipal*)agg, &rv);
+    if (NS_FAILED(rv)) return rv;
+
     *result = principal;
     NS_ADDREF(*result);
     return NS_OK;
