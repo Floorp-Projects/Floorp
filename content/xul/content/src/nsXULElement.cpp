@@ -524,7 +524,6 @@ nsXULElement::nsXULElement()
 #ifdef DEBUG
       mIsScriptObjectRooted(PR_FALSE),
 #endif
-      mLazyState(0),
       mBindingParent(nsnull),
       mSlots(nsnull)
 {
@@ -1856,21 +1855,31 @@ nsXULElement::PeekChildCount(PRInt32& aCount) const
 NS_IMETHODIMP
 nsXULElement::SetLazyState(PRInt32 aFlags)
 {
-    mLazyState |= aFlags;
+    nsresult rv = EnsureSlots();
+    if (NS_FAILED(rv)) return rv;
+
+    mSlots->mLazyState |= aFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::ClearLazyState(PRInt32 aFlags)
 {
-    mLazyState &= ~aFlags;
+    // No need to clear a flag we've never set.
+    if (mSlots)
+        mSlots->mLazyState &= ~aFlags;
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULElement::GetLazyState(PRInt32 aFlag, PRBool& aResult)
 {
-    aResult = (mLazyState & aFlag) ? PR_TRUE : PR_FALSE;
+    if (mSlots && (mSlots->mLazyState & aFlag))
+        aResult = PR_TRUE;
+    else
+        aResult = PR_FALSE;
+
     return NS_OK;
 }
 
@@ -3972,7 +3981,7 @@ nsXULElement::GetBuilder(nsIXULTemplateBuilder** aBuilder)
 nsresult
 nsXULElement::EnsureContentsGenerated(void) const
 {
-    if (mLazyState & nsIXULContent::eChildrenMustBeRebuilt) {
+    if (mSlots && (mSlots->mLazyState & nsIXULContent::eChildrenMustBeRebuilt)) {
         // Ensure that the element is actually _in_ the document tree;
         // otherwise, somebody is trying to generate children for a node
         // that's not currently in the content model.
@@ -3985,7 +3994,7 @@ nsXULElement::EnsureContentsGenerated(void) const
 
         // Clear this value *first*, so we can re-enter the nsIContent
         // getters if needed.
-        unconstThis->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
+        unconstThis->mSlots->mLazyState &= ~nsIXULContent::eChildrenMustBeRebuilt;
 
         // Walk up our ancestor chain, looking for an element with a
         // XUL content model builder attached to it.
@@ -5182,6 +5191,7 @@ nsXULElement::Slots::Slots(nsXULElement* aElement)
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
       mAttributes(nsnull),
+      mLazyState(0),
       mInnerXULElement(nsnull)
 {
     MOZ_COUNT_CTOR(nsXULElement::Slots);

@@ -533,10 +533,6 @@ protected:
     PRBool                              mIsScriptObjectRooted;
 #endif
 
-    // The state of our sloth for lazy content model construction via
-    // RDF; see nsIXULContent and nsRDFGenericBuilder.
-    PRInt32                             mLazyState;
-
     // The nearest enclosing content node with a binding
     // that created us. [Weak]
     nsIContent*                         mBindingParent;
@@ -555,6 +551,10 @@ protected:
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
         nsCOMPtr<nsIRDFResource>            mOwnedResource;      // [OWNER]
         nsXULAttributes*                    mAttributes;
+
+        // The state of our sloth for lazy content model construction via
+        // RDF; see nsIXULContent and nsRDFGenericBuilder.
+        PRInt32                             mLazyState;
 
         // An unreferenced bare pointer to an aggregate that can
         // implement element-specific APIs.
