@@ -97,7 +97,7 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 	}
 	else mRootNode = pDataItem;
 
-	nsHTItem* pItem = (nsHTItem*)(pDataItem->GetImplData());
+	nsHTItem* pItem = NS_STATIC_CAST(nsHTItem*, pDataItem->GetImplData());
 
 	nsIContent* pChildrenNode = pItem->FindChildWithName("children");
 	if (pChildrenNode)
