@@ -1897,10 +1897,12 @@ void nsWebShellWindow::ShowAppropriateChrome()
             makeChange = PR_TRUE;
             flag = mChromeMask & NS_CHROME_TOOL_BAR_ON;
           }
-          if (makeChange)
-            domElement->SetAttribute("chromehidden", "");
-          else
-            domElement->RemoveAttribute("chromehidden");
+          if (makeChange) {
+            if (flag)
+              domElement->RemoveAttribute("chromehidden");
+            else
+              domElement->SetAttribute("chromehidden", "");
+          }
         }
       }
     }
