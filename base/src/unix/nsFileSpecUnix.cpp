@@ -35,16 +35,12 @@
 #define _SVID3/* for statvfs.h */
 #include <sys/statvfs.h>  /* for statvfs() */
 #define STATFS statvfs
-#elif defined(HPUX) 
+#elif defined(HPUX) || defined(LINUX)
 #include <sys/vfs.h>      /* for statfs() */
 #define STATFS statfs
-#elif defined(LINUX)
-#include <sys/vfs.h>      /* for statfs() */
-#define STATFS statfs
-#elif defined(SUNOS4)
-#include <sys/vfs.h>      /* for statfs() */
-extern "C" int statfs(char *, struct statfs *);
-#define STATFS statfs
+#if defined(SUNOS4)
+  extern "C" int statfs(char *, struct statfs *);
+#endif
 #else
 #if defined(BSDI) || defined(NETBSD) || defined(OPENBSD) || defined(RHAPSODY) || defined(FREEBSD)
 #include <sys/mount.h>/* for statfs() */
@@ -52,7 +48,7 @@ extern "C" int statfs(char *, struct statfs *);
 #else
 #include <sys/statfs.h>  /* for statfs() */
 #define STATFS statfs
-extern "C" int statfs(char *, struct statfs *);
+  extern "C" int statfs(char *, struct statfs *);
 #endif
 #endif
 
