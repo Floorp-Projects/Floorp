@@ -1610,7 +1610,9 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
             break;
           case eCSSProperty_user_focus:       mUserInterface->mUserFocus = aValue;      break;
           case eCSSProperty_resizer:          mUserInterface->mResizer = aValue;        break;
-          case eCSSProperty_behavior:         mUserInterface->mBehavior = aValue;       break;
+          case eCSSProperty_behavior:         
+            mUserInterface->mBehavior = aValue;      
+            break;
           CSS_BOGUS_DEFAULT; // make compiler happy
         }
       }
@@ -3046,7 +3048,9 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
             break;
           case eCSSProperty_user_focus:       aValue = mUserInterface->mUserFocus;       break;
           case eCSSProperty_resizer:          aValue = mUserInterface->mResizer;         break;
-          case eCSSProperty_behavior:         aValue = mUserInterface->mBehavior;        break;
+          case eCSSProperty_behavior:         
+            aValue = mUserInterface->mBehavior;        
+            break;
 
           CSS_BOGUS_DEFAULT; // make compiler happy
         }

@@ -2552,6 +2552,9 @@ MapDeclarationUIInto(nsICSSDeclaration* aDeclaration,
       if (eCSSUnit_URL == ourUI->mBehavior.GetUnit()) {
         ourUI->mBehavior.GetStringValue(ui->mBehavior);
       }
+      else if (eCSSUnit_None == ourUI->mBehavior.GetUnit()) {
+        ui->mBehavior.Truncate();
+      }
 
       // key-equivalent: none, enum XXX, inherit
       nsCSSValueList*  keyEquiv = ourUI->mKeyEquivalent;
