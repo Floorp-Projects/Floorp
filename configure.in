@@ -4037,6 +4037,17 @@ fi
 # the c-sdk first.  
 #
 if test "$MOZ_LDAP_XPCOM"; then
+
+  # these subdirs may not yet have been created in the build tree.
+  # don't use the "-p" switch to mkdir, since not all platforms have it
+  #
+  if test ! -d "directory/c-sdk"; then
+    mkdir "directory/c-sdk"    
+  fi
+  if test ! -d "directory/c-sdk/ldap"; then
+    mkdir "directory/c-sdk/ldap"    
+  fi
+
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
 fi
