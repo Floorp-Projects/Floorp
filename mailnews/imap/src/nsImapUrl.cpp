@@ -1274,8 +1274,8 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 	{
     *aURI = nsnull;
     PRUint32 key = m_listOfMessageIds ? atoi(m_listOfMessageIds) : 0;
-		nsXPIDLCString theFile;
-    CreateCanonicalSourceFolderPathString(getter_Copies(theFile));
+    nsXPIDLCString canonicalPath;
+    AllocateCanonicalPath(m_sourceCanonicalFolderPathSubString, m_onlineSubDirSeparator, (getter_Copies(canonicalPath)));
     nsCString fullFolderPath("/");
     fullFolderPath += (const char *) m_userName;
     nsCAutoString hostName;
@@ -1283,7 +1283,7 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
     fullFolderPath += '@';
     fullFolderPath += hostName;
     fullFolderPath += '/';
-    fullFolderPath.Append(theFile);
+    fullFolderPath.Append(canonicalPath);
 
     char * baseMessageURI;
     nsCreateImapBaseMessageURI(fullFolderPath.get(), &baseMessageURI);

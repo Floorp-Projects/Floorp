@@ -737,84 +737,84 @@ NS_IMETHODIMP nsImapService::DisplayMessageForPrinting(const char* aMessageURI,
 NS_IMETHODIMP
 nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
                            aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
+                           nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsISupports> streamSupport;
-    if (!aSrcMailboxURI || !aMailboxCopy) return rv;
-    streamSupport = do_QueryInterface(aMailboxCopy, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIMsgFolder> folder;
-    nsXPIDLCString msgKey;
-    rv = DecomposeImapURI(aSrcMailboxURI, getter_AddRefs(folder), getter_Copies(msgKey));
-	  if (NS_SUCCEEDED(rv))
-	  {
-    	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
-		  if (NS_SUCCEEDED(rv))
-		  {
-            nsCOMPtr<nsIImapUrl> imapUrl;
-            nsCAutoString urlSpec;
-			      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
-            PRBool hasMsgOffline = PR_FALSE;
-            nsMsgKey key = atoi(msgKey);
-
-            rv = CreateStartOfImapUrl(aSrcMailboxURI, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-
-            if (folder)
-            {
-              nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
-              folder->HasMsgOffline(key, &hasMsgOffline);
-              if (msgurl)
-                msgurl->SetMsgIsInLocalCache(hasMsgOffline);
-            }
-            // now try to download the message
-            nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
-            if (moveMessage)
-                imapAction = nsIImapUrl::nsImapOnlineToOfflineMove; 
-			      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aMsgWindow, aURL, streamSupport, msgKey, PR_TRUE);
-        } // if we got an imap message sink
-    } // if we decomposed the imap message 
-    return rv;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsISupports> streamSupport;
+  if (!aSrcMailboxURI || !aMailboxCopy) return rv;
+  streamSupport = do_QueryInterface(aMailboxCopy, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgFolder> folder;
+  nsXPIDLCString msgKey;
+  rv = DecomposeImapURI(aSrcMailboxURI, getter_AddRefs(folder), getter_Copies(msgKey));
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl;
+      nsCAutoString urlSpec;
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+      PRBool hasMsgOffline = PR_FALSE;
+      nsMsgKey key = atoi(msgKey);
+      
+      rv = CreateStartOfImapUrl(aSrcMailboxURI, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+      
+      if (folder)
+      {
+        nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(imapUrl));
+        folder->HasMsgOffline(key, &hasMsgOffline);
+        if (msgurl)
+          msgurl->SetMsgIsInLocalCache(hasMsgOffline);
+      }
+      // now try to download the message
+      nsImapAction imapAction = nsIImapUrl::nsImapOnlineToOfflineCopy;
+      if (moveMessage)
+        imapAction = nsIImapUrl::nsImapOnlineToOfflineMove; 
+      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aMsgWindow, aURL, streamSupport, msgKey, PR_TRUE);
+    } // if we got an imap message sink
+  } // if we decomposed the imap message 
+  return rv;
 }
 
 NS_IMETHODIMP
 nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStreamListener *aMailboxCopy, PRBool moveMessage,
-						   nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
+                            nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI **aURL)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsISupports> streamSupport;
-    if (!keys || !aMailboxCopy) 
-		return NS_ERROR_NULL_POINTER;
-    streamSupport = do_QueryInterface(aMailboxCopy, &rv);
-    if (!streamSupport || NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsIMsgFolder> folder = srcFolder;
-    nsXPIDLCString msgKey;
-	if (NS_SUCCEEDED(rv))
-	{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsISupports> streamSupport;
+  if (!keys || !aMailboxCopy) 
+    return NS_ERROR_NULL_POINTER;
+  streamSupport = do_QueryInterface(aMailboxCopy, &rv);
+  if (!streamSupport || NS_FAILED(rv)) return rv;
+  
+  nsCOMPtr<nsIMsgFolder> folder = srcFolder;
+  nsXPIDLCString msgKey;
+  if (NS_SUCCEEDED(rv))
+  {
     nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
-		if (NS_SUCCEEDED(rv))
-		{
-			nsCString messageIds;
-
-			AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
+    if (NS_SUCCEEDED(rv))
+    {
+      nsCString messageIds;
+      
+      AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
       nsCOMPtr<nsIImapUrl> imapUrl;
       nsCAutoString urlSpec;
-			PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
+      PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
       rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-			nsImapAction action;
-			if (moveMessage)
-				action = nsIImapUrl::nsImapOnlineToOfflineMove;
-			else
-				action = nsIImapUrl::nsImapOnlineToOfflineCopy;
-			imapUrl->SetCopyState(aMailboxCopy);
-            // now try to display the message
-			rv = FetchMessage(imapUrl, action, folder, imapMessageSink,
-                              aMsgWindow, aURL, streamSupport, messageIds.get(), PR_TRUE);
-			// ### end of copy operation should know how to do the delete.if this is a move
-
-     } // if we got an imap message sink
+      nsImapAction action;
+      if (moveMessage)
+        action = nsIImapUrl::nsImapOnlineToOfflineMove;
+      else
+        action = nsIImapUrl::nsImapOnlineToOfflineCopy;
+      imapUrl->SetCopyState(aMailboxCopy);
+      // now try to display the message
+      rv = FetchMessage(imapUrl, action, folder, imapMessageSink,
+        aMsgWindow, aURL, streamSupport, messageIds.get(), PR_TRUE);
+      // ### end of copy operation should know how to do the delete.if this is a move
+      
+    } // if we got an imap message sink
   } // if we decomposed the imap message 
   return rv;
 }
