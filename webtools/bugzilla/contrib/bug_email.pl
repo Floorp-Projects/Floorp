@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.7 2000/08/30 21:47:17 cyeh%bluemartini.com Exp $
+# $Id: bug_email.pl,v 1.8 2000/09/06 06:01:10 dave%intrec.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -1087,7 +1087,7 @@ if( $GroupSet eq "" ) {
 	if( lsearch( \@db_bits, $bit ) == -1 ) {
 	    # Bit not found !
 	    my $Text = "Checking the Group-Settings: You sent the Groupset-Bit $bit\n" .
-		"which is not a valid Groupset-Bit. It will be scipped !\n\n";
+		"which is not a valid Groupset-Bit. It will be skipped !\n\n";
 	    BugMailError( 0, $Text );
 	} else {
 	    # Cool bit, add to the result-String
