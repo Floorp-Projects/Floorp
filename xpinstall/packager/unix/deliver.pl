@@ -96,7 +96,7 @@ mkdir($STUB, 0777)  || die "--- deliver.pl: couldn't mkdir stub: $!";
 if ($aBuildWizard eq "buildwizard")
 {
     chdir($WIZARD);
-    system($TREETOP."/../build/autoconf/update-makefile.sh");
+    system($TREETOP."/build/autoconf/update-makefile.sh");
 
     #// make unix wizard
     system("make");
