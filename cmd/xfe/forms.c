@@ -1274,9 +1274,14 @@ text_change(FEFormData *fed,
   loc = fe_ConvertToLocaleEncoding(charset, (unsigned char*)text);
 
   if (form_type == FORM_TYPE_TEXTAREA)
-    XmTextSetString(fed->widget, loc);
+    {
+      FETextAreaFormData *ta_fed = (FETextAreaFormData*)fed;
+      XmTextSetString(ta_fed->text_widget, loc);
+    }
   else
-    XmTextFieldSetString(fed->widget, loc);
+    {
+      XmTextFieldSetString(fed->widget, loc);
+    }
 
   if (((char *) loc) != text)
     {
@@ -2100,7 +2105,7 @@ select_change(FEFormData *fed,
 				     text_attr->charset,
 				     fe_font,
 				     type,
-				     fontlist);
+				     &fontlist);
         }
       else 
         {
@@ -2890,7 +2895,7 @@ fe_mocha_submit_form_cb (MWContext *context, LO_Element *element, int32 event,
   NET_AddLOSubmitDataToURLStruct (data, url);
   if (data->window_target)
   {
-      context = XP_FindNamedContextInList(context, data->window_target);
+      context = XP_FindNamedContextInList(context, (char*)data->window_target);
       data->window_target = NULL;
  }
 
