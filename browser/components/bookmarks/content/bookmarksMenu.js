@@ -83,17 +83,11 @@ var BookmarksMenu = {
   // hides the 'Open in Tabs' on popuphidden so that we won't duplicate it -->
   hideOpenInTabsMenuItem: function (aTarget)
   {
-#   sometimes insertions occur between the "open in tabs" menuitem and
-#   menuseparator. the eventual children of the menupopup have should
-#   have already been closed at this stage, so it''s ok to grab the first
-#   "open in tabs" menuitem and menuseparator.
-    var nodeList;
-    nodeList = aTarget.getElementsByAttribute("class", "openintabs-menuitem");
-    if (nodeList.length > 0)
-      aTarget.removeChild(nodeList[0]);
-    nodeList = aTarget.getElementsByAttribute("class", "openintabs-menuseparator");
-    if (nodeList.length > 0)
-      aTarget.removeChild(nodeList[0]);
+    if (aTarget.hasChildNodes() &&
+        aTarget.lastChild.getAttribute("class") == "openintabs-menuitem") {
+      aTarget.removeChild(aTarget.lastChild);
+      aTarget.removeChild(aTarget.lastChild);
+    }
   },
 #endif
 
