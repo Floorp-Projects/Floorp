@@ -127,11 +127,8 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
 {
   nsIView* view = aChildList->GetView();
   if (view && mDoCreateWidget) {
-    nscoord dx, dy;
-    nsCOMPtr<nsIWidget> widget;
-    view->GetOffsetFromWidget(&dx, &dy, *getter_AddRefs(widget));
     nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
-    if (ppContext && widget) {
+    if (ppContext && view->GetNearestWidget(nsnull)) {
       view->CreateWidget(kCChildCID);  
     }
   }

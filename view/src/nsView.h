@@ -77,31 +77,6 @@ public:
   // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  // nsIView
-  NS_IMETHOD  Init(nsIViewManager* aManager,
-      						 const nsRect &aBounds,
-                   const nsIView *aParent,
-      						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
-  /**
-   * Used to ask a view if it has any areas within its bounding box
-   * that are transparent. This is not the same as opacity - opacity can
-   * be set externally, transparency is a quality of the view itself.
-   * @result Returns PR_TRUE if there are transparent areas, PR_FALSE otherwise.
-   */
-  NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
-  NS_IMETHOD  SetClientData(void *aData);
-  NS_IMETHOD  GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget);
-  NS_IMETHOD  CreateWidget(const nsIID &aWindowIID,
-                           nsWidgetInitData *aWidgetInitData = nsnull,
-                           nsNativeWidget aNative = nsnull,
-                           PRBool aEnableDragDrop = PR_TRUE,
-                           PRBool aResetVisibility = PR_TRUE,
-                           nsContentType aContentType = eContentTypeInherit);
-#ifdef DEBUG
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
-#endif
-
-  NS_IMETHOD  Destroy();
   /**
    * Called to indicate that the specified rect of the view
    * needs to be drawn via the rendering context. The rect
@@ -228,9 +203,6 @@ public:
   NS_IMETHOD  GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const;
 
 
-  // XXX Temporary for Bug #19416
-  NS_IMETHOD IgnoreSetPosition(PRBool aShouldIgnore);
-
   /**
    * Sync your widget size and position with the view
    */
@@ -239,9 +211,6 @@ public:
 
   // Helper function to get the view that's associated with a widget
   static nsView*  GetViewFor(nsIWidget* aWidget);
-
-   // Helper function to determine if the view instance is the root view
-  virtual PRBool IsRoot() const;
 
    // Helper function to determine if the view point is inside of a view
   PRBool PointIsInside(nsView& aView, nscoord x, nscoord y) const;
@@ -284,10 +253,10 @@ public:
   void ConvertFromParentCoords(nscoord* aX, nscoord* aY) const { *aX -= mPosX; *aY -= mPosY; }
   void ResetWidgetPosition(PRBool aRecurse);
   void SetPositionIgnoringChildWidgets(nscoord aX, nscoord aY);
+  nsresult LoadWidget(const nsCID &aClassIID);
 
 protected:
   virtual ~nsView();
-  virtual nsresult LoadWidget(const nsCID &aClassIID);
 
 protected:
   nsZPlaceholderView*mZParent;
@@ -295,8 +264,6 @@ protected:
   //XXX should there be pointers to last child so backward walking is fast?
   nsRect            mChildClip;
   nsIRegion*        mDirtyRegion;
-  // Bug #19416
-  PRPackedBool      mShouldIgnoreSetPosition;
   PRPackedBool      mChildRemoved;
 
 private:

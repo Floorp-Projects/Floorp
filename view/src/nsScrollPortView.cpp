@@ -380,15 +380,7 @@ NS_IMETHODIMP nsScrollPortView::GetScrollbarVisibility(PRBool *aVerticalVisible,
 
 void nsScrollPortView::AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float scale)
 {
-  if (aScrolling == aView)
-  {
-    nsIWidget *widget;
-    nscoord dx, dy;
-    aScrolling->GetOffsetFromWidget(&dx, &dy, widget);
-    aDx += dx;
-    aDy += dy;
-    NS_IF_RELEASE(widget);
-  }
+  NS_ASSERTION(aScrolling != aView, "We should only be scrolling children of aScrolling");
 
   nsPoint pt = aView->GetPosition();
 

@@ -1216,10 +1216,7 @@ nsObjectFrame::InstantiateWidget(nsIPresContext*          aPresContext,
     return rv;
   }
 
-  nsCOMPtr<nsIWidget> parent;
-  parentWithView->GetOffsetFromWidget(nsnull, nsnull, *getter_AddRefs(parent));
-  mWidget->Create(NS_STATIC_CAST(nsIWidget*, parent), r, nsnull, nsnull);
-
+  mWidget->Create(parentWithView->GetNearestWidget(nsnull), r, nsnull, nsnull);
   mWidget->Show(PR_TRUE);
   return rv;
 }
@@ -4049,28 +4046,13 @@ static void ConvertRelativeToWindowAbsolute(nsIFrame* aFrame,
     aAbs = aFrame->GetPosition();
   }
 
+  NS_ASSERTION(view, "the object frame does not have a view");
   if (view) {
-    // Caclulate the views offset from its nearest widget
-
-   nscoord viewx = 0; 
-   nscoord viewy = 0;
-   aContainerWidget = view->GetWidget();
-   NS_IF_ADDREF(aContainerWidget);
-   if (!aContainerWidget) {
-     view->GetOffsetFromWidget(&viewx, &viewy, aContainerWidget/**getter_AddRefs(widget)*/);
-     aAbs.x += viewx;
-     aAbs.y += viewy;
-   
-   
-   // GetOffsetFromWidget does not include the views offset, so we need to add
-   // that in.
-     aAbs += view->GetPosition();
-    }
-   
-   nsRect widgetBounds;
-   aContainerWidget->GetBounds(widgetBounds); 
-  } else {
-   NS_ASSERTION(PR_FALSE, "the object frame does not have a view");
+    // Calculate the view's offset from its nearest widget
+    nsPoint viewOffset;
+    aContainerWidget = view->GetNearestWidget(&viewOffset);
+    NS_IF_ADDREF(aContainerWidget);
+    aAbs += viewOffset;
   }
 
   // Add relative coordinate to the absolute coordinate that has been calculated
