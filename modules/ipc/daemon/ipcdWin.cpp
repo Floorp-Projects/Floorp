@@ -37,6 +37,8 @@
 
 #include <windows.h>
 
+#include "prprf.h"
+
 #include "ipcConfig.h"
 #include "ipcLog.h"
 #include "ipcMessage.h"
@@ -54,13 +56,71 @@ int        ipcClientCount;
 
 static ipcClient ipcClientArray[IPC_MAX_CLIENTS];
 
+static HWND ipcHwnd;
+
 //-----------------------------------------------------------------------------
 // client array manipulation
 //-----------------------------------------------------------------------------
 
+static void
+RemoveClient(ipcClient *client)
+{
+    LOG(("RemoveClient [num-clients=%u]\n", ipcClientCount - 1));
+
+    int clientIndex = client - ipcClientArray;
+
+    client->Finalize();
+
+    //
+    // move last ipcClient object down into the spot occupied by this client.
+    //
+    int fromIndex = ipcClientCount - 1;
+    int toIndex = clientIndex;
+    if (toIndex != fromIndex)
+        memcpy(&ipcClientArray[toIndex], &ipcClientArray[fromIndex], sizeof(ipcClient));
+
+    memset(&ipcClientArray[fromIndex], 0, sizeof(ipcClient));
+
+    --ipcClientCount;
+}
+
+static void
+PurgeDeadClients()
+{
+    LOG(("PurgeDeadClients\n"));
+    //
+    // walk the list of supposedly active clients, and verify the existance of
+    // their respective message windows.
+    //
+    char wName[sizeof(IPC_CLIENT_WINDOW_NAME_PREFIX) + 20];
+    for (int i=ipcClientCount-1; i>=0; ++i) {
+        ipcClient *client = &ipcClientArray[i];
+
+        LOG(("  checking client at index %u [client-id=%u pid=%u]\n", 
+            i, client->ID(), client->PID()));
+
+        // construct window name
+        PR_snprintf(wName, sizeof(wName), "%s%u",
+                    IPC_CLIENT_WINDOW_NAME_PREFIX, client->PID());
+
+        HWND hwnd = FindWindow(IPC_CLIENT_WINDOW_CLASS, wName);
+        if (!hwnd) {
+            LOG(("  window not found; removing client!\n"));
+            RemoveClient(client);
+        }
+    }
+}
+
 static ipcClient *
 AddClient(HWND hwnd, PRUint32 pid)
 {
+    LOG(("AddClient [num-clients=%u]\n", ipcClientCount + 1));
+
+/*
+    if (ipcClientCount > 0)
+        PurgeDeadClients();
+*/
+
     if (ipcClientCount == IPC_MAX_CLIENTS) {
         LOG(("reached maximum client count!\n"));
         return NULL;
@@ -75,12 +135,7 @@ AddClient(HWND hwnd, PRUint32 pid)
     return client;
 }
 
-static void
-RemoveClient()
-{
-}
-
-ipcClient *
+static ipcClient *
 GetClientByPID(PRUint32 pid)
 {
     for (int i=0; i<ipcClientCount; ++i) {
@@ -107,16 +162,15 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
         //
         if (msg->Target().Equals(IPCM_TARGET) &&
             IPCM_GetMsgType(msg) == IPCM_MSG_TYPE_CLIENT_HELLO) {
-            client->Finalize();
-            memset(client, 0, sizeof(ipcClient));
-            client->Init();
+            RemoveClient(client);
+            client = AddClient(hwnd, pid);
         }
     }
-    else {
+    else
         client = AddClient(hwnd, pid);
-        if (client == NULL)
-            return;
-    }
+
+    if (client == NULL)
+        return;
 
     IPC_DispatchMsg(client, msg);
 }
@@ -126,18 +180,24 @@ ProcessMsg(HWND hwnd, PRUint32 pid, const ipcMessage *msg)
 void
 IPC_SendMessageNow(ipcClient *client, const ipcMessage *msg)
 {
+    LOG(("IPC_SendMessageNow [clientID=%u clientPID=%u]\n",
+        client->ID(), client->PID()));
+
     COPYDATASTRUCT cd;
     cd.dwData = GetCurrentProcessId();
     cd.cbData = (DWORD) msg->MsgLen();
     cd.lpData = (PVOID) msg->MsgBuf();
+
+
+    LOG(("calling SendMessage...\n"));
     SendMessageA(client->Hwnd(), WM_COPYDATA, 0, (LPARAM) &cd);
+   // SendMessageA(hwnd, WM_COPYDATA, (WPARAM) ipcHwnd, (LPARAM) &cd);
+    LOG(("  done.\n"));
 }
 
 //-----------------------------------------------------------------------------
 // windows message loop
 //-----------------------------------------------------------------------------
-
-static HWND ipcHwnd;
 
 static LRESULT CALLBACK
 ipcWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
