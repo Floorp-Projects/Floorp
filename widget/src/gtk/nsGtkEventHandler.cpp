@@ -357,15 +357,15 @@ idle_resize_cb(gpointer data)
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
   nsWindow *widget = (nsWindow *)p;
-  EventInfo *eventinfo = NULL;
-  GtkAllocation *old_size = NULL;
+  EventInfo *eventinfo = 0;
+  GtkAllocation *old_size = 0;
   PRBool send_event = PR_FALSE;
 
-  old_size = gtk_object_get_data(GTK_OBJECT(w), "mozilla.old_size");
+  old_size = (GtkAllocation *) gtk_object_get_data(GTK_OBJECT(w), "mozilla.old_size");
   // see if we need to allocate this - this may be the first time
   // the size allocation has happened.
   if (!old_size) { 
-    old_size = g_malloc(sizeof(GtkAllocation));
+    old_size = (GtkAllocation *) g_malloc(sizeof(GtkAllocation));
     old_size->x = alloc->x;
     old_size->y = alloc->y;
     old_size->width = alloc->width;
