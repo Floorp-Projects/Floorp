@@ -262,6 +262,13 @@ nsresult ns4xPlugin :: LockFactory(PRBool aLock)
   return NS_OK;
 }  
 
+NS_METHOD ns4xPlugin :: CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
+                                  const char* aPluginMIMEType,
+                                  void **aResult)
+{
+  return CreateInstance(aOuter, aIID, aResult);
+}
+
 nsresult
 ns4xPlugin::Initialize(void)
 {

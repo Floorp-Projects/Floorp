@@ -70,6 +70,15 @@ public:
 
   //nsIPlugin interface
 
+  /**
+   * Creates a new plugin instance, based on a MIME type. This
+   * allows different impelementations to be created depending on
+   * the specified MIME type.
+   */
+  NS_IMETHOD CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID, 
+                                  const char* aPluginMIMEType,
+                                  void **aResult);
+  
   NS_IMETHOD
   Initialize(void);
 
