@@ -131,7 +131,7 @@ if ($row[0]) {
     print "<PRE>";
     if (!open(DOSYNC, "./syncit.pl -user $F::loginname|")) {
         print p("Can't do sync (error $?).  Please send mail to " .
-                a({href=>"mailto:terry@mozilla.org"}, "terry") . ".");
+                a({href=>"mailto:terry\@mozilla.org"}, "terry") . ".");
     } else {
         while (<DOSYNC>) {
             if ($despot) {
