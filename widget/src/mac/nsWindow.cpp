@@ -43,6 +43,13 @@
 
 #pragma mark -
 
+// #define BLINK_DEBUGGING
+
+#ifdef BLINK_DEBUGGING
+static void blinkRect(Rect* r);
+static void blinkRgn(RgnHandle rgn);
+#endif
+
 #if !TARGET_CARBON
 
 // for non-carbon builds, provide various accessors to keep the code below free of ifdefs.
@@ -64,6 +71,11 @@ inline void GetWindowPortBounds(WindowRef window, Rect* rect)
 inline void InvalWindowRect(WindowRef window, Rect* rect)
 {
 	::InvalRect(rect);
+}
+
+inline void GetPortVisibleRegion(GrafPtr port, RgnHandle visRgn)
+{
+	::CopyRgn(port->visRgn, visRgn);
 }
 
 #endif
@@ -533,7 +545,6 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
   return NS_OK;
   
 } // nsWindow :: SetCursor
-    
 
 #pragma mark -
 //-------------------------------------------------------------------------
@@ -653,7 +664,50 @@ NS_IMETHODIMP nsWindow::EndResizingChildren(void)
 }
 
 #pragma mark -
- 
+
+#ifdef BLINK_DEBUGGING
+
+static Boolean caps_lock()
+{
+	EventRecord event;
+	::OSEventAvail(0, &event);
+	return ((event.modifiers & alphaLock) != 0);
+}
+
+static void blinkRect(Rect* r)
+{
+	StRegionFromPool oldClip;
+	if (oldClip != NULL)
+		::GetClip(oldClip);
+
+	::ClipRect(r);
+	::InvertRect(r);
+	UInt32 end = ::TickCount() + 5;
+	while (::TickCount() < end) ;
+	::InvertRect(r);
+
+	if (oldClip != NULL)
+		::SetClip(oldClip);
+}
+
+static void blinkRgn(RgnHandle rgn)
+{
+	StRegionFromPool oldClip;
+	if (oldClip != NULL)
+		::GetClip(oldClip);
+
+	::SetClip(rgn);
+	::InvertRgn(rgn);
+	UInt32 end = ::TickCount() + 5;
+	while (::TickCount() < end) ;
+	::InvertRgn(rgn);
+
+	if (oldClip != NULL)
+		::SetClip(oldClip);
+}
+
+#endif
+
 //-------------------------------------------------------------------------
 //
 // Invalidate this component visible area
@@ -698,6 +752,12 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 		Rect savePortRect;
 		::GetWindowPortBounds(mWindowPtr, &savePortRect);
 		::SetOrigin(0, 0);
+
+#ifdef BLINK_DEBUGGING
+		if (caps_lock())
+			::blinkRect(&macRect);
+#endif
+
 		::InvalWindowRect(mWindowPtr, &macRect);
 		::SetOrigin(savePortRect.left, savePortRect.top);
 	}
@@ -900,17 +960,18 @@ nsresult nsWindow::HandleUpdateEvent()
 	if (! mVisible)
 		return NS_OK;
 
-	// make sure the port is set
-	StPortSetter	portSetter(mWindowPtr);
+	// make sure the port is set and origin is (0, 0).
+	StPortSetter portSetter(mWindowPtr);
+	::SetOrigin(0, 0);
 	
 	// get the damaged region from the OS
 	StRegionFromPool damagedRgn;
 	if (!damagedRgn)
 		return NS_ERROR_OUT_OF_MEMORY;
-#if TARGET_CARBON
-	::GetPortVisibleRegion(GetWindowPort(mWindowPtr), damagedRgn);
-#else
-	::CopyRgn(mWindowPtr->visRgn, damagedRgn);
+	::GetPortVisibleRegion(GrafPtr(GetWindowPort(mWindowPtr)), damagedRgn);
+
+#ifdef BLINK_DEBUGGING	
+	blinkRgn(damagedRgn);
 #endif
 
 	// calculate the update region relatively to the window port rect
@@ -924,8 +985,11 @@ nsresult nsWindow::HandleUpdateEvent()
 	nsRect bounds = mBounds;
 	LocalToWindowCoordinate(bounds);
 	::OffsetRgn(updateRgn, bounds.x, bounds.y);
+
+#ifdef BLINK_DEBUGGING
+	blinkRgn(updateRgn);
+#endif
 	
-	::SetOrigin(0, 0);
 	// check if the update region is visible
 	::SectRgn(damagedRgn, updateRgn, updateRgn);
 	if (!::EmptyRgn(updateRgn))
@@ -935,12 +999,8 @@ nsresult nsWindow::HandleUpdateEvent()
 		{
 			// determine the rect to draw
 			nsRect rect;
-#if TARGET_CARBON
 			Rect macRect;
-			::GetRegionBounds ( updateRgn, &macRect );
-#else
-			Rect macRect = (*updateRgn)->rgnBBox;
-#endif
+			::GetRegionBounds(updateRgn, &macRect);
 			::OffsetRect(&macRect, -bounds.x, -bounds.y);
 			rect.SetRect(macRect.left, macRect.top, macRect.right - macRect.left, macRect.bottom - macRect.top);
 
