@@ -2167,12 +2167,11 @@ net_IntSetCookieString(MWContext * context,
         cd->preference = NET_GetCookieBehaviorPref();
 
 	/*
-	 * This probably is only safe to do from the mozilla thread
+	 * This is only safe to do from the mozilla thread
 	 *   since it might do file I/O and uses the preferences
-	 *   global context + objects
-	 * XXX chouck
+	 *   global context + objects.
 	 */
-        result = JSCF_Execute(context, script_name, cd, &changed);
+        result= (JSCFResult)ET_JSCFExecute(context, script_name, cd, &changed);
 		if( result != JSCF_error) {
 			if( changed ) {
 				if( cd->path_from_header != path_from_header ) {

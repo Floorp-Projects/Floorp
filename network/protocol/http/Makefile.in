@@ -30,7 +30,7 @@ CSRCS		= \
 	mkaccess.c	\
 	$(NULL)
 
-EXPORTS= mkaccess.h httpurl.h httpauth.h cookies.h jscookie.h
+EXPORTS= mkaccess.h httpurl.h httpauth.h cookies.h 
 
 EXPORTS         := $(addprefix $(srcdir)/, $(EXPORTS))
 
