@@ -244,10 +244,6 @@ protected:
                              RowGroupReflowState& aReflowState,
                              nsReflowStatus&      aStatus);
 
-  NS_IMETHOD DidAppendRow(nsTableRowFrame *aRowFrame);
-
-  PRBool NoRowsFollow();
-
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
                                      RowGroupReflowState& aReflowState,
                                      nsIFrame*            aKidFrame,

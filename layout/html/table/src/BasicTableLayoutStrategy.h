@@ -57,11 +57,9 @@ public:
   /** call every time any table thing changes that might effect the width of any column
     * in the table (content, structure, or style) 
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
-    * @param aNumCols         the total number of columns in the table
     */
-  virtual PRBool Initialize(nsSize*      aMaxElementSize, 
-                           PRInt32       aNumCols, 
-                           nscoord       aMaxSize);
+  virtual PRBool Initialize(nsSize*      aMaxElementSize,
+                            nscoord       aMaxSize);
 
   /** compute the max element size of the table.
     * assumes that Initialize has been called
@@ -83,7 +81,6 @@ public:
   nscoord GetTableMinContentWidth() const;
   nscoord GetTableMaxContentWidth() const;
   nscoord GetCOLSAttribute() const;
-  nscoord GetNumCols() const;
   void Dump(PRInt32 aIndent);
 
 protected:
@@ -159,13 +156,6 @@ protected:
                              PRInt32* aAllocTypes,
                              PRBool   aSkip0Proportional);
 
-  /** return true if the style indicates that the width is a specific width 
-    * for the purposes of column width determination.
-    * return false if the width changes based on content, parent size, etc.
-    */
-  static PRBool IsFixedWidth(const nsStylePosition* aStylePosition,
-                              const nsStyleTable* aStyleTable);
-
   /** return true if the colIndex is in the list of colIndexes */
   virtual PRBool IsColumnInList(const PRInt32 colIndex, 
                                 PRInt32 *colIndexes, 
@@ -214,7 +204,6 @@ protected:
 protected:
   nsTableFrame * mTableFrame;
   PRInt32        mCols;
-  PRInt32        mNumCols;
   // cached data
   nscoord        mMinTableContentWidth;   // the smallest size for the table (excluding border and padding)
   nscoord        mMaxTableContentWidth;   // the "natural" size for the table, if unconstrained (excluding border and padding) 
@@ -232,9 +221,6 @@ inline nscoord BasicTableLayoutStrategy::GetTableMaxContentWidth() const
 
 inline nscoord BasicTableLayoutStrategy::GetCOLSAttribute() const
 { return mCols; };
-
-inline nscoord BasicTableLayoutStrategy::GetNumCols() const
-{ return mNumCols; };  
 
 
 #endif

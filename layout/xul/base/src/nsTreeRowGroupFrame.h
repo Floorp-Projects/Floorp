@@ -150,10 +150,6 @@ protected:
 
   void ComputeTotalRowCount(PRInt32& rowCount, nsIContent* aParent);
 
-  void PostAppendRow(nsIFrame* aRowFrame, nsIPresContext* aPresContext);
-
-  void GetFirstRow(nsTableRowFrame **aRowFrame);
-
 public:
   // Helpers that allow access to info. The tree is the primary consumer of this
   // info.
@@ -190,9 +186,11 @@ public:
                                       nsIPresContext* aPresContext,
                                       nsIContent *aContent);
 
-  void AddRowToMap(nsTableFrame *aTableFrame,
-                   nsIPresContext* aPresContext,
-                   nsIContent *aContent, nsIFrame *aCurrentFrame);
+  // Also returns the number of new columns that were added
+  PRInt32 AddRowToMap(nsTableFrame*   aTableFrame,
+                      nsIPresContext& aPresContext,
+                      nsIContent*     aContent, 
+                      nsIFrame*       aCurrentFrame);
   
   static PRBool IsTableRowGroupFrame(nsIFrame*);
   static PRBool IsTableRowFrame(nsIFrame*);

@@ -91,7 +91,7 @@ NS_METHOD nsTreeRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
       nsTableFrame* tableFrame = nsnull;
       nsTableFrame::GetTableFrame(this, tableFrame);
   
-      tableFrame->InvalidateCellMap(); 
+      tableFrame->InvalidateColumnWidths(); 
     }
   }
   return rv;

@@ -55,6 +55,13 @@ enum nsColConstraint {
   e0ProportionConstraint = 4       // 0*, means to force to min width
 };
 
+enum nsTableColType {
+  eColContent            = 0, // there is real col content associated   
+  eColAnonymousCol       = 1, // the result of a span on a col
+  eColAnonymousColGroup  = 2, // the result of a span on a col group
+  eColAnonymousCell      = 3, // the result of a cell alone
+};
+
 class nsTableColFrame : public nsFrame {
 public:
 
@@ -63,7 +70,8 @@ public:
         eWIDTH_SOURCE_CELL_WITH_SPAN=2    // a cell implicitly specified a width via colspan
   };
 
-  void InitColFrame(PRInt32 aColIndex);
+  nsTableColType GetType() const;
+  void nsTableColFrame::SetType(nsTableColType aType);
 
   /** instantiate a new instance of nsTableColFrame.
     * @param aResult    the new object is returned in this out-param
@@ -74,6 +82,12 @@ public:
     */
   friend nsresult 
   NS_NewTableColFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+
+  nsStyleCoord GetStyleWidth() const;
+
+  PRInt32 GetColIndex() const;
+  
+  void SetColIndex (PRInt32 aColIndex);
 
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -97,14 +111,8 @@ public:
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
 
-  /** return the index of the column the col represents.  always >= 0 */
-  virtual PRInt32 GetColumnIndex ();
-
   /** return the number of the columns the col represents.  always >= 0 */
   virtual PRInt32 GetSpan ();
-
-  /** set the index of the column this content object represents.  must be >= 0 */
-  virtual void SetColumnIndex (int aColIndex);
 
   /** convenience method, calls into cellmap */
   nsVoidArray * GetCells();
@@ -138,6 +146,11 @@ public:
 
 protected:
 
+  struct ColBits {
+    unsigned int mType:4;       
+    unsigned int mUnused:28;                         
+  } mBits;
+
   nsTableColFrame();
   ~nsTableColFrame();
 
@@ -153,18 +166,11 @@ protected:
   PRPackedBool      mNonPercentSpansPercent;
 };
 
-
-inline void nsTableColFrame::InitColFrame(PRInt32 aColIndex)
-{
-  NS_ASSERTION(0<=aColIndex, "bad col index param");
-  mColIndex = aColIndex;
-}
-
-inline PRInt32 nsTableColFrame::GetColumnIndex()
+inline PRInt32 nsTableColFrame::GetColIndex() const
 { return mColIndex; }
 
-inline void nsTableColFrame::SetColumnIndex (int aColIndex)
-{  mColIndex = aColIndex;}
+inline void nsTableColFrame::SetColIndex (PRInt32 aColIndex)
+{ mColIndex = aColIndex; }
 
 inline nsColConstraint nsTableColFrame::GetConstraint() const
 { return mConstraint; }

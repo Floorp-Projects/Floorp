@@ -37,6 +37,7 @@
 #include "nsILinkHandler.h"
 #include "nsIDocument.h"
 #include "nsIHTMLTableCellElement.h"
+#include "nsTableColGroupFrame.h"
 #include "nsTableColFrame.h"
 #include "nsHTMLIIDs.h"
 #include "nsIStyleFrameConstruction.h"
@@ -1175,7 +1176,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresShell*        aPresSh
                                                     nsTableCreator&          aTableCreator)
 {
   nsresult rv = NS_OK;
-  NS_WARNING("an anonymous table frame was created. \n");
+  //NS_WARNING("an anonymous table frame was created. \n");
   nsCOMPtr<nsIStyleContext> parentStyleContext;
   aParentFrame->GetStyleContext(getter_AddRefs(parentStyleContext));
   const nsStyleDisplay* parentDisplay = 
@@ -1326,7 +1327,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
     // the caller is responsible for calling SetInitialChildList on the outer, inner frames
     aNewTopFrame = aNewCaptionFrame;
   } else { // parent is not a table, need to create a new table
-    NS_WARNING("a non table contains a table caption child. \n");
+    //NS_WARNING("a non table contains a table caption child. \n");
     nsIFrame* outerFrame;
     ConstructAnonymousTableFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                  aNewTopFrame, outerFrame, innerFrame, aTableCreator);
@@ -1418,7 +1419,7 @@ nsCSSFrameConstructor::ConstructTableGroupFrame(nsIPresShell*        aPresShell,
                                       styleContext, aIsRowGroup, aNewTopFrame, aNewGroupFrame, 
                                       aTableCreator, contentDisplayIsGroup);
   } else { // construct anonymous frames
-    NS_WARNING("a non table contains a table row or col group child. \n");
+    //NS_WARNING("a non table contains a table row or col group child. \n");
     nsIFrame* innerFrame;
     nsIFrame* outerFrame;
 
@@ -1639,9 +1640,8 @@ nsCSSFrameConstructor::ConstructTableRowFrameOnly(nsIPresShell*        aPresShel
   return rv;
 }
 
-
 nsresult
-nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*        aPresShell, 
+nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShell, 
                                               nsIPresContext*          aPresContext,
                                               nsFrameConstructorState& aState,
                                               nsIContent*              aContent,
@@ -1673,6 +1673,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*        aPresShell,
     rv = ConstructTableColFrameOnly(aPresShell, aPresContext, aState, aContent, groupFrame, 
                                     styleContext, aNewColFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
+    aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewColFrame);
     groupFrame->SetInitialChildList(aPresContext, nsnull, aNewColFrame);
 
     // if an anoymous table got created, then set its initial child list
@@ -1747,7 +1748,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*        aPresShell,
                                      aTableCreator, aProcessChildren);
     aNewTopFrame = aNewCellFrame;
   } else { // the cell needs some ancestors to be fabricated
-    NS_WARNING("WARNING - a non table row contains a table cell child. \n");
+    //NS_WARNING("WARNING - a non table row contains a table cell child. \n");
     nsTableList toDo;
     nsIFrame* rowFrame;
     rv = ConstructTableRowFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
@@ -5483,6 +5484,35 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
                                        nsnull, frames.GetPrevSiblingFor(lastChild),
                                        aFrameList);
   }
+
+  // a col group or col appended to a table may result in an insert rather than an append
+  nsIAtom* parentType;
+  aParentFrame->GetFrameType(&parentType);
+  if (nsLayoutAtoms::tableFrame == parentType) { 
+    nsTableFrame* tableFrame = (nsTableFrame *)aParentFrame;
+    nsIAtom* childType;
+    aFrameList->GetFrameType(&childType);
+    if (nsLayoutAtoms::tableColFrame == childType) {
+      nsIFrame* parentFrame = aParentFrame;
+      aFrameList->GetParent(&parentFrame);
+      return aFrameManager->AppendFrames(aPresContext, *aPresShell, parentFrame,
+                                         nsLayoutAtoms::colGroupList, aFrameList);
+    }
+    else if (nsLayoutAtoms::tableColGroupFrame == childType) {
+      nsIFrame* prevSibling;
+      PRBool doAppend = nsTableColGroupFrame::GetLastRealColGroup(tableFrame, &prevSibling);
+      if (doAppend) {
+        return aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                           nsLayoutAtoms::colGroupList, aFrameList);
+      }
+      else {
+        return aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame, 
+                                           nsLayoutAtoms::colGroupList, prevSibling, aFrameList);
+      }
+    }
+    NS_IF_RELEASE(childType);
+  }
+  NS_IF_RELEASE(parentType);
 
   // Append the frames to the end of the parent's child list
   return aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,

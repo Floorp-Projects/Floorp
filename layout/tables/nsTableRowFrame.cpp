@@ -56,6 +56,7 @@ nsTableRowFrame::nsTableRowFrame()
     mAllBits(0)
 {
   mBits.mMinRowSpan = 1;
+  mBits.mRowIndex   = 0;
 }
 
 NS_IMETHODIMP
@@ -129,23 +130,11 @@ nsTableRowFrame::AppendFrames(nsIPresContext* aPresContext,
 
     if (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay) {
       // Add the cell to the cell map
-      PRInt32 colIndex = tableFrame->AddCellToTable((nsTableCellFrame*)childFrame,
-                                                    GetRowIndex());
-
-      // Initialize the cell frame and give it its column index
-      ((nsTableCellFrame*)childFrame)->InitCellFrame(colIndex);
+      tableFrame->AppendCell(*aPresContext, (nsTableCellFrame&)*childFrame, GetRowIndex());
     }
   }
 
-  // See if any implicit column frames need to be created as a result of
-  // adding the new rows
-  PRBool  createdColFrames;
-  tableFrame->EnsureColumns(aPresContext, createdColFrames);
-  if (createdColFrames) {
-    // We need to rebuild the column cache
-    // XXX It would be nice if this could be done incrementally
-    tableFrame->InvalidateColumnCache();
-  }
+  tableFrame->InvalidateColumnWidths();
 
   // Reflow the new frames. They're already marked dirty, so generate a reflow
   // command that tells us to reflow our dirty child frames
@@ -160,6 +149,7 @@ nsTableRowFrame::AppendFrames(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
                               nsIPresShell&   aPresShell,
@@ -171,26 +161,39 @@ nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
   nsTableFrame* tableFrame = nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
   
-  // Insert the frames
+  // gather the new frames (only those which are cells) into an array
+  nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableCellFrame);
+  nsVoidArray cellChildren;
+  for (nsIFrame* childFrame = aFrameList; childFrame; childFrame->GetNextSibling(&childFrame)) {
+    nsIAtom* frameType;
+    childFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableCellFrame == frameType) {
+      cellChildren.AppendElement(childFrame);
+    }
+    NS_IF_RELEASE(frameType);
+  }
+  // insert the cells into the cell map
+  PRInt32 colIndex = -1;
+  if (prevCellFrame) {
+    prevCellFrame->GetColIndex(colIndex);
+  }
+  tableFrame->InsertCells(*aPresContext, cellChildren, GetRowIndex(), colIndex);
+
+  // Insert the frames in the frame list
   mFrames.InsertFrames(nsnull, aPrevFrame, aFrameList);
   
-  // We need to rebuild the cell map, because currently we can't insert
-  // new frames except at the end (append)
-  tableFrame->InvalidateCellMap();
+  // Because the number of columns may have changed invalidate the column widths
+  tableFrame->InvalidateColumnWidths();
 
-  // We should try and avoid doing a pass1 reflow on all the cells and just
-  // do it for the newly added frames, but we need to add these frames to the
-  // cell map before we reflow them
-  tableFrame->InvalidateFirstPassCache();
+  // Reflow the new frames. They're already marked dirty, so generate a reflow
+  // command that tells us to reflow our dirty child frames
+  nsIReflowCommand* reflowCmd;
 
-  // Because the number of columns may have changed invalidate the column
-  // cache. Note that this has the side effect of recomputing the column
-  // widths, so we don't need to call InvalidateColumnWidths()
-  tableFrame->InvalidateColumnCache();
-
-  // Generate a reflow command so we reflow the table itself. This will
-  // do a pass-1 reflow of all the rows including any rows we just added
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+  if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                           nsIReflowCommand::ReflowDirty))) {
+    aPresShell.AppendReflowCommand(reflowCmd);
+    NS_RELEASE(reflowCmd);
+  }
   return NS_OK;
 }
 
@@ -203,91 +206,28 @@ nsTableRowFrame::RemoveFrame(nsIPresContext* aPresContext,
   // Get the table frame
   nsTableFrame* tableFrame=nsnull;
   nsTableFrame::GetTableFrame(this, tableFrame);
+  if (tableFrame) {
+    nsIAtom* frameType;
+    aOldFrame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableCellFrame == frameType) {
+      nsTableCellFrame* cellFrame = (nsTableCellFrame*)aOldFrame;
+      PRInt32 colIndex;
+      cellFrame->GetColIndex(colIndex);
+      tableFrame->RemoveCell(*aPresContext, cellFrame, GetRowIndex());
 
-#if 0
-  // XXX Currently we can't incrementally remove cells from the cell map
-  PRInt32 colIndex;
-  aDeletedFrame->GetColIndex(colIndex);
-  tableFrame->RemoveCellFromTable(aOldFrame, GetRowIndex());
+      // Remove the frame and destroy it
+      mFrames.DestroyFrame(aPresContext, aOldFrame);
 
-  // Remove the frame and destroy it
-  mFrames.DestroyFrame(aPresContext, (nsIFrame*)aOldFrame); 
+      // cells have possibly shifted into different columns. 
+      tableFrame->InvalidateColumnWidths();
 
-  // XXX Reflow the row
-
-#else
-  // Remove the frame and destroy it
-  mFrames.DestroyFrame(aPresContext, aOldFrame);
-
-  // We need to rebuild the cell map, because currently we can't incrementally
-  // remove rows
-  tableFrame->InvalidateCellMap();
-
-  // Because the number of columns may have changed invalidate the column
-  // cache. Note that this has the side effect of recomputing the column
-  // widths, so we don't need to call InvalidateColumnWidths()
-  tableFrame->InvalidateColumnCache();
-
-  // Because we haven't added any new frames we don't need to do a pass1
-  // reflow. Just generate a reflow command so we reflow the table itself
-  AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
-#endif
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTableRowFrame::InitChildrenWithIndex(PRInt32 aRowIndex)
-{
-  nsTableFrame* table = nsnull;
-  nsresult  result=NS_OK;
-
-  // each child cell can only be added to the table one time.
-  // for now, we remember globally whether we've added all or none
-  if (0 == (mState & NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN))
-  {
-    result = nsTableFrame::GetTableFrame(this, table);
-    if ((NS_OK==result) && (table != nsnull))
-    {
-      mState |= NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN;
-      SetRowIndex(aRowIndex);
-    
-      for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
-      {
-        const nsStyleDisplay *kidDisplay;
-        kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)kidDisplay));
-        if (NS_STYLE_DISPLAY_TABLE_CELL == kidDisplay->mDisplay)
-        {
-          // add the cell frame to the table's cell map and get its col index
-          PRInt32 colIndex;
-          colIndex = table->AddCellToTable((nsTableCellFrame *)kidFrame, aRowIndex);
-          // what column does this cell belong to?
-          // this sets the frame's notion of its column index
-          ((nsTableCellFrame *)kidFrame)->InitCellFrame(colIndex);
-        }
-      }
+      // Because we haven't added any new frames we don't need to do a pass1
+      // reflow. Just generate a reflow command so we reflow the table itself
+      AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
     }
+    NS_IF_RELEASE(frameType);
   }
-  return NS_OK;
-}
 
-NS_IMETHODIMP
-nsTableRowFrame::InitChildren()
-{
-  nsTableFrame* table = nsnull;
-  nsresult  result=NS_OK;
-
-  // each child cell can only be added to the table one time.
-  // for now, we remember globally whether we've added all or none
-  if (0 == (mState & NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN))
-  {
-    result = nsTableFrame::GetTableFrame(this, table);
-    if ((NS_OK==result) && (table != nsnull))
-    {
-      PRInt32 rowIndex = table->GetNextAvailRowIndex();
-      InitChildrenWithIndex(rowIndex);
-    }
-  }
   return NS_OK;
 }
 

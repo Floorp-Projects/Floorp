@@ -43,6 +43,8 @@ class nsHTMLValue;
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
+enum nsTableColType;
+enum nsTableColGroupType;
 
 /**
  * Child list name indices
@@ -124,8 +126,14 @@ public:
   /** helper method to find the table parent of any table frame object */
   // TODO: today, this depends on display types.  This should be changed to rely
   // on stronger criteria, like an inner table frame atom
-  static NS_METHOD GetTableFrame(nsIFrame *aSourceFrame, nsTableFrame *& aTableFrame);
+  static NS_METHOD GetTableFrame(nsIFrame*      aSourceFrame, 
+                                 nsTableFrame*& aTableFrame);
 
+  // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
+  // of type aChildType.
+  static nsIFrame* nsTableFrame::GetFrameAtOrBefore(nsIFrame* aParentFrame,
+                                                    nsIFrame* aPriorChildFrame,
+                                                    nsIAtom*  aChildType);
   /**
     * @param aReflowState  the context within which we're to determine the table width info
     * @param aSpecifiedTableWidth [OUT] if the table is not auto-width,
@@ -143,10 +151,6 @@ public:
   PRBool IsRowGroup(PRInt32 aDisplayType) const;
 
   /** Initialize the table frame with a set of children.
-    * Calls DidAppendRowGroup which calls nsTableRowFrame::InitChildren
-    * which finally calls back into this table frame to build the cell map.
-    * Also ensures we have the right number of column frames for the child list.
-    * 
     * @see nsIFrame::SetInitialChildList 
     */
   NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
@@ -161,16 +165,6 @@ public:
   /** @see nsIFrame::GetAdditionalChildListName */
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
                                          nsIAtom** aListName) const;
-
-  /** complete the append of aRowGroupFrame to the table
-    * this builds the cell map by calling nsTableRowFrame::InitChildren
-    * which calls back into this table frame to build the cell map.
-    * @param aRowGroupFrame the row group that was appended.
-    * note that this method is optimized for content appended, and doesn't
-    * work for random insertion of row groups.  Random insertion must go
-    * through incremental reflow notifications.
-    */
-  NS_IMETHOD DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFrame);
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext* aPresContext,
@@ -220,6 +214,8 @@ public:
     * column information yet.
     */
   NS_METHOD GetColumnFrame(PRInt32 aColIndex, nsTableColFrame *&aColFrame);
+
+  nsFrameList& GetColGroups();
 
   /** return PR_TRUE if the column width information has been set */
   PRBool IsColumnWidthsSet();
@@ -308,14 +304,84 @@ public:
     */
   PRInt32 GetNextAvailRowIndex() const;
 
-  /** build as much of the CellMap as possible from the info we have so far 
-    */
-  virtual PRInt32 AddCellToTable (nsTableCellFrame* aCellFrame,
-                                  PRInt32           aRowIndex);
-  virtual void RemoveCellFromTable (nsTableCellFrame* aCellFrame,
-                                    PRInt32           aRowIndex);
+  /** return the column frame associated with aColIndex */
+  nsTableColFrame* GetColFrame(PRInt32 aColIndex) const;
 
-  virtual void AddColumnFrame (nsTableColFrame *aColFrame);
+  void InsertCol(nsIPresContext&  aPresContext,
+                 nsTableColFrame& aColFrame,
+                 PRInt32          aColIndex);
+
+  nsTableColGroupFrame* CreateAnonymousColGroupFrame(nsIPresContext&     aPresContext,
+                                                     nsTableColGroupType aType);
+
+  PRInt32 DestroyAnonymousColFrames(nsIPresContext& aPresContext,
+                                    PRInt32 aNumFrames);
+
+  void CreateAnonymousColFrames(nsIPresContext& aPresContext,
+                                PRInt32         aNumColsToAdd,
+                                nsTableColType  aColType,
+                                PRBool          aDoAppend,
+                                nsIFrame*       aPrevCol = nsnull);
+
+  void CreateAnonymousColFrames(nsIPresContext&       aPresContext,
+                                nsTableColGroupFrame& aColGroupFrame,
+                                PRInt32               aNumColsToAdd,
+                                nsTableColType        aColType,
+                                PRBool                aAddToColGroupAndTable,
+                                nsIFrame*             aPrevCol,
+                                nsIFrame**            aFirstNewFrame);
+
+  /** empty the column frame cache */
+  void ClearColCache();
+
+  virtual PRInt32 AppendCell(nsIPresContext&   aPresContext,
+                             nsTableCellFrame& aCellFrame,
+                             PRInt32           aRowIndex);
+
+  virtual void InsertCells(nsIPresContext& aPresContext,
+                           nsVoidArray&    aCellFrames, 
+                           PRInt32         aRowIndex, 
+                           PRInt32         aColIndexBefore);
+
+  virtual void RemoveCell(nsIPresContext&   aPresContext,
+                          nsTableCellFrame* aCellFrame,
+                          PRInt32           aRowIndex);
+
+  void AppendRows(nsIPresContext& aPresContext,
+                  nsVoidArray&    aRowFrames);
+
+  PRInt32 InsertRow(nsIPresContext& aPresContext,
+                    nsIFrame&       aFrame,
+                    PRInt32         aRowIndex,
+                    PRBool          aConsiderSpans);
+
+  PRInt32 InsertRows(nsIPresContext& aPresContext,
+                     nsVoidArray&    aFrames,
+                     PRInt32         aRowIndex,
+                     PRBool          aConsiderSpans);
+
+  virtual void RemoveRows(nsIPresContext& aPresContext,
+                          PRInt32         aFirstRowFrame,
+                          PRInt32         aNumRowsToRemove,
+                          PRBool          aConsiderSpans);
+
+  void AppendRowGroups(nsIPresContext& aPresContext,
+                       nsIFrame*       aFirstRowGroupFrame);
+
+  void InsertRowGroups(nsIPresContext& aPresContext,
+                       nsIFrame*       aFirstRowGroupFrame,
+                       PRInt32         aRowIndex);
+
+  void InsertColGroups(nsIPresContext& aPresContext,
+                       PRInt32         aColIndex,
+                       nsIFrame*       aFirstFrame,
+                       nsIFrame*       aLastFrame = nsnull);
+
+  virtual void RemoveCol(nsIPresContext&       aPresContext,
+                         nsTableColGroupFrame* aColGroupFrame,
+                         PRInt32               aColIndex,
+                         PRBool                aRemoveFromCache,
+                         PRBool                aRemoveFromCellMap);
 
   static PRBool IsFinalPass(const nsHTMLReflowState& aReflowState);
 
@@ -323,7 +389,7 @@ public:
                                   PRInt32            aColX, 
                                   PRBool*            aOriginates = nsnull, 
                                   PRInt32*           aColSpan = nsnull);
-  PRInt32 GetNumCellsOriginatingInRow(PRInt32 aRowIndex) const;
+
   PRInt32 GetNumCellsOriginatingInCol(PRInt32 aColIndex) const;
 
   NS_METHOD GetBorderPlusMarginPadding(nsMargin& aResult);
@@ -555,9 +621,6 @@ protected:
   virtual PRBool IsFirstPassValid() const;
 
   /** returns PR_TRUE if the cached column info is still valid */
-  virtual PRBool IsColumnCacheValid() const;
-
-  /** returns PR_TRUE if the cached column info is still valid */
   virtual PRBool IsColumnWidthsValid() const;
 
   nsIFrame* GetFirstBodyRowGroupFrame();
@@ -612,8 +675,6 @@ public:
   
   virtual void InvalidateFirstPassCache();
 
-  virtual void InvalidateColumnCache();
-
   virtual void InvalidateColumnWidths();
 
 protected:
@@ -623,38 +684,18 @@ protected:
   void      MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
-  /** returns PR_TRUE if the cached pass 1 data is still valid */
-  virtual PRBool IsCellMapValid() const;
-
 public:
   /** Get the cell map for this table frame.  It is not always mCellMap.
     * Only the firstInFlow has a legit cell map
     */
   virtual nsCellMap *GetCellMap() const;
-
-  /** ResetCellMap is called when the cell structure of the table is changed.
-    * Call with caution, only when changing the structure of the table such as 
-    * inserting or removing rows, changing the rowspan or colspan attribute of a cell, etc.
-    */
-  virtual void InvalidateCellMap();
     
-  /** sum the columns represented by all nsTableColGroup objects. 
-    * if the cell map says there are more columns than this, 
-    * add extra implicit columns to the content tree.
-    *
-    * returns whether any implicit column frames were created
-    */ 
-  virtual void EnsureColumns (nsIPresContext* aPresContext,
-                              PRBool&         aCreatedColFrames);
-
-  // These methods are used to incrementally insert and remove rows
-  // from the cell map without having to invalidate the entire map.
-  NS_IMETHOD InsertRowIntoMap(nsTableRowFrame* aRow, PRInt32 aRowIndex);
-  NS_IMETHOD RemoveRowFromMap(nsTableRowFrame* aRow, PRInt32 aRowIndex);
+  void AdjustRowIndices(PRInt32 aRowIndex,
+                        PRInt32 aAdjustment);
 
   NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup, 
-                                             PRInt32 aRowIndex,
-                                             PRInt32 anAdjustment);
+                              PRInt32   aRowIndex,
+                              PRInt32   anAdjustment);
 
   // Return PR_TRUE if rules=groups is set for the table content 
   PRBool HasGroupRules() const;
@@ -662,9 +703,9 @@ public:
   // Remove cell borders which aren't bordering row and/or col groups 
   void ProcessGroupRules(nsIPresContext* aPresContext);
 
+  nsVoidArray& GetColCache();
+
 protected:
-  /** iterates all child frames and creates a new cell map */
-  NS_IMETHOD ReBuildCellMap();
 
   void SetColumnDimensions(nsIPresContext* aPresContext, nscoord aHeight);
 
@@ -685,7 +726,14 @@ protected:
 	/** 
 	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
 	  */
-  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDisplay);
+  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame*             aFrame, 
+                                            const nsStyleDisplay* aDisplay);
+
+  nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
+                                         nsIAtom*  aFrameTypeIn = nsnull);
+
+  void CollectRows(nsIFrame*    aFrame,
+                   nsVoidArray& aCollection);
 
 public: /* ----- Cell Map public methods ----- */
 
@@ -752,14 +800,16 @@ public: /* ----- Cell Map public methods ----- */
 
   /*------------end of nsITableLayout methods -----------------------*/
 
-
-  virtual void CacheColFrames(nsIPresContext* aPresContext,
-                              PRBool          aReset = PR_FALSE);
 public:
   static nsIAtom* gColGroupAtom;
-  void Dump(PRBool aDumpCols, PRBool aDumpCellMap);
+  void Dump(PRBool aDumpRows,
+            PRBool aDumpCols, 
+            PRBool aDumpCellMap);
+
+  nsVoidArray mColFrames; // XXX temporarily public 
 
 protected:
+  void DumpRowGroup(nsIFrame* aChildFrame);
   void DebugPrintCount() const; // Debugging routine
 
 // data members
@@ -770,15 +820,11 @@ protected:
     unsigned mColumnWidthsSet:1;       // PR_TRUE if column widths have been set at least once
     unsigned mColumnWidthsValid:1;     // PR_TRUE if column width data is still legit, PR_FALSE if it needs to be recalculated
     unsigned mFirstPassValid:1;        // PR_TRUE if first pass data is still legit, PR_FALSE if it needs to be recalculated
-    unsigned mColumnCacheValid:1;      // PR_TRUE if column cache info is still legit, PR_FALSE if it needs to be recalculated
-    unsigned mCellMapValid:1;          // PR_TRUE if cell map data is still legit, PR_FALSE if it needs to be recalculated
     unsigned mIsInvariantWidth:1;      // PR_TRUE if table width cannot change
-    unsigned mHasScrollableRowGroup:1; // PR_TRUE if any section has overflow == "auto" or "scroll"
     unsigned mNonPercentSpansPercent:1;
-    int : 24;                          // unused
+    int : 26;                          // unused
   } mBits;
 
-  PRInt32      mColCount;           // the number of columns in this table
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsFrameList  mColGroups;          // the list of colgroup frames
@@ -809,6 +855,16 @@ inline PRBool nsTableFrame::HasNonPercentSpanningPercent() const
 inline void nsTableFrame::SetHasNonPercentSpanningPercent(PRBool aValue)
 {
   mBits.mNonPercentSpansPercent = (unsigned)aValue;
+}
+
+inline nsFrameList& nsTableFrame::GetColGroups()
+{
+  return mColGroups;
+}
+
+inline nsVoidArray& nsTableFrame::GetColCache()
+{
+  return mColFrames;
 }
 
 enum nsTableIteration {

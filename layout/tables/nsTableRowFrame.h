@@ -62,9 +62,6 @@ struct RowReflowState {
 /**
  * Additional frame-state bits
  */
-#define NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN 0x80000000  // set if child cells have been
-                                                            // added to the table
-
 #define NS_TABLE_MAX_ROW_INDEX  (1<<19)
 
 /**
@@ -99,12 +96,6 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
-
-  /** Initialization of data */
-  NS_IMETHOD InitChildren();
-  NS_IMETHOD InitChildrenWithIndex(PRInt32 aRowIndex);
-
-  void ResetInitChildren();
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aResult    the new object is returned in this out-param
@@ -320,11 +311,6 @@ inline void nsTableRowFrame::SetRowIndex (int aRowIndex)
 {
   NS_PRECONDITION(aRowIndex < NS_TABLE_MAX_ROW_INDEX, "unexpected row index");
   mBits.mRowIndex = aRowIndex;
-}
-
-inline void nsTableRowFrame::ResetInitChildren()
-{
-  mState &= ~NS_TABLE_ROW_FRAME_INITIALIZED_CHILDREN;
 }
 
 inline void nsTableRowFrame::GetMaxElementSize(nsSize& aMaxElementSize) const

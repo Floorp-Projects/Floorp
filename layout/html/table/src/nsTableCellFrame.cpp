@@ -71,10 +71,9 @@ nsTableCellFrame::Init(nsIPresContext*  aPresContext,
   if (aPrevInFlow) {
     // Set the column index
     nsTableCellFrame* cellFrame = (nsTableCellFrame*)aPrevInFlow;
-    PRInt32           baseColIndex;
-    
-    cellFrame->GetColIndex(baseColIndex);
-    InitCellFrame(baseColIndex);
+    PRInt32           colIndex;
+    cellFrame->GetColIndex(colIndex);
+    InitCellFrame(colIndex);
   }
 
   return rv;
@@ -139,29 +138,24 @@ nsTableCellFrame::RemoveFrame(nsIPresContext* aPresContext,
 
 void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
-  NS_PRECONDITION(0<=aColIndex, "bad col index arg");
-  SetColIndex(aColIndex); // this also sets the contents col index
   nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
-  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
-  {
-    if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle())
-    {
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame)) {
+    SetColIndex(aColIndex);
+    if (NS_STYLE_BORDER_COLLAPSE == tableFrame->GetBorderCollapseStyle()) {
       mBorderEdges = new nsBorderEdges;
       mBorderEdges->mOutsideEdge=PR_FALSE;
       
       PRInt32 rowspan = GetRowSpan();
       PRInt32 i;
-      for (i=0; i<rowspan; i++)
-      {
+      for (i=0; i<rowspan; i++) {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
         mBorderEdges->mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
         borderToAdd = new nsBorderEdge();
         mBorderEdges->mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
       }
       PRInt32 colspan = GetColSpan();
-      for (i=0; i<colspan; i++)
-      {
+      for (i=0; i<colspan; i++) {
         nsBorderEdge *borderToAdd = new nsBorderEdge();
         mBorderEdges->mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
         borderToAdd = new nsBorderEdge();
