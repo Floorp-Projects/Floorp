@@ -30,6 +30,7 @@ print "\n\nChecking for unclobbered files\n" .
           "------------------------------\n";
 
 GoDir("ns");
+GoDir("mozilla");
 
 if( $missed ){
     die "\nError: $missed files or directories unclobbered\n";
