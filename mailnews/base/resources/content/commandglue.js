@@ -34,7 +34,7 @@ var prefs = Components.classes['component://netscape/preferences'].getService();
 prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 var showPerformance = prefs.GetBoolPref('mail.showMessengerPerformance');
 
-
+var gBeforeFolderLoadTime;
 
 function OpenURL(url)
 {
@@ -159,12 +159,32 @@ function ChangeFolderByURI(uri)
       window.title = msgfolder.name + " on " +
           msgfolder.server.prettyName;
 
+  gBeforeFolderLoadTime = new Date();
+
+  if(msgfolder.ManyHeadersToDownload())
+  {
+	try
+	{
+		msgfolder.UpdateFolder();
+	}
+	catch(ex)
+	{
+	}
+  }
+  else
+  {
+	RerootFolder(uri);
+  }
+}
+
+function RerootFolder(uri)
+{
+	dump('In reroot folder\n');
   var folder = GetThreadTreeFolder();
-  var beforeTime = new Date();
   ClearThreadTreeSelection();
   folder.setAttribute('ref', uri);
-  var afterTime = new Date();
-  var timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
+  var afterFolderLoadTime = new Date();
+  var timeToLoad = (afterFolderLoadTime.getTime() - gBeforeFolderLoadTime.getTime())/1000;
   if(showPerformance)
 	  dump("Time to load " + uri + " is " +  timeToLoad + " seconds\n");
 }
@@ -182,15 +202,18 @@ function SortThreadPane(column, sortKey)
 
 function SortFolderPane(column, sortKey)
 {
-	var node = FindInSidebar(frames[0].frames[0], column)
+	var node = FindInSidebar(window, column);
 	if(!node)
+	{
+		dump('Couldnt find sort column\n');
 		return false;
+	}
 	return SortColumn(node, sortKey);
 }
 
 function SortColumn(node, sortKey)
 {
-
+	dump('In sortColumn\n');
 	var xulSortService = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
 
 	if (xulSortService)

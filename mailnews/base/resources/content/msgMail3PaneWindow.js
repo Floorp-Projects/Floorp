@@ -56,13 +56,31 @@ messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 var folderListener = {
     OnItemAdded: function(parentFolder, item) {},
 
-	OnItemRemoved: function(parentFolder, item){
-		dump('in OnItemRemoved\n');
-	},
+	OnItemRemoved: function(parentFolder, item){},
 
 	OnItemPropertyChanged: function(item, property, oldValue, newValue) {},
 
-	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {}
+	OnItemPropertyFlagChanged: function(item, property, oldFlag, newFlag) {},
+
+	OnFolderLoaded: function (folder)
+	{
+		if(folder)
+		{
+			var resource = folder.QueryInterface(Components.interfaces.nsIRDFResource);
+			if(resource)
+			{
+				var uri = resource.Value;
+				var folderTree = GetFolderTree();
+				var selArray = folderTree.selectedItems;
+				if ( selArray && (selArray.length == 1) )
+				{
+					var id = selArray[0].getAttribute('id');
+					if(uri == id)
+						RerootFolder(uri);
+				}
+			}
+		}
+	}
 }
 
 /* Functions related to startup */
@@ -131,8 +149,6 @@ function verifyAccounts() {
 function loadStartPage() {
 
 	var startpage = "about:blank";
-
-    if (!pref) return;
 
     try {
         var pref = Components.classes[prefProgID].getService(Components.interfaces.nsIPref);
@@ -218,14 +234,23 @@ function AddDataSources()
 
 function InitPanes()
 {
-	init_sidebar('messenger', 'chrome://messenger/content/sidebar-messenger.xul',  275);
-	var tree = GetThreadTree();
-	if(tree);
-		OnLoadThreadPane(tree);
+	var mailsidebar = new Object
+	mailsidebar.db       = 'chrome://messenger/content/sidebar-messenger.rdf'
+	mailsidebar.resource = 'NC:MessengerSidebarRoot'
+    sidebarOverlayInit(mailsidebar);
+
+	var threadTree = GetThreadTree();
+	if(threadTree);
+		OnLoadThreadPane(threadTree);
+
+	var folderTree = GetFolderTree();
+	if(folderTree)
+		OnLoadFolderPane(folderTree);
 }
 
 function OnLoadFolderPane(folderTree)
 {
+	dump('In onLoadfolderPane\n');
     gFolderTree = folderTree;
 	SortFolderPane('FolderColumn', 'http://home.netscape.com/NC-rdf#Name');
 	//Add folderDataSource and accountManagerDataSource to folderPane
@@ -257,7 +282,7 @@ function GetFolderTree()
 {
     if (gFolderTree) return gFolderTree;
     
-	var folderTree = FindInSidebar(frames[0], 'folderTree');
+	var folderTree = document.getElementById('folderTree');
     gFolderTree = folderTree;
 	return folderTree;
 }
@@ -268,7 +293,7 @@ function FindInSidebar(currentWindow, id)
 	if(item)
 		return item;
 
-	for(var i = 0; i < frames.length; i++)
+	for(var i = 0; i < currentWindow.frames.length; i++)
 	{
 		var frameItem = FindInSidebar(currentWindow.frames[i], id);
 		if(frameItem)
@@ -308,7 +333,10 @@ function ClearThreadTreeSelection()
 {
 	var tree = GetThreadTree();
 	if(tree)
+	{
+		dump('before clearItemSelection\n');
 		tree.clearItemSelection();
+	}
 
 }
 
