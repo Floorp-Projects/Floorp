@@ -33,6 +33,8 @@
 #include "nsINetDataDiskCache.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsIObserverService.h"
+
 #define FILE_CACHE_IS_READY
 // Limit the number of entries in the cache to conserve memory space
 // in the nsReplacementPolicy code.
@@ -76,7 +78,8 @@ static int PR_CALLBACK memCacheSizeChanged(const char *pref, void *closure)
 
 nsCacheManager* gCacheManager = 0;
 PRBool gCacheManagerNeedToEvict = PR_FALSE;
-NS_IMPL_ISUPPORTS(nsCacheManager, NS_GET_IID(nsINetDataCacheManager))
+
+NS_IMPL_ISUPPORTS2(nsCacheManager, nsINetDataCacheManager, nsIObserver)
 
 nsCacheManager::nsCacheManager()
     : mActiveCacheRecords(0),
@@ -102,6 +105,12 @@ nsCacheManager::~nsCacheManager()
         prefs->UnregisterCallback( CACHE_DISK_CAPACITY, diskCacheSizeChanged, this); 
         prefs->UnregisterCallback( CACHE_MEM_CAPACITY, memCacheSizeChanged, this); 
     }
+    // Unregister this memory pressure observer
+    NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = os->RemoveObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+    }
+
 }
 
 
@@ -132,6 +141,13 @@ nsCacheManager::Init()
     mActiveCacheRecords = new nsHashtable(64);
     if (!mActiveCacheRecords)
         return NS_ERROR_OUT_OF_MEMORY;
+
+    // Register as a memory pressure observer
+    NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+        rv = os->AddObserver(this, NS_MEMORY_PRESSURE_TOPIC);
+    }
+    // Ignore any failure of the memory pressure registration...
 
     // Instantiate the memory cache component
     rv = nsComponentManager::CreateInstance(NS_NETWORK_MEMORY_CACHE_CONTRACTID,
@@ -607,3 +623,24 @@ nsCacheManager::GetDiskCacheCapacity(PRUint32* aCapacity)
     *aCapacity = mDiskCacheCapacity;
     return NS_OK;
 }
+
+//
+// nsIObserver methods
+//
+NS_IMETHODIMP
+nsCacheManager::Observe(nsISupports *aSubject,
+                        const PRUnichar *aTopic, 
+                        const PRUnichar *aSomeData)
+{
+  nsAutoString memPressure(NS_MEMORY_PRESSURE_TOPIC);
+
+  if (memPressure.EqualsWithConversion(aTopic)) {
+    (void) Clear(MEM_CACHE);
+    //
+    // Even if clearing a cache fails, do not pass the failure out to
+    // the observer service...
+    //
+  }
+  return NS_OK;
+}
+
