@@ -90,8 +90,13 @@ ifeq ($(OS_TEST),s390x)
 	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
 	CPU_ARCH        = s390x
 else
+ifeq ($(OS_TEST),mips)
+	OS_REL_CFLAGS   = -DLINUX1_2 -D_XOPEN_SOURCE
+	CPU_ARCH        = mips
+else
 	OS_REL_CFLAGS	= -DLINUX1_2 -Di386 -D_XOPEN_SOURCE
 	CPU_ARCH	= x86
+endif
 endif
 endif
 endif
