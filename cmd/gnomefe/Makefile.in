@@ -231,7 +231,7 @@ MCS_CMD		= true
 # Only IRIX 5.x uses this.
 EXTRA_POST_LINK_CMD	= echo
 
-NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libnspr21.a
 BASIC_LIBS	= \
 		  $(DIST)/lib/libgnuzilla.a \
 		  $(DIST)/lib/libgnuzilla-widgets.a \
