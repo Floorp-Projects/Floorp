@@ -122,7 +122,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	taskbar-addressbook.gif \
 	taskbar-addressbook-hover.gif \
 	taskbar-composer.gif \
-	taskbar-composer-hover.gif
+	taskbar-composer-hover.gif \
 	taskbar-mail.gif \
 	taskbar-mail-hover.gif \
     taskbar-gotmail.gif \
