@@ -697,7 +697,7 @@ sub do_panel {
     <body BGCOLOR="#FFFFFF" TEXT="#000000" 
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
-  print "<a href=showbuilds.cgi?tree=$form{tree}";
+  print "<a href=http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi?tree=$form{tree}";
   print "&hours=$form{hours}" if $form{hours};
   print "&nocrap=1" if $form{nocrap};
   print ">$tree";
