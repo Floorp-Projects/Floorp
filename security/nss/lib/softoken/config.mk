@@ -86,6 +86,8 @@ EXTRA_SHARED_LIBS += \
 	$(NULL)
 endif
 
+DEFINES += -DLIB_SUFFIX="$(LIB_SUFFIX)"
+
 ifeq ($(OS_TARGET),SunOS)
 ifndef USE_64
 ifeq ($(CPU_ARCH),sparc)
