@@ -107,7 +107,7 @@ MODULE_PRIVATE csname2id_t csname2id_tbl[] = {
 			{"x-johabfont", "", CS_JOHABFONT}, /* hangterm johab font */
 			{"x-viet-vps", "", CS_VIET_VPS},
 			{"x-viet-tcvn", "", CS_VIET_TCVN},
-			{"x-viet-vni", "", CS_VIET_VIQR},
+			{"x-viet-vni", "", CS_VIET_VNI},
 
 	/* Additional OS/2 codepages. These are IANA primary names */
 			{"ibm850", "Cp850", CS_CP_850},         /* PC Latin 1 */
