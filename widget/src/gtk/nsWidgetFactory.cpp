@@ -224,7 +224,8 @@ static nsModuleComponentInfo components[] =
     nsDragServiceConstructor },
   { "File Spec with UI",
     NS_FILESPECWITHUI_CID,
-    "mozilla.widget.filespecwithui.gtk.1",
+    //    "mozilla.widget.filespecwithui.gtk.1",
+    "component://netscape/filespecwithui",
     nsFileSpecWithUIImplConstructor }
 };
 
