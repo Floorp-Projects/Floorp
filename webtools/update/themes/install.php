@@ -77,7 +77,7 @@ $today=date("Ymd")."000000";
 // This is also where the weekly w/e code would go. if that feature is ever created.
    $mindate = date("Ymd", mktime(0, 0, 0, date("m"), date("d")-7, date("Y")))."000000";
    $downloadcount="0";
-  $sql = "SELECT `downloadcount` FROM `t_downloads` WHERE `ID`='$_GET[id]' AND `date`>='$mindate' AND `type`='count' LIMIT 1";
+  $sql = "SELECT `downloadcount` FROM `t_downloads` WHERE `ID`='$_GET[id]' AND `date`>='$mindate' AND `type`='count'  ORDER BY `date` DESC";
    $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
     while ($row = mysql_fetch_array($sql_result)) {
      $downloadcount = $downloadcount+$row["downloadcount"];
