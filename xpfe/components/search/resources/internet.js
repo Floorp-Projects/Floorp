@@ -63,6 +63,13 @@ function doSearch()
 	// XXX shouldn't assume that treebody is the last child node in the tree!
 	resultsTree.childNodes[x-1].setAttribute("id", searchURL);
 
+	// enable "Save Search" button
+	var searchButton = document.getElementById("SaveSearch");
+	if (searchButton)
+	{
+		searchButton.removeAttribute("disabled", "false");
+	}
+
 	dump("doSearch done.\n");
 
 	return(true);
