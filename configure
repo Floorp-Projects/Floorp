@@ -14951,7 +14951,16 @@ EOF
 #ifndef _MOZILLA_CONFIG_H_
 #define _MOZILLA_CONFIG_H_
 EOF
-  sort confdefs.h >> $_CONFIG_TMP
+
+_EGREP_PATTERN='^#define ('
+if test -n "$_NON_GLOBAL_ACDEFINES"; then
+    for f in $_NON_GLOBAL_ACDEFINES; do
+        _EGREP_PATTERN="${_EGREP_PATTERN}$f|"
+    done
+fi
+_EGREP_PATTERN="${_EGREP_PATTERN}dummy_never_defined)"
+ 
+  sort confdefs.h | egrep -v "$_EGREP_PATTERN" >> $_CONFIG_TMP
 
   cat >> $_CONFIG_TMP <<\EOF
 
