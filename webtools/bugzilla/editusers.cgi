@@ -260,7 +260,7 @@ my $action  = trim($::FORM{action} || '');
 my $localtrailer = '<a href="editusers.cgi?">edit more users</a>';
 my $candelete = Param('allowuserdeletion');
 
-
+my $dbh = Bugzilla->dbh;
 
 #
 # action='' -> Ask for match string for users.
@@ -302,11 +302,11 @@ if ($action eq 'list') {
           $query .= "like";
           $matchstr = '%' . $matchstr . '%';
       } elsif ($::FORM{'matchtype'} eq 'regexp') {
-          $query .= "regexp";
+          $query .= $dbh->sql_regexp();
           $matchstr = '.'
                 unless $matchstr;
       } elsif ($::FORM{'matchtype'} eq 'notregexp') {
-          $query .= "not regexp";
+          $query .= $dbh->sql_not_regexp();
           $matchstr = '.'
                 unless $matchstr;
       } else {

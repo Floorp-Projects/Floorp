@@ -95,6 +95,8 @@ sub init {
     my @andlist;
     my %chartfields;
 
+    my $dbh = Bugzilla->dbh;
+
     &::GetVersionTable();
     
     # First, deal with all the old hard-coded non-chart-based poop.
@@ -677,9 +679,9 @@ sub init {
              } elsif ($t eq "notequal") {
                  $oper = "<>";
              } elsif ($t eq "regexp") {
-                 $oper = "REGEXP";
+                 $oper = $dbh->sql_regexp();
              } elsif ($t eq "notregexp") {
-                 $oper = "NOT REGEXP";
+                 $oper = $dbh->sql_not_regexp();
              } else {
                  $oper = "noop";
              }
@@ -950,10 +952,10 @@ sub init {
              $term = "INSTR(LOWER($ff), " . lc($q) . ") = 0";
          },
          ",regexp" => sub {
-             $term = "LOWER($ff) REGEXP $q";
+             $term = "LOWER($ff) " . $dbh->sql_regexp() . " $q";
          },
          ",notregexp" => sub {
-             $term = "LOWER($ff) NOT REGEXP $q";
+             $term = "LOWER($ff) " . $dbh->sql_not_regexp() . " $q";
          },
          ",lessthan" => sub {
              $term = "$ff < $q";
@@ -1434,6 +1436,7 @@ sub build_subselect {
 sub GetByWordList {
     my ($field, $strs) = (@_);
     my @list;
+    my $dbh = Bugzilla->dbh;
 
     foreach my $w (split(/[\s,]+/, $strs)) {
         my $word = $w;
@@ -1443,7 +1446,7 @@ sub GetByWordList {
             $word =~ s/^'//;
             $word =~ s/'$//;
             $word = '(^|[^a-z0-9])' . $word . '($|[^a-z0-9])';
-            push(@list, "lower($field) regexp '$word'");
+            push(@list, "lower($field) " . $dbh->sql_regexp() . " '$word'");
         }
     }
 
