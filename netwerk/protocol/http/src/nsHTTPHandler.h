@@ -39,14 +39,15 @@
 */
 
 #include "nsIHTTPProtocolHandler.h"
+#include "nsIProxy.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
 #include "nsAuthEngine.h"
-#include "nsAuthEngine.h"
 #include "nsIProxy.h"
 #include "prtime.h"
+#include "nsString.h"
 
 //Forward decl.
 class nsHashtable;
@@ -54,77 +55,15 @@ class nsHTTPChannel;
 
 class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsIProxy 
 {
-
 public:
-
-    //Functions from nsISupports
     NS_DECL_ISUPPORTS
-
-    //Functions from nsIProtocolHandler
-    /*
-        GetDefaultPort returns the default port associated with this 
-        protocol. 
-    */
-    NS_IMETHOD               GetDefaultPort(PRInt32 *result)
-    {
-        static const PRInt32 defaultPort = 80;
-        *result = defaultPort;
-        return NS_OK;
-    };    
-
-    /* 
-        The GetScheme function uniquely identifies the scheme this handler 
-        is associated with. 
-    */
-    NS_IMETHOD               GetScheme(char * *o_Scheme)
-    {
-        static const char* scheme = "http";
-        *o_Scheme = nsCRT::strdup(scheme);
-        return NS_OK;
-    };
-
-    NS_IMETHOD               NewChannel(const char* verb, nsIURI* url,
-                                        nsILoadGroup* aLoadGroup,
-                                        nsIInterfaceRequestor* notificationCallbacks,
-                                        nsLoadFlags loadAttributes,
-                                        nsIURI* originalURI,
-                                        PRUint32 bufferSegmentSize,
-                                        PRUint32 bufferMaxSize,
-                                        nsIChannel **_retval);
-    
-    NS_IMETHOD               NewURI(const char *aSpec, nsIURI *aBaseURI,
-                                    nsIURI **_retval);
-
-    //Functions from nsIProxy
-    /*
-       Get and Set the Proxy Host 
-    */
-    NS_IMETHOD               GetProxyHost(const char* *o_ProxyHost) const; 
-
-    NS_IMETHOD               SetProxyHost(const char* i_ProxyHost);
-
-    /*
-        Get and Set the Proxy Port 
-        -1 on Set call indicates switch to default port
-    */
-    NS_IMETHOD_(PRInt32)     GetProxyPort(void) const 
-    {
-        return mProxyPort;
-    };
-    NS_IMETHOD               SetProxyPort(PRInt32 i_ProxyPort) 
-    {
-        mProxyPort = i_ProxyPort;
-        return NS_OK;
-    }; 
-
-    /**
-    * Follow the redirects automatically. 
-    * This will trigger OnRedirect call on the sink
-    */
-    NS_IMETHOD      FollowRedirects(PRBool bFollow=PR_TRUE);
-
-    // Functions from nsIHTTPProtocolHandler
+    NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIHTTPPROTOCOLHANDLER
+    NS_DECL_NSIPROXY
+
+    nsHTTPHandler();
+    nsresult Init();
+    static NS_METHOD Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
 
     /** 
     *   Pull out an existing transport from the list, or if none exists
@@ -147,19 +86,12 @@ public:
                                      PRUint32 bufferMaxSize,
                                      nsIChannel** o_pTrans);
     
-    /*
-        Remove this transport from the list.
-    */
+    /* Remove this transport from the list. */
     virtual nsresult ReleaseTransport(nsIChannel* i_pTrans);
-
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
-  
     PRTime GetSessionStartTime() { return mSessionStartTime; }
-
-    nsHTTPHandler(void);
+    nsresult FollowRedirects(PRBool bFollow=PR_TRUE);
 protected:
-
-    // None
     virtual ~nsHTTPHandler();
 
     // This is the array of connections that the handler thread 
@@ -177,6 +109,19 @@ protected:
     PRInt32         mProxyPort;
     PRTime          mSessionStartTime;
     PRBool          mUseProxy; 
+
+    nsresult BuildUserAgent();
+    nsCAutoString mAppName;
+    nsCAutoString mAppVersion;
+    nsCAutoString mVendorName;
+    nsCAutoString mVendorVersion;
+    nsCAutoString mVendorComment;
+    nsCAutoString mAppPlatform;
+    nsCAutoString mAppOSCPU;
+    nsCAutoString mAppSecurity;
+    nsCAutoString mAppLanguage;
+    nsCAutoString mAppUserAgent;
+    nsCAutoString mAppMisc;
 };
 
 #endif /* _nsHTTPHandler_h_ */

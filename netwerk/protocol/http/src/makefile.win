@@ -49,7 +49,6 @@ EXPORTS= 	\
 
 CPP_OBJS=		\
 	.\$(OBJDIR)\nsHTTPHandler.obj		\
-	.\$(OBJDIR)\nsHTTPHandlerFactory.obj	\
 	.\$(OBJDIR)\nsHTTPHandlerModule.obj	\
 	.\$(OBJDIR)\nsHTTPChannel.obj		\
 	.\$(OBJDIR)\nsHTTPRequest.obj		\

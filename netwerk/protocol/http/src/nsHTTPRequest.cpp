@@ -23,7 +23,7 @@
 #include "nspr.h"
 #include "nsIURL.h"
 #include "nsHTTPRequest.h"
-#include "nsHTTPHandler.h"
+#include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPAtoms.h"
 #include "nsHTTPEnums.h"
 #include "nsIPipe.h"
@@ -45,7 +45,8 @@
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
 
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID,   NS_IHTTPHANDLER_CID);
 
 nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method, 
     nsIChannel* i_Transport):
@@ -88,56 +89,47 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
     }
 
     // Add the user-agent 
-    nsresult rv;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) NS_ERROR("Failed to get IOService!");
-    PRUnichar * ua = nsnull;
-    if (NS_SUCCEEDED(service->GetUserAgent(&ua)))
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, kHTTPHandlerCID, &rv);
+    if (NS_FAILED(rv)) return;
+
+    nsXPIDLString ua;
+    if (NS_SUCCEEDED(httpHandler->GetUserAgent(getter_Copies(ua))))
     {
-        nsCString uaString(ua);
-        nsCRT::free(ua);
+        nsCString uaString((const PRUnichar*)ua);
         SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
     }
 
     // Send */*. We're no longer chopping MIME-types for acceptance.
     // MIME based content negotiation has died.
+    //SetHeader(nsHTTPAtoms::Accept, "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, image/png, */*");
     SetHeader(nsHTTPAtoms::Accept, "*/*");
 
     // Check to see if an authentication header is required
     nsAuthEngine* pAuthEngine = nsnull; 
-    
-    nsCOMPtr<nsIProtocolHandler> protocolHandler;
-    rv = service->GetProtocolHandler("http", getter_AddRefs(protocolHandler));
+
+    rv = httpHandler->GetAuthEngine(&pAuthEngine);
+    if (NS_SUCCEEDED(rv) && pAuthEngine)
+    {
+        // Qvq lbh xabj gung t?? Ebg13f n yvar va IVZ? Jbj. 
+        nsXPIDLCString authStr;
+        //PRUint32 authType = 0;
+        if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
+                getter_Copies(authStr))))
+                //&authType)) && (authType == 1))
+        {
+            if (authStr && *authStr)
+                SetHeader(nsHTTPAtoms::Authorization, authStr);
+        }
+    }
+    nsXPIDLCString acceptLanguages;
+    // Add the Accept-Language header
+    rv = httpHandler->GetAcceptLanguages(
+            getter_Copies(acceptLanguages));
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = 
-          do_QueryInterface(protocolHandler);
-      if (httpHandler)
-      {
-        rv = httpHandler->GetAuthEngine(&pAuthEngine);
-        if (NS_SUCCEEDED(rv) && pAuthEngine)
-        {
-            // Qvq lbh xabj gung t?? Ebg13f n yvar va IVZ? Jbj. 
-            nsXPIDLCString authStr;
-            //PRUint32 authType = 0;
-            if (NS_SUCCEEDED(pAuthEngine->GetAuthString(mURI, 
-                    getter_Copies(authStr))))
-                    //&authType)) && (authType == 1))
-            {
-                if (authStr && *authStr)
-                    SetHeader(nsHTTPAtoms::Authorization, authStr);
-            }
-        }
-        nsXPIDLCString acceptLanguages;
-        // Add the Accept-Language header
-        rv = httpHandler->GetAcceptLanguages(
-                getter_Copies(acceptLanguages));
-        if (NS_SUCCEEDED(rv))
-        {
-            if (acceptLanguages && *acceptLanguages)
-                SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
-        }
-      }
+        if (acceptLanguages && *acceptLanguages)
+            SetHeader(nsHTTPAtoms::Accept_Language, acceptLanguages);
     }
 }
     
@@ -148,10 +140,6 @@ nsHTTPRequest::~nsHTTPRequest()
            ("Deleting nsHTTPRequest [this=%x].\n", this));
 
     mTransport = null_nsCOMPtr();
-/*
-    if (mConnection)
-        NS_RELEASE(mConnection);
-*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -260,18 +248,9 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
         // Check to see if an authentication header is required
         nsAuthEngine* pAuthEngine = nsnull; 
         
-        nsCOMPtr<nsIProtocolHandler> protocolHandler;
-        NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-        if (NS_FAILED(rv)) NS_ERROR("Failed to get IOService!");
-        rv = service->GetProtocolHandler("http", 
-                getter_AddRefs(protocolHandler));
-
+        NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, kHTTPHandlerCID, &rv);
         if (NS_SUCCEEDED(rv))
         {
-          nsCOMPtr<nsIHTTPProtocolHandler> httpHandler = 
-              do_QueryInterface(protocolHandler);
-          if (httpHandler)
-          {
             rv = httpHandler->GetAuthEngine(&pAuthEngine);
             if (NS_SUCCEEDED(rv) && pAuthEngine)
             {
@@ -286,7 +265,6 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
                         SetHeader(nsHTTPAtoms::Proxy_Authorization, authStr);
                 }
             }
-          }
         }
     }
 #endif // 0

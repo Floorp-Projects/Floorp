@@ -34,7 +34,6 @@ REQUIRES	= xpcom necko raptor
 
 CPPSRCS		= \
 		nsHTTPHandler.cpp \
-		nsHTTPHandlerFactory.cpp \
 		nsHTTPHandlerModule.cpp \
 		nsHTTPChannel.cpp \
 		nsHTTPRequest.cpp \
@@ -47,8 +46,6 @@ CPPSRCS		= \
 		nsAuth.cpp \
 		nsAuthEngine.cpp \
 		$(NULL)
-
-EXPORTS		= nsHTTPCID.h
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
