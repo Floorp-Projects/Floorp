@@ -70,6 +70,7 @@ protected:
 private:
   HMODULE mThemeDLL;
   HANDLE mButtonTheme;
+  HANDLE mTooltipTheme;
   HANDLE mToolbarTheme;
   HANDLE mRebarTheme;
   HANDLE mProgressTheme;

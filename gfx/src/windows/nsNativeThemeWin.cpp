@@ -94,7 +94,10 @@
 #define TABP_TAB             4
 #define TABP_TAB_SELECTED    5
 #define TABP_TAB_PANE        9
-           
+
+// Tooltip constants
+#define TTP_STANDARD         1
+
 NS_IMPL_ISUPPORTS1(nsNativeThemeWin, nsITheme)
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
@@ -132,6 +135,7 @@ nsNativeThemeWin::nsNativeThemeWin() {
   NS_INIT_ISUPPORTS();
   mThemeDLL = NULL;
   mButtonTheme = NULL;
+  mTooltipTheme = NULL;
   mToolbarTheme = NULL;
   mRebarTheme = NULL;
   mProgressTheme = NULL;
@@ -188,6 +192,11 @@ nsNativeThemeWin::GetTheme(PRUint8 aWidgetType)
       if (!mButtonTheme)
         mButtonTheme = openTheme(NULL, L"Button");
       return mButtonTheme;
+    }
+    case NS_THEME_TOOLTIP: {
+      if (!mTooltipTheme)
+        mTooltipTheme = openTheme(NULL, L"Tooltip");
+      return mTooltipTheme;
     }
     case NS_THEME_TOOLBOX: {
       if (!mRebarTheme)
@@ -375,6 +384,11 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       nsIAtom* atom = (aWidgetType == NS_THEME_CHECKBOX) ? mCheckedAtom : mSelectedAtom;
       if (CheckBooleanAttr(aFrame, atom))
         aState += 4; // 4 unchecked states, 4 checked states.
+      return NS_OK;
+    }
+    case NS_THEME_TOOLTIP: {
+      aPart = TTP_STANDARD;
+      aState = TS_NORMAL;
       return NS_OK;
     }
     case NS_THEME_PROGRESSBAR: {
@@ -703,7 +717,8 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, PRUint8 aWidgetType,
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK ||
       aWidgetType == NS_THEME_PROGRESSBAR_CHUNK_VERTICAL ||
       aWidgetType == NS_THEME_PROGRESSBAR ||
-      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL) {
+      aWidgetType == NS_THEME_PROGRESSBAR_VERTICAL ||
+      aWidgetType == NS_THEME_TOOLTIP) {
     *aShouldRepaint = PR_FALSE;
     return NS_OK;
   }
@@ -749,6 +764,10 @@ nsNativeThemeWin::CloseData()
   if (mButtonTheme) {
     closeTheme(mButtonTheme);
     mButtonTheme = NULL;
+  }
+  if (mTooltipTheme) {
+    closeTheme(mTooltipTheme);
+    mTooltipTheme = NULL;
   }
   if (mStatusbarTheme) {
     closeTheme(mStatusbarTheme);
