@@ -158,6 +158,9 @@ static PRInt32              gRefCnt                    = 0;
 nsIXPConnect *GlobalWindowImpl::sXPConnect             = nsnull;
 nsIScriptSecurityManager *GlobalWindowImpl::sSecMan    = nsnull;
 nsIFactory *GlobalWindowImpl::sComputedDOMStyleFactory = nsnull;
+#ifdef DEBUG_jst
+PRInt32 gTimeoutCnt                                    = 0;
+#endif
 
 #define DOM_MIN_TIMEOUT_VALUE 10 // 10ms
 
@@ -179,7 +182,6 @@ static const char *kDOMSecurityWarningsBundleURL = "chrome://communicator/locale
 
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
-
 
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
@@ -262,6 +264,7 @@ GlobalWindowImpl::ShutDown()
 
 #ifdef DEBUG_jst
   printf ("---- Leaked %d GlobalWindowImpl's\n", gRefCnt);
+  printf ("---- Leaked %d nsTimeoutImpl's\n", gTimeoutCnt);
 #endif
 }
 
@@ -4616,19 +4619,6 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       // firing depth so that we can reentrantly run timeouts
       timeout->mFiringDepth = firingDepth;
       last_expired_timeout = timeout;
-
-      // If the timeout has a timer it means that it's a timeout
-      // that's due to be fired but it's OS timer hasn't fired yet.
-      // We'll go ahead and handle the timeout now so we can cancel
-      // the OS timer for the timeout and relese the OS timer's
-      // reference to the timeout (and set timeout->mTimer to nsnull to
-      // indicate that the OS timer no longer owns the timeout).
-      if (timeout->mTimer) {
-        timeout->mTimer->Cancel();
-        timeout->mTimer = nsnull;
-
-        timeout->Release(mContext);
-      }
     }
   }
 
@@ -4744,17 +4734,22 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     if (timeout->mInterval) {
       // Compute time to next timeout for interval timer.
       PRInt32 delay32;
-      PRInt64 interval, delay;
-      LL_I2L(interval, PR_MillisecondsToInterval(timeout->mInterval));
-      LL_ADD(timeout->mWhen, timeout->mWhen, interval);
-      LL_I2L(now, PR_IntervalNow());
-      LL_SUB(delay, timeout->mWhen, now);
-      LL_L2I(delay32, delay);
+
+      {
+        PRInt64 interval, delay;
+
+        LL_I2L(interval, PR_MillisecondsToInterval(timeout->mInterval));
+        LL_ADD(timeout->mWhen, timeout->mWhen, interval);
+        LL_I2L(now, PR_IntervalNow());
+        LL_SUB(delay, timeout->mWhen, now);
+        LL_L2I(delay32, delay);
+      }
 
       // If the next interval timeout is already supposed to have
       // happened then run the timeout immediately.
-      if (delay32 < 0)
+      if (delay32 < 0) {
         delay32 = 0;
+      }
 
       delay32 = PR_IntervalToMilliseconds(delay32);
 
@@ -4765,51 +4760,45 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
         delay32 = DOM_MIN_TIMEOUT_VALUE;
       }
 
-      // Reschedule timeout. Account for possible error return in
-      // code below that checks for zero toid.
-      timeout->mTimer = do_CreateInstance("@mozilla.org/timer;1");
+      // Reschedule the OS timer. Don't bother returning any error
+      // codes if this fails since nobody who cares about them is
+      // listening anyways.
+      rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
+                                                 delay32,
+                                                 nsITimer::TYPE_ONE_SHOT);
 
-      // Since we're in a loop where we're likely to be running
-      // multiple timeouts that were due to be handled when we
-      // entered this method (but the OS timers for those timeouts
-      // hadn't fired yet) we don't do an early return here just
-      // because we couldn't create a timer for an interval timeout
-      // since we still want to continue running the timeouts that
-      // were due to be handled when we entered this method. This
-      // method is never called by code that cares about success or
-      // failure any way so dropping the error on the floor here is
-      // no big deal.
+      if (NS_FAILED(rv)) {
+        NS_ERROR("Error initializing timer for DOM timeout!");
 
-      if (timeout->mTimer) {
-        rv = timeout->mTimer->InitWithFuncCallback(TimerCallback, timeout,
-                                                  delay32,
-                                                  nsITimer::TYPE_ONE_SHOT);
+        // We failed to initialize the new OS timer, this timer does
+        // us no good here so we just cancel it (just in case) and
+        // null out the pointer to the OS timer, this will release the
+        // OS timer. As we continue executing the code below we'll end
+        // up deleting the timeout since it's not an interval timeout
+        // any more (since timeout->mTimer == nsnull).
+        timeout->mTimer->Cancel();
+        timeout->mTimer = nsnull;
 
-        // Likewise, don't return early even if we fail to
-        // initialize the new OS timer.
+        // Now that the OS timer no longer has a reference to the
+        // timeout we need to drop that reference.
+        timeout->Release(contextKungFuDeathGrip);
+      }
+    }
 
-        if (NS_SUCCEEDED(rv)) {
-          // Increment the timeout's reference count to indicate that
-          // the new timer is holding on to the timeout struct.
-          timeout->AddRef();
-        } else {
-          NS_ERROR("Error initializing timer for DOM timeout!");
+    PRBool isInterval = PR_FALSE;
 
-          // We failed to initialize the new OS timer, this timer
-          // does us no good here so we just null out the pointer to
-          // the OS timer, this will release the OS timer. As we
-          // continue executing the code below we'll end up deleting
-          // the timeout since it's not an interval timeout any more
-          // (since timeout->mTimer == nsnull).
-
-          timeout->mTimer = nsnull;
-        }
+    if (timeout->mTimer) {
+      if (timeout->mInterval) {
+        isInterval = PR_TRUE;
       } else {
-        NS_ERROR("Error creating timer for DOM timeout!");
+        // The timeout still has an OS timer, and it's not an
+        // interval, that means that the OS timer could still fire (if
+        // it didn't already, i.e. aTimeout == timeout), cancel the OS
+        // timer and release it's reference to the timeout.
+        timeout->mTimer->Cancel();
+        timeout->mTimer = nsnull;
 
-        // If we weren't able to create a new OS timer for 'timeout'
-        // we'll fall through here and the code below will delete
-        // the timeout (since timeout->mTimer == nsnull).
+        timeout->Release(mContext);
       }
     }
 
@@ -4823,9 +4812,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
       prev->mNext = next;
     }
 
-    PRBool isInterval = (timeout->mInterval && timeout->mTimer);
-
-    // Drop timeout struct since it's out of the list
+    // Release the timeout struct since it's out of the list
     timeout->Release(contextKungFuDeathGrip);
 
     if (isInterval) {
@@ -4878,7 +4865,7 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
       // window having a context. It would be good to remedy this
       // workable but clumsy situation someday.
 
-      NS_WARNING("DropTimeout proceeding without context.");
+      NS_WARNING("nsTimeoutImpl::Release() proceeding without context.");
       nsCOMPtr<nsIJSRuntimeService> rtsvc =
         do_GetService("@mozilla.org/js/xpc/RuntimeService;1");
 
@@ -4889,7 +4876,7 @@ nsTimeoutImpl::Release(nsIScriptContext *aContext)
     if (!rt) {
       // most unexpected. not much choice but to bail.
 
-      NS_ERROR("DropTimeout with no JSRuntime. eek!");
+      NS_ERROR("nsTimeoutImpl::Release() with no JSRuntime. eek!");
 
       return;
     }
@@ -5063,15 +5050,13 @@ GlobalWindowImpl::TimerCallback(nsITimer *aTimer, void *aClosure)
 {
   nsTimeoutImpl *timeout = (nsTimeoutImpl *)aClosure;
 
-  // Null out the pointer to the OS timer (aTimer) in the timeout to
-  // to indicate that the timer (aTimer) no longer owns the
-  // timeout. From now on 'timeout' has the reference to the timeout.
-  timeout->mTimer = nsnull;
+  // Hold on to the timeout to ensure it doesn't go away while it's
+  // being handled (aka kungFuDeathGrip).
+  timeout->AddRef();
 
   timeout->mWindow->RunTimeout(timeout);
 
-  // Drop timeout's reference to the timeout (i.e. drop the reference
-  // that the timer held to the timeout).
+  // Drop our reference to the timeout now that we're done with it.
   timeout->Release(nsnull);
 }
 

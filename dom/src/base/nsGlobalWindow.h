@@ -339,6 +339,14 @@ struct nsTimeoutImpl
 {
   nsTimeoutImpl()
   {
+#ifdef DEBUG_jst
+    {
+      extern gTimeoutCnt;
+
+      ++gTimeoutCnt;
+    }
+#endif
+
     memset(this, 0, sizeof(*this));
 
     MOZ_COUNT_CTOR(nsTimeoutImpl);
@@ -346,6 +354,14 @@ struct nsTimeoutImpl
 
   ~nsTimeoutImpl()
   {
+#ifdef DEBUG_jst
+    {
+      extern gTimeoutCnt;
+
+      --gTimeoutCnt;
+    }
+#endif
+
     MOZ_COUNT_DTOR(nsTimeoutImpl);
   }
 
