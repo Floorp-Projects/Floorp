@@ -128,6 +128,11 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
   }
 
   switch (selector) {
+#ifdef XP_MACOSX  
+    case kPlatformCharsetSel_FileName:
+      oResult.Assign(NS_LITERAL_STRING("UTF-8"));
+      break;
+#endif
     case  kPlatformCharsetSel_KeyboardInput:
       rv = MapToCharset(
              (short) (0x0000FFFF & ::GetScriptManagerVariable(smKeyScript)),
