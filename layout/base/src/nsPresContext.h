@@ -71,7 +71,6 @@ public:
   virtual void SetImageAnimationMode(PRUint16 aMode);
   virtual void ClearStyleDataAndReflow();
 
-  virtual nsresult GetXBLBindingURL(nsIContent* aContent, nsIURI** aResult);
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult);
   virtual const nsFont* GetDefaultFont(PRUint8 aFontID) const;
 

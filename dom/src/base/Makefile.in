@@ -109,4 +109,6 @@ FORCE_STATIC_LIB = 1
 
 LOCAL_INCLUDES = -I$(srcdir)/../events
 
+DEFINES += -D_IMPL_NS_LAYOUT
+
 include $(topsrcdir)/config/rules.mk
