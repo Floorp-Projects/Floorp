@@ -74,7 +74,6 @@ Requires Ant version 1.2 or later
       <exclude name="org/mozilla/javascript/ClassNameHelper*.class"/>
       <exclude name="org/mozilla/javascript/ClassRepository*.class"/>
       <exclude name="org/mozilla/javascript/JavaAdapter*.class"/>
-      <exclude name="org/mozilla/javascript/NotAFunctionException*.class"/>
       <exclude name="org/mozilla/javascript/Token.class"/>
 
       <include name="org/mozilla/javascript/debug/*.class"/>

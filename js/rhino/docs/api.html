@@ -53,14 +53,12 @@ by objects wrapping other objects. Provides a method for recovering the
 wrapped value.</li>
 
 <li>
-<a href="org/mozilla/javascript/WrapHandler.html">WrapHandler</a> - Interface
-embedders can implement in order to control the way Java objects are wrapped
+<a href="org/mozilla/javascript/WrapFactory.html">WrapFactory</a> - Class 
+embedders can extend in order to control the way Java objects are wrapped
 for use by JavaScript.</li>
 
 <li>
-<a href="org/mozilla/javascript/ClassOutput.html">ClassOutput</a> - Interface
-embedders can implement in order to control the placement of generated
-class bytecodes.</li>
+<a href="org/mozilla/javascript/optimizer/ClassCompiler.html">ClassCompiler</a> - Class that provies API for compiling scripts into JVM class files.</li>
 
 <li>
 <a href="org/mozilla/javascript/serialize/ScriptableOutputStream.html">ScriptableOutputStream</a> - This stream can be used to serialize JavaScript objects and functions.
@@ -124,10 +122,6 @@ from a Java class.</li>
 <a href="org/mozilla/javascript/PropertyException.html">PropertyException</a>
 - Thrown if errors are detected while attempting to define a property of
 a host object from a Java class or method, or if a property is not found.</li>
-
-<li>
-<a href="org/mozilla/javascript/NotAFunctionException.html">NotAFunctionException</a>
-- Thrown when attempting to call an object that is not a function.</li>
 
 <li>
 <a href="org/mozilla/javascript/EvaluatorException.html">EvaluatorException</a>
