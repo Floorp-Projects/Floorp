@@ -3,12 +3,13 @@
 <!ENTITY textBegin.label                  "Quoted plain text appearance">
 <!ENTITY style.label                      "Style:">
 <!ENTITY style.accesskey                  "t">
-<!ENTITY regular.label                    "Regular">
+<!ENTITY regularStyle.label               "Regular">
 <!ENTITY bold.label                       "Bold">
 <!ENTITY italic.label                     "Italic">
 <!ENTITY boldItalic.label                 "Bold Italic">
 <!ENTITY size.label                       "Size:">
 <!ENTITY size.accesskey                   "s">
+<!ENTITY regularSize.label                "Regular">
 <!ENTITY bigger.label                     "Bigger">
 <!ENTITY smaller.label                    "Smaller">
 <!ENTITY color.label                      "Color:">

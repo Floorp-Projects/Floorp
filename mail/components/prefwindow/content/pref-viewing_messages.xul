@@ -118,7 +118,7 @@
       <label value="&style.label;" accesskey="&style.accesskey;" control="mailQuotedStyle"/>
       <menulist id="mailQuotedStyle" prefstring="mail.quoted_style">
         <menupopup>
-          <menuitem value="0" label="&regular.label;"/>
+          <menuitem value="0" label="&regularStyle.label;"/>
           <menuitem value="1" label="&bold.label;"/>
           <menuitem value="2" label="&italic.label;"/>
           <menuitem value="3" label="&boldItalic.label;"/>
@@ -128,7 +128,7 @@
       <label value="&size.label;" accesskey="&size.accesskey;" control="mailQuotedSize"/>
       <menulist id="mailQuotedSize" prefstring="mail.quoted_size">
         <menupopup>
-          <menuitem value="0" label="&regular.label;"/>
+          <menuitem value="0" label="&regularSize.label;"/>
           <menuitem value="1" label="&bigger.label;"/>
           <menuitem value="2" label="&smaller.label;"/>
         </menupopup>
