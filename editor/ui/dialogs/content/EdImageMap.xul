@@ -66,14 +66,14 @@
     <key id="nudgeleft"    keycode="VK_LEFT"     onkeypress="nudge(event, 'left')" />
     <key id="nudgedown"    keycode="VK_DOWN"     onkeypress="nudge(event, 'down')" />
     <key id="nudgeright"   keycode="VK_RIGHT"    onkeypress="nudge(event, 'right')" />
-    <key id="mapclearkb"   xulkey="true" key="d" observes="Map:Clear" />
-    <key id="mapselectkb"  xulkey="true" key="a" observes="Map:SelectAll" />
-    <key id="mapclosekb"   xulkey="true" key="l" observes="Map:Close" />
-    <key id="mapcutkb"     xulkey="true" key="x" observes="Map:Cut" />
-    <key id="mapcopykb"    xulkey="true" key="c" observes="Map:Copy" />
-    <key id="mappastekb"   xulkey="true" key="v" observes="Map:Paste" />
-    <key id="mappropskb"   xulkey="true" key="p" observes="Map:Props" />
-    <key id="maptbarkb"    xulkey="true" key="t" observes="Map:ViewToolbar" />
+    <key id="mapclearkb"   xulkey="true" key="&clear.accesskey;" observes="Map:Clear" />
+    <key id="mapselectkb"  xulkey="true" key="&selectall.accesskey;" observes="Map:SelectAll" />
+    <key id="mapclosekb"   xulkey="true" key="&close.accesskey;" observes="Map:Close" />
+    <key id="mapcutkb"     xulkey="true" key="&cut.accesskey;" observes="Map:Cut" />
+    <key id="mapcopykb"    xulkey="true" key="&copy.accesskey;" observes="Map:Copy" />
+    <key id="mappastekb"   xulkey="true" key="&paste.accesskey;" observes="Map:Paste" />
+    <key id="mappropskb"   xulkey="true" key="&props.accesskey;" observes="Map:Props" />
+    <key id="maptbarkb"    xulkey="true" key="&tbar.accesskey;" observes="Map:ViewToolbar" />
 
   </keyset>
 
@@ -144,25 +144,27 @@
 </menubar>
 
 
-<toolbar id="toolbar" class="standard" persist="collapsed">
-  <titledbutton id="cutButton" class="button28" observes="Map:Cut"/>
-  <titledbutton id="copyButton" class="button28" observes="Map:Copy"/>
-  <titledbutton id="pasteButton" class="button28" observes="Map:Paste"/>
-  <titledbutton id="zoomInButton" class="button28" observes="Map:ZoomIn"/>
-  <titledbutton id="zoomOutButton" class="button28" observes="Map:ZoomOut"/>
-  <titledbutton id="contrastButton" class="button28" observes="Map:Contrast"/>
+<toolbar id="toolbar" class="toolbar-primary" persist="collapsed">
+  <button id="cutButton" class="button-toolbar-2 top" observes="Map:Cut"/>
+  <button id="copyButton" class="button-toolbar-2 top" observes="Map:Copy"/>
+  <button id="pasteButton" class="button-toolbar-2 top" observes="Map:Paste"/>
+  <button id="zoomInButton" class="button-toolbar-2 top" observes="Map:ZoomIn"/>
+  <button id="zoomOutButton" class="button-toolbar-2 top" observes="Map:ZoomOut"/>
+  <button id="contrastButton" class="button-toolbar-2 top" observes="Map:Contrast"/>
   <spring flex="1"/>
 </toolbar> 
 
 
-<box orient="horizontal" flex="1">
+<box align="horizontal" flex="100">
 
   <toolbar id="toolbox" orient="vertical">
-    <titledbutton id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
-    <titledbutton id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
-    <titledbutton id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
-    <titledbutton id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
+  <box orient="vertical">
+    <button id="pointerButton" class="tool" toggled="1" onclick="changeTool(event, 'pointer')"/>
+    <button id="rectButton" class="tool" onclick="changeTool(event, 'rect')"/>
+    <button id="cirButton" class="tool" onclick="changeTool(event, 'cir')"/>
+    <button id="polyButton" class="tool" onclick="changeTool(event, 'poly')"/>
     <spring flex="1"/>
+  </box>
   </toolbar>
 
   <!-- Content Area -->

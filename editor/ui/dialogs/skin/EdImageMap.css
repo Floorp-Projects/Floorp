@@ -27,16 +27,16 @@ toolbar#toolbox {
   padding: 4px; 0px; 0px; 0px;
 }
 
-toolbar#toolbox titledbutton.tool:active {
-  margin: 2px 0px 0px 2px;
+toolbar#toolbox button.tool:active {
+	margin: 2px 0px 0px 2px;
 }
 
-toolbar#toolbox titledbutton.tool[toggled="1"] {
+toolbar#toolbox button.tool[toggled="1"] {
   margin: 2px 0px 0px 2px;
   border: 1px white inset;
 }
 
-toolbar#toolbox titledbutton.tool {
+toolbar#toolbox button.tool {
   border: 1px solid transparent;
   margin: 1px 1px 1px 1px;
 	padding: 2px;
@@ -44,42 +44,46 @@ toolbar#toolbox titledbutton.tool {
 	color: inherit;
 }
 
-toolbar#toolbox titledbutton#pointerButton {
+toolbar.toolbox > toolbargrippy {
+	visibility: collapse;
+}
+
+#pointerButton {
 	list-style-image:url("chrome://editor/skin/images/Map_pointerTool.gif");
 }
 
-toolbar#toolbox titledbutton#rectButton {
+#rectButton {
 	list-style-image:url("chrome://editor/skin/images/Map_rectangleTool.gif");
 }
 
-toolbar#toolbox titledbutton#cirButton {
+#cirButton {
 	list-style-image:url("chrome://editor/skin/images/Map_circleTool.gif");
 }
 
-toolbar#toolbox titledbutton#polyButton {
+#polyButton {
 	list-style-image:url("chrome://editor/skin/images/Map_polygonTool.gif");
 }
 
-toolbar#toolbar titledbutton#cutButton {
+#cutButton {
 	list-style-image:url("chrome://editor/skin/images/Map_Cut.gif");
 }
 
-toolbar#toolbar titledbutton#copyButton {
+#copyButton {
 	list-style-image:url("chrome://editor/skin/images/Map_Copy.gif");
 }
 
-toolbar#toolbar titledbutton#pasteButton {
+#pasteButton {
 	list-style-image:url("chrome://editor/skin/images/Map_Paste.gif");
 }
 
-toolbar#toolbar titledbutton#zoomInButton {
+#zoomInButton {
 	list-style-image:url("chrome://editor/skin/images/Map_zoomIn.gif");
 }
 
-toolbar#toolbar titledbutton#zoomOutButton {
+#zoomOutButton {
 	list-style-image:url("chrome://editor/skin/images/Map_zoomOut.gif");
 }
 
-toolbar#toolbar titledbutton#contrastButton {
+#contrastButton {
 	list-style-image:url("chrome://editor/skin/images/Map_contrast.gif");
 }

@@ -19,6 +19,7 @@
    - 
    - Contributor(s): 
    -   Dan Haddix (dan6992@hotmail.com)
+   -   Brian King (briano9@yahoo.com)
   -->
 
 <!-- These strings are for use specifically in the editor's image map dialog. -->
@@ -76,3 +77,13 @@
 <!ENTITY zoominCmd.label "Zoom In">
 <!ENTITY zoomoutCmd.label "Zoom Out">
 <!ENTITY delSpotCmd.label "Delete Spot">
+
+<!-- Keys -->
+<!ENTITY clear.accesskey "d">
+<!ENTITY selectall.accesskey "a">
+<!ENTITY close.accesskey "l">
+<!ENTITY cut.accesskey "x">
+<!ENTITY copy.accesskey "c">
+<!ENTITY paste.accesskey "v">
+<!ENTITY props.accesskey "p">
+<!ENTITY tbar.accesskey "t">
