@@ -144,6 +144,8 @@ public:
 
   NS_IMETHOD LaunchApplication(nsString& aApplication) ;
 
+  NS_IMETHOD GetCommandLineOptions(PLOptState** aOptState, const char * aOptions) ; 
+
 
 private:
   nsNativeApplicationInstance mNativeInstance ;
@@ -151,8 +153,13 @@ private:
   nsIWidget *                 mApplicationWindow ;
   nsIPref *                   mPref;
   nsIStreamManager *          mStreamManager;
-  nsIXPFCToolbarManager *         mToolbarManager;
+  nsIXPFCToolbarManager *     mToolbarManager;
   nsIDeviceContext *          mDeviceContext;
+
+public:
+  PLOptState * mOptState;
+  PRInt32 mArgc;
+  char ** mArgv;
 
 };
 

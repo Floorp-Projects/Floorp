@@ -74,7 +74,7 @@ void main(int argc, char **argv)
 {
   nsresult result = NS_OK ;
 
-  nsIShellInstance * pShellInstance ;
+  nsShellInstance * pShellInstance ;
   nsIApplicationShell * pApplicationShell ;
 
   XtSetLanguageProc(NULL, NULL, NULL);
@@ -141,6 +141,9 @@ void main(int argc, char **argv)
     //  Initialize the system
 
     pShellInstance->Init();
+    pShellInstance->mArgc = argc;
+    pShellInstance->mArgv = argv;
+
     pApplicationShell->Init();
 
     // Now, let actually start dispatching events.

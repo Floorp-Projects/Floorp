@@ -55,6 +55,7 @@
 #include "nsCalendarModel.h"
 #include "nsIServiceManager.h"
 
+#include "plgetopt.h"
 
 /* for CAPI to work in general form */
 #include "nsCapiCallbackReader.h"
@@ -185,10 +186,22 @@ NS_IMPL_RELEASE(nsCalendarShell)
 nsresult nsCalendarShell::Init()
 {
   /*
+   * Get the shell instance
+   */
+
+  nsresult res = nsApplicationManager::GetShellInstance(this, &mShellInstance);
+
+  /*
+   * Parse command Line
+   */
+
+
+  ParseCommandLine();
+    
+  /*
    * Register class factrories needed for application
    */
   RegisterFactories() ;
-
   InitFactoryObjs();
 
   /*
@@ -206,7 +219,7 @@ nsresult nsCalendarShell::Init()
    */
   LoadUI();
 
-  return NS_OK;
+  return res;
 }
 
 /**
@@ -228,6 +241,42 @@ nsresult nsCalendarShell::InitFactoryObjs()
   }
 
   return res;
+}
+
+nsresult nsCalendarShell::ParseCommandLine()
+{
+	PLOptStatus os;
+ 	PLOptState *opt;
+  
+  mShellInstance->GetCommandLineOptions(&opt,"Gdl:c:");
+
+	while (PL_OPT_EOL != (os = PL_GetNextOpt(opt)))
+  {
+		if (PL_OPT_BAD == os) 
+      continue;
+
+    switch (opt->option)
+    {
+      case 'G':  /* GLOBAL threads */
+    		//thread_scope = PR_GLOBAL_THREAD;
+        break;
+    
+      case 'd':  /* debug mode */
+        break;
+      
+      case 'l':  /* loop count */
+		    //loops = atoi(opt->value);
+        break;
+      
+      case 'c':  /* concurrency limit */
+		    //cpus = atoi(opt->value);
+        break;
+      
+      default:
+        break;
+    }
+  }
+  return NS_OK;
 }
 
 /**
@@ -460,11 +509,9 @@ nsresult nsCalendarShell::EnvVarsToValues(JulianString& s)
  */
 nsresult nsCalendarShell::LoadPreferences()
 {
-  nsresult res = nsApplicationManager::GetShellInstance(this, &mShellInstance);
-  nsCurlParser curl;
+  nsresult res = NS_OK;
 
-  if (NS_OK != res)
-    return res ;
+  nsCurlParser curl;
 
   /*
    * Load the overriding user preferences

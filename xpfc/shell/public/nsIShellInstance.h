@@ -20,10 +20,12 @@
 #define nsIShellInstance_h___
 
 #include "nscore.h"
+#include "nspr.h"
 #include "nsxpfc.h"
 #include "nsISupports.h"
 #include "nsIApplicationShell.h"
 #include "nsIWidget.h"
+#include "plgetopt.h"
 
 class nsIApplicationShell;
 class nsIPref;
@@ -132,6 +134,14 @@ public:
    * @result An nsIXPFCToolbarManager pointer
    */
   NS_IMETHOD_(nsIXPFCToolbarManager *) GetToolbarManager() = 0; 
+
+ 	PLOptState *opt;
+  
+  /**
+   * Get Command Line Options
+   * @result NS_OK
+   */
+  NS_IMETHOD GetCommandLineOptions(PLOptState** aOptState, const char * aOptions) = 0; 
 
   /**
    * Launch an application

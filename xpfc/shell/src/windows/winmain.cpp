@@ -67,9 +67,9 @@ static NS_DEFINE_IID(kCListLayoutCID,   NS_LISTLAYOUT_CID);
 
 int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
-	nsresult result = NS_OK ;
+  nsresult result = NS_OK ;
 
-	nsIShellInstance * pShellInstance ;
+	nsShellInstance * pShellInstance ;
 	nsIApplicationShell * pApplicationShell ;
 
   PL_InitializeEventsLib("");
@@ -77,83 +77,83 @@ int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam,
   PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
   PR_STDIO_INIT();
 
-    
-
-
-    // Let get a ShellInstance for this Application instance
-    nsRepository::RegisterFactory(kCShellInstanceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCMenuBarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCMenuContainerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCMenuManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCMenuItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCToolbarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCDialogCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCUserCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCTextWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCTabWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCXPFCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCStreamManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCStreamObjectCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCstackCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCBoxLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kCListLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  // Let get a ShellInstance for this Application instance
+  nsRepository::RegisterFactory(kCShellInstanceCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCMenuBarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCMenuContainerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCMenuManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCMenuItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCToolbarCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCDialogCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCUserCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPButtonCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPItemCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCTextWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCTabWidgetCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCXPFCToolbarManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCStreamManagerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCStreamObjectCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCstackCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCBoxLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCListLayoutCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
 	result = nsRepository::CreateInstance(kCShellInstanceCID,
-										  NULL,
-										  kIShellInstanceIID,
-										  (void **) &pShellInstance) ;
+										                    NULL,
+										                    kIShellInstanceIID,
+										                    (void **) &pShellInstance) ;
 
 	if (result != NS_OK)
 		return result ;
 
     // Let's instantiate the Application's Shell
-    NS_RegisterApplicationShellFactory() ;
+  NS_RegisterApplicationShellFactory() ;
 
 	result = nsRepository::CreateInstance(kIXPCOMApplicationShellCID,
-										  NULL,
-										  kIXPCOMApplicationShellCID,
-										  (void **) &pApplicationShell) ;
+										                    NULL,
+										                    kIXPCOMApplicationShellCID,
+										                    (void **) &pApplicationShell) ;
 		
 	if (result != NS_OK)
 		return result ;
 
-    // Let the the State know who it's Application Instance is
-    pShellInstance->SetNativeInstance((nsNativeApplicationInstance) instance);
-    pShellInstance->SetApplicationShell(pApplicationShell);
+  // Let the the State know who it's Application Instance is
+  pShellInstance->SetNativeInstance((nsNativeApplicationInstance) instance);
+  pShellInstance->SetApplicationShell(pApplicationShell);
 
-    // Tell the application manager to store away the association so the
-    // Application can look up its State
-    nsApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
+  // Tell the application manager to store away the association so the
+  // Application can look up its State
+  nsApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
 
-    // Initialize the system
-    pShellInstance->Init();
+  // Initialize the system
+  pShellInstance->mArgc = __argc;
+  pShellInstance->mArgv = __argv;
+
+  pShellInstance->Init();
 	pApplicationShell->Init();
 
-    // Now, let actually start dispatching events.
-    nsIAppShell * app_shell = nsnull;
+  // Now, let actually start dispatching events.
+  nsIAppShell * app_shell = nsnull;
 
-    result = pApplicationShell->QueryInterface(kIAppShellIID,(void**)&app_shell);
+  result = pApplicationShell->QueryInterface(kIAppShellIID,(void**)&app_shell);
 
-    if (result == NS_OK)
-    {
-	  result = app_shell->Run();
-      NS_RELEASE(app_shell);
-    }
+  if (result == NS_OK)
+  {
+	result = app_shell->Run();
+    NS_RELEASE(app_shell);
+  }
 
-    // We're done, clean up
-    nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
+  // We're done, clean up
+  nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
 
-    NS_RELEASE(pApplicationShell);
-    NS_RELEASE(pShellInstance);
-    
-    //PR_Cleanup();
+  NS_RELEASE(pApplicationShell);
+  NS_RELEASE(pShellInstance);
+  
+  //PR_Cleanup();
 
-    // book out of here
+  // book out of here
 	return result;
 }
 

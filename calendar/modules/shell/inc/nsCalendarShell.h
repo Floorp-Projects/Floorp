@@ -60,6 +60,8 @@ public:
   NS_METHOD Logoff();
   NS_METHOD LoadUI();
   NS_METHOD LoadPreferences();
+  NS_METHOD ParseCommandLine();
+
   NS_METHOD EnsureUserPath( JulianString& sPath );
 
   NS_IMETHOD SetCAPISession(CAPISession aCAPISession);

@@ -42,6 +42,7 @@ public:
   NS_IMETHOD Logoff() = 0;
   NS_IMETHOD LoadUI() = 0;
   NS_IMETHOD LoadPreferences() = 0;
+  NS_IMETHOD ParseCommandLine() = 0;
 
   NS_IMETHOD SetCAPISession(CAPISession aCAPISession) = 0;
   NS_IMETHOD_(CAPISession) GetCAPISession() = 0;
