@@ -78,6 +78,7 @@
    xmlns:html="http://www.w3.org/1999/xhtml"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    height="700px"
+   width="830px"
    persist="screenX screenY width height"
    > 
  
