@@ -136,7 +136,7 @@
   
   <binding id="checkbox" extends="chrome://global/content/xulBindings.xml#basetext">
     <content>
-      <xul:box flex="1" class="internal-box" autostretch="never">
+      <xul:box flex="1" class="internal-box" autostretch="never" valign="top">
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image class="checkbox-check"/>
         </xul:box>
