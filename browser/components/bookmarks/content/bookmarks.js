@@ -1572,7 +1572,7 @@ var BookmarksUtils = {
     // unlike for command events, we have to close the menus manually
     personalToolbarDNDObserver.mCurrentDragOverTarget = null;
     personalToolbarDNDObserver.onDragCloseTarget();
-    this.loadBookmarkBrowser(aEvent, aDS);
+    this.loadBookmarkBrowser(aEvent, aEvent.originalTarget, aDS);
   },
 
   loadBookmarkBrowser: function (aEvent, aTarget, aDS)
