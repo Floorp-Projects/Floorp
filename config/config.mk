@@ -456,7 +456,10 @@ ifneq ($(OS_ARCH),WINNT)
 
 ifdef MOZ_NATIVE_MAKEDEPEND
 MKDEPEND_DIR	=
-MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y
+# Adding the '-w' flag shortens the depend.mk files by allowing
+# more dependencies on one line. It may even speed up makedepend.
+# (Picking 6000 somewhat arbitrarily.)
+MKDEPEND	= $(MOZ_NATIVE_MAKEDEPEND) -Y -w 6000
 else
 MKDEPEND_DIR	= $(DEPTH)/config/mkdepend
 MKDEPEND	= $(MKDEPEND_DIR)/$(OBJDIR_NAME)/mkdepend
