@@ -1346,6 +1346,8 @@ nsObjectFrame::ReinstantiatePlugin(nsIPresContext* aPresContext, nsHTMLReflowMet
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
   mInstanceOwner->GetWindow(window);
+  
+  NS_ENSURE_TRUE(window, NS_ERROR_NULL_POINTER);
 
   GetOffsetFromView(aPresContext, origin, &parentWithView);
 
