@@ -128,7 +128,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
         if (result == PR_TRUE) {
           // I think it also needs a conversion here (to unicode since appending to nsString) 
           // but doing that generates garbage file name, weird.
-          mFile.AppendWithConversion(pathStr);
+          mFile.AppendWithConversion(fileBuffer);
         }
       }
     }
