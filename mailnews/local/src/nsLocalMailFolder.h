@@ -188,32 +188,31 @@ protected:
 
   nsresult CheckIfFolderExists(const PRUnichar *newFolderName, nsIMsgFolder *parentFolder, nsIMsgWindow *msgWindow);
 
-	/* Finds the directory associated with this folder.  That is if the path is
-	c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
-	currently exist then it will create it
-	*/
-	nsresult CreateDirectoryForFolder(nsFileSpec &path);
+  /* Finds the directory associated with this folder.  That is if the path is
+  c:\Inbox, it will return c:\Inbox.sbd if it succeeds.  If that path doesn't
+  currently exist then it will create it
+  */
+  nsresult CreateDirectoryForFolder(nsFileSpec &path);
 
-	nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
-                         PRBool deleteStorage, PRBool commit);
+  nsresult DeleteMessage(nsISupports *message, nsIMsgWindow *msgWindow,
+                   PRBool deleteStorage, PRBool commit);
 
-	// copy message helper
-	nsresult DisplayMoveCopyStatusMsg();
-    nsresult SortMessagesBasedOnKey(nsISupportsArray *messages, nsMsgKeyArray *aKeyArray, nsIMsgFolder *srcFolder);
+  // copy message helper
+  nsresult DisplayMoveCopyStatusMsg();
+  nsresult SortMessagesBasedOnKey(nsISupportsArray *messages, nsMsgKeyArray *aKeyArray, nsIMsgFolder *srcFolder);
 
   nsresult CopyMessageTo(nsISupports *message, nsIMsgFolder *dstFolder,
                          nsIMsgWindow *msgWindow, PRBool isMove);
 
-	// copy multiple messages at a time from this folder
-	nsresult CopyMessagesTo(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow,
-                                             nsIMsgFolder *dstFolder,
-                                             PRBool isMove);
-	virtual const char* GetIncomingServerType();
+  // copy multiple messages at a time from this folder
+  nsresult CopyMessagesTo(nsISupportsArray *messages, nsIMsgWindow *aMsgWindow,
+                                       nsIMsgFolder *dstFolder,
+                                       PRBool isMove);
+  virtual const char* GetIncomingServerType();
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
-	void CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDBHdr *srcHdr);
-  nsresult OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded);
-	virtual nsresult CreateBaseMessageURI(const char *aURI);
+  void CopyPropertiesToMsgHdr(nsIMsgDBHdr *destHdr, nsIMsgDBHdr *srcHdr);
+  virtual nsresult CreateBaseMessageURI(const char *aURI);
   virtual nsresult SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
   virtual nsresult SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin);
 protected:

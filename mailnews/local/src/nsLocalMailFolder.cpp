@@ -1710,7 +1710,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   return rv;
 }
 
-nsresult
+NS_IMETHODIMP
 nsMsgLocalMailFolder::OnCopyCompleted(nsISupports *srcSupport, PRBool moveCopySucceeded)
 {
   if (mCopyState && mCopyState->m_notifyFolderLoaded)
@@ -1966,21 +1966,22 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
   {
     nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(newMsgFolder);
     if (localFolder)
-      localFolder->DoNextSubFolder(srcFolder, msgWindow, listener);
-
-    // We need to call OnCopyCompleted() here because if it's an empty folder then
-    // we'll never get a callback to nsMailboxProtocol::OnStopRequest() which will
-    // eventually call OnCopyCompleted() to clean up the copy request.
-    nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(srcFolder);
-    return OnCopyCompleted(srcSupport, PR_FALSE);
+    {
+      // normally these would get called from ::EndCopy when the last message
+      // was finished copying. But since there are no messages, we have to call
+      // them explicitly.
+      nsCOMPtr<nsISupports> srcSupports = do_QueryInterface(newMsgFolder);
+      localFolder->CopyAllSubFolders(srcFolder, msgWindow, listener);
+      return localFolder->OnCopyCompleted(srcSupports, PR_TRUE);
+    }
   }	    
   return NS_OK;  // otherwise the front-end will say Exception::CopyFolder
 }
 
-nsresult    //Continue with next subfolder
-nsMsgLocalMailFolder::DoNextSubFolder(nsIMsgFolder *srcFolder, 
-								                      nsIMsgWindow *msgWindow, 
-								                      nsIMsgCopyServiceListener *listener )
+nsresult    //copy the sub folders
+nsMsgLocalMailFolder::CopyAllSubFolders(nsIMsgFolder *srcFolder, 
+                                      nsIMsgWindow *msgWindow, 
+                                      nsIMsgCopyServiceListener *listener )
 {
   nsresult rv;
   nsCOMPtr<nsIEnumerator> aEnumerator;
@@ -1990,11 +1991,11 @@ nsMsgLocalMailFolder::DoNextSubFolder(nsIMsgFolder *srcFolder,
   rv = aEnumerator->First();
   while (NS_SUCCEEDED(rv))
   {
-     rv = aEnumerator->CurrentItem(getter_AddRefs(aSupports));
-     folder = do_QueryInterface(aSupports);
-     rv = aEnumerator->Next();
-     if (folder)
-         CopyFolderAcrossServer(folder, msgWindow, listener);  
+    rv = aEnumerator->CurrentItem(getter_AddRefs(aSupports));
+    folder = do_QueryInterface(aSupports);
+    rv = aEnumerator->Next();
+    if (folder)
+      CopyFolderAcrossServer(folder, msgWindow, listener);  
     
   }  
   return rv;
@@ -2658,7 +2659,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         nsCOMPtr<nsIMsgFolder> srcFolder;
         srcFolder = do_QueryInterface(mCopyState->m_srcSupport);
         if (mCopyState->m_isFolder)
-          DoNextSubFolder(srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
+          CopyAllSubFolders(srcFolder, nsnull, nsnull);  //Copy all subfolders then notify completion
         
         if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
         {

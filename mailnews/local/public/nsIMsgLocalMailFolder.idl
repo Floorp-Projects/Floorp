@@ -56,7 +56,8 @@ interface nsIMsgLocalMailFolder : nsISupports {
   nsIMsgDatabase getDatabaseWOReparse();
   void parseFolder(in nsIMsgWindow aMsgWindow, in nsIUrlListener listener);
   void copyFolderLocal(in nsIMsgFolder srcFolder, in boolean isMove, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
-  void doNextSubFolder(in nsIMsgFolder srcFolder, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
+  void copyAllSubFolders(in nsIMsgFolder srcFolder, in nsIMsgWindow msgWindow, in nsIMsgCopyServiceListener listener );
+  void onCopyCompleted(in nsISupports aSrcSupport, in boolean aMoveCopySucceeded);
   attribute boolean checkForNewMessagesAfterParsing;
   [noscript] void markMsgsOnPop3Server(in nsISupportsArray aMessages, in boolean aDeleteMsgs);
   void refreshSizeOnDisk(); // file size on disk has possibly changed - update and notify
