@@ -179,3 +179,4 @@ toolkit.jar:
     content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
     content/global/filepicker.js				(filepicker/res/content/filepicker.js)
     content/global/filepicker.xul				(filepicker/res/content/filepicker.xul)
+    content/global/filepicker.css				(filepicker/res/content/filepicker.css)
