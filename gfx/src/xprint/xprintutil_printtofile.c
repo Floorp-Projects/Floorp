@@ -179,6 +179,7 @@ typedef struct
 #endif    
   char          *displayname;
   Display       *pdpy;
+  Display       *parent_pdpy;
   XPContext      pcontext;
   const char    *file_name;
   FILE          *file;
@@ -195,6 +196,7 @@ void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
   if( (mpfd = malloc(sizeof(MyPrintFileData))) == NULL )
     return(NULL);
   
+  mpfd->parent_pdpy = pdpy;
   mpfd->displayname = XDisplayString(pdpy);
   mpfd->pdpy        = NULL;
   mpfd->pcontext    = pcontext;
@@ -237,6 +239,10 @@ XPGetDocStatus XpuWaitForPrintFileChild( void *handle )
   MyPrintFileData *mpfd   = (MyPrintFileData *)handle;
   void            *res;
   XPGetDocStatus   status;
+  
+  /* Flush data a last time to make sure we send all data to Xprt and that
+   * the Xlib internal hooks have called a last time */
+  XFlush(mpfd->parent_pdpy);
 
 #ifdef XPU_USE_NSPR
   if( PR_JoinThread(mpfd->prthread) != PR_SUCCESS  )
@@ -279,6 +285,7 @@ typedef struct
   int             pipe[2];  /* child-->parent communication pipe */
   const char     *displayname;
   Display        *pdpy;
+  Display        *parent_pdpy;
   XPContext       pcontext;
   const char     *file_name;
   FILE           *file;
@@ -304,6 +311,7 @@ void *XpuPrintToFile( Display *pdpy, XPContext pcontext, const char *filename )
     return(NULL);
   }
         
+  mpfd->parent_pdpy = pdpy;
   mpfd->displayname = XDisplayString(pdpy);
   mpfd->pcontext    = pcontext;
   mpfd->file_name   = filename;
@@ -357,6 +365,10 @@ XPGetDocStatus XpuWaitForPrintFileChild( void *handle )
   MyPrintFileData *mpfd   = (MyPrintFileData *)handle;
   int              res;
   XPGetDocStatus   status = XPGetDocError; /* used when read() from pipe fails */
+
+  /* Flush data a last time to make sure we send all data to Xprt and that
+   * the Xlib internal hooks have called a last time */
+  XFlush(mpfd->parent_pdpy);
   
   if( XPU_TRACE(waitpid(mpfd->pid, &res, 0)) == -1 )
     perror("XpuWaitForPrintFileChild: waitpid failure");
