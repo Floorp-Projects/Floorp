@@ -1945,7 +1945,7 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
 {
 	nscoord oldWidth, oldHeight;
 	aView->GetDimensions(&oldWidth, &oldHeight);
-	if (width != oldWidth || height != oldHeight) {
+	if ((width != oldWidth) || (height != oldHeight)) {
 		nscoord x = 0, y = 0;
 		nsIView* parentView = nsnull;
 	    aView->GetParent(parentView);
@@ -1956,31 +1956,20 @@ NS_IMETHODIMP nsViewManager::ResizeView(nsIView *aView, nscoord width, nscoord h
 
 		// resize the view.
 		aView->SetDimensions(width, height);
-		
-		// compute rectangular strips that need to be refreshed.
-		nscoord minWidth, maxWidth;
-		if (oldWidth < width)
-			minWidth = oldWidth, maxWidth = width;
-		else
-			minWidth = width, maxWidth = oldWidth;
 
-		nscoord minHeight, maxHeight;
-		if (oldHeight < height)
-			minHeight = oldHeight, maxHeight = height;
-		else
-			minHeight = height, maxHeight = oldHeight;
-			
-		if (width != oldWidth) {
-			nscoord deltaWidth = maxWidth - minWidth;
-			nsRect rightEdge(x + minWidth, y, deltaWidth, maxHeight);
-			UpdateView(parentView, rightEdge, NS_VMREFRESH_NO_SYNC);
-		}
-		
-		if (height != oldHeight) {
-			nscoord deltaHeight = maxHeight - minHeight;
-			nsRect bottomEdge(x, y + minHeight, maxWidth, deltaHeight);
-			UpdateView(parentView, bottomEdge, NS_VMREFRESH_NO_SYNC);
-		}
+#if 0
+		// refresh the bounding box of old and new areas.
+		nscoord maxWidth = (oldWidth < width ? width : oldWidth);
+		nscoord maxHeight = (oldHeight < height ? height : oldHeight);
+		nsRect boundingArea(x, y, maxWidth, maxHeight);
+		UpdateView(parentView, boundingArea, NS_VMREFRESH_NO_SYNC);
+#else
+		// brute force, invalidate old and new areas. I don't understand
+		// why just refreshing the bounding box is insufficient.
+		nsRect oldBounds(x, y, oldWidth, oldHeight);
+		UpdateView(parentView, oldBounds, NS_VMREFRESH_NO_SYNC);
+		UpdateView(parentView, nsnull, NS_VMREFRESH_NO_SYNC);
+#endif
 	}
 	
 	return NS_OK;
