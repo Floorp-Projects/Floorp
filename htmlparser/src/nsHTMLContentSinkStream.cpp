@@ -149,7 +149,7 @@ void WriteAttributes(const nsIParserNode& aNode,ostream& aStream) {
  * @param 
  * @return
  */
-void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,bool aNewline) {
+void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab,ostream& aStream,PRBool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
     aStream << " ";
@@ -167,7 +167,7 @@ void OpenTagWithAttributes(const char* theTag,const nsIParserNode& aNode,int tab
  * @param 
  * @return
  */
-void OpenTag(const char* theTag,int tab,ostream& aStream,bool aNewline) {
+void OpenTag(const char* theTag,int tab,ostream& aStream,PRBool aNewline) {
   int i=0;
   for(i=0;i<tab*gTabSize;i++) 
     aStream << " ";
@@ -199,7 +199,7 @@ void CloseTag(const char* theTag,int tab,ostream& aStream) {
  */
 void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,false);
+  OpenTag(titleStr,tab,aStream,PR_FALSE);
   theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
   aStream << gBuffer;
   CloseTag(titleStr,0,aStream);
@@ -215,7 +215,7 @@ void WritePair(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStrea
  */
 void WriteSingleton(eHTMLTags aTag,const nsString& theContent,int tab,ostream& aStream) {
   const char* titleStr = GetTagName(aTag);
-  OpenTag(titleStr,tab,aStream,false);
+  OpenTag(titleStr,tab,aStream,PR_FALSE);
   if(theContent.Length()) {
     theContent.ToCString(gBuffer,sizeof(gBuffer)-1);
     aStream << gBuffer;
@@ -253,7 +253,7 @@ PRInt32 CHTMLContentSinkStream::OpenHTML(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_html);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
   }
   return result;
 }
@@ -289,7 +289,7 @@ PRInt32 CHTMLContentSinkStream::OpenHead(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_head);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
   }
   return result;
 }
@@ -325,7 +325,7 @@ PRInt32 CHTMLContentSinkStream::OpenBody(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_body);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
   }
   return result;
 }
@@ -361,7 +361,7 @@ PRInt32 CHTMLContentSinkStream::OpenForm(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_form);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
   }
   return result;
 }
@@ -397,7 +397,7 @@ PRInt32 CHTMLContentSinkStream::OpenFrameset(const nsIParserNode& aNode){
   mTabLevel++;
   if(mOutput) {
     const char* theTag= GetTagName(eHTMLTag_frameset);
-    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,true);
+    OpenTagWithAttributes(theTag,aNode,mTabLevel,*mOutput,PR_TRUE);
   }
   return result;
 }
@@ -465,7 +465,7 @@ PRInt32 CHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode){
         {
           const nsString& name=aNode.GetName();
           const char* tagName= GetTagName(nodeType);
-          OpenTagWithAttributes(tagName,aNode,mTabLevel,*mOutput,true);
+          OpenTagWithAttributes(tagName,aNode,mTabLevel,*mOutput,PR_TRUE);
         }
         break;
     }
