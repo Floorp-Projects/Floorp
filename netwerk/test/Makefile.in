@@ -37,6 +37,7 @@ CPPSRCS		= \
 		TestFileInput2.cpp \
 		TestRes.cpp \
 		TestCallbacks.cpp \
+        TestSyncHTTP.cpp \
 		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
