@@ -36,18 +36,28 @@ var expect= '';
 var expectedvalues = [];
 
 
-status = 'Section 1 of test';
 try
 {
   xxxyyyzzz();
 }
 catch (e)
 {
+  status = 'Section 1 of test';
   actual = e instanceof ReferenceError;
-}
-expect = true;
-addThis();
+  expect = true;
+  addThis();
 
+
+  /*
+   * This test is more literal, and may one day be invalid.
+   * Searching for literal string "ReferenceError" in e.toString()
+   */
+  status = 'Section 2 of test';
+  var match = e.toString().search(/ReferenceError/);
+  actual = (match > -1);
+  expect = true;
+  addThis();
+}
 
 
 
