@@ -40,6 +40,13 @@ const PP_PowerPlant::ResIDT	wind_BrowserWindow = 129;
 // Dialogs
 const PP_PowerPlant::ResIDT	dlog_FindDialog = 1281;
 
+// nsIPrompt
+const PP_PowerPlant::ResIDT dlog_Alert = 1282;
+const PP_PowerPlant::ResIDT dlog_Confirm = 1283;
+const PP_PowerPlant::ResIDT dlog_ConfirmCheck = 1284;
+const PP_PowerPlant::ResIDT dlog_Prompt = 1285;
+const PP_PowerPlant::ResIDT dlog_PromptNameAndPass = 1286;
+const PP_PowerPlant::ResIDT dlog_PromptPassword = 1287;
 
 //*****************************************************************************
 //***    Message IDs
