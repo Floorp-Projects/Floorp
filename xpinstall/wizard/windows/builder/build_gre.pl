@@ -76,8 +76,9 @@ print "stage:  $cwdDist\\stage";
 print "cwdDistWin: $cwdDistWin";
 
 mkdir("$cwdDist\\stage", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdGrePkgr\\basebrowser-win -o dos -v");
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdGrePkgr\\gre-win -o dos -v");
+mkdir("$cwdDist\\stage\\gre", 775);
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\gre -f $cwdGrePkgr\\basebrowser-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\gre -f $cwdGrePkgr\\gre-win -o dos -v");
 
 
 chdir("$cwdPackager\\win_gre");

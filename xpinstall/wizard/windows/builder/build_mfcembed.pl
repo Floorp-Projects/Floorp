@@ -76,9 +76,10 @@ print "stage:  $cwdDist\\stage";
 print "cwdDistWin: $cwdDistWin";
 
 mkdir("$cwdDist\\stage", 775);
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin -d $cwdDist\\stage -f $cwdPackager\\pkgs-mfcembed-win -o dos -v");
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdMfcEmbedPkgr\\basebrowser-win-supp -o dos -v");
-system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage -f $cwdMrcEmbedPkgr\\gre-win-supp -o dos -v");
+mkdir("$cwdDist\\stage\\mfcembed", 775);
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\mfcembed -f $cwdPackager\\pkgs-mfcembed-win -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\mfcembed -f $cwdMfcEmbedPkgr\\basebrowser-win-supp -o dos -v");
+system("perl $cwdPackager\\pkgcp.pl -s $cwdDistWin\\bin -d $cwdDist\\stage\\mfcembed -f $cwdMfcEmbedPkgr\\gre-win-supp -o dos -v");
 
 
 chdir("$cwdPackager\\win_mfcembed");
