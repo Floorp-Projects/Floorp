@@ -16,7 +16,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&prefWindow.title;" 
         orient="vertical" class="dialog"
-        style="width: 52em; height: 41em;"
+        style="&prefWindow.size;"
         onload="Startup();"
         persist="screenX screenY"> 
 

@@ -4,3 +4,9 @@
 <!ENTITY  prefWindow.title            "Preferences">
 <!ENTITY  categoryHeader              "Category">
 
+<!-- LOCALIZATION NOTE : this is part of an inline-style attribute on the
+     preference dialog's <window> node, which specifies the width and height
+     in em units of the dialog. Increase these widths if you are having
+     difficulty getting panel content to fit. 1em = the width of the 
+     letter 'm' in the selected font -->
+<!ENTITY  prefWindow.size             "width: 52em; height: 41em;">
