@@ -20,6 +20,7 @@
  *
  * Contributor(s):
  *   Joe Hewitt <hewitt@netscape.com> (Original Author)
+ *   Dean Tessman <dean_tessman@hotmail.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -87,7 +88,7 @@ interface nsIAutoCompleteController : nsISupports
    * means of changing the text value, including typing a character, backspacing, deleting, or
    * pasting in an entirely new value.
    */
-  void handleText();
+  void handleText(in boolean aIgnoreSelection);
 
   /*
    * Notify the controller that the user wishes to enter the current text
@@ -136,4 +137,9 @@ interface nsIAutoCompleteController : nsISupports
    * Get a the style hint for the result at a given index in the last completed search
    */
   AString getStyleAt(in long index);
+
+  /*
+   * Set the current search string, but don't start searching
+   */
+  void setSearchString(in AString aSearchString);
 };

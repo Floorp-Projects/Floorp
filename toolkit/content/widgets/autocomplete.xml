@@ -21,6 +21,7 @@
 # 
 # Contributor(s):
 #     Pierre Chanial (p_ch@verizon.net)
+#     Dean Tessman   (dean_tessman@hotmail.com)
 #
 # Alternatively, the contents of this file may be used under the
 # terms of the GNU General Public License Version 2 or later (the
@@ -424,7 +425,7 @@
 
     <handlers>
       <handler event="input"
-               action="if (!this.mIgnoreInput) this.mController.handleText();"/>
+               action="if (!this.mIgnoreInput) this.mController.handleText(false);"/>
 
       <handler event="keypress" phase="capturing"
                action="return this.onKeyPress(event);"/>
