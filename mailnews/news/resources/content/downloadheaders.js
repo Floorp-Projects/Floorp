@@ -103,16 +103,16 @@ function CancelButtonCallback() {
 	return true;
 }
 
-function doCheckboxEnabling() {
-  var allRadio = document.getElementById("all");
+function setupDownloadUI(enable) {
   var checkbox = document.getElementById("markread");
   var numberFld = document.getElementById("number");
-  if (allRadio && allRadio.checked) {
-    checkbox.setAttribute("disabled", "true");
-    numberFld.setAttribute("disabled", "true");
-  }
-  else {
+
+  if (enable) {
     checkbox.removeAttribute("disabled");
     numberFld.removeAttribute("disabled");
+  }
+  else {
+    checkbox.setAttribute("disabled", "true");
+    numberFld.setAttribute("disabled", "true");
   }
 }
