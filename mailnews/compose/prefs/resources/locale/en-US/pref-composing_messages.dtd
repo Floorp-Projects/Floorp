@@ -18,17 +18,17 @@ Communications Corporation. Portions created by Netscape are
 Rights Reserved.
 --> 
 
-<!ENTITY pane.title                           "Message Composition">
+<!ENTITY pane.title                           "Composition">
 <!ENTITY pane.description                     "Composing mail messages">
 <!ENTITY forwardReply.label                   "Forwarding and Replying to Messages">
 <!ENTITY forwardMsg.label                     "Forward messages:">
 <!ENTITY forwardMsg.accesskey                 "f">
 <!ENTITY inline.label                         "Inline">
-<!ENTITY inline.accesskey                     "i">
+<!ENTITY inline.accesskey                     "I">
 <!ENTITY quoted.label                         "Quoted">
 <!ENTITY quoted.accesskey                     "q">
 <!ENTITY asAttachment.label                   "As Attachment">
-<!ENTITY asAttachment.accesskey               "a">
+<!ENTITY asAttachment.accesskey               "A">
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
 <!ENTITY autoQuote.accesskey                  "u">
 <!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
