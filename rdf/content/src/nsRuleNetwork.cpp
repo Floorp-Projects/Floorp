@@ -598,7 +598,7 @@ RootNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 }
 
 nsresult
-RootNode::Constrain(InstantiationSet& aInstantiations)
+RootNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 {
     return NS_OK;
 }
@@ -676,7 +676,7 @@ JoinNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 
     if (! instantiations.Empty()) {
         // propogate consistency checking back up the tree
-        rv = test->Constrain(instantiations);
+        rv = test->Constrain(instantiations, aClosure);
         if (NS_FAILED(rv)) return rv;
 
         NodeSet::Iterator last = mKids.Last();
@@ -753,7 +753,7 @@ JoinNode::Bind(InstantiationSet& aInstantiations, PRBool* aDidBind)
 }
 
 nsresult
-JoinNode::Constrain(InstantiationSet& aInstantiations)
+JoinNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 {
     if (aInstantiations.Empty())
         return NS_OK;
@@ -782,7 +782,7 @@ JoinNode::Constrain(InstantiationSet& aInstantiations)
         last = mLeftParent;
     }
 
-    rv = first->Constrain(aInstantiations);
+    rv = first->Constrain(aInstantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! didBind) {
@@ -792,7 +792,7 @@ JoinNode::Constrain(InstantiationSet& aInstantiations)
         NS_ASSERTION(didBind, "uh oh, still no binding");
     }
 
-    rv = last->Constrain(aInstantiations);
+    rv = last->Constrain(aInstantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! didBind) {
@@ -865,7 +865,7 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
     nsresult rv;
 
     InstantiationSet instantiations = aInstantiations;
-    rv = FilterInstantiations(instantiations);
+    rv = FilterInstantiations(instantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! instantiations.Empty()) {
@@ -879,17 +879,17 @@ TestNode::Propogate(const InstantiationSet& aInstantiations, void* aClosure)
 
 
 nsresult
-TestNode::Constrain(InstantiationSet& aInstantiations)
+TestNode::Constrain(InstantiationSet& aInstantiations, void* aClosure)
 {
     nsresult rv;
 
-    rv = FilterInstantiations(aInstantiations);
+    rv = FilterInstantiations(aInstantiations, aClosure);
     if (NS_FAILED(rv)) return rv;
 
     if (! aInstantiations.Empty()) {
         // if we still have instantiations, then ride 'em on up to the
         // parent to narrow them.
-        rv = mParent->Constrain(aInstantiations);
+        rv = mParent->Constrain(aInstantiations, aClosure);
     }
     else {
         rv = NS_OK;
