@@ -443,6 +443,10 @@ nsMimeBaseEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten
   nsresult rv = NS_OK;
   PRUint32            needToWrite;
 
+#ifdef DEBUG_BenB
+  // If you want to see libmime output...
+  printf("%s", buf);
+#endif
 
   PR_LOG(gMimeEmitterLogModule, PR_LOG_ALWAYS, (buf));
   //
