@@ -377,6 +377,8 @@ pref("mail.identity.default.stationery_folder","mailbox://nobody@Local Folders/T
 pref("mail.update_compose_title_as_you_type", true);
 
 pref("mail.collect_email_address", true);
+pref("mail.collect_email_address_incoming", true);
+pref("mail.collect_email_address_outgoing", true);
 pref("mail.default_sendlater_uri","mailbox://nobody@Local Folders/Unsent Messages");
 
 pref("mail.server.default.port", -1);

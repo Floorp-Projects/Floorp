@@ -12,7 +12,7 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["emailCollection"];
+    var _elementIDs = ["emailCollection", "emailCollectionIncoming", "emailCollectionOutgoing"];
   ]]>
   </script>  
     
@@ -21,9 +21,18 @@
 	<titledbox orient="vertical">
     <title><text value="&emailCollectiontitle.label;"/></title>
 	<html>&emailCollectiontext.label;</html>
-		<checkbox id="emailCollection" value="&emailCollectionenable.label;"
+		<checkbox id="emailCollection" value="&emailCollectionEnable.label;"
               pref="true" preftype="bool" prefstring="mail.collect_email_address"
               prefattribute="checked"/>
+    <box orient="vertical" autostretch="never" class="indent">
+		<html>&emailCollectionTypeText.label;</html>
+		<checkbox id="emailCollectionIncoming" value="&emailCollectionIncomingEnable.label;"
+              pref="true" preftype="bool" prefstring="mail.collect_email_address_incoming"
+              prefattribute="checked"/>
+		<checkbox id="emailCollectionOutgoing" value="&emailCollectionOutgoingEnable.label;"
+              pref="true" preftype="bool" prefstring="mail.collect_email_address_outgoing"
+              prefattribute="checked"/>
+	</box>
 	</titledbox>
 	
 	<box orient="vertical" id="additional_addrbook_prefs"/>

@@ -91,6 +91,7 @@ static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 #define PREF_MAIL_SEND_STRUCT "mail.send_struct"
 #define PREF_MAIL_STRICTLY_MIME "mail.strictly_mime"
 #define PREF_MAIL_MESSAGE_WARNING_SIZE "mailnews.message_warning_size"
+#define PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING "mail.collect_email_address_outgoing"
 
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
@@ -2751,30 +2752,40 @@ nsMsgComposeAndSend::DeliverFileAsMail()
 
 	nsresult rv;
 
+	PRBool collectOutgoingAddresses = PR_TRUE;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv) && prefs)
+	{
+		prefs->GetBoolPref(PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING,&collectOutgoingAddresses);
+	}
+ 
+
 	NS_WITH_SERVICE(nsIAbAddressCollecter, addressCollecter,
 					kCAddressCollecter, &rv);
 
 	if (!NS_SUCCEEDED(rv))
 		addressCollecter = nsnull;
 
+	PRBool collectAddresses = (collectOutgoingAddresses && addressCollecter);
+
 	PL_strcpy (buf, "");
 	buf2 = buf + PL_strlen (buf);
 	if (mCompFields->GetTo() && *mCompFields->GetTo())
 	{
 		PL_strcat (buf2, mCompFields->GetTo());
-		if (addressCollecter)
+		if (collectAddresses)
 			addressCollecter->CollectAddress(mCompFields->GetTo());
 	}
 	if (mCompFields->GetCc() && *mCompFields->GetCc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetCc());
-		if (addressCollecter)
+		if (collectAddresses)
 			addressCollecter->CollectAddress(mCompFields->GetCc());
 	}
 	if (mCompFields->GetBcc() && *mCompFields->GetBcc()) {
 		if (*buf2) PL_strcat (buf2, ",");
 			PL_strcat (buf2, mCompFields->GetBcc());
-		if (addressCollecter)
+		if (collectAddresses)
 			addressCollecter->CollectAddress(mCompFields->GetBcc());
 	}
 

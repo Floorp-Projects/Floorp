@@ -166,7 +166,8 @@ var messageHeaderSink = {
       currentHeaderData[lowerCaseHeaderName] = foo;
       if (lowerCaseHeaderName == "from")
       {
-        if (headerValue && abAddressCollector)
+ 		var  collectIncoming = pref.GetBoolPref("mail.collect_email_address_incoming");
+         if (collectIncoming && headerValue && abAddressCollector)
           abAddressCollector.collectUnicodeAddress(headerValue);  
       }
  
