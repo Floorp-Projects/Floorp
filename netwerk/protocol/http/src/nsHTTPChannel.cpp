@@ -101,7 +101,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mPipelinedRequest (nsnull)
 {
     NS_INIT_REFCNT();
-
+			NS_NewISupportsArray ( getter_AddRefs (mStreamAsFileObserverArray ) );
 #if defined(PR_LOGGING)
     nsXPIDLCString urlCString; 
     mURI->GetSpec(getter_Copies(urlCString));
@@ -137,13 +137,14 @@ nsHTTPChannel::~nsHTTPChannel()
     CRTFREEIF(mProxy);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS6(nsHTTPChannel,
+NS_IMPL_THREADSAFE_ISUPPORTS7(nsHTTPChannel,
                               nsIHTTPChannel,
                               nsIChannel,
                               nsIInterfaceRequestor,
                               nsIProgressEventSink,
                               nsIProxy,
-                              nsIRequest);
+                              nsIRequest,
+                              nsIStreamAsFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsIRequest methods:
@@ -877,6 +878,7 @@ nsHTTPChannel::CheckCache()
         mURI->GetSpec(getter_Copies(urlCString));
         rv = cacheManager->GetCachedNetData(urlCString, 0, 0, cacheFlags,
                                             getter_AddRefs(mCacheEntry));
+                                            
         if (NS_FAILED(rv)) return rv;
         NS_ASSERTION(mCacheEntry, 
                 "Cache manager must always return cache entry");
@@ -884,6 +886,21 @@ nsHTTPChannel::CheckCache()
             return NS_ERROR_FAILURE;
     }
     
+    // Hook up stream as listener
+    nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
+		if ( streamAsFile )
+		{
+			nsCOMPtr< nsIStreamAsFileObserver> observer;
+			PRUint32 count = 0;
+			mStreamAsFileObserverArray->Count( & count );
+			for ( PRInt32 i=0; i< count; i++ )
+			{
+				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
+				streamAsFile->AddObserver( observer );
+			}
+			
+		}
+		
     // Be pessimistic: Assume cache entry has no useful data
     mCachedContentIsAvailable = mCachedContentIsValid = PR_FALSE;
 
@@ -1449,10 +1466,12 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   //
   NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
+
    
   if (aStatusCode == 305)   // Use-Proxy
   {
       newURI = mURI;
+
 
       nsCOMPtr<nsIURI> tmpURI;
       rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(tmpURI));
@@ -2129,6 +2148,22 @@ nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
     rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
     if (NS_FAILED (rv)) return rv;
 
+
+		// Set StreamAsFileObserver
+		nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheTransport ) );
+		if ( streamAsFile )
+		{
+			nsCOMPtr< nsIStreamAsFileObserver> observer;
+			PRUint32 count = 0;
+			mStreamAsFileObserverArray->Count( & count );
+			for ( PRInt32 i=0; i< count; i++ )
+			{
+				mStreamAsFileObserverArray->GetElementAt( i, getter_AddRefs( observer ) );
+				streamAsFile->AddObserver( observer );
+			}
+			
+		}
+
     // Create a new HTTPCacheListener...
     nsHTTPResponseListener *cacheListener;
     cacheListener = new nsHTTPCacheListener(this, mHandler);
@@ -2343,5 +2378,49 @@ NS_IMETHODIMP
 nsHTTPChannel::SetUploadStream(nsIInputStream * aUploadStream) 
 {
     return mRequest->SetUploadStream(aUploadStream);
+}
+
+NS_IMETHODIMP 
+nsHTTPChannel::GetFile(nsIFile * *aFile)
+{
+	nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
+	if( streamAsFile.get() )
+		return streamAsFile->GetFile( aFile );
+
+	return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP 
+nsHTTPChannel::AddObserver(nsIStreamAsFileObserver *aObserver) 
+{
+	nsCOMPtr<nsISupports> isupports( aObserver );
+	PRInt32 index = 0;
+	nsresult rv;
+	mStreamAsFileObserverArray->GetIndexOf( isupports, &index );
+	if ( index == -1 )
+	{
+		rv = mStreamAsFileObserverArray->AppendElement( isupports );
+		if ( NS_FAILED( rv  ) ) return rv;
+	}
+
+	nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
+	if( streamAsFile.get() )
+		return streamAsFile->AddObserver( aObserver );
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsHTTPChannel::RemoveObserver(nsIStreamAsFileObserver *aObserver)
+{
+	nsCOMPtr<nsISupports> isupports( aObserver );
+	mStreamAsFileObserverArray->RemoveElement( isupports );
+		
+	nsCOMPtr<nsIStreamAsFile> streamAsFile( do_QueryInterface( mCacheEntry ) );
+	if( streamAsFile.get() )
+		return streamAsFile->RemoveObserver( aObserver );
+	
+	
+	return NS_OK;
 }
 
