@@ -57,7 +57,7 @@ static PRFileDesc *timelineFD = PR_STDERR;
 static PRHashTable *timers;
 static PRLock *timerLock;
 static int indent;
-int g_timelineDisabled = PR_FALSE;
+static PRBool gTimelineDisabled = PR_FALSE;
 
 /* Implementation file */
 NS_IMPL_ISUPPORTS1(nsTimelineService, nsITimelineService)
@@ -225,7 +225,7 @@ static void TimelineInit(void)
 
     // Runtime disable of timeline
     if (PR_GetEnv("NS_TIMELINE_DISABLE"))
-        g_timelineDisabled = PR_TRUE;
+        gTimelineDisabled = PR_TRUE;
 }
 
 static void ParseTime(PRTime tm, PRInt32& secs, PRInt32& msecs)
@@ -310,7 +310,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineMark(const char *text, ...)
         TimelineInit();
     }
 
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     NS_TimelineMarkV(text, args);
@@ -341,7 +341,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineStartTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     PR_Lock(timerLock);
@@ -363,7 +363,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineStopTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
     /*
      * Strange-looking now/timer->stop() interaction is to avoid
@@ -391,7 +391,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineMarkTimer(const char *timerName, const char *s
         return NS_ERROR_FAILURE;
     }
 
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     PR_Lock(timerLock);
@@ -423,7 +423,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
         return NS_ERROR_FAILURE;
     }
 
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     PR_Lock(timerLock);
@@ -440,7 +440,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineResetTimer(const char *timerName)
 
 PR_IMPLEMENT(nsresult) NS_TimelineIndent()
 {
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     indent++;                   // Could have threading issues here.
@@ -449,7 +449,7 @@ PR_IMPLEMENT(nsresult) NS_TimelineIndent()
 
 PR_IMPLEMENT(nsresult) NS_TimelineOutdent()
 {
-    if (g_timelineDisabled)
+    if (gTimelineDisabled)
         return NS_ERROR_NOT_AVAILABLE;
 
     indent--;                   // Could have threading issues here.
