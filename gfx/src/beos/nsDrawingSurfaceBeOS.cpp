@@ -21,6 +21,7 @@
  */
 
 #include "nsDrawingSurfaceBeOS.h"
+#include "nsCoord.h"
 
 NS_IMPL_ISUPPORTS2(nsDrawingSurfaceBeOS, nsIDrawingSurface, nsIDrawingSurfaceBeOS)
 
