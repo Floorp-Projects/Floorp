@@ -560,8 +560,6 @@ nsDNSService::InitDNSThread(void)
     PRMonitor * monitor;
     PRStatus    status;
 
-    mThreadHandle = GetCurrentThread();
-    
     monitor = PR_CEnterMonitor(this);
     mState = NS_OK;
     status = PR_CNotify(this);
