@@ -62,13 +62,12 @@
 #include "nsIUnicharStreamLoader.h"
 
 class nsIAtom;
-class nsIHTMLElementFactory;
+class nsIElementFactory;
 class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
 class nsITimer;
 class nsIUnicharStreamLoader;
-class nsIXMLElementFactory;
 class nsIXULContentUtils;
 class nsIXULPrototypeCache;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
@@ -473,8 +472,8 @@ protected:
     static nsIRDFResource* kNC_attribute;
     static nsIRDFResource* kNC_value;
 
-    static nsIHTMLElementFactory* gHTMLElementFactory;
-    static nsIXMLElementFactory* gXMLElementFactory;
+    static nsIElementFactory* gHTMLElementFactory;
+    static nsIElementFactory* gXMLElementFactory;
 
     static nsINameSpaceManager* gNameSpaceManager;
     static PRInt32 kNameSpaceID_XUL;
@@ -483,6 +482,8 @@ protected:
     static nsIXULPrototypeCache* gXULCache;
 
     static PRLogModuleInfo* gXULLog;
+
+    static void GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 
     nsIContent*
     FindContent(const nsIContent* aStartNode,
