@@ -2656,12 +2656,15 @@ nsGenericHTMLElement::ParseValueOrPercent(const nsAString& aString,
                                           nsHTMLUnit aValueUnit)
 {
   nsAutoString tmp(aString);
-  tmp.CompressWhitespace(PR_TRUE, PR_TRUE);
   PRInt32 ec, val = tmp.ToInteger(&ec);
   if (NS_OK == ec) {
-    if (val < 0) val = 0;
-    if (!tmp.IsEmpty() && tmp.RFindChar('%') >= 0) {/* XXX not 100% compatible with ebina's code */
-      if (val > 100) val = 100;
+    if (val < 0) {
+      val = 0;
+    }
+    if (tmp.RFindChar('%') != kNotFound) {
+      if (val > 100) {
+        val = 100;
+      }
       aResult.SetPercentValue(float(val)/100.0f);
     } else {
       if (eHTMLUnit_Pixel == aValueUnit) {
