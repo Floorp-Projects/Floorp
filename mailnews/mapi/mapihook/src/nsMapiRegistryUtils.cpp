@@ -74,7 +74,7 @@ const char * nsMapiRegistryUtils::thisApplication()
         len = ::GetShortPathName(buffer, shortPathBuf, MAX_PATH);
         if (!len) return nsnull ; 
         m_thisApp = buffer;
-        m_thisApp.ToUpperCase();
+        ToUpperCase(m_thisApp);
     }
 
     return m_thisApp.get() ;
@@ -234,8 +234,8 @@ PRBool nsMapiRegistryUtils::IsDefaultMailClient()
          if (!result.IsEmpty()) {
              nsCAutoString strExtension;
              strExtension.Assign(EXE_EXTENSION);
-             result.ToUpperCase();
-             strExtension.ToUpperCase();
+             ToUpperCase(result);
+             ToUpperCase(strExtension);
              PRInt32 index = result.RFind(strExtension.get());
              if (index != kNotFound) {
                  result.Truncate(index + strExtension.Length());
