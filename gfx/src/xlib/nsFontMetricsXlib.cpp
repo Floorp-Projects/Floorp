@@ -84,14 +84,6 @@
 #endif /* !REG_OK */
 #endif /* ENABLE_X_FONT_BANNING */
 
-#ifdef USE_XPRINT 
-/* enable hack "fix" for bug 88554 ("Xprint module should avoid using GFX
- * fonts unless there is no other option...") until bug 93771 ("Mozilla
- * uses low-resolution bitmap fonts on high resolution X11 displays") get's
- * fixed. */
-#define XPRINT_FONT_HACK 1
-#endif /* USE_XPRINT */
-
 #ifdef PR_LOGGING 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 #endif /* PR_LOGGING */
@@ -1173,24 +1165,6 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFont = new nsFont(aFont);
   mLangGroup = aLangGroup;
 
-#ifdef USE_XPRINT 
-#ifdef XPRINT_FONT_HACK
-  nsString savedName;
-
-  /* We're limiting here the font search to "serif" only now
-   * until we have a fix for bug 93771 ("Mozilla uses 
-   * low-resolution bitmap fonts on high resolution X11 displays") 
-   */
-  if(mPrinterMode)
-  {
-    /* save original font name (that we can restore it later, see below)... */
-    savedName = mFont->name;
-    /* .. and replace it with "serif" for now. */
-    mFont->name = NS_LITERAL_STRING("serif");
-  }   
-#endif  /* XPRINT_FONT_HACK */
-#endif /* USE_XPRINT */
-
   mDeviceContext = aContext;
 
   float app2dev;
@@ -1290,14 +1264,6 @@ nsFontMetricsXlib::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFontHandle = mWesternFont->mFont;
 
   RealizeFont();
-
-#ifdef USE_XPRINT
-#ifdef XPRINT_FONT_HACK
-  /* restore the original font name */
-  if(mPrinterMode)
-    mFont->name = savedName;
-#endif /* XPRINT_FONT_HACK */
-#endif /* USE_XPRINT */
 
   return NS_OK;
 }
