@@ -85,14 +85,12 @@ private:
 
 
 
-nsBulletFrame::nsBulletFrame() :
-  mPresContext(nsnull)
+nsBulletFrame::nsBulletFrame()
 {
 }
 
 nsBulletFrame::~nsBulletFrame()
 {
-  NS_PRECONDITION(!mPresContext, "Never got destroyed properly!");
 }
 
 NS_IMETHODIMP
@@ -107,41 +105,8 @@ nsBulletFrame::Destroy(nsPresContext* aPresContext)
   if (mListener)
     NS_REINTERPRET_CAST(nsBulletListener*, mListener.get())->SetFrame(nsnull);
 
-  mPresContext = nsnull; // clear weak pointer
-  
   // Let base class do the rest
   return nsFrame::Destroy(aPresContext);
-}
-
-NS_IMETHODIMP
-nsBulletFrame::Init(nsPresContext*  aPresContext,
-                    nsIContent*      aContent,
-                    nsIFrame*        aParent,
-                    nsStyleContext*  aContext,
-                    nsIFrame*        aPrevInFlow)
-{
-  mPresContext = aPresContext;
-  
-  nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  if (NS_FAILED(rv))
-    return rv;
-
-  imgIRequest *imgRequest = GetStyleList()->mListStyleImage;
-  if (imgRequest) {
-    if (!mListener) {
-      nsBulletListener *listener;
-      NS_NEWXPCOM(listener, nsBulletListener);
-      NS_ADDREF(listener);
-      listener->SetFrame(this);
-      listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
-      NS_ASSERTION(mListener, "queryinterface for the listener failed");
-      NS_RELEASE(listener);
-    }
-
-    imgRequest->Clone(mListener, getter_AddRefs(mImageRequest));
-  }
-
-  return NS_OK;
 }
 
 #ifdef NS_DEBUG
@@ -158,7 +123,57 @@ nsBulletFrame::GetType() const
   return nsLayoutAtoms::bulletFrame;
 }
 
-#include "nsIDOMNode.h"
+NS_IMETHODIMP
+nsBulletFrame::DidSetStyleContext(nsPresContext* aPresContext)
+{
+  imgIRequest *newRequest = GetStyleList()->mListStyleImage;
+
+  if (newRequest) {
+
+    if (!mListener) {
+      nsBulletListener *listener;
+      NS_NEWXPCOM(listener, nsBulletListener);
+      NS_ADDREF(listener);
+      listener->SetFrame(this);
+      listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
+      NS_ASSERTION(mListener, "queryinterface for the listener failed");
+      NS_RELEASE(listener);
+    }
+
+    PRBool needNewRequest = PR_TRUE;
+
+    if (mImageRequest) {
+      // Reload the image, maybe...
+      nsCOMPtr<nsIURI> oldURI;
+      mImageRequest->GetURI(getter_AddRefs(oldURI));
+      nsCOMPtr<nsIURI> newURI;
+      newRequest->GetURI(getter_AddRefs(newURI));
+      if (oldURI && newURI) {
+        PRBool same;
+        newURI->Equals(oldURI, &same);
+        if (same) {
+          needNewRequest = PR_FALSE;
+        } else {
+          mImageRequest->Cancel(NS_ERROR_FAILURE);
+          mImageRequest = nsnull;
+        }
+      }
+    }
+
+    if (needNewRequest) {
+      newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
+    }
+  } else {
+    // No image request on the new style context
+    if (mImageRequest) {
+      mImageRequest->Cancel(NS_ERROR_FAILURE);
+      mImageRequest = nsnull;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsBulletFrame::Paint(nsPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
@@ -1553,60 +1568,6 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsBulletFrame", aReflowState.reason);
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
 
-  PRBool isStyleChange = PR_FALSE;
-  if (eReflowReason_StyleChange == aReflowState.reason)
-    isStyleChange = PR_TRUE;
-  else if (eReflowReason_Incremental == aReflowState.reason) {
-    // XXXwaterson The reflow had better be targeted at this frame.
-    nsReflowType type;
-    aReflowState.path->mReflowCommand->GetType(type);
-
-    /* if the style changed, see if we need to load a new url */
-    if (eReflowType_StyleChanged == type)
-      isStyleChange = PR_TRUE;
-  }
-
-  if (isStyleChange) {
-    imgIRequest *newRequest = GetStyleList()->mListStyleImage;
-
-    if (newRequest) {
-
-      if (!mListener) {
-        nsBulletListener *listener;
-        NS_NEWXPCOM(listener, nsBulletListener);
-        NS_ADDREF(listener);
-        listener->SetFrame(this);
-        listener->QueryInterface(NS_GET_IID(imgIDecoderObserver), getter_AddRefs(mListener));
-        NS_ASSERTION(mListener, "queryinterface for the listener failed");
-        NS_RELEASE(listener);
-      }
-
-      PRBool needNewRequest = PR_TRUE;
-
-      if (mImageRequest) {
-        // Reload the image, maybe...
-        nsCOMPtr<nsIURI> oldURI;
-        mImageRequest->GetURI(getter_AddRefs(oldURI));
-        nsCOMPtr<nsIURI> newURI;
-        newRequest->GetURI(getter_AddRefs(newURI));
-        if (oldURI && newURI) {
-          PRBool same;
-          newURI->Equals(oldURI, &same);
-          if (same) {
-            needNewRequest = PR_FALSE;
-          } else {
-            mImageRequest->Cancel(NS_ERROR_FAILURE);
-            mImageRequest = nsnull;
-          }
-        }
-      }
-
-      if (needNewRequest) {
-        newRequest->Clone(mListener, getter_AddRefs(mImageRequest));
-      }
-    }
-  }
-
   // Get the base size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
 
@@ -1632,7 +1593,6 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
 {
   if (!aImage) return NS_ERROR_INVALID_ARG;
   if (!aRequest) return NS_ERROR_INVALID_ARG;
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
 
   PRUint32 status;
   aRequest->GetImageStatus(&status);
@@ -1645,7 +1605,8 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   aImage->GetHeight(&h);
 
   float p2t;
-  p2t = mPresContext->PixelsToTwips();
+  nsPresContext* presContext = GetPresContext();
+  p2t = presContext->PixelsToTwips();
 
   nsSize newsize(NSIntPixelsToTwips(w, p2t), NSIntPixelsToTwips(h, p2t));
 
@@ -1654,7 +1615,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
 
     // Now that the size is available (or an error occurred), trigger
     // a reflow of the bullet frame.
-    nsIPresShell *shell = mPresContext->GetPresShell();
+    nsIPresShell *shell = presContext->GetPresShell();
     if (shell) {
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       if (mParent) {
@@ -1665,7 +1626,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
   }
 
   // Handle animations
-  aImage->SetAnimationMode(mPresContext->ImageAnimationMode());
+  aImage->SetAnimationMode(presContext->ImageAnimationMode());
   // Ensure the animation (if any) is started.
   aImage->StartAnimation();
 
@@ -1693,8 +1654,6 @@ NS_IMETHODIMP nsBulletFrame::OnStopDecode(imgIRequest *aRequest,
   //     it didn't in the old code...
 
 #if 0
-  NS_ENSURE_TRUE(mPresContext, NS_ERROR_UNEXPECTED); // Why are we bothering?
-  
   if (NS_FAILED(aStatus)) {
     // We failed to load the image. Notify the pres shell
     if (NS_FAILED(aStatus) && (mImageRequest == aRequest || !mImageRequest)) {
