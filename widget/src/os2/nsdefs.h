@@ -24,9 +24,10 @@
 #define NSDEFS_H
 
 #include <os2.h>
+#include <builtin.h>
 
 #ifdef _DEBUG
-  #define BREAK_TO_DEBUGGER           DebugBreak()
+  #define BREAK_TO_DEBUGGER           _interrupt(3)
 #else   
   #define BREAK_TO_DEBUGGER
 #endif  

@@ -152,7 +152,7 @@ PRBool nsFileWidget::Show()
 
    // Store the current directory in mDisplayDirectory
   char* newCurrentDirectory = new char[MAX_PATH+1];
-  VERIFY(gModuleData.GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
+  VERIFY(gModuleData->GetCurrentDirectory(MAX_PATH, newCurrentDirectory) > 0);
   mDisplayDirectory = newCurrentDirectory;
   delete[] newCurrentDirectory;
 
@@ -312,10 +312,10 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
 
    DIRPICKER dp = { { 0 }, 0, TRUE, 0 }; // modal dialog
 
-   gModuleData.ConvertFromUcs( promptString, dp.szFullFile, CCHMAXPATH);
+   gModuleData->ConvertFromUcs( promptString, dp.szFullFile, CCHMAXPATH);
 
    HWND ret = FS_PickDirectory( HWND_DESKTOP, hwndOwner,
-                                gModuleData.hModResources, &dp);
+                                gModuleData->hModResources, &dp);
 
    if( ret && dp.lReturn == DID_OK)
    {

@@ -111,7 +111,7 @@ PRBool nsCanvas::OnReposition( PSWP pSwp)
    if( mIsTLB)
    {
       if( pSwp->fl & SWP_MOVE && !(pSwp->fl & SWP_MINIMIZE))
-         rc = OnMove( pSwp->x, gModuleData.szScreen.cy - pSwp->y - pSwp->cy);
+         rc = OnMove( pSwp->x, gModuleData->szScreen.cy - pSwp->y - pSwp->cy);
       if( pSwp->fl & SWP_SIZE && !(pSwp->fl & SWP_MINIMIZE))
          rc = OnResize( pSwp->cx, pSwp->cy);
    }

@@ -91,7 +91,7 @@ static void GetTempFile( nsFileSpec &tempfile);
 nsDragService::nsDragService() : mDragInfo(0), mDragItems(0)
 {
    // XXX temporary icon until xptoolkit realises it needs to give us one
-   mIcon = WinLoadPointer( HWND_DESKTOP, gModuleData.hModResources,
+   mIcon = WinLoadPointer( HWND_DESKTOP, gModuleData->hModResources,
                            ID_ICO_DRAGITEM);
 
    // Window for doing things
@@ -178,7 +178,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
    {
       nsString *pFlavour = (nsString*) pFormats->ElementAt( i);
       char      buff[40];
-      gModuleData.ConvertFromUcs( *pFlavour, buff, 40);
+      gModuleData->ConvertFromUcs( *pFlavour, buff, 40);
       const char *rf = MimeTypeToRF( buff);
       if( rf && DrgVerifyRMF( pItem, 0, rf))
       {
@@ -324,7 +324,7 @@ nsresult nsDragService::IsDataFlavorSupported( nsString *aDataFlavour)
    nsresult rc = NS_ERROR_FAILURE;
 
    char buff[40];
-   gModuleData.ConvertFromUcs( *aDataFlavour, buff, 40);
+   gModuleData->ConvertFromUcs( *aDataFlavour, buff, 40);
 
    const char *rf = MimeTypeToRF( buff);
 
@@ -434,7 +434,7 @@ nsresult NS_GetDragService( nsISupports **aDragService)
    if( !aDragService)
       return NS_ERROR_NULL_POINTER;
 
-   *aDragService = (nsIDragService*)gModuleData.dragService;
+   *aDragService = (nsIDragService*)gModuleData->dragService;
    NS_ADDREF(*aDragService);
 
    return NS_OK;
@@ -523,7 +523,7 @@ void nsDragService::FillDragItem( PDRAGITEM aItem, nsITransferable *aTransferabl
    for( PRUint32 i = 0; i < cFormats; i++)
    {
       nsString *pFlavour = (nsString*) pFormats->ElementAt( i);
-      gModuleData.ConvertFromUcs( *pFlavour, buff, 40);
+      gModuleData->ConvertFromUcs( *pFlavour, buff, 40);
       const char *rf = MimeTypeToRF( buff);
       if( rf)
       {
@@ -631,8 +631,8 @@ MRESULT EXPENTRY fnwpDragSource( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 {
    MRESULT mr;
 
-   if( gModuleData.dragService)
-      mr = gModuleData.dragService->HandleMessage( msg, mp1, mp2);
+   if( gModuleData->dragService)
+      mr = gModuleData->dragService->HandleMessage( msg, mp1, mp2);
    else
       mr = WinDefWindowProc( hwnd, msg, mp1, mp2);
 
@@ -717,7 +717,7 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             for( i = 0; i < cFormats; i++)
             {
                nsString *pFlavour = (nsString*) pFormats->ElementAt( i);
-               gModuleData.ConvertFromUcs( *pFlavour, buff, 40);
+               gModuleData->ConvertFromUcs( *pFlavour, buff, 40);
                const char *this_rf = MimeTypeToRF( buff);
                if( this_rf && !strcmp( this_rf, rf))
                {

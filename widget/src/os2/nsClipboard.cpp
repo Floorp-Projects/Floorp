@@ -64,7 +64,7 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
   for (int cnt=0 ; cnt < sizeof(formatEntries) / sizeof(formatEntries[0]) ; cnt++)
   {
     if (formatEntries[cnt].ulClipboardFmt == 0)  // Not yet registered
-      formatEntries[cnt].ulClipboardFmt = gModuleData.GetAtom( formatEntries[cnt].szFmtName );
+      formatEntries[cnt].ulClipboardFmt = gModuleData->GetAtom( formatEntries[cnt].szFmtName );
   }
 }
 
@@ -141,7 +141,7 @@ PRBool nsClipboard::GetClipboardDataByID(ULONG ulFormatID, const char *aFlavor)
 
         pTempBuf = nsMemory::Alloc( NumOfBytes + sizeof(UniChar) );
         TempBufAllocated = PR_TRUE;
-        NumOfChars = gModuleData.ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars + 1 );
+        NumOfChars = gModuleData->ConvertToUcs( NS_STATIC_CAST(char*, pDataMem), NS_STATIC_CAST(PRUnichar*, pTempBuf), NumOfChars + 1 );
         NumOfBytes = NumOfChars * sizeof(UniChar);
         pDataMem = pTempBuf;
       }
@@ -260,7 +260,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
-          gModuleData.ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfBytes + 1 );
+          gModuleData->ConvertFromUcs( NS_STATIC_CAST(PRUnichar*, pMozData), pByteMem, NumOfBytes + 1 );
           pByteMem [NumOfBytes] = '\0';
 
           WinSetClipbrdData( 0, NS_REINTERPRET_CAST(ULONG, pByteMem), CF_TEXT, CFI_POINTER );
@@ -352,7 +352,7 @@ ULONG nsClipboard::GetFormatID(const char *aMimeStr)
     }
   }
  
-  return gModuleData.GetAtom( aMimeStr );        // Unknown flavor. Register it in OS/2 atom table as is
+  return gModuleData->GetAtom( aMimeStr );        // Unknown flavor. Register it in OS/2 atom table as is
 }
 
 NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)

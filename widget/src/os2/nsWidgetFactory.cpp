@@ -32,6 +32,7 @@
  * 05/31/2000       IBM Corp.              Enabled timer stuff
  * 06/30/2000       sobotka@axess.com      Added nsFilePicker
  * 03/11/2001       achimha@innotek.de     converted to XPCOM module
+ * 03/20/2001       achimha@innotek.de     Added class for embedded module init
  */
 
 #include "nsIGenericFactory.h"
@@ -54,6 +55,7 @@
 #include "nsScrollbar.h"
 #include "nsSound.h"
 #include "nsToolkit.h"
+#include "nsModule.h"
 
 #include "nsWindowsTimer.h"
 #include "nsTimerManager.h"
@@ -108,6 +110,42 @@ static nsresult nsAppShellConstructor (nsISupports *aOuter, REFNSIID aIID, void 
   nsIAppShell *pShell = nsnull;
   NS_CreateAppshell(&pShell);
   inst = (nsISupports*)pShell;
+
+  if (inst == NULL)
+  {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}
+
+static nsresult nsWidgetModuleDataConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
+
+  if ( NULL == aResult )
+  {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter)
+  {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+
+  // we need to create an object, store it in a global
+  // pointer and call its init method. This object is only
+  // instantiated in the embedding case - for the retail
+  // browser this is done in NS_CreateAppshell
+  gModuleData = new nsWidgetModuleData();
+  gModuleData->Init(nsnull);
+  inst = (nsISupports*)gModuleData;
 
   if (inst == NULL)
   {
@@ -186,6 +224,10 @@ static nsModuleComponentInfo components[] =
     NS_APPSHELL_CID,
     "@mozilla.org/widget/appshell/os2;1",
     nsAppShellConstructor },
+  { "OS/2 Embedded Module Data Init",
+    NS_MODULEDATAOS2_CID,
+    "@mozilla.org/widget/widgetmoduledata/os2;1",
+    nsWidgetModuleDataConstructor },
   { "OS/2 Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",

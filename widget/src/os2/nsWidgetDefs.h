@@ -36,6 +36,8 @@
 #include <uconv.h>  // Rather not have to include these two, but need types...
 #include <unikbd.h> // 
 
+#include "nsModule.h"
+
 #ifndef MAX_PATH
 #define MAX_PATH CCHMAXPATH
 #endif
@@ -122,72 +124,7 @@ class nsIFontRetrieverService;
 class nsDragService;
 class nsIAppShell;
 
-// Module data -- anything that would be static, should be module-visible,
-//                or any magic constants.
-class nsWidgetModuleData
-{
- public:
-   HMODULE hModResources;   // resource module
-   SIZEL   szScreen;        // size of screen in pixels
-   BOOL    bMouseSwitched;  // true if MB1 is the RH mouse button
-   LONG    lHtEntryfield;   // ideal height of an entryfield
-   BOOL    bIsDBCS;         // true if system is dbcs
-
-   // xptoolkit services we look after, & the primaeval appshell too.
-   nsIFontRetrieverService *fontService;
-   nsDragService           *dragService;
-   nsIAppShell             *appshell;
-
-   // We're caching resource-loaded things here too.  This may be
-   // better-suited elsewhere, but there shouldn't be very many of them.
-   HPOINTER GetPointer( nsCursor aCursor);
-   HPOINTER GetFrameIcon();
-
-   // local->Unicode cp. conversion
-   ULONG ConvertToUcs( const char *szText, PRUnichar *pBuffer, ULONG ulSize);
-
-   // Unicode->local cp. conversions
-   char *ConvertFromUcs( const PRUnichar *pText, char *szBuffer, ULONG ulSize);
-   char *ConvertFromUcs( const nsString &aStr, char *szBuffer, ULONG ulSize);
-   // these methods use a single static buffer
-   const char *ConvertFromUcs( const PRUnichar *pText);
-   const char *ConvertFromUcs( const nsString &aStr);
-
-   // Atom service; clients don't need to bother about freeing them.
-   ATOM GetAtom( const char *atomname);
-   ATOM GetAtom( const nsString &atomname);
-
-   ULONG GetCurrentDirectory(ULONG bufLen, PSZ dirString);
-
-   int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, char* szBuffer, ULONG ulSize );
-
-#if 0
-   HWND     GetWindowForPrinting( PCSZ pszClass, ULONG ulStyle);
-#endif
-
-   nsWidgetModuleData();
-  ~nsWidgetModuleData();
-
-   void Init( nsIAppShell *aPrimaevalAppShell);
-
- private:
-   ULONG        idSelect;    
-   HPOINTER     hptrSelect;  // !! be more sensible about this...
-   HPOINTER     hptrFrameIcon;
-#if 0
-   nsHashtable *mWindows;
-#endif
-
-   // Utility function for creating the Unicode conversion object
-   int CreateUcsConverter();
-
-   UconvObject  converter;
-   BOOL         supplantConverter;
-
-   nsVoidArray  atoms;
-};
-
-extern nsWidgetModuleData gModuleData;
+extern nsWidgetModuleData *gModuleData;
 
 // messages - here to avoid duplication
 #define WMU_CALLMETHOD   (WM_USER + 1)

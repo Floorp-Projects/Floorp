@@ -289,18 +289,19 @@ extern "C" nsresult NS_CreateAppshell( nsIAppShell **aAppShell)
    if( !aAppShell)
       return NS_ERROR_NULL_POINTER;
 
-   BOOL bFirstTime = FALSE;
-
    if( !pManager)
    {
-      bFirstTime = TRUE;
       pManager = new nsAppshellManager;
    }
 
    *aAppShell = pManager->GetAppshell();
 
-   if( bFirstTime)
-      gModuleData.Init( *aAppShell);
+   // only do this the very first time
+   if (gModuleData == nsnull)
+   {
+      gModuleData = new nsWidgetModuleData();
+      gModuleData->Init(*aAppShell);
+   }
 
    return NS_OK;
 }
