@@ -59,7 +59,7 @@ var nsNewsBlogFeedDownloader =
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
         .getService(Components.interfaces.nsIRDFService);
 
-    progressNotifier.init(aMsgWindow.statusFeedback, false);
+    progressNotifier.init(aMsgWindow ? aMsgWindow.statusFeedback : null, false);
 
     for (url in feedUrlArray)
     {
@@ -309,10 +309,13 @@ var progressNotifier = {
     {
       this.mStatusFeedback = aStatusFeedback;
       this.mSubscribeMode = aSubscribeMode;
-      this.mStatusFeedback.startMeteors();
 
-      this.mStatusFeedback.showStatusString(aSubscribeMode ? GetNewsBlogStringBundle().GetStringFromName('subscribe-validating') 
+      if (this.mStatusFeedback)
+      {
+        this.mStatusFeedback.startMeteors();
+        this.mStatusFeedback.showStatusString(aSubscribeMode ? GetNewsBlogStringBundle().GetStringFromName('subscribe-validating') 
                                             : GetNewsBlogStringBundle().GetStringFromName('newsblog-getNewMailCheck'));
+      }
     }
   },
 
@@ -326,14 +329,18 @@ var progressNotifier = {
       updateFolderFeedUrl(folder, feed.url, false);        
       addFeed(feed.url, feed.name, folder); // add feed just adds the feed to the subscription UI and flushes the datasource
     } 
-    else if (aErrorCode == kNewsBlogInvalidFeed)
+
+    if (this.mStatusFeedback)
+    {
+      if (aErrorCode == kNewsBlogInvalidFeed)
       this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-invalidFeed",
                                             [feed.url], 1));
-    else if (aErrorCode == kNewsBlogRequestFailure)
-      this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-networkError",
-                                            [feed.url], 1));
-      
-    this.mStatusFeedback.stopMeteors();
+      else if (aErrorCode == kNewsBlogRequestFailure)
+        this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("newsblog-networkError",
+                                            [feed.url], 1));      
+      this.mStatusFeedback.stopMeteors();
+    }
+
     gNumPendingFeedDownloads--;
 
     if (!gNumPendingFeedDownloads)
@@ -344,7 +351,7 @@ var progressNotifier = {
 
       // should we do this on a timer so the text sticks around for a little while? 
       // It doesnt look like we do it on a timer for newsgroups so we'll follow that model.
-      if (aErrorCode == kNewsBlogSuccess) // don't clear the status text if we just dumped an error to the status bar!
+      if (aErrorCode == kNewsBlogSuccess && this.mStatusFeedback) // don't clear the status text if we just dumped an error to the status bar!
         this.mStatusFeedback.showStatusString("");
     }
   },
@@ -357,7 +364,7 @@ var progressNotifier = {
     // we currently don't do anything here. Eventually we may add
     // status text about the number of new feed articles received.
 
-    if (this.mSubscribeMode) // if we are subscribing to a feed, show feed download progress
+    if (this.mSubscribeMode && this.mStatusFeedback) // if we are subscribing to a feed, show feed download progress
     {
       this.mStatusFeedback.showStatusString(GetNewsBlogStringBundle().formatStringFromName("subscribe-fetchingFeedItems", [aCurrentFeedItems, aMaxFeedItems], 2));
       this.onProgress(feed, aCurrentFeedItems, aMaxFeedItems);
@@ -390,8 +397,11 @@ var progressNotifier = {
     // and only updates every so often. For the most part all of our request have initial progress
     // before the UI actually picks up a progress value. 
 
-    var progress = (currentProgress * 100) / maxProgress;
-    this.mStatusFeedback.showProgress(progress);
+    if (this.mStatusFeedback)
+    {
+      var progress = (currentProgress * 100) / maxProgress;
+      this.mStatusFeedback.showProgress(progress);
+    }
   }
 }
 
