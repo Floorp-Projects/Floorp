@@ -43,6 +43,11 @@ public:
 
   static nsIAtom* checkbox;
   static nsIAtom* tristatecheckbox;
+  static nsIAtom* spinner;
+  static nsIAtom* scrollbar;
+  static nsIAtom* slider;
+  static nsIAtom* colorpicker;
+  static nsIAtom* fontpicker;
 
   static nsIAtom* radio;
 
