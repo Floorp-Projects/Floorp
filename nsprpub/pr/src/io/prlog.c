@@ -196,7 +196,7 @@ void _PR_InitLog(void)
                     }
                     lm = lm->next;
                 }
-                if (NULL == lm) {
+                if (( PR_FALSE == skip_modcheck) && (NULL == lm)) {
 #ifdef XP_PC
                     char* str = PR_smprintf("Unrecognized NSPR_LOG_MODULE: %s=%d\n",
                                             module, level);
