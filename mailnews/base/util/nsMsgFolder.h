@@ -127,8 +127,8 @@ public:
   // when I get around to implementing in all subclasses?
   NS_IMETHOD UpdateSummaryTotals();
   NS_IMETHOD SummaryChanged();
-  NS_IMETHOD GetNumUnread(PRBool deep, PRUint32 *numUnread);       // How many unread messages in this folder.
-  NS_IMETHOD GetTotalMessages(PRBool deep, PRUint32 *totalMessages);   // Total number of messages in this folder.
+  NS_IMETHOD GetNumUnread(PRBool deep, PRInt32 *numUnread);       // How many unread messages in this folder.
+  NS_IMETHOD GetTotalMessages(PRBool deep, PRInt32 *totalMessages);   // Total number of messages in this folder.
 
 #ifdef HAVE_DB
   NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many messages in database.

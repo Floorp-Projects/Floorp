@@ -41,7 +41,9 @@ static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgFolder::nsMsgFolder(void)
-  : nsRDFResource(), mFlags(0),
+  : nsRDFResource(),
+    mName(""),
+    mFlags(0),
     mNumUnreadMessages(0),	mNumTotalMessages(0),
 		mListeners(nsnull),
     mCsid(0),
@@ -117,7 +119,7 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   for (PRUint32 i = 0; i < array->Count(); i++) {
     nsCOMPtr<nsISupports> element = getter_AddRefs((*array)[i]);
     if (filter(element, data)) {
-      nsresult rv = f->AppendElement(element);
+      rv = f->AppendElement(element);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -136,11 +138,16 @@ nsMsgFolder::AddUnique(nsISupports* element)
   return mSubFolders->AppendElement(element);
 }
 
+// I'm assuming this means "Replace Subfolder"?
 NS_IMETHODIMP
 nsMsgFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 {
-  PR_ASSERT(0);
-  return NS_ERROR_NOT_IMPLEMENTED;
+  PRBool success=PR_FALSE;
+  PRInt32 location = mSubFolders->IndexOf(element);
+  if (location>0)
+    success = mSubFolders->ReplaceElementAt(newElement, location);
+  
+  return success ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP
@@ -645,7 +652,7 @@ NS_IMETHODIMP nsMsgFolder::SummaryChanged()
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
+NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
 {
 	if(!numUnread)
 		return NS_ERROR_NULL_POINTER;
@@ -663,7 +670,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
 			folder = do_QueryInterface(supports, &rv);
 			if(NS_SUCCEEDED(rv))
 			{
-				PRUint32 num;
+				PRInt32 num;
 				folder->GetNumUnread(deep, &num);
 				if (num >= 0) // it's legal for counts to be negative if we don't know
 					total += num;
@@ -675,7 +682,7 @@ NS_IMETHODIMP nsMsgFolder::GetNumUnread(PRBool deep, PRUint32 *numUnread)
 
 }
 
-NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRUint32 *totalMessages)
+NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessages)
 {
 	if(!totalMessages)
 		return NS_ERROR_NULL_POINTER;
@@ -693,7 +700,7 @@ NS_IMETHODIMP nsMsgFolder::GetTotalMessages(PRBool deep, PRUint32 *totalMessages
 			folder = do_QueryInterface(supports, &rv);
 			if(NS_SUCCEEDED(rv))
 			{
-				PRUint32 num;
+				PRInt32 num;
 				folder->GetTotalMessages (deep, &num);
 				if (num >= 0) // it's legal for counts to be negative if we don't know
 					total += num;
