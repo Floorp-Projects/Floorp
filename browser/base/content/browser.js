@@ -2835,7 +2835,9 @@ nsBrowserContentListener.prototype =
     parentContentListener: null
 }
 
-function toggleSidebar(aCommandID) {
+// |forceOpen| is a bool that indicates that the sidebar should be forced open.  In other words
+// the toggle won't be allowed to close the sidebar.
+function toggleSidebar(aCommandID, forceOpen) {
   if (gInPrintPreviewMode)
     return;
   var sidebarBox = document.getElementById("sidebar-box");
@@ -2848,11 +2850,13 @@ function toggleSidebar(aCommandID) {
   var sidebarSplitter = document.getElementById("sidebar-splitter");
 
   if (elt.getAttribute("checked") == "true") {
-    elt.removeAttribute("checked");
-    sidebarBox.setAttribute("sidebarcommand", "");
-    sidebarTitle.setAttribute("value", "");
-    sidebarBox.hidden = true;
-    sidebarSplitter.hidden = true;
+    if (!forceOpen) {
+        elt.removeAttribute("checked");
+        sidebarBox.setAttribute("sidebarcommand", "");
+        sidebarTitle.setAttribute("value", "");
+        sidebarBox.hidden = true;
+        sidebarSplitter.hidden = true;
+    }
     return;
   }
   
@@ -3743,6 +3747,38 @@ nsDefaultEngine.prototype =
         {
         }
     }
+}
+
+var gWebPanelURI;
+function openWebPanel(aURI)
+{
+    // Ensure that the web panels sidebar is open.
+    toggleSidebar('viewWebPanelsSidebar', true);
+    
+    // Tell the Web Panels sidebar to load the bookmark.
+    var sidebar = document.getElementById("sidebar");
+    if (sidebar.contentDocument && sidebar.contentDocument.getElementById('webpanels-browser')) {
+        sidebar.contentWindow.loadWebPanel(aURI);
+        if (gWebPanelURI) {
+            gWebPanelURI = "";
+            sidebar.removeEventListener("load", asyncOpenWebPanel, true);
+        }
+    }
+    else {
+        // The panel is still being constructed.  Attach an onload handler.
+        if (!gWebPanelURI)
+            sidebar.addEventListener("load", asyncOpenWebPanel, true);
+        gWebPanelURI = aURI;
+    }
+}
+
+function asyncOpenWebPanel(event)
+{
+    var sidebar = document.getElementById("sidebar");
+    if (gWebPanelURI && sidebar.contentDocument && sidebar.contentDocument.getElementById('webpanels-browser'))
+        sidebar.contentWindow.loadWebPanel(gWebPanelURI);
+    gWebPanelURI = "";
+    sidebar.removeEventListener("load", asyncOpenWebPanel, true);
 }
 
 /*

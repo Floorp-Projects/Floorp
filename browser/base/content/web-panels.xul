@@ -8,13 +8,14 @@
 
 <page id="webpanels-window"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="loadPlaceholderPage()"> 
   <script type="application/x-javascript" src="chrome://browser/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://browser/content/web-panels.js"/>
-  <browser id="browser" type="content" flex="1" src="chrome://browser/content/web-panels.xml"
+  <browser id="webpanels-browser" type="content" flex="1"
            onclick="return window.parent.contentAreaClick(event, true);"
            ondragdrop="nsDragAndDrop.drop(event, panelAreaDNDObserver);"/>
 </page>
