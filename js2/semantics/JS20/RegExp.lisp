@@ -665,6 +665,9 @@
 (run-regexp "a." "AAab" :ignore-case t)
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd"))
 (run-regexp "a.." (concatenate 'string "a" (string #\newline) "bacd") :span t)
+
+(run-regexp "^(a\\1?){4}$" "aaaaaaaaaa")
+(run-regexp "(?:(f)(o)(o)|(b)(a)(r))*" "foobar")
 |#
 
 #+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
