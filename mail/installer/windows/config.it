@@ -734,7 +734,7 @@ Description Long=for reporting $ProductName$ crash information
 Archive=talkback.xpi
 $InstallSize$:talkback
 $InstallSizeSystem$
-$InstallSizeArchive$:talkbck.xpi
+$InstallSizeArchive$:talkback.xpi
 Attributes=SELECTED|FORCE_UPGRADE
 Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
 FileCount=$FileCount$
