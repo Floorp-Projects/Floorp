@@ -181,6 +181,15 @@ var messageHeaderSink = {
 
 function AddNodeToAddressBook (emailAddressNode)
 {
+  if (emailAddressNode)
+  {
+    var primaryEmail = emailAddressNode.getAttribute("emailAddress");
+    var displayName = emailAddressNode.getAttribute("displayName");
+	  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+					  "",
+					  "chrome,resizeable=no", 
+            {primaryEmail:primaryEmail, displayName:displayName });
+  }
 }
 
 // SendMailToNode takes the email address title button, extracts
@@ -193,19 +202,6 @@ function SendMailToNode(emailAddressNode)
      var emailAddress = emailAddressNode.getAttribute("emailAddress");
      if (emailAddress)
         messenger.OpenURL("mailto:" + emailAddress );
-  }
-}
-
-function AddSenderToAddressBook() 
-{
-  // extract the from field from the current msg header and then call AddToAddressBook with that information
-  var node = document.getElementById("FromValue");
-  if (node)
-  {
-    var fromValue = node.value; 
-    // node.childNodes[0].nodeValue;
-    if (fromValue)
-      AddToAddressBook(fromValue, "");
   }
 }
 
@@ -361,19 +357,16 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
         emailAddress = addrValue.value;
         name = nameValue.value;
 
-        // turn the strings back into a full address
-        // var fullAddress = msgHeaderParser.MakeFullAddress(name, emailAddress);
-
         // if we want to include short/long toggle views and we have a long view, always add it.
         // if we aren't including a short/long view OR if we are and we haven't parsed enough
         // addresses to reach the cutoff valve yet then add it to the default (short) div.
         if (includeShortLongToggle && optionalLongDiv)
         {
-          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, emailAddress, fullAddress);
+          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, emailAddress, fullAddress, name);
         }
         if (!includeShortLongToggle || (numAddressesParsed < gNumAddressesToShow))
         {
-          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, emailAddress, fullAddress);
+          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, emailAddress, fullAddress, name);
         }
         
         numAddressesParsed++;
@@ -396,7 +389,7 @@ function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, inclu
    parentDiv --> the DIV the email addresses need to be inserted into.
 */
    
-function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress, fullAddress) 
+function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress, fullAddress, displayName) 
 {
   if ( parentBox ) 
   { 
@@ -424,6 +417,7 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       itemInDocument.setAttribute("value", fullAddress);           
       itemInDocument.setTextAttribute("emailAddress", emailAddress);
       itemInDocument.setTextAttribute("fullAddress", fullAddress);  
+      itemInDocument.setTextAttribute("displayName", displayName);  
 
       AddExtraAddressProcessing(emailAddress, itemInDocument);
 
