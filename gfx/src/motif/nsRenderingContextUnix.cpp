@@ -532,8 +532,10 @@ void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)
 
 void nsRenderingContextUnix :: SetColor(nscolor aColor)
 {
-  XGCValues values ;
+  if (nsnull == mContext) 
+    return;
 
+  XGCValues values ;
   mContext->ConvertPixel(aColor, mCurrentColor);
 
   values.foreground = mCurrentColor;
@@ -681,6 +683,9 @@ nsTransform2D * nsRenderingContextUnix :: GetCurrentTransform()
 
 nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
 {
+  if (nsnull == mRenderingSurface) {
+    return nsnull;
+  }
   // Must make sure this code never gets called when nsRenderingSurface is nsnull
   PRUint32 depth = DefaultDepth(mRenderingSurface->display,
 				DefaultScreen(mRenderingSurface->display));
@@ -817,6 +822,9 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
 
 void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
@@ -828,6 +836,9 @@ void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, n
 
 void nsRenderingContextUnix :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   PRUint32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
@@ -856,6 +867,9 @@ void nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
 
   nscoord x,y,w,h;
 
@@ -879,8 +893,10 @@ void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   nscoord x,y,w,h;
-
   x = aX;
   y = aY;
   w = aWidth;
@@ -897,6 +913,9 @@ void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, 
 
 void nsRenderingContextUnix::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   PRUint32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
@@ -920,6 +939,9 @@ void nsRenderingContextUnix::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPo
 
 void nsRenderingContextUnix::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   PRUint32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
@@ -951,6 +973,9 @@ void nsRenderingContextUnix :: DrawEllipse(const nsRect& aRect)
 
 void nsRenderingContextUnix :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   nscoord x,y,w,h;
 
   x = aX;
@@ -973,6 +998,9 @@ void nsRenderingContextUnix :: FillEllipse(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   nscoord x,y,w,h;
 
   x = aX;
@@ -997,6 +1025,9 @@ void nsRenderingContextUnix :: DrawArc(const nsRect& aRect,
 void nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   nscoord x,y,w,h;
 
   x = aX;
@@ -1022,6 +1053,9 @@ void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
 void nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface) {
+    return;
+  }
   nscoord x,y,w,h;
 
   x = aX;
