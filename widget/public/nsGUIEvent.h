@@ -239,7 +239,8 @@ struct nsCompositionEvent : public nsInputEvent {
 };
 
 struct nsMouseScrollEvent : public nsInputEvent {
-	PRInt32                 deltaLines;
+  PRBool isPageScroll;
+  PRInt32 delta;
 };
 
 struct nsReconversionEventReply {
