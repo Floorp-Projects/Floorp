@@ -248,14 +248,16 @@ NS_IMETHODIMP nsMessageViewDataSource::GetTargets(nsIRDFResource* source,
 			{
 				nsCOMPtr<nsISimpleEnumerator> messages;
 				rv = folder->GetMessages(getter_AddRefs(messages));
-				if (NS_FAILED(rv)) return rv;
-				nsMessageViewMessageEnumerator * messageEnumerator = 
-					new nsMessageViewMessageEnumerator(messages, mShowStatus);
-				if(!messageEnumerator)
-					return NS_ERROR_OUT_OF_MEMORY;
-				NS_ADDREF(messageEnumerator);
-				*targets = messageEnumerator;
-				rv = NS_OK;
+				if (NS_SUCCEEDED(rv))
+				{
+					nsMessageViewMessageEnumerator * messageEnumerator = 
+						new nsMessageViewMessageEnumerator(messages, mShowStatus);
+					if(!messageEnumerator)
+						return NS_ERROR_OUT_OF_MEMORY;
+					NS_ADDREF(messageEnumerator);
+					*targets = messageEnumerator;
+					rv = NS_OK;
+				}
 			}
 		}
 	}
