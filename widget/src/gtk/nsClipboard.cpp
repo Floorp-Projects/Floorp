@@ -60,11 +60,13 @@ enum {
   // compatibility types
   TARGET_NS4_HTML_NETSCAPE,
   TARGET_NS4_HTML,
+  TARGET_COMPOUND_TEXT,
   TARGET_UNKNOWN,
   TARGET_LAST
 };
 
 static GdkAtom sSelTypes[TARGET_LAST];
+
 
 //-------------------------------------------------------------------------
 //
@@ -86,6 +88,37 @@ nsClipboard::nsClipboard() : nsBaseClipboard()
 
   // initialize the widget, etc we're binding to
   Init();
+}
+
+// XXX if GTK's internal code changes this isn't going to work
+// copied from gtk code because it is a static function we can't get to it.
+// need to bug owen taylor about getting this code public.
+
+typedef struct _GtkSelectionTargetList GtkSelectionTargetList;
+
+struct _GtkSelectionTargetList {
+  GdkAtom selection;
+  GtkTargetList *list;
+};
+
+static const char *gtk_selection_handler_key = "gtk-selection-handlers";
+
+void __gtk_selection_target_list_remove (GtkWidget *widget)
+{
+  GtkSelectionTargetList *sellist;
+  GList *tmp_list;
+  GList *lists;
+  lists = (GList*)gtk_object_get_data (GTK_OBJECT (widget), gtk_selection_handler_key);
+  tmp_list = lists;
+  while (tmp_list)
+    {
+      sellist = (GtkSelectionTargetList*)tmp_list->data;
+      gtk_target_list_unref (sellist->list);
+      g_free (sellist);
+      tmp_list = tmp_list->next;
+    }
+  g_list_free (lists);
+  gtk_object_set_data (GTK_OBJECT (widget), gtk_selection_handler_key, NULL);
 }
 
 //-------------------------------------------------------------------------
@@ -247,7 +280,8 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   if (gdk_selection_owner_get(GDK_SELECTION_PRIMARY) == sWidget->window)
   {
     // if so, clear all the targets
-    gtk_selection_remove_all(sWidget);
+    __gtk_selection_target_list_remove(sWidget);
+    //    gtk_selection_remove_all(sWidget);
   }
 #if 0
   else
@@ -286,6 +320,13 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
   mIgnoreEmptyNotification = PR_FALSE;
 
   return NS_OK;
+}
+
+void nsClipboard::AddTarget(GdkAtom aAtom)
+{
+  gtk_selection_add_target(sWidget,
+                           GDK_SELECTION_PRIMARY,
+                           aAtom, aAtom);
 }
 
 gint nsClipboard::GetFormat(const nsString &aMimeStr)
@@ -345,93 +386,71 @@ void nsClipboard::RegisterFormat(gint format)
   {
   case TARGET_TEXT_PLAIN:
     // text/plain (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
+
     // STRING (what X uses)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             GDK_SELECTION_TYPE_STRING,
-                             format);
+    AddTarget(GDK_SELECTION_TYPE_STRING);
+
+    // COMPOUND_TEXT (what X uses)
+    AddTarget(sSelTypes[TARGET_COMPOUND_TEXT]);
     break;
+
 
   case TARGET_TEXT_XIF:
     // text/xif (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
 
   case TARGET_TEXT_UNICODE:
     // text/unicode (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
 
   case TARGET_TEXT_HTML:
     // text/html (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
-    // NETSCAPE_HTML (used in NS4.x)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[TARGET_NS4_HTML_NETSCAPE],
-                             format);
-    // HTML (used in NS4.x)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[TARGET_NS4_HTML],
-                             format);
+    AddTarget(sSelTypes[format]);
 
+    // HTML (used in NS4.x)
+    AddTarget(sSelTypes[TARGET_NS4_HTML]);
     break;
+
 
   case TARGET_AOLMAIL:
     // text/aolmail (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
+
   case TARGET_IMAGE_PNG:
     // image/png (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
+
   case TARGET_IMAGE_JPEG:
     // image/jpeg (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
+
   case TARGET_IMAGE_GIF:
     // image/gif (default)
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
     break;
+
+
   default:
     // if we don't match something above, then just add it like its something we know about...
-    gtk_selection_add_target(sWidget, 
-                             GDK_SELECTION_PRIMARY,
-                             sSelTypes[format],
-                             format);
+    AddTarget(sSelTypes[format]);
   }
 }
 
 PRBool nsClipboard::DoRealConvert(GdkAtom type)
 {
 #ifdef DEBUG_CLIPBOARD
-  g_print("    nsClipboard::DoRealConvert(%i)\n    {\n", type);
+  g_print("    nsClipboard::DoRealConvert(%li)\n    {\n", type);
 #endif
   int e = 0;
   // Set a flag saying that we're blocking waiting for the callback:
@@ -556,7 +575,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 
   // Get the transferable list of data flavors
   nsVoidArray *dfList;
-  aTransferable->GetTransferDataFlavors(&dfList);
+  aTransferable->FlavorsTransferableCanImport(&dfList);
 
   // Walk through flavors and see which flavor matches the one being pasted:
   int cnt = dfList->Count();

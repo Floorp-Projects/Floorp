@@ -38,7 +38,6 @@
 #include "stdio.h"
 
 
-
 //-------------------------------------------------------------------------
 //
 // nsWindow constructor
@@ -49,7 +48,6 @@ nsWindow::nsWindow()
   NS_INIT_REFCNT();
   mFontMetrics = nsnull;
   mShell = nsnull;
-  mVBox = nsnull;
   mResized = PR_FALSE;
   mVisible = PR_FALSE;
   mDisplayed = PR_FALSE;
@@ -189,12 +187,7 @@ NS_METHOD nsWindow::Destroy()
     nsBaseWidget::Destroy();
     if (PR_FALSE == mOnDestroyCalled)
         nsWidget::OnDestroy();
-    if (mVBox)
-    {
-      if (GTK_IS_WIDGET(mVBox))
-        gtk_widget_destroy(mVBox);
-      mVBox = nsnull;
-    }
+
     if (mShell) {
     	if (GTK_IS_WIDGET(mShell))
      		gtk_widget_destroy(mShell);
@@ -331,16 +324,16 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     mShell = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_policy(GTK_WINDOW(mShell), PR_TRUE, PR_TRUE, PR_FALSE);
     InstallRealizeSignal(mShell);
+    gtk_container_add(GTK_CONTAINER(mShell), mWidget);
 
-    // VBox for the menu, etc.
-    mVBox = gtk_vbox_new(PR_FALSE, 0);
-    gtk_container_add(GTK_CONTAINER(mShell), mVBox);
-    gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
-    
     gtk_signal_connect(GTK_OBJECT(mShell),
                        "delete_event",
                        GTK_SIGNAL_FUNC(handle_delete_event),
                        this);
+    gtk_signal_connect_after(GTK_OBJECT(mShell),
+                             "size_allocate",
+                             GTK_SIGNAL_FUNC(handle_size_allocate),
+                             this);
     break;
 
   case eWindowType_child:
@@ -378,11 +371,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-  gtk_signal_connect_after(GTK_OBJECT(mWidget),
-                           "size_allocate",
-                           GTK_SIGNAL_FUNC(handle_size_allocate),
-                           this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
                      GTK_SIGNAL_FUNC(nsWindow::DrawSignal),
@@ -564,16 +552,6 @@ NS_METHOD nsWindow::EndResizingChildren(void)
   return NS_OK;
 }
 
-#if 0
-PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
-{
-  if (mEventCallback) {
-    return DispatchWindowEvent(&aEvent);
-  }
-  return PR_FALSE;
-}
-#endif
-
 PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
 {
   if (mEventCallback) {
@@ -589,6 +567,9 @@ PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
 {
+  // this is needed for viewer so we need to do something here
+  // like add it to a layout widget.. (i.e. mWidget)
+#if 0
   if (mMenuBar == aMenuBar) {
     // Ignore duplicate calls
     return NS_OK;
@@ -617,7 +598,7 @@ NS_METHOD nsWindow::SetMenuBar(nsIMenuBar* aMenuBar)
     gtk_box_pack_start(GTK_BOX(mVBox), menubar, PR_FALSE, PR_FALSE, 0);
     gtk_box_reorder_child(GTK_BOX(mVBox), menubar, 0);
   }
-
+#endif
   return NS_OK;
 }
 
@@ -638,25 +619,16 @@ NS_METHOD nsWindow::Show(PRBool bState)
   if (bState)
   {
     // show mWidget
-#if 0
-    gtk_widget_realize(mWidget);
-    GTK_WIDGET_SET_FLAGS (mWidget, GTK_VISIBLE);
-    gtk_signal_emit_by_name(GTK_OBJECT(mWidget), "map");
-#endif
     gtk_widget_show(mWidget);
 
     // are we a toplevel window?
     if (mIsToplevel && mShell)
     {
-#ifdef DEBUG_pavlov
+#if 0
       printf("nsWidget::Show %s (%p) bState = %i, mWindowType = %i\n",
              mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
              bState, mWindowType);
-      g_print("nsWindow::Show(%i) toplevel, mWindowType = %i\n", bState, mWindowType);
 #endif
-      // popup windows don't have vboxes
-      if (mVBox)
-        gtk_widget_show(mVBox);
 
       gtk_widget_show(mShell);
 
@@ -671,10 +643,6 @@ NS_METHOD nsWindow::Show(PRBool bState)
     if (mIsToplevel && mShell)
     {
       gtk_widget_hide(mShell);
-
-      // popup windows don't have vboxes
-      if (mVBox)
-        gtk_widget_hide(mVBox);
     } 
 
     gtk_widget_hide(mWidget);
@@ -776,7 +744,7 @@ NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
 NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
-#ifdef DEBUG_pavlov
+#if 0
   printf("nsWidget::Resize %s (%p) to %d %d\n",
          mWidget ? gtk_widget_get_name(mWidget) : "(no-widget)", this,
          aWidth, aHeight);
@@ -811,6 +779,21 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 
     gtk_widget_set_usize(mWidget, aWidth, aHeight);
   }
+
+
+  // XXX pav
+  // call the size allocation handler directly to avoid code duplication
+  // note, this could be a problem as this will make layout think that it
+  // got the size it requested which could be wrong.
+  // but, we don't use many native widgets anymore, so this shouldn't be a problem
+  // layout's will size to the size you tell them to, which are the only native widgets
+  // we still use after all the xp widgets land
+  GtkAllocation alloc;
+  alloc.width = aWidth;
+  alloc.height = aHeight;
+  alloc.x = 0;
+  alloc.y = 0;
+  handle_size_allocate(mWidget, &alloc, this);
 
   return NS_OK;
 }
@@ -934,8 +917,8 @@ nsWindow::OnRealize()
 //////////////////////////////////////////////////////////////////////
 void 
 nsWindow::InitDrawEvent(GdkRectangle * aArea,
-						nsPaintEvent & aPaintEvent,
-						PRUint32       aEventType)
+                        nsPaintEvent & aPaintEvent,
+                        PRUint32       aEventType)
 {
   aPaintEvent.message = aEventType;
   aPaintEvent.widget  = (nsWidget *) this;
@@ -958,8 +941,8 @@ nsWindow::InitDrawEvent(GdkRectangle * aArea,
 //////////////////////////////////////////////////////////////////////
 void 
 nsWindow::UninitDrawEvent(GdkRectangle * area,
-						  nsPaintEvent & aPaintEvent,
-						  PRUint32       aEventType)
+                          nsPaintEvent & aPaintEvent,
+                          PRUint32       aEventType)
 {
   if (area != NULL) 
   {

@@ -36,7 +36,6 @@ class nsIToolkit;
 #undef NOISY_DESTROY
 #endif
 
-
 #define NSRECT_TO_GDKRECT(ns,gdk) \
   PR_BEGIN_MACRO \
   gdk.x = ns.x; \
@@ -98,6 +97,7 @@ class nsWidget : public nsBaseWidget
 
     NS_IMETHOD GetBounds(nsRect &aRect);
 
+    PRBool OnResize(nsSizeEvent event);
     virtual PRBool OnResize(nsRect &aRect);
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
 
