@@ -472,6 +472,8 @@ js_CleanupLocks()
             deleteListOfFatlocks(_fl_tables[i].taken);
             _fl_tables[i].taken = NULL;
         }
+        free(_fl_tables);
+        _fl_tables = NULL;
         free(_global_locks);
         _global_locks = NULL;
 #ifdef UsingCounterLock
