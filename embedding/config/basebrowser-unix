@@ -106,7 +106,7 @@ components/content_base.xpt
 
 ; netwerk
 
-libz.so
+libmozz.so
 components/libnecko.so                    
 components/necko.xpt                    
 components/libnecko2.so                   
@@ -121,6 +121,7 @@ components/necko_res.xpt
 components/necko_strconv.xpt            
 
 ; imagelib
+libmozjpeg.so
 components/libnsgif.so                    
 components/libnsjpg.so                    
 components/libnspng.so
