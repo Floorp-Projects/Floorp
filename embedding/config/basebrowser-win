@@ -126,6 +126,7 @@ components\jsurl.dll
 components\jsurl.xpt
 
 ; layout
+moz_art_lgpl.dll
 components\gkcontent.dll
 res\dtd\*
 components\gklayout.dll                   

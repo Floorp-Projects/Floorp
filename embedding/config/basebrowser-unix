@@ -118,6 +118,7 @@ components/libjsurl.so
 components/jsurl.xpt
 
 ; layout
+libmoz_art_lgpl.so
 components/libgkcontent.so
 res/dtd/*
 components/libgklayout.so                   
