@@ -249,7 +249,8 @@ nsBackgroundUpdateService.prototype = {
     // The number of available updates is the number of extension/theme/other
     // updates + 1 for an application update, if one is available.
     var updateCount = this._pref.getIntPref(PREF_UPDATE_EXTENSIONS_COUNT);
-    if (this._pref.getBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE))
+    if (this._pref.prefHasUserValue(PREF_UPDATE_APP_UPDATESAVAILABLE) && 
+        this._pref.getBoolPref(PREF_UPDATE_APP_UPDATESAVAILABLE))
       ++updateCount;
     return updateCount;
   },

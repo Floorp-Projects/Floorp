@@ -46,6 +46,19 @@ const PREF_EM_LAST_APP_VERSION  = "extensions.lastAppVersion";
 const PREF_UPDATE_COUNT         = "update.extensions.count";
 const PREF_UPDATE_EXT_WSDL_URI  = "update.extensions.wsdl";
 
+const DIR_EXTENSIONS          = "Extensions";
+const DIR_UNINSTALL           = "Uninstall";
+const DIR_TEMP                = "Temp";
+const DIR_CHROME              = "Chrome";
+const DIR_COMPONENTS          = "Components";
+const DIR_DEFAULTS            = "Defaults";
+const DIR_DEFAULTS_PREFS      = "Preferences";
+const FILE_EXTENSIONS         = "Extensions.rdf";
+const FILE_UNINSTALL_LOG      = "Uninstall";
+const FILE_DEFAULTS           = "Defaults";
+const FILE_AUTOREG            = ".autoreg";
+const FILE_EXTENSION_MANIFEST = "extension.rdf";
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Utility Functions
@@ -56,6 +69,8 @@ function EM_NS(aProperty)
   return "http://www.mozilla.org/2004/em-rdf#" + aProperty;
 }
 
+// Returns the specified directory hierarchy under the special directory 
+// specified by aKey, creating directories along the way if necessary.
 function getDir(aKey, aSubDirs)
 {
   var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
@@ -70,6 +85,33 @@ function getDir(aKey, aSubDirs)
   return dir;
 }
 
+// Returns the file at the appropriate point in a directory hierarchy under
+// the specified key, creating directories along the way if necessary. Does
+// NOT create the file.
+function getFile(aKey, aPathToFile)
+{
+  var subdirs = [];
+  for (var i = 0; i < aPathToFile.length - 1; ++i)
+    subdirs.push(aPathToFile[i]);
+  var file = getDir(aKey, subdirs);
+  file.append(aPathToFile[aPathToFile.length - 1]);
+  return file;
+}
+
+function getDirKey(aIsProfile)
+{
+  return aIsProfile ? "ProfD" : "XCurProcD";
+}
+
+function dumpFile(aFile)
+{
+  dump("*** file = " + aFile.path + ", exists = " + aFile.exists() + "\n");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// nsInstallLogBase
+//
 function nsInstallLogBase()
 {
 }
@@ -92,9 +134,9 @@ nsInstallLogBase.prototype = {
 function nsInstallLogWriter(aExtensionID, aIsProfile)
 {
   this._isProfile = aIsProfile;
-  this._uninstallLog = getDir(aIsProfile ? "ProfD" : "ProfD",
-                              ["extensions", aExtensionID, "uninstall"]); // XXXben XCurProcDir
-  this._uninstallLog.append("uninstall.log");
+  this._uninstallLog = getDir(getDirKey(aIsProfile),
+                              [DIR_EXTENSIONS, aExtensionID, DIR_UNINSTALL]);
+  this._uninstallLog.append(FILE_UNINSTALL_LOG);
 }
 
 nsInstallLogWriter.prototype = {
@@ -138,9 +180,9 @@ nsInstallLogWriter.prototype = {
 function nsInstallLogReader(aExtensionID, aIsProfile, aListener)
 {
   this._isProfile = aIsProfile;
-  this.uninstallLog = getDir(aIsProfile ? "ProfD" : "ProfD",
-                              ["extensions", aExtensionID, "uninstall"]); // XXXben XCurProcDir
-  this.uninstallLog.append("uninstall.log");
+  this.uninstallLog = getFile(getDirKey(aIsProfile),
+                              [DIR_EXTENSIONS, aExtensionID, 
+                               DIR_UNINSTALL, FILE_UNINSTALL_LOG]);
   this._listener = aListener
 }
 
@@ -231,7 +273,7 @@ nsExtensionInstaller.prototype = {
     // Initialize the installer for this extension
     this._extensionID = aExtensionID;
     this._isProfile = aIsProfile;
-    this._extDirKey = this._isProfile ? "ProfD" : "ProfD"; // XXXben XCurProcDir
+    this._extDirKey = getDirKey(this._isProfile);
 
     // Create a logger to log install operations for uninstall
     this._writer = new nsInstallLogWriter(this._extensionID, this._isProfile);
@@ -243,8 +285,8 @@ nsExtensionInstaller.prototype = {
     this._installExtensionFiles();
     
     // Load the metadata datasource
-    var metadataFile = getDir(this._extDirKey, ["extensions", aExtensionID]);
-    metadataFile.append("extension.rdf");
+    var metadataFile = getFile(this._extDirKey, 
+                               [DIR_EXTENSIONS, aExtensionID, FILE_EXTENSION_MANIFEST]);
     
     var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
                            .getService(Components.interfaces.nsIIOService);
@@ -266,8 +308,10 @@ nsExtensionInstaller.prototype = {
   
   _installExtensionFiles: function ()
   {
-    var sourceXPI = getDir(this._extDirKey, ["extensions", "temp", this._extensionID]);
-    sourceXPI.append(this._extensionID + ".xpi");
+    var sourceXPI = getFile(this._extDirKey, 
+                            [DIR_EXTENSIONS, DIR_TEMP, 
+                             this._extensionID, 
+                             this._extensionID + ".xpi"]);
     var zipReader = Components.classes["@mozilla.org/libjar/zip-reader;1"]
                               .createInstance(Components.interfaces.nsIZipReader);
     zipReader.init(sourceXPI);
@@ -278,14 +322,13 @@ nsExtensionInstaller.prototype = {
       var entry = entries.getNext().QueryInterface(Components.interfaces.nsIZipEntry);
       
       var parts = entry.name.split("/");
-      var subDirs = ["extensions", this._extensionID];
-      for (var i = 0; i < parts.length - 1; ++i)
+      var subDirs = [DIR_EXTENSIONS, this._extensionID];
+      for (var i = 0; i < parts.length; ++i)
         subDirs.push(parts[i]);
       
-      var targetFile = getDir(this._extDirKey, subDirs);
       var fileName = parts[parts.length-1];
       if (fileName != "") {
-        targetFile.append(fileName);
+        var targetFile = getFile(this._extDirKey, subDirs);
         zipReader.extract(entry.name, targetFile);
         this._writer.addFile(targetFile.QueryInterface(Components.interfaces.nsILocalFile));
       }
@@ -300,7 +343,8 @@ nsExtensionInstaller.prototype = {
   
   _cleanUpStagedXPI: function ()
   {
-    var stageDir = getDir(this._extDirKey, ["extensions", "temp", this._extensionID]);
+    var stageDir = getDir(this._extDirKey, 
+                          [DIR_EXTENSIONS, DIR_TEMP, this._extensionID]);
     var sourceXPI = stageDir.clone();
     sourceXPI.append(this._extensionID + ".xpi");
     sourceXPI.remove(false);
@@ -310,15 +354,19 @@ nsExtensionInstaller.prototype = {
       stageDir.remove(false);
       
     // If the parent "temp" dir is empty, remove it.
-    if (!stageDir.parent.directoryEntries.hasMoreElements())
-      stageDir.parent.remove(false);
+    try { // XXXben
+      if (!stageDir.parent.directoryEntries.hasMoreElements())
+        stageDir.parent.remove(false);
+    }
+    catch (e) { }
   },
   
   _registerChromeForExtension: function ()
   {
     // Enumerate the metadata datasource files collection and register chrome
     // for each file, calling _registerChrome for each.
-    var chromeDir = getDir(this._extDirKey, ["extensions", this._extensionID, "chrome"]);
+    var chromeDir = getDir(this._extDirKey, 
+                           [DIR_EXTENSIONS, this._extensionID, DIR_CHROME]);
     
     var files = this._metadataDS.GetTargets(this._sourceResource, this._fileProperty, true);
     while (files.hasMoreElements()) {
@@ -402,8 +450,8 @@ nsExtensionUninstaller.prototype = {
     // Initialize the installer for this extension
     this._extensionID = aExtensionID;
     this._isProfile = aIsProfile;
-    this._extDirKey = this._isProfile ? "ProfD" : "ProfD"; // XXXben XCurProcDir
-    this._extensionsDir = getDir(this._extDirKey, ["extensions"]);
+    this._extDirKey = getDirKey(this._isProfile);
+    this._extensionsDir = getDir(this._extDirKey, [DIR_EXTENSIONS]);
 
     // Create a logger to log install operations for uninstall
     this._reader = new nsInstallLogReader(this._extensionID, 
@@ -435,9 +483,7 @@ nsExtensionUninstaller.prototype = {
   _removeFile: function (aFile)
   {
     if (aFile.exists()) {
-      dump("*** trying to remove " + aFile.path + "\n");
       aFile.remove(false);
-      dump("*** just removed " + aFile.path + "\n");
       
       // Clean up the parent hierarchy if possible  
       var parent = aFile.parent;
@@ -497,6 +543,12 @@ nsExtensionManager.prototype = {
       var os = Components.classes["@mozilla.org/observer-service;1"]
                          .getService(Components.interfaces.nsIObserverService);
       os.removeObserver(this, "profile-do-change");
+      
+      // XXXben - a bit of a hack - clean up any empty dirs that may not have been
+      //          properly removed by [un]install... I should really investigate those
+      //          cases to see what is stopping these dirs from being removed, but no
+      //          time now.
+      this._cleanDirs();
     
       var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
                                   .getService(Components.interfaces.nsIProperties);
@@ -545,10 +597,9 @@ nsExtensionManager.prototype = {
       }
       
       // Load default preferences files for all extensions
-      
       var defaultsManifest = fileLocator.get("ProfD", Components.interfaces.nsIFile);
-      defaultsManifest.append("extensions");
-      defaultsManifest.append("Defaults");
+      defaultsManifest.append(DIR_EXTENSIONS);
+      defaultsManifest.append(FILE_DEFAULTS);
       if (defaultsManifest.exists()) {
         var pref = Components.classes["@mozilla.org/preferences-service;1"]
                             .getService(Components.interfaces.nsIPrefService);
@@ -563,10 +614,12 @@ nsExtensionManager.prototype = {
           var lf = Components.classes["@mozilla.org/file/local;1"]
                               .createInstance(Components.interfaces.nsILocalFile);
           var path = line.value;
-          lf.initWithPath(path);
-          
-          if (lf.exists())
-            pref.readUserPrefs(lf);
+          if (path) {
+            lf.initWithPath(path);
+            
+            if (lf.exists())
+              pref.readUserPrefs(lf);
+          }
         }
         while (more);
         fis.close();
@@ -618,7 +671,7 @@ nsExtensionManager.prototype = {
     return rv;
   },
   
-  _writeProfileFile: function (aSubfolder, aFileName, aGetDirFunc, aWriteLineFunc)
+  _writeProfileFile: function (aFile, aGetDirFunc, aWriteLineFunc)
   {
     // When an operation is performed that requires a component re-registration
     // (extension enabled/disabled, installed, uninstalled), we must write the
@@ -630,66 +683,44 @@ nsExtensionManager.prototype = {
     
     this._ensureDS();
     
-    var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"]
-                                .getService(Components.interfaces.nsIProperties);
-    var profileDir = fileLocator.get("ProfD", Components.interfaces.nsIFile);
-    var globalDir = fileLocator.get("ProfD", Components.interfaces.nsIFile); // XXXben - XCurProcDir
-    
-    // Open the .autoreg file for writing.
-    
-    var dataFile = profileDir.clone();
-    if (aSubfolder)
-      dataFile.append(aSubfolder);
-    dataFile.append(aFileName);
     var fos = Components.classes["@mozilla.org/network/file-output-stream;1"]
                         .createInstance(Components.interfaces.nsIFileOutputStream);
     const MODE_WRONLY   = 0x02;
     const MODE_CREATE   = 0x08;
     const MODE_TRUNCATE = 0x20;
-    fos.init(dataFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
+    fos.init(aFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE, 0664, 0);
 
     var extensions = this.getItemList(null, Components.interfaces.nsIUpdateItem.TYPE_EXTENSION, { });
     for (var i = 0; i < extensions.length; ++i) {
       var extension = extensions[i];
-      
-      var valid = this._ds.getExtensionProperty(extension.id, "toBeDisabled") != "true"; // About to be disabled
-      valid = this._ds.getExtensionProperty(extension.id, "disabled") != "true";         // Already disabled
-      valid = this._ds.getExtensionProperty(extension.id, "toBeUninstalled") != "true";  // About to be uninstalled
-      
-      if (!valid)
+    
+      // An extension entry is valid only if it is not disabled, not about to 
+      // be disabled, and not about to be uninstalled.
+      var toBeDisabled = this._ds.getExtensionProperty(extension.id, "toBeDisabled");
+      var toBeUninstalled = this._ds.getExtensionProperty(extension.id, "toBeUninstalled");
+      var disabled = this._ds.getExtensionProperty(extension.id, "disabled");
+      if (toBeDisabled == "true" || toBeUninstalled == "true" || disabled == "true")
         continue;
       
-      // Now locate this extension within the extensions folder
-      // First, where is it installed - profile or global?
-      var dir = this._ds.isProfileExtension(extension.id) ? profileDir : globalDir;
-      
-      // Now synthesize the components dir for the extension
-      var sourceDir = aGetDirFunc(dir, extension.id);
-      if (sourceDir.exists()) {
-        // write the relative path of the components dir
+      var sourceDir = aGetDirFunc(this._ds.isProfileExtension(extension.id), 
+                                  extension.id);
+      if (sourceDir.exists())
         aWriteLineFunc(fos, sourceDir, extension.id);
-      }
     }
     fos.close();
   },
   
-  _getComponentsDir: function (aSourceDir, aExtensionID)
+  _getComponentsDir: function (aIsProfile, aExtensionID)
   {
-    var sourceDir = aSourceDir.clone();
-    sourceDir.append("extensions");
-    sourceDir.append(aExtensionID);
-    sourceDir.append("components");
-    return sourceDir;
+    return getDir(getDirKey(aIsProfile), 
+                  [DIR_EXTENSIONS, aExtensionID, DIR_COMPONENTS]);
   },
   
-  _getPreferencesDir: function (aSourceDir, aExtensionID)
+  _getPreferencesDir: function (aIsProfile, aExtensionID)
   {
-    var sourceDir = aSourceDir.clone();
-    sourceDir.append("extensions");
-    sourceDir.append(aExtensionID);
-    sourceDir.append("defaults");
-    sourceDir.append("preferences");
-    return sourceDir;
+    return getDir(getDirKey(aIsProfile), 
+                  [DIR_EXTENSIONS, aExtensionID, 
+                   DIR_DEFAULTS, DIR_DEFAULTS_PREFS]);
   },
   
   _writeAutoregLines: function (aStream, aSourceDir, aExtensionID)
@@ -708,14 +739,32 @@ nsExtensionManager.prototype = {
     }
   },
 
-  _writeProfileData: function ()
+  _writeAutoReg: function ()
   {
-    this._writeProfileFile(null, ".autoreg", 
+    this._writeProfileFile(getFile("ProfD", [FILE_AUTOREG]), 
                            this._getComponentsDir, 
                            this._writeAutoregLines);
-    this._writeProfileFile("extensions", "Defaults", 
+  },
+  
+  _writeDefaults: function ()
+  {
+    this._writeProfileFile(getFile("ProfD", [DIR_EXTENSIONS, FILE_DEFAULTS]), 
                            this._getPreferencesDir, 
                            this._writePreferencesLines);
+  },
+  
+  _cleanDirs: function ()
+  {
+    var keys = ["ProfD", "XCurProcD"];
+    for (var i = 0; i < keys.length; ++i) {
+      var extensions = getDir(keys[i], [DIR_EXTENSIONS]);
+      var entries = extensions.directoryEntries;
+      while (entries.hasMoreElements()) {
+        var entry = entries.getNext().QueryInterface(Components.interfaces.nsIFile);
+        if (entry.isDirectory() && !entry.directoryEntries.hasMoreElements())
+          entry.remove(false);
+      }
+    }
   },
   
   /////////////////////////////////////////////////////////////////////////////  
@@ -731,10 +780,9 @@ nsExtensionManager.prototype = {
     //         defaults/
     //                  prefs/
     var installProfile = aFlags & nsIExtensionManager.FLAG_INSTALL_PROFILE;
-    var tempManifest = getDir(installProfile ? "ProfD" : "ProfD", 
-                              ["extensions", "temp"]);
-    tempManifest.append("extension.rdf");
-    aZipReader.extract("extension.rdf", tempManifest);
+    var tempManifest = getFile(getDirKey(installProfile),
+                               [DIR_EXTENSIONS, DIR_TEMP, FILE_EXTENSION_MANIFEST]);
+    aZipReader.extract(FILE_EXTENSION_MANIFEST, tempManifest);
     
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                         .getService(Components.interfaces.nsIRDFService);
@@ -745,10 +793,9 @@ nsExtensionManager.prototype = {
     
     // We do a basic version check first just to make sure we somehow weren't 
     // tricked into installing an incompatible extension...
+    this._ensureDS();
     var extensionID = this._canInstallExtension(ds);
     if (extensionID) {
-      this._ensureDS();
-      
       this._ds.setExtensionProperty(extensionID, this._ds._emR("toBeInstalled"),
                                     this._ds._emL("true"), installProfile);
       // Then we stage the extension's XPI into a temporary directory so we 
@@ -757,7 +804,7 @@ nsExtensionManager.prototype = {
     }
     tempManifest.remove(false);
     
-    this._writeProfileData();
+    this._writeAutoReg();
   },
   
   _canInstallExtension: function (aDataSource)
@@ -765,9 +812,9 @@ nsExtensionManager.prototype = {
     var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
                         .getService(Components.interfaces.nsIRDFService);
     var manifestRoot = rdf.GetResource("urn:mozilla:extension:manifest");
-    var id = rdf.GetResource(EM_NS("id"));
     // Check the target application range specified by the extension metadata.
-    if (this._ds.isCompatible(aDataSource, id)) {
+    if (this._ds.isCompatible(aDataSource, manifestRoot)) {
+      var id = rdf.GetResource(EM_NS("id"));
       var idLiteral = aDataSource.GetTarget(manifestRoot, id, true);
       return idLiteral.QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
     }
@@ -777,8 +824,8 @@ nsExtensionManager.prototype = {
   _stageExtensionXPI: function (aZipReader, aExtensionID, aInstallProfile)
   {
     // Get the staging dir
-    var dir = getDir(aInstallProfile ? "ProfD" : "ProfD", 
-                     ["extensions", "temp", aExtensionID]);
+    var dir = getDir(getDirKey(aInstallProfile),
+                     [DIR_EXTENSIONS, DIR_TEMP, aExtensionID]);
     var extensionFileName = aExtensionID + ".xpi";
     var extensionFile = dir.clone();
     extensionFile.append(extensionFileName);
@@ -794,6 +841,9 @@ nsExtensionManager.prototype = {
       this._extInstaller = new nsExtensionInstaller(this._ds);
     this._extInstaller.install(aExtensionID, 
                                this._ds.isProfileExtension(aExtensionID));
+    
+    // Update the Defaults Manifest
+    this._writeDefaults();
   },
   
   _finalizeEnable: function (aExtensionID)
@@ -812,27 +862,29 @@ nsExtensionManager.prototype = {
       this._extUninstaller = new nsExtensionUninstaller(this._ds);
     this._extUninstaller.uninstall(aExtensionID, 
                                    this._ds.isProfileExtension(aExtensionID));
+    
+    // Update the Defaults Manifest
+    this._writeDefaults();
   },
       
   uninstallExtension: function (aExtensionID)
   {
     this._ds.uninstallExtension(aExtensionID);
-    this._writeProfileData();
+    this._writeAutoReg();
   },
   
   enableExtension: function (aExtensionID)
   {
     this._ds.enableExtension(aExtensionID);
-    this._writeProfileData();
+    this._writeAutoReg();
   },
   
   disableExtension: function (aExtensionID)
   {
     this._ds.disableExtension(aExtensionID);
-    this._writeProfileData();
+    this._writeAutoReg();
   },
   
-  // XXXben - handle the case where the item provides its own update url. 
   update: function (aItems, aItemCount)
   {
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
@@ -881,12 +933,53 @@ nsExtensionManager.prototype = {
   _ensureDS: function ()
   {
     if (!this._ds) {
+      dump("*** loading the extensions datasource\n");
       this._ds = new nsExtensionsDataSource();
       if (this._ds) {
         this._ds.loadExtensions(false);
         this._ds.loadExtensions(true);
       }
     }
+  },
+
+  /////////////////////////////////////////////////////////////////////////////
+  // nsIClassInfo
+  getInterfaces: function (aCount)
+  {
+    var interfaces = [Components.interfaces.nsIExtensionManager,
+                      Components.interfaces.nsIObserver];
+    aCount.value = interfaces.length;
+    return interfaces;
+  },
+  
+  getHelperForLanguage: function (aLanguage)
+  {
+    return null;
+  },
+  
+  get contractID() 
+  {
+    return "@mozilla.org/extensions/manager;1";
+  },
+  
+  get classDescription()
+  {
+    return "Extension Manager";
+  },
+  
+  get classID() 
+  {
+    return Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}");
+  },
+  
+  get implementationLanguage()
+  {
+    return Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT;
+  },
+  
+  get flags()
+  {
+    return Components.interfaces.nsIClassInfo.SINGLETON;
   },
 
   /////////////////////////////////////////////////////////////////////////////
@@ -1030,7 +1123,6 @@ nsExtensionItemUpdater.prototype = {
   getNewestExtensionCallback: function (aResult)
   {
     var item = aResult;
-    dump("*** result = " + item.toSource() + "\n");
     try {
       item.name.toString(); // XXXben This is a lame hack to cause an exception to be
                             // thrown for null values when there is no newer extension
@@ -1140,15 +1232,14 @@ nsExtensionsDataSource.prototype = {
     return aResourceURI.substr("urn:mozilla:extension:".length, aResourceURI.length);
   },
   
-  isCompatible: function (aDS, aExtensionID)
+  isCompatible: function (aDS, aSource)
   {
-    var r = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
-    var targets = aDS.GetTargets(r, this._emR("targetApplication"), true);
-    
     var pref = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
     var appID = pref.getCharPref(PREF_EM_APP_ID);
+
+    var targets = aDS.GetTargets(aSource, this._emR("targetApplication"), true);
     while (targets.hasMoreElements()) {
       var targetApp = targets.getNext().QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
 
@@ -1174,8 +1265,8 @@ nsExtensionsDataSource.prototype = {
     var elements = ctr.GetElements();
     while (elements.hasMoreElements()) {
       var e = elements.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-      var id = this._stripPrefix(e.Value);
-      if (!this.isCompatible(this, id)) {
+      if (!this.isCompatible(this, e)) {
+        var id = this._stripPrefix(e.Value);
         var item = Components.classes["@mozilla.org/updates/item;1"]
                              .createInstance(Components.interfaces.nsIUpdateItem);
         item.init(id, this.getExtensionProperty(id, "version"),
@@ -1236,7 +1327,7 @@ nsExtensionsDataSource.prototype = {
   
   isProfileExtension: function (aExtensionID)
   {
-    return this.getExtensionProperty(aExtensionID, "installLocation") == "profile";
+    return this.getExtensionProperty(aExtensionID, "installLocation") != "global";
   },
   
   _setProperty: function (aDS, aSource, aProperty, aNewValue)
@@ -1347,6 +1438,10 @@ nsExtensionsDataSource.prototype = {
   
   uninstallExtension: function (aExtensionID)
   {
+    // We have to do this check BEFORE we unhook all the metadata from this 
+    // extension's resource, otherwise we'll think it's a global extension.
+    var isProfile = this.isProfileExtension(aExtensionID);
+    
     var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                         .createInstance(Components.interfaces.nsIRDFContainer);
     ctr.Init(this, this._rdf.GetResource("urn:mozilla:extension:root"));
@@ -1359,7 +1454,8 @@ nsExtensionsDataSource.prototype = {
     
     this.setExtensionProperty(aExtensionID, this._emR("toBeUninstalled"), 
                               this._emL("true"), 
-                              this.isProfileExtension(aExtensionID));
+                              isProfile);
+    this.Flush();
   },
   
   _removeExtensionMetadata: function (aExtensionID)
@@ -1367,6 +1463,8 @@ nsExtensionsDataSource.prototype = {
     var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
     var isProfile = this.isProfileExtension(aExtensionID);
     var ds = isProfile ? this._profileExtensions : this._appExtensions;
+
+    // Remove outward arcs
     var arcs = ds.ArcLabelsOut(extension);
     while (arcs.hasMoreElements()) {
       var arc = arcs.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
@@ -1379,26 +1477,15 @@ nsExtensionsDataSource.prototype = {
   loadExtensions: function (aProfile)
   {
     var fileLocator = Components.classes["@mozilla.org/file/directory_service;1"].getService(Components.interfaces.nsIProperties);
-    var key = aProfile ? "ProfD" : "ProfD"; // XXXben - XCurProcDir
-    var extensionsFile = fileLocator.get(key, Components.interfaces.nsIFile);
-    extensionsFile.append("extensions");
+    var extensionsFile  = getFile(getDirKey(aProfile), 
+                                  [DIR_EXTENSIONS, FILE_EXTENSIONS]);
     
-    var extensionsDir = extensionsFile.clone();
-    if (!extensionsDir.exists())
-      extensionsDir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
-    
-    extensionsFile.append("extensions.rdf");
-    
+    // If the file does not exist at the current location, copy the default
+    // version over so we can access the various roots. 
     if (!extensionsFile.exists()) {
-      // XXXben - Copy over the default file - temporary. 
-      if (key == "ProfD") {
-        var defaultExtensionsFile = fileLocator.get("ProfDefNoLoc", Components.interfaces.nsIFile);
-        defaultExtensionsFile.append("extensions");
-        defaultExtensionsFile.append("extensions.rdf");
-        defaultExtensionsFile.copyTo(extensionsDir, "extensions.rdf");
-      }
-      else
-        return;
+      var defaultFile = getFile("ProfDefNoLoc", 
+                                ["extensions", FILE_EXTENSIONS]);
+      defaultFile.copyTo(extensionsFile.parent, extensionsFile.leafName);
     }
 
     var ioServ = Components.classes["@mozilla.org/network/io-service;1"]
@@ -1477,9 +1564,8 @@ nsExtensionsDataSource.prototype = {
       }
     }
     else if (aProperty.EqualsNode(this._emR("installLocation"))) {
-      var hasNameArc = this._profileExtensions.hasArcOut(aSource, this._emR("name"));
-      var hasVersionArc = this._profileExtensions.hasArcOut(aSource, this._emR("version"));
-      return hasNameArc && hasVersionArc ? this._emL("profile") : this._emL("global");
+      var arcs = this._profileExtensions.ArcLabelsOut(aSource);
+      return arcs.hasMoreElements() ? this._emL("profile") : this._emL("global");
     }
     
     return this._composite.GetTarget(aSource, aProperty, aTruthValue);
@@ -1670,21 +1756,21 @@ var gModule = {
   },
   
   _objects: {
-    manager: { CID: Components.ID("{8A115FAA-7DCB-4e8f-979B-5F53472F51CF}"),
-               contractID: "@mozilla.org/extensions/manager;1",
-               className: "Extension Manager",
-               factory: {
-                          createInstance: function (aOuter, aIID) 
-                          {
-                            if (aOuter != null)
-                              throw Components.results.NS_ERROR_NO_AGGREGATION;
-                            
-                            if (!gExtensionManager)
-                              gExtensionManager = new nsExtensionManager();
-                              
-                            return gExtensionManager.QueryInterface(aIID);
-                          }
-                        }
+    manager: { CID        : nsExtensionManager.prototype.classID,
+               contractID : nsExtensionManager.prototype.contractID,
+               className  : nsExtensionManager.prototype.classDescription,
+               factory    : {
+                              createInstance: function (aOuter, aIID) 
+                              {
+                                if (aOuter != null)
+                                  throw Components.results.NS_ERROR_NO_AGGREGATION;
+                                
+                                if (!gExtensionManager)
+                                  gExtensionManager = new nsExtensionManager();
+                                  
+                                return gExtensionManager.QueryInterface(aIID);
+                              }
+                            }
              }
    },
   
