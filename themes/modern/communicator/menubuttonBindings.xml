@@ -29,4 +29,14 @@
     </content>
   </binding>
   
+  <binding id="menubutton-toolbar-single" extends="chrome://global/content/menulistBindings.xml#menubutton-single-left">
+    <content includes="menupopup">
+      <xul:box class="menubutton-internal-box" flex="1" autostretch="never">
+        <xul:image class="menubutton-icon" inherits="src,disabled"/>
+        <xul:text class="menubutton-text" inherits="value,accesskey,crop,disabled,dragover-top" flex="1"/>
+        <xul:image class="menubutton-dropmarker" inherits="menubuttontype,disabled"/>
+      </xul:box>
+    </content>
+  </binding>
+
 </bindings>

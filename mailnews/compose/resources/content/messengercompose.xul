@@ -504,15 +504,9 @@
       <button id="indentButton"/>
       <toolbarseparator class="toolbarseparator-standard"/>
     
-      <menu>
-        <button id="AlignPopupButton"/>
-        <menupopup id="AlignmentPopup"/>
-      </menu>
+      <menubutton id="AlignPopupButton"/>
     
-      <menu>
-        <button id="InsertPopupButton"/>
-        <menupopup id="InsertPopup"/>
-      </menu>
+      <menubutton id="InsertPopupButton"/>
 
 	  <menu id="smileButtonMenu"/>
 

@@ -9,7 +9,6 @@
       min-width           : 47px;
       margin              : 0px;
       border              : 1px solid transparent;
-      color               : WindowText;
       background-color    : transparent;
       -moz-user-focus     : ignore;
     }
@@ -165,6 +164,7 @@
   .button-toolbar[disabled="true"]:hover > .button-internal-box,
   .button-toolbar[disabled="true"]:hover:active > .button-internal-box
     {
+      border              : 1px solid transparent;
   	  padding             : 1px 3px 1px 3px !important;
     }
     

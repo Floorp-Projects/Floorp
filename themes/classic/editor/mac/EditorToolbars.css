@@ -624,11 +624,41 @@ button.edit-mode[selected="1"]:hover:active
   }
 
 #AlignPopupButton {
-	list-style-image:url("chrome://editor/skin/images/align.gif");
+	list-style-image        : url("chrome://editor/skin/images/align.gif");
+}
+
+#AlignPopupButton:hover {
+	list-style-image        : url("chrome://editor/skin/images/align-hover.gif");
+}
+
+#AlignPopupButton:hover:active,
+#AlignPopupButton[open="true"] {
+	list-style-image        : url("chrome://editor/skin/images/align-hover-active.gif");
+}
+
+#AlignPopupButton[disabled="true"],
+#AlignPopupButton[disabled="true"]:hover,
+#AlignPopupButton[disabled="true"]:hover:active {
+	list-style-image        : url("chrome://editor/skin/images/align-disabled.gif");
 }
 
 #InsertPopupButton {
-	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
+	list-style-image        : url("chrome://editor/skin/images/insert.gif");
+}
+
+#InsertPopupButton:hover {
+	list-style-image        : url("chrome://editor/skin/images/insert-hov.gif");
+}
+
+#InsertPopupButton:hover:active,
+#InsertPopupButton[open="true"] {
+	list-style-image        : url("chrome://editor/skin/images/insert-act.gif");
+}
+
+#InsertPopupButton[disabled="true"],
+#InsertPopupButton[disabled="true"]:hover,
+#InsertPopupButton[disabled="true"]:hover:active {
+	list-style-image        : url("chrome://editor/skin/images/insert-dis.gif");
 }
 
 #text-align-left,

@@ -109,7 +109,7 @@ button, .exit-dialog {
 	min-width           : 60px;
 	min-height          : 20px;
 	color               : #000000;
-	background-color    : transparent !important;  /* Greatly increases responsiveness and 'feel' */
+	background-color    : transparent;  /* Greatly increases responsiveness and 'feel' */
 }
 
 button {
@@ -633,5 +633,4 @@ button[default="true"][disabled="true"]:hover:active > .button-image-right,
       margin              : none;
       padding             : none;
     }
-    
     

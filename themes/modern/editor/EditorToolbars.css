@@ -246,12 +246,6 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     text-align			  : center;
   }
 
-#printButton > .menubutton-dual-stack > .menubutton-dual-button
-  {
-  	margin				  : 0px;
-  	padding				  : 0px;
-  }
-
 #printButton[disabled="true"],
 #printButton[disabled="true"]:hover,
 #printButton[disabled="true"]:hover:active,
@@ -270,12 +264,6 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 #printButton > .menubutton-dual-stack > .menubutton-dual-button:hover:active
   {
     list-style-image      : url("chrome://global/skin/print-clicked.gif");
-  }
-
-#printButton > .menubutton-dual-stack > .menubutton-dual-dropmarker-box
-  {
-    margin-left             : 19px;
-    margin-top				: 21px;
   }
 
 #findButton {
@@ -385,26 +373,6 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/table-clicked.gif");
   }
-
-#linkButton-dark {
-	//list-style-image:url("chrome://editor/skin/images/link.gif");
-}
-#imageButton-dark {
-	//list-style-image:url("chrome://editor/skin/images/image.gif");
-}
-#namedAnchorButton-dark {
-	//list-style-image:url("chrome://editor/skin/images/anchor.gif");
-}
-#hlineButton-dark {
-	//list-style-image:url("chrome://editor/skin/images/hline.gif");
-}
-#tableButton-dark {
-	//list-style-image:url("chrome://editor/skin/images/table.gif");
-}
-
-#spellingButton {
-	list-style-image:url("chrome://editor/skin/images/spell.gif");
-}
 
 #spellingButton[disabled="true"],
 #spellingButton[disabled="true"]:hover,
@@ -624,39 +592,37 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 	list-style-image:url("chrome://editor/skin/images/align.gif");
 }
 
+#AlignPopupButton:hover {
+	list-style-image:url("chrome://editor/skin/images/align_hover.gif");
+}
+
+#AlignPopupButton:hover:active,
+#AlignPopupButton[open="true"] {
+	list-style-image:url("chrome://editor/skin/images/align_active.gif");
+}
+
+#AlignPopupButton[disabled="true"],
+#AlignPopupButton[disabled="true"]:hover,
+#AlignPopupButton[disabled="true"]:hover:active {
+	list-style-image:url("chrome://editor/skin/images/align_disabled.gif");
+}
+
 #InsertPopupButton {
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-menu:hover > #AlignPopupButton, 
-menu:hover:active > #AlignPopupButton[toggled="true"] {
-	list-style-image:url("chrome://editor/skin/images/align_hover.gif");
-}
-
-menu:hover:active > #AlignPopupButton,
-menu:hover > #AlignPopupButton[toggled="true"] {
-	list-style-image:url("chrome://editor/skin/images/align_active.gif");
-}
-
-#AlignPopupButton[disabled="true"], 
-menu:hover > #AlignPopupButton[disabled="true"], 
-menu:hover:active > #AlignPopupButton[disabled="true"] {
-	list-style-image:url("chrome://editor/skin/images/align_disabled.gif");
-}
-
-menu:hover > #InsertPopupButton,
-menu:hover:active > #InsertPopupButton[toggled="true"] {
+#InsertPopupButton:hover {
 	list-style-image:url("chrome://editor/skin/images/object-popup_hover.gif");
 }
 
-menu:hover:active > #InsertPopupButton,
-menu:hover > #InsertPopupButton[toggled="true"] {
+#InsertPopupButton:hover:active,
+#InsertPopupButton[open="true"] {
 	list-style-image:url("chrome://editor/skin/images/object-popup_active.gif");
 }
 
 #InsertPopupButton[disabled="true"],
-menu:hover > #InsertPopupButton[disabled="true"], 
-menu:hover:active > #InsertPopupButton[disabled="true"] {
+#InsertPopupButton[disabled="true"]:hover,
+#InsertPopupButton[disabled="true"]:hover:active {
 	list-style-image:url("chrome://editor/skin/images/object-popup_disabled.gif");
 }
 

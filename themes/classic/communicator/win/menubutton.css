@@ -1,12 +1,12 @@
 
-.menubutton-dual.toolbar.top
+.menubutton-dual.top
   {
     -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
     border                : 1px solid transparent;
     -moz-user-focus       : ignore !important;
   }
 
-.menubutton-dual.toolbar.left
+.menubutton-dual.left
   {
     -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex-left");
     border                : 1px solid transparent;
@@ -42,13 +42,13 @@
     list-style-image      : url("chrome://global/skin/scroll-down.gif");
   } 
   
-.menubutton-dual.toolbar > .menubutton-dual-dropmarker-box
+.menubutton-dual > .menubutton-dual-dropmarker-box
   {
     border                : 1px solid transparent;
     padding               : 1px 0px 1px 0px;
   }
 
-.menubutton-dual.toolbar.left > .menubutton-dual-dropmarker-box
+.menubutton-dual.left > .menubutton-dual-dropmarker-box
   {
     border-left           : 1px solid ThreeDHighlight;
     border-top            : 1px solid ThreeDHighlight;
@@ -63,7 +63,7 @@
     color                 : GrayText;
   }  
 
-.menubutton-dual.toolbar[disabled="true"] > .menubutton-dual-dropmarker-box > .menubutton-dropmarker
+.menubutton-dual[disabled="true"] > .menubutton-dual-dropmarker-box > .menubutton-dropmarker
   {
     list-style-image      : url("chrome://global/skin/scroll-down-disabled.gif");
   }  
@@ -82,7 +82,7 @@
       color                 : blue;
     }
 
-  .menubutton-dual.toolbar[disabled="true"] > .menubutton-dual-ex-button:hover
+  .menubutton-dual[disabled="true"] > .menubutton-dual-ex-button:hover
     {
       border                : 1px solid transparent;
       color                 : GrayText;
@@ -97,24 +97,24 @@
  */
 
   /* 2) menubutton gets black border */
-  .menubutton-dual.toolbar[buttonover="true"]
+  .menubutton-dual[buttonover="true"]
     {
       border                : 1px solid ThreeDDarkShadow;
     }
     
-  .menubutton-dual.toolbar[buttonover="true"][disabled="true"]
+  .menubutton-dual[buttonover="true"][disabled="true"]
     {
       border                : 1px solid transparent;
     }
     
-  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-ex-button,
-  .menubutton-dual.toolbar[disabled="true"][buttonover="true"] > .menubutton-dual-ex-button
+  .menubutton-dual[disabled="true"]:hover > .menubutton-dual-ex-button,
+  .menubutton-dual[disabled="true"][buttonover="true"] > .menubutton-dual-ex-button
     {
       border                : 1px solid transparent;
     }
 
   /* 3) dropmarker gets outset border */
-  .menubutton-dual.toolbar[buttonover="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual[buttonover="true"] > .menubutton-dual-dropmarker-box
     {
       border-left           : 1px solid ThreeDHighlight;
       border-top            : 1px solid ThreeDHighlight;
@@ -122,7 +122,7 @@
       border-bottom         : 1px solid ThreeDShadow;
     }    
     
-  .menubutton-dual.toolbar[buttonover="true"][disabled="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual[buttonover="true"][disabled="true"] > .menubutton-dual-dropmarker-box
     {
       border                : 1px solid transparent;
     }
@@ -147,7 +147,7 @@
     }
     
   /* 2). dropmarker gets inset border */
-  .menubutton-dual.toolbar[buttondown="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual[buttondown="true"] > .menubutton-dual-dropmarker-box
     {
       border-left           : 1px solid ThreeDShadow !important;
       border-top            : 1px solid ThreeDShadow !important;
@@ -156,7 +156,7 @@
       padding               : 2px 0px 0px 0px !important;
     }    
     
-  .menubutton-dual.toolbar[buttondown="true"][disabled="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual[buttondown="true"][disabled="true"] > .menubutton-dual-dropmarker-box
     {
       border                : 1px solid transparent !important;
       padding               : 0px !important;
@@ -165,18 +165,18 @@
 /* ACTION: mouse over the menu */
   
   /* 1). menubutton gets black border */
-  .menubutton-dual.toolbar:hover
+  .menubutton-dual:hover
     {
       border                : 1px solid ThreeDDarkShadow;
     }
     
-  .menubutton-dual.toolbar[disabled="true"]:hover
+  .menubutton-dual[disabled="true"]:hover
     {
       border                : 1px solid transparent;
     }
     
   /* 2). button gets outset border */
-  .menubutton-dual.toolbar:hover > .menubutton-dual-ex-button
+  .menubutton-dual:hover > .menubutton-dual-ex-button
     {
       border-left           : 1px solid ThreeDHighlight;
       border-top            : 1px solid ThreeDHighlight;
@@ -186,7 +186,7 @@
     }
     
   /* 3). dropmarker gets outset border */
-  .menubutton-dual.toolbar:hover > .menubutton-dual-dropmarker-box
+  .menubutton-dual:hover > .menubutton-dual-dropmarker-box
     {
       border-left           : 1px solid ThreeDHighlight;
       border-top            : 1px solid ThreeDHighlight;
@@ -194,7 +194,7 @@
       border-bottom         : 1px solid ThreeDShadow;
     }
 
-  .menubutton-dual.toolbar[disabled="true"]:hover > .menubutton-dual-dropmarker-box
+  .menubutton-dual[disabled="true"]:hover > .menubutton-dual-dropmarker-box
     {
       border                : 1px solid transparent;
     }
@@ -202,13 +202,13 @@
 /* ACTION: open the menu */
   
   /* 1). menubutton gets black border */
-  .menubutton-dual.toolbar[open="true"]
+  .menubutton-dual[open="true"]
     {
       border                : 1px solid ThreeDDarkShadow;
     }
   
   /* 2). button gets outset border */
-  .menubutton-dual.toolbar[open="true"] > .menubutton-dual-ex-button
+  .menubutton-dual[open="true"] > .menubutton-dual-ex-button
     {
       border-left           : 1px solid ThreeDHighlight;
       border-top            : 1px solid ThreeDHighlight;
@@ -218,7 +218,7 @@
     }
   
   /* 3). dropmarker gets inset border */
-  .menubutton-dual.toolbar[open="true"] > .menubutton-dual-dropmarker-box
+  .menubutton-dual[open="true"] > .menubutton-dual-dropmarker-box
     {
       border-left           : 1px solid ThreeDShadow;
       border-top            : 1px solid ThreeDShadow;
@@ -236,71 +236,75 @@
       padding               : 1px 3px 1px 3px;
     }
  
-/* toolbar menubuttons */   
-menubutton.button-toolbar-4
-  {
-    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
-    border                  : 1px solid transparent;
-  }
-  
-menubutton.button-toolbar  
-  {
-    -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
-  }
-  
-menubutton.button-toolbar[open="true"], 
-menubutton.button-toolbar:hover 
-  {
-    color                   : #FF0000;
-  }  
-
-  
-menubutton.button-toolbar > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-icon
-  {
-    margin-right            : 5px;
-  }
+  menubutton.button-toolbar-4,
+  menubutton.button-toolbar
+    {
+      -moz-binding            : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-toolbar-single");
+    }
     
-menubutton.button-toolbar-4:hover
-  {
-    border                  : 1px solid ThreeDDarkShadow;
-  }
+  .menubutton-toolbar-single-internal-box,
+  .button-toolbar[disabled="true"]:hover 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar-4[disabled="true"]:hover 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar[disabled="true"]:hover:active 
+      > .menubutton-toolbar-single-internal-box,
+  .button-toolbar-4[disabled="true"]:hover:active 
+      > .menubutton-toolbar-single-internal-box
+    {
+      border                  : 1px solid transparent;
+      padding                 : 1px 3px 1px 3px;
+    }
 
-.menubutton-toolbar-single-internal-box
-  {
-    border                  : 1px solid transparent;
-    padding                 : 0px 4px 0px 4px;
-  }  
+  menubutton.button-toolbar > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-icon
+    {
+      margin-right            : 5px;
+    }
   
-menubutton.button-toolbar > .menubutton-toolbar-single-internal-box
-  {
-    border                  : none;
-    padding                 : 0px 4px 0px 4px;
-  }  
+  .menubutton-toolbar-single-dropmarker
+    {
+      list-style-image        : url("chrome://global/skin/scroll-up.gif");
+    }  
   
-menubutton.button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
-  {
-    border-left             : 1px solid ThreeDHighlight;
-    border-top              : 1px solid ThreeDHighlight;
-    border-right            : 1px solid ThreeDShadow;
-    border-bottom           : 1px solid ThreeDShadow;
-  }  
-  
-menubutton.button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
-menubutton.button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box
-  {
-    border-left             : 1px solid ThreeDShadow;
-    border-top              : 1px solid ThreeDShadow;
-    border-right            : 1px solid ThreeDHighlight;
-    border-bottom           : 1px solid ThreeDHighlight;
-    padding                 : 0px 4px 0px 4px;
-  }  
-  
-.menubutton-toolbar-single-dropmarker
-  {
-    padding-left            : 4px;
-    list-style-image        : url("chrome://global/skin/scroll-up.gif");
-  } 
-  
+  .button-toolbar > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+    {
+      list-style-image        : url("chrome://global/skin/scroll-down.gif");
+    }
+      
+  .button-toolbar[disabled="true"] > .menubutton-toolbar-single-internal-box > .menubutton-toolbar-single-dropmarker
+    {
+      list-style-image        : url("chrome://global/skin/scroll-down-disabled.gif");
+    }  
+    
+  .button-toolbar:hover > .menubutton-toolbar-single-internal-box,
+  .button-toolbar-4:hover > .menubutton-toolbar-single-internal-box
+    {
+      border-left             : 1px solid ThreeDHighlight;
+      border-top              : 1px solid ThreeDHighlight;
+      border-right            : 1px solid ThreeDShadow;
+      border-bottom           : 1px solid ThreeDShadow;
+    }  
+    
+  menubutton.button-toolbar-4:hover:active,
+  menubutton.button-toolbar-4[open="true"],
+  menubutton.button-toolbar:hover:active,
+  menubutton.button-toolbar[open="true"]
+    {
+      border                 : 1px solid ThreeDDarkShadow;
+    }  
+    
+  .button-toolbar-4:hover:active > .menubutton-toolbar-single-internal-box,
+  .button-toolbar-4[open="true"] > .menubutton-toolbar-single-internal-box,
+  .button-toolbar:hover:active > .menubutton-toolbar-single-internal-box,
+  .button-toolbar[open="true"] > .menubutton-toolbar-single-internal-box
+    {
+      border-left            : 1px solid ThreeDShadow;
+      border-top             : 1px solid ThreeDShadow;
+      border-right           : 1px solid ThreeDHighlight;
+      border-bottom          : 1px solid ThreeDHighlight;
+      padding                : 2px 2px 0px 4px;
+    }  
+    
 /* menubutton button-toolbar-2 */
   
 /** 
@@ -359,3 +363,29 @@ menubutton.button-toolbar-2.bottom {
   -moz-binding        : url("chrome://global/content/xulBindings.xml#buttontop") !important;
 }
 
+/** Low profile rollover menubuttons
+ **/  
+ 
+.menubutton-dual.button-toolbar-3
+  {
+    -moz-binding          : url("chrome://global/content/menulistBindings.xml#menubutton-dual-ex");
+  }  
+  
+.menubutton-dual.button-toolbar-3 > .menubutton-dual-ex-button,
+.menubutton-dual.button-toolbar-3 > .menubutton-dual-dropmarker-box
+  {
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
+  }
+
+.menubutton-dual.button-toolbar-3[buttondown="true"] > .menubutton-dual-dropmarker-box,
+.menubutton-dual.button-toolbar-3[open="true"] > .menubutton-dual-dropmarker-box
+  {
+    border-left           : 1px solid ThreeDShadow !important;
+    border-top            : 1px solid ThreeDShadow !important;
+    border-right          : 1px solid ThreeDHighlight !important;
+    border-bottom         : 1px solid ThreeDHighlight !important;
+  }
+    

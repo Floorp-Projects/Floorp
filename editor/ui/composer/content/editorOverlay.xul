@@ -217,7 +217,7 @@
     <command id="cmd_backgroundColor" state=""/>
 
     <command id="cmd_fontSize"        state=""         oncommand="goDoCommand('cmd_fontSize')"/>
-    <command id="cmd_align"           state=""         oncommand="goDoCommand('cmd_align')"/>
+    <command id="cmd_align"           state=""/>
     
     <command id="cmd_advancedProperties"              oncommand="goDoCommand('cmd_advancedProperties')"/>
 
@@ -599,39 +599,35 @@
    </menu>
 
   <!-- this is only used in mailnews -->
-  <menupopup id="AlignmentPopup">
-    <menuitem oncommand="doStatefulCommand('cmd_align', 'left')">
-     <button class="plain" id="text-align-left" align="left" value="&alignLeft.label;"/>
-    </menuitem>
-    <menuitem oncommand="doStatefulCommand('cmd_align', 'center')">
-     <button class="plain" id="text-align-center" align="left" value="&alignCenter.label;"/>
-    </menuitem>
-    <menuitem oncommand="doStatefulCommand('cmd_align', 'right')">
-     <button class="plain" id="text-align-right" align="left" value="&alignRight.label;"/>
-    </menuitem>
-    <menuitem oncommand="doStatefulCommand('cmd_align', 'justify')">
-     <button class="plain" id="text-align-justify" align="left" value="&alignJustify.label;"/>
-    </menuitem>
-  </menupopup>
+  <menubutton id="AlignPopupButton" class="button-toolbar" observes="cmd_align"
+              tooltip="aTooltip" tooltiptext="&AlignPopupButton.tooltip;">
+    <menupopup id="AlignPopup">
+      <menuitem id="AlignLeftItem" class="menuitem-iconic" value="&alignLeft.label;"
+                oncommand="doStatefulCommand('cmd_align', 'left')"/>
+      <menuitem id="AlignCenterItem" class="menuitem-iconic" value="&alignCenter.label;"
+                oncommand="doStatefulCommand('cmd_align', 'center')"/>
+      <menuitem id="AlignRightItem" class="menuitem-iconic" value="&alignRight.label;"
+                oncommand="doStatefulCommand('cmd_align', 'right')"/>
+      <menuitem id="AlignJustifyItem" class="menuitem-iconic" value="&alignJustify.label;"
+                oncommand="doStatefulCommand('cmd_align', 'justify')"/>
+    </menupopup>
+  </menubutton>
 
-  <!-- InsertPopup is used by messengercompose.xul -->
-  <menupopup id="InsertPopup">
-    <menuitem oncommand="goDoCommand('cmd_link')">
-     <button class="plain" id="linkButton-dark" darkcolor="true" align="left" value="&linkToolbarCmd.label;"/>
-    </menuitem>
-    <menuitem oncommand="goDoCommand('cmd_anchor')">
-     <button class="plain" id="namedAnchorButton-dark" align="left" value="&anchorToolbarCmd.label;"/>
-    </menuitem>
-    <menuitem oncommand="goDoCommand('cmd_image')">
-     <button class="plain" id="imageButton-dark" align="left" value="&imageToolbarCmd.label;"/>
-    </menuitem>
-    <menuitem oncommand="goDoCommand('cmd_hline')">
-     <button class="plain" id="hlineButton-dark" align="left" value="&hruleToolbarCmd.label;"/>
-    </menuitem>
-    <menuitem oncommand="goDoCommand('cmd_table')">
-     <button class="plain" id="tableButton-dark" align="left" value="&tableToolbarCmd.label;"/>
-    </menuitem>
-  </menupopup>
+  <!-- InsertPopupButton is used by messengercompose.xul -->
+  <menubutton id="InsertPopupButton" class="button-toolbar" observes="cmd_insert">
+    <menupopup id="InsertPopup">
+      <menuitem id="InsertLinkItem" class="menuitem-iconic" observes="cmd_link"
+                oncommand="goDoCommand('cmd_link')" value="&linkToolbarCmd.label;"/>
+      <menuitem id="InsertAnchorItem" class="menuitem-iconic" observes="cmd_anchor"
+                oncommand="goDoCommand('cmd_anchor')" value="&anchorToolbarCmd.label;"/>
+      <menuitem id="InsertImageItem"  class="menuitem-iconic" observes="cmd_image"
+                oncommand="goDoCommand('cmd_image')" value="&imageToolbarCmd.label;"/>
+      <menuitem id="InsertHRuleItem"  class="menuitem-iconic" observes="cmd_hline"
+                oncommand="goDoCommand('cmd_hline')" value="&hruleToolbarCmd.label;"/>
+      <menuitem id="InsertTableItem"  class="menuitem-iconic" observes="cmd_table"
+                oncommand="goDoCommand('cmd_table')" value="&tableToolbarCmd.label;"/>
+    </menupopup>
+  </menubutton>
 
   <!-- Editor toolbar items -->
   <!-- note that we override the submenu item label "Blank Window" with "New" used for the menu -->
@@ -770,9 +766,6 @@
   <button class="button-toolbar format" id="indentButton"     observes="cmd_indent"
           tooltip="aTooltip"            tooltiptext="&indentToolbarCmd.tooltip;"/>
 
-  <button class="button-toolbar format popup" id="AlignPopupButton"
-          tooltip="aTooltip"            tooltiptext="&AlignPopupButton.tooltip;"/>
-
   <!-- alignment buttons -->
   <button class="button-toolbar" id="align-left-button"     oncommand="doStatefulCommand('cmd_align', 'left')"
     tooltip="aTooltip" tooltiptext="&alignLeft.tooltip;" >
@@ -800,10 +793,6 @@
           tooltip="aTooltip"      tooltiptext="&HTMLSourceMode.tooltip;"/>
   <tab id="PreviewModeButton"  class="tab-bottom edit-mode _plain" type="text" selected="0" value="&PreviewMode.label;"    oncommand="SetEditMode(0);"
           tooltip="aTooltip"      tooltiptext="&PreviewMode.tooltip;"/>
-
-  <!-- InsertPopupButton is used by messengercompose.xul -->
-  <button class="button-toolbar format popup" id="InsertPopupButton"/>
-
 
   <!-- Paste as quotation is used by mail compose,
        but in composer it has to go in the debug menu

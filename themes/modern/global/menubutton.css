@@ -1,81 +1,71 @@
-/*********************************
- * Regular menubutton
- *   Shows a caption and brings up a popup menu which executes a command.
- *********************************/    
-   
-  menubutton
-    {
-      border              : 1px solid #000000;
-      margin              : 3px 5px 3px 5px;
-      -moz-border-radius  : 3px 2px 2px 3px;
-      font: menu;
-    }
-    
-  menubutton[disabled="true"] 
-    {
-      border              : 1px solid #999999;
-      color               : #999999;
-    }
-  
-  menubutton > .menubutton-internal-box
-    {
-      border              : 1px outset #CCCCCC;
-      padding             : 1px 2px 1px 2px;
-      vertical-align      : middle;
-    }
-    
-  .menubutton-single-icon
-    {
-      margin-left		  : 3px;
-    }
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
 
-/*********************************
- * "Dual Functionality" menubutton
- *   Has a popup spawning button and a command invoking button, e.g. back/forward
- *   class="menubutton-dual"
- *********************************/    
-  
-  .menubutton-dual,
-  .menubutton-dual > .menubutton-internal-box,
-  .menubutton-dual:hover > .menubutton-dual-button,
-  .menubutton-dual:active > .menubutton-dual-button
-    {
-      border              : none;
-      margin              : 0px;
-      -moz-border-radius  : 0px;
-    }
+/* ===== menubutton.css =================================================
+  == Styles used by the XUL menubutton element.
+  ======================================================================= */
 
-  .menubutton-dual-dropmarker-box
-    {
-      list-style-image    : url("chrome://global/skin/simple-arrow-down.gif");
-    }
-    
-  .menubutton-dual > menupopup
-    {
-      min-width           : 0px;
-    }
-    
-/**************
- * Icon only menubutton.menubutton-duals
- * class="menubutton.menubutton-dual-icon"
- ***************/
- 
-  .menubutton.menubutton-dual-icon 
-    {
-      border              : 1px solid #000000;
-      background-color    : #CCCCCC;
-    } 
-    
-  .menubutton.menubutton-dual-icon > .menubutton.menubutton-dual-icon-internal-box
-    {
-      border              : 1px outset #CCCCCC;
-      padding             : 1px;
-    }
-    
-  .menubutton.menubutton-dual-icon:hover:active > .menubutton.menubutton-dual-icon-internal-box,
-  .menubutton.menubutton-dual-icon[open="true"] > .menubutton.menubutton-dual-icon-internal-box
-    {
-      border              : 1px inset #CCCCCC;
-      padding             : 2px 0px 0px 2px;
-    }    
-    
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: Regular menubutton ::::::::::
+   :: Shows a caption and brings up a popup menu which executes a command.
+   ::::: */
+
+menubutton {
+  margin: 3px 5px 3px 5px;
+  border: 1px solid #000000;
+  font: menu;
+}
+
+menubutton[disabled="true"] {
+  border-color: #85959E;
+  color: #85959E;
+}
+
+.menubutton-internal-box {
+  border: 1px outset #C2D0D0;
+  padding: 1px 2px 1px 2px;
+  vertical-align: middle;
+}
+
+/* ::::: "Dual Functionality" menubutton ::::::::::
+   :: Has a popup spawning button and a command invoking button, e.g. back/forward
+   :::::: */
+
+.menubutton-dual,
+.menubutton-dual > .menubutton-internal-box,
+.menubutton-dual:hover > .menubutton-dual-button,
+.menubutton-dual:active > .menubutton-dual-button {
+  margin: 0px;
+  border: none;
+  padding: 0px;
+}
+
+.menubutton-dual-dropmarker-box {
+  list-style-image: url("chrome://global/skin/simple-arrow-down.gif");
+}
+
+.menubutton-dual > menupopup {
+  min-width: 0px;
+}
+

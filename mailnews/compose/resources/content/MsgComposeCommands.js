@@ -461,6 +461,7 @@ function CommandUpdate_MsgCompose()
     goUpdateCommand("cmd_listProperties");
     goUpdateCommand("cmd_indent");
     goUpdateCommand("cmd_outdent");
+    goUpdateCommand("cmd_align");
     goUpdateCommand("cmd_objectProperties");
     goUpdateCommand("cmd_InsertTable");
     goUpdateCommand("cmd_InsertRowAbove");

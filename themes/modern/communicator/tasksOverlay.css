@@ -69,12 +69,10 @@
 	height				  : 17px;  
   }
 
-.taskbutton 
-  {
-	margin-right          : -4px;
-	margin-left			  : 0px;
-	padding				  : 0px;
-  }
+.taskbutton {
+  margin: 0px;
+  padding: 0px;
+}
 
 .taskbarspacer
   {
