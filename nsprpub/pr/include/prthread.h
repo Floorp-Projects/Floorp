@@ -132,7 +132,7 @@ typedef enum PRThreadPriority
 ** PR_USER_THREAD to exit then the process exits.
 */
 NSPR_API(PRThread*) PR_CreateThread(PRThreadType type,
-                     void (*start)(void *arg),
+                     void (PR_CALLBACK *start)(void *arg),
                      void *arg,
                      PRThreadPriority priority,
                      PRThreadScope scope,
