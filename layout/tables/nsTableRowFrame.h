@@ -158,22 +158,22 @@ protected:
                             nsHTMLReflowMetrics& aDesiredSize,
                             RowReflowState&      aReflowState,
                             nsReflowStatus&      aStatus,
-                            nsIFrame *           aInsertedFrame,
+                            nsTableCellFrame *   aInsertedFrame,
                             PRBool               aReplace);
 
   NS_IMETHOD IR_CellAppended(nsIPresContext&     aPresContext,
                             nsHTMLReflowMetrics& aDesiredSize,
                             RowReflowState&      aReflowState,
                             nsReflowStatus&      aStatus,
-                            nsIFrame *           aAppendedFrame);
+                            nsTableCellFrame *   aAppendedFrame);
 
-  NS_IMETHOD IR_DidAppendCell(nsTableRowFrame *aRowFrame);
+  NS_IMETHOD IR_DidAppendCell(nsTableCellFrame *aRowFrame);
 
   NS_IMETHOD IR_CellRemoved(nsIPresContext&     aPresContext,
                            nsHTMLReflowMetrics& aDesiredSize,
                            RowReflowState&      aReflowState,
                            nsReflowStatus&      aStatus,
-                           nsIFrame *           aDeletedFrame);
+                           nsTableCellFrame *   aDeletedFrame);
   
   NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&      aPresContext,
                                      nsHTMLReflowMetrics& aDesiredSize,
@@ -195,11 +195,11 @@ protected:
 
   void FixMinCellHeight(nsTableFrame *aTableFrame);
 
-  nsresult RecoverState(nsIPresContext& aPresContext,
-                        RowReflowState& aState,
-                        nsIFrame*       aKidFrame,
-                        nscoord&        aMaxCellTopMargin,
-                        nscoord&        aMaxCellBottomMargin);
+  NS_IMETHOD RecoverState(nsIPresContext& aPresContext,
+                          RowReflowState& aState,
+                          nsIFrame*       aKidFrame,
+                          nscoord&        aMaxCellTopMargin,
+                          nscoord&        aMaxCellBottomMargin);
 
   void PlaceChild(nsIPresContext& aPresContext,
                   RowReflowState& aState,
@@ -218,24 +218,21 @@ protected:
    * Called for a resize reflow. Typically because the column widths have
    * changed. Reflows all the existing table cell frames
    */
-  nsresult ResizeReflow(nsIPresContext&  aPresContext,
-                        RowReflowState&  aState,
-                        nsHTMLReflowMetrics& aDesiredSize);
+  NS_IMETHOD ResizeReflow(nsIPresContext&      aPresContext,
+                          nsHTMLReflowMetrics& aDesiredSize,
+                          RowReflowState&      aReflowState,
+                          nsReflowStatus&      aStatus);
 
   /**
    * Called for the initial reflow. Creates each table cell frame, and
    * reflows the cell frame to gets its minimum and maximum sizes
    */
-  nsresult InitialReflow(nsIPresContext&  aPresContext,
-                         RowReflowState&  aState,
-                         nsHTMLReflowMetrics& aDesiredSize);
-
-  /**
-   * Called for incremental reflow
-   */
-  nsresult IncrementalReflow(nsIPresContext&  aPresContext,
-                             RowReflowState&  aState,
-                             nsHTMLReflowMetrics& aDesiredSize);
+  NS_IMETHOD InitialReflow(nsIPresContext&      aPresContext,
+                           nsHTMLReflowMetrics& aDesiredSize,
+                           RowReflowState&      aReflowState,
+                           nsReflowStatus&      aStatus,
+                           nsTableCellFrame *   aStartFrame,
+                           PRBool               aDoSiblings);
 
 private:
   PRInt32  mRowIndex;

@@ -1150,7 +1150,8 @@ NS_METHOD nsTableRowGroupFrame::IR_UnknownFrameInserted(nsIPresContext&      aPr
       aInsertedFrame->SetNextSibling(nextSibling);
     }
   }
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 NS_METHOD nsTableRowGroupFrame::IR_UnknownFrameRemoved(nsIPresContext&      aPresContext,
@@ -1176,7 +1177,8 @@ NS_METHOD nsTableRowGroupFrame::IR_UnknownFrameRemoved(nsIPresContext&      aPre
     mFirstChild = nextChild;
   else
     prevChild->SetNextSibling(nextChild);
-  return NS_FRAME_COMPLETE;
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
 }
 
 NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresContext,
