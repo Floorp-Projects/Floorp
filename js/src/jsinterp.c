@@ -4455,7 +4455,16 @@ js_Interpret(JSContext *cx, jsbytecode *pc, jsval *result)
              * with [parameters and body specified by the function expression
              * that was parsed by the compiler into a Function object, and
              * saved in the script's atom map].
+             *
+             * Protect parent from GC after js_CloneFunctionObject calls into
+             * js_NewObject, which displaces the newborn object root in cx by
+             * allocating the clone, then runs a last-ditch GC while trying
+             * to allocate the clone's slots vector.  Another, multi-threaded
+             * path: js_CloneFunctionObject => js_NewObject => OBJ_GET_CLASS
+             * which may suspend the current request in ClaimScope, with the
+             * newborn displaced as in the first scenario.
              */
+            fp->scopeChain = parent;
             obj = js_CloneFunctionObject(cx, JSVAL_TO_OBJECT(rval), parent);
             if (!obj) {
                 ok = JS_FALSE;
