@@ -528,25 +528,22 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     if (childCount > 0) {
       // We'll only build content if all the explicit children are 
       // in the includes list.
-      if (!includes.IsEmpty()) {
-        // Walk the children and ensure that all of them
-        // are in the includes array.
-        for (PRInt32 i = 0; i < childCount; i++) {
-          nsCOMPtr<nsIContent> child;
-          aBoundElement->ChildAt(i, *getter_AddRefs(child));
-          nsCOMPtr<nsIAtom> tag;
-          child->GetTag(*getter_AddRefs(tag));
-          if (!IsInExcludesList(tag, includes)) {
-            // XXX HACK! Ignore <template> and <observes>
-            if (tag.get() != kXULTemplateAtom &&
-              tag.get() != kXULObservesAtom) {
-              buildContent = PR_FALSE;
-              break;
-            }
+      // Walk the children and ensure that all of them
+      // are in the includes array.
+      for (PRInt32 i = 0; i < childCount; i++) {
+        nsCOMPtr<nsIContent> child;
+        aBoundElement->ChildAt(i, *getter_AddRefs(child));
+        nsCOMPtr<nsIAtom> tag;
+        child->GetTag(*getter_AddRefs(tag));
+        if (!IsInExcludesList(tag, includes)) {
+          // XXX HACK! Ignore <template> and <observes>
+          if (tag.get() != kXULTemplateAtom &&
+            tag.get() != kXULObservesAtom) {
+            buildContent = PR_FALSE;
+            break;
           }
         }
       }
-      else buildContent = PR_FALSE;
     }
   }
   
