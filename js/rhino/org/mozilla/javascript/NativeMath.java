@@ -49,88 +49,116 @@ public class NativeMath extends ScriptableObject
     public static Scriptable init(Scriptable scope) {
         NativeMath m = new NativeMath();
         Context cx = Context.getContext();
-        // We know that scope is a Scriptable object since we
-        // constrained the type on initStandardObjects.
-        m.initForGlobal(cx, (ScriptableObject)scope, false);
+        m.scopeInit(cx, scope, false);
         return m;
     }
 
     public NativeMath() { }
     
-    public void initForGlobal(Context cx, ScriptableObject global, 
-                              boolean sealed) 
-    {
-      setPrototype(getObjectPrototype(global));
-      setParentScope(global);
-      if (sealed) {
-        sealObject();
-      }
-      global.defineProperty("Math", this, ScriptableObject.DONTENUM);
+    public void scopeInit(Context cx, Scriptable scope, boolean sealed) {
+        setPrototype(getObjectPrototype(scope));
+        setParentScope(scope);
+        if (sealed) {
+            sealObject();
+        }
+        if (scope instanceof ScriptableObject) {
+            ((ScriptableObject)scope).defineProperty("Math", this,
+                                                     ScriptableObject.DONTENUM);
+        }
+        else {
+            scope.put("Math", scope, this);
+        }
     }
 
     public String getClassName() { return "Math"; }
 
     public boolean has(String name, Scriptable start) {
         int id = nameToId(name);
-        if (0 != id && !wasOverwritten(id)) { return true; }
+        if (id > LAST_METHOD_ID) { 
+            // math field is always present
+            return true; 
+        }
+        else if (id != 0) {
+            if (functionPool[id] != IdFunction.WAS_OVERWRITTEN) {
+                return true; 
+            }
+        }
         return super.has(name, start);
     }
 
     public Object get(String name, Scriptable start) {
-	// ALERT: cache the last used value like ScriptableObject does.
-	// But what about thread safety then?
+        IdFunction f = lastFunction;
+        if (f.methodName == name) { 
+            // Need to check that cache was not overwritten
+            if (f == functionPool[f.methodId]) {
+                return f; 
+            }
+        }
+
         int id = nameToId(name);
-        if (0 != id && !wasOverwritten(id)) {
-            return (id > LAST_METHOD_ID) 
-                ? getField(id) : wrapMethod(name, id);
+        if (id > LAST_METHOD_ID) {
+            return getField(id); 
+        }
+        if (id != 0) {
+            f = functionPool[id];
+            if (f == null) { f = wrapMethod(name, id); }
+            if (f != IdFunction.WAS_OVERWRITTEN) { 
+                f.methodName = name;
+                lastFunction = f;
+                return f; 
+            }
         }
         return super.get(name, start);
     }
 
     public void put(String name, Scriptable start, Object value) {
-        if (markAsModified(name)) {
+        if (doOverwrite(name)) {
             super.put(name, start, value);
         }
     }
 
     public void delete(String name) {
-        if (markAsModified(name)) {
+        if (doOverwrite(name)) {
             super.delete(name);
         }
     }
     
-    private boolean wasOverwritten(int id) {
-        return 0 != (overwritten_flags & (1 << id));
-    }
-
-    // Return if field or method was marked as overwritten
-    private boolean markAsModified(String name) {
+    // Return true to invoke put/delete in super class
+    private boolean doOverwrite(String name) {
+        if (isSealed()) { 
+            // Let the super class to throw exceptions for sealed objects
+            return true; 
+        }
         int id = nameToId(name);
-        if (0 != id && !wasOverwritten(id)) {
-            if (isSealed() || id > LAST_METHOD_ID) { 
-                // Read only Math constant, ignore modifications
-                return false;
+        if (id > LAST_METHOD_ID) { 
+            // Ignore modifications of read-only Math constants
+            return false; 
+        }
+        
+        if (0 != id) {
+            if (functionPool[id] != IdFunction.WAS_OVERWRITTEN) {
+                synchronized (this) {
+                    // Forget default implementation
+                    // Must be synchronized to avoid clearance of overwritten
+                    // mark by another thread running in wrapMethod 
+                    functionPool[id] = IdFunction.WAS_OVERWRITTEN;
+                }
             }
-            overwritten_flags |= (1 << id);
-            function_cache[id - 1] = null;
         }
         return true;
     } 
     
-    private Object wrapMethod(String name, int id) {
-        IdFunction f = function_cache[id - 1];
-        if (f == null) {
-            synchronized (this) {
-                if (function_cache[id - 1] == null) {
-                    function_cache[id - 1] = new IdFunction(this, name, id);
-                    f = function_cache[id - 1];
-                }
+    private IdFunction wrapMethod(String name, int id) {
+        synchronized (this) {
+            IdFunction f = functionPool[id];
+            if (f == null) {
+                f = functionPool[id] = new IdFunction(this, name, id);
             }
+            return f;
         }
-        return f;
     }
     
-    private Object getField(int fieldId) {
+    private Double getField(int fieldId) {
         switch (fieldId) {
             case Id_E:       return E;
             case Id_PI:      return PI;
@@ -234,27 +262,27 @@ public class NativeMath extends ScriptableObject
     }
 
     private double js_max(Object[] args) { 
-      double result = Double.NEGATIVE_INFINITY;
-      if (args.length == 0)
+        double result = Double.NEGATIVE_INFINITY;
+        if (args.length == 0)
+            return result;
+        for (int i = 0; i < args.length; i++) {
+            double d = ScriptRuntime.toNumber(args[i]);
+            if (d != d) return d;
+            if (result < d) result = d;
+        }
         return result;
-      for (int i = 0; i < args.length; i++) {
-        double d = ScriptRuntime.toNumber(args[i]);
-        if (d != d) return d;
-        result = Math.max(result, d);
-      }
-      return result;
     }
 
     private double js_min(Object[] args) { 
-      double result = Double.POSITIVE_INFINITY;
-      if (args.length == 0)
+        double result = Double.POSITIVE_INFINITY;
+        if (args.length == 0)
+            return result;
+        for (int i = 0; i < args.length; i++) {
+            double d = ScriptRuntime.toNumber(args[i]);
+            if (d != d) return d;
+            if (result > d) result = d;
+        }
         return result;
-      for (int i = 0; i < args.length; i++) {
-        double d = ScriptRuntime.toNumber(args[i]);
-        if (d != d) return d;
-        result = Math.min(result, d);
-      }
-      return result;
     }
     
     private double js_pow(double x, double y) { 
@@ -288,14 +316,14 @@ public class NativeMath extends ScriptableObject
             return d == 0.0 ? d : 0.0;
         }
         return (double) l;
-	}
+    }
 
     private double js_sin(double x) { return Math.sin(x); }
 
     private double js_sqrt(double x) { return Math.sqrt(x); }
 
     private double js_tan(double x) { return Math.tan(x); }
-
+    
     private static int nameToId(String s) {
         int c;
         int id = 0;
@@ -387,7 +415,7 @@ public class NativeMath extends ScriptableObject
         Id_SQRT1_2      = 25,
         Id_SQRT2        = 26;
         
-    private static final Double 
+    private static final Double
         E       = new Double(Math.E),
         PI      = new Double(Math.PI),
         LN10    = new Double(2.302585092994046),
@@ -397,11 +425,11 @@ public class NativeMath extends ScriptableObject
         SQRT1_2 = new Double(0.7071067811865476),
         SQRT2   = new Double(1.4142135623730951);
 
-    // Indicates that field or method was overwritten
-    private int overwritten_flags;
+    // Pool of constructed wrappers for methods
+    private final IdFunction[] 
+        functionPool = new IdFunction[LAST_METHOD_ID + 1];
     
-    // Cache of constructed wrappers for methods
-    private IdFunction[] function_cache = new IdFunction[LAST_METHOD_ID];
-    
+    // Last accessed function cache
+    private IdFunction lastFunction = IdFunction.WAS_OVERWRITTEN;
 }
 

@@ -271,8 +271,9 @@ public class IdFunction extends ScriptableObject implements Function
         ID_PROTOTYPE = 4;
         
     protected final Master master;
-    protected final String methodName;
     protected final int methodId;
+    
+    protected String methodName;
 
     protected Object idTag;
     
