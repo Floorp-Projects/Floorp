@@ -6,8 +6,8 @@
 # partitions and this will require making get_filename() less regular
 # then we have defined it here.
 
-# $Revision: 1.6 $ 
-# $Date: 2000/09/22 15:03:32 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/10/18 20:26:57 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/FileStructure.pm,v $ 
 # $Name:  $ 
@@ -116,7 +116,20 @@ sub get_filename {
   my %all_files = 
     (
 
-     # the build log files will be turned into html and stored
+     # where the database files are stored on disk. For debugging it
+     # is useful to have this inside the webservers document root so
+     # that all browsers can examine the raw data.  For security you
+     # may want this outside the webservers document root, so that the
+     # raw data can not be seen.
+
+     'TinderDB_Dir'=> "$tree_dir/db",
+
+     # header data files are placed in this directory.  Same issues
+     # with document root as above.
+
+     'TinderHeader_Dir'=> "$tree_dir/h",
+     
+     # The build log files will be turned into html and stored
      # here.  Lets have just one big full/brief directory for
      # all the trees this will make cleanup easier and no one
      # goes browsing through the tree specific log dir anyway.
@@ -125,13 +138,13 @@ sub get_filename {
      
      'brief-log' => "$TINDERBOX_DIR/brief",
      
-     # where the binary files mailed inside the log files will
+     # where the binary files mailed inside the build log files will
      # be placed.
      
      'build_bin_dir' => "$tree_dir/bin",
      
      # the per tree time stamp file to ensure all updates are at least 
-     # $MIN_TABLE_SPACING apart
+     # $TinderDB::TABLE_SPACING apart
      
      'update_time_stamp'  => "$tree_dir/db/Mail.Build.time.stamp",
      
@@ -141,29 +154,21 @@ sub get_filename {
      'tree_HTML' => $tree_dir,
      
      'tree_URL' => "$URL_HTML/$tree",
-     
-     # where the database files are stored on disk
-     
-     'TinderDB_Dir'=> "$tree_dir/db",
-     
-     # header data files
-     
-     'TinderHeader_Dir'=> "$tree_dir/h",
-     
+
      # the index file for this tree
      
      'index'=> "$tree_dir/index.html",
      
      # access to the administration page
 
-     # this version lets you have each tree have a different set of
-     # administrators.
-     
+     # setting it like this lets you have each tree have a different
+     # set of administrators.
+
      'passwd' => "$tree_dir/h/passwd.DBdat",
-     
-     # this version lets you have one set of adminstrators for all
-     # trees.
-     
+
+     # setting it like this lets you have one set of adminstrators for
+     # all trees.
+
      #'passwd' => "$TINDERBOX_DIR/passwd.DBdat",
 
      # there are automated bots who need the header data, they extract
