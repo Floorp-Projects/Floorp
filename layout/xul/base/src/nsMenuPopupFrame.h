@@ -49,7 +49,12 @@ public:
   NS_IMETHOD SetActive(PRBool aActiveFlag) { return NS_OK; }; // We don't care.
   NS_IMETHOD GetIsActive(PRBool& isActive) { isActive = PR_FALSE; return NS_OK; };
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) { isMenuBar = PR_FALSE; return NS_OK; };
+  
+  // Closes up the chain of open cascaded menus.
   NS_IMETHOD DismissChain();
+
+  // Hides the chain of cascaded menus without closing them up.
+  NS_IMETHOD HideChain();
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,

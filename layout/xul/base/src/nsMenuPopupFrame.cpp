@@ -506,6 +506,26 @@ nsMenuPopupFrame::KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag)
 }
 
 NS_IMETHODIMP
+nsMenuPopupFrame::HideChain()
+{
+  nsIFrame* frame;
+  GetParent(&frame);
+  if (frame) {
+    nsMenuFrame* menuFrame = (nsMenuFrame*)frame;
+    menuFrame->ActivateMenu(PR_FALSE);
+    menuFrame->SelectMenu(PR_FALSE);
+
+    // Get the parent.
+    nsCOMPtr<nsIMenuParent> menuParent;
+    menuFrame->GetMenuParent(getter_AddRefs(menuParent));
+    if (menuParent)
+      menuParent->HideChain();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMenuPopupFrame::DismissChain()
 {
   // Get our menu parent.

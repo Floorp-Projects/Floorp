@@ -41,6 +41,7 @@ public:
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
 
   NS_IMETHOD DismissChain() = 0;
+  NS_IMETHOD HideChain() = 0;
 };
 
 #endif

@@ -417,6 +417,16 @@ nsMenuBarFrame::Enter()
   menuFrame->SelectFirstItem();
 }
 
+NS_IMETHODIMP
+nsMenuBarFrame::HideChain()
+{
+  if (mCurrentMenu) {
+    nsMenuFrame* menuFrame = (nsMenuFrame*)mCurrentMenu;
+    menuFrame->ActivateMenu(PR_FALSE);
+    menuFrame->SelectMenu(PR_FALSE);
+  }
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsMenuBarFrame::DismissChain()
