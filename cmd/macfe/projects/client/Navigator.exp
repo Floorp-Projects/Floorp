@@ -60,7 +60,7 @@ CACHE_RemoveCache
 CACHE_UpdateCache
 # CL_AddLayerToGroup
 # CL_ChangeLayerFlag
-# CL_CompositeNow
+CL_CompositeNow
 # CL_DestroyCompositor
 # CL_DestroyDrawable
 # CL_DestroyLayer
@@ -75,7 +75,7 @@ CACHE_UpdateCache
 # CL_GetCompositorDrawable
 # CL_GetCompositorEnabled
 # CL_GetCompositorFrameRate
-# CL_GetCompositorOffscreenDrawing
+CL_GetCompositorOffscreenDrawing
 # CL_GetCompositorRoot
 # CL_GetCompositorWindowSize
 # CL_GetCompositorXOffset
@@ -133,7 +133,7 @@ CL_GetLayerCompositor
 # CL_SetCompositorDrawingMethod
 # CL_SetCompositorEnabled
 # CL_SetCompositorFrameRate
-# CL_SetCompositorOffscreenDrawing
+CL_SetCompositorOffscreenDrawing
 # CL_SetCompositorRoot
 # CL_SetKeyboardFocusPolicy
 # CL_SetLayerBbox
@@ -144,7 +144,7 @@ CL_GetLayerCompositor
 # CL_SetLayerUniformColor
 # CL_SetLayerVTable
 # CL_UnhideLayerGroup
-# CL_UpdateDocumentRect
+CL_UpdateDocumentRect
 CL_UpdateLayerRect
 # CL_UpdateLayerRegion
 # CL_WindowToDocumentRect
