@@ -19,7 +19,7 @@ DEPTH = ../../..
 
 LIBRARY_NAME = testdynamic
 
-LOCAL_INCLUDES = -I.. -I../../src
+LOCAL_INCLUDES = -I.. -I../../public
 
 CPPSRCS = \
 	TestDynamic.cpp	\
