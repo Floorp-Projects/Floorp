@@ -58,6 +58,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  necko \
 		  uconv \
+		  intl \
 		  gtkxtbin \
 		  xremoteservice
 

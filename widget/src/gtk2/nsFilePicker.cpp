@@ -38,11 +38,14 @@
 #include <gtk/gtkwindow.h>
 #include <gtk/gtkdialog.h>
 #include <gtk/gtkstock.h>
+#include <gtk/gtkmessagedialog.h>
 
 #include "nsIFileURL.h"
 #include "nsIURI.h"
 #include "nsIWidget.h"
 #include "nsILocalFile.h"
+#include "nsIStringBundle.h"
+
 #include "nsArrayEnumerator.h"
 #include "nsVoidArray.h"
 #include "nsMemory.h"
@@ -91,6 +94,9 @@ typedef void (*_gtk_file_chooser_set_select_multiple_fn)(GtkFileChooser* chooser
 typedef void (*_gtk_file_chooser_set_current_name_fn)(GtkFileChooser* chooser, const gchar* name);
 typedef void (*_gtk_file_chooser_set_current_folder_fn)(GtkFileChooser* chooser, const gchar* folder);
 typedef void (*_gtk_file_chooser_add_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
+typedef void (*_gtk_file_chooser_set_filter_fn)(GtkFileChooser* chooser, GtkFileFilter* filter);
+typedef GtkFileFilter* (*_gtk_file_chooser_get_filter_fn)(GtkFileChooser* chooser);
+typedef GSList* (*_gtk_file_chooser_list_filters_fn)(GtkFileChooser* chooser);
 typedef GtkFileFilter* (*_gtk_file_filter_new_fn)();
 typedef void (*_gtk_file_filter_add_pattern_fn)(GtkFileFilter* filter, const gchar* pattern);
 typedef void (*_gtk_file_filter_set_name_fn)(GtkFileFilter* filter, const gchar* name);
@@ -103,6 +109,9 @@ DECL_FUNC_PTR(gtk_file_chooser_set_select_multiple);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_name);
 DECL_FUNC_PTR(gtk_file_chooser_set_current_folder);
 DECL_FUNC_PTR(gtk_file_chooser_add_filter);
+DECL_FUNC_PTR(gtk_file_chooser_set_filter);
+DECL_FUNC_PTR(gtk_file_chooser_get_filter);
+DECL_FUNC_PTR(gtk_file_chooser_list_filters);
 DECL_FUNC_PTR(gtk_file_filter_new);
 DECL_FUNC_PTR(gtk_file_filter_add_pattern);
 DECL_FUNC_PTR(gtk_file_filter_set_name);
@@ -179,6 +188,9 @@ nsFilePicker::LoadSymbolsGTK24()
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_name);
   GET_LIBGTK_FUNC(gtk_file_chooser_set_current_folder);
   GET_LIBGTK_FUNC(gtk_file_chooser_add_filter);
+  GET_LIBGTK_FUNC(gtk_file_chooser_set_filter);
+  GET_LIBGTK_FUNC(gtk_file_chooser_get_filter);
+  GET_LIBGTK_FUNC(gtk_file_chooser_list_filters);
   GET_LIBGTK_FUNC(gtk_file_filter_new);
   GET_LIBGTK_FUNC(gtk_file_filter_add_pattern);
   GET_LIBGTK_FUNC(gtk_file_filter_set_name);
@@ -272,6 +284,12 @@ nsFilePicker::ReadValuesFromFileChooser(GtkWidget *file_chooser)
     g_free(filename);
   }
 
+  GtkFileFilter *filter = _gtk_file_chooser_get_filter (GTK_FILE_CHOOSER(file_chooser));
+  GSList *filter_list = _gtk_file_chooser_list_filters (GTK_FILE_CHOOSER(file_chooser));
+
+  mSelectedType = NS_STATIC_CAST(PRInt16, g_slist_index (filter_list, filter));
+  g_slist_free(filter_list);
+
   // Remember last used directory.
   nsCOMPtr<nsILocalFile> file;
   GetFile(getter_AddRefs(file));
@@ -315,7 +333,7 @@ nsFilePicker::AppendFilters(PRInt32 aFilterMask)
 NS_IMETHODIMP
 nsFilePicker::AppendFilter(const nsAString& aTitle, const nsAString& aFilter)
 {
-  if (aFilter.Equals(NS_LITERAL_STRING("..apps"))) {
+  if (aFilter.EqualsLiteral("..apps")) {
     // No platform specific thing we can do here, really....
     return NS_OK;
   }
@@ -438,6 +456,46 @@ nsFilePicker::GetFiles(nsISimpleEnumerator **aFiles)
   return NS_ERROR_FAILURE;
 }
 
+PRBool
+confirm_overwrite_file (GtkWidget *parent, nsILocalFile* file)
+{
+  nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  nsCOMPtr<nsIStringBundle> bundle;
+  nsresult rv = sbs->CreateBundle("chrome://global/locale/filepicker.properties",
+                                  getter_AddRefs(bundle));
+  if (NS_FAILED(rv)) {
+    return PR_FALSE;
+  }
+
+  nsAutoString leafName;
+  file->GetLeafName(leafName);
+  const PRUnichar *formatStrings[] =
+  {
+    leafName.get()
+  };
+
+  nsXPIDLString title, message;
+  bundle->GetStringFromName(NS_LITERAL_STRING("confirmTitle").get(),
+                            getter_Copies(title));
+  bundle->FormatStringFromName(NS_LITERAL_STRING("confirmFileReplacing").get(),
+                               formatStrings, NS_ARRAY_LENGTH(formatStrings),
+                               getter_Copies(message));
+
+  GtkWidget *dialog;
+  
+  dialog = gtk_message_dialog_new(GTK_WINDOW(parent),
+                                  GTK_DIALOG_DESTROY_WITH_PARENT,
+                                  GTK_MESSAGE_QUESTION,
+                                  GTK_BUTTONS_YES_NO,
+                                  NS_ConvertUTF16toUTF8(message).get());
+  gtk_window_set_title(GTK_WINDOW(dialog), NS_ConvertUTF16toUTF8(title).get());
+
+  PRBool result = (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_YES);
+  gtk_widget_destroy (dialog);
+
+  return result;
+}
+
 NS_IMETHODIMP
 nsFilePicker::Show(PRInt16 *aReturn)
 {
@@ -508,6 +566,11 @@ nsFilePicker::Show(PRInt16 *aReturn)
     }
 
     _gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (file_chooser), filter);
+
+    // Set the initially selected filter
+    if (mSelectedType == i) {
+      _gtk_file_chooser_set_filter (GTK_FILE_CHOOSER(file_chooser), filter);
+    }
   }
 
   gint response = gtk_dialog_run (GTK_DIALOG (file_chooser));
@@ -516,14 +579,20 @@ nsFilePicker::Show(PRInt16 *aReturn)
     case GTK_RESPONSE_ACCEPT:
     ReadValuesFromFileChooser(file_chooser);
     *aReturn = nsIFilePicker::returnOK;
-    if (mMode == modeSave) {
+    if (mMode == nsIFilePicker::modeSave) {
       nsCOMPtr<nsILocalFile> file;
       GetFile(getter_AddRefs(file));
       if (file) {
         PRBool exists = PR_FALSE;
         file->Exists(&exists);
         if (exists) {
-          *aReturn = nsIFilePicker::returnReplace;
+          PRBool overwrite = confirm_overwrite_file (file_chooser, file);
+
+          if (overwrite) {
+            *aReturn = nsIFilePicker::returnReplace;
+          } else {
+            *aReturn = nsIFilePicker::returnCancel;    
+          }
         }
       }
     }
