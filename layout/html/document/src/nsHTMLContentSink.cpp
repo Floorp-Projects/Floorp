@@ -168,7 +168,8 @@ protected:
   nsresult ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
                                 const nsIParserNode& aNode);
   nsresult ProcessCloseSELECTTag(const nsIParserNode& aNode);
-  nsresult ProcessOpenOPTIONTag(const nsIParserNode& aNode);
+  nsresult ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
+	                            const nsIParserNode& aNode);
   nsresult ProcessCloseOPTIONTag(const nsIParserNode& aNode);
   nsresult ProcessOPTIONTagContent(const nsIParserNode& aNode);
 
@@ -548,7 +549,7 @@ PRBool HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
       break;
 
     case eHTMLTag_option:
-      rv = ProcessOpenOPTIONTag(aNode);
+      rv = ProcessOpenOPTIONTag(&container, aNode);
       break;
 
     default:
@@ -1192,7 +1193,7 @@ HTMLContentSink::ProcessOpenSELECTTag(nsIHTMLContent** aInstancePtrResult,
   nsresult rv = NS_NewHTMLSelect(&mCurrentSelect, atom, mCurrentForm);
   if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
     // Add remaining attributes from the tag
-    rv = AddAttributes(aNode, mCurrentSelect);
+    //rv = AddAttributes(aNode, mCurrentSelect);
     *aInstancePtrResult = mCurrentSelect;
   }
 
@@ -1209,7 +1210,8 @@ HTMLContentSink::ProcessCloseSELECTTag(const nsIParserNode& aNode)
 }
 
 nsresult
-HTMLContentSink::ProcessOpenOPTIONTag(const nsIParserNode& aNode)
+HTMLContentSink::ProcessOpenOPTIONTag(nsIHTMLContent** aInstancePtrResult,
+									  const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
   if (nsnull != mCurrentSelect) {
@@ -1222,7 +1224,8 @@ HTMLContentSink::ProcessOpenOPTIONTag(const nsIParserNode& aNode)
     rv = NS_NewHTMLOption(&mCurrentOption, atom);
     if ((NS_OK == rv) && (nsnull != mCurrentSelect)) {
       // Add remaining attributes from the tag
-      rv = AddAttributes(aNode, mCurrentOption);
+      //rv = AddAttributes(aNode, mCurrentOption);
+	    *aInstancePtrResult = mCurrentSelect;
     }
     NS_RELEASE(atom);
   }
