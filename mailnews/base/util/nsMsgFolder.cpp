@@ -1053,7 +1053,7 @@ NS_IMETHODIMP nsMsgFolder::EmptyTrash(nsIMsgWindow *msgWindow)
 NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name)
 {
     nsresult status = NS_OK;
-	nsAutoString2 unicharString(name);
+	nsAutoString unicharString(name);
 	status = SetName((PRUnichar *) unicharString.GetUnicode());
 	//After doing a SetName we need to make sure that broadcasting this message causes a
 	//new sort to happen.
