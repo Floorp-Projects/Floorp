@@ -336,14 +336,16 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
 // on the way out, it's the whole path.
 nsresult nsMsgDBFolder::CreatePlatformLeafNameForDisk(const char *userLeafName, nsFileSpec &path, char **resultName)
 {
+#if 0
 	const int charLimit = MAX_FILE_LENGTH_WITHOUT_EXTENSION;	// set on platform specific basis
-#if XP_MAC
+#endif
+#if defined(XP_MAC)
 	nsCAutoString illegalChars = ":";
 #elif defined(XP_OS2) 
 	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$. ";
 #elif defined(XP_WIN32)
 	nsCAutoString illegalChars = "\"/\\[]:;=,|?<>*$";
-#else		// UNIX
+#else		// UNIX	(what about beos?)
 	nsCAutoString illegalChars = "";
 #endif
 

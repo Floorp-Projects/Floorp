@@ -119,7 +119,11 @@ static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 nsRenderingContextPS :: nsRenderingContextPS()
 {
   NS_INIT_REFCNT();
+
   mPSObj = nsnull;     // local copy of printcontext, will be set on the init process
+  mContext = nsnull;
+  mFontMetrics = nsnull;
+
   mStateCache = new nsVoidArray();
 
   PushState();
@@ -195,7 +199,9 @@ nsRenderingContextPS :: Init(nsIDeviceContext* aContext)
 float app2dev;
 
   mContext = aContext;
-  mPSObj = ((nsDeviceContextPS*)mContext)->GetPrintContext();
+  if (mContext) {
+  	mPSObj = ((nsDeviceContextPS*)mContext)->GetPrintContext();
+  }
   NS_IF_ADDREF(mContext);
 
   // initialize the matrix
@@ -524,7 +530,9 @@ NS_IMETHODIMP
 nsRenderingContextPS :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
-  mContext->GetMetricsFor(aFont, mFontMetrics);
+  if (mContext) {
+  	mContext->GetMetricsFor(aFont, mFontMetrics);
+  }
   return NS_OK;
 }
 

@@ -57,6 +57,8 @@ char* paper_string[]={ "Letter", "Legal", "Executive", "A4" };
  */
 nsPostScriptObj::nsPostScriptObj()
 {
+	mPrintContext = nsnull;
+	mPrintSetup = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -90,10 +92,13 @@ nsPostScriptObj::~nsPostScriptObj()
       delete mPrintContext->prSetup;
     }
     delete mPrintContext;
+    mPrintContext = nsnull;
   }
 
-  if (nsnull != mPrintSetup)
+  if (nsnull != mPrintSetup) {
 	  delete mPrintSetup;
+	  mPrintSetup = nsnull;
+  }
 }
 
 /** ---------------------------------------------------

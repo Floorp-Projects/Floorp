@@ -453,23 +453,23 @@ nsAppShellService::ShutdownComponent( const nsCID &aComponentCID ) {
     if ( NS_SUCCEEDED( rv ) ) {
         // Instance accessed, tell it to shutdown.
         rv = component->Shutdown();
-        #ifdef NS_DEBUG
+#ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
             printf( "Shut down app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
-            delete [] name;
-        #endif
+            nsCRT::free(name);
+#endif
         // Release the service.
         nsServiceManager::ReleaseService( aComponentCID, component );
     } else {
         // Error getting component service (perhaps due to that component not being
         // a service).
-        #ifdef NS_DEBUG
+#ifdef NS_DEBUG
             char *name = aComponentCID.ToString();
             printf( "Unable to shut down app shell component %s, rv=0x%08X\n",
                     name, (int)rv );
-            delete [] name;
-        #endif
+            nsCRT::free(name);
+#endif
     }
 
     return;
