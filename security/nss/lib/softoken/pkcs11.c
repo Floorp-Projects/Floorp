@@ -1206,7 +1206,6 @@ pk11_handlePrivateKeyObject(PK11Session *session,PK11Object *object,CK_KEY_TYPE 
 	char *label;
 	SECStatus rv = SECSuccess;
 	SECItem pubKey;
-	CK_RV crv;
 
 	if (slot->keyDB == NULL) {
 	    return CKR_TOKEN_WRITE_PROTECTED;
@@ -1245,8 +1244,6 @@ fail:
 	nsslowkey_DestroyPrivateKey(privKey);
 	if (rv != SECSuccess) return CKR_DEVICE_ERROR;
     } else {
-	CK_RV crv;
-
 	object->objectInfo = pk11_mkPrivKey(object,key_type,&crv);
 	if (object->objectInfo == NULL) return crv;
 	object->infoFree = (PK11Free) nsslowkey_DestroyPrivateKey;
