@@ -143,6 +143,10 @@ static AtkStateSet*        refStateSetCB(AtkObject *aAtkObj);
 */
 G_END_DECLS
 
+static GType GetMaiAtkType(const PRUint32 & interfaceCount,
+                           MaiInterface **interfaces);
+static const char * GetUniqueMaiAtkTypeName(void);
+
 static gpointer parent_class = NULL;
 
 GType
@@ -174,8 +178,6 @@ mai_atk_object_get_type(void)
 PRInt32 nsAccessibleWrap::mAccWrapCreated = 0;
 PRInt32 nsAccessibleWrap::mAccWrapDeleted = 0;
 #endif
-
-PRUint32 nsAccessibleWrap::mAtkTypeNameIndex = 0;
 
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode,
                                    nsIWeakReference *aShell)
@@ -230,7 +232,7 @@ NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
         CreateMaiInterfaces();
         mMaiAtkObject =
             NS_REINTERPRET_CAST(AtkObject *,
-                                g_object_new(GetMaiAtkType(), NULL));
+                                g_object_new(GetMaiAtkType(mInterfaceCount, mInterfaces), NULL));
         NS_ENSURE_TRUE(mMaiAtkObject, NS_ERROR_OUT_OF_MEMORY);
 
         atk_object_initialize(mMaiAtkObject, this);
@@ -385,8 +387,8 @@ nsAccessibleWrap::GetMaiInterface(PRInt16 aIfaceType)
     return mInterfaces[aIfaceType];
 }
 
-PRUint32
-nsAccessibleWrap::GetMaiAtkType(void)
+static GType
+GetMaiAtkType(const PRUint32 & interfaceCount, MaiInterface **interfaces)
 {
     GType type;
     static const GTypeInfo tinfo = {
@@ -402,32 +404,33 @@ nsAccessibleWrap::GetMaiAtkType(void)
         NULL /* value table */
     };
 
-    if (mInterfaceCount == 0)
+    if (interfaceCount == 0)
         return MAI_TYPE_ATK_OBJECT;
 
     type = g_type_register_static(MAI_TYPE_ATK_OBJECT,
-                                  nsAccessibleWrap::GetUniqueMaiAtkTypeName(),
+                                  GetUniqueMaiAtkTypeName(),
                                   &tinfo, GTypeFlags(0));
 
     for (int index = 0; index < MAI_INTERFACE_NUM; index++) {
-        if (!mInterfaces[index])
+        if (!interfaces[index])
             continue;
         g_type_add_interface_static(type,
-                                    mInterfaces[index]->GetAtkType(),
-                                    mInterfaces[index]->GetInterfaceInfo());
+                                    interfaces[index]->GetAtkType(),
+                                    interfaces[index]->GetInterfaceInfo());
     }
     return type;
 }
 
-const char *
-nsAccessibleWrap::GetUniqueMaiAtkTypeName(void)
+static const char *
+GetUniqueMaiAtkTypeName(void)
 {
 #define MAI_ATK_TYPE_NAME_LEN (30)     /* 10+sizeof(gulong)*8/4+1 < 30 */
 
+    static PRUint32 atkTypeNameIndex = 0;
     static gchar namePrefix[] = "MaiAtkType";   /* size = 10 */
     static gchar name[MAI_ATK_TYPE_NAME_LEN + 1];
 
-    sprintf(name, "%s%lx", namePrefix, mAtkTypeNameIndex++);
+    sprintf(name, "%s%x", namePrefix, atkTypeNameIndex++);
     name[MAI_ATK_TYPE_NAME_LEN] = '\0';
 
     MAI_LOG_DEBUG(("MaiWidget::LastedTypeName=%s\n", name));
