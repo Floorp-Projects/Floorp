@@ -403,7 +403,7 @@ static JSConstDoubleSpec number_constants[] = {
 
 static jsdouble NaN;
 
-#if !defined __MWERKS__ && defined (XP_PC) && defined (_M_IX86)
+#if !defined __MWERKS__ && defined XP_PC && (defined _M_IX86 || defined __GNUC__)
 
 /*
  * On Alpha platform this is handled via Compiler option.
