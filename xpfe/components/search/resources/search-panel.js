@@ -814,9 +814,9 @@ function OpenSearch( tabName, forceDialogFlag, aSearchStr, engineURIs )
 	catch(ex)
 	{
 	}
-	
+
 	if ( !defaultSearchURL )
-		defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=";
+		defaultSearchURL = bundle.GetStringFromName("defaultSearchURL");
 
 	if( searchMode == 1 || forceDialogFlag )
 	{
