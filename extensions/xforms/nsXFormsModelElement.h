@@ -41,11 +41,11 @@
 
 #include "nsXFormsStubElement.h"
 #include "nsIModelElementPrivate.h"
+#include "nsIDOMEventListener.h"
 #include "nsISchema.h"
 #include "nsCOMArray.h"
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
-#include "nsIDOMLoadListener.h"
 #include "nsIDOMDocument.h"
 #include "nsXFormsMDGEngine.h"
 
@@ -69,7 +69,7 @@ class nsXFormsControl;
 class nsXFormsModelElement : public nsXFormsStubElement,
                              public nsIModelElementPrivate,
                              public nsISchemaLoadListener,
-                             public nsIDOMLoadListener
+                             public nsIDOMEventListener
 {
 public:
   nsXFormsModelElement() NS_HIDDEN;
@@ -90,13 +90,6 @@ public:
   NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
   NS_IMETHOD OnCreated(nsIXTFGenericElementWrapper *aWrapper);
 
-  // nsIDOMLoadListener
-  NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Unload(nsIDOMEvent* aEvent);
-  NS_IMETHOD Abort(nsIDOMEvent* aEvent);
-  NS_IMETHOD Error(nsIDOMEvent* aEvent);
-
   // Called after nsXFormsAtoms is registered
   static NS_HIDDEN_(void) Startup();
 
@@ -106,6 +99,7 @@ private:
     FindInstanceDocument(const nsAString &aID);
 
   NS_HIDDEN_(nsresult) FinishConstruction();
+  NS_HIDDEN_(void)     MaybeNotifyCompletion();
 
   NS_HIDDEN_(PRBool)   ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
                                    nsIDOMNode           *aContextNode,
@@ -114,18 +108,23 @@ private:
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 
+  // Returns true when all external documents have been loaded
   PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount
                                       && mPendingInstanceCount == 0);  }
 
   nsIDOMElement            *mElement;
   nsCOMPtr<nsISchemaLoader> mSchemas;
-  nsVoidArray              mFormControls;
+  nsStringArray             mPendingInlineSchemas;
+  nsVoidArray               mFormControls;
 
   PRInt32 mSchemaCount;
   PRInt32 mSchemaTotal;
   PRInt32 mPendingInstanceCount;
-  
+
   nsXFormsMDGEngine mMDG;
+
+  // This flag indicates whether or not the document fired DOMContentLoaded
+  PRBool mDocumentLoaded;
 };
 
 NS_HIDDEN_(nsresult) NS_NewXFormsModelElement(nsIXTFElement **aResult);
