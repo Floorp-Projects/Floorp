@@ -312,7 +312,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ ($Version$) Setup - Download
 ;*** LOCALIZE ME BABY ***
-Message Download0=Setup is downloading the required files now.  This may take some time given your network connection speed.
+Message Download0=Setup is downloading the required files now.  This may take some time depending on your network connection speed.
 ;*** LOCALIZE ME BABY ***
 Message Retry0=Some files have failed the CRC check and are being downloaded again.  Only those files that have failed will be downloaded.
 
