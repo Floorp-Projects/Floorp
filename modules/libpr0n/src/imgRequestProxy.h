@@ -67,6 +67,7 @@ private:
 
   nsCOMPtr<nsILoadGroup> mLoadGroup;
 
+  nsLoadFlags mLoadFlags;
   PRBool mCanceled;
 
   PRLock *mLock;

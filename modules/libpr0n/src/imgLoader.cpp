@@ -58,8 +58,10 @@ imgLoader::~imgLoader()
   /* destructor code */
 }
 
-/* imgIRequest loadImage (in nsIURI uri, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports cx); */
-NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *cx, imgIRequest **_retval)
+#define SHOULD_RELOAD(flags) (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
+
+/* imgIRequest loadImage (in nsIURI aURI, in nsILoadGroup aLoadGroup, in imgIDecoderObserver aObserver, in nsISupports aCX, in nsLoadFlags aLoadFlags); */
+NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgIDecoderObserver *aObserver, nsISupports *aCX, nsLoadFlags aLoadFlags, imgIRequest **_retval)
 {
   NS_ASSERTION(aURI, "imgLoader::LoadImage -- NULL URI pointer");
 
@@ -77,24 +79,30 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
   nsCOMPtr<nsICacheEntryDescriptor> entry;
   imgCache::Get(aURI, &request, getter_AddRefs(entry)); // addrefs request
 
-  if (request && entry && aLoadGroup) {
+  if (request && entry) {
     /* this isn't exactly what I want here.  This code will re-doom every
        cache hit in a document while it is force reloading.  So for multiple
        copies of an image on a page, when you force reload, this will cause
        you to get seperate loads for each copy of the image... this sucks.
     */
-    PRUint32 flags = 0;
     PRBool doomRequest = PR_FALSE;
-    aLoadGroup->GetLoadFlags(&flags);
-    if (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
+
+    if (SHOULD_RELOAD(aLoadFlags)) {
       doomRequest = PR_TRUE;
-    else {
-      nsCOMPtr<nsIRequest> r;
-      aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
-      if (r) {
-        r->GetLoadFlags(&flags);
-        if (flags & nsIRequest::LOAD_BYPASS_CACHE || flags & nsIRequest::VALIDATE_ALWAYS)
-          doomRequest = PR_TRUE;
+    } else if (aLoadGroup) {
+      nsLoadFlags flags = 0;
+      aLoadGroup->GetLoadFlags(&flags);
+      if (SHOULD_RELOAD(flags)) {
+        doomRequest = PR_TRUE;
+      } else {
+        nsCOMPtr<nsIRequest> r;
+        aLoadGroup->GetDefaultLoadRequest(getter_AddRefs(r));
+        if (r) {
+          flags = 0;
+          r->GetLoadFlags(&flags);
+          if (SHOULD_RELOAD(flags))
+            doomRequest = PR_TRUE;
+        }
       }
     }
 
@@ -185,7 +193,7 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
       LOG_MSG(gImgLog, "imgLoader::LoadImage", "async open failed.");
 
       nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
-                                             cx, _retval);
+                                             aCX, aLoadFlags, _retval);
       if (NS_SUCCEEDED(rv)) {
         request->OnStartRequest(newChannel, nsnull);
         request->OnStopRequest(newChannel, nsnull, NS_BINDING_ABORTED);
@@ -203,12 +211,14 @@ NS_IMETHODIMP imgLoader::LoadImage(nsIURI *aURI, nsILoadGroup *aLoadGroup, imgID
 
   LOG_MSG(gImgLog, "imgLoader::LoadImage", "creating proxy request.");
 
-  nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, cx, _retval);
+  nsresult rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver, aCX, aLoadFlags, _retval);
 
   NS_RELEASE(request);
 
   return rv;
 }
+
+#undef SHOULD_RELOAD
 
 /* imgIRequest loadImageWithChannel(in nsIChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener); */
 NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderObserver *aObserver, nsISupports *cx, nsIStreamListener **listener, imgIRequest **_retval)
@@ -259,7 +269,7 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
   nsCOMPtr<nsILoadGroup> loadGroup;
   channel->GetLoadGroup(getter_AddRefs(loadGroup));
 
-  nsresult rv = CreateNewProxyForRequest(request, loadGroup, aObserver, cx, _retval);
+  nsresult rv = CreateNewProxyForRequest(request, loadGroup, aObserver, cx, nsIRequest::LOAD_NORMAL, _retval);
 
   NS_RELEASE(request);
 
@@ -271,20 +281,25 @@ NS_IMETHODIMP imgLoader::LoadImageWithChannel(nsIChannel *channel, imgIDecoderOb
 nsresult
 imgLoader::CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
                                     imgIDecoderObserver *aObserver, nsISupports *cx,
-                                    imgIRequest **_retval)
+                                    nsLoadFlags aLoadFlags, imgIRequest **_retval)
 {
   LOG_SCOPE_WITH_PARAM(gImgLog, "imgLoader::CreateNewProxyForRequest", "imgRequest", aRequest);
 
   /* XXX If we move decoding onto seperate threads, we should save off the
      calling thread here and pass it off to |proxyRequest| so that it call
      proxy calls to |aObserver|.
-  */
+   */
 
   imgRequestProxy *proxyRequest;
   NS_NEWXPCOM(proxyRequest, imgRequestProxy);
   if (!proxyRequest) return NS_ERROR_OUT_OF_MEMORY;
 
   NS_ADDREF(proxyRequest);
+
+  /* It is important to call |SetLoadFlags()| before calling |Init()| because
+     |Init()| adds the request to the loadgroup.
+   */
+  proxyRequest->SetLoadFlags(aLoadFlags);
 
   // init adds itself to imgRequest's list of observers
   nsresult rv = proxyRequest->Init(aRequest, aLoadGroup, aObserver, cx);
