@@ -21,26 +21,8 @@
  */
 
 
-#include "nsIImgDecoder.h" // include if_struct.h Needs to be first
-#include "prmem.h"
-#include "merrors.h"
-
-
-#include "dllcompat.h"
-#include "pngdec.h"
 #include "nsPNGDecoder.h"
-#include "nscore.h"
-
-/*--- needed for autoregistry ---*/
-#include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
-
-PR_BEGIN_EXTERN_C
-extern int MK_OUT_OF_MEMORY;
-PR_END_EXTERN_C
-
+#include "pngdec.h"
 
 /*-----------class----------------*/
 /*-------------------------------------------------*/
@@ -56,30 +38,7 @@ PNGDecoder::~PNGDecoder(void)
 {
 };
 
-static NS_DEFINE_IID(kPNGDecoderIID, NS_PNGDECODER_IID);
-
-NS_IMETHODIMP 
-PNGDecoder::QueryInterface(const nsIID& aIID, void** aInstPtr)
-{ 
-  if (NULL == aInstPtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  NS_DEFINE_IID(kIImgDecoderIID, NS_IIMGDECODER_IID);
-
-  if (aIID.Equals(kPNGDecoderIID) ||  
-      aIID.Equals(kIImgDecoderIID) ||
-      aIID.Equals(kISupportsIID)) {
-	  *aInstPtr = (void*) this;
-    NS_INIT_REFCNT();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-NS_IMPL_ADDREF(PNGDecoder)
-NS_IMPL_RELEASE(PNGDecoder)
+NS_IMPL_ISUPPORTS(PNGDecoder, NS_GET_IID(nsIImgDecoder))
 
 /*----------------------------------------------------*/
 // api functions
