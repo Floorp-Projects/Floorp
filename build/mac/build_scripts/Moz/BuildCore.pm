@@ -37,13 +37,64 @@ use Moz::CodeWarriorLib;
 #//--------------------------------------------------------------------------------------------------
 sub DoPrebuildCheck()
 {
-    SanityCheckJarOptions();
+    SanityCheckBuildOptions();
 
     # launch codewarrior and persist its location. Have to call this before first
     # call to getCodeWarriorPath().
     my($ide_path_file) = $main::filepaths{"idepath"};
     $ide_path_file = full_path_to($ide_path_file);
     LaunchCodeWarrior($ide_path_file);
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// SanityCheckBuildOptions
+#//--------------------------------------------------------------------------------------------------
+sub SanityCheckBuildOptions()
+{
+    my($bad_options) = 0;
+
+    # Jar options
+    if (!$main::options{chrome_jars} && !$main::options{chrome_files})
+    {
+        print "Warning: Both \$options{chrome_jars} and \$options{chrome_files} are off. You won't get any chrome.\n";
+        $bad_options = 1;
+    }
+
+    if (!$main::options{chrome_jars} && $main::options{use_jars})
+    {
+        print "Warning: \$options{chrome_jars} is off but \$options{use_jars} is on. Your build won't run (expects jars, got files).\n";
+        $bad_options = 1;
+    }
+
+    if (!$main::options{chrome_files} && !$main::options{use_jars})
+    {
+        print "Warning: \$options{chrome_jars} is off but \$options{chrome_files} is on. Your build won't run (expects files, got jars).\n";
+        $bad_options = 1;
+    }
+
+    if ($main::options{ldap_experimental} && !$main::options{ldap})
+    {
+        print "Warning: \$options{ldap_experimental} is on but \$options{ldap} is off. LDAP experimental features will not be built.\n";
+        $bad_options = 1;
+    }
+
+    if ($main::options{soap} && !$main::options{xmlextras})
+    {
+        print "Warning: \$options{soap} is on but \$options{xmlextras} is off. SOAP will not be built.\n";
+        $bad_options = 1;
+    }
+
+    if ($main::options{wsp} && !$main::options{soap})
+    {
+        print "Warning: \$options{wsp} is on but \$options{soap} is off. wsp will not be built.\n";
+        $bad_options = 1;
+    }
+
+    if ($bad_options) {
+        print "Build will start in 5 seconds. Press command-. to stop\n";
+        
+        DelayFor(5);
+    }
 }
 
 #//--------------------------------------------------------------------------------------------------
