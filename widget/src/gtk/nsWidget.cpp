@@ -1789,7 +1789,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseEvent event;
   PRUint32 eventType = 0;
 
-#ifdef DEBUG_pavlov
+#if defined(DEBUG_pavlov) || defined(DEBUG_akkana)
   printf("button press\n");
 #endif
 
