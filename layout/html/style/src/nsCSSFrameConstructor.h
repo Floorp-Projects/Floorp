@@ -511,15 +511,23 @@ protected:
                                   PRBool&                  aFrameHasBeenInitialized,
                                   PRBool                   aIsFixedPositioned);
 
-  nsresult ConstructFrameByTag(nsIPresShell*            aPresShell, 
-                               nsIPresContext*          aPresContext,
-                               nsFrameConstructorState& aState,
-                               nsIContent*              aContent,
-                               nsIFrame*                aParentFrame,
-                               nsIAtom*                 aTag,
-                               PRInt32                  aNameSpaceID,
-                               nsIStyleContext*         aStyleContext,
-                               nsFrameItems&            aFrameItems);
+  nsresult ConstructTextFrame(nsIPresShell*            aPresShell, 
+                              nsIPresContext*          aPresContext,
+                              nsFrameConstructorState& aState,
+                              nsIContent*              aContent,
+                              nsIFrame*                aParentFrame,
+                              nsIStyleContext*         aStyleContext,
+                              nsFrameItems&            aFrameItems);
+
+  nsresult ConstructHTMLFrame(nsIPresShell*            aPresShell, 
+                              nsIPresContext*          aPresContext,
+                              nsFrameConstructorState& aState,
+                              nsIContent*              aContent,
+                              nsIFrame*                aParentFrame,
+                              nsIAtom*                 aTag,
+                              PRInt32                  aNameSpaceID,
+                              nsIStyleContext*         aStyleContext,
+                              nsFrameItems&            aFrameItems);
 
   nsresult ConstructFrameInternal( nsIPresShell*            aPresShell, 
                                    nsIPresContext*          aPresContext,
