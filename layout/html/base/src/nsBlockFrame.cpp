@@ -4319,9 +4319,11 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // positioned and sized
   if (aLine->IsInline()) {
     nsIFrame* frame = aLine->mFirstChild;
-    for (PRInt32 i = 0; i < aLine->GetChildCount(); i++) {
-      ::PlaceFrameView(aState.mPresContext, frame);
-      frame->GetNextSibling(&frame);
+    for (PRInt32 i = 0; (i < aLine->GetChildCount() && frame); i++) {
+       ::PlaceFrameView(aState.mPresContext, frame);
+       frame->GetNextSibling(&frame);
+      NS_ASSERTION(frame || (i+1) == aLine->GetChildCount(),
+        "Child count bigger than the number of linked frames!!!");
     }
   }
 
