@@ -32,7 +32,7 @@ PROGRAM		= vreg
 CSRCS		= reg.c VerReg.c vr_stubs.c
 
 BIN_SRCS	= VerReg.c reg.c vr_stubs.c
-BIN_OBJS	= $(addprefix R_,$(BIN_SRCS:.c=.o))
+PROGOBJS        = $(addprefix R_,$(BIN_SRCS:.c=.o))
 
 # We don't want a shared lib.  Static lib only.
 override NO_SHARED_LIB=1
@@ -48,47 +48,10 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(topsrcdir)/include
-GARBAGE		+= $(PROGRAM) $(BIN_OBJS)
-
-$(PROGRAM): $(BIN_OBJS)
-ifeq ($(OS_ARCH), OS2)
-	$(LINK_EXE) -OUT:$@ $(BIN_OBJS) $(LDFLAGS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH), OSF1)
-	$(CC) -o $@ $(BIN_OBJS) $(LDFLAGS)
-else
-ifeq ($(OS_TARGET), NTO)
-	$(CC) -o $@ $(BIN_OBJS) $(LDFLAGS)
-else
-	$(CCF) -o $@ $(BIN_OBJS) $(LDFLAGS)
-endif
-endif
-endif
-
-R_VerReg.o:	VerReg.c
+R_%.o: %.c
 ifeq ($(OS_ARCH), OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 else
 	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
 endif
-
-R_reg.o:	reg.c
-ifeq ($(OS_ARCH), OS2)
-	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
-else
-	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
-endif
-
-R_vr_stubs.o:	vr_stubs.c
-ifeq ($(OS_ARCH), OS2)
-	$(CC) -Fo$@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
-else
-	$(CC) -o $@ -c $(CFLAGS) -DSTANDALONE_REGISTRY $<
-endif
-
-$(BIN_OBJS): $(BIN_SRCS)
-
-install:: $(PROGRAM)
-	$(INSTALL) -m 444 $< $(DIST)/bin
 
