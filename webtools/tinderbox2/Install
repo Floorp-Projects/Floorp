@@ -20,6 +20,11 @@ need more details about how something works.
 To install:
 -----------
 
+
+*) You will need to ensure that Perl is installed on your webserver.
+It would be a good idea to have these modules installed:
+	 Storable, Date::Format,
+
 *) Read the Policies and Overview documents found in this directory to
 help you get a feel for the scope of this installation.
 
