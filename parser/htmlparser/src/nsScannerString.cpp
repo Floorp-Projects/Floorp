@@ -235,17 +235,34 @@ nsScannerSubstring::Rebind( const nsAString& aString )
     acquire_ownership_of_buffer_list();
   }
 
-const nsString&
+const nsSubstring&
 nsScannerSubstring::AsString() const
   {
     if (mIsDirty)
       {
         nsScannerSubstring* mutable_this = NS_CONST_CAST(nsScannerSubstring*, this);
 
-        nsScannerIterator start, end;
-        CopyUnicodeTo(BeginReading(start), EndReading(end), mutable_this->mFlattenedRep);
+        if (mStart.mBuffer == mEnd.mBuffer) {
+          // We only have a single fragment to deal with, so just return it
+          // as a substring.  We take advantage of the fact that |nsString| and
+          // |nsDependentSubstring| don't have any members that aren't on
+          // |nsSubstring|, so that have same same layout.  Furthermore,
+          // we know that the implementation of ~nsString() will not try
+          // to free the data if the string was constructed as a
+          // |nsDependentSubstring|.
+          
+          mFlattenedRep.~nsString(); // in case we have a buffer currently
+          new (&mutable_this->mFlattenedRep)
+            nsDependentSubstring(mStart.mPosition, mEnd.mPosition);
+        } else {
+          // Otherwise, we need to copy the data into a flattened buffer.
+          nsScannerIterator start, end;
+          CopyUnicodeTo(BeginReading(start), EndReading(end), mutable_this->mFlattenedRep);
+        }
+
         mutable_this->mIsDirty = PR_FALSE;
       }
+
     return mFlattenedRep;
   }
 

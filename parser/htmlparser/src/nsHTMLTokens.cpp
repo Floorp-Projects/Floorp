@@ -208,7 +208,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag
 }
 
 
-const nsAString& CStartToken::GetStringValue()
+const nsSubstring& CStartToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
@@ -350,7 +350,7 @@ PRInt32 CEndToken::GetTokenType(void) {
   return eToken_end;
 }
 
-const nsAString& CEndToken::GetStringValue()
+const nsSubstring& CEndToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
@@ -631,7 +631,7 @@ void CTextToken::CopyTo(nsAString& aStr)
   CopyUnicodeTo(start, end, aStr);
 }
 
-const nsAString& CTextToken::GetStringValue(void)
+const nsSubstring& CTextToken::GetStringValue(void)
 {
   return mTextValue.AsString();
 }
@@ -769,7 +769,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
   return result;
 }
 
-const nsAString& CCDATASectionToken::GetStringValue(void)
+const nsSubstring& CCDATASectionToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -905,7 +905,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   return result;
 }
 
-const nsAString& CMarkupDeclToken::GetStringValue(void)
+const nsSubstring& CMarkupDeclToken::GetStringValue(void)
 {
   return mTextValue.AsString();
 }
@@ -1201,7 +1201,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
   return result;
 }
 
-const nsAString& CCommentToken::GetStringValue(void)
+const nsSubstring& CCommentToken::GetStringValue(void)
 {
   return mComment.AsString();
 }
@@ -1259,7 +1259,7 @@ void CNewlineToken::FreeNewline()
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
  */
-const nsAString& CNewlineToken::GetStringValue(void) {
+const nsSubstring& CNewlineToken::GetStringValue(void) {
   return gNewlineStr->AsString();
 }
 
@@ -1400,12 +1400,7 @@ void CAttributeToken::SanitizeKey() {
   return;
 }
 
-const nsAString& CAttributeToken::GetKey(void)
-{
-  return mTextKey.AsString();
-}
-
-const nsAString& CAttributeToken::GetStringValue(void)
+const nsSubstring& CAttributeToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -1917,7 +1912,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   return result;
 }
 
-const nsAString& CWhitespaceToken::GetStringValue(void)
+const nsSubstring& CWhitespaceToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2178,7 +2173,7 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
 }
 
 
-const nsAString& CEntityToken::GetStringValue(void)
+const nsSubstring& CEntityToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2299,7 +2294,7 @@ PRInt32 CInstructionToken::GetTokenType(void){
   return eToken_instruction;
 }
 
-const nsAString& CInstructionToken::GetStringValue(void)
+const nsSubstring& CInstructionToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2371,7 +2366,7 @@ PRInt32 CDoctypeDeclToken::GetTokenType(void) {
   return eToken_doctypeDecl;
 }
 
-const nsAString& CDoctypeDeclToken::GetStringValue(void)
+const nsSubstring& CDoctypeDeclToken::GetStringValue(void)
 {
   return mTextValue;
 }

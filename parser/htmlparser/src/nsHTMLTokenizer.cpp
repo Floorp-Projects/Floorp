@@ -646,7 +646,7 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
       //start token it was empty.
       if(NS_SUCCEEDED(result)) {
         PRBool isUsableAttr = PR_TRUE;
-        const nsAString& key=theToken->GetKey();
+        const nsSubstring& key=theToken->GetKey();
         const nsAString& text=theToken->GetValue();
 
          // support XML like syntax to fix bugs like 44186
