@@ -74,6 +74,8 @@
 #include "nss.h"
 #include "ssl.h"
 #include "sslproto.h"
+#include "cert.h"
+#include "certt.h"
 
 #ifndef PORT_Sprintf
 #define PORT_Sprintf sprintf
@@ -425,6 +427,7 @@ typedef struct jobStr {
 } JOB;
 
 static PZLock    * qLock; /* this lock protects all data immediately below */
+static PRLock    * lastLoadedCrlLock; /* this lock protects lastLoadedCrl variable */
 static PZCondVar * jobQNotEmptyCv;
 static PZCondVar * freeListNotEmptyCv;
 static PZCondVar * threadCountChangeCv;
@@ -531,6 +534,9 @@ launch_threads(
     freeListNotEmptyCv  = PZ_NewCondVar(qLock);
     threadCountChangeCv = PZ_NewCondVar(qLock);
 
+    /* create monitor for crl reload procedure */
+    lastLoadedCrlLock   = PR_NewLock();
+
     /* allocate the array of thread slots */
     threads = PR_Calloc(maxThreads, sizeof(perThread));
     if ( NULL == threads )  {
@@ -593,6 +599,7 @@ terminateWorkerThreads(void)
     DESTROY_CONDVAR(freeListNotEmptyCv);
     DESTROY_CONDVAR(threadCountChangeCv);
 
+    PR_DestroyLock(lastLoadedCrlLock);
     DESTROY_LOCK(qLock);
     PR_Free(jobTable);
     PR_Free(threads);
@@ -651,6 +658,7 @@ static const char outHeader[] = {
     "Content-type: text/plain\r\n"
     "\r\n"
 };
+static const char crlCacheErr[]  = { "CRL ReCache Error: " };
 
 #ifdef FULL_DUPLEX_CAPABLE
 
@@ -819,6 +827,53 @@ cleanup:
 
 #endif
 
+static SECItem *lastLoadedCrl = NULL;
+
+static SECStatus
+reload_crl(PRFileDesc *crlFile)
+{
+    SECItem *crlDer;
+    CERTCertDBHandle *certHandle = CERT_GetDefaultCertDB();
+    SECStatus rv;
+
+    /* Read in the entire file specified with the -f argument */
+    crlDer = PORT_Malloc(sizeof(SECItem));
+    if (!crlDer) {
+        errWarn("Can not allocate memory.");
+        return SECFailure;
+    }
+
+    rv = SECU_ReadDERFromFile(crlDer, crlFile, PR_FALSE);
+    if (rv != SECSuccess) {
+        errWarn("Unable to read input file.");
+        PORT_Free(crlDer);
+        return SECFailure;
+    }
+
+    PR_Lock(lastLoadedCrlLock);
+    rv = CERT_CacheCRL(certHandle, crlDer);
+    if (rv == SECSuccess) {
+        SECItem *tempItem = crlDer;
+        if (lastLoadedCrl != NULL) {
+            rv = CERT_UncacheCRL(certHandle, lastLoadedCrl);
+            if (rv != SECSuccess) {
+                errWarn("Unable to uncache crl.");
+                goto loser;
+            }
+            crlDer = lastLoadedCrl;
+        } else {
+            crlDer = NULL;
+        }
+        lastLoadedCrl = tempItem;
+    }
+
+  loser:
+    PR_Unlock(lastLoadedCrlLock);
+    SECITEM_FreeItem(crlDer, PR_TRUE);
+    return rv;
+}
+
+
 int
 handle_connection( 
     PRFileDesc *tcp_sock,
@@ -844,6 +899,7 @@ handle_connection(
     char               msgBuf[160];
     char               buf[10240];
     char               fileName[513];
+    char               proto[128];
 
     pBuf   = buf;
     bufRem = sizeof buf;
@@ -962,13 +1018,23 @@ handle_connection(
 	    if (fnEnd) {
 		int fnLen = fnEnd - fnBegin;
 		if (fnLen < sizeof fileName) {
-		    strncpy(fileName, fnBegin, fnLen);
-		    fileName[fnLen] = 0;	/* null terminate */
-		    status = PR_GetFileInfo(fileName, &info);
+                    char *real_fileName = fileName;
+                    char *protoEnd = NULL;
+                    strncpy(fileName, fnBegin, fnLen);
+                    fileName[fnLen] = 0;	/* null terminate */
+                    if ((protoEnd = strstr(fileName, "://")) != NULL) {
+                        int protoLen = PR_MIN(protoEnd - fileName, sizeof(proto) - 1);
+                        PL_strncpy(proto, fileName, protoLen);
+                        proto[protoLen] = 0;
+                        real_fileName= protoEnd + 3;
+                    } else {
+                        proto[0] = 0;
+                    }
+		    status = PR_GetFileInfo(real_fileName, &info);
 		    if (status == PR_SUCCESS &&
 			info.type == PR_FILE_FILE &&
 			info.size >= 0 ) {
-			local_file_fd = PR_Open(fileName, PR_RDONLY, 0);
+			local_file_fd = PR_Open(real_fileName, PR_RDONLY, 0);
 		    }
 		}
 	    }
@@ -1014,27 +1080,46 @@ handle_connection(
 	if (local_file_fd) {
 	    PRInt32     bytes;
 	    int         errLen;
-	    bytes = PR_TransmitFile(ssl_sock, local_file_fd, outHeader,
-				    sizeof outHeader - 1, 
-				    PR_TRANSMITFILE_KEEP_OPEN,
-				    PR_INTERVAL_NO_TIMEOUT);
-	    if (bytes >= 0) {
-		bytes -= sizeof outHeader - 1;
-		FPRINTF(stderr, 
-			"selfserv: PR_TransmitFile wrote %d bytes from %s\n",
-			bytes, fileName);
-		break;
-	    }
-	    errString = errWarn("PR_TransmitFile");
-	    errLen = PORT_Strlen(errString);
-	    if (errLen > sizeof msgBuf - 1) 
-	    	errLen = sizeof msgBuf - 1;
-	    PORT_Memcpy(msgBuf, errString, errLen);
-	    msgBuf[errLen] = 0;
-
-	    iovs[numIOVs].iov_base = msgBuf;
-	    iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
-	    numIOVs++;
+	    if (!PL_strlen(proto) || !PL_strcmp(proto, "file")) {
+                bytes = PR_TransmitFile(ssl_sock, local_file_fd, outHeader,
+                                        sizeof outHeader - 1,
+                                        PR_TRANSMITFILE_KEEP_OPEN,
+                                        PR_INTERVAL_NO_TIMEOUT);
+                if (bytes >= 0) {
+                    bytes -= sizeof outHeader - 1;
+                    FPRINTF(stderr, 
+                            "selfserv: PR_TransmitFile wrote %d bytes from %s\n",
+                            bytes, fileName);
+                    break;
+                }
+                errString = errWarn("PR_TransmitFile");
+                errLen = PORT_Strlen(errString);
+                errLen = PR_MIN(errLen, sizeof msgBuf - 1);
+                PORT_Memcpy(msgBuf, errString, errLen);
+                msgBuf[errLen] = 0;
+                
+                iovs[numIOVs].iov_base = msgBuf;
+                iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+                numIOVs++;
+            }
+            if (!PL_strcmp(proto, "crl")) {
+                if (reload_crl(local_file_fd) == SECFailure) {
+                    errString = errWarn("CERT_CacheCRL");
+                    if (!errString)
+                        errString = "Unknow error";
+                    PR_snprintf(msgBuf, sizeof(msgBuf), "%s%s ",
+                                crlCacheErr, errString);
+                    
+                    iovs[numIOVs].iov_base = msgBuf;
+                    iovs[numIOVs].iov_len  = PORT_Strlen(msgBuf);
+                    numIOVs++;
+                } else {
+                    FPRINTF(stderr, 
+                            "selfserv: CRL %s reloaded.\n",
+                            fileName);
+                    break;
+                }
+            }
 	} else if (reqLen <= 0) {	/* hit eof */
 	    PORT_Sprintf(msgBuf, "Get or Post incomplete after %d bytes.\r\n",
 			 bufDat);
