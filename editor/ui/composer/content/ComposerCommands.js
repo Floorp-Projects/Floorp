@@ -774,13 +774,18 @@ var nsObjectPropertiesCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
+    var isEnabled = false;
     if (window.editorShell && window.editorShell.documentEditable)
     {
+      try {
       // Launch Object properties for appropriate selected element 
-      return (GetSelectedElementOrParentCellOrLink() != null ||
-              window.editorShell.GetSelectedElement("href") != null);
+        isEnabled = (GetSelectedElementOrParentCellOrLink() != null ||
+                window.editorShell.GetSelectedElement("href") != null);
+      } catch(e)
+      {
+      }
     }
-    return false;
+    return isEnabled;
   },
   doCommand: function(aCommand)
   {

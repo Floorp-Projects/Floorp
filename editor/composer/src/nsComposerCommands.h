@@ -207,6 +207,17 @@ protected:
   virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
 };
 
+class nsAlignCommand : public nsMultiStateCommand
+{
+public:
+                   nsAlignCommand();
+
+protected:
+
+  virtual nsresult GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed);
+  virtual nsresult SetState(nsIEditorShell *aEditorShell, nsString& newState);
+};
+
 class nsBackgroundColorStateCommand : public nsMultiStateCommand
 {
 public:
@@ -239,7 +250,6 @@ NS_DECL_COMPOSER_COMMAND(nsPasteQuotationCommand)
 NS_DECL_COMPOSER_COMMAND(nsIndentCommand)
 NS_DECL_COMPOSER_COMMAND(nsOutdentCommand)
 
-NS_DECL_COMPOSER_COMMAND(nsAlignCommand)
 NS_DECL_COMPOSER_COMMAND(nsRemoveListCommand)
 NS_DECL_COMPOSER_COMMAND(nsRemoveStylesCommand)
 NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)

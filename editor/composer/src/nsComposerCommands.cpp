@@ -129,7 +129,14 @@ nsBaseStateUpdatingCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISuppo
   *outCmdEnabled = !sourceMode;
     
   // also udpate the command state  
-  return UpdateCommandState(aCommand, refCon);
+  nsresult rv = UpdateCommandState(aCommand, refCon);
+  if (NS_FAILED(rv))
+  {
+    *outCmdEnabled = PR_FALSE;
+    return NS_OK;
+  }
+  
+  return NS_OK;
 }
 
 
@@ -454,6 +461,7 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
 #ifdef XP_MAC
 #pragma mark -
 #endif
+
 NS_IMETHODIMP
 nsRemoveListCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
 {
@@ -595,7 +603,13 @@ nsMultiStateCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * r
     }
   }
     
-  return UpdateCommandState(aCommand, refCon);
+  nsresult rv = UpdateCommandState(aCommand, refCon);
+  if (NS_FAILED(rv)) {
+    *outCmdEnabled = PR_FALSE;
+    return NS_OK;
+  }
+   
+  return NS_OK; 
 }
 
 
@@ -840,43 +854,61 @@ nsBackgroundColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& 
 #pragma mark -
 #endif
 
-NS_IMETHODIMP
-nsAlignCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+nsAlignCommand::nsAlignCommand()
+: nsMultiStateCommand()
 {
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-  *outCmdEnabled = PR_FALSE;
-  if (editorShell)
+}
+
+nsresult
+nsAlignCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+ 
+  nsIHTMLEditor::EAlignment firstAlign;
+  nsresult rv = htmlEditor->GetAlignment(outMixed, firstAlign);
+  if (NS_FAILED(rv)) return rv;
+  switch (firstAlign)
   {
-    nsCOMPtr<nsIEditor> editor;
-    editorShell->GetEditor(getter_AddRefs(editor));
-    if (editor)
-    {
-      *outCmdEnabled = PR_TRUE;
-    }
+    default:
+    case nsIHTMLEditor::eLeft:
+      outStateString.AssignWithConversion("left");
+      break;
+      
+    case nsIHTMLEditor::eCenter:
+      outStateString.AssignWithConversion("center");
+      break;
+      
+    case nsIHTMLEditor::eRight:
+      outStateString.AssignWithConversion("right");
+      break;
+
+    case nsIHTMLEditor::eJustify:
+      outStateString.AssignWithConversion("justify");
+      break;
   }
   
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsAlignCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+nsresult
+nsAlignCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
 {
-  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
-
-  nsresult rv = NS_OK;
-  if (editorShell)
-  {
-    // we have to grab the state attribute on our command node to find out
-    // what format to set the paragraph to
-    nsAutoString stateAttribute;
-    rv = GetCommandNodeState(aCommand, editorShell, stateAttribute);
-    if (NS_FAILED(rv)) return rv;
-    rv = editorShell->Align(stateAttribute.GetUnicode());
-  }
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
   
-  return rv;  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->Align(newState);
 }
+
 
 #ifdef XP_MAC
 #pragma mark -

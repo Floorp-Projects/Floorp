@@ -4120,6 +4120,8 @@ NS_IMETHODIMP nsEditor::IncDocModCount(PRInt32 inNumMods)
 NS_IMETHODIMP nsEditor::GetDocModCount(PRInt32 &outModCount)
 {
   if (!mDocWeak) return NS_ERROR_NOT_INITIALIZED;
+
+  outModCount = 0;
   
   nsCOMPtr<nsIDOMDocument> doc = do_QueryReferent(mDocWeak);
   if (!doc) return NS_ERROR_NOT_INITIALIZED;

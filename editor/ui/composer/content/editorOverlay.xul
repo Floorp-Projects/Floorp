@@ -747,10 +747,18 @@
           tooltip="aTooltip"            tooltiptext="&AlignPopupButton.tooltip;"/>
 
   <!-- alignment buttons -->
-  <button class="button-toolbar" id="align-left-button"     oncommand="doStatefulCommand('cmd_align', 'left')"/>
-  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')"/>
-  <button class="button-toolbar" id="align-right-button"    oncommand="doStatefulCommand('cmd_align', 'right')"/>
-  <button class="button-toolbar" id="align-justify-button"  oncommand="doStatefulCommand('cmd_align', 'justify')"/>
+  <button class="button-toolbar" id="align-left-button"     oncommand="doStatefulCommand('cmd_align', 'left')">
+    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'left')"/>
+  </button>
+  <button class="button-toolbar" id="align-center-button"   oncommand="doStatefulCommand('cmd_align', 'center')">
+    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'center')"/>
+  </button>
+  <button class="button-toolbar" id="align-right-button"    oncommand="doStatefulCommand('cmd_align', 'right')">
+    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'right')"/>
+  </button>
+  <button class="button-toolbar" id="align-justify-button"  oncommand="doStatefulCommand('cmd_align', 'justify')">
+    <observes element="cmd_align" attribute="state" onbroadcast="onStateButtonUpdate(this.parentNode, 'cmd_align', 'justify')"/>
+  </button>
   
   <!-- Edit Mode toolbar -->
   <button id="NormalModeButton"   class="edit-mode _plain" type="text" selected="1" value="&NormalModeTab.label;"  onclick="SetEditMode(1)"

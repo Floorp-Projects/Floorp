@@ -1682,6 +1682,16 @@ function onButtonUpdate(button, commmandID)
   button.setAttribute("toggled", state);
 }
 
+//--------------------------------------------------------------------
+function onStateButtonUpdate(button, commmandID, onState)
+{
+// dump(" === onButtonUpdate called\n");
+  var commandNode = document.getElementById(commmandID);
+  var state = commandNode.getAttribute("state");
+
+  button.setAttribute("toggled", (state == onState) ? "true" : "false");
+}
+
 
 // --------------------------- Status calls ---------------------------
 function onStyleChange(theStyle)
@@ -1720,20 +1730,6 @@ function onDirtyChange()
       theButton.setAttribute("src", "chrome://editor/skin/images/savemod.gif");
     } else {
       theButton.setAttribute("src", "chrome://editor/skin/images/savefile.gif");
-    }
-  }
-}
-
-function onListFormatChange(listType)
-{
-  var theButton = document.getElementById(listType + "Button");
-  if (theButton)
-  {
-	  var isOn = theButton.getAttribute(listType);
-  	if (isOn == "true") {
-      theButton.setAttribute("toggled", "true");
-    } else {
-      theButton.setAttribute("toggled", "false");
     }
   }
 }

@@ -42,7 +42,6 @@ nsHTMLEditUtils::IsBody(nsIDOMNode *node)
   {
     nsAutoString tag;
     nsEditor::GetTagString(node,tag);
-    tag.ToLowerCase();
     if (tag.EqualsWithConversion("body"))
     {
       return PR_TRUE;
