@@ -37,12 +37,13 @@ XPIDLSRCS =                             \
         .\nsIPrompt.idl                 \
         .\nsIProtocolHandler.idl        \
         .\nsIProgressEventSink.idl      \
-	.\nsINetModRegEntry.idl         \
-	.\nsINetModuleMgr.idl           \
-	.\nsINetNotify.idl              \
-	.\nsILoadGroup.idl              \
+        .\nsINetModRegEntry.idl         \
+        .\nsINetModuleMgr.idl           \
+        .\nsINetNotify.idl              \
+        .\nsILoadGroup.idl              \
         .\nsISocketTransportService.idl \
         .\nsIFileTransportService.idl   \
+        .\nsIStatusCodeEventSink.idl    \
         .\nsIFileSystem.idl             \
         $(NULL)
 
