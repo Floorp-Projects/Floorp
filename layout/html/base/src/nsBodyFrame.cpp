@@ -34,7 +34,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
-//#include "nsHTMLTagContent.h"
 #include "nsHTMLParts.h"
 #include "nsCSSLayout.h"
 
@@ -527,29 +526,21 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
   // Apply style size if present; XXX note the inner value (style-size -
   // border+padding) should be given to the child as a max-size
   nsSize styleSize;
-  PRIntn ss = nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, styleSize);
+  PRIntn ss =
+    nsCSSLayout::GetStyleSize(&aPresContext, aReflowState, styleSize);
   if (NS_SIZE_HAS_WIDTH & ss) {
     width = styleSize.width + aBorderPadding.left + aBorderPadding.right;
   }
   else {
-    if (mIsTopLevel) {
+    if (mIsTopLevel && (NS_UNCONSTRAINEDSIZE != aMaxSize.width)) {
       // Make sure we're at least as wide as our available width
       width = PR_MAX(aMetrics.width, aMaxSize.width);
     }
   }
-
   if (NS_SIZE_HAS_HEIGHT & ss) {
     height = styleSize.width + aBorderPadding.top + aBorderPadding.bottom;
   }
   else {
-    if (mIsTopLevel) {
-      height += aBorderPadding.top + aBorderPadding.bottom;
-    }
-  }
-
-  if (mIsTopLevel) {
-    // Make sure we're at least as wide as our available width
-    width = PR_MAX(aMetrics.width, aMaxSize.width);
     height += aBorderPadding.top + aBorderPadding.bottom;
   }
 
