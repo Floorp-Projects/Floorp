@@ -48,6 +48,7 @@ const nsString& GetEmptyString() {
 nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsITokenRecycler* aRecycler): 
     nsIParserNode() {
   NS_INIT_REFCNT();
+  MOZ_COUNT_CTOR(nsCParserNode);
 
   static int theNodeCount=0;
   theNodeCount++;
@@ -101,6 +102,8 @@ nsCParserNode::~nsCParserNode() {
     delete mSkippedContent;
   }
   mSkippedContent=0;
+
+  MOZ_COUNT_DTOR(nsCParserNode);
 }
 
 
