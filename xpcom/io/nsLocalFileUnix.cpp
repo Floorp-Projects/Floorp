@@ -986,44 +986,33 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::IsContainedIn(nsIFile *inFile, PRBool recur, PRBool *_retval)
+nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
 {
     NS_ENSURE_ARG(inFile);
     NS_ENSURE_ARG_POINTER(_retval);
-
+   
     nsXPIDLCString inPath;
     nsresult rv;
+    
+    *_retval = PR_FALSE;
 
     if (NS_FAILED(rv = inFile->GetPath(getter_Copies(inPath))))
         return rv;
     
-    ssize_t inLen = strlen(inPath);
+    ssize_t len = strlen(mPath);
 
-    /* remove trailing slashes */
-    while (((const char *)mPath)[inLen - 1] == '/')
-        inLen--;
+    if ( strncmp( mPath, inPath, len) == 0)
+    {
+        // now make sure that the |inFile|'s path has a trailing
+        // separator.
 
-    /* 
-     * See if the given path is a prefix of our path, but make sure that
-     * we don't treat /foo as a parent of /foobar/thing.
-     */
-    if (strncmp(inPath, mPath, inLen) || ((const char *)mPath)[inLen] != '/') {
-        *_retval = PR_FALSE;
-        return NS_OK;
-    }
-    if (recur) {
-        /* good enough -- don't need to check for direct parentage */
-        *_retval = PR_TRUE;
-        return NS_OK;
+        if (inPath[len] == '/')
+        {
+            *_retval = PR_TRUE;
+        }
+
     }
 
-    const char *parentEnd = strrchr(mPath, '/');
-    if (inLen == (parentEnd - (const char *)mPath)) {
-        *_retval = PR_TRUE;
-        return NS_OK;
-    }
-
-    *_retval = PR_FALSE;
     return NS_OK;
 }
 
