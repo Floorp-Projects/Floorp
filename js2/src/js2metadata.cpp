@@ -105,6 +105,12 @@ namespace MetaData {
             break;
         case StmtNode::label:
             {
+/*
+    A labelled statement catches contained, named, 'breaks' but simply adds itself as a label for
+    contained iteration statements. (i.e. you can 'break' out of a labelled statement, but not 'continue'
+    one
+*/
+
                 LabelStmtNode *l = checked_cast<LabelStmtNode *>(p);
                 l->labelID = bCon->getLabel();
                 std::pair<LabelSet::iterator, bool> breakResult = jt->breakTargets->insert(LabelSet::value_type(&l->name, l->labelID));
@@ -135,6 +141,44 @@ namespace MetaData {
             break;
         case StmtNode::While:
             {
+                // add 'default' to list of statement labels, these
+                // are all continue targets (either by name or default).
+                // [adding 'default' simply means pushing the continue target onto the
+                // existing continueLabels list]
+                // The default break label is the bottom of the while
+                // loop.
+
+/*
+                continueLabel = getLabel();
+                breakLabel = getLabel();
+
+                <bra> --> <continueLabel>
+                setLabel(loopTop);
+
+                addContinueLabel(continueLabel);
+                addBreakLabel(breakLabel);
+                
+                <stmt>
+                setLabel(continueLabel);
+                <expr>
+                <test> --> <loopTop>
+                setLabel(breakLabel);
+
+
+*/
+
+            }
+            break;
+        case StmtNode::Break:
+            {
+//                if identifier, look in breakLabel list and jump to matched entry's LabelID
+//                else jump to top of breakLabel list's LabelID
+            }
+            break;
+        case StmtNode::Continue:
+            {
+//                if identifier, look in continueLabel list and jump to matched entry's LabelID
+//                else jump to top of continueLabel list's LabelID
             }
             break;
         case StmtNode::Return:
