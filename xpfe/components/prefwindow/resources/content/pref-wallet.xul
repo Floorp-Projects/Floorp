@@ -130,14 +130,6 @@ dump("\n##### pref="+ this.pref.GetBoolPref("wallet.crypto")+"\n");
               pref="true" preftype="bool" prefstring="wallet.crypto"
               prefattribute="checked"/>
 
-    <separator/>
-
-    <box autostretch="never" halign="center">
-      <button class="dialog" value="&convertEncrypted.label;" accesskey="&convertEncrypted.accesskey;"
-              oncommand="convertStoredValues(true);"/>
-      <button class="dialog" value="&convertObscurred.label;" accesskey="&convertObscurred.accesskey;"
-              oncommand="convertStoredValues(false);"/>
-    </box>
   </titledbox>
 
 </window>
