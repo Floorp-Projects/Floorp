@@ -45,6 +45,17 @@
 * big problems on Linux RedHat8! For a discussion of this issue, see
 * http://bugzilla.mozilla.org/show_bug.cgi?id=174341#c24 and following.
 *
+*
+* MODIFIED: 20 March 2003
+*
+* Removed the early return and changed |N| below from 1000 to 90.
+* Note |make_deep_nest(N)| returns an object graph of length N(N+1).
+* So the graph has now been reduced from 1,001,000 to 8190.
+*
+* With this reduction, the bug still manifests on my WinNT and Linux
+* boxes (crash due to stack overflow). So the testcase is again of use
+* on those boxes. At the same time, Linux RedHat8 boxes can now run
+* the test in a reasonable amount of time.
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -57,19 +68,13 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-/*
- * Early return added 2003-02-27 due to problems on Linux RedHat8.
- * See reference above -
- */
-quit();
-
 
 /*
  * We're just testing that this script will compile and run.
  * Set both |actual| and |expect| to a dummy value.
  */
 status = inSection(1);
-var N = 1000;
+var N = 90;
 try
 {
   make_deep_nest(N);
