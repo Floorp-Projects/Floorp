@@ -160,6 +160,8 @@ function InitializeGlobalVariables()
   gLastWindowToHaveFocus = null;
   gReceiptOptionChanged = false;
   gAttachVCardOptionChanged = false;
+
+
 }
 InitializeGlobalVariables();
 
@@ -1775,6 +1777,7 @@ function GenericSendMessage( msgType )
           gSendOrSaveOperationInProgress = true;
         }
         msgWindow.SetDOMWindow(window);
+        msgWindow.rootDocShell.allowAuth = true;
 
         gMsgCompose.SendMsg(msgType, getCurrentIdentity(), currentAccountKey, msgWindow, progress);
       }
