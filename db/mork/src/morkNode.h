@@ -121,11 +121,11 @@ public: // inlines for weird mNode_Mutable and mNode_Load constants
   mork_bool IsMutable() const { return mNode_Mutable == morkAble_kEnabled; }
   mork_bool IsAsleep() const { return mNode_Mutable == morkAble_kAsleep; }
 
-  void SetClean() { mNode_Load = morkLoad_kClean; }
-  void SetDirty() { mNode_Load = morkLoad_kDirty; }
+  void SetNodeClean() { mNode_Load = morkLoad_kClean; }
+  void SetNodeDirty() { mNode_Load = morkLoad_kDirty; }
   
-  mork_bool IsClean() const { return mNode_Load == morkLoad_kClean; }
-  mork_bool IsDirty() const { return mNode_Load == morkLoad_kDirty; }
+  mork_bool IsNodeClean() const { return mNode_Load == morkLoad_kClean; }
+  mork_bool IsNodeDirty() const { return mNode_Load == morkLoad_kDirty; }
   
 public: // morkNode memory management methods
   static void* MakeNew(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev);
@@ -264,10 +264,18 @@ public: // refcounting for typesafe subclass inline methods
 extern void // utility method very similar to morkNode::SlotStrongNode():
 nsIMdbHeap_SlotStrongHeap(nsIMdbHeap* self, morkEnv* ev, nsIMdbHeap** ioSlot);
   // If *ioSlot is non-nil, that heap is released by CutStrongRef() and
-  // then zeroed out.  Then if me is non-nil, this is acquired by
+  // then zeroed out.  Then if self is non-nil, this is acquired by
   // calling AddStrongRef(), and if the return value shows success,
-  // then me is put into slot *ioSlot.  Note me can be nil, so we take
-  // expression 'nsIMdbHeap_SlotStrongNode(0, ev, &slot)'.
+  // then self is put into slot *ioSlot.  Note self can be nil, so we take
+  // expression 'nsIMdbHeap_SlotStrongHeap(0, ev, &slot)'.
+
+extern void // utility method very similar to morkNode::SlotStrongNode():
+nsIMdbFile_SlotStrongFile(nsIMdbFile* self, morkEnv* ev, nsIMdbFile** ioSlot);
+  // If *ioSlot is non-nil, that file is released by CutStrongRef() and
+  // then zeroed out.  Then if self is non-nil, this is acquired by
+  // calling AddStrongRef(), and if the return value shows success,
+  // then self is put into slot *ioSlot.  Note self can be nil, so we take
+  // expression 'nsIMdbHeap_SlotStrongFile(0, ev, &slot)'.
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 

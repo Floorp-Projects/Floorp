@@ -122,6 +122,9 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
 , mWriter_Stream( 0 )
 , mWriter_SlotHeap( 0 )
 
+, mWriter_CommitGroupIdentity( 0 ) // see mStore_CommitGroupIdentity
+, mWriter_GroupBufFill( 0 )
+
 , mWriter_TotalCount( morkWriter_kCountNumberOfPhases )
 , mWriter_DoneCount( 0 )
 
@@ -130,7 +133,7 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
 , mWriter_MaxLine( morkWriter_kMaxLine )
   
 , mWriter_TableForm( 0 )
-, mWriter_TableAtomScope( 0 )
+, mWriter_TableAtomScope( 'v' )
 , mWriter_TableRowScope( 0 )
 , mWriter_TableKind( 0 )
   
@@ -139,14 +142,19 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
 , mWriter_RowScope( 0 )
   
 , mWriter_DictForm( 0 )
-, mWriter_DictAtomScope( 0 )
+, mWriter_DictAtomScope( 'v' )
 
 , mWriter_NeedDirtyAll( morkBool_kFalse )
-, mWriter_Phase( morkWriter_kPhaseNothingDone )
+, mWriter_Incremental( morkBool_kTrue ) // opposite of mWriter_NeedDirtyAll
 , mWriter_DidStartDict( morkBool_kFalse )
 , mWriter_DidEndDict( morkBool_kTrue )
 
 , mWriter_SuppressDirtyRowNewline( morkBool_kFalse )
+, mWriter_DidStartGroup( morkBool_kFalse )
+, mWriter_DidEndGroup( morkBool_kTrue )
+, mWriter_Phase( morkWriter_kPhaseNothingDone )
+
+, mWriter_BeVerbose( ev->mEnv_BeVerbose )
 
 , mWriter_TableRowArrayPos( 0 )
 
@@ -158,6 +166,8 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
 , mWriter_RowSpaceTablesIter( )
 , mWriter_RowSpaceRowsIter( )
 {
+  mWriter_GroupBuf[ 0 ] = 0;
+
   mWriter_SafeNameBuf[ 0 ] = 0;
   mWriter_SafeNameBuf[ morkWriter_kMaxColumnNameSize * 2 ] = 0;
   mWriter_ColNameBuf[ 0 ] = 0;
@@ -188,37 +198,61 @@ morkWriter::morkWriter(morkEnv* ev, const morkUsage& inUsage,
       nsIMdbHeap_SlotStrongHeap(ioSlotHeap, ev, &mWriter_SlotHeap);
       if ( ev->Good() )
       {
-        morkFile* bud = ioFile->AcquireBud(ev, ioSlotHeap);
+        mNode_Derived = morkDerived_kWriter;
+      }
+    }
+    else
+      ev->NilPointerError();
+  }
+}
+
+
+void
+morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
+{
+  mWriter_Incremental = !mWriter_NeedDirtyAll; // opposites
+  
+  if ( !mWriter_Stream && ev->Good() )
+  {
+    if ( mWriter_File )
+    {
+      morkStream* stream = 0;
+      mork_bool frozen = morkBool_kFalse; // need to modify
+      nsIMdbHeap* heap = mWriter_SlotHeap;
+    
+      if ( mWriter_Incremental )
+      {
+        stream = new(*heap, ev)
+          morkStream(ev, morkUsage::kHeap, heap, mWriter_File,
+            morkWriter_kStreamBufSize, frozen);
+      }
+      else // compress commit
+      {
+        morkFile* bud = mWriter_File->AcquireBud(ev, heap);
         if ( bud )
         {
           if ( ev->Good() )
           {
             mWriter_Bud = bud;
-            mork_bool frozen = morkBool_kFalse; // need to modify
-            morkStream* stream = new(*ioSlotHeap, ev)
-              morkStream(ev, morkUsage::kHeap, ioSlotHeap, bud,
+            stream = new(*heap, ev)
+              morkStream(ev, morkUsage::kHeap, heap, bud,
                 morkWriter_kStreamBufSize, frozen);
-              
-            if ( stream )
-            {
-              if ( ev->Good() )
-              {
-                mWriter_Stream = stream;
-                if ( ev->Good() )
-                  mNode_Derived = morkDerived_kWriter;
-                  
-              }
-              else
-                stream->CutStrongRef(ev);
-            }
           }
           else
             bud->CutStrongRef(ev);
         }
       }
+        
+      if ( stream )
+      {
+        if ( ev->Good() )
+          mWriter_Stream = stream;
+        else
+          stream->CutStrongRef(ev);
+      }
     }
     else
-      ev->NilPointerError();
+      this->NilWriterFileError(ev);
   }
 }
 
@@ -265,6 +299,12 @@ morkWriter::NilWriterBudError(morkEnv* ev)
 }
 
 /*static*/ void
+morkWriter::NilWriterFileError(morkEnv* ev)
+{
+  ev->NewError("nil mWriter_File");
+}
+
+/*static*/ void
 morkWriter::NilWriterStreamError(morkEnv* ev)
 {
   ev->NewError("nil mWriter_Stream");
@@ -283,6 +323,9 @@ morkWriter::WriteMore(morkEnv* ev) // call until IsWritingDone() is true
   {
     if ( this->IsWriter() )
     {
+      if ( !mWriter_Stream )
+        this->MakeWriterStream(ev);
+        
       if ( mWriter_Stream )
       {
         if ( ev->Bad() )
@@ -456,10 +499,9 @@ morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
     {
       if ( atom )
       {
-        // temporarily check for expected change from earlier DirtyAll():
-        if ( atom->mAtom_Change == morkChange_kAdd )
+        if ( atom->IsAtomDirty() )
         {
-          atom->mAtom_Change = morkChange_kNil; // neutralize change
+          atom->SetAtomClean(); // neutralize change
           
           atom->AliasYarn(&yarn);
           mork_size size = ev->TokenAsHex(idBuf, atom->mBookAtom_Id);
@@ -483,8 +525,6 @@ morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
           
           ++mWriter_DoneCount;
         }
-        else // temporarily warn about wrong change slot value
-          ev->NewWarning("mAtom_Change != morkChange_kAdd");
       }
       else
         ev->NilPointerError();
@@ -494,8 +534,12 @@ morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
   
   if ( ev->Good() )
   {
-    this->IndentAsNeeded(ev, 0);
-    stream->PutByteThenNewline(ev, '>'); // end dict
+    ioSpace->SetAtomSpaceClean();
+    // this->IndentAsNeeded(ev, 0);
+    // stream->PutByteThenNewline(ev, '>'); // end dict
+    
+    stream->Putc(ev, '>'); // end dict
+    ++mWriter_LineSize;
   }
 }
  
@@ -514,7 +558,7 @@ morkWriter::DirtyAll(morkEnv* ev)
   morkStore* store = mWriter_Store;
   if ( store )
   {
-    store->SetDirty();
+    store->SetStoreDirty();
     mork_change* c = 0;
 
     if ( ev->Good() )
@@ -532,6 +576,7 @@ morkWriter::DirtyAll(morkEnv* ev)
         {
           if ( space->IsAtomSpace() )
           {
+            space->SetAtomSpaceDirty();
             morkBookAtom* atom = 0;
             morkAtomAidMapIter* ai = &mWriter_AtomSpaceAtomAidsIter;
             ai->InitAtomAidMapIter(ev, &space->mAtomSpace_AtomAids);
@@ -573,7 +618,7 @@ morkWriter::DirtyAll(morkEnv* ev)
         {
           if ( space->IsRowSpace() )
           {
-            space->SetDirty();
+            space->SetRowSpaceDirty();
             if ( ev->Good() )
             {
               morkRowMapIter* ri = &mWriter_RowSpaceRowsIter;
@@ -610,7 +655,8 @@ morkWriter::DirtyAll(morkEnv* ev)
                 {
                   // table->DirtyAllTableContent(ev);
                   // only necessary to mark table itself dirty:
-                  table->SetDirty();
+                  table->SetTableDirty();
+                  table->SetTableRewrite();
                   ++mWriter_TotalCount;
                 }
                 else
@@ -636,6 +682,8 @@ morkWriter::DirtyAll(morkEnv* ev)
 mork_bool
 morkWriter::OnNothingDone(morkEnv* ev)
 {
+  mWriter_Incremental = !mWriter_NeedDirtyAll; // opposites
+  
   // morkStream* stream = mWriter_Stream;
   if ( mWriter_NeedDirtyAll )
     this->DirtyAll(ev);
@@ -649,14 +697,131 @@ morkWriter::OnNothingDone(morkEnv* ev)
 }
 
 mork_bool
-morkWriter::OnDirtyAllDone(morkEnv* ev)
+morkWriter::StartGroup(morkEnv* ev)
 {
   morkStream* stream = mWriter_Stream;
-  stream->Seek(ev, 0); // beginning of stream
+  mWriter_DidStartGroup = morkBool_kTrue;
+  mWriter_DidEndGroup = morkBool_kFalse;
+
+  char buf[ 64 ];
+  char* p = buf;
+  *p++ = '@';
+  *p++ = '$';
+  *p++ = '$';
+  *p++ = '{';
+  
+  mork_token groupID = mWriter_CommitGroupIdentity;
+  mork_fill idFill = ev->TokenAsHex(p, groupID);
+  mWriter_GroupBufFill = 0;
+  // ev->TokenAsHex(mWriter_GroupBuf, groupID);
+  if ( idFill < morkWriter_kGroupBufSize )
+  {
+    MORK_MEMCPY(mWriter_GroupBuf, p, idFill + 1);
+    mWriter_GroupBufFill = idFill;
+  }
+  else
+    *mWriter_GroupBuf = 0;
+    
+  p += idFill;
+  *p++ = '{';
+  *p++ = '@';
+  *p = 0;
+
+  stream->PutLineBreak(ev);
+  
+  morkStore* store = mWriter_Store;
+  if ( store ) // might need to capture commit group position?
+  {
+    mork_pos groupPos = stream->Tell(ev);
+    if ( !store->mStore_FirstCommitGroupPos )
+      store->mStore_FirstCommitGroupPos = groupPos;
+    else if ( !store->mStore_SecondCommitGroupPos )
+      store->mStore_SecondCommitGroupPos = groupPos;
+  }
+  
+  stream->Write(ev, buf, idFill + 6); // '@$${' + idFill + '{@'
+  stream->PutLineBreak(ev);
+  mWriter_LineSize = 0;
+  
+  return ev->Good();
+}
+
+mork_bool
+morkWriter::CommitGroup(morkEnv* ev)
+{
+  if ( mWriter_DidStartGroup )
+  {
+    morkStream* stream = mWriter_Stream;
+  
+    if ( mWriter_LineSize )
+      stream->PutLineBreak(ev);
+      
+    stream->Putc(ev, '@');
+    stream->Putc(ev, '$');
+    stream->Putc(ev, '$');
+    stream->Putc(ev, '}');
+    
+    mork_fill bufFill = mWriter_GroupBufFill;
+    if ( bufFill )
+      stream->Write(ev, mWriter_GroupBuf, bufFill);
+
+    stream->Putc(ev, '}');
+    stream->Putc(ev, '@');
+    stream->PutLineBreak(ev);
+
+    mWriter_LineSize = 0;
+  }
+
+  mWriter_DidStartGroup = morkBool_kFalse;
+  mWriter_DidEndGroup = morkBool_kTrue;
+  
+  return ev->Good();
+}
+
+mork_bool
+morkWriter::AbortGroup(morkEnv* ev)
+{
+  if ( mWriter_DidStartGroup )
+  {
+    morkStream* stream = mWriter_Stream;
+    stream->PutLineBreak(ev);
+    stream->PutStringThenNewline(ev, "@$$}~~}@");
+    mWriter_LineSize = 0;
+  }
+  
+  mWriter_DidStartGroup = morkBool_kFalse;
+  mWriter_DidEndGroup = morkBool_kTrue;
+
+  return ev->Good();
+}
+
+
+mork_bool
+morkWriter::OnDirtyAllDone(morkEnv* ev)
+{
   if ( ev->Good() )
   {
-    stream->PutStringThenNewline(ev, morkWriter_kFileHeader);
-    mWriter_LineSize = 0;
+    morkStream* stream = mWriter_Stream;
+    if ( mWriter_NeedDirtyAll ) // compress commit
+    {
+      stream->Seek(ev, 0); // beginning of stream
+      stream->PutStringThenNewline(ev, morkWriter_kFileHeader);
+      mWriter_LineSize = 0;
+    }
+    else // else mWriter_Incremental
+    {
+      mork_pos eos = stream->Length(ev); // length is end of stream
+      if ( ev->Good() )
+      {
+        stream->Seek(ev, eos); // goto end of stream
+        if ( eos < 128 ) // maybe need file header?
+        {
+          stream->PutStringThenNewline(ev, morkWriter_kFileHeader);
+          mWriter_LineSize = 0;
+        }
+        this->StartGroup(ev); // begin incremental transaction
+      }
+    }
   }
     
   if ( ev->Good() )
@@ -673,14 +838,19 @@ morkWriter::OnPutHeaderDone(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnPutHeaderDone()");
+  
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnPutHeaderDone()");
   mWriter_LineSize = 0;
   
-  morkStore* store = mWriter_Store;
-  if ( store )
-    store->RenumberAllCollectableContent(ev);
-  else
-    this->NilWriterStoreError(ev);
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+    morkStore* store = mWriter_Store;
+    if ( store )
+      store->RenumberAllCollectableContent(ev);
+    else
+      this->NilWriterStoreError(ev);
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseRenumberAllDone;
@@ -696,8 +866,14 @@ morkWriter::OnRenumberAllDone(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnRenumberAllDone()");
+    
+  // if ( mWriter_NeedDirtyAll )
+  //  stream->PutStringThenNewline(ev, "// OnRenumberAllDone()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseStoreAtomSpaces;
@@ -713,8 +889,14 @@ morkWriter::OnStoreAtomSpaces(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnStoreAtomSpaces()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnStoreAtomSpaces()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
   
   if ( ev->Good() )
   {
@@ -722,11 +904,17 @@ morkWriter::OnStoreAtomSpaces(morkEnv* ev)
     if ( store )
     {
       morkAtomSpace* space = store->LazyGetGroundColumnSpace(ev);
-      if ( space )
+      if ( space && space->IsAtomSpaceDirty() )
       {
-        stream->PutStringThenNewline(ev, "// ground column space dict:");
-        mWriter_LineSize = 0;
+        // stream->PutStringThenNewline(ev, "// ground column space dict:");
+        
+        if ( mWriter_LineSize )
+        {
+          stream->PutLineBreak(ev);
+          mWriter_LineSize = 0;
+        }
         this->WriteAtomSpaceAsDict(ev, space);
+        space->SetAtomSpaceClean();
       }
     }
     else
@@ -747,8 +935,14 @@ morkWriter::OnAtomSpaceAtomAids(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnAtomSpaceAtomAids()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnAtomSpaceAtomAids()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseStoreRowSpacesTables;
@@ -778,6 +972,7 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
       {
         if ( space->IsRowSpace() )
         {
+          space->SetRowSpaceClean();
           if ( ev->Good() )
           {
             morkTableMapIter* ti = &mWriter_RowSpaceTablesIter;
@@ -791,21 +986,60 @@ morkWriter::WriteAllStoreTables(morkEnv* ev)
             {
               if ( table && table->IsTable() )
               {
-                // temporarily check for dirty from earlier DirtyAll():
-                if ( table->IsDirty() )
+                if ( table->IsTableDirty() )
                 {
-                  table->SetClean();
-                  
+                  mWriter_BeVerbose =
+                    ( ev->mEnv_BeVerbose || table->IsTableVerbose() );
+                    
                   if ( this->PutTableDict(ev, table) )
                     this->PutTable(ev, table);
+
+                  table->SetTableClean(ev);
+                  mWriter_BeVerbose = ev->mEnv_BeVerbose;
                 }
-                else // temporarily warn about wrong dirty status:
-                  ev->NewWarning("table->IsClean()");
               }
               else
                 table->NonTableTypeWarning(ev);
             }
             ti->CloseMapIter(ev);
+          }
+          if ( ev->Good() )
+          {
+            mWriter_TableRowScope = 0; // ensure no table context now
+            
+            morkRowMapIter* ri = &mWriter_RowSpaceRowsIter;
+            ri->InitRowMapIter(ev, &space->mRowSpace_Rows);
+
+            morkRow* row = 0; // old row in the map
+              
+            for ( c = ri->FirstRow(ev, &row); c && ev->Good();
+                  c = ri->NextRow(ev, &row) )
+            {
+              if ( row && row->IsRow() )
+              {
+                // later we should also check that table use count is nonzero:
+                if ( row->IsRowDirty() )
+                {
+                  mWriter_BeVerbose = ev->mEnv_BeVerbose;
+                  if ( this->PutRowDict(ev, row) )
+                  {
+                    if ( ev->Good() && mWriter_DidStartDict )
+                    {
+                      this->EndDict(ev);
+                      if ( mWriter_LineSize < 32 && ev->Good() )
+                        mWriter_SuppressDirtyRowNewline = morkBool_kTrue;
+                    }
+                      
+                    if ( ev->Good() )
+                      this->PutRow(ev, row);
+                  }
+                  mWriter_BeVerbose = ev->mEnv_BeVerbose;
+                }
+              }
+              else
+                row->NonRowTypeWarning(ev);
+            }
+            ri->CloseMapIter(ev);
           }
         }
         else
@@ -823,8 +1057,14 @@ morkWriter::OnStoreRowSpacesTables(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnStoreRowSpacesTables()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnStoreRowSpacesTables()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
   
   // later we'll break this up, but today we'll write all in one shot:
   this->WriteAllStoreTables(ev);
@@ -843,8 +1083,14 @@ morkWriter::OnRowSpaceTables(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnRowSpaceTables()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnRowSpaceTables()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseStoreRowSpacesRows;
@@ -860,8 +1106,14 @@ morkWriter::OnTableRowArray(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnTableRowArray()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnTableRowArray()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseStoreRowSpacesRows;
@@ -877,8 +1129,14 @@ morkWriter::OnStoreRowSpacesRows(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnStoreRowSpacesRows()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnStoreRowSpacesRows()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseContentDone;
@@ -894,8 +1152,14 @@ morkWriter::OnRowSpaceRows(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnRowSpaceRows()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnRowSpaceRows()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_NeedDirtyAll ) // compress commit
+  {
+  }
     
   if ( ev->Good() )
     mWriter_Phase = morkWriter_kPhaseContentDone;
@@ -911,8 +1175,25 @@ morkWriter::OnContentDone(morkEnv* ev)
   morkStream* stream = mWriter_Stream;
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
-  stream->PutStringThenNewline(ev, "// OnContentDone()");
+
+  // if ( mWriter_NeedDirtyAll )
+  //   stream->PutStringThenNewline(ev, "// OnContentDone()");
   mWriter_LineSize = 0;
+  
+  if ( mWriter_Incremental )
+  {
+    if ( ev->Good() )
+      this->CommitGroup(ev);
+    else
+      this->AbortGroup(ev);
+  }
+  else if ( mWriter_Store && ev->Good() )
+  {
+    // after rewriting everything, there are no transaction groups:
+    mWriter_Store->mStore_FirstCommitGroupPos = 0;
+    mWriter_Store->mStore_SecondCommitGroupPos = 0;
+  }
+  
   stream->Flush(ev);
   morkFile* bud = mWriter_Bud;
   if ( bud )
@@ -921,7 +1202,7 @@ morkWriter::OnContentDone(morkEnv* ev)
     bud->BecomeTrunk(ev);
     morkFile::SlotStrongFile((morkFile*) 0, ev, &mWriter_Bud);
   }
-  else
+  else if ( !mWriter_Incremental ) // should have a bud?
     this->NilWriterBudError(ev);
     
   mWriter_Phase = morkWriter_kPhaseWritingDone; // stop always
@@ -939,6 +1220,36 @@ morkWriter::OnWritingDone(morkEnv* ev)
 }
 
 mork_bool
+morkWriter::PutTableChange(morkEnv* ev, const morkTableChange* inChange)
+{
+  if ( inChange->IsAddRowTableChange() )
+  {
+    this->PutRow(ev, inChange->mTableChange_Row ); // row alone means add
+  }
+  else if ( inChange->IsCutRowTableChange() )
+  {
+    mWriter_Stream->Putc(ev, '-'); // prefix '-' indicates cut row
+    ++mWriter_LineSize;
+    this->PutRow(ev, inChange->mTableChange_Row );
+  }
+  else if ( inChange->IsMoveRowTableChange() )
+  {
+    this->PutRow(ev, inChange->mTableChange_Row );
+    char buf[ 64 ];
+    char* p = buf;
+    *p++ = '!'; // for moves, position is indicated by prefix '!'
+    mork_size posSize = ev->TokenAsHex(p, inChange->mTableChange_Pos);
+    p += posSize;
+    *p++ = ' ';
+    mWriter_LineSize += mWriter_Stream->Write(ev, buf, posSize + 2);
+  }
+  else
+    inChange->UnknownChangeError(ev);
+  
+  return ev->Good();
+}
+
+mork_bool
 morkWriter::PutTable(morkEnv* ev, morkTable* ioTable)
 {
   if ( ev->Good() )
@@ -946,25 +1257,38 @@ morkWriter::PutTable(morkEnv* ev, morkTable* ioTable)
     
   if ( ev->Good() )
   {
-    morkArray* array = &ioTable->mTable_RowArray; // vector of rows
-    mork_fill fill = array->mArray_Fill; // count of rows
-    morkRow** rows = (morkRow**) array->mArray_Slots;
-    if ( rows && fill )
+    if ( ioTable->IsTableRewrite() || mWriter_NeedDirtyAll )
     {
-      morkRow** end = rows + fill;
-      while ( rows < end && ev->Good() )
+      morkArray* array = &ioTable->mTable_RowArray; // vector of rows
+      mork_fill fill = array->mArray_Fill; // count of rows
+      morkRow** rows = (morkRow**) array->mArray_Slots;
+      if ( rows && fill )
       {
-        morkRow* r = *rows++; // next row to consider
-        if ( r && r->IsRow() )
+        morkRow** end = rows + fill;
+        while ( rows < end && ev->Good() )
+        {
+          morkRow* r = *rows++; // next row to consider
           this->PutRow(ev, r);
-        else
-          r->NonRowTypeError(ev);
+        }
+      }
+    }
+    else // incremental write only table changes
+    {
+      morkList* list = &ioTable->mTable_ChangeList;
+      morkNext* next = list->GetListHead();
+      while ( next && ev->Good() )
+      {
+        this->PutTableChange(ev, (morkTableChange*) next);
+        next = next->GetNextLink();
       }
     }
   }
     
   if ( ev->Good() )
     this->EndTable(ev);
+  
+  ioTable->SetTableClean(ev); // note this also cleans change list
+  mWriter_TableRowScope = 0;
 
   ++mWriter_DoneCount;
   return ev->Good();
@@ -1141,6 +1465,48 @@ morkWriter::ChangeDictAtomScope(morkEnv* ev, mork_scope inScope)
 }
 
 void
+morkWriter::ChangeRowForm(morkEnv* ev, mork_cscode inNewForm)
+{
+  if ( inNewForm != mWriter_RowForm )
+  {
+    morkStream* stream = mWriter_Stream;
+    if ( mWriter_LineSize )
+      stream->PutLineBreak(ev);
+    mWriter_LineSize = 0;
+
+    char buf[ 128 ]; // buffer for staging the two hex IDs
+    char* p = buf;
+    *p++ = '['; // we always start with open bracket
+    *p++ = '('; // we always start with open paren
+    *p++ = (char) morkStore_kFormColumn;
+
+    mork_size formSize = 1; // default to one byte
+    if ( inNewForm >= 0x80 )
+    {
+      *p++ = '^'; // indicates col is hex ID
+      formSize = ev->TokenAsHex(p, inNewForm);
+      p += formSize;
+    }
+    else
+    {
+      *p++ = '='; // indicates col is imm byte
+      *p++ = (char) (mork_u1) inNewForm;
+    }
+    
+    *p++ = ')';
+    *p++ = ']';
+    *p = 0;
+
+    mork_size pending = formSize + 6;
+    this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
+    
+    mWriter_LineSize += stream->Write(ev, buf, pending);
+      
+    mWriter_RowForm = inNewForm;
+  }
+}
+
+void
 morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
 {
   if ( inNewForm != mWriter_DictForm )
@@ -1152,7 +1518,7 @@ morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
 
     char buf[ 128 ]; // buffer for staging the two hex IDs
     char* p = buf;
-    *p++ = '<'; // we always start with open paren
+    *p++ = '<'; // we always start with open angle
     *p++ = '('; // we always start with open paren
     *p++ = (char) morkStore_kFormColumn;
 
@@ -1192,11 +1558,15 @@ morkWriter::StartDict(morkEnv* ev)
     ++mWriter_LineSize;
   }
   mWriter_DidStartDict = morkBool_kTrue;
+  mWriter_DidEndDict = morkBool_kFalse;
   
   if ( mWriter_LineSize )
     stream->PutLineBreak(ev);
   mWriter_LineSize = 0;
-  stream->PutLineBreak(ev);
+  
+  if ( mWriter_TableRowScope ) // blank line before table's dict?
+    stream->PutLineBreak(ev);
+    
   if ( mWriter_DictForm || mWriter_DictAtomScope != 'v' )
   {
     stream->Putc(ev, '<');
@@ -1216,8 +1586,8 @@ morkWriter::StartDict(morkEnv* ev)
   else
   {
     stream->Putc(ev, '<');
-    stream->Putc(ev, ' ');
-    mWriter_LineSize += 2;
+    // stream->Putc(ev, ' ');
+    ++mWriter_LineSize;
   }
 }
 
@@ -1231,6 +1601,7 @@ morkWriter::EndDict(morkEnv* ev)
     ++mWriter_LineSize;
   }
   mWriter_DidStartDict = morkBool_kFalse;
+  mWriter_DidEndDict = morkBool_kTrue;
 }
 
 void
@@ -1247,27 +1618,72 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
     mWriter_LineSize = 0;
     // stream->PutLineBreak(ev);
 
-    char buf[ 64 ]; // buffer for staging hex
+    char buf[ 64 + 16 ]; // buffer for staging hex
     char* p = buf;
-    *p++ = '{';
-    mork_size size = ev->OidAsHex(p, toid);
-    p += size;
-    *p++ = ' ';
-    *p = '{';
-    mWriter_LineSize += stream->Write(ev, buf, size + 3);
+    *p++ = '{'; // punct 1
+    mork_size punctSize = 10; // counting "{ {/*r=*/ "
+
+    if ( ioTable->IsTableRewrite() && mWriter_Incremental )
+    {
+      *p++ = '-';
+      ++punctSize; // counting '-' // punct ++
+      ++mWriter_LineSize;
+    }
+    mork_size oidSize = ev->OidAsHex(p, toid);
+    p += oidSize;
+    *p++ = ' '; // punct 2
+    *p++ = '{'; // punct 3
     
-    // mork_scope rs = mWriter_TableRowScope;
-    // if ( rs )
-    // {
-    //   this->IndentAsNeeded(ev, morkWriter_kTableMetaCellDepth);
-    //   this->WriteTokenToTokenMetaCell(ev, store->mStore_RowScopeToken, rs);
-    // }
+    *p++ = '/'; // punct=4
+    *p++ = '*'; // punct=5
+    *p++ = 'r'; // punct=6
+    *p++ = '='; // punct=7
+
+    mork_token tableUses = (mork_token) ioTable->mTable_GcUses;
+    mork_size usesSize = ev->TokenAsHex(p, tableUses);
+    punctSize += usesSize;
+    p += usesSize;
+    
+    *p++ = '*'; // punct=8
+    *p++ = '/'; // punct=9
+    *p++ = ' '; // punct=10
+
+    mWriter_LineSize += stream->Write(ev, buf, oidSize + punctSize);
+    
     mork_kind tk = mWriter_TableKind;
     if ( tk )
     {
       this->IndentAsNeeded(ev, morkWriter_kTableMetaCellDepth);
       this->WriteTokenToTokenMetaCell(ev, morkStore_kKindColumn, tk);
     }
+      
+    stream->Putc(ev, '('); // start 's' col cell
+    stream->Putc(ev, 's'); // column
+    stream->Putc(ev, '='); // column
+    mWriter_LineSize += 3;
+
+    int prio = (int) ioTable->mTable_Priority;
+    if ( prio > 9 ) // need to force down to max decimal digit?
+      prio = 9;
+    prio += '0'; // add base digit zero
+    stream->Putc(ev, prio); // priority: (s=0
+    ++mWriter_LineSize;
+    
+    if ( ioTable->IsTableUnique() )
+    {
+      stream->Putc(ev, 'u'); // (s=0u
+      ++mWriter_LineSize;
+    }
+    if ( ioTable->IsTableVerbose() )
+    {
+      stream->Putc(ev, 'v'); // (s=0uv
+      ++mWriter_LineSize;
+    }
+    
+    // stream->Putc(ev, ':'); // (s=0uv:
+    // stream->Putc(ev, 'c'); // (s=0uv:c
+    stream->Putc(ev, ')'); // end 's' col cell (s=0uv:c)
+    mWriter_LineSize += 1; // maybe 3 if we add ':' and 'c'
 
     morkRow* r = ioTable->mTable_MetaRow;
     if ( r )
@@ -1289,8 +1705,6 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
       stream->Putc(ev, ' '); // nice white space
       ++mWriter_LineSize;
     }
-    
-    // mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
   }
 }
 
@@ -1307,6 +1721,8 @@ morkWriter::EndTable(morkEnv* ev)
 mork_bool
 morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
 {
+  mWriter_RowForm = mWriter_TableForm;
+
   morkCell* cells = ioRow->mRow_Cells;
   if ( cells )
   {
@@ -1321,7 +1737,7 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
     while ( ++cells < end && ev->Good() )
     {
       morkAtom* atom = cells->GetAtom();
-      if ( atom && atom->mAtom_Change == morkChange_kAdd )
+      if ( atom && atom->IsAtomDirty() )
       {
         if ( atom->IsBook() ) // is it possible to write atom ID?
         {
@@ -1331,7 +1747,7 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
             if ( ev->Bad() )
               break;
           }
-          atom->mAtom_Change = morkChange_kNil; // neutralize change
+          atom->SetAtomClean(); // neutralize change
           
           this->IndentAsNeeded(ev, morkWriter_kDictAliasDepth);
           morkBookAtom* ba = (morkBookAtom*) atom;
@@ -1386,92 +1802,160 @@ morkWriter::IsYarnAllValue(const mdbYarn* inYarn)
 }
 
 mork_bool
+morkWriter::PutVerboseCell(morkEnv* ev, morkCell* ioCell, mork_bool inWithVal)
+{
+  morkStream* stream = mWriter_Stream;
+  morkStore* store = mWriter_Store;
+
+  mdbYarn* colYarn = &mWriter_ColYarn;
+  
+  morkAtom* atom = (inWithVal)? ioCell->GetAtom() : (morkAtom*) 0;
+  
+  mork_column col = ioCell->GetColumn();
+  store->TokenToString(ev, col, colYarn);
+  
+  mdbYarn yarn; // to ref content inside atom
+  atom->AliasYarn(&yarn); // works even when atom==nil
+  
+  if ( yarn.mYarn_Form != mWriter_RowForm )
+    this->ChangeRowForm(ev, yarn.mYarn_Form);
+
+  mork_size pending = yarn.mYarn_Fill + colYarn->mYarn_Fill +
+     morkWriter_kYarnEscapeSlop + 3;
+  this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
+
+  stream->Putc(ev, '('); // start cell
+  ++mWriter_LineSize;
+
+  this->WriteYarn(ev, colYarn); // column
+  
+  pending = yarn.mYarn_Fill + morkWriter_kYarnEscapeSlop;
+  this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellValueDepth);
+  stream->Putc(ev, '=');
+  ++mWriter_LineSize;
+  
+  this->WriteYarn(ev, &yarn); // value
+  
+  stream->Putc(ev, ')'); // end cell
+  ++mWriter_LineSize;
+
+  return ev->Good();
+}
+
+mork_bool
+morkWriter::PutVerboseRowCells(morkEnv* ev, morkRow* ioRow)
+{
+  morkCell* cells = ioRow->mRow_Cells;
+  if ( cells )
+  {
+
+    morkCell* end = cells + ioRow->mRow_Length;
+    --cells; // prepare for preincrement:
+    while ( ++cells < end && ev->Good() )
+    {
+      // note we prefer to avoid writing cells here with no value:
+      if ( cells->GetAtom() ) // does cell have any value?
+        this->PutVerboseCell(ev, cells, /*inWithVal*/ morkBool_kTrue);
+    }
+  }
+  return ev->Good();
+}
+
+
+mork_bool
+morkWriter::PutCell(morkEnv* ev, morkCell* ioCell, mork_bool inWithVal)
+{
+  morkStream* stream = mWriter_Stream;
+  char buf[ 128 ]; // buffer for staging hex ids
+  char* idBuf = buf + 2; // where the id always starts
+  buf[ 0 ] = '('; // we always start with open paren
+  buf[ 1 ] = '^'; // column is always a hex ID
+  
+  mork_size colSize = 0; // the size of col hex ID
+  
+  morkAtom* atom = (inWithVal)? ioCell->GetAtom() : (morkAtom*) 0;
+  
+  mork_column col = ioCell->GetColumn();
+  char* p = idBuf;
+  colSize = ev->TokenAsHex(p, col);
+  p += colSize;
+
+  mdbYarn yarn; // to ref content inside atom
+  atom->AliasYarn(&yarn); // works even when atom==nil
+  
+  if ( yarn.mYarn_Form != mWriter_RowForm )
+    this->ChangeRowForm(ev, yarn.mYarn_Form);
+  
+  if ( atom && atom->IsBook() ) // is it possible to write atom ID?
+  {
+    this->IndentAsNeeded(ev, morkWriter_kRowCellDepth);
+    *p++ = '^';
+    morkBookAtom* ba = (morkBookAtom*) atom;
+
+    mork_size valSize = ev->TokenAsHex(p, ba->mBookAtom_Id);
+    mork_fill yarnFill = yarn.mYarn_Fill;
+    mork_bool putImmYarn = ( yarnFill <= valSize );
+    if ( putImmYarn )
+      putImmYarn = this->IsYarnAllValue(&yarn);
+    
+    if ( putImmYarn ) // value no bigger than id?
+    {
+      p[ -1 ] = '='; // go back and clobber '^' with '=' instead
+      if ( yarnFill )
+      {
+        MORK_MEMCPY(p, yarn.mYarn_Buf, yarnFill);
+        p += yarnFill;
+      }
+      *p++ = ')';
+      mork_size distance = (mork_size) (p - buf);
+      mWriter_LineSize += stream->Write(ev, buf, distance);
+    }
+    else
+    {
+      p += valSize;
+      *p = ')';
+      mWriter_LineSize += stream->Write(ev, buf, colSize + valSize + 4);
+    }
+
+    if ( atom->IsAtomDirty() )
+    {
+      atom->SetAtomClean();
+      ++mWriter_DoneCount;
+    }
+  }
+  else // must write an anonymous atom
+  {
+    mork_size pending = yarn.mYarn_Fill + colSize +
+      morkWriter_kYarnEscapeSlop + 2;
+    this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
+
+    mWriter_LineSize += stream->Write(ev, buf, colSize + 2);
+
+    pending -= ( colSize + 2 );
+    this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
+    stream->Putc(ev, '=');
+    ++mWriter_LineSize;
+    
+    this->WriteYarn(ev, &yarn);
+    stream->Putc(ev, ')'); // end cell
+    ++mWriter_LineSize;
+  }
+  return ev->Good();
+}
+
+mork_bool
 morkWriter::PutRowCells(morkEnv* ev, morkRow* ioRow)
 {
   morkCell* cells = ioRow->mRow_Cells;
   if ( cells )
   {
-    morkStream* stream = mWriter_Stream;
-    char buf[ 128 ]; // buffer for staging hex ids
-    char* idBuf = buf + 2; // where the id always starts
-    buf[ 0 ] = '('; // we always start with open paren
-    buf[ 1 ] = '^'; // column is always a hex ID
-    
-    mork_size colSize = 0; // the size of col hex ID
-
     morkCell* end = cells + ioRow->mRow_Length;
     --cells; // prepare for preincrement:
-    while ( ++cells < end )
+    while ( ++cells < end && ev->Good() )
     {
-      morkAtom* atom = cells->GetAtom();
-      if ( atom ) // anything to write at all?
-      {
-        mork_column col = cells->GetColumn();
-        char* p = idBuf;
-        colSize = ev->TokenAsHex(p, col);
-        p += colSize;
-
-        mdbYarn yarn; // to ref content inside atom
-        atom->AliasYarn(&yarn);
-        
-        if ( yarn.mYarn_Form != mWriter_DictForm )
-          this->ChangeDictForm(ev, yarn.mYarn_Form);
-        
-        if ( atom->IsBook() ) // is it possible to write atom ID?
-        {
-          this->IndentAsNeeded(ev, morkWriter_kRowCellDepth);
-          *p++ = '^';
-          morkBookAtom* ba = (morkBookAtom*) atom;
-
-          mork_size valSize = ev->TokenAsHex(p, ba->mBookAtom_Id);
-          mork_fill yarnFill = yarn.mYarn_Fill;
-          mork_bool putImmYarn = ( yarnFill <= valSize );
-          if ( putImmYarn )
-            putImmYarn = this->IsYarnAllValue(&yarn);
-          
-          if ( putImmYarn ) // value no bigger than id?
-          {
-            p[ -1 ] = '='; // go back and clobber '^' with '=' instead
-            if ( yarnFill )
-            {
-              MORK_MEMCPY(p, yarn.mYarn_Buf, yarnFill);
-              p += yarnFill;
-            }
-            *p++ = ')';
-            mork_size distance = (mork_size) (p - buf);
-            mWriter_LineSize += stream->Write(ev, buf, distance);
-          }
-          else
-          {
-            p += valSize;
-            *p = ')';
-            mWriter_LineSize += stream->Write(ev, buf, colSize + valSize + 4);
-          }
-
-          if ( atom->mAtom_Change == morkChange_kAdd )
-          {
-            atom->mAtom_Change = morkChange_kNil;
-            ++mWriter_DoneCount;
-          }
-        }
-        else // must write an anonymous atom
-        {
-          mork_size pending = yarn.mYarn_Fill + colSize +
-            morkWriter_kYarnEscapeSlop + 2;
-          this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
-
-          mWriter_LineSize += stream->Write(ev, buf, colSize + 2);
-
-          pending -= ( colSize + 2 );
-          this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
-          stream->Putc(ev, '=');
-          ++mWriter_LineSize;
-          
-          this->WriteYarn(ev, &yarn);
-          stream->Putc(ev, ')'); // end alias
-          ++mWriter_LineSize;
-        }
-      }
+      // note we prefer to avoid writing cells here with no value:
+      if ( cells->GetAtom() ) // does cell have any value?
+        this->PutCell(ev, cells, /*inWithVal*/ morkBool_kTrue);
     }
   }
   return ev->Good();
@@ -1480,51 +1964,120 @@ morkWriter::PutRowCells(morkEnv* ev, morkRow* ioRow)
 mork_bool
 morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
 {
-  morkStream* stream = mWriter_Stream;
-  char buf[ 128 ]; // buffer for staging hex
-  char* p = buf;
-  mdbOid* roid = &ioRow->mRow_Oid;
-  mork_size ridSize = 0;
-
-  if ( ioRow->IsRowDirty() )
+  if ( ioRow && ioRow->IsRow() )
   {
-    if ( mWriter_SuppressDirtyRowNewline )
-      mWriter_SuppressDirtyRowNewline = morkBool_kFalse;
+    mWriter_RowForm = mWriter_TableForm;
+
+    morkStream* stream = mWriter_Stream;
+    char buf[ 128 + 16 ]; // buffer for staging hex
+    char* p = buf;
+    mdbOid* roid = &ioRow->mRow_Oid;
+    mork_size ridSize = 0;
+    
+    mork_scope tableScope = mWriter_TableRowScope;
+
+    if ( ioRow->IsRowDirty() )
+    {
+      if ( mWriter_SuppressDirtyRowNewline || !mWriter_LineSize )
+        mWriter_SuppressDirtyRowNewline = morkBool_kFalse;
+      else
+      {
+        if ( tableScope ) // in a table?
+          mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
+        else
+          mWriter_LineSize = stream->PutIndent(ev, 0); // no indent
+      }
+      
+      mork_rid rid = roid->mOid_Id;
+      *p++ = '['; // start row punct=1
+      mork_size punctSize = 9; // counting "{ /*r=*/ "
+      
+      mork_bool rowRewrite = ioRow->IsRowRewrite();
+            
+      if ( rowRewrite && mWriter_Incremental )
+      {
+        *p++ = '-';
+        ++punctSize; // counting '-'
+        ++mWriter_LineSize;
+      }
+
+      if ( tableScope && roid->mOid_Scope == tableScope )
+        ridSize = ev->TokenAsHex(p, roid->mOid_Id);
+      else
+        ridSize = ev->OidAsHex(p, *roid);
+      
+      p += ridSize;
+      
+      *p++ = ' '; // punct=2
+      *p++ = '/'; // punct=3
+      *p++ = '*'; // punct=4
+      *p++ = 'r'; // punct=5
+      *p++ = '='; // punct=6
+
+      mork_size usesSize = ev->TokenAsHex(p, (mork_token) ioRow->mRow_GcUses);
+      punctSize += usesSize;
+      p += usesSize;
+      
+      *p++ = '*'; // punct=7
+      *p++ = '/'; // punct=8
+      *p++ = ' '; // punct=9
+      
+      mWriter_LineSize += stream->Write(ev, buf, ridSize + punctSize);
+      
+      // special case situation where row puts exactly one column:
+      if ( !rowRewrite && mWriter_Incremental && ioRow->HasRowDelta() )
+      {
+        mork_column col = ioRow->GetDeltaColumn();
+        morkCell dummy(col, morkChange_kNil, (morkAtom*) 0);
+        morkCell* cell = 0;
+        
+        mork_bool withVal = ( ioRow->GetDeltaChange() != morkChange_kCut );
+        
+        if ( withVal )
+        {
+          mork_pos cellPos = 0; // dummy pos
+          cell = ioRow->GetCell(ev, col, &cellPos);
+        }
+        if ( !cell )
+          cell = &dummy;
+          
+        if ( mWriter_BeVerbose )
+          this->PutVerboseCell(ev, cell, withVal);
+        else
+          this->PutCell(ev, cell, withVal);
+      }
+      else // put entire row?
+      {
+        if ( mWriter_BeVerbose )
+          this->PutVerboseRowCells(ev, ioRow); // write all, verbosely
+        else
+          this->PutRowCells(ev, ioRow); // write all, hex notation
+      }
+        
+      stream->Putc(ev, ']'); // end row
+      ++mWriter_LineSize;
+    }
     else
-      mWriter_LineSize = stream->PutIndent(ev, morkWriter_kRowDepth);
-    
-    ioRow->SetRowClean();
-    mork_rid rid;
-    rid = roid->mOid_Id;
-    *p++ = '[';
-    if ( roid->mOid_Scope == mWriter_TableRowScope )
-      ridSize = ev->TokenAsHex(p, roid->mOid_Id);
-    else
-      ridSize = ev->OidAsHex(p, *roid);
-    
-    p += ridSize;
-    *p++ = ' ';
-    mWriter_LineSize += stream->Write(ev, buf, ridSize + 2);
-    
-    this->PutRowCells(ev, ioRow);
-    stream->Putc(ev, ']'); // end row
-    ++mWriter_LineSize;
+    {
+      this->IndentAsNeeded(ev, morkWriter_kRowDepth);
+
+      if ( tableScope && roid->mOid_Scope == tableScope )
+        ridSize = ev->TokenAsHex(p, roid->mOid_Id);
+      else
+        ridSize = ev->OidAsHex(p, *roid);
+
+      mWriter_LineSize += stream->Write(ev, buf, ridSize);
+      stream->Putc(ev, ' ');
+      ++mWriter_LineSize;
+    }
+
+    ++mWriter_DoneCount;
+
+    ioRow->SetRowClean(); // try to do this at the very last
   }
   else
-  {
-    this->IndentAsNeeded(ev, morkWriter_kRowDepth);
-
-    if ( roid->mOid_Scope == mWriter_TableRowScope )
-      ridSize = ev->TokenAsHex(p, roid->mOid_Id);
-    else
-      ridSize = ev->OidAsHex(p, *roid);
-
-    mWriter_LineSize += stream->Write(ev, buf, ridSize);
-    stream->Putc(ev, ' ');
-    ++mWriter_LineSize;
-  }
-
-  ++mWriter_DoneCount;
+    ioRow->NonRowTypeWarning(ev);
+  
   return ev->Good();
 }
 

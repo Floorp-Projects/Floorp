@@ -99,6 +99,13 @@ public: // state is public because the entire Mork system is private
   morkAtomAidMap   mAtomSpace_AtomAids; // all atoms in space by ID
   morkAtomBodyMap  mAtomSpace_AtomBodies; // all atoms in space by body
 
+public: // more specific dirty methods for atom space:
+  void SetAtomSpaceDirty() { this->SetNodeDirty(); }
+  void SetAtomSpaceClean() { this->SetNodeClean(); }
+  
+  mork_bool IsAtomSpaceClean() const { return this->IsNodeClean(); }
+  mork_bool IsAtomSpaceDirty() const { return this->IsNodeDirty(); }
+
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
   virtual void CloseMorkNode(morkEnv* ev); // CloseAtomSpace() only if open

@@ -99,22 +99,35 @@ morkTable::morkTable(morkEnv* ev, /*i*/
 , mTable_RowSpace( 0 )
 , mTable_MetaRow( 0 )
 
-, mTable_RowMap(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
-  morkTable_kStartRowMapSlotCount)
+, mTable_RowMap( 0 )
+// , mTable_RowMap(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap,
+//   morkTable_kStartRowMapSlotCount)
 , mTable_RowArray(ev, morkUsage::kMember, (nsIMdbHeap*) 0,
   morkTable_kStartRowArraySize, ioSlotHeap)
+  
+, mTable_ChangeList()
+, mTable_ChangesCount( 0 )
+, mTable_ChangesMax( 3 ) // any very small number greater than zero
 
 , mTable_Id( inTid )
 , mTable_Kind( inKind )
-, mTable_MustBeUnique( inMustBeUnique )
-, mTable_CellUses( 0 )
+
+, mTable_Flags( 0 )
+, mTable_Priority( morkPriority_kLo ) // NOT high priority
+, mTable_GcUses( 0 )
+, mTable_Pad( 0 )
 {
+  this->mLink_Next = 0;
+  this->mLink_Prev = 0;
+  
   if ( ev->Good() )
   {
     if ( ioStore && ioSlotHeap && ioRowSpace )
     {
       if ( inKind )
       {
+        if ( inMustBeUnique )
+          this->SetTableUnique();
         morkStore::SlotWeakStore(ioStore, ev, &mTable_Store);
         morkRowSpace::SlotWeakRowSpace(ioRowSpace, ev, &mTable_RowSpace);
         if ( inOptionalMetaRowOid )
@@ -125,7 +138,13 @@ morkTable::morkTable(morkEnv* ev, /*i*/
           mTable_MetaRowOid.mOid_Id = morkRow_kMinusOneRid;
         }
         if ( ev->Good() )
+        {
+          if ( this->MaybeDirtySpaceStoreAndTable() )
+            this->SetTableRewrite(); // everything is dirty
+            
           mNode_Derived = morkDerived_kTable;
+        }
+        this->MaybeDirtySpaceStoreAndTable(); // new table might dirty store
       }
       else
         ioRowSpace->ZeroKindError(ev);
@@ -142,7 +161,8 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
   {
     if ( this->IsNode() )
     {
-      mTable_RowMap.CloseMorkNode(ev);
+      morkRowMap::SlotStrongRowMap((morkRowMap*) 0, ev, &mTable_RowMap);
+      // mTable_RowMap.CloseMorkNode(ev);
       mTable_RowArray.CloseMorkNode(ev);
       morkStore::SlotWeakStore((morkStore*) 0, ev, &mTable_Store);
       morkRowSpace::SlotWeakRowSpace((morkRowSpace*) 0,
@@ -160,33 +180,106 @@ morkTable::CloseTable(morkEnv* ev) /*i*/ // called by CloseMorkNode();
 // ````` ````` ````` ````` ````` 
 
 mork_u2
-morkTable::AddCellUse(morkEnv* ev)
+morkTable::AddTableGcUse(morkEnv* ev)
 {
   MORK_USED_1(ev); 
-  if ( mTable_CellUses < morkTable_kMaxCellUses ) // not already maxed out?
-    ++mTable_CellUses;
+  if ( mTable_GcUses < morkTable_kMaxTableGcUses ) // not already maxed out?
+    ++mTable_GcUses;
     
-  return mTable_CellUses;
+  return mTable_GcUses;
 }
 
 mork_u2
-morkTable::CutCellUse(morkEnv* ev)
+morkTable::CutTableGcUse(morkEnv* ev)
 {
-  if ( mTable_CellUses ) // any outstanding uses to cut?
+  if ( mTable_GcUses ) // any outstanding uses to cut?
   {
-    if ( mTable_CellUses < morkTable_kMaxCellUses ) // not frozen at max?
-      --mTable_CellUses;
+    if ( mTable_GcUses < morkTable_kMaxTableGcUses ) // not frozen at max?
+      --mTable_GcUses;
   }
   else
-    this->CellUsesUnderflowWarning(ev);
+    this->TableGcUsesUnderflowWarning(ev);
     
-  return mTable_CellUses;
+  return mTable_GcUses;
+}
+
+// table dirty handling more complex thatn morkNode::SetNodeDirty() etc.
+
+void morkTable::SetTableClean(morkEnv* ev)
+{
+  nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+  mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  mTable_ChangesCount = 0;
+  
+  mTable_Flags = 0;
+  this->SetNodeClean();
+}
+
+// notifications regarding table changes:
+
+void morkTable::NoteTableMoveRow(morkEnv* ev, morkRow* ioRow, mork_pos inPos)
+{
+  nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+  if ( this->IsTableRewrite() || this->HasChangeOverflow() )
+    this->NoteTableSetAll(ev);
+  else
+  {
+    morkTableChange* tableChange = new(*heap, ev)
+      morkTableChange(ev, ioRow, inPos);
+    if ( tableChange )
+    {
+      if ( ev->Good() )
+      {
+        mTable_ChangeList.PushTail(tableChange);
+        ++mTable_ChangesCount;
+      }
+      else
+      {
+        tableChange->ZapOldNext(ev, heap);
+        this->SetTableRewrite(); // just plan to write all table rows
+      }
+    }
+  }
+}
+
+void morkTable::note_row_change(morkEnv* ev, mork_change inChange,
+  morkRow* ioRow)
+{
+  if ( this->IsTableRewrite() || this->HasChangeOverflow() )
+    this->NoteTableSetAll(ev);
+  else
+  {
+    nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+    morkTableChange* tableChange = new(*heap, ev)
+      morkTableChange(ev, inChange, ioRow);
+    if ( tableChange )
+    {
+      if ( ev->Good() )
+      {
+        mTable_ChangeList.PushTail(tableChange);
+        ++mTable_ChangesCount;
+      }
+      else
+      {
+        tableChange->ZapOldNext(ev, heap);
+        this->NoteTableSetAll(ev);
+      }
+    }
+  }
+}
+
+void morkTable::NoteTableSetAll(morkEnv* ev)
+{
+  nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+  mTable_ChangeList.CutAndZapAllListMembers(ev, heap); // forget changes
+  mTable_ChangesCount = 0;
+  this->SetTableRewrite();
 }
 
 /*static*/ void
-morkTable::CellUsesUnderflowWarning(morkEnv* ev)
+morkTable::TableGcUsesUnderflowWarning(morkEnv* ev)
 {
-  ev->NewWarning("mTable_CellUses underflow");
+  ev->NewWarning("mTable_GcUses underflow");
 }
 
 /*static*/ void
@@ -205,6 +298,38 @@ morkTable::NonTableTypeWarning(morkEnv* ev)
 morkTable::NilRowSpaceError(morkEnv* ev)
 {
   ev->NewError("nil mTable_RowSpace");
+}
+
+mork_bool morkTable::MaybeDirtySpaceStoreAndTable()
+{
+  morkRowSpace* rowSpace = mTable_RowSpace;
+  if ( rowSpace )
+  {
+    morkStore* store = rowSpace->mSpace_Store;
+    if ( store && store->mStore_CanDirty )
+    {
+      store->SetStoreDirty();
+      rowSpace->mSpace_CanDirty = morkBool_kTrue;
+    }
+    
+    if ( rowSpace->mSpace_CanDirty ) // first time being dirtied?
+    {
+      if ( this->IsTableClean() )
+      {
+        mork_count rowCount = this->GetRowCount();
+        mork_count oneThird = rowCount / 4; // one third of rows
+        if ( oneThird > 0x07FFF ) // more than half max u2?
+          oneThird = 0x07FFF;
+          
+        mTable_ChangesMax = (mork_u2) oneThird;
+      }
+      this->SetTableDirty();
+      rowSpace->SetRowSpaceDirty();
+      
+      return morkBool_kTrue;
+    }
+  }
+  return morkBool_kFalse;
 }
 
 morkRow*
@@ -228,7 +353,13 @@ morkTable::GetMetaRow(morkEnv* ev, const mdbOid* inOptionalMetaRowOid)
     }
     mTable_MetaRow = outRow;
     if ( outRow ) // need to note another use of this row?
-      outRow->AddTableUse(ev);
+    {
+      outRow->AddRowGcUse(ev);
+
+      this->SetTableNewMeta();
+      if ( this->IsTableClean() ) // catch dirty status of meta row?
+        this->MaybeDirtySpaceStoreAndTable();
+    }
   }
   
   return outRow;
@@ -285,25 +416,87 @@ morkTable::ArrayHasOid(morkEnv* ev, const mdbOid* inOid)
 mork_bool
 morkTable::MapHasOid(morkEnv* ev, const mdbOid* inOid)
 {
-  return ( mTable_RowMap.GetOid(ev, inOid) != 0 );
+  if ( mTable_RowMap )
+    return ( mTable_RowMap->GetOid(ev, inOid) != 0 );
+  else
+    return ( ArrayHasOid(ev, inOid) >= 0 );
+}
+
+void morkTable::build_row_map(morkEnv* ev)
+{
+  morkRowMap* map = mTable_RowMap;
+  if ( !map )
+  {
+    mork_count count = mTable_RowArray.mArray_Fill + 3;
+    nsIMdbHeap* heap = mTable_Store->mPort_Heap;
+    map = new(*heap, ev) morkRowMap(ev, morkUsage::kHeap, heap, heap, count);
+    if ( map )
+    {
+      if ( ev->Good() )
+      {
+        mTable_RowMap = map; // put strong ref here
+        mork_count count = mTable_RowArray.mArray_Fill;
+        mork_pos pos = -1;
+        while ( ++pos < count )
+        {
+          morkRow* row = (morkRow*) mTable_RowArray.At(pos);
+          if ( row && row->IsRow() )
+            map->AddRow(ev, row);
+          else
+            row->NonRowTypeError(ev);
+        }
+      }
+      else
+        map->CutStrongRef(ev);
+    }
+  }
+}
+
+morkRow* morkTable::find_member_row(morkEnv* ev, morkRow* ioRow)
+{
+  if ( mTable_RowMap )
+    return mTable_RowMap->GetRow(ev, ioRow);
+  else
+  {
+    mork_count count = mTable_RowArray.mArray_Fill;
+    mork_pos pos = -1;
+    while ( ++pos < count )
+    {
+      morkRow* row = (morkRow*) mTable_RowArray.At(pos);
+      if ( row == ioRow )
+        return row;
+    }
+  }
+  return (morkRow*) 0;
 }
 
 mork_bool
 morkTable::AddRow(morkEnv* ev, morkRow* ioRow)
 {
-  morkRow* row = mTable_RowMap.GetRow(ev, ioRow);
+  morkRow* row = this->find_member_row(ev, ioRow);
   if ( !row && ev->Good() )
   {
+    mork_bool canDirty = ( this->IsTableClean() )?
+      this->MaybeDirtySpaceStoreAndTable() : morkBool_kTrue;
+      
     mork_pos pos = mTable_RowArray.AppendSlot(ev, ioRow);
     if ( ev->Good() && pos >= 0 )
     {
-      ioRow->AddTableUse(ev);
-      if ( mTable_RowMap.AddRow(ev, ioRow) )
+      ioRow->AddRowGcUse(ev);
+      if ( mTable_RowMap )
       {
-        // okay, anything else?
+        if ( mTable_RowMap->AddRow(ev, ioRow) )
+        {
+          // okay, anything else?
+        }
+        else
+          mTable_RowArray.CutSlot(ev, pos);
       }
-      else
-        mTable_RowArray.CutSlot(ev, pos);
+      else if ( mTable_RowArray.mArray_Fill >= morkTable_kMakeRowMapThreshold )
+        this->build_row_map(ev);
+
+      if ( canDirty && ev->Good() )
+        this->NoteTableAddRow(ev, ioRow);
     }
   }
   return ev->Good();
@@ -312,9 +505,12 @@ morkTable::AddRow(morkEnv* ev, morkRow* ioRow)
 mork_bool
 morkTable::CutRow(morkEnv* ev, morkRow* ioRow)
 {
-  morkRow* row = mTable_RowMap.GetRow(ev, ioRow);
+  morkRow* row = this->find_member_row(ev, ioRow);
   if ( row )
   {
+    mork_bool canDirty = ( this->IsTableClean() )?
+      this->MaybeDirtySpaceStoreAndTable() : morkBool_kTrue;
+      
     mork_count count = mTable_RowArray.mArray_Fill;
     morkRow** rowSlots = (morkRow**) mTable_RowArray.mArray_Slots;
     if ( rowSlots ) // array has vector as expected?
@@ -338,9 +534,50 @@ morkTable::CutRow(morkEnv* ev, morkRow* ioRow)
     else
       mTable_RowArray.NilSlotsAddressError(ev);
       
-    mTable_RowMap.CutRow(ev, ioRow);
-    if ( ioRow->CutTableUse(ev) == 0 )
-      ioRow->OnZeroTableUse(ev);
+    if ( mTable_RowMap )
+      mTable_RowMap->CutRow(ev, ioRow);
+
+    if ( canDirty )
+      this->NoteTableCutRow(ev, ioRow);
+
+    if ( ioRow->CutRowGcUse(ev) == 0 )
+      ioRow->OnZeroRowGcUse(ev);
+  }
+  return ev->Good();
+}
+
+
+mork_bool
+morkTable::CutAllRows(morkEnv* ev)
+{
+  if ( this->MaybeDirtySpaceStoreAndTable() )
+  {
+    this->SetTableRewrite(); // everything is dirty
+    this->NoteTableSetAll(ev);
+  }
+    
+  if ( ev->Good() )
+  {
+    mTable_RowArray.CutAllSlots(ev);
+    if ( mTable_RowMap )
+    {
+      morkRowMapIter i(ev, mTable_RowMap);
+      mork_change* c = 0;
+      morkRow* r = 0;
+      
+      for ( c = i.FirstRow(ev, &r); c;  c = i.NextRow(ev, &r) )
+      {
+        if ( r )
+        {
+          if ( r->CutRowGcUse(ev) == 0 )
+            r->OnZeroRowGcUse(ev);
+            
+          i.CutHereRow(ev, (morkRow**) 0);
+        }
+        else
+          ev->NewWarning("nil row in table map");
+      }
+    }
   }
   return ev->Good();
 }
@@ -367,6 +604,65 @@ morkTable::NewTableRowCursor(morkEnv* ev, mork_pos inRowPos)
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
+morkTableChange::morkTableChange(morkEnv* ev, mork_change inChange,
+  morkRow* ioRow)
+// use this constructor for inChange == morkChange_kAdd or morkChange_kCut
+: morkNext()
+, mTableChange_Row( ioRow )
+, mTableChange_Pos( morkTableChange_kNone )
+{
+  if ( ioRow )
+  {
+    if ( ioRow->IsRow() )
+    {
+      if ( inChange == morkChange_kAdd )
+        mTableChange_Pos = morkTableChange_kAdd;
+      else if ( inChange == morkChange_kCut )
+        mTableChange_Pos = morkTableChange_kCut;
+      else
+        this->UnknownChangeError(ev);
+    }
+    else
+      ioRow->NonRowTypeError(ev);
+  }
+  else
+    ev->NilPointerError();
+}
+
+morkTableChange::morkTableChange(morkEnv* ev, morkRow* ioRow, mork_pos inPos)
+// use this constructor when the row is moved
+: morkNext()
+, mTableChange_Row( ioRow )
+, mTableChange_Pos( inPos )
+{
+  if ( ioRow )
+  {
+    if ( ioRow->IsRow() )
+    {
+      if ( inPos < 0 )
+        this->NegativeMovePosError(ev);
+    }
+    else
+      ioRow->NonRowTypeError(ev);
+  }
+  else
+    ev->NilPointerError();
+}
+
+void morkTableChange::UnknownChangeError(morkEnv* ev) const
+// morkChange_kAdd or morkChange_kCut
+{
+  ev->NewError("mTableChange_Pos neither kAdd nor kCut");
+}
+
+void morkTableChange::NegativeMovePosError(morkEnv* ev) const
+// move must be non-neg position
+{
+  ev->NewError("negative mTableChange_Pos for row move");
+}
+
+//3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
+
 
 morkTableMap::~morkTableMap()
 {
@@ -379,6 +675,5 @@ morkTableMap::morkTableMap(morkEnv* ev, const morkUsage& inUsage,
   if ( ev->Good() )
     mNode_Derived = morkDerived_kTableMap;
 }
-
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

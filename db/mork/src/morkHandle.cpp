@@ -63,6 +63,7 @@ morkHandle::~morkHandle() // assert CloseHandle() executed earlier
   MORK_ASSERT(mHandle_Face==0);
   MORK_ASSERT(mHandle_Object==0);
   MORK_ASSERT(mHandle_Magic==0);
+  MORK_ASSERT(mHandle_Tag==morkHandle_kTag); // should still have correct tag
 }
 
 /*public non-poly*/
@@ -90,6 +91,8 @@ morkHandle::morkHandle(morkEnv* ev, // note morkUsage is always morkUsage_kPool
         mNode_Derived = morkDerived_kHandle;
       }
     }
+    else
+      ev->CantMakeWhenBadError();
   }
   else
     ev->NilPointerError();

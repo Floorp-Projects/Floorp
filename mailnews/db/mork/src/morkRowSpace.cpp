@@ -122,6 +122,8 @@ morkRowSpace::morkRowSpace(morkEnv* ev,
     if ( ioSlotHeap )
     {
       mNode_Derived = morkDerived_kRowSpace;
+      
+      // the morkSpace base constructor handles any dirty propagation
     }
     else
       ev->NilPointerError();
@@ -207,6 +209,9 @@ morkRowSpace::MinusOneRidError(morkEnv* ev)
 mork_num
 morkRowSpace::CutAllRows(morkEnv* ev, morkPool* ioPool)
 {
+  if ( this->IsRowSpaceClean() )
+    this->MaybeDirtyStoreAndSpace();
+  
   mork_num outSlots = mRowSpace_Rows.mMap_Fill;
   morkRow* r = 0; // old key row in the map
   
@@ -268,13 +273,14 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
   const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
 {
   morkTable* outTable = 0;
+  morkStore* store = mSpace_Store;
   
-  if ( inTableKind )
+  if ( inTableKind && store )
   {
     mdb_bool mustBeUnique = morkBool_kFalse;
-    nsIMdbHeap* heap = mSpace_Store->mPort_Heap;
+    nsIMdbHeap* heap = store->mPort_Heap;
     morkTable* table = new(*heap, ev)
-      morkTable(ev, morkUsage::kHeap, heap, mSpace_Store, heap, this,
+      morkTable(ev, morkUsage::kHeap, heap, store, heap, this,
         inOptionalMetaRowOid, inTid, inTableKind, mustBeUnique);
     if ( table )
     {
@@ -284,11 +290,17 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
         if ( mRowSpace_NextTableId <= inTid )
           mRowSpace_NextTableId = inTid + 1;
       }
-      table->CutStrongRef(ev);
+      table->CutStrongRef(ev); // always cut ref; AddTable() adds its own
+        
+      if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
+        this->MaybeDirtyStoreAndSpace(); // morkTable does already
+
     }
   }
-  else
+  else if ( store )
     this->ZeroKindError(ev);
+  else
+    this->NilSpaceStoreError(ev);
     
   return outTable;
 }
@@ -299,8 +311,9 @@ morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
   const mdbOid* inOptionalMetaRowOid) // can be nil to avoid specifying 
 {
   morkTable* outTable = 0;
+  morkStore* store = mSpace_Store;
   
-  if ( inTableKind )
+  if ( inTableKind && store )
   {
     if ( inMustBeUnique ) // need to look for existing table first?
       outTable = this->FindTableByKind(ev, inTableKind);
@@ -320,12 +333,17 @@ morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
             outTable = table;
           else
             table->CutStrongRef(ev);
+
+          if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
+            this->MaybeDirtyStoreAndSpace(); // morkTable does already
         }
       }
     }
   }
-  else
+  else if ( store )
     this->ZeroKindError(ev);
+  else
+    this->NilSpaceStoreError(ev);
     
   return outTable;
 }
@@ -515,22 +533,31 @@ morkRowSpace::NewRowWithOid(morkEnv* ev, const mdbOid* inOid)
   MORK_ASSERT(outRow==0);
   if ( !outRow && ev->Good() )
   {
-    morkPool* pool = this->GetSpaceStorePool();
-    morkRow* row = pool->NewRow(ev);
-    if ( row )
+    morkStore* store = mSpace_Store;
+    if ( store )
     {
-      row->InitRow(ev, inOid, this, /*length*/ 0, pool);
-      
-      if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
+      morkPool* pool = this->GetSpaceStorePool();
+      morkRow* row = pool->NewRow(ev);
+      if ( row )
       {
-        outRow = row;
-        mork_rid rid = inOid->mOid_Id;
-        if ( mRowSpace_NextRowId <= rid )
-          mRowSpace_NextRowId = rid + 1;
+        row->InitRow(ev, inOid, this, /*length*/ 0, pool);
+        
+        if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
+        {
+          outRow = row;
+          mork_rid rid = inOid->mOid_Id;
+          if ( mRowSpace_NextRowId <= rid )
+            mRowSpace_NextRowId = rid + 1;
+        }
+        else
+          pool->ZapRow(ev, row);
+
+        if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
+          this->MaybeDirtyStoreAndSpace(); // InitRow() does already
       }
-      else
-        pool->ZapRow(ev, row);
     }
+    else
+      this->NilSpaceStoreError(ev);
   }
   return outRow;
 }
@@ -544,24 +571,34 @@ morkRowSpace::NewRow(morkEnv* ev)
     mork_rid id = this->MakeNewRowId(ev);
     if ( id )
     {
-      mdbOid oid;
-      oid.mOid_Scope = mSpace_Scope;
-      oid.mOid_Id = id;
-      morkPool* pool = this->GetSpaceStorePool();
-      morkRow* row = pool->NewRow(ev);
-      if ( row )
+      morkStore* store = mSpace_Store;
+      if ( store )
       {
-        row->InitRow(ev, &oid, this, /*length*/ 0, pool);
-        
-        if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
-          outRow = row;
-        else
-          pool->ZapRow(ev, row);
+        mdbOid oid;
+        oid.mOid_Scope = mSpace_Scope;
+        oid.mOid_Id = id;
+        morkPool* pool = this->GetSpaceStorePool();
+        morkRow* row = pool->NewRow(ev);
+        if ( row )
+        {
+          row->InitRow(ev, &oid, this, /*length*/ 0, pool);
+          
+          if ( ev->Good() && mRowSpace_Rows.AddRow(ev, row) )
+            outRow = row;
+          else
+            pool->ZapRow(ev, row);
+
+          if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
+            this->MaybeDirtyStoreAndSpace(); // InitRow() does already
+        }
       }
+      else
+        this->NilSpaceStoreError(ev);
     }
   }
   return outRow;
 }
+
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 

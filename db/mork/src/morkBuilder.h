@@ -139,6 +139,13 @@ protected: // protected morkBuilder members
   mork_scope       mBuilder_TableAtomScope;  // table atom scope
   mork_kind        mBuilder_TableKind;       // table kind
   
+  mork_token       mBuilder_TableStatus;  // dummy: priority/unique/verbose
+  
+  mork_priority    mBuilder_TablePriority;   // table priority
+  mork_bool        mBuilder_TableIsUnique;   // table uniqueness
+  mork_bool        mBuilder_TableIsVerbose;  // table verboseness
+  mork_u1          mBuilder_TablePadByte;    // for u4 alignment
+  
   // tokens that become set as the result of meta cells in meta rows:
   mork_cscode      mBuilder_RowForm;       // default row charset format
   mork_scope       mBuilder_RowRowScope;   // row scope per row metainfo
@@ -160,8 +167,8 @@ protected: // protected morkBuilder members
   // CutCell implies the current column should be cut from the row.
   mork_bool        mBuilder_DoCutRow;    // row with kCut change
   mork_bool        mBuilder_DoCutCell;   // cell with kCut change
-  mork_u1          mBuilder_Pad1;      // pad to u4 alignment
-  mork_u1          mBuilder_Pad2;      // pad to u4 alignment
+  mork_u1          mBuilder_row_pad;    // pad to u4 alignment
+  mork_u1          mBuilder_cell_pad;   // pad to u4 alignment
   
   morkCell         mBuilder_CellsVec[ morkBuilder_kCellsVecSize + 1 ];
   mork_fill        mBuilder_CellsVecFill; // count used in CellsVec
@@ -243,7 +250,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan);  
 
   virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-    const morkMid& inMid, mork_change inChange);
+    const morkMid& inMid, mork_bool inCutAllRows);
   virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch);
   virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan);
     
@@ -251,8 +258,9 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch);
   virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan);
 
+  virtual void OnMinusRow(morkEnv* ev);
   virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-    const morkMid& inMid, mork_change inChange);
+    const morkMid& inMid, mork_bool inCutAllCols);
   virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch);  
   virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan);  
 
@@ -265,8 +273,9 @@ public: // out virtual morkParser methods, data flow parser to subclass
 
   virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch);
 
+  virtual void OnMinusCell(morkEnv* ev);
   virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-    const morkMid* inMid, const morkBuf* inBuf, mork_change inChange);
+    const morkMid* inMid, const morkBuf* inBuf);
   // Exactly one of inMid and inBuf is nil, and the other is non-nil.
   // When hex ID syntax is used for a column, then inMid is not nil, and
   // when a naked string names a column, then inBuf is not nil.

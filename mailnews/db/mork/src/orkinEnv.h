@@ -138,6 +138,9 @@ public:
   virtual mdb_err GetWarningCount(mdb_count* outCount,
     mdb_bool* outShouldAbort);
   
+  virtual mdb_err GetEnvBeVerbose(mdb_bool* outBeVerbose);
+  virtual mdb_err SetEnvBeVerbose(mdb_bool inBeVerbose);
+  
   virtual mdb_err GetDoTrace(mdb_bool* outDoTrace);
   virtual mdb_err SetDoTrace(mdb_bool inDoTrace);
   

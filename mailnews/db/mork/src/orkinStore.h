@@ -302,6 +302,69 @@ public: // type identification
     nsIMdbPortTableCursor** acqCursor); // all such tables in the port
   // } ----- end table methods -----
 
+
+  // { ----- begin commit methods -----
+
+  virtual mdb_err ShouldCompress( // store wastes at least inPercentWaste?
+    nsIMdbEnv* ev, // context
+    mdb_percent inPercentWaste, // 0..100 percent file size waste threshold
+    mdb_percent* outActualWaste, // 0..100 percent of file actually wasted
+    mdb_bool* outShould); // true when about inPercentWaste% is wasted
+  // ShouldCompress() returns true if the store can determine that the file
+  // will shrink by an estimated percentage of inPercentWaste% (or more) if
+  // CompressCommit() is called, because that percentage of the file seems
+  // to be recoverable free space.  The granularity is only in terms of 
+  // percentage points, and any value over 100 is considered equal to 100.
+  //
+  // If a store only has an approximate idea how much space might be saved
+  // during a compress, then a best guess should be made.  For example, the
+  // Mork implementation might keep track of how much file space began with
+  // text content before the first updating transaction, and then consider
+  // all content following the start of the first transaction as potentially
+  // wasted space if it is all updates and not just new content.  (This is
+  // a safe assumption in the sense that behavior will stabilize on a low
+  // estimate of wastage after a commit removes all transaction updates.)
+  //
+  // Some db formats might attempt to keep a very accurate reckoning of free
+  // space size, so a very accurate determination can be made.  But other db
+  // formats might have difficulty determining size of free space, and might
+  // require some lengthy calculation to answer.  This is the reason for
+  // passing in the percentage threshold of interest, so that such lengthy
+  // computations can terminate early as soon as at least inPercentWaste is
+  // found, so that the entire file need not be groveled when unnecessary.
+  // However, we hope implementations will always favor fast but imprecise
+  // heuristic answers instead of extremely slow but very precise answers.
+  //
+  // If the outActualWaste parameter is non-nil, it will be used to return
+  // the actual estimated space wasted as a percentage of file size.  (This
+  // parameter is provided so callers need not call repeatedly with altered
+  // inPercentWaste values to isolate the actual wastage figure.)  Note the
+  // actual wastage figure returned can exactly equal inPercentWaste even
+  // when this grossly underestimates the real figure involved, if the db
+  // finds it very expensive to determine the extent of wastage after it is
+  // known to at least exceed inPercentWaste.  Note we expect that whenever
+  // outShould returns true, that outActualWaste returns >= inPercentWaste.
+  //
+  // The effect of different inPercentWaste values is not very uniform over
+  // the permitted range.  For example, 50 represents 50% wastage, or a file
+  // that is about double what it should be ideally.  But 99 represents 99%
+  // wastage, or a file that is about ninety-nine times as big as it should
+  // be ideally.  In the smaller direction, 25 represents 25% wastage, or
+  // a file that is only 33% larger than it should be ideally.
+  //
+  // Callers can determine what policy they want to use for considering when
+  // a file holds too much wasted space, and express this as a percentage
+  // of total file size to pass as in the inPercentWaste parameter.  A zero
+  // likely returns always trivially true, and 100 always trivially false.
+  // The great majority of callers are expected to use values from 25 to 75,
+  // since most plausible thresholds for compressing might fall between the
+  // extremes of 133% of ideal size and 400% of ideal size.  (Presumably the
+  // larger a file gets, the more important the percentage waste involved, so
+  // a sliding scale for compress thresholds might use smaller numbers for
+  // much bigger file sizes.)
+  
+  // } ----- end commit methods -----
+
 // } ===== end nsIMdbPort methods =====
 
 // { ===== begin nsIMdbStore methods =====

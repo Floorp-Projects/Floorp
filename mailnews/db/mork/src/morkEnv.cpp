@@ -86,6 +86,7 @@ morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
 , mEnv_ShouldAbort( morkBool_kFalse )
+, mEnv_BeVerbose( morkBool_kFalse )
 {
   MORK_ASSERT(ioSlotHeap && ioFactory );
   if ( ioSlotHeap )
@@ -124,6 +125,8 @@ morkEnv::morkEnv(morkEnv* ev, /*i*/
   
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
+, mEnv_ShouldAbort( morkBool_kFalse )
+, mEnv_BeVerbose( morkBool_kFalse )
 {
   // $$$ do we need to refcount the inSelfAsMdbEnv nsIMdbEnv??
   
@@ -158,6 +161,8 @@ morkEnv::CloseEnv(morkEnv* ev) /*i*/ // called by CloseMorkNode();
       
       mEnv_SelfAsMdbEnv = 0;
       mEnv_ErrorHook = 0;
+      
+      morkPool::SlotStrongPool((morkPool*) 0, ev, &mEnv_HandlePool);
 
       // mEnv_Factory is NOT refcounted
       
@@ -260,6 +265,40 @@ morkEnv::TokenAsHex(void* outBuf, mork_token inToken)
   }
 }
 
+void
+morkEnv::StringToYarn(const char* inString, mdbYarn* outYarn)
+{
+  if ( outYarn )
+  {
+    mdb_fill fill = ( inString )? (mdb_fill) MORK_STRLEN(inString) : 0; 
+      
+    if ( fill ) // have nonempty content?
+    {
+      mdb_size size = outYarn->mYarn_Size; // max dest size
+      if ( fill > size ) // too much string content?
+      {
+        outYarn->mYarn_More = fill - size; // extra string bytes omitted
+        fill = size; // copy no more bytes than size of yarn buffer
+      }
+      void* dest = outYarn->mYarn_Buf; // where bytes are going
+      if ( !dest ) // nil destination address buffer?
+        fill = 0; // we can't write any content at all
+        
+      if ( fill ) // anything to copy?
+        MORK_MEMCPY(dest, inString, fill); // copy fill bytes to yarn
+        
+      outYarn->mYarn_Fill = fill; // tell yarn size of copied content
+    }
+    else // no content to put into the yarn
+    {
+      outYarn->mYarn_Fill = 0; // tell yarn that string has no bytes
+    }
+    outYarn->mYarn_Form = 0; // always update the form slot
+  }
+  else
+    this->NilPointerError();
+}
+
 char*
 morkEnv::CopyString(nsIMdbHeap* ioHeap, const char* inString)
 {
@@ -352,6 +391,12 @@ morkEnv::OutOfMemoryError()
 }
 
 void
+morkEnv::CantMakeWhenBadError()
+{
+  this->NewError("can't make an object when ev->Bad()");
+}
+
+void
 morkEnv::NilPointerError()
 {
   this->NewError("nil pointer");
@@ -419,7 +464,7 @@ morkEnv::FromMdbEnv(nsIMdbEnv* ioEnv) // dynamic type checking
       if ( oenv->IsOpenNode() )
       {
         morkEnv* ev = (morkEnv*) oenv->mHandle_Object;
-         if ( ev && ev->IsEnv() )
+        if ( ev && ev->IsEnv() )
         {
           if ( ev->DoAutoClear() )
           {

@@ -248,6 +248,33 @@ orkinEnv::GetWarningCount(mdb_count* outCount,
 }
 
 /*virtual*/ mdb_err
+orkinEnv::GetEnvBeVerbose(mdb_bool* outBeVerbose)
+{
+  mdb_err outErr = 0;
+  mork_bool beVerbose = morkBool_kFalse;
+  morkEnv* ev = this->CanUseEnv(/*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    beVerbose = ev->mEnv_BeVerbose;
+  }
+  if ( outBeVerbose )
+    *outBeVerbose = beVerbose;
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinEnv::SetEnvBeVerbose(mdb_bool inBeVerbose)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseEnv(/*inMutable*/ morkBool_kTrue, &outErr);
+  if ( ev )
+  {
+    ev->mEnv_BeVerbose = inBeVerbose;
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
 orkinEnv::GetDoTrace(mdb_bool* outDoTrace)
 {
   mdb_err outErr = 0;

@@ -127,6 +127,7 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
 #define morkStore_kRowScopeColumn ((mork_column) 'r')
 #define morkStore_kMetaScope ((mork_scope) 'm')
 #define morkStore_kKindColumn ((mork_column) 'k')
+#define morkStore_kStatusColumn ((mork_column) 's')
 
 /*| morkStore: 
 |*/
@@ -168,13 +169,66 @@ public: // state is public because the entire Mork system is private
   // we alloc a max size book atom to reuse space for atom map key searches:
   morkMaxBookAtom  mStore_BookAtom; // staging area for atom map searches
   
+  // GroupIdentity should be one more than largest seen in a parsed db file:
+  mork_gid         mStore_CommitGroupIdentity; // transaction ID number
+  
+  // group positions are used to help compute PercentOfStoreWasted():
+  mork_pos         mStore_FirstCommitGroupPos; // start of first group
+  mork_pos         mStore_SecondCommitGroupPos; // start of second group
+  // If the first commit group is very near the start of the file (say less
+  // than 512 bytes), then we might assume the file started nearly empty and
+  // that most of the first group is not wasted.  In that case, the pos of
+  // the second commit group might make a better estimate of the start of
+  // transaction space that might represent wasted file space.  That's why
+  // we support fields for both first and second commit group positions.
+  //
+  // We assume that a zero in either group pos means that the slot has not
+  // yet been given a valid value, since the file will always start with a
+  // tag, and a commit group cannot actually start at position zero.
+  //
+  // Either or both the first or second commit group positions might be
+  // supplied by either morkWriter (while committing) or morkBuilder (while
+  // parsing), since either reading or writing the file might encounter the
+  // first transaction groups which came into existence either in the past
+  // or in the very recent present.
+  
   mork_bool        mStore_CanAutoAssignAtomIdentity;
-  mork_u1          mStore_Pad[ 3 ]; // for u4 alignment
+  mork_bool        mStore_CanDirty; // changes imply the store becomes dirty?
+  mork_u1          mStore_CanWriteIncremental; // compress not required?
+  mork_u1          mStore_Pad; // for u4 alignment
+  
+  // mStore_CanDirty should be FALSE when parsing a file while building the
+  // content going into the store, because such data structure modifications
+  // are actuallly in sync with the file.  So content read from a file must
+  // be clean with respect to the file.  After a file is finished parsing,
+  // the mStore_CanDirty slot should become TRUE, so that any additional
+  // changes at runtime cause structures to be marked dirty with respect to
+  // the file which must later be updated with changes during a commit.
+  //
+  // It might also make sense to set mStore_CanDirty to FALSE while a commit
+  // is in progress, lest some internal transformations make more content
+  // appear dirty when it should not.  So anyone modifying content during a
+  // commit should think about the intended significance regarding dirty.
+
+public: // more specific dirty methods for store:
+  void SetStoreDirty() { this->SetNodeDirty(); }
+  void SetStoreClean() { this->SetNodeClean(); }
+  
+  mork_bool IsStoreClean() const { return this->IsNodeClean(); }
+  mork_bool IsStoreDirty() const { return this->IsNodeDirty(); }
  
-public: // coping with any changes to store token slots above:
+public: // setting dirty based on CanDirty:
  
-  // void SyncTokenIdChange(morkEnv* ev, const morkBookAtom* inAtom,
-  //   const mdbOid* inOid);
+  void MaybeDirtyStore()
+  { if ( mStore_CanDirty ) this->SetStoreDirty(); }
+  
+public: // space waste analysis
+
+  mork_percent PercentOfStoreWasted(morkEnv* ev);
+ 
+public: // setting store and all subspaces canDirty:
+ 
+  void SetStoreAndAllSpacesCanDirty(morkEnv* ev, mork_bool inCanDirty);
 
 public: // building an atom inside mStore_BookAtom from a char* string
 

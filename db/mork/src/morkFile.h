@@ -27,6 +27,10 @@
 #include "morkNode.h"
 #endif
 
+#ifndef _MORKOBJECT_
+#include "morkObject.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 /*=============================================================================
@@ -35,7 +39,25 @@
 
 #define morkDerived_kFile     /*i*/ 0x4669 /* ascii 'Fi' */
 
-class morkFile /*d*/ : public morkNode { /* ````` simple file API ````` */
+class morkFile /*d*/ : public morkObject { /* ````` simple file API ````` */
+
+// public: // slots inherited from morkNode (meant to inform only)
+  // nsIMdbHeap*    mNode_Heap;
+
+  // mork_base      mNode_Base;     // must equal morkBase_kNode
+  // mork_derived   mNode_Derived;  // depends on specific node subclass
+  
+  // mork_access    mNode_Access;   // kOpen, kClosing, kShut, or kDead
+  // mork_usage     mNode_Usage;    // kHeap, kStack, kMember, kGlobal, kNone
+  // mork_able      mNode_Mutable;  // can this node be modified?
+  // mork_load      mNode_Load;     // is this node clean or dirty?
+  
+  // mork_uses      mNode_Uses;     // refcount for strong refs
+  // mork_refs      mNode_Refs;     // refcount for strong refs + weak refs
+  
+// public: // slots inherited from morkObject (meant to inform only)
+
+  // morkHandle*    mObject_Handle;   // weak ref to handle for this object
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected morkFile members (similar to public domain IronDoc)
@@ -48,6 +70,8 @@ protected: // protected morkFile members (similar to public domain IronDoc)
   nsIMdbHeap* mFile_SlotHeap; // heap for Name and other allocated slots
   char*       mFile_Name; // can be nil if SetFileName() is never called
   // mFile_Name convention: managed with morkEnv::CopyString()/FreeString()
+
+  nsIMdbFile* mFile_Thief; // from a call to orkinFile::Steal()
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
@@ -91,6 +115,17 @@ public: // public static standard file creation entry point
   
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // virtual morkFile methods
+
+  virtual void Steal(morkEnv* ev, nsIMdbFile* ioThief) = 0;
+  // Steal: tell this file to close any associated i/o stream in the file
+  // system, because the file ioThief intends to reopen the file in order
+  // to provide the MDB implementation with more exotic file access than is
+  // offered by the nsIMdbFile alone.  Presumably the thief knows enough
+  // from Path() in order to know which file to reopen.  If Steal() is
+  // successful, this file should probably delegate all future calls to
+  // the nsIMdbFile interface down to the thief files, so that even after
+  // the file has been stolen, it can still be read, written, or forcibly
+  // closed (by a call to CloseMdbObject()).
   
   virtual void BecomeTrunk(morkEnv* ev);
   // If this file is a file version branch created by calling AcquireBud(),
@@ -126,6 +161,8 @@ public: // virtual morkFile methods
     
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // non-poly morkFile methods
+
+  nsIMdbFile* AcquireFileHandle(morkEnv* ev); // mObject_Handle
   
   mork_bool FileFrozen() const  { return mFile_Frozen == 'F'; }
   mork_bool FileDoTrace() const { return mFile_DoTrace == 'T'; }
@@ -146,9 +183,15 @@ public: // non-poly morkFile methods
   { return ( this->IsOpenNode() && this->FileActive() ); }
     // call IsOpenAndActiveFile() before using a file
     
+
+  nsIMdbFile* GetThief() const { return mFile_Thief; }
+  void SetThief(morkEnv* ev, nsIMdbFile* ioThief); // ioThief can be nil
+    
+  const char* GetFileNameString() const { return mFile_Name; }
   void SetFileName(morkEnv* ev, const char* inName); // inName can be nil
   static void NilSlotHeapError(morkEnv* ev);
   static void NilFileNameError(morkEnv* ev);
+  static void NonFileTypeError(morkEnv* ev);
     
   void NewMissingIoError(morkEnv* ev) const;
     
@@ -219,6 +262,17 @@ public: // compatible with the morkFile::OpenOldFile() entry point
 
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // virtual ab_File methods
+
+  virtual void Steal(morkEnv* ev, nsIMdbFile* ioThief);
+  // Steal: tell this file to close any associated i/o stream in the file
+  // system, because the file ioThief intends to reopen the file in order
+  // to provide the MDB implementation with more exotic file access than is
+  // offered by the nsIMdbFile alone.  Presumably the thief knows enough
+  // from Path() in order to know which file to reopen.  If Steal() is
+  // successful, this file should probably delegate all future calls to
+  // the nsIMdbFile interface down to the thief files, so that even after
+  // the file has been stolen, it can still be read, written, or forcibly
+  // closed (by a call to CloseMdbObject()).
 
   virtual void BecomeTrunk(morkEnv* ev);
   // If this file is a file version branch created by calling AcquireBud(),

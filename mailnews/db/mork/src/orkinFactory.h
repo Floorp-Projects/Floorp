@@ -140,6 +140,26 @@ public:
 
 // { ===== begin nsIMdbFactory methods =====
 
+  // { ----- begin file methods -----
+  virtual mdb_err OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    const char* inFilePath, mdb_bool inFrozen, nsIMdbFile** acqFile);
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be open and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+
+  virtual mdb_err CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    const char* inFilePath, nsIMdbFile** acqFile);
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be created and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+  // } ----- end file methods -----
+
   // { ----- begin env methods -----
   virtual mdb_err MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv); // new env
   // ioHeap can be nil, causing a MakeHeap() style heap instance to be used

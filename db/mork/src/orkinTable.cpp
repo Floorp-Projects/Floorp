@@ -315,8 +315,11 @@ orkinTable::BecomeContent(nsIMdbEnv* mev,
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkTable* table;
-    table = (morkTable*) mHandle_Object;
+    // remember table->MaybeDirtySpaceStoreAndTable();
+    
+    morkTable* table = (morkTable*) mHandle_Object;
+    MORK_USED_1(table);
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -347,6 +350,99 @@ orkinTable::DropActivity( // tell collection usage no longer expected
 // { ===== begin nsIMdbTable methods =====
 
 // { ----- begin attribute methods -----
+
+/*virtual*/ mdb_err
+orkinTable::SetTablePriority(nsIMdbEnv* mev, mdb_priority inPrio)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    if ( inPrio > morkPriority_kMax )
+      inPrio = morkPriority_kMax;
+      
+    table->mTable_Priority = inPrio;
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::GetTablePriority(nsIMdbEnv* mev, mdb_priority* outPrio)
+{
+  mdb_err outErr = 0;
+  mork_priority prio = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    prio = table->mTable_Priority;
+    if ( prio > morkPriority_kMax )
+    {
+      prio = morkPriority_kMax;
+      table->mTable_Priority = prio;
+    }
+    outErr = ev->AsErr();
+  }
+  if ( outPrio )
+    *outPrio = prio;
+  return outErr;
+}
+
+
+/*virtual*/ mdb_err
+orkinTable:: GetTableBeVerbose(nsIMdbEnv* mev, mdb_bool* outBeVerbose)
+{
+  mdb_err outErr = 0;
+  mdb_bool beVerbose = morkBool_kFalse;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    beVerbose = table->IsTableVerbose();
+    outErr = ev->AsErr();
+  }
+  if ( outBeVerbose )
+    *outBeVerbose = beVerbose;
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::SetTableBeVerbose(nsIMdbEnv* mev, mdb_bool inBeVerbose)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    if ( inBeVerbose )
+      table->SetTableVerbose();
+    else
+       table->ClearTableVerbose();
+   
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::GetTableIsUnique(nsIMdbEnv* mev, mdb_bool* outIsUnique)
+{
+  mdb_err outErr = 0;
+  mdb_bool isUnique = morkBool_kFalse;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    isUnique = table->IsTableUnique();
+    outErr = ev->AsErr();
+  }
+  if ( outIsUnique )
+    *outIsUnique = isUnique;
+  return outErr;
+}
+
 /*virtual*/ mdb_err
 orkinTable::GetTableKind(nsIMdbEnv* mev, mdb_kind* outTableKind)
 {
@@ -731,6 +827,20 @@ orkinTable::CutRow( // make sure the row with inOid is not a member
   }
   return outErr;
 }
+
+/*virtual*/ mdb_err
+orkinTable::CutAllRows( // remove all rows from the table 
+  nsIMdbEnv* mev) // context
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    ((morkTable*) mHandle_Object)->CutAllRows(ev);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
 // } ----- end row set methods -----
 
 // { ----- begin searching methods -----
@@ -1021,6 +1131,8 @@ orkinTable::MoveOid( // change position of row in unsorted table
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
+    // remember table->MaybeDirtySpaceStoreAndTable();
+
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }
@@ -1043,6 +1155,8 @@ orkinTable::MoveRow( // change position of row in unsorted table
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
+    // remember table->MaybeDirtySpaceStoreAndTable();
+    
     ev->StubMethodOnlyError();
     outErr = ev->AsErr();
   }

@@ -44,6 +44,10 @@ typedef mdb_u4 mdb_size;  // unsigned physical media size
 typedef mdb_u4 mdb_fill;  // unsigned logical content size
 typedef mdb_u4 mdb_more;  // more available bytes for larger buffer
 
+typedef mdb_u4 mdb_percent; // 0..100, with values >100 same as 100
+
+typedef mdb_u1 mdb_priority; // 0..9, for a total of ten different values
+
 // temporary substitute for NS_RESULT, for mdb.h standalone compilation:
 typedef mdb_u4 mdb_err;   // equivalent to NS_RESULT
 
@@ -311,6 +315,7 @@ class nsIMdbErrorHook;
 class nsIMdbCompare;
 class nsIMdbThumb;
 class nsIMdbFactory;
+class nsIMdbFile;
 class nsIMdbPort;
 class nsIMdbStore;
 class nsIMdbCursor;
@@ -544,6 +549,9 @@ public:
   virtual mdb_err GetWarningCount(mdb_count* outCount,
     mdb_bool* outShouldAbort) = 0;
   
+  virtual mdb_err GetEnvBeVerbose(mdb_bool* outBeVerbose) = 0;
+  virtual mdb_err SetEnvBeVerbose(mdb_bool inBeVerbose) = 0;
+  
   virtual mdb_err GetDoTrace(mdb_bool* outDoTrace) = 0;
   virtual mdb_err SetDoTrace(mdb_bool inDoTrace) = 0;
   
@@ -615,6 +623,26 @@ class nsIMdbFactory : public nsIMdbObject { // suite entry points
 public:
 
 // { ===== begin nsIMdbFactory methods =====
+
+  // { ----- begin file methods -----
+  virtual mdb_err OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    const char* inFilePath, mdb_bool inFrozen, nsIMdbFile** acqFile) = 0;
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be open and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+
+  virtual mdb_err CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    const char* inFilePath, nsIMdbFile** acqFile) = 0;
+  // Choose some subclass of nsIMdbFile to instantiate, in order to read
+  // (and write if not frozen) the file known by inFilePath.  The file
+  // returned should be created and ready for use, and presumably positioned
+  // at the first byte position of the file.  The exact manner in which
+  // files must be opened is considered a subclass specific detail, and
+  // other portions or Mork source code don't want to know how it's done.
+  // } ----- end file methods -----
 
   // { ----- begin env methods -----
   virtual mdb_err MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv) = 0; // acquire new env
@@ -740,9 +768,9 @@ public:
 // { ===== begin nsIMdbFile methods =====
 
   // { ----- begin pos methods -----
-  virtual mdb_err Tell(nsIMdbEnv* ev, mdb_pos* outPos) const = 0;
+  virtual mdb_err Tell(nsIMdbEnv* ev, mdb_pos* outPos) = 0;
   virtual mdb_err Seek(nsIMdbEnv* ev, mdb_pos inPos) = 0;
-  virtual mdb_err Eof(nsIMdbEnv* ev, mdb_pos* outPos) const = 0;
+  virtual mdb_err Eof(nsIMdbEnv* ev, mdb_pos* outPos) = 0;
   // } ----- end pos methods -----
 
   // { ----- begin read methods -----
@@ -768,6 +796,34 @@ public:
   virtual mdb_err  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief) = 0;
   virtual mdb_err  Thief(nsIMdbEnv* ev, nsIMdbFile** acqThief) = 0;
   // } ----- end replacement methods -----
+
+  // { ----- begin versioning methods -----
+  virtual mdb_err BecomeTrunk(nsIMdbEnv* ev) = 0;
+  // If this file is a file version branch created by calling AcquireBud(),
+  // BecomeTrunk() causes this file's content to replace the original
+  // file's content, typically by assuming the original file's identity.
+  // This default implementation of BecomeTrunk() does nothing, and this
+  // is appropriate behavior for files which are not branches, and is
+  // also the right behavior for files returned from AcquireBud() which are
+  // in fact the original file that has been truncated down to zero length.
+
+  virtual mdb_err AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    nsIMdbFile** acqBud) = 0; // acquired file for new version of content
+  // AcquireBud() starts a new "branch" version of the file, empty of content,
+  // so that a new version of the file can be written.  This new file
+  // can later be told to BecomeTrunk() the original file, so the branch
+  // created by budding the file will replace the original file.  Some
+  // file subclasses might initially take the unsafe but expedient
+  // approach of simply truncating this file down to zero length, and
+  // then returning the same morkFile pointer as this, with an extra
+  // reference count increment.  Note that the caller of AcquireBud() is
+  // expected to eventually call CutStrongRef() on the returned file
+  // in order to release the strong reference.  High quality versions
+  // of morkFile subclasses will create entirely new files which later
+  // are renamed to become the old file, so that better transactional
+  // behavior is exhibited by the file, so crashes protect old files.
+  // Note that AcquireBud() is an illegal operation on readonly files.
+  // } ----- end versioning methods -----
 
 // } ===== end nsIMdbFile methods =====
 };
@@ -949,6 +1005,12 @@ public:
     nsIMdbEnv* ev, // context
     const mdbOid* inOid,  // hypothetical row oid
     nsIMdbRow** acqRow) = 0; // acquire specific row (or null)
+    
+  // virtual mdb_err
+  // GetPortRowCursor( // get cursor for all rows in specific scope
+  //   nsIMdbEnv* ev, // context
+  //   mdb_scope inRowScope, // row scope for row ids
+  //   nsIMdbPortRowCursor** acqCursor) = 0; // all such rows in the port
 
   virtual mdb_err FindRow(nsIMdbEnv* ev, // search for row with matching cell
     mdb_scope inRowScope,   // row scope for row ids
@@ -1036,6 +1098,69 @@ public:
     mdb_kind inTableKind, // the type of table to access
     nsIMdbPortTableCursor** acqCursor) = 0; // all such tables in the port
   // } ----- end table methods -----
+
+
+  // { ----- begin commit methods -----
+
+  virtual mdb_err ShouldCompress( // store wastes at least inPercentWaste?
+    nsIMdbEnv* ev, // context
+    mdb_percent inPercentWaste, // 0..100 percent file size waste threshold
+    mdb_percent* outActualWaste, // 0..100 percent of file actually wasted
+    mdb_bool* outShould) = 0; // true when about inPercentWaste% is wasted
+  // ShouldCompress() returns true if the store can determine that the file
+  // will shrink by an estimated percentage of inPercentWaste% (or more) if
+  // CompressCommit() is called, because that percentage of the file seems
+  // to be recoverable free space.  The granularity is only in terms of 
+  // percentage points, and any value over 100 is considered equal to 100.
+  //
+  // If a store only has an approximate idea how much space might be saved
+  // during a compress, then a best guess should be made.  For example, the
+  // Mork implementation might keep track of how much file space began with
+  // text content before the first updating transaction, and then consider
+  // all content following the start of the first transaction as potentially
+  // wasted space if it is all updates and not just new content.  (This is
+  // a safe assumption in the sense that behavior will stabilize on a low
+  // estimate of wastage after a commit removes all transaction updates.)
+  //
+  // Some db formats might attempt to keep a very accurate reckoning of free
+  // space size, so a very accurate determination can be made.  But other db
+  // formats might have difficulty determining size of free space, and might
+  // require some lengthy calculation to answer.  This is the reason for
+  // passing in the percentage threshold of interest, so that such lengthy
+  // computations can terminate early as soon as at least inPercentWaste is
+  // found, so that the entire file need not be groveled when unnecessary.
+  // However, we hope implementations will always favor fast but imprecise
+  // heuristic answers instead of extremely slow but very precise answers.
+  //
+  // If the outActualWaste parameter is non-nil, it will be used to return
+  // the actual estimated space wasted as a percentage of file size.  (This
+  // parameter is provided so callers need not call repeatedly with altered
+  // inPercentWaste values to isolate the actual wastage figure.)  Note the
+  // actual wastage figure returned can exactly equal inPercentWaste even
+  // when this grossly underestimates the real figure involved, if the db
+  // finds it very expensive to determine the extent of wastage after it is
+  // known to at least exceed inPercentWaste.  Note we expect that whenever
+  // outShould returns true, that outActualWaste returns >= inPercentWaste.
+  //
+  // The effect of different inPercentWaste values is not very uniform over
+  // the permitted range.  For example, 50 represents 50% wastage, or a file
+  // that is about double what it should be ideally.  But 99 represents 99%
+  // wastage, or a file that is about ninety-nine times as big as it should
+  // be ideally.  In the smaller direction, 25 represents 25% wastage, or
+  // a file that is only 33% larger than it should be ideally.
+  //
+  // Callers can determine what policy they want to use for considering when
+  // a file holds too much wasted space, and express this as a percentage
+  // of total file size to pass as in the inPercentWaste parameter.  A zero
+  // likely returns always trivially true, and 100 always trivially false.
+  // The great majority of callers are expected to use values from 25 to 75,
+  // since most plausible thresholds for compressing might fall between the
+  // extremes of 133% of ideal size and 400% of ideal size.  (Presumably the
+  // larger a file gets, the more important the percentage waste involved, so
+  // a sliding scale for compress thresholds might use smaller numbers for
+  // much bigger file sizes.)
+  
+  // } ----- end commit methods -----
 
 // } ===== end nsIMdbPort methods =====
 };
@@ -1208,6 +1333,7 @@ public:
   // then the commit will be finished.  Note the store is effectively write
   // locked until commit is finished or canceled through the thumb instance.
   // Until the commit is done, the store will report it has readonly status.
+  
   // } ----- end commit methods -----
 
 // } ===== end nsIMdbStore methods =====
@@ -1486,6 +1612,14 @@ public:
 // { ===== begin nsIMdbTable methods =====
 
   // { ----- begin meta attribute methods -----
+  virtual mdb_err SetTablePriority(nsIMdbEnv* ev, mdb_priority inPrio) = 0;
+  virtual mdb_err GetTablePriority(nsIMdbEnv* ev, mdb_priority* outPrio) = 0;
+  
+  virtual mdb_err GetTableBeVerbose(nsIMdbEnv* ev, mdb_bool* outBeVerbose) = 0;
+  virtual mdb_err SetTableBeVerbose(nsIMdbEnv* ev, mdb_bool inBeVerbose) = 0;
+  
+  virtual mdb_err GetTableIsUnique(nsIMdbEnv* ev, mdb_bool* outIsUnique) = 0;
+  
   virtual mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind) = 0;
   virtual mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope) = 0;
   
@@ -1517,6 +1651,7 @@ public:
     // it will be different from inOptionalMetaRowOid when the meta row was
     // already given a different oid earlier.
   // } ----- end meta attribute methods -----
+
 
   // { ----- begin cursor methods -----
   virtual mdb_err GetTableRowCursor( // make a cursor, starting iteration at inRowPos
@@ -1580,6 +1715,9 @@ public:
   virtual mdb_err CutRow( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow) = 0; // row to remove from table
+
+  virtual mdb_err CutAllRows( // remove all rows from the table
+    nsIMdbEnv* ev) = 0; // context
   // } ----- end row set methods -----
 
   // { ----- begin searching methods -----

@@ -70,6 +70,13 @@ morkCell::AliasYarn(morkEnv* ev, mdbYarn* outYarn) const
   
   
 void
+morkCell::SetCellClean()
+{
+  mork_column col = this->GetColumn();
+  this->SetColumnAndChange(col, morkChange_kNil);
+}
+  
+void
 morkCell::SetCellDirty()
 {
   mork_column col = this->GetColumn();

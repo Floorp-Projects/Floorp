@@ -222,9 +222,15 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 , mStore_AtomSpaces(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 , mStore_Pool(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioPortHeap)
 
+, mStore_CommitGroupIdentity( 0 )
+
+, mStore_FirstCommitGroupPos( 0 )
+, mStore_SecondCommitGroupPos( 0 )
+
 // disable auto-assignment of atom IDs until someone knows it is okay:
 , mStore_CanAutoAssignAtomIdentity( morkBool_kFalse )
-
+, mStore_CanDirty( morkBool_kFalse ) // not until the store is open
+, mStore_CanWriteIncremental( morkBool_kTrue ) // always with few exceptions
 {
   if ( ev->Good() )
   {
@@ -270,6 +276,82 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
 
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
+
+mork_percent morkStore::PercentOfStoreWasted(morkEnv* ev)
+{
+  mork_percent outPercent = 0;
+  morkFile* file = mStore_File;
+  
+  if ( file )
+  {
+    mork_pos firstPos = mStore_FirstCommitGroupPos;
+    mork_pos secondPos = mStore_SecondCommitGroupPos;
+    if ( firstPos || secondPos )
+    {
+      if ( firstPos < 512 && secondPos > firstPos )
+        firstPos = secondPos; // better approximation of first commit
+        
+      mork_pos fileLength = file->Length(ev); // end of file
+      if ( ev->Good() && fileLength > firstPos )
+      {
+        mork_size groupContent = fileLength - firstPos;
+        outPercent = ( groupContent * 100 ) / fileLength;
+      }
+    }
+  }
+  else
+    this->NilStoreFileError(ev);
+    
+  return outPercent;
+}
+
+void
+morkStore::SetStoreAndAllSpacesCanDirty(morkEnv* ev, mork_bool inCanDirty)
+{
+  mStore_CanDirty = inCanDirty;
+  
+  mork_change* c = 0;
+  mork_scope* key = 0; // ignore keys in maps
+
+  if ( ev->Good() )
+  {
+    morkAtomSpaceMapIter asi(ev, &mStore_AtomSpaces);
+
+    morkAtomSpace* atomSpace = 0; // old val node in the map
+    
+    for ( c = asi.FirstAtomSpace(ev, key, &atomSpace); c && ev->Good();
+          c = asi.NextAtomSpace(ev, key, &atomSpace) )
+    {
+      if ( atomSpace )
+      {
+        if ( atomSpace->IsAtomSpace() )
+          atomSpace->mSpace_CanDirty = inCanDirty;
+        else
+          atomSpace->NonAtomSpaceTypeError(ev);
+      }
+      else
+        ev->NilPointerError();
+    }
+  }
+
+  if ( ev->Good() )
+  {
+    morkRowSpaceMapIter rsi(ev, &mStore_RowSpaces);
+    morkRowSpace* rowSpace = 0; // old val node in the map
+    
+    for ( c = rsi.FirstRowSpace(ev, key, &rowSpace); c && ev->Good();
+          c = rsi.NextRowSpace(ev, key, &rowSpace) )
+    {
+      if ( rowSpace )
+      {
+        if ( rowSpace->IsRowSpace() )
+          rowSpace->mSpace_CanDirty = inCanDirty;
+        else
+          rowSpace->NonRowSpaceTypeError(ev);
+      }
+    }
+  }
+}
 
 void
 morkStore::RenumberAllCollectableContent(morkEnv* ev)
@@ -386,6 +468,8 @@ morkAtomSpace* morkStore::LazyGetGroundAtomSpace(morkEnv* ev)
       
     if ( space ) // successful space creation?
     {
+      this->MaybeDirtyStore();
+    
       mStore_GroundAtomSpace = space; // transfer strong ref to this slot
       mStore_AtomSpaces.AddAtomSpace(ev, space);
     }
@@ -404,6 +488,8 @@ morkAtomSpace* morkStore::LazyGetGroundColumnSpace(morkEnv* ev)
       
     if ( space ) // successful space creation?
     {
+      this->MaybeDirtyStore();
+    
       mStore_GroundColumnSpace = space; // transfer strong ref to this slot
       mStore_AtomSpaces.AddAtomSpace(ev, space);
     }
@@ -423,6 +509,7 @@ morkStream* morkStore::LazyGetInStream(morkEnv* ev)
           morkStore_kStreamBufSize, /*frozen*/ morkBool_kTrue);
       if ( stream )
       {
+        this->MaybeDirtyStore();
         mStore_InStream = stream; // transfer strong ref to this slot
       }
     }
@@ -444,6 +531,7 @@ morkStream* morkStore::LazyGetOutStream(morkEnv* ev)
           morkStore_kStreamBufSize, /*frozen*/ morkBool_kFalse);
       if ( stream )
       {
+        this->MaybeDirtyStore();
         mStore_InStream = stream; // transfer strong ref to this slot
       }
     }
@@ -494,6 +582,8 @@ morkStore::LazyGetRowSpace(morkEnv* ev, mdb_scope inRowScope)
       
     if ( outSpace ) // successful space creation?
     {
+      this->MaybeDirtyStore();
+    
       // note adding to node map creates it's own strong ref...
       if ( mStore_RowSpaces.AddRowSpace(ev, outSpace) )
         outSpace->CutStrongRef(ev); // ...so we can drop our strong ref
@@ -521,6 +611,8 @@ morkStore::LazyGetAtomSpace(morkEnv* ev, mdb_scope inAtomScope)
         
       if ( outSpace ) // successful space creation?
       {
+        this->MaybeDirtyStore();
+    
         // note adding to node map creates it's own strong ref...
         if ( mStore_AtomSpaces.AddAtomSpace(ev, outSpace) )
           outSpace->CutStrongRef(ev); // ...so we can drop our strong ref
@@ -622,7 +714,10 @@ morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
         morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
         outAtom = map->GetAtom(ev, keyAtom);
         if ( !outAtom )
+        {
+          this->MaybeDirtyStore();
           outAtom = groundSpace->MakeBookAtomCopy(ev, *keyAtom);
+        }
       }
       else if ( ev->Good() )
       {
@@ -666,6 +761,7 @@ morkStore::MidToOid(morkEnv* ev, const morkMid& inMid, mdbOid* outOid)
           outOid->mOid_Scope = bookAtom->mBookAtom_Id;
         else
         {
+          this->MaybeDirtyStore();
           bookAtom = groundSpace->MakeBookAtomCopy(ev, *keyAtom);
           if ( bookAtom )
           {
@@ -856,6 +952,7 @@ morkStore::AddAlias(morkEnv* ev, const morkMid& inMid, mork_cscode inForm)
         }
         else
         {
+          this->MaybeDirtyStore();
           keyAtom->mBookAtom_Id = oid->mOid_Id;
           outAtom = atomSpace->MakeBookAtomCopyWithAid(ev,
             *keyAtom, (mork_aid) oid->mOid_Id);
@@ -936,6 +1033,7 @@ morkStore::BufToToken(morkEnv* ev, const morkBuf* inBuf)
             outToken = bookAtom->mBookAtom_Id;
           else
           {
+            this->MaybeDirtyStore();
             bookAtom = space->MakeBookAtomCopy(ev, *keyAtom);
             if ( bookAtom )
             {
@@ -977,6 +1075,7 @@ morkStore::StringToToken(morkEnv* ev, const char* inTokenName)
             outToken = bookAtom->mBookAtom_Id;
           else
           {
+            this->MaybeDirtyStore();
             bookAtom = groundSpace->MakeBookAtomCopy(ev, *keyAtom);
             if ( bookAtom )
             {
@@ -1061,7 +1160,7 @@ morkStore::GetTableKind(morkEnv* ev, mdb_scope inRowScope,
         if ( outTableCount )
           *outTableCount = outTable->GetRowCount();
         if ( outMustBeUnique )
-          *outMustBeUnique = outTable->mTable_MustBeUnique;
+          *outMustBeUnique = outTable->IsTableUnique();
       }
     }
   }

@@ -165,6 +165,14 @@ public: // type identification
 // { ===== begin nsIMdbTable methods =====
 
   // { ----- begin meta attribute methods -----
+  virtual mdb_err SetTablePriority(nsIMdbEnv* ev, mdb_priority inPrio);
+  virtual mdb_err GetTablePriority(nsIMdbEnv* ev, mdb_priority* outPrio);
+  
+  virtual mdb_err GetTableBeVerbose(nsIMdbEnv* ev, mdb_bool* outBeVerbose);
+  virtual mdb_err SetTableBeVerbose(nsIMdbEnv* ev, mdb_bool inBeVerbose);
+  
+  virtual mdb_err GetTableIsUnique(nsIMdbEnv* ev, mdb_bool* outIsUnique);
+
   virtual mdb_err GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind);
   virtual mdb_err GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope);
   
@@ -260,6 +268,9 @@ public: // type identification
   virtual mdb_err CutRow( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow); // row to remove from table
+
+  virtual mdb_err CutAllRows( // remove all rows from the table
+    nsIMdbEnv* ev); // context
   // } ----- end row set methods -----
 
   // { ----- begin searching methods -----

@@ -96,6 +96,7 @@ morkAtomSpace::morkAtomSpace(morkEnv* ev, const morkUsage& inUsage,
 , mAtomSpace_AtomAids(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap)
 , mAtomSpace_AtomBodies(ev, morkUsage::kMember, (nsIMdbHeap*) 0, ioSlotHeap)
 {
+  // the morkSpace base constructor handles any dirty propagation
   if ( ev->Good() )
     mNode_Derived = morkDerived_kAtomSpace;
 }
@@ -137,6 +138,9 @@ morkAtomSpace::NonAtomSpaceTypeError(morkEnv* ev)
 mork_num
 morkAtomSpace::CutAllAtoms(morkEnv* ev, morkPool* ioPool)
 {
+  if ( this->IsAtomSpaceClean() )
+    this->MaybeDirtyStoreAndSpace();
+  
   mork_num outSlots = mAtomSpace_AtomAids.mMap_Fill;
   morkBookAtom* a = 0; // old key atom in the map
   
@@ -165,6 +169,13 @@ morkAtomSpace::MakeBookAtomCopyWithAid(morkEnv* ev,
     outAtom = pool->NewBookAtomCopy(ev, inAtom);
     if ( outAtom )
     {
+      if ( mSpace_Store->mStore_CanDirty )
+      {
+        outAtom->SetAtomDirty();
+        if ( this->IsAtomSpaceClean() )
+          this->MaybeDirtyStoreAndSpace();
+      }
+  
       outAtom->mBookAtom_Id = inAid;
       outAtom->mBookAtom_Space = this;
       mAtomSpace_AtomAids.AddAtom(ev, outAtom);
@@ -184,9 +195,10 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
 // make copy of inAtom and put it in both maps, using a new ID as needed.
 {
   morkBookAtom* outAtom = 0;
-  if ( ev->Good() )
+  morkStore* store = mSpace_Store;
+  if ( ev->Good() && store )
   {
-    if ( mSpace_Store->mStore_CanAutoAssignAtomIdentity )
+    if ( store->mStore_CanAutoAssignAtomIdentity )
     {
       morkPool* pool = this->GetSpaceStorePool();
       morkBookAtom* atom = pool->NewBookAtomCopy(ev, inAtom);
@@ -195,6 +207,13 @@ morkAtomSpace::MakeBookAtomCopy(morkEnv* ev, const morkBigBookAtom& inAtom)
         mork_aid id = this->MakeNewAtomId(ev, atom);
         if ( id )
         {
+          if ( store->mStore_CanDirty )
+          {
+            atom->SetAtomDirty();
+            if ( this->IsAtomSpaceClean() )
+              this->MaybeDirtyStoreAndSpace();
+          }
+            
           outAtom = atom; 
           atom->mBookAtom_Space = this;
           mAtomSpace_AtomAids.AddAtom(ev, atom);

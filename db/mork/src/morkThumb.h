@@ -128,6 +128,7 @@ public: // 'do more' methods
   void DoMore_LargeCommit(morkEnv* ev);
   void DoMore_SessionCommit(morkEnv* ev);
   void DoMore_CompressCommit(morkEnv* ev);
+  void DoMore_Commit(morkEnv* ev);
   void DoMore_SearchManyColumns(morkEnv* ev);
   void DoMore_NewSortColumn(morkEnv* ev);
   void DoMore_NewSortColumnWithCompare(morkEnv* ev);
@@ -145,10 +146,13 @@ public: // other thumb methods
 public: // assorted thumb constructors
 
   static morkThumb* Make_OpenFileStore(morkEnv* ev, 
-    nsIMdbHeap* ioHeap,morkStore* ioStore);
+    nsIMdbHeap* ioHeap, morkStore* ioStore);
 
   static morkThumb* Make_CompressCommit(morkEnv* ev, 
-    nsIMdbHeap* ioHeap,morkStore* ioStore, mork_bool inDoCollect);
+    nsIMdbHeap* ioHeap, morkStore* ioStore, mork_bool inDoCollect);
+
+  static morkThumb* Make_LargeCommit(morkEnv* ev, 
+    nsIMdbHeap* ioHeap, morkStore* ioStore);
 
 // { ===== begin non-poly methods imitating nsIMdbThumb =====
   void GetProgress(morkEnv* ev, mdb_count* outTotal,

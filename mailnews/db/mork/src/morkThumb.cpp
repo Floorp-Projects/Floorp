@@ -242,6 +242,45 @@ morkThumb::Make_OpenFileStore(morkEnv* ev, nsIMdbHeap* ioHeap,
 
 
 /*static*/ morkThumb*
+morkThumb::Make_LargeCommit(morkEnv* ev, 
+  nsIMdbHeap* ioHeap, morkStore* ioStore)
+{
+  morkThumb* outThumb = 0;
+  if ( ioHeap && ioStore )
+  {
+    morkFile* file = ioStore->mStore_File;
+    if ( file )
+    {
+      outThumb = new(*ioHeap, ev)
+        morkThumb(ev, morkUsage::kHeap, ioHeap, ioHeap,
+          morkThumb_kMagic_LargeCommit);
+          
+      if ( outThumb )
+      {
+        morkWriter* writer = new(*ioHeap, ev)
+          morkWriter(ev, morkUsage::kHeap, ioHeap, ioStore, file, ioHeap);
+        if ( writer )
+        {
+          writer->mWriter_CommitGroupIdentity =
+            ++ioStore->mStore_CommitGroupIdentity;
+          writer->mWriter_NeedDirtyAll = morkBool_kFalse;
+          outThumb->mThumb_DoCollect = morkBool_kFalse;
+          morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
+          morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
+          morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
+        }
+      }
+    }
+    else
+      ioStore->NilStoreFileError(ev);
+  }
+  else
+    ev->NilPointerError();
+    
+  return outThumb;
+}
+
+/*static*/ morkThumb*
 morkThumb::Make_CompressCommit(morkEnv* ev, 
   nsIMdbHeap* ioHeap, morkStore* ioStore, mork_bool inDoCollect)
 {
@@ -266,6 +305,10 @@ morkThumb::Make_CompressCommit(morkEnv* ev,
           morkStore::SlotStrongStore(ioStore, ev, &outThumb->mThumb_Store);
           morkFile::SlotStrongFile(file, ev, &outThumb->mThumb_File);
           morkWriter::SlotStrongWriter(writer, ev, &outThumb->mThumb_Writer);
+          
+          // cope with fact that parsed transaction groups are going away:
+          ioStore->mStore_FirstCommitGroupPos = 0;
+          ioStore->mStore_SecondCommitGroupPos = 0;
         }
       }
     }
@@ -406,15 +449,15 @@ void morkThumb::DoMore_ImportContent(morkEnv* ev)
 
 void morkThumb::DoMore_LargeCommit(morkEnv* ev)
 {
-  this->UnsupportedThumbMagicError(ev);
+  this->DoMore_Commit(ev);
 }
 
 void morkThumb::DoMore_SessionCommit(morkEnv* ev)
 {
-  this->UnsupportedThumbMagicError(ev);
+  this->DoMore_Commit(ev);
 }
 
-void morkThumb::DoMore_CompressCommit(morkEnv* ev)
+void morkThumb::DoMore_Commit(morkEnv* ev)
 {
   morkWriter* writer = mThumb_Writer;
   if ( writer )
@@ -431,6 +474,11 @@ void morkThumb::DoMore_CompressCommit(morkEnv* ev)
     mThumb_Broken = morkBool_kTrue;
     mThumb_Done = morkBool_kTrue;
   }
+}
+
+void morkThumb::DoMore_CompressCommit(morkEnv* ev)
+{
+  this->DoMore_Commit(ev);
 }
 
 void morkThumb::DoMore_SearchManyColumns(morkEnv* ev)

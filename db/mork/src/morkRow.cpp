@@ -66,43 +66,102 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
-mork_u2
-morkRow::AddTableUse(morkEnv* ev)
+// notifications regarding row changes:
+
+void morkRow::NoteRowAddCol(morkEnv* ev, mork_column inColumn)
 {
-  if ( this->IsRow() )
+  if ( !this->IsRowRewrite() )
   {
-    if ( mRow_TableUses < morkRow_kMaxTableUses ) // not already maxed out?
-      ++mRow_TableUses;
+    mork_delta newDelta;
+    morkDelta_Init(newDelta, inColumn, morkChange_kAdd);
+    
+    if ( newDelta != mRow_Delta ) // not repeating existing data?
+    {
+      if ( this->HasRowDelta() ) // already have one change recorded?
+        this->SetRowRewrite(); // just plan to write all row cells
+      else
+        this->SetRowDelta(inColumn, morkChange_kAdd);
+    }
   }
   else
-    this->NonRowTypeError(ev);
+    this->ClearRowDelta();
+}
+
+void morkRow::NoteRowCutCol(morkEnv* ev, mork_column inColumn)
+{
+  if ( !this->IsRowRewrite() )
+  {
+    mork_delta newDelta;
+    morkDelta_Init(newDelta, inColumn, morkChange_kCut);
     
-  return mRow_TableUses;
+    if ( newDelta != mRow_Delta ) // not repeating existing data?
+    {
+      if ( this->HasRowDelta() ) // already have one change recorded?
+        this->SetRowRewrite(); // just plan to write all row cells
+      else
+        this->SetRowDelta(inColumn, morkChange_kCut);
+    }
+  }
+  else
+    this->ClearRowDelta();
+}
+
+void morkRow::NoteRowSetCol(morkEnv* ev, mork_column inColumn)
+{
+  if ( !this->IsRowRewrite() )
+  {
+    if ( this->HasRowDelta() ) // already have one change recorded?
+      this->SetRowRewrite(); // just plan to write all row cells
+    else
+      this->SetRowDelta(inColumn, morkChange_kSet);
+  }
+  else
+    this->ClearRowDelta();
+}
+
+void morkRow::NoteRowSetAll(morkEnv* ev)
+{
+  this->SetRowRewrite(); // just plan to write all row cells
+  this->ClearRowDelta();
 }
 
 mork_u2
-morkRow::CutTableUse(morkEnv* ev)
+morkRow::AddRowGcUse(morkEnv* ev)
 {
   if ( this->IsRow() )
   {
-    if ( mRow_TableUses ) // any outstanding uses to cut?
-    {
-      if ( mRow_TableUses < morkRow_kMaxTableUses ) // not frozen at max?
-        --mRow_TableUses;
-    }
-    else
-      this->TableUsesUnderflowWarning(ev);
+    if ( mRow_GcUses < morkRow_kMaxGcUses ) // not already maxed out?
+      ++mRow_GcUses;
   }
   else
     this->NonRowTypeError(ev);
     
-  return mRow_TableUses;
+  return mRow_GcUses;
+}
+
+mork_u2
+morkRow::CutRowGcUse(morkEnv* ev)
+{
+  if ( this->IsRow() )
+  {
+    if ( mRow_GcUses ) // any outstanding uses to cut?
+    {
+      if ( mRow_GcUses < morkRow_kMaxGcUses ) // not frozen at max?
+        --mRow_GcUses;
+    }
+    else
+      this->GcUsesUnderflowWarning(ev);
+  }
+  else
+    this->NonRowTypeError(ev);
+    
+  return mRow_GcUses;
 }
 
 /*static*/ void
-morkRow::TableUsesUnderflowWarning(morkEnv* ev)
+morkRow::GcUsesUnderflowWarning(morkEnv* ev)
 {
-  ev->NewWarning("mRow_TableUses underflow");
+  ev->NewWarning("mRow_GcUses underflow");
 }
 
 
@@ -155,12 +214,19 @@ morkRow::InitRow(morkEnv* ev, const mdbOid* inOid, morkRowSpace* ioSpace,
         mRow_Length = (mork_u2) inLength;
         mRow_Seed = (mork_u2) (mork_ip) this; // "random" assignment
 
-        mRow_TableUses = 0;
-        mRow_Load = morkLoad_kClean;
+        mRow_GcUses = 0;
+        mRow_Pad = 0;
+        mRow_Flags = 0;
         mRow_Tag = morkRow_kTag;
 
         if ( inLength )
           mRow_Cells = ioPool->NewCells(ev, inLength);
+
+        if ( this->MaybeDirtySpaceStoreAndRow() ) // new row might dirty store
+        {
+          this->SetRowRewrite();
+          this->NoteRowSetAll(ev);
+        }
       }
       else
         ioSpace->MinusOneRidError(ev);
@@ -181,7 +247,7 @@ morkRow::AcquireRowObject(morkEnv* ev, morkStore* ioStore)
   else
   {
     nsIMdbHeap* heap = ioStore->mPort_Heap;
-    ro = new (*heap, ev)
+    ro = new(*heap, ev)
       morkRowObject(ev, morkUsage::kHeap, heap, this, ioStore);
 
     morkRowObject::SlotWeakRowObject(ro, ev, &mRow_Object);
@@ -207,7 +273,7 @@ morkRow::AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
   mdb_column inCol, mork_pos inPos)
 {
   nsIMdbHeap* heap = ev->mEnv_Heap;
-  morkCellObject* cellObj = new (*heap, ev)
+  morkCellObject* cellObj = new(*heap, ev)
     morkCellObject(ev, morkUsage::kHeap, heap, this, ioCell, inCol, inPos);
   if ( cellObj )
   {
@@ -333,6 +399,28 @@ morkRow::TakeCells(morkEnv* ev, morkCell* ioVector, mork_fill inVecLength,
   }
 }
 
+mork_bool morkRow::MaybeDirtySpaceStoreAndRow()
+{
+  morkRowSpace* rowSpace = mRow_Space;
+  if ( rowSpace )
+  {
+    morkStore* store = rowSpace->mSpace_Store;
+    if ( store && store->mStore_CanDirty )
+    {
+      store->SetStoreDirty();
+      rowSpace->mSpace_CanDirty = morkBool_kTrue;
+    }
+    
+    if ( rowSpace->mSpace_CanDirty )
+    {
+      this->SetRowDirty();
+      rowSpace->SetRowSpaceDirty();
+      return morkBool_kTrue;
+    }
+  }
+  return morkBool_kFalse;
+}
+
 morkCell*
 morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
   mork_pos* outPos, morkStore* ioStore)
@@ -341,10 +429,21 @@ morkRow::NewCell(morkEnv* ev, mdb_column inColumn,
   mork_size length = (mork_size) mRow_Length;
   *outPos = (mork_pos) length;
   morkPool* pool = ioStore->StorePool();
+  
+  mork_bool canDirty = this->MaybeDirtySpaceStoreAndRow();
+  
   if ( pool->AddRowCells(ev, this, length + 1) )
   {
     morkCell* cell = mRow_Cells + length;
-    cell->SetColumnAndChange(inColumn, morkChange_kAdd);
+    // next line equivalent to inline morkCell::SetCellDirty():
+    if ( canDirty )
+      cell->SetCellColumnDirty(inColumn);
+    else
+      cell->SetCellColumnClean(inColumn);
+      
+    if ( canDirty && !this->IsRowRewrite() )
+      this->NoteRowAddCol(ev, inColumn);
+      
     return cell;
   }
     
@@ -432,6 +531,11 @@ morkRow::EmptyAllCells(morkEnv* ev)
     morkStore* store = this->GetRowSpaceStore(ev);
     if ( store )
     {
+      if ( this->MaybeDirtySpaceStoreAndRow() )
+      {
+        this->SetRowRewrite();
+        this->NoteRowSetAll(ev);
+      }
       morkPool* pool = store->StorePool();
       morkCell* end = cells + mRow_Length;
       --cells; // prepare for preincrement:
@@ -480,6 +584,11 @@ morkRow::CutAllColumns(morkEnv* ev)
   morkStore* store = this->GetRowSpaceStore(ev);
   if ( store )
   {
+    if ( this->MaybeDirtySpaceStoreAndRow() )
+    {
+      this->SetRowRewrite();
+      this->NoteRowSetAll(ev);
+    }
     morkRowSpace* rowSpace = mRow_Space;
     if ( rowSpace->mRowSpace_IndexCount ) // any indexes?
       this->cut_all_index_entries(ev);
@@ -497,6 +606,11 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
   morkStore* srcStore = inSourceRow->GetRowSpaceStore(ev);
   if ( store && srcStore )
   {
+    if ( this->MaybeDirtySpaceStoreAndRow() )
+    {
+      this->SetRowRewrite();
+      this->NoteRowSetAll(ev);
+    }
     morkRowSpace* rowSpace = mRow_Space;
     mork_count indexes = rowSpace->mRowSpace_IndexCount; // any indexes?
     
@@ -518,9 +632,13 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
         {
           morkAtom* atom = src->mCell_Atom;
           mork_column dstCol = src->GetColumn();
+          // Note we modify the mCell_Atom slot directly instead of using
+          // morkCell::SetAtom(), because we know it starts equal to nil.
+          
           if ( sameStore ) // source and dest in same store?
           {
-            dst->SetColumnAndChange(dstCol, morkChange_kAdd);
+            // next line equivalent to inline morkCell::SetCellDirty():
+            dst->SetCellColumnDirty(dstCol);
             dst->mCell_Atom = atom;
             if ( atom ) // another ref to non-nil atom?
               atom->AddCellUse(ev);
@@ -530,7 +648,8 @@ morkRow::SetRow(morkEnv* ev, const morkRow* inSourceRow)
             dstCol = store->CopyToken(ev, dstCol, srcStore);
             if ( dstCol )
             {
-              dst->SetColumnAndChange(dstCol, morkChange_kAdd);
+              // next line equivalent to inline morkCell::SetCellDirty():
+              dst->SetCellColumnDirty(dstCol);
               atom = store->CopyAtom(ev, atom);
               dst->mCell_Atom = atom;
               if ( atom ) // another ref?
@@ -565,19 +684,23 @@ morkRow::AddRow(morkEnv* ev, const morkRow* inSourceRow)
 }
 
 void
-morkRow::OnZeroTableUse(morkEnv* ev)
-// OnZeroTableUse() is called when CutTableUse() returns zero.
+morkRow::OnZeroRowGcUse(morkEnv* ev)
+// OnZeroRowGcUse() is called when CutRowGcUse() returns zero.
 {
   MORK_USED_1(ev);
-  // ev->NewWarning("need to implement OnZeroTableUse");
+  // ev->NewWarning("need to implement OnZeroRowGcUse");
 }
 
 void
 morkRow::DirtyAllRowContent(morkEnv* ev)
 {
   MORK_USED_1(ev);
-  this->SetRowDirty();
 
+  if ( this->MaybeDirtySpaceStoreAndRow() )
+  {
+    this->SetRowRewrite();
+    this->NoteRowSetAll(ev);
+  }
   morkCell* cells = mRow_Cells;
   if ( cells )
   {
@@ -624,6 +747,9 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
     morkStore* store = this->GetRowSpaceStore(ev);
     if ( store )
     {
+      if ( this->MaybeDirtySpaceStoreAndRow() && !this->IsRowRewrite() )
+        this->NoteRowCutCol(ev, inColumn);
+        
       morkRowSpace* rowSpace = mRow_Space;
       morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
         rowSpace->FindMap(ev, inColumn) : (morkAtomRowMap*) 0;
@@ -664,25 +790,6 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
   }
 }
 
-// void morkRow::cut_cell_from_space_index(morkEnv* ev, morkCell* ioCell)
-// {
-//   morkAtom* oldAtom = ioCell->mCell_Atom;
-//   if ( oldAtom )
-//   {
-//     mork_column col = ioCell->GetColumn();
-//     morkRowSpace* rowSpace = mRow_Space;
-//     morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
-//       rowSpace->FindMap(ev, col) : (morkAtomRowMap*) 0;
-//     
-//     if ( map ) // col is indexed by row space?
-//     {
-//       mork_aid oldAid = oldAtom->GetBookAtomAid();
-//       if ( oldAid ) // cut old row attribute from row index in space?
-//         map->CutAid(ev, oldAid);
-//     }
-//   }
-// }
-
 void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
   const mdbYarn* inYarn, morkStore* ioStore)
 {
@@ -690,16 +797,16 @@ void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
   {
     mork_pos pos = -1;
     morkCell* cell = this->GetCell(ev, inColumn, &pos);
+    morkCell* oldCell = cell; // need to know later whether new
     if ( !cell ) // column does not yet exist?
       cell = this->NewCell(ev, inColumn, &pos, ioStore);
-    else
-      ++mRow_Seed;
     
     if ( cell )
     {
-      // cell->SetYarn(ev, inYarn, ioStore);
+      morkAtom* oldAtom = cell->mCell_Atom;
+
       morkAtom* atom = ioStore->YarnToAtom(ev, inYarn);
-      if ( atom )
+      if ( atom && atom != oldAtom )
       {
         morkRowSpace* rowSpace = mRow_Space;
         morkAtomRowMap* map = ( rowSpace->mRowSpace_IndexCount )?
@@ -707,7 +814,6 @@ void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
         
         if ( map ) // inColumn is indexed by row space?
         {
-          morkAtom* oldAtom = cell->mCell_Atom;
           if ( oldAtom && oldAtom != atom ) // cut old cell from index?
           {
             mork_aid oldAid = oldAtom->GetBookAtomAid();
@@ -717,6 +823,13 @@ void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
         }
         
         cell->SetAtom(ev, atom, ioStore->StorePool()); // refcounts atom
+
+        if ( oldCell ) // we changed a pre-existing cell in the row?
+        {
+          ++mRow_Seed;
+          if ( this->MaybeDirtySpaceStoreAndRow() && !this->IsRowRewrite() )
+            this->NoteRowAddCol(ev, inColumn);
+        }
 
         if ( map ) // inColumn is indexed by row space?
         {
@@ -742,7 +855,7 @@ morkRow::NewRowCellCursor(morkEnv* ev, mdb_pos inPos)
       if ( rowObj )
       {
         nsIMdbHeap* heap = store->mPort_Heap;
-        morkRowCellCursor* cursor = new (*heap, ev)
+        morkRowCellCursor* cursor = new(*heap, ev)
           morkRowCellCursor(ev, morkUsage::kHeap, heap, rowObj);
          
         if ( cursor )

@@ -88,7 +88,7 @@ morkAtom::GetYarn(mdbYarn* outYarn) const
     mdb_size size = outYarn->mYarn_Size; // max dest size
     if ( fill > size ) // too much atom content?
     {
-      outYarn->mYarn_More = size - fill; // extra atom bytes omitted
+      outYarn->mYarn_More = fill - size; // extra atom bytes omitted
       fill = size; // copy no more bytes than size of yarn buffer
     }
     void* dest = outYarn->mYarn_Buf; // where bytes are going

@@ -383,9 +383,9 @@ public: // out virtual morkParser methods, data flow parser to subclass
 // mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
 // mp:Meta      ::= OnNewMeta mp:MetaItem* OnMetaEnd
 // mp:MetaItem  ::= mp:Cell | OnMetaGlitch
-// mp:Row       ::= OnNewRow mp:RowItem* OnRowEnd
+// mp:Row       ::= OnMinusRow? OnNewRow mp:RowItem* OnRowEnd
 // mp:RowItem   ::= mp:Cell | mp:Meta | OnRowGlitch
-// mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
+// mp:Cell      ::= OnMinusCell? OnNewCell mp:CellItem? OnCellEnd
 // mp:CellItem  ::= mp:Slot | OnCellForm | OnCellGlitch
 // mp:Slot      ::= OnValue | OnValueMid | OnRowMid | OnTableMid
 
@@ -409,7 +409,7 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
   virtual void OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-    const morkMid& inMid, mork_change inChange) = 0;
+    const morkMid& inMid, mork_bool inCutAllRows) = 0;
   virtual void OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
   virtual void OnTableEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
     
@@ -417,8 +417,9 @@ public: // out virtual morkParser methods, data flow parser to subclass
   virtual void OnMetaGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
   virtual void OnMetaEnd(morkEnv* ev, const morkSpan& inSpan) = 0;
 
+  virtual void OnMinusRow(morkEnv* ev) = 0;
   virtual void OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-    const morkMid& inMid, mork_change inChange) = 0;
+    const morkMid& inMid, mork_bool inCutAllCols) = 0;
   virtual void OnRowGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;  
   virtual void OnRowEnd(morkEnv* ev, const morkSpan& inSpan) = 0;  
 
@@ -431,8 +432,9 @@ public: // out virtual morkParser methods, data flow parser to subclass
 
   virtual void OnAliasGlitch(morkEnv* ev, const morkGlitch& inGlitch) = 0;
 
+  virtual void OnMinusCell(morkEnv* ev) = 0;
   virtual void OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-    const morkMid* inMid, const morkBuf* inBuf, mork_change inChange) = 0;
+    const morkMid* inMid, const morkBuf* inBuf) = 0;
   // Exactly one of inMid and inBuf is nil, and the other is non-nil.
   // When hex ID syntax is used for a column, then inMid is not nil, and
   // when a naked string names a column, then inBuf is not nil.
@@ -476,7 +478,11 @@ protected: // protected parser helper methods
   void ReadTable(morkEnv* ev);
   void ReadTableMeta(morkEnv* ev);
   void ReadDict(morkEnv* ev);
+  mork_bool ReadContent(morkEnv* ev, mork_bool inInsideGroup);
   void ReadGroup(morkEnv* ev);
+  mork_bool ReadEndGroupId(morkEnv* ev);
+  mork_bool ReadAt(morkEnv* ev, mork_bool inInsideGroup);
+  mork_bool FindGroupEnd(morkEnv* ev);
   void ReadMeta(morkEnv* ev, int inEndMeta);
   void ReadAlias(morkEnv* ev);
   mork_id ReadHex(morkEnv* ev, int* outNextChar);
@@ -487,7 +493,10 @@ protected: // protected parser helper methods
   mork_bool MatchPattern(morkEnv* ev, const char* inPattern);
   
   void EndSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan);
+  void EndSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan);
   void StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan);
+  
+  void StartSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan);
   
   int eat_line_break(morkEnv* ev, int inLast);
   int eat_line_continue(morkEnv* ev); // last char was '\\'

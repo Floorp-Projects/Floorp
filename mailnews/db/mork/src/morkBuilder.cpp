@@ -132,6 +132,11 @@ morkBuilder::morkBuilder(morkEnv* ev,
 , mBuilder_TableRowScope( (mork_scope) 'r' )
 , mBuilder_TableAtomScope( (mork_scope) 'v' )
 , mBuilder_TableKind( 0 )
+
+, mBuilder_TablePriority( morkPriority_kLo )
+, mBuilder_TableIsUnique( morkBool_kFalse )
+, mBuilder_TableIsVerbose( morkBool_kFalse )
+, mBuilder_TablePadByte( 0 )
   
 , mBuilder_RowForm( 0 )
 , mBuilder_RowRowScope( (mork_scope) 'r' )
@@ -283,9 +288,21 @@ morkBuilder::OnPortEnd(morkEnv* ev, const morkSpan& inSpan)
 /*virtual*/ void
 morkBuilder::OnNewGroup(morkEnv* ev, const morkPlace& inPlace, mork_gid inGid)
 {
-  MORK_USED_2(inPlace,inGid);
+  MORK_USED_1(inPlace);
   // mParser_InGroup = morkBool_kTrue;
-  ev->StubMethodOnlyError();
+  mork_pos startPos = inPlace.mPlace_Pos;
+
+  morkStore* store = mBuilder_Store;
+  if ( store )
+  {
+    if ( inGid >= store->mStore_CommitGroupIdentity )
+      store->mStore_CommitGroupIdentity = inGid + 1;
+  
+    if ( !store->mStore_FirstCommitGroupPos )
+      store->mStore_FirstCommitGroupPos = startPos;
+    else if ( !store->mStore_SecondCommitGroupPos )
+      store->mStore_SecondCommitGroupPos = startPos;
+  }
 }
 
 /*virtual*/ void
@@ -297,9 +314,9 @@ morkBuilder::OnGroupGlitch(morkEnv* ev, const morkGlitch& inGlitch)
 /*virtual*/ void
 morkBuilder::OnGroupCommitEnd(morkEnv* ev, const morkSpan& inSpan)  
 {
-  MORK_USED_1(inSpan);
+  MORK_USED_2(ev,inSpan);
   // mParser_InGroup = morkBool_kFalse;
-  ev->StubMethodOnlyError();
+  // ev->StubMethodOnlyError();
 }
 
 /*virtual*/ void
@@ -335,24 +352,35 @@ morkBuilder::OnPortRowEnd(morkEnv* ev, const morkSpan& inSpan)
 
 /*virtual*/ void
 morkBuilder::OnNewTable(morkEnv* ev, const morkPlace& inPlace,
-  const morkMid& inMid, mork_change inChange)
+  const morkMid& inMid, mork_bool inCutAllRows)
 // mp:Table     ::= OnNewTable mp:TableItem* OnTableEnd
 // mp:TableItem ::= mp:Row | mp:MetaTable | OnTableGlitch
 // mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
 // mp:Meta      ::= OnNewMeta mp:MetaItem* OnMetaEnd
 // mp:MetaItem  ::= mp:Cell | OnMetaGlitch
 {
-  MORK_USED_2(inPlace,inChange);
+  MORK_USED_1(inPlace);
   // mParser_InTable = morkBool_kTrue;
   mBuilder_TableForm = mBuilder_PortForm;
   mBuilder_TableRowScope = mBuilder_PortRowScope;
   mBuilder_TableAtomScope = mBuilder_PortAtomScope;
   mBuilder_TableKind = morkStore_kNoneToken;
+  
+  mBuilder_TablePriority = morkPriority_kLo;
+  mBuilder_TableIsUnique = morkBool_kFalse;
+  mBuilder_TableIsVerbose = morkBool_kFalse;
 
   morkTable* table = mBuilder_Store->MidToTable(ev, inMid);
   morkTable::SlotStrongTable(table, ev, &mBuilder_Table);
-  if ( table && table->mTable_RowSpace )
-    mBuilder_TableRowScope = table->mTable_RowSpace->mSpace_Scope;}
+  if ( table )
+  {
+    if ( table->mTable_RowSpace )
+      mBuilder_TableRowScope = table->mTable_RowSpace->mSpace_Scope;
+      
+    if ( inCutAllRows )
+      table->CutAllRows(ev);
+  }
+}
 
 /*virtual*/ void
 morkBuilder::OnTableGlitch(morkEnv* ev, const morkGlitch& inGlitch)
@@ -368,6 +396,14 @@ morkBuilder::OnTableEnd(morkEnv* ev, const morkSpan& inSpan)
   // mParser_InTable = morkBool_kFalse;
   if ( mBuilder_Table )
   {
+    mBuilder_Table->mTable_Priority = mBuilder_TablePriority;
+    
+    if ( mBuilder_TableIsUnique )
+      mBuilder_Table->SetTableUnique();
+
+    if ( mBuilder_TableIsVerbose )
+      mBuilder_Table->SetTableVerbose();
+  
     morkTable::SlotStrongTable((morkTable*) 0, ev, &mBuilder_Table);
   }
   else
@@ -375,19 +411,27 @@ morkBuilder::OnTableEnd(morkEnv* ev, const morkSpan& inSpan)
     
   mBuilder_Row = 0;
   mBuilder_Cell = 0;
+  
+  
+  mBuilder_TablePriority = morkPriority_kLo;
+  mBuilder_TableIsUnique = morkBool_kFalse;
+  mBuilder_TableIsVerbose = morkBool_kFalse;
 
   if ( mBuilder_TableKind == morkStore_kNoneToken )
     ev->NewError("missing table kind");
 
   mBuilder_CellAtomScope = mBuilder_RowAtomScope =
     mBuilder_TableAtomScope = mBuilder_PortAtomScope;
+
+  mBuilder_DoCutCell = morkBool_kFalse;
+  mBuilder_DoCutRow = morkBool_kFalse;
 }
 
 /*virtual*/ void
 morkBuilder::OnNewMeta(morkEnv* ev, const morkPlace& inPlace)
 // mp:Meta      ::= OnNewMeta mp:MetaItem* OnMetaEnd
 // mp:MetaItem  ::= mp:Cell | OnMetaGlitch
-// mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
+// mp:Cell      ::= OnMinusCell? OnNewCell mp:CellItem? OnCellEnd
 // mp:CellItem  ::= mp:Slot | OnCellForm | OnCellGlitch
 // mp:Slot      ::= OnValue | OnValueMid | OnRowMid | OnTableMid
 {
@@ -411,58 +455,78 @@ morkBuilder::OnMetaEnd(morkEnv* ev, const morkSpan& inSpan)
 }
 
 /*virtual*/ void
+morkBuilder::OnMinusRow(morkEnv* ev)
+{
+  MORK_USED_1(ev);
+  mBuilder_DoCutRow = morkBool_kTrue;
+}
+
+/*virtual*/ void
 morkBuilder::OnNewRow(morkEnv* ev, const morkPlace& inPlace, 
-  const morkMid& inMid, mork_change inChange)
+  const morkMid& inMid, mork_bool inCutAllCols)
 // mp:Table     ::= OnNewTable mp:TableItem* OnTableEnd
 // mp:TableItem ::= mp:Row | mp:MetaTable | OnTableGlitch
 // mp:MetaTable ::= OnNewMeta mp:MetaItem* mp:Row OnMetaEnd
-// mp:Row       ::= OnNewRow mp:RowItem* OnRowEnd
+// mp:Row       ::= OnMinusRow? OnNewRow mp:RowItem* OnRowEnd
 // mp:RowItem   ::= mp:Cell | mp:Meta | OnRowGlitch
-// mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
+// mp:Cell      ::= OnMinusCell? OnNewCell mp:CellItem? OnCellEnd
 // mp:CellItem  ::= mp:Slot | OnCellForm | OnCellGlitch
 // mp:Slot      ::= OnValue | OnValueMid | OnRowMid | OnTableMid
 {
-  MORK_USED_2(inPlace,inChange);
+  MORK_USED_1(inPlace);
   // mParser_InRow = morkBool_kTrue;
-  if ( mBuilder_Table )
+  
+  mBuilder_CellForm = mBuilder_RowForm = mBuilder_TableForm;
+  mBuilder_CellAtomScope = mBuilder_RowAtomScope = mBuilder_TableAtomScope;
+  mBuilder_RowRowScope = mBuilder_TableRowScope;
+  morkStore* store = mBuilder_Store;
+  
+  if ( !inMid.mMid_Buf && !inMid.mMid_Oid.mOid_Scope )
   {
-    mBuilder_CellForm = mBuilder_RowForm = mBuilder_TableForm;
-    mBuilder_CellAtomScope = mBuilder_RowAtomScope = mBuilder_TableAtomScope;
-    mBuilder_RowRowScope = mBuilder_TableRowScope;
-    morkStore* store = mBuilder_Store;
-    
-    if ( !inMid.mMid_Buf && !inMid.mMid_Oid.mOid_Scope )
-    {
-      morkMid mid(inMid);
-      mid.mMid_Oid.mOid_Scope = mBuilder_RowRowScope;
-      mBuilder_Row = store->MidToRow(ev, mid);
-    }
-    else
-    {
-      mBuilder_Row = store->MidToRow(ev, inMid);
-    }
+    morkMid mid(inMid);
+    mid.mMid_Oid.mOid_Scope = mBuilder_RowRowScope;
+    mBuilder_Row = store->MidToRow(ev, mid);
+  }
+  else
+  {
+    mBuilder_Row = store->MidToRow(ev, inMid);
+  }
+  morkRow* row = mBuilder_Row;
+  if ( row && inCutAllCols )
+  {
+    row->CutAllColumns(ev);
+  }
 
-    morkRow* row = mBuilder_Row;
+  morkTable* table = mBuilder_Table;
+  if ( table )
+  {
     if ( row )
     {
-      morkTable* table = mBuilder_Table;
       if ( mParser_InMeta )
       {
-        if ( !table->mTable_MetaRow )
+        morkRow* metaRow = table->mTable_MetaRow;
+        if ( !metaRow )
         {
           table->mTable_MetaRow = row;
           table->mTable_MetaRowOid = row->mRow_Oid;
-          row->AddTableUse(ev);
+          row->AddRowGcUse(ev);
         }
-        else
+        else if ( metaRow != row ) // not identical?
           ev->NewError("duplicate table meta row");
       }
       else
-        table->AddRow(ev, row);
+      {
+        if ( mBuilder_DoCutRow )
+          table->CutRow(ev, row);
+        else
+          table->AddRow(ev, row);
+      }
     }
   }
-  else
-    this->NilBuilderTableError(ev);
+  // else // it is now okay to have rows outside a table:
+  //  this->NilBuilderTableError(ev);
+    
+  mBuilder_DoCutRow = morkBool_kFalse;
 }
 
 /*virtual*/ void
@@ -496,7 +560,7 @@ morkBuilder::FlushBuilderCells(morkEnv* ev)
 
 /*virtual*/ void
 morkBuilder::OnRowEnd(morkEnv* ev, const morkSpan& inSpan) 
-// mp:Row       ::= OnNewRow mp:RowItem* OnRowEnd
+// mp:Row       ::= OnMinusRow? OnNewRow mp:RowItem* OnRowEnd
 {
   MORK_USED_1(inSpan);
   // mParser_InRow = morkBool_kFalse;
@@ -509,6 +573,9 @@ morkBuilder::OnRowEnd(morkEnv* ev, const morkSpan& inSpan)
     
   mBuilder_Row = 0;
   mBuilder_Cell = 0;
+
+  mBuilder_DoCutCell = morkBool_kFalse;
+  mBuilder_DoCutRow = morkBool_kFalse;
 }
 
 /*virtual*/ void
@@ -590,18 +657,30 @@ morkBuilder::AddBuilderCell(morkEnv* ev,
 }
 
 /*virtual*/ void
+morkBuilder::OnMinusCell(morkEnv* ev)
+{
+  MORK_USED_1(ev);
+  mBuilder_DoCutCell = morkBool_kTrue;
+}
+
+/*virtual*/ void
 morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
-    const morkMid* inMid, const morkBuf* inBuf, mork_change inChange)
+    const morkMid* inMid, const morkBuf* inBuf)
 // Exactly one of inMid and inBuf is nil, and the other is non-nil.
 // When hex ID syntax is used for a column, then inMid is not nil, and
 // when a naked string names a column, then inBuf is not nil.
   
-  // mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
+  // mp:Cell      ::= OnMinusCell? OnNewCell mp:CellItem? OnCellEnd
   // mp:CellItem  ::= mp:Slot | OnCellForm | OnCellGlitch
   // mp:Slot      ::= OnValue | OnValueMid | OnRowMid | OnTableMid
 {
   MORK_USED_1(inPlace);
   // mParser_InCell = morkBool_kTrue;
+  
+  mork_change cellChange = ( mBuilder_DoCutCell )?
+    morkChange_kCut : morkChange_kAdd;
+    
+  mBuilder_DoCutCell = morkBool_kFalse;
   
   mBuilder_CellAtomScope = mBuilder_RowAtomScope;
   
@@ -639,7 +718,7 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
   
   if ( mBuilder_Row && ev->Good() ) // this cell must be inside a row
   {
-      // mBuilder_Cell = this->AddBuilderCell(ev, *cellMid, inChange);
+      // mBuilder_Cell = this->AddBuilderCell(ev, *cellMid, cellChange);
 
       if ( mBuilder_CellsVecFill >= morkBuilder_kCellsVecSize )
         this->FlushBuilderCells(ev);
@@ -647,9 +726,10 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
       {
         if ( mBuilder_CellsVecFill < morkBuilder_kCellsVecSize )
         {
-          mork_fill indx = mBuilder_CellsVecFill++;
-          morkCell* cell =  mBuilder_CellsVec + indx;
-          cell->SetColumnAndChange(column, inChange);
+          mork_fill ix = mBuilder_CellsVecFill++;
+          morkCell* cell =  mBuilder_CellsVec + ix;
+          cell->SetColumnAndChange(column, cellChange);
+          
           cell->mCell_Atom = 0;
           mBuilder_Cell = cell;
         }
@@ -666,6 +746,8 @@ morkBuilder::OnNewCell(morkEnv* ev, const morkPlace& inPlace,
       {
         if ( column == morkStore_kKindColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableKind;
+        else if ( column == morkStore_kStatusColumn )
+          mBuilder_MetaTokenSlot = &mBuilder_TableStatus;
         else if ( column == morkStore_kRowScopeColumn )
           mBuilder_MetaTokenSlot = &mBuilder_TableRowScope;
         else if ( column == morkStore_kAtomScopeColumn )
@@ -715,7 +797,7 @@ morkBuilder::OnCellForm(morkEnv* ev, mork_cscode inCharsetFormat)
 
 /*virtual*/ void
 morkBuilder::OnCellEnd(morkEnv* ev, const morkSpan& inSpan)
-// mp:Cell      ::= OnNewCell mp:CellItem? OnCellEnd
+// mp:Cell      ::= OnMinusCell? OnNewCell mp:CellItem? OnCellEnd
 {
   MORK_USED_2(ev,inSpan);
   // mParser_InCell = morkBool_kFalse;
@@ -749,14 +831,58 @@ morkBuilder::OnValue(morkEnv* ev, const morkSpan& inSpan,
     mork_token* metaSlot = mBuilder_MetaTokenSlot;
     if ( metaSlot )
     {
-      mork_token token = store->BufToToken(ev, &inBuf);
-      if ( token )
+      if ( metaSlot == &mBuilder_TableStatus ) // table status?
       {
-        *metaSlot = token;
-        if ( metaSlot == &mBuilder_TableKind ) // table kind?
+        if ( mParser_InTable && mBuilder_Table )
         {
-          if ( mParser_InTable && mBuilder_Table )
-            mBuilder_Table->mTable_Kind = token;
+          const char* body = (const char*) inBuf.mBuf_Body;
+          mork_fill bufFill = inBuf.mBuf_Fill;
+          if ( body && bufFill )
+          {
+            const char* bodyEnd = body + bufFill;
+            while ( body < bodyEnd )
+            {
+              int c = *body++;
+              switch ( c )
+              {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                  mBuilder_TablePriority = (mork_priority) ( c - '0' );
+                  break;
+                
+                case 'u':
+                case 'U':
+                  mBuilder_TableIsUnique = morkBool_kTrue;
+                  break;
+                  
+                case 'v':
+                case 'V':
+                  mBuilder_TableIsVerbose = morkBool_kTrue;
+                  break;
+              }
+            }
+          }
+        }
+      }
+      else
+      {
+        mork_token token = store->BufToToken(ev, &inBuf);
+        if ( token )
+        {
+          *metaSlot = token;
+          if ( metaSlot == &mBuilder_TableKind ) // table kind?
+          {
+            if ( mParser_InTable && mBuilder_Table )
+              mBuilder_Table->mTable_Kind = token;
+          }
         }
       }
     }
@@ -815,6 +941,15 @@ morkBuilder::OnValueMid(morkEnv* ev, const morkSpan& inSpan,
             else
               ev->NewWarning("mBuilder_TableKind not in table");
           }
+          else if ( metaSlot == &mBuilder_TableStatus ) // table status?
+          {
+            if ( mParser_InTable && mBuilder_Table )
+            {
+              // $$ what here??
+            }
+            else
+              ev->NewWarning("mBuilder_TableStatus not in table");
+          }
         }
       }
       else
@@ -854,7 +989,7 @@ morkBuilder::OnRowMid(morkEnv* ev, const morkSpan& inSpan,
          cell->SetAtom(ev, atom, pool);
          morkRow* row = store->OidToRow(ev, &rowOid);
          if ( row ) // found or created such a row?
-           row->AddTableUse(ev);
+           row->AddRowGcUse(ev);
        }
      }
   }
@@ -892,7 +1027,7 @@ morkBuilder::OnTableMid(morkEnv* ev, const morkSpan& inSpan,
          morkTable* table = store->OidToTable(ev, &tableOid,
            /*optionalMetaRowOid*/ (mdbOid*) 0);
          if ( table ) // found or created such a table?
-           table->AddCellUse(ev);
+           table->AddTableGcUse(ev);
        }
      }
   }

@@ -47,6 +47,10 @@
 #include "morkArray.h"
 #endif
 
+#ifndef _MORKDEQUE_
+#include "morkDeque.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 #define morkDerived_kRowSpace  /*i*/ 0x7253 /* ascii 'rS' */
@@ -81,7 +85,7 @@ class morkRowSpace : public morkSpace { //
   
   // mork_bool   mSpace_DoAutoIDs;    // whether db should assign member IDs
   // mork_bool   mSpace_HaveDoneAutoIDs; // whether actually auto assigned IDs
-  // mork_u1     mSpace_Pad[ 2 ];     // pad to u4 alignment
+  // mork_u1     mSpace_Pad[ 2 ];    // pad to u4 alignment
 
 public: // state is public because the entire Mork system is private
 
@@ -97,6 +101,15 @@ public: // state is public because the entire Mork system is private
     
   // every nonzero slot in IndexCache is a strong ref to a morkAtomRowMap:
   morkAtomRowMap* mRowSpace_IndexCache[ morkRowSpace_kPrimeCacheSize ];
+
+  morkDeque    mRowSpace_TablesByPriority[ morkPriority_kCount ];
+
+public: // more specific dirty methods for row space:
+  void SetRowSpaceDirty() { this->SetNodeDirty(); }
+  void SetRowSpaceClean() { this->SetNodeClean(); }
+  
+  mork_bool IsRowSpaceClean() const { return this->IsNodeClean(); }
+  mork_bool IsRowSpaceDirty() const { return this->IsNodeDirty(); }
 
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
