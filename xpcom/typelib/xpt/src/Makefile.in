@@ -29,14 +29,12 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 LIBRARY_NAME	= xpt
 LIB_IS_C_ONLY	= 1
+HOST_LIBRARY_NAME	= hostxpt
 
 REQUIRES	= $(MODULE)
 
 CSRCS		= xpt_struct.c xpt_xdr.c
-
-ifdef CROSS_COMPILE
-HOSTOBJS	:= $(CSRCS:.c=.o-h)
-endif
+HOST_CSRCS	= $(CSRCS)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 override NO_SHARED_LIB=1
@@ -52,21 +50,8 @@ HOST_CFLAGS	+= -DEXPORT_XPT_API
 export:: install
 
 ifdef CROSS_COMPILE
-GARBAGE		+= libhostxpt.$(LIB_SUFFIX) $(HOSTOBJS)
-
-libhostxpt.$(LIB_SUFFIX): $(HOSTOBJS)
-	rm -f $@
-	$(HOST_AR) $(AR_FLAGS) $@ $(HOSTOBJS)
-	$(HOST_RANLIB) $@
-
 ifdef HOST_NSPR_MDCPUCFG
 HOST_CFLAGS     += -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
-
-%.o-h: %.c
-	$(HOST_CC) $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) -c -o $@ $<
-
-export:: libhostxpt.$(LIB_SUFFIX)
-	$(INSTALL) -m 444 libhostxpt.$(LIB_SUFFIX) $(DIST)/lib
 endif
 

@@ -207,8 +207,13 @@ NFSPWD		= $(CONFIG_TOOLS)/nfspwd
 PURIFY		= purify $(PURIFYOPTIONS)
 QUANTIFY	= quantify $(QUANTIFYOPTIONS)
 MOC		= moc
+ifdef CROSS_COMPILE
+XPIDL_COMPILE 	= $(DIST)/host/bin/host_xpidl$(BIN_SUFFIX)
+XPIDL_LINK	= $(DIST)/host/bin/host_xpt_link$(BIN_SUFFIX)
+else
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
+endif
 
 ifeq ($(OS_ARCH),OS2)
 SHELL		= gbash.exe
@@ -393,7 +398,11 @@ endif
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifneq (,$(filter-out OS2 WINNT, $(OS_ARCH)))
+ifdef CROSS_COMPILE
+NSINSTALL	= $(CONFIG_TOOLS)/host_nsinstall
+else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
+endif
 
 ifeq ($(NSDISTMODE),copy)
 # copy files, but preserve source mtime

@@ -77,16 +77,8 @@ ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
 
-ifdef INTERNAL_TOOLS
 ifdef CROSS_COMPILE
-CC			:= $(HOST_CC)
-CXX			:= $(HOST_CXX)
-CFLAGS			:= $(HOST_CFLAGS) -I$(PUBLIC) $(NSPR_CFLAGS)
-CXXFLAGS		:= $(HOST_CXXFLAGS) -I$(PUBLIC) $(NSPR_CFLAGS)
-RANLIB			:= $(HOST_RANLIB)
-AR			:= $(HOST_AR)
-OS_LIBS			:= 
-endif
+HOST_AR_FLAGS		= $(AR_FLAGS)
 endif
 
 REPORT_BUILD = @echo $(notdir $<)
@@ -126,6 +118,12 @@ LIBRARY_NAME		:= $(SHORT_LIBNAME)
 endif
 endif
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
+endif
+endif
+
+ifndef HOST_LIBRARY
+ifdef HOST_LIBRARY_NAME
+HOST_LIBRARY		:= lib$(HOST_LIBRARY_NAME).$(LIB_SUFFIX)
 endif
 endif
 
@@ -184,11 +182,15 @@ DLL_SUFFIX		= $(LIB_SUFFIX)
 endif
 
 ifndef TARGETS
-TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS)
+TARGETS			= $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(HOST_PROGRAM) $(HOST_SIMPLE_PROGRAMS)
 endif
 
 ifndef OBJS
 OBJS			= $(JRI_STUB_CFILES) $(addsuffix .o, $(JMC_GEN)) $(CSRCS:.c=.o) $(CPPSRCS:.cpp=.o) $(ASFILES:.s=.o)
+endif
+
+ifndef HOST_OBJS
+HOST_OBJS		= $(HOST_CSRCS:.c=.ho)
 endif
 
 ifeq ($(OS_ARCH),OS2)
@@ -210,10 +212,11 @@ ALL_TRASH = \
 	$(JMC_HEADERS) $(JMC_EXPORT_FILES) \
 	 so_locations _gen _stubs _jmc _jri \
 	$(wildcard gts_tmp_*) \
-	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
+	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)	
 else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
+	$(HOST_PROGOBJS) $(HOST_OBJS) \
 	so_locations _gen _stubs \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
 endif
@@ -271,6 +274,10 @@ endif
 #
 ifndef PROGOBJS
 PROGOBJS		= $(OBJS)
+endif
+
+ifndef HOST_PROGOBJS
+HOST_PROGOBJS		= $(HOST_OBJS)
 endif
 
 # SUBMAKEFILES: List of Makefiles for next level down.
@@ -480,10 +487,10 @@ endif # OS2
 
 ifeq ($(OS_ARCH),OS2)
 # Leave DLL-making for the install loop to ensure all libs required for linkage have been built
-install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS) $(PROGRAM) $(SIMPLE_PROGRAMS)
+install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(IMPORT_LIBRARY) $(SHARED_LIBRARY_LIBS) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS)
 	@echo "**** OS2 install *****"
 else
-install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(LIBRARY) $(SHARED_LIBRARY) $(PROGRAM) $(SIMPLE_PROGRAMS) $(MAPS)
+install:: $(SUBMAKEFILES) $(MAKE_DIRS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY) $(HOST_PROGRAM) $(PROGRAM) $(HOST_SIMPLE_PROGRAMS) $(SIMPLE_PROGRAMS) $(MAPS)
 endif
 ifndef NO_STATIC_LIB
 ifdef LIBRARY
@@ -532,6 +539,15 @@ ifdef PROGRAM
 endif
 ifdef SIMPLE_PROGRAMS
 	$(INSTALL) $(IFLAGS2) $(SIMPLE_PROGRAMS) $(DIST)/bin
+endif
+ifdef HOST_PROGRAM
+	$(INSTALL) $(IFLAGS2) $(HOST_PROGRAM) $(DIST)/host/bin
+endif
+ifdef HOST_SIMPLE_PROGRAMS
+	$(INSTALL) $(IFLAGS2) $(HOST_SIMPLE_PROGRAMS) $(DIST)/host/bin
+endif
+ifdef HOST_LIBRARY
+	$(INSTALL) $(IFLAGS1) $(HOST_LIBRARY) $(DIST)/host/lib
 endif
 	+$(LOOP_OVER_DIRS)
 
@@ -604,6 +620,9 @@ endif
 endif
 endif
 
+$(HOST_PROGRAM): $(HOST_PROGOBJS) $(HOST_EXTRA_DEPS) Makefile Makefile.in
+	$(HOST_CC) -o $@ $(HOST_CFLAGS) $(HOST_PROGOBJS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
+
 #
 # This is an attempt to support generation of multiple binaries
 # in one directory, it assumes everything to compile Foo is in
@@ -628,6 +647,9 @@ else
 endif
 	$(MOZ_POST_PROGRAM_COMMAND) $@
 endif
+
+$(HOST_SIMPLE_PROGRAMS): host_%$(BIN_SUFFIX): %.ho $(HOST_EXTRA_DEPS) Makefile Makefile.in
+	$(HOST_CC) -o $@ $< $(HOST_CFLAGS) $(HOST_LIBS) $(HOST_EXTRA_LIBS)
 
 #
 # Purify target.  Solaris/sparc only to start.
@@ -754,8 +776,13 @@ $(LIBRARY): $(OBJS)
 endif
 endif
 
+$(HOST_LIBRARY): $(HOST_OBJS) Makefile
+	rm -f $@
+	$(HOST_AR) $(HOST_AR_FLAGS) $@ $(HOST_OBJS)
+	$(HOST_RANLIB) $@
+
 ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_O) Makefile Makefile.in
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OpenVMS)
 ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
@@ -828,6 +855,10 @@ else
 	$(ELOG) $(CC) -o $@ -c $(COMPILE_CFLAGS) $<
 endif
 endif
+
+%.ho: %.c Makefile.in
+	$(REPORT_BUILD)
+	$(ELOG) $(HOST_CC) -o $@ -c $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) $<
 
 moc_%.cpp: %.h
 	$(MOC) $< -o $@ 
@@ -1411,7 +1442,7 @@ endif
 # hundreds of built-in suffix rules for stuff we don't need.
 #
 .SUFFIXES:
-.SUFFIXES: .out .a .ln .o .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in
+.SUFFIXES: .out .a .ln .o .ho .c .cc .C .cpp .y .l .s .S .h .sh .i .pl .class .java .html .pp .mk .in
 
 #
 # Don't delete these files if we get killed.
@@ -1457,7 +1488,7 @@ echo-module-filelist:
 	@$(topsrcdir)/build/package/rpm/print-module-filelist.sh
 
 showtargs:
-ifneq (,$(filter $(PROGRAM) $(SIMPLE_PROGRAMS) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
+ifneq (,$(filter $(PROGRAM) $(HOST_PROGRAM) $(SIMPLE_PROGRAMS) $(HOST_LIBRARY) $(LIBRARY) $(SHARED_LIBRARY),$(TARGETS)))
 	@echo --------------------------------------------------------------------------------
 	@echo "PROGRAM             = $(PROGRAM)"
 	@echo "SIMPLE_PROGRAMS     = $(SIMPLE_PROGRAMS)"
