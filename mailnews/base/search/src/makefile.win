@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  pref \
 		  msgnews \
+                  docshell \
 		  txmgr \
 		  msgbase \
 		  import \
