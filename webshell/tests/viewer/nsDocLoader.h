@@ -22,8 +22,7 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 
-class nsIViewerContainer;
-class nsIDocumentLoader;
+class nsIWebWidget;
 class nsITimer;
 class nsVoidArray;
 class nsViewer;
@@ -34,9 +33,10 @@ class nsViewer;
   posts an exit application message
 */
 
-class nsDocLoader : public nsIStreamObserver {
+class nsDocLoader : public nsIStreamObserver
+{
 public:
-  nsDocLoader(nsIViewerContainer* aContainer, nsViewer* aViewer,
+  nsDocLoader(nsIWebWidget* aWebWidget, nsViewer* aViewer, 
               PRInt32 aSeconds=1, PRBool aPostExit=PR_TRUE);
 
   // nsISupports
@@ -96,8 +96,7 @@ protected:
   PRBool        mStart;
   PRInt32       mDelay;
   PRBool        mPostExit;
-  nsIViewerContainer* mContainer;
-  nsIDocumentLoader*  mDocLoader;
+  nsIWebWidget* mWebWidget;
   nsViewer*     mViewer;
   nsString      mURL;
   nsVoidArray*  mURLList;

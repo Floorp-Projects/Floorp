@@ -19,7 +19,6 @@
 #define nsIWebWidget_h___
 
 #include "nsweb.h"
-#include "nsIDocumentWidget.h"
 #include "nsIScrollableView.h"
 
 // Forward declarations... 
@@ -28,6 +27,11 @@ class nsIDOMDocument;
 class nsILinkHandler;
 class nsIPresContext;
 class nsIStyleSet;
+class nsIStyleSheet;
+
+class nsIStreamObserver;
+class nsIPostData;
+class nsIDeviceContext;
 
 // IID for the nsWebWidget interface
 #define NS_IWEBWIDGET_IID      \
@@ -42,8 +46,13 @@ class nsIStyleSet;
 
 // Interface to the web widget. The web widget is a container for web
 // content.
-class nsIWebWidget : public nsIDocumentWidget {
+class nsIWebWidget : public nsISupports {
 public:
+
+NS_IMETHOD LoadURL(const nsString& aURLSpec,
+                   nsIStreamObserver* aObserver,
+                   nsIPostData* aPostData=nsnull) = 0;
+
 
   // Create a native window for this web widget; may be called once
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -82,6 +91,16 @@ public:
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult) = 0;
 
+  virtual nsRect GetBounds() = 0;
+
+  virtual void SetBounds(const nsRect& aBounds) = 0;
+
+  virtual void Move(PRInt32 aX, PRInt32 aY) = 0;
+
+  virtual void Show() = 0;
+
+  virtual void Hide() = 0;
+
   virtual nsIDocument* GetDocument() = 0;
 
   virtual void DumpContent(FILE* out = nsnull) = 0;
@@ -102,6 +121,9 @@ public:
                                                 
   virtual nsIPresContext* GetPresContext() = 0;
 
+  // Temporary until the parser is re-enterant...
+  virtual nsIStyleSheet* GetUAStyleSheet() = 0;
+  NS_IMETHOD SetUAStyleSheet(nsIStyleSheet* aUAStyleSheet) = 0;
 };
 
 // Create a new web widget that uses the default (galley) presentation

@@ -22,12 +22,14 @@ DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 CPPSRCS=				\
+ nsContentViewer.cpp        \
  nsLinkHandler.cpp			\
  nsWebWidget.cpp			\
  nsDocLoader.cpp            \
  $(NULL)
 
 CPP_OBJS=				\
+ .\$(OBJDIR)\nsContentViewer.obj    \
  .\$(OBJDIR)\nsLinkHandler.obj		\
  .\$(OBJDIR)\nsWebWidget.obj		\
  .\$(OBJDIR)\nsDocLoader.obj		\

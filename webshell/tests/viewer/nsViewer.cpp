@@ -541,9 +541,10 @@ DocObserver::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
   return NS_OK;
 }
 
+#if 0
 NS_IMETHODIMP
-DocObserver::Embed(nsIDocumentWidget* aDocViewer, 
-                   const char* aCommand, 
+DocObserver::Embed(nsIDocumentWidget* aDocViewer,
+                   const char* aCommand,
                    nsISupports* aExtraInfo)
 {
   nsresult rv;
@@ -583,6 +584,7 @@ DocObserver::Embed(nsIDocumentWidget* aDocViewer,
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 DocObserver::Init(nsIWebWidget* aWidget)
@@ -615,7 +617,7 @@ DocObserver::HandleLinkClickEvent(const nsString& aURLSpec,
 {
   if (nsnull != mDocLoader) {
     if (nsnull != mViewer) {
-      mViewer->GoTo(aURLSpec, nsnull, this, aPostData, nsnull, this);
+      mViewer->GoTo(aURLSpec, nsnull, mWebWidget, aPostData, nsnull, this);
     }
   }
 }
@@ -1558,8 +1560,7 @@ nsViewer::Back()
     mHistoryIndex--;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-      mWD->observer->LoadURL(*s, nsnull, mWD->observer,
-                             nsnull, nsnull, mWD->observer);
+      mWD->observer->mWebWidget->LoadURL(*s, mWD->observer, nsnull);
     }
     ShowHistory();
   }
@@ -1583,8 +1584,7 @@ nsViewer::Forward()
     mHistoryIndex++;
     if (nsnull != mWD && nsnull != mWD->observer) {
       nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
-      mWD->observer->LoadURL(*s, nsnull, mWD->observer,
-                             nsnull, nsnull, mWD->observer);
+      mWD->observer->mWebWidget->LoadURL(*s, mWD->observer, nsnull);
     }
     ShowHistory();
   }
@@ -1608,7 +1608,7 @@ nsEventStatus PR_CALLBACK HandleLocationEvent(nsGUIEvent *aEvent)
 nsresult
 nsViewer::GoTo(const nsString& aURLSpec, 
                const char* aCommand,
-               nsIViewerContainer* aContainer,
+               nsIWebWidget* aWebWidget,
                nsIPostData* aPostData,
                nsISupports* aExtraInfo,
                nsIStreamObserver* anObserver)
@@ -1620,14 +1620,10 @@ nsViewer::GoTo(const nsString& aURLSpec,
     printf("goto: ");
     fputs(aURLSpec, stdout);
     printf("\n");
+
     mLocation->RemoveText();
     mLocation->SetText(aURLSpec);
-    rv = mWD->observer->LoadURL(aURLSpec,       // URL string
-                                aCommand,       // Command
-                                aContainer,     // Container
-                                aPostData,      // Post Data
-                                aExtraInfo,     // Extra Info...
-                                anObserver);    // Observer
+    rv = aWebWidget->LoadURL(aURLSpec, anObserver, aPostData);
   }
   return rv;
 }
@@ -1795,24 +1791,22 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   wd->mViewer = this;
 
     // Now embed the web widget in it
-  nsIWebWidget* ww;
-  nsresult rv = NS_NewWebWidget(&ww);
+  nsresult rv = NS_NewWebWidget(&(wd->ww));
   nsRect rr(WEBWIDGET_LEFT_INSET, BUTTON_HEIGHT+WEBWIDGET_TOP_INSET,
             bounds.width - WEBWIDGET_LEFT_INSET - WEBWIDGET_RIGHT_INSET,
             bounds.height - BUTTON_HEIGHT - WEBWIDGET_TOP_INSET -
             WEBWIDGET_BOTTOM_INSET);
-  rv = ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
-///  ww->Show();
-  wd->observer = NewObserver(wd->windowWidget, ww);
+  rv = wd->ww->Init(wd->windowWidget->GetNativeData(NS_NATIVE_WIDGET), rr);
+  wd->ww->Show();
+  wd->observer = NewObserver(wd->windowWidget, wd->ww);
   wd->observer->mViewer = this;
   mWD = wd;
-  NS_RELEASE(ww);
 
 
     // Determine if we should run the purify test
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
-    dl = new nsDocLoader(wd->observer, this, gDelay);
+    dl = new nsDocLoader(wd->ww, this, gDelay);
     dl->AddRef();
 
       // Add the documents to the loader
@@ -1823,7 +1817,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     dl->StartTimedLoading();
   }
   else if (gLoadTestFromFile) {
-    dl = new nsDocLoader(wd->observer, this, gDelay);
+    dl = new nsDocLoader(wd->ww, this, gDelay);
     dl->AddRef();
     for (PRInt32 i=0; i<gRepeatCount; i++)
       AddTestDocsFromFile(dl, gInputFileName);
