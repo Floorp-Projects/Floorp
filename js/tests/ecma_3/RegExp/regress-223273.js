@@ -141,8 +141,9 @@ status = inSection(20);
 checkThis(' /[abc(x\]yz+)def]g/ ');
 
 
+
 /*
- * Run the some tests for unbalanced braces -
+ * Run some tests for unbalanced braces -
  */
 status = inSection(21);
 testThis(' /abc{def/ ');
