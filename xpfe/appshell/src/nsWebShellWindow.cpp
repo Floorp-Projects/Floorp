@@ -426,9 +426,9 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
   nsIMenuItem * pnsMenuItem = nsnull;
   nsresult rv = nsRepository::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
   if (NS_OK == rv) {
-    pnsMenuItem->Create(pParentMenu); //, menuitemName, 0);                 
+    pnsMenuItem->Create(pParentMenu, menuitemName, 0);                 
     // Set nsMenuItem Name
-    pnsMenuItem->SetLabel(menuitemName);
+    //pnsMenuItem->SetLabel(menuitemName);
     // Make nsMenuItem a child of nsMenu
     pParentMenu->AddMenuItem(pnsMenuItem);
           
