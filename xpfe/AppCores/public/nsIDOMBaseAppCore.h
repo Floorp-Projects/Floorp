@@ -54,7 +54,7 @@ public:
   NS_IMETHOD    SetDocumentCharset(const nsString& aCharset) { return _to##SetDocumentCharset(aCharset); }  \
 
 
-extern NS_DOM nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
+extern "C" NS_DOM nsresult NS_InitBaseAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
 
 extern "C" NS_DOM nsresult NS_NewScriptBaseAppCore(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn);
 
