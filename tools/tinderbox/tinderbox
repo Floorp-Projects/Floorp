@@ -50,13 +50,14 @@ fi
 # See how we were called.
 case "$build_action" in
   start)
-    echo "Starting $build_type tinderbox..."
     if test -f $build_type.pid; then
       echo "$build_type build already running with PID "`cat $build_type.pid`
     else
+      echo "Starting $build_type tinderbox..."
       nohup ./build-seamonkey.pl --$build_type &
       echo "PID $!"
       echo $! > $build_type.pid
+	  \rm nohup.out
     fi
     ;;
   stop)
