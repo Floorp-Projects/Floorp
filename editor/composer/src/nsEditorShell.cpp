@@ -259,6 +259,7 @@ nsEditorShell::nsEditorShell()
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
+,  mCantEditReason(eCantEditNoReason)
 ,  mEditorType(eUninitializedEditorType)
 ,  mWrapColumn(0)
 ,  mSuggestedWordIndex(0)
@@ -612,6 +613,7 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
 #endif
 
   // Force initial focus to the content window except if in mail compose
+  // why aren't we doing this in JS?
   if (!mMailCompose)
   {
     if(!mContentWindow)
@@ -4699,10 +4701,11 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
   // for pages with charsets, this gets called the first time with a 
   // non-zero status value. Don't prepare the editor that time.
   // aStatus will be NS_BINDING_ABORTED then.
-  nsresult res = NS_OK;
-	if (NS_FAILED(aStatus))
+	if (aStatus == NS_BINDING_ABORTED)
 	  return NS_OK;
-	  
+	
+	// note that we continue with other non-success status codes.
+	
   // Disable meta-refresh
   nsCOMPtr<nsIRefreshURI> refreshURI = do_QueryInterface(mContentAreaDocShell);
   if (refreshURI)
@@ -4722,19 +4725,53 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* aChanne
         // where do we pop up a dialog telling the user they can't edit this doc?
         // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
         mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditFramesets;
       }
     }
   }
   
+  // Is this a MIME type we can handle?
+  if (aChannel)
+  {
+    char  *contentType;
+    aChannel->GetContentType(&contentType);
+    if (contentType)
+    {
+      if ( (strcmp(contentType, "text/html") != 0) &&
+           (strcmp(contentType, "text/plain") != 0))
+      {
+        mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditMimeType;
+      }
+  
+      nsAllocator::Free(contentType);
+    }
+  }
+  
   PRBool isRootDoc;
-  res = DocumentIsRootDoc(aLoader, isRootDoc);
+  nsresult res = DocumentIsRootDoc(aLoader, isRootDoc);
   if (NS_FAILED(res)) return res;
   
   if (mCloseWindowWhenLoaded && isRootDoc)
   {
     nsAutoString alertLabel, alertMessage;
     GetBundleString(NS_ConvertASCIItoUCS2("Alert"), alertLabel);
-    GetBundleString(NS_ConvertASCIItoUCS2("CantEditFramesetMsg"), alertMessage);
+    
+    nsAutoString  stringID;
+    switch (mCantEditReason)
+    {
+      case eCantEditFramesets:
+        stringID.AssignWithConversion("CantEditFramesetMsg");
+        break;        
+      case eCantEditMimeType:
+        stringID.AssignWithConversion("CantEditMimeTypeMsg");
+        break;
+      case eCantEditOther:
+        stringID.AssignWithConversion("CantEditDocumentMsg");
+        break;
+    }
+    
+    GetBundleString(stringID, alertMessage);
     Alert(alertLabel, alertMessage);
 
     nsCOMPtr<nsIBaseWindow> baseWindow;
@@ -4795,6 +4832,7 @@ nsEditorShell::OnProgressURLLoad(nsIDocumentLoader* aLoader,
         // where do we pop up a dialog telling the user they can't edit this doc?
         // this next call will close the window, but do we want to do that?  or tell the .js UI to do it?
         mCloseWindowWhenLoaded = PR_TRUE;
+        mCantEditReason = eCantEditFramesets;
       }
     }
   }

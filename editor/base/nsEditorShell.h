@@ -105,6 +105,14 @@ class nsEditorShell :   public nsIEditorShell,
   		ePlainTextEditorType = 1,
   		eHTMLTextEditorType = 2
   	} EEditorType;
+
+
+  	typedef enum {
+      eCantEditNoReason = 0,
+      eCantEditFramesets = 1,
+      eCantEditMimeType = 2,
+      eCantEditOther = 3
+  	} ECantEditReason;
   	
     nsresult   			DoEditorMode(nsIDocShell *aDocShell);
     // nuke any existing editor in the editorShell, thus preparing it to edit
@@ -194,7 +202,8 @@ class nsEditorShell :   public nsIEditorShell,
     nsIDocShell         *mContentAreaDocShell;	// weak reference
 
     PRPackedBool        mCloseWindowWhenLoaded; // error on load. Close window when loaded
-
+    ECantEditReason     mCantEditReason;
+    
 		EEditorType					mEditorType;
 		nsString						mEditorTypeString;	    // string which describes which editor type will be instantiated (lowercased)
     PRInt32             mWrapColumn;            // can't actually set this 'til the editor is created, so we may have to hold on to it for a while
