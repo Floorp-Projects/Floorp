@@ -62,43 +62,6 @@ nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& i
 		mRawPtr = newRawPtr;
 	}
 
-
-#if 0
-void
-nsCOMPtr_base::assign_with_QueryInterface( nsISupports* rawPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-    if ( !rawPtr || !NS_SUCCEEDED( status = rawPtr->QueryInterface(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      rawPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = rawPtr;
-
-    if ( result )
-      *result = status;
-  }
-
-void
-nsCOMPtr_base::assign_with_QueryReferent( nsIWeakReference* weakPtr, const nsIID& iid, nsresult* result )
-  {
-    nsresult status = NS_ERROR_NULL_POINTER;
-
-    nsISupports* rawPtr;
-    if ( !weakPtr || !NS_SUCCEEDED( status = weakPtr->QueryReferent(iid, NSCAP_REINTERPRET_CAST(void**, &rawPtr)) ) )
-      rawPtr = 0;
-
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-
-    mRawPtr = rawPtr;
-
-    if ( result )
-      *result = status;
-  }
-#endif
-
 void**
 nsCOMPtr_base::begin_assignment()
   {
