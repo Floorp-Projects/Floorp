@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = appshell bootstrap
+DIRS = appshell bootstrap browser
 
 include $(topsrcdir)/config/config.mk
 

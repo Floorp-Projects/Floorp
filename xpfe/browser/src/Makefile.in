@@ -20,149 +20,16 @@ topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-DIRS=public
-
 include $(DEPTH)/config/autoconf.mk
-
 include $(topsrcdir)/config/config.mk
-
-TOOLKIT_GFX_LIB		= $(addprefix -lgfx, $(MOZ_TOOLKIT))
-TOOLKIT_WIDGET_LIB	= $(addprefix -lwidget, $(MOZ_TOOLKIT))
-TOOLKIT_BASE_LIB	= $(addprefix -lgmbase, $(MOZ_TOOLKIT))
-
-ifneq (,$(filter gtk,$(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetgtk.so\" \
-	-DGFXWIN_DLL=\"libgfxgtk.so\"
-
-TOOLKIT_CPPSRCS = \
-	nsGTKMain.cpp \
-	nsGTKMenu.cpp
-
-INCLUDES += -I$(topsrcdir)/widget/src/gtk
-
-TOOLKIT_CFLAGS += $(TK_GTK_CFLAGS)
-TOOLKIT_LIBS   = $(TK_GTK_LIBS)
-else
-ifneq (,$(filter motif,$(MOZ_TOOLKIT)))
-TOOLKIT_CFLAGS = \
-	-DWIDGET_DLL=\"libwidgetmotif.so\" \
-	-DGFXWIN_DLL=\"libgfxmotif.so\"
-
-
-TOOLKIT_CFLAGS += $(TK_MOTIF_CFLAGS)
-TOOLKIT_LIBS   = $(TK_MOTIF_LIBS)
-endif
-endif
-
-CPPSRCS = \
-#  nsWidgetListener.cpp                   \
-#  nsBrowserController.cpp                \
-#  nsBrowserFactory.cpp                   \
-	$(NULL)
-
-CFLAGS += $(TOOLKIT_CFLAGS)
-
-INCLUDES += \
-			-I$(PUBLIC)/raptor \
-			-I$(PUBLIC)/xpcom \
-			-I$(PUBLIC)/base \
-			-I$(PUBLIC)/netlib \
-			-I$(PUBLIC)/dom \
-			-I$(PUBLIC)/js \
-			-I$(PUBLIC)/netlib 
-
-LINCS=-I$(PUBLIC)\raptor                \
-      -I$(PUBLIC)\xpcom                 \
-      -I$(PUBLIC)\base                  \
-      -I$(PUBLIC)\dom                   \
-      -I$(PUBLIC)\js                    \
-      -I$(PUBLIC)\netlib 
-
-ifdef MOZ_OJI
-	JSJ_LIB = -ljsj
-endif
-
-EX_LIBS = \
-	-L$(DIST)/bin \
-	-lraptorbase    \
-	-lpref \
-	-lraptorbase \
-	$(TOOLKIT_WIDGET_LIB) \
-	-lraptorgfx \
-	$(TOOLKIT_GFX_LIB) \
-	-lraptorhtml \
-	$(TOOLKIT_BASE_LIB) \
-	-lraptorhtmlpars \
-	-lraptorview \
-	-lreg \
-	-labouturl \
-	-lfileurl \
-	-lftpurl \
-	-lgophurl \
-	-lhttpurl \
-	-limg \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS) \
-	-ljs \
-	-ljsdom \
-	-ljsurl \
-	$(JSJ_LIB) \
-	-lmimetype \
-	-lnetcache \
-	-lnetcnvts \
-	-lnetlib \
-	-lnetutil \
-	-lnetwork \
-	$(NSPR_LIBS) \
-	-lpwcac \
-	-lraptorwebwidget \
-	-lreg \
-	-lremoturl \
-	-lsecfree \
-	-lstubnj \
-	-lstubsj \
-	-ltestdynamic \
-	-lmozutil \
-	-lxp \
-	-lxpcom \
-	-lmozutil \
-	-lxp \
-	-lxpcom \
-	$(ZLIB_LIBS) \
-	-lraptorplugin \
-	-lmozdbm \
-	$(NULL)
-
-PROGS = viewer
-
-TARGETS = $(PROGS)
-
 include $(topsrcdir)/config/rules.mk
 
-$(PROGS): $(OBJS) #$(EX_LIBS)
-	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),Linux)
-	$(CCC) -rdynamic -o $@ $(OBJS) $(LDFLAGS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-ifeq ($(OS_ARCH),IRIX)
-	$(CCC) -o $@ -woff 84,85 $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-else
-	$(CCC) -o $@ $(LDFLAGS) $(OBJS) $(EX_LIBS) $(NSPR_LIBS) $(TOOLKIT_LIBS) $(XLDFLAGS) $(XLIBS) $(OS_LIBS)
-endif
-endif
+EXPORT_RESOURCE_SAMPLES = \
+	$(srcdir)/appshell.html \
+	$(srcdir)/toolbar.xml \
+	$(srcdir)/xul.css \
+	$(NULL)
 
-export::
-
-install:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
-	$(INSTALL) $(srcdir)/appshell.html $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/toolbar.xml $(DIST)/bin/res/samples
-	$(INSTALL) $(srcdir)/xul.css $(DIST)/bin/res/samples
-
-clobber::
-	rm -f $(DIST)/bin/res/samples/appshell.html
-	rm -f $(DIST)/bin/res/samples/toolbar.xml
-	rm -f $(DIST)/bin/res/samples/xul.css
-
+install:: 
+	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 
