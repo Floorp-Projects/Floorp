@@ -573,7 +573,7 @@ PR_IMPLEMENT(PRStatus) PR_JoinThread(PRThread *thred)
          */
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         PR_LogPrint(
-            "PR_JoinThread: 0x%X not joinable | already smashed\n", thred);
+            "PR_JoinThread: %p not joinable | already smashed\n", thred);
     }
     else
     {
@@ -1131,7 +1131,7 @@ PR_IMPLEMENT(PRStatus) PR_EnumerateThreads(PREnumerator func, void *arg)
             PR_ASSERT((thred == me) || (thred->suspend & PT_THREAD_SUSPENDED));
 #endif
             PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-                   ("In PR_EnumerateThreads callback thread %X thid = %X\n", 
+                   ("In PR_EnumerateThreads callback thread %p thid = %X\n", 
                     thred, thred->id));
 
             rv = func(thred, count++, arg);
@@ -1193,7 +1193,7 @@ static void suspend_signal_handler(PRIntn sig)
 	PR_ASSERT((me->suspend & PT_THREAD_SUSPENDED) == 0);
 
 	PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-        ("Begin suspend_signal_handler thred %X thread id = %X\n", 
+        ("Begin suspend_signal_handler thred %p thread id = %X\n", 
 		me, me->id));
 
 	/*
@@ -1241,7 +1241,7 @@ static void suspend_signal_handler(PRIntn sig)
      */
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-        ("End suspend_signal_handler thred = %X tid = %X\n", me, me->id));
+        ("End suspend_signal_handler thred = %p tid = %X\n", me, me->id));
 }  /* suspend_signal_handler */
 
 static void pt_SuspendSet(PRThread *thred)
@@ -1249,7 +1249,7 @@ static void pt_SuspendSet(PRThread *thred)
     PRIntn rv;
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("pt_SuspendSet thred %X thread id = %X\n", thred, thred->id));
+	   ("pt_SuspendSet thred %p thread id = %X\n", thred, thred->id));
 
 
     /*
@@ -1259,7 +1259,7 @@ static void pt_SuspendSet(PRThread *thred)
     PR_ASSERT((thred->suspend & PT_THREAD_SUSPENDED) == 0);
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("doing pthread_kill in pt_SuspendSet thred %X tid = %X\n",
+	   ("doing pthread_kill in pt_SuspendSet thred %p tid = %X\n",
 	   thred, thred->id));
 #if defined(VMS)
     rv = thread_suspend(thred);
@@ -1272,7 +1272,7 @@ static void pt_SuspendSet(PRThread *thred)
 static void pt_SuspendTest(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("Begin pt_SuspendTest thred %X thread id = %X\n", thred, thred->id));
+	   ("Begin pt_SuspendTest thred %p thread id = %X\n", thred, thred->id));
 
 
     /*
@@ -1298,13 +1298,13 @@ static void pt_SuspendTest(PRThread *thred)
 #endif
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS,
-        ("End pt_SuspendTest thred %X tid %X\n", thred, thred->id));
+        ("End pt_SuspendTest thred %p tid %X\n", thred, thred->id));
 }  /* pt_SuspendTest */
 
 static void pt_ResumeSet(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("pt_ResumeSet thred %X thread id = %X\n", thred, thred->id));
+	   ("pt_ResumeSet thred %p thread id = %X\n", thred, thred->id));
 
     /*
      * Clear the global state and set the thread state so that it will
@@ -1329,7 +1329,7 @@ static void pt_ResumeSet(PRThread *thred)
 static void pt_ResumeTest(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	   ("Begin pt_ResumeTest thred %X thread id = %X\n", thred, thred->id));
+	   ("Begin pt_ResumeTest thred %p thread id = %X\n", thred, thred->id));
 
     /*
      * Wait for the threads resume state to change
@@ -1353,7 +1353,7 @@ static void pt_ResumeTest(PRThread *thred)
     thred->suspend &= ~PT_THREAD_RESUMED;
 
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, (
-        "End pt_ResumeTest thred %X tid %X\n", thred, thred->id));
+        "End pt_ResumeTest thred %p tid %X\n", thred, thred->id));
 }  /* pt_ResumeTest */
 
 static pthread_once_t pt_gc_support_control = PTHREAD_ONCE_INIT;
@@ -1449,7 +1449,7 @@ PR_IMPLEMENT(void) PR_ResumeAll(void)
 PR_IMPLEMENT(void *)PR_GetSP(PRThread *thred)
 {
     PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, 
-	    ("in PR_GetSP thred %X thid = %X, sp = %X \n", 
+	    ("in PR_GetSP thred %p thid = %X, sp = %p\n", 
 	    thred, thred->id, thred->sp));
     return thred->sp;
 }  /* PR_GetSP */
@@ -1520,7 +1520,7 @@ PR_IMPLEMENT(void*)PR_GetSP(PRThread *thred)
 	PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("Begin PR_GetSP\n"));
 	thread_tcb = (char*)tid.field1;
 	top_sp = *(char**)(thread_tcb + 128);
-	PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("End PR_GetSP %X \n", top_sp));
+	PR_LOG(_pr_gc_lm, PR_LOG_ALWAYS, ("End PR_GetSP %p \n", top_sp));
 	return top_sp;
 }  /* PR_GetSP */
 
