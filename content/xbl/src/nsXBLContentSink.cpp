@@ -328,7 +328,8 @@ PRBool
 nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts, 
                                   PRUint32 aAttsCount, 
                                   PRInt32 aNameSpaceID, 
-                                  nsIAtom* aTagName)
+                                  nsIAtom* aTagName,
+                                  PRUint32 aLineNumber)
 {
   PRBool ret = PR_TRUE;
   if (aNameSpaceID == kNameSpaceID_XBL) {
@@ -362,7 +363,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
     }
     else if (aTagName == nsXBLAtoms::handler) {
       mSecondaryState = eXBL_InHandler;
-      ConstructHandler(aAtts);
+      ConstructHandler(aAtts, aLineNumber);
       ret = PR_FALSE;
     }
     else if (aTagName == nsXBLAtoms::resources) {
@@ -387,6 +388,7 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
                                                nsnull, nsnull, nsnull, nsnull,
                                                nsnull, nsnull);
         newHandler->SetEventName(nsXBLAtoms::constructor);
+        newHandler->SetLineNumber(aLineNumber);
         mBinding->SetConstructor(newHandler);
       }
       else if (aTagName == nsXBLAtoms::destructor) {
@@ -396,28 +398,42 @@ nsXBLContentSink::OnOpenContainer(const PRUnichar **aAtts,
                                                nsnull, nsnull, nsnull, nsnull,
                                                nsnull, nsnull);
         newHandler->SetEventName(nsXBLAtoms::destructor);
+        newHandler->SetLineNumber(aLineNumber);
         mBinding->SetDestructor(newHandler);
       }
       else if (aTagName == nsXBLAtoms::field) {
         mSecondaryState = eXBL_InField;
-        ConstructField(aAtts);
+        ConstructField(aAtts, aLineNumber);
       }
       else if (aTagName == nsXBLAtoms::property) {
         mSecondaryState = eXBL_InProperty;
         ConstructProperty(aAtts);
       }
-      else if (aTagName == nsXBLAtoms::getter)
+      else if (aTagName == nsXBLAtoms::getter) {
+        if (mSecondaryState == eXBL_InProperty && mProperty) {
+          mProperty->SetGetterLineNumber(aLineNumber);
+        }        
         mSecondaryState = eXBL_InGetter;
-      else if (aTagName == nsXBLAtoms::setter)
+      }
+      else if (aTagName == nsXBLAtoms::setter) {
+        if (mSecondaryState == eXBL_InProperty && mProperty) {
+          mProperty->SetSetterLineNumber(aLineNumber);
+        }
         mSecondaryState = eXBL_InSetter;
+      }
       else if (aTagName == nsXBLAtoms::method) {
         mSecondaryState = eXBL_InMethod;
         ConstructMethod(aAtts);
       }
       else if (aTagName == nsXBLAtoms::parameter)
         ConstructParameter(aAtts);
-      else if (aTagName == nsXBLAtoms::body)
+      else if (aTagName == nsXBLAtoms::body) {
+        if (mSecondaryState == eXBL_InMethod && mMethod) {
+          // stash away the line number
+          mMethod->SetLineNumber(aLineNumber);
+        }
         mSecondaryState = eXBL_InBody;
+      }
 
       ret = PR_FALSE; // Ignore everything we encounter inside an <implementation> block.
     }
@@ -443,7 +459,7 @@ nsXBLContentSink::ConstructBinding()
 
 
 void
-nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
+nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts, PRUint32 aLineNumber)
 {
   nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
 
@@ -507,6 +523,8 @@ nsXBLContentSink::ConstructHandler(const PRUnichar **aAtts)
                                          clickcount, preventdefault);
 
   if (newHandler) {
+    newHandler->SetLineNumber(aLineNumber);
+    
     // Add this handler to our chain of handlers.
     if (mHandler)
       mHandler->SetNextHandler(newHandler); // Already have a chain. Just append to the end.
@@ -579,7 +597,7 @@ nsXBLContentSink::ConstructImplementation(const PRUnichar **aAtts)
 }
 
 void
-nsXBLContentSink::ConstructField(const PRUnichar **aAtts)
+nsXBLContentSink::ConstructField(const PRUnichar **aAtts, PRUint32 aLineNumber)
 {
   nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
 
@@ -607,6 +625,8 @@ nsXBLContentSink::ConstructField(const PRUnichar **aAtts)
   // parameters.
   mField = new nsXBLProtoImplField(name, readonly);
   if (mField) {
+    mField->SetLineNumber(aLineNumber);
+    
     // Add this member to our chain.
     if (mImplMember)
       mImplMember->SetNext(mField); // Already have a chain. Just append to the end.

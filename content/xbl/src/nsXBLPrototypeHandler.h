@@ -83,6 +83,13 @@ public:
 
   void AppendHandlerText(const nsAString& aText);
 
+  void SetLineNumber(PRUint32 aLineNumber) {
+    // XXXbz JS event handlers do not have line numbers associated to
+    // them... see the XXXbe comment in nsJSContext::CompileEventHandler
+    // We can get line numbers here easily; getting the filename/URI
+    // of the script will be much harder...
+  }
+
   PRUint8 GetPhase() { return mPhase; }
   PRUint8 GetType() { return mType; }
 

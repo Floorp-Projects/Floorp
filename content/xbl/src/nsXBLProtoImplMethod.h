@@ -71,18 +71,18 @@ MOZ_DECL_CTOR_COUNTER(nsXBLUncompiledMethod)
 struct nsXBLUncompiledMethod {
   nsXBLParameter* mParameters;
   nsXBLParameter* mLastParameter;
-  PRUnichar* mBodyText;
+  nsXBLTextWithLineNumber mBodyText;
 
-  nsXBLUncompiledMethod() {
+  nsXBLUncompiledMethod() :
+    mParameters(nsnull),
+    mLastParameter(nsnull),
+    mBodyText()
+  {
     MOZ_COUNT_CTOR(nsXBLUncompiledMethod);
-    mBodyText = nsnull;
-    mParameters = nsnull;
-    mLastParameter = nsnull;
   }
 
   ~nsXBLUncompiledMethod() {
     MOZ_COUNT_DTOR(nsXBLUncompiledMethod);
-    nsMemory::Free(mBodyText);
     delete mParameters;
   }
 
@@ -94,13 +94,7 @@ struct nsXBLUncompiledMethod {
   }
 
   void AppendBodyText(const nsAString& aText) {
-    if (mBodyText) {
-      PRUnichar* temp = mBodyText;
-      mBodyText = ToNewUnicode(nsDependentString(temp) + aText);
-      nsMemory::Free(temp);
-    }
-    else
-      mBodyText = ToNewUnicode(aText);
+    mBodyText.AppendText(aText);
   }
 
   void AddParameter(const nsAString& aText) {
@@ -112,6 +106,10 @@ struct nsXBLUncompiledMethod {
     else
       mLastParameter->mNext = param;
     mLastParameter = param;
+  }
+
+  void SetLineNumber(PRUint32 aLineNumber) {
+    mBodyText.SetLineNumber(aLineNumber);
   }
 };
 
@@ -125,6 +123,8 @@ public:
   void AppendBodyText(const nsAString& aBody);
   void AddParameter(const nsAString& aName);
 
+  void SetLineNumber(PRUint32 aLineNumber);
+  
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject);

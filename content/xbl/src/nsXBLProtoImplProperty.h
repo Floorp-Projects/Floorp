@@ -61,23 +61,29 @@ public:
   void AppendGetterText(const nsAString& aGetter);
   void AppendSetterText(const nsAString& aSetter);
 
+  void SetGetterLineNumber(PRUint32 aLineNumber);
+  void SetSetterLineNumber(PRUint32 aLineNumber);
+
   virtual nsresult InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                  void* aScriptObject, void* aTargetClassObject);
   virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject);
 
 protected:
   union {
-    PRUnichar* mGetterText;     // The raw text for the getter (prior to compilation).
-    JSObject * mJSGetterObject; // The JS object for the getter (after compilation)
+    // The raw text for the getter (prior to compilation).
+    nsXBLTextWithLineNumber* mGetterText;
+    // The JS object for the getter (after compilation)
+    JSObject *               mJSGetterObject;
   };
 
   union {
-    PRUnichar* mSetterText;     // The raw text for the setter (prior to compilation).
-    JSObject * mJSSetterObject; // The JS object for the setter (after compilation)
+    // The raw text for the setter (prior to compilation).
+    nsXBLTextWithLineNumber* mSetterText;
+    // The JS object for the setter (after compilation)
+    JSObject *               mJSSetterObject;
   };
   
   uintN mJSAttributes;          // A flag for all our JS properties (getter/setter/readonly/shared/enum)
-  PRBool mCompiled;             // Whether or not we are compiled.
 };
 
 #endif // nsXBLProtoImplProperty_h__

@@ -99,7 +99,7 @@ public:
                                             nsIAtom *aName,
                                             void *aHandler);
   NS_IMETHOD       CompileFunction(void* aTarget,
-                                   const nsCString& aName,
+                                   const nsACString& aName,
                                    PRUint32 aArgCount,
                                    const char** aArgArray,
                                    const nsAString& aBody,

@@ -51,6 +51,50 @@
 
 class nsIScriptContext;
 
+MOZ_DECL_CTOR_COUNTER(nsXBLTextWithLineNumber)
+
+struct nsXBLTextWithLineNumber
+{
+  PRUnichar* mText;
+  PRUint32 mLineNumber;
+
+  nsXBLTextWithLineNumber() :
+    mText(nsnull),
+    mLineNumber(0)
+  {
+    MOZ_COUNT_CTOR(nsXBLTextWithLineNumber);
+  }
+
+  ~nsXBLTextWithLineNumber() {
+    MOZ_COUNT_DTOR(nsXBLTextWithLineNumber);
+    if (mText) {
+      nsMemory::Free(mText);
+    }
+  }
+
+  void AppendText(const nsAString& aText) {
+    if (mText) {
+      PRUnichar* temp = mText;
+      mText = ToNewUnicode(nsDependentString(temp) + aText);
+      nsMemory::Free(temp);
+    } else {
+      mText = ToNewUnicode(aText);
+    }
+  }
+
+  PRUnichar* GetText() {
+    return mText;
+  }
+
+  void SetLineNumber(PRUint32 aLineNumber) {
+    mLineNumber = aLineNumber;
+  }
+
+  PRUint32 GetLineNumber() {
+    return mLineNumber;
+  }
+};
+
 class nsXBLProtoImplMember
 {
 public:
