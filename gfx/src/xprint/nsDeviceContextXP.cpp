@@ -86,7 +86,7 @@ nsDeviceContextXp :: SetSpec(nsIDeviceContextSpec* aSpec)
   mPrintContext = new nsXPrintContext();
   xpSpec = do_QueryInterface(mSpec);
   if(xpSpec) {
-     rv = mPrintContext->Init(xpSpec);
+     rv = mPrintContext->Init(this, xpSpec);
   }
  
   return rv;

@@ -28,15 +28,18 @@
 #include <strings.h>
 #include "xlibrgb.h"
 #include "nsXPrintContext.h"
+#include "nsDeviceContextXP.h"
 #include "xprintutil.h"
 #include "prenv.h" /* for PR_GetEnv */
 
-//#define HACK_PRINTONSCREEN 1
+/* misc defines */
+// #define HACK_PRINTONSCREEN 1
+#define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
 #ifdef XPRINT_NOT_YET /* ToDo: make this dynamically */
-#define MY_XLIB_RGB_DITHER_XPRINT XLIB_RGB_DITHER_NONE
+#define NS_XPRINT_RGB_DITHER XLIB_RGB_DITHER_NONE
 #else
-#define MY_XLIB_RGB_DITHER_XPRINT XLIB_RGB_DITHER_MAX
+#define NS_XPRINT_RGB_DITHER ((mDepth>12)?(XLIB_RGB_DITHER_NONE):(XLIB_RGB_DITHER_MAX))
 #endif
 
 #ifdef PR_LOGGING 
@@ -90,34 +93,43 @@ nsXPrintContext::~nsXPrintContext()
     EndDocument();
 }
 
-#ifdef HACK_PRINTONSCREEN
-// debug: "print" on display server for quick debugging
-// see sleep() in nsXPrintContext::EndDocument()
-#define XPRINTONSCREEN (!strcmp("xprint_preview",(aSpec->GetCommand(&buf),buf)))
-#endif /* HACK_PRINTONSCREEN */
-
 NS_IMETHODIMP 
-nsXPrintContext::Init(nsIDeviceContextSpecXp *aSpec)
+nsXPrintContext::Init(nsDeviceContextXp *dc, nsIDeviceContextSpecXp *aSpec)
 {
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::Init()\n"));
 
-  int   prefDepth = 8; /* 24 or 8... 
-                        * I wish current Xprt would have a StaticGray visual... ;-( */
+  int   prefDepth = 8;  /* 24 or 8 for PS DDX, 24, 8, 1 for PCL DDX... 
+                         * I wish current Xprt would have a 1bit/8bit StaticGray 
+                         * visual for the PS DDX... ;-( 
+                         */
   char *buf;
+
+/* I can't get any other visual than the 8bit peudocolor one working... BAD...
+ * This env var allows others to test this without hacking their own binaries...
+ */
+#ifdef XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING  
+  if( PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_USE_24BIT_VISUAL") != nsnull )
+  {
+    prefDepth = 24;
+  }
+#endif /* XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING */  
 
 /* print on screen(="normal" Xserver) is "DEBUG" for now... 
  * maybe usefull for preview, too... 
  */
 #ifdef HACK_PRINTONSCREEN
-  if( XPRINTONSCREEN )
+  // debug: "print" on display server for quick debugging
+  // see sleep() in nsXPrintContext::EndDocument()
+  if( !strcmp("xprint_preview",(aSpec->GetCommand(&buf),buf)) )
   {
     mPDisplay  = (Display *)XOpenDisplay(nsnull);
     mScreen = XDefaultScreenOfDisplay(mPDisplay);
     mScreenNumber = XScreenNumberOfScreen(mScreen);
+    xlib_disallow_image_tiling(TRUE);
     xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
 
     SetupWindow(0, 0, 1200, 1200);
-    mPrintResolution = 300;
+    mPrintResolution = 91 /* or 301 - intentionally forcing scaling */;
     XMapWindow(mPDisplay, mDrawable);
   }
   else
@@ -131,6 +143,7 @@ nsXPrintContext::Init(nsIDeviceContextSpecXp *aSpec)
     
     mScreen = XpGetScreenOfContext(mPDisplay, mPContext);
     mScreenNumber = XScreenNumberOfScreen(mScreen);
+    xlib_disallow_image_tiling(TRUE);
     xlib_rgb_init_with_depth(mPDisplay, mScreen, prefDepth);
 
     XpGetPageDimensions(mPDisplay, mPContext, &width, &height, &rect);
@@ -139,6 +152,8 @@ nsXPrintContext::Init(nsIDeviceContextSpecXp *aSpec)
     XMapWindow(mPDisplay, mDrawable);
   }
   
+  mContext = dc;
+    
   /* Set error handler and sync
    * ToDo: unset handler after all is done - what about handler "stacking" ?
    */
@@ -151,8 +166,8 @@ nsXPrintContext::Init(nsIDeviceContextSpecXp *aSpec)
 NS_IMETHODIMP
 nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 {
-  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, 
-         ("nsXPrintContext::SetupWindow: x=%d y=%d width=%d height=%d\n", 
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+         ("nsXPrintContext::SetupWindow: x=%d y=%d width=%d height=%d\n",
          x, y, width, height));
 
   Window                 parent_win;
@@ -160,7 +175,9 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   unsigned long          gcmask;
   XGCValues              gcvalues;
   XSetWindowAttributes   xattributes;
-  long                   xattributes_mask;  
+  long                   xattributes_mask;
+  unsigned long          background,
+                         foreground;
   
   mWidth  = width;
   mHeight = height;
@@ -168,23 +185,34 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
   visual_info = xlib_rgb_get_visual_info();
   mVisual     = xlib_rgb_get_visual();
   mDepth      = xlib_rgb_get_depth();
-  
-  parent_win = XRootWindow(mPDisplay, mScreenNumber);
-                                           
+
+  background = XWhitePixel(mPDisplay, mScreenNumber);
+  foreground = XBlackPixel(mPDisplay, mScreenNumber);  
+  parent_win = XRootWindow(mPDisplay, mScreenNumber);                                         
                                              
-  xattributes.background_pixel = XWhitePixel(mPDisplay, mScreenNumber);
-  xattributes.border_pixel     = XBlackPixel(mPDisplay, mScreenNumber);
-  xattributes_mask             = CWBorderPixel | CWBackPixel;                                                                                                                                                                
-  mDrawable = (Drawable)XCreateWindow(mPDisplay, parent_win, x, y, width,
-                                      height, 0,
+  xattributes.background_pixel = background;
+  xattributes.border_pixel     = foreground;
+  xattributes.colormap         = xlib_rgb_get_cmap();
+  xattributes_mask             = CWBorderPixel | CWBackPixel;
+  if( xattributes.colormap )
+    xattributes_mask |= CWColormap;
+
+  mDrawable = (Drawable)XCreateWindow(mPDisplay, parent_win, x, y,
+                                      width, height, 0,
                                       mDepth, InputOutput, mVisual, xattributes_mask,
                                       &xattributes);
-
+  
   gcmask = GCBackground | GCForeground | GCFunction;
-  gcvalues.background = XWhitePixel(mPDisplay, mScreenNumber);
-  gcvalues.foreground = XBlackPixel(mPDisplay, mScreenNumber);
+  gcvalues.background = background;
+  gcvalues.foreground = foreground;
   gcvalues.function = GXcopy;
   mGC     = XCreateGC(mPDisplay, mDrawable, gcmask, &gcvalues); /* ToDo: Check for error */
+
+  /* %p would be better instead of %lx for pointers - but does PR_LOG() support that ? */
+  PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+         ("nsXPrintContext::SetupWindow: mDepth=%d, mScreenNumber=%d, colormap=%lx, mDrawable=%lx, mGC=%lx\n",
+         (int)mDepth, (int)mScreenNumber, (long)xattributes.colormap, (long)mDrawable, (long)mGC));
+         
   return NS_OK;
 }
 
@@ -347,6 +375,18 @@ nsXPrintContext::EndPage()
 {
   XPU_TRACE(XpEndPage(mPDisplay));
   XPU_TRACE(XpuWaitForPrintNotify(mPDisplay, XPEndPageNotify));
+
+#ifdef HACK_PRINTONSCREEN        
+  /* HACK: sleep 15secs if we're displaying to a "display" server
+   * see nsXPrintContext::Init and XprintOnScreen macro above - this is only used if 
+   * we are printing to a normal Xserver and not to a Xprint server (e.g. in rare 
+   * rare cases...)
+   */
+  if( XpuCheckExtension(mPDisplay) != 1 )
+  {
+    sleep(15);
+  }
+#endif /* HACK_PRINTONSCREEN */
   
   return NS_OK;
 }
@@ -369,7 +409,7 @@ nsXPrintContext::EndDocument()
   }
     
 #ifdef HACK_PRINTONSCREEN        
-  /* HACK: sleep 15secs if we're displaying to an "display" server
+  /* HACK: sleep 15secs if we're displaying to a "display" server
    * see nsXPrintContext::Init and XprintOnScreen macro above - this is only used if 
    * we are printing to a normal Xserver and not to a Xprint server (e.g. in rare 
    * rare cases...)
@@ -378,12 +418,15 @@ nsXPrintContext::EndDocument()
   {
     sleep(15);
   }
-#endif /* HACK_PRINTONSCREEN */  
+#endif /* HACK_PRINTONSCREEN */
 
   // Cleanup things allocated along the way
+  xlib_rgb_detach();
+
   XpDestroyContext(mPDisplay, mPContext);
-  mPContext = nsnull;
   XCloseDisplay(mPDisplay);
+
+  mPContext = nsnull;
   mPDisplay = nsnull;
     
   return NS_OK;
@@ -454,21 +497,6 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
          ("nsXPrintContext::DrawImage(%d/%d/%d/%d - %d/%d/%d/%d)\n", 
           (int)aSX, (int)aSY, (int)aSWidth, (int)aSHeight,
           (int)aDX, (int)aDY, (int)aDWidth, (int)aDHeight));
-
-  static PRPackedBool got_env_var         = PR_FALSE;
-  static PRPackedBool enable_xprt_scaling = PR_FALSE;
-  
-  if( !got_env_var )
-  {
-    enable_xprt_scaling = (PR_GetEnv("MOZILLA_XPRINT_EXPERIMENTAL_ENABLE_XPRT_SCALING") != nsnull);
-    got_env_var = PR_TRUE;
-  }
-  
-  /* this is a temporary solution until bug 57820 will be fixed. */
-  if( !enable_xprt_scaling )
-  {
-    return DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
-  }
   
   double   scaler;
   int      prev_res = 0,
@@ -480,12 +508,20 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
   
   PRInt32 aSrcWidth  = aImage->GetWidth();
   PRInt32 aSrcHeight = aImage->GetHeight();
+  
+  if( (aSrcWidth == 0) || (aSrcHeight == 0) ||
+      (aSWidth == 0)   || (aSHeight == 0) ||
+      (aDWidth == 0)   || (aDHeight == 0) )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+          ("nsXPrintContext::DrawImage(): Image with zero source||dest width||height supressed\n"));
+    return NS_OK;
+  }
 
-  double factorX = (double)aSrcWidth  / (double)aDWidth;
-  double factorY = (double)aSrcHeight / (double)aDHeight;
-  
-  scaler = (factorX > factorY)?(factorX):(factorY);
-  
+  float pixelscaler = 1.0;
+  mContext->GetCanonicalPixelScale(pixelscaler);
+  scaler = 1.0 / pixelscaler;
+
   imageResolution = (double)mPrintResolution * scaler;
   aDWidth_scaled  = (double)aDWidth  * scaler;
   aDHeight_scaled = (double)aDHeight * scaler;
@@ -655,7 +691,7 @@ nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
     xlib_draw_rgb_image(mDrawable,
                         mGC,
                         aDX, aDY, aDWidth, aDHeight,
-                        MY_XLIB_RGB_DITHER_XPRINT,
+                        NS_XPRINT_RGB_DITHER,
                         (unsigned char *)dstImg->data, dstImg->bytes_per_line);
     rv = NS_OK;                        
   }
@@ -715,7 +751,14 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     aWidth  = width;
     aHeight = height;
   }
-    
+
+  if( (aWidth == 0) || (aHeight == 0) )
+  {
+    PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
+           ("nsXPrintContext::DrawImage(): Image with zero width||height supressed\n"));
+    return NS_OK;
+  }
+      
   return DrawImageBits(alphaBits, alphaRowBytes, 
                        image_bits, row_bytes, 
                        aX, aY, aWidth, aHeight);
@@ -732,11 +775,12 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("nsXPrintContext::DrawImageBits(%d/%d/%d/%d)\n",
          (int)aX, (int)aY, (int)aWidth, (int)aHeight));
 
-  Pixmap   alpha_pixmap  = None;
-  Pixmap   image_pixmap  = None;
-
+  Pixmap alpha_pixmap  = None;
+  GC     image_gc;
+  
   // Create gc clip-mask on demand
-  if ( alphaBits != nsnull ) {
+  if( alphaBits != nsnull )
+  {
     XImage    *x_image = nsnull;
     GC         gc;
     XGCValues  gcv;
@@ -769,7 +813,7 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
 
     // Write into the pixemap that is underneath gdk's alpha_pixmap
     // the image we just created.
-    memset(&gcv, 0, sizeof(XGCValues));
+    memset(&gcv, 0, sizeof(XGCValues)); /* this may be unneccesary */
     gcv.function = GXcopy;
     gc = XCreateGC(mPDisplay, alpha_pixmap, GCFunction, &gcv);
 
@@ -778,77 +822,55 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
     XFreeGC(mPDisplay, gc);
 
     // Now we are done with the temporary image
-    x_image->data = nsnull;          /* Don't free the IL_Pixmap's bits. */
+    x_image->data = nsnull; /* Don't free the IL_Pixmap's bits. */
     XDestroyImage(x_image);
   }
   
-  // Create an off screen pixmap to hold the image bits.
-  image_pixmap = XCreatePixmap(mPDisplay,
-                               mDrawable,
-                               aWidth, aHeight,
-                               mDepth);
-  XSetClipOrigin(mPDisplay, mGC, 0, 0);
-  XSetClipMask(mPDisplay, mGC, None);
-  
-  GC            gc;
-  XGCValues     xvalues;
-  unsigned long xvalues_mask;
+  if( alpha_pixmap != None )
+  {
+    /* create copy of GC before start to playing with it... */
+    XGCValues gcv;  
+    memset(&gcv, 0, sizeof(XGCValues)); /* this may be unneccesary */
+    gcv.function = GXcopy;
+    image_gc = XCreateGC(mPDisplay, mDrawable, GCFunction, &gcv);
+    
+    // set up the gc to use the alpha pixmap for clipping
+    XSetClipOrigin(mPDisplay, image_gc, aX, aY);
+    XSetClipMask(mPDisplay, image_gc, alpha_pixmap);
+  }
+  else
+  {
+    /* this assumes that xlib_draw_rgb_image()/xlib_draw_gray_image()
+     * does not change the GC... */
+    image_gc = mGC;
+  }
 
-  xvalues.function           = GXcopy;
-  xvalues.fill_style         = FillSolid;
-  xvalues.arc_mode           = ArcPieSlice;
-  xvalues.subwindow_mode     = ClipByChildren;
-  xvalues.graphics_exposures = True;
-  xvalues_mask = GCFunction | GCFillStyle | GCArcMode | GCSubwindowMode | GCGraphicsExposures;
-
-  gc = XCreateGC(mPDisplay, image_pixmap, xvalues_mask, &xvalues); 
-
-  // XpSetImageResolution(mPDisplay, mPContext, new_res, &prev_res);
   if( mIsGrayscale )
   {
-    xlib_draw_gray_image(image_pixmap,
-                         gc,
-                         0, 0, aWidth, aHeight,
-                         MY_XLIB_RGB_DITHER_XPRINT,
+    xlib_draw_gray_image(mDrawable,
+                         image_gc,
+                         aX, aY, aWidth, aHeight,
+                         NS_XPRINT_RGB_DITHER,
                          image_bits, row_bytes);  
   }
   else
   {
-    xlib_draw_rgb_image(image_pixmap,
-                        gc,
-                        0, 0, aWidth, aHeight,
-                        MY_XLIB_RGB_DITHER_XPRINT,
+    xlib_draw_rgb_image(mDrawable,
+                        image_gc,
+                        aX, aY, aWidth, aHeight,
+                        NS_XPRINT_RGB_DITHER,
                         image_bits, row_bytes);
   }
-  // XpSetImageResolution(mPDisplay, mPContext, prev_res, &new_res);
   
-  XFreeGC(mPDisplay, gc);
-  
-  if (alpha_pixmap != None)
+  if( alpha_pixmap != None ) 
   {
-    // set up the gc to use the alpha pixmap for clipping
-    XSetClipOrigin(mPDisplay, mGC, aX, aY);
-    XSetClipMask(mPDisplay, mGC, alpha_pixmap);
+    XSetClipOrigin(mPDisplay, image_gc, 0, 0);
+    XSetClipMask(mPDisplay, image_gc, None);
+    
+    XFreeGC(mPDisplay, image_gc);
+    XFreePixmap(mPDisplay, alpha_pixmap);
   }
-
-  // copy our off screen pixmap onto the window.
-  XCopyArea(mPDisplay,                 // display
-            image_pixmap,              // source
-            mDrawable,                 // dest
-            mGC,                       // GC
-            0, 0,                      // xsrc, ysrc
-            aWidth, aHeight,           // width, height
-            aX, aY);                   // xdest, ydest
-
-  if (alpha_pixmap != None) 
-  {
-    XSetClipOrigin(mPDisplay, mGC, 0, 0);
-    XSetClipMask(mPDisplay, mGC, None);
-  }
-  
-  if( image_pixmap != None )  XFreePixmap(mPDisplay, image_pixmap);
-  if( alpha_pixmap != None )  XFreePixmap(mPDisplay, alpha_pixmap);
-  
+    
   return NS_OK;
 }
 

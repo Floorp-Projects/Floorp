@@ -45,7 +45,8 @@
  * Christopher Blizzard <blizzard@redhat.com>
  * Owen Taylor          <otaylor@redhat.com>
  * Shawn T. Amundson    <amundson@gtk.org>
-*/
+ * Roland Mainz         <roland.mainz@informatik.med.uni-giessen.de> 
+ */
 
 
 #ifndef __XLIB_RGB_H__
@@ -87,6 +88,10 @@ void
 xlib_rgb_init (Display *display, Screen *screen);
 void
 xlib_rgb_init_with_depth (Display *display, Screen *screen, int prefDepth);
+void
+xlib_rgb_detach (void);
+void 
+xlib_disallow_image_tiling (Bool disallow_it);
 
 unsigned long
 xlib_rgb_xpixel_from_rgb (uint32 rgb);
