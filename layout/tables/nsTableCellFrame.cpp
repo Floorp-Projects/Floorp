@@ -659,6 +659,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   if (isStyleChanged) {
     kidReflowState.reason = eReflowReason_StyleChange;
     kidReflowState.reflowCommand = nsnull;
+    // the following could be optimized with a fair amount of effort
+    tableFrame->SetNeedStrategyInit(PR_TRUE);
   }
 
   // Assume the inner child will stay positioned exactly where it is. Later in
