@@ -424,9 +424,16 @@ echo"</DIV>";
 ?>
 
 <?php
-echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
-if ($populardownloads > 5 ) {echo" | Downloads this Week: $populardownloads";}
-echo"</DIV>\n";
+
+    echo"<DIV class=\"baseline\">$datestring";
+    if ($populardownloads > 5 ) {
+        echo" | Downloads Last 7 Days: $populardownloads";
+    }
+    if ($downloadcount) {
+        echo" | Total Downloads: $downloadcount";
+    }
+
+    echo"</DIV>\n";
 ?>
 <?php
 } else if ($page=="releases") {

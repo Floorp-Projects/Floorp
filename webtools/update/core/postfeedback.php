@@ -88,6 +88,13 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
     $versiontagline = "version $version for $appname";
     if ($os !=="ALL") {$versiontagline .=" on $os"; }
 
+//Are we behind a proxy and given the IP via an alternate enviroment variable? If so, use it.
+    if ($_SERVER["HTTP_X_FORWARDED_FOR"]) {
+        $remote_addr = $_SERVER["HTTP_X_FORWARDED_FOR"];
+    } else {
+        $remote_addr = $_SERVER["REMOTE_ADDR"];
+    }
+
 //Check the Formkey against the DB, and see if this has already been posted...
 $formkey = escape_string($_POST["formkey"]);
 $date = date("Y-m-d H:i:s", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")));
@@ -96,7 +103,7 @@ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mys
 if (mysql_num_rows($sql_result)=="0") {
 
 //FormKey doesn't exist, go ahead and add their comment.
-    $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$_SERVER[REMOTE_ADDR]', '$email', '$formkey', '$versiontagline');";
+    $sql = "INSERT INTO `t_feedback` (`ID`, `CommentName`, `CommentVote`, `CommentTitle`, `CommentNote`, `CommentDate`, `commentip`, `email`, `formkey`, `VersionTagline`) VALUES ('$id', '$name', '$rating', '$title', '$comments', NOW(NULL), '$remote_addr', '$email', '$formkey', '$versiontagline');";
     $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
 
 

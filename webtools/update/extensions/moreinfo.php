@@ -472,9 +472,13 @@ if (!$page or $page=="general") {
 ?>
 
 <?php
-    echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
+
+    echo"<DIV class=\"baseline\">$datestring";
     if ($populardownloads > 5 ) {
-        echo" | Downloads this Week: $populardownloads";
+        echo" | Downloads Last 7 Days: $populardownloads";
+    }
+    if ($downloadcount) {
+        echo" | Total Downloads: $downloadcount";
     }
     echo"</DIV>\n";
 ?>

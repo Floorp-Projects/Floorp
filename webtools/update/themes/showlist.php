@@ -403,8 +403,9 @@ if ($homepage) {echo"<DIV class=\"iconbar\"><A HREF=\"$homepage\"><IMG SRC=\"/im
 echo"<DIV class=\"iconbar\" title=\"$rating of 5 stars\"><A HREF=\"moreinfo.php?".uriparams()."&id=$id&page=comments\"><IMG SRC=\"/images/ratings.png\" BORDER=0 HEIGHT=34 WIDTH=34 ALT=\"\">Rated<br>&nbsp;&nbsp;$rating of 5</A></DIV>";
 echo"</DIV>";
 
-echo"<DIV class=\"baseline\">$datestring | Total Downloads: $downloadcount";
-if ($populardownloads > 5 ) {echo" | Downloads this Week: $populardownloads";}
+echo"<DIV class=\"baseline\">$datestring";
+if ($populardownloads > 5 ) {echo" | Downloads Last 7 Days: $populardownloads";}
+if ($downloadcount) { echo" | Total Downloads: $downloadcount"; }
 echo"</DIV>\n";
 echo"</DIV>\n";
 
