@@ -114,6 +114,10 @@ treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-imap, isS
   list-style-image: url("chrome://messenger/skin/icons/server-remote-lock.gif");
 }
 
+treechildren::-moz-tree-image(folderNameCol, biffState-NewMail, isServer-true, isSecure-true) {
+  list-style-image: url("chrome://messenger/skin/icons/server-remote-lock-new.gif");
+}
+
 treechildren::-moz-tree-image(folderNameCol, isServer-true, serverType-none) {
   list-style-image: url("chrome://messenger/skin/icons/server-local.gif");
 }

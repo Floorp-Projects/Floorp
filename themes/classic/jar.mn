@@ -241,6 +241,7 @@ classic.jar:
   skin/classic/messenger/icons/server-news-lock.gif                     (messenger/icons/server-news-lock.gif)
   skin/classic/messenger/icons/server-remote.gif                        (messenger/icons/server-remote.gif)
   skin/classic/messenger/icons/server-remote-lock.gif                   (messenger/icons/server-remote-lock.gif)
+  skin/classic/messenger/icons/server-remote-lock-new.gif               (messenger/icons/server-remote-lock-new.gif)
   skin/classic/messenger/icons/thread-closed.gif                        (messenger/icons/thread-closed.gif)
   skin/classic/messenger/icons/threadcol.gif                            (messenger/icons/threadcol.gif)
   skin/classic/messenger/icons/thread-new-closed.gif                    (messenger/icons/thread-new-closed.gif)
