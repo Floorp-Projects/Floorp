@@ -111,6 +111,8 @@
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
+#include "nsIDOMViewCSS.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 
 // Used for the temporary DOM Level2 hack
 #include "nsIPref.h"
@@ -2032,6 +2034,42 @@ nsXULElement::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject)
 
         // Ensure that a reference exists to this element
         aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, rootname);
+
+        // See if we have a frame.
+        if (mDocument) {
+          nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+          if (shell) {
+            nsIFrame* frame;
+            shell->GetPrimaryFrameFor(NS_STATIC_CAST(nsIStyledContent*, this), &frame);
+            if (!frame) {
+              // We must ensure that the XBL Binding is installed before we hand
+              // back this object.
+              nsCOMPtr<nsIBindingManager> bindingManager;
+              mDocument->GetBindingManager(getter_AddRefs(bindingManager));
+              nsCOMPtr<nsIXBLBinding> binding;
+              bindingManager->GetBinding(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(binding));
+              if (!binding) {
+                nsCOMPtr<nsIScriptGlobalObject> global;
+                mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+                nsCOMPtr<nsIDOMViewCSS> viewCSS(do_QueryInterface(global));
+                if (viewCSS) {
+                  nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
+                  nsAutoString empty;
+                  viewCSS->GetComputedStyle(this, empty, getter_AddRefs(cssDecl));
+                  if (cssDecl) {
+                    nsAutoString behavior; behavior.AssignWithConversion("behavior");
+                    nsAutoString value;
+                    cssDecl->GetPropertyValue(behavior, value);
+                    if (!value.IsEmpty()) {
+                      // We have a binding that must be installed.
+                      xblService->LoadBindings(NS_STATIC_CAST(nsIStyledContent*, this), value, PR_FALSE);
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
     }
 
     *aScriptObject = mScriptObject;
