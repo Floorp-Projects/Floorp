@@ -1,14 +1,19 @@
-README for libpng 1.0.2 - June 14, 1998 (shared library 2.1)
+README for libpng 1.0.8 - July 24, 2000 (shared library 2.1)
 See the note about version numbers near the top of png.h
 
 See INSTALL for instructions on how to install libpng.
 
-This is the first official release of libpng.  Don't let the fact that
-it's the first release fool you.  The libpng library has been in
-extensive use and testing for about two and a half years.  However, it's
-finally gotten to the stage where there haven't been significant
+Libpng comes in two distribution formats.  Get libpng-*.tar.gz if you
+want UNIX-style line endings in the text files, or lpng*.zip if you want
+DOS-style line endings.
+
+Version 0.89 was the first official release of libpng.  Don't let the
+fact that it's the first release fool you.  The libpng library has been in
+extensive use and testing since mid-1995.  By late 1997 it had
+finally gotten to the stage where there hadn't been significant
 changes to the API in some time, and people have a bad feeling about
-libraries with versions < 1.0.
+libraries with versions < 1.0.  Version 1.0.0 was released in
+March 1998.
 
 ****
 Note that some of the changes to the png_info structure render this
@@ -28,8 +33,8 @@ directly, to avoid such problems in the future.
 It is important to note that the APIs do not make current programs
 that access the info struct directly incompatible with the new
 library.  However, it is strongly suggested that new programs use
-the new APIs (as shown in example.c), and older programs be converted
-to the new format, to facilitate upgrades in the future.
+the new APIs (as shown in example.c and pngtest.c), and older programs
+be converted to the new format, to facilitate upgrades in the future.
 ****
 
 Additions since 0.90 include the ability to compile libpng as a
@@ -49,8 +54,9 @@ to set different actions based on whether the CRC error occurred in a
 critical or an ancillary chunk.
 
 The changes made to the library, and bugs fixed are based on discussions
-on the PNG implementation mailing list <png-implement@dworking.wustl.edu>
-and not on material submitted to Guy.
+on the PNG implementation mailing list <png-implement@ccrc.wustl.edu>
+and not on material submitted privately to Guy, Andreas, or Glenn.  They will
+forward any good suggestions to the list.
 
 For a detailed description on using libpng, read libpng.txt.  For
 examples of libpng in a program, see example.c and pngtest.c.  For usage
@@ -98,8 +104,8 @@ fix.  Please mention "libpng" somewhere in the subject line.  Thanks.
 This release was created and will be supported by myself (of course
 based in a large way on Guy's and Andreas' earlier work), and the PNG group.
 
-randeg@alumni.rpi.edu
-png-implement@dworkin.wustl.edu
+randeg@alum.rpi.edu
+png-implement@ccrc.wustl.edu
 
 You can't reach Guy, the original libpng author, at the addresses
 given in previous versions of this document.  He and Andreas will read mail
@@ -108,7 +114,7 @@ addressed to the png-implement list, however.
 Please do not send general questions about PNG.  Send them to
 the address in the specification (png-group@w3.org).  At the same
 time, please do not send libpng questions to that address, send them to me
-or to png-implement@dworkin.wustl.edu.  I'll
+or to png-implement@ccrc.wustl.edu.  I'll
 get them in the end anyway.  If you have a question about something
 in the PNG specification that is related to using libpng, send it
 to me.  Send me any questions that start with "I was using libpng,
@@ -123,24 +129,27 @@ gladly listen.  Even if your suggestion is not used for version
 
 Files in this distribution:
 
+      ANNOUNCE      =>  Announcement of this version, with recent changes
       CHANGES       =>  Description of changes between libpng versions
+      KNOWNBUG      =>  List of known bugs and deficiencies
+      LICENSE       =>  License to use and redistribute libpng
       README        =>  This file
       TODO          =>  Things not implemented in the current library
-      ansi2knr.1    =>  Manual page for ansi2knr
-      ansi2knr.c    =>  Converts files to K&R style function declarations
-      build.bat     =>  MS-DOS batch file for Borland compiler
-      descrip.mms   =>  VMS project file
+      Y2KINFO       =>  Statement of Y2K compliance
       example.c     =>  Example code for using libpng functions
-      libpng.3      =>  manual page for libpng
+      libpng.3      =>  manual page for libpng (includes libpng.txt)
       libpng.txt    =>  Description of libpng and its functions
       libpngpf.3    =>  manual page for libpng's private functions
       png.5         =>  manual page for the PNG format
       png.c         =>  Basic interface functions common to library
       png.h         =>  Library function and interface declarations
       pngconf.h     =>  System specific library configuration
+      pngasmrd.h    =>  Header file for assembler-coded functions
       pngerror.c    =>  Error/warning message I/O functions
       pngget.c      =>  Functions for retrieving info from struct
       pngmem.c      =>  Memory handling functions
+      pngbar.png    =>  PNG logo, 88x31
+      pngnow.png    =>  PNG logo, 98x31
       pngpread.c    =>  Progressive reading functions
       pngread.c     =>  Read data/helper high-level functions
       pngrio.c      =>  Lowest-level data read I/O functions
@@ -154,39 +163,71 @@ Files in this distribution:
       pngwrite.c    =>  High-level write functions
       pngwtran.c    =>  Write data transformations
       pngwutil.c    =>  Write utility functions
+      contrib       =>  Contributions
+       gregbook         =>  source code for PNG reading and writing, from
+                            Greg Roelofs' "PNG: The Definitive Guide",
+                            O'Reilly, 1999
+       msvctest     =>  Builds and runs pngtest using a MSVC workspace
+       pngminus     =>  Simple pnm2png and png2pnm programs
+       pngsuite     =>  Test images
+       visupng      =>  Contains a MSVC workspace for VisualPng
+      msvc          =>  Contains a Microsoft Visual C++ (MSVC) workspace
+                        for building libpng and zlib
       scripts       =>  Directory containing scripts for building libpng:
-        descrip.mms   =>  VMS makefile for MMS or MMK
-        makefile.std  =>  Generic UNIX makefile
-        makefile.knr  =>  Archaic UNIX Makefile that converts files with ansi2knr
-        makefile.dec  =>  DEC Alpha UNIX makefile
-        makefile.sgi  =>  Silicon Graphics IRIX makefile
-        makefile.sun  =>  Sun makefile
-        makefile.s2x  =>  Solaris 2.X makefile (gcc, creates libpng.so.2.1.0)
-        makefile.lnx  =>  Linux/ELF makefile (gcc, creates libpng.so.2.1.0)
-        makefile.mip  =>  MIPS makefile
-        makefile.aco  =>  Acorn makefile
-        makefile.ama  =>  Amiga makefile
-        smakefile.ppc =>  AMIGA smakefile for SAS C V6.58/7.00 PPC compiler
-                          (Requires SCOPTIONS, copied from scripts/SCOPTIONS.ppc)
-        makefile.atr  =>  Atari makefile
-        makefile.bor  =>  Borland makefile
-        build.bat     =>  MS-DOS batch file for Borland compiler
-        makefile.dj2  =>  DJGPP 2 makefile
-        makefile.msc  =>  Microsoft C makefile
-        makefile.w32  =>  makefile for Microsoft Visual C++ 4.0 and later
-        makefile.tc3  =>  Turbo C 3.0 makefile
-        makefile.os2  =>  OS/2 Makefile (gcc and emx, requires pngos2.def)
-        makefile.wat  =>  Watcom 10a+ Makefile, 32-bit flat memory model
-        pngos2.def    =>  OS/2 module definition file used by makefile.os2
-        makevms.com   =>  VMS build script
-        pngdll.mak    =>  To make a png32bd.dll with Borland C++ 4.5
-        pngdef.pas    =>  Defines for a png32bd.dll with Borland C++ 4.5
+       descrip.mms      =>  VMS makefile for MMS or MMK
+       makefile.std     =>  Generic UNIX makefile (cc, creates static libpng.a)
+       makefile.linux   =>  Linux/ELF makefile
+                            (gcc, creates libpng.so.2.1.0.8)
+       makefile.gcmmx   =>  Linux/ELF makefile (gcc, creates
+                            libpng.so.2.1.0.8, uses assembler code
+                            tuned for Intel MMX platform)
+       makefile.gcc     =>  Generic makefile (gcc, creates static libpng.a)
+       makefile.knr     =>  Archaic UNIX Makefile that converts files with
+                            ansi2knr (Requires ansi2knr.c from
+                            ftp://ftp.cs.wisc.edu/ghost)
+       makefile.dec     =>  DEC Alpha UNIX makefile
+       makefile.hpux    =>  HPUX (10.20 and 11.00) makefile
+       makefile.ibmc    =>  IBM C/C++ version 3.x for Win32 and OS/2 (static)
+       makefile.intel   =>  Intel C/C++ version 4.0 and later
+       libpng.icc       =>  Project file, IBM VisualAge/C++ 4.0 or later
+       makefile.sgi     =>  Silicon Graphics IRIX (cc, creates static lib)
+       makefile.sggcc   =>  Silicon Graphics (gcc, creates libpng.so.2.1.0.8)
+       makefile.sunos   =>  Sun makefile
+       makefile.solaris =>  Solaris 2.X makefile
+                            (gcc, creates libpng.so.2.1.0.8)
+       makefile.sco     =>  For SCO OSr5  ELF and Unixware 7 with Native cc
+       makefile.mips    =>  MIPS makefile
+       makefile.acorn   =>  Acorn makefile
+       makefile.amiga   =>  Amiga makefile
+       smakefile.ppc    =>  AMIGA smakefile for SAS C V6.58/7.00 PPC
+                            compiler (Requires SCOPTIONS, copied from
+                            scripts/SCOPTIONS.ppc)
+       makefile.atari   =>  Atari makefile
+       makefile.beos    =>  BEOS makefile for X86
+       makefile.bor     =>  Borland makefile (uses bcc)
+       makefile.bc32    =>  32-bit Borland C++ (all modules compiled in C mode)
+       makefile.bd32    =>  To make a png32bd.dll with Borland C++ 4.5
+       makefile.tc3     =>  Turbo C 3.0 makefile
+       makefile.dj2     =>  DJGPP 2 makefile
+       makefile.msc     =>  Microsoft C makefile
+       makefile.vcawin32 => makefile for Microsoft Visual C++ 5.0 and
+                            later (uses assembler code tuned for Intel MMX
+                            platform)
+       makefile.vcwin32 =>  makefile for Microsoft Visual C++ 4.0 and
+                            later (does not use assembler code)
+       makefile.os2     =>  OS/2 Makefile (gcc and emx, requires pngos2.def)
+       pngos2.def       =>  OS/2 module definition file used by makefile.os2
+       makefile.watcom  =>  Watcom 10a+ Makefile, 32-bit flat memory model
+       makevms.com      =>  VMS build script
+       pngdef.pas       =>  Defines for a png32bd.dll with Borland C++ 4.5
+       SCOPTIONS.ppc    =>  Used with smakefile.ppc
+      wince         =>  Contains a Microsoft Visual C++ (Windows CD Toolkit)
+                        workspace for building libpng and zlib on WindowsCE
 
 Good luck, and happy coding.
 
 -Glenn Randers-Pehrson
- Internet: randeg@alumni.rpi.edu
- Web: http://www.rpi.edu/~randeg/index.html
+ Internet: randeg@alum.rpi.edu
 
 -Andreas Eric Dilger
  Internet: adilger@enel.ucalgary.ca

@@ -1,11 +1,11 @@
 
 /* pngwtran.c - transforms the data in a row for PNG writers
  *
- * libpng 1.0.2 - June 14, 1998
+ * libpng 1.0.8 - July 24, 2000
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.
- * Copyright (c) 1996, 1997 Andreas Dilger
- * Copyright (c) 1998, Glenn Randers-Pehrson
+ * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
+ * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  */
 
 #define PNG_INTERNAL
@@ -14,10 +14,13 @@
 /* Transform the data according to the user's wishes.  The order of
  * transformations is significant.
  */
-void
+void /* PRIVATE */
 png_do_write_transformations(png_structp png_ptr)
 {
    png_debug(1, "in png_do_write_transformations\n");
+
+   if (png_ptr == NULL)
+      return;
 
 #if defined(PNG_WRITE_USER_TRANSFORM_SUPPORTED)
    if (png_ptr->transformations & PNG_USER_TRANSFORM)
@@ -47,14 +50,14 @@ png_do_write_transformations(png_structp png_ptr)
       png_do_pack(&(png_ptr->row_info), png_ptr->row_buf + 1,
          (png_uint_32)png_ptr->bit_depth);
 #endif
+#if defined(PNG_WRITE_SWAP_SUPPORTED)
+   if (png_ptr->transformations & PNG_SWAP_BYTES)
+      png_do_swap(&(png_ptr->row_info), png_ptr->row_buf + 1);
+#endif
 #if defined(PNG_WRITE_SHIFT_SUPPORTED)
    if (png_ptr->transformations & PNG_SHIFT)
       png_do_shift(&(png_ptr->row_info), png_ptr->row_buf + 1,
          &(png_ptr->shift));
-#endif
-#if defined(PNG_WRITE_SWAP_SUPPORTED)
-   if (png_ptr->transformations & PNG_SWAP_BYTES)
-      png_do_swap(&(png_ptr->row_info), png_ptr->row_buf + 1);
 #endif
 #if defined(PNG_WRITE_INVERT_ALPHA_SUPPORTED)
    if (png_ptr->transformations & PNG_INVERT_ALPHA)
@@ -79,7 +82,7 @@ png_do_write_transformations(png_structp png_ptr)
  * row_info bit depth should be 8 (one pixel per byte).  The channels
  * should be 1 (this only happens on grayscale and paletted images).
  */
-void
+void /* PRIVATE */
 png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
 {
    png_debug(1, "in png_do_pack\n");
@@ -102,7 +105,7 @@ png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
             dp = row;
             mask = 0x80;
             v = 0;
-           
+
             for (i = 0; i < row_width; i++)
             {
                if (*sp != 0)
@@ -137,7 +140,7 @@ png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
             {
                png_byte value;
 
-               value = (png_byte)(*sp & 0x3);
+               value = (png_byte)(*sp & 0x03);
                v |= (value << shift);
                if (shift == 0)
                {
@@ -169,7 +172,7 @@ png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
             {
                png_byte value;
 
-               value = (png_byte)(*sp & 0xf);
+               value = (png_byte)(*sp & 0x0f);
                v |= (value << shift);
 
                if (shift == 0)
@@ -205,7 +208,7 @@ png_do_pack(png_row_infop row_info, png_bytep row, png_uint_32 bit_depth)
  * would pass 3 as bit_depth, and this routine would translate the
  * data to 0 to 15.
  */
-void
+void /* PRIVATE */
 png_do_shift(png_row_infop row_info, png_bytep row, png_color_8p bit_depth)
 {
    png_debug(1, "in png_do_shift\n");
@@ -311,7 +314,7 @@ png_do_shift(png_row_infop row_info, png_bytep row, png_color_8p bit_depth)
             png_uint_16 value, v;
             int j;
 
-            v = ((png_uint_16)(*bp) << 8) + *(bp + 1);
+            v = (png_uint_16)(((png_uint_16)(*bp) << 8) + *(bp + 1));
             value = 0;
             for (j = shift_start[c]; j > -shift_dec[c]; j -= shift_dec[c])
             {
@@ -329,7 +332,7 @@ png_do_shift(png_row_infop row_info, png_bytep row, png_color_8p bit_depth)
 #endif
 
 #if defined(PNG_WRITE_SWAP_ALPHA_SUPPORTED)
-void
+void /* PRIVATE */
 png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
 {
    png_debug(1, "in png_do_write_swap_alpha\n");
@@ -417,7 +420,7 @@ png_do_write_swap_alpha(png_row_infop row_info, png_bytep row)
 #endif
 
 #if defined(PNG_WRITE_INVERT_ALPHA_SUPPORTED)
-void
+void /* PRIVATE */
 png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
 {
    png_debug(1, "in png_do_write_invert_alpha\n");
@@ -438,7 +441,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = *(sp++);
                *(dp++) = *(sp++);
                *(dp++) = *(sp++);
-               *(dp++) = 255 - *(sp++);
+               *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
          /* This inverts the alpha channel in RRGGBBAA */
@@ -456,8 +459,8 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
                *(dp++) = *(sp++);
                *(dp++) = *(sp++);
                *(dp++) = *(sp++);
-               *(dp++) = 255 - *(sp++);
-               *(dp++) = 255 - *(sp++);
+               *(dp++) = (png_byte)(255 - *(sp++));
+               *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
       }
@@ -473,7 +476,7 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
             for (i = 0, sp = dp = row; i < row_width; i++)
             {
                *(dp++) = *(sp++);
-               *(dp++) = 255 - *(sp++);
+               *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
          /* This inverts the alpha channel in GGAA */
@@ -487,8 +490,8 @@ png_do_write_invert_alpha(png_row_infop row_info, png_bytep row)
             {
                *(dp++) = *(sp++);
                *(dp++) = *(sp++);
-               *(dp++) = 255 - *(sp++);
-               *(dp++) = 255 - *(sp++);
+               *(dp++) = (png_byte)(255 - *(sp++));
+               *(dp++) = (png_byte)(255 - *(sp++));
             }
          }
       }

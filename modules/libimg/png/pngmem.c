@@ -1,11 +1,11 @@
 
 /* pngmem.c - stub functions for memory allocation
  *
- * libpng 1.0.2 - June 14, 1998
+ * libpng 1.0.8 - July 24, 2000
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.
- * Copyright (c) 1996, 1997 Andreas Dilger
- * Copyright (c) 1998, Glenn Randers-Pehrson
+ * Copyright (c) 1998, 1999, 2000 Glenn Randers-Pehrson
+ * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
+ * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
  * This file provides a location for all memory allocation.  Users who
  * need special memory handling are expected to supply replacement
@@ -23,7 +23,7 @@
 
 /* Allocate memory for a png_struct.  The malloc and memset can be replaced
    by a single call to calloc() if this is thought to improve performance. */
-png_voidp
+png_voidp /* PRIVATE */
 png_create_struct(int type)
 {
 #ifdef PNG_USER_MEM_SUPPORTED
@@ -31,7 +31,7 @@ png_create_struct(int type)
 }
 
 /* Alternate version of png_create_struct, for use with user-defined malloc. */
-png_voidp
+png_voidp /* PRIVATE */
 png_create_struct_2(int type, png_malloc_ptr malloc_fn)
 {
 #endif /* PNG_USER_MEM_SUPPORTED */
@@ -62,7 +62,7 @@ png_create_struct_2(int type, png_malloc_ptr malloc_fn)
 
 
 /* Free memory allocated by a png_create_struct() call */
-void
+void /* PRIVATE */
 png_destroy_struct(png_voidp struct_ptr)
 {
 #ifdef PNG_USER_MEM_SUPPORTED
@@ -70,7 +70,7 @@ png_destroy_struct(png_voidp struct_ptr)
 }
 
 /* Free memory allocated by a png_create_struct() call */
-void
+void /* PRIVATE */
 png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
 {
 #endif
@@ -82,12 +82,10 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
          png_struct dummy_struct;
          png_structp png_ptr = &dummy_struct;
          (*(free_fn))(png_ptr, struct_ptr);
-         struct_ptr = NULL;
          return;
       }
 #endif /* PNG_USER_MEM_SUPPORTED */
       farfree (struct_ptr);
-      struct_ptr = NULL;
    }
 }
 
@@ -110,7 +108,7 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
  * result, we would be truncating potentially larger memory requests
  * (which should cause a fatal error) and introducing major problems.
  */
-png_voidp
+png_voidp PNGAPI
 png_malloc(png_structp png_ptr, png_uint_32 size)
 {
 #ifndef PNG_USER_MEM_SUPPORTED
@@ -126,7 +124,7 @@ png_malloc(png_structp png_ptr, png_uint_32 size)
        return png_malloc_default(png_ptr, size);
 }
 
-png_voidp
+png_voidp PNGAPI
 png_malloc_default(png_structp png_ptr, png_uint_32 size)
 {
    png_voidp ret;
@@ -157,8 +155,9 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
                ret = NULL;
             }
 
-            num_blocks = (int)(1 << (png_ptr->zlib_window_bits - 14));
-            if (num_blocks < 1)
+            if(png_ptr->zlib_window_bits > 14)
+               num_blocks = (int)(1 << (png_ptr->zlib_window_bits - 14));
+            else
                num_blocks = 1;
             if (png_ptr->zlib_mem_level >= 7)
                num_blocks += (int)(1 << (png_ptr->zlib_mem_level - 7));
@@ -192,12 +191,12 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
             if ((png_size_t)hptr & 0xf)
             {
                hptr = (png_byte huge *)((long)(hptr) & 0xfffffff0L);
-               hptr += 16L;
+               hptr = hptr + 16L;  /* "hptr += 16L" fails on Turbo C++ 3.0 */
             }
             for (i = 0; i < num_blocks; i++)
             {
                png_ptr->offset_table_ptr[i] = (png_bytep)hptr;
-               hptr += (png_uint_32)65536L;
+               hptr = hptr + (png_uint_32)65536L;  /* "+=" fails on TC++3.0 */
             }
 
             png_ptr->offset_table_number = num_blocks;
@@ -225,7 +224,7 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
 /* free a pointer allocated by png_malloc().  In the default
    configuration, png_ptr is not used, but is passed in case it
    is needed.  If ptr is NULL, return without taking any action. */
-void
+void PNGAPI
 png_free(png_structp png_ptr, png_voidp ptr)
 {
    if (png_ptr == NULL || ptr == NULL)
@@ -235,17 +234,16 @@ png_free(png_structp png_ptr, png_voidp ptr)
    if (png_ptr->free_fn != NULL)
    {
       (*(png_ptr->free_fn))(png_ptr, ptr);
-      ptr = NULL;
       return;
    }
    else png_free_default(png_ptr, ptr);
 }
 
-void
+void PNGAPI
 png_free_default(png_structp png_ptr, png_voidp ptr)
 {
 #endif /* PNG_USER_MEM_SUPPORTED */
-      
+
    if (png_ptr->offset_table != NULL)
    {
       int i;
@@ -271,7 +269,6 @@ png_free_default(png_structp png_ptr, png_voidp ptr)
    if (ptr != NULL)
    {
       farfree(ptr);
-      ptr = NULL;
    }
 }
 
@@ -280,7 +277,7 @@ png_free_default(png_structp png_ptr, png_voidp ptr)
 /* Allocate memory for a png_struct or a png_info.  The malloc and
    memset can be replaced by a single call to calloc() if this is thought
    to improve performance noticably.*/
-png_voidp
+png_voidp /* PRIVATE */
 png_create_struct(int type)
 {
 #ifdef PNG_USER_MEM_SUPPORTED
@@ -290,7 +287,7 @@ png_create_struct(int type)
 /* Allocate memory for a png_struct or a png_info.  The malloc and
    memset can be replaced by a single call to calloc() if this is thought
    to improve performance noticably.*/
-png_voidp
+png_voidp /* PRIVATE */
 png_create_struct_2(int type, png_malloc_ptr malloc_fn)
 {
 #endif /* PNG_USER_MEM_SUPPORTED */
@@ -331,7 +328,7 @@ png_create_struct_2(int type, png_malloc_ptr malloc_fn)
 
 
 /* Free memory allocated by a png_create_struct() call */
-void
+void /* PRIVATE */
 png_destroy_struct(png_voidp struct_ptr)
 {
 #ifdef PNG_USER_MEM_SUPPORTED
@@ -339,7 +336,7 @@ png_destroy_struct(png_voidp struct_ptr)
 }
 
 /* Free memory allocated by a png_create_struct() call */
-void
+void /* PRIVATE */
 png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
 {
 #endif /* PNG_USER_MEM_SUPPORTED */
@@ -351,20 +348,16 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
          png_struct dummy_struct;
          png_structp png_ptr = &dummy_struct;
          (*(free_fn))(png_ptr, struct_ptr);
-         struct_ptr = NULL;
          return;
       }
 #endif /* PNG_USER_MEM_SUPPORTED */
 #if defined(__TURBOC__) && !defined(__FLAT__)
       farfree(struct_ptr);
-      struct_ptr = NULL;
 #else
 # if defined(_MSC_VER) && defined(MAXSEG_64K)
       hfree(struct_ptr);
-      struct_ptr = NULL;
 # else
       free(struct_ptr);
-      struct_ptr = NULL;
 # endif
 #endif
    }
@@ -377,7 +370,7 @@ png_destroy_struct_2(png_voidp struct_ptr, png_free_ptr free_fn)
    need to allocate exactly 64K, so whatever you call here must
    have the ability to do that. */
 
-png_voidp
+png_voidp PNGAPI
 png_malloc(png_structp png_ptr, png_uint_32 size)
 {
 #ifndef PNG_USER_MEM_SUPPORTED
@@ -392,7 +385,7 @@ png_malloc(png_structp png_ptr, png_uint_32 size)
    else
        return (png_malloc_default(png_ptr, size));
 }
-png_voidp
+png_voidp /* PRIVATE */
 png_malloc_default(png_structp png_ptr, png_uint_32 size)
 {
    png_voidp ret;
@@ -423,7 +416,7 @@ png_malloc_default(png_structp png_ptr, png_uint_32 size)
 
 /* Free a pointer allocated by png_malloc().  If ptr is NULL, return
    without taking any action. */
-void
+void PNGAPI
 png_free(png_structp png_ptr, png_voidp ptr)
 {
    if (png_ptr == NULL || ptr == NULL)
@@ -433,33 +426,32 @@ png_free(png_structp png_ptr, png_voidp ptr)
    if (png_ptr->free_fn != NULL)
    {
       (*(png_ptr->free_fn))(png_ptr, ptr);
-      ptr = NULL;
       return;
    }
    else png_free_default(png_ptr, ptr);
 }
-void
+void /* PRIVATE */
 png_free_default(png_structp png_ptr, png_voidp ptr)
 {
+   if (png_ptr == NULL || ptr == NULL)
+      return;
+
 #endif /* PNG_USER_MEM_SUPPORTED */
 
 #if defined(__TURBOC__) && !defined(__FLAT__)
    farfree(ptr);
-   ptr = NULL;
 #else
 # if defined(_MSC_VER) && defined(MAXSEG_64K)
    hfree(ptr);
-   ptr = NULL;
 # else
    free(ptr);
-   ptr = NULL;
 # endif
 #endif
 }
 
 #endif /* Not Borland DOS special memory handler */
 
-png_voidp
+png_voidp /* PRIVATE */
 png_memcpy_check (png_structp png_ptr, png_voidp s1, png_voidp s2,
    png_uint_32 length)
 {
@@ -468,11 +460,11 @@ png_memcpy_check (png_structp png_ptr, png_voidp s1, png_voidp s2,
    size = (png_size_t)length;
    if ((png_uint_32)size != length)
       png_error(png_ptr,"Overflow in png_memcpy_check.");
-  
+
    return(png_memcpy (s1, s2, size));
 }
 
-png_voidp
+png_voidp /* PRIVATE */
 png_memset_check (png_structp png_ptr, png_voidp s1, int value,
    png_uint_32 length)
 {
@@ -490,7 +482,7 @@ png_memset_check (png_structp png_ptr, png_voidp s1, int value,
 /* This function is called when the application wants to use another method
  * of allocating and freeing memory.
  */
-void
+void PNGAPI
 png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr
   malloc_fn, png_free_ptr free_fn)
 {
@@ -503,7 +495,7 @@ png_set_mem_fn(png_structp png_ptr, png_voidp mem_ptr, png_malloc_ptr
  * functions.  The application should free any memory associated with this
  * pointer before png_write_destroy and png_read_destroy are called.
  */
-png_voidp
+png_voidp PNGAPI
 png_get_mem_ptr(png_structp png_ptr)
 {
    return ((png_voidp)png_ptr->mem_ptr);
