@@ -1510,7 +1510,9 @@ NS_IMETHODIMP
 nsXPIProgressListener::OnProgress(PRUint32 aIndex, PRUint32 aValue, PRUint32 aMaxValue)
 {
   nsCOMPtr<nsIWebProgressListener> wpl(do_QueryElementAt(mDownloads, aIndex));
-  return wpl->OnProgressChange(nsnull, nsnull, 0, 0, aValue, aMaxValue);
+  if (wpl) 
+    return wpl->OnProgressChange(nsnull, nsnull, 0, 0, aValue, aMaxValue);
+  return NS_OK;
 }
 
 void 
