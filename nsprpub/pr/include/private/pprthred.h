@@ -33,20 +33,6 @@ PR_BEGIN_EXTERN_C
 ---------------------------------------------------------------------------*/
 
 /*
-** Add an exit func to be evaluated when the thread exits. Each thread
-** can have zero or more of these.
-*/
-typedef void (*PRThreadExit)(void *arg);
-PR_EXTERN(PRStatus) PR_SetThreadExit(PRUintn index, PRThreadExit func, void *arg);
-
-/*
-** Return the "index"'th at-exit function associated with thread
-** "t". Returns NULL if the index does not reference a valid at-exit
-** function.
-*/
-PR_EXTERN(PRThreadExit) PR_GetThreadExit(PRUintn index, void **argp);
-
-/*
 ** Associate a thread object with an existing native thread.
 ** 	"type" is the type of thread object to attach
 ** 	"priority" is the priority to assign to the thread

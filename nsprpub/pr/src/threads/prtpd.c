@@ -260,46 +260,4 @@ void _PR_DestroyThreadPrivate(PRThread* self)
     }
 }  /* _PR_DestroyThreadPrivate */
 
-#if 0
-PR_IMPLEMENT(PRStatus) PR_SetThreadExit(PRUintn index, PRThreadExit func, void *arg)
-{
-    _PRPerThreadExit *pte;
-    PRThread *thread = _PR_MD_CURRENT_THREAD();
-
-    if (index >= thread->numExits) {
-    if (thread->ptes) {
-        thread->ptes = (_PRPerThreadExit*)
-        PR_REALLOC(thread->ptes, (index+1) * sizeof(_PRPerThreadExit));
-    } else {
-        thread->ptes = (_PRPerThreadExit*)
-            PR_CALLOC(index+1 * sizeof(_PRPerThreadExit));
-    }
-    if (!thread->ptes) {
-        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
-        return PR_FAILURE;
-    }
-    thread->numExits = index + 1;
-    }
-    pte = &thread->ptes[index];
-    pte->func = func;
-    pte->arg = arg;
-    return PR_SUCCESS;
-}
-
-PR_IMPLEMENT(PRThreadExit) PR_GetThreadExit(PRUintn index, void **argp)
-{
-    _PRPerThreadExit *pte;
-    PRThread *thread = _PR_MD_CURRENT_THREAD();
-
-    if (index >= thread->numExits) {
-    if (argp) *argp = 0;
-    return 0;
-    }
-    pte = &thread->ptes[index];
-    if (argp) *argp = pte->arg;
-    return pte->func;
-}
-
-#endif
-
 #endif /* !XP_BEOS */

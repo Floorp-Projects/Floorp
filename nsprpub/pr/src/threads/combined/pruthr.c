@@ -241,7 +241,6 @@ static void _PR_InitializeRecycledThread(PRThread *thread)
     }
 #endif
     PR_ASSERT(thread->dumpArg == 0 && thread->dump == 0);
-    PR_ASSERT(thread->numExits == 0 && thread->ptes == 0);
     PR_ASSERT(thread->errorString == 0 && thread->errorStringSize == 0);
 
     /* Reset data members in thread structure */

@@ -41,7 +41,6 @@ void _PR_CleanupThread(PRThread *thread)
 {
     PRUintn i;
     void **ptd;
-    _PRPerThreadExit *pte;
     PRThreadPrivateDTOR *destructor;
 
     /* Free up per-thread-data */
@@ -59,19 +58,6 @@ void _PR_CleanupThread(PRThread *thread)
     }
     thread->dump = 0;
 
-    /* Invoke per-thread exit functions */
-    pte = &thread->ptes[0];
-    for (i = 0; i < thread->numExits; i++, pte++) {
-        if (pte->func) {
-            (*pte->func)(pte->arg);
-            pte->func = 0;
-        }
-    }
-    if (thread->ptes) {
-        PR_DELETE(thread->ptes);
-        thread->numExits = 0;
-    }
-    PR_ASSERT(thread->numExits == 0);
     PR_DELETE(thread->errorString);
     thread->errorStringSize = 0;
     thread->environment = NULL;
