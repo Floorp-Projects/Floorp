@@ -261,7 +261,7 @@ extern double __ieee754_scalb __P((double,double));
 #endif
 
 /* fdlibm kernel function */
-extern double __kernel_standard __P((double,double,int));	
+extern double __kernel_standard __P((double,double,int,int*));
 extern double __kernel_sin __P((double,double,int));
 extern double __kernel_cos __P((double,double));
 extern double __kernel_tan __P((double,double,int));
