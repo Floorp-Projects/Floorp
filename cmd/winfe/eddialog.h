@@ -188,6 +188,7 @@ public:
 	enum { IDD = IDD_SAVE_NEW_DOCUMENT };
 	//}}AFX_DATA
 
+    BOOL m_bPublishPage;
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -198,13 +199,13 @@ public:
 private:
     // This will change resource hInstance to Editor dll (in constructor)
     CEditorResourceSwitcher m_ResourceSwitcher;
-
 // Implementation
 protected:
 
 	// Generated message map functions
 	//{{AFX_MSG(CSaveNewDlg)
 	virtual BOOL OnInitDialog();
+	afx_msg void OnPublish();
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
 };

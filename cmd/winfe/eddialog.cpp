@@ -120,8 +120,7 @@ void CLoadingImageDlg::PostNcDestroy()
 CSaveNewDlg::CSaveNewDlg(CWnd * pParent)
 	: CDialog(CSaveNewDlg::IDD, pParent)
 {
-	//{{AFX_DATA_INIT(CSaveNewDlg)
-	//}}AFX_DATA_INIT
+    m_bPublishPage = FALSE;
 }
 
 
@@ -141,8 +140,17 @@ BOOL CSaveNewDlg::OnInitDialog()
 
 BEGIN_MESSAGE_MAP(CSaveNewDlg, CDialog)
 	//{{AFX_MSG_MAP(CSaveNewDlg)
+	ON_BN_CLICKED(IDC_PUBLISH_FILENAME, OnPublish)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
+
+void CSaveNewDlg::OnPublish()
+{
+    // Just set a flag so caller can
+    //  bring up publishing dialog
+    m_bPublishPage = TRUE;
+    CDialog::OnCancel();
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // CSaveFileDlg dialog
@@ -798,7 +806,7 @@ void CPublishDlg::OnOK()
         // e.g. ends in a slash or does not have a file extension.
         // Give the user the option of replacing bad characters with '_'
         //  ot attempting to publish to the specified URL anyway
-        BOOL bResult = EDT_CheckPublishURL(m_pMWContext, &m_pFullLocation);
+        ED_PublishError  iResult = EDT_CheckPublishURL(m_pMWContext, &m_pFullLocation);
 
         // Reset filename in case we replaced any bad characters
         // FALSE = strip filename even if there's no extension
@@ -806,8 +814,12 @@ void CPublishDlg::OnOK()
         SetPublishingControls(m_pFullLocation, FALSE);
 
         // If user selected "Cancel", then don't publish
-        if( !bResult ) 
+        //   and put focus back to offending control
+        if( iResult != ED_PUBLISH_OK )
+        { 
+            GetDlgItem((iResult==ED_PUBLISH_ERROR_FILENAME) ? IDC_PUBLISH_FILENAME : IDC_PUBLISH_LOCATION_LIST)->SetFocus();
             return;
+        }
 
         CListBox * pIncludeListBox = (CListBox*)GetDlgItem(IDC_PUBLISH_OTHER_FILES);
         int iCount = pIncludeListBox->GetSelCount();

@@ -3404,9 +3404,7 @@ void CNetscapeEditView::OnPublish()
                         dlg.m_pFullLocation,
                         bKeepImages,
                         bKeepLinks, 
-                        TRUE); // We always "remember" the password now,
-                               // This simply means we copy it to the pref
-                               //  so Single Signon can use it
+                        0); // This is now ignored. Single Signon handles passwords
     }
 
     XP_FREE(pSrcURL);
@@ -3567,9 +3565,13 @@ BOOL FE_SaveDocument(MWContext * pMWContext)
             return TRUE;
         }
         CSaveNewDlg dlg( GET_DLG_PARENT(pView) );
-        if ( dlg.DoModal() == IDOK ) {
+        if( dlg.DoModal() == IDOK )
             return pView->SaveDocument();
-        }
+        // Also allow publishing - close the dialog and bring up Publish dialog
+        //  (Note that we can't do this synchronously, so we return FALSE here)
+        if( dlg.m_bPublishPage )
+            pView->PostMessage(WM_COMMAND, ID_FILE_PUBLISH);
+    
    } else {
         // Doc is already saved - save again only if dirty and user wants to
         return FE_CheckAndSaveDocument(pMWContext);

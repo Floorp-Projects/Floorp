@@ -548,10 +548,11 @@ CAPTION "Save New Page"
 FONT 8, "MS Sans Serif"
 BEGIN
     ICON            "IDI_ASTERISK",IDC_INFO_ICON,7,6,21,20
-    LTEXT           "You must save this page before continuing with the requested action.",
+    LTEXT           "You must save or publish this page before you can preview or edit it.",
                     IDC_STATIC,45,8,148,29
-    DEFPUSHBUTTON   "Save...",IDOK,44,40,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,105,40,50,14
+    DEFPUSHBUTTON   "Save...",IDOK,14,40,50,14,WS_GROUP
+    PUSHBUTTON      "Publish...",IDC_PUBLISH_FILENAME,74,40,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,134,40,50,14
 END
 
 IDD_PAGE_TABLE DIALOG DISCARDABLE  0, 0, 290, 190
