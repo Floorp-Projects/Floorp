@@ -155,7 +155,7 @@ endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR)
 
-GARBAGE += dist
+GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
    $(shell cat unallmakefiles) unallmakefiles \

@@ -203,12 +203,16 @@ ALL_TRASH = \
 	 so_locations _gen _stubs _jmc _jri \
 	$(wildcard gts_tmp_*) \
 	$(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)	
+ALL_TRASH_DIRS = \
+	$(GARBAGE_DIRS)
 else
 ALL_TRASH = \
 	$(GARBAGE) $(TARGETS) $(OBJS) $(PROGOBJS) LOGS TAGS a.out \
 	$(HOST_PROGOBJS) $(HOST_OBJS) $(IMPORT_LIBRARY) $(DEF_FILE)\
 	so_locations _gen _stubs $(wildcard *.res) \
 	$(wildcard gts_tmp_*) $(LIBRARY:%.a=.%.timestamp)
+ALL_TRASH_DIRS = \
+	$(GARBAGE_DIRS)
 endif
 
 ifdef JAVA_OR_NSJVM
@@ -293,13 +297,13 @@ MAKE_DIRS		=
 ifdef COMPILER_DEPEND
 ifdef OBJS
 MAKE_DIRS		+= $(MDDEPDIR)
-GARBAGE			+= $(MDDEPDIR)
+GARBAGE_DIRS		+= $(MDDEPDIR)
 endif
 endif
 
 ifneq ($(XPIDLSRCS),)
 MAKE_DIRS		+= $(XPIDL_GEN_DIR)
-GARBAGE			+= $(XPIDL_GEN_DIR)
+GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 endif
 
 #
@@ -531,12 +535,14 @@ run_viewer: $(DIST)/bin/viewer
 	viewer
 
 clean clobber realclean clobber_all:: $(SUBMAKEFILES)
-	rm -rf $(ALL_TRASH)
+	rm -f $(ALL_TRASH); \
+	rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
 
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
-	rm -rf $(ALL_TRASH) \
+	rm -f $(ALL_TRASH) ; \
+	rm -rf $(ALL_TRASH_DIRS) \
 	$(wildcard *.map) \
 	Makefile .HSancillary $(DIST_GARBAGE) \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
@@ -1106,7 +1112,7 @@ install:: $(XPIDL_GEN_DIR)/$(XPIDL_MODULE).xpt
 
 endif
 
-GARBAGE			+= $(XPIDL_GEN_DIR)
+GARBAGE_DIRS		+= $(XPIDL_GEN_DIR)
 endif
 
 ################################################################################
