@@ -190,7 +190,7 @@ NS_IMETHODIMP nsDeviceContextSpecQT::Init(nsIPrintSettings* aPS, PRBool aQuiet)
       nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
 
       nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, aChromeURL,
+      rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
             "_blank", "chrome,modal,centerscreen", array,
             getter_AddRefs(newWindow));
     }
