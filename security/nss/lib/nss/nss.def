@@ -73,6 +73,7 @@ CERT_VerifyCertName;
 CERT_VerifyCertNow;
 DER_UTCDayToAscii;
 DER_UTCTimeToAscii;
+DER_GeneralizedTimeToTime;
 NSS_Init;
 NSS_Initialize;
 NSS_InitReadWrite;
@@ -331,16 +332,24 @@ VFY_VerifyDigest;
 ;+#
 ;+# Data objects
 ;+#
+;;CERT_CrlTemplate;
+;;CERT_SignedDataTemplate;
+;;CERT_CertificateTemplate;
+;;CERT_CertificateRequestTemplate;
 ;;CERT_IssuerAndSNTemplate;
 ;;CERT_SetOfSignedCrlTemplate;
 ;;SECAnyTemplate;
+;;SECKEY_DSAPublicKeyTemplate;
+;;SECKEY_EncryptedPrivateKeyInfoTemplate;
 ;;SECKEY_PointerToEncryptedPrivateKeyInfoTemplate;
 ;;SECKEY_PointerToPrivateKeyInfoTemplate;
 ;;SECKEY_PrivateKeyInfoTemplate;
+;;SECKEY_RSAPublicKeyTemplate;
 ;;SECOID_AlgorithmIDTemplate;
 ;;SEC_AnyTemplate;
 ;;SEC_BMPStringTemplate;
 ;;SEC_BitStringTemplate;
+;;SEC_GeneralizedTimeTemplate;
 ;;SEC_IA5StringTemplate;
 ;;SEC_IntegerTemplate;
 ;;SEC_ObjectIDTemplate;
@@ -351,16 +360,24 @@ VFY_VerifyDigest;
 ;;SEC_UTCTimeTemplate;
 ;;sgn_DigestInfoTemplate;
 ;+# This isnt right, but it's better than we have now...
+CERT_CrlTemplate DATA ;+ UNIX_REMOVE
+CERT_SignedDataTemplate DATA ;+ UNIX_REMOVE
+CERT_CertificateTemplate DATA ;+ UNIX_REMOVE
+CERT_CertificateRequestTemplate DATA ;+ UNIX_REMOVE
 CERT_IssuerAndSNTemplate DATA ;+ UNIX_REMOVE
 CERT_SetOfSignedCrlTemplate DATA ;+ UNIX_REMOVE
 SECAnyTemplate DATA ;+ UNIX_REMOVE
+SECKEY_DSAPublicKeyTemplate DATA ;+ UNIX_REMOVE
+SECKEY_EncryptedPrivateKeyInfoTemplate DATA ;+ UNIX_REMOVE
 SECKEY_PointerToEncryptedPrivateKeyInfoTemplate DATA ;+ UNIX_REMOVE
 SECKEY_PointerToPrivateKeyInfoTemplate DATA ;+ UNIX_REMOVE
 SECKEY_PrivateKeyInfoTemplate DATA ;+ UNIX_REMOVE
+SECKEY_RSAPublicKeyTemplate DATA ;+ UNIX_REMOVE
 SECOID_AlgorithmIDTemplate DATA ;+ UNIX_REMOVE
 SEC_AnyTemplate DATA ;+ UNIX_REMOVE
 SEC_BMPStringTemplate DATA ;+ UNIX_REMOVE
 SEC_BitStringTemplate DATA ;+ UNIX_REMOVE
+SEC_GeneralizedTimeTemplate DATA ;+ UNIX_REMOVE
 SEC_IA5StringTemplate DATA ;+ UNIX_REMOVE
 SEC_IntegerTemplate DATA ;+ UNIX_REMOVE
 SEC_ObjectIDTemplate DATA ;+ UNIX_REMOVE
@@ -371,12 +388,14 @@ SEC_SetOfAnyTemplate DATA ;+ UNIX_REMOVE
 SEC_UTCTimeTemplate DATA ;+ UNIX_REMOVE
 sgn_DigestInfoTemplate DATA ;+ UNIX_REMOVE
 ;+# commands?
-;+#CERT_DecodeCertificatePoliciesExtension;
-;+#CERT_DecodeUserNotice;
-;+#CERT_DestroyCertificatePoliciesExtension;
-;+#CERT_GenTime2FormattedAscii;
-;+#CERT_Hexify;
-;+#DER_GeneralizedTimeToTime;
+CERT_DecodeBasicConstraintValue;
+CERT_DecodeOidSequence;
+CERT_DecodeUserNotice;
+CERT_DecodeCertificatePoliciesExtension;
+CERT_DestroyCertificatePoliciesExtension;
+CERT_GenTime2FormattedAscii;
+CERT_Hexify;
+CERT_CompareName;
 ;+#MD2_Flatten;
 ;+#MD2_Resurrect;
 ;+#MD5_Flatten;
@@ -389,8 +408,8 @@ NSSBase64Encoder_Destroy;
 NSSBase64Encoder_Update;
 ;+#PK11_DoPassword;
 ;+#PK11_FindKeyByKeyID;
-;+#PK11_InitPin;
-;+#PK11_NeedUserInit;
+PK11_InitPin;
+PK11_NeedUserInit;
 ;+#PQG_ParamGen;
 ;+#PQG_VerifyParams;
 ;+#SECITEM_ReallocItem;
