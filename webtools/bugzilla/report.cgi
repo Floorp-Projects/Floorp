@@ -274,7 +274,7 @@ if ($action eq "wrap") {
     # URLs in the HTML.
     $vars->{'buglistbase'} = $cgi->canonicalise_query(
                                  "x_axis_field", "y_axis_field", "z_axis_field",
-                                               "ctype", "format", @axis_fields);
+                               "ctype", "format", "query_format", @axis_fields);
     $vars->{'imagebase'}   = $cgi->canonicalise_query( 
                     $tbl_field, "action", "ctype", "format", "width", "height");
     $vars->{'switchbase'}  = $cgi->canonicalise_query( 
