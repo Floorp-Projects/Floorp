@@ -3313,7 +3313,7 @@ nsresult
 nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
                                               nsIFile *component)
 {
-    nsresult rv = NS_OK;
+    nsresult rv = NS_OK, res = NS_ERROR_FACTORY_NOT_REGISTERED;
     /*
      * Do we have to give the native loader first crack at it?
      * I vote ``no''.
@@ -3329,11 +3329,13 @@ nsComponentManagerImpl::AutoRegisterComponent(PRInt32 when,
             NS_ASSERTION(loader == mLoaderData[i].loader, "oops");
         }
         rv = mLoaderData[i].loader->AutoRegisterComponent((int)when, component, &didRegister);
-        if (NS_SUCCEEDED(rv) && didRegister)
-            break;
+        if (NS_FAILED(rv)) {
+            res = rv;
+        } else if (didRegister) {
+            return rv;
+        }
     }
-    return NS_FAILED(rv) ? NS_ERROR_FACTORY_NOT_REGISTERED : NS_OK;
-
+    return res;
 }
 
 nsresult
