@@ -570,7 +570,7 @@ if ( Param("move-enabled") && (defined $::COOKIE{"Bugzilla_login"}) && ($::COOKI
 print "<BR></FORM>";
 
 print "
-<table><tr><td align=left><B>Description:</B></td>
+<table><tr><td align=left><B><a name=\"c0\" href=\"#c0\">Description:</a></B></td>
 <td align=right width=100%>Opened: $bug{'creation_ts'}</td></tr></table>
 <HR>
 ";

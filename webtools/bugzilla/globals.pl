@@ -891,6 +891,22 @@ sub quoteUrls {
 
         $things[$count++] = $item;
     }
+    # Either a comment string or no comma and a compulsory #.
+    while ($text =~ s/\bbug(\s|%\#)*(\d+),?\s*comment\s*(\s|%\#)(\d+)/"##$count##"/ei) {
+        my $item = $&;
+        my $bugnum = $2;
+        my $comnum = $4;
+        $item = GetBugLink($bugnum, $item);
+        $item =~ s/(id=\d+)/$1#c$comnum/;
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/\bcomment(\s|%\#)*(\d+)/"##$count##"/ei) {
+        my $item = $&;
+        my $num = $2;
+        $item = value_quote($item);
+        $item = qq{<A HREF="#c$num">$item</A>};
+        $things[$count++] = $item;
+    }
     while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
         my $item = $&;
         my $num = $2;
@@ -1047,16 +1063,16 @@ sub GetLongDescriptionAsHTML {
         my ($who, $email, $when, $text) = (FetchSQLData());
         $email .= Param('emailsuffix');
         if ($count) {
-            $result .= "<BR><BR><I>------- Additional Comments From ";
-              if ($who) {
-                  $result .= qq{<A HREF="mailto:$email">$who</A> } .
-                      time2str("%Y-%m-%d %H:%M", str2time($when)) .
-                          " -------</I><BR>\n";
-              } else {
-                  $result .= qq{<A HREF="mailto:$email">$email</A> } .
-                      time2str("%Y-%m-%d %H:%M", str2time($when)) .
-                          " -------</I><BR>\n";
-              }
+            $result .= "<BR><BR><I>------- Additional Comment <a name='c$count' href='#c$count'>#$count</a> From ";
+            if ($who) {
+                $result .= qq{<A HREF="mailto:$email">$who</A> } .
+                    time2str("%Y-%m-%d %H:%M", str2time($when));
+            } else {
+                $result .= qq{<A HREF="mailto:$email">$email</A> } .
+                    time2str("%Y-%m-%d %H:%M", str2time($when));
+            }
+              
+            $result .= " -------</I><BR>\n";
         }
         $result .= "<PRE>" . quoteUrls(\%knownattachments, $text) . "</PRE>\n";
         $count++;
