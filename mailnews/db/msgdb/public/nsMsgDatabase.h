@@ -171,8 +171,9 @@ public:
   friend class nsMsgDBThreadEnumerator;
 protected:
   // prefs stuff - in future, we might want to cache the prefs interface
-  nsresult GetBoolPref(const char *prefName, PRBool *result);
-  nsresult GetIntPref(const char *prefName, PRInt32 *result);
+  nsresult        GetBoolPref(const char *prefName, PRBool *result);
+  nsresult        GetIntPref(const char *prefName, PRInt32 *result);
+  virtual void    GetGlobalPrefs();
     // retrieval methods
   nsIMsgThread *  GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
   nsIMsgThread *  GetThreadForSubject(nsCString &subject);
@@ -182,6 +183,7 @@ protected:
   // threading interfaces
   virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
   virtual PRBool  ThreadBySubjectWithoutRe();
+  virtual PRBool  UseStrictThreading();
   virtual nsresult ThreadNewHdr(nsMsgHdr* hdr, PRBool &newThread);
   virtual nsresult AddNewThread(nsMsgHdr *msgHdr);
   virtual nsresult AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIMsgDBHdr *pMsgHdr, PRBool threadInThread);

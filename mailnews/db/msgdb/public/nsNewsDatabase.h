@@ -80,8 +80,6 @@ public:
   NS_IMETHOD GetDefaultSortType(nsMsgViewSortTypeValue *aDefaultSortType);
 
 protected:
-  virtual PRBool	    ThreadBySubjectWithoutRe() ;
-
   // this is owned by the nsNewsFolder, which lives longer than the db.
   nsMsgKeySet           *m_readSet;
 };

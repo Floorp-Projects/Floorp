@@ -77,14 +77,13 @@ NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
 }
 
 static PRBool gGotGlobalPrefs = PR_FALSE;
-static PRBool gThreadWithoutRe = PR_TRUE;
 static PRInt32 gTimeStampLeeway;
 
 void nsMailDatabase::GetGlobalPrefs()
 {
   if (!gGotGlobalPrefs)
   {
-    GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
+    nsMsgDatabase::GetGlobalPrefs();
     GetIntPref("mail.db_timestamp_leeway", &gTimeStampLeeway);
     gGotGlobalPrefs = PR_TRUE;
   }
@@ -121,7 +120,7 @@ nsresult nsMailDatabase::GetAllOfflineOpsTable()
 // cache m_folderStream to make updating mozilla status flags fast
 NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
-  if (!m_folderStream)  //only if we create a stream, set m_ownFolderStream to true.
+  if (!m_folderStream && m_folder)  //only if we create a stream, set m_ownFolderStream to true.
   {
     PRBool isLocked;
     m_folder->GetLocked(&isLocked);
@@ -753,14 +752,6 @@ void nsMailDatabase::SetReparse(PRBool reparse)
   m_reparse = reparse;
 }
 
-
-// should we thread messages with common subjects that don't start with Re: together?
-// I imagine we might have separate preferences for mail and news, so this is a virtual method.
-PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
-{
-  GetGlobalPrefs();
-  return gThreadWithoutRe;
-}
 
 class nsMsgOfflineOpEnumerator : public nsISimpleEnumerator {
 public:

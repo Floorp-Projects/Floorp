@@ -113,7 +113,6 @@ NS_IMETHODIMP nsNewsDatabase::IsRead(nsMsgKey key, PRBool *pRead)
   NS_ASSERTION(pRead, "null out param in IsRead");
   if (!pRead) return NS_ERROR_NULL_POINTER;
 
-  NS_ASSERTION(m_readSet, "set is null!");
   if (!m_readSet) return NS_ERROR_FAILURE;
   
   *pRead = m_readSet->IsMember(key);
@@ -178,13 +177,6 @@ nsresult		nsNewsDatabase::ExpireRange(nsMsgKey startRange, nsMsgKey endRange)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// should we thread messages with common subjects that don't start with Re: together?
-// I imagine we might have separate preferences for mail and news, so this is a virtual method.
-PRBool	
-nsNewsDatabase::ThreadBySubjectWithoutRe()
-{
-  return PR_TRUE;
-}
 
 NS_IMETHODIMP nsNewsDatabase::GetReadSet(nsMsgKeySet **pSet)
 {

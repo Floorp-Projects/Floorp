@@ -93,8 +93,7 @@ protected:
   virtual void    SetReparse(PRBool reparse);
   
 protected:
-  void            GetGlobalPrefs();
-  virtual PRBool  ThreadBySubjectWithoutRe() ;
+  virtual void    GetGlobalPrefs();
   
   PRBool          m_reparse;
   nsFileSpec	  *m_folderSpec;

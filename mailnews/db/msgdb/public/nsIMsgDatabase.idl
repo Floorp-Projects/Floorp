@@ -110,8 +110,8 @@ interface nsIMsgDBService : nsISupports
 {
     // want to remove this method from nsIMsgDatabase...
     // if a db is opened on the folder, the listener will automatically be added
-    nsIMsgDatabase openFolderDB(in nsIMsgFolder aFolder, in boolean aCreate, in boolean aUpgrading);
-    nsIMsgDatabase openMailDBFromFileSpec(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
+    nsIMsgDatabase openFolderDB(in nsIMsgFolder aFolder, in boolean aCreate, in boolean aLeaveInvalidDB);
+    nsIMsgDatabase openMailDBFromFileSpec(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
     void registerPendingListener(in nsIMsgFolder aFolder, in nsIDBChangeListener aListener);
     void unregisterPendingListener(in nsIDBChangeListener aListener);
 };
@@ -119,7 +119,7 @@ interface nsIMsgDBService : nsISupports
 [scriptable, uuid(f667dcb8-5aae-4e71-8559-2a48d7e508cd)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
-  void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
+  void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aLeaveInvalidDB);
   void forceFolderDBClosed(in nsIMsgFolder aFolder);
   void Close(in boolean aForceCommit);
 

@@ -223,6 +223,20 @@ NS_IMETHODIMP nsMsgDBService::UnregisterPendingListener(nsIDBChangeListener *aLi
   return NS_ERROR_FAILURE;
 }
 
+static PRBool gGotGlobalPrefs = PR_FALSE;
+static PRBool gThreadWithoutRe = PR_TRUE;
+static PRBool gStrictThreading = PR_FALSE;
+
+void nsMsgDatabase::GetGlobalPrefs()
+{
+  if (!gGotGlobalPrefs)
+  {
+    GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
+    GetBoolPref("mail.strict_threading", &gStrictThreading);
+    gGotGlobalPrefs = PR_TRUE;
+  }
+}
+
 // we never need to call this because we check the use cache first,
 // and any hdr in this cache will be in the use cache.
 nsresult nsMsgDatabase::GetHdrFromCache(nsMsgKey key, nsIMsgDBHdr* *result)
@@ -1692,7 +1706,7 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgHdrForKey(nsMsgKey key, nsIMsgDBHdr **pmsgHdr
   mdb_bool	hasOid;
   mdbOid		rowObjectId;
   
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
   NS_ASSERTION(m_folder, "folder should be set");
 #endif
   
@@ -3491,6 +3505,21 @@ NS_IMETHODIMP	nsMsgDatabase::GetSummaryValid(PRBool *aResult)
 
 // protected routines
 
+// should we thread messages with common subjects that don't start with Re: together?
+// I imagine we might have separate preferences for mail and news, so this is a virtual method.
+PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
+{
+  GetGlobalPrefs();
+  return gThreadWithoutRe;
+}
+
+PRBool nsMsgDatabase::UseStrictThreading()
+{
+  GetGlobalPrefs();
+  return gStrictThreading;
+}
+
+
 nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, nsMsgThread **pnewThread)
 {
   nsresult	err = NS_OK;
@@ -3649,7 +3678,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
   newHdr->GetRawFlags(&newHdrFlags);
   newHdr->GetNumReferences(&numReferences);
   
-#define SUBJ_THREADING 1// try reference threading first
+  // try reference threading first
   for (PRInt32 i = numReferences - 1; i >= 0;  i--)
   {
     nsCAutoString reference;
@@ -3671,26 +3700,28 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
       break;
     }
   }
-#ifdef SUBJ_THREADING
-  // try subject threading if we couldn't find a reference and the subject starts with Re:
-  nsXPIDLCString subject;
-  
-  newHdr->GetSubject(getter_Copies(subject));
-  if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
+  // if user hasn't said "only thread by ref headers", thread by subject
+  if (!UseStrictThreading())
   {
-    nsCAutoString cSubject(subject);
-    thread = getter_AddRefs(GetThreadForSubject(cSubject));
-    if(thread)
+    // try subject threading if we couldn't find a reference and the subject starts with Re:
+    nsXPIDLCString subject;
+  
+    newHdr->GetSubject(getter_Copies(subject));
+    if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
     {
-      thread->GetThreadKey(&threadId);
-      newHdr->SetThreadId(threadId);
-      //TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
-      // if we move this and do subject threading after, ref threading, 
-      // don't thread within children, since we know it won't work. But for now, pass TRUE.
-      result = AddToThread(newHdr, thread, nsnull, PR_TRUE);     
+      nsCAutoString cSubject(subject);
+      thread = getter_AddRefs(GetThreadForSubject(cSubject));
+      if(thread)
+      {
+        thread->GetThreadKey(&threadId);
+        newHdr->SetThreadId(threadId);
+        //TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
+        // if we move this and do subject threading after, ref threading, 
+        // don't thread within children, since we know it won't work. But for now, pass TRUE.
+        result = AddToThread(newHdr, thread, nsnull, PR_TRUE);     
+      }
     }
   }
-#endif // SUBJ_THREADING
   
   if (!thread)
   {
@@ -3893,14 +3924,6 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
     threadHdr->Release();
   }
   return err;
-}
-
-
-// should we thread messages with common subjects that don't start with Re: together?
-// I imagine we might have separate preferences for mail and news, so this is a virtual method.
-PRBool	nsMsgDatabase::ThreadBySubjectWithoutRe()
-{
-  return PR_TRUE;
 }
 
 nsresult nsMsgDatabase::GetBoolPref(const char *prefName, PRBool *result)
