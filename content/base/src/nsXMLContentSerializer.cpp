@@ -641,9 +641,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
       continue;
 
     if (namespaceID == kNameSpaceID_None) {
-      PRInt32 elementNsID;
-      content->GetNameSpaceID(&elementNsID);
-      if (elementNsID == kNameSpaceID_XHTML) {
+      if (content->GetNameSpaceID() == kNameSpaceID_XHTML) {
         if (IsShorthandAttr(attrName, content->Tag()) &&
             valueStr.IsEmpty()) {
           valueStr = nameStr;

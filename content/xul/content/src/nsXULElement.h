@@ -458,7 +458,7 @@ public:
     virtual nsresult AppendChildTo(nsIContent* aKid, PRBool aNotify,
                                    PRBool aDeepSetDocument);
     virtual nsresult RemoveChildAt(PRUint32 aIndex, PRBool aNotify);
-    virtual void GetNameSpaceID(PRInt32* aNameSpeceID) const;
+    virtual PRInt32 GetNameSpaceID() const;
     virtual nsIAtom *Tag() const;
     virtual nsINodeInfo *GetNodeInfo() const;
     virtual nsIAtom *GetIDAttributeName() const;

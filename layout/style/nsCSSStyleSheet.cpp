@@ -2847,7 +2847,7 @@ RuleProcessorData::RuleProcessorData(nsPresContext* aPresContext,
     mContent = aContent;
 
     // get the namespace
-    aContent->GetNameSpaceID(&mNameSpaceID);
+    mNameSpaceID = aContent->GetNameSpaceID();
 
     // get the tag and parent
     mContentTag = aContent->Tag();

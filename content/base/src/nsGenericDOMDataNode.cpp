@@ -622,10 +622,10 @@ nsGenericDOMDataNode::SetNativeAnonymous(PRBool aAnonymous)
   // XXX Need to fix this to do something - bug 165110
 }
 
-void
-nsGenericDOMDataNode::GetNameSpaceID(PRInt32* aID) const
+PRInt32
+nsGenericDOMDataNode::GetNameSpaceID() const
 {
-  *aID = kNameSpaceID_None;
+  return kNameSpaceID_None;
 }
 
 nsIAtom *

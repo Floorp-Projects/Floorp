@@ -370,7 +370,7 @@ public:
   virtual void SetParent(nsIContent* aParent);
   virtual PRBool IsNativeAnonymous() const;
   virtual void SetNativeAnonymous(PRBool aAnonymous);
-  virtual void GetNameSpaceID(PRInt32* aNameSpaceID) const;
+  virtual PRInt32 GetNameSpaceID() const;
   virtual nsIAtom *Tag() const;
   virtual nsINodeInfo *GetNodeInfo() const;
   virtual PRUint32 GetChildCount() const;

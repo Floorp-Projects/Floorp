@@ -176,10 +176,7 @@ nsXULContentUtils::FindChildByTag(nsIContent* aElement,
     for (PRUint32 i = 0; i < count; ++i) {
         nsIContent *kid = aElement->GetChildAt(i);
 
-        PRInt32 nameSpaceID;
-        kid->GetNameSpaceID(&nameSpaceID);
-
-        if (nameSpaceID != aNameSpaceID)
+        if (kid->GetNameSpaceID() != aNameSpaceID)
             continue; // wrong namespace
 
         nsINodeInfo *ni = kid->GetNodeInfo();
