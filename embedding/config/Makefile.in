@@ -28,5 +28,5 @@ include $(topsrcdir)/config/rules.mk
 
 install::
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/basebrowser-unix -o unix -v
-	$(INSTALL) $(srcdir)/installed-chrome.txt $(DIST)/bin/chrome
+	$(INSTALL) $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 
