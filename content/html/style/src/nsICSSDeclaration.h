@@ -340,11 +340,10 @@ struct nsCSSUserInterface : public nsCSSStruct  { // NEW
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   nsCSSValue      mUserInput;
-  nsCSSValue      mModifyContent;
-  nsCSSValue      mSelectionStyle;
-  nsCSSValue      mAutoSelect;
+  nsCSSValue      mUserModify;
+  nsCSSValue      mUserSelect;
   nsCSSValueList* mKeyEquivalent;
-  nsCSSValue      mAutoTab;
+  nsCSSValue      mUserFocus;
   nsCSSValue      mResizer;
 };
 

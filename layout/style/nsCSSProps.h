@@ -59,8 +59,6 @@ public:
 
   // Keyword/Enum value tables
   static const PRInt32 kAzimuthKTable[];
-  static const PRInt32 kAutoSelectKTable[];
-  static const PRInt32 kAutoTabKTable[];
   static const PRInt32 kBackgroundAttachmentKTable[];
   static const PRInt32 kBackgroundColorKTable[];
   static const PRInt32 kBackgroundRepeatKTable[];
@@ -88,7 +86,6 @@ public:
   static const PRInt32 kKeyEquivalentKTable[];
   static const PRInt32 kListStylePositionKTable[];
   static const PRInt32 kListStyleKTable[];
-  static const PRInt32 kModifyContentKTable[];
   static const PRInt32 kOutlineColorKTable[];
   static const PRInt32 kOverflowKTable[];
   static const PRInt32 kPageBreakKTable[];
@@ -99,7 +96,6 @@ public:
   static const PRInt32 kPlayDuringKTable[];
   static const PRInt32 kPositionKTable[];
   static const PRInt32 kResizerKTable[];
-  static const PRInt32 kSelectionStyleKTable[];
   static const PRInt32 kSpeakKTable[];
   static const PRInt32 kSpeakHeaderKTable[];
   static const PRInt32 kSpeakNumeralKTable[];
@@ -110,7 +106,10 @@ public:
   static const PRInt32 kTextDecorationKTable[];
   static const PRInt32 kTextTransformKTable[];
   static const PRInt32 kUnicodeBidiKTable[];
+  static const PRInt32 kUserFocusKTable[];
   static const PRInt32 kUserInputKTable[];
+  static const PRInt32 kUserModifyKTable[];
+  static const PRInt32 kUserSelectKTable[];
   static const PRInt32 kVerticalAlignKTable[];
   static const PRInt32 kVisibilityKTable[];
   static const PRInt32 kVolumeKTable[];
