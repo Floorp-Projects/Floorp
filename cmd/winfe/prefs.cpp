@@ -581,7 +581,14 @@ CBrowserPrefs::GetHelperInfo(NET_cdataStruct *pcdata, LPHELPERINFO lpInfo)
 				lpInfo->bAskBeforeOpening = TRUE;
 			}
 			break;
-
+//~~~
+		case HANDLE_VIA_PLUGIN:
+		case HANDLE_VIA_PLUGINAPPLET:
+			if (pcdata->num_exts > 0) {
+				GetOpenCommandForExt(pcdata->exts[0], lpInfo->szOpenCmd, sizeof(lpInfo->szOpenCmd));
+				lpInfo->bAskBeforeOpening = FALSE;
+			}
+			break;
 		default:
 			break;
 	}

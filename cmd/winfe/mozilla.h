@@ -152,6 +152,8 @@ typedef struct _fe_EventStruct {
 #define HANDLE_MOREINFO     500
 #define HANDLE_SHELLEXECUTE 600
 #define HANDLE_BY_OLE           700
+//~~~
+#define HANDLE_VIA_PLUGINAPPLET   800
 
 #define TB_PICTURESANDTEXT 0
 #define TB_PICTURES 1

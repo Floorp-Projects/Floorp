@@ -132,6 +132,8 @@
 #endif /* MOZ_SMARTUPDATE */
 #define IDD_SMARTBROWSING               147
 #define IDD_PRIVACY			148
+#define IDS_NONE                        149
+#define IDS_PLUGINAPPLET                150
 #define IDC_EXTENSION                   309
 #define IDC_ICON1                       316
 #define IDC_ICON2                       317

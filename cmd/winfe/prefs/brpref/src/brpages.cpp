@@ -30,6 +30,8 @@
 #include "resource.h"
 #include "xp_core.h"
 #include "xp_help.h"
+//~~~
+#include "xp_mem.h"
 #include "prefapi.h"
 #include "brprefid.h"
 #include "../../../defaults.h"
@@ -53,7 +55,8 @@
 #define HANDLE_MOREINFO     500
 #define HANDLE_SHELLEXECUTE 600
 #define HANDLE_BY_OLE		700
-
+//~~~
+#define HANDLE_VIA_PLUGINAPPLET   800
 /////////////////////////////////////////////////////////////////////////////
 // Helper routines
 
@@ -1051,6 +1054,54 @@ CEditTypeDialog::InitDialog()
 	}
 #endif /* MOZ_MAIL_NEWS */
 
+//~~~
+  typedef char** (* TYPE_FIND_PLUGIN_FOR_TYPE)(const char *);
+  TYPE_FIND_PLUGIN_FOR_TYPE fp_find_plugin_for_type = NULL;
+
+  HINSTANCE hLib = LoadLibrary("mozilla.exe");
+  if(hLib != NULL)
+  {
+    fp_find_plugin_for_type = (TYPE_FIND_PLUGIN_FOR_TYPE)GetProcAddress((HMODULE)hLib, "NPL_FindPluginsForType");
+    if(fp_find_plugin_for_type != NULL)
+    {
+      char ** ppchPlugins = fp_find_plugin_for_type(LPCTSTR(m_strMimeType));
+      HWND hWndCombo1 = GetDlgItem(m_hwndDlg, IDC_COMBO1);
+      if(ppchPlugins != NULL)
+      {
+        int iCount = 0;
+        for(int i = 0; ppchPlugins[i] != NULL; i++)
+        {
+          char * pch = ppchPlugins[i];
+          ComboBox_AddString(hWndCombo1, pch);
+          if(pch != NULL)
+            XP_FREE(pch);
+          iCount++;
+        }
+        XP_FREE(ppchPlugins);
+        ComboBox_SetCurSel(hWndCombo1, iCount - 1);
+      }
+      else
+      {
+        char sz[256];
+	      LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+        ComboBox_AddString(hWndCombo1, sz);
+        ComboBox_SetCurSel(hWndCombo1, 0);
+        EnableDlgItem(IDC_RADIO4, FALSE);
+        EnableDlgItem(IDC_COMBO1, FALSE);
+      }
+    }
+
+    FreeLibrary((HMODULE)hLib);
+  }
+  
+  char sz[256];
+	LoadString(m_hInstance, IDS_NONE, sz, sizeof(sz));
+  HWND hWndCombo2 = GetDlgItem(m_hwndDlg, IDC_COMBO2);
+  ComboBox_AddString(hWndCombo2, sz);
+  ComboBox_SetCurSel(hWndCombo2, 0);
+  EnableDlgItem(IDC_RADIO5, FALSE);
+  EnableDlgItem(IDC_COMBO2, FALSE);
+
 	return CDialog::InitDialog();
 }
 
@@ -1086,6 +1137,13 @@ CEditTypeDialog::DoTransfer(BOOL bSaveAndValidate)
 			case HANDLE_BY_OLE:
 				nRadio = 2;
 				break;
+//~~~
+      case HANDLE_VIA_PLUGIN:
+        nRadio = 3;
+				break;
+      case HANDLE_VIA_PLUGINAPPLET:
+        nRadio = 4;
+				break;
 		}
 	}
 
@@ -1112,7 +1170,13 @@ CEditTypeDialog::DoTransfer(BOOL bSaveAndValidate)
 				if (m_nHowToHandle != HANDLE_EXTERNAL)
 					m_nHowToHandle = HANDLE_SHELLEXECUTE;
 				break;
-
+//~~~
+      case 3:
+        m_nHowToHandle = HANDLE_VIA_PLUGIN;
+				break;
+      case 4:
+        m_nHowToHandle = HANDLE_VIA_PLUGINAPPLET;
+				break;
 			default:
 				assert(FALSE);
 				break;
@@ -1136,8 +1200,9 @@ CEditTypeDialog::OnCommand(int id, HWND hwndCtl, UINT notifyCode)
         if (BrowseForProgram(m_hInstance, m_hwndDlg, szPath))
             Edit_SetText(GetDlgItem(m_hwndDlg, IDC_EDIT2), szPath);
 		return TRUE;
-
-	} else if ((id == IDC_RADIO1 || id == IDC_RADIO2 || id == IDC_RADIO3) && (notifyCode == BN_CLICKED)) {
+//~~~
+	} else if ((id == IDC_RADIO1 || id == IDC_RADIO2 || id == IDC_RADIO3 || id == IDC_RADIO4 || id == IDC_RADIO5) 
+                && (notifyCode == BN_CLICKED)) {
 		// Check whether the check box to prompt before opening a downloaded
 		// file should be enabled
 		CheckControls();
@@ -1686,7 +1751,7 @@ CApplicationsPrefs::DisplayFileDetails()
 	int				 nIndex;
 	CString			 strHandledBy, strExts;
 	LPCSTR			 lpszMimeType = "";
-	BOOL			 bIsPlugin = FALSE;
+	//~~~BOOL			 bIsPlugin = FALSE;
 //Begin CRN_MIME
 	BOOL			 bIsLocked = FALSE; 
 	XP_Bool			 bAddEnabled = TRUE;
@@ -1745,7 +1810,10 @@ CApplicationsPrefs::DisplayFileDetails()
 	
 				case HANDLE_VIA_PLUGIN:
 					strHandledBy.LoadString(m_hInstance, IDS_PLUGIN);
-					bIsPlugin = TRUE;
+					//~~~bIsPlugin = TRUE;
+					break;
+				case HANDLE_VIA_PLUGINAPPLET:
+					strHandledBy.LoadString(m_hInstance, IDS_PLUGINAPPLET);
 					break;
 			}
 
@@ -1809,10 +1877,11 @@ CApplicationsPrefs::DisplayFileDetails()
 
 	EnableDlgItem(IDC_BUTTON1, bAddEnabled); //This is the "New Type.." button.	CRN_MIME 
 
-	// Disable the Edit and Remove buttons if the item is handled by a plug-in,
+//~~~
+  // Disable the Edit and Remove buttons if the item is handled by a plug-in,
 	// because changing or removing the item won't actually do anything
-	EnableDlgItem(IDC_BUTTON2, !bIsPlugin && !bIsLocked && bEditEnabled); //CRN_MIME Added "&& !bIsLocked && bEditEnabled
-	EnableDlgItem(IDC_BUTTON3, !bIsPlugin && !bIsLocked && bRemoveEnabled); //CRN_MIME Added "&& !bIsLocked && bRemoveEnabled
+	//EnableDlgItem(IDC_BUTTON2, !bIsPlugin && !bIsLocked && bEditEnabled); //CRN_MIME Added "&& !bIsLocked && bEditEnabled
+	//EnableDlgItem(IDC_BUTTON3, !bIsPlugin && !bIsLocked && bRemoveEnabled); //CRN_MIME Added "&& !bIsLocked && bRemoveEnabled
 }
 
 void

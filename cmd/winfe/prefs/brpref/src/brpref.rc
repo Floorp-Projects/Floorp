@@ -364,85 +364,40 @@ BEGIN
                     35,10
 END
 
-#ifdef MOZ_MAIL_NEWS
-IDD_EDIT_TYPE DIALOG DISCARDABLE  0, 0, 223, 220
+IDD_EDIT_TYPE DIALOG DISCARDABLE  0, 0, 256, 223
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Edit Type"
 FONT 8, "MS Sans Serif"
 BEGIN
-    ICON            "",IDC_ICON1,7,4,18,20
+    ICON            "",IDC_ICON1,7,4,20,20
     LTEXT           "Description",IDC_DESCRIPTION,34,10,180,8,SS_NOPREFIX
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,28,209,1
+    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,28,242,1
     LTEXT           "Extension:",IDC_STATIC,7,40,34,8
     LTEXT           "GIF",IDC_EXTENSION,50,40,165,8
-    LTEXT           "&MIME Type:",IDC_STATIC,7,56,40,8
-    EDITTEXT        IDC_EDIT1,50,53,166,14,ES_AUTOHSCROLL
-    GROUPBOX        "Handled By",IDC_STATIC,7,89,209,77
-    CONTROL         "&Navigator",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
-                    WS_DISABLED | WS_GROUP | WS_TABSTOP,17,101,47,10
-    CONTROL         "&Save to Disk",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
-                    17,115,57,10
-    CONTROL         "&Application:",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,
-                    17,129,51,10
-    EDITTEXT        IDC_EDIT2,70,128,140,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse...",IDC_BUTTON1,160,145,50,14
-    DEFPUSHBUTTON   "OK",IDOK,111,199,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,166,199,50,14
-    CONTROL         "As&k me before opening downloaded files of this type",
-                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,171,
-                    179,10
-    CONTROL         "Use this MIME as the outgoing default for these file extensions",
-                    IDC_USEASDEFAULT,"Button",BS_AUTO3STATE | WS_TABSTOP,7,
-                    72,211,10
-END
-
-IDD_NEW_TYPE DIALOG DISCARDABLE  0, 0, 222, 142
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "New Type"
-FONT 8, "MS Sans Serif"
-BEGIN
-    LTEXT           "&Description of type:",IDC_STATIC,7,10,62,8
-    EDITTEXT        IDC_EDIT1,71,8,144,14,ES_AUTOHSCROLL
-    LTEXT           "File &extension:",IDC_STATIC,7,27,46,8
-    EDITTEXT        IDC_EDIT2,71,25,144,14,ES_AUTOHSCROLL
-    LTEXT           "&MIME Type:",IDC_STATIC,7,43,40,8
-    EDITTEXT        IDC_EDIT3,71,42,144,14,ES_AUTOHSCROLL
-    LTEXT           "&Application to use:",IDC_STATIC,7,61,59,8
-    EDITTEXT        IDC_EDIT4,71,59,144,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse...",IDC_BUTTON1,165,76,50,14
-    DEFPUSHBUTTON   "OK",IDOK,109,121,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,165,121,50,14
-    CONTROL         "Use this MIME as the outgoing default for this file extension",
-                    IDC_USEASDEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,
-                    100,201,10
-END
-#else
-IDD_EDIT_TYPE DIALOG DISCARDABLE  0, 0, 223, 199
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Edit Type"
-FONT 8, "MS Sans Serif"
-BEGIN
-    ICON            "",IDC_ICON1,7,4,18,20
-    LTEXT           "Description",IDC_DESCRIPTION,34,10,180,8,SS_NOPREFIX
-    CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,7,28,209,1
-    LTEXT           "Extension:",IDC_STATIC,7,40,34,8
-    LTEXT           "GIF",IDC_EXTENSION,50,40,165,8
-    LTEXT           "&MIME Type:",IDC_STATIC,7,54,40,8
-    EDITTEXT        IDC_EDIT1,50,52,166,14,ES_AUTOHSCROLL
-    GROUPBOX        "Handled By",IDC_STATIC,7,75,209,77
+    LTEXT           "&MIME type:",IDC_STATIC,7,55,37,8
+    EDITTEXT        IDC_EDIT1,50,52,199,14,ES_AUTOHSCROLL
+    GROUPBOX        "Handled by",IDC_STATIC,7,75,242,94
     CONTROL         "&Navigator",IDC_RADIO1,"Button",BS_AUTORADIOBUTTON | 
                     WS_DISABLED | WS_GROUP | WS_TABSTOP,17,87,47,10
-    CONTROL         "&Save to Disk",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
-                    17,101,57,10
+    CONTROL         "&Save to disk",IDC_RADIO2,"Button",BS_AUTORADIOBUTTON,
+                    17,103,55,10
     CONTROL         "&Application:",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,
-                    17,115,51,10
-    EDITTEXT        IDC_EDIT2,70,114,140,14,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Browse...",IDC_BUTTON1,160,131,50,14
-    DEFPUSHBUTTON   "OK",IDOK,111,173,50,14,WS_GROUP
-    PUSHBUTTON      "Cancel",IDCANCEL,166,173,50,14
+                    17,119,51,10
+    EDITTEXT        IDC_EDIT2,77,117,148,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "&...",IDC_BUTTON1,227,117,16,14
+    CONTROL         "&Plug-in:",IDC_RADIO4,"Button",BS_AUTORADIOBUTTON,17,
+                    135,39,10
+    COMBOBOX        IDC_COMBO1,77,134,148,100,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "Plug-in app&let:",IDC_RADIO5,"Button",
+                    BS_AUTORADIOBUTTON,17,151,59,10
+    COMBOBOX        IDC_COMBO2,77,149,148,100,CBS_DROPDOWN | CBS_SORT | 
+                    WS_VSCROLL | WS_TABSTOP
     CONTROL         "As&k me before opening downloaded files of this type",
-                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,157,
+                    IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,180,
                     179,10
+    DEFPUSHBUTTON   "OK",IDOK,145,202,50,14,WS_GROUP
+    PUSHBUTTON      "Cancel",IDCANCEL,199,202,50,14
 END
 
 IDD_NEW_TYPE DIALOG DISCARDABLE  0, 0, 217, 126
@@ -463,28 +418,6 @@ BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,159,101,50,14
 END
 
-#ifdef MOZ_SMARTUPDATE
-
-IDD_SMARTUPDATE DIALOG DISCARDABLE  0, 0, 256, 212
-STYLE WS_CHILD | WS_CLIPSIBLINGS
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "Compress Client Registry",IDC_BUTTON1,7,55,122,14
-    PUSHBUTTON      "Uninstall",IDC_BUTTON2,189,96,50,14
-    GROUPBOX        "",IDC_STATIC,7,7,242,40
-    CONTROL         "Enable SmartUpdate",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | 
-                    WS_TABSTOP,17,17,226,10
-    CONTROL         "Require manual confirmation of each install",IDC_CHECK2,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,30,225,10
-    GROUPBOX        "",IDC_STATIC,7,72,242,127
-    LISTBOX         IDC_LIST1,15,95,169,99,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
-                    WS_VSCROLL | WS_TABSTOP
-    LTEXT           "To uninstall, select from the following list and click the Uninstall button.",
-                    IDC_STATIC,13,83,230,10
-END
-
-#endif /* MOZ_SMARTUPDATE */
-
 IDD_SMARTBROWSING DIALOG DISCARDABLE  0, 0, 256, 211
 STYLE WS_CHILD | WS_CLIPSIBLINGS
 FONT 8, "MS Sans Serif"
@@ -497,9 +430,6 @@ BEGIN
     CONTROL         "Enable Internet &Keywords",IDC_CHECK2,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,17,109,97,10
 END
-
-#endif
-
 
 
 /////////////////////////////////////////////////////////////////////////////
@@ -543,6 +473,14 @@ BEGIN
     END
 
     IDD_ADVANCED, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 249
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 183
+    END
+
+    IDD_PRIVACY, DIALOG
     BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 249
@@ -609,9 +547,9 @@ BEGIN
     IDD_EDIT_TYPE, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 216
+        RIGHTMARGIN, 249
         TOPMARGIN, 7
-        BOTTOMMARGIN, 192
+        BOTTOMMARGIN, 216
     END
 
     IDD_NEW_TYPE, DIALOG
@@ -622,16 +560,6 @@ BEGIN
         BOTTOMMARGIN, 119
     END
 
-#ifdef MOZ_SMARTUPDATE
-    IDD_SMARTUPDATE, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 249
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 205
-    END
-#endif /* MOZ_SMARTUPDATE */
-
     IDD_SMARTBROWSING, DIALOG
     BEGIN
         LEFTMARGIN, 7
@@ -639,15 +567,6 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 183
     END
-
-    IDD_PRIVACY, DIALOG
-    BEGIN
-        LEFTMARGIN, 7
-        RIGHTMARGIN, 249
-        TOPMARGIN, 7
-        BOTTOMMARGIN, 183
-    END
-
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -826,20 +745,15 @@ BEGIN
     IDS_DISK_SPACE          "Disk Space"
     IDS_NUMERIC_ONLY        "Please enter numeric digits only."
     IDS_MORE_DISK_SPACE     "More disk space"
-    IDD_SMARTBROWSING       "Smart Browsing\nConfigure browsing aids"
-    IDD_PRIVACY             "Privacy\nEstablish your level of privacy protection"
 END
 
-#ifdef MOZ_SMARTUPDATE
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDD_SMARTUPDATE         "SmartUpdate\nEnable and uninstall SmartUpdates"
-    IDS_CONTINUE_UNINSTALL  "Are you sure you want to uninstall ""%s"" ?"
-    IDS_UNINSTALL           "Uninstall"
-    IDS_ERROR_UNINSTALL     "Error in uninstall."
+    IDD_SMARTBROWSING       "Smart Browsing\nConfigure browsing aids"
+    IDD_PRIVACY             "Privacy\nEstablish your level of privacy protection"
+    IDS_NONE                "<none>"
+    IDS_PLUGINAPPLET        "Applet"
 END
-#endif /* MOZ_SMARTUPDATE */
-
 
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////

@@ -59,6 +59,9 @@ public:
 #define MIME_SAVE       "browser-handle-internal-savetodisk"
 #define MIME_SHELLEXECUTE      "browser-handle-shellexecute"
 #define MIME_OLE      "browser-handle-oleserver"
+//~~~
+#define MIME_PLUGIN   "browser-handle-plugin"
+#define MIME_PLUGINAPPLET   "browser-handle-plugin-applet"
 
 // Helper functions
 extern NET_cdataStruct *
