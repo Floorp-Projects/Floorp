@@ -238,6 +238,16 @@ typedef const JSErrorFormatString *
 (* CRT_CALL JSErrorCallback)(void *userRef, const char *locale,
 			     const uintN errorNumber);
 
+#ifdef va_start
+#ifndef JS_ARGUMENT_FORMATTER_DEFINED
+#define JS_ARGUMENT_FORMATTER_DEFINED 1
+/* XXX typedef'd here and in jsapi.h, see XXX comment there. */
+typedef JSBool
+(* CRT_CALL JSArgumentFormatter)(JSContext *cx, const char *format,
+				 JSBool fromJS, jsval **vpp, va_list *app);
+#endif
+#endif
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */
