@@ -54,7 +54,7 @@
 
 
 static const PRUnichar sUserdefined[] = {'u', 's', 'e', 'r', 'd', 'e', 'f',
-                                         'i', 'n', 'e', 'd'};
+                                         'i', 'n', 'e', 'd', 0};
 
 static const PRUnichar kAttributeTerminalChars[] = {
   PRUnichar('&'), PRUnichar('\b'), PRUnichar('\t'), 
