@@ -34,8 +34,6 @@
 
  */
 
-#define FORCE_PR_LOG
-
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIAtom.h"
