@@ -39,7 +39,8 @@ nsBaseDragService::nsBaseDragService() :
   mTargetSize(0,0)
 {
   NS_INIT_REFCNT();
-  mCanDrop       = PR_FALSE;
+  mCanDrop    = PR_FALSE;
+  mDragAction = DRAGDROP_ACTION_NONE;
 }
 
 //-------------------------------------------------------------------------
@@ -86,6 +87,20 @@ NS_IMETHODIMP nsBaseDragService::SetCanDrop (PRBool aCanDrop)
 NS_IMETHODIMP nsBaseDragService::GetCanDrop (PRBool * aCanDrop)
 {
   *aCanDrop = mCanDrop;
+  return NS_OK;
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::SetDragAction (PRUint32 anAction) 
+{
+ mDragAction = anAction;
+ return NS_OK;
+}
+
+//---------------------------------------------------------
+NS_IMETHODIMP nsBaseDragService::GetDragAction (PRUint32 * anAction)
+{
+  *anAction = mDragAction;
   return NS_OK;
 }
 
