@@ -106,7 +106,11 @@ function LoadSignons()
         Components.classes["component://netscape/network/standard-url"]
           .createInstance(Components.interfaces.nsIURI); 
       uri.spec = site; 
-      user = uri.username;
+      if (user.username) {
+        user = uri.username;
+      } else {
+        user = "<>";
+      }
     }
     AddItem("savesignonlist",[site,user],"signon_",i-1);
   }

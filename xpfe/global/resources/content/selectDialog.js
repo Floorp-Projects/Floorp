@@ -73,6 +73,9 @@ function selectDialogOnLoad() {
 
   for ( i = 2; i <= numItems+1; i++ ) {
     var newString = param.GetString( i );
+    if (newString == "") {
+      newString = "<>";
+    }
     dump("setting string "+newString+"\n");
     elements[i-2] = AppendStringToTreelist(list, newString);
   }
