@@ -97,9 +97,8 @@ MOZCONFIG2DEFS := mozilla/build/autoconf/mozconfig2defs.sh
 run_for_side_effects := \
   $(shell cd $(ROOTDIR); \
           if test "$(_IS_FIRST_CHECKOUT)"; then \
-	    $(CVSCO) mozilla/build/autoconf/find-mozconfig.sh \
-	             $(MOZCONFIG2DEFS) \
-                     mozilla/config/cvsco.pl; \
+	    $(CVSCO) mozilla/build/autoconf/find-mozconfig.sh; \
+	    $(CVSCO) $(MOZCONFIG2DEFS); \
 	  else true; \
 	  fi; \
 	  $(MOZCONFIG2DEFS) mozilla/.client-defs.mk)
@@ -127,7 +126,7 @@ ifdef MOZ_CO_BRANCH
 endif
 
 ifdef MOZ_CO_DATE
-  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "'$(MOZ_CO_DATE)'"
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "$(MOZ_CO_DATE)"
 endif
 
 ifndef MOZ_CO_MODULE
@@ -163,12 +162,41 @@ everything: checkout clobber_all build
 
 ####################################
 # CVS checkout
-# (cvsco.pl checks for conflicts during the checkout. 
-#  cvsco.pl also logs the checkout to a file, cvslog.txt.)
+#
 checkout:
-	@echo cd $(ROOTDIR)
-	@cd $(ROOTDIR); \
-	$(PERL) mozilla/config/cvsco.pl $(CVSCO) $(MOZ_CO_MODULE)
+	@: Backup the last checkout log. \
+	 ; \
+	if test -f $(CVSCO_LOGFILE) ; then \
+	  mv $(CVSCO_LOGFILE) $(CVSCO_LOGFILE).old; \
+	else true; \
+	fi
+	@: Start the checkout. Pipe the output to the tty and a log file. \
+	 : If it fails, touch an error file because the pipe hides the    \
+	 : error. If the file is created, remove it and return an error.  \
+	 ; \
+	echo "checkout start: "`date` | tee $(CVSCO_LOGFILE); \
+	echo "cd $(ROOTDIR); $(CVSCO) $(MOZ_CO_MODULE)"; \
+	cd $(ROOTDIR); \
+	rm -f cvs-failed.tmp*; \
+	( $(CVSCO) $(MOZ_CO_MODULE) || touch cvs-failed.tmp ) 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE); \
+	if test -f cvs-failed.tmp ; then \
+	  rm cvs-failed.tmp; \
+	  false; \
+	else true; \
+	fi
+	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE); \
+	 : \
+	 : Check the log for conflicts. \
+	 ; \
+	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
+	if test "$$conflicts" ; then \
+	  echo "$(MAKE): *** Conflicts during checkout." ;\
+	  echo "$$conflicts" ;\
+	  echo "$(MAKE): Refer to $(CVSCO_LOGFILE) for full log." ;\
+	  false; \
+	else true; \
+	fi
 
 ####################################
 # Web configure
