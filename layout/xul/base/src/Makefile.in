@@ -31,6 +31,8 @@ LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
        nsTreeLayout.cpp \
+       nsXULTreeCellFrame.cpp \
+       nsXULTreeFrame.cpp \
        nsXULTreeSliceFrame.cpp \
        nsXULTreeGroupFrame.cpp \
        nsXULTreeOuterGroupFrame.cpp \
