@@ -27,17 +27,12 @@ nsButtonFrameRenderer::SetNameSpace(PRInt32 aNameSpace)
 }
 
 void
-nsButtonFrameRenderer::SetFrame(nsFrame* aFrame, nsIPresContext& aPresContext)
+nsButtonFrameRenderer::SetFrame(nsIFrame* aFrame, nsIPresContext& aPresContext)
 {
 	mFrame = aFrame;
 	ReResolveStyles(aPresContext);
 }
 
-void
-nsButtonFrameRenderer::Redraw()
-{
-  mFrame->Invalidate(mOutlineRect, PR_TRUE);
-}
 
 nsString
 nsButtonFrameRenderer::GetPseudoClassAttribute()
@@ -339,14 +334,8 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
 	nsRect rect;
 
-  if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) 
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) 
 	{
-    // because we have and outline rect we need to 
-    // store our bounds for redraw. We will change
-    // these bounds when outline appears
-    mOutlineRect = rect;
-    mOutlineRect.width = 0;
-    mOutlineRect.height= 0;
 
 		if (mOuterFocusStyle) {
 			// ---------- paint the outer focus border -------------
@@ -371,11 +360,11 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 		}
 	}
 
-  if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) 
 	{
-		if (mOutlineStyle) {
+		if /*(mOutlineStyle) */ (PR_FALSE) {
 
-			 GetButtonOutlineRect(aRect, mOutlineRect);
+			 GetButtonOutlineRect(aRect, rect);
  
 			 const nsStyleSpacing* spacing = (const nsStyleSpacing*)mOutlineStyle ->GetStyleData(eStyleStruct_Spacing);
 
@@ -385,7 +374,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
 		     aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
 			 nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,
-							   aDirtyRect, mOutlineRect, *spacing, mOutlineStyle, 0);
+							   aDirtyRect, rect, *spacing, mOutlineStyle, 0);
 
 			 aRenderingContext.PopState(clipEmpty);
 		}
@@ -540,18 +529,10 @@ nsButtonFrameRenderer::GetButtonOutlineBorderAndPadding()
 	return borderAndPadding;
 }
 
-// gets the full size of our border with all the focus borders
 nsMargin
 nsButtonFrameRenderer::GetFullButtonBorderAndPadding()
 {
-  return GetAddedButtonBorderAndPadding() + GetButtonBorderAndPadding();
-}
-
-// gets all the focus borders and padding that will be added to the regular border
-nsMargin
-nsButtonFrameRenderer::GetAddedButtonBorderAndPadding()
-{
-  return GetButtonOuterFocusBorderAndPadding() + GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
+  return GetButtonOuterFocusBorderAndPadding() + GetButtonBorderAndPadding() + GetButtonInnerFocusMargin() + GetButtonInnerFocusBorderAndPadding();
 }
 
 void 

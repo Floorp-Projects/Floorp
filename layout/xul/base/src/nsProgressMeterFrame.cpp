@@ -601,7 +601,10 @@ nsProgressMeterFrame :: Reflow ( nsIPresContext&          aPresContext,
                             nsHTMLReflowMetrics&     aDesiredSize,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
-{	
+{
+
+  ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
+	
   if (mUndetermined)
      gStripeAnimator->AddFrame(this);
   else 
