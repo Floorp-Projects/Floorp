@@ -53,6 +53,8 @@ public:
   nsContainerBox(nsIPresShell* aShell);
   virtual ~nsContainerBox();
 
+  void Destroy(nsBoxLayoutState& aState);
+
   NS_IMETHOD SetLayoutManager(nsIBoxLayout* aLayout);
   NS_IMETHOD GetLayoutManager(nsIBoxLayout** aLayout);
   NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);

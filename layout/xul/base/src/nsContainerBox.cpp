@@ -85,6 +85,13 @@ nsContainerBox::~nsContainerBox()
 {
 }
 
+void
+nsContainerBox::Destroy(nsBoxLayoutState& aState)
+{
+  SetLayoutManager(nsnull);
+  ClearChildren(aState);
+}
+
 #ifdef DEBUG_LAYOUT
 void
 nsContainerBox::GetBoxName(nsAutoString& aName)
