@@ -214,7 +214,7 @@ OSErr
 RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 {
 	OSErr 				err = noErr;
-	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec;
+	FSSpec				tgtDirSpec, xpiStubDirSpec, xpiSpec, xpiProgDirSpec;
 	XPI_InitProc		xpi_initProc;
 	XPI_InstallProc		xpi_installProc;
 	XPI_ExitProc		xpi_exitProc;
@@ -225,11 +225,12 @@ RunAllXPIs(short xpiVRefNum, long xpiDirID, short vRefNum, long dirID)
 	Boolean				isCurrXPI = false, indeterminateFlag = false;
 	Str255				installingStr;
 	
-	err = FSMakeFSSpec(vRefNum, dirID, 0, &xpiStubDirSpec); /* temp dir */
+	err = FSMakeFSSpec(vRefNum, dirID, "\p:viewer", &xpiProgDirSpec); /* temp dir */
+	err = FSMakeFSSpec(vRefNum, dirID, "\p:viewer:components", &xpiStubDirSpec); /* xpistub dir */
 	err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, 0, &tgtDirSpec);	/* program dir */
 	
 	ERR_CHECK_RET(LoadXPIStub(&xpi_initProc, &xpi_installProc, &xpi_exitProc, &connID, xpiStubDirSpec), err);
-	XPI_ERR_CHECK(xpi_initProc( xpiStubDirSpec, tgtDirSpec, xpicbProgress ));
+	XPI_ERR_CHECK(xpi_initProc( xpiProgDirSpec, tgtDirSpec, xpicbProgress ));
 	
 	// init overall xpi indicator
 	numXPIs = CountSelectedXPIs();

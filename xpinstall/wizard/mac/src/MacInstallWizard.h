@@ -434,6 +434,7 @@ void		MakeMenus(void);
 void 		MainEventLoop(void);
 void		ErrorHandler(void);
 void		Shutdown(void);
+void		EssentialFiles2Components(char *filename);
 
 /*-----------------------------------------------------------*
  *   Parser 

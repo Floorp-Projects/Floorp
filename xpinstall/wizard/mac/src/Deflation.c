@@ -28,6 +28,7 @@
 #include "zipstub.h"
 #include "zipfile.h"
 #include "nsAppleSingleDecoder.h"
+#include "TextUtils.h"
 
 static FSSpec 	coreFileList[kMaxCoreFiles];
 static short	currCoreFile = 0;
@@ -126,6 +127,39 @@ cleanup:
 	return err;
 }
 
+void
+EssentialFiles2Components(char *filename)
+{
+	//  we know that filename has a big enough buffer for this
+	//  process because "essential files" is longer than "components"
+	//  Black Magic at work here.
+	Ptr		componentPathStr 	= 0;
+	Ptr		tempStr				= 0;
+	Ptr		finalStr			= 0;
+	long	prefixLen			= 0;
+	
+	componentPathStr = NewPtrClear(strlen(filename) + 1);
+	finalStr		 = NewPtrClear(strlen(filename) + 1);
+	strcpy(componentPathStr, filename);
+	LowercaseText(componentPathStr, strlen(componentPathStr), smSystemScript);
+	if((tempStr = strstr(componentPathStr, "essential files")) != NULL)
+	{
+		*tempStr = '\0';
+		prefixLen = strlen(componentPathStr);
+		*tempStr = 'e';
+		
+		strcpy(finalStr, filename);
+		strcpy(&finalStr[prefixLen], "components");
+		strcpy(&finalStr[prefixLen + strlen("components")], &filename[prefixLen + strlen("essential files")]);
+		strcpy(filename, finalStr);
+	}
+
+	if(componentPathStr)
+		DisposeHandle(&componentPathStr);
+	if(finalStr)
+		DisposeHandle(&finalStr);
+}
+
 OSErr
 InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 {
@@ -167,11 +201,12 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 		err = GetFullPath(tgtVRefNum, tgtDirID, "\p", &fullPathLen, &fullPathH); /* get dirpath */
 		if (err!=noErr)
 			return err;
+
 		HLock(fullPathH);
 		fullPathStr = NewPtrClear(fullPathLen + strlen(filename) + 1);
 		strncat(fullPathStr, *fullPathH, fullPathLen);
-		strcat(fullPathStr, leaf);	/* tack on filename to dirpath */
-		*(fullPathStr+fullPathLen+strlen(leaf)) = '\0';
+		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
+		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
 		
 		/* create directories if file is nested in new subdirs */
 		SLASHES_2_COLONS(fullPathStr);
@@ -189,6 +224,8 @@ InflateFiles(void *hZip, void *hFind, short tgtVRefNum, long tgtDirID)
 			continue; /* XXX do we want to do this? */
 		}
 		
+		EssentialFiles2Components(fullPathStr);
+
 		/* extract the file to its full path destination */
 		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
 		
