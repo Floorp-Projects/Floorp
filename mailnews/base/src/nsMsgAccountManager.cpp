@@ -1298,7 +1298,7 @@ nsMsgAccountManager::LoadAccounts()
   if (m_accountsLoaded)
     return NS_OK;
 
-  kDefaultServerAtom = NS_NewAtom("DefaultServer");
+  kDefaultServerAtom = do_GetAtom("DefaultServer");
   
   //Ensure biff service has started
   nsCOMPtr<nsIMsgBiffManager> biffService = 

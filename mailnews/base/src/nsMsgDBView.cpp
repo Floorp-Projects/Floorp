@@ -1204,7 +1204,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
       PRInt32 endOfKeyword = (spaceIndex == -1) ? keywords.Length() : spaceIndex;
       keywords.Left(nextKeyword, endOfKeyword);
       nextKeyword.Insert("kw-", 0);
-      nsCOMPtr <nsIAtom> keywordAtom = NS_NewAtom(nextKeyword.get());
+      nsCOMPtr <nsIAtom> keywordAtom = do_GetAtom(nextKeyword.get());
       properties->AppendElement(keywordAtom);
       if (spaceIndex > 0)
         keywords.Cut(0, endOfKeyword + 1);
