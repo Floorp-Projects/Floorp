@@ -35,10 +35,10 @@ CPPSRCS = \
 	$(NULL)
 
 CPP_OBJS= \
-        nsJSXULCommandDispatcher.obj    \
-        nsJSXULDocument.obj             \
-        nsJSXULElement.obj              \
-        nsJSXULTreeElement.obj          \
+        .\$(OBJDIR)\nsJSXULCommandDispatcher.obj    \
+        .\$(OBJDIR)\nsJSXULDocument.obj             \
+        .\$(OBJDIR)\nsJSXULElement.obj              \
+        .\$(OBJDIR)\nsJSXULTreeElement.obj          \
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
