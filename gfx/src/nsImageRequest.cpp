@@ -121,6 +121,10 @@ NS_IMPL_QUERY_INTERFACE(ImageRequestImpl, kIImageRequestIID)
 nsrefcnt ImageRequestImpl::Release(void)                        
 {
   if (--mRefCnt == 0) {
+    if (mXPObserver) {
+      // Make sure dangling reference to this object goes away
+      XP_RemoveObserver(mXPObserver, ns_observer_proc, (void*)this);
+    }
     IL_DestroyImage(mImageReq);
     NS_DELETEXPCOM(this);
     return 0;
