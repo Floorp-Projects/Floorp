@@ -257,7 +257,7 @@ nsHelperAppDialog.prototype = {
 
 
          this.mTitle = this.replaceInsert( win.getAttribute( "title" ), 1, fname);
-         win.setAttribute( "title", this.mTitle );
+         this.mDialog.title = this.mTitle;
 
          // Put content type, filename and location into intro.
          this.initIntro(url, fname);
