@@ -401,9 +401,6 @@ RoamingPrefs.prototype =
   {
     try
     {
-      var promptService = Components
-                          .classes["@mozilla.org/embedcomp/prompt-service;1"]
-                          .getService(Components.interfaces.nsIPromptService);
       var bundle = Components.classes["@mozilla.org/intl/stringbundle;1"]
                   .getService()
                   .QueryInterface(Components.interfaces.nsIStringBundleService)
@@ -416,7 +413,7 @@ RoamingPrefs.prototype =
         text += bundle.GetStringFromName(prop);
       if (tech) // should we show exceptions to user?
         text += "\n" + tech;
-      promptService.alert(window, dialogTitle, text);
+      GetPromptService().alert(window, dialogTitle, text);
     } catch(e) {
       dump("Error while trying to display an error: " + e
            + " (original error: " + prop + " " + tech + ")\n");
