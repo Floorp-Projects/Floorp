@@ -100,6 +100,7 @@ nsBaseWidget::~nsBaseWidget()
 	NS_IF_RELEASE(mContext);
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Basic create.
@@ -124,6 +125,7 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
       }
       // it's some top level window with no toolkit passed in.
       // Create a default toolkit with the current thread
+#if !defined(USE_TLS_FOR_TOOLKIT)
       else {
         static NS_DEFINE_CID(kToolkitCID, NS_TOOLKIT_CID);
         
@@ -135,6 +137,13 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
         if (mToolkit)
           mToolkit->Init(PR_GetCurrentThread());
       }
+#else /* USE_TLS_FOR_TOOLKIT */
+      else {
+        nsresult rv;
+
+        rv = NS_GetCurrentToolkit(&mToolkit);
+      }
+#endif /* USE_TLS_FOR_TOOLKIT */
     }
     
   }
