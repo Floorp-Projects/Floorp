@@ -50,6 +50,7 @@ class nsRDFCore : public nsBaseAppCore,
     NS_IMETHOD    SetDocumentCharset(const nsString& aCharset)  { return nsBaseAppCore::SetDocumentCharset(aCharset); } 
 
     NS_IMETHOD    DoSort(nsIDOMNode* node, const nsString& sortResource, const nsString& sortDirection);
+    NS_IMETHOD    AddBookmark(const nsString& aUrl, const nsString& aOptionalTitle);
 
   protected:
 
