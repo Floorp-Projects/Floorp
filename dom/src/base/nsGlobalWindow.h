@@ -101,8 +101,10 @@ public:
                             nsIDOMWindow** aReturn);
 
   // nsIDOMEventCapturer interface
-  NS_IMETHOD CaptureEvent(nsIDOMEventListener *aListener);
-  NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener);
+  NS_IMETHOD    CaptureEvent(const nsString& aType);
+  NS_IMETHOD    ReleaseEvent(const nsString& aType);
+
+  // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);

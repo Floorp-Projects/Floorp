@@ -28,6 +28,7 @@
 #include "nsIDOMNavigator.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindowCollection.h"
+#include "nsIDOMEventCapturer.h"
 #include "nsIDOMWindow.h"
 
 
@@ -37,11 +38,13 @@ static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
 static NS_DEFINE_IID(kINavigatorIID, NS_IDOMNAVIGATOR_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIWindowCollectionIID, NS_IDOMWINDOWCOLLECTION_IID);
+static NS_DEFINE_IID(kIEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIWindowIID, NS_IDOMWINDOW_IID);
 
 NS_DEF_PTR(nsIDOMNavigator);
 NS_DEF_PTR(nsIDOMDocument);
 NS_DEF_PTR(nsIDOMWindowCollection);
+NS_DEF_PTR(nsIDOMEventCapturer);
 NS_DEF_PTR(nsIDOMWindow);
 
 //
@@ -906,6 +909,102 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 
+//
+// Native method CaptureEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+EventCapturerCaptureEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  nsIDOMEventCapturer *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventCapturer");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->CaptureEvent(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function captureEvent requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method ReleaseEvent
+//
+PR_STATIC_CALLBACK(JSBool)
+EventCapturerReleaseEvent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  nsIDOMEventCapturer *nativeThis;
+  if (NS_OK != privateThis->QueryInterface(kIEventCapturerIID, (void **)nativeThis)) {
+    JS_ReportError(cx, "Object must be of type EventCapturer");
+    return JS_FALSE;
+  }
+
+  JSBool rBool = JS_FALSE;
+  nsAutoString b0;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 1) {
+
+    JSString *jsstring0 = JS_ValueToString(cx, argv[0]);
+    if (nsnull != jsstring0) {
+      b0.SetString(JS_GetStringChars(jsstring0));
+    }
+    else {
+      b0.SetString("");   // Should this really be null?? 
+    }
+
+    if (NS_OK != nativeThis->ReleaseEvent(b0)) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function releaseEvent requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for Window
@@ -960,6 +1059,8 @@ static JSFunctionSpec WindowMethods[] =
   {"setTimeout",          WindowSetTimeout,     0},
   {"setInterval",          WindowSetInterval,     0},
   {"open",          WindowOpen,     0},
+  {"captureEvent",          EventCapturerCaptureEvent,     1},
+  {"releaseEvent",          EventCapturerReleaseEvent,     1},
   {0}
 };
 

@@ -1059,56 +1059,62 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     txtHeight = 24;
   }
 
+  nsRect rr(0, 0, aWidth, aHeight);
   nsIWidget* locationWidget = nsnull;
 
   if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget))
   {
     // position location bar (it's stretchy)
     if (mLocation) {
-      if (mThrobber) {
-        locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                          aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
-                          BUTTON_HEIGHT,
-                          PR_TRUE);
+      if (mChromeMask & NS_CHROME_TOOL_BAR_ON) {
+        if (mThrobber) {
+          locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                            aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                            BUTTON_HEIGHT,
+                            PR_TRUE);
+          mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
+        }
+        else {
+          locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                            aWidth - 2*BUTTON_WIDTH,
+                            BUTTON_HEIGHT,
+                            PR_TRUE);
+        }
+        rr.y += BUTTON_HEIGHT;
+        rr.height -= BUTTON_HEIGHT;
+        locationWidget->Show(PR_TRUE);
       }
       else {
-        locationWidget->Resize(2*BUTTON_WIDTH, 0,
-                          aWidth - 2*BUTTON_WIDTH,
-                          BUTTON_HEIGHT,
-                          PR_TRUE);
+        locationWidget->Show(PR_FALSE);
       }
     }
+  }
+  
+  nsIWidget* statusWidget = nsnull;
 
-    if (mThrobber) {
-      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
-    }
-
-    nsRect rr(0, 0, aWidth, aHeight);
-
-    if (mLocation) {
-      rr.y += BUTTON_HEIGHT;
-      rr.height -= BUTTON_HEIGHT;
-    }
-
-    nsIWidget* statusWidget = nsnull;
-
-    if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget))
-    {
-      if (mStatus) {
+  if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget))
+  {
+    if (mStatus) {
+      if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
         statusWidget->Resize(0, aHeight - txtHeight,
                         aWidth, txtHeight,
                         PR_TRUE);
         rr.height -= txtHeight;
+        statusWidget->Show(PR_TRUE);
+      }
+      else {
+        statusWidget->Show(PR_FALSE);
       }
     }
-    // inset the web widget
-    rr.x += WEBSHELL_LEFT_INSET;
-    rr.y += WEBSHELL_TOP_INSET;
-    rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
-    rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
-    mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
-    NS_RELEASE(locationWidget);
   }
+
+  // inset the web widget
+  rr.x += WEBSHELL_LEFT_INSET;
+  rr.y += WEBSHELL_TOP_INSET;
+  rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
+  rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
+  mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+  NS_IF_RELEASE(locationWidget);
 }
 
 NS_IMETHODIMP
@@ -1183,8 +1189,11 @@ nsBrowserWindow::Close()
 NS_IMETHODIMP
 nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
-  // XXX write me
   mChromeMask = aChromeMask;
+  nsRect r;
+  mWindow->GetBounds(r);
+  Layout(r.width, r.height);
+
   return NS_OK;
 }
 

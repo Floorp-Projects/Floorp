@@ -886,6 +886,9 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   }
   
   //Capturing stage
+  /*if (mEventCapturer) {
+    mEventCapturer->HandleDOMEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+  }*/
   
   //Local handling stage
   if (nsnull != mListenerManager) {
@@ -906,7 +909,11 @@ nsresult nsDocument::HandleDOMEvent(nsIPresContext& aPresContext,
   if (DOM_EVENT_INIT == aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event, release here.
     if (nsnull != *aDOMEvent) {
-      if (0 != (*aDOMEvent)->Release()) {
+      nsrefcnt rc;
+      nsIDOMEvent* DOMEvent = *aDOMEvent;
+      // Release the copy since the macro will null the pointer 
+      NS_RELEASE2(DOMEvent, rc);
+      if (0 != rc) {
       //Okay, so someone in the DOM loop (a listener, JS object) still has a ref to the DOM Event but
       //the internal data hasn't been malloc'd.  Force a copy of the data here so the DOM Event is still valid.
         nsIPrivateDOMEvent *mPrivateEvent;
@@ -943,22 +950,22 @@ nsresult nsDocument::RemoveEventListener(nsIDOMEventListener *aListener, const n
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocument::CaptureEvent(nsIDOMEventListener *aListener)
+nsresult nsDocument::CaptureEvent(const nsString& aType)
 {
   nsIEventListenerManager *mManager;
 
   if (NS_OK == GetListenerManager(&mManager)) {
-    mManager->CaptureEvent(aListener);
+    //mManager->CaptureEvent(aListener);
     NS_RELEASE(mManager);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsDocument::ReleaseEvent(nsIDOMEventListener *aListener)
+nsresult nsDocument::ReleaseEvent(const nsString& aType)
 {
   if (nsnull != mListenerManager) {
-    mListenerManager->ReleaseEvent(aListener);
+    //mListenerManager->ReleaseEvent(aListener);
     return NS_OK;
   }
   return NS_ERROR_FAILURE;
@@ -1460,6 +1467,7 @@ nsIContent* nsDocument::GetNextContent(const nsIContent *aContent) const
           nsIContent * old = result;
           old->ChildAt(0, result);
           NS_RELEASE(old);
+          result->ChildCount(n);
         }
       } else {
         result = GetNextContent(parent);

@@ -10,4 +10,3 @@
      NodeList                  getElementsByTagName(in wstring tagname);
      void                      normalize();
    };
-

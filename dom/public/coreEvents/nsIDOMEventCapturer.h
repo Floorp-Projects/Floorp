@@ -15,35 +15,39 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+/* AUTO-GENERATED. DO NOT EDIT!!! */
 
 #ifndef nsIDOMEventCapturer_h__
 #define nsIDOMEventCapturer_h__
 
+#include "nsISupports.h"
+#include "nsString.h"
+#include "nsIScriptContext.h"
 #include "nsIDOMEventReceiver.h"
-class nsIDOMEventListener;
-class nsIDOMMouseListener;
-class nsIDOMMouseMotionListener;
-class nsIDOMKeyListener;
-class nsIDOMFocusListener;
-class nsIDOMLoadListener;
-class nsIDOMDragListener;
-class nsIEventListenerManager;
 
-/*
- * DOM event source class.  Object that allow event registration and distribution 
- * from themselves implement this interface.
- */
+
 #define NS_IDOMEVENTCAPTURER_IID \
-{ /* a044aec0-df04-11d1-bd85-00805f8ae3f4 */ \
-0xa044aec0, 0xdf04, 0x11d1, \
-{0xbd, 0x85, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+{ 0x6f76532f,  0xee43, 0x11d1, \
+ { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMEventCapturer : public nsIDOMEventReceiver {
-
 public:
 
-  NS_IMETHOD CaptureEvent(nsIDOMEventListener *aListener) = 0;
-  NS_IMETHOD ReleaseEvent(nsIDOMEventListener *aListener) = 0;
+  NS_IMETHOD    CaptureEvent(const nsString& aType)=0;
 
+  NS_IMETHOD    ReleaseEvent(const nsString& aType)=0;
 };
+
+
+#define NS_DECL_IDOMEVENTCAPTURER   \
+  NS_IMETHOD    CaptureEvent(const nsString& aType);  \
+  NS_IMETHOD    ReleaseEvent(const nsString& aType);  \
+
+
+
+#define NS_FORWARD_IDOMEVENTCAPTURER(_to)  \
+  NS_IMETHOD    CaptureEvent(const nsString& aType) { return _to##CaptureEvent(aType); }  \
+  NS_IMETHOD    ReleaseEvent(const nsString& aType) { return _to##ReleaseEvent(aType); }  \
+
+
 #endif // nsIDOMEventCapturer_h__

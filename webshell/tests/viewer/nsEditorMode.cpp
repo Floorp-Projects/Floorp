@@ -130,7 +130,7 @@ nsresult nsGetCurrentNode(nsIDOMNode ** aNode)
   }
   
   /* If no node set, get first text node */
-  nsIDOMNode *mDocNode, *mFirstTextNode;
+  nsIDOMNode *mDocNode = nsnull, *mFirstTextNode;
 
   if (NS_OK == kDomDoc->GetFirstChild(&mDocNode) && 
       NS_OK == GetFirstTextNode(mDocNode, &mFirstTextNode)) {
@@ -156,7 +156,7 @@ nsresult nsSetCurrentNode(nsIDOMNode * aNode)
 
 nsresult nsAppendText(nsString *aStr)
 {
-  nsIDOMNode *mNode;
+  nsIDOMNode *mNode = nsnull;
   nsIDOMText *mText;
 
   if (NS_OK == nsGetCurrentNode(&mNode) && 
