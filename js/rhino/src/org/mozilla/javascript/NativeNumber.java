@@ -135,10 +135,10 @@ final class NativeNumber extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeNumber realThis(Scriptable thisObj, IdFunction f) {
-        while (!(thisObj instanceof NativeNumber)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+    private static NativeNumber realThis(Scriptable thisObj, IdFunction f)
+    {
+        if (!(thisObj instanceof NativeNumber))
+            throw incompatibleCallError(f);
         return (NativeNumber)thisObj;
     }
 

@@ -422,16 +422,16 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     /**
-     * Utility method for converting target object into native this.
+     * Utility method to construct type error to indicate incompatible call
+     * when converting script thisObj to a particular type is not possible.
      * Possible usage would be to have a private function like realThis:
      * <pre>
-       private NativeSomething realThis(Scriptable thisObj,
-                                        IdFunction f, boolean readOnly)
-       {
-           while (!(thisObj instanceof NativeSomething)) {
-               thisObj = nextInstanceCheck(thisObj, f, readOnly);
-           }
-           return (NativeSomething)thisObj;
+        private static NativeSomething realThis(Scriptable thisObj,
+                                                IdFunction f)
+        {
+            if (!(thisObj instanceof NativeSomething))
+                throw incompatibleCallError(f);
+            return (NativeSomething)thisObj;
        }
     * </pre>
     * Note that although such function can be implemented universally via
@@ -440,8 +440,7 @@ public abstract class IdScriptable extends ScriptableObject
     * @return Scriptable object suitable for a check by the instanceof operator.
     * @throws RuntimeException if no more instanceof target can be found
     */
-    protected Scriptable nextInstanceCheck(Scriptable thisObj,
-                                           IdFunction f)
+    protected static RuntimeException incompatibleCallError(IdFunction f)
     {
         throw NativeGlobal.typeError1("msg.incompat.call",
                                       f.getFunctionName(), f);

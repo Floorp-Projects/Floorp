@@ -99,10 +99,10 @@ final class NativeBoolean extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeBoolean realThis(Scriptable thisObj, IdFunction f) {
-        while (!(thisObj instanceof NativeBoolean)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+    private static NativeBoolean realThis(Scriptable thisObj, IdFunction f)
+    {
+        if (!(thisObj instanceof NativeBoolean))
+            throw incompatibleCallError(f);
         return (NativeBoolean)thisObj;
     }
 

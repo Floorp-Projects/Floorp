@@ -126,11 +126,10 @@ public class NativeScript extends NativeFunction implements Script {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeScript realThis(Scriptable thisObj, IdFunction f)
+    private static NativeScript realThis(Scriptable thisObj, IdFunction f)
     {
-        while (!(thisObj instanceof NativeScript)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+        if (!(thisObj instanceof NativeScript))
+            throw incompatibleCallError(f);
         return (NativeScript)thisObj;
     }
 

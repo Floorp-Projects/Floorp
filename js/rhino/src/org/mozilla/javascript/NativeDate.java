@@ -381,11 +381,10 @@ final class NativeDate extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeDate realThis(Scriptable thisObj, IdFunction f)
+    private static NativeDate realThis(Scriptable thisObj, IdFunction f)
     {
-        while (!(thisObj instanceof NativeDate)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+        if (!(thisObj instanceof NativeDate))
+            throw incompatibleCallError(f);
         return (NativeDate)thisObj;
     }
 

@@ -247,10 +247,10 @@ final class NativeString extends IdScriptable {
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeString realThis(Scriptable thisObj, IdFunction f) {
-        while (!(thisObj instanceof NativeString)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+    private static NativeString realThis(Scriptable thisObj, IdFunction f)
+    {
+          if (!(thisObj instanceof NativeString))
+            throw incompatibleCallError(f);
         return (NativeString)thisObj;
     }
 

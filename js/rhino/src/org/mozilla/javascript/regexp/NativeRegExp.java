@@ -2716,11 +2716,10 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private NativeRegExp realThis(Scriptable thisObj, IdFunction f)
+    private static NativeRegExp realThis(Scriptable thisObj, IdFunction f)
     {
-        while (!(thisObj instanceof NativeRegExp)) {
-            thisObj = nextInstanceCheck(thisObj, f);
-        }
+        if (!(thisObj instanceof NativeRegExp))
+            throw incompatibleCallError(f);
         return (NativeRegExp)thisObj;
     }
 
