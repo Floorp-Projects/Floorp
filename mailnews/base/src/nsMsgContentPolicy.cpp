@@ -250,7 +250,7 @@ nsMsgContentPolicy::ShouldLoad(PRUint32          aContentType,
         nsCOMPtr<nsIRssIncomingServer> rssServer;
         nsCOMPtr<nsIMsgFolder> folder;
         rv = msgHdr->GetFolder(getter_AddRefs(folder));
-        if (NS_SUCCEEDED(rv))
+        if (NS_SUCCEEDED(rv) && folder)
         {
         nsCOMPtr<nsIMsgIncomingServer> server;
           folder->GetServer(getter_AddRefs(server));
