@@ -185,13 +185,13 @@ PRBool nsCmdLineService::ArgsMatch(const char *lookingFor, const char *userGave)
 
 #if defined(XP_UNIX) || defined(XP_BEOS)
     /* on unix and beos, we'll allow --mail for -mail */
-    if ((PL_strlen(lookingFor) > 0) && (PL_strlen(userGave) > 1)) {
+    if (lookingFor && userGave && (lookingFor[0] != '\0') && (userGave[0] != '\0') && (userGave[1] != '\0')) {
         if (!PL_strcasecmp(lookingFor+1,userGave+2) && (lookingFor[0] == '-') && (userGave[0] == '-') && (userGave[1] == '-')) return PR_TRUE;
     }
 #endif
 #ifdef XP_PC
     /* on windows /mail is the same as -mail */
-    if ((PL_strlen(lookingFor) > 0) && (PL_strlen(userGave) > 0)) {
+    if (lookingFor && userGave && (lookingFor[0] != '\0') && (userGave[0] != '\0')) {
         if (!PL_strcasecmp(lookingFor+1,userGave+1) && (lookingFor[0] == '-') && (userGave[0] == '/')) return PR_TRUE;
     }
 #endif 
