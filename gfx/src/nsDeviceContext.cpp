@@ -362,7 +362,7 @@ nsresult DeviceContextImpl::CreateIconILGroupContext()
 NS_IMETHODIMP DeviceContextImpl::LoadIconImage(PRInt32 aId, nsIImage*& aImage)
 {
   // XXX synchronous image loading doesn't work on mac yet
-#if defined(XP_MAC) || defined(XP_BEOS)
+#if defined(XP_BEOS)
   return NS_ERROR_FAILURE;
 #endif
   nsresult  result;
