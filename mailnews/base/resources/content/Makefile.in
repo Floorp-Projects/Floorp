@@ -32,6 +32,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		messenger.xul \
 		folderPane.xul \
 		threadPane.xul \
+		msgHdrViewOverlay.xul \
+		msgHdrViewOverlay.js \
 		widgetglue.js \
 		commandglue.js \
 		shareglue.js \
