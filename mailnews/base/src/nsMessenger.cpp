@@ -55,7 +55,6 @@
 
 /* for access to webshell */
 #include "nsIDOMWindow.h"
-#include "nsIBrowserWindow.h"
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"

@@ -30,7 +30,6 @@
 #include "nsIAppShellComponentImpl.h"
 
 
-#include "nsIBrowserWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIServiceManager.h"
 #include "nsIDocumentViewer.h"
