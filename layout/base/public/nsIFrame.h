@@ -324,7 +324,7 @@ public:
    * @return NS_ERROR_INVALID_ARG if the index is < 0 and NS_OK otherwise
    */
   NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom*& aListName) const = 0;
+                                         nsIAtom** aListName) const = 0;
 
   /**
    * Get the first child frame from the specified child list.
@@ -334,7 +334,7 @@ public:
    * @return  NS_ERROR_INVALID_ARG if there is no child list with the specified name
    * @see     #GetAdditionalListName()
    */
-  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const = 0;
+  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const = 0;
 
   /**
    * Child frames are linked together in a singly-linked

@@ -564,16 +564,17 @@ NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsFrame::GetAdditionalChildListName(PRInt32 aIndex, nsIAtom*& aListName) const
+nsFrame::GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const
 {
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   NS_PRECONDITION(aIndex >= 0, "invalid index number");
-  aListName = nsnull;
+  *aListName = nsnull;
   return aIndex < 0 ? NS_ERROR_INVALID_ARG : NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+NS_IMETHODIMP nsFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
-  aFirstChild = nsnull;
+  *aFirstChild = nsnull;
   return nsnull == aListName ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
@@ -1753,7 +1754,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
   nsIAtom* list = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsresult rv = FirstChild(list, kid);
+    nsresult rv = FirstChild(list, &kid);
     if (NS_SUCCEEDED(rv) && (nsnull != kid)) {
       IndentBy(out, aIndent);
       if (nsnull != list) {
@@ -1777,7 +1778,7 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
       fprintf(out, "</child-list>\n");
     }
     NS_IF_RELEASE(list);
-    GetAdditionalChildListName(listIndex++, list);
+    GetAdditionalChildListName(listIndex++, &list);
   } while (nsnull != list);
 }
 
@@ -1808,7 +1809,7 @@ nsFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset
   if (!aActualSelected)
     return NS_ERROR_NULL_POINTER;
   nsIFrame *child = nsnull;
-  nsresult result = FirstChild(nsnull, child);
+  nsresult result = FirstChild(nsnull, &child);
   if (NS_FAILED(result)){
     *aActualSelected = this;
     if (aAnchorOffset > 0)
@@ -1946,7 +1947,7 @@ static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
   }
   NS_IF_RELEASE(frameContent);
 
-  aFrame->FirstChild(nsnull, aFrame);
+  aFrame->FirstChild(nsnull, &aFrame);
   while (aFrame) {
     RefreshAllContentFrames(aFrame, aContent);
     aFrame->GetNextSibling(aFrame);

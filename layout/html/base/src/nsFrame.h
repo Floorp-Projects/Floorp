@@ -148,8 +148,8 @@ public:
   NS_IMETHOD  SetRect(const nsRect& aRect);
   NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
   NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
-  NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom*& aListName) const;
-  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const;
+  NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
+  NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,

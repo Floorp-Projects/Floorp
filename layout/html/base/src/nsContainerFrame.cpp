@@ -94,7 +94,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
     PRInt32 listIndex = 0;
     do {
       nsIFrame* kid;
-      FirstChild(listName, kid);
+      FirstChild(listName, &kid);
       while (nsnull != kid) {
         nsIHTMLReflow* htmlReflow;
         nsresult rv;
@@ -105,7 +105,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
         kid->GetNextSibling(kid);
       }
       NS_IF_RELEASE(listName);
-      GetAdditionalChildListName(listIndex++, listName);
+      GetAdditionalChildListName(listIndex++, &listName);
     } while(nsnull != listName);
   }
 
@@ -120,14 +120,15 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+nsContainerFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   // We only know about the unnamed principal child list
   if (nsnull == aListName) {
-    aFirstChild = mFrames.FirstChild();
+    *aFirstChild = mFrames.FirstChild();
     return NS_OK;
   } else {
-    aFirstChild = nsnull;
+    *aFirstChild = nsnull;
     return NS_ERROR_INVALID_ARG;
   }
 }
@@ -144,7 +145,7 @@ nsContainerFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   if (oldContext != mStyleContext) {
     // Update primary child list
     nsIFrame* child;
-    result = FirstChild(nsnull, child);
+    result = FirstChild(nsnull, &child);
     while ((NS_SUCCEEDED(result)) && (nsnull != child)) {
       result = child->ReResolveStyleContext(aPresContext, mStyleContext);
       child->GetNextSibling(child);
@@ -304,7 +305,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   nsPoint tmp;
   *aFrame = nsnull;
 
-  FirstChild(aList, kid);
+  FirstChild(aList, &kid);
   while (nsnull != kid) {
     kid->GetRect(kidRect);
     if (kidRect.Contains(aPoint)) {
@@ -314,7 +315,7 @@ nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
     kid->GetNextSibling(kid);
   }
 
-  FirstChild(aList, kid);
+  FirstChild(aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
     kid->GetFrameState(state);
@@ -605,7 +606,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
   PRBool outputOneList = PR_FALSE;
   do {
     nsIFrame* kid;
-    FirstChild(listName, kid);
+    FirstChild(listName, &kid);
     if (nsnull != kid) {
       if (outputOneList) {
         IndentBy(out, aIndent);
@@ -625,7 +626,7 @@ nsContainerFrame::List(FILE* out, PRInt32 aIndent) const
       fputs(">\n", out);
     }
     NS_IF_RELEASE(listName);
-    GetAdditionalChildListName(listIndex++, listName);
+    GetAdditionalChildListName(listIndex++, &listName);
   } while(nsnull != listName);
 
   if (!outputOneList) {

@@ -380,7 +380,7 @@ NS_IMETHODIMP nsTableFrame::DidAppendRowGroup(nsTableRowGroupFrame *aRowGroupFra
 {
   nsresult rv=NS_OK;
   nsIFrame *nextRow=nsnull;
-  aRowGroupFrame->FirstChild(nsnull, nextRow);
+  aRowGroupFrame->FirstChild(nsnull, &nextRow);
   for ( ; nsnull!=nextRow; nextRow->GetNextSibling(nextRow))
   {
     const nsStyleDisplay *rowDisplay;
@@ -922,7 +922,7 @@ NS_METHOD nsTableFrame::ReBuildCellMap()
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(nsnull, rowFrame);
+      rowGroupFrame->FirstChild(nsnull, &rowFrame);
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
@@ -2165,35 +2165,35 @@ void nsTableFrame::RecalcLayoutData(nsIPresContext& aPresContext)
 // Child frame enumeration
 
 NS_IMETHODIMP
-nsTableFrame::FirstChild(nsIAtom* aListName, nsIFrame*& aFirstChild) const
+nsTableFrame::FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const
 {
   if (nsnull == aListName) {
-    aFirstChild = mFrames.FirstChild();
+    *aFirstChild = mFrames.FirstChild();
     return NS_OK;
   }
   else if (aListName == nsLayoutAtoms::colGroupList) {
-    aFirstChild = mColGroups.FirstChild();
+    *aFirstChild = mColGroups.FirstChild();
     return NS_OK;
   }
-  aFirstChild = nsnull;
+  *aFirstChild = nsnull;
   return NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
 nsTableFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom*& aListName) const
+                                         nsIAtom** aListName) const
 {
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
   if (aIndex < 0) {
     return NS_ERROR_INVALID_ARG;
   }
-  nsIAtom* atom = nsnull;
+  *aListName = nsnull;
   switch (aIndex) {
   case NS_TABLE_FRAME_COLGROUP_LIST_INDEX:
-    atom = nsLayoutAtoms::colGroupList;
-    NS_ADDREF(atom);
+    *aListName = nsLayoutAtoms::colGroupList;
+    NS_ADDREF(*aListName);
     break;
   }
-  aListName = atom;
   return NS_OK;
 }
 
@@ -3705,7 +3705,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
           nscoord excessForRowGroup=0;
           nsIFrame * rowFrame=nsnull;
-          rv = rowGroupFrame->FirstChild(nsnull, rowFrame);
+          rv = rowGroupFrame->FirstChild(nsnull, &rowFrame);
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
           {
             const nsStyleDisplay *rowDisplay;
@@ -3732,7 +3732,7 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
           nscoord excessForRowGroup=0;
           nsIFrame * rowFrame=nsnull;
-          rv = rowGroupFrame->FirstChild(nsnull, rowFrame);
+          rv = rowGroupFrame->FirstChild(nsnull, &rowFrame);
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
           {
             const nsStyleDisplay *rowDisplay;
@@ -3994,7 +3994,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       if (PR_TRUE==RequiresPass1Layout())
       {
         nsIFrame *rowFrame;
-        childFrame->FirstChild(nsnull, rowFrame);
+        childFrame->FirstChild(nsnull, &rowFrame);
         while (nsnull!=rowFrame)
         {
           const nsStyleDisplay *rowDisplay;
@@ -4002,7 +4002,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
           if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay)
           {
             nsIFrame *cellFrame;
-            rowFrame->FirstChild(nsnull, cellFrame);
+            rowFrame->FirstChild(nsnull, &cellFrame);
             while (nsnull!=cellFrame)
             {
               /* this is the first time we are guaranteed to have both the cell frames
@@ -4029,7 +4029,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
   while (nsnull!=childFrame)
   { // for every child, if it's a col group then get the columns
     nsTableColFrame *colFrame=nsnull;
-    childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
+    childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
     while (nsnull!=colFrame)
     { // for every column, create an entry in the column cache
       // assumes that the col style has been twiddled to account for first cell width attribute
@@ -4060,7 +4060,7 @@ void nsTableFrame::CacheColFramesInCellMap()
   while (nsnull!=childFrame)
   { // in this loop, we cache column info 
     nsTableColFrame *colFrame=nsnull;
-    childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
+    childFrame->FirstChild(nsnull, (nsIFrame **)&colFrame);
     while (nsnull!=colFrame)
     {
       PRInt32 colIndex = colFrame->GetColumnIndex();
@@ -4148,7 +4148,7 @@ void nsTableFrame::InvalidateCellMap()
     if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
     {
       nsIFrame *rowFrame;
-      rowGroupFrame->FirstChild(nsnull, rowFrame);
+      rowGroupFrame->FirstChild(nsnull, &rowFrame);
       for ( ; nsnull!=rowFrame; rowFrame->GetNextSibling(rowFrame))
       {
         const nsStyleDisplay *rowDisplay;
@@ -4182,7 +4182,7 @@ nsTableFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   // add headers and footers to cf
   nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
   nsIFrame * rg = nsnull;
-  firstInFlow->FirstChild(nsnull, rg);
+  firstInFlow->FirstChild(nsnull, &rg);
   NS_ASSERTION (nsnull!=rg, "previous frame has no children");
   PRInt32 index = 0;
   nsIFrame * bodyRowGroupFromOverflow = mOverflowFrames.FirstChild();
@@ -4941,7 +4941,7 @@ nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDispl
     if (NS_SUCCEEDED(rv) && (nsnull != result)) {
       ;
     } else { // it is a scroll frame that contains the row group frame
-      aFrame->FirstChild(nsnull, result);
+      aFrame->FirstChild(nsnull, &result);
       mHasScrollableRowGroup = PR_TRUE;
     }
   }
