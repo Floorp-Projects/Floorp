@@ -115,8 +115,8 @@ protected:
 										void *handlerRefCon, DragReference theDrag );
 	pascal static OSErr DragReceiveHandler (WindowPtr theWindow,
 												void *handlerRefCon, DragReference theDragRef) ;
-	static DragTrackingHandlerUPP sDragTrackingHandlerUPP;
-	static DragReceiveHandlerUPP sDragReceiveHandlerUPP;
+	DragTrackingHandlerUPP mDragTrackingHandlerUPP;
+	DragReceiveHandlerUPP mDragReceiveHandlerUPP;
 
 	PRBool							mWindowMadeHere; // true if we created the window
 	PRBool							mIsDialog;       // true if the window is a dialog
