@@ -42,7 +42,7 @@ nsByteArrayInputStream::Available (PRUint32* aResult)
     if (aResult == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    if (_nbytes == 0)
+    if (_nbytes == 0 || _buffer == NULL)
         *aResult = 0;
     else
         *aResult = _nbytes - _pos;
@@ -62,15 +62,21 @@ nsByteArrayInputStream::Read (char* aBuffer, PRUint32 aCount, PRUint32 *aNumRead
     if (aCount == 0 || _pos == _nbytes)
         *aNumRead = 0;
     else
-    if (aCount > _nbytes - _pos)
     {
-        memcpy (aBuffer, &_buffer[_pos], *aNumRead = _nbytes - _pos);
-        _pos = _nbytes;
-    }
-    else
-    {
-        memcpy (aBuffer, &_buffer[_pos], *aNumRead = aCount);
-        _pos += aCount;
+        NS_ASSERTION (_buffer != NULL, "Stream buffer has been released - there's an ownership problem somewhere!");
+        if (_buffer == NULL)
+            *aNumRead = 0;
+        else
+        if (aCount > _nbytes - _pos)
+        {        
+            memcpy (aBuffer, &_buffer[_pos], *aNumRead = _nbytes - _pos);
+            _pos = _nbytes;
+        }
+        else
+        {
+            memcpy (aBuffer, &_buffer[_pos], *aNumRead = aCount);
+            _pos += aCount;
+        }
     }
     return NS_OK;
 }
