@@ -91,11 +91,6 @@ protected:
 private:
     nsresult CreateMaiInterfaces(void);
     nsresult AddMaiInterface(MaiInterface *aMaiIface);
-    PRUint32 GetMaiAtkType(void);
-
-    static const char * GetUniqueMaiAtkTypeName(void);
-    static PRUint32 mAtkTypeNameIndex;
-
 
     MaiInterface **mInterfaces;
     PRUint32 mInterfaceCount;
