@@ -18,7 +18,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -121,8 +121,7 @@ jsj_InitJavaObjReflectionsTable(void)
         return JS_FALSE;
 
 #ifdef JSJ_THREADSAFE
-    java_obj_reflections_monitor = 
-    (struct PRMonitor *) PR_NewMonitor();
+    java_obj_reflections_monitor = (struct PRMonitor *) PR_NewMonitor();
     if (!java_obj_reflections_monitor) {
         JSJ_HashTableDestroy(java_obj_reflections);
         return JS_FALSE;
@@ -156,7 +155,7 @@ jsj_WrapJavaObject(JSContext *cx,
 #ifdef JSJ_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
 #endif
-    
+
     if (!installed_GC_callback) {
         /*
          * Hook into GC callback mechanism, so we can defer deleting global
@@ -195,7 +194,7 @@ jsj_WrapJavaObject(JSContext *cx,
         JS_ASSERT(IS_OBJECT_TYPE(class_descriptor->type));
         js_class = &JavaObject_class;
     }
-    
+
     /* Create new JS object to reflect Java object */
     js_wrapper_obj = JS_NewObject(cx, js_class, NULL, NULL);
     if (!js_wrapper_obj)
@@ -240,7 +239,7 @@ jsj_WrapJavaObject(JSContext *cx,
         goto out_of_memory;
 
     /* cache the hash code for all time. */
-    java_wrapper->u.hash_code = hash_code; 
+    java_wrapper->u.hash_code = hash_code;
 
     /* Add the JavaObject to the hash table */
     he = JSJ_HashTableRawAdd(java_obj_reflections, hep, hash_code,
@@ -252,7 +251,7 @@ jsj_WrapJavaObject(JSContext *cx,
     if (!he) {
         (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
         goto out_of_memory;
-    } 
+    }
 
     return js_wrapper_obj;
 
@@ -370,19 +369,19 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
     JNIEnv *jEnv;
     JSJavaThreadState *jsj_env;
     JSBool result;
-        
+
     java_wrapper = JS_GetPrivate(cx, obj);
     if (!java_wrapper) {
         if (type == JSTYPE_OBJECT) {
             *vp = OBJECT_TO_JSVAL(obj);
             return JS_TRUE;
         }
-        
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                              JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
-        
+
     java_obj = java_wrapper->java_obj;
     class_descriptor = java_wrapper->class_descriptor;
 
@@ -392,7 +391,7 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         return JS_TRUE;
 
     case JSTYPE_FUNCTION:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                              JSJMSG_CONVERT_TO_FUNC);
         return JS_FALSE;
 
@@ -414,7 +413,7 @@ JavaObject_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
         jsj_env = jsj_EnterJava(cx, &jEnv);
         if (!jEnv)
             return JS_FALSE;
-        
+
         /* Call Java doubleValue() method, if applicable */
         result = jsj_ConvertJavaObjectToJSNumber(cx, jEnv, class_descriptor, java_obj, vp);
         jsj_ExitJava(jsj_env);
@@ -449,7 +448,7 @@ inherit_props_from_JS_natives(JSContext *cx, const char *js_constructor_name,
 {
     JSObject *global_obj, *constructor_obj, *prototype_obj;
     jsval constructor_val, prototype_val;
-    
+
     global_obj = JS_GetGlobalObject(cx);
     JS_ASSERT(global_obj);
     if (!global_obj)
@@ -467,8 +466,11 @@ inherit_props_from_JS_natives(JSContext *cx, const char *js_constructor_name,
 }
 
 struct JSJPropertyInfo {
-    const char* name;
-    uintN attributes;
+    JSBool wantProp;            /* input param tells whether prop is returned */
+    const char* name;           /* output param, name of property (XXX ASCII) */
+    uintN attributes;           /* output param, attributes of property */
+    JSProperty *prop;           /* output param, if wantProp, held pointer that
+                                   must be released via OBJ_DROP_PROPERTY */
 };
 typedef struct JSJPropertyInfo JSJPropertyInfo;
 
@@ -486,7 +488,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     JavaClassDescriptor *class_descriptor;
     JSObject *proto_chain;
     JSBool found_in_proto;
-    
+
     found_in_proto = JS_FALSE;
     member_descriptor = NULL;
     java_wrapper = JS_GetPrivate(cx, obj);
@@ -501,14 +503,14 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
         JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, JSJMSG_BAD_OP_JOBJECT);
         return JS_FALSE;
     }
-    
+
     class_descriptor = java_wrapper->class_descriptor;
     JS_ASSERT(IS_REFERENCE_TYPE(class_descriptor->type));
-    
+
     member_descriptor = jsj_LookupJavaMemberDescriptorById(cx, jEnv, class_descriptor, id);
     if (member_descriptor)
         goto done;
-    
+
     /* Instances can reference static methods and fields */
     member_descriptor = jsj_LookupJavaStaticMemberDescriptorById(cx, jEnv, class_descriptor, id);
     if (member_descriptor)
@@ -549,7 +551,7 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
             *vp = OBJECT_TO_JSVAL(proto_chain);
         goto done;
     }
-    
+
     /*
      * See if the property looks like the explicit resolution of an
      * overloaded method, e.g. "max(double,double)", first as an instance method,
@@ -562,21 +564,33 @@ lookup_member_by_id(JSContext *cx, JNIEnv *jEnv, JSObject *obj,
     member_descriptor = jsj_ResolveExplicitMethod(cx, jEnv, class_descriptor, id, JS_TRUE);
     if (member_descriptor)
         goto done;
-    
+
     /* Is the property defined in the prototype chain? */
     if (proto_chainp && prop_infop) {
         /* If so, follow __proto__ link to search prototype chain */
         proto_chain = JS_GetPrototype(cx, obj);
 
-        /* Use JS_GetPropertyAttributes to determine if the property actually
-           exists in the prototype chain. */
-        if (proto_chain &&
-            JS_GetPropertyAttributes(cx, proto_chain, member_name,
-                                     &prop_infop->attributes, &found_in_proto) &&
-            found_in_proto) {
-            *proto_chainp = proto_chain;
-            prop_infop->name = member_name;
-            goto done;
+        /* Use OBJ_LOOKUP_PROPERTY to determine if and where the property
+           actually exists in the prototype chain. */
+        if (proto_chain) {
+            if (!OBJ_LOOKUP_PROPERTY(cx, proto_chain, id, proto_chainp,
+                                     &prop_infop->prop)) {
+                return JS_FALSE;
+            }
+            if (prop_infop->prop) {
+                if (!OBJ_GET_ATTRIBUTES(cx, *proto_chainp, id, prop_infop->prop,
+                                        &prop_infop->attributes)) {
+                    OBJ_DROP_PROPERTY(cx, *proto_chainp, prop_infop->prop);
+                    return JS_FALSE;
+                }
+                if (!prop_infop->wantProp) {
+                    OBJ_DROP_PROPERTY(cx, *proto_chainp, prop_infop->prop);
+                    prop_infop->prop = NULL;
+                }
+                prop_infop->name = member_name;
+                found_in_proto = JS_TRUE;
+                goto done;
+            }
         }
     }
 
@@ -616,16 +630,17 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
-        
+
     if (vp)
         *vp = JSVAL_VOID;
+    prop_info.wantProp = JS_FALSE;
     if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor, vp,
                              &proto_chain, &prop_info)) {
         jsj_ExitJava(jsj_env);
         return JS_FALSE;
     }
 
-    /* Handle access to special, non-Java properties of JavaObjects, e.g. the 
+    /* Handle access to special, non-Java properties of JavaObjects, e.g. the
        "constructor" property of the prototype object */
     if (!member_descriptor) {
         jsj_ExitJava(jsj_env);
@@ -675,7 +690,7 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         } else {
             /* Handle special case of access to a property that could refer
                to either a Java field or a method that share the same name.
-               In Java, such ambiguity is not possible because the compiler 
+               In Java, such ambiguity is not possible because the compiler
                can statically determine which is being accessed. */
             obj = jsj_CreateJavaMember(cx, method_val, field_val);
             if (!obj) {
@@ -691,7 +706,7 @@ JavaObject_getPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     }
 
 #endif  /* !TEST_JAVAMEMBER */
-    
+
     jsj_ExitJava(jsj_env);
     return JS_TRUE;
 }
@@ -717,7 +732,8 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
-    
+
+    prop_info.wantProp = JS_FALSE;
     if (!lookup_member_by_id(cx, jEnv, obj, &java_wrapper, id, &member_descriptor, NULL,
                              &proto_chain, &prop_info)) {
         jsj_ExitJava(jsj_env);
@@ -736,7 +752,7 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
             if (strcmp(member_name, "__proto__"))
                 goto no_such_field;
             if (!JSVAL_IS_OBJECT(*vp)) {
-                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+                JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                      JSJMSG_BAD_PROTO_ASSIGNMENT);
                 jsj_ExitJava(jsj_env);
                 return JS_FALSE;
@@ -757,7 +773,7 @@ JavaObject_setPropertyById(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         jsj_ExitJava(jsj_env);
         return JS_TRUE;
     }
-    
+
     java_obj = java_wrapper->java_obj;
     result = jsj_SetJavaFieldValue(cx, jEnv, member_descriptor->field, java_obj, *vp);
     jsj_ExitJava(jsj_env);
@@ -767,7 +783,7 @@ no_such_field:
     JS_IdToValue(cx, id, &idval);
     member_name = JS_GetStringBytes(JSVAL_TO_STRING(idval));
     class_descriptor = java_wrapper->class_descriptor;
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                          JSJMSG_NO_NAME_IN_CLASS,
                          member_name, class_descriptor->name);
     jsj_ExitJava(jsj_env);
@@ -790,18 +806,24 @@ JavaObject_lookupProperty(JSContext *cx, JSObject *obj, jsid id,
     JSJavaThreadState *jsj_env;
 
     /* printf("In JavaObject_lookupProperty()\n"); */
-    
+
     /* Get the Java per-thread environment pointer for this JSContext */
     jsj_env = jsj_EnterJava(cx, &jEnv);
     if (!jEnv)
         return JS_FALSE;
 
     old_reporter = JS_SetErrorReporter(cx, NULL);
+    prop_info.wantProp = JS_TRUE;
     if (lookup_member_by_id(cx, jEnv, obj, NULL, id, NULL, &dummy_val,
                             &proto_chain, &prop_info)) {
         /* signify that the property is in the prototype chain or the object itself. */
-        *objp = (proto_chain ? proto_chain : obj);
-        *propp = (JSProperty*)1;
+        if (proto_chain) {
+            *objp = proto_chain;
+            *propp = prop_info.prop;
+        } else {
+            *objp = obj;
+            *propp = (JSProperty*)1;
+        }
     } else {
         *objp = NULL;
         *propp = NULL;
@@ -817,8 +839,8 @@ JavaObject_defineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
                          JSPropertyOp getter, JSPropertyOp setter,
                          uintN attrs, JSProperty **propp)
 {
-    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                                    JSJMSG_JOBJECT_PROP_DEFINE);
+    JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                         JSJMSG_JOBJECT_PROP_DEFINE);
     return JS_FALSE;
 }
 
@@ -849,11 +871,11 @@ JS_STATIC_DLL_CALLBACK(JSBool)
 JavaObject_deleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 {
     JSVersion version = JS_GetVersion(cx);
-    
+
     *vp = JSVAL_FALSE;
 
     if (!JSVERSION_IS_ECMA(version)) {
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
                                         JSJMSG_JOBJECT_PROP_DELETE);
         return JS_FALSE;
     } else {
@@ -893,7 +915,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 
     switch(enum_op) {
     case JSENUMERATE_INIT:
-        
+
         /* Get the Java per-thread environment pointer for this JSContext */
         jsj_env = jsj_EnterJava(cx, &jEnv);
         if (!jEnv)
@@ -905,7 +927,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
             *idp = INT_TO_JSVAL(class_descriptor->num_instance_members);
         jsj_ExitJava(jsj_env);
         return JS_TRUE;
-        
+
     case JSENUMERATE_NEXT:
         member_descriptor = JSVAL_TO_PRIVATE(*statep);
         if (member_descriptor) {
@@ -919,7 +941,7 @@ JavaObject_newEnumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
                     return JS_TRUE;
                 }
             }
-            
+
             *idp = member_descriptor->id;
             *statep = PRIVATE_TO_JSVAL(member_descriptor->next);
             return JS_TRUE;
@@ -943,13 +965,13 @@ JavaObject_checkAccess(JSContext *cx, JSObject *obj, jsid id,
 {
     switch (mode) {
     case JSACC_WATCH:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                                                JSJMSG_JOBJECT_PROP_WATCH);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                             JSJMSG_JOBJECT_PROP_WATCH);
         return JS_FALSE;
 
     case JSACC_IMPORT:
-        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL, 
-                                                JSJMSG_JOBJECT_PROP_EXPORT);
+        JS_ReportErrorNumber(cx, jsj_GetErrorMessage, NULL,
+                             JSJMSG_JOBJECT_PROP_EXPORT);
         return JS_FALSE;
 
     default:
@@ -964,7 +986,7 @@ jsj_wrapper_newObjectMap(JSContext *cx, jsrefcount nrefs, JSObjectOps *ops,
                          JSClass *clasp, JSObject *obj)
 {
     JSObjectMap * map;
-    
+
     map = (JSObjectMap *) JS_malloc(cx, sizeof(JSObjectMap));
     if (map) {
         map->nrefs = nrefs;
@@ -979,7 +1001,7 @@ void JS_DLL_CALLBACK
 jsj_wrapper_destroyObjectMap(JSContext *cx, JSObjectMap *map)
 {
     JS_free(cx, map);
-}        
+}
 
 jsval JS_DLL_CALLBACK
 jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
@@ -989,18 +1011,17 @@ jsj_wrapper_getRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot)
     JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     return obj->slots[slot];
-}        
+}
 
 void JS_DLL_CALLBACK
-jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, 
-                              uint32 slot, jsval v)
+jsj_wrapper_setRequiredSlot(JSContext *cx, JSObject *obj, uint32 slot, jsval v)
 {
     JS_ASSERT(slot < JSJ_SLOT_COUNT);
     JS_ASSERT(obj->slots);
     JS_ASSERT(obj->map->nslots == JSJ_SLOT_COUNT);
     JS_ASSERT(obj->map->freeslot == JSJ_SLOT_COUNT);
     obj->slots[slot] = v;
-}        
+}
 
 JSObjectOps JavaObject_ops = {
     /* Mandatory non-null function pointer members. */
@@ -1059,11 +1080,8 @@ extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;
 JSBool
 jsj_init_JavaObject(JSContext *cx, JSObject *global_obj)
 {
-    if (!JS_InitClass(cx, global_obj, 
-        0, &JavaObject_class, 0, 0,
-        0, 0,
-        0, 0))
-        return JS_FALSE;
-
-    return JS_TRUE;
+    return JS_InitClass(cx, global_obj,
+                        0, &JavaObject_class, 0, 0,
+                        0, 0,
+                        0, 0) != 0;
 }
