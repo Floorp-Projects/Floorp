@@ -32,19 +32,22 @@ MAKE_OBJ_TYPE=DLL
 
 DLLNAME=jar$(VERSION_NUMBER)
 
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+DLL=$(OBJDIR)\$(DLLNAME).dll
 MAPFILE=$(DLLNAME).map
 
-EXPORTS=zipfile.h
+EXPORTS=zipfile.h nsIJAR.h nsIZip.h nsJARIIDs.h
 
-OBJS=.\$(OBJDIR)\nsZipArchive.obj
+OBJS=.\$(OBJDIR)\nsZipArchive.obj \
+     .\$(OBJDIR)\nsJAR.obj	\
+	 .\$(OBJDIR)\nsJARFactory.obj
 
-LINCS=                        \
-    -I$(XPDIST)\public\nspr   \
-    -I$(XPDIST)\public\raptor \
-    -I$(XPDIST)\public\xpcom  \
-    -I$(XPDIST)\public\zlib   \
+LINCS=                         \
+    -I$(XPDIST)\public\nspr    \
+    -I$(XPDIST)\public\raptor  \
+    -I$(XPDIST)\public\xpcom   \
+    -I$(XPDIST)\public\zlib    \
     -I$(XPDIST)\public\network \
+    -I$(XPDIST)\public\libjar  \
     $(NULL)
 
 LLIBS=                        \
@@ -52,6 +55,7 @@ LLIBS=                        \
       $(DIST)\lib\plc3.lib    \
       $(DIST)\lib\zlib.lib    \
       $(DIST)\lib\xplib.lib   \
+      $(DIST)\lib\xpcom.lib \
       $(NULL)
 
 include <$(DEPTH)/config/rules.mak>
