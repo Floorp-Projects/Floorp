@@ -32,21 +32,12 @@
 #
 
 #
-#  Override TARGETS variable so that only static libraries
+#  Override TARGETS variable so that only shared libraries
 #  are specifed as dependencies within rules.mk.
 #
 
-ifeq ($(OS_TARGET), WIN16)
-TARGETS        = all
-else
 TARGETS        = $(SHARED_LIBRARY) $(SHARED_SW_LIBRARY) $(LIBCI_JAR) $(LIBCI_SW_JAR)
-endif
 LIBRARY        =
-PURE_LIBRARY   =
+IMPORT_LIBRARY =
 PROGRAM        =
 
-
-ifeq ($(OS_TARGET), WIN16)
-dummy:
-	@echo $(TARGETS)
-endif

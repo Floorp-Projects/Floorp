@@ -30,7 +30,21 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:43:48 $ $Name:  $"
+CONFIG_CVS_ID = "@(#) $RCSfile: config.mk,v $ $Revision: 1.2 $ $Date: 2001/01/30 19:43:21 $ $Name:  $"
+
+#
+#  Override TARGETS variable so that only shared libraries
+#  are specifed as dependencies within rules.mk.
+#
+
+TARGETS        = $(SHARED_LIBRARY)
+LIBRARY        =
+IMPORT_LIBRARY =
+PROGRAM        =
+
+ifeq ($(OS_ARCH), WINNT)
+	SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+endif
 
 ifdef BUILD_IDG
 DEFINES += -DNSSDEBUG
