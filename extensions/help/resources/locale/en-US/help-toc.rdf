@@ -28,7 +28,7 @@
       <rdf:Seq>
         <rdf:li> <rdf:Description ID="help-help-window" nc:name="Finding the Topic You Want" nc:link="help_help.xhtml#finding_the_topic_you_want"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help-retrace" nc:name="Retracing Your Steps and Printing" nc:link="help_help.xhtml#retracing_your_steps"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="help-help-buttons" nc:name="Using Help Buttons" nc:link="help_help.xhtml#retracing_your_steps"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="help-help-buttons" nc:name="Using Help Buttons" nc:link="help_help.xhtml#using_help_buttons"/> </rdf:li>
         <rdf:li> <rdf:Description ID="help-help-tips" nc:name="Search Tips" nc:link="help_help.xhtml#search_tips"/></rdf:li>
       </rdf:Seq>
     </nc:subheadings>
