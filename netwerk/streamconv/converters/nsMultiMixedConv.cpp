@@ -198,7 +198,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
                 if (contentTypeStr.Length() < 1)
                     contentTypeStr = "text/html"; // default to text/html, that's all we'll ever see anyway
                 rv = serv->NewInputStreamChannel(partURI, contentTypeStr.GetBuffer(),
-                                                 nsnull, &mPartChannel);
+                                                 nsnull, nsnull, &mPartChannel);
                 NS_RELEASE(partURI);
                 if (NS_FAILED(rv)) return rv;
 
