@@ -78,7 +78,7 @@ if (defined($login)) {
     MailPassword($login, $password);
     
     $template->process("account/created.html.tmpl", $vars)
-      || DisplayError($template->error());
+      || ThrowTemplateError($template->error());
     exit;
 }
 
