@@ -922,7 +922,7 @@ pkits_NameConstraints()
   VFY_ACTION="Valid Self-Issued DN nameConstraints Test19"
   certImport nameConstraintsDN1CACert
   crlImport $crls/nameConstraintsDN1CACRL.crl
-  pkits certs/ValidDNnameConstraintsTest19EE.crt \
+  pkits $certs/ValidDNnameConstraintsTest19EE.crt \
       $certs/nameConstraintsDN1SelfIssuedCACert.crt \
       $certs/nameConstraintsDN1CACert.crt
 
