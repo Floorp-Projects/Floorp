@@ -158,6 +158,10 @@ function onClick(e) {
     if (file.isDirectory()) {
       gotoDirectory(file.path);
     }
+    else if (file.isFile()) {
+	/* what about symlinks? what if they symlink to a directory? */
+ 	return doOKButton();
+    }
   }
 }
 
