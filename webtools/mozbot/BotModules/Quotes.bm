@@ -188,7 +188,8 @@ sub dbcreatetables {
                                date DATETIME NOT NULL DEFAULT 0,
                                note TEXT NULL DEFAULT NULL,
                                shown INTEGER UNSIGNED NOT NULL DEFAULT 0,
-                               INDEX (author), INDEX(shown)
+                               age INTEGER UNSIGNED NOT NULL DEFAULT 1,
+                               INDEX (author), INDEX(shown), INDEX(age)
                              )");
     };
     if ($@) {
@@ -324,11 +325,9 @@ sub markRead {
     my ($id) = @_;
     eval {
         $self->{dbhandle}->do("UPDATE $self->{tableName} SET shown = shown + 1 WHERE id = ?", undef, $id);
+        $self->{dbhandle}->do("UPDATE $self->{tableName} SET age = age + 1");
     };
-    #if ($@) {
-    #    $self->debug("While updating shown count in database: $@");
-    #    # ignore errors
-    #}
+    # ignore errors
 }
 
 sub getQuote {
@@ -355,10 +354,7 @@ sub randomQuote {
     $self->sanitiseTableName();
     my($id, $quote, $author, $note);
     eval {
-        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note FROM $self->{tableName} ORDER BY RAND() LIMIT 1", undef);
-        # ideally, i'd like to not show recently shown stuff again too soon
-        # but i don't have a good solution yet
-        # XXX
+        ($id, $quote, $author, $note) = $self->{dbhandle}->selectrow_array("SELECT id, quote, author, note, shown/age AS freq FROM $self->{tableName} ORDER BY freq, RAND() LIMIT 1", undef);
     };
     if ($@) {
         $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
@@ -407,31 +403,36 @@ sub searchQuote {
     my (@columns, @values);
     my $skip = 0;
     while (length $data) {
-        if ($data =~ s/^\s*text=(\S+)\b//osi or
-            $data =~ s/^\s*text="([^"]*)"\b//osi or
-            $data =~ s/^\s*text='([^']*)'\b//osi) {
+        if ($data =~ s/^\s*text="([^"]*)"(?:\s|\z)//osi or
+            $data =~ s/^\s*text='([^']*)'(?:\s|\z)//osi or
+            $data =~ s/^\s*text=(\S+)(?:\s|\z)//osi) {
             push(@columns, 'quote LIKE ?');
             push(@values, "%$1%");
-        } elsif ($data =~ s/^\s*author=(\S+)\b//osi or
-            $data =~ s/^\s*author="([^"]*)"\b//osi or
-            $data =~ s/^\s*author='([^']*)'\b//osi) {
+        } elsif ($data =~ s/^\s*author="([^"]*)"(?:\s|\z)//osi or
+                 $data =~ s/^\s*author='([^']*)'(?:\s|\z)//osi or
+                 $data =~ s/^\s*author=(\S+)(?:\s|\z)//osi) {
             push(@columns, 'author LIKE ?');
             push(@values, "%$1%");
-        } elsif ($data =~ s/^\s*note=(\S+)\b//osi or
-            $data =~ s/^\s*note="([^"]*)"\b//osi or
-            $data =~ s/^\s*note='([^']*)'\b//osi) {
+        } elsif ($data =~ s/^\s*note="([^"]*)"(?:\s|\z)//osi or
+                 $data =~ s/^\s*note='([^']*)'(?:\s|\z)//osi or
+                 $data =~ s/^\s*note=(\S+)(?:\s|\z)//osi) {
             push(@columns, 'note LIKE ?');
             push(@values, "%$1%");
+        } elsif ($data =~ s/^\s*(\w+)="([^"]*)"(?:\s|\z)//osi or
+                 $data =~ s/^\s*(\w+)='([^']*)'(?:\s|\z)//osi or
+                 $data =~ s/^\s*(\w+)=(\S+)(?:\s|\z)//osi) {
+            $self->say($event, "$event->{from}: I don't know how to search for '$1'. The valid search types are 'author', 'note', and 'text'. See the help entry for 'quote' for more information on the quote searching syntax.");
+            return;
         } elsif ($data =~ s/^\s*([0-9]+)\s*$//osi) {
             $skip = $1 - 1;
-        } elsif ($data =~ s/^\s*(\S+)\b//osi or
-                 $data =~ s/^\s*"([^"]+)"\b//osi or
-                 $data =~ s/^\s*'([^']+)'\b//osi) {
+        } elsif ($data =~ s/^\s*"([^"]+)"(?:\s|\z)//osi or
+                 $data =~ s/^\s*'([^']+)'(?:\s|\z)//osi or
+                 $data =~ s/^\s*(\S+)(?:\s|\z)//osi) {
             push(@columns, 'quote LIKE ?');
             push(@values, "%$1%");
         } else {
             # wtf
-            $self->say($event, "$event->{from}: I didn't quite understand what you were looking for. See the help entry for 'quote' for more information on the quote searching syntax.");
+            $self->say($event, "$event->{from}: I didn't quite understand what you were looking for ('$data'?). See the help entry for 'quote' for more information on the quote searching syntax.");
             return;
         }
     }
@@ -453,7 +454,8 @@ sub searchQuote {
         $note = defined $note ? " ($note)" : '';
         my $n = $skip + 1;
         $count = "about $n" if $count < $n; # sanitise output in case of race condition
-        $self->say($event, "Quote $id (match $n of $count): $quote - $author$note");
+        my $match = $count == 1 ? 'only match' : "match $n of $count";
+        $self->say($event, "Quote $id ($match): $quote - $author$note");
     } else {
         $self->say($event, "$event->{from}: No matching quotes found.");
     }
@@ -616,18 +618,27 @@ sub editQuote {
 sub printStatus {
     my $self = shift;
     my ($event) = @_;
+    if (not $self->{dbhandle}) {
+        $self->say($event, "$event->{from}: No connection could be established to the quotes datbase.");
+        return;
+    }
     $self->sanitiseTableName();
-    my ($quotes, $sources, $shown) = @_;
+    my ($quotes, $sources, $shown, $id) = @_;
     eval {
         ($quotes, $sources, $shown) = $self->{dbhandle}->selectrow_array("SELECT COUNT(*), COUNT(DISTINCT author), SUM(shown) FROM $self->{tableName}");
+        ($id) = $self->{dbhandle}->selectrow_array("SELECT id, shown/age AS freq FROM $self->{tableName} ORDER BY freq, shown LIMIT 1");
     };
     if ($@) {
-        $self->say($event, "$event->{from}: I'm sorry, I can't read from the database for some reason.");
+        $self->say($event, "$event->{from}: I am getting errors when connecting to the quotes database.");
         $self->tellAdmin($event, "While trying to obtain statistics of the database, I got: $@");
         return;
     }
-    my $s1 = $quotes == 1 ? '' : 's';
-    my $s2 = $sources == 1 ? '' : 's';
-    my $s3 = $shown == 1 ? '' : 's';
-    $self->say($event, "$event->{from}: The database contains $quotes quote$s1 attributed to $sources source$s2. I have shown quotes $shown time$s3 in total.");
+    if ($quotes) {
+        my $s1 = $quotes == 1 ? '' : 's';
+        my $s2 = $sources == 1 ? '' : 's';
+        my $s3 = $shown == 1 ? '' : 's';
+        $self->say($event, "$event->{from}: The database contains $quotes quote$s1 attributed to $sources source$s2. I have shown these quotes $shown time$s3 in total. The most popular quote (relatively speaking) is quote ID $id.");
+    } else {
+        $self->say($event, "$event->{from}: The database contains 0 quotes.");
+    }
 }
