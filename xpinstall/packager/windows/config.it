@@ -55,6 +55,10 @@ Program Folder Path=[COMMON_PROGRAMS]
 ;   Setup Type 3 - fourth radio button (usually the Custom option)
 Default Setup Type=Setup Type 0
 
+Setup Title0=Netscape Seamonkey
+Setup Title1=Setup
+Setup Title2=
+
 [Dialog Welcome]
 Show Dialog=TRUE
 Title=Welcome
