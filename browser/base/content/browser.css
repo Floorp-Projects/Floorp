@@ -18,3 +18,7 @@ window[chromehidden~="toolbar"] #navigator-throbber {
 window[chromehidden~="toolbar"] #navigator-throbber[busy="true"] {
   list-style-image: url("chrome://communicator/skin/brand/throbber16-anim.gif") !important;
 }
+
+#search-bar {
+  -moz-binding: url("chrome://browser/content/search.xml#searchbar");
+}

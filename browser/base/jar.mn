@@ -12,6 +12,7 @@ browser.jar:
         content/browser/viewSourceOverlay.xul         (content/viewSourceOverlay.xul)
         content/browser/openLocation.xul              (content/openLocation.xul)
         content/browser/openLocation.js               (content/openLocation.js)
+        content/browser/search.xml                    (content/search.xml)
 
 classic.jar:
         skin/classic/browser/browser.css              (skin/browser.css)
@@ -46,6 +47,7 @@ classic.jar:
         skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
         skin/classic/browser/lock-secure.gif          (skin/lock-secure.gif)
         skin/classic/browser/loading.gif              (skin/loading.gif)
+        skin/classic/browser/search-bar.png           (skin/search-bar.png)
 
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)

@@ -111,8 +111,8 @@
                 onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 50;"/>
 
       <property name="searchParam"
-                onget="return this.getAttribute('searchparam');"
-                onset="this.setAttribute('searchparam', val); return val;"/>
+                onget="return this.getAttribute('autocompletesearchparam');"
+                onset="this.setAttribute('autocompletesearchparam', val); return val;"/>
 
       <property name="searchCount" readonly="true"
                 onget="this.initSearchNames(); return this.mSearchNames.length;"/>
@@ -297,7 +297,7 @@
           if (!this.disableKeyNavigation) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_TAB:
-                if (this.tabScrolling && this.mPopupOpen)
+                if (this.tabScrolling && this.popup.mPopupOpen)
                   cancel = this.mController.handleKeyNavigation(aEvent.shiftKey ? IController.KEY_UP : IController.KEY_DOWN);
                 break;
               case KeyEvent.DOM_VK_UP:
@@ -330,7 +330,7 @@
               cancel = this.mController.handleEnter();
               break;
           }
-          
+
           if (cancel) {
             aEvent.stopPropagation();
             aEvent.preventDefault();
