@@ -1495,7 +1495,7 @@ pk11_PairwiseConsistencyCheck(SECKEYPublicKey *pubKey,
     /**********************************************/
 
     canSignVerify = PK11_HasAttributeSet ( privKey->pkcs11Slot, 
-					  privKey->pkcs11ID, CKA_VERIFY);
+					  privKey->pkcs11ID, CKA_SIGN);
     
     if (canSignVerify)
       {
