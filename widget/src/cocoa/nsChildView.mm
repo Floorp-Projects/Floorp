@@ -590,17 +590,9 @@ static Boolean we_are_front_process()
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsChildView::SetFocus(PRBool aRaise)
 {
-#if 0
-  gEventDispatchHandler.SetFocus(this);
-  
-  // Here's where we see if there's a notification we need to remove
-  if (gNotificationInstalled && we_are_front_process())
-  {
-    (void)::NMRemove(&gNMRec);
-    gNotificationInstalled = false;
-  }
-#endif
-  
+  NSWindow* window = [mView window];
+  if (window)
+    [window makeFirstResponder: mView];
   return NS_OK;
 }
 
