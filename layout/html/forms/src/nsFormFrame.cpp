@@ -468,6 +468,12 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   // make the url string
   nsILinkHandler* handler;
   if (NS_OK == aPresContext->GetLinkHandler(&handler)) {
+    nsAutoString href;
+    GetAction(&href);
+    if (href.Equals("")) {
+      return NS_OK;
+    }
+
     // Resolve url to an absolute url
     nsIURL* docURL = nsnull;
     nsIDocument* doc = nsnull;
@@ -484,8 +490,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsAutoString target;
     GetTarget(&target);
 
-    nsAutoString href;
-    GetAction(&href);
     if (!isPost) {
       href.Append(data);
     }
