@@ -128,6 +128,15 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
+  /**
+    * Respond to the request to print the control
+    *
+    */
+  NS_IMETHOD ReflowWithNoWidget(nsIPresContext&      aPresContext,
+                                       nsHTMLReflowMetrics& aDesiredSize,
+                                       const nsHTMLReflowState& aReflowState,
+                                       nsReflowStatus&      aStatus);
+
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent*     aChild,
                               nsIAtom*        aAttribute,
@@ -253,6 +262,25 @@ protected:
 
   //nscoord GetStyleDim(nsIPresContext& aPresContext, nscoord aMaxDim, 
   //                    nscoord aMaxWidth, const nsStyleCoord& aCoord);
+
+   /**
+    * Draw a fat line. The line is drawn as a polygon with a specified width.
+	* Utility used for rendering a form control during printing.
+	* 
+    * @param aRenderingContext the rendering context
+    * @param aSX starting x in pixels
+	* @param aSY starting y in pixels
+	* @param aEX ending x in pixels
+	* @param aEY ending y in pixels
+    * @param aHorz PR_TRUE if aWidth is added to x coordinates to form polygon. If 
+	*              PR_FALSE  then aWidth as added to the y coordinates.
+    * @param aOnePixel number of twips in a single pixel.
+    */
+
+  void DrawLine(nsIRenderingContext& aRenderingContext, 
+                 nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
+                 PRBool aHorz, nscoord aWidth, nscoord aOnePixel);
+
 
   nsMouseState mLastMouseState;
   nsIWidget*   mWidget;

@@ -47,6 +47,7 @@
 #include "nsStyleUtil.h"
 #include "nsFormFrame.h"
 #include "nsIContent.h"
+#include "nsGlobalVariables.h"
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
@@ -225,6 +226,15 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
                            nsReflowStatus&      aStatus)
 {
   nsresult result = NS_OK;
+
+ //XXX:PRINTING Temporary to force GFX rendered widgets to appear on the display. This
+ //Will be used to debug GFX rendered widgets for printing. This should be removed when
+ //Printing is completely working.
+ //PRBool renderToScreen = PR_TRUE;
+ PRBool renderToScreen = PR_FALSE;
+  if (PR_TRUE == renderToScreen) {
+	return(ReflowWithNoWidget(aPresContext, aDesiredSize, aReflowState, aStatus));
+  }
 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
 
@@ -940,6 +950,135 @@ nsFormControlFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
 void
 nsFormControlFrame::Reset()
 {
+}
+
+
+//XXX:PRINTING Temporary to force GFX rendered widgets to appear on the display. This
+//Will be used to debug GFX rendered widgets for printing. This should be removed when
+//Printing is completely working.
+
+NS_IMETHODIMP
+nsFormControlFrame::ReflowWithNoWidget(nsIPresContext&      aPresContext,
+                                       nsHTMLReflowMetrics& aDesiredSize,
+                                       const nsHTMLReflowState& aReflowState,
+                                       nsReflowStatus&      aStatus)
+{
+  nsresult result = NS_OK;
+
+  GetDesiredSize(&aPresContext, aReflowState, aDesiredSize, mWidgetSize);
+
+  if (!mDidInit) {
+	  nsIPresShell   *presShell = aPresContext.GetShell();     // need to release
+  	nsIViewManager *viewMan   = presShell->GetViewManager();  // need to release
+	  NS_RELEASE(presShell); 
+    nsRect boundBox(0, 0, aDesiredSize.width, aDesiredSize.height); 
+
+    // absolutely positioned controls already have a view but not a widget
+    nsIView* view = nsnull;
+    GetView(view);
+    if (nsnull == view) {
+      result = nsRepository::CreateInstance(kViewCID, nsnull, kIViewIID, (void **)&view);
+	    if (!NS_SUCCEEDED(result)) {
+	      NS_ASSERTION(0, "Could not create view for form control"); 
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        return result;
+	    }
+
+      nsIFrame* parWithView;
+	    nsIView *parView;
+
+      GetParentWithView(parWithView);
+	    parWithView->GetView(parView);
+
+	    // initialize the view as hidden since we don't know the (x,y) until Paint
+      result = view->Init(viewMan, boundBox, parView, nsnull, nsViewVisibility_kHide);
+      if (NS_OK != result) {
+	      NS_ASSERTION(0, "view initialization failed"); 
+        aStatus = NS_FRAME_NOT_COMPLETE;
+        return NS_OK;
+	    }
+
+      viewMan->InsertChild(parView, view, 0);
+      SetView(view);
+    }
+
+ 	  const nsIID& id = GetCID();
+    nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
+    //view->CreateWidget(id, initData);
+
+    if (nsnull != initData) {
+      delete(initData);
+    }
+
+ 	  // set our widget
+	  //result = GetWidget(view, &mWidget);
+	  //if ((NS_OK == result) && mWidget) { // keep the ref on mWidget
+      //nsIFormControl* formControl = nsnull;
+      //result = mContent->QueryInterface(kIFormControlIID, (void**)&formControl);
+      //if ((NS_OK == result) && formControl) {
+        // set the content's widget, so it can get content modified by the widget
+        //formControl->SetWidget(mWidget);
+        //NS_RELEASE(formControl);
+      //}
+      PostCreateWidget(&aPresContext, aDesiredSize.width, aDesiredSize.height);
+      mDidInit = PR_TRUE;
+	  //} else {
+	  //  NS_ASSERTION(0, "could not get widget");
+	  //}
+
+    if ((aDesiredSize.width != boundBox.width) || (aDesiredSize.height != boundBox.height)) {
+      viewMan->ResizeView(view, aDesiredSize.width, aDesiredSize.height);
+    }
+
+	  NS_IF_RELEASE(viewMan);    
+  } 
+  
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+    
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+void 
+nsFormControlFrame::DrawLine(nsIRenderingContext& aRenderingContext, 
+                              nscoord aSX, nscoord aSY, nscoord aEX, nscoord aEY, 
+                              PRBool aHorz, nscoord aWidth, nscoord aOnePixel)
+{
+  
+  nsPoint p[5];
+  if (aHorz) {
+    aEX++;
+    p[0].x = nscoord(float(aSX)*aOnePixel);
+    p[0].y = nscoord(float(aSY)*aOnePixel);
+    p[1].x = nscoord(float(aEX)*aOnePixel);
+    p[1].y = nscoord(float(aEY)*aOnePixel);
+    p[2].x = nscoord(float(aEX)*aOnePixel);
+    p[2].y = nscoord(float(aEY+1)*aOnePixel);
+    p[3].x = nscoord(float(aSX)*aOnePixel);
+    p[3].y = nscoord(float(aSY+1)*aOnePixel);
+    p[4].x = nscoord(float(aSX)*aOnePixel);
+    p[4].y = nscoord(float(aSY)*aOnePixel);
+  } else {
+    aEY++;
+    p[0].x = nscoord(float(aSX)*aOnePixel);
+    p[0].y = nscoord(float(aSY)*aOnePixel);
+    p[1].x = nscoord(float(aEX)*aOnePixel);
+    p[1].y = nscoord(float(aEY)*aOnePixel);
+    p[2].x = nscoord(float(aEX+1)*aOnePixel);
+    p[2].y = nscoord(float(aEY)*aOnePixel);
+    p[3].x = nscoord(float(aSX+1)*aOnePixel);
+    p[3].y = nscoord(float(aSY)*aOnePixel);
+    p[4].x = nscoord(float(aSX)*aOnePixel);
+    p[4].y = nscoord(float(aSY)*aOnePixel);
+  }
+  aRenderingContext.FillPolygon(p, 5);
+
 }
 
 
