@@ -136,7 +136,8 @@ public:
   nsresult GetFrameSize(   nsIFrame* aFrame,
                            nsSize& aSize);
                         
-  nsresult SetFrameSize(   nsIFrame* aFrame,
+  nsresult SetFrameSize(   nsIPresContext* aPresContext,
+                           nsIFrame* aFrame,
                            nsSize aSize);
  
   nsresult CalculateScrollAreaSize(nsIPresContext&          aPresContext,
@@ -203,11 +204,11 @@ public:
    void AddVerticalScrollbar     (const nsSize& aSbSize, nsSize& aScrollAreaSize);
    void RemoveHorizontalScrollbar(const nsSize& aSbSize, nsSize& aScrollAreaSize);
    void RemoveVerticalScrollbar  (const nsSize& aSbSize, nsSize& aScrollAreaSize);
-   nsIScrollableView* GetScrollableView();
+   nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
 
    void GetScrolledContentSize(nsSize& aSize);
 
-  void ScrollbarChanged(nscoord aX, nscoord aY);
+  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
   nsresult GetContentOf(nsIFrame* aFrame, nsIContent** aContent);
 
   nsIFrame* mHScrollbarFrame;
@@ -246,12 +247,14 @@ nsGfxScrollFrame::nsGfxScrollFrame(nsIDocument* aDocument)
     mInner = new nsGfxScrollFrameInner(this);
     mInner->AddRef();
     mInner->mDocument = aDocument;
+    mPresContext = nsnull;
 }
 
 nsGfxScrollFrame::~nsGfxScrollFrame()
 {
     mInner->mOuter = nsnull;
     mInner->Release();
+    mPresContext = nsnull;
 }
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
@@ -313,6 +316,7 @@ nsGfxScrollFrame::Init(nsIPresContext&  aPresContext,
                     nsIStyleContext* aStyleContext,
                     nsIFrame*        aPrevInFlow)
 {
+  mPresContext = &aPresContext;
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent,
                                             aParent, aStyleContext,
                                             aPrevInFlow);
@@ -342,7 +346,7 @@ nsGfxScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mInner->mHScrollbarFrame->GetNextSibling(&mInner->mVScrollbarFrame);
 
   // listen for scroll events.
-  mInner->GetScrollableView()->AddScrollPositionListener(mInner);
+  mInner->GetScrollableView(&aPresContext)->AddScrollPositionListener(mInner);
 
   return rv;
 }
@@ -470,7 +474,7 @@ nsGfxScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // redraw anything that needs it.
   if ( aReflowState.reason == eReflowReason_Incremental ) 
       if (hscrollbarNeedsReflow && vscrollbarNeedsReflow && scrollAreaNeedsReflow)
-          Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+          Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
 
   mInner->mHscrollbarNeedsReflow = PR_FALSE;
@@ -643,7 +647,7 @@ nsGfxScrollFrameInner::nsGfxScrollFrameInner(nsGfxScrollFrame* aOuter):mHScrollb
                                                mScrollAreaFrame(nsnull),
                                                mHasVerticalScrollbar(PR_FALSE), 
                                                mHasHorizontalScrollbar(PR_FALSE),
-                                               mOnePixel(20) 
+                                               mOnePixel(20)
 {
    mOuter = aOuter;
    mRefCnt = 0;
@@ -674,10 +678,10 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
 
 NS_IMETHODIMP
 nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
-                              nsIContent*  aContent,
-                              PRInt32      aNameSpaceID,
-                              nsIAtom*     aAttribute,
-                              PRInt32      aHint) 
+                              nsIContent*     aContent,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint) 
 {
    if (mHScrollbarFrame && mVScrollbarFrame)
    {
@@ -709,7 +713,7 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
            y = value.ToInteger(&error);
         }
 
-        ScrollbarChanged(x*mOnePixel, y*mOnePixel);
+        ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel);
      }
    }
 
@@ -718,11 +722,11 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
 
 
 nsIScrollableView*
-nsGfxScrollFrameInner::GetScrollableView()
+nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
 {
   nsIScrollableView* scrollingView;
   nsIView*           view;
-  mScrollAreaFrame->GetView(&view);
+  mScrollAreaFrame->GetView(aPresContext, &view);
   nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
   NS_ASSERTION(NS_SUCCEEDED(result), "assertion gfx scrollframe does not contain a scrollframe");          
   return scrollingView;
@@ -743,8 +747,9 @@ nsGfxScrollFrameInner::GetScrolledContentSize(nsSize& aSize)
 
 
 nsresult
-nsGfxScrollFrameInner::SetFrameSize(   nsIFrame* aFrame,
-                               nsSize aSize)
+nsGfxScrollFrameInner::SetFrameSize(nsIPresContext* aPresContext,
+                                    nsIFrame*       aFrame,
+                                    nsSize          aSize)
                                
 {  
     // get the margin
@@ -764,7 +769,7 @@ nsGfxScrollFrameInner::SetFrameSize(   nsIFrame* aFrame,
     aSize.width -= margin.left + margin.right;
     aSize.height -= margin.top + margin.bottom;
 
-    aFrame->SizeTo(aSize.width, aSize.height);
+    aFrame->SizeTo(aPresContext, aSize.width, aSize.height);
 
     return NS_OK;
 }
@@ -1187,7 +1192,7 @@ nsGfxScrollFrameInner::ReflowFrame(    nsIPresContext&          aPresContext,
 
     // if the frame size change then mark the flag
     if (oldSize.width != aDesiredSize.width || oldSize.height != aDesiredSize.height) {
-       aFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
+       aFrame->SizeTo(&aPresContext, aDesiredSize.width, aDesiredSize.height);
        aResized = PR_TRUE;
     }
 
@@ -1409,7 +1414,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext&          aPresContext
       SetAttribute(mHScrollbarFrame, nsXULAtoms::pageincrement, nscoord(float(scrollAreaSize.width)*0.8));
 
       SetAttribute(mVScrollbarFrame, nsXULAtoms::increment, fontHeight);
-      nsIScrollableView* scrollable = GetScrollableView();
+      nsIScrollableView* scrollable = GetScrollableView(&aPresContext);
       scrollable->SetLineHeight(fontHeight);
 
       SetAttribute(mHScrollbarFrame, nsXULAtoms::increment, 10*mOnePixel);
@@ -1418,7 +1423,7 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext&          aPresContext
       // even if it is different from the old size. This is because ReflowFrame set the child's
       // frame so we have to make sure our final size is scrollAreaSize
 
-      SetFrameSize(mScrollAreaFrame, scrollAreaSize);  
+      SetFrameSize(&aPresContext, mScrollAreaFrame, scrollAreaSize);  
 
   } 
 }  
@@ -1443,13 +1448,13 @@ nsGfxScrollFrameInner::LayoutChildren(nsIPresContext&          aPresContext,
   const nsMargin& border = aReflowState.mComputedBorderPadding;
 
   // Place scroll area
-  mScrollAreaFrame->MoveTo(border.left, border.top);
+  mScrollAreaFrame->MoveTo(&aPresContext, border.left, border.top);
 
   // place vertical scrollbar
-  mVScrollbarFrame->MoveTo(border.left + scrollAreaSize.width, border.top);
+  mVScrollbarFrame->MoveTo(&aPresContext, border.left + scrollAreaSize.width, border.top);
 
   // place horizontal scrollbar
-  mHScrollbarFrame->MoveTo(border.left, border.top + scrollAreaSize.height);
+  mHScrollbarFrame->MoveTo(&aPresContext, border.left, border.top + scrollAreaSize.height);
 
   // Compute our desired size
   // ---------- compute width ----------- 
@@ -1499,9 +1504,9 @@ nsGfxScrollFrameInner::LayoutChildren(nsIPresContext&          aPresContext,
 }
 
 void
-nsGfxScrollFrameInner::ScrollbarChanged(nscoord aX, nscoord aY)
+nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
 {
-  nsIScrollableView* scrollable = GetScrollableView();
+  nsIScrollableView* scrollable = GetScrollableView(aPresContext);
   scrollable->ScrollTo(aX,aY, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
  // printf("scrolling to: %d, %d\n", aX, aY);
 }

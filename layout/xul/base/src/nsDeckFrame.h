@@ -62,7 +62,8 @@ public:
                                               nsIFrame*       aChildList);
 
 
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
+  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+                               const nsPoint& aPoint, 
                                nsIFrame**     aFrame);
 
   virtual PRIntn GetSkipSides() const { return 0; }  

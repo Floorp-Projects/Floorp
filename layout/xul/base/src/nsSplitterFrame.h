@@ -87,13 +87,15 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
 
 private:
 
   friend class nsSplitterFrameImpl;
   nsSplitterFrameImpl* mImpl;
+  // XXX Hack
+  nsIPresContext* mPresContext;  // weak reference
 
 }; // class nsSplitterFrame
 

@@ -147,8 +147,12 @@ public:
    * aState is the document state storage object onto which each frame 
    * stores its state.
    */
-  NS_IMETHOD CaptureFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
-  NS_IMETHOD RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState) = 0;
+  NS_IMETHOD CaptureFrameState(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame,
+                               nsILayoutHistoryState* aState) = 0;
+  NS_IMETHOD RestoreFrameState(nsIPresContext* aPresContext,
+                               nsIFrame* aFrame,
+                               nsILayoutHistoryState* aState) = 0;
 
   /**
    * Gets a property value for a given frame.

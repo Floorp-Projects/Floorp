@@ -468,7 +468,7 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
       // if it has redraw us
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
     } else {
       // otherwise dirty our children
       Dirty(aReflowState,incrementalChild);
@@ -727,7 +727,7 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
       ListTag(stdout);
       printf("is being redrawn\n");
 #endif
-    Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
+    Invalidate(&aPresContext, nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
   }
 
   return NS_OK;
@@ -860,17 +860,17 @@ nsBoxFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, ns
 
 
 void 
-nsBoxFrame::CollapseChild(nsIFrame* frame)
+nsBoxFrame::CollapseChild(nsIPresContext* aPresContext, nsIFrame* frame)
 {
     nsRect rect(0,0,0,0);
     frame->GetRect(rect);
     if (rect.width > 0 || rect.height > 0) {
       // shrink the frame
-      frame->SizeTo(0,0);
+      frame->SizeTo(aPresContext, 0,0);
 
       // shrink the view
       nsIView* view = nsnull;
-      frame->GetView(&view);
+      frame->GetView(aPresContext, &view);
 
       // if we find a view stop right here. All views under it
       // will be clipped.
@@ -885,7 +885,7 @@ nsBoxFrame::CollapseChild(nsIFrame* frame)
 
       while (nsnull != child) 
       {
-         CollapseChild(child);
+         CollapseChild(aPresContext, child);
          nsresult rv = child->GetNextSibling(&child);
          NS_ASSERTION(rv == NS_OK,"failed to get next child");
       }
@@ -912,7 +912,7 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 
     // make collapsed children not show up
     if (mSprings[count].collapsed) {
-      CollapseChild(childFrame);
+      CollapseChild(&aPresContext, childFrame);
     } else {
       const nsStyleSpacing* spacing;
       rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -933,7 +933,7 @@ nsBoxFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
       childFrame->GetRect(rect);
       rect.x = x;
       rect.y = y;
-      childFrame->SetRect(rect);
+      childFrame->SetRect(&aPresContext, rect);
 
       // add in the right margin
       if (mHorizontal)
@@ -1008,7 +1008,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                shouldReflow = PR_FALSE;
                desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
                desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
-               childFrame->SizeTo(desiredSize.width, desiredSize.height);
+               childFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
           } else {
             desiredSize.width = currentRect.width;
             desiredSize.height = currentRect.height;
@@ -1147,7 +1147,7 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
         }
 
           // set the rect
-        childFrame->SizeTo(desiredSize.width, desiredSize.height);
+        childFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
 
         // Stub out desiredSize.maxElementSize so that when go out of
         // scope, nothing bad happens!
@@ -1967,10 +1967,11 @@ nsCalculatedBoxInfo::clear()
 
 
 NS_IMETHODIMP  
-nsBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                             const nsPoint& aPoint, 
                              nsIFrame**     aFrame)
 {   
-    nsresult rv = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+    nsresult rv = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
     return rv;
 }
 
@@ -2040,7 +2041,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext& aPresContext,
       // how much we are scrolled.
       nsIScrollableView* scrollingView;
       nsIView*           view;
-      parent->GetView(&view);
+      parent->GetView(&aPresContext, &view);
       if (view) {
         nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
         if (NS_SUCCEEDED(result)) {

@@ -123,7 +123,8 @@ public:
                          nsGUIEvent*     aEvent,
                          nsEventStatus&  aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
                               nsIFrame**     aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext& aPresContext,
@@ -149,7 +150,7 @@ public:
   void MouseDrag(nsIPresContext& aPresContext, 
                  nsGUIEvent*     aEvent);
 
-  void EndMouseDrag();
+  void EndMouseDrag(nsIPresContext* aPresContext);
 
   nsFrameborder GetParentFrameborder() { return mParentFrameborder; }
 

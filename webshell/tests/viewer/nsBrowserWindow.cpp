@@ -2754,7 +2754,11 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
       nsIFrame* root;
       shell->GetRootFrame(&root);
       if (nsnull != root) {
-        root->List(out, 0);
+        nsIPresContext* presContext;
+        shell->GetPresContext(&presContext);
+
+        root->List(presContext, out, 0);
+        NS_IF_RELEASE(presContext);
       }
       NS_RELEASE(shell);
     }

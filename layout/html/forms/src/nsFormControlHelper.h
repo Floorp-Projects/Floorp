@@ -126,7 +126,7 @@ public:
                                     nsInputDimensionSpec& aSpec,
                                     nsSize&              aSize);
 
-  static void ForceDrawFrame(nsIFrame * aFrame);
+  static void ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame);
 
   static nsresult GetValue(nsIContent* aContent, nsString* aResult);
   static nsresult GetName(nsIContent* aContent, nsString* aResult);

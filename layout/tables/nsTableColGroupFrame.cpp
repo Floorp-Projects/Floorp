@@ -341,7 +341,7 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&          aPresContext,
     nsReflowStatus status;
     ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, status);
     // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
-    kidFrame->SetRect(nsRect(0,0,0,0));
+    kidFrame->SetRect(&aPresContext, nsRect(0,0,0,0));
   }
 
   aDesiredSize.width=0;

@@ -151,9 +151,9 @@ public:
   NS_IMETHOD  GetRect(nsRect& aRect) const;
   NS_IMETHOD  GetOrigin(nsPoint& aPoint) const;
   NS_IMETHOD  GetSize(nsSize& aSize) const;
-  NS_IMETHOD  SetRect(const nsRect& aRect);
-  NS_IMETHOD  MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD  SizeTo(nscoord aWidth, nscoord aHeight);
+  NS_IMETHOD  SetRect(nsIPresContext* aPresContext, const nsRect& aRect);
+  NS_IMETHOD  MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
+  NS_IMETHOD  SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
   NS_IMETHOD  FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
   NS_IMETHOD  Paint(nsIPresContext&      aPresContext,
@@ -166,8 +166,9 @@ public:
   NS_IMETHOD  GetCursor(nsIPresContext& aPresContext,
                         nsPoint&        aPoint,
                         PRInt32&        aCursor);
-  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
-                              nsIFrame**     aFrame);
+  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext,
+                               const nsPoint& aPoint, 
+                               nsIFrame**     aFrame);
 
   NS_IMETHOD  GetPointFromOffset(nsIPresContext*        inPresContext,
                                  nsIRenderingContext*   inRendContext,
@@ -179,7 +180,8 @@ public:
                                  PRInt32*               outFrameContentOffset,
                                  nsIFrame*              *outChildFrame);
 
-  static nsresult  GetNextPrevLineFromeBlockFrame(nsPeekOffsetStruct *aPos, 
+  static nsresult  GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
+                                        nsPeekOffsetStruct *aPos, 
                                         nsIFrame *aBlockFrame, 
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
@@ -204,24 +206,24 @@ public:
   NS_IMETHOD  SetPrevInFlow(nsIFrame*);
   NS_IMETHOD  GetNextInFlow(nsIFrame** aNextInFlow) const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
-  NS_IMETHOD  GetView(nsIView** aView) const;
-  NS_IMETHOD  SetView(nsIView* aView);
-  NS_IMETHOD  GetParentWithView(nsIFrame** aParent) const;
-  NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
-  NS_IMETHOD  GetWindow(nsIWidget**) const;
+  NS_IMETHOD  GetView(nsIPresContext* aPresContext, nsIView** aView) const;
+  NS_IMETHOD  SetView(nsIPresContext* aPresContext, nsIView* aView);
+  NS_IMETHOD  GetParentWithView(nsIPresContext* aPresContext, nsIFrame** aParent) const;
+  NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
+  NS_IMETHOD  GetWindow(nsIPresContext* aPresContext, nsIWidget**) const;
   NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD  GetNextSibling(nsIFrame** aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  Scrolled(nsIView *aView);
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
   NS_IMETHOD  VerifyTree() const;
-  NS_IMETHOD  SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD  SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
   NS_IMETHOD  GetSelected(PRBool *aSelected) const;
-  NS_IMETHOD  PeekOffset(nsPeekOffsetStruct *aPos) ;
+  NS_IMETHOD  PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) ;
 
   NS_IMETHOD  GetOffsets(PRInt32 &aStart, PRInt32 &aEnd) const;
 
@@ -272,7 +274,8 @@ public:
 
   // Invalidate part of the frame by asking the view manager to repaint.
   // aDamageRect is in the frame's local coordinate space
-  void        Invalidate(const nsRect& aDamageRect,
+  void        Invalidate(nsIPresContext* aPresContext,
+                         const nsRect& aDamageRect,
                          PRBool aImmediate = PR_FALSE) const;
 
   // Helper function to return the index in parent of the frame's content
@@ -287,7 +290,9 @@ public:
   PRBool IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
                             nsHTMLReflowMetrics& aMetrics);
 
-  virtual nsresult GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView);
+  virtual nsresult GetClosestViewForFrame(nsIPresContext* aPresContext,
+                                          nsIFrame *aFrame,
+                                          nsIView **aView);
 
 #ifdef NS_DEBUG
   /**

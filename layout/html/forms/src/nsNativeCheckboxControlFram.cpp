@@ -145,7 +145,7 @@ nsNativeCheckboxControlFrame::GetCheckboxState()
 }
 
 
-void nsNativeCheckboxControlFrame::SetCheckboxState(CheckState aValue)
+void nsNativeCheckboxControlFrame::SetCheckboxState(nsIPresContext* aPresContext, CheckState aValue)
 {
   if (nsnull != mWidget) {
     nsICheckButton* checkBox = nsnull;

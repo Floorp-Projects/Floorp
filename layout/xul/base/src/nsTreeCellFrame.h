@@ -32,7 +32,8 @@ public:
                               PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,

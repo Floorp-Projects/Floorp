@@ -82,15 +82,15 @@ public:
 
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
   void GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
-  static void GetNearestEnclosingView(nsIFrame* aStartFrame, nsIView** aResult);
+  static void GetNearestEnclosingView(nsIPresContext* aPresContext, nsIFrame* aStartFrame, nsIView** aResult);
 
   nsresult SyncViewWithFrame(nsIPresContext& aPresContext, PRBool aOnMenuBar, 
                              nsIFrame* aFrame, PRInt32 aXPos, PRInt32 aYPos);
 
-  NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
+  NS_IMETHOD CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
 
   void KeyboardNavigation(PRUint32 aDirection, PRBool& aHandledFlag);
   
@@ -106,6 +106,8 @@ public:
 protected:
   nsIMenuFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
+  // XXX Hack
+  nsIPresContext* mPresContext;  // weak reference
 }; // class nsMenuPopupFrame
 
 #endif

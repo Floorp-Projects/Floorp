@@ -78,7 +78,7 @@ nsFormControlHelper::~nsFormControlHelper()
   MOZ_COUNT_DTOR(nsFormControlHelper);
 }
 
-void nsFormControlHelper::ForceDrawFrame(nsIFrame * aFrame)
+void nsFormControlHelper::ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
 {
   if (aFrame == nsnull) {
     return;
@@ -86,7 +86,7 @@ void nsFormControlHelper::ForceDrawFrame(nsIFrame * aFrame)
   nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, &view);
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;

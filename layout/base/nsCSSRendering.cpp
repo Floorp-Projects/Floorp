@@ -1816,14 +1816,14 @@ ComputeBackgroundAnchorPoint(const nsStyleColor& aColor,
 // Returns the clip view associated with the scroll frame's scrolling
 // view
 static const nsIView*
-GetClipView(nsIFrame* aScrollFrame)
+GetClipView(nsIPresContext* aPresContext, nsIFrame* aScrollFrame)
 {
   nsIView*           view;
   nsIScrollableView* scrollingView;
   const nsIView*     clipView;
 
   // Get the scrolling view
-  aScrollFrame->GetView(&view);
+  aScrollFrame->GetView(aPresContext, &view);
   view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
 
   // Get the clip view
@@ -1968,7 +1968,7 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
       scrollFrame = GetNearestScrollFrame(aForFrame);
       
       // Get the viewport size
-      clipView = GetClipView(scrollFrame);
+      clipView = GetClipView(&aPresContext, scrollFrame);
       clipView->GetDimensions(&viewportArea.width, &viewportArea.height);
     }
 
@@ -1987,10 +1987,10 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
       nsIView*  view;
 
-      aForFrame->GetView(&view);
+      aForFrame->GetView(&aPresContext, &view);
       if (!view) {
         nsPoint offset;
-        aForFrame->GetOffsetFromView(offset, &view);
+        aForFrame->GetOffsetFromView(&aPresContext, offset, &view);
         anchor -= offset;
       }
       NS_ASSERTION(view, "expected a view");

@@ -271,7 +271,7 @@ nsFieldSetFrame::Paint(nsIPresContext& aPresContext,
 
   if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) && GetShowFrameBorders()) {
     nsIView* view;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (nsnull != view) {
       aRenderingContext.SetColor(NS_RGB(0,0,255));
     }
@@ -359,7 +359,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   nsRect contentRect(borderPadding.left,borderPadding.top + mLegendSpace,aDesiredSize.width ,aDesiredSize.height);
 
   // Place the content area frame.
-  mContentFrame->SetRect(contentRect);
+  mContentFrame->SetRect(&aPresContext, contentRect);
 
   if (mLegendFrame) 
   {
@@ -376,7 +376,7 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
     // place the legend
     nsRect actualLegendRect(mLegendRect);
     actualLegendRect.Deflate(legendMargin);
-    mLegendFrame->SetRect(actualLegendRect);
+    mLegendFrame->SetRect(&aPresContext, actualLegendRect);
   }
   
   // Return our size and our result

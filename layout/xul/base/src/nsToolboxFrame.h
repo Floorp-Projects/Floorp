@@ -83,7 +83,8 @@ public:
                                         nsIStyleContext* aStyleContext);
  
     // Overridden to capture events
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint,
                               nsIFrame**     aFrame);
 
 /*BEGIN implementations of dragevent handler interface*/
@@ -138,10 +139,10 @@ protected:
   void CollapseToolbar ( TabInfo & inTab ) ; 
   void ExpandToolbar ( TabInfo & inTab ) ; 
 
-  void ConvertToLocalPoint ( nsPoint & ioPoint ) ;
-  void OnMouseMove ( nsPoint & aMouseLoc ) ;
-  void OnMouseExit ( ) ;
-  void OnMouseLeftClick ( nsPoint & aMouseLoc ) ;
+  void ConvertToLocalPoint ( nsIPresContext* aPresContext, nsPoint & ioPoint ) ;
+  void OnMouseMove ( nsIPresContext* aPresContext, nsPoint & aMouseLoc ) ;
+  void OnMouseExit ( nsIPresContext* aPresContext ) ;
+  void OnMouseLeftClick ( nsIPresContext* aPresContext, nsPoint & aMouseLoc ) ;
 
     // utility routines
   TabInfo* FindGrippyForToolbar ( nsVoidArray & inList, const nsIContent* inContent ) const ;

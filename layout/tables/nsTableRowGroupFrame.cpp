@@ -268,7 +268,7 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
   while (nsnull != kid) {
     nsIView *pView;
      
-    kid->GetView(&pView);
+    kid->GetView(&aPresContext, &pView);
     if (nsnull == pView) {
       PRBool clipState;
       nsRect kidRect;
@@ -296,7 +296,9 @@ void nsTableRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
 NS_IMETHODIMP
-nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsTableRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                       const nsPoint& aPoint,
+                                       nsIFrame** aFrame)
 {
   nsIFrame* kid;
   nsRect kidRect;
@@ -311,13 +313,13 @@ nsTableRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
     if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay) {
       if (((nsTableRowFrame*)(kid))->Contains(aPoint)) {
         tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-        return kid->GetFrameForPoint(tmp, aFrame);
+        return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
       }
     }
     else {
       if (kidRect.Contains(aPoint)) {
         tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-        return kid->GetFrameForPoint(tmp, aFrame);
+        return kid->GetFrameForPoint(aPresContext, tmp, aFrame);
       }
     }
 
@@ -336,7 +338,7 @@ void nsTableRowGroupFrame::PlaceChild(nsIPresContext&      aPresContext,
 																			nsSize&              aKidMaxElementSize)
 {
   // Place and size the child
-  aKidFrame->SetRect(aKidRect);
+  aKidFrame->SetRect(&aPresContext, aKidRect);
 
   // Adjust the running y-offset
   aReflowState.y += aKidRect.height;
@@ -535,7 +537,7 @@ NS_METHOD nsTableRowGroupFrame::PullUpAllRowFrames(nsIPresContext& aPresContext)
         // When pushing and pulling frames we need to check for whether any
         // views need to be reparented.
         for (nsIFrame* f = nextInFlow->GetFirstFrame(); f; GetNextFrame(f, &f)) {
-          nsHTMLContainerFrame::ReparentFrameView(f, nextInFlow, this);
+          nsHTMLContainerFrame::ReparentFrameView(&aPresContext, f, nextInFlow, this);
         }
         // Append them to our child list
         mFrames.AppendFrames(this, nextInFlow->mFrames);
@@ -689,9 +691,9 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
                 {
                   // yes the cell's height fits with the available space of the rows it
                   // spans. Set the cell frame's height
-                  cellFrame->SizeTo(cellFrameSize.width, availHeightOfRowsSpanned);
+                  cellFrame->SizeTo(&aPresContext, cellFrameSize.width, availHeightOfRowsSpanned);
                   // Realign cell content based on new height
-                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild();
+                  ((nsTableCellFrame*)cellFrame)->VerticallyAlignChild(&aPresContext);
                 }
                 else
                 {
@@ -744,7 +746,7 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext& aPresContext,
   
             // Resize the row to its final size and position
             rowBounds.height = rowHeights[rowIndex];
-            rowFrame->SetRect(rowBounds);
+            rowFrame->SetRect(&aPresContext, rowBounds);
           }
           
           rowIndex++;
@@ -829,7 +831,7 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContex
         htmlReflow->WillReflow(aPresContext);
       }
       
-      kidFrame->MoveTo(origin.x, origin.y);
+      kidFrame->MoveTo(&aPresContext, origin.x, origin.y);
     }
 
     // Remember the last frame
@@ -871,7 +873,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext&          aPresContext,
         nsHTMLReflowMetrics desiredSize(nsnull);
 
         rv = ReflowChild(rowFrame, aPresContext, desiredSize, rowReflowState, aStatus);
-        rowFrame->SizeTo(desiredSize.width, desiredSize.height);
+        rowFrame->SizeTo(&aPresContext, desiredSize.width, desiredSize.height);
         ((nsTableRowFrame *)rowFrame)->DidResize(aPresContext, aReflowState);
         aDesiredSize.height = desiredSize.height;
 
@@ -1533,7 +1535,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
         // repaint the entire row
         // XXX Improve this so the row knows it should bitblt (or repaint) those
         // cells that change position...
-        Invalidate(kidRect);
+        Invalidate(&aPresContext, kidRect);
 
         // Invalidate the area we're offseting. Note that we only repaint within
         // our existing frame bounds.
@@ -1542,7 +1544,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
         if (kidRect.YMost() < mRect.height) {
           nsRect  dirtyRect(0, kidRect.YMost(),
                             mRect.width, mRect.height - kidRect.YMost());
-          Invalidate(dirtyRect);
+          Invalidate(&aPresContext, dirtyRect);
         }
 
         // Adjust the frames that follow
@@ -1567,7 +1569,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext&      aPresConte
       // XXX We should change CalculateRowHeights() to return the bounding
       // rect of what changed. Or whether anything moved or changed size...
       nsRect  dirtyRect(0, 0, mRect.width, mRect.height);
-      Invalidate(dirtyRect);
+      Invalidate(&aPresContext, dirtyRect);
     }
   }
   

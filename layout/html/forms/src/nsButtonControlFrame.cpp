@@ -194,7 +194,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
         formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnReset();
+        mFormFrame->OnReset(aPresContext);
       }
       break;
     case NS_FORM_INPUT_SUBMIT:
@@ -324,9 +324,9 @@ nsButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 }
 
 void
-nsButtonControlFrame::Redraw()
+nsButtonControlFrame::Redraw(nsIPresContext* aPresContext)
 {	nsRect rect(0, 0, mRect.width, mRect.height);
-    Invalidate(rect, PR_FALSE);
+    Invalidate(aPresContext, rect, PR_FALSE);
 
 }
 

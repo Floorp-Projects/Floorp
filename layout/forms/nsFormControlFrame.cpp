@@ -199,7 +199,7 @@ nsFormControlFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
@@ -462,7 +462,7 @@ nsFormControlFrame::GetStyleSize(nsIPresContext& aPresContext,
 }
 
 void
-nsFormControlFrame::Reset()
+nsFormControlFrame::Reset(nsIPresContext* aPresContext)
 {
 }
 
@@ -533,7 +533,7 @@ nsFormControlFrame::SetCurrentCheckState(PRBool aState)
 }
 
 NS_IMETHODIMP
-nsFormControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+nsFormControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
 }

@@ -339,7 +339,7 @@ nsAreaFrame::DidReflow(nsIPresContext& aPresContext,
       const nsStyleDisplay* display = (const nsStyleDisplay*)
         mStyleContext->GetStyleData(eStyleStruct_Display);
 
-      GetView(&view);
+      GetView(&aPresContext, &view);
       if (view && (NS_STYLE_OVERFLOW_VISIBLE == display->mOverflow)) {
         // Don't let our base class position the view since we're doing it
         mState &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
@@ -357,7 +357,7 @@ nsAreaFrame::DidReflow(nsIPresContext& aPresContext,
 
         // XXX We need to handle the case where child frames stick out on the
         // left and top edges as well...
-        GetOffsetFromView(origin, &parentWithView);
+        GetOffsetFromView(&aPresContext, origin, &parentWithView);
         vm->ResizeView(view, mCombinedArea.XMost(), mCombinedArea.YMost());
         vm->MoveViewTo(view, origin.x, origin.y);
         NS_RELEASE(vm);

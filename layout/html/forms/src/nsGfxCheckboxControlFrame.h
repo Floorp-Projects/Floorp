@@ -45,7 +45,7 @@ public:
 
 protected:
   virtual CheckState GetCheckboxState();
-  virtual void SetCheckboxState(CheckState aValue);
+  virtual void SetCheckboxState(nsIPresContext* aPresContext, CheckState aValue);
 
   virtual void PaintCheckBox(nsIPresContext& aPresContext,
                              nsIRenderingContext& aRenderingContext,

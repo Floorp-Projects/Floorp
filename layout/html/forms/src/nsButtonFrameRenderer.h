@@ -87,7 +87,7 @@ public:
   virtual nsresult SetStyleContext(PRInt32 aIndex, nsIStyleContext* aStyleContext);
 	virtual void ReResolveStyles(nsIPresContext& aPresContext);
 
-  virtual void Redraw();
+  virtual void Redraw(nsIPresContext* aPresContext);
 
   virtual nsIFrame* GetFrame();
   virtual PRInt32 GetNameSpace();

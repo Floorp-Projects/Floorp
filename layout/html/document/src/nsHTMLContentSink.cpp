@@ -2552,7 +2552,9 @@ HTMLContentSink::ScrollToRef()
               // coordinates that are relative to that.
               nsPoint offset;
               nsIView* view;
-              frame->GetOffsetFromView(offset, &view);
+              nsCOMPtr<nsIPresContext> presContext;
+              shell->GetPresContext(getter_AddRefs(presContext));
+              frame->GetOffsetFromView(presContext, offset, &view);
               nscoord x = 0;
               nscoord y = offset.y;
               sview->SetScrollPreference(mOriginalScrollPreference);

@@ -52,7 +52,7 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext) = 0;
 
-  virtual void Reset() = 0;
+  virtual void Reset(nsIPresContext* aPresContext) = 0;
 
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter) = 0;
 
@@ -118,7 +118,7 @@ public:
    * @returns NS_OK if the property name is valid, otherwise an error code
    */
   
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue) = 0;
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue) = 0;
   
   /**
    * Get a property from the form control frame

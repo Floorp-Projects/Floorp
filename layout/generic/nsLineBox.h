@@ -254,7 +254,7 @@ public:
   static nsLineBox* FindLineContaining(nsLineBox* aLine, nsIFrame* aFrame,
                                        PRInt32* aFrameIndexInLine);
 
-  void List(FILE* out, PRInt32 aIndent) const;
+  void List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 
   nsIFrame* LastChild() const;
 

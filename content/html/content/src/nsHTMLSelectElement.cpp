@@ -485,7 +485,10 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aValue)
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
     nsString value;
     value.Append(aValue, 10);
-    formControlFrame->SetProperty(nsHTMLAtoms::selectedindex, value);
+    nsIPresContext* presContext;
+    nsGenericHTMLElement::GetPresContext(this, &presContext);
+    formControlFrame->SetProperty(presContext, nsHTMLAtoms::selectedindex, value);
+    NS_IF_RELEASE(presContext);
   }
   return NS_OK;
 }
@@ -654,7 +657,10 @@ nsHTMLSelectElement::AddOption(nsIContent* aContent)
     nsISelectControlFrame* selectFrame = nsnull;
     result = fcFrame->QueryInterface(nsISelectControlFrame::GetIID(),(void **) &selectFrame);
     if (NS_SUCCEEDED(result) && (nsnull != selectFrame)) {
-      result = selectFrame->AddOption(mOptions->IndexOf(aContent));
+      nsIPresContext* presContext;
+      nsGenericHTMLElement::GetPresContext(this, &presContext);
+      result = selectFrame->AddOption(presContext, mOptions->IndexOf(aContent));
+      NS_IF_RELEASE(presContext);
     }
   }
   
@@ -683,7 +689,10 @@ nsHTMLSelectElement::RemoveOption(nsIContent* aContent)
       // We can't get our index if we've already been replaced in the OptionList.
       // If we couldn't get our index, pass -1, remove all options and recreate
       // Coincidentally, IndexOf returns -1 if the option isn't found in the list
-      result = selectFrame->RemoveOption(oldIndex);
+      nsIPresContext* presContext;
+      nsGenericHTMLElement::GetPresContext(this, &presContext);
+      result = selectFrame->RemoveOption(presContext, oldIndex);
+      NS_IF_RELEASE(presContext);
     }
   }
 

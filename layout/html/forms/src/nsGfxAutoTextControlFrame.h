@@ -50,7 +50,7 @@ public:
 					nsGUIEvent* aEvent,
 					nsEventStatus& aEventStatus);
 
-	NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+	NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
 	NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
 	void ReadAttributes(nsIContent* aContent);

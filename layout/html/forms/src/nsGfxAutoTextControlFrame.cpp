@@ -147,7 +147,9 @@ nsresult nsGfxAutoTextControlFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 
-nsresult nsGfxAutoTextControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+nsresult nsGfxAutoTextControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                nsIAtom* aName,
+                                                const nsString& aValue)
 {
   	if (nsHTMLAtoms::autocomplete == aName)
   	{
@@ -155,7 +157,7 @@ nsresult nsGfxAutoTextControlFrame::SetProperty(nsIAtom* aName, const nsString& 
   		//return NS_OK;
    	}
 
-	return(Inherited::SetProperty(aName, aValue));
+	return(Inherited::SetProperty(aPresContext, aName, aValue));
 }
 
 

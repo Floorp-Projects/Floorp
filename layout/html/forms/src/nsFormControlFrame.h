@@ -156,7 +156,7 @@ public:
 
   virtual void SetFocus(PRBool aOn = PR_TRUE, PRBool aRepaint = PR_FALSE);
   virtual void ScrollIntoView(nsIPresContext* aPresContext);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
   virtual PRBool IsSuccessful(nsIFormControlFrame* aSubmitter);
 
   /**
@@ -203,7 +203,7 @@ public:
                             nsSize& aSize);
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
 
 protected:

@@ -56,9 +56,9 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
 protected:
 
@@ -81,7 +81,7 @@ private:
 /* ---------- abstract methods derived class must implement ---------- */
 public:  
   // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue)=0;
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue)=0;
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue)=0; 
 
   virtual nsWidgetInitData* GetWidgetInitData(nsIPresContext& aPresContext)=0;

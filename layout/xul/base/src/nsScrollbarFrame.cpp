@@ -301,7 +301,7 @@ nsScrollbarFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
   return rv;
 }

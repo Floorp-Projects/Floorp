@@ -207,10 +207,11 @@ nsMenuFrame::Destroy(nsIPresContext& aPresContext)
 
 // Called to prevent events from going to anything inside the menu.
 NS_IMETHODIMP
-nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
+nsMenuFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
                               nsIFrame**     aFrame)
 {
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aFrame);
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   nsCOMPtr<nsIContent> content;
   if (*aFrame) {
     (*aFrame)->GetContent(getter_AddRefs(content));
@@ -621,7 +622,7 @@ nsMenuFrame::Reflow(nsIPresContext&   aPresContext,
   frame->GetRect(rect);
   rect.width = aDesiredSize.width;
   rect.height = aDesiredSize.height;
-  frame->SetRect(rect);
+  frame->SetRect(&aPresContext, rect);
 
   // Don't let it affect our size.
   aDesiredSize.width = w;

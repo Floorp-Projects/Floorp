@@ -277,9 +277,10 @@ public:
   static PRBool GetBackgroundAttributesImpact(const nsIAtom* aAttribute,
                                               PRInt32& aHint);
 
-  //XXX This creates a dependency between content and frames 
+  //XXX These two creates a dependency between content and frames 
   static nsresult GetPrimaryFrame(nsIHTMLContent* aContent,
                                   nsIFormControlFrame *&aFormControlFrame);
+  static nsresult GetPresContext(nsIHTMLContent* aContent, nsIPresContext** aPresContext);
 
   static nsresult GetBaseURL(const nsHTMLValue& aBaseHref,
                              nsIDocument* aDocument,

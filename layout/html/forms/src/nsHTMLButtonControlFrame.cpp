@@ -278,7 +278,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
         formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
-        mFormFrame->OnReset();
+        mFormFrame->OnReset(aPresContext);
       }
     }
     else if (IsSubmit(type) == PR_TRUE) {
@@ -314,11 +314,11 @@ nsHTMLButtonControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 }
 
 void
-nsHTMLButtonControlFrame::GetTranslatedRect(nsRect& aRect)
+nsHTMLButtonControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
 {
   nsIView* view;
   nsPoint viewOffset(0,0);
-  GetOffsetFromView(viewOffset, &view);
+  GetOffsetFromView(aPresContext, viewOffset, &view);
   while (nsnull != view) {
     nsPoint tempOffset;
     view->GetPosition(&tempOffset.x, &tempOffset.y);
@@ -353,7 +353,9 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                           const nsPoint& aPoint,
+                                           nsIFrame** aFrame)
 {
   *aFrame = this;
   return NS_OK;
@@ -530,7 +532,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     // See if it's targeted at us
     aReflowState.reflowCommand->GetTarget(targetFrame);
     if (this == targetFrame) {
-      Invalidate(nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
+      Invalidate(&aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
       nsIReflowCommand::ReflowType  reflowType;
       aReflowState.reflowCommand->GetType(reflowType);
@@ -552,7 +554,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
 
   // Place the child
   nsRect rect = nsRect(focusPadding.left + aReflowState.mComputedBorderPadding.left, focusPadding.top + aReflowState.mComputedBorderPadding.top, aDesiredSize.width, aDesiredSize.height);
-  firstKid->SetRect(rect);
+  firstKid->SetRect(&aPresContext, rect);
 
   // if computed use the computed values.
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && (aDesiredSize.width < aReflowState.mComputedWidth)) 
@@ -631,7 +633,8 @@ nsresult nsHTMLButtonControlFrame::RequiresWidget(PRBool& aRequiresWidget)
 }
 
 
-NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsHTMLButtonControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                    nsIAtom* aName, const nsString& aValue)
 {
   return NS_OK;
 }

@@ -216,8 +216,8 @@ nsFirstLetterFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   // Place and size the child and update the output metrics
-  kid->MoveTo(bp.left, bp.top);
-  kid->SizeTo(aMetrics.width, aMetrics.height);
+  kid->MoveTo(&aPresContext, bp.left, bp.top);
+  kid->SizeTo(&aPresContext, aMetrics.width, aMetrics.height);
   aMetrics.width += lr;
   aMetrics.height += tb;
   if (aMetrics.maxElementSize) {
@@ -278,7 +278,7 @@ nsFirstLetterFrame::DrainOverflowFrames(nsIPresContext* aPresContext)
       // views need to be reparented.
       nsIFrame* f = overflowFrames;
       while (f) {
-        nsHTMLContainerFrame::ReparentFrameView(f, prevInFlow, this);
+        nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
         f->GetNextSibling(&f);
       }
       mFrames.InsertFrames(this, nsnull, overflowFrames);

@@ -3,6 +3,8 @@
 
 #include "nsISupports.h"
 
+class nsIPresContext;
+
 #define NS_ISTATEFULFRAME_IID_STR "306c8ca0-5f0c-11d3-a9fb-000064657374"
 
 #define NS_ISTATEFULFRAME_IID \
@@ -18,9 +20,9 @@ class nsIStatefulFrame : public nsISupports {
   enum StateType {eNoType=-1, eCheckboxType, eFileType, eRadioType, eSelectType,
                 eTextType, eNumStateTypes};
 
-  NS_IMETHOD GetStateType(nsIStatefulFrame::StateType* aStateType) = 0;
-  NS_IMETHOD SaveState(nsISupports** aState) = 0;
-  NS_IMETHOD RestoreState(nsISupports* aState) = 0;
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType) = 0;
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState) = 0;
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState) = 0;
 
 };
 

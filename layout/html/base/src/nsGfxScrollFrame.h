@@ -116,6 +116,7 @@ protected:
 private:
   friend class nsGfxScrollFrameInner;
   nsGfxScrollFrameInner* mInner;
+  nsIPresContext*        mPresContext;  // weak reference
 };
 
 #endif /* nsScrollFrame_h___ */

@@ -830,7 +830,7 @@ PresShell::RepaintSelection(SelectionType aType)
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->RepaintSelection(aType);
+  return mSelection->RepaintSelection(mPresContext, aType);
 }
 
 NS_IMETHODIMP
@@ -949,7 +949,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
     if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
       mPresContext->SetVisibleArea(nsRect(0,0,desiredSize.width,desiredSize.height));
       
 #ifdef NS_DEBUG
@@ -1029,7 +1029,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
 
     if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
         rootFrame->VerifyTree();
@@ -1209,7 +1209,7 @@ PresShell::StyleChangeReflow()
 
     if (NS_OK == rootFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
       htmlReflow->Reflow(*mPresContext, desiredSize, reflowState, status);
-      rootFrame->SizeTo(desiredSize.width, desiredSize.height);
+      rootFrame->SizeTo(mPresContext, desiredSize.width, desiredSize.height);
 #ifdef NS_DEBUG
       if (nsIFrame::GetVerifyTreeEnable()) {
         rootFrame->VerifyTree();
@@ -1505,10 +1505,10 @@ PresShell::CreateRenderingContext(nsIFrame *aFrame,
   nsPoint   pt;
   nsresult  rv;
 
-  aFrame->GetView(&view);
+  aFrame->GetView(mPresContext, &view);
 
   if (nsnull == view)
-    aFrame->GetOffsetFromView(pt, &view);
+    aFrame->GetOffsetFromView(mPresContext, pt, &view);
 
   while (nsnull != view)
   {
@@ -1614,7 +1614,7 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
       // Determine the offset from aFrame to the scrolled view. We do that by
       // getting the offset from its closest view and then walking up
       scrollingView->GetScrolledView(scrolledView);
-      aFrame->GetOffsetFromView(offset, &closestView);
+      aFrame->GetOffsetFromView(mPresContext, offset, &closestView);
 
       // XXX Deal with the case where there is a scrolled element, e.g., a
       // DIV in the middle...
@@ -1784,7 +1784,7 @@ PresShell::GetHistoryState(nsILayoutHistoryState** aState)
   rv = GetRootFrame(&rootFrame);
   if (NS_FAILED(rv) || nsnull == rootFrame) return rv;
 
-  rv = mFrameManager->CaptureFrameState(rootFrame, *aState);
+  rv = mFrameManager->CaptureFrameState(mPresContext, rootFrame, *aState);
 
   return rv;
 }
@@ -1855,7 +1855,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
     nsIFrame* frame;
     rv = GetPrimaryFrameFor(aContainer, &frame);
     if (NS_SUCCEEDED(rv) && nsnull != frame)
-      mFrameManager->RestoreFrameState(frame, mHistoryState);
+      mFrameManager->RestoreFrameState(mPresContext, frame, mHistoryState);
   }
 
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
@@ -2149,7 +2149,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
   if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
   {//KEY HANDLERS WILL GET RID OF THIS 
-    if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(aEvent)))
+    if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(mPresContext, aEvent)))
     {  
       return NS_OK;
     }
@@ -2176,10 +2176,10 @@ PresShell::HandleEvent(nsIView         *aView,
         manager->GetFocusedContent(&focusContent);
         if (focusContent)
           GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
-        else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+        else frame->GetFrameForPoint(mPresContext, aEvent->point, &mCurrentEventFrame);
       }
       else {
-        frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+        frame->GetFrameForPoint(mPresContext, aEvent->point, &mCurrentEventFrame);
       }
       NS_IF_RELEASE(mCurrentEventContent);
       if (GetCurrentEventFrame() || focusContent) {
@@ -2316,7 +2316,7 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 }
 
 static PRBool
-CompareTrees(nsIFrame* aA, nsIFrame* aB)
+CompareTrees(nsIPresContext* aPresContext, nsIFrame* aA, nsIFrame* aB)
 {
   PRBool ok = PR_TRUE;
   nsIAtom* listName = nsnull;
@@ -2359,8 +2359,8 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         // do have views, make sure the views are the same size. If the
         // views have widgets, make sure they both do or neither does. If
         // they do, make sure the widgets are the same size.
-        k1->GetView(&v1);
-        k2->GetView(&v2);
+        k1->GetView(aPresContext, &v1);
+        k2->GetView(aPresContext, &v2);
         if (((nsnull == v1) && (nsnull != v2)) ||
             ((nsnull != v1) && (nsnull == v2))) {
           ok = PR_FALSE;
@@ -2393,7 +2393,7 @@ CompareTrees(nsIFrame* aA, nsIFrame* aB)
         }
 
         // Compare the sub-trees too
-        if (!CompareTrees(k1, k2)) {
+        if (!CompareTrees(aPresContext, k1, k2)) {
           ok = PR_FALSE;
           if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
             break;
@@ -2640,12 +2640,12 @@ PresShell::VerifyIncrementalReflow()
   root1 = FindTopFrame(root1);
   root2 = FindTopFrame(root2);
 #endif
-  PRBool ok = CompareTrees(root1, root2);
+  PRBool ok = CompareTrees(mPresContext, root1, root2);
   if (!ok && (VERIFY_REFLOW_NOISY & gVerifyReflowFlags)) {
     printf("Verify reflow failed, primary tree:\n");
-    root1->List(stdout, 0);
+    root1->List(mPresContext, stdout, 0);
     printf("Verification tree:\n");
-    root2->List(stdout, 0);
+    root2->List(mPresContext, stdout, 0);
   }
 
 //  printf("Incremental reflow doomed view tree:\n");

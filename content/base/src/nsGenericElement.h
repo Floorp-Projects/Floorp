@@ -184,7 +184,7 @@ public:
 
   //----------------------------------------
 
-  nsresult RenderFrame();
+  nsresult RenderFrame(nsIPresContext*);
 
   nsresult AddScriptEventListener(nsIAtom* aAttribute,
                                   const nsString& aValue,

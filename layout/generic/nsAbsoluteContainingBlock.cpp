@@ -365,7 +365,7 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
     nsRect  rect(border.left + kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
                  border.top + kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
                  kidDesiredSize.width, kidDesiredSize.height);
-    aKidFrame->SetRect(rect);
+    aKidFrame->SetRect(&aPresContext, rect);
   }
 
   return rv;

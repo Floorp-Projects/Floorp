@@ -65,9 +65,9 @@ public:
   virtual const nsIID& GetIID();
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
   virtual PRInt32 GetMaxNumValues();
   virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                 nsString* aValues, nsString* aNames);
@@ -89,19 +89,20 @@ public:
   enum CheckState { eOff, eOn, eMixed } ;
 
    // nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
 protected:
 
     // native/gfx implementations need to implement needs.
   virtual CheckState GetCheckboxState() = 0;
-  virtual void SetCheckboxState(CheckState aValue) = 0;
+  virtual void SetCheckboxState(nsIPresContext* aPresContext, CheckState aValue) = 0;
 
    // Utility methods for implementing SetProperty/GetProperty
-  void SetCheckboxControlFrameState(const nsString& aValue);
+  void SetCheckboxControlFrameState(nsIPresContext* aPresContext,
+                                    const nsString& aValue);
   void GetCheckboxControlFrameState(nsString& aValue);  
 
     // utility routine for converting from DOM values to internal enum
@@ -113,7 +114,8 @@ protected:
 
     // we just became a tri-state, or we just lost tri-state status. fix up
     // the attributes for the new mode.
-  void SwitchModesWithEmergencyBrake ( PRBool inIsNowTristate ) ;
+  void SwitchModesWithEmergencyBrake ( nsIPresContext* aPresContext,
+                                       PRBool inIsNowTristate ) ;
   
     // for tri-state checkbox. meaningless for normal HTML
   PRBool mIsTristate;

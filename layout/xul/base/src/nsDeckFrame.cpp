@@ -168,7 +168,8 @@ nsDeckFrame::Paint(nsIPresContext& aPresContext,
 }
 
 
-NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(const nsPoint& aPoint, 
+NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                             const nsPoint& aPoint, 
                                              nsIFrame**     aFrame)
 {
   // if its not in our child just return us.
@@ -187,7 +188,7 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(const nsPoint& aPoint,
       nsPoint p = aPoint;
       p.x -= childRect.x;
       p.y -= childRect.y;
-      return selectedFrame->GetFrameForPoint(p, aFrame);
+      return selectedFrame->GetFrameForPoint(aPresContext, p, aFrame);
     }
   }
     
@@ -272,7 +273,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
   
     // make collapsed children not show up
     if (mSprings[count].collapsed || count != index) {
-       CollapseChild(childFrame);
+       CollapseChild(&aPresContext, childFrame);
   //  } if (count != index) {
       // if the child is not in view then make sure its view is 0 so it clips
       // out all its children.
@@ -283,7 +284,7 @@ nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
       ////nsIView* pv;
       //GetView(&pv);
       //childView->SetParent(pv);
-      childFrame->MoveTo(boxRect.x, boxRect.y);
+      childFrame->MoveTo(&aPresContext, boxRect.x, boxRect.y);
     }
 
     rv = childFrame->GetNextSibling(&childFrame);

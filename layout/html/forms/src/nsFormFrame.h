@@ -49,15 +49,15 @@ public:
 
   // nsIFormManager
 
-  NS_IMETHOD OnReset();
+  NS_IMETHOD OnReset(nsIPresContext* aPresContext);
 
   NS_IMETHOD OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   // other methods 
 
-  void OnRadioChecked(nsRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
+  void OnRadioChecked(nsIPresContext* aPresContext, nsRadioControlFrame& aRadio, PRBool aChecked = PR_TRUE); 
     
-  void AddFormControlFrame(nsIFormControlFrame& aFrame);
+  void AddFormControlFrame(nsIPresContext* aPresContext, nsIFormControlFrame& aFrame);
   static void AddFormControlFrame(nsIPresContext& aPresContext, nsIFrame& aFrame);
 
   PRBool CanSubmit(nsFormControlFrame& aFrame);

@@ -137,7 +137,7 @@ public:
   virtual void ControlChanged(nsIPresContext* aPresContext);
 
   // nsIFormControLFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
@@ -147,15 +147,15 @@ public:
                                      PRInt32         aHint);
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(PRInt32 aIndex);
-  NS_IMETHOD RemoveOption(PRInt32 aIndex);
+  NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 aIndex);
+  NS_IMETHOD RemoveOption(nsIPresContext* aPresContext, PRInt32 aIndex);
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
   NS_IMETHOD GetOptionSelected(PRInt32 aIndex, PRBool* aValue);
 
   //nsIStatefulFrame
-  NS_IMETHOD GetStateType(StateType* aStateType);
-  NS_IMETHOD SaveState(nsISupports** aState);
-  NS_IMETHOD RestoreState(nsISupports* aState);
+  NS_IMETHOD GetStateType(nsIPresContext* aPresContext, StateType* aStateType);
+  NS_IMETHOD SaveState(nsIPresContext* aPresContext, nsISupports** aState);
+  NS_IMETHOD RestoreState(nsIPresContext* aPresContext, nsISupports* aState);
 
 protected:
   PRInt32 mNumRows;
@@ -1238,7 +1238,8 @@ nsNativeSelectControlFrame::AttributeChanged(nsIPresContext* aPresContext,
 }
 
 
-NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& aValue)
+NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIPresContext* aPresContext,
+                                                      nsIAtom* aName, const nsString& aValue)
 {
   if (nsHTMLAtoms::selected == aName) {
     return NS_ERROR_INVALID_ARG; // Selected is readonly according to spec.
@@ -1257,12 +1258,13 @@ NS_IMETHODIMP nsNativeSelectControlFrame::SetProperty(nsIAtom* aName, const nsSt
     // Update widget
     UpdateWidgetToCache();
   } else {
-    return nsNativeFormControlFrame::SetProperty(aName, aValue);
+    return nsNativeFormControlFrame::SetProperty(aPresContext, aName, aValue);
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsNativeSelectControlFrame::AddOption(PRInt32 aIndex)
+NS_IMETHODIMP nsNativeSelectControlFrame::AddOption(nsIPresContext* aPresContext,
+                                                    PRInt32 aIndex)
 {
     // Grab the content model information
     nsIDOMHTMLCollection* options = GetOptions();
@@ -1318,7 +1320,8 @@ NS_IMETHODIMP nsNativeSelectControlFrame::AddOption(PRInt32 aIndex)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsNativeSelectControlFrame::RemoveOption(PRInt32 aIndex)
+NS_IMETHODIMP nsNativeSelectControlFrame::RemoveOption(nsIPresContext* aPresContext,
+                                                       PRInt32 aIndex)
 {
     // Grab the content model information
     nsIDOMHTMLCollection* options = GetOptions();
@@ -1536,14 +1539,15 @@ nsNativeSelectControlFrame::Deselect()
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsNativeSelectControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+nsNativeSelectControlFrame::GetStateType(nsIPresContext* aPresContext,
+                                         nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType = nsIStatefulFrame::eSelectType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::SaveState(nsISupports** aState)
+nsNativeSelectControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
 {
   nsISupportsArray* value = nsnull;
   nsresult res = NS_NewISupportsArray(&value);
@@ -1576,7 +1580,7 @@ nsNativeSelectControlFrame::SaveState(nsISupports** aState)
 }
 
 NS_IMETHODIMP
-nsNativeSelectControlFrame::RestoreState(nsISupports* aState)
+nsNativeSelectControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
 {
   nsISupportsArray* value = (nsISupportsArray *)aState;
   nsresult res = NS_ERROR_NULL_POINTER;

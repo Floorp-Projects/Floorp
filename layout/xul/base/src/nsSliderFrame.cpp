@@ -135,8 +135,10 @@ nsSliderFrame::Init(nsIPresContext&  aPresContext,
   nsresult  rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
+  // XXX Hack
+  mPresContext = &aPresContext;
   return rv;
 }
 
@@ -437,7 +439,7 @@ nsSliderFrame::Reflow(nsIPresContext&   aPresContext,
   else
     thumbRect.y += pos;
 
-  thumbFrame->SetRect(thumbRect);
+  thumbFrame->SetRect(&aPresContext, thumbRect);
 
   // add in our border
   aDesiredSize.width += borderPadding.left + borderPadding.right;
@@ -465,7 +467,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
 
   PRBool isHorizontal = IsHorizontal(scrollbar);
 
-  if (isDraggingThumb())
+  if (isDraggingThumb(&aPresContext))
   {
     switch (aEvent->message) {
     case NS_MOUSE_MOVE: {
@@ -494,7 +496,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
           // how much we are scrolled.
           nsIScrollableView* scrollingView;
           nsIView*           view;
-          parent->GetView(&view);
+          parent->GetView(&aPresContext, &view);
           if (view) {
             nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
             if (NS_SUCCEEDED(result)) {
@@ -535,7 +537,7 @@ nsSliderFrame::HandleEvent(nsIPresContext& aPresContext,
        // stop capturing
       //printf("stop capturing\n");
       AddListener();
-      DragThumb(PR_FALSE);
+      DragThumb(&aPresContext, PR_FALSE);
     }
     //return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     return NS_OK;
@@ -639,14 +641,14 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
        newThumbRect.y = borderPadding.top + nscoord(float(curpospx)*mRatio);
 
     // set the rect
-    thumbFrame->SetRect(newThumbRect);
+    thumbFrame->SetRect(aPresContext, newThumbRect);
     
     // figure out the union of the rect so we know what to redraw
     nsRect changeRect;
     changeRect.UnionRect(thumbRect, newThumbRect);
 
     // redraw just the change
-    Invalidate(changeRect, PR_TRUE);
+    Invalidate(aPresContext, changeRect, PR_TRUE);
 
     if (mScrollbarListener)
       mScrollbarListener->PositionChanged(*aPresContext, mCurPos, curpos);
@@ -680,10 +682,11 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
   
 }
 
-NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint, 
+NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                             const nsPoint& aPoint, 
                                              nsIFrame**     aFrame)
 {   
-  if (isDraggingThumb())
+  if (isDraggingThumb(aPresContext))
   {
     *aFrame = this;
     return NS_OK;
@@ -702,7 +705,7 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint,
 
   return NS_OK;
 
-  //return nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  //return nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 }
 
 
@@ -766,7 +769,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
   nsCOMPtr<nsIDOMUIEvent> uiEvent(do_QueryInterface(aMouseEvent));
 
   RemoveListener();
-  DragThumb(PR_TRUE);
+  DragThumb(mPresContext, PR_TRUE);
   PRInt32 c = 0;
   if (isHorizontal)
      uiEvent->GetClientX(&c);
@@ -797,11 +800,11 @@ nsSliderFrame::MouseUp(nsIDOMEvent* aMouseEvent)
 }
 
 NS_IMETHODIMP
-nsSliderFrame :: DragThumb(PRBool aGrabMouseEvents)
+nsSliderFrame :: DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
 
@@ -821,11 +824,11 @@ nsSliderFrame :: DragThumb(PRBool aGrabMouseEvents)
 }
 
 PRBool
-nsSliderFrame :: isDraggingThumb()
+nsSliderFrame :: isDraggingThumb(nsIPresContext* aPresContext)
 {
     // get its view
   nsIView* view = nsnull;
-  GetView(&view);
+  GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   
   if (view) {

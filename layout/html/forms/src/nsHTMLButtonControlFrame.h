@@ -75,7 +75,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
   NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -108,7 +108,7 @@ public:
   virtual PRBool  GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                  nsString* aValues, nsString* aNames);
   virtual void MouseClicked(nsIPresContext* aPresContext);
-  virtual void Reset() {};
+  virtual void Reset(nsIPresContext*) {};
   virtual void SetFormFrame(nsFormFrame* aFormFrame) { mFormFrame = aFormFrame; }
 
   void SetFocus(PRBool aOn, PRBool aRepaint);
@@ -129,7 +129,7 @@ public:
   void GetDefaultLabel(nsString& aLabel);
 
        // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 
@@ -140,7 +140,7 @@ protected:
                                                    const nsHTMLReflowState& aSuggestedReflowState);
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
-  void GetTranslatedRect(nsRect& aRect);
+  void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect);
 
   PRIntn GetSkipSides() const;
   PRBool mInline;

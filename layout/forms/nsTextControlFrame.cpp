@@ -349,14 +349,14 @@ nsTextControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 // nsIStatefulFrame
 //----------------------------------------------------------------------
 NS_IMETHODIMP
-nsTextControlFrame::GetStateType(nsIStatefulFrame::StateType* aStateType)
+nsTextControlFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::StateType* aStateType)
 {
   *aStateType = nsIStatefulFrame::eTextType;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::SaveState(nsISupports** aState)
+nsTextControlFrame::SaveState(nsIPresContext* aPresContext, nsISupports** aState)
 {
   nsISupportsString* value = nsnull;
   nsAutoString string;
@@ -379,13 +379,13 @@ nsTextControlFrame::SaveState(nsISupports** aState)
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::RestoreState(nsISupports* aState)
+nsTextControlFrame::RestoreState(nsIPresContext* aPresContext, nsISupports* aState)
 {
   char* chars = nsnull;
   nsresult res = ((nsISupportsString*)aState)->GetData(&chars);
   if (NS_SUCCEEDED(res) && chars) {
     nsAutoString string(chars);
-    res = SetProperty(nsHTMLAtoms::value, string);
+    res = SetProperty(aPresContext, nsHTMLAtoms::value, string);
     nsCRT::free(chars);
   }
   return res;

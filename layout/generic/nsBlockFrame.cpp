@@ -1016,7 +1016,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       fc->mCombinedArea.y += finalDeltaY;
       nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
       floater->GetRect(r);
-      floater->MoveTo(r.x, r.y + finalDeltaY);
+      floater->MoveTo(mPresContext, r.x, r.y + finalDeltaY);
 #ifdef DEBUG
       if (gNoisyReflow || gNoisySpaceManager) {
         nscoord tx, ty;
@@ -1161,12 +1161,12 @@ ListTextRuns(FILE* out, PRInt32 aIndent, nsTextRun* aRuns)
 }
 
 NS_METHOD
-nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
+nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }
@@ -1211,7 +1211,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (nsnull != mLines) {
     nsLineBox* line = mLines;
     while (nsnull != line) {
-      line->List(out, aIndent);
+      line->List(aPresContext, out, aIndent);
       line = line->mNext;
     }
   }
@@ -1234,7 +1234,7 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
       }
       fputs("<\n", out);
       while (nsnull != kid) {
-        kid->List(out, aIndent + 1);
+        kid->List(aPresContext, out, aIndent + 1);
         kid->GetNextSibling(&kid);
       }
       IndentBy(out, aIndent);
@@ -1416,7 +1416,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     ListTag(stdout);
     printf(": reflow=initial\n");
 #endif
-    DrainOverflowLines();
+    DrainOverflowLines(&aPresContext);
     rv = PrepareInitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
     break;
@@ -1467,7 +1467,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     ListTag(stdout);
     printf(": reflow=resize (%d)\n", aReflowState.reason);
 #endif
-    DrainOverflowLines();
+    DrainOverflowLines(&aPresContext);
     rv = PrepareResizeReflow(state);
     break;
   }
@@ -1534,7 +1534,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     if (isStyleChange) {
       // Lots of things could have changed so damage our entire
       // bounds
-      Invalidate(nsRect(0, 0, mRect.width, mRect.height));
+      Invalidate(&aPresContext, nsRect(0, 0, mRect.width, mRect.height));
 
     } else {
       nsMargin  border = aReflowState.mComputedBorderPadding -
@@ -1560,7 +1560,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
           damageRect.y = 0;
           damageRect.height = mRect.height;
         }
-        Invalidate(damageRect);
+        Invalidate(&aPresContext, damageRect);
       }
   
       // See if our height changed
@@ -1583,7 +1583,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
           damageRect.y = mRect.height - border.bottom;
           damageRect.height = border.bottom;
         }
-        Invalidate(damageRect);
+        Invalidate(&aPresContext, damageRect);
       }
     }
   }
@@ -2429,7 +2429,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       RecoverStateFrom(aState, line, deltaY, incrementalReflow ?
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
-        Invalidate(damageRect);
+        Invalidate(aState.mPresContext, damageRect);
       }
     }
 
@@ -2482,7 +2482,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       frame->SetParent(this);
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented
-      nsHTMLContainerFrame::ReparentFrameView(frame, mNextInFlow, this);
+      nsHTMLContainerFrame::ReparentFrameView(aState.mPresContext, frame, mNextInFlow, this);
       lastFrame = frame;
       frame->GetNextSibling(&frame);
     }
@@ -2602,7 +2602,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         // XXX We need to improve on this...
         nsRect  dirtyRect;
         dirtyRect.UnionRect(oldCombinedArea, lineCombinedArea);
-        Invalidate(dirtyRect);
+        Invalidate(aState.mPresContext, dirtyRect);
 
       } else {
         if (oldCombinedArea.width != lineCombinedArea.width) {
@@ -2618,7 +2618,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                             dirtyRect.x;
           dirtyRect.height = PR_MAX(oldCombinedArea.height,
                                     lineCombinedArea.height);
-          Invalidate(dirtyRect);
+          Invalidate(aState.mPresContext, dirtyRect);
         }
         if (oldCombinedArea.height != lineCombinedArea.height) {
           nsRect  dirtyRect;
@@ -2633,7 +2633,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           dirtyRect.height = PR_MAX(oldCombinedArea.YMost(),
                                     lineCombinedArea.YMost()) -
                              dirtyRect.y;
-          Invalidate(dirtyRect);
+          Invalidate(aState.mPresContext, dirtyRect);
         }
       }
     }
@@ -2649,7 +2649,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
       nsRect dirtyRect;
       dirtyRect.UnionRect(oldCombinedArea, combinedArea);
-      Invalidate(dirtyRect);
+      Invalidate(aState.mPresContext, dirtyRect);
     }
   }
 
@@ -2758,7 +2758,7 @@ nsBlockFrame::PullFrame(nsBlockReflowState& aState,
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented
       NS_ASSERTION(oldParentFrame != this, "unexpected parent frame");
-      nsHTMLContainerFrame::ReparentFrameView(frame, oldParentFrame, this);
+      nsHTMLContainerFrame::ReparentFrameView(aState.mPresContext, frame, oldParentFrame, this);
       
       // The frame is being pulled from a next-in-flow; therefore we
       // need to add it to our sibling list.
@@ -2796,7 +2796,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
     kid->GetRect(r);
     if (aDY) {
       r.y += aDY;
-      kid->SetRect(r);
+      kid->SetRect(aState.mPresContext, r);
     }
 
     // If the child has any floaters that impact the space-manager,
@@ -2827,7 +2827,7 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
       while (--n >= 0) {
         kid->GetRect(r);
         r.y += aDY;
-        kid->SetRect(r);
+        kid->SetRect(aState.mPresContext, r);
         kid->GetNextSibling(&kid);
       }
     }
@@ -3361,7 +3361,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         nscoord bulletTopMargin = applyTopMargin ? collapsedBottomMargin : 0;
         bbox.y = aState.BorderPadding().top + ascent -
           metrics.ascent + bulletTopMargin;
-        mBullet->SetRect(bbox);
+        mBullet->SetRect(aState.mPresContext, bbox);
       }
     }
     else {
@@ -4160,7 +4160,7 @@ nsBlockFrame::PushLines(nsBlockReflowState& aState)
 }
 
 PRBool
-nsBlockFrame::DrainOverflowLines()
+nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
 {
 #ifdef DEBUG
   VerifyOverflowSituation();
@@ -4183,7 +4183,7 @@ nsBlockFrame::DrainOverflowLines()
 
         // When pushing and pulling frames we need to check for whether any
         // views need to be reparented
-        nsHTMLContainerFrame::ReparentFrameView(frame, prevBlock, this);
+        nsHTMLContainerFrame::ReparentFrameView(aPresContext, frame, prevBlock, this);
 
         // Get the next frame
         lastFrame = frame;
@@ -4721,7 +4721,7 @@ nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
     aFrame->GetParent(&oldParent);
     aFrame->SetParent(this);
     if (this != oldParent) {
-      nsHTMLContainerFrame::ReparentFrameView(aFrame, oldParent, this);
+      nsHTMLContainerFrame::ReparentFrameView(aPresContext, aFrame, oldParent, this);
       aPresContext->ReParentStyleContext(aFrame, mStyleContext);
     }
     aFrame->GetNextSibling(&aFrame);
@@ -4902,7 +4902,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         // cases...
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
-        Invalidate(lineCombinedArea);
+        Invalidate(aPresContext, lineCombinedArea);
         delete line;
         line = next;
       }
@@ -5063,7 +5063,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   const nsHTMLReflowMetrics& metrics = brc.GetMetrics();
   aCombinedRect = metrics.mCombinedArea;
-  floater->SizeTo(metrics.width, metrics.height);
+  floater->SizeTo(aState.mPresContext, metrics.width, metrics.height);
 
   // Stash away the max-element-size for later
   aState.StoreMaxElementSize(floater, brc.GetMaxElementSize());
@@ -5402,7 +5402,7 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
     x += aFloaterCache->mOffsets.left;
     y += aFloaterCache->mOffsets.top;
   }
-  floater->MoveTo(x, y);
+  floater->MoveTo(mPresContext, x, y);
 
   // Update the floater combined area state
   nsRect combinedArea = aFloaterCache->mCombinedArea;
@@ -5818,7 +5818,7 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
 
     while(NS_SUCCEEDED(result))
     { //we are starting aloop to allow us to "drill down to the one we want" 
-      mainframe->GetOffsetFromView(origin, &parentWithView);
+      mainframe->GetOffsetFromView(&aPresContext, origin, &parentWithView);
 
       if (NS_FAILED(result))
         return NS_OK;//do not handle
@@ -5865,7 +5865,8 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
       pos.mDirection = eDirNext;
       pos.mDesiredX = aEvent->point.x;
       
-      result = nsFrame::GetNextPrevLineFromeBlockFrame(&pos,
+      result = nsFrame::GetNextPrevLineFromeBlockFrame(&aPresContext,
+                                          &pos,
                                           mainframe, 
                                           closestLine-1, 
                                           0
@@ -5893,20 +5894,22 @@ nsBlockFrame::HandleEvent(nsIPresContext& aPresContext,
 
 
 NS_IMETHODIMP
-nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsBlockFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                               const nsPoint& aPoint,
+                               nsIFrame** aFrame)
 {
-  nsresult rv = GetFrameForPointUsing(aPoint, nsnull, aFrame);
+  nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
   if (NS_OK == rv) {
     return NS_OK;
   }
   if (nsnull != mBullet) {
-    rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::bulletList, aFrame);
+    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::bulletList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
   }
   if (mFloaters.NotEmpty()) {
-    rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::floaterList, aFrame);
+    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::floaterList, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
@@ -6339,7 +6342,7 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   // the final vertical location.
   const nsMargin& bp = aState.BorderPadding();
   nscoord y = bp.top;
-  mBullet->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
+  mBullet->SetRect(aState.mPresContext, nsRect(x, y, aMetrics.width, aMetrics.height));
 }
 
 //XXX get rid of this -- its slow

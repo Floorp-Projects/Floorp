@@ -90,7 +90,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
 
   NS_IMETHOD GetFor(nsString& aFor);
 
@@ -101,7 +101,7 @@ public:
 protected:
   PRBool FindFirstControl(nsIFrame* aParentFrame, nsIFormControlFrame*& aResultFrame);
   PRBool FindForControl(nsIFormControlFrame*& aResultFrame);
-  void GetTranslatedRect(nsRect& aRect);
+  void GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect);
 
   PRIntn GetSkipSides() const;
   PRBool mInline;
@@ -141,11 +141,11 @@ nsLabelFrame::nsLabelFrame()
 }
 
 void
-nsLabelFrame::GetTranslatedRect(nsRect& aRect)
+nsLabelFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRect)
 {
   nsIView* view;
   nsPoint viewOffset(0,0);
-  GetOffsetFromView(viewOffset, &view);
+  GetOffsetFromView(aPresContext, viewOffset, &view);
   while (nsnull != view) {
     nsPoint tempOffset;
     view->GetPosition(&tempOffset.x, &tempOffset.y);
@@ -208,9 +208,11 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsLabelFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                               const nsPoint& aPoint,
+                               nsIFrame** aFrame)
 {
-  nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
   if (nsnull != *aFrame) {
     nsCOMPtr<nsIFormControlFrame> controlFrame = do_QueryInterface(*aFrame);
     if (!controlFrame) {
@@ -426,7 +428,7 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
   if (!mDidInit) {
     // create our view, we need a view to grab the mouse 
     nsIView* view;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (!view) {
       nsresult result = nsComponentManager::CreateInstance(kViewCID, nsnull, kIViewIID,
                                                     (void **)&view);
@@ -437,14 +439,14 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
 
       nsIFrame* parWithView;
 	    nsIView *parView;
-      GetParentWithView(&parWithView);
-	    parWithView->GetView(&parView);
+      GetParentWithView(&aPresContext, &parWithView);
+	    parWithView->GetView(&aPresContext, &parView);
       // the view's size is not know yet, but its size will be kept in synch with our frame.
       nsRect boundBox(0, 0, 500, 500); 
       result = view->Init(viewMan, boundBox, parView, nsnull);
       view->SetContentTransparency(PR_TRUE);
       viewMan->InsertChild(parView, view, 0);
-      SetView(view);
+      SetView(&aPresContext, view);
     }
     mDidInit = PR_TRUE;
   }
@@ -485,7 +487,7 @@ nsLabelFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Place the child
   nsRect rect = nsRect(borderPadding.left, borderPadding.top, aDesiredSize.width, aDesiredSize.height);
-  firstKid->SetRect(rect);
+  firstKid->SetRect(&aPresContext, rect);
 
   // add in our border and padding to the size of the child
   aDesiredSize.width  += borderPadding.left + borderPadding.right;

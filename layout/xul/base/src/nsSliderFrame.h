@@ -106,7 +106,8 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
-    NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
+    NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                                const nsPoint& aPoint, nsIFrame** aFrame);
 
     NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
                                  nsIAtom*        aListName,
@@ -208,10 +209,10 @@ private:
   nsIContent* GetScrollBar();
   void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
   void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);
-  NS_IMETHOD DragThumb(PRBool aGrabMouseEvents);
+  NS_IMETHOD DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
-  PRBool isDraggingThumb();
+  PRBool isDraggingThumb(nsIPresContext* aPresContext);
 
   float mRatio;
 
@@ -221,6 +222,9 @@ private:
   PRInt32 mCurPos;
 
   nsIScrollbarListener* mScrollbarListener;
+
+  // XXX Hack
+  nsIPresContext* mPresContext;  // weak reference
 
   static nscoord gChange;
 }; // class nsSliderFrame

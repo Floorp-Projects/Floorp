@@ -158,9 +158,6 @@ public:
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
 
-  NS_IMETHOD MoveTo(nscoord aX, nscoord aY);
-  NS_IMETHOD SizeTo(nscoord aWidth, nscoord aHeight);
-
   NS_IMETHOD GetParentContent(nsIContent*& aContent);
   PRBool GetURL(nsIContent* aContent, nsString& aResult);
   PRBool GetName(nsIContent* aContent, nsString& aResult);
@@ -361,7 +358,7 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
   
     // Place and size the child
     nsRect rect(offset.x, offset.y, innerSize.width, innerSize.height);
-    firstChild->SetRect(rect);
+    firstChild->SetRect(&aPresContext, rect);
   }
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
@@ -587,18 +584,6 @@ nsHTMLFrameInnerFrame::GetFrameType(nsIAtom** aType) const
   return NS_OK;
 }
 
-NS_METHOD
-nsHTMLFrameInnerFrame::MoveTo(nscoord aX, nscoord aY)
-{
-  return nsLeafFrame::MoveTo(aX, aY);
-}
-
-NS_METHOD
-nsHTMLFrameInnerFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  return nsLeafFrame::SizeTo(aWidth, aHeight);
-}
-
 NS_IMETHODIMP
 nsHTMLFrameInnerFrame::Paint(nsIPresContext&      aPresContext,
                              nsIRenderingContext& aRenderingContext,
@@ -668,7 +653,7 @@ nsHTMLFrameInnerFrame::DidReflow(nsIPresContext& aPresContext,
   // positioned then we show it.
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     nsIView* view = nsnull;
-    GetView(&view);
+    GetView(&aPresContext, &view);
     if (view) {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
@@ -811,7 +796,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
 
   nsIView* parView;
   nsPoint origin;
-  GetOffsetFromView(origin, &parView);  
+  GetOffsetFromView(&aPresContext, origin, &parView);  
   nsRect viewBounds(origin.x, origin.y, aSize.width, aSize.height);
 
   nsCOMPtr<nsIViewManager> viewMan;
@@ -819,7 +804,7 @@ nsHTMLFrameInnerFrame::CreateWebShell(nsIPresContext& aPresContext,
   rv = view->Init(viewMan, viewBounds, parView);
   viewMan->InsertChild(parView, view, 0);
   rv = view->CreateWidget(kCChildCID);
-  SetView(view);
+  SetView(&aPresContext, view);
 
   // if the visibility is hidden, reflect that in the view
   const nsStyleDisplay* display;

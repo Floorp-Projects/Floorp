@@ -439,7 +439,7 @@ nsFrameImageLoader::Notify(nsIImageRequest *aImageRequest,
     // XXX this is pretty vile; change this so that we set another frame status bit and then pass on a notification *or* lets just start passing on the notifications directly to the frames and eliminate all of this code.
     pfd = mFrames;
     while (pfd) {
-      pfd->mFrame->GetView(&view);
+      pfd->mFrame->GetView(mPresContext, &view);
       if (view) {
         view->SetContentTransparency(PR_TRUE);
       }
@@ -541,9 +541,9 @@ nsFrameImageLoader::DamageRepairFrames(const nsRect* aDamageRect)
     // XXX We should tell the frame the damage area and let it invalidate
     // itself. Add some API calls to nsIFrame to allow a caller to invalidate
     // parts of the frame...
-    frame->GetView(&view);
+    frame->GetView(mPresContext, &view);
     if (nsnull == view) {
-      frame->GetOffsetFromView(offset, &view);
+      frame->GetOffsetFromView(mPresContext, offset, &view);
       bounds.x += offset.x;
       bounds.y += offset.y;
     }

@@ -341,7 +341,10 @@ nsHTMLFormElement::Reset()
         nsIFormManager* formMan = nsnull;
         res = frame->QueryInterface(kIFormManagerIID, (void**)&formMan);
         if (NS_SUCCEEDED(res) && formMan) {
-          res = formMan->OnReset();
+          nsCOMPtr<nsIPresContext> presContext;
+          shell->GetPresContext(getter_AddRefs(presContext));
+          
+          res = formMan->OnReset(presContext);
         }
       }
       NS_RELEASE(shell);

@@ -144,7 +144,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  void AddFrame(nsIFrame* aFrame);
+  void AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame);
 
   PRBool RemoveFrame(nsIFrame* aFrame);
 
@@ -156,8 +156,19 @@ public:
 
   virtual void Notify(nsITimer *timer);
 
+  struct FrameData {
+    nsIPresContext* mPresContext;  // pres context associated with the frame
+    nsIFrame*       mFrame;
+
+
+    FrameData(nsIPresContext* aPresContext,
+              nsIFrame*       aFrame)
+      : mPresContext(aPresContext), mFrame(aFrame) {}
+  };
+
   nsITimer* mTimer;
   nsVoidArray mFrames;
+  nsIPresContext* mPresContext;
 };
 
 static PRBool gBlinkTextOff;
@@ -196,15 +207,27 @@ void nsBlinkTimer::Stop()
 static NS_DEFINE_IID(kITimerCallbackIID, NS_ITIMERCALLBACK_IID);
 NS_IMPL_ISUPPORTS(nsBlinkTimer, kITimerCallbackIID);
 
-void nsBlinkTimer::AddFrame(nsIFrame* aFrame) {
-  mFrames.AppendElement(aFrame);
+void nsBlinkTimer::AddFrame(nsIPresContext* aPresContext, nsIFrame* aFrame) {
+  FrameData* frameData = new FrameData(aPresContext, aFrame);
+  mFrames.AppendElement(frameData);
   if (1 == mFrames.Count()) {
     Start();
   }
 }
 
 PRBool nsBlinkTimer::RemoveFrame(nsIFrame* aFrame) {
-  PRBool rv = mFrames.RemoveElement(aFrame);
+  PRInt32 i, n = mFrames.Count();
+  PRBool rv = PR_FALSE;
+  for (i = 0; i < n; i++) {
+    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
+
+    if (frameData->mFrame == aFrame) {
+      rv = mFrames.RemoveElementAt(i);
+      delete frameData;
+      break;
+    }
+  }
+  
   if (0 == mFrames.Count()) {
     Stop();
   }
@@ -239,14 +262,14 @@ void nsBlinkTimer::Notify(nsITimer *timer)
 
   PRInt32 i, n = mFrames.Count();
   for (i = 0; i < n; i++) {
-    nsIFrame* text = (nsIFrame*) mFrames.ElementAt(i);
+    FrameData* frameData = (FrameData*) mFrames.ElementAt(i);
 
     // Determine damaged area and tell view manager to redraw it
     nsPoint offset;
     nsRect bounds;
-    text->GetRect(bounds);
+    frameData->mFrame->GetRect(bounds);
     nsIView* view;
-    text->GetOffsetFromView(offset, &view);
+    frameData->mFrame->GetOffsetFromView(frameData->mPresContext, offset, &view);
     nsIViewManager* vm;
     view->GetViewManager(vm);
     bounds.x = offset.x;
@@ -290,7 +313,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
 
   /**
    * Get the "type" of the frame
@@ -325,9 +348,12 @@ public:
                          PRInt32&       aOffset);
 
 
-  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+                         nsIDOMRange *aRange,
+                         PRBool aSelected,
+                         nsSpread aSpread);
 
-  NS_IMETHOD PeekOffset(nsPeekOffsetStruct *aPos);
+  NS_IMETHOD PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos);
 
   NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
                          nsGUIEvent *    aEvent,
@@ -1281,8 +1307,8 @@ nsTextFrame::GetPositionSlowly(nsIPresContext& aPresContext,
   }
   nsIView * view;
   nsPoint origin;
-  GetView(&view);
-  GetOffsetFromView(origin, &view);
+  GetView(&aPresContext, &view);
+  GetOffsetFromView(&aPresContext, origin, &view);
 
   if (aXCoord - origin.x <0)
   {
@@ -1912,7 +1938,7 @@ nsTextFrame::GetPosition(nsIPresContext& aCX,
       PRUnichar* text = paintBuffer.mBuffer;
       nsPoint origin;
       nsIView * view;
-      GetOffsetFromView(origin, &view);
+      GetOffsetFromView(&aCX, origin, &view);
       PRBool found = BinarySearchForPosition(acx, text, origin.x, 0, 0,
                                              PRInt32(textLength),
                                              PRInt32(aXCoord) , //go to local coordinates
@@ -1970,7 +1996,10 @@ void ForceDrawFrame(nsFrame * aFrame);
 
 //null range means the whole thing
 NS_IMETHODIMP
-nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+nsTextFrame::SetSelected(nsIPresContext* aPresContext,
+                         nsIDOMRange *aRange,
+                         PRBool aSelected,
+                         nsSpread aSpread)
 {
   nsresult result;
   if (aSelected && ParentDisablesSelection())
@@ -2046,7 +2075,7 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
     nsRect frameRect;
     GetRect(frameRect);
     nsRect rect(0, 0, frameRect.width, frameRect.height);
-    Invalidate(rect, PR_FALSE);
+    Invalidate(aPresContext, rect, PR_FALSE);
 //    ForceDrawFrame(this);
   }
   if (aSpread == eSpreadDown)
@@ -2054,14 +2083,14 @@ nsTextFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
     nsIFrame *frame;
     GetPrevInFlow(&frame);
     while(frame){
-      frame->SetSelected(aRange,aSelected,eSpreadNone);
+      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
       result = frame->GetPrevInFlow(&frame);
       if (NS_FAILED(result))
         break;
     }
     GetNextInFlow(&frame);
     while (frame){
-      frame->SetSelected(aRange,aSelected,eSpreadNone);
+      frame->SetSelected(aPresContext, aRange,aSelected,eSpreadNone);
       result = frame->GetNextInFlow(&frame);
       if (NS_FAILED(result))
         break;
@@ -2181,7 +2210,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
 
 
 NS_IMETHODIMP
-nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos) 
+nsTextFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos) 
 {
 
   if (!aPos || !mContent)
@@ -2198,13 +2227,13 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       NS_ASSERTION(PR_FALSE,"nsTextFrame::PeekOffset no more flow \n");
       return NS_ERROR_INVALID_ARG;
     }
-    return nextInFlow->PeekOffset(aPos);
+    return nextInFlow->PeekOffset(aPresContext, aPos);
   }
  
   if (aPos->mAmount == eSelectLine || aPos->mAmount == eSelectBeginLine 
       || aPos->mAmount == eSelectEndLine)
   {
-      return nsFrame::PeekOffset(aPos);
+      return nsFrame::PeekOffset(aPresContext, aPos);
   }
 
   nsAutoTextBuffer paintBuffer;
@@ -2242,7 +2271,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       else
       {
         aPos->mAmount = eSelectDir;//go to "next" or previous frame based on direction not THIS frame
-        return nsFrame::PeekOffset(aPos);//no matter what this is not a valid frame to end up on
+        return nsFrame::PeekOffset(aPresContext, aPos);//no matter what this is not a valid frame to end up on
       }
     }
     break;
@@ -2305,7 +2334,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
       {
         result = GetFrameFromDirection(aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
-          result = aPos->mResultFrame->PeekOffset(aPos);
+          result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
       }
       else 
         aPos->mResultContent = mContent;
@@ -2425,7 +2454,7 @@ nsTextFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         result = GetFrameFromDirection(aPos);
         if (NS_SUCCEEDED(result) && aPos->mResultFrame && aPos->mResultFrame!= this)
         {
-          if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPos)))
+          if (NS_SUCCEEDED(result = aPos->mResultFrame->PeekOffset(aPresContext, aPos)))
             return NS_OK;//else fall through
         }
         else 
@@ -2569,7 +2598,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_TRUE,
                         PR_FALSE);
-        rv = PeekOffset(&startpos);
+        rv = PeekOffset(&aPresContext, &startpos);
         if (NS_FAILED(rv))
           return rv;
         nsPeekOffsetStruct endpos;
@@ -2581,7 +2610,7 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_FALSE,
                         PR_FALSE);
-        rv = PeekOffset(&endpos);
+        rv = PeekOffset(&aPresContext, &endpos);
         if (NS_FAILED(rv))
           return rv;
 
@@ -2673,7 +2702,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   if (ts.mFont->mFont.decorations & NS_STYLE_TEXT_DECORATION_BLINK) {
     if (0 == (mState & TEXT_BLINK_ON)) {
       mState |= TEXT_BLINK_ON;
-      gTextBlinker->AddFrame(this);
+      gTextBlinker->AddFrame(&aPresContext, this);
     }
   }
   else {
@@ -3049,7 +3078,7 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   // XXX We need a finer granularity than this, but it isn't clear what
   // has actually changed...
   if (eReflowReason_Incremental == aReflowState.reason) {
-    Invalidate(mRect);
+    Invalidate(&aPresContext, mRect);
   }
 
   nsReflowStatus rs = (offset == contentLength)
@@ -3372,13 +3401,13 @@ nsTextFrame::GetFrameName(nsString& aResult) const
 }
 
 NS_IMETHODIMP
-nsTextFrame::List(FILE* out, PRInt32 aIndent) const
+nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   // Output the tag
   IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
-  GetView(&view);
+  GetView(aPresContext, &view);
   if (nsnull != view) {
     fprintf(out, " [view=%p]", view);
   }

@@ -1608,6 +1608,29 @@ nsGenericHTMLElement::GetPrimaryFrame(nsIHTMLContent* aContent,
  
   return res;
 }         
+
+// XXX This creates a dependency between content and frames
+nsresult 
+nsGenericHTMLElement::GetPresContext(nsIHTMLContent* aContent,
+                                     nsIPresContext** aPresContext)
+{
+  nsIDocument* doc = nsnull;
+  nsresult res = NS_NOINTERFACE;
+   // Get the document
+  if (NS_OK == aContent->GetDocument(doc)) {
+    if (nsnull != doc) {
+       // Get presentation shell 0
+      nsIPresShell* presShell = doc->GetShellAt(0);
+      if (nsnull != presShell) {
+        res = presShell->GetPresContext(aPresContext);
+        NS_RELEASE(presShell);
+      }
+      NS_RELEASE(doc);
+    }
+  }
+ 
+  return res;
+}         
           
 // XXX check all mappings against ebina's usage
 static nsGenericHTMLElement::EnumTable kAlignTable[] = {

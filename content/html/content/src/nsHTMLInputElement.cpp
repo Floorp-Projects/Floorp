@@ -358,7 +358,10 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame ) { 
-        formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
+        nsIPresContext* presContext;
+        nsGenericHTMLElement::GetPresContext(this, &presContext);
+        formControlFrame->SetProperty(presContext, nsHTMLAtoms::value, aValue);
+        NS_IF_RELEASE(presContext);
       }
       return NS_OK;
     }
@@ -396,7 +399,10 @@ nsHTMLInputElement::SetAutocomplete(const nsString& aAutocomplete)
     nsIFormControlFrame* formControlFrame = nsnull;
     if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
       if (nsnull != formControlFrame ) { 
-        formControlFrame->SetProperty(nsHTMLAtoms::autocomplete, aAutocomplete);
+        nsIPresContext* presContext;
+        nsGenericHTMLElement::GetPresContext(this, &presContext);
+        formControlFrame->SetProperty(presContext, nsHTMLAtoms::autocomplete, aAutocomplete);
+        NS_IF_RELEASE(presContext);
       }
     }
   }
@@ -426,12 +432,15 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
   if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+    nsIPresContext* presContext;
+    nsGenericHTMLElement::GetPresContext(this, &presContext);
     if (PR_TRUE == aValue) {
-     formControlFrame->SetProperty(nsHTMLAtoms::checked, "1");
+     formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, "1");
     }
     else {
-      formControlFrame->SetProperty(nsHTMLAtoms::checked, "0");
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, "0");
     }
+    NS_IF_RELEASE(presContext);
   }
   return NS_OK;     
 }
@@ -518,7 +527,10 @@ nsHTMLInputElement::Select()
   nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
   if (NS_SUCCEEDED(rv)) {
     if (nsnull != formControlFrame ) { 
-      formControlFrame->SetProperty(nsHTMLAtoms::select, "");
+      nsIPresContext* presContext;
+      nsGenericHTMLElement::GetPresContext(this, &presContext);
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::select, "");
+      NS_IF_RELEASE(presContext);
       return NS_OK;
     }
   }

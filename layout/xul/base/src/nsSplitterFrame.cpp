@@ -102,7 +102,8 @@ public:
                     PRInt32 aCount,
                     PRInt32& aSpaceLeft);
 
-  void ResizeChildTo(nscoord& aDiff, 
+  void ResizeChildTo(nsIPresContext* aPresContext,
+                   nscoord& aDiff, 
                    nsSplitterInfo* aChildrenBeforeInfos, 
                    nsSplitterInfo* aChildrenAfterInfos, 
                    PRInt32 aChildrenBeforeCount, 
@@ -122,8 +123,8 @@ public:
   ResizeType GetResizeAfter();
   State GetState();
 
-  nsresult CaptureMouse(PRBool aGrabMouseEvents);
-  PRBool IsMouseCaptured();
+  nsresult CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
+  PRBool IsMouseCaptured(nsIPresContext* aPresContext);
   void Reverse(nsSplitterInfo*& aIndexes, PRInt32 aCount);
   CollapseDirection GetCollapseDirection();
 
@@ -320,6 +321,9 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
+  // XXX Hack because we need the pres context in some of the event handling functions...
+  mPresContext = &aPresContext;
+
   // find the box we are in
   nsIFrame* box = nsnull;
   nsScrollbarButtonFrame::GetParentWithTag(nsXULAtoms::box, this, box);
@@ -343,7 +347,7 @@ nsSplitterFrame::Init(nsIPresContext&  aPresContext,
 
   nsHTMLContainerFrame::CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   nsIView* view;
-  GetView(&view);
+  GetView(&aPresContext, &view);
   view->SetContentTransparency(PR_TRUE);
   view->SetZIndex(kMaxZ);
 /*
@@ -411,16 +415,17 @@ nsSplitterFrame::HandleRelease(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(const nsPoint& aPoint, 
+NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                             const nsPoint& aPoint, 
                                              nsIFrame**     aFrame)
 {   
   // if the mouse is captured always return us as the frame.
-  if (mImpl->IsMouseCaptured())
+  if (mImpl->IsMouseCaptured(aPresContext))
   {
     *aFrame = this;
     return NS_OK;
   } else 
-    return nsBoxFrame::GetFrameForPoint(aPoint, aFrame);
+    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 }
 
 NS_IMETHODIMP
@@ -445,10 +450,10 @@ nsSplitterFrame::HandleEvent(nsIPresContext& aPresContext,
 void
 nsSplitterFrameImpl::MouseUp(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 {
-      if (IsMouseCaptured()) {
+      if (IsMouseCaptured(&aPresContext)) {
           AdjustChildren(aPresContext);
           AddListener();
-          CaptureMouse(PR_FALSE);
+          CaptureMouse(&aPresContext, PR_FALSE);
           mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "", PR_TRUE);
           mPressed = PR_FALSE;
       }
@@ -457,7 +462,7 @@ nsSplitterFrameImpl::MouseUp(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 void
 nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 {
-        if (IsMouseCaptured()) {
+        if (IsMouseCaptured(&aPresContext)) {
           PRBool isHorizontal = !mSplitter->IsHorizontal();
            // convert coord to pixels
           nscoord pos = isHorizontal ? aEvent->point.x : aEvent->point.y;
@@ -481,7 +486,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
               // how much we are scrolled.
               nsIScrollableView* scrollingView;
               nsIView*           view;
-              parent->GetView(&view);
+              parent->GetView(&aPresContext, &view);
               if (view) {
                 nsresult result = view->QueryInterface(kScrollViewIID, (void**)&scrollingView);
                 if (NS_SUCCEEDED(result)) {
@@ -521,7 +526,7 @@ nsSplitterFrameImpl::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
 
 //            nscoord oldPos = pos;
 
-            ResizeChildTo(pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
+            ResizeChildTo(&aPresContext, pos, mChildInfosBefore, mChildInfosAfter, mChildInfosBeforeCount, mChildInfosAfterCount, bounded);
 
             /*
             if (oldPos > 0 && oldPos > pos)
@@ -600,11 +605,11 @@ nsSplitterFrameImpl::RemoveListener()
 }
 
 nsresult
-nsSplitterFrameImpl :: CaptureMouse(PRBool aGrabMouseEvents)
+nsSplitterFrameImpl :: CaptureMouse(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
     // get its view
   nsIView* view = nsnull;
-  mSplitter->GetView(&view);
+  mSplitter->GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   PRBool result;
   //nsCOMPtr<nsIWidget> widget;
@@ -629,11 +634,11 @@ nsSplitterFrameImpl :: CaptureMouse(PRBool aGrabMouseEvents)
 }
 
 PRBool
-nsSplitterFrameImpl :: IsMouseCaptured()
+nsSplitterFrameImpl :: IsMouseCaptured(nsIPresContext* aPresContext)
 {
     // get its view
   nsIView* view = nsnull;
-  mSplitter->GetView(&view);
+  mSplitter->GetView(aPresContext, &view);
   nsCOMPtr<nsIViewManager> viewMan;
   
   if (view) {
@@ -766,7 +771,7 @@ nsSplitterFrameImpl::MouseDown(nsIDOMEvent* aMouseEvent)
 
   nsRect vr(0,0,0,0);
   nsIView *v;
-  mSplitter->GetView(&v);
+  mSplitter->GetView(mSplitter->mPresContext, &v);
   v->GetBounds(vr);
 
   PRInt32 c = 0;
@@ -795,7 +800,7 @@ nsSplitterFrameImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   if (!mPressed)
       return NS_OK;
   
-  if (IsMouseCaptured())
+  if (IsMouseCaptured(mSplitter->mPresContext))
     return NS_OK;
 
  // if (mState == Collapsed)
@@ -805,7 +810,7 @@ nsSplitterFrameImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   mSplitter->mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::state, "dragging", PR_TRUE);
 
   RemoveListener();
-  CaptureMouse(PR_TRUE);
+  CaptureMouse(mSplitter->mPresContext, PR_TRUE);
 
   return NS_OK;
 }
@@ -1016,7 +1021,8 @@ nsSplitterFrameImpl::AddRemoveSpace(nscoord aDiff,
  */
 
 void
-nsSplitterFrameImpl::ResizeChildTo(nscoord& aDiff, 
+nsSplitterFrameImpl::ResizeChildTo(nsIPresContext* aPresContext,
+                                   nscoord& aDiff, 
                                    nsSplitterInfo* aChildrenBeforeInfos, 
                                    nsSplitterInfo* aChildrenAfterInfos, 
                                    PRInt32 aChildrenBeforeCount, 
@@ -1043,22 +1049,22 @@ nsSplitterFrameImpl::ResizeChildTo(nscoord& aDiff,
   nsRect vr;
   nsCOMPtr<nsIViewManager> vm;
   nsIView *v;
-  mSplitter->GetView(&v);
+  mSplitter->GetView(aPresContext, &v);
   v->GetViewManager(*getter_AddRefs(vm));
   v->GetBounds(vr);
   nsRect invalid;
   if (mParentBox->IsHorizontal()) {
-      mSplitter->MoveTo(mSplitterPos + aDiff, r.y);
+      mSplitter->MoveTo(aPresContext, mSplitterPos + aDiff, r.y);
       vm->MoveViewTo(v, mSplitterViewPos + aDiff, vr.y);
       invalid.UnionRect(r,mSplitter->mRect);
   } else {
-      mSplitter->MoveTo(r.x, mSplitterPos + aDiff);
+      mSplitter->MoveTo(aPresContext, r.x, mSplitterPos + aDiff);
       vm->MoveViewTo(v, vr.x, mSplitterViewPos + aDiff);
       invalid.UnionRect(r,mSplitter->mRect);
   }
 
   // redraw immediately only what changed. This is animation so 
   // it must be immediate.
-  mParentBox->Invalidate(invalid, PR_TRUE);
+  mParentBox->Invalidate(aPresContext, invalid, PR_TRUE);
 }
 

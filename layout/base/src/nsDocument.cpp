@@ -1920,9 +1920,11 @@ nsDocument::GetPixelDimensions(nsIPresShell* aShell,
 
   result = aShell->GetPrimaryFrameFor(mRootContent, &frame);
   if (NS_SUCCEEDED(result) && frame) {
-    nsIView* view;
+    nsIView*                  view;
+    nsCOMPtr<nsIPresContext>  presContext;
 
-    result = frame->GetView(&view);
+    aShell->GetPresContext(getter_AddRefs(presContext));
+    result = frame->GetView(presContext, &view);
     if (NS_SUCCEEDED(result)) {
       // If we have a view check if it's scrollable. If not,
       // just use the view size itself

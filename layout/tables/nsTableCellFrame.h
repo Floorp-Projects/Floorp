@@ -104,7 +104,10 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
-  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+                         nsIDOMRange *aRange,
+                         PRBool aSelected,
+                         nsSpread aSpread);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
                     nsHTMLReflowMetrics& aDesiredSize,
@@ -124,7 +127,7 @@ public:
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void VerticallyAlignChild();
+  virtual void VerticallyAlignChild(nsIPresContext* aPresContext);
 
   /**
    * return the cell's specified row span. this is what was specified in the

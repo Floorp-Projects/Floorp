@@ -77,7 +77,7 @@ static NS_DEFINE_IID(kCTransferableCID,  NS_TRANSFERABLE_CID);
 #include "nsICaret.h"
 #include "nsILineIterator.h"
 // [HACK] Foward Declarations
-void ForceDrawFrame(nsFrame * aFrame);
+void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame);
 //non Hack prototypes
 #if 0
 static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
@@ -487,14 +487,15 @@ NS_IMETHODIMP nsFrame::GetSize(nsSize& aSize) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetRect(const nsRect& aRect)
+NS_IMETHODIMP nsFrame::SetRect(nsIPresContext* aPresContext,
+                               const nsRect&   aRect)
 {
-  MoveTo(aRect.x, aRect.y);
-  SizeTo(aRect.width, aRect.height);
+  MoveTo(aPresContext, aRect.x, aRect.y);
+  SizeTo(aPresContext, aRect.width, aRect.height);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
+NS_IMETHODIMP nsFrame::MoveTo(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
 {
   mRect.x = aX;
   mRect.y = aY;
@@ -509,7 +510,7 @@ NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
       // parent frame (our parent frame may not have a view).
       nsIView* parentWithView;
       nsPoint origin;
-      GetOffsetFromView(origin, &parentWithView);
+      GetOffsetFromView(aPresContext, origin, &parentWithView);
       nsIViewManager  *vm;
       mView->GetViewManager(vm);
       vm->MoveViewTo(mView, origin.x, origin.y);
@@ -520,7 +521,7 @@ NS_IMETHODIMP nsFrame::MoveTo(nscoord aX, nscoord aY)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SizeTo(nscoord aWidth, nscoord aHeight)
+NS_IMETHODIMP nsFrame::SizeTo(nsIPresContext* aPresContext, nscoord aWidth, nscoord aHeight)
 {
   mRect.width = aWidth;
   mRect.height = aHeight;
@@ -881,7 +882,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_TRUE,
                         PR_TRUE);
-        rv = PeekOffset(&startpos);
+        rv = PeekOffset(&aPresContext, &startpos);
         if (NS_FAILED(rv))
           return rv;
         nsPeekOffsetStruct endpos;
@@ -893,7 +894,7 @@ nsFrame::HandleMultiplePress(nsIPresContext& aPresContext,
                         PR_FALSE,
                         PR_FALSE,
                         PR_TRUE);
-        rv = PeekOffset(&endpos);
+        rv = PeekOffset(&aPresContext, &endpos);
         if (NS_FAILED(rv))
           return rv;
 
@@ -996,7 +997,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
   nsIFrame *kid          = nsnull;
   nsIFrame *closestFrame = nsnull;
 
-  result = GetClosestViewForFrame(this, &view);
+  result = GetClosestViewForFrame(&aCX, this, &view);
 
   if (NS_FAILED(result))
     return result;
@@ -1016,7 +1017,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
       nsIView * kidView = nsnull;
 
       kid->GetRect(rect);
-      kid->GetOffsetFromView(offsetPoint, &kidView);
+      kid->GetOffsetFromView(&aCX, offsetPoint, &kidView);
 
       rect.x = offsetPoint.x;
       rect.y = offsetPoint.y;
@@ -1063,7 +1064,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
       nsPoint newPoint     = aPoint;
       nsIView *closestView = nsnull;
 
-      result = GetClosestViewForFrame(closestFrame, &closestView);
+      result = GetClosestViewForFrame(&aCX, closestFrame, &closestView);
 
       if (NS_FAILED(result))
         return result;
@@ -1094,7 +1095,7 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext& aCX,
   if (NS_FAILED(result))
     return result;
   nsPoint offsetPoint;
-  GetOffsetFromView(offsetPoint, &view);
+  GetOffsetFromView(&aCX, offsetPoint, &view);
   thisRect.x = offsetPoint.x;
   thisRect.y = offsetPoint.y;
 
@@ -1140,7 +1141,9 @@ nsFrame::GetCursor(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                          const nsPoint& aPoint,
+                          nsIFrame** aFrame)
 {
   *aFrame = this;
   return NS_OK;
@@ -1193,7 +1196,7 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
         // parent frame (our parent frame may not have a view).
         nsIView* parentWithView;
         nsPoint origin;
-        GetOffsetFromView(origin, &parentWithView);
+        GetOffsetFromView(&aPresContext, origin, &parentWithView);
         vm->ResizeView(mView, mRect.width, mRect.height);
         vm->MoveViewTo(mView, origin.x, origin.y);
       }
@@ -1419,14 +1422,14 @@ NS_IMETHODIMP nsFrame::SetNextInFlow(nsIFrame*)
 }
 
 // Associated view object
-NS_IMETHODIMP nsFrame::GetView(nsIView** aView) const
+NS_IMETHODIMP nsFrame::GetView(nsIPresContext* aPresContext, nsIView** aView) const
 {
   NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
   *aView = mView;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::SetView(nsIView* aView)
+NS_IMETHODIMP nsFrame::SetView(nsIPresContext* aPresContext, nsIView* aView)
 {
   nsresult  rv;
 
@@ -1442,7 +1445,8 @@ NS_IMETHODIMP nsFrame::SetView(nsIView* aView)
 }
 
 // Find the first geometric parent that has a view
-NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame** aParent) const
+NS_IMETHODIMP nsFrame::GetParentWithView(nsIPresContext* aPresContext,
+                                         nsIFrame**      aParent) const
 {
   NS_PRECONDITION(nsnull != aParent, "null OUT parameter pointer");
 
@@ -1450,7 +1454,7 @@ NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame** aParent) const
   for (parent = mParent; nsnull != parent; parent->GetParent(&parent)) {
     nsIView* parView;
      
-    parent->GetView(&parView);
+    parent->GetView(aPresContext, &parView);
     if (nsnull != parView) {
       break;
     }
@@ -1462,7 +1466,9 @@ NS_IMETHODIMP nsFrame::GetParentWithView(nsIFrame** aParent) const
 
 // Returns the offset from this frame to the closest geometric parent that
 // has a view. Also returns the containing view or null in case of error
-NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const
+NS_IMETHODIMP nsFrame::GetOffsetFromView(nsIPresContext* aPresContext,
+                                         nsPoint&        aOffset,
+                                         nsIView**       aView) const
 {
   NS_PRECONDITION(nsnull != aView, "null OUT parameter pointer");
   nsIFrame* frame = (nsIFrame*)this;
@@ -1476,22 +1482,23 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView** aView) cons
     aOffset += origin;
     frame->GetParent(&frame);
     if (nsnull != frame) {
-      frame->GetView(aView);
+      frame->GetView(aPresContext, aView);
     }
   } while ((nsnull != frame) && (nsnull == *aView));
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetWindow(nsIWidget** aWindow) const
+NS_IMETHODIMP nsFrame::GetWindow(nsIPresContext* aPresContext,
+                                 nsIWidget**     aWindow) const
 {
   NS_PRECONDITION(nsnull != aWindow, "null OUT parameter pointer");
   
   nsIFrame*  frame;
   nsIWidget* window = nsnull;
-  for (frame = (nsIFrame*)this; nsnull != frame; frame->GetParentWithView(&frame)) {
+  for (frame = (nsIFrame*)this; nsnull != frame; frame->GetParentWithView(aPresContext, &frame)) {
     nsIView* view;
      
-    frame->GetView(&view);
+    frame->GetView(aPresContext, &view);
     if (nsnull != view) {
       view->GetWidget(window);
       if (nsnull != window) {
@@ -1513,8 +1520,9 @@ nsFrame::GetFrameType(nsIAtom** aType) const
 }
 
 void
-nsFrame::Invalidate(const nsRect& aDamageRect,
-                    PRBool aImmediate) const
+nsFrame::Invalidate(nsIPresContext* aPresContext,
+                    const nsRect&   aDamageRect,
+                    PRBool          aImmediate) const
 {
   nsIViewManager* viewManager = nsnull;
   nsRect damageRect(aDamageRect);
@@ -1539,7 +1547,7 @@ nsFrame::Invalidate(const nsRect& aDamageRect,
     nsPoint   offset;
     nsIView*  view;
   
-    GetOffsetFromView(offset, &view);
+    GetOffsetFromView(aPresContext, offset, &view);
     NS_ASSERTION(nsnull != view, "no view");
     rect += offset;
     view->GetViewManager(viewManager);
@@ -1643,7 +1651,7 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 
 // Debugging
 NS_IMETHODIMP
-nsFrame::List(FILE* out, PRInt32 aIndent) const
+nsFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
 {
   IndentBy(out, aIndent);
   ListTag(out);
@@ -1836,7 +1844,7 @@ nsFrame::VerifyTree() const
 /*this method may.. invalidate if the state was changed or if aForceRedraw is PR_TRUE
   it will not update immediately.*/
 NS_IMETHODIMP
-nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
+nsFrame::SetSelected(nsIPresContext* aPresContext, nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
 {
   if (aSelected && ParentDisablesSelection())
     return NS_OK;
@@ -1869,7 +1877,7 @@ nsFrame::SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread)
   nsRect frameRect;
   GetRect(frameRect);
   nsRect rect(0, 0, frameRect.width, frameRect.height);
-  Invalidate(rect, PR_FALSE);
+  Invalidate(aPresContext, rect, PR_FALSE);
 #if 0
   if (aRange) {
     //lets see if the range contains us, if so we must redraw!
@@ -1950,7 +1958,8 @@ nsFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset, PRBool inHint, P
 }
 
 nsresult
-nsFrame::GetNextPrevLineFromeBlockFrame(nsPeekOffsetStruct *aPos,
+nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
+                                        nsPeekOffsetStruct *aPos,
                                         nsIFrame *aBlockFrame, 
                                         PRInt32 aLineStart, 
                                         PRInt8 aOutSideLimit
@@ -2029,7 +2038,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPeekOffsetStruct *aPos,
       }
       nsPoint offset;
       nsIView * view; //used for call of get offset from view
-      aBlockFrame->GetOffsetFromView(offset,&view);
+      aBlockFrame->GetOffsetFromView(aPresContext, offset,&view);
       nscoord newDesiredX  = aPos->mDesiredX - offset.x;//get desired x into blockframe coordinates!
       result = it->FindFrameAt(searchingLine, newDesiredX, &resultFrame, &isBeforeFirstFrame, &isAfterLastFrame);
     }
@@ -2135,7 +2144,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPeekOffsetStruct *aPos,
       aPos->mPreferLeft = !(aPos->mDirection == eDirNext);
       if (aPos->mDirection == eDirPrevious)
         aPos->mStartOffset = -1;//start from end
-     return aBlockFrame->PeekOffset(aPos);
+     return aBlockFrame->PeekOffset(aPresContext, aPos);
     }
   }
   return NS_OK;
@@ -2143,7 +2152,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPeekOffsetStruct *aPos,
 
 
 NS_IMETHODIMP
-nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
+nsFrame::PeekOffset(nsIPresContext* aPresContext, nsPeekOffsetStruct *aPos)
 {
   if (!aPos || !aPos->mTracker )
     return NS_ERROR_NULL_POINTER;
@@ -2177,7 +2186,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
             {
               return result?result:NS_ERROR_FAILURE;
             }
-            return aPos->mResultFrame->PeekOffset(aPos);
+            return aPos->mResultFrame->PeekOffset(aPresContext, aPos);
           }
           else
           {
@@ -2235,7 +2244,8 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         //it will "drill down" to find a viable frame or it will return an error.
         do {
 
-          result = GetNextPrevLineFromeBlockFrame(aPos, 
+          result = GetNextPrevLineFromeBlockFrame(aPresContext,
+                                        aPos, 
                                         blockFrame, 
                                         thisLine, 
                                         edgeCase //start from thisLine
@@ -2313,7 +2323,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
         {
           nsPoint offsetPoint; //used for offset of result frame
           nsIView * view; //used for call of get offset from view
-          firstFrame->GetOffsetFromView(offsetPoint, &view);
+          firstFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
 
           offsetPoint.x = 0;//all the way to the left
           result = firstFrame->GetContentAndOffsetsFromPoint(*(context.get()),
@@ -2337,7 +2347,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
 
             nsPoint offsetPoint; //used for offset of result frame
             nsIView * view; //used for call of get offset from view
-            nextFrame->GetOffsetFromView(offsetPoint, &view);
+            nextFrame->GetOffsetFromView(aPresContext, offsetPoint, &view);
 
             offsetPoint.x = 2* usedRect.width; //2* just to be sure we are off the edge
 
@@ -2363,7 +2373,7 @@ nsFrame::PeekOffset(nsPeekOffsetStruct *aPos)
     default: 
     {
       if (NS_SUCCEEDED(result))
-        result = aPos->mResultFrame->PeekOffset(aPos);
+        result = aPos->mResultFrame->PeekOffset(aPresContext, aPos);
     }
   }                          
   return result;
@@ -2497,7 +2507,9 @@ nsFrame::GetFrameFromDirection(nsPeekOffsetStruct *aPos)
   return NS_OK;
 }
 
-nsresult nsFrame::GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView)
+nsresult nsFrame::GetClosestViewForFrame(nsIPresContext* aPresContext,
+                                         nsIFrame *aFrame,
+                                         nsIView **aView)
 {
   if (!aView)
     return NS_ERROR_NULL_POINTER;
@@ -2510,7 +2522,7 @@ nsresult nsFrame::GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView)
 
   while (parent && !*aView)
   {
-    result = parent->GetView(aView);
+    result = parent->GetView(aPresContext, aView);
 
     if (NS_FAILED(result))
       return result;
@@ -2533,18 +2545,18 @@ nsresult nsFrame::GetClosestViewForFrame(nsIFrame *aFrame, nsIView **aView)
  /********************************************************
 * Refreshes each content's frame
 *********************************************************/
-static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
+static void RefreshAllContentFrames(nsIPresContext* aPresContext, nsIFrame * aFrame, nsIContent * aContent)
 {
   nsIContent* frameContent;
   aFrame->GetContent(&frameContent);
   if (frameContent == aContent) {
-    ForceDrawFrame((nsFrame *)aFrame);
+    ForceDrawFrame(aPresContext, (nsFrame *)aFrame);
   }
   NS_IF_RELEASE(frameContent);
 
   aFrame->FirstChild(nsnull, &aFrame);
   while (aFrame) {
-    RefreshAllContentFrames(aFrame, aContent);
+    RefreshAllContentFrames(aPresContext, aFrame, aContent);
     aFrame->GetNextSibling(&aFrame);
   }
 }
@@ -2556,7 +2568,7 @@ static void RefreshAllContentFrames(nsIFrame * aFrame, nsIContent * aContent)
 /**
   *
  */
-void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
+void ForceDrawFrame(nsIPresContext* aPresContext, nsFrame * aFrame)//, PRBool)
 {
   if (aFrame == nsnull) {
     return;
@@ -2564,7 +2576,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
   nsRect    rect;
   nsIView * view;
   nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, &view);
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
   aFrame->GetRect(rect);
   rect.x = pnt.x;
   rect.y = pnt.y;

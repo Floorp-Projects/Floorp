@@ -176,7 +176,10 @@ public:
 
   /** nsIFrame method overridden to handle table specifics
   */
-  NS_IMETHOD SetSelected(nsIDOMRange *aRange,PRBool aSelected, nsSpread aSpread);
+  NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
+                         nsIDOMRange *aRange,
+                         PRBool aSelected,
+                         nsSpread aSpread);
 
   /** inner tables are reflowed in two steps.
     * <pre>
@@ -765,7 +768,7 @@ protected:
   /** iterates all child frames and creates a new cell map */
   NS_IMETHOD ReBuildCellMap();
 
-  void SetColumnDimensions(nscoord aHeight);
+  void SetColumnDimensions(nsIPresContext* aPresContext, nscoord aHeight);
 
 #ifdef NS_DEBUG
   /** for debugging only
