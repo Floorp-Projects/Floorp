@@ -129,12 +129,12 @@ while (<JARFILE>)
   # implying that the file is in the current directory.
   if (!$1 || $1 eq "")
   {
-    $chromefile = File::Spec->canonpath("$jarfilename/$_");
+    $chromefile = File::Spec::Unix->canonpath("$jarfilename/$_");
     $_ =~ /.*\/(.*?)$/;
-    $cvsfile = File::Spec->canonpath($1);
+    $cvsfile = File::Spec::Unix->canonpath($1);
   } else {
-    $chromefile = File::Spec->canonpath("$jarfilename/$chromefile");
-    $cvsfile = File::Spec->canonpath($cvsfile);
+    $chromefile = File::Spec::Unix->canonpath("$jarfilename/$chromefile");
+    $cvsfile = File::Spec::Unix->canonpath($cvsfile);
   }
 
   # Convert to platform-specific separator for the chrome version.
