@@ -125,13 +125,13 @@ public String getSource()
     return result;
 }
  
-public byte [] getSourceBytes()
+public byte [] getSourceBytes(boolean viewMode)
 {
     byte [] result = null;
     myFactory.throwExceptionIfNotInitialized();
     
     synchronized(myBrowserControl) {
-        result = nativeGetSourceBytes();
+        result = nativeGetSourceBytes(nativeWebShell, viewMode);
     }
     return result;
 }
@@ -150,7 +150,7 @@ public void selectAll()
     myFactory.throwExceptionIfNotInitialized();
     
     synchronized(myBrowserControl) {
-        nativeSelectAll();
+        nativeSelectAll(nativeWebShell);
     }
 }
 
@@ -172,11 +172,11 @@ native public String nativeGetCurrentURL(int webShellPtr);
             
 native public String nativeGetSource();
  
-native public byte [] nativeGetSourceBytes();
+native public byte [] nativeGetSourceBytes(int webShellPtr, boolean viewMode);
             
 native public void nativeResetFind(int webShellPtr);
             
-native public void nativeSelectAll();
+native public void nativeSelectAll(int webShellPtr);
 
 
 // ----VERTIGO_TEST_START
@@ -190,7 +190,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.3 2000/04/06 17:33:47 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.4 2000/04/20 02:59:01 ashuk%eng.sun.com Exp $");
     
 }
 

@@ -38,7 +38,7 @@ public String getCurrentURL();
             
 public String getSource();
  
-public byte [] getSourceBytes();
+public byte [] getSourceBytes(boolean viewMode);
             
 public void resetFind();
             
