@@ -526,27 +526,27 @@ textbox[type="autocomplete"] {
 }
 
 .autocomplete-result-popup {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-result-popup");
 }
 
 .autocomplete-history-popup {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-history-popup");
 }
 
 .autocomplete-outliner {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outliner") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outliner");
 }
 
 .autocomplete-outlinerbody {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerbody") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerbody");
 }
 
 .autocomplete-outlinerrows {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerrows") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinerrows");
 }
 
 .autocomplete-outlinercol {
-  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinercol") !important;
+  -moz-binding: url("chrome://global/content/autocomplete.xml#autocomplete-outlinercol");
 }
 
 /********** colorpicker **********/
