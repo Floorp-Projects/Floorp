@@ -600,7 +600,7 @@ FIN
                 {
                 my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
 	        if( $::FORM{'product'} ne "-All-" ) {
-                    $query .= "and    bugs.product=".SqlQuote($::FORM{'product'})";
+                    $query .= "and    bugs.product=".SqlQuote($::FORM{'product'});
                     }
 	        $query .= <<FIN;
 and 	 
