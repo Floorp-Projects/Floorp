@@ -529,9 +529,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 
             case STATIC_CALL:
                 {
+                    // FIXME:  static call should use its static index.
                     StaticCall* call = static_cast<StaticCall*>(instruction);
-                    ASSERT(op2(call)->getScope()->getProperty(*op3(call)).isFunction());
-                    JSFunction *target = op2(call)->getScope()->getProperty(*op3(call)).function;
+                    JSClass* thisClass = op2(call);
+                    const JSValue& value = (*thisClass)[thisClass->getStatic(*op3(call)).mIndex];
+                    ASSERT(value.isFunction());
+                    JSFunction *target = value.function;
                     if (target->isNative()) {
                         RegisterList &params = op4(call);
                         JSValues argv(params.size() + 1);

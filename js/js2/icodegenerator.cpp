@@ -818,7 +818,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     const StringAtom &className = (static_cast<IdentifierExprNode *>(b->op1))->name;
                     const JSValue &v = mGlobal->getVariable(className);
                     JSClass* c = dynamic_cast<JSClass*>(v.type);
-                    if (c && c->getScope()->hasProperty(name)) {
+                    if (c && c->hasStatic(name)) {
                         ret = staticCall(c, name, args);
                         break;
                     }
