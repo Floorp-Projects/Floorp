@@ -109,7 +109,7 @@
 #endif
 
 #define	BOOKMARK_TIMEOUT		15000		// fire every 15 seconds
-//	#define	DEBUG_BOOKMARK_PING_OUTPUT	1
+// #define	DEBUG_BOOKMARK_PING_OUTPUT	1
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1238,8 +1238,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	}
 
 	nsCOMPtr<nsIRDFResource> bookmark;
-  nsCAutoString fullurlC;
-  fullurlC.AssignWithConversion(fullURL);
+	nsCAutoString fullurlC;
+	fullurlC.AssignWithConversion(fullURL);
 	if (NS_FAILED(rv = gRDF->GetResource(fullurlC, getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
@@ -2320,7 +2320,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
 	if (httpChannel)
 	{
-		nsAutoString			eTagValue, lastModValue, contentLengthValue;
+		nsCAutoString			eTagValue, lastModValue, contentLengthValue;
 		nsCOMPtr<nsISimpleEnumerator>	enumerator;
 		if (NS_SUCCEEDED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
 		{
@@ -2347,7 +2347,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 						header->GetValue(&val);
 						if (val)
 						{
-							eTagValue.AssignWithConversion(val);
+							eTagValue = val;
 							nsCRT::free(val);
 						}
 					}
@@ -2356,7 +2356,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 						header->GetValue(&val);
 						if (val)
 						{
-							lastModValue.AssignWithConversion(val);
+							lastModValue = val;
 							nsCRT::free(val);
 						}
 					}
@@ -2365,7 +2365,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 						header->GetValue(&val);
 						if (val)
 						{
-							contentLengthValue.AssignWithConversion(val);
+							contentLengthValue = val;
 							nsCRT::free(val);
 						}
 					}
@@ -2383,9 +2383,10 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				if (eTagValue.Length() > 0)
 				{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-					const char *eTagVal = nsCAutoString(eTagValue);
+					const char *eTagVal = eTagValue.GetBuffer();
 					printf("eTag: '%s'\n", eTagVal);
 #endif
+					nsAutoString		eTagStr;
 					nsCOMPtr<nsIRDFNode>	currentETagNode;
 					if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingETag,
 						PR_TRUE, getter_AddRefs(currentETagNode))) && (rv != NS_RDF_NO_VALUE))
@@ -2399,8 +2400,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 							{
 								changedFlag = PR_TRUE;
 							}
+							eTagStr.AssignWithConversion(eTagValue);
 							nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
-							if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagValue.GetUnicode(),
+							if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.GetUnicode(),
 								getter_AddRefs(newETagLiteral))))
 							{
 								rv = mInner->Change(busyResource, kWEB_LastPingETag,
@@ -2410,8 +2412,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					}
 					else
 					{
+						eTagStr.AssignWithConversion(eTagValue);
 						nsCOMPtr<nsIRDFLiteral>	newETagLiteral;
-						if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagValue.GetUnicode(),
+						if (NS_SUCCEEDED(rv = gRDF->GetLiteral(eTagStr.GetUnicode(),
 							getter_AddRefs(newETagLiteral))))
 						{
 							rv = mInner->Assert(busyResource, kWEB_LastPingETag,
@@ -2425,9 +2428,10 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		if ((changedFlag == PR_FALSE) && (lastModValue.Length() > 0))
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-			const char *lastModVal = nsCAutoString(lastModValue);
+			const char *lastModVal = lastModValue.GetBuffer();
 			printf("Last-Modified: '%s'\n", lastModVal);
 #endif
+			nsAutoString		lastModStr;
 			nsCOMPtr<nsIRDFNode>	currentLastModNode;
 			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingModDate,
 				PR_TRUE, getter_AddRefs(currentLastModNode))) && (rv != NS_RDF_NO_VALUE))
@@ -2441,8 +2445,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					{
 						changedFlag = PR_TRUE;
 					}
+					lastModStr.AssignWithConversion(lastModValue);
 					nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
-					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModValue.GetUnicode(),
+					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.GetUnicode(),
 						getter_AddRefs(newLastModLiteral))))
 					{
 						rv = mInner->Change(busyResource, kWEB_LastPingModDate,
@@ -2452,8 +2457,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			else
 			{
+				lastModStr.AssignWithConversion(lastModValue);
 				nsCOMPtr<nsIRDFLiteral>	newLastModLiteral;
-				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModValue.GetUnicode(),
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(lastModStr.GetUnicode(),
 					getter_AddRefs(newLastModLiteral))))
 				{
 					rv = mInner->Assert(busyResource, kWEB_LastPingModDate,
@@ -2465,9 +2471,10 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		if ((changedFlag == PR_FALSE) && (contentLengthValue.Length() > 0))
 		{
 #ifdef	DEBUG_BOOKMARK_PING_OUTPUT
-			const char *contentLengthVal = nsCAutoString(contentLengthValue);
+			const char *contentLengthVal = contentLengthValue.GetBuffer();
 			printf("Content-Length: '%s'\n", contentLengthVal);
 #endif
+			nsAutoString		contentLenStr;
 			nsCOMPtr<nsIRDFNode>	currentContentLengthNode;
 			if (NS_SUCCEEDED(rv = mInner->GetTarget(busyResource, kWEB_LastPingContentLen,
 				PR_TRUE, getter_AddRefs(currentContentLengthNode))) && (rv != NS_RDF_NO_VALUE))
@@ -2481,8 +2488,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					{
 						changedFlag = PR_TRUE;
 					}
+					contentLenStr = contentLengthValue;
 					nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
-					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLengthValue.GetUnicode(),
+					if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.GetUnicode(),
 						getter_AddRefs(newContentLengthLiteral))))
 					{
 						rv = mInner->Change(busyResource, kWEB_LastPingContentLen,
@@ -2492,8 +2500,9 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			else
 			{
+				contentLenStr = contentLengthValue;
 				nsCOMPtr<nsIRDFLiteral>	newContentLengthLiteral;
-				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLengthValue.GetUnicode(),
+				if (NS_SUCCEEDED(rv = gRDF->GetLiteral(contentLenStr.GetUnicode(),
 					getter_AddRefs(newContentLengthLiteral))))
 				{
 					rv = mInner->Assert(busyResource, kWEB_LastPingContentLen,
