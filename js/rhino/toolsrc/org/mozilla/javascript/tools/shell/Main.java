@@ -181,7 +181,20 @@ public class Main
                 if (d != d)
                     usage(arg);
                 int opt = (int)d;
+                if (opt == -2) {
+                    // Compatibility with Cocoon Rhino fork
+                    shellContextFactory.setEnableContinuations(true);
+                    opt = -1;
+                }
                 cx.setOptimizationLevel(opt);
+                if (opt >= 0) {
+                    shellContextFactory.setEnableContinuations(false);
+                }
+                continue;
+            }
+            if (arg.equals("-continuations")) {
+                shellContextFactory.setEnableContinuations(true);
+                cx.setOptimizationLevel(-1);
                 continue;
             }
             if (arg.equals("-e")) {

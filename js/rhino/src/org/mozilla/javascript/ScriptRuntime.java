@@ -172,6 +172,10 @@ public class ScriptRuntime {
             new LazilyLoadedCtor(scope, topProperty, className, sealed);
         }
 
+        if (cx.hasFeature(Context.FEATURE_INTERPRETER_CONTINUATIONS)) {
+            Continuation.init(cx, scope, sealed);
+        }
+
         return scope;
     }
 

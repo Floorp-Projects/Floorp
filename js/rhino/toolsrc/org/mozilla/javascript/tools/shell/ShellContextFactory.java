@@ -39,9 +39,20 @@ import org.mozilla.javascript.*;
 
 public class ShellContextFactory extends ContextFactory
 {
+    private boolean enableContinuations;
+
     protected boolean hasFeature(Context cx, int featureIndex)
     {
+        if (featureIndex == Context.FEATURE_INTERPRETER_CONTINUATIONS) {
+            return enableContinuations;
+        }
         return super.hasFeature(cx, featureIndex);
+    }
+
+    public void setEnableContinuations(boolean flag)
+    {
+        checkNotSealed();
+        this.enableContinuations = flag;
     }
 
 }

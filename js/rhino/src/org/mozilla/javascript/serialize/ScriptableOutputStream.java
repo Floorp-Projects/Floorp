@@ -127,6 +127,16 @@ public class ScriptableOutputStream extends ObjectOutputStream {
         for (int i=0; i < names.length; i++) {
             addExcludedName(names[i]);
         }
+        boolean hasContinuations = false;
+        Context cx = Context.getCurrentContext();
+        if (cx != null) {
+            hasContinuations
+                = cx.hasFeature(Context.FEATURE_INTERPRETER_CONTINUATIONS);
+        }
+        if (hasContinuations) {
+            addExcludedName("Continuation");
+            addExcludedName("Continuation.prototype");
+        }
     }
 
     static Object lookupQualifiedName(Scriptable scope,

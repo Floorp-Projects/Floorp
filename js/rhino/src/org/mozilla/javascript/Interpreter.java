@@ -203,9 +203,13 @@ public class Interpreter
     /**
      * Class to hold data corresponding to one interpreted call stack frame.
      */
-    private static class CallFrame
+    private static class CallFrame implements Cloneable, Serializable
     {
         CallFrame parentFrame;
+        // amount of stack frames before this one on the interpretation stack
+        int frameIndex;
+        // If true indicates read-only frame that is a part of continuation
+        boolean frozen;
 
         InterpretedFunction fnOrScript;
         InterpreterData idata;
@@ -218,6 +222,7 @@ public class Interpreter
 
         Object[] stack;
         double[] sDbl;
+        CallFrame varSource; // defaults to this unless continuation frame
         int localShift;
         int emptyStackTop;
 
@@ -238,6 +243,78 @@ public class Interpreter
 
         int savedStackTop;
         int savedCallOp;
+
+        CallFrame cloneFrozen()
+        {
+            if (!frozen) Kit.codeBug();
+
+            CallFrame copy;
+            try {
+                copy = (CallFrame)clone();
+            } catch (CloneNotSupportedException ex) {
+                throw new IllegalStateException();
+            }
+
+            // clone stack but keep varSource to point to values
+            // from this frame to share variables.
+
+            copy.stack = (Object[])stack.clone();
+            copy.sDbl = (double[])sDbl.clone();
+
+            copy.frozen = false;
+            return copy;
+        }
+    }
+
+    private static final class ContinuationJump implements Serializable
+    {
+        CallFrame capturedFrame;
+        CallFrame branchFrame;
+        Object result;
+        double resultDbl;
+
+        private CallFrame cachedBranchFrame;
+
+        ContinuationJump(Continuation c, CallFrame current)
+        {
+            this.capturedFrame = (CallFrame)c.data;
+            if (this.capturedFrame == null) {
+                this.branchFrame = null;
+            } else {
+                // Search for branch frame where parent frame chains starting
+                // from captured and current meet.
+                CallFrame chain1 = this.capturedFrame;
+                CallFrame chain2 = current;
+
+                // First work parents of chain1 or chain2 until the same
+                // to make frame depth equal
+                int diff = chain1.frameIndex - chain2.frameIndex;
+                if (diff != 0) {
+                    if (diff < 0) {
+                        // swap to make sure that
+                        // chain1.frameIndex > chain2.frameIndex and diff > 0
+                        chain1 = current;
+                        chain2 = this.capturedFrame;
+                        diff = -diff;
+                    }
+                    do {
+                        chain1 = chain1.parentFrame;
+                    } while (--diff != 0);
+                    if (chain1.frameIndex != chain2.frameIndex) Kit.codeBug();
+                }
+
+                // Now work parents in paralel
+                while (chain1 != chain2 && chain1 != null) {
+                    chain1 = chain1.parentFrame;
+                    chain2 = chain2.parentFrame;
+                }
+
+                this.branchFrame = chain1;
+                if (this.branchFrame != null && !this.branchFrame.frozen)
+                    Kit.codeBug();
+            }
+        }
+
     }
 
     static {
@@ -2080,7 +2157,7 @@ public class Interpreter
 
         Object result;
         try {
-            result = interpret(cx, frame);
+            result = interpret(cx, frame, null);
         } finally {
             // Always clenup interpreterLineCounting to avoid memory leaks
             // throgh stored in Context frame
@@ -2089,8 +2166,39 @@ public class Interpreter
         return result;
     }
 
-    private static Object interpret(Context cx, CallFrame frame)
+    static Object restartContinuation(Continuation c, Context cx,
+                                      Scriptable scope, Object[] args)
     {
+        if (!ScriptRuntime.hasTopCall(cx)) {
+            return ScriptRuntime.doTopCall(c, cx, scope, null, args);
+        }
+
+        Object arg;
+        if (args.length == 0) {
+            arg = Undefined.instance;
+        } else {
+            arg = args[0];
+        }
+
+        CallFrame capturedFrame = (CallFrame)c.data;
+        if (capturedFrame == null) {
+            // No frames to restart
+            return arg;
+        }
+
+        ContinuationJump cjump = new ContinuationJump(c, null);
+
+        cjump.result = arg;
+        return interpret(cx, null, cjump);
+    }
+
+    private static Object interpret(Context cx, CallFrame frame,
+                                    Object throwable)
+    {
+        // throwable holds exception object to rethrow or catch
+        // It is also used for continuation restart in which case
+        // it holds ContinuationJump
+
         final Object DBL_MRK = UniqueTag.DOUBLE_MARK;
         final Scriptable undefined = Undefined.instance;
 
@@ -2103,39 +2211,124 @@ public class Interpreter
 
         String stringReg = null;
         int indexReg = -1;
-        // Exception object to rethrow or catch
-        Object throwable = null;
+
+        // When restarting continuation throwable is not null and to jump
+        // to the code that rewind continuation state indexReg should be set
+        // to -1.
+        // With the normal call throable == null and indexReg == -1 allows to
+        // catch bugs with using indeReg to access array eleemnts before
+        // initializing indexReg.
+
+        if (throwable != null) {
+            // Assert assumptions
+            if (!(throwable instanceof ContinuationJump)) {
+                // It should be continuation
+                Kit.codeBug();
+            }
+        }
 
         StateLoop: for (;;) {
-
             withoutExceptions: try {
 
                 if (throwable != null) {
                     // Recovering from exception, indexReg contains
                     // the index of handler
 
-                    int[] table = frame.idata.itsExceptionTable;
+                    if (indexReg >= 0) {
+                        // Normal excepton handler, transfer
+                        // control appropriately
 
-                    frame.pc = table[indexReg + EXCEPTION_HANDLER_SLOT];
-                    if (instructionCounting) {
-                        frame.pcPrevBranch = frame.pc;
+                        if (frame.frozen) {
+                            // XXX Deal with exceptios!!!
+                            frame = frame.cloneFrozen();
+                        }
+
+                        int[] table = frame.idata.itsExceptionTable;
+
+                        frame.pc = table[indexReg + EXCEPTION_HANDLER_SLOT];
+                        if (instructionCounting) {
+                            frame.pcPrevBranch = frame.pc;
+                        }
+
+                        frame.savedStackTop = frame.emptyStackTop;
+                        int scopeLocal = frame.localShift
+                                         + table[indexReg
+                                                 + EXCEPTION_SCOPE_SLOT];
+                        int exLocal = frame.localShift
+                                         + table[indexReg
+                                                 + EXCEPTION_LOCAL_SLOT];
+                        frame.scope = (Scriptable)frame.stack[scopeLocal];
+                        frame.stack[exLocal] = throwable;
+
+                        throwable = null;
+                    } else {
+                        // Continuation restoration
+                        ContinuationJump cjump = (ContinuationJump)throwable;
+
+                        // Clear throwable to indicate that execptions are OK
+                        throwable = null;
+
+                        if (cjump.branchFrame != frame) Kit.codeBug();
+
+                        // Check that we have at least one frozen frame
+                        // in the case of detached continuation restoration:
+                        // unwind code ensure that
+                        if (cjump.capturedFrame == null) Kit.codeBug();
+
+                        // Need to rewind branchFrame, capturedFrame
+                        // and all frames in between
+                        int rewindCount = cjump.capturedFrame.frameIndex + 1;
+                        if (cjump.branchFrame != null) {
+                            rewindCount -= cjump.branchFrame.frameIndex;
+                        }
+
+                        int enterCount = 0;
+                        CallFrame[] enterFrames = null;
+
+                        CallFrame x = cjump.capturedFrame;
+                        for (int i = 0; i != rewindCount; ++i) {
+                            if (!x.frozen) Kit.codeBug();
+                            if (isFrameEnterExitRequired(x)) {
+                                if (enterFrames == null) {
+                                    // Allocate enough space to store the rest
+                                    // of rewind frames in case all of them
+                                    // would require to enter
+                                    enterFrames = new CallFrame[rewindCount
+                                                                - i];
+                                }
+                                enterFrames[enterCount] = x;
+                                ++enterCount;
+                            }
+                            x = x.parentFrame;
+                        }
+
+                        while (enterCount != 0) {
+                            // execute enter: walk enterFrames in the reverse
+                            // order since they were stored starting from
+                            // the capturedFrame, not branchFrame
+                            --enterCount;
+                            x = enterFrames[enterCount];
+                            enterFrame(cx, x, ScriptRuntime.emptyArgs);
+                        }
+
+                        // Continuation jump is almost done: capturedFrame
+                        // points to the call to the function that captured
+                        // continuation, so clone capturedFrame and
+                        // emulate return that function with the suplied result
+                        frame = cjump.capturedFrame.cloneFrozen();
+                        setCallResult(frame, cjump.result, cjump.resultDbl);
+                        // restart the execution
                     }
-
-                    frame.savedStackTop = frame.emptyStackTop;
-                    int scopeLocal = frame.localShift
-                                     + table[indexReg + EXCEPTION_SCOPE_SLOT];
-                    int exLocal = frame.localShift
-                                     + table[indexReg + EXCEPTION_LOCAL_SLOT];
-                    frame.scope = (Scriptable)frame.stack[scopeLocal];
-                    frame.stack[exLocal] = throwable;
-
-                    throwable = null;
+                } else {
+                    if (frame.frozen) Kit.codeBug();
                 }
 
                 // Use local variables for constant values in frame
                 // for faster access
                 Object[] stack = frame.stack;
                 double[] sDbl = frame.sDbl;
+                Object[] vars = frame.varSource.stack;
+                double[] varDbls = frame.varSource.sDbl;
                 byte[] iCode = frame.idata.itsICode;
                 String[] strings = frame.idata.itsStringTable;
 
@@ -2615,7 +2808,16 @@ switch (op) {
             calleeScope = ScriptableObject.getTopLevelScope(frame.scope);
         }
 
-        if (fun instanceof InterpretedFunction && op != Token.REF_CALL) {
+        if (op == Token.REF_CALL) {
+            Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
+                                            indexReg);
+            stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
+                                                          outArgs, cx,
+                                                          calleeScope);
+            continue Loop;
+        }
+
+        if (fun instanceof InterpretedFunction) {
             InterpretedFunction ifun = (InterpretedFunction)fun;
             if (frame.fnOrScript.securityDomain == ifun.securityDomain) {
                 CallFrame callParentFrame = frame;
@@ -2652,15 +2854,38 @@ switch (op) {
                 continue StateLoop;
             }
         }
+
+        if (fun instanceof Continuation) {
+            // Jump to the captured continuation
+            ContinuationJump cjump;
+            cjump = new ContinuationJump((Continuation)fun, frame);
+
+            // continuation result is the first argument if any
+            // of contination call
+            if (indexReg == 0) {
+                cjump.result = undefined;
+            } else {
+                cjump.result = stack[stackTop + 2];
+                cjump.resultDbl = sDbl[stackTop + 2];
+            }
+
+            // Start the real unwind job
+            throwable = cjump;
+            break withoutExceptions;
+        }
+
+        if (fun instanceof IdFunctionObject) {
+            IdFunctionObject ifun = (IdFunctionObject)fun;
+            if (Continuation.isContinuationConstructor(ifun)) {
+                captureContinuation(cx, frame, stackTop);
+                continue Loop;
+            }
+        }
+
         Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
                                         indexReg);
-        if (op != Token.REF_CALL) {
-            stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
-        } else {
-            stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
-                                                          outArgs, cx,
-                                                          calleeScope);
-        }
+        stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
+
         continue Loop;
     }
     case Token.NEW : {
@@ -2693,6 +2918,15 @@ switch (op) {
             throw ScriptRuntime.notFunctionError(lhs);
         }
         Function fun = (Function)lhs;
+
+        if (fun instanceof IdFunctionObject) {
+            IdFunctionObject ifun = (IdFunctionObject)fun;
+            if (Continuation.isContinuationConstructor(ifun)) {
+                captureContinuation(cx, frame, stackTop);
+                continue Loop;
+            }
+        }
+
         Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
                                         indexReg);
         stack[stackTop] = fun.construct(cx, frame.scope, outArgs);
@@ -2740,8 +2974,8 @@ switch (op) {
         // fallthrough
     case Token.SETVAR :
         if (!frame.useActivation) {
-            stack[indexReg] = stack[stackTop];
-            sDbl[indexReg] = sDbl[stackTop];
+            vars[indexReg] = stack[stackTop];
+            varDbls[indexReg] = sDbl[stackTop];
         } else {
             Object val = stack[stackTop];
             if (val == DBL_MRK) val = ScriptRuntime.wrapNumber(sDbl[stackTop]);
@@ -2755,8 +2989,8 @@ switch (op) {
     case Token.GETVAR :
         ++stackTop;
         if (!frame.useActivation) {
-            stack[stackTop] = stack[indexReg];
-            sDbl[stackTop] = sDbl[indexReg];
+            stack[stackTop] = vars[indexReg];
+            sDbl[stackTop] = varDbls[indexReg];
         } else {
             stringReg = frame.fnOrScript.argNames[indexReg];
             stack[stackTop] = frame.scope.get(stringReg, frame.scope);
@@ -2768,17 +3002,17 @@ switch (op) {
         int incrDecrMask = iCode[frame.pc];
         if (!frame.useActivation) {
             stack[stackTop] = DBL_MRK;
-            Object varValue = stack[indexReg];
+            Object varValue = vars[indexReg];
             double d;
             if (varValue == DBL_MRK) {
-                d = sDbl[indexReg];
+                d = varDbls[indexReg];
             } else {
                 d = ScriptRuntime.toNumber(varValue);
-                stack[indexReg] = DBL_MRK;
+                vars[indexReg] = DBL_MRK;
             }
             double d2 = ((incrDecrMask & Node.DECR_FLAG) == 0)
                         ? d + 1.0 : d - 1.0;
-            sDbl[indexReg] = d2;
+            varDbls[indexReg] = d2;
             sDbl[stackTop] = ((incrDecrMask & Node.POST_FLAG) == 0) ? d2 : d;
         } else {
             String varName = frame.fnOrScript.argNames[indexReg];
@@ -3098,7 +3332,9 @@ switch (op) {
                 double callResultDbl = frame.resultDbl;
                 if (frame.parentFrame != null) {
                     frame = frame.parentFrame;
-
+                    if (frame.frozen) {
+                        frame = frame.cloneFrozen();
+                    }
                     setCallResult(frame, callResult, callResultDbl);
                     continue StateLoop;
                 }
@@ -3127,6 +3363,7 @@ switch (op) {
             final int EX_NO_JS_STATE = 0; // Terminate JS execution
 
             int exState;
+            ContinuationJump cjump = null;
 
             if (throwable instanceof JavaScriptException) {
                 exState = EX_CATCH_STATE;
@@ -3137,9 +3374,12 @@ switch (op) {
                 exState = EX_CATCH_STATE;
             } else if (throwable instanceof RuntimeException) {
                 exState = EX_FINALLY_STATE;
-            } else {
-                // Error instance
+            } else if (throwable instanceof Error) {
                 exState = EX_NO_JS_STATE;
+            } else {
+                // It must be ContinuationJump
+                exState = EX_FINALLY_STATE;
+                cjump = (ContinuationJump)throwable;
             }
 
             if (instructionCounting) {
@@ -3152,6 +3392,7 @@ switch (op) {
                     // Error from instruction counting
                     //     => unconditionally terminate JS
                     throwable = ex;
+                    cjump = null;
                     exState = EX_NO_JS_STATE;
                 }
             }
@@ -3166,11 +3407,12 @@ switch (op) {
                     // Any exception from debugger
                     //     => unconditionally terminate JS
                     throwable = ex;
+                    cjump = null;
                     exState = EX_NO_JS_STATE;
                 }
             }
 
-            do {
+            for (;;) {
                 if (exState != EX_NO_JS_STATE) {
                     boolean onlyFinally = (exState != EX_CATCH_STATE);
                     indexReg = getExceptionHandler(frame, onlyFinally);
@@ -3187,9 +3429,30 @@ switch (op) {
                 exitFrame(cx, frame, throwable);
 
                 frame = frame.parentFrame;
-            } while (frame != null);
+                if (frame == null) { break; }
+                if (cjump != null && cjump.branchFrame == frame) {
+                    // Continuation branch point was hit,
+                    // restart the state loop to reenter continuation
+                    indexReg = -1;
+                    continue StateLoop;
+                }
+            }
 
-            // No more frames, rethrow the exception.
+            // No more frames, rethrow the exception or deal with continuation
+            if (cjump != null) {
+                if (cjump.branchFrame != null) {
+                    // The above loop should locate the top frame
+                    Kit.codeBug();
+                }
+                if (cjump.capturedFrame != null) {
+                    // Restarting detached continuation
+                    indexReg = -1;
+                    continue StateLoop;
+                }
+                // Return continuation result to the caller
+                return (cjump.result != DBL_MRK)
+                    ? cjump.result : ScriptRuntime.wrapNumber(cjump.resultDbl);
+            }
             if (throwable instanceof RuntimeException) {
                 throw (RuntimeException)throwable;
             } else {
@@ -3297,11 +3560,16 @@ switch (op) {
         // Fill the frame structure
 
         frame.parentFrame = parentFrame;
+        frame.frameIndex = (parentFrame == null)
+                           ? 0 : parentFrame.frameIndex + 1;
+        frame.frozen = false;
+
         frame.fnOrScript = fnOrScript;
         frame.idata = idata;
 
         frame.stack = stack;
         frame.sDbl = sDbl;
+        frame.varSource = frame;
         frame.localShift = idata.itsMaxVars;
         frame.emptyStackTop = emptyStackTop;
 
@@ -3337,14 +3605,24 @@ switch (op) {
             }
         }
 
-        if (debuggerFrame != null) {
-            debuggerFrame.onEnter(cx, scope, thisObj, args);
+        enterFrame(cx, frame, args);
+    }
+
+    private static boolean isFrameEnterExitRequired(CallFrame frame)
+    {
+        return frame.debuggerFrame != null || frame.idata.itsNeedsActivation;
+    }
+
+    private static void enterFrame(Context cx, CallFrame frame, Object[] args)
+    {
+        if (frame.debuggerFrame != null) {
+            frame.debuggerFrame.onEnter(cx, frame.scope, frame.thisObj, args);
         }
-        if (idata.itsNeedsActivation) {
+        if (frame.idata.itsNeedsActivation) {
             // Enter activation only when itsNeedsActivation true, not when
             // useActivation holds since debugger should not interfere
             // with activation chaining
-            ScriptRuntime.enterActivationFunction(cx, scope);
+            ScriptRuntime.enterActivationFunction(cx, frame.scope);
         }
     }
 
@@ -3361,9 +3639,20 @@ switch (op) {
                     frame.debuggerFrame.onExit(cx, true, (Throwable)throwable);
                 } else {
                     Object result;
-                    result = frame.result;
+                    ContinuationJump cjump = (ContinuationJump)throwable;
+                    if (cjump == null) {
+                        result = frame.result;
+                    } else {
+                        result = cjump.result;
+                    }
                     if (result == UniqueTag.DOUBLE_MARK) {
-                        result = ScriptRuntime.wrapNumber(frame.resultDbl);
+                        double resultDbl;
+                        if (cjump == null) {
+                            resultDbl = frame.resultDbl;
+                        } else {
+                            resultDbl = cjump.resultDbl;
+                        }
+                        result = ScriptRuntime.wrapNumber(resultDbl);
                     }
                     frame.debuggerFrame.onExit(cx, false, result);
                 }
@@ -3395,6 +3684,40 @@ switch (op) {
             Kit.codeBug();
         }
         frame.savedCallOp = 0;
+    }
+
+    private static void captureContinuation(Context cx, CallFrame frame,
+                                            int stackTop)
+    {
+        Continuation c = new Continuation();
+        Scriptable libScope = ScriptRuntime.getLibraryScopeOrNull(frame.scope);
+        c.setParentScope(libScope);
+        c.setPrototype(
+            ScriptableObject.getClassPrototype(libScope, c.getClassName()));
+
+        // Make sure that all frames upstack frames are frozen
+        CallFrame x = frame.parentFrame;
+        while (x != null && !x.frozen) {
+            x.frozen = true;
+            // Allow to GC unused stack space
+            for (int i = x.savedStackTop + 1; i != x.stack.length; ++i) {
+                // Allow to GC unused stack space
+                x.stack[i] = null;
+            }
+            if (x.savedCallOp == Token.CALL) {
+                // the call will always overwrite the stack top with the result
+                x.stack[x.savedStackTop] = null;
+            } else {
+                if (x.savedCallOp != Token.NEW) Kit.codeBug();
+                // the new operator uses stack top to store the constructed
+                // object so it shall not be cleared: see comments in
+                // setCallResult
+            }
+            x = x.parentFrame;
+        }
+
+        c.data = frame.parentFrame;
+        frame.stack[stackTop] = c;
     }
 
     private static int stack_int32(CallFrame frame, int i)
