@@ -24,7 +24,7 @@
 
 #include "xptcprivate.h"
 
-#ifdef sparc
+#if defined(sparc) || defined(__sparc__)
 
 extern "C" nsresult
 PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, uint32* args)
@@ -128,4 +128,4 @@ nsresult nsXPTCStubBase::Sentinel##n() \
 
 #include "xptcstubsdef.inc"
 
-#endif
+#endif /* sparc || __sparc__ */
