@@ -93,10 +93,10 @@
 
 #include "nsITimer.h"
 #include "nsMsgUtils.h"
+
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
 static NS_DEFINE_CID(kImapProtocolCID, NS_IMAPPROTOCOL_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kMsgLogonRedirectorServiceCID, NS_MSGLOGONREDIRECTORSERVICE_CID);
 static NS_DEFINE_CID(kImapServiceCID, NS_IMAPSERVICE_CID);
@@ -1394,16 +1394,50 @@ NS_IMETHODIMP nsImapIncomingServer::GetRedirectorType(char **redirectorType)
   rv = GetCharValue("redirector_type", redirectorType);
   m_redirectorType = *redirectorType;
   m_readRedirectorType = PR_TRUE;
-  if (*redirectorType && !nsCRT::strcasecmp(*redirectorType, "aol"))
+
+  if (*redirectorType)  
   {
-    nsXPIDLCString hostName;
-    GetHostName(getter_Copies(hostName));
+    // we used to use "aol" as the redirector type  
+    // for both aol mail and webmail
+    // this code migrates webmail accounts to use "netscape" as the
+    // redirectory type
+    if (!nsCRT::strcasecmp(*redirectorType, "aol"))  
+    {
+      nsXPIDLCString hostName;
+      GetHostName(getter_Copies(hostName));
     
-    // Change redirector_type from "aol" to "netscape" if necessary
-    if (hostName.get() && !nsCRT::strcasecmp(hostName, "imap.mail.netcenter.com"))
-      SetRedirectorType("netscape");
+      if (hostName.get() && !nsCRT::strcasecmp(hostName, "imap.mail.netcenter.com"))
+        SetRedirectorType("netscape");
+    }
   }
+  else 
+  {
+    // for people who have migrated from 4.x or outlook, or mistakenly
+    // created redirected accounts as regular imap accounts, 
+    // they won't have redirector type set properly
+    // this fixes the redirector type for them automatically
+    nsCAutoString prefName;
+    rv = CreateHostSpecificPrefName("default_redirector_type", prefName);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString defaultRedirectorType;
   
+    nsCOMPtr <nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr<nsIPrefBranch> prefBranch; 
+    rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = prefBranch->GetCharPref(prefName.get(), getter_Copies(defaultRedirectorType));
+    if (NS_SUCCEEDED(rv) && !defaultRedirectorType.IsEmpty()) 
+    {
+      // only set redirectory type in memory
+      // if we call SetRedirectorType() that sets it in prefs
+      // which makes this automatic redirector type repair permanent
+      m_redirectorType = defaultRedirectorType.get();
+    }
+  }
   return NS_OK;
 }
 

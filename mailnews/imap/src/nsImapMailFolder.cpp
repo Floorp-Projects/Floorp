@@ -2205,7 +2205,7 @@ NS_IMETHODIMP nsImapMailFolder::GetNewMessages(nsIMsgWindow *aWindow, nsIUrlList
     if (NS_SUCCEEDED(rv) && prefs)
     {
       nsCOMPtr<nsIPrefBranch> prefBranch; 
-      rv = prefs->GetBranch("", getter_AddRefs(prefBranch)); 
+      rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch)); 
 
       // This pref might not exist, which is OK. We'll only check inbox and marked ones
       if (NS_SUCCEEDED(rv) && prefBranch)
