@@ -1,0 +1,90 @@
+<!doctype html public "-//w3c//dtd html 4.0 transitional//en">
+<html>
+<head>
+   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+   <meta name="GENERATOR" content="Mozilla/4.5 [en] (X11; I; Linux 2.0.36 i686) [Netscape]">
+</head>
+<body>
+
+<h2>
+About Leaky</h2>
+Leaky is a program which will help you find memory leaks, and as of late,
+help you debug reference count problems with xpcom objects.
+<p>To use leaky you must first build it. I've made it work only on x86
+linux. To work on other platforms you will need to:
+<ol>
+<li>
+Implement CrawlStack in libmalloc.cpp</li>
+
+<li>
+Implement DumpAddressMap in libmalloc.cpp and in ShowLibs.cpp</li>
+
+<li>
+Either support LD_PRELOAD in your dynamic linker *or* produce a library
+that wraps your libc malloc (see config.h for some clues)</li>
+
+<li>
+Implement symbol table reading code (see coff.cpp, elf.cpp and bfd.cpp
+for examples; at the time of writing this document only bfd.cpp was known
+to work)</li>
+</ol>
+After its built, you can use TestPreload and TestMalloc and ShowLibs to
+debug your implementation.
+<p>By setting the LIBMALLOC_LOG environment variable you control how much
+information is logged during the programs execution. See libmalloc.h for
+a definition of the values to use. If you are using LD_PRELOAD, here is
+one way to run your program:
+<blockquote><tt>env LD_PRELOAD=/full/path/to/libleaky.so LIBMALLOC_LOG=1
+my-program</tt></blockquote>
+The debugging malloc library creates two files - "malloc-log" and "malloc-map".
+The malloc-log file can be quite large for large programs (e.g. mozilla)
+so be prepared to have alot of disk space. The malloc-map is tiny.
+<p>Once your program has completed execution you can use leaky to look
+for memory leaks, or at least use it to dump the log. For memory leaks,
+you use leaky like this:
+<blockquote><tt>leaky -d &lt;program-name-goes-here> malloc-log</tt></blockquote>
+Leaky will then display all of the call sites where memory was leaked.
+To look at the entire log file contents, not just the leaks add "-a" to
+the arguments:
+<blockquote><tt>leaky -d -a &lt;program-name-goes-here> malloc-log</tt></blockquote>
+For debugging reference count issues, here is what I&nbsp;do:
+<ol>
+<li>
+Set LIBMALLOC_LOG&nbsp;to "8"</li>
+
+<li>
+Modify your source code so that your class::Addref and class::Release methods
+call __log_addref and __log_release, as appropriate. See libmalloc.h for
+their signatures.</li>
+
+<li>
+Run your program so that you get the log data. Its often convenient to
+run your program in the debugger and then set a breakpoint at an interesting
+location where you think some object is being leaked or over-freed. Then
+when the debugger gets there tell it to execute DumpAddressMap. In gdb
+you do this:</li>
+
+<ol><tt></tt>&nbsp;
+<br><tt>(gdb)&nbsp;p DumpAddressMap()</tt>
+<br><tt></tt>&nbsp;</ol>
+
+<li>
+Then use leaky to capture the addref and release calls to a log file:</li>
+
+<ol>&nbsp;
+<br><tt>leaky -d -a &lt;program-name-goes-here>&nbsp;malloc-log >&nbsp;log</tt>
+<br>&nbsp;</ol>
+
+<li>
+Then use "grep" to search the log for a specific object by grepping for
+its memory address...</li>
+
+<li>
+On a typical *short*&nbsp;run of mozilla, I'll end up with a malloc-log
+file of around 5 to 10 megabytes and the resulting converted log file will
+be 10 to 20 times that so be prepared to have alot of disk space. It helps
+a great deal to narrow down your problem space to reduce the log file size...</li>
+</ol>
+
+</body>
+</html>

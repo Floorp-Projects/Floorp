@@ -1,0 +1,74 @@
+#! gmake
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.0 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License
+# at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See
+# the License for the specific language governing rights and
+# limitations under the License.
+#
+# The Initial Developer of the Original Code is Kipp E.B. Hickman.
+
+CXX = c++
+OPTIMIZER = -g
+CXXFLAGS = $(OPTIMIZER) -Wall
+CXXF = $(CXX) $(CXXFLAGS)
+
+MKSHLIB = $(CXX) -shared
+
+# Stuff to build the leaky executable
+LEAKY_CPPSRCS =	   \
+	bfd.cpp    \
+	coff.cpp   \
+	dict.cpp   \
+	elf.cpp	   \
+	leaky.cpp  \
+	strset.cpp \
+	$(NULL)
+LEAKY_OBJECTS = $(LEAKY_CPPSRCS:.cpp=.o)
+LEAKY_LIBS = -lbfd -liberty
+
+# Stuff to build the library used to wrap malloc
+LIBMALLOC_CPPSRCS = libmalloc.cpp
+LIBMALLOC_OBJECTS = $(LIBMALLOC_CPPSRCS:.cpp=.o)
+LIBMALLOC = libleaky.so
+
+# Stuff to build test programs
+LIBPRELOAD = libpreload.so
+
+TARGETS = leaky $(LIBMALLOC) TestLeaky TestPreload $(LIBPRELOAD) ShowLibs
+
+.SUFFIXES: .cpp
+
+default all: $(TARGETS)
+
+clean:
+	rm -f core malloc-log malloc-map *.o
+
+clobber: clean
+	rm -f $(TARGETS)
+
+.cpp.o:
+	$(CXXF) -c $<
+
+leaky: $(LEAKY_OBJECTS)
+	$(CXXF) -o $@ $(LEAKY_OBJECTS) $(LEAKY_LIBS)
+
+$(LIBMALLOC): $(LIBMALLOC_OBJECTS)
+	rm -f $@
+	$(MKSHLIB) -o $@ $(LIBMALLOC_OBJECTS)
+
+TestLeaky: TestLeaky.cpp
+	$(CXXF) -o $@ TestLeaky.cpp
+
+TestPreload: TestPreload.cpp
+	$(CXXF) -o $@ TestPreload.cpp
+
+$(LIBPRELOAD): LibPreload.o
+	$(MKSHLIB) -o $@ LibPreload.o
+
+ShowLibs: ShowLibs.cpp
+	$(CXXF) -o $@ ShowLibs.cpp
