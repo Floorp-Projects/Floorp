@@ -802,6 +802,7 @@ case "$target" in
     PR_MD_ASFILES=os_Irix.s
     MKSHLIB='$(LD) $(DSO_LDOPTS) -rdata_shared -shared -soname $(notdir $@) -o $@'
     #DSO_LDOPTS='-elf -shared -all'
+    STRIP="$STRIP -f"
     if test -n "$USE_64"; then
         MDCPUCFG_H=_irix64.cfg
     else
