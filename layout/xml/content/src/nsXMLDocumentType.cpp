@@ -278,7 +278,7 @@ nsXMLDocumentType::List(FILE* out, PRInt32 aIndent) const
   PRInt32 index;
   for (index = aIndent; --index >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Document type...\n", mRefCnt);
+  fprintf(out, "Document type refcount: %d\n", mRefCnt);
 
   return NS_OK;
 }
