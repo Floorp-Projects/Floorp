@@ -45,23 +45,18 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Match(nsIContent *aContent, PRBool *aMatch);
-
-  NS_IMETHOD Add(nsIContent *aContent);
-
-  NS_IMETHOD Remove(nsIContent *aContent);
-
-  NS_IMETHOD Reset();
-
+  // nsIDOMHTMLCollection
   NS_IMETHOD GetLength(PRUint32* aLength);
 
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
 
   NS_IMETHOD NamedItem(const nsString& aName, nsIDOMNode** aReturn);
 
+  // nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
   NS_IMETHOD SetScriptObject(void *aScriptObject);
   
+  // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD EndUpdate(nsIDocument *aDocument) { return NS_OK; }
   NS_IMETHOD BeginLoad(nsIDocument *aDocument) { return NS_OK; }
@@ -111,9 +106,18 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 protected:
+  nsresult Match(nsIContent *aContent, PRBool *aMatch);
+  nsresult Add(nsIContent *aContent);
+  nsresult Remove(nsIContent *aContent);
+  nsresult Reset();
   void Init(nsIDocument *aDocument);
-  void PopulateSelf(nsIContent *aContent);
+  void PopulateWith(nsIContent *aContent, PRBool aIncludeRoot);
   PRBool MatchSelf(nsIContent *aContent);
+  void PopulateSelf();
+  void DisconnectFromDocument();
+  PRBool IsDescendantOfRoot(nsIContent* aContainer);
+  PRBool ContainsRoot(nsIContent* aContent);
+  nsresult CheckDocumentExistence();
 
   static nsIAtom* gWildCardAtom;
 

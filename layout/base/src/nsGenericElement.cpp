@@ -51,6 +51,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
+#include "nsContentList.h"
 #include "prprf.h"
 #include "prmem.h"
 
@@ -119,7 +120,19 @@ nsChildContentList::GetScriptObject(nsIScriptContext *aContext, void** aScriptOb
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptNodeList(aContext, (nsISupports *)(nsIDOMNodeList *)this, mContent, (void**)&mScriptObject);
+    nsIDOMScriptObjectFactory *factory;
+    
+    res = nsGenericElement::GetScriptObjectFactory(&factory);
+    if (NS_OK != res) {
+      return res;
+    }
+
+    res = factory->NewScriptNodeList(aContext, 
+                                     (nsISupports *)(nsIDOMNodeList *)this, 
+                                     mContent, 
+                                     (void**)&mScriptObject);
+
+    NS_RELEASE(factory);
   }
   *aScriptObject = mScriptObject;
   return res;
@@ -519,7 +532,26 @@ nsresult
 nsGenericElement::GetElementsByTagName(const nsString& aTagname,
                                        nsIDOMNodeList** aReturn)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;/* XXX */
+  nsIAtom* nameAtom;
+  PRInt32 nameSpaceId;
+  nsresult result = NS_OK;
+  
+  result = mContent->ParseAttributeString(aTagname, nameAtom,
+                                          nameSpaceId);
+  if (NS_OK != result) {
+    return result;
+  }
+
+  nsContentList* list = new nsContentList(mDocument, 
+                                          nameAtom, 
+                                          nameSpaceId, 
+                                          mContent);
+  NS_IF_RELEASE(nameAtom);
+  if (nsnull == list) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  return list->QueryInterface(kIDOMNodeListIID, (void **)aReturn);
 }
 
 nsresult
