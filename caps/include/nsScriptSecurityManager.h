@@ -65,7 +65,7 @@ class nsIStringBundle;
 class nsSystemPrincipal;
 struct ClassPolicy;
 
-#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon)
+#if defined(DEBUG_mstoltz) || defined(DEBUG_caillon) || defined(DEBUG_chb)
 #define DEBUG_CAPS_HACKER
 #endif
 
@@ -148,7 +148,7 @@ private:
 // Property Policy
 union SecurityLevel
 {
-    long     level;
+    PRInt32  level;
     char*    capability;
 };
 
