@@ -348,7 +348,10 @@ NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aTimeout = mTimeout;
+  if (mTimeout == 0)
+    *aTimeout = 100; // Ensure a minimal time between updates so we don't throttle the UI thread.
+  else
+    *aTimeout = mTimeout;
   return NS_OK;
 }
 

@@ -174,8 +174,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
       nsCOMPtr<gfxIImageFrame> currentFrame;
       this->GetFrameAt(mCurrentDecodingFrameIndex, getter_AddRefs(currentFrame));
       currentFrame->GetTimeout(&timeout);
-      if (timeout != -1 &&
-         timeout >= 0) { // -1 means display this frame forever
+      if (timeout > 0) { // -1 means display this frame forever
         
         if(mAnimating) {
           // Since we have more than one frame we need a timer
@@ -216,8 +215,7 @@ NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout
     PRUint32 numFrames;
     this->GetNumFrames(&numFrames);
     if (numFrames > 1) {
-        if (aTimeout != -1 &&
-            aTimeout >= 0) { // -1 means display this frame forever
+        if (aTimeout > 0) { // -1 means display this frame forever
 
           mAnimating = PR_TRUE;
           mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -269,8 +267,7 @@ NS_IMETHODIMP imgContainer::StartAnimation()
     this->GetCurrentFrame(getter_AddRefs(currentFrame));
     if (currentFrame) {
       currentFrame->GetTimeout(&timeout);
-      if (timeout != -1 &&
-          timeout >= 0) { // -1 means display this frame forever
+      if (timeout > 0) { // -1 means display this frame forever
 
         mAnimating = PR_TRUE;
         if(!mTimer) mTimer = do_CreateInstance("@mozilla.org/timer;1");
@@ -381,7 +378,7 @@ NS_IMETHODIMP_(void) imgContainer::Notify(nsITimer *timer)
     if(!nextFrame) return;
   }
 
-  if(timeout >= 0)
+  if(timeout > 0)
     mTimer->SetDelay(timeout);
   else
     this->StopAnimation();
