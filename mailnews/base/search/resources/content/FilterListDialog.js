@@ -69,8 +69,6 @@ function onLoad()
         selectServer(firstItem);
     }
     
-    if (("arguments" in window) && window.arguments[0] && ("prefillValue" in window.arguments[0])) 
-        onNewFilter(window.arguments[0].prefillValue);
 }
 
 function onOk()
@@ -168,11 +166,7 @@ function onNewFilter(emailAddress)
 {
   var curFilterList = currentFilterList();
   var args = {filterList: curFilterList};
-  if(emailAddress) {
-    args.okCallback = function() {};
-    args.filterName = emailAddress;
-  }
-    
+  
   window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal,titlebar,resizable,centerscreen", args);
 
   if ("refresh" in args && args.refresh)

@@ -56,9 +56,6 @@ var gMailSession = null;
 
 var nsMsgFilterAction = Components.interfaces.nsMsgFilterAction;
 
-/* the okCallback is used for sending a callback to the Filter Dialog to close incase the user cancels from pre-fill.*/
-var okCallback=null;
-
 var gFilterEditorMsgWindow=null;
      
 function filterEditorOnLoad()
@@ -71,9 +68,6 @@ function filterEditorOnLoad()
     gFilterBundle = document.getElementById("bundle_filter");
     if ("arguments" in window && window.arguments[0]) {
         var args = window.arguments[0];
-        if("okCallback" in args ) {
-          top.okCallback = window.arguments[0].okCallback;
-        }
 
         if ("filter" in args) {
           // editing a filter
@@ -168,14 +162,6 @@ function onAccept()
     window.arguments[0].refresh = true;
     return true;
 }
-
-function onCancel()
-{
-  if (top.okCallback)
-    top.okCallback();
-  return true;
-}
-
 
 // the folderListener object
 var gFolderListener = {

@@ -1128,11 +1128,34 @@ function MsgCanFindAgain()
 function MsgFilters(emailAddress)
 {
     var preselectedFolder = GetFirstSelectedMsgFolder();
-    var args = { folder: preselectedFolder };
+    var args;
     if (emailAddress)
-      args.prefillValue = emailAddress;
+    {
+      /* we have to do prefill filter so we are going to launch the filterEditor dialog
+         and prefill that with the emailAddress */
+         
+      var curFilterList = preselectedFolder.getFilterList(msgWindow);
+      args = {filterList: curFilterList};
+      args.filterName = emailAddress;
+      window.openDialog("chrome://messenger/content/FilterEditor.xul", "", 
+                        "chrome, modal, resizable,centerscreen,dialog=yes", args);
+
+      /* if the user hits ok in the filterEditor dialog we set args.refresh=true there
+         we check this here in args to show filterList dialog */
+
+      if ("refresh" in args && args.refresh)
+      {
+         args = { folder: preselectedFolder };
     window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
                         "chrome,modal,resizable,centerscreen,dialog=yes", args);
+}
+    }
+    else  //just launch filterList dialog
+    {
+      args = { folder: preselectedFolder };
+      window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 
+                       "chrome,modal,resizable,centerscreen,dialog=yes", args);
+    }
 }
 
 function MsgViewAllHeaders()

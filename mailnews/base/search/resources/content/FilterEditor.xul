@@ -40,8 +40,7 @@ Contributor(s):
   persist="width height screenX screenY"
   onload="filterEditorOnLoad();"
   onunload="filterEditorOnUnload();"
-  ondialogaccept="return onAccept();"
-  ondialogcancel="return onCancel();">
+  ondialogaccept="return onAccept();">
 
   <dummy class="usesMailWidgets"/>
   <stringbundleset id="stringbundleset">
