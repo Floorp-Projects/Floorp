@@ -46,6 +46,12 @@ RELEASE_LIBS = $(TARGETS)
 
 ifeq ($(OS_ARCH), WINNT)
 
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:smime.def
+
 EXTRA_LIBS += \
 	$(DIST)/lib/pkcs12.lib \
 	$(DIST)/lib/nss3.lib \

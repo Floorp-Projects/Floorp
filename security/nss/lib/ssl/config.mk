@@ -44,6 +44,12 @@
 
 ifeq ($(OS_ARCH), WINNT)
 
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:ssl.def
+
 EXTRA_LIBS += \
 	$(DIST)/lib/nss3.lib \
 	$(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \

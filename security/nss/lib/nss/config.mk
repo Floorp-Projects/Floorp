@@ -45,6 +45,12 @@
 # can't do this in manifest.mn because OS_ARCH isn't defined there.
 ifeq ($(OS_ARCH), WINNT)
 
+# don't want the 32 in the shared library name
+SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
+IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
+
+DLLFLAGS += -DEF:nss.def
+
 # $(PROGRAM) has explicit dependencies on $(EXTRA_LIBS)
 CRYPTOLIB=$(DIST)/lib/freebl.lib
 ifdef MOZILLA_SECURITY_BUILD
@@ -56,6 +62,7 @@ ifdef MOZILLA_BSAFE_BUILD
 endif
 
 EXTRA_LIBS += \
+	$(DIST)/lib/pkcs7.lib \
 	$(DIST)/lib/certhi.lib \
 	$(DIST)/lib/cryptohi.lib \
 	$(DIST)/lib/pk11wrap.lib \
