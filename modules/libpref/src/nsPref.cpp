@@ -1088,7 +1088,7 @@ PrefResult PREF_SavePrefFileSpecWith(
 }
 
 /// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
-static int
+static int PR_CALLBACK
 inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 {
 	char *name1 = nsnull;
