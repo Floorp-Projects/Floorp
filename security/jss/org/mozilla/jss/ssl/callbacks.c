@@ -123,7 +123,7 @@ done:
  *    -1        SECFailure - No suitable certificate found.
  *    -2         SECWouldBlock (we're waiting while we ask the user).
  */
-int
+SECStatus
 JSSL_CallCertSelectionCallback(    void * arg,
             PRFileDesc *        fd,
             CERTDistNames *     caNames,
@@ -287,7 +287,7 @@ JSSL_CallCertSelectionCallback(    void * arg,
     rv = SECSuccess;
 
 loser:
-    return (int)rv;
+    return rv;
 }
 
 
@@ -326,7 +326,7 @@ finish:
  * Callback from SSL for checking certificate the peer (other end of
  * the socket) presents.
  */
-int
+SECStatus
 JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
@@ -369,7 +369,7 @@ JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
         rv = SECFailure;
 
     if (peerCert) CERT_DestroyCertificate(peerCert);
-    return (int)rv;
+    return rv;
 }
 
 static void
@@ -608,7 +608,7 @@ finish:
     return retval;
 }
 
-int
+SECStatus
 JSSL_GetClientAuthData( void * arg,
                         PRFileDesc *        fd,
                         CERTDistNames *     caNames,
@@ -648,7 +648,7 @@ JSSL_GetClientAuthData( void * arg,
  * Callback from SSL for checking a (possibly) expired
  * certificate the peer presents.
  */
-int
+SECStatus
 JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer)
 {
@@ -697,5 +697,5 @@ JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
 
 finish:
     if (peerCert!=NULL) CERT_DestroyCertificate(peerCert);
-    return (int)rv;
+    return rv;
 }

@@ -50,22 +50,22 @@ JSSL_JavaCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
 void
 JSSL_HandshakeCallback(PRFileDesc *fd, void *arg);
 
-int
+SECStatus
 JSSL_DefaultCertAuthCallback(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer);
 
-int
+SECStatus
 JSSL_CallCertSelectionCallback(    void * arg,
             PRFileDesc *        fd,
             CERTDistNames *     caNames,
             CERTCertificate **  pRetCert,
             SECKEYPrivateKey ** pRetKey);
 
-int
+SECStatus
 JSSL_ConfirmExpiredPeerCert(void *arg, PRFileDesc *fd, PRBool checkSig,
              PRBool isServer);
 
-int
+SECStatus
 JSSL_GetClientAuthData( void * arg,
                         PRFileDesc *        fd,
                         CERTDistNames *     caNames,

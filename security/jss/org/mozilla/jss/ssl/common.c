@@ -58,7 +58,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
 {
     jbyteArray sdArray = NULL;
     JSSL_SocketData *sockdata;
-    PRStatus status;
+    SECStatus status;
     PRFileDesc *newFD;
 
     /* create a TCP socket */
@@ -90,7 +90,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
     /* setup the handshake callback */
     status = SSL_HandshakeCallback(sockdata->fd, JSSL_HandshakeCallback,
                                     sockdata);
-    if( status != PR_SUCCESS ) {
+    if( status != SECSuccess ) {
         JSS_throwMsg(env, SOCKET_EXCEPTION,
             "Unable to install handshake callback");
     }
@@ -111,7 +111,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
         status = SSL_AuthCertificateHook(
                     sockdata->fd, JSSL_DefaultCertAuthCallback, NULL);
     }
-    if( status != PR_SUCCESS ) {
+    if( status != SECSuccess ) {
         JSS_throwMsg(env, SOCKET_EXCEPTION,
             "Unable to install certificate authentication callback");
         goto finish;
@@ -128,7 +128,7 @@ Java_org_mozilla_jss_ssl_SocketBase_socketCreate(JNIEnv *env, jobject self,
         status = SSL_GetClientAuthDataHook(
             sockdata->fd, JSSL_CallCertSelectionCallback,
             (void*) sockdata->clientCertSelectionCallback);
-        if( status != PR_SUCCESS ) {
+        if( status != SECSuccess ) {
             JSS_throwMsg(env, SOCKET_EXCEPTION,
                 "Unable to install client certificate selection callback");
             goto finish;
@@ -310,7 +310,7 @@ finish:
 }
 
 JNIEXPORT void JNICALL
-Java_org_mozilla_jss_ssl_SocketBase_requestClientAuthNoExpiryCheck
+Java_org_mozilla_jss_ssl_SocketBase_requestClientAuthNoExpiryCheckNative
     (JNIEnv *env, jobject self, jboolean b)
 {
     JSSL_SocketData *sock;
