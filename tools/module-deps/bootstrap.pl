@@ -40,7 +40,7 @@ my $debug = 1;
 
 sub PrintUsage {
   die <<END_USAGE
-  usage: $0 --modules=mod1,mod2,.. --skip-cvs
+  usage: $0 --modules=mod1,mod2,.. [--skip-cvs] [--skip-core-cvs]
   (Assumes you can check out a new cvs tree here)
 END_USAGE
 }
@@ -200,6 +200,14 @@ sub FindMakefiles {
   close EXTRADOT;
 
   close METADOT;
+
+
+  # Print out module dependency tree.
+  print "\nDependency tree:\n";
+  my $tree_cmd = "mozilla/tools/module-deps/module-graph\.pl --file mozilla/tools/module-deps/meta\.dot --start-module $root_modules --force-order mozilla/tools/module-deps/force_order\.txt --skip-dep-map --skip-list";
+  print "cmd = $tree_cmd\n";
+  system("$tree_cmd");
+  print "\n";
 
   # Figure out the modules list.
   my @modules;
