@@ -121,6 +121,7 @@ typedef enum {
     DupInsertNOp,           // <N>                      <N things> <object2> --> <object2> <N things> <object2>
     PopOp,                  //                          <object> -->   
     PopNOp,                 // <N>                      <N things> -->   
+    VoidPopOp,              //                          <object>-->     (doesn't cache result value)
     // for instance members
     GetFieldOp,             // <slot>                   <base> --> <object>
     SetFieldOp,             // <slot>                   <base> <object> --> <object>

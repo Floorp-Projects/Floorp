@@ -331,6 +331,7 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { -128,     "DupInsertN", },
 { -1,       "Pop", },
 { -128,     "PopN", },
+{ -1,       "VoidPop", },
 { 0,        "GetField", },
 { -1,       "SetField", },
 { 1,        "GetMethod", },
@@ -729,7 +730,8 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             VariableBinding *v = vs->bindings;
             bool isStatic = (vs->attributeValue->mTrueFlags & Property::Static) == Property::Static;
             while (v)  {
-                Reference *ref = mScopeChain->getName(*v->name, vs->attributeValue->mNamespaceList, Write);
+                Reference *ref = v->scope->genReference(false, *v->name, vs->attributeValue->mNamespaceList, Write, 0);
+   //             Reference *ref = mScopeChain->getName(*v->name, vs->attributeValue->mNamespaceList, Write);
                 ASSERT(ref);    // must have been added previously by collectNames
                 if (v->initializer) {
                     if (isStatic && (static_cg != NULL)) {
@@ -903,7 +905,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                         NOT_REACHED("what else??");
                 }            
                 if (value == NULL)
-                    m_cx->reportError(Exception::referenceError, "Invalid for..in target");
+                    m_cx->reportError(Exception::referenceError, "Invalid for..in target", p->pos);
                 iteratorReadRef->emitCodeSequence(this);
                 addOp(GetPropertyOp);
                 addStringRef(m_cx->Value_StringAtom);
@@ -925,7 +927,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addLong(1);
                 addByte(Explicit);
                 iteratorWriteRef->emitCodeSequence(this);
-                addOp(PopOp);
+                addOp(VoidPopOp);
 
             setLabel(labelAtTestCondition);
                 iteratorReadRef->emitCodeSequence(this);
@@ -948,16 +950,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addOp(PopOp);
 
             setLabel(labelAtEnd);
-/*
-            if (valueBaseDepth) {
-                if (valueBaseDepth > 1) {
-                    addOpAdjustDepth(PopNOp, -valueBaseDepth);
-                    addShort(valueBaseDepth);
-                }
-                else
-                    addOp(PopOp);
-            }
-*/
+
             delete objectReadRef;
             delete objectWriteRef;
             delete iteratorReadRef;
@@ -2366,6 +2359,9 @@ BinaryOpEquals:
             return Object_Type;
         }
         break;
+    case ExprNode::regExp:
+        m_cx->reportError(Exception::internalError, "Regular expressions nyi", p->pos);
+        break;
     default:
         NOT_REACHED("Not Implemented Yet");
     }
@@ -2409,6 +2405,7 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case DupOp:
     case DupInsertOp:
     case PopOp:
+    case VoidPopOp:
     case LoadGlobalObjectOp:
     case NewClosureOp:
     case ClassOp:

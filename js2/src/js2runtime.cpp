@@ -81,6 +81,13 @@ JSType *Attribute_Type;
 JSType *NamedArgument_Type;
 JSArrayType *Array_Type;
 JSType *Date_Type;
+JSType *Error_Type;
+JSType *EvalError_Type;
+JSType *RangeError_Type;
+JSType *ReferenceError_Type;
+JSType *SyntaxError_Type;
+JSType *TypeError_Type;
+JSType *UriError_Type;
 
 
 Attribute *Context::executeAttributes(ExprNode *attr)
@@ -672,6 +679,18 @@ void ScopeChain::setNameValue(Context *cx, const String& name, AttributeStmtNode
     cx->getGlobalObject()->defineVariable(cx, name, attr, Object_Type, v);
 }
 
+bool ScopeChain::deleteName(Context *cx, const String& name, AttributeStmtNode *attr)
+{
+    NamespaceList *names = (attr) ? attr->attributeValue->mNamespaceList : NULL;
+    for (ScopeScanner s = mScopeStack.rbegin(), end = mScopeStack.rend(); (s != end); s++)
+    {
+        PropertyIterator i;
+        if ((*s)->hasOwnProperty(name, names, Read, &i))
+            return (*s)->deleteProperty(name, names);
+    }
+    return true;
+}
+
 inline char narrow(char16 ch) { return char(ch); }
 
 JSObject *ScopeChain::getNameValue(Context *cx, const String& name, AttributeStmtNode *attr)
@@ -989,8 +1008,8 @@ void ScopeChain::collectNames(StmtNode *p)
             }            
         }
         break;
-    case StmtNode::If:
     case StmtNode::With:
+    case StmtNode::If:
     case StmtNode::DoWhile:
     case StmtNode::While:
         {
@@ -1008,13 +1027,16 @@ void ScopeChain::collectNames(StmtNode *p)
     case StmtNode::Try:
         {
             TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+            collectNames(t->stmt);
             if (t->catches) {
                 CatchClause *c = t->catches;
                 while (c) {
+                    collectNames(c->stmt);
                     c->prop = defineVariable(m_cx, c->name, NULL, NULL);
                     c = c->next;
                 }
             }
+            if (t->finally) collectNames(t->finally);
         }
         break;
     case StmtNode::For:
@@ -1046,6 +1068,7 @@ void ScopeChain::collectNames(StmtNode *p)
                     v->prop = defineStaticVariable(m_cx, *v->name, vs, NULL);
                 else
                     v->prop = defineVariable(m_cx, *v->name, vs, NULL);
+                v->scope = mScopeStack.back();
                 v = v->next;
             }
         }
@@ -1590,17 +1613,20 @@ void Context::buildRuntimeForStmt(StmtNode *p)
     case StmtNode::Try:
         {
             TryStmtNode *t = checked_cast<TryStmtNode *>(p);
+            buildRuntimeForStmt(t->stmt);
             if (t->catches) {
                 CatchClause *c = t->catches;
                 while (c) {
+                    buildRuntimeForStmt(c->stmt);
                     c->prop->mType = mScopeChain->extractType(c->type);
                     c = c->next;
                 }
             }
+            if (t->finally) buildRuntimeForStmt(t->finally);
         }
         break;
-    case StmtNode::If:
     case StmtNode::With:
+    case StmtNode::If:
     case StmtNode::DoWhile:
     case StmtNode::While:
         {
@@ -1745,7 +1771,7 @@ static JSValue Object_Constructor(Context *cx, const JSValue& thisValue, JSValue
     JSValue thatValue = thisValue;  // incoming 'new this' potentially supplied by constructor sequence
 
     if (argc != 0) {
-        if (argv[0].isObject())
+        if (argv[0].isObject() || argv[0].isFunction() || argv[0].isType())
             thatValue = argv[0];
         else
         if (argv[0].isString() || argv[0].isBool() || argv[0].isNumber())
@@ -2030,6 +2056,14 @@ static JSValue Boolean_Constructor(Context *cx, const JSValue& thisValue, JSValu
     return v;
 }
 
+static JSValue Boolean_TypeCast(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    if (argc == 0)
+        return kFalseValue;
+    else
+        return argv[0].toBoolean(cx);
+}
+
 static JSValue Boolean_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
 {
     ASSERT(thisValue.isObject());
@@ -2054,6 +2088,76 @@ static JSValue Boolean_valueOf(Context *cx, const JSValue& thisValue, JSValue * 
         return kFalseValue;
 }
 
+static JSValue GenericError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc, JSType *errType)
+{
+    JSValue v = thisValue;
+    if (v.isNull())
+        v = errType->newInstance(cx);
+    ASSERT(v.isObject());
+    JSObject *thisObj = v.object;
+    JSValue msg;
+    if (argc > 0)
+        msg = argv[0].toString(cx);
+    else
+        msg = JSValue(&cx->Empty_StringAtom);
+    thisObj->defineVariable(cx, cx->Message_StringAtom, NULL, Property::NoAttribute, String_Type, msg);
+    thisObj->defineVariable(cx, cx->Name_StringAtom, NULL, Property::NoAttribute, String_Type, JSValue(errType->mClassName));
+    return v;
+}
+
+JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, Error_Type);
+}
+
+static JSValue Error_toString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    ContextStackReplacement csr(cx);
+
+    ASSERT(thisValue.isObject());
+    JSObject *thisObj = thisValue.object;
+    if ((thisObj->mType != Error_Type) && !thisObj->mType->derivesFrom(Error_Type))
+        cx->reportError(Exception::typeError, "Error.toString can only be applied to Error objects");
+    thisObj->getProperty(cx, cx->Message_StringAtom, CURRENT_ATTR);
+    JSValue msg = cx->popValue();
+    thisObj->getProperty(cx, cx->Name_StringAtom, CURRENT_ATTR);
+    JSValue name = cx->popValue();
+
+    String *result = new String(*name.toString(cx).string + ":" + *msg.toString(cx).string);
+    return JSValue(result);
+}
+
+JSValue EvalError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, EvalError_Type);
+}
+
+JSValue RangeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, RangeError_Type);
+}
+
+JSValue ReferenceError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, ReferenceError_Type);
+}
+
+JSValue SyntaxError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, SyntaxError_Type);
+}
+
+JSValue TypeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, TypeError_Type);
+}
+
+JSValue UriError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    return GenericError_Constructor(cx, thisValue, argv, argc, UriError_Type);
+}
+
+
 static JSValue ExtendAttribute_Invoke(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
     ASSERT(argc == 1);
@@ -2065,15 +2169,18 @@ static JSValue ExtendAttribute_Invoke(Context * /*cx*/, const JSValue& /*thisVal
     return JSValue(x);
 }
 
-static JSValue GlobalObject_Eval(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 /*argc*/)
+static JSValue GlobalObject_Eval(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {
-    if (!argv[0].isString())
-        return argv[0];
-    const String *sourceStr = argv[0].toString(cx).string;
+    if (argc > 0) {
+        if (!argv[0].isString())
+            return argv[0];
+        const String *sourceStr = argv[0].toString(cx).string;
 
-    Activation *prev = cx->mActivationStack.top();
+        Activation *prev = cx->mActivationStack.top();
 
-    return cx->readEvalString(*sourceStr, widenCString("eval source"), cx->mScopeChain, prev->mThis);
+        return cx->readEvalString(*sourceStr, widenCString("eval source"), cx->mScopeChain, prev->mThis);
+    }
+    return kUndefinedValue;
 }
 
 static JSValue GlobalObject_ParseInt(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
@@ -2123,6 +2230,149 @@ static JSValue GlobalObject_isFinite(Context *cx, const JSValue& /*thisValue*/, 
         return kTrueValue;
     else
         return kFalseValue;
+}
+
+/*
+ * Stuff to emulate the old libmocha escape, which took a second argument
+ * giving the type of escape to perform.  Retained for compatibility, and
+ * copied here to avoid reliance on net.h, mkparse.c/NET_EscapeBytes.
+ */
+#define URL_XALPHAS     ((uint8) 1)
+#define URL_XPALPHAS    ((uint8) 2)
+#define URL_PATH        ((uint8) 4)
+
+static const uint8 urlCharType[256] =
+/*      Bit 0           xalpha          -- the alphas
+ *      Bit 1           xpalpha         -- as xalpha but
+ *                             converts spaces to plus and plus to %20
+ *      Bit 2 ...       path            -- as xalphas but doesn't escape '/'
+ */
+    /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
+    {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 0x */
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 1x */
+         0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,       /* 2x   !"#$%&'()*+,-./  */
+         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,       /* 3x  0123456789:;<=>?  */
+         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 4x  @ABCDEFGHIJKLMNO  */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,       /* 5X  PQRSTUVWXYZ[\]^_  */
+         0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 6x  `abcdefghijklmno  */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,       /* 7X  pqrstuvwxyz{\}~  DEL */
+         0, };
+
+/* This matches the ECMA escape set when mask is 7 (default.) */
+
+#define IS_OK(C, mask) (urlCharType[((uint8) (C))] & (mask))
+
+/* See ECMA-262 15.1.2.4. */
+static JSValue GlobalObject_escape(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    if (argc > 0) {
+        uint32 i, ni, length, newlength;
+        char16 ch;
+
+        const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                               '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+        uint32 mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
+        if (argc > 1) {
+            float64 d = argv[1].toNumber(cx).f64;
+            if (!JSDOUBLE_IS_FINITE(d) || (mask = (uint32)d) != d || mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
+                cx->reportError(Exception::runtimeError, "Bad string mask for escape");
+        }
+
+        const String *str = argv[0].toString(cx).string;
+
+        const char16 *chars = str->begin();
+        length = newlength = str->size();
+
+        /* Take a first pass and see how big the result string will need to be. */
+        for (i = 0; i < length; i++) {
+            if ((ch = chars[i]) < 128 && IS_OK(ch, mask))
+                continue;
+            if (ch < 256) {
+                if (mask == URL_XPALPHAS && ch == ' ')
+                    continue;   /* The character will be encoded as '+' */
+                newlength += 2; /* The character will be encoded as %XX */
+            } else {
+                newlength += 5; /* The character will be encoded as %uXXXX */
+            }
+        }
+
+        char16 *newchars = new char16[newlength + 1];
+        for (i = 0, ni = 0; i < length; i++) {
+            if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+                newchars[ni++] = ch;
+            } else if (ch < 256) {
+                if (mask == URL_XPALPHAS && ch == ' ') {
+                    newchars[ni++] = '+'; /* convert spaces to pluses */
+                } else {
+                    newchars[ni++] = '%';
+                    newchars[ni++] = digits[ch >> 4];
+                    newchars[ni++] = digits[ch & 0xF];
+                }
+            } else {
+                newchars[ni++] = '%';
+                newchars[ni++] = 'u';
+                newchars[ni++] = digits[ch >> 12];
+                newchars[ni++] = digits[(ch & 0xF00) >> 8];
+                newchars[ni++] = digits[(ch & 0xF0) >> 4];
+                newchars[ni++] = digits[ch & 0xF];
+            }
+        }
+        ASSERT(ni == newlength);
+        newchars[newlength] = 0;
+
+        String *result = new String(newchars, newlength);
+        delete[] newchars;
+        return JSValue(result);
+    }
+    return JSValue(&cx->Undefined_StringAtom);
+}
+#undef IS_OK
+
+/* See ECMA-262 15.1.2.5 */
+static JSValue GlobalObject_unescape(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
+{
+    if (argc > 0) {
+        uint32 i, ni;
+        char16 ch;
+
+        const String *str = argv[0].toString(cx).string;
+
+        const char16 *chars = str->begin();
+        uint32 length = str->size();
+
+        /* Don't bother allocating less space for the new string. */
+        char16 *newchars = new char16[length + 1];
+        ni = i = 0;
+        while (i < length) {
+            uint hexValue[4];
+            ch = chars[i++];
+            if (ch == '%') {
+                if (i + 1 < length &&
+                    isASCIIHexDigit(chars[i], hexValue[0]) && isASCIIHexDigit(chars[i + 1], hexValue[1]))
+                {
+                    ch = hexValue[0] * 16 + hexValue[1];
+                    i += 2;
+                } else if (i + 4 < length && chars[i] == 'u' &&
+                           isASCIIHexDigit(chars[i + 1], hexValue[0]) && isASCIIHexDigit(chars[i + 2], hexValue[1]) &&
+                           isASCIIHexDigit(chars[i + 3], hexValue[2]) && isASCIIHexDigit(chars[i + 4], hexValue[3]))
+                {
+                    ch = (((((hexValue[0] << 4)
+                            + hexValue[1]) << 4)
+                          + hexValue[2]) << 4)
+                        + hexValue[3];
+                    i += 5;
+                }
+            }
+            newchars[ni++] = ch;
+        }
+        newchars[ni] = 0;
+
+        String *result = new String(newchars, ni);
+        delete[] newchars;
+        return JSValue(result);
+    }
+    return JSValue(&cx->Undefined_StringAtom);
 }
 
 
@@ -2276,20 +2526,27 @@ void Context::initBuiltins()
 {
     ClassDef builtInClasses[] =
     {
-        { "Object",         Object_Constructor,    &kUndefinedValue     },
-        { "Type",           NULL,                  &kNullValue          },
-        { "Function",       Function_Constructor,  &kNullValue          },
-        { "Number",         Number_Constructor,    &kPositiveZero       },
-        { "Integer",        Integer_Constructor,   &kPositiveZero       },
-        { "String",         String_Constructor,    &kNullValue          },
-        { "Array",          Array_Constructor,     &kNullValue          },
-        { "Boolean",        Boolean_Constructor,   &kFalseValue         },
-        { "Void",           NULL,                  &kUndefinedValue     },
-        { "Unit",           NULL,                  &kNullValue          },
-        { "Attribute",      NULL,                  &kNullValue          },
-        { "NamedArgument",  NULL,                  &kNullValue          },
-        { "Date",           Date_Constructor,      &kPositiveZero       },
-        { "Null",           NULL,                  &kNullValue          },
+        { "Object",         Object_Constructor,         &kUndefinedValue     },
+        { "Type",           NULL,                       &kNullValue          },
+        { "Function",       Function_Constructor,       &kNullValue          },
+        { "Number",         Number_Constructor,         &kPositiveZero       },
+        { "Integer",        Integer_Constructor,        &kPositiveZero       },
+        { "String",         String_Constructor,         &kNullValue          },
+        { "Array",          Array_Constructor,          &kNullValue          },
+        { "Boolean",        Boolean_Constructor,        &kFalseValue         },
+        { "Void",           NULL,                       &kUndefinedValue     },
+        { "Unit",           NULL,                       &kNullValue          },
+        { "Attribute",      NULL,                       &kNullValue          },
+        { "NamedArgument",  NULL,                       &kNullValue          },
+        { "Date",           Date_Constructor,           &kPositiveZero       },
+        { "Null",           NULL,                       &kNullValue          },
+        { "Error",          Error_Constructor,          &kNullValue          },
+        { "EvalError",      EvalError_Constructor,      &kNullValue          },
+        { "RangeError",     RangeError_Constructor,     &kNullValue          },
+        { "ReferenceError", ReferenceError_Constructor, &kNullValue          },
+        { "SyntaxError",    SyntaxError_Constructor,    &kNullValue          },
+        { "TypeError",      TypeError_Constructor,      &kNullValue          },
+        { "UriError",       UriError_Constructor,       &kNullValue          },
     };
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
@@ -2334,6 +2591,13 @@ void Context::initBuiltins()
     NamedArgument_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
     Date_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[12].name)], Object_Type);
     Null_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[13].name)], Object_Type);
+    Error_Type          = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[14].name)], Object_Type);
+    EvalError_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[15].name)], Error_Type);
+    RangeError_Type     = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[16].name)], Error_Type);
+    ReferenceError_Type = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[17].name)], Error_Type);
+    SyntaxError_Type    = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[18].name)], Error_Type);
+    TypeError_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[19].name)], Error_Type);
+    UriError_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[20].name)], Error_Type);
 
     String_Type->defineVariable(this, FromCharCode_StringAtom, NULL, String_Type, JSValue(new JSFunction(this, String_fromCharCode, String_Type)));
 
@@ -2374,6 +2638,12 @@ void Context::initBuiltins()
         { "valueOf",  Number_Type, 0, Boolean_valueOf },
         { NULL }
     };
+    ProtoFunDef errorProtos[] = 
+    {
+        { "toString", String_Type, 0, Error_toString },
+        { "toSource", String_Type, 0, Error_toString },
+        { NULL }
+    };
 
     ASSERT(mGlobal);
     *mGlobal = Object_Type->newInstance(this);
@@ -2392,9 +2662,17 @@ void Context::initBuiltins()
     initClass(NamedArgument_Type,   &builtInClasses[11], NULL);
     initClass(Date_Type,            &builtInClasses[12], getDateProtos() );
     initClass(Null_Type,            &builtInClasses[13], NULL);
+    initClass(Error_Type,           &builtInClasses[14], new PrototypeFunctions(&errorProtos[0]));
+    initClass(EvalError_Type,       &builtInClasses[15], new PrototypeFunctions(&errorProtos[0]));
+    initClass(RangeError_Type,      &builtInClasses[16], new PrototypeFunctions(&errorProtos[0]));
+    initClass(ReferenceError_Type,  &builtInClasses[17], new PrototypeFunctions(&errorProtos[0]));
+    initClass(SyntaxError_Type,     &builtInClasses[18], new PrototypeFunctions(&errorProtos[0]));
+    initClass(TypeError_Type,       &builtInClasses[19], new PrototypeFunctions(&errorProtos[0]));
+    initClass(UriError_Type,        &builtInClasses[20], new PrototypeFunctions(&errorProtos[0]));
 
     Type_Type->defineUnaryOperator(Index, new JSFunction(this, arrayMaker, Type_Type));
-
+    
+    Object_Type->mTypeCast = new JSFunction(this, Object_Constructor, Object_Type);
     Function_Type->mTypeCast = new JSFunction(this, Function_Constructor, Object_Type);
 
     Number_Type->mTypeCast = new JSFunction(this, Number_TypeCast, Number_Type);
@@ -2403,11 +2681,15 @@ void Context::initBuiltins()
     Array_Type->defineUnaryOperator(IndexEqual, new JSFunction(this, Array_SetElement, Object_Type));
     Array_Type->mTypeCast = new JSFunction(this, Array_Constructor, Array_Type);
 
+    Boolean_Type->mTypeCast = new JSFunction(this, Boolean_TypeCast, Boolean_Type);
+
     Date_Type->mTypeCast = new JSFunction(this, Date_TypeCast, String_Type);
     Date_Type->defineStaticMethod(this, widenCString("parse"), NULL, new JSFunction(this, Date_parse, Number_Type));
     Date_Type->defineStaticMethod(this, widenCString("UTC"), NULL, new JSFunction(this, Date_UTC, Number_Type));
 
     String_Type->mTypeCast = new JSFunction(this, String_TypeCast, String_Type);
+
+    Error_Type->mTypeCast = new JSFunction(this, Error_Constructor, Error_Type);
 
 }
 
@@ -2509,6 +2791,15 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       Infinity_StringAtom       (world.identifiers["Infinity"]),
       Empty_StringAtom          (world.identifiers[""]),
       Arguments_StringAtom      (world.identifiers["arguments"]),
+      Message_StringAtom        (world.identifiers["message"]),
+      Name_StringAtom           (world.identifiers["name"]),
+      Error_StringAtom          (world.identifiers["Error"]),
+      EvalError_StringAtom      (world.identifiers["EvalError"]),
+      RangeError_StringAtom     (world.identifiers["RangeError"]),
+      ReferenceError_StringAtom (world.identifiers["ReferenceError"]),
+      SyntaxError_StringAtom    (world.identifiers["SyntaxError"]),
+      TypeError_StringAtom      (world.identifiers["TypeError"]),
+      UriError_StringAtom       (world.identifiers["UriError"]),
 
       mWorld(world),
       mScopeChain(NULL),
@@ -2596,6 +2887,8 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         { "parseFloat",     Number_Type,  2, GlobalObject_ParseFloat },
         { "isNaN",          Boolean_Type, 2, GlobalObject_isNaN },
         { "isFinite",       Boolean_Type, 2, GlobalObject_isFinite },
+        { "escape",         String_Type,  1, GlobalObject_escape },
+        { "unescape",       String_Type,  1, GlobalObject_unescape },        
     };
     
     for (i = 0; i < (sizeof(globalObjectFunctions) / sizeof(ProtoFunDef)); i++) {
@@ -2604,18 +2897,6 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
         x->setIsPrototype(true);
         getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue(x));    
     }
-
-/*    
-    x = new JSFunction(GlobalObject_Eval, Object_Type);
-    x->setArgCounts(1, 0, false);
-    x->setIsPrototype(true);
-    getGlobalObject()->defineVariable(this, Eval_StringAtom, (NamespaceList *)(NULL), Object_Type, JSValue(x));
-
-    x = new JSFunction(GlobalObject_ParseInt, Number_Type);
-    x->setArgCounts(2, 0, false);
-    x->setIsPrototype(true);
-    getGlobalObject()->defineVariable(this, widenCString("parseInt"), (NamespaceList *)(NULL), Object_Type, JSValue(x));
-*/
 
     getGlobalObject()->defineVariable(this, Undefined_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kUndefinedValue);
     getGlobalObject()->defineVariable(this, NaN_StringAtom, (NamespaceList *)(NULL), Property::NoAttribute, Void_Type, kNaNValue);

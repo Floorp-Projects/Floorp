@@ -1083,12 +1083,14 @@ XXX ...couldn't get this to work...
             return top->hasProperty(name, names, acc, p);
         }
 
+        bool deleteName(Context *cx, const String& name, AttributeStmtNode *attr);
+/*
         bool hasOwnProperty(const String& name, NamespaceList *names, Access acc, PropertyIterator *p)
         {
             JSObject *top = mScopeStack.back();
             return top->hasOwnProperty(name, names, acc, p);
         }
-
+*/
         // delete a property from the top object (already know it's there)
         bool deleteProperty(const String &name, NamespaceList *names)
         {
@@ -1367,8 +1369,18 @@ XXX ...couldn't get this to work...
 
 
 
-    class Attribute;
 
+    // provide access to the Error object constructors so that runtime exceptions
+    // can be constructed for Javascript catches.
+    extern JSValue Error_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue EvalError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue RangeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue ReferenceError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue SyntaxError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue TypeError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue UriError_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+
+    class Attribute;
     
     class Context {
     public:
@@ -1444,6 +1456,15 @@ XXX ...couldn't get this to work...
         StringAtom& Infinity_StringAtom;
         StringAtom& Empty_StringAtom;
         StringAtom& Arguments_StringAtom;
+        StringAtom& Message_StringAtom;
+        StringAtom& Name_StringAtom;
+        StringAtom& Error_StringAtom;
+        StringAtom& EvalError_StringAtom;
+        StringAtom& RangeError_StringAtom;
+        StringAtom& ReferenceError_StringAtom;
+        StringAtom& SyntaxError_StringAtom;
+        StringAtom& TypeError_StringAtom;
+        StringAtom& UriError_StringAtom;
 
         void initBuiltins();
         void initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef);
@@ -1580,6 +1601,10 @@ XXX ...couldn't get this to work...
             
         OperatorList mOperatorTable[OperatorCount];
         
+        typedef String PackageName;
+        typedef std::vector<PackageName> PackageList;
+
+        PackageList mPackages;  // the currently loaded packages, mPackages.back() is the current package
 
         JSValue readEvalFile(const String& fileName);
         JSValue readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue);

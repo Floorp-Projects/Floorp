@@ -407,7 +407,7 @@ typedef struct QSortArgs {
     CompareArgs  *arg;
 } QSortArgs;
 
-static int sort_compare(JSValue *a, JSValue *b, CompareArgs *arg);
+static int32 sort_compare(JSValue *a, JSValue *b, CompareArgs *arg);
 
 static void
 js_qsort_r(QSortArgs *qa, int lo, int hi)
@@ -472,15 +472,15 @@ static void js_qsort(JSValue *vec, size_t nel, CompareArgs *arg)
     delete(pivot);
 }
 
-static int sort_compare(JSValue *a, JSValue *b, CompareArgs *arg)
+static int32 sort_compare(JSValue *a, JSValue *b, CompareArgs *arg)
 {
     JSValue av = *(const JSValue *)a;
     JSValue bv = *(const JSValue *)b;
     CompareArgs *ca = (CompareArgs *) arg;
     Context *cx = ca->context;
+    int32 result;
 
     if (ca->target == NULL) {
-        int32 result;
         if (av.isUndefined() || bv.isUndefined()) {
 	    /* Put undefined properties at the end. */
 	    result = (av.isUndefined()) ? 1 : -1;
@@ -496,8 +496,16 @@ static int sort_compare(JSValue *a, JSValue *b, CompareArgs *arg)
         JSValue argv[2];
 	argv[0] = av;
 	argv[1] = bv;
-        JSValue result = cx->invokeFunction(ca->target, kNullValue, argv, 2);
-        return (int32)(result.toInt32(cx).f64);
+        JSValue v = cx->invokeFunction(ca->target, kNullValue, argv, 2);
+        float64 f = v.toNumber(cx).f64;
+        if (JSDOUBLE_IS_NaN(f) || (f == 0))
+            result = 0;
+        else
+            if (f > 0)
+                result = 1;
+            else
+                result = -1;
+        return result;
     }
 }
 
@@ -509,14 +517,15 @@ static JSValue Array_sort(Context *cx, const JSValue& thisValue, JSValue *argv, 
 
     CompareArgs ca;
     ca.context = cx;
+    ca.target = NULL;
 
     if (argc > 0) {
-        if (!argv[0].isFunction())
-            cx->reportError(Exception::typeError, "sort needs a compare function");
-        ca.target = argv[0].function;
+        if (!argv[0].isUndefined()) {
+            if (!argv[0].isFunction())
+                cx->reportError(Exception::typeError, "sort needs a compare function");
+            ca.target = argv[0].function;
+        }
     }
-    else
-        ca.target = NULL;
 
     JSObject *thisObj = thisValue.object;
     thisObj->getProperty(cx, cx->Length_StringAtom, CURRENT_ATTR);

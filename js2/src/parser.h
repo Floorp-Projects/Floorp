@@ -126,6 +126,7 @@ namespace JavaScript {
         bool constant;                  // true for const variables and parameters
 
         JS2Runtime::Property *prop;     // the sematics/codegen passes stuff their data in here.
+        JS2Runtime::JSObject *scope;    // ditto
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):
                 ParseNode(pos), next(0), name(name), type(type), initializer(initializer), constant(constant) {}

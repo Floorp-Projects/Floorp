@@ -63,12 +63,6 @@ namespace JavaScript {
 namespace JS2Runtime {
 
 
-class JSException {
-public:
-};
-
-
-
 inline char narrow(char16 ch) { return char(ch); }
 
 JSValue Context::readEvalString(const String &str, const String& fileName, ScopeChain *scopeChain, const JSValue& thisValue)
@@ -78,24 +72,24 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
     Arena a;
     Parser p(mWorld, a, mFlags, str, fileName);
     Reader *oldReader = mReader;
-    mReader = &p.lexer.reader;
-    StmtNode *parsedStatements = p.parseProgram();
-    ASSERT(p.lexer.peek(true).hasKind(Token::end));
-    if (mDebugFlag)
-    {
-        PrettyPrinter f(stdOut, 30);
-        {
-            PrettyPrinter::Block b(f, 2);
-            f << "Program =";
-            f.linearBreak(1);
-            StmtNode::printStatements(f, parsedStatements);
-        }
-        f.end();
-        stdOut << '\n';
-    }
-    buildRuntime(parsedStatements);
-    JS2Runtime::ByteCodeModule* bcm = genCode(parsedStatements, fileName);
+    setReader(&p.lexer.reader);
     try {
+        StmtNode *parsedStatements = p.parseProgram();
+        ASSERT(p.lexer.peek(true).hasKind(Token::end));
+        if (mDebugFlag)
+        {
+            PrettyPrinter f(stdOut, 30);
+            {
+                PrettyPrinter::Block b(f, 2);
+                f << "Program =";
+                f.linearBreak(1);
+                StmtNode::printStatements(f, parsedStatements);
+            }
+            f.end();
+            stdOut << '\n';
+        }
+        buildRuntime(parsedStatements);
+        JS2Runtime::ByteCodeModule* bcm = genCode(parsedStatements, fileName);
         if (bcm) {
             setReader(NULL);
             bcm->setSource(str, fileName);
@@ -103,10 +97,11 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
             delete bcm;
         }
     }
-    catch (JSException *x) {
+    catch (Exception &x) {
         setReader(oldReader);
         throw x;
     }
+    setReader(oldReader);
     return result;
 }
 
@@ -220,7 +215,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     try {
         result = interpret(pc, endPC);
     }
-    catch (JSException *x) {
+    catch (Exception &x) {
         Activation *prev = mActivationStack.top();
         mActivationStack.pop();
 
@@ -420,7 +415,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             switch ((ByteCodeOp)(*pc++)) {
             case PopOp:
                 {
-                    result = popValue(); // XXX debug only? - just decrement top
+                    result = popValue();
+                }
+                break;
+            case VoidPopOp:
+                {
+                    popValue(); // XXX just decrement top
                 }
                 break;
             case PopNOp:
@@ -627,22 +627,18 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     if (target->isPrototype() && mThis.isNull())
                         mThis = JSValue(getGlobalObject());
                                         
-                    JSValue *argBase = getBase(stackSize() - argCount);
-
                     if (!target->isNative()) {
-
+                        JSValue *argBase = buildArgumentBlock(target, argCount);
                         // XXX Optimize the more typical case in which there are no named arguments, no optional arguments
                         // and the appropriate number of arguments have been supplied.
-
-                        argBase = buildArgumentBlock(target, argCount);
 
                         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - (cleanUp + 1),
                                                                     mScopeChain,
                                                                     mArgumentBase, oldThis,
                                                                     pc, mCurModule));
                         mScopeChain = target->getScopeChain();
-//                        if (mThis.isObject())
-//                            mScopeChain->addScope(mThis.object);
+                        mScopeChain->addScope(target->getParameterBarrel());
+                        mScopeChain->addScope(target->getActivation());
 
                         if (!target->isChecked()) {
                             JSArrayInstance *args = (JSArrayInstance *)Array_Type->newInstance(this);
@@ -650,9 +646,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                                 args->setProperty(this, *numberToString(i), NULL, argBase[i]);
                             mScopeChain->defineVariable(this, Arguments_StringAtom, NULL, Array_Type, JSValue(args));
                         }
-
-                        mScopeChain->addScope(target->getParameterBarrel());
-                        mScopeChain->addScope(target->getActivation());
 
                         mCurModule = target->getByteCode();
                         pc = mCurModule->mCodeBase;
@@ -664,6 +657,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         mStackTop = 0;
                     }
                     else {
+                        JSValue *argBase = getBase(stackSize() - argCount);
                         // native functions may still need access to information
                         // about the currently executing function.
                         mActivationStack.push(new Activation(mLocals, mStack, mStackTop - (cleanUp + 1),
@@ -790,10 +784,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     const String &name = *mCurModule->getString(index);
-                    PropertyIterator it;
-                    if (mScopeChain->hasOwnProperty(name, CURRENT_ATTR, Read, &it))
-                        mScopeChain->deleteProperty(name, CURRENT_ATTR);
-                    pushValue(kTrueValue);
+                    if (mScopeChain->deleteName(this, name, CURRENT_ATTR))
+                        pushValue(kTrueValue);
+                    else
+                        pushValue(kFalseValue);
                 }
                 break;
             case DeleteOp:
@@ -907,8 +901,18 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         else
                             reportError(Exception::typeError, "InstanceOf couldn't find [[hasInstance]]");
                     }
-                    else
-                        reportError(Exception::typeError, "InstanceOf needs function object");
+                    else {
+                        // XXX hack for <= ECMA 3 compatibility
+                        if (t.isType()) {
+                            if ((v.getType() == t.type)
+                                    || v.getType()->derivesFrom(t.type))
+                                pushValue(kTrueValue);
+                            else
+                                pushValue(kFalseValue);
+                        }
+                        else
+                            reportError(Exception::typeError, "InstanceOf needs function object");
+                    }
                 }
                 break;
             case GetNameOp:
@@ -994,7 +998,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), argBase[0], argBase, argCount);
                             }
-                            catch (JSException *x) {
+                            catch (Exception &x) {
                                 delete[] argBase;
                                 throw x;
                             }
@@ -1050,7 +1054,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), *baseValue, argBase, argCount);
                             }
-                            catch (JSException *x) {
+                            catch (Exception &x) {
                                 delete[] argBase;
                                 throw x;
                             }
@@ -1105,7 +1109,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             try {
                                 result = interpret(target->getByteCode(), 0, target->getScopeChain(), kNullValue, argBase, argCount);
                             }
-                            catch (JSException *x) {
+                            catch (Exception &x) {
                                 delete[] argBase;
                                 throw x;
                             }
@@ -1341,12 +1345,12 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             JSArrayInstance *args = (JSArrayInstance *)Array_Type->newInstance(this);
                             for (uint32 i = 0; i < argCount; i++) 
                                 args->setProperty(this, *numberToString(i), NULL, argBase[i]);
-                            mScopeChain->defineVariable(this, Arguments_StringAtom, NULL, Array_Type, JSValue(args));
+                            target->getScopeChain()->defineVariable(this, Arguments_StringAtom, NULL, Array_Type, JSValue(args));
                         }
                         try {
                             result = interpret(target->getByteCode(), 0, target->getScopeChain(), newThis, argBase, argCount);
                         }
-                        catch (JSException *x) {
+                        catch (Exception &x) {
                             delete[] argBase;
                             throw x;
                         }
@@ -1553,41 +1557,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case ThrowOp:
                 {   
-                    throw new JSException();
-/*
-                    if (mTryStack.size() > 0) {
-                        HandlerData *hndlr = (HandlerData *)mTryStack.top();
-                        Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
-                        if (curAct != hndlr->mActivation) {
-                            ASSERT(mActivationStack.size() > 0);
-                            Activation *prev;// = mActivationStack.top();
-                            do {
-                                prev = curAct;
-                                if (prev->mPC == NULL) {
-                                    // Yikes! the exception is getting thrown across a re-invocation
-                                    // of the interpreter loop.
-                                    ASSERT(false);
-                                }
-                                mActivationStack.pop();
-                                curAct = mActivationStack.top();                            
-                            } while (hndlr->mActivation != curAct);
-                            mCurModule = prev->mModule;
-                            endPC = mCurModule->mCodeBase + mCurModule->mLength;
-                            mLocals = prev->mLocals;
-                            mStack = prev->mStack;
-                            mStackTop = 1;          // just the exception object remains
-                            mStackMax = mCurModule->mStackDepth;
-                            mArgumentBase = prev->mArgumentBase;
-                            mThis = prev->mThis;
-                        }
-
-                        resizeStack(hndlr->mStackSize);
-                        pc = hndlr->mPC;
-                        pushValue(x);
-                    }
-                    else
-                        reportError(Exception::uncaughtError, "No handler for throw");
-*/
+                    throw Exception(Exception::userException, "");
                 }
                 break;
             case ClassOp:
@@ -1651,11 +1621,38 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 reportError(Exception::internalError, "Bad Opcode");
             }
         }
-        catch (JSException *jsx) {
-            JSValue x = topValue();
+        catch (Exception &jsx) {
             if (mTryStack.size() > 0) {
                 HandlerData *hndlr = (HandlerData *)mTryStack.top();
                 Activation *curAct = (mActivationStack.size() > 0) ? mActivationStack.top() : NULL;
+                
+                JSValue x;
+                // make sure there's a JS object for the catch clause to work with
+                if (!jsx.hasKind(Exception::userException)) {
+                    JSValue argv[1];
+                    argv[0] = JSValue(new String(jsx.fullMessage()));
+                    switch (jsx.kind) {
+                    case Exception::syntaxError:
+                        x = SyntaxError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::referenceError:
+                        x = ReferenceError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::typeError:
+                        x = TypeError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    case Exception::rangeError:
+                        x = RangeError_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    default:
+                        x = Error_Constructor(this, kNullValue, argv, 1);
+                        break;
+                    }
+                }
+                else {
+                    x = popValue();
+                }
+                
                 if (curAct != hndlr->mActivation) {
                     ASSERT(mActivationStack.size() > 0);
                     Activation *prev;// = mActivationStack.top();
@@ -1673,7 +1670,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     endPC = mCurModule->mCodeBase + mCurModule->mLength;
                     mLocals = prev->mLocals;
                     mStack = prev->mStack;
-                    mStackTop = 1;          // just the exception object remains
                     mStackMax = mCurModule->mStackDepth;
                     mArgumentBase = prev->mArgumentBase;
                     mThis = prev->mThis;
@@ -1684,10 +1680,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 pushValue(x);
             }
             else
-                reportError(Exception::uncaughtError, "No handler for throw");
-        }
-        catch (Exception x) {
-            throw x;
+                throw jsx; //reportError(Exception::uncaughtError, "No handler for throw");
         }
     }
     return result;
@@ -2259,7 +2252,7 @@ JSValue JSValue::valueToNumber(Context *cx, const JSValue& value)
         return JSValue(stringToNumber(value.string));
     case object_tag:
     case function_tag:
-        return value.toPrimitive(cx, NoHint).toNumber(cx);
+        return value.toPrimitive(cx, NumberHint).toNumber(cx);
     case boolean_tag:
         return JSValue((value.boolean) ? 1.0 : 0.0);
     case undefined_tag:
@@ -2326,7 +2319,7 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
         }
         if (target)
             return cx->invokeFunction(target, value, NULL, 0);
-        throw new Exception(Exception::runtimeError, "toString");    // XXX
+        cx->reportError(Exception::runtimeError, "toString");    // XXX
         return kUndefinedValue; // keep compilers happy
     }
     else
@@ -2396,7 +2389,7 @@ JSValue JSValue::toPrimitive(Context *cx, Hint hint) const
             }
         }
     }
-    throw new Exception(Exception::runtimeError, "toPrimitive");    // XXX
+    cx->reportError(Exception::runtimeError, "toPrimitive");    // XXX
     return kUndefinedValue;
 }
 

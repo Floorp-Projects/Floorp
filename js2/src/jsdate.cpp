@@ -375,8 +375,10 @@ static JSValue Date_makeTime(Context *cx, const JSValue& thisValue, JSValue *arg
     if (JSDOUBLE_IS_NaN(result))
 	return kNaNValue;
 
-    if (argc == 0)
-	argc = 1;   /* should be safe, because length of all settors is 1 */
+    if (argc == 0) {
+        *date = nan;
+        return kNaNValue;
+    }
     else if (argc > maxargs)
 	argc = maxargs;  /* clamp argc */
 
@@ -439,8 +441,10 @@ static JSValue Date_makeDate(Context *cx, const JSValue& thisValue, JSValue *arg
     result = *date;
 
     /* see complaint about ECMA in date_MakeTime */
-    if (argc == 0)
-	argc = 1;   /* should be safe, because length of all settors is 1 */
+    if (argc == 0) {
+        *date = nan;
+        return kNaNValue;
+    }
     else if (argc > maxargs)
 	argc = maxargs;   /* clamp argc */
 

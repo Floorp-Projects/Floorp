@@ -55,7 +55,8 @@ namespace JavaScript
             rangeError,
             typeError,
             uncaughtError,
-            semanticError
+            semanticError,
+            userException
         };
         
         Kind kind;              // The exception's kind
