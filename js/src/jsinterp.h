@@ -65,12 +65,12 @@ struct JSStackFrame {
     JSObject        *sharpArray;    /* scope for #n= initializer vars */
     JSPackedBool    constructing;   /* true if called via new operator */
     uint8           overrides;      /* bit-set of overridden Call properties */
-    uint8           flags;          /* flags, see below */
+    uint8           special;        /* special frame type flags, see below */
     JSPackedBool    reserved;       /* reserved for future use */
     JSStackFrame    *dormantNext;   /* next dormant frame chain */
 };
 
-/* JS stack frame flags. */
+/* JS stack frame special flags. */
 #define JSFRAME_DEBUGGER    0x1     /* frame for JS_EvaluateInStackFrame */
 #define JSFRAME_EVAL        0x2     /* frame for obj_eval */
 
@@ -215,6 +215,10 @@ js_GetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 extern JSBool
 js_SetLocalVariable(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
+/*
+ * NB: js_Invoke requires that cx is currently running JS (i.e., that cx->fp
+ * is non-null).
+ */
 extern JS_FRIEND_API(JSBool)
 js_Invoke(JSContext *cx, uintN argc, uintN flags);
 
@@ -225,9 +229,19 @@ js_Invoke(JSContext *cx, uintN argc, uintN flags);
 #define JSINVOKE_CONSTRUCT      0x1     /* construct object rather than call */
 #define JSINVOKE_INTERNAL       0x2     /* internal call, not from a script */
 
+/*
+ * "Internal" calls may come from C or C++ code using a JSContext on which no
+ * JS is running (!cx->fp), so they may need to push a dummy JSStackFrame.
+ */
+#define js_InternalCall(cx,obj,fval,argc,argv,rval)                           \
+    js_InternalInvoke(cx, obj, fval, 0, argc, argv, rval)
+
+#define js_InternalConstruct(cx,obj,fval,argc,argv,rval)                      \
+    js_InternalInvoke(cx, obj, fval, JSINVOKE_CONSTRUCT, argc, argv, rval)
+
 extern JSBool
-js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
-		uintN argc, jsval *argv, jsval *rval);
+js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
+                  uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,

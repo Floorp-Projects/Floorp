@@ -124,6 +124,19 @@ static JSPropertySpec object_props[] = {
     {0,0,0,0,0}
 };
 
+/* NB: JSSLOT_PROTO and JSSLOT_PARENT are already indexes into object_props. */
+#define JSSLOT_COUNT 2
+
+static JSBool
+ReportStrictSlot(JSContext *cx, uint32 slot)
+{
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        JSREPORT_WARNING | JSREPORT_STRICT,
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_DEPRECATED_USAGE,
+                                        object_props[slot].name);
+}
+
 static JSBool
 obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -132,6 +145,8 @@ obj_getSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     uintN attrs;
 
     slot = (uint32) JSVAL_TO_INT(id);
+    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
+        return JS_FALSE;
     if (id == INT_TO_JSVAL(JSSLOT_PROTO)) {
 	id = (jsid)cx->runtime->atomState.protoAtom;
 	mode = JSACC_PROTO;
@@ -155,6 +170,8 @@ obj_setSlot(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	return JS_TRUE;
     obj2 = JSVAL_TO_OBJECT(*vp);
     slot = (uint32) JSVAL_TO_INT(id);
+    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, slot))
+        return JS_FALSE;
     while (obj2) {
 	if (obj2 == obj) {
 	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
@@ -173,6 +190,9 @@ obj_getCount(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     jsval iter_state;
     jsid num_properties;
     JSBool ok;
+
+    if (JS_HAS_STRICT_OPTION(cx) && !ReportStrictSlot(cx, JSSLOT_COUNT))
+        return JS_FALSE;
 
     /* Get the number of properties to enumerate. */
     iter_state = JSVAL_NULL;
@@ -697,6 +717,7 @@ static JSBool
 obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *caller;
+    JSBool indirectCall;
     JSObject *scopeobj;
     JSString *str;
     const char *file;
@@ -706,14 +727,12 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSBool ok;
 #if JS_HAS_EVAL_THIS_SCOPE
     JSObject *callerScopeChain;
-    JSBool implicitWith = JS_FALSE; /* unnecessary init to kill gcc warning */
 #endif
 
     caller = cx->fp->down;
+    indirectCall = (caller->pc && *caller->pc != JSOP_EVAL);
 
-    if (JSVERSION_IS_ECMA(cx->version) &&
-	caller->pc &&
-	*caller->pc != JSOP_EVAL) {
+    if (JSVERSION_IS_ECMA(cx->version) && indirectCall) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
         return JS_FALSE;
@@ -741,8 +760,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #if JS_HAS_EVAL_THIS_SCOPE
 	/* If obj.eval(str), emulate 'with (obj) eval(str)' in the caller. */
 	callerScopeChain = caller->scopeChain;
-	implicitWith = (caller->pc && *caller->pc != JSOP_EVAL);
-	if (implicitWith) {
+	if (indirectCall) {
 	    scopeobj = js_NewObject(cx, &js_WithClass, obj, callerScopeChain);
 	    if (!scopeobj)
 		return JS_FALSE;
@@ -787,14 +805,15 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	scopeobj = caller->scopeChain;
     }
 #endif
-    ok = js_Execute(cx, scopeobj, script, caller->fun, caller, JSFRAME_EVAL,
+    ok = js_Execute(cx, scopeobj, script, caller->fun, caller,
+		    indirectCall ? 0 : JSFRAME_EVAL,
                     rval);
     JS_DestroyScript(cx, script);
 
 out:
 #if JS_HAS_EVAL_THIS_SCOPE
     /* Restore OBJ_GET_PARENT(scopeobj) not callerScopeChain in case of Call. */
-    if (implicitWith)
+    if (indirectCall)
 	caller->scopeChain = OBJ_GET_PARENT(cx, scopeobj);
 #endif
     return ok;
@@ -1090,6 +1109,16 @@ With(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSObject *parent, *proto;
     jsval v;
 
+    if (JS_HAS_STRICT_OPTION(cx)) {
+        if (!JS_ReportErrorFlagsAndNumber(cx,
+                                          JSREPORT_WARNING | JSREPORT_STRICT,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_DEPRECATED_USAGE,
+                                          js_WithClass.name)) {
+            return JS_FALSE;
+        }
+    }
+
     if (!cx->fp->constructing) {
 	obj = js_NewObject(cx, &js_WithClass, NULL, NULL);
 	if (!obj)
@@ -1294,14 +1323,10 @@ JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
 		   JSObject *parent)
 {
+    jsval cval, rval;
     JSObject *obj, *ctor;
-    JSBool ok;
-    jsval cval, *sp, *oldsp, rval;
-    void *mark;
-    JSStackFrame *fp;
 
-    ok = FindConstructor(cx, clasp->name, &cval);
-    if (!ok)
+    if (!FindConstructor(cx, clasp->name, &cval))
 	return NULL;
 
     /*
@@ -1325,23 +1350,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (!obj)
 	return NULL;
 
-    /* Allocate stack space for cval and obj, then push them. */
-    sp = js_AllocStack(cx, 2, &mark);
-    if (!sp)
-	goto bad;
-    *sp++ = cval;
-    *sp++ = OBJECT_TO_JSVAL(obj);
-
-    /* Lift current frame to include the args and do the call. */
-    fp = cx->fp;
-    oldsp = fp->sp;
-    fp->sp = sp;
-    ok = js_Invoke(cx, 0, JSINVOKE_CONSTRUCT | JSINVOKE_INTERNAL);
-    rval = sp[-1];
-    fp->sp = oldsp;
-    js_FreeStack(cx, mark);
-
-    if (!ok)
+    if (!js_InternalConstruct(cx, obj, cval, 0, NULL, &rval))
 	goto bad;
     return JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : obj;
 bad:
@@ -1764,9 +1773,13 @@ js_FindVariable(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
      */
     if (JS_HAS_STRICT_OPTION(cx)) {
         JSString *str = JSVAL_TO_STRING(js_IdToValue(id));
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_UNDECLARED_VAR, JS_GetStringBytes(str));
-        return JS_FALSE;
+        if (!JS_ReportErrorFlagsAndNumber(cx,
+                                          JSREPORT_WARNING | JSREPORT_STRICT,
+                                          js_GetErrorMessage, NULL,
+                                          JSMSG_UNDECLARED_VAR,
+                                          JS_GetStringBytes(str))) {
+            return JS_FALSE;
+        }
     }
     if (!OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
 			     JSPROP_ENUMERATE, &prop)) {

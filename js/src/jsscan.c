@@ -459,7 +459,7 @@ MatchChar(JSTokenStream *ts, int32 expect)
     return JS_FALSE;
 }
 
-void
+JSBool
 js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 			    const uintN errorNumber, ...)
 {
@@ -470,7 +470,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
     jschar *tokenptr;
     JSString *linestr;
     char *message;
+    JSBool warning;
 
+    report.flags = flags;
     report.errorNumber = errorNumber;
     report.messageArgs = NULL;
     report.ucmessage = NULL;
@@ -478,9 +480,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 
     va_start(ap, errorNumber);
     if (!js_ExpandErrorArguments(cx, js_GetErrorMessage, NULL,
-				errorNumber, &message, &report,
+				errorNumber, &message, &report, &warning,
                                 JS_TRUE, ap)) {
-	return;
+	return JS_FALSE;
     }
     va_end(ap);
 
@@ -495,14 +497,12 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	report.linebuf  = linestr
 			  ? JS_GetStringBytes(linestr)
 			  : NULL;
-        /* XXXbe this whole fn duplicates a lot of JS_ReportCompileError... */
-        tokenptr = CURRENT_TOKEN(ts).ptr;
+        tokenptr = ts->tokens[(ts->cursor + ts->lookahead) & NTOKENS_MASK].ptr;
 	report.tokenptr = linestr
 			  ? report.linebuf + (tokenptr - ts->linebuf.base)
 			  : NULL;
 	report.uclinebuf = ts->linebuf.base;
 	report.uctokenptr = tokenptr;
-	report.flags = flags;
 
 #if JS_HAS_ERROR_EXCEPTIONS
 	/*
@@ -572,6 +572,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
         /* Set the error flag to suppress spurious reports. */
         ts->flags |= TSF_ERROR;
     }
+    return warning;
 }
 
 JSTokenType
@@ -739,9 +740,11 @@ retry:
 		 * not always be so permissive, so we warn about it.
 		 */
 		if (c > '7' && JSVERSION_IS_ECMA(cx->version)) {
-		    js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
-                                                JSMSG_BAD_OCTAL,
-                                                c == '8' ? "08" : "09");
+		    if (!js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
+                                                     JSMSG_BAD_OCTAL,
+                                                     c == '8' ? "08" : "09")) {
+                        RETURN(TOK_ERROR);
+                    }
 		    radix = 10;
 		} else {
 		    radix = 8;
@@ -863,7 +866,10 @@ retry:
 			    c = (JS7_UNHEX(cp[0]) << 4) + JS7_UNHEX(cp[1]);
 			    SkipChars(ts, 2);
 			}
-		    }
+		    } else if (c == '\n' && JSVERSION_IS_ECMA(cx->version)) {
+                        /* ECMA follows C by removing escaped newlines. */
+                        continue;
+                    }
 		    break;
 		}
 	    }
@@ -1132,6 +1138,19 @@ skipline:
 	    }
 	}
 	tp->t_dval = (jsdouble) n;
+        if (JS_HAS_STRICT_OPTION(cx) &&
+            (c == '=' || c == '#')) {
+            char buf[20];
+            JS_snprintf(buf, sizeof buf, "#%u%c", n, c);
+            if (!JS_ReportErrorFlagsAndNumber(cx,
+                                              JSREPORT_WARNING |
+                                              JSREPORT_STRICT,
+                                              js_GetErrorMessage, NULL,
+                                              JSMSG_DEPRECATED_USAGE,
+                                              buf)) {
+                RETURN(TOK_ERROR);
+            }
+        }
 	if (c == '=')
 	    RETURN(TOK_DEFSHARP);
 	if (c == '#')

@@ -495,8 +495,9 @@ static struct {
     const char  *name;
     uint32      flag;
 } js_options[] = {
-    {"strict",  JSOPTION_STRICT},
-    {0}
+    {"strict",          JSOPTION_STRICT},
+    {"werror",          JSOPTION_WERROR},
+    {0,                 0}
 };
 
 static JSBool
@@ -1614,9 +1615,8 @@ static const JSErrorFormatString *
 my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
 {
     if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
-	    return &jsShell_ErrorFormatString[errorNumber];
-	else
-	    return NULL;
+        return &jsShell_ErrorFormatString[errorNumber];
+    return NULL;
 }
 
 static void
@@ -1661,7 +1661,9 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     }
     if (JSREPORT_IS_WARNING(report->flags)) {
 	tmp = prefix;
-	prefix = JS_smprintf("%swarning: ", tmp ? tmp : "");
+	prefix = JS_smprintf("%s%swarning: ",
+                             tmp ? tmp : "",
+                             JSREPORT_IS_STRICT(report->flags) ? "strict " : "");
 	JS_free(cx, tmp);
     }
 

@@ -587,22 +587,105 @@ js_ValueToStringAtom(JSContext *cx, jsval v)
     return js_AtomizeString(cx, str, 0);
 }
 
+JS_STATIC_DLL_CALLBACK(JSHashNumber)
+js_hash_atom_ptr(const void *key)
+{
+    const JSAtom *atom = key;
+    return atom->number;
+}
+
+JS_STATIC_DLL_CALLBACK(void *)
+js_alloc_temp_space(void *priv, size_t size)
+{
+    JSContext *cx = priv;
+    void *space;
+
+    JS_ARENA_ALLOCATE(space, &cx->tempPool, size);
+    if (!space)
+        JS_ReportOutOfMemory(cx);
+    return space;
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+js_free_temp_space(void *priv, void *item)
+{
+}
+
+JS_STATIC_DLL_CALLBACK(JSHashEntry *)
+js_alloc_temp_entry(void *priv, const void *key)
+{
+    JSContext *cx = priv;
+    JSAtomListElement *ale;
+
+    JS_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(JSAtomListElement));
+    if (!ale) {
+        JS_ReportOutOfMemory(cx);
+        return NULL;
+    }
+    return &ale->entry;
+}
+
+JS_STATIC_DLL_CALLBACK(void)
+js_free_temp_entry(void *priv, JSHashEntry *he, uintN flag)
+{
+}
+
+static JSHashAllocOps temp_alloc_ops = {
+    js_alloc_temp_space,    js_free_temp_space,
+    js_alloc_temp_entry,    js_free_temp_entry
+};
+
 JSAtomListElement *
 js_IndexAtom(JSContext *cx, JSAtom *atom, JSAtomList *al)
 {
-    JSAtomListElement *ale;
+    JSAtomListElement *ale, *ale2, *next;
+    JSHashEntry **hep;
 
-    ATOM_LIST_SEARCH(ale, al, atom);
+    ATOM_LIST_LOOKUP(ale, hep, al, atom);
     if (!ale) {
-	JS_ARENA_ALLOCATE(ale, &cx->tempPool, sizeof(JSAtomListElement));
-	if (!ale) {
-	    JS_ReportOutOfMemory(cx);
-	    return NULL;
-	}
-	ale->atom = atom;
-	ale->index = (jsatomid) al->count++;
-	ale->next = al->list;
-	al->list = ale;
+        if (al->count <= 5) {
+            /* Few enough for linear search, no hash table needed. */
+            JS_ASSERT(!al->table);
+            ale = (JSAtomListElement *)js_alloc_temp_entry(cx, atom);
+            if (!ale)
+                return NULL;
+            ALE_SET_ATOM(ale, atom);
+            ALE_SET_NEXT(ale, al->list);
+            al->list = ale;
+        } else {
+            /* We want to hash.  Have we already made a hash table? */
+            if (!al->table) {
+                /* No hash table yet, so hep had better be null! */
+                JS_ASSERT(!hep);
+                al->table = JS_NewHashTable(8, js_hash_atom_ptr,
+                                            JS_CompareValues, JS_CompareValues,
+                                            &temp_alloc_ops, cx);
+                if (!al->table)
+                    return NULL;
+
+                /* Insert each ale on al->list into the new hash table. */
+                for (ale2 = al->list; ale2; ale2 = next) {
+                    next = ALE_NEXT(ale2);
+                    ale2->entry.keyHash = ALE_ATOM(ale2)->number;
+                    hep = JS_HashTableRawLookup(al->table, ale2->entry.keyHash,
+                                                ale2->entry.key);
+                    ALE_SET_NEXT(ale2, *hep);
+                    *hep = &ale2->entry;
+                }
+                al->list = NULL;
+
+                /* Set hep for insertion of atom's ale, immediately below. */
+                hep = JS_HashTableRawLookup(al->table, atom->number, atom);
+            }
+
+            /* Finally, add an entry for atom into the hash bucket at hep. */
+            ale = (JSAtomListElement *)
+                JS_HashTableRawAdd(al->table, hep, atom->number, atom, NULL);
+            if (!ale)
+                return NULL;
+        }
+
+	ALE_SET_INDEX(ale, al->count++);
     }
     return ale;
 }
@@ -626,6 +709,21 @@ js_GetAtom(JSContext *cx, JSAtomMap *map, jsatomid i)
     return atom;
 }
 
+JS_STATIC_DLL_CALLBACK(intN)
+js_map_atom(JSHashEntry *he, intN i, void *arg)
+{
+    JSAtomListElement *ale = (JSAtomListElement *)he;
+    JSAtom **vector = arg;
+
+    vector[ALE_INDEX(ale)] = ALE_ATOM(ale);
+    return HT_ENUMERATE_NEXT;
+}
+
+#ifdef DEBUG
+jsrefcount js_atom_map_count;
+jsrefcount js_atom_map_hash_table_count;
+#endif
+
 JS_FRIEND_API(JSBool)
 js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
 {
@@ -633,8 +731,11 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
     JSAtomListElement *ale;
     uint32 count;
 
+#ifdef DEBUG
+    JS_ATOMIC_ADDREF(&js_atom_map_count, 1);
+#endif
     ale = al->list;
-    if (!ale) {
+    if (!ale && !al->table) {
 	map->vector = NULL;
 	map->length = 0;
 	return JS_TRUE;
@@ -650,11 +751,17 @@ js_InitAtomMap(JSContext *cx, JSAtomMap *map, JSAtomList *al)
     if (!vector)
 	return JS_FALSE;
 
-    do {
-	vector[ale->index] = ale->atom;
-    } while ((ale = ale->next) != NULL);
-    al->list = NULL;
-    al->count = 0;
+    if (al->table) {
+#ifdef DEBUG
+        JS_ATOMIC_ADDREF(&js_atom_map_hash_table_count, 1);
+#endif
+        JS_HashTableEnumerateEntries(al->table, js_map_atom, vector);
+    } else {
+        do {
+            vector[ALE_INDEX(ale)] = ALE_ATOM(ale);
+        } while ((ale = ALE_NEXT(ale)) != NULL);
+    }
+    ATOM_LIST_INIT(al);
 
     map->vector = vector;
     map->length = (jsatomid)count;

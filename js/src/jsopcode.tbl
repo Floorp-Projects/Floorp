@@ -141,7 +141,7 @@ OPDEF(JSOP_NEW_EQ,    72, "eq",         NULL,         1,  2,  1,  5,  JOF_BYTE)
 OPDEF(JSOP_NEW_NE,    73, "ne",         NULL,         1,  2,  1,  5,  JOF_BYTE)
 
 /* Lexical closure constructor. */
-OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  1,  0,  JOF_CONST)
+OPDEF(JSOP_CLOSURE,   74, "closure",    NULL,         3,  0,  0,  0,  JOF_CONST)
 
 /* Export and import ops. */
 OPDEF(JSOP_EXPORTALL, 75, "exportall",  NULL,         1,  0,  0,  0,  JOF_BYTE)

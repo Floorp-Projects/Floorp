@@ -57,6 +57,7 @@
 #include "jsnum.h"
 #include "jsobj.h"
 #include "jsopcode.h"
+#include "jsregexp.h"
 #include "jsscope.h"
 #include "jsscript.h"
 #include "jsstr.h"
@@ -529,7 +530,7 @@ have_fun:
     frame.sharpDepth = 0;
     frame.sharpArray = NULL;
     frame.overrides = 0;
-    frame.flags = 0;
+    frame.special = 0;
     frame.dormantNext = NULL;
 
     /*
@@ -728,8 +729,8 @@ bad:
 }
 
 JSBool
-js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
-		uintN argc, jsval *argv, jsval *rval)
+js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
+                  uintN argc, jsval *argv, jsval *rval)
 {
     JSStackFrame *fp, *oldfp, frame;
     jsval *oldsp, *sp;
@@ -755,7 +756,7 @@ js_InternalCall(JSContext *cx, JSObject *obj, jsval fval,
     for (i = 0; i < argc; i++)
 	PUSH(argv[i]);
     SAVE_SP(fp);
-    ok = js_Invoke(cx, argc, JSINVOKE_INTERNAL);
+    ok = js_Invoke(cx, argc, flags | JSINVOKE_INTERNAL);
     if (ok) {
 	RESTORE_SP(fp);
 	*rval = POP();
@@ -772,7 +773,7 @@ out:
 
 JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
-	   JSStackFrame *down, uintN flags, jsval *result)
+	   JSStackFrame *down, uintN special, jsval *result)
 {
     JSStackFrame *oldfp, frame;
     JSBool ok;
@@ -809,7 +810,7 @@ js_Execute(JSContext *cx, JSObject *chain, JSScript *script, JSFunction *fun,
     frame.sharpDepth = 0;
     frame.constructing = JS_FALSE;
     frame.overrides = 0;
-    frame.flags = (uint8) flags;
+    frame.special = (uint8) special;
     frame.dormantNext = NULL;
 
     /*
@@ -965,6 +966,41 @@ out:
     return ok;
 }
 #endif /* JS_HAS_EXPORT_IMPORT */
+
+static JSBool
+CheckRedeclaration(JSContext *cx, JSObject *obj, JSObject *obj2, jsid id,
+                   JSProperty *prop, uintN attrs)
+{
+    uintN oldAttrs;
+    JSBool isFunction;
+    jsval value;
+
+    if (!OBJ_GET_ATTRIBUTES(cx, obj2, id, prop, &oldAttrs))
+        return JS_FALSE;
+    if ((oldAttrs & JSPROP_READONLY) == (attrs & JSPROP_READONLY) &&
+        !JS_HAS_STRICT_OPTION(cx)) {
+        return JS_TRUE;
+    }
+
+    isFunction = (attrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
+    if (!isFunction) {
+        if (!OBJ_GET_PROPERTY(cx, obj, id, &value))
+            return JS_FALSE;
+        isFunction = JSVAL_IS_FUNCTION(cx, value);
+    }
+    return JS_ReportErrorFlagsAndNumber(cx,
+                                        ((oldAttrs | attrs) & JSPROP_READONLY)
+                                        ? JSREPORT_ERROR
+                                        : JSREPORT_WARNING | JSREPORT_STRICT,
+                                        js_GetErrorMessage, NULL,
+                                        JSMSG_REDECLARED_VAR,
+                                        isFunction
+                                        ? js_function_str
+                                        : (oldAttrs & JSPROP_READONLY)
+                                        ? js_const_str
+                                        : js_var_str,
+                                        ATOM_BYTES((JSAtom *)id));
+}
 
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
 #define MAX_INTERP_LEVEL 1000
@@ -2415,87 +2451,6 @@ js_Interpret(JSContext *cx, jsval *result)
 
 #endif /* JS_HAS_SWITCH_STATEMENT */
 
-#if JS_HAS_LEXICAL_CLOSURE
-	  case JSOP_CLOSURE:
-	    /*
-	     * If the nearest variable scope is a function, not a call object,
-	     * replace it in the scope chain with its call object.
-	     */
-	    parent = js_FindVariableScope(cx, &fun);
-	    if (!parent) {
-		ok = JS_FALSE;
-		goto out;
-	    }
-
-            /*
-             * Name the closure in the object at the head of the scope chain,
-             * referenced by parent.
-             */
-	    if (fp->scopeChain != parent) {
-		parent = fp->scopeChain;
-		JS_ASSERT(OBJ_GET_CLASS(cx, parent) == &js_WithClass);
-#if JS_BUG_WITH_CLOSURE
-                /*
-                 * If in a with statement, set parent to the With object's
-                 * prototype, i.e., the object specified in the head of
-                 * the with statement.
-                 */
-		while (OBJ_GET_CLASS(cx, parent) == &js_WithClass) {
-		    proto = OBJ_GET_PROTO(cx, parent);
-		    if (!proto)
-			break;
-		    parent = proto;
-		}
-#endif
-	    }
-
-	    /*
-	     * Get immediate operand atom, which is a function object literal.
-	     * From it, get the function to close.
-	     */
-	    atom = GET_ATOM(cx, script, pc);
-	    JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
-	    obj = ATOM_TO_OBJECT(atom);
-	    fun = JS_GetPrivate(cx, obj);
-
-	    /*
-             * Clone the function object with the current scope chain as the
-             * clone's parent.  The original function object is the prototype
-             * of the clone.
-	     */
-	    SAVE_SP(fp);
-	    obj = js_CloneFunctionObject(cx, obj, parent);
-	    if (!obj) {
-		ok = JS_FALSE;
-		goto out;
-	    }
-
-	    /*
-	     * Define a property in parent with id fun->atom and value obj,
-	     * but only if fun is not anonymous.
-	     */
-	    if (fun->atom) {
-		SAVE_SP(fp);
-                attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-                rval = attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj);
-                ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom, rval,
-                                         (attrs & JSFUN_GETTER)
-                                         ? (JSPropertyOp) obj
-                                         : NULL,
-                                         (attrs & JSFUN_SETTER)
-                                         ? (JSPropertyOp) obj
-                                         : NULL,
-                                         attrs | JSPROP_ENUMERATE,
-                                         NULL);
-		if (!ok) {
-		    cx->newborn[GCX_OBJECT] = NULL;
-		    goto out;
-		}
-	    }
-	    PUSH_OPND(OBJECT_TO_JSVAL(obj));
-	    break;
-#endif /* JS_HAS_LEXICAL_CLOSURE */
-
 #if JS_HAS_EXPORT_IMPORT
 	  case JSOP_EXPORTALL:
 	    obj = js_FindVariableScope(cx, &fun);
@@ -2626,14 +2581,52 @@ js_Interpret(JSContext *cx, jsval *result)
 	    *vp = sp[-1];
 	    break;
 
+          case JSOP_DEFCONST:
+          case JSOP_DEFVAR:
+            atom = GET_ATOM(cx, script, pc);
+            obj = js_FindVariableScope(cx, &fun);
+            attrs = JSPROP_ENUMERATE;
+            if (!(fp->special & JSFRAME_EVAL))
+                attrs |= JSPROP_PERMANENT;
+            if (op == JSOP_DEFCONST)
+                attrs |= JSPROP_READONLY;
+
+            /* Lookup id in order to check for redeclaration problems. */
+            id = (jsid)atom;
+            ok = OBJ_LOOKUP_PROPERTY(cx, obj, id, &obj2, &prop);
+            if (!ok)
+                goto out;
+
+            /* Bind a variable only if it's not yet defined. */
+            if (prop) {
+                ok = CheckRedeclaration(cx, obj, obj2, id, prop, attrs);
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+            } else {
+                ok = OBJ_DEFINE_PROPERTY(cx, obj, id, JSVAL_VOID, NULL, NULL,
+                                         attrs, NULL);
+            }
+            if (!ok)
+                goto out;
+            break;
+
           case JSOP_DEFFUN:
-            /* We must be at top-level ("box") scope, not inside a with. */
-            parent = fp->scopeChain;
-            JS_ASSERT(parent == js_FindVariableScope(cx, &fun));
+          {
+            uintN flags;
+
+            /*
+             * We must be at top-level (default "box", either function body or
+             * global) scope, not inside a with or other compound statement.
+             */
+	    parent = js_FindVariableScope(cx, &fun);
+	    if (!parent) {
+		ok = JS_FALSE;
+		goto out;
+	    }
 
             atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
             fun = JS_GetPrivate(cx, obj);
+            id = (jsid) fun->atom;
 
             /*
              * If static link is not current scope, clone fun's object to link
@@ -2662,43 +2655,51 @@ js_Interpret(JSContext *cx, jsval *result)
                 }
             }
 
-            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
-            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
-                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
-                                     (attrs & JSFUN_GETTER)
+            /* Load function flags that are also property attributes. */
+            flags = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            attrs = flags | JSPROP_ENUMERATE;
+
+            /*
+             * Check for a const property of the same name -- or any kind
+             * of property if executing with the strict option.  We check
+             * here at runtime as well as at compile-time, to handle eval
+             * as well as multiple HTML script tags.
+             */
+            ok = OBJ_LOOKUP_PROPERTY(cx, parent, id, &obj2, &prop);
+            if (!ok)
+                goto out;
+            if (prop) {
+                ok = CheckRedeclaration(cx, parent, obj2, id, prop, attrs);
+                OBJ_DROP_PROPERTY(cx, obj2, prop);
+                if (!ok)
+                    goto out;
+            }
+
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, id,
+                                     flags ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+                                     (flags & JSFUN_GETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     (attrs & JSFUN_SETTER)
+                                     (flags & JSFUN_SETTER)
                                      ? (JSPropertyOp) obj
                                      : NULL,
-                                     attrs | JSPROP_ENUMERATE,
+                                     attrs,
                                      NULL);
             if (!ok)
                 goto out;
             break;
-
-          case JSOP_DEFCONST:
-          case JSOP_DEFVAR:
-            atom = GET_ATOM(cx, script, pc);
-            obj = js_FindVariableScope(cx, &fun);
-            attrs = JSPROP_ENUMERATE;
-            if (!(fp->flags & JSFRAME_EVAL))
-                attrs |= JSPROP_PERMANENT;
-            if (op == JSOP_DEFCONST)
-                attrs |= JSPROP_READONLY;
-            ok = OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
-                                     NULL, NULL, attrs, NULL);
-            if (!ok)
-                goto out;
-            break;
+          }
 
 #if JS_HAS_LEXICAL_CLOSURE
           case JSOP_ANONFUNOBJ:
             /* Push the specified function object literal. */
-            parent = fp->scopeChain;
-            JS_ASSERT(parent == js_FindVariableScope(cx, &fun));
             atom = GET_ATOM(cx, script, pc);
             obj = ATOM_TO_OBJECT(atom);
+	    parent = js_FindVariableScope(cx, &fun);
+	    if (!parent) {
+		ok = JS_FALSE;
+		goto out;
+	    }
 
             /* If re-parenting, push a clone of the function object. */
             if (OBJ_GET_PARENT(cx, obj) != parent) {
@@ -2716,8 +2717,17 @@ js_Interpret(JSContext *cx, jsval *result)
             atom = GET_ATOM(cx, script, pc);
             rval = ATOM_KEY(atom);
             JS_ASSERT(JSVAL_IS_FUNCTION(cx, rval));
-            obj = JSVAL_TO_OBJECT(rval);
-            fun = JS_GetPrivate(cx, obj);
+
+            /*
+             * 0. Ensure an active function has a Call object for its scope.
+             * We do this lazily because we may be in a control-flow branch
+             * that's rarely executed -- we don't want to penalize all calls
+             * to the enclosing function.
+             */
+	    if (!js_FindVariableScope(cx, &fun)) {
+		ok = JS_FALSE;
+		goto out;
+	    }
 
             /*
              * 1. Create a new object as if by the expression new Object().
@@ -2740,7 +2750,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * that was parsed by the compiler into a Function object, and
              * saved in the script's atom map].
              */
-            obj = js_CloneFunctionObject(cx, obj, parent);
+            obj = js_CloneFunctionObject(cx, JSVAL_TO_OBJECT(rval), parent);
             if (!obj) {
                 ok = JS_FALSE;
                 goto out;
@@ -2751,6 +2761,7 @@ js_Interpret(JSContext *cx, jsval *result)
              * name is [fun->atom, the identifier parsed by the compiler],
              * value is Result(3), and attributes are { DontDelete, ReadOnly }.
              */
+            fun = JS_GetPrivate(cx, obj);
             attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
             ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
                                      attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
@@ -2775,6 +2786,89 @@ js_Interpret(JSContext *cx, jsval *result)
              */
             PUSH_OPND(OBJECT_TO_JSVAL(obj));
             break;
+
+	  case JSOP_CLOSURE:
+	    /*
+             * ECMA ed. 3 extension: a named function expression in a compound
+             * statement (not at top-level or "box" scope, either global code
+             * or in a function body).
+             *
+	     * If the nearest variable scope is a function, not a call object,
+	     * replace it in the scope chain with its call object.
+	     */
+	    parent = js_FindVariableScope(cx, &fun);
+	    if (!parent) {
+		ok = JS_FALSE;
+		goto out;
+	    }
+
+            /*
+             * Name the closure in the object at the head of the scope chain,
+             * referenced by parent.
+             */
+	    if (fp->scopeChain != parent) {
+		parent = fp->scopeChain;
+		JS_ASSERT(OBJ_GET_CLASS(cx, parent) == &js_WithClass);
+#if JS_BUG_WITH_CLOSURE
+                /*
+                 * If in a with statement, set parent to the With object's
+                 * prototype, i.e., the object specified in the head of
+                 * the with statement.
+                 */
+		while (OBJ_GET_CLASS(cx, parent) == &js_WithClass) {
+		    proto = OBJ_GET_PROTO(cx, parent);
+		    if (!proto)
+			break;
+		    parent = proto;
+		}
+#endif
+	    }
+
+	    /*
+	     * Get immediate operand atom, which is a function object literal.
+	     * From it, get the function to close.
+	     */
+	    atom = GET_ATOM(cx, script, pc);
+	    JS_ASSERT(JSVAL_IS_FUNCTION(cx, ATOM_KEY(atom)));
+	    obj = ATOM_TO_OBJECT(atom);
+	    fun = JS_GetPrivate(cx, obj);
+
+	    /*
+             * Clone the function object with the current scope chain as the
+             * clone's parent.  The original function object is the prototype
+             * of the clone.  Do this only if re-parenting; the compiler may
+             * have seen the right parent already and created a sufficiently
+             * well-scoped function object.
+	     */
+            if (OBJ_GET_PARENT(cx, obj) != parent) {
+                obj = js_CloneFunctionObject(cx, obj, parent);
+                if (!obj) {
+                    ok = JS_FALSE;
+                    goto out;
+                }
+            }
+
+	    /*
+	     * Define a property in parent with id fun->atom and value obj,
+	     * unless fun is a getter or setter (in which case, obj is cast
+             * to a JSPropertyOp and passed accordingly).
+	     */
+            attrs = fun->flags & (JSFUN_GETTER | JSFUN_SETTER);
+            ok = OBJ_DEFINE_PROPERTY(cx, parent, (jsid)fun->atom,
+                                     attrs ? JSVAL_VOID : OBJECT_TO_JSVAL(obj),
+                                     (attrs & JSFUN_GETTER)
+                                     ? (JSPropertyOp) obj
+                                     : NULL,
+                                     (attrs & JSFUN_SETTER)
+                                     ? (JSPropertyOp) obj
+                                     : NULL,
+                                     attrs | JSPROP_ENUMERATE,
+                                     NULL);
+            if (!ok) {
+                cx->newborn[GCX_OBJECT] = NULL;
+                goto out;
+            }
+	    break;
 #endif /* JS_HAS_LEXICAL_CLOSURE */
 
 #if JS_HAS_GETTER_SETTER

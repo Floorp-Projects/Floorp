@@ -73,7 +73,7 @@ typedef struct JSHashAllocOps {
 
 struct JSHashEntry {
     JSHashEntry         *next;          /* hash chain linkage */
-    JSHashNumber          keyHash;        /* key hash function result */
+    JSHashNumber        keyHash;        /* key hash function result */
     const void          *key;           /* ptr to opaque key */
     void                *value;         /* ptr to opaque value */
 };

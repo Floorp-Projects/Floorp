@@ -647,7 +647,7 @@ JS_IsContructorFrame(JSContext *cx, JSStackFrame *fp)
 JS_PUBLIC_API(JSBool)
 JS_IsDebuggerFrame(JSContext *cx, JSStackFrame *fp)
 {
-    return fp->flags & JSFRAME_DEBUGGER;
+    return fp->special & JSFRAME_DEBUGGER;
 }
 
 JS_PUBLIC_API(jsval)

@@ -76,31 +76,53 @@ struct JSAtom {
 #define ATOM_BYTES(atom)         JS_GetStringBytes(ATOM_TO_STRING(atom))
 
 struct JSAtomListElement {
-    JSAtomListElement   *next;
-    jsatomid            index;          /* index in script-specific atom map */
-    JSAtom		*atom;
+    JSHashEntry         entry;
 };
+
+#define ALE_ATOM(ale)   ((JSAtom *) (ale)->entry.key)
+#define ALE_INDEX(ale)  ((jsatomid) (ale)->entry.value)
+#define ALE_NODE(ale)   ((JSParseNode *) (ale)->entry.value)
+#define ALE_NEXT(ale)   ((JSAtomListElement *) (ale)->entry.next)
+
+#define ALE_SET_ATOM(ale,atom)  ((ale)->entry.key = (const void *)(atom))
+#define ALE_SET_INDEX(ale,index)((ale)->entry.value = (void *)(index))
+#define ALE_SET_NODE(ale,pn)    ((ale)->entry.value = (void *)(pn))
+#define ALE_SET_NEXT(ale,link)  ((ale)->entry.next = (JSHashEntry *)(link))
 
 struct JSAtomList {
     JSAtomListElement   *list;          /* literals indexed for mapping */
+    JSHashTable         *table;         /* hash table if list gets too long */
     jsuint              count;          /* count of indexed literals */
 };
 
-#define ATOM_LIST_INIT(al)  ((al)->list = NULL, (al)->count = 0)
+#define ATOM_LIST_INIT(al)  ((al)->list = NULL, (al)->table = NULL,           \
+                             (al)->count = 0)
 
 #define ATOM_LIST_SEARCH(_ale,_al,_atom)                                      \
     JS_BEGIN_MACRO                                                            \
-	JSAtomListElement **_alep = &(_al)->list;                             \
-	while ((_ale = *_alep) != NULL) {                                     \
-	    if (_ale->atom == (_atom)) {                                      \
-		/* Hit, move atom's element to the front of the list. */      \
-		*_alep = _ale->next;                                          \
-		_ale->next = (_al)->list;                                     \
-		(_al)->list = _ale;                                           \
-		break;                                                        \
-	    }                                                                 \
-	    _alep = &_ale->next;                                              \
-	}                                                                     \
+        JSHashEntry **_hep;                                                   \
+        ATOM_LIST_LOOKUP(_ale, _hep, _al, _atom);                             \
+    JS_END_MACRO
+
+#define ATOM_LIST_LOOKUP(_ale,_hep,_al,_atom)                                 \
+    JS_BEGIN_MACRO                                                            \
+        if ((_al)->table) {                                                   \
+            _hep = JS_HashTableRawLookup((_al)->table, _atom->number, _atom); \
+            _ale = *_hep ? (JSAtomListElement *) *_hep : NULL;                \
+        } else {                                                              \
+            JSAtomListElement **_alep = &(_al)->list;                         \
+            _hep = NULL;                                                      \
+            while ((_ale = *_alep) != NULL) {                                 \
+                if (ALE_ATOM(_ale) == (_atom)) {                              \
+                    /* Hit, move atom's element to the front of the list. */  \
+                    *_alep = ALE_NEXT(_ale);                                  \
+                    ALE_SET_NEXT(_ale, (_al)->list);                          \
+                    (_al)->list = _ale;                                       \
+                    break;                                                    \
+                }                                                             \
+                _alep = (JSAtomListElement **)&_ale->entry.next;              \
+            }                                                                 \
+        }                                                                     \
     JS_END_MACRO
 
 struct JSAtomMap {

@@ -174,6 +174,7 @@ struct JSParseNode {
 	    JSFunction  *fun;           /* function object private data */
 	    JSParseNode *body;          /* TOK_LC list of statements */
 	    uint32      tryCount;       /* try statement count */
+            JSBool      topLevel;       /* at TL of program or function body */
 	} func;
 	struct {                        /* list of next-linked nodes */
 	    JSParseNode *head;          /* first node in list */
@@ -209,6 +210,7 @@ struct JSParseNode {
 #define pn_fun          pn_u.func.fun
 #define pn_body         pn_u.func.body
 #define pn_tryCount     pn_u.func.tryCount
+#define pn_topLevel     pn_u.func.topLevel
 #define pn_head         pn_u.list.head
 #define pn_tail         pn_u.list.tail
 #define pn_count        pn_u.list.count
