@@ -43,34 +43,14 @@ EXTRA_DSO_LDOPTS = \
 		$(SHARED_LIBRARY_LIBS)	\
 		$(MKSHLIB_UNFORCE_ALL)	\
 		-L$(DIST)/bin	\
-		-lmozjs			\
-		-ljsdom			\
-		-ljsurl			\
-		-lraptorbase	\
-		-lmsgbaseutil	\
-		-lgmbasegtk		\
-		$(TK_LIBS)		\
+		$(NSPR_LIBS)	\
 		-lxpcom			\
 		-lreg			\
+		-lraptorbase	\
+		-lmozjs			\
+		-lmsgbaseutil	\
 		-lappcores		\
-		-lnetlib		\
-		-lnetwork		\
-		-lhttpurl		\
-		-lftpurl		\
-		-lgophurl		\
-		-labouturl		\
-		-lfileurl		\
-		-lremoturl		\
-		-lnetcnvts		\
-		-lmimetype		\
-		-lsockstuburl	\
-		-lnetutil		\
-		-lpwcac			\
-		-lnetcache		\
-		-lpref			\
-		-lsecfree		\
-		$(ZLIB_LIBS)	\
-		$(NSPR_LIBS)	\
+		-ljsdom			\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
