@@ -489,7 +489,7 @@ int XP_FileWrite (const void* source, int32 count, XP_File file)
     else
         realCount = count;
 
-	return( fwrite( source, 1, realCount, (unsigned int)file ) );
+	return( fwrite( source, 1, realCount, file ) );
 }
 
 /* The user can set these on the preferences dialogs; the front end
