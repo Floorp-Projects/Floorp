@@ -61,7 +61,6 @@ nsIRDFResource* nsMSGFolderDataSource::kNC_Child;
 nsIRDFResource* nsMSGFolderDataSource::kNC_MessageChild;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Folder;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Name;
-nsIRDFResource* nsMSGFolderDataSource::kNC_MSGFolderRoot;
 nsIRDFResource* nsMSGFolderDataSource::kNC_SpecialFolder;
 
 nsIRDFResource* nsMSGFolderDataSource::kNC_Subject;
@@ -186,7 +185,6 @@ nsMSGFolderDataSource::~nsMSGFolderDataSource (void)
   NS_RELEASE2(kNC_MessageChild, refcnt);
   NS_RELEASE2(kNC_Folder, refcnt);
   NS_RELEASE2(kNC_Name, refcnt);
-  NS_RELEASE2(kNC_MSGFolderRoot, refcnt);
   NS_RELEASE2(kNC_SpecialFolder, refcnt);
 
   NS_RELEASE2(kNC_Subject, refcnt);
@@ -246,7 +244,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_MessageChild,   &kNC_MessageChild);
     gRDFService->GetResource(kURINC_Folder,  &kNC_Folder);
     gRDFService->GetResource(kURINC_Name,    &kNC_Name);
-    gRDFService->GetResource(kURINC_MSGFolderRoot, &kNC_MSGFolderRoot);
 	gRDFService->GetResource(kURINC_SpecialFolder, &kNC_SpecialFolder);
 
     gRDFService->GetResource(kURINC_Subject, &kNC_Subject);
@@ -258,29 +255,6 @@ NS_IMETHODIMP nsMSGFolderDataSource::Init(const char* uri)
     gRDFService->GetResource(kURINC_Reply, &kNC_Reply);
     gRDFService->GetResource(kURINC_Forward, &kNC_Forward);
   }
-#if 0
-  //create the folder for the root folder
-  nsresult rv;
-  nsIMsgFolder *rootFolder;
-#if 0
-  if(NS_SUCCEEDED(kNC_MSGFolderRoot->QueryInterface(nsIMsgFolder::GetIID(), (void**)&rootFolder)))
-  {    
-    if(rootFolder)
-    {
-      rootFolder->SetName("Mail and News");
-      rootFolder->SetDepth(0);
-      nsNativeFileSpec startPath("c:\\program files\\netscape\\users\\putterman\\Mail", PR_FALSE);
-      if (NS_FAILED(rv = InitLocalFolders(rootFolder, startPath, 1)))
-        return rv;
-
-      NS_RELEASE(rootFolder);
-    }
-  }
-#else
-  if (NS_FAILED(rv = nsMsgFolder::GetRoot(&rootFolder)))
-    return rv;
-#endif
-#endif
   mInitialized = PR_TRUE;
   return NS_OK;
 }
@@ -322,7 +296,7 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
       if (NS_FAILED(rv)) return rv;
       nsString nameString(name);
       createNode(nameString, target);
-      PR_FREEIF(name);
+      delete[] name;
       return rv;
     }
 	else if (peq(kNC_SpecialFolder, property)) {
@@ -771,9 +745,19 @@ nsMSGFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     nsIMsgFolder* folder;
     nsIMessage* message;
     if (NS_SUCCEEDED(source->QueryInterface(nsIMsgFolder::GetIID(), (void**)&folder))) {
-
+		PRUint32 itemCount = aArguments->Count();
       if (peq(aCommand, kNC_Delete)) {
-        // XXX delete folder
+        for(PRUint32 item = 0; item < itemCount; item++)
+		{
+			nsIMessage* deletedMessage;
+			nsISupports* argument = (*aArguments)[item];
+			if (rv = NS_SUCCEEDED(argument->QueryInterface(nsIMessage::GetIID(), (void**)&deletedMessage)))
+			{
+				rv = folder->DeleteMessage(deletedMessage);
+				NS_RELEASE(deletedMessage);
+			}
+			NS_RELEASE(argument);
+		}
       }
 
       NS_RELEASE(folder);

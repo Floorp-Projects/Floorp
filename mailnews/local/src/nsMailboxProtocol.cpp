@@ -74,7 +74,7 @@ nsMailboxProtocol::~nsMailboxProtocol()
 {
 	// release all of our event sinks
 	NS_IF_RELEASE(m_mailboxParser);
-	
+
 	// free our local state
 	PR_FREEIF(m_dataBuf);
 
@@ -82,6 +82,7 @@ nsMailboxProtocol::~nsMailboxProtocol()
 	NS_IF_RELEASE(m_outputStream); 
 	NS_IF_RELEASE(m_outputConsumer);
 	NS_IF_RELEASE(m_transport);
+	NS_IF_RELEASE(m_runningUrl);
 }
 
 void nsMailboxProtocol::Initialize(nsIURL * aURL)
@@ -167,6 +168,9 @@ NS_IMETHODIMP nsMailboxProtocol::OnStartBinding(nsIURL* aURL, const char *aConte
 		m_mailboxParser->OnStartBinding(aURL, aContentType);
 
 	}
+	else if(m_mailboxCopyHandler) 
+		m_mailboxCopyHandler->OnStartBinding(aURL, aContentType); 
+
 	return NS_OK;
 
 }
@@ -183,7 +187,9 @@ NS_IMETHODIMP nsMailboxProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, c
 		// we need to inform our mailbox parser that there is no more incoming data...
 		m_mailboxParser->OnStopBinding(aURL, 0, nsnull);
 	}
-	if (m_nextState == MAILBOX_READ_MESSAGE) 
+	else if (m_mailboxCopyHandler) 
+		m_mailboxCopyHandler->OnStopBinding(aURL, 0, nsnull); 
+	else if (m_nextState == MAILBOX_READ_MESSAGE) 
 	{
 		// and close the article file if it was open....
 		if (m_tempMessageFile)

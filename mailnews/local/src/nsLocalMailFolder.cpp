@@ -35,6 +35,7 @@
 #include "nsIRDFService.h"
 #include "nsIRDFDataSource.h"
 #include "nsRDFCID.h"
+#include "nsFileStream.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -84,7 +85,34 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
   NS_IF_RELEASE(mMailDatabase);
 }
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMsgLocalMailFolder, nsMsgFolder, nsIMsgLocalMailFolder)
+NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
+NS_IMPL_RELEASE_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
+
+NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+	*aInstancePtr = nsnull;
+	if (aIID.Equals(nsIMsgLocalMailFolder::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
+	}              
+	else if (aIID.Equals(nsIDBChangeListener::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
+	}
+	else if(aIID.Equals(nsICopyMessageListener::GetIID()))
+	{
+		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
+	}
+
+	if(*aInstancePtr)
+	{
+		AddRef();
+		return NS_OK;
+	}
+
+	return nsMsgFolder::QueryInterface(aIID, aInstancePtr);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -295,6 +323,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
     nsresult rv = GetPath(path);
     if (NS_FAILED(rv)) return rv;
 
+	//END DEBUGGING
 	nsresult folderOpen;
 	if(!NS_SUCCEEDED(folderOpen = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_FALSE)) &&
 			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
@@ -990,3 +1019,67 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * 
 	return NS_OK;
 }
 
+//nsICopyMessageListener
+NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy()
+{
+
+	PRBool isLocked;
+	IsLocked(&isLocked);
+	if(!isLocked)
+		AcquireSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+	else
+		return NS_MSG_FOLDER_BUSY;
+
+	nsFileSpec path;
+	GetPath(path);
+	mCopyState = new nsLocalMailCopyState;
+	if(!mCopyState)
+		return NS_ERROR_OUT_OF_MEMORY;
+	//Before we continue we should verify that there is enough diskspace.
+	//XXX How do we do this?
+	mCopyState->fileStream = new nsOutputFileStream(path, PR_WRONLY | PR_CREATE_FILE);
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::CopyData(nsIInputStream *aIStream, PRInt32 aLength)
+{
+	//check to make sure we have control of the write.
+    PRBool haveSemaphore;
+	nsresult rv = NS_OK;
+
+	rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &haveSemaphore);
+	if(NS_FAILED(rv))
+		return rv;
+	if(!haveSemaphore)
+		return NS_MSG_FOLDER_BUSY;
+
+	char *data = (char*)PR_MALLOC(aLength + 1);
+
+	if(!data)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+	PRUint32 readCount;
+	rv = aIStream->Read(data, aLength, &readCount);
+	data[readCount] ='\0';
+	mCopyState->fileStream->seek(PR_SEEK_END, 0);
+	*(mCopyState->fileStream) << data;
+	PR_Free(data);
+
+	return rv;
+}
+
+NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy()
+{
+	mCopyState->fileStream->close();
+	delete mCopyState->fileStream;
+	delete mCopyState;
+	mCopyState = nsnull;
+
+	//we finished the copy so someone else can write to us.
+	PRBool haveSemaphore;
+	nsresult rv = TestSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this), &haveSemaphore);
+	if(rv && haveSemaphore)
+		ReleaseSemaphore(NS_STATIC_CAST(nsIMsgLocalMailFolder*, this));
+
+	return NS_OK;
+}

@@ -50,8 +50,11 @@ function MsgDeleteMessage()
   if (appCore != null) {
     dump("\nAppcore isn't null in MsgDeleteMessage\n");
     appCore.SetWindow(window);
-    var NodeList = tree.getElementsByAttribute("selected", "true");
-    appCore.DeleteMessage(tree, NodeList);
+	//get the selected elements
+    var messageList = tree.getElementsByAttribute("selected", "true");
+	//get the current folder
+	var srcFolder = tree.childNodes[5];
+    appCore.DeleteMessage(tree, srcFolder, messageList);
   }
 }
 
@@ -87,10 +90,44 @@ function MsgForwardAsQuoted()
 
 function MsgCopyMessage(destFolder)
 {
-    uri = destFolder.getAttribute('id');
+	// Get the id for the folder we're copying into
+    destUri = destFolder.getAttribute('id');
+	dump(destUri);
 
-	dump(uri);
+	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	if(tree)
+	{
+		//Get the selected messages to copy
+		var messageList = tree.getElementsByAttribute("selected", "true");
+		var appCore = FindMsgAppCore();
+		if (appCore != null) {
+		    appCore.SetWindow(window);
+			//get the current folder
+			var srcFolder = tree.childNodes[5];
+			appCore.CopyMessages(srcFolder, destFolder, messageList);
+		}
+	}	
+}
 
+function MsgMoveMessage(destFolder)
+{
+	// Get the id for the folder we're copying into
+    destUri = destFolder.getAttribute('id');
+	dump(destUri);
+
+	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	if(tree)
+	{
+		//Get the selected messages to copy
+		var messageList = tree.getElementsByAttribute("selected", "true");
+		var appCore = FindMsgAppCore();
+		if (appCore != null) {
+		    appCore.SetWindow(window);
+			//get the current folder
+			var srcFolder = tree.childNodes[5];
+			appCore.MoveMessages(srcFolder, destFolder, messageList);
+		}
+	}	
 }
 
 function MsgNewFolder() {}
