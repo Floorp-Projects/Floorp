@@ -25,7 +25,7 @@
 #include "nsIDocumentObserver.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresShell.h"
-#include "nsIPresContext.h"
+#include "nsIPresContext.h" 
 #include "nsIImageMap.h"
 #include "nsIHTMLContent.h"
 #include "nsIDOMElement.h"
