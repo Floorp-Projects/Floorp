@@ -63,15 +63,14 @@ viewer:Plug-ins:MRJPlugin
 viewer:Plug-ins:MRJPlugin.jar
 viewer:Plug-ins:Default Plug-in
 
-viewer:Essential Files:gfx.shlb 
-viewer:Essential Files:libutil.shlb 
-viewer:Essential Files:RaptorShell.shlb 
-viewer:Essential Files:widget.shlb 
+viewer:Essential Files:gfx.shlb
+viewer:Essential Files:libutil.shlb
+viewer:Essential Files:WidgetSupport.shlb 
 viewer:Essential Files:XPICleanup
 
 viewer:Essential Files:NSSckbi.shlb
 
-viewer:Components:docshell.shlb 
+viewer:Components:docshell.shlb
 viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
 viewer:Components:bookmarks.xpt 
@@ -108,6 +107,8 @@ viewer:Components:EditorTxmgr.shlb
 viewer:Components:EmbedComponents.xpt
 viewer:Components:EmbedComponents.shlb
 viewer:Components:FindComponent.shlb 
+viewer:Components:gfx.xpt 
+viewer:Components:gfxComponent.shlb 
 viewer:Components:history.xpt 
 viewer:Components:htmlparser.shlb 
 viewer:Components:JSLoader.shlb 
@@ -129,7 +130,6 @@ viewer:Components:Mork.shlb
 viewer:Components:mozBrowser.shlb 
 viewer:Components:mozBrowser.xpt 
 viewer:Components:mozcomps.xpt 
-viewer:Components:gfx.xpt 
 viewer:Components:nsIStringBundle.xpt 
 viewer:Components:nslocale.shlb 
 viewer:Components:nsLocale.xpt 
@@ -182,6 +182,7 @@ viewer:Components:xpcom.xpt
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
+viewer:Components:widget.shlb 
 viewer:Components:autocomplete.xpt 
 viewer:Components:xml-rpc.xpt
 viewer:Components:nsDictionary.js
