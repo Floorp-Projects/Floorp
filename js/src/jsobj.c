@@ -973,9 +973,10 @@ static JSBool
 obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
+    jsval fval;
     JSAtom *atom;
-    jsval fval = argv[1];
 
+    fval = argv[1];
     if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_GETTER_OR_SETTER,
@@ -988,18 +989,19 @@ obj_defineGetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
 
     return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID, 
-                                    (JSPropertyOp) JSVAL_TO_OBJECT(fval),
-                                    NULL, JSPROP_GETTER, NULL);
+                               (JSPropertyOp) JSVAL_TO_OBJECT(fval), NULL,
+                               JSPROP_GETTER, NULL);
 }
 
 static JSBool
 obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                    jsval *rval)
 {
+    jsval fval;
     JSAtom *atom;
-    jsval fval = argv[1];
 
-    if (JS_TypeOfValue(cx, argv[1]) != JSTYPE_FUNCTION) {
+    fval = argv[1];
+    if (JS_TypeOfValue(cx, fval) != JSTYPE_FUNCTION) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_GETTER_OR_SETTER,
                              js_setter_str);
@@ -1010,9 +1012,9 @@ obj_defineSetter(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     if (!atom)
 	return JS_FALSE;
 
-    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,  NULL, 
-                                   (JSPropertyOp) JSVAL_TO_OBJECT(argv[1]),
-                                   JSPROP_SETTER, NULL);
+    return OBJ_DEFINE_PROPERTY(cx, obj, (jsid)atom, JSVAL_VOID,
+                               NULL, (JSPropertyOp) JSVAL_TO_OBJECT(fval),
+                               JSPROP_SETTER, NULL);
 }
 #endif /* JS_HAS_GETTER_SETTER */
 
@@ -1800,7 +1802,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
     rt = cx->runtime;
     obj = cx->fp->scopeChain;
     do {
-        /* Try the property cache and return immediately on cache hit. */
+	/* Try the property cache and return immediately on cache hit. */
         JS_LOCK_OBJ(cx, obj);
 	PROPERTY_CACHE_TEST(&rt->propertyCache, obj, id, prop);
 	if (PROP_FOUND(prop)) {
@@ -1833,7 +1835,7 @@ js_FindProperty(JSContext *cx, jsid id, JSObject **objp, JSObject **pobjp,
 	}
 	lastobj = obj;
     } while ((obj = OBJ_GET_PARENT(cx, obj)) != NULL);
-    
+
     *objp = lastobj;
     *pobjp = NULL;
     *propp = NULL;
@@ -1894,30 +1896,30 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     jsint slot;
 
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
-	return JS_FALSE;
+        return JS_FALSE;
     if (!sprop) {
-	/*
-	 * Handle old bug that treated empty string as zero index.
-	 * Also convert string indices to numbers if applicable.
-	 */
-	CHECK_FOR_FUNNY_INDEX(id);
+        /*
+         * Handle old bug that treated empty string as zero index.
+         * Also convert string indices to numbers if applicable.
+         */
+        CHECK_FOR_FUNNY_INDEX(id);
 
 #if JS_BUG_NULL_INDEX_PROPS
-	/* Indexed properties defaulted to null in old versions. */
-	*vp = (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) >= 0)
-	      ? JSVAL_NULL
-	      : JSVAL_VOID;
+        /* Indexed properties defaulted to null in old versions. */
+        *vp = (JSVAL_IS_INT(id) && JSVAL_TO_INT(id) >= 0)
+              ? JSVAL_NULL
+              : JSVAL_VOID;
 #else
-	*vp = JSVAL_VOID;
+        *vp = JSVAL_VOID;
 #endif
 
-	return OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, js_IdToValue(id),
-			     vp);
+        return OBJ_GET_CLASS(cx, obj)->getProperty(cx, obj, js_IdToValue(id),
+                             vp);
     }
 
     if (!OBJ_IS_NATIVE(obj2)) {
-	OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
-	return OBJ_GET_PROPERTY(cx, obj2, id, vp);
+        OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
+        return OBJ_GET_PROPERTY(cx, obj2, id, vp);
     }
 
     /* Unlock obj2 before calling getter, relock after to avoid deadlock. */
@@ -1930,7 +1932,7 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     JS_UNLOCK_SCOPE(cx, scope);
     if (!SPROP_GET(cx, sprop, obj, obj2, vp)) {
         JS_LOCK_OBJ_VOID(cx, obj2, js_DropScopeProperty(cx, scope, sprop));
-	return JS_FALSE;
+        return JS_FALSE;
     }
     JS_LOCK_SCOPE(cx, scope);
     sprop = js_DropScopeProperty(cx, scope, sprop);
