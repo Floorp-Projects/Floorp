@@ -298,7 +298,7 @@ nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
 {
   nsISupports *supports =
     (::JS_GetOptions(aContext) & JSOPTION_PRIVATE_IS_NSISUPPORTS)
-    ? NS_STATIC_CAST(nsIScriptContext*, ::JS_GetContextPrivate(aContext))
+    ? NS_STATIC_CAST(nsISupports*, ::JS_GetContextPrivate(aContext))
     : nsnull;
   if (!supports)
     return nsnull;
