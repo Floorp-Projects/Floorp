@@ -570,6 +570,7 @@ void nsFileURL::operator = (const nsFilePath& inOther)
 {
     mURL = kFileURLPrefix;
     char* original = (char*)(const char*)inOther; // we shall modify, but restore.
+    if (!original || !*original) return;
 #ifdef XP_PC
     // because we don't want to escape the '|' character, change it to a letter.
     NS_ASSERTION(original[2] == '|', "No drive letter part!");
@@ -819,7 +820,7 @@ void nsFileSpec::MakeUnique()
     }
     if (*suffix)
         nsCRT::free(suffix);
-    delete [] leafName;
+    nsCRT::free(leafName);
 } // nsFileSpec::MakeUnique
 
 //----------------------------------------------------------------------------------------
