@@ -5081,12 +5081,27 @@ nsDocShell::InternalLoad(nsIURI * aURI,
         }
     }
     //
-    // Stop any current network activity.  Do not stop the content until
-    // data starts arriving from the new URI...
-    //
-    rv = Stop(nsIWebNavigation::STOP_NETWORK);
-    if (NS_FAILED(rv)) return rv;
-    
+    // Stop any current network activity.
+    // Also stop content if this is a zombie doc. otherwise 
+    // the onload will be delayed by other loads initiated in the 
+    // background by the first document that
+    // didn't fully load before the next load was initiated.
+    // If not a zombie, don't stop content until data 
+    // starts arriving from the new URI...
+
+    nsCOMPtr<nsIContentViewer> zombieViewer;
+    if (mContentViewer) {
+        mContentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
+    }
+
+    if (zombieViewer) {
+       rv = Stop(nsIWebNavigation::STOP_ALL);
+    } else {
+       rv = Stop(nsIWebNavigation::STOP_NETWORK);
+    }
+
+    if (NS_FAILED(rv)) 
+      return rv;
 
     mLoadType = aLoadType;
     // mLSHE should be assigned to aSHEntry, only after Stop() has
