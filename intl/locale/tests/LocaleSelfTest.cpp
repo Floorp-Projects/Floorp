@@ -719,26 +719,26 @@ int main(int argc, char** argv) {
   nsresult res; 
 
 #if !XP_PC
-  res = nsRepository::RegisterFactory(kCollationFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kCollationFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterFactory(kCollationCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kCollationCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterFactory(kDateTimeFormatCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kDateTimeFormatCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterFactory(kCharsetConverterManagerCID, UCONV_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterFactory(kLatin1ToUnicodeCID, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kLatin1ToUnicodeCID, NULL, NULL, UCVLATIN_DLL, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-  res = nsRepository::RegisterFactory(kUnicharUtilCID, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
-  if (NS_FAILED(res)) cout << "RegisterFactory failed\n";
+  res = nsRepository::RegisterComponent(kUnicharUtilCID, NULL, NULL, UNICHARUTIL_DLL_NAME, PR_FALSE, PR_FALSE);
+  if (NS_FAILED(res)) cout << "RegisterComponent failed\n";
 
-	res = nsRepository::RegisterFactory(kLocaleFactoryCID, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+	res = nsRepository::RegisterComponent(kLocaleFactoryCID, NULL, NULL, LOCALE_DLL_NAME, PR_FALSE, PR_FALSE);
+	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterComponent failed.");
 
 #endif
   // --------------------------------------------

@@ -212,7 +212,7 @@ NSRegisterSelf(nsISupports* serviceMgr, const char* path)
 {
   nsresult ret;
 
-  ret = nsRepository::RegisterFactory(kStringBundleServiceCID, path,
+  ret = nsRepository::RegisterComponent(kStringBundleServiceCID, NULL, NULL, path,
     PR_TRUE, PR_TRUE);
   if (NS_FAILED(ret)) {
     return ret;

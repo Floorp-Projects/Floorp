@@ -373,7 +373,7 @@ PRBool TestWordBreaker()
 
 extern "C" void NS_SetupRegistry()
 {
-   nsRepository::RegisterFactory(kLWBrkCID,  LWBRK_DLL, PR_FALSE, PR_FALSE);
+   nsRepository::RegisterComponent(kLWBrkCID,  NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
 }
 
 void   SamplePrintWordWithBreak();

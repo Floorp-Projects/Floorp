@@ -120,35 +120,35 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* serviceMgr, const char
 	//
 	// register the generic factory
 	//
-	res = nsRepository::RegisterFactory(kLocaleFactoryCID,path,PR_TRUE,PR_TRUE);
+	res = nsRepository::RegisterComponent(kLocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
 	if (res!=NS_OK) return res;
 
 	//
 	// register the windows specific factory
 	//
-	res = nsRepository::RegisterFactory(kWin32LocaleFactoryCID,path,PR_TRUE,PR_TRUE);
+	res = nsRepository::RegisterComponent(kWin32LocaleFactoryCID,NULL,NULL,path,PR_TRUE,PR_TRUE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register nsIWin32LocaleFactory failed.");
 	if (res!=NS_OK) return res;
 
 	//
 	// register the collation factory
 	//
-	res = nsRepository::RegisterFactory(kCollationFactoryCID, path, PR_TRUE, PR_TRUE);
+	res = nsRepository::RegisterComponent(kCollationFactoryCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register CollationFactory failed.");
 	if (NS_FAILED(res)) return res;
 	
 	//
 	// register the collation interface
 	//
-	res = nsRepository::RegisterFactory(kCollationCID, path, PR_TRUE, PR_TRUE);
+	res = nsRepository::RegisterComponent(kCollationCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register Collation failed.");
 	if (NS_FAILED(res)) return res;
 	
 	//
 	// register the date time formatter
 	//
-	res = nsRepository::RegisterFactory(kDateTimeFormatCID, path, PR_TRUE, PR_TRUE);
+	res = nsRepository::RegisterComponent(kDateTimeFormatCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 	NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register DateTimeFormat failed.");
 	if (NS_FAILED(res)) return res;
 

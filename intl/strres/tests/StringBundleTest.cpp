@@ -49,7 +49,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL,
+  nsRepository::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,
     PR_FALSE, PR_FALSE);
   nsIEventQueueService* pEventQueueService = nsnull;
   ret = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -64,7 +64,7 @@ main(int argc, char *argv[])
     return 1;
   }
 
-  nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);

@@ -377,18 +377,22 @@ main(int argc, char** argv)
 	//
 	// register the Locale Factory
 	//
-	res = nsRepository::RegisterFactory(kLocaleFactoryCID,
+	res = nsRepository::RegisterComponent(kLocaleFactoryCID,
+                                 NULL,
+                                 NULL,
                                  LOCALE_DLL_NAME,
                                  PR_FALSE,
                                  PR_FALSE);
-	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+	NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterComponent failed.");
 
 #ifdef XP_PC
 
 	//
 	// register the Windows specific factory
 	//
-	res = nsRepository::RegisterFactory(kWin32LocaleFactoryCID,
+	res = nsRepository::RegisterComponent(kWin32LocaleFactoryCID,
+								NULL,
+								NULL,
 								LOCALE_DLL_NAME,
 								PR_FALSE,
 								PR_FALSE);
