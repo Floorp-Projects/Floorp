@@ -2198,48 +2198,47 @@ net_parse_first_http_line (ActiveEntry *ce)
 			PR_FREEIF(CE_URL_S->content_name);
 			CE_URL_S->content_name = NULL;
 		  }
-
+ 
         switch (CE_URL_S->server_status / 100) 
           {
 	      	  case 1:
 				if(CE_URL_S->server_status == 100)
 				{
-					char * end_of_line;
-					int cur_line_size;
+					char * endOfResp;
+					char tmp;
+					int curRespSize=0;
 
-					/* 100 continue.  Ignore line and continue looking
-			 		 * for first line
-			 		 */
+					/* We just got a 100 Continue response from the server.
+					 * Skip it. We don't do any special handling. We're not
+					 * dealing with the status line or any headers sent with
+					 * the response. */
 
-					/* strip the "HTTP/1.1 100 Continue" from the line buffer */
-					end_of_line = line_feed;
-					cur_line_size = (end_of_line - cd->line_buffer)+1;
+					/* Get the length of the response as a string. The end
+					 * of the response is a double CRLF sequence. */
 
-					/* absorb any blank lines after the 100 continue */
-					while(cd->line_buffer_size > cur_line_size)
-					{
-						if(line_feed[1] == CR || line_feed[1] == LF)
-						{
-							cur_line_size++;
-							end_of_line++;
-						}
-						else
-						{
-							/* anything else stop */
-							break;
-						}
+					endOfResp=PL_strstr(cd->line_buffer, CRLF CRLF);
+
+					/* If we can't find the end of the response, either we
+					 * haven't received it all yet, or it's a malformed
+					 * resposne. */
+					if(endOfResp) {
+						endOfResp+=4;
+						tmp=*endOfResp;
+						*endOfResp='\0';
+						curRespSize=PL_strlen(cd->line_buffer);
+						*endOfResp=tmp;
+
+						cd->line_buffer_size -= curRespSize;
+						PR_ASSERT(cd->line_buffer_size >= 0);
+						if(cd->line_buffer_size > 0)
+							memmove(cd->line_buffer, endOfResp, cd->line_buffer_size);
 					}
 
-					cd->line_buffer_size -= cur_line_size;
-					if(cd->line_buffer_size)
-						memmove(cd->line_buffer, end_of_line+1, cd->line_buffer_size); 
-
-					/* by not setting CD_NEXT_STATE to something different
+ 					/* by not setting CD_NEXT_STATE to something different
 					 * we will come back to this function and look for another
 					 * first line.
 					 */
 					return(0);
-					
 				}
 				break;
 
