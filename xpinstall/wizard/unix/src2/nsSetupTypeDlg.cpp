@@ -786,9 +786,30 @@ nsSetupTypeDlg::CreateDestYes(GtkWidget *aWidget, gpointer aData)
 {
     DUMP("CreateDestYes");
     int err = 0; 
+    char path[PATH_MAX + 1];
+    int  pathLen = strlen(gCtx->opt->mDestination);
 
+    if (pathLen > PATH_MAX)
+        pathLen = PATH_MAX;
+    memcpy(path, gCtx->opt->mDestination, pathLen);
+    path[pathLen] = '/';  // for uniform handling
+
+    struct stat buf;
     mode_t oldPerms = umask(022);
-    err = mkdir(gCtx->opt->mDestination, (0777 & ~oldPerms));
+
+    for (int i = 1; !err && i <= pathLen; i++) 
+    {
+        if (path[i] == '/') 
+        {
+            path[i] = '\0';
+            if (stat(path, &buf) != 0) 
+            {
+                err = mkdir(path, (0777 & ~oldPerms));
+            }
+            path[i] = '/';
+        }
+    }
+
     umask(oldPerms); // restore original umask
 
     gtk_widget_destroy(sCreateDestDlg);
