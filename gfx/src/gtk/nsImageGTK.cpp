@@ -1398,130 +1398,6 @@ void nsImageGTK::TilePixmap(GdkPixmap *src, GdkPixmap *dest,
   gdk_gc_unref(gc);
 }
 
-/** 
- * Draw a tiled version of the bitmap
- * @update - dwc 3/30/00
- * @param aSurface  the surface to blit to
- * @param aX0 starting x
- * @param aY0 starting y
- * @param aX1 ending x
- * @param aY1 ending y
- * @param aWidth The destination width of the pixelmap
- * @param aHeight The destination height of the pixelmap
- */
-NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
-                                   nsDrawingSurface aSurface,
-                                   nsRect &aSrcRect,
-                                   nsRect &aTileRect)
-{
-#ifdef DEBUG_TILING
-  printf("nsImageGTK::DrawTile: mWidth=%d, mHeight=%d\n", mWidth, mHeight);
-  printf("                      aSrcRect.width=%d, aSrcRect.height=%d\n",
-         aSrcRect.width, aSrcRect.height);
-
-  printf("nsImageGTK::DrawTile((src: %d, %d), (tile: %d,%d, %d, %d) %p\n", mWidth, mHeight,
-         aTileRect.x, aTileRect.y,
-         aTileRect.width, aTileRect.height, this);
-#endif
-
-  if ((mAlphaDepth==1) && mIsSpacer)
-    return NS_OK;
-
-  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
-  PRBool partial = PR_FALSE;
-
-  PRInt32
-    validX = 0,
-    validY = 0,
-    validWidth  = mWidth,
-    validHeight = mHeight;
-  
-  // limit the image rectangle to the size of the image data which
-  // has been validated.
-  if (mDecodedY2 < mHeight) {
-    validHeight = mDecodedY2 - mDecodedY1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedX2 < mWidth) {
-    validWidth = mDecodedX2 - mDecodedX1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedY1 > 0) {   
-    validHeight -= mDecodedY1;
-    validY = mDecodedY1;
-    partial = PR_TRUE;
-  }
-  if (mDecodedX1 > 0) {
-    validWidth -= mDecodedX1;
-    validX = mDecodedX1; 
-    partial = PR_TRUE;
-  }
-
-  if (partial || 
-      (drawing->GetDepth() == 8) ||
-      ((mAlphaDepth == 8) && mAlphaValid)) {
-#ifdef DEBUG_TILING
-    printf("Warning: using slow tiling\n");
-#endif
-    PRInt32 aY0 = aTileRect.y,
-            aX0 = aTileRect.x,
-            aY1 = aTileRect.y + aTileRect.height,
-            aX1 = aTileRect.x + aTileRect.width;
-
-            for (PRInt32 y = aY0; y < aY1; y+=aSrcRect.height)
-              for (PRInt32 x = aX0; x < aX1; x+=aSrcRect.width)
-                Draw(aContext,aSurface,x,y,
-                     PR_MIN(aSrcRect.width, aX1-x),
-                     PR_MIN(aSrcRect.height, aY1-y));
-   
-    return NS_OK;
-  }
-
-  if (mAlphaDepth == 1) {
-
-    GdkPixmap *tileImg;
-    GdkPixmap *tileMask;
-
-    CreateAlphaBitmap(validWidth, validHeight);
-
-    nsRect tmpRect(0,0,aTileRect.width, aTileRect.height);
-
-    tileImg = gdk_pixmap_new(mImagePixmap, aTileRect.width, aTileRect.height, mDepth);
-    TilePixmap(mImagePixmap, tileImg, 0, 0, tmpRect, tmpRect, PR_FALSE);
-
-
-    // tile alpha mask
-    tileMask = gdk_pixmap_new(mAlphaPixmap, aTileRect.width, aTileRect.height, mAlphaDepth);
-    TilePixmap(mAlphaPixmap, tileMask, 0, 0, tmpRect, tmpRect, PR_FALSE);
-
-    GdkGC *fgc = gdk_gc_new(drawing->GetDrawable());
-    gdk_gc_set_clip_mask(fgc, (GdkBitmap*)tileMask);
-    gdk_gc_set_clip_origin(fgc, aTileRect.x, aTileRect.y);
-
-    // and copy it back
-    gdk_window_copy_area(drawing->GetDrawable(), fgc, aTileRect.x,
-                         aTileRect.y, tileImg, 0, 0, aTileRect.width,
-                         aTileRect.height);
-    gdk_gc_unref(fgc);
-
-    gdk_pixmap_unref(tileImg);
-    gdk_pixmap_unref(tileMask);
-
-  } else {
-
-    // In the non-alpha case, gdk can tile for us
-
-    nsRect clipRect;
-    PRBool isValid;
-    aContext.GetClipRect(clipRect, isValid);
-
-    TilePixmap(mImagePixmap, drawing->GetDrawable(), aTileRect.x, aTileRect.y, aTileRect, clipRect, PR_TRUE);
-  }
-
-  return NS_OK;
-}
-
-
 
 NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
                                    nsDrawingSurface aSurface,
@@ -1566,6 +1442,11 @@ NS_IMETHODIMP nsImageGTK::DrawTile(nsIRenderingContext &aContext,
     validWidth -= mDecodedX1;
     validX = mDecodedX1; 
     partial = PR_TRUE;
+  }
+
+  if (aTileRect.width == 0 || aTileRect.height == 0 ||
+      validWidth == 0 || validHeight == 0) {
+    return NS_OK;
   }
 
   if (partial || ((mAlphaDepth == 8) && mAlphaValid)) {
