@@ -85,10 +85,6 @@
 #define OLD_REGISTRY_FILE_NAME "nsreg.dat"
 #endif /* XP_UNIX */
 
-// hack for copying panels.rdf, localstore.rdf & mimeTypes.rdf into migrated profile dir
-#define PANELS_RDF_FILE                "panels.rdf"
-#define LOCALSTORE_RDF_FILE                "localstore.rdf"
-#define MIMETYPES_RDF_FILE                "mimeTypes.rdf"
 
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME           "default"
@@ -1828,22 +1824,8 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
         return NS_ERROR_FAILURE;
     }
 
-    // Copy the default 5.0 profile files into the migrated profile
-    // Get profile defaults folder..
-    nsCOMPtr<nsIFile> profDefaultsDir;
-    rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_50_DIR, getter_AddRefs(profDefaultsDir));
-    if (NS_FAILED(rv)) return rv;
-
-    // Copy panels.rdf, localstore.rdf & mimeTypes.rdf files
-    // This is a hack. Once the localFileSpec implementation
-    // is complete, this will be removed.
-	rv = CopyDefaultFile(profDefaultsDir, newProfDir, LOCALSTORE_RDF_FILE);
-	if (NS_FAILED(rv)) return rv;
-	rv = CopyDefaultFile(profDefaultsDir, newProfDir, PANELS_RDF_FILE);
-	if (NS_FAILED(rv)) return rv;
-	rv = CopyDefaultFile(profDefaultsDir, newProfDir, MIMETYPES_RDF_FILE);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to copy default mimeTypes.rdf file");
-    // hack finish.
+    // No longer copying the default 5.0 profile files into
+    // the migrated profile. Check for them as requested.
 	
 	rv = CreateUserDirectories(newProfDir);
 	if (NS_FAILED(rv)) return rv;
@@ -2211,9 +2193,16 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     }
     else if (inAtom == sApp_LocalStore50)
     {
+        // Ensure that this file exists. If not, it
+        // needs to be copied from the defaults.
+
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
+        {
             rv = localFile->Append(LOCAL_STORE_FILE_50_NAME);
+            if (NS_SUCCEEDED(rv))
+                rv = EnsureProfileFileExists(localFile);
+        }
     }
     else if (inAtom == sApp_History50)
     {
@@ -2225,7 +2214,7 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     {
         // We do need to ensure that this file exists. If
         // not, it needs to be copied from the defaults
-        // folder. There is JS code which depends on this.
+        // folder. There is code which depends on this.
         
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
@@ -2237,26 +2226,35 @@ nsProfile::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
     }
     else if (inAtom == sApp_UsersMimeTypes50)
     {
-        // Here we differ from nsFileLocator - It checks for the
-        // existance of this file and if it does not exist, copies
-        // it from the defaults folder to the profile folder. Since
-        // WE set up any profile folder, we'll make sure it's copied then.
+        // Ensure that this file exists. If not, it
+        // needs to be copied from the defaults.
         
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
+        {
             rv = localFile->Append(MIME_TYPES_FILE_50_NAME);
+            if (NS_SUCCEEDED(rv))
+                rv = EnsureProfileFileExists(localFile);
+        }
     }
     else if (inAtom == sApp_BookmarksFile50)
     {
+        // Ensure that this file exists. If not, it
+        // needs to be copied from the defaults.
+
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
+        {
             rv = localFile->Append(BOOKMARKS_FILE_50_NAME);
+            if (NS_SUCCEEDED(rv))
+                rv = EnsureProfileFileExists(localFile);
+        }
     }
     else if (inAtom == sApp_SearchFile50)
     {
         // We do need to ensure that this file exists. If
         // not, it needs to be copied from the defaults
-        // folder.
+        // folder. There is code which depends on this.
          
         rv = CloneProfileDirectorySpec(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
