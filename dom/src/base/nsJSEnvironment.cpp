@@ -1000,7 +1000,7 @@ static JSPropertySpec OptionsProperties[] = {
   {0}
 };
 
-static JSBool
+static JSBool PR_CALLBACK
 GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
@@ -1011,7 +1011,7 @@ GetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   return JS_TRUE;
 }
 
-static JSBool
+static JSBool PR_CALLBACK
 SetOptionsProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   if (JSVAL_IS_INT(id)) {
