@@ -4858,8 +4858,6 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
     // if we are not creating the list, just continue the loop
     // no need to proceed if changes are detected
     if (!aCreatePluginList) {
-      delete pluginTag;
-
       if (*aPluginsChanged)
         return NS_OK;
       else
