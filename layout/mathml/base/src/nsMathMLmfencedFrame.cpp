@@ -320,7 +320,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   /////////////////
   // opening fence ...
   ReflowChar(aPresContext, renderingContext, mStyleContext, mOpenChar, NS_MATHML_OPERATOR_FORM_PREFIX,
-             mScriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
+             mPresentationData.scriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
   /////////////////
   // separators ...
   PRInt32 i = 0;
@@ -332,7 +332,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
       dx += rect.width;
       if (i < mSeparatorsCount) {
         ReflowChar(aPresContext, renderingContext, mStyleContext, &mSeparatorsChar[i], NS_MATHML_OPERATOR_FORM_INFIX,
-                   mScriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
+                   mPresentationData.scriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
         i++;
       }
     }
@@ -341,7 +341,7 @@ nsMathMLmfencedFrame::Reflow(nsIPresContext*          aPresContext,
   /////////////////
   // closing fence ...
   ReflowChar(aPresContext, renderingContext, mStyleContext, mCloseChar, NS_MATHML_OPERATOR_FORM_POSTFIX,
-             mScriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
+             mPresentationData.scriptLevel, fontAscent, fontDescent, em, parentSize, aDesiredSize, dx);
 
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 

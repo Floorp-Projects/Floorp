@@ -128,9 +128,7 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
 	baseFrame = aChildFrame;
 	baseSize.descent = aRect.x; baseSize.ascent = aRect.y;
 	baseSize.width = aRect.width; baseSize.height = aRect.height;
-        if (NS_SUCCEEDED(GetBoundingMetricsFor(baseFrame, baseBounds))) {
-          baseBounds.descent = -baseBounds.descent;
-        } else {
+        if (NS_FAILED(GetBoundingMetricsFor(baseFrame, baseBounds))) {
           baseBounds.descent = baseSize.descent;
           baseBounds.ascent = baseSize.ascent;
           baseBounds.width = baseSize.width;
@@ -141,9 +139,7 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
 	subScriptFrame = aChildFrame;
 	subScriptSize.descent = aRect.x; subScriptSize.ascent = aRect.y;
 	subScriptSize.width = aRect.width; subScriptSize.height = aRect.height;
-        if (NS_SUCCEEDED(GetBoundingMetricsFor(subScriptFrame, subScriptBounds))) {
-          subScriptBounds.descent = -subScriptBounds.descent;
-        } else {
+        if (NS_FAILED(GetBoundingMetricsFor(subScriptFrame, subScriptBounds))) {
           subScriptBounds.descent = subScriptSize.descent;
           subScriptBounds.ascent = subScriptSize.ascent;
           subScriptBounds.width = subScriptSize.width;
@@ -218,9 +214,7 @@ nsMathMLmsubFrame::Place(nsIPresContext*      aPresContext,
      PR_MAX(baseSize.descent, subScriptSize.descent + actualSubScriptShift);
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
-//XXX wrong  aDesiredSize.width = mBoundingMetrics.width;
-
-  mBoundingMetrics.descent = -mBoundingMetrics.descent;
+  aDesiredSize.width = baseSize.width + mScriptSpace + subScriptSize.width;
 
   if (aPlaceOrigin) {
     nscoord dx, dy;

@@ -76,7 +76,8 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  mFlags = 0;
+  mPresentationData.mstyle = this;
+
   mInnerScriptLevelIncrement = 0;
 
   // see if the displaystyle attribute is there
@@ -84,12 +85,12 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
                    nsMathMLAtoms::displaystyle_, value)) {
     if (value == "true") {
-      mDisplayStyle = PR_TRUE;
-      mFlags |= NS_MATHML_MSTYLE_DISPLAYSTYLE;
+      mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
     }
     else if (value == "false") {
-      mDisplayStyle = PR_FALSE;
-      mFlags |= NS_MATHML_MSTYLE_DISPLAYSTYLE;
+      mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_DISPLAYSTYLE;
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
     }
   }
 
@@ -100,8 +101,8 @@ nsMathMLmstyleFrame::Init(nsIPresContext*  aPresContext,
     aUserValue = value.ToInteger(&aErrorCode); 
     if (NS_SUCCEEDED(aErrorCode)) {
       if (value[0] != '+' && value[0] != '-') { // record that it is an explicit value
-        mFlags |= NS_MATHML_MSTYLE_SCRIPTLEVEL_EXPLICIT;
-        mScriptLevel = aUserValue; // explicit value...
+        mPresentationData.flags |= NS_MATHML_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL;
+        mPresentationData.scriptLevel = aUserValue;
       }
       else {
 //        mScriptLevel += aUserValue; // incremental value...
@@ -125,12 +126,17 @@ nsMathMLmstyleFrame::UpdatePresentationData(PRInt32 aScriptLevelIncrement,
   // Since UpdatePresentationData() can be called by a parent frame, the
   // scriptlevel and displaystyle attributes of mstyle must take precedence.
   // Update only if attributes are not there
-  if (!(NS_MATHML_MSTYLE_HAS_DISPLAYSTYLE(mFlags))) {
-    mDisplayStyle = aDisplayStyle;
+
+  if (!NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
+    if (aDisplayStyle)
+      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
+    else
+      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
   }
-  if (!(NS_MATHML_MSTYLE_HAS_SCRIPTLEVEL_EXPLICIT(mFlags))) {
-    mScriptLevel += aScriptLevelIncrement;
+  if (!NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
+    mPresentationData.scriptLevel += aScriptLevelIncrement;
   }
+  
   return NS_OK;
 }
 
@@ -142,15 +148,17 @@ nsMathMLmstyleFrame::UpdatePresentationDataFromChildAt(PRInt32 aIndex,
   // mstyle is special...
   // Since UpdatePresentationDataFromChildAt() can be called by a parent frame,
   // wee need to ensure that the attributes of mstyle take precedence
-  if (NS_MATHML_MSTYLE_HAS_DISPLAYSTYLE(mFlags)) {
-    aDisplayStyle = mDisplayStyle;
+
+  PRBool displayStyle = NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags);
+  if (NS_MATHML_IS_MSTYLE_WITH_DISPLAYSTYLE(mPresentationData.flags)) {
+    aDisplayStyle = displayStyle;
   }
-  if (NS_MATHML_MSTYLE_HAS_SCRIPTLEVEL_EXPLICIT(mFlags)) {
+  if (NS_MATHML_IS_MSTYLE_WITH_EXPLICIT_SCRIPTLEVEL(mPresentationData.flags)) {
     aScriptLevelIncrement = 0;
   }
-  if (0 == aScriptLevelIncrement && aDisplayStyle == mDisplayStyle)
+  if (0 == aScriptLevelIncrement && aDisplayStyle == displayStyle)
     return NS_OK;
-
+    
   // let the base class worry about the update
   return nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(aIndex,
                                          aScriptLevelIncrement, aDisplayStyle);

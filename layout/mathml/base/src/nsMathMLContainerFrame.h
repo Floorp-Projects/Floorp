@@ -111,8 +111,10 @@ public:
   SetEmbellishData(const nsEmbellishData& aEmbellishData);
 
   NS_IMETHOD
-  GetPresentationData(PRInt32* aScriptLevel, 
-                      PRBool*  aDisplayStyle);
+  GetPresentationData(nsPresentationData& aPresentationData);
+
+  NS_IMETHOD
+  SetPresentationData(const nsPresentationData& aPresentationData);
 
   NS_IMETHOD
   UpdatePresentationData(PRInt32 aScriptLevelIncrement, 
@@ -160,7 +162,7 @@ public:
                  const nsHTMLReflowState& aReflowState,
                  nsReflowStatus&          aStatus);
 
-  // helper function to palce token elements
+  // helper function to place token elements
   static nsresult
   PlaceTokenFor(nsIFrame*            aFrame,
                 nsIPresContext*      aPresContext,
@@ -236,34 +238,11 @@ public:
   // helper methods to facilitate getting/setting the bounding metrics
   static nsresult
   GetBoundingMetricsFor(nsIFrame*          aFrame, 
-                        nsBoundingMetrics& aBoundingMetrics)
-  {
-    aBoundingMetrics.Clear();
-    nsIMathMLFrame* aMathMLFrame = nsnull;
-    nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-    if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
-      aMathMLFrame->GetBoundingMetrics(aBoundingMetrics);
-      return NS_OK;
-    }
-    // if we reach here, aFrame is not a MathML frame, let the caller know that
-    printf("GetBoundingMetrics() failed!! ...\n"); /* getchar(); */
-    return NS_ERROR_FAILURE;
-  }
+                        nsBoundingMetrics& aBoundingMetrics);
 
   static nsresult
   SetBoundingMetricsFor(nsIFrame*          aFrame, 
-                        nsBoundingMetrics& aBoundingMetrics)
-  {
-    nsIMathMLFrame* aMathMLFrame = nsnull;
-    nsresult rv = aFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
-    if (NS_SUCCEEDED(rv) && aMathMLFrame) {   
-      aMathMLFrame->SetBoundingMetrics(aBoundingMetrics);
-      return NS_OK;
-    }
-    // if we reach here, aFrame is not a MathML frame, let the caller know that
-    printf("SetBoundingMetrics() failed!! ...\n"); /* getchar(); */
-    return NS_ERROR_FAILURE;
-  }
+                        nsBoundingMetrics& aBoundingMetrics);
 
   // helper methods for getting sup/subdrop's from a child
   static void 
@@ -336,23 +315,18 @@ public:
 
 protected:
 
-  PRInt32 mScriptLevel;  // Relevant to nested frames within: msub, msup, msubsup, munder,
-                         // mover, munderover, mmultiscripts, mfrac, mroot, mtable.
+  // information about the presentation policy of the frame
+  nsPresentationData mPresentationData;
 
-  PRBool mDisplayStyle;  // displaystyle="false" is intended to slightly alter how the
-                         // rendering is done in inline mode.
+  // information about a container that is an embellished operator
+  nsEmbellishData mEmbellishData;
   
-  PRBool mCompressed;    // for compatibility with TeX rendering 
-                         //  for internal use only, cannot be set by the user.
-  nscoord mScriptSpace;  // scriptspace from TeX for extra spacing after sup/subscript
-                         // = 0.5pt in plain TeX
-
-  nsEmbellishData mEmbellishData; // information about a container that is an embellished operator
-
-  nsBoundingMetrics mBoundingMetrics; // Metrics that _exactly_ enclose the text of the frame
-
-  nsPoint mReference; // Reference point of the frame: mReference.y is the baseline
-
+  // Metrics that _exactly_ enclose the text of the frame
+  nsBoundingMetrics mBoundingMetrics;
+  
+  // Reference point of the frame: mReference.y is the baseline
+  nsPoint mReference; 
+  
   virtual PRIntn GetSkipSides() const { return 0; }
 };
 

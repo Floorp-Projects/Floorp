@@ -198,7 +198,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   
   // Get aSubScriptShift{1,2} default from font
   GetSubScriptShifts (fm, aSubScriptShift1, aSubScriptShift2);
-  if (mSubUserSetFlag == PR_TRUE) {
+  if (mSubUserSetFlag) {
     // the user has set the subscriptshift attribute
     float aFactor = ((float) aSubScriptShift2) / aSubScriptShift1;
     aSubScriptShift1 = NSToCoordRound(mSubScriptShiftFactor * xHeight);
@@ -230,7 +230,7 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   nscoord aSupScriptShift1, aSupScriptShift2, aSupScriptShift3;
   // Set aSupScriptShift{1,2,3} default from font
   GetSupScriptShifts (fm, aSupScriptShift1, aSupScriptShift2, aSupScriptShift3);
-  if (mSupUserSetFlag == PR_TRUE) {
+  if (mSupUserSetFlag) {
     // the user has set the superscriptshift attribute
     float aFactor2 = ((float) aSupScriptShift2) / aSupScriptShift1;
     float aFactor3 = ((float) aSupScriptShift3) / aSupScriptShift1;
@@ -242,13 +242,13 @@ nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
   // get sup script shift depending on current script level and display style
   // Rule 18c, App. G, TeXbook
   nscoord aSupScriptShift;
-  if ((mScriptLevel == 0) && 
-      (mDisplayStyle == PR_TRUE) && 
-      (mCompressed == PR_FALSE)) {
+  if ( mPresentationData.scriptLevel == 0 && 
+       NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags) &&
+      !NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style D in TeXbook
     aSupScriptShift = aSupScriptShift1;
   }
-  else if (mCompressed == PR_TRUE) {
+  else if (NS_MATHML_IS_COMPRESSED(mPresentationData.flags)) {
     // Style C' in TeXbook = D',T',S',SS'
     aSupScriptShift = aSupScriptShift3;
   }

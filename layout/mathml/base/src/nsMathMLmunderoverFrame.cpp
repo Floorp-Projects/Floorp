@@ -81,6 +81,163 @@ nsMathMLmunderoverFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmunderoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                             nsIAtom*        aListName,
+                                             nsIFrame*       aChildList)
+{
+  nsresult rv;
+  rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+
+  // check whether or not this is an embellished operator
+  EmbellishOperator();
+
+  // set our accent and accentunder flags
+  /* 
+  The REC says:
+
+  The accent and accentunder attributes have the same effect as
+  the attributes with the same names on <mover>  and <munder>, 
+  respectively. Their default values are also computed in the 
+  same manner as described for those elements, with the default
+  value of accent depending on overscript and the default value
+  of accentunder depending on underscript.
+  */
+
+  // get our overscript and underscript frames
+  PRInt32 count = 0;
+  nsIFrame* baseFrame = nsnull;
+  nsIFrame* underscriptFrame = nsnull;
+  nsIFrame* overscriptFrame = nsnull;
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while (childFrame) {
+    if (!IsOnlyWhitespace(childFrame)) {
+      count++;
+      if (1 == count) baseFrame = childFrame;
+      if (2 == count) underscriptFrame = childFrame;
+      if (3 == count) { overscriptFrame = childFrame; break; }
+    }
+    childFrame->GetNextSibling(&childFrame);
+  }
+
+  nsIMathMLFrame* underscriptMathMLFrame = nsnull;
+  nsIMathMLFrame* overscriptMathMLFrame = nsnull;
+  nsIMathMLFrame* aMathMLFrame = nsnull;
+  nsEmbellishData embellishData;
+  nsAutoString value;
+
+  mPresentationData.flags &= ~NS_MATHML_MOVABLELIMITS; // default is false
+  mPresentationData.flags &= ~NS_MATHML_ACCENTUNDER; // default of accentunder is false
+  mPresentationData.flags &= ~NS_MATHML_ACCENTOVER; // default of accent is false
+
+  // see if the baseFrame has movablelimits="true" or if it is an
+  // embellished operator whose movablelimits attribute is set to true
+  if (baseFrame && NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags)) {
+    nsCOMPtr<nsIContent> baseContent;
+    baseFrame->GetContent(getter_AddRefs(baseContent));
+    if (NS_CONTENT_ATTR_HAS_VALUE == baseContent->GetAttribute(kNameSpaceID_None, 
+                     nsMathMLAtoms::movablelimits_, value)) {
+      if (value == "true") {
+        mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
+      }
+    }
+    else { // no attribute, get the value from the core
+      rv = mEmbellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+      if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+        aMathMLFrame->GetEmbellishData(embellishData);
+        if (NS_MATHML_EMBELLISH_IS_MOVABLELIMITS(embellishData.flags)) {
+          mPresentationData.flags |= NS_MATHML_MOVABLELIMITS;
+        }
+      }
+    }
+  }
+
+  // see if the underscriptFrame is <mo> or an embellished operator
+  if (underscriptFrame) {
+    rv = underscriptFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&underscriptMathMLFrame);
+    if (NS_SUCCEEDED(rv) && underscriptMathMLFrame) {
+      underscriptMathMLFrame->GetEmbellishData(embellishData);
+      // core of the underscriptFrame
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
+        rv = embellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+          aMathMLFrame->GetEmbellishData(embellishData);
+          // if we have the accentunder attribute, tell the core to behave as 
+          // requested (otherwise leave the core with its default behavior)
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                          nsMathMLAtoms::accentunder_, value))
+          {
+            if (value == "true") embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+            else if (value == "false") embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+            aMathMLFrame->SetEmbellishData(embellishData);
+          }
+
+          // sync the presentation data: record whether we have an accentunder
+          if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags))
+            mPresentationData.flags |= NS_MATHML_ACCENTUNDER;
+        }
+      }
+    }
+  }
+  
+  // see if the overscriptFrame is <mo> or an embellished operator
+  if (overscriptFrame) {
+    rv = overscriptFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&overscriptMathMLFrame);
+    if (NS_SUCCEEDED(rv) && overscriptMathMLFrame) {
+      overscriptMathMLFrame->GetEmbellishData(embellishData);
+      // core of the overscriptFrame
+      if (NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags) && embellishData.core) {
+        rv = embellishData.core->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+        if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+          aMathMLFrame->GetEmbellishData(embellishData);
+          // if we have the accent attribute, tell the core to behave as 
+          // requested (otherwise leave the core with its default behavior)
+          if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
+                          nsMathMLAtoms::accent_, value))
+          {
+            if (value == "true") embellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
+            else if (value == "false") embellishData.flags &= ~NS_MATHML_EMBELLISH_ACCENT;
+            aMathMLFrame->SetEmbellishData(embellishData);
+          }
+
+          // sync the presentation data: record whether we have an accent
+          if (NS_MATHML_EMBELLISH_IS_ACCENT(embellishData.flags))
+            mPresentationData.flags |= NS_MATHML_ACCENTOVER;
+        }
+      }
+    }
+  }
+
+  //The REC says:
+  /*
+  Within underscript, <munderover> always sets displaystyle to "false",
+  but increments scriptlevel by 1 only when accentunder is "false". 
+
+  Within overscript, <munderover> always sets displaystyle to "false", 
+  but increments scriptlevel by 1 only when accent is "false".
+  */
+
+  PRInt32 incrementScriptLevel;
+
+  if (underscriptMathMLFrame) {
+    incrementScriptLevel = NS_MATHML_IS_ACCENTUNDER(mPresentationData.flags)? 0 : 1;
+    underscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE);
+    underscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE);
+  }
+  
+  if (overscriptMathMLFrame) 
+  {
+    incrementScriptLevel = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)? 0 : 1;
+    overscriptMathMLFrame->UpdatePresentationData(incrementScriptLevel, PR_FALSE);
+    overscriptMathMLFrame->UpdatePresentationDataFromChildAt(0, incrementScriptLevel, PR_FALSE);
+  }
+  
+  // switch the style of the underscript and the overscript
+  InsertScriptLevelStyleContext(aPresContext);
+
+  return rv;
+}
+
+NS_IMETHODIMP
 nsMathMLmunderoverFrame::Reflow(nsIPresContext*          aPresContext,
                                 nsHTMLReflowMetrics&     aDesiredSize,
                                 const nsHTMLReflowState& aReflowState,
@@ -90,7 +247,7 @@ nsMathMLmunderoverFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   /////////////
-  // Reflow children to stretch themselves
+  // Reflow children
 
   ReflowChildren(1, aPresContext, aDesiredSize, aReflowState, aStatus);
 
@@ -110,6 +267,25 @@ nsMathMLmunderoverFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }
+
+/*
+The REC says:
+*  If the base is an operator with movablelimits="true" (or an embellished
+   operator whose <mo> element core has movablelimits="true"), and
+   displaystyle="false", then underscript and overscript are drawn in
+   a subscript and superscript position, respectively. In this case, 
+   the accent and accentunder attributes are ignored. This is often
+   used for limits on symbols such as &sum;.
+
+TODO:
+ if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+     !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+  // place like subscript-superscript pair
+ }
+ else {
+  // place like accentunder-accent pair
+ }
+*/
 
 NS_IMETHODIMP
 nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
@@ -173,9 +349,9 @@ nsMathMLmunderoverFrame::Place(nsIPresContext*      aPresContext,
   }
 
   // XXX Fix me!
-  mBoundingMetrics.ascent  =  aDesiredSize.ascent;
-  mBoundingMetrics.descent = -aDesiredSize.descent;
-  mBoundingMetrics.width   =  aDesiredSize.width;
+  mBoundingMetrics.ascent  = aDesiredSize.ascent;
+  mBoundingMetrics.descent = aDesiredSize.descent;
+  mBoundingMetrics.width   = aDesiredSize.width;
 
   return NS_OK;
 }
