@@ -1038,7 +1038,7 @@ namespace MetaData {
                         if (vb->member->kind == Member::Variable) {
                             Variable *v = checked_cast<Variable *>(vb->member);
                             JS2Class *type = getVariableType(v, CompilePhase, p->pos);
-                            if (JS2VAL_IS_FUTURE(v->value)) {
+                            if (JS2VAL_IS_FUTURE(v->value)) {   // it's a const, execute the initializer
                                 v->value = JS2VAL_INACCESSIBLE;
                                 if (vb->initializer) {
                                     try {
@@ -1046,15 +1046,14 @@ namespace MetaData {
                                         v->value = engine->assignmentConversion(newValue, type);
                                     }
                                     catch (Exception x) {
-                                        // If a compileExpressionError occurred, then the initialiser is not a compile-time 
-                                        // constant expression. In this case, ignore the error and leave the value of the 
-                                        // variable inaccessible until it is defined at run time.
+                                        // If a compileExpressionError occurred, then the initialiser is 
+                                        // not a compile-time constant expression. 
                                         if (x.kind != Exception::compileExpressionError)
                                             throw x;
                                     }
-                                    // XXX more here - 
+                                    // XXX more here - does 'static' act c-like?
                                     //
-                                    // eGET_TOP_FRAME    <-- establish base
+                                    // eGET_TOP_FRAME    <-- establish base??? why isn't this a lexical reference?
                                     // eDotRead <v->mn>
                                     // eIS_INACCESSIBLE      ??
                                     // eBRANCH_FALSE <lbl>   ?? eBRANCH_ACC <lbl>
@@ -1066,7 +1065,28 @@ namespace MetaData {
                                 }
                                 else
                                     // Would only have come here if the variable was immutable - i.e. a 'const' definition
+                                    // XXX why isn't this handled at validation-time?
                                     reportError(Exception::compileExpressionError, "Missing compile time expression", p->pos);
+                            }
+                            else {
+                                if (vb->initializer) {
+                                    try {
+                                        js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
+                                        v->value = engine->assignmentConversion(newValue, type);
+                                    }
+                                    catch (Exception x) {
+                                        // If a compileExpressionError occurred, then the initialiser is not a compile-time 
+                                        // constant expression. In this case, ignore the error and leave the value of the 
+                                        // variable inaccessible until it is defined at run time.
+                                        if (x.kind != Exception::compileExpressionError)
+                                            throw x;
+                                        Reference *r = EvalExprNode(env, phase, vb->initializer);
+                                        if (r) r->emitReadBytecode(bCon, p->pos);
+                                        LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
+                                        lVal->variableMultiname->addNamespace(publicNamespace);
+                                        lVal->emitWriteBytecode(bCon, p->pos);                                                        
+                                    }
+                                }
                             }
                         }
                         else {
@@ -1081,8 +1101,8 @@ namespace MetaData {
                                 else
                                     if (vb->osp->second->overriddenMember && (vb->osp->second->overriddenMember != POTENTIAL_CONFLICT))
                                         t = vb->osp->second->overriddenMember->type;
-                                else
-                                    t = objectClass;
+                                    else
+                                        t = objectClass;
                             }
                             v->type = t;
                         }
@@ -1552,14 +1572,19 @@ namespace MetaData {
      */
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        BytecodeContainer *saveBacon = bCon;
-        bCon = new BytecodeContainer();
-        Reference *r = EvalExprNode(env, phase, p);
-        if (r) r->emitReadBytecode(bCon, p->pos);
-        bCon->emitOp(eReturn, p->pos);
-        js2val retval = engine->interpret(phase, bCon);
-        delete bCon;    // XXX check that the destructor does everything it should?
-        bCon = saveBacon;
+        js2val retval;
+        CompilationData *oldData;
+        try {
+            oldData = startCompilationUnit(NULL, bCon->mSource, bCon->mSourceLocation);
+            Reference *r = EvalExprNode(env, phase, p);
+            if (r) r->emitReadBytecode(bCon, p->pos);
+            bCon->emitOp(eReturn, p->pos);
+            retval = engine->interpret(phase, bCon);
+        }
+        catch (Exception &x) {
+            restoreCompilationUnit(oldData);
+            throw x;
+        }
         return retval;
     }
 
@@ -1871,7 +1896,7 @@ doUnary:
 
                 bCon->setLabel(falseConditionExpression);
                 //adjustStack(-1);        // the true case will leave a stack entry pending
-                                        // but we can discard it since only path will be taken.
+                                          // but we can discard it since only one path will be taken.
                 lVal = EvalExprNode(env, phase, c->op3);
                 if (lVal) lVal->emitReadBytecode(bCon, p->pos);
 
@@ -2950,6 +2975,8 @@ doUnary:
             *rval = (checked_cast<Variable *>(m))->value;
             return true;
         case StaticMember::HoistedVariable:
+            if (phase == CompilePhase) 
+                reportError(Exception::compileExpressionError, "Inappropriate compile time expression", engine->errorPos());
             *rval = (checked_cast<HoistedVar *>(m))->value;
             return true;
         case StaticMember::ConstructorMethod:
