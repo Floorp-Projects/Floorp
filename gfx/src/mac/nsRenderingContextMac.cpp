@@ -27,46 +27,112 @@
 #include "nsVoidArray.h"
 #include "nsGfxCIID.h"
 #include "nsCOMPtr.h"
+#include "plhash.h"
 
-//#define USE_ATSUI_HACK	// Note: ATSUI is not used for 7-bit text. See GetHints().
-
-#ifdef USE_ATSUI_HACK
-#include <ATSUnicode.h>
 #include <FixMath.h>
 #include <Gestalt.h>
-#endif
 
 
-//------------------------------------------------------------------------
-//	ConvertLatin1ToMacRoman
-//
-//		Utility function: converts a Latin-1 String to a MacRoman one in place
-//------------------------------------------------------------------------
+typedef enum {
+  kFontChanged = 1,
+  kColorChanged = 2
+} styleChanges;
 
-static void ConvertLatin1ToMacRoman( char* aString)
-{
-	char* location = aString;
-	static char  conversionTable[]={
-0xDB, 0x2A,  0xE2, 0xC4, 0xE3, 0xC9,  0xA0, 0xE0,  0xF6, 0xE4,  0x53, 0xDC,  0xCE, 0x2A,  0x2A, 0x2A,
-0x2A, 0xD4,  0xD5, 0xD2,  0xD3, 0xA5,  0xD0, 0xD1,  0xF7, 0xAA,  0x73, 0xDD,  0xCF, 0x2A,  0x2A, 0xD9,
-0xCA, 0xC1,  0xA2, 0xA3,  0xDB, 0xB4,  0x7C, 0xA4,  0xAC, 0xA9, 0xBB, 0xC7,  0xC2, 0xD0,  0xA8, 0xF8,
-0xA1, 0xB1,  0x32, 0x33,  0xAB, 0xB5,  0xA6, 0xE1,  0xFC, 0x31,  0xBC, 0xC8,  0x2A, 0x2A,  0x2A, 0xC0,
-0xCB, 0xE7,  0xE5, 0xCC,  0x80, 0x81,  0xAE, 0x82, 0xE9, 0x83,  0xE6, 0xE8,  0xED, 0xEA,  0xEB, 0xEC,
-0xDC, 0x84,  0xF1, 0xEE,  0xEF, 0xCD,  0x85, 0x78,  0xAF, 0xF4,  0xF2, 0xF3,  0x86, 0xA0,  0xDE, 0xA7,
-0x88, 0x87,  0x89, 0x8B,  0x8A, 0x8C,  0xBE, 0x8D,  0x8F, 0x8E,  0x90, 0x91,  0x93, 0x92,  0x94, 0x95,
-0xDD, 0x96,  0x98, 0x97,  0x99, 0x9B,  0x9A, 0xD6,  0xBF, 0x9D,  0x9C, 0x9E,  0x9F, 0xE0,  0xDF, 0xD8
+typedef struct  {
+	short f;
+	short s;
+	nscolor c;
+	short bi;
+} atsuiLayoutCacheKey;
+
+class ATSUILayoutCache {
+public:
+	ATSUILayoutCache();
+	~ATSUILayoutCache();
+	PRBool Get(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout *txlayout);
+	void Set(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout txlayout);
+	PRBool Get(atsuiLayoutCacheKey *key, ATSUTextLayout *txlayout);
+	void Set(atsuiLayoutCacheKey *key, ATSUTextLayout txlayout);
+	
+private:			
+	struct PLHashTable* mTable;
+	PRUint32 mCount;
 };
-	int	ch;
-	while ( (ch= (*location)) != 0 )
+static PR_CALLBACK PLHashNumber hashKey( const void *key)
+{
+	atsuiLayoutCacheKey* real = (atsuiLayoutCacheKey*)key;	
+	return 	real->f + (real-> s << 7) + (real->bi << 12) + real->c;
+}
+static PR_CALLBACK PRIntn compareKeys(const void *v1, const void *v2)
+{
+	atsuiLayoutCacheKey *k1 = (atsuiLayoutCacheKey *)v1;
+	atsuiLayoutCacheKey *k2 = (atsuiLayoutCacheKey *)v2;
+	return (k1->f == k2->f) && (k1->c == k2->c ) && (k1->s == k2->s) && (k1->bi == k2->bi);
+}
+static PR_CALLBACK PRIntn compareValues(const void *v1, const void *v2)
+{
+	ATSUTextLayout t1 = (ATSUTextLayout)v1;
+	ATSUTextLayout t2 = (ATSUTextLayout)v2;
+	return t1 == t2;
+}
+static PR_CALLBACK PRIntn freeHashEntries(PLHashEntry *he, PRIntn i, void *arg)
+{
+	delete (atsuiLayoutCacheKey*) he->key;
+	ATSUDisposeTextLayout( (ATSUTextLayout) he->value);
+	return HT_ENUMERATE_REMOVE;
+}
+ATSUILayoutCache::ATSUILayoutCache()
+{
+	mTable = PL_NewHashTable(8 , (PLHashFunction) hashKey, 
+								(PLHashComparator) compareKeys, 
+								(PLHashComparator) compareValues,
+							nsnull, nsnull);
+	mCount = 0;
+}
+ATSUILayoutCache::~ATSUILayoutCache()
+{
+	if(mTable)
 	{
-		if ( ch<0 )
-			*location = conversionTable[ *location+128];
-		location++;
+		PL_HashTableEnumerateEntries(mTable, freeHashEntries, 0);
+		PL_HashTableDestroy(mTable);
+		mTable = nsnull;
 	}
 }
+PRBool ATSUILayoutCache::Get(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout *txlayout)
+{
+	atsuiLayoutCacheKey k = {font, size,color,  ( b ? 1 : 0 ) + ( i ? 2 : 0 )};
+	return Get(&k, txlayout);
+}
 
+void ATSUILayoutCache::Set(short font, short size, PRBool b, PRBool i, nscolor color, ATSUTextLayout txlayout)
+{
+	atsuiLayoutCacheKey k = {font, size,color, ( b ? 1 : 0 ) + ( i ? 2 : 0 )};
+	return Set(&k, txlayout);
+}
+
+PRBool ATSUILayoutCache::Get(atsuiLayoutCacheKey *key, ATSUTextLayout *txlayout)
+{
+	PLHashEntry **hep = PL_HashTableRawLookup(mTable, hashKey(key), key);
+	PLHashEntry *he = *hep;
+	if( he )
+	{
+		*txlayout = (ATSUTextLayout)he-> value;
+		return PR_TRUE;
+	}
+	return PR_FALSE;
+}
+
+void ATSUILayoutCache::Set(atsuiLayoutCacheKey *key, ATSUTextLayout txlayout)
+{
+	atsuiLayoutCacheKey *newKey = new atsuiLayoutCacheKey;
+	newKey->f = key->f; newKey->s = key->s; newKey->bi = key->bi; newKey->c = key->c;
+	
+	PL_HashTableAdd(mTable, newKey, txlayout);
+	mCount ++;
+}
+
+static ATSUILayoutCache* gTxLayoutCache= nsnull;
 #pragma mark -
-
 
 #ifdef OLDDRAWINGSURFACE
 //------------------------------------------------------------------------
@@ -335,6 +401,11 @@ void DrawingSurface::Init(nsIWidget* aWindow)
 
 static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
+PRBool nsRenderingContextMac::gATSUI = PR_FALSE;
+PRBool nsRenderingContextMac::gATSUI_Init = PR_FALSE;
+
+
+
 nsRenderingContextMac::nsRenderingContextMac()
 {
   NS_INIT_REFCNT();
@@ -355,6 +426,16 @@ nsRenderingContextMac::nsRenderingContextMac()
 	mGS								= nsnull;
 
   mGSStack					= new nsVoidArray();
+  long				version;
+  if(! gATSUI_Init)
+  {
+  	gATSUI =  (::Gestalt(gestaltATSUVersion, &version) == noErr); // turn on ATSUI if it is available
+  	gTxLayoutCache = new ATSUILayoutCache();
+  	gATSUI_Init = PR_TRUE;
+	// gATSUI = PR_FALSE; // force not using ATSUI
+  }
+  mChanges = kFontChanged | kColorChanged;
+  mLastTextLayout = nsnull;
 }
 
 
@@ -1119,6 +1200,8 @@ NS_IMETHODIMP nsRenderingContextMac :: SetColor(nscolor aColor)
 	::RGBForeColor(&thecolor);
   mGS->mColor = aColor ;
  
+  mChanges |= kColorChanged;
+
 	EndDraw();
   return NS_OK;
 }
@@ -1157,6 +1240,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetFont(const nsFont& aFont)
 
 	if (mContext)
 		mContext->GetMetricsFor(aFont, mGS->mFontMetrics);
+  mChanges |= kFontChanged;
 
   return NS_OK;
 }
@@ -1168,7 +1252,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetFont(nsIFontMetrics *aFontMetrics)
 	NS_IF_RELEASE(mGS->mFontMetrics);
 	mGS->mFontMetrics = aFontMetrics;
 	NS_IF_ADDREF(mGS->mFontMetrics);
-
+  mChanges |= kFontChanged;
   return NS_OK;
 }
 
@@ -1523,26 +1607,12 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 	// set native font and attributes
 	SetPortTextState();
 
-  NS_ASSERTION(strlen(aString) >= aLength, "Getting width on garbage string");
+//   below is a bad assert, aString is not guaranteed null terminated...
+//    NS_ASSERTION(strlen(aString) >= aLength, "Getting width on garbage string");
   
 	// measure text
 	short textWidth = ::TextWidth(aString, 0, aLength);
 	aWidth = NSToCoordRound(float(textWidth) * mP2T);
-
-
-#if 0
-	// add a bit for italic
-	switch (font->style)
-	{
-		case NS_FONT_STYLE_ITALIC:
-		case NS_FONT_STYLE_OBLIQUE:
-			nscoord aAdvance;
-	  mGS->mFontMetrics->GetMaxAdvance(aAdvance);
-			aWidth += aAdvance;
-			break;
-	}
-
-#endif
 
 	EndDraw();
 	return NS_OK;
@@ -1550,17 +1620,195 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
+NS_IMETHODIMP nsRenderingContextMac :: qdGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
 {
-	nsString nsStr;
-	nsStr.SetString(aString, aLength);
-	char* cStr = nsStr.ToNewCString();
-	ConvertLatin1ToMacRoman ( cStr );
+  // XXX Unicode Broken!!!
+  // we should use TEC here to convert Unicode to different script run
+  nsString nsStr;
+  nsStr.SetString(aString, aLength);
+  char* cStr = nsStr.ToNewCString();
   GetWidth(cStr, aLength, aWidth);
-	delete[] cStr;
+  delete[] cStr;
   if (nsnull != aFontID)
     *aFontID = 0;
   return NS_OK;
+}
+
+#define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
+
+ATSUTextLayout nsRenderingContextMac::atsuiGetTextLayout()
+{ 
+	if( 0 != mChanges )
+	{		
+		ATSUTextLayout txLayout;
+		OSStatus err;
+		
+		nsFont *font;
+		nsFontHandle fontNum;
+		mGS->mFontMetrics->GetFont(font);
+		mGS->mFontMetrics->GetFontHandle(fontNum);
+		PRBool aBold = font->weight > NS_FONT_WEIGHT_NORMAL;
+		PRBool aItalic = (NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style);		
+		
+		if(! gTxLayoutCache->Get((short)fontNum, font->size, aBold, aItalic, mGS->mColor,  &txLayout) )
+		{
+			UniChar dmy[1];
+			err = ATSUCreateTextLayoutWithTextPtr (dmy, 0,0,0,0,NULL, NULL, &txLayout);
+
+	 		NS_ASSERTION(noErr == err, "ATSUCreateTextLayoutWithTextPtr failed");
+	 	
+			ATSUStyle				theStyle;
+			err = ATSUCreateStyle(&theStyle);
+	 		NS_ASSERTION(noErr == err, "ATSUCreateStyle failed");
+
+			ATSUAttributeTag 		theTag[3];
+			ByteCount				theValueSize[3];
+			ATSUAttributeValuePtr 	theValue[3];
+
+	 		//--- Font ID & Face -----		
+			ATSUFontID atsuFontID;
+			
+			err = ATSUFONDtoFontID((short)fontNum, (StyleField)((aBold ? bold : normal) | (aItalic ? italic : normal)), &atsuFontID);
+	 		NS_ASSERTION(noErr == err, "ATSUFONDtoFontID failed");
+
+			theTag[0] = kATSUFontTag;
+			theValueSize[0] = (ByteCount) sizeof(ATSUFontID);
+			theValue[0] = (ATSUAttributeValuePtr) &atsuFontID;
+	 		//--- Font ID & Face  -----		
+	 		
+	 		//--- Size -----		
+	 		float  dev2app;
+	 		short fontsize = font->size;
+
+			mContext->GetDevUnitsToAppUnits(dev2app);
+	 		Fixed size = FloatToFixed( roundf(float(fontsize) / dev2app));
+	 		if( FixRound ( size ) < 9 )
+	 			size = X2Fix(9);
+
+			theTag[1] = kATSUSizeTag;
+			theValueSize[1] = (ByteCount) sizeof(Fixed);
+			theValue[1] = (ATSUAttributeValuePtr) &size;
+	 		//--- Size -----		
+	 		
+	 		//--- Color -----		
+	 		RGBColor color;
+	 		
+			color.red = COLOR8TOCOLOR16(NS_GET_R(mGS->mColor));
+			color.green = COLOR8TOCOLOR16(NS_GET_G(mGS->mColor));
+			color.blue = COLOR8TOCOLOR16(NS_GET_B(mGS->mColor));				
+			theTag[2] = kATSUColorTag;
+			theValueSize[2] = (ByteCount) sizeof(RGBColor);
+			theValue[2] = (ATSUAttributeValuePtr) &color;
+	 		//--- Color -----		
+
+			err =  ATSUSetAttributes(theStyle, 3, theTag, theValueSize, theValue);
+	 		NS_ASSERTION(noErr == err, "ATSUSetAttributes failed");
+			 	
+	 		err = ATSUSetRunStyle(txLayout, theStyle, kATSUFromTextBeginning, kATSUToTextEnd);
+	 		NS_ASSERTION(noErr == err, "ATSUSetRunStyle failed");
+		
+		
+			err = ATSUSetTransientFontMatching(txLayout, true);
+	 		NS_ASSERTION(noErr == err, "ATSUSetTransientFontMatching failed");
+	 		
+	 		gTxLayoutCache->Set((short)fontNum, font->size, aBold, aItalic, mGS->mColor,  txLayout);	
+		} 		
+		mLastTextLayout = txLayout;
+		mChanges = 0;
+	}
+	return mLastTextLayout;
+}
+
+NS_IMETHODIMP nsRenderingContextMac :: atsuiGetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
+{
+  OSStatus err = noErr;
+  StartDraw();
+
+	// set native font and attributes
+  SetPortTextState();
+  
+  ATSUTextLayout aTxtLayout = atsuiGetTextLayout();
+  ATSUTextMeasurement iAfter; 
+  err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString, 0, aLength, aLength);
+  NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
+  err = ATSUMeasureText( aTxtLayout, 0, aLength, NULL, &iAfter, NULL, NULL );
+  NS_ASSERTION(noErr == err, "ATSUMeasureText failed");
+  
+  aWidth = NSToCoordRound(Fix2Long(FixMul(iAfter , X2Fix(mP2T))));      
+  EndDraw();
+
+  return NS_OK;
+}
+PRBool convertToMacRoman(const PRUnichar *aString, PRUint32 aLength, char* macroman, PRBool onlyAllowASCII);
+
+PRBool convertToMacRoman(const PRUnichar *aString, PRUint32 aLength, char* macroman, PRBool onlyAllowASCII)
+{
+
+	static char map[0x80] = {
+0x00, 0x00,  0x00, 0x00, 0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,
+0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,  0x00, 0x00,
+0xCA, 0xC1,  0xA2, 0xA3,  0x00, 0xB4,  0x00, 0xA4,  0xAC, 0xA9, 0xBB, 0xC7,  0xC2, 0xD0,  0xA8, 0xF8,
+0xA1, 0xB1,  0x00, 0x00,  0xAB, 0xB5,  0xA6, 0xE1,  0xFC, 0x00,  0xBC, 0xC8,  0x00, 0x00,  0x00, 0xC0,
+0xCB, 0xE7,  0xE5, 0xCC,  0x80, 0x81,  0xAE, 0x82, 0xE9, 0x83,  0xE6, 0xE8,  0xED, 0xEA,  0xEB, 0xEC,
+0x00, 0x84,  0xF1, 0xEE,  0xEF, 0xCD,  0x85, 0x78,  0xAF, 0xF4,  0xF2, 0xF3,  0x86, 0x00,  0x00, 0xA7,
+0x88, 0x87,  0x89, 0x8B,  0x8A, 0x8C,  0xBE, 0x8D,  0x8F, 0x8E,  0x90, 0x91,  0x93, 0x92,  0x94, 0x95,
+0x00, 0x96,  0x98, 0x97,  0x99, 0x9B,  0x9A, 0xD6,  0xBF, 0x9D,  0x9C, 0x9E,  0x9F, 0x00,  0x00, 0xD8
+	
+	};
+	const PRUnichar *u = aString;
+	char *c = macroman;
+	if(onlyAllowASCII)
+	{
+		for(PRUint32 i = 0 ; i < aLength ; i++) {
+			if( (*u) & 0xFF80 )
+				return PR_FALSE;
+			*c++ = *u++;
+		}
+	} else {
+		for(PRUint32 i = 0 ; i < aLength ; i++) {
+			if( (*u) & 0xFF80 ) {
+				if( (*u) & 0xFF00 ) 
+					return PR_FALSE;
+				char ch = map[(*u++) & 0x007F];
+				if(ch == 0)
+					return PR_FALSE;				
+				*c++ = ch;
+			} else {
+				*c++ = *u++;
+			}
+		}
+	}
+	return PR_TRUE;
+}
+
+NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID)
+{
+	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
+	nsresult res = NS_OK;
+	if(aLength< 500)
+	{
+		char buf[500];
+		if(convertToMacRoman(aString, aLength, buf, ! isMacRomanFont))
+		{
+			res = GetWidth(buf, aLength, aWidth);
+			return res;
+		}
+	} else {
+        char* buf = new char[aLength];
+		PRBool useQD = convertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
+		if(useQD)
+			res = GetWidth(buf, aLength, aWidth);
+		delete [] buf;
+		if(useQD)
+			return res;
+	}
+
+	if(gATSUI) {
+		return atsuiGetWidth(aString, aLength, aWidth, aFontID);	
+	}
+	else {
+		return qdGetWidth(aString, aLength, aWidth, aFontID);
+	}
 }
 
 
@@ -1590,20 +1838,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
   mGS->mTMatrix->TransformCoord(&x,&y);
 
 	::MoveTo(x,y);
-  char* macRomanString;
-  char stringBuffer[128];
-  if ( aLength < 128 )
-  {
-  	memcpy( stringBuffer, aString, aLength+1 );
-  	macRomanString = stringBuffer;
-  }
-  else
-  {
-  	macRomanString = strdup( aString );
-  }
-  ConvertLatin1ToMacRoman ( macRomanString );
   if ( aSpacing == NULL )
-		::DrawText(macRomanString,0,aLength);
+		::DrawText(aString,0,aLength);
   else
   {
 		int buffer[500];
@@ -1616,9 +1852,9 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		
 		mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);
 		PRInt32 currentX = x;
-		for ( PRInt32 i = 0; i<= aLength; i++ )
+		for ( PRInt32 i = 0; i< aLength; i++ )
 		{
-			::DrawChar( macRomanString[i] );
+			::DrawChar( aString[i] );
 			currentX += spacing[ i ];
 			::MoveTo( currentX, y );
 		}
@@ -1626,236 +1862,131 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		if ( (spacing != buffer))
 			delete [] spacing; 
   }
-  
-#if 0
-  //this is no longer to bew done here. another routine
-  //will take it's place with this functionality and this
-  //code will be needed there. MMP
-  if (mGS->mFontMetrics)
-	{
-		const nsFont* font;
-    mGS->mFontMetrics->GetFont(font);
-		PRUint8 deco = font->decorations;
 
-		if (deco & NS_FONT_DECORATION_OVERLINE)
-			DrawLine(aX, aY, aX + aWidth, aY);
-
-		if (deco & NS_FONT_DECORATION_UNDERLINE)
-		{
-			nscoord ascent = 0;
-			nscoord descent = 0;
-	  	mGS->mFontMetrics->GetMaxAscent(ascent);
-	  	mGS->mFontMetrics->GetMaxDescent(descent);
-
-			DrawLine(aX, aY + ascent + (descent >> 1),
-						aX + aWidth, aY + ascent + (descent >> 1));
-		}
-
-		if (deco & NS_FONT_DECORATION_LINE_THROUGH)
-		{
-			nscoord height = 0;
-	 		mGS->mFontMetrics->GetHeight(height);
-
-			DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
-		}
-	}
-#endif
-
-	if ( macRomanString != stringBuffer )
-		free( macRomanString );
-	EndDraw();
+  EndDraw();
   return NS_OK;
 }
 
+
+
 //------------------------------------------------------------------------
-// ATSUI Hack 
-// The following ATSUI hack should go away when we rework the Mac GFX
-// It is implement in a quick and dirty faction without change nsIRenderingContext
-// interface. The purpose is to use ATSUI in GFX so we can start Input Method work
-// before the real ATSUI GFX adoption get finish.
-//------------------------------------------------------------------------
-#ifdef USE_ATSUI_HACK
 
-#define FloatToFixed(a)		((Fixed)((float)(a) * fixed1))
-
-static OSErr AtsuSetFont(ATSUStyle theStyle, ATSUFontID theFontID)
+NS_IMETHODIMP nsRenderingContextMac :: qdDrawString(const PRUnichar *aString, PRUint32 aLength,
+                                         nscoord aX, nscoord aY, PRInt32 aFontID,
+                                         const nscoord* aSpacing)
 {
-	ATSUAttributeTag 		theTag;
-	ByteCount				theValueSize;
-	ATSUAttributeValuePtr 	theValue;
+	// XXX Unicode Broken!!!
+    // we should use TEC here to convert Unicode to different script run
+  	nsString nsStr;
+	nsStr.SetString(aString, aLength);
+	char* cStr = nsStr.ToNewCString();
 
-	theTag = kATSUFontTag;
-	theValueSize = (ByteCount) sizeof(ATSUFontID);
-	theValue = (ATSUAttributeValuePtr) &theFontID;
+	nsresult rv = DrawString(cStr, aLength, aX, aY, aSpacing);
 
-	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);	
+	delete[] cStr;
+	return rv;
 }
 
-
-static OSErr AtsuSetSize(ATSUStyle theStyle, Fixed size)
+NS_IMETHODIMP nsRenderingContextMac :: atsuiDrawString(const PRUnichar *aString, PRUint32 aLength,
+                                         nscoord aX, nscoord aY, PRInt32 aFontID,
+                                         const nscoord* aSpacing)
 {
-	ATSUAttributeTag 		theTag;
-	ByteCount				theValueSize;
-	ATSUAttributeValuePtr 	theValue;
+  OSStatus err = noErr;
+  
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+  if (mGS->mFontMetrics)
+  {
+		// set native font and attributes
+		SetPortTextState();
 
-	theTag = kATSUSizeTag;
-	theValueSize = (ByteCount) sizeof(Fixed);
-	theValue = (ATSUAttributeValuePtr) &size;
-
-	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
-}
-
-
-static OSErr AtsuSetColor(ATSUStyle theStyle, RGBColor color)
-{
-	ATSUAttributeTag 		theTag;
-	ByteCount				theValueSize;
-	ATSUAttributeValuePtr 	theValue;
-
-	theTag = kATSUColorTag;
-	theValueSize = (ByteCount) sizeof(RGBColor);
-	theValue = (ATSUAttributeValuePtr) &color;
-
-	return ATSUSetAttributes(theStyle, 1, &theTag, &theValueSize, &theValue);
-}
-
-
-static OSErr SetStyleSize (nsIFontMetrics& inFontMetrics, nsIDeviceContext* aContext, ATSUStyle theStyle)
-{
-	float  dev2app;
-	aContext->GetDevUnitsToAppUnits(dev2app);
-	nsFont		*aFont;
-	inFontMetrics.GetFont(aFont);
-	return AtsuSetSize(theStyle, FloatToFixed((float(aFont->size) / dev2app)));
-}
-
-
-static OSErr SetStyleColor(nscolor aColor, ATSUStyle theStyle)
-{
-	RGBColor	thecolor;
-	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
-	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
-	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));	
-	return AtsuSetColor(theStyle, thecolor);	
-}
-
-
-static OSErr SetStyleFont (nsIFontMetrics& inFontMetrics, nsIDeviceContext* aContext, ATSUStyle theStyle)
-{
-  TextStyle		textStyle;
-	nsFontMetricsMac::GetNativeTextStyle(inFontMetrics, *aContext, textStyle);
-
-	ATSUFontID atsuFontID ;
-	
-	OSErr	err = ATSUFONDtoFontID( textStyle.tsFont, textStyle.tsFace,  &atsuFontID);
-	if (noErr != err) 
-		return err;
-	return AtsuSetFont(theStyle, atsuFontID);
-}
-
-
-static OSErr SetATSUIFont(nsIFontMetrics& inFontMetrics, nscolor aColor, nsIDeviceContext* aContext, ATSUStyle theStyle)
-{
-	OSErr					err = 0;
-	err = SetStyleSize(inFontMetrics, aContext, theStyle);
-	if(noErr != err)
-		return err;
-	err = SetStyleFont(inFontMetrics, aContext, theStyle);
-	if(noErr != err)
-		return err;
-	return SetStyleColor(aColor, theStyle);	
-}
-
-
-static Boolean IsATSUIAvailable()
-{
-	static Boolean gInitialized = FALSE;
-	static Boolean gATSUIAvailable = FALSE;
-	if (! gInitialized)
-	{
-		long				version;
-		gATSUIAvailable = (::Gestalt(gestaltATSUVersion, &version) == noErr);
-		gInitialized = TRUE;
+		// substract ascent since drawing specifies baseline
+		nscoord ascent = 0;
+		mGS->mFontMetrics->GetMaxAscent(ascent);
+		y += ascent;
 	}
-	return gATSUIAvailable;
+  mGS->mTMatrix->TransformCoord(&x,&y);
+
+  ATSUTextLayout aTxtLayout = atsuiGetTextLayout();
+  if(NULL == aSpacing) 
+  {
+    err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString, 0, aLength, aLength);
+    NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
+  	err = ATSUDrawText( aTxtLayout, 0, aLength, Long2Fix(x), Long2Fix(y));
+    NS_ASSERTION(noErr == err, "ATSUMeasureText failed");
+  }
+  else
+  {
+    if(aLength < 500)
+    {
+     	int spacing[500];
+	  	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);  	
+	    for(PRInt32 i = 0; i < aLength; i++)
+	    {
+          err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString+i, 0, 1, 1);
+          NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
+	      err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
+	      NS_ASSERTION(noErr == err, "ATSUMeasureText failed");  	
+	      x += spacing[i];
+	    }
+	}
+    else
+    {
+      	int *spacing = new int[aLength];
+	    NS_ASSERTION(NULL != spacing, "memalloc failed");  	
+	  	mGS->mTMatrix->ScaleXCoords(aSpacing, aLength, spacing);  	
+	    for(PRInt32 i = 0; i < aLength; i++)
+	    {
+          err = ATSUSetTextPointerLocation( aTxtLayout, (ConstUniCharArrayPtr)aString+i, 0, 1, 1);
+          NS_ASSERTION(noErr == err, "ATSUSetTextPointerLocation failed");
+	      err = ATSUDrawText( aTxtLayout, 0, 1, Long2Fix(x), Long2Fix(y));
+	      NS_ASSERTION(noErr == err, "ATSUMeasureText failed");  	
+	      x += spacing[i];
+	    }
+      	delete spacing;
+    }
+
+  }
+  return NS_OK;
+
 }
-#endif //USE_ATSUI_HACK
-
-
-//------------------------------------------------------------------------
-
 NS_IMETHODIMP nsRenderingContextMac :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
                                          const nscoord* aSpacing)
 {
-#ifdef USE_ATSUI_HACK
-   if (IsATSUIAvailable())
-   { 
 
-			StartDraw();
-
-			PRInt32 x = aX;
-			PRInt32 y = aY;
-			ATSUTextLayout 	txLayout = nil;
-			ATSUStyle				theStyle;
-			OSErr						err;
-			
-			err = ATSUCreateStyle(&theStyle);
-			NS_ASSERTION((noErr == err), "ATSUCreateStyle failed");
-
-		  if (mGS->mFontMetrics)
-		  {
-				// set native font and attributes
-		    nsFont *font;
-		    mGS->mFontMetrics->GetFont(font);
-				//nsFontMetricsMac::SetFont(*font, mContext);	// this is unnecessary
-
-				// substract ascent since drawing specifies baseline
-				nscoord ascent = 0;
-				mGS->mFontMetrics->GetMaxAscent(ascent);
-				y += ascent;
-
-		    err = SetATSUIFont(*mGS->mFontMetrics, mGS->mColor, mContext, theStyle);
-	  		NS_ASSERTION((noErr == err), "setATSUIFont failed");
-				
-			}
-
-	  mGS->mTMatrix->TransformCoord(&x,&y);
-
-
-		UniCharCount			runLengths = aLength;
-	  err = ATSUCreateTextLayoutWithTextPtr(	(ConstUniCharArrayPtr)aString, 0, aLength, aLength,
-												1, &runLengths, &theStyle,
-												&txLayout);
-
-		NS_ASSERTION((noErr == err), "ATSUCreateTextLayoutWithTextPtr failed");
-		err = ATSUSetTransientFontMatching(txLayout, true);
-		NS_ASSERTION((noErr == err), "ATSUSetTransientFontMatching failed");
-
-		err = ATSUDrawText( txLayout, 0, aLength, Long2Fix(x), Long2Fix(y) );	
-		NS_ASSERTION((noErr == err), "ATSUDrawText failed");
-		err =   ATSUDisposeTextLayout(txLayout);
-		NS_ASSERTION((noErr == err), "ATSUDisposeTextLayout failed");
-		err =   ATSUDisposeStyle(theStyle);
-		NS_ASSERTION((noErr == err), "ATSUDisposeStyle failed");
-
-		EndDraw();
- 	 	return NS_OK;
-	}
-	else
-#endif //USE_ATSUI_HACK
+	// First, let's try to convert to MacRoman and draw by Quick Draw
+		
+	PRBool isMacRomanFont = PR_TRUE; // XXX we need to set up this value latter.
+	nsresult res = NS_OK;
+	if(aLength < 500)
 	{
-		nsString nsStr;
-		nsStr.SetString(aString, aLength);
-		char* cStr = nsStr.ToNewCString();
-
-		nsresult rv = DrawString(cStr, aLength, aX, aY, aSpacing);
-
-		delete[] cStr;
-		return rv;
+		char buf[500];
+		if(convertToMacRoman(aString, aLength, buf, ! isMacRomanFont))
+		{
+			res = DrawString(buf, aLength, aX, aY, aSpacing);
+			return res;
+		}
+	} else {
+        char* buf = new char[aLength ];
+		PRBool useQD = convertToMacRoman(aString, aLength, buf, ! isMacRomanFont);
+		if(useQD)
+			res = DrawString(buf, aLength, aX, aY, aSpacing);
+		delete [] buf;
+		if(useQD)
+			return res;
 	}
-}
 
+	// The data cannot be convert to MacRoman, let's draw by using ATSUI if available
+	
+	if(gATSUI) {
+		return atsuiDrawString(aString, aLength, aX, aY, aFontID, aSpacing);	
+	}
+	else {
+		return qdDrawString(aString, aLength, aX, aY, aFontID, aSpacing);
+	}
+	
+}
 
 //------------------------------------------------------------------------
 
@@ -1866,6 +1997,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const nsString& aString,
  	nsresult rv = DrawString(aString.GetUnicode(), aString.Length(), aX, aY, aFontID, aSpacing);
 	return rv;
 }
+
+
 
 
 #pragma mark -
