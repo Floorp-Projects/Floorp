@@ -304,7 +304,7 @@ nsLocalFile::MakeDirty()
 nsresult 
 nsLocalFile::ResolvePath(const char* workingPath, PRBool resolveTerminal, char** resolvedPath)
 {
-#ifdef DOUGT_debug
+#ifdef DEBUG_dougt
     printf("localfile - resolving symlink\n");
 #endif
 
