@@ -141,12 +141,14 @@ DSLoadObserver.prototype =
   onError: function(aSink, aStatus, aErrorMsg) 
   { 
     this.mListener.onError(aStatus, aErrorMsg);
+    aSink.removeXMLSinkObserver(this);
   },
   
   onEndLoad: function(aSink) 
   { 
     var ds = XPCU.QI(aSink, "nsIRDFDataSource");
     this.mListener.onDataSourceReady(ds);
-	}
-  
+    aSink.removeXMLSinkObserver(this);
+  }
+    
 };
