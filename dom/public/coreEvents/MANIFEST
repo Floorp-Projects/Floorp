@@ -21,4 +21,6 @@ nsIDOMTextListener.h
 nsIDOMCompositionListener.h
 nsIDOMTextRange.h
 nsIDOMTextRangeList.h
+nsIDOMMenuListener.h
+
 
