@@ -72,6 +72,13 @@
 *                            dayBoxItemByDateArray[0]  === dayBoxItemArray[3] and 
 *                            dayBoxItemByDateArray[29] === dayBoxItemArray[36]
 *
+*   firstDateOfView        - A date equal to the date of the first box of the View (the date of 
+*                            dayBoxItemArray[0])
+*
+*   lastDateOfView        - A date equal to the date of the last box of the View (the date of 
+*                            dayBoxItemArray[41])
+*
+*
 *    kungFooDeathGripOnEventBoxes - This is to keep the event box javascript objects around so when we get 
 *                                   them back they still have the calendar event property on them.
 * 
@@ -171,6 +178,9 @@ function MonthView( calendarWindow )
    this.dayBoxItemArray = new Array();
    this.kungFooDeathGripOnEventBoxes = new Array();
    this.dayBoxItemByDateArray = new Array();
+   this.firstDateOfView = new Date();
+   this.lastDateOfView = new Date();
+
    
    var dayItemIndex = 0;
    
@@ -651,10 +661,6 @@ MonthView.prototype.clearSelectedBoxes = function monthView_clearSelectedBoxes( 
 
 MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
 {
-   var Month = this.calendarWindow.getSelectedDate().getMonth();
-   
-   var Year = this.calendarWindow.getSelectedDate().getFullYear();
-
    // Clear the old selection if there was one
    var TodayBox = document.getElementsByAttribute( "today", "true" );
    
@@ -665,9 +671,11 @@ MonthView.prototype.hiliteTodaysDate = function monthView_hiliteTodaysDate( )
 
    //highlight today.
    var Today = new Date( );
-   if ( Year == Today.getFullYear() && Month == Today.getMonth() ) 
+   var todayInView = Math.floor( (Today - this.firstDateOfView ) / (1000 * 60 * 60 * 24) ) ;
+
+   if ( todayInView >= 0 && todayInView < 42 ) 
    {
-      var ThisBox = this.dayBoxItemByDateArray[ Today.getDate() ];
+     var ThisBox = this.dayBoxItemArray[ todayInView ];
       if( ThisBox )
          ThisBox.setAttribute( "today", "true" );
    }
