@@ -2178,6 +2178,18 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
    return InitWithPath(aPersistentDescriptor);   
 }
 
+NS_IMETHODIMP
+nsLocalFile::Reveal()
+{
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP
+nsLocalFile::Launch()
+{
+  return NS_ERROR_FAILURE;
+}
 
 nsresult 
 NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)

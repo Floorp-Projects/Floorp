@@ -44,6 +44,7 @@
 #include  <stdlib.h>
 #include  <mbstring.h>
 
+#include "nsXPIDLString.h"
 #include "prproces.h"
 
 // certainly not all the error that can be 
@@ -1911,6 +1912,53 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
    return InitWithPath(aPersistentDescriptor);   
 }
 
+NS_IMETHODIMP
+nsLocalFile::Reveal()
+{
+  nsresult rv = NS_OK;
+  PRBool isDirectory = PR_FALSE;
+  nsXPIDLCString path;
+
+  IsDirectory(&isDirectory);
+  if (isDirectory)
+  {
+    GetPath(getter_Copies(path));  
+  }
+  else
+  {
+    nsCOMPtr<nsIFile> parent;
+    GetParent(getter_AddRefs(parent));
+    if (parent)
+      parent->GetPath(getter_Copies(path));  
+  }
+
+  // use the app registry name to launch a shell execute....
+  LONG r = (LONG) ::ShellExecute( NULL, "explore", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+  if (r < 32) 
+    rv = NS_ERROR_FAILURE;
+	else
+		rv = NS_OK;
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsLocalFile::Launch()
+{
+  nsresult rv = NS_OK;
+  nsXPIDLCString path;
+  GetPath(getter_Copies(path));
+
+  // use the app registry name to launch a shell execute....
+  LONG r = (LONG) ::ShellExecute( NULL, "open", (const char *) path, NULL, NULL, SW_SHOWNORMAL);
+  if (r < 32) 
+    rv = NS_ERROR_FAILURE;
+	else
+		rv = NS_OK;
+
+  return rv;
+}
 
 nsresult 
 NS_NewLocalFile(const char* path, PRBool followLinks, nsILocalFile* *result)
