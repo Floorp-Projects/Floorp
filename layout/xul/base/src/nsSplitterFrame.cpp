@@ -444,8 +444,7 @@ nsSplitterFrame::HandleRelease(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                             const nsPoint& aPoint, 
+NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                              nsFramePaintLayer aWhichLayer,    
                                              nsIFrame**     aFrame)
 {   
@@ -457,7 +456,7 @@ NS_IMETHODIMP  nsSplitterFrame::GetFrameForPoint(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  nsresult rv = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  nsresult rv = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
 
   if (NS_FAILED(rv) &&
       aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND &&

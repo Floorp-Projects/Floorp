@@ -208,8 +208,7 @@ public:
                                  nsIContent** aContent);
   NS_IMETHOD  GetCursor(const nsPoint&    aPoint,
                         nsIFrame::Cursor& aCursor);
-  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint, 
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame);
 
@@ -242,7 +241,7 @@ public:
   virtual nsIFrame* GetNextInFlow() const;
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  GetOffsetFromView(nsPoint& aOffset, nsIView** aView) const;
-  NS_IMETHOD  GetOriginToViewOffset(nsPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
+  NS_IMETHOD  GetOriginToViewOffset(nsPoint& aOffset, nsIView **aView) const;
   virtual nsIAtom* GetType() const;
   virtual PRBool IsContainingBlock() const;
 #ifdef NS_DEBUG

@@ -341,12 +341,11 @@ nsMenuFrame::Destroy(nsPresContext* aPresContext)
 
 // Called to prevent events from going to anything inside the menu.
 NS_IMETHODIMP
-nsMenuFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+nsMenuFrame::GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame)
 {
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
   if (NS_FAILED(result) || *aFrame == this) {
     return result;
   }

@@ -103,13 +103,12 @@ nsTitleBarFrame::GetMouseThrough(PRBool& aMouseThrough)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTitleBarFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                    const nsPoint& aPoint, 
+NS_IMETHODIMP nsTitleBarFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                     nsFramePaintLayer aWhichLayer,
                                     nsIFrame**     aFrame)
 {
   // override, since we don't want children to get events
-  return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
 }
 
 

@@ -58,8 +58,7 @@ public:
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Overridden to capture events.
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 

@@ -134,8 +134,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
@@ -842,8 +841,7 @@ nsHTMLFramesetFrame::GetCursor(const nsPoint&    aPoint,
 }
 
 NS_IMETHODIMP 
-nsHTMLFramesetFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                      const nsPoint& aPoint, 
+nsHTMLFramesetFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                       nsFramePaintLayer aWhichLayer,
                                       nsIFrame**     aFrame)
 {
@@ -852,7 +850,7 @@ nsHTMLFramesetFrame::GetFrameForPoint(nsPresContext* aPresContext,
     *aFrame = this;
     return NS_OK;
   } else {
-    return nsContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+    return nsContainerFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
   }
 }
 
@@ -1762,8 +1760,7 @@ nsHTMLFramesetBorderFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP 
-nsHTMLFramesetBorderFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                            const nsPoint& aPoint, 
+nsHTMLFramesetBorderFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                             nsFramePaintLayer aWhichLayer,
                                             nsIFrame**     aFrame)
 {

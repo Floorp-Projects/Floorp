@@ -1167,7 +1167,7 @@ nsMenuPopupFrame::SyncViewWithFrame(nsPresContext* aPresContext,
   // Now that we've positioned the view, sync up the frame's origin.
   nsPoint frameOrigin = GetPosition();
   nsPoint offsetToView;
-  GetOriginToViewOffset(aPresContext, offsetToView, nsnull);
+  GetOriginToViewOffset(offsetToView, nsnull);
   frameOrigin -= offsetToView;
   nsBoxFrame::SetPosition(frameOrigin);
 
@@ -2049,12 +2049,11 @@ nsMenuPopupFrame::Destroy(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint,
+nsMenuPopupFrame::GetFrameForPoint(const nsPoint& aPoint,
                                    nsFramePaintLayer aWhichLayer,    
                                    nsIFrame** aFrame)
 {
-  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
 }
 
 

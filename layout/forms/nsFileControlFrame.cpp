@@ -567,8 +567,7 @@ nsFileControlFrame::AttributeChanged(nsIContent*     aChild,
 }
 
 NS_IMETHODIMP
-nsFileControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                     const nsPoint& aPoint,
+nsFileControlFrame::GetFrameForPoint(const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
@@ -579,7 +578,7 @@ nsFileControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
       return NS_OK;
     }
   } else {
-    return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+    return nsAreaFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
   }
 #endif
   return NS_ERROR_FAILURE;

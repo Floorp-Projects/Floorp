@@ -241,8 +241,7 @@ nsDeckFrame::Paint(nsPresContext*      aPresContext,
 
 
 NS_IMETHODIMP
-nsDeckFrame::GetFrameForPoint(nsPresContext*   aPresContext,
-                              const nsPoint&    aPoint, 
+nsDeckFrame::GetFrameForPoint(const nsPoint&    aPoint, 
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**        aFrame)
 {
@@ -256,8 +255,7 @@ nsDeckFrame::GetFrameForPoint(nsPresContext*   aPresContext,
   if (selectedBox) {
     nsPoint tmp(aPoint.x - mRect.x, aPoint.y - mRect.y);
 
-    if (NS_SUCCEEDED(selectedBox->GetFrameForPoint(aPresContext, tmp,
-                                                   aWhichLayer, aFrame)))
+    if (NS_SUCCEEDED(selectedBox->GetFrameForPoint(tmp, aWhichLayer, aFrame)))
       return NS_OK;
   }
     

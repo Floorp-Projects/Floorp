@@ -5704,21 +5704,21 @@ PresShell::HandleEvent(nsIView         *aView,
 
       nsPoint originOffset;
       nsIView *view = nsnull;
-      frame->GetOriginToViewOffset(mPresContext, originOffset, &view);
+      frame->GetOriginToViewOffset(originOffset, &view);
 
       NS_ASSERTION(view == aView, "view != aView");
       if (view == aView)
         eventPoint -= originOffset;
 
-      rv = frame->GetFrameForPoint(mPresContext, eventPoint,
+      rv = frame->GetFrameForPoint(eventPoint,
                                    NS_FRAME_PAINT_LAYER_FOREGROUND,
                                    &mCurrentEventFrame);
       if (NS_FAILED(rv)) {
-        rv = frame->GetFrameForPoint(mPresContext, eventPoint,
+        rv = frame->GetFrameForPoint(eventPoint,
                                      NS_FRAME_PAINT_LAYER_FLOATS,
                                      &mCurrentEventFrame);
         if (NS_FAILED(rv)) {
-          rv = frame->GetFrameForPoint(mPresContext, eventPoint,
+          rv = frame->GetFrameForPoint(eventPoint,
                                        NS_FRAME_PAINT_LAYER_BACKGROUND,
                                        &mCurrentEventFrame);
           if (NS_FAILED (rv)) {

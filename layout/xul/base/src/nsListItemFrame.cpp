@@ -80,15 +80,14 @@ nsListItemFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 }
 
 NS_IMETHODIMP
-nsListItemFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                     const nsPoint& aPoint, 
+nsListItemFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
 {
   nsAutoString value;
   mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::allowevents, value);
   if (value.EqualsLiteral("true")) {
-    return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+    return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
   }
   else if (mRect.Contains(aPoint)) {
     if (GetStyleVisibility()->IsVisible()) {

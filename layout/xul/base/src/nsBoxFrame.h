@@ -123,8 +123,7 @@ public:
 
   // ----- public methods -------
   
-  NS_IMETHOD GetFrameForPoint(nsPresContext*   aPresContext,
-                              const nsPoint&    aPoint,
+  NS_IMETHOD GetFrameForPoint(const nsPoint&    aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**        aFrame);
 
@@ -258,8 +257,7 @@ protected:
     nsresult RegUnregAccessKey(nsPresContext* aPresContext,
                                PRBool aDoReg);
     void FireDOMEvent(nsPresContext *aPresContext, const nsAString& aDOMEventName);
-    virtual nsresult GetFrameForPointChild(nsPresContext*   aPresContext,
-                                           const nsPoint&    aPoint,
+    virtual nsresult GetFrameForPointChild(const nsPoint&    aPoint,
                                            nsFramePaintLayer aWhichLayer,    
                                            nsIFrame*         aChild,
                                            PRBool            aCheckMouseThrough,

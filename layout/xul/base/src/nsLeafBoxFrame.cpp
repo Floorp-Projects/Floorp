@@ -185,8 +185,7 @@ nsLeafBoxFrame::GetMouseThrough(PRBool& aMouseThrough)
 }
 
 NS_IMETHODIMP  
-nsLeafBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                             const nsPoint& aPoint, 
+nsLeafBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**     aFrame)
 {   

@@ -6386,14 +6386,14 @@ nsLineBox* nsBlockFrame::GetFirstLineContaining(nscoord y) {
 
 static inline void
 GetFrameFromLine(const nsRect& aLineArea, const nsPoint& aTmp,
-                 nsBlockFrame::line_iterator& aLine, nsPresContext* aPresContext,
+                 nsBlockFrame::line_iterator& aLine,
                  nsFramePaintLayer aWhichLayer, nsIFrame** aFrame) {
   if (aLineArea.Contains(aTmp)) {
     nsIFrame* kid = aLine->mFirstChild;
     PRInt32 n = aLine->GetChildCount();
     while (--n >= 0) {
       nsIFrame *hit;
-      nsresult rv = kid->GetFrameForPoint(aPresContext, aTmp, aWhichLayer, &hit);
+      nsresult rv = kid->GetFrameForPoint(aTmp, aWhichLayer, &hit);
       
       if (NS_SUCCEEDED(rv) && hit) {
         *aFrame = hit;
@@ -6406,16 +6406,15 @@ GetFrameFromLine(const nsRect& aLineArea, const nsPoint& aTmp,
 // Optimized function that uses line combined areas to skip lines
 // we know can't contain the point
 nsresult
-nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
-                                    const nsPoint& aPoint,
+nsBlockFrame::GetFrameForPointUsing(const nsPoint& aPoint,
                                     nsIAtom*       aList,
                                     nsFramePaintLayer aWhichLayer,
                                     PRBool         aConsiderSelf,
                                     nsIFrame**     aFrame)
 {
   if (aList) {
-    return nsContainerFrame::GetFrameForPointUsing(aPresContext,
-      aPoint, aList, aWhichLayer, aConsiderSelf, aFrame);
+    return nsContainerFrame::GetFrameForPointUsing(aPoint,
+      aList, aWhichLayer, aConsiderSelf, aFrame);
   }
 
   PRBool inThisFrame = mRect.Contains(aPoint);
@@ -6429,7 +6428,7 @@ nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
 
   nsPoint originOffset;
   nsIView *view = nsnull;
-  nsresult rv = GetOriginToViewOffset(aPresContext, originOffset, &view);
+  nsresult rv = GetOriginToViewOffset(originOffset, &view);
 
   if (NS_SUCCEEDED(rv) && view)
     tmp += originOffset;
@@ -6449,7 +6448,7 @@ nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
         if (lineArea.y > tmp.y) {
           break;
         }
-        GetFrameFromLine(lineArea, tmp, line, aPresContext, aWhichLayer, aFrame);
+        GetFrameFromLine(lineArea, tmp, line, aWhichLayer, aFrame);
       }
     }
   } else {
@@ -6469,7 +6468,7 @@ nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
         lastY = lineArea.y;
         lastYMost = lineArea.YMost();
 
-        GetFrameFromLine(lineArea, tmp, line, aPresContext, aWhichLayer, aFrame);
+        GetFrameFromLine(lineArea, tmp, line, aWhichLayer, aFrame);
       }
       lineCount++;
     }
@@ -6494,8 +6493,7 @@ nsBlockFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint,
+nsBlockFrame::GetFrameForPoint(const nsPoint& aPoint,
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame** aFrame)
 {
@@ -6503,12 +6501,16 @@ nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
 
   switch (aWhichLayer) {
     case NS_FRAME_PAINT_LAYER_FOREGROUND:
-      rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+      rv = GetFrameForPointUsing(aPoint, nsnull,
+                                 NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE,
+                                 aFrame);
       if (NS_OK == rv) {
         return NS_OK;
       }
       if (nsnull != mBullet) {
-        rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::bulletList, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+        rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::bulletList,
+                                   NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE,
+                                   aFrame);
       }
       return rv;
       break;
@@ -6516,16 +6518,16 @@ nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
     case NS_FRAME_PAINT_LAYER_FLOATS:
       // we painted our floats before our children, and thus
       // we should check floats within children first
-      rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FLOATS, PR_FALSE, aFrame);
+      rv = GetFrameForPointUsing(aPoint, nsnull,
+                                 NS_FRAME_PAINT_LAYER_FLOATS, PR_FALSE,
+                                 aFrame);
       if (NS_OK == rv) {
         return NS_OK;
       }
       if (mFloats.NotEmpty()) {
-
-        return GetFrameForPointUsing(aPresContext, aPoint,
-                                     nsLayoutAtoms::floatList,
-                                     NS_FRAME_PAINT_LAYER_ALL,
-                                     PR_FALSE, aFrame);
+        return GetFrameForPointUsing(aPoint, nsLayoutAtoms::floatList,
+                                     NS_FRAME_PAINT_LAYER_ALL, PR_FALSE,
+                                     aFrame);
       } else {
         return NS_ERROR_FAILURE;
       }
@@ -6533,9 +6535,9 @@ nsBlockFrame::GetFrameForPoint(nsPresContext* aPresContext,
 
     case NS_FRAME_PAINT_LAYER_BACKGROUND:
       // we're a block, so PR_TRUE for consider self
-      return GetFrameForPointUsing(aPresContext, aPoint, nsnull,
-                                   NS_FRAME_PAINT_LAYER_BACKGROUND,
-                                   PR_TRUE, aFrame);
+      return GetFrameForPointUsing(aPoint, nsnull,
+                                   NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE,
+                                   aFrame);
       break;
   }
   // we shouldn't get here

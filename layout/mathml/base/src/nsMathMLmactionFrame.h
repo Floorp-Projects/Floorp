@@ -73,8 +73,7 @@ public:
                       nsIFrame*       aChildList);
 
   NS_IMETHOD
-  GetFrameForPoint(nsPresContext*   aPresContext,
-                   const nsPoint&    aPoint,
+  GetFrameForPoint(const nsPoint&    aPoint,
                    nsFramePaintLayer aWhichLayer,
                    nsIFrame**        aFrame);
 

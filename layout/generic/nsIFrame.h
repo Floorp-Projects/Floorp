@@ -769,8 +769,7 @@ public:
    * recieve the events.  A successful return value indicates that a
    * point was found.
    */
-  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint, 
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame) = 0;
   
@@ -1029,8 +1028,7 @@ public:
    * aView is optional, that is, you may pass null if you are not interested
    * in getting a pointer to the view.
    */
-  NS_IMETHOD  GetOriginToViewOffset(nsPresContext* aPresContext,
-                                    nsPoint&        aOffset,
+  NS_IMETHOD  GetOriginToViewOffset(nsPoint&        aOffset,
                                     nsIView**       aView) const = 0;
 
   /**

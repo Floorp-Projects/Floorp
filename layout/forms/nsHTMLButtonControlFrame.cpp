@@ -285,8 +285,7 @@ nsHTMLButtonControlFrame::HandleEvent(nsPresContext* aPresContext,
 
 
 NS_IMETHODIMP
-nsHTMLButtonControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                           const nsPoint& aPoint,
+nsHTMLButtonControlFrame::GetFrameForPoint(const nsPoint& aPoint,
                                            nsFramePaintLayer aWhichLayer,
                                            nsIFrame** aFrame)
 {
