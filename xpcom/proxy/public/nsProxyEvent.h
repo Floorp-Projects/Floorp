@@ -168,10 +168,8 @@ private:
     PLEvent         *mEvent;                     /* the current plevent */       
     PRInt32          mCompleted;                 /* is true when the method has been called. */
        
-    nsIEventQueue*   mCallersEventQ;             /* this is the eventQ that we must post a message back to 
+    nsCOMPtr<nsIEventQueue>  mCallersEventQ;     /* this is the eventQ that we must post a message back to 
                                                     when we are done invoking the method (only PROXY_SYNC). 
-                                                    this does not need to be a comptr because it will be 
-                                                    released by the created in PostAndWait()
                                                   */
 
     nsCOMPtr<nsProxyObject>   mOwner;            /* this is the strong referenced nsProxyObject */
