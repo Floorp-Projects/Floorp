@@ -65,6 +65,8 @@
 #include "nsImageInspectorDialog.h"
 #include "nsITextWidget.h"
 
+#include "nsIPrintSettings.h"
+
 class nsILabel;
 class nsICheckButton;
 class nsIButton;
@@ -276,6 +278,8 @@ protected:
 
   nsWebBrowserChrome*   mWebBrowserChrome;
   PRBool mHaveMenuBar;
+
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 // XXX This is bad; because we can't hang a closure off of the event
