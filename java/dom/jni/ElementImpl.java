@@ -68,4 +68,12 @@ public class ElementImpl extends NodeImpl implements Element {
         throw new UnsupportedOperationException();
     }
 
+    public boolean hasAttribute(String name) {
+        throw new UnsupportedOperationException();
+    }
+
+    public boolean hasAttributeNS(String namespaceURI, 
+                                  String localName) {
+        throw new UnsupportedOperationException();
+    }
 }
