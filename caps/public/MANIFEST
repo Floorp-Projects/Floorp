@@ -3,5 +3,4 @@ nsICertPrincipal.h
 nsICodebasePrincipal.h
 nsICodeSourcePrincipal.h
 nsCapsPublicEnums.h
-nsICapsSecurityCallbacks.h
-nsICapsSecurityCallbacks.h
+
