@@ -91,10 +91,11 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
     iAmRunning = PR_TRUE;
 
     threadHandle = PR_CreateThread(PR_USER_THREAD, nsKeygenThreadRunner, NS_STATIC_CAST(void*, this), 
-      PR_PRIORITY_LOW, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
+      PR_PRIORITY_NORMAL, PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
 
     // bool thread_started_ok = (threadHandle != nsnull);
     // we might want to return "thread started ok" to caller in the future
+    NS_ASSERTION(threadHandle, "Could not create nsKeygenThreadRunner thread\n");
 
   PR_Unlock(mutex);
   
