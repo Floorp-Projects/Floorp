@@ -724,6 +724,12 @@ extern JSD_PUBLIC_API(JSDStackFrameInfo*)
 JSD_GetStackFrame(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
 
 /*
+* Get the JSContext for the given JSDThreadState
+*/
+extern JSD_PUBLIC_API(JSContext*)
+JSD_GetJSContext(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
+
+/*
 * Get the calling call stack frame for the given frame
 */
 extern JSD_PUBLIC_API(JSDStackFrameInfo*)

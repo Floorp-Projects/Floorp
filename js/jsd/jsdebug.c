@@ -550,6 +550,13 @@ JSD_GetStackFrame(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
     return jsd_GetStackFrame(jsdc, jsdthreadstate);
 }
 
+JSD_PUBLIC_API(JSContext*)
+JSD_GetJSContext(JSDContext* jsdc, JSDThreadState* jsdthreadstate)
+{
+    JSD_ASSERT_VALID_CONTEXT(jsdc);
+    return jsd_GetJSContext(jsdc, jsdthreadstate);
+}
+
 JSD_PUBLIC_API(JSDStackFrameInfo*)
 JSD_GetCallingStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,

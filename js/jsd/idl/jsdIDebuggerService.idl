@@ -53,7 +53,9 @@ native jsuword(jsuword);
 
 /* interfaces we declare in this file */
 interface jsdIDebuggerService;
+interface jsdIFilter;
 interface jsdINestCallback;
+interface jsdIFilterEnumerator;
 interface jsdIScriptEnumerator;
 interface jsdIScriptHook;
 interface jsdIExecutionHook;
@@ -107,6 +109,12 @@ interface jsdIDebuggerService : nsISupports
     attribute jsdICallHook functionHook;
 
     /**
+     * |true| if the debugger should register an app-start observer in order
+     * to begin collecting debug information when mozilla is launched.
+     */
+    attribute boolean initAtStartup;
+
+    /**
      * |true| if the debugger service has been turned on.  This does not
      * necessarily mean another app is actively using the service, as the 
      * autostart pref may have turned the service on.
@@ -135,22 +143,86 @@ interface jsdIDebuggerService : nsISupports
     void off ();
 
     /**
+     * Temporarily disable the debugger.  Hooks will not be called while the
+     * debugger is paused.  Multiple calls to pause will increase the "pause
+     * depth", and equal number of unPause calles must be made to resume
+     * normal debugging.
+     *
+     * @return depth Number of times pause has been called since the debugger
+     *               has been unpaused.
+     */
+    unsigned long pause();
+    /**
+     * Undo a pause.
+     *
+     * @return depth The number of remaining pending pause calls.
+     */
+    unsigned long unPause();
+    
+    /**
      * Force the engine to perform garbage collection.
      */
     void GC();
+
     /**
-     * Ignore/unignore execution hooks which are triggered by a context with a
-     * particular global object.
+     * Adds an execution hook filter.  These filters are consulted each time one
+     * of the jsdIExecutionHooks is about to be called.  Filters are matched in
+     * a first in, first compared fashion.  The first filter to match determines
+     * whether or not the hook is called.  Use swapFilter to reorder existing
+     * filters, and removeFilter to remove them.
      *
-     * @param glob Global object to ignore/unignore.  For the typical Mozilla
-     *             context, global objects are DOM windows.
+     * If |filter| is already present this method throws NS_ERROR_INVALID_ARG.
      *
-     * @param state |true| to ignore this global object, |false| to unignore.
-     *              If state is |false| and the the glob passed in is not
-     *              currently ignored, this method will throw an
-     *              NS_ERROR_INVALID_PARAM exception.
+     * @param filter Object representing the filter to add.
+     * @param after  Insert |filter| after this one.  Pass null to insert at
+     *               the beginning.
      */
-    //void filterGlobalObject (in nsISupports glob, in boolean state);
+    void insertFilter (in jsdIFilter filter, in jsdIFilter after);
+    /**
+     * Same as insertFilter, except always add to the end of the list.
+     */
+    void appendFilter (in jsdIFilter filter);
+    /**
+     * Unignore execution hooks which are triggered by a jsdIScript matching
+     * particular filter.
+     *
+     * If |filter| is not present this method throws NS_ERROR_INVALID_ARG.
+     *
+     * @param filter Object representing the filter to remove.  Must be the exact
+     * object passed to addFilter, not just a new object with the same
+     * properties.
+     */
+    void removeFilter (in jsdIFilter filter);
+    /**
+     * Swaps the positions of the filters passed in.
+     * 
+     * If |filter_a| is not present, this method throws NS_ERROR_INVALID_ARG.
+     * If |filter_b| is not present, filter_a is replaced by filter_b.
+     * If |filter_a| == |filter_b|, then the glob and urlPattern properties of
+     * the filter are reread.
+     */
+    void swapFilters (in jsdIFilter filter_a, in jsdIFilter filter_b);
+    /**
+     * Enumerate all active filters.  This routine refreshes each filter before
+     * passing them on to the enumeration function.  Calling this with a null
+     * |enumerator| is equivilant to jsdIService::refreshFilters.
+     *
+     * @param enumerator jsdIFilterEnumerator instance to be called back for the
+     *                   enumeration.
+     */
+    void enumerateFilters (in jsdIFilterEnumerator enumerator);
+    /**
+     * Force the debugger to resync its internal filter cache with the
+     * actual values in the jsdIFilter objects.  To refresh a single filter,
+     * see jsdIService::swapFilters.  This method is equivilant to
+     * jsdIService::enumerateFilters with a null enumerator.
+     */
+    void refreshFilters ();
+    /**
+     * Causes the debugger service to clear its list of filters.
+     */
+    void clearFilters();
+
     /**
      * Enumerate all scripts the debugger knows about.  Any scripts created
      * before you turned the debugger on, or after turning the debugger off
@@ -165,15 +237,96 @@ interface jsdIDebuggerService : nsISupports
      */
     void clearAllBreakpoints ();
     
+    /* XXX these two routines are candidates for refactoring.  The only problem
+     * is that it is not clear where and how they should land.
+     */
+
     /**
-     * XXX temporary hacks
-     * These routines are used to nest and unnest UI and network event loops.
+     * Push a new network queue, and enter a new UI event loop.
+     * @param callback jsdINestCallback instance to be called back after the
+     *                 network queue has been pushed, but before the
+     *                 UI loop starts.
+     * @return depth returns the current number of times the event loop has been
+     *               nested.  your code can use it for sanity checks.
      */
     unsigned long enterNestedEventLoop (in jsdINestCallback callback);
+    /**
+     * Exit the current nested event loop after the current iteration completes,
+     * and pop the network event queue.
+     *
+     * @return depth returns the current number of times the event loop has been
+     *               nested.  your code can use it for sanity checks.
+     */
     unsigned long exitNestedEventLoop ();
 };
 
 /* callback interfaces */
+
+/**
+ * Object representing a pattern of global object and/or url the debugger should
+ * ignore.  The debugger service itself will not modify properties of these
+ * objects.
+ */
+[scriptable, uuid(05593438-1b83-4517-864f-3cea3d37a266)]
+interface jsdIFilter : nsISupports
+{
+    /**
+     * These two bytes of the flags attribute are reserved for interpretation
+     * by the jsdService implementation.  You can do what you like with the
+     * remaining flags.
+     */
+    const unsigned long FLAG_RESERVED_MASK = 0xFF;
+    /**
+     * Filters without this flag set are ignored.
+     */
+    const unsigned long FLAG_ENABLED       = 0x01;
+    /**
+     * Filters with this flag set are "pass" filters, they allow matching hooks
+     * to continue.  Filters without this flag block matching hooks.
+     */
+    const unsigned long FLAG_PASS          = 0x02;
+
+    /**
+     * FLAG_* values from above, OR'd together.
+     */
+    attribute unsigned long flags;
+    
+    /**
+     * An nsISupports version of the global object to be filtered.  A null glob
+     * matches all hooks.  This attribute must be QI'able to the
+     * (non-scriptable) nsIScriptGlobalObject interface.
+     *
+     * The jsdIService caches this value internally, to if it changes you must
+     * swap the filter with itself using jsdIService::swapFilters.
+     */
+    attribute nsISupports glob;
+    
+    /**
+     * String representing the url pattern to be filtered.  Supports limited
+     * glob matching, at the beginning and end of the pattern only.  For example,
+     * "chrome://venkman*" filters all urls that start with chrome/venkman,
+     * "*.cgi" filters all cgi's, and "http://myserver/utils.js" filters only
+     * the utils.js file on "myserver".   A null urlPattern matches all urls.
+     *
+     * The jsdIService caches this value internally, to if it changes you must
+     * swap the filter with itself using jsdIService::swapFilters.
+     */
+    attribute string urlPattern;
+
+    /**
+     * Line number for the start of this filter.  Line numbers are one based.
+     * Assigning a 0 to this attribute will tell the debugger to ignore the
+     * entire file.
+     */
+    attribute unsigned long startLine;
+
+    /**
+     * Line number for the end of this filter.  Line numbers are one based.
+     * Assigning a 0 to this attribute will tell the debugger to ignore from
+     * |startLine| to the end of the file.
+     */
+    attribute unsigned long endLine;
+};
 
 /**
  * Pass an instance of one of these to jsdIDebuggerService::enterNestedEventLoop.
@@ -190,6 +343,19 @@ interface jsdINestCallback : nsISupports
 };
 
 /**
+ * Pass an instance of one of these to jsdIDebuggerService::enumerateFilters.
+ */
+[scriptable, uuid(54382875-ed12-4f90-9a63-1f0498d0a3f2)]
+interface jsdIFilterEnumerator : nsISupports
+{
+    /**
+     * The enumerateFilter method will be called once for every filter the
+     * debugger knows about.
+     */
+    void enumerateFilter (in jsdIFilter filter);
+};
+
+/**
  * Pass an instance of one of these to jsdIDebuggerService::enumerateScripts.
  */
 [scriptable, uuid(4c2f706e-1dd2-11b2-9ebc-85a06e948830)]
@@ -199,7 +365,7 @@ interface jsdIScriptEnumerator : nsISupports
      * The enumerateScript method will be called once for every script the
      * debugger knows about.
      */
-    boolean enumerateScript (in jsdIScript script);
+    void enumerateScript (in jsdIScript script);
 };
 
 /**
@@ -427,7 +593,12 @@ interface jsdIScript : jsdIEphemeral
     /**
      * Get the first PC associated with a line.
      */
-    jsdIPC lineToPc (in unsigned long line);    
+    jsdIPC lineToPc (in unsigned long line);
+    /**
+     * Determine is a particular line is executable, like checking that
+     * lineToPc == pcToLine, except in one call.
+     */
+    boolean isLineExecutable (in unsigned long line);
     /**
      * Set a breakpoint at a PC in this script.
      */

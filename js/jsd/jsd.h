@@ -586,6 +586,9 @@ jsd_GetCountOfStackFrames(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
 extern JSDStackFrameInfo*
 jsd_GetStackFrame(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
 
+extern JSContext*
+jsd_GetJSContext(JSDContext* jsdc, JSDThreadState* jsdthreadstate);
+
 extern JSDStackFrameInfo*
 jsd_GetCallingStackFrame(JSDContext* jsdc,
                          JSDThreadState* jsdthreadstate,
