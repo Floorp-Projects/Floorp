@@ -26,7 +26,8 @@
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsIDocument.h"
+#include "nsIDOMEventReceiver.h"
 
 //
 // NS_NewMenuBarFrame
@@ -67,5 +68,23 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 
   // Create the menu bar listener.
   mMenuBarListener = new nsMenuBarListener(this);
+
+  // Hook up the menu bar as a key listener (capturer) on the whole document.  It will see every
+  // key press that occurs before anyone else does and will know when to take control.
+  // Retrieve the root node.
+  nsCOMPtr<nsIDocument> doc;
+  aContent->GetDocument(*getter_AddRefs(doc));
+  nsCOMPtr<nsIDOMEventReceiver> target = do_QueryInterface(doc);
+  nsIDOMEventListener* domEventListener = (nsIDOMKeyListener*)mMenuBarListener;
+
+  target->AddEventListener("keypress", domEventListener, PR_FALSE, PR_TRUE); 
+	target->AddEventListener("keydown", domEventListener, PR_FALSE, PR_TRUE);  
+  target->AddEventListener("keyup", domEventListener, PR_FALSE, PR_TRUE);   
+  
+  // The menu bar should also observe all mouse events that happen within it
+  // (which it can do using bubbling).
+  target->AddEventListenerByIID((nsIDOMMouseListener*)mMenuBarListener, nsIDOMMouseListener::GetIID());
+  target->AddEventListenerByIID((nsIDOMMouseMotionListener*)mMenuBarListener, nsIDOMMouseMotionListener::GetIID());
+
   return rv;
 }
