@@ -48,7 +48,7 @@ public:
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;
   NS_IMETHOD SetFlags(PRUint32 aFlags)=0;
-
+  NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
 };
 
 #endif //nsEditRules_h__

@@ -60,6 +60,7 @@ public:
 
   /* ------------ nsIHTMLEditor methods -------------- */
 
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty);
   NS_IMETHOD GetDocumentLength(PRInt32 *aCount);
   NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
   NS_IMETHOD GetMaxTextLength(PRInt32& aMaxTextLength);

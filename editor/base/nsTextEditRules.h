@@ -54,6 +54,7 @@ public:
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
   NS_IMETHOD SetFlags(PRUint32 aFlags);
+  NS_IMETHOD DocumentIsEmpty(PRBool *aDocumentIsEmpty);
 
   // nsTextEditRules action id's
   enum 

@@ -47,9 +47,11 @@ interface nsIEditorShell : nsISupports
   };
 %}
   readonly attribute boolean              documentModified;
+  readonly attribute boolean              documentIsEmpty;
+  readonly attribute long                 documentLength;
   
-  attribute wstring    paragraphFormat;
-  attribute long       wrapColumn;
+  attribute wstring                       paragraphFormat;
+  attribute long                          wrapColumn;
    
   /* Setup */
   void SetEditorType(in wstring editorType);

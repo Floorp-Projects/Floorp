@@ -109,6 +109,10 @@ public:
 
 
   /* ------------ Document info and file methods -------------- */
+  
+  /** Returns true if the document has no *meaningful* content */
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
+  
   /** Returns true if the document is modifed and needs saving */
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
 

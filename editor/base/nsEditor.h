@@ -121,6 +121,9 @@ public:
   NS_IMETHOD BeginTransaction();
   NS_IMETHOD EndTransaction();
 
+  // pure virtual, because the definition of 'empty' depends on the doc type
+  NS_IMETHOD GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)=0;
+
   // file handling
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
   NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);

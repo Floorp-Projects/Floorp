@@ -2019,15 +2019,9 @@ nsEditorShell::GetEditorDocument(nsIDOMDocument** aEditorDocument)
 NS_IMETHODIMP
 nsEditorShell::GetEditorSelection(nsIDOMSelection** aEditorSelection)
 {
-
-  if (mEditor)
-  {
-    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
-    if (editor)
-    {
+  nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor);
+  if (editor)
       return editor->GetSelection(aEditorSelection);
-    }
-  }
   
   return NS_NOINTERFACE;
 }
@@ -2038,6 +2032,27 @@ nsEditorShell::GetDocumentModified(PRBool *aDocumentModified)
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (editor)
     return editor->GetDocumentModified(aDocumentModified);
+
+  return NS_NOINTERFACE;
+}
+
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
+{
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (editor)
+    return editor->GetDocumentIsEmpty(aDocumentIsEmpty);
+
+  return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
+{
+  nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(mEditor);
+  if (editor)
+    return editor->GetDocumentLength(aDocumentLength);
 
   return NS_NOINTERFACE;
 }
