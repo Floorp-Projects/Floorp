@@ -389,6 +389,7 @@ void nsCSSColor::List(FILE* out, PRInt32 aIndent) const
   mBackFilter.AppendToString(buffer, PROP_BACKGROUND_FILTER);
   mCursor.AppendToString(buffer, PROP_CURSOR);
   mCursorImage.AppendToString(buffer, PROP_CURSOR_IMAGE);
+  mOpacity.AppendToString(buffer, PROP_OPACITY);
   fputs(buffer, out);
 }
 
@@ -781,6 +782,7 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
     case PROP_BACKGROUND_FILTER:
     case PROP_CURSOR:
     case PROP_CURSOR_IMAGE:
+    case PROP_OPACITY:
       if (nsnull == mColor) {
         mColor = new nsCSSColor();
       }
@@ -796,6 +798,7 @@ nsresult CSSDeclarationImpl::AddValue(PRInt32 aProperty, const nsCSSValue& aValu
           case PROP_BACKGROUND_FILTER:      mColor->mBackFilter = aValue;      break;
           case PROP_CURSOR:                 mColor->mCursor = aValue;          break;
           case PROP_CURSOR_IMAGE:           mColor->mCursorImage = aValue;     break;
+          case PROP_OPACITY:                mColor->mOpacity = aValue;         break;
         }
       }
       else {
@@ -1138,6 +1141,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
     case PROP_BACKGROUND_FILTER:
     case PROP_CURSOR:
     case PROP_CURSOR_IMAGE:
+    case PROP_OPACITY:
       if (nsnull != mColor) {
         switch (aProperty) {
           case PROP_COLOR:                  aValue = mColor->mColor;           break;
@@ -1150,6 +1154,7 @@ nsresult CSSDeclarationImpl::GetValue(PRInt32 aProperty, nsCSSValue& aValue)
           case PROP_BACKGROUND_FILTER:      aValue = mColor->mBackFilter;      break;
           case PROP_CURSOR:                 aValue = mColor->mCursor;          break;
           case PROP_CURSOR_IMAGE:           aValue = mColor->mCursorImage;     break;
+          case PROP_OPACITY:                aValue = mColor->mOpacity;         break;
         }
       }
       else {
