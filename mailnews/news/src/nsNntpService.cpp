@@ -1504,17 +1504,17 @@ nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer, nsIMsgWindow *aM
 	rv = server->GetServerURI(getter_Copies(serverUri));
 	if (NS_FAILED(rv)) return rv;
 
-    rv = ConstructNntpUrl((const char *)serverUri, nsnull, aMsgWindow, nsnull, nsINntpUrl::ActionUpdateCounts, getter_AddRefs(url));
-	if (NS_FAILED(rv)) return rv;
-
-	// run the url to update the counts
-    rv = RunNewsUrl(url, aMsgWindow, nsnull);
-
-    // being offline is not an error.
-    if (NS_SUCCEEDED(rv) || (rv == NS_MSG_ERROR_OFFLINE)) {
-      return NS_OK;
-    }
-    return rv;
+  rv = ConstructNntpUrl((const char *)serverUri, nsnull, aMsgWindow, nsnull, nsINntpUrl::ActionUpdateCounts, getter_AddRefs(url));
+  if (NS_FAILED(rv)) return rv;
+  
+  // run the url to update the counts
+  rv = RunNewsUrl(url, aMsgWindow, nsnull);
+  
+  // being offline is not an error.
+  if (NS_SUCCEEDED(rv) || (rv == NS_MSG_ERROR_OFFLINE)) {
+    return NS_OK;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
@@ -1536,16 +1536,20 @@ nsNntpService::GetListOfGroupsOnServer(nsINntpIncomingServer *aNntpServer, nsIMs
 	uriStr += "/*";
 		
 	nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(aNntpServer, &rv);
-	if (NS_FAILED(rv)) return rv;
-	if (!listener) return NS_ERROR_FAILURE;
+	if (NS_FAILED(rv)) 
+    return rv;
+	if (!listener) 
+    return NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIURI> url;
-    rv = ConstructNntpUrl(uriStr.get(), listener, aMsgWindow, nsnull, nsINntpUrl::ActionListGroups, getter_AddRefs(url));
-	if (NS_FAILED(rv)) return rv;
-
-	// now run the url to add the rest of the groups
-    rv = RunNewsUrl(url, aMsgWindow, nsnull);
-	if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIURI> url;
+  rv = ConstructNntpUrl(uriStr.get(), listener, aMsgWindow, nsnull, nsINntpUrl::ActionListGroups, getter_AddRefs(url));
+  if (NS_FAILED(rv)) 
+    return rv;
+  
+  // now run the url to add the rest of the groups
+  rv = RunNewsUrl(url, aMsgWindow, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
 
 	return NS_OK;
 }
@@ -1582,8 +1586,8 @@ NS_IMETHODIMP
 nsNntpService::HandleContent(const char * aContentType, const char * aCommand, nsISupports * aWindowContext, nsIRequest *request)
 {
   nsresult rv;
-  if (!request) return NS_ERROR_NULL_POINTER;
-
+  NS_ENSURE_ARG_POINTER(request);
+  
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 

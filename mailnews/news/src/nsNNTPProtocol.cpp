@@ -173,7 +173,6 @@ protected:
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
@@ -492,7 +491,7 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
     NS_ENSURE_SUCCESS(rv, NS_MSG_INVALID_OR_MISSING_SERVER);
     if (!m_nntpServer) return NS_MSG_INVALID_OR_MISSING_SERVER;
 
-	rv = m_nntpServer->GetMaxArticles(&m_maxArticles);
+    rv = m_nntpServer->GetMaxArticles(&m_maxArticles);
     NS_ENSURE_SUCCESS(rv,rv);
 
     rv = server->GetIsSecure(&isSecure);
@@ -521,18 +520,23 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 
 	m_runningURL = do_QueryInterface(m_url);
   SetIsBusy(PR_TRUE);
-  PRBool msgIsInLocalCache = PR_FALSE;
+
 	if (NS_SUCCEEDED(rv) && m_runningURL)
 	{
   	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningURL);
     if (mailnewsUrl)
     {
       mailnewsUrl->SetMsgWindow(aMsgWindow);
-      mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+
+      m_runningURL->GetNewsAction(&m_newsAction);
+      if (m_newsAction == nsINntpUrl::ActionFetchArticle || m_newsAction == nsINntpUrl::ActionFetchPart) {
+        PRBool msgIsInLocalCache = PR_FALSE;
+        mailnewsUrl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+        if (msgIsInLocalCache)
+          return NS_OK; // probably don't need to do anything else - definitely don't want
+                        // to open the socket.
+      }
     }
-    if (msgIsInLocalCache)
-      return NS_OK; // probably don't need to do anything else - definitely don't want
-                    // to open the socket.
 	}
   else {
     return rv;
@@ -1056,11 +1060,11 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		  }
 		  else if (PL_strstr(commandSpecificData.get(), "?list-ids"))
 		  {
-			  m_typeWanted = IDS_WANTED;
-			  m_commandSpecificData = ToNewCString(commandSpecificData);
-
-              rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
-              if (!m_newsFolder) goto FAIL;
+        m_typeWanted = IDS_WANTED;
+        m_commandSpecificData = ToNewCString(commandSpecificData);
+        
+        rv = m_nntpServer->FindGroup(group.get(), getter_AddRefs(m_newsFolder));
+        if (!m_newsFolder) goto FAIL;
 		  }
 		  else
 		  {
@@ -1079,9 +1083,12 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
     /* news:GROUP
        news:/GROUP
        news://HOST/GROUP
+       news://host/*
      */
-    if (PL_strchr(group.get(),'*'))
+    if (PL_strchr(group.get(),'*')) {
+      // getting all the newsgroups on the server, for subscribe dialog
       m_typeWanted = LIST_WANTED;
+    }
     else 
     {
       if (m_nntpServer)
@@ -4831,40 +4838,37 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 
 PRInt32 nsNNTPProtocol::SendListGroup()
 {
-    nsresult rv;
-	char outputBuffer[OUTPUT_BUFFER_SIZE];
-	PRInt32 status = 0; 
-
-    NS_ASSERTION(m_newsFolder,"no newsFolder");
-    if (!m_newsFolder) return -1;
-    nsXPIDLCString newsgroupName;
-
-    rv = m_newsFolder->GetAsciiName(getter_Copies(newsgroupName));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-	PR_snprintf(outputBuffer, 
-			OUTPUT_BUFFER_SIZE, 
-			"listgroup %.512s" CRLF,
-            (const char *)newsgroupName);
-
-    rv = nsComponentManager::CreateInstance(kNNTPArticleListCID,
-                                            nsnull,
-                                            NS_GET_IID(nsINNTPArticleList),
-                                            getter_AddRefs(m_articleList));
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    rv = m_articleList->Initialize(m_newsFolder);
-    NS_ENSURE_SUCCESS(rv,rv);
-	
-	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
-	if (mailnewsurl)
-		status = SendData(mailnewsurl, outputBuffer); 
-
-	m_nextState = NNTP_RESPONSE;
-	m_nextStateAfterResponse = NNTP_LIST_GROUP_RESPONSE;
-    SetFlag(NNTP_PAUSE_FOR_READ);
-
-	return status;
+  nsresult rv;
+  char outputBuffer[OUTPUT_BUFFER_SIZE];
+  PRInt32 status = 0; 
+  
+  NS_ASSERTION(m_newsFolder,"no newsFolder");
+  if (!m_newsFolder) return -1;
+  nsXPIDLCString newsgroupName;
+  
+  rv = m_newsFolder->GetAsciiName(getter_Copies(newsgroupName));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  PR_snprintf(outputBuffer, 
+    OUTPUT_BUFFER_SIZE, 
+    "listgroup %.512s" CRLF,
+    newsgroupName.get());
+  
+  m_articleList = do_CreateInstance(NS_NNTPARTICLELIST_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = m_articleList->Initialize(m_newsFolder);
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+  if (mailnewsurl)
+    status = SendData(mailnewsurl, outputBuffer); 
+  
+  m_nextState = NNTP_RESPONSE;
+  m_nextStateAfterResponse = NNTP_LIST_GROUP_RESPONSE;
+  SetFlag(NNTP_PAUSE_FOR_READ);
+  
+  return status;
 }
 
 PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUint32 length)
@@ -4893,20 +4897,21 @@ PRInt32 nsNNTPProtocol::SendListGroupResponse(nsIInputStream * inputStream, PRUi
 	{
 		if (line[0] != '.')
 		{
-			nsMsgKey found_id = nsMsgKey_None;
-            nsresult rv;
-			PR_sscanf(line, "%ld", &found_id);
-            rv = m_articleList->AddArticleKey(found_id);
+      nsMsgKey found_id = nsMsgKey_None;
+      PR_sscanf(line, "%ld", &found_id);
+      nsresult rv = m_articleList->AddArticleKey(found_id);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "add article key failed");
 		}
 		else
 		{
-            m_articleList->FinishAddingArticleKeys();
-            m_articleList = nsnull;
-			m_nextState = NEWS_DONE;	 /* ### dmb - don't really know */
-			ClearFlag(NNTP_PAUSE_FOR_READ); 
-			PR_FREEIF(line);
-			return 0;
-		}
+      nsresult rv = m_articleList->FinishAddingArticleKeys();
+      NS_ASSERTION(NS_SUCCEEDED(rv), "finish adding article key failed");
+      m_articleList = nsnull;
+      m_nextState = NEWS_DONE;	 /* ### dmb - don't really know */
+      ClearFlag(NNTP_PAUSE_FOR_READ); 
+      PR_FREEIF(line);
+      return 0;
+    }
 	}
 	PR_FREEIF(line);
 	return 0;

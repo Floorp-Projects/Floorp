@@ -68,7 +68,7 @@ static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 nsNntpUrl::nsNntpUrl()
 {
   m_newsgroupPost = nsnull;
-  m_newsAction = nsINntpUrl::ActionGetNewNews;
+  m_newsAction = nsINntpUrl::ActionUnknown;
   m_addDummyEnvelope = PR_FALSE;
   m_canonicalLineEnding = PR_FALSE;
   m_filePath = nsnull;
@@ -96,21 +96,77 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 NS_IMETHODIMP nsNntpUrl::SetSpec(const char * aSpec)
 {
 	nsresult rv = nsMsgMailNewsUrl::SetSpec(aSpec);
-	if (NS_SUCCEEDED(rv))
-		ParseUrl(aSpec);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+	rv = DetermineNewsAction();
+  NS_ENSURE_SUCCESS(rv,rv);
 	return rv;
 }
 
-nsresult nsNntpUrl::ParseUrl(const char * aSpec)
+nsresult nsNntpUrl::DetermineNewsAction()
 {
-  char * partString = PL_strcasestr(aSpec, "?part=");
-  if (partString)
-    m_newsAction = nsINntpUrl::ActionFetchPart;
-  else
-    m_newsAction = nsINntpUrl::ActionFetchArticle;
+  nsresult rv;
 
-  // XXX to do: add more smart detection code for setting the action type based on the contents of the url
-  // string.
+  nsXPIDLCString path;
+  rv = nsMsgMailNewsUrl::GetPath(getter_Copies(path));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!nsCRT::strcmp(path,"/*")) {
+    // news://news.mozilla.org/* 
+    // get all newsgroups on the server, for subscribe
+    m_newsAction = nsINntpUrl::ActionListGroups;
+    return NS_OK;
+  }
+
+  if (!nsCRT::strcmp(path,"/")) {
+    // could be news:netscape.public.mozilla.mail-news or news://news.mozilla.org
+    // news:netscape.public.mozilla.mail-news gets turned into news://netscape.public.mozilla.mail-news/ by nsStandardURL
+    // news://news.mozilla.org gets turned in to news://news.mozilla.org/ by nsStandardURL
+    // news://news.mozilla.org is nsINntpUrl::ActionUpdateCounts
+    // (which is "update the unread counts for all groups that we're subscribed to on news.mozilla.org)
+    // news:netscape.public.mozilla.mail-news is nsINntpUrl::AutoSubscribe
+    //
+    // also in here for, news:3B98D201.3020100@cs.com
+    // and when posting, and during message display GetCodeBasePrinciple() and nsMimeNewURI()
+    //
+    // set it as unknown (so we won't try to check the cache for it
+    // we'll figure out the action later, or it will be set on the url by the caller.
+    m_newsAction = nsINntpUrl::ActionUnknown;
+    return NS_OK;
+  }
+    
+  if (PL_strcasestr(path.get(), "?part=")) {
+    // news://news.mozilla.org:119/3B98D201.3020100@cs.com?part=1
+    m_newsAction = nsINntpUrl::ActionFetchPart;
+    return NS_OK;
+  }
+
+  if (PL_strcasestr(path.get(), "?cancel")) {
+    // news://news.mozilla.org/3C06C0E8.5090107@sspitzer.org?cancel
+    m_newsAction = nsINntpUrl::ActionCancelArticle;
+    return NS_OK;
+  }
+
+  if (PL_strcasestr(path.get(), "?list-ids")) {
+    // news://news.mozilla.org/netscape.test?list-ids
+    // remove all cancelled articles from netscape.test
+    m_newsAction = nsINntpUrl::ActionListIds;
+    return NS_OK;
+  }
+   
+  if (PL_strchr(path.get(), '@') || PL_strstr(path.get(),"%40")) {
+    // news://news.mozilla.org/3B98D201.3020100@cs.com
+    // news://news.mozilla.org/3B98D201.3020100%40cs.com
+    m_newsAction = nsINntpUrl::ActionFetchArticle;
+    return NS_OK;
+  }
+
+  // news://news.mozilla.org/netscape.test could be 
+  // get new news for netscape.test (nsINntpUrl::ActionGetNewNews)
+  // or subscribe to netscape.test (nsINntpUrl::AutoSubscribe)
+  // set it as unknown (so we won't try to check the cache for it
+  // we'll figure out the action later, or it will be set on the url by the caller.
+  m_newsAction = nsINntpUrl::ActionUnknown;
   return NS_OK;
 }
 

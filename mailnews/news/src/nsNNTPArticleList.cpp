@@ -48,7 +48,18 @@ nsNNTPArticleList::nsNNTPArticleList()
     NS_INIT_REFCNT();
 }
 
-nsresult
+nsNNTPArticleList::~nsNNTPArticleList()
+{
+  if (m_newsDB) {
+    m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
+    m_newsDB->Close(PR_TRUE);
+    m_newsDB = nsnull;
+  }
+  
+  m_newsFolder = nsnull;
+}
+
+NS_IMETHODIMP
 nsNNTPArticleList::Initialize(nsIMsgNewsFolder *newsFolder)
 {
     nsresult rv;
@@ -71,54 +82,53 @@ nsNNTPArticleList::Initialize(nsIMsgNewsFolder *newsFolder)
     return NS_OK;
 }
 
-nsNNTPArticleList::~nsNNTPArticleList()
-{
-  if (m_newsDB) {
-		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
-        m_newsDB->Close(PR_TRUE);
-        m_newsDB = nsnull;
-  }
-
-  m_newsFolder = nsnull;
-}
-
-nsresult
+NS_IMETHODIMP
 nsNNTPArticleList::AddArticleKey(PRInt32 key)
 {
-#ifdef DEBUG_seth
-	m_idsOnServer.Add(key);
+#ifdef DEBUG
+  m_idsOnServer.Add(key);
 #endif
-
-	if (m_dbIndex < m_idsInDB.GetSize())
-	{
-		PRInt32 idInDBToCheck = m_idsInDB.GetAt(m_dbIndex);
-		// if there are keys in the database that aren't in the newsgroup
-		// on the server, remove them. We probably shouldn't do this if
-		// we have a copy of the article offline.
-		while (idInDBToCheck < key)
-		{
-            m_newsFolder->RemoveMessage(idInDBToCheck);
-#ifdef DEBUG_seth
-			m_idsDeleted.Add(idInDBToCheck);
+  
+  if (m_dbIndex < m_idsInDB.GetSize())
+  {
+    PRInt32 idInDBToCheck = m_idsInDB.GetAt(m_dbIndex);
+    // if there are keys in the database that aren't in the newsgroup
+    // on the server, remove them. We probably shouldn't do this if
+    // we have a copy of the article offline.
+    while (idInDBToCheck < key)
+    {
+      m_newsFolder->RemoveMessage(idInDBToCheck);
+#ifdef DEBUG
+      m_idsDeleted.Add(idInDBToCheck);
 #endif
-			if (m_dbIndex >= m_idsInDB.GetSize())
-				break;
-			idInDBToCheck = m_idsInDB.GetAt(++m_dbIndex);
-		}
-		if (idInDBToCheck == key)
-			m_dbIndex++;
-	}
-	return 0;
+      if (m_dbIndex >= m_idsInDB.GetSize())
+        break;
+      idInDBToCheck = m_idsInDB.GetAt(++m_dbIndex);
+    }
+    if (idInDBToCheck == key)
+      m_dbIndex++;
+  }
+  return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP
 nsNNTPArticleList::FinishAddingArticleKeys()
 {
-#ifdef DEBUG_seth
+  // if the last n messages in the group are cancelled, they won't have gotten removed
+  // so we have to go an removed them now.
+  PRUint32 totalCount = m_idsInDB.GetSize();
+  for (PRUint32 i = m_dbIndex; i < totalCount; i++) {
+    m_newsFolder->RemoveMessage(m_idsInDB.GetAt(i));
+#ifdef DEBUG
+    m_idsDeleted.Add(m_idsInDB.GetAt(i));
+#endif
+  }
+
+#ifdef DEBUG
 	// make sure none of the deleted turned up on the idsOnServer list
-	for (PRUint32 i = 0; i < m_idsDeleted.GetSize(); i++) {
+	for (i = 0; i < m_idsDeleted.GetSize(); i++) {
 		NS_ASSERTION(m_idsOnServer.FindIndex((nsMsgKey)(m_idsDeleted.GetAt(i)), 0) == nsMsgViewIndex_None, "a deleted turned up on the idsOnServer list");
-    }
+  }
 #endif
 	return NS_OK;
 }

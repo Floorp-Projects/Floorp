@@ -62,25 +62,26 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-protected:  
-  virtual nsresult ParseUrl(const char * aSpec);
+private:
 	virtual const char * GetUserName() { return nsnull; }
+  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
+  nsresult DetermineNewsAction();
+
   nsINNTPNewsgroupPost *m_newsgroupPost;
 	nsNewsAction m_newsAction; // the action this url represents...parse mailbox, display messages, etc.
-    
-  nsFileSpec	*m_filePath; 
-    
-    // used by save message to disk
-	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
-  PRBool                m_addDummyEnvelope;
-  PRBool                m_canonicalLineEnding;
-
-  nsresult GetMsgFolder(nsIMsgFolder **msgFolder);
-
+ 
   nsCString mURI; // the RDF URI associated with this url.
   nsString mCharsetOverride; // used by nsIMsgI18NUrl...
-	PRBool				m_getOldMessages;
-    nsCString mOriginalSpec;
+
+  nsCString mOriginalSpec;
+  nsFileSpec	*m_filePath; 
+    
+  // used by save message to disk
+	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
+
+  PRPackedBool  m_addDummyEnvelope;
+  PRPackedBool  m_canonicalLineEnding;
+	PRPackedBool	m_getOldMessages;
 };
 
 #endif // nsNntpUrl_h__

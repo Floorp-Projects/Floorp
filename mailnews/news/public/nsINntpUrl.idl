@@ -58,13 +58,16 @@ interface nsINntpUrl : nsISupports {
   attribute nsNewsAction newsAction;
   attribute boolean getOldMessages;
 
-  const nsNewsAction ActionGetNewNews = 0;
-  const nsNewsAction ActionFetchArticle = 1;
-  const nsNewsAction ActionSaveMessageToDisk = 2;
-  const nsNewsAction ActionCancelArticle = 3;
-  const nsNewsAction ActionPostArticle = 4;
-  const nsNewsAction ActionSearch = 5;
-  const nsNewsAction ActionUpdateCounts = 6;
-  const nsNewsAction ActionListGroups = 7;
-  const nsNewsAction ActionFetchPart = 8;
+  const nsNewsAction ActionUnknown = 0;
+  const nsNewsAction ActionGetNewNews = 1;
+  const nsNewsAction ActionFetchArticle = 2;
+  const nsNewsAction ActionSaveMessageToDisk = 3;
+  const nsNewsAction ActionCancelArticle = 4;
+  const nsNewsAction ActionPostArticle = 5;
+  const nsNewsAction ActionSearch = 6;
+  const nsNewsAction ActionUpdateCounts = 7;
+  const nsNewsAction ActionListGroups = 8;
+  const nsNewsAction ActionFetchPart = 9;
+  const nsNewsAction ActionAutoSubscribe = 10;
+  const nsNewsAction ActionListIds = 11;
 };

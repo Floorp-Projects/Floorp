@@ -45,9 +45,6 @@
 #include "nsMsgKeyArray.h"
 
 class nsNNTPArticleList : public nsINNTPArticleList
-#ifdef HAVE_CHANGELISTENER
- : public ChangeListener
-#endif
 {
 public:
 	nsNNTPArticleList();
@@ -59,15 +56,15 @@ public:
 protected:
     nsMsgKeyArray m_idsInDB;
 
-#ifdef DEBUG_seth
+#ifdef DEBUG
     nsMsgKeyArray m_idsOnServer;
     nsMsgKeyArray m_idsDeleted;
 #endif
-
-	nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
+    
+    nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
     nsCOMPtr <nsIMsgDatabase> m_newsDB;
-
-	PRUint32  m_dbIndex;
+    
+    PRUint32  m_dbIndex;
 };
 
 #endif /* nsNNTPArticleList_h___ */
