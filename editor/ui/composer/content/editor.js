@@ -467,8 +467,7 @@ function EditorSetDocumentCharacterSet(aCharset)
   if(editorShell) 
   {
     editorShell.SetDocumentCharacterSet(aCharset);
-    if((! editorShell.documentModified) &&
-       editorShell.editorDocument.location != "about:blank")
+    if( editorShell.editorDocument.location != "about:blank")
     {
       editorShell.LoadUrl(editorShell.editorDocument.location);
     }
