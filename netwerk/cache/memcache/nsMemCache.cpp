@@ -252,7 +252,7 @@ nsMemCache::GetNextCache(nsINetDataCache* *aNextCache)
 {
     NS_ENSURE_ARG(aNextCache);
     *aNextCache = mNextCache;
-    NS_ADDREF(*aNextCache);
+    NS_IF_ADDREF(*aNextCache);
     return NS_OK;
 }
 
