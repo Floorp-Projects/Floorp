@@ -48,7 +48,12 @@ typedef PRUint32 nsOperatorFlags;
 #define NS_MATHML_OPERATOR_SEPARATOR     (1<<6)
 #define NS_MATHML_OPERATOR_MOVABLELIMITS (1<<7)
 
+// Additional bits not stored in the dictionary
+
 #define NS_MATHML_OPERATOR_SYMMETRIC     (1<<8)
+
+#define NS_MATHML_OPERATOR_MINSIZE_EXPLICIT  (1<<9)
+#define NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT  (1<<10)
 
 // Macros that retrieve those bits
 
@@ -90,6 +95,12 @@ typedef PRUint32 nsOperatorFlags;
 
 #define NS_MATHML_OPERATOR_IS_SYMMETRIC(_flags) \
   (NS_MATHML_OPERATOR_SYMMETRIC == ((_flags) & NS_MATHML_OPERATOR_SYMMETRIC))
+
+#define NS_MATHML_OPERATOR_MINSIZE_IS_EXPLICIT(_flags) \
+  (NS_MATHML_OPERATOR_MINSIZE_EXPLICIT == ((_flags) & NS_MATHML_OPERATOR_MINSIZE_EXPLICIT))
+
+#define NS_MATHML_OPERATOR_MAXSIZE_IS_EXPLICIT(_flags) \
+  (NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT == ((_flags) & NS_MATHML_OPERATOR_MAXSIZE_EXPLICIT))
 
 class nsMathMLOperators {
 public:
