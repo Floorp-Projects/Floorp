@@ -390,10 +390,10 @@ nsXBLDocumentInfo::GetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBin
 }
 
 static PRBool PR_CALLBACK
-ReleasePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
+DeletePrototypeBinding(nsHashKey* aKey, void* aData, void* aClosure)
 {
   nsXBLPrototypeBinding* binding = NS_STATIC_CAST(nsXBLPrototypeBinding*, aData);
-  binding->Release();
+  delete binding;
   return PR_TRUE;
 }
 
@@ -401,11 +401,10 @@ NS_IMETHODIMP
 nsXBLDocumentInfo::SetPrototypeBinding(const nsACString& aRef, nsXBLPrototypeBinding* aBinding)
 {
   if (!mBindingTable)
-    mBindingTable = new nsObjectHashtable(nsnull, nsnull, ReleasePrototypeBinding, nsnull);
+    mBindingTable = new nsObjectHashtable(nsnull, nsnull, DeletePrototypeBinding, nsnull);
 
   const nsPromiseFlatCString& flat = PromiseFlatCString(aRef);
   nsCStringKey key(flat.get());
-  aBinding->AddRef();
   mBindingTable->Put(&key, aBinding);
 
   return NS_OK;

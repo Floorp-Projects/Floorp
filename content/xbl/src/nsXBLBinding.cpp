@@ -166,12 +166,17 @@ nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
   mIsStyleBinding(PR_TRUE),
   mMarkedForDeath(PR_FALSE)
 {
+  NS_ASSERTION(mPrototypeBinding, "Must have a prototype binding!");
+  // Grab a ref to the document info so the prototype binding won't die
+  NS_ADDREF(mPrototypeBinding->XBLDocumentInfo());
 }
 
 
 nsXBLBinding::~nsXBLBinding(void)
 {
   delete mInsertionPointTable;
+  nsIXBLDocumentInfo* info = mPrototypeBinding->XBLDocumentInfo();
+  NS_RELEASE(info);
 }
 
 // nsIXBLBinding Interface ////////////////////////////////////////////////////////////////
@@ -718,11 +723,6 @@ nsXBLBinding::InstallEventHandlers()
   // Don't install handlers if scripts aren't allowed.
   if (AllowScripts()) {
     // Fetch the handlers prototypes for this binding.
-    nsCOMPtr<nsIXBLDocumentInfo> info;
-    info = mPrototypeBinding->GetXBLDocumentInfo(mBoundElement);
-    if (!info)
-      return NS_ERROR_FAILURE;
-
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
 
     if (handlerChain) {

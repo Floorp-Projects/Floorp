@@ -76,7 +76,7 @@ public:
   void SetBindingElement(nsIContent* aElement);
 
   nsIURI* BindingURI() const { return mBindingURI; }
-  nsIURI* DocURI() const;
+  nsIURI* DocURI() const { return mXBLDocInfoWeak->DocumentURI(); }
   nsresult GetID(nsACString& aResult) const { return mBindingURI->GetRef(aResult); }
 
   nsresult GetAllowScripts(PRBool* aResult);
@@ -111,8 +111,7 @@ public:
   void SetBasePrototype(nsXBLPrototypeBinding* aBinding);
   nsXBLPrototypeBinding* GetBasePrototype() { return mBaseBinding; }
 
-  already_AddRefed<nsIXBLDocumentInfo>
-  GetXBLDocumentInfo(nsIContent* aBoundElement) const;
+  nsIXBLDocumentInfo* XBLDocumentInfo() const { return mXBLDocInfoWeak; }
   
   PRBool HasBasePrototype() { return mHasBaseProto; }
   void SetHasBasePrototype(PRBool aHasBase) { mHasBaseProto = aHasBase; }
@@ -174,22 +173,6 @@ public:
                 nsIXBLDocumentInfo* aInfo,
                 nsIContent* aElement);
   
-  nsrefcnt AddRef() {
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "nsXBLPrototypeBinding", sizeof(nsXBLPrototypeBinding));
-    return mRefCnt;
-  }
-
-  nsrefcnt Release() {
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "nsXBLPrototypeBinding");
-    if (mRefCnt == 0) {
-      delete this;
-      return 0;
-    }
-    return mRefCnt;
-  }
-
 // Static members
   static PRUint32 gRefCnt;
  
@@ -251,7 +234,7 @@ protected:
  
   nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
                                       
-  nsWeakPtr mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
+  nsIXBLDocumentInfo* mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 
   nsObjectHashtable* mAttributeTable; // A table for attribute entries.  Used to efficiently
                                       // handle attribute changes.

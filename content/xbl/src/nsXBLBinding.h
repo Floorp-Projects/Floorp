@@ -150,7 +150,7 @@ protected:
   
 // MEMBER VARIABLES
 protected:
-  nsRefPtr<nsXBLPrototypeBinding> mPrototypeBinding; // Strong. We share ownership with other bindings and the docinfo.
+  nsXBLPrototypeBinding* mPrototypeBinding; // Weak, but we're holding a ref to the docinfo
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
   
