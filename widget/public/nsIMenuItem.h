@@ -157,6 +157,8 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD DoCommand() = 0;
 
+    NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode) = 0;
+    NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode) = 0;
     NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement) = 0;
     NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement) = 0;
     NS_IMETHOD SetWebShell(nsIWebShell * aWebShell) = 0;

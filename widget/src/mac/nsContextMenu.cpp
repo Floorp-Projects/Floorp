@@ -588,6 +588,7 @@ void nsContextMenu::LoadMenuItem(
 	// code. 
     pnsMenuItem->SetWebShell(mWebShell);
     pnsMenuItem->SetDOMElement(domElement);
+    pnsMenuItem->SetDOMNode(menuitemNode);
 
 	if(disabled == NS_STRING_TRUE )
 		::DisableMenuItem(mMacMenuHandle, menuitemIndex + 1);

@@ -63,6 +63,8 @@ public:
 
   NS_IMETHOD SetCommand(const nsString & aStrCmd);
   NS_IMETHOD DoCommand();
+  NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);
@@ -106,6 +108,7 @@ protected:
   
   nsIWebShell   *   mWebShell;
   nsIDOMElement *   mDOMElement;
+  nsIDOMNode    *   mDOMNode;
   
    PRUint8           mModifiers;
 };

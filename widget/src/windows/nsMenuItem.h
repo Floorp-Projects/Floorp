@@ -50,6 +50,8 @@ public:
   NS_IMETHOD Create(nsISupports * aParent, const nsString &aLabel, PRBool aIsSeparator);
 
   // nsIMenuItem Methods
+  NS_IMETHOD SetDOMNode(nsIDOMNode * aDOMNode);
+  NS_IMETHOD GetDOMNode(nsIDOMNode ** aDOMNode);
   NS_IMETHOD SetDOMElement(nsIDOMElement * aDOMElement);
   NS_IMETHOD GetDOMElement(nsIDOMElement ** aDOMElement);
   NS_IMETHOD SetWebShell(nsIWebShell * aWebShell);

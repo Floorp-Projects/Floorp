@@ -475,6 +475,18 @@ NS_METHOD nsMenuItem::DoCommand()
 }
 
 //-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
+{
+  return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
 {
   mDOMElement = aDOMElement;
