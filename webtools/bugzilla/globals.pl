@@ -409,7 +409,7 @@ sub GenerateCode {
         $result = "";
         foreach my $k (sort { uc($a) cmp uc($b)} eval("keys $name")) {
             $result .= GenerateCode("\$" . substr($name, 1) .
-                                    "{'" . $k . "'}");
+                                    "{" . PerlQuote($k) . "}");
         }
         return $result;
     } else {

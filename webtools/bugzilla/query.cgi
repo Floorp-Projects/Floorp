@@ -347,7 +347,7 @@ sub make_js_array {
     foreach my $p ( @prods ) {
         # join each element with a "," case-insensitively alpha sorted
         if ( $data{$p} ) {
-            $ret .= $arr."['$p'] = [";
+            $ret .= $arr."[".SqlQuote($p)."] = [";
             # the SqlQuote() protects our 's.
             my @tmp = map( SqlQuote( $_ ), @{ $data{$p} } );
             # do the join on a sorted, quoted list
