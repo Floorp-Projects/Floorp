@@ -42,6 +42,7 @@
 
 #include "nsIAccessibleValue.h"
 #include "nsXULFormControlAccessible.h"
+#include "nsAccessibleText.h"
 
 class nsXULProgressMeterAccessibleWrap : public nsXULProgressMeterAccessible,
                                          public nsIAccessibleValue
@@ -51,6 +52,19 @@ public:
   NS_DECL_NSIACCESSIBLEVALUE
 
   nsXULProgressMeterAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
+};
+
+
+class nsXULTextFieldAccessibleWrap : public nsXULTextFieldAccessible,
+                                     public nsAccessibleEditableText
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  nsXULTextFieldAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD GetRole(PRUint32* aRole);
+
+  NS_IMETHOD Shutdown();
 };
 
 #endif

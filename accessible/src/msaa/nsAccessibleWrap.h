@@ -202,5 +202,6 @@ typedef class nsHTMLTableAccessible        nsHTMLTableAccessibleWrap;
 typedef class nsXULTreeAccessible          nsXULTreeAccessibleWrap;
 typedef class nsXULTreeColumnsAccessible   nsXULTreeColumnsAccessibleWrap;
 typedef class nsXULProgressMeterAccessible nsXULProgressMeterAccessibleWrap;
+typedef class nsXULTextFieldAccessible     nsXULTextFieldAccessibleWrap;
 
 #endif

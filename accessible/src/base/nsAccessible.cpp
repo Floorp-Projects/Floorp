@@ -1220,7 +1220,8 @@ nsresult nsAccessible::GetXULName(nsAString& aLabel)
   }
 
   // CASES #2 and #3 ------ label as a child or <label control="id" ... > </label>
-  if (NS_FAILED(rv) || label.IsEmpty() ) {
+  if (NS_FAILED(rv) || label.IsEmpty()) {
+    label.Truncate();
     nsIContent *labelContent = GetXULLabelContent(content);
     nsCOMPtr<nsIDOMXULLabelElement> xulLabel(do_QueryInterface(labelContent));
     // Check if label's value attribute is used
