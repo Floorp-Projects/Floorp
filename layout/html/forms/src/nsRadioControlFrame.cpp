@@ -38,12 +38,16 @@
 #include "nsFormFrame.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsILookAndFeel.h"
+#include "nsRepository.h"
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
 static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
+static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
+static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
-#define NS_DESIRED_RADIOBOX_SIZE  12
+#define NS_DEFAULT_RADIOBOX_SIZE  12
 
 
 nsresult NS_NewRadioControlFrame(nsIFrame*& aResult);
@@ -78,6 +82,20 @@ nsRadioControlFrame::GetCID()
   return kRadioCID;
 }
 
+nscoord 
+nsRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
+{
+  nsILookAndFeel * lookAndFeel;
+  PRInt32 radioboxSize = 0;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+   lookAndFeel->GetMetric(nsILookAndFeel::eMetric_RadioboxSize,  radioboxSize);
+   NS_RELEASE(lookAndFeel);
+  }
+ if (radioboxSize == 0)
+   radioboxSize = NS_DEFAULT_RADIOBOX_SIZE;
+  return NSIntPixelsToTwips(radioboxSize, aPixToTwip);
+}
+
 void 
 nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsHTMLReflowState& aReflowState,
@@ -87,8 +105,9 @@ nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 #ifndef NS_GFX_RENDER_FORM_ELEMENTS
   float p2t;
   aPresContext->GetScaledPixelsToTwips(p2t);
-  aDesiredWidgetSize.width  = NSIntPixelsToTwips(NS_DESIRED_RADIOBOX_SIZE, p2t);
-  aDesiredWidgetSize.height = NSIntPixelsToTwips(NS_DESIRED_RADIOBOX_SIZE, p2t);
+  aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
+  aDesiredWidgetSize.height = aDesiredWidgetSize.width;
+
   aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
   aDesiredLayoutSize.height = aDesiredWidgetSize.height;
   aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;

@@ -57,6 +57,8 @@ public:
     eMetric_TextShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
     eMetric_ButtonHorizontalInsidePaddingNavQuirks,  
     eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks, 
+    eMetric_CheckboxSize,
+    eMetric_RadioboxSize,
     
     eMetric_ListShouldUseHorizontalInsideMinimumPadding,  // needed only because of GTK
     eMetric_ListHorizontalInsideMinimumPadding,         

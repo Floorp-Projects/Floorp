@@ -86,6 +86,7 @@ protected:
   void SetRadioControlFrameState(const nsString& aValue);
   void GetRadioControlFrameState(nsString& aValue);             
 
+  virtual nscoord GetRadioboxSize(float aPixToTwip) const;
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsHTMLReflowMetrics& aDesiredLayoutSize,

@@ -109,6 +109,12 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     case eMetric_ButtonHorizontalInsidePaddingOffsetNavQuirks:
         aMetric = 8;
         break;
+    case eMetric_CheckboxSize:
+        aMetric = 12;
+        break;
+    case eMetric_RadioboxSize:
+        aMetric = 12;
+        break;
     case eMetric_TextHorizontalInsideMinimumPadding:
         aMetric = 3;
         break;
