@@ -24,6 +24,7 @@
 #include "nsWidget.h"
 #include "keysym2ucs.h"
 #include "nsWindow.h"
+#include "nsAppShell.h"
 
 #include "nsScrollbar.h"
 #include "nsGUIEvent.h"
@@ -775,6 +776,13 @@ handle_gdk_event (GdkEvent *event, gpointer data)
   guint32 event_time = gdk_event_get_time(event);
   if (event_time)
     nsWidget::SetLastEventTime(event_time);
+
+  // process any pending events first
+  if (XPending(GDK_DISPLAY())) {
+    XEvent temp_event;
+    XPeekEvent(GDK_DISPLAY(), &temp_event);
+    nsAppShell::ProcessBeforeID(temp_event.xany.serial - 1);
+  }
 
   // try to get the user data for the event window.
   if (event->any.window)

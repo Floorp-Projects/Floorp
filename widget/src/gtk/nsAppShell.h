@@ -39,6 +39,8 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIAPPSHELL
 
+  static void ProcessBeforeID(unsigned long aID);
+
 private:
   nsCOMPtr<nsIEventQueue> mEventQueue;
 };

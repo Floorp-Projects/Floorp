@@ -103,6 +103,8 @@ struct PLEventQueue {
     int		 efn;
 #elif defined(XP_UNIX)
     PRInt32      eventPipe[2];
+    PLGetEventIDFunc idFunc;
+    void            *idFuncClosure;
 #elif defined(_WIN32) || defined(WIN16) || defined(XP_OS2)
     HWND         eventReceiverWindow;
     PRBool       removeMsg;
@@ -245,6 +247,9 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
 
     mon = self->monitor;
     PR_EnterMonitor(mon);
+
+    if (self->idFunc && event)
+      event->id = self->idFunc(self->idFuncClosure);
 
     /* insert event into thread's event queue: */
     if (event != NULL) {
@@ -555,6 +560,7 @@ PL_InitEvent(PLEvent* self, void* owner,
     PR_ASSERT(self->lock);
     self->condVar = PR_NewCondVar(self->lock);
     PR_ASSERT(self->condVar);
+    self->id = 0;
 }
 
 PR_IMPLEMENT(void*)
@@ -569,7 +575,7 @@ PL_HandleEvent(PLEvent* self)
     void* result;
     if (self == NULL)
         return;
- 
+
     /* This event better not be on an event queue anymore. */
     PR_ASSERT(PR_CLIST_IS_EMPTY(&self->link));
 
@@ -725,6 +731,9 @@ _pl_SetupNativeNotifier(PLEventQueue* self)
     int err;
     int flags;
 
+    self->idFunc = 0;
+    self->idFuncClosure = 0;
+    
     err = pipe(self->eventPipe);
     if (err != 0) {
         return PR_FAILURE;
@@ -1187,4 +1196,103 @@ static void _md_CreateEventQueue( PLEventQueue *eventQueue )
     return;    
 } /* end _md_CreateEventQueue() */
 #endif /* XP_UNIX */
+
+/* extra functions for unix */
+
+#ifdef XP_UNIX
+
+PR_IMPLEMENT(PRInt32)
+PL_ProcessEventsBeforeID(PLEventQueue *aSelf, unsigned long aID)
+{
+  PRInt32 count = 0;
+  PRInt32 fullCount;
+
+  if (aSelf == NULL)
+    return -1;
+  
+  PR_EnterMonitor(aSelf->monitor);
+
+  if (aSelf->processingEvents) {
+    PR_ExitMonitor(aSelf->monitor);
+    return 0;
+  }
+
+  aSelf->processingEvents = PR_TRUE;
+
+  /* Only process the events that are already in the queue, and
+   * not any new events that get added. Do this by counting the
+   * number of events currently in the queue
+   */
+  fullCount = _pl_GetEventCount(aSelf);
+  PR_LOG(event_lm, PR_LOG_DEBUG, 
+         ("$$$ fullCount is %d id is %ld\n", fullCount, aID));
+
+  if (fullCount == 0) {
+    aSelf->processingEvents = PR_FALSE;
+    PR_ExitMonitor(aSelf->monitor);
+    return 0;
+  }
+
+  PR_ExitMonitor(aSelf->monitor);
+
+  while(fullCount-- > 0) {
+    /* peek at the next event */
+    PLEvent *event;
+    event = PR_EVENT_PTR(aSelf->queue.next);
+    if (event == NULL)
+      break;
+    PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ processing event %ld\n",
+                                    event->id));
+    if (event->id < aID) {
+      event = PL_GetEvent(aSelf);
+      PL_HandleEvent(event);
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ done processing event"));
+      count++;
+    }
+    else {
+      PR_LOG(event_lm, PR_LOG_DEBUG, ("$$$ skipping event and breaking"));
+      break;
+    }
+  }
+
+  PR_EnterMonitor(aSelf->monitor);
+
+  /* if full count still had items left then there's still items left
+     in the queue.  Let the native notify token stay. */
+
+  if (aSelf->type == EventQueueIsNative)
+  {
+    fullCount = _pl_GetEventCount(aSelf);
+
+    if (fullCount <= 0)
+    {
+      _pl_AcknowledgeNativeNotify(aSelf);
+      aSelf->notified = PR_FALSE;
+    }
+  }
+
+  aSelf->processingEvents = PR_FALSE;
+  
+  PR_ExitMonitor(aSelf->monitor);
+
+  return count;
+}
+
+PR_IMPLEMENT(void)
+PL_RegisterEventIDFunc(PLEventQueue *aSelf, PLGetEventIDFunc aFunc,
+                       void *aClosure)
+{
+  aSelf->idFunc = aFunc;
+  aSelf->idFuncClosure = aClosure;
+}
+
+PR_IMPLEMENT(void)
+PL_UnregisterEventIDFunc(PLEventQueue *aSelf)
+{
+  aSelf->idFunc = 0;
+  aSelf->idFuncClosure = 0;
+}
+
+#endif /* XP_UNIX */
+
 /* --- end plevent.c --- */

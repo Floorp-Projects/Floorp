@@ -30,6 +30,7 @@
 #include "nsICmdLineService.h"
 #include "nsGtkEventHandler.h"
 #include <stdlib.h>
+#include <gdk/gdkx.h>
 
 #ifdef MOZ_GLE
 #include <gle/gle.h>
@@ -39,10 +40,12 @@
 #include "nsIPref.h"
 
 #include "glib.h"
+#include "nsVoidArray.h"
 
 static PRBool sInitialized = PR_FALSE;
 static PLHashTable *sQueueHashTable = nsnull;
 static PLHashTable *sCountHashTable = nsnull;
+static nsVoidArray *sEventQueueList = nsnull;
 
 struct OurGdkIOClosure {
   GdkInputFunction  function;
@@ -97,6 +100,11 @@ our_gdk_input_add (gint              source,
   return result;
 }
 
+// wrapper so we can call a macro
+static unsigned long getNextRequest (void *aClosure) {
+  return NextRequest(GDK_DISPLAY());
+}
+
 
 //-------------------------------------------------------------------------
 //
@@ -119,6 +127,8 @@ nsAppShell::nsAppShell()
 #ifdef DEBUG_APPSHELL
   printf("nsAppShell::nsAppShell()\n");
 #endif
+  if (!sEventQueueList)
+    sEventQueueList = new nsVoidArray();
 }
 
 //-------------------------------------------------------------------------
@@ -426,6 +436,10 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
       if (tag >= 0) {
         PL_HashTableAdd(sQueueHashTable, GINT_TO_POINTER(key), GINT_TO_POINTER(tag));
       }
+      PLEventQueue *plqueue;
+      aQueue->GetPLEventQueue(&plqueue);
+      PL_RegisterEventIDFunc(plqueue, getNextRequest, 0);
+      sEventQueueList->AppendElement(plqueue);
     }
     /* bump up the count */
     gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, GINT_TO_POINTER(key)));
@@ -433,6 +447,11 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
   } else {
     /* remove listener */
     PRInt32 key = aQueue->GetEventQueueSelectFD();
+    
+    PLEventQueue *plqueue;
+    aQueue->GetPLEventQueue(&plqueue);
+    PL_UnregisterEventIDFunc(plqueue);
+    sEventQueueList->RemoveElement(plqueue);
 
     gint count = GPOINTER_TO_INT(PL_HashTableLookup(sCountHashTable, GINT_TO_POINTER(key)));
     if (count - 1 == 0) {
@@ -449,3 +468,16 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
   return NS_OK;
 }
 
+PRBool processQueue(void *aElement, void *aData)
+{
+  PLEventQueue *queue = NS_STATIC_CAST(PLEventQueue *, aElement);
+  unsigned int  id = (unsigned int)aData;
+  PL_ProcessEventsBeforeID(queue, id);
+  return PR_TRUE;
+}
+
+void
+nsAppShell::ProcessBeforeID(unsigned long aID)
+{
+  sEventQueueList->EnumerateForwards(processQueue, (void *)aID);
+}
