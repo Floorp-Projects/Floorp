@@ -939,7 +939,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
     BoundsCheck(minSize, prefSize, maxSize);
 
-    if (sizeToPopup && prefSize.width < contentRect.width)
+    if (sizeToPopup)
         prefSize.width = contentRect.width;
 
     // if the pref size changed then set bounds to be the pref size
