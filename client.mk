@@ -158,7 +158,7 @@ MODULES_xulrunner :=                            \
 
 MODULES_macbrowser :=                           \
   $(MODULES_suite)                              \
-  camino                                        \
+  mozilla/camino                                \
   $(NULL)
 
 #######################################################################
@@ -388,7 +388,7 @@ endif
 ifdef MOZ_THUNDERBIRD
 $(warning MOZ_THUNDERBIRD is obsolete.)
 MOZ_MODULE_LIST += $(MODULES_mail)
-$(error MOZ_THUNDERBIRD is obsolete, use MOZ_CO_PROJECT=mail and --enable-application=mail)
+# $(error MOZ_THUNDERBIRD is obsolete, use MOZ_CO_PROJECT=mail and --enable-application=mail)
 endif
 
 ###################################
