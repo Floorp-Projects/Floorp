@@ -3673,6 +3673,7 @@ XULDocumentImpl::SetContentSink(nsIXULContentSink* aParentContentSink)
 NS_IMETHODIMP
 XULDocumentImpl::GetContentSink(nsIXULContentSink** aParentContentSink)
 {
+    NS_IF_ADDREF(mParentContentSink);
     *aParentContentSink = mParentContentSink;
     return NS_OK;
 }
