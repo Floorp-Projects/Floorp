@@ -61,6 +61,8 @@ public:
 
   NS_IMETHOD GetContentState(nsIContent *aContent, PRInt32& aState) = 0;
   NS_IMETHOD SetContentState(nsIContent *aContent, PRInt32 aState) = 0;
+
+  NS_IMETHOD GetFocusedContent(nsIContent **aContent) = 0;
 };
 
 #define NS_EVENT_STATE_UNSPECIFIED  0x0000

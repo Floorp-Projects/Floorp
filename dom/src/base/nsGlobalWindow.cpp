@@ -737,12 +737,27 @@ GlobalWindowImpl::SetStatus(const nsString& aStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::GetDefaultStatus(nsString& aDefaultStatus)
 {
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    const PRUnichar *status;
+    mBrowser->GetDefaultStatus(&status);
+    aDefaultStatus = status;
+    NS_RELEASE(mBrowser);
+  }
+  else {
+    aDefaultStatus.Truncate();
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
 {
+  nsIBrowserWindow *mBrowser;
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    mBrowser->SetDefaultStatus(aDefaultStatus.GetUnicode());
+    NS_RELEASE(mBrowser);
+  }
   return NS_OK;
 }
 

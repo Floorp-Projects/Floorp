@@ -95,6 +95,10 @@ public:
 
   NS_IMETHOD GetStatus(const PRUnichar** aResult) = 0;
 
+  NS_IMETHOD SetDefaultStatus(const PRUnichar* aStatus) = 0;
+
+  NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult) = 0;
+
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax) = 0;
 
   NS_IMETHOD ShowMenuBar(PRBool aShow) = 0;

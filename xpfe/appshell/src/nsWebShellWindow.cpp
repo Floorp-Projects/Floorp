@@ -1815,6 +1815,16 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   if (mCreatedVisible)
     Show(PR_TRUE);
 
+  nsCOMPtr<nsIWebShell> contentShell;
+  GetContentWebShell(getter_AddRefs(contentShell));
+  if (contentShell) {
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    if (NS_SUCCEEDED(ConvertWebShellToDOMWindow(contentShell, 
+                                                getter_AddRefs(domWindow)))) {
+      domWindow->Focus();
+    }
+  }
+
   return NS_OK;
 }
 
@@ -2687,8 +2697,11 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
 NS_IMETHODIMP nsWebShellWindow::SetStatus(const PRUnichar* aStatus)
 {
     nsresult rv = NS_OK;
-    // Store status text.
+    // Store status text unless empty string was set, then use defaultStatus
     mStatus = aStatus;
+    if (mStatus.Length() == 0) {
+      mStatus = mDefaultStatus;
+    }
     // Broadcast status text change to interested parties.
     rv = NotifyObservers( "status", aStatus );
     return rv;
@@ -2700,6 +2713,28 @@ NS_IMETHODIMP nsWebShellWindow::GetStatus(const PRUnichar** aResult)
     if ( aResult ) {
         // Semantics are ill-defined: How to allocate?  Who frees it?
         *aResult = mStatus.ToNewUnicode();
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+    return rv;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::SetDefaultStatus(const PRUnichar* aStatus)
+{
+    nsresult rv = NS_OK;
+    // Store status text.
+    mDefaultStatus = aStatus;
+    // Broadcast status text change to interested parties.
+    rv = NotifyObservers( "defaultStatus", aStatus );
+    return rv;
+}
+ 
+NS_IMETHODIMP nsWebShellWindow::GetDefaultStatus(const PRUnichar** aResult)
+{
+    nsresult rv = NS_OK;
+    if ( aResult ) {
+        // Semantics are ill-defined: How to allocate?  Who frees it?
+        *aResult = mDefaultStatus.ToNewUnicode();
     } else {
         rv = NS_ERROR_NULL_POINTER;
     }

@@ -1171,6 +1171,14 @@ nsEventStateManager::SendFocusBlur(nsIContent *aContent)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsEventStateManager::GetFocusedContent(nsIContent** aContent)
+{
+  *aContent = mCurrentFocus;
+  NS_IF_ADDREF(*aContent);
+  return NS_OK;
+}
+
 nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
