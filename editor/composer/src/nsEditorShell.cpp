@@ -4751,8 +4751,8 @@ NS_IMETHODIMP nsEditorShell::OnStartURIOpen(nsIURI *aURI, PRBool *aAbortOpen)
   return NS_OK;
 }
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in boolean aIsContentPreferred, in nsIChannel aOpenedChannel, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest* request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
   NS_ENSURE_ARG_POINTER(aContentHandler);
   NS_ENSURE_ARG_POINTER(aAbortProcess);
@@ -4761,8 +4761,8 @@ NS_IMETHODIMP nsEditorShell::DoContent(const char *aContentType, nsURILoadComman
   return NS_OK;
 }
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+/* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
   NS_ENSURE_ARG_POINTER(_retval);
@@ -4771,8 +4771,8 @@ NS_IMETHODIMP nsEditorShell::IsPreferred(const char *aContentType, nsURILoadComm
   return NS_OK;
 }
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP nsEditorShell::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+/* boolean canHandleContent (in string aContentType, in boolean aIsContentPreferred, out string aDesiredContentType); */
+NS_IMETHODIMP nsEditorShell::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
   NS_ENSURE_ARG_POINTER(aDesiredContentType);
   NS_ENSURE_ARG_POINTER(_retval);

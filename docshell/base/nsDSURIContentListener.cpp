@@ -76,7 +76,7 @@ nsDSURIContentListener::OnStartURIOpen(nsIURI* aURI, PRBool* aAbortOpen)
 
 NS_IMETHODIMP 
 nsDSURIContentListener::DoContent(const char* aContentType, 
-                                  nsURILoadCommand aCommand,
+                                  PRBool aIsContentPreferred,
                                   nsIRequest* request,
                                   nsIStreamListener** aContentHandler,
                                   PRBool* aAbortProcess)
@@ -94,8 +94,7 @@ nsDSURIContentListener::DoContent(const char* aContentType,
     if (aOpenedChannel)
       aOpenedChannel->GetLoadFlags(&loadFlags);
 
-    PRUint32 loadType = mDocShell->ConvertDocShellLoadInfoToLoadType((nsDocShellInfoLoadType) aCommand);
-    mDocShell->SetLoadType(loadType);
+    mDocShell->SetLoadType(aIsContentPreferred ? LOAD_LINK : LOAD_NORMAL);
 
     if(loadFlags & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
     {
@@ -117,7 +116,6 @@ nsDSURIContentListener::DoContent(const char* aContentType,
 
 NS_IMETHODIMP
 nsDSURIContentListener::IsPreferred(const char* aContentType,
-                                    nsURILoadCommand aCommand,
                                     char ** aDesiredContentType,
                                     PRBool* aCanHandle)
 {
@@ -127,29 +125,31 @@ nsDSURIContentListener::IsPreferred(const char* aContentType,
     // the docshell has no idea if it is the preferred content provider or not.
     // It needs to ask it's parent if it is the preferred content handler or not...
 
-    if(mParentContentListener)
+    if(mParentContentListener) {
         return mParentContentListener->IsPreferred(aContentType,
-                                                   aCommand, 
                                                    aDesiredContentType,
                                                    aCanHandle);
-    else
-    {
-        // we used to return false here if we didn't have a parent properly registered at the top of
-        // the docshell hierarchy to dictate what content types this docshell should be a preferred handler for.
-        // But this really makes it hard for developers using iframe or browser tags because then they need to 
-        // make sure they implement nsIURIContentListener otherwise all link clicks would get sent to another window
-        // because we said we weren't the preferred handler type. I'm going to change the default now...if we can handle the 
-        // content, and someone didn't EXPLICITLY set a nsIURIContentListener at the top of our docshell chain, then we'll
-        // now always attempt to process the content ourselves...
-        return CanHandleContent(aContentType, aCommand, aDesiredContentType, aCanHandle);
     }
-
-    return NS_OK;
+    // we used to return false here if we didn't have a parent properly
+    // registered at the top of the docshell hierarchy to dictate what
+    // content types this docshell should be a preferred handler for.  But
+    // this really makes it hard for developers using iframe or browser tags
+    // because then they need to make sure they implement
+    // nsIURIContentListener otherwise all link clicks would get sent to
+    // another window because we said we weren't the preferred handler type.
+    // I'm going to change the default now...if we can handle the content,
+    // and someone didn't EXPLICITLY set a nsIURIContentListener at the top
+    // of our docshell chain, then we'll now always attempt to process the
+    // content ourselves...
+    return CanHandleContent(aContentType,
+                            PR_TRUE,
+                            aDesiredContentType,
+                            aCanHandle);
 }
 
 NS_IMETHODIMP
 nsDSURIContentListener::CanHandleContent(const char* aContentType,
-                                         nsURILoadCommand aCommand,
+                                         PRBool aIsContentPreferred,
                                          char ** aDesiredContentType,
                                          PRBool* aCanHandleContent)
 {

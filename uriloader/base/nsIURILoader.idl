@@ -67,8 +67,6 @@ interface nsIRequest;
 interface nsIStreamListener;
 interface nsIInputStream;
 
-typedef long nsURILoadCommand;
-
 [scriptable, uuid(40AECB53-8B65-11d3-989D-001083010E9B)]
 interface nsIURILoader : nsISupports
 {
@@ -84,56 +82,52 @@ interface nsIURILoader : nsISupports
 
   /* OpenURI requires the following parameters.....
      aURI --> the uri you wish to open
-	 aCommand --> describes the context of the url. most often, you want to pass viewNormal here.
-				  but if it the action was from a user click or you want to view source, or you want
-				  a new window, these are all passed in via aCommand.
-	 aWindowTarget -> the name of the desired target window (can be null)
-	 aWindowContext --> if you are running the url from a doc shell or a web shell,
-					    this is your window context. If you have a content listener
-						you want to give first crack to, the uri loader needs to be able
-						to get it from the window context (we'll use nsIInterfaceRequestor).
-						we will also be using nsIInterfaceRequestor to get at the progress event
-						sink interface.
-     aReferringURI --> if a uri referral was involved....
+     aCommand --> should the content be displayed in a container that prefers
+                  the content-type, or will any container do...
+     aWindowContext --> if you are running the url from a doc shell or a
+                        web shell, this is your window context. If you have a
+                        content listener you want to give first crack to, the
+                        uri loader needs to be able to get it from the window
+                        context (we'll use nsIInterfaceRequestor).  we will
+                        also be using nsIInterfaceRequestor to get at the
+                        progress event sink interface.
   */ 
 
-  void openURI(in nsIChannel aChannel, 
-			   in nsURILoadCommand aCommand,
-			   in nsISupports aWindowContext);
+  void openURI(in nsIChannel aChannel,
+               in boolean aIsContentPreferred,
+               in nsISupports aWindowContext);
 
 
   /* same call as OpenURI except this one takes an IP address to use as well...
-     adapterBinding -> the local IP address to bind to*/			   
+     adapterBinding -> the local IP address to bind to
+   */
 
   void openURIVia(in nsIChannel aChannel,
-				  in nsURILoadCommand aCommand,
-				  in nsISupports aWindowContext,
-				  in unsigned long adapterBinding); 
+                  in boolean aIsContentPreferred,
+                  in nsISupports aWindowContext,
+                  in unsigned long adapterBinding); 
 
-  /* stops an in progress load */
+  /* stops an in progress load
+   */
   void stop(in nsISupports aLoadCookie);
   
   /* dirty little back door for sneaking the load group out in case you need 
-     it to create the channel before calling openURI */
+     it to create the channel before calling openURI
+   */
   nsILoadGroup getLoadGroupForContext(in nsISupports aWindowContext);
   nsIDocumentLoader getDocumentLoaderForContext (in nsISupports aWindowContext);
 
 
-    /* these are nsURILoadCommand */
-   const long viewNormal = 0;
-   const long viewUserClick = 7;
-   const long viewNormalBackground = 0;
-
   /* mscott -> I'm going to move this out into a separate private interface
    */
   void dispatchContent(in string aContentType,
-					   in nsURILoadCommand aCommand,
-					   in nsIRequest aRequest, 
-					   in nsISupports aCtxt,
-					   in nsIURIContentListener aContentListener,
-					   in nsISupports aSrcWindowContext,
-					   out string aDesiredContentType,
-					   out nsIURIContentListener aTargetListener,
-					   out boolean abortDispatch);
+                       in boolean aIsContentPreferred,
+                       in nsIRequest aRequest, 
+                       in nsISupports aCtxt,
+                       in nsIURIContentListener aContentListener,
+                       in nsISupports aSrcWindowContext,
+                       out string aDesiredContentType,
+                       out nsIURIContentListener aTargetListener,
+                       out boolean abortDispatch);
 };
 

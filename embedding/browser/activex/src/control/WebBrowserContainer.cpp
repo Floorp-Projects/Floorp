@@ -387,22 +387,22 @@ NS_IMETHODIMP CWebBrowserContainer::OnStartURIOpen(nsIURI *pURI, PRBool *aAbortO
     return NS_OK;
 }
 
-/* void doContent (in string aContentType, in nsURILoadCommand aCommand, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
-NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, nsURILoadCommand aCommand, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
+/* void doContent (in string aContentType, in boolean aIsContentPreferred, in nsIRequest request, out nsIStreamListener aContentHandler, out boolean aAbortProcess); */
+NS_IMETHODIMP CWebBrowserContainer::DoContent(const char *aContentType, PRBool aIsContentPreferred, nsIRequest *request, nsIStreamListener **aContentHandler, PRBool *aAbortProcess)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
-/* boolean isPreferred (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+/* boolean isPreferred (in string aContentType, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::IsPreferred(const char *aContentType, char **aDesiredContentType, PRBool *_retval)
 {
-    return CanHandleContent(aContentType, aCommand, aDesiredContentType, _retval);
+    return CanHandleContent(aContentType, PR_TRUE, aDesiredContentType, _retval);
 }
 
 
-/* boolean canHandleContent (in string aContentType, in nsURILoadCommand aCommand, out string aDesiredContentType); */
-NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, nsURILoadCommand aCommand, char **aDesiredContentType, PRBool *_retval)
+/* boolean canHandleContent (in string aContentType, in PRBool aIsContentPreferred, out string aDesiredContentType); */
+NS_IMETHODIMP CWebBrowserContainer::CanHandleContent(const char *aContentType, PRBool aIsContentPreferred, char **aDesiredContentType, PRBool *_retval)
 {
     if (aContentType)
     {

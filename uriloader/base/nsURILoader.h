@@ -67,7 +67,7 @@ protected:
   // a small helper function
   PRBool ShouldHandleContent(nsIURIContentListener * aCntListener, 
                              const char * aContentType,
-                             nsURILoadCommand aCommand,
+                             PRBool bIsContentPreferred,
                              char ** aContentTypeToUse);
 };
 
