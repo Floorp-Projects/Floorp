@@ -1217,7 +1217,7 @@ nsPasswordManager::Notify(nsIContent* aFormNode,
                                 dialogText.get(),
                                 (nsIPrompt::BUTTON_TITLE_YES * nsIPrompt::BUTTON_POS_0) +
                                 (nsIPrompt::BUTTON_TITLE_NO * nsIPrompt::BUTTON_POS_1),
-                                nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+                                nsnull, nsnull, nsnull, nsnull, nsnull,
                                 &selection);
 
               if (selection == 0)
