@@ -2251,6 +2251,13 @@ nsWebBrowserPersist::EnumCleanupURIMap(nsHashKey *aKey, void *aData, void* closu
 PRBool PR_CALLBACK
 nsWebBrowserPersist::EnumCleanupUploadList(nsHashKey *aKey, void *aData, void* closure)
 {
+    nsCOMPtr<nsISupports> keyPtr;
+    ((nsMyISupportsKey *) aKey)->GetISupports(getter_AddRefs(keyPtr));
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(keyPtr);
+    if (channel)
+    {
+        channel->Cancel(NS_BINDING_ABORTED);
+    }
     UploadData *data = (UploadData *) aData;
     if (data)
     {
