@@ -66,7 +66,7 @@ function goEditCardDialog(abURI, card, okCallback)
 function goPreferences(id, pane)
 {
   //if( !top.goPrefWindow ) // XXXX commenting out for now until we find a way to duplicate this.
-    top.goPrefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=yes,resizable=yes", pane);
+    top.goPrefWindow = window.openDialog("chrome://pref/content/pref.xul","PrefWindow", "chrome,modal=no,resizable=yes", pane);
 }
 
 
