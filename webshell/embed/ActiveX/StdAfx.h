@@ -90,6 +90,7 @@ typedef long int32;
 #include "nsViewsCID.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsICookieService.h"
 
 #include "nsIHTTPChannel.h"
