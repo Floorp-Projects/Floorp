@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.28 $
+ *  Version: $Revision: 1.29 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.28 2002/12/04 07:22:50 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.29 2002/12/04 07:26:02 samuel%sieb.net Exp $
  */
 
 /*
@@ -82,9 +82,9 @@ nsXmlRpcClient.prototype = {
     _passwordTried: false,
 
     init: function(serverURL) {
-        var oURL = createInstance('@mozilla.org/network/standard-url;1',
-            'nsIURL');
-        oURL.spec = serverURL;
+        var ios = Components.classes["@mozilla.org/network/io-service;1"].
+            getService(Components.interfaces.nsIIOService);
+        var oURL = ios.newURI(serverURL, null, null);
 
         // Make sure it is a complete spec
         // Note that we don't care what the scheme is otherwise.
