@@ -605,6 +605,15 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     aDesiredSize.maxElementSize->width  += borderPadding.left + borderPadding.right;
     aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom;
   }
+
+  // if we are constrained and the child is smaller, use the constrained values
+  if (aReflowState.HaveConstrainedWidth() && (aDesiredSize.width < aReflowState.minWidth)) {
+    aDesiredSize.width = aReflowState.minWidth;
+  }
+  if (aReflowState.HaveConstrainedHeight() && (aDesiredSize.height < aReflowState.minHeight)) {
+    aDesiredSize.height = aReflowState.minHeight;
+  }
+
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
