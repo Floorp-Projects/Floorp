@@ -306,25 +306,25 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
 
     nsString pushBuffer;
    
-    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td><a href=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("<tr valign=\"bottom\">\n <td><a href=\""));
 
     nsXPIDLCString loc;
     aIndex->GetLocation(getter_Copies(loc));
     
     pushBuffer.AppendWithConversion(loc);
 
-    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"middle\" hspace=\"2\" src=\""));
+    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"absbottom\" hspace=\"2\" src=\""));
 
     PRUint32 type;
     aIndex->GetType(&type);
     switch (type) {
     case nsIDirIndex::TYPE_DIRECTORY:
     case nsIDirIndex::TYPE_SYMLINK:
-        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-menu"));
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-menu\" alt=\"Directory"));
         break;
     case nsIDirIndex::TYPE_FILE:
     case nsIDirIndex::TYPE_UNKNOWN:
-        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown"));
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown\" alt=\"File"));
         break;
     }
     pushBuffer.Append(NS_LITERAL_STRING("\"><tt>"));
