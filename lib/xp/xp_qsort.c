@@ -43,7 +43,7 @@
 static char sccsid[] = "@(#)qsort.c	8.1 (Berkeley) 6/4/93";
 #endif
 static const char rcsid[] =
-	"$Id: xp_qsort.c,v 3.1 1998/03/28 03:33:33 ltabb Exp $";
+	"$Id: xp_qsort.c,v 3.2 1998/04/07 23:30:24 slamm Exp $";
 #endif /* LIBC_SCCS and not lint */
 
 #include <stdlib.h>
@@ -183,7 +183,7 @@ loop:	SWAPINIT(a, es);
 	r = min(pd - pc, pn - pd - es);
 	vecswap(pb, pn - r, r);
 	if ((r = pb - pa) > es)
-		qsort(a, r / es, es, cmp);
+        XP_QSORT(a, r / es, es, cmp);
 	if ((r = pd - pc) > es) {
 		/* Iterate rather than recurse to save stack space */
 		a = pn - r;
