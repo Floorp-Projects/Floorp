@@ -53,6 +53,8 @@
 #include "nsIJSRuntimeService.h"
 #include "jsapi.h"
 
+#include "nsQuickSort.h"
+
 #ifdef _WIN32
 #include "windows.h"
 #endif /* _WIN32 */
@@ -60,7 +62,13 @@
 #define PREFS_HEADER_LINE_1 "# Mozilla User Preferences"
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
 
+#define INITIAL_MAX_DEFAULT_PREF_FILES 10
+
 #include "prefapi_private_data.h"
+
+#if defined(DEBUG_mcafee) || defined(DEBUG_seth) || defined (DEBUG_sspitzer)
+#define DEBUG_prefs
+#endif
 
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
@@ -906,19 +914,19 @@ static PR_CALLBACK PRIntn
 pref_addChild(PLHashEntry *he, int i, void *arg)
 {
 	PrefChildIter* pcs = (PrefChildIter*) arg;
-	if ( PL_strncmp((char*)he->key, pcs->parent, strlen(pcs->parent)) == 0 )
+	if ( PL_strncmp((char*)he->key, pcs->parent, PL_strlen(pcs->parent)) == 0 )
 	{
 		char buf[512];
 		char* nextdelim;
-		PRUint32 parentlen = strlen(pcs->parent);
+		PRUint32 parentlen = PL_strlen(pcs->parent);
 		char* substring;
 
-		PL_strncpy(buf, (char*)he->key, PR_MIN(512, strlen((char*)he->key) + 1));
+		PL_strncpy(buf, (char*)he->key, PR_MIN(512, PL_strlen((char*)he->key) + 1));
 		nextdelim = buf + parentlen;
 		if (parentlen < PL_strlen(buf))
 		{
 			/* Find the next delimiter if any and truncate the string there */
-			nextdelim = strstr(nextdelim, ".");
+			nextdelim = PL_strstr(nextdelim, ".");
 			if (nextdelim)
 			{
 				*nextdelim = ';';
@@ -926,10 +934,10 @@ pref_addChild(PLHashEntry *he, int i, void *arg)
 			}
 		}
 
-		substring = strstr(pcs->childList, buf);
+		substring = PL_strstr(pcs->childList, buf);
 		if (!substring)
 		{
-			unsigned int newsize = strlen(pcs->childList) + strlen(buf) + 2;
+			unsigned int newsize = PL_strlen(pcs->childList) + PL_strlen(buf) + 2;
 			if (newsize > pcs->bufsize)
 			{
 				pcs->bufsize *= 3;
@@ -972,7 +980,7 @@ NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **li
 	char* child = strtok(temp, ";");
 	if (child)
 	{
-		*indx += strlen(child) + 1;
+		*indx += PL_strlen(child) + 1;
 		*listchild = child;
 		return NS_OK;
 	}
@@ -990,7 +998,7 @@ PR_STATIC_CALLBACK(PRIntn)
 pref_enumChild(PLHashEntry *he, int i, void *arg)
 {
     EnumerateData *d = (EnumerateData *) arg;
-    if (PL_strncmp((char*)he->key, d->parent, strlen(d->parent)) == 0) {
+    if (PL_strncmp((char*)he->key, d->parent, PL_strlen(d->parent)) == 0) {
         (*d->callback)((char*)he->key, d->arg);
     }
     return HT_ENUMERATE_NEXT;
@@ -1028,7 +1036,7 @@ PrefResult pref_OpenFileSpec(
     char* readBuf;
     if (NS_FAILED(fileSpec->GetFileContents(&readBuf)))
     	return PREF_ERROR;
-    long fileLength = strlen(readBuf);
+    long fileLength = PL_strlen(readBuf);
     if (verifyHash && !pref_VerifyLockFile(readBuf, fileLength))
         result = PREF_BAD_LOCKFILE;
     if (!PREF_EvaluateConfigScript(readBuf, fileLength,
@@ -1091,6 +1099,35 @@ PR_IMPLEMENT(PrefResult) PREF_SavePrefFileSpecWith(
     return PREF_NOERROR;
 }
 
+/// Note: inplaceSortCallback is a small C callback stub for NS_QuickSort
+static int
+inplaceSortCallback(const void *data1, const void *data2, void *privateData)
+{
+	char *name1 = nsnull;
+	char *name2 = nsnull;
+	nsIFileSpec *file1= *(nsIFileSpec **)data1;
+	nsIFileSpec *file2= *(nsIFileSpec **)data2;
+	nsresult rv;
+	int sortResult = 0;
+
+	rv = file1->GetLeafName(&name1);
+	NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
+	if (NS_SUCCEEDED(rv)) {
+		rv = file2->GetLeafName(&name2);
+		NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the leaf name");
+		if (NS_SUCCEEDED(rv)) {
+			if (name1 && name2) {
+				// we want it so foo.js will come before foo-<bar>.js
+				// "foo." is before "foo-", so we have to reverse the order to accomplish
+				sortResult = PL_strcmp(name2,name1);
+			}
+			if (name1) nsCRT::free((char*)name1);
+			if (name2) nsCRT::free((char*)name2);
+		}
+	}
+	return sortResult;
+}
+
 //----------------------------------------------------------------------------------------
 extern "C" JSBool pref_InitInitialObjects()
 // Initialize default preference JavaScript buffers from
@@ -1117,8 +1154,12 @@ extern "C" JSBool pref_InitInitialObjects()
 #endif
 	};
     
-	int k;
+	int k=0;
 	JSBool worked = JS_FALSE;
+ 	nsIFileSpec ** defaultPrefFiles = new nsIFileSpec*[INITIAL_MAX_DEFAULT_PREF_FILES];
+	int maxDefaultPrefFiles = INITIAL_MAX_DEFAULT_PREF_FILES;
+	int numFiles = 0;
+
 	// Parse all the random files that happen to be in the components directory.
     nsIDirectoryIterator* i = nsnull;
     rv = nsComponentManager::CreateInstance(
@@ -1151,9 +1192,9 @@ extern "C" JSBool pref_InitInitialObjects()
 	NS_ASSERTION(worked, "initpref.js not parsed successfully");
 	// Keep this child
 
-#ifdef DEBUG_mcafee
-            printf("Parsing default JS files.\n");
-#endif
+#ifdef DEBUG_prefs
+    printf("Parsing default JS files.\n");
+#endif /* DEBUG_prefs */
 	for (; Exists(i); i->Next())
 	{
 		nsIFileSpec* child;
@@ -1165,36 +1206,78 @@ extern "C" JSBool pref_InitInitialObjects()
 		if NS_FAILED(rv)
 			goto next_child;
 		// Skip non-js files
-		if (strstr(leafName, ".js") + strlen(".js") != leafName + strlen(leafName))
+		if (PL_strstr(leafName, ".js") + PL_strlen(".js") != leafName + PL_strlen(leafName))
 			shouldParse = PR_FALSE;
 		// Skip files in the special list.
 		if (shouldParse)
 		{
-#ifdef DEBUG_mcafee
-            printf("Parsing %s\n", leafName);
-#endif
-
 			for (int j = 0; j < (int) (sizeof(specialFiles) / sizeof(char*)); j++)
-				if (strcmp(leafName, specialFiles[j]) == 0)
+				if (PL_strcmp(leafName, specialFiles[j]) == 0)
 					shouldParse = PR_FALSE;
 		}
-		nsCRT::free((char*)leafName);
 		if (shouldParse)
 		{
-		    worked = (JSBool)(pref_OpenFileSpec(
-		    	child,
-		    	PR_FALSE,
-		    	PR_FALSE,
-		    	PR_FALSE,
-		    	PR_FALSE) == PREF_NOERROR);
-			NS_ASSERTION(worked, "Config file not parsed successfully");
+#ifdef DEBUG_prefs
+            printf("Adding %s to the list to be sorted\n", leafName);
+#endif /* DEBUG_prefs */
+			rv = NS_NewFileSpec(&(defaultPrefFiles[numFiles]));
+			NS_ASSERTION(NS_SUCCEEDED(rv),"failed to create a file spec");
+			if (NS_SUCCEEDED(rv) && defaultPrefFiles[numFiles]) {
+				rv = defaultPrefFiles[numFiles]->FromFileSpec(child);
+				NS_ASSERTION(NS_SUCCEEDED(rv),"failed to set the spec");
+				if (NS_SUCCEEDED(rv)) {
+					numFiles++;
+				}
+				if (numFiles == maxDefaultPrefFiles) {
+					// double the size of the array
+					nsIFileSpec **newArray;
+					newArray = new nsIFileSpec*[maxDefaultPrefFiles * 2];
+					nsCRT::memcpy(newArray,defaultPrefFiles,maxDefaultPrefFiles*sizeof(nsIFileSpec *));
+					maxDefaultPrefFiles *= 2;
+					delete [] defaultPrefFiles;
+					defaultPrefFiles = newArray; 
+				}
+			}
 		}
+		if (leafName) nsCRT::free((char*)leafName);
 	next_child:
 		NS_IF_RELEASE(child);
 	}
-#ifdef DEBUG_mcafee
+
+#ifdef DEBUG_prefs
+	printf("Sort defaultPrefFiles.  we need them sorted so all-ns.js will override all.js (where override == parsed later)\n");
+#endif /* DEBUG_prefs */
+	NS_QuickSort((void *)defaultPrefFiles, numFiles,sizeof(nsIFileSpec *), inplaceSortCallback, nsnull);
+
+	for (k=0;k<numFiles;k++) {
+		char* currentLeafName = nsnull;
+		if (defaultPrefFiles[k]) {
+				rv = defaultPrefFiles[k]->GetLeafName(&currentLeafName);
+#ifdef DEBUG_prefs
+				printf("Parsing %s\n", currentLeafName);
+#endif /* DEBUG_prefs */
+				if (currentLeafName) nsCRT::free((char*)currentLeafName);
+
+				if (NS_SUCCEEDED(rv)) {
+					worked = (JSBool)(pref_OpenFileSpec(
+						defaultPrefFiles[k],
+						PR_FALSE,
+						PR_FALSE,
+						PR_FALSE,
+						PR_FALSE) == PREF_NOERROR);
+					NS_ASSERTION(worked, "Config file not parsed successfully");
+				}
+		}
+	}
+	for (k=0;k<numFiles;k++) {
+		NS_IF_RELEASE(defaultPrefFiles[k]);
+	}
+	delete [] defaultPrefFiles;
+	defaultPrefFiles = nsnull;
+
+#ifdef DEBUG_prefs
             printf("Parsing platform-specific JS files.\n");
-#endif
+#endif /* DEBUG_prefs */
 	// Finally, parse any other special files (platform-specific ones).
 	for (k = 1; k < (int) (sizeof(specialFiles) / sizeof(char*)); k++)
 	{
@@ -1204,9 +1287,9 @@ extern "C" JSBool pref_InitInitialObjects()
 		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
 
-#ifdef DEBUG_mcafee
+#ifdef DEBUG_prefs
             printf("Parsing %s\n", specialFiles[k]);
-#endif
+#endif /* DEBUG_prefs */
 
 	    worked = (JSBool)(pref_OpenFileSpec(
     		specialChild2,
