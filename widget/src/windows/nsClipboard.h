@@ -53,13 +53,14 @@ public:
   static nsresult SetupNativeDataObject(nsITransferable * aTransferable, 
                                         IDataObject * aDataObj);
 
-  static nsresult GetDataFromDataObject(IDataObject     * aDataObject, 
+  static nsresult GetDataFromDataObject(IDataObject     * aDataObject,
+                                        UINT              anIndex,
                                         nsIWidget       * aWindow,
                                         nsITransferable * aTransferable);
 
-  static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen);
+  static nsresult GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
 
-  static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen);
+  static nsresult GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen);
 
   static nsresult GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLen);
 

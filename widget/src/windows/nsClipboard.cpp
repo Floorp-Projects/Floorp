@@ -256,7 +256,7 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void ** aData, PRUint32 * aLe
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT aFormat, void ** aData, PRUint32 * aLen)
+nsresult nsClipboard::GetNativeDataOffClipboard(nsIWidget * aWindow, UINT /*aIndex*/, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   HGLOBAL   hglb; 
   nsresult  result = NS_ERROR_FAILURE;
@@ -381,13 +381,14 @@ PRUint8 * GetDIBBits(BITMAPINFO * aBitmapInfo)
 }
 
 //-------------------------------------------------------------------------
-nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aFormat, void ** aData, PRUint32 * aLen)
+nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT aIndex, UINT aFormat, void ** aData, PRUint32 * aLen)
 {
   nsresult result = NS_ERROR_FAILURE;
+  *aData = nsnull;
+  *aLen = 0;
 
-  if (nsnull == aDataObject) {
+  if ( !aDataObject )
     return result;
-  }
 
   UINT    format = aFormat;
   HRESULT hres   = S_FALSE;
@@ -471,11 +472,8 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
                   ::GlobalUnlock (hGlobal) ;
                   result = NS_OK;
-                } else {
-                  *aData = nsnull;
-                  aLen   = 0;
                 }
-
+                
                 // XXX NOTE this is temporary
                 // until the rest of the image code gets in
                 NS_ASSERTION(0, "Take this out when editor can handle images");
@@ -483,27 +481,29 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
             case CF_HDROP : 
               {
-                HDROP dropFiles = (HDROP)(*aData);
+                // in the case of a file drop, multiple files are stashed within a
+                // single data object. In order to match mozilla's D&D apis, we
+                // just pull out the file at the requested index, pretending as
+                // if there really are multiple drag items.
+                HDROP dropFiles = (HDROP) ::GlobalLock(stm.hGlobal);
 
-                char fileName[1024];
-                UINT numFiles = DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
+                UINT numFiles = ::DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
+                NS_ASSERTION ( numFiles > 0, "File drop flavor, but no files...hmmmm" );
+                NS_ASSERTION ( aIndex < numFiles, "Asked for a file index out of range of list" );
                 if (numFiles > 0) {
-                  nsVoidArray * fileList = new nsVoidArray();
-                  for (UINT i=0;i<numFiles;i++) {
-                    UINT bytesCopied = ::DragQueryFile(dropFiles, i, fileName, 1024);
-                    //nsAutoString name((char *)fileName, bytesCopied-1);
-                    nsString name = fileName;
-                    printf("name [%s]\n", name.ToNewCString());
-                    nsFilePath filePath(name);
-                    nsFileSpec * fileSpec = new nsFileSpec(filePath);
-                    fileList->AppendElement(fileSpec);
+                  UINT fileNameLen = ::DragQueryFile(dropFiles, aIndex, nsnull, 0);
+                  char* buffer = NS_REINTERPRET_CAST(char*, nsAllocator::Alloc(fileNameLen + 1));
+                  if ( buffer ) {
+                    ::DragQueryFile(dropFiles, aIndex, buffer, fileNameLen + 1);
+                    *aData = buffer;
+                    *aLen = fileNameLen;
+                    result = NS_OK;
                   }
-                  *aLen  = (PRUint32)numFiles;
-                  *aData = fileList;
-                } else {
-                  *aData = nsnull;
-                  *aLen = 0;
+                  else
+                    result = NS_ERROR_OUT_OF_MEMORY;
                 }
+                ::GlobalUnlock (stm.hGlobal) ;
+
               } break;
 
             default: {
@@ -533,12 +533,14 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
     } //switch
   }
 
+  ReleaseStgMedium(&stm);
   return result;
 }
 
 
 //-------------------------------------------------------------------------
 nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
+                                            UINT              anIndex,
                                             nsIWidget       * aWindow,
                                             nsITransferable * aTransferable)
 {
@@ -572,18 +574,18 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       PRUint32 dataLen;
       PRBool dataFound = PR_FALSE;
       if (nsnull != aDataObject) {
-        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen)) )
+        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aDataObject, anIndex, format, &data, &dataLen)) )
           dataFound = PR_TRUE;
       } 
       else if (nsnull != aWindow) {
-        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, format, &data, &dataLen)) )
+        if ( NS_SUCCEEDED(GetNativeDataOffClipboard(aWindow, anIndex, format, &data, &dataLen)) )
           dataFound = PR_TRUE;
       }
       if ( !dataFound ) {
 	    // if we are looking for text/unicode and we fail to find it on the clipboard first,
         // try again with text/plain. If that is present, convert it to unicode.
         if ( strcmp(flavorStr, kUnicodeMime) == 0 ) {
-          nsresult loadResult = GetNativeDataOffClipboard(aDataObject, GetFormat(kTextMime), &data, &dataLen);
+          nsresult loadResult = GetNativeDataOffClipboard(aDataObject, anIndex, GetFormat(kTextMime), &data, &dataLen);
           if ( NS_SUCCEEDED(loadResult) && data ) {
             const char* castedText = NS_REINTERPRET_CAST(char*, data);          
             PRUnichar* convertedText = nsnull;
@@ -602,19 +604,32 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
       } // if we try one last ditch effort to find our data
 
       if ( dataFound ) {
-        // the DOM only wants LF, so convert from Win32 line endings to DOM line
-        // endings.
-        PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
-        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
-        dataLen = signedLen;
-
         nsCOMPtr<nsISupports> genericDataWrapper;
-        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+	    if ( strcmp(flavorStr, kFileMime) == 0 ) {
+	      // we have a file path in |data|. Create an nsLocalFile object.
+	      char* filepath = NS_REINTERPRET_CAST(char*, data);
+	      nsCOMPtr<nsILocalFile> file;
+	      if ( NS_SUCCEEDED(NS_NewLocalFile(filepath, getter_AddRefs(file))) )
+	        genericDataWrapper = do_QueryInterface(file);
+	    }
+	    else {
+          // we probably have some form of text. The DOM only wants LF, so convert from Win32 line 
+          // endings to DOM line endings.
+          PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
+          nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
+          dataLen = signedLen;
+
+          nsCOMPtr<nsISupports> genericDataWrapper;
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+        }
+        
+        NS_ASSERTION ( genericDataWrapper, "About to put null data into the transferable" );
         aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
 
-        nsAllocator::Free ( NS_REINTERPRET_CAST(char*, data) );
-        
+        nsAllocator::Free ( NS_REINTERPRET_CAST(char*, data) );        
         res = NS_OK;
+        
+        // we found one, get out of the loop
         break;
       }
 
@@ -639,10 +654,10 @@ NS_IMETHODIMP nsClipboard::GetNativeClipboardData ( nsITransferable * aTransfera
   IDataObject * dataObj;
   if (S_OK == ::OleGetClipboard(&dataObj)) {
     // Use OLE IDataObject for clipboard operations
-    res = GetDataFromDataObject(dataObj, nsnull, aTransferable);
+    res = GetDataFromDataObject(dataObj, 0, nsnull, aTransferable);
   } else {
     // do it the old manula way
-    res = GetDataFromDataObject(nsnull, mWindow, aTransferable);
+    res = GetDataFromDataObject(nsnull, 0, mWindow, aTransferable);
   }
   return res;
 
