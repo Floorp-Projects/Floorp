@@ -681,7 +681,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           ret = NS_NewDOMUIEvent(aDOMEvent, aPresContext, aEvent);
         }
         if (NS_OK == ret) {
-          for (int i=0; i<mMouseListeners->Count(); i++) {
+          for (int i=0; mMouseListeners && i<mMouseListeners->Count(); i++) {
             nsListenerStruct *ls;
             nsIDOMMouseListener *mMouseListener;
 
