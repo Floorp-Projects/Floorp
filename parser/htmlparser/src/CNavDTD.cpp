@@ -881,7 +881,8 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         case eHTMLTag_comment:
         case eHTMLTag_newline:
         case eHTMLTag_whitespace:
-          if(mMisplacedContent.GetSize()<1) {
+        case eHTMLTag_userdefined:
+          if (mMisplacedContent.GetSize() == 0) {
             // simply pass these through to token handler without further ado...
             // fix for bugs 17017,18308,23765,24275,69331
             break;  
@@ -1481,13 +1482,13 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
     
     //this code is here to make sure the head is closed before we deal 
     //with any tags that don't belong in the head.
-    if (NS_SUCCEEDED(result) && mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD) {
-      static eHTMLTags skip2[] = {eHTMLTag_newline,eHTMLTag_whitespace};
-      if (!FindTagInSet(aTag,skip2,sizeof(skip2)/sizeof(eHTMLTag_unknown))) {
-        PRBool theExclusive = PR_FALSE;
-        if (!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, theExclusive)) {      
-          result = CloseHead();
-        }
+    if (NS_SUCCEEDED(result) && (mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD && 
+                                 eHTMLTag_newline != aTag &&
+                                 eHTMLTag_whitespace != aTag &&
+                                 eHTMLTag_userdefined != aTag)) {
+      PRBool theExclusive = PR_FALSE;
+      if (!gHTMLElements[eHTMLTag_head].IsChildOfHead(aTag, theExclusive)) {      
+        result = CloseHead();
       }
     }
   }
@@ -1750,8 +1751,9 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
       if(!isTokenHandled) {
         if(theHeadIsParent || ((mFlags & NS_DTD_FLAG_HAS_OPEN_HEAD)  && 
-                               (eHTMLTag_newline == theChildTag || 
-                                eHTMLTag_whitespace == theChildTag))) {
+                               (eHTMLTag_newline == theChildTag    || 
+                                eHTMLTag_whitespace == theChildTag ||
+                                eHTMLTag_userdefined == theChildTag))) {
             result = AddHeadLeaf(theNode);
         }
         else 
