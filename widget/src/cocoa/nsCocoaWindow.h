@@ -191,14 +191,14 @@ protected:
 #endif
 
 #if 0
-	PRBool							mIsDialog;       // true if the window is a dialog
 	auto_ptr<nsMacEventHandler>		mMacEventHandler;
-	nsIWidget                      *mOffsetParent;
 	PRBool                          mAcceptsActivation;
 	PRBool                          mIsActive;
 	PRBool                          mZoomOnShow;	
 #endif // COCOA
 
+	nsIWidget*        mOffsetParent;   // if we're a popup, this is our parent [WEAK]
+	PRBool				    mIsDialog;       // true if the window is a dialog
 	PRBool            mIsResizing;     // we originated the resize, prevent infinite recursion
 	PRBool            mWindowMadeHere; // true if we created the window, false for embedding
   NSWindow*         mWindow;         // our cocoa window [STRONG]

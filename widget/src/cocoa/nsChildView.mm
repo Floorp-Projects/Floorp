@@ -383,11 +383,11 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
     }
       
     case NS_NATIVE_OFFSETX:
-      retVal = (void*)mBounds.x;
+      retVal = 0;
       break;
 
     case NS_NATIVE_OFFSETY:
-      retVal = (void*)mBounds.y;
+      retVal = 0;
       break;
     
 #if 0
