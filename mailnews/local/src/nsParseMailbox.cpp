@@ -1748,6 +1748,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 
 	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
 
+	NS_RELEASE(myThis);
 	if (lockedFolder && (err = lockedFolder->AcquireSemaphore (myISupports)) != 0)
 		return err;
 
