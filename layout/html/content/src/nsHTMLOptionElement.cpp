@@ -307,7 +307,7 @@ nsHTMLOptionElement::SetLabel(const nsString& aValue)
   nsresult result = mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::label, aValue, PR_TRUE); 
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
-    nsresult result = GetPrimaryFrame(fcFrame);
+    result = GetPrimaryFrame(fcFrame);
     if (NS_SUCCEEDED(result) && (nsnull != fcFrame)) {
       nsIComboboxControlFrame* selectFrame = nsnull;
       result = fcFrame->QueryInterface(nsIComboboxControlFrame::GetIID(),(void **) &selectFrame);

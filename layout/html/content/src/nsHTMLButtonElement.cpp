@@ -417,9 +417,9 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
   NS_ENSURE_ARG_POINTER(aEventStatus);
 
   // Do not process any DOM events if the element is disabled
-  PRBool disabled;
-  nsresult rv = GetDisabled(&disabled);
-  if (NS_FAILED(rv) || disabled) {
+  PRBool bDisabled;
+  nsresult rv = GetDisabled(&bDisabled);
+  if (NS_FAILED(rv) || bDisabled) {
     return rv;
   }
 
