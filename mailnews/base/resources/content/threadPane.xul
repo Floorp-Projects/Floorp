@@ -33,6 +33,7 @@ Rights Reserved.
 
 
 <tree datasources="rdf:null" id="threadTree"
+	          class="window-focusborder"
               onclick="ThreadPaneOnClick(event);"
               ondraggesture="return BeginDragThreadTree(event);"
               ondragdrop="return DropOnThreadTree(event);" 

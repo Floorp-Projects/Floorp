@@ -158,7 +158,7 @@ var ThreadPaneController =
 						ClearMessagePane();
 				}
 					//setting threadTree on
-        			document.getElementById("threadTree").setAttribute("focusring","true");
+        			//document.getElementById("threadTree").setAttribute("focusring","true");
 				break;
 		}
 	},
@@ -168,14 +168,14 @@ var ThreadPaneController =
 		// on blur events set the menu item texts back to the normal values
 		if ( event == 'blur' )
         {
-              document.getElementById("threadTree").setAttribute("focusring","false");
+              //document.getElementById("threadTree").setAttribute("focusring","false");
 
 		}
 		
 		if ( event == 'focus' )
         {
         	//alert("focus")
-              document.getElementById("threadTree").setAttribute("focusring","true");
+              //document.getElementById("threadTree").setAttribute("focusring","true");
 
 		}		
 	}
@@ -503,44 +503,6 @@ function GetNumSelectedMessages()
 
 function CommandUpdate_Mail()
 {
-	//var messagePane = top.document.getElementById('messagePane');
-	//var drawFocusBorder = messagePane.getAttribute('draw-focus-border');
-		document.getElementById("messagepanebox").setAttribute("focusring","false");
-		document.getElementById("threadTree").setAttribute("focusring","false")
-		document.getElementById("folderTree").setAttribute("focusring","false")
-	
-	if ( MessagePaneHasFocus() )
-	{
-		//if ( !drawFocusBorder )
-		//	messagePane.setAttribute('draw-focus-border', 'true');
-		document.getElementById("messagepanebox").setAttribute("focusring","true");
-		//document.getElementById("threadTree").setAttribute("focusring","false")
-		//document.getElementById("folderTree").setAttribute("focusring","false")
-
-	}
-	else
-	{
-		//if ( drawFocusBorder )
-		//	messagePane.removeAttribute('draw-focus-border');
-		//document.getElementById("messagepanebox").setAttribute("focusring","false");
-		
-		if( WhichPaneHasFocus() == "threadTree"){
-			document.getElementById("threadTree").setAttribute("focusring","true")
-			//document.getElementById("folderTree").setAttribute("focusring","false")
-		}
-		
-// mail3PaneWindowCommands.js
-		else{
-			if(WhichPaneHasFocus()=="folderTree")
-			//document.getElementById("threadTree").setAttribute("focusring","false")
-			document.getElementById("folderTree").setAttribute("focusring","true")
-		}
-		
-	}
-
-
-
-		
 
 	//goUpdateCommand('button_delete');
 
@@ -566,6 +528,52 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_emptyTrash');
 	goUpdateCommand('cmd_compactFolder');
 }
+
+
+var lastFocusedElement=null;
+
+function FocusRingUpdate_Mail(){
+	var currentFocusedElement = null;
+	
+	if(MessagePaneHasFocus()){
+		currentFocusedElement="messagepanebox"
+	}
+	else{
+		currentFocusedElement= WhichPaneHasFocus()	
+	}
+	
+	if(currentFocusedElement != lastFocusedElement){
+			if( currentFocusedElement == "threadTree"){
+				document.getElementById("threadTree").setAttribute("focusring","true")
+				//document.getElementById("folderTree").setAttribute("focusring","false")
+				document.getElementById("messagepanebox").setAttribute("focusring","false")
+
+			}
+
+			else{
+				if(currentFocusedElement=="folderTree"){
+						document.getElementById("threadTree").setAttribute("focusring","false")
+						//document.getElementById("folderTree").setAttribute("focusring","true")
+						document.getElementById("messagepanebox").setAttribute("focusring","false")
+				}
+				else{
+					if(currentFocusedElement=="messagepanebox"){
+						document.getElementById("threadTree").setAttribute("focusring","false")
+						//document.getElementById("folderTree").setAttribute("focusring","false")
+						document.getElementById("messagepanebox").setAttribute("focusring","true")
+					}
+					else{
+						document.getElementById("threadTree").setAttribute("focusring","false")
+						//document.getElementById("folderTree").setAttribute("focusring","false")
+						document.getElementById("messagepanebox").setAttribute("focusring","false")
+						}
+
+					}
+			}	
+		lastFocusedElement=currentFocusedElement;
+		}
+	}
+	
 
 function ThreadTreeUpdate_Mail(command)
 {
@@ -655,6 +663,7 @@ function MessagePaneHasFocus()
 	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
 	{
 		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow, false);
+
 		return hasFocus;
 	}
 	
@@ -686,7 +695,9 @@ function WhichPaneHasFocus(){
 			if(currentNode.getAttribute("id") == "threadTree" ){ whichPane="threadTree" }
 			
 			if(currentNode.getAttribute("id") == "folderTree"){  whichPane="folderTree" } 
-		
+	
+			if(currentNode.getAttribute("id") == "messagepanebox"){  whichPane="messagepanebox" }
+					
 			currentNode = currentNode.parentNode;
 		}
 	

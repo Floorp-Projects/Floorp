@@ -487,26 +487,26 @@ searchterm {
  *Focus rings on 3 pane view
  */
 
-
-#folderTree[focusring="true"]{
-	border:2px solid black;
-}
-
-#folderTree[focusring="false"]{
-	border:2px solid transparent;
-}
-
+#folderTree{
+	border: 2px solid transparent;
+} 
  
+#folderTree:focus{
+	border: 2px solid black;
+} 
+  
+  
 .window-focusborder[focusring="true"]{
-
  border:2px solid black;
-
-
 }
 
 .window-focusborder[focusring="false"]{
  border:2px solid transparent;
 } 
  
+
+
+
+
 
 

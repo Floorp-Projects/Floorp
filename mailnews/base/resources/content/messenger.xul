@@ -71,10 +71,15 @@ Rights Reserved.
 <script src="chrome://navigator/content/navigator.js"></script>
 
 <commands id="commands">
+
 	<commandset id="CommandUpdate_Mail"
 				commandupdater="true"
-				events="focus,folderTree-select,threadTree-select,blur"
+				events="focus,folderTree-select,threadTree-select"
 				oncommandupdate="CommandUpdate_Mail()"/>
+	<commandset id="FocusRingUpdate_Mail"
+				commandupdater="true"
+				events="focus"
+				oncommandupdate="FocusRingUpdate_Mail()"/>				
 	<commandset id="ThreadTreeUpdate_Mail"
 				commandupdater="true"
 				events="threadTree-select"
@@ -83,6 +88,7 @@ Rights Reserved.
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>
 	<commandset id="clipboardEditMenuItems"/>
+
 </commands>
 
 <broadcasterset id="broadcasterset"/>
@@ -123,14 +129,14 @@ Rights Reserved.
 
 		<box id="sidebar-box">
 			<sidebarheader type="box" class="sidebarheader-main" value="&mail-sidebar-header.label;"/>
-			<tree id="folderTree" flex="1000" context="folderPaneContext" focusring="false"/>
+			<tree id="folderTree" flex="1000" context="folderPaneContext"  />
 		</box>
           
 		<splitter id="sidebar-splitter"/>
 
 		<box orient="vertical" flex="1">
      
-			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+			<tree id="threadTree" flex="2" style="height:0px" context="threadPaneContext"  focusring="false"/>
 
 			<!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
 			<splitter collapse="after" persist="state" onclick="OnClickThreadAndMessagePaneSplitter()"

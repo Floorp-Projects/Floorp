@@ -73,6 +73,10 @@ Rights Reserved.
 				commandupdater="true"
 				events="threadTree-select"
 				oncommandupdate="ThreadTreeUpdate_Mail()"/>
+	<commandset id="FocusRingUpdate_Mail"
+				commandupdater="true"
+				events="focus"
+				oncommandupdate="FocusRingUpdate_Mail()"/>				
 	<commandset id="globalEditMenuItems"/>
 	<commandset id="selectEditMenuItems"/>
 	<commandset id="undoEditMenuItems"/>
@@ -123,7 +127,7 @@ Rights Reserved.
           
 		<box orient="vertical" flex="1">
 			<box align ="horizontal" flex="1">
-				<tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext"  focusring="false"/>
+				<tree id="folderTree" flex="1" style="width:0px;" context="folderPaneContext"  />
 				<splitter id="gray_vertical_splitter" collapse="after"  persist="state"/>
 				<tree id="threadTree" flex="2" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
 			</box>
