@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.24 2002/09/11 01:08:06 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.25 2002/09/18 00:34:32 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -956,6 +956,11 @@ SECStatus DPCache_Destroy(CRLDPCache* cache)
     for (i=0;i<cache->ncrls;i++)
     {
         SEC_DestroyCrl(cache->crls[i]);
+    }
+    /* free the array of CRLs */
+    if (cache->crls)
+    {
+	PR_Free(cache->crls);
     }
     /* destroy the hash table */
     if (cache->entries)
