@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.16 2002/03/26 01:13:23 nicolson%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.17 2002/09/07 00:25:49 jpierre%netscape.com Exp $
  */
 
 #include "secasn1.h"
@@ -551,7 +551,7 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
 	expect_tag_number = 0;
     } else {
 	check_tag_mask = SEC_ASN1_TAG_MASK;
-	expect_tag_modifiers = encode_kind & SEC_ASN1_TAG_MASK
+	expect_tag_modifiers = (unsigned char)encode_kind & SEC_ASN1_TAG_MASK
 				& ~SEC_ASN1_TAGNUM_MASK;
 	/*
 	 * XXX This assumes only single-octet identifiers.  To handle
@@ -1814,7 +1814,7 @@ sec_asn1d_next_in_sequence (sec_asn1d_state *state)
 		 * sake it should probably be made to work at some point.
 		 */
 		PORT_Assert (child_found_tag_number < SEC_ASN1_HIGH_TAG_NUMBER);
-		identifier = child_found_tag_modifiers | child_found_tag_number;
+		identifier = (unsigned char)(child_found_tag_modifiers | child_found_tag_number);
 		sec_asn1d_record_any_header (child, (char *) &identifier, 1);
 	    }
 	}
@@ -2061,7 +2061,7 @@ static unsigned long
 sec_asn1d_parse_end_of_contents (sec_asn1d_state *state,
 				 const char *buf, unsigned long len)
 {
-    int i;
+    unsigned int i;
 
     PORT_Assert (state->pending <= 2);
     PORT_Assert (state->place == duringEndOfContents);
@@ -2283,7 +2283,7 @@ SECStatus
 SEC_ASN1DecodeInteger(SECItem *src, unsigned long *value)
 {
     unsigned long v;
-    int i;
+    unsigned int i;
     
     if (src == NULL) {
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
