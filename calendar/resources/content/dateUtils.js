@@ -321,11 +321,13 @@ function DateFormater( )
       }
     } 
   }
-  // International formats ([roman, cyrillic letters]|chinese/kanji characters)
+  // International formats ([roman, cyrillic]|arabic|chinese/kanji characters)
+  // covering languages of U.N. (en,fr,sp,ru,ar,zh) and G8 (en,fr,de,it,ru,ja).
+  // See examples at parseTimeOfDay.
   var amExpr =
-    "[Aa\u0410\u0430][. ]?[Mm\u041c\u043c][. ]?|\u4e0a\u5348|\u5348\u524d";
+    "[Aa\u0410\u0430][. ]?[Mm\u041c\u043c][. ]?|\u0635|\u4e0a\u5348|\u5348\u524d";
   var pmExpr =
-    "[Pp\u0420\u0440][. ]?[Mm\u041c\u043c][. ]?|\u4e0b\u5348|\u5348\u5f8c";
+    "[Pp\u0420\u0440][. ]?[Mm\u041c\u043c][. ]?|\u0645|\u4e0b\u5348|\u5348\u5f8c";
   if (this.ampmIndex){
     amExpr = amFormatExpr+"|"+amExpr;
     pmExpr = pmFormatExpr+"|"+pmExpr;
@@ -552,6 +554,7 @@ DateFormater.prototype.parseShortDate = function ( dateString )
 // am/pm optional        "02:34 a.m.""02.34pm"  "02 34 A M" "02H34M P.M." "0234pm"
 // am/pm prefix          "a.m. 02:34""pm02.34"  "A M 02 34" "P.M. 02H34M" "pm0234"
 // am/pm cyrillic        "02:34\u0430.\u043c."  "02 34 \u0420 \u041c"
+// am/pm arabic          "\u063502:34" (RTL 02:34a) "\u0645 02.34" (RTL 02.34 p)
 // above/below noon      "\u4e0a\u534802:34"    "\u4e0b\u5348 02 34"
 // noon before/after     "\u5348\u524d02:34"    "\u5348\u5f8c 02 34"
 DateFormater.prototype.parseTimeOfDay = function( timeString )
