@@ -34,7 +34,7 @@ class nsBodyFrame : public nsHTMLContainerFrame,
 {
 public:
   friend nsresult NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent,
-                                  nsIFrame*& aResult, PRBool aIsTopLevel);
+                                  nsIFrame*& aResult, PRUint32 aFlags);
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
@@ -73,12 +73,12 @@ public:
 
   NS_IMETHOD VerifyTree() const;
 
-  void SetIsTopLevel(PRBool aIsTopLevel) {
-    mIsTopLevel = aIsTopLevel;
-  }
-
 protected:
-  PRBool  mIsTopLevel;
+  PRUint32  mFlags;
+
+  void SetFlags(PRUint32 aFlags) {
+    mFlags = aFlags;
+  }
 
   nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
