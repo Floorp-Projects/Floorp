@@ -154,7 +154,19 @@ nsresult nsMsgComposeService::DisposeCompose(nsIMsgCompose *compose, PRBool clos
 		
 		if (closeWindow)
 			;//TODO
-		NS_RELEASE(compose);
+
+
+		// comment copied from nsMessenger.cpp. It's the same issue.
+    // ** clean up
+    // *** jt - We seem to have one extra ref count. I have no idea where it
+    // came from. This could be the global object we created in commandglue.js
+    // which causes us to have one more ref count. Call Release() here
+    // seems the right thing to do. This gurantees the nsMessenger instance
+    // gets deleted after we close down the messenger window.
+    
+    // smfr the one extra refcount is the result of a bug 8555, which I have 
+    // checked in a fix for. So I'm commenting out this extra release.
+		//NS_RELEASE(compose);
 	}
 	return NS_OK;
 }

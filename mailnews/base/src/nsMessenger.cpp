@@ -260,6 +260,8 @@ nsMessenger::Open3PaneWindow()
 	char *  urlstr=nsnull;
 	nsresult rv = NS_OK;
 	
+	nsCOMPtr<nsIWebShellWindow> newWindow;
+
 	urlstr = "resource:/res/samples/messenger.html";
 	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   
@@ -268,17 +270,15 @@ nsMessenger::Open3PaneWindow()
 	if (NS_SUCCEEDED(rv) && pNetService) {
 		rv = pNetService->CreateURL(&url, urlstr);
 		if (NS_FAILED(rv))
-			goto done;
+			goto done;		// goto in C++ is evil!
 	}
 	else
-		goto done;
+		goto done;		// goto in C++ is evil!
 
-
-	nsIWebShellWindow* newWindow;
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,
                                    PR_TRUE,
-                                   newWindow,   // result widget
+                                   *getter_AddRefs(newWindow),   // result widget
                                    nsnull,      // observer
                                    nsnull,      // callbacks
                                    200,         // width
@@ -678,7 +678,10 @@ nsMessenger::OnUnload()
     // which causes us to have one more ref count. Call Release() here
     // seems the right thing to do. This gurantees the nsMessenger instance
     // gets deleted after we close down the messenger window.
-    Release();
+    
+    // smfr the one extra refcount is the result of a bug 8555, which I have 
+    // checked in a fix for. So I'm commenting out this extra release.
+    //Release();
     return NS_OK;
 }
 
@@ -865,7 +868,7 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
   return NS_OK;
 }
 
-nsresult 
+static nsresult 
 SendUnsentMessagesCallback(nsresult aExitCode, PRUint32 totalSentCount,
                            PRUint32 totalSentSuccessfully, void *tagData)
 {
