@@ -651,12 +651,12 @@ secmod_OpenDB(const char *appName, const char *filename, const char *dbName,
 	   secname[len-3] = 0;
 	}
     	pkcs11db=rdbopen(appName, "", secname, readOnly ? NO_RDONLY:NO_CREATE);
-	PORT_Free(secname);
 	if (update && !pkcs11db) {
 	    DB *updatedb;
 
     	    pkcs11db = rdbopen(appName, "", secname, NO_CREATE);
 	    if (!pkcs11db) {
+		PORT_Free(secname);
 		return NULL;
 	    }
 	    updatedb = dbopen(dbName, NO_RDONLY, 0600, DB_HASH, 0);
@@ -665,9 +665,11 @@ secmod_OpenDB(const char *appName, const char *filename, const char *dbName,
 		(*updatedb->close)(updatedb);
 	    } else {
 		(*pkcs11db->close)(pkcs11db);
+		PORT_Free(secname);
 		return NULL;
 	   }
 	}
+	PORT_Free(secname);
 	return pkcs11db;
     }
   
