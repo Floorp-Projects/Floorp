@@ -216,25 +216,36 @@ class Signature {
     bool returnType;                    // The type of this function's result
 };
 
-// A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
-class StaticMember {
+// A base class for Instance and Static members for convenience.
+class Member {
 public:
-    enum StaticMemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor };
+    enum MemberKind { Forbidden, Variable, HoistedVariable, ConstructorMethod, Accessor, InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
+    
+    Member(MemberKind kind) : kind(kind) { }
 
-    StaticMember(StaticMemberKind kind) : kind(kind) { }
+    MemberKind kind;
 
-    StaticMemberKind kind;
 #ifdef DEBUG
     virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
 #endif
 };
 
+// A static member is either forbidden, a variable, a hoisted variable, a constructor method, or an accessor:
+class StaticMember : public Member {
+public:
+    StaticMember(MemberKind kind) : Member(kind) { }
+
+};
+
+#define FUTURE_TYPE ((JS2Class *)(-1))
+
 class Variable : public StaticMember {
 public:
-    Variable() : StaticMember(StaticMember::Variable), type(NULL), value(JS2VAL_VOID), immutable(false) { }
+    Variable() : StaticMember(Member::Variable), type(NULL), value(JS2VAL_VOID), immutable(false) { }
     Variable(JS2Class *type, js2val value, bool immutable) : StaticMember(StaticMember::Variable), type(type), value(value), immutable(immutable) { }
 
-    JS2Class *type;                 // Type of values that may be stored in this variable
+    JS2Class *type;                 // Type of values that may be stored in this variable, NULL if INACCESSIBLE, FUTURE_TYPE if pending
+    VariableBinding *vb;            // The variable definition node, to resolve future types
     js2val value;                   // This variable's current value; future if the variable has not been declared yet;
                                     // uninitialised if the variable must be written before it can be read
     bool immutable;                 // true if this variable's value may not be changed once set
@@ -242,21 +253,21 @@ public:
 
 class HoistedVar : public StaticMember {
 public:
-    HoistedVar() : StaticMember(StaticMember::HoistedVariable), value(JS2VAL_VOID), hasFunctionInitializer(false) { }
+    HoistedVar() : StaticMember(Member::HoistedVariable), value(JS2VAL_VOID), hasFunctionInitializer(false) { }
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 };
 
 class ConstructorMethod : public StaticMember {
 public:
-    ConstructorMethod() : StaticMember(StaticMember::ConstructorMethod), code(NULL) { }
+    ConstructorMethod() : StaticMember(Member::ConstructorMethod), code(NULL) { }
 
     Invokable *code;        // This function itself (a callable object)
 };
 
 class Accessor : public StaticMember {
 public:
-    Accessor() : StaticMember(StaticMember::Accessor), type(NULL), code(NULL) { }
+    Accessor() : StaticMember(Member::Accessor), type(NULL), code(NULL) { }
 
     JS2Class *type;         // The type of the value read from the getter or written into the setter
     Invokable *code;        // calling this object does the read or write
@@ -292,14 +303,12 @@ public:
     StaticMember *content;      // The member to which this qualified name was bound
 };
 
-class InstanceMember {
+class InstanceMember : public Member {
 public:
-    enum InstanceMemberKind { InstanceVariableKind, InstanceMethodKind, InstanceAccessorKind };
+    InstanceMember(MemberKind kind, JS2Class *type, bool final) : Member(kind), type(type), final(final) { }
 
-    InstanceMember(InstanceMemberKind kind, bool final) : kind(kind), final(final) { }
-
-    InstanceMemberKind kind;
-    bool final;             // true if this member may not be overridden in subclasses
+    JS2Class *type;             // Type of values that may be stored in this variable
+    bool final;                 // true if this member may not be overridden in subclasses
 
 #ifdef DEBUG
     virtual void uselessVirtual()   { } // want the checked_cast stuff to work, so need a virtual function
@@ -308,8 +317,7 @@ public:
 
 class InstanceVariable : public InstanceMember {
 public:
-    InstanceVariable(bool immutable, bool final, uint32 slotIndex) : InstanceMember(InstanceVariableKind, final), immutable(immutable), slotIndex(slotIndex) { }
-    JS2Class *type;                 // Type of values that may be stored in this variable
+    InstanceVariable(JS2Class *type, bool immutable, bool final, uint32 slotIndex) : InstanceMember(InstanceVariableKind, type, final), immutable(immutable), slotIndex(slotIndex) { }
     Invokable *evalInitialValue;    // A function that computes this variable's initial value
     bool immutable;                 // true if this variable's value may not be changed once set
     uint32 slotIndex;               // The index into an instance's slot array in which this variable is stored
@@ -317,15 +325,14 @@ public:
 
 class InstanceMethod : public InstanceMember {
 public:
-    InstanceMethod() : InstanceMember(InstanceMethodKind, false) { }
+    InstanceMethod() : InstanceMember(InstanceMethodKind, NULL, false) { }
     Signature type;         // This method's signature
     Invokable *code;        // This method itself (a callable object); null if this method is abstract
 };
 
 class InstanceAccessor : public InstanceMember {
 public:
-    InstanceAccessor(Invokable *code, bool final) : InstanceMember(InstanceAccessorKind, final), code(code) { }
-    JS2Class *type;         // The type of the value read from the getter or written into the setter
+    InstanceAccessor(Invokable *code, JS2Class *type, bool final) : InstanceMember(InstanceAccessorKind, type, final), code(code) { }
     Invokable *code;        // A callable object which does the read or write; null if this method is abstract
 };
 
@@ -338,7 +345,7 @@ public:
 };
 
 // Override status is used to resolve overriden definitions for instance members
-#define PotentialConflict ((InstanceMember *)(-1))
+#define POTENTIAL_CONFLICT ((InstanceMember *)(-1))
 class OverrideStatus {
 public:
     OverrideStatus(InstanceMember *overriddenMember, const StringAtom &name)
@@ -667,13 +674,14 @@ public:
 
 
     void ValidateStmtList(Context *cxt, Environment *env, StmtNode *p);
-    void ValidateTypeExpression(ExprNode *e);
+    void ValidateTypeExpression(Context *cxt, Environment *env, ExprNode *e)    { ValidateExpression(cxt, env, e); } 
     void ValidateStmt(Context *cxt, Environment *env, StmtNode *p);
     void ValidateExpression(Context *cxt, Environment *env, ExprNode *p);
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
     js2val ExecuteStmtList(Phase phase, StmtNode *p);
     js2val EvalExpression(Environment *env, Phase phase, ExprNode *p);
+    JS2Class *EvalTypeExpression(Environment *env, Phase phase, ExprNode *p);
     Reference *EvalExprNode(Environment *env, Phase phase, ExprNode *p);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
     void EvalStmt(Environment *env, Phase phase, StmtNode *p);
@@ -685,13 +693,14 @@ public:
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
     void defineHoistedVar(Environment *env, const StringAtom &id, StmtNode *p);
-    void defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
-    OverrideStatusPair defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
+    Multiname *defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
+    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
     OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
     OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom &id, NamespaceList *namespaces, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
     bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);
+    JS2Class *getVariableType(Variable *v, Phase phase, size_t pos);
 
 
     bool readProperty(js2val container, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval);

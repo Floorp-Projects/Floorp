@@ -60,6 +60,10 @@ namespace JavaScript {
     namespace MetaData {
         class Context;
         class JS2Class;
+        class Member;
+        class Multiname;
+        class OverrideStatus;
+        typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
     }
 #endif
 
@@ -140,6 +144,11 @@ namespace JavaScript {
 #ifdef DIKDIK
         JS2Runtime::Property *prop;     // the sematics/codegen passes stuff their data in here.
         JS2Runtime::JSObject *scope;    // ditto
+#endif
+#ifdef EPIMETHEUS
+        MetaData::Member *member;
+        MetaData::Multiname *mn;
+        MetaData::OverrideStatusPair *osp;
 #endif
 
         VariableBinding(size_t pos, const StringAtom *name, ExprNode *type, ExprNode *initializer, bool constant):

@@ -129,17 +129,18 @@ namespace MetaData {
                     attr = EvalAttributeExpression(env, CompilePhase, vs->attributes);
                 }
                 
-                VariableBinding *v = vs->bindings;
+                VariableBinding *vb = vs->bindings;
                 Frame *regionalFrame = env->getRegionalFrame();
-                while (v)  {
-                    const StringAtom *name = v->name;
-                    ValidateTypeExpression(v->type);
+                while (vb)  {
+                    const StringAtom *name = vb->name;
+                    ValidateTypeExpression(cxt, env, vb->type);
+                    vb->member = NULL;
 
                     if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
                                         || (regionalFrame->kind == FunctionKind))
                                     && !immutable
                                     && (vs->attributes == NULL)
-                                    && (v->type == NULL)) {
+                                    && (vb->type == NULL)) {
                         defineHoistedVar(env, *name, p);
                     }
                     else {
@@ -153,18 +154,19 @@ namespace MetaData {
                         switch (memberMod) {
                         case Attribute::NoModifier:
                         case Attribute::Static: {
-                                Variable *var = new Variable(NULL, JS2VAL_UNDEFINED, immutable);
-                                defineStaticMember(env, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, var, p->pos);
-                                // XXX - not done !!! XXX
-                                // the type and the value are 'future'
+                            Variable *v = new Variable(FUTURE_TYPE, immutable ? JS2VAL_FUTUREVALUE : JS2VAL_INACCESSIBLE, immutable);
+                                vb->member = v;
+                                v->vb = vb;
+                                vb->mn = defineStaticMember(env, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                             }
                             break;
                         case Attribute::Virtual:
                         case Attribute::Final: 
                             {
                                 JS2Class *c = checked_cast<JS2Class *>(env->getTopFrame());
-                                InstanceMember *m = new InstanceVariable(immutable, (memberMod == Attribute::Final), c->slotCount++);
-                                defineInstanceMember(c, cxt, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
+                                InstanceMember *m = new InstanceVariable(FUTURE_TYPE, immutable, (memberMod == Attribute::Final), c->slotCount++);
+                                vb->member = m;
+                                vb->osp = defineInstanceMember(c, cxt, *name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, m, p->pos);
                             }
                             break;
                         default:
@@ -173,7 +175,7 @@ namespace MetaData {
                         }
                     }
 
-                    v = v->next;
+                    vb = vb->next;
                 }
             }
             break;
@@ -292,6 +294,30 @@ namespace MetaData {
         return retval;
     }
 
+    JS2Class *JS2Metadata::getVariableType(Variable *v, Phase phase, size_t pos)
+    {
+        JS2Class *type = v->type;
+        if (type == NULL) { // Inaccessible, Note that this can only happen when phase = compile 
+                            // because the compilation phase ensures that all types are valid, 
+                            // so invalid types will not occur during the run phase.          
+            ASSERT(phase == CompilePhase);
+            reportError(Exception::compileExpressionError, "No type assigned", pos);
+        }
+        else {
+            if (v->type == FUTURE_TYPE) {
+                // Note that phase = compile because all futures are resolved by the end of the compilation phase.
+                ASSERT(phase == CompilePhase);
+                if (v->vb->type) {
+                    v->type = NULL;
+                    v->type = EvalTypeExpression(&env, CompilePhase, v->vb->type);
+                }
+                else
+                    v->type = objectClass;
+            }
+        }
+        return v->type;
+    }
+
     /*
      * Evaluate an individual statement 'p', including it's children
      *  - this generates bytecode for each statement, but doesn't actually
@@ -348,12 +374,76 @@ namespace MetaData {
         case StmtNode::Var:
         case StmtNode::Const:
             {
-                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
-                
-                VariableBinding *v = vs->bindings;
-                while (v)  {
+                // Note that the code here is the PreEval code plus the emit of the Eval bytecode
+                VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);                
+                VariableBinding *vb = vs->bindings;
+                while (vb)  {
+                    if (vb->member) {
+                        if (vb->member->kind == Member::Variable) {
+                            Variable *v = checked_cast<Variable *>(vb->member);
+                            JS2Class *type = getVariableType(v, CompilePhase, p->pos);
+                            if (JS2VAL_IS_FUTURE(v->value)) {
+                                v->value = JS2VAL_INACCESSIBLE;
+                                try {
+                                    if (vb->initializer) {
+                                        js2val newValue = EvalExpression(env, CompilePhase, vb->initializer);
+                                        v->value = engine->assignmentConversion(newValue, type);
+                                    }
+                                    else
+                                        // Would only have come here if the variable was immutable
+                                        reportError(Exception::compileExpressionError, "Missing compile time expression", p->pos);
+                                }
+                                catch (Exception x) {
+                                    // If a compileExpressionError occurred, then the initialiser is not a compile-time 
+                                    // constant expression. In this case, ignore the error and leave the value of the 
+                                    // variable inaccessible until it is defined at run time.
+                                    if (x.kind != Exception::compileExpressionError)
+                                        throw x;
+                                }
+                                if (vb->initializer) {
+                                    // XXX more here - 
+                                    //
+                                    // eGET_TOP_FRAME    <-- establish base
+                                    // eDotRead <v->mn>
+                                    // eIS_INACCESSIBLE
+                                    // eBRANCH_FALSE <lbl>
+                                    //      eGET_TOP_FRAME
+                                    //      <vb->initializer code>
+                                    //      <convert to 'type'>
+                                    //      eDotWrite <v->mn>
+                                    // <lbl>:
+                                }
 
-                    v = v->next;
+                            }
+                        }
+                        else {
+                            ASSERT(vb->member->kind == Member::InstanceVariableKind);
+                            InstanceVariable *v = checked_cast<InstanceVariable *>(vb->member);
+                            JS2Class *t;
+                            if (vb->type)
+                                t = EvalTypeExpression(env, CompilePhase, vb->type);
+                            else {
+                                if (vb->osp->first->overriddenMember && (vb->osp->first->overriddenMember != POTENTIAL_CONFLICT))
+                                    t = vb->osp->first->overriddenMember->type;
+                                else
+                                    if (vb->osp->second->overriddenMember && (vb->osp->second->overriddenMember != POTENTIAL_CONFLICT))
+                                        t = vb->osp->second->overriddenMember->type;
+                                else
+                                    t = objectClass;
+                            }
+                            v->type = t;
+                        }
+                    }
+                    else { // HoistedVariable
+                        if (vb->initializer) {
+                            Reference *r = EvalExprNode(env, phase, vb->initializer);
+                            if (r) r->emitReadBytecode(bCon, p->pos);
+                            LexicalReference *lVal = new LexicalReference(*vb->name, cxt.strict);
+                            lVal->variableMultiname->addNamespace(publicNamespace);
+                            lVal->emitWriteBytecode(bCon, p->pos);                                                        
+                        }
+                    }
+                    vb = vb->next;
                 }
             }
             break;
@@ -687,7 +777,7 @@ namespace MetaData {
 
 
     /*
-     * Evaluate an expression 'p' and execute the assocaited bytecode
+     * Evaluate an expression 'p' and execute the associated bytecode
      */
     js2val JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
@@ -856,8 +946,15 @@ doBinary:
         return returnRef;
     }
 
-    void JS2Metadata::ValidateTypeExpression(ExprNode *e)
+    JS2Class *JS2Metadata::EvalTypeExpression(Environment *env, Phase phase, ExprNode *p)
     {
+        js2val retval = EvalExpression(env, phase, p);
+        if (JS2VAL_IS_PRIMITIVE(retval))
+            reportError(Exception::badValueError, "Type expected", p->pos);
+        JS2Object *obj = JS2VAL_TO_OBJECT(retval);
+        if (obj->kind != ClassKind)
+            reportError(Exception::badValueError, "Type expected", p->pos);
+        return checked_cast<JS2Class *>(obj);        
     }
 
 /************************************************************************************
@@ -1011,7 +1108,7 @@ doBinary:
     // - If the binding exists (not forbidden) in lower frames in the regional environment, it's an error.
     // - Define a forbidden binding in all the lower frames.
     // 
-    void JS2Metadata::defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos)
+    Multiname *JS2Metadata::defineStaticMember(Environment *env, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos)
     {
         NamespaceList publicNamespaceList;
 
@@ -1077,7 +1174,7 @@ doBinary:
                 fr = fr->nextFrame;
             }
         }
-
+        return mn;
     }
 
     // Look through 'c' and all it's super classes for a identifier 
@@ -1147,7 +1244,7 @@ doBinary:
                     os->multiname.addNamespace(namespaces);
                 }
                 else {
-                    os->overriddenMember = PotentialConflict;   // Didn't find the member with a specified namespace, but did with
+                    os->overriddenMember = POTENTIAL_CONFLICT;  // Didn't find the member with a specified namespace, but did with
                                                                 // the use'd ones. That'll be an error unless the override is 
                                                                 // disallowed (in defineInstanceMember below)
                     os->multiname.addNamespace(namespaces);
@@ -1180,11 +1277,11 @@ doBinary:
         }
         // Make sure we're getting what we expected
         if (expectMethod) {
-            if (os->overriddenMember && (os->overriddenMember != PotentialConflict) && (os->overriddenMember->kind != InstanceMember::InstanceMethodKind))
+            if (os->overriddenMember && (os->overriddenMember != POTENTIAL_CONFLICT) && (os->overriddenMember->kind != InstanceMember::InstanceMethodKind))
                 reportError(Exception::definitionError, "Illegal override, expected method", pos);
         }
         else {
-            if (os->overriddenMember && (os->overriddenMember != PotentialConflict) && (os->overriddenMember->kind == InstanceMember::InstanceMethodKind))
+            if (os->overriddenMember && (os->overriddenMember != POTENTIAL_CONFLICT) && (os->overriddenMember->kind == InstanceMember::InstanceMethodKind))
                 reportError(Exception::definitionError, "Illegal override, didn't expect method", pos);
         }
 
@@ -1193,7 +1290,7 @@ doBinary:
 
     // Define an instance member in the class. Verify that, if any overriding is happening, it's legal. The result pair indicates
     // the members being overridden.
-    OverrideStatusPair JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
+    OverrideStatusPair *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom &id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
     {
         OverrideStatus *readStatus;
         OverrideStatus *writeStatus;
@@ -1210,13 +1307,13 @@ doBinary:
         else
             writeStatus = new OverrideStatus(NULL, id);
 
-        if ((readStatus->overriddenMember && (readStatus->overriddenMember != PotentialConflict))
-                || (writeStatus->overriddenMember && (writeStatus->overriddenMember != PotentialConflict))) {
+        if ((readStatus->overriddenMember && (readStatus->overriddenMember != POTENTIAL_CONFLICT))
+                || (writeStatus->overriddenMember && (writeStatus->overriddenMember != POTENTIAL_CONFLICT))) {
             if ((overrideMod != Attribute::DoOverride) && (overrideMod != Attribute::OverrideUndefined))
                 reportError(Exception::definitionError, "Illegal override", pos);
         }
         else {
-            if ((readStatus->overriddenMember == PotentialConflict) || (writeStatus->overriddenMember == PotentialConflict)) {
+            if ((readStatus->overriddenMember == POTENTIAL_CONFLICT) || (writeStatus->overriddenMember == POTENTIAL_CONFLICT)) {
                 if ((overrideMod != Attribute::DontOverride) && (overrideMod != Attribute::OverrideUndefined))
                     reportError(Exception::definitionError, "Illegal override", pos);
             }
@@ -1237,8 +1334,7 @@ doBinary:
             c->instanceWriteBindings.insert(e);
         }
         
-        OverrideStatusPair osp(readStatus, writeStatus);
-        return osp;
+        return new OverrideStatusPair(readStatus, writeStatus);;
     }
 
     // Define a hoisted var in the current frame (either Global or a Function)
@@ -1579,7 +1675,7 @@ readClassProperty:
             return &checked_cast<FixedInstance *>(thisObj)->slots[id->slotIndex];
     }
 
-
+    // Read the value of an instanceMember, if valid
     bool JS2Metadata::readInstanceMember(js2val containerVal, JS2Class *c, QualifiedName *qname, Phase phase, js2val *rval)
     {
         InstanceMember *m = findInstanceMember(c, qname, ReadAccess);
