@@ -125,9 +125,11 @@ Contributor(s):
               return nodes[i];
             else {
               var subnodes = nodes[i].getElementsByAttribute(aAttribute, aValue);
-              return subnodes.length ? subnodes[0] : null;
+              if (!subnodes.length) continue;
+              return subnodes[0];
             }
           }
+          return null;
         ]]>
         </body>
       </method>
@@ -151,7 +153,7 @@ Contributor(s):
               collapsedGrippy.collapsed = true;
               collapsedGrippy.setAttribute("tbgrippy-collapsed", "true");
               var collapsedTrayHolder = this.findNodeByAttribute("tbattr", "collapsed-tray-holder");
-              if (collapsedTrayHolder.getAttribute("collapsed") == "true");
+              if (collapsedTrayHolder.getAttribute("collapsed") == "true")
                 collapsedTrayHolder.removeAttribute("collapsed");
               this.findNodeByAttribute("tbattr", "collapsed-tray").appendChild(collapsedGrippy);
               collapsedGrippy = document.getElementById("moz_tb_collapsed_" + aToolbar.id);
@@ -225,7 +227,7 @@ Contributor(s):
   <binding id="menubar" extends="xul:menubar">
     <content>
       <xul:toolbargrippy inherits="grippytooltiptext:tooltiptext,grippytooltip:tooltip,last-toolbar"
-                         onclick="this.grippyClicked();"
+                         onclick="this.grippyClicked();" tbattr="toolbar-grippy"
                          class="toolbar-grippy"/>
       <xul:box flex="1" class="toolbar-holder" inherits="collapsed,last-toolbar" autostretch="never">
         <children/>
