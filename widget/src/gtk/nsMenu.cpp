@@ -82,6 +82,7 @@ nsMenu::nsMenu() : nsIMenu()
   mDOMNode       = nsnull;
   mWebShell      = nsnull;
   mDOMElement    = nsnull;
+  mAccessKey     = "_";
 }
 
 //-------------------------------------------------------------------------
@@ -173,12 +174,20 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 {
+  aText = mAccessKey;
+  char *foo = mAccessKey.ToNewCString();
+  g_print("GetAccessKey returns \"%s\"\n", foo);
+  delete [] foo;
   return NS_OK;
 }
 
 //-------------------------------------------------------------------------
 NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
 {
+  mAccessKey = aText;
+  char *foo = mAccessKey.ToNewCString();
+  g_print("SetAccessKey setting to \"%s\"\n", foo);
+  delete [] foo;
   return NS_OK;
 }
 

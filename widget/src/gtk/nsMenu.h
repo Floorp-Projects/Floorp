@@ -93,6 +93,7 @@ protected:
   GtkWidget  *GetNativeParent();
 
   nsString   mLabel;
+  nsString   mAccessKey;
   PRUint32   mNumMenuItems;
   GtkWidget  *mMenu;
   
