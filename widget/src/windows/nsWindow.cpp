@@ -743,17 +743,19 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
 
         if (nsnull != par) {
           deferrer = ((nsWindow *)par)->mDeferredPositioner;
-          NS_RELEASE(par);
         }
 
         if (NULL != deferrer) {
-            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, 0, 0,
+            VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
+                                  mWnd, NULL, aX, aY, 0, 0,
                                   SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
         }
         else {
             VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, 0, 0, 
                                   SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
         }
+
+        NS_IF_RELEASE(par);
     }
 }
 
@@ -770,7 +772,6 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 
         if (nsnull != par) {
           deferrer = ((nsWindow *)par)->mDeferredPositioner;
-          NS_RELEASE(par);
         }
 
         UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE;
@@ -779,13 +780,15 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
         }
 
         if (NULL != deferrer) {
-            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
-                                    flags));
+            VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
+                                    mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), flags));
         }
         else {
             VERIFY(::SetWindowPos(mWnd, NULL, 0, 0, aWidth, GetHeight(aHeight), 
                                   flags));
         }
+
+        NS_IF_RELEASE(par);
     }
 }
 
@@ -807,7 +810,6 @@ void nsWindow::Resize(PRUint32 aX,
 
         if (nsnull != par) {
           deferrer = ((nsWindow *)par)->mDeferredPositioner;
-          NS_RELEASE(par);
         }
 
         UINT  flags = SWP_NOZORDER | SWP_NOACTIVATE;
@@ -816,13 +818,16 @@ void nsWindow::Resize(PRUint32 aX,
         }
 
         if (NULL != deferrer) {
-            VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
+            VERIFY(((nsWindow *)par)->mDeferredPositioner = ::DeferWindowPos(deferrer,
+                                    mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
                                     flags));
         }
         else {
             VERIFY(::SetWindowPos(mWnd, NULL, aX, aY, aWidth, GetHeight(aHeight), 
                                   flags));
         }
+
+        NS_IF_RELEASE(par);
     }
 }
 
@@ -881,7 +886,37 @@ void nsWindow::GetBounds(nsRect &aRect)
         // convert coordinates if parent exists
         HWND parent = ::GetParent(mWnd);
         if (parent) {
-            ::ScreenToClient(parent, (LPPOINT)&r);
+          RECT pr;
+          VERIFY(::GetClientRect(parent, &pr));
+          VERIFY(::ClientToScreen(mWnd, (LPPOINT)&r));
+          VERIFY(::ClientToScreen(parent, (LPPOINT)&pr));
+          r.left -= pr.left;
+          r.top -= pr.top;
+        }
+        aRect.x = r.left;
+        aRect.y = r.top;
+    }
+}
+
+//get the bounds, but don't take into account the client size
+
+void nsWindow::GetNonClientBounds(nsRect &aRect)
+{
+    if (mWnd) {
+        RECT r;
+        VERIFY(::GetWindowRect(mWnd, &r));
+
+        // assign size
+        aRect.width = r.right - r.left;
+        aRect.height = r.bottom - r.top;
+
+        // convert coordinates if parent exists
+        HWND parent = ::GetParent(mWnd);
+        if (parent) {
+          RECT pr;
+          VERIFY(::GetWindowRect(parent, &pr));
+          r.left -= pr.left;
+          r.top -= pr.top;
         }
         aRect.x = r.left;
         aRect.y = r.top;

@@ -167,3 +167,15 @@ DWORD nsRadioButton::WindowExStyle()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsRadioButton::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetBounds(aRect);
+}
+
+

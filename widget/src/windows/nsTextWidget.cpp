@@ -116,3 +116,15 @@ DWORD nsTextWidget::WindowExStyle()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsTextWidget::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetNonClientBounds(aRect);
+}
+
+

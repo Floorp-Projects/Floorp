@@ -450,3 +450,15 @@ DWORD nsScrollbar::WindowExStyle()
 }
 
 
+//-------------------------------------------------------------------------
+//
+// get position/dimensions
+//
+//-------------------------------------------------------------------------
+
+void nsScrollbar::GetBounds(nsRect &aRect)
+{
+    nsWindow::GetBounds(aRect);
+}
+
+
