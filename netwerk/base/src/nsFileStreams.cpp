@@ -499,6 +499,8 @@ NS_IMETHODIMP
 nsSafeFileOutputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm,
                              PRInt32 behaviorFlags)
 {
+    NS_ENSURE_ARG(file);
+
     nsresult rv = file->Exists(&mTargetFileExists);
     if (NS_FAILED(rv)) {
         NS_ERROR("Can't tell if target file exists");

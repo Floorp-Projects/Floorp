@@ -162,6 +162,7 @@ public:
     NS_DECL_NSISAFEOUTPUTSTREAM
 
     nsSafeFileOutputStream() :
+        mTargetFileExists(PR_TRUE),
         mWriteResult(NS_OK) {}
 
     virtual ~nsSafeFileOutputStream() { nsSafeFileOutputStream::Close(); }
