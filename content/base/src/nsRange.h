@@ -192,8 +192,6 @@ public:
   // helper routines
   
   static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
-  static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode);
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);
   static nsresult      Lock();
   static nsresult      Unlock();
