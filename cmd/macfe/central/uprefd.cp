@@ -2437,7 +2437,9 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 			break;
 		case PrintFlags:
 		case NewsArticlesMax:
+#ifdef MOZ_MAIL_NEWS
 			NET_SetNumberOfNewsArticlesInListing(GetLong(id));
+#endif
 			break;
 		case CheckDocuments:
 			NET_SetCacheUseMethod( (CacheUseEnum)GetLong(id) );
@@ -2461,7 +2463,9 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 		case HomePage:
 			break;
 		case NewsHost:
+#ifdef MOZ_MAIL_NEWS
 			NET_SetNewsHost( GetCharPtr(id) );
+#endif
 			break;
 		case UserName:
 			break;
@@ -2482,11 +2486,13 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 			// Should we reset mail window here too?
 			break;
 		case PopHost:
-//			MSG_SetPopHost( GetCharPtr(id) );
+#ifdef MOZ_MAIL_NEWS
+			MSG_SetPopHost( GetCharPtr(id) );
 			if ( GetBoolean( RememberMailPassword ) )
 				NET_SetPopPassword( GetCharPtr( MailPassword) );
 			else
 				NET_SetPopPassword(NULL);
+#endif
 			break;
 			
 		case DefaultMailCC:
@@ -2496,7 +2502,9 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 		case ReplyTo:
 			break;
 		case PopID:
+#ifdef MOZ_MAIL_NEWS
 			NET_SetPopUsername(GetCharPtr(PopID));
+#endif
 			break;
 
 		case AcceptCookies:
@@ -2592,15 +2600,19 @@ void CPrefs::PostInitializePref(PrefEnum id, Boolean changed)
 		case AutoQuoteOnReply:
 			break;	
 		case MailPassword:
+#ifdef MOZ_MAIL_NEWS
 			NET_SetPopPassword( GetCharPtr( MailPassword) );
+#endif
 			break;
 		case RememberMailPassword:
+#ifdef MOZ_MAIL_NEWS
 		// This depends on the loading order
 		// Should be solved by the accumulator
 			if ( GetBoolean( RememberMailPassword ) )
 				NET_SetPopPassword( GetCharPtr( MailPassword) );
 			else
 				NET_SetPopPassword(NULL);
+#endif
 			break;
 		default:
 //			Assert_(FALSE);

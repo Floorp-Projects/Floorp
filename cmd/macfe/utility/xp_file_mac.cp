@@ -355,12 +355,13 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 /* NEWS */
 		case xpNewsRC:
 		case xpSNewsRC:
+#ifdef MOZ_MAIL_NEWS
 			_ftype = emNewsrcFile;
 			*outSpec = CPrefs::GetFilePrototype( CPrefs::NewsFolder );
 			if ( (inName == NULL) || (*inName == 0))
 			{
 				GetIndString( tempName, 300, newsrc );
-				/* NET_RegisterNewsrcFile( tempName, inName, type == xpSNewsRC, FALSE ); */
+				NET_RegisterNewsrcFile( tempName, inName, type == xpSNewsRC, FALSE );
 			}
 			else
 			{
@@ -470,7 +471,7 @@ OSErr XP_FileSpec(const char *inName, XP_FileType type, FSSpec* outSpec)
 			*outSpec = CPrefs::GetFilePrototype(CPrefs::NewsFolder);
 			GetIndString(outSpec->name, 300, newsHostDatabase);
 			break;
-
+#endif /* #ifdef MOZ_MAIL_NEWS */
 /* MAIL */
 		case xpJSMailFilters:
 			_ftype = emTextType;
@@ -1194,10 +1195,12 @@ int XP_FileRemove( const char* name, XP_FileType type )
 	if ( err == noErr )
 	{
 		err = ::FSpDelete( &spec );
+#ifdef MOZ_MAIL_NEWS
 		if ( type == xpNewsRC || type == xpNewsgroups )
 	        NET_UnregisterNewsHost( name, FALSE );
 		else if ( type == xpSNewsRC || type == xpSNewsgroups)
 	        NET_UnregisterNewsHost( name, TRUE );
+#endif
 	}
 	
 	if ( err == noErr )

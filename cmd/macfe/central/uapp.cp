@@ -984,9 +984,8 @@ CFrontApp::~CFrontApp()
 	// XP_Saves
 	GH_SaveGlobalHistory();
 	GH_FreeGlobalHistory();
-	NET_SaveNewsrcFileMappings();
-	
 #ifdef MOZ_MAIL_NEWS
+	NET_SaveNewsrcFileMappings();
 	CAddressBookManager::CloseAddressBookManager();
 	CCheckMailContext::Release(this);
 #endif // MOZ_MAIL_NEWS
@@ -1498,7 +1497,9 @@ void CFrontApp::ProperStartup( FSSpec* file, short fileType )
 	XP_AppVersion = (char*)XP_ALLOC( tmp.Length() + strlen( securityText )  + 1);
 	sprintf( XP_AppVersion, tmp, securityText );
 	
+#ifdef MOZ_MAIL_NEWS
 	NET_ReadNewsrcFileMappings();
+#endif
 
 	SplashProgress(  GetPString(MAC_PROGRESS_BOOKMARK));
 	InitBookmarks();
