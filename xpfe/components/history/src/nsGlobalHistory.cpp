@@ -58,6 +58,8 @@
 #include "nsIMdbFactoryFactory.h"
 
 #include "nsIPref.h"
+#include "nsIProfileChangeStatus.h"
+#include "nsIObserverService.h"
 
 PRInt32 nsGlobalHistory::gRefCnt;
 nsIRDFService* nsGlobalHistory::gRDFService;
@@ -1636,6 +1638,14 @@ nsGlobalHistory::Init()
   // register this as a named data source with the RDF service
   rv = gRDFService->RegisterDataSource(this, PR_FALSE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // register to observe profile changes
+  NS_WITH_SERVICE(nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+  NS_ASSERTION(observerService, "failed to get observer service");
+  if (observerService) {
+    observerService->AddObserver(this, PROFILE_BEFORE_CHANGE_TOPIC);
+    observerService->AddObserver(this, PROFILE_DO_CHANGE_TOPIC);
+  }
   
   rv = OpenDB();
   NS_ENSURE_SUCCESS(rv, rv);
@@ -2084,12 +2094,13 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
 {
   nsresult rv;
 
+  nsLiteralString aTopicString(aTopic);
   
   // topics we observe
   NS_NAMED_LITERAL_STRING(prefChangedTopic, "nsPref:changed");
 
   // pref changing - update member vars
-  if (prefChangedTopic.Equals(aTopic)) {
+  if (aTopicString.Equals(prefChangedTopic)) {
 
     // expiration date
     nsCAutoString pref; pref.AssignWithConversion(aSomeData);
@@ -2100,6 +2111,11 @@ nsGlobalHistory::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
     }
 
   }
+  else if (aTopicString.Equals(PROFILE_BEFORE_CHANGE_TOPIC))
+    rv = CloseDB();
+  else if (aTopicString.Equals(PROFILE_DO_CHANGE_TOPIC))
+    rv = OpenDB();
+
   return NS_OK;
 }
 
