@@ -122,7 +122,7 @@
 <table>
   <tr>
     [% IF bugs.size > 0 %]
-      <td valign="bottom">
+      <td valign="middle">
         <form method="post" action="long_list.cgi">
           <input type="hidden" name="buglist" value="[% buglist %]">
           <input type="submit" value="Long Format">
@@ -131,7 +131,7 @@
       
       <td>&nbsp;</td>
       
-      <td valign="bottom">
+      <td valign="middle">
         <a href="buglist.cgi?
         [% urlquerypart FILTER html %]&amp;ctype=csv">CSV</a> |
         <a href="colchange.cgi?
@@ -151,12 +151,12 @@
       </td>
     [% END %]
     
-    <td valign="bottom">
+    <td valign="middle">
       <a href="query.cgi?[% urlquerypart FILTER html %]">Edit&nbsp;Search</a>
     </td>
       
     [% IF searchname %]
-      <td valign="bottom" nowrap="nowrap">
+      <td valign="middle" nowrap="nowrap">
         |
         <a href="buglist.cgi?cmdtype=dorem&amp;remaction=forget&amp;namedcmd=
                 [% searchname FILTER html %]">Forget&nbsp;Search&nbsp;'
@@ -165,7 +165,7 @@
     [% ELSE %]
       <td>&nbsp;</td>
       
-      <td valign="bottom">
+      <td valign="middle">
         <form method="get" action="buglist.cgi">
           <input type="submit" value="Remember search"> as 
           <input type="hidden" name="newquery" 
