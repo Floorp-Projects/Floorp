@@ -675,7 +675,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         // Read data from the input and write to the output
         char buffer[8192];
         PRUint32 bytesRead;
-        PRBool readError;
+        PRBool readError = PR_TRUE;
         while (!cancel && bytesRemaining)
         {
             readError = PR_TRUE;
