@@ -57,6 +57,7 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 
+#include "nsINetService.h"
 #include "nsCopyMessageStreamListener.h"
 #include "nsICopyMessageListener.h"
 
@@ -70,8 +71,8 @@ static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 static NS_DEFINE_IID(kAppShellServiceCID,        NS_APPSHELL_SERVICE_CID);
-
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -351,14 +352,21 @@ nsMsgAppCore::Open3PaneWindow()
 	rv = nsServiceManager::GetService(kAppShellServiceCID,
 									  nsIAppShellService::GetIID(),
 									  (nsISupports**)&appShell);
-	nsIURL* url;
-	nsIWebShellWindow* newWindow;
   
-	rv = NS_NewURL(&url, urlstr);
-	if (NS_FAILED(rv)) {
-	  goto done;
+	nsIURL* url = nsnull;
+	nsINetService * pNetService;
+	rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+	if (NS_SUCCEEDED(rv) && pNetService) {
+		rv = pNetService->CreateURL(&url, urlstr);
+		NS_RELEASE(pNetService);
+		if (NS_FAILED(rv))
+			goto done;
 	}
+	else
+		goto done;
 
+
+	nsIWebShellWindow* newWindow;
 	controllerCID = "6B75BB61-BD41-11d2-9D31-00805F8ADDDE";
 	appShell->CreateTopLevelWindow(nsnull,      // parent
                                    url,

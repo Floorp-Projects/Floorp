@@ -471,17 +471,22 @@ char*
 nsMsgGroupRecord::GetSaveString()
 {
 	char* pretty = NULL;
+	char* result = nsnull;
+	
 	if (m_prettyname) {
 		pretty = nsEscape(m_prettyname, url_XAlphas);
 		if (!pretty) return NULL;
 	}
 	char* fullname = GetFullName();
-	if (!fullname) return NULL;
-        char* result = PR_smprintf("%s,%s,%lx,%lx,%lx" LINEBREAK,
+	if (!fullname) return NULL; {
+		long nAddTime;
+		LL_L2I(nAddTime, m_addtime);
+        result = PR_smprintf("%s,%s,%lx,%lx,%lx" LINEBREAK,
 							   fullname, pretty ? pretty : "",
 							   (long) (m_flags & ~RUNTIMEFLAGS),
-							   (long) m_addtime,
+							   nAddTime,
 							   (long) m_uniqueId);
+	}
 	delete [] fullname;
 	if (pretty) PR_Free(pretty);
 	m_flags &= ~F_DIRTY;
@@ -575,7 +580,9 @@ nsMsgGroupRecord::Create(nsMsgGroupRecord* parent, const char* saveline,
 	ptr = endptr;
 	uniqueid = strtol(ptr, NULL, 16);
 
-	result = Create(parent, partname, addtime, uniqueid, fileoffset);
+	PRInt64 llAddtime;
+	LL_I2L(llAddtime, addtime);
+	result = Create(parent, partname, llAddtime, uniqueid, fileoffset);
 	if (result) {
 		PRBool maybeCategoryContainer = flags & F_CATCONT;
 		flags &= ~F_CATCONT;

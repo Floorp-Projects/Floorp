@@ -49,11 +49,6 @@ char *INTL_Strstr(int16 charSetID, const char *s1, const char *s2)
 #undef FREEIF
 #define FREEIF(obj) do { if (obj) { PR_Free (obj); obj = 0; }} while (0)
 
-extern "C"
-{
-	extern int MK_OUT_OF_MEMORY;
-}
-
 #define CS_APP_DEFAULT             INTL_DefaultWinCharSetID(NULL)
 
 #define COPY_CHAR(_CSID,_D,_S)      do { if (!_S || !*_S) { *_D++ = 0; }\
@@ -323,13 +318,13 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 
 	name_buf = (char *)PR_Malloc(line_length * 2 + 10);
 	if (!name_buf)
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 
 	addr_buf = (char *)PR_Malloc(line_length * 2 + 10);
 	if (!addr_buf)
 	{
 		FREEIF(name_buf);
-		return MK_OUT_OF_MEMORY;
+		return NS_ERROR_OUT_OF_MEMORY;
 	}
 
 	line_end = line;

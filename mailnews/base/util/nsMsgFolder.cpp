@@ -1189,7 +1189,8 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
     {
         nsIDBFolderInfo   *folderInfo;
         nsMsgDatabase       *db;
-        if((result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db))))
+        result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db));
+        if(result)
         {
 			mIsCachable = TRUE;
             if (folderInfo)
@@ -1405,7 +1406,18 @@ nsGetMailboxRoot(nsFileSpec &result)
     if (prefs && NS_SUCCEEDED(rv)) {
       rv = prefs->Startup("prefs.js");
       if (NS_SUCCEEDED(rv)) {
-        rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
+#if defined(XP_MAC)
+		  char prefValue[1024];
+		  PRInt32 prefLength = 1024;
+
+          rv = prefs->GetCharPref(kMsgRootFolderPref, prefValue, &prefLength);
+		  if (NS_SUCCEEDED(rv) && prefLength > 0) {
+		    gMailboxRoot = PL_strdup(prefValue);
+		    
+		  }
+#else
+          rv = prefs->CopyPathPref(kMsgRootFolderPref, &gMailboxRoot);
+#endif
       }
     }
     (void)nsServiceManager::ReleaseService(kPrefCID, prefs);
@@ -1453,7 +1465,7 @@ nsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult)
   rv = nsGetMailboxRoot(root);
   if (NS_FAILED(rv)) return rv;
   
-  nsAutoString path(root);
+  nsAutoString path((nsFilePath)root);
   uri.Cut(0, nsCRT::strlen(rootURI));
 
   PRInt32 uriLen = uri.Length();
