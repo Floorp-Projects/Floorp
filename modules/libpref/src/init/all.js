@@ -737,13 +737,6 @@ pref("bidi.texttype", 1);
 // 3 = containercontrolstextmodeBidi *
 pref("bidi.controlstextmode", 1);
 // ------------------
-//  Clipboard Text Mode
-// ------------------
-//  1 = logicalclipboardtextmodeBidi
-// 2 = visiualclipboardtextmodeBidi
-// 3 = sourceclipboardtextmodeBidi *
-pref("bidi.clipboardtextmode", 3);
-// ------------------
 //  Numeral Style
 // ------------------
 // 0 = nominalnumeralBidi *

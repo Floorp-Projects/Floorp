@@ -131,14 +131,6 @@ interface nsIMarkupDocumentViewer : nsISupports
   attribute octet bidiControlsTextMode;
 
   /**
-   * bidiClipboardTextMode: the order in which text is transferred to the clipboard.
-   *                        1 - logical
-   *                        2 - visual
-   *                        3 - as source (unchanged)
-   */
-  attribute octet bidiClipboardTextMode;
-
-  /**
    * bidiNumeral: the type of numerals to display. 
    *              1 - depending on context, default is Arabic numerals
    *              2 - depending on context, default is Hindi numerals

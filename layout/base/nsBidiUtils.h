@@ -117,7 +117,6 @@
 #define IBMBIDI_TEXTDIRECTION_STR       "bidi.direction"
 #define IBMBIDI_TEXTTYPE_STR            "bidi.texttype"
 #define IBMBIDI_CONTROLSTEXTMODE_STR    "bidi.controlstextmode"
-#define IBMBIDI_CLIPBOARDTEXTMODE_STR   "bidi.clipboardtextmode"
 #define IBMBIDI_NUMERAL_STR             "bidi.numeral"
 #define IBMBIDI_SUPPORTMODE_STR         "bidi.support"
 #define IBMBIDI_CHARSET_STR             "bidi.characterset"
@@ -125,10 +124,9 @@
 #define IBMBIDI_TEXTDIRECTION       1
 #define IBMBIDI_TEXTTYPE            2
 #define IBMBIDI_CONTROLSTEXTMODE    3
-#define IBMBIDI_CLIPBOARDTEXTMODE   4
-#define IBMBIDI_NUMERAL             5
-#define IBMBIDI_SUPPORTMODE         6
-#define IBMBIDI_CHARSET             7
+#define IBMBIDI_NUMERAL             4
+#define IBMBIDI_SUPPORTMODE         5
+#define IBMBIDI_CHARSET             6
 
 //  ------------------
 //  Text Direction
@@ -150,13 +148,6 @@
 #define IBMBIDI_CONTROLSTEXTMODE_LOGICAL   1 //  1 = logicalcontrolstextmodeBidiCmd *
 #define IBMBIDI_CONTROLSTEXTMODE_VISUAL    2 //  2 = visualcontrolstextmodeBidi
 #define IBMBIDI_CONTROLSTEXTMODE_CONTAINER 3 //  3 = containercontrolstextmodeBidi
-//  ------------------
-//  Clipboard Text Mode
-//  ------------------
-//  bidi.clipboardtextmode
-#define IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL 1 //  1 = logicalclipboardtextmodeBidi
-#define IBMBIDI_CLIPBOARDTEXTMODE_VISUAL  2 //  2 = visualclipboardtextmodeBidi
-#define IBMBIDI_CLIPBOARDTEXTMODE_SOURCE  3 //  3 = sourceclipboardtextmodeBidi *
 //  ------------------
 //  Numeral Style
 //  ------------------
@@ -184,27 +175,24 @@
         ((IBMBIDI_TEXTDIRECTION_LTR<<0)         | \
          (IBMBIDI_TEXTTYPE_CHARSET<<4)          | \
          (IBMBIDI_CONTROLSTEXTMODE_LOGICAL<<8)  | \
-         (IBMBIDI_CLIPBOARDTEXTMODE_SOURCE<<12) | \
-         (IBMBIDI_NUMERAL_NOMINAL<<16)          | \
-         (IBMBIDI_SUPPORTMODE_MOZILLA<<20)      | \
-         (IBMBIDI_CHARSET_BIDI<<24))
+         (IBMBIDI_NUMERAL_NOMINAL<<12)          | \
+         (IBMBIDI_SUPPORTMODE_MOZILLA<<16)      | \
+         (IBMBIDI_CHARSET_BIDI<<20))
 
 
 #define GET_BIDI_OPTION_DIRECTION(bo) (((bo)>>0) & 0x0000000F) /* 4 bits for DIRECTION */
 #define GET_BIDI_OPTION_TEXTTYPE(bo) (((bo)>>4) & 0x0000000F) /* 4 bits for TEXTTYPE */
 #define GET_BIDI_OPTION_CONTROLSTEXTMODE(bo) (((bo)>>8) & 0x0000000F) /* 4 bits for CONTROLTEXTMODE */
-#define GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bo) (((bo)>>12) & 0x0000000F) /* 4 bits for CLIPBOARDTEXTMODE */
-#define GET_BIDI_OPTION_NUMERAL(bo) (((bo)>>16) & 0x0000000F) /* 4 bits for NUMERAL */
-#define GET_BIDI_OPTION_SUPPORT(bo) (((bo)>>20) & 0x0000000F) /* 4 bits for SUPPORT */
-#define GET_BIDI_OPTION_CHARACTERSET(bo) (((bo)>>24) & 0x0000000F) /* 4 bits for CHARACTERSET */
+#define GET_BIDI_OPTION_NUMERAL(bo) (((bo)>>12) & 0x0000000F) /* 4 bits for NUMERAL */
+#define GET_BIDI_OPTION_SUPPORT(bo) (((bo)>>16) & 0x0000000F) /* 4 bits for SUPPORT */
+#define GET_BIDI_OPTION_CHARACTERSET(bo) (((bo)>>20) & 0x0000000F) /* 4 bits for CHARACTERSET */
 
 #define SET_BIDI_OPTION_DIRECTION(bo, dir) {(bo)=((bo) & 0xFFFFFFF0)|(((dir)& 0x0000000F)<<0);}
 #define SET_BIDI_OPTION_TEXTTYPE(bo, tt) {(bo)=((bo) & 0xFFFFFF0F)|(((tt)& 0x0000000F)<<4);}
 #define SET_BIDI_OPTION_CONTROLSTEXTMODE(bo, cotm) {(bo)=((bo) & 0xFFFFF0FF)|(((cotm)& 0x0000000F)<<8);}
-#define SET_BIDI_OPTION_CLIPBOARDTEXTMODE(bo, cltm) {(bo)=((bo) & 0xFFFF0FFF)|(((cltm)& 0x0000000F)<<12);}
-#define SET_BIDI_OPTION_NUMERAL(bo, num) {(bo)=((bo) & 0xFFF0FFFF)|(((num)& 0x0000000F)<<16);}
-#define SET_BIDI_OPTION_SUPPORT(bo, sup) {(bo)=((bo) & 0xFF0FFFFF)|(((sup)& 0x0000000F)<<20);}
-#define SET_BIDI_OPTION_CHARACTERSET(bo, cs) {(bo)=((bo) & 0xF0FFFFFF)|(((cs)& 0x0000000F)<<24);}
+#define SET_BIDI_OPTION_NUMERAL(bo, num) {(bo)=((bo) & 0xFFFF0FFF)|(((num)& 0x0000000F)<<12);}
+#define SET_BIDI_OPTION_SUPPORT(bo, sup) {(bo)=((bo) & 0xFFF0FFFF)|(((sup)& 0x0000000F)<<16);}
+#define SET_BIDI_OPTION_CHARACTERSET(bo, cs) {(bo)=((bo) & 0xFF0FFFFF)|(((cs)& 0x0000000F)<<20);}
 
 /* Constants related to the position of numerics in the codepage */
 #define START_HINDI_DIGITS              0x0660

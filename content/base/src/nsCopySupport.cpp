@@ -138,58 +138,6 @@ nsresult nsCopySupport::HTMLCopy(nsISelection *aSel, nsIDocument *aDoc, PRInt16 
       return rv;
   }
   
-#ifdef IBMBIDI //ahmed
-  rv = NS_OK;
-  PRBool arabicCharset;
-  
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
-  if (doc) {
-    nsIPresShell *shell = doc->GetShellAt(0);
-    if (shell) {
-      nsCOMPtr<nsIPresContext> context;
-      shell->GetPresContext(getter_AddRefs(context) );
-      if (context) {
-        context->IsArabicEncoding(arabicCharset);
-        if (arabicCharset) {
-          PRUint32 bidiOptions;
-          PRBool isBidiSystem = context->IsBidiSystem();
-          PRBool isVisual = context->IsVisualMode();
-
-          context->GetBidi(&bidiOptions);
-          if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_LOGICAL)&&(isVisual)
-             ) {
-            nsAutoString newBuffer;
-            if (isBidiSystem) { 
-              if (GET_BIDI_OPTION_DIRECTION(bidiOptions) == IBMBIDI_TEXTDIRECTION_RTL) {
-                Conv_FE_06(buffer, newBuffer);
-              }
-              else {
-                Conv_FE_06_WithReverse(buffer, newBuffer);
-              }
-            }
-            else { //nonbidisystem
-              HandleNumbers(buffer, newBuffer);//ahmed
-            }
-            buffer = newBuffer;
-          }
-          //Mohamed
-          else {
-            nsCAutoString bidiCharset;
-            context->GetBidiCharset(bidiCharset);
-            if (bidiCharset.EqualsIgnoreCase("UTF-8") || (!isVisual)) {
-              if ( (GET_BIDI_OPTION_CLIPBOARDTEXTMODE(bidiOptions) == IBMBIDI_CLIPBOARDTEXTMODE_VISUAL) || (!isBidiSystem) ) {
-                nsAutoString newBuffer;
-                Conv_06_FE_WithReverse(buffer, newBuffer, GET_BIDI_OPTION_DIRECTION(bidiOptions));
-                HandleNumbers(newBuffer, buffer);
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-#endif // IBMBIDI
-
   // Get the Clipboard
   nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
   if (NS_FAILED(rv)) 
