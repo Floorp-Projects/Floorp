@@ -29,13 +29,19 @@
 #endif
 */
 
+#include "nslog.h"
+
+NS_DECL_LOG(OEDebugLogLog)
+#define PRINTF NS_LOG_PRINTF(OEDebugLogLog)
+#define FLUSH  NS_LOG_FLUSH(OEDebugLogLog)
+
 #ifdef IMPORT_DEBUG
 #include "stdio.h"
 
-#define	IMPORT_LOG0( x)	printf( x)
-#define	IMPORT_LOG1( x, y)	printf( x, y)
-#define	IMPORT_LOG2( x, y, z)	printf( x, y, z)
-#define	IMPORT_LOG3( a, b, c, d)	printf( a, b, c, d)
+#define	IMPORT_LOG0( x)	PRINTF( x)
+#define	IMPORT_LOG1( x, y)	PRINTF( x, y)
+#define	IMPORT_LOG2( x, y, z)	PRINTF( x, y, z)
+#define	IMPORT_LOG3( a, b, c, d)	PRINTF( a, b, c, d)
 
 #else
 

@@ -30,6 +30,11 @@
 #include "nsGCCache.h"
 #include <gtk/gtk.h>
 #include "prmem.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRenderingContextGTKLog)
+#define PRINTF NS_LOG_PRINTF(nsRenderingContextGTKLog)
+#define FLUSH  NS_LOG_FLUSH(nsRenderingContextGTKLog)
 
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
@@ -397,7 +402,7 @@ static char *
 nsClipCombine_to_string(nsClipCombine aCombine)
 {
 #ifdef TRACE_SET_CLIP
-  printf("nsRenderingContextGTK::SetClipRect(x=%d,y=%d,w=%d,h=%d,%s)\n",
+  PRINTF("nsRenderingContextGTK::SetClipRect(x=%d,y=%d,w=%d,h=%d,%s)\n",
          trect.x,
          trect.y,
          trect.width,
@@ -457,7 +462,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   nsRect trect = aRect;
 
 #ifdef TRACE_SET_CLIP
-  printf("nsRenderingContextGTK::SetClipRect(%s)\n",
+  PRINTF("nsRenderingContextGTK::SetClipRect(%s)\n",
          nsClipCombine_to_string(aCombine));
 #endif // TRACE_SET_CLIP
 
@@ -602,7 +607,7 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
       }
     }
   } else {
-    printf("null clip region, can't make a valid copy\n");
+    PRINTF("null clip region, can't make a valid copy\n");
     rv = NS_ERROR_FAILURE;
   }
 
@@ -845,7 +850,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawPolyline(const nsPoint aPoints[], PRInt
     mTranMatrix->TransformCoord(&p.x,&p.y);
     pts[i].x = p.x;
     pts[i].y = p.y;
-    printf("(%i,%i)\n", p.x, p.y);
+    PRINTF("(%i,%i)\n", p.x, p.y);
   }
 
   UpdateGC();
@@ -1578,7 +1583,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
   //  gdk_window_clear_area(mSurface->GetDrawable(), x, y, w, h);
   PRInt32 xx, yy, ww, hh;
   mClipRegion->GetBoundingBox(&xx,&yy,&ww,&hh);
-  printf("clip bounds: x = %i, y = %i, w = %i, h = %i\n", xx, yy, ww, hh);
+  PRINTF("clip bounds: x = %i, y = %i, w = %i, h = %i\n", xx, yy, ww, hh);
 
   nscolor color = mCurrentColor;
   SetColor(NS_RGB(255,   0,   0));
@@ -1609,7 +1614,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawImage(nsIImage *aImage,
 #if 0
   PRInt32 x, y, w, h;
   mClipRegion->GetBoundingBox(&x,&y,&w,&h);
-  printf("clip bounds: x = %i, y = %i, w = %i, h = %i\n", x, y, w, h);
+  PRINTF("clip bounds: x = %i, y = %i, w = %i, h = %i\n", x, y, w, h);
 
   //  gdk_window_clear_area(mSurface->GetDrawable(), sr.x, sr.y, sr.width, sr.height);
 
@@ -1693,21 +1698,21 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   g_return_val_if_fail(mSurface != NULL, NS_ERROR_FAILURE);
 
 #if 0
-  printf("nsRenderingContextGTK::CopyOffScreenBits()\nflags=\n");
+  PRINTF("nsRenderingContextGTK::CopyOffScreenBits()\nflags=\n");
 
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
-    printf("NS_COPYBITS_USE_SOURCE_CLIP_REGION\n");
+    PRINTF("NS_COPYBITS_USE_SOURCE_CLIP_REGION\n");
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    printf("NS_COPYBITS_XFORM_SOURCE_VALUES\n");
+    PRINTF("NS_COPYBITS_XFORM_SOURCE_VALUES\n");
 
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
-    printf("NS_COPYBITS_XFORM_DEST_VALUES\n");
+    PRINTF("NS_COPYBITS_XFORM_DEST_VALUES\n");
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-    printf("NS_COPYBITS_TO_BACK_BUFFER\n");
+    PRINTF("NS_COPYBITS_TO_BACK_BUFFER\n");
 
-  printf("\n");
+  PRINTF("\n");
 #endif
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)

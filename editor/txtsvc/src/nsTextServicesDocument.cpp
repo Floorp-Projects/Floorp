@@ -34,6 +34,11 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLDocument.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTextServicesDocumentLog)
+#define PRINTF NS_LOG_PRINTF(nsTextServicesDocumentLog)
+#define FLUSH  NS_LOG_FLUSH(nsTextServicesDocumentLog)
 
 #define LOCK_DOC(doc)
 #define UNLOCK_DOC(doc)
@@ -1792,7 +1797,7 @@ nsTextServicesDocument::SetSelection(PRInt32 aOffset, PRInt32 aLength)
   UNLOCK_DOC(this);
 
   //**** KDEBUG ****
-  // printf("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PRINTF("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
   //**** KDEBUG ****
 
   return result;
@@ -1834,8 +1839,8 @@ nsTextServicesDocument::DeleteSelection()
   LOCK_DOC(this);
 
   //**** KDEBUG ****
-  // printf("\n---- Before Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PRINTF("\n---- Before Delete\n");
+  // PRINTF("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
   // PrintOffsetTable();
   //**** KDEBUG ****
 
@@ -1899,8 +1904,8 @@ nsTextServicesDocument::DeleteSelection()
     }
 
   //**** KDEBUG ****
-  // printf("\n---- Middle Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+    // PRINTF("\n---- Middle Delete\n");
+    // PRINTF("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
   // PrintOffsetTable();
   //**** KDEBUG ****
 
@@ -2026,8 +2031,8 @@ nsTextServicesDocument::DeleteSelection()
   result = RemoveInvalidOffsetEntries();
 
   //**** KDEBUG ****
-  // printf("\n---- After Delete\n");
-  // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PRINTF("\n---- After Delete\n");
+  // PRINTF("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
   // PrintOffsetTable();
   //**** KDEBUG ****
 
@@ -2086,8 +2091,8 @@ nsTextServicesDocument::InsertText(const nsString *aText)
   if (SelectionIsValid())
   {
     //**** KDEBUG ****
-    // printf("\n---- Before Insert\n");
-    // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+    // PRINTF("\n---- Before Insert\n");
+    // PRINTF("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
     // PrintOffsetTable();
     //**** KDEBUG ****
 
@@ -2268,8 +2273,8 @@ nsTextServicesDocument::InsertText(const nsString *aText)
     }
 
     //**** KDEBUG ****
-    // printf("\n---- After Insert\n");
-    // printf("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+    // PRINTF("\n---- After Insert\n");
+    // PRINTF("Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
     // PrintOffsetTable();
     //**** KDEBUG ****
   }
@@ -2299,8 +2304,8 @@ nsTextServicesDocument::InsertNode(nsIDOMNode *aNode,
                                    PRInt32 aPosition)
 {
   //**** KDEBUG ****
-  // printf("** InsertNode: 0x%.8x  0x%.8x  %d\n", aNode, aParent, aPosition);
-  // fflush(stdout);
+  // PRINTF("** InsertNode: 0x%.8x  0x%.8x  %d\n", aNode, aParent, aPosition);
+  // FLUSH();
   //**** KDEBUG ****
 
   NS_ASSERTION(0, "InsertNode called, offset tables might be out of sync."); 
@@ -2312,8 +2317,8 @@ nsresult
 nsTextServicesDocument::DeleteNode(nsIDOMNode *aChild)
 {
   //**** KDEBUG ****
-  // printf("** DeleteNode: 0x%.8x\n", aChild);
-  // fflush(stdout);
+  // PRINTF("** DeleteNode: 0x%.8x\n", aChild);
+  // FLUSH();
   //**** KDEBUG ****
 
   LOCK_DOC(this);
@@ -2392,8 +2397,8 @@ nsTextServicesDocument::SplitNode(nsIDOMNode *aExistingRightNode,
                                   nsIDOMNode *aNewLeftNode)
 {
   //**** KDEBUG ****
-  // printf("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
-  // fflush(stdout);
+  // PRINTF("** SplitNode: 0x%.8x  %d  0x%.8x\n", aExistingRightNode, aOffset, aNewLeftNode);
+  // FLUSH();
   //**** KDEBUG ****
 
   NS_ASSERTION(0, "SplitNode called, offset tables might be out of sync."); 
@@ -2411,8 +2416,8 @@ nsTextServicesDocument::JoinNodes(nsIDOMNode  *aLeftNode,
   nsresult result;
 
   //**** KDEBUG ****
-  // printf("** JoinNodes: 0x%.8x  0x%.8x  0x%.8x\n", aLeftNode, aRightNode, aParent);
-  // fflush(stdout);
+  // PRINTF("** JoinNodes: 0x%.8x  0x%.8x  0x%.8x\n", aLeftNode, aRightNode, aParent);
+  // FLUSH();
   //**** KDEBUG ****
 
   // Make sure that both nodes are text nodes!
@@ -3100,7 +3105,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
     mSelEndOffset = mSelStartOffset;
 
    //**** KDEBUG ****
-   // printf("\n* Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+    // PRINTF("\n* Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
    //**** KDEBUG ****
 
     return NS_OK;
@@ -3150,7 +3155,7 @@ nsTextServicesDocument::SetSelectionInternal(PRInt32 aOffset, PRInt32 aLength, P
   }
 
   //**** KDEBUG ****
-  // printf("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
+  // PRINTF("\n * Sel: (%2d, %4d) (%2d, %4d)\n", mSelStartIndex, mSelStartOffset, mSelEndIndex, mSelEndOffset);
   //**** KDEBUG ****
 
   return result;
@@ -4445,13 +4450,13 @@ nsTextServicesDocument::PrintOffsetTable()
   for (i = 0; i < mOffsetTable.Count(); i++)
   {
     entry = (OffsetEntry *)mOffsetTable[i];
-    printf("ENTRY %4d: 0x%.8x  %c  %c  %4d  %4d  %4d\n",
+    PRINTF("ENTRY %4d: 0x%.8x  %c  %c  %4d  %4d  %4d\n",
            i, (PRInt32)entry->mNode,  entry->mIsValid ? 'V' : 'N',
            entry->mIsInsertedText ? 'I' : 'B',
            entry->mNodeOffset, entry->mStrOffset, entry->mLength);
   }
 
-  fflush(stdout);
+  FLUSH();
 }
 
 void
@@ -4466,7 +4471,7 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
   atom->ToString(tmpStr);
   tmpStr.ToCString(tmpBuf, 256);
 
-  printf("%s", tmpBuf);
+  PRINTF("%s", tmpBuf);
 
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aContent);
 
@@ -4487,10 +4492,10 @@ nsTextServicesDocument::PrintContentNode(nsIContent *aContent)
         return;
 
       str.ToCString(tmpBuf, 256);
-      printf(":  \"%s\"", tmpBuf);
+      PRINTF(":  \"%s\"", tmpBuf);
     }
   }
 
-  printf("\n");
-  fflush(stdout);
+  PRINTF("\n");
+  FLUSH();
 }

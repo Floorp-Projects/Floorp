@@ -60,6 +60,15 @@
 #include "nsIXPConnect.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindowInternal.h"
+#include "nslog.h"
+
+#ifdef DEBUG_jband
+NS_IMPL_LOG_ENABLED(nsScriptSecurityManagerLog)
+#else
+NS_IMPL_LOG(nsScriptSecurityManagerLog)
+#endif
+#define PRINTF NS_LOG_PRINTF(nsScriptSecurityManagerLog)
+#define FLUSH  NS_LOG_FLUSH(nsScriptSecurityManagerLog)
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
@@ -922,13 +931,13 @@ Localize(char *genericString, nsString &result)
     ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
                                        (nsISupports**) &pNetService);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get net service\n");
+        NS_WARNING("cannot get net service");
         return ret;
     }
     nsIURI *uri = nsnull;
     ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot create URI\n");
+        NS_WARNING("cannot create URI");
         nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
         return ret;
     }
@@ -938,7 +947,7 @@ Localize(char *genericString, nsString &result)
     nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
     
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot create URL\n");
+        NS_WARNING("cannot create URL");
         return ret;
     }
     
@@ -947,13 +956,13 @@ Localize(char *genericString, nsString &result)
     ret = nsServiceManager::GetService(kStringBundleServiceCID,
         kIStringBundleServiceIID, (nsISupports**) &pStringService);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get string service\n");
+        NS_WARNING("cannot get string service");
         return ret;
     }
     char *spec = nsnull;
     ret = url->GetSpec(&spec);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get url spec\n");
+        NS_WARNING("cannot get url spec");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
         nsCRT::free(spec);
         return ret;
@@ -964,7 +973,7 @@ Localize(char *genericString, nsString &result)
     nsCRT::free(spec);
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot create instance\n");
+        NS_WARNING("cannot create instance");
         return ret;
     }
     
@@ -976,7 +985,7 @@ Localize(char *genericString, nsString &result)
     ret = bundle->GetStringFromName(strtmp.GetUnicode(), &ptrv);
     NS_RELEASE(bundle);
     if (NS_FAILED(ret)) {
-        NS_WARNING("cannot get string from name\n");
+        NS_WARNING("cannot get string from name");
     }
     result = ptrv;
     nsCRT::free(ptrv);
@@ -1480,11 +1489,9 @@ nsScriptSecurityManager::GetScriptSecurityManager()
             if (NS_FAILED(rv)) {
                 NS_WARNING("failed to install xpconnect security manager!");    
             } 
-#ifdef DEBUG_jband
             else {
-                printf("!!!!! xpc security manager registered\n");
+                PRINTF("!!!!! xpc security manager registered");
             }
-#endif
         }
         else {
             NS_WARNING("can't get xpconnect to install security manager!");    

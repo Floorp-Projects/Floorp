@@ -39,6 +39,11 @@
 #include "nsRepository.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsEmbedXlibIntoXtLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoXtLog)
+#define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoXtLog)
 
 
 
@@ -106,7 +111,7 @@ Window		gTopLevelWindow = 0;
 static void WindowCreateCallback( PRUint32 aID )
 {
 	// XXX Milind:
-  printf( "window created: %u\n", aID );
+  PRINTF( "window created: %u\n", aID );
 	Widget	parentwidget = gTopLevelWidget;
 
 	Widget	widget = XtCreateEmbedMozilla( parentwidget,
@@ -117,7 +122,7 @@ static void WindowCreateCallback( PRUint32 aID )
 																				);
 	XtRealizeWidget( widget );
 
-	printf( "widget(%p) of window(%ld)\n\n", widget, (Window)aID );
+	PRINTF( "widget(%p) of window(%ld)\n\n", widget, (Window)aID );
 	XtAddEventHandler( widget,
 										 ( ExposureMask |
 										   ButtonPressMask | ButtonReleaseMask |
@@ -133,7 +138,7 @@ static void WindowCreateCallback( PRUint32 aID )
 
 static void WindowDestroyCallback(PRUint32 aID)
 {
-  printf("window destroyed\n");
+  PRINTF("window destroyed\n");
 }
 
 
@@ -155,7 +160,7 @@ int main(int argc, char **argv)
 	gDisplay = XtDisplay( gTopLevelWidget );
 	gScreenNumber = DefaultScreen( gDisplay );
 
-	printf("TOP LEVEL WIDGET: %p\n", gTopLevelWidget);
+	PRINTF("TOP LEVEL WIDGET: %p\n", gTopLevelWidget);
 
   // init xlibrgb
   xlib_rgb_init( gDisplay, DefaultScreenOfDisplay( gDisplay ) );
@@ -166,13 +171,13 @@ int main(int argc, char **argv)
 								 NULL);
 
 
-	printf("realizing TOP LEVEL WIDGET...\n");
+	PRINTF("realizing TOP LEVEL WIDGET...\n");
 	XtRealizeWidget( gTopLevelWidget );
-	printf("done.\n");
+	PRINTF("done.\n");
 
 	gTopLevelWindow = XtWindow( gTopLevelWidget );
 
-	printf("Top Level Window = %ld\n", gTopLevelWindow);
+	PRINTF("Top Level Window = %ld\n", gTopLevelWindow);
 	
 
   //////////////////////////////////////////////////////////////////////
@@ -215,7 +220,7 @@ int main(int argc, char **argv)
   //////////////////////////////////////////////////////////////////////
   NS_SetupRegistry();
 
-  printf("Creating event queue.\n");
+  PRINTF("Creating event queue.\n");
     
   nsIEventQueueService * eventQueueService = nsnull;
   nsIEventQueue * eventQueue = nsnull;
@@ -288,7 +293,7 @@ int main(int argc, char **argv)
 					                                (void **) &sgPrefs);
 
   if (NS_OK != rv) {
-    printf("failed to get prefs instance\n");
+    PRINTF("failed to get prefs instance\n");
     return rv;
   }
   
@@ -296,7 +301,7 @@ int main(int argc, char **argv)
   sgPrefs->ReadUserPrefs();
 
   sgWebShell->SetPrefs(sgPrefs);
-	printf("showing webshell...\n");
+	PRINTF("showing webshell...\n");
   sgWebShell->Show();
 
 
@@ -348,7 +353,7 @@ static void resize_callback( Widget    w,
 		
 		if ( changed )
 		{
-			printf("RESIZE...%p(%d, %d)\n", w, width, height);
+			PRINTF("RESIZE...%p(%d, %d)\n", w, width, height);
 			webshell->SetBounds( 0, 0, width, height );   changed = 0;
 		}
   	
@@ -364,7 +369,7 @@ static void window_event_handler( Widget    w,
 																	XEvent    *xevent,
 																	Boolean   *toContinue )
 {
-	//printf("window_event_handler...\n");
+	//PRINTF("window_event_handler...\n");
   (*gsEventDispatcher)((nsXlibNativeEvent) xevent);
 	//*toContinue = True;
 }
@@ -374,7 +379,7 @@ static void event_processor_callback( XtPointer client_data,
                                       int       *fd,
 																			XtInputId *id )
 {
-	printf("event_processor_callback...\n");
+	PRINTF("event_processor_callback...\n");
 	
 	nsIEventQueue *eq = ( nsIEventQueue *)client_data;
 	eq->ProcessPendingEvents();

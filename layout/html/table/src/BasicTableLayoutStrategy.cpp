@@ -29,6 +29,11 @@
 #include "nsStyleConsts.h"
 #include "nsVoidArray.h"
 #include "nsHTMLIIDs.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(BasicTableLayoutStrategyLog)
+#define PRINTF NS_LOG_PRINTF(BasicTableLayoutStrategyLog)
+#define FLUSH  NS_LOG_FLUSH(BasicTableLayoutStrategyLog)
 
 #if 1
 static PRBool gsDebugAssign  = PR_FALSE;
@@ -156,7 +161,7 @@ PRBool BCW_Wrapup(nsIPresContext*           aPresContext,
 {
   if (aAllocTypes)
     delete [] aAllocTypes;
-  if (gsDebugBalance) {printf("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugBalance) {PRINTF("BalanceColumnWidths ex \n"); aTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   return PR_TRUE;
 }
 
@@ -166,7 +171,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
                                               const nsHTMLReflowState& aReflowState,
                                               nscoord                  aMaxWidthIn)
 {
-  if (gsDebugBalance) {printf("BalanceColumnWidths en max=%d count=%d \n", aMaxWidthIn, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugBalance) {PRINTF("BalanceColumnWidths en max=%d count=%d \n", aMaxWidthIn, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   float p2t;
   aPresContext->GetScaledPixelsToTwips(&p2t);
 
@@ -770,7 +775,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
                                                    const nsHTMLReflowState& aReflowState,
                                                    float                    aPixelToTwips)
 {
-  if (gsDebugAssign) {printf("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugAssign) {PRINTF("AssignNonPctColWidths en max=%d count=%d \n", aMaxWidth, gsDebugCount++); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   PRBool rv = PR_FALSE;
   PRInt32 numRows = mTableFrame->GetRowCount();
   PRInt32 numCols = mTableFrame->GetColCount();
@@ -950,7 +955,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     mTableFrame->SetColumnWidth(colX, minWidth);
   }
 
-  if (gsDebugAssign) {printf("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
+  if (gsDebugAssign) {PRINTF("AssignNonPctColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   return rv;
 }
 
@@ -1914,11 +1919,11 @@ void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
   }
   indent[aIndent] = 0;
 
-  printf("%s**START BASIC STRATEGY DUMP** table=%p cols=%X",
+  PRINTF("%s**START BASIC STRATEGY DUMP** table=%p cols=%X",
          indent, mTableFrame, mCols);
-  printf("\n%s cellSpacing=%d propRatio=%.2f navQuirks=%d",
-    indent, mCellSpacingTotal, mMinToDesProportionRatio, mIsNavQuirksMode);
-  printf(" **END BASIC STRATEGY DUMP** \n");
+  PRINTF("\n%s cellSpacing=%d propRatio=%.2f navQuirks=%d",
+         indent, mCellSpacingTotal, mMinToDesProportionRatio, mIsNavQuirksMode);
+  PRINTF(" **END BASIC STRATEGY DUMP** \n");
   delete [] indent;
 }
 

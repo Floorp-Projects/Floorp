@@ -46,6 +46,11 @@
 #include "nsMemory.h"
 
 #include <Scrap.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsClipboardLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
+#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 
 //
@@ -126,7 +131,7 @@ nsClipboard :: SetNativeClipboardData ( PRInt32 aWhichClipboard )
       errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
       nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
 #ifdef NS_DEBUG
-        if ( NS_FAILED(errCode) ) printf("nsClipboard:: Error getting data from transferable\n");
+      if ( NS_FAILED(errCode) ) PRINTF("nsClipboard:: Error getting data from transferable\n");
 #endif
       
       // stash on clipboard
@@ -273,7 +278,7 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
         nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
 #ifdef NS_DEBUG
-          if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
+        if ( errCode != NS_OK ) PRINTF("nsClipboard:: Error setting data into transferable\n");
 #endif
         nsMemory::Free ( clipboardData );
         
@@ -324,7 +329,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
 
     // put it into the transferable
 #ifdef NS_DEBUG
-    if ( err != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
+    if ( err != NS_OK ) PRINTF("nsClipboard:: Error setting data into transferable\n");
 #endif
 
     if ( outDataSize )
@@ -354,7 +359,7 @@ nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, void** outData, PRInt3
     } 
     else {
 #ifdef NS_DEBUG
-         printf("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
+      PRINTF("nsClipboard: Error getting data off the clipboard, #%d\n", dataSize);
 #endif
        return NS_ERROR_FAILURE;
     }

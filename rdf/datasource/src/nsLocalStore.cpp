@@ -41,6 +41,11 @@
 #include "rdf.h"
 #include "nsCOMPtr.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsLocalStoreLog)
+#define PRINTF NS_LOG_PRINTF(nsLocalStoreLog)
+#define FLUSH  NS_LOG_FLUSH(nsLocalStoreLog)
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -210,7 +215,7 @@ LocalStoreImpl::~LocalStoreImpl(void)
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    fprintf(stdout, "%d - RDF: LocalStoreImpl\n", gInstanceCount);
+    PRINTF("%d - RDF: LocalStoreImpl\n", gInstanceCount);
 #endif
 }
 
@@ -239,7 +244,7 @@ NS_NewLocalStore(nsILocalStore** aResult)
     if (NS_FAILED(rv)) {
 
 #ifdef	DEBUG
-	printf("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
+        PRINTF("\n\nRDF: NS_NewLocalStore::Refresh() failed.\n\n");
 #endif
 
         delete impl;

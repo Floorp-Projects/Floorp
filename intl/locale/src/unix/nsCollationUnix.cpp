@@ -33,6 +33,12 @@
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h" /* for nsAutoString */
 #include "nsIPref.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCollationUnixLog)
+#define PRINTF NS_LOG_PRINTF(nsCollationUnixLog)
+#define FLUSH  NS_LOG_FLUSH(nsCollationUnixLog)
+
 //#define DEBUG_UNIX_COLLATION
 
 static NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);
@@ -155,11 +161,11 @@ nsresult nsCollationUnix::Initialize(nsILocale* locale)
 #if defined(DEBUG_UNIX_COLLATION)
   nsAutoCString tmp(mLocale);
   if (NULL != (const char *)tmp) {
-    printf("nsCollationUnix::Initialize mLocale = %s\n", (const char *)tmp);
+    PRINTF("nsCollationUnix::Initialize mLocale = %s\n", (const char *)tmp);
   }
   nsAutoCString tmp2(mCharset);
   if (NULL != (const char *)tmp2) {
-    printf("nsCollationUnix::Initialize mCharset = %s\n", (const char *)tmp2);
+    PRINTF("nsCollationUnix::Initialize mCharset = %s\n", (const char *)tmp2);
   }
 #endif
 

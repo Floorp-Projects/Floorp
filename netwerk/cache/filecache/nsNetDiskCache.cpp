@@ -45,6 +45,11 @@
 #include "nsIFile.h"
 #include "nsILocalFile.h"
 #include "nsString.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNetDiskCacheLog)
+#define PRINTF NS_LOG_PRINTF(nsNetDiskCacheLog)
+#define FLUSH  NS_LOG_FLUSH(nsNetDiskCacheLog)
 
 #if !defined(IS_LITTLE_ENDIAN) && !defined(IS_BIG_ENDIAN)
 ERROR! Must have a byte order
@@ -201,9 +206,7 @@ nsNetDiskCache::Observe(nsISupports *aSubject, const PRUnichar *aTopic,
 
 NS_IMETHODIMP nsNetDiskCache::InitCacheFolder()
 {
-#ifdef DEBUG_dp
-  printf("CACHE: InitCacheFolder()\n");
-#endif /* DEBUG_dp */
+  PRINTF("CACHE: InitCacheFolder()");
 
 // don't initialize if no cache folder is set. 
  if(!mDiskCacheFolder) return NS_OK ;
@@ -454,9 +457,7 @@ nsNetDiskCache::GetCachedNetData(const char* key, PRUint32 length, nsINetDataCac
   if ( NS_FAILED( rv ) ) 
   	DBRecovery();
 
-#ifdef DEBUG_dp
-  printf("CACHE: GetCachedNetData(%s) created nsDiskCacheRecord %p id=%d\n", key, _retval, id);
-#endif /* DEBUG_dp */
+  PRINTF("CACHE: GetCachedNetData(%s) created nsDiskCacheRecord %p id=%d", key, _retval, id);
 
   return rv;
 }
@@ -488,9 +489,7 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     } else {
       delete newRecord; 
     }
-#ifdef DEBUG_dp
-    printf("CACHE: GetCachedNetDataByID(id=%d) created nsDiskCacheRecord %p\n", RecordID, *_retval);
-#endif /* DEBUG_dp */
+    PRINTF("CACHE: GetCachedNetDataByID(id=%d) created nsDiskCacheRecord %p", RecordID, *_retval);
     return rv;
   }
 
@@ -512,11 +511,9 @@ nsNetDiskCache::GetCachedNetDataByID(PRInt32 RecordID, nsINetDataCacheRecord **_
     rv = NS_ERROR_FAILURE;
   }
 
-#ifdef DEBUG_dp
-    printf("CACHE: GetCachedNetDataByID(id=%d) = RecordID not in DB\n", RecordID);
-#endif /* DEBUG_dp */
+  PRINTF("CACHE: GetCachedNetDataByID(id=%d) = RecordID not in DB", RecordID);
 
-  NS_WARNING("Error: RecordID not in DB\n");
+  NS_WARNING("Error: RecordID not in DB");
   return rv;
 }
 
@@ -613,9 +610,7 @@ nsNetDiskCache::GetStorageInUse(PRUint32 *aStorageInUse)
 NS_IMETHODIMP
 nsNetDiskCache::RemoveAll(void)
 {
-#ifdef DEBUG_dp
-  printf("CACHE: RemoveAll()\n");
-#endif /* DEBUG_dp */
+  PRINTF("CACHE: RemoveAll()");
   NS_ASSERTION(mDB, "no db.") ;
   NS_ASSERTION(mDiskCacheFolder, "no cache folder.") ;
   nsresult rv;

@@ -27,6 +27,11 @@
 #include "nsINNTPArticleList.h"
 #include "nsMsgKeySet.h"
 #include "nsNNTPArticleList.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNNTPArticleListLog)
+#define PRINTF NS_LOG_PRINTF(nsNNTPArticleListLog)
+#define FLUSH  NS_LOG_FLUSH(nsNNTPArticleListLog)
 
 NS_IMPL_ISUPPORTS(nsNNTPArticleList, GetIID())
 
@@ -82,7 +87,7 @@ nsNNTPArticleList::AddArticleKey(PRInt32 key)
 	char * groupname = nsnull;
 	if (m_newsgroup)
 		m_newsgroup->GetName(&groupname);
-	printf("Adding article key %d for group %s.\n", key, groupname ? groupname : "unspecified");
+	PRINTF("Adding article key %d for group %s.\n", key, groupname ? groupname : "unspecified");
 	PR_FREEIF(groupname);
 #endif
 	m_idsOnServer.set->Add(key);

@@ -38,6 +38,11 @@
 #include "nsIChromeRegistry.h" 
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNoIncomingServerLog)
+#define PRINTF NS_LOG_PRINTF(nsNoIncomingServerLog)
+#define FLUSH  NS_LOG_FLUSH(nsNoIncomingServerLog)
 
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
@@ -168,7 +173,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 	// if it exists add to the end, else copy
 	if (exists) {
 #ifdef DEBUG_sspitzer
-		printf("append default %s\n",folderNameOnDisk);
+		PRINTF("append default %s\n",folderNameOnDisk);
 #endif
 		// todo for bug #1181
 		// open folderFile, seek to end
@@ -176,7 +181,7 @@ NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDi
 	}
 	else {
 #ifdef DEBUG_sspitzer
-		printf("copy default %s\n",folderNameOnDisk);
+		PRINTF("copy default %s\n",folderNameOnDisk);
 #endif
 		rv = defaultMessagesFile->CopyTo(localParentDir, nsnull);
 		if (NS_FAILED(rv)) return rv;

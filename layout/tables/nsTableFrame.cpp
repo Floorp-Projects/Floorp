@@ -60,6 +60,12 @@
 #include "nsIScrollableFrame.h"
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrameManager.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsTableFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsTableFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsTableFrameLog)
 
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
@@ -1048,7 +1054,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
                          PRInt32               aRowIndex,
                          PRBool                aConsiderSpans)
 {
-  //printf("insertRowsBefore firstRow=%d \n", aRowIndex);
+  //PRINTF("insertRowsBefore firstRow=%d \n", aRowIndex);
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 
   PRInt32 numColsToAdd = 0;
@@ -1076,7 +1082,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
     }
   }
 
-  //printf("insertRowsAfter \n");
+  //PRINTF("insertRowsAfter \n");
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 
   return numColsToAdd;
@@ -1088,7 +1094,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
                               PRInt32          aNumRowsToRemove,
                               PRBool           aConsiderSpans)
 {
-  //printf("removeRowsBefore firstRow=%d numRows=%d\n", aFirstRowIndex, aNumRowsToRemove);
+  //PRINTF("removeRowsBefore firstRow=%d numRows=%d\n", aFirstRowIndex, aNumRowsToRemove);
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 
   nsTableCellMap* cellMap = GetCellMap();
@@ -1104,7 +1110,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
     }
   }
   AdjustRowIndices(&aPresContext, aFirstRowIndex, -aNumRowsToRemove);
-  //printf("removeRowsAfter\n");
+  //PRINTF("removeRowsAfter\n");
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 }
 
@@ -1347,7 +1353,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
       }
       else
       {
-        //printf("paint table frame\n");
+        //PRINTF("paint table frame\n");
         nsBorderEdges* edges = nsnull;
         if (mBorderCollapser) {
           edges = mBorderCollapser->GetEdges();
@@ -4347,7 +4353,7 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
       nsIAtom* rowType;
       rowFrame->GetFrameType(&rowType);
       if (nsLayoutAtoms::tableRowFrame == rowType) {
-        printf("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
+        PRINTF("row(%d)=%p ", ((nsTableRowFrame*)rowFrame)->GetRowIndex(), rowFrame);
         nsIFrame* cellFrame;
         rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
         while (cellFrame) {
@@ -4356,12 +4362,12 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
           if (nsLayoutAtoms::tableCellFrame == cellType) {
             PRInt32 colIndex;
             ((nsTableCellFrame*)cellFrame)->GetColIndex(colIndex);
-            printf("cell(%d)=%p ", colIndex, cellFrame);
+            PRINTF("cell(%d)=%p ", colIndex, cellFrame);
           }
           NS_IF_RELEASE(cellType);
           cellFrame->GetNextSibling(&cellFrame);
         }
-        printf("\n");
+        PRINTF("\n");
       }
       else {
         DumpRowGroup(aPresContext, rowFrame);
@@ -4377,15 +4383,15 @@ void nsTableFrame::Dump(nsIPresContext* aPresContext,
                         PRBool          aDumpCols, 
                         PRBool          aDumpCellMap)
 {
-  printf("***START TABLE DUMP*** \n");
+  PRINTF("***START TABLE DUMP*** \n");
   // dump the columns widths array
-  printf("mColWidths=");
+  PRINTF("mColWidths=");
   PRInt32 numCols = GetColCount();
   PRInt32 colX;
   for (colX = 0; colX < numCols; colX++) {
-    printf("%d ", mColumnWidths[colX]);
+    PRINTF("%d ", mColumnWidths[colX]);
   }
-  printf("\n");
+  PRINTF("\n");
 
   if (aDumpRows) {
     nsIFrame* kidFrame = mFrames.FirstChild();
@@ -4397,16 +4403,16 @@ void nsTableFrame::Dump(nsIPresContext* aPresContext,
 
   if (aDumpCols) {
 	  // output col frame cache
-    printf("\n col frame cache ->");
+    PRINTF("\n col frame cache ->");
 	  for (colX = 0; colX < numCols; colX++) {
       nsTableColFrame* colFrame = (nsTableColFrame *)mColFrames.ElementAt(colX);
       if (0 == (colX % 8)) {
-        printf("\n");
+        PRINTF("\n");
       }
-      printf ("%d=%p ", colX, colFrame);
+      PRINTF ("%d=%p ", colX, colFrame);
     }
     for (colX = 0; colX < numCols; colX++) {
-      printf("\n");
+      PRINTF("\n");
       nsTableColFrame* colFrame = GetColFrame(colX);
       colFrame->Dump(1);
     }
@@ -4417,7 +4423,7 @@ void nsTableFrame::Dump(nsIPresContext* aPresContext,
     cellMap->Dump();
 #endif
   }
-  printf(" ***END TABLE DUMP*** \n");
+  PRINTF(" ***END TABLE DUMP*** \n");
 }
 
 // nsTableIterator
@@ -4650,16 +4656,16 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
 {
   char indent[256];
   nsTableFrame::DebugGetIndent(aFrame, indent);
-  printf("%s%s %p ", indent, aMessage, aFrame);
+  PRINTF("%s%s %p ", indent, aMessage, aFrame);
   char width[32];
   char height[32];
   if (aState) {
     PrettyUC(aState->availableWidth, width);
     PrettyUC(aState->availableHeight, height);
-    printf("rea=%d av=(%s,%s) ", aState->reason, width, height); 
+    PRINTF("rea=%d av=(%s,%s) ", aState->reason, width, height); 
     PrettyUC(aState->mComputedWidth, width);
     PrettyUC(aState->mComputedHeight, height);
-    printf("comp=(%s,%s) count=%d \n ", width, height, gRflCount);
+    PRINTF("comp=(%s,%s) count=%d \n ", width, height, gRflCount);
     gRflCount++;
     //if (32 == gRflCount) {
     //  NS_ASSERTION(PR_FALSE, "stop");
@@ -4667,23 +4673,23 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
   }
   if (aMetrics) {
     if (aState) {
-      printf("%s", indent);
+      PRINTF("%s", indent);
     }
     PrettyUC(aMetrics->width, width);
     PrettyUC(aMetrics->height, height);
-    printf("des=(%s,%s) ", width, height);
+    PRINTF("des=(%s,%s) ", width, height);
     if (aMetrics->maxElementSize) {
       PrettyUC(aMetrics->maxElementSize->width, width);
       PrettyUC(aMetrics->maxElementSize->height, height);
-      printf("maxElem=(%s,%s)", width, height);
+      PRINTF("maxElem=(%s,%s)", width, height);
     }
     if (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-      printf("max=%d ", aMetrics->mMaximumWidth);
+      PRINTF("max=%d ", aMetrics->mMaximumWidth);
     }
     if (NS_FRAME_COMPLETE != aStatus) {
-      printf("status=%d", aStatus);
+      PRINTF("status=%d", aStatus);
     }
-    printf("\n");
+    PRINTF("\n");
   }
 }
 

@@ -39,6 +39,9 @@ static NS_DEFINE_IID(kICharsetConverterManagerIID, NS_ICHARSETCONVERTERMANAGER_I
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#undef printf
+#undef fprintf
+
 void usage()
 {
   printf(

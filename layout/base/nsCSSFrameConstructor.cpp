@@ -123,6 +123,11 @@
 #include "nsPolygonFrame.h"
 #include "nsPolylineFrame.h"
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSFrameConstructorLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSFrameConstructorLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSFrameConstructorLog)
 
 
 nsresult
@@ -8247,7 +8252,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
 {
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
+    PRINTF("nsCSSFrameConstructor::ContentAppended container=%p index=%d\n",
            aContainer, aNewIndexInContainer);
     if (gReallyNoisyContentUpdates && aContainer) {
       aContainer->List(stdout, 0);
@@ -8320,9 +8325,9 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
       // around. This logic guarantees a correct answer.
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::ContentAppended: parentFrame=");
+        PRINTF("nsCSSFrameConstructor::ContentAppended: parentFrame=");
         nsFrame::ListTag(stdout, parentFrame);
-        printf(" is special\n");
+        PRINTF(" is special\n");
       }
 #endif
       return ReframeContainingBlock(aPresContext, parentFrame);
@@ -8551,7 +8556,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
 {
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentInserted container=%p child=%p index=%d\n",
+    PRINTF("nsCSSFrameConstructor::ContentInserted container=%p child=%p index=%d\n",
            aContainer, aChild, aIndexInContainer);
     if (gReallyNoisyContentUpdates) {
       (aContainer ? aContainer : aChild)->List(stdout, 0);
@@ -8748,9 +8753,9 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         // around. This logic guarantees a correct answer.
 #ifdef DEBUG
         if (gNoisyContentUpdates) {
-          printf("nsCSSFrameConstructor::ContentInserted: parentFrame=");
+          PRINTF("nsCSSFrameConstructor::ContentInserted: parentFrame=");
           nsFrame::ListTag(stdout, parentFrame);
-          printf(" is special\n");
+          PRINTF(" is special\n");
         }
 #endif
         return ReframeContainingBlock(aPresContext, parentFrame);
@@ -8829,10 +8834,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
         blockContent->GetParent(*getter_AddRefs(parentContainer));
 #ifdef DEBUG
         if (gNoisyContentUpdates) {
-          printf("nsCSSFrameConstructor::ContentInserted: parentFrame=");
+          PRINTF("nsCSSFrameConstructor::ContentInserted: parentFrame=");
           nsFrame::ListTag(stdout, parentFrame);
-          printf(" is special inline\n");
-          printf("  ==> blockContent=%p, parentContainer=%p\n",
+          PRINTF(" is special inline\n");
+          PRINTF("  ==> blockContent=%p, parentContainer=%p\n",
                  blockContent.get(), parentContainer.get());
         }
 #endif
@@ -9171,7 +9176,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 {
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("nsCSSFrameConstructor::ContentRemoved container=%p child=%p index=%d\n",
+    PRINTF("nsCSSFrameConstructor::ContentRemoved container=%p child=%p index=%d\n",
            aContainer, aChild, aIndexInContainer);
     if (gReallyNoisyContentUpdates) {
       aContainer->List(stdout, 0);
@@ -9295,9 +9300,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // around. This logic guarantees a correct answer.
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::ContentRemoved: childFrame=");
+        PRINTF("nsCSSFrameConstructor::ContentRemoved: childFrame=");
         nsFrame::ListTag(stdout, childFrame);
-        printf(" is special\n");
+        PRINTF(" is special\n");
       }
 #endif
       return ReframeContainingBlock(aPresContext, childFrame);
@@ -9320,13 +9325,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // Trap out to special routine that handles adjusting a blocks
       // frame tree when first-letter style is present.
 #ifdef NOISY_FIRST_LETTER
-      printf("ContentRemoved: containingBlock=");
+      PRINTF("ContentRemoved: containingBlock=");
       nsFrame::ListTag(stdout, containingBlock);
-      printf(" parentFrame=");
+      PRINTF(" parentFrame=");
       nsFrame::ListTag(stdout, parentFrame);
-      printf(" childFrame=");
+      PRINTF(" childFrame=");
       nsFrame::ListTag(stdout, childFrame);
-      printf("\n");
+      PRINTF("\n");
 #endif
 
       // First update the containing blocks structure by removing the
@@ -9343,11 +9348,11 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       childFrame->GetParent(&parentFrame);
 
 #ifdef NOISY_FIRST_LETTER
-      printf("  ==> revised parentFrame=");
+      PRINTF("  ==> revised parentFrame=");
       nsFrame::ListTag(stdout, parentFrame);
-      printf(" childFrame=");
+      PRINTF(" childFrame=");
       nsFrame::ListTag(stdout, childFrame);
-      printf("\n");
+      PRINTF("\n");
 #endif
     }
 
@@ -9362,7 +9367,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                              (const nsStyleStruct*&)display);
     if (display->IsFloating()) {
 #ifdef NOISY_FIRST_LETTER
-      printf("  ==> child display is still floating!\n");
+      PRINTF("  ==> child display is still floating!\n");
 #endif
       // Get the placeholder frame
       nsIFrame* placeholderFrame;
@@ -9680,9 +9685,9 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
     // around. This logic guarantees a correct answer.
 #ifdef DEBUG
     if (gNoisyContentUpdates) {
-      printf("nsCSSFrameConstructor::StyleChangeReflow: aFrame=");
+      PRINTF("nsCSSFrameConstructor::StyleChangeReflow: aFrame=");
       nsFrame::ListTag(stdout, aFrame);
-      printf(" is special\n");
+      PRINTF(" is special\n");
     }
 #endif
     ReframeContainingBlock(aPresContext, aFrame);
@@ -12139,7 +12144,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Now that everything is set...
 #ifdef NOISY_FIRST_LETTER
-  printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
+  PRINTF("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
   aFrameManager->SetPlaceholderFrameFor(floater, nsnull);
@@ -12705,17 +12710,17 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell*            aPresShell,
   if (gNoisyInlineConstruction) {
     nsIFrameDebug*  frameDebug;
 
-    printf("nsCSSFrameConstructor::ConstructInline:\n");
+    PRINTF("nsCSSFrameConstructor::ConstructInline:\n");
     if (NS_SUCCEEDED(aNewFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      printf("  ==> leading inline frame:\n");
+      PRINTF("  ==> leading inline frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
     if (NS_SUCCEEDED(blockFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      printf("  ==> block frame:\n");
+      PRINTF("  ==> block frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
     if (NS_SUCCEEDED(inlineFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
-      printf("  ==> trailing inline frame:\n");
+      PRINTF("  ==> trailing inline frame:\n");
       frameDebug->List(aPresContext, stdout, 2);
     }
   }
@@ -12896,7 +12901,7 @@ nsCSSFrameConstructor::WipeContainingBlock(nsIPresContext* aPresContext,
       aBlockContent->GetParent(*getter_AddRefs(parentContainer));
 #ifdef DEBUG
       if (gNoisyContentUpdates) {
-        printf("nsCSSFrameConstructor::WipeContainingBlock: aBlockContent=%p parentContainer=%p\n",
+        PRINTF("nsCSSFrameConstructor::WipeContainingBlock: aBlockContent=%p parentContainer=%p\n",
                aBlockContent, parentContainer.get());
       }
 #endif
@@ -13107,7 +13112,7 @@ nsCSSFrameConstructor::ReframeContainingBlock(nsIPresContext* aPresContext, nsIF
 
 #ifdef DEBUG
   if (gNoisyContentUpdates) {
-    printf("  ==> blockContent=%p, parentContainer=%p\n",
+    PRINTF("  ==> blockContent=%p, parentContainer=%p\n",
            blockContent.get(), parentContainer.get());
   }
 #endif

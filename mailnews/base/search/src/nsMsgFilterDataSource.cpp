@@ -146,7 +146,7 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
         }
 
         else {
-            NS_WARNING("ArcLabelsOut(): unknown filter delegate!\n");
+            NS_WARNING("ArcLabelsOut(): unknown filter delegate!");
         }
     }
     
@@ -191,7 +191,7 @@ nsMsgFilterDataSource::GetTarget(nsIRDFResource *aSource,
             rv = getFilterTarget(filter, aProperty, aTruthValue, aResult);
         
         else {
-            NS_WARNING("GetTarget(): unknown filter delegate!\n");
+            NS_WARNING("GetTarget(): unknown filter delegate!");
         }
     }
 
@@ -237,7 +237,7 @@ nsMsgFilterDataSource::ArcLabelsOut(nsIRDFResource *aSource,
             arcs = mFilterArcsOut;
         
         else {
-            NS_WARNING("GetTargets(): unknown filter delegate!\n");
+            NS_WARNING("GetTargets(): unknown filter delegate!");
 
         }
     }

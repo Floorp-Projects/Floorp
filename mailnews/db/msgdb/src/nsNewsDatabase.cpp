@@ -27,6 +27,11 @@
 #include "nsNewsSummarySpec.h"
 #include "nsMsgKeySet.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNewsDatabaseLog)
+#define PRINTF NS_LOG_PRINTF(nsNewsDatabaseLog)
+#define FLUSH  NS_LOG_FLUSH(nsNewsDatabaseLog)
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_NEWS_DATABASE 1
@@ -88,9 +93,9 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   nsresult                  err = NS_OK;
 
 #ifdef DEBUG_NEWS_DATABASE
-  printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
+  PRINTF("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
            (const char*)newsgroupName, create ? "TRUE":"FALSE",
-           pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
+         pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
 #endif
 
   nsFileSpec dbPath(summarySpec);
@@ -109,7 +114,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   
   if (!newsDB) {
 #ifdef DEBUG_NEWS_DATABASE
-    printf("NS_ERROR_OUT_OF_MEMORY\n");
+    PRINTF("NS_ERROR_OUT_OF_MEMORY\n");
 #endif
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -120,7 +125,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   err = newsDB->OpenMDB((const char *) summarySpec, create);
   if (NS_SUCCEEDED(err)) {
 #ifdef DEBUG_NEWS_DATABASE
-    printf("newsDB->OpenMDB succeeded!\n");
+    PRINTF("newsDB->OpenMDB succeeded!\n");
 #endif
 	*pMessageDB = newsDB;
 	if (newsDB) {
@@ -129,7 +134,7 @@ NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, P
   }
   else {
 #ifdef DEBUG_NEWS_DATABASE
-    printf("newsDB->OpenMDB failed!\n");
+    PRINTF("newsDB->OpenMDB failed!\n");
 #endif
     *pMessageDB = nsnull;
     if (newsDB) {
@@ -376,7 +381,7 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
 
       if (!bRead) {
 #ifdef DEBUG_NEWS_DATABASE
-        printf("remove %d from the set\n",messageKey);
+        PRINTF("remove %d from the set\n",messageKey);
 #endif
 
         rv = m_readSet->Remove(messageKey);
@@ -387,7 +392,7 @@ PRBool nsNewsDatabase::SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead)
       }
       else {
 #ifdef DEBUG_NEWS_DATABASE
-        printf("add %d to the set\n",messageKey);
+        PRINTF("add %d to the set\n",messageKey);
 #endif
 
         rv = m_readSet->Add(messageKey);

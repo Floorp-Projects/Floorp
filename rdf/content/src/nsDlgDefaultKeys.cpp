@@ -37,6 +37,11 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDlgDefaultKeys.h"
 #include "nsRDFCID.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDlgDefaultKeysLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsDlgDefaultKeysLog)
+#define FLUSH  NS_LOG_FLUSH(nsDlgDefaultKeysLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -273,7 +278,7 @@ nsresult nsDlgDefaultKeysImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		        tempChar[0] = theChar;
 		        tempChar[1] = 0;
 		        nsString tempChar2 = tempChar;
-		        //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
+		        //PRINTF("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
 		         // NOTE - convert theChar and keyName to upper
 		         keyName.ToUpperCase();
 		         tempChar2.ToUpperCase();
@@ -293,7 +298,7 @@ nsresult nsDlgDefaultKeysImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 			      }
 			      
 			      
-			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
+			      //PRINTF("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do
 		          {
 		            

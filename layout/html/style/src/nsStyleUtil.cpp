@@ -40,6 +40,11 @@
 
 #include "nsIServiceManager.h"
 #include "nsIPref.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsStyleUtilLog)
+#define PRINTF NS_LOG_PRINTF(nsStyleUtilLog)
+#define FLUSH  NS_LOG_FLUSH(nsStyleUtilLog)
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -676,106 +681,106 @@ void DumpFontSizes(nsIPresContext* aPresContext)
 		for (short i=0; i<2; i ++)
 		{
 			doWinRounding ^= true;
-			printf("\n\n\n");
-			printf("---------------------------------------------------------------\n");
-			printf("                          CSS                                  \n");
-			printf("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
-			printf("---------------------------------------------------------------\n");
-			printf("\n");
-			printf("NEW SIZES:\n");
-			printf("----------\n");
-			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			PRINTF("\n\n\n");
+			PRINTF("---------------------------------------------------------------\n");
+			PRINTF("                          CSS                                  \n");
+			PRINTF("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
+			PRINTF("---------------------------------------------------------------\n");
+			PRINTF("\n");
+			PRINTF("NEW SIZES:\n");
+			PRINTF("----------\n");
+			PRINTF("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (cssSize = 0; cssSize <= 6; cssSize++) {
 					val = NewCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_CSS);
-					printf("%2d        ", RoundSize(val, aPresContext, false));
+					PRINTF("%2d        ", RoundSize(val, aPresContext, false));
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
 
-			printf("\n");
-			printf("OLD SIZES:\n");
-			printf("----------\n");
-			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			PRINTF("\n");
+			PRINTF("OLD SIZES:\n");
+			PRINTF("----------\n");
+			PRINTF("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (cssSize = 0; cssSize <= 6; cssSize++) {
 					val = OldCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f);
-					printf("%2d        ", RoundSize(val, aPresContext, doWinRounding));
+					PRINTF("%2d        ", RoundSize(val, aPresContext, doWinRounding));
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
 
-			printf("\n");
-			printf("DIFFS:\n");
-			printf("------\n");
-			printf("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
+			PRINTF("\n");
+			PRINTF("DIFFS:\n");
+			PRINTF("------\n");
+			PRINTF("        xx-small  x-small   small     medium    large     x-large   xx-large\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (cssSize = 0; cssSize <= 6; cssSize++) {
 					oldVal = OldCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f);
 					val = NewCalcFontPointSize(cssSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_CSS);
 					if (RoundSize(oldVal, aPresContext, doWinRounding) <= 8)
-						printf(" .");
+						PRINTF(" .");
 					else
-					  printf("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
-					printf("        ");
+					  PRINTF("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
+					PRINTF("        ");
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
 
 
 
-			printf("\n\n\n");
-			printf("---------------------------------------------------------------\n");
-			printf("                          HTML                                 \n");
-			printf("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
-			printf("---------------------------------------------------------------\n");
-			printf("\n");
-			printf("NEW SIZES:\n");
-			printf("----------\n");
-			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			PRINTF("\n\n\n");
+			PRINTF("---------------------------------------------------------------\n");
+			PRINTF("                          HTML                                 \n");
+			PRINTF("                     Rounding %s\n", (doWinRounding ? "ON" : "OFF"));
+			PRINTF("---------------------------------------------------------------\n");
+			PRINTF("\n");
+			PRINTF("NEW SIZES:\n");
+			PRINTF("----------\n");
+			PRINTF("        #1        #2        #3        #4        #5        #6        #7\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
 					val = NewCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_HTML);
-					printf("%2d        ", RoundSize(val, aPresContext, false));
+					PRINTF("%2d        ", RoundSize(val, aPresContext, false));
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
 
-			printf("\n");
-			printf("OLD SIZES:\n");
-			printf("----------\n");
-			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			PRINTF("\n");
+			PRINTF("OLD SIZES:\n");
+			PRINTF("----------\n");
+			PRINTF("        #1        #2        #3        #4        #5        #6        #7\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
 					val = OldCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f);
-					printf("%2d        ", RoundSize(val, aPresContext, doWinRounding));
+					PRINTF("%2d        ", RoundSize(val, aPresContext, doWinRounding));
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
 
-			printf("\n");
-			printf("DIFFS:\n");
-			printf("------\n");
-			printf("        #1        #2        #3        #4        #5        #6        #7\n");
+			PRINTF("\n");
+			PRINTF("DIFFS:\n");
+			PRINTF("------\n");
+			PRINTF("        #1        #2        #3        #4        #5        #6        #7\n");
 			for (baseSize = 9; baseSize <= 20; baseSize++) {
-				printf("%2d:     ", baseSize);
+				PRINTF("%2d:     ", baseSize);
 				for (htmlSize = 1; htmlSize <= 7; htmlSize++) {
 					oldVal = OldCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f);
 					val = NewCalcFontPointSize(htmlSize, baseSize*dev2app, 1.0f, aPresContext, eFontSize_HTML);
 					if (RoundSize(oldVal, aPresContext, doWinRounding) <= 8)
-						printf(" .");
+						PRINTF(" .");
 					else
-					  printf("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
-					printf("        ");
+					  PRINTF("%2d", (RoundSize(val, aPresContext, false)-RoundSize(oldVal, aPresContext, doWinRounding)));
+					PRINTF("        ");
 				}
-				printf("\n");
+				PRINTF("\n");
 			}
-			printf("\n\n\n");
+			PRINTF("\n\n\n");
 		}
 	}
 }

@@ -37,6 +37,11 @@ extern "C" {
 #include "nsRepository.h"
 #include "nsIPref.h"
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsEmbedXlibIntoGtkLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsEmbedXlibIntoGtkLog)
+#define FLUSH  NS_LOG_FLUSH(nsEmbedXlibIntoGtkLog)
 
 static NS_DEFINE_IID(kIEventQueueServiceIID,
                      NS_IEVENTQUEUESERVICE_IID);
@@ -64,7 +69,7 @@ static void event_processor_callback(gpointer data,
                                      gint source,
                                      GdkInputCondition condition)
 {
-  printf("event_processor_callback()\n");
+  PRINTF("event_processor_callback()\n");
   nsIEventQueue *eventQueue = (nsIEventQueue*)data;
   eventQueue->ProcessPendingEvents();
 }
@@ -79,12 +84,12 @@ static void WindowCreateCallback(PRUint32 aID)
   // attach it to a filter
   gdk_window_add_filter(window, test_filter, NULL);
 
-  printf("window created\n");
+  PRINTF("window created\n");
 }
 
 static void WindowDestroyCallback(PRUint32 aID)
 {
-  printf("window destroyed\n");
+  PRINTF("window destroyed\n");
 }
 
 static nsXlibEventDispatcher gsEventDispatcher = nsnull;
@@ -151,7 +156,7 @@ int main(int argc, char **argv)
   //////////////////////////////////////////////////////////////////////
   NS_SetupRegistry();
 
-  printf("Creating event queue.\n");
+  PRINTF("Creating event queue.\n");
     
   nsIEventQueueService * eventQueueService = nsnull;
   nsIEventQueue * eventQueue = nsnull;
@@ -223,7 +228,7 @@ int main(int argc, char **argv)
                                     (nsISupports**)&sgPrefs);
 
   if (NS_OK != rv) {
-    printf("failed to get prefs instance\n");
+    PRINTF("failed to get prefs instance\n");
     return rv;
   }
   
@@ -264,7 +269,7 @@ static GdkFilterReturn test_filter (GdkXEvent *gdk_xevent,
 				    GdkEvent  *event,
 				    gpointer   data)
 {
-  printf("test_filter called\n");
+  PRINTF("test_filter called\n");
   XEvent *xevent;
   xevent = (XEvent *)gdk_xevent;
 
@@ -280,7 +285,7 @@ static GdkFilterReturn test_filter (GdkXEvent *gdk_xevent,
 
 void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
 {
-  printf("handling size allocate\n");
+  PRINTF("handling size allocate\n");
   nsIWebShell *moz_widget = (nsIWebShell *)p;
   nsIContentViewer *content_viewer=nsnull;
   nsresult rv=NS_OK;

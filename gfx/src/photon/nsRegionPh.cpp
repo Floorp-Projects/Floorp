@@ -22,6 +22,11 @@
 
 #include "nsRegionPh.h"
 #include "prmem.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRegionPhLog)
+#define PRINTF NS_LOG_PRINTF(nsRegionPhLog)
+#define FLUSH  NS_LOG_FLUSH(nsRegionPhLog)
 
 /* Turn debug off to limit all the output to PhGfxLog */
 #undef DEBUG
@@ -51,7 +56,7 @@ static void DumpTiles(PhTile_t *t)
   
   while(t)
   {
-    printf("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
+    PRINTF("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry);
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("Tile %d is t=<%p> t->next=<%p> (%d, %d) - (%d,%d)\n", count, t, t->next, tulx, tuly, tlrx, tlry));
     t = t->next;
 	count++;
@@ -233,7 +238,7 @@ void nsRegionPh :: Subtract(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHei
     tile->rect.lr.y = (aY+aHeight-1);
     tile->next = NULL;
 
-    //printf ("subtract: %d %d %d %d\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y);
+    //PRINTF ("subtract: %d %d %d %d\n", tile->rect.ul.x, tile->rect.ul.y, tile->rect.lr.x, tile->rect.lr.y);
 
     mRegion = PhClipTilings(mRegion, tile, NULL);
   }
@@ -430,12 +435,12 @@ NS_IMETHODIMP nsRegionPh :: GetRects(nsRegionRectSet **aRects)
 	rect->y = tuly;
     rect->height = (tlry - tuly+1);											  
     rects->mArea += rect->width * rect->height;
-    //printf ("getrect: %d %d %d %d\n",rect->x,rect->y,rect->width,rect->height);
+    //PRINTF ("getrect: %d %d %d %d\n",rect->x,rect->y,rect->width,rect->height);
     rect++;
     t = t->next;
   }
  
-  //printf ("num rects %d %d\n",rects->mNumRects,rects->mRectsLen);  fflush(stdout);
+  //PRINTF ("num rects %d %d\n",rects->mNumRects,rects->mRectsLen);  fflush(stdout);
   *aRects = rects;
   return NS_OK;
 }

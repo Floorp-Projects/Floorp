@@ -44,6 +44,11 @@
 #include "npapi.h"
 #include "nullplugin.h"
 #include "strings.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(npshellLog, 0)
+#define PRINTF NS_LOG_PRINTF(npshellLog)
+#define FLUSH  NS_LOG_FLUSH(npshellLog)
 
 /***********************************************************************
  *
@@ -201,11 +206,11 @@ NPP_SetWindow(NPP instance, NPWindow* window)
            id.
         */
 #ifdef DEBUG
-        fprintf(stderr, "Nullplugin: plugin received window resize.\n");
-        fprintf(stderr, "Window=(%i)\n", (int)window);
+      PRINTF("Nullplugin: plugin received window resize.\n");
+      PRINTF("Window=(%i)\n", (int)window);
         if (window) {
-           fprintf(stderr, "W=(%i) H=(%i)\n",
-               (int)window->width, (int)window->height);
+           PRINTF("W=(%i) H=(%i)\n",
+                  (int)window->width, (int)window->height);
         }
 #endif
         return NPERR_NO_ERROR;

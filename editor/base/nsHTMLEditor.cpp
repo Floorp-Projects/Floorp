@@ -105,6 +105,12 @@
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsHTMLEditorLog)
+#define PRINTF NS_LOG_PRINTF(nsHTMLEditorLog)
+#define FLUSH  NS_LOG_FLUSH(nsHTMLEditorLog)
+
 const PRUnichar nbsp = 160;
 
 // HACK - CID for NS_CTRANSITIONAL_DTD_CID so that we can get at transitional dtd
@@ -131,13 +137,6 @@ static NS_DEFINE_CID(kCHTMLFormatConverterCID, NS_HTMLFORMATCONVERTER_CID);
 // private clipboard data flavors for html copy/paste
 #define kHTMLContext   "text/_moz_htmlcontext"
 #define kHTMLInfo      "text/_moz_htmlinfo"
-
-
-#if defined(NS_DEBUG) && defined(DEBUG_buster)
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
 
 // Some utilities to handle annoying overloading of "A" tag for link and named anchor
 static char hrefText[] = "href";
@@ -576,7 +575,7 @@ nsHTMLEditor::InstallEventListeners()
   result = NS_NewEditorTextListener(getter_AddRefs(mTextListenerP),this);
   if (NS_FAILED(result)) { 
 #ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
+    PRINTF("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 #endif
     HandleEventListenerError();
     return result;
@@ -586,7 +585,7 @@ printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
   result = NS_NewEditorCompositionListener(getter_AddRefs(mCompositionListenerP),this);
   if (NS_FAILED(result)) { 
 #ifdef DEBUG_TAGUE
-printf("nsTextEditor.cpp: failed to get TextEvent Listener\n");
+    PRINTF("nsTextEditor.cpp: failed to get TextEvent Listener\n");
 #endif
     HandleEventListenerError();
     return result;
@@ -1729,14 +1728,13 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   if (!aProperty)
     return NS_ERROR_NULL_POINTER;
 /*
-  if (gNoisy) 
-  { 
+#ifdef NS_ENABLE_LOGGING
     nsAutoString propString;
     aProperty->ToString(propString);
     char *propCString = propString.ToNewCString();
-    if (gNoisy) { printf("nsTextEditor::GetTextProperty %s\n", propCString); }
+    PRINTF("nsTextEditor::GetTextProperty %s\n", propCString);
     nsCRT::free(propCString);
-  }
+#endif
 */
   nsresult result;
   aAny=PR_FALSE;
@@ -1843,7 +1841,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
     iter->CurrentNode(getter_AddRefs(content));
     while (NS_ENUMERATOR_FALSE == iter->IsDone())
     {
-      //if (gNoisy) { printf("  checking node %p\n", content.get()); }
+      //PRINTF("  checking node %p\n", content.get());
       nsCOMPtr<nsIDOMCharacterData>text;
       text = do_QueryInterface(content);
       PRBool skipNode = PR_FALSE;
@@ -1858,7 +1856,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
           text->GetLength(&count);
           if (startOffset==(PRInt32)count) 
           {
-            //if (gNoisy) { printf("  skipping node %p\n", content.get()); }
+            //PRINTF("  skipping node %p\n", content.get());
             skipNode = PR_TRUE;
           }
         }
@@ -1869,11 +1867,11 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
         content->CanContainChildren(canContainChildren);
         if (canContainChildren)
         {
-          //if (gNoisy) { printf("  skipping non-leaf node %p\n", content.get()); }
+          //PRINTF("  skipping non-leaf node %p\n", content.get());
           skipNode = PR_TRUE;
         }
         else {
-          //if (gNoisy) { printf("  testing non-text leaf node %p\n", content.get()); }
+          //PRINTF("  testing non-text leaf node %p\n", content.get());
         }
       }
       if (!skipNode)
@@ -1916,7 +1914,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
   { // make sure that if none of the selection is set, we don't report all is set
     aAll = PR_FALSE;
   }
-  //if (gNoisy) { printf("  returning first=%d any=%d all=%d\n", aFirst, aAny, aAll); }
+  //PRINTF("  returning first=%d any=%d all=%d\n", aFirst, aAny, aAll);
   return result;
 }
 
@@ -2352,9 +2350,7 @@ NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
     }
     if (NS_FAILED(result))
     {
-#ifdef DEBUG
-      printf("Selection controller interface didn't work!\n");
-#endif
+      PRINTF("Selection controller interface didn't work!\n");
       return result;
     }
   }
@@ -3023,9 +3019,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsString &aSourceToInsert)
 
   if (NS_FAILED(res))
   {
-#ifdef DEBUG
-    printf("Couldn't create contextual fragment: error was %d\n", res);
-#endif
+    PRINTF("Couldn't create contextual fragment: error was %d\n", res);
     return res;
   }
   if (!docfrag) return NS_ERROR_NULL_POINTER;
@@ -3292,9 +3286,9 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSe
       {
       nsAutoString name;
       parentSelectedNode->GetNodeName(name);
-      printf("InsertElement: Anchor node of selection: ");
-      wprintf(name.GetUnicode());
-      printf(" Offset: %d\n", offsetForInsert);
+      PRINTF("InsertElement: Anchor node of selection: ");
+      WPRINTF(name.GetUnicode());
+      PRINTF(" Offset: %d\n", offsetForInsert);
       }
 #endif
 
@@ -3442,13 +3436,13 @@ nsHTMLEditor::SetCaretAfterElement(nsIDOMElement* aElement)
       {
       nsAutoString name;
       parent->GetNodeName(name);
-      printf("SetCaretAfterElement: Parent node: ");
-      wprintf(name.GetUnicode());
-      printf(" Offset: %d\n\nHTML:\n", offsetInParent+1);
+      PRINTF("SetCaretAfterElement: Parent node: ");
+      WPRINTF(name.GetUnicode());
+      PRINTF(" Offset: %d\n\nHTML:\n", offsetInParent+1);
       nsAutoString Format("text/html");
       nsAutoString ContentsAs;
       OutputToString(ContentsAs, Format, 2);
-      wprintf(ContentsAs.GetUnicode());
+      WPRINTF(ContentsAs.GetUnicode());
       }
 #endif
     }
@@ -4287,13 +4281,13 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         {
         nsAutoString name;
         anchorNode->GetNodeName(name);
-        printf("GetSelectedElement: Anchor node of selection: ");
-        wprintf(name.GetUnicode());
-        printf(" Offset: %d\n", anchorOffset);
+        PRINTF("GetSelectedElement: Anchor node of selection: ");
+        WPRINTF(name.GetUnicode());
+        PRINTF(" Offset: %d\n", anchorOffset);
         focusNode->GetNodeName(name);
-        printf("Focus node of selection: ");
-        wprintf(name.GetUnicode());
-        printf(" Offset: %d\n", focusOffset);
+        PRINTF("Focus node of selection: ");
+        WPRINTF(name.GetUnicode());
+        PRINTF(" Offset: %d\n", focusOffset);
         }
   #endif
         nsCOMPtr<nsIDOMElement> parentLinkOfAnchor;
@@ -4414,10 +4408,10 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
         } else {
           // Should never get here?
           isCollapsed = PR_TRUE;
-          printf("isCollapsed was FALSE, but no elements found in selection\n");
+          PRINTF("isCollapsed was FALSE, but no elements found in selection\n");
         }
       } else {
-        printf("Could not create enumerator for GetSelectionProperties\n");
+        PRINTF("Could not create enumerator for GetSelectionProperties\n");
       }
     }
   }
@@ -4529,7 +4523,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
   
   if (isCollapsed)
   {
-    printf("InsertLinkAroundSelection called but there is no selection!!!\n");     
+    PRINTF("InsertLinkAroundSelection called but there is no selection!!!\n");     
     res = NS_OK;
   } else {
     // Be sure we were given an anchor element
@@ -4974,8 +4968,8 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
       *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
     else {
 #ifdef DEBUG_akkana
-      printf("Can't get wrap column: style unit is %d\n",
-             stylePosition->mWidth.GetUnit());
+      PRINTF("Can't get wrap column: style unit is %d\n",
+              stylePosition->mWidth.GetUnit());
 #endif
       *aWrapColumn = -1;
       return NS_ERROR_UNEXPECTED;
@@ -5064,11 +5058,11 @@ NS_IMETHODIMP nsHTMLEditor::SetBodyWrapWidth(PRInt32 aWrapColumn)
 
 #ifdef DEBUG_wrapstyle
   char* curstyle = styleValue.ToNewCString();
-  printf("Setting style: [%s]\nNow body looks like:\n", curstyle);
+  PRINTF("Setting style: [%s]\nNow body looks like:\n", curstyle);
   Recycle(curstyle);
   //nsCOMPtr<nsIContent> nodec (do_QueryInterface(bodyElement));
   //if (nodec) nodec->List(stdout);
-  //printf("-----\n");
+  //PRINTF("-----\n");
 #endif /* DEBUG_akkana */
 
   return res;
@@ -5297,7 +5291,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     nsAutoString flavor, stuffToPaste;
     flavor.AssignWithConversion( bestFlavor );   // just so we can use flavor.Equals()
 #ifdef DEBUG_akkana
-    printf("Got flavor [%s]\n", bestFlavor);
+    PRINTF("Got flavor [%s]\n", bestFlavor);
 #endif
     if (flavor.EqualsWithConversion(kHTMLMime))
     {
@@ -5391,7 +5385,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable
     else if (flavor.EqualsWithConversion(kJPEGImageMime))
     {
       // Insert Image code here
-      printf("Don't know how to insert an image yet!\n");
+      PRINTF("Don't know how to insert an image yet!\n");
       //nsIImage* image = (nsIImage *)data;
       //NS_RELEASE(image);
       rv = NS_ERROR_NOT_IMPLEMENTED; // for now give error code
@@ -5599,7 +5593,7 @@ NS_IMETHODIMP nsHTMLEditor::CanDrag(nsIDOMEvent *aDragEvent, PRBool &aCanDrag)
   if (mIgnoreSpuriousDragEvent)
   {
 #ifdef DEBUG_cmanske
-    printf(" *** IGNORING SPURIOUS DRAG EVENT!\n");
+    PRINTF(" *** IGNORING SPURIOUS DRAG EVENT!\n");
 #endif
     mIgnoreSpuriousDragEvent = PR_FALSE;
     return NS_OK;
@@ -5913,7 +5907,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsString& aCitation,
     if (NS_FAILED(res))
     {
 #ifdef DEBUG_akkana
-      printf("Couldn't collapse");
+      PRINTF("Couldn't collapse");
 #endif
       // XXX: error result:  should res be returned here?
     }
@@ -5957,12 +5951,12 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(PRInt32 aSelectionType)
     if (NS_FAILED(rv))
     {
 #ifdef DEBUG_akkana
-      printf("PasteAsPlaintextQuotation: GetAnyTransferData failed, %d\n", rv);
+      PRINTF("PasteAsPlaintextQuotation: GetAnyTransferData failed, %d\n", rv);
 #endif
       return rv;
     }
 #ifdef DEBUG_akkana
-    printf("Got flavor [%s]\n", flav);
+    PRINTF("Got flavor [%s]\n", flav);
 #endif
     nsAutoString flavor; flavor.AssignWithConversion(flav);
     nsAutoString stuffToPaste;
@@ -6437,7 +6431,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   nsCRT::free(contractid);
   if (NS_FAILED(rv))
   {
-    printf("Couldn't get contractid %s\n", contractid);
+    PRINTF("Couldn't get contractid %s\n", contractid);
     return rv;
   }
 
@@ -7165,7 +7159,7 @@ nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parent
     // Here's where the new node was inserted
   }
   else {
-    printf("InsertBreak into an empty document is not yet supported\n");
+    PRINTF("InsertBreak into an empty document is not yet supported\n");
   }
   return result;
 }
@@ -7223,7 +7217,7 @@ nsCOMPtr<nsIDOMElement> nsHTMLEditor::FindPreElement()
 
 void nsHTMLEditor::HandleEventListenerError()
 {
-  if (gNoisy) { printf("failed to add event listener\n"); }
+  PRINTF("failed to add event listener\n");
   // null out the nsCOMPtrs
   mKeyListenerP = nsnull;
   mMouseListenerP = nsnull;

@@ -74,6 +74,11 @@
 #define PSM_FILE_NAME "psm"
 #endif
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPSMComponentLog)
+#define PRINTF NS_LOG_PRINTF(nsPSMComponentLog)
+#define FLUSH  NS_LOG_FLUSH(nsPSMComponentLog)
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
@@ -627,9 +632,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
     }
 
 failure:
-#ifdef DEBUG
-    printf("*** Failure setting up Cartman! \n");
-#endif
+    PRINTF("*** Failure setting up Cartman! \n");
 
     if (mControl)
     {

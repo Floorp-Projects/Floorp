@@ -47,6 +47,13 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsFrameSetFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsFrameSetFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsFrameSetFrameLog)
+
 // masks for mEdgeVisibility
 #define LEFT_VIS   0x0001
 #define RIGHT_VIS  0x0002
@@ -646,7 +653,7 @@ nsHTMLFramesetFrame::Paint(nsIPresContext*      aPresContext,
                            const nsRect&        aDirtyRect,
                            nsFramePaintLayer    aWhichLayer)
 {
-  //printf("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+    //PRINTF("frameset paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
                                      aDirtyRect, aWhichLayer);
 }
@@ -937,7 +944,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext*          aPresContext,
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
             
-  //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
+  //PRINTF("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
   PRBool firstTime = (0 == mNumRows);
@@ -1567,7 +1574,7 @@ nsHTMLFramesetBorderFrame::nsHTMLFramesetBorderFrame(PRInt32 aWidth,
 
 nsHTMLFramesetBorderFrame::~nsHTMLFramesetBorderFrame()
 {
-  //printf("nsHTMLFramesetBorderFrame destructor %p \n", this);
+    //PRINTF("nsHTMLFramesetBorderFrame destructor %p \n", this);
 }
 
 void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext*          aPresContext,
@@ -1612,7 +1619,7 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext*      aPresContext,
   if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer) {
     return NS_OK;
   }
-  //printf("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
+  //PRINTF("border frame paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
   nscolor WHITE    = NS_RGB(255, 255, 255);
   nscolor bgColor  = NS_RGB(200,200,200);
   nscolor fgColor  = NS_RGB(0,0,0);
@@ -1762,7 +1769,7 @@ NS_IMETHODIMP nsHTMLFramesetBorderFrame::GetFrameName(nsString& aResult) const
 
 nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 {
-  //printf("nsHTMLFramesetBlankFrame destructor %p \n", this);
+    //PRINTF("nsHTMLFramesetBlankFrame destructor %p \n", this);
 }
 
 void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext*          aPresContext,

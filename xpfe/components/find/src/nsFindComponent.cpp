@@ -46,12 +46,11 @@
 #include "nsWidgetsCID.h"   // ugh! contractID, please
 
 #include "nsFindComponent.h"
+#include "nslog.h"
 
-
-#ifdef DEBUG
-#define DEBUG_FIND
-#endif
-
+NS_IMPL_LOG(nsFindComponentLog)
+#define PRINTF NS_LOG_PRINTF(nsFindComponentLog)
+#define FLUSH  NS_LOG_FLUSH(nsFindComponentLog)
 
 nsFindComponent::Context::Context()
 {
@@ -63,7 +62,7 @@ nsFindComponent::Context::Context()
 nsFindComponent::Context::~Context()
 {
     #ifdef DEBUG_law
-    printf( "\nnsFindComponent::Context destructor called\n\n" );
+  PRINTF( "\nnsFindComponent::Context destructor called\n\n" );
     #endif
     // Close the dialog (if there is one).
     if ( mFindDialog ) {
@@ -774,27 +773,27 @@ static nsresult OpenDialogWithArg( nsIDOMWindowInternal     *parent,
                         }
                         JS_PopArguments( jsContext, stackPtr );
                     } else {
-                        DEBUG_PRINTF( PR_STDOUT, "%s %d: JS_PushArguments failed\n",
-                                      (char*)__FILE__, (int)__LINE__ );
+                      PRINTF("%s %d: JS_PushArguments failed\n",
+                             (char*)__FILE__, (int)__LINE__ );
                         rv = NS_ERROR_FAILURE;
                     }
                 } else {
-                    DEBUG_PRINTF( PR_STDOUT, "%s %d: GetNativeContext failed\n",
-                                  (char*)__FILE__, (int)__LINE__ );
+                    PRINTF("%s %d: GetNativeContext failed\n",
+                           (char*)__FILE__, (int)__LINE__ );
                     rv = NS_ERROR_FAILURE;
                 }
             } else {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d: GetContext failed\n",
-                              (char*)__FILE__, (int)__LINE__ );
+                PRINTF("%s %d: GetContext failed\n",
+                       (char*)__FILE__, (int)__LINE__ );
                 rv = NS_ERROR_FAILURE;
             }
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
-                          (char*)__FILE__, (int)__LINE__, (int)rv );
+            PRINTF("%s %d: QueryInterface (for nsIScriptGlobalObject) failed, rv=0x%08X\n",
+                   (char*)__FILE__, (int)__LINE__, (int)rv );
         }
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "%s %d: OpenDialogWithArg was passed a null pointer!\n",
-                      __FILE__, (int)__LINE__ );
+        PRINTF("%s %d: OpenDialogWithArg was passed a null pointer!\n",
+               __FILE__, (int)__LINE__ );
         rv = NS_ERROR_NULL_POINTER;
     }
     return rv;
@@ -819,8 +818,8 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         }
         // Test for error (GetFindDialog succeeds if there's no dialog).
         if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d: Error getting find dialog, rv=0x%08X\n",
-                          __FILE__, (int)__LINE__, (int)rv );
+            PRINTF("%s %d: Error getting find dialog, rv=0x%08X\n",
+                   __FILE__, (int)__LINE__, (int)rv );
             return rv;
         }
     }

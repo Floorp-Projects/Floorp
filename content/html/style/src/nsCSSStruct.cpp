@@ -31,6 +31,11 @@
 #include "nsCOMPtr.h"
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSDeclarationLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSDeclarationLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSDeclarationLog)
 
 // #define DEBUG_REFS
 
@@ -1062,7 +1067,7 @@ CSSDeclarationImpl::CSSDeclarationImpl(void)
   NS_INIT_REFCNT();
 #ifdef DEBUG_REFS
   ++gInstanceCount;
-  fprintf(stdout, "CSSDeclaration Instances (ctor): %ld\n", (long)gInstanceCount);
+  FPRINTF(stdout, "CSSDeclaration Instances (ctor): %ld\n", (long)gInstanceCount);
 #endif
 }
 
@@ -1088,7 +1093,7 @@ CSSDeclarationImpl::CSSDeclarationImpl(const CSSDeclarationImpl& aCopy)
 
 #ifdef DEBUG_REFS
   ++gInstanceCount;
-  fprintf(stdout, "CSSDeclaration Instances (cp-ctor): %ld\n", (long)gInstanceCount);
+  FPRINTF(stdout, "CSSDeclaration Instances (cp-ctor): %ld\n", (long)gInstanceCount);
 #endif
 
   if (aCopy.mImportant) {
@@ -1134,7 +1139,7 @@ CSSDeclarationImpl::~CSSDeclarationImpl(void)
 
 #ifdef DEBUG_REFS
   --gInstanceCount;
-  fprintf(stdout, "CSSDeclaration Instances (dtor): %ld\n", (long)gInstanceCount);
+  FPRINTF(stdout, "CSSDeclaration Instances (dtor): %ld\n", (long)gInstanceCount);
 #endif
 }
 

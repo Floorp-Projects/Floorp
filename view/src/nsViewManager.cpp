@@ -34,6 +34,11 @@
 #include "nsISupportsArray.h"
 #include "nsICompositeListener.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsViewManagerLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsViewManagerLog)
+#define FLUSH  NS_LOG_FLUSH(nsViewManagerLog)
 
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
@@ -116,7 +121,7 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 {
 	nsViewManager *vm = (nsViewManager *)aClosure;
 
-  printf("ViewManager2 timer callback\n");
+	PRINTF("ViewManager2 timer callback\n");
 
 	//restart the timer
   
@@ -127,7 +132,7 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 			vm->mFrameRate = 0;
 			vm->SetFrameRate(fr);
 		}
-	//printf("timer composite...\n");
+	//PRINTF("timer composite...\n");
 #ifndef XP_MAC
 	//XXX temporary: The Mac doesn't need the timer to repaint but
 	// obviously this is not the good method to disable the thing.
@@ -654,11 +659,11 @@ NS_IMETHODIMP nsViewManager::SetWindowDimensions(nscoord width, nscoord height)
 	if (nsnull != mRootView)
 		mRootView->SetDimensions(width, height);
 
-//printf("new dims: %d %d\n", width, height);
+//PRINTF("new dims: %d %d\n", width, height);
   // Inform the presentation shell that we've been resized
 	if (nsnull != mObserver)
 		mObserver->ResizeReflow(mRootView, width, height);
-	//printf("reflow done\n");
+	//PRINTF("reflow done\n");
 
 	return NS_OK;
 }
@@ -692,7 +697,7 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, nsIRe
 
 	mPainting = PR_TRUE;
 
-	//printf("refreshing region...\n");
+	//PRINTF("refreshing region...\n");
 	//force double buffering because of non-opaque views?
 
 	if (mTransCnt > 0)
@@ -818,9 +823,9 @@ void nsViewManager::Refresh(nsIView *aView, nsIRenderingContext *aContext, const
 
 	//force double buffering because of non-opaque views?
 
-	//printf("refreshing rect... ");
+	//PRINTF("refreshing rect... ");
 	//stdout << *rect;
-	//printf("\n");
+	//PRINTF("\n");
 	if (mTransCnt > 0)
 		aUpdateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
@@ -1181,8 +1186,8 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
       // XXX Which color should we use for these bits?
       aRC.SetColor(NS_RGB(128, 128, 128));
       aRC.FillRect(finalTransparentRect);
-      printf("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
-        finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
+      PRINTF("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
+			 finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
     }
     
     // initialize various counters. These are updated in OptimizeDisplayListClipping.
@@ -1778,7 +1783,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 								float p2t;
 								mContext->GetDevUnitsToAppUnits(p2t);
 
-								//printf("resize: (pix) %d, %d\n", width, height);
+								//PRINTF("resize: (pix) %d, %d\n", width, height);
 								SetWindowDimensions(NSIntPixelsToTwips(width, p2t),
 													NSIntPixelsToTwips(height, p2t));
 								*aStatus = nsEventStatus_eConsumeNoDefault;
@@ -1829,7 +1834,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 										// XXX rods
 										updateFlags |= NS_VMREFRESH_DOUBLE_BUFFER;
 
-										//printf("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
+										//PRINTF("refreshing: view: %x, %d, %d, %d, %d\n", view, damrect.x, damrect.y, damrect.width, damrect.height);
 										// Refresh the view
 										Refresh(view, ((nsPaintEvent*)aEvent)->renderingContext, &damrect, updateFlags);
 									}
@@ -1958,9 +1963,9 @@ NS_IMETHODIMP nsViewManager::GrabMouseEvents(nsIView *aView, PRBool &aResult)
 #ifdef DEBUG_mjudge
   if (aView)
   {
-    printf("capturing mouse events for view %x\n",aView);
+	  PRINTF("capturing mouse events for view %x\n",aView);
   }
-  printf("removing mouse capture from view %x\n",mMouseGrabber);
+  PRINTF("removing mouse capture from view %x\n",mMouseGrabber);
 #endif
 
 	mMouseGrabber = aView;
@@ -2454,7 +2459,7 @@ void nsViewManager::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
     }
   }
 
-//   printf("WIDGET BOUNDS %d %d\n", aMaxWidgetBounds.width, aMaxWidgetBounds.height);
+//   PRINTF("WIDGET BOUNDS %d %d\n", aMaxWidgetBounds.width, aMaxWidgetBounds.height);
 }
 
 PRBool nsViewManager::RectFitsInside(nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
@@ -2541,7 +2546,7 @@ void nsViewManager::CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect&
      gLargestRequestedSize.height = PR_MAX(aRequestedSize.height, aMaxWidgetSize.height);
      aSurfaceSize.width = gLargestRequestedSize.width;
      aSurfaceSize.height = gLargestRequestedSize.height;
-  //   printf("Expanding the largested requested size to %d %d\n", gLargestRequestedSize.width, gLargestRequestedSize.height);
+	 //   PRINTF("Expanding the largested requested size to %d %d\n", gLargestRequestedSize.width, gLargestRequestedSize.height);
   }
 }
 
@@ -2568,7 +2573,7 @@ nsDrawingSurface nsViewManager::GetDrawingSurface(nsIRenderingContext &aContext,
 			}
 
 			nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
-   //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
+			//   PRINTF("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
 			if (NS_SUCCEEDED(rv)) {
 				mDSBounds = newBounds;
 				aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
@@ -3368,7 +3373,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 	float t2p;
 	mContext->GetAppUnitsToDevUnits(t2p);
 
-	printf("### display list length=%d ###\n", flatlen);
+	PRINTF("### display list length=%d ###\n", flatlen);
 
 	for (cnt = 0; cnt < flatlen; cnt++) {
 		nsIView   *view, *parent;
@@ -3386,7 +3391,7 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 		view->GetParent(parent);
 		view->GetZIndex(zindex);
 		rect *= t2p;
-		printf("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
+		PRINTF("%snsIView@%p [z=%d, x=%d, y=%d, w=%d, h=%d, p=%p]\n",
 			   nest, view, zindex,
 			   rect.x, rect.y, rect.width, rect.height, parent);
 
@@ -3394,22 +3399,22 @@ void nsViewManager::ShowDisplayList(PRInt32 flatlen)
 
 		if (flags)
 			{
-				printf("%s", nest);
+				PRINTF("%s", nest);
 
 				if (flags & POP_CLIP) {
-					printf("POP_CLIP ");
+					PRINTF("POP_CLIP ");
 					newnestcnt--;
 				}
 
 				if (flags & PUSH_CLIP) {
-					printf("PUSH_CLIP ");
+					PRINTF("PUSH_CLIP ");
 					newnestcnt++;
 				}
 
 				if (flags & VIEW_RENDERED)
-					printf("VIEW_RENDERED ");
+					PRINTF("VIEW_RENDERED ");
 
-				printf("\n");
+				PRINTF("\n");
 			}
 
 		nest[nestcnt << 1] = ' ';
@@ -3583,14 +3588,14 @@ PRBool nsViewManager::IsRectVisible(nsIView *aView, const nsRect &aRect)
   // Debugging code
   static int toggle = 0;
   for (int i = 0; i < toggle; i++) {
-    printf(" ");
+	  PRINTF(" ");
   }
   if (toggle == 10) {
     toggle = 0;
   } else {
    toggle++;
   }
-  printf("***overlaps %d\n", overlaps);
+  PRINTF("***overlaps %d\n", overlaps);
 #endif
 
   return overlaps;
@@ -3646,7 +3651,7 @@ nsViewManager::IsPainting(PRBool& aIsPainting)
 nsresult
 nsViewManager::ProcessWidgetChanges(nsIView* aView)
 {
-  //printf("---------Begin Sync----------\n");
+	//PRINTF("---------Begin Sync----------\n");
   nsresult rv = aView->SynchWidgetSizePosition();
   if (NS_FAILED(rv))
       return rv;
@@ -3661,7 +3666,7 @@ nsViewManager::ProcessWidgetChanges(nsIView* aView)
 		child->GetNextSibling(child);
 	}
 
-  //printf("---------End Sync----------\n");
+	//PRINTF("---------End Sync----------\n");
 
   return NS_OK;
 }

@@ -37,6 +37,12 @@
 #include "nsISupports.h"
 #include "nsCharDetDll.h"
 #include "pratom.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCyrillicDetectorLog)
+#define PRINTF NS_LOG_PRINTF(nsCyrillicDetectorLog)
+#define FLUSH  NS_LOG_FLUSH(nsCyrillicDetectorLog)
+
 // temp fix for XPCOM should be remove after alechf fix the xpcom one
 #define MY_NS_IMPL_QUERY_INTERFACE(_class,_classiiddef,_interface)       \
 NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
@@ -146,7 +152,7 @@ void nsCyrillicDetector::DataEnd()
 
 #ifdef DEBUG
    for(j=0;j<mItems;j++) 
-      printf("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
+     PRINTF("Charset %s->\t%d\n", mCharsets[j], mProb[j]);
 #endif
    this->Report(mCharsets[maxIdx]);
    mDone = PR_TRUE;

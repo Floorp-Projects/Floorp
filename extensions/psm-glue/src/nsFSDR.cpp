@@ -32,6 +32,11 @@
 #include "nsIPSMComponent.h"
 
 #include "nsFSDR.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFSDRLog)
+#define PRINTF NS_LOG_PRINTF(nsFSDRLog)
+#define FLUSH  NS_LOG_FLUSH(nsFSDRLog)
 
 /*********************************************************************************
 **************************** MASTER PASSWORD FUNCTIONS ***************************
@@ -73,7 +78,7 @@ Wallet_Localize(char* genericString) {
     (nsISupports**) &pNetService);
 
   if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
+      PRINTF("cannot get net service\n");
     return v.ToNewUnicode();
   }
   nsIURI *url = nsnull;
@@ -81,7 +86,7 @@ Wallet_Localize(char* genericString) {
   nsIURI *uri = nsnull;
   ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
   if (NS_FAILED(ret)) {
-    printf("cannot create URI\n");
+      PRINTF("cannot create URI\n");
     nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
     return v.ToNewUnicode();
   }
@@ -91,7 +96,7 @@ Wallet_Localize(char* genericString) {
   nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
 
   if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
+      PRINTF("cannot create URL\n");
     return v.ToNewUnicode();
   }
 
@@ -100,7 +105,7 @@ Wallet_Localize(char* genericString) {
   ret = nsServiceManager::GetService(kStringBundleServiceCID,
     kIStringBundleServiceIID, (nsISupports**) &pStringService);
   if (NS_FAILED(ret)) {
-    printf("cannot get string service\n");
+      PRINTF("cannot get string service\n");
     NS_RELEASE(url);
     return v.ToNewUnicode();
   }
@@ -110,7 +115,7 @@ Wallet_Localize(char* genericString) {
   ret = url->GetSpec(&spec);
   NS_RELEASE(url);
   if (NS_FAILED(ret)) {
-    printf("cannot get url spec\n");
+      PRINTF("cannot get url spec\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     nsCRT::free(spec);
     return v.ToNewUnicode();
@@ -118,7 +123,7 @@ Wallet_Localize(char* genericString) {
   ret = pStringService->CreateBundle(spec, locale, &bundle);
   nsCRT::free(spec);
   if (NS_FAILED(ret)) {
-    printf("cannot create instance\n");
+      PRINTF("cannot create instance\n");
     nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     return v.ToNewUnicode();
   }
@@ -131,7 +136,7 @@ Wallet_Localize(char* genericString) {
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
   NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
-    printf("cannot get string from name\n");
+      PRINTF("cannot get string from name\n");
     return v.ToNewUnicode();
   }
   v = ptrv;

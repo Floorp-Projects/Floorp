@@ -23,6 +23,11 @@
 #include "xp_core.h"
 #include "nsFontMetricsBeOS.h"
 #include "nspr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFontMetricsBeOSLog)
+#define PRINTF NS_LOG_PRINTF(nsFontMetricsBeOSLog)
+#define FLUSH  NS_LOG_FLUSH(nsFontMetricsBeOSLog)
 
 #undef NOISY_FONTS
 #undef REALLY_NOISY_FONTS
@@ -129,9 +134,7 @@ NS_IMETHODIMP nsFontMetricsBeOS::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mFontHandle.SetSize( rounded * app2dev );
  
 #ifdef NOISY_FONTS
-#ifdef DEBUG
-  fprintf(stderr, "looking for font %s (%d)", wildstring, aFont.size / 20);
-#endif
+  PRINTF("looking for font %s (%d)", wildstring, aFont.size / 20);
 #endif
 
   RealizeFont(aContext);

@@ -65,6 +65,11 @@
 #include <windows.h>
 #endif
 #include "nsMimeTypes.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(testLog)
+#define PRINTF NS_LOG_PRINTF(testLog)
+#define FLUSH  NS_LOG_FLUSH(testLog)
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -263,7 +268,7 @@ SetupRegistry(void)
   nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, NS_GET_IID(nsICharsetConverterManager), (nsISupports **)&ccMan);
   if (NS_FAILED(res)) 
   {
-    printf("ERROR at GetService() code=0x%x.\n",res);
+      PRINTF("ERROR at GetService() code=0x%x.\n",res);
     return NS_ERROR_FAILURE;
   }
   
@@ -290,7 +295,7 @@ GetHackIdentity()
                   NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return nsnull;
   {
-    printf("Failure on AccountManager Init!\n");
+      PRINTF("Failure on AccountManager Init!\n");
     return nsnull;
   }  
   
@@ -307,7 +312,7 @@ GetHackIdentity()
                                   (void **)getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
-    printf("Failure getting Identity!\n");
+      PRINTF("Failure getting Identity!\n");
     return nsnull;
   }  
   
@@ -339,14 +344,14 @@ int main(int argc, char *argv[])
   NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
   if (NS_FAILED(rv)) 
   {
-    printf("Failed to get event queue\n");
+      PRINTF("Failed to get event queue\n");
     return rv;
   }
   
   rv = pEventQService->CreateThreadEventQueue();
   if (NS_FAILED(rv)) 
   {
-    printf("Failed to create event queue\n");
+      PRINTF("Failed to create event queue\n");
     return rv;
   }
   
@@ -362,12 +367,12 @@ int main(int argc, char *argv[])
   
   if (NS_FAILED(prefs->StartUp()))
   {
-    printf("Failed to start up prefs!\n");
+      PRINTF("Failed to start up prefs!\n");
     exit(rv);
   }
   if (NS_FAILED(prefs->ReadUserPrefs()))
   {
-    printf("Failed on reading user prefs!\n");
+      PRINTF("Failed on reading user prefs!\n");
     exit(rv);
   }
     
@@ -378,7 +383,7 @@ int main(int argc, char *argv[])
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
-    printf("We succesfully obtained a nsIMsgSend interface....\n");    
+      PRINTF("We succesfully obtained a nsIMsgSend interface....\n");    
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
       (void **) &pMsgCompFields); 
     if (NS_SUCCEEDED(rv) && pMsgCompFields)
@@ -427,7 +432,7 @@ int main(int argc, char *argv[])
       sendListener = new SendOperationListener();
       if (!sendListener)
       {
-        printf("Failure creating send listener!\n");
+          PRINTF("Failure creating send listener!\n");
         return NS_ERROR_FAILURE;
       }
       NS_ADDREF(sendListener);
@@ -453,7 +458,7 @@ int main(int argc, char *argv[])
   }
   
 #if defined(XP_PC) && !defined(XP_OS2)
-  printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
+  PRINTF("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (keepOnRunning)
   {
     MSG msg;
@@ -466,7 +471,7 @@ int main(int argc, char *argv[])
 #endif
   
   NS_RELEASE(sendListener);
-  printf("Releasing the interfaces now...\n");
+  PRINTF("Releasing the interfaces now...\n");
   pMsgSend->Release(); 
   pMsgCompFields->Release(); 
   

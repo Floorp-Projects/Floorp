@@ -35,6 +35,13 @@
 #include "nsFileSpec.h"
 #include <windows.h>
 #include <SHLOBJ.H>
+#include "nslog.h"
+#undef PRINTF
+#undef FLUSH
+
+NS_IMPL_LOG(nsFileWidgetLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsFileWidgetLog)
+#define FLUSH  NS_LOG_FLUSH(nsFileWidgetLog)
 
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -339,7 +346,7 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
         pathStr.Assign(unichar);
         delete [] unichar;
       }
-      //printf("[%s]\n", path);
+      //PRINTF("[%s]\n", path);
       nsFilePath filePath(pathStr);
       nsFileSpec fileSpec(filePath);
       theFileSpec = fileSpec;

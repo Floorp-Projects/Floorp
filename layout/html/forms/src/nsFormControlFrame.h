@@ -33,6 +33,11 @@
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_DECL_LOG(nsFormControlFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsFormControlFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsFormControlFrameLog)
 
 class nsIView;
 class nsIPresContext;
@@ -50,7 +55,7 @@ class nsFormFrame;
 { \
   float t2p;                                            \
   aPresContext->GetTwipsToPixels(&t2p);                  \
-  printf ("%-25s::Size=%4d,%4d %3d,%3d Nav:%3d,%3d Diffs: %3d,%3d\n",  \
+  PRINTF ("%-25s::Size=%4d,%4d %3d,%3d Nav:%3d,%3d Diffs: %3d,%3d\n",  \
            (__class),                                   \
            aDesiredSize.width, aDesiredSize.height,     \
            NSToCoordRound(aDesiredSize.width * t2p),    \

@@ -23,6 +23,11 @@
 #include "nsToolkit.h"
 #include "nsGUIEvent.h"
 #include "plevent.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsToolkitLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsToolkitLog)
+#define FLUSH  NS_LOG_FLUSH(nsToolkitLog)
 
 // Static Thread Local Storage index of the toolkit object associated with
 // a given thread...
@@ -69,10 +74,10 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
     // Create a new toolkit for this thread
     if (!toolkit)
     {
-      fprintf(stderr, "Creating a new nsIToolkit!\n");
+      PRINTF("Creating a new nsIToolkit!\n");
     }
     else
-      fprintf(stderr, "No need to create a new nsIToolkit!\n");
+      PRINTF("No need to create a new nsIToolkit!\n");
   }
 
   return NS_OK;

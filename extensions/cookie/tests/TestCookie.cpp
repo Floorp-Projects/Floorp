@@ -27,7 +27,11 @@
 #include "nsXPIDLString.h"
 #include "nsIEventQueueService.h"
 #include "nsIStringBundle.h"
+#include "nslog.h"
 
+NS_IMPL_LOG(TestCookieLog)
+#define PRINTF NS_LOG_PRINTF(TestCookieLog)
+#define FLUSH  NS_LOG_FLUSH(TestCookieLog)
 
 static nsIEventQueue* gEventQ = nsnull;
 
@@ -42,12 +46,12 @@ void SetACookie(nsICookieService *cookieService, const char* aSpec, const char* 
     
     nsString cookie;
     cookie.AssignWithConversion(aCookieString);
-    printf("setting cookie for \"%s\" : ", aSpec);
+    PRINTF("setting cookie for \"%s\" : ", aSpec);
     nsresult rv = cookieService->SetCookieString(uri, nsnull, cookie);
     if (NS_FAILED(rv)) {
-        printf("NOT-SET\n");
+        PRINTF("NOT-SET\n");
     } else {
-        printf("\"%s\" was set.\n", aCookieString);
+        PRINTF("\"%s\" was set.\n", aCookieString);
     }
     return;
 }
@@ -58,16 +62,16 @@ void GetACookie(nsICookieService *cookieService, const char* aSpec, char* *aCook
     NS_ASSERTION(uri, "malformed uri");   
 
     nsString cookie;
-    printf("retrieving cookie(s) for \"%s\" : ", aSpec);
+    PRINTF("retrieving cookie(s) for \"%s\" : ", aSpec);
     nsresult rv = cookieService->GetCookieString(uri, cookie);
-    if (NS_FAILED(rv)) printf("XXX GetCookieString() failed!\n");
+    if (NS_FAILED(rv)) PRINTF("XXX GetCookieString() failed!\n");
 
     if (cookie.IsEmpty()) {
-        printf("NOT-FOUND\n");
+        PRINTF("NOT-FOUND\n");
     } else {
-        printf("FOUND: ");
+        PRINTF("FOUND: ");
         char *cookieString = cookie.ToNewCString();
-        printf("%s\n", cookieString);
+        PRINTF("%s\n", cookieString);
         nsCRT::free(cookieString);
     }
     return;

@@ -33,6 +33,11 @@
 #include "nsScrollPortView.h"
 
 #include "nsIModule.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsViewFactoryLog)
+#define PRINTF NS_LOG_PRINTF(nsViewFactoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsViewFactoryLog)
 
 static NS_DEFINE_CID(kCViewManager, NS_VIEW_MANAGER_CID);
 static NS_DEFINE_CID(kCView, NS_VIEW_CID);
@@ -262,9 +267,7 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
     nsresult rv;
   
-#ifdef DEBUG_dp
-    printf("***Registering view library...");
-#endif
+    PRINTF("***Registering view library...");
 
     rv = aCompMgr->RegisterComponentSpec(kCViewManager, "View Manager",
                                          "@mozilla.org/view-manager;1",
@@ -281,9 +284,7 @@ nsViewModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = aCompMgr->RegisterComponentSpec(kCScrollPortView, "Scroll Port View",
                                          "@mozilla.org/scroll-port-view;1",
                                          aPath, PR_TRUE, PR_TRUE);
-#ifdef DEBUG_dp
-    printf("done.\n");
-#endif
+    PRINTF("done.\n");
     return rv;
 }
 

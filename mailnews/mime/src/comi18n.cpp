@@ -45,6 +45,11 @@
 #include "nsTextFormatter.h"
 #include "nsMsgI18N.h"
 #include "nsMimeTypes.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(comi18nLog)
+#define PRINTF NS_LOG_PRINTF(comi18nLog)
+#define FLUSH  NS_LOG_FLUSH(comi18nLog)
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
@@ -1557,10 +1562,10 @@ void comi18n_destructor()
 main()
 {
         char *encoded, *decoded;
-        printf("mime\n");
+        PRINTF("mime\n");
         encoded = intl_EncodeMimePartIIStr("hello world…", INTL_CsidToCharsetNamePt(0), PR_TRUE,
 kMIME_ENCODED_WORD_SIZE);
-        printf("%s\n", encoded);
+PRINTF("%s\n", encoded);
         decoded = intl_DecodeMimePartIIStr((const char *) encoded,
 nsCRT::strlen(encoded), PR_TRUE);
 

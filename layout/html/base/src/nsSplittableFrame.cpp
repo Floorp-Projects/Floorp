@@ -24,6 +24,12 @@
 #include "nsIPresContext.h"
 #include "nsIStyleContext.h"
 #include "nsISizeOfHandler.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsSplittableFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsSplittableFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsSplittableFrameLog)
 
 NS_IMETHODIMP
 nsSplittableFrame::Init(nsIPresContext*  aPresContext,

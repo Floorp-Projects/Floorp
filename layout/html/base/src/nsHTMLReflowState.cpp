@@ -34,6 +34,11 @@
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
 #include "nsImageFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsHTMLReflowStateLog)
+#define PRINTF NS_LOG_PRINTF(nsHTMLReflowStateLog)
+#define FLUSH  NS_LOG_FLUSH(nsHTMLReflowStateLog)
 
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
@@ -1494,8 +1499,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     }
 
 #if 0
-    nsFrame::ListTag(stdout, frame); printf(": cb=");
-    nsFrame::ListTag(stdout, cbrs->frame); printf(" size=%d,%d\n", aContainingBlockWidth, aContainingBlockHeight);
+    nsFrame::ListTag(stdout, frame); PRINTF(": cb=");
+    nsFrame::ListTag(stdout, cbrs->frame); PRINTF(" size=%d,%d\n", aContainingBlockWidth, aContainingBlockHeight);
 #endif
 
     // See if the containing block height is based on the size of its

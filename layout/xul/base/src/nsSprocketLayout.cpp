@@ -43,6 +43,11 @@
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
 #include "nsBoxFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSprocketLayoutLog)
+#define PRINTF NS_LOG_PRINTF(nsSprocketLayoutLog)
+#define FLUSH  NS_LOG_FLUSH(nsSprocketLayoutLog)
 
 nsCOMPtr<nsIBoxLayout> nsSprocketLayout::gInstance = new nsSprocketLayout();
 
@@ -124,7 +129,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   GetFrameState(aBox, frameState);
 
   //if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
-  //   printf("In debug\n");
+  //   PRINTF("In debug\n");
 
   // ----- build a list of our child desired sizes and computeds sizes ------
 
@@ -198,7 +203,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     #ifdef DEBUG_REFLOW
     if (passes > 0) {
       AddIndents();
-      printf("ChildResized doing pass: %d\n", passes);
+      PRINTF("ChildResized doing pass: %d\n", passes);
     }
     #endif 
 
@@ -411,7 +416,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           {
 #ifdef DEBUG_GROW
             child->DumpBox(stdout);
-            printf(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
+            PRINTF(" GREW from (%d,%d) -> (%d,%d)\n", childRect.width, childRect.height, newChildRect.width, newChildRect.height);
 #endif
             newChildRect.Inflate(margin);
             childRect.Inflate(margin);
@@ -605,7 +610,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
   GetFrameState(aBox, frameState);
 
   //if (frameState & NS_STATE_CURRENTLY_IN_DEBUG)
-  //   printf("In debug\n");
+  //   PRINTF("In debug\n");
 
   aMinSize = 0;
   aMaxSize = NS_INTRINSICSIZE;

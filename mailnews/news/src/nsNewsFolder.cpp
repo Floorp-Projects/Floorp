@@ -70,6 +70,11 @@
 #include "nsIInterfaceRequestor.h"
 
 #include "nsReadableUtils.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNewsFolderLog)
+#define PRINTF NS_LOG_PRINTF(nsNewsFolderLog)
+#define FLUSH  NS_LOG_FLUSH(nsNewsFolderLog)
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -157,7 +162,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 
   if (isNewsServer) {  
 #ifdef DEBUG_NEWS
-    printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
+    PRINTF("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
 
     nsCOMPtr<nsINntpIncomingServer> nntpServer;
@@ -172,7 +177,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   }
   else {
 #ifdef DEBUG_NEWS
-    printf("%s is not a host, so it has no newsgroups.  (what about categories??)\n", mURI);
+    PRINTF("%s is not a host, so it has no newsgroups.  (what about categories??)\n", mURI);
 #endif
     rv = NS_OK;
   }
@@ -201,7 +206,7 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
     if (!name) return NS_ERROR_NULL_POINTER;
   
 #ifdef DEBUG_NEWS
-    printf("AddNewsgroup(%s,??,%s)\n",name,setStr);
+    PRINTF("AddNewsgroup(%s,??,%s)\n",name,setStr);
 #endif
   
 	nsCOMPtr <nsINntpIncomingServer> nntpServer;
@@ -445,7 +450,7 @@ NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
 #ifdef DEBUG_NEWS
-  printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
+  PRINTF("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
 #endif
 
   nsresult rv = NS_OK;
@@ -754,7 +759,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 {
 	nsresult rv = NS_OK;
 #ifdef DEBUG_NEWS
-	printf("oldest=%d,youngest=%d,total=%d\n",oldest,youngest,total);
+	PRINTF("oldest=%d,youngest=%d,total=%d\n",oldest,youngest,total);
 #endif
 	PRBool newsrcHasChanged = PR_FALSE;
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
@@ -851,7 +856,7 @@ NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals(PRBool force)
     return NS_OK;
 
 #ifdef DEBUG_NEWS
-	printf("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
+	PRINTF("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
 #endif
 
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
@@ -944,7 +949,7 @@ nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetO
   nsresult rv = NS_OK;
 
 #ifdef DEBUG_NEWS
-  printf("GetNewsMessages() uri = %s\n",mURI);
+  PRINTF("GetNewsMessages() uri = %s\n",mURI);
 #endif
 
   PRBool isNewsServer = PR_FALSE;
@@ -964,7 +969,7 @@ nsresult nsMsgNewsFolder::GetNewsMessages(nsIMsgWindow *aMsgWindow, PRBool aGetO
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_NEWS
-  printf("Getting news articles....\n");
+  PRINTF("Getting news articles....\n");
 #endif
 
   rv = nntpService->GetNewNews(nntpServer, mURI, aGetOld, this, aMsgWindow, nsnull);
@@ -1018,7 +1023,7 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups()
 
   if (!exists) {
 #ifdef DEBUG_NEWS
-  	printf("it is ok for the newsrc file to not exist yet\n");
+  	PRINTF("it is ok for the newsrc file to not exist yet\n");
 #endif
 	return NS_OK;
   }
@@ -1067,7 +1072,7 @@ nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
 	line[line_size] = 0;
 
 #ifdef DEBUG_NEWS_
-    printf("nsMsgNewsFolder::HandleNewsrcLine(%s,%d)\n",line,line_size);
+  PRINTF("nsMsgNewsFolder::HandleNewsrcLine(%s,%d)\n",line,line_size);
 #endif
 
 	if ((line[0] == 'o' || line[0] == 'O') &&
@@ -1117,14 +1122,14 @@ nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
   // 3746EF3F.6080309%40netscape.com:
   if (PL_strstr(line,"@") || PL_strstr(line,"%40")) {
 #ifdef DEBUG_NEWS
-    printf("skipping %s.  it contains @ or %%40\n",line);
+    PRINTF("skipping %s.  it contains @ or %%40\n",line);
 #endif
   	subscribed = PR_FALSE;
   }
 
   if (subscribed) {
 #ifdef DEBUG_NEWS
-    printf("subscribed: %s\n", line);
+    PRINTF("subscribed: %s\n", line);
 #endif
 
     // we're subscribed, so add it
@@ -1136,7 +1141,7 @@ nsMsgNewsFolder::HandleNewsrcLine(char* line, PRUint32 line_size)
   }
   else {
 #ifdef DEBUG_NEWS
-    printf("NOT subscribed: %s\n", line);
+    PRINTF("NOT subscribed: %s\n", line);
 #endif
     rv = RememberUnsubscribedGroup(line, setStr);
     if (NS_FAILED(rv)) return -1;
@@ -1202,7 +1207,7 @@ nsresult
 nsMsgNewsFolder::RememberUnsubscribedGroup(const char *newsgroup, const char *setStr)
 {
 #ifdef DEBUG_NEWS
-    printf("RememberUnsubscribedGroup(%s,%s)\n",newsgroup,setStr);
+  PRINTF("RememberUnsubscribedGroup(%s,%s)\n",newsgroup,setStr);
 #endif /* DEBUG_NEWS */
 
     if (newsgroup) {
@@ -1217,7 +1222,7 @@ nsMsgNewsFolder::RememberUnsubscribedGroup(const char *newsgroup, const char *se
     }
 
 #ifdef DEBUG_NEWS
-    printf("mUnsubscribedNewsgroupLines:\n%s",(const char *)mUnsubscribedNewsgroupLines);
+    PRINTF("mUnsubscribedNewsgroupLines:\n%s",(const char *)mUnsubscribedNewsgroupLines);
 #endif /* DEBUG_NEWS */
     return NS_OK;
 }
@@ -1226,7 +1231,7 @@ PRInt32
 nsMsgNewsFolder::RememberLine(const char* line)
 {
 #ifdef DEBUG_NEWS
-    printf("RemeberLine(%s)\n",line);
+  PRINTF("RemeberLine(%s)\n",line);
 #endif /* DEBUG_NEWS */
 
     mOptionLines = line;
@@ -1583,7 +1588,7 @@ nsMsgNewsFolder::SetCachedNewsrcLine(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 #ifdef DEBUG_NEWS
-	printf("SetCachedNewsrcLine: [%s]\n", newsrcLine);
+    PRINTF("SetCachedNewsrcLine: [%s]\n", newsrcLine);
 #endif
 
     mCachedNewsrcLine = nsCRT::strdup(newsrcLine);

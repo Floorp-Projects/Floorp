@@ -37,6 +37,11 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsProfileAccessLog)
+#define PRINTF NS_LOG_PRINTF(nsProfileAccessLog)
+#define FLUSH  NS_LOG_FLUSH(nsProfileAccessLog)
 
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
@@ -1369,9 +1374,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 
             if (NS_FAILED(rv)) return rv;
 
-#ifdef DEBUG
-            printf("%s exists:  %d\n",profileLocation.GetBuffer(), exists);
-#endif
+            PRINTF("%s exists:  %d\n",profileLocation.GetBuffer(), exists);
             if (exists) {
                 ProfileStruct*  profileItem     = new ProfileStruct();
                 if (!profileItem)
@@ -1393,9 +1396,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 				//delete profileItem;
             }
             else {
-#ifdef DEBUG
-                printf("no 4.x profile\n");
-#endif
+                PRINTF("no 4.x profile\n");
             }
         }
 #endif /* XP_UNIX */

@@ -34,6 +34,9 @@
 #ifdef MOZ_MATHML
 #include "nsIRenderingContext.h" //to get struct nsBoundingMetrics
 #endif
+#include "nslog.h"
+#undef PRLogModuleInfo
+#undef fprintf
 
 /**
  * New rules of reflow:

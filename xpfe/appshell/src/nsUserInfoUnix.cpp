@@ -31,6 +31,11 @@
 
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsUserInfoUnixLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsUserInfoUnixLog)
+#define FLUSH  NS_LOG_FLUSH(nsUserInfoUnixLog)
 
 /* Some UNIXy platforms don't have pw_gecos. In this case we use pw_name */
 #if defined(NO_PW_GECOS)
@@ -60,7 +65,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
     if (!pw || !pw->PW_GECOS) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("fullname = %s\n", pw->PW_GECOS);
+    PRINTF("fullname = %s\n", pw->PW_GECOS);
 #endif
 
     nsAutoString fullname(NS_ConvertASCIItoUCS2(pw->PW_GECOS));
@@ -84,7 +89,7 @@ nsUserInfo::GetUsername(char * *aUsername)
     if (!pw || !pw->pw_name) return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_sspitzer
-    printf("username = %s\n", pw->pw_name);
+    PRINTF("username = %s\n", pw->pw_name);
 #endif
 
     *aUsername = nsCRT::strdup(pw->pw_name);

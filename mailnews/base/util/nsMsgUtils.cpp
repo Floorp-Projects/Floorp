@@ -37,6 +37,11 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgUtilsLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgUtilsLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgUtilsLog)
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -308,7 +313,7 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
   nsCAutoString str(name);
 
 #ifdef DEBUG_NS_MsgHashIfNecessary
-  printf("in: %s\n",str.GetBuffer());
+  PRINTF("in: %s\n",str.GetBuffer());
 #endif
 
   // Given a name, use either that name, if it fits on our
@@ -329,7 +334,7 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
   }
   name = hashedname;
 #ifdef DEBUG_NS_MsgHashIfNecessary
-  printf("out: %s\n",hashedname);
+  PRINTF("out: %s\n",hashedname);
 #endif
   
   return NS_OK;

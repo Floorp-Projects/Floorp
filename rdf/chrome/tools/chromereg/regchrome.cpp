@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   nsIDirectoryServiceProvider *appFileLocProvider;
   appFileLocProvider = new nsAppFileLocationProvider;
   if (!appFileLocProvider) {
-    NS_WARNING("failed to create directory service provider\n");
+    NS_WARNING("failed to create directory service provider");
     return NS_ERROR_FAILURE;
   }
   // add a reference

@@ -31,11 +31,11 @@
 //included for new nsEditor::CreateContent()
 #include "nsIContent.h"
 
-#ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
+#include "nslog.h"
+
+NS_IMPL_LOG(CreateElementTxnLog)
+#define PRINTF NS_LOG_PRINTF(CreateElementTxnLog)
+#define FLUSH  NS_LOG_FLUSH(CreateElementTxnLog)
 
 CreateElementTxn::CreateElementTxn()
   : EditTxn()
@@ -74,13 +74,12 @@ CreateElementTxn::~CreateElementTxn()
 
 NS_IMETHODIMP CreateElementTxn::Do(void)
 {
-  if (gNoisy)
-  {
-    char* nodename = mTag.ToNewCString();
-    printf("Do Create Element parent = %p <%s>, offset = %d\n", 
-           mParent.get(), nodename, mOffsetInParent);
-    nsMemory::Free(nodename);
-  }
+#ifdef NS_LOGGING
+  char* nodename = mTag.ToNewCString();
+  PRINTF("Do Create Element parent = %p <%s>, offset = %d\n", 
+         mParent.get(), nodename, mOffsetInParent);
+  nsMemory::Free(nodename);
+#endif
 
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
@@ -121,7 +120,7 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
   NS_ASSERTION(((NS_SUCCEEDED(result)) && (mNewNode)), "could not create element.");
   if (!mNewNode) return NS_ERROR_NULL_POINTER;
 
-  if (gNoisy) { printf("  newNode = %p\n", mNewNode.get()); }
+  PRINTF("  newNode = %p\n", mNewNode.get());
   // insert the new node
   nsCOMPtr<nsIDOMNode> resultNode;
   if (CreateElementTxn::eAppend==(PRInt32)mOffsetInParent)
@@ -172,8 +171,8 @@ NS_IMETHODIMP CreateElementTxn::Do(void)
 
 NS_IMETHODIMP CreateElementTxn::Undo(void)
 {
-  if (gNoisy) { printf("Undo Create Element, mParent = %p, node = %p\n",
-                        mParent.get(), mNewNode.get()); }
+  PRINTF("Undo Create Element, mParent = %p, node = %p\n",
+         mParent.get(), mNewNode.get());
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 
@@ -184,7 +183,7 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
 
 NS_IMETHODIMP CreateElementTxn::Redo(void)
 {
-  if (gNoisy) { printf("Redo Create Element\n"); }
+  PRINTF("Redo Create Element\n");
   NS_ASSERTION(mEditor && mParent, "bad state");
   if (!mEditor || !mParent) return NS_ERROR_NOT_INITIALIZED;
 

@@ -34,6 +34,11 @@
 
 #include <stdio.h> // for sscanf
 #include <stdlib.h> // realloc/free
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDragServiceLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsDragServiceLog)
+#define FLUSH  NS_LOG_FLUSH(nsDragServiceLog)
 
 //
 // There are three major cases to consider:
@@ -202,7 +207,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
                nsFileSpec file;
 
                if( !FindFile( pItem, file))
-                  printf( "Can't find dropped file\n");
+                   PRINTF( "Can't find dropped file\n");
                else
                {
                   cData = file.GetFileSize();
@@ -225,7 +230,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
          else
          {
             const char *rmf = DecodeStrHandle( pItem->hstrRMF);
-            printf( "Incomprehensible DRM (%s)\n", rmf);
+            PRINTF( "Incomprehensible DRM (%s)\n", rmf);
          }
 
          if( pData && cData)
@@ -240,7 +245,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
          nsCOMPtr<nsIFileListTransferable> pFileList = do_QueryInterface(aTransferable);
 
          if( !pFileList)
-            printf( "kDropFilesMime requested but no filelisttransferable!\n");
+             PRINTF( "kDropFilesMime requested but no filelisttransferable!\n");
          else
          {
             // Need a file.
@@ -273,7 +278,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
                   nsFileSpec file;
    
                   if( !FindFile( pItem, file))
-                     printf( "Can't find dropped file\n");
+                      PRINTF( "Can't find dropped file\n");
                   else
                      pFileSpec = new nsFileSpec(file);
                }
@@ -286,7 +291,7 @@ nsresult nsDragService::GetData( nsITransferable *aTransferable,
             else
             {
                const char *rmf = DecodeStrHandle( pItem->hstrRMF);
-               printf( "Incomprehensible DRM -> file (%s)\n", rmf);
+               PRINTF( "Incomprehensible DRM -> file (%s)\n", rmf);
             }
 
             // Did we get one?
@@ -329,8 +334,8 @@ nsresult nsDragService::IsDataFlavorSupported( nsString *aDataFlavour)
    const char *rf = MimeTypeToRF( buff);
 
 #ifdef DEBUG
-   printf( "IsDataFlavorSupported %s\n", buff);
-   printf( "RF for that is %s\n", rf);
+   PRINTF( "IsDataFlavorSupported %s\n", buff);
+   PRINTF( "RF for that is %s\n", rf);
 #endif
 
    if( rf)
@@ -348,7 +353,7 @@ nsresult nsDragService::IsDataFlavorSupported( nsString *aDataFlavour)
    }
 
 #ifdef DEBUG
-   printf( "Flavor is %ssupported.\n", rc == NS_OK ? "" : "not ");
+   PRINTF( "Flavor is %ssupported.\n", rc == NS_OK ? "" : "not ");
 #endif
 
    return rc;
@@ -512,7 +517,7 @@ void nsDragService::FillDragItem( PDRAGITEM aItem, nsITransferable *aTransferabl
    nsVoidArray *pFormats = nsnull;
    aTransferable->FlavorsTransferableCanExport( &pFormats);
 
-   // XXX DRM_DISCARD and DRM_PRINTFILE to come when xptoolkit decides how
+   // XXX DRM_DISCARD and DRM_PRINTFLEto come when xptoolkit decides how
    //     (whether...) to handle them
 
    char rmf[200] = "(DRM_OS2FILE,DRM_MOZILLA) X (DRF_UNKNOWN";
@@ -691,7 +696,7 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 
 #ifdef DEBUG
          char *target = DecodeStrHandle( pXFer->hstrRenderToName);
-         printf( "Source-rendering to %s\n", target);
+         PRINTF( "Source-rendering to %s\n", target);
          nsFileSpec dest( target);
 #else
          nsFileSpec dest( DecodeStrHandle( pXFer->hstrRenderToName));
@@ -703,7 +708,7 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
 
          NS_ASSERTION(tokens == 2, "Couldn't parse hstrSelectedRMF");
 #ifdef DEBUG
-         printf( "%d - %s %s\n", tokens, rm, rf);
+         PRINTF( "%d - %s %s\n", tokens, rm, rf);
 #endif
          if( !strcmp( rm, "DRM_OS2FILE"))
          {
@@ -738,12 +743,12 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             delete pFormats;
             if( i == cFormats)
 #ifdef DEBUG
-               printf( "Target asked for format %s which we can't do.\n", rf);
+                PRINTF( "Target asked for format %s which we can't do.\n", rf);
 #endif
          }
          else
          {
-            printf( "Unexpected rendering mechanism\n");
+             PRINTF( "Unexpected rendering mechanism\n");
          }
 
          // Tell the target we're done.
@@ -813,7 +818,7 @@ MRESULT nsDragService::HandleMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
             mDragInfo = 0;
          }
 #ifdef DEBUG
-         printf( "DM_ENDCONVERSATION, mDragItems = %d\n", (int)mDragItems);
+         PRINTF( "DM_ENDCONVERSATION, mDragItems = %d\n", (int)mDragItems);
 #endif
          return 0;
       }
@@ -838,7 +843,7 @@ void nsDragService::DoMozillaXfer( PDRAGITEM pItem, char *szFlavour,
       // Yes.
       nsITransferable *pSource = (nsITransferable*) pItem->ulItemID;
       if( !pSource)
-         printf( "intra-process xfer fails due to null ulItemID\n");
+          PRINTF( "intra-process xfer fails due to null ulItemID\n");
       else
       {
          nsAutoString flavour(szFlavour);
@@ -909,8 +914,8 @@ void nsDragService::DoPushedOS2FILE( PDRAGITEM pItem, const char *szRf,
    // But it's not all bad: not many people use source rendering; mozilla
    // does, but we can use DRM_MOZILLA to do that.
 
-   printf( "\n\nSorry, source-rendering of DRM_OS2FILE not working.\n");
-   printf( "(see mozilla/widget/src/os2/nsDragService::DoPushedOS2FILE)\n\n");
+    PRINTF( "\n\nSorry, source-rendering of DRM_OS2FILE not working.\n");
+    PRINTF( "(see mozilla/widget/src/os2/nsDragService::DoPushedOS2FILE)\n\n");
 }
 
 // Quick utility functions ------------------------------------------------------
@@ -957,12 +962,12 @@ static BOOL FindFile( PDRAGITEM pItem, nsFileSpec &aFileSpec)
 {
    const char *str = DecodeStrHandle( pItem->hstrContainerName);
 #ifdef DEBUG
-   printf( "Getting drag data from `%s'", str);
+   PRINTF( "Getting drag data from `%s'", str);
 #endif
    aFileSpec = str;
    str = DecodeStrHandle( pItem->hstrSourceName);
 #ifdef DEBUG
-   printf( "`%s'\n", str);
+   PRINTF( "`%s'\n", str);
 #endif
    aFileSpec += str;
 

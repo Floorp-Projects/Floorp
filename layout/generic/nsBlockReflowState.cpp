@@ -57,6 +57,12 @@
 #include "nsSpaceManager.h"
 #include "prenv.h"
 #include "plstr.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsBlockFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsBlockFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsBlockFrameLog)
 
 #ifdef DEBUG
 
@@ -92,14 +98,14 @@ static BlockDebugFlags gFlags[] = {
 static void
 ShowDebugFlags()
 {
-  printf("Here are the available GECKO_BLOCK_DEBUG_FLAGS:\n");
+  PRINTF("Here are the available GECKO_BLOCK_DEBUG_FLAGS:\n");
   BlockDebugFlags* bdf = gFlags;
   BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
   for (; bdf < end; bdf++) {
-    printf("  %s\n", bdf->name);
+    PRINTF("  %s\n", bdf->name);
   }
-  printf("Note: GECKO_BLOCK_DEBUG_FLAGS is a comma seperated list of flag\n");
-  printf("names (no whitespace)\n");
+  PRINTF("Note: GECKO_BLOCK_DEBUG_FLAGS is a comma seperated list of flag\n");
+  PRINTF("names (no whitespace)\n");
 }
 
 static void
@@ -121,7 +127,7 @@ InitDebugFlags()
         for (; bdf < end; bdf++) {
           if (PL_strcasecmp(bdf->name, flags) == 0) {
             *(bdf->on) = PR_TRUE;
-            printf("nsBlockFrame: setting %s debug flag on\n", bdf->name);
+            PRINTF("nsBlockFrame: setting %s debug flag on\n", bdf->name);
             gNoisy = PR_TRUE;
             found = PR_TRUE;
             break;
@@ -192,17 +198,17 @@ DumpStyleGeneaology(nsIFrame* aFrame, const char* gap)
 {
   fputs(gap, stdout);
   nsFrame::ListTag(stdout, aFrame);
-  printf(": ");
+  PRINTF(": ");
   nsIStyleContext* sc;
   aFrame->GetStyleContext(&sc);
   while (nsnull != sc) {
     nsIStyleContext* psc;
-    printf("%p ", sc);
+    PRINTF("%p ", sc);
     psc = sc->GetParent();
     NS_RELEASE(sc);
     sc = psc;
   }
-  printf("\n");
+  PRINTF("\n");
 }
 #endif
 
@@ -240,7 +246,7 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
   // Log updates to the status that yield different values
   if (record[index] != newS) {
     record[index] = newS;
-    printf("record(%d): %02x %02x\n", index, record[0], record[1]);
+    PRINTF("record(%d): %02x %02x\n", index, record[0], record[1]);
   }
 }
 #endif
@@ -311,7 +317,7 @@ public:
 #ifdef DEBUG
     if (gNoisyReflow) {
       nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+      PRINTF("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
              mAvailSpaceRect.x, mAvailSpaceRect.y,
              mAvailSpaceRect.width, mAvailSpaceRect.height,
              mBand.GetTrapezoidCount());
@@ -332,7 +338,7 @@ public:
 #ifdef DEBUG
     if (gNoisyReflow) {
       nsFrame::IndentBy(stdout, gNoiseIndent);
-      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+      PRINTF("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
              mAvailSpaceRect.x, mAvailSpaceRect.y,
              mAvailSpaceRect.width, mAvailSpaceRect.height,
              mBand.GetTrapezoidCount());
@@ -387,10 +393,10 @@ public:
         (mMaxElementSize.height != oldSize.height)) {
       nsFrame::IndentBy(stdout, mBlock->GetDepth());
       if (NS_UNCONSTRAINEDSIZE == mReflowState.availableWidth) {
-        printf("PASS1 ");
+        PRINTF("PASS1 ");
       }
       nsFrame::ListTag(stdout, mBlock);
-      printf(": old max-element-size=%d,%d new=%d,%d\n",
+      PRINTF(": old max-element-size=%d,%d new=%d,%d\n",
              oldSize.width, oldSize.height,
              mMaxElementSize.width, mMaxElementSize.height);
     }
@@ -400,7 +406,7 @@ public:
   void UpdateMaximumWidth(nscoord aMaximumWidth) {
     if (aMaximumWidth > mMaximumWidth) {
 #ifdef NOISY_MAXIMUM_WIDTH
-      printf("nsBlockReflowState::UpdateMaximumWidth block %p caching max width %d\n", mBlock, aMaximumWidth);
+      PRINTF("nsBlockReflowState::UpdateMaximumWidth block %p caching max width %d\n", mBlock, aMaximumWidth);
 #endif
       mMaximumWidth = aMaximumWidth;
     }
@@ -427,7 +433,7 @@ public:
 
   PRBool IsImpactedByFloater() {
 #ifdef REALLY_NOISY_REFLOW
-    printf("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
+    PRINTF("nsBlockReflowState::IsImpactedByFloater %p returned %d\n", 
            this, mBand.GetFloaterCount());
 #endif
     return mBand.GetFloaterCount();
@@ -721,7 +727,7 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 
   SetFlag(BRS_COMPUTEMAXELEMENTSIZE, (nsnull != aMetrics.maxElementSize));
 #ifdef NOISY_MAX_ELEMENT_SIZE
-  printf("BRS: setting compute-MES to %d\n", (nsnull != aMetrics.maxElementSize));
+  PRINTF("BRS: setting compute-MES to %d\n", (nsnull != aMetrics.maxElementSize));
 #endif
   mMaxElementSize.SizeTo(0, 0);
   SetFlag(BRS_COMPUTEMAXWIDTH, 
@@ -772,7 +778,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
                                            nsRect& aResult)
 {
 #ifdef REALLY_NOISY_REFLOW
-  printf("CBAS frame=%p has floater count %d\n", aFrame, mBand.GetFloaterCount());
+  PRINTF("CBAS frame=%p has floater count %d\n", aFrame, mBand.GetFloaterCount());
   mBand.List();
 #endif
   aResult.y = mY;
@@ -883,7 +889,7 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
     aResult.width = mAvailSpaceRect.width;
   }
 #ifdef REALLY_NOISY_REFLOW
-  printf("  CBAS: result %d %d %d %d\n", aResult.x, aResult.y, aResult.width, aResult.height);
+  PRINTF("  CBAS: result %d %d %d %d\n", aResult.x, aResult.y, aResult.width, aResult.height);
 #endif
 }
 
@@ -902,7 +908,7 @@ nsBlockReflowState::ClearPastFloaters(PRUint8 aBreakType)
     ClearFloaters(saveY, aBreakType);
 #ifdef NOISY_FLOATER_CLEARING
     nsFrame::ListTag(stdout, mBlock);
-    printf(": ClearPastFloaters: mPrevBottomMargin=%d saveY=%d oldY=%d newY=%d deltaY=%d\n",
+    PRINTF(": ClearPastFloaters: mPrevBottomMargin=%d saveY=%d oldY=%d newY=%d deltaY=%d\n",
            mPrevBottomMargin, saveY, saveY - mPrevBottomMargin, mY,
            mY - saveY);
 #endif
@@ -1012,17 +1018,17 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
 #ifdef DEBUG
     if (CRAZY_WIDTH(xmost)) {
       nsFrame::ListTag(stdout, mBlock);
-      printf(": WARNING: xmost:%d\n", xmost);
+      PRINTF(": WARNING: xmost:%d\n", xmost);
     }
 #endif
 #ifdef NOISY_KIDXMOST
-    printf("%p RecoverState block %p aState.mKidXMost=%d\n", this, mBlock, xmost); 
+    PRINTF("%p RecoverState block %p aState.mKidXMost=%d\n", this, mBlock, xmost); 
 #endif
     mKidXMost = xmost;
   }
   if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
 #ifdef NOISY_MAX_ELEMENT_SIZE
-    printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaxElementWidth);
+    PRINTF("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaxElementWidth);
 #endif
     UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
   }
@@ -1030,7 +1036,7 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // If computing the maximum width, then update mMaximumWidth
   if (GetFlag(BRS_COMPUTEMAXWIDTH)) {
 #ifdef NOISY_MAXIMUM_WIDTH
-    printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaximumWidth);
+    PRINTF("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaximumWidth);
 #endif
     UpdateMaximumWidth(aLine->mMaximumWidth);
   }
@@ -1041,9 +1047,9 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
     aApplyTopMargin = ClearPastFloaters(aLine->GetBreakType());
 #ifdef NOISY_VERTICAL_MARGINS
     nsFrame::ListTag(stdout, mBlock);
-    printf(": RecoverStateFrom: y=%d child ", mY);
+    PRINTF(": RecoverStateFrom: y=%d child ", mY);
     nsFrame::ListTag(stdout, aLine->mFirstChild);
-    printf(" has clear of %d => %s, mPrevBottomMargin=%d\n", aLine->mBreakType,
+    PRINTF(" has clear of %d => %s, mPrevBottomMargin=%d\n", aLine->mBreakType,
            aApplyTopMargin ? "applyTopMargin" : "nope", mPrevBottomMargin);
 #endif
   }
@@ -1135,10 +1141,10 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
         nscoord tx, ty;
         mSpaceManager->GetTranslation(tx, ty);
         nsFrame::IndentBy(stdout, gNoiseIndent);
-        printf("RecoverState: txy=%d,%d (%d,%d) ",
+        PRINTF("RecoverState: txy=%d,%d (%d,%d) ",
                tx, ty, mSpaceManagerX, mSpaceManagerY);
         nsFrame::ListTag(stdout, floater);
-        printf(" r.y=%d finalDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
+        PRINTF(" r.y=%d finalDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
                r.y, finalDeltaY, r.y + finalDeltaY,
                fc->mRegion.x, fc->mRegion.y,
                fc->mRegion.width, fc->mRegion.height);
@@ -1278,7 +1284,7 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
+  FPRINTF(out, " [parent=%p]", mParent);
 #endif
   nsIView* view;
   GetView(aPresContext, &view);
@@ -1508,7 +1514,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
+    PRINTF(": begin reflow type %d availSize=%d,%d computedSize=%d,%d\n",
            aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight,
            aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   }
@@ -1582,7 +1588,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       extern char* nsPresShell_ReflowStackPointerTop;
       char marker;
       char* newsp = (char*) &marker;
-      printf("XXX: frame tree is too deep; approx stack size = %d\n",
+      PRINTF("XXX: frame tree is too deep; approx stack size = %d\n",
              nsPresShell_ReflowStackPointerTop - newsp);
     }
 #endif
@@ -1605,7 +1611,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
     reflowState.mSpaceManager = spaceManager.get();
 #ifdef NOISY_SPACEMANAGER
-    printf("constructed new space manager %p\n", reflowState.mSpaceManager);
+    PRINTF("constructed new space manager %p\n", reflowState.mSpaceManager);
 #endif
   }
 
@@ -1624,7 +1630,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   case eReflowReason_Initial:
 #ifdef NOISY_REFLOW_REASON
     ListTag(stdout);
-    printf(": reflow=initial\n");
+    PRINTF(": reflow=initial\n");
 #endif
     DrainOverflowLines(aPresContext);
     rv = PrepareInitialReflow(state);
@@ -1641,7 +1647,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       aReflowState.reflowCommand->GetType(type);
 #ifdef NOISY_REFLOW_REASON
       ListTag(stdout);
-      printf(": reflow=incremental type=%d\n", type);
+      PRINTF(": reflow=incremental type=%d\n", type);
 #endif
       switch (type) {
       case nsIReflowCommand::StyleChanged:
@@ -1661,12 +1667,12 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       aReflowState.reflowCommand->GetNext(state.mNextRCFrame);
 #ifdef NOISY_REFLOW_REASON
       ListTag(stdout);
-      printf(": reflow=incremental");
+      PRINTF(": reflow=incremental");
       if (state.mNextRCFrame) {
-        printf(" next=");
+        PRINTF(" next=");
         nsFrame::ListTag(stdout, state.mNextRCFrame);
       }
-      printf("\n");
+      PRINTF("\n");
 #endif
 
       // this code does a correct job of propogating incremental reflows (bug 25510)
@@ -1724,7 +1730,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   default:
 #ifdef NOISY_REFLOW_REASON
     ListTag(stdout);
-    printf(": reflow=resize (%d)\n", aReflowState.reason);
+    PRINTF(": reflow=resize (%d)\n", aReflowState.reason);
 #endif
     DrainOverflowLines(aPresContext);
     rv = PrepareResizeReflow(state);
@@ -1749,7 +1755,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     }
     else {
 #ifdef DEBUG_kipp
-      ListTag(stdout); printf(": block is not complete\n");
+      ListTag(stdout); PRINTF(": block is not complete\n");
 #endif
     }
   }
@@ -1769,7 +1775,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       if (xMost > aMetrics.width) {
 #ifdef NOISY_FINAL_SIZE
         ListTag(stdout);
-        printf(": changing desired width from %d to %d\n", aMetrics.width, xMost);
+        PRINTF(": changing desired width from %d to %d\n", aMetrics.width, xMost);
 #endif
         aMetrics.width = xMost;
       }
@@ -1777,7 +1783,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       if (yMost > aMetrics.height) {
 #ifdef NOISY_FINAL_SIZE
         ListTag(stdout);
-        printf(": changing desired height from %d to %d\n", aMetrics.height, yMost);
+        PRINTF(": changing desired height from %d to %d\n", aMetrics.height, yMost);
 #endif
         aMetrics.height = yMost;
       }
@@ -1810,7 +1816,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_BLOCK_SPACE_MGR & mState) {
     nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
 #ifdef NOISY_SPACEMANAGER
-    printf("restoring old space manager %p\n", oldSpaceManager);
+    PRINTF("restoring old space manager %p\n", oldSpaceManager);
 #endif
     reflowState.mSpaceManager = oldSpaceManager;
   }
@@ -1819,7 +1825,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   nsHTMLReflowState&  reflowState = (nsHTMLReflowState&)aReflowState;
   if (reflowState.mSpaceManager) {
     ListTag(stdout);
-    printf(": space-manager %p after reflow\n", reflowState.mSpaceManager);
+    PRINTF(": space-manager %p after reflow\n", reflowState.mSpaceManager);
     reflowState.mSpaceManager->List(stdout);
   }
 #endif
@@ -1832,7 +1838,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       // Lots of things could have changed so damage our entire
       // bounds
 #ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate 1 (%d, %d, %d, %d)\n",
+      PRINTF("%p invalidate 1 (%d, %d, %d, %d)\n",
              this, 0, 0, mRect.width, mRect.height);
 #endif
       Invalidate(aPresContext, nsRect(0, 0, mRect.width, mRect.height));
@@ -1862,7 +1868,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           damageRect.height = mRect.height;
         }
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 2 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 2 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
         Invalidate(aPresContext, damageRect);
@@ -1889,7 +1895,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
           damageRect.height = border.bottom;
         }
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 3 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 3 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
         Invalidate(aPresContext, damageRect);
@@ -1933,23 +1939,23 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
+    PRINTF(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
            aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
            aMetrics.width, aMetrics.height,
            aMetrics.mCarriedOutBottomMargin);
     if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-      printf(" combinedArea={%d,%d,%d,%d}",
+      PRINTF(" combinedArea={%d,%d,%d,%d}",
              aMetrics.mOverflowArea.x,
              aMetrics.mOverflowArea.y,
              aMetrics.mOverflowArea.width,
              aMetrics.mOverflowArea.height);
     }
     if (aMetrics.maxElementSize) {
-      printf(" maxElementSize=%d,%d",
+      PRINTF(" maxElementSize=%d,%d",
              aMetrics.maxElementSize->width,
              aMetrics.maxElementSize->height);
     }
-    printf("\n");
+    PRINTF("\n");
   }
 
   if (gLameReflowMetrics) {
@@ -1968,12 +1974,12 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     PR_snprintf(buf, sizeof(buf),
                 ": %lld elapsed (%lld per line) (%d lines; %d new lines)",
                 delta, perLineDelta, numLines, ectc - ctc);
-    printf("%s\n", buf);
+    PRINTF("%s\n", buf);
   }
 #endif
 #ifdef NOISY_MAX_ELEMENT_SIZE
   if (aMetrics.maxElementSize) {
-    printf("block %p returning with maxElementSize=%d,%d\n", this,
+    PRINTF("block %p returning with maxElementSize=%d,%d\n", this,
            aMetrics.maxElementSize->width,
            aMetrics.maxElementSize->height);
   }
@@ -2057,7 +2063,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   const nsMargin& borderPadding = aState.BorderPadding();
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
-  printf(": mY=%d mIsBottomMarginRoot=%s mPrevBottomMargin=%d bp=%d,%d\n",
+  PRINTF(": mY=%d mIsBottomMarginRoot=%s mPrevBottomMargin=%d bp=%d,%d\n",
          aState.mY, aState.GetFlag(BRS_ISBOTTOMMARGINROOT) ? "yes" : "no",
          aState.mPrevBottomMargin,
          borderPadding.top, borderPadding.bottom);
@@ -2066,7 +2072,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // Compute final width
   nscoord maxWidth = 0, maxHeight = 0;
 #ifdef NOISY_KIDXMOST
-  printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+  PRINTF("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
   nscoord minWidth = aState.mKidXMost + borderPadding.right;
   if (!HaveAutoWidth(aReflowState)) {
@@ -2276,8 +2282,8 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     aMetrics.maxElementSize->width = maxWidth;
     aMetrics.maxElementSize->height = maxHeight;
 #ifdef NOISY_MAX_ELEMENT_SIZE
-    printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
-             this, aMetrics.maxElementSize->width);
+    PRINTF ("nsBlockFrame::CFS: %p returning MES %d\n", 
+            this, aMetrics.maxElementSize->width);
 #endif
   }
 
@@ -2288,12 +2294,12 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 #ifdef DEBUG_blocks
   if (CRAZY_WIDTH(aMetrics.width) || CRAZY_HEIGHT(aMetrics.height)) {
     ListTag(stdout);
-    printf(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
+    PRINTF(": WARNING: desired:%d,%d\n", aMetrics.width, aMetrics.height);
   }
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE) &&
       ((maxWidth > aMetrics.width) || (maxHeight > aMetrics.height))) {
     ListTag(stdout);
-    printf(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+    PRINTF(": WARNING: max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
            maxWidth, maxHeight, aMetrics.width, aMetrics.height,
            aState.mReflowState.availableWidth,
            aState.mReflowState.availableHeight);
@@ -2303,10 +2309,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
     IndentBy(stdout, GetDepth());
     if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-      printf("PASS1 ");
+      PRINTF("PASS1 ");
     }
     ListTag(stdout);
-    printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
+    PRINTF(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
            maxWidth, maxHeight, aMetrics.width, aMetrics.height,
            aState.mReflowState.availableWidth,
            aState.mReflowState.availableHeight);
@@ -2318,7 +2324,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     // We need to add in for the right border/padding
     aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
 #ifdef NOISY_MAXIMUM_WIDTH
-    printf("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
+    PRINTF("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
 #endif
   }
 
@@ -2368,7 +2374,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   }
 #ifdef NOISY_COMBINED_AREA
   ListTag(stdout);
-  printf(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
+  PRINTF(": ca=%d,%d,%d,%d\n", xa, ya, xb-xa, yb-ya);
 #endif
 
   // If the combined area of our children exceeds our bounding box
@@ -2427,7 +2433,7 @@ nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
   if (gNoisyReflow) {
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": mark line %p dirty\n", aLine);
+    PRINTF(": mark line %p dirty\n", aLine);
   }
 #endif
 
@@ -2440,7 +2446,7 @@ nsBlockFrame::MarkLineDirty(nsLineBox* aLine, nsLineBox* aPrevLine)
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": mark prev-line %p dirty\n", aPrevLine);
+      PRINTF(": mark prev-line %p dirty\n", aPrevLine);
     }
 #endif
   }
@@ -2554,7 +2560,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
         mStyleContext->GetStyleData(eStyleStruct_Text);
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": marking all lines dirty: reason=%d availWidth=%d textAlign=%d\n",
+      PRINTF(": marking all lines dirty: reason=%d availWidth=%d textAlign=%d\n",
              aState.mReflowState.reason,
              aState.mReflowState.availableWidth,
              mStyleText->mTextAlign);
@@ -2587,7 +2593,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     if (gNoisyReflow) {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": trying to avoid marking all lines dirty\n");
+      PRINTF(": trying to avoid marking all lines dirty\n");
     }
 #endif
     
@@ -2601,8 +2607,8 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
       else {
         // We can avoid reflowing *some* inline lines in some cases.
 #ifdef REALLY_NOISY_REFLOW
-      printf("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
-        line, line->IsImpactedByFloater() ? "" : "not ");
+      PRINTF("PrepareResizeReflow thinks line %p is %simpacted by floaters\n", 
+             line, line->IsImpactedByFloater() ? "" : "not ");
 #endif
         if (notWrapping) {
           // When no-wrap is set then the only line-breaking that
@@ -2628,7 +2634,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
 #ifdef DEBUG
         if (gNoisyReflow && !line->IsDirty() && !notWrapping) {
           IndentBy(stdout, gNoiseIndent + 1);
-          printf("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
+          PRINTF("skipped: line=%p next=%p %s %s %s%s%s breakType=%d xmost=%d\n",
                  line, line->mNext,
                  line->IsBlock() ? "block" : "inline",
                  aState.GetFlag(BRS_NOWRAP) ? "no-wrap" : "wrapping",
@@ -2779,8 +2785,8 @@ nsBlockFrame::PropogateReflowDamage(nsBlockReflowState& aState,
         PRBool wasImpactedByFloater = next->IsImpactedByFloater();
         PRBool isImpactedByFloater = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
 #ifdef REALLY_NOISY_REFLOW
-        printf("nsBlockFrame::PropogateReflowDamage %p was = %d, is=%d\n", 
-           this, wasImpactedByFloater, isImpactedByFloater);
+        PRINTF("nsBlockFrame::PropogateReflowDamage %p was = %d, is=%d\n", 
+               this, wasImpactedByFloater, isImpactedByFloater);
 #endif
         if (wasImpactedByFloater != isImpactedByFloater) {
           next->MarkDirty();
@@ -2865,16 +2871,16 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       aState.mReflowState.reflowCommand->GetType(type);
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": incrementally reflowing dirty lines: type=%s(%d) isInline=%s",
+      PRINTF(": incrementally reflowing dirty lines: type=%s(%d) isInline=%s",
              kReflowCommandType[type], type,
              aState.GetFlag(BRS_ISINLINEINCRREFLOW) ? "true" : "false");
     }
     else {
       IndentBy(stdout, gNoiseIndent);
       ListTag(stdout);
-      printf(": reflowing dirty lines");
+      PRINTF(": reflowing dirty lines");
     }
-    printf(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
+    PRINTF(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
     gNoiseIndent++;
   }
 #endif
@@ -2902,7 +2908,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 4 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 4 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
         Invalidate(aState.mPresContext, damageRect);
@@ -2919,7 +2925,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nsRect lca;
       line->GetCombinedArea(&lca);
       IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
+      PRINTF("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
              line, aState.mY, line->IsDirty() ? "yes" : "no",
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
@@ -2977,7 +2983,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
                        &damageRect : 0);
       if (incrementalReflow && !damageRect.IsEmpty()) {
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 5 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 5 (%d, %d, %d, %d)\n",
                this, damageRect.x, damageRect.y, damageRect.width, damageRect.height);
 #endif
         Invalidate(aState.mPresContext, damageRect);
@@ -2990,7 +2996,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       nsRect lca;
       line->GetCombinedArea(&lca);
       IndentBy(stdout, gNoiseIndent);
-      printf("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
+      PRINTF("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
              line, aState.mY,
              line->mBounds.x, line->mBounds.y,
              line->mBounds.width, line->mBounds.height,
@@ -3089,7 +3095,7 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     gNoiseIndent--;
     IndentBy(stdout, gNoiseIndent);
     ListTag(stdout);
-    printf(": done reflowing dirty lines (status=%x)\n",
+    PRINTF(": done reflowing dirty lines (status=%x)\n",
            aState.mReflowStatus);
   }
 #endif
@@ -3154,7 +3160,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         nsRect  dirtyRect;
         dirtyRect.UnionRect(oldCombinedArea, lineCombinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 6 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 6 (%d, %d, %d, %d)\n",
                this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
         Invalidate(aState.mPresContext, dirtyRect);
@@ -3174,7 +3180,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
           dirtyRect.height = PR_MAX(oldCombinedArea.height,
                                     lineCombinedArea.height);
 #ifdef NOISY_BLOCK_INVALIDATE
-          printf("%p invalidate 7 (%d, %d, %d, %d)\n",
+          PRINTF("%p invalidate 7 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
           Invalidate(aState.mPresContext, dirtyRect);
@@ -3193,7 +3199,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
                                     lineCombinedArea.YMost()) -
                              dirtyRect.y;
 #ifdef NOISY_BLOCK_INVALIDATE
-          printf("%p invalidate 8 (%d, %d, %d, %d)\n",
+          PRINTF("%p invalidate 8 (%d, %d, %d, %d)\n",
                  this, dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
           Invalidate(aState.mPresContext, dirtyRect);
@@ -3233,7 +3239,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
 #ifdef NOISY_MAXIMUM_WIDTH
-      printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
+      PRINTF("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
              this, aLine, aLine->mMaximumWidth);
 #endif
       aState.UpdateMaximumWidth(aLine->mMaximumWidth);
@@ -3263,7 +3269,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         if (aState.GetFlag(BRS_COMPUTEMAXWIDTH))
         {
 #ifdef NOISY_MAXIMUM_WIDTH
-          printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
+          PRINTF("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
                  this, aLine, aLine->mMaximumWidth);
 #endif
           aState.UpdateMaximumWidth(aLine->mMaximumWidth);
@@ -3271,7 +3277,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
         if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE))
         {
 #ifdef NOISY_MAX_ELEMENT_SIZE
-          printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
+          PRINTF("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
                  this, aLine, aLine->mMaxElementWidth);
 #endif
           aState.UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
@@ -3290,11 +3296,11 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       nsRect dirtyRect;
       dirtyRect.UnionRect(oldCombinedArea, combinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
-      printf("%p invalidate because %s is true (%d, %d, %d, %d)\n",
+      PRINTF("%p invalidate because %s is true (%d, %d, %d, %d)\n",
              this, aDamageDirtyArea ? "aDamageDirtyArea" : "aLine->IsForceInvalidate",
              dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
       if (aLine->IsForceInvalidate())
-        printf("  dirty line is %p\n");
+        PRINTF("  dirty line is %p\n");
 #endif
       Invalidate(aState.mPresContext, dirtyRect);
     }
@@ -3525,7 +3531,7 @@ nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
         nscoord tx, ty;
         aSpaceManager->GetTranslation(tx, ty);
         nsFrame::ListTag(stdout, this);
-        printf(": UpdateSpaceManager: AddRectRegion: txy=%d,%d {%d,%d,%d,%d}\n",
+        PRINTF(": UpdateSpaceManager: AddRectRegion: txy=%d,%d {%d,%d,%d,%d}\n",
                tx, ty,
                fc->mRegion.x, fc->mRegion.y,
                fc->mRegion.width, fc->mRegion.height);
@@ -3808,9 +3814,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
 #ifdef NOISY_VERTICAL_MARGINS
     ListTag(stdout);
-    printf(": y=%d child ", aState.mY);
+    PRINTF(": y=%d child ", aState.mY);
     ListTag(stdout, frame);
-    printf(" has clear of %d => %s, mPrevBottomMargin=%d\n",
+    PRINTF(" has clear of %d => %s, mPrevBottomMargin=%d\n",
            breakType,
            applyTopMargin ? "applyTopMargin" : "nope",
            aState.mPrevBottomMargin);
@@ -3850,7 +3856,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   // Compute the available space for the block
   aState.GetAvailableSpace();
 #ifdef REALLY_NOISY_REFLOW
-  printf("setting line %p isImpacted to %s\n", aLine, aState.IsImpactedByFloater()?"true":"false");
+  PRINTF("setting line %p isImpacted to %s\n", aLine, aState.IsImpactedByFloater()?"true":"false");
 #endif
   PRBool isImpacted = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
   aLine->SetLineIsImpactedByFloater(isImpacted);
@@ -3974,9 +3980,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // therefore zero out the running margin value.
 #ifdef NOISY_VERTICAL_MARGINS
         ListTag(stdout);
-        printf(": reflow incomplete, frame=");
+        PRINTF(": reflow incomplete, frame=");
         nsFrame::ListTag(stdout, frame);
-        printf(" prevBottomMargin=%d, setting to zero\n",
+        PRINTF(" prevBottomMargin=%d, setting to zero\n",
                aState.mPrevBottomMargin);
 #endif
         aState.mPrevBottomMargin = 0;
@@ -3984,18 +3990,18 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       else {
 #ifdef NOISY_VERTICAL_MARGINS
         ListTag(stdout);
-        printf(": reflow complete for ");
+        PRINTF(": reflow complete for ");
         nsFrame::ListTag(stdout, frame);
-        printf(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
+        PRINTF(" prevBottomMargin=%d collapsedBottomMargin=%d\n",
                aState.mPrevBottomMargin, collapsedBottomMargin);
 #endif
         aState.mPrevBottomMargin = collapsedBottomMargin;
       }
 #ifdef NOISY_VERTICAL_MARGINS
       ListTag(stdout);
-      printf(": frame=");
+      PRINTF(": frame=");
       nsFrame::ListTag(stdout, frame);
-      printf(" carriedOutBottomMargin=%d collapsedBottomMargin=%d => %d\n",
+      PRINTF(" carriedOutBottomMargin=%d collapsedBottomMargin=%d => %d\n",
              aLine->GetCarriedOutBottomMargin(), collapsedBottomMargin,
              aState.mPrevBottomMargin);
 #endif
@@ -4020,8 +4026,8 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         const nsMargin& margin = brc.GetMargin();
         aLine->mMaximumWidth += margin.left + margin.right;
 #ifdef NOISY_MAXIMUM_WIDTH
-        printf("nsBlockFrame::ReflowBlockFrame parent block %p line %p aLine->mMaximumWidth set to brc.GetMaximumWidth %d, updating aState.mMaximumWidth\n", 
-             this, aLine, aLine->mMaximumWidth);
+        PRINTF("nsBlockFrame::ReflowBlockFrame parent block %p line %p aLine->mMaximumWidth set to brc.GetMaximumWidth %d, updating aState.mMaximumWidth\n", 
+               this, aLine, aLine->mMaximumWidth);
 #endif
         aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
@@ -4132,7 +4138,7 @@ nsBlockFrame::ReflowInlineFrames(nsBlockReflowState& aState,
     spins++;
     if (1000 == spins) {
       ListTag(stdout);
-      printf(": yikes! spinning on a line over 1000 times!\n");
+      PRINTF(": yikes! spinning on a line over 1000 times!\n");
       NS_ABORT();
     }
 #endif
@@ -4204,7 +4210,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
   PRBool impactedByFloaters = aState.IsImpactedByFloater() ? PR_TRUE : PR_FALSE;
   aLine->SetLineIsImpactedByFloater(impactedByFloaters);
 #ifdef REALLY_NOISY_REFLOW
-  printf("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
+  PRINTF("nsBlockFrame::DoReflowInlineFrames %p impacted = %d\n",
          this, impactedByFloaters);
 #endif
 
@@ -4346,9 +4352,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   PRBool reflowingFirstLetter = aLineLayout.GetFirstLetterStyleOK();
 #ifdef NOISY_FIRST_LETTER
   ListTag(stdout);
-  printf(": reflowing ");
+  PRINTF(": reflowing ");
   nsFrame::ListTag(stdout, aFrame);
-  printf(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
+  PRINTF(" reflowingFirstLetter=%s\n", reflowingFirstLetter ? "on" : "off");
 #endif
 
   // Remember if we have a percentage aware child on this line
@@ -4371,7 +4377,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   }
 #ifdef REALLY_NOISY_REFLOW_CHILD
   nsFrame::ListTag(stdout, aFrame);
-  printf(": status=%x\n", frameReflowStatus);
+  PRINTF(": status=%x\n", frameReflowStatus);
 #endif
 
 #if defined(REFLOW_STATUS_COVERAGE)
@@ -4555,14 +4561,14 @@ nsBlockFrame::SplitLine(nsBlockReflowState& aState,
 #ifdef DEBUG
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("split line: from line=%p pushCount=%d aFrame=", aLine, pushCount);
+    PRINTF("split line: from line=%p pushCount=%d aFrame=", aLine, pushCount);
     if (aFrame) {
       nsFrame::ListTag(stdout, aFrame);
     }
     else {
-      printf("(null)");
+      PRINTF("(null)");
     }
-    printf("\n");
+    PRINTF("\n");
     if (gReallyNoisyReflow) {
       aLine->List(aState.mPresContext, stdout, gNoiseIndent+1);
     }
@@ -4693,8 +4699,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 	  	lastHeight = aLine->mBounds.y;
 	  	if (abs(aLine->mBounds.y - lastHeight) > CRAZY_H/10) {
 		    nsFrame::ListTag(stdout);
-		    printf(": line=%p y=%d line.bounds.height=%d\n",
-		           aLine, aLine->mBounds.y, aLine->mBounds.height);
+		    PRINTF(": line=%p y=%d line.bounds.height=%d\n",
+               aLine, aLine->mBounds.y, aLine->mBounds.height);
 	    }
 	  }
 	  else {
@@ -4775,10 +4781,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #ifdef NOISY_MAX_ELEMENT_SIZE
     IndentBy(stdout, GetDepth());
     if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-      printf("PASS1 ");
+      PRINTF("PASS1 ");
     }
     ListTag(stdout);
-    printf(": line.floaters=%s band.floaterCount=%d\n",
+    PRINTF(": line.floaters=%s band.floaterCount=%d\n",
            //aLine->mFloaters.NotEmpty() ? "yes" : "no",
            aState.mHaveRightFloaters ? "(have right floaters)" : "",
            aState.mBand.GetFloaterCount());
@@ -4801,8 +4807,8 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // incremental reflow
       aLine->mMaxElementWidth = maxElementSize.width;
 #ifdef NOISY_MAX_ELEMENT_SIZE
-      printf ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
-               this, aLine, maxElementSize.width);
+      PRINTF ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
+              this, aLine, maxElementSize.width);
 #endif
     }
 
@@ -4830,7 +4836,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     aLine->GetCombinedArea(&lineCombinedArea);
 #ifdef NOISY_COMBINED_AREA
     ListTag(stdout);
-    printf(": lineCA=%d,%d,%d,%d floaterCA=%d,%d,%d,%d\n",
+    PRINTF(": lineCA=%d,%d,%d,%d floaterCA=%d,%d,%d,%d\n",
            lineCombinedArea.x, lineCombinedArea.y,
            lineCombinedArea.width, lineCombinedArea.height,
            aState.mFloaterCombinedArea.x, aState.mFloaterCombinedArea.y,
@@ -4851,7 +4857,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // most edge of all the right floaters. Therefore, to accomplish our goal
       // all we do is set that X value to the lines XMost value.
 #ifdef NOISY_COMBINED_AREA
-      printf("  ==> rightFloaterCA=%d,%d,%d,%d lineXMost=%d\n",
+      PRINTF("  ==> rightFloaterCA=%d,%d,%d,%d lineXMost=%d\n",
              aState.mRightFloaterCombinedArea.x,
              aState.mRightFloaterCombinedArea.y,
              aState.mRightFloaterCombinedArea.width,
@@ -4870,7 +4876,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     }
     aLine->SetCombinedArea(lineCombinedArea);
 #ifdef NOISY_COMBINED_AREA
-    printf("  ==> final lineCA=%d,%d,%d,%d\n",
+    PRINTF("  ==> final lineCA=%d,%d,%d,%d\n",
            lineCombinedArea.x, lineCombinedArea.y,
            lineCombinedArea.width, lineCombinedArea.height);
 #endif
@@ -4903,10 +4909,10 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
 #ifdef NOISY_MAX_ELEMENT_SIZE
   IndentBy(stdout, GetDepth());
   if (NS_UNCONSTRAINEDSIZE == aState.mReflowState.availableWidth) {
-    printf("PASS1 ");
+    PRINTF("PASS1 ");
   }
   ListTag(stdout);
-  printf(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
+  PRINTF(": maxFloaterSize=%d,%d\n", maxWidth, maxHeight);
 #endif
 
   // If the floaters are wider than the content, then use the maximum
@@ -4933,8 +4939,8 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
     }
   }
 #ifdef NOISY_MAX_ELEMENT_SIZE
-  printf ("nsBlockFrame::ComputeLineMaxElementSize: %p returning MES %d\n", 
-           this, aMaxElementSize->width);
+  PRINTF ("nsBlockFrame::ComputeLineMaxElementSize: %p returning MES %d\n", 
+          this, aMaxElementSize->width);
 #endif
 }
 
@@ -4960,8 +4966,8 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     // incremental reflow
     aLine->mMaxElementWidth = aMaxElementSize.width;
 #ifdef NOISY_MAX_ELEMENT_SIZE
-    printf ("nsBlockFrame::PostPlaceLine: %p setting line %p MES %d\n", 
-               this, aLine, aMaxElementSize.width);
+    PRINTF ("nsBlockFrame::PostPlaceLine: %p setting line %p MES %d\n", 
+            this, aLine, aMaxElementSize.width);
 #endif
   }
 
@@ -4970,7 +4976,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // calculate the maximum width
   if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
 #ifdef NOISY_MAXIMUM_WIDTH
-    printf("nsBlockFrame::PostPlaceLine during UC Reflow of block %p line %p caching max width %d\n", 
+    PRINTF("nsBlockFrame::PostPlaceLine during UC Reflow of block %p line %p caching max width %d\n", 
            this, aLine, aLine->mBounds.XMost());
 #endif
     aLine->mMaximumWidth = aLine->mBounds.XMost();
@@ -4981,7 +4987,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 #ifdef DEBUG
   if (CRAZY_WIDTH(xmost)) {
     ListTag(stdout);
-    printf(": line=%p xmost=%d\n", aLine, xmost);
+    PRINTF(": line=%p xmost=%d\n", aLine, xmost);
   }
 #endif
   // If we're shrink wrapping our width and the line was wrapped,
@@ -4989,13 +4995,13 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
     aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
 #ifdef NOISY_KIDXMOST
-    printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    PRINTF("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
   }
   else if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
 #ifdef NOISY_KIDXMOST
-    printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    PRINTF("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
 #endif
   }
 }
@@ -5205,13 +5211,13 @@ nsBlockFrame::AppendFrames(nsIPresContext* aPresContext,
   // Add frames after the last child
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
-  printf(": append ");
+  PRINTF(": append ");
   nsFrame::ListTag(stdout, aFrameList);
   if (lastKid) {
-    printf(" after ");
+    PRINTF(" after ");
     nsFrame::ListTag(stdout, lastKid);
   }
-  printf("\n");
+  PRINTF("\n");
 #endif
   nsresult rv = AddFrames(aPresContext, aFrameList, lastKid);
   if (NS_SUCCEEDED(rv)) {
@@ -5244,13 +5250,13 @@ nsBlockFrame::InsertFrames(nsIPresContext* aPresContext,
 
 #ifdef NOISY_REFLOW_REASON
   ListTag(stdout);
-  printf(": insert ");
+  PRINTF(": insert ");
   nsFrame::ListTag(stdout, aFrameList);
   if (aPrevFrame) {
-    printf(" after ");
+    PRINTF(" after ");
     nsFrame::ListTag(stdout, aPrevFrame);
   }
-  printf("\n");
+  PRINTF("\n");
 #endif
   nsresult rv = AddFrames(aPresContext, aFrameList, aPrevFrame);
   if (NS_SUCCEEDED(rv)) {
@@ -5387,9 +5393,9 @@ nsBlockFrame::RemoveFrame(nsIPresContext* aPresContext,
 
 #ifdef NOISY_REFLOW_REASON
     ListTag(stdout);
-    printf(": remove ");
+    PRINTF(": remove ");
     nsFrame::ListTag(stdout, aOldFrame);
-    printf("\n");
+    PRINTF("\n");
 #endif
 
   if (nsLayoutAtoms::absoluteList == aListName) {
@@ -5516,10 +5522,10 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         nsSplittableFrame::RemoveFromFlow(aDeletedFrame);
       }
 #ifdef NOISY_REMOVE_FRAME
-      printf("DoRemoveFrame: prevLine=%p line=%p frame=",
+      PRINTF("DoRemoveFrame: prevLine=%p line=%p frame=",
              prevLine, line);
       nsFrame::ListTag(stdout, aDeletedFrame);
-      printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
+      PRINTF(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
 #endif
       aDeletedFrame->Destroy(aPresContext);
       aDeletedFrame = nextInFlow;
@@ -5537,7 +5543,7 @@ nsBlockFrame::DoRemoveFrame(nsIPresContext* aPresContext,
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
 #ifdef NOISY_BLOCK_INVALIDATE
-        printf("%p invalidate 10 (%d, %d, %d, %d)\n",
+        PRINTF("%p invalidate 10 (%d, %d, %d, %d)\n",
                this, lineCombinedArea.x, lineCombinedArea.y, lineCombinedArea.width, lineCombinedArea.height);
 #endif
         Invalidate(aPresContext, lineCombinedArea);
@@ -5622,11 +5628,11 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
                             nsMargin& aComputedOffsetsResult)
 {
 #ifdef NOISY_FLOATER
-  printf("Reflow Floater %p in parent %p, availSpace(%d,%d,%d,%d)\n",
+  PRINTF("Reflow Floater %p in parent %p, availSpace(%d,%d,%d,%d)\n",
           aPlaceholder->GetOutOfFlowFrame(), this, 
           aState.mAvailSpaceRect.x, aState.mAvailSpaceRect.y, 
           aState.mAvailSpaceRect.width, aState.mAvailSpaceRect.height
-  );
+    );
 #endif
   // XXX update this just
   aState.GetAvailableSpace();
@@ -5697,7 +5703,7 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
     aState.StoreMaxElementSize(floater, mes);
   }
 #ifdef NOISY_FLOATER
-  printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
+  PRINTF("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
 #endif
   return NS_OK;
 }
@@ -6043,7 +6049,7 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   nscoord tx, ty;
   mSpaceManager->GetTranslation(tx, ty);
   nsFrame::ListTag(stdout, mBlock);
-  printf(": PlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
+  PRINTF(": PlaceFloater: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
          tx, ty, mSpaceManagerX, mSpaceManagerY,
          aFloaterCache->mRegion.x, aFloaterCache->mRegion.y,
          aFloaterCache->mRegion.width, aFloaterCache->mRegion.height);
@@ -6102,9 +6108,9 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
     nsRect r;
     floater->GetRect(r);
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("placed floater: ");
+    PRINTF("placed floater: ");
     ((nsFrame*)floater)->ListTag(stdout);
-    printf(" %d,%d,%d,%d\n", r.x, r.y, r.width, r.height);
+    PRINTF(" %d,%d,%d,%d\n", r.x, r.y, r.width, r.height);
   }
 #endif
 }
@@ -6121,9 +6127,9 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 #ifdef DEBUG
       if (gNoisyReflow) {
         nsFrame::IndentBy(stdout, gNoiseIndent);
-        printf("placing bcl floater: ");
+        PRINTF("placing bcl floater: ");
         nsFrame::ListTag(stdout, fc->mPlaceholder->GetOutOfFlowFrame());
-        printf("\n");
+        PRINTF("\n");
       }
 #endif
       mBlock->ReflowFloater(*this, fc->mPlaceholder, fc->mCombinedArea,
@@ -6143,13 +6149,13 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 #ifdef DEBUG
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("clear floaters: in: mY=%d aY=%d(%d)\n",
+    PRINTF("clear floaters: in: mY=%d aY=%d(%d)\n",
            mY, aY, aY - BorderPadding().top);
   }
 #endif
 
 #ifdef NOISY_FLOATER_CLEARING
-  printf("nsBlockReflowState::ClearFloaters: aY=%d breakType=%dn",
+  PRINTF("nsBlockReflowState::ClearFloaters: aY=%d breakType=%dn",
          aY, aBreakType);
   mSpaceManager->List(stdout);
 #endif
@@ -6161,7 +6167,7 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 #ifdef DEBUG
   if (gNoisyReflow) {
     nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
+    PRINTF("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
   }
 #endif
 }
@@ -6237,7 +6243,7 @@ nsBlockFrame::Paint(nsIPresContext*      aPresContext,
       ComputeCombinedArea(mLines, mRect.width, mRect.height, ca);
       nsFrame::IndentBy(stdout, depth);
       ListTag(stdout);
-      printf(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+      PRINTF(": bounds=%d,%d,%d,%d dirty=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
              mRect.x, mRect.y, mRect.width, mRect.height,
              aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height,
              ca.x, ca.y, ca.width, ca.height);
@@ -6390,7 +6396,7 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
-        printf("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+        PRINTF("draw line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
                line->mBounds.width, line->mBounds.height,
                lineCombinedArea.x, lineCombinedArea.y,
@@ -6415,7 +6421,7 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
         nsRect lineCombinedArea;
         line->GetCombinedArea(&lineCombinedArea);
         nsFrame::IndentBy(stdout, depth+1);
-        printf("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
+        PRINTF("skip line=%p bounds=%d,%d,%d,%d ca=%d,%d,%d,%d\n",
                line, line->mBounds.x, line->mBounds.y,
                line->mBounds.width, line->mBounds.height,
                lineCombinedArea.x, lineCombinedArea.y,
@@ -6450,7 +6456,7 @@ nsBlockFrame::PaintChildren(nsIPresContext* aPresContext,
                 ": %lld elapsed (%lld per line) lines=%d drawn=%d skip=%d",
                 delta, deltaPerLine,
                 numLines, drawnLines, numLines - drawnLines);
-    printf("%s\n", buf);
+    PRINTF("%s\n", buf);
   }
 #endif
 }
@@ -6880,7 +6886,7 @@ nsBlockFrame::SetInitialChildList(nsIPresContext* aPresContext,
         mState |= NS_BLOCK_HAS_FIRST_LETTER_STYLE;
 #ifdef NOISY_FIRST_LETTER
         ListTag(stdout);
-        printf(": first-letter style found\n");
+        PRINTF(": first-letter style found\n");
 #endif
         NS_RELEASE(firstLetterStyle);
       }

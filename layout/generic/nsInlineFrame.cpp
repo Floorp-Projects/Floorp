@@ -31,6 +31,11 @@
 #include "nsIFontMetrics.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsLayoutAtoms.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsInlineFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsInlineFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsInlineFrameLog)
 
 #ifdef DEBUG
 #undef NOISY_PUSHING
@@ -287,7 +292,7 @@ nsInlineFrame::Reflow(nsIPresContext*          aPresContext,
       extern char* nsPresShell_ReflowStackPointerTop;
       char marker;
       char* newsp = (char*) &marker;
-      printf("XXX: frame tree is too deep; approx stack size = %d\n",
+      PRINTF("XXX: frame tree is too deep; approx stack size = %d\n",
              nsPresShell_ReflowStackPointerTop - newsp);
     }
 #endif
@@ -431,7 +436,7 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
       PRBool isComplete;
       frame = PullOneFrame(aPresContext, irs, &isComplete);
 #ifdef NOISY_PUSHING
-      printf("%p pulled up %p\n", this, frame);
+      PRINTF("%p pulled up %p\n", this, frame);
 #endif
       if (nsnull == frame) {
         if (!isComplete) {
@@ -538,11 +543,11 @@ nsInlineFrame::ReflowFrames(nsIPresContext* aPresContext,
 
 #ifdef NOISY_FINAL_SIZE
   ListTag(stdout);
-  printf(": metrics=%d,%d ascent=%d descent=%d\n",
+  PRINTF(": metrics=%d,%d ascent=%d descent=%d\n",
          aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent);
   if (nsnull != aMetrics.maxElementSize) {
-    printf(" maxElementSize %d,%d\n", 
-      aMetrics.maxElementSize->width, aMetrics.maxElementSize->height);
+    PRINTF(" maxElementSize %d,%d\n", 
+           aMetrics.maxElementSize->width, aMetrics.maxElementSize->height);
   }
 #endif
 
@@ -720,7 +725,7 @@ nsInlineFrame::PushFrames(nsIPresContext* aPresContext,
 #endif
 
 #ifdef NOISY_PUSHING
-      printf("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
+      PRINTF("%p pushing aFromChild %p, disconnecting from prev sib %p\n", 
              this, aFromChild, aPrevSibling);
 #endif
   // Disconnect aFromChild from its previous sibling

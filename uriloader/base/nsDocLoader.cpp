@@ -41,24 +41,26 @@
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIStringBundle.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDocLoaderLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsDocLoaderLog)
+#define FLUSH  NS_LOG_FLUSH(nsDocLoaderLog)
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-#if defined(PR_LOGGING)
 //
 // Log module for nsIDocumentLoader logging...
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=DocLoader:5
+//    set NSPR_LOG_MODULES=nsDocLoaderLog:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gDocLoaderLog = nsnull;
-#endif /* PR_LOGGING */
-
+#define gDocLoaderLog nsDocLoaderLog
 
 #if defined(DEBUG)
 void GetURIStringFromChannel(nsIRequest *aRequest, nsXPIDLCString &aStr)
@@ -101,12 +103,6 @@ struct nsChannelInfo {
 nsDocLoaderImpl::nsDocLoaderImpl()
 {
   NS_INIT_REFCNT();
-
-#if defined(PR_LOGGING)
-  if (nsnull == gDocLoaderLog) {
-      gDocLoaderLog = PR_NewLogModule("DocLoader");
-  }
-#endif /* PR_LOGGING */
 
   mContainer = nsnull;
   mParent    = nsnull;
@@ -1449,7 +1445,7 @@ void nsDocLoaderImpl::DumpChannelInfo()
   PRInt32 current=0, max=0;
 
   
-  printf("==== DocLoader=%x\n", this);
+  PRINTF("==== DocLoader=%x\n", this);
 
   count = mChannelInfoList.Count();
   for(i=0; i<count; i++) {
@@ -1462,7 +1458,7 @@ void nsDocLoaderImpl::DumpChannelInfo()
       rv = info->mURI->GetSpec(getter_Copies(buffer));
     }
 
-    printf("  [%d] current=%d  max=%d [%s]\n", i,
+    PRINTF("  [%d] current=%d  max=%d [%s]\n", i,
            info->mCurrentProgress, 
            info->mMaxProgress, (const char *)buffer);
 #endif /* DEBUG */
@@ -1477,7 +1473,7 @@ void nsDocLoaderImpl::DumpChannelInfo()
     }
   }
 
-  printf("\nCurrent=%d   Total=%d\n====\n", current, max);
+  PRINTF("\nCurrent=%d   Total=%d\n====\n", current, max);
 }
 #endif /* 0 */
 

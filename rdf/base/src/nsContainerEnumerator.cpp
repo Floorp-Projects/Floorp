@@ -51,6 +51,11 @@
 #include "prlog.h"
 #include "rdf.h"
 #include "rdfutil.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsContainerEnumeratorLog)
+#define PRINTF NS_LOG_PRINTF(nsContainerEnumeratorLog)
+#define FLUSH  NS_LOG_FLUSH(nsContainerEnumeratorLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -115,7 +120,7 @@ ContainerEnumeratorImpl::~ContainerEnumeratorImpl(void)
 {
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    fprintf(stdout, "%d - RDF: ContainerEnumeratorImpl\n", gInstanceCount);
+    PRINTF("%d - RDF: ContainerEnumeratorImpl\n", gInstanceCount);
 #endif
 
     NS_IF_RELEASE(mResult);

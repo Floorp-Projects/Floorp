@@ -61,6 +61,11 @@
 #include "secmod.h"
 #include "pk11func.h"
 #include "nsMimeStringResources.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(mimefiltLog, 0)
+#define PRINTF NS_LOG_PRINTF(mimefiltLog)
+#define FLUSH  NS_LOG_FLUSH(mimefiltLog)
 
 #ifndef XP_UNIX
 ERROR!	This is a unix-only file for the "mimefilt" standalone program.
@@ -146,16 +151,16 @@ test_output_init_fn (const char *type,
 					 void *stream_closure)
 {
   FILE *out = (FILE *) stream_closure;
-  fprintf(out, "CONTENT-TYPE: %s", type);
+  FPRINTF(out, "CONTENT-TYPE: %s", type);
   if (charset)
-	fprintf(out, "; charset=\"%s\"", charset);
+	FPRINTF(out, "; charset=\"%s\"", charset);
   if (name)
-	fprintf(out, "; name=\"%s\"", name);
+	FPRINTF(out, "; name=\"%s\"", name);
   if (x_mac_type || x_mac_creator)
-	fprintf(out, "; x-mac-type=\"%s\"; x-mac-creator=\"%s\"",
+	FPRINTF(out, "; x-mac-type=\"%s\"; x-mac-creator=\"%s\"",
 			x_mac_type ? x_mac_type : "",
-			x_mac_creator ? x_mac_type : "");
-  fprintf(out, CRLF CRLF);
+            x_mac_creator ? x_mac_type : "");
+  FPRINTF(out, CRLF CRLF);
   return 0;
 }
 
@@ -225,7 +230,7 @@ static char *
 test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
 {
   char buf[2048], *s;
-  fprintf(stdout, "#### Password required: ");
+  FPRINTF(stdout, "#### Password required: ");
   s = fgets(buf, sizeof(buf)-1, stdin);
   if (!s) return s;
   if (s[nsCRT::strlen(s)-1] == '\r' ||
@@ -327,11 +332,11 @@ test(FILE *in, FILE *out,
 
   if (outline_p)
 	{
-	  fprintf(out, "\n\n"
-		  "###############################################################\n");
+	  FPRINTF(out, "\n\n"
+              "###############################################################\n");
 	  obj->class->debug_print(obj, stderr, 0);
-	  fprintf(out,
-		  "###############################################################\n");
+	  FPRINTF(out,
+              "###############################################################\n");
 	}
 
   mime_free (obj);
@@ -428,7 +433,7 @@ main (int argc, char **argv)
 		dexlate_p = PR_TRUE;
 	  else
 		{
-		  fprintf(stderr,
+		  FPRINTF(stderr,
 		  "usage: %s [ URL [ -fancy | -no-fancy | -html | -raw | -outline | -dexlate ]]\n"
 				  "     < message/rfc822 > output\n",
 				  (PL_strrchr(argv[0], '/') ?
@@ -441,7 +446,7 @@ main (int argc, char **argv)
 	}
 
   i = test(stdin, stdout, url, fancy_p, html_p, outline_p, dexlate_p, PR_TRUE);
-  fprintf(stdout, "\n");
+  FPRINTF(stdout, "\n");
   fflush(stdout);
 
  FAIL:

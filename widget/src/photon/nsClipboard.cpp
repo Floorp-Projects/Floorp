@@ -38,6 +38,11 @@
 
 #include "nsVoidArray.h"
 #include "nsPhWidgetLog.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsClipboardLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
+#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 // Initialize the  class statics:
 
@@ -70,7 +75,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard(PRInt32 aWhichClipboard)
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::ForceDataToClipboard this=<%p>\n", this));
 
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::ForceDataToClipboard this=<%p>\n", this);
+  PRINTF("nsClipboard::ForceDataToClipboard this=<%p>\n", this);
 #endif
 
   // make sure we have a good transferable
@@ -88,7 +93,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData this=<%p>\n", this));
 
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::SetNativeClipboardData this=<%p>\n", this);
+  PRINTF("nsClipboard::SetNativeClipboardData this=<%p>\n", this);
 #endif
 
   nsresult res = NS_ERROR_FAILURE;
@@ -96,7 +101,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // make sure we have a good transferable
   if (nsnull == mTransferable)
   {
-    printf("nsClipboard::SetNativeClipboardData(): no transferable!\n");
+    PRINTF("nsClipboard::SetNativeClipboardData(): no transferable!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -148,18 +153,18 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
            PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::SetNativeClipboardData adding %d index=<%d> type=<%s> length=%d data=<%s>\n", i, index, cliphdr[index].type, dataLen, data));
 
 
-printf("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
+           PRINTF("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
 
 #if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
-   printf("nsClipboard::setNativeClipboardData before:  ");
+  PRINTF("nsClipboard::setNativeClipboardData before:  ");
    for(i=0; i < dataLen; ptr++,i++)
    {
-     printf("%x ",*ptr);
+     PRINTF("%x ",*ptr);
    }
-   printf("\n");
+   PRINTF("\n");
 }
 #endif
 
@@ -167,18 +172,18 @@ printf("nsClipboard::setNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, 
            char *mbsbuffer = (char *) calloc(dataLen,1);					/* MEMORY LEAK */
            len = wcstombs (mbsbuffer, (const wchar_t*) data, dataLen);
 
-printf("nsClipboard::setNativeClipboardData 2 mbsbuffer=<%s> dataLen=<%d> len=<%d> \n", mbsbuffer, dataLen, len );
+           PRINTF("nsClipboard::setNativeClipboardData 2 mbsbuffer=<%s> dataLen=<%d> len=<%d> \n", mbsbuffer, dataLen, len );
 
 #if defined(DEBUG) && 0
 {
   unsigned char *ptr = mbsbuffer;
   int i=0;
-   printf("nsClipboard::setNativeClipboardData after:  ");
+  PRINTF("nsClipboard::setNativeClipboardData after:  ");
    for(i=0; i < len; ptr++,i++)
    {
-     printf("%x ",*ptr);
+     PRINTF("%x ",*ptr);
    }
-   printf("\n");
+   PRINTF("\n");
 
 }
 #endif
@@ -221,14 +226,14 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetNativeClipboardData this=<%p>\n", this));
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::GetNativeClipboardData this=<%p>\n", this);
+  PRINTF("nsClipboard::GetNativeClipboardData this=<%p>\n", this);
 #endif
 
   nsresult res = NS_ERROR_FAILURE;
 
   // make sure we have a good transferable
   if (nsnull == aTransferable) {
-    printf("  GetNativeClipboardData: Transferable is null!\n");
+    PRINTF("  GetNativeClipboardData: Transferable is null!\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -276,18 +281,18 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 		  data = cliphdr->data;
 		  dataLen = cliphdr->length;
 
-printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
+      PRINTF("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, dataLen );
 
 #if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
-   printf("nsClipboard::GetNativeClipboardData before:  ");
+  PRINTF("nsClipboard::GetNativeClipboardData before:  ");
    for(i=0; i < dataLen; ptr++,i++)
    {
-     printf("%x ",*ptr);
+     PRINTF("%x ",*ptr);
    }
-   printf("\n");
+   PRINTF("\n");
 }
 #endif
 
@@ -295,23 +300,23 @@ printf("nsClipboard::GetNativeClipboardData 1 data=<%s> dataLen=<%d> \n", data, 
            wchar_t    *wbuffer  = (wchar_t *) calloc(dataLen*3, 1);					/* MEMORY LEAK */
            len = mbstowcs(wbuffer, (const char *) data, dataLen*3);
 
-        printf("nsClipboard::GetNativeClipboardData  %s(%d)\n", data, len );
+           PRINTF("nsClipboard::GetNativeClipboardData  %s(%d)\n", data, len );
         
            data = wbuffer;         
            dataLen = len*2;
 
-printf("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, dataLen );
+           PRINTF("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, dataLen );
 
 #if defined(DEBUG) && 0
 {
   unsigned char *ptr = data;
   int i=0;
-   printf("nsClipboard::GetNativeClipboardData after:  ");
+  PRINTF("nsClipboard::GetNativeClipboardData after:  ");
    for(i=0; i < dataLen; ptr++,i++)
    {
-     printf("%x ",*ptr);
+     PRINTF("%x ",*ptr);
    }
-   printf("\n");
+   PRINTF("\n");
 }
 #endif
 
@@ -332,7 +337,7 @@ printf("nsClipboard::GetNativeClipboardData 2 data=<%s> dataLen=<%d>\n", data, d
           aTransferable->SetTransferData(flavorStr,
                                          genericDataWrapper,
                                         dataLen);
-          printf("nsClipboard::GetNativeClipboardData flavorStr=<%s> length=<%d> data=<%s>\n", cliptype.type, dataLen, data );
+PRINTF("nsClipboard::GetNativeClipboardData flavorStr=<%s> length=<%d> data=<%s>\n", cliptype.type, dataLen, data );
           res = NS_OK;
 		  break;
         }
@@ -368,7 +373,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
 		 {
            nsXPIDLCString flavorStr;
            currentFlavor->ToString(getter_Copies(flavorStr));
-           printf("nsClipboard::HasDataMatchingFlavors : <%s>\n", (const char *) flavorStr);
+           PRINTF("nsClipboard::HasDataMatchingFlavors : <%s>\n", (const char *) flavorStr);
          }
       }
   }
@@ -386,7 +391,7 @@ nsresult nsClipboard::GetFormat(const char* aMimeStr, PhClipHeader *cliphdr )
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr));
 
 #ifdef DEBUG_CLIPBOARD
-  printf("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr);
+  PRINTF("nsClipboard::GetFormat this=<%p> aMimeStr=<%s>\n", this, aMimeStr);
 #endif
 
 

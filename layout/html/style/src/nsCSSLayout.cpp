@@ -31,6 +31,11 @@
 #include "nsRect.h"
 #include "nsIPtr.h"
 #include "nsHTMLIIDs.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSLayoutLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSLayoutLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSLayoutLog)
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -104,7 +109,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
       nscoord dx = 0;
       switch (kidPosition->mOffset.GetLeftUnit()) {
       case eStyleUnit_Percent:
-        printf("XXX: not yet implemented: % relative position\n");
+        PRINTF("XXX: not yet implemented: % relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:
@@ -114,7 +119,7 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
       nscoord dy = 0;
       switch (kidPosition->mOffset.GetTopUnit()) {
       case eStyleUnit_Percent:
-        printf("XXX: not yet implemented: % relative position\n");
+        PRINTF("XXX: not yet implemented: % relative position\n");
       case eStyleUnit_Auto:
         break;
       case eStyleUnit_Coord:

@@ -108,6 +108,11 @@
 #include "nsICachedNetData.h"
 #include "nsIXMLContent.h" //for createelementNS
 #include "nsHTMLParts.h" //for createelementNS
+#include "nslog.h"
+
+NS_IMPL_LOG(nsHTMLDocumentLog)
+#define PRINTF NS_LOG_PRINTF(nsHTMLDocumentLog)
+#define FLUSH  NS_LOG_FLUSH(nsHTMLDocumentLog)
 
 
 #define DETECTOR_CONTRACTID_MAX 127
@@ -566,7 +571,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
             {
 #ifdef DEBUG_charset
  							char* cCharset = charset.ToNewCString();
-							printf("From HTTP Header, charset = %s\n", cCharset);
+							PRINTF("From HTTP Header, charset = %s\n", cCharset);
  							Recycle(cCharset);
  #endif
               charset = preferred;
@@ -710,7 +715,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
    		nsAutoString d(defaultCharsetFromWebShell);
  			char* cCharset = d.ToNewCString();
- 			printf("From default charset, charset = %s\n", cCharset);
+ 			PRINTF("From default charset, charset = %s\n", cCharset);
  			Recycle(cCharset);
  #endif
         charset = defaultCharsetFromWebShell;
@@ -735,7 +740,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
 				nsAutoString d(requestCharset);
 			  char* cCharset = d.ToNewCString();
-			  printf("From request charset, charset = %s req=%d->%d\n", 
+			  PRINTF("From request charset, charset = %s req=%d->%d\n", 
 			  		cCharset, charsetSource, requestCharsetSource);
 			  Recycle(cCharset);
 #endif
@@ -755,7 +760,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
 				nsAutoString d(forceCharsetFromWebShell);
 			  char* cCharset = d.ToNewCString();
-			  printf("From force, charset = %s \n", cCharset);
+			  PRINTF("From force, charset = %s \n", cCharset);
 			  Recycle(cCharset);
 #endif
 				charset = forceCharsetFromWebShell;
@@ -860,7 +865,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           csAtom->ToString(charset);
           charsetSource = kCharsetFromParentFrame;  
 
-          // printf("### 0 >>> Having parent CS = %s\n", charset.ToNewCString());
+          // PRINTF("### 0 >>> Having parent CS = %s\n", charset.ToNewCString());
         }
       }
     }
@@ -934,7 +939,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
 #ifdef DEBUG_charset
 	  char* cCharset = charset.ToNewCString();
-	  printf("set to parser charset = %s source %d\n", 
+	  PRINTF("set to parser charset = %s source %d\n", 
 		  		cCharset, charsetSource);
 				  Recycle(cCharset);
 #endif
@@ -3719,7 +3724,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
 
   PRInt32 i;
   for (i=0;i<aLevel;i++) {
-    printf(".");
+    PRINTF(".");
   }
 
   nsIDOMElement* domElement;
@@ -3748,7 +3753,7 @@ void printDOMRefs(nsIDOMNode * aNode, PRInt32 aLevel)
     }
   }
 
-  printf("[%s] (0x%x)\n", (cStr?cStr:"<?>"), aNode);
+  PRINTF("[%s] (0x%x)\n", (cStr?cStr:"<?>"), aNode);
   delete[] cStr;
 
   PRBool hasChildren;

@@ -39,6 +39,11 @@ extern "C" int verbose=4;	// kedl, need this while using Bobby's test render lib
 #include "nsDrawingSurfacePh.h"
 #include <stdlib.h>
 #include <mem.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRenderingContextPhLog)
+#define PRINTF NS_LOG_PRINTF(nsRenderingContextPhLog)
+#define FLUSH  NS_LOG_FLUSH(nsRenderingContextPhLog)
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 static NS_DEFINE_IID(kIDrawingSurfaceIID, NS_IDRAWING_SURFACE_IID);
@@ -178,7 +183,7 @@ nsRenderingContextPh :: ~nsRenderingContextPh()
 	if (mSurface && (dc == mSurface->GetDC()))
 	{
 		PhDCSetCurrent(NULL);
-  		//printf("PhDCSetCurrent (~nsRenderingContextPh): NULL\n");
+  		//PRINTF("PhDCSetCurrent (~nsRenderingContextPh): NULL\n");
   	}
 #else
   PhDCSetCurrent(NULL);
@@ -585,11 +590,11 @@ NS_IMETHODIMP nsRenderingContextPh :: SetClipRect(const nsRect& aRect, nsClipCom
   }
   else
   {
-    printf ("no region....\n");
-	NS_ASSERTION(mTMatrix, "nsRenderingContextPh::SetClipRect mTMatrix is NULL");
-	NS_ASSERTION(mClipRegion, "nsRenderingContextPh::SetClipRect mClipRegionis NULL");
-    PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Invalid pointers!\n"));
-	abort();
+      PRINTF ("no region....\n");
+      NS_ASSERTION(mTMatrix, "nsRenderingContextPh::SetClipRect mTMatrix is NULL");
+      NS_ASSERTION(mClipRegion, "nsRenderingContextPh::SetClipRect mClipRegionis NULL");
+      PR_LOG(PhGfxLog, PR_LOG_ERROR, ("nsRenderingContextPh::SetClipRect  Invalid pointers!\n"));
+      abort();
   }
   																			
   return res;
@@ -672,7 +677,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion(nsIRegion **aRegion)
 
   if (*aRegion) // copy it, they should be using CopyClipRegion
   {
-    // printf("you should be calling CopyClipRegion()\n");
+      // PRINTF("you should be calling CopyClipRegion()\n");
     (*aRegion)->SetTo(*mClipRegion);
     rv = NS_OK;
   }
@@ -690,7 +695,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetClipRegion(nsIRegion **aRegion)
       }
       else
       {
-        printf("null clip region, can't make a valid copy\n");
+          PRINTF("null clip region, can't make a valid copy\n");
         NS_RELEASE(*aRegion);
         rv = NS_ERROR_FAILURE;
       }
@@ -1390,8 +1395,8 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
   if (mClipRegion->IsEmpty())
   {
     // this is bad!
-    //    printf("drawing image with empty clip region\n");
-    //printf("nsRenderingContextPh::DrawImage2 drawing image with empty clip region\n");
+      //    PRINTF("drawing image with empty clip region\n");
+      //PRINTF("nsRenderingContextPh::DrawImage2 drawing image with empty clip region\n");
     return NS_ERROR_FAILURE;
   }
 #endif 
@@ -1433,7 +1438,7 @@ NS_IMETHODIMP nsRenderingContextPh::DrawImage(nsIImage *aImage,
   if (mClipRegion->IsEmpty())
   {
     // this is bad!
-    //    printf("drawing image with empty clip region\n");
+      //    PRINTF("drawing image with empty clip region\n");
     return NS_ERROR_FAILURE;
   }
 
@@ -1585,7 +1590,7 @@ int rid;
 
    if (err == -1)
    {
-     printf ("nsRenderingContextPh::CopyOffScreenBits Error calling PgDrawImage\n");
+       PRINTF ("nsRenderingContextPh::CopyOffScreenBits Error calling PgDrawImage\n");
 	 abort();
    }
 
@@ -1651,7 +1656,7 @@ void nsRenderingContextPh::ApplyClipping( PhGC_t *gc )
 		}
 	}
 	else
-		printf("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL");
+            PRINTF("nsRenderingContextPh::ApplyClipping  mClipRegion is NULL");
 }
 
 

@@ -50,6 +50,11 @@
 #include "nsIPref.h"
 #include "nsIRDFService.h"
 #include "nsMsgI18N.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsParseMailboxLog)
+#define PRINTF NS_LOG(nsParseMailboxLog)
+#define FLUSH  NS_LOG_FLUSH(nsParseMailboxLog)
 
 
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -131,7 +136,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIChannel * /* aChannel */, ns
 			}
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 #ifdef DEBUG_mscott
-			printf("url file = %s\n", (const char *)fileName);
+			PRINTF("url file = %s\n", (const char *)fileName);
 #endif
 		}
  	}
@@ -177,7 +182,7 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopRequest(nsIChannel * /* aChannel */, nsI
 				msgHdr->GetSubject(&subject);
 #ifdef DEBUG_bienvenu
 				// leak nsString return values...
-				printf("hdr key = %d, author = %s subject = %s\n", key, author.GetBuffer(), subject.GetBuffer());
+				PRINTF("hdr key = %d, author = %s subject = %s\n", key, author.GetBuffer(), subject.GetBuffer());
 #endif
 			}
 		}
@@ -1706,7 +1711,7 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 
 	// look at action - currently handle move
 #ifdef DEBUG_bienvenu
-	printf("got a rule hit!\n");
+	PRINTF("got a rule hit!\n");
 #endif
 	if (NS_SUCCEEDED(filter->GetAction(&actionType)))
 	{

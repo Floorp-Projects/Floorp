@@ -48,7 +48,6 @@
 #include "prmem.h"
 #include "ImportDebug.h"
 
-
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kImportServiceCID,		NS_IMPORTSERVICE_CID);
 static NS_DEFINE_IID(kImportModuleIID,		NS_IIMPORTMODULE_IID);

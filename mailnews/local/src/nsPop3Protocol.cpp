@@ -51,11 +51,16 @@
 #include "nsIPref.h" 
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPop3ProtocolLog)
+#define PRINTF NS_LOG_PRINTF(nsPop3ProtocolLog)
+#define FLUSH  NS_LOG_FLUSH(nsPop3ProtocolLog)
 
 #define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
 #define EXTRA_SAFETY_SPACE 3096
 
-static PRLogModuleInfo *POP3LOGMODULE = nsnull;
+NS_IMPL_LOG(POP3LOGMODULE)
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); 
 
@@ -431,9 +436,6 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
 		return rv;
   } // if we got a url...
   
-  if (!POP3LOGMODULE)
-      POP3LOGMODULE = PR_NewLogModule("POP3");
-
   m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
   if(!m_lineStreamBuffer)
 	  return NS_ERROR_OUT_OF_MEMORY;
@@ -1836,13 +1838,13 @@ nsPop3Protocol::GetMsg()
             	// We'll leave a debug message to warn people.
 
                 #ifdef DEBUG
-                printf("Call to GetDiskSpaceAvailable FAILED! \n");
+                PRINTF("Call to GetDiskSpaceAvailable FAILED! \n");
                 #endif
             }
             else
             {
 				#ifdef DEBUG
-				printf("GetDiskSpaceAvailable returned: %d bytes\n", mailboxSpaceLeft);
+				PRINTF("GetDiskSpaceAvailable returned: %d bytes\n", mailboxSpaceLeft);
 				#endif
 
             	// Original comment from old implimentation follows...
@@ -1865,7 +1867,7 @@ nsPop3Protocol::GetMsg()
             	{
             		// Not enough disk space!
 					#ifdef DEBUG
-					printf("Not enough disk space! Raising error! \n");
+					PRINTF("Not enough disk space! Raising error! \n");
 					#endif
             		// Should raise an error at this point.
             		// First, we need to delete our references to the two interfaces..

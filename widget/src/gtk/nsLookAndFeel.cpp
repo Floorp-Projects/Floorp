@@ -24,6 +24,11 @@
 #include <gtk/gtkinvisible.h>
 
 #include "nsXPLookAndFeel.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsLookAndFeelLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsLookAndFeelLog)
+#define FLUSH  NS_LOG_FLUSH(nsLookAndFeelLog)
 
 #define GDK_COLOR_TO_NS_RGB(c) \
     ((nscolor) NS_RGB(c.red>>8, c.green>>8, c.blue>>8))
@@ -211,7 +216,7 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
     break;
   }
 
-  //  printf("%i, %i, %i\n", NS_GET_R(aColor), NS_GET_B(aColor), NS_GET_G(aColor));
+  //  PRINTF("%i, %i, %i\n", NS_GET_R(aColor), NS_GET_B(aColor), NS_GET_G(aColor));
 
   return res;
 }

@@ -59,6 +59,12 @@
 
 #include <iostream.h>
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSLoaderLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSLoaderLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSLoaderLog)
+
 static NS_DEFINE_IID(kICSSLoaderIID, NS_ICSS_LOADER_IID);
 //static NS_DEFINE_IID(kICSSParserIID, NS_ICSS_PARSER_IID);
 //static NS_DEFINE_IID(kICSSStyleSheetIID, NS_ICSS_STYLE_SHEET_IID);
@@ -922,10 +928,8 @@ CSSLoaderImpl::DidLoadStyle(nsIStreamLoader* aLoader,
       // Dump error message to console.
       char *url;
       aLoadData->mURL->GetSpec(&url);
-#ifdef DEBUG
-      cerr << "CSSLoaderImpl::DidLoadStyle: Load of URL '" << url 
-           << "' failed.  Error code: " << NS_ERROR_GET_CODE(aStatus) << "\n";
-#endif
+      PRINTF("CSSLoaderImpl::DidLoadStyle: Load of URL '%s' failed.  Error code: %x\n",
+             url, aStatus);
       nsCRT::free(url);
     }
 
@@ -1198,10 +1202,8 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
           // Dump an error message to the console
           char *url;
           aKey.mURL->GetSpec(&url);
-#ifdef DEBUG
-          cerr << "CSSLoaderImpl::LoadSheet: Load of URL '" << url 
-               << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
-#endif
+          PRINTF("CSSLoaderImpl::LoadSheet: Load of URL '%s' failed.  Error code: %x\n",
+                 url, result);
           nsCRT::free(url);
         }
       }
@@ -1531,10 +1533,8 @@ CSSLoaderImpl::LoadAgentSheet(nsIURI* aURL,
         // Dump an error message to the console
         char *url;
         aURL->GetSpec(&url);
-#ifdef DEBUG
-        cerr << "CSSLoaderImpl::LoadAgentSheet: Load of URL '" << url 
-             << "' failed.  Error code: " << NS_ERROR_GET_CODE(result)  << "\n";
-#endif
+        PRINTF("CSSLoaderImpl::LoadAgentSheet: Load of URL '%s' failed.  Error code: %x\n",
+               url, result);
         nsCRT::free(url);
       }
     }

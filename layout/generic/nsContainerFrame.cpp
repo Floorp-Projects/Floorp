@@ -41,6 +41,12 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 #include "nsIViewManager.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsContainerFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsContainerFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsContainerFrameLog)
 
 #ifdef NS_DEBUG
 #undef NOISY
@@ -694,17 +700,17 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 
 #ifdef DEBUG
   if (saveMaxElementSize != aDesiredSize.maxElementSize) {
-    printf("nsContainerFrame: ");
+    PRINTF("nsContainerFrame: ");
     nsFrame::ListTag(stdout, aKidFrame);
-    printf(" changed the maxElementSize *pointer* (baaaad boy!)\n");
+    PRINTF(" changed the maxElementSize *pointer* (baaaad boy!)\n");
   }
 #ifdef REALLY_NOISY_MAX_ELEMENT_SIZE
   if ((nsnull != aDesiredSize.maxElementSize) &&
       ((nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->width) ||
        (nscoord(0xdeadbeef) == aDesiredSize.maxElementSize->height))) {
-    printf("nsContainerFrame: ");
+    PRINTF("nsContainerFrame: ");
     nsFrame::ListTag(stdout, aKidFrame);
-    printf(" didn't set max-element-size!\n");
+    PRINTF(" didn't set max-element-size!\n");
     aDesiredSize.maxElementSize->width = 0;
     aDesiredSize.maxElementSize->height = 0;
   }

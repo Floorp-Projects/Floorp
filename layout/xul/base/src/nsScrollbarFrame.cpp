@@ -46,6 +46,11 @@
 #include "nsHTMLValue.h"
 #include "nsIAnonymousContent.h"
 #include "nsIView.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsScrollbarFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsScrollbarFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsScrollbarFrameLog)
 
 
 class AnonymousElement : public nsXMLElement, public nsIAnonymousContent
@@ -97,7 +102,7 @@ AnonymousElement::List(FILE* out, PRInt32 aIndent) const
   PRInt32 indx;
   for (indx = aIndent; --indx >= 0; ) fputs("  ", out);
 
-  fprintf(out, "Comment refcount=%d<", mRefCnt);
+  FPRINTF(out, "Comment refcount=%d<", mRefCnt);
 
   nsAutoString tmp;
   mInner.ToCString(tmp, 0, mInner.mText.GetLength());

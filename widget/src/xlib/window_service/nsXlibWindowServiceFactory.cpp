@@ -30,6 +30,11 @@
 #include "nsCOMPtr.h"
 
 #include "nsXlibWindowService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXlibWindowServiceFactoryLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsXlibWindowServiceFactoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsXlibWindowServiceFactoryLog)
 
 static NS_DEFINE_CID(kCXlibWindowServiceCID, NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
@@ -125,7 +130,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char *fullpath)
   nsresult rv;
 
 #ifdef NS_DEBUG
-  printf("*** Registering XlibWindowService\n");
+  PRINTF("*** Registering XlibWindowService\n");
 #endif
 
   nsCOMPtr<nsIServiceManager>

@@ -34,6 +34,11 @@
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
 #include "nsIFileStream.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsStreamTransferLog)
+#define PRINTF NS_LOG_PRINTF(nsStreamTransferLog)
+#define FLUSH  NS_LOG_FLUSH(nsStreamTransferLog)
 
 // {BEBA91C0-070F-11d3-8068-00600811A9C3}
 #define NS_STREAMTRANSFER_CID \
@@ -148,17 +153,17 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
             rv = p->OpenDialog( parent );
             NS_RELEASE(p);
             if ( NS_FAILED( rv ) ) {
-                DEBUG_PRINTF( PR_STDOUT, "%s %d : Error opening dialog, rv=0x%08X\n",
-                              (char *)__FILE__, (int)__LINE__, (int)rv );
+                PRINTF("%s %d : Error opening dialog, rv=0x%08X\n",
+                       (char *)__FILE__, (int)__LINE__, (int)rv );
             }
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "%s %d : Unable to create nsStreamXferOp\n",
-                          (char *)__FILE__, (int)__LINE__ );
+            PRINTF("%s %d : Unable to create nsStreamXferOp\n",
+                   (char *)__FILE__, (int)__LINE__ );
             rv = NS_ERROR_OUT_OF_MEMORY;
         }
     } else {
         if ( NS_FAILED( rv ) ) {
-            DEBUG_PRINTF( PR_STDOUT, "Failed to select file, rv=0x%X\n", (int)rv );
+          PRINTF("Failed to select file, rv=0x%X\n", (int)rv );
         } else {
             // User cancelled.
         }
@@ -208,10 +213,10 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
             // Transfer channel to output file chosen by user.
             rv = this->SelectFileAndTransferLocation( channel, parent, contentType, suggestedName );
         } else {
-            DEBUG_PRINTF( PR_STDOUT, "Failed to open URI, rv=0x%X\n", (int)rv );
+          PRINTF("Failed to open URI, rv=0x%X\n", (int)rv );
         }
     } else {
-        DEBUG_PRINTF( PR_STDOUT, "Failed to create URI, rv=0x%X\n", (int)rv );
+      PRINTF("Failed to create URI, rv=0x%X\n", (int)rv );
     }
 
     return rv;
@@ -278,7 +283,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResul
             }
 
             #ifdef DEBUG_law
-            printf( "\nFile picker result = 0x%04X\n\n", (int)rc );
+            PRINTF( "\nFile picker result = 0x%04X\n\n", (int)rc );
             #endif
             if ( rc != nsIFilePicker::returnCancel ) {
                 // Give result to caller.
@@ -289,7 +294,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResul
                         rv = NS_NewFileSpec( aResult );
                         if ( NS_SUCCEEDED( rv ) ) {
                             rv = (*aResult)->SetNativePath( selectionPath );
-                            printf( "\nresult native path = %s\n\n", (const char *)selectionPath );
+                            PRINTF( "\nresult native path = %s\n\n", (const char *)selectionPath );
                         }
                     }
                 }
@@ -312,7 +317,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsIFileSpec **aResul
                     if ( NS_SUCCEEDED( rv ) && startDir ) {
                         prefs->SetFileXPref( "browser.download.dir", startDir);
                         #ifdef DEBUG_law
-                        printf( "\nbrowser.download.dir has been reset\n\n" );
+                        PRINTF( "\nbrowser.download.dir has been reset\n\n" );
                         #endif
                     }
                 }

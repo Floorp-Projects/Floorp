@@ -72,6 +72,12 @@
 #include "winbase.h"
 #endif
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsInternetSearchServiceLog)
+#define PRINTF NS_LOG_PRINTF(nsInternetSearchServiceLog)
+#define FLUSH  NS_LOG_FLUSH(nsInternetSearchServiceLog)
+
 #ifdef	DEBUG
 // #define	DEBUG_SEARCH_OUTPUT	1
 // #define	DEBUG_SEARCH_UPDATES	1
@@ -296,9 +302,7 @@ searchModePrefCallback(const char *pref, void *aClosure)
 	{
 		PRInt32		searchMode=0;
 		searchDS->prefs->GetIntPref(pref, &searchMode);
-#ifdef	DEBUG
-		printf("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
-#endif
+		PRINTF("searchModePrefCallback: '%s' = %d\n", pref, searchMode);
 		searchDS->Assert(searchDS->kNC_LastSearchRoot, searchDS->kNC_LastSearchMode, searchDS->kTrueLiteral, PR_TRUE);
 	}
 	return(NS_OK);
@@ -637,7 +641,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 			search->busySchedule = TRUE;
 
 #ifdef	DEBUG_SEARCH_UPDATES
-			printf("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);
+			PRINTF("    InternetSearchDataSource::FireTimer - Pinging '%s'\n", (char *)updateURL);
 #endif
 
 		}
@@ -645,7 +649,7 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 #ifdef	DEBUG_SEARCH_UPDATES
 else
 	{
-	printf("    InternetSearchDataSource::FireTimer - busy pinging.\n");
+	    PRINTF("    InternetSearchDataSource::FireTimer - busy pinging.\n");
 	}
 #endif
 
@@ -1282,8 +1286,8 @@ InternetSearchDataSource::GetCategoryList()
 					aEngineRes->GetValueConst(&catEngineURI);
 					if (catEngineURI)
 					{
-						printf("**** Stale search engine reference to '%s'\n",
-							catEngineURI);
+						PRINTF("**** Stale search engine reference to '%s'\n",
+						       catEngineURI);
 					}
 #endif
 					nsCOMPtr<nsIRDFNode>	staleCatEngine;
@@ -2173,7 +2177,7 @@ InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *ico
 	// can be null or empty strings, which is OK
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-	printf("AddSearchEngine: engine='%s'\n", engineURL);
+	PRINTF("AddSearchEngine: engine='%s'\n", engineURL);
 #endif
 
 	nsresult	rv = NS_OK;
@@ -2621,8 +2625,8 @@ InternetSearchDataSource::FindInternetSearchResults(const char *url, PRBool *sea
 			char	*engineMatch = searchText.ToNewCString();
 			if (engineMatch)
 			{
-				printf("FindInternetSearchResults: search for: '%s'\n\n",
-					engineMatch);
+				PRINTF("FindInternetSearchResults: search for: '%s'\n\n",
+				       engineMatch);
 				Recycle(engineMatch);
 				engineMatch = nsnull;
 			}
@@ -2929,7 +2933,7 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		if (!baseFilename)	continue;
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-		printf("Search engine to query: '%s'\n", baseFilename);
+		PRINTF("Search engine to query: '%s'\n", baseFilename);
 #endif
 
 		nsCOMPtr<nsIRDFResource>	engine;
@@ -3020,7 +3024,7 @@ InternetSearchDataSource::FindData(nsIRDFResource *engine, nsIRDFLiteral **dataL
 		return(rv);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-	printf("InternetSearchDataSource::FindData - reading in '%s'\n", baseFilename);
+	PRINTF("InternetSearchDataSource::FindData - reading in '%s'\n", baseFilename);
 #endif
 
 	nsFileSpec	engineSpec(baseFilename);
@@ -3329,7 +3333,7 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 		validateEngineNow(engine);
 
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' marked valid as of now.\n", engineURI);
+		PRINTF("    Search engine '%s' marked valid as of now.\n", engineURI);
 #endif
 
 		return(NS_OK);
@@ -3352,8 +3356,8 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 	if (durationSecs < updateCheckSecs)
 	{
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' is valid for %d more seconds.\n",
-			engineURI, (updateCheckSecs-durationSecs));
+		PRINTF("    Search engine '%s' is valid for %d more seconds.\n",
+		       engineURI, (updateCheckSecs-durationSecs));
 #endif
 		return(NS_OK);
 	}
@@ -3365,15 +3369,15 @@ InternetSearchDataSource::validateEngine(nsIRDFResource *engine)
 		mUpdateArray->AppendElement(engine);
 
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' is now queued to be validated via HTTP HEAD method.\n",
-			engineURI, durationSecs);
+		PRINTF("    Search engine '%s' is now queued to be validated via HTTP HEAD method.\n",
+		       engineURI, durationSecs);
 #endif
 	}
 	else
 	{
 #ifdef	DEBUG_SEARCH_UPDATES
-		printf("    Search engine '%s' is already in queue to be validated.\n",
-			engineURI);
+		PRINTF("    Search engine '%s' is already in queue to be validated.\n",
+		       engineURI);
 #endif
 	}
 	return(NS_OK);
@@ -4276,7 +4280,7 @@ NS_IMETHODIMP
 InternetSearchDataSource::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
 #ifdef	DEBUG_SEARCH_OUTPUT
-	printf("InternetSearchDataSourceCallback::OnStartRequest entered.\n");
+    PRINTF("InternetSearchDataSourceCallback::OnStartRequest entered.\n");
 #endif
 	return(NS_OK);
 }
@@ -4302,7 +4306,7 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 	if (NS_FAILED(rv = aIStream->Read(buffer, aLength, &count)) || count == 0)
 	{
 #ifdef	DEBUG
-		printf("Search datasource read failure.\n");
+	    PRINTF("Search datasource read failure.\n");
 #endif
 		delete []buffer;
 		return(rv);
@@ -4310,7 +4314,7 @@ InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt
 	if (count != aLength)
 	{
 #ifdef	DEBUG
-		printf("Search datasource read # of bytes failure.\n");
+	    PRINTF("Search datasource read # of bytes failure.\n");
 #endif
 		delete []buffer;
 		return(NS_ERROR_UNEXPECTED);
@@ -4462,7 +4466,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				if (val)
 				{
 #ifdef	DEBUG_SEARCH_UPDATES
-					printf("    Search engine='%s' Last-Modified='%s'\n", engineURI, val);
+				    PRINTF("    Search engine='%s' Last-Modified='%s'\n", engineURI, val);
 #endif
 					lastModValue = val;
 					nsCRT::free(val);
@@ -4474,7 +4478,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 				if (val)
 				{
 #ifdef	DEBUG_SEARCH_UPDATES
-					printf("    Search engine='%s' Content-Length='%s'\n", engineURI, val);
+				    PRINTF("    Search engine='%s' Content-Length='%s'\n", engineURI, val);
 #endif
 					contentLengthValue = val;
 					nsCRT::free(val);
@@ -4523,15 +4527,15 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 						nsAutoString	dataStr(dataUni);
 						PRInt32		dataLen=dataStr.Length();
 #ifdef	DEBUG_SEARCH_UPDATES
-						printf("    Search engine='%s' data length='%d'\n", engineURI, dataLen);
+						PRINTF("    Search engine='%s' data length='%d'\n", engineURI, dataLen);
 #endif
 						PRInt32	contentLen=0, err=0;
 						contentLen = contentLengthValue.ToInteger(&err);
 						if ((!err) && (dataLen != contentLen))
 						{
 #ifdef	DEBUG_SEARCH_UPDATES
-							printf("    Search engine '%s' data length != remote content length, so update\n",
-								engineURI, dataLen);
+							PRINTF("    Search engine '%s' data length != remote content length, so update\n",
+							       engineURI, dataLen);
 #endif
 							updateSearchEngineFile = PR_TRUE;
 						}
@@ -4546,7 +4550,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		if (updateSearchEngineFile == PR_TRUE)
 		{
 #ifdef	DEBUG_SEARCH_UPDATES
-			printf("    Search engine='%s' needs updating, so fetching it\n", engineURI);
+		    PRINTF("    Search engine='%s' needs updating, so fetching it\n", engineURI);
 #endif
 			// get update URL
 			nsCString		updateURL;
@@ -4589,7 +4593,7 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 		else
 		{
 #ifdef	DEBUG_SEARCH_UPDATES
-			printf("    Search engine='%s' is current and requires no updating\n", engineURI);
+		    PRINTF("    Search engine='%s' is current and requires no updating\n", engineURI);
 #endif
 		}
 	}
@@ -4680,7 +4684,7 @@ InternetSearchDataSource::webSearchFinalize(nsIChannel* channel, nsIInternetSear
 	else
 	{
 #ifdef	DEBUG_SEARCH_OUTPUT
-		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
+	    PRINTF(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
 #endif
 	}
 
@@ -4928,7 +4932,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			char	*results = resultItem.ToNewCString();
 			if (results)
 			{
-				printf("\n----- Search result: '%s'\n\n", results);
+			    PRINTF("\n----- Search result: '%s'\n\n", results);
 				nsCRT::free(results);
 				results = nsnull;
 			}
@@ -4939,7 +4943,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (hrefOffset < 0)
 			{
 #ifdef	DEBUG_SEARCH_OUTPUT
-				printf("\n***** Unable to find HREF!\n\n");
+			    PRINTF("\n***** Unable to find HREF!\n\n");
 #endif
 				continue;
 			}
@@ -5030,7 +5034,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			nsAutoString	site(hrefStr);
 
 #ifdef	DEBUG_SEARCH_OUTPUT
-			printf("HREF: '%s'\n", href);
+			PRINTF("HREF: '%s'\n", href);
 #endif
 
 			nsCOMPtr<nsIRDFResource>	res;
@@ -5134,7 +5138,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				if (anchorEnd < quoteEndOffset)
 				{
 #ifdef	DEBUG_SEARCH_OUTPUT
-					printf("\n\nSearch: Unable to find ending > when computing name.\n\n");
+				    PRINTF("\n\nSearch: Unable to find ending > when computing name.\n\n");
 #endif
 					continue;
 				}
@@ -5142,7 +5146,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 				if (anchorStop < anchorEnd)
 				{
 #ifdef	DEBUG_SEARCH_OUTPUT
-					printf("\n\nSearch: Unable to find </A> tag to compute name.\n\n");
+				    PRINTF("\n\nSearch: Unable to find </A> tag to compute name.\n\n");
 #endif
 					continue;
 				}

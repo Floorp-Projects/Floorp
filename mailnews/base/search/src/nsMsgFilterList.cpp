@@ -36,6 +36,11 @@
 
 #include "nsMsgBaseCID.h"
 #include "nsIMsgFilterService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgFilterListLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgFilterListLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgFilterListLog)
 
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
@@ -908,7 +913,7 @@ void nsMsgFilterList::Dump()
 {
 	PRUint32			filterCount;
 	m_filters->Count(&filterCount);
-	printf("%d filters\n", filterCount);
+	PRINTF("%d filters\n", filterCount);
 
 	for (PRUint32 i = 0; i < filterCount; i++)
 	{

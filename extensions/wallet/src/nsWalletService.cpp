@@ -43,6 +43,11 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsWalletServiceLog)
+#define PRINTF NS_LOG_PRINTF(nsWalletServiceLog)
+#define FLUSH  NS_LOG_FLUSH(nsWalletServiceLog)
 
 static NS_DEFINE_IID(kDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -57,9 +62,7 @@ nsWalletlibService::nsWalletlibService()
 
 nsWalletlibService::~nsWalletlibService()
 {
-#ifdef DEBUG_dp
-  printf("Wallet Service destroyed successfully.\n");
-#endif /* DEBUG_dp */
+  PRINTF("Wallet Service destroyed successfully.\n");
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,

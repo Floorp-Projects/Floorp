@@ -25,6 +25,11 @@
 #include <stdio.h>
 
 #include "nsRegionOS2.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRegionOS2Log)
+#define PRINTF NS_LOG_PRINTF(nsRegionOS2Log)
+#define FLUSH  NS_LOG_FLUSH(nsRegionOS2Log)
 
 // Crazy Region Space
 //
@@ -103,7 +108,7 @@ void nsRegionOS2::combine( long lOp, PRInt32 aX, PRInt32 aY, PRInt32 aW, PRInt32
    if( rgn == RGN_ERROR)
    {
       PMERROR( "GpiCreateRegion #2 ");
-      printf( "X Y W H is %d %d %d %d\n", aX, aY, aW, aH);
+      PRINTF("X Y W H is %d %d %d %d\n", aX, aY, aW, aH);
    }
    mRegionType = GpiCombineRegion( nsRgnPS, mRegion, mRegion, rgn, lOp);
    if( mRegionType == RGN_ERROR)
@@ -272,10 +277,8 @@ static void RealQueryRects( HRGN              hrgn,
                   realloc( *aRects, sizeof( nsRegionRectSet) +
                              ((*aRects)->mNumRects + 9) * sizeof(nsRegionRect));
                (*aRects)->mRectsLen += 10;
-#ifdef DEBUG
-// !! If this happens lots, bump up initial allocation
-               printf( "Allocating more regionrect space...\n");
-#endif
+               // !! If this happens lots, bump up initial allocation
+               PRINTF("Allocating more regionrect space...\n");
             }
 
             nsRegionRect *theRect = (*aRects)->mRects + (*aRects)->mNumRects;

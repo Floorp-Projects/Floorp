@@ -29,15 +29,20 @@
 
 #include "OLE2.h"
 #include "URLMON.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDataObjCollectionLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsDataObjCollectionLog)
+#define FLUSH  NS_LOG_FLUSH(nsDataObjCollectionLog)
 
 #if 0
-#define PRNTDEBUG(_x) printf(_x);
-#define PRNTDEBUG2(_x1, _x2) printf(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) printf(_x1, _x2, _x3);
+#define PRNTDEBUG(_x) PRINTF(_x);
+#define PRNTDEBUG2(_x1, _x2) PRINTF(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) PRINTF(_x1, _x2, _x3);
 #else
-#define PRNTDEBUG(_x) // printf(_x);
-#define PRNTDEBUG2(_x1, _x2) // printf(_x1, _x2);
-#define PRNTDEBUG3(_x1, _x2, _x3) // printf(_x1, _x2, _x3);
+#define PRNTDEBUG(_x) // PRINTF(_x);
+#define PRNTDEBUG2(_x1, _x2) // PRINTF(_x1, _x2);
+#define PRNTDEBUG3(_x1, _x2, _x3) // PRINTF(_x1, _x2, _x3);
 #endif
 
 ULONG nsDataObjCollection::g_cRef = 0;

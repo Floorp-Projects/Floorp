@@ -30,7 +30,11 @@
 #include "nsIScreenManager.h"
 #include "nsIScreen.h"
 #include "nsGfxCIID.h"
+#include "nslog.h"
 
+NS_IMPL_LOG(nsDeviceContextWinLog)
+#define PRINTF NS_LOG_PRINTF(nsDeviceContextWinLog)
+#define FLUSH  NS_LOG_FLUSH(nsDeviceContextWinLog)
 
 // Size of the color cube
 #define COLOR_CUBE_SIZE       216
@@ -447,7 +451,7 @@ nsresult nsDeviceContextWin :: GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsF
   LONG logHeight = LONG((float(ptrLogFont->lfHeight) * mPixelScale)+0.5); // round up
 
   int pointSize = -MulDiv(logHeight, 72, ::GetDeviceCaps(aHDC, LOGPIXELSY));
-  //printf("\n\n Default Font size: %dpt\n", pointSize);
+  //PRINTF("\n\n Default Font size: %dpt\n", pointSize);
   // As far as I can tell the Default size 8pt
   // increase it by 2 points to match Windows GUI
   if (anID == eSystemAttr_Font_Button || 

@@ -36,6 +36,11 @@
 
 #include <Pt.h>
 #include <errno.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsAppShellLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsAppShellLog)
+#define FLUSH  NS_LOG_FLUSH(nsAppShellLog)
 
 /* Global Definitions */
 PRBool nsAppShell::gExitMainLoop = PR_FALSE;
@@ -62,7 +67,7 @@ our_photon_input_add (int               fd,
                        event_processor_callback,data);
   if (err != 0)
   {
-    NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
+    NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD");
   }
 
   return (err);
@@ -93,7 +98,7 @@ nsAppShell::~nsAppShell()
 
     if (err==-1)
     {
-	  printf("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mFD=<%d> errno=<%d>\n", mFD, errno);
+        PRINTF("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mFD=<%d> errno=<%d>", mFD, errno);
     }  
     mFD = -1;
   }
@@ -121,11 +126,15 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 
 static int event_processor_callback(int fd, void *data, unsigned mode)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::event_processor_callback fd=<%d> data=<%p> mode=<%d>\n", fd, data, mode));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::event_processor_callback fd=<%d> data=<%p> mode=<%d>", fd, data, mode));
 	
 	nsIEventQueue *eventQueue = (nsIEventQueue*)data;
 	if (eventQueue)
 	   eventQueue->ProcessPendingEvents();
+
+  nsIEventQueue *eventQueue = (nsIEventQueue*)data;
+  if (eventQueue)
+    eventQueue->ProcessPendingEvents();
 
   return Pt_CONTINUE;
 }
@@ -147,7 +156,7 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
     PhWidLog =  PR_NewLogModule("PhWidLog");
   }
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Create\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::Create"));
 
   int argc = bac ? *bac : 0;
   char **argv = bav;
@@ -240,7 +249,7 @@ void MyMainLoop( void )
 		PtProcessEvent();
 	}
 
-    NS_WARNING("MyMainLoop exiting!\n");
+    NS_WARNING("MyMainLoop exiting!");
 }
 
 //-------------------------------------------------------------------------
@@ -289,7 +298,7 @@ NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::DispatchNativeEvent aRealEvent=<%d> aEvent=<%p> mEventQueue=<%p>\n", aRealEvent, aEvent, mEventQueue));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::DispatchNativeEvent aRealEvent=<%d> aEvent=<%p> mEventQueue=<%p>", aRealEvent, aEvent, mEventQueue));
 
 
   if (!mEventQueue)

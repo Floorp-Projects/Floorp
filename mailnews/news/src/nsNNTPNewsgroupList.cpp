@@ -82,6 +82,11 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
 #include "nsIScriptContext.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNNTPNewsgroupListLog)
+#define PRINTF NS_LOG_PRINTF(nsNNTPNewsgroupListLog)
+#define FLUSH  NS_LOG_FLUSH(nsNNTPNewsgroupListLog)
 
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
@@ -205,17 +210,17 @@ nsNNTPNewsgroupList::GetDatabase(const char *uri, nsIMsgDatabase **db)
                 newsDBOpen = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) db);
 #ifdef DEBUG_NEWS
                 if (NS_SUCCEEDED(newsDBOpen)) {
-                    printf ("newsDBFactory->Open() succeeded\n");
+                    PRINTF ("newsDBFactory->Open() succeeded\n");
                 }
                 else {
-                    printf ("newsDBFactory->Open() failed\n");
+                    PRINTF ("newsDBFactory->Open() failed\n");
                 }
 #endif /* DEBUG_NEWS */
                 return rv;
         }
 #ifdef DEBUG_NEWS
         else {
-            printf("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
+            PRINTF("nsComponentManager::CreateInstance(kCNewsDB,...) failed\n");
         }
 #endif
     }
@@ -464,9 +469,9 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
                 // don't use prefs for dialog values, use the arg block
 				// m_promptedAlready may not be saved
 #ifdef DEBUG_NEWS
-				printf("Download Header Dialog:  %d\n",*last - *first + 1);
-				printf("download = %d\n", download);
-				printf("download all = %d\n", m_downloadAll);
+				PRINTF("Download Header Dialog:  %d\n",*last - *first + 1);
+				PRINTF("download = %d\n", download);
+				PRINTF("download all = %d\n", m_downloadAll);
 #endif /* DEBUG_NEWS */
                 
                 nsCOMPtr<nsIDialogParamBlock> ioParamBlock = do_CreateInstance(kDialogParamBlockCID, &rv);
@@ -541,7 +546,7 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 		}
 	}
 #ifdef DEBUG_NEWS
-	printf("GetRangeOfArtsToDownload(first possible = %d, last possible = %d, first = %d, last = %d maxextra = %d\n",first_possible, last_possible, *first, *last, maxextra);
+	PRINTF("GetRangeOfArtsToDownload(first possible = %d, last possible = %d, first = %d, last = %d maxextra = %d\n",first_possible, last_possible, *first, *last, maxextra);
 #endif /* DEBUG_NEWS */
 	m_firstMsgToDownload = *first;
 	m_lastMsgToDownload = *last;
@@ -714,7 +719,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 
 	GET_TOKEN ();
 #ifdef DEBUG_NEWS											/* message number */
-	printf("message number = %ld\n", atol(line));
+	PRINTF("message number = %ld\n", atol(line));
 #endif
 	*message_number = atol(line);
  
@@ -750,7 +755,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 		if (! (flags & MSG_FLAG_READ))
 			rv = newMsgHdr->OrFlags(MSG_FLAG_NEW, &flags);
 #ifdef DEBUG_NEWS
-		printf("subject = %s\n",subject);
+		PRINTF("subject = %s\n",subject);
 #endif
 		rv = newMsgHdr->SetSubject(subject);
     		if (NS_FAILED(rv)) return rv;
@@ -760,7 +765,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   GET_TOKEN ();											/* author */
   if (line) {
 #ifdef DEBUG_spitzer
-	printf("author = %s\n", line);
+      PRINTF("author = %s\n", line);
 #endif
 	rv = newMsgHdr->SetAuthor(line);
     	if (NS_FAILED(rv)) return rv;
@@ -773,7 +778,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	if (PR_SUCCESS == status) {
 
 #ifdef DEBUG_NEWS
-		printf("date = %s\n", line);
+		PRINTF("date = %s\n", line);
 #endif
 		rv = newMsgHdr->SetDate(date);					/* date */
 		if (NS_FAILED(rv)) return rv;
@@ -783,7 +788,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   GET_TOKEN ();											/* message id */
   if (line) {
 #ifdef DEBUG_NEWS
-	printf("message id = %s\n", line);
+      PRINTF("message id = %s\n", line);
 #endif
 	char *strippedId = line;
 
@@ -802,7 +807,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
   GET_TOKEN ();											/* references */
   if (line) {
 #ifdef DEBUG_NEWS
-	printf("references = %s\n",line);
+      PRINTF("references = %s\n",line);
 #endif
 	rv = newMsgHdr->SetReferences(line);
   	if (NS_FAILED(rv)) return rv;           
@@ -814,7 +819,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	msgSize = (line) ? atol (line) : 0;
 
 #ifdef DEBUG_NEWS
-	printf("bytes = %d\n", msgSize);
+	PRINTF("bytes = %d\n", msgSize);
 #endif
 	rv = newMsgHdr->SetMessageSize(msgSize);
   	if (NS_FAILED(rv)) return rv;           
@@ -825,7 +830,7 @@ nsNNTPNewsgroupList::ParseLine(char *line, PRUint32 * message_number)
 	PRUint32 numLines = 0;
 	numLines = line ? atol (line) : 0;
 #ifdef DEBUG_NEWS	
-	printf("lines = %d\n", numLines);
+	PRINTF("lines = %d\n", numLines);
 #endif
 	rv = newMsgHdr->SetLineCount(numLines);
   	if (NS_FAILED(rv)) return rv;           
@@ -970,7 +975,7 @@ nsNNTPNewsgroupList::FinishXOVERLINE(int status, int *newstatus)
 	if (m_newsDB)
 	{
 #ifdef DEBUG_NEWS
-        printf("committing summary file changes\n");
+        PRINTF("committing summary file changes\n");
 #endif
 		m_newsDB->Commit(nsMsgDBCommitType::kSessionCommit);
 		m_newsDB->Close(PR_TRUE);
@@ -1085,7 +1090,7 @@ void
 nsNNTPNewsgroupList::SetProgressBarPercent(int percent)
 {
 #ifdef DEBUG_NEWS
-        printf("nsNNTPNewsgroupList::SetProgressBarPercent(%d)\n",percent);
+    PRINTF("nsNNTPNewsgroupList::SetProgressBarPercent(%d)\n",percent);
 #endif
         if (!m_runningURL) return;
 
@@ -1104,7 +1109,7 @@ void
 nsNNTPNewsgroupList::SetProgressStatus(char *message)
 {
 #ifdef DEBUG_NEWS
-        printf("nsNNTPNewsgroupList::SetProgressStatus(%s)\n",message);
+    PRINTF("nsNNTPNewsgroupList::SetProgressStatus(%s)\n",message);
 #endif
         PRUnichar *progressMsg = nsnull;
         // PRUnichar *progressMsg = NNTPGetStringByID(aMsgId);

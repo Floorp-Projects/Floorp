@@ -25,6 +25,16 @@
 #include "nsIStyleContext.h"
 #include "nsLineLayout.h"
 #include "prprf.h"
+#include "nslog.h"
+#undef fprintf
+
+#ifdef VERY_NOISY_REFLOW
+NS_IMPL_LOG_ENABLED(nsLineBoxLog)
+#else
+NS_IMPL_LOG(nsLineBoxLog)
+#endif
+#define PRINTF NS_LOG_PRINTF(nsLineBoxLog)
+#define FLUSH  NS_LOG_FLUSH(nsLineBoxLog)
 
 #ifdef DEBUG
 #include "nsISizeOfHandler.h"
@@ -427,10 +437,8 @@ nsLineBox::SetCombinedArea(const nsRect& aCombinedArea)
     }
     MaybeFreeData();
   }
-#ifdef VERY_NOISY_REFLOW
-  printf("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
+  PRINTF("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
          this, aCombinedArea.x, aCombinedArea.y, aCombinedArea.width, aCombinedArea.height);
-#endif
 }
 
 void
@@ -439,10 +447,8 @@ nsLineBox::GetCombinedArea(nsRect* aResult)
   NS_ASSERTION(aResult, "null arg");
   if (aResult) {
     *aResult = mData ? mData->mCombinedArea : mBounds;
-#ifdef VERY_NOISY_REFLOW
-    printf("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
-         this, aResult->x, aResult->y, aResult->width, aResult->height);
-#endif
+    PRINTF("nsLB::SetCombinedArea(1) %p (%d, %d, %d, %d)\n", 
+           this, aResult->x, aResult->y, aResult->width, aResult->height);
   }
 }
 

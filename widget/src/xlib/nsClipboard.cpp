@@ -49,6 +49,11 @@
 #include "nsVoidArray.h"
 
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsClipboardLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsClipboardLog)
+#define FLUSH  NS_LOG_FLUSH(nsClipboardLog)
 
 
 #include "nsIServiceManager.h"
@@ -105,7 +110,7 @@ nsEventStatus PR_CALLBACK nsClipboard::Callback(nsGUIEvent *event) {
   // Check the event type
   if (ev->type == SelectionRequest) {
     if (mTransferable == nsnull) {
-      fprintf(stderr, "nsClipboard::Callback: null transferable\n");
+      PRINTF("nsClipboard::Callback: null transferable\n");
       return nsEventStatus_eIgnore;
     }
 
@@ -184,7 +189,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // bomb out if we cannot get ownership.
   if (XSetSelectionOwner(sDisplay, XA_PRIMARY, sWindow, CurrentTime))
     if (XGetSelectionOwner(sDisplay, XA_PRIMARY) != sWindow) {
-      fprintf(stderr, "nsClipboard::SetData: Cannot get ownership\n");
+      PRINTF("nsClipboard::SetData: Cannot get ownership\n");
       return NS_ERROR_FAILURE;
     }
   
@@ -202,7 +207,7 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
   // make sure we have a good transferable
   if (nsnull == transferable) {
 #ifdef DEBUG_faulkner
-    fprintf(stderr, "nsClipboard::SetNativeClipboardData(): no transferable!\n");
+    PRINTF("nsClipboard::SetNativeClipboardData(): no transferable!\n");
 #endif /* DEBUG_faulkner */
     return NS_ERROR_FAILURE;
   }
@@ -238,7 +243,7 @@ NS_IMETHODIMP nsClipboard::SetData(nsITransferable *aTransferable,
 {
   if (XSetSelectionOwner(sDisplay, XA_PRIMARY, sWindow, CurrentTime))
     if (XGetSelectionOwner(sDisplay, XA_PRIMARY) != sWindow) {
-      fprintf(stderr, "nsClipboard::SetData: Cannot get ownership\n");
+      PRINTF("nsClipboard::SetData: Cannot get ownership\n");
       return NS_ERROR_FAILURE;
     }
 
@@ -280,7 +285,7 @@ NS_IMETHODIMP nsClipboard::GetData(nsITransferable *aTransferable,
   int i;
 
   if (aTransferable == nsnull) {
-    fprintf(stderr, "nsClipboard::GetData: NULL transferable\n");
+    PRINTF("nsClipboard::GetData: NULL transferable\n");
     return NS_ERROR_FAILURE;
   }
 

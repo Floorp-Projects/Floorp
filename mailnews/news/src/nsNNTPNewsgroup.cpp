@@ -32,6 +32,11 @@
 #include "nsNNTPNewsgroup.h"
 
 #include "nsCOMPtr.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNNTPNewsgroupLog)
+#define PRINTF NS_LOG_PRINTF(nsNNTPNewsgroupLog)
+#define FLUSH  NS_LOG_FLUSH(nsNNTPNewsgroupLog)
 
 nsNNTPNewsgroup::nsNNTPNewsgroup()
 {
@@ -45,7 +50,7 @@ nsNNTPNewsgroup::nsNNTPNewsgroup()
 nsNNTPNewsgroup::~nsNNTPNewsgroup()
 {
 #ifdef DEBUG_NEWS
-	printf("destroying newsgroup: %s", m_groupName ? m_groupName : "");
+	PRINTF("destroying newsgroup: %s", m_groupName ? m_groupName : "");
 #endif
 	PR_FREEIF(m_groupName);
 	PR_FREEIF(m_prettyName);
@@ -68,7 +73,7 @@ nsresult nsNNTPNewsgroup::SetName(const char *aName)
 	if (aName)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting newsgroup name to %s. \n", aName);
+		PRINTF("Setting newsgroup name to %s. \n", aName);
 #endif
 		m_groupName = PL_strdup(aName);
 	}
@@ -91,7 +96,7 @@ nsresult nsNNTPNewsgroup::SetPrettyName(const char *aName)
 	if (aName)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting pretty newsgroup name to %s. \n", aName);
+		PRINTF("Setting pretty newsgroup name to %s. \n", aName);
 #endif
 		m_prettyName = PL_strdup(aName);
 	}
@@ -114,7 +119,7 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 	if (aNeedsExtraInfo)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting needs extra info for newsgroup %s to %s. \n", m_groupName, aNeedsExtraInfo ? "TRUE" : "FALSE" );
+		PRINTF("Setting needs extra info for newsgroup %s to %s. \n", m_groupName, aNeedsExtraInfo ? "TRUE" : "FALSE" );
 #endif
 		m_needsExtraInfo = aNeedsExtraInfo;
 	}
@@ -125,7 +130,7 @@ nsresult nsNNTPNewsgroup::SetNeedsExtraInfo(PRBool aNeedsExtraInfo)
 nsresult nsNNTPNewsgroup::IsOfflineArticle(PRInt32 num, PRBool *_retval)
 {
 #ifdef DEBUG_NEWS
-	printf("Testing for offline article %d in %s. \n", num, m_groupName);
+	PRINTF("Testing for offline article %d in %s. \n", num, m_groupName);
 #endif
 	if (_retval)
 		*_retval = PR_FALSE;
@@ -148,7 +153,7 @@ nsresult nsNNTPNewsgroup::SetCategory(PRBool aCategory)
 	if (aCategory)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting is category for newsgroup %s to %s. \n", m_groupName, aCategory ? "TRUE" : "FALSE" );
+		PRINTF("Setting is category for newsgroup %s to %s. \n", m_groupName, aCategory ? "TRUE" : "FALSE" );
 #endif
 		m_category = aCategory;
 	}
@@ -188,7 +193,7 @@ nsresult nsNNTPNewsgroup::SetWantNewTotals(PRBool aWantNewTotals)
 	if (aWantNewTotals)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting wants new totals for newsgroup %s to %s. \n", m_groupName, aWantNewTotals ? "TRUE" : "FALSE" );
+		PRINTF("Setting wants new totals for newsgroup %s to %s. \n", m_groupName, aWantNewTotals ? "TRUE" : "FALSE" );
 #endif
 		m_wantsNewTotals = aWantNewTotals;
 	}
@@ -212,7 +217,7 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 	if (aNewsgroupList)
 	{
 #ifdef DEBUG_NEWS
-		printf("Setting newsgroup list for newsgroup %s. \n", m_groupName);
+		PRINTF("Setting newsgroup list for newsgroup %s. \n", m_groupName);
 #endif
 		m_newsgroupList = aNewsgroupList;
 		NS_IF_ADDREF(aNewsgroupList);
@@ -224,7 +229,7 @@ nsresult nsNNTPNewsgroup::SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList
 nsresult nsNNTPNewsgroup::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages)
 {
 #ifdef DEBUG_NEWS
-	printf("Updating summary with oldest= %d, youngest= %d, and total messages = %d. \n", oldest, youngest, total_messages);
+	PRINTF("Updating summary with oldest= %d, youngest= %d, and total messages = %d. \n", oldest, youngest, total_messages);
 #endif
 	return NS_OK;
 }
@@ -234,7 +239,7 @@ nsresult nsNNTPNewsgroup::Initialize(const char *name,
                                      PRBool subscribed)
 {
 #ifdef DEBUG_NEWS
-	printf("nsNNTPNewsgroup::Intialize(name = %s, subscribed = %s)\n",name?name:"(null)", subscribed?"TRUE":"FALSE");
+	PRINTF("nsNNTPNewsgroup::Intialize(name = %s, subscribed = %s)\n",name?name:"(null)", subscribed?"TRUE":"FALSE");
 #endif
 	nsresult rv = NS_OK;
 

@@ -39,6 +39,11 @@
 #include "xp_str.h"
 #include "xp_file.h"
 #include "prprf.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDirPrefsLog)
+#define PRINTF NS_LOG_PRINTF(nsDirPrefsLog)
+#define FLUSH  NS_LOG_FLUSH(nsDirPrefsLog)
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);
@@ -476,7 +481,7 @@ nsresult DIR_AddNewAddressBook(const PRUnichar *dirName, const char *fileName, P
 		}
 #ifdef DEBUG_sspitzer
 		else {
-			printf("don't set the prefs, they are already set since this ab was migrated\n");
+			PRINTF("don't set the prefs, they are already set since this ab was migrated\n");
 		}
 #endif
 		*pServer = server;
@@ -3439,13 +3444,13 @@ nsresult DIR_GetServerPreferences(nsVoidArray** list)
 		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   		if (NS_FAILED(rv) || !abUpgrader) {
 #ifdef DEBUG_sspitzer_
-			printf("move the pab aside, since we don't have the ab upgrader\n");
+			PRINTF("move the pab aside, since we don't have the ab upgrader\n");
 #endif
 			dir_ConvertToMabFileName();
 		}
 #ifdef DEBUG_sspitzer_
 		else {
-			printf("don't touch the 4.x pab.  we will migrate it\n");
+			PRINTF("don't touch the 4.x pab.  we will migrate it\n");
 		}
 #endif
 	}

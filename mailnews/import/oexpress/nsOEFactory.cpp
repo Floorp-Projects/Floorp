@@ -36,6 +36,8 @@
 #include "nsOEStringBundle.h"
 #include "OEDebugLog.h"
 
+NS_IMPL_LOG(OEDebugLogLog)
+
 static NS_DEFINE_CID(kOEImportCID,       	NS_OEIMPORT_CID);
 
 ////////////////////////////////////////////////////////////////////

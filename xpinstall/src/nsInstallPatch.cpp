@@ -34,6 +34,11 @@
 #include "ScheduledTasks.h"
 #include "plstr.h"
 #include "prlog.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsInstallPatchLog)
+#define PRINTF NS_LOG_PRINTF(nsInstallPatchLog)
+#define FLUSH  NS_LOG_FLUSH(nsInstallPatchLog)
 
 #ifdef XP_MAC
 #include "PatchableAppleSingle.h"
@@ -603,7 +608,7 @@ nsInstallPatch::NativePatch(nsIFile *sourceFile, nsIFile *patchFile, nsIFile **n
 		{
 		    PRInt64 fileSize;
 		    outFileSpec->GetFileSize(&fileSize);
-			printf("filesize: %d\n", fileSize);
+			PRINTF("filesize: %d\n", fileSize);
 		}
 		
 			

@@ -25,6 +25,11 @@
 #include "nsMsgDeliveryListener.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgPrompts.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgDeliveryListenerLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgDeliveryListenerLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgDeliveryListenerLog)
 
 NS_IMPL_ISUPPORTS(nsMsgDeliveryListener, NS_GET_IID(nsIUrlListener))
 
@@ -32,7 +37,7 @@ nsresult
 nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)
 {
 #ifdef NS_DEBUG
-//  printf("Starting to run the delivery operation\n");
+//  PRINTF("Starting to run the delivery operation\n");
 #endif
 
   if (mMsgSendObj)
@@ -49,7 +54,7 @@ nsMsgDeliveryListener::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
   nsresult rv = NS_ERROR_UNEXPECTED;
 #ifdef NS_DEBUG
-//  printf("\nOnStopRunningUrl() called!\n");
+//  PRINTF("\nOnStopRunningUrl() called!\n");
 #endif
 
   // First, stop being a listener since we are done.

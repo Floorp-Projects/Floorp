@@ -47,6 +47,15 @@
 
 #include "InsertTextTxn.h"
 #include "DeleteTextTxn.h"
+#include "nslog.h"
+
+#if defined(DEBUG_ftang)
+NS_IMPL_LOG_ENABLED(nsHTMLEditRulesLog)
+#else
+NS_IMPL_LOG(nsHTMLEditRulesLog)
+#endif
+#define PRINTF NS_LOG_PRINTF(nsHTMLEditRulesLog)
+#define FLUSH  NS_LOG_FLUSH(nsHTMLEditRulesLog)
 
 //const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 //const static char* kMOZEditorBogusNodeValue="TRUE";
@@ -384,9 +393,7 @@ nsHTMLEditRules::WillDoAction(nsISelection *aSelection,
 {
   if (!aInfo || !aCancel || !aHandled) 
     return NS_ERROR_NULL_POINTER;
-#if defined(DEBUG_ftang)
-  printf("nsHTMLEditRules::WillDoAction action = %d\n", aInfo->action);
-#endif
+  PRINTF("nsHTMLEditRules::WillDoAction action = %d\n", aInfo->action);
 
   *aCancel = PR_FALSE;
   *aHandled = PR_FALSE;

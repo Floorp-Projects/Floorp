@@ -33,6 +33,11 @@
 #include "nsIMsgAccountManager.h"
 #include "nsXPIDLString.h"
 #include "nsLocalFolderSummarySpec.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgDBFolderLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgDBFolderLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgDBFolderLog)
 
 #if defined(XP_OS2)
 #define MAX_FILE_LENGTH_WITHOUT_EXTENSION 8
@@ -773,7 +778,7 @@ NS_IMETHODIMP nsMsgDBFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *
 
 NS_IMETHODIMP nsMsgDBFolder::ManyHeadersToDownload(PRBool *retval)
 {
-	PRInt32 numTotalMessages;
+//	PRInt32 numTotalMessages;
 
 	if (!retval)
 		return NS_ERROR_NULL_POINTER;
@@ -816,7 +821,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
 	char *uri;
 
 	GetURI(&uri);
-	printf("read total %ld for %s\n", mNumTotalMessages, uri);
+	PRINTF("read total %ld for %s\n", mNumTotalMessages, uri);
 	PR_Free(uri);
 #endif
 	mCharset.AssignWithConversion(charset);
@@ -953,7 +958,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 	char *uri;
 
 	GetURI(&uri);
-	printf("writing total %ld for %s\n", mNumTotalMessages, uri);
+	PRINTF("writing total %ld for %s\n", mNumTotalMessages, uri);
 	PR_Free(uri);
 #endif
 	return rv;

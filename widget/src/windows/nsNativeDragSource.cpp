@@ -22,6 +22,11 @@
 
 #include "nsNativeDragSource.h"
 #include <stdio.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsNativeDragSourceLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsNativeDragSourceLog)
+#define FLUSH  NS_LOG_FLUSH(nsNativeDragSourceLog)
 
 
 /*
@@ -72,23 +77,23 @@ STDMETHODIMP_(ULONG) nsNativeDragSource::Release(void)
 
 STDMETHODIMP nsNativeDragSource::QueryContinueDrag(BOOL fEsc, DWORD grfKeyState)
 {
-  //printf("QueryContinueDrag\n");
+  //PRINTF("QueryContinueDrag\n");
   if (fEsc) {
-    //printf("QueryContinueDrag: fEsc\n");
+    //PRINTF("QueryContinueDrag: fEsc\n");
     return ResultFromScode(DRAGDROP_S_CANCEL);
   }
 
   if (!(grfKeyState & MK_LBUTTON)) {
-    //printf("QueryContinueDrag: grfKeyState & MK_LBUTTON\n");
+    //PRINTF("QueryContinueDrag: grfKeyState & MK_LBUTTON\n");
     return ResultFromScode(DRAGDROP_S_DROP);
   }
 
-  //printf("QueryContinueDrag: NOERROR\n");
+  //PRINTF("QueryContinueDrag: NOERROR\n");
 	return NOERROR;
 }
 
 STDMETHODIMP nsNativeDragSource::GiveFeedback(DWORD dwEffect)
 {
-  //printf("GiveFeedback\n");
+  //PRINTF("GiveFeedback\n");
 	return ResultFromScode(DRAGDROP_S_USEDEFAULTCURSORS);
 }

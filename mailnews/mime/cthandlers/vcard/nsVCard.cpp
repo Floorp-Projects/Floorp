@@ -70,6 +70,11 @@ DFARS 252.227-7013 or 48 CFR 52.227-19, as applicable.
 #include "nsVCardObj.h"
 #include "nsFileStream.h"
 #include "prprf.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsVCardLog)
+#define PRINTF NS_LOG_PRINTF(nsVCardLog)
+#define FLUSH  NS_LOG_FLUSH(nsVCardLog)
 
 #ifndef lint
 char yysccsid[] = "@(#)yaccpar	1.4 (Berkeley) 02/25/90";
@@ -1301,8 +1306,8 @@ yyloop:
             yys = 0;
             if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
             if (!yys) yys = "illegal-symbol";
-            printf("yydebug: state %d, reading %d (%s)\n", yystate,
-                    yychar, yys);
+            PRINTF("yydebug: state %d, reading %d (%s)\n", yystate,
+                   yychar, yys);
         }
 #endif
     }
@@ -1311,8 +1316,8 @@ yyloop:
     {
 #if YYDEBUG
         if (yydebug)
-            printf("yydebug: state %d, shifting to state %d\n",
-                    yystate, yytable[yyn]);
+            PRINTF("yydebug: state %d, shifting to state %d\n",
+                   yystate, yytable[yyn]);
 #endif
         if (yyssp >= yyss + yystacksize - 1)
         {
@@ -1352,7 +1357,7 @@ yyinrecovery:
             {
 #if YYDEBUG
                 if (yydebug)
-                    printf("yydebug: state %d, error recovery shifting\
+                    PRINTF("yydebug: state %d, error recovery shifting\
  to state %d\n", *yyssp, yytable[yyn]);
 #endif
                 if (yyssp >= yyss + yystacksize - 1)
@@ -1367,8 +1372,8 @@ yyinrecovery:
             {
 #if YYDEBUG
                 if (yydebug)
-                    printf("yydebug: error recovery discarding state %d\n",
-                            *yyssp);
+                    PRINTF("yydebug: error recovery discarding state %d\n",
+                           *yyssp);
 #endif
                 if (yyssp <= yyss) goto yyabort;
                 --yyssp;
@@ -1385,8 +1390,8 @@ yyinrecovery:
             yys = 0;
             if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
             if (!yys) yys = "illegal-symbol";
-            printf("yydebug: state %d, error recovery discards token %d (%s)\n",
-                    yystate, yychar, yys);
+            PRINTF("yydebug: state %d, error recovery discards token %d (%s)\n",
+                   yystate, yychar, yys);
         }
 #endif
         yychar = (-1);
@@ -1395,8 +1400,8 @@ yyinrecovery:
 yyreduce:
 #if YYDEBUG
     if (yydebug)
-        printf("yydebug: state %d, reducing by rule %d (%s)\n",
-                yystate, yyn, yyrule[yyn]);
+        PRINTF("yydebug: state %d, reducing by rule %d (%s)\n",
+               yystate, yyn, yyrule[yyn]);
 #endif
     yym = yylen[yyn];
     yyval = yyvsp[1-yym];
@@ -1571,7 +1576,7 @@ break;
     {
 #if YYDEBUG
         if (yydebug)
-            printf("yydebug: after reduction, shifting from state 0 to\
+            PRINTF("yydebug: after reduction, shifting from state 0 to\
  state %d\n", YYFINAL);
 #endif
         yystate = YYFINAL;
@@ -1586,8 +1591,8 @@ break;
                 yys = 0;
                 if (yychar <= YYPR_MAXTOKEN) yys = yyname[yychar];
                 if (!yys) yys = "illegal-symbol";
-                printf("yydebug: state %d, reading %d (%s)\n",
-                        YYFINAL, yychar, yys);
+                PRINTF("yydebug: state %d, reading %d (%s)\n",
+                       YYFINAL, yychar, yys);
             }
 #endif
         }
@@ -1601,7 +1606,7 @@ break;
         yystate = yydgoto[yym];
 #if YYDEBUG
     if (yydebug)
-        printf("yydebug: after reduction, shifting from state %d \
+        PRINTF("yydebug: after reduction, shifting from state %d \
 to state %d\n", *yyssp, yystate);
 #endif
     if (yyssp >= yyss + yystacksize - 1)

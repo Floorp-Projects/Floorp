@@ -28,6 +28,7 @@
 #include "nsImportStringBundle.h"
 #include "ImportDebug.h"
 
+NS_IMPL_LOG(ImportDebugLog)
 
 extern NS_METHOD NS_NewImportService(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 

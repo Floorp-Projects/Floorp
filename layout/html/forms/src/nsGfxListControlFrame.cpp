@@ -69,6 +69,7 @@
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
+#include "nslog.h"
 
 #define STATUS_CHECK_RETURN_MACRO() {if (!mTracker) return NS_ERROR_FAILURE;}
 
@@ -141,7 +142,7 @@ static PRInt32 gReflowInx = -1;
   if (mReflowId > -1) {\
     gTotalReqs    += gReflowControlCntRQ[mReflowId];\
     gTotalReflows += gReflowControlCnt[mReflowId];\
-    printf("** Id:%5d %s RF: %d RQ: %d   %d/%d  %5.2f\n", \
+    PRINTF("** Id:%5d %s RF: %d RQ: %d   %d/%d  %5.2f\n", \
            mReflowId, (__desc), \
            gReflowControlCnt[mReflowId], \
            gReflowControlCntRQ[mReflowId],\
@@ -159,10 +160,10 @@ static PRInt32 gReflowInx = -1;
   }
 
 // reflow messages
-#define REFLOW_DEBUG_MSG(_msg1) printf((_msg1))
-#define REFLOW_DEBUG_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
-#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
-#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
+#define REFLOW_DEBUG_MSG(_msg1) PRINTF((_msg1))
+#define REFLOW_DEBUG_MSG2(_msg1, _msg2) PRINTF((_msg1), (_msg2))
+#define REFLOW_DEBUG_MSG3(_msg1, _msg2, _msg3) PRINTF((_msg1), (_msg2), (_msg3))
+#define REFLOW_DEBUG_MSG4(_msg1, _msg2, _msg3, _msg4) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
 
 #else //-------------
 
@@ -183,10 +184,10 @@ static PRInt32 gReflowInx = -1;
 // This is for being VERY noisy
 //------------------------------------------
 #ifdef DO_VERY_NOISY
-#define REFLOW_NOISY_MSG(_msg1) printf((_msg1))
-#define REFLOW_NOISY_MSG2(_msg1, _msg2) printf((_msg1), (_msg2))
-#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) printf((_msg1), (_msg2), (_msg3))
-#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) printf((_msg1), (_msg2), (_msg3), (_msg4))
+#define REFLOW_NOISY_MSG(_msg1) PRINTF((_msg1))
+#define REFLOW_NOISY_MSG2(_msg1, _msg2) PRINTF((_msg1), (_msg2))
+#define REFLOW_NOISY_MSG3(_msg1, _msg2, _msg3) PRINTF((_msg1), (_msg2), (_msg3))
+#define REFLOW_NOISY_MSG4(_msg1, _msg2, _msg3, _msg4) PRINTF((_msg1), (_msg2), (_msg3), (_msg4))
 #else
 #define REFLOW_NOISY_MSG(_msg) 
 #define REFLOW_NOISY_MSG2(_msg1, _msg2) 
@@ -212,7 +213,7 @@ static PRInt32 gReflowInx = -1;
 if (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE) { \
   nscoord width = aDesiredSize.width - borderPadding.left - borderPadding.right; \
   if (width != aReflowState.mComputedWidth) { \
-    printf("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
+    PRINTF("aDesiredSize.width %d %d != aReflowState.mComputedWidth %d\n", aDesiredSize.width, width, aReflowState.mComputedWidth); \
   } \
   NS_ASSERTION(width == aReflowState.mComputedWidth, "Returning bad value when constrained!"); \
 }
@@ -353,11 +354,11 @@ static int myCounter = 0;
 
 static void printSize(char * aDesc, nscoord aSize) 
 {
-  printf(" %s: ", aDesc);
+  PRINTF(" %s: ", aDesc);
   if (aSize == NS_UNCONSTRAINEDSIZE) {
-    printf("UNC");
+    PRINTF("UNC");
   } else {
-    printf("%d", aSize);
+    PRINTF("%d", aSize);
   }
 }
 #endif
@@ -384,35 +385,35 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
 #ifdef DO_REFLOW_DEBUG
-  printf("%p ** Id: %d nsLCF::Reflow %d R: ", this, mReflowId, myCounter++);
+  PRINTF("%p ** Id: %d nsLCF::Reflow %d R: ", this, mReflowId, myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:
-      printf("Initia");break;
+      PRINTF("Initia");break;
     case eReflowReason_Incremental:
-      printf("Increm");break;
+      PRINTF("Increm");break;
     case eReflowReason_Resize:
-      printf("Resize");break;
+      PRINTF("Resize");break;
     case eReflowReason_StyleChange:
-      printf("StyleC");break;
+      PRINTF("StyleC");break;
     case eReflowReason_Dirty:
-      printf("Dirty ");break;
-    default:printf("<unknown>%d", aReflowState.reason);break;
+      PRINTF("Dirty ");break;
+    default:PRINTF("<unknown>%d", aReflowState.reason);break;
   }
   
   printSize("AW", aReflowState.availableWidth);
   printSize("AH", aReflowState.availableHeight);
   printSize("CW", aReflowState.mComputedWidth);
   printSize("CH", aReflowState.mComputedHeight);
-  printf("\n");
+  PRINTF("\n");
 #if 0
     {
       const nsStyleDisplay* display;
       GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-      printf("+++++++++++++++++++++++++++++++++ ");
+      PRINTF("+++++++++++++++++++++++++++++++++ ");
       switch (display->mVisible) {
-        case NS_STYLE_VISIBILITY_COLLAPSE: printf("NS_STYLE_VISIBILITY_COLLAPSE\n");break;
-        case NS_STYLE_VISIBILITY_HIDDEN:   printf("NS_STYLE_VISIBILITY_HIDDEN\n");break;
-        case NS_STYLE_VISIBILITY_VISIBLE:  printf("NS_STYLE_VISIBILITY_VISIBLE\n");break;
+        case NS_STYLE_VISIBILITY_COLLAPSE: PRINTF("NS_STYLE_VISIBILITY_COLLAPSE\n");break;
+        case NS_STYLE_VISIBILITY_HIDDEN:   PRINTF("NS_STYLE_VISIBILITY_HIDDEN\n");break;
+        case NS_STYLE_VISIBILITY_VISIBLE:  PRINTF("NS_STYLE_VISIBILITY_VISIBLE\n");break;
       }
     }
 #endif
@@ -430,7 +431,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 	      aDesiredSize.maxElementSize->height = aDesiredSize.height;
       }
       aStatus = NS_FRAME_COMPLETE;
-      printf("--------------------------> Skipping reflow\n");
+      PRINTF("--------------------------> Skipping reflow\n");
       NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
       NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
       return NS_OK;
@@ -515,7 +516,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         }
         aDesiredSize.ascent = aDesiredSize.height;
         aDesiredSize.descent = 0;
-        printf("Bottom#  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+        PRINTF("Bottom#  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
 
         nsIView * view;
         GetView(aPresContext, &view);
@@ -567,7 +568,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         scrollSpacing->CalcBorderPaddingFor(firstChildFrame, scrollBorderPadding);
         rect.width  -= (scrollBorderPadding.left + scrollBorderPadding.right);
         rect.height -= (scrollBorderPadding.top + scrollBorderPadding.bottom)*2;
-        printf("Inc Pass CW: %d CH: %d\n", rect.width, rect.height);
+        PRINTF("Inc Pass CW: %d CH: %d\n", rect.width, rect.height);
         nsHTMLReflowState childReflowState(aPresContext, aReflowState, 
                                            firstChildFrame, 
                                            nsSize(rect.width, rect.height));
@@ -587,7 +588,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
                               childReflowState, 
                               aStatus);
 #endif
-        printf("AfterInc DW: %d CH: %d\n", aDesiredSize.width, aDesiredSize.height);
+PRINTF("AfterInc DW: %d CH: %d\n", aDesiredSize.width, aDesiredSize.height);
         aDesiredSize.width  = mCacheSize.width;
         aDesiredSize.height = mCacheSize.height;
 
@@ -597,7 +598,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         }
         aDesiredSize.ascent = aDesiredSize.height;
         aDesiredSize.descent = 0;
-        printf("Bottom*  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+        PRINTF("Bottom*  DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
         NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
         NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
         return NS_OK;
@@ -701,12 +702,12 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsSize scrolledAreaSize(0,0);
   nsHTMLReflowMetrics  scrolledAreaDesiredSize(&scrolledAreaSize);
 
-  printf("1st Pass CW: %d CH: %d\n", childReflowState.mComputedWidth, childReflowState.mComputedHeight);
+  PRINTF("1st Pass CW: %d CH: %d\n", childReflowState.mComputedWidth, childReflowState.mComputedHeight);
   firstChildFrame->Reflow(aPresContext, 
                         scrolledAreaDesiredSize,
                         childReflowState, 
                         aStatus);
-  printf("After1st DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
+  PRINTF("After1st DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
 
   nsIScrollableFrame * scrollableFrame = nsnull;
   
@@ -956,7 +957,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   secondPassState.reason = eReflowReason_Resize;
 
   
-  printf("2nd Pass CW: %d CH: %d\n", visibleWidth, visibleHeight);
+  PRINTF("2nd Pass CW: %d CH: %d\n", visibleWidth, visibleHeight);
   mCachedScrollFrameSize.width  = visibleWidth;
   mCachedScrollFrameSize.height = visibleHeight;
   // Reflow 
@@ -980,7 +981,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nsRect rr;
   firstChildFrame->GetRect(rr);
 
-  printf("After2nd DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
+  PRINTF("After2nd DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
   //mCachedScrollFrameSize.width  = scrolledAreaDesiredSize.width;
   //mCachedScrollFrameSize.height = scrolledAreaDesiredSize.height;
 
@@ -1026,7 +1027,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (!isInDropDownMode) {
     PRInt32 numRows = 1;
     GetSizeAttribute(&numRows);
-    printf("%d ", numRows);
+    PRINTF("%d ", numRows);
     if (numRows == 2) {
       COMPARE_QUIRK_SIZE("nsGfxListControlFrame", 42, 38) 
     } if (numRows == 3) {
@@ -1043,7 +1044,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
-  printf("Bottom   DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
+  PRINTF("Bottom   DW: %d DH: %d\n", aDesiredSize.width, aDesiredSize.height);
   NS_ASSERTION(aDesiredSize.width < 100000, "Width is still NS_UNCONSTRAINEDSIZE");
   NS_ASSERTION(aDesiredSize.height < 100000, "Height is still NS_UNCONSTRAINEDSIZE");
   return NS_OK;
@@ -1417,7 +1418,7 @@ nsGfxListControlFrame::HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2)
 NS_IMETHODIMP
 nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool aGrabMouseEvents)
 {
-  printf("}}}}}}}}}}}}}}}}}}}} Setting Capture to %s\n", aGrabMouseEvents?"On":"Off");
+  PRINTF("}}}}}}}}}}}}}}}}}}}} Setting Capture to %s\n", aGrabMouseEvents?"On":"Off");
 
   nsIFrame * firstChildFrame = nsnull;
   FirstChild(mPresContext, nsnull, &firstChildFrame);
@@ -1451,7 +1452,7 @@ nsGfxListControlFrame::CaptureMouseEvents(nsIPresContext* aPresContext, PRBool a
         nsIWidget * widget;
         view->GetWidget(widget);
         if (nsnull != widget) {
-          printf("Capture is set on widget to %s\n", aGrabMouseEvents?"On":"Off");
+          PRINTF("Capture is set on widget to %s\n", aGrabMouseEvents?"On":"Off");
           widget->CaptureMouse(aGrabMouseEvents);
           NS_RELEASE(widget);
         }
@@ -1526,9 +1527,9 @@ nsGfxListControlFrame::HandleEvent(nsIPresContext* aPresContext,
                           "NS_MOUSE_RIGHT_CLICK"};
   int inx = aEvent->message-NS_MOUSE_MESSAGE_START;
   if (inx >= 0 && inx <= (NS_MOUSE_RIGHT_CLICK-NS_MOUSE_MESSAGE_START)) {
-    printf("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->message);
+  PRINTF("Mouse in ListFrame %s [%d]\n", desc[inx], aEvent->message);
   } else {
-    printf("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
+  PRINTF("Mouse in ListFrame <UNKNOWN> [%d]\n", aEvent->message);
   }*/
 
   if (nsEventStatus_eConsumeNoDefault == *aEventStatus)
@@ -1542,7 +1543,7 @@ nsGfxListControlFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_KEY_EVENT == aEvent->eventStructType) {
 #ifdef DEBUG_rodsXXX
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
-        printf("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
+        PRINTF("---> %d %c\n", keyEvent->keyCode, keyEvent->keyCode);
 #endif
         //if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
         //  MouseClicked(aPresContext);
@@ -1888,7 +1889,7 @@ nsGfxListControlFrame::SetContentSelected(PRInt32 aIndex, PRBool aSelected)
   PRInt32 numOptions = 0;
   if (NS_SUCCEEDED(GetNumberOfOptions(&numOptions))) {
     if (aIndex >= numOptions || aIndex < 0) {
-      printf("Index: %d Range 0:%d  (setting to %s)\n", aIndex, numOptions, aSelected?"TRUE":"FALSE");
+      PRINTF("Index: %d Range 0:%d  (setting to %s)\n", aIndex, numOptions, aSelected?"TRUE":"FALSE");
       NS_ASSERTION(0, "Bad Index has been passed into SetContentSelected!");
     }
   } else {
@@ -2414,7 +2415,7 @@ NS_IMETHODIMP
 nsGfxListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
 {
 #ifdef DO_REFLOW_DEBUG
-  printf("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
+  PRINTF("---- Id: %d nsLCF %p Added Option %d\n", mReflowId, this, aIndex);
 #endif
 
   if (!mIsAllContentHere) {
@@ -2465,7 +2466,7 @@ nsGfxListControlFrame::AddOption(nsIPresContext* aPresContext, PRInt32 aIndex)
       if (NS_CONTENT_ATTR_NOT_THERE == rv || 0 == text.Length()) {
         option->GetText(text);
       }   
-      printf("this %p Index: %d  [%s] CB: %p\n", this, aIndex, text.ToNewCString(), mComboboxFrame); //leaks
+      PRINTF("this %p Index: %d  [%s] CB: %p\n", this, aIndex, text.ToNewCString(), mComboboxFrame); //leaks
       }
 #endif
     }
@@ -3426,8 +3427,8 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
         }
       }
       mLastDragCoordY = scrY;
-      //printf("%d %d  %d %d %d %d isInside: %d mIsDragScrollingDown: %d\n", scrX, scrY, 
-      //        absPixelRect.x, absPixelRect.y, absPixelRect.width, absPixelRect.height, isInside, mIsDragScrollingDown);
+      //PRINTF("%d %d  %d %d %d %d isInside: %d mIsDragScrollingDown: %d\n", scrX, scrY, 
+      //        absPixelRect.x, absPixelRect.y, absPixelRect.width, absPixelRect.height, isInside, mIsDragScrollingDown));
 
       if (!isInside) {
 #ifdef DO_LISTBOX_DRAGGING
@@ -3482,7 +3483,7 @@ nsGfxListControlFrame::DragMove(nsIDOMEvent* aMouseEvent)
           }
         }
       }
-    } else { // Fix Bug 44454
+    }else { // Fix Bug 44454
       // get the currently moused over item
       PRInt32 oldIndex;
       PRInt32 curIndex = mSelectedIndex;
@@ -3608,9 +3609,9 @@ nsGfxListControlFrame::AdjustIndexForDisabledOpt(PRInt32 &anNewIndex, PRInt32 &a
   aWasDisabled = PR_FALSE;
   while (1) {
     // Special Debug Code
-    //printf("T:%d  B:%d  I:%d  R:%d  IM:%d  I:%d\n", top, bottom, newIndex, aDoAdjustInc, aDoAdjustIncNext, doingReverse);
+    //PRINTF("T:%d  B:%d  I:%d  R:%d  IM:%d  I:%d\n", top, bottom, newIndex, aDoAdjustInc, aDoAdjustIncNext, doingReverse);
     //if (newIndex < -30 || newIndex > 30) {
-    //  printf("********************************* Stopped!\n");
+    //  PRINTF("********************************* Stopped!\n");
     //  return;
     //}
     // if the newIndex isn't disabled, we are golden, bail out
@@ -4361,7 +4362,7 @@ nsGfxListControlFrame::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFra
     if (options) {
       PRUint32 numOptions;
       options->GetLength(&numOptions);
-      printf("Cur: %d  Num: %d\n", curIndex, numOptions);
+      PRINTF("Cur: %d  Num: %d\n", curIndex, numOptions);
       if (curIndex >= (PRInt32)numOptions) {
         bail = PR_TRUE;
       }
@@ -4383,14 +4384,14 @@ nsGfxListControlFrame::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFra
   //}
   if (!mIsDragScrollingDown) {
     if (mSelectedIndex != mStartExtendedIndex) {
-      printf("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", mSelectedIndex);
+      PRINTF("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", mSelectedIndex);
       ToggleSelected(mSelectedIndex);
     }
   }
   mSelectedIndex = curIndex;
   //SetContentSelected(mSelectedIndex, PR_TRUE);
   if (mSelectedIndex != mStartExtendedIndex) {
-    printf("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", curIndex);
+    PRINTF("%s Toggling Index %d\n", mIsDragScrollingDown?"DN":"UP", curIndex);
     ToggleSelected(mSelectedIndex);
   }
 

@@ -69,6 +69,13 @@
 #include "nsIBindingManager.h"
 #include "nsINodeInfo.h"
 #include "nsIDOMDocumentEvent.h"
+#include "nslog.h"
+
+NS_DECL_LOG(nsXULDocumentLog)
+#define PRINTF NS_LOG_PRINTF(nsXULDocumentLog)
+#define FLUSH  NS_LOG_FLUSH(nsXULDocumentLog)
+
+#define gXULLog nsXULDocumentLog
 
 class nsIAtom;
 class nsIElementFactory;
@@ -86,7 +93,6 @@ class nsIXULPrototypeScript;
 #endif
 
 struct JSObject;
-struct PRLogModuleInfo;
 
 /**
  * The XUL document class
@@ -484,8 +490,6 @@ protected:
     static nsIXULPrototypeCache* gXULCache;
     static nsIScriptSecurityManager* gScriptSecurityManager;
     static nsIPrincipal* gSystemPrincipal;
-
-    static PRLogModuleInfo* gXULLog;
 
     static void GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);
 

@@ -48,6 +48,11 @@
 #include "nsNetUtil.h"
 #include "mozITXTToHTMLConv.h"
 #include "nsIMsgMailNewsUrl.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsStreamConverterLog)
+#define PRINTF NS_LOG_PRINTF(nsStreamConverterLog)
+#define FLUSH  NS_LOG_FLUSH(nsStreamConverterLog)
 
 #define PREF_MAIL_DISPLAY_GLYPH "mail.display_glyph"
 #define PREF_MAIL_DISPLAY_STRUCT "mail.display_struct"
@@ -614,7 +619,7 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
     if ((NS_FAILED(rv)) || (!mEmitter))
     {
 #ifdef DEBUG_rhp
-      printf("Unable to create the correct converter!\n");
+      PRINTF("Unable to create the correct converter!\n");
 #endif
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -865,7 +870,7 @@ nsresult
 nsStreamConverter::OnStartRequest(nsIChannel * aChannel, nsISupports *ctxt)
 {
 #ifdef DEBUG_rhp
-    printf("nsStreamConverter::OnStartRequest()\n");
+  PRINTF("nsStreamConverter::OnStartRequest()\n");
 #endif
 
 #ifdef DEBUG_mscott
@@ -897,7 +902,7 @@ nsresult
 nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 {
 #ifdef DEBUG_rhp
-    printf("nsStreamConverter::OnStopRequest()\n");
+  PRINTF("nsStreamConverter::OnStopRequest()\n");
 #endif
 
   //
@@ -968,7 +973,7 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
 #ifdef DEBUG_mscott
   // print out the mime timing information BEFORE we flush to layout
   // otherwise we'll be including layout information.
-  printf("Time Spent in mime:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - mConvertContentTime));
+  PRINTF("Time Spent in mime:    %d ms\n", PR_IntervalToMilliseconds(PR_IntervalNow() - mConvertContentTime));
 #endif
 
   // forward on top request to any listeners

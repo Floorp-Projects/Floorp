@@ -29,6 +29,11 @@
 #include "nsISmtpServer.h"
 #include "nsSmtpDataSource.h"
 #include "nsMsgCompCID.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSmtpDataSourceLog)
+#define PRINTF NS_LOG_PRINTF(nsSmtpDataSourceLog)
+#define FLUSH  NS_LOG_FLUSH(nsSmtpDataSourceLog)
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
@@ -170,19 +175,19 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
         nsCOMPtr<nsISmtpServer> testServer;
         
         if (aProperty == kNC_IsDefaultServer.get()) {
-            printf("Checking for default..");
+            PRINTF("Checking for default..");
             smtpService->GetDefaultServer(getter_AddRefs(testServer));
         }
 
         else if (aProperty == kNC_IsSessionDefaultServer.get()) {
-            printf("checking for session default..");
+            PRINTF("checking for session default..");
             smtpService->GetSessionDefaultServer(getter_AddRefs(testServer));
         }
         
         if (testServer.get() == smtpServer.get())
             truthValue = PR_TRUE;
 
-        printf("%s\n",  truthValue ? "TRUE" : "FALSE");
+        PRINTF("%s\n",  truthValue ? "TRUE" : "FALSE");
         if (truthValue) {
             *aResult = kTrueLiteral;
             NS_ADDREF(*aResult);
@@ -190,7 +195,7 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
     }
 
     else {
-        printf("smtpDatasource: Unknown property\n");
+        PRINTF("smtpDatasource: Unknown property\n");
     }
 
     return NS_OK;

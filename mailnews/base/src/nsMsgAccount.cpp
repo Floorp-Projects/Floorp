@@ -38,6 +38,11 @@
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgMailSession.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgAccountLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgAccountLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgAccountLog)
 
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -122,7 +127,7 @@ nsMsgAccount::createIncomingServer()
   if (NS_FAILED(rv)) return rv;
     
 #ifdef DEBUG_alecf
-  printf("\t%s's server: %s\n", (const char*)m_accountKey, (const char*)serverKey);
+  PRINTF("\t%s's server: %s\n", (const char*)m_accountKey, (const char*)serverKey);
 #endif
 
   // get the servertype
@@ -142,9 +147,9 @@ nsMsgAccount::createIncomingServer()
     
 #ifdef DEBUG_alecf
   if (NS_FAILED(rv)) {
-    printf("\tCould not read pref %s\n", (const char*)serverTypePref);
+    PRINTF("\tCould not read pref %s\n", (const char*)serverTypePref);
   } else {
-    printf("\t%s's   type: %s\n",
+    PRINTF("\t%s's   type: %s\n",
            (const char*)m_accountKey, (const char*)serverType);
   }
 #endif
@@ -159,7 +164,7 @@ nsMsgAccount::createIncomingServer()
   NS_ENSURE_SUCCESS(rv, rv);
   
 #ifdef DEBUG_alecf
-  printf("%s loaded.\n", (const char*)m_accountKey);
+  PRINTF("%s loaded.\n", (const char*)m_accountKey);
 #endif
   // store the server in this structure
   m_incomingServer = server;
@@ -239,7 +244,7 @@ nsMsgAccount::createIdentities()
   if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_alecf
-  printf("%s's identities: %s\n",
+  PRINTF("%s's identities: %s\n",
          (const char*)m_accountKey,
          (const char*)identityKey);
 #endif

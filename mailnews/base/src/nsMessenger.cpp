@@ -107,6 +107,12 @@
 // Find / Find Again 
 #include "nsIFindComponent.h"
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMessengerLog)
+#define PRINTF NS_LOG_PRINTF(nsMessengerLog)
+#define FLUSH  NS_LOG_FLUSH(nsMessengerLog)
+
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
@@ -488,7 +494,7 @@ nsMessenger::OpenURL(const char * url)
   if (url)
   {
 #ifdef DEBUG_MESSENGER
-    printf("nsMessenger::OpenURL(%s)\n",url);
+      PRINTF("nsMessenger::OpenURL(%s)\n",url);
 #endif    
 
     // This is to setup the display DocShell as UTF-8 capable...
@@ -664,7 +670,7 @@ nsMessenger::SaveAttachment(const char * url, const char * displayName,
   if (!url) goto done;
 
 #ifdef DEBUG_MESSENGER
-  printf("nsMessenger::SaveAttachment(%s)\n",url);
+  PRINTF("nsMessenger::SaveAttachment(%s)\n",url);
 #endif    
   unescapedUrl = PL_strdup(url);
   if (!unescapedUrl) goto done;
@@ -1379,8 +1385,8 @@ SendLaterListener::OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint
 {
 #ifdef NS_DEBUG
   if (NS_SUCCEEDED(aStatus))
-    printf("SendLaterListener::OnStopSending: Tried to send %d messages. %d successful.\n",
-            aTotalTried, aSuccessful);
+    PRINTF("SendLaterListener::OnStopSending: Tried to send %d messages. %d successful.\n",
+           aTotalTried, aSuccessful);
 #endif
 
   return NS_OK;
@@ -1396,7 +1402,7 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity)
 	if (NS_SUCCEEDED(rv) && pMsgSendLater) 
 	{ 
 #ifdef DEBUG
-		printf("We succesfully obtained a nsIMsgSendLater interface....\n"); 
+		PRINTF("We succesfully obtained a nsIMsgSendLater interface....\n"); 
 #endif
 
     SendLaterListener *sendLaterListener = new SendLaterListener();
@@ -1415,7 +1421,7 @@ nsMessenger::SendUnsentMessages(nsIMsgIdentity *aIdentity)
 NS_IMETHODIMP nsMessenger::DoPrint()
 {
 #ifdef DEBUG_MESSENGER
-  printf("nsMessenger::DoPrint()\n");
+    PRINTF("nsMessenger::DoPrint()\n");
 #endif
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -1433,13 +1439,13 @@ NS_IMETHODIMP nsMessenger::DoPrint()
     }
 #ifdef DEBUG_MESSENGER
     else {
-	    printf("the content viewer does not support printing\n");
+	    PRINTF("the content viewer does not support printing\n");
     }
 #endif
   }
 #ifdef DEBUG_MESSENGER
   else {
-	printf("failed to get the viewer for printing\n");
+      PRINTF("failed to get the viewer for printing\n");
   }
 #endif
   
@@ -1450,7 +1456,7 @@ NS_IMETHODIMP nsMessenger::DoPrintPreview()
 {
   nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
 #ifdef DEBUG_MESSENGER
-  printf("nsMessenger::DoPrintPreview() not implemented yet\n");
+  PRINTF("nsMessenger::DoPrintPreview() not implemented yet\n");
 #endif
   return rv;  
 }

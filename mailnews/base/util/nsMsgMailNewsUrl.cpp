@@ -34,6 +34,11 @@
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgMailNewsUrlLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgMailNewsUrlLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgMailNewsUrlLog)
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
@@ -110,7 +115,7 @@ nsresult nsMsgMailNewsUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 		}
 	}
   else
-    printf("no listeners in set url state\n");
+      PRINTF("no listeners in set url state\n");
 
 	return NS_OK;
 }

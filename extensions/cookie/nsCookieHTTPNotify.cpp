@@ -38,6 +38,11 @@
 #include "nsIHTTPProtocolHandler.h"		// for NS_HTTP_STARTUP_CATEGORY
 #include "nsIInterfaceRequestor.h"
 #include "nsIPrompt.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCookieHTTPNotifyLog)
+#define PRINTF NS_LOG_PRINTF(nsCookieHTTPNotifyLog)
+#define FLUSH  NS_LOG_FLUSH(nsCookieHTTPNotifyLog)
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
@@ -117,9 +122,7 @@ nsCookieHTTPNotify::nsCookieHTTPNotify()
 {
     NS_INIT_REFCNT();
     mCookieService = nsnull;
-#ifdef DEBUG_dp
-    printf("CookieHTTPNotify Created.\n");
-#endif /* DEBUG_dp */
+    PRINTF("CookieHTTPNotify Created.\n");
 }
 
 nsCookieHTTPNotify::~nsCookieHTTPNotify()

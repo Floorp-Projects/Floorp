@@ -27,6 +27,11 @@
 #include <photon/PhRender.h>
 #include <Pt.h>
 #include <errno.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDrawingSurfacePhLog)
+#define PRINTF NS_LOG_PRINTF(nsDrawingSurfacePhLog)
+#define FLUSH  NS_LOG_FLUSH(nsDrawingSurfacePhLog)
 
 NS_IMPL_ISUPPORTS2(nsDrawingSurfacePh, nsIDrawingSurface, nsIDrawingSurfacePh)
 
@@ -102,7 +107,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
                                           void **aBits, PRInt32 *aStride,
                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
-	printf("Lock()\n");
+	PRINTF("Lock()\n");
 	PhArea_t    dst_area, src_area;
 	int         format = 0, bpl;
 
@@ -160,13 +165,13 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Lock(PRInt32 aX, PRInt32 aY,
 	}
 	*aStride = *aWidthBytes = bpl * dst_area.size.w;
 
-	printf("end Lock()\n");
+	PRINTF("end Lock()\n");
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 {
-	printf("UnLock\n");
+	PRINTF("UnLock\n");
 	PdOffscreenContext_t *off_dc = (PdOffscreenContext_t *) mDrawContext;
 	PhArea_t    dst_area, src_area;
 
@@ -194,8 +199,8 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
 
 	mLocked = PR_FALSE;
 
-	printf("end UnLock\n");
-  	return NS_OK;
+	PRINTF("end UnLock\n");
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsDrawingSurfacePh :: GetDimensions(PRUint32 *aWidth, PRUint32 *aHeight)

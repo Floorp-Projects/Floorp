@@ -27,6 +27,12 @@
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
 #include "nsLayoutAtoms.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsPlaceholderFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsPlaceholderFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsPlaceholderFrameLog)
 
 nsresult
 NS_NewPlaceholderFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)

@@ -67,6 +67,11 @@
 #include "cmtcmn.h"
 #include "rsrcids.h"
 #include "nsSSLIOLayer.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSecureBrowserUIImplLog)
+#define PRINTF NS_LOG_PRINTF(nsSecureBrowserUIImplLog)
+#define FLUSH  NS_LOG_FLUSH(nsSecureBrowserUIImplLog)
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCommonDialogsCID,         NS_CommonDialog_CID );
@@ -86,13 +91,13 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsSecureBroswerUI:5
+//    set NSPR_LOG_MODULES=gSecureDocLog:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gSecureDocLog = nsnull;
+NS_IMPL_LOG(gSecureDocLog);
 #endif /* PR_LOGGING */
 
  
@@ -129,13 +134,6 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 {
     NS_INIT_REFCNT();
     
-#if defined(PR_LOGGING)
-    if (nsnull == gSecureDocLog) {
-        gSecureDocLog = PR_NewLogModule("nsSecureBroswerUI");
-    }
-#endif /* PR_LOGGING */
-
-
     mIsSecureDocument = mMixContentAlertShown = mIsDocumentBroken = PR_FALSE;
     mLastPSMStatus    = nsnull;
     mCurrentURI       = nsnull;
@@ -516,7 +514,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 
     nsXPIDLCString temp;
     aURI->GetSpec(getter_Copies(temp));
-    printf("OnSecurityChange: (%x) %s\n", state, (const char*)temp);
+    PRINTF("OnSecurityChange: (%x) %s\n", state, (const char*)temp);
 #endif
 
 

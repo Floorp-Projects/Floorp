@@ -32,6 +32,11 @@
 #include "nsSound.h"
 #include "nsIURL.h"
 #include "nsNetUtil.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsSoundLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsSoundLog)
+#define FLUSH  NS_LOG_FLUSH(nsSoundLog)
 
 NS_IMPL_ISUPPORTS2(nsSound, nsISound, nsIStreamLoaderObserver)
 
@@ -69,7 +74,7 @@ NS_IMETHODIMP nsSound::OnStreamComplete(nsIStreamLoader *aLoader,
         if (uri) {
           char* uriSpec;
           uri->GetSpec(&uriSpec);
-          printf("Failed to load %s\n", uriSpec ? uriSpec : "");
+          PRINTF("Failed to load %s\n", uriSpec ? uriSpec : "");
         }
       }
     }
@@ -94,7 +99,7 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
 #ifdef DEBUG_SOUND
   char *url;
   aURL->GetSpec(&url);
-  printf("%s\n", url);
+  PRINTF("%s\n", url);
 #endif
 
   nsCOMPtr<nsIStreamLoader> loader;

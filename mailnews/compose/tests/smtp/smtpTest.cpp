@@ -69,6 +69,12 @@
 #endif
 #endif
 
+#include "nslog.h"
+
+NS_IMPL_LOG(smtpTestLog)
+#define PRINTF NS_LOG_PRINTF(smtpTestLog)
+#define FLUSH  NS_LOG_FLUSH(smtpTestLog)
+
 /////////////////////////////////////////////////////////////////////////////////
 // Define keys for all of the interfaces we are going to require for this test
 /////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +102,7 @@ static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 #ifdef XP_UNIX
 extern "C" char *fe_GetConfigDir(void) {
-  printf("XXX: return /tmp for fe_GetConfigDir\n");
+    PRINTF("XXX: return /tmp for fe_GetConfigDir\n");
   return PL_strdup("/tmp");
 }
 #endif /* XP_UNIX */
@@ -203,9 +209,9 @@ nsresult nsSmtpTestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	// the following strings are used by QA as part of the smoketest. DO NOT REMOVE THEM!!!!!!!
 	///////////////////////////////////////////////////////////////////////////////////////////
 	if (NS_SUCCEEDED(aExitCode))
-		printf("\nMessage Sent: PASSED\n");
+		PRINTF("\nMessage Sent: PASSED\n");
 	else
-		printf("\nMessage Sent: FAILED!\n");
+		PRINTF("\nMessage Sent: FAILED!\n");
 
 	return NS_OK;
 }
@@ -282,7 +288,7 @@ void nsSmtpTestDriver::InitializeTestDriver()
 	PL_strcpy(m_urlSpec, DEFAULT_URL_TYPE); // copy "sockstub://" part into url spec...
 
 	// prompt user for port...
-	printf("Enter port to use [%d]: ", m_port);
+	PRINTF("Enter port to use [%d]: ", m_port);
     fgets(portString, sizeof(portString), stdin);
     strip_nonprintable(portString);
 	if (portString && *portString)
@@ -291,7 +297,7 @@ void nsSmtpTestDriver::InitializeTestDriver()
 	}
 
 	// now prompt for the host name....
-	printf("Enter host name to use [%s]: ", m_host);
+	PRINTF("Enter host name to use [%s]: ", m_host);
     fgets(hostString, sizeof(hostString), stdin);
     strip_nonprintable(hostString);
 	if(hostString && *hostString)
@@ -311,9 +317,9 @@ nsresult nsSmtpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 	tempBuffer[0] = '\0'; 
 
 	if (userPrompt)
-		printf(userPrompt);
+		PRINTF(userPrompt);
 	else
-		printf("Enter data for command: ");
+		PRINTF("Enter data for command: ");
 
     fgets(tempBuffer, sizeof(tempBuffer), stdin);
     strip_nonprintable(tempBuffer);
@@ -333,7 +339,7 @@ nsresult nsSmtpTestDriver::ReadAndDispatchCommand()
 	char commandString[5];
 	commandString[0] = '\0';
 
-	printf("Enter command number: ");
+	PRINTF("Enter command number: ");
     fgets(commandString, sizeof(commandString), stdin);
     strip_nonprintable(commandString);
 	if (commandString && *commandString)
@@ -360,10 +366,10 @@ nsresult nsSmtpTestDriver::ReadAndDispatchCommand()
 
 nsresult nsSmtpTestDriver::ListCommands()
 {
-	printf("Commands currently available: \n");
-	printf("0) List commands. \n");
-	printf("1) Send a message in a file. \n");
-	printf("9) Exit the test application. \n");
+	PRINTF("Commands currently available: \n");
+	PRINTF("0) List commands. \n");
+	PRINTF("1) Send a message in a file. \n");
+	PRINTF("9) Exit the test application. \n");
 	return NS_OK;
 }
 
@@ -373,7 +379,7 @@ nsresult nsSmtpTestDriver::ListCommands()
 
 nsresult nsSmtpTestDriver::OnExit()
 {
-	printf("Terminating Smtp test harness....\n");
+	PRINTF("Terminating Smtp test harness....\n");
 	m_runTestHarness = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
@@ -416,7 +422,7 @@ nsresult nsSmtpTestDriver::OnSendMessageInFile()
 	nsCOMPtr <nsIMsgIdentity> senderIdentity;
 	senderIdentity = null_nsCOMPtr();
 	
-	printf("passing in null for the sender identity will cause the send to fail, but at least it builds.  I need to talk to rhp / mscott about this.\n");
+	PRINTF("passing in null for the sender identity will cause the send to fail, but at least it builds.  I need to talk to rhp / mscott about this.\n");
 
 	m_smtpService->SendMailMessage(aIFileSpec, recipients, senderIdentity, this, nsnull, &url);
 	if (url)
@@ -458,7 +464,7 @@ int main()
 	prefs->StartUp();
     if (NS_FAILED(prefs->ReadUserPrefs()))
     {
-      printf("Failed on reading user prefs!\n");
+        PRINTF("Failed on reading user prefs!\n");
       exit(-1);
     }
 
@@ -472,7 +478,7 @@ int main()
 
     result = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,&queue);
     if (NS_FAILED(result) || !queue) {
-        printf("unable to get event queue.\n");
+        PRINTF("unable to get event queue.\n");
         return 1;
     }
 

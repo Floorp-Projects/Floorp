@@ -62,6 +62,11 @@
 
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsXULPopupListenerLog)
+#define PRINTF NS_LOG_PRINTF(nsXULPopupListenerLog)
+#define FLUSH  NS_LOG_FLUSH(nsXULPopupListenerLog)
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -160,7 +165,7 @@ XULPopupListenerImpl::~XULPopupListenerImpl(void)
   
 #ifdef DEBUG_REFS
     --gInstanceCount;
-    fprintf(stdout, "%d - RDF: XULPopupListenerImpl\n", gInstanceCount);
+    PRINTF("%d - RDF: XULPopupListenerImpl\n", gInstanceCount);
 #endif
 }
 

@@ -51,6 +51,11 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIInterfaceRequestor.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgIncomingServerLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgIncomingServerLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgIncomingServerLog)
 
 #ifdef DEBUG_sspitzer
 #define DEBUG_MSGINCOMING_SERVER
@@ -142,7 +147,7 @@ NS_IMETHODIMP
 nsMsgIncomingServer::PerformExpand(nsIMsgWindow *aMsgWindow)
 {
 #ifdef DEBUG_sspitzer
-	printf("PerformExpand()\n");
+	PRINTF("PerformExpand()\n");
 #endif
 	return NS_OK;
 }
@@ -842,13 +847,13 @@ nsMsgIncomingServer::Equals(nsIMsgIncomingServer *server, PRBool *_retval)
     // compare the server keys
     if (PL_strcmp((const char *)key1,(const char *)key2)) {
 #ifdef DEBUG_MSGINCOMING_SERVER
-        printf("%s and %s are different, servers are not the same\n",(const char *)key1,(const char *)key2);
+        PRINTF("%s and %s are different, servers are not the same\n",(const char *)key1,(const char *)key2);
 #endif /* DEBUG_MSGINCOMING_SERVER */
         *_retval = PR_FALSE;
     }
     else {
 #ifdef DEBUG_MSGINCOMING_SERVER
-        printf("%s and %s are equal, servers are the same\n",(const char *)key1,(const char *)key2);
+        PRINTF("%s and %s are equal, servers are the same\n",(const char *)key1,(const char *)key2);
 #endif /* DEBUG_MSGINCOMING_SERVER */
         *_retval = PR_TRUE;
     }
@@ -875,7 +880,7 @@ nsMsgIncomingServer::RemoveFiles()
 	// and in use.  I need to think about this some more.
 #if 0
 #ifdef DEBUG_MSGINCOMING_SERVER
-	printf("remove files for %s\n", (const char *)m_serverKey);
+	PRINTF("remove files for %s\n", (const char *)m_serverKey);
 #endif /* DEBUG_MSGINCOMING_SERVER */
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsIFileSpec> localPath;

@@ -38,6 +38,11 @@
 #include "winbase.h"
 
 #include "nsSpecialSystemDirectory.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsPluginsDirWinLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsPluginsDirWinLog)
+#define FLUSH  NS_LOG_FLUSH(nsPluginsDirWinLog)
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -209,7 +214,7 @@ nsPluginsDir::nsPluginsDir(PRUint16 location)
 
 #ifdef NS_DEBUG 
   if (path[0] != 0) 
-    printf("plugins at: %s\n", path); 
+      PRINTF("plugins at: %s\n", path); 
 #endif 
 }
 

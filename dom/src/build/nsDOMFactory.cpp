@@ -138,6 +138,11 @@
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "plhash.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsDOMFactoryLog)
+#define PRINTF NS_LOG_PRINTF(nsDOMFactoryLog)
+#define FLUSH  NS_LOG_FLUSH(nsDOMFactoryLog)
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
 
@@ -791,7 +796,7 @@ void DumpJSStack()
     if(NS_SUCCEEDED(rv))
         xpc->DebugDumpJSStack(PR_TRUE, PR_TRUE, PR_FALSE);
     else    
-        printf("failed to get XPConnect service!\n");
+        PRINTF("failed to get XPConnect service!\n");
 }
 
 void DumpJSEval(PRUint32 frame, const char* text)
@@ -801,7 +806,7 @@ void DumpJSEval(PRUint32 frame, const char* text)
     if(NS_SUCCEEDED(rv))
         xpc->DebugDumpEvalInJSStackFrame(frame, text);
     else    
-        printf("failed to get XPConnect service!\n");
+        PRINTF("failed to get XPConnect service!\n");
 }
 JS_END_EXTERN_C
 #endif

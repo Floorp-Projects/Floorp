@@ -39,6 +39,11 @@
 #include <ToolUtils.h>
 #include <Devices.h>
 #include <Menus.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsContextMenuLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsContextMenuLog)
+#define FLUSH  NS_LOG_FLUSH(nsContextMenuLog)
 
 // CIDs
 #include "nsWidgetsCID.h"
@@ -575,7 +580,7 @@ void nsContextMenu::LoadSubMenu(
 {
   nsString menuName;
   menuElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), menuName);
-  //printf("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
+  //PRINTF("Creating Menu [%s] \n", menuName.ToNewCString()); // this leaks
 
   // Create nsMenu
   nsIMenu * pnsMenu = nsnull;

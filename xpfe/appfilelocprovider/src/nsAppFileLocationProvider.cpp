@@ -398,7 +398,7 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 
         if(firstWarning) {
             // Warn that MOZILLA_FIVE_HOME not set, once.
-            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
+            NS_WARNING("Warning: MOZILLA_FIVE_HOME not set.\n");
             firstWarning = PR_FALSE;
         }
 

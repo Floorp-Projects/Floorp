@@ -36,6 +36,11 @@
 
 #include "nsFrameWindow.h"
 #include "nsIRollupListener.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFrameWindowLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsFrameWindowLog)
+#define FLUSH  NS_LOG_FLUSH(nsFrameWindowLog)
 
 static PRBool haveHiddenWindow = PR_FALSE;
 
@@ -82,10 +87,10 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                  "Attempt to create non-top-level frame");   */
 
 #if DEBUG_sobotka
-   printf("\nIn nsFrameWindow::RealDoCreate:\n");
-   printf("   hwndP = %lu\n", hwndP);
-   printf("   aParent = 0x%lx\n", &aParent);
-   printf("   aRect = %ld, %ld, %ld, %ld\n", aRect.x, aRect.y, aRect.height, aRect.width);
+    PRINTF("\nIn nsFrameWindow::RealDoCreate:\n");
+    PRINTF("   hwndP = %lu\n", hwndP);
+    PRINTF("   aParent = 0x%lx\n", &aParent);
+    PRINTF("   aRect = %ld, %ld, %ld, %ld\n", aRect.x, aRect.y, aRect.height, aRect.width);
 #endif
 
    // Create the frame window.

@@ -65,6 +65,12 @@
 
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nslog.h"
+#undef fprintf
+
+NS_IMPL_LOG(nsTextFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsTextFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsTextFrameLog)
 
 #ifndef PR_ABS
 #define PR_ABS(x) ((x) < 0 ? -(x) : (x))
@@ -284,7 +290,7 @@ NS_IMETHODIMP_(void) nsBlinkTimer::Notify(nsITimer *timer)
   LL_SUB(delta, now, gLastTick);
   gLastTick = now;
   PR_snprintf(buf, sizeof(buf), "%lldusec", delta);
-  printf("%s\n", buf);
+  PRINTF("%s\n", buf);
 #endif
 
   PRInt32 i, n = mFrames.Count();
@@ -3978,7 +3984,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     // frame and recorded it as part of the word.
 #ifdef DEBUG_WORD_WRAPPING
     ListTag(stdout);
-    printf(": in word; skipping\n");
+    PRINTF(": in word; skipping\n");
 #endif
     lineLayout.ForgetWordFrame(this);
   }
@@ -4009,12 +4015,11 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
 #ifdef DEBUG_WORD_WRAPPING
           nsAutoString tmp(aTx.GetWordBuffer(), lastWordLen);
           ListTag(stdout);
-          printf(": start='");
-          fputs(tmp, stdout);
-          printf("' lastWordLen=%d baseWidth=%d prevOffset=%d offset=%d next=",
+          PRINTF(": start='%s", tmp);
+          PRINTF("' lastWordLen=%d baseWidth=%d prevOffset=%d offset=%d next=",
                  lastWordLen, lastWordWidth, prevOffset, aTextData.mOffset);
           ListTag(stdout, next);
-          printf("\n");
+          PRINTF("\n");
 #endif
           PRUnichar* pWordBuf = lastWordPtr;
           PRUint32   wordBufLen = aTx.GetWordBufferLength() -
@@ -4069,7 +4074,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
           else {
 #ifdef NOISY_REFLOW
             ListTag(stdout);
-            printf(": look-ahead (didn't fit) x=%d wordWidth=%d lastWordWidth=%d\n",
+            PRINTF(": look-ahead (didn't fit) x=%d wordWidth=%d lastWordWidth=%d\n",
                    aTextData.mX, wordWidth, lastWordWidth);
 #endif
             // The fully joined word won't fit. We need to reduce our
@@ -4079,7 +4084,7 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
             aTextData.mOffset = prevOffset;
             column = prevColumn;
 #ifdef DEBUG_WORD_WRAPPING
-            printf("  x=%d maxWordWidth=%d len=%d\n", aTextData.mX, aTextData.mMaxWordWidth,
+            PRINTF("  x=%d maxWordWidth=%d len=%d\n", aTextData.mX, aTextData.mMaxWordWidth,
                    aTextData.mOffset - startingOffset);
 #endif
             lineLayout.ForgetWordFrames();
@@ -4129,7 +4134,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
   DO_GLOBAL_REFLOW_COUNT("nsTextFrame", aReflowState.reason);
 #ifdef NOISY_REFLOW
   ListTag(stdout);
-  printf(": BeginReflow: availableSize=%d,%d\n",
+  PRINTF(": BeginReflow: availableSize=%d,%d\n",
          aReflowState.availableWidth, aReflowState.availableHeight);
 #endif
 
@@ -4267,11 +4272,11 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
       // previous reflow
       measureText = PR_FALSE;
 #ifdef NOISY_REFLOW
-      printf("  => measureText=%s wrapping=%s skipWhitespace=%s",
+      PRINTF("  => measureText=%s wrapping=%s skipWhitespace=%s",
              measureText ? "yes" : "no",
              wrapping ? "yes" : "no",
              skipWhitespace ? "yes" : "no");
-      printf(" realWidth=%d maxWidth=%d\n",
+      PRINTF(" realWidth=%d maxWidth=%d\n",
              realWidth, maxWidth);
 #endif
     }
@@ -4364,7 +4369,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
       aMetrics.mBoundingMetrics.descent = aMetrics.descent;
       aMetrics.mBoundingMetrics.width   = aMetrics.width;
 #ifdef MOZ_MATHML_BOUNDINGMETRICS
-      printf("nsTextFrame: could not perform GetBoundingMetrics()\n");
+      PRINTF("nsTextFrame: could not perform GetBoundingMetrics()\n");
 #endif
     }
   }
@@ -4402,7 +4407,7 @@ nsTextFrame::Reflow(nsIPresContext* aPresContext,
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
-  printf(": desiredSize=%d,%d(a=%d/d=%d) status=%x\n",
+  PRINTF(": desiredSize=%d,%d(a=%d/d=%d) status=%x\n",
          aMetrics.width, aMetrics.height, aMetrics.ascent, aMetrics.descent,
          aStatus);
 #endif
@@ -4462,7 +4467,7 @@ nsTextFrame::TrimTrailingWhiteSpace(nsIPresContext* aPresContext,
   }
 #ifdef NOISY_TRIM
   ListTag(stdout);
-  printf(": trim => %d\n", dw);
+  PRINTF(": trim => %d\n", dw);
 #endif
   if (0 != dw) {
     mState |= TEXT_TRIMMED_WS;
@@ -4506,9 +4511,9 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
     nsIContent* content = nsnull;
     if ((NS_OK == aNextFrame->GetContent(&content)) && (nsnull != content)) {
 #ifdef DEBUG_WORD_WRAPPING
-      printf("  next textRun=");
+      PRINTF("  next textRun=");
       nsFrame::ListTag(stdout, aNextFrame);
-      printf("\n");
+      PRINTF("\n");
 #endif
       nsITextContent* tc;
       if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
@@ -4526,7 +4531,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
         NS_RELEASE(content);
         addedWidth += moreWidth;
 #ifdef DEBUG_WORD_WRAPPING
-        printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreWidth,
+        PRINTF("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreWidth,
                addedWidth, stop?'T':'F');
 #endif
         if (stop) {
@@ -4548,7 +4553,7 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 
  done:;
 #ifdef DEBUG_WORD_WRAPPING
-  printf("  total word width=%d\n", aBaseWidth + addedWidth);
+  PRINTF("  total word width=%d\n", aBaseWidth + addedWidth);
 #endif
   return aBaseWidth + addedWidth;
 }
@@ -4643,9 +4648,8 @@ nsTextFrame::ComputeWordFragmentWidth(nsIPresContext* aPresContext,
 
 #ifdef DEBUG_WORD_WRAPPING
     nsAutoString tmp(bp, wordLen);
-    printf("  fragment='");
-    fputs(tmp, stdout);
-    printf("' width=%d [wordLen=%d contentLen=%d ContentLength=%d]\n",
+    PRINTF("  fragment='%s", tmp);
+    PRINTF("' width=%d [wordLen=%d contentLen=%d ContentLength=%d]\n",
            width, wordLen, contentLen, tx.GetContentLength());
 #endif
 
@@ -4732,7 +4736,7 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   IndentBy(out, aIndent);
   ListTag(out);
 #ifdef DEBUG_waterson
-  fprintf(out, " [parent=%p]", mParent);
+  FPRINTF(out, " [parent=%p]", mParent);
 #endif
   nsIView* view;
   GetView(aPresContext, &view);
@@ -4773,13 +4777,11 @@ nsTextFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
   aIndent++;
 
   IndentBy(out, aIndent);
-  fputs("\"", out);
-  fputs(tmp, out);
-  fputs("\"\n", out);
+  fprintf(out, "\"%s\"\n", tmp);
 
   aIndent--;
   IndentBy(out, aIndent);
-  fputs(">\n", out);
+  fprintf(out, ">\n");
 
   return NS_OK;
 }

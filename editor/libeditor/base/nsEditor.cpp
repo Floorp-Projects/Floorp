@@ -137,12 +137,11 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 const char* nsEditor::kMOZEditorBogusNodeAttr="_moz_editor_bogus_node";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
 
-#ifdef NS_DEBUG_EDITOR
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
+#include "nslog.h"
 
+NS_IMPL_LOG(nsEditorLog)
+#define PRINTF NS_LOG_PRINTF(nsEditorLog)
+#define FLUSH  NS_LOG_FLUSH(nsEditorLog)
 
 const PRUnichar nbsp = 160;
 PRInt32 nsEditor::gInstanceCount = 0;
@@ -724,11 +723,11 @@ nsRangeUpdater::DidMoveNode(nsIDOMNode *aOldParent, PRInt32 aOldOffset, nsIDOMNo
 
 nsRangeStore::nsRangeStore() 
 { 
-  // DEBUG: n++;  printf("range store alloc count=%d\n", n); 
+  // DEBUG: n++;  PRINTF("range store alloc count=%d\n", n); 
 }
 nsRangeStore::~nsRangeStore()
 {
-  // DEBUG: n--;  printf("range store alloc count=%d\n", n); 
+  // DEBUG: n--;  PRINTF("range store alloc count=%d\n", n); 
 }
 
 nsresult nsRangeStore::StoreRange(nsIDOMRange *aRange)
@@ -1108,7 +1107,7 @@ nsEditor::GetSelection(nsISelection **aSelection)
 NS_IMETHODIMP 
 nsEditor::Do(nsITransaction *aTxn)
 {
-  if (gNoisy) { printf("Editor::Do ----------\n"); }
+  PRINTF("Editor::Do ----------\n");
   
   nsresult result = NS_OK;
   
@@ -1185,7 +1184,7 @@ nsEditor::EnableUndo(PRBool aEnable)
                                         nsnull,
                                         NS_GET_IID(nsITransactionManager), getter_AddRefs(mTxnMgr));
       if (NS_FAILED(result) || !mTxnMgr) {
-        printf("ERROR: Failed to get TransactionManager instance.\n");
+        PRINTF("ERROR: Failed to get TransactionManager instance.\n");
         return NS_ERROR_NOT_AVAILABLE;
       }
     }
@@ -1221,7 +1220,7 @@ nsEditor::GetTransactionManager(nsITransactionManager* *aTxnManager)
 NS_IMETHODIMP 
 nsEditor::Undo(PRUint32 aCount)
 {
-  if (gNoisy) { printf("Editor::Undo ----------\n"); }
+  PRINTF("Editor::Undo ----------\n");
   nsresult result = NS_OK;
   ForceCompositionEnd();
 
@@ -1266,7 +1265,7 @@ NS_IMETHODIMP nsEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 NS_IMETHODIMP 
 nsEditor::Redo(PRUint32 aCount)
 {
-  if (gNoisy) { printf("Editor::Redo ----------\n"); }
+  PRINTF("Editor::Redo ----------\n");
   nsresult result = NS_OK;
 
   nsAutoRules beginRulesSniffing(this, kOpRedo, nsIEditor::eNone);
@@ -2455,7 +2454,7 @@ NS_IMETHODIMP
 nsEditor::BeginComposition(nsTextEventReply* aReply)
 {
 #ifdef DEBUG_tague
-  printf("nsEditor::StartComposition\n");
+  PRINTF("nsEditor::StartComposition\n");
 #endif
   nsresult ret = QueryComposition(aReply);
   mInIMEMode = PR_TRUE;
@@ -2814,7 +2813,7 @@ nsEditor::CloneAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
           } else {
             // Do we ever get here?
 #if DEBUG_cmanske
-            printf("Attribute in sourceAttribute has empty value in nsEditor::CloneAttributes()\n");
+            PRINTF("Attribute in sourceAttribute has empty value in nsEditor::CloneAttributes()\n");
 #endif
           }
         }        
@@ -3255,7 +3254,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
                         nsIDOMNode*  aParent)
 {
 
-  if (gNoisy) { printf("SplitNodeImpl: left=%p, right=%p, offset=%d\n", aNewLeftNode, aExistingRightNode, aOffset); }
+  PRINTF("SplitNodeImpl: left=%p, right=%p, offset=%d\n", aNewLeftNode, aExistingRightNode, aOffset);
   
   nsresult result;
   NS_ASSERTION(((nsnull!=aExistingRightNode) &&
@@ -3282,7 +3281,7 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
 
     nsCOMPtr<nsIDOMNode> resultNode;
     result = aParent->InsertBefore(aNewLeftNode, aExistingRightNode, getter_AddRefs(resultNode));
-    //printf("  after insert\n"); content->List();  // DEBUG
+    //PRINTF("  after insert\n"); content->List();  // DEBUG
     if (NS_SUCCEEDED(result))
     {
       // split the children between the 2 nodes
@@ -3318,13 +3317,13 @@ nsEditor::SplitNodeImpl(nsIDOMNode * aExistingRightNode,
               if ((NS_SUCCEEDED(result)) && (childNode))
               {
                 result = aExistingRightNode->RemoveChild(childNode, getter_AddRefs(resultNode));
-                //printf("  after remove\n"); content->List();  // DEBUG
+                //PRINTF("  after remove\n"); content->List();  // DEBUG
                 if (NS_SUCCEEDED(result))
                 {
                   nsCOMPtr<nsIDOMNode> firstChild;
                   aNewLeftNode->GetFirstChild(getter_AddRefs(firstChild));
                   result = aNewLeftNode->InsertBefore(childNode, firstChild, getter_AddRefs(resultNode));
-                  //printf("  after append\n"); content->List();  // DEBUG
+                  //PRINTF("  after append\n"); content->List();  // DEBUG
                 }
               }
             }
@@ -4617,8 +4616,8 @@ nsEditor::GetBlockSection(nsIDOMNode *aChild,
     result = (*aRightNode)->GetNextSibling(getter_AddRefs(sibling)); 
   }
   NS_ADDREF((*aRightNode));
-  if (gNoisy) { printf("GetBlockSection returning %p %p\n", 
-                      (*aLeftNode), (*aRightNode)); }
+  PRINTF("GetBlockSection returning %p %p\n", 
+         (*aLeftNode), (*aRightNode));
 
   return result;
 }
@@ -4673,7 +4672,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
             result = GetBlockSection(currentNode,
                                      getter_AddRefs(leftNode),
                                      getter_AddRefs(rightNode));
-            if (gNoisy) {printf("currentNode %p has block content (%p,%p)\n", currentNode.get(), leftNode.get(), rightNode.get());}
+            PRINTF("currentNode %p has block content (%p,%p)\n", currentNode.get(), leftNode.get(), rightNode.get());
             if ((NS_SUCCEEDED(result)) && leftNode && rightNode)
             {
               // add range to the list if it doesn't overlap with the previous range
@@ -4686,12 +4685,12 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
                 blockParentOfLastStartNode = do_QueryInterface(GetBlockNodeParent(lastStartNode));
                 if (blockParentOfLastStartNode)
                 {
-                  if (gNoisy) {printf("lastStartNode %p has block parent %p\n", lastStartNode.get(), blockParentOfLastStartNode.get());}
+                  PRINTF("lastStartNode %p has block parent %p\n", lastStartNode.get(), blockParentOfLastStartNode.get());
                   nsCOMPtr<nsIDOMElement> blockParentOfLeftNode;
                   blockParentOfLeftNode = do_QueryInterface(GetBlockNodeParent(leftNode));
                   if (blockParentOfLeftNode)
                   {
-                    if (gNoisy) {printf("leftNode %p has block parent %p\n", leftNode.get(), blockParentOfLeftNode.get());}
+                    PRINTF("leftNode %p has block parent %p\n", leftNode.get(), blockParentOfLeftNode.get());
                     if (blockParentOfLastStartNode==blockParentOfLeftNode) {
                       addRange = PR_FALSE;
                     }
@@ -4700,7 +4699,7 @@ nsEditor::GetBlockSectionsForRange(nsIDOMRange *aRange, nsISupportsArray *aSecti
               }
               if (PR_TRUE==addRange) 
               {
-                if (gNoisy) {printf("adding range, setting lastRange with start node %p\n", leftNode.get());}
+                PRINTF("adding range, setting lastRange with start node %p\n", leftNode.get());
                 nsCOMPtr<nsIDOMRange> range;
                 result = nsComponentManager::CreateInstance(kCRangeCID, nsnull, 
                                                             NS_GET_IID(nsIDOMRange), getter_AddRefs(range));
@@ -5842,7 +5841,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         }
         else
         { // XXX: can you have an empty text node?  If so, what do you do?
-          printf("ERROR: found a text node with 0 characters\n");
+          PRINTF("ERROR: found a text node with 0 characters\n");
           result = NS_ERROR_UNEXPECTED;
         }
       }
@@ -5881,7 +5880,7 @@ nsEditor::CreateTxnForDeleteInsertionPoint(nsIDOMRange         *aRange,
         }
         else
         { // XXX: can you have an empty text node?  If so, what do you do?
-          printf("ERROR: found a text node with 0 characters\n");
+          PRINTF("ERROR: found a text node with 0 characters\n");
           result = NS_ERROR_UNEXPECTED;
         }
       }

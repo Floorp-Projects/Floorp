@@ -38,26 +38,31 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsIStreamListener.h"
 #include "nsCRT.h"
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
-static NS_DEFINE_CID(kDateTimeCID, NS_DATETIMEFORMAT_CID);
+#include "nslog.h"
 
-#if defined(PR_LOGGING)
 //
 // Log module for FTP dir listing stream converter logging...
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsFTPDirListConv:5
+//    set NSPR_LOG_MODULES=nsFTPDirListingConvLog:5
 //    set NSPR_LOG_FILE=nspr.log
 //
 // this enables PR_LOG_DEBUG level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gFTPDirListConvLog = nsnull;
+#ifdef DEBUG_valeski
+NS_IMPL_LOG_ENABLED(nsFTPDirListingConvLog)
+#else
+NS_IMPL_LOG(nsFTPDirListingConvLog)
+#endif
+#define PRINTF NS_LOG_PRINTF(nsFTPDirListingConvLog)
+#define FLUSH  NS_LOG_FLUSH(nsFTPDirListingConvLog)
 
-#endif /* PR_LOGGING */
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+static NS_DEFINE_CID(kDateTimeCID, NS_DATETIMEFORMAT_CID);
 
 // nsISupports implementation
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFTPDirListingConv, nsIStreamConverter, nsIStreamListener, nsIStreamObserver);
@@ -148,15 +153,12 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     }
     // end body building
 
-#ifndef DEBUG_valeski
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
-        convertedData.Length(), convertedData.GetBuffer()) );
-#else
+#ifdef NS_ENABLED_LOGGING
     char *unescData = convertedData.ToNewCString();
     nsUnescape(unescData);
-    printf("::OnData() sending the following %d bytes...\n\n%s\n\n", convertedData.Length(), unescData);
+    PRINTF("::OnData() sending the following %d bytes...\n\n%s\n\n", convertedData.Length(), unescData);
     nsMemory::Free(unescData);
-#endif // DEBUG_valeski
+#endif
 
     // send the converted data out.
     nsCOMPtr<nsIInputStream> inputData;
@@ -236,7 +238,7 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, 
+    PR_LOG(nsFTPDirListingConvLog, PR_LOG_DEBUG, 
         ("nsFTPDirListingConv::AsyncConvertData() converting FROM raw %s, TO application/http-index-format\n", fromMIMEString.GetBuffer()));
 
     return NS_OK;
@@ -263,7 +265,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     // the dir listings are ascii text, null terminate this sucker.
     buffer[streamLen] = '\0';
 
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::OnData(channel = %x, ctxt = %x, inStr = %x, sourceOffset = %d, count = %d)\n", channel, ctxt, inStr, sourceOffset, count));
+    PR_LOG(nsFTPDirListingConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::OnData(channel = %x, ctxt = %x, inStr = %x, sourceOffset = %d, count = %d)\n", channel, ctxt, inStr, sourceOffset, count));
 
     if (!mBuffer.IsEmpty()) {
         // we have data left over from a previous OnDataAvailable() call.
@@ -274,12 +276,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
         mBuffer.Truncate();
     }
 
-#ifndef DEBUG_valeski
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer) );
-#else
-    printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
-#endif // DEBUG_valeski
-
+    PRINTF("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer);
 
     if (!mSentHeading) {
         // build up the 300: line
@@ -308,20 +305,17 @@ nsFTPDirListingConv::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt,
     char *line = buffer;
     line = DigestBufferLines(line, indexFormat);
 
-#ifndef DEBUG_valeski
-    PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
-        indexFormat.Length(), indexFormat.GetBuffer()) );
-#else
+#ifdef NS_ENABLE_LOGGING
     char *unescData = indexFormat.ToNewCString();
     nsUnescape(unescData);
-    printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
+    PRINTF("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
     nsMemory::Free(unescData);
-#endif // DEBUG_valeski
+#endif
 
     // if there's any data left over, buffer it.
     if (line && *line) {
         mBuffer.Append(line);
-        PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %d bytes...\n\n%s\n\n",
+        PR_LOG(nsFTPDirListingConvLog, PR_LOG_DEBUG, ("::OnData() buffering the following %d bytes...\n\n%s\n\n",
             PL_strlen(line), line) );
     }
 
@@ -401,16 +395,6 @@ nsFTPDirListingConv::Init() {
     rv = comMgr->CreateInstance(kDateTimeCID, nsnull, NS_GET_IID(nsIDateTimeFormat), (void**)&mDateTimeFormat);
     if (NS_FAILED(rv)) return rv;
 
-#if defined(PR_LOGGING)
-    //
-    // Initialize the global PRLogModule for FTP Protocol logging 
-    // if necessary...
-    //
-    if (nsnull == gFTPDirListConvLog) {
-        gFTPDirListConvLog = PR_NewLogModule("nsFTPDirListingConv");
-    }
-#endif /* PR_LOGGING */
-
     return NS_OK;
 }
 
@@ -424,7 +408,7 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
     char c1 = month[1], c2 = month[2];
     PRInt8 rv = -1;
 
-    //PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::MonthNumber(month = %s) ", month) );
+    //PR_LOG(nsFTPDirListingConvLog, PR_LOG_DEBUG, ("nsFTPDirListingConv::MonthNumber(month = %s) ", month) );
 
     switch (*month) {
     case 'f': case 'F':
@@ -464,7 +448,7 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
         rv = -1;
     }
 
-   //PR_LOG(gFTPDirListConvLog, PR_LOG_DEBUG, ("returning %d\n", rv) );
+   //PR_LOG(nsFTPDirListingConvLog, PR_LOG_DEBUG, ("returning %d\n", rv) );
 
     return rv;
 }

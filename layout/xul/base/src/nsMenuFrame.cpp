@@ -65,6 +65,11 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIPref.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMenuFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsMenuFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsMenuFrameLog)
  
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -861,7 +866,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
            if (bounds.width < prefSize.width + width)
            {
              bounds.width += width;
-             //printf("Width=%d\n",width);
+             //PRINTF("Width=%d\n",width);
              ibox->SetBounds(aState, bounds);
            }
         }

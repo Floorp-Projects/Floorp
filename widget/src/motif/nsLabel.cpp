@@ -31,6 +31,11 @@
 #include "nsXtEventHandler.h"
 
 #include <Xm/Label.h>
+#include "nslog.h"
+
+NS_IMPL_LOG(nsLabelLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsLabelLog)
+#define FLUSH  NS_LOG_FLUSH(nsLabelLog)
 
 NS_IMPL_ADDREF(nsLabel)
 NS_IMPL_RELEASE(nsLabel)
@@ -219,7 +224,7 @@ PRBool nsLabel::OnMove(PRInt32, PRInt32)
 
 PRBool nsLabel::OnPaint(nsPaintEvent &aEvent)
 {
-  //printf("** nsLabel::OnPaint **\n");
+  //PRINTF("** nsLabel::OnPaint **\n");
   return PR_FALSE;
 }
 

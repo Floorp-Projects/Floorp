@@ -47,6 +47,11 @@
 #include "nsFileStream.h"
 
 #include "nsNetUtil.h"           // for NS_MakeAbsoluteURI
+#include "nslog.h"
+
+NS_IMPL_LOG(nsHTMLContentSinkStreamLog)
+#define PRINTF NS_LOG_PRINTF(nsHTMLContentSinkStreamLog)
+#define FLUSH  NS_LOG_FLUSH(nsHTMLContentSinkStreamLog)
 
 static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
@@ -655,7 +660,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
 
 #ifdef DEBUG_prettyprint
   if (isDirty)
-    printf("AddStartTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
+    PRINTF("AddStartTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
            name.ToNewCString(),
            BreakBeforeOpen(tag),
            BreakAfterOpen(tag),
@@ -721,7 +726,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
 
 #ifdef DEBUG_prettyprint
   if (isDirty)
-    printf("AddEndTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
+    PRINTF("AddEndTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
            aNode.GetText().ToNewCString(),
            BreakBeforeOpen(tag),
            BreakAfterOpen(tag),

@@ -55,6 +55,11 @@
 #include "nsISecurityManagerComponent.h"
 
 #include "nsIWalletService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(walletLog)
+#define PRINTF NS_LOG_PRINTF(walletLog)
+#define FLUSH  NS_LOG_FLUSH(walletLog)
 
 #ifdef DEBUG_morse
 #define morseAssert NS_ASSERTION
@@ -80,14 +85,14 @@ static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 #include "prlong.h"
 #include "prinrval.h"
 
-#include "prlog.h"
+#include "nslog.h"
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsWallet:5
+//    set NSPR_LOG_MODULES=gWalletLog:5
 //    set NSPR_LOG_FILE=nspr.log
 //
-PRLogModuleInfo* gWalletLog = nsnull;
+NS_IMPL_LOG(gWalletLog);
 
 
 /********************************************************/
@@ -369,8 +374,6 @@ nsresult
 NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
 {
     nsresult rv;
-    if (gWalletLog == nsnull)
-        gWalletLog = PR_NewLogModule ("nsWallet");
 
     nsCOMPtr<nsIIOService> serv = do_GetService(kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -384,9 +387,7 @@ NS_NewURItoFile(const char *in, nsFileSpec dirSpec, const char *out)
     // Async reading thru the calls of the event sink interface
     rv = NS_OpenURI(getter_AddRefs(pChannel), pURL, serv);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-        printf("ERROR: NewChannelFromURI failed for %s\n", in);
-#endif
+      PRINTF("ERROR: NewChannelFromURI failed for %s\n", in);
         return rv;
     }
 
@@ -502,12 +503,12 @@ nsIURI * wallet_lastUrl = NULL;
 
 static void
 wallet_Pause(){
-  fprintf(stdout,"%cpress y to continue\n", '\007');
+  PRINTF("%cpress y to continue\n", '\007');
   char c;
   for (;;) {
     c = getchar();
     if (tolower(c) == 'y') {
-      fprintf(stdout,"OK\n");
+      PRINTF("OK\n");
       break;
     }
   }
@@ -520,7 +521,7 @@ static void
 wallet_DumpAutoString(const nsString& as){
   char s[100];
   as.ToCString(s, sizeof(s));
-  fprintf(stdout, "%s\n", s);
+  PRINTF("%s\n", s);
 }
 
 static void
@@ -534,13 +535,13 @@ wallet_Dump(nsVoidArray * list) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
     ptr->item1.ToCString(item1, sizeof(item1));
     ptr->item2.ToCString(item2, sizeof(item2));
-    fprintf(stdout, "%s %s \n", item1, item2);
+    PRINTF("%s %s \n", item1, item2);
     wallet_Sublist * ptr1;
     PRInt32 count2 = LIST_COUNT(ptr->itemList);
     for (PRInt32 i2=0; i2<count2; i2++) {
       ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(i2));
       ptr1->item.ToCString(item, sizeof(item));
-      fprintf(stdout, "     %s \n", item);
+      PRINTF("     %s \n", item);
     }
   }
   wallet_Pause();
@@ -574,7 +575,7 @@ wallet_DumpTiming() {
     LL_I2L(r2, 100);
     LL_DIV(r3, r1, r2);
     LL_L2I(r4, r3);
-    fprintf(stdout, "time %c = %ld\n", timingID[i], (long)r4);
+    PRINTF("time %c = %ld\n", timingID[i], (long)r4);
     if (i%20 == 0) {
       wallet_Pause();
     }
@@ -632,7 +633,7 @@ wallet_DumpStopwatch() {
   LL_I2L(r1, 100);
   LL_DIV(r2, stopwatch, r1);
   LL_L2I(r3, r2);
-  fprintf(stdout, "stopwatch = %ld\n", (long)r3);  
+  PRINTF("stopwatch = %ld\n", (long)r3);  
 }
 #endif /* DEBUG */
 
@@ -651,18 +652,14 @@ Wallet_Localize(char* genericString) {
   /* create a bundle for the localization */
   nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
-#ifdef DEBUG
-    printf("cannot get string service\n");
-#endif
+    PRINTF("cannot get string service\n");
     return v.ToNewUnicode();
   }
   nsCOMPtr<nsILocale> locale;
   nsCOMPtr<nsIStringBundle> bundle;
   ret = pStringService->CreateBundle(PROPERTIES_URL, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
-#ifdef DEBUG
-    printf("cannot create instance\n");
-#endif
+    PRINTF("cannot create instance\n");
     return v.ToNewUnicode();
   }
 
@@ -672,9 +669,7 @@ Wallet_Localize(char* genericString) {
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
   if (NS_FAILED(ret)) {
-#ifdef DEBUG
-    printf("cannot get string from name\n");
-#endif
+    PRINTF("cannot get string from name\n");
     return v.ToNewUnicode();
   }
   v = ptrv;
@@ -2414,7 +2409,7 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
 //wallet_PauseStopwatch();
 //wallet_DumpStopwatch();
 #endif
-//    printf("******** start profile\n");
+//    PRINTF("******** start profile\n");
 //             ProfileStart();
 
     wallet_Clear(&wallet_FieldToSchema_list); /* otherwise we will duplicate the list */
@@ -2429,7 +2424,7 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
     wallet_ReadFromFile(schemaConcatFileName, wallet_SchemaConcat_list, PR_FALSE);
 
 //    ProfileStop();
-//   printf("****** end profile\n");
+//   PRINTF("****** end profile\n");
     wallet_tablesInitialized = PR_TRUE;
   }
 
@@ -2454,24 +2449,24 @@ wallet_Initialize(PRBool fetchTables, PRBool unlockDatabase=PR_TRUE) {
   }
 
 #if DEBUG
-//    fprintf(stdout,"Field to Schema table \n");
+//    PRINTF("Field to Schema table \n");
 //    wallet_Dump(wallet_FieldToSchema_list);
 
-//    fprintf(stdout,"SchemaConcat table \n");
+//    PRINTF("SchemaConcat table \n");
 //    wallet_Dump(wallet_SchemaConcat_list);
 
-//    fprintf(stdout,"URL Field to Schema table \n");
+//    PRINTF("URL Field to Schema table \n");
 //    char item1[100];
 //    wallet_MapElement * ptr;
 //    PRInt32 count = LIST_COUNT(wallet_URLFieldToSchema_list);
 //    for (PRInt32 i=0; i<count; i++) {
 //      ptr = NS_STATIC_CAST(wallet_MapElement*, wallet_URLFieldToSchema_list->ElementAt(i));
 //      ptr->item1.ToCString(item1, 100);
-//      fprintf(stdout, item1);
-//      fprintf(stdout,"\n");
+//      PRINTF(item1);
+//      PRINTF("\n");
 //      wallet_Dump(ptr->itemList);
 //    }
-//    fprintf(stdout,"Schema to Value table \n");
+//    PRINTF("Schema to Value table \n");
 //    wallet_Dump(wallet_SchemaToValue_list);
 #endif
 
@@ -2524,7 +2519,7 @@ wallet_InitializeCurrentURL(nsIDocument * doc) {
     }
   }
 #ifdef DEBUG
-//  fprintf(stdout,"specific URL Field to Schema table \n");
+//  PRINTF("specific URL Field to Schema table \n");
 //  wallet_Dump(wallet_specificURLFieldToSchema_list);
 #endif
 }

@@ -33,6 +33,11 @@
 #include "nsFont.h"
 #include "nsVoidArray.h"
 #include "nsFontSizeIterator.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsFontRetrieverServiceLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsFontRetrieverServiceLog)
+#define FLUSH  NS_LOG_FLUSH(nsFontRetrieverServiceLog)
  
 NS_IMPL_ISUPPORTS2(nsFontRetrieverService, nsIFontRetrieverService, nsIFontNameIterator)
 
@@ -178,7 +183,7 @@ static FontInfo * GetFontInfo(nsVoidArray * aFontList, char * aName)
 
   FontInfo * fontInfo   = new FontInfo();
   fontInfo->mName       = nsString( (const PRUnichar *) aName, strlen(aName));
-  printf("nsFontRetrieverService::GetFontInfo Adding [%s]\n", aName);fflush(stdout); 
+  PRINTF("nsFontRetrieverService::GetFontInfo Adding [%s]\n", aName);fflush(stdout); 
   fontInfo->mIsScalable = PR_FALSE; // X fonts aren't scalable right??
   fontInfo->mSizes      = nsnull;
   aFontList->AppendElement(fontInfo);
@@ -259,17 +264,17 @@ NS_IMETHODIMP nsFontRetrieverService::LoadFontList()
   }
 
   if (fonts == NULL) {
-    fprintf(stderr, "pattern \"%s\" unmatched\n", pattern);
+    PRINTF("pattern \"%s\" unmatched\n", pattern);
     return NS_ERROR_FAILURE;
   }
 
 #if 0 // debug
   // print out all the retrieved fonts
-  printf("-----------------------------\n");
+  PRINTF("-----------------------------\n");
   for (i=0; i<available; i++) {
-    printf("[%s]i\n", fonts[i]);
+    PRINTF("[%s]i\n", fonts[i]);
   }
-  printf("-----------------------------\n");
+  PRINTF("-----------------------------\n");
 #endif
 
   // this code assumes all like fonts are grouped together

@@ -47,6 +47,11 @@
 #include "nsDocumentCharsetInfo.h"
 
 #include "nsPSMDetectors.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCharDetModuleLog)
+#define PRINTF NS_LOG_PRINTF(nsCharDetModuleLog)
+#define FLUSH  NS_LOG_FLUSH(nsCharDetModuleLog)
 
 NS_DEFINE_CID(kJAPSMDetectorCID,  NS_JA_PSMDETECTOR_CID);
 NS_DEFINE_CID(kJAStringPSMDetectorCID,  NS_JA_STRING_PSMDETECTOR_CID);
@@ -211,7 +216,7 @@ nsCharDetModule::GetClassObject(nsIComponentManager *aCompMgr,
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
     char* cs = aClass.ToString();
-    printf("+++ nsCharDetModule: unable to create factory for %s\n", cs);
+    PRINTF("+++ nsCharDetModule: unable to create factory for %s\n", cs);
     nsCRT::free(cs);
 #endif
   }
@@ -299,9 +304,7 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
   nsresult rv = NS_OK;
 
-#ifdef DEBUG
-  printf("*** Registering CharDet components\n");
-#endif
+  PRINTF("*** Registering CharDet components\n");
 
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
@@ -310,10 +313,8 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                          cp->mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsCharDetModule: unable to register %s component => %x\n",
+      PRINTF("nsCharDetModule: unable to register %s component => %x\n",
              cp->mDescription, rv);
-#endif
       break;
     }
     cp++;
@@ -404,18 +405,14 @@ nsCharDetModule::UnregisterSelf(nsIComponentManager* aCompMgr,
                                 nsIFile* aPath,
                                 const char* registryLocation)
 {
-#ifdef DEBUG
-  printf("*** Unregistering CharDet components\n");
-#endif
+  PRINTF("*** Unregistering CharDet components\n");
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsCharDetModule: unable to unregister %s component => %x\n",
+      PRINTF("nsCharDetModule: unable to unregister %s component => %x\n",
              cp->mDescription, rv);
-#endif
     }
     cp++;
   }

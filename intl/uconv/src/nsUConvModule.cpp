@@ -36,6 +36,12 @@
 #include "nsUConvDll.h"
 #include "nsFileSpec.h"
 #include "nsIFile.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsUConvModuleLog)
+#define PRINTF NS_LOG_PRINTF(nsUConvModuleLog)
+#define FLUSH  NS_LOG_FLUSH(nsUConvModuleLog)
+
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
@@ -184,9 +190,7 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
 {
   nsresult rv = NS_OK;
 
-#ifdef DEBUG
-  printf("*** Registering uconv components\n");
-#endif
+  PRINTF("*** Registering uconv components\n");
 
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
@@ -195,10 +199,8 @@ nsUConvModule::RegisterSelf(nsIComponentManager *aCompMgr,
                                          cp->mContractID, aPath, PR_TRUE,
                                          PR_TRUE);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsUConvModule: unable to register %s component => %x\n",
+      PRINTF("nsUConvModule: unable to register %s component => %x\n",
              cp->mDescription, rv);
-#endif
       break;
     }
     cp++;
@@ -215,18 +217,14 @@ nsUConvModule::UnregisterSelf(nsIComponentManager *aCompMgr,
                              nsIFile* aPath,
                              const char* registryLocation)
 {
-#ifdef DEBUG
-  printf("*** Unregistering uconv components\n");
-#endif
+  PRINTF("*** Unregistering uconv components\n");
   Components* cp = gComponents;
   Components* end = cp + NUM_COMPONENTS;
   while (cp < end) {
     nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
     if (NS_FAILED(rv)) {
-#ifdef DEBUG
-      printf("nsUConvModule: unable to unregister %s component => %x\n",
+      PRINTF("nsUConvModule: unable to unregister %s component => %x\n",
              cp->mDescription, rv);
-#endif
     }
     cp++;
   }

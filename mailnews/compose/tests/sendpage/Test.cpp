@@ -38,6 +38,11 @@
 #include "nsIMsgSendListener.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIIOService.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(TestLog)
+#define PRINTF NS_LOG_PRINTF(TestLog)
+#define FLUSH  NS_LOG_FLUSH(TestLog)
 
 #include <stdio.h>
 #if defined(XP_PC) && !defined(XP_OS2)
@@ -155,7 +160,7 @@ nsresult
 SendOperationListener::OnStartSending(const char *aMsgID, PRUint32 aMsgSize)
 {
 #ifdef NS_DEBUG
-  printf("SendOperationListener::OnStartSending()\n");
+    PRINTF("SendOperationListener::OnStartSending()\n");
 #endif
   return NS_OK;
 }
@@ -164,7 +169,7 @@ nsresult
 SendOperationListener::OnProgress(const char *aMsgID, PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-  printf("SendOperationListener::OnProgress()\n");
+    PRINTF("SendOperationListener::OnProgress()\n");
 #endif
   return NS_OK;
 }
@@ -173,7 +178,7 @@ nsresult
 SendOperationListener::OnStatus(const char *aMsgID, const PRUnichar *aMsg)
 {
 #ifdef NS_DEBUG
-  printf("SendOperationListener::OnStatus()\n");
+    PRINTF("SendOperationListener::OnStatus()\n");
 #endif
 
   return NS_OK;
@@ -186,14 +191,14 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 {
   if (NS_SUCCEEDED(aStatus))
   {
-    printf("Send Mail Operation Completed Successfully!\n");
+      PRINTF("Send Mail Operation Completed Successfully!\n");
   }
   else
   {
-    printf("Send Mail Operation FAILED!\n");
+      PRINTF("Send Mail Operation FAILED!\n");
   }
 
-  printf("Exit code = [%d]\n", aStatus);
+  PRINTF("Exit code = [%d]\n", aStatus);
   keepOnRunning = PR_FALSE;
   return NS_OK;
 }
@@ -202,7 +207,7 @@ nsresult
 SendOperationListener::OnStartCopy()
 {
 #ifdef NS_DEBUG
-  printf("SendOperationListener::OnStartCopy()\n");
+    PRINTF("SendOperationListener::OnStartCopy()\n");
 #endif
 
   return NS_OK;
@@ -212,7 +217,7 @@ nsresult
 SendOperationListener::OnProgress(PRUint32 aProgress, PRUint32 aProgressMax)
 {
 #ifdef NS_DEBUG
-  printf("SendOperationListener::OnProgress() - COPY\n");
+    PRINTF("SendOperationListener::OnProgress() - COPY\n");
 #endif
   return NS_OK;
 }
@@ -222,11 +227,11 @@ SendOperationListener::OnStopCopy(nsresult aStatus)
 {
   if (NS_SUCCEEDED(aStatus))
   {
-    printf("SendOperationListener::OnStopCopy() Completed Successfully!\n");
+      PRINTF("SendOperationListener::OnStopCopy() Completed Successfully!\n");
   }
   else
   {
-    printf("SendOperationListener::OnStopCopy() Completed FAILED!\n");
+      PRINTF("SendOperationListener::OnStopCopy() Completed FAILED!\n");
   }
 
   return NS_OK;
@@ -296,7 +301,7 @@ nsresult rv;
   NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) 
   {
-    printf("Failure on Mail Session Init!\n");
+      PRINTF("Failure on Mail Session Init!\n");
     return nsnull;
   }  
 
@@ -312,7 +317,7 @@ nsresult rv;
                                   (void **)getter_AddRefs(identity));
   if (NS_FAILED(rv)) 
   {
-    printf("Failure getting Identity!\n");
+      PRINTF("Failure getting Identity!\n");
     return nsnull;
   }  
 
@@ -332,7 +337,7 @@ main(int argc, char *argv[])
   // Before anything, do some sanity checking :-)
   if (argc < 4)
   {
-    printf("Usage: %s <recipients> <web_page_url> <email_subject>\n", argv[0]);
+      PRINTF("Usage: %s <recipients> <web_page_url> <email_subject>\n", argv[0]);
     exit(0);
   }
   SetupRegistry();
@@ -341,14 +346,14 @@ main(int argc, char *argv[])
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
 	if (NS_FAILED(rv)) 
   {
-    printf("Failed to get event queue\n");
+      PRINTF("Failed to get event queue\n");
     return rv;
   }
 
   rv = pEventQService->CreateThreadEventQueue();
 	if (NS_FAILED(rv)) 
   {
-    printf("Failed to create event queue\n");
+      PRINTF("Failed to create event queue\n");
     return rv;
   }
 
@@ -356,12 +361,12 @@ main(int argc, char *argv[])
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_FAILED(rv) || (!prefs)) 
   {
-    printf("Failed on prefs service!\n");
+      PRINTF("Failed on prefs service!\n");
     exit(rv);
   }
   if (NS_FAILED(prefs->ReadUserPrefs()))
   {
-    printf("Failed on reading user prefs!\n");
+      PRINTF("Failed on reading user prefs!\n");
     exit(rv);
   }
 
@@ -369,7 +374,7 @@ main(int argc, char *argv[])
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, NS_GET_IID(nsIMsgSend), (void **) &pMsgSend); 
   if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
-    printf("We succesfully obtained a nsIMsgSend interface....\n");    
+      PRINTF("We succesfully obtained a nsIMsgSend interface....\n");    
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
                                              (void **) &pMsgCompFields); 
     if (NS_SUCCEEDED(rv) && pMsgCompFields) 
@@ -402,7 +407,7 @@ main(int argc, char *argv[])
       nsMsgNewURL(&url, argv[2]);
       if (!url)
       {
-        printf("Error creating new URL object.\n");
+          PRINTF("Error creating new URL object.\n");
         return -1;
       }
 
@@ -417,7 +422,7 @@ main(int argc, char *argv[])
       nsIMsgSendListener **tArray = CreateListenerArray(mSendListener);
       if (!tArray)
       {
-        printf("Error creating listener array.\n");
+          PRINTF("Error creating listener array.\n");
         return NS_ERROR_FAILURE;
       }
 
@@ -426,7 +431,7 @@ main(int argc, char *argv[])
   }
 
 #if defined(XP_PC) && !defined(XP_OS2)
-  printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
+  PRINTF("Sitting in an event processing loop ...Hit Cntl-C to exit...");
   while (keepOnRunning)
   {
     MSG msg;
@@ -438,7 +443,7 @@ main(int argc, char *argv[])
   }
 #endif
 
-  printf("Releasing the interface now...\n");
+  PRINTF("Releasing the interface now...\n");
   if (pMsgSend)
     pMsgSend->Release(); 
   if (pMsgCompFields)

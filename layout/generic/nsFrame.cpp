@@ -65,6 +65,15 @@
 #include "nsIGfxTextControlFrame.h"
 #include "nsINameSpaceManager.h"
 
+#include "nslog.h"
+#undef PRLogModuleInfo
+#undef PR_NewLogModule
+#undef fprintf
+
+NS_IMPL_LOG(nsFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsFrameLog)
+
 // For triple-click pref
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
@@ -133,7 +142,7 @@ nsIFrameDebug::GetVerifyTreeEnable()
     if (nsnull == gFrameVerifyTreeLogModuleInfo) {
       gFrameVerifyTreeLogModuleInfo = PR_NewLogModule("frameverifytree");
       gFrameVerifyTreeEnable = 0 != gFrameVerifyTreeLogModuleInfo->level;
-      printf("Note: frameverifytree is %sabled\n",
+      PRINTF("Note: frameverifytree is %sabled",
              gFrameVerifyTreeEnable ? "en" : "dis");
     }
   }
@@ -157,7 +166,7 @@ nsIFrameDebug::GetVerifyStyleTreeEnable()
     if (nsnull == gStyleVerifyTreeLogModuleInfo) {
       gStyleVerifyTreeLogModuleInfo = PR_NewLogModule("styleverifytree");
       gStyleVerifyTreeEnable = 0 != gStyleVerifyTreeLogModuleInfo->level;
-      printf("Note: styleverifytree is %sabled\n",
+      PRINTF("Note: styleverifytree is %sabled",
              gStyleVerifyTreeEnable ? "en" : "dis");
     }
   }
@@ -1248,8 +1257,8 @@ nsFrame::HandleMultiplePress(nsIPresContext* aPresContext,
   else
     return NS_OK;
 #ifdef DEBUG_akkana
-  if (selectPara) printf("Selecting Paragraph\n");
-  else printf("Selecting Line\n");
+  if (selectPara) PRINTF("Selecting Paragraph");
+  else PRINTF("Selecting Line");
 #endif
 
   // Line or paragraph selection:
@@ -1680,13 +1689,12 @@ nsresult nsFrame::GetContentAndOffsetsFromPoint(nsIPresContext* aCX,
         }
       }
 
-      // printf("      0x%.8x   0x%.8x  %4d  %4d\n",
-      //        closestFrame, closestView, closestXDistance, closestYDistance);
+      // PRINTF("      0x%.8x   0x%.8x  %4d  %4d",
+      //        closestFrame, closestView, closestXDistance, closestYDistance));
 
       return closestFrame->GetContentAndOffsetsFromPoint(aCX, newPoint, aNewContent,
                                                          aContentOffset, aContentOffsetEnd,aBeginFrameContent);
-    }
-  }
+    }  }
 
   if (!mContent)
     return NS_ERROR_NULL_POINTER;
@@ -2654,7 +2662,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
         //result = lastFrame->GetNextSibling(&lastFrame, searchingLine);
         result = it->GetNextSiblingOnLine(lastFrame, searchingLine);
         if (NS_FAILED(result)){
-          NS_ASSERTION(0,"should not be reached nsFrame\n");
+          NS_ASSERTION(0,"should not be reached nsFrame");
           continue;
         }
       }
@@ -2891,7 +2899,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
                              nsPeekOffsetStruct *aPos)
 {
 #ifdef DEBUG_paragraph
-  printf("Selecting paragraph\n");
+  PRINTF("Selecting paragraph");
 #endif
   nsIFrame* blockFrame;
   nsCOMPtr<nsILineIterator> iter (getter_AddRefs(GetBlockFrameAndLineIter(this, &blockFrame)));
@@ -2901,7 +2909,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
   PRInt32 thisLine;
   nsresult result = iter->FindLineContaining(this, &thisLine);
 #ifdef DEBUG_paragraph
-  printf("Looping %s from line %d\n",
+  PRINTF("Looping %s from line %d",
          aPos->mDirection == eDirPrevious ? "back" : "forward",
          thisLine);
 #endif
@@ -2924,7 +2932,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
       if (NS_FAILED(result) || !firstFrameOnLine || !numFramesOnLine)
       {
 #ifdef DEBUG_paragraph
-        printf("End loop at line %d\n", i);
+        PRINTF("End loop at line %d", i);
 #endif
         break;
       }
@@ -2933,7 +2941,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
     {
       // Fill in aPos with the info on the new position
 #ifdef DEBUG_paragraph
-      printf("Found a paragraph break at line %d\n", i);
+      PRINTF("Found a paragraph break at line %d", i);
 #endif
 
       // Save the old direction, but now go one line back the other way
@@ -2949,7 +2957,7 @@ nsFrame::PeekOffsetParagraph(nsIPresContext* aPresContext,
                                               i,
                                               0);
       if (NS_FAILED(result))
-        printf("GetNextPrevLineFromeBlockFrame failed\n");
+        PRINTF("GetNextPrevLineFromeBlockFrame failed");
 
 #else /* SIMPLE -- alas, nope */
       int edgeCase = 0;//no edge case. this should look at thisLine
@@ -3035,7 +3043,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
     if (!nextFrame) //premature leaving of loop.
     {
       nextFrame = currentFrame; //back it up. lets show a warning
-      NS_WARNING("lineFrame Count lied to us from nsILineIterator!\n");
+      NS_WARNING("lineFrame Count lied to us from nsILineIterator!");
     }
 	
     nsPoint offsetPoint; //used for offset of result frame
@@ -3060,7 +3068,7 @@ DrillDownToEndOfLine(nsIFrame* aFrame, PRInt32 aLineNo, PRInt32 aLineFrameCount,
       return PR_TRUE;
 
 #ifdef DEBUG_paragraph
-    NS_ASSERTION(PR_FALSE, "Looping around in PeekOffset\n");
+    NS_ASSERTION(PR_FALSE, "Looping around in PeekOffset");
 #endif
     aLineFrameCount--;
     if (aLineFrameCount == 0)
@@ -3367,7 +3375,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
   for (;lineFrameCount > 1;lineFrameCount --){
     result = lastFrame->GetNextSibling(&lastFrame);
     if (NS_FAILED(result)){
-      NS_ASSERTION(0,"should not be reached nsFrame\n");
+      NS_ASSERTION(0,"should not be reached nsFrame");
       return NS_ERROR_FAILURE;
     }
   }

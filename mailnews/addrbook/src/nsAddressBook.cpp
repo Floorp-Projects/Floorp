@@ -53,6 +53,11 @@
 #include "nsIFilePicker.h"
 #include "nsIPref.h"
 #include "nsVoidArray.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsAddressBookLog)
+#define PRINTF NS_LOG_PRINTF(nsAddressBookLog)
+#define FLUSH  NS_LOG_FLUSH(nsAddressBookLog)
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -251,7 +256,7 @@ nsresult nsAddressBook::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 NS_IMETHODIMP nsAddressBook::PrintCard()
 {
 #ifdef DEBUG_seth
-  printf("nsAddressBook::PrintCard()\n");
+  PRINTF("nsAddressBook::PrintCard()\n");
 #endif
 
   nsresult rv = NS_ERROR_FAILURE;
@@ -259,7 +264,7 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
 
   if (!mDocShell) {
 #ifdef DEBUG_seth
-        printf("can't print, there is no docshell\n");
+    PRINTF("can't print, there is no docshell\n");
 #endif
         return rv;
   }
@@ -274,13 +279,13 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
     }
 #ifdef DEBUG_seth
     else {
-      printf("content viewer does not support printing\n");
+      PRINTF("content viewer does not support printing\n");
     }
 #endif
   }
 #ifdef DEBUG_seth
   else {
-    printf("failed to get the viewer for printing\n");
+    PRINTF("failed to get the viewer for printing\n");
   }
 #endif
 
@@ -290,7 +295,7 @@ NS_IMETHODIMP nsAddressBook::PrintCard()
 NS_IMETHODIMP nsAddressBook::PrintAddressbook()
 {
 #ifdef DEBUG_seth
-	printf("nsAddressBook::PrintAddressbook()\n");
+  PRINTF("nsAddressBook::PrintAddressbook()\n");
 #endif
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1421,7 +1426,7 @@ NS_IMETHODIMP nsAddressBook::ConvertNA2toLDIF(nsIFileSpec *srcFileSpec, nsIFileS
     do {
       rv = abUpgrader->ContinueExport(&done);
 	  // todo:  put this in the msg status
-      printf("converting na2 to ldif...\n");
+      PRINTF("converting na2 to ldif...\n");
     } while (NS_SUCCEEDED(rv) && !done);
   }
   return rv;  
@@ -1474,7 +1479,7 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
  		nsCOMPtr <nsIAbUpgrader> abUpgrader = do_GetService(NS_AB4xUPGRADER_CONTRACTID, &rv);
   		if (NS_FAILED(rv) || !abUpgrader) {
 			// todo:  make this an alert
-			printf("this product can't import Netscape 4.x addressbooks.  use the commercial build\n");
+          PRINTF("this product can't import Netscape 4.x addressbooks.  use the commercial build\n");
 			return NS_ERROR_FAILURE;
 		}
 

@@ -68,8 +68,12 @@
 #include "nsIProgressEventSink.h"
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
-
 #include "nsIMsgAccountManager.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsImapMailFolderLog)
+#define PRINTF NS_LOG_PRINTF(nsImapMailFolderLog)
+#define FLUSH  NS_LOG_FLUSH(nsImapMailFolderLog)
 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -1315,9 +1319,9 @@ NS_IMETHODIMP nsImapMailFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement
     m_onlineFolderName.Assign(onlineName);
 #ifdef DEBUG_bienvenu
   if (!nsCRT::strcasecmp((const char *) onlineName, "Sent"))
-    printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
+      PRINTF("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
   else if (!nsCRT::strcasecmp((const char *) onlineName, "INBOX"))
-    printf("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
+      PRINTF("loading folder cache elem for %s flags = %lx", (const char *) onlineName, mFlags);
 #endif
   return rv;
 }
@@ -2360,7 +2364,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
   }
   // look at action - currently handle move
 #ifdef DEBUG_bienvenu
-  printf("got a rule hit!\n");
+  PRINTF("got a rule hit!\n");
 #endif
   if (NS_SUCCEEDED(filter->GetAction(&actionType)))
   {
@@ -3315,7 +3319,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
 #ifdef DEBUG_bienvenu1
     nsXPIDLCString urlSpec;
     aUrl->GetSpec(getter_Copies(urlSpec));
-   printf("stop running url %s\n", (const char *) urlSpec);
+    PRINTF("stop running url %s\n", (const char *) urlSpec);
 #endif
 
    if (imapUrl)
@@ -3798,7 +3802,7 @@ NS_IMETHODIMP nsImapMailFolder::GetPath(nsIFileSpec ** aPathName)
        return NS_ERROR_OUT_OF_MEMORY;
 
     rv = nsImapURI2Path(kImapRootURI, mURI, *m_pathName);
-    //    printf("constructing path %s\n", (const char *) *m_pathName);
+    //    PRINTF("constructing path %s\n", (const char *) *m_pathName);
     if (NS_FAILED(rv)) return rv;
   }
   rv = NS_NewFileSpecWithSpec(*m_pathName, aPathName);

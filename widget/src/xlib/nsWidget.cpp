@@ -40,6 +40,11 @@
 #include "nsIMenuRollup.h"
 
 #include "xlibrgb.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsWidgetLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsWidgetLog)
+#define FLUSH  NS_LOG_FLUSH(nsWidgetLog)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
@@ -553,7 +558,7 @@ void * nsWidget::GetNativeData(PRUint32 aDataType)
     return (void *)mGC;
     break;
   default:
-    fprintf(stderr, "nsWidget::GetNativeData(%d) called with crap value.\n",
+    PRINTF("nsWidget::GetNativeData(%d) called with crap value.\n",
             aDataType);
     return NULL;
     break;
@@ -907,7 +912,7 @@ nsWidget::OnPaint(nsPaintEvent &event)
 
     if (event.rect) 
 	{
-      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
+      PRINTF("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
 			 sPrintCount++,
 			 (void *) this,
 			 (const char *) nsCAutoString(mName),
@@ -915,15 +920,15 @@ nsWidget::OnPaint(nsPaintEvent &event)
 			 event.rect->x, 
 			 event.rect->y,
 			 event.rect->width, 
-			 event.rect->height);
+             event.rect->height);
     }
     else 
 	{
-      printf("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
+      PRINTF("%4d nsWidget::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
 			 sPrintCount++,
 			 (void *) this,
 			 (const char *) nsCAutoString(mName),
-			 (void *) mBaseWindow);
+             (void *) mBaseWindow);
     }
 #endif
 
@@ -956,7 +961,7 @@ PRBool nsWidget::IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 
 	// Get the origin (top left corner) coordinate and size
 	Window currentPopupWindow = (Window)inWidget->GetNativeData(NS_NATIVE_WINDOW);
 	if (XGetWindowAttributes(mDisplay, currentPopupWindow, &inWindowAttributes) == 0){
-		fprintf(stderr, "Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
+		PRINTF("Failed calling XGetWindowAttributes in nsWidget::IsMouseInWindow");
 		return PR_FALSE;
 	}
 	
@@ -972,21 +977,21 @@ PRBool nsWidget::IsMouseInWindow(nsIWidget* inWidget, PRInt32 inMouseX, PRInt32 
 	if (!XTranslateCoordinates(mDisplay, mBaseWindow, rootWindow,
 		inMouseX, inMouseY,
 		&root_inMouse_x, &root_inMouse_y, &returnedChild)){
-		fprintf(stderr, "Could not get coordinates for origin coordinates for mouseclick\n");
+		PRINTF("Could not get coordinates for origin coordinates for mouseclick\n");
 		// should we return true or false??????
 		return PR_FALSE;
 	}
-	//fprintf(stderr, "Here are the mouse click coordinates x:%i y%i\n", root_inMouse_x, root_inMouse_y);
+	//PRINTF("Here are the mouse click coordinates x:%i y%i\n", root_inMouse_x, root_inMouse_y);
 	
 	// Test using coordinates relative to root window if click was inside passed popup window
 	if (root_inMouse_x > inWindowAttributes.x &&
 			root_inMouse_x < (inWindowAttributes.x + inWindowAttributes.width) &&
       root_inMouse_y > inWindowAttributes.y &&
 			root_inMouse_y < (inWindowAttributes.y + inWindowAttributes.height)){
-    //fprintf(stderr, "Mouse click INSIDE passed popup\n");
+    //PRINTF("Mouse click INSIDE passed popup\n");
 		return PR_TRUE;
 	}
-	//fprintf(stderr, "Mouse click OUTSIDE of passed popup\n");
+	//PRINTF("Mouse click OUTSIDE of passed popup\n");
 	return PR_FALSE;
 }
 
@@ -1037,7 +1042,7 @@ PRBool nsWidget::HandlePopup ( PRInt32 inMouseX, PRInt32 inMouseY ){
 	}
 	
 	if (rollup){
-		//fprintf(stderr, "Calling gRollupListener->Rollup()\n");
+		//PRINTF("Calling gRollupListener->Rollup()\n");
 		gRollupListener->Rollup();
 		retVal = PR_TRUE;
 	}
@@ -1060,7 +1065,7 @@ void nsWidget::OnDestroy()
 
 PRBool nsWidget::OnDeleteWindow(void)
 {
-  printf("nsWidget::OnDeleteWindow()\n");
+  PRINTF("nsWidget::OnDeleteWindow()\n");
   nsBaseWidget::OnDestroy();
   // emit a destroy signal
   return DispatchDestroyEvent();
@@ -1206,15 +1211,15 @@ nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
 
   nsCAutoString eventString;
   eventString.AssignWithConversion(debug_GuiEventToString(&aEvent));
-  printf("%4d %-26s(this=%-8p , window=%-8p",
+  PRINTF("%4d %-26s(this=%-8p , window=%-8p",
          sPrintCount++,
          (const char *) eventString,
          this,
          (void *) aWindow);
          
-  printf(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
+  PRINTF(" , x=%-3d, y=%d)",aEvent.point.x,aEvent.point.y);
 
-  printf("\n");
+  PRINTF("\n");
 }
 #endif // DEBUG
 //////////////////////////////////////////////////////////////////

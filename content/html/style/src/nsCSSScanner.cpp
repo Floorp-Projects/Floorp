@@ -24,6 +24,11 @@
 #include "nsIUnicharInputStream.h"
 #include "nsString.h"
 #include "nsCRT.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsCSSScannerLog)
+#define PRINTF NS_LOG_PRINTF(nsCSSScannerLog)
+#define FLUSH  NS_LOG_FLUSH(nsCSSScannerLog)
 
 #ifdef NS_DEBUG
 static char* kNullPointer = "null pointer";
@@ -215,7 +220,7 @@ void nsCSSScanner::InitErrorReporting(nsIURI* aURI)
 
 void nsCSSScanner::ReportError(const nsAReadableString& aError)
 {
-  printf("CSS Error (%s :%u.%u): %s.\n",
+  PRINTF("CSS Error (%s :%u.%u): %s.\n",
          mFileName.get(),
          mLineNumber,
          mColNumber,
@@ -287,7 +292,7 @@ PRInt32 nsCSSScanner::Read(PRInt32& aErrorCode)
 #endif
   }
   mLastRead = rv;
-//printf("Read => %x\n", rv);
+//PRINTF("Read => %x\n", rv);
   return rv;
 }
 
@@ -301,7 +306,7 @@ PRInt32 nsCSSScanner::Peek(PRInt32& aErrorCode)
     mPushback[0] = PRUnichar(ch);
     mPushbackCount++;
   }
-//printf("Peek => %x\n", mLookAhead);
+//PRINTF("Peek => %x\n", mLookAhead);
   return PRInt32(mPushback[mPushbackCount - 1]);
 }
 

@@ -44,6 +44,12 @@
 #include <Path.h>
 #endif
 
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRegistryLog)
+#define PRINTF NS_LOG_PRINTF(nsRegistryLog)
+#define FLUSH  NS_LOG_FLUSH(nsRegistryLog)
+
 /* extra locking for the paranoid */
 /* #define EXTRA_THREADSAFE */
 #ifndef EXTRA_THREADSAFE
@@ -51,9 +57,7 @@
 #define PR_Unlock(x)         (void)0
 #endif
 
-// Logging of debug output
-#define FORCE_PR_LOG /* Allow logging in the release build */
-extern PRLogModuleInfo *nsComponentManagerLog;
+#define nsComponentManagerLog nsRegistryLog
 
 PRUnichar widestrFormat[] = { PRUnichar('%'),PRUnichar('s'),PRUnichar(0)};
 
@@ -386,9 +390,7 @@ NS_IMETHODIMP nsRegistry::Open( const char *regFile ) {
         return OpenWellKnownRegistry(nsIRegistry::ApplicationRegistry);
     }
 
-#ifdef DEBUG_dp
-    printf("nsRegistry: Opening registry %s\n", regFile);
-#endif /* DEBUG_dp */
+    PRINTF("nsRegistry: Opening registry %s\n", regFile);
    
     if (mCurRegID != nsIRegistry::None && mCurRegID != nsIRegistry::ApplicationCustomRegistry)
     {
@@ -478,7 +480,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
                 "%s/" NS_MOZILLA_DIR_NAME, settings);
     if (PR_Access(settingsMozillaDir, PR_ACCESS_EXISTS) != PR_SUCCESS) {
         PR_MkDir(settingsMozillaDir, NS_MOZILLA_DIR_PERMISSION);
-        printf("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
+        PRINTF("nsComponentManager: Creating Directory %s\n", settingsMozillaDir);
         PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
                ("nsComponentManager: Creating Directory %s", settingsMozillaDir));
     }
@@ -560,9 +562,7 @@ NS_IMETHODIMP nsRegistry::OpenWellKnownRegistry( nsWellKnownRegistry regid )
         return NS_ERROR_REG_BADTYPE;
     }
    
-#ifdef DEBUG_dp
-    printf("nsRegistry: Opening std registry %s\n", regFile);
-#endif /* DEBUG_dp */
+    PRINTF("nsRegistry: Opening std registry %s\n", regFile);
 
     PR_Lock(mregLock);
     err = NR_RegOpen((char*)regFile, &mReg );
@@ -1076,9 +1076,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
     while (NR_RegEnumSubkeys(mReg, key, &state, subkeyname, sizeof(subkeyname),
            REGENUM_NORMAL) == REGERR_OK)
     {
-#ifdef DEBUG_dp
-        printf("...recursing into %s\n", subkeyname);
-#endif /* DEBUG_dp */
+      PRINTF("...recursing into %s\n", subkeyname);
         // Even though this is not a "Raw" API the subkeys may still, in fact,
         // *be* raw. Since we're recursively deleting this will work either way.
         // If we were guaranteed none would be raw then a depth-first enumeration
@@ -1090,9 +1088,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtree( nsRegistryKey baseKey, const char *path
     // If success in deleting all subkeys, delete this key too
     if (err == REGERR_OK)
     {
-#ifdef DEBUG_dp
-        printf("...deleting %s\n", path);
-#endif /* DEBUG_dp */
+      PRINTF("...deleting %s\n", path);
         PR_Lock(mregLock);
         err = NR_RegDeleteKey(mReg, baseKey, (char *)path);
         PR_Unlock(mregLock);
@@ -1133,9 +1129,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *k
     subkeyname[0] = '\0';
     while (NR_RegEnumSubkeys(mReg, key, &state, subkeyname, n, REGENUM_NORMAL) == REGERR_OK)
     {
-#ifdef DEBUG_dp
-        printf("...recursing into %s\n", subkeyname);
-#endif /* DEBUG_dp */
+      PRINTF("...recursing into %s\n", subkeyname);
         err = RemoveSubtreeRaw(key, subkeyname);
         if (err != REGERR_OK) break;
     }
@@ -1143,9 +1137,7 @@ NS_IMETHODIMP nsRegistry::RemoveSubtreeRaw( nsRegistryKey baseKey, const char *k
     // If success in deleting all subkeys, delete this key too
     if (err == REGERR_OK)
     {
-#ifdef DEBUG_dp
-        printf("...deleting %s\n", keyname);
-#endif /* DEBUG_dp */
+      PRINTF("...deleting %s\n", keyname);
         PR_Lock(mregLock);
         err = NR_RegDeleteKeyRaw(mReg, baseKey, (char *)keyname);
         PR_Unlock(mregLock);

@@ -71,6 +71,15 @@
 #include "nsIDocShell.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsITreeFrame.h"
+#include "nslog.h"
+
+#ifdef DEBUG_hyatt
+NS_IMPL_LOG_ENABLED(nsEventStateManagerLog)
+#else
+NS_IMPL_LOG(nsEventStateManagerLog)
+#endif
+#define PRINTF NS_LOG_PRINTF(nsEventStateManagerLog)
+#define FLUSH  NS_LOG_FLUSH(nsEventStateManagerLog)
 
 //we will use key binding by default now. this wil lbreak viewer for now
 #define NON_KEYBINDING 0  
@@ -80,8 +89,6 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 nsIContent * gLastFocusedContent = 0; // Strong reference
 nsIDocument * gLastFocusedDocument = 0; // Strong reference
 nsIPresContext* gLastFocusedPresContext = 0; // Weak reference
-
-PRLogModuleInfo *MOUSEWHEEL;
 
 PRUint32 nsEventStateManager::mInstanceCount = 0;
 
@@ -130,8 +137,6 @@ nsEventStateManager::nsEventStateManager()
   NS_INIT_REFCNT();
   
   ++mInstanceCount;
-  if (!MOUSEWHEEL)
-    MOUSEWHEEL = PR_NewLogModule("MOUSEWHEEL");
 }
 
 NS_IMETHODIMP
@@ -314,9 +319,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
-#ifdef DEBUG_hyatt
-      printf("Got focus.\n");
-#endif
+      PRINTF("Got focus.\n");
 
       EnsureDocument(aPresContext);
 

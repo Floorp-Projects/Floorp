@@ -24,11 +24,11 @@
 #include "nsIDOMCharacterData.h"
 #include "nsISelection.h"
 
-#ifdef NS_DEBUG
-static PRBool gNoisy = PR_FALSE;
-#else
-static const PRBool gNoisy = PR_FALSE;
-#endif
+#include "nslog.h"
+
+NS_IMPL_LOG(DeleteTextTxnLog)
+#define PRINTF NS_LOG_PRINTF(DeleteTextTxnLog)
+#define FLUSH  NS_LOG_FLUSH(DeleteTextTxnLog)
 
 DeleteTextTxn::DeleteTextTxn()
   : EditTxn()
@@ -64,7 +64,7 @@ NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
 
 NS_IMETHODIMP DeleteTextTxn::Do(void)
 {
-  if (gNoisy) { printf("Do Delete Text\n"); }
+  PRINTF("Do Delete Text\n");
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
   // get the text that we're about to delete
@@ -96,7 +96,7 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
 //     was it an insertion point or an extended selection?
 NS_IMETHODIMP DeleteTextTxn::Undo(void)
 {
-  if (gNoisy) { printf("Undo Delete Text\n"); }
+  PRINTF("Undo Delete Text\n");
   NS_ASSERTION(mEditor && mElement, "bad state");
   if (!mEditor || !mElement) { return NS_ERROR_NOT_INITIALIZED; }
 

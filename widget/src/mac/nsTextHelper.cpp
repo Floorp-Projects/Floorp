@@ -29,6 +29,11 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsTextHelperLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsTextHelperLog)
+#define FLUSH  NS_LOG_FLUSH(nsTextHelperLog)
 
 #define DBG 0
 
@@ -92,7 +97,7 @@ PRUint32	len;
 //-------------------------------------------------------------------------
 PRUint32  nsTextHelper::SetText(const nsString& aText)
 { 
-  //printf("SetText Password %d\n", mIsPassword);
+  //PRINTF("SetText Password %d\n", mIsPassword);
   if (!mIsPassword) 
   	{
     NS_ALLOC_STR_BUF(buf, aText, 512);
@@ -108,7 +113,7 @@ PRUint32  nsTextHelper::SetText(const nsString& aText)
     char * buf = new char[aText.Length()+1];
     memset(buf, '*', aText.Length());
     buf[aText.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    //PRINTF("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
     //XmTextSetString(mWidget, buf);
     data->mIgnore = PR_FALSE;
   	}
@@ -135,7 +140,7 @@ PRUint32  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, PR
     char * buf = new char[data->mPassword.Length()+1];
     memset(buf, '*', data->mPassword.Length());
     buf[data->mPassword.Length()] = 0;
-    //printf("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
+    //PRINTF("SetText [%s]  [%s]\n", data->mPassword.ToNewCString(), buf);
     //XmTextInsert(mWidget, aStartPos, buf);
     data->mIgnore = PR_FALSE;
   	}
@@ -187,7 +192,7 @@ void  nsTextHelper::SetSelection(PRUint32 aStartSel, PRUint32 aEndSel)
   //XmTextPosition right = (XmTextPosition)aEndSel;
 
   //Time time;
-printf("SetSel %d %d\n", left, right);
+  PRINTF("SetSel %d %d\n", left, right);
   //XmTextSetSelection(mWidget, left, right, 0);
 }
 
@@ -200,11 +205,11 @@ void  nsTextHelper::GetSelection(PRUint32 *aStartSel, PRUint32 *aEndSel)
 
 	/*
   if (XmTextGetSelectionPosition(mWidget, &left, &right)) {
-    printf("left %d right %d\n", left, right);
+  PRINTF("left %d right %d\n", left, right);
     *aStartSel = (PRUint32)left;
     *aEndSel   = (PRUint32)right;
   } else {
-    printf("nsTextHelper::GetSelection Error getting positions\n");
+  PRINTF("nsTextHelper::GetSelection Error getting positions\n");
   }
   */
 }

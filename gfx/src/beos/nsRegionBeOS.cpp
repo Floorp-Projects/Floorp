@@ -24,6 +24,11 @@
 
 #include "nsRegionBeOS.h"
 #include "prmem.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRegionBeOSLog)
+#define PRINTF NS_LOG_PRINTF(nsRegionBeOSLog)
+#define FLUSH  NS_LOG_FLUSH(nsRegionBeOSLog)
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
@@ -118,7 +123,7 @@ PRBool nsRegionBeOS :: IsEmpty(void)
 
 PRBool nsRegionBeOS :: IsEqual(const nsIRegion &aRegion)
 {
-  printf(" - nsRegionBeOS :: IsEqual not implemented!\n");
+  PRINTF(" - nsRegionBeOS :: IsEqual not implemented!\n");
   return PR_FALSE;
 }
 

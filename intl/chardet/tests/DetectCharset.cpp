@@ -33,7 +33,11 @@
 #ifdef XP_UNIX
 #include <unistd.h>
 #endif
+#include "nslog.h"
 
+NS_IMPL_LOG(DetectCharsetLog)
+#define PRINTF NS_LOG_PRINTF(DetectCharsetLog)
+#define FLUSH  NS_LOG_FLUSH(DetectCharsetLog)
 
 class nsStatis {
 public:
@@ -124,33 +128,33 @@ void nsBaseStatis::Report()
     if(mNumOf2Bytes > 0)
     {
 /*
-      printf("LChar Ratio = %d : %d ( %5.3f)\n", 
+      PRINTF("LChar Ratio = %d : %d ( %5.3f)\n", 
                          mNumOfLChar,
                          mNumOf2Bytes,
-                        ((float)mNumOfLChar / (float)mNumOf2Bytes) * 100);
+                         ((float)mNumOfLChar / (float)mNumOf2Bytes) * 100);
 */
       float rate = (float) mNumOfLChar / (float) mNumOf2Bytes;
       float delta = (rate - mR) / mR;
       delta *= delta * 1000;
 #ifdef EXPERIMENT
-      printf("Exp = %f \n",delta);
+      PRINTF("Exp = %f \n",delta);
 #endif
     }
     
 /*
 
     if(mNumOfLChar > 0)
-      printf("LWord Word = %d : %d (%5.3f)\n", 
+      PRINTF("LWord Word = %d : %d (%5.3f)\n", 
                          mNumOfLWord,
                          mNumOfLChar,
-                        ((float)mNumOfLWord / (float)mNumOfLChar) * 100);
+                         ((float)mNumOfLWord / (float)mNumOfLChar) * 100);
     if(mNumOfLWord > 0)
     {
       PRUint32 ac =0;
       for(PRUint32 i=0;i<10;i++)
       {
        ac += mLWordLen[i];
-       printf("LWord Word Length[%d]= %d -> %5.3f%% %5.3f%%\n", i+1, 
+       PRINTF("LWord Word Length[%d]= %d -> %5.3f%% %5.3f%%\n", i+1, 
            mLWordLen[i],
            (((float)mLWordLen[i] / (float)mNumOfLWord) * 100),
            (((float)ac / (float)mNumOfLWord) * 100));
@@ -218,9 +222,9 @@ void nsSimpleStatis::Report()
       float delta = (rate - mR) / mR;
       delta = delta * delta * (float)100;
 #ifdef EXPERIMENT
-      printf("Exp = %f \n",delta);
+      PRINTF("Exp = %f \n",delta);
       if(delta < 1.0)
-         printf("This is %s\n" ,mCharset);
+        PRINTF("This is %s\n" ,mCharset);
 #endif
 
     }
@@ -231,7 +235,7 @@ void nsSimpleStatis::Report()
 #define MAXBSIZE (1L << 13)
 
 void usage() {
-   printf("Usage: DetectFile detector blocksize\n"
+   PRINTF("Usage: DetectFile detector blocksize\n"
           "     detector: " 
           "ja_parallel_state_machine,"
           "ko_parallel_state_machine,"
@@ -255,8 +259,8 @@ class nsReporter : public nsICharsetDetectionObserver
 
    NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf)
     {
-        printf("RESULT CHARSET : %s\n", aCharset);
-        printf("RESULT Confident : %d\n", aConf);
+      PRINTF("RESULT CHARSET : %s\n", aCharset);
+      PRINTF("RESULT Confident : %d\n", aConf);
         return NS_OK;
     };
 };
@@ -294,14 +298,14 @@ int main(int argc, char** argv) {
   if( 3 != argc )
   {
     usage();
-    printf("Need 2 arguments\n");
+    PRINTF("Need 2 arguments\n");
     return(-1);
   }
   bs = atoi(argv[2]);
   if((bs <1)||(bs>MAXBSIZE))
   {
     usage();
-    printf("blocksize out of range - %s\n", argv[2]);
+    PRINTF("blocksize out of range - %s\n", argv[2]);
     return(-1);
   }
   nsresult rev = NS_OK;
@@ -309,8 +313,8 @@ int main(int argc, char** argv) {
   rev = GetDetector(argv[1], &det);
   if(NS_FAILED(rev) || (nsnull == det) ){
     usage();
-    printf("Invalid Detector - %s\n", argv[1]);
-    printf("XPCOM ERROR CODE = %x\n", rev);
+    PRINTF("Invalid Detector - %s\n", argv[1]);
+    PRINTF("XPCOM ERROR CODE = %x\n", rev);
     return(-1);
   }
   nsICharsetDetectionObserver *obs = nsnull;
@@ -320,11 +324,11 @@ int main(int argc, char** argv) {
     NS_IF_RELEASE(obs);
     if(NS_FAILED(rev))
     {
-      printf("XPCOM ERROR CODE = %x\n", rev);
+      PRINTF("XPCOM ERROR CODE = %x\n", rev);
       return(-1);
     }
   } else {
-    printf("XPCOM ERROR CODE = %x\n", rev);
+    PRINTF("XPCOM ERROR CODE = %x\n", rev);
     return(-1);
   }
 
@@ -339,12 +343,12 @@ int main(int argc, char** argv) {
     sz = read(0, buf, bs); 
     if(sz > 0) {
       if(! done) {
-printf("call DoIt %d\n",sz);
+        PRINTF("call DoIt %d\n",sz);
         rev = det->DoIt( buf, sz, &done);
-printf("DoIt return Done = %d\n",done);
+        PRINTF("DoIt return Done = %d\n",done);
         if(NS_FAILED(rev))
         {
-          printf("XPCOM ERROR CODE = %x\n", rev);
+          PRINTF("XPCOM ERROR CODE = %x\n", rev);
           return(-1);
         }
       }
@@ -355,12 +359,12 @@ printf("DoIt return Done = %d\n",done);
   } while(sz > 0);
   if(!done)
   {
-printf("Done = %d\n",done);
-printf("call Done %d\n",sz);
+    PRINTF("Done = %d\n",done);
+    PRINTF("call Done %d\n",sz);
     rev = det->Done();
     if(NS_FAILED(rev))
     {
-      printf("XPCOM ERROR CODE = %x\n", rev);
+      PRINTF("XPCOM ERROR CODE = %x\n", rev);
       return(-1);
     }
   }
@@ -368,9 +372,9 @@ printf("call Done %d\n",sz);
     stat[i]->DataEnd();
     stat[i]->Report();
   }
-printf( "Done\n");
+  PRINTF( "Done\n");
   
   NS_IF_RELEASE(det);
-printf( "Done 2\n");
+  PRINTF( "Done 2\n");
   return (0);
 }

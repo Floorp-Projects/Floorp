@@ -49,6 +49,11 @@
 
 #include "nsTraceRefcnt.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMsgFolderDataSourceLog)
+#define PRINTF NS_LOG_PRINTF(nsMsgFolderDataSourceLog)
+#define FLUSH  NS_LOG_FLUSH(nsMsgFolderDataSourceLog)
 
 static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID,		NS_MSGMAILSESSION_CID);
@@ -311,7 +316,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTarget(nsIRDFResource* source,
     property->GetValue(getter_Copies(propval));
     //    (*target)->GetValue(getter_Copies(targetval));
 
-    printf("nsMsgFolderDataSource::GetTarget(%s, %s, %s, (%s))\n",
+    PRINTF("nsMsgFolderDataSource::GetTarget(%s, %s, %s, (%s))\n",
            (const char*)srcval,
            (const char*)propval, tv ? "TRUE" : "FALSE",
            (const char*)"");
@@ -350,7 +355,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
   property->GetValue(getter_Copies(propval));
   //    (*target)->GetValue(getter_Copies(targetval));
   
-  printf("nsMsgFolderDataSource::GetTargets(%s, %s, %s, (%s))\n",
+  PRINTF("nsMsgFolderDataSource::GetTargets(%s, %s, %s, (%s))\n",
          (const char*)srcval,
          (const char*)propval, tv ? "TRUE" : "FALSE",
          (const char*)"");
@@ -442,7 +447,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::HasAssertion(nsIRDFResource* source,
   source->GetValue(getter_Copies(sourceval));
   property->GetValue(getter_Copies(propval));
   /*  target->GetValue(getter_Copies(targetval)); */
-  printf("HasAssertion(%s, %s, ??...)\n", (const char*)sourceval, (const char*)propval);
+  PRINTF("HasAssertion(%s, %s, ??...)\n", (const char*)sourceval, (const char*)propval);
 #endif
 
 	nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source, &rv));

@@ -33,6 +33,11 @@
 
 #include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsButtonLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsButtonLog)
+#define FLUSH  NS_LOG_FLUSH(nsButtonLog)
 
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
@@ -134,7 +139,7 @@ PRBool nsButton::OnMove(PRInt32, PRInt32)
 
 PRBool nsButton::OnPaint(nsRect &r)
 {
-  //printf("** nsButton::OnPaint **\n");
+  //PRINTF("** nsButton::OnPaint **\n");
   return PR_FALSE;
 }
 

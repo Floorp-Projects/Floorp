@@ -29,6 +29,11 @@
 #include "xlibrgb.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsRenderingContextXlibLog)
+#define PRINTF NS_LOG_PRINTF(nsRenderingContextXlibLog)
+#define FLUSH  NS_LOG_FLUSH(nsRenderingContextXlibLog)
 
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
 
@@ -208,7 +213,7 @@ nsresult nsRenderingContextXlib::CommonInit(void)
   Drawable drawable = mRenderingSurface->GetDrawable();
 
 #ifdef XLIB_GFX_NOISY
-  printf("XGetGeometry(display=%p,drawable=%p)\n",
+  PRINTF("XGetGeometry(display=%p,drawable=%p)\n",
          (void *) mDisplay,
          (void *) drawable);
 #endif

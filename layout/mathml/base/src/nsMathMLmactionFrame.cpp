@@ -49,6 +49,11 @@
 #include "nsIDOMMouseListener.h"
 
 #include "nsMathMLmactionFrame.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsMathMLmactionFrameLog)
+#define PRINTF NS_LOG_PRINTF(nsMathMLmactionFrameLog)
+#define FLUSH  NS_LOG_FLUSH(nsMathMLmactionFrameLog)
 
 //
 // <maction> -- bind actions to a subexpression - implementation
@@ -98,7 +103,7 @@ nsMathMLmactionFrame::nsMathMLmactionFrame()
 nsMathMLmactionFrame::~nsMathMLmactionFrame()
 {
   // unregister us as a mouse event listener ...
-//  printf("maction:%p unregistering as mouse event listener ...\n", this);
+//  PRINTF("maction:%p unregistering as mouse event listener ...\n", this);
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   receiver->RemoveEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 }
@@ -263,7 +268,7 @@ nsMathMLmactionFrame::SetInitialChildList(nsIPresContext* aPresContext,
   GetSelectedFrame();
 
   // register us as a mouse event listener ...
-//  printf("maction:%p registering as mouse event listener ...\n", this);
+//  PRINTF("maction:%p registering as mouse event listener ...\n", this);
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(mContent));
   receiver->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 

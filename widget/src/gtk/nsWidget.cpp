@@ -43,6 +43,11 @@
 
 #include "nsIPref.h"
 #include "nsGtkIMEHelper.h"
+#include "nslog.h"
+
+NS_IMPL_LOG(nsWidgetLog, 0)
+#define PRINTF NS_LOG_PRINTF(nsWidgetLog)
+#define FLUSH  NS_LOG_FLUSH(nsWidgetLog)
 
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -322,7 +327,7 @@ nsWidget::~nsWidget()
 
 #ifdef NOISY_DESTROY
   IndentByDepth(stdout);
-  printf("nsWidget::~nsWidget:%p\n", this);
+  PRINTF("nsWidget::~nsWidget:%p\n", this);
 #endif
 
   sWidgetCount--;
@@ -402,7 +407,7 @@ nsWidget::IndentByDepth(FILE* out)
 
 NS_IMETHODIMP nsWidget::Destroy(void)
 {
-  //  printf("%p nsWidget::Destroy()\n", this);
+  //  PRINTF("%p nsWidget::Destroy()\n", this);
   // make sure we don't call this more than once.
   if (mIsDestroying)
     return NS_OK;
@@ -594,7 +599,7 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 NS_IMETHODIMP nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
 #ifdef DEBUG_MOVE
-  printf("nsWidget::Resize %s (%p) to %d %d\n",
+  PRINTF("nsWidget::Resize %s (%p) to %d %d\n",
          (const char *) debug_GetName(mWidget),
          this,
          aWidth, aHeight);
@@ -663,7 +668,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
 PRBool nsWidget::OnMove(PRInt32 aX, PRInt32 aY)
 {
 #if 0
-    printf("nsWidget::OnMove %s (%p) (%d,%d) -> (%d,%d)\n",
+    PRINTF("nsWidget::OnMove %s (%p) (%d,%d) -> (%d,%d)\n",
            (const char *) debug_GetName(mWidget),
            this, mBounds.x, mBounds.y, aX, aY);
 #endif
@@ -1104,7 +1109,7 @@ NS_IMETHODIMP nsWidget::Update(void)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
-  //  printf("nsWidget::Update()\n");
+  //  PRINTF("nsWidget::Update()\n");
 
   // this will Union() again, but so what?
   return InvalidateRegion(mUpdateArea, PR_TRUE);
@@ -1520,11 +1525,11 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
 //         GetBounds(rect);
 //         if (rect.Contains(event.point.x, event.point.y)) {
 //           if (mCurrentWindow == NULL || mCurrentWindow != this) {
-//             printf("Mouse enter");
+//             PRINTF("Mouse enter");
 //             mCurrentWindow = this;
 //           }
 //         } else {
-//           printf("Mouse exit");
+//           PRINTF("Mouse exit");
 //         }
 
       } break;
@@ -1543,7 +1548,7 @@ PRBool nsWidget::DispatchMouseEvent(nsMouseEvent& aEvent)
         break;
 
     case NS_DRAGDROP_DROP:
-      printf("nsWidget::DispatchMouseEvent, NS_DRAGDROP_DROP\n");
+      PRINTF("nsWidget::DispatchMouseEvent, NS_DRAGDROP_DROP\n");
       break;
 
     default:
@@ -2113,7 +2118,7 @@ nsWidget::OnFocusOutSignal(GdkEventFocus * aGdkFocusEvent)
 /* virtual */ void
 nsWidget::OnRealize(GtkWidget *aWidget)
 {
-  printf("nsWidget::OnRealize(%p)\n",this);
+  PRINTF("nsWidget::OnRealize(%p)\n",this);
 }
 //////////////////////////////////////////////////////////////////////
 
@@ -2190,7 +2195,7 @@ nsWidget::DropEvent(GtkWidget * aWidget,
   {
     GtkLayout * layout = GTK_LAYOUT(aWidget);
 
-    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
+    PRINTF("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p,bin_win=%p)\n",
            count++,
            this,
            aWidget,
@@ -2200,7 +2205,7 @@ nsWidget::DropEvent(GtkWidget * aWidget,
   }
   else
   {
-    printf("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
+    PRINTF("%4d DropEvent(this=%p,widget=%p,event_win=%p,wid_win=%p)\n",
            count++,
            this,
            aWidget,
@@ -2221,7 +2226,7 @@ nsWidget::DropEvent(GtkWidget * aWidget,
     if (aEventWindow != layout->bin_window)
     {
 #ifdef DEBUG_pavlov
-      printf("dropping event!!!!!!!\n");
+      PRINTF("dropping event!!!!!!!\n");
 #endif
       return PR_TRUE;
     }
@@ -2308,7 +2313,7 @@ nsWidget::ButtonPressSignal(GtkWidget *      aWidget,
 							GdkEventButton * aGdkButtonEvent, 
 							gpointer         aData)
 {
-  //  printf("nsWidget::ButtonPressSignal(%p)\n",aData);
+  //  PRINTF("nsWidget::ButtonPressSignal(%p)\n",aData);
 
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
@@ -2332,7 +2337,7 @@ nsWidget::ButtonReleaseSignal(GtkWidget *      aWidget,
 							GdkEventButton * aGdkButtonEvent, 
 							gpointer         aData)
 {
-  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
+  //  PRINTF("nsWidget::ButtonReleaseSignal(%p)\n",aData);
 
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkButtonEvent, "event is null");
@@ -2371,7 +2376,7 @@ nsWidget::FocusInSignal(GtkWidget *      aWidget,
                         GdkEventFocus *  aGdkFocusEvent, 
                         gpointer         aData)
 {
-  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
+  //  PRINTF("nsWidget::ButtonReleaseSignal(%p)\n",aData);
 
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkFocusEvent, "event is null");
@@ -2398,7 +2403,7 @@ nsWidget::FocusOutSignal(GtkWidget *      aWidget,
                         GdkEventFocus *  aGdkFocusEvent, 
                         gpointer         aData)
 {
-  //  printf("nsWidget::ButtonReleaseSignal(%p)\n",aData);
+  //  PRINTF("nsWidget::ButtonReleaseSignal(%p)\n",aData);
 
   NS_ASSERTION( nsnull != aWidget, "widget is null");
   NS_ASSERTION( nsnull != aGdkFocusEvent, "event is null");
@@ -2775,7 +2780,7 @@ static void setDebugWindow(void)
 
   sscanf(&text[2], "%x", &val);
 
-  printf("setting value to 0x%x\n", val);
+  PRINTF("setting value to 0x%x\n", val);
   nsWidget::debugWidget = (nsWidget *)val;
 
   g_free(text);
