@@ -275,6 +275,12 @@ public:
    */
   NS_IMETHOD SetCaretEnabled(PRBool inEnable) = 0;
 
+  /**
+   * Should the images have borders ect.
+  */
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool inEnable) = 0;
+
+  NS_IMETHOD GetDisplayNonTextSelection(PRBool *inEnable) = 0;
   // XXX events
   // XXX selection
 

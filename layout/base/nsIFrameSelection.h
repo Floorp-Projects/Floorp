@@ -76,9 +76,11 @@ public:
    *  the old anchor and focus position may also be used to deselect things
    *  @param aNewfocus is the content that wants the focus
    *  @param aContentOffset is the content offset of the parent aNewFocus
+   *  @param aContentOffsetEnd is the content offset of the parent aNewFocus and is specified different
+   *                           when you need to select to and include both start and end points
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
    */
-  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aContinueSelection) = 0;
+  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset , PRBool aContinueSelection) = 0;
 
   /** EnableFrameNotification
    *  mutch like start batching, except all dirty calls are ignored. no notifications will go 

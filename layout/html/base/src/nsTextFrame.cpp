@@ -226,8 +226,10 @@ public:
                          nsIRenderingContext * aRendContext,
                          nsGUIEvent*     aEvent,
                          nsIFrame *      aNewFrame,
+                         nsIContent **   aNewContent,
                          PRUint32&       aActualContentOffset,
-                         PRInt32&        aOffset);
+                         PRInt32&        aOffset,
+                         PRInt32&        aOffsetEnd);
 
   NS_IMETHOD GetPositionSlowly(nsIPresContext& aCX,
                          nsIRenderingContext * aRendContext,
@@ -245,6 +247,10 @@ public:
                         nsIContent **aResultContent, 
                         PRInt32 *aContentOffset,
                         PRBool aEatingWS);
+
+  NS_IMETHOD HandleMultiplePress(nsIPresContext& aPresContext,
+                         nsGUIEvent *    aEvent,
+                         nsEventStatus&  aEventStatus);
 
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
 
@@ -1687,13 +1693,18 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
                          nsIRenderingContext* aRendContext,
                          nsGUIEvent* aEvent,
                          nsIFrame* aNewFrame,
+                         nsIContent **aNewContent,
                          PRUint32& aActualContentOffset,
-                         PRInt32& aOffset)
+                         PRInt32& aOffset,
+                         PRInt32& aOffsetEnd)
 {
   TextStyle ts(&aPresContext, *aRendContext, mStyleContext);
   if (ts.mSmallCaps || ts.mWordSpacing || ts.mLetterSpacing) {
-    return GetPositionSlowly(aPresContext, aRendContext, aEvent, aNewFrame,
+
+    nsresult result = GetPositionSlowly(aPresContext, aRendContext, aEvent, aNewFrame,
                              aActualContentOffset, aOffset);
+    aOffsetEnd = aOffset;
+    return result;
   }
 
   PRUnichar wordBufMem[WORD_BUF_SIZE];
@@ -1774,6 +1785,7 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
 
   aActualContentOffset = mContentOffset;//offset;//((nsTextFrame *)aNewFrame)->mContentOffset;
   aOffset = index;
+  aOffsetEnd = aOffset;
   //reusing wordBufMem
   PRInt32 i;
   for (i = 0;i <= mContentLength; i ++){
@@ -1783,6 +1795,9 @@ nsTextFrame::GetPosition(nsIPresContext& aPresContext,
     }
   }
   NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
+  *aNewContent = mContent;
+  if (*aNewContent)
+    (*aNewContent)->AddRef();
   return NS_OK;
 }
 
@@ -1971,7 +1986,6 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
                         PRBool aEatingWS) 
 {
 
-  //default, no matter what grab next/ previous sibling. 
   if (!aResultContent || !aContentOffset)
     return NS_ERROR_NULL_POINTER;
   if (aStartOffset < 0)
@@ -2179,6 +2193,77 @@ nsTextFrame::PeekOffset(nsSelectionAmount aAmount,
     result = NS_OK;
   }
   return result;
+}
+
+NS_IMETHODIMP
+nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext, 
+                     nsGUIEvent*     aEvent,
+                     nsEventStatus&  aEventStatus)
+{
+  if (!DisplaySelection(aPresContext)) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
+  nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
+  if (NS_SUCCEEDED(rv) && shell) {
+    nsCOMPtr<nsIRenderingContext> acx;      
+    rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
+    if (NS_SUCCEEDED(rv)){
+      PRInt32 startPos = 0;
+      PRUint32 contentOffset = 0;
+      PRInt32 contentOffsetEnd = 0;
+      nsCOMPtr<nsIContent> newContent;
+      if (NS_SUCCEEDED(GetPosition(aPresContext, acx, aEvent, this, 
+                       getter_AddRefs(newContent), contentOffset, startPos, contentOffsetEnd))){
+        //find which word needs to be selected! use peek offset one way then the other
+        nsCOMPtr<nsIContent> startContent;
+        nsCOMPtr<nsIDOMNode> startNode;
+        nsCOMPtr<nsIContent> endContent;
+        nsCOMPtr<nsIDOMNode> endNode;
+        PRInt32 startOffset;
+        PRInt32 endOffset;
+        //peeks{}
+        rv = PeekOffset(eSelectWord,
+                        eDirPrevious,
+                        contentOffset + startPos,
+                        getter_AddRefs(startContent), 
+                        &startOffset,
+                        PR_FALSE);
+        if (NS_FAILED(rv))
+          return rv;
+        rv = PeekOffset(eSelectWord,
+                        eDirNext,
+                        contentOffset + startPos,
+                        getter_AddRefs(endContent), 
+                        &endOffset,
+                        PR_FALSE);
+        if (NS_FAILED(rv))
+          return rv;
+
+        endNode = do_QueryInterface(endContent,&rv);
+        if (NS_FAILED(rv))
+          return rv;
+        startNode = do_QueryInterface(startContent,&rv);
+        if (NS_FAILED(rv))
+          return rv;
+
+        nsCOMPtr<nsIDOMSelection> selection;
+        if (NS_SUCCEEDED(shell->GetSelection(getter_AddRefs(selection)))){
+          rv = selection->Collapse(startNode,startOffset);
+          if (NS_FAILED(rv))
+            return rv;
+          rv = selection->Extend(endNode,endOffset);
+          if (NS_FAILED(rv))
+            return rv;
+        }
+        //no release 
+      }
+    }
+  }
+  return NS_OK;
+
 }
 
 NS_IMETHODIMP

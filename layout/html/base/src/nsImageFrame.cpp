@@ -499,8 +499,8 @@ nsImageFrame::Paint(nsIPresContext& aPresContext,
       aRenderingContext.PopState(clipState);
     }
   }
-
-  return NS_OK;
+  
+  return nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 }
 
 nsImageMap*

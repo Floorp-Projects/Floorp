@@ -80,7 +80,7 @@ public:
   NS_IMETHOD ShutDown();
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGUIEvent);
   NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent);
-  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aContinueSelection);
+  NS_IMETHOD TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRUint32 aContentEndOffset, PRBool aContinueSelection);
   NS_IMETHOD EnableFrameNotification(PRBool aEnable){mNotifyFrames = aEnable; return NS_OK;}
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
                              PRInt32 *aStart, PRInt32 *aEnd, PRBool *aDrawSelected , PRUint32 aFlag/*not used*/);
@@ -783,7 +783,7 @@ if (!aGuiEvent)
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
             if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirPrevious, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
-              result = TakeFocus(content, offsetused, keyEvent->isShift);
+              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
           }
@@ -808,7 +808,7 @@ if (!aGuiEvent)
           if (content){
             result = mTracker->GetPrimaryFrameFor(content, &frame);
             if (NS_SUCCEEDED(result) && NS_SUCCEEDED(frame->PeekOffset(amount, eDirNext, offsetused, getter_AddRefs(content), &offsetused, PR_FALSE)) && resultFrame){
-              result = TakeFocus(content, offsetused, keyEvent->isShift);
+              result = TakeFocus(content, offsetused, offsetused, keyEvent->isShift);
             }
             result = ScrollIntoView();
           }
@@ -914,7 +914,8 @@ nsRangeList::selectFrames(nsIDOMRange *aRange, PRBool aFlags)
 hard to go from nodes to frames, easy the other way!
  */
 NS_IMETHODIMP
-nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aContinueSelection)
+nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, 
+                       PRUint32 aContentEndOffset, PRBool aContinueSelection)
 {
   if (!aNewFocus)
     return NS_ERROR_NULL_POINTER;
@@ -930,6 +931,9 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aC
     return NS_ERROR_FAILURE;
   if (NS_FAILED(parent->GetParent(*getter_AddRefs(parent2))) || !parent2)
     return NS_ERROR_FAILURE;
+
+  //END HACKHACKHACK /checking for root frames/content
+
   domNode = do_QueryInterface(aNewFocus);
   //traverse through document and unselect crap here
   if (!aContinueSelection){ //single click? setting cursor down
@@ -939,12 +943,18 @@ nsRangeList::TakeFocus(nsIContent *aNewFocus, PRUint32 aContentOffset, PRBool aC
     Collapse(domNode, aContentOffset);
     mBatching = batching;
     mChangesDuringBatching = changes;
+    if (aContentEndOffset > aContentOffset)
+      Extend(domNode,aContentEndOffset);
   }
   else {
     // Now update the range list:
     if (aContinueSelection && domNode)
     {
       Extend(domNode, aContentOffset);
+      if (mDirection == eDirNext && aContentEndOffset > aContentOffset) //didnt go far enough 
+      {
+        Extend(domNode, aContentEndOffset);//this will only redraw the diff 
+      }
     }
   }
     
