@@ -51,6 +51,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsISelectionController.h"
 #include "nsIDOMXULCheckboxElement.h"
+#include "nsIDOMXULButtonElement.h"
 
 nsHTMLFormControlAccessible::nsHTMLFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
 nsLeafAccessible(aNode, aShell)
@@ -394,9 +395,22 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAWritab
 NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
 {
   if (index == 0) {
-    nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
-    element->Click();
-    return NS_OK;
+    nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(mDOMNode));
+    if ( inputElement )
+    {
+      inputElement->Click();
+      return NS_OK;
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
+      if ( buttonElement )
+      {
+        buttonElement->DoCommand();
+        return NS_OK;
+      }
+    }
+    return NS_ERROR_FAILURE;
   }
   return NS_ERROR_INVALID_ARG;
 }
@@ -420,6 +434,11 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccState(PRUint32 *_retval)
 /* wstring getAccName (); */
 NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAWritableString& _retval)
 {
+  nsCOMPtr<nsIDOMXULButtonElement> buttonElement(do_QueryInterface(mDOMNode));
+  if ( buttonElement ) {
+    return buttonElement->GetLabel(_retval);
+  }
+
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
 

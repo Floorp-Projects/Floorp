@@ -37,6 +37,9 @@ XPIDLSRCS =					\
 	nsIDOMXULControlElement.idl          \
 	nsIDOMXULLabeledControlEl.idl          \
 	nsIDOMXULCheckboxElement.idl          \
+  nsIDOMXULButtonElement.idl              \
+  nsIDOMXULDescriptionElement.idl         \
+  nsIDOMXULLabelElement.idl               \
 	nsIDOMXULImageElement.idl               \
 	$(NULL)
 
