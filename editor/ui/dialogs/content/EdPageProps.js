@@ -50,7 +50,8 @@ function Startup()
 
   if (!IsUrlAboutBlank(location))
   {
-    gDialog.PageLocation.setAttribute("value", GetDocumentUrl());
+    // NEVER show username and password in clear text
+    gDialog.PageLocation.setAttribute("value", StripPassword(location));
 
     // Get last-modified file date+time
     // TODO: Convert this to local time?
