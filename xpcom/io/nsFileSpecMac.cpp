@@ -1216,9 +1216,13 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
 	
 	if (err == noErr)
 	{
+#ifdef HAVE_LONG_LONG
+		space64Bits = pb.ioVFreeBytes;
+#else
 		const UnsignedWide& freeBytes = UInt64ToUnsignedWide(pb.ioVFreeBytes);
 		space64Bits.lo = freeBytes.lo;
 		space64Bits.hi = freeBytes.hi;
+#endif
 	}
 		
 	return space64Bits;

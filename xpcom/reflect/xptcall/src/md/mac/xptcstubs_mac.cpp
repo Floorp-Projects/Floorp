@@ -100,7 +100,24 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
         							else
         								dp->val.i32  = (PRInt32)  *ap++;
         							break;
-        case nsXPTType::T_I64     :  if (iCount < PARAM_GPR_COUNT)
+        case nsXPTType::T_I64     :
+#ifdef HAVE_LONG_LONG
+    								PRUint64 tempu64;
+    								if (iCount & 1) iCount++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
+    								if ((iCount + 1) < PARAM_GPR_COUNT)
+    								{
+    									tempu64 = *(PRUint64*) &gprData[iCount];
+										iCount += 2;
+									}
+									else
+									{
+										if ((PRUint32) ap & 4) ap++; // longlongs are 8-byte aligned on stack
+										tempu64 = *(PRUint64*) ap;
+										ap += 2;
+									}
+									dp->val.i64 = (PRUint64)tempu64;
+#else
+        							if (iCount < PARAM_GPR_COUNT)
         								dp->val.i64.hi  = (PRInt32) gprData[iCount++];
         							else
         								dp->val.i64.hi  = (PRInt32)  *ap++;
@@ -108,6 +125,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
         								dp->val.i64.lo  = (PRUint32) gprData[iCount++];
         							else
         								dp->val.i64.lo  = (PRUint32)  *ap++;
+#endif
         							break;
         case nsXPTType::T_U8     :  if (iCount < PARAM_GPR_COUNT)
         								dp->val.i8  = (PRUint8) gprData[iCount++];
@@ -124,7 +142,24 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
         							else
         								dp->val.i32  = (PRUint32)  *ap++;
         							break;
-        case nsXPTType::T_U64     :  if (iCount < PARAM_GPR_COUNT)
+        case nsXPTType::T_U64     :
+#ifdef HAVE_LONG_LONG
+    								// PRUint64 tempu64;	// declared above and still in scope
+    								if (iCount & 1) iCount++; // longlongs are aligned in odd/even register pairs, eg. r5/r6
+    								if ((iCount + 1) < PARAM_GPR_COUNT)
+    								{
+    									tempu64 = *(PRUint64*) &gprData[iCount];
+										iCount += 2;
+									}
+									else
+									{
+										if ((PRUint32) ap & 4) ap++; // longlongs are 8-byte aligned on stack
+										tempu64 = *(PRUint64*) ap;
+										ap += 2;
+									}
+									dp->val.i64 = (PRUint64)tempu64;
+#else
+        							if (iCount < PARAM_GPR_COUNT)
         								dp->val.i64.hi  = (PRUint32) gprData[iCount++];
         							else
         								dp->val.i64.hi  = (PRUint32)  *ap++;
@@ -132,6 +167,7 @@ PrepareAndDispatch(nsXPTCStubBase* self, PRUint32 methodIndex, PRUint32* args, P
         								dp->val.i64.lo  = (PRUint32) gprData[iCount++];
         							else
         								dp->val.i64.lo  = (PRUint32)  *ap++;
+#endif
         							break;
         case nsXPTType::T_FLOAT  : if (fpCount < 13) {
         								dp->val.f  = (float) fprData[fpCount++];

@@ -1670,7 +1670,7 @@ nsLocalFile::GetFileSize(PRInt64 *aFileSize)
 {
 	NS_ENSURE_ARG(aFileSize);
 	
-  *aFileSize = LL_Zero();
+	*aFileSize = LL_Zero();
   
 	ResolveAndStat(PR_TRUE);
 	
@@ -1792,7 +1792,7 @@ nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 	if (err == noErr)
 	{
 		const UnsignedWide& freeBytes = UInt64ToUnsignedWide(pb.ioVFreeBytes);
-#ifdef MACOSX
+#ifdef HAVE_LONG_LONG
     space64Bits = UnsignedWideToUInt64(freeBytes);
 #else
 		space64Bits.lo = freeBytes.lo;
