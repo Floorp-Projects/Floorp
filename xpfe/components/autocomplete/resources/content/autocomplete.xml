@@ -861,10 +861,16 @@
               this.closeResultPopup();
               break;
 
+            case KeyEvent.DOM_VK_DOWN:
+              if (aEvent.altKey && !aEvent.ctrlKey && !aEvent.shiftKey && !this.hideHistory) {
+                var historyPopup = this.getElementsByTagName("menupopup").item(0);
+                if (historyPopup)
+                  historyPopup.showPopup();
+                break;
+              }
             case KeyEvent.DOM_VK_PAGE_UP:
             case KeyEvent.DOM_VK_PAGE_DOWN:
             case KeyEvent.DOM_VK_UP:
-            case KeyEvent.DOM_VK_DOWN:
               this.clearTimer();
               killEvent = true;
               this.keyNavigation(aEvent);
@@ -989,7 +995,7 @@
                 this.resultsPopup.setAttribute("width", w);
             }
             
-            this.resultsPopup.openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+            this.resultsPopup.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
             this.mMenuOpen = true;
           }
         ]]></body>
@@ -999,7 +1005,7 @@
       <method name="closeResultPopup">
         <body><![CDATA[
           if (this.resultsPopup && this.mMenuOpen) {
-            this.resultsPopup.closePopup();
+            this.resultsPopup.hidePopup();
             this.mMenuOpen = false;
           }
         ]]></body>

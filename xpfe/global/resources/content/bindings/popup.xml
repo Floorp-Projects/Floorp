@@ -39,8 +39,7 @@
         </getter>
       </property>
       
-      <!-- XXXben should become showPopup -->
-      <method name="openPopup">
+      <method name="showPopup">
         <parameter name="element"/>
         <parameter name="xpos"/>
         <parameter name="ypos"/>
@@ -65,8 +64,7 @@
         </body>
       </method>
       
-      <!-- XXXben should become hidePopup -->
-      <method name="closePopup">
+      <method name="hidePopup">
         <body>
         <![CDATA[
           var popupBox = null;
@@ -189,7 +187,7 @@
         if (!rel) {
           ++this._mouseOutCount;
           if (this._mouseOutCount > 1)
-            this.closePopup();
+            this.hidePopup();
           return;
         }
           
@@ -202,7 +200,7 @@
         
         // if the entered node is not a descendant of ours, hide the tooltip
         if (rel != this && this._isMouseOver) {
-          this.closePopup();
+          this.hidePopup();
         }        
       ]]></handler>
 
@@ -225,7 +223,7 @@
         // XXX commenting this out for now because it doesn't work on Mac 
         //     become mouseover isn't fired when the tooltip appears with the mouse over it
         //if (this.hasAttribute("titletip"))
-        //  window.setTimeout(function(me) { if (!me._isMouseOver) me.closePopup(); }, 100, this);
+        //  window.setTimeout(function(me) { if (!me._isMouseOver) me.hidePopup(); }, 100, this);
       ]]>
       </handler>
 

@@ -420,7 +420,7 @@
               if (!popups[0].hasAttribute("open")) {
                 event.preventDefault();
 
-                popups[0].openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+                popups[0].showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
 
                 this._selectInputFieldValueInList();
               }

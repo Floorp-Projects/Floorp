@@ -485,15 +485,15 @@
         ]]></body>
       </method>
       
-      <method name="openPopup">
+      <method name="showPopup">
         <body><![CDATA[
-          this.mPicker.parentNode.openPopup(this, -1, -1, "popup", "bottomleft", "topleft");
+          this.mPicker.parentNode.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
         ]]></body>
       </method>
       
-      <method name="closePopup">
+      <method name="hidePopup">
         <body><![CDATA[
-          this.mPicker.parentNode.closePopup();
+          this.mPicker.parentNode.hidePopup();
         ]]></body>
       </method>
 
@@ -524,7 +524,7 @@
       <method name="pickerChange">
         <body><![CDATA[
           this.color = this.mPicker.color;
-          setTimeout(function(aPopup) { aPopup.closePopup() }, 1, this.mPicker.parentNode);
+          setTimeout(function(aPopup) { aPopup.hidePopup() }, 1, this.mPicker.parentNode);
           
           if (this.onchange) 
             this.onchange();
@@ -542,7 +542,7 @@
         // open popup if key is space/up/left/right/down and popup is closed
         if ( (event.keyCode == 32 || (event.keyCode > 36 && event.keyCode < 41)) && !this.mOpen)
           
-          this.openPopup();
+          this.showPopup();
       ]]></handler>
 
       <handler event="mousedown"><![CDATA[
@@ -551,7 +551,7 @@
         // get it to recognize the popupalign and popupanchor attributes that way
         // So, I have to do it manually...
         this.focus();
-        this.openPopup();
+        this.showPopup();
       ]]></handler>
     </handlers>
   </binding>
