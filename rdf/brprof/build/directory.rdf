@@ -26,7 +26,7 @@
    <narrow r:resource="http://dir.yahoo.com/News_and_Media/Television/"/>
    <narrow r:resource="http://www.ultimatetv.com/"/>
     <narrow r:resource="http://tv.yahoo.com/"/>
-   <narrow r:resource="http://www.gist.com/"/"/>
+   <narrow r:resource="http://www.gist.com/"/>
    <narrow r:resource="http://www.cnn.com/SHOWBIZ/TV/"/>
 </Topic>
 
@@ -92,7 +92,7 @@
 
 <Topic r:about="Arts/Muppets">
     <catid>11</catid>
-    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/"/>
+    <narrow r:resource="http://dir.yahoo.com/Entertainment/Movies_and_Film/Genres/Children/Muppets/"/>
     <narrow r:resource="http://www.muppets.com"/>
     <narrow r:resource="http://www.henson.com/"/>
 </Topic>
