@@ -37,10 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 #include <stdio.h>
 #include <string.h>
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupports.h"
@@ -97,27 +96,6 @@ PRUnichar cLatin1_d0[] = {
 
 PRInt32 bLatin1_s0 = ARRAY_SIZE(bLatin1_d0)-1;
 PRInt32 cLatin1_s0 = ARRAY_SIZE(cLatin1_d0);
-
-
-//----------------------------------------------------------------------
-// Registry setup function(s)
-
-nsresult setupRegistry()
-{
-  /** 
-   * Ok, here's where we used to register the components needed to run the 
-   * tests. This is not necessary anymore, as the auto-registration stuff
-   * is in place now. But, as we don't trigger the autoregistration in 
-   * this test program, you make sure you first run an autoreg app (like 
-   * viewer). Included is an example of the old code, in case we'll need it.
-   *
-   * nsresult res = nsComponentManager::RegisterComponent(
-   * kCharsetConverterManagerCID, NULL, NULL, UCONV_DLL, PR_FALSE, PR_FALSE);
-   * if (NS_FAILED(res) && (NS_ERROR_FACTORY_EXISTS != res)) return res;
-   */
-
-  return NS_OK;
-}
 
 //----------------------------------------------------------------------
 // Converter Manager test code
@@ -1153,8 +1131,6 @@ nsresult testAll()
 
 nsresult testFromArgs(int argc, char **argv)
 {
-  nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID,
-      kICharsetConverterManagerIID, (nsISupports **)&ccMan);
   if (NS_FAILED(res)) {
     printf("ERROR at GetService() code=0x%x.\n",res);
     return res;
@@ -1179,22 +1155,15 @@ nsresult testFromArgs(int argc, char **argv)
 
 nsresult init()
 {
-  nsresult res;
-
-  res = setupRegistry();
-  if (NS_FAILED(res)) {
-    printf("ERROR at setupRegistry() code=0x%x.\n", res);
-    return res;
-  }
-
-  return NS_OK;
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  if (NS_FAILED(rv))
+    return rv;
+  return CallGetService(kCharsetConverterManagerCID, &ccMan);
 }
 
 nsresult done()
 {
-  if (ccMan != NULL) nsServiceManager::
-      ReleaseService(kCharsetConverterManagerCID, ccMan);
-
+  NS_RELEASE(ccMan);
   return NS_OK;
 }
 

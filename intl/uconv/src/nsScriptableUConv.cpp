@@ -47,9 +47,7 @@
 #include "nsIScriptableUConv.h"
 #include "nsScriptableUConv.h"
 
-#define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 
 static NS_DEFINE_CID(kIScriptableUnicodeConverterCID, NS_ISCRIPTABLEUNICODECONVERTER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);

@@ -35,21 +35,14 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
+#include "nsXPCOM.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 #include "nsIParser.h"
 #include "nsILoggingSink.h"
 #include "CNavDTD.h"
 #include <fstream.h>
-
-#ifdef XP_PC
-#define PARSER_DLL "gkparser.dll"
-#endif
-#ifdef XP_MAC
-#endif
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define PARSER_DLL "libhtmlpars"MOZ_DLL_SUFFIX
-#endif
 
 // Class IID's
 static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
@@ -58,14 +51,6 @@ static NS_DEFINE_IID(kLoggingSinkCID, NS_LOGGING_SINK_IID);
 // Interface IID's
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
-
-//----------------------------------------------------------------------
-
-static void SetupRegistry()
-{
-  nsComponentManager::RegisterComponent(kParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kLoggingSinkCID, NULL, NULL, PARSER_DLL,PR_FALSE,PR_FALSE);
-}
 
 //----------------------------------------------------------------------
 
@@ -206,7 +191,11 @@ int main(int argc, char** argv)
 
 	int result=0;
 
-	SetupRegistry();
+	nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  if (NS_FAILED(rv)) {
+    printf("NS_InitXPCOM2 failed\n");
+    return 1;
+  }
 
 	if(0==strcmp("-c",argv[1])) {
 

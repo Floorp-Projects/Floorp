@@ -42,6 +42,7 @@
 #include <stdlib.h>
 #include <io.h>
 
+#include "nsXPCOM.h"
 #include "nsISupports.h"
 #include "nsTokenizer.h"
 #include "nsHTMLDelegate.h"
@@ -49,12 +50,6 @@
 #include "nsHTMLContentSink.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
-
-#ifdef XP_PC
-#define PARSER_DLL "gkparser.dll"
-#else
-#define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
-#endif
 
 
 PRBool compareFiles(const char* file1,const char* file2,int& failpos) {
@@ -221,8 +216,11 @@ int main(int argc, char* argv [])
     strcpy(buffer,argv[1]);
   else _getcwd(buffer,_MAX_PATH);
 
-  static NS_DEFINE_CID(kCParserCID, NS_PARSER_CID);
-  nsComponentManager::RegisterComponent(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+  nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+  if (NS_FAILED(rv)) {
+    printf("NS_InitXPCOM2 failed\n");
+    return 1;
+  }
 
   walkDirectoryTree(buffer);
   return 0;

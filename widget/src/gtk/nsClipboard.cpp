@@ -52,9 +52,7 @@
 #include "prthread.h"
 
 // unicode conversion
-#define NS_IMPL_IDS
 #  include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 
 
 // The class statics:

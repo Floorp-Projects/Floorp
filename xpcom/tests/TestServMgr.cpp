@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "MyService.h"
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include <stdio.h>
@@ -143,30 +144,17 @@ AsyncNoShutdownTest(int testNumber)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#if defined(XP_WIN32) || defined(XP_OS2_VACPP)
-#define _MY_SERVICE_DLL "rel:MyService.dll"
-#else
-#define _MY_SERVICE_DLL "rel:libMyService" MOZ_DLL_SUFFIX
-#endif
-
-void
-SetupFactories(void)
-{
-    nsresult err;
-    // seed the repository (hack)
-    err = nsComponentManager::RegisterComponent(kIMyServiceCID, NULL, NULL, 
-                                                _MY_SERVICE_DLL,
-                                                PR_TRUE, PR_FALSE);
-    NS_ASSERTION(err == NS_OK, "failed to register my factory");
-}
-
 int
 main(void)
 {
     nsresult err;
     int testNumber = 0;
 
-    SetupFactories();
+    err = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    if (NS_FAILED(err)) {
+        printf("NS_InitXPCOM2 failed\n");
+        return -1;
+    }
 
     err = SimpleTest(++testNumber);
     if (err != NS_OK)

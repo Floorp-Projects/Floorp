@@ -55,6 +55,7 @@
 #include <io.h>
 #endif
 
+#include "nsXPCOM.h"
 #include "nsIContent.h"
 #include "nsIEventQueueService.h"
 #include "nsIInputStream.h"
@@ -78,29 +79,6 @@
 #include "plstr.h"
 #include "rdf.h"
 
-#if defined(XP_PC)
-#define DOM_DLL    "jsdom.dll"
-#define LAYOUT_DLL "gkhtml.dll"
-#define NETLIB_DLL "netlib.dll"
-#define PARSER_DLL "gkparser.dll"
-#define RDF_DLL    "rdf.dll"
-#define XPCOM_DLL  "xpcom32.dll"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-#define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
-#define LAYOUT_DLL "libgklayout"MOZ_DLL_SUFFIX
-#define NETLIB_DLL "libnecko"MOZ_DLL_SUFFIX
-#define PARSER_DLL "libtmlpars"MOZ_DLL_SUFFIX
-#define RDF_DLL    "librdf"MOZ_DLL_SUFFIX
-#define XPCOM_DLL  "libxpcom"MOZ_DLL_SUFFIX
-#elif defined(XP_MAC)
-#define DOM_DLL    "DOM_DLL"
-#define LAYOUT_DLL "LAYOUT_DLL"
-#define NETLIB_DLL "NETLIB_DLL"
-#define PARSER_DLL "PARSER_DLL"
-#define RDF_DLL    "RDF_DLL"
-#define XPCOM_DLL  "XPCOM_DLL"
-#endif
-
 ////////////////////////////////////////////////////////////////////////
 // CIDs
 
@@ -115,16 +93,6 @@ static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFContentSinkCID,        NS_RDFCONTENTSINK_CID);
 static NS_DEFINE_CID(kRDFXMLDataSourceCID,      NS_RDFXMLDATASOURCE_CID);
 
-// parser
-static NS_DEFINE_CID(kParserCID,                NS_PARSER_CID);
-static NS_DEFINE_CID(kWellFormedDTDCID,         NS_WELLFORMEDDTD_CID);
-
-// layout
-static NS_DEFINE_CID(kNameSpaceManagerCID,      NS_NAMESPACEMANAGER_CID);
-
-// dom
-static NS_DEFINE_IID(kScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
-
 // xpcom
 static NS_DEFINE_CID(kEventQueueServiceCID,     NS_EVENTQUEUESERVICE_CID);
 
@@ -138,29 +106,6 @@ NS_DEFINE_IID(kIRDFDataSourceIID,      NS_IRDFDATASOURCE_IID);
 NS_DEFINE_IID(kIRDFServiceIID,         NS_IRDFSERVICE_IID);
 NS_DEFINE_IID(kIRDFXMLDataSourceIID,   NS_IRDFXMLDATASOURCE_IID);
 
-static nsresult
-SetupRegistry(void)
-{
-    // netlib
-    nsComponentManager::RegisterComponent(kIOServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-    // parser
-    nsComponentManager::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-
-    // layout
-    nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
-
-    // dom
-    nsComponentManager::RegisterComponent(kScriptNameSetRegistryCID, NULL, NULL, DOM_DLL,    PR_FALSE, PR_FALSE);
-
-    // xpcom
-    nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
-
-    return NS_OK;
-}
-
-
 ////////////////////////////////////////////////////////////////////////
 
 int
@@ -173,7 +118,11 @@ main(int argc, char** argv)
         return 1;
     }
 
-    SetupRegistry();
+    rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+    if (NS_FAILED(rv)) {
+        fprintf(stderr, "NS_InitXPCOM2 failed\n");
+        return 1;
+    }
 
     nsIEventQueueService* theEventQueueService = nsnull;
     nsIEventQueue* mainQueue      = nsnull;

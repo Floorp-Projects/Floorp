@@ -38,13 +38,7 @@
 #include "nsIPref.h"
 #include "prmem.h"
 
-#ifdef XP_MAC
 #include "nsXPBaseWindow.h"
-#define NS_IMPL_IDS
-#else
-#define NS_IMPL_IDS
-#include "nsXPBaseWindow.h"
-#endif
 
 #include "nsCOMPtr.h"
 #include "nsIPrompt.h"

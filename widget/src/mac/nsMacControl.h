@@ -39,9 +39,7 @@
 #define nsMacControl_h__
 
 #include "nsIServiceManager.h"
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
-#undef NS_IMPL_IDS
 #include "nsChildWindow.h"
 #include <Controls.h>
 

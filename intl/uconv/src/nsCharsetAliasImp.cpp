@@ -37,9 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 
-#define NS_IMPL_IDS
-
-
 #include "nsICharsetAlias.h"
 #include "pratom.h"
 

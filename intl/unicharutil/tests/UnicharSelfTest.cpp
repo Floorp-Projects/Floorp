@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include <iostream.h>
 #include "nsISupports.h"
+#include "nsXPCOM.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentManager.h"
 #include "nsICaseConversion.h"
@@ -56,12 +57,6 @@ NS_DEFINE_IID(kCaseConversionIID, NS_ICASECONVERSION_IID);
 NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 NS_DEFINE_IID(kIPersistentPropertiesIID,NS_IPERSISTENTPROPERTIES_IID);
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-#define UNICHARUTIL_DLL_NAME "libunicharutil"MOZ_DLL_SUFFIX
-#else
-#define UNICHARUTIL_DLL_NAME "UNICHARUTIL_DLL"
-#endif
 
 #define TESTLEN 29
 #define T2LEN TESTLEN
@@ -520,24 +515,13 @@ static void TestSaveAsCharset()
   cout << "==============================\n\n";
 }
 
-void RegisterFactories()
-{
-   nsresult res;
-   res = nsComponentManager::RegisterComponent(kUnicharUtilCID,
-                                 NULL,
-                                 NULL,
-                                 UNICHARUTIL_DLL_NAME,
-                                 PR_FALSE,
-                                 PR_TRUE);
-   if(NS_FAILED(res))
-     cout << "RegisterComponent failed\n";
-}
- 
 int main(int argc, char** argv) {
    
-#ifndef USE_NSREG
-   RegisterFactories();
-#endif
+   nsresult rv = NS_InitXPCOM2(nsnull, nsnull, nsnull);
+   if (NS_FAILED(rv)) {
+      printf("NS_InitXPCOM2 failed\n");
+      return 1;
+   }
 
    // --------------------------------------------
 

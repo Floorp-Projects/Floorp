@@ -39,10 +39,8 @@
 #include "nsILocalFile.h"
 #include "nsReadableUtils.h"
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 
 #define MAX_PERSISTENT_DATA_SIZE  1000
 #define NUM_HEX_BYTES             8

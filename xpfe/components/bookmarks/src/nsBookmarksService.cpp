@@ -37,8 +37,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#define NS_IMPL_IDS
-
 /*
   The global bookmarks service.
  */

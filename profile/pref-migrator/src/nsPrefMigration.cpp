@@ -85,10 +85,8 @@
 #define DEBUG_UTF8_CONVERSION 1
 #endif 
 
-#define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #define MIGRATION_PROPERTIES_URL "chrome://communicator/locale/profile/migration.properties"

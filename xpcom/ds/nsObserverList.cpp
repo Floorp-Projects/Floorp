@@ -37,7 +37,6 @@
 
 #define NS_WEAK_OBSERVERS
 
-#define NS_IMPL_IDS
 #include "pratom.h"
 #include "nsString.h"
 #include "nsAutoLock.h"

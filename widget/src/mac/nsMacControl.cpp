@@ -46,9 +46,7 @@
 #include "nsFontMetricsMac.h"
 
 #include "nsIServiceManager.h"
-#define NS_IMPL_IDS
 #include "nsIPlatformCharset.h"
-#undef NS_IMPL_IDS
 
 #if TARGET_CARBON || (UNIVERSAL_INTERFACES_VERSION >= 0x0330)
 #include <ControlDefinitions.h>
