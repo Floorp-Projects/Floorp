@@ -1353,47 +1353,27 @@ GetRealFrame(nsIFrame* aFrame)
 
 /**
  * Utility method, called from MoveChildrenTo(), that recursively
- * descends down the frame hierarchy looking for out-of-flow frames that
+ * descends down the frame hierarchy looking for floating frames that
  * need parent pointer adjustments to account for the containment block
  * changes that could occur as the result of the reparenting done in
  * MoveChildrenTo().
  */
 static void
-AdjustOutOfFlowFrameParentPtrs(nsPresContext*          aPresContext,
-                               nsIFrame*                aFrame,
-                               nsFrameConstructorState* aState)
+AdjustFloatParentPtrs(nsIFrame*                aFrame,
+                      nsFrameConstructorState& aState)
 {
   nsIFrame *outOfFlowFrame = GetRealFrame(aFrame);
 
   if (outOfFlowFrame && outOfFlowFrame != aFrame) {
 
     // Get the display data for the outOfFlowFrame so we can
-    // figure out if it is a float or absolutely positioned element.
+    // figure out if it is a float.
 
-    const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
-
-    // Update the parent pointer for outOfFlowFrame if it's
-    // containing block has changed as the result of reparenting,
-    // XXXbz Why is this needed?  The reflow code can just be tweaked to do
-    // better coordinate system conversion, and then this case will work.
-
-    if (NS_STYLE_POSITION_ABSOLUTE == display->mPosition) {
-      // XXX_kin: I think we'll need to add code here to handle the
-      // XXX_kin: reparenting that can happen in ConstructInline()?
-      // XXX_kin:
-      // XXX_kin: The case I'm thinking about here is when the inline being
-      // XXX_kin: constructed has a style="position: relative;" property
-      // XXX_kin: on it, and ConstructInline() moves/reparents all child block
-      // XXX_kin: frames and any inlines (including placeholders) that happen
-      // XXX_kin: to be between these blocks, under the new inline-block it created.
-      // XXX_kin: I think right now this case generates an assertion during
-      // XXX_kin: reflow, and as a result things fail to render since I believe
-      // XXX_kin: the placeholder is parented to the inline-block, and the
-      // XXX_kin: outOfFlowFrame is in the original inline frame's absolute list,
-      // XXX_kin: and is also parented to it.
-    }
-    else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-      nsIFrame *parent = aState->mFloatedItems.containingBlock;
+    if (outOfFlowFrame->GetStyleDisplay()->IsFloating()) {
+      // Update the parent pointer for outOfFlowFrame if it's
+      // containing block has changed as the result of reparenting,
+      
+      nsIFrame *parent = aState.mFloatedItems.containingBlock;
       outOfFlowFrame->SetParent(parent);
       if (outOfFlowFrame->GetStateBits() &
           (NS_FRAME_HAS_VIEW | NS_FRAME_HAS_CHILD_WITH_VIEW)) {
@@ -1404,25 +1384,17 @@ AdjustOutOfFlowFrameParentPtrs(nsPresContext*          aPresContext,
       }
     }
 
-    // XXX_kin: We'll need to remove the return below when we support
-    // XXX_kin: descending into out-of-flow frames. Here are some notes
-    // XXX_kin: from waterson:
-    // XXX_kin:
-    // XXX_kin:     We'd want to continue to descend into placeholders
-    // XXX_kin:     until we found an out-of-flow frame that established
-    // XXX_kin:     a new containing block for absolutely positioned
-    // XXX_kin:     elements. At that point, we could terminate the descent,
-    // XXX_kin:     because any absolutely positioned frames below that frame
-    // XXX_kin:     would be properly parented.
-
+    // All out-of-flows are automatically float containing blocks, so we're
+    // done here
     return;
   }
 
-  // XXX_kin: Since we're only handling floats at the moment,
-  // XXX_kin: we don't need to cross block boundaries.
-
-  if (IsBlockFrame(aPresContext, aFrame))
+  // XXXbz we really want IsFloatContainingBlock() here!
+  if (IsBlockFrame(aState.mPresContext, aFrame)) {
+    // No need to recurse further; floats whose placeholders are
+    // inside a block already have the right parent.
     return;
+  }
 
   // Dive down into children to see if any of their
   // placeholders need adjusting.
@@ -1431,14 +1403,9 @@ AdjustOutOfFlowFrameParentPtrs(nsPresContext*          aPresContext,
 
   while (childFrame)
   {
-    // XXX_kin: Once we add support for adjusting absolutely positioned
-    // XXX_kin: frames, we will be crossing block boundaries, we/ll need
-    // XXX_kin: to update aState's containingBlock info to avoid incorrectly
-    // XXX_kin: reparenting floats, etc.
-    // XXX_kin:
     // XXX_kin: Do we need to prevent descent into anonymous content here?
 
-    AdjustOutOfFlowFrameParentPtrs(aPresContext, childFrame, aState);
+    AdjustFloatParentPtrs(childFrame, aState);
     childFrame = childFrame->GetNextSibling();
   }
 }
@@ -1467,11 +1434,11 @@ MoveChildrenTo(nsPresContext*          aPresContext,
 
     aFrameList->SetParent(aNewParent);
 
-    // If aState is not null, the caller expects us to make adjustments
-    // so that placeholder out of flow frames point to the correct parent.
-
+    // If aState is not null, the caller expects us to make adjustments so that
+    // floats whose placeholders are descendants of frames in aFrameList point
+    // to the correct parent.
     if (aState)
-      AdjustOutOfFlowFrameParentPtrs(aPresContext, aFrameList, aState);
+      AdjustFloatParentPtrs(aFrameList, *aState);
 
 #if 0
     // XXX When this is used with {ib} frame hierarchies, it seems

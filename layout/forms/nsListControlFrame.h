@@ -237,7 +237,6 @@ protected:
   nsIContent* GetOptionContent(PRInt32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
   PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
-  void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   PRBool   IsOptionElement(nsIContent* aContent);
   PRBool   CheckIfAllFramesHere();
   PRInt32  GetIndexFromContent(nsIContent *aContent);

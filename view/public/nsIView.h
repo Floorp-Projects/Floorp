@@ -190,6 +190,21 @@ public:
   nsRect GetBounds() const { return mDimBounds; }
 
   /**
+   * Get the offset between the coordinate systems of |this| and aOther.
+   * Adding the return value to a point in the coordinate system of |this|
+   * will transform the point to the coordinate system of aOther.
+   *
+   * If aOther is null, this will return the offset of |this| from the
+   * root of the viewmanager tree.
+   * 
+   * This function is fastest when aOther is an ancestor of |this|.
+   *
+   * NOTE: this actually returns the offset from aOther to |this|, but
+   * that offset is added to transform _coordinates_ from |this| to aOther.
+   */
+  nsPoint GetOffsetTo(const nsIView* aOther) const;
+
+  /**
    * Called to query the visibility state of a view.
    * @result current visibility state
    */

@@ -3015,18 +3015,11 @@ nsCSSRendering::PaintBackgroundWithSC(nsPresContext* aPresContext,
     ComputeBackgroundAnchorPoint(aColor, viewportArea, viewportArea, tileWidth, tileHeight, anchor);
 
     // Convert the anchor point to aForFrame's coordinate space
-    nsIView* view = aForFrame->GetView();
-    if (!view) {
-      nsPoint offset;
-      aForFrame->GetOffsetFromView(aPresContext, offset, &view);
-      anchor -= offset;
-    }
+    nsPoint offset(0, 0);
+    nsIView* view = aForFrame->GetClosestView(&offset);
+    anchor -= offset;
     NS_ASSERTION(view, "expected a view");
-    while (view && (view != viewportView)) {
-      anchor -= view->GetPosition();
-      // Get the parent view until we reach the viewport view
-      view = view->GetParent();
-    }
+    anchor -= view->GetOffsetTo(viewportView);
   } else {
     if (frameType == nsLayoutAtoms::canvasFrame) {
       // If the frame is the canvas, the image is placed relative to

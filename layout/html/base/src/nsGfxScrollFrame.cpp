@@ -281,18 +281,13 @@ nsHTMLScrollFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                                 PRInt32&        aContentOffsetEnd,
                                                 PRBool&         aBeginFrameContent)
 {
-  nsPoint point(aPoint);
   //we need to translate the coordinates to the inner
   nsIView *view = GetClosestView();
   if (!view)
     return NS_ERROR_FAILURE;
 
-  nsIView *innerView = GetClosestView();
-  while (view != innerView && innerView)
-  {
-    point -= innerView->GetPosition();
-    innerView = innerView->GetParent();
-  }
+  nsIView *innerView = mInner.mScrollAreaBox->GetClosestView();
+  nsPoint point = aPoint - innerView->GetOffsetTo(view);
 
   return mInner.mScrollAreaBox->GetContentAndOffsetsFromPoint(aCX, point, aNewContent, aContentOffset, aContentOffsetEnd, aBeginFrameContent);
 }
@@ -809,18 +804,13 @@ nsXULScrollFrame::GetContentAndOffsetsFromPoint(nsPresContext* aCX,
                                                 PRInt32&        aContentOffsetEnd,
                                                 PRBool&         aBeginFrameContent)
 {
-  nsPoint point(aPoint);
   //we need to translate the coordinates to the inner
   nsIView *view = GetClosestView();
   if (!view)
     return NS_ERROR_FAILURE;
 
-  nsIView *innerView = GetClosestView();
-  while (view != innerView && innerView)
-  {
-    point -= innerView->GetPosition();
-    innerView = innerView->GetParent();
-  }
+  nsIView *innerView = mInner.mScrollAreaBox->GetClosestView();
+  nsPoint point = aPoint - innerView->GetOffsetTo(view);
 
   return mInner.mScrollAreaBox->GetContentAndOffsetsFromPoint(aCX, point, aNewContent, aContentOffset, aContentOffsetEnd, aBeginFrameContent);
 }

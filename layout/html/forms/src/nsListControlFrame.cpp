@@ -505,12 +505,7 @@ void nsListControlFrame::PaintFocus(nsIRenderingContext& aRC, nsFramePaintLayer 
   nsRect fRect = childframe->GetRect();
   
   // get it into the coordinates of containerFrame
-  for (nsIFrame* ancestor = childframe->GetParent();
-       ancestor && ancestor != containerFrame;
-       ancestor = ancestor->GetParent()) {
-    fRect += ancestor->GetPosition();
-  }
-
+  fRect.MoveBy(childframe->GetParent()->GetOffsetTo(containerFrame));
   PRBool lastItemIsSelected = PR_FALSE;
   if (focusedIndex != kNothingSelected) {
     nsCOMPtr<nsIDOMNode> node;
@@ -2242,21 +2237,6 @@ nsListControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
   return NS_OK;
 }
 
-//---------------------------------------------------------
-void
-nsListControlFrame::GetViewOffset(nsIViewManager* aManager, nsIView* aView, 
-  nsPoint& aPoint)
-{
-  aPoint.x = 0;
-  aPoint.y = 0;
- 
-  for (nsIView* parent = aView;
-       parent && parent->GetViewManager() == aManager;
-       parent = parent->GetParent()) {
-    aPoint += parent->GetPosition();
-  }
-}
- 
 //---------------------------------------------------------
 NS_IMETHODIMP 
 nsListControlFrame::SyncViewWithFrame(nsPresContext* aPresContext)
