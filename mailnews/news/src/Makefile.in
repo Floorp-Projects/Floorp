@@ -37,6 +37,7 @@ EXPORTS = \
 	nsNewsFolder.h		\
 	nsNntpIncomingServer.h  \
 	nsNewsMessage.h \
+	nsNewsUtils.h	\
 	$(NULL)
 
 CPPSRCS = \

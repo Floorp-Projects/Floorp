@@ -65,6 +65,7 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNewsFolder.h \
 			nsNntpIncomingServer.h 				\
 			nsNewsMessage.h	\
+			nsNewsUtils.h \
             $(NULL)
 
 LINCS=							\
