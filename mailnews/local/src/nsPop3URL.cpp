@@ -582,7 +582,6 @@ nsresult nsPop3URL::GetProtocol(const char* *result) const
 
 nsresult nsPop3URL::SetProtocol(const char *aNewProtocol)
 {
-    NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
     m_protocol = nsCRT::strdup(aNewProtocol);
     ReconstructSpec();
