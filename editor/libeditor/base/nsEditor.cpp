@@ -830,8 +830,16 @@ NS_IMETHODIMP nsEditor::SelectAll()
 
 NS_IMETHODIMP nsEditor::Cut()
 {
-  //printf("nsEditor::Cut\n");
-  nsresult res = Copy();
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult res = mPresShell->GetSelection(getter_AddRefs(selection));
+  if (!NS_SUCCEEDED(res))
+    return res;
+
+  PRBool isCollapsed;
+  if (NS_SUCCEEDED(selection->GetIsCollapsed(&isCollapsed)) && isCollapsed)
+    return NS_ERROR_NOT_AVAILABLE;
+
+  res = Copy();
   if (NS_SUCCEEDED(res))
     res = DeleteSelection(eDoNothing);
   return res;
@@ -1490,6 +1498,7 @@ NS_IMETHODIMP
 nsEditor::DeleteSelection(nsIEditor::ECollapsedSelectionAction aAction)
 {
   nsresult result;
+
   EditAggregateTxn *txn;
   result = CreateTxnForDeleteSelection(aAction, &txn);
   if (NS_SUCCEEDED(result))  {
