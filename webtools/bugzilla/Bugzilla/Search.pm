@@ -37,6 +37,8 @@ package Bugzilla::Search;
 
 use Bugzilla::Util;
 
+use Date::Format;
+
 # Create a new Search
 sub new {
     my $invocant = shift;
