@@ -329,7 +329,6 @@ END_COM_MAP()
         /* [out][retval] */ BSTR *p)
     {
         *p = NULL;
-#if 0
         nsCOMPtr<nsIDOMWindow> window;
         NPN_GetValue(mData->pPluginInstance, NPNVDOMWindow, (void *) &window);
         if (window)
@@ -349,7 +348,6 @@ END_COM_MAP()
                 }
             }
         }
-#endif
         return E_FAIL;
     }
     
