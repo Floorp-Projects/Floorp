@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCairoDrawingSurface.h"
+#include "nsCairoDeviceContext.h"
 
 #if defined(MOZ_ENABLE_GTK2)
 #include <gdk/gdkx.h>
@@ -110,7 +111,7 @@ nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
     nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
 
 #ifdef MOZ_ENABLE_GTK2
-    NS_ASSERTION (GDK_IS_WINDOW(aNativeWidget), "unsupported native widget type!");
+    NS_ASSERTION (GDK_IS_WINDOW(nativeWidget), "unsupported native widget type!");
     mSurface = cairo_xlib_surface_create
         (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
          GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
@@ -119,8 +120,8 @@ nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
          GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(GDK_DRAWABLE(nativeWidget))));
 
     Window root_ignore;
-    int x_ignore, y_ignore, bwidth_ignore;
-    int width, height, depth;
+    int x_ignore, y_ignore;
+    unsigned int bwidth_ignore, width, height, depth;
 
     XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
                  GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
@@ -141,6 +142,8 @@ nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 
     mPixmap = 0;
     mLockFlags = 0;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -183,7 +186,7 @@ nsCairoDrawingSurface::Lock (PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 a
 NS_IMETHODIMP
 nsCairoDrawingSurface::Unlock (void)
 {
-    NS_ASSERT(mLockFlags != 0, "nsCairoDrawingSurface::Unlock on non-locked surface!");
+    NS_ASSERTION(mLockFlags != 0, "nsCairoDrawingSurface::Unlock on non-locked surface!");
 
     if (mFastAccess) {
         mLockFlags = 0;
@@ -192,7 +195,7 @@ nsCairoDrawingSurface::Unlock (void)
 
     if (mLockFlags & NS_LOCK_SURFACE_WRITE_ONLY) {
         /* need to copy back */
-        cairo_surface_set_image (mImageSurface);
+        cairo_surface_set_image (mSurface, mImageSurface);
     }
 
     cairo_surface_destroy (mImageSurface);
