@@ -315,6 +315,8 @@ rdfassert(RDF rdf, RDF_Resource u, RDF_Resource  s, void* value,
 {
    int32 size =  rdf->numTranslators;
    int32 n = size -1;
+
+   XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)value));
    
    /* XXX - what happens here if there is no local store? */     
    if ((size > 1) && (callHasAssertions(0, rdf, u, s, value, type, (!tv)))) {
@@ -352,6 +354,7 @@ PR_PUBLIC_API(PRBool)
 RDF_CanAssert(RDF r, RDF_Resource u, RDF_Resource s, 
 		    void* v, RDF_ValueType type)
 {
+	XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)v));
 	return true;
 }
 
@@ -360,6 +363,7 @@ RDF_CanAssert(RDF r, RDF_Resource u, RDF_Resource s,
 PR_PUBLIC_API(PRBool)
 RDF_CanAssertFalse(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
 {
+	XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)v));
 	return true;
 }
 
@@ -368,6 +372,7 @@ RDF_CanAssertFalse(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType
 PR_PUBLIC_API(PRBool)
 RDF_CanUnassert(RDF r, RDF_Resource u, RDF_Resource s, void* v, RDF_ValueType type)
 {
+	XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)v));
 	return true;
 }
 
@@ -380,6 +385,7 @@ RDF_Unassert (RDF rdf, RDF_Resource u, RDF_Resource s, void* value, RDF_ValueTyp
   int32 size =  rdf->numTranslators;
   int32 n = 0;
   
+   XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)value));
   setLockedp(u, 1);
   while (allok && (n < size)) {
     if (callHasAssertions(n, rdf, u, s, value, type, 1)) {
@@ -584,6 +590,7 @@ RDF_HasAssertion (RDF rdf, RDF_Resource u, RDF_Resource s,
 {
   int32 size = rdf->numTranslators;
   int32 n = 0;
+  XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)v));
   if (callHasAssertions(0, rdf, u, s, v, type, !tv)) return 0;
   while (n < size) {
     if (callHasAssertions(n, rdf, u, s, v, type, tv)) return 1;
@@ -606,9 +613,16 @@ RDF_GetSlotValue (RDF rdf, RDF_Resource u, RDF_Resource s,
 	RDFT translator = rdf->translators[n];
     void*  ans = callGetSlotValue(n, rdf, u, s, type, inversep, tv);
     if ((ans != NULL) && ((n == 0)||(!callHasAssertions(0, rdf, u, s, ans, type, !tv))))
-    if (type == RDF_RESOURCE_TYPE) {
-      return addDep(rdf, ans) ;
-      } else return ans;
+    {
+
+    	XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)ans));
+
+    	if (type == RDF_RESOURCE_TYPE) {
+      		return addDep(rdf, ans) ;
+      	} else {
+		return ans;
+	}
+    }
     n++;
   }
   if (s == gCoreVocab->RDF_name && tv && !inversep && type == RDF_STRING_TYPE) 
@@ -878,6 +892,7 @@ PR_PUBLIC_API(RDF_Cursor)
 RDF_Find (RDF_Resource s, RDF_Resource match, void* v, RDF_ValueType type)
 {
   RDF_Cursor c = (RDF_Cursor) getMem(sizeof(struct RDF_CursorStruct));
+  XP_ASSERT( (type != RDF_STRING_TYPE ) || IsUTF8String((const char*)v));
   c->s = s;
   c->match = match;
   c->value = v;
