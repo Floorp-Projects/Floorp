@@ -6152,3 +6152,47 @@ FE_SecurityDialog (MWContext *context, int state, XP_Bool *prefs_toggle)
       }
   }
 }
+
+
+/* Temporary stub. */
+XP_Bool 
+FE_Select(MWContext  *pContext,
+		  char       *pMessage,
+		  char       **pList,
+		  int        *pCount) 
+{
+    int i;
+    char *message = 0;
+    for (i = 0; i < *pCount; i++) {
+	StrAllocCopy(message, pMessage);
+        StrAllocCat(message, " = ");
+	StrAllocCat(message, pList[i]);
+	if (FE_Confirm(pContext, message)) {
+	    /* user selected this one */
+	    XP_FREE(message);
+	    *pCount = i;
+	    return TRUE;
+	}
+    }
+
+    /* user rejected all */
+    XP_FREE(message);
+    return FALSE;
+}
+
+
+/*
+ * temporary UI until FE implements this function as a single dialog box
+ */
+XP_Bool
+FE_CheckConfirm (MWContext  *pContext,
+				 char       *pConfirmMessage,
+				 char       *pCheckMessage,
+				 const char *pOKMessage,     /* text on the OK button */
+				 const char *pCancelMessage, /* text on the cancel button */
+				 XP_Bool    *pChecked)
+{
+    Bool userHasAccepted = FE_Confirm(pContext, pConfirmMessage);
+    *pChecked = FE_Confirm (pContext, pCheckMessage);
+    return userHasAccepted;
+}
