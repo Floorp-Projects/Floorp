@@ -133,5 +133,20 @@ rebase:
 !endif
 !endif
 
-install:: rebase
+splitsymbols:
+!if defined(MOZILLA_OFFICIAL)
+!if defined(FIND)
+!if "$(SPLITSYM)" != ""
+	echo splitting symbols for FullCircle
+	$(FIND) $(DIST) -name "*.dll" -exec $(SPLITSYM) {} ;
+	$(FIND) $(DIST) -name "*.exe" -exec $(SPLITSYM) {} ;
+!else
+        echo No splitsym defined.
+!endif
+!else
+        echo No find defined.
+!endif
+!endif
+
+install:: rebase splitsymbols
 

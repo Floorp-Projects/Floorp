@@ -163,6 +163,13 @@ browse_info::
 	-bscmake /o nglayout.bsc @sbrlist.tmp
 	-rm sbrlist.tmp
 
+deliver::
+	@cd $(MOZ_SRC)\mozilla\.
+	set DIST_DIRS=1
+	set LAYOUT_DIRS=1
+	set CLIENT_DIRS=1
+	nmake /f makefile.win splitsymbols
+
 #//------------------------------------------------------------------------
 #// Utility stuff...
 #//------------------------------------------------------------------------
