@@ -324,7 +324,7 @@ netwerk/protocol/jar/public/Makefile
 netwerk/protocol/jar/src/Makefile
 netwerk/protocol/keyword/Makefile
 netwerk/protocol/keyword/src/Makefile
-netwerk/protocol/res/Makefile
+netwerk/9     úÿÿÿ/Makefile
 netwerk/protocol/res/public/Makefile
 netwerk/protocol/res/src/Makefile
 netwerk/protocol/resource/Makefile
@@ -480,11 +480,11 @@ widget/timer/Makefile
 widget/timer/public/Makefile
 widget/timer/src/Makefile
 widget/timer/src/beos/Makefile
-widget/timer/src/photon/Makefile
 widget/timer/src/rhapsody/Makefile
 widget/timer/src/unix/Makefile
 widget/timer/src/unix/gtk/Makefile
 widget/timer/src/unix/motif/Makefile
+widget/timer/src/unix/photon/Makefile
 widget/timer/src/unix/xlib/Makefile
 widget/timer/src/unix/qt/Makefile
 #
