@@ -1748,7 +1748,7 @@ public:
     NS_IF_ADDREF(mWebShell);
   }
 
-  ~nsWebShellEventSinkGetter() {
+  virtual ~nsWebShellEventSinkGetter() {
     NS_IF_RELEASE(mWebShell);
   }
 
