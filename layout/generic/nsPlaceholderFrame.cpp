@@ -154,6 +154,20 @@ NS_IMETHODIMP nsPlaceholderFrame::ContentChanged(nsIPresShell*   aShell,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsPlaceholderFrame::AttributeChanged(nsIPresShell* aShell,
+                                     nsIPresContext* aPresContext,
+                                     nsIContent* aChild,
+                                     nsIAtom* aAttribute)
+{
+  // Forward the notification to the floater
+  if (nsnull != mAnchoredItem) {
+    return mAnchoredItem->AttributeChanged(aShell, aPresContext, aChild, aAttribute);
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsPlaceholderFrame::ListTag(FILE* out) const
 {
   fputs("*placeholder", out);

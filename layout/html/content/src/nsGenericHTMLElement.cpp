@@ -1197,6 +1197,7 @@ nsGenericHTMLElement::SetAttribute(nsIAtom* aAttribute,
         mContent->StringToAttribute(aAttribute, aValue, val)) {
       // string value was mapped to nsHTMLValue, set it that way
       result = SetAttribute(aAttribute, val, aNotify);
+      return result;
     }
     else {
       // set as string value to avoid another string copy
