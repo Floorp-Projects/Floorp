@@ -185,7 +185,7 @@
       min-width           : 1px;
     }
   
-  statusbarpanel 
+  statusbarpanel, .statusbar-panel
     {
       border-left         : 1px solid ThreeDHighlight;
       border-top          : 1px solid ThreeDHighlight;
@@ -202,7 +202,7 @@
   .statusbar-panel-icon
     {
       list-style-image    : inherit;
-    }    
+    }      
 
 /**
  * iframe default sizing 

@@ -1291,13 +1291,13 @@ Rights Reserved.
 
 <statusbar id="status-bar"> 
   <box insertbefore="unreadMessageCount" flex="1">
-    <box id="component-bar" class="component-bar-box"/>
-    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
+    <box id="component-bar"/>
     <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
     <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
   </box>
   <box insertafter="totalMessageCount">
-      <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
+    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
+    <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
 	  <resizer class="window-diagonal"/>
   </box>
 </statusbar> 

@@ -58,7 +58,7 @@
   </commandset>
   
 
-  <box id="component-bar">
+  <box id="component-bar" class="statusbar-panel" persist="collapsed">
     <button class="button-toolbar-4 taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltip="aTooltip" tooltiptext="&taskMessenger.tooltip;"/>
   </box>

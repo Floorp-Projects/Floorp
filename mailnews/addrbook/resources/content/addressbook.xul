@@ -268,11 +268,10 @@ Rights Reserved.
  
   </box>
   
-         <statusbar id="status-bar" >
-           <box id="component-bar" class="component-bar-box"/>
-           <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/>
-           <statusbarpanel id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>  
-           
-           <resizer class="window-diagonal"/>
-         </statusbar>  
+  <statusbar id="status-bar" >
+    <box id="component-bar"/>
+    <statusbarpanel id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>  
+    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/>           
+    <resizer class="window-diagonal"/>
+  </statusbar>  
 </window>

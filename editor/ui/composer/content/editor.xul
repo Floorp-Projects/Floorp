@@ -255,10 +255,9 @@
 
     <!-- Some of this is from globarOverlay.xul -->
     <statusbar id="status-bar">
-      <box id="component-bar" class="component-bar-box"/>
-      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-
+      <box id="component-bar"/>
       <statusbarpanel id="statusText" label="&statusText.label;" flex="1" crop="right"/>
+      <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
       <resizer class="window-diagonal" />
     </statusbar>
     
