@@ -97,6 +97,28 @@ nsScriptableUnicodeConverter::ConvertFromUnicode(const PRUnichar *aSrc, char **_
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP
+nsScriptableUnicodeConverter::Finish(char **_retval)
+{
+  if (!mEncoder)
+    return NS_ERROR_FAILURE;
+
+  PRInt32 finLength = 32;
+
+  *_retval = (char *) nsMemory::Alloc(finLength);
+  if (!*_retval)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv = mEncoder->Finish(*_retval, &finLength);
+  if (NS_SUCCEEDED(rv))
+    (*_retval)[finLength] = '\0';
+  else
+    nsMemory::Free(*_retval);
+
+  return rv;
+
+}
+
 /* wstring ConvertToUnicode ([const] in string src); */
 NS_IMETHODIMP
 nsScriptableUnicodeConverter::ConvertToUnicode(const char *aSrc, PRUnichar **_retval)
