@@ -65,7 +65,7 @@ nsCString::nsCString(nsIMemoryAgent* anAgent) : mAgent(anAgent) {
 
 /**
  * This constructor accepts an ascii string
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   aCString is a ptr to a 1-byte cstr
  * @param   aLength tells us how many chars to copy from given CString
  */
@@ -76,7 +76,7 @@ nsCString::nsCString(const char* aCString,PRInt32 aLength,nsIMemoryAgent* anAgen
 
 /**
  * This constructor accepts a unicode string
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   aString is a ptr to a unichar string
  * @param   aLength tells us how many chars to copy from given aString
  */
@@ -106,7 +106,7 @@ nsCString::nsCString(const PRUnichar* aString,PRInt32 aLength,nsIMemoryAgent* an
 
 /**
  * This constructor works for all other nsSTr derivatives
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   reference to another nsCString
  */
 nsCString::nsCString(const nsStr &aString,nsIMemoryAgent* anAgent) : mAgent(anAgent) {
@@ -116,7 +116,7 @@ nsCString::nsCString(const nsStr &aString,nsIMemoryAgent* anAgent) : mAgent(anAg
 
 /**
  * This is our copy constructor 
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   reference to another nsCString
  */
 nsCString::nsCString(const nsCString& aString) :mAgent(aString.mAgent) {
@@ -126,7 +126,7 @@ nsCString::nsCString(const nsCString& aString) :mAgent(aString.mAgent) {
 
 /**
  * construct from subsumeable string
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
 nsCString::nsCString(nsSubsumeCStr& aSubsumeStr) :mAgent(0) {
@@ -149,7 +149,7 @@ void nsCString::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const {
 /**
  * This method truncates this string to given length.
  *
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   anIndex -- new length of string
  * @return  nada
  */
@@ -181,7 +181,7 @@ PRBool nsCString::IsOrdered(void) const {
 
 /**
  * Call this method if you want to force the string to a certain capacity
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   aLength -- contains new length for mStr
  */
 void nsCString::SetCapacity(PRUint32 aLength) {
@@ -198,7 +198,7 @@ void nsCString::SetCapacity(PRUint32 aLength) {
 
 /**
  * Retrieves internal (1-byte) buffer ptr;
- * @update	gess1/4/99
+ * @update  gess1/4/99
  * @return  ptr to internal buffer
  */
 const char* nsCString::GetBuffer(void) const {
@@ -255,7 +255,7 @@ PRBool nsCString::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
 
 /**
  * Create a new string by appending given string to this
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aString -- 2nd string to be appended
  * @return  new subsumeable string (this makes things faster by reducing copying)
  */
@@ -268,7 +268,7 @@ nsSubsumeCStr nsCString::operator+(const nsCString& aString){
 
 /**
  * create a new string by adding this to the given buffer.
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aCString is a ptr to cstring to be added to this
  * @return  newly created subsumable string
  */
@@ -281,7 +281,7 @@ nsSubsumeCStr nsCString::operator+(const char* aCString) {
 
 /**
  * create a new string by adding this to the given char.
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar is a char to be added to this
  * @return  newly created subsumable string
  */
@@ -293,7 +293,7 @@ nsSubsumeCStr nsCString::operator+(PRUnichar aChar) {
 
 /**
  * create a new string by adding this to the given char.
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar is a char to be added to this
  * @return  newly created string
  */
@@ -310,7 +310,7 @@ nsSubsumeCStr nsCString::operator+(char aChar) {
 
 /**
  * Converts all chars in internal string to lower
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  */
 void nsCString::ToLowerCase() {
   nsStr::ChangeCase(*this,PR_FALSE);
@@ -318,7 +318,7 @@ void nsCString::ToLowerCase() {
 
 /**
  * Converts all chars in internal string to upper
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  */
 void nsCString::ToUpperCase() {
   nsStr::ChangeCase(*this,PR_TRUE);
@@ -327,7 +327,7 @@ void nsCString::ToUpperCase() {
 /**
  * Converts chars in this to lowercase, and
  * stores them in aString
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aOut is a string to contain result
  */
 void nsCString::ToLowerCase(nsCString& aString) const {
@@ -338,7 +338,7 @@ void nsCString::ToLowerCase(nsCString& aString) const {
 /**
  * Converts chars in this to uppercase, and
  * stores them in a given output string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aOut is a string to contain result
  */
 void nsCString::ToUpperCase(nsCString& aString) const {
@@ -503,7 +503,7 @@ nsCString& nsCString::CompressWhitespace( PRBool aEliminateLeading,PRBool aElimi
 
 /**
  * Creates a duplicate clone (ptr) of this string.
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @return  ptr to clone of this string
  */
 nsCString* nsCString::ToNewString() const {
@@ -513,7 +513,7 @@ nsCString* nsCString::ToNewString() const {
 /**
  * Creates an ascii clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @return  ptr to new ascii string
  */
 char* nsCString::ToNewCString() const {
@@ -527,7 +527,7 @@ char* nsCString::ToNewCString() const {
 /**
  * Creates an unicode clone of this string
  * Note that calls to this method should be matched with calls to Recycle().
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @return  ptr to new ascii string
  */
 PRUnichar* nsCString::ToNewUnicode() const {
@@ -544,7 +544,7 @@ PRUnichar* nsCString::ToNewUnicode() const {
  * Note that if you provide me a buffer that is smaller than the length of
  * this string, only the number of bytes that will fit are copied. 
  *
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aBuf
  * @param   aBufLength
  * @param   anOffset
@@ -566,7 +566,7 @@ char* nsCString::ToCString(char* aBuf, PRUint32 aBufLength,PRUint32 anOffset) co
 
 /**
  * Perform string to float conversion.
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aErrorCode will contain error if one occurs
  * @return  float rep of string value
  */
@@ -591,7 +591,7 @@ float nsCString::ToFloat(PRInt32* aErrorCode) const {
  *       2. This method will return an error if the string you give
             contains chars outside the range for the specified radix.
 
- * @update	gess 10/01/98
+ * @update  gess 10/01/98
  * @param   aErrorCode will contain error if one occurs
  * @param   aRadix tells us what base to expect the string in.
  * @return  int rep of string value
@@ -648,7 +648,7 @@ PRInt32 _ToInteger(nsCString& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
  * 1-byte input string, and simultaneously determine the radix.
  * NOTE: This method mandates that the string is well formed.
  *       Leading and trailing gunk should be removed, and the case upper.
- * @update	gess 10/01/98
+ * @update  gess 10/01/98
  * @param   anInputString contains orig string
  * @param   anOutString contains numeric portion copy of input string
  * @param   aRadix (an out parm) tells the caller what base we think the string is in.
@@ -710,7 +710,7 @@ PRInt32 GetNumericSubstring(nsCString& aString,PRUint32& aRadix) {
 
 /**
  * This method tries to autodetect that radix given a string
- * @update	gess 10/01/98
+ * @update  gess 10/01/98
  * @return  10,16,or 0 (meaning I don't know)
  */
 PRUint32 nsCString::DetermineRadix(void) {
@@ -727,7 +727,7 @@ PRUint32 nsCString::DetermineRadix(void) {
 /**
  * Perform decimal numeric string to int conversion.
  * NOTE: In this version, we use the radix you give, even if it's wrong.
- * @update	gess 10/01/98
+ * @update  gess 10/01/98
  * @param   aErrorCode will contain error if one occurs
  * @param   aRadix tells us what base to expect the given string in.
  * @return  int rep of string value
@@ -758,7 +758,7 @@ PRInt32 nsCString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
 
 /**
  * assign given nsStr (or derivative) to this one
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aString: string to be appended
  * @return  this
  */
@@ -777,7 +777,7 @@ nsCString& nsCString::Assign(const nsStr& aString,PRInt32 aCount) {
   
 /**
  * assign given char* to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
@@ -791,7 +791,7 @@ nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
 
 /**
  * assign given unichar* to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aCString: buffer to be assigned to this 
  * @return  this
  */
@@ -822,7 +822,7 @@ nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
 
 /**
  * assign given unichar to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar: char to be assignd to this
  * @return  this
  */
@@ -833,7 +833,7 @@ nsCString& nsCString::Assign(PRUnichar aChar) {
 
 /**
  * assign given char to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar: char to be assignd to this
  * @return  this
  */
@@ -846,7 +846,7 @@ nsCString& nsCString::Assign(char aChar) {
  * WARNING! THIS IS A VERY SPECIAL METHOD. 
  * This method "steals" the contents of aSource and hands it to aDest.
  * Ordinarily a copy is made, but not in this version.
- * @update	gess10/30/98
+ * @update  gess10/30/98
  * @param 
  * @return
  */
@@ -864,7 +864,7 @@ nsCString& nsCString::operator=(nsSubsumeCStr& aSubsumeString) {
 
 /**
  * append given string to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aString : string to be appended to this
  * @return  this
  */
@@ -879,7 +879,7 @@ nsCString& nsCString::Append(const nsCString& aString,PRInt32 aCount) {
 
 /**
  * append given c-string to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aString : string to be appended to this
  * @param   aCount: #of chars to be copied; -1 means to copy the whole thing
  * @return  this
@@ -910,7 +910,7 @@ nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
 
 /**
  * append given char to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar: char to be appended to this
  * @return  this
  */
@@ -928,7 +928,7 @@ nsCString& nsCString::Append(PRUnichar aChar) {
 
 /**
  * append given unichar to this string
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aChar: char to be appended to this
  * @return  this
  */
@@ -946,7 +946,7 @@ nsCString& nsCString::Append(char aChar) {
 
 /**
  * Append the given integer to this string 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aInteger:
  * @param   aRadix:
  * @return
@@ -968,7 +968,7 @@ nsCString& nsCString::Append(PRInt32 aInteger,PRInt32 aRadix) {
 
 /**
  * Append the given float to this string 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aFloat:
  * @return
  */
@@ -1047,7 +1047,7 @@ nsCString& nsCString::Insert(const nsCString& aString,PRUint32 anOffset,PRInt32 
 /**
  * Insert a char* into this string at a specified offset.
  *
- * @update	gess4/22/98
+ * @update  gess4/22/98
  * @param   char* aCString to be inserted into this string
  * @param   anOffset is insert pos in str 
  * @param   aCounttells us how many chars to insert
@@ -1081,7 +1081,7 @@ nsCString& nsCString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCou
 /**
  * Insert a single unichar into this string at a specified offset.
  *
- * @update	gess4/22/98
+ * @update  gess4/22/98
  * @param   aChar unichar to be inserted into this string
  * @param   anOffset is insert pos in str 
  * @return  this
@@ -1101,7 +1101,7 @@ nsCString& nsCString::Insert(PRUnichar aChar,PRUint32 anOffset){
  * Insert a single uni-char into this string at
  * a specified offset.
  *
- * @update	gess4/22/98
+ * @update  gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
  * @return  this
@@ -1413,7 +1413,7 @@ PRInt32 nsCString::RFindCharInSet(const nsStr& aSet,PRInt32 anOffset) const{
 
 /**
  * Compares given cstring to this string. 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aCString points to a cstring
  * @param   aIgnoreCase tells us how to treat case
  * @param   aCount tells us how many chars to test; -1 implies full length
@@ -1434,7 +1434,7 @@ PRInt32 nsCString::Compare(const char *aCString,PRBool aIgnoreCase,PRInt32 aCoun
 
 /**
  * Compares given unistring to this string. 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param   aString pts to a uni-string
  * @param   aIgnoreCase tells us how to treat case
  * @param   aCount tells us how many chars to test; -1 implies full length
@@ -1597,7 +1597,7 @@ static nsCStringRecycler& GetRecycler(void);
 
 /**
  * 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param 
  * @return
  */
@@ -1610,7 +1610,7 @@ nsCStringRecycler& GetRecycler(void){
 
 /**
  * Call this mehod when you're done 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param 
  * @return
  */
@@ -1624,7 +1624,7 @@ nsCString* nsCString::CreateString(void){
 
 /**
  * Call this mehod when you're done 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param 
  * @return
  */
@@ -1637,7 +1637,7 @@ void nsCString::Recycle(nsCString* aString){
 #if 0
 /**
  * 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param 
  * @return
  */
@@ -1650,7 +1650,7 @@ void nsCString::DebugDump(ostream& aStream) const {
 
 /**
  * 
- * @update	gess8/8/98
+ * @update  gess8/8/98
  * @param 
  * @return
  */
@@ -1674,13 +1674,13 @@ ostream& operator<<(ostream& aStream,const nsCString& aString){
       theOffset+=theCount;
     }
   }    
-	return aStream;
+  return aStream;
 }
 #endif
 
 /**
  * 
- * @update	gess 01/04/99
+ * @update  gess 01/04/99
  * @param 
  * @return
  */
@@ -1793,7 +1793,7 @@ nsCAutoString::nsCAutoString(PRUnichar aChar) : nsCString(){
 
 /**
  * construct from a subsumeable string
- * @update	gess 1/4/99
+ * @update  gess 1/4/99
  * @param   reference to a subsumeString
  */
 #ifdef AIX

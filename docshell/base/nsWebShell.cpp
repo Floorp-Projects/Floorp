@@ -73,7 +73,7 @@
 #include "nsIDOMRange.h"
 #include "nsIFrameReflow.h"
 
-#include "nsMultiMixedConv.h" // for 
+#include "nsMultiMixedConv.h" // for
 #include "nsIRegistry.h"
 static NS_DEFINE_CID(kRegistryCID,               NS_REGISTRY_CID);
 
@@ -127,7 +127,7 @@ static PRLogModuleInfo* gLogModule = PR_NewLogModule("webshell");
 
 #if OLD_EVENT_QUEUE
   /* The following is not used for the GTK version of the browser.
-   * It is still lurking around  for Motif 
+   * It is still lurking around  for Motif
    */
 PLEventQueue* gWebShell_UnixEventQueue;
 
@@ -173,7 +173,7 @@ public:
 
   // nsIContentViewerContainer
   NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
-  NS_IMETHOD Embed(nsIContentViewer* aDocViewer, 
+  NS_IMETHOD Embed(nsIContentViewer* aDocViewer,
                    const char* aCommand,
                    nsISupports* aExtraInfo);
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
@@ -197,17 +197,17 @@ public:
   NS_IMETHOD SetContentViewer(nsIContentViewer* aViewer);
   NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
   NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-	NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
+  NS_IMETHOD SetObserver(nsIStreamObserver* anObserver);
   NS_IMETHOD GetObserver(nsIStreamObserver*& aResult);
   NS_IMETHOD SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver);
   NS_IMETHOD GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult);
   NS_IMETHOD SetPrefs(nsIPref* aPrefs);
   NS_IMETHOD GetPrefs(nsIPref*& aPrefs);
   NS_IMETHOD GetRootWebShell(nsIWebShell*& aResult);
-	NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult);
+  NS_IMETHOD GetRootWebShellEvenIfChrome(nsIWebShell*& aResult);
   NS_IMETHOD SetParent(nsIWebShell* aParent);
   NS_IMETHOD GetParent(nsIWebShell*& aParent);
-	NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
+  NS_IMETHOD GetParentEvenIfChrome(nsIWebShell*& aParent);
   NS_IMETHOD GetChildCount(PRInt32& aResult);
   NS_IMETHOD AddChild(nsIWebShell* aChild);
   NS_IMETHOD RemoveChild(nsIWebShell* aChild);
@@ -217,7 +217,7 @@ public:
   NS_IMETHOD FindChildWithName(const PRUnichar* aName,
                                nsIWebShell*& aResult);
 
-	NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
+  NS_IMETHOD SetWebShellType(nsWebShellType aWebShellType);
   NS_IMETHOD GetWebShellType(nsWebShellType& aWebShellType);
   NS_IMETHOD GetContainingChromeShell(nsIWebShell** aResult);
   NS_IMETHOD SetContainingChromeShell(nsIWebShell* aChromeShell);
@@ -232,11 +232,11 @@ public:
   NS_IMETHOD SetIsFrame(PRBool aIsFrame);
   NS_IMETHOD SetZoom(float aZoom);
   NS_IMETHOD GetZoom(float *aZoom);
-  
+
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
-                     nsIInputStream* aPostDataStream=nsnull,                     
+                     nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
 #ifdef NECKO
                      nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
@@ -244,7 +244,7 @@ public:
                      nsURLReloadType aType = nsURLReload,
 #endif
                      const PRUint32 localIP = 0,
-					 nsISupports * aHistoryState = nsnull);
+                     nsISupports * aHistoryState = nsnull);
   NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
                      nsIInputStream* aPostDataStream=nsnull,
@@ -255,7 +255,7 @@ public:
                      nsURLReloadType aType = nsURLReload,
 #endif
                      const PRUint32 localIP = 0,
-					 nsISupports * aHistoryState=nsnull);
+                     nsISupports * aHistoryState=nsnull);
 
   NS_IMETHOD Stop(void);
 
@@ -264,7 +264,7 @@ public:
 #else
   NS_IMETHOD Reload(nsURLReloadType aType);
 #endif
-   
+
   // History api's
   NS_IMETHOD Back(void);
   NS_IMETHOD CanBack(void);
@@ -288,9 +288,9 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode);
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment, 
+  NS_IMETHOD CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent,
+                         PRInt32 aXPos, PRInt32 aYPos,
+                         const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
@@ -299,16 +299,16 @@ public:
   NS_IMETHOD SetHistoryState(nsISupports* aLayoutHistoryState);
 
   // nsIWebShellServices
-  NS_IMETHOD LoadDocument(const char* aURL, 
-                          const char* aCharset= nsnull , 
+  NS_IMETHOD LoadDocument(const char* aURL,
+                          const char* aCharset= nsnull ,
                           nsCharsetSource aSource = kCharsetUninitialized);
-  NS_IMETHOD ReloadDocument(const char* aCharset= nsnull , 
-                 nsCharsetSource aSource = kCharsetUninitialized);                        
+  NS_IMETHOD ReloadDocument(const char* aCharset= nsnull ,
+                            nsCharsetSource aSource = kCharsetUninitialized);
   NS_IMETHOD StopDocumentLoad(void);
   NS_IMETHOD SetRendering(PRBool aRender);
 
   // nsILinkHandler
-  NS_IMETHOD OnLinkClick(nsIContent* aContent, 
+  NS_IMETHOD OnLinkClick(nsIContent* aContent,
                          nsLinkVerb aVerb,
                          const PRUnichar* aURLSpec,
                          const PRUnichar* aTargetSpec,
@@ -325,47 +325,47 @@ public:
 
 #ifdef NECKO
   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
                                  nsIURI* aURL,
                                  const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, 
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel,
                                nsresult aStatus,
                                nsIDocumentLoaderObserver * );
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
                             nsIChannel* channel,
                             nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIChannel* channel, PRUint32 aProgress, 
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIChannel* channel, PRUint32 aProgress,
                                PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
                              nsIChannel* channel, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
                           nsIChannel* channel, nsresult aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
                                       nsIChannel* channel,
                                       const char *aContentType,
                                       const char *aCommand );
 #else
   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                 nsIURI* aURL, 
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader,
+                                 nsIURI* aURL,
                                  const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, 
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader,
+                               nsIURI* aURL,
                                PRInt32 aStatus,
-							   nsIDocumentLoaderObserver * );
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
-                            nsIURI* aURL, const char* aContentType, 
+                               nsIDocumentLoaderObserver * );
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader,
+                            nsIURI* aURL, const char* aContentType,
                             nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
-                               nsIURI* aURL, PRUint32 aProgress, 
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader,
+                               nsIURI* aURL, PRUint32 aProgress,
                                PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader,
                              nsIURI* aURL, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader,
                           nsIURI* aURL, PRInt32 aStatus);
-  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader,
                                       nsIURI* aURL,
                                       const char *aContentType,
                                       const char *aCommand );
@@ -396,7 +396,7 @@ public:
   // nsIPrompt
   NS_DECL_NSIPROMPT
 #else
-	// nsINetSupport interface methods
+  // nsINetSupport interface methods
   NS_IMETHOD_(void) Alert(const nsString &aText);
   NS_IMETHOD_(PRBool) Confirm(const nsString &aText);
   NS_IMETHOD_(PRBool) ConfirmYN(const nsString &aText);
@@ -410,7 +410,7 @@ public:
                                      nsString &aPassword);
 #endif
 
-  // nsIClipboardCommands 
+  // nsIClipboardCommands
   NS_IMETHOD CanCutSelection  (PRBool* aResult);
   NS_IMETHOD CanCopySelection (PRBool* aResult);
   NS_IMETHOD CanPasteSelection(PRBool* aResult);
@@ -517,7 +517,7 @@ protected:
   PRInt32 mScrolling[2];
   nsVoidArray mRefreshments;
 
-	nsWebShellType mWebShellType;
+  nsWebShellType mWebShellType;
   nsIWebShell* mChromeShell; // Weak reference.
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
@@ -540,10 +540,10 @@ protected:
   static nsIPluginManager *mPluginManager;
   static PRUint32          mPluginInitCnt;
   PRBool mProcessedEndDocumentLoad;
-  
+
   // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
   nsString mHintCharset;
-  nsCharsetSource mHintCharsetSource; 
+  nsCharsetSource mHintCharsetSource;
   nsString mForceCharacterSet;
 
   // if there is no mWindow, this will keep track of the bounds  --dwc0001
@@ -551,11 +551,11 @@ protected:
 
 #ifdef NS_DEBUG
 private:
-		// We're counting the number of |nsWebShells| to help find leaks
-	static unsigned long gNumberOfWebShells;
+  // We're counting the number of |nsWebShells| to help find leaks
+  static unsigned long gNumberOfWebShells;
 
 public:
-	static unsigned long TotalWebShellsInExistence() { return gNumberOfWebShells; }
+  static unsigned long TotalWebShellsInExistence() { return gNumberOfWebShells; }
 #endif
 };
 
@@ -565,9 +565,9 @@ unsigned long nsWebShell::gNumberOfWebShells = 0;
 extern "C" NS_WEB
 unsigned long
 NS_TotalWebShellsInExistence()
-	{
-		return nsWebShell::TotalWebShellsInExistence();
-	}
+  {
+    return nsWebShell::TotalWebShellsInExistence();
+  }
 #endif
 
 //----------------------------------------------------------------------
@@ -583,7 +583,7 @@ static NS_DEFINE_IID(kWebShellCID,            NS_WEB_SHELL_CID);
 // IID's
 static NS_DEFINE_IID(kIContentViewerContainerIID,
                      NS_ICONTENT_VIEWER_CONTAINER_IID);
-static NS_DEFINE_IID(kIDocumentLoaderObserverIID, 
+static NS_DEFINE_IID(kIDocumentLoaderObserverIID,
                      NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDeviceContextIID,      NS_IDEVICE_CONTEXT_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID,     NS_IDOCUMENTLOADER_IID);
@@ -631,7 +631,7 @@ nsresult nsWebShell::CreatePluginHost(PRBool aAllowPlugins)
     {
       // use the service manager to obtain the plugin manager.
       rv = nsServiceManager::GetService(kCPluginManagerCID, kIPluginManagerIID,
-      									(nsISupports**)&mPluginManager);
+                                        (nsISupports**)&mPluginManager);
       if (NS_OK == rv)
       {
         if (NS_OK == mPluginManager->QueryInterface(kIPluginHostIID,
@@ -661,7 +661,7 @@ nsresult nsWebShell::DestroyPluginHost(void)
       mPluginHost->Release();
       mPluginHost = NULL;
     }
-    
+
     // use the service manager to release the plugin manager.
     if (nsnull != mPluginManager) {
       nsServiceManager::ReleaseService(kCPluginManagerCID, mPluginManager);
@@ -678,8 +678,8 @@ nsresult nsWebShell::DestroyPluginHost(void)
 nsWebShell::nsWebShell()
 {
 #ifdef NS_DEBUG
-		// We're counting the number of |nsWebShells| to help find leaks
-	++gNumberOfWebShells;
+  // We're counting the number of |nsWebShells| to help find leaks
+  ++gNumberOfWebShells;
 #endif
 
   NS_INIT_REFCNT();
@@ -687,10 +687,10 @@ nsWebShell::nsWebShell()
   mScrollPref = nsScrollPreference_kAuto;
   mScriptGlobal = nsnull;
   mScriptContext = nsnull;
-	mThreadEventQueue = nsnull;
+  mThreadEventQueue = nsnull;
   InitFrameData(PR_TRUE);
   mIsFrame = PR_FALSE;
-	mWebShellType = nsWebShellContent;
+  mWebShellType = nsWebShellContent;
   mChromeShell = nsnull;
   mSHist = nsnull;
   mIsInSHist = PR_FALSE;
@@ -774,8 +774,8 @@ nsWebShell::~nsWebShell()
   DestroyPluginHost();
 
 #ifdef NS_DEBUG
-		// We're counting the number of |nsWebShells| to help find leaks
-	--gNumberOfWebShells;
+  // We're counting the number of |nsWebShells| to help find leaks
+  --gNumberOfWebShells;
 #endif
 }
 
@@ -918,7 +918,7 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-#if defined(NS_DEBUG) 
+#if defined(NS_DEBUG)
   /*
    * Check for the debug-only interface indicating thread-safety
    */
@@ -957,8 +957,8 @@ nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsWebShell::Embed(nsIContentViewer* aContentViewer, 
-                  const char* aCommand, 
+nsWebShell::Embed(nsIContentViewer* aContentViewer,
+                  const char* aCommand,
                   nsISupports* aExtraInfo)
 {
   nsresult rv;
@@ -979,8 +979,8 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
   if(mWindow) {
     mWindow->GetClientBounds(bounds);
     bounds.x = bounds.y = 0;
-    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
-                              mDeviceContext, 
+    rv = mContentViewer->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET),
+                              mDeviceContext,
                               mPrefs,
                               bounds,
                               mScrollPref);
@@ -997,7 +997,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
           rv = shell->SetHistoryState((nsILayoutHistoryState*) mHistoryState);
         }
       }
-    }  
+    }
 
     if (NS_SUCCEEDED(rv)) {
       mContentViewer->Show();
@@ -1027,7 +1027,7 @@ nsWebShell::GetContentViewer(nsIContentViewer** aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
+nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader,
 #ifdef NECKO
                                      nsIChannel* channel,
 #else
@@ -1056,7 +1056,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   // Cache the PL_EventQueue of the current UI thread...
   //
   // Since this call must be made on the UI thread, we know the Event Queue
-  // will be associated with the current thread... 
+  // will be associated with the current thread...
   //
   nsIEventQueueService* eventService;
   rv = nsServiceManager::GetService(kEventQueueServiceCID,
@@ -1064,7 +1064,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
                                     (nsISupports **)&eventService);
   if (NS_SUCCEEDED(rv)) {
     // XXX: What if this fails?
-    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(), 
+    rv = eventService->GetThreadEventQueue(PR_GetCurrentThread(),
                                            &mThreadEventQueue);
     nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
   }
@@ -1105,7 +1105,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   } else {
     nsIDocumentLoader* docLoaderService;
 
-    // Get the global document loader service...  
+    // Get the global document loader service...
     rv = nsServiceManager::GetService(kDocLoaderServiceCID,
                                       kIDocumentLoaderIID,
                                       (nsISupports **)&docLoaderService);
@@ -1202,7 +1202,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
     mDeviceContext->SetGamma(1.0f);
 
     widgetInit.clipChildren = PR_FALSE;
-    widgetInit.mWindowType = eWindowType_child; 
+    widgetInit.mWindowType = eWindowType_child;
   }
 
   // STREAM CONVERTER REGISTRATION
@@ -1261,7 +1261,7 @@ nsWebShell::Destroy()
   //Fire unload event before we blow anything away.
   if (nsnull != mScriptGlobal) {
     nsIDocumentViewer* docViewer;
-    if (nsnull != mContentViewer && 
+    if (nsnull != mContentViewer &&
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
       nsIPresContext *presContext;
       if (NS_OK == docViewer->GetPresContext(presContext)) {
@@ -1335,7 +1335,7 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
   --dwc0001
   NS_PRECONDITION(nsnull != mWindow, "null window");
   */
-  
+
   PRInt32 borderWidth  = 0;
   PRInt32 borderHeight = 0;
   if (nsnull != mWindow) {
@@ -1344,7 +1344,7 @@ nsWebShell::SetBounds(PRInt32 x, PRInt32 y, PRInt32 w, PRInt32 h)
     // during reflow
     mWindow->Resize(x, y, w, h, PR_FALSE);
   }
-    
+
   mBounds.SetRect(x,y,w,h);   // set the webshells bounds --dwc0001
 
   // Set the size of the content area, which is the size of the window
@@ -1400,7 +1400,7 @@ nsWebShell::SizeToContent()
               widthDelta = width - oldWidth;
               heightDelta = height - oldHeight;
               browser->GetWindowBounds(windowBounds);
-              browser->SizeWindowTo(windowBounds.width + widthDelta, 
+              browser->SizeWindowTo(windowBounds.width + widthDelta,
                                     windowBounds.height + heightDelta);
             }
           }
@@ -1554,7 +1554,7 @@ nsWebShell::GetSessionHistory(nsISessionHistory *& aResult)
 
 nsEventStatus PR_CALLBACK
 nsWebShell::HandleEvent(nsGUIEvent *aEvent)
-{ 
+{
   return nsEventStatus_eIgnore;
 }
 
@@ -1581,7 +1581,7 @@ nsWebShell::SetObserver(nsIStreamObserver* anObserver)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetObserver(nsIStreamObserver*& aResult)
 {
   aResult = mObserver;
@@ -1594,17 +1594,17 @@ nsWebShell::GetObserver(nsIStreamObserver*& aResult)
 NS_IMETHODIMP
 nsWebShell::SetDocLoaderObserver(nsIDocumentLoaderObserver* anObserver)
 {
-//	if (anObserver != nsnull) {
+//  if (anObserver != nsnull) {
   NS_IF_RELEASE(mDocLoaderObserver);
 
   mDocLoaderObserver = anObserver;
   NS_IF_ADDREF(mDocLoaderObserver);
-//	}
+//  }
   return NS_OK;
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetDocLoaderObserver(nsIDocumentLoaderObserver*& aResult)
 {
   aResult = mDocLoaderObserver;
@@ -1624,7 +1624,7 @@ nsWebShell::SetUrlDispatcher(nsIUrlDispatcher* aDispatcher)
 }
 
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetUrlDispatcher(nsIUrlDispatcher*& aResult)
 {
   aResult = mUrlDispatcher;
@@ -1697,20 +1697,20 @@ nsWebShell::SetParent(nsIWebShell* aParent)
 NS_IMETHODIMP
 nsWebShell::GetParent(nsIWebShell*& aParent)
 {
-	if (mWebShellType == nsWebShellContent)
-	{
-		// We cannot return our parent if it is a chrome webshell.
-		nsWebShellType parentType;
-		if (mParent)
-		{
-			mParent->GetWebShellType(parentType);
-		  if (parentType == nsWebShellChrome)
-			{
-				aParent = nsnull; // Just return null.
-				return NS_OK;
-			}
-		}
-	}
+  if (mWebShellType == nsWebShellContent)
+  {
+    // We cannot return our parent if it is a chrome webshell.
+    nsWebShellType parentType;
+    if (mParent)
+    {
+      mParent->GetWebShellType(parentType);
+      if (parentType == nsWebShellChrome)
+      {
+        aParent = nsnull; // Just return null.
+        return NS_OK;
+      }
+    }
+  }
 
   aParent = mParent;
   NS_IF_ADDREF(mParent);
@@ -1743,8 +1743,8 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   aChild->SetParent(this);
   const PRUnichar *defaultCharset=nsnull;
   if(NS_SUCCEEDED(this->GetDefaultCharacterSet (&defaultCharset)))
-       aChild->SetDefaultCharacterSet(defaultCharset); 
-  aChild->SetForceCharacterSet(mForceCharacterSet.GetUnicode()); 
+       aChild->SetDefaultCharacterSet(defaultCharset);
+  aChild->SetForceCharacterSet(mForceCharacterSet.GetUnicode());
   NS_ADDREF(aChild);
 
   return NS_OK;
@@ -1805,7 +1805,7 @@ nsWebShell::SetURL(const PRUnichar* aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetIsInSHist(PRBool& aResult)
 {
   aResult = mIsInSHist;
@@ -1814,7 +1814,7 @@ nsWebShell::GetIsInSHist(PRBool& aResult)
 
 NS_IMETHODIMP
 nsWebShell::SetIsInSHist(PRBool aIsInSHist)
-{ 
+{
   mIsInSHist = aIsInSHist;
   return NS_OK;
 }
@@ -1854,21 +1854,20 @@ nsWebShell::FindChildWithName(const PRUnichar* aName1,
 NS_IMETHODIMP
 nsWebShell::GetWebShellType(nsWebShellType& aWebShellType)
 {
-	aWebShellType = mWebShellType;
-	return NS_OK;
+  aWebShellType = mWebShellType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::SetWebShellType(nsWebShellType aWebShellType)
 {
-	if (aWebShellType != nsWebShellChrome && 
-		  aWebShellType != nsWebShellContent)
+  if (aWebShellType != nsWebShellChrome && aWebShellType != nsWebShellContent)
   {
-		NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
-		return NS_ERROR_FAILURE;
-	}
-	mWebShellType = aWebShellType;
-	return NS_OK;
+    NS_ERROR("Attempt to set bogus webshell type: values should be content or chrome.");
+    return NS_ERROR_FAILURE;
+  }
+  mWebShellType = aWebShellType;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1932,7 +1931,7 @@ nsWebShell::SetScrolling(PRInt32 aScrolling, PRBool aSetCurrentAndInitial)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetIsFrame(PRBool& aIsFrame)
 {
   aIsFrame = mIsFrame;
@@ -1941,7 +1940,7 @@ nsWebShell::GetIsFrame(PRBool& aIsFrame)
 
 NS_IMETHODIMP
 nsWebShell::SetIsFrame(PRBool aIsFrame)
-{ 
+{
   mIsFrame = aIsFrame;
   return NS_OK;
 }
@@ -1960,9 +1959,9 @@ nsWebShell::SetZoom(float aZoom)
     if (nsnull != docv) {
       nsIPresContext* cx = nsnull;
       docv->GetPresContext(cx);
-	    if (nsnull != cx) {
+      if (nsnull != cx) {
         nsIPresShell  *shell = nsnull;
-	      cx->GetShell(&shell);
+        cx->GetShell(&shell);
         if (nsnull != shell) {
           nsIViewManager  *vm = nsnull;
           shell->GetViewManager(&vm);
@@ -1975,12 +1974,12 @@ nsWebShell::SetZoom(float aZoom)
             vm->GetRootView(rootview);
             if (nsnull != rootview)
               vm->UpdateView(rootview, nsnull, 0);
-    	      NS_RELEASE(vm);
+              NS_RELEASE(vm);
           }
-  	      NS_RELEASE(shell);
+          NS_RELEASE(shell);
         }
-	      NS_RELEASE(cx);
-	    }
+        NS_RELEASE(cx);
+      }
       NS_RELEASE(docv);
     }
   }
@@ -1999,7 +1998,7 @@ nsWebShell::GetZoom(float *aZoom)
 /**
  * Document Load methods
  */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetDocumentLoader(nsIDocumentLoader*& aResult)
 {
   aResult = mDocLoader;
@@ -2018,7 +2017,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
     PRInt32 len = strlen(szFile);
     PRInt32 sum = len + sizeof(FILE_PROTOCOL);
     char* lpszFileURL = (char *)PR_Malloc(sum + 1);
-    
+
     // Translate '\' to '/'
     for (PRInt32 i = 0; i < len; i++) {
       if (szFile[i] == '\\') {
@@ -2028,7 +2027,7 @@ static void convertFileToURL(const nsString &aIn, nsString &aOut)
         szFile[i] = '|';
       }
     }
-    
+
     // Build the file URL
     PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, szFile);
     aOut = lpszFileURL;
@@ -2051,7 +2050,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsURLReloadType aType,
 #endif
                     const PRUint32 aLocalIP,
-					nsISupports * aHistoryState)
+                    nsISupports * aHistoryState)
 {
   // Initialize margnwidth, marginheight. Put scrolling back the way it was
   // before the last document was loaded.
@@ -2071,7 +2070,7 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
   nsXPIDLCString file2;
   char *  anchor1 = nsnull, * anchor2=nsnull;
   PRBool rv = PR_FALSE;
-  
+
   if (url1 && url2) {
     // XXX We need to make these strcmps case insensitive.
 #ifdef NECKO
@@ -2079,7 +2078,7 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
     url2->GetHost(getter_Copies(host2));
 #else
     url1->GetHost(getter_Shares(host1));
-    url2->GetHost(getter_Shares(host2));  
+    url2->GetHost(getter_Shares(host2));
 #endif
     if (0 == PL_strcmp(host1, host2)) {
 #ifdef NECKO
@@ -2091,23 +2090,23 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 #endif
 
       anchor1 = PL_strrchr(file1, '#');
-	  if (anchor1) {
-          char * tmp = PL_strstr(file1, file2);
-	    if (tmp && (const char *)tmp == file1) {
-				  return PR_TRUE;
-		}
-	  }
-	  anchor2 = PL_strrchr(file2, '#');
-	  if (anchor2) {
-          char * tmp = PL_strstr(file2, file1);
-	    if (tmp && (const char *)tmp == file2) {			 
-				  return PR_TRUE;
-		}
-	  }
-	
+      if (anchor1) {
+        char * tmp = PL_strstr(file1, file2);
+        if (tmp && (const char *)tmp == file1) {
+          return PR_TRUE;
+        }
+      }
+      anchor2 = PL_strrchr(file2, '#');
+      if (anchor2) {
+        char * tmp = PL_strstr(file2, file1);
+        if (tmp && (const char *)tmp == file2) {
+          return PR_TRUE;
+        }
+      }
+
       if (0 == PL_strcmp(file1, file2)) {
-          rv = PR_TRUE;
-	  }
+        rv = PR_TRUE;
+      }
     }  // strcmp(host1, host2)
   }   // url1 && url2
   return rv;
@@ -2140,12 +2139,12 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
 #ifdef NECKO
-	// We don't have a reload loadtype yet in necko. So, check for just history
-	// loadtype
-	if ((aType == LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
-    (nsnull == aPostDataStream))
+  // We don't have a reload loadtype yet in necko. So, check for just history
+  // loadtype
+  if ((aType == LOAD_HISTORY || aType == nsIChannel::LOAD_NORMAL) && (nsnull != mContentViewer) &&
+      (nsnull == aPostDataStream))
 #else
-  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) && 
+  if ((aType == nsURLReload || aType == nsURLReloadFromHistory) &&
     (nsnull != mContentViewer) && (nsnull == aPostDataStream))
 #endif
   {
@@ -2164,7 +2163,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       nsCOMPtr<nsIURI>  url;
 #ifndef NECKO
       rv = NS_NewURL(getter_AddRefs(url), aUrlSpec);
-#else 
+#else
       rv = NS_NewURI(getter_AddRefs(url), aUrlSpec);
 #ifdef DEBUG
       char* urlStr = aUrlSpec.ToNewCString();
@@ -2179,7 +2178,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
       nsCRT::free(urlStr);
 #endif
 #endif // NECKO
-      if (NS_FAILED(rv)) return rv;      
+      if (NS_FAILED(rv)) return rv;
       if (url && docURL && EqualBaseURLs(docURL, url)) {
         // See if there's a destination anchor
 #ifdef NECKO
@@ -2197,17 +2196,17 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 
         if (NS_SUCCEEDED(rv) && presShell) {
           if (nsnull != ref) {
-            // Go to the anchor in the current document                    
+            // Go to the anchor in the current document
             rv = presShell->GoToAnchor(nsAutoString(ref));
 
-	        // Pass notifications to BrowserAppCore just to be consistent with
-			// regular page loads thro' necko
-			nsCOMPtr<nsIChannel> dummyChannel;
+            // Pass notifications to BrowserAppCore just to be consistent with
+            // regular page loads thro' necko
+            nsCOMPtr<nsIChannel> dummyChannel;
             rv = NS_OpenURI(getter_AddRefs(dummyChannel), url, nsnull);
-            if (NS_FAILED(rv)) return rv;  
-	
-			mProcessedEndDocumentLoad = PR_FALSE;
-			rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
+            if (NS_FAILED(rv)) return rv;
+
+            mProcessedEndDocumentLoad = PR_FALSE;
+            rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
 
             return rv;
           }
@@ -2218,24 +2217,24 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
 #endif
           {
             // Go to the top of the current document
-            nsCOMPtr<nsIViewManager> viewMgr;            
+            nsCOMPtr<nsIViewManager> viewMgr;
             rv = presShell->GetViewManager(getter_AddRefs(viewMgr));
             if (NS_SUCCEEDED(rv) && viewMgr) {
 
 
               nsIScrollableView* view;
               rv = viewMgr->GetRootScrollableView(&view);
-              if (NS_SUCCEEDED(rv) && view)           
+              if (NS_SUCCEEDED(rv) && view)
                 rv = view->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
 
-			  // Pass notifications to BrowserAppCore just to be consistent with 
-		      // regular necko loads.
-			  nsCOMPtr<nsIChannel> dummyChannel;
+              // Pass notifications to BrowserAppCore just to be consistent with
+              // regular necko loads.
+              nsCOMPtr<nsIChannel> dummyChannel;
               rv = NS_OpenURI(getter_AddRefs(dummyChannel), url, nsnull);
-              if (NS_FAILED(rv)) return rv;  		   
-			  mProcessedEndDocumentLoad = PR_FALSE;
-		
-			  rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
+              if (NS_FAILED(rv)) return rv;
+              mProcessedEndDocumentLoad = PR_FALSE;
+
+              rv = OnEndDocumentLoad(mDocLoader, dummyChannel, 0, this);
 
 
 
@@ -2266,7 +2265,7 @@ nsWebShell::DoLoadURL(const nsString& aUrlSpec,
   * So, pass on the observer which is already a streamObserver to DocLoder.
   *  - Radha
   */
-  
+
   return mDocLoader->LoadDocument(aUrlSpec,        // URL string
                                   aCommand,        // Command
                                   this,            // Container
@@ -2288,7 +2287,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     nsURLReloadType aType,
 #endif
                     const PRUint32 aLocalIP,
-					nsISupports * aHistoryState)
+                    nsISupports * aHistoryState)
 {
   nsresult rv;
 
@@ -2374,7 +2373,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   rv = GetRootWebShell(root);
   if (NS_SUCCEEDED(rv) && root) {
      nsIDocumentLoaderObserver * dlObserver = nsnull;
- 
+
      rv = root->GetDocLoaderObserver(dlObserver);
      if (NS_SUCCEEDED(rv) && dlObserver) {
         isBrowser = PR_TRUE;
@@ -2382,9 +2381,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
      }
   }
 
-  /* Ask the URL dispatcher to take car of this URL only if it is a
+  /* Ask the URL dispatcher to take care of this URL only if it is a
    * mailto: link clicked inside a browser or any link clicked
-   * inside a *non-browser* window. Note this mechanism s'd go away once 
+   * inside a *non-browser* window. Note this mechanism s'd go away once
    * we have the protocol registry and window manager available
    */
   if (isMail) {
@@ -2394,38 +2393,37 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
        nsCOMPtr<nsIUrlDispatcher>  urlDispatcher = nsnull;
        rv = GetUrlDispatcher(*getter_AddRefs(urlDispatcher));
        if (NS_SUCCEEDED(rv) && urlDispatcher) {
-		  printf("calling HandleUrl\n");
-          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(), 
+          printf("calling HandleUrl\n");
+          urlDispatcher->HandleUrl(LinkCommand.GetUnicode(),
                                    mURL.GetUnicode(), aPostDataStream);
-          return NS_OK;          
+          return NS_OK;
        }
        NS_RELEASE(root);
     }
   }
 
 
-  /* 
+  /*
    * Before the new page is added to the session history,
    * save the history information of the previous page in
    * session history
    */
-  
+
    nsISupports * historyState=nsnull;
 
    // Get the history object for the previous page.
    rv = GetHistoryState(&historyState);
    nsCOMPtr<nsIWebShell> rootWebShell;
    rv = GetRootWebShell(*getter_AddRefs(rootWebShell));
-   if (NS_SUCCEEDED(rv) && rootWebShell)
-   {
-        nsCOMPtr<nsISessionHistory> shist;
-	    rv = rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
-		if (NS_SUCCEEDED(rv) && shist) {
-		   PRInt32 indix=0;
-		   shist->getCurrentIndex(indix);
-		   // Save it in session history
-		   shist->SetHistoryObjectForIndex(indix, historyState);
-		}
+   if (NS_SUCCEEDED(rv) && rootWebShell) {
+      nsCOMPtr<nsISessionHistory> shist;
+      rv = rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
+      if (NS_SUCCEEDED(rv) && shist) {
+        PRInt32 indix=0;
+        shist->getCurrentIndex(indix);
+        // Save it in session history
+        shist->SetHistoryObjectForIndex(indix, historyState);
+      }
    }
 
 
@@ -2433,20 +2431,19 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   /* If this is one of the frames, get it from the top level shell */
 
   if (aModifyHistory) {
-	  if (rootWebShell)
-	  {
-        nsCOMPtr<nsISessionHistory> shist;
-	    rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
-	      /* Add yourself to the Session History */
-		  if (shist) {
-		    PRInt32  ret=0;
-		    ret = shist->add(this);
-		  }
-	  }
+    if (rootWebShell) {
+      nsCOMPtr<nsISessionHistory> shist;
+      rootWebShell->GetSessionHistory(*getter_AddRefs(shist));
+      /* Add yourself to the Session History */
+      if (shist) {
+        PRInt32  ret=0;
+        ret = shist->add(this);
+      }
+    }
   }
 
-  /* Set the History state object for the current page in the 
-   * presentation shell. If it is a new page being visited, 
+  /* Set the History state object for the current page in the
+   * presentation shell. If it is a new page being visited,
    * aHistoryState is null. If the load is coming from
    * session History, it will be set to the cached history object by
    * session History.
@@ -2480,7 +2477,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 
   /* The session History may have changed the URL. So pass on the
-   * right one for loading 
+   * right one for loading
    */
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
@@ -2489,7 +2486,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       return rv;
     }
   }
-  
+
 
   return DoLoadURL(uriSpec, aCommand, aPostDataStream, aType, aLocalIP);
 //#endif
@@ -2590,10 +2587,10 @@ NS_IMETHODIMP nsWebShell::Reload(nsURLReloadType aType)
   }
   return NS_ERROR_FAILURE;
 #else
-  if (mSHist) 
+  if (mSHist)
      return mSHist->Reload(this, aType);
   return NS_OK;
-#endif  
+#endif
 }
 
 //----------------------------------------
@@ -2621,7 +2618,7 @@ nsWebShell::CanBack(void)
   if (mSHist) {
     PRBool result=PR_TRUE;
     mSHist->canBack(result);
-    return  (result ? NS_OK : NS_COMFALSE);   
+    return  (result ? NS_OK : NS_COMFALSE);
   }
   return NS_OK;
 #endif
@@ -2649,7 +2646,7 @@ nsWebShell::CanForward(void)
   if (mSHist) {
     PRBool result=PR_TRUE;
     mSHist->canForward(result);
-    return  (result ? NS_OK : NS_COMFALSE);   
+    return  (result ? NS_OK : NS_COMFALSE);
   }
   return NS_OK;
 #endif
@@ -2706,7 +2703,7 @@ nsWebShell::GetHistoryLength(PRInt32& aResult)
 #else
   if (mSHist)
     return mSHist->getHistoryLength(aResult);
-#endif 
+#endif
   return NS_OK;
 }
 
@@ -2778,7 +2775,7 @@ nsWebShell::SetTitle(const PRUnichar* aTitle)
   // Title's set on the top level web-shell are passed ont to the container
   nsIWebShell* parent;
   GetParent(parent);
-  if (nsnull == parent) {  
+  if (nsnull == parent) {
     nsIBrowserWindow *browserWindow = GetBrowserWindow();
     if (nsnull != browserWindow) {
       browserWindow->SetTitle(aTitle);
@@ -2835,9 +2832,9 @@ nsWebShell::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 }
 
 NS_IMETHODIMP
-nsWebShell::ProgressLoadURL(nsIWebShell* aShell, 
-                            const PRUnichar* aURL, 
-                            PRInt32 aProgress, 
+nsWebShell::ProgressLoadURL(nsIWebShell* aShell,
+                            const PRUnichar* aURL,
+                            PRInt32 aProgress,
                             PRInt32 aProgressMax)
 {
   nsresult rv = NS_OK;
@@ -2880,14 +2877,14 @@ nsWebShell::ContentShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode)
 }
 
 NS_IMETHODIMP
-nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType, const nsString& anAnchorAlignment, 
+nsWebShell::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupContent,
+                         PRInt32 aXPos, PRInt32 aYPos,
+                         const nsString& aPopupType, const nsString& anAnchorAlignment,
                          const nsString& aPopupAlignment,
                          nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
 {
   if (nsnull != mContainer) {
-    return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType, 
+    return mContainer->CreatePopup(aElement, aPopupContent, aXPos, aYPos, aPopupType,
                                    anAnchorAlignment, aPopupAlignment,
                                    aWindow, outPopup);
   }
@@ -2929,7 +2926,7 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
       }
     }
   }
- 
+
   return NS_OK;
 }
 
@@ -2938,9 +2935,9 @@ nsWebShell::GetHistoryState(nsISupports** aLayoutHistoryState)
 {
   nsresult rv = NS_OK;
   // XXX Need to think about what to do for framesets.
-  // For now, return an error if this webshell 
+  // For now, return an error if this webshell
   // contains a frame or a frameset document.
-  // The main content area will always have a parent. It is 
+  // The main content area will always have a parent. It is
   // enough to check the children count to verify frames.
   if (mChildren.Count() > 0) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2965,36 +2962,36 @@ NS_IMETHODIMP
 nsWebShell::SetHistoryState(nsISupports* aLayoutHistoryState)
 {
   mHistoryState = aLayoutHistoryState;
-  return NS_OK;  
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
 // Web Shell Services API
 
 NS_IMETHODIMP
-nsWebShell::LoadDocument(const char* aURL, 
-                         const char* aCharset, 
+nsWebShell::LoadDocument(const char* aURL,
+                         const char* aCharset,
                          nsCharsetSource aSource)
 {
   // XXX hack. kee the aCharset and aSource wait to pick it up
   mHintCharset = aCharset;
   mHintCharsetSource = aSource;
-  
+
   nsAutoString url(aURL);
   LoadURL(url.GetUnicode());
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsWebShell::ReloadDocument(const char* aCharset, 
-                           nsCharsetSource aSource) 
-{ 
+NS_IMETHODIMP
+nsWebShell::ReloadDocument(const char* aCharset,
+                           nsCharsetSource aSource)
+{
 
-  // XXX hack. kee the aCharset and aSource wait to pick it up 
-  mHintCharset = aCharset; 
-  mHintCharsetSource= aSource; 
+  // XXX hack. kee the aCharset and aSource wait to pick it up
+  mHintCharset = aCharset;
+  mHintCharsetSource= aSource;
 
-  return Reload( nsIChannel::LOAD_NORMAL); 
+  return Reload(nsIChannel::LOAD_NORMAL);
 }
 
 
@@ -3025,7 +3022,7 @@ struct OnLinkClickEvent : public PLEvent {
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(), 
+    mHandler->HandleLinkClickEvent(mContent, mVerb, mURLSpec->GetUnicode(),
                                    mTargetSpec->GetUnicode(), mPostDataStream);
   }
 
@@ -3065,14 +3062,14 @@ OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
   mContent = aContent;
   NS_IF_ADDREF(mContent);
   mVerb = aVerb;
-  
+
   PL_InitEvent(this, nsnull,
                (PLHandleEventProc) ::HandlePLEvent,
                (PLDestroyEventProc) ::DestroyPLEvent);
 
   eventQueue = aHandler->GetEventQueue();
-	eventQueue->PostEvent(this);
-	NS_RELEASE(eventQueue);
+  eventQueue->PostEvent(this);
+  NS_RELEASE(eventQueue);
 }
 
 OnLinkClickEvent::~OnLinkClickEvent()
@@ -3082,13 +3079,13 @@ OnLinkClickEvent::~OnLinkClickEvent()
   NS_IF_RELEASE(mPostDataStream);
   if (nsnull != mURLSpec) delete mURLSpec;
   if (nsnull != mTargetSpec) delete mTargetSpec;
-  
+
 }
 
 //----------------------------------------
 
 NS_IMETHODIMP
-nsWebShell::OnLinkClick(nsIContent* aContent, 
+nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsLinkVerb aVerb,
                         const PRUnichar* aURLSpec,
                         const PRUnichar* aTargetSpec,
@@ -3097,7 +3094,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
   OnLinkClickEvent* ev;
   nsresult rv = NS_OK;
 
-  ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec, 
+  ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec,
                             aTargetSpec, aPostDataStream);
   if (nsnull == ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -3120,7 +3117,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     NS_ADDREF_THIS();
     return this;
   }
-  
+
   if (name.EqualsIgnoreCase("_blank")) {
     nsIWebShell *shell;
     if (NS_OK == NewWebShell(PRUint32(~0), PR_TRUE, shell))
@@ -3130,11 +3127,11 @@ nsWebShell::GetTarget(const PRUnichar* aName)
       //don't know what to do here? MMP
       NS_ASSERTION(PR_FALSE, "unable to get new webshell");
     }
-  } 
+  }
   else if (name.EqualsIgnoreCase("_self")) {
     target = this;
     NS_ADDREF(target);
-  } 
+  }
   else if (name.EqualsIgnoreCase("_parent")) {
     GetParent(target);
     if (target == nsnull) {
@@ -3143,7 +3140,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
     }
   }
   else if (name.EqualsIgnoreCase("_top")) {
-    GetRootWebShell(target);		// this addrefs, which is OK
+    GetRootWebShell(target);            // this addrefs, which is OK
   }
   else if (name.EqualsIgnoreCase("_content")) {
     // a kind of special case: only the window can answer this question
@@ -3162,7 +3159,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
         mContainer->NewWebShell(NS_CHROME_ALL_CHROME, PR_TRUE, target);
       }
       if (nsnull != target) {
-        target->SetName(aName);      
+        target->SetName(aName);
       }
       else {
         target = this;
@@ -3177,7 +3174,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
 nsIEventQueue* nsWebShell::GetEventQueue(void)
 {
   NS_PRECONDITION(nsnull != mThreadEventQueue, "EventQueue for thread is null");
-	NS_ADDREF(mThreadEventQueue);
+  NS_ADDREF(mThreadEventQueue);
   return mThreadEventQueue;
 }
 
@@ -3195,7 +3192,7 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
     case eLinkVerb_New:
       target.SetString("_blank");
       // Fall into replace case
-    case eLinkVerb_Replace: 
+    case eLinkVerb_Replace:
       {
         nsIWebShell* shell = GetTarget(target.GetUnicode());
         if (nsnull != shell) {
@@ -3218,11 +3215,11 @@ nsWebShell::OnOverLink(nsIContent* aContent,
 {
   if (!mOverURL.Equals(aURLSpec) || !mOverTarget.Equals(aTargetSpec)) {
 #ifdef NOISY_LINKS
-    fputs("Was '", stdout); 
-    fputs(mOverURL, stdout); 
-    fputs("' '", stdout); 
-    fputs(mOverTarget, stdout); 
-    fputs("'\n", stdout); 
+    fputs("Was '", stdout);
+    fputs(mOverURL, stdout);
+    fputs("' '", stdout);
+    fputs(mOverTarget, stdout);
+    fputs("'\n", stdout);
     fputs("Over link '", stdout);
     fputs(aURLSpec, stdout);
     fputs("' '", stdout);
@@ -3249,7 +3246,7 @@ NS_IMETHODIMP
 nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
 {
   aState = eLinkState_Unvisited;
-  
+
   nsresult rv;
 
   // XXX: GlobalHistory is going to be moved out of the webshell into a more appropriate place.
@@ -3266,37 +3263,37 @@ nsWebShell::GetLinkState(const PRUnichar* aURLSpec, nsLinkState& aState)
   if (mHistoryService) {
     // XXX aURLSpec should really be a char*, not a PRUnichar*.
     nsAutoString urlStr(aURLSpec);
-  
+
     char buf[256];
     char* url = buf;
-  
+
     if (urlStr.Length() >= PRInt32(sizeof buf)) {
       url = new char[urlStr.Length() + 1];
     }
-  
+
     PRInt64 lastVisitDate;
-  
+
     if (url) {
       urlStr.ToCString(url, urlStr.Length() + 1);
-  
+
       rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
-  
+
       if (url != buf)
         delete[] url;
     }
     else {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
-  
+
   //XXX: Moved to destructor  nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
-  
+
     if (NS_FAILED(rv)) return rv;
-  
+
     // a last-visit-date of zero means we've never seen it before; so
     // if it's not zero, we must've seen it.
     if (! LL_IS_ZERO(lastVisitDate))
       aState = eLinkState_Visited;
-  
+
     // XXX how to tell if eLinkState_OutOfDate?
   }
 
@@ -3344,7 +3341,7 @@ nsWebShell::CreateScriptEnvironment()
   return res;
 }
 
-nsresult 
+nsresult
 nsWebShell::GetScriptContext(nsIScriptContext** aContext)
 {
   NS_PRECONDITION(nsnull != aContext, "null arg");
@@ -3360,7 +3357,7 @@ nsWebShell::GetScriptContext(nsIScriptContext** aContext)
   return res;
 }
 
-nsresult 
+nsresult
 nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
 {
   NS_PRECONDITION(nsnull != aGlobal, "null arg");
@@ -3376,7 +3373,7 @@ nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
   return res;
 }
 
-nsresult 
+nsresult
 nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 {
   // XXX Is this right? Why are we passing in a context?
@@ -3386,8 +3383,8 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                nsIURI* aURL, 
+nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
+                                nsIURI* aURL,
                                 const char* aCommand)
 {
   nsIDocumentViewer* docViewer;
@@ -3395,7 +3392,7 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
 
   if ((nsnull != mScriptGlobal) &&
       (loader == mDocLoader)) {
-    if (nsnull != mContentViewer && 
+    if (nsnull != mContentViewer &&
         NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
       nsIPresContext *presContext;
       if (NS_OK == docViewer->GetPresContext(presContext)) {
@@ -3419,25 +3416,25 @@ nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader,
      mDocLoaderObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
   }
 
-  
+
   return rv;
 }
 
 
 
 NS_IMETHODIMP
-nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader, 
+nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
-                              nsIChannel* channel, 
+                              nsIChannel* channel,
 #else
-                              nsIURI* aURL, 
+                              nsIURI* aURL,
 #endif
 #ifdef NECKO
                               nsresult aStatus,
 #else
                               PRInt32  aStatus,
 #endif
-							                nsIDocumentLoaderObserver * aWebShell)
+                              nsIDocumentLoaderObserver * aWebShell)
 {
   nsresult rv = NS_ERROR_FAILURE;
 
@@ -3449,11 +3446,11 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 
 //if (!mProcessedEndDocumentLoad) {
   if (loader == mDocLoader) {
-    mProcessedEndDocumentLoad = PR_TRUE;    
+    mProcessedEndDocumentLoad = PR_TRUE;
 
     if (nsnull != mScriptGlobal) {
       nsIDocumentViewer* docViewer;
-      if (nsnull != mContentViewer && 
+      if (nsnull != mContentViewer &&
           NS_OK == mContentViewer->QueryInterface(kIDocumentViewerIID, (void**)&docViewer)) {
         nsIPresContext *presContext;
         if (NS_OK == docViewer->GetPresContext(presContext)) {
@@ -3482,15 +3479,15 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
          urlString = spec;
          if (nsnull != mContainer) {
             rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
-         }  
-#ifdef NECKO			
+         }
+#ifdef NECKO
          nsCRT::free(spec);
 #endif
        }
     }
 
 
-	  nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
+    nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
 
     if (!mDocLoaderObserver && mParent) {
       /* If this is a frame (in which case it would have a parent && doesn't
@@ -3498,18 +3495,18 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        */
       nsCOMPtr<nsIWebShell> root;
       nsresult res = GetRootWebShell(*getter_AddRefs(root));
-   
-      if (NS_SUCCEEDED(res) && root) 
+
+      if (NS_SUCCEEDED(res) && root)
         root->GetDocLoaderObserver(*getter_AddRefs(dlObserver));
     }
     else
     {
-	  /* Take care of the Trailing slash situation */
-	  if (mSHist)
-		CheckForTrailingSlash(aURL);
-      dlObserver = do_QueryInterface(mDocLoaderObserver);		// we need this to addref
+      /* Take care of the Trailing slash situation */
+      if (mSHist)
+        CheckForTrailingSlash(aURL);
+      dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
     }
-    
+
     /*
      * Fire the OnEndDocumentLoad of the DocLoaderobserver
      */
@@ -3580,12 +3577,12 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader, 
+nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
-                           nsIChannel* channel, 
+                           nsIChannel* channel,
 #else
-                           nsIURI* aURL, 
-                           const char* aContentType, 
+                           nsIURI* aURL,
+                           const char* aContentType,
 #endif
                            nsIContentViewer* aViewer)
 {
@@ -3613,7 +3610,7 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
   // when it changes the URL like this.  That would mean adding a new method
   // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
 
-  /* Overriding comments: History mechanism has changed. So is Necko changing. 
+  /* Overriding comments: History mechanism has changed. So is Necko changing.
    * Need to check in the new world if this is still valid. If so, new methods
    * need to be added to nsISessionHistory. Until then. We don't need this.
    * This is being done so that old History code can be removed.
@@ -3635,13 +3632,13 @@ nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader, 
+nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
-                              nsIChannel* channel, 
+                              nsIChannel* channel,
 #else
-                              nsIURI* aURL, 
+                              nsIURI* aURL,
 #endif
-                              PRUint32 aProgress, 
+                              PRUint32 aProgress,
                               PRUint32 aProgressMax)
 {
   /*
@@ -3660,11 +3657,11 @@ nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader, 
+nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
-                            nsIChannel* channel, 
+                            nsIChannel* channel,
 #else
-                            nsIURI* aURL, 
+                            nsIURI* aURL,
 #endif
                             nsString& aMsg)
 {
@@ -3684,12 +3681,12 @@ nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader, 
+nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
 #ifdef NECKO
                          nsIChannel* channel,
                          nsresult aStatus)
 #else
-                         nsIURI* aURL, 
+                         nsIURI* aURL,
                          PRInt32 aStatus)
 #endif // NECKO
 {
@@ -3714,7 +3711,7 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
 }
 
 /* For use with redirect/refresh url api */
-class refreshData : public nsITimerCallback 
+class refreshData : public nsITimerCallback
 {
 public:
   refreshData();
@@ -3758,7 +3755,7 @@ void refreshData::Notify(nsITimer *aTimer)
     mShell->LoadURL(mUrlSpec.GetUnicode(), nsnull, PR_TRUE, nsURLReload);
 #endif
   }
-  /* 
+  /*
    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
    * its refreshData instance to be released...
    */
@@ -3772,7 +3769,7 @@ nsWebShell::RefreshURL(nsIURI* aURI, PRInt32 millis, PRBool repeat)
 nsWebShell::RefreshURI(nsIURI* aURI, PRInt32 millis, PRBool repeat)
 #endif // NECKO
 {
-  
+
   nsresult rv = NS_OK;
   if (nsnull == aURI) {
     NS_PRECONDITION((aURI != nsnull), "Null pointer");
@@ -3876,7 +3873,7 @@ nsWebShell::CancelRefreshURLTimers(void)
  * changes and update the currently loading url's entry in the history
  * list. UpdateHistoryEntry() does this.
  *
- * Assumptions: 
+ * Assumptions:
  *
  *   1) aURL is the URL that was inserted into the history list in LoadURL()
  *   2) The load of aURL is in progress and this function is being called
@@ -3913,11 +3910,11 @@ nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
   }
 
   rv = GetTitle(&title);
- 
+
   if (NS_SUCCEEDED(rv) && title) {
-	   nsString titleStr(title);
-     mSHist->SetTitleForIndex(curIndex, title);	  
-    // Replace the top most history entry with the new url    
+    nsString titleStr(title);
+    mSHist->SetTitleForIndex(curIndex, title);
+    // Replace the top most history entry with the new url
     mSHist->SetURLForIndex(curIndex, newURL->GetUnicode());
   }
   else {
@@ -4067,9 +4064,9 @@ nsWebShell::ConfirmYN(const nsString &aText)
 
 #ifdef NECKO
 NS_IMETHODIMP
-nsWebShell::ConfirmCheck(const PRUnichar *text, 
-                         const PRUnichar *checkMsg, 
-                         PRBool *checkValue, 
+nsWebShell::ConfirmCheck(const PRUnichar *text,
+                         const PRUnichar *checkMsg,
+                         PRBool *checkValue,
                          PRBool *result)
 {
   if (mPrompter == nsnull)
@@ -4080,9 +4077,9 @@ nsWebShell::ConfirmCheck(const PRUnichar *text,
 
 #ifdef NECKO
 NS_IMETHODIMP
-nsWebShell::ConfirmCheckYN(const PRUnichar *text, 
-                         const PRUnichar *checkMsg, 
-                         PRBool *checkValue, 
+nsWebShell::ConfirmCheckYN(const PRUnichar *text,
+                         const PRUnichar *checkMsg,
+                         PRBool *checkValue,
                          PRBool *result)
 {
   if (mPrompter == nsnull)
@@ -4094,7 +4091,7 @@ nsWebShell::ConfirmCheckYN(const PRUnichar *text,
 #ifdef NECKO
 NS_IMETHODIMP
 nsWebShell::Prompt(const PRUnichar *text,
-                   const PRUnichar *defaultText, 
+                   const PRUnichar *defaultText,
                    PRUnichar **result,
                    PRBool *_retval)
 #else
@@ -4124,7 +4121,7 @@ nsWebShell::PromptUsernameAndPassword(const PRUnichar *text,
                                       PRUnichar **pwd,
                                       PRBool *_retval)
 #else
-NS_IMETHODIMP_(PRBool) 
+NS_IMETHODIMP_(PRBool)
 nsWebShell::PromptUserAndPassword(const nsString &aText,
                                   nsString &aUser,
                                   nsString &aPassword)
@@ -4145,11 +4142,11 @@ nsWebShell::PromptUserAndPassword(const nsString &aText,
 
 #ifdef NECKO
 NS_IMETHODIMP
-nsWebShell::PromptPassword(const PRUnichar *text, 
-                           PRUnichar **pwd, 
+nsWebShell::PromptPassword(const PRUnichar *text,
+                           PRUnichar **pwd,
                            PRBool *_retval)
 #else
-NS_IMETHODIMP_(PRBool) 
+NS_IMETHODIMP_(PRBool)
 nsWebShell::PromptPassword(const nsString &aText,
                            nsString &aPassword)
 #endif
@@ -4238,7 +4235,7 @@ nsWebShell::SelectAll(void)
   rv = mContentViewer->QueryInterface(kIDocumentViewerIID,
                                       getter_AddRefs(docViewer));
   if (NS_FAILED(rv) || !docViewer) return rv;
-                   
+
   nsCOMPtr<nsIPresShell> presShell;
   rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
   if (NS_FAILED(rv) || !presShell) return rv;
@@ -4267,7 +4264,7 @@ nsWebShell::SelectAll(void)
 #if 0
   rv = selection->Collapse(bodyNode, 0);
   if (NS_FAILED(rv)) return rv;
-  
+
   nsCOMPtr<nsIDOMRange>range;
   rv = selection->GetRangeAt(0, getter_AddRefs(range));
   if (NS_FAILED(rv) || !range) return rv;
@@ -4296,26 +4293,24 @@ nsWebShell::SelectNone(void)
 
 static char *gDefCharset = nsnull;
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet)
 {
-  if(0 == mDefaultCharacterSet.Length())
-  {
-      if((nsnull == gDefCharset) || (nsnull == *gDefCharset))
-      {
-         if(mPrefs) 
+  if (0 == mDefaultCharacterSet.Length()) {
+      if ((nsnull == gDefCharset) || (nsnull == *gDefCharset)) {
+         if(mPrefs)
             mPrefs->CopyCharPref("intl.charset.default", &gDefCharset);
       }
-      if((nsnull == gDefCharset) || (nsnull == *gDefCharset))
-           mDefaultCharacterSet = "ISO-8859-1";
-	  else
-		   mDefaultCharacterSet = gDefCharset;
+      if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
+        mDefaultCharacterSet = "ISO-8859-1";
+      else
+        mDefaultCharacterSet = gDefCharset;
   }
   *aDefaultCharacterSet = mDefaultCharacterSet.GetUnicode();
   return NS_OK;
 }
-NS_IMETHODIMP 
-nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)  
+NS_IMETHODIMP
+nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
 {
   mDefaultCharacterSet = aDefaultCharacterSet;
   PRInt32 i, n = mChildren.Count();
@@ -4328,7 +4323,7 @@ nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
 {
   nsAutoString emptyStr;
@@ -4341,8 +4336,8 @@ nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  
+NS_IMETHODIMP
+nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)
 {
   mForceCharacterSet = aForceCharacterSet;
   PRInt32 i, n = mChildren.Count();
@@ -4357,15 +4352,15 @@ nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)
 
 NS_IMETHODIMP nsWebShell::GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource)
 {
-	*oSource = mHintCharsetSource;
-	if(kCharsetUninitialized == mHintCharsetSource) {
-		*oHintCharset = nsnull;
-	} else {
-		*oHintCharset = mHintCharset.GetUnicode();
-		// clean up after we access it.
-		mHintCharsetSource = kCharsetUninitialized;
-	}
-	return NS_OK;
+  *oSource = mHintCharsetSource;
+  if(kCharsetUninitialized == mHintCharsetSource) {
+    *oHintCharset = nsnull;
+  } else {
+    *oHintCharset = mHintCharset.GetUnicode();
+    // clean up after we access it.
+    mHintCharsetSource = kCharsetUninitialized;
+  }
+  return NS_OK;
 }
 
 

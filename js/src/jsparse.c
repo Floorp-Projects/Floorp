@@ -596,7 +596,7 @@ Condition(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
      * XXX not ECMA, but documented in several books -- need a compile option
      */
     if (pn->pn_type == TOK_ASSIGN && pn->pn_op == JSOP_NOP) {
-	js_ReportCompileErrorNumber(cx, ts,JSREPORT_WARNING,
+	js_ReportCompileErrorNumber(cx, ts, JSREPORT_WARNING,
 				    JSMSG_EQUAL_AS_ASSIGN,
 				    JSVERSION_IS_ECMA(cx->version) ? ""
 				    : "\nAssuming equality test");
