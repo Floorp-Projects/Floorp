@@ -1616,6 +1616,16 @@ nsTableRowGroupFrame::FindLineContaining(nsIFrame* aFrame,
   NS_ENSURE_ARG_POINTER(aFrame);
   NS_ENSURE_ARG_POINTER(aLineNumberResult);
 
+  // make sure it is a rowFrame in the RowGroup
+  // - it should be, but we do not validate in every case (see bug 88849)
+  nsCOMPtr<nsIAtom> frameType;
+  aFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType.get() != nsLayoutAtoms::tableRowFrame) {
+    NS_WARNING("RowGroup contains a frame that is not a row");
+    *aLineNumberResult = 0;
+    return NS_ERROR_FAILURE;
+  } 
+
   nsTableRowFrame* rowFrame = (nsTableRowFrame*)aFrame;
   *aLineNumberResult = rowFrame->GetRowIndex();
 
