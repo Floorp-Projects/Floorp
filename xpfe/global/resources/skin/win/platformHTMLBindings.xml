@@ -6,9 +6,9 @@
  
   <binding name="inputFields" extends="resource:/chrome/htmlBindings.xml#inputFieldsBase">
     <handlers>
-      <handler type="keypress" id="key_up" keycode="VK_UP"
+      <handler type="keypress" id="key_up" keycode="VK_UP" alt="false"
         command="cmd_charPrevious"/>
-      <handler type="keypress" id="key_down" keycode="VK_DOWN" 
+      <handler type="keypress" id="key_down" keycode="VK_DOWN" alt="false"
         command="cmd_charNext"/>
     </handlers>
   </binding>
