@@ -29,6 +29,7 @@ private:
   JSContext *mContext;
   nsIScriptNameSpaceManager* mNameSpaceManager;
   PRBool mIsInitialized;
+  PRUint32 mNumEvaluations;
 
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -52,6 +53,8 @@ public:
   NS_IMETHOD     GC();
   NS_IMETHOD GetNameSpaceManager(nsIScriptNameSpaceManager** aInstancePtr);
   NS_IMETHOD GetSecurityManager(nsIScriptSecurityManager** aInstancePtr);
+
+  NS_IMETHOD ScriptEvaluated(void);
 
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();

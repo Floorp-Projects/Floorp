@@ -1100,6 +1100,15 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
 
       if (timeout->expr) {
         /* Evaluate the timeout expression. */
+#if 0
+        // V says it would be nice if we could have a chokepoint
+        // for calling scripts instead of making a bunch of
+        // ScriptEvaluated() calls to clean things up. MMP
+        PRBool isundefined;
+        mContext->EvaluateString(nsAutoString(timeout->expr),
+                                 timeout->filename,
+                                 timeout->lineno, nsAutoString(""), &isundefined);
+#endif
         JS_EvaluateScript(cx, (JSObject *)mScriptObject,
                           timeout->expr, 
                           PL_strlen(timeout->expr),
@@ -1120,6 +1129,8 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
                              OBJECT_TO_JSVAL(timeout->funobj),
                              timeout->argc + 1, timeout->argv, &result);
       }
+
+      mContext->ScriptEvaluated();
 
       mRunningTimeout = nsnull;
 

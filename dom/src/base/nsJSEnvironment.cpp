@@ -67,6 +67,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime)
   JS_SetContextPrivate(mContext, (void *)this);
   mNameSpaceManager = nsnull;
   mIsInitialized = PR_FALSE;
+  mNumEvaluations = 0;
 }
 
 nsJSContext::~nsJSContext()
@@ -103,6 +104,8 @@ nsJSContext::EvaluateString(const nsString& aScript,
   else {
     aRetValue.Truncate();
   }
+
+  ScriptEvaluated();
 
   return ret;
 }
@@ -265,6 +268,19 @@ NS_IMETHODIMP
 nsJSContext::GC()
 {
   JS_GC(mContext);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsJSContext::ScriptEvaluated(void)
+{
+  mNumEvaluations++;
+
+  if (mNumEvaluations > 20) {
+    mNumEvaluations = 0;
+    GC();
+  }
+
   return NS_OK;
 }
 
