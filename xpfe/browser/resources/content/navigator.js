@@ -642,13 +642,6 @@ function OpenBookmarkURL(node, datasources)
     openDialog(getBrowserURL(), "_blank", "chrome,all,dialog=no", url);
 }
 
-function urlDomain(url)
-{
-  urlReg = /http:\/\/([\w.]+)\//;
-  return url.match(urlReg)[0];
-}
-
-
 function readRDFString(aDS,aRes,aProp)
 {
   var n = aDS.GetTarget(aRes, aProp, true);
