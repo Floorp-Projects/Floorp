@@ -496,7 +496,7 @@ RRT_HEADER:
 		userAgentString += vendorSub;
 		userAgentString += " (";
 		userAgentString += platform;
-		userAgentString += " ";
+		userAgentString += "/";
 		userAgentString += productSub;
 		userAgentString += ")";
 	  }
