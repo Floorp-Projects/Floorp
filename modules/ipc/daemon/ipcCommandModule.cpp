@@ -138,6 +138,8 @@ public:
         };
 
         int type = IPCM_GetMsgType(rawMsg);
+        LOG(("ipcCommandModule::HandleMsg [type=%d]\n", type));
+
         if (type < IPCM_MSG_TYPE_UNKNOWN) {
             if (handlers[type]) {
                 MsgHandler handler = handlers[type];
