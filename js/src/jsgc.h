@@ -59,7 +59,7 @@ JS_BEGIN_EXTERN_C
 #if 1
 /*
  * Since we're forcing a GC from JS_GC anyway, don't bother wasting cycles
- * loading oldval.  XXX remove implied force, poke in addroot/removeroot, &c
+ * loading oldval.  XXX remove implied force, etc.
  */
 #define GC_POKE(cx, oldval) ((cx)->runtime->gcPoke = JS_TRUE)
 #else
@@ -90,8 +90,21 @@ js_UnlockGCThing(JSContext *cx, void *thing);
 extern JS_FRIEND_API(void)
 js_ForceGC(JSContext *cx);
 
+/*
+ * Flags to modify how a GC marks and sweeps:
+ *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
+ *                      compiler, or by an API function that calls js_Atomize,
+ *                      when the GC is called from js_AllocGCThing, due to a
+ *                      malloc failure or runtime GC-thing limit.
+ *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
+ *                      JSRuntime, when it is imperative that rt->gcPoke gets
+ *                      cleared early in js_GC, if it is set.
+ */
+#define GC_KEEP_ATOMS       0x1
+#define GC_LAST_CONTEXT     0x2
+
 extern void
-js_GC(JSContext *cx);
+js_GC(JSContext *cx, uintN gcflags);
 
 #ifdef JS_GCMETER
 

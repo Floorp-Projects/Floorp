@@ -180,24 +180,26 @@ js_AddRoot(JSContext *cx, void *rp, const char *name)
 JSBool
 js_RemoveRoot(JSRuntime *rt, void *rp)
 {
-    JS_LOCK_GC_VOID(rt, JS_HashTableRemove(rt->gcRootsHash, rp));
+    JS_LOCK_GC(rt);
+    JS_HashTableRemove(rt->gcRootsHash, rp);
+    rt->gcPoke = JS_TRUE;
+    JS_UNLOCK_GC(rt);
     return JS_TRUE;
 }
 
 void *
 js_AllocGCThing(JSContext *cx, uintN flags)
 {
+    JSBool tried_gc;
     JSRuntime *rt;
     JSGCThing *thing;
-    uint8 *flagp = NULL;
-    JSBool tried_gc = JS_TRUE;
+    uint8 *flagp;
+
 #ifdef TOO_MUCH_GC
-    /*
-     * This breaks modern code that holds unpinned, unrooted atoms.  It dates
-     * from before atoms became garbage collected (they were once ref-counted).
-     * Therefore defining TOO_MUCH_GC also pins all atoms (see jsatom.c).
-     */
-    js_GC(cx);
+    js_GC(cx, GC_KEEP_ATOMS);
+    tried_gc = JS_TRUE;
+#else
+    tried_gc = JS_FALSE;
 #endif
 
     rt = cx->runtime;
@@ -211,6 +213,7 @@ retry:
 	METER(rt->gcStats.freelen--);
 	METER(rt->gcStats.recycle++);
     } else {
+        flagp = NULL;
 	if (rt->gcBytes < rt->gcMaxBytes &&
             (tried_gc || rt->gcMallocBytes < rt->gcMaxBytes))
         {
@@ -222,7 +225,7 @@ retry:
 		JS_ARENA_RELEASE(&rt->gcArenaPool, thing);
 	    if (!tried_gc) {
 		JS_UNLOCK_GC(rt);
-		js_GC(cx);
+		js_GC(cx, GC_KEEP_ATOMS);
 		tried_gc = JS_TRUE;
 		JS_LOCK_GC(rt);
 		METER(rt->gcStats.retry++);
@@ -394,6 +397,7 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 	METER(rt->gcStats.unstuck++);
     }
 
+    rt->gcPoke = JS_TRUE;
     METER(rt->gcStats.unlock++);
     JS_UNLOCK_GC(rt);
     return JS_TRUE;
@@ -430,15 +434,15 @@ gc_object_class_name(JSRuntime* rt, void* thing)
     if (flagp && ((*flagp & GCF_TYPEMASK) == GCX_OBJECT)) {
         JSObject  *obj = (JSObject *)thing;
         JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
-        jsval     privateValue = obj->slots[JSSLOT_PRIVATE];
-        void      *privateThing = JSVAL_IS_VOID(privateValue)
-                                  ? NULL
-                                  : JSVAL_TO_PRIVATE(privateValue);
-
         className = clasp->name;
 #ifdef HAVE_XPCONNECT
         if ((clasp->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) &&
             (clasp->flags & JSCLASS_HAS_PRIVATE)) {
+            jsval privateValue = obj->slots[JSSLOT_PRIVATE];
+            void  *privateThing = JSVAL_IS_VOID(privateValue)
+                                  ? NULL
+                                  : JSVAL_TO_PRIVATE(privateValue);
+
             const char* xpcClassName = GetXPCObjectClassName(privateThing);
             if (xpcClassName)
                 className = xpcClassName;
@@ -474,7 +478,6 @@ gc_dump_thing(JSRuntime* rt, JSGCThing *thing, uint8 flags, GCMarkNode *prev,
       case GCX_OBJECT:
       {
         JSObject  *obj = (JSObject *)thing;
-        JSClass   *clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
         jsval     privateValue = obj->slots[JSSLOT_PRIVATE];
         void      *privateThing = JSVAL_IS_VOID(privateValue)
                                   ? NULL
@@ -807,12 +810,12 @@ js_ForceGC(JSContext *cx)
     cx->newborn[GCX_STRING] = NULL;
     cx->newborn[GCX_DOUBLE] = NULL;
     cx->runtime->gcPoke = JS_TRUE;
-    js_GC(cx);
+    js_GC(cx, 0);
     JS_ArenaFinish();
 }
 
 void
-js_GC(JSContext *cx)
+js_GC(JSContext *cx, uintN gcflags)
 {
     JSRuntime *rt;
     JSContext *iter, *acx;
@@ -831,17 +834,18 @@ js_GC(JSContext *cx)
 #endif
 
     rt = cx->runtime;
-    if (rt->gcDisabled)
-	return;
-
 #ifdef JS_THREADSAFE
     /* Avoid deadlock. */
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
+    if (!(gcflags & GC_LAST_CONTEXT)) {
+        if (rt->gcDisabled)
+            return;
 
-    /* Let the API user decide to defer a GC if it wants to. */
-    if (rt->gcCallback && !rt->gcCallback(cx, JSGC_BEGIN))
-	return;
+        /* Let the API user decide to defer a GC if it wants to. */
+        if (rt->gcCallback && !rt->gcCallback(cx, JSGC_BEGIN))
+            return;
+    }
 
     /* Lock out other GC allocator and collector invocations. */
     JS_LOCK_GC(rt);
@@ -973,10 +977,28 @@ restart:
 	    sp = fp->sp;
 	    if (sp) {
 		for (a = acx->stackPool.first.next; a; a = a->next) {
-		    begin = a->base;
-		    end = a->avail;
-		    if (JS_UPTRDIFF(sp, begin) < JS_UPTRDIFF(end, begin))
-			end = (jsuword)sp;
+                    /*
+                     * Don't scan beyond the current context's top of stack,
+                     * because we may be nesting a GC from within a call to
+                     * js_AllocGCThing originating from a conversion call made
+                     * by js_Interpret with local variables holding the only
+                     * references to other, unrooted GC-things (e.g., a non-
+                     * newborn object that was just popped off the stack).
+                     *
+                     * Yes, this means we're not doing "exact GC", exactly.
+                     * This temporary failure to collect garbage held only
+                     * by unrecycled stack space should be fixed, but it is
+                     * not a leak bug, and the bloat issue should also be
+                     * small and transient (the next GC will likely get any
+                     * true garbage, as the stack will have pulsated).  But
+                     * it deserves an XXX.
+                     */
+                    begin = a->base;
+                    end = a->avail;
+                    if (acx != cx &&
+                        JS_UPTRDIFF(sp, begin) < JS_UPTRDIFF(end, begin)) {
+                        end = (jsuword)sp;
+                    }
 		    for (vp = (jsval *)begin; vp < (jsval *)end; vp++) {
 			v = *vp;
 			if (JSVAL_IS_GCTHING(v))
@@ -1023,7 +1045,7 @@ restart:
      */
     ma = cx->tempPool.current;
     mark = JS_ARENA_MARK(&cx->tempPool);
-    js_SweepAtomState(&rt->atomState);
+    js_SweepAtomState(&rt->atomState, gcflags);
     fa = rt->gcFlagsPool.first.next;
     flagp = (uint8 *)fa->base;
     for (a = rt->gcArenaPool.first.next; a; a = a->next) {

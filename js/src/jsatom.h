@@ -229,7 +229,7 @@ extern void
 js_MarkAtomState(JSAtomState *state, JSGCThingMarker mark);
 
 extern void
-js_SweepAtomState(JSAtomState *state);
+js_SweepAtomState(JSAtomState *state, uintN gcflags);
 
 extern void
 js_UnpinPinnedAtoms(JSAtomState *state);

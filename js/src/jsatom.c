@@ -180,11 +180,7 @@ js_alloc_atom(void *priv, const void *key)
 #endif
     atom->entry.key = key;
     atom->entry.value = NULL;
-#ifdef TOO_MUCH_GC
-    atom->flags = ATOM_PINNED;
-#else
     atom->flags = 0;
-#endif
     atom->kwindex = -1;
     atom->number = state->number++;
     return &atom->entry;
@@ -327,12 +323,16 @@ JS_STATIC_DLL_CALLBACK(intN)
 js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
 {
     JSAtom *atom;
+    uintN gcflags;
 
     atom = (JSAtom *)he;
     if (atom->flags & ATOM_MARK) {
-	atom->flags &= ~ATOM_MARK;
-	return HT_ENUMERATE_NEXT;
+        atom->flags &= ~ATOM_MARK;
+        return HT_ENUMERATE_NEXT;
     }
+    gcflags = (uintN)arg;
+    if (gcflags & GC_KEEP_ATOMS)
+        return HT_ENUMERATE_NEXT;
     JS_ASSERT((atom->flags & ATOM_PINNED) == 0);
     atom->entry.key = NULL;
     atom->flags = 0;
@@ -340,9 +340,9 @@ js_atom_sweeper(JSHashEntry *he, intN i, void *arg)
 }
 
 void
-js_SweepAtomState(JSAtomState *state)
+js_SweepAtomState(JSAtomState *state, uintN gcflags)
 {
-    JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, NULL);
+    JS_HashTableEnumerateEntries(state->table, js_atom_sweeper, (void*)gcflags);
 }
 
 JS_STATIC_DLL_CALLBACK(intN)

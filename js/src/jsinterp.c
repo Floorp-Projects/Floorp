@@ -1714,7 +1714,7 @@ js_Interpret(JSContext *cx, jsval *result)
             if (sprop) {                                                      \
                 LOCKED_OBJ_SET_SLOT(obj, sprop->slot, rval);                  \
                 SET_ENUMERATE_ATTR(sprop);                                    \
-                GC_POKE(cx, NULL);  /* second arg ignored! */                 \
+                GC_POKE(cx, JSVAL_NULL);  /* second arg ignored! */           \
             }                                                                 \
             JS_UNLOCK_SCOPE(cx, _scope);                                      \
         }                                                                     \
