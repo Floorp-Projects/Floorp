@@ -51,6 +51,8 @@ public:
   void GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
   void KeyboardNavigation(PRUint32 aDirection);
 
+  void SetCurrentMenuItem(nsIContent* aMenuItem);
+
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
