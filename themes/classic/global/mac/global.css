@@ -118,7 +118,7 @@ statusbar {
   -moz-appearance: statusbar;
   border-top: 1px solid #000000 !important;
   border-left: 1px solid ThreeDShadow;
-  border-right: none !important
+  border-right: none !important;
   border-bottom: 1px solid ThreeDHighlight;
   min-width: 1px; /* DON'T DELETE!
     Prevents hiding of scrollbars in browser when window is made smaller.*/

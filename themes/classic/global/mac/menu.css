@@ -93,7 +93,7 @@ menuitem[_moz-menuactive="true"][disabled="true"] {
 
 .menu-right[disabled="true"],
 .menu-right[_moz-menuactive="true"][disabled="true"] {
-  list-style-image: url("chrome://global/skin/menu/menu-arrow-dis.gif);
+  list-style-image: url("chrome://global/skin/menu/menu-arrow-dis.gif");
 }
 
 .menu-right[_moz-menuactive="true"] {
