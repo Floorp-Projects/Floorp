@@ -25,6 +25,7 @@ IDLSRCS = \
 	nsISupports.idl	\
 	nsIShutdownListener.idl \
 	nsIServiceManager.idl \
+	nsIFactory.idl \
 	$(NULL)
 
 
