@@ -84,14 +84,14 @@ public:
   nsNSSCertificateDB(); 
   virtual ~nsNSSCertificateDB();
 
+  static PRUint32 getCertType(CERTCertificate *cert);
+
 private:
 
   void getCertNames(CERTCertList *certList,
                     PRUint32      type, 
                     PRUint32     *_count,
                     PRUnichar  ***_certNameList);
-
-  PRUint32 getCertType(CERTCertificate *cert);
 
 };
 

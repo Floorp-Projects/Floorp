@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.34 2001/06/22 00:52:56 ddrinan%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.35 2001/06/23 13:13:03 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -975,6 +975,14 @@ nsNSSCertificate::GetValidity(nsIX509CertValidity **aValidity)
 PRBool
 nsNSSCertificate::verifyFailed(PRUint32 *_verified)
 {
+  SECCertUsage certUsage;
+  switch (nsNSSCertificateDB::getCertType(mCert)) {
+  case EMAIL_CERT:   /* fall through */
+  case USER_CERT:    certUsage = certUsageEmailRecipient; break;
+  case CA_CERT:      certUsage = certUsageSSLCA;          break;
+  case SERVER_CERT:  certUsage = certUsageSSLServer;      break;
+  }
+  CERT_VerifyCertNow(CERT_GetDefaultCertDB(), mCert, PR_TRUE, certUsage, NULL);
   int err = PR_GetError();
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("not verified because: %d\n", err));
   switch (err) {
@@ -1023,7 +1031,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLServer, NULL) == SECSuccess) {
     // add server to usage
@@ -1032,7 +1040,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLServerWithStepUp, NULL) == SECSuccess) {
     // add stepup to usage
@@ -1041,7 +1049,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageEmailSigner, NULL) == SECSuccess) {
     // add signer to usage
@@ -1050,7 +1058,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageEmailRecipient, NULL) == SECSuccess) {
     // add recipient to usage
@@ -1059,7 +1067,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageObjectSigner, NULL) == SECSuccess) {
     // add objsigner to usage
@@ -1068,7 +1076,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageProtectedObjectSigner, NULL) == SECSuccess) {
@@ -1078,7 +1086,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageUserCertImport, NULL) == SECSuccess) {
     // add user import to usage
@@ -1087,7 +1095,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #endif
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageSSLCA, NULL) == SECSuccess) {
@@ -1097,7 +1105,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageVerifyCA, NULL) == SECSuccess) {
@@ -1107,7 +1115,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #endif
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageStatusResponder, NULL) == SECSuccess) {
@@ -1117,7 +1125,7 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #if 0
   if (CERT_VerifyCertNow(defaultcertdb, mCert, PR_TRUE, 
                          certUsageAnyCA, NULL) == SECSuccess) {
@@ -1127,13 +1135,15 @@ nsNSSCertificate::GetUsageArray(char     *suffix,
     typestr.AppendWithConversion(suffix);
     rv = nssComponent->GetPIPNSSBundleString(typestr.GetUnicode(), verifyDesc);
     tmpUsages[tmpCount++] = verifyDesc.ToNewUnicode();
-  } else if (verifyFailed(_verified)) goto verify_failed;
+  }
 #endif
+  if (tmpCount == 0) {
+    verifyFailed(_verified);
+  } else {
+    *_count = tmpCount;
+    *_verified = nsNSSCertificate::VERIFIED_OK;
+  }
   *_count = tmpCount;
-  *_verified = nsNSSCertificate::VERIFIED_OK;
-  return NS_OK;
-verify_failed:
-  *_count = 0;
   return NS_OK;
 }
 
