@@ -64,6 +64,7 @@
 #include "nsIRequestObserver.h"
 #include "nsITimelineService.h"
 #include "nsCRT.h"
+#include "prmem.h"
 
 //----------------------------------------------------------------------------
 // Global functions and data [declaration]
@@ -1771,18 +1772,8 @@ nsresult nsCharsetMenu::ReorderMenuItemArray(nsVoidArray * aArray)
   for (i = 0; i < count && NS_SUCCEEDED(res); i++) {
     array[i].item = (nsMenuEntry *)aArray->ElementAt(i);
 
-    res = collation->GetSortKeyLen(kCollationCaseInSensitive, 
-                                   (array[i].item)->mTitle, &array[i].len);
-
-    if (NS_SUCCEEDED(res)) {
-      array[i].key = new PRUint8 [array[i].len];
-      if (!(array[i].key)) {
-        res = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-      }
-      res = collation->CreateRawSortKey(kCollationCaseInSensitive, 
-                                       (array[i].item)->mTitle, array[i].key, &array[i].len);
-    }
+    res = collation->AllocateRawSortKey(kCollationCaseInSensitive, 
+                                       (array[i].item)->mTitle, &array[i].key, &array[i].len);
   }
 
   // reorder the array
@@ -1798,8 +1789,7 @@ nsresult nsCharsetMenu::ReorderMenuItemArray(nsVoidArray * aArray)
 
 done:
   for (i = 0; i < count; i++) {
-    if (array[i].key)
-      delete [] array[i].key;
+    PR_FREEIF(array[i].key);
   }
   delete [] array;
   return res;

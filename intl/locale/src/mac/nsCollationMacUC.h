@@ -65,13 +65,9 @@ public:
                            const nsAString& string2, 
                            PRInt32* result) ;
 
-  NS_IMETHOD GetSortKeyLen(const nsCollationStrength strength, 
-                           const nsAString& stringIn, 
-                           PRUint32* outLen);
-
-  NS_IMETHOD CreateRawSortKey(const nsCollationStrength strength, 
-                              const nsAString& stringIn, 
-                              PRUint8* key, PRUint32* outLen);
+  NS_IMETHOD AllocateRawSortKey(const nsCollationStrength strength, 
+                                const nsAString& stringIn, 
+                                PRUint8** key, PRUint32* outLen);
 
   NS_IMETHOD CompareRawSortKey(const PRUint8* key1, const PRUint32 len1, 
                                const PRUint8* key2, const PRUint32 len2, 
@@ -92,10 +88,8 @@ private:
   LocaleRef mLocale;
   nsCollationStrength mLastStrength;
   CollatorRef mCollator;
-  UCCollationValue mCachedKey[kCacheSize * kCollationValueSizeFactor];
-  PRUint32 mCachedKeyLen;               // byte length of key
-  UniChar mCachedString[kCacheSize];
-  PRUint32 mCachedStringLen;            // character length of the string
+  void *mBuffer; // temporary buffer to generate collation keys
+  PRUint32 mBufferLen; // byte length of buffer
 };
 
 #endif  /* nsCollationMacUC_h__ */
