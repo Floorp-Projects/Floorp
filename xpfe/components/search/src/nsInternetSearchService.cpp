@@ -1797,7 +1797,7 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 		{	nsnull, nsnull		}
 	};
 
-	stringEncoding.Truncate();
+	stringEncoding = "UTF-8"; // make "UTF-8" as the default
 
 	PRUint32	loop = 0;
 	while (encodingList[loop].numericEncoding != nsnull)
