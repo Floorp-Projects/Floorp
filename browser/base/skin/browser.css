@@ -149,7 +149,7 @@ menuitem.bookmark-item {
 
 .bookmark-item  {
   margin: 0px 2px;
-  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  list-style-image: url("chrome://global/skin/icons/item-folder.png") !important;
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 .bookmark-item:hover {
@@ -160,7 +160,7 @@ menuitem.bookmark-item {
 }
 
 .bookmark-item[container="true"] {
-  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  list-style-image: url("chrome://global/skin/icons/item-folder.png") !important;
   -moz-image-region: rect(16px 16px 32px 0px);
 }
 .bookmark-item[container="true"]:hover {
@@ -670,7 +670,7 @@ toolbar[iconsize="small"] #history-button[disabled="true"] {
 }
 
 #page-proxy-button {
-  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  list-style-image: url("chrome://global/skin/icon/item-folder.png") !important;
   -moz-image-region: rect(0px 16px 16px 0px);
 }
 
