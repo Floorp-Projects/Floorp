@@ -50,7 +50,7 @@ var FolderPaneController =
 
 	isCommandEnabled: function(command)
 	{
-		dump("FolderPaneController.IsCommandEnabled\n");
+		dump("FolderPaneController.IsCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -125,7 +125,7 @@ var ThreadPaneController =
 
 	isCommandEnabled: function(command)
 	{
-		dump("ThreadPaneController.isCommandEnabled\n");
+        dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -579,7 +579,15 @@ function MsgAccountManager()
         refreshFolderPane();
 }
 
+// we do this from a timer because if this is called from the onload=
+// handler, then the parent window doesn't appear until after the wizard
+// has closed, and this is confusing to the user
 function MsgAccountWizard()
+{
+    setTimeout("msgOpenAccountWizard();", 0);
+}
+
+function msgOpenAccountWizard()
 {
     var result = {refresh: false};
     window.openDialog("chrome://messenger/content/AccountWizard.xul",
