@@ -798,18 +798,20 @@ function ValidateTableData()
   // If user is deleting any cells, get confirmation
   // (This is a global to the dialog and we ask only once per dialog session)
   if ( !canDelete &&
-       (newRowCount < rowCount ||
-        newColCount < colCount) &&
-       ConfirmWithTitle(GetString("DeleteTableTitle"), 
-                          GetString("DeleteTableMsg"),
-                          GetString("DeleteCells")) )
+        (newRowCount < rowCount ||
+         newColCount < colCount) ) 
   {
-    canDelete = true;
-  }
-  else
-  {
-    SetTextboxFocus(newRowCount < rowCount ? dialog.TableRowsInput : dialog.TableColumnsInput);
-    return false;
+    if (ConfirmWithTitle(GetString("DeleteTableTitle"), 
+                         GetString("DeleteTableMsg"),
+                         GetString("DeleteCells")) )
+    {
+      canDelete = true;
+    }
+    else
+    {
+      SetTextboxFocus(newRowCount < rowCount ? dialog.TableRowsInput : dialog.TableColumnsInput);
+      return false;
+    }
   }
 
   ValidateNumber(dialog.TableWidthInput, dialog.TableWidthUnits,
