@@ -81,8 +81,6 @@
       if (!permissionmanager) {
         return;
       }
-      var COOKIEPERMISSION = 0;
-      var IMAGEPERMISSION = 1;
       var element;
       switch (action) {
         case "cookieAllow":
