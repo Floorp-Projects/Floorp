@@ -311,13 +311,13 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
   
   // This hardcoded list of commands is temporary.
   // This code should use nsIControllerCommandGroup.
-  if (aCommandGroup.Equals(NS_LITERAL_STRING("undo")))
+  if (aCommandGroup.EqualsLiteral("undo"))
   {
     commandUpdater->CommandStatusChanged("cmd_undo");
     commandUpdater->CommandStatusChanged("cmd_redo");
   }
-  else if (aCommandGroup.Equals(NS_LITERAL_STRING("select")) ||
-           aCommandGroup.Equals(NS_LITERAL_STRING("style")))
+  else if (aCommandGroup.EqualsLiteral("select") ||
+           aCommandGroup.EqualsLiteral("style"))
   {
     commandUpdater->CommandStatusChanged("cmd_bold");
     commandUpdater->CommandStatusChanged("cmd_italic");
@@ -347,7 +347,7 @@ nsComposerCommandsUpdater::UpdateCommandGroup(const nsAString& aCommandGroup)
     commandUpdater->CommandStatusChanged("cmd_backgroundColor");
     commandUpdater->CommandStatusChanged("cmd_highlight");
   }  
-  else if (aCommandGroup.Equals(NS_LITERAL_STRING("save")))
+  else if (aCommandGroup.EqualsLiteral("save"))
   {
     // save commands (most are not in C++)
     commandUpdater->CommandStatusChanged("cmd_setDocumentModified");

@@ -612,7 +612,7 @@ nsresult nsAbAutoCompleteSession::SearchDirectory(const nsACString& aURI, nsAbAu
     if (!searchDuringLocalAutocomplete)
       return NS_OK;
 
-    if (!aURI.Equals(NS_LITERAL_CSTRING(kAllDirectoryRoot)))
+    if (!aURI.EqualsLiteral(kAllDirectoryRoot))
         rv = SearchCards(directory, searchStr, results);
     
     if (!searchSubDirectory)

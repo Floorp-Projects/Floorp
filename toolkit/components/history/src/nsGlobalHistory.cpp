@@ -841,7 +841,7 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
       uri->GetHost(hostname);
 
   // Strip www.
-  if (Substring(hostname, 0, 4).Equals(NS_LITERAL_CSTRING("www.")))
+  if (Substring(hostname, 0, 4).EqualsLiteral("www."))
     hostname.Cut(0, 4);
 
   SetRowValue(row, kToken_HostnameColumn, hostname.get());
@@ -3240,29 +3240,29 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
     // per-term tokens
     const nsASingleFragmentCString& tokenName =
         Substring(token->tokenName, token->tokenName + token->tokenNameLength);
-    if (tokenName.Equals(NS_LITERAL_CSTRING("datasource"))) {
+    if (tokenName.EqualsLiteral("datasource")) {
       datasource = token->tokenValue;
       datasourceLen = token->tokenValueLength;
     }
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("match"))) {
+    else if (tokenName.EqualsLiteral("match")) {
       if (Substring(token->tokenValue, token->tokenValue+token->tokenValueLength).Equals("AgeInDays"))
         matchCallback = matchAgeInDaysCallback;
       
       property = token->tokenValue;
       propertyLen = token->tokenValueLength;
     }
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("method"))) {
+    else if (tokenName.EqualsLiteral("method")) {
       method = token->tokenValue;
       methodLen = token->tokenValueLength;
     }    
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("text"))) {
+    else if (tokenName.EqualsLiteral("text")) {
       text = token->tokenValue;
       textLen = token->tokenValueLength;
     }
     
     // really, we should be storing the group-by as a column number or
     // rdf resource
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("groupby"))) {
+    else if (tokenName.EqualsLiteral("groupby")) {
       mdb_err err;
       err = mStore->QueryToken(mEnv,
                                nsCAutoString(token->tokenValue).get(),

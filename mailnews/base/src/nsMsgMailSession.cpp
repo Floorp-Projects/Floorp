@@ -328,8 +328,8 @@ nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
         rv = domElement->GetAttribute(NS_LITERAL_STRING("windowtype"), windowType);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (windowType.Equals(NS_LITERAL_STRING("mail:3pane")) ||
-            windowType.Equals(NS_LITERAL_STRING("mail:messageWindow")))
+        if (windowType.EqualsLiteral("mail:3pane") ||
+            windowType.EqualsLiteral("mail:messageWindow"))
             break;
 
         windowEnum->HasMoreElements(&more);

@@ -5812,7 +5812,7 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent,
 					}
 				}
 
-				if ((!relItem.IsEmpty()) && (!relItem.Equals(NS_LITERAL_STRING("-"))))
+				if ((!relItem.IsEmpty()) && (!relItem.EqualsLiteral("-")))
 				{
 					// If its a percentage, remove "%"
 					if (relItem[relItem.Length()-1] == PRUnichar('%'))

@@ -661,7 +661,7 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals(NS_LITERAL_STRING("menupopup")))
+        if (menuPopupNodeType.EqualsLiteral("menupopup"))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -680,12 +680,12 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
         nsString menuitemNodeType;
         nsString menuitemName;
         menuitemElement->GetNodeName(menuitemNodeType);
-        if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuitem"))) {
+        if (menuitemNodeType.EqualsLiteral("menuitem")) {
           // LoadMenuItem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuseparator"))) {
+        } else if (menuitemNodeType.EqualsLiteral("menuseparator")) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menu"))) {
+        } else if (menuitemNodeType.EqualsLiteral("menu")) {
           // Load a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -766,16 +766,16 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
 	    keyElement->GetAttribute(altAtom, altValue);
 	    keyElement->GetAttribute(commandAtom, commandValue);
 	    
-	    if(!keyChar.Equals(NS_LITERAL_STRING(" ")))
+	    if(!keyChar.EqualsLiteral(" "))
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-	    if(shiftValue.Equals(NS_LITERAL_STRING("true")))
+	    if(shiftValue.EqualsLiteral("true"))
 	      modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue.Equals(NS_LITERAL_STRING("true")))
+	    if(altValue.EqualsLiteral("true"))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue.Equals(NS_LITERAL_STRING("false")))
+	    if(commandValue.EqualsLiteral("false"))
 	     modifiers |= knsMenuItemCommandModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
@@ -874,7 +874,7 @@ void nsWebShellWindow::LoadSubMenu(
       if (menuPopupElement) {
         nsString menuPopupNodeType;
         menuPopupElement->GetNodeName(menuPopupNodeType);
-        if (menuPopupNodeType.Equals(NS_LITERAL_STRING("menupopup")))
+        if (menuPopupNodeType.EqualsLiteral("menupopup"))
           break;
       }
       nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
@@ -897,12 +897,12 @@ void nsWebShellWindow::LoadSubMenu(
         printf("Type [%s] %d\n", NS_LossyConvertUCS2toASCII(menuitemNodeType).get(), menuitemNodeType.Equals("menuseparator"));
 #endif
 
-        if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuitem"))) {
+        if (menuitemNodeType.EqualsLiteral("menuitem")) {
           // Load a menuitem
           LoadMenuItem(pnsMenu, menuitemElement, menuitemNode);
-        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menuseparator"))) {
+        } else if (menuitemNodeType.EqualsLiteral("menuseparator")) {
           pnsMenu->AddSeparator();
-        } else if (menuitemNodeType.Equals(NS_LITERAL_STRING("menu"))) {
+        } else if (menuitemNodeType.EqualsLiteral("menu")) {
           // Add a submenu
           LoadSubMenu(pnsMenu, menuitemElement, menuitemNode);
         }
@@ -1031,7 +1031,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             nsString menuNodeType;
             nsString menuName;
             menuElement->GetNodeName(menuNodeType);
-            if (menuNodeType.Equals(NS_LITERAL_STRING("menu"))) {
+            if (menuNodeType.EqualsLiteral("menu")) {
               menuElement->GetAttribute(NS_LITERAL_STRING("label"), menuName);
 
 #ifdef DEBUG_rods
@@ -1365,7 +1365,7 @@ nsCOMPtr<nsIDOMDocument> nsWebShellWindow::GetNamedDOMDoc(const nsAString & aWeb
 
   // first get the toolbar child docShell
   nsCOMPtr<nsIDocShell> childDocShell;
-  if (aWebShellName.Equals(NS_LITERAL_STRING("this"))) { // XXX small kludge for code reused
+  if (aWebShellName.EqualsLiteral("this")) { // XXX small kludge for code reused
     childDocShell = mDocShell;
   } else {
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem;

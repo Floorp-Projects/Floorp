@@ -1080,12 +1080,12 @@ void DetermineParseMode(const nsString& aBuffer,
                         eParserDocType& aDocType,
                         const nsACString& aMimeType)
 {
-  if (aMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
+  if (aMimeType.EqualsLiteral(kHTMLTextContentType)) {
     DetermineHTMLParseMode(aBuffer, aParseMode, aDocType);
-  } else if (aMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)) ||
-             aMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType)) ||
-             aMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType)) ||
-             aMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
+  } else if (aMimeType.EqualsLiteral(kPlainTextContentType) ||
+             aMimeType.EqualsLiteral(kTextCSSContentType) ||
+             aMimeType.EqualsLiteral(kApplicationJSContentType) ||
+             aMimeType.EqualsLiteral(kTextJSContentType)) {
     aDocType = ePlainText;
     aParseMode = eDTDMode_quirks;
   } else { // Some form of XML
@@ -2181,7 +2181,7 @@ nsParser::DetectMetaTag(const char* aBytes,
 
   // XXX Only look inside HTML documents for now. For XML
   // documents we should be looking inside the XMLDecl.
-  if (!mParserContext->mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))) {
+  if (!mParserContext->mMimeType.EqualsLiteral(kHTMLTextContentType)) {
     return PR_FALSE;
   }
 
@@ -2331,11 +2331,11 @@ ParserWriteFunc(nsIInputStream* in,
       // one of a designated set that we ignore.
       if (NS_SUCCEEDED(result) &&
           ((kCharsetFromByteOrderMark == guessSource) ||
-           (!preferred.Equals(NS_LITERAL_CSTRING("UTF-16")) &&
-            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16BE")) &&
-            !preferred.Equals(NS_LITERAL_CSTRING("UTF-16LE")) &&
-            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32BE")) &&
-            !preferred.Equals(NS_LITERAL_CSTRING("UTF-32LE"))))) {
+           (!preferred.EqualsLiteral("UTF-16") &&
+            !preferred.EqualsLiteral("UTF-16BE") &&
+            !preferred.EqualsLiteral("UTF-16LE") &&
+            !preferred.EqualsLiteral("UTF-32BE") &&
+            !preferred.EqualsLiteral("UTF-32LE")))) {
         guess = preferred;
         pws->mParser->SetDocumentCharset(guess, guessSource); 
         pws->mParser->SetSinkCharset(preferred);
@@ -2450,7 +2450,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
     //If you're here, then OnDataAvailable() never got called. 
     //Prior to necko, we never dealt with this case, but the problem may have existed.
     //What we'll do (for now at least) is construct a blank HTML document.
-    if (!mParserContext->mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType)))
+    if (!mParserContext->mMimeType.EqualsLiteral(kPlainTextContentType))
     {
       temp.Assign(NS_LITERAL_STRING("<html><body></body></html>"));
     }

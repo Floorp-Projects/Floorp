@@ -64,7 +64,7 @@ nsSchema::nsSchema(nsISchemaCollection* aCollection,
                                    elementFormDefault);
     elementFormDefault.Trim(" \r\n\t");
     mElementFormQualified = 
-      elementFormDefault.Equals(NS_LITERAL_STRING("qualified"));
+      elementFormDefault.EqualsLiteral("qualified");
   }
 }
 

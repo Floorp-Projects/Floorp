@@ -930,10 +930,10 @@ mozSqlResult::SetCellValue(PRInt32 row, nsITreeColumn* col, const nsAString& val
 
   Cell* cell = buffer->mCells[columnIndex];
 
-  if (value.Equals(NS_LITERAL_STRING("true"))) {
+  if (value.EqualsLiteral("true")) {
     cell->mBool = PR_TRUE;
   }
-  else if (value.Equals(NS_LITERAL_STRING("false"))) {
+  else if (value.EqualsLiteral("false")) {
     cell->mBool = PR_FALSE;
   }
   

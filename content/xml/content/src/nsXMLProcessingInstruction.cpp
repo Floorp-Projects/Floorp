@@ -46,7 +46,7 @@ NS_NewXMLProcessingInstruction(nsIContent** aInstancePtrResult,
                                const nsAString& aTarget,
                                const nsAString& aData)
 {
-  if (aTarget.Equals(NS_LITERAL_STRING("xml-stylesheet"))) {
+  if (aTarget.EqualsLiteral("xml-stylesheet")) {
     return NS_NewXMLStylesheetProcessingInstruction(aInstancePtrResult, aData);
   }
   *aInstancePtrResult = new nsXMLProcessingInstruction(aTarget, aData);

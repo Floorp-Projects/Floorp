@@ -193,7 +193,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
   XMLT_LOG(mozLineTerm::ArePrefsSecure,32,
            ("secLevelString=%s\n", secLevelString.get()));
 
-  *_retval = secLevelString.Equals(NS_LITERAL_CSTRING("sameOrigin"));
+  *_retval = secLevelString.EqualsLiteral("sameOrigin");
 
   if (!(*_retval)) {
     XMLT_ERROR("mozLineTerm::ArePrefsSecure: Error - Please add the line\n"

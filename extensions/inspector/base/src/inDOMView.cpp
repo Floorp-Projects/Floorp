@@ -408,21 +408,21 @@ inDOMView::GetCellText(PRInt32 row, nsITreeColumn* col, nsAString& _retval)
 
   nsAutoString colID;
   col->GetId(colID);
-  if (colID.Equals(NS_LITERAL_STRING("colNodeName")))
+  if (colID.EqualsLiteral("colNodeName"))
     domNode->GetNodeName(_retval);
-  else if (colID.Equals(NS_LITERAL_STRING("colLocalName")))
+  else if (colID.EqualsLiteral("colLocalName"))
     domNode->GetLocalName(_retval);
-  else if (colID.Equals(NS_LITERAL_STRING("colPrefix")))
+  else if (colID.EqualsLiteral("colPrefix"))
     domNode->GetPrefix(_retval);
-  else if (colID.Equals(NS_LITERAL_STRING("colNamespaceURI")))
+  else if (colID.EqualsLiteral("colNamespaceURI"))
     domNode->GetNamespaceURI(_retval);
-  else if (colID.Equals(NS_LITERAL_STRING("colNodeType"))) {
+  else if (colID.EqualsLiteral("colNodeType")) {
     PRUint16 nodeType;
     domNode->GetNodeType(&nodeType);
     nsAutoString temp;
     temp.AppendInt(PRInt32(nodeType));
     _retval = temp;
-  } else if (colID.Equals(NS_LITERAL_STRING("colNodeValue")))
+  } else if (colID.EqualsLiteral("colNodeValue"))
     domNode->GetNodeValue(_retval);
   else {
     if (StringBeginsWith(colID, NS_LITERAL_STRING("col@"))) {

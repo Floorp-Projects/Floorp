@@ -106,9 +106,9 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
 
   nsCOMPtr<nsIDOMElement> linkContent;
   ToLowerCase(localName);
-  if (localName.Equals(NS_LITERAL_STRING("a")) ||
-      localName.Equals(NS_LITERAL_STRING("area")) ||
-      localName.Equals(NS_LITERAL_STRING("link"))) {
+  if (localName.EqualsLiteral("a") ||
+      localName.EqualsLiteral("area") ||
+      localName.EqualsLiteral("link")) {
     PRBool hasAttr;
     content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
     if (hasAttr) {
@@ -137,7 +137,7 @@ nsContextMenuInfo::GetAssociatedLink(nsAString& aHRef)
         break;
       content->GetLocalName(localName);
       ToLowerCase(localName);
-      if (localName.Equals(NS_LITERAL_STRING("a"))) {
+      if (localName.EqualsLiteral("a")) {
         PRBool hasAttr;
         content->HasAttribute(NS_LITERAL_STRING("href"), &hasAttr);
         if (hasAttr) {
@@ -326,7 +326,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
       primitiveValue = do_QueryInterface(cssValue);
       if (primitiveValue) {
         primitiveValue->GetStringValue(bgStringValue);
-        if (!bgStringValue.Equals(NS_LITERAL_STRING("none"))) {
+        if (!bgStringValue.EqualsLiteral("none")) {
           nsCOMPtr<nsIURI> bgUri;
           NS_NewURI(getter_AddRefs(bgUri), bgStringValue);
           NS_ENSURE_TRUE(bgUri, NS_ERROR_FAILURE);
@@ -347,7 +347,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode *aDOMNode, imgIR
       primitiveValue = do_QueryInterface(cssValue);
       if (primitiveValue) {
         primitiveValue->GetStringValue(bgStringValue);
-        if (!bgStringValue.Equals(NS_LITERAL_STRING("transparent")))
+        if (!bgStringValue.EqualsLiteral("transparent"))
           return NS_ERROR_FAILURE;
       }
     }

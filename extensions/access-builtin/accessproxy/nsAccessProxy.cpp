@@ -147,7 +147,7 @@ NS_IMETHODIMP nsAccessProxy::HandleEvent(nsIDOMEvent* aEvent)
   }
   //return  NS_OK;
   /*
-  if (presShell && eventNameStr.Equals(NS_LITERAL_STRING("click"))) {
+  if (presShell && eventNameStr.EqualsLiteral("click")) {
     nsCOMPtr<nsIFrameSelection> frameSelection;
     presShell->GetFrameSelection(getter_AddRefs(frameSelection));
     if (!frameSelection)
@@ -186,10 +186,10 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
   nsresult rv = NS_OK;
   nsDependentCString aTopicString(aTopic);
 
-  if (accessProxyInstalled && aTopicString.Equals(NS_LITERAL_CSTRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
+  if (accessProxyInstalled && aTopicString.EqualsLiteral(NS_XPCOM_SHUTDOWN_OBSERVER_ID))
     return Release();
 
-  if (!accessProxyInstalled && aTopicString.Equals(NS_LITERAL_CSTRING(APPSTARTUP_CATEGORY))) {
+  if (!accessProxyInstalled && aTopicString.EqualsLiteral(APPSTARTUP_CATEGORY)) {
     accessProxyInstalled = PR_TRUE; // Set to TRUE even for failure cases - we don't want to try more than once
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     rv = NS_ERROR_FAILURE;

@@ -2618,7 +2618,7 @@ nsresult nsWebBrowserPersist::OnWalkDOMNode(nsIDOMNode *aNode)
     {
         nsAutoString target;
         nodeAsPI->GetTarget(target);
-        if (target.Equals(NS_LITERAL_STRING("xml-stylesheet")))
+        if (target.EqualsLiteral("xml-stylesheet"))
         {
             nsAutoString href;
             GetXMLStyleSheetLink(nodeAsPI, href);
@@ -2810,7 +2810,7 @@ nsWebBrowserPersist::CloneNodeWithFixedUpURIAttributes(
     {
         nsAutoString target;
         nodeAsPI->GetTarget(target);
-        if (target.Equals(NS_LITERAL_STRING("xml-stylesheet")))
+        if (target.EqualsLiteral("xml-stylesheet"))
         {
             rv = GetNodeToFixup(aNodeIn, aNodeOut);
             if (NS_SUCCEEDED(rv) && *aNodeOut)
@@ -3465,7 +3465,7 @@ static PRBool IsSpecialXHTMLTag(nsIDOMNode *aNode)
 {
     nsAutoString ns;
     aNode->GetNamespaceURI(ns);
-    if (!ns.Equals(NS_LITERAL_STRING("http://www.w3.org/1999/xhtml")))
+    if (!ns.EqualsLiteral("http://www.w3.org/1999/xhtml"))
         return PR_FALSE;
 
     // Ordered so that typical documents work fastest

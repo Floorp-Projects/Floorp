@@ -1741,7 +1741,7 @@ nsBookmarksService::Init()
                 if (NS_SUCCEEDED(useProfile) && profileCount == 1)
                 {
                     ToLowerCase(currentProfileName);
-                    if (currentProfileName.Equals(NS_LITERAL_STRING("default")))
+                    if (currentProfileName.EqualsLiteral("default"))
                         useProfile = NS_ERROR_FAILURE;
                 }
             }

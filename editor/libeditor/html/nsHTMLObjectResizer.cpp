@@ -620,13 +620,13 @@ nsHTMLEditor::MouseDown(PRInt32 aClientX, PRInt32 aClientY,
       nsAutoString anonclass;
       nsresult res = aTarget->GetAttribute(NS_LITERAL_STRING("_moz_anonclass"), anonclass);
       if (NS_FAILED(res)) return res;
-      if (anonclass.Equals(NS_LITERAL_STRING("mozResizer"))) {
+      if (anonclass.EqualsLiteral("mozResizer")) {
         // and that element is a resizer, let's start resizing!
         mOriginalX = aClientX;
         mOriginalY = aClientY;
         return StartResizing(aTarget);
       }
-      if (anonclass.Equals(NS_LITERAL_STRING("mozGrabber"))) {
+      if (anonclass.EqualsLiteral("mozGrabber")) {
         // and that element is a grabber, let's start moving the element!
         mOriginalX = aClientX;
         mOriginalY = aClientY;

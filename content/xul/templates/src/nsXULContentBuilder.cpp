@@ -526,7 +526,7 @@ nsXULContentBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
                   aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetMemberVariable(), &member);
                   aChild = VALUE_TO_IRDFRESOURCE(member);
               }
-              else if (uri.Equals(NS_LITERAL_STRING("...")) || uri.Equals(NS_LITERAL_STRING("rdf:*"))) {
+              else if (uri.EqualsLiteral("...") || uri.EqualsLiteral("rdf:*")) {
                   // If we -are- the resource element, then we are no
                   // matter unique.
                   isResourceElement = PR_TRUE;
@@ -1371,7 +1371,7 @@ nsXULContentBuilder::IsOpen(nsIContent* aElement)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get open attribute");
 
     return (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-            value == NS_LITERAL_STRING("true"));
+            value.EqualsLiteral("true"));
 }
 
 
@@ -1616,7 +1616,7 @@ nsXULContentBuilder::AttributeChanged(nsIDocument* aDocument,
         nsAutoString open;
         aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::open, open);
 
-        if (open == NS_LITERAL_STRING("true"))
+        if (open.EqualsLiteral("true"))
             OpenContainer(aContent);
         else
             CloseContainer(aContent);

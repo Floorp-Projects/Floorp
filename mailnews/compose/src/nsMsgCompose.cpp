@@ -2114,7 +2114,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         if (! followUpTo.IsEmpty())
         {
           // Handle "followup-to: poster" magic keyword here
-          if (followUpTo == NS_LITERAL_STRING("poster"))
+          if (followUpTo.EqualsLiteral("poster"))
           {
             nsCOMPtr<nsIDOMWindowInternal> composeWindow;
             nsCOMPtr<nsIPrompt> prompt;
@@ -3470,8 +3470,8 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
     {
       nsDependentSubstring firstFourChars(sigData, 0, 4);
     
-      if (!(firstFourChars.Equals(NS_LITERAL_STRING("-- \n")) ||
-            firstFourChars.Equals(NS_LITERAL_STRING("-- \r"))))
+      if (!(firstFourChars.EqualsLiteral("-- \n") ||
+            firstFourChars.EqualsLiteral("-- \r")))
       {
         sigOutput.AppendWithConversion(dashes);
     
@@ -3666,7 +3666,7 @@ static nsresult OpenAddressBook(const char * dbUri, nsIAddrDatabase** aDatabase)
 nsresult nsMsgCompose::GetABDirectories(const nsACString& dirUri, nsISupportsArray* directoriesArray, PRBool searchSubDirectory)
 {
   static PRBool collectedAddressbookFound;
-  if (dirUri.Equals(NS_LITERAL_CSTRING(kMDBDirectoryRoot)))
+  if (dirUri.EqualsLiteral(kMDBDirectoryRoot))
     collectedAddressbookFound = PR_FALSE;
 
   nsresult rv = NS_OK;
@@ -4264,7 +4264,7 @@ nsresult nsMsgCompose::TagConvertible(nsIDOMNode *node,  PRInt32 *_retval)
         else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("text"), &hasAttribute)) &&
                  hasAttribute &&
                  NS_SUCCEEDED(domElement->GetAttribute(NS_LITERAL_STRING("text"), color)) &&
-                 !color.Equals(NS_LITERAL_STRING("#000000"))) {
+                 !color.EqualsLiteral("#000000")) {
           *_retval = nsIMsgCompConvertible::Altering;
         }
         else if (NS_SUCCEEDED(domElement->HasAttribute(NS_LITERAL_STRING("bgcolor"), &hasAttribute)) &&
@@ -4647,7 +4647,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             if (tempNode)
             {
               tempNode->GetLocalName(tagLocalName);
-              if (tagLocalName.Equals(NS_LITERAL_STRING("BR")))
+              if (tagLocalName.EqualsLiteral("BR"))
                 m_editor->DeleteNode(tempNode);
             }
             m_editor->EndTransaction();
@@ -4668,7 +4668,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
         switch (searchState)
         {
           case 0: 
-            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsLiteral("BR"))
               searchState = 1;
             break;
 
@@ -4678,11 +4678,11 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             {
               nsString nodeValue;
               node->GetNodeValue(nodeValue);
-              if (nodeValue.Equals(NS_LITERAL_STRING("-- ")))
+              if (nodeValue.EqualsLiteral("-- "))
                 searchState = 2;
             }
             else
-              if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
+              if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsLiteral("BR"))
               {
                 searchState = 1;
                 break;
@@ -4690,7 +4690,7 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
             break;
 
           case 2:
-            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.Equals(NS_LITERAL_STRING("BR")))
+            if (nodeType == nsIDOMNode::ELEMENT_NODE && tagLocalName.EqualsLiteral("BR"))
               searchState = 3;
             else
               searchState = 0;               

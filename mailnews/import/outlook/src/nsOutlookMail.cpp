@@ -980,7 +980,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 			if (pVal) {
 				type.Truncate( 0);
 				m_mapi.GetStringFromProp( pVal, type);
-				if (type.Equals(NS_LITERAL_CSTRING("IPM.Contact"))) {
+				if (type.EqualsLiteral("IPM.Contact")) {
 					// This is a contact, add it to the address book!
 					subject.Truncate( 0);
 					pVal = m_mapi.GetMapiProperty( lpMsg, PR_SUBJECT);
@@ -998,7 +998,7 @@ nsresult nsOutlookMail::ImportAddresses( PRUint32 *pCount, PRUint32 *pTotal, con
 						}
 					}
 				}
-        else if (type.Equals(NS_LITERAL_CSTRING("IPM.DistList")))
+        else if (type.EqualsLiteral("IPM.DistList"))
         {
           // This is a list/group, add it to the address book!
           subject.Truncate( 0);

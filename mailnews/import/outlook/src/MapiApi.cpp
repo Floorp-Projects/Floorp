@@ -310,22 +310,22 @@ BOOL CGetStoreFoldersIter::ExcludeFolderClass( const PRUnichar *pName)
     nsDependentString pNameStr(pName);
 	if (m_isMail) {
 		bResult = FALSE;
-        if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Appointment")))
+        if (pNameStr.EqualsLiteral("IPF.Appointment"))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Contact")))
+		else if (pNameStr.EqualsLiteral("IPF.Contact"))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Journal")))
+		else if (pNameStr.EqualsLiteral("IPF.Journal"))
 			bResult = TRUE;
-        else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.StickyNote")))
+        else if (pNameStr.EqualsLiteral("IPF.StickyNote"))
 			bResult = TRUE;
-		else if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Task")))
+		else if (pNameStr.EqualsLiteral("IPF.Task"))
 			bResult = TRUE;
 		// else if (!stricmp( pName, "IPF.Note"))
 		//	bResult = TRUE;
 	}
 	else {
 		bResult = TRUE;
-		if (pNameStr.Equals(NS_LITERAL_STRING("IPF.Contact")))
+		if (pNameStr.EqualsLiteral("IPF.Contact"))
 			bResult = FALSE;
 	}
 

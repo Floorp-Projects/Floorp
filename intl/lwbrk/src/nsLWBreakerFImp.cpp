@@ -90,25 +90,25 @@ nsresult
 nsLWBreakerFImp::GetBreaker(const nsAString& aParam, nsILineBreaker** oResult)
 {
   nsJISx4051LineBreaker *result;
-  if( aParam.Equals(NS_LITERAL_STRING("ja")) ) 
+  if( aParam.EqualsLiteral("ja") ) 
   {
      result = new nsJISx4051LineBreaker (
            gJaNoBegin, sizeof(gJaNoBegin)/sizeof(PRUnichar), 
            gJaNoEnd, sizeof(gJaNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals(NS_LITERAL_STRING("ko"))) 
+  else if(aParam.EqualsLiteral("ko")) 
   {
      result = new nsJISx4051LineBreaker (
            gKoNoBegin, sizeof(gKoNoBegin)/sizeof(PRUnichar), 
            gKoNoEnd, sizeof(gKoNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals(NS_LITERAL_STRING("tw"))) 
+  else if(aParam.EqualsLiteral("tw")) 
   {
      result = new nsJISx4051LineBreaker (
            gTwNoBegin, sizeof(gTwNoBegin)/sizeof(PRUnichar), 
            gTwNoEnd, sizeof(gTwNoEnd)/sizeof(PRUnichar));
   } 
-  else if(aParam.Equals(NS_LITERAL_STRING("cn"))) 
+  else if(aParam.EqualsLiteral("cn")) 
   {
      result = new nsJISx4051LineBreaker (
            gCnNoBegin, sizeof(gCnNoBegin)/sizeof(PRUnichar), 

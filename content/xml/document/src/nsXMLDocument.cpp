@@ -520,9 +520,9 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
     if (node) {
       nsAutoString name, ns;      
       if (NS_SUCCEEDED(node->GetLocalName(name)) &&
-          name.Equals(NS_LITERAL_STRING("parsererror")) &&
+          name.EqualsLiteral("parsererror") &&
           NS_SUCCEEDED(node->GetNamespaceURI(ns)) &&
-          ns.Equals(NS_LITERAL_STRING("http://www.mozilla.org/newlayout/xml/parsererror.xml"))) {
+          ns.EqualsLiteral("http://www.mozilla.org/newlayout/xml/parsererror.xml")) {
         //return is already false
       } else {
         *aReturn = PR_TRUE;

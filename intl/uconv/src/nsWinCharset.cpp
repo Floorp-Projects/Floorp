@@ -92,12 +92,12 @@ nsresult
 nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
 {
   //delay loading wincharset.properties bundle if possible
-  if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.1252"))) {
+  if (inANSICodePage.EqualsLiteral("acp.1252")) {
     outCharset = NS_LITERAL_CSTRING("windows-1252");
     return NS_OK;
   } 
 
-  if (inANSICodePage.Equals(NS_LITERAL_STRING("acp.932"))) {
+  if (inANSICodePage.EqualsLiteral("acp.932")) {
     outCharset = NS_LITERAL_CSTRING("Shift_JIS");
     return NS_OK;
   } 

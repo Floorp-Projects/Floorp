@@ -512,7 +512,7 @@ nsFormFillController::Focus(nsIDOMEvent* aEvent)
 
     nsAutoString autocomplete; 
     input->GetAttribute(NS_LITERAL_STRING("autocomplete"), autocomplete);
-    if (type.Equals(NS_LITERAL_STRING("text")) &&
+    if (type.EqualsLiteral("text") &&
         !autocomplete.EqualsIgnoreCase("off")) {
 
       nsCOMPtr<nsIDOMHTMLFormElement> form;

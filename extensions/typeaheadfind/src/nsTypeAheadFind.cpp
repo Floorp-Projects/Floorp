@@ -527,19 +527,19 @@ nsTypeAheadFind::HandleEvent(nsIDOMEvent* aEvent)
   nsAutoString eventType;
   aEvent->GetType(eventType);
 
-  if (eventType.Equals(NS_LITERAL_STRING("DOMMenuBarActive"))) {
+  if (eventType.EqualsLiteral("DOMMenuBarActive")) {
     mIsMenuBarActive = PR_TRUE;
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("DOMMenuBarInactive"))) {
+  else if (eventType.EqualsLiteral("DOMMenuBarInactive")) {
     mIsMenuBarActive = PR_FALSE;
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("popupshown"))) {
+  else if (eventType.EqualsLiteral("popupshown")) {
     mIsMenuPopupActive = PR_TRUE;
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("popuphidden"))) {
+  else if (eventType.EqualsLiteral("popuphidden")) {
     mIsMenuPopupActive = PR_FALSE;
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("unload"))) {
+  else if (eventType.EqualsLiteral("unload")) {
     // When document is unloaded, check to see if it's the 
     // current typeahead doc. If it is, cancel find
     // and reset member variables so we don't leak
@@ -608,7 +608,7 @@ nsTypeAheadFind::KeyPress(nsIDOMEvent* aEvent)
     // by waiting for the first keystroke, we still get the startup time benefits.
     mIsSoundInitialized = PR_TRUE;
     mSoundInterface = do_CreateInstance("@mozilla.org/sound;1");
-    if (mSoundInterface && !mNotFoundSoundURL.Equals(NS_LITERAL_CSTRING("beep"))) {
+    if (mSoundInterface && !mNotFoundSoundURL.EqualsLiteral("beep")) {
       mSoundInterface->Init();
     }
   }
@@ -1626,7 +1626,7 @@ nsTypeAheadFind::RangeStartsInsideLink(nsIDOMRange *aRange,
       if (*aIsInsideLink) {
         nsAutoString xlinkType;
         startContent->GetAttr(kNameSpaceID_XLink, typeAtom, xlinkType);
-        if (!xlinkType.Equals(NS_LITERAL_STRING("simple"))) {
+        if (!xlinkType.EqualsLiteral("simple")) {
           *aIsInsideLink = PR_FALSE;  // Xlink must be type="simple"
         }
 
@@ -1965,7 +1965,7 @@ nsTypeAheadFind::GetAutoStart(nsIDOMWindow *aDOMWin, PRBool *aIsAutoStartOn)
   if (mLinksOnlyPref) {
     nsAutoString contentType;
     doc->GetContentType(contentType);
-    if (contentType.Equals(NS_LITERAL_STRING("text/plain"))) {
+    if (contentType.EqualsLiteral("text/plain")) {
       return NS_OK; // No auto link search in plain text pages
     }
   }
@@ -2879,7 +2879,7 @@ nsTypeAheadController::IsCommandEnabled(const char *aCommand, PRBool *aResult)
   if (htmlDoc) {
     nsAutoString designMode;
     htmlDoc->GetDesignMode(designMode);
-    if (designMode.Equals(NS_LITERAL_STRING("on"))) {
+    if (designMode.EqualsLiteral("on")) {
       *aResult = PR_FALSE;
     }
   }

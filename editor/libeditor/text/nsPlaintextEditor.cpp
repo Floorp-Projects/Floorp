@@ -1337,7 +1337,7 @@ nsPlaintextEditor::GetAndInitDocEncoder(const nsAString& aFormatType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!aCharset.IsEmpty()
-    && !(aCharset.Equals(NS_LITERAL_CSTRING("null"))))
+    && !(aCharset.EqualsLiteral("null")))
     docEncoder->SetCharset(aCharset);
 
   PRInt32 wc;
@@ -1443,7 +1443,7 @@ nsPlaintextEditor::OutputToStream(nsIOutputStream* aOutputStream,
   // special-case for empty document when requesting plain text,
   // to account for the bogus text node.
   // XXX Should there be a similar test in OutputToString?
-  if (aFormatType == NS_LITERAL_STRING("text/plain"))
+  if (aFormatType.EqualsLiteral("text/plain"))
   {
     PRBool docEmpty;
     rv = GetDocumentIsEmpty(&docEmpty);

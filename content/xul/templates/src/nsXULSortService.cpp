@@ -428,7 +428,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree,
                                       nsXULAtoms::sortActive, value))
     && (rv == NS_CONTENT_ATTR_HAS_VALUE))
   {
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
     {
       if (NS_SUCCEEDED(rv = tree->GetAttr(kNameSpaceID_None,
                                           nsXULAtoms::sortResource,
@@ -448,7 +448,7 @@ XULSortServiceImpl::GetSortColumnInfo(nsIContent *tree,
                                               value)) &&
               (rv == NS_CONTENT_ATTR_HAS_VALUE))
           {
-            if (value.Equals(NS_LITERAL_STRING("true")))
+            if (value.EqualsLiteral("true"))
             {
               inbetweenSeparatorSort = PR_TRUE;
             }
@@ -1234,7 +1234,7 @@ XULSortServiceImpl::SortContainer(nsIContent *container, sortPtr sortInfo,
 
       // if it's a container, find its treechildren nodes, and sort those
       if (NS_FAILED(rv = parentNode->GetAttr(kNameSpaceID_None, nsXULAtoms::container, value)) ||
-        (rv != NS_CONTENT_ATTR_HAS_VALUE) || !value.Equals(NS_LITERAL_STRING("true")))
+        (rv != NS_CONTENT_ATTR_HAS_VALUE) || !value.EqualsLiteral("true"))
         continue;
         
       numChildren = parentNode->GetChildCount();
@@ -1468,7 +1468,7 @@ XULSortServiceImpl::InsertContainerNode(nsIRDFCompositeDataSource *db, nsRDFSort
       }
       
       if (NS_SUCCEEDED(rv = root->GetAttr(kNameSpaceID_None, nsXULAtoms::sortStaticsLast, valueStr))
-          && (rv == NS_CONTENT_ATTR_HAS_VALUE) && valueStr.Equals(NS_LITERAL_STRING("true")))
+          && (rv == NS_CONTENT_ATTR_HAS_VALUE) && valueStr.EqualsLiteral("true"))
       {
         // indicate that static XUL comes after RDF-generated content by making negative
         staticCount = -staticCount;
@@ -1583,7 +1583,7 @@ XULSortServiceImpl::Sort(nsIDOMNode* node, const nsAString& sortResource, const 
   nsAutoString value;
   if (NS_SUCCEEDED(rv = dbNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortActive, value))
       && (rv == NS_CONTENT_ATTR_HAS_VALUE) 
-      && value.Equals(NS_LITERAL_STRING("true")))
+      && value.EqualsLiteral("true"))
   {
     if (NS_SUCCEEDED(rv = dbNode->GetAttr(kNameSpaceID_None, nsXULAtoms::sortResource, value))
         && (rv == NS_CONTENT_ATTR_HAS_VALUE) 

@@ -2233,7 +2233,7 @@ nsFtpState::Init(nsIFTPChannel* aChannel,
     if (NS_FAILED(rv))
         return rv;
 
-    if (!uname.IsEmpty() && !uname.Equals(NS_LITERAL_CSTRING("anonymous"))) {
+    if (!uname.IsEmpty() && !uname.EqualsLiteral("anonymous")) {
         mAnonymous = PR_FALSE;
         CopyUTF8toUTF16(NS_UnescapeURL(uname), mUsername);
         

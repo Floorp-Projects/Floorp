@@ -794,15 +794,15 @@ nsHttpChannel::ProcessNormal()
     // Apache installs.
     const char *encoding = mResponseHead->PeekHeader(nsHttp::Content_Encoding);
     if (encoding && PL_strcasestr(encoding, "gzip") && (
-        mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_GZIP)) ||
-        mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_GZIP2)) ||
-        mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_GZIP3)))) {
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP) ||
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP2) ||
+        mResponseHead->ContentType().EqualsLiteral(APPLICATION_GZIP3))) {
         // clear the Content-Encoding header
         mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }
     else if (encoding && PL_strcasestr(encoding, "compress") && (
-             mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_COMPRESS)) ||
-             mResponseHead->ContentType().Equals(NS_LITERAL_CSTRING(APPLICATION_COMPRESS2)))) {
+             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS) ||
+             mResponseHead->ContentType().EqualsLiteral(APPLICATION_COMPRESS2))) {
         // clear the Content-Encoding header
         mResponseHead->ClearHeader(nsHttp::Content_Encoding);
     }

@@ -2219,7 +2219,7 @@ nsHTMLEditor::SetParagraphFormat(const nsAString& aParagraphFormat)
 {
   nsAutoString tag; tag.Assign(aParagraphFormat);
   ToLowerCase(tag);
-  if (tag.Equals(NS_LITERAL_STRING("dd")) || tag.Equals(NS_LITERAL_STRING("dt")))
+  if (tag.EqualsLiteral("dd") || tag.EqualsLiteral("dt"))
     return MakeDefinitionItem(tag);
   else
     return InsertBasicBlock(tag);
@@ -2461,8 +2461,8 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       htmlElement = do_QueryInterface(tmp);
       // look at parent if the queried color is transparent and if the node to
       // examine is not the root of the document
-    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && htmlElement );
-    if (!htmlElement && aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
+    } while ( aOutColor.EqualsLiteral("transparent") && htmlElement );
+    if (!htmlElement && aOutColor.EqualsLiteral("transparent")) {
       // we have hit the root of the document and the color is still transparent !
       // Grumble... Let's look at the default background color because that's the
       // color we are looking for
@@ -2491,7 +2491,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
         // node to examine
         mHTMLCSSUtils->GetComputedProperty(nodeToExamine, nsEditProperty::cssBackgroundColor,
                             aOutColor);
-        if (!aOutColor.Equals(NS_LITERAL_STRING("transparent"))) {
+        if (!aOutColor.EqualsLiteral("transparent")) {
           break;
         }
       }
@@ -2499,7 +2499,7 @@ nsHTMLEditor::GetCSSBackgroundColorState(PRBool *aMixed, nsAString &aOutColor, P
       if (NS_FAILED(res)) return res;
       nodeToExamine = tmp;
       htmlElement = do_QueryInterface(tmp);
-    } while ( aOutColor.Equals(NS_LITERAL_STRING("transparent")) && htmlElement );
+    } while ( aOutColor.EqualsLiteral("transparent") && htmlElement );
   }
   return NS_OK;
 }
@@ -2848,7 +2848,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
     if (!node) res = NS_ERROR_FAILURE;
     if (NS_FAILED(res)) return res;
   
-    if (aIndent == NS_LITERAL_STRING("indent"))
+    if (aIndent.EqualsLiteral("indent"))
     {
       if (isCollapsed)
       {
@@ -2966,8 +2966,8 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsAString& aTagName, nsIDOMNode 
   {
     TagName.Assign(NS_LITERAL_STRING("a"));  
   }
-  PRBool findTableCell = TagName.Equals(NS_LITERAL_STRING("td"));
-  PRBool findList = TagName.Equals(NS_LITERAL_STRING("list"));
+  PRBool findTableCell = TagName.EqualsLiteral("td");
+  PRBool findList = TagName.EqualsLiteral("list");
 
   // default is null - no element found
   *aReturn = nsnull;
@@ -3315,7 +3315,7 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
   newElement->SetAttribute(NS_LITERAL_STRING("_moz_dirty"), EmptyString());
 
   // Set default values for new elements
-  if (TagName.Equals(NS_LITERAL_STRING("hr")))
+  if (TagName.EqualsLiteral("hr"))
   {
     // Note that we read the user's attributes for these from prefs (in InsertHLine JS)
     res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("width"),
@@ -3323,14 +3323,14 @@ nsHTMLEditor::CreateElementWithDefaults(const nsAString& aTagName, nsIDOMElement
     if (NS_FAILED(res)) return res;
     res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("size"),
                                    NS_LITERAL_STRING("2"), PR_TRUE);
-  } else if (TagName.Equals(NS_LITERAL_STRING("table")))
+  } else if (TagName.EqualsLiteral("table"))
   {
     res = newElement->SetAttribute(NS_LITERAL_STRING("cellpadding"),NS_LITERAL_STRING("2"));
     if (NS_FAILED(res)) return res;
     res = newElement->SetAttribute(NS_LITERAL_STRING("cellspacing"),NS_LITERAL_STRING("2"));
     if (NS_FAILED(res)) return res;
     res = newElement->SetAttribute(NS_LITERAL_STRING("border"),NS_LITERAL_STRING("1"));
-  } else if (TagName.Equals(NS_LITERAL_STRING("td")))
+  } else if (TagName.EqualsLiteral("td"))
   {
     res = SetAttributeOrEquivalent(newElement, NS_LITERAL_STRING("valign"),
                                    NS_LITERAL_STRING("top"), PR_TRUE);
@@ -3905,9 +3905,9 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
         ToLowerCase(tagName);
 
         // See if it's an image or an embed
-        if (tagName.Equals(NS_LITERAL_STRING("img")) || tagName.Equals(NS_LITERAL_STRING("embed")))
+        if (tagName.EqualsLiteral("img") || tagName.EqualsLiteral("embed"))
           (*aNodeList)->AppendElement(node);
-        else if (tagName.Equals(NS_LITERAL_STRING("a")))
+        else if (tagName.EqualsLiteral("a"))
         {
           // Only include links if they're links to file: URLs
           nsCOMPtr<nsIDOMHTMLAnchorElement> anchor (do_QueryInterface(content));
@@ -3920,7 +3920,7 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
                 (*aNodeList)->AppendElement(node);
           }
         }
-        else if (tagName.Equals(NS_LITERAL_STRING("body")))
+        else if (tagName.EqualsLiteral("body"))
         {
           nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
           if (element)
@@ -3992,7 +3992,7 @@ nsCOMPtr<nsIDOMNode> nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode *aNode)
   while (node)
   {
     mHTMLCSSUtils->GetComputedProperty(node, nsEditProperty::cssMozUserSelect, mozUserSelectValue);
-    if (mozUserSelectValue.Equals(NS_LITERAL_STRING("all")))
+    if (mozUserSelectValue.EqualsLiteral("all"))
     {
       resultNode = node;
     }
@@ -4353,9 +4353,9 @@ nsHTMLEditor::TagCanContainTag(const nsAString& aParentTag, const nsAString& aCh
 
 /*  
   // if parent is a pre, and child is not inline, say "no"
-  if ( aParentTag.Equals(NS_LITERAL_STRING("pre")) )
+  if ( aParentTag.EqualsLiteral("pre") )
   {
-    if (aChildTag.Equals(NS_LITERAL_STRING("__moz_text")))
+    if (aChildTag.EqualsLiteral("__moz_text"))
       return PR_TRUE;
     PRInt32 childTagEnum, parentTagEnum;
     nsAutoString non_const_childTag(aChildTag);
@@ -5511,7 +5511,7 @@ nsHTMLEditor::SetAttributeOrEquivalent(nsIDOMElement * aElement,
       // count is an integer that represents the number of CSS declarations applied to the
       // element. If it is zero, we found no equivalence in this implementation for the
       // attribute
-      if (aAttribute.Equals(NS_LITERAL_STRING("style"))) {
+      if (aAttribute.EqualsLiteral("style")) {
         // if it is the style attribute, just add the new value to the existing style
         // attribute's value
         nsAutoString existingValue;

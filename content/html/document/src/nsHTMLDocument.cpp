@@ -814,7 +814,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
         // Use the channel's charset (e.g., charset from HTTP
         // "Content-Type" header).
       }
-      else if (!scheme.Equals(NS_LITERAL_CSTRING("about")) &&          // don't try to access bookmarks for about:blank
+      else if (!scheme.EqualsLiteral("about") &&          // don't try to access bookmarks for about:blank
                TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
         // Use the bookmark's charset.
       }
@@ -839,7 +839,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       nsCAutoString methodStr;
       rv = httpChannel->GetRequestMethod(methodStr);
       isPostPage = (NS_SUCCEEDED(rv) &&
-                    methodStr.Equals(NS_LITERAL_CSTRING("POST")));
+                    methodStr.EqualsLiteral("POST"));
     }
 
     if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {

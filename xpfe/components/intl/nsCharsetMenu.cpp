@@ -421,24 +421,24 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
   if (!nsCRT::strcmp(aTopic, "charsetmenu-selected")) {
     nsDependentString nodeName(someData);
     rv = mCharsetMenu->Init();
-    if (nodeName.Equals(NS_LITERAL_STRING("browser"))) {
+    if (nodeName.EqualsLiteral("browser")) {
       rv = mCharsetMenu->InitBrowserMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("composer"))) {
+    if (nodeName.EqualsLiteral("composer")) {
       rv = mCharsetMenu->InitComposerMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("mailview"))) {
+    if (nodeName.EqualsLiteral("mailview")) {
       rv = mCharsetMenu->InitMailviewMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("mailedit"))) {
+    if (nodeName.EqualsLiteral("mailedit")) {
       rv = mCharsetMenu->InitMaileditMenu();
       rv = mCharsetMenu->InitOthers();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("more-menu"))) {
+    if (nodeName.EqualsLiteral("more-menu")) {
       rv = mCharsetMenu->InitSecondaryTiers();
       rv = mCharsetMenu->InitAutodetMenu();
     }
-    if (nodeName.Equals(NS_LITERAL_STRING("other"))) {
+    if (nodeName.EqualsLiteral("other")) {
       rv = mCharsetMenu->InitOthers();
       rv = mCharsetMenu->InitMaileditMenu();
     }
@@ -448,7 +448,7 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(someData);
 
-    if (prefName.Equals(NS_LITERAL_STRING(kBrowserStaticPrefKey))) {
+    if (prefName.EqualsLiteral(kBrowserStaticPrefKey)) {
       // refresh menus which share this pref
       rv = mCharsetMenu->RefreshBrowserMenu();
       NS_ENSURE_SUCCESS(rv, rv);
@@ -456,7 +456,7 @@ NS_IMETHODIMP nsCharsetMenuObserver::Observe(nsISupports *aSubject, const char *
       NS_ENSURE_SUCCESS(rv, rv);
       rv = mCharsetMenu->RefreshComposerMenu();
     }
-    else if (prefName.Equals(NS_LITERAL_STRING(kMaileditPrefKey))) {
+    else if (prefName.EqualsLiteral(kMaileditPrefKey)) {
       rv = mCharsetMenu->RefreshMaileditMenu();
     }
   }

@@ -273,7 +273,7 @@ nsLocalFile::Clone(nsIFile **file)
 NS_IMETHODIMP
 nsLocalFile::InitWithNativePath(const nsACString &filePath)
 {
-    if (Substring(filePath, 0, 2) == NS_LITERAL_CSTRING("~/")) {
+    if (Substring(filePath, 0, 2).EqualsLiteral("~/")) {
         nsCOMPtr<nsIFile> homeDir;
         nsCAutoString homePath;
         if (NS_FAILED(NS_GetSpecialDirectory(NS_OS_HOME_DIR,
@@ -487,7 +487,7 @@ nsLocalFile::AppendRelativeNativePath(const nsACString &fragment)
     if (fragment.First() == '/')
         return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 
-    if (mPath.Equals(NS_LITERAL_CSTRING("/")))
+    if (mPath.EqualsLiteral("/"))
         mPath.Append(fragment);
     else
         mPath.Append(NS_LITERAL_CSTRING("/") + fragment);

@@ -814,7 +814,7 @@ nsCSSDeclaration::TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSe
 
     nsAutoString valueString;
     AppendValueToString(eCSSProperty_border_top_color, valueString);
-    if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
+    if (!valueString.EqualsLiteral("-moz-use-text-color")) {
       /* don't output this value, it's proprietary Mozilla and  */
       /* not intended to be exposed ; we can remove it from the */
       /* values of the shorthand since this value represents the */
@@ -848,7 +848,7 @@ nsCSSDeclaration::TryBorderSideShorthand(nsAString & aString,
 
     nsAutoString valueString;
     AppendValueToString(OrderValueAt(aBorderColor-1), valueString);
-    if (!valueString.Equals(NS_LITERAL_STRING("-moz-use-text-color"))) {
+    if (!valueString.EqualsLiteral("-moz-use-text-color")) {
       aString.Append(NS_LITERAL_STRING(" "));
       aString.Append(valueString);
     }

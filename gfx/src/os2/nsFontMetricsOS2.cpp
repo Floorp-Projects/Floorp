@@ -1292,20 +1292,20 @@ PRBool
 nsFontMetricsOS2::GetVectorSubstitute(HPS aPS, const nsAString& aFamilyname,
                                       nsAString& aAlias)
 {
-  if (aFamilyname.Equals(NS_LITERAL_STRING("Tms Rmn"))) {
+  if (aFamilyname.EqualsLiteral("Tms Rmn")) {
     aAlias = NS_LITERAL_STRING("Times New Roman");
-  } else if (aFamilyname.Equals(NS_LITERAL_STRING("Helv"))) {
+  } else if (aFamilyname.EqualsLiteral("Helv")) {
     aAlias = NS_LITERAL_STRING("Helvetica");
   }
 
   // When printing, substitute vector fonts for these common bitmap fonts
   if (!mDeviceContext->SupportsRasterFonts()) {
-    if (aFamilyname.Equals(NS_LITERAL_STRING("System Proportional")) ||
-        aFamilyname.Equals(NS_LITERAL_STRING("WarpSans")))
+    if (aFamilyname.EqualsLiteral("System Proportional") ||
+        aFamilyname.EqualsLiteral("WarpSans"))
     {
       aAlias = NS_LITERAL_STRING("Helvetica");
-    } else if (aFamilyname.Equals(NS_LITERAL_STRING("System Monospaced")) ||
-               aFamilyname.Equals(NS_LITERAL_STRING("System VIO")))
+    } else if (aFamilyname.EqualsLiteral("System Monospaced") ||
+               aFamilyname.EqualsLiteral("System VIO"))
     {
       aAlias = NS_LITERAL_STRING("Courier");
     }

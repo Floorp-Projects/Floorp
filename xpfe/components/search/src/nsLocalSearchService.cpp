@@ -369,13 +369,13 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
 	if (! str)	return(found);
 	nsAutoString	value(str);
 
-        if (matchMethod.Equals(NS_LITERAL_STRING("contains")))
+        if (matchMethod.EqualsLiteral("contains"))
 	{
             if (FindInReadable(matchText, value,
                                nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
-        else if (matchMethod.Equals(NS_LITERAL_STRING("startswith")))
+        else if (matchMethod.EqualsLiteral("startswith"))
 	{
             nsAString::const_iterator start, realstart, end;
             value.BeginReading(start);
@@ -388,7 +388,7 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
                 
                 found = PR_TRUE;
 	}
-        else if (matchMethod.Equals(NS_LITERAL_STRING("endswith")))
+        else if (matchMethod.EqualsLiteral("endswith"))
 	{
             nsAString::const_iterator start, end, realend;
             value.BeginReading(start);
@@ -401,17 +401,17 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
                 
                 found = PR_TRUE;
 	}
-        else if (matchMethod.Equals(NS_LITERAL_STRING("is")))
+        else if (matchMethod.EqualsLiteral("is"))
 	{
             if (value.Equals(matchText, nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
-        else if (matchMethod.Equals(NS_LITERAL_STRING("isnot")))
+        else if (matchMethod.EqualsLiteral("isnot"))
 	{
             if (!value.Equals(matchText, nsCaseInsensitiveStringComparator()))
                 found = PR_TRUE;
 	}
-        else if (matchMethod.Equals(NS_LITERAL_STRING("doesntcontain")))
+        else if (matchMethod.EqualsLiteral("doesntcontain"))
 	{
             if (!FindInReadable(matchText, value,
                                 nsCaseInsensitiveStringComparator()))
@@ -427,8 +427,8 @@ LocalSearchDataSource::doDateMatch(nsIRDFDate *aDate,
 {
     PRBool found = PR_FALSE;
     
-    if (matchMethod.Equals(NS_LITERAL_STRING("isbefore")) ||
-        matchMethod.Equals(NS_LITERAL_STRING("isafter")))
+    if (matchMethod.EqualsLiteral("isbefore") ||
+        matchMethod.EqualsLiteral("isafter"))
     {
         PRInt64 matchDate;
         nsresult rv = parseDate(matchText, &matchDate);
@@ -455,11 +455,11 @@ LocalSearchDataSource::doIntMatch(nsIRDFInt *aInt,
     PRInt32 matchVal = matchText.ToInteger(&error);
     if (error != 0) return PR_FALSE;
     
-    if (matchMethod.Equals(NS_LITERAL_STRING("is")))
+    if (matchMethod.EqualsLiteral("is"))
         found = (val == matchVal);
-    else if (matchMethod.Equals(NS_LITERAL_STRING("isgreater")))
+    else if (matchMethod.EqualsLiteral("isgreater"))
         found = (val > matchVal);
-    else if (matchMethod.Equals(NS_LITERAL_STRING("isless")))
+    else if (matchMethod.EqualsLiteral("isless"))
         found = (val < matchVal);
 
     return found;
@@ -491,13 +491,13 @@ LocalSearchDataSource::dateMatches(nsIRDFDate *aDate,
     aDate->GetValue(&date);
     PRBool matches = PR_FALSE;
     
-    if (method.Equals(NS_LITERAL_STRING("isbefore")))
+    if (method.EqualsLiteral("isbefore"))
         matches = LL_CMP(date, <, matchDate);
     
-    else if (method.Equals(NS_LITERAL_STRING("isafter")))
+    else if (method.EqualsLiteral("isafter"))
         matches = LL_CMP(date, >, matchDate);
 
-    else if (method.Equals(NS_LITERAL_STRING("is")))
+    else if (method.EqualsLiteral("is"))
         matches = LL_EQ(date, matchDate);
 
     return matches;

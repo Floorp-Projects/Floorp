@@ -527,25 +527,25 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxyInfo **aResult)
     }
 
     if (!mHTTPProxyHost.IsEmpty() && mHTTPProxyPort > 0 &&
-        scheme.Equals(NS_LITERAL_CSTRING("http"))) {
+        scheme.EqualsLiteral("http")) {
         host = ToNewCString(mHTTPProxyHost);
         type = kProxyType_HTTP;
         port = mHTTPProxyPort;
     }
     else if (!mHTTPSProxyHost.IsEmpty() && mHTTPSProxyPort > 0 &&
-             scheme.Equals(NS_LITERAL_CSTRING("https"))) {
+             scheme.EqualsLiteral("https")) {
         host = ToNewCString(mHTTPSProxyHost);
         type = kProxyType_HTTP;
         port = mHTTPSProxyPort;
     }
     else if (!mFTPProxyHost.IsEmpty() && mFTPProxyPort > 0 &&
-             scheme.Equals(NS_LITERAL_CSTRING("ftp"))) {
+             scheme.EqualsLiteral("ftp")) {
         host = ToNewCString(mFTPProxyHost);
         type = kProxyType_HTTP;
         port = mFTPProxyPort;
     }
     else if (!mGopherProxyHost.IsEmpty() && mGopherProxyPort > 0 &&
-             scheme.Equals(NS_LITERAL_CSTRING("gopher"))) {
+             scheme.EqualsLiteral("gopher")) {
         host = ToNewCString(mGopherProxyHost);
         type = kProxyType_HTTP;
         port = mGopherProxyPort;

@@ -199,9 +199,9 @@ nsLSParser::AddEventListener(const nsAString& aType,
 {
   nsCOMArray<nsIDOMEventListener> *listeners;
 
-  if (aType.Equals(NS_LITERAL_STRING("ls-load"))) {
+  if (aType.EqualsLiteral("ls-load")) {
     listeners = &mLoadListeners;
-  } else if (aType.Equals(NS_LITERAL_STRING("ls-progress"))) {
+  } else if (aType.EqualsLiteral("ls-progress")) {
     listeners = &mProgressListeners;
   } else {
     // Not a supported event
@@ -223,9 +223,9 @@ nsLSParser::RemoveEventListener(const nsAString& aType,
 {
   nsCOMArray<nsIDOMEventListener> *listeners;
 
-  if (aType.Equals(NS_LITERAL_STRING("ls-load"))) {
+  if (aType.EqualsLiteral("ls-load")) {
     listeners = &mLoadListeners;
-  } else if (aType.Equals(NS_LITERAL_STRING("ls-progress"))) {
+  } else if (aType.EqualsLiteral("ls-progress")) {
     listeners = &mProgressListeners;
   } else {
     // Not a supported event

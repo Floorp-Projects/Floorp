@@ -185,7 +185,7 @@ NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
       return NS_OK;
    // _main is an IE target which should be case-insensitive but isn't
    // see bug 217886 for details
-   if(name.EqualsIgnoreCase("_content") || name.Equals(NS_LITERAL_STRING("_main")))
+   if(name.EqualsIgnoreCase("_content") || name.EqualsLiteral("_main"))
       {
       fIs_Content = PR_TRUE;
       mXULWindow->GetPrimaryContentShell(aFoundItem);
@@ -726,7 +726,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
       if(docShellElement)  
          {
          docShellElement->GetAttribute(NS_LITERAL_STRING("contenttitlesetting"), contentTitleSetting);
-         if(contentTitleSetting.Equals(NS_LITERAL_STRING("true")))
+         if(contentTitleSetting.EqualsLiteral("true"))
             {
             mContentTitleSetting = PR_TRUE;
             docShellElement->GetAttribute(NS_LITERAL_STRING("titledefault"), mTitleDefault);

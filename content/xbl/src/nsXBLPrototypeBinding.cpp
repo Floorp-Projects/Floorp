@@ -324,7 +324,7 @@ nsXBLPrototypeBinding::SetBindingElement(nsIContent* aElement)
   mBinding = aElement;
   nsAutoString inheritStyle;
   mBinding->GetAttr(kNameSpaceID_None, nsXBLAtoms::inheritstyle, inheritStyle);
-  if (inheritStyle == NS_LITERAL_STRING("false"))
+  if (inheritStyle.EqualsLiteral("false"))
     mInheritStyle = PR_FALSE;
 }
 

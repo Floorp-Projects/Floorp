@@ -435,7 +435,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     // recognize signature
     if ((lineSourceStr.Length() >= 4)
         && lineSourceStr.First() == '-'
-        && Substring(lineSourceStr, 0, 3).Equals(NS_LITERAL_STRING("-- "))
+        && Substring(lineSourceStr, 0, 3).EqualsLiteral("-- ")
         && (lineSourceStr[3] == '\r' || lineSourceStr[3] == '\n') )
     {
       text->mIsSig = PR_TRUE;

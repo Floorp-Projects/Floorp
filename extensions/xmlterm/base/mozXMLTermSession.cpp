@@ -1029,7 +1029,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
             XMLT_LOG(mozXMLTermSession::ReadAll,62,("metaCommandOutput\n"));
 
             // Ignore the string "false", if that's the only output
-            if (metaCommandOutput.Equals(NS_LITERAL_STRING("false")))
+            if (metaCommandOutput.EqualsLiteral("false"))
               metaCommandOutput.SetLength(0);
 
             // Check metacommand output for markup (secure)

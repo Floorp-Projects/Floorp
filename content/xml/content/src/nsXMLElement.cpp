@@ -141,7 +141,7 @@ nsXMLElement::SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom* aPrefix,
     //       we do not need to check other attributes. If there
     //       is no href attribute, then this link is simply
     //       untraversible [XLink 3.2].
-    mIsLink = aValue.Equals(NS_LITERAL_STRING("simple"));
+    mIsLink = aValue.EqualsLiteral("simple");
 
     // We will check for actuate="onLoad" in MaybeTriggerAutoLink
   }
@@ -226,7 +226,7 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
           break;
 
         // XXX Should probably do this using atoms 
-        if (value.Equals(NS_LITERAL_STRING("new"))) {
+        if (value.EqualsLiteral("new")) {
           if (nsContentUtils::GetBoolPref("dom.disable_open_during_load")) {
             // disabling open during load
 
@@ -237,12 +237,12 @@ nsXMLElement::MaybeTriggerAutoLink(nsIDocShell *aShell)
             // not blocking new windows
             verb = eLinkVerb_New;
           }
-        } else if (value.Equals(NS_LITERAL_STRING("replace"))) {
+        } else if (value.EqualsLiteral("replace")) {
           // We want to actually stop processing the current document now.
           // We do this by returning the correct value so that the one
           // that called us knows to stop processing.
           verb = eLinkVerb_Replace;
-        } else if (value.Equals(NS_LITERAL_STRING("embed"))) {
+        } else if (value.EqualsLiteral("embed")) {
           // XXX TODO
           break;
         }
@@ -325,13 +325,13 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                     show);
 
           // XXX Should probably do this using atoms 
-          if (show.Equals(NS_LITERAL_STRING("new"))) {
+          if (show.EqualsLiteral("new")) {
             if (!nsContentUtils::GetBoolPref("browser.block.target_new_window")) {
               verb = eLinkVerb_New;
             }
-          } else if (show.Equals(NS_LITERAL_STRING("replace"))) {
+          } else if (show.EqualsLiteral("replace")) {
             verb = eLinkVerb_Replace;
-          } else if (show.Equals(NS_LITERAL_STRING("embed"))) {
+          } else if (show.EqualsLiteral("embed")) {
             verb = eLinkVerb_Embed;
           }
 

@@ -3005,7 +3005,7 @@ WLLT_PostEdit(const nsString& walletList)
   tail = temp;
 
   /* return if OK button was not pressed */
-  if (!head.Equals(NS_LITERAL_STRING("OK"))) {
+  if (!head.EqualsLiteral("OK")) {
     return;
   }
 
@@ -3217,7 +3217,7 @@ WLLT_PrefillReturn(const nsString& results)
   wallet_DecodeVerticalBars(urlName);
 
   /* add url to url list if user doesn't want to preview this page in the future */
-  if (skip.Equals(NS_LITERAL_STRING("true"))) {
+  if (skip.EqualsLiteral("true")) {
     nsCAutoString url = NS_ConvertUCS2toUTF8(urlName);
     nsVoidArray* dummy;
     nsCAutoString urlPermissions("nn");

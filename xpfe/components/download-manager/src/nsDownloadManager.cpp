@@ -829,7 +829,7 @@ nsDownloadManager::HandleEvent(nsIDOMEvent* aEvent)
   // the event is either load or unload
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  if (eventType.Equals(NS_LITERAL_STRING("unload")))
+  if (eventType.EqualsLiteral("unload"))
     return OnClose();
 
   nsCOMPtr<nsIDOMEventTarget> target;

@@ -1327,15 +1327,15 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         //make sure rv value is not crunched, it is used to SetPrettyName
         nsXPIDLCString redirectorType;
         GetRedirectorType(getter_Copies(redirectorType)); //Sent mail folder as per aol/netscape webmail
-        if ((redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && onlineName.Equals(NS_LITERAL_CSTRING("Sent Items")))
-          || (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Sent"))))
+        if ((redirectorType.EqualsLiteral("aol") && onlineName.EqualsLiteral("Sent Items"))
+          || (redirectorType.EqualsLiteral("netscape") && onlineName.EqualsLiteral("Sent")))
           //we know that we don't allowConversion for netscape webmail so just use the onlineName
           child->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
 
-        else if (redirectorType.Equals(NS_LITERAL_CSTRING("netscape")) && onlineName.Equals(NS_LITERAL_CSTRING("Draft")))
+        else if (redirectorType.EqualsLiteral("netscape") && onlineName.EqualsLiteral("Draft"))
           child->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
 
-        else if (redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && onlineName.Equals(NS_LITERAL_CSTRING("RECYCLE")))
+        else if (redirectorType.EqualsLiteral("aol") && onlineName.EqualsLiteral("RECYCLE"))
           child->SetFlag(MSG_FOLDER_FLAG_TRASH);
 
         if (NS_SUCCEEDED(rv))

@@ -450,7 +450,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   if (bTEXT_HTML)
     // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
     res = conv->Init(charsetName.get(),
-                     charsetName.Equals(NS_LITERAL_CSTRING("ISO-8859-1")) ?
+                     charsetName.EqualsLiteral("ISO-8859-1") ?
                      nsISaveAsCharset::attr_htmlTextDefault :
                      nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR, 
                      nsIEntityConverter::html32);
@@ -465,7 +465,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
 
   // Mapping characters in a certain range (required for Japanese only)
   nsAutoString mapped;
-  if (charsetName.Equals(NS_LITERAL_CSTRING("ISO-2022-JP"))) {
+  if (charsetName.EqualsLiteral("ISO-2022-JP")) {
     static PRInt32 sSendHankakuKana = -1;
     if (sSendHankakuKana < 0) {
       nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &res));

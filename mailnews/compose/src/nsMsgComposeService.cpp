@@ -335,7 +335,7 @@ nsMsgComposeService::Observe(nsISupports *aSubject, const char *aTopic, const PR
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
   {
     nsDependentString prefName(someData);
-    if (prefName.Equals(NS_LITERAL_STRING(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS)))
+    if (prefName.EqualsLiteral(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS))
       Reset();
     return NS_OK;
   }

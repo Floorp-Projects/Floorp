@@ -629,7 +629,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
 {
     nsCAutoString charset;
     GetHTMLCharset(data, dataLength, charset);// get charset of HTML
-    if (charset.Equals(NS_LITERAL_CSTRING("UTF-16"))) {//current mozilla
+    if (charset.EqualsLiteral("UTF-16")) {//current mozilla
         outUnicodeLen = (dataLength / 2) - 1;
         *unicodeData = NS_REINTERPRET_CAST(PRUnichar*,
                        nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
@@ -639,7 +639,7 @@ void ConvertHTMLtoUCS2(guchar * data, PRInt32 dataLength,
                    outUnicodeLen * sizeof(PRUnichar));
             (*unicodeData)[outUnicodeLen] = '\0';
         }
-    } else if (charset.Equals(NS_LITERAL_CSTRING("UNKNOWN"))) {
+    } else if (charset.EqualsLiteral("UNKNOWN")) {
         outUnicodeLen = 0;
         return;
     } else {

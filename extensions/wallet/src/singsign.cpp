@@ -611,7 +611,7 @@ si_Randomize(nsString& password) {
   PRIntervalTime randomNumber;
   int i;
   const char * hexDigits = "0123456789AbCdEf";
-  if (password.Equals(NS_LITERAL_STRING("********"))) {
+  if (password.EqualsLiteral("********")) {
     randomNumber = PR_IntervalNow();
     for (i=0; i<8; i++) {
       password.SetCharAt(hexDigits[randomNumber%16], i);

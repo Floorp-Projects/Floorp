@@ -364,7 +364,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *_retval)
   if (element) {
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
-    if (!selType.IsEmpty() && selType.Equals(NS_LITERAL_STRING("multiple")))
+    if (!selType.IsEmpty() && selType.EqualsLiteral("multiple"))
         *_retval |= STATE_MULTISELECTABLE;
   }
 
@@ -419,7 +419,7 @@ NS_IMETHODIMP nsXULListitemAccessible::GetName(nsAString& _retval)
     if (childElement) {
       nsAutoString tagName;
       childElement->GetLocalName(tagName);
-      if (tagName.Equals(NS_LITERAL_STRING("listcell"))) {
+      if (tagName.EqualsLiteral("listcell")) {
         childElement->GetAttribute(NS_LITERAL_STRING("label"), _retval);
         return NS_OK;
       }

@@ -2686,8 +2686,8 @@ nsGlobalHistory::InitByteOrder(PRBool aForce)
   if (!aForce)
     rv = GetByteOrder(getter_Copies(file_byte_order));
   if (aForce || NS_FAILED(rv) ||
-      !(file_byte_order.Equals(NS_LITERAL_CSTRING("BE")) ||
-        file_byte_order.Equals(NS_LITERAL_CSTRING("LE")))) {
+      !(file_byte_order.EqualsLiteral("BE") ||
+        file_byte_order.EqualsLiteral("LE"))) {
     // Byte order is not yet set, or needs to be reset; initialize it.
     mReverseByteOrder = PR_FALSE;
     rv = SaveByteOrder(machine_byte_order.get());
@@ -3292,29 +3292,29 @@ nsGlobalHistory::TokenListToSearchQuery(const nsVoidArray& aTokens,
     // per-term tokens
     const nsASingleFragmentCString& tokenName =
         Substring(token->tokenName, token->tokenName + token->tokenNameLength);
-    if (tokenName.Equals(NS_LITERAL_CSTRING("datasource"))) {
+    if (tokenName.EqualsLiteral("datasource")) {
       datasource = token->tokenValue;
       datasourceLen = token->tokenValueLength;
     }
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("match"))) {
+    else if (tokenName.EqualsLiteral("match")) {
       if (Substring(token->tokenValue, token->tokenValue+token->tokenValueLength).Equals("AgeInDays"))
         matchCallback = matchAgeInDaysCallback;
       
       property = token->tokenValue;
       propertyLen = token->tokenValueLength;
     }
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("method"))) {
+    else if (tokenName.EqualsLiteral("method")) {
       method = token->tokenValue;
       methodLen = token->tokenValueLength;
     }    
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("text"))) {
+    else if (tokenName.EqualsLiteral("text")) {
       text = token->tokenValue;
       textLen = token->tokenValueLength;
     }
     
     // really, we should be storing the group-by as a column number or
     // rdf resource
-    else if (tokenName.Equals(NS_LITERAL_CSTRING("groupby"))) {
+    else if (tokenName.EqualsLiteral("groupby")) {
       mdb_err err;
       err = mStore->QueryToken(mEnv,
                                nsCAutoString(token->tokenValue).get(),

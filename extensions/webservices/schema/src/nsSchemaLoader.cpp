@@ -137,7 +137,7 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
   
   event->GetType(eventType);
   
-  if (eventType.Equals(NS_LITERAL_STRING("load"))) {
+  if (eventType.EqualsLiteral("load")) {
     nsCOMPtr<nsIDOMDocument> document;
     nsCOMPtr<nsISchema> schema;
     
@@ -163,7 +163,7 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
       mListener->OnError(rv, NS_LITERAL_STRING("Failure processing schema document"));
     }
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("error")) &&
+  else if (eventType.EqualsLiteral("error") &&
            mListener) {
     mListener->OnError(NS_ERROR_SCHEMA_LOADING_ERROR, 
                        NS_LITERAL_STRING("Failure loading"));
@@ -228,8 +228,8 @@ nsBuiltinSchemaCollection::GetAttribute(const nsAString & aName,
 static PRBool
 IsSchemaNamespace(const nsAString& aNamespace)
 {
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE)) ||
-      aNamespace.Equals(NS_LITERAL_STRING(NS_SCHEMA_1999_NAMESPACE))) {
+  if (aNamespace.EqualsLiteral(NS_SCHEMA_2001_NAMESPACE) ||
+      aNamespace.EqualsLiteral(NS_SCHEMA_1999_NAMESPACE)) {
     return PR_TRUE;
   }
   else {
@@ -240,8 +240,8 @@ IsSchemaNamespace(const nsAString& aNamespace)
 static PRBool
 IsSOAPNamespace(const nsAString& aNamespace)
 {
-  if (aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_1_ENCODING_NAMESPACE)) ||
-      aNamespace.Equals(NS_LITERAL_STRING(NS_SOAP_1_2_ENCODING_NAMESPACE))) {
+  if (aNamespace.EqualsLiteral(NS_SOAP_1_1_ENCODING_NAMESPACE) ||
+      aNamespace.EqualsLiteral(NS_SOAP_1_2_ENCODING_NAMESPACE)) {
     return PR_TRUE;
   }
   else {
@@ -446,7 +446,7 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
     rv = CallQueryInterface(sup, aType);
   }
   else {
-    if (aName.Equals(NS_LITERAL_STRING("Array"))) {
+    if (aName.EqualsLiteral("Array")) {
       nsCOMPtr<nsISchemaType> anyType;
       rv = GetBuiltinType(NS_LITERAL_STRING("anyType"),
                           NS_LITERAL_STRING(NS_SCHEMA_2001_NAMESPACE),
@@ -465,7 +465,7 @@ nsBuiltinSchemaCollection::GetSOAPType(const nsAString& aName,
       *aType = array;
       NS_ADDREF(*aType);
     }
-    else if (aName.Equals(NS_LITERAL_STRING("arrayType"))) {
+    else if (aName.EqualsLiteral("arrayType")) {
       nsSOAPArrayType* arrayType = new nsSOAPArrayType();
       if (!arrayType) {
         return NS_ERROR_OUT_OF_MEMORY;
@@ -985,7 +985,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     value.Trim(" \r\n\t");
 
     PRInt32 flags = 0;
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       flags |= nsSchemaElement::NILLABLE;
 
     rv = aElement->GetAttributeNS(empty, NS_LITERAL_STRING("abstract"), value);
@@ -993,7 +993,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
       return rv;
     value.Trim(" \r\n\t");
 
-    if (value.Equals(NS_LITERAL_STRING("true")))
+    if (value.EqualsLiteral("true"))
       flags |= nsSchemaElement::ABSTRACT;
 
     nsCOMPtr<nsIDOMNode> parent;
@@ -1012,7 +1012,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
     // elementFormDefault on the <schema> ancestor is qualified, then the
     // actual value of the  targetNamespace [attribute] is that of the ancestor
     // <schema> element information item, or absent if there is none.
-    if (value.Equals(NS_LITERAL_STRING("schema"))) {
+    if (value.EqualsLiteral("schema")) {
       flags |= nsSchemaElement::FORM_QUALIFIED;
     }
     else {
@@ -1029,7 +1029,7 @@ nsSchemaLoader::ProcessElement(nsSchema* aSchema,
            flags &= ~nsSchemaElement::FORM_QUALIFIED;
         }
       }
-      else if (value.Equals(NS_LITERAL_STRING("qualified"))) {
+      else if (value.EqualsLiteral("qualified")) {
         flags |= nsSchemaElement::FORM_QUALIFIED;
       }
       else {
@@ -1122,7 +1122,7 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
 
   nsSchemaComplexType* typeInst;
   typeInst = new nsSchemaComplexType(aSchema, name, 
-                                     abstract.Equals(NS_LITERAL_STRING("true")));
+                                     abstract.EqualsLiteral("true"));
   if (!typeInst) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1174,7 +1174,7 @@ nsSchemaLoader::ProcessComplexType(nsSchema* aSchema,
 
   nsAutoString mixed;
   aElement->GetAttribute(NS_LITERAL_STRING("mixed"), mixed);
-  if (mixed.Equals(NS_LITERAL_STRING("true"))) {
+  if (mixed.EqualsLiteral("true")) {
     contentModel = nsISchemaComplexType::CONTENT_MODEL_MIXED;
   }
 
@@ -1833,7 +1833,7 @@ nsSchemaLoader::ProcessComplexContent(nsSchema* aSchema,
 
   nsAutoString mixed;
   aElement->GetAttribute(NS_LITERAL_STRING("mixed"), mixed);
-  if (mixed.Equals(NS_LITERAL_STRING("true"))) {
+  if (mixed.EqualsLiteral("true")) {
     *aContentModel = nsISchemaComplexType::CONTENT_MODEL_MIXED;
   }
 
@@ -2590,13 +2590,13 @@ nsSchemaLoader::ProcessFacet(nsSchema* aSchema,
   }
   else if (aTagName == nsSchemaAtoms::sWhiteSpace_atom) {
     PRUint16 whiteSpaceVal;
-    if (valueStr.Equals(NS_LITERAL_STRING("collapse"))) {
+    if (valueStr.EqualsLiteral("collapse")) {
       whiteSpaceVal = nsSchemaFacet::WHITESPACE_COLLAPSE;
     }
-    else if (valueStr.Equals(NS_LITERAL_STRING("preserve"))) {
+    else if (valueStr.EqualsLiteral("preserve")) {
       whiteSpaceVal = nsSchemaFacet::WHITESPACE_PRESERVE;
     }
-    else if (valueStr.Equals(NS_LITERAL_STRING("replace"))) {
+    else if (valueStr.EqualsLiteral("replace")) {
       whiteSpaceVal = nsSchemaFacet::WHITESPACE_REPLACE;
     }
     else {
@@ -2611,7 +2611,7 @@ nsSchemaLoader::ProcessFacet(nsSchema* aSchema,
   
   nsAutoString isFixed;
   aElement->GetAttribute(NS_LITERAL_STRING("fixed"), isFixed);
-  facetInst->SetIsFixed(isFixed.Equals(NS_LITERAL_STRING("true")));
+  facetInst->SetIsFixed(isFixed.EqualsLiteral("true"));
 
   *aFacet = facet;
   NS_ADDREF(*aFacet);
@@ -2628,10 +2628,10 @@ nsSchemaLoader::GetUse(nsIDOMElement* aElement,
   nsAutoString use;
   aElement->GetAttribute(NS_LITERAL_STRING("use"), use);
   
-  if (use.Equals(NS_LITERAL_STRING("prohibited"))) {
+  if (use.EqualsLiteral("prohibited")) {
     *aUse = nsISchemaAttribute::USE_PROHIBITED;
   }
-  else if (use.Equals(NS_LITERAL_STRING("required"))) {
+  else if (use.EqualsLiteral("required")) {
     *aUse = nsISchemaAttribute::USE_REQUIRED;
   }
 }
@@ -2645,10 +2645,10 @@ nsSchemaLoader::GetProcess(nsIDOMElement* aElement,
   nsAutoString process;
   aElement->GetAttribute(NS_LITERAL_STRING("process"), process);
 
-  if (process.Equals(NS_LITERAL_STRING("lax"))) {
+  if (process.EqualsLiteral("lax")) {
     *aProcess = nsISchemaAnyParticle::PROCESS_LAX;
   }
-  else if (process.Equals(NS_LITERAL_STRING("skip"))) {
+  else if (process.EqualsLiteral("skip")) {
     *aProcess = nsISchemaAnyParticle::PROCESS_SKIP;
   }
 }
@@ -2674,7 +2674,7 @@ nsSchemaLoader::GetMinAndMax(nsIDOMElement* aElement,
   }
 
   if (!maxStr.IsEmpty()) {
-    if (maxStr.Equals(NS_LITERAL_STRING("unbounded"))) {
+    if (maxStr.EqualsLiteral("unbounded")) {
       *aMaxOccurs = nsISchemaParticle::OCCURRENCE_UNBOUNDED;
     }
     else {

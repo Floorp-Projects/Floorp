@@ -487,7 +487,7 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
       // see if it is type=simple (we don't deal with other types)
       nsAutoString val;
       aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
-      if (val == NS_LITERAL_STRING("simple")) {
+      if (val.EqualsLiteral("simple")) {
         // see if there is an xlink namespace'd href attribute: 
         // - get it if there is, if not no big deal, it is not required for xlinks
         // is it bad to re-use val here?

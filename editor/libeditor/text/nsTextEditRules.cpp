@@ -659,7 +659,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         // is it a return?
-        if (subStr.Equals(NS_LITERAL_STRING(LFSTR)))
+        if (subStr.EqualsLiteral(LFSTR))
         {
           if (nsIPlaintextEditor::eEditorSingleLineMask & mFlags)
           {
@@ -727,13 +727,13 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         nsDependentSubstring subStr(tString, oldPos, subStrLen);
         
         // is it a tab?
-        if (subStr.Equals(NS_LITERAL_STRING("\t")))
+        if (subStr.EqualsLiteral("\t"))
         {
           res = mEditor->InsertTextImpl(NS_LITERAL_STRING("    "), address_of(curNode), &curOffset, doc);
           pos++;
         }
         // is it a return?
-        else if (subStr.Equals(NS_LITERAL_STRING(LFSTR)))
+        else if (subStr.EqualsLiteral(LFSTR))
         {
           res = mEditor->CreateBRImpl(address_of(curNode), &curOffset, address_of(unused), nsIEditor::eNone);
           pos++;
@@ -1084,7 +1084,7 @@ nsTextEditRules::WillOutputText(nsISelection *aSelection,
 
   nsAutoString outputFormat(*aOutputFormat);
   ToLowerCase(outputFormat);
-  if (outputFormat.Equals(NS_LITERAL_STRING("text/plain")))
+  if (outputFormat.EqualsLiteral("text/plain"))
   { // only use these rules for plain text output
     if (mFlags & nsIPlaintextEditor::eEditorPasswordMask)
     {

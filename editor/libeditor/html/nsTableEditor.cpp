@@ -2939,7 +2939,7 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
     res = GetSelectedOrParentTableElement(tagName, &selectedCount,
                                           getter_AddRefs(cellOrTableElement));
     if (NS_FAILED(res)) return res;
-    if (tagName.Equals(NS_LITERAL_STRING("table")))
+    if (tagName.EqualsLiteral("table"))
     {
       // We have a selected table, not a cell
       if (aTable)
@@ -2949,7 +2949,7 @@ nsHTMLEditor::GetCellContext(nsISelection **aSelection,
       }
       return NS_OK;
     }
-    if (!tagName.Equals(NS_LITERAL_STRING("td")))
+    if (!tagName.EqualsLiteral("td"))
       return NS_EDITOR_ELEMENT_NOT_FOUND;
 
     // We found a cell

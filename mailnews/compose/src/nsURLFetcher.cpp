@@ -496,7 +496,7 @@ NS_IMETHODIMP nsURLFetcherStreamConsumer::OnStopRequest(nsIRequest *aRequest, ns
   if(!aChannel) return NS_ERROR_FAILURE;
 
   if (NS_SUCCEEDED(aChannel->GetContentType(contentType)) &&
-      !contentType.Equals(NS_LITERAL_CSTRING(UNKNOWN_CONTENT_TYPE)))
+      !contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE))
   {
     mURLFetcher->mContentType = contentType;
   }

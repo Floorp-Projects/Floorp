@@ -70,7 +70,7 @@ void nsXULTreeAccessible::GetTreeBoxObject(nsIDOMNode *aDOMNode, nsITreeBoxObjec
   currentNode = aDOMNode;
   while (currentNode) {
     currentNode->GetLocalName(name);
-    if (name.Equals(NS_LITERAL_STRING("tree"))) {
+    if (name.EqualsLiteral("tree")) {
       // We will get the nsITreeBoxObject from the tree node
       nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(currentNode));
       if (xulElement) {
@@ -102,7 +102,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetState(PRUint32 *_retval)
     // the default selection type is multiple
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
-    if (selType.IsEmpty() || !selType.Equals(NS_LITERAL_STRING("single")))
+    if (selType.IsEmpty() || !selType.EqualsLiteral("single"))
       *_retval |= STATE_MULTISELECTABLE;
   }
 
@@ -343,7 +343,7 @@ NS_IMETHODIMP nsXULTreeAccessible::SelectAllSelection(PRBool *_retval)
   if (element) {
     nsAutoString selType;
     element->GetAttribute(NS_LITERAL_STRING("seltype"), selType);
-    if (selType.IsEmpty() || !selType.Equals(NS_LITERAL_STRING("single"))) {
+    if (selType.IsEmpty() || !selType.EqualsLiteral("single")) {
       *_retval = PR_TRUE;
       nsCOMPtr<nsITreeSelection> selection;
       mTreeView->GetSelection(getter_AddRefs(selection));
@@ -630,7 +630,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32
         for (childIndex = 0; childIndex < childCount; childIndex++) {
           childNodes->Item(childIndex, getter_AddRefs(childNode));
           childNode->GetLocalName(name);
-          if (name.Equals(NS_LITERAL_STRING("treechildren"))) {
+          if (name.EqualsLiteral("treechildren")) {
             nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(childNode));
             if (xulElement) {
               nsCOMPtr<nsIBoxObject> box;

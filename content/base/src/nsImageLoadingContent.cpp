@@ -591,7 +591,7 @@ HandleImagePLEvent(PLEvent* aEvent)
   nsEventStatus estatus = nsEventStatus_eIgnore;
   PRUint32 eventMsg;
 
-  if (evt->mMessage == NS_LITERAL_STRING("load")) {
+  if (evt->mMessage.EqualsLiteral("load")) {
     eventMsg = NS_IMAGE_LOAD;
   } else {
     eventMsg = NS_IMAGE_ERROR;

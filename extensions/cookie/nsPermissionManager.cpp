@@ -656,7 +656,7 @@ nsPermissionManager::Read()
       // Split the line at tabs
       lineArray.ParseString(buffer.get(), "\t");
       
-      if (lineArray[0]->Equals(NS_LITERAL_CSTRING(kMatchTypeHost)) &&
+      if (lineArray[0]->EqualsLiteral(kMatchTypeHost) &&
           lineArray.Count() == 4) {
         
         PRInt32 error;
@@ -759,7 +759,7 @@ nsPermissionManager::Read()
           continue;
 
         // Ignore @@@ as host. Old style checkbox status
-        if (!permissionString.IsEmpty() && !host.Equals(NS_LITERAL_CSTRING("@@@@"))) {
+        if (!permissionString.IsEmpty() && !host.EqualsLiteral("@@@@")) {
           rv = AddInternal(host, type, permission, PR_FALSE);
           if (NS_FAILED(rv)) return rv;
         }

@@ -439,13 +439,13 @@ nsImageDocument::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsAutoString eventType;
   aEvent->GetType(eventType);
-  if (eventType.Equals(NS_LITERAL_STRING("resize"))) {
+  if (eventType.EqualsLiteral("resize")) {
     CheckOverflowing();
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("click"))) {
+  else if (eventType.EqualsLiteral("click")) {
     ToggleImageSize();
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("keypress"))) {
+  else if (eventType.EqualsLiteral("keypress")) {
     nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aEvent);
     PRUint32 charCode;
     keyEvent->GetCharCode(&charCode);

@@ -98,12 +98,12 @@ nsresult
 nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
 {
   //delay loading os2charset.properties bundle if possible
-  if (inANSICodePage.Equals(NS_LITERAL_STRING("os2.850"))) {
+  if (inANSICodePage.EqualsLiteral("os2.850")) {
     outCharset = NS_LITERAL_CSTRING("IBM850");
     return NS_OK;
   } 
 
-  if (inANSICodePage.Equals(NS_LITERAL_STRING("os2.932"))) {
+  if (inANSICodePage.EqualsLiteral("os2.932")) {
     outCharset = NS_LITERAL_CSTRING("Shift_JIS");
     return NS_OK;
   } 

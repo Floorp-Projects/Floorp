@@ -271,7 +271,7 @@ nsPolicyReference::ProcessPolicyReferenceFile(nsIDOMDocument* aDocument,
   nsresult result = NS_OK;
   
   // The root element MUST be META
-  mError = name.Equals(NS_LITERAL_STRING("META")) 
+  mError = name.EqualsLiteral("META") 
     ? POLICY_LOAD_SUCCESS : POLICY_SYNTAX_ERROR;
  
   if (mError != POLICY_LOAD_SUCCESS)

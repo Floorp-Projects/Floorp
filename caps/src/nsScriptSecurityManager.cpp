@@ -252,14 +252,14 @@ nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
         rv = sourceBaseURI->GetScheme(sourceScheme);
     if (NS_SUCCEEDED(rv) && targetScheme.Equals(sourceScheme))
     {
-        if (targetScheme.Equals(NS_LITERAL_CSTRING("file")))
+        if (targetScheme.EqualsLiteral("file"))
         {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         }
-        else if (targetScheme.Equals(NS_LITERAL_CSTRING("imap")) ||
-                 targetScheme.Equals(NS_LITERAL_CSTRING("mailbox")) ||
-                 targetScheme.Equals(NS_LITERAL_CSTRING("news")))
+        else if (targetScheme.EqualsLiteral("imap") ||
+                 targetScheme.EqualsLiteral("mailbox") ||
+                 targetScheme.EqualsLiteral("news"))
         {
             // Each message is a distinct trust domain; use the 
             // whole spec for comparison

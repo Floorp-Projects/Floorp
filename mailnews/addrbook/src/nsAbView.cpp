@@ -512,9 +512,9 @@ nsresult nsAbView::RefreshTree()
   // if neither the primary nor the secondary sorts are GeneratedName (or kPhoneticNameColumn), 
   // all we have to do is invalidate (to show the new GeneratedNames), 
   // but the sort will not change.
-  if (mSortColumn.Equals(NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID)) ||
-      mSortColumn.Equals(NS_LITERAL_STRING(kPriEmailColumn)) ||
-      mSortColumn.Equals(NS_LITERAL_STRING(kPhoneticNameColumn))) {
+  if (mSortColumn.EqualsLiteral(GENERATED_NAME_COLUMN_ID) ||
+      mSortColumn.EqualsLiteral(kPriEmailColumn) ||
+      mSortColumn.EqualsLiteral(kPhoneticNameColumn)) {
     rv = SortBy(mSortColumn.get(), mSortDirection.get());
   }
   else {
@@ -857,7 +857,7 @@ NS_IMETHODIMP nsAbView::Observe(nsISupports *aSubject, const char *aTopic, const
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(someData);
     
-    if (prefName.Equals(NS_LITERAL_STRING(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST))) {
+    if (prefName.EqualsLiteral(PREF_MAIL_ADDR_BOOK_LASTNAMEFIRST)) {
       rv = SetGeneratedNameFormatFromPrefs();
       NS_ENSURE_SUCCESS(rv,rv);
 
@@ -1209,7 +1209,7 @@ NS_IMETHODIMP nsAbView::SwapFirstNameLastName()
 
     nsXPIDLString str;
     pls->ToString(getter_Copies(str));
-    displayNameLastnamefirst = str.Equals(NS_LITERAL_STRING("true"));
+    displayNameLastnamefirst = str.EqualsLiteral("true");
     nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 

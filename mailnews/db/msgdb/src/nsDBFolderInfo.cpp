@@ -112,7 +112,7 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
   {
     nsDependentString prefName(someData);
     
-    if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_VIEW_DEFAULT_CHARSET)))
+    if (prefName.EqualsLiteral(kMAILNEWS_VIEW_DEFAULT_CHARSET))
     {
       nsCOMPtr<nsIPrefLocalizedString> pls;
       rv = prefBranch->GetComplexValue(kMAILNEWS_VIEW_DEFAULT_CHARSET,
@@ -125,7 +125,7 @@ NS_IMETHODIMP nsFolderCharsetObserver::Observe(nsISupports *aSubject, const char
           gDefaultCharacterSet.AssignWithConversion(ucsval.get());
       }
     }
-    else if (prefName.Equals(NS_LITERAL_STRING(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE)))
+    else if (prefName.EqualsLiteral(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE))
     {
       rv = prefBranch->GetBoolPref(kMAILNEWS_DEFAULT_CHARSET_OVERRIDE, &gDefaultCharacterOverride);
     }

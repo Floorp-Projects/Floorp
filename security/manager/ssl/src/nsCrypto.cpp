@@ -2167,8 +2167,8 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
     return NS_OK;
   }
 
-  if (!aCaOption.Equals(NS_LITERAL_STRING("auto")) &&
-      !aCaOption.Equals(NS_LITERAL_STRING("ask"))) {
+  if (!aCaOption.EqualsLiteral("auto") &&
+      !aCaOption.EqualsLiteral("ask")) {
     JS_ReportError(cx, "%s%s\n", JS_ERROR, "caOption argument must be ask or auto");
 
     aResult.Append(internalError);
@@ -2410,7 +2410,7 @@ nsCrypto::SignText(const nsAString& aStringToSign, const nsAString& aCaOption,
 
   // XXX Doing what nsFormSubmission::GetEncoder does (see
   //     http://bugzilla.mozilla.org/show_bug.cgi?id=81203).
-  if (charset.Equals(NS_LITERAL_CSTRING("ISO-8859-1"))) {
+  if (charset.EqualsLiteral("ISO-8859-1")) {
     charset.Assign(NS_LITERAL_CSTRING("windows-1252"));
   }
 

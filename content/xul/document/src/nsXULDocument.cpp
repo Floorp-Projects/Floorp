@@ -518,7 +518,7 @@ nsXULDocument::GetContentType(nsAString& aContentType)
 void
 nsXULDocument::SetContentType(const nsAString& aContentType)
 {
-    NS_ASSERTION(aContentType.Equals(NS_LITERAL_STRING("application/vnd.mozilla.xul+xml")),
+    NS_ASSERTION(aContentType.EqualsLiteral("application/vnd.mozilla.xul+xml"),
                  "xul-documents always has content-type application/vnd.mozilla.xul+xml");
     // Don't do anything, xul always has the mimetype
     // application/vnd.mozilla.xul+xml
@@ -828,7 +828,7 @@ nsXULDocument::SynchronizeBroadcastListener(nsIDOMElement   *aBroadcaster,
     nsCOMPtr<nsIContent> broadcaster = do_QueryInterface(aBroadcaster);
     nsCOMPtr<nsIContent> listener = do_QueryInterface(aListener);
 
-    if (aAttr.Equals(NS_LITERAL_STRING("*"))) {
+    if (aAttr.EqualsLiteral("*")) {
         PRUint32 count = broadcaster->GetAttrCount();
         while (count-- > 0) {
             PRInt32 nameSpaceID;
@@ -1047,7 +1047,7 @@ nsXULDocument::ExecuteOnBroadcastHandlerFor(nsIContent* aBroadcaster,
                        listeningToAttribute);
 
         if (!aAttr->Equals(listeningToAttribute) &&
-            listeningToAttribute != NS_LITERAL_STRING("*")) {
+            !listeningToAttribute.EqualsLiteral("*")) {
             continue;
         }
 
@@ -1771,7 +1771,7 @@ nsXULDocument::AddElementToDocumentPre(nsIContent* aElement)
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::commandupdater,
                            value);
     if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-        value == NS_LITERAL_STRING("true")) {
+        value.EqualsLiteral("true")) {
         rv = nsXULContentUtils::SetCommandUpdater(this, aElement);
         if (NS_FAILED(rv)) return rv;
     }
@@ -1888,7 +1888,7 @@ nsXULDocument::RemoveSubtreeFromDocument(nsIContent* aElement)
     rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::commandupdater,
                            value);
     if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-        value == NS_LITERAL_STRING("true")) {
+        value.EqualsLiteral("true")) {
         nsCOMPtr<nsIDOMElement> domelement = do_QueryInterface(aElement);
         NS_ASSERTION(domelement != nsnull, "not a DOM element");
         if (! domelement)
@@ -2193,7 +2193,7 @@ nsXULDocument::MatchAttribute(nsIContent* aContent,
         return PR_FALSE;
     }
 
-    if (aAttrValue == NS_LITERAL_STRING("*")) {
+    if (aAttrValue.EqualsLiteral("*")) {
         // Wildcard.  We already know we have this attr, so we match
         return PR_TRUE;
     }
@@ -3653,7 +3653,7 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
         // Element in the overlay has the 'removeelement' attribute set
         // so remove it from the actual document.
         if (attr == nsXULAtoms::removeelement &&
-            value.Equals(NS_LITERAL_STRING("true"))) {
+            value.EqualsLiteral("true")) {
 
             rv = RemoveElement(aTargetNode->GetParent(), aTargetNode);
             if (NS_FAILED(rv)) return rv;

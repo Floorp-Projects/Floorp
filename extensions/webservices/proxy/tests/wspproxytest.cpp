@@ -166,7 +166,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
     }                                                                     \
                                                                           \
     prop->GetName(propName);                                              \
-    if (!propName.Equals(NS_LITERAL_STRING(#_name))) {                    \
+    if (!propName.EqualsLiteral(#_name)) {                    \
       aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Name doesn't match for property ") + NS_LITERAL_STRING(#_name)); \
       return NS_ERROR_FAILURE;                                            \
     }                                                                     \
@@ -210,7 +210,7 @@ WSPProxyTest::TestComplexTypeWrapperInstance(nsIPropertyBag* propBag,
     return rv;
   }
 
-  if (!str.Equals(NS_LITERAL_STRING(STRING_VAL))) {
+  if (!str.EqualsLiteral(STRING_VAL)) {
     aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for property s"));
     return NS_ERROR_FAILURE;
   }
@@ -363,7 +363,7 @@ WSPProxyTest::TestPropertyBagWrapper(nsAString& aResult)
     aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Failed to get value for attribute s"));
     return NS_OK;
   }
-  if (!str.Equals(NS_LITERAL_STRING(STRING_VAL))) {
+  if (!str.EqualsLiteral(STRING_VAL)) {
     aResult.Assign(NS_LITERAL_STRING("WSPProxyTest: Value doesn't match for attribute s"));
     return NS_OK;
   }

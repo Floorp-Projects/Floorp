@@ -393,7 +393,7 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
 
   event->GetType(eventType);
 
-  if (eventType.Equals(NS_LITERAL_STRING("load"))) {
+  if (eventType.EqualsLiteral("load")) {
     nsCOMPtr<nsIDOMDocument> document;
 
     rv = mRequest->GetResponseXML(getter_AddRefs(document));
@@ -456,7 +456,7 @@ nsWSDLLoadRequest::HandleEvent(nsIDOMEvent *event)
       return NS_OK;
     }
   }
-  else if (eventType.Equals(NS_LITERAL_STRING("error"))) {
+  else if (eventType.EqualsLiteral("error")) {
     mListener->OnError(NS_ERROR_WSDL_LOADING_ERROR,
                        NS_LITERAL_STRING("Failure loading"));
     return NS_OK;
@@ -641,8 +641,8 @@ nsWSDLLoadRequest::GetSchemaType(const nsAString& aName,
                                  const nsAString& aNamespace,
                                  nsISchemaType** aSchemaComponent)
 {
-  if (aNamespace.Equals(NS_LITERAL_STRING(SCHEMA_2001_NAMESPACE)) ||
-      aNamespace.Equals(NS_LITERAL_STRING(SCHEMA_1999_NAMESPACE))) {
+  if (aNamespace.EqualsLiteral(SCHEMA_2001_NAMESPACE) ||
+      aNamespace.EqualsLiteral(SCHEMA_1999_NAMESPACE)) {
     nsCOMPtr<nsISchemaCollection> collection(do_QueryInterface(mSchemaLoader));
     return collection->GetType(aName, aNamespace, aSchemaComponent);
   }
@@ -1148,7 +1148,7 @@ nsWSDLLoadRequest::ProcessMessageBinding(nsIDOMElement* aElement,
       childElement->GetAttribute(NS_LITERAL_STRING("namespace"), namespaceStr);
 
       PRUint16 use = nsISOAPPartBinding::USE_LITERAL;
-      if (useStr.Equals(NS_LITERAL_STRING("encoded"))) {
+      if (useStr.EqualsLiteral("encoded")) {
         use = nsISOAPPartBinding::USE_ENCODED;
       }
 
@@ -1270,10 +1270,10 @@ nsWSDLLoadRequest::ProcessOperationBinding(nsIDOMElement* aElement,
       childElement->GetAttribute(NS_LITERAL_STRING("style"), style);
 
       bindingInst->SetSoapAction(action);
-      if (style.Equals(NS_LITERAL_STRING("rpc"))) {
+      if (style.EqualsLiteral("rpc")) {
         bindingInst->SetStyle(nsISOAPPortBinding::STYLE_RPC);
       }
-      else if (style.Equals(NS_LITERAL_STRING("document"))) {
+      else if (style.EqualsLiteral("document")) {
         bindingInst->SetStyle(nsISOAPPortBinding::STYLE_DOCUMENT);
       }
       // If one isn't explicitly specified, we inherit from the port
@@ -1394,10 +1394,10 @@ nsWSDLLoadRequest::ProcessBindingElement(nsIDOMElement* aElement)
       childElement->GetAttribute(NS_LITERAL_STRING("style"), style);
       childElement->GetAttribute(NS_LITERAL_STRING("transport"), transport);
 
-      if (style.Equals(NS_LITERAL_STRING("rpc"))) {
+      if (style.EqualsLiteral("rpc")) {
         bindingInst->SetStyle(nsISOAPPortBinding::STYLE_RPC);
       }
-      else if (style.Equals(NS_LITERAL_STRING("document"))) {
+      else if (style.EqualsLiteral("document")) {
         bindingInst->SetStyle(nsISOAPPortBinding::STYLE_DOCUMENT);
       }
       bindingInst->SetTransport(transport);

@@ -487,7 +487,7 @@ nsresult nsMsgDBView::AppendSelectedTextColorProperties(nsMsgLabelValue label, n
   // means the highlight color will be black.
   //
   // We need to subtract 1 because mLabelPrefColors is 0 based.
-  if(mLabelPrefColors[label - 1].Equals(NS_LITERAL_STRING(LABEL_COLOR_WHITE_STRING)))
+  if(mLabelPrefColors[label - 1].EqualsLiteral(LABEL_COLOR_WHITE_STRING))
     aProperties->AppendElement(kLabelColorBlackAtom);  
   else
     aProperties->AppendElement(kLabelColorWhiteAtom);  
@@ -903,7 +903,7 @@ nsresult nsMsgDBView::CycleThreadedColumn(nsIDOMElement * aElement)
 
   // toggle threaded/unthreaded mode
   aElement->GetAttribute(NS_LITERAL_STRING("currentView"), currentView);
-  if (currentView.Equals(NS_LITERAL_STRING("threaded")))
+  if (currentView.EqualsLiteral("threaded"))
   {
     aElement->SetAttribute(NS_LITERAL_STRING("currentView"), NS_LITERAL_STRING("unthreaded"));
 

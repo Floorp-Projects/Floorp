@@ -317,7 +317,7 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent,
 
       if (commandElt)
         commandElt->GetAttribute(NS_LITERAL_STRING("disabled"), disabled);
-      if (!disabled.Equals(NS_LITERAL_STRING("true"))) {
+      if (!disabled.EqualsLiteral("true")) {
         nsCOMPtr<nsIDOMEventReceiver> rec = mReceiver;
         if (mElement)
           rec = do_QueryInterface(commandElt);

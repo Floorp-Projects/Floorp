@@ -1424,7 +1424,7 @@ nsMsgAccountManagerDataSource::Observe(nsISupports *aSubject, const char *aTopic
 
   if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
     nsDependentString prefName(aData);
-    if (prefName.Equals(NS_LITERAL_STRING(PREF_SHOW_FAKE_ACCOUNT))) {
+    if (prefName.EqualsLiteral(PREF_SHOW_FAKE_ACCOUNT)) {
       NotifyObservers(kNC_AccountRoot, kNC_Child, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
       NotifyObservers(kNC_AccountRoot, kNC_Settings, kNC_PageTitleFakeAccount, PR_FALSE, PR_FALSE);
     }

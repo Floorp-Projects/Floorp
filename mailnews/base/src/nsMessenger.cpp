@@ -475,7 +475,7 @@ nsMessenger::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar 
   if (!nsCRT::strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID))
   {
     nsDependentString prefName(aData);
-    if (prefName.Equals(NS_LITERAL_STRING(MAILNEWS_ALLOW_PLUGINS_PREF_NAME)))
+    if (prefName.EqualsLiteral(MAILNEWS_ALLOW_PLUGINS_PREF_NAME))
       SetDisplayProperties();
   }
 

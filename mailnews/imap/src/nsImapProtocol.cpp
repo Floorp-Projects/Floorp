@@ -7394,7 +7394,7 @@ void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)
     return;
   nsXPIDLCString redirectorType;
   imapServer->GetRedirectorType(getter_Copies(redirectorType));
-  if (redirectorType.Equals(NS_LITERAL_CSTRING("aol")) && PL_strcasecmp("Inbox", aBoxName))
+  if (redirectorType.EqualsLiteral("aol") && PL_strcasecmp("Inbox", aBoxName))
     return;
 
   IncrementCommandTagNumber();
