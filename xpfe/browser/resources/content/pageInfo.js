@@ -212,11 +212,30 @@ catch(e)
   // do nothing, later code will handle the error
 }
 
+// interfaces for the different html elements
+const nsIAnchorElement   = Components.interfaces.nsIDOMHTMLAnchorElement
+const nsIImageElement    = Components.interfaces.nsIDOMHTMLImageElement
+const nsIAreaElement     = Components.interfaces.nsIDOMHTMLAreaElement
+const nsILinkElement     = Components.interfaces.nsIDOMHTMLLinkElement
+const nsIInputElement    = Components.interfaces.nsIDOMHTMLInputElement
+const nsIFormElement     = Components.interfaces.nsIDOMHTMLFormElement
+const nsIAppletElement   = Components.interfaces.nsIDOMHTMLAppletElement
+const nsIObjectElement   = Components.interfaces.nsIDOMHTMLObjectElement
+const nsIEmbedElement    = Components.interfaces.nsIDOMHTMLEmbedElement
+const nsIButtonElement   = Components.interfaces.nsIDOMHTMLButtonElement
+const nsISelectElement   = Components.interfaces.nsIDOMHTMLSelectElement
+const nsITextareaElement = Components.interfaces.nsIDOMHTMLTextAreaElement
+
 // namespaces, don't need all of these yet...
-const XLinkNS = "http://www.w3.org/1999/xlink";
-const XULNS   = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-const XMLNS   = "http://www.w3.org/XML/1998/namespace";
-const XHTMLNS = "http://www.w3.org/1999/xhtml";
+const XLinkNS  = "http://www.w3.org/1999/xlink";
+const XULNS    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+const XMLNS    = "http://www.w3.org/XML/1998/namespace";
+const XHTMLNS  = "http://www.w3.org/1999/xhtml";
+const XHTML2NS = "http://www.w3.org/2002/06/xhtml2"
+
+const XHTMLNSre  = "^http\:\/\/www\.w3\.org\/1999\/xhtml$";
+const XHTML2NSre = "^http\:\/\/www\.w3\.org\/2002\/06\/xhtml2$";
+const XHTMLre = RegExp(XHTMLNSre + "|" + XHTML2NSre, "");
 
 /* Overlays register init functions here.
  *   Add functions to call by invoking "onLoadRegistry.append(XXXLoadFunc);"
@@ -254,7 +273,7 @@ function onLoadPageInfo()
   gStrings.mediaInput = theBundle.getString("mediaInput");
 
   var docTitle = "";
-  if("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
+  if ("arguments" in window && window.arguments.length >= 1 && window.arguments[0])
   {
     theWindow = null;
     theDocument = window.arguments[0];
@@ -378,7 +397,7 @@ function makeGeneralTab()
   try
   {
     var cacheEntryDescriptor = httpCacheSession.openCacheEntry(url, Components.interfaces.nsICache.ACCESS_READ, false);
-    if(cacheEntryDescriptor)
+    if (cacheEntryDescriptor)
     { 
       switch(cacheEntryDescriptor.deviceID)
       {
@@ -484,79 +503,74 @@ function grabAll(elem)
   // check for background images, any node may have one
   var url = elem.ownerDocument.defaultView.getComputedStyle(elem, "").getPropertyCSSValue("background-image");
   if (url && url.primitiveType == CSSPrimitiveValue.CSS_URI)
-  {
     imageView.addRow([url.getStringValue(), gStrings.mediaBGImg, gStrings.notSet, elem, true]);
-  }
 
-  // one switch to rule them all
+  // one swi^H^H^Hif-else to rule them all
   // XXX: these tests should use regexes to be a little more lenient wrt whitespace, see bug 177047
-  switch (elem.nodeName.toLowerCase())
+  if (elem instanceof nsIAnchorElement)
   {
-    // form tab
-    case "form":
-      formView.addRow([elem.name, elem.method, elem.getAttribute("action"), elem]);  // use getAttribute() because of bug 122128
-      break;
-
-    // link tab
-    case "a":
-      linktext = getValueText(elem);
-      linkView.addRow([linktext, elem.href, gStrings.linkAnchor, elem.target]);
-      break;
-    case "area":
-      linkView.addRow([elem.alt, elem.href, gStrings.linkArea, elem.target]);
-      break;
-    case "input":
-      linkView.addRow([elem.value || gStrings.linkSubmit, elem.form.getAttribute("action"), gStrings.linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
-      break;
-    case "link":
-      if (elem.rel)
-      {
-        var rel = elem.rel.toLowerCase();
-        if (rel == "icon")
-        {
-          imageView.addRow([elem.href, gStrings.mediaLink, "", elem]);
-          break;
-        }
-        if (rel == "stylesheet" || rel == "alternate stylesheet")
-          linktext = gStrings.linkStylesheet;
-        else
-          linktext = gStrings.linkRel;
-      }
-      else
-        linktext = gStrings.linkRev;
-      linkView.addRow([elem.rel || elem.rev, elem.href, linktext, elem.target]);
-      break;
-
-    // media tab
-    case "img":
-      imageView.addRow([elem.src, gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
-      break;
-    case "input":
-      if (elem.type == "image")
-        imageView.addRow([elem.src, gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
-      break;
-    case "applet":
-      //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
-      // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
-      // content from two hosts (bug 136539) so just drop applets from Page Info when
-      // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
-      if (!navigator.javaEnabled())
-        imageView.addRow([elem.code || elem.object, gStrings.mediaApplet, "",elem]);
-      break;
-    case "object":
-      imageView.addRow([elem.data, gStrings.mediaObject, getValueText(elem), elem]);
-      break;
-    case "embed":
-      imageView.addRow([elem.src, gStrings.mediaEmbed, "", elem]);
-      break;
-    default:
-      if (elem.hasAttributeNS(XLinkNS, "href"))
-      {
-        linktext = getValueText(elem);
-        linkView.addRow([linktext, elem.href, gStrings.linkX, ""]);
-      }
-      break;
+    linktext = getValueText(elem);
+    linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkAnchor, elem.target]);
   }
+  else if (elem instanceof nsIImageElement)
+  {
+    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaImg, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+  }
+  else if (elem instanceof nsIAreaElement)
+  {
+    linkView.addRow([elem.alt, getAbsoluteURL(elem.href, elem), gStrings.linkArea, elem.target]);
+  }
+  else if (elem instanceof nsILinkElement)
+  {
+    if (elem.rel)
+    {
+      var rel = elem.rel;
+      if (/\bicon\b/i.test(rel))
+        imageView.addRow([getAbsoluteURL(elem.href, elem), gStrings.mediaLink, "", elem]);
+      else if (/\bstylesheet\b/i.test(rel))
+        linkView.addRow([elem.rel, getAbsoluteURL(elem.href, elem), gStrings.linkStylesheet, elem.target]);
+      else
+        linkView.addRow([elem.rel, getAbsoluteURL(elem.href, elem), gStrings.linkRel, elem.target]);
+    }
+    else
+      linkView.addRow([elem.rev, getAbsoluteURL(elem.href, elem), gStrings.linkRev, elem.target]);
+
+  }
+  else if (elem instanceof nsIInputElement)
+  {
+    if (/^image$/i.test(elem.type))
+      imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaInput, (elem.hasAttribute("alt")) ? elem.alt : gStrings.notSet, elem]);
+    else if (/^submit$/i.test(elem.type))
+      linkView.addRow([elem.value || gStrings.linkSubmit, getAbsoluteURL(elem.form.getAttribute("action"), elem), gStrings.linkSubmission, elem.form.getAttribute("target")]); // use getAttribute() due to bug 122128
+  }
+  else if (elem instanceof nsIFormElement)
+  {
+    formView.addRow([elem.name, elem.method, getAbsoluteURL(elem.getAttribute("action"), elem), elem]);  // use getAttribute() because of bug 122128
+  }
+  else if (elem instanceof nsIAppletElement)
+  {
+    //XXX When Java is enabled, the DOM model for <APPLET> is broken. Bug #59686.
+    // Also, some reports of a crash with Java in Media tab (bug 136535), and mixed
+    // content from two hosts (bug 136539) so just drop applets from Page Info when
+    // Java is on. For the 1.0.1 branch; get a real fix on the trunk.
+    if (!navigator.javaEnabled())
+      imageView.addRow([getAbsoluteURL(elem.code || elem.object, elem), gStrings.mediaApplet, "", elem]);
+  }
+  else if (elem instanceof nsIObjectElement)
+  {
+    imageView.addRow([getAbsoluteURL(elem.data, elem), gStrings.mediaObject, getValueText(elem), elem]);
+  }
+  else if (elem instanceof nsIEmbedElement)
+  {
+    imageView.addRow([getAbsoluteURL(elem.src, elem), gStrings.mediaEmbed, "", elem]);
+  }
+  else
+    if (elem.hasAttributeNS(XLinkNS, "href"))
+    {
+      linktext = getValueText(elem);
+      linkView.addRow([linktext, getAbsoluteURL(elem.href, elem), gStrings.linkX, ""]);
+    }
+
   return NodeFilter.FILTER_SKIP;
 }
 
@@ -585,7 +599,7 @@ function onFormSelect()
     document.getElementById("formenctype").value = form.encoding || theBundle.getString("default");
     document.getElementById("formtarget").value = form.target || theBundle.getString("formDefaultTarget");
 
-    var formfields = form.elements;
+    var formfields = findFormControls(form);
 
     var length = formfields.length;
     var i = 0;
@@ -595,15 +609,14 @@ function onFormSelect()
 
     for (i = 0; i < length; i++)
     {
-      var elem = formfields[i];
+      var elem = formfields[i], val;
 
-      if(elem.nodeName.toLowerCase() == "button")
-        fieldView.addRow(["", elem.name, elem.type, getValueText(elem)]);
+      if (elem instanceof nsIButtonElement)
+        val = getValueText(elem);
       else
-      {
-        var val = (elem.type == "password") ? theBundle.getString("formPassword") : elem.value;
-        fieldView.addRow(["", elem.name, elem.type, val]);
-      }
+        val = (/^password$/i.test(elem.type)) ? theBundle.getString("formPassword") : elem.value;
+
+      fieldView.addRow(["", elem.id || elem.name, elem.type, val]);
     }
 
     var labels = form.getElementsByTagName("label");
@@ -627,26 +640,31 @@ function onFormSelect()
   }
 }
 
+function FormControlFilter(node) 
+{
+  if (node instanceof nsIInputElement || node instanceof nsISelectElement ||
+      node instanceof nsIButtonElement || node instanceof nsITextareaElement ||
+      node instanceof nsIObjectElement)
+      return NodeFilter.FILTER_ACCEPT;
+    return NodeFilter.FILTER_SKIP;
+}
+
 function findFirstControl(node)
 {
-  function FormControlFilter() 
-  {
-    switch (node.nodeName.toLowerCase())
-    {
-      case "input":
-      case "select":
-      case "button":
-      case "textarea":
-      case "object":
-        return NodeFilter.FILTER_ACCEPT;
-      default:
-        return NodeFilter.FILTER_SKIP;
-    }
-  }
-
   var iterator = theDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, FormControlFilter, true);
 
   return iterator.nextNode();
+}
+
+function findFormControls(node)
+{
+  var iterator = theDocument.createTreeWalker(node, NodeFilter.SHOW_ELEMENT, FormControlFilter, true);
+
+  var list = [];
+  while (iterator.nextNode())
+    list.push(iterator.currentNode);
+
+  return list;
 }
 
 //******** Link Stuff
@@ -758,7 +776,7 @@ function makePreview(row)
   // IMO all text that is not really the value text should go in italics
   // What if somebody has <img alt="Not specified">? =)
   // We can't use textbox.style because of bug 7639
-  if (altText=="") {
+  if (!altText) {
       textbox.value = gStrings.emptyString;
       textbox.setAttribute("style","font-style:italic");
   } else {
@@ -842,7 +860,7 @@ function makePreview(row)
       httpType = match[1];
   }
 
-  if (item.nodeName.toLowerCase() != "input")
+  if (!(item instanceof nsIInputElement))
     mimeType = ("type" in item && item.type) ||
                ("codeType" in item && item.codeType) ||
                ("contentType" in item && item.contentType) ||
@@ -856,15 +874,15 @@ function makePreview(row)
   var imageContainer = document.getElementById("theimagecontainer");
   var oldImage = document.getElementById("thepreviewimage");
 
-  var nn = item.nodeName.toLowerCase();
   var regex = new RegExp("^(https?|ftp|file|gopher)://");
   var absoluteURL = getAbsoluteURL(url, item);
   var isProtocolAllowed = regex.test(absoluteURL); 
   var newImage = new Image();
   newImage.setAttribute("id", "thepreviewimage");
-  var physWidth = physHeight = 0;
+  var physWidth = 0, physHeight = 0;
 
-  if ((nn == "link" || nn == "input" || nn == "img" || isBG) && isProtocolAllowed) 
+  if ((item instanceof nsILinkElement || item instanceof nsIInputElement || 
+       item instanceof nsIImageElement || isBG) && isProtocolAllowed)  
   {
     newImage.src = absoluteURL;
     physWidth = newImage.width;
@@ -920,7 +938,7 @@ function getValueText(linkNode)
       valueText += " " + childNode.nodeValue;
     else if (nodeType == Node.ELEMENT_NODE)
     {
-      if (childNode.nodeName.toLowerCase() == "img")
+      if (childNode instanceof nsIImageElement)
         valueText += " " + getAltText(childNode);
       else
         valueText += " " + getValueText(childNode);
@@ -1027,3 +1045,4 @@ function doCopy(event)
   if (text) 
     gClipboardHelper.copyString(text);
 }
+
