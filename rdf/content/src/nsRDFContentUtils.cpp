@@ -261,6 +261,11 @@ nsRDFContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
 }
 
 
+
+/*
+	Note: this routine is similiar, yet distinctly different from, nsBookmarksService::GetTextForNode
+*/
+
 nsresult
 nsRDFContentUtils::GetTextForNode(nsIRDFNode* aNode, nsString& aResult)
 {
