@@ -96,10 +96,10 @@ interface nsIInputStream : nsISupports
     /** 
      * Read data from the stream.
      *
-     * @param aBuf the buffer into which the data is read
-     * @param aCount the maximum number of bytes to read
+     * @param aBuf the buffer into which the data is to be read
+     * @param aCount the maximum number of bytes to be read
      *
-     * @return count read
+     * @return number of bytes read
      * @return 0 if reached end of file
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream would
@@ -112,11 +112,11 @@ interface nsIInputStream : nsISupports
      * Low-level read method that has access to the stream's underlying buffer. The
      * writer function may be called multiple times for segmented buffers.
      *
-     * @param aWriter the "consumer" of the data to read
+     * @param aWriter the "consumer" of the data to be read
      * @param aClosure opaque parameter passed to writer 
-     * @param aCount the maximum number of bytes to read
+     * @param aCount the maximum number of bytes to be read
      *
-     * @return count read
+     * @return number of bytes read
      * @return 0 if reached end of file
      *
      * @throws NS_BASE_STREAM_WOULD_BLOCK if reading from the input stream would
