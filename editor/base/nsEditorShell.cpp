@@ -116,7 +116,7 @@ static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 #define APP_DEBUG 0 
 
-#define EDITOR_BUNDLE_URL "chrome://editor/content/editor.properties"
+#define EDITOR_BUNDLE_URL "chrome://editor/locale/editor.properties"
 
 nsresult
 NS_NewEditorShell(nsIEditorShell** aEditorShell)
