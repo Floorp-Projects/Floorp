@@ -52,10 +52,6 @@
 #include "nsISound.h"
 #include "nsIFileSpecWithUI.h"
 
-#if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
-#include "nsIUnixToolkitService.h"
-#endif
-
 #include "prprf.h"
 #include "prmem.h"
 #include "prlog.h"	// PR_ASSERT
@@ -91,16 +87,6 @@
     #define LIVECONNECT_DLL "LIVECONNECT_DLL"
     #define OJI_DLL        "OJI_DLL"
 #else
-    /** Currently CFLAGS  defines WIDGET_DLL and GFXWIN_DLL. If, for some 
-      * reason, the cflags value doesn't get defined, use gtk, 
-      * since that is the default.
-     **/
-    #ifndef WIDGET_DLL
-    #define WIDGET_DLL "libwidget_gtk"MOZ_DLL_SUFFIX
-    #endif
-    #ifndef GFXWIN_DLL
-    #define GFXWIN_DLL "libgfx_gtk"MOZ_DLL_SUFFIX
-    #endif
     #define VIEW_DLL   "libraptorview"MOZ_DLL_SUFFIX
     #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
@@ -113,6 +99,7 @@
 // Class ID's
 
 // WIDGET
+#ifndef XP_UNIX
 static NS_DEFINE_IID(kCLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCVScrollbarCID, NS_VERTSCROLLBAR_CID);
@@ -140,6 +127,7 @@ static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
 static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
+#endif
 
 // unneeded widgets
 #if 0
@@ -194,130 +182,20 @@ static NS_DEFINE_CID(kCJVMManagerCID, NS_JVMMANAGER_CID);
 extern "C" void
 NS_SetupRegistry()
 {
-#if defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT)
-  // On unix, the widget and gfx toolkit are not linked into the app.
-  //
-  // Instead, they are loaded at runtime courtesy of xpcom.
-  //
-  // Loading the toolkit specific dlls at runtime has many benefits:
-  //
-  // o Simplifies linking of the "app" since it no longer needs to 
-  //   pull in the toolkit world.
-  //
-  // o Makes it possible to embed the xlib gfx/widget backends into
-  //   other high level x toolkit such as motif and gtk.  This is
-  //   highly desirable in the long run as a means to increase code
-  //   reuse and eyeball focus.
-  //
-  // o Makes it possible to run X Mozilla using different toolkits
-  //   without having to hack the application bits.  This in turn
-  //   simplifies everyone's life, since only one binary is needed.
-  //   The only platform specific bits are:
-  //
-  //   mozilla/gfx/src
-  //   mozilla/widget/src/
-  //   mozilla/widget/timer/
-  //
-  // o It bypasses (yeah right) the toolkit inquisitions and crusades.
-  // 
-  // o It makes you breakfast, lunch and dinner.
-  //
 
-
-  //
-  // Note1:
-  //
-  // The following code assumes that:
-  //
-  // + Some kind of auto registration has occurred for components.
-  //   For example, NS_AutoRegister() or nsComponentManager::AutoRegister().
-  //
-  //   -or-
-  //
-  // + The "app" was installed and a registry with information on the
-  //   toolkit_service component has been populated.  The master plan
-  //   is that this occurs at install time.  Otherwise bad things will
-  //   happen.
-  //
-  // During the development of mozilla, this usually occurs in the
-  // main() of the "app" (viewer/apprunner).  It is always the first
-  // thing that happens on the NS_SetupRegistry() function.
-  //
-  // If for some reason that changes in the future, the following code
-  // might have to be moved.
-  //
-  // Note2:
-  //
-  // The WIDGET_DLL and GFX_DLL macros will be redefined from the 
-  // hard coded values set in this file above.  They will point
-  // to strings valid only in the scope of this function.  
-  //
-  // If for some reason, the nsComponentManager::RegisterComponentLib()
-  // calls below are moved to a different scope, this unix specific code
-  // will have to deal.
-
-  static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
-
-  nsresult   rv;
-
-  nsIUnixToolkitService * unixToolkitService = nsnull;
-    
-  rv = nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
-                                          nsnull,
-                                          NS_GET_IID(nsIUnixToolkitService),
-                                          (void **) &unixToolkitService);
-  
-  NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");
-
-
-  nsCAutoString unixToolkitName("error");
-  nsCAutoString unixWidgetDllName("error");
-  nsCAutoString unixGfxDllName("error");
-  
-  if (NS_OK == rv && nsnull != unixToolkitService)
-  {
-    nsresult rv2;
-
-    rv2 = unixToolkitService->GetToolkitName(unixToolkitName);
-
-    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit name context.");
-
-    rv2 = unixToolkitService->GetWidgetDllName(unixWidgetDllName);
-
-    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit widget dll name.");
-
-    rv2 = unixToolkitService->GetGfxDllName(unixGfxDllName);
-
-    NS_ASSERTION(rv2 == NS_OK,"Cannot get unix toolkit gfx dll name.");
-
-    NS_RELEASE(unixToolkitService);
-  }
-
-#ifdef NS_DEBUG
-  printf("NS_SetupRegistry() MOZ_TOOLKIT=%s, WIDGET_DLL=%s, GFX_DLL=%s\n",
-         (const char *) unixToolkitName,
-         (const char *) unixWidgetDllName,
-         (const char *) unixGfxDllName);
-#endif
-  
+#ifdef XP_UNIX  
 #undef WIDGET_DLL
 #undef GFXWIN_DLL
-
-#define WIDGET_DLL (const char *) unixWidgetDllName
-#define GFXWIN_DLL (const char *) unixGfxDllName
-
-#endif /* defined(XP_UNIX) && !defined(MOZ_MONOLITHIC_TOOLKIT) */
+#endif /* defined(XP_UNIX) */
 
   // WIDGET
+#ifndef XP_UNIX
   nsComponentManager::RegisterComponentLib(kCLookAndFeelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCWindowCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCVScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCHScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDialogCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFileWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-#ifndef XP_UNIX
-  nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "component://mozilla/filepicker", WIDGET_DLL, PR_FALSE, PR_FALSE);
-#endif
   nsComponentManager::RegisterComponentLib(kCChildCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCPopUpCID,NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -328,19 +206,21 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCXIFFormatConverterCID,  NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDragServiceCID,          "Drag Service", "component://netscape/widget/dragservice", WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCFontRetrieverServiceCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID, NS_FILESPECWITHUI_CLASSNAME, 
+                                           NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kCFilePickerCID, "FilePicker", "component://mozilla/filepicker", WIDGET_DLL, PR_FALSE, PR_FALSE);
 #ifdef XP_PC
   nsComponentManager::RegisterComponentLib(kCTimerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTimerManagerCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
 #endif
-  nsComponentManager::RegisterComponentLib(kSoundCID,   "Sound Services", "component://netscape/sound", WIDGET_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kFileSpecWithUICID, NS_FILESPECWITHUI_CLASSNAME, 
-                                           NS_FILESPECWITHUI_PROGID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   // WIDGETS
   nsComponentManager::RegisterComponentLib(kCLabelCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCCheckButtonCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
+#endif
 
   // MAC ONLY WIDGETS
 #ifdef XP_MAC
