@@ -56,17 +56,29 @@ function MsgGetMessage()
   GetNewMessages();
 }
 
-function MsgDeleteMessage()
+function MsgDeleteMessage(fromToolbar)
 {
   dump("\nMsgDeleteMessage from XUL\n");
+  //dump("from toolbar? " + fromToolbar + "\n");
+
   var tree = GetThreadTree();
   if(tree) {
-    dump("tree is valid\n");
-	//get the selected elements
-    var messageList = tree.getElementsByAttribute("selected", "true");
-	//get the current folder
 	var srcFolder = GetThreadTreeFolder();
-    messenger.DeleteMessages(tree, srcFolder, messageList);
+	// if from the toolbar, return right away if this is a news message
+	// only allow cancel from the menu:  "Edit | Cancel / Delete Message"
+	if (fromToolbar) {
+		uri = srcFolder.getAttribute('id');
+		//dump("uri[0:6]=" + uri.substring(0,6) + "\n");
+		if (uri.substring(0,6) == "news:/") {
+			//dump("delete ignored!\n");
+			return;
+		}
+	}
+	dump("tree is valid\n");
+	//get the selected elements
+	var messageList = tree.getElementsByAttribute("selected", "true");
+	//get the current folder
+	messenger.DeleteMessages(tree, srcFolder, messageList);
   }
 }
 
