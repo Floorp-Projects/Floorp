@@ -20,6 +20,7 @@
  *
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
+ *                 Chris Allen <christopher.allen@mint.steelcase.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -541,21 +542,14 @@ CalendarEventDataSource.prototype.orderToDosByDueDate = function calEvent_orderT
 
 CalendarEventDataSource.prototype.orderEventsByDisplayDate = function calEvent_orderEventsByDisplayDate( eventA, eventB )
 {
-   var eventADisplayDate = new Date( eventA.displayDate );
-   var eventBDisplayDate = new Date( eventB.displayDate );
-
-   if( eventADisplayDate.getFullYear() == eventBDisplayDate.getFullYear() &&
-       eventADisplayDate.getMonth() == eventBDisplayDate.getMonth() &&
-       eventADisplayDate.getDay() == eventBDisplayDate.getDay() &&
-       eventADisplayDate.getHours() == eventBDisplayDate.getHours() && 
-       eventADisplayDate.getMinutes() == eventBDisplayDate.getMinutes() )
+   var r=eventA.displayDate - eventB.displayDate;
+   if (r==0)
    {
-      if ( eventA.title < eventB.title ) return -1;
-      if ( eventA.title > eventB.title ) return 1;
-      return 0;
+      if ( eventA.title < eventB.title ) r=-1;
+      if ( eventA.title > eventB.title ) r=1;
    }
-   
-   return( eventA.displayDate - eventB.displayDate );
+  
+   return(r);
 }
 
 
