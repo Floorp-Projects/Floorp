@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslcon.c,v 1.23 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslcon.c,v 1.24 2004/06/24 02:02:39 nelsonb%netscape.com Exp $ */
 
 #include "nssrenam.h"
 #include "cert.h"
@@ -2573,7 +2573,7 @@ ssl2_HandleMessage(sslSocket *ss)
 
     case SSL_MT_REQUEST_CERTIFICATE:
 	len = ss->gs.recordLen - 2;
-	if ((len != SSL_MIN_CHALLENGE_BYTES) ||
+	if ((len < SSL_MIN_CHALLENGE_BYTES) ||
 	    (len > SSL_MAX_CHALLENGE_BYTES)) {
 	    /* Bad challenge */
 	    SSL_DBG(("%d: SSL[%d]: bad cert request message: code len=%d",
@@ -2617,6 +2617,11 @@ ssl2_HandleMessage(sslSocket *ss)
 	    PORT_SetError(SSL_ERROR_UNSUPPORTED_CERTIFICATE_TYPE);
 	    goto loser;
 	}
+	if (certLen + responseLen + SSL_HL_CLIENT_CERTIFICATE_HBYTES 
+	    > ss->gs.recordLen) {
+	    /* prevent overflow crash. */
+	    rv = SECFailure;
+	} else
 	rv = ssl2_HandleClientCertificate(ss, data[1],
 		data + SSL_HL_CLIENT_CERTIFICATE_HBYTES,
 		certLen,
@@ -2808,9 +2813,22 @@ ssl2_HandleServerHelloMessage(sslSocket *ss)
 	}
     }
 
-    /* Save connection-id for later */
-    PORT_Memcpy(ss->sec.ci.connectionID, cs + csLen, 
-                sizeof(ss->sec.ci.connectionID));
+    if ((SSL_HL_SERVER_HELLO_HBYTES + certLen + csLen + cidLen 
+                                                  > ss->gs.recordLen)
+	|| (csLen % 3) != 0   
+	/* || cidLen < SSL_CONNECTIONID_BYTES || cidLen > 32  */
+	) {
+	goto bad_server;
+    }
+
+    /* Save connection-id.
+    ** This code only saves the first 16 byte of the connectionID.
+    ** If the connectionID is shorter than 16 bytes, it is zero-padded.
+    */
+    if (cidLen < sizeof ss->sec.ci.connectionID)
+	memset(ss->sec.ci.connectionID, 0, sizeof ss->sec.ci.connectionID);
+    cidLen = PR_MIN(cidLen, sizeof ss->sec.ci.connectionID);
+    PORT_Memcpy(ss->sec.ci.connectionID, cs + csLen, cidLen);
 
     /* See if session-id hit */
     needed = CIS_HAVE_MASTER_KEY | CIS_HAVE_FINISHED | CIS_HAVE_VERIFY;
@@ -3494,7 +3512,11 @@ ssl2_HandleClientHelloMessage(sslSocket *ss)
     challenge    = sd + sdLen;
     PRINT_BUF(7, (ss, "server, client session-id value:", sd, sdLen));
 
-    if ((unsigned)ss->gs.recordLen != 
+    if (!csLen || (csLen % 3) != 0 || 
+        (sdLen != 0 && sdLen != SSL2_SESSIONID_BYTES) ||
+	challengeLen < SSL_MIN_CHALLENGE_BYTES || 
+	challengeLen > SSL_MAX_CHALLENGE_BYTES ||
+        (unsigned)ss->gs.recordLen != 
             SSL_HL_CLIENT_HELLO_HBYTES + csLen + sdLen + challengeLen) {
 	SSL_DBG(("%d: SSL[%d]: bad client hello message, len=%d should=%d",
 		 SSL_GETPID(), ss->fd, ss->gs.recordLen,
