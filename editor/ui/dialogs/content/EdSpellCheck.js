@@ -93,15 +93,17 @@ function Startup()
       return;
     }
 
-    // "Close" button becomes "Send"
-    gDialog.CloseButton.setAttribute("label", GetString("Send"));
+    // Hide "Close" button and use "Send" instead
+    gDialog.CloseButton.hidden = true;
+    gDialog.CloseButton = document.getElementById("Send");
+    gDialog.CloseButton.hidden = false;
   }
   else
   {
     // Normal spell checking - hide the "Stop" button
     // (Note that this button is the "Cancel" button for
     //  Esc keybinding and related window close actions)
-    gDialog.StopButton.setAttribute("hidden", "true");
+    gDialog.StopButton.hidden = true;
   }
 
   // Clear flag that determines message when
