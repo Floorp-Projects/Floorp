@@ -17,6 +17,17 @@
  *
  * Contributor(s): 
  *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 06/28/2000       IBM Corp.       Fixed querying of system keyboard
+ * 
  */
 
 #define INCL_DOSDEVIOCTL // for keyboard layout
@@ -110,7 +121,11 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
       unikbdname[i] = kbdname[i];
 
    if( UniCreateKeyboard( &hKeyboard, unikbdname, 0) != ULS_SUCCESS)
-      hKeyboard = 0;
+   {
+      unikbdname[2] = L'\0';
+      if( UniCreateKeyboard( &hKeyboard, unikbdname, 0) != ULS_SUCCESS)
+         hKeyboard = 0;
+   }
 #ifdef DEBUG
    else
       printf( "Widget library loaded keyboard table for %s\n", kbdname);
@@ -397,7 +412,17 @@ static void GetKeyboardName( char *buff)
       if( !DosDevIOCtl( hKeyboard, IOCTL_KEYBOARD, KBD_QUERYKBDCODEPAGESUPPORT,
                         0, 0, 0,
                         &kcp, ulDataLen, &ulDataLen))
+      {
+         int length;
          strcpy( buff, kcp.ach);
+         strcat( buff, kcp.ach+strlen(kcp.ach)+1);
+         // Strip off white space at the end of the keyboard name
+         length = strlen(buff);
+         while( length && buff[--length] == ' ')
+         {
+            buff[length] = '\0';
+         }
+      }
 
       DosClose( hKeyboard);
    }
