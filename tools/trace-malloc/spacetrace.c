@@ -2700,6 +2700,7 @@ getDataString(const FormData * aGetData, const char *aCheckFor, int inIndex,
 */
 int
 displayTopAllocations(STRequest * inRequest, STRun * aRun,
+                      const char* id,
                       const char* caption,
                       int aWantCallsite)
 {
@@ -2721,12 +2722,12 @@ displayTopAllocations(STRequest * inRequest, STRun * aRun,
             };
 
             if (aWantCallsite)
-                htmlStartTable(inRequest, NULL, "top-allocations",
+                htmlStartTable(inRequest, NULL, id,
                                caption,
                                headers_callsite,
                                sizeof(headers_callsite) / sizeof(headers_callsite[0]));
             else
-                htmlStartTable(inRequest, NULL, "top-allocations", caption,
+                htmlStartTable(inRequest, NULL, id, caption,
                                headers,
                                sizeof(headers) / sizeof(headers[0]));                           
             /*
@@ -2957,6 +2958,7 @@ displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
 int
 displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
                  PRUint32 aStamp,
+                 const char* id,
                  const char* caption,
                  int aRealNames)
 {
@@ -2998,7 +3000,7 @@ displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
                             "<abbr title=\"Composite Heap Operation Seconds\">C.H. Operation (sec)</abbr>"
                         };
                         headerDisplayed = __LINE__;
-                        htmlStartTable(inRequest, NULL, "callsites", caption, headers,
+                        htmlStartTable(inRequest, NULL, id, caption, headers,
                                        sizeof(headers)/sizeof(headers[0]));
                     }
 
@@ -3162,7 +3164,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
             };
 
             char caption[100];
-            PR_snprintf(caption, sizeof(caption), "%u Life Event(s):<br>\n",
+            PR_snprintf(caption, sizeof(caption), "%u Life Event(s)",
                        aAllocation->mEventCount);
             htmlStartTable(inRequest, NULL, "allocation-details", caption, headers,
                            sizeof(headers) / sizeof(headers[0]));
@@ -3228,7 +3230,7 @@ displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
                 displayRes =
                     displayCallsites(inRequest,
                                      aAllocation->mEvents[traverse].mCallsite,
-                                     ST_FOLLOW_PARENTS, 0, "(?? fill me in ??)", __LINE__);
+                                     ST_FOLLOW_PARENTS, 0, "event-stack", "", __LINE__);
                 if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsite);
@@ -3392,6 +3394,7 @@ compareCallsites(const void *aSite1, const void *aSite2, void *aContext)
 int
 displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
                     PRUint32 aCallsiteCount, PRUint32 aStamp,
+                    const char* id,
                     const char* caption,
                     int aRealName)
 {
@@ -3447,7 +3450,7 @@ displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
                     };
                     headerDisplayed = __LINE__;
 
-                    htmlStartTable(inRequest, NULL, "top-callsites", caption, headers,
+                    htmlStartTable(inRequest, NULL, id, caption, headers,
                                    sizeof(headers) / sizeof(headers[0]));
                 }
 
@@ -3627,6 +3630,7 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
                  */
                 displayRes =
                     displayTopCallsites(inRequest, sites, siteCount, 0,
+                                        "callsites",
                                         "Children Callsites",
                                         __LINE__);
                 if (0 != displayRes) {
@@ -3650,7 +3654,7 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
 
             displayRes =
                 displayCallsites(inRequest, aCallsite->parent,
-                                 ST_FOLLOW_PARENTS, 0, "Caller stack",
+                                 ST_FOLLOW_PARENTS, 0, "caller-stack", "Caller stack",
                                  __LINE__);
             if (0 != displayRes) {
                 retval = __LINE__;
@@ -3679,6 +3683,7 @@ displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
 
                         displayRes =
                             displayTopAllocations(inRequest, sortedRun,
+                                                  "allocations",
                                                   "Allocations",
                                                   0);
                         if (0 != displayRes) {
@@ -5385,6 +5390,7 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                 displayRes =
                     displayTopAllocations(&request,
                                           request.mContext->mSortedRun,
+                                          "top-allocations",
                                           "SpaceTrace Top Allocations Report",
                                           1);
                 if (0 != displayRes) {
@@ -5413,6 +5419,7 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                         displayRes =
                             displayTopCallsites(&request, array, arrayCount,
                                                 0,
+                                                "top-callsites",
                                                 "Top Callsites Report",
                                                 0);
                         if (0 != displayRes) {
@@ -5523,6 +5530,7 @@ handleRequest(tmreader * aTMR, PRFileDesc * aFD,
                 displayRes =
                     displayCallsites(&request, aTMR->calltree_root.kids,
                                      ST_FOLLOW_SIBLINGS, 0,
+                                     "callsites-root",
                                      "SpaceTrace Root Callsites",
                                      __LINE__);
                 if (0 != displayRes) {
@@ -5766,7 +5774,7 @@ handleClient(void *inArg)
                  */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
                 PR_fprintf(aFD, "Server: %s%s",
-                           "$Id: spacetrace.c,v 1.47 2003/06/18 02:02:01 alecf%flett.org Exp $",
+                           "$Id: spacetrace.c,v 1.48 2003/06/18 02:13:42 alecf%flett.org Exp $",
                            crlf);
                 PR_fprintf(aFD, "Content-type: ");
                 if (NULL != strstr(start, ".png")) {

@@ -101,20 +101,20 @@ body {
   width: 20%;
 }
 
-#top-callsites {
+#callsites {
   width: 75%;
   height: 40%;
   overflow: scroll;
 }
 
-#callsites {
+#caller-stack {
   height: 45%;
   width: 75%;
   overflow: scroll;
   padding-top: 5px;
 }
 
-#top-allocations {
+#allocations {
   position: absolute;
   right: 1px;
   bottom: 1px;
@@ -123,9 +123,6 @@ body {
   overflow: scroll;
 }
 
-#top-allocations tbody { 
-/*  overflow: scroll; */
-}
 /* headers at the top of specific call site pages */
 
 table.summary {
