@@ -46,10 +46,6 @@
         onload="Startup();">
 
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
-
-  <!-- gee, it would be lovely to use outliner, since tree sucks, and its column resizing
-       is totally horked. But outliner doesn't support progressmeter in cells yet. -->
-
   <script type="application/x-javascript" src="chrome://global/content/treePopups.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTreeUtils.js"/>
 

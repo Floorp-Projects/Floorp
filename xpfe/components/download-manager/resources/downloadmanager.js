@@ -151,6 +151,7 @@ var downloadViewController = {
     case "cmd_properties":
       return selectionCount == 1 && isDownloading;
     case "cmd_pause":
+      return false;
     case "cmd_cancel":
       // XXX check if selection is still in progress
       //     how to handle multiple selection?
