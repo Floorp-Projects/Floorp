@@ -116,21 +116,6 @@ nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
 
     // Notify our containing block that there's a new floater
     container->AddFloater(&aPresContext, aReflowState, mAnchoredItem, this);
-
-  } else {
-    // XXX This causes anchored-items sizes to get fixed up; this is
-    // not quite right because this class should be implementing one
-    // of the incremental reflow methods and propagating things down
-    // properly to the contained frame.
-    nsReflowMetrics desiredSize(nsnull);
-    nsReflowState   reflowState(mAnchoredItem, aReflowState, aReflowState.maxSize,
-                                eReflowReason_Resize);
-    mAnchoredItem->WillReflow(aPresContext);
-    mAnchoredItem->Reflow(aPresContext, desiredSize, reflowState, aStatus);
-    mAnchoredItem->SizeTo(desiredSize.width, desiredSize.height);
-
-//XXXdeprecated    container->PlaceFloater(aPresContext, mAnchoredItem, this);
-    mAnchoredItem->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
   if (nsIFrame::GetShowFrameBorders()) {
