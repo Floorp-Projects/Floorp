@@ -18,6 +18,14 @@
 
 #include "nsCOMPtr.h"
 
+#ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
+nsCOMPtr_base::~nsCOMPtr_base()
+	{
+		if ( mRawPtr )
+			NSCAP_RELEASE(mRawPtr);
+	}
+#endif
+
 void
 nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
 	{
@@ -48,7 +56,10 @@ void**
 nsCOMPtr_base::begin_assignment()
   {
     if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-    mRawPtr = 0;
+    	{
+	      NSCAP_RELEASE(mRawPtr);
+	    	mRawPtr = 0;
+    	}
+
     return NSCAP_REINTERPRET_CAST(void**, &mRawPtr);
   }

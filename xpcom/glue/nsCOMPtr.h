@@ -116,6 +116,7 @@
 
 #define NSCAP_FEATURE_ALLOW_RAW_POINTERS
 #define NSCAP_FEATURE_ALLOW_COMPARISONS
+#define NSCAP_FEATURE_FACTOR_DESTRUCTOR
 
 
 	/*
@@ -338,11 +339,17 @@ class nsCOMPtr_base
           // nothing else to do here
         }
 
+#ifdef NSCAP_FEATURE_FACTOR_DESTRUCTOR
+		 ~nsCOMPtr_base();
+#endif
+
+#if 0
      ~nsCOMPtr_base()
         {
           if ( mRawPtr )
             NSCAP_RELEASE(mRawPtr);
         }
+#endif
 
       NS_EXPORT void    assign_with_AddRef( nsISupports* );
       NS_EXPORT void    assign_with_QueryInterface( nsISupports*, const nsIID&, nsresult* );
@@ -362,6 +369,14 @@ class nsCOMPtr : private nsCOMPtr_base
   {
     public:
       typedef T element_type;
+
+#ifndef NSCAP_FEATURE_FACTOR_DESTRUCTOR
+		 ~nsCOMPtr()
+				{
+					if ( mRawPtr )
+						NSCAP_RELEASE(mRawPtr);
+				}
+#endif
 
       nsCOMPtr()
           // : nsCOMPtr_base(0)
@@ -632,7 +647,7 @@ CallQueryInterface( SourceType* aSource, nsCOMPtr<DestinationType>* aDestination
 		NS_PRECONDITION(aSource, "null parameter");
 		NS_PRECONDITION(aDestination, "null parameter");
 
-		return aSource->QueryInterface(DestinationType::GetIID(), getter_AddRefs(*aDestination));
+		return aSource->QueryInterface(DestinationType::GetIID(), NS_STATIC_CAST(void**, getter_AddRefs(*aDestination)));
 	}
 
 
