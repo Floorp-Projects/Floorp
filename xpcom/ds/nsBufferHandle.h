@@ -134,11 +134,11 @@ class nsSharedBufferHandle
 
   // need a name for this
 template <class CharT>
-class nsXXXBufferHandle
+class nsFlexBufferHandle
     : public nsSharedBufferHandle<CharT>
   {
     public:
-      nsXXXBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT* aStorageStart, CharT* aStorageEnd )
+      nsFlexBufferHandle( CharT* aDataStart, CharT* aDataEnd, CharT* aStorageStart, CharT* aStorageEnd )
           : nsSharedBufferHandle<CharT>(aDataStart, aDataEnd),
             mStorageStart(aStorageStart),
             mStorageEnd(aStorageEnd)
@@ -172,7 +172,7 @@ nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
       {
         CharT* string_storage = this->mDataStart;
         if ( mFlags & kIsStorageDefinedSeparately )
-          string_storage = NS_REINTERPRET_CAST(nsXXXBufferHandle<CharT>*, this)->StorageStart();
+          string_storage = NS_REINTERPRET_CAST(nsFlexBufferHandle<CharT>*, this)->StorageStart();
         nsMemory::Free(string_storage);
       }
   }
