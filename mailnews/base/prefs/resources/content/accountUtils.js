@@ -195,12 +195,15 @@ function verifyAccounts(wizardcallback) {
 // has closed, and this is confusing to the user
 function MsgAccountWizard()
 {
-    setTimeout("msgOpenAccountWizard();", 0);
+  setTimeout("msgOpenAccountWizard();", 0);
 }
 
 function msgOpenAccountWizard()
 {
-// Check to see if the verify accounts function was called with callback or not.
+  gNewAccountToLoad = null;
+
+  // Check to see if the verify accounts function 
+  // was called with callback or not.
   if (gReturnmycall)
       window.openDialog("chrome://messenger/content/AccountWizard.xul",
                         "AccountWizard", "chrome,modal,titlebar,resizable", {okCallback:WizCallback});
