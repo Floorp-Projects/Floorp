@@ -116,7 +116,6 @@ class nsIDOMNode;
   IBOutlet NSMenuItem*          mBackItem;
   IBOutlet NSMenuItem*          mForwardItem;
   
-  NSToolbarItem*                mLocationToolbarItem;
   NSToolbarItem*                mSidebarToolbarItem;
 
   BOOL mInitialized;
