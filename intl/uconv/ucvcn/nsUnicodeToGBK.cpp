@@ -318,6 +318,7 @@ NS_IMETHODIMP nsUnicodeToGBK::ConvertNoBuff(
             aDest += aOutLen;
           } else {
             res = NS_ERROR_UENC_NOMAPPING;
+            iSrcLength++;   // include length of the unmapped character
             break;
           }
         }
