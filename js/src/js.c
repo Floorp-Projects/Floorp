@@ -780,7 +780,7 @@ ValueToScript(JSContext *cx, jsval v)
     JSScript *script;
     JSFunction *fun;
 
-    if (JSVAL_IS_OBJECT(v) &&
+    if (!JSVAL_IS_PRIMITIVE(v) &&
         JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass) {
         script = (JSScript *) JS_GetPrivate(cx, JSVAL_TO_OBJECT(v));
     } else {
@@ -796,15 +796,19 @@ static JSBool
 GetTrapArgs(JSContext *cx, uintN argc, jsval *argv, JSScript **scriptp,
             int32 *ip)
 {
+    jsval v;
     uintN intarg;
     JSScript *script;
 
     *scriptp = cx->fp->down->script;
     *ip = 0;
     if (argc != 0) {
+        v = argv[0];
         intarg = 0;
-        if (JS_TypeOfValue(cx, argv[0]) == JSTYPE_FUNCTION) {
-            script = ValueToScript(cx, argv[0]);
+        if (!JSVAL_IS_PRIMITIVE(v) &&
+            (JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_FunctionClass ||
+             JS_GET_CLASS(cx, JSVAL_TO_OBJECT(v)) == &js_ScriptClass)) {
+            script = ValueToScript(cx, v);
             if (!script)
                 return JS_FALSE;
             *scriptp = script;
@@ -1568,6 +1572,18 @@ GetPDA(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return ok;
 }
 
+static JSBool
+GetSLX(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    JSScript *script;
+
+    script = ValueToScript(cx, argv[0]);
+    if (!script)
+        return JS_FALSE;
+    *rval = INT_TO_JSVAL(js_GetScriptLineExtent(script));
+    return JS_TRUE;
+}
+
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1599,6 +1615,7 @@ static JSFunctionSpec shell_functions[] = {
     {"clone",           Clone,          1},
     {"seal",            Seal,           1, 0, 1},
     {"getpda",          GetPDA,         1},
+    {"getslx",          GetSLX,         1},
     {0}
 };
 
@@ -1635,6 +1652,7 @@ static char *shell_help_messages[] = {
     "clone(fun[, scope])    Clone function object",
     "seal(obj[, deep])      Seal object, or object graph if deep",
     "getpda(obj)            Get the property descriptors for obj",
+    "getslx(obj)            Get script line extent",
     0
 };
 
