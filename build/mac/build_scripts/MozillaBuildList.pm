@@ -1122,7 +1122,9 @@ sub BuildIDLProjects()
     BuildIDLProject(":mozilla:profile:macbuild:ProfileServicesIDL.xml", "profileservices");
     BuildIDLProject(":mozilla:profile:pref-migrator:macbuild:prefmigratorIDL.xml",  "prefm");
         
-    BuildIDLProject(":mozilla:content:macbuild:contentIDL.xml",                       "content");
+
+    BuildIDLProject(":mozilla:htmlparser:macbuild:htmlparserIDL.xml",               "htmlparser");
+    BuildIDLProject(":mozilla:content:macbuild:contentIDL.xml",                     "content");
 
     BuildIDLProject(":mozilla:layout:macbuild:layoutIDL.xml",                       "layout");
 
