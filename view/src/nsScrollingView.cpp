@@ -964,6 +964,7 @@ NS_IMETHODIMP nsScrollingView :: CreateScrollControls(nsNativeWidget aNative)
       mVScrollBarView->GetWidget(scrollbar);
       if (nsnull != scrollbar) {
         win->SetVerticalScrollbar(scrollbar);
+        NS_RELEASE(scrollbar);
       }
       NS_RELEASE(win);
     }
