@@ -47,7 +47,7 @@
 #include "nsIDOMMouseEvent.h"
 #include "nsITimer.h"
 #include "nsIDOMNSUIEvent.h"
-
+#include "nsIDOMEventTarget.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -193,8 +193,10 @@ XULPopupListenerImpl::MouseDown(nsIDOMEvent* aMouseEvent)
   }
 
   // Get the node that was clicked on.
+  nsCOMPtr<nsIDOMEventTarget> target;
+  mouseEvent->GetTarget( getter_AddRefs( target ) );
   nsCOMPtr<nsIDOMNode> targetNode;
-  mouseEvent->GetTarget( getter_AddRefs( targetNode ) );
+  if (target) targetNode = do_QueryInterface(target);
 
   // Get the document with the popup.
   nsCOMPtr<nsIDocument> document;
@@ -279,9 +281,11 @@ XULPopupListenerImpl::MouseMove(nsIDOMEvent* aMouseEvent)
   
   NS_NewTimer ( getter_AddRefs(mTooltipTimer) );
   if ( mTooltipTimer ) {
-    nsCOMPtr<nsIDOMNode> eventTarget;
+    nsCOMPtr<nsIDOMEventTarget> eventTarget;
+    nsCOMPtr<nsIDOMNode> eventTargetNode;
     aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
-    mPossibleTooltipNode = eventTarget.get();
+    if (eventTarget) eventTargetNode = do_QueryInterface(eventTarget);
+    mPossibleTooltipNode = eventTargetNode.get();
     mTooltipTimer->Init(sTooltipCallback, this, 500, NS_PRIORITY_HIGH);   // 500 ms delay
   }
   else
@@ -317,10 +321,12 @@ XULPopupListenerImpl::MouseOut(nsIDOMEvent* aMouseEvent)
     mPopupContent = nsnull;  // release the popup
     
     // clear out the tooltip node on the document
-    nsCOMPtr<nsIDOMNode> eventTarget;
+    nsCOMPtr<nsIDOMEventTarget> eventTarget;
+    nsCOMPtr<nsIDOMNode> eventTargetNode;
     aMouseEvent->GetTarget(getter_AddRefs(eventTarget));
+    if (eventTarget) eventTargetNode = do_QueryInterface(eventTarget);
     nsCOMPtr<nsIDOMXULDocument> doc;
-    FindDocumentForNode ( eventTarget, getter_AddRefs(doc) );
+    FindDocumentForNode ( eventTargetNode, getter_AddRefs(doc) );
     if ( doc )
       doc->SetTooltipNode(nsnull);
   }

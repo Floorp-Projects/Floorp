@@ -277,7 +277,7 @@ function ReverseState(uri)
 
 function SubscribeOnClick(event)
 {
-	if (event.clickCount == 2) {
+	if (event.detail == 2) {
 		ReverseStateFromNode(event.target.parentNode.parentNode);
 	}
 	else {

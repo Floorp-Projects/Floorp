@@ -376,10 +376,11 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
    nsCOMPtr<nsIChromeEventHandler> kungFuDeathGrip1(mChromeEventHandler);
    nsCOMPtr<nsIScriptContext> kungFuDeathGrip2(mContext);
 
-   if(NS_EVENT_FLAG_INIT == aFlags)
+   if(NS_EVENT_FLAG_INIT & aFlags)
       {
       aDOMEvent = &domEvent;  
-      aEvent->flags = NS_EVENT_FLAG_NONE;
+      aEvent->flags = aFlags;
+      aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
       }
   
    //Capturing stage
@@ -391,11 +392,11 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
       }
 
    //Local handling stage
-   if(mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH))
+   if(mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags))
       {
       aEvent->flags |= aFlags;
-      mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, 
-         aEventStatus);
+      mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
       aEvent->flags &= ~aFlags;
       }
 
@@ -415,7 +416,7 @@ NS_IMETHODIMP GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
          }
       }
 
-   if(NS_EVENT_FLAG_INIT == aFlags)
+   if(NS_EVENT_FLAG_INIT & aFlags)
       {
       // We're leaving the DOM event loop so if we created a DOM event, release here.
       if(*aDOMEvent)
@@ -2147,6 +2148,31 @@ NS_IMETHODIMP GlobalWindowImpl::RemoveEventListener(const nsString& aType,
    return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP GlobalWindowImpl::DispatchEvent(nsIDOMEvent* aEvent)
+{
+  if (mDocument) {
+    nsCOMPtr<nsIDocument> idoc(do_QueryInterface(mDocument));
+    if (idoc) {
+      // Obtain a presentation context
+      PRInt32 count = idoc->GetNumberOfShells();
+      if (count == 0)
+        return NS_OK;
+
+      nsCOMPtr<nsIPresShell> shell = getter_AddRefs(idoc->GetShellAt(0));
+
+      // Retrieve the context
+      nsCOMPtr<nsIPresContext> aPresContext;
+      shell->GetPresContext(getter_AddRefs(aPresContext));
+
+      nsCOMPtr<nsIEventStateManager> esm;
+      if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
+        return esm->DispatchNewEvent(NS_STATIC_CAST(nsIScriptGlobalObject*, this), aEvent);
+      }
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
 //*****************************************************************************
 // GlobalWindowImpl::nsIDOMEventReceiver
 //*****************************************************************************   
@@ -2203,7 +2229,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetNewListenerManager(nsIEventListenerManager **
 
 NS_IMETHODIMP GlobalWindowImpl::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return NS_ERROR_FAILURE;
+  return DispatchEvent(aEvent);
 }
 
 //*****************************************************************************

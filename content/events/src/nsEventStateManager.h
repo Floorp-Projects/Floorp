@@ -99,6 +99,9 @@ public:
 
   NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
 
+  //Method for centralized distribution of new DOM events
+  NS_IMETHOD DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent);
+
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   void GenerateMouseEnterExit(nsIPresContext* aPresContext, nsGUIEvent* aEvent);

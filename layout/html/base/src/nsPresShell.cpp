@@ -1995,7 +1995,7 @@ PresShell::ScrollLine(PRBool aForward)
     result = viewManager->GetRootScrollableView(&scrollView);
     if (NS_SUCCEEDED(result) && scrollView)
     {
-      scrollView->ScrollByLines(aForward ? 1 : -1);
+      scrollView->ScrollByLines(0, aForward ? 1 : -1);
 //NEW FOR LINES    
       // force the update to happen now, otherwise multiple scrolls can
       // occur before the update is processed. (bug #7354)
@@ -2012,7 +2012,26 @@ PresShell::ScrollLine(PRBool aForward)
 NS_IMETHODIMP
 PresShell::ScrollHorizontal(PRBool aLeft)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsCOMPtr<nsIViewManager> viewManager;
+  nsresult result = GetViewManager(getter_AddRefs(viewManager));
+  if (NS_SUCCEEDED(result) && viewManager)
+  {
+    nsIScrollableView *scrollView;
+    result = viewManager->GetRootScrollableView(&scrollView);
+    if (NS_SUCCEEDED(result) && scrollView)
+    {
+      scrollView->ScrollByLines(aLeft ? -1 : 1, 0);
+//NEW FOR LINES    
+      // force the update to happen now, otherwise multiple scrolls can
+      // occur before the update is processed. (bug #7354)
+
+    // I'd use Composite here, but it doesn't always work.
+      // vm->Composite();
+      viewManager->ForceUpdate();
+    }
+  }
+
+  return result;
 }
 
 NS_IMETHODIMP

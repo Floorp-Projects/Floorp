@@ -91,6 +91,7 @@ interface EventTarget {
 
 	   void	addEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
 	   void	removeEventListener(in DOMString type, in function EventListener listener, in boolean useCapture);
+	   void	dispatchEvent(in Event evt);
 };
 
 // Introduced in DOM Level 2:

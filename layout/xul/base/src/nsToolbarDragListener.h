@@ -31,6 +31,7 @@ class nsToolbarFrame;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
+class nsIDOMNode;
 
 
 class nsToolbarDragListener : public nsIDOMDragListener

@@ -2061,6 +2061,28 @@ nsXULElement::RemoveEventListener(const nsString& aType, nsIDOMEventListener* aL
 }
 
 NS_IMETHODIMP
+nsXULElement::DispatchEvent(nsIDOMEvent* aEvent)
+{
+  // Obtain a presentation context
+  PRInt32 count = mDocument->GetNumberOfShells();
+  if (count == 0)
+    return NS_OK;
+
+  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
+  
+  // Retrieve the context
+  nsCOMPtr<nsIPresContext> aPresContext;
+  shell->GetPresContext(getter_AddRefs(aPresContext));
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  if (NS_SUCCEEDED(aPresContext->GetEventStateManager(getter_AddRefs(esm)))) {
+    return esm->DispatchNewEvent(NS_STATIC_CAST(nsIStyledContent*, this), aEvent);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
     if (! mListenerManager) {
@@ -2090,7 +2112,7 @@ nsXULElement::GetNewListenerManager(nsIEventListenerManager **aResult)
 NS_IMETHODIMP
 nsXULElement::HandleEvent(nsIDOMEvent *aEvent)
 {
-  return NS_ERROR_FAILURE;
+  return DispatchEvent(aEvent);
 }
 
 
@@ -3449,9 +3471,10 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     nsresult ret = NS_OK;
   
     nsIDOMEvent* domEvent = nsnull;
-    if (NS_EVENT_FLAG_INIT == aFlags) {
+    if (NS_EVENT_FLAG_INIT & aFlags) {
         aDOMEvent = &domEvent;
-        aEvent->flags = NS_EVENT_FLAG_NONE;
+        aEvent->flags = aFlags;
+        aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
         // In order for the event to have a proper target for events that don't go through
         // the presshell (onselect, oncommand, oncreate, ondestroy) we need to set our target
         // ourselves. Also, key sets and menus don't have frames and therefore need their
@@ -3474,7 +3497,8 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
                 NS_ERROR("Unable to instantiate a listener manager on this event.");
                 return ret;
             }
-            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, aDOMEvent))) {
+            nsAutoString empty;
+            if (NS_FAILED(ret = listenerManager->CreateEvent(aPresContext, aEvent, empty, aDOMEvent))) {
                 NS_ERROR("This event will fail without the ability to create the event early.");
                 return ret;
             }
@@ -3522,7 +3546,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
     //Local handling stage
     if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
         aEvent->flags |= aFlags;
-        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+        mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, this, aFlags, aEventStatus);
         aEvent->flags &= ~aFlags;
     }
 
@@ -3556,7 +3580,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         }
     }
 
-    if (NS_EVENT_FLAG_INIT == aFlags) {
+    if (NS_EVENT_FLAG_INIT & aFlags) {
         // We're leaving the DOM event loop so if we created a DOM event,
         // release here.
         if (nsnull != *aDOMEvent) {

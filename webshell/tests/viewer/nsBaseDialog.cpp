@@ -23,6 +23,8 @@
 #include "nsBaseDialog.h"
 #include "nsIDOMEvent.h"
 #include "nsIXPBaseWindow.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
@@ -89,14 +91,15 @@ void nsBaseDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindow * aWindo
 
   aStatus = PR_FALSE;
 
-  nsIDOMNode * node;
-  aMouseEvent->GetTarget(&node);
-  if (node == mCancelBtn) {
-    DoClose();
-    aStatus = PR_TRUE;
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aMouseEvent->GetTarget(getter_AddRefs(target));
+  if (target) {
+    nsCOMPtr<nsIDOMElement> node(do_QueryInterface(target));
+    if (node.get() == mCancelBtn) {
+      DoClose();
+      aStatus = PR_TRUE;
+    }
   }
-  NS_RELEASE(node);
-
 }
 
 //---------------------------------------------------------------

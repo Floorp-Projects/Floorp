@@ -800,7 +800,29 @@ void IdlScanner::LKeywords(char *aCurrentPos, Token *aToken)
     // if terminated is a keyword
     c = mInputFile->get();
     if (c != EOF) {
-      if (isalpha(c) || isdigit(c) || c == '_') {
+      if (c == 'l' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+          c != EOF && c == 'o' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+          c != EOF && c == 'n' && (*aCurrentPos++ = c) && (c = mInputFile->get()) &&
+          c != EOF && c == 'g' && (*aCurrentPos++ = c)) {
+        // if terminated is a keyword
+        c = mInputFile->get();
+        if (c != EOF) {
+          if (isalpha(c) || isdigit(c) || c == '_') {
+            // more characters, it must be an identifier
+            *aCurrentPos++ = c;
+            Identifier(aCurrentPos, aToken);
+          }
+          else {
+            // it is a keyword
+            aToken->SetToken(LONG_LONG_TOKEN);
+            mInputFile->putback(c);
+          }
+        }
+        else {
+          aToken->SetToken(LONG_LONG_TOKEN);
+        }
+      }
+      else if (isalpha(c) || isdigit(c) || c == '_') {
         // more characters, it must be an identifier
         *aCurrentPos++ = c;
         Identifier(aCurrentPos, aToken);
@@ -1165,6 +1187,9 @@ void IdlScanner::UKeywords(char *aCurrentPos, Token *aToken)
           }
           else if (LONG_TOKEN == mCurrentToken->id) {
             aToken->SetToken(ULONG_TOKEN);
+          }
+          else if (LONG_LONG_TOKEN == mCurrentToken->id) {
+            aToken->SetToken(ULONG_LONG_TOKEN);
           }
         }
       }

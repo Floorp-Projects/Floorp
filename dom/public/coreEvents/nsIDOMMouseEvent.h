@@ -29,7 +29,7 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMUIEvent.h"
 
-class nsIDOMNode;
+class nsIDOMEventTarget;
 
 #define NS_IDOMMOUSEEVENT_IID \
  { 0xff751edc, 0x8b02, 0xaae7, \
@@ -57,9 +57,7 @@ public:
 
   NS_IMETHOD    GetButton(PRUint16* aButton)=0;
 
-  NS_IMETHOD    GetClickCount(PRUint16* aClickCount)=0;
-
-  NS_IMETHOD    GetRelatedNode(nsIDOMNode** aRelatedNode)=0;
+  NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget)=0;
 
   NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg)=0;
 };
@@ -75,8 +73,7 @@ public:
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);  \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);  \
   NS_IMETHOD    GetButton(PRUint16* aButton);  \
-  NS_IMETHOD    GetClickCount(PRUint16* aClickCount);  \
-  NS_IMETHOD    GetRelatedNode(nsIDOMNode** aRelatedNode);  \
+  NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);  \
   NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);  \
 
 
@@ -91,8 +88,7 @@ public:
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey) { return _to GetShiftKey(aShiftKey); } \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to GetMetaKey(aMetaKey); } \
   NS_IMETHOD    GetButton(PRUint16* aButton) { return _to GetButton(aButton); } \
-  NS_IMETHOD    GetClickCount(PRUint16* aClickCount) { return _to GetClickCount(aClickCount); } \
-  NS_IMETHOD    GetRelatedNode(nsIDOMNode** aRelatedNode) { return _to GetRelatedNode(aRelatedNode); } \
+  NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget) { return _to GetRelatedTarget(aRelatedTarget); } \
   NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg) { return _to InitMouseEvent(aTypeArg, aCtrlKeyArg, aAltKeyArg, aShiftKeyArg, aMetaKeyArg, aScreenXArg, aScreenYArg, aClientXArg, aClientYArg, aButtonArg, aDetailArg); }  \
 
 

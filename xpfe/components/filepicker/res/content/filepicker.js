@@ -164,7 +164,7 @@ function onClick(e) {
   textInput = document.getElementById("textInput");
   textInput.value = file.path;
 
-  if (e.clickCount == 2) {
+  if (e.detail == 2) {
     if (file.isDirectory()) {
       gotoDirectory(file.path);
     }

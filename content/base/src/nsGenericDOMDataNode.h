@@ -260,7 +260,7 @@ struct nsGenericDOMDataNode {
 
   //----------------------------------------
 
-  nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
+  nsresult GetListenerManager(nsIContent* aOuterContent, nsIEventListenerManager** aInstancePtrResult);
 
   void ToCString(nsString& aBuf, PRInt32 aOffset, PRInt32 aLen) const;
 
@@ -609,14 +609,14 @@ struct nsGenericDOMDataNode {
   }                                                         \
   if (_id.Equals(kIDOMEventReceiverIID)) {                  \
     nsCOMPtr<nsIEventListenerManager> man;                  \
-    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
+    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){ \
       return man->QueryInterface(kIDOMEventReceiverIID, (void**)_iptr); \
     }                                                       \
     return NS_NOINTERFACE;                                  \
   }                                                         \
   if (_id.Equals(kIDOMEventTargetIID)) {                    \
     nsCOMPtr<nsIEventListenerManager> man;                  \
-    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){ \
+    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){ \
       return man->QueryInterface(kIDOMEventTargetIID, (void**)_iptr); \
     }                                                       \
     return NS_NOINTERFACE;                                  \

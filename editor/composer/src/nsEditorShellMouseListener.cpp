@@ -30,6 +30,7 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDOMSelection.h"
+#include "nsIDOMEventTarget.h"
 
 /*
  * nsEditorShellMouseListener implementation
@@ -100,11 +101,11 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
   // What about Mac?
   if (mEditorShell && buttonNumber == 3)
   {
-    nsCOMPtr<nsIDOMNode> node;
-    if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(node))) && node)
+    nsCOMPtr<nsIDOMEventTarget> target;
+    if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(target))) && target)
     {
       // We are only interested in elements, not text nodes
-      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
       if (element)
       {
         // Set selection to node clicked on
@@ -125,11 +126,11 @@ nsEditorShellMouseListener::MouseUp(nsIDOMEvent* aMouseEvent)
     return NS_OK;
   }
   // Detect double click message:
-  PRUint16 clickCount;
-  nsresult res = mouseEvent->GetClickCount(&clickCount);
+  PRInt32 clickCount;
+  nsresult res = mouseEvent->GetDetail(&clickCount);
   if (NS_FAILED(res)) return res;
 
-  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIDOMEventTarget> node;
   if (NS_SUCCEEDED(aMouseEvent->GetTarget(getter_AddRefs(node))) && node)
   {
     // We are only interested in elements, not text nodes

@@ -85,18 +85,20 @@ public:
     eDOMEvents_draggesture
   };
 
-  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent);
+  nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsString& aEventType);
   virtual ~nsDOMEvent();
 
   NS_DECL_ISUPPORTS
 
   // nsIDOMEvent Interface
   NS_IMETHOD    GetType(nsString& aType);
-  NS_IMETHOD    GetTarget(nsIDOMNode** aTarget);
-  NS_IMETHOD    GetCurrentNode(nsIDOMNode** aCurrentNode);
+  NS_IMETHOD    GetTarget(nsIDOMEventTarget** aTarget);
+  NS_IMETHOD    GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget);
   NS_IMETHOD    GetEventPhase(PRUint16* aEventPhase);
   NS_IMETHOD    GetBubbles(PRBool* aBubbles);
   NS_IMETHOD    GetCancelable(PRBool* aCancelable);
+  NS_IMETHOD    GetTimeStamp(PRUint64* aTimestamp);
+  NS_IMETHOD    StopPropagation();
   NS_IMETHOD    PreventBubble();
   NS_IMETHOD    PreventCapture();
   NS_IMETHOD    PreventDefault();
@@ -117,8 +119,7 @@ public:
   NS_IMETHOD    GetShiftKey(PRBool* aShiftKey);
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);
   NS_IMETHOD    GetButton(PRUint16* aButton);
-  NS_IMETHOD    GetClickCount(PRUint16* aClickCount);  
-  NS_IMETHOD    GetRelatedNode(nsIDOMNode** aRelatedNode);
+  NS_IMETHOD    GetRelatedTarget(nsIDOMEventTarget** aRelatedTarget);
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);
   NS_IMETHOD    InitMouseEvent(const nsString& aTypeArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, PRBool aMetaKeyArg, PRInt32 aScreenXArg, PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, PRUint16 aButtonArg, PRUint16 aDetailArg);
@@ -139,7 +140,8 @@ public:
 
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
-  NS_IMETHOD    SetTarget(nsIDOMNode* aNode);
+  NS_IMETHOD    SetTarget(nsIDOMEventTarget* aTarget);
+  NS_IMETHOD    SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget);
   NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
 
   // nsIPrivateTextEvent interface
@@ -154,10 +156,13 @@ protected:
 
   //Internal helper funcs
   nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T, float* aT2P);
+  nsresult SetEventType(const nsString& aEventTypeArg);
 
   nsEvent* mEvent;
+  PRBool mEventIsInternal;
   nsIPresContext* mPresContext;
-  nsIDOMNode* mTarget;
+  nsIDOMEventTarget* mTarget;
+  nsIDOMEventTarget* mCurrentTarget;
   nsString*	mText;
   nsIPrivateTextRangeList*	mTextRange;
   const char* GetEventName(PRUint32 aEventType);

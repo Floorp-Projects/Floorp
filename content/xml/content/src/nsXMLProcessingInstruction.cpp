@@ -137,7 +137,7 @@ nsXMLProcessingInstruction::QueryInterface(REFNSIID aIID, void** aInstancePtrRes
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMEventReceiver))) {
     nsCOMPtr<nsIEventListenerManager> man;
-    if (NS_SUCCEEDED(mInner.GetListenerManager(getter_AddRefs(man)))){
+    if (NS_SUCCEEDED(mInner.GetListenerManager(this, getter_AddRefs(man)))){
       return man->QueryInterface(kIDOMEventReceiverIID, (void**)aInstancePtrResult);
     }
     return NS_NOINTERFACE;

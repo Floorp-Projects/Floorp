@@ -608,7 +608,7 @@ function ThreadPaneOnClick(event)
 			msgNavigationService.OpenTreeitemAndDescendants(treeitem);
 		}
     }
-	else if(event.clickCount == 2)
+	else if(event.detail == 2)
 	{
 		ThreadPaneDoubleClick(event.target.parentNode.parentNode);
 	}
@@ -681,7 +681,7 @@ function FolderPaneOnClick(event)
 			}
 		}
     }
-	else if(event.clickCount == 2)
+	else if(event.detail == 2)
 	{
 		var item = event.target.parentNode.parentNode;
 		if (item.nodeName == "treeitem")

@@ -41,7 +41,7 @@ typedef struct {
 } nsListenerStruct;
 
 //Flag must live higher than all event flags in nsGUIEvent.h
-#define NS_PRIV_EVENT_FLAG_SCRIPT 0x20
+#define NS_PRIV_EVENT_FLAG_SCRIPT 0x80
 
 /*
  * Event listener manager
@@ -94,14 +94,18 @@ public:
   virtual nsresult HandleEvent(nsIPresContext* aPresContext, 
                                nsEvent* aEvent, 
                                nsIDOMEvent** aDOMEvent,
+                               nsIDOMEventTarget* aCurrentTarget,
                                PRUint32 aFlags,
                                nsEventStatus* aEventStatus);
 
   virtual nsresult CreateEvent(nsIPresContext* aPresContext, 
-                               nsEvent* aEvent, 
+                               nsEvent* aEvent,
+                               const nsString& aEventType,
                                nsIDOMEvent** aDOMEvent);
 
   virtual nsresult RemoveAllListeners(PRBool aScriptOnly);
+
+  virtual nsresult SetListenerTarget(nsISupports* aTarget);
 
   static nsresult GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aSubType);
 
@@ -112,6 +116,7 @@ public:
   NS_IMETHOD RemoveEventListener(const nsString& aType, 
                                  nsIDOMEventListener* aListener, 
                                  PRBool aUseCapture);
+  NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
   // nsIDOMEventReceiver interface
   NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
@@ -123,6 +128,7 @@ public:
 protected:
   nsresult HandleEventSubType(nsListenerStruct* aListenerStruct,
                               nsIDOMEvent* aDOMEvent,
+                              nsIDOMEventTarget* aCurrentTarget,
                               PRUint32 aSubType,
                               PRUint32 aPhaseFlags);
   nsListenerStruct* FindJSEventListener(REFNSIID aIID);
@@ -146,6 +152,8 @@ protected:
   nsVoidArray* mMenuListeners;
   nsCOMPtr<nsIPrincipal> mPrincipal;
   PRBool mDestroyed;
+
+  nsISupports* mTarget;  //WEAK
 };
 
 

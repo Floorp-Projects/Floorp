@@ -401,7 +401,10 @@ nsGenericElement::~nsGenericElement()
       mDOMSlots->mAttributeMap->DropReference();
       NS_RELEASE(mDOMSlots->mAttributeMap);
     }
-    NS_IF_RELEASE(mDOMSlots->mListenerManager);
+    if (nsnull != mDOMSlots->mListenerManager) {
+      mDOMSlots->mListenerManager->SetListenerTarget(nsnull);
+      NS_RELEASE(mDOMSlots->mListenerManager);
+    }
     // XXX Should really be arena managed
     PR_DELETE(mDOMSlots);
   }
@@ -1284,9 +1287,10 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   
   nsIDOMEvent* domEvent = nsnull;
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     aDOMEvent = &domEvent;
-    aEvent->flags = NS_EVENT_FLAG_NONE;
+    aEvent->flags = aFlags;
+    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
   }
   
   //Capturing stage evaluation
@@ -1310,9 +1314,11 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Local handling stage
-  if (mDOMSlots && mDOMSlots->mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+  if (mDOMSlots && mDOMSlots->mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)) {
     aEvent->flags |= aFlags;
-    mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+    nsCOMPtr<nsIDOMEventTarget> curTarg(do_QueryInterface(mContent));
+    mDOMSlots->mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
@@ -1334,7 +1340,7 @@ nsGenericElement::HandleDOMEvent(nsIPresContext* aPresContext,
     }
   }
 
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
     if (nsnull != *aDOMEvent) {
@@ -1557,6 +1563,7 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager** aResult)
   if (NS_OK == rv) {
     slots->mListenerManager = *aResult;
     NS_ADDREF(slots->mListenerManager);
+    slots->mListenerManager->SetListenerTarget(mContent);
   }
   return rv;
 }

@@ -20,9 +20,11 @@
  * Contributor(s): 
  */
 
+#include "nsCOMPtr.h"
 #include "nsFindDialog.h"
 #include "nsIDOMEvent.h"
 #include "nsIXPBaseWindow.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
@@ -81,12 +83,14 @@ void nsFindDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindow * aWindo
 
   nsBaseDialog::MouseClick(aMouseEvent, aWindow, aStatus);
   if (!aStatus) { // is not consumed
-    nsIDOMNode * node;
-    aMouseEvent->GetTarget(&node);
-    if (node == mFindBtn) {
-      DoFind();
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aMouseEvent->GetTarget(getter_AddRefs(target));
+    if (target) {
+      nsCOMPtr<nsIDOMElement> node(do_QueryInterface(target));
+      if (node.get() == mFindBtn) {
+        DoFind();
+      }
     }
-    NS_RELEASE(node);
   }
 }
 

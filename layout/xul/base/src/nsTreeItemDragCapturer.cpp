@@ -35,6 +35,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+#include "nsIDOMEventTarget.h"
 
 
 NS_IMPL_ADDREF(nsTreeItemDragCapturer)
@@ -306,17 +307,21 @@ nsTreeItemDragCapturer :: IsEventTargetMyTreeItem ( nsIDOMEvent* inEvent )
 
   // get the treeItem associated with the target. Remember that the tree cell is the
   // actual target, so we have to go up two levels to get to its treeItem.
+  nsCOMPtr<nsIDOMEventTarget> target;
   nsCOMPtr<nsIDOMNode> targetCell;
-  inEvent->GetTarget ( getter_AddRefs(targetCell) );
   nsCOMPtr<nsIDOMNode> targetRow;
   nsCOMPtr<nsIDOMNode> targetTreeItem;
-  if ( targetCell ) {
-    targetCell->GetParentNode(getter_AddRefs(targetRow)); 
-    if ( targetRow ) {
-      targetRow->GetParentNode(getter_AddRefs(targetTreeItem));
-      // the critical comparison. are 
-      if ( myDomNode == targetTreeItem )
-        retVal = PR_TRUE;
+  inEvent->GetTarget ( getter_AddRefs(target) );
+  if ( target ) {
+    targetCell = do_QueryInterface( target );
+    if ( targetCell ) {
+      targetCell->GetParentNode(getter_AddRefs(targetRow)); 
+      if ( targetRow ) {
+        targetRow->GetParentNode(getter_AddRefs(targetTreeItem));
+        // the critical comparison. are 
+        if ( myDomNode == targetTreeItem )
+          retVal = PR_TRUE;
+      }
     }
   }
 

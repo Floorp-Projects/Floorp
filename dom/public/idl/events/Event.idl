@@ -45,13 +45,15 @@
 	      const int META_MASK	= 0x00000008;
 
 
-	      readonly  attribute   wstring	        type;
-	      readonly  attribute   Node	        target;
-	      readonly  attribute   Node	        currentNode;
-	      readonly  attribute   unsigned short	eventPhase;
-        readonly attribute boolean          bubbles;
-        readonly attribute boolean          cancelable;
+	      readonly  attribute   wstring	            type;
+	      readonly  attribute   EventTarget         target;
+	      readonly  attribute   EventTarget         currentTarget;
+	      readonly  attribute   unsigned short	    eventPhase;
+        readonly  attribute   boolean             bubbles;
+        readonly  attribute   boolean             cancelable;
+        readonly  attribute   unsigned longlong   timeStamp;
 
+        void          stopPropagation();
 		    void					preventBubble();
 		    void					preventCapture();
 		    void					preventDefault();

@@ -31,7 +31,7 @@ var appCore = window.content.appCore;
 
 function clicked(event, target)
 {
-	if ((event.button != 1) || (event.clickCount != 2) || (target.nodeName != "treeitem"))
+	if ((event.button != 1) || (event.detail != 2) || (target.nodeName != "treeitem"))
 		return(false);
 
 	if (target.getAttribute("container") == "true")

@@ -20,10 +20,12 @@
  * Contributor(s): 
  */
 
+#include "nsCOMPtr.h"
 #include "nsPrintSetupDialog.h"
 #include "nsIDOMEvent.h"
 #include "nsIXPBaseWindow.h"
 #include "nsBrowserWindow.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLDocument.h"
@@ -191,13 +193,15 @@ void nsPrintSetupDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindow * 
 
   nsBaseDialog::MouseClick(aMouseEvent, aWindow, aStatus);
   if (!aStatus) { // is not consumed
-    nsIDOMNode * node;
-    aMouseEvent->GetTarget(&node);
-    if (node == mOKBtn) {
-      GetSetupInfo(mBrowserWindow->mPrintSetupInfo);
-      DoClose();
-    } 
-    NS_RELEASE(node);
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aMouseEvent->GetTarget(getter_AddRefs(target));
+    if (target) {
+      nsCOMPtr<nsIDOMElement> node(do_QueryInterface(target));
+      if (node.get() == mOKBtn) {
+        GetSetupInfo(mBrowserWindow->mPrintSetupInfo);
+        DoClose();
+      } 
+    }
   }
 }
 

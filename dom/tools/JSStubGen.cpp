@@ -744,8 +744,10 @@ JSStubGen::GeneratePropGetter(ofstream *file,
       case_str = kBoolGetCaseStr;
       break;
     case TYPE_LONG:
+    case TYPE_LONG_LONG:
     case TYPE_SHORT:
     case TYPE_ULONG:
+    case TYPE_ULONG_LONG:
     case TYPE_USHORT:
     case TYPE_CHAR:
     case TYPE_INT:
@@ -904,8 +906,10 @@ JSStubGen::GeneratePropSetter(ofstream *file,
       sprintf(case_buf, kBoolSetCaseStr);
       break;
     case TYPE_LONG:
+    case TYPE_LONG_LONG:
     case TYPE_SHORT:
     case TYPE_ULONG:
+    case TYPE_ULONG_LONG:
     case TYPE_USHORT:
     case TYPE_CHAR:
     case TYPE_INT:
@@ -1423,8 +1427,10 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             JSGEN_GENERATE_BOOLPARAM(buf, p);
             break;
           case TYPE_LONG:
+          case TYPE_LONG_LONG:
           case TYPE_SHORT:
           case TYPE_ULONG:
+          case TYPE_ULONG_LONG:
           case TYPE_USHORT:
           case TYPE_CHAR:
           case TYPE_INT:
@@ -1494,8 +1500,10 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
             *file << kMethodBoolRetStr;
             break;
           case TYPE_LONG:
+          case TYPE_LONG_LONG:
           case TYPE_SHORT:
           case TYPE_ULONG:
+          case TYPE_ULONG_LONG:
           case TYPE_USHORT:
           case TYPE_CHAR:
           case TYPE_INT:

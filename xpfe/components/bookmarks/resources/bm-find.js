@@ -196,7 +196,7 @@ function getAbsoluteID(root, node)
 
 function OpenURL(event, node, root)
 {
-	if ((event.button != 1) || (event.clickCount != 2) || (node.nodeName != "treeitem"))
+	if ((event.button != 1) || (event.detail != 2) || (node.nodeName != "treeitem"))
 		return(false);
 
 	if (node.getAttribute("container") == "true")

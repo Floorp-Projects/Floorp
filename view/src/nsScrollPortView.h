@@ -74,7 +74,7 @@ public:
   NS_IMETHOD  GetScrollProperties(PRUint32 *aProperties);
   NS_IMETHOD  SetLineHeight(nscoord aHeight);
   NS_IMETHOD  GetLineHeight(nscoord *aHeight);
-  NS_IMETHOD  ScrollByLines(PRInt32 aNumLines);
+  NS_IMETHOD  ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLinesY);
   NS_IMETHOD  ScrollByPages(PRInt32 aNumPages);
   NS_IMETHOD  ScrollByWhole(PRBool aTop);
   

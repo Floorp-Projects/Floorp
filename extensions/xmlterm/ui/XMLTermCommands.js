@@ -418,10 +418,10 @@ function HandleEvent(eventObj, eventType, targetType, entryNumber,
 
   } else if (eventType === "click") {
 
-     dump("clickCount="+eventObj.clickCount+"\n");
+     dump("clickCount="+eventObj.detail+"\n");
 
      var shiftClick = eventObj.shiftKey;
-     var dblClick = (eventObj.clickCount == 2);
+     var dblClick = (eventObj.detail == 2);
 
      // Execute shell commands only on double-click for safety
      // Use single click for "selection" and prompt expansion only

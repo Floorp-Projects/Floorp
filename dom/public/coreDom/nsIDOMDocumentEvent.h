@@ -21,34 +21,34 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMAbstractView_h__
-#define nsIDOMAbstractView_h__
+#ifndef nsIDOMDocumentEvent_h__
+#define nsIDOMDocumentEvent_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
-class nsIDOMDocumentView;
+class nsIDOMEvent;
 
-#define NS_IDOMABSTRACTVIEW_IID \
- { 0xf51ebade, 0x8b1a, 0x11d3, \
-  { 0xaa, 0xe7, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } 
+#define NS_IDOMDOCUMENTEVENT_IID \
+ { 0x46b91d66, 0x28e2, 0x11d4, \
+  { 0xab, 0x1e, 0x00, 0x10, 0x83, 0x01, 0x23, 0xb4 } } 
 
-class nsIDOMAbstractView : public nsISupports {
+class nsIDOMDocumentEvent : public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_IDOMABSTRACTVIEW_IID; return iid; }
+  static const nsIID& GetIID() { static nsIID iid = NS_IDOMDOCUMENTEVENT_IID; return iid; }
 
-  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument)=0;
+  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn)=0;
 };
 
 
-#define NS_DECL_IDOMABSTRACTVIEW   \
-  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument);  \
+#define NS_DECL_IDOMDOCUMENTEVENT   \
+  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn);  \
 
 
 
-#define NS_FORWARD_IDOMABSTRACTVIEW(_to)  \
-  NS_IMETHOD    GetDocument(nsIDOMDocumentView** aDocument) { return _to GetDocument(aDocument); } \
+#define NS_FORWARD_IDOMDOCUMENTEVENT(_to)  \
+  NS_IMETHOD    CreateEvent(const nsString& aEventType, nsIDOMEvent** aReturn) { return _to CreateEvent(aEventType, aReturn); }  \
 
 
-#endif // nsIDOMAbstractView_h__
+#endif // nsIDOMDocumentEvent_h__

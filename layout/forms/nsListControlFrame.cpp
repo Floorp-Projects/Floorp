@@ -57,6 +57,7 @@
 #include "nsIFontMetrics.h"
 #include "nsVoidArray.h"
 #include "nsIScrollableFrame.h"
+#include "nsIDOMEventTarget.h"
 
 #include "nsISelectElement.h"
 
@@ -2381,15 +2382,16 @@ nsListControlFrame::SelectionChanged(nsIContent* aContent)
   // Here we create our own DOM event and set the target to the Select
   // We'll pass this DOM event in, in hopes that the target is used.
   nsIDOMEvent* DOMEvent = nsnull;
-  nsresult res = NS_NewDOMUIEvent(&DOMEvent, mPresContext, &event);
+  nsAutoString empty;
+  nsresult res = NS_NewDOMUIEvent(&DOMEvent, mPresContext, empty, &event);
   if (NS_SUCCEEDED(res) && DOMEvent && mContent) {
-    nsCOMPtr<nsIDOMNode> node;
-    res = mContent->QueryInterface(kIDOMNodeIID, (void**)getter_AddRefs(node));
-    if (NS_SUCCEEDED(res) && node) {
+    nsCOMPtr<nsIDOMEventTarget> target;
+    res = mContent->QueryInterface(kIDOMNodeIID, (void**)getter_AddRefs(target));
+    if (NS_SUCCEEDED(res) && target) {
       nsCOMPtr<nsIPrivateDOMEvent> pDOMEvent;
       res = DOMEvent->QueryInterface(kIPrivateDOMEventIID, (void**)getter_AddRefs(pDOMEvent));
       if (NS_SUCCEEDED(res) && pDOMEvent) {
-        res = pDOMEvent->SetTarget(node);
+        res = pDOMEvent->SetTarget(target);
         if (NS_SUCCEEDED(res)) {
           // Have the content handle the event.
           res = mContent->HandleDOMEvent(mPresContext, &event, &DOMEvent, NS_EVENT_FLAG_BUBBLE, &status);

@@ -71,7 +71,10 @@ nsGenericDOMDataNode::nsGenericDOMDataNode()
 
 nsGenericDOMDataNode::~nsGenericDOMDataNode()
 {
-  NS_IF_RELEASE(mListenerManager);
+  if (mListenerManager) {
+    mListenerManager->SetListenerTarget(nsnull);
+    NS_RELEASE(mListenerManager);
+  }
   delete mRangeList;
 }
 
@@ -529,7 +532,7 @@ nsGenericDOMDataNode::SetScriptObject(void *aScriptObject)
 //----------------------------------------------------------------------
 
 nsresult
-nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
+nsGenericDOMDataNode::GetListenerManager(nsIContent* aOuterContent, nsIEventListenerManager** aResult)
 {
   if (nsnull != mListenerManager) {
     NS_ADDREF(mListenerManager);
@@ -540,6 +543,7 @@ nsGenericDOMDataNode::GetListenerManager(nsIEventListenerManager** aResult)
   if (NS_OK == rv) {
     mListenerManager = *aResult;
     NS_ADDREF(mListenerManager);
+    mListenerManager->SetListenerTarget(aOuterContent);
   }
   return rv;
 }
@@ -748,9 +752,10 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   nsresult ret = NS_OK;
   nsIDOMEvent* domEvent = nsnull;
 
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     aDOMEvent = &domEvent;
-    aEvent->flags = NS_EVENT_FLAG_NONE;
+    aEvent->flags = aFlags;
+    aFlags &= ~(NS_EVENT_FLAG_CANT_BUBBLE | NS_EVENT_FLAG_CANT_CANCEL);
 
     //Initiate capturing phase.  Special case first call to document
     if (nsnull != mDocument) {
@@ -765,9 +770,10 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
   }
   
   //Local handling stage
-  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH)) {
+  if (mListenerManager && !(aEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) &&
+      !(NS_EVENT_FLAG_BUBBLE & aFlags && NS_EVENT_FLAG_CANT_BUBBLE & aEvent->flags)) {
     aEvent->flags |= aFlags;
-    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
+    mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, nsnull, aFlags, aEventStatus);
     aEvent->flags &= ~aFlags;
   }
 
@@ -777,7 +783,7 @@ nsGenericDOMDataNode::HandleDOMEvent(nsIPresContext* aPresContext,
                                   NS_EVENT_FLAG_BUBBLE, aEventStatus);
   }
 
-  if (NS_EVENT_FLAG_INIT == aFlags) {
+  if (NS_EVENT_FLAG_INIT & aFlags) {
     // We're leaving the DOM event loop so if we created a DOM event,
     // release here.
     if (nsnull != *aDOMEvent) {

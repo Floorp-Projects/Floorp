@@ -20,11 +20,12 @@
  * Contributor(s): 
  */
 
+#include "nsCOMPtr.h"
 #include "nsTableInspectorDialog.h"
 #include "nsIDOMEvent.h"
 #include "nsIXPBaseWindow.h"
 #include "nsBrowserWindow.h"
-
+#include "nsIDOMEventTarget.h"
 #include "nsIDOMDocument.h"
 
 #include "nsIDOMHTMLInputElement.h"
@@ -168,13 +169,15 @@ void nsTableInspectorDialog::MouseClick(nsIDOMEvent* aMouseEvent, nsIXPBaseWindo
 
   nsBaseDialog::MouseClick(aMouseEvent, aWindow, aStatus);
   if (!aStatus) { // is not consumed
-    nsIDOMNode * node;
-    aMouseEvent->GetTarget(&node);
-    if (node == mOKBtn) {
-      ///GetSetupInfo(mBrowserWindow->mPrintSetupInfo);
-      DoClose();
-    } 
-    NS_RELEASE(node);
+    nsCOMPtr<nsIDOMEventTarget> target;
+    aMouseEvent->GetTarget(getter_AddRefs(target));
+    if (target) {
+      nsCOMPtr<nsIDOMElement> node(do_QueryInterface(target));
+      if (node.get() == mOKBtn) {
+        ///GetSetupInfo(mBrowserWindow->mPrintSetupInfo);
+        DoClose();
+      } 
+    }
   }
 }
 

@@ -62,6 +62,7 @@
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
+#include "nsIDOMEventTarget.h"
 
   enum {
     VK_CANCEL = 3,
@@ -491,7 +492,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
     return ret;
 
   // Get DOMEvent target
-  nsCOMPtr<nsIDOMNode> target = nsnull;
+  nsCOMPtr<nsIDOMEventTarget> target = nsnull;
   aKeyEvent->GetTarget(getter_AddRefs(target));
 
   nsCOMPtr<nsPIDOMWindow> piWindow;

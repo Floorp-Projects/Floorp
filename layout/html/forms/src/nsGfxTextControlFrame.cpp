@@ -4184,8 +4184,8 @@ nsEnderEventListener::DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEven
       aEvent->GetScreenX(&(event.point.x));
       aEvent->GetScreenY(&(event.point.y));
 
-      PRUint16 clickCount;
-      aEvent->GetClickCount(&clickCount);
+      PRInt32 clickCount;
+      aEvent->GetDetail(&clickCount);
       event.clickCount = clickCount;
       event.message = aEventType;
       GetWidgetForView(mView, event.widget);

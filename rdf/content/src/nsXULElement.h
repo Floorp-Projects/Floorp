@@ -465,6 +465,7 @@ public:
                                 PRBool aUseCapture);
     NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
                                    PRBool aUseCapture);
+    NS_IMETHOD DispatchEvent(nsIDOMEvent* aEvent);
 
     // nsIDOMEventReceiver
     NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);

@@ -31,6 +31,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsXULAtoms.h"
+#include "nsIDOMEventListener.h"
 
 /*
  * nsTreeTwistyListener implementation
@@ -79,7 +80,7 @@ nsresult
 nsTreeTwistyListener::MouseDown(nsIDOMEvent* aEvent)
 {  
   // Get the target of the event. If it's a titledbutton, we care.
-  nsCOMPtr<nsIDOMNode> target;
+  nsCOMPtr<nsIDOMEventTarget> target;
   aEvent->GetTarget(getter_AddRefs(target));
 
   nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);

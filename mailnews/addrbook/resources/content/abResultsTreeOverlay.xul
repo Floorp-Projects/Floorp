@@ -31,7 +31,7 @@ Rights Reserved.
 		  datasources="rdf:addressdirectory rdf:addresscard"
 		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 		  onblur="goOnEvent(this,'blur')"
-		  onclick="if ( event.clickCount == 2 ) top.AbEditCard();"
+		  onclick="if ( event.detail == 2 ) top.AbEditCard();"
 		  containment="http://home.netscape.com/NC-rdf#CardChild"
 		  allownegativeassertions="false"
           coalesceduplicatearcs="false"
