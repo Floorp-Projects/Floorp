@@ -34,6 +34,8 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
 #if defined(XP_MAC)
 #include <Folders.h>
 #include <Script.h>
+#include <Processes.h>
+#include "nsILocalFileMac.h"
 static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile);
 #endif
 #if defined(XP_PC) && !defined(XP_OS2)
