@@ -2654,11 +2654,12 @@ nsBlockFrame::UpdateSpaceManager(nsIPresContext* aPresContext,
 NS_IMETHODIMP 
 nsBlockFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent*     aChild,
+                               PRInt32         aNameSpaceID,
                                nsIAtom*        aAttribute,
                                PRInt32         aHint)
 {
   nsresult rv = nsBlockFrameSuper::AttributeChanged(aPresContext, aChild,
-                                                    aAttribute, aHint);
+                                                    aNameSpaceID, aAttribute, aHint);
 
   if (NS_OK != rv) {
     return rv;

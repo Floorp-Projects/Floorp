@@ -1859,7 +1859,7 @@ nsGenericContainerElement::SetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
   }
 
   if (NS_SUCCEEDED(rv) && aNotify && (nsnull != mDocument)) {
-    mDocument->AttributeChanged(mContent, aName, NS_STYLE_HINT_UNKNOWN);
+    mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
   }
 
   return rv;
@@ -1933,7 +1933,7 @@ nsGenericContainerElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
     }
 
     if (NS_SUCCEEDED(rv) && found && aNotify && (nsnull != mDocument)) {
-      mDocument->AttributeChanged(mContent, aName, NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(mContent, aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
     }
   }
 

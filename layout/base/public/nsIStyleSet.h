@@ -136,6 +136,7 @@ public:
                                   nsIContent* aContent2) = 0;
   NS_IMETHOD AttributeChanged(nsIPresContext*  aPresContext,
                               nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint) = 0; // See nsStyleConsts fot hint values
 

@@ -184,11 +184,12 @@ nsSliderFrame::GetIntegerAttribute(nsIContent* content, nsIAtom* atom, PRInt32 d
 NS_IMETHODIMP
 nsSliderFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aHint);
   // if the current position changes
   if (aAttribute == nsXULAtoms::curpos) {
      CurrentPositionChanged(aPresContext);

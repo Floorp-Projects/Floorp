@@ -156,6 +156,7 @@ nsNativeTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
 NS_IMETHODIMP
 nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                            nsIContent*     aChild,
+                                           PRInt32         aNameSpaceID,
                                            nsIAtom*        aAttribute,
                                            PRInt32         aHint)
 {
@@ -188,7 +189,7 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       // Allow the base class to handle common attributes supported
       // by all form elements... 
       else {
-        result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+        result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
       }
       NS_RELEASE(text);
     }
@@ -219,12 +220,12 @@ nsNativeTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
         // Allow the base class to handle common attributes supported
         // by all form elements... 
         else {
-          result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+          result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
         }
         NS_RELEASE(textArea);
       }
       else { // We didn't get a Text or TextArea.  Uh oh...
-        result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+        result = nsNativeFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
       }
     }
   }

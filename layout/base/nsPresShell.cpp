@@ -273,6 +273,7 @@ public:
                                   nsIContent* aContent2);
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
@@ -1772,13 +1773,14 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
 NS_IMETHODIMP
 PresShell::AttributeChanged(nsIDocument *aDocument,
                             nsIContent*  aContent,
+                            PRInt32      aNameSpaceID,
                             nsIAtom*     aAttribute,
                             PRInt32      aHint)
 {
   NS_PRECONDITION(nsnull != mRootFrame, "null root frame");
 
   EnterReflowLock();
-  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aAttribute, aHint);
+  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
   VERIFY_STYLE_TREE;
   ExitReflowLock();
   return rv;

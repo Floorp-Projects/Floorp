@@ -112,6 +112,8 @@ public:
   // Re-resolve style contexts for frame tree
   NS_IMETHOD ComputeStyleChangeFor(nsIPresContext& aPresContext,
                                    nsIFrame* aFrame, 
+                                   PRInt32 aAttrNameSpaceID,
+                                   nsIAtom* aAttribute,
                                    nsStyleChangeList& aChangeList,
                                    PRInt32 aMinChange,
                                    PRInt32& aTopLevelChange) = 0;

@@ -669,11 +669,12 @@ nsProgressMeterFrame::CalcSize(nsIPresContext& aPresContext, int& width, int& he
 NS_IMETHODIMP
 nsProgressMeterFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aHint);
   if (NS_OK != rv) {
     return rv;
   }

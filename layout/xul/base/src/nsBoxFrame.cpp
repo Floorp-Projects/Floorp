@@ -1470,11 +1470,12 @@ nsBoxFrame::AppendFrames(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsHTMLContainerFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aHint);
 
   if (NS_OK != rv) {
     return rv;

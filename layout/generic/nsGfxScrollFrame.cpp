@@ -88,6 +88,7 @@ public:
                                   nsIContent* aContent2) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint);
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
@@ -674,6 +675,7 @@ nsGfxScrollFrameInner::ScrollPositionDidChange(nsIScrollableView* aScrollable, n
 NS_IMETHODIMP
 nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint) 
 {

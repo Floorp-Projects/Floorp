@@ -145,6 +145,7 @@ public:
                                   nsIContent* aContent2) { return NS_OK; }
   NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                               nsIContent*  aContent,
+                              PRInt32      aNameSpaceID,
                               nsIAtom*     aAttribute,
                               PRInt32      aHint) { return NS_OK; }
   NS_IMETHOD ContentAppended(nsIDocument *aDocument,
@@ -1594,6 +1595,7 @@ nsDocument::ContentRemoved(nsIContent* aContainer,
 
 NS_IMETHODIMP
 nsDocument::AttributeChanged(nsIContent* aChild,
+                             PRInt32 aNameSpaceID,
                              nsIAtom* aAttribute,
                              PRInt32 aHint)
 {
@@ -1602,7 +1604,7 @@ nsDocument::AttributeChanged(nsIContent* aChild,
   // observers remove themselves during the loop.
   for (i = 0; i < mObservers.Count(); i++) {
     nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
-    observer->AttributeChanged(this, aChild, aAttribute, aHint);
+    observer->AttributeChanged(this, aChild, aNameSpaceID, aAttribute, aHint);
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.
     if (observer != (nsIDocumentObserver*)mObservers[i]) {

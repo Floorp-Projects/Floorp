@@ -367,6 +367,7 @@ nsGfxTextControlFrame::GetText(nsString* aText, PRBool aInitialValue)
 NS_IMETHODIMP
 nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
                                         nsIContent*     aChild,
+                                        PRInt32         aNameSpaceID,
                                         nsIAtom*        aAttribute,
                                         PRInt32         aHint)
 {
@@ -455,7 +456,7 @@ nsGfxTextControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   // Allow the base class to handle common attributes supported
   // by all form elements... 
   else {
-    result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aAttribute, aHint);
+    result = nsFormControlFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aHint);
   }
 
   return result;
@@ -1711,6 +1712,7 @@ NS_IMETHODIMP nsEnderDocumentObserver::ContentStatesChanged(nsIDocument* aDocume
 
 NS_IMETHODIMP nsEnderDocumentObserver::AttributeChanged(nsIDocument *aDocument,
                                                         nsIContent*  aContent,
+                                                        PRInt32      aNameSpaceID,
                                                         nsIAtom*     aAttribute,
                                                         PRInt32      aHint)
 { return NS_OK; }

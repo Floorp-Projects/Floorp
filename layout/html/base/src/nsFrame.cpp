@@ -1337,6 +1337,7 @@ nsFrame::ContentChanged(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::AttributeChanged(nsIPresContext* aPresContext,
                           nsIContent*     aChild,
+                          PRInt32         aNameSpaceID,
                           nsIAtom*        aAttribute,
                           PRInt32         aHint)
 {

@@ -827,18 +827,19 @@ nsImageFrame::GetCursor(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
   nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aAttribute, aHint);
+                                              aNameSpaceID, aAttribute, aHint);
   if (NS_OK != rv) {
     return rv;
   }
   if (nsHTMLAtoms::src == aAttribute) {
     nsAutoString oldSRC, newSRC;
     mImageLoader.GetURLSpec(oldSRC);
-    aChild->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, newSRC);
+    aChild->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::src, newSRC);
     if (!oldSRC.Equals(newSRC)) {
 #ifdef NOISY_IMAGE_LOADING
       ListTag(stdout);

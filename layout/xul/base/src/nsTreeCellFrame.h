@@ -29,6 +29,7 @@ public:
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
                               nsIContent* aChild,
+                              PRInt32 aNameSpaceID,
                               nsIAtom* aAttribute,
                               PRInt32 aHint);
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
