@@ -25,7 +25,6 @@
 #include "nsLeafBoxFrame.h"
 #include "nsIOutlinerBoxObject.h"
 #include "nsIOutlinerView.h"
-#include "nsIOutlinerRangeList.h"
 #include "nsICSSPseudoComparator.h"
 #include "nsIScrollbarMediator.h"
 #include "nsIWidget.h"
@@ -212,7 +211,7 @@ protected:
   virtual ~nsOutlinerBodyFrame();
 
   // Returns the height of rows in the tree.
-  PRInt32 GetRowHeight(nsIPresContext* aPresContext);
+  PRInt32 GetRowHeight();
 
   // Returns our width/height once border and padding have been removed.
   nsRect GetInnerBox();
@@ -222,7 +221,7 @@ protected:
   nsresult GetPseudoStyleContext(nsIPresContext* aPresContext, nsIAtom* aPseudoElement, nsIStyleContext** aResult);
 
   // Builds our cache of column info.
-  void EnsureColumns(nsIPresContext* aContext);
+  void EnsureColumns();
 
   // Use to auto-fill some of the common properties without the view having to do it.
   // Examples include container, open, selected, and focused.

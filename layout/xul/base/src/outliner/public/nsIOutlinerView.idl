@@ -75,6 +75,10 @@ interface nsIOutlinerView : nsISupports
   // Called on the view when a header is clicked.
   void cycleHeader(in nsIDOMElement elt);
 
+  // Should be called from a XUL onselect handler whenever the selection changes.
+  // XXX Should this be done automatically?
+  void selectionChanged();
+
   // Called on the view when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
   void cycleCell(in long row, in wstring colID);
   

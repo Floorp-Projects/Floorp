@@ -14,6 +14,11 @@
 	    <children/>
 	  </xul:outlinerrows>
 	</content>
+	<implementation>
+	  <property name="outlinerBoxObject"
+                onget="return this.boxObject.QueryInterface(Components.interfaces.nsIOutlinerBoxObject);"
+                readonly="true"/>
+	</implementation>
   </binding>
 
   <binding id="outlinerrows" extends="xul:box">
@@ -21,7 +26,10 @@
 	  <children/>
       <xul:scrollbar align="vertical" class="outliner-scrollbar"/>
     </content>
-	<handlers>
+  </binding>
+
+  <binding id="outlinerbody">
+    <handlers>
 	  <!-- If there is no modifier key, we select on mousedown, not
            click, so that drags work correctly. -->
       <handler event="mousedown">
@@ -29,15 +37,15 @@
 	     if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
 		   var row = {};
 		   var col = {};
-		   var v = this.parentNode.outlinerBoxObject.view;
-		   v.getCellAt(event.x, event.y, row, col);
+		   var b = this.parentNode.outlinerBoxObject;
+		   b.getCellAt(event.clientX, event.clientY, row, col);
            
 		   // XXX Check the col to see if it's a cycler.  If so,
 		   // don't select.
-		   if (!v.selection.isSelected(row.value))
-             v.selection.select(row.value);
+		   if (!b.selection.isSelected(row.value))
+             b.selection.select(row.value);
 			 
-		   v.selection.currentIndex = row.value;
+		   b.selection.currentIndex = row.value;
          }
       ]]>
       </handler>
@@ -50,15 +58,15 @@
          if (event.button != 1) return;
          var row = {};
 	     var col = {};
-	     var v = this.parentNode.outlinerBoxObject.view;
-	     v.getCellAt(event.x, event.y, row, col);
+	     var b = this.parentNode.outlinerBoxObject;
+	     b.getCellAt(event.clientX, event.clientY, row, col);
          if (event.ctrlKey || event.metaKey) {
-           v.selection.toggleSelect(row.value);
-           v.selection.currentIndex = row.value;
+           b.selection.toggleSelect(row.value);
+           b.selection.currentIndex = row.value;
          }
          else if (event.shiftKey) {
-		   v.selection.rangedSelect(null, row.value);
-           v.currentIndex = row.value;
+		   b.selection.rangedSelect(-1, row.value);
+           b.currentIndex = row.value;
          }
          else {
           /* We want to deselect all the selected items except what was
@@ -67,7 +75,7 @@
             selected group of items */
 
 		   if (event.button == 1)
-		     v.selection.select(row.value);  
+		     b.selection.select(row.value);  
          }
       ]]>
       </handler>
@@ -78,16 +86,15 @@
            var row = {};
 		   var col = {};
 		   // XXX Again, we need to check the cycler.
-		   var v = this.parentNode.outlinerBoxObject.view;
-		   v.getCellAt(event.x, event.y, row, col);
-		   if (v.isContainer(row.value))
-		     v.toggleOpenState(row.value);
+		   var b = this.parentNode.outlinerBoxObject;
+		   b.getCellAt(event.clientX, event.clientY, row, col);
+		   if (b.isContainer(row.value))
+		     b.toggleOpenState(row.value);
       ]]>
       </handler>
     </handlers>
   </binding>
 
-  <binding id="outlinerbody"/>
 
   <binding id="outlinercol">
     <content autostretch="never">
@@ -95,6 +102,9 @@
       <xul:text class="outlinercol-text" inherits="crop,value" flex="1" crop="right"/>
       <xul:image class="outlinercol-sortdirection"/>
     </content>
+	<handlers>
+	  <handler event="click" action="this.parentNode.outlinerBoxObject.view.cycleHeader(this)"/>
+	</handlers>
   </binding>
 
 </bindings>

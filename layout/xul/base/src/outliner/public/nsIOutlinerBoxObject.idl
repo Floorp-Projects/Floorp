@@ -23,8 +23,10 @@
  */
 
 #include "nsISupports.idl"
+#include "domstubs.idl"
 
 interface nsIOutlinerView;
+interface nsIOutlinerSelection;
 
 [scriptable, uuid(8398C757-6387-480c-82B2-C914E15CE00D)]
 interface nsIOutlinerBoxObject : nsISupports
@@ -33,6 +35,12 @@ interface nsIOutlinerBoxObject : nsISupports
   // It is dynamically settable, either using a view attribute on the
   // outliner tag or by setting this attribute to a new value.
   attribute nsIOutlinerView view;
+
+  // Obtain the outlinerbody content node
+  readonly attribute nsIDOMElement outlinerBody;
+
+  // Obtains the selection from the view.
+  readonly attribute nsIOutlinerSelection selection;
 
   // Get the index of the first visible row.
   long getIndexOfVisibleRow();

@@ -128,6 +128,22 @@ NS_IMETHODIMP nsOutlinerBoxObject::SetView(nsIOutlinerView * aView)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsOutlinerBoxObject::GetOutlinerBody(nsIDOMElement** aElement)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body) 
+    return body->GetOutlinerBody(aElement);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsOutlinerBoxObject::GetSelection(nsIOutlinerSelection * *aSelection)
+{
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->GetSelection(aSelection);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBoxObject::GetIndexOfVisibleRow(PRInt32 *_retval)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();

@@ -21,9 +21,7 @@
 
 DEPTH=..\..\..\..\..\..
 
-XPIDLSRCS=      .\nsIOutlinerRangeList.idl                  \
-                .\nsIOutlinerRange.idl              \
-				.\nsIOutlinerView.idl    \
+XPIDLSRCS=      .\nsIOutlinerView.idl    \
                 .\nsIOutlinerSelection.idl               \
                 .\nsIOutlinerBoxObject.idl \
 				.\nsIOutlinerColFrame.idl \
