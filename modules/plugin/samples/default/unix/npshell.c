@@ -308,6 +308,18 @@ NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 }
 
 
+void
+NPP_URLNotify(NPP instance, const char* url,
+                NPReason reason, void* notifyData)
+{
+    /***** Insert NPP_URLNotify code here *****\
+    PluginInstance* This;
+    if (instance != NULL)
+        This = (PluginInstance*) instance->pdata;
+    \*********************************************/
+}
+
+
 void 
 NPP_Print(NPP instance, NPPrint* printInfo)
 {
