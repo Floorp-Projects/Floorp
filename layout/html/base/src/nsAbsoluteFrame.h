@@ -18,14 +18,13 @@
 #ifndef nsAbsoluteFrame_h___
 #define nsAbsoluteFrame_h___
 
-#include "nsFrame.h"
+#include "nsContainerFrame.h"
 struct nsStylePosition;
 struct nsStyleDisplay;
 
 // Implementation of a frame that's used as a placeholder for an absolutely
 // positioned frame
-class nsAbsoluteFrame : public nsFrame
-{
+class nsAbsoluteFrame : public nsContainerFrame {
 public:
   /**
    * Create a new absolutely positioned frame
@@ -35,23 +34,14 @@ public:
                            nsIFrame*   aParent);
 
   // nsIFrame overrides
-  NS_IMETHOD  ChildCount(PRInt32& aChildCount) const;
-  NS_IMETHOD  ChildAt(PRInt32 aIndex, nsIFrame*& aFrame) const;
-  NS_IMETHOD  IndexOf(const nsIFrame* aChild, PRInt32& aIndex) const;
-  NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
-  NS_IMETHOD  NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
-  NS_IMETHOD  PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
-  NS_IMETHOD  LastChild(nsIFrame*& aLastChild) const;
+  NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
                      const nsReflowState& aReflowState,
                      nsReflowStatus&      aStatus);
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
 
 protected:
-  nsIFrame* mFrame;  // the actual absolutely positioned frame
-
   // Constructor. Takes as arguments the content object, the index in parent,
   // and the Frame for the content parent
   nsAbsoluteFrame(nsIContent* aContent, nsIFrame* aParent);
