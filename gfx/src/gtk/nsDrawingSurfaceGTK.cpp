@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
 #include "nsDrawingSurfaceGTK.h"
 
@@ -155,7 +156,11 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   *aBits = mImage->mem;
 
 
-//   int bytes_per_line = ((GdkImagePrivate*)mImage)->ximage->bytes_per_line;
+
+
+
+#if 0
+  int bytes_per_line = ((GdkImagePrivate*)mImage)->ximage->bytes_per_line;
 
   //
   // All this code is a an attempt to set the stride width properly.
@@ -167,45 +172,44 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Lock(PRInt32 aX, PRInt32 aY,
   *aWidthBytes = mImage->bpl;
   *aStride = mImage->bpl;
 
-//   int width_in_pixels = *aWidthBytes << 8;
+  int width_in_pixels = *aWidthBytes << 8;
 
 
-  //   int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
-//   int depth = ((GdkImagePrivate*)mImage)->ximage->depth;
+  int bitmap_pad = ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  int depth = ((GdkImagePrivate*)mImage)->ximage->depth;
 
-// #define RASWIDTH8(width, bpp) (width)
-// #define RASWIDTH16(width, bpp) ((((width) * (bpp) + 15) >> 4) << 1)
-// #define RASWIDTH32(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
+#define RASWIDTH8(width, bpp) (width)
+#define RASWIDTH16(width, bpp) ((((width) * (bpp) + 15) >> 4) << 1)
+#define RASWIDTH32(width, bpp) ((((width) * (bpp) + 31) >> 5) << 2)
 
-//   switch(bitmap_pad)
-//     {
-//     case 8:
-//       *aStride = RASWIDTH8(aWidth,bitmap_pad);
-//       break;
+  switch(bitmap_pad)
+    {
+    case 8:
+      *aStride = RASWIDTH8(aWidth,bitmap_pad);
+      break;
 
-//     case 16:
-//       //      *aStride = bytes_per_line;
-//       *aStride = RASWIDTH16(aWidth,bitmap_pad);
-//       break;
+    case 16:
+      *aStride = bytes_per_line;
+      *aStride = RASWIDTH16(aWidth,bitmap_pad);
+      break;
 
-//     case 32:
-//       *aStride = bytes_per_line;
-//       //      *aStride = RASWIDTH32(aWidth,bitmap_pad);
-//       break;
+    case 32:
+      *aStride = bytes_per_line;
+      *aStride = RASWIDTH32(aWidth,bitmap_pad);
+      break;
 
-//     default:
+    default:
 
-//       NS_ASSERTION(nsnull,"something got screwed");
-      
-//     }
+      NS_ASSERTION(nsnull,"something got screwed");
 
+    }
 
-  //   *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
+  *aStride = (*aWidthBytes) + ((bitmap_pad >> 3) - 1);
 
-  // ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
+  ((GdkImagePrivate*)mImage)->ximage->bitmap_pad;
 
-  //  *aWidthBytes = mImage->bpl;
-
+  *aWidthBytes = mImage->bpl;
+#endif
   return NS_OK;
 }
 
@@ -228,18 +232,31 @@ NS_IMETHODIMP nsDrawingSurfaceGTK :: Unlock(void)
             mLockWidth, mLockHeight);
 #endif
 
-#if 0
-    gdk_gc_set_clip_origin(mGC, 0, 0);
-    gdk_gc_set_clip_mask(mGC, nsnull);
+#if XSHM
+    if (gdk_get_use_xshm())
+    {
+      XShmPutImage(GDK_DISPLAY(),
+                   GDK_WINDOW_XWINDOW(mPixmap),
+                   GDK_GC_XGC(mGC),
+                   GDK_IMAGE_XIMAGE(mImage),
+                   0, 0,
+                   mLockX, mLockY,
+                   mLockWidth, mLockHeight,
+                   False);
+      gdk_flush();
+    }
+    else
+    {
 #endif
-
-    gdk_draw_image(mPixmap,
-		   mGC,
-		   mImage,
-		   0, 0,
-		   mLockX, mLockY,
-		   mLockWidth, mLockHeight);
-
+      gdk_draw_image(mPixmap,
+                     mGC,
+                     mImage,
+                     0, 0,
+                     mLockX, mLockY,
+                     mLockWidth, mLockHeight);
+#ifdef XSHM
+    }
+#endif
   }
 
   if (mImage)

@@ -417,7 +417,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
   aClipEmpty = mClipRegion->IsEmpty();
 
   mClipRegion->GetNativeRegion((void*&)rgn);
-  gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
+  ::gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
 
   return NS_OK;
 }
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
 
   aClipEmpty = mClipRegion->IsEmpty();
   mClipRegion->GetNativeRegion((void*&)rgn);
-  gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
+  ::gdk_gc_set_clip_region(mSurface->GetGC(),rgn);
 
   return NS_OK;
 }
@@ -519,8 +519,8 @@ NS_IMETHODIMP nsRenderingContextGTK::SetFont(nsIFontMetrics *aFontMetrics)
     mFontMetrics->GetFontHandle(fontHandle);
     mCurrentFont = (GdkFont *)fontHandle;
 
-    gdk_gc_set_font(mSurface->GetGC(),
-                    mCurrentFont);
+    ::gdk_gc_set_font(mSurface->GetGC(),
+                      mCurrentFont);
   }
 
   return NS_OK;
@@ -533,25 +533,34 @@ NS_IMETHODIMP nsRenderingContextGTK::SetLineStyle(nsLineStyle aLineStyle)
     switch(aLineStyle)
     { 
       case nsLineStyle_kSolid:
-        ::gdk_gc_set_line_attributes(mSurface->GetGC(),
-                          1, GDK_LINE_SOLID, (GdkCapStyle)0, (GdkJoinStyle)0);
+        {
+          ::gdk_gc_set_line_attributes(mSurface->GetGC(),
+                                       1,
+                                       GDK_LINE_SOLID,
+                                       (GdkCapStyle)0,
+                                       (GdkJoinStyle)0);
+        }
         break;
 
-      case nsLineStyle_kDashed: {
-        static char dashed[2] = {4,4};
+      case nsLineStyle_kDashed:
+        {
+          static char dashed[2] = {4,4};
 
-        ::gdk_gc_set_dashes(mSurface->GetGC(), 
-                     0, dashed, 2);
-        } break;
+          ::gdk_gc_set_dashes(mSurface->GetGC(), 
+                              0, dashed, 2);
+        }
+        break;
 
-      case nsLineStyle_kDotted: {
-        static char dotted[2] = {3,1};
+      case nsLineStyle_kDotted:
+        {
+          static char dotted[2] = {3,1};
 
-        ::gdk_gc_set_dashes(mSurface->GetGC(), 
-                     0, dotted, 2);
-         }break;
+          ::gdk_gc_set_dashes(mSurface->GetGC(), 
+                              0, dotted, 2);
+        }
+        break;
 
-      default:
+    default:
         break;
 
     }
@@ -646,6 +655,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
   if (aX0 != aX1) {
     aX1--;
   }
+
   ::gdk_draw_line(mSurface->GetDrawable(),
                   mSurface->GetGC(),
                   aX0, aY0, aX1, aY1);
@@ -703,7 +713,9 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
 
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        FALSE,
-                       x, y, w - 1, h - 1);
+                       x, y,
+                       w - 1,
+                       h - 1);
 
   return NS_OK;
 }
@@ -727,8 +739,6 @@ NS_IMETHODIMP nsRenderingContextGTK::FillRect(nscoord aX, nscoord aY, nscoord aW
   h = aHeight;
 
   mTMatrix->TransformCoord(&x,&y,&w,&h);
-
-  //  gdk_gc_set_clip_region(mSurface->GetGC(), nsnull);
 
   ::gdk_draw_rectangle(mSurface->GetDrawable(), mSurface->GetGC(),
                        TRUE,
@@ -889,6 +899,9 @@ NS_IMETHODIMP nsRenderingContextGTK::FillArc(nscoord aX, nscoord aY,
 
   return NS_OK;
 }
+
+
+
 
 #ifdef FONT_SWITCHING
 
@@ -1376,8 +1389,8 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                                          const nsRect &aDestBounds,
                                          PRUint32 aCopyFlags)
 {
-  PRInt32               x = aSrcX;
-  PRInt32               y = aSrcY;
+  PRInt32               srcX = aSrcX;
+  PRInt32               srcY = aSrcY;
   nsRect                drect = aDestBounds;
   nsDrawingSurfaceGTK  *destsurf;
 
@@ -1412,7 +1425,7 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
     destsurf = mOffscreenSurface;
 
   if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)
-    mTMatrix->TransformCoord(&x, &y);
+    mTMatrix->TransformCoord(&srcX, &srcY);
 
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
     mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
@@ -1420,12 +1433,16 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
   //XXX flags are unused. that would seem to mean that there is
   //inefficiency somewhere... MMP
 
-  ::gdk_draw_pixmap(destsurf->GetDrawable(),
-                    ((nsDrawingSurfaceGTK *)aSrcSurf)->GetGC(),
-                    ((nsDrawingSurfaceGTK *)aSrcSurf)->GetDrawable(),
-                    x, y,
-                    drect.x, drect.y,
-                    drect.width, drect.height);
+
+  // gdk_draw_pixmap and copy_area do the same thing internally.
+  // copy_area sounds better
+  ::gdk_window_copy_area(destsurf->GetDrawable(),
+                         ((nsDrawingSurfaceGTK *)aSrcSurf)->GetGC(),
+                         drect.x, drect.y,
+                         ((nsDrawingSurfaceGTK *)aSrcSurf)->GetDrawable(),
+                         srcX, srcY,
+                         drect.width, drect.height);
+                     
 
   return NS_OK;
 }
