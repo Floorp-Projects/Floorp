@@ -90,13 +90,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         }
         // TODO: passing 'this' as the scope is bogus since it has 
         //  no parent scope
-        Object result = members.get(this, name, javaObject, false);
-        if (result == NOT_FOUND) {
-            Scriptable proto = getPrototype();
-            if (proto == null || !ScriptRuntime.hasProp(proto, name))
-                throw members.reportMemberNotFound(name);
-        }
-        return result;
+        return members.get(this, name, javaObject, false);
     }
 
     public Object get(int index, Scriptable start) {
