@@ -96,7 +96,7 @@ BOOL nsMapiAddressBook::LoadMapiLibrary(void)
     HRESULT retCode = mMAPIInitialize(&mapiInit) ;
 
     if (HR_FAILED(retCode)) { 
-        PRINTF("Cannot initialize MAPI %08x.\n", retCode) ; return FALSE ;
+        PRINTF(("Cannot initialize MAPI %08x.\n", retCode)) ; return FALSE ;
     }
     mInitialized = TRUE ;
     retCode = mMAPILogonEx(0, NULL, NULL,
@@ -106,12 +106,12 @@ BOOL nsMapiAddressBook::LoadMapiLibrary(void)
                            MAPI_NEW_SESSION,
                            &mRootSession) ;
     if (HR_FAILED(retCode)) { 
-        PRINTF("Cannot logon to MAPI %08x.\n", retCode) ; return FALSE ;
+        PRINTF(("Cannot logon to MAPI %08x.\n", retCode)) ; return FALSE ;
     }
     mLogonDone = TRUE ;
     retCode = mRootSession->OpenAddressBook(0, NULL, 0, &mRootBook) ;
     if (HR_FAILED(retCode)) { 
-        PRINTF("Cannot open MAPI address book %08x.\n", retCode) ;
+        PRINTF(("Cannot open MAPI address book %08x.\n", retCode)) ;
     }
     return HR_SUCCEEDED(retCode) ;
 }
@@ -165,7 +165,7 @@ BOOL nsMapiAddressBook::Initialize(void)
     nsAutoLock guard(mMutex) ;
 
     if (!LoadMapiLibrary()) {
-        PRINTF("Cannot load library.\n") ;
+        PRINTF(("Cannot load library.\n")) ;
         return FALSE ;
     }
     mAddressBook = mRootBook ; 

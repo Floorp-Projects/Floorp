@@ -153,7 +153,7 @@ nsresult nsAbOutlookCard::Init(const char *aUri)
 
     mAbWinType = getAbWinType(kOutlookCardScheme, mURI, stub, entry) ;
     if (mAbWinType == nsAbWinType_Unknown) {
-        PRINTF("Huge problem URI=%s.\n", mURI) ;
+        PRINTF(("Huge problem URI=%s.\n", mURI)) ;
         return NS_ERROR_INVALID_ARG ;
     }
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
@@ -237,7 +237,7 @@ static void UnicodeToWord(const PRUnichar *aUnicode, WORD& aWord)
 
     aWord = NS_STATIC_CAST(WORD, unichar.ToInteger(&errorCode)) ;
     if (errorCode != 0) {
-        PRINTF("Error conversion string %S: %08x.\n", unichar.get(), errorCode) ;
+        PRINTF(("Error conversion string %S: %08x.\n", unichar.get(), errorCode)) ;
     }
 }
 
@@ -292,7 +292,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
     GetNotes(getter_Copies(properties [index_Comments])) ;
     if (!mapiAddBook->SetPropertiesUString(*mMapiData, OutlookCardMAPIProps, 
         index_LastProp, properties)) {
-        PRINTF("Cannot set general properties.\n") ;
+        PRINTF(("Cannot set general properties.\n")) ;
     }
     delete [] properties ;
     nsXPIDLString unichar ;
@@ -307,7 +307,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
     if (utility.Length() > 0) { utility.AppendWithConversion(CRLF) ; }
     utility.Append(unichar2.get()) ;
     if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_HOME_ADDRESS_STREET_W, utility.get())) {
-        PRINTF("Cannot set home address.\n") ;
+        PRINTF(("Cannot set home address.\n")) ;
     }
     GetWorkAddress(getter_Copies(unichar)) ;
     GetWorkAddress2(getter_Copies(unichar2)) ;
@@ -315,7 +315,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
     if (utility.Length() > 0) { utility.AppendWithConversion(CRLF) ; }
     utility.Append(unichar2.get()) ;
     if (!mapiAddBook->SetPropertyUString(*mMapiData, PR_BUSINESS_ADDRESS_STREET_W, utility.get())) {
-        PRINTF("Cannot set work address.\n") ;
+        PRINTF(("Cannot set work address.\n")) ;
     }
     GetBirthYear(getter_Copies(unichar)) ;
     UnicodeToWord(unichar.get(), year) ;
@@ -324,7 +324,7 @@ NS_IMETHODIMP nsAbOutlookCard::EditCardToDatabase(const char *aUri)
     GetBirthDay(getter_Copies(unichar)) ;
     UnicodeToWord(unichar.get(), day) ;
     if (!mapiAddBook->SetPropertyDate(*mMapiData, PR_BIRTHDAY, year, month, day)) {
-        PRINTF("Cannot set date.\n") ;
+        PRINTF(("Cannot set date.\n")) ;
     }
     return retCode ;
 }

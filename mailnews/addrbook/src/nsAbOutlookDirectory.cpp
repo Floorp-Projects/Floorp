@@ -113,7 +113,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
 
     mAbWinType = getAbWinType(kOutlookDirectoryScheme, mURINoQuery, stub, entry) ;
     if (mAbWinType == nsAbWinType_Unknown) {
-        PRINTF("Huge problem URI=%s.\n", mURINoQuery) ;
+        PRINTF(("Huge problem URI=%s.\n", mURINoQuery)) ;
         return NS_ERROR_INVALID_ARG ;
     }
     nsAbWinHelperGuard mapiAddBook (mAbWinType) ;
@@ -124,11 +124,11 @@ NS_IMETHODIMP nsAbOutlookDirectory::Init(const char *aUri)
     if (!mapiAddBook->IsOK()) { return NS_ERROR_FAILURE ; }
     mMapiData->Assign(entry) ;
     if (!mapiAddBook->GetPropertyLong(*mMapiData, PR_OBJECT_TYPE, objectType)) {
-        PRINTF("Cannot get type.\n") ;
+        PRINTF(("Cannot get type.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     if (!mapiAddBook->GetPropertyUString(*mMapiData, PR_DISPLAY_NAME_W, unichars)) {
-        PRINTF("Cannot get name.\n") ;
+        PRINTF(("Cannot get name.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     if (mAbWinType == nsAbWinType_Outlook) { prefix.AssignWithConversion("OP ") ; }
@@ -314,7 +314,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
 
             cardEntry.Assign(entryString) ;
             if (!mapiAddBook->DeleteEntry(*mMapiData, cardEntry)) {
-                PRINTF("Cannot delete card %s.\n", entryString.get()) ;
+                PRINTF(("Cannot delete card %s.\n", entryString.get())) ;
             }
             else {
                 nsVoidKey key (NS_STATIC_CAST(void *, element)) ;
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteCards(nsISupportsArray *aCardList)
             }
         }
         else {
-            PRINTF("Card doesn't belong in this directory.\n") ;
+            PRINTF(("Card doesn't belong in this directory.\n")) ;
         }
     }
     return NS_OK ;
@@ -347,7 +347,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
 
         directoryEntry.Assign(entryString) ;
         if (!mapiAddBook->DeleteEntry(*mMapiData, directoryEntry)) {
-            PRINTF("Cannot delete directory %s.\n", entryString.get()) ;
+            PRINTF(("Cannot delete directory %s.\n", entryString.get())) ;
         }
         else {
             m_AddressList->RemoveElement(aDirectory) ;
@@ -356,7 +356,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::DeleteDirectory(nsIAbDirectory *aDirectory)
         }
     }
     else {
-        PRINTF("Directory doesn't belong to this folder.\n") ;
+        PRINTF(("Directory doesn't belong to this folder.\n")) ;
     }
     return retCode ;
 }
@@ -372,7 +372,7 @@ NS_IMETHODIMP nsAbOutlookDirectory::AddCard(nsIAbCard *aData, nsIAbCard **aCard)
     retCode = HasCard(aData, &hasCard) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (hasCard) {
-        PRINTF("Has card.\n") ;
+        PRINTF(("Has card.\n")) ;
         return NS_OK ; 
     }
     retCode = CreateCard(aData, aCard) ;
@@ -710,11 +710,11 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
     retCode = expressions->Count(&nbExpressions) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (nbExpressions == 0) { 
-        PRINTF("Error, no expressions.\n") ;
+        PRINTF(("Error, no expressions.\n")) ;
         return NS_OK ;
     }
     if (operationType == nsIAbBooleanOperationTypes::NOT && nbExpressions != 1) {
-        PRINTF("Error, unary operation NOT with multiple operands.\n") ;
+        PRINTF(("Error, unary operation NOT with multiple operands.\n")) ;
         return NS_OK ;
     }
     LPSRestriction restrictionArray = new SRestriction [nbExpressions] ;
@@ -733,7 +733,7 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
                 if (NS_SUCCEEDED(retCode)) {
                     if (!skipItem) { ++ restrictionArray ; ++ realNbExpressions ; }
                 }
-                else { PRINTF("Cannot build restriction for item %d %08x.\n", i, retCode) ; }
+                else { PRINTF(("Cannot build restriction for item %d %08x.\n", i, retCode)) ; }
             }
             else { 
                 nsCOMPtr<nsIAbBooleanExpression> subExpression (do_QueryInterface(element, &retCode)) ;
@@ -746,10 +746,10 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
                         }
                     }
                 }
-                else { PRINTF("Cannot get interface for item %d %08x.\n", i, retCode) ; }
+                else { PRINTF(("Cannot get interface for item %d %08x.\n", i, retCode)) ; }
             }
         }
-        else { PRINTF("Cannot get item %d %08x.\n", i, retCode) ; }
+        else { PRINTF(("Cannot get item %d %08x.\n", i, retCode)) ; }
     }
     restrictionArray -= realNbExpressions ;
     if (realNbExpressions > 1) {
@@ -764,7 +764,7 @@ static nsresult BuildRestriction(nsIAbBooleanExpression *aLevel,
             aRestriction.res.resAnd.cRes = realNbExpressions ;
         }
         else {
-            PRINTF("Unsupported operation %d.\n", operationType) ;
+            PRINTF(("Unsupported operation %d.\n", operationType)) ;
         }
     }
     else if (realNbExpressions == 1) {
@@ -1112,7 +1112,7 @@ nsresult nsAbOutlookDirectory::GetChildCards(nsISupportsArray **aCards,
     retCode = NS_NewISupportsArray(getter_AddRefs(cards)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!mapiAddBook->GetCards(*mMapiData, restriction, cardEntries)) {
-        PRINTF("Cannot get cards.\n") ;
+        PRINTF(("Cannot get cards.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
@@ -1145,7 +1145,7 @@ nsresult nsAbOutlookDirectory::GetChildNodes(nsISupportsArray **aNodes)
     retCode = NS_NewISupportsArray(getter_AddRefs(nodes)) ;
     NS_ENSURE_SUCCESS(retCode, retCode) ;
     if (!mapiAddBook->GetNodes(*mMapiData, nodeEntries)) {
-        PRINTF("Cannot get nodes.\n") ;
+        PRINTF(("Cannot get nodes.\n")) ;
         return NS_ERROR_FAILURE ;
     }
     nsCAutoString entryId ;
@@ -1196,7 +1196,7 @@ nsresult nsAbOutlookDirectory::CommitAddressList(void)
     PRUint32 i = 0 ;
     
     if (!m_bIsMailList) { 
-        PRINTF("We are not in a mailing list, no commit can be done.\n") ;
+        PRINTF(("We are not in a mailing list, no commit can be done.\n")) ;
         return NS_ERROR_UNEXPECTED ;
     }
     retCode = GetChildCards(getter_AddRefs(oldList), nsnull) ;

@@ -75,7 +75,7 @@ BOOL nsWabAddressBook::LoadWabLibrary(void)
     HRESULT retCode = mWABOpen(&mRootBook, &mRootSession, NULL, 0) ;
 
     if (HR_FAILED(retCode)) {
-        PRINTF("Cannot initialize WAB %08x.\n", retCode) ; return FALSE ;
+        PRINTF(("Cannot initialize WAB %08x.\n", retCode)) ; return FALSE ;
     }
     return TRUE ;
 }
@@ -116,7 +116,7 @@ BOOL nsWabAddressBook::Initialize(void)
     nsAutoLock guard(mMutex) ;
 
     if (!LoadWabLibrary()) {
-        PRINTF("Cannot load library.\n") ;
+        PRINTF(("Cannot load library.\n")) ;
         return FALSE ;
     }
     mAddressBook = mRootBook ;
