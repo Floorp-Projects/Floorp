@@ -565,13 +565,13 @@ nsHTMLTableElement::GetRows(nsIDOMHTMLCollection** aValue)
   if (!mRows) {
     // XXX why was this here NS_ADDREF(nsHTMLAtoms::tr);
     mRows = new TableRowsCollection(this);
-
     NS_ENSURE_TRUE(mRows, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(mRows); // this table's reference, released in the destructor
   }
 
-  mRows->QueryInterface(NS_GET_IID(nsIDOMHTMLCollection), (void **)aValue);
+  *aValue = mRows;
+  NS_ADDREF(*aValue);
 
   return NS_OK;
 }
@@ -756,27 +756,32 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
        insert the new row as its first child
   */
   *aValue = nsnull;
+
+  if (aIndex < 0) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
   nsresult rv;
 
-  // use local variable refIndex so we can remember original aIndex
-  PRInt32 refIndex = aIndex;
-
-  if (0>refIndex) // negative aIndex treated as 0
-    refIndex=0;
-
-  nsIDOMHTMLCollection *rows;
-  GetRows(&rows);
+  nsCOMPtr<nsIDOMHTMLCollection> rows;
+  GetRows(getter_AddRefs(rows));
 
   PRUint32 rowCount;
-
   rows->GetLength(&rowCount);
 
-  if (0<rowCount) {
-    if (rowCount<=PRUint32(refIndex)) {
+  if ((PRUint32)aIndex > rowCount) {
+    return NS_ERROR_DOM_INDEX_SIZE_ERR;
+  }
+
+  // use local variable refIndex so we can remember original aIndex
+  PRUint32 refIndex = (PRUint32)aIndex;
+
+  if (rowCount > 0) {
+    if (refIndex == rowCount) {
       // we set refIndex to the last row so we can get the last row's
       // parent we then do an AppendChild below if (rowCount<aIndex)
 
-      refIndex=rowCount-1;
+      refIndex = rowCount - 1;
     }
 
     nsCOMPtr<nsIDOMNode> refRow;
@@ -822,7 +827,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
 
     GenericElementCollection head(this, nsHTMLAtoms::thead);
 
-    PRUint32 length=0;
+    PRUint32 length = 0;
 
     head.GetLength(&length);
 
@@ -832,22 +837,22 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     else
     {
       GenericElementCollection body(this, nsHTMLAtoms::tbody);
-      length=0;
+      length = 0;
 
       body.GetLength(&length);
 
-      if (0 != length) {
+      if (length > 0) {
         body.Item(0, getter_AddRefs(rowGroup));
       }
       else
       {
         GenericElementCollection foot(this, nsHTMLAtoms::tfoot);
 
-        length=0;
+        length = 0;
 
         foot.GetLength(&length);
 
-        if (0 != length) {
+        if (length > 0) {
           foot.Item(0, getter_AddRefs(rowGroup));
         }
       }
