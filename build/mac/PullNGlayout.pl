@@ -36,10 +36,10 @@ $pull{runtime} = 0;
 
 if ($pull{all})
 {
-	foreach $k (keys(%pull))
-	{
-		$pull{$k} = 1;
-	}
+    foreach $k (keys(%pull))
+    {
+        $pull{$k} = 1;
+    }
 }
 
 # you should not have to edit anything bellow

@@ -253,7 +253,7 @@ sub InstallManifestRDFFiles()
     my $chrome_subdir = "Chrome:";
     my $chrome_dir = "$dist_dir" . $chrome_subdir;
 
-    my($building_jars) = $main::options{jars};
+    my($building_jars) = 0;     # $main::options{chrome_jars};
 
     # nuke installed-chrome.txt
     unlink ${chrome_dir}."installed-chrome.txt";
@@ -336,6 +336,8 @@ sub ConfigureBuildSystem()
 
     # launch codewarrior and write idepath.txt
     LaunchCodeWarrior();
+    
+    SanityCheckJarOptions();
     
     #// For now, if we discover a newer header file than existed in Universal Interfaces 3.2,
     #// we'll assume that 3.3 or later is in use.
@@ -620,6 +622,8 @@ sub SetDefaultSkin($)
 
     my($dist_dir) = _getDistDirectory();
     my($chrome_subdir) = $dist_dir."Chrome";
+    
+    print "Setting default skin to $skin\n";
     
     open(CHROMEFILE, ">>${chrome_subdir}:installed-chrome.txt") || die "Failed to open installed_chrome.txt\n";
     print(CHROMEFILE "skin,install,select,$skin\n");
@@ -1364,7 +1368,7 @@ sub ProcessJarManifests()
 
 sub BuildJarFiles()
 {
-    unless( $main::build{resources} && $main::options{jars} ) { return; }
+    unless( $main::build{resources} ) { return; }
     _assertRightDirectory();
 
     print("--- Starting JAR building ----\n");

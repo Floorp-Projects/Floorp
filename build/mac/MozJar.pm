@@ -20,7 +20,7 @@ use Moz;
 use vars qw( @ISA @EXPORT );
 
 @ISA        = qw(Exporter);
-@EXPORT     = qw(CreateJarFileFromDirectory WriteOutJarFiles);
+@EXPORT     = qw(CreateJarFileFromDirectory WriteOutJarFiles SanityCheckJarOptions);
 
 
 #-------------------------------------------------------------------------------
@@ -97,6 +97,39 @@ sub CreateJarFileFromDirectory($$$)
     # set the file type/creator to something reasonable
     MacPerl::SetFileInfo("ZIP ", "ZIP ", $jarpath);
 }
+
+
+#-------------------------------------------------------------------------------
+# SanityCheckJarOptions
+# 
+#-------------------------------------------------------------------------------
+sub SanityCheckJarOptions()
+{
+    if (! $main::options{jar_manifests})
+    {
+        print "\$options{jar_manifests} is off, which means you are using obsolete MANIFEST files to install chrome resources.\n";
+        return;
+    }
+
+    if (!$main::options{chrome_jars} && !$main::options{chrome_files})
+    {
+        print "Both \$options{chrome_jars} and \$options{chrome_files} are off. You won't get any chrome.\n";
+        return;
+    }
+
+    if (!$main::options{chrome_jars} && $main::options{use_jars})
+    {
+        print "\$options{chrome_jars} is off but \$options{use_jars} is on. Your build won't run (expects jars, got files).\n";
+        return;
+    }
+
+    if (!$main::options{chrome_files} && !$main::options{use_jars})
+    {
+        print "\$options{chrome_jars} is off but \$options{chrome_files} is on. Your build won't run (expects files, got jars).\n";
+        return;
+    }
+}
+
 
 #-------------------------------------------------------------------------------
 # printZipContents
@@ -186,7 +219,7 @@ sub addToJarFile($$$$$$$)
         }
     }
     
-    if ($main::options{jars})
+    if ($main::options{chrome_jars})
     {
         my($zip) = $jars->{$jar_id};
         unless ($zip) { die "Can't find Zip entry for $jar_id\n"; }
@@ -276,7 +309,7 @@ sub setupJarFile($$$)
     $jar_file =~ s|/|:|g;           # slash to colons
     my($full_jar_path) = Moz::full_path_to($dest_path.":".$jar_file);
 
-    if ($main::options{jars})
+    if ($main::options{chrome_jars})
     {
         my($zip) = $jar_hash->{$jar_id};
         if (!$zip)      # if we haven't made it already, do so
@@ -318,7 +351,7 @@ sub closeJarFile($$)
 
     # print "Closing jar file $jar_path\n";
 
-    if ($main::options{jars})
+    if ($main::options{chrome_jars})
     {
     
     }
@@ -339,7 +372,7 @@ sub WriteOutJarFiles($$)
 {
     my($chrome_dir, $jars) = @_;
 
-    unless ($main::options{jars}) { return; }
+    unless ($main::options{chrome_jars}) { return; }
     
     my($full_chrome_path) = Moz::full_path_to($chrome_dir);
 
@@ -382,7 +415,7 @@ sub registerChromePackage($$$$$$)
     
     my($chrome_entry);
     
-    if ($main::options{jars}) {
+    if ($main::options{use_jars}) {
         $chrome_entry = "$chrome_type,install,url,jar:resource:/chrome/$manifest_subdir!/$chrome_type/$pkg_name";
     } else {
         $manifest_subdir =~ s/\.jar$/\//;
@@ -427,9 +460,10 @@ sub CreateJarFromManifest($$$)
 {
     my($jar_man_path, $dest_path, $jars) = @_;
     
-    if ($main::options{jars}) {
+    if ($main::options{chrome_jars}) {
         print "Jarring from $jar_man_path\n";
-    } else {
+    }
+    if ($main::options{chrome_files}) {
         print "Installing files from $jar_man_path\n";
     }
 
