@@ -104,9 +104,12 @@ public class Main {
         if (processStdin)
             fileList.addElement(null);
 
-        // define "arguments" array in the top-level object
-        Object[] array = args;
-        Scriptable argsObj = cx.newArray(global, args);
+        // define "arguments" array in the top-level object:
+        // need to allocate new array since newArray requires instances
+        // of exactly Object[], not ObjectSubclass[]
+        Object[] array = new Object[args.length];
+        System.arraycopy(args, 0, array, 0, args.length);
+        Scriptable argsObj = cx.newArray(global, array);
         global.defineProperty("arguments", argsObj,
                               ScriptableObject.DONTENUM);
 
