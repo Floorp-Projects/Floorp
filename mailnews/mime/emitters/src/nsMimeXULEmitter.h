@@ -163,6 +163,8 @@ protected:
     // RICHIE SHERRY nsCOMPtr<nsIMimeMiscStatus>   mMiscStatus;
     nsVoidArray         *mMiscStatusArray;
     nsCOMPtr<nsIMsgHeaderParser>  mHeaderParser;
+
+	//nsOutputFileStream* m_outputFile;
 };
 
 

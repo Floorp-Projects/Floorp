@@ -45,6 +45,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 
+
 nsresult NS_NewMimeXULEmitter(const nsIID& iid, void **result)
 {
 	nsMimeXULEmitter *obj = new nsMimeXULEmitter();
@@ -68,6 +69,11 @@ NS_IMPL_QUERY_INTERFACE(nsMimeXULEmitter, nsIMimeEmitter::GetIID()); /* we need 
 nsMimeXULEmitter::nsMimeXULEmitter()
 {
   NS_INIT_REFCNT(); 
+
+ // nsFileSpec fileSpec("c:\\temp\\xulOutput");
+
+ // m_outputFile = new nsOutputFileStream(fileSpec, PR_WRONLY |
+ //                                                 PR_CREATE_FILE);
 
   mCutoffValue = 3;
   mBufferMgr = NULL;
@@ -340,6 +346,7 @@ nsMimeXULEmitter::Write(const char *buf, PRUint32 size, PRUint32 *amountWritten)
   PRUint32            rc = 0;
   PRUint32            needToWrite;
 
+ // *m_outputFile << buf;
   //
   // Make sure that the buffer we are "pushing" into has enough room
   // for the write operation. If not, we have to buffer, return, and get
@@ -540,11 +547,6 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   // Make it look consistent...
   UtilityWriteCRLF("<?xml-stylesheet href=\"chrome://global/skin/\" type=\"text/css\"?>");
 
-  // Output the message ID to make it query-able via the DOM
-  UtilityWrite("<message id=\"");
-  UtilityWrite(newValue);
-  PR_FREEIF(newValue);
-  UtilityWriteCRLF("\">");
 
   // Now, the XUL window!
   UtilityWriteCRLF("<window ");
@@ -552,7 +554,13 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   UtilityWriteCRLF("xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ");
   UtilityWriteCRLF("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
   DoWindowStatusProcessing();
-  UtilityWriteCRLF("align=\"vertical\"> ");
+  UtilityWriteCRLF("align=\"vertical\" flex=\"1\"> ");
+
+  // Output the message ID to make it query-able via the DOM
+  UtilityWrite("<message id=\"");
+  UtilityWrite(newValue);
+  PR_FREEIF(newValue);
+  UtilityWriteCRLF("\"/>");
 
   // Now, the JavaScript...
   UtilityWriteCRLF("<html:script language=\"javascript\" src=\"chrome://messenger/content/attach.js\"/>");
@@ -803,7 +811,7 @@ nsMimeXULEmitter::DumpBody()
 
   UtilityWrite("<html:iframe id=\"mail-body-frame\" type=\"content-primary\" src=\"");
   UtilityWrite(url);
-  UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" height=\"100%\"/>");
+  UtilityWriteCRLF("\" border=\"0\" scrolling=\"auto\" resize=\"yes\" width=\"100%\" flex=\"1\"/>");
   PR_FREEIF(url);
   return NS_OK;
 }
@@ -829,9 +837,9 @@ nsresult
 nsMimeXULEmitter::DumpSubjectFromDate()
 {
   UtilityWriteCRLF("<toolbar>");
-  UtilityWriteCRLF("<box name=\"header-splitter\" align=\"horizontal\" flex=\"100%\" >");
+  UtilityWriteCRLF("<box name=\"header-splitter\" align=\"horizontal\" flex=\"1\" >");
 
-      UtilityWriteCRLF("<box name=\"header-part1\" align=\"vertical\" flex=\"100%\">");
+      UtilityWriteCRLF("<box name=\"header-part1\" align=\"vertical\" flex=\"1\">");
       UtilityWriteCRLF("<spring flex=\"2\"/>");
 
           // This is the envelope information
@@ -843,7 +851,7 @@ nsMimeXULEmitter::DumpSubjectFromDate()
       UtilityWriteCRLF("</box>");
 
 
-      UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"100%\">");
+      UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"1\">");
       UtilityWriteCRLF("<spring flex=\"1\"/>");
 
         // Now the addbook and attachment icons need to be displayed
@@ -864,7 +872,7 @@ nsMimeXULEmitter::DumpToCC()
 {
   UtilityWriteCRLF("<toolbar>");
 
-    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"100%\">");
+    UtilityWriteCRLF("<box name=\"header-part2\" align=\"vertical\" flex=\"1\">");
 
       OutputGenericHeader(HEADER_TO);
       OutputGenericHeader(HEADER_CC);
@@ -886,7 +894,7 @@ nsMimeXULEmitter::DumpRestOfHeaders()
 
   UtilityWriteCRLF("<toolbar>");
 
-    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" flex=\"100%\">");
+    UtilityWriteCRLF("<box name=\"header-part3\" align=\"vertical\" flex=\"1\">");
 
       for (i=0; i<mHeaderArray->Count(); i++)
       {
