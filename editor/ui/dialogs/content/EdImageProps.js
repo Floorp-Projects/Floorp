@@ -22,13 +22,13 @@
  *   Brian King
  */
 
-var insertNew         = true;
+var insertNew                           = true;
 var imageElement;
-var tagName         = "img"
-var doSeeAll         = true;
-var wasEnableAll       = false;
-var hasAnyChanged       = false;
-var oldSourceInt       = 0;
+var tagName                             = "img"
+var doSeeAll                            = true;
+var wasEnableAll                        = false;
+var hasAnyChanged                       = false;
+var oldSourceInt                        = 0;
 
 // dialog initialization code
 
@@ -40,32 +40,32 @@ function Startup()
 
   // Create dialog object to store controls for easy access
 
-  dialog         = new Object;
+  dialog                                = new Object;
 
   // This is the "combined" widget:
 
-  dialog.srcInput       = document.getElementById("image.srcInput");
-  dialog.altTextInput       = document.getElementById("image.altTextInput");
+  dialog.srcInput                       = document.getElementById("image.srcInput");
+  dialog.altTextInput                   = document.getElementById("image.altTextInput");
 
-  dialog.MoreFewerButton     = document.getElementById("MoreFewerButton");
-  dialog.MoreRow       = document.getElementById("MoreRow");
+  dialog.MoreFewerButton                = document.getElementById("MoreFewerButton");
+  dialog.MoreRow                        = document.getElementById("MoreRow");
 
-  dialog.customsizeRadio     = document.getElementById( "customsizeRadio" );
-  dialog.imagewidthInput     = document.getElementById( "imagewidthInput" );
-  dialog.imageheightInput     = document.getElementById( "imageheightInput" );
+  dialog.customsizeRadio                = document.getElementById( "customsizeRadio" );
+  dialog.imagewidthInput                = document.getElementById( "imagewidthInput" );
+  dialog.imageheightInput               = document.getElementById( "imageheightInput" );
   
-  dialog.imagelrInput       = document.getElementById( "imageleftrightInput" );
-  dialog.imagetbInput       = document.getElementById( "imagetopbottomInput" );
-  dialog.imageborderInput     = document.getElementById( "imageborderInput" );
+  dialog.imagelrInput                   = document.getElementById( "imageleftrightInput" );
+  dialog.imagetbInput                   = document.getElementById( "imagetopbottomInput" );
+  dialog.imageborderInput               = document.getElementById( "imageborderInput" );
 
   // Start in the mode initialized in the "doSeeAll" var above
   // THIS IS NOT WORKING NOW - After switching to "basic" mode,
   // then back to 
 
   if (doSeeAll) {
-    dialog.MoreRow.style.visibility   = "inherit"; // visible
+    dialog.MoreRow.style.visibility     = "inherit"; // visible
   } else {
-    dialog.MoreRow.style.visibility   = "hidden"; // collapse
+    dialog.MoreRow.style.visibility     = "hidden"; // collapse
   }
 
   if (null == dialog.srcInput || 
@@ -83,23 +83,23 @@ function initDialog() {
 
   // Get a single selected anchor element
 
-  imageElement         = editorShell.GetSelectedElement(tagName);
+  imageElement                          = editorShell.GetSelectedElement(tagName);
 
   if (imageElement) 
   {
     // We found an element and don't need to insert one
 
-    insertNew         = false;
+    insertNew                           = false;
   } 
   else
   {
-    insertNew         = true;
+    insertNew                           = true;
 
     // We don't have an element selected, 
     //  so create one with default attributes
 
     dump("Element not selected - calling createElementWithDefaults\n");
-    imageElement       = editorShell.CreateElementWithDefaults(tagName);
+    imageElement                        = editorShell.CreateElementWithDefaults(tagName);
     if( !imageElement )
     {
       dump("Failed to get selected element or create a new one!\n");
@@ -109,19 +109,19 @@ function initDialog() {
 
   // Set the controls to the image's attributes
 
-  str           = imageElement.getAttribute("src");
+  str                                   = imageElement.getAttribute("src");
   if ( str == "null" )
   {
-    str = "";
+    str                                 = "";
   }
 
-  dialog.srcInput.value     = str;
+  dialog.srcInput.value                 = str;
   
-  str           = imageElement.getAttribute("alt");
+  str                                   = imageElement.getAttribute("alt");
 
   if ( str == "null" )
   {
-    str         = "";
+    str                                 = "";
   }
   dialog.altTextInput.value = str;
   
@@ -138,24 +138,24 @@ function initDialog() {
   {
     dimvalue = "";
   }
-  dialog.imagewidthInput.value     = dimvalue;
+  dialog.imagewidthInput.value          = dimvalue;
   
-  dimvalue         = imageElement.getAttribute("height");
+  dimvalue                              = imageElement.getAttribute("height");
   if ( dimvalue == "null" )
   {
-    dimvalue         = "";
+    dimvalue                            = "";
   }
-  dialog.imageheightInput.value     = dimvalue;
+  dialog.imageheightInput.value         = dimvalue;
   
   // Mods Brian King XML Workshop
   // Set H & W pop-up on start-up
   if (insertNew == false)
   {
     
-    var wdh = imageElement.getAttribute("width");
-    var hgt = imageElement.getAttribute("height");
-    ispercentw = wdh.substr(wdh.length-1, 1);
-    ispercenth = hgt.substr(hgt.length-1, 1);
+    var wdh                             = imageElement.getAttribute("width");
+    var hgt                             = imageElement.getAttribute("height");
+    ispercentw                          = wdh.substr(wdh.length-1, 1);
+    ispercenth                          = hgt.substr(hgt.length-1, 1);
 
   if (ispercentw == "%")
       setPopup("w");
@@ -170,18 +170,20 @@ function initDialog() {
 
   if ( dimvalue != "" )
   {
-    dialog.customsizeRadio.checked   = true;
+    dialog.customsizeRadio.checked      = true;
   }
 
-  alignpopup         = document.getElementById("image.alignType");
+  alignpopup                            = document.getElementById("image.alignType");
+
+/********************* removed, some things are better said without words ******************
 
   if ( alignpopup )
   {
-    alignvalue         = imageElement.getAttribute("align");
+    alignvalue                          = imageElement.getAttribute("align");
 
     if ( alignvalue == "" )
     {
-      alignvalue       = "at the bottom";
+      alignvalue                        = "at the bottom";
     }
 
     dump( "popup value = " + alignvalue + "\n" );
@@ -190,20 +192,22 @@ function initDialog() {
 
   }
 
+********************* removed, some things are better said without words ******************/
+
   // set spacing editfields
 
-  sizevalue         = imageElement.getAttribute("hspace");
-  dialog.imagelrInput.value     = sizevalue;
+  sizevalue                             = imageElement.getAttribute("hspace");
+  dialog.imagelrInput.value             = sizevalue;
   
-  sizevalue         = imageElement.getAttribute("vspace");
-  dialog.imagetbInput.value     = sizevalue;
+  sizevalue                             = imageElement.getAttribute("vspace");
+  dialog.imagetbInput.value             = sizevalue;
   
-  sizevalue         = imageElement.getAttribute("border");
-  dialog.imageborderInput.value   = sizevalue;    
+  sizevalue                             = imageElement.getAttribute("border");
+  dialog.imageborderInput.value         = sizevalue;    
 
   // force wasEnableAll to be different so everything gets updated
 
-  wasEnableAll         = !(dialog.srcInput.value.length > 0);
+  wasEnableAll                          = !(dialog.srcInput.value.length > 0);
   doOverallEnabling();
 
   checkForImage( "image.srcInput" );
@@ -213,9 +217,9 @@ function chooseFile()
 {
   // Get a local file, converted into URL format
 
-  fileName         = editorShell.GetLocalFileURL(window, "img");
+  fileName                              = editorShell.GetLocalFileURL(window, "img");
   if (fileName && fileName != "") {
-    dialog.srcInput.value     = fileName;
+    dialog.srcInput.value               = fileName;
     checkForImage( "image.srcInput" );
     doValueChanged();
   }
@@ -230,35 +234,31 @@ function onMoreFewer()
   if (doSeeAll)
   {
     void(null);    
-    doSeeAll         = false;
-    dialog.MoreRow.style.visibility   = "hidden"; // collapse is a little funky
+    doSeeAll                            = false;
+    dialog.MoreRow.style.visibility     = "hidden"; // collapse is a little funky
   }
   else
   {
-    doSeeAll = true;
-    dialog.MoreRow.style.visibility   = "inherit"; // was visible; show doesn't seem to work
+    doSeeAll                            = true;
+    dialog.MoreRow.style.visibility     = "inherit"; // was visible; show doesn't seem to work
   }
 }
 
 function doValueChanged()
 {
 
-  if ( !imageType )
-  return;
-
-
   if ( !hasAnyChanged )
   {
-    hasAnyChanged       = true;
+    hasAnyChanged                       = true;
     doOverallEnabling();
-    hasAnyChanged       = false;
+    hasAnyChanged                       = false;
   }
 }
 
 function SelectWidthUnits()
 {
-   list         = document.getElementById("WidthUnits");
-   value         = list.options[list.selectedIndex].value;
+   list                                 = document.getElementById("WidthUnits");
+   value                                = list.options[list.selectedIndex].value;
 
    dump("Selected item: "+value+"\n");
 
@@ -267,7 +267,6 @@ function SelectWidthUnits()
 
 function OnChangeSrc()
 {
-  dump("OnChangeSrc ****************\n");
   doValueChanged();
 }
 
@@ -283,16 +282,32 @@ function doDimensionEnabling( doEnable )
   SetClassEnabledByID( "AdvancedButton", doEnable );
   SetClassEnabledByID( "MoreFewerButton", doEnable );
 
-  customradio         = document.getElementById( "customsizeRadio" );
 
-  if ( customradio )
+  customradio                           = document.getElementById( "customsizeRadio" );
+
+
+  if ( customradio && customradio.checked )
   {
       // disable or enable custom setting controls
 
     SetElementEnabledByID( "imagewidthInput", doEnable && customradio.checked );
-    SetElementEnabledByID( "widthunitSelect", doEnable && customradio.checked );
+
+////////////////// this is currently the only way i can get it to work /////////////////
+
+    // SetElementEnabledByID( "widthunitSelect", doEnable && customradio.checked );
+
+    element                           = document.getElementById( "widthunitSelect" );
+    element.setAttribute( "disabled", false );
+
     SetElementEnabledByID( "imageheightInput", doEnable && customradio.checked );
-    SetElementEnabledByID( "heightunitSelect", doEnable && customradio.checked );
+
+    element                           = document.getElementById( "heightunitSelect" );
+    element.setAttribute( "disabled", false );
+
+    //SetElementEnabledByID( "heightunitSelect", doEnable && customradio.checked );
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
     SetElementEnabledByID( "constrainCheckbox", doEnable && customradio.checked );
 
     SetClassEnabledByID( "imagewidthLabel", doEnable && customradio.checked );
@@ -306,21 +321,21 @@ function doOverallEnabling()
 {
 
   var canEnableAll;
-  canEnableAll         = (dialog.srcInput.value.length > 0);
+  canEnableAll                          = imageType;
 
   if ( wasEnableAll == canEnableAll )
     return;
   
-  wasEnableAll         = canEnableAll;
+  wasEnableAll                          = canEnableAll;
 
-  btn           = document.getElementById("OK");
+  btn                                   = document.getElementById("OK");
   if ( btn )
   {
-    btn.disabled       = (!canEnableAll && hasAnyChanged);
+    btn.disabled                        = (!canEnableAll && hasAnyChanged);
   }
   
   
-  fieldset       = document.getElementById("imagedimensionsFieldset");
+  fieldset                              = document.getElementById("imagedimensionsFieldset");
   if ( fieldset )
   {
     SetElementEnabledByID("imagedimensionsFieldset", canEnableAll );
@@ -338,6 +353,13 @@ function doOverallEnabling()
 
   SetClassEnabledByID( "imagealignmentLabel", canEnableAll );
   SetElementEnabledByID("image.alignType", canEnableAll );
+
+/* this shouldn't be needed here; doDimensionEnabling should do this */
+  customradio                           = document.getElementById( "customsizeRadio" );
+  if(customradio.checked){
+  SetElementEnabledByID("heightunitSelect", canEnableAll );
+  SetElementEnabledByID("widthunitSelect", canEnableAll );
+                        }
 
     // spacing fieldset
 
@@ -365,22 +387,21 @@ function SetImageAlignment(align)
 
 // an API to validate and image by sniffing out the extension
 
-var imageType      = false;
+var imageType                           = false;
 
 function checkForImage( elementID ){
 
-  image       = document.getElementById( elementID ).value;
+  image                                 = document.getElementById( elementID ).value;
 
   if ( !image )
   return;
   
-  var length         = image.length;
+  var length                            = image.length;
 
-  var tail           = image.length - 4; 
-  var type           = image.substring(tail,length);
+  var tail                              = image.length - 4; 
+  var type                              = image.substring(tail,length);
 
   if ( tail == 0 )  { 
-  dump("Sorry wrong image type\n\n");
   return; 
   }
   else  {
@@ -427,9 +448,10 @@ function checkForImage( elementID ){
     }
 
   if( imageType ){ dump("Image is of type "+imageType+"\n\n"); }
-  else{ dump("Sorry wrong image type\n\n"); }
+
 
 return(imageType);
+
 }
 
 
@@ -438,7 +460,7 @@ return(imageType);
 
 function constrainProportions( srcID, destID )
 {
-  srcElement         = document.getElementById ( srcID );
+  srcElement                            = document.getElementById ( srcID );
   if ( !srcElement )
     return;
   
@@ -446,13 +468,13 @@ function constrainProportions( srcID, destID )
   
   // now find out if we should be constraining or not
 
-  checkbox         = document.getElementById( "constrainCheckbox" );
+  checkbox                              = document.getElementById( "constrainCheckbox" );
   if ( !checkbox)
     return;
   if ( !checkbox.checked )
     return;
   
-  destElement         = document.getElementById( destID );
+  destElement                           = document.getElementById( destID );
   if ( !destElement )
     return;
   
@@ -461,11 +483,11 @@ function constrainProportions( srcID, destID )
   // newDest = (newSrc * oldDest / oldSrc)
 
   if ( oldSourceInt == 0 )
-    destElement.value       = srcElement.value;
+    destElement.value                   = srcElement.value;
   else
-    destElement.value       = Math.round( srcElement.value * destElement.value / oldSourceInt );
+    destElement.value                   = Math.round( srcElement.value * destElement.value / oldSourceInt );
   
-  oldSourceInt         = srcElement.value;
+  oldSourceInt                          = srcElement.value;
 }
 
 function onOK()
@@ -552,8 +574,8 @@ function onOK()
 function setDimensions()
 {
 
-  var wtype = dialog.imagewidthSelect.getAttribute("value");
-  var htype = dialog.imageheightSelect.getAttribute("value");
+  var wtype                             = dialog.imagewidthSelect.getAttribute("value");
+  var htype                             = dialog.imageheightSelect.getAttribute("value");
 
     // width
     if (wtype.substr(0,4) == "% of")
@@ -582,7 +604,7 @@ function setDimensions()
 function setPopup(dim)
 {
 
-    select = getContainer();
+    select                              = getContainer();
     if (select.nodeName == "TD")
     { 
       if (dim == "w")
@@ -597,5 +619,24 @@ function setPopup(dim)
       else
         dialog.imageheightSelect.setAttribute("value", "% of window");
     }
+
+}
+
+// This function moves the selected item into view
+
+function popupSelectedImage( item, elementID, node ){
+
+selectedItem                            = document.getElementById(elementID);
+selectedItem.setAttribute(node, item);
+
+
+}
+
+function SetPixelOrPercentByID(fu, bar){
+
+dump("comming soon . . . SetPixelOrPercentByID\n\n");
+
+
+
 
 }
