@@ -1520,9 +1520,10 @@ nsObjectFrame::HandleEvent(nsIPresContext& aPresContext,
       case NS_KEY_UP:
       case NS_KEY_DOWN:
       //case set cursor must be here:
+        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
+        return rv;
       case NS_GOTFOCUS:
       case NS_LOSTFOCUS:
-        anEventStatus = mInstanceOwner->ProcessEvent(*anEvent);
         return rv;
       default:
         break;
@@ -2400,49 +2401,6 @@ static void GUItoMacEvent(const nsGUIEvent& anEvent, EventRecord& aMacEvent)
 }
 #endif
 
-//~~~
-#ifdef XP_WIN
-static void GUItoWinEvent(const nsGUIEvent& anEvent, nsPluginEvent& aWinEvent)
-{
-	switch (anEvent.message) 
-  {
-    case NS_PAINT:
-      break;
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      break;
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      break;
-    case NS_MOUSE_LEFT_DOUBLECLICK:
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      break;
-    case NS_MOUSE_RIGHT_BUTTON_UP:
-      break;
-    case NS_MOUSE_RIGHT_DOUBLECLICK:
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_DOWN:
-      break;
-    case NS_MOUSE_MIDDLE_BUTTON_UP:
-      break;
-    case NS_MOUSE_MIDDLE_DOUBLECLICK:
-      break;
-    case NS_MOUSE_MOVE:
-      break;
-    case NS_KEY_UP:
-      break;
-    case NS_KEY_DOWN:
-      break;
-    //case set cursor must be here:
-    case NS_GOTFOCUS:
-      break;
-    case NS_LOSTFOCUS:
-      break;
-    default:
-      break;
-  }
-}
-#endif // XP_WIN
-
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
@@ -2465,10 +2423,9 @@ nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 
 //~~~
 #ifdef XP_WIN
-		nsPluginEvent pluginEvent;
-    GUItoWinEvent(anEvent, pluginEvent);
+		nsPluginEvent * pPluginEvent = (nsPluginEvent *)anEvent.nativeMsg;
 		PRBool eventHandled = PR_FALSE;
-		mInstance->HandleEvent(&pluginEvent, &eventHandled);
+		mInstance->HandleEvent(pPluginEvent, &eventHandled);
 		if (eventHandled)
 			rv = nsEventStatus_eConsumeNoDefault;
 #endif
