@@ -954,8 +954,9 @@ sub close_toc {
     local (*G) = shift;
     my $menu = shift;
 
-    print G "</table></center>" . $user_foot;
+    print G "</table></center>\n";
     print G &get_menu($menu) . "<p>\n";
+    print G $user_foot . "\n";
     print G $footstr;
     close G;
 
