@@ -290,6 +290,32 @@ are prompted for during initial startup. The interesting ones are:
    bot (/msg mozbot cycle) then the bot will change servers without
    shutting down.
 
+   localAddr -- if you don't seem to be able to establish a
+   connection, but it works fine with other software, then you should
+   try setting the localAddr variable to your IP address. Technically,
+   this variable sets which interface to use to form the outgoing
+   connection. (This is to work around a limitation of Net::IRC.) 
+   Typically you would set this variable directly in the configuration
+   file, by adding a line that says "localAddr=10.11.12.13" or
+   whatever your IP address is.
+
+   simpleIRCNameServer -- if the value of this variable equals the
+   name of the server, then the IRC Name sent to the server will be
+   simplified so that it doesn't include the URI of the mozbot help
+   files. This is usually dealt with automatically, but if you are
+   having troubles connecting, you could try setting it. (It is set to
+   the name of the server so that if you change servers, by default
+   mozbot will use a complete IRC Name again.)
+
+   username -- if this variable has a true value, then the bot will
+   use its value as its IRC username. By default, the bot uses
+   "pid-1234" as the username, where "1234" is the bot's process ID. 
+   This can cause problems on networks or with BNCs that require a
+   valid and accurate ident, in which case this variable can provide a
+   solution. (You can also set this variable by entering
+   "username=blah" into the configuration file, where blah is the
+   username you want to use.)
+
    channels -- unlike other modules, the channels variable for the
    Admin module actually controls which channels the bot itself
    appears in. The preferred method for controlling this is using
@@ -353,14 +379,6 @@ are prompted for during initial startup. The interesting ones are:
       <user> foobot: what is green?
       <foobot> user: green is good.
       * user patpats mozbot
-
-   simpleIRCNameServer -- If the value of this variable equals the
-   name of the server, then the IRC Name sent to the server will be
-   simplified so that it doesn't include the URI of the mozbot help
-   files. This is usually dealt with automatically, but if you are
-   having troubles connecting, you could try setting it. (It is set to
-   the name of the server so that if you change servers, by default
-   mozbot will use a complete IRC Name again.)
 
 Changes to variables are usually immediately recorded in the
 configuration file and will be saved for the next time the bot is

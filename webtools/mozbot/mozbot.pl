@@ -316,13 +316,12 @@ sub connect {
             &debug('I couldn\'t resolve it.');
         }
         if (defined($localAddr)) {
-            if ($Net::IRC::VERSION < 0.73) {
-                &debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
-            } else {
-                &debug("Is '$localAddr' the correct address of the interface to use?");
-            }
+            &debug("Is '$localAddr' the correct address of the interface to use?");
         } else {
             &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
+        }
+        if ($Net::IRC::VERSION < 0.73) {
+            &debug("Note that to use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
         }
         $mailed = &Mails::ServerDown($server, $port, $localAddr, $nicks[$nick], "[mozbot] $helpline", $nicks[0]) unless $mailed;
         sleep($sleepdelay);
