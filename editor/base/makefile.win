@@ -132,6 +132,7 @@ LLIBS=				\
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorwidget_s.lib		\
 !ifdef NECKO
+ $(DIST)\lib\neckoutil_s.lib           \
 !else
  $(DIST)\lib\netlib.lib           \
 !endif
