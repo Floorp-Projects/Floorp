@@ -59,9 +59,9 @@ static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
-  : nsMsgFolder(), mExpungedBytes(0), 
+  : mExpungedBytes(0), 
     mHaveReadNameFromDB(PR_FALSE), mGettingMail(PR_FALSE),
-    mInitialized(PR_FALSE), mMailDatabase(nsnull)
+    mInitialized(PR_FALSE)
 {
 	mPath = nsnull;
 //  NS_INIT_REFCNT(); done by superclass
@@ -69,9 +69,6 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-	if(mMailDatabase)
-		//Close releases db;
-		mMailDatabase->Close(PR_TRUE);
 	if (mPath)
 		delete mPath;
 }
@@ -87,10 +84,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::QueryInterface(REFNSIID aIID, void** aInstan
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
 	}              
-	else if (aIID.Equals(nsIDBChangeListener::GetIID()))
-	{
-		*aInstancePtr = NS_STATIC_CAST(nsIDBChangeListener*, this);
-	}
 	else if(aIID.Equals(nsICopyMessageListener::GetIID()))
 	{
 		*aInstancePtr = NS_STATIC_CAST(nsICopyMessageListener*, this);
@@ -341,7 +334,7 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgLocalMailFolder::GetDatabase()
 {
-	if (mMailDatabase == nsnull)
+	if (!mDatabase)
 	{
 		nsNativeFileSpec path;
 		nsresult rv = GetPath(path);
@@ -353,12 +346,12 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), getter_AddRefs(mailDBFactory));
 		if (NS_SUCCEEDED(rv) && mailDBFactory)
 		{
-			folderOpen = mailDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mMailDatabase, PR_FALSE);
+			folderOpen = mailDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_FALSE);
 			if(!NS_SUCCEEDED(folderOpen) &&
 				folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 			{
 				// if it's out of date then reopen with upgrade.
-				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
+				if(!NS_SUCCEEDED(rv = mailDBFactory->Open(path, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE)))
 				{
 					return rv;
 				}
@@ -366,10 +359,10 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 	
 		}
 
-		if(mMailDatabase)
+		if(mDatabase)
 		{
 
-			mMailDatabase->AddListener(this);
+			mDatabase->AddListener(this);
 
 			// if we have to regenerate the folder, run the parser url.
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
@@ -398,7 +391,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 	{
 		nsCOMPtr<nsIEnumerator> msgHdrEnumerator;
 		nsMessageFromMsgHdrEnumerator *messageEnumerator = nsnull;
-		rv = mMailDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
+		rv = mDatabase->EnumerateMessages(getter_AddRefs(msgHdrEnumerator));
 		if(NS_SUCCEEDED(rv))
 			rv = NS_NewMessageFromMsgHdrEnumerator(msgHdrEnumerator,
 												   this, &messageEnumerator);
@@ -407,59 +400,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetThreads(nsIEnumerator** threadEnumerator)
-{
-	nsresult rv = GetDatabase();
-	
-	if(NS_SUCCEEDED(rv))
-		return mMailDatabase->EnumerateThreads(threadEnumerator);
-	else
-		return rv;
-}
 
-NS_IMETHODIMP
-nsMsgLocalMailFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
-{
-	nsresult rv = GetDatabase();
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-		if(NS_SUCCEEDED(rv))
-			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-		if(NS_SUCCEEDED(rv))
-		{
-			rv = mMailDatabase->GetThreadContainingMsgHdr(msgDBHdr, thread);
-		}
-	}
-	return rv;
-
-}
-
-NS_IMETHODIMP
-nsMsgLocalMailFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
-{
-	if(!hasMessage)
-		return NS_ERROR_NULL_POINTER;
-
-	nsresult rv = GetDatabase();
-
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMsgDBHdr> msgDBHdr, msgDBHdrForKey;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
-		nsMsgKey key;
-		if(NS_SUCCEEDED(rv))
-			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-		if(NS_SUCCEEDED(rv))
-			rv = msgDBHdr->GetMessageKey(&key);
-		if(NS_SUCCEEDED(rv))
-			rv = mMailDatabase->ContainsKey(key, hasMessage);
-		
-	}
-	return rv;
-
-}
 
 NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
 {
@@ -1111,7 +1052,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 			if(NS_SUCCEEDED(rv))
 			{
-				rv =mMailDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
+				rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
 			}
 		}
 	}
@@ -1183,62 +1124,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetNewMessages()
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                         nsIDBChangeListener * aInstigator)
-{
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                          nsIDBChangeListener * aInstigator)
-{
-	nsCOMPtr<nsIMsgDBHdr> pMsgDBHdr;
-	nsresult rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(pMsgDBHdr));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMessage> message;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, getter_AddRefs(message));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsISupports> msgSupports(do_QueryInterface(message, &rv));
-			if(NS_SUCCEEDED(rv))
-			{
-				NotifyItemDeleted(msgSupports);
-			}
-			UpdateSummaryTotals();
-		}
-	}
-
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                        nsIDBChangeListener * aInstigator)
-{
-	nsresult rv;
-	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
-	rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
-	if(NS_SUCCEEDED(rv))
-	{
-		nsCOMPtr<nsIMessage> message;
-		rv = CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
-		if(NS_SUCCEEDED(rv))
-		{
-			nsCOMPtr<nsISupports> msgSupports;
-			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, getter_AddRefs(msgSupports))))
-			{
-				NotifyItemAdded(msgSupports);
-			}
-			UpdateSummaryTotals();
-		}
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgLocalMailFolder::OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator)
-{
-	return NS_OK;
-}
 
 //nsICopyMessageListener
 NS_IMETHODIMP nsMsgLocalMailFolder::BeginCopy(nsIMessage *message)
@@ -1310,7 +1195,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 
 		if(NS_SUCCEEDED(rv))
-			rv = mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
+			rv = mDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
 	}
 
 	if(mCopyState->fileStream)

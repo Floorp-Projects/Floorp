@@ -19,12 +19,11 @@
 #define nsImapMailFolder_h__
 
 #include "nsImapCore.h"
-#include "nsMsgFolder.h"
+#include "nsMsgDBFolder.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
-#include "nsIDBChangeListener.h"
 #include "nsICopyMessageListener.h"
 #include "nsIImapService.h"
 #include "nsIUrlListener.h"
@@ -36,13 +35,12 @@
 
 class nsParseMailMessageState;
 
-class nsImapMailFolder : public nsMsgFolder, 
+class nsImapMailFolder : public nsMsgDBFolder, 
                          public nsIMsgImapMailFolder,
                          public nsIImapMailFolderSink,
                          public nsIImapMessageSink,
                          public nsIImapExtensionSink,
                          public nsIImapMiscellaneousSink,
-                         public nsIDBChangeListener,
                          public nsICopyMessageListener,
                          public nsIUrlListener
 {
@@ -64,10 +62,6 @@ public:
     NS_IMETHOD AddUnique(nsISupports* element);
     NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
     NS_IMETHOD GetMessages(nsIEnumerator* *result);
-	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
-	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
-	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
-
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
     
@@ -166,15 +160,6 @@ public:
     NS_IMETHOD GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                     MessageSizeInfo* sizeInfo);
 
-	//nsIDBChangeListener
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                         nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                        nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
-
 	//nsICopyMessageListener
 	NS_IMETHOD BeginCopy(nsIMessage *message);
 	NS_IMETHOD CopyData(nsIInputStream *aIStream, PRInt32 aLength);
@@ -269,7 +254,6 @@ protected:
 	nsresult GetDatabase();
 
     nsNativeFileSpec m_pathName;
-	nsCOMPtr<nsIMsgDatabase> m_mailDatabase;
     PRBool m_initialized;
     PRBool m_haveDiscoverAllFolders;
     PRBool m_haveReadNameFromDB;

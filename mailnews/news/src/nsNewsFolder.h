@@ -25,9 +25,8 @@
 #ifndef nsMsgNewsFolder_h__
 #define nsMsgNewsFolder_h__
 
-#include "nsMsgFolder.h" /* include the interface we are going to support */
+#include "nsMsgDBFolder.h" 
 #include "nsFileSpec.h"
-#include "nsIDBChangeListener.h"
 #include "nsFileStream.h"
 
 /*
@@ -52,7 +51,7 @@
 
 #endif /* ! XP_UNIX */
 
-class nsMsgNewsFolder : public nsMsgFolder, public nsIMsgNewsFolder, public nsIDBChangeListener
+class nsMsgNewsFolder : public nsMsgDBFolder, public nsIMsgNewsFolder
 {
 public:
 	nsMsgNewsFolder(void);
@@ -72,10 +71,6 @@ public:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
-	NS_IMETHOD GetThreads(nsIEnumerator** threadEnumerator);
-	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
-	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
-
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
 
@@ -117,15 +112,6 @@ public:
 	// nsIMsgNewsFolder
   NS_IMETHOD GetPath(nsNativeFileSpec& aPathName);
 
-	//nsIDBChangeListener
-	NS_IMETHOD OnKeyChange(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                         nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyDeleted(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                          nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnKeyAdded(nsMsgKey aKeyChanged, PRInt32 aFlags, 
-                        nsIDBChangeListener * aInstigator);
-	NS_IMETHOD OnAnnouncerGoingAway(nsIDBChangeAnnouncer * instigator);
-
 protected:
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
@@ -159,7 +145,6 @@ protected:
 	PRBool		mGettingNews;
 	PRBool		mInitialized;
 	nsISupportsArray *mMessages;
-	nsIMsgDatabase* mNewsDatabase;
   char      *m_optionLines;
 };
 
