@@ -180,7 +180,7 @@ addThis();
 
 
 /*
- * By martin.honnen@t-online.de
+ * By martin.honnen@gmx.de
  * From http://bugzilla.mozilla.org/show_bug.cgi?id=150859
  *
  * Here the same name is being used for a local var in F
