@@ -136,6 +136,13 @@ typedef PRUcs2 PRUnichar;
 #define NS_PLUGIN NS_IMPORT
 #endif
 
+#ifdef _IMPL_NS_APPSHELL
+#define NS_APPSHELL NS_EXPORT
+#else
+#define NS_APPSHELL NS_IMPORT
+#endif
+
+
 /* ------------------------------------------------------------------------ */
 // Casting macros for hiding C++ features from older compilers
 
