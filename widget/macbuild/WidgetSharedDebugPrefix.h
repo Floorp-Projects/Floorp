@@ -16,6 +16,6 @@
  * Reserved.
  */
 
-#define WIDGET_SHARED 1
+#define MAC_SHARED 1
 
 #include "WidgetDebug.prefix"

@@ -16,6 +16,6 @@
  * Reserved.
  */
 
-#define WIDGET_STATIC 1
+#define MAC_STATIC 1
 
 #include "WidgetDebug.prefix"
