@@ -544,7 +544,7 @@ nsSoftwareUpdate::StubInitialize(nsIFile *aDir, const char* logName)
         return NS_ERROR_NULL_POINTER;
 
     if (logName)
-        PL_strdup(mLogName, logName);
+        mLogName = PL_strdup(logName);
     if (!mLogName)
         return NS_ERROR_OUT_OF_MEMORY;
 
