@@ -425,6 +425,8 @@ PRInt32 HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
+  if (!aPresContext || !aContent || !aResults) return matchCount;
+
   nsIStyledContent* styledContent;
 
   // just get the one and only style rule from the content's STYLE attribute

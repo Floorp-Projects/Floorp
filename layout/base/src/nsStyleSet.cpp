@@ -533,7 +533,10 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
 
     if (nsnull != rules) {
       nsIAtom* medium = nsnull;
-      aPresContext->GetMedium(&medium);
+      NS_ASSERTION(aPresContext, "must have aPresContext");
+      if (aPresContext) {
+	      aPresContext->GetMedium(&medium);
+      }
       RulesMatchingData data(aPresContext, medium, aContent, aParentContext, rules);
       if (mBackstopSheets) {
         mBackstopSheets->EnumerateBackwards(EnumRulesMatching, &data);
