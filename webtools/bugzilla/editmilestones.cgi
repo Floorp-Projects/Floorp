@@ -513,6 +513,13 @@ if ($action eq 'update') {
                          milestones WRITE,
                          products WRITE");
 
+    if ($sortkey != $sortkeyold) {
+        SendSQL("UPDATE milestones SET sortkey=$sortkey
+                 WHERE product=" . SqlQuote($product) . "
+                   AND value=" . SqlQuote($milestoneold));
+        unlink "data/versioncache";
+        print "Updated sortkey.<BR>\n";
+    }
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
             print "Sorry, I can't delete the milestone text.";
@@ -540,13 +547,6 @@ if ($action eq 'update') {
                 "  AND defaultmilestone = " . SqlQuote($milestoneold));
         unlink "data/versioncache";
         print "Updated milestone.<BR>\n";
-    }
-    if ($sortkey != $sortkeyold) {
-        SendSQL("UPDATE milestones SET sortkey=$sortkey
-                 WHERE product=" . SqlQuote($product) . "
-                   AND value=" . SqlQuote($milestoneold));
-        unlink "data/versioncache";
-        print "Updated sortkey.<BR>\n";
     }
     SendSQL("UNLOCK TABLES");
 
