@@ -24,5 +24,6 @@
 <!ENTITY mailonly.label "General">
 <!ENTITY languages.label "Languages">
 <!ENTITY themes.label "Themes">
+<!ENTITY extensions.label "Extensions">
 <!ENTITY fonts.label "Fonts">
 <!ENTITY privacy.label "Privacy">

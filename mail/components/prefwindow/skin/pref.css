@@ -121,6 +121,6 @@
 }
 
 .extensionInfoArea {
-  background-color: -moz-Field !important;
-  height: 10em;
+  height: 93px;
+  padding: 1px;
 }
