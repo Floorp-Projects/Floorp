@@ -38,38 +38,41 @@
 	  <key id="key_newMessage"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  xulkey="true" key="o" observes="Editor:Open" />
-    <key id="savekb"        xulkey="true" key="s" observes="Editor:Save"/>
-    <key id="closekb"       xulkey="true" key="w" observes="Editor:Close" />
-    <key id="printkb"       xulkey="true" key="p" observes="Editor:Print" />
-    <key id="exitkb"        xulkey="true" key="q" observes="Editor:Exit" />
+    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;" observes="Editor:Open" />
+    <key id="savekb"        xulkey="true" key="&filesave.keybinding;" observes="Editor:Save"/>
+    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" observes="Editor:Close" />
+    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" observes="Editor:Print" />
+    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;" observes="Editor:Exit" />
 
-    <key id="undokb"        xulkey="true" key="z" observes="Editor:Undo" />
-    <key id="redokb"        xulkey="true" key="y" observes="Editor:Redo" />
-    <key id="cutkb"         xulkey="true" key="x" observes="Editor:Cut" />
-    <key id="copykb"        xulkey="true" key="c" observes="Editor:Copy" />
-    <key id="pastekb"       xulkey="true" key="v" observes="Editor:Paste" />
-    <key id="pastequotationkb" xulkey="true" shift="true" key="v" observes="Editor:PasteQuote" />
-    <key id="selectallkb"   xulkey="true" key="a" observes="Editor:SelectAll" />
-    <key id="findkb"        xulkey="true" key="f" observes="Editor:Find" />
-    <key id="findnextkb"    xulkey="true" key="g" observes="Editor:FindNext" />
-    <key id="checkspellingkb" xulkey="true" key="k" observes="Editor:CheckSpelling" />
+    <key id="undokb"        xulkey="true" key="&editundo.keybinding;" observes="Editor:Undo" />
+    <key id="redokb"        xulkey="true" key="&editredo.keybinding;" observes="Editor:Redo" />
+    <key id="cutkb"         xulkey="true" key="&editcut.keybinding;" observes="Editor:Cut" />
+    <key id="copykb"        xulkey="true" key="&editcopy.keybinding;" observes="Editor:Copy" />
+    <key id="pastekb"       xulkey="true" key="&editpaste.keybinding;" observes="Editor:Paste" />
+    <key id="pastequotationkb" xulkey="true" shift="true" key="&editpaste.keybinding;" observes="Editor:PasteQuote" />
+    <key id="selectallkb"   xulkey="true" key="&editselectall.keybinding;" observes="Editor:SelectAll" />
+    <key id="findkb"        xulkey="true" key="&editfind.keybinding;" observes="Editor:Find" />
+    <key id="findnextkb"    xulkey="true" key="&editfindnext.keybinding;" observes="Editor:FindNext" />
+    <key id="checkspellingkb" xulkey="true" key="&editcheckspelling.keybinding;" observes="Editor:CheckSpelling" />
 
-    <key id="boldkb"        xulkey="true" key="b" observes="Editor:Bold"/>
-    <key id="italickb"      xulkey="true" key="i" observes="Editor:Italic"/>
+    <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;" observes="Editor:Bold"/>
+    <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;" observes="Editor:Italic"/>
     
-    <key id="underlinekb"   xulkey="true" key="u" onkeypress="EditorToggleStyle('underline')"/>
-    <key id="navigatorkb"   xulkey="true" shift="true" key="n" onkeypress="Navigator()" />
-    <key id="navvigatorkb"   xulkey="true" key="1" onkeypress="Navigator()" />
+    <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" onkeypress="EditorToggleStyle('underline')"/>
+    
+    <!-- these should come from tasksOverlay.xul -->
+    <key id="navigatortaskkb" xulkey="true" key="1" onkeypress="Navigator()" />
     <key id="messengerkb"   xulkey="true" key="2" onkeypress="Messenger()" />
     <key id="composerkb"    xulkey="true" key="3" onkeypress="Composer()" />
     <key id="calendarkb"    xulkey="true" key="4" onkeypress="Calendar()" />
-    <key id="indentkb"      xulkey="true" key="=" onkeypress="EditorIndent('indent')" />
-    <key id="outdentkb"     xulkey="true" key="-" onkeypress="EditorIndent('outdent')" />
 
-    <key id="removestyleskb" shift="true" xulkey="true" key="k" onkeypress="EditorRemoveStyle('all')" />
-    <key id="decreasefontsizekb" shift="true" xulkey="true" key="[" onkeypress="DecreaseFontSize()" />
-    <key id="increasefontsizekb" shift="true" xulkey="true" key="]" onkeypress="IncreaseFontSize()" />
+
+    <key id="indentkb"      xulkey="true" key="&formatindent.keybinding;" onkeypress="EditorIndent('indent')" />
+    <key id="outdentkb"     xulkey="true" key="&formatoutdent.keybinding;" onkeypress="EditorIndent('outdent')" />
+
+    <key id="removestyleskb" shift="true" xulkey="true" key="&formatremovelinks.keybinding;" onkeypress="EditorRemoveStyle('all')" />
+    <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;" onkeypress="DecreaseFontSize()" />
+    <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;" onkeypress="IncreaseFontSize()" />
 
 <!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
         <!-- scroll document/page/line and move caret -->
@@ -495,6 +498,34 @@
         <menuitem value="&tableCell.label;"   accesskey="&tablecell.accesskey;"    oncommand="EditorDeleteTableCell()"/>
     </menupopup>
     </menu>
+
+    <!-- Toolbar popups -->
+    <!-- TODO: REPLACE WITH COLOR WIDGET -->
+    <menupopup id="BackColorPopup">
+       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetBackgroundColor('black')"/>
+       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetBackgroundColor('gray')"/>
+       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetBackgroundColor('silver')"/>
+       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetBackgroundColor('white')"/>
+       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetBackgroundColor('red')"/>
+       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetBackgroundColor('blue')"/>
+       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetBackgroundColor('green')"/>
+       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetBackgroundColor('cyan')"/>
+       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetBackgroundColor('yellow')"/>
+       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetBackgroundColor('magenta')"/>
+    </menupopup>
+   
+    <menupopup id="TextColorPopup">
+       <menuitem value="&colorBlackCmd.label;"     oncommand="EditorSetFontColor('black')"/>
+       <menuitem value="&colorGrayCmd.label;"      oncommand="EditorSetFontColor('gray')"/>
+       <menuitem value="&colorSilverCmd.label;"    oncommand="EditorSetFontColor('silver')"/>
+       <menuitem value="&colorWhiteCmd.label;"     oncommand="EditorSetFontColor('white')"/>
+       <menuitem value="&colorRedCmd.label;"       oncommand="EditorSetFontColor('red')"/>
+       <menuitem value="&colorBlueCmd.label;"      oncommand="EditorSetFontColor('blue')"/>
+       <menuitem value="&colorGreenCmd.label;"     oncommand="EditorSetFontColor('green')"/>
+       <menuitem value="&colorCyanCmd.label;"      oncommand="EditorSetFontColor('cyan')"/>
+       <menuitem value="&colorYellowCmd.label;"    oncommand="EditorSetFontColor('yellow')"/>
+       <menuitem value="&colorMagentaCmd.label;"   oncommand="EditorSetFontColor('magenta')"/>
+    </menupopup>
 
     <popup id="TextColorPicker">
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>

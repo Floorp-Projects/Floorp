@@ -31,8 +31,10 @@
 <!ENTITY newMenu.accesskey "n">
 <!ENTITY openCmd.label "Open...">
 <!ENTITY fileopen.accesskey "o">
+<!ENTITY fileopen.keybinding "o">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
+<!ENTITY filesave.keybinding "s">
 <!ENTITY saveAsCmd.label "Save As...">
 <!ENTITY filesaveas.accesskey "a">
 <!ENTITY printSetupCmd.label ".Print Setup...">
@@ -41,36 +43,48 @@
 <!ENTITY fileprintpreview.accesskey "r">
 <!ENTITY printCmd.label "Print...">
 <!ENTITY fileprint.accesskey "p">
+<!ENTITY fileprint.keybinding "p">
 <!ENTITY closeCmd.label "Close">
 <!ENTITY fileclose.accesskey "c">
+<!ENTITY fileclose.keybinding "w">
 <!ENTITY exitCmd.label "Quit">
 <!ENTITY fileexit.accesskey "q">
+<!ENTITY fileexit.keybinding "q">
 
 <!-- Edit menu items -->
 <!ENTITY editMenu.label "Edit">
 <!ENTITY editmenu.accesskey "e">
 <!ENTITY undoCmd.label "Undo">
 <!ENTITY editundo.accesskey "u">
+<!ENTITY editundo.keybinding "z">
 <!ENTITY redoCmd.label "Redo">
 <!ENTITY editredo.accesskey "r">
+<!ENTITY editredo.keybinding "y">
 <!ENTITY cutCmd.label "Cut">
 <!ENTITY editcut.accesskey "t">
+<!ENTITY editcut.keybinding "x">
 <!ENTITY copyCmd.label "Copy">
 <!ENTITY editcopy.accesskey "c">
+<!ENTITY editcopy.keybinding "c">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY editpaste.accesskey "p">
+<!ENTITY editpaste.keybinding "v"> <!-- also used for pasteAsQuotationCmd -->
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
 <!ENTITY clearCmd.label ".Clear">
 <!ENTITY editclear.accesskey "l">
 <!ENTITY selectAllCmd.label "Select All">
 <!ENTITY editselectall.accesskey "a">
+<!ENTITY editselectall.keybinding "a">
 <!ENTITY findCmd.label "Find...">
 <!ENTITY editfind.accesskey "f">
+<!ENTITY editfind.keybinding "f">
 <!ENTITY findAgainCmd.label "Find Again">
 <!ENTITY editfindnext.accesskey "n">
+<!ENTITY editfindnext.keybinding "g">
 <!ENTITY checkSpellingCmd.label "Check Spelling">
 <!ENTITY editcheckspelling.accesskey "s">
+<!ENTITY editcheckspelling.keybinding "k">
 
 <!-- View menu items -->
 <!ENTITY viewMenu.label "View">
@@ -252,16 +266,21 @@
 <!ENTITY size3.accesskey "3">
 <!ENTITY size4Cmd.label " +4">
 <!ENTITY size4.accesskey "4">
+<!ENTITY increaseFontSize.keybinding "]">
+<!ENTITY decreaseFontSize.keybinding "[">
 
 <!-- Font Style SubMenu -->
 <!ENTITY fontStyleMenu.label "Style">
 <!ENTITY formatstylemenu.accesskey "t">
 <!ENTITY styleBoldCmd.label "Bold">
 <!ENTITY stylebold.accesskey "b">
+<!ENTITY stylebold.keybinding "b">
 <!ENTITY styleItalicCmd.label "Italic">
 <!ENTITY styleitalic.accesskey "i">
+<!ENTITY styleitalic.keybinding "i">
 <!ENTITY styleUnderlineCmd.label "Underline">
 <!ENTITY styleunderline.accesskey "u">
+<!ENTITY styleunderline.keybinding "u">
 <!ENTITY styleStrikeThruCmd.label "Strikethrough">
 <!ENTITY stylestrikethru.accesskey "k">
 <!ENTITY styleSuperscriptCmd.label "Superscript">
@@ -302,6 +321,9 @@
 <!ENTITY formatremovestyles.accesskey "r">
 <!ENTITY removeLinksCmd.label "Remove Link(s)">
 <!ENTITY formatremovelinks.accesskey "m">
+<!ENTITY formatremovelinks.keybinding "k">
+<!ENTITY formatindent.keybinding "=">
+<!ENTITY formatoutdent.keybinding "-">
 
 <!ENTITY headingMenu.label "Heading">
 <!ENTITY formatheadingmenu.accesskey "h">
