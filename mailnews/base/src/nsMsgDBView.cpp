@@ -36,7 +36,7 @@
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapCore.h"
 #include "nsMsgFolderFlags.h"
-
+#include "nsIMsgLocalMailFolder.h"
 #include "nsIDOMElement.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsMsgMimeCID.h"
@@ -1597,9 +1597,8 @@ nsresult nsMsgDBView::DownloadForOffline(nsIMsgWindow *window, nsMsgViewIndex *i
     {
       PRUint32 flags;
       msgHdr->GetFlags(&flags);
-      if ((flags & MSG_FLAG_OFFLINE))
-        if (! (flags & MSG_FLAG_OFFLINE))
-          messageArray->AppendElement(msgHdr);
+      if (!(flags & MSG_FLAG_OFFLINE))
+        messageArray->AppendElement(msgHdr);
     }
   }
   m_folder->DownloadMessagesForOffline(messageArray, window);
@@ -4375,6 +4374,10 @@ nsMsgDBView::OnStopCopy(nsresult aStatus)
 
 PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices)
 {
+  nsCOMPtr <nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);
+  if (localFolder)
+    return PR_TRUE;
+
   nsresult rv = NS_OK;
   for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
   {
