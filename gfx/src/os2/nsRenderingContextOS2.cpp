@@ -1477,7 +1477,7 @@ nsRenderingContextOS2::GetTextDimensions(const char*       aString,
 
       // Find the nearest place to break that is less than or equal to
       // the estimated break offset
-      if (aLength < estimatedBreakOffset) {
+      if (aLength <= estimatedBreakOffset) {
         // All the characters should fit
         numChars = aLength - start;
         breakIndex = aNumBreaks - 1;
