@@ -159,8 +159,6 @@ public:
   NS_IMETHOD SetUseMap(const nsString& aUseMap);
   NS_IMETHOD GetValue(nsString& aValue);
   NS_IMETHOD SetValue(const nsString& aValue);
-  NS_IMETHOD GetAutocomplete(nsString& aAutocomplete);
-  NS_IMETHOD SetAutocomplete(const nsString& aAutocomplete);
   NS_IMETHOD Blur();
   NS_IMETHOD Focus();
   NS_IMETHOD Select();
@@ -236,7 +234,6 @@ nsHTMLInputElement::nsHTMLInputElement(nsIAtom* aTag)
   mSkipFocusEvent = PR_FALSE;
   mDidMouseDown   = PR_FALSE;
   //nsTraceRefcnt::Create((nsIFormControl*)this, "nsHTMLFormControlElement", __FILE__, __LINE__);
-
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -474,45 +471,6 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
 
   // Treat value == defaultValue for other input elements.
   return mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, aValue, PR_TRUE);
-}
-
-NS_IMETHODIMP 
-nsHTMLInputElement::GetAutocomplete(nsString& aAutocomplete)
-{
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type) {
-    nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
-      if (nsnull != formControlFrame) {
-        formControlFrame->GetProperty(nsHTMLAtoms::autocomplete, aAutocomplete);
-      }
-    }
-  }
-  else
-  	aAutocomplete = "";
-  
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP 
-nsHTMLInputElement::SetAutocomplete(const nsString& aAutocomplete)
-{
-  PRInt32 type;
-  GetType(&type);
-  if (NS_FORM_INPUT_TEXT == type) {
-    nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
-      if (nsnull != formControlFrame ) { 
-        nsIPresContext* presContext;
-        nsGenericHTMLElement::GetPresContext(this, &presContext);
-        formControlFrame->SetProperty(presContext, nsHTMLAtoms::autocomplete, aAutocomplete);
-        NS_IF_RELEASE(presContext);
-      }
-    }
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -1230,4 +1188,3 @@ nsHTMLInputElement::GetControllers(nsIControllers** aResult)
   NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
-
