@@ -349,7 +349,6 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 
     /* find the key */
     if (keyPtr) {
-	unsigned int size;
         key = pk11_ObjectFromHandle(hKey,session);
         if (key == NULL) {
 	    return CKR_KEY_HANDLE_INVALID;
