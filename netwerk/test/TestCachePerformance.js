@@ -1,4 +1,4 @@
-var DEBUG = false;
+var DEBUG = true;
 
 var clientID = "javascript";
 var nsICache = Components.interfaces.nsICache;
@@ -39,6 +39,24 @@ function wrapInputStream(input)
     return wrapper;
 }
 
+function getIOService()
+{
+    var CID = Components.classes["@mozilla.org/network/io-service;1"];
+    var service = CID.getService(Components.interfaces.nsIIOService);
+    return service;
+}
+
+function downloadHTTP(spec)
+{
+    var ioService = getIOService();
+    var uri = ioService.newURI(spec, null);
+    var channel = ioService.newChannelFromURI(uri);
+    var input = wrapInputStream(channel.open());
+    var data = input.read(input.available());
+    input.close();
+    return data;
+}
+
 function download(url)
 {
     var data = "";
@@ -49,7 +67,7 @@ function download(url)
         if (count <= 0)
             break;
         var str = new java.lang.String(buffer, 0, count);
-        datas += str;
+        data += str;
     }
     stream.close();
     return data;
