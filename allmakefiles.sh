@@ -625,6 +625,8 @@ xpfe/global/resources/skin/unix/Makefile
 xpfe/global/resources/content/Makefile
 xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
+xpfe/global/resources/locale/en-US/Makefile
+xpfe/global/resources/locale/en-US/unix/Makefile
 xpfe/global/resources/locale/unix/Makefile
 #
 # End of XPFE Makefiles
