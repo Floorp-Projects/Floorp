@@ -24,7 +24,7 @@
 #define nsUrlListenerManager_h___
 
 #include "nsIUrlListenerManager.h"
-#include "nsVoidArray.h"
+#include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
 
 /********************************************************************************************
@@ -34,7 +34,7 @@
 	url listener register/unregister calls are forwarded to the listener manager. In addition,
 	the url listener manager handles broadcasting of event changes on the url.
 
-    mscott --> hmm now that I think about it this class is probably going to have to be made
+  mscott --> hmm now that I think about it this class is probably going to have to be made
 	thread safe. It might have to proxy notification calls into another thread....
  ********************************************************************************************/
 
@@ -51,10 +51,27 @@ public:
 	virtual ~nsUrlListenerManager();
     
 protected:
-	nsVoidArray * m_listeners;
+  // mscott --> for the longest time, I had m_listeners as a nsVoidArray to prevent
+  // circular references when the url listener owned the url which owned the manager
+  // which owned the url listener. By using a void array, were the manager didn't own
+  // the listeners, we got out of this problem. But this made the model very difficult
+  // to use for folks when it came to maintenance. Why? Because they would have a url
+  // listener which didn't own the url. And they had no way of knowing how to keep
+  // their object alive until the listener manager said the url was done. As a result,
+  // folks were using strange ref counting techniques on their objects such that they 
+  // would addref themselves before adding their listener to the url. Then, when they
+  // received a on stop running url, they would throw a random release in there.
+  // Needless to say, this is far from ideal so I've decided to change this to 
+  // an nsISupportsArray and cleanup the caller's ref counting hacks to get this to work.
+  // The danger is of course still the circular reference problem. In order to get around
+  // this, when we issue a on stop running url through the manager, I'm going to release
+  // all our url listeners. This should break the circle.
+	// nsVoidArray * m_listeners;
+  nsCOMPtr<nsISupportsArray> m_listeners;
 
 	// helper function used to enumerate ISupportsArray and broadcast the change
 	nsresult BroadcastChange(nsIURI * aUrl, nsUrlNotifyType notification, nsresult aErrorCode);
+  void ReleaseListeners();
 };
 
 #endif /* nsUrlListenerManager_h___ */

@@ -29,20 +29,24 @@ nsUrlListenerManager::nsUrlListenerManager() :
 {
 	NS_INIT_REFCNT();
 	// create a new isupports array to store our listeners in...
-	m_listeners = new nsVoidArray();
+  NS_NewISupportsArray(getter_AddRefs(m_listeners));
 }
 
 nsUrlListenerManager::~nsUrlListenerManager()
 {
-	if (m_listeners)
+  ReleaseListeners();
+}
+
+void nsUrlListenerManager::ReleaseListeners()
+{
+  if(m_listeners)
 	{
-		PRUint32 count = m_listeners->Count();
+		PRUint32 count;
+    nsresult rv = m_listeners->Count(&count);
 
 		for (int i = count - 1; i >= 0; i--)
 			m_listeners->RemoveElementAt(i);
 	}
-
-	delete m_listeners;
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsCOMTypeInfo<nsIUrlListenerManager>::GetIID());
@@ -50,7 +54,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, nsCOMTypeInfo<nsIUrlListenerM
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->AppendElement((void *) aUrlListener);
+		m_listeners->AppendElement(aUrlListener);
 
 	return NS_OK;
 }
@@ -58,7 +62,7 @@ nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 nsresult nsUrlListenerManager::UnRegisterListener(nsIUrlListener * aUrlListener)
 {
 	if (m_listeners && aUrlListener)
-		m_listeners->RemoveElement((void *) aUrlListener);
+		m_listeners->RemoveElement(aUrlListener);
 	return NS_OK;
 }
 
@@ -70,11 +74,15 @@ nsresult nsUrlListenerManager::BroadcastChange(nsIURI * aUrl, nsUrlNotifyType no
 	if (m_listeners && aUrl)
 	{
 		// enumerate over all url listeners...(Start at the end and work our way down)
-		nsIUrlListener * listener = nsnull;
-		
-		for (PRUint32 i = m_listeners->Count(); i > 0; i--)
+		nsCOMPtr<nsIUrlListener> listener;
+    nsCOMPtr<nsISupports> aSupports;
+		PRUint32 index;
+    m_listeners->Count(&index);
+		for (; index > 0; index--)
 		{
-			listener = (nsIUrlListener *) m_listeners->ElementAt(i-1);
+      m_listeners->GetElementAt(index-1, getter_AddRefs(aSupports)); 
+			listener = do_QueryInterface(aSupports);
+
 			if (listener)
 			{
 				if (notification == nsUrlNotifyStartRunning)
@@ -96,6 +104,10 @@ nsresult nsUrlListenerManager::OnStartRunningUrl(nsIMsgMailNewsUrl * aUrl)
 
 nsresult nsUrlListenerManager::OnStopRunningUrl(nsIMsgMailNewsUrl * aUrl, nsresult aErrorCode)
 {
-	return BroadcastChange(aUrl, nsUrlNotifyStopRunning, aErrorCode);
+	nsresult rv = BroadcastChange(aUrl, nsUrlNotifyStopRunning, aErrorCode);
+  // in order to prevent circular references, after we issue on stop running url, 
+  // go through and release all of our listeners...
+  ReleaseListeners();
+  return rv;
 }
 
