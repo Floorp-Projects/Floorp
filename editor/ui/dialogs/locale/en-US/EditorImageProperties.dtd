@@ -35,9 +35,6 @@
 <!ENTITY altTextEditField.label "Alternative Text:">
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 
-<!ENTITY previewBox.label "Preview">
-<!ENTITY noImageSelected.label "&lt;No image chosen&gt;">
-
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
 <!-- These controls are in the Dimensions box of the expanded area -->
 <!ENTITY dimensionsBox.label "Dimensions">
