@@ -1609,7 +1609,7 @@ function subjectKeyPress(event)
   case 9: 
     if (!event.shiftKey) {
       window._content.focus();
-      event.preventDefault;
+      event.preventDefault();
     }
     break;
   case 13:
