@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.1 2000/03/31 19:35:53 relyea%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.2 2000/09/07 19:01:48 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -1181,6 +1181,11 @@ SSL_SetURL(PRFileDesc *fd, const char *url)
     sslSocket *   ss = ssl_FindSocket(fd);
     int           rv = SECSuccess;
 
+    if (!ss) {
+	SSL_DBG(("%d: SSL[%d]: bad socket in SSLSetURL",
+		 SSL_GETPID(), fd));
+	return SECFailure;
+    }
     ssl_Get1stHandshakeLock(ss);
     ssl_GetSSL3HandshakeLock(ss);
 
