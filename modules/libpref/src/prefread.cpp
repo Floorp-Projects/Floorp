@@ -56,11 +56,11 @@ enum {
     PREF_PARSE_UNTIL_COMMA,
     PREF_PARSE_UNTIL_VALUE,
     PREF_PARSE_STRING_VALUE,
-    PREF_PARSE_ESC_STRING_VALUE,
     PREF_PARSE_INT_VALUE,
     PREF_PARSE_COMMENT_MAYBE_START,
     PREF_PARSE_COMMENT_BLOCK,
     PREF_PARSE_COMMENT_BLOCK_MAYBE_END,
+    PREF_PARSE_ESC_STRING,
     PREF_PARSE_UNTIL_OPEN_PAREN,
     PREF_PARSE_UNTIL_CLOSE_PAREN,
     PREF_PARSE_UNTIL_SEMICOLON,
@@ -264,7 +264,11 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
         case PREF_PARSE_NAME:
             if (ps->lbcur == ps->lbend && !pref_GrowBuf(ps))
                 return PR_FALSE; /* out of memory */
-            if (c == '\"') {
+            if (c == '\\') {
+                ps->nextstate = state; /* return here when done */
+                state = PREF_PARSE_ESC_STRING;
+            }
+            else if (c == '\"') {
                 *ps->lbcur++ = '\0';
                 state = PREF_PARSE_UNTIL_COMMA;
             }
@@ -327,36 +331,16 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
                 return PR_FALSE; /* out of memory */
             /* skip char if start of escape sequence.  handle escaped
              * characters using a separate state. */
-            if (c == '\\')
-                state = PREF_PARSE_ESC_STRING_VALUE;
+            if (c == '\\') {
+                ps->nextstate = state; /* return here when done */
+                state = PREF_PARSE_ESC_STRING;
+            }
             else if (c != '\"')
                 *ps->lbcur++ = c;
             else { 
                 *ps->lbcur++ = '\0';
                 state = PREF_PARSE_UNTIL_CLOSE_PAREN;
             }
-            break;
-        case PREF_PARSE_ESC_STRING_VALUE:
-            /* not necessary to resize buffer here since we are only
-             * writing one character and the resize check would have
-             * been done for us in the PREF_PARSE_STRING_VALUE state. */
-            switch (c) {
-            case '\"':
-            case '\\':
-                break;
-            case 'r':
-                c = '\r';
-                break;
-            case 'n':
-                c = '\n';
-                break;
-            default:
-                NS_WARNING("preserving unexpected JS escape sequence");
-                *ps->lbcur++ = '\\'; /* preserve the escape sequence */
-                break;
-            }
-            *ps->lbcur++ = c;
-            state = PREF_PARSE_STRING_VALUE;
             break;
         case PREF_PARSE_INT_VALUE:
             /* grow line buffer if necessary... */
@@ -411,6 +395,31 @@ PREF_ParseBuf(PrefParseState *ps, const char *buf, int bufLen)
             default:
                 state = PREF_PARSE_COMMENT_BLOCK;
             }
+            break;
+
+        /* string escape sequence parsing */
+        case PREF_PARSE_ESC_STRING:
+            /* not necessary to resize buffer here since we are writing
+             * only one character and the resize check would have been
+             * done for us in the previous state */
+            switch (c) {
+            case '\"':
+            case '\\':
+                break;
+            case 'r':
+                c = '\r';
+                break;
+            case 'n':
+                c = '\n';
+                break;
+            default:
+                NS_WARNING("preserving unexpected JS escape sequence");
+                *ps->lbcur++ = '\\'; /* preserve the escape sequence */
+                break;
+            }
+            *ps->lbcur++ = c;
+            state = ps->nextstate;
+            ps->nextstate = PREF_PARSE_INIT; /* reset next state */
             break;
 
         /* function open and close parsing */
@@ -482,9 +491,9 @@ pref_reader(void       *closure,
             const char *pref,
             PrefValue   val,
             PrefType    type,
-            PrefAction  action)
+            PRBool      defPref)
 {
-    printf("%spref(\"%s\", ", action == PREF_SETUSER ? "user_" : "", pref);
+    printf("%spref(\"%s\", ", defPref ? "" : "user_", pref);
     switch (type) {
     case PREF_STRING:
         printf("\"%s\");\n", val.stringVal);
