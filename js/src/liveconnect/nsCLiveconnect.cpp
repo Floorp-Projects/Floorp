@@ -207,7 +207,7 @@ AutoPushJSContext::AutoPushJSContext(nsISupports* aSecuritySupports,
             tempFP = tempFP->down;
         };
 
-        if (!hasScript
+        if (!hasScript)
         {
             JSPrincipals* jsprinc;
             principal->GetJSPrincipals(&jsprinc);
