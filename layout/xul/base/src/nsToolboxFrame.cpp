@@ -524,87 +524,108 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
   nscoord collapsedGrippyHeight = kCollapsedGrippyHeightInPixels * onePixel;
 
   // ----see how many collased bars there are ----
-  int collapsedGrippies=0;
 
-  // Get the first child of the toolbox content node and the first child frame of the toolbox
+  // Get the first child of the toolbox content node
   unsigned int contentCounter = 0;
   nsCOMPtr<nsIContent> childContent;
-  mContent->ChildAt(0, *getter_AddRefs(childContent));
-
-  nsIFrame* childFrame = mFrames.FirstChild();
+  nsresult errCode = mContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
+  NS_ASSERTION(errCode == NS_OK,"failed to get first child");    
+  PRBool anyCollapsedToolbars = PR_FALSE;
   
+  // iterate over each content node to see if we can find one with the "collapsed"
+  // attribute set. If so, we have a collapsed toolbar.
   while ( childContent ) {      
-    // first determine if the current content node matches the current frame. Make sure we don't
-    // walk off the end of the frame list when we still have content nodes.     
-    nsCOMPtr<nsIContent> currentFrameContent;
-    if ( childFrame )
-       childFrame->GetContent(getter_AddRefs(currentFrameContent));
-
-    // if not hidden continue otherwise add a collapsed grippy
-    if ( childFrame && currentFrameContent && childContent == currentFrameContent ) {
-         childFrame->GetNextSibling(&childFrame);
-    } else {
-       collapsedGrippies++;
-    }
-
-    contentCounter++;
-    mContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
+    // is this bar collapsed?
+    nsAutoString value;
+    childContent->GetAttribute ( kNameSpaceID_None, kCollapsedAtom, value );
+    if ( value == "true" )
+      anyCollapsedToolbars = PR_TRUE;
+    
+    // next!
+    ++contentCounter;
+    errCode = mContent->ChildAt(contentCounter, *getter_AddRefs(childContent));
+    NS_ASSERTION(errCode == NS_OK,"failed to get next child");    
   }
+ 
+#ifdef NS_DEBUG
+//*** Highlights bug 3505. The frame still exists even though the display:none attribute is set on
+//*** the content node.
+if ( anyCollapsedToolbars ) {
+  printf("There are collapsed toolbars\n");
+  nsIFrame* childFrame = mFrames.FirstChild();
+  while ( childFrame ) {
+    nsCOMPtr<nsIContent> currentFrameContent;
+    childFrame->GetContent(getter_AddRefs(currentFrameContent));
+    nsAutoString value;
+    currentFrameContent->GetAttribute ( kNameSpaceID_None, kCollapsedAtom, value );
+    if ( value == "true" )
+      printf("BUG 3505:: Found a collapsed toolbar (display:none) but the frame still exists!!!!\n");
+    childFrame->GetNextSibling(&childFrame);
+  }
+}
+#endif
 
-  // -----set the bottom margin to be the sum of those colapsed bars---
-  // set left to be the width of the grippy
+  // if there are any collapsed bars, we need to leave room at the bottom of
+  // the box for the grippies. Regardless, we need to leave room at the side for
+  // the grippies of visible toolbars. Make a margin of the appropriate dimensions.
+//XXX FIX ME! -- bottom margins don't work!
   mInset = nsMargin(0,0,0,0);
-
   if (IsHorizontal()) {
      mInset.top = grippyWidth;
-     mInset.right = collapsedGrippyHeight*collapsedGrippies;
+     mInset.left = anyCollapsedToolbars ? collapsedGrippyHeight : 0;
   } else {
      mInset.left = grippyWidth;
-     mInset.bottom = collapsedGrippyHeight*collapsedGrippies;
-  }
+     mInset.bottom = anyCollapsedToolbars ? collapsedGrippyHeight : 0;
+ }
 
   // -----flow things-----
-  nsresult result = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  errCode = nsBoxFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  NS_ASSERTION(errCode == NS_OK,"box reflow failed");
 
   // -----set all the grippy locations-----
+//XXX FIX ME - also handle grippies that are collapsed....
   mNumToolbars = 0;
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  while ( childFrame )   {    
+    // get the childs rect and figure out the grippy size
+    nsRect rect(0,0,0,0);
+    childFrame->GetRect(rect);
 
-  
-  childFrame = mFrames.FirstChild(); 
-  while (nsnull != childFrame) 
-  {    
-      // get the childs rect and figure out the grippy size
-      nsRect rect(0,0,0,0);
-      childFrame->GetRect(rect);
+    nsCOMPtr<nsIContent> childContent;
+    childFrame->GetContent ( getter_AddRefs(childContent) );
+    nsRect grippyRect(rect);
 
-      nsCOMPtr<nsIContent> childContent;
-      childFrame->GetContent ( getter_AddRefs(childContent) );
-      nsRect grippyRect(rect);
+    if (IsHorizontal()) {
+      grippyRect.y = 0;
+      grippyRect.height = grippyWidth;
+    } else {
+      grippyRect.x = 0;
+      grippyRect.width = grippyWidth;
+   }
 
-      if (IsHorizontal()) {
-          grippyRect.y = 0;
-          grippyRect.height = grippyWidth;
-      } else {
-          grippyRect.x = 0;
-          grippyRect.width = grippyWidth;
-     }
+    mGrippies[mNumToolbars].SetProperties ( grippyRect, childContent, PR_FALSE );
 
-      mGrippies[mNumToolbars].SetProperties ( grippyRect, childContent, PR_FALSE );
-
-      nsresult rv = childFrame->GetNextSibling(&childFrame);
-      NS_ASSERTION(rv == NS_OK,"failed to get next child");
-      mNumToolbars++;
+    errCode = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(errCode == NS_OK,"failed to get next child");
+    mNumToolbars++;
   }
-  
 
-  return result;
+  return errCode;
 } // Reflow
 
+
+//
+// GetInset
+//
+// Our Reflow() method computes a margin for the grippies and for collased grippies (if
+// any). Return this pre-computed margin when asked by the box.
+//
 void
 nsToolboxFrame::GetInset(nsMargin& margin)
 {
    margin = mInset;
 }
+
 
 //
 // GetFrameForPoint
@@ -768,8 +789,14 @@ void
 nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab ) 
 {
   if ( inTab.mToolbar ) {
-    printf("CollapseToolbar:: collapsing\n");
-    inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kCollapsedAtom, "true", PR_TRUE );
+    #ifdef NS_DEBUG
+      printf("CollapseToolbar:: collapsing\n");
+    #endif
+    nsresult errCode = inTab.mToolbar->SetAttribute ( kNameSpaceID_None, kCollapsedAtom, "true", PR_TRUE );
+    #ifdef NS_DEBUG
+    if ( errCode )
+      printf("Problem setting collapsed attribute while collapsing toolbar\n");
+    #endif
   }
    
 } // CollapseToolbar
@@ -784,6 +811,10 @@ nsToolboxFrame :: CollapseToolbar ( TabInfo & inTab )
 void
 nsToolboxFrame :: ExpandToolbar ( TabInfo & inTab ) 
 {
-  mContent->UnsetAttribute ( kNameSpaceID_None, kCollapsedAtom, PR_TRUE );
+  nsresult errCode = mContent->UnsetAttribute ( kNameSpaceID_None, kCollapsedAtom, PR_TRUE );
+  #ifdef NS_DEBUG
+  if ( errCode )
+    printf("Problem clearing collapsed attribute while expanding toolbar\n");
+  #endif
 
 } // ExpandToolbar
