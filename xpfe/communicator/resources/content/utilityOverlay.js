@@ -451,6 +451,13 @@ function editPage(url, launchWindow, delay)
     launchWindow.openDialog("chrome://editor/content", "_blank", "chrome,all,dialog=no", url);
 }
 
+// function that extracts the filename from a url
+function extractFileNameFromUrl(urlstr)
+{
+  if (!urlstr) return null;
+  return urlstr.slice(urlstr.lastIndexOf( "/" )+1);
+}
+
 function helpMenuCreate()
 {
     //adding the brand string to the about
