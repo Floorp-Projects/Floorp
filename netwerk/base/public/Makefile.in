@@ -96,6 +96,7 @@ EXPORTS		= \
 		nsNetError.h \
 		nsNetUtil.h \
 		nsUnixColorPrintf.h \
+		nsURIHashKey.h \
 		nsReadLine.h \
 		nsCPasswordManager.h \
 		nsCPasswordManagerInternal.h \
