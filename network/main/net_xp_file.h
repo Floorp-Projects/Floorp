@@ -89,4 +89,4 @@ extern int NET_I_XP_FileRemove(const char * name, XP_FileType type);
 #define NET_XP_FileRemove(name, type) XP_FileRemove(name, type) 
 #endif /* MODULAR_NETLIB */
 
-#endif
+#endif /* _net_xp_file_h */
