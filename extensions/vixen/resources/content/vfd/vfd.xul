@@ -20,7 +20,7 @@
   <!-- selection manager -->
   <script src="chrome://vixen/content/vfd/vxVFDSelectionManager.js"></script>
   
-  <tabcontrol class="tabbed-edit" flex="1">
+  <tabcontrol class="tabbed-edit" flex="1" orient="vertical">
     <tabpanel flex="1">
       <iframe id="vfdDocument" name="vfdDocument" flex="1"/>
       <box id="vfdDOMTree" flex="1"/> <!-- from overlay -->

@@ -23,86 +23,67 @@
  
 function vxVFDTransactionManager() 
 {
-  const kTxMgrContractID = "@mozilla.org/transaction/manager;1";
-  const kTxMgrIID = "nsITransactionManager";
-  this.mTxMgr = nsJSComponentManager.getService(kTxMgrContractID, kTxMgrIID);
+  this.mTxnStack = new vxVFDTransactionStack();
 }
 
 vxVFDTransactionManager.prototype = 
 {
-  mTxMgr:   null,
-  mDoSeq:   null,
-  mUndoSeq: null,
-  mTxnDS:   null,
+  mTxMgr:     null,
+  mTxnSeq:    null,
+  mTxnDS:     null,
+  mTxnStack:  null,
 
   doTransaction: function (aTransaction) 
   {
-    // XXX Until the txmgr is fully scriptable, we need to perform the
-    //     transaction ourself 
+    // perform the transaction
     aTransaction.doTransaction();
     
-    if (!this.mDoSeq) {
+    if (!this.mTxnSeq) {
       // If a Transaction Seq does not exist, create one.
-      this.makeSeq(vxVFDDoTransactionSeq);
+      this.mTxnSeq = this.makeSeq(vxVFDTransactionSeq);
     }
-    _dd("we've successfully made a sequence\n");
+
+    if (this.mTxnStack.index < this.mTxnStack.mStack.length - 1) {
+      // clear the stack from the index upwards
+      this.mTxnStack.flush(this.mTxnStack.index);
+      
+      // likewise with the RDF Seq.
+      var seqCount = this.mTxnSeq.GetCount();
+      for (var i = this.mTxnStack.index; i < seqCount; i++)
+        this.mTxnSeq.RemoveElementAt(i);
+    }
     
+    // append the transaction to our list
+    this.mTxnStack.push(aTransaction);
+
     // add the transaction to the stack
-    this.mDoSeq.AppendElement(aTransaction);
+    this.mTxnSeq.AppendElement(new RDFLiteral(this.mTxnStack.index-1));
     
-    if (!this.mTxMgr) {
-      // If a Transaction Manager does not exist for this VFD, 
-      // create one.
-      const kTxMgrCONTRACTID = "@mozilla.org/transaction/manager;1";
-      const kTxMgrIID = "nsITransactionManager";
-      // XXX comment this out until this works
-      // this.mTxMgr = nsJSComponentManager.getService(kTxMgrCONTRACTID, kTxMgrIID);
-    }
-    
-    // do the transaction
-    // XXX comment this out until this works
-    // this.mTxMgr.doTransaction(aTransaction);
   },
   
   undoTransaction: function ()
   {  
-    // XXX Until the txmgr is fully scriptable, we need to undo the
-    //     transaction ourself 
-    aTransaction.undoTransaction();
-    
-    if (!this.mUndoSeq) {
-      // If a  Transaction Undo Seq does not exist, create one
-      this.makeSeq(vxVFDUndoTransactionSeq);
-    }
-    
-    // remove the transaction at the top of the do seq
-    var lastIndex = this.mDoSeq.GetCount() - 1;
-    var txn = this.mDoSeq.RemoveElementAt(lastIndex, true);
-    
-    // and add it to the undo seq
-    this.mUndoSeq.AppendElement(txn);
-    
+    // retrieve the previous transaction
+    var txn = this.mTxnStack.mStack[this.mTxnStack.index-1];
+
     // undo the transaction
-    // XXX comment this out until this works
-    // this.mTxMgr.undoTransaction();
+    if (txn) {
+      _ddf("going to undo the txn at", this.mTxnStack.index-1);
+      txn.undoTransaction();
+      this.mTxnStack.index--;
+    }
   },
   
   redoTransaction: function (aTransaction)
   {
-    // XXX Until the txmgr is fully scriptable, we need to redo the
-    //     transaction ourself 
-    aTransaction.redoTransaction();
-    
-    // remove the transaction at the top of the undo seq
-    var lastIndex = this.mUndoSeq.GetCount() - 1;
-    var txn = this.mDoSeq.RemoveElementAt(lastIndex, true);
-    
-    // and add it to the do seq
-    this.mDoSeq.AppendElement(txn);
-    
+    // retrieve the previous transaction
+    var txn = this.mTxnStack.mStack[this.mTxnStack.index+1];
+
     // redo the transaction
-    // XXX comment this out until this works
-    // this.mTxMgr.redoTransaction();
+    if (txn) { 
+      txn.redoTransaction();
+      this.mTxnStack.index++;
+    }
   },
   
   makeSeq: function (aResource)
@@ -110,8 +91,9 @@ vxVFDTransactionManager.prototype =
     const kContainerUtilsCID = "{d4214e92-fb94-11d2-bdd8-00104bde6048}";
     const kContainerUtilsIID = "nsIRDFContainerUtils";
     var utils = nsJSComponentManager.getServiceByID(kContainerUtilsCID, kContainerUtilsIID);
-    this.mDoSeq = utils.MakeSeq(vxVFDTransactionDS, aResource);
+    return utils.MakeSeq(vxVFDTransactionDS, aResource);
   }
+  
 };
 
 /** 
@@ -120,15 +102,13 @@ vxVFDTransactionManager.prototype =
 var vxVFDTransactionDS = 
 {
   mResources: { },
-  
+ 
   HasAssertion: function (aSource, aProperty, aValue, aTruthValue)
   {
-    _ddf("vxtxds::hasassertion", aValue);
     var res = aSource.Value;
     if (!res) throw Components.results.NS_ERROR_FAILURE; 
     var prop = aProperty.Value;
     if (!prop) throw Components.results.NS_ERROR_FAILURE;
-    _ddf("so, the values are", res + ", " + prop);
     
     if (this.mResources[res] && 
         this.mResources[res][prop] &&
@@ -139,27 +119,24 @@ var vxVFDTransactionDS =
   
   Assert: function (aSource, aProperty, aValue, aTruthVal)
   {
-    _dd("vxtxds::assert");
     var res = aSource.Value;
     if (!res) throw Components.results.NS_ERROR_FAILURE; 
     var prop = aProperty.Value;
     if (!prop) throw Components.results.NS_ERROR_FAILURE;
     
-    this.mResources[res] = { };
-    _ddf("going to assert into", res + ", " + prop);
+    if (!this.mResources[res])
+      this.mResources[res] = { };
     this.mResources[res][prop] = aValue;
-    _ddf("value is now", this.mResources[res][prop]);
   },
   
   Unassert: function (aSource, aProperty, aValue, aTruthVal)
   {
-    _dd("vxtxds::unassert");
     var res = aSource.Value;
     if (!res) throw Components.results.NS_ERROR_FAILURE;
-    var prop = aSource.Value;
+    var prop = aProperty.Value;
     if (!prop) throw Components.results.NS_ERROR_FAILURE;
     if (!aValue) throw Components.results.NS_ERROR_FAILURE;
-    
+
     if (!this.mResources[res][prop])
       throw Components.results.NS_ERROR_FAILURE;
     
@@ -168,7 +145,6 @@ var vxVFDTransactionDS =
   
   GetTarget: function (aSource, aProperty, aTruthValue)
   {
-    _dd("vxtxds::gettarget");
     var res = aSource.Value;
     if (!res) throw Components.results.NS_ERROR_FAILURE;
     var prop = aProperty.Value;
@@ -176,26 +152,128 @@ var vxVFDTransactionDS =
 
     if (this.mResources[res] != undefined && 
         this.mResources[res][prop] != undefined) {
-      var thang = this.mResources[res][prop].QueryInterface(Components.interfaces.nsIRDFLiteral);
-      _ddf("prop", thang.Value);
-      return this.mResources[res][prop];
+      return this.mResources[res][prop].QueryInterface(Components.interfaces.nsIRDFNode);
     }
     throw Components.results.NS_ERROR_FAILURE;
     return null;
+  },
+  
+  mObservers: [],
+  AddObserver: function (aObserver) 
+  {
+    this.mObservers.push(aObserver);
+  },
+  
+  RemoveObserver: function (aObserver)
+  {
+    for (var i = 0; i < this.mObservers.length; i++) {
+      if (this.mObservers[i] == aObserver) {
+        this.mObservers.splice(i, 1);
+        break;
+      }
+    }
   }
 };
 
 /** 
  * Implements nsIRDFResource
  */
-var vxVFDDoTransactionSeq = 
+var vxVFDTransactionSeq = 
 {
-  Value: "vxVFDDoTransactionSeq"
+  Value: "vxVFDTransactionSeq"
 };
 
-var vxVFDUndoTransactionSeq = 
+function stripRDFPrefix (aString)
 {
-  Value: "vxVFDUndoTransactionSeq"
-};
+  var len = "http://www.w3.org/1999/02/22-rdf-syntax-ns#".length;
+  return aString.substring(len, aString.length);
+}
 
+/** 
+ * Transaction stack
+ */
+function vxVFDTransactionStack()
+{
+  this.mIndex = 0;
+
+  this.mStack = [];
+}
+
+vxVFDTransactionStack.prototype = 
+{
+  get index ()
+  {
+    return this.mIndex;
+  },
+  
+  set index (aValue)
+  {
+    _ddf("setting index to", aValue);
+    this.mIndex = aValue;
+    return this.mIndex;
+  },
+  
+  push: function (aTransaction) 
+  {
+    this.mStack.push(aTransaction);
+    this.index++;
+  },
+  
+  pop: function ()
+  {
+    this.index--;
+    return this.mStack.pop();
+  },
+  
+  flush: function (aStart)
+  {
+    if (aStart === undefined) 
+      aStart = 0;
+      
+    this.mStack.splice(aStart, this.mStack.length - aStart);
+  }
+}; 
+
+/** 
+ * RDF Literal object
+ */
+function RDFLiteral (aValue)
+{
+  this.Value = aValue;
+}
+
+RDFLiteral.prototype = 
+{
+  EqualsNode: function (aRDFNode) 
+  {
+    try {
+      var node = aRDFNode.QueryInterface(Components.interfaces.nsIRDFLiteral);
+      if (node.Value == this.Value) 
+        return true;
+    }
+    catch (e) {
+    }
+    return false;
+  }
+}
+
+/*
+function txnResource(aTransaction)
+{
+  this.Value = "";
+  this.mTransaction = aTransaction;
+}
+
+txnResource.prototype = {  
+  QueryInterface: function (aIID)
+  {
+    if (aIID == Components.interfaces.nsIRDFResource || 
+        aIID == Components.interfaces.nsIRDFNode ||
+        aIID == Components.interfaces.nsISupports)
+      return this;
+    throw Components.results.NS_ERROR_NO_INTERFACE;
+    return null;
+  }
+};
+*/
 

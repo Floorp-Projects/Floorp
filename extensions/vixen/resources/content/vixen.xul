@@ -42,6 +42,11 @@
 
   <script language="JavaScript" src="chrome://vixen/content/vixen.js"></script>
   <script language="JavaScript" src="chrome://vixen/content/vxUtils.js"></script>
+
+  <keyset id="vxKeyset">
+    <key id="undo" key="z" xulkey="true" alt="false" shift="false" onkeypress="vxShell.undo();"/>
+    <key id="redo" key="z" xulkey="true" alt="false" shift="true" onkeypress="vxShell.redo();"/>
+  </keyset>
   
   <toolbox id="xuledit-toolbox" flex="1">
     <menubar id="xuledit-menubar">
@@ -49,6 +54,14 @@
         <menupopup>
           <menuitem value="Open..." accesskey="o" oncommand="vxShell.loadDocumentWithUI();"/>
           <menuitem value="Exit" accesskey="x"/>
+        </menupopup>
+      </menu>
+      <menu id="menu_Edit" value="Edit" accesskey="e">
+        <menupopup>
+          <menuitem value="Undo" accesskey="u" oncommand="vxShell.undo();" key="undo"/>
+          <menuitem value="Redo" accesskey="r" oncommand="vxShell.redo();" key="redo"/>
+          <menuseparator/>
+          <menuitem value=" "/>
         </menupopup>
       </menu>
       <menu id="menu_Help" value="Help" accesskey="h">
