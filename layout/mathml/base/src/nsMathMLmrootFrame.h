@@ -48,16 +48,30 @@ public:
   {
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-    UpdatePresentationDataFromChildAt(0, 2, PR_FALSE);
+    UpdatePresentationDataFromChildAt(1, 2, PR_FALSE);
     InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
+
+  NS_IMETHOD
+  Reflow(nsIPresContext&          aPresContext,
+         nsHTMLReflowMetrics&     aDesiredSize,
+         const nsHTMLReflowState& aReflowState,
+         nsReflowStatus&          aStatus);
+
+  NS_IMETHOD 
+  Paint(nsIPresContext&      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        const nsRect&        aDirtyRect,
+        nsFramePaintLayer    aWhichLayer);
 
 protected:
   nsMathMLmrootFrame();
   virtual ~nsMathMLmrootFrame();
   
   virtual PRIntn GetSkipSides() const { return 0; }
+
+  nsMathMLChar mSqrtChar, mSqrtBar;
 };
 
 #endif /* nsMathMLmrootFrame_h___ */
