@@ -585,7 +585,7 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
 
     aConsumer->OnStartRequest(request, nsnull);
     while (PR_TRUE) {
-        char buf[1024];
+        char buf[4096];
         PRUint32 readCount;
 
         if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
