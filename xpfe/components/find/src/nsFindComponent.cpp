@@ -310,7 +310,7 @@ static PRInt32 FindInString(const nsString &searchStr, const nsString &patternSt
 						while (t < searchEnd - 1 && nsString::IsSpace(*(t + 1)))
 							t ++;
 							
-						inWhitespace = false;
+						inWhitespace = PR_FALSE;
 					}
 					else
 						inWhitespace = nsString::IsSpace(*p);
