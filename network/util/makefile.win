@@ -29,6 +29,7 @@ IGNORE_MANIFEST=1
 # Make sure we have MOZILLA_CLIENT defined so we get the
 #   proper JS includes
 #
+MAPFILE=netutil.map
 LCFLAGS		= $(LCFLAGS)  -DMOZILLA_CLIENT
 
 !ifdef BUILD_DEBUG_GC
@@ -41,7 +42,6 @@ LLIBS=  \
 MISCDEP=$(LLIBS)
 
 OBJS=   \
-	.\$(OBJDIR)\mkreg.obj	\
 !if defined(SMART_MAIL) 
 	.\$(OBJDIR)\mkbuf.obj	\
 !endif
@@ -49,7 +49,6 @@ OBJS=   \
 
 
 CSRCS =	\
-	mkreg.c	\
 !if defined(SMART_MAIL) 
 	mkbuf.c \
 !endif
@@ -64,7 +63,6 @@ EXTRA_LIBS=
 
 REQUIRES= network
 EXPORTS= \
-	mkreg.h \
 !if defined(SMART_MAIL)
 	mkbuf.h \
 !endif

@@ -31,8 +31,7 @@ DIRS	= \
 	cnvts		\
 	mimetype	\
 	main		\
-	protocol	\
-	util
+	protocol
 
 ifdef MODULAR_NETLIB
 DIRS	+= public module
