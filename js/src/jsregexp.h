@@ -41,10 +41,6 @@
 #include "jspubtd.h"
 #include "jsstr.h"
 
-#ifdef JS_THREADSAFE
-#include "jsdhash.h"
-#endif
-
 struct JSRegExpStatics {
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
@@ -75,13 +71,8 @@ struct JSRegExp {
     jsrefcount   nrefs;         /* reference count */
     uint32       parenCount:24, /* number of parenthesized submatches */
                  flags:8;       /* flags, see jsapi.h's JSREG_* defines */
-    double       lastIndex;     /* index after last match, for //g iterator */
     RENode       *ren;          /* regular expression tree root */
     JSString     *source;       /* locked source string, sans // */
-#ifdef JS_THREADSAFE            /* extension: lastIndex is thread-specific */
-    jsword       owningThread;  /* (not quite right if someone intentionally */
-    JSDHashTable *lastIndexes;  /* passes a regexp from thread A to B) */
-#endif
 };
 
 extern JSRegExp *
@@ -132,5 +123,11 @@ js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
 
 extern JSObject *
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
+
+extern JSBool
+js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex);
+
+extern JSBool
+js_SetLastIndex(JSContext *cx, JSObject *obj, jsdouble lastIndex);
 
 #endif /* jsregexp_h___ */

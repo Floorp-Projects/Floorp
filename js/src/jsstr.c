@@ -1097,8 +1097,14 @@ match_or_replace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                     : INT_TO_JSVAL(-1);
         }
     } else if (data->global) {
-        ok = JS_TRUE;
-        re->lastIndex = 0;
+        if (reobj) {
+            /* Set the lastIndex property's reserved slot to 0. */
+            ok = js_SetLastIndex(cx, reobj, 0);
+            if (!ok)
+                return JS_FALSE;
+        } else {
+            ok = JS_TRUE;
+        }
         length = JSSTRING_LENGTH(str);
         for (count = 0; index <= length; count++) {
             ok = js_ExecuteRegExp(cx, re, str, &index, JS_TRUE, rval);
