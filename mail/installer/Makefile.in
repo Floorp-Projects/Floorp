@@ -42,6 +42,11 @@ VPATH		= @srcdir@
 
 NO_GECKO_SDK=1
 
+# Before building the installer, re-make in mail/config to pick up
+# new files in dist/bin.  This is needed for Talkback.
+libs:: 
+	$(MAKE) -C ../config
+
 include $(DEPTH)/xpinstall/packager/Makefile
 
 # Rename the archive after it's created, so that we can differentiate between
