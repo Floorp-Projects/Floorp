@@ -43,4 +43,3 @@ nsIToolbarManagerListener.h
 nsIImageButton.h
 nsIImageButtonListener.h
 nsIContentConnector.h
-nsIXULCommand.h

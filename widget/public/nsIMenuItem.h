@@ -21,7 +21,6 @@
 
 #include "nsISupports.h"
 #include "nsString.h"
-#include "nsIXULCommand.h"
 
 // {7F045771-4BEB-11d2-8DBB-00609703C14E}
 #define NS_IMENUITEM_IID      \
@@ -85,11 +84,6 @@ class nsIMenuItem : public nsISupports {
     */
     NS_IMETHOD GetNativeData(void*& aData) = 0;
 
-   /**
-    * Set the comamnd for this menu item
-    *
-    */
-    NS_IMETHOD SetXULCommand(nsIXULCommand * aXULCommand) = 0;
 };
 
 #endif

@@ -73,7 +73,6 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mMenuParent  = nsnull;
   mPopUpParent = nsnull;
   mTarget      = nsnull;
-  mXULCommand  = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -272,24 +271,6 @@ NS_METHOD nsMenuItem::GetNativeData(void *& aData)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  // Execute the XULCommand
-  if(mXULCommand)
-  { 
-    mXULCommand->DoCommand();
-    return nsEventStatus_eConsumeNoDefault;
-  }
-  else
   	return nsEventStatus_eIgnore;
 }
 
-//-------------------------------------------------------------------------
-// Set the nsIXULCommand to poke when we get a nsMenuEvent from the user
-//-------------------------------------------------------------------------
-NS_METHOD nsMenuItem::SetXULCommand(nsIXULCommand * aXULCommand)
-{
-  // We may support more than one XULCommand later, but not at this moment
-  NS_IF_RELEASE(mXULCommand);
-  NS_IF_ADDREF(aXULCommand);
-  mXULCommand = aXULCommand;
-  return NS_OK;
-}

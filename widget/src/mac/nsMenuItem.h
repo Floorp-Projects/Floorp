@@ -24,8 +24,6 @@
 #include "nsString.h"
 #include "nsIMenuListener.h"
 
-#include "nsIXULCommand.h"
-
 class nsIMenu;
 class nsIPopUpMenu;
 class nsIWidget;
@@ -62,8 +60,7 @@ public:
   // nsIMenuListener interface
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   
-  NS_IMETHOD SetXULCommand(nsIXULCommand * aXULCommand);
-  
+ 
 protected:
   //void Create(nsIWidget * aMBParent, Widget aParent,
               //const nsString &aLabel, PRUint32 aCommand);
@@ -77,7 +74,6 @@ protected:
   nsIPopUpMenu * mPopUpParent;
   nsIWidget    * mTarget;
 
-  nsIXULCommand * mXULCommand;
   //Widget mMenu; // native cascade widget
 
 };
