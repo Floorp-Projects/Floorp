@@ -248,7 +248,7 @@
        (define (member (id string) (list (vector string))) boolean
          (if (empty list)
            false
-           (if (string-equal id (nth list 0))
+           (if (string= id (nth list 0))
              true
              (member id (subseq list 1)))))
        

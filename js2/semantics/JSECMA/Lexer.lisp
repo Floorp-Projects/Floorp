@@ -160,7 +160,7 @@
          (if (empty list)
            false
            (let ((s string (nth list 0)))
-             (if (string-equal id s)
+             (if (string= id s)
                true
                (member id (subseq list 1))))))
        

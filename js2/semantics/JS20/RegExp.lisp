@@ -426,7 +426,7 @@
                 (let ((j integer (+ i (length ref))))
                   (if (> j (length s))
                     (oneof failure)
-                    (if (string-equal (subseq s i (- j 1)) ref)   ;*********ignore case?
+                    (if (string= (subseq s i (- j 1)) ref)   ;*********ignore case?
                       (c (tuple r-e-match j (& captures x)))
                       (oneof failure))))))
              (absent (c x)))))
