@@ -2044,6 +2044,11 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
     // Special rules for tables. In general, tables will stick to the
     // left edge when they are too large otherwise they behave like
     // blocks.
+
+    // the borderpadding should not influence the margin relative to the 
+    // outertable frame  
+    availMarginSpace = aAvailWidth - aComputedWidth;
+
     if (availMarginSpace < 0) {
       // Whoops - the TABLE element is too large for the available
       // space. In this case use the "direction" property to pin the
