@@ -177,6 +177,12 @@ sub BuildDist()
 
 	#UCONV
 	InstallFromManifest(":mozilla:intl:uconv:public:MANIFEST",						"$distdirectory:uconv:");
+	InstallFromManifest(":mozilla:intl:uconv:ucvlatin:MANIFEST",					"$distdirectory:uconv:");
+	InstallFromManifest(":mozilla:intl:uconv:ucvja:MANIFEST",						"$distdirectory:uconv:");
+	InstallFromManifest(":mozilla:intl:uconv:ucvja2:MANIFEST",						"$distdirectory:uconv:");
+
+	#STRRES
+	# InstallFromManifest(":mozilla:intl:strres:public:MANIFEST",						"$distdirectory:strres:");
 
 	#JPEG
     InstallFromManifest(":mozilla:jpeg:MANIFEST",									"$distdirectory:jpeg:");
@@ -448,6 +454,9 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvlatin.mcp",				"ucvlatin$D.shlb", "uconvlatin.toc", 1, $main::ALIAS_SYM_FILES);
 
 	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvja.mcp",					"ucvja$D.shlb", "ucvja.toc", 1, $main::ALIAS_SYM_FILES);
+
+	# BuildOneProject(":mozilla:intl:strres:macbuild:strres.mcp",					"strres$D.shlb", "strres.toc", 1, $main::ALIAS_SYM_FILES);
+
 
 #// removing powerplant - long live powerplant
 #	BuildOneProject(":mozilla:lib:mac:PowerPlant:PowerPlant.mcp",				"PowerPlant$D.shlb", "", 1, $main::ALIAS_SYM_FILES);
