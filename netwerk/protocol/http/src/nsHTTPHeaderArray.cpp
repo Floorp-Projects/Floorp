@@ -86,7 +86,7 @@ nsHTTPHeaderArray::~nsHTTPHeaderArray()
 
 nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
 {
-  nsCOMPtr<nsHeaderEntry> entry;
+  nsHeaderEntry *entry = nsnull;
   PRInt32 i;
 
   NS_ASSERTION(m_pHTTPHeaders, "header array doesn't exist.");
@@ -94,14 +94,14 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  i = GetEntry(aHeader, getter_AddRefs(entry));
-
+  i = GetEntry(aHeader, &entry);
   //
   // If a NULL value is passed in, then delete the header entry...
   //
   if (!aValue) {
     if (entry) {
       m_pHTTPHeaders->RemoveElementAt(i);
+      NS_RELEASE(entry);
     }
     return NS_OK;
   }
@@ -114,6 +114,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
     if (!entry) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
+    NS_ADDREF(entry);
     m_pHTTPHeaders->AppendElement(entry);
   } 
   // 
@@ -136,7 +137,7 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
 
 nsresult nsHTTPHeaderArray::GetHeader(nsIAtom* aHeader, char* *aResult)
 {
-  nsCOMPtr<nsHeaderEntry> entry;
+  nsHeaderEntry *entry = nsnull;
 
   *aResult = nsnull;
 
@@ -145,9 +146,11 @@ nsresult nsHTTPHeaderArray::GetHeader(nsIAtom* aHeader, char* *aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  (void) GetEntry(aHeader, getter_AddRefs(entry));
+  GetEntry(aHeader, &entry);
+
   if (entry) {
     *aResult = entry->mValue.ToNewCString();
+    NS_RELEASE(entry);
     if (!*aResult) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -165,11 +168,11 @@ PRInt32 nsHTTPHeaderArray::GetEntry(nsIAtom* aHeader, nsHeaderEntry** aResult)
   count = 0;
   (void)m_pHTTPHeaders->Count(&count);
   for (i = 0; i < count; i++) {
-    nsCOMPtr<nsISupports> entry;
+    nsISupports *entry = nsnull;
     nsHeaderEntry* element;
     
     entry   = m_pHTTPHeaders->ElementAt(i);
-    element = (nsHeaderEntry*)entry.get();
+    element = NS_STATIC_CAST(nsHeaderEntry*, entry);
     if (aHeader == element->mAtom.get()) {
       *aResult = element;
       NS_ADDREF(*aResult);
