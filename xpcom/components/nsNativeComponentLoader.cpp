@@ -129,13 +129,6 @@ nsNativeComponentLoader::GetFactory(const nsIID & aCID,
         }
     }
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-    // Inform refcnt tracer of new library so that calls through the
-    // new library can be traced.
-    nsTraceRefcnt::LoadLibrarySymbols(dll->GetNativePath(),
-                                      dll->GetInstance());
-#endif
-
     /* Get service manager for factory */
     nsIServiceManager* serviceMgr = NULL;
     rv = nsServiceManager::GetGlobalServiceManager(&serviceMgr);

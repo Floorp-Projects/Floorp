@@ -334,6 +334,7 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type, FILE* out)
 #ifdef NS_BUILD_REFCNT_LOGGING
   if (gBloatLog == nsnull || gBloatView == nsnull) {
     fprintf(stdout, "### ERROR: Can't dump bloat statistics because XPCOM_MEM_BLOAT_LOG isn't set.\n");
+    fflush(stdout);
     return NS_ERROR_FAILURE;
   }
   if (out == nsnull) {
@@ -488,6 +489,7 @@ static void InitTraceLog(void)
     else {
       gLogToLeaky = PR_FALSE;
       fprintf(stdout, "### ERROR: XPCOM_MEM_LEAKY_LOG defined, but can't locate __log_addref and __log_release symbols\n");
+      fflush(stdout);
     }
   }
 
@@ -674,7 +676,8 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
         0,
         NULL 
         );
-      fprintf(stderr, "### ERROR: WalkStack: %s\n", lpMsgBuf);
+      fprintf(stdout, "### ERROR: WalkStack: %s", lpMsgBuf);
+      fflush(stdout);
       LocalFree( lpMsgBuf );
     }
     if (!ok || frame.AddrPC.Offset == 0)
@@ -902,22 +905,48 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
     InitTraceLog();
 
   if (gAllocLog || gRefcntsLog) {
+    fprintf(stdout, "### Loading symbols for %s\n", aLibraryName);
+    fflush(stdout);
+
     HANDLE myProcess = ::GetCurrentProcess();
 
-    if (!SymInitialize(myProcess, ".;..\\lib", TRUE)) {
-      return;
+    BOOL ok = SymInitialize(myProcess, ".;..\\lib", FALSE);
+    if (ok) {
+      const char* baseName = aLibraryName;
+      // just get the base name of the library if a full path was given:
+      PRInt32 len = nsCRT::strlen(aLibraryName);
+      for (PRInt32 i = len - 1; i >= 0; i--) {
+        if (aLibraryName[i] == '\\') {
+          baseName = &aLibraryName[i + 1];
+          break;
+        }
+      }
+      DWORD baseAddr = SymLoadModule(myProcess,
+                                     NULL,
+                                     (char*)baseName,
+                                     (char*)baseName,
+                                     0,
+                                     0);
+      ok = (baseAddr != nsnull);
     }
-
-    BOOL b = ::SymLoadModule(myProcess,
-                             NULL,
-                             (char*)aLibraryName,
-                             (char*)aLibraryName,
-                             0,
-                             0);
-//  DWORD lastError = 0;
-//  if (!b) lastError = ::GetLastError();
-//  fprintf(gLogStream, "loading symbols for library %s => %s [%d]\n", aLibraryName,
-//         b ? "true" : "false", lastError);
+    if (!ok) {
+      LPVOID lpMsgBuf;
+      FormatMessage( 
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+        FORMAT_MESSAGE_FROM_SYSTEM | 
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,
+        GetLastError(),
+        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+        (LPTSTR) &lpMsgBuf,
+        0,
+        NULL 
+        );
+      fprintf(stdout, "### ERROR: LoadLibrarySymbols for %s: %s\n",
+              aLibraryName, lpMsgBuf);
+      fflush(stdout);
+      LocalFree( lpMsgBuf );
+    }
   }
 #endif
 #endif
