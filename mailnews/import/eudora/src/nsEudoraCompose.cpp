@@ -39,6 +39,8 @@
 #include "nsIMsgAccountManager.h"
 #include "nsMsgI18N.h"
 
+#include "nsNetCID.h"
+
 #include "nsEudoraCompose.h"
 
 #include "EudoraDebugLog.h"
