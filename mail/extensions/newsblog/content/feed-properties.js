@@ -46,6 +46,10 @@ function onLoad()
 
   // set quick mode value
   document.getElementById('quickMode').checked = window.arguments[0].quickMode;
+
+  // if we are editing an existing feed, disable the top level account
+  if (window.arguments[0].folderURI)
+    document.getElementById('rssAccountMenuItem').setAttribute('disabled', 'true');
 }
 
 function onOk()

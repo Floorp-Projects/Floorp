@@ -40,7 +40,7 @@
   xmlns:nc="http://home.netscape.com/NC-rdf#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
-  style="width: 27em;"
+  style="width: 30em;"
   buttons="accept,cancel"
   onload="onLoad();"
   ondialogaccept="return onOk();">
