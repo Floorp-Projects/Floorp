@@ -133,19 +133,13 @@ NS_IMPL_THREADSAFE_ISUPPORTS7(nsPref, nsIPref, nsIPrefService, nsIObserver, nsIP
 nsPref::nsPref()
 //----------------------------------------------------------------------------------------
 {
-  nsIPrefBranch *pBranch;
-  nsresult     rv;
-
   PR_AtomicIncrement(&g_InstanceCount);
   NS_INIT_REFCNT();
 
-  nsCOMPtr<nsIPrefService> pService = 
-           do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
-  mPrefService = pService;
+  mPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
 
-  mPrefService->GetDefaultBranch("", &pBranch);
-  mDefaultBranch = (nsIPrefBranch *)pBranch;
-
+  if (mPrefService)
+    mPrefService->GetDefaultBranch("", getter_AddRefs(mDefaultBranch));
 }
 
 //----------------------------------------------------------------------------------------
