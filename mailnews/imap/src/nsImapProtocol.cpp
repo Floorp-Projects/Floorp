@@ -3292,6 +3292,14 @@ void nsImapProtocol::HandleMessageDownLoadLine(const char *line, PRBool chunkEnd
           endOfLine[2] = '\0';
         }
       }
+      else if ((endOfLine - localMessageLine) >=3 && endOfLine[-3] == nsCRT::CR && endOfLine[-2] == nsCRT::CR
+        && endOfLine[-1] == nsCRT::LF)
+      {
+        // CRCRLF -> CRLF
+        endOfLine[-2] = nsCRT::LF;
+        endOfLine[-1] = '\0';
+      }
+
     }
   }
   
