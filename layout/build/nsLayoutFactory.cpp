@@ -33,6 +33,7 @@
 #include "nsIServiceManager.h"
 #include "nsICSSParser.h"
 #include "nsIHTMLStyleSheet.h"
+#include "nsIHTMLCSSStyleSheet.h"
 #include "nsIDOMRange.h"
 #include "nsIContentIterator.h"
 #include "nsINameSpaceManager.h"
@@ -46,6 +47,7 @@ static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocumentCID, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
+static NS_DEFINE_CID(kHTMLCSSStyleSheetCID, NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kCHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
@@ -237,6 +239,12 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   else if (mClassID.Equals(kHTMLStyleSheetCID)) {
     // XXX ibid
     if (NS_FAILED(res = NS_NewHTMLStyleSheet((nsIHTMLStyleSheet**)&inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kHTMLCSSStyleSheetCID)) {
+    // XXX ibid
+    if (NS_FAILED(res = NS_NewHTMLCSSStyleSheet((nsIHTMLCSSStyleSheet**)&inst)))
       return res;
     refCounted = PR_TRUE;
   }
