@@ -298,10 +298,16 @@ cookie_Localize(char* genericString) {
 }
 
 PRBool
-cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
+cookie_CheckConfirmYN(nsIPrompt *aPrompter, PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
+
+  nsresult res;
+  nsCOMPtr<nsIPrompt> dialog;
+
+  if (aPrompter)
+    dialog = aPrompter;
+  else
+    dialog = do_GetService(kNetSupportDialogCID);
+  if (!dialog) {
     *checkValue = 0;
     return PR_FALSE;
   }
@@ -1106,6 +1112,7 @@ permission_Add(char * host, PRBool permission, PRInt32 type, PRBool save);
 
 PRBool
 permission_Check(
+     nsIPrompt *aPrompter,
      char * hostname,
      PRInt32 type,
      PRBool warningPref,
@@ -1126,7 +1133,7 @@ permission_Check(
   /* we need to prompt */
   PRBool rememberChecked = permission_GetRememberChecked(type);
   PRUnichar * remember_string = cookie_Localize("RememberThisDecision");
-  permission = cookie_CheckConfirmYN(message, remember_string, &rememberChecked);
+  permission = cookie_CheckConfirmYN(aPrompter, message, remember_string, &rememberChecked);
 
   /* see if we need to remember this decision */
   if (rememberChecked) {
@@ -1206,7 +1213,7 @@ Image_CheckForPermission(char * hostname, char * firstHostname, PRBool &permissi
   /* use common routine to make decision */
   PRUnichar * message = cookie_Localize("PermissionToAcceptImage");
   PRUnichar * new_string = nsTextFormatter::smprintf(message, hostname ? hostname : "");
-  permission = permission_Check(hostname, IMAGEPERMISSION,
+  permission = permission_Check(0, hostname, IMAGEPERMISSION,
                                 image_GetWarningPref(), new_string);
   PR_FREEIF(new_string);
   Recycle(message);
@@ -1679,7 +1686,7 @@ cookie_Defer(char * curURL, char * setCookieHeader, time_t timeToExpire) {
 }
            
 PRIVATE void
-cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpire );
+cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHeader, time_t timeToExpire );
 
 PRIVATE void
 cookie_Undefer() {
@@ -1700,7 +1707,7 @@ cookie_Undefer() {
   cookie_UnlockDeferList();
   if (defer_cookie) {
     cookie_SetCookieString
-      (defer_cookie->curURL, defer_cookie->setCookieHeader, defer_cookie->timeToExpire);
+      (defer_cookie->curURL, 0, defer_cookie->setCookieHeader, defer_cookie->timeToExpire);
     PR_FREEIF(defer_cookie->curURL);
     PR_FREEIF(defer_cookie->setCookieHeader);
     PR_Free(defer_cookie);
@@ -1711,7 +1718,7 @@ cookie_Undefer() {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpire) {
+cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHeader, time_t timeToExpire) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=NULL, *host_from_header=NULL;
   char *name_from_header=NULL, *cookie_from_header=NULL;
@@ -1990,7 +1997,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
   //          cookie_from_header, host_from_header, path_from_header));
 
   /* use common code to determine if we can set the cookie */
-  PRBool permission = permission_Check(host_from_header, COOKIEPERMISSION,
+  PRBool permission = permission_Check(aPrompter, host_from_header, COOKIEPERMISSION,
 // I believe this is the right place to eventually add the logic to ask
 // about cookies that have excessive lifetimes, but it shouldn't be done
 // until generalized per-site preferences are available.
@@ -2108,7 +2115,7 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
 
 PUBLIC void
 COOKIE_SetCookieString(char * curURL, char * setCookieHeader) {
-  cookie_SetCookieString(curURL, setCookieHeader, 0);
+  cookie_SetCookieString(curURL, 0, setCookieHeader, 0);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -2120,15 +2127,15 @@ COOKIE_SetCookieString(char * curURL, char * setCookieHeader) {
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieHeader, char * server_date) {
+COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, char * setCookieHeader, char * server_date) {
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
    if(newline) {
      *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, setCookieHeader, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date);
      *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, newline+1, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date);
      return;
    }
 
@@ -2185,7 +2192,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, char * setCookieH
       }
     }
   }
-  cookie_SetCookieString(curURL, setCookieHeader, gmtCookieExpires);
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires);
 }
 
 /* saves the HTTP cookies permissions to disk */

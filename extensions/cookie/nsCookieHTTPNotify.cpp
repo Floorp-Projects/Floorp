@@ -34,6 +34,7 @@
 #include "nsILoadGroup.h"
 #include "nsICategoryManager.h"
 #include "nsIHTTPProtocolHandler.h"		// for NS_HTTP_STARTUP_CATEGORY
+#include "nsIPrompt.h"
 
 static NS_DEFINE_CID(kINetModuleMgrCID, NS_NETMODULEMGR_CID);
 
@@ -229,6 +230,9 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
       if (NS_FAILED(rv)) return rv;
     }
 
+    nsCOMPtr<nsIPrompt> pPrompter;
+    pHTTPConnection->GetPrompter(getter_AddRefs(pPrompter));
+
     nsCOMPtr<nsIURI> pFirstURL;
     if (pChannel) {
       rv = pChannel->GetURI(getter_AddRefs(pFirstURL));
@@ -247,7 +251,7 @@ nsCookieHTTPNotify::AsyncExamineResponse(nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     // Save the cookie
-    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, cookieHeader, expiresHeader);
+    rv = mCookieService->SetCookieStringFromHttp(pURL, pFirstURL, pPrompter, cookieHeader, expiresHeader);
 
     return rv;
 }
