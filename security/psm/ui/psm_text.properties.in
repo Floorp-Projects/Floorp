@@ -727,7 +727,7 @@ set_password_success="Successfully set your new personal security password!"
 set_password_failure="Could not set your personal security password!"
 new_passwd="New password:"
 new_passwd_again="New password (again):"
-new_passwd_warning="Important: If you forget your Personal Security Password, you will not longer be able to use the sensitive information it protects.  Please record your password in a safe location."
+new_passwd_warning="Important: If you forget your Personal Security Password, you will no longer be able to use the sensitive information it protects.  Please record your password in a safe location."
 require_passwd="Require password:"
 first_time_cert_requested:
 First time sensitive information (such as your certificate) is requested.
