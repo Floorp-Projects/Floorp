@@ -416,8 +416,10 @@ nsHTMLSelectElement::GetType(nsString& aType)
 NS_IMETHODIMP
 nsHTMLSelectElement::GetLength(PRUint32* aLength)
 {
-  if (nsnull != mOptions) {
+  if (nsnull == mOptions) {
     Init();
+  }
+  if (nsnull != mOptions) {
     return mOptions->GetLength(aLength);
   }
   *aLength = 0;
