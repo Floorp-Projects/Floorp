@@ -378,11 +378,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 
   if (!mProfileInitialized) {
     // Just setSpec 
-    nsresult rv = GetProfileRoot(mProfileRoot);
+    GetInstallRoot(mInstallRoot);
+    rv = GetProfileRoot(mProfileRoot);
     if (NS_SUCCEEDED(rv)) {
       // Load the profile search path for skins, content, and locales
       // Prepend them to our list of substitutions.
-      mProfileInitialized = PR_TRUE;
+      mProfileInitialized = mInstallInitialized = PR_TRUE;
       mChromeDataSource = nsnull;
       AddToCompositeDataSource(PR_TRUE);
 
@@ -398,14 +399,11 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     else if (!mInstallInitialized) {
       // Load the installed search path for skins, content, and locales
       // Prepend them to our list of substitutions
-      nsresult rv = GetInstallRoot(mInstallRoot);
-      if (NS_SUCCEEDED(rv)) {
-        mInstallInitialized = PR_TRUE;
-        AddToCompositeDataSource(PR_FALSE);
+      mInstallInitialized = PR_TRUE;
+      AddToCompositeDataSource(PR_FALSE);
 
-        LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
+      LoadStyleSheet(getter_AddRefs(mScrollbarSheet), "chrome://global/skin/scrollbars.css"); 
         // This must always be the last line of install initialization!
-      }
     }
   }
  
@@ -601,7 +599,8 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCAutoString &aFileName,
 
   // We need to read this synchronously.
   rv = remote->Init(key);
-  rv = remote->Refresh(PR_TRUE);
+  if (NS_SUCCEEDED(rv))
+    rv = remote->Refresh(PR_TRUE);
   
   nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
   nsStringKey skey(key);
