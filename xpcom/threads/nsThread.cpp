@@ -49,7 +49,7 @@ PRLogModuleInfo* nsIThreadLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsThread::nsThread()
-    : mThread(nsnull), mDead(PR_FALSE)
+    : mThread(nsnull), mDead(PR_FALSE), mStartLock(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -62,10 +62,24 @@ nsThread::nsThread()
         nsIThreadLog = PR_NewLogModule("nsIThread");
     }
 #endif /* PR_LOGGING */
+
+// enforce matching of constants to enums in prthread.h
+NS_ASSERTION(nsIThread::PRIORITY_LOW    == PR_PRIORITY_LOW &&
+             nsIThread::PRIORITY_NORMAL == PRIORITY_NORMAL &&
+             nsIThread::PRIORITY_HIGH   == PRIORITY_HIGH &&
+             nsIThread::PRIORITY_URGENT == PRIORITY_URGENT &&
+             nsIThread::SCOPE_LOCAL  == PR_LOCAL_THREAD &&
+             nsIThread::SCOPE_GLOBAL == PR_GLOBAL_THREAD &&
+             nsIThread::STATE_JOINABLE   == PR_JOINABLE_THREAD &&
+             nsIThread::STATE_UNJOINABLE == PR_UNJOINABLE_THREAD,
+             "Bad constant in nsIThread!");
 }
 
 nsThread::~nsThread()
 {
+    if (mStartLock)
+        PR_DestroyLock(mStartLock);
+
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p destroyed\n", this));
 }
@@ -74,6 +88,8 @@ void
 nsThread::Main(void* arg)
 {
     nsThread* self = (nsThread*)arg;
+
+    self->WaitUntilReadyToStartMain();
 
     nsresult rv = NS_OK;
     rv = self->RegisterThreadSelf();
@@ -212,12 +228,37 @@ nsThread::Init(nsIRunnable* runnable,
     NS_ADDREF_THIS();   // released in nsThread::Exit
     if (state == PR_JOINABLE_THREAD)
         NS_ADDREF_THIS();   // released in nsThread::Join
+    mStartLock = PR_NewLock();
+    if (mStartLock == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    PR_Lock(mStartLock);
     mThread = PR_CreateThread(PR_USER_THREAD, Main, this,
                               priority, scope, state, stackSize);
+    PR_Unlock(mStartLock);
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p created\n", this));
     if (mThread == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+}
+
+/* readonly attribute nsIThread currentThread; */
+NS_IMETHODIMP 
+nsThread::GetCurrentThread(nsIThread * *aCurrentThread)
+{
+    return GetIThread(PR_CurrentThread(), aCurrentThread);
+}
+
+/* void sleep (in PRUint32 msec); */
+NS_IMETHODIMP 
+nsThread::Sleep(PRUint32 msec)
+{
+    if (PR_CurrentThread() != mThread)
+        return NS_ERROR_FAILURE;
+    
+    if (PR_Sleep(PR_MillisecondsToInterval(msec)) != PR_SUCCESS)
+        return NS_ERROR_FAILURE;
+
     return NS_OK;
 }
 
@@ -277,6 +318,15 @@ nsThread::RegisterThreadSelf()
     if (status != PR_SUCCESS) return NS_ERROR_FAILURE;
 
     return NS_OK;
+}
+
+void 
+nsThread::WaitUntilReadyToStartMain()
+{
+    PR_Lock(mStartLock);
+    PR_Unlock(mStartLock);
+    PR_DestroyLock(mStartLock);
+    mStartLock = nsnull;
 }
 
 NS_COM nsresult
