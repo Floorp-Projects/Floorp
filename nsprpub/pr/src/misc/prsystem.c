@@ -33,7 +33,6 @@
 #endif
 
 #if defined(HPUX)
-#include <sys/scall_define.h>
 #include <sys/mp.h>
 #endif
 
@@ -175,14 +174,14 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
     numCpus = sysInfo.cpu_count;
 #elif defined(OS2)
     DosQuerySysInfo( QSV_NUMPROCESSORS, QSV_NUMPROCESSORS, &numCpus, sizeof(numCpus));
-#elif defined(HPUX11)
+#elif defined(HPUX)
     numCpus = mpctl( MPC_GETNUMSPUS, 0, 0 );
     if ( numCpus < 1 )  {
         numCpus = -1; /* set to -1 for return value on error */
         PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
     }
-#elif defined(IRIX)
-    numCpus = sysconf( _SC_NPROC_CONF );
+#elif defined(IRIX) || defined(RELIANTUNIX)
+    numCpus = sysconf( _SC_NPROC_ONLN );
 #elif defined(XP_UNIX)
     numCpus = sysconf( _SC_NPROCESSORS_ONLN );
 #else
