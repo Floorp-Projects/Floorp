@@ -27,6 +27,9 @@
 
 #define DBG 0
 
+NS_IMPL_ADDREF(nsTextAreaWidget)
+NS_IMPL_RELEASE(nsTextAreaWidget)
+
 //-------------------------------------------------------------------------
 //
 // nsTextAreaWidget constructor

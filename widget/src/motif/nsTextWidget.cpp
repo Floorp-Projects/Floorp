@@ -29,6 +29,9 @@
 
 extern int mIsPasswordCallBacksInstalled;
 
+NS_IMPL_ADDREF(nsTextWidget)
+NS_IMPL_RELEASE(nsTextWidget)
+
 //-------------------------------------------------------------------------
 //
 // nsTextWidget constructor
