@@ -106,11 +106,13 @@ EventQueueTokenQueue::~EventQueueTokenQueue()
   // are referenced by things that leak, so this assertion goes off a lot.)
   if (mHead)
   {
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("EventQueueTokenQueue::~EventQueueTokenQueue Destructor mToken=<%d>\n", mHead->mToken));
+
     int err=PtAppRemoveFd(NULL,mHead->mToken);
     if (err==-1)
     {
-	  printf ("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd\n");
-	  abort();
+	  printf ("nsAppShell::~EventQueueTokenQueue Run Error calling PtAppRemoveFd mHead->mToken=<%d> errno=<%d>\n", mHead->mToken, errno);
+	  //abort();
     }
     delete mHead;
     // and leak the rest. it's an error, anyway

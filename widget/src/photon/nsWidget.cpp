@@ -46,8 +46,9 @@ static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
 
 /* Define and Initialize global variables */
-static nsIRollupListener *gRollupListener = nsnull;
-static nsIWidget *gRollupWidget = nsnull;
+nsIRollupListener *nsWidget::gRollupListener = nsnull;
+nsIWidget         *nsWidget::gRollupWidget = nsnull;
+PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 
 /* Enable this to queue widget damage, this should be ON by default */
 #define ENABLE_DAMAGE_QUEUE
@@ -147,7 +148,14 @@ NS_METHOD nsWidget::SetBackgroundColor( const nscolor &aColor )
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WidgetToScreen - Not Implemented.\n" ));
-//  NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
+  
+  if (mWidget)
+  {
+    /* This is NOT correct */
+    aNewRect.x = aOldRect.x;
+    aNewRect.y = aOldRect.y;
+  }
+
   return NS_OK;
 }
 
@@ -872,7 +880,7 @@ NS_IMETHODIMP nsWidget::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 
   PtWidgetArea( mWidget, &area ); // parent coords
   //printf("nsWidget::InvalidateRegion mWidget=<%p> area=<%d,%d,%d,%d>\n", mWidget, area.pos.x, area.pos.y, area.size.w, area.size.h);
-  if (PtWidgetIsClass(mWidget, PtWindow))
+  if ((PtWidgetIsClass(mWidget, PtWindow)) || (PtWidgetIsClass(mWidget, PtRegion)))
   {
     printf("nsWidget::InvalidateRegion mWidget=<%p> is a PtWindow\n");
 	area.pos.x = area.pos.y = 0;  
@@ -947,7 +955,8 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetParentClippedArea screen coords: %
       rect2.width = area->size.w;
       rect2.height = area->size.h;
 
-      if ((parent == disjoint) || (PtWidgetIsClass(parent, PtWindow)))
+      if ((parent == disjoint) || (PtWidgetIsClass(parent, PtWindow)) 
+	      || (PtWidgetIsClass(parent, PtRegion)))
       {
         rect2.x = rect2.y = 0;
 	  }
@@ -2120,7 +2129,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 2 \n"));
     PtWidgetArea( mWidget, &area );
 PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::UpdateWidgetDamaged 3 \n"));
 
-    if (PtWidgetIsClass(mWidget, PtWindow))
+    if ((PtWidgetIsClass(mWidget, PtWindow)) || (PtWidgetIsClass(mWidget, PtRegion)))
     {
       PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::UpdateWidgetDamaged mWidget=<%p> is a PtWindow, set x,y=0\n", mWidget));
 	  area.pos.x = area.pos.y = 0;  
@@ -2269,7 +2278,7 @@ int nsWidget::WorkProc( void *data )
   
 PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::WorkProc damaging widget=<%p> area=<%d,%d,%d,%d>\n", dqe->widget, area.pos.x, area.pos.y, area.size.w, area.size.h));
 
-        if (PtWidgetIsClass(dqe->widget, PtWindow))
+        if ((PtWidgetIsClass(dqe->widget, PtWindow)) || (PtWidgetIsClass(dqe->widget, PtRegion)))
 		{
 		  printf("nsWidget::WorkProc Forced PtWindow origin to 0,0\n");
 		  area.pos.x = area.pos.y = 0;
@@ -2360,7 +2369,7 @@ int nsWidget::GotFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_t
   nsWidget *pWidget = (nsWidget *) data;
 
 
-  if ( PtIsFocused(widget) != 2)
+  if ((widget->parent) && (PtIsFocused(widget) != 2))
   {
      printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));
      return Pt_CONTINUE;
@@ -2378,7 +2387,7 @@ int nsWidget::LostFocusCallback( PtWidget_t *widget, void *data, PtCallbackInfo_
 {
   nsWidget *pWidget = (nsWidget *) data;
 
-  if ( PtIsFocused(widget) != 2)
+  if ((widget->parent) && (PtIsFocused(widget) != 2))
   {
      PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget)));
      printf("nsWidget::GetFocusCallback Not on focus leaf! PtIsFocused(mWidget)=<%d>\n", PtIsFocused(widget));

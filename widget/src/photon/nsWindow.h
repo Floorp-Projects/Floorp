@@ -31,7 +31,9 @@
 #include "nsStringUtil.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+
 #include <Pt.h>
+#include <Ap.h>
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -62,11 +64,10 @@ public:
   NS_IMETHOD            Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
   NS_IMETHOD            SetTitle(const nsString& aTitle);
   NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
+  NS_IMETHOD            Show(PRBool state);
   NS_IMETHOD            ShowMenuBar(PRBool aShow);
   NS_IMETHOD            GetClientBounds( nsRect &aRect );
   NS_IMETHOD            Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-//  NS_IMETHOD            Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-//		                      PRInt32 aHeight, PRBool aRepaint);
   NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
   NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
   NS_IMETHOD            RemoveTooltips();
@@ -75,8 +76,8 @@ public:
   virtual PRBool        IsChild() { return(PR_FALSE); };
   virtual void          SetIsDestroying( PRBool val) { mIsDestroying = val; };
   virtual int           GetMenuBarHeight();
-//  void                  NativePaint( PhRect_t &extent );
   NS_IMETHOD            Destroy(void);
+  NS_IMETHOD            Flash(void);
 
   /* Add this because of bug 11088 */
   virtual NS_IMETHOD    Move(PRInt32 aX, PRInt32 aY);
@@ -88,10 +89,11 @@ public:
   PRBool                DispatchFocus(nsGUIEvent &aEvent);
   virtual PRBool        OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
   NS_IMETHOD            GetFrameSize(int *FrameLeft, int *FrameRight, int *FrameTop, int *FrameBottom) const;
-  
+
 protected:
 
   static void           RawDrawFunc( PtWidget_t *pWidget, PhTile_t *damage );
+  static int            MenuRegionCallback(PtWidget_t *widget, ApInfo_t *apinfo, PtCallbackInfo_t *cbinfo);  
 
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
   static int            ResizeHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
@@ -109,6 +111,8 @@ protected:
 
   PtWidget_t            *mClientWidget;
   PtWidget_t            *mShell;         /* used for toplevel windows */
+  PtWidget_t            *mMenuRegion;
+  
   PRBool                mIsDestroyingWindow;
 
   nsIFontMetrics        *mFontMetrics;
