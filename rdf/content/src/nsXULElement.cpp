@@ -4267,7 +4267,9 @@ nsXULElement::GetAnonymousContent(nsIDOMNodeList** aResult)
   // Retrieve the anonymous content that we should build.
   nsCOMPtr<nsISupportsArray> anonymousItems;
   nsCOMPtr<nsIContent> childElement;
-  xblService->GetContentList(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(anonymousItems), getter_AddRefs(childElement));
+  PRBool dummy;
+  xblService->GetContentList(NS_STATIC_CAST(nsIStyledContent*, this), getter_AddRefs(anonymousItems), 
+                             getter_AddRefs(childElement), &dummy);
   
   if (!anonymousItems)
     return NS_OK;
