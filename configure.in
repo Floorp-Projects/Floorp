@@ -3556,6 +3556,17 @@ then
     AC_SUBST(MOZ_LIBGNOME_CFLAGS)
     AC_SUBST(MOZ_LIBGNOME_LIBS)
 
+    # The GNOME component is built if gtk2, gconf, gnome-vfs, and libgnome
+    # are all available.
+
+    if test "$MOZ_ENABLE_GTK2" -a "$MOZ_ENABLE_GCONF" -a \
+            "$MOZ_ENABLE_GNOMEVFS" -a "$MOZ_ENABLE_LIBGNOME"; then
+      MOZ_ENABLE_GNOME_COMPONENT=1
+    else
+      MOZ_ENABLE_GNOME_COMPONENT=
+    fi
+
+    AC_SUBST(MOZ_ENABLE_GNOME_COMPONENT)
 fi
 
 dnl ========================================================
