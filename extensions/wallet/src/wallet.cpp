@@ -1972,6 +1972,7 @@ wallet_PostEdit() {
       delete []cookies;
       return;
     }
+    Wallet_RestartKey();
 
     /* write the values in the cookie to the file */
     for (int i=0; ((*cookie != '\0') && (*cookie != ';')); i++) {
