@@ -71,7 +71,8 @@ typedef enum _FTP_Server_Type {
     TCPC,
     VMS,
     NT,
-    EPLF
+    EPLF,
+    ERROR_TYPE
 } FTP_Server_Type;
 
 typedef enum _FTPentryType {

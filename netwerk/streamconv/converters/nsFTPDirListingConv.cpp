@@ -66,6 +66,41 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFTPDirListingConv,
                               nsIStreamListener, 
                               nsIRequestObserver);
 
+// Common code of Convert and AsyncConvertData function
+
+static FTP_Server_Type
+DetermineServerType (nsCString &fromMIMEString, const PRUnichar *aFromType)
+{
+    fromMIMEString.AssignWithConversion(aFromType);
+    const char *from = fromMIMEString.get();
+    NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
+
+    from = PL_strstr(from, "/ftp-dir-");
+    if (!from) return ERROR_TYPE;
+    from += 9;
+    fromMIMEString = from;
+
+    if (-1 != fromMIMEString.Find("unix")) {
+        return UNIX;
+    } else if (-1 != fromMIMEString.Find("nt")) {
+        return NT;
+    } else if (-1 != fromMIMEString.Find("dcts")) {
+        return DCTS;
+    } else if (-1 != fromMIMEString.Find("ncsa")) {
+        return NCSA;
+    } else if (-1 != fromMIMEString.Find("peter_lewis")) {
+        return PETER_LEWIS;
+    } else if (-1 != fromMIMEString.Find("machten")) {
+        return MACHTEN;
+    } else if (-1 != fromMIMEString.Find("cms")) {
+        return CMS;
+    } else if (-1 != fromMIMEString.Find("tcpc")) {
+        return TCPC;
+    }
+
+    return GENERIC;
+}
+
 // nsIStreamConverter implementation
 
 #define CONV_BUF_SIZE (4*1024)
@@ -77,34 +112,10 @@ nsFTPDirListingConv::Convert(nsIInputStream *aFromStream,
     nsresult rv;
 
     // set our internal state to reflect the server type
-    nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
-    const char *from = fromMIMEString.get();
-    NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
+    nsCString fromMIMEString;
 
-    from = PL_strstr(from, "/ftp-dir-");
-    if (!from) return NS_ERROR_FAILURE;
-    from += 9;
-    fromMIMEString = from;
-
-    if (-1 != fromMIMEString.Find("unix")) {
-        mServerType = UNIX;
-    } else if (-1 != fromMIMEString.Find("nt")) {
-        mServerType = NT;
-    } else if (-1 != fromMIMEString.Find("dcts")) {
-        mServerType = DCTS;
-    } else if (-1 != fromMIMEString.Find("ncsa")) {
-        mServerType = NCSA;
-    } else if (-1 != fromMIMEString.Find("peter_lewis")) {
-        mServerType = PETER_LEWIS;
-    } else if (-1 != fromMIMEString.Find("machten")) {
-        mServerType = MACHTEN;
-    } else if (-1 != fromMIMEString.Find("cms")) {
-        mServerType = CMS;
-    } else if (-1 != fromMIMEString.Find("tcpc")) {
-        mServerType = TCPC;
-    } else {
-        mServerType = GENERIC;
-    }
+    mServerType = DetermineServerType(fromMIMEString, aFromType);
+    if (mServerType == ERROR_TYPE) return NS_ERROR_FAILURE;
 
     char buffer[CONV_BUF_SIZE];
     int i = 0;
@@ -195,34 +206,10 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     NS_ADDREF(mFinalListener);
 
     // set our internal state to reflect the server type
-    nsCString fromMIMEString; fromMIMEString.AssignWithConversion(aFromType);
-    const char *from = fromMIMEString.get();
-    NS_ASSERTION(from, "nsCString/PRUnichar acceptance failed.");
+    nsCString fromMIMEString;
 
-    from = PL_strstr(from, "/ftp-dir-");
-    if (!from) return NS_ERROR_FAILURE;
-    from += 9;
-    fromMIMEString = from;
-
-    if (-1 != fromMIMEString.Find("unix")) {
-        mServerType = UNIX;
-    } else if (-1 != fromMIMEString.Find("nt")) {
-        mServerType = NT;
-    } else if (-1 != fromMIMEString.Find("dcts")) {
-        mServerType = DCTS;
-    } else if (-1 != fromMIMEString.Find("ncsa")) {
-        mServerType = NCSA;
-    } else if (-1 != fromMIMEString.Find("peter_lewis")) {
-        mServerType = PETER_LEWIS;
-    } else if (-1 != fromMIMEString.Find("machten")) {
-        mServerType = MACHTEN;
-    } else if (-1 != fromMIMEString.Find("cms")) {
-        mServerType = CMS;
-    } else if (-1 != fromMIMEString.Find("tcpc")) {
-        mServerType = TCPC;
-    } else {
-        mServerType = GENERIC;
-    }
+    mServerType = DetermineServerType(fromMIMEString, aFromType);
+    if (mServerType == ERROR_TYPE) return NS_ERROR_FAILURE;
 
 
     // we need our own channel that represents the content-type of the
@@ -447,25 +434,29 @@ nsFTPDirListingConv::MonthNumber(const char *month) {
     case 'f': case 'F':
         rv = 1; break;
     case 'm': case 'M':
-        if (c1 == 'a' || c1 == 'A') 
-            if (c2 == 'r' || c2 == 'R')
-                rv = 2;
-            else if (c2 == 'y' || c2 == 'Y')
-                rv = 4;
+        // c1 == 'a' || c1 == 'A'
+        if (c2 == 'r' || c2 == 'R')
+            rv = 2;
+        else
+            // c2 == 'y' || c2 == 'Y'
+            rv = 4;
         break;
     case 'a': case 'A':
         if (c1 == 'p' || c1 == 'P')
             rv = 3;
-        else if (c1 == 'u' || c1 == 'U')
+        else
+            // c1 == 'u' || c1 == 'U'
             rv = 7;
         break;
     case 'j': case 'J':
         if (c1 == 'u' || c1 == 'U') {
             if (c2 == 'n' || c2 == 'N')
                 rv = 5;
-            else if (c2 == 'l' || c2 == 'L')
+            else
+                // c2 == 'l' || c2 == 'L'
                 rv = 6;
-        } else if (c1 == 'a' || c1 == 'A') {
+        } else {
+            // c1 == 'a' || c1 == 'A'
             rv = 0;
         }
         break;
