@@ -69,13 +69,13 @@
     </grid>        
   </titledbox>
   <titledbox><title><text align="left" value="&alignmentBox.label;"/></title>
-    <radiogroup orient="horizontal">
-      <radio id="leftAlign" value="&leftRadio.value;"
-               tooltip="aTooltip"  tooltiptext="&leftRadio.tooltip;" />
-      <radio id="centerAlign" value="&centerRadio.value;"
-               tooltip="aTooltip"  tooltiptext="&centerRadio.tooltip;" />
-      <radio id="rightAlign" value="&rightRadio.value;"
-               tooltip="aTooltip"  tooltiptext="&rightRadio.tooltip;" />
+    <radiogroup id="alignmentGroup" orient="horizontal">
+      <radio group="alignmentGroup" id="leftAlign" value="&leftRadio.value;"
+             tooltip="aTooltip"  tooltiptext="&leftRadio.tooltip;" />
+      <radio group="alignmentGroup" id="centerAlign" value="&centerRadio.value;"
+             tooltip="aTooltip"  tooltiptext="&centerRadio.tooltip;" />
+      <radio group="alignmentGroup" id="rightAlign" value="&rightRadio.value;"
+             tooltip="aTooltip"  tooltiptext="&rightRadio.tooltip;" />
     </radiogroup>
   </titledbox>
   <box>

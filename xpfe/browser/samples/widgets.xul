@@ -121,14 +121,14 @@
         <checkbox value="Checkbox 3"/>
       </box>
       <separator class="groove"/>
-      <radiogroup orient="vertical">
+      <radiogroup id="group" orient="vertical">
         <box>
-          <radio value="Radio 1" id="radio1"/>
+          <radio group="group" value="Radio 1" id="radio1"/>
           <spring flex="1"/>
           <button value="Test Property APIs" oncommand="testProperty('radio1');"/>
         </box>
-        <radio value="Radio 2"/>
-        <radio value="Radio 3" disabled="true" checked="true"/>
+        <radio group="group" value="Radio 2"/>
+        <radio group="group" value="Radio 3" disabled="true" checked="true"/>
       </radiogroup>
     </box>
   </box>
