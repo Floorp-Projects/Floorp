@@ -31,7 +31,6 @@
  * file under either the NPL or the GPL.
  */
 
-
 #ifdef _WIN32
  // Turn off warnings about identifiers too long in browser information
 #pragma warning(disable: 4786)
@@ -259,10 +258,18 @@ void PropertyReference::emitDelete(ByteCodeGen *bcg)
 void ElementReference::emitCodeSequence(ByteCodeGen *bcg) 
 {
     if (mAccess == Read)
-        bcg->addOp(GetElementOp);
+        bcg->addOpAdjustDepth(GetElementOp, -mDepth);
     else
-        bcg->addOp(SetElementOp);
+        bcg->addOpAdjustDepth(SetElementOp, -(mDepth + 1));
+    bcg->addShort(mDepth);
 }
+
+void ElementReference::emitDelete(ByteCodeGen *bcg) 
+{
+    bcg->addOpAdjustDepth(DeleteElementOp, -mDepth);
+    bcg->addByte(mDepth);
+}
+
 
 ByteCodeData gByteCodeData[OpCodeCount] = {
 { 1,        "LoadConstantUndefined", },
@@ -325,8 +332,9 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { 0,        "SetLocalVar", },
 { 1,        "GetClosureVar", },
 { 0,        "SetClosureVar", },
-{ -1,       "GetElement", },
-{ -2,       "SetElement", },
+{ -128,     "GetElement", },
+{ -128,     "SetElement", },
+{ -128,     "DeleteElement" },
 { 0,        "GetProperty", },
 { 1,        "GetInvokeProperty", },
 { -1,       "SetProperty", },
@@ -343,8 +351,9 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 
 };
 
-ByteCodeModule::ByteCodeModule(ByteCodeGen *bcg)
+ByteCodeModule::ByteCodeModule(ByteCodeGen *bcg, JSFunction *f)
 {
+    mFunction = f;
     mLength = bcg->mBuffer->size();
     mCodeBase = new uint8[mLength];
     memcpy(mCodeBase, bcg->mBuffer->begin(), mLength);
@@ -569,7 +578,7 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
                                 // otherwise, look for calls to the superclass by name
                                 if (i->op->getKind() == ExprNode::identifier) {
                                     const StringAtom &name = checked_cast<IdentifierExprNode *>(i->op)->name;
-                                    if (name == superClass->mClassName)
+                                    if (superClass->mClassName->compare(name) == 0)
                                         foundSuperCall = true;
                                     i->isSuperInvoke = true;
                                 }                            
@@ -628,7 +637,6 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
     VariableBinding *v = f.parameters;
     uint32 index = 0;
     while (v) {
-        
         if (v->initializer) {        
             // this code gets executed if the function is called without
             // an argument for this parameter. 
@@ -640,7 +648,7 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
         v = v->next;
     }
 
-    ByteCodeModule *bcm = new ByteCodeModule(this);
+    ByteCodeModule *bcm = new ByteCodeModule(this, fnc);
     if (m_cx->mReader)
         bcm->setSource(m_cx->mReader->source, m_cx->mReader->sourceLocation);
     fnc->setByteCode(bcm);        
@@ -656,14 +664,14 @@ ByteCodeModule *ByteCodeGen::genCodeForScript(StmtNode *p)
         genCodeForStatement(p, NULL, NotALabel);
         p = p->next;
     }
-    return new ByteCodeModule(this);
+    return new ByteCodeModule(this, NULL);
 }
 
 ByteCodeModule *ByteCodeGen::genCodeForExpression(ExprNode *p)
 {
     genExpr(p);
     addOp(PopOp);
-    return new ByteCodeModule(this);
+    return new ByteCodeModule(this, NULL);
 }
 
 
@@ -693,7 +701,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                     // build a function to be invoked 
                     // when the class is loaded
                     f = new JSFunction(Void_Type, mScopeChain);
-                    ByteCodeModule *bcm = new ByteCodeModule(&static_cg);
+                    ByteCodeModule *bcm = new ByteCodeModule(&static_cg, NULL);
                     if (m_cx->mReader)
                         bcm->setSource(m_cx->mReader->source, m_cx->mReader->sourceLocation);
                     f->setByteCode(bcm);
@@ -703,7 +711,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 if (bcg.hasContent()) {
                     // execute this function now to form the initial instance
                     f = new JSFunction(Void_Type, mScopeChain);
-                    ByteCodeModule *bcm = new ByteCodeModule(&bcg);
+                    ByteCodeModule *bcm = new ByteCodeModule(&bcg, NULL);
                     if (m_cx->mReader)
                         bcm->setSource(m_cx->mReader->source, m_cx->mReader->sourceLocation);
                     f->setByteCode(bcm);
@@ -767,7 +775,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             JSFunction *fnc = f->mFunction;
 
             ASSERT(f->function.name);
-            if (mScopeChain->topClass() && (mScopeChain->topClass()->mClassName.compare(*f->function.name) == 0))
+            if (mScopeChain->topClass() && (mScopeChain->topClass()->mClassName->compare(*f->function.name) == 0))
                 isConstructor = true;
             ByteCodeGen bcg(m_cx, mScopeChain);
             bcg.genCodeForFunction(f->function, f->pos, fnc, isConstructor, mScopeChain->topClass());
@@ -1137,6 +1145,16 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             ExprStmtNode *e = checked_cast<ExprStmtNode *>(p);
             if (e->expr) {
                 genExpr(e->expr);
+
+                JSFunction *container = mScopeChain->getContainerFunction();
+                if (container) {                    
+                    if (container->getResultType() != Object_Type) {
+                        addOp(LoadTypeOp);
+                        addPointer(container->getResultType());
+                        addOp(CastOp);
+                    }
+                }
+
                 ASSERT(mStackTop == 1);
                 addOpSetDepth(ReturnOp, 0);
             }
@@ -1329,13 +1347,13 @@ Reference *ByteCodeGen::genReference(ExprNode *p, Access acc)
             InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
             genExpr(i->op);
             ExprPairList *p = i->pairs;
-            int32 argCount = 0;
+            uint16 dimCount = 0;
             while (p) {
                 genExpr(p->value);
-                argCount++;
+                dimCount++;
                 p = p->next;
             }
-            Reference *ref = new ElementReference(acc, argCount);
+            Reference *ref = new ElementReference(acc, dimCount);
             return ref;
         }
     case ExprNode::identifier:
@@ -1430,14 +1448,14 @@ void ByteCodeGen::genReferencePair(ExprNode *p, Reference *&readRef, Reference *
             InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
             genExpr(i->op);
             ExprPairList *p = i->pairs;
-            int32 argCount = 0;
+            uint16 dimCount = 0;
             while (p) {
                 genExpr(p->value);
-                argCount++;
+                dimCount++;
                 p = p->next;
             }
-            readRef = new ElementReference(Read, argCount);
-            writeRef = new ElementReference(Write, argCount);
+            readRef = new ElementReference(Read, dimCount);
+            writeRef = new ElementReference(Write, dimCount);
         }
         break;
     case ExprNode::dot:
@@ -1637,12 +1655,11 @@ PreXcrement:
             Reference *readRef;
             Reference *writeRef;            
             genReferencePair(u->op, readRef, writeRef);
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupNOp, -baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1674,12 +1691,11 @@ PostXcrement:
             Reference *readRef;
             Reference *writeRef;
             genReferencePair(u->op, readRef, writeRef);
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupNOp, baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1687,7 +1703,7 @@ PostXcrement:
                    // duplicate the value and bury it
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupInsertNOp, baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupInsertOp);
@@ -1746,12 +1762,11 @@ BinaryOpEquals:
             Reference *writeRef;
             genReferencePair(b->op1, readRef, writeRef);
 
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOp(DupNOp);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1783,12 +1798,11 @@ BinaryOpEquals:
             Reference *writeRef;
             genReferencePair(b->op1, readRef, writeRef);
 
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupNOp, -baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1825,12 +1839,11 @@ BinaryOpEquals:
             Reference *writeRef;
             genReferencePair(b->op1, readRef, writeRef);
 
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupNOp, -baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1867,12 +1880,11 @@ BinaryOpEquals:
             Reference *writeRef;
             genReferencePair(b->op1, readRef, writeRef);
 
-            int32 baseDepth = readRef->baseExpressionDepth();
+            uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
-                ASSERT(baseDepth <= MAX_UINT16);
                 if (baseDepth > 1) {
                     addOpAdjustDepth(DupNOp, -baseDepth);
-                    addShort((uint16)baseDepth);
+                    addShort(baseDepth);
                 }
                 else
                     addOp(DupOp);
@@ -1978,11 +1990,17 @@ BinaryOpEquals:
         }
     case ExprNode::This:
         {
+            JSFunction *f = mScopeChain->getContainerFunction();
+            JSType *theClass = mScopeChain->topClass();            
+            // 'this' is legal in prototype functions
+            // and at the script top-level
+            if ( ((f == NULL) && theClass)
+                    || ((theClass == NULL) && f && !f->isPrototype()) )
+                m_cx->reportError(Exception::referenceError, "Illegal use of 'this'");
             addOp(LoadThisOp);
-            JSType *theClass = mScopeChain->topClass();
             if (theClass)
                 return theClass;
-            else    // XXX need to be able to detect illegal references to 'this' in non-prototype, non-member functions
+            else
                 return Object_Type;
         }
     case ExprNode::dot:
@@ -2142,7 +2160,8 @@ BinaryOpEquals:
                     addOp(LoadConstantNumberOp);
                     addNumberRef(index);
                     genExpr(e->value);
-                    addOp(SetElementOp);
+                    addOpAdjustDepth(SetElementOp, -2);
+                    addShort(1);
                     addOp(PopOp);
                 }
                 index++;
@@ -2315,13 +2334,21 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     case DupOp:
     case DupInsertOp:
     case PopOp:
-    case GetElementOp:
-    case SetElementOp:
     case LoadGlobalObjectOp:
     case NewClosureOp:
     case ClassOp:
     case JuxtaposeOp:
     case NamedArgOp:
+        break;
+
+    case DeleteElementOp:
+    case GetElementOp:
+    case SetElementOp:
+        {
+            uint16 u = bcm.getShort(i);
+            printFormat(f, "%uh", i);
+            i += 2;
+        }
         break;
 
     case DoUnaryOp:
@@ -2332,8 +2359,11 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
     
     case DupNOp:
     case DupInsertNOp:
-        f << bcm.getShort(i);
-        i += 2;
+        {
+            uint16 u = bcm.getShort(i);
+            printFormat(f, "%uh", i);
+            i += 2;
+        }
         break;
 
     case JumpOp:

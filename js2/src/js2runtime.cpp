@@ -284,7 +284,7 @@ Reference *JSObject::genReference(bool hasBase, const String& name, NamespaceLis
             if (hasBase)
                 return new PropertyReference(name, acc, prop->mType, prop->mAttributes);
             else
-                return new NameReference(name, acc);
+                return new NameReference(name, acc, prop->mType, prop->mAttributes);
         case FunctionPair:
             if (acc == Read)
                 return new GetterFunctionReference(prop->mData.fPair.getterF, prop->mAttributes);
@@ -705,8 +705,10 @@ JSType *ScopeChain::findType(const StringAtom& typeName, size_t pos)
     else {
         // Allow finding a function that has the same name as it's containing class
         // i.e. the default constructor.
-        if (v.isFunction() && v.function->getClass() 
-                    && (v.function->getClass()->mClassName.compare(v.function->getFunctionName()) == 0))
+        FunctionName *fnName = v.function->getFunctionName();
+        if ((fnName->prefix == FunctionName::normal)
+                && v.isFunction() && v.function->getClass() 
+                    && (v.function->getClass()->mClassName->compare(*fnName->name) == 0))
             return v.function->getClass();
         m_cx->reportError(Exception::semanticError, "Unknown type", pos);
         return NULL;
@@ -793,16 +795,16 @@ void ScopeChain::collectNames(StmtNode *p)
     case StmtNode::Class:
         {
             ClassStmtNode *classStmt = checked_cast<ClassStmtNode *>(p);
-            const StringAtom& name = classStmt->name;
+            const StringAtom *name = &classStmt->name;
             JSType *thisClass = new JSType(name, NULL);
 
             m_cx->setAttributeValue(classStmt, 0);              // XXX default attribute for a class?
 
             PropertyIterator it;
-            if (hasProperty(name, NULL, Read, &it))
+            if (hasProperty(*name, NULL, Read, &it))
                 m_cx->reportError(Exception::referenceError, "Duplicate class definition", p->pos);
 
-            defineVariable(m_cx, name, classStmt, Type_Type, JSValue(thisClass));
+            defineVariable(m_cx, *name, classStmt, Type_Type, JSValue(thisClass));
             classStmt->mType = thisClass;
         }
         break;
@@ -858,6 +860,8 @@ void ScopeChain::collectNames(StmtNode *p)
             VariableStmtNode *vs = checked_cast<VariableStmtNode *>(p);
             VariableBinding *v = vs->bindings;
             m_cx->setAttributeValue(vs, Property::Final);
+            if (p->getKind() == StmtNode::Const)
+                vs->attributeValue->mTrueFlags |= Property::Const;
             bool isStatic = (vs->attributeValue->mTrueFlags & Property::Static) == Property::Static;
 
             while (v)  {
@@ -873,7 +877,6 @@ void ScopeChain::collectNames(StmtNode *p)
         {
             FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
             m_cx->setAttributeValue(f, Property::Virtual);
-            f->attributeValue->mTrueFlags |= Property::Const;
 
             bool isStatic = (f->attributeValue->mTrueFlags & Property::Static) == Property::Static;
             bool isConstructor = (f->attributeValue->mTrueFlags & Property::Constructor) == Property::Constructor;
@@ -909,6 +912,7 @@ void ScopeChain::collectNames(StmtNode *p)
             JSFunction *fnc = new JSFunction(NULL, this);
             fnc->setIsPrototype(isPrototype);
             fnc->setIsConstructor(isConstructor);
+            fnc->setFunctionName(&f->function);
             f->mFunction = fnc;
 
             uint32 reqArgCount = 0;
@@ -930,7 +934,6 @@ void ScopeChain::collectNames(StmtNode *p)
             }
             else {
                 const StringAtom& name = *f->function.name;
-                fnc->setFunctionName(name);
                 if (topClass())
                     fnc->setClass(topClass());
 
@@ -940,7 +943,7 @@ void ScopeChain::collectNames(StmtNode *p)
                 
                     // sort of want to fall into the code below, but use 'extendedClass' instead
                     // of whatever the topClass will turn out to be.
-                    if (extendedClass->mClassName.compare(name) == 0) {
+                    if (extendedClass->mClassName->compare(name) == 0) {
                         isConstructor = true;       // can you add constructors?
                         fnc->setIsConstructor(true);
                     }
@@ -961,6 +964,7 @@ void ScopeChain::collectNames(StmtNode *p)
                                 extendedClass->defineSetterMethod(m_cx, name, f, fnc);
                             break;
                         case FunctionName::normal:
+                            f->attributeValue->mTrueFlags |= Property::Const;
                             if (isStatic)
                                 extendedClass->defineStaticMethod(m_cx, name, f, fnc);
                             else
@@ -973,7 +977,7 @@ void ScopeChain::collectNames(StmtNode *p)
                     }                    
                 }
                 else {
-                    if (topClass() && (topClass()->mClassName.compare(name) == 0)) {
+                    if (topClass() && (topClass()->mClassName->compare(name) == 0)) {
                         isConstructor = true;
                         fnc->setIsConstructor(true);
                     }
@@ -995,6 +999,7 @@ void ScopeChain::collectNames(StmtNode *p)
                                     defineSetterMethod(m_cx, name, f, fnc);
                                 break;
                             case FunctionName::normal:
+                                f->attributeValue->mTrueFlags |= Property::Const;
                                 if (isStatic)
                                     defineStaticMethod(m_cx, name, f, fnc);
                                 else
@@ -1030,7 +1035,10 @@ void JSType::completeClass(Context *cx, ScopeChain *scopeChain)
     if (getDefaultConstructor() == NULL) {
         JSFunction *fnc = new JSFunction(Object_Type, scopeChain);
         fnc->setIsConstructor(true);
-        fnc->setFunctionName(mClassName);
+        FunctionName *fnName = new FunctionName();
+        fnName->name = mClassName; //cx->mWorld.identifiers[mClassName];
+        fnName->prefix = FunctionName::normal;
+        fnc->setFunctionName(fnName);
         fnc->setClass(this);
 
         ByteCodeGen bcg(cx, scopeChain);
@@ -1050,12 +1058,12 @@ void JSType::completeClass(Context *cx, ScopeChain *scopeChain)
         bcg.addOp(LoadThisOp);
         ASSERT(bcg.mStackTop == 1);
         bcg.addOpSetDepth(ReturnOp, 0);
-        ByteCodeModule *bcm = new JS2Runtime::ByteCodeModule(&bcg);
+        ByteCodeModule *bcm = new JS2Runtime::ByteCodeModule(&bcg, fnc);
         if (cx->mReader)
             bcm->setSource(cx->mReader->source, cx->mReader->sourceLocation);
         fnc->setByteCode(bcm);        
 
-        scopeChain->defineConstructor(cx, mClassName, NULL, fnc);   // XXX attributes?
+        scopeChain->defineConstructor(cx, *mClassName, NULL, fnc);   // XXX attributes?
     }
 }
 
@@ -1065,7 +1073,7 @@ void JSType::completeClass(Context *cx, ScopeChain *scopeChain)
 JSFunction *JSType::getDefaultConstructor()
 {
     PropertyIterator it;
-    if (hasOwnProperty(mClassName, NULL, Read, &it)) {
+    if (hasOwnProperty(*mClassName, NULL, Read, &it)) {
         ASSERT(PROPERTY_KIND(it) == ValuePointer);
         JSValue c = *PROPERTY_VALUEPOINTER(it);
         ASSERT(c.isFunction());
@@ -1221,7 +1229,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
     return NULL;
 }
 
-JSType::JSType(const String &name, JSType *super) 
+JSType::JSType(const StringAtom *name, JSType *super) 
             : JSObject(Type_Type),
                     mSuperType(super), 
                     mVariableCount(0),
@@ -1246,6 +1254,7 @@ JSType::JSType(JSType *xClass)     // used for constructing the static component
                     mSuperType(xClass), 
                     mVariableCount(0),
                     mInstanceInitializer(NULL),
+                    mClassName(NULL),
                     mIsDynamic(false),
                     mUninitializedValue(kNullValue),
                     mPrototypeObject(NULL)
@@ -1308,7 +1317,7 @@ Reference *Activation::genReference(bool /* hasBase */, const String& name, Name
                 return new LocalVarReference(prop->mData.index, acc, prop->mType, prop->mAttributes);
 
         case ValuePointer:
-            return new NameReference(name, acc);
+            return new NameReference(name, acc, prop->mType, prop->mAttributes);
 
         default:            
             NOT_REACHED("bad genRef call");
@@ -1432,10 +1441,10 @@ void Context::buildRuntimeForStmt(StmtNode *p)
             fnc->setResultType(resultType);
             
             VariableBinding *v = f->function.parameters;
-            uint32 index = 0;
+            uint32 parameterCount = 0;
             while (v) {
                 // XXX if no type is specified for the rest parameter - is it Array?
-                fnc->setArgument(index++, v->name, mScopeChain->extractType(v->type));
+                fnc->setArgument(parameterCount++, v->name, mScopeChain->extractType(v->type));
                 v = v->next;
             }
 
@@ -1445,11 +1454,16 @@ void Context::buildRuntimeForStmt(StmtNode *p)
                 }
                 ASSERT(f->function.name);
                 const StringAtom& name = *f->function.name;
-                Operator op = getOperator(getParameterCount(f->function), name);
+                Operator op = getOperator(parameterCount, name);
                 // if it's a unary operator, it just gets added 
                 // as a method with a special name. Binary operators
                 // get added to the Context's operator table.
-                if (getParameterCount(f->function) == 1)
+                // The indexing operators are considered unary since
+                // they only dispatch on the base type.
+                if ((parameterCount == 1)
+                        || (op == Index)
+                        || (op == IndexEqual)
+                        || (op == DeleteIndex))
                     mScopeChain->defineUnaryOperator(op, fnc);
                 else
                     defineOperator(op, getParameterType(f->function, 0), 
@@ -1756,21 +1770,21 @@ void Context::initBuiltins()
         { "NamedArgument",  NULL,                  &kNullValue    },
     };
 
-    Object_Type  = new JSType(widenCString(builtInClasses[0].name), NULL);
+    Object_Type  = new JSType(&mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
     Object_Type->mIsDynamic = true;
     // XXX aren't all the built-ins thus?
 
-    Type_Type           = new JSType(widenCString(builtInClasses[1].name), Object_Type);
-    Function_Type       = new JSType(widenCString(builtInClasses[2].name), Object_Type);
-    Number_Type         = new JSType(widenCString(builtInClasses[3].name), Object_Type);
-    Integer_Type        = new JSType(widenCString(builtInClasses[4].name), Object_Type);
-    String_Type         = new JSStringType(widenCString(builtInClasses[5].name), Object_Type);
-    Array_Type          = new JSArrayType(widenCString(builtInClasses[6].name), Object_Type);
-    Boolean_Type        = new JSType(widenCString(builtInClasses[7].name), Object_Type);
-    Void_Type           = new JSType(widenCString(builtInClasses[8].name), Object_Type);
-    Unit_Type           = new JSType(widenCString(builtInClasses[9].name), Object_Type);
-    Attribute_Type      = new JSType(widenCString(builtInClasses[10].name), Object_Type);
-    NamedArgument_Type  = new JSType(widenCString(builtInClasses[11].name), Object_Type);
+    Type_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[1].name)], Object_Type);
+    Function_Type       = new JSType(&mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type);
+    Number_Type         = new JSType(&mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type);
+    Integer_Type        = new JSType(&mWorld.identifiers[widenCString(builtInClasses[4].name)], Object_Type);
+    String_Type         = new JSStringType(&mWorld.identifiers[widenCString(builtInClasses[5].name)], Object_Type);
+    Array_Type          = new JSArrayType(&mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type);
+    Boolean_Type        = new JSType(&mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
+    Void_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[8].name)], Object_Type);
+    Unit_Type           = new JSType(&mWorld.identifiers[widenCString(builtInClasses[9].name)], Object_Type);
+    Attribute_Type      = new JSType(&mWorld.identifiers[widenCString(builtInClasses[10].name)], Object_Type);
+    NamedArgument_Type  = new JSType(&mWorld.identifiers[widenCString(builtInClasses[11].name)], Object_Type);
 
 
     String_Type->defineVariable(this, widenCString("fromCharCode"), NULL, String_Type, JSValue(new JSFunction(String_fromCharCode, String_Type)));
@@ -1841,7 +1855,7 @@ struct OperatorInitData {
     { "new",          JS2Runtime::New,              },
     { "[]",           JS2Runtime::Index,            },
     { "[]=",          JS2Runtime::IndexEqual,       },
-    { "delete []",    JS2Runtime::DeleteIndex,      },
+    { "delete[]",     JS2Runtime::DeleteIndex,      },
     { "+",            JS2Runtime::Plus,             },
     { "-",            JS2Runtime::Minus,            },
     { "*",            JS2Runtime::Multiply,         },
@@ -2052,8 +2066,12 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
         f << "null";
         break;
     case JSValue::function_tag:
-        if (!value.function->isNative())
-            f << "function '" << value.function->getFunctionName() << "'\n" << *value.function->getByteCode();
+        if (!value.function->isNative()) {
+            StringFormatter s;
+            PrettyPrinter pp(s);
+            value.function->getFunctionName()->print(pp);
+            f << "function '" << s.getString() << "'\n" << *value.function->getByteCode();
+        }
         else
             f << "function\n";
         break;

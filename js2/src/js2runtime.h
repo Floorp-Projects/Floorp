@@ -312,7 +312,7 @@ XXX ...couldn't get this to work...
                 { throw Exception(Exception::internalError, "gen code for base ref"); }
 
         // returns the amount of stack used by the reference
-        virtual int32 baseExpressionDepth()                 { return 0; }
+        virtual uint16 baseExpressionDepth()                 { return 0; }
 
         // generate code sequence for typeof operator
         virtual void emitTypeOf(ByteCodeGen *bcg);
@@ -359,7 +359,7 @@ XXX ...couldn't get this to work...
         uint32 mIndex;
         void emitCodeSequence(ByteCodeGen *bcg);
         void emitImplicitLoad(ByteCodeGen *bcg);
-        int32 baseExpressionDepth() { return 1; }
+        uint16 baseExpressionDepth() { return 1; }
     };
     // a static field
     class StaticFieldReference : public Reference {
@@ -372,7 +372,7 @@ XXX ...couldn't get this to work...
         void emitCodeSequence(ByteCodeGen *bcg);
         void emitInvokeSequence(ByteCodeGen *bcg);
         void emitImplicitLoad(ByteCodeGen *bcg);
-        int32 baseExpressionDepth() { return 1; }
+        uint16 baseExpressionDepth() { return 1; }
     };
     // a member function in a vtable
     class MethodReference : public Reference {
@@ -384,7 +384,7 @@ XXX ...couldn't get this to work...
         void emitCodeSequence(ByteCodeGen *bcg);
         virtual bool needsThis() { return true; }
         virtual void emitImplicitLoad(ByteCodeGen *bcg);
-        virtual int32 baseExpressionDepth() { return 1; }
+        virtual uint16 baseExpressionDepth() { return 1; }
         void emitInvokeSequence(ByteCodeGen *bcg);
     };
     class GetterMethodReference : public MethodReference {
@@ -433,7 +433,7 @@ XXX ...couldn't get this to work...
         const String& mName;
         void emitCodeSequence(ByteCodeGen *bcg);
         void emitInvokeSequence(ByteCodeGen *bcg);
-        int32 baseExpressionDepth() { return 1; }
+        uint16 baseExpressionDepth() { return 1; }
         bool needsThis() { return true; }
         void emitImplicitLoad(ByteCodeGen *bcg);
         void emitDelete(ByteCodeGen *bcg);
@@ -454,6 +454,8 @@ XXX ...couldn't get this to work...
     public:
         NameReference(const String& name, Access acc)
             : Reference(Object_Type, 0), mAccess(acc), mName(name) { }
+        NameReference(const String& name, Access acc, JSType *type, PropertyAttribute attr)
+            : Reference(type, attr), mAccess(acc), mName(name) { }
         Access mAccess;
         const String& mName;
         void emitCodeSequence(ByteCodeGen *bcg);
@@ -463,12 +465,13 @@ XXX ...couldn't get this to work...
 
     class ElementReference : public Reference {
     public:
-        ElementReference(Access acc, int32 depth)
+        ElementReference(Access acc, uint16 depth)
             : Reference(Object_Type, 0), mAccess(acc), mDepth(depth) { }
         Access mAccess;
-        int32 mDepth;
+        uint16 mDepth;
         void emitCodeSequence(ByteCodeGen *bcg);
-        int32 baseExpressionDepth() { return mDepth; }
+        uint16 baseExpressionDepth() { return mDepth; }
+        void emitDelete(ByteCodeGen *bcg);
     };
 
 
@@ -571,8 +574,9 @@ XXX ...couldn't get this to work...
         
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
-        virtual JSType *topClass()      { return NULL; }
-        virtual bool isNestedFunction() { return false; }
+        virtual JSType *topClass()                      { return NULL; }
+        virtual bool isNestedFunction()                 { return false; }
+        virtual JSFunction *getContainerFunction()      { return NULL; }
         
         virtual bool hasLocalVars()     { return false; }
         virtual uint32 localVarCount()  { return 0; }
@@ -674,7 +678,7 @@ XXX ...couldn't get this to work...
 
     class JSType : public JSObject {
     public:        
-        JSType(const String &name, JSType *super);
+        JSType(const StringAtom *name, JSType *super);
         JSType(JSType *xClass);     // used for constructing the static component type
 
         virtual ~JSType() { } // keeping gcc happy
@@ -724,12 +728,12 @@ XXX ...couldn't get this to work...
 
         JSFunction *getUnaryOperator(Operator which)
         {
-            return mUnaryOperators[which];
+            return mUnaryOperators[which];      // XXX Umm, aren't these also getting inherited? 
         }
 
         void setDefaultConstructor(Context *cx, JSFunction *f)
         {
-            defineConstructor(cx, mClassName, NULL, f);    // XXX attr?
+            defineConstructor(cx, *mClassName, NULL, f);    // XXX attr?
         }
 
         void addMethod(Context *cx, const String &name, AttributeStmtNode *attr, JSFunction *f);
@@ -762,8 +766,8 @@ XXX ...couldn't get this to work...
         JSFunction      *mInstanceInitializer;
 
         // the 'vtable'
-        MethodList      mMethods;
-        String          mClassName;
+        MethodList          mMethods;
+        const StringAtom    *mClassName;
 
         JSFunction      *mUnaryOperators[OperatorCount];    // XXX too wasteful
 
@@ -799,7 +803,7 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(const String &name, JSType *super) 
+        JSArrayType(const StringAtom *name, JSType *super) 
             : JSType(name, super)
         {
         }
@@ -833,7 +837,7 @@ XXX ...couldn't get this to work...
 
     class JSStringType : public JSType {
     public:
-        JSStringType(const String &name, JSType *super) 
+        JSStringType(const StringAtom *name, JSType *super) 
             : JSType(name, super)
         {
         }
@@ -894,7 +898,8 @@ XXX ...couldn't get this to work...
                         mStack(NULL),
                         mStackTop(0),
                         mPC(0), 
-                        mModule(NULL) { }
+                        mModule(NULL),
+                        mContainer(NULL) { }
 
         Activation(JSValue *locals, 
                         JSValue *stack, uint32 stackTop,
@@ -910,7 +915,8 @@ XXX ...couldn't get this to work...
                         mArgumentBase(argBase), 
                         mThis(curThis), 
                         mPC(pc), 
-                        mModule(module) { }
+                        mModule(module),
+                        mContainer(NULL)       { }
 
         virtual ~Activation() { } // keeping gcc happy
 
@@ -938,6 +944,9 @@ XXX ...couldn't get this to work...
         JSValue mThis;
         uint8 *mPC;
         ByteCodeModule *mModule;
+        JSFunction *mContainer;
+
+        virtual JSFunction *getContainerFunction()      { return mContainer; }
 
 
         bool hasLocalVars()             { return true; }
@@ -1067,6 +1076,12 @@ XXX ...couldn't get this to work...
             return obj->topClass();
         }
         
+        JSFunction *getContainerFunction()
+        {
+            JSObject *obj = mScopeStack.back();
+            return (obj->getContainerFunction());
+        }
+
         // return 'true' if the current top of scope stack is an
         // activation - which would make any function declarations
         // be local declarations.
@@ -1130,7 +1145,7 @@ XXX ...couldn't get this to work...
 
     class JSFunction : public JSObject {
     protected:
-        JSFunction() : JSObject(Function_Type), mActivation() { mPrototype = Function_Type->mPrototypeObject; }        // for JSBoundFunction (XXX ask Patrick about this structure)
+        JSFunction() : JSObject(Function_Type), mActivation() { mActivation.mContainer = this; mPrototype = Function_Type->mPrototypeObject; }        // for JSBoundFunction (XXX ask Patrick about this structure)
     public:
 
         class ArgumentData {
@@ -1168,6 +1183,7 @@ XXX ...couldn't get this to work...
                 mScopeChain = new ScopeChain(*scopeChain);
             }
             mPrototype = Function_Type->mPrototypeObject;
+            mActivation.mContainer = this;
         }
         
         JSFunction(NativeCode *code, JSType *resultType) 
@@ -1189,6 +1205,7 @@ XXX ...couldn't get this to work...
                         mClass(NULL)
         {
             mPrototype = Function_Type->mPrototypeObject;
+            mActivation.mContainer = this;
         }
 
         ~JSFunction() { }  // keeping gcc happy
@@ -1209,7 +1226,7 @@ XXX ...couldn't get this to work...
         void setIsPrototype(bool i)             { mIsPrototype = i; }
         void setIsConstructor(bool i)           { mIsConstructor = i; }
         void setIsUnchecked()                   { mIsChecked = false; }
-        void setFunctionName(const String &n)   { mFunctionName = n; }
+        void setFunctionName(FunctionName *n)   { mFunctionName = n; }
         void setClass(JSType *c)                { mClass = c; }
 
         virtual bool hasBoundThis()             { return false; }
@@ -1226,7 +1243,7 @@ XXX ...couldn't get this to work...
         virtual ScopeChain *getScopeChain()     { return mScopeChain; }
         virtual JSValue getThisValue()          { return kNullValue; }         
         virtual JSType *getClass()              { return mClass; }
-        virtual String &getFunctionName()       { return mFunctionName; }
+        virtual FunctionName *getFunctionName() { return mFunctionName; }
         virtual uint32 findParameterName(const String *name);
         virtual uint32 getRequiredArgumentCount()   
                                                 { return mRequiredArgs; }
@@ -1259,7 +1276,7 @@ XXX ...couldn't get this to work...
         bool mHasRestParameter;
         const String *mRestParameterName;
         JSType *mClass;                         // pointer to owning class if this function is a method
-        String mFunctionName;
+        FunctionName *mFunctionName;
     };
 
     class JSBoundFunction : public JSFunction {
@@ -1287,7 +1304,7 @@ XXX ...couldn't get this to work...
         ScopeChain *getScopeChain()     { return mFunction->getScopeChain(); }
         JSValue getThisValue()          { return (mThis) ? JSValue(mThis) : kNullValue; }         
         JSType *getClass()              { return mFunction->getClass(); }
-        String &getFunctionName()       { return mFunction->getFunctionName(); }
+        FunctionName *getFunctionName() { return mFunction->getFunctionName(); }
         uint32 findParameterName(const String *name)
                                         { return mFunction->findParameterName(name); } 
         uint32 getRequiredArgumentCount()   

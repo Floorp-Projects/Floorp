@@ -135,8 +135,9 @@ typedef enum {
     GetClosureVarOp,        // <depth>, <index>         --> <object>
     SetClosureVarOp,        // <depth>, <index>         <object> --> <object>
     // for array elements
-    GetElementOp,           //                          <base> <index> --> <object>
-    SetElementOp,           //                          <base> <index> <object> --> <object>
+    GetElementOp,           // <dimcount>               <base> <index> ... <index> --> <object>
+    SetElementOp,           // <dimcount>               <base> <index> ...<index> <object> --> <object>
+    DeleteElementOp,        // <dimcount>               <base> <index> ... <index> --> <boolean>
     // for properties
     GetPropertyOp,          // <poolindex>              <base> --> <object>
     GetInvokePropertyOp,    // <poolindex>              <base> --> <base> <object> 
@@ -169,7 +170,7 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
     class ByteCodeModule {
     public:
             
-        ByteCodeModule(ByteCodeGen *bcg);
+        ByteCodeModule(ByteCodeGen *bcg, JSFunction *f);
 
 #ifdef DEBUG
         void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("ByteCodeModule", s, t); return t; }
@@ -187,6 +188,8 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
             mSource = source;
             mSourceLocation = sourceLocation;
         }
+
+        JSFunction *mFunction;
 
         String mSource;
         String mSourceLocation;
@@ -337,16 +340,13 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
                                     { addByte(op); mStackTop = depth; ASSERT(mStackTop >= 0); }
 
         void addByte(uint8 v)       { mBuffer->push_back(v); }
-        void addShort(uint16 v)     { mBuffer->push_back((uint8)(v >> 8)); mBuffer->push_back((uint8)(v)); }
+        void addShort(uint16 v)     { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint16)); }
 
         void addPointer(void *v)    { ASSERT(sizeof(void *) == sizeof(uint32)); addLong((uint32)(v)); }   // XXX Pointer size dependant !!!
         
-        void addLong(uint32 v)     
-            { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
-        void addOffset(int32 v)     
-            { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
-        void setOffset(uint32 index, int32 v)
-            {   *((int32 *)(mBuffer->begin() + index)) = v; }   // XXX
+        void addLong(uint32 v)      { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(uint32)); }
+        void addOffset(int32 v)     { mBuffer->insert(mBuffer->end(), (uint8 *)&v, (uint8 *)(&v) + sizeof(int32)); }
+        void setOffset(uint32 index, int32 v) { *((int32 *)(mBuffer->begin() + index)) = v; }   // XXX dubious pointer usage
 
         void addFixup(uint32 label) 
         { 

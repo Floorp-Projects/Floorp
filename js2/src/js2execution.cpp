@@ -215,6 +215,7 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
     return result;
 }
 
+// Assumes arguments are on the top of stack.
 JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
 {
     JSValue *argBase;
@@ -334,7 +335,19 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
         mPC = pc;
         try {
             if (mDebugFlag) {
-                printFormat(stdOut, "                                  %d        ", stackSize());
+                if (mCurModule->mFunction) {
+                    FunctionName *fnName = mCurModule->mFunction->getFunctionName();
+                    StringFormatter s;
+                    PrettyPrinter pp(s);
+                    fnName->print(pp);
+                    const String &fnStr = s.getString();
+                    std::string str(fnStr.length(), char());
+                    std::transform(fnStr.begin(), fnStr.end(), str.begin(), narrow);
+                    int len = strlen(str.c_str());
+                    printFormat(stdOut, "%.30s+%.4d%*c%d        ", str.c_str(), (pc - mCurModule->mCodeBase), (len > 30) ? 0 : (len - 30), ' ', stackSize());
+                }
+                else
+                    printFormat(stdOut, "+%.4d%*c%d        ", (pc - mCurModule->mCodeBase), 30, ' ', stackSize());
                 printInstruction(stdOut, toUInt32(pc - mCurModule->mCodeBase), *mCurModule);
             }
             switch ((ByteCodeOp)(*pc++)) {
@@ -473,6 +486,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 cleanUp = argCount;
                     pc += sizeof(uint32);
                     CallFlag callFlags = (CallFlag)(*pc++);
+                    mPC = pc;
 
                     JSValue *targetValue = getBase(stackSize() - (argCount + 1));
                     JSFunction *target;
@@ -671,12 +685,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     pc += sizeof(uint32);
                     const String &name = *mCurModule->getString(index);
                     PropertyIterator it;
-                    if (!obj->hasOwnProperty(name, CURRENT_ATTR, Read, &it))
-                        pushValue(kTrueValue);
-                    else {
+                    if (obj->hasOwnProperty(name, CURRENT_ATTR, Read, &it))
                         obj->deleteProperty(name, CURRENT_ATTR);
-                        pushValue(kTrueValue);
-                    }
+                    pushValue(kTrueValue);
                 }
                 break;
             case TypeOfOp:
@@ -803,30 +814,124 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case GetElementOp:
                 {
-                    JSValue index = popValue();
-                    JSValue base = popValue();
+                    uint32 dimCount = *((uint16 *)pc);
+                    pc += sizeof(uint16);
+                    mPC = pc;
+
+                    JSValue *baseValue = getBase(stackSize() - (dimCount + 1));
+
+                    // Use the type of the base to dispatch on...
                     JSObject *obj = NULL;
-                    if (!base.isObject() && !base.isType())
-                        obj = base.toObject(this).object;
+                    if (!baseValue->isObject() && !baseValue->isType())
+                        obj = baseValue->toObject(this).object;
                     else
-                        obj = base.object;
-                    const String *name = index.toString(this).string;
-                    obj->getProperty(this, *name, CURRENT_ATTR);
+                        obj = baseValue->object;
+                    JSFunction *target = obj->getType()->getUnaryOperator(Index);
+
+                    if (target) {
+                        JSValue result;
+                        if (target->isNative())
+                            result = target->getNativeCode()(this, kNullValue, baseValue, dimCount + 1);
+                        else {
+                            uint32 argCount = dimCount + 1;
+                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            result = interpret(target->getByteCode(), 0, target->getScopeChain(), kNullValue, argBase, argCount);
+                        }
+                        resizeStack(stackSize() - (dimCount + 1));
+                        pushValue(result);
+                    }
+                    else {  // XXX or should this be implemented in Object_Type as operator "[]" ?
+                        if (dimCount != 1)
+                            reportError(Exception::typeError, "too many indices");
+                        JSValue index = popValue();
+                        popValue();     // discard base
+                        const String *name = index.toString(this).string;
+                        obj->getProperty(this, *name, CURRENT_ATTR);
+                    }
                 }
                 break;
             case SetElementOp:
                 {
-                    JSValue v = popValue();
-                    JSValue index = popValue();
-                    JSValue base = popValue();
+                    uint32 dimCount = *((uint16 *)pc);
+                    pc += sizeof(uint16);
+                    mPC = pc;
+
+                    JSValue *baseValue = getBase(stackSize() - (dimCount + 2));     // +1 for assigned value
+
+                    // Use the type of the base to dispatch on...
                     JSObject *obj = NULL;
-                    if (!base.isObject() && !base.isType())
-                        obj = base.toObject(this).object;
+                    if (!baseValue->isObject() && !baseValue->isType())
+                        obj = baseValue->toObject(this).object;
                     else
-                        obj = base.object;
-                    const String *name = index.toString(this).string;
-                    obj->setProperty(this, *name, CURRENT_ATTR, v);
-                    pushValue(v);
+                        obj = baseValue->object;
+                    JSFunction *target = obj->getType()->getUnaryOperator(IndexEqual);
+
+                    if (target) {
+                        JSValue v = popValue();     // need to have this sitting right above the base value
+                        insertValue(v, mStackTop - dimCount);
+
+                        JSValue result;
+                        if (target->isNative())
+                            result = target->getNativeCode()(this, *baseValue, baseValue, (dimCount + 2));
+                        else {
+                            uint32 argCount = dimCount + 2;
+                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            result = interpret(target->getByteCode(), 0, target->getScopeChain(), *baseValue, argBase, argCount);
+                        }
+                        resizeStack(stackSize() - (dimCount + 2));
+                        pushValue(result);
+                    }
+                    else {  // XXX or should this be implemented in Object_Type as operator "[]=" ?
+                        if (dimCount != 1)
+                            reportError(Exception::typeError, "too many indices");
+                        JSValue v = popValue();
+                        JSValue index = popValue();
+                        popValue();     // discard base
+                        const String *name = index.toString(this).string;
+                        obj->setProperty(this, *name, CURRENT_ATTR, v);
+                        pushValue(v);                
+                    }
+                }
+                break;
+            case DeleteElementOp:
+                {
+                    uint32 dimCount = *((uint16 *)pc);
+                    pc += sizeof(uint16);
+                    mPC = pc;
+
+                    JSValue *baseValue = getBase(stackSize() - (dimCount + 1));
+
+                    // Use the type of the base to dispatch on...
+                    JSObject *obj = NULL;
+                    if (!baseValue->isObject() && !baseValue->isType())
+                        obj = baseValue->toObject(this).object;
+                    else
+                        obj = baseValue->object;
+                    JSFunction *target = obj->getType()->getUnaryOperator(DeleteIndex);
+
+                    if (target) {
+                        JSValue result;
+                        if (target->isNative())
+                            result = target->getNativeCode()(this, kNullValue, baseValue, dimCount + 1);
+                        else {
+                            uint32 argCount = dimCount + 1;
+                            JSValue *argBase = buildArgumentBlock(target, argCount);
+                            result = interpret(target->getByteCode(), 0, target->getScopeChain(), kNullValue, argBase, argCount);
+                        }
+                        resizeStack(stackSize() - (dimCount + 1));
+                        pushValue(result);
+                    }
+                    else {  // XXX or should this be implemented in Object_Type as operator "delete[]" ?
+                        if (dimCount != 1)
+                            reportError(Exception::typeError, "too many indices");
+                        JSValue index = popValue();
+                        popValue();     // discard base
+                        const String *name = index.toString(this).string;
+                        PropertyIterator it;
+                        if (obj->hasOwnProperty(*name, CURRENT_ATTR, Read, &it))
+                            obj->deleteProperty(*name, CURRENT_ATTR);
+                        pushValue(kTrueValue);
+                    }
                 }
                 break;
             case GetPropertyOp:
@@ -839,6 +944,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         obj = base.object;
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
+                    mPC = pc;
                     const String &name = *mCurModule->getString(index);
                     obj->getProperty(this, name, CURRENT_ATTR);
                     // if the result is a function of some kind, bind
@@ -869,6 +975,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
+                    mPC = pc;
                     
                     const String &name = *mCurModule->getString(index);
 
@@ -890,6 +997,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                         obj = base.object;
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
+                    mPC = pc;
                     const String &name = *mCurModule->getString(index);
                     obj->setProperty(this, name, CURRENT_ATTR, v);
                     pushValue(v);
@@ -898,6 +1006,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case DoUnaryOp:
                 {
                     Operator op = (Operator)(*pc++);
+                    mPC = pc;
                     JSValue v = topValue();
                     JSFunction *target;
                     if (v.isObject() && (target = v.object->getType()->getUnaryOperator(op)) )
@@ -936,7 +1045,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     case Increment: // defined in terms of '+'
                         {
                             pushValue(JSValue(1.0));
-                            mPC = pc;
                             if (executeOperator(Plus, v.getType(), Number_Type)) {
                                 // need to invoke
                                 pc = mCurModule->mCodeBase;
@@ -951,7 +1059,6 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     case Decrement: // defined in terms of '-'
                         {
                             pushValue(JSValue(1.0));
-                            mPC = pc;
                             if (executeOperator(Minus, v.getType(), Number_Type)) {
                                 // need to invoke
                                 pc = mCurModule->mCodeBase;
@@ -993,9 +1100,9 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case DoOperatorOp:
                 {
                     Operator op = (Operator)(*pc++);
+                    mPC = pc;
                     JSValue v1 = getValue(stackSize() - 2);
                     JSValue v2 = getValue(stackSize() - 1);
-                    mPC = pc;
                     if (executeOperator(op, v1.getType(), v2.getType())) {
                         // need to invoke
                         pc = mCurModule->mCodeBase;
@@ -1017,8 +1124,8 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
             case NewInstanceOp:
                 {
                     uint32 argCount = *((uint32 *)pc); 
-                    uint32 cleanUp = argCount;
                     pc += sizeof(uint32);
+                    uint32 cleanUp = argCount;
                     JSValue *argBase = getBase(stackSize() - argCount);
                     bool isPrototypeFunctionCall = false;
 
@@ -1829,7 +1936,7 @@ String *numberToString(float64 number)
               
 JSValue JSValue::valueToString(Context *cx, const JSValue& value)
 {
-    String *strp = NULL;
+    const String *strp = NULL;
     JSObject *obj = NULL;
     switch (value.tag) {
     case f64_tag:
@@ -1848,7 +1955,7 @@ JSValue JSValue::valueToString(Context *cx, const JSValue& value)
                         : new JavaScript::String(widenCString("false"));
         break;
     case type_tag:
-        strp = &value.type->mClassName;
+        strp = value.type->mClassName;
         break;
     case undefined_tag:
         strp = new JavaScript::String(widenCString("undefined"));
