@@ -29,6 +29,7 @@ interface nsIUrlListener;
 interface nsISupportsArray;
 interface nsIMsgIdentity;
 interface nsIInterfaceRequestor;
+interface nsIMsgStatusFeedback;
 
 [scriptable, uuid(FBAF0F10-CA9B-11d2-8063-006008128C4E)]
 interface nsISmtpService : nsISupports {
@@ -55,6 +56,7 @@ interface nsISmtpService : nsISupports {
                        in nsIMsgIdentity aSenderIdentity,
                        in nsIUrlListener aUrlListener, 
                        in nsISmtpServer aServer,
+					   in nsIMsgStatusFeedback aStatusListener, 
                        in nsIInterfaceRequestor aNotificationCallbacks,
                        out nsIURI aURL);
 
