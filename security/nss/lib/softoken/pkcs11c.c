@@ -448,10 +448,9 @@ pk11_CryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 	}
 	context->multi = PR_FALSE;
 	context->cipherInfo =  isEncrypt ? 
-			(void *)pk11_GetPubKey(key,CKK_RSA) :
-					(void *)pk11_GetPrivKey(key,CKK_RSA);
+			(void *)pk11_GetPubKey(key,CKK_RSA,&crv) :
+				(void *)pk11_GetPrivKey(key,CKK_RSA,&crv);
 	if (context->cipherInfo == NULL) {
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	if (isEncrypt) {
@@ -1854,10 +1853,9 @@ finish_rsa:
 	    break;
 	}
 	context->multi = PR_FALSE;
-	privKey = pk11_GetPrivKey(key,CKK_RSA);
+	privKey = pk11_GetPrivKey(key,CKK_RSA,&crv);
 	if (privKey == NULL) {
 	    if (info) PORT_Free(info);
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	/* OK, info is allocated only if we're doing hash and sign mechanism.
@@ -1885,9 +1883,8 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
-	privKey = pk11_GetPrivKey(key,CKK_DSA);
+	privKey = pk11_GetPrivKey(key,CKK_DSA,&crv);
 	if (privKey == NULL) {
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	context->cipherInfo = privKey;
@@ -2263,9 +2260,8 @@ finish_rsa:
 	    crv = CKR_KEY_TYPE_INCONSISTENT;
 	    break;
 	}
-	pubKey = pk11_GetPubKey(key,CKK_RSA);
+	pubKey = pk11_GetPubKey(key,CKK_RSA,&crv);
 	if (pubKey == NULL) {
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	if (info) {
@@ -2288,9 +2284,8 @@ finish_rsa:
 	    break;
 	}
 	context->multi = PR_FALSE;
-	pubKey = pk11_GetPubKey(key,CKK_DSA);
+	pubKey = pk11_GetPubKey(key,CKK_DSA,&crv);
 	if (pubKey == NULL) {
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	context->cipherInfo = pubKey;
@@ -2456,9 +2451,8 @@ CK_RV NSC_VerifyRecoverInit(CK_SESSION_HANDLE hSession,
 	    break;
 	}
 	context->multi = PR_FALSE;
-	pubKey = pk11_GetPubKey(key,CKK_RSA);
+	pubKey = pk11_GetPubKey(key,CKK_RSA,&crv);
 	if (pubKey == NULL) {
-	    crv = CKR_HOST_MEMORY;
 	    break;
 	}
 	context->cipherInfo = pubKey;
@@ -3248,6 +3242,7 @@ dsagn_done:
 	pk11_DeleteAttributeType(privateKey,CKA_PRIME);
 	pk11_DeleteAttributeType(privateKey,CKA_BASE);
 	pk11_DeleteAttributeType(privateKey,CKA_VALUE);
+    	pk11_DeleteAttributeType(privateKey,CKA_NETSCAPE_DB);
 	key_type = CKK_DH;
 
 	/* extract the necessary parameters and copy them to private keys */
@@ -3280,6 +3275,10 @@ dsagn_done:
 
 	crv=pk11_AddAttributeType(publicKey, CKA_VALUE, 
 				pk11_item_expand(&dhPriv->publicValue));
+	if (crv != CKR_OK) goto dhgn_done;
+
+        crv = pk11_AddAttributeType(privateKey,CKA_NETSCAPE_DB,
+			   pk11_item_expand(&dhPriv->publicValue));
 	if (crv != CKR_OK) goto dhgn_done;
 
 	crv=pk11_AddAttributeType(privateKey, CKA_VALUE, 
@@ -3376,7 +3375,7 @@ dhgn_done:
     return CKR_OK;
 }
 
-static SECItem *pk11_PackagePrivateKey(PK11Object *key)
+static SECItem *pk11_PackagePrivateKey(PK11Object *key, CK_RV *crvp)
 {
     NSSLOWKEYPrivateKey *lk = NULL;
     NSSLOWKEYPrivateKeyInfo *pki = NULL;
@@ -3388,15 +3387,17 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     SECItem *encodedKey = NULL;
 
     if(!key) {
+	*crvp = CKR_KEY_HANDLE_INVALID; /* really can't happen */
 	return NULL;
     }
 
     attribute = pk11_FindAttribute(key, CKA_KEY_TYPE);
     if(!attribute) {
+	*crvp = CKR_KEY_TYPE_INCONSISTENT;
 	return NULL;
     }
 
-    lk = pk11_GetPrivKey(key, *(CK_KEY_TYPE *)attribute->attrib.pValue);
+    lk = pk11_GetPrivKey(key, *(CK_KEY_TYPE *)attribute->attrib.pValue, crvp);
     pk11_FreeAttribute(attribute);
     if(!lk) {
 	return NULL;
@@ -3404,6 +3405,7 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
 
     arena = PORT_NewArena(2048); 	/* XXX different size? */
     if(!arena) {
+	*crvp = CKR_HOST_MEMORY;
 	rv = SECFailure;
 	goto loser;
     }
@@ -3411,6 +3413,7 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     pki = (NSSLOWKEYPrivateKeyInfo*)PORT_ArenaZAlloc(arena, 
 					sizeof(NSSLOWKEYPrivateKeyInfo));
     if(!pki) {
+	*crvp = CKR_HOST_MEMORY;
 	rv = SECFailure;
 	goto loser;
     }
@@ -3440,12 +3443,15 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     }
  
     if(!dummy || ((lk->keyType == NSSLOWKEYDSAKey) && !param)) {
+	*crvp = CKR_DEVICE_ERROR; /* should map NSS SECError */
+	rv = SECFailure;
 	goto loser;
     }
 
     rv = SECOID_SetAlgorithmID(arena, &pki->algorithm, algorithm, 
 			       (SECItem*)param);
     if(rv != SECSuccess) {
+	*crvp = CKR_DEVICE_ERROR; /* should map NSS SECError */
 	rv = SECFailure;
 	goto loser;
     }
@@ -3453,12 +3459,14 @@ static SECItem *pk11_PackagePrivateKey(PK11Object *key)
     dummy = SEC_ASN1EncodeInteger(arena, &pki->version,
 				  NSSLOWKEY_PRIVATE_KEY_INFO_VERSION);
     if(!dummy) {
+	*crvp = CKR_DEVICE_ERROR; /* should map NSS SECError */
 	rv = SECFailure;
 	goto loser;
     }
 
     encodedKey = SEC_ASN1EncodeItem(NULL, NULL, pki, 
 				    nsslowkey_PrivateKeyInfoTemplate);
+    *crvp = encodedKey ? CKR_OK : CKR_DEVICE_ERROR;
 
 loser:
     if(arena) {
@@ -3569,10 +3577,9 @@ CK_RV NSC_WrapKey(CK_SESSION_HANDLE hSession,
 
 	case CKO_PRIVATE_KEY:
 	    {
-		SECItem *bpki = pk11_PackagePrivateKey(key);
+		SECItem *bpki = pk11_PackagePrivateKey(key, &crv);
 
 		if(!bpki) {
-		    crv = CKR_KEY_TYPE_INCONSISTENT;
 		    break;
 		}
 
