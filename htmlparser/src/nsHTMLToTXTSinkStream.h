@@ -143,6 +143,7 @@ protected:
   NS_IMETHOD GetValueOfAttribute(const nsIParserNode& aNode,
                                  char* aMatchKey,
                                  nsString& aValueRet);
+  PRBool DoOutput();
 
 protected:
   nsIOutputStream* mStream;
@@ -151,9 +152,9 @@ protected:
   PRInt32          mIndent;
   PRBool           mCiteQuote;
   PRInt32          mColPos;
-  PRBool           mDoOutput;
   PRInt32          mFlags;
   PRUint32         mWrapColumn;
+  PRBool           mDoFragment;
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;
