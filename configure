@@ -10000,8 +10000,15 @@ else
   done
 
         . ${srcdir}/allmakefiles.sh
-                  eval `echo $MAKEFILES | \
-         $PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+                        if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+	echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl \
+		>configsh.tmp 2>/dev/null
+	eval `cat configsh.tmp`
+	rm configsh.tmp
+  else
+	eval `echo $MAKEFILES | \
+		$PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+  fi
 fi
 
 trap '' 1 2 15
