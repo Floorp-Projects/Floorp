@@ -122,7 +122,8 @@ nsCookieService::OnEndURLLoad
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
+nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) 
+{
   nsXPIDLCString spec;
   nsresult rv = aURL->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
@@ -131,7 +132,11 @@ nsCookieService::GetCookieString(nsIURI *aURL, char ** aCookie) {
 }
 
 NS_IMETHODIMP
-nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char ** aCookie) {
+nsCookieService::GetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, char ** aCookie) 
+{
+  NS_ENSURE_ARG_POINTER(aURL);
+  NS_ENSURE_ARG_POINTER(aFirstURL);
+
   nsXPIDLCString spec;
   nsresult rv = aURL->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
