@@ -50,6 +50,7 @@
 #include "nsXFormsTypes.h"
 #include "nsXFormsMDGSet.h"
 #include "nsXFormsNodeState.h"
+#include "nsIModelElementPrivate.h"
 
 class nsIDOMXPathExpression;
 
@@ -171,6 +172,9 @@ protected:
   
   /** The actual MDG */
   nsVoidArray mGraph;
+
+  /** The model that created the MDG */
+  nsIModelElementPrivate *mModel;
   
   /**
    * Set of nodes that are marked as changed, and should be included in
@@ -322,8 +326,10 @@ public:
   
   /**
    * Initializes the internal structures. Needs to be called before class is used!
+   *
+   * @param aModel           The model that created this MDGEngine instance.
    */
-  nsresult Init();
+  nsresult Init(nsIModelElementPrivate *aModel);
 
   /**
    * Insert new MIP (Model Item Property) into graph.

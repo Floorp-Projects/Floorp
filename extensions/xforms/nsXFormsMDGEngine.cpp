@@ -45,6 +45,7 @@
 #include "nsIDOMXPathExpression.h"
 #include "nsIDOMXPathResult.h"
 #include "nsDeque.h"
+#include "nsIModelElementPrivate.h"
 
 #ifdef DEBUG
 //#  define DEBUG_XF_MDG
@@ -135,13 +136,15 @@ nsXFormsMDGEngine::~nsXFormsMDGEngine()
 }
 
 nsresult
-nsXFormsMDGEngine::Init()
+nsXFormsMDGEngine::Init(nsIModelElementPrivate *aModel)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (mNodeStates.Init() && mNodeToMDG.Init()) {
     rv = NS_OK;
   }
-  
+
+  mModel = aModel;
+
   return rv;
 }
 
@@ -330,7 +333,7 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
 #ifdef DEBUG_XF_MDG
     nsAutoString domNodeName;
     g->mContextNode->GetNodeName(domNodeName);
-    
+
     printf("\tNode #%d: This=%p, Dirty=%d, DynFunc=%d, Type=%d, Count=%d, Suc=%d, CSize=%d, CPos=%d, Next=%p, domnode=%s\n",
            i, (void*) g, g->IsDirty(), g->mDynFunc, g->mType,
            g->mCount, g->mSuc.Count(), g->mContextSize, g->mContextPosition,
@@ -379,17 +382,20 @@ nsXFormsMDGEngine::Recalculate(nsXFormsMDGSet* aChangedNodes)
         rv = BooleanExpression(g, constraint);
         NS_ENSURE_SUCCESS(rv, rv);
       }
-      ///
-      /// @todo Schema validity should be checked here (XXX)
-              
+
+      if (mModel && constraint) {
+        mModel->ValidateNode(g->mContextNode, &constraint);
+      }
+
       if (ns->IsConstraint() != constraint) {
         ns->Set(eFlag_CONSTRAINT, constraint);
         ns->Set(eFlag_DISPATCH_VALID_CHANGED, PR_TRUE);
         NS_ENSURE_TRUE(aChangedNodes->AddNode(g->mContextNode),
                        NS_ERROR_FAILURE);
       }
+
       break;
-      
+
     case eModel_readonly:
       if (g->HasExpr()) {
         rv = ComputeMIPWithInheritance(eFlag_READONLY,

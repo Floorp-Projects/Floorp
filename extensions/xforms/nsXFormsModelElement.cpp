@@ -68,6 +68,7 @@
 #include "nsXFormsXPathAnalyzer.h"
 #include "nsIInstanceElementPrivate.h"
 #include "nsXFormsUtils.h"
+#include "nsXFormsSchemaValidator.h"
 
 #include "nsISchemaLoader.h"
 #include "nsISchema.h"
@@ -392,7 +393,7 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
   mElement = node;
   NS_ASSERTION(mElement, "Wrapper is not an nsIDOMElement, we'll crash soon");
 
-  nsresult rv = mMDG.Init();
+  nsresult rv = mMDG.Init(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mSchemas = do_GetService(NS_SCHEMALOADER_CONTRACTID);
@@ -779,10 +780,46 @@ nsXFormsModelElement::GetMDG(nsXFormsMDGEngine **aMDG)
 }
 
 NS_IMETHODIMP
-nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode,
-                                   PRBool *aResult)
+nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
 {
-  *aResult = PR_TRUE;
+  NS_ENSURE_ARG_POINTER(aResult);
+  nsresult rv;
+
+  nsAutoString typeAttribute;
+  nsCOMPtr<nsIDOMElement> nodeElem = do_QueryInterface(aInstanceNode, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nodeElem->GetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
+                           NS_LITERAL_STRING("type"), typeAttribute);
+
+  // split type (ns:type) into namespace and type.
+  PRUint32 separator = typeAttribute.FindChar(':');
+  if ((separator == kNotFound) || (separator == typeAttribute.Length()))
+    return NS_ERROR_UNEXPECTED;
+
+  nsAutoString schemaTypeName;
+  nsAutoString schemaTypePrefix;
+  nsAutoString schemaTypeNamespace;
+
+  schemaTypePrefix.Assign(Substring(typeAttribute, 0, separator));
+  schemaTypeName.Assign(Substring(typeAttribute, ++separator, typeAttribute.Length()));
+
+  // get the namespace url from the prefix
+  nsCOMPtr<nsIDOM3Node> domNode3 = do_QueryInterface(mElement, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = domNode3->LookupNamespaceURI(schemaTypePrefix, schemaTypeNamespace);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsXFormsSchemaValidator validator;
+  nsCOMPtr<nsISchema> schema = do_QueryInterface(mSchemas);
+  validator.LoadSchema(schema);
+
+  nsAutoString value;
+  nsXFormsUtils::GetNodeValue(aInstanceNode, value);
+  PRBool isValid = validator.ValidateString(value, schemaTypeName, schemaTypeNamespace);
+
+  *aResult = isValid;
   return NS_OK;
 }
 

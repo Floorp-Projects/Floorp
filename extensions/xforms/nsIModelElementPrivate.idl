@@ -88,5 +88,5 @@ interface nsIModelElementPrivate : nsIXFormsModelElement
   /**
    * Validates the instance node against the schemas loaded by the model.
    */
-  PRBool validateNode(in nsIDOMNode instanceNode);
+  PRBool validateNode(in nsIDOMNode aInstanceNode);
 };
