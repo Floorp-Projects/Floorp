@@ -2479,7 +2479,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     }
 
     // Create an area frame
-    NS_NewAreaFrame(newFrame, 0);
+    NS_NewAreaFrame(newFrame, NS_BLOCK_MARGIN_ROOT);
     newFrame->Init(*aPresContext, aContent,
                    (isAbsolutelyPositioned
                     ? aAbsoluteItems.containingBlock
@@ -2517,7 +2517,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
             (NS_STYLE_DISPLAY_INLINE == aDisplay->mDisplay) ||
             (NS_STYLE_DISPLAY_LIST_ITEM == aDisplay->mDisplay))) {
     // Create an area frame
-    NS_NewAreaFrame(newFrame, NS_BLOCK_SHRINK_WRAP);
+    NS_NewAreaFrame(newFrame, NS_BLOCK_SHRINK_WRAP|NS_BLOCK_MARGIN_ROOT);
 
     // Initialize the frame
     newFrame->Init(*aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
