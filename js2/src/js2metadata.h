@@ -50,6 +50,12 @@ class CompoundAttribute;
 class BytecodeContainer;
 class Pond;
 class SimpleInstance;
+class BooleanInstance;
+class DateInstance;
+class StringInstance;
+class FunctionInstance;
+class ArrayInstance;
+class RegExpInstance;
 class LookupKind;
 class Package;
 
@@ -247,22 +253,40 @@ public:
     static void markJS2Value(js2val v);
 };
 
+#define ROOTKEEPER_CONSTRUCTOR(type) RootKeeper(type **p, int line, char *pfile) : is_js2val(false), p(p) { init(line, pfile); }
 class RootKeeper {
 public:
 #ifdef DEBUG
-    RootKeeper(JS2Object **p, int line, char *pfile) : is_js2val(false), p(p), line(line)
+
+    ROOTKEEPER_CONSTRUCTOR(JS2Object)
+    ROOTKEEPER_CONSTRUCTOR(RegExpInstance)
+    ROOTKEEPER_CONSTRUCTOR(CompoundAttribute)
+    ROOTKEEPER_CONSTRUCTOR(const String)
+    ROOTKEEPER_CONSTRUCTOR(String)
+    ROOTKEEPER_CONSTRUCTOR(ArrayInstance)
+    ROOTKEEPER_CONSTRUCTOR(BooleanInstance)
+    ROOTKEEPER_CONSTRUCTOR(StringInstance)
+    ROOTKEEPER_CONSTRUCTOR(JS2Metadata)
+    ROOTKEEPER_CONSTRUCTOR(Environment)
+    ROOTKEEPER_CONSTRUCTOR(Multiname)
+    ROOTKEEPER_CONSTRUCTOR(ParameterFrame)
+    ROOTKEEPER_CONSTRUCTOR(SimpleInstance)
+    ROOTKEEPER_CONSTRUCTOR(FunctionInstance)
+    ROOTKEEPER_CONSTRUCTOR(DateInstance)
+
+    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p)
     {
-        file = new char[strlen(pfile) + 1];
-        strcpy(file, pfile);
-        ri = JS2Object::addRoot(this);
-    }
-    RootKeeper(js2val *p, int line, char *pfile) : is_js2val(true), p(p), line(line)
-    {
-        file = new char[strlen(pfile) + 1];
-        strcpy(file, pfile);
-        ri = JS2Object::addRoot(this);
+        init(line, pfile);
     }
     ~RootKeeper() { JS2Object::removeRoot(ri); delete file; }
+
+    void RootKeeper::init(int line, char *pfile)
+    {
+        line = line;
+        file = new char[strlen(pfile) + 1];
+        strcpy(file, pfile);
+        ri = JS2Object::addRoot(this);
+    }
 #else
     RootKeeper(JS2Object **p) : is_js2val(false), p(p), { ri = JS2Object::addRoot(p); }
     RootKeeper(js2val *p) : is_js2val(true), p(p) { ri = JS2Object::addRoot(p); }

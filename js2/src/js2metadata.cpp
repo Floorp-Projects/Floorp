@@ -5151,12 +5151,14 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             RootKeeper *r = *i;
             PondScum *scum = NULL;
             if (r->is_js2val) {
-                if (JS2VAL_IS_OBJECT(*(r->p))
-                    scum = ((PondScum *)(JS2VAL_TO_OBJECT(*(r->p)))) - 1;
+                js2val *valp = (js2val *)(r->p);
+                if (JS2VAL_IS_OBJECT(*valp))
+                    scum = ((PondScum *)(JS2VAL_TO_OBJECT(*valp))) - 1;
             }
             else {
-                if (*(r->p))
-                    scum = (*(r->p) - 1);
+                JS2Object *objp = (JS2Object *)(r->p);
+                if (objp)
+                    scum = ((PondScum *)objp - 1);
             }
             if (scum) {
                 ASSERT(scum->owner && (scum->getSize() >= sizeof(PondScum)) && (scum->owner->sanity == POND_SANITY));
