@@ -402,6 +402,8 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
                             nsIDBChangeListener *aInstigator)
 {
   nsCOMPtr <nsIMsgThread> thread;
+  nsMsgKey keyDeleted;
+  aHdrDeleted->GetMessageKey(&keyDeleted);
 
   nsresult rv = GetThreadContainingMsgHdr(aHdrDeleted, getter_AddRefs(thread));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -409,12 +411,22 @@ NS_IMETHODIMP nsMsgGroupView::OnHdrDeleted(nsIMsgDBHdr *aHdrDeleted, nsMsgKey aP
   thread->RemoveChildHdr(aHdrDeleted, nsnull);
 
   nsMsgGroupThread *groupThread = NS_STATIC_CAST(nsMsgGroupThread *, (nsIMsgThread *) thread);
+
+  PRBool rootDeleted = m_keys.GetAt(viewIndexOfThread) == keyDeleted;
   rv = nsMsgDBView::OnHdrDeleted(aHdrDeleted, aParentKey, aFlags, aInstigator);
-  if (groupThread->m_dummy && !groupThread->NumRealChildren())
+  if (groupThread->m_dummy)
   {
-    thread->RemoveChildAt(0); // get rid of dummy
-    nsMsgDBView::RemoveByIndex(viewIndexOfThread);
-    NoteChange(viewIndexOfThread, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
+    if (!groupThread->NumRealChildren())
+    {
+      thread->RemoveChildAt(0); // get rid of dummy
+      nsMsgDBView::RemoveByIndex(viewIndexOfThread);
+      NoteChange(viewIndexOfThread, -1, nsMsgViewNotificationCode::insertOrDelete); // an example where view is not the listener - D&D messages
+    }
+    else if (rootDeleted)
+    {
+      m_keys.SetAt(viewIndexOfThread, m_keys.GetAt(viewIndexOfThread + 1));
+      OrExtraFlag(viewIndexOfThread, MSG_VIEW_FLAG_DUMMY | MSG_VIEW_FLAG_ISTHREAD);
+    }
   }
   if (!groupThread->m_keys.GetSize())
   {
@@ -451,6 +463,7 @@ NS_IMETHODIMP nsMsgGroupView::GetCellText(PRInt32 aRow, nsITreeColumn* aCol, nsA
   {
     nsCOMPtr <nsIMsgDBHdr> msgHdr;
     nsresult rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+    NS_ENSURE_SUCCESS(rv, rv);
     nsHashKey *hashKey = AllocHashKeyForHdr(msgHdr);
     if (!hashKey)
       return NS_OK;
