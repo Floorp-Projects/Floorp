@@ -46,5 +46,5 @@ DIRS = search xpinstall pref sidebar bookmarks directory profile regviewer relat
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/$(THEME)/communicator/skin
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin
 

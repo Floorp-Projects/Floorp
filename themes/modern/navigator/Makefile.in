@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/navigator/skin
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/navigator/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 	NavSecurityOverlay.css \

@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/communicator/skin/sidebar
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/sidebar
 
 EXPORT_RESOURCE_SAMPLES = \
         list-up-dis.gif  \

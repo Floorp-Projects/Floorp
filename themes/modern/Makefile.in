@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)
 
 EXPORT_RESOURCE_SAMPLES = \
 	manifest.rdf \

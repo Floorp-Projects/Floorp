@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/global/skin
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/global/skin
 
 EXPORT_RESOURCE_SAMPLES = \
 	alert-icon.gif \

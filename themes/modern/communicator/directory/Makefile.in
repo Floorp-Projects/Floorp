@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/communicator/skin/directory
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/directory
 
 EXPORT_RESOURCE_SAMPLES = \
         directory.css \

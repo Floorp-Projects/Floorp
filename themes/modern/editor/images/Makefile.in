@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/editor/skin/images
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/editor/skin/images
 
 EXPORT_RESOURCE_SAMPLES = \
 	Map_Copy.gif \

@@ -29,7 +29,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/communicator/skin/bookmarks
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/communicator/skin/bookmarks
 
 EXPORT_RESOURCE_SAMPLES = \
         bookmark-folder-closed.gif \

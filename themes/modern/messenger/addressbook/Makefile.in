@@ -28,7 +28,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(THEME_ROOT_DEPTH)/theme.mk
 
-SAMPLES_DIR	= $(DIST)/bin/chrome/$(THEME)/messenger/skin/addressbook
+SAMPLES_DIR	= $(DIST)/bin/chrome/skins/$(THEME)/messenger/skin/addressbook
 
 EXPORT_RESOURCE_SAMPLES = \
 		addressbook.css \
