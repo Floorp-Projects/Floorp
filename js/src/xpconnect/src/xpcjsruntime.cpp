@@ -61,7 +61,7 @@ XPCJSRuntime::~XPCJSRuntime()
     while(JS_ContextIterator(mJSRuntime, &iter))
         count ++;
     if(count)
-        printf("deleting XPCJSRuntime with %d total live JSContexts\n", count);        
+        printf("deleting XPCJSRuntime with %d live JSContexts\n", count);        
     }
 #endif
     
@@ -69,12 +69,7 @@ XPCJSRuntime::~XPCJSRuntime()
 
     if(mContextMap)
     {
-        SyncXPCContextList();
-#ifdef DEBUG_jband
-        uint32 count = mContextMap->Count();
-        if(count)
-            printf("deleting XPCJSRuntime with %d live JSContexts known by xpconnect\n", (int)count);        
-#endif
+        PurgeXPCContextList();
         delete mContextMap;
     }
 
@@ -237,6 +232,23 @@ XPCJSRuntime::SyncXPCContextList(JSContext* cx /* = nsnull */)
             found = xpcc;
     }
     return found;
+}
+
+JS_STATIC_DLL_CALLBACK(intN)
+PurgeContextsCB(JSHashEntry *he, intN i, void *arg)
+{
+    delete (XPCContext*) he->value;
+    return HT_ENUMERATE_REMOVE;
+}
+
+void 
+XPCJSRuntime::PurgeXPCContextList()
+{
+    // hold the map lock through this whole thing
+    nsAutoLock lock(mMapLock);
+
+    // get rid of all XPCContexts
+    mContextMap->Enumerate(PurgeContextsCB, nsnull);
 }
 
 JSBool 
