@@ -129,70 +129,85 @@ extern const char *prefContractID;
     prefs->ClearUserPref("network.proxy.no_proxies_on");
 
     if ((cfDictionary = SCDynamicStoreCopyProxies (NULL)) != NULL) {
-        cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPEnable);
-        if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-            cfString = (CFStringRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPProxy);
-            if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                prefs->SetCharPref("network.proxy.http", strbuf);
+        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPEnable, (const void **)&cfNumber) == TRUE) {
+            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
+                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPProxy, (const void **)&cfString) == TRUE) {
+                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                        prefs->SetCharPref("network.proxy.http", strbuf);
+                    }
+                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPPort, (const void **)&cfNumber) == TRUE) {
+                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
+                            prefs->SetIntPref("network.proxy.http_port", numbuf);
+                        }
+                        prefs->SetIntPref("network.proxy.type", 1);
+                    }
+                }
             }
-            cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPPort);
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                prefs->SetIntPref("network.proxy.http_port", numbuf);
-            }
-            prefs->SetIntPref("network.proxy.type", 1);
         }
-        cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPSEnable);
-        if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-            cfString = (CFStringRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPSProxy);
-            if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                prefs->SetCharPref("network.proxy.ssl", strbuf);
+        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSEnable, (const void **)&cfNumber) == TRUE) {
+            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
+                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSProxy, (const void **)&cfString) == TRUE) {
+                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                        prefs->SetCharPref("network.proxy.ssl", strbuf);
+                    }
+                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesHTTPSPort, (const void **)&cfNumber) == TRUE) {
+                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
+                            prefs->SetIntPref("network.proxy.ssl_port", numbuf);
+                        }
+                        prefs->SetIntPref("network.proxy.type", 1);
+                    }
+                }
             }
-            cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesHTTPSPort);
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                prefs->SetIntPref("network.proxy.ssl_port", numbuf);
-            }
-            prefs->SetIntPref("network.proxy.type", 1);
         }
-        cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesFTPEnable);
-        if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-            cfString = (CFStringRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesFTPProxy);
-            if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                prefs->SetCharPref("network.proxy.ftp", strbuf);
+        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPEnable, (const void **)&cfNumber) == TRUE) {
+            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
+                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPProxy, (const void **)&cfString) == TRUE) {
+                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                        prefs->SetCharPref("network.proxy.ftp", strbuf);
+                    }
+                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesFTPPort, (const void **)&cfNumber) == TRUE) {
+                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
+                            prefs->SetIntPref("network.proxy.ftp_port", numbuf);
+                        }
+                        prefs->SetIntPref("network.proxy.type", 1);
+                    }
+                }
             }
-            cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesFTPPort);
-            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                prefs->SetIntPref("network.proxy.ftp_port", numbuf);
-            }
-            prefs->SetIntPref("network.proxy.type", 1);
         }
-        cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesGopherEnable);
-        if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-            cfString = (CFStringRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesGopherProxy);
-            if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                prefs->SetCharPref("network.proxy.gopher", strbuf);
+        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherEnable, (const void **)&cfNumber) == TRUE) {
+            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
+                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherProxy, (const void **)&cfString) == TRUE) {
+                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                        prefs->SetCharPref("network.proxy.gopher", strbuf);
+                    }
+                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesGopherPort, (const void **)&cfNumber) == TRUE) {
+                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
+                            prefs->SetIntPref("network.proxy.gopher_port", numbuf);
+                        }
+                        prefs->SetIntPref("network.proxy.type", 1);
+                    }
+                }
             }
-            cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesGopherPort);
-            if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                prefs->SetIntPref("network.proxy.gopher_port", numbuf);
-            }
-            prefs->SetIntPref("network.proxy.type", 1);
         }
-        cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesSOCKSEnable);
-        if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
-            cfString = (CFStringRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesSOCKSProxy);
-            if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
-                prefs->SetCharPref("network.proxy.socks", strbuf);
+        if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSEnable, (const void **)&cfNumber) == TRUE) {
+            if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE && numbuf == 1) {
+                if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSProxy, (const void **)&cfString) == TRUE) {
+                    if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                        prefs->SetCharPref("network.proxy.socks", strbuf);
+                    }
+                    if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesSOCKSPort, (const void **)&cfNumber) == TRUE) {
+                        if (CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
+                            prefs->SetIntPref("network.proxy.socks_port", numbuf);
+                        }
+                        prefs->SetIntPref("network.proxy.type", 1);
+                    }
+                }
             }
-            cfNumber = (CFNumberRef)CFDictionaryGetValue (cfDictionary, kSCPropNetProxiesSOCKSPort);
-            if (cfNumber && CFNumberGetValue (cfNumber, kCFNumberIntType, &numbuf) == TRUE) {
-                prefs->SetIntPref("network.proxy.socks_port", numbuf);
-            }
-            prefs->SetIntPref("network.proxy.type", 1);
         }
         if (CFDictionaryGetValueIfPresent (cfDictionary, kSCPropNetProxiesExceptionsList, (const void **)&cfArray) == TRUE) {
             cfString = CFStringCreateByCombiningStrings (NULL, cfArray, CFSTR(", "));
             if (CFStringGetLength (cfString) > 0) {
-                if (CFStringGetCString (cfString, &strbuf[0], sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
+                if (CFStringGetCString (cfString, strbuf, sizeof(strbuf)-1, kCFStringEncodingASCII) == TRUE) {
                     prefs->SetCharPref("network.proxy.no_proxies_on", strbuf);
                 }
             }
