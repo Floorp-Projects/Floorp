@@ -971,7 +971,7 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByUrl(const char *aUrl)
   NS_ASSERTION(aUrl, "trying to load a null url");
   if (!mSuppressMsgDisplay)
   {
-    mMessengerInstance->LoadURL(aUrl);
+    mMessengerInstance->LoadURL(NULL, aUrl);
     m_currentlyDisplayedMsgKey = nsMsgKey_None;
   }
   return NS_OK;

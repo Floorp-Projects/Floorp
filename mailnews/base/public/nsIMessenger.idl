@@ -79,11 +79,12 @@ interface nsIMessenger : nsISupports {
                    in nsISupportsArray folders,
                    in boolean isMoveFolder);
     
+
     void OpenURL(in string aURL);
 
     /** load a custom message by url, e.g load a attachment as a email
       */
-    void loadURL(in string aURL); 
+    void loadURL(in nsIDOMWindowInternal ptr, in string aURL); 
 
     void RenameFolder(in nsIRDFCompositeDataSource db, 
                       in nsIRDFResource folder, in wstring name);

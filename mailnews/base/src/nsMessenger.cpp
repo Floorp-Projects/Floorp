@@ -140,6 +140,8 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 
+#include "nsILinkHandler.h"                                                                              
+
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kMsgSendLaterCID, NS_MSGSENDLATER_CID); 
 static NS_DEFINE_CID(kMsgPrintEngineCID,		NS_MSG_PRINTENGINE_CID);
@@ -588,10 +590,9 @@ nsMessenger::OpenURL(const char *aURL)
 }
 
 NS_IMETHODIMP
-nsMessenger::LoadURL(const char *aURL)
+nsMessenger::LoadURL(nsIDOMWindowInternal *aWin, const char *aURL)
 {
   NS_ENSURE_ARG_POINTER(aURL);
-  NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
   
   SetDisplayCharset(NS_LITERAL_STRING("UTF-8").get());
   
@@ -606,6 +607,23 @@ nsMessenger::LoadURL(const char *aURL)
   nsresult rv = NS_NewURI(getter_AddRefs(uri), uriString);
   NS_ENSURE_SUCCESS(rv, rv);
   
+  // cheat....if we were given a dom window, then use the docshell from it
+  // and pass the url out as a link...this is really just used by stand alone
+  // mail right now and could be wrapped in a MOZ_THUNDERBIRD ifdef if we needed to.
+  if (aWin)
+  {
+    nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(aWin, &rv);    
+    NS_ENSURE_SUCCESS(rv,rv);                                                    
+    nsCOMPtr <nsIDocShell> docShell; 
+    rv = globalObj->GetDocShell(getter_AddRefs(docShell));  
+    NS_ENSURE_SUCCESS(rv,rv);
+    nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(docShell, &rv);              
+    NS_ENSURE_SUCCESS(rv,rv); 
+    return rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, uri,nsnull,nsnull,nsnull);                                                     
+  }
+  else
+  {
+    NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
   nsCOMPtr<nsIMsgMailNewsUrl> msgurl = do_QueryInterface(uri);
   if (msgurl)
     msgurl->SetMsgWindow(mMsgWindow);
@@ -615,6 +633,7 @@ nsMessenger::LoadURL(const char *aURL)
   NS_ENSURE_SUCCESS(rv, rv);
   loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormal);
   return mDocShell->LoadURI(uri, loadInfo, 0, PR_TRUE);
+  }
 }
 
 nsresult
