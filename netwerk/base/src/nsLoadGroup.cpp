@@ -179,6 +179,8 @@ NS_IMETHODIMP
 nsLoadGroup::Init(nsILoadGroup *parent)
 {
 //    mParent = parent;   // weak ref
+    if (!parent)
+        return NS_ERROR_NULL_POINTER;
     parent->AddSubGroup(this);  // XXX
     return NS_OK;
 }
