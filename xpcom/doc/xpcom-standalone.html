@@ -37,7 +37,7 @@ be.</b>
 Hence cannot be used with the mozilla browser.</b>
 <h3>
 2.0&nbsp; Building Standalone XPCOM</h3>
-Here are the instructions for building the Standalone XPCOM on unix:
+Here are the instructions for building the Standalone XPCOM on Unix or Windows:
 <br>&nbsp;
 <ol><b>Step 1 : Pull the sources</b>
 <li>
@@ -113,17 +113,8 @@ standalone. Make sure you did "<tt>configure --enable-modules=xpcom"</tt></ol>
 
 <h3>
 5.0&nbsp; Whats the difference between Standalone and non-Standalone XPCOM</h3>
-Here is what we had to do to get a working standalone XPCOM
-<ol>
 
-<li>
-Disabled control of XPT from preferences.</li>
-
-<li>
-Disabled use of ZIP format of XPT files.</li>
-</ol>
-Until we fix these differences, the non-standalone xpcom will be the one
-used by the mozilla browser.
+    There is no binary difference between standalone XPCOM and the XPCOM that ships with the Mozilla browser. The one functional difference is that XPT files cannot be read from .zip files in standalone XPCOM.
 <h3>
 6.0&nbsp; TODO for v 1.0</h3>
 
@@ -137,11 +128,7 @@ in memory requirements and size.</li>
 Get <tt>xpcom/tests</tt> directory upto date and documented.</li>
 
 <li>
-Make standalone XPCOM the only deliverable from xpcom. <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=66759">No more <tt>#ifndef
-XPCOM_STANDALONE</tt></a></li>
-
-<li>
-Update this document for both Windows and Mac.</li>
+Update this document for Mac.</li>
 
 <li>
 API freeze and documentation</li>
