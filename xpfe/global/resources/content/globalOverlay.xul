@@ -11,31 +11,31 @@
 
 	<!-- File Menu (Exit) -->
 	<menupopup id="fileMenu">
-		<menuitem value="&quitApplicationCmd.label;" onaction="goQuitApplication()"/>
+		<menuitem value="&quitApplicationCmd.label;" oncommand="goQuitApplication()"/>
 	</menupopup>
 	
 	<!-- Page Setup menu item -->
-	<menuitem id="pageSetup" value="&pageSetupCmd.label;" onaction="goPageSetup()"/>
+	<menuitem id="pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
 
 	<!-- Help Menu -->
 	<menu id="helpMenu" value="&helpMenu.label;">
 	  <menupopup>
-		<menuitem value="&helpContentCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&referenceLibraryCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&releaseNotesCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&productInfoCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&helpContentCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&referenceLibraryCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&releaseNotesCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&productInfoCmd.label;" oncommand="goHelp()"/>
 		<menuseparator/>
-		<menuitem value="&softwareUpdatesCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&registerCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&memberServicesCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&softwareUpdatesCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&registerCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&memberServicesCmd.label;" oncommand="goHelp()"/>
 		<menuseparator/>
-		<menuitem value="&internationalCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&securityCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&netwatchCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&internationalCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&securityCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&netwatchCmd.label;" oncommand="goHelp()"/>
 		<menuseparator/>
-		<menuitem value="&aboutPluginsCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&aboutFontCmd.label;" onaction="goHelp()"/>
-		<menuitem value="&aboutCmd.label;" onaction="goHelp()"/>
+		<menuitem value="&aboutPluginsCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&aboutFontCmd.label;" oncommand="goHelp()"/>
+		<menuitem value="&aboutCmd.label;" oncommand="goHelp()"/>
 	  </menupopup>
 	</menu>
 	

@@ -39,7 +39,7 @@ Contributor(s): ______________________________________. -->
 	      <html:div>Ctrl+N</html:div>
 		  <titledbutton class="menu-right"/> 
 		  <menupopup>
-		    <menuitem value="Lambda" accesskey="a" onaction="dump('Lambda lambda lambda!\n')"/>
+		    <menuitem value="Lambda" accesskey="a" oncommand="dump('Lambda lambda lambda!\n')"/>
 			<menuitem value="Phi" accesskey="p"/>
 		  </menupopup>
 	    </menu>

@@ -35,7 +35,7 @@
   <menubar>
     <menu value="&fileMenu.label;">
       <menupopup>
-        <menuitem value="&newWinCmd.label;" onaction="HistoryNewWindow();"/>
+        <menuitem value="&newWinCmd.label;" oncommand="HistoryNewWindow();"/>
         <menuseparator/>
         <menuitem value="&closeCmd.label;"/>
       </menupopup>

@@ -393,7 +393,7 @@ nsEventStatus nsDynamicMenu::MenuSelected( const nsMenuEvent &aMenuEvent)
             InsertItemAt( pItem);
 
             nsString itemCmd, disabled, checked;
-            pItemElement->GetAttribute( nsAutoString("onaction"), itemCmd);
+            pItemElement->GetAttribute( nsAutoString("oncommand"), itemCmd);
             pItemElement->GetAttribute( nsAutoString("disabled"), disabled);
             pItemElement->GetAttribute( nsAutoString("checked"), checked);
             pItem->SetCommand( itemCmd);
