@@ -83,6 +83,7 @@ EXPORTS2= \
 	nsIDOMHTMLTheadElement.h \
 	nsIDOMHTMLTitleElement.h \
 	nsIDOMHTMLUListElement.h \
+	nsIDOMImage.h \
 	nsIDOMNSHTMLDocument.h
 
 MODULE=dom 
