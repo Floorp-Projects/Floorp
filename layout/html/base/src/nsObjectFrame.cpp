@@ -46,6 +46,7 @@
 #include "nsIWebShell.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
+#include "nsIStringStream.h" // for NS_NewCharInputStream
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 #include "nsLayoutAtoms.h"
@@ -87,7 +88,8 @@ public:
 
   NS_IMETHOD CreateWidget(void);
 
-  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData);
+  NS_IMETHOD GetURL(const char *aURL, const char *aTarget, void *aPostData, 
+                    PRUint32 aPostDataLen);
 
   NS_IMETHOD ShowStatus(const char *aStatusMsg);
   
@@ -1661,7 +1663,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetInstance(nsIPluginInstance *&aInstance)
     return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData)
+NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarget, void *aPostData, PRUint32 aPostDataLen)
 {
   nsISupports     *container;
   nsILinkHandler  *lh;
@@ -1698,7 +1700,19 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetURL(const char *aURL, const char *aTarge
           if (NS_OK == rv) {
             nsIContent* content = nsnull;
             mOwner->GetContent(&content);
-            rv = lh->OnLinkClick(content, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
+            nsCOMPtr<nsISupports> result = nsnull;
+            nsCOMPtr<nsIInputStream> postDataStream = nsnull;
+            if (aPostData) {
+              NS_NewByteInputStream(getter_AddRefs(result),
+                                    (const char *) aPostData, aPostDataLen);
+              if (result) {
+                postDataStream = do_QueryInterface(result, &rv);
+              }
+            }
+            rv = lh->OnLinkClick(content, eLinkVerb_Replace, 
+                                 fullurl.GetUnicode(), 
+                                 unitarget.GetUnicode(), 
+                                 postDataStream ? postDataStream : nsnull);
             NS_IF_RELEASE(content);
           }
           NS_RELEASE(lh);

@@ -270,7 +270,7 @@ nsPluginStreamToFile::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
 	PRUint32 actualCount;
 	mFileThing->Write(aBuf, aCount, &actualCount);
 	mFileThing->Close();
-	mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull);
+	mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull, 0);
 
 	return NS_OK;
 }
@@ -320,7 +320,7 @@ nsPluginStreamToFile::SetObserver(nsIOutputStreamObserver * aObserver)
 NS_IMETHODIMP
 nsPluginStreamToFile::Close(void)
 {
-	mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull);
+	mOwner->GetURL(mFileURL.GetAsString(), mTarget, nsnull, 0);
 
 	return NS_OK;
 }
