@@ -82,7 +82,7 @@ interface nsISeekableStream : nsISupports
      *                 implementing stream.  A negative value causes seeking in 
      *                 the reverse direction.
      */
-    void seek(in long whence, in long offset);
+    void seek(in long whence, in long long offset);
 
     /**
      *  tell
@@ -90,7 +90,7 @@ interface nsISeekableStream : nsISupports
      *  This method reports the current offset, in bytes, from the start of the 
      *  stream. 
      */
-    unsigned long tell();
+    long long tell();
 
 
     /**

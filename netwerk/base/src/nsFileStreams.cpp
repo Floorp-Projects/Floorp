@@ -129,26 +129,28 @@ nsFileStream::Close()
 }
 
 NS_IMETHODIMP
-nsFileStream::Seek(PRInt32 whence, PRInt32 offset)
+nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    PRInt32 cnt = PR_Seek(mFD, offset, (PRSeekWhence)whence);
-    if (cnt == -1) {
+    nsInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
+    const nsInt64 minus1(-1);
+    if (cnt == minus1) {
         return NS_ErrorAccordingToNSPR();
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileStream::Tell(PRUint32 *result)
+nsFileStream::Tell(PRInt64 *result)
 {
     if (mFD == nsnull)
         return NS_BASE_STREAM_CLOSED;
 
-    PRInt32 cnt = PR_Seek(mFD, 0, PR_SEEK_CUR);
-    if (cnt == -1) {
+    nsInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
+    const nsInt64 minus1(-1);
+    if (cnt == minus1) {
         return NS_ErrorAccordingToNSPR();
     }
     *result = cnt;

@@ -58,6 +58,7 @@
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 #include "nsISeekableStream.h"
+#include "nsInt64.h"
 
 #define NS_FILE_RESULT(x) ns_file_convert_result((PRInt32)x)
 #define NS_FILE_FAILURE NS_FILE_RESULT(-1)
@@ -261,17 +262,21 @@ nsStringInputStream::IsNonBlocking(PRBool *aNonBlocking)
 /////////
 // nsISeekableStream implementation
 /////////
-NS_IMETHODIMP nsStringInputStream::Seek(PRInt32 whence, PRInt32 offset)
+NS_IMETHODIMP nsStringInputStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     mLastResult = NS_OK; // reset on a seek.
+    const nsInt64 maxUint32 = PR_UINT32_MAX;
+    nsInt64 offset64(offset);
+    PRInt32 offset32 = offset;
+    NS_ASSERTION(maxUint32 > offset64, "string streams only support 32 bit offsets");
     mEOF = PR_FALSE; // reset on a seek.
     PRInt32 fileSize = LengthRemaining();
     PRInt32 newPosition=-1;
     switch (whence)
     {
-        case NS_SEEK_CUR: newPosition = mOffset + offset; break;
-        case NS_SEEK_SET: newPosition = offset; break;
-        case NS_SEEK_END: newPosition = fileSize + offset; break;
+        case NS_SEEK_CUR: newPosition = mOffset + offset32; break;
+        case NS_SEEK_SET: newPosition = offset32; break;
+        case NS_SEEK_END: newPosition = fileSize + offset32; break;
     }
     if (newPosition < 0)
     {
@@ -288,7 +293,7 @@ NS_IMETHODIMP nsStringInputStream::Seek(PRInt32 whence, PRInt32 offset)
 }
 
 
-NS_IMETHODIMP nsStringInputStream::Tell(PRUint32* outWhere)
+NS_IMETHODIMP nsStringInputStream::Tell(PRInt64* outWhere)
 {
     *outWhere = mOffset;
     return NS_OK;

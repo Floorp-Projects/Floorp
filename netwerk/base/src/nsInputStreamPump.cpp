@@ -45,6 +45,7 @@
 #include "nsNetUtil.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
+#include "nsInt64.h"
 
 static NS_DEFINE_CID(kStreamTransportServiceCID, NS_STREAMTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -424,7 +425,7 @@ nsInputStreamPump::OnStateTransfer()
 
             // in most cases this QI will succeed (mAsyncStream is almost always
             // a nsPipeInputStream, which implements nsISeekableStream::Tell).
-            PRUint32 offsetBefore;
+            PRInt64 offsetBefore;
             nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mAsyncStream);
             if (seekable)
                 seekable->Tell(&offsetBefore);
@@ -436,10 +437,16 @@ nsInputStreamPump::OnStateTransfer()
             if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(mStatus)) {
                 // test to see if this ODA failed to consume data
                 if (seekable) {
-                    PRUint32 offsetAfter;
+                    PRInt64 offsetAfter;
                     seekable->Tell(&offsetAfter);
-                    if (offsetAfter > offsetBefore)
-                        mStreamOffset += (offsetAfter - offsetBefore);
+                    nsInt64 offsetBefore64 = offsetBefore;
+                    nsInt64 offsetAfter64 = offsetAfter;
+                    if (offsetAfter64 > offsetBefore64) {
+                        nsInt64 offsetDelta = offsetAfter64 - offsetBefore64;
+                        const nsInt64 maxUint32 = PR_UINT32_MAX;
+                        NS_ASSERTION(offsetDelta < maxUint32, "offset overflows PRUint32");
+                        mStreamOffset += (PRUint32) offsetDelta;
+                    }
                     else if (mSuspendCount == 0) {
                         //
                         // possible infinite loop if we continue pumping data!

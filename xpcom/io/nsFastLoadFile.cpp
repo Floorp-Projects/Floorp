@@ -55,7 +55,7 @@
 
 #include "nsBinaryStream.h"
 #include "nsFastLoadFile.h"
-
+#include "nsInt64.h"
 #ifdef DEBUG_brendan
 # define METERING
 # define DEBUG_MUX
@@ -322,7 +322,7 @@ struct nsDocumentMapReadEntry : public nsDocumentMapEntry {
                                         // Read, in case there is no Read before
                                         // another entry is Selected (to improve
                                         // input stream buffer utilization)
-    PRUint32    mSaveOffset;            // in case demux schedule differs from
+    PRInt64     mSaveOffset;            // in case demux schedule differs from
                                         // mux schedule
 };
 
@@ -633,7 +633,7 @@ nsFastLoadFileReader::ComputeChecksum(PRUint32 *aResult)
     nsCOMPtr<nsIInputStream> stream = mInputStream;
 
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(stream));
-    PRUint32 saveOffset;
+    PRInt64 saveOffset;
     nsresult rv = seekable->Tell(&saveOffset);
     if (NS_FAILED(rv))
         return rv;
@@ -959,12 +959,14 @@ nsFastLoadFileReader::Open()
     if (NS_FAILED(rv))
         return rv;
 
-    PRUint32 fileSize;
+    PRInt64 fileSize;
     rv = seekable->Tell(&fileSize);
     if (NS_FAILED(rv))
         return rv;
-
-    if (fileSize != mHeader.mFileSize)
+    nsInt64 fileSize64(fileSize);
+    const nsInt64 maxUint32 = PR_UINT32_MAX;
+    NS_ASSERTION(maxUint32 > fileSize64, "fileSize must fit in 32 bits");
+    if ((PRUint32) fileSize64 != mHeader.mFileSize)
         return NS_ERROR_UNEXPECTED;
 
     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
@@ -1060,21 +1062,22 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
         object = entry->mReadObject;
         if (!object) {
             nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
-            PRUint32 saveOffset;
+            PRInt64 saveOffset;
             nsDocumentMapReadEntry* saveDocMapEntry = nsnull;
 
             rv = seekable->Tell(&saveOffset);
             if (NS_FAILED(rv))
                 return rv;
 
-            if (entry->mCIDOffset != saveOffset) {
+            PRUint32 saveOffset32 = saveOffset;
+            if (entry->mCIDOffset != saveOffset32) {
                 // We skipped deserialization of this object from its position
                 // earlier in the input stream, presumably due to the reference
                 // there being an nsFastLoadPtr, or (more likely) because the
                 // object was muxed in another document, and deserialization
                 // order does not match serialization order.  So we must seek
                 // back and read it now.
-                NS_ASSERTION(entry->mCIDOffset < saveOffset,
+                NS_ASSERTION(entry->mCIDOffset < saveOffset32,
                              "out of order object?!");
 
                 // Ape our Seek wrapper by clearing mCurrentDocumentMapEntry.
@@ -1092,7 +1095,7 @@ nsFastLoadFileReader::ReadObject(PRBool aIsStrongRef, nsISupports* *aObject)
             if (NS_FAILED(rv))
                 return rv;
 
-            if (entry->mCIDOffset != saveOffset) {
+            if (entry->mCIDOffset != saveOffset32) {
                 // Save the "skip offset" in case we need to skip this object
                 // definition when reading forward, later on.
                 rv = seekable->Tell(&entry->mSkipOffset);
@@ -1173,7 +1176,7 @@ nsFastLoadFileReader::ReadID(nsID *aResult)
 }
 
 NS_IMETHODIMP
-nsFastLoadFileReader::Seek(PRInt32 aWhence, PRInt32 aOffset)
+nsFastLoadFileReader::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
     mCurrentDocumentMapEntry = nsnull;
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
@@ -1181,7 +1184,7 @@ nsFastLoadFileReader::Seek(PRInt32 aWhence, PRInt32 aOffset)
 }
 
 NS_IMETHODIMP
-nsFastLoadFileReader::Tell(PRUint32 *aResult)
+nsFastLoadFileReader::Tell(PRInt64 *aResult)
 {
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mInputStream));
     return seekable->Tell(aResult);
@@ -1436,11 +1439,12 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
 
     // Capture the current file offset (XXXbe maintain our own via Write?)
     nsresult rv;
-    PRUint32 currentSegmentOffset;
+    PRInt64 currentSegmentOffset;
     rv = seekable->Tell(&currentSegmentOffset);
     if (NS_FAILED(rv))
         return rv;
 
+    PRUint32 currentSegmentOffset32 = currentSegmentOffset;
     // Look for an existing entry keyed by aURI, added by StartMuxedDocument.
     nsCOMPtr<nsISupports> key(do_QueryInterface(aURI));
     nsURIMapWriteEntry* uriMapEntry =
@@ -1492,7 +1496,7 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
 
         // The length counts all bytes in the segment, including the header
         // that contains [nextSegmentOffset, length].
-        rv = Write32(currentSegmentOffset - prevSegmentOffset);
+        rv = Write32(currentSegmentOffset32 - prevSegmentOffset);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1511,14 +1515,14 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
     // Otherwise, seek back to write the next segment offset of the previous
     // segment for this document in the multiplex.
     if (!docMapEntry->mInitialSegmentOffset) {
-        docMapEntry->mInitialSegmentOffset = currentSegmentOffset;
+        docMapEntry->mInitialSegmentOffset = currentSegmentOffset32;
     } else {
         rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
                             docMapEntry->mCurrentSegmentOffset);
         if (NS_FAILED(rv))
             return rv;
 
-        rv = Write32(currentSegmentOffset);
+        rv = Write32(currentSegmentOffset32);
         if (NS_FAILED(rv))
             return rv;
 
@@ -1531,7 +1535,7 @@ nsFastLoadFileWriter::SelectMuxedDocument(nsISupports* aURI,
     // Update this document's current segment offset so we can later fix its
     // next segment offset (unless it is last, in which case we leave the zero
     // placeholder as a terminator).
-    docMapEntry->mCurrentSegmentOffset = currentSegmentOffset;
+    docMapEntry->mCurrentSegmentOffset = currentSegmentOffset32;
 
     rv = Write32(0);    // nextSegmentOffset placeholder
     if (NS_FAILED(rv))
@@ -1937,7 +1941,10 @@ nsFastLoadFileWriter::Close()
 
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
 
-    rv = seekable->Tell(&mHeader.mFooterOffset);
+    PRInt64 footerOffset;
+    rv = seekable->Tell(&footerOffset);
+
+    LL_L2UI(mHeader.mFooterOffset, footerOffset);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1967,8 +1974,9 @@ nsFastLoadFileWriter::Close()
     rv = WriteFooter();
     if (NS_FAILED(rv))
         return rv;
-
-    rv = seekable->Tell(&mHeader.mFileSize);
+    PRInt64 fileSize;
+    rv = seekable->Tell(&fileSize);
+    LL_L2UI(mHeader.mFileSize, fileSize);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2106,7 +2114,7 @@ nsFastLoadFileWriter::WriteObjectCommon(nsISupports* aObject,
         if (!entry->mObject) {
             // First time we've seen this object address: add it to mObjectMap
             // and serialize the object at the current stream offset.
-            PRUint32 thisOffset;
+            PRInt64 thisOffset;
             rv = Tell(&thisOffset);
             if (NS_FAILED(rv)) {
                 aObject->Release();
@@ -2261,7 +2269,7 @@ nsFastLoadFileWriter::WriteID(const nsID& aID)
 }
 
 NS_IMETHODIMP
-nsFastLoadFileWriter::Seek(PRInt32 aWhence, PRInt32 aOffset)
+nsFastLoadFileWriter::Seek(PRInt32 aWhence, PRInt64 aOffset)
 {
     mCurrentDocumentMapEntry = nsnull;
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
@@ -2269,7 +2277,7 @@ nsFastLoadFileWriter::Seek(PRInt32 aWhence, PRInt32 aOffset)
 }
 
 NS_IMETHODIMP
-nsFastLoadFileWriter::Tell(PRUint32 *aResult)
+nsFastLoadFileWriter::Tell(PRInt64 *aResult)
 {
     nsCOMPtr<nsISeekableStream> seekable(do_QueryInterface(mOutputStream));
     return seekable->Tell(aResult);
@@ -2391,7 +2399,7 @@ nsFastLoadFileUpdater::Open(nsFastLoadFileReader* aReader)
     // singleton object that might otherwise get written by this updater.
     nsDocumentMapReadEntry* saveDocMapEntry = nsnull;
     nsCOMPtr<nsISeekableStream> inputSeekable;
-    PRUint32 saveOffset = 0;
+    PRInt64 saveOffset = 0;
 
     for (i = 0, n = aReader->mFooter.mNumSharpObjects; i < n; i++) {
         nsFastLoadFileReader::nsObjectMapEntry* readEntry = &readObjectMap[i];

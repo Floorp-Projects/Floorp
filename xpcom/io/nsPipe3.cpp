@@ -849,16 +849,16 @@ nsPipeInputStream::AsyncWait(nsIInputStreamCallback *callback,
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Seek(PRInt32 whence, PRInt32 offset)
+nsPipeInputStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     NS_NOTREACHED("nsPipeInputStream::Seek");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPipeInputStream::Tell(PRUint32 *offset)
+nsPipeInputStream::Tell(PRInt64 *offset)
 {
-    *offset = mLogicalOffset;
+    LL_UI2L(*offset, mLogicalOffset);
     return NS_OK;
 }
 
@@ -1214,14 +1214,14 @@ nsPipeOutputStream::AsyncWait(nsIOutputStreamCallback *callback,
 }
 
 NS_IMETHODIMP
-nsPipeOutputStream::Seek(PRInt32 whence, PRInt32 offset)
+nsPipeOutputStream::Seek(PRInt32 whence, PRInt64 offset)
 {
     NS_NOTREACHED("nsPipeOutputStream::Seek");
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsPipeOutputStream::Tell(PRUint32 *offset)
+nsPipeOutputStream::Tell(PRInt64 *offset)
 {
     *offset = mLogicalOffset;
     return NS_OK;

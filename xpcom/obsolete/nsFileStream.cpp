@@ -43,7 +43,7 @@
 #include "nsFileSpec.h"
 #include "nsIFileSpec.h"
 #include "nsIStringStream.h"
-
+#include "nsInt64.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -228,8 +228,9 @@ PRBool nsRandomAccessInputStream::readline(char* s, PRInt32 n)
     if (!s || !n)
         return PR_TRUE;
 
-    PRIntn position = tell();
-    if (position < 0)
+    nsInt64 position = tell();
+    const nsInt64 zero(0);
+    if (position < zero)
         return PR_FALSE;
     PRInt32 bytesRead = read(s, n - 1);
     if (failed())

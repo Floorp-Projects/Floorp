@@ -387,22 +387,23 @@ public:
                                       }
     virtual                           ~nsRandomAccessStoreClient() {}
     
-    void                              seek(PRInt32 offset)
+    void                              seek(PRInt64 offset)
                                       {
                                           seek(PR_SEEK_SET, offset);
                                       }
 
-    void                              seek(PRSeekWhence whence, PRInt32 offset)
+    void                              seek(PRSeekWhence whence, PRInt64 offset)
                                       {
                                           set_at_eof(PR_FALSE);
                                           if (mStore)
                                               mResult = mStore->Seek(whence, offset);
                                       }
-    PRIntn                            tell()
+    PRInt64                           tell()
                                       {
-                                          PRIntn result = -1;
+                                          PRInt64 result;
+                                          LL_I2L(result, -1);
                                           if (mStore)
-                                              mResult = mStore->Tell((PRUint32 *)&result);
+                                              mResult = mStore->Tell(&result);
                                           return result;
                                       }
 

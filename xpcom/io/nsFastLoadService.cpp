@@ -485,7 +485,7 @@ nsFastLoadService::ReadFastLoadPtr(nsIObjectInputStream* aInputStream,
     if (!seekable)
         return NS_ERROR_FAILURE;
 
-    PRUint32 thisOffset;
+    PRInt64 thisOffset;
     rv = seekable->Tell(&thisOffset);
     if (NS_FAILED(rv))
         return rv;
@@ -528,7 +528,7 @@ nsFastLoadService::WriteFastLoadPtr(nsIObjectOutputStream* aOutputStream,
     if (!seekable)
         return NS_ERROR_FAILURE;
 
-    PRUint32 saveOffset;
+    PRInt64 saveOffset;
     rv = seekable->Tell(&saveOffset);
     if (NS_FAILED(rv))
         return rv;
@@ -541,7 +541,7 @@ nsFastLoadService::WriteFastLoadPtr(nsIObjectOutputStream* aOutputStream,
     if (NS_FAILED(rv))
         return rv;
 
-    PRUint32 nextOffset;
+    PRInt64 nextOffset;
     rv = seekable->Tell(&nextOffset);
     if (NS_FAILED(rv))
         return rv;
