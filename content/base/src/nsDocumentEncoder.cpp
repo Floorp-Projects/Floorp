@@ -46,8 +46,7 @@ public:
   nsTextEncoder();
   virtual ~nsTextEncoder();
 
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument,
-                  const nsString& aMimeType, PRUint32 aFlags);
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 aFlags);
 
   /* Interfaces for addref and release and queryinterface */
   NS_DECL_ISUPPORTS
@@ -68,7 +67,6 @@ protected:
 
   nsIDocument*      mDocument;
   nsIDOMSelection*  mSelection;
-  nsIPresShell*     mPresShell;
   nsString          mMimeType;
   nsString          mCharset;
   PRUint32          mFlags;
@@ -84,30 +82,23 @@ nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
   NS_INIT_REFCNT();
   mDocument = 0;
   mSelection = 0;
-  mPresShell = 0;
 }
 
 nsTextEncoder::~nsTextEncoder()
 {
   NS_IF_RELEASE(mDocument);
   //NS_IF_RELEASE(mSelection);		// no. we never addref'd it.
-  NS_IF_RELEASE(mPresShell);
 }
 
 NS_IMETHODIMP
-nsTextEncoder::Init(nsIPresShell* aPresShell, nsIDocument* aDocument,
-                    const nsString& aMimeType, PRUint32 aFlags)
+nsTextEncoder::Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 aFlags)
 {
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
 
-  if (!aPresShell)
-    return NS_ERROR_INVALID_ARG;
-
   mDocument = aDocument;
   NS_ADDREF(mDocument);
-  mPresShell = aPresShell;
-  NS_ADDREF(aPresShell);
+
   mMimeType = aMimeType;
 
   mFlags = aFlags;
@@ -165,62 +156,57 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
 
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!mPresShell)
-    return NS_ERROR_NOT_INITIALIZED;
 
   // xxx Also make sure mString is a mime type "text/html" or "text/plain"
   
-  if (mPresShell)
+  if (mDocument)
   {
-    if (mDocument)
+    nsString buffer;
+
+    if (mMimeType == "text/xif")
     {
-      nsString buffer;
+      mDocument->CreateXIF(aOutputString, mSelection);
+      return NS_OK;
+    }
 
-      if (mMimeType == "text/xif")
+    mDocument->CreateXIF(buffer, mSelection);
+
+    nsIParser* parser;
+
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+    rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                            nsnull, 
+                                            kCParserIID, 
+                                            (void **)&parser);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      nsIHTMLContentSink* sink = nsnull;
+
+      if (mMimeType == "text/html")
+        rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
+
+      else  // default to text/plain
+        rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
+                                         mWrapColumn, mFlags);
+
+      if (sink && NS_SUCCEEDED(rv))
       {
-        mDocument->CreateXIF(aOutputString, mSelection);
-        return NS_OK;
-      }
-
-      mDocument->CreateXIF(buffer, mSelection);
-
-      nsIParser* parser;
-
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-      rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                              nsnull, 
-                                              kCParserIID, 
-                                              (void **)&parser);
-
-      if (NS_SUCCEEDED(rv))
-      {
-        nsIHTMLContentSink* sink = nsnull;
-
-        if (mMimeType == "text/html")
-          rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
-
-        else  // default to text/plain
-          rv = NS_New_HTMLToTXT_SinkStream(&sink, &aOutputString,
-                                           mWrapColumn, mFlags);
-
-        if (sink && NS_SUCCEEDED(rv))
+        parser->SetContentSink(sink);
+        nsIDTD* dtd = nsnull;
+        rv = NS_NewXIFDTD(&dtd);
+        if (NS_SUCCEEDED(rv))
         {
-          parser->SetContentSink(sink);
-          nsIDTD* dtd = nsnull;
-          rv = NS_NewXIFDTD(&dtd);
-          if (NS_SUCCEEDED(rv))
-          {
-            parser->RegisterDTD(dtd);
-            parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
-          }
-          NS_IF_RELEASE(dtd);
-          NS_IF_RELEASE(sink);
+          parser->RegisterDTD(dtd);
+          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
         }
-        NS_RELEASE(parser);
+        NS_IF_RELEASE(dtd);
+        NS_IF_RELEASE(sink);
       }
-  	}
+      NS_RELEASE(parser);
+    }
 	}
   return rv;
 }
@@ -232,62 +218,59 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
 
   if (!mDocument)
     return NS_ERROR_NOT_INITIALIZED;
-  if (!mPresShell)
-    return NS_ERROR_NOT_INITIALIZED;
 
   // xxx Also make sure mString is a mime type "text/html" or "text/plain"
   
-  if (mPresShell) {
-    if (mDocument) {
-      nsString buffer;
+  if (mDocument)
+  {
+    nsString buffer;
 
-      mDocument->CreateXIF(buffer,mSelection);
-      
-      nsString*     charset = nsnull;
-      nsAutoString  defaultCharset("ISO-8859-1");
-      if (!mCharset.Equals("null") && !mCharset.Equals(""))
-        charset = &mCharset; 
+    mDocument->CreateXIF(buffer,mSelection);
+    
+    nsString*     charset = nsnull;
+    nsAutoString  defaultCharset("ISO-8859-1");
+    if (!mCharset.Equals("null") && !mCharset.Equals(""))
+      charset = &mCharset; 
 
-      nsIParser* parser;
+    nsIParser* parser;
 
-      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+    static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+    static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
 
-      rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                              nsnull, 
-                                              kCParserIID, 
-                                              (void **)&parser);
+    rv = nsComponentManager::CreateInstance(kCParserCID, 
+                                            nsnull, 
+                                            kCParserIID, 
+                                            (void **)&parser);
 
-      if (NS_SUCCEEDED(rv)) {
-        nsIHTMLContentSink* sink = nsnull;
+    if (NS_SUCCEEDED(rv)) {
+      nsIHTMLContentSink* sink = nsnull;
 
-        if (mMimeType == "text/html")
-          rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset, mFlags);
+      if (mMimeType == "text/html")
+        rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset, mFlags);
 
-        else
-          rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,
-                                           mWrapColumn, mFlags);
-  
-      	if (sink && NS_SUCCEEDED(rv))
+      else
+        rv = NS_New_HTMLToTXT_SinkStream(&sink, aStream, charset,
+                                         mWrapColumn, mFlags);
+
+    	if (sink && NS_SUCCEEDED(rv))
+      {
+        if (NS_SUCCEEDED(rv))
         {
-	        if (NS_SUCCEEDED(rv))
-          {
-	          parser->SetContentSink(sink);
+          parser->SetContentSink(sink);
 
-            nsIDTD* dtd = nsnull;
-	          rv = NS_NewXIFDTD(&dtd);
-	          if (NS_SUCCEEDED(rv))
-            {
-	            parser->RegisterDTD(dtd);
-	            parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
-	          }
-	          NS_IF_RELEASE(dtd);
-	          NS_IF_RELEASE(sink);
-	        }
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
+          if (NS_SUCCEEDED(rv))
+          {
+            parser->RegisterDTD(dtd);
+            parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
+          }
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
         }
-        NS_RELEASE(parser);
       }
-  	}
+      NS_RELEASE(parser);
+    }
 	}
   return rv;
 }

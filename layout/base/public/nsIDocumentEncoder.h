@@ -27,7 +27,7 @@ class nsIDocument;
 class nsIDOMSelection;
 class nsIOutputStream;
 class nsISupportsArray;
-class nsIPresShell;
+
 
 #define NS_IDOCUMENT_ENCODER_IID                     \
 { /* a6cf9103-15b3-11d2-932e-00805f8add32 */         \
@@ -66,7 +66,7 @@ public:
   /**
    *  Initialize with a pointer to the document and the mime type.
    */
-  NS_IMETHOD Init(nsIPresShell* aPresShell, nsIDocument* aDocument, const nsString& aMimeType, PRUint32 flags) = 0;
+  NS_IMETHOD Init(nsIDocument* aDocument, const nsString& aMimeType, PRUint32 flags) = 0;
 
   /**
    *  If the selection is set to a non-null value, then the
