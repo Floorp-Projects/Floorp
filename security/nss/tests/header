@@ -467,7 +467,7 @@ tbx_dirs()
         TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tbx/stalker_NT"
     else
         if [ -n "${TBX_LOGDIR}" ] ; then
-            TBX_LOGFILE_DIR="${TBX_LOGDIR}
+            TBX_LOGFILE_DIR="${TBX_LOGDIR}"
         fi
         TBX_LOGFILE_DIR="${NSS_VER_DIR}/logs/tinderbox/Solaris8_64"
     fi
