@@ -142,6 +142,7 @@ protected:
 	virtual void	xaolenvelope_data();
 	virtual void	parse_address(nsCAutoString &addressLine);
 	virtual void	internal_date();
+  virtual nsresult BeginMessageDownload(const char *content_type);
 
     virtual void    response_data();
     virtual void    resp_text();

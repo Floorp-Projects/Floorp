@@ -272,6 +272,8 @@ public:
 	PRBool IsShellCached() { return m_cached; }
 	void	SetIsCached(PRBool isCached) { m_cached = isCached; }
 	PRBool	GetGeneratingWholeMessage() { return m_generatingWholeMessage; }
+	IMAP_ContentModifiedType	GetContentModified() { return m_contentModified; }
+	void	SetContentModified(IMAP_ContentModifiedType modType) { m_contentModified = modType; }
 
 protected:
 
@@ -290,6 +292,8 @@ protected:
 	PRBool				m_cached;				// Whether or not this shell is cached
 	PRBool				m_generatingWholeMessage;	// whether or not we are generating the whole (non-MPOD) message
 													// Set to PR_FALSE if we are generating by parts
+	IMAP_ContentModifiedType	m_contentModified;	// under what conditions the content has been modified.
+													// Either IMAP_CONTENT_MODIFIED_VIEW_INLINE or IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS
 };
 
 

@@ -27,6 +27,10 @@
 
 #include "nsHashtable.h"
 #include "nsMimeTypes.h"
+#include "nsIPref.h"
+
+
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // need to talk to Rich about this...
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
@@ -35,6 +39,10 @@
 // Implementation of the nsIMAPBodyShell and associated classes
 // These are used to parse IMAP BODYSTRUCTURE responses, and intelligently (?)
 // figure out what parts we need to display inline.
+
+static PRInt32 gMaxDepth = 0;	// Maximum depth that we will descend before marking a shell invalid.
+							// This will be initialized from the prefs the first time a shell is created.
+							// This is to protect against excessively complex (deep) BODYSTRUCTURE responses.
 
 
 /*
@@ -55,6 +63,15 @@
 
 nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char *buf, PRUint32 UID, const char *folderName)
 {
+	if (gMaxDepth == 0)
+	{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) 
+		// one-time initialization
+      prefs->GetIntPref("mail.imap.mime_parts_on_demand_max_depth", &gMaxDepth);   
+	}
+
 	m_isValid = PR_FALSE;
 	m_isBeingGenerated = PR_FALSE;
 	m_cached = PR_FALSE;
@@ -82,6 +99,10 @@ nsIMAPBodyShell::nsIMAPBodyShell(nsImapProtocol *protocolConnection, const char 
 	m_folderName = nsCRT::strdup(folderName);
 	if (!m_folderName)
 		return;
+	if (GetShowAttachmentsInline())
+		SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_INLINE);
+	else
+		SetContentModified(IMAP_CONTENT_MODIFIED_VIEW_AS_LINKS);
 	// Turn the BODYSTRUCTURE response into a form that the nsIMAPBodypartMessage can be constructed from.
 	char *doctoredBuf = PR_smprintf("(\"message\" \"rfc822\" NIL NIL NIL NIL 0 () %s 0)", buf);
 	if (!doctoredBuf)

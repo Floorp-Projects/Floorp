@@ -409,8 +409,7 @@ void nsImapServerResponseParser::ProcessOkCommand(const char *commandToken)
 			char *imapPart = nsnull;
 
 			fServerConnection.GetCurrentUrl()->GetImapPartToFetch(&imapPart);
-			if (imapPart)
-				m_shell->Generate(imapPart);
+			m_shell->Generate(imapPart);
 			PR_FREEIF(imapPart);
 
 			if ((navCon && navCon->GetPseudoInterrupted())
@@ -1166,12 +1165,14 @@ void nsImapServerResponseParser::msg_fetch()
 		{
 			fDownloadingHeaders = PR_TRUE;
 			bNeedEndMessageDownload = PR_TRUE;
+      BeginMessageDownload(MESSAGE_RFC822);
 			envelope_data(); 
 		}
 		else if (!PL_strcasecmp(fNextToken, "INTERNALDATE"))
 			internal_date(); 
 		else if (!PL_strcasecmp(fNextToken, "XAOL-ENVELOPE"))
 		{
+      BeginMessageDownload(MESSAGE_RFC822);
 			xaolenvelope_data();
 			fDownloadingHeaders = PR_TRUE;
 			bNeedEndMessageDownload = PR_TRUE;
@@ -1194,16 +1195,6 @@ void nsImapServerResponseParser::msg_fetch()
 		{
 			if (ContinueParse())
 			{
-				nsresult rv;
-				rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
-															MESSAGE_RFC822);
-				if (NS_FAILED(rv))
-				{
-					skip_to_CRLF();
-					fServerConnection.PseudoInterrupt(PR_TRUE);
-					fServerConnection.AbortMessageDownLoad();
-					return;
-				}
 				// complete the message download
 				fServerConnection.NormalMessageEndDownload();
 			}
@@ -1806,20 +1797,11 @@ void nsImapServerResponseParser::msg_fetch_content(PRBool chunk, PRInt32 origin,
 	// Don't do it if we are filling in a shell or downloading a part.
 	// DO do it if we are downloading a whole message as a result of
 	// an invalid shell trying to generate.
-	if ((!chunk || (origin == 0)) && 
+	if ((!chunk || (origin == 0)) && !GetDownloadingHeaders() &&
 		(GetFillingInShell() ? m_shell->GetGeneratingWholeMessage() : PR_TRUE))
 	{
-		NS_ASSERTION(fSizeOfMostRecentMessage > 0, "most recent message has 0 or negative size");
-		nsresult rv;
-        rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
-                                                    content_type);
-        if (NS_FAILED(rv))
-        {
-            skip_to_CRLF();
-            fServerConnection.PseudoInterrupt(PR_TRUE);
-            fServerConnection.AbortMessageDownLoad();
-            return;
-        }
+    if (!NS_SUCCEEDED(BeginMessageDownload(content_type)))
+      return;
 	}
 
 	if (PL_strcasecmp(fNextToken, "NIL"))
@@ -2607,3 +2589,16 @@ void nsImapServerResponseParser::SetSyntaxError(PRBool error)
 	}
 }
 
+nsresult nsImapServerResponseParser::BeginMessageDownload(const char *content_type)
+{
+		NS_ASSERTION(fSizeOfMostRecentMessage > 0, "most recent message has 0 or negative size");
+    nsresult rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
+                                                content_type);
+    if (NS_FAILED(rv))
+    {
+        skip_to_CRLF();
+        fServerConnection.PseudoInterrupt(PR_TRUE);
+        fServerConnection.AbortMessageDownLoad();
+    }
+  return rv;
+}
