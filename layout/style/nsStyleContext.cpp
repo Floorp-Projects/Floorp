@@ -49,6 +49,8 @@
 #include "nsIStyleSet.h"
 #include "nsISizeOfHandler.h"
 #include "nsIPresShell.h"
+#include "nsLayoutAtoms.h"
+#include "prenv.h"
 
 static NS_DEFINE_IID(kIStyleContextIID, NS_ISTYLECONTEXT_IID);
 
@@ -2147,13 +2149,19 @@ public:
   NS_IMETHOD  CalcStyleDifference(nsIStyleContext* aOther, PRInt32& aHint,PRBool aStopAtFirstDifference = PR_FALSE) const;
 
 #ifdef SHARE_STYLECONTEXTS
+  // evaluate and execute the style data sharing
+  // - if nothing to share, it leaves the current style data intact,
+  //   otherwise it calls ShareStyleDataFrom to share another context's data
+  //   and releases the old data
+  nsresult ShareStyleData(void);
+
   // share the style data of the StyleDataDonor
   // NOTE: the donor instance is cast to a StyleContextImpl to keep the
   //       interface free of implementation types. This may be invalid in 
   //       the future
   // XXX - reconfigure APIs to avoid casting the interface to the impl
   nsresult ShareStyleDataFrom(nsIStyleContext*aStyleDataDonor);
-
+  
   // sets aMatches to PR_TRUE if the style data of aStyleContextToMatch matches the 
   // style data of this, PR_FALSE otherwise
   NS_IMETHOD StyleDataMatches(nsIStyleContext* aStyleContextToMatch, PRBool *aMatches);
@@ -2896,32 +2904,7 @@ StyleContextImpl::RemapStyle(nsIPresContext* aPresContext, PRBool aRecurse)
   RecalcAutomaticData(aPresContext);
 
 #ifdef SHARE_STYLECONTEXTS
-
-  static PRBool bEnableSharing = PR_FALSE; 
-    // set to FALSE in debugger to turn off sharing of sc data
-
-  if (bEnableSharing) {
-    // set the CRC
-    mStyleData->SetCRC32();
-
-    NS_ASSERTION(mStyleSet, "Expected to have a style set ref...");
-    nsIStyleContext *matchingSC = nsnull;
-
-    // check if there is a matching context...
-    if ((NS_SUCCEEDED(mStyleSet->FindMatchingContext(this, &matchingSC))) && 
-        (nsnull != matchingSC)) {
-      ShareStyleDataFrom(matchingSC);
-#ifdef NOISY_DEBUG
-      printf("SC Data Shared :)\n");
-#endif
-      NS_IF_RELEASE(matchingSC);
-    } else {
-#ifdef NOISY_DEBUG
-      printf("Unique SC Data - Not Shared :(\n");
-#endif
-    }
-  } // if(bDisableSharing==false)
-
+  nsresult result = ShareStyleData();
 #endif
 
   if (aRecurse) {
@@ -3082,6 +3065,70 @@ nsresult StyleContextImpl::HaveStyleData(void) const
 
 
 #ifdef SHARE_STYLECONTEXTS
+
+nsresult StyleContextImpl::ShareStyleData(void)
+{
+  nsresult result = NS_OK;
+
+  // Enable flag: this is TRUE by default, however the env. var. moz_disable_style_sharing
+  // can be set to '1' to disable the sharing before the app is launched
+  static char *disableSharing = PR_GetEnv("moz_disable_style_sharing");
+  static PRBool bEnableSharing = (disableSharing == nsnull) || 
+                                 (*disableSharing != '1');
+#ifdef DEBUG
+  static PRBool bOnce = PR_FALSE;
+  if(!bOnce){
+    printf( "Style Data Sharing is %s\n", bEnableSharing ? "Enabled :)" : "Disabled :(" );
+    bOnce = PR_TRUE;
+  }
+#endif
+
+  PRBool bSharingSupported = PR_TRUE;
+  if (bEnableSharing) {
+    // NOTE: sharing of style data for the GfxScrollFrame is problematic
+    //       and is currently disabled. These pseudos indicate the use of a GfxScrollFrame
+    //       so we check for them and disallow sharing when any are found.
+    //       If you haen;t guessed it, this is a total hack until we can figure out
+    //       why the GfxScrollFrame is not happy having its style data shared... 
+    //       (See bugzilla bug 39618 which also documents this problem)
+    if(mPseudoTag) {
+      if(mPseudoTag == nsLayoutAtoms::viewportPseudo ||
+         mPseudoTag == nsLayoutAtoms::canvasPseudo ||
+         mPseudoTag == nsLayoutAtoms::viewportScrollPseudo ||
+         mPseudoTag == nsLayoutAtoms::scrolledContentPseudo ||
+         mPseudoTag == nsLayoutAtoms::selectScrolledContentPseudo) {
+        bSharingSupported = PR_FALSE;
+      } else {
+        bSharingSupported = PR_TRUE;
+      }
+    }
+  }
+
+  if (bEnableSharing && bSharingSupported) {
+    // set the CRC
+    mStyleData->SetCRC32();
+
+    NS_ASSERTION(mStyleSet, "Expected to have a style set ref...");
+    nsIStyleContext *matchingSC = nsnull;
+
+    // check if there is a matching context...
+    result = mStyleSet->FindMatchingContext(this, &matchingSC);
+    if ((NS_SUCCEEDED(result)) && 
+        (nsnull != matchingSC)) {
+      ShareStyleDataFrom(matchingSC);
+#ifdef NOISY_DEBUG
+      printf("SC Data Shared :)\n");
+#endif
+      NS_IF_RELEASE(matchingSC);
+    } else {
+#ifdef NOISY_DEBUG
+      printf("Unique SC Data - Not Shared :(\n");
+#endif
+    }
+  }
+
+  return result;
+}
 
 nsresult StyleContextImpl::ShareStyleDataFrom(nsIStyleContext*aStyleDataDonor)
 {
