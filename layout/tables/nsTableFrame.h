@@ -648,6 +648,10 @@ protected:
   /** returns PR_TRUE if the cached column info is still valid */
   virtual PRBool IsColumnWidthsValid() const;
 
+  nsIFrame* GetFirstBodyRowGroupFrame();
+  PRBool MoveOverflowToChildList();
+  void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
+
 public:
   virtual void InvalidateFirstPassCache();
 

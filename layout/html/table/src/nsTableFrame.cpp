@@ -2638,6 +2638,108 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
 
   return rv;
 }
+  
+nsIFrame*
+nsTableFrame::GetFirstBodyRowGroupFrame()
+{
+  nsIFrame* headerFrame = nsnull;
+  nsIFrame* footerFrame = nsnull;
+
+  for (nsIFrame* kidFrame = mFrames.FirstChild(); nsnull != kidFrame; ) {
+    const nsStyleDisplay *childDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+
+    // We expect the header and footer row group frames to be first, and we only
+    // allow one header and one footer
+    if (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay) {
+      if (headerFrame) {
+        // We already have a header frame and so this header frame is treated
+        // like an ordinary body row group frame
+        return kidFrame;
+      }
+      headerFrame = kidFrame;
+    
+    } else if (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay) {
+      if (footerFrame) {
+        // We already have a footer frame and so this footer frame is treated
+        // like an ordinary body row group frame
+        return kidFrame;
+      }
+      footerFrame = kidFrame;
+
+    } else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
+      return kidFrame;
+    }
+
+    // Get the next child
+    kidFrame->GetNextSibling(&kidFrame);
+  }
+
+  return nsnull;
+}
+
+// Table specific version that takes into account repeated header and footer
+// frames when continuing table frames
+void
+nsTableFrame::PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling)
+{
+  NS_PRECONDITION(nsnull != aFromChild, "null pointer");
+  NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
+#ifdef NS_DEBUG
+  nsIFrame* prevNextSibling;
+  aPrevSibling->GetNextSibling(&prevNextSibling);
+  NS_PRECONDITION(prevNextSibling == aFromChild, "bad prev sibling");
+#endif
+
+  // Disconnect aFromChild from its previous sibling
+  aPrevSibling->SetNextSibling(nsnull);
+
+  if (nsnull != mNextInFlow) {
+    nsTableFrame* nextInFlow = (nsTableFrame*)mNextInFlow;
+
+    // Insert the frames after any repeated header and footer frames
+    nsIFrame* firstBodyFrame = nextInFlow->GetFirstBodyRowGroupFrame();
+    nsIFrame* prevSibling = nsnull;
+    if (firstBodyFrame) {
+      prevSibling = nextInFlow->mFrames.GetPrevSiblingFor(firstBodyFrame);
+    }
+    nextInFlow->mFrames.InsertFrames(mNextInFlow, prevSibling, aFromChild);
+  }
+  else {
+    // Add the frames to our overflow list
+    NS_ASSERTION(mOverflowFrames.IsEmpty(), "bad overflow list");
+    mOverflowFrames.SetFrames(aFromChild);
+  }
+}
+
+// Table specific version that takes into account header and footer row group
+// frames that are repeated for continuing table frames
+//
+// Appends the overflow frames to the end of the child list, just like the
+// nsContainerFrame version does, except that there are no assertions that
+// the child list is empty (it may not be empty, because there may be repeated
+// header/footer frames)
+PRBool
+nsTableFrame::MoveOverflowToChildList()
+{
+  PRBool result = PR_FALSE;
+
+  // Check for an overflow list with our prev-in-flow
+  nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
+  if (nsnull != prevInFlow) {
+    if (prevInFlow->mOverflowFrames.NotEmpty()) {
+      mFrames.Join(this, prevInFlow->mOverflowFrames);
+      result = PR_TRUE;
+    }
+  }
+
+  // It's also possible that we have an overflow list for ourselves
+  if (mOverflowFrames.NotEmpty()) {
+    mFrames.Join(nsnull, mOverflowFrames);
+    result = PR_TRUE;
+  }
+  return result;
+}
 
 /** the second of 2 reflow passes
   */
@@ -2675,12 +2777,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
 
   // Check for an overflow list, and append any row group frames being
   // pushed
-  nsTableFrame* prevInFlow = (nsTableFrame*)mPrevInFlow;
-  if (prevInFlow) {
-    if (prevInFlow->mOverflowFrames.NotEmpty()) {
-      mFrames.Join(this, prevInFlow->mOverflowFrames);
-    }
-  }
+  MoveOverflowToChildList();
 
   // Reflow the existing frames
   if (mFrames.NotEmpty()) {
