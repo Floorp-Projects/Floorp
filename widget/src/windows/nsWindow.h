@@ -178,6 +178,10 @@ protected:
 
     static  PRBool          IsScrollbar(HWND aWnd);
     static  PRBool          EventIsInsideWindow(nsWindow* aWindow); 
+
+    static  nsWindow *      GetNSWindowPtr(HWND aWnd);
+    static  BOOL            SetNSWindowPtr(HWND aWnd, nsWindow * ptr);
+
     virtual PRBool          ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent* event);
     virtual PRBool          DispatchWindowEvent(nsGUIEvent*event, nsEventStatus &aStatus);
