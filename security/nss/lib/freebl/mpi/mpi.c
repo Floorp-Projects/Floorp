@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.6 2000/07/21 21:06:08 nelsonb%netscape.com Exp $
+ *  $Id: mpi.c,v 1.7 2000/07/26 05:39:53 nelsonb%netscape.com Exp $
  */
 
 #include "mpi.h"
@@ -1083,14 +1083,15 @@ mp_err mp_div_2d(mp_int *a, mp_digit d, mp_int *q, mp_int *r)
   if(q) {
     if((res = mp_copy(a, q)) != MP_OKAY)
       return res;
-
-    s_mp_div_2d(q, d);
   }
-
   if(r) {
     if((res = mp_copy(a, r)) != MP_OKAY)
       return res;
-
+  }
+  if(q) {
+    s_mp_div_2d(q, d);
+  }
+  if(r) {
     s_mp_mod_2d(r, d);
   }
 
@@ -2678,16 +2679,15 @@ void     s_mp_div_2d(mp_int *mp, mp_digit d)
 
   s_mp_rshd(mp, d / DIGIT_BIT);
   d %= DIGIT_BIT;
-
-  mask = (1 << d) - 1;
-
-  save = 0;
-  for(ix = USED(mp) - 1; ix >= 0; ix--) {
-    next = DIGIT(mp, ix) & mask;
-    DIGIT(mp, ix) = (DIGIT(mp, ix) >> d) | (save << (DIGIT_BIT - d));
-    save = next;
+  if (d) {
+    mask = (1 << d) - 1;
+    save = 0;
+    for(ix = USED(mp) - 1; ix >= 0; ix--) {
+      next = DIGIT(mp, ix) & mask;
+      DIGIT(mp, ix) = (DIGIT(mp, ix) >> d) | (save << (DIGIT_BIT - d));
+      save = next;
+    }
   }
-
   s_mp_clamp(mp);
 
 } /* end s_mp_div_2d() */
