@@ -630,7 +630,9 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
        return ConsumeText(temp,aToken,aScanner);
     }//if
     if(aToken){
+#if 0
       nsString& theStr=aToken->GetStringValueXXX();
+
       if((kHashsign!=theChar) && (-1==nsHTMLEntities::EntityToUnicode(theStr))){
         //if you're here we have a bogus entity.
         //convert it into a text token.
@@ -640,6 +642,7 @@ nsresult nsHTMLTokenizer::ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanne
         theRecycler->RecycleToken(aToken);
         aToken=theToken;
       }
+#endif
       AddToken(aToken,result,&mTokenDeque,theRecycler);
     }
   }//if

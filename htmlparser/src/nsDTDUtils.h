@@ -155,6 +155,11 @@ public:
     return result;
   }
 
+  PRBool  CanOpenTBody() {
+    PRBool result=!(mHasTBody);
+    return result;
+  }
+
   PRBool  CanOpenTHead() {
     PRBool result=!(mHasTHead || mHasTFoot || mHasTBody);
     return result;
@@ -174,14 +179,42 @@ public:
 };
 
 
+//used for named entities and counters (XXX debug only)
+class CNamedEntity {
+public:
+  CNamedEntity(const nsString& aName,const nsString& aValue) : mName(), mValue() {
+    PRUnichar theFirst=aName.First();
+    PRUnichar theLast=aName.Last();
+    PRInt32   theLen=aName.Length();
+    if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
+      aName.Mid(mName,1,theLen-2);
+    } 
+    else mName=aName;
+
+    theFirst=aValue.First();
+    theLast=aValue.Last();
+    theLen=aValue.Length();
+    if((2<theLen) && (theFirst==theLast) && (kQuote==theFirst)) {
+      aValue.Mid(mValue,1,theLen-2);
+    }
+    else mValue=aValue;
+
+  }
+
+  nsAutoString mName;
+  nsAutoString mValue;
+  PRInt32      mOrdinal;
+};
+
+
 /************************************************************************
   The dtdcontext class defines an ordered list of tags (a context).
  ************************************************************************/
 
 class nsDTDContext {
 public:
-                nsDTDContext();
-                ~nsDTDContext();
+                  nsDTDContext();
+                  ~nsDTDContext();
 
   void            Push(const nsIParserNode* aNode,nsEntryStack* aStyleStack=0);
   nsIParserNode*  Pop(nsEntryStack*& aChildStack);
@@ -209,9 +242,11 @@ public:
   nsresult        GetNodeRecycler(CNodeRecycler*& aNodeRecycler);
   static  void    FreeNodeRecycler(void);
 
+  CNamedEntity*   RegisterEntity(const nsString& aName,const nsString& aValue);
+  CNamedEntity*   GetEntity(const nsString& aName)const;
+
   void            ResetCounters(void);
-  void            ResetCounter(eHTMLTags aTag,PRInt32 aNewValue);
-  PRInt32         IncrementCounter(eHTMLTags aTag);
+  PRInt32         IncrementCounter(eHTMLTags aTag,nsCParserNode& aNode,nsString& aResult);
 
   nsEntryStack    mStack; //this will hold a list of tagentries...
   PRInt32         mResidualStyleCount;
@@ -221,8 +256,10 @@ public:
 
   static   CNodeRecycler* mNodeRecycler;
 
-  CTableState *mTableStates;
+  CTableState     *mTableStates;
   PRInt32         mCounters[NS_HTML_TAG_MAX];
+  nsString        mDefaultEntity;
+  nsDeque         mEntities;
 
 #ifdef  NS_DEBUG
   enum { eMaxTags = 100 };

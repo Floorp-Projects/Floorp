@@ -4,24 +4,24 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of 
  * the License at http://www.mozilla.org/NPL/
- *                          
+ *                            
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or  
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *          
+ *           
  * The Original Code is mozilla.org code. 
  *  
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.  
- *  
+ *   
  * Contributor(s):     
  */          
     
 //#define ENABLE_CRC       
-//#define RICKG_DEBUG     
+//#define RICKG_DEBUG      
  
       
 #include "nsDebug.h"  
@@ -131,7 +131,7 @@ NS_IMPL_RELEASE(COtherDTD)
  *  @param   
  *  @return   
  */ 
-COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSharedNodes(0) {
+COtherDTD::COtherDTD() : nsIDTD(), mSharedNodes(0) {
   NS_INIT_REFCNT();
   mSink = 0; 
   mParser=0;       
@@ -141,14 +141,17 @@ COtherDTD::COtherDTD() : nsIDTD(), mMisplacedContent(0), mSkippedContent(0), mSh
   mHasOpenHead=0;
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
-  mHeadContext=new nsDTDContext();
   mBodyContext=new nsDTDContext();
-  mFormContext=0;
   mTokenizer=0;
   mComputedCRC32=0;
   mExpectedCRC32=0;
   mDTDState=NS_OK;
-  mDocType=ePlainText;
+  mDocType=eHTML4Text;
+  mHadFrameset=PR_FALSE;
+  mHadBody=PR_FALSE;
+  mHasOpenScript=PR_FALSE;
+  mTokenRecycler=0;
+  mParserCommand=eViewNormal;
 
   char* theEnvString = PR_GetEnv("ENABLE_STRICT"); 
   mEnableStrict=PRBool(theEnvString!=0);
@@ -280,7 +283,6 @@ const nsIID& COtherDTD::GetMostDerivedIID(void)const {
  *  @return  
  */
 COtherDTD::~COtherDTD(){
-  delete mHeadContext;
   delete mBodyContext;
 
   NS_IF_RELEASE(mTokenizer);
@@ -336,7 +338,19 @@ NS_HTMLPARS nsresult NS_NewOtherHTMLDTD(nsIDTD** aInstancePtrResult) {
  * @return
  */
 nsresult COtherDTD::CreateNewInstance(nsIDTD** aInstancePtrResult){
-  return NS_NewOtherHTMLDTD(aInstancePtrResult);
+  nsresult result=NS_NewOtherHTMLDTD(aInstancePtrResult);
+
+  if(aInstancePtrResult) {
+    COtherDTD *theOtherDTD=(COtherDTD*)*aInstancePtrResult;
+    if(theOtherDTD) {
+      theOtherDTD->mDTDMode=mDTDMode;
+      theOtherDTD->mParserCommand=mParserCommand;
+      theOtherDTD->mDocType=mDocType;
+      theOtherDTD->mEnableStrict=mEnableStrict;
+    }
+  }
+
+  return result;
 }
 
 /**
@@ -608,6 +622,7 @@ nsresult COtherDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       case eToken_start:
       case eToken_whitespace: 
       case eToken_newline:
+      case eToken_doctypeDecl:
         result=HandleStartToken(theToken); break;
 
       case eToken_end:
@@ -722,7 +737,7 @@ nsresult COtherDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsCParserNo
   MOZ_TIMER_DEBUGLOG(("Start: Parse Time: COtherDTD::WillHandleStartTag(), this=%p\n", this));
   START_TIMER()
 
-  return result;
+  return result; 
 }
   
 
@@ -762,20 +777,20 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
     if(NS_OK==result) {
  
       mLineNumber += aToken->mNewlineCount;
-
+ 
       PRBool theTagWasHandled=PR_FALSE; 
  
-      switch(theChildTag) {      
-        
-        case eHTMLTag_html: 
+      switch(theChildTag) {       
+          
+        case eHTMLTag_html:  
           if(!HasOpenContainer(theChildTag)) { 
             mSink->OpenHTML(*theNode);
             mBodyContext->Push(theNode,0);
           }
           theTagWasHandled=PR_TRUE;  
-          break;    
-           
-        default:   
+          break;      
+              
+        default:    
           CElement* theElement=gElementTable->mElements[theParent];
           if(theElement) {
             result=theElement->HandleStartToken(theNode,theChildTag,mBodyContext,mSink);  
@@ -788,7 +803,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
         DidHandleStartTag(*theNode,theChildTag);  
       }
    
-    } //if         
+    } //if          
   }//if         
       
   RecycleNode(theNode);          
@@ -814,7 +829,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
   nsresult    result=NS_OK;
   eHTMLTags   theChildTag=(eHTMLTags)aToken->GetTypeID();
  
-  #ifdef  RICKG_DEBUG  
+  #ifdef  RICKG_DEBUG   
     WriteTokenToLog(aToken); 
   #endif 
   
@@ -825,7 +840,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
       break;   
         
     case eHTMLTag_script:    
-      mHasOpenScript=PR_FALSE;      
+      mHasOpenScript=PR_FALSE;       
       
     default: 
       PRInt32 theCount=mBodyContext->GetCount();
@@ -838,7 +853,7 @@ nsresult COtherDTD::HandleEndToken(CToken* aToken) {
         nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber); 
         result=theElement->HandleEndToken(&theNode,theChildTag,mBodyContext,mSink);  
       }   
-      break;
+      break; 
   }     
  
   return result;          
@@ -857,14 +872,12 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
   int attr=0;
 
   nsresult result=NS_OK;
-  int theAvailTokenCount=mTokenizer->GetCount() + mSkippedContent.GetSize();
+  int theAvailTokenCount=mTokenizer->GetCount();
   if(aCount<=theAvailTokenCount) {
     CToken* theToken=0; 
     eHTMLTags theSkipTarget=gElementTable->mElements[aTag]->GetSkipTarget();
     for(attr=0;attr<aCount;attr++){  
-      if((eHTMLTag_unknown!=theSkipTarget) && mSkippedContent.GetSize())
-        theToken=(CToken*)mSkippedContent.PopFront();
-      else theToken=mTokenizer->PopToken(); 
+      theToken=mTokenizer->PopToken(); 
       if(theToken)  {
         // Sanitize the key for it might contain some non-alpha-non-digit characters
         // at its end.  Ex. <OPTION SELECTED/> - This will be tokenized as "<" "OPTION",
@@ -886,77 +899,6 @@ nsresult COtherDTD::CollectAttributes(nsCParserNode& aNode,eHTMLTags aTag,PRInt3
   return result; 
 } 
 
-
-/**
- * Causes the next skipped-content token (if any) to
- * be consumed by this node.
- * @update  gess5/11/98 
- * @param   node to consume skipped-content
- * @param   holds the number of skipped content elements encountered
- * @return  Error condition.
- */
-nsresult COtherDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
-
-  eHTMLTags       theNodeTag=(eHTMLTags)aNode.GetNodeType();
-
-  int aIndex=0; 
-  int aMax=mSkippedContent.GetSize();
-  
-  // XXX rickg This linefeed conversion stuff should be moved out of
-  // the parser and into the form element code
-  PRBool aMustConvertLinebreaks = PR_FALSE; 
-  
-  mScratch.SetLength(0);    
-  aNode.SetSkippedContent(mScratch); 
-     
-  for(aIndex=0;aIndex<aMax;aIndex++){
-    CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
-
-    eHTMLTokenTypes theTokenType=(eHTMLTokenTypes)theNextToken->GetTokenType();
-  
-    mScratch.Truncate();
-    // Dont worry about attributes here because it's already stored in 
-    // the start token as mTrailing content and will get appended in 
-    // start token's GetSource();
-    if(eToken_attribute!=theTokenType) { 
-      if (eToken_entity==theTokenType) {
-        if((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag)) {
-          ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
-          // since this is an entity, we know that it's only one character.
-          // check to see if it's a CR, in which case we'll need to do line
-          // termination conversion at the end.
-          aMustConvertLinebreaks |= (mScratch[0] == kCR);
-        }
-      }
-      else theNextToken->GetSource(mScratch);
-  
-      aNode.mSkippedContent->Append(mScratch);
-    }
-    mTokenRecycler->RecycleToken(theNextToken); 
-  }
-    
-  // if the string contained CRs (hence is either CR, or CRLF terminated)
-  // we need to convert line breaks
-  if (aMustConvertLinebreaks)
-  {
-    /*
-    PRInt32  offset;
-    while ((offset = aNode.mSkippedContent.Find("\r\n")) != kNotFound)
-      aNode.mSkippedContent.Cut(offset, 1);		// remove the CR
-  
-    // now replace remaining CRs with LFs
-    aNode.mSkippedContent.ReplaceChar("\r", kNewLine);
-    */
-#if 1
-    nsLinebreakConverter::ConvertStringLineBreaks(*aNode.mSkippedContent,
-         nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
-#endif
-  }
-  
-  // Let's hope that this does not hamper the  PERFORMANCE!!
-  mLineNumber += aNode.mSkippedContent->CountChar(kNewLine);
-  return NS_OK;
-}
             
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
