@@ -487,7 +487,7 @@ NS_IMETHODIMP nsScrollingView::SetDimensions(nscoord width, nscoord height, PRBo
     showVert = NSToCoordRound(scrollWidth);
 
   // Compute the clip view rect
-  clipRect.SetRect(0, 0, PR_MAX((width - showVert), 0), PR_MAX((height - showHorz), 0));
+  clipRect.SetRect(0, 0, PR_MAX((width - showVert), mInsets.left+mInsets.right), PR_MAX((height - showHorz), mInsets.top+mInsets.bottom));
   clipRect.Deflate(mInsets);
 
   // Size and position the clip view
