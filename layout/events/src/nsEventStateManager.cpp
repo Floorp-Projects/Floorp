@@ -194,6 +194,14 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     break;
   case NS_GOTFOCUS:
     {
+      if (!mDocument) {
+        nsCOMPtr<nsIPresShell> presShell;
+        aPresContext->GetShell(getter_AddRefs(presShell));
+        if (presShell) {
+          presShell->GetDocument(&mDocument);
+        }
+      }
+
       if (gLastFocusedDocument == mDocument)
         break;
       
@@ -220,14 +228,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       nsEvent focusevent;
       focusevent.eventStructType = NS_EVENT;
       focusevent.message = NS_FOCUS_CONTENT;
-
-      if (!mDocument) {
-        nsCOMPtr<nsIPresShell> presShell;
-        aPresContext->GetShell(getter_AddRefs(presShell));
-        if (presShell) {
-          presShell->GetDocument(&mDocument);
-        }
-      }
 
       if (mDocument) {
         // fire focus on window, not document
