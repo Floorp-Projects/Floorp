@@ -24,7 +24,9 @@
 
 static nsresult registerLib( const nsCID &cid, const char *libName ) {
     printf( "Registering library %s...", libName );
-    nsresult rv = nsRepository::RegisterFactory( cid,       // Class ID.
+    nsresult rv = nsRepository::RegisterComponent( cid,       // Class ID.
+                                                 NULL,   // Class name.
+                                                 NULL,   // Program ID.
                                                  libName,   // Library name.
                                                  PR_TRUE,   // Replace if already there.
                                                  PR_TRUE ); // Store it in the NS Registry.

@@ -92,17 +92,17 @@ NS_SetupRegistry_1()
    */
   NS_SetupRegistry();
 
-  nsRepository::RegisterFactory(kCAppShellServiceCID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kCCmdLineServiceCID,  APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kCAppShellServiceCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
 //#if defined(XP_PC) || defined(XP_MAC)
-  nsRepository::RegisterFactory(kAppCoresManagerCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kToolkitCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kMailCoreCID,       APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kToolbarCoreCID,    APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kBrowserAppCoreCID, APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kEditorAppCoreCID,  APPCORES_DLL, PR_FALSE, PR_FALSE);
-  nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kAppCoresManagerCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kToolkitCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kMailCoreCID,       NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kToolbarCoreCID,    NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kEditorAppCoreCID,  NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterComponent(kIEditFactoryIID, NULL, NULL, EDITOR_DLL, PR_FALSE, PR_FALSE);
 //#endif
-///  nsRepository::RegisterFactory(kCBrowserControllerCID, BROWSER_DLL, PR_FALSE, PR_FALSE);
+///  nsRepository::RegisterComponent(kCBrowserControllerCID, NULL, NULL, BROWSER_DLL, PR_FALSE, PR_FALSE);
 }
