@@ -615,6 +615,7 @@ sub BuildClientDist()
     InstallFromManifest(":mozilla:netwerk:build:MANIFEST",                         "$distdirectory:netwerk:");
     InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST",                   "$distdirectory:netwerk:");
     InstallFromManifest(":mozilla:netwerk:base:public:MANIFEST_IDL",               "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:netwerk:base:src:MANIFEST_COMPONENTS",           "${dist_dir}Components:");
     InstallFromManifest(":mozilla:netwerk:socket:base:MANIFEST_IDL",               "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:about:public:MANIFEST_IDL",     "$distdirectory:idl:");
     InstallFromManifest(":mozilla:netwerk:protocol:data:public:MANIFEST_IDL",      "$distdirectory:idl:");

@@ -180,6 +180,7 @@ viewer:Components:xpinstall.xpt
 viewer:Components:autocomplete.xpt 
 viewer:Components:xml-rpc.xpt
 viewer:Components:nsDictionary.js
+viewer:Components:nsProxyAutoConfig.js
 viewer:Components:nsXmlRpcClient.js
 viewer:Components:xmlextras.xpt
 viewer:Components:xmlextras.shlb

@@ -59,6 +59,10 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsStreamListenerTee.obj        \
 	$(NULL)
 
+JSFILES = \
+	.\nsProxyAutoConfig.js \
+	$(NULL)
+
 INCS = $(INCS)                  \
         -I$(DEPTH)\dist\include \
         $(NULL)
@@ -67,6 +71,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(LIBRARY)
 	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+	$(MAKE_INSTALL) $(JSFILES) $(DIST)\bin\components
 
 clobber::
         $(RM) $(DIST)\lib\$(LIBRARY_NAME).lib
