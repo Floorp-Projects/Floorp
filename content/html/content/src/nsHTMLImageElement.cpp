@@ -606,7 +606,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
   JSBool ret = JS_ValueToInt32(aContext, argv[0], &width);
   NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Integer);
+  nsHTMLValue widthVal((PRInt32)width, eHTMLUnit_Pixel);
 
   nsresult rv = SetHTMLAttribute(nsHTMLAtoms::width, widthVal, PR_FALSE);
 
@@ -616,7 +616,7 @@ nsHTMLImageElement::Initialize(JSContext* aContext, JSObject *aObj,
     ret = JS_ValueToInt32(aContext, argv[1], &height);
     NS_ENSURE_TRUE(ret, NS_ERROR_INVALID_ARG);
 
-    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Integer);
+    nsHTMLValue heightVal((PRInt32)height, eHTMLUnit_Pixel);
 
     rv = SetHTMLAttribute(nsHTMLAtoms::height, heightVal, PR_FALSE);
   }
