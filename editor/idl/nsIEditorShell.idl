@@ -133,9 +133,6 @@ interface nsIEditorShell : nsISupports
   */
   void Shutdown();
                         
-  /* check a particular window's URL to see if it matches the given URL */
-  boolean checkOpenWindowForURLMatch( in wstring inFileURL, in nsIDOMWindowInternal inCheckWindow); 
-
   /* Commands */
   void Print();
   
