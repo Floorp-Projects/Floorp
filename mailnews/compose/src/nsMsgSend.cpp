@@ -17,7 +17,6 @@
  */ 
 
 #include "msgCore.h"
-
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgCompose.h"
@@ -28,6 +27,7 @@
 #include "nsIMsgHeaderParser.h"
 #include "nsINetService.h"
 #include "nsISmtpService.h"  // for actually sending the message...
+#include "nsINntpService.h"  // for actually posting the message...
 #include "nsMsgCompPrefs.h"
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -38,6 +38,7 @@
 static NS_DEFINE_IID(kIMsgSend, NS_IMSGSEND_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
+static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
@@ -3212,8 +3213,8 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		PUSH_NEWLINE ();
 	}
 
-	nsINetService * pNetService;
-	nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pNetService)
 	{
 		nsString aNSStr;
@@ -3235,8 +3236,6 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			}
 			PUSH_NEWLINE ();
 		}
-
-		pNetService->Release();
 	}
 
 	/* for Netscape Server, Accept-Language data sent in Mail header */
@@ -3637,16 +3636,14 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 	{
 		char* sAppName = nsnull;
 
-		nsINetService * pNetService;
-		nsresult rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+        nsresult rv = NS_OK;
+        NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv);
 		if (NS_SUCCEEDED(rv) && pNetService)
 		{
 			nsString aNSStr;
 
 			pNetService->GetAppCodeName(aNSStr);
 			sAppName = aNSStr.ToNewCString();
-
-			pNetService->Release();
 		}
 	  /* If the URL didn't provide a subject, we will. */
 	  StrAllocCat (extra_headers, "Subject: Form posted from ");
@@ -4919,7 +4916,7 @@ void nsMsgSendMimeDeliveryState::DeliverMessage ()
 		return;
 	}
 }
-#endif /* XP_UNIX */
+#endif /* 0 */
 
 
 #ifdef MAIL_BEFORE_NEWS
@@ -4972,14 +4969,13 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 			PL_strcat (buf2, m_fields->GetBcc());
 	}
 
-	nsISmtpService * smtpService = nsnull;
 	nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
 
-	nsresult rv = nsServiceManager::GetService(kSmtpServiceCID, nsISmtpService::GetIID(), (nsISupports **)&smtpService);
+    nsresult rv = NS_OK;
+    NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv);
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{	
 		rv = smtpService->SendMailMessage(filePath, buf, nsnull, nsnull);
-		nsServiceManager::ReleaseService(kSmtpServiceCID, smtpService);
 	}
 
 	PR_FREEIF(buf); // free the buf because we are done with it....
@@ -4988,36 +4984,20 @@ void nsMsgSendMimeDeliveryState::DeliverFileAsMail ()
 
 void nsMsgSendMimeDeliveryState::DeliverFileAsNews ()
 {
-	URL_Struct *url = NET_CreateURLStruct (m_fields->GetNewspostUrl(), NET_DONT_RELOAD);
-	if (! url) {
-		Fail (MK_OUT_OF_MEMORY, 0);
-		return;
-	}
+  if (m_fields->GetNewsgroups() == nsnull) {
+    return;
+  }
 
-#ifdef UNREADY_CODE
-	FE_Progress (GetContext(), XP_GetString(MK_MSG_DELIV_NEWS));
-#endif
+  nsFilePath filePath (m_msg_file_name ? m_msg_file_name : "");
 
-	/*  put the filename of the message into the post data field and set a flag
-	  in the URL struct to specify that it is a file.
-	*/
-	PR_FREEIF(url->post_data);
-	url->post_data = PL_strdup(m_msg_file_name);
-	url->post_data_size = PL_strlen(url->post_data);
-	url->post_data_is_file = PR_TRUE;
-	url->method = URL_POST_METHOD;
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
 
-	url->fe_data = this;
-	url->internal_url = PR_TRUE;
-
-	url->msg_pane = m_pane;
-
-	/* We can ignore the return value of NET_GetURL() because we have
-	 handled the error in mime_deliver_as_news_exit(). */
-
-/*JFD
-  MSG_UrlQueue::AddUrlToPane (url, mime_deliver_as_news_exit, m_pane, PR_TRUE);
-*/
+  if (NS_SUCCEEDED(rv) && nntpService) {	
+    rv = nntpService->PostMessage(filePath, m_fields->GetSubject(), m_fields->GetNewsgroups(), nsnull, nsnull);
+  }
+  
+  return;
 }
 
 static void

@@ -901,9 +901,6 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 
 		if (mMsgSend)
 			mMsgSend->SendMessage(mMsgCompFields, NULL);
-
-        if (mMsgPost)
-            mMsgPost->PostNewsMessage(mMsgCompFields);
 	}
 
 	if (nsnull != mScriptContext) {
