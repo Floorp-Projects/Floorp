@@ -83,7 +83,7 @@ public:
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
 
 protected:
-  nsGenericHTMLLeafElement mInner;
+  nsGenericHTMLContainerElement mInner;
   nsIStyleSheet* mStyleSheet;
 };
 
