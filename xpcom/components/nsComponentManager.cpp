@@ -3198,7 +3198,7 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     if (NS_FAILED(rv)) return rv;
 
 #ifdef ENABLE_STATIC_COMPONENT_LOADER
-    rv = mStaticComponentLoader->AutoRegisterComponents((PRInt32)when, dir);
+    rv = mStaticComponentLoader->AutoRegisterComponents((PRInt32)when, inDirSpec);
     if (NS_FAILED(rv)) return rv;
 #endif
 
