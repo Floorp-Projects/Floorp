@@ -1578,6 +1578,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
                              PRInt32 aFlag)
 {
   NS_ASSERTION(aChar==kQuote || aChar==kApostrophe,"char is neither quote nor apostrophe");
+  // hold onto this in case this is an unterminated string literal
+  PRUint32 origLen = aString.Length();
 
   static const PRUnichar theTerminalCharsQuote[] = { 
     PRUnichar(kQuote), PRUnichar('&'), PRUnichar(kCR),
@@ -1603,7 +1605,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
                                    *terminateCondition,PR_TRUE,aFlag);
 
   if(NS_SUCCEEDED(result)) {
-    result = aScanner.SkipOver(aChar); // aChar should be " or '
+    result = aScanner.GetChar(aChar); // aChar should be " or '
   }
 
   // Ref: Bug 35806
@@ -1613,10 +1615,14 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
      !aScanner.IsIncremental() && result==kEOF) {
     static const nsReadEndCondition
       theAttributeTerminator(kAttributeTerminalChars);
-    aString.Truncate();
+    aString.Truncate(origLen);
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
     result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
                                      theAttributeTerminator,PR_FALSE,aFlag);
+    if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+      // Remember that this string literal was unterminated.
+      result = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL;
+    }
   }
   return result;
 }
@@ -1687,13 +1693,16 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                 if (NS_OK==result) {
                   if ((kQuote==aChar) || (kApostrophe==aChar)) {
                     aScanner.GetChar(aChar);
-                    PRInt32 quotehere = mTextValue.Length();
+                    if (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE) {
+                      mTextValue.Append(aChar);
+                    }
                     
                     result=ConsumeQuotedString(aChar,mTextValue,mNewlineCount,
                                                aScanner,aFlag);
                     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-                      mTextValue.Insert(aChar,quotehere);
                       mTextValue.Append(aChar);
+                    } else if (result == NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL) {
+                      result = NS_OK;
                     }
                     // According to spec. we ( who? ) should ignore linefeeds. But look,
                     // even the carriage return was getting stripped ( wonder why! ) -
@@ -1739,7 +1748,13 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
             //so let's see what it is. If it's a '"', then assume we're reading
             //from the middle of the value. Try stripping the quote and continuing...
             if (kQuote==aChar){
-              result=aScanner.SkipOver(aChar); //strip quote.
+              if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+                result=aScanner.SkipOver(aChar); //strip quote.
+              } else {
+                aScanner.BindSubstring(mTextKey, wsstart, ++wsend);
+                // I've just incremented wsend.
+                aScanner.SetPosition(wsend);
+              } 
             }
           }
         }//if
