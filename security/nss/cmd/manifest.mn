@@ -62,11 +62,11 @@ DIRS = lib  \
  swfort  \
  tstclnt  \
  smimetools  \
+ modutil \
  $(NULL)
 
 TEMPORARILY_DONT_BUILD = \
  SSLsample \
- modutil \
  $(NULL)
 
 # rsaperf  \
