@@ -1596,49 +1596,49 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
           break;
         }
-        case NS_DOMUI_ACTIVATE:
-        {
-          if (mForm && (oldType == NS_FORM_INPUT_SUBMIT ||
-                        oldType == NS_FORM_INPUT_IMAGE)) {
-            if (mType != NS_FORM_INPUT_SUBMIT && mType != NS_FORM_INPUT_IMAGE) {
-              // If the type has changed to a non-submit type, then we want to
-              // flush the stored submission if there is one (as if the submit()
-              // was allowed to succeed)
-              mForm->FlushPendingSubmission();
+      default:
+        break;
+      }
+
+      if (clickOrExtActivate) {
+        if (mForm && (oldType == NS_FORM_INPUT_SUBMIT ||
+                      oldType == NS_FORM_INPUT_IMAGE)) {
+          if (mType != NS_FORM_INPUT_SUBMIT && mType != NS_FORM_INPUT_IMAGE) {
+            // If the type has changed to a non-submit type, then we want to
+            // flush the stored submission if there is one (as if the submit()
+            // was allowed to succeed)
+            mForm->FlushPendingSubmission();
+          }
+        }
+        switch(mType) {
+        case NS_FORM_INPUT_RESET:
+        case NS_FORM_INPUT_SUBMIT:
+        case NS_FORM_INPUT_IMAGE:
+          if (mForm) {
+            nsFormEvent event((mType == NS_FORM_INPUT_RESET) ?
+                              NS_FORM_RESET : NS_FORM_SUBMIT);
+            event.originator      = this;
+            nsEventStatus status  = nsEventStatus_eIgnore;
+
+            nsIPresShell *presShell = aPresContext->GetPresShell();
+
+            // If |nsIPresShell::Destroy| has been called due to
+            // handling the event (base class HandleDOMEvent, above),
+            // the pres context will return a null pres shell.  See
+            // bug 125624.
+            if (presShell) {
+              nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
+              presShell->HandleDOMEventWithTarget(form, &event, &status);
             }
           }
-          switch(mType) {
-            case NS_FORM_INPUT_RESET:
-            case NS_FORM_INPUT_SUBMIT:
-            case NS_FORM_INPUT_IMAGE:
-              {
-                if (mForm) {
-                  nsFormEvent event((mType == NS_FORM_INPUT_RESET) ?
-                                    NS_FORM_RESET : NS_FORM_SUBMIT);
-                  event.originator      = this;
-                  nsEventStatus status  = nsEventStatus_eIgnore;
+          break;
 
-                  nsIPresShell *presShell = aPresContext->GetPresShell();
-
-                  // If |nsIPresShell::Destroy| has been called due to
-                  // handling the event (base class HandleDOMEvent, above),
-                  // the pres context will return a null pres shell.  See
-                  // bug 125624.
-                  if (presShell) {
-                    nsCOMPtr<nsIContent> form(do_QueryInterface(mForm));
-                    presShell->HandleDOMEventWithTarget(form, &event, &status);
-                  }
-                }
-              }
-              break;
-
-            default:
-              break;
-          } //switch 
-        } break;// NS_DOMUI_ACTIVATE
-      } //switch
+        default:
+          break;
+        } //switch 
+      } //click or outer activate event
     } else {
-      if (aEvent->message == NS_DOMUI_ACTIVATE &&
+      if (clickOrExtActivate &&
           (oldType == NS_FORM_INPUT_SUBMIT || oldType == NS_FORM_INPUT_IMAGE) &&
           mForm) {
         // tell the form to flush a possible pending submission.
