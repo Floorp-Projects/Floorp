@@ -48,6 +48,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFContainer.h"
+#include "nsIRDFContainerUtils.h"
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"

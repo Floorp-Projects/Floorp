@@ -23,7 +23,8 @@
   content model that is to be used with a certain widget.  This class
   is abstract.
  */
- 
+
+#include "nsIRDFContainerUtils.h" 
 #include "nsIRDFContentModelBuilder.h"
 #include "nsIRDFObserver.h"
 #include "nsIDOMNodeObserver.h"
