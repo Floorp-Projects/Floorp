@@ -391,6 +391,18 @@ else
 
 	<listitem>
 	  <para>
+	    Patch Format
+	  </para>
+	  <para>
+	    All patches submitted for inclusion into Bugzilla should be in the form of a
+	    <quote>unified diff</quote>.  This comes from using <quote>diff -u</quote>
+	    instead of simply <quote>diff</quote> when creating your patch.  This will
+	    result in quicker acceptance of the patch.
+	  </para>
+	</listitem>
+
+	<listitem>
+	  <para>
 	    Schema Changes
 	  </para>
 	  <para>
