@@ -1,0 +1,46 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+  A sample of XPConnect. This file contains a WalletEditor interface.
+
+ */
+
+#include "nsISupports.idl"
+#include "domstubs.idl"
+%{C++
+#include "nsIDOMWindow.h"
+%}
+
+[scriptable, uuid(0A904580-1C88-11d3-ABA9-0080C787AD96)]
+interface nsIWalletEditor : nsISupports
+{
+    void SetValue(in string aValue, in nsIDOMWindow win);
+    string GetValue();
+};
+
+
+%{ C++
+// {F86A2E60-1C6A-11d3-ABA9-0080C787AD96}
+#define NS_WALLETEDITOR_CID \
+{ 0xf86a2e60, 0x1c6a, 0x11d3, { 0xab, 0xa9, 0x0, 0x80, 0xc7, 0x87, 0xad, 0x96 } }
+
+extern nsresult
+NS_NewWalletEditor(nsIWalletEditor** aWalletEditor);
+%}
