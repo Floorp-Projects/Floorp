@@ -384,20 +384,13 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
     if (PR_TRUE==gsDebug) printf("  availWidth for this cell is %d\n", availWidth);
 
     prevColIndex = cellColIndex + (cellColSpan-1);  // remember the rightmost column this cell spans into
-
-    // If the available width is the same as last time we reflowed the cell,
-    // then just use the previous desired size
-    //
-    // XXX Wouldn't it be cleaner (but slightly less efficient) for the row to
-    // just reflow the cell, and have the cell decide whether it could use the
-    // cached value rather than having the row make that determination?
     nsReflowMetrics desiredSize(pKidMaxElementSize);
 
-    // XXX kipp added the check for a non-null pKidMaxElementSize; if
-    // we need the max-element-size we must reflow the child to get
-    // it, right?
-    if ((nsnull != pKidMaxElementSize) ||
-        (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth()))
+    // If the available width is the same as last time we reflowed the cell,
+    // then just use the previous desired size and max element size.
+    // if we need the max-element-size we don't need to reflow.
+    // we just grab it from the cell frame which remembers it (see the else clause below)
+    if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
     {
       // Always let the cell be as high as it wants. We ignore the height that's
       // passed in and always place the entire row. Let the row group decide
@@ -433,6 +426,8 @@ nsresult nsTableRowFrame::ResizeReflow(nsIPresContext&  aPresContext,
       nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetDesiredSize();
       desiredSize.width = priorSize.width;
       desiredSize.height = priorSize.height;
+      if (nsnull != pKidMaxElementSize) 
+        *pKidMaxElementSize = ((nsTableCellFrame *)kidFrame)->GetMaxElementSize();
     }
 
     // Place the child after taking into account its margin and attributes
