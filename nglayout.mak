@@ -18,10 +18,10 @@ IGNORE_MANIFEST=1
 THIS_MAKEFILE=nglayout.mak
 THAT_MAKEFILE=makefile.win
 
-!if !defined(MODULAR_NETLIB) || !defined(STANDALONE_IMAGE_LIB)
+!if !defined(MODULAR_NETLIB) || !defined(STANDALONE_IMAGE_LIB) || !defined(NGLAYOUT_PLUGINS)
 ERR_MSG = ^
-You need to set MODULAR_NETLIB=1 and STANDALONE_IMAGE_LIB=1 ^
-in your environment.
+You need to set MODULAR_NETLIB=1, STANDALONE_IMAGE_LIB=1 ^
+and NGLAYOUT_PLUGINS=1 in your environment.
 !ERROR $(ERR_MSG)
 !endif
 

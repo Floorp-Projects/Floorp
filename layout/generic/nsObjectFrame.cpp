@@ -28,6 +28,7 @@
 #include "nsplugin.h"
 #include "nsIPluginHost.h"
 #include "nsString.h"
+#include "nsIContentViewerContainer.h"
 #include "prmem.h"
 
 #define nsObjectFrameSuper nsLeafFrame
@@ -199,38 +200,46 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
     }
 
     static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+    static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
-    nsISupports    *container, *pluginsup;
-    nsIPluginHost  *pm;
+    nsISupports               *container, *pluginsup;
+    nsIPluginHost             *pm;
+    nsIContentViewerContainer *cv;
 
     rv = aPresContext.GetContainer(&container);
 
     if (NS_OK == rv) {
-      rv = container->QueryInterface(kIPluginHostIID, (void **)&pm);
+      rv = container->QueryInterface(kIContentViewerContainerIID, (void **)&cv);
 
       if (NS_OK == rv) {
-        nsString  type;
-        char      *buf;
-        PRInt32   buflen;
+        rv = cv->QueryCapability(kIPluginHostIID, (void **)&pm);
 
-        mContent->GetAttribute(nsString("type"), type);
+        if (NS_OK == rv) {
+          nsString  type;
+          char      *buf;
+          PRInt32   buflen;
 
-        buflen = type.Length();
+          mContent->GetAttribute(nsString("type"), type);
 
-        if (buflen > 0) {
-          buf = (char *)PR_Malloc(buflen + 1);
+          buflen = type.Length();
 
-          if (nsnull != buf) {
-            type.ToCString(buf, buflen + 1);
+          if (buflen > 0) {
+            buf = (char *)PR_Malloc(buflen + 1);
 
-            rv = pm->InstantiatePlugin(buf, &pluginsup);
+            if (nsnull != buf) {
+              type.ToCString(buf, buflen + 1);
 
-            if (NS_OK == rv) {
+              rv = pm->InstantiatePlugin(buf, &pluginsup);
+
+              if (NS_OK == rv) {
+              }
             }
           }
+
+          NS_RELEASE(pm);
         }
 
-        NS_RELEASE(pm);
+        NS_RELEASE(cv);
       }
 
       NS_RELEASE(container);

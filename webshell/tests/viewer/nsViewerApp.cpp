@@ -35,11 +35,6 @@
 #include "JSConsole.h"
 #endif
 
-#ifdef VIEWER_PLUGINS
-static nsIPluginManager *gPluginManager = nsnull;
-static nsIPluginHost *gPluginHost = nsnull;
-#endif
-
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
 extern "C" int NET_PollSockets();
@@ -142,26 +137,6 @@ nsViewerApp::Initialize(int argc, char** argv)
   gRelatedLinks = mRelatedLinks;
   if (mRelatedLinks) {
     mRLWindow = mRelatedLinks->MakeRLWindowWithCallback(DumpRLValues, this);
-  }
-#endif
-
-#ifdef VIEWER_PLUGINS
-  if (nsnull == gPluginManager) {
-    rv = NSRepository::CreateInstance(kCPluginHostCID, nsnull,
-                                      kIPluginManagerIID,
-                                      (void**)&gPluginManager);
-    if (NS_OK==rv)
-    {
-      if (NS_OK == gPluginManager->QueryInterface(kIPluginHostIID,
-                                                  (void **)&gPluginHost))
-      {
-        gPluginHost->Init();
-        gPluginHost->LoadPlugins();
-      }
-    }
-
-    // It's ok if we can't host plugins
-    rv = NS_OK;
   }
 #endif
 

@@ -23,10 +23,7 @@
 #include "nsWidgetsCID.h"
 #include "nsGfxCIID.h"
 #include "nsViewsCID.h"
-
-#ifdef VIEWER_PLUGINS
 #include "nsPluginsCID.h"
-#endif
 
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -77,10 +74,7 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
-
-#ifdef VIEWER_PLUGINS
 static NS_DEFINE_IID(kCPluginHostCID, NS_PLUGIN_HOST_CID);
-#endif
 
 extern "C" void
 NS_SetupRegistry()
@@ -110,8 +104,5 @@ NS_SetupRegistry()
   NSRepository::RegisterFactory(kCDocumentLoaderCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kThrobberCID, WEB_DLL, PR_FALSE, PR_FALSE);
   NSRepository::RegisterFactory(kPrefCID, PREF_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef VIEWER_PLUGINS
   NSRepository::RegisterFactory(kCPluginHostCID, PLUGIN_DLL, PR_FALSE, PR_FALSE);
-#endif
 }
