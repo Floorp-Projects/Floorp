@@ -93,8 +93,6 @@ pref("mail.identity.username",              "");
 pref("mail.identity.useremail",             "");
 pref("mail.use_fcc",                        true);
 pref("mail.cc_self",                        false);
-pref("mail.limit_message_size",             false);
-pref("mail.max_size",                       50); // download message size limit
 pref("mail.strictly_mime",                  false);
 pref("mail.strictly_mime_headers",          true);
 pref("mail.file_attach_binary",             false);
@@ -257,8 +255,7 @@ pref("mail.server.default.download_on_biff", false);
 pref("mail.server.default.check_time", 10);
 // "mail.server.default.check_new_mail" now lives in the protocol info
 pref("mail.server.default.dot_fix", true);
-pref("mail.server.default.limit_message_size", false);
-pref("mail.server.default.limit_offline_message_size", true);
+pref("mail.server.default.limit_offline_message_size", false);
 pref("mail.server.default.max_size", 50);
 pref("mail.server.default.auth_login", true);
 pref("mail.server.default.delete_mail_left_on_server", false);
