@@ -8,8 +8,8 @@
 
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/07/20 19:05:19 $ 
+# $Revision: 1.5 $ 
+# $Date: 2002/05/03 02:21:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState.pm,v $ 
 # $Name:  $ 
@@ -58,12 +58,19 @@ use TinderHeader::BasicTxtHeader;
 
 @ISA = qw(TinderHeader::BasicTxtHeader);
 
-$VERSION = ( qw $Revision: 1.4 $ )[1];
+$VERSION = ( qw $Revision: 1.5 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
 
 $TinderHeader::NAMES2OBJS{ 'TreeState' } = 
   TinderHeader::TreeState->new();
+
+sub get_all_sorted_setable_tree_states {
+
+    my @valid_states = TreeData::get_all_sorted_tree_states();
+
+  return @valid_states;
+}
 
 1;

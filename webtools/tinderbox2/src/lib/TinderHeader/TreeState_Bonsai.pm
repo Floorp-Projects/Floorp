@@ -6,8 +6,8 @@
 # the current tree state using the bonsai conventions when we have
 # implemented it.  
 
-# $Revision: 1.6 $ 
-# $Date: 2001/08/13 19:49:36 $ 
+# $Revision: 1.7 $ 
+# $Date: 2002/05/03 02:21:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderHeader/TreeState_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@ use BonsaiData;
 
 
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 # load the simple name of this module into TinderHeader so we can
 # track the implementations provided.
@@ -85,6 +85,13 @@ sub savetree_header {
   BonsaiData::save_tree_state($tree, $value);
 
   return ;
+}
+
+sub get_all_sorted_setable_tree_states {
+
+    my @valid_states = ('Open', 'Closed' );
+
+    return @valid_states;
 }
 
 1;
