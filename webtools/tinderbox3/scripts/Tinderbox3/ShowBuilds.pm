@@ -8,7 +8,8 @@ use Tinderbox3::BonsaiColumns;
 use Tinderbox3::BuildTimeColumn;
 
 sub print_showbuilds {
-  my ($p, $dbh, $fh, $tree, $start_time, $end_time) = @_;
+  my ($p, $dbh, $fh, $tree, $start_time, $end_time,
+      $min_row_size, $max_row_size) = @_;
 
   #
   # Get tree and patch info
@@ -19,7 +20,9 @@ sub print_showbuilds {
   }
   my ($field_short_names, $field_processors_str, $header, $footer,
       $special_message, $sheriff, $build_engineer, $cvs_co_date, $status,
-      $min_row_size, $max_row_size) = @{$tree_info};
+      $default_min_row_size, $default_max_row_size) = @{$tree_info};
+  $min_row_size = $default_min_row_size if !defined($min_row_size);
+  $max_row_size = $default_max_row_size if !defined($max_row_size);
   my %field_processors;
   # Create the handlers for the different fields
   require Tinderbox3::FieldProcessors::default;
