@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.11 2001/06/19 05:34:47 javi%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.12 2001/06/20 22:41:29 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -339,6 +339,10 @@ finish:
   }
   if (ecx)
     SEC_PKCS12DestroyExportContext(ecx);
+  if (this->mTmpFile) {
+    PR_Close(this->mTmpFile);
+    this->mTmpFile = NULL;
+  }
   return rv;
 }
 
