@@ -122,7 +122,7 @@ nsrefcnt ImageRequestImpl::Release(void)
 {
   if (--mRefCnt == 0) {
     IL_DestroyImage(mImageReq);
-    delete this;
+    NS_DELETEXPCOM(this);
     return 0;
   }
   return mRefCnt;
