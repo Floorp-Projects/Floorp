@@ -40,7 +40,7 @@
 
 #include "resource.h"
 
-#include "Plugin.h" // this includes npapi.h
+#include "plugin.h" // this includes npapi.h
 #include "utils.h"
 #include "dbg.h"
 
