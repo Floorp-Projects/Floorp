@@ -404,6 +404,11 @@ frameset {
   overflow: -moz-hidden-unscrollable;
   position: static ! important;
   float: none ! important;
+  border: none ! important;
+}
+
+frame {
+  border: none ! important;
 }
 
 iframe {
