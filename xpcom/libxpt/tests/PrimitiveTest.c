@@ -38,19 +38,23 @@
 #define TRY(msg, cond)		TRY_(msg, cond, 0)
 #define TRY_Q(msg, cond)	TRY_(msg, cond, 1);
 
+XPTString in_str = { 4, "bazz" };
+
 struct TestData {
     uint32	bit32;
     uint16      bit16;
     uint8       bit8[2];
     char	*cstr;
-} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, "foobar"},
-  output = {0, 0, {0, 0}, NULL };
+    XPTString   *str;
+} input = { 0xdeadbeef, 0xcafe, {0xba, 0xbe}, "foobar", &in_str},
+  output = {0, 0, {0, 0}, NULL, NULL };
 
 void
 dump_struct(char *label, struct TestData *str)
 {
-    fprintf(stderr, "%s: {%#08x, %#04x, {%#02x, %#02x}, %s\n", label,
-	    str->bit32, str->bit16, str->bit8[0], str->bit8[1], str->cstr);
+    fprintf(stderr, "%s: {%#08x, %#04x, {%#02x, %#02x}, %s, %d/%s}\n",
+	    label, str->bit32, str->bit16, str->bit8[0], str->bit8[1],
+	    str->cstr, str->str->length, str->str->bytes);
 }
 
 PRBool
@@ -61,6 +65,7 @@ XDR(XPTCursor *cursor, struct TestData *str)
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[0]));
     TRY("Do8",  XPT_Do8 (cursor, &str->bit8[1]));
     TRY("DoCString", XPT_DoCString(cursor, &str->cstr));
+    TRY("DoString", XPT_DoString(cursor, &str->str));
     return 0;
 }
 
