@@ -64,12 +64,6 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/base/txExpandedNameMap.$(OBJ_SUFFIX) \
   ../source/base/txNamespaceMap.$(OBJ_SUFFIX) \
   ../source/base/txURIUtils.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaAttr.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaDocument.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaElement.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaNamedNodeMap.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaNode.$(OBJ_SUFFIX) \
-  ../source/xml/dom/mozImpl/MozillaProcInstruction.$(OBJ_SUFFIX) \
   ../source/xpath/AdditiveExpr.$(OBJ_SUFFIX) \
   ../source/xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
   ../source/xpath/BooleanExpr.$(OBJ_SUFFIX) \
@@ -97,6 +91,7 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/StringFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/StringResult.$(OBJ_SUFFIX) \
   ../source/xpath/txLiteralExpr.$(OBJ_SUFFIX) \
+  ../source/xpath/txMozillaXPathTreeWalker.$(OBJ_SUFFIX) \
   ../source/xpath/txNameTest.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeSet.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
@@ -107,7 +102,6 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/UnaryExpr.$(OBJ_SUFFIX) \
   ../source/xpath/VariableRefExpr.$(OBJ_SUFFIX) \
   ../source/xml/XMLUtils.$(OBJ_SUFFIX) \
-  ../source/xml/XMLDOMUtils.$(OBJ_SUFFIX) \
   ../source/xml/parser/txXMLParser.$(OBJ_SUFFIX) \
   ../source/xslt/txBufferingHandler.$(OBJ_SUFFIX) \
   ../source/xslt/txOutputFormat.$(OBJ_SUFFIX) \
@@ -150,6 +144,6 @@ EXTRA_DSO_LDOPTS += \
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
-  -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/dom \
-  -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xpath \
-  -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions
+  -I$(srcdir)/../source/xml -I$(srcdir)/../source/xml/parser \
+  -I$(srcdir)/../source/xpath -I$(srcdir)/../source/xslt/util \
+  -I$(srcdir)/../source/xslt/functions

@@ -203,7 +203,7 @@ txResultRecycler::getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
     else {
         *aResult = NS_STATIC_CAST(txNodeSet*, mNodeSetResults.pop());
         (*aResult)->clear();
-        (*aResult)->append(aNodeSet);
+        (*aResult)->append(*aNodeSet);
         (*aResult)->mRecycler = this;
     }
     NS_ADDREF(*aResult);
@@ -212,7 +212,7 @@ txResultRecycler::getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(Node* aNode, txAExprResult** aResult)
+txResultRecycler::getNodeSet(const txXPathNode& aNode, txAExprResult** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
         *aResult = new txNodeSet(aNode, this);
@@ -231,7 +231,7 @@ txResultRecycler::getNodeSet(Node* aNode, txAExprResult** aResult)
 }
 
 nsresult
-txResultRecycler::getNodeSet(Node* aNode, txNodeSet** aResult)
+txResultRecycler::getNodeSet(const txXPathNode& aNode, txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
         *aResult = new txNodeSet(aNode, this);

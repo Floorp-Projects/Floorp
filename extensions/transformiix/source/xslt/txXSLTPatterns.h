@@ -53,7 +53,8 @@ public:
     /*
      * Determines whether this Pattern matches the given node.
      */
-    virtual MBool matches(Node* aNode, txIMatchContext* aContext) = 0;
+    virtual MBool matches(const txXPathNode& aNode,
+                          txIMatchContext* aContext) = 0;
 
     /*
      * Returns the default priority of this Pattern.
@@ -85,7 +86,7 @@ public:
 };
 
 #define TX_DECL_PATTERN \
-    MBool matches(Node* aNode, txIMatchContext* aContext); \
+    MBool matches(const txXPathNode& aNode, txIMatchContext* aContext); \
     double getDefaultPriority(); \
     void toString(nsAString& aDest)
 #define TX_DECL_PATTERN2 \

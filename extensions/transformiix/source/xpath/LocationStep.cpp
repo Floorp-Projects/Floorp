@@ -53,75 +53,92 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     nsresult rv = aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    MBool reverse = MB_FALSE;
+    txXPathTreeWalker walker(aContext->getContextNode());
 
-    Node* node = aContext->getContextNode();
     switch (mAxisIdentifier) {
-        case ANCESTOR_AXIS :
-            node = node->getXPathParent();
-            //-- do not break here
-        case ANCESTOR_OR_SELF_AXIS :
-            reverse = MB_TRUE;
-            while (node) {
-                if (mNodeTest->matches(node, aContext)) {
-                    nodes->append(node);
-                }
-                node = node->getXPathParent();
-            }
-            break;
-        case ATTRIBUTE_AXIS :
+        case ANCESTOR_AXIS:
         {
-            NamedNodeMap* atts = node->getAttributes();
-            if (atts) {
-                for (PRUint32 i = 0; i < atts->getLength(); i++) {
-                    Node* attr = atts->item(i);
-                    if (attr->getNamespaceID() != kNameSpaceID_XMLNS &&
-                        mNodeTest->matches(attr, aContext))
-                        nodes->append(attr);
+            if (!walker.moveToParent()) {
+                break;
+            }
+            // do not break here
+        }
+        case ANCESTOR_OR_SELF_AXIS:
+        {
+            nodes->setReverse();
+
+            do {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
+            } while (walker.moveToParent());
+
+            break;
+        }
+        case ATTRIBUTE_AXIS:
+        {
+            if (!walker.moveToFirstAttribute()) {
+                break;
+            }
+
+            do {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
+            } while (walker.moveToNextAttribute());
+            break;
+        }
+        case DESCENDANT_OR_SELF_AXIS:
+        {
+            if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
+            }
+            // do not break here
+        }
+        case DESCENDANT_AXIS:
+        {
+            fromDescendants(walker.getCurrentPosition(), aContext, nodes);
+            break;
+        }
+        case FOLLOWING_AXIS:
+        {
+            if (walker.getNodeType() == txXPathNodeType::ATTRIBUTE_NODE) {
+                walker.moveToParent();
+                fromDescendants(walker.getCurrentPosition(), aContext, nodes);
+            }
+            PRBool cont = PR_TRUE;
+            while (!walker.moveToNextSibling()) {
+                if (!walker.moveToParent()) {
+                    cont = PR_FALSE;
+                    break;
+                }
+            }
+            while (cont) {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
+
+                fromDescendants(walker.getCurrentPosition(), aContext, nodes);
+
+                while (!walker.moveToNextSibling()) {
+                    if (!walker.moveToParent()) {
+                        cont = PR_FALSE;
+                        break;
+                    }
                 }
             }
             break;
         }
-        case DESCENDANT_OR_SELF_AXIS :
-            if (mNodeTest->matches(node, aContext))
-                nodes->append(node);
-            //-- do not break here
-        case DESCENDANT_AXIS :
-            fromDescendants(node, aContext, nodes);
-            break;
-        case FOLLOWING_AXIS :
+        case FOLLOWING_SIBLING_AXIS:
         {
-            if ( node->getNodeType() == Node::ATTRIBUTE_NODE) {
-                node = node->getXPathParent();
-                fromDescendants(node, aContext, nodes);
-            }
-            while (node && !node->getNextSibling()) {
-                node = node->getXPathParent();
-            }
-            while (node) {
-                node = node->getNextSibling();
-
-                if (mNodeTest->matches(node, aContext))
-                    nodes->append(node);
-
-                if (node->hasChildNodes())
-                    fromDescendants(node, aContext, nodes);
-
-                while (node && !node->getNextSibling()) {
-                    node = node->getParentNode();
+            while (walker.moveToNextSibling()) {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
                 }
             }
             break;
         }
-        case FOLLOWING_SIBLING_AXIS :
-            node = node->getNextSibling();
-            while (node) {
-                if (mNodeTest->matches(node, aContext))
-                    nodes->append(node);
-                node = node->getNextSibling();
-            }
-            break;
-        case NAMESPACE_AXIS : //-- not yet implemented
+        case NAMESPACE_AXIS: //-- not yet implemented
 #if 0
             // XXX DEBUG OUTPUT
             cout << "namespace axis not yet implemented"<<endl;
@@ -129,106 +146,121 @@ LocationStep::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
             break;
         case PARENT_AXIS :
         {
-            Node* parent = node->getXPathParent();
-            if (mNodeTest->matches(parent, aContext))
-                    nodes->append(parent);
+            if (walker.moveToParent() &&
+                mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
+            }
             break;
         }
-        case PRECEDING_AXIS :
-            reverse = MB_TRUE;
-            while (node && !node->getPreviousSibling()) {
-                node = node->getXPathParent();
+        case PRECEDING_AXIS:
+        {
+            nodes->setReverse();
+
+            PRBool cont = PR_TRUE;
+            while (!walker.moveToPreviousSibling()) {
+                if (!walker.moveToParent()) {
+                    cont = PR_FALSE;
+                    break;
+                }
             }
-            while (node) {
-                node = node->getPreviousSibling();
+            while (cont) {
+                fromDescendantsRev(walker.getCurrentPosition(), aContext, nodes);
 
-                if (node->hasChildNodes())
-                    fromDescendantsRev(node, aContext, nodes);
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
 
-                if (mNodeTest->matches(node, aContext))
-                    nodes->append(node);
-
-                while (node && !node->getPreviousSibling()) {
-                    node = node->getParentNode();
+                while (!walker.moveToPreviousSibling()) {
+                    if (!walker.moveToParent()) {
+                        cont = PR_FALSE;
+                        break;
+                    }
                 }
             }
             break;
+        }
         case PRECEDING_SIBLING_AXIS:
-            reverse = MB_TRUE;
-            node = node->getPreviousSibling();
-            while (node) {
-                if (mNodeTest->matches(node, aContext))
-                    nodes->append(node);
-                node = node->getPreviousSibling();
-            }
-            break;
-        case SELF_AXIS :
-            if (mNodeTest->matches(node, aContext))
-                nodes->append(node);
-            break;
-        default: //-- Children Axis
         {
-            node = node->getFirstChild();
-            while (node) {
-                if (mNodeTest->matches(node, aContext))
-                    nodes->append(node);
-                node = node->getNextSibling();
+            nodes->setReverse();
+
+            while (walker.moveToPreviousSibling()) {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
             }
             break;
         }
-    } //-- switch
+        case SELF_AXIS:
+        {
+            if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                nodes->append(walker.getCurrentPosition());
+            }
+            break;
+        }
+        default: // Children Axis
+        {
+            if (!walker.moveToFirstChild()) {
+                break;
+            }
 
-    //-- apply predicates
+            do {
+                if (mNodeTest->matches(walker.getCurrentPosition(), aContext)) {
+                    nodes->append(walker.getCurrentPosition());
+                }
+            } while (walker.moveToNextSibling());
+            break;
+        }
+    }
+
+    // Apply predicates
     if (!isEmpty()) {
         rv = evaluatePredicates(nodes, aContext);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    if (reverse)
-        nodes->reverse();
+    nodes->unsetReverse();
 
     NS_ADDREF(*aResult = nodes);
 
     return NS_OK;
 }
 
-void LocationStep::fromDescendants(Node* node,
-                                   txIMatchContext* cs,
-                                   txNodeSet* nodes)
+void LocationStep::fromDescendants(const txXPathNode& aNode,
+                                   txIMatchContext* aCs,
+                                   txNodeSet* aNodes)
 {
-    if (!node)
+    txXPathTreeWalker walker(aNode);
+    if (!walker.moveToFirstChild()) {
         return;
-
-    Node* child = node->getFirstChild();
-    while (child) {
-        if (mNodeTest->matches(child, cs))
-            nodes->append(child);
-        //-- check childs descendants
-        if (child->hasChildNodes())
-            fromDescendants(child, cs, nodes);
-
-        child = child->getNextSibling();
     }
+
+    do {
+        const txXPathNode& child = walker.getCurrentPosition();
+        if (mNodeTest->matches(child, aCs)) {
+            aNodes->append(child);
+        }
+        fromDescendants(child, aCs, aNodes);
+    } while (walker.moveToNextSibling());
 }
 
-void LocationStep::fromDescendantsRev(Node* node,
-                                      txIMatchContext* cs,
-                                      txNodeSet* nodes)
+void LocationStep::fromDescendantsRev(const txXPathNode& aNode,
+                                      txIMatchContext* aCs,
+                                      txNodeSet* aNodes)
 {
-    if (!node)
+    txXPathTreeWalker walker(aNode);
+    if (!walker.moveToLastChild()) {
         return;
-
-    Node* child = node->getLastChild();
-    while (child) {
-        //-- check childs descendants
-        if (child->hasChildNodes())
-            fromDescendantsRev(child, cs, nodes);
-
-        if (mNodeTest->matches(child, cs))
-            nodes->append(child);
-
-        child = child->getPreviousSibling();
     }
+
+    do {
+        const txXPathNode& child = walker.getCurrentPosition();
+        fromDescendantsRev(child, aCs, aNodes);
+
+        if (mNodeTest->matches(child, aCs)) {
+            aNodes->append(child);
+        }
+
+    } while (walker.moveToPreviousSibling());
 }
 
 /**

@@ -43,10 +43,10 @@
 #include "baseutils.h"
 #include "List.h"
 #include "nsIAtom.h"
+#include "txXPathNode.h"
 
 class Element;
 class Expr;
-class Node;
 class txExecutionState;
 class txNodeSet;
 class TxObject;

@@ -45,12 +45,21 @@ RootExpr::RootExpr(MBool aSerialize) {
 nsresult
 RootExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
 {
-    Node* context = aContext->getContextNode();
-    if (context->getNodeType() != Node::DOCUMENT_NODE) {
-        context = context->getOwnerDocument();
+    const txXPathNode& context = aContext->getContextNode();
+    nsAutoPtr<txXPathNode> document(txXPathNodeUtils::getDocument(context));
+    if (!document) {
+        nsRefPtr<txNodeSet> nodes;
+        aContext->recycler()->getNodeSet(getter_AddRefs(nodes));
+        if (!nodes) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        NS_ADDREF(*aResult = nodes);
+
+        return NS_OK;
     }
 
-    return aContext->recycler()->getNodeSet(context, aResult);
+    return aContext->recycler()->getNodeSet(*document, aResult);
 } //-- evaluate
 
 /**

@@ -45,7 +45,6 @@
 #include "ExprResult.h"
 #include "Expr.h"
 #include "txStringUtils.h"
-#include "txNodeSet.h"
 #include "prmem.h"
 #include "nsQuickSort.h"
 

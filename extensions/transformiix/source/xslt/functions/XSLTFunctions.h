@@ -179,9 +179,6 @@ public:
     GenerateIdFunctionCall();
 
     TX_DECL_FUNCTION;
-
-private:
-    static const char printfFmt[];
 };
 
 /**

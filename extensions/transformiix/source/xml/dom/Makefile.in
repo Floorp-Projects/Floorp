@@ -26,9 +26,7 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef TX_EXE
-DIRS		= mozImpl
-else
+ifdef TX_EXE
 DIRS            = standalone
 endif
 

@@ -37,8 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "txNamespaceMap.h"
-#include "dom.h"
 #include "txAtoms.h"
+#include "txXPathNode.h"
 
 txNamespaceMap::txNamespaceMap()
 {

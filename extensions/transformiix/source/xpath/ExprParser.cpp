@@ -45,7 +45,7 @@
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 #include "txStringUtils.h"
-
+#include "txXPathNode.h"
 
 /**
  * Creates an Attribute Value Template using the given value
@@ -692,11 +692,11 @@ txExprParser::createLocationStep(txExprLexer& lexer, txIParseContext* aContext,
                     switch (axisIdentifier) {
                         case LocationStep::ATTRIBUTE_AXIS:
                             nodeTest = new txNameTest(prefix, lName, nspace,
-                                                      Node::ATTRIBUTE_NODE);
+                                                      txXPathNodeType::ATTRIBUTE_NODE);
                             break;
                         default:
                             nodeTest = new txNameTest(prefix, lName, nspace,
-                                                      Node::ELEMENT_NODE);
+                                                      txXPathNodeType::ELEMENT_NODE);
                             break;
                     }
                     NS_ENSURE_TRUE(nodeTest, NS_ERROR_OUT_OF_MEMORY);

@@ -80,7 +80,7 @@ public:
         return mRefCnt;
     }
 
-    txInstruction* findTemplate(Node* aNode,
+    txInstruction* findTemplate(const txXPathNode& aNode,
                                 const txExpandedName& aMode,
                                 txIMatchContext* aContext,
                                 ImportFrame* aImportedBy,
@@ -91,7 +91,8 @@ public:
     txOutputFormat* getOutputFormat();
     GlobalVariable* getGlobalVariable(const txExpandedName& aName);
     const txExpandedNameMap& getKeyMap();
-    PRBool isStripSpaceAllowed(Node* aNode, txIMatchContext* aContext);
+    PRBool isStripSpaceAllowed(const txXPathNode& aNode,
+                               txIMatchContext* aContext);
 
     /**
      * Called by the stylesheet compiler once all stylesheets has been read.
@@ -212,12 +213,12 @@ class txStripSpaceTest {
 public:
     txStripSpaceTest(nsIAtom* aPrefix, nsIAtom* aLocalName, PRInt32 aNSID,
                      MBool stripSpace)
-        : mNameTest(aPrefix, aLocalName, aNSID, Node::ELEMENT_NODE),
+        : mNameTest(aPrefix, aLocalName, aNSID, txXPathNodeType::ELEMENT_NODE),
           mStrips(stripSpace)
     {
     }
 
-    MBool matches(Node* aNode, txIMatchContext* aContext) {
+    MBool matches(const txXPathNode& aNode, txIMatchContext* aContext) {
         return mNameTest.matches(aNode, aContext);
     }
 

@@ -79,7 +79,10 @@ CPPSRCS += nsXPathEvaluator.cpp \
            nsXPathExpression.cpp \
            nsXPathNSResolver.cpp \
            nsXPathResult.cpp \
-           nsXPath1Scheme.cpp
+           nsXPath1Scheme.cpp \
+           txMozillaXPathTreeWalker.cpp
+else
+CPPSRCS += txStandaloneXPathTreeWalker.cpp
 endif
 
 include $(topsrcdir)/config/rules.mk

@@ -29,7 +29,6 @@
 
 #include "Expr.h"
 #include "txNodeSet.h"
-#include "XMLDOMUtils.h"
 #include "txIXPathContext.h"
 
 /**
@@ -58,7 +57,8 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
             strResult->mValue.Truncate();
-            XMLDOMUtils::getNodeValue(nodeSet->get(i), strResult->mValue);
+            txXPathNodeUtils::appendNodeValue(nodeSet->get(i),
+                                              strResult->mValue);
             if (compareResults(aContext, strResult, aRight)) {
                 return PR_TRUE;
             }
@@ -82,7 +82,8 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
         PRInt32 i;
         for (i = 0; i < nodeSet->size(); ++i) {
             strResult->mValue.Truncate();
-            XMLDOMUtils::getNodeValue(nodeSet->get(i), strResult->mValue);
+            txXPathNodeUtils::appendNodeValue(nodeSet->get(i),
+                                              strResult->mValue);
             if (compareResults(aContext, aLeft, strResult)) {
                 return PR_TRUE;
             }
@@ -153,19 +154,26 @@ RelationalExpr::compareResults(txIEvalContext* aContext, txAExprResult* aLeft,
 
     switch (mOp) {
         case LESS_THAN:
+        {
             return leftDbl < rightDbl;
-
+        }
         case LESS_OR_EQUAL:
+        {
             return leftDbl <= rightDbl;
-
-        case GREATER_THAN :
+        }
+        case GREATER_THAN:
+        {
             return leftDbl > rightDbl;
-
+        }
         case GREATER_OR_EQUAL:
+        {
             return leftDbl >= rightDbl;
+        }
+        default:
+        {
+            NS_NOTREACHED("We should have caught all cases");
+        }
     }
-
-    NS_NOTREACHED("We should have caught all cases");
 
     return PR_FALSE;
 }

@@ -31,10 +31,10 @@
 #define MITRE_XMLUTILS_H
 
 #include "baseutils.h"
-#include "dom.h"
 #include "nsDependentSubstring.h"
 #include "nsIAtom.h"
 #include "txError.h"
+#include "txXPathNode.h"
 
 class txNamespaceMap;
 
@@ -127,12 +127,6 @@ public:
     static PRBool isWhitespace(const nsAFlatString& aText);
 
     /**
-     * Returns true if the given node's DOM nodevalue has only whitespace
-     * characters
-     */
-    static PRBool isWhitespace(Node* aNode);
-
-    /**
      * Normalizes the value of a XML processingInstruction
     **/
     static void normalizePIValue(nsAString& attValue);
@@ -156,7 +150,7 @@ public:
      * Walks up the document tree and returns true if the closest xml:space
      * attribute is "preserve"
      */
-    static MBool getXMLSpacePreserve(Node* aNode);
+    static MBool getXMLSpacePreserve(const txXPathNode& aNode);
 };
 
 #endif
