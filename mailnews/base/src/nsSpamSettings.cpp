@@ -455,7 +455,7 @@ NS_IMETHODIMP nsSpamSettings::SetServerFilterName(const nsACString &aFilterName)
   return NS_OK;
 }
 
-NS_IMPL_GETSET(nsSpamSettings, ServerFilterTrustFlags, PRBool, mServerFilterTrustFlags);
+NS_IMPL_GETSET(nsSpamSettings, ServerFilterTrustFlags, PRBool, mServerFilterTrustFlags)
 
 #define LOG_ENTRY_START_TAG "<p>\n"
 #define LOG_ENTRY_START_TAG_LEN (strlen(LOG_ENTRY_START_TAG))
