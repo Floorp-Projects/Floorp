@@ -560,7 +560,7 @@ res=`echo :$MOZ_TOOLKIT | grep -c "gtk"`
 if [ test $res != 0 ]; then
     AC_ARG_WITH(gtk-config, 
 	[  --with-gtk-config=\$prog specify which gtk-config to use],
-	if test test ! -x $withval; then
+	if test ! -x $withval; then
 	   AC_MSG_ERROR("Specified --with-gtk-config not executable")
 	else
 	   GTK_CONFIG=$withval
