@@ -1,57 +1,21 @@
+/* -*- Mode: C; c-basic-offset: 2 -*-
+
+   Style rules specific to the SoftwareUpdate Panel. These are kludged right now.
+
+ */
+
 window { 
- display: block; 
-} 
-
-tree { 
- display: table; 
- background-color: #FFFFFF; 
- border: none; 
- border-spacing: 0px; 
- width: 100%;
+  background-color: white;
 }
 
-treecol {
- display: table-column;
- width: 200px;
+
+treeitem[type="http://home.netscape.com/NC-rdf#SoftwarePackage"] > treerow >  treecell > titledbutton {
+ list-style-image: url("resource:/res/xpinstall/SoftwareUpdatePackage.gif");
 }
 
-treeitem { 
- display: table-row; 
-} 
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow >  treecell > titledbutton {
+ list-style-image: url("resource:/res/xpinstall/folder-closed.gif");
 
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
-treecell { 
- display: table-cell; 
- font-family: Verdana, Sans-Serif;
- font-size: 8pt;
-} 
-
-treecell[selectedcell] {
- background-color: yellow;
- }
- 
-
-treehead treeitem treecell { 
- background-color: #c0c0c0; 
- border: outset 1px;
- border-color: white #707070 #707070 white;
- padding-left: 4px;
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#SoftwarePackage"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/SoftwareUpdatePackage.gif");
-}
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
-
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/bookmark-folder-open.gif");
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow >  treecell > titledbutton {
+ list-style-image: url("resource:/res/xpinstall/folder-open.gif");
 }
