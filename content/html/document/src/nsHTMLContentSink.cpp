@@ -787,6 +787,7 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_legend:
     rv = NS_NewHTMLLegendElement(aResult, aAtom);
+    SetForm(*aResult, aForm);
     break;
   case eHTMLTag_li:
     rv = NS_NewHTMLLIElement(aResult, aAtom);
@@ -4192,8 +4193,8 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   MOZ_TIMER_STOP(mWatch);
 
   // Don't process scripts that aren't JavaScript and don't process
-  // scripts that are inside iframes
-  if (isJavaScript && !mNumOpenIFRAMES) {
+  // scripts that are inside iframes, noframe, or noscript tags.
+  if (isJavaScript && !mNumOpenIFRAMES && !mInsideNoXXXTag) {
     mScriptLanguageVersion = jsVersionString;
 
     // If there is a SRC attribute...
