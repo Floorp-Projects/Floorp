@@ -681,6 +681,9 @@ xpfe/components/urlbarhistory/public/Makefile
 xpfe/components/urlbarhistory/src/Makefile
 xpfe/components/urlwidget/Makefile
 xpfe/components/winhooks/Makefile
+xpfe/components/alerts/Makefile
+xpfe/components/alerts/public/Makefile
+xpfe/components/alerts/src/Makefile
 xpfe/components/console/Makefile
 xpfe/components/resetPref/Makefile
 xpfe/components/build/Makefile
