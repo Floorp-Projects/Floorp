@@ -342,7 +342,7 @@ calItemBase.prototype = {
         {
             var ritem = null;
             if (recprop.propertyName == "RRULE" ||
-                recprop.propertyName == "EXDATE")
+                recprop.propertyName == "EXRULE")
             {
                 ritem = new CalRecurrenceRule();
             } else if (recprop.propertyName == "RDATE" ||
