@@ -81,7 +81,7 @@ nsEudoraAddress::~nsEudoraAddress()
 }
 
 
-nsresult nsEudoraAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors)
+nsresult nsEudoraAddress::ImportAddresses( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors)
 {
 	// Open the source file for reading, read each line and process it!
 	
@@ -109,8 +109,11 @@ nsresult nsEudoraAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pNam
 		if (wasTruncated)
 			pLine[kEudoraAddressBufferSz - 1] = 0;
 		if (NS_SUCCEEDED( rv)) {
-			ProcessLine( pLine, nsCRT::strlen( pLine), errors);
+			PRInt32	len = nsCRT::strlen( pLine);
+			ProcessLine( pLine, len, errors);
 			rv = pSrc->Eof( &eof);
+			if (pBytes)
+				*pBytes += (len / 2);
 		}
 	}
 	
@@ -128,7 +131,7 @@ nsresult nsEudoraAddress::ImportAddresses( PRBool *pAbort, const PRUnichar *pNam
 	DumpAliasArray( m_alias);
 	#endif
 	
-	BuildABCards( pDb);
+	BuildABCards( pBytes, pDb);
 	
 	return( NS_OK);
 }
@@ -325,9 +328,17 @@ void nsEudoraAddress::ProcessNote( const char *pLine, PRInt32 len, nsString& err
 		return;
 	
 	// Find the alias for this note and store the note data there!
-	
-	
+	CAliasEntry *pEntry = nsnull;
+	PRInt32	idx = FindAlias( name);	
+	if (idx == -1)
+		return;
+
+	pEntry = (CAliasEntry *) m_alias.ElementAt( idx);
+	pEntry->m_notes.Append( pLine, len);
+	pEntry->m_notes.Trim( kWhitespace);
 }
+
+
 
 PRInt32 nsEudoraAddress::CountQuote( const char *pLine, PRInt32 len)
 {
@@ -580,8 +591,24 @@ void nsEudoraAddress::ResolveEntries( nsCString& name, nsVoidArray& list, nsVoid
 		}
 	}
 }
- 
-void nsEudoraAddress::BuildABCards( nsIAddrDatabase *pDb)
+
+PRInt32 nsEudoraAddress::FindAlias( nsCString& name)
+{
+	CAliasEntry *	pEntry;
+	PRInt32			max = m_alias.Count();
+	PRInt32			i;
+	
+	// First off, run through the list and build person cards - groups/lists have to be done later
+	for (i = 0; i < max; i++) {
+		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
+		if (pEntry->m_name == name)
+			return( i);
+	}
+
+	return( -1);
+}
+
+void nsEudoraAddress::BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb)
 {
 	CAliasEntry *	pEntry;
 	CAliasData *	pData;
@@ -601,6 +628,69 @@ void nsEudoraAddress::BuildABCards( nsIAddrDatabase *pDb)
 			BuildSingleCard( pEntry, pData, pDb);
 		}
 		entries.Clear();
+
+		if (pBytes) {
+			// This isn't exact but it will get us close enough
+			*pBytes += (pEntry->m_name.Length() + pEntry->m_notes.Length() + 10);
+		}
+	}
+}
+
+void nsEudoraAddress::ExtractNoteField( nsCString& note, nsCString& value, const char *pFieldName)
+{
+	value.Truncate( 0);
+	nsCString	field = "<";
+	field.Append( pFieldName);
+	field.Append( ':');
+
+	/* 
+		this is a bit of a cheat, but there's no reason it won't work
+		fine for us, even better than Eudora in some cases!
+	 */
+	
+	PRInt32 idx = note.Find( field);
+	if (idx != -1) {
+		idx += field.Length();
+		PRInt32 endIdx = note.FindChar( '>', PR_FALSE, idx);
+		if (endIdx == -1)
+			endIdx = note.Length() - 1;
+		note.Mid( value, idx, endIdx - idx);
+		idx -= field.Length();
+		nsCString tempL;
+		if (idx)
+			note.Left( tempL, idx);
+		nsCString tempR;
+		note.Right( tempR, note.Length() - endIdx - 1);
+		note = tempL;
+		note.Append( tempR);
+	}
+}
+
+void nsEudoraAddress::SanitizeValue( nsCString& val)
+{
+	val.ReplaceSubstring( "\x0D\x0A", ", ");
+	val.ReplaceChar( 13, ',');
+	val.ReplaceChar( 10, ',');
+}
+
+void nsEudoraAddress::SplitString( nsCString& val1, nsCString& val2)
+{
+	nsCString	temp;
+
+	// Find the last line if there is more than one!
+	PRInt32 idx = val1.RFind( "\x0D\x0A");
+	PRInt32	cnt = 2;
+	if (idx == -1) {
+		cnt = 1;
+		idx = val1.RFindChar( 13);
+	}
+	if (idx == -1)
+		idx= val1.RFindChar( 10);
+	if (idx != -1) {
+		val1.Right( val2, val1.Length() - idx - cnt);
+		val1.Left( temp, idx);
+		val1 = temp;
+		SanitizeValue( val1);
 	}
 }
 
@@ -616,32 +706,70 @@ void nsEudoraAddress::BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, n
 	pDb->GetNewRow( &newRow); 
 	char *		pCStr;
 	
+	/*
+		
+	*/
+
 	nsCString	displayName = pData->m_realName;
+	nsCString	name;
+	nsCString	fax;
+	nsCString	phone;
+	nsCString	address;
+	nsCString	address2;
+	nsCString	note = pEntry->m_notes;
+	if (note.Length() > 0) {
+		ExtractNoteField( note, fax, "fax");
+		ExtractNoteField( note, phone, "phone");
+		ExtractNoteField( note, address, "address");
+		ExtractNoteField( note, name, "name");
+	}
+	if (displayName.IsEmpty())
+		displayName = name;
 	if (displayName.IsEmpty())
 		displayName = pEntry->m_name;
+	
+	address.ReplaceSubstring( "\x03", "\x0D\x0A");
+	SplitString( address, address2);
+	note.ReplaceSubstring( "\x03", "\x0D\x0A");
+	fax.ReplaceSubstring( "\x03", " ");
+	phone.ReplaceSubstring( "\x03", " ");
+	name.ReplaceSubstring( "\x03", " ");
 		
 	if (newRow) {
 		pDb->AddDisplayName( newRow, pCStr = displayName.ToNewCString());
 		nsCRT::free( pCStr);
-		
-		/*
-		if (!firstName.IsEmpty()) {
-			m_database->AddFirstName( newRow, pCStr = firstName.ToNewCString());
-			nsCRT::free( pCStr);
-		}
-		if (!lastName.IsEmpty()) {
-			m_database->AddLastName( newRow, pCStr = lastName.ToNewCString());
-			nsCRT::free( pCStr);
-		}
-		*/
-		
+				
 		pDb->AddNickName( newRow, pCStr = pEntry->m_name.ToNewCString());
 		nsCRT::free( pCStr);
 		
 		pDb->AddPrimaryEmail( newRow, pCStr = pData->m_email.ToNewCString());
 		nsCRT::free( pCStr);
 		
-		
+		if (!fax.IsEmpty()) {
+			pDb->AddFaxNumber( newRow, pCStr = fax.ToNewCString());
+			nsCRT::free( pCStr);
+		}
+
+		if (!phone.IsEmpty()) {
+			pDb->AddHomePhone( newRow, pCStr = phone.ToNewCString());
+			nsCRT::free( pCStr);
+		}
+
+		if (!address.IsEmpty()) {
+			pDb->AddHomeAddress( newRow, pCStr = address.ToNewCString());
+			nsCRT::free( pCStr);
+		}
+
+		if (!address2.IsEmpty()) {
+			pDb->AddHomeAddress2( newRow, pCStr = address2.ToNewCString());
+			nsCRT::free( pCStr);
+		}
+
+		if (!note.IsEmpty()) {
+			pDb->AddNotes( newRow, pCStr = note.ToNewCString());
+			nsCRT::free( pCStr);
+		}
+
 		pDb->AddCardRowToDB( newRow);
 		
 		IMPORT_LOG1( "Added card to db: %s\n", (const char *)displayName);

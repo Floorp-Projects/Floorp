@@ -116,14 +116,15 @@ nsresult nsEudoraMailbox::DeleteFile( nsIFileSpec *pSpec)
 
 #define kComposeErrorStr	"X-Eudora-Compose-Error: *****" "\x0D\x0A"
 
-nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount)
+nsresult nsEudoraMailbox::ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount)
 {
 	nsCOMPtr<nsIFileSpec>	tocFile;
 	PRBool					deleteToc = PR_FALSE;
 	nsresult				rv;
 	nsCOMPtr<nsIFileSpec>	mailFile;
 	PRBool					deleteMailFile = PR_FALSE;
-	
+	PRUint32				div = 1;
+
 	if (pMsgCount)
 		*pMsgCount = 0;
 
@@ -150,7 +151,8 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 				rv = mailFile->OpenStreamForWriting();
 				if (NS_SUCCEEDED( rv)) {
 					// Read the toc and compact the mailbox into mailFile
-					rv = CompactMailbox( pAbort, pSrc, tocFile, mailFile);
+					rv = CompactMailbox( pBytes, pAbort, pSrc, tocFile, mailFile);
+					div = 2;
 				}
 			}
 		}
@@ -235,6 +237,11 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 		IMPORT_LOG0( "Reading first message\n");
 
 		while (!*pAbort && NS_SUCCEEDED( rv = ReadNextMessage( &state, readBuffer, headers, body))) {
+			
+			if (pBytes) {
+				*pBytes += ((body.m_writeOffset - 1 + headers.m_writeOffset - 1) / div);
+			}
+
 			compose.SetBody( body.m_pBuffer, body.m_writeOffset - 1);
 			compose.SetHeaders( headers.m_pBuffer, headers.m_writeOffset - 1);
 			compose.SetAttachments( &m_attachments);
@@ -250,7 +257,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 					break;
 				}
 				if (pMsgCount)
-					*pMsgCount++;
+					(*pMsgCount)++;
 			}
 			else {
 				IMPORT_LOG0( "*** Error composing message, writing raw message\n");
@@ -277,6 +284,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 					break;
 				}
 			}
+
 			if (!readBuffer.m_bytesInBuf && (state.offset >= state.size))
 				break;
 		}
@@ -302,7 +310,7 @@ nsresult nsEudoraMailbox::ImportMailbox( PRBool *pAbort, const PRUnichar *pName,
 #define kMsgFirstOffset		104
 #endif
 
-nsresult nsEudoraMailbox::CompactMailbox( PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst)
+nsresult nsEudoraMailbox::CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst)
 {
 	PRUint32	mailSize = m_mailSize;
 	PRUint32	tocSize = 0;
@@ -349,6 +357,8 @@ nsresult nsEudoraMailbox::CompactMailbox( PRBool *pAbort, nsIFileSpec *pMail, ns
 			(copy.m_pBuffer[4] != ' '))
 			return( NS_ERROR_FAILURE);
 		
+		if (pBytes)
+			*pBytes += (data[1] / 2);
 		// Looks like everything is cool, we have a message that appears to start with a separator
 		while (data[1]) {
 			lastChar = copy.m_pBuffer[count - 1];

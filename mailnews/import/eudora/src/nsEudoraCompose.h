@@ -40,13 +40,16 @@ public:
 	nsresult	SendMessage( nsIFileSpec *pMsg);
 
 	void		SetBody( const char *pBody, PRInt32 len) { m_pBody = pBody; m_bodyLen = len;}
-	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len;}
+		// The incoming length includes the trailing null, so set our length
+		// to be one less than that.
+	void		SetHeaders( const char *pHeaders, PRInt32 len) { m_pHeaders = pHeaders; m_headerLen = len - 1;}
 	void		SetAttachments( nsVoidArray *pAttachments) { m_pAttachments = pAttachments;}
 
 private:
 	nsresult	CreateComponents( void);
 	nsresult	CreateIdentity( void);
 	
+	void		GetNthHeader( PRInt32 n, nsString& header, nsString& val, PRBool unwrap);
 	void		GetHeaderValue( const char *pHeader, nsString& val);
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);

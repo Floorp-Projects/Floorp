@@ -49,7 +49,7 @@ public:
 		
 	// Non-platform specific common stuff
 		// import a mailbox
-	nsresult ImportAddresses( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors);
+	nsresult ImportAddresses( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors);
 
 
 private:
@@ -61,8 +61,12 @@ private:
 	PRInt32			GetAliasName( const char *pLine, PRInt32 len, nsCString& name);
 	CAliasEntry *	ResolveAlias( nsCString& name);
 	void 			ResolveEntries( nsCString& name, nsVoidArray& list, nsVoidArray& result);
-	void			BuildABCards( nsIAddrDatabase *pDb);
+	void			BuildABCards( PRUint32 *pBytes, nsIAddrDatabase *pDb);
 	void			BuildSingleCard( CAliasEntry *pEntry, CAliasData *pData, nsIAddrDatabase *pDb);
+	PRInt32			FindAlias( nsCString& name);
+	void			ExtractNoteField( nsCString& note, nsCString& field, const char *pFieldName);
+	void			SanitizeValue( nsCString& val);
+	void			SplitString( nsCString& val1, nsCString& val2);
 
 public:
 	static PRInt32 		CountQuote( const char *pLine, PRInt32 len);

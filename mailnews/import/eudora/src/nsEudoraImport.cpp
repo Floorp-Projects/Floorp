@@ -102,6 +102,7 @@ private:
 #ifdef XP_MAC
 	nsEudoraMac		m_eudora;
 #endif
+	PRUint32		m_bytes;
 };
 
 
@@ -163,6 +164,7 @@ private:
 #ifdef XP_MAC
 	nsEudoraMac		m_eudora;
 #endif
+	PRUint32		m_bytes;
 };
 
 
@@ -412,7 +414,6 @@ void ImportMailImpl::ReportError( PRInt32 errorNum, nsString& name, nsString *pS
 	PRUnichar *pFmt = nsEudoraStringBundle::GetStringByID( errorNum);
 	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
-	IMPORT_LOG1( "%S\n", pText);
 	nsTextFormatter::smprintf_free( pText);
 	nsEudoraStringBundle::FreeString( pFmt);
 	AddLinebreak( pStream);
@@ -484,7 +485,8 @@ NS_IMETHODIMP ImportMailImpl::ImportMailbox(	nsIImportMailboxDescriptor *pSource
 	PRInt32	msgCount = 0;
     nsresult rv = NS_OK;
 	
-	rv = m_eudora.ImportMailbox( &abort, name.GetUnicode(), inFile, pDestination, &msgCount);
+	m_bytes = 0;
+	rv = m_eudora.ImportMailbox( &m_bytes, &abort, name.GetUnicode(), inFile, pDestination, &msgCount);
 
     inFile->Release();
 
@@ -511,9 +513,7 @@ NS_IMETHODIMP ImportMailImpl::GetImportProgress( PRUint32 *pDoneSoFar)
     if (! pDoneSoFar)
         return NS_ERROR_NULL_POINTER;
 	
-	// TLR: FIXME: Figure our how to update this from the import
-	// of the current mailbox.
-	*pDoneSoFar = 0;
+	*pDoneSoFar = m_bytes;
 	return( NS_OK);
 }
 
@@ -579,7 +579,7 @@ NS_IMETHODIMP ImportAddressImpl::GetDefaultLocation(nsIFileSpec **ppLoc, PRBool 
 		return( rv);
 	
 	*found = m_eudora.FindAddressFolder( spec);
-	if (!*found) {
+	if (!(*found)) {
 		NS_IF_RELEASE( spec);
 	}
 	else {
@@ -620,9 +620,11 @@ void ImportAddressImpl::ReportSuccess( nsString& name, nsString *pStream)
 	if (!pStream)
 		return;
 	// load the success string
-	PRUnichar *pText = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_ADDRESS_SUCCESS);
+	PRUnichar *pFmt = nsEudoraStringBundle::GetStringByID( EUDORAIMPORT_ADDRESS_SUCCESS);
+	PRUnichar *pText = nsTextFormatter::smprintf( pFmt, name.GetUnicode());
 	pStream->Append( pText);
-	nsEudoraStringBundle::FreeString( pText);
+	nsTextFormatter::smprintf_free( pText);
+	nsEudoraStringBundle::FreeString( pFmt);
 	ImportMailImpl::AddLinebreak( pStream);
 }
 
@@ -684,7 +686,8 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	    
     nsresult rv = NS_OK;
 	
-	rv = m_eudora.ImportAddresses( &abort, name.GetUnicode(), inFile, pDestination, error);
+	m_bytes = 0;
+	rv = m_eudora.ImportAddresses( &m_bytes, &abort, name.GetUnicode(), inFile, pDestination, error);
 
     inFile->Release();
 
@@ -707,6 +710,12 @@ NS_IMETHODIMP ImportAddressImpl::ImportAddressBook(	nsIImportABDescriptor *pSour
 	
 NS_IMETHODIMP ImportAddressImpl::GetImportProgress(PRUint32 *_retval)
 {
+    NS_PRECONDITION(_retval != nsnull, "null ptr");
+	if (!_retval)
+		return( NS_ERROR_NULL_POINTER);
+	
+	*_retval = m_bytes;
+
 	return( NS_OK);
 }
 

@@ -229,13 +229,111 @@ nsresult nsEudoraCompose::CreateComponents( void)
 	if (NS_SUCCEEDED(rv) && m_pMsgSend) { 
 	    rv = nsComponentManager::CreateInstance( kMsgCompFieldsCID, nsnull, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &m_pMsgFields); 
 		if (NS_SUCCEEDED(rv) && m_pMsgFields) {
-			IMPORT_LOG0( "nsEudoraCompose - CreateComponents succeeded\n");
+			// IMPORT_LOG0( "nsEudoraCompose - CreateComponents succeeded\n");
 			return( NS_OK);
 		}
 	}
 
 	return( NS_ERROR_FAILURE);
 }
+
+void nsEudoraCompose::GetNthHeader( PRInt32 n, nsString& header, nsString& val, PRBool unwrap)
+{
+	header.Truncate();
+	val.Truncate();
+	if (!m_pHeaders)
+		return;
+
+	PRInt32	index = 0;
+	PRInt32	len;
+	PRInt32	start = 0;
+	const char *pChar = m_pHeaders;
+	const char *pStart;
+	if (n == 0) {
+		pStart = pChar;
+		len = 0;
+		while ((start < m_headerLen) && (*pChar != ':')) {
+			start++;
+			len++;
+			pChar++;
+		}
+		header.Append( pStart, len);
+		header.Trim( kWhitespace);
+	}
+	else {
+		while (start < m_headerLen) {
+			if ((*pChar != ' ') && (*pChar != 9)) {
+				if (n == index) {
+					pStart = pChar;
+					len = 0;
+					while ((start < m_headerLen) && (*pChar != ':')) {
+						start++;
+						len++;
+						pChar++;
+					}
+					header.Append( pStart, len);
+					header.Trim( kWhitespace);
+					start++;
+					pChar++;
+				}
+				else
+					index++;
+			}
+
+			while ((start < m_headerLen) && (*pChar != 0x0D) && (*pChar != 0x0A)) {
+				start++;
+				pChar++;
+			}
+			while ((start < m_headerLen) && ((*pChar == 0x0D) || (*pChar == 0x0A))) {
+				start++;
+				pChar++;
+			}
+		}
+	}
+
+	if (start >= m_headerLen)
+		return;
+
+	PRInt32		lineEnd;
+	PRInt32		end = start;
+	while (end < m_headerLen) {
+		while ((end < m_headerLen) && (*pChar != 0x0D) && (*pChar != 0x0A)) {
+			end++;
+			pChar++;
+		}
+		if (end > start) {
+			val.Append( m_pHeaders + start, end - start);
+		}
+		
+		lineEnd = end;
+		pStart = pChar;
+		while ((end < m_headerLen) && ((*pChar == 0x0D) || (*pChar == 0x0A))) {
+			end++;
+			pChar++;
+		}
+		
+		start = end;
+
+		while ((end < m_headerLen) && ((*pChar == ' ') || (*pChar == '\t'))) {
+			end++;
+			pChar++;
+		}
+
+		if (start == end)
+			break;
+		
+		if (unwrap)
+			val.Append( ' ');
+		else {
+			val.Append( pStart, end - lineEnd);
+		}
+
+		start = end;
+	}
+	
+	val.Trim( kWhitespace);
+}
+
 
 void nsEudoraCompose::GetHeaderValue( const char *pHeader, nsString& val)
 {
@@ -461,7 +559,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 	if (bodyType.Length())
 		pMimeType = bodyType.ToNewCString();
 	
-	IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
+	// IMPORT_LOG0( "Eudora compose calling CreateAndSendMessage\n");
 	nsMsgAttachedFile *pAttach = GetLocalAttachments();
 
 	rv = m_pMsgSend->CreateAndSendMessage(	nsnull,			// no editor shell
@@ -480,7 +578,7 @@ nsresult nsEudoraCompose::SendMessage( nsIFileSpec *pMsg)
 										nsnull);		// listener array
 
 	
-	IMPORT_LOG0( "Returned from CreateAndSendMessage\n");
+	// IMPORT_LOG0( "Returned from CreateAndSendMessage\n");
 
 	if (pAttach)
 		delete [] pAttach;

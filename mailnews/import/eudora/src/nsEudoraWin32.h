@@ -81,7 +81,8 @@ private:
 
 
 
-	static BYTE * GetValueBytes( HKEY hKey, const char *pValueName);
+	static BYTE *	GetValueBytes( HKEY hKey, const char *pValueName);
+	static void		ConvertPath( nsCString& str);
 
 private:
 	PRUint32		m_depth;

@@ -98,7 +98,7 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 		if (pBytes) {
 			nsCString str = (const char *)pBytes;
 			delete [] pBytes;
-
+			
 			// Command line is Eudora mailfolder eudora.ini
 			int	idx = -1;
 			if (str.CharAt( 0) == '"') {
@@ -135,7 +135,12 @@ PRBool nsEudoraWin32::FindEudoraLocation( nsIFileSpec *pFolder, PRBool findIni)
 				}
 				if (endIdx != -1) {
 					nsCString	path;
-					str.Mid( path, idx, endIdx - idx);
+					str.Mid( path, idx, endIdx - idx);					
+					
+					ConvertPath( path);
+
+					IMPORT_LOG1( "** GetShortPath returned: %s\n", (const char *)path);
+					
 					pFolder->SetNativePath( path);
 					PRBool exists = PR_FALSE;
 					if (findIni) {
@@ -1123,6 +1128,8 @@ void nsEudoraWin32::GetMimeTypeFromExtension( nsCString& ext, nsCString& mimeTyp
 
 PRBool nsEudoraWin32::FindAddressFolder( nsIFileSpec *pFolder)
 {
+	IMPORT_LOG0( "*** Looking for Eudora address folder\n");
+
 	return( FindEudoraLocation( pFolder));
 }
 
@@ -1375,4 +1382,44 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 }
 
 
+void nsEudoraWin32::ConvertPath( nsCString& str)
+{
+	nsCString	temp;
+	nsCString	path;
+	PRInt32		idx = 0;
+	PRInt32		start = 0;
+	nsCString	search;
+
+	idx = str.FindChar( '\\', PR_FALSE, idx);
+	if ((idx == 2) && (str.CharAt( 1) == ':')) {
+		str.Left( path, 3);
+		idx++;
+		idx = str.FindChar( '\\', PR_FALSE, idx);
+		start = 3;
+	}
+	
+	WIN32_FIND_DATA findFileData;
+	while (idx != -1) {
+		str.Mid( temp, start, idx - start);
+		search = path;
+		search.Append( temp);
+		HANDLE h = FindFirstFile( search, &findFileData);
+		if (h == INVALID_HANDLE_VALUE)
+			return;
+		path.Append( findFileData.cFileName);
+		idx++;
+		start = idx;
+		idx = str.FindChar( '\\', PR_FALSE, idx);
+		FindClose( h);
+		if (idx != -1)
+			path.Append( '\\');
+		else {
+			str.Right( temp, str.Length() - start);
+			path.Append( '\\');
+			path.Append( temp);
+		}
+	}
+
+	str = path;
+}
 

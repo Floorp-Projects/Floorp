@@ -112,7 +112,7 @@ public:
 		
 	// Non-platform specific common stuff
 		// import a mailbox
-	nsresult ImportMailbox( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount);
+	nsresult ImportMailbox( PRUint32 *pBytes, PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIFileSpec *pDst, PRInt32 *pMsgCount);
 
 	static PRInt32		IsEudoraFromSeparator( const char *pData, PRInt32 maxLen);
 
@@ -122,7 +122,7 @@ protected:
 
 
 private:
-	nsresult	CompactMailbox( PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
+	nsresult	CompactMailbox( PRUint32 *pBytes, PRBool *pAbort, nsIFileSpec *pMail, nsIFileSpec *pToc, nsIFileSpec *pDst);
 	nsresult	ReadNextMessage( ReadFileState *pState, SimpleBuffer& copy, SimpleBuffer& header, SimpleBuffer& body);
 	nsresult	FillMailBuffer( ReadFileState *pState, SimpleBuffer& read);
 	PRInt32		FindStartLine( SimpleBuffer& data);
