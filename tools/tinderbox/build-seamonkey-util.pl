@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.29 $ ';
+$::UtilsVersion = '$Revision: 1.30 $ ';
 
 package TinderUtils;
 
@@ -576,10 +576,18 @@ sub BuildIt {
         
         PrintEnv();
         
+		# Make sure we have client.mk
         unless (-e "$TreeSpecific::name/client.mk") {
             run_shell_command "$Settings::CVS $cvsco $TreeSpecific::name/client.mk";
         }
         
+		# Pass $ObjDir along to the build system.
+		if($Settings::ObjDir) {
+		  my $_objdir = "MOZ_OBJDIR=$Settings::ObjDir";
+		  $Settings::MakeOverrides .= $_objdir;
+		}
+
+		# Create toplevel source directory.
         chdir $Settings::Topsrcdir or die "chdir $Settings::Topsrcdir: $!\n";
 
         # Build it
@@ -594,7 +602,8 @@ sub BuildIt {
             my $make = "$Settings::Make -f client.mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
             my $targets = $TreeSpecific::checkout_target;
             $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
-	    mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
+			# Make sure we have an ObjDir if we need one.
+			mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
             my $status = run_shell_command "$make $targets";
             if ($status != 0) {
@@ -700,9 +709,8 @@ sub run_tests {
       $test_result = AliveTest($build_dir, "$embed_binary_dir/$embed_binary_basename", 45);
     }
 
-
     # Bloat test
-    if ($Settings::BloatStats or $Settings::BloatTest
+    if (($Settings::BloatStats or $Settings::BloatTest)
         and $test_result eq 'success') {
         print_log "Running BloatTest ...\n";
         $test_result = BloatTest($binary, $build_dir, $Settings::BloatTestTimeout);
@@ -746,6 +754,12 @@ sub run_tests {
                         "FAILED", 0,
                         0);  # Timeout means failure.
     }
+
+	# Page-loader performance test.
+    if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
+      print_log "Page-loader performance test goes here.\n";
+    }
+
 
     return $test_result;
 }
