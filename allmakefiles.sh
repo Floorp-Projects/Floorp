@@ -824,6 +824,22 @@ dom/src/base/Makefile
 modules/oji/public/Makefile
 "
 
+MAKEFILES_inspector="
+extensions/inspector/base/public/Makefile
+extensions/inspector/base/Makefile
+extensions/inspector/base/src/Makefile
+extensions/inspector/Makefile
+extensions/inspector/build/src/Makefile
+extensions/inspector/build/Makefile
+extensions/inspector/resources/content/Makefile
+extensions/inspector/resources/Makefile
+extensions/inspector/resources/locale/en-US/Makefile
+extensions/inspector/resources/locale/Makefile
+extensions/inspector/resources/skin/classic/Makefile
+extensions/inspector/resources/skin/Makefile
+extensions/inspector/resources/skin/modern/Makefile
+"
+
 MAKEFILES_transformiix="
 extensions/transformiix/source/base/Makefile
 extensions/transformiix/source/main/Makefile
@@ -1052,6 +1068,9 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/xml-rpc/idl/Makefile
 	    extensions/xml-rpc/src/Makefile
             " ;;
+	inspector ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    $MAKEFILES_inspector"
+	    ;;
     esac
 done
 
