@@ -334,6 +334,7 @@ struct MWContext_ {
     Bool anonymous;
 #ifdef MODULAR_NETLIB
     URL_Struct*   modular_data;
+    PRInt32       ref_count;
 #endif
 
     /* This gets set to `true' when layout encounters an image with no
