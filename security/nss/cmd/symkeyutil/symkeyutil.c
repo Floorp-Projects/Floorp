@@ -1093,7 +1093,7 @@ main(int argc, char **argv)
 	    goto shutdown;
 	}
 	rv = SECFailure;
-	newKey = PK11_MoveKey(target, CKA_ENCRYPT, 0, PR_TRUE, symKey);
+	newKey = PK11_MoveSymKey(target, CKA_ENCRYPT, 0, PR_TRUE, symKey);
 	if (!newKey) {
 	    PR_fprintf(PR_STDERR, "%s: Couldn't move the key \n",progName);
 	    goto shutdown;

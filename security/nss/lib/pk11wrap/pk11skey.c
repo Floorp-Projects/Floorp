@@ -1428,7 +1428,7 @@ pk11_ForceSlot(PK11SymKey *symKey,CK_MECHANISM_TYPE type,
 }
 
 PK11SymKey *
-PK11_MoveKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
+PK11_MoveSymKey(PK11SlotInfo *slot, CK_ATTRIBUTE_TYPE operation, 
 			CK_FLAGS flags, PRBool  perm, PK11SymKey *symKey)
 {
     if (symKey->slot == slot) {
