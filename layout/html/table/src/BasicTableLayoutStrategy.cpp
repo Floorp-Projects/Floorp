@@ -169,6 +169,11 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
 
   nscoord specifiedTableWidth = 0; // not cached as a data member because it can vary depending on aMaxWidth
   PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(mTableFrame, aTableStyle, aReflowState, specifiedTableWidth);
+  if (NS_UNCONSTRAINEDSIZE==specifiedTableWidth)
+  {
+    specifiedTableWidth=0;
+    tableIsAutoWidth=PR_TRUE;
+  }
 
   // Step 2 - determine how much space is really available
   PRInt32 availWidth = aMaxWidth - mFixedTableWidth;
@@ -440,7 +445,10 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
 
   // clean up
   if (nsnull!=spanList)
+  {
+    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
     delete spanList;
+  }
   if (nsnull!=colSpanList)
   {
     PRInt32 colSpanListCount = colSpanList->Count();
@@ -642,32 +650,37 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
 
     const nsStylePosition* colPosition;
     colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);    
-    if (PR_FALSE==IsFixedWidth(colPosition))
+
+    // first, deal with any cells that span into this column from a pervious column
+    if (nsnull!=spanList)
     {
-      // first, deal with any cells that span into this column from a pervious column
-      if (nsnull!=spanList)
+      PRInt32 spanCount = spanList->Count();
+      // go through the list backwards so we can delete easily
+      for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
       {
-        PRInt32 spanCount = spanList->Count();
-        // go through the list backwards so we can delete easily
-        for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
+        SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
+        if (PR_FALSE==IsFixedWidth(colPosition))
         {
-          SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
           if (minColWidth < spanInfo->cellMinWidth)
             minColWidth = spanInfo->cellMinWidth;
           if (maxColWidth < spanInfo->cellDesiredWidth)
             maxColWidth = spanInfo->cellDesiredWidth;
-          spanInfo->span--;
-          if (gsDebug==PR_TRUE) 
-            printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
-                    spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
-          if (0==spanInfo->span)
-          {
-            spanList->RemoveElementAt(spanIndex);
-            delete spanInfo;
-          }
+        }
+        spanInfo->span--;
+        if (gsDebug==PR_TRUE) 
+          printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
+                  spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
+        if (0==spanInfo->span)
+        {
+          spanList->RemoveElementAt(spanIndex);
+          delete spanInfo;
         }
       }
+    }
 
+    // second, process non-fixed-width columns
+    if (PR_FALSE==IsFixedWidth(colPosition))
+    {
       for (rowIndex = 0; rowIndex<numRows; rowIndex++)
       { // this col has proportional width, so determine its width requirements
         nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
@@ -912,7 +925,10 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
   }
   if (nsnull!=spanList)
+  {
+    NS_ASSERTION(0==spanList->Count(), "space leak, span list not empty");
     delete spanList;
+  }
   return result;
 }
 
@@ -1042,31 +1058,35 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
     const nsStylePosition* colPosition;
     colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
 
-    if (PR_FALSE==IsFixedWidth(colPosition))
+    // first, deal with any cells that span into this column from a pervious column
+    if (nsnull!=spanList)
     {
-      // first, deal with any cells that span into this column from a pervious column
-      if (nsnull!=spanList)
+      PRInt32 spanCount = spanList->Count();
+      // go through the list backwards so we can delete easily
+      for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
       {
-        PRInt32 spanCount = spanList->Count();
-        // go through the list backwards so we can delete easily
-        for (PRInt32 spanIndex=spanCount-1; 0<=spanIndex; spanIndex--)
+        SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
+        if (PR_FALSE==IsFixedWidth(colPosition))
         {
-          SpanInfo *spanInfo = (SpanInfo *)(spanList->ElementAt(spanIndex));
           if (minColWidth < spanInfo->cellMinWidth)
             minColWidth = spanInfo->cellMinWidth;
           if (maxColWidth < spanInfo->cellDesiredWidth)
             maxColWidth = spanInfo->cellDesiredWidth;
-          spanInfo->span--;
-          if (gsDebug==PR_TRUE) 
-            printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
-                    spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
-          if (0==spanInfo->span)
-          {
-            spanList->RemoveElementAt(spanIndex);
-            delete spanInfo;
-          }
+        }
+        spanInfo->span--;
+        if (gsDebug==PR_TRUE) 
+          printf ("    for spanning cell %d with remaining span=%d, min = %d and  des = %d\n", 
+                  spanIndex, spanInfo->span, spanInfo->cellMinWidth, spanInfo->cellDesiredWidth);
+        if (0==spanInfo->span)
+        {
+          spanList->RemoveElementAt(spanIndex);
+          delete spanInfo;
         }
       }
+    }
+
+    if (PR_FALSE==IsFixedWidth(colPosition))
+    {
       for (rowIndex = 0; rowIndex<numRows; rowIndex++)
       {
         nsTableCellFrame * cellFrame = mTableFrame->GetCellAt(rowIndex, colIndex);
