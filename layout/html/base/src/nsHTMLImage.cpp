@@ -33,6 +33,7 @@
 #include "nsIImageMap.h"
 #include "nsILinkHandler.h"
 #include "nsIURL.h"
+#include "nsCSSLayout.h"
 
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
@@ -138,6 +139,13 @@ NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
+  if ((0 == mRect.width) || (0 == mRect.height)) {
+    // Do not render when given a zero area. This avoids some useless
+    // scaling work while we wait for our image dimensions to arrive
+    // asynchronously.
+    return NS_OK;
+  }
+
   nsIImage* image = GetImage(aPresContext);
   if (nsnull == image) {
     return NS_OK;
@@ -289,36 +297,59 @@ void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize& aMaxSize)
 {
-  // XXX temporary hack: Get width & height from attributes
-  nscoord width = -1;
-  nscoord height = -1;
-  ImagePart* part = (ImagePart*) mContent;
-  nsHTMLValue value;
-  nsContentAttr ca;
-  ca = part->nsHTMLTagContent::GetAttribute(nsHTMLAtoms::width, value);
-  if (eContentAttr_HasValue == ca) {
-    // XXX Percents
-    width = value.GetPixelValue();
+  nsSize styleSize;
+  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, this, styleSize);
+  if (0 != ss) {
+    if (NS_SIZE_HAS_BOTH == ss) {
+      aDesiredSize.width = styleSize.width;
+      aDesiredSize.height = styleSize.height;
+    }
+    else {
+      // Preserve aspect ratio of image with unbound dimension.
+      nsIImage* image = GetImage(*aPresContext);
+      if (nsnull == image) {
+        // Provide a dummy size for now; later on when the image size
+        // shows up we will reflow to the new size.
+        aDesiredSize.width = 0;
+        aDesiredSize.height = 0;
+      }
+      else {
+        float p2t = aPresContext->GetPixelsToTwips();
+        float imageWidth = image->GetWidth() * p2t;
+        float imageHeight = image->GetHeight() * p2t;
+        if (0.0f != imageHeight) {
+          if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
+            // We have a width, and an auto height. Compute height
+            // from width.
+            aDesiredSize.width = styleSize.width;
+            aDesiredSize.height =
+              nscoord(styleSize.width * imageHeight / imageWidth);
+          }
+          else {
+            // We have a height and an auto width. Compute width from
+            // height.
+            aDesiredSize.height = styleSize.height;
+            aDesiredSize.width =
+              nscoord(styleSize.height * imageWidth / imageHeight);
+          }
+        }
+        else {
+          // Screwy image
+          aDesiredSize.width = 0;
+          aDesiredSize.height = 0;
+        }
+      }
+    }
   }
-  ca = part->nsHTMLTagContent::GetAttribute(nsHTMLAtoms::height, value);
-  if (eContentAttr_HasValue == ca) {
-    // XXX Percents
-    height = value.GetPixelValue();
-  }
-
-  float p2t = aPresContext->GetPixelsToTwips();
-  if ((0 < width) && (0 < height)) {
-    // Use dimensions from style attributes
-    aDesiredSize.width = nscoord(width * p2t);
-    aDesiredSize.height = nscoord(height * p2t);
-  } else {
+  else {
     nsIImage* image = GetImage(*aPresContext);
     if (nsnull == image) {
-      // XXX Here is where we trigger a resize-reflow later on; or block
-      // layout or whatever our policy wants to be
-      aDesiredSize.width = nscoord(50 * p2t);
-      aDesiredSize.height = nscoord(50 * p2t);
+      // Provide a dummy size for now; later on when the image size
+      // shows up we will reflow to the new size.
+      aDesiredSize.width = 0;
+      aDesiredSize.height = 0;
     } else {
+      float p2t = aPresContext->GetPixelsToTwips();
       aDesiredSize.width = nscoord(image->GetWidth() * p2t);
       aDesiredSize.height = nscoord(image->GetHeight() * p2t);
     }
@@ -565,6 +596,7 @@ void ImagePart::MapAttributesInto(nsIStyleContext* aContext,
       break;
     }
   }
+  MapImagePropertiesInto(aContext, aPresContext);
 }
 
 nsresult
