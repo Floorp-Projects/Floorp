@@ -498,9 +498,10 @@ void
 nsTreeRowGroupFrame::SetScrollbarFrame(nsIFrame* aFrame)
 {
   mScrollbar = aFrame;
+  nsFrameList frameList(mScrollbar);
   
   // Place it in its own list.
-  mScrollbarList.AppendFrames(this, nsFrameList(mScrollbar));
+  mScrollbarList.AppendFrames(this,frameList);
 
   nsCOMPtr<nsIContent> scrollbarContent;
   aFrame->GetContent(getter_AddRefs(scrollbarContent));
