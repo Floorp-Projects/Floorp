@@ -3478,6 +3478,12 @@ PresShell::EndLoad(nsIDocument *aDocument)
   if (!docShell)
     return;
 
+  // Make sure we don't reenter reflow via the sync paint that happens while
+  // we're scrolling to our restored position.  Entering reflow for the
+  // scrollable frame will cause it to reenter ScrollToRestoredPosition(), and
+  // it'll get all confused.
+  ++mChangeNestCount;
+
   nsCOMPtr<nsILayoutHistoryState> historyState;
   docShell->GetLayoutHistoryState(getter_AddRefs(historyState));
 
@@ -3494,6 +3500,8 @@ PresShell::EndLoad(nsIDocument *aDocument)
     }
   }
 
+  --mChangeNestCount;
+  
 #ifdef MOZ_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
   MOZ_TIMER_DEBUGLOG(("Stop: Reflow: PresShell::EndLoad(), this=%p\n", this));
