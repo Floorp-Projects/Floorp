@@ -155,7 +155,6 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName      aType,
                           PRInt32                aContextSize)
 {
   NS_ENSURE_ARG(aContextNode);
-  NS_ENSURE_ARG(aExpression);
   
 #ifdef DEBUG_XF_MDG
   nsAutoString nodename;
@@ -168,7 +167,7 @@ nsXFormsMDGEngine::AddMIP(ModelItemPropName      aType,
          aContextPos, aContextSize, gMIPNames[aType], aDynFunc);
 #endif
   nsXFormsMDGNode* newnode = GetNode(aContextNode,
-                                     (ModelItemPropName) aType,
+                                     aType,
                                      PR_TRUE);
   
   if (!newnode) {
@@ -638,8 +637,6 @@ nsXFormsMDGEngine::SetNodeValue(nsIDOMNode       *aContextNode,
   case nsIDOMNode::CDATA_SECTION_NODE:
   case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
   case nsIDOMNode::COMMENT_NODE:
-    ///
-    /// @todo Check existing value, and ignore if same?? (XXX)
     rv = aContextNode->SetNodeValue(aNodeValue);
     NS_ENSURE_SUCCESS(rv, rv);
 

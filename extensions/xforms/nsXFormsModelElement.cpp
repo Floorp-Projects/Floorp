@@ -1001,6 +1001,11 @@ nsXFormsModelElement::ProcessBind(nsIDOMXPathEvaluator *aEvaluator,
           rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XML_SCHEMA_INSTANCE),
                                         NS_LITERAL_STRING("type"),
                                         propStrings[j]);
+          NS_ENSURE_SUCCESS(rv, rv);
+
+          // Inform MDG that it needs to check type. The only arguments
+          // actually used are |eModel_constraint| and |node|.
+          rv = mMDG.AddMIP(eModel_constraint, nsnull, nsnull, PR_FALSE, node, 1, 1);
         } else {
           rv = nodeElem->SetAttributeNS(NS_LITERAL_STRING(NS_NAMESPACE_XFORMS),
                                         NS_LITERAL_STRING("p3ptype"),
