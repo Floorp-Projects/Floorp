@@ -1051,7 +1051,7 @@ Rights Reserved.
            label="&threadsMsgsCmd.label;"
            accesskey="&threadsMsgsCmd.accesskey;"
            observes="cmd_sortByThread"/>
-          <menuitem id="viewIgnoredThreadsMenuItem" type="checkbox" label="&ignoredThreadsCmd.label;" disabled="true" observes="cmd_viewIgnoredThreads"/>
+          <menuitem id="viewIgnoredThreadsMenuItem" type="checkbox" label="&ignoredThreadsCmd.label;" disabled="true" observes="cmd_viewIgnoredThreads" accesskey="&ignoredThreadsCmd.accesskey;"/>
           <menuseparator/>
           <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
           <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>

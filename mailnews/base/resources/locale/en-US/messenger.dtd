@@ -179,6 +179,7 @@ Rights Reserved.
 <!ENTITY watchedThreadsWithUnreadCmd.label "Watched Threads with Unread">
 <!ENTITY watchedThreadsWithUnreadCmd.accesskey "W">
 <!ENTITY ignoredThreadsCmd.label "Ignored Threads">
+<!ENTITY ignoredThreadsCmd.accesskey "i">  
 <!ENTITY headersMenu.label "Headers">
 <!ENTITY headersMenu.accesskey "H">
 <!ENTITY headersAllCmd.label "All">
