@@ -44,7 +44,7 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 	{
 		nsAbAutoCompleteSession * abSession = new nsAbAutoCompleteSession(); 
 		if (abSession)
-			return abSession->QueryInterface(NS_GET_IID(nsIAutoCompleteSession), aInstancePtrResult);
+			return abSession->QueryInterface(NS_GET_IID(nsIAbAutoCompleteSession), aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -52,7 +52,7 @@ nsresult NS_NewAbAutoCompleteSession(const nsIID &aIID, void ** aInstancePtrResu
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, NS_GET_IID(nsIAutoCompleteSession))
+NS_IMPL_ISUPPORTS(nsAbAutoCompleteSession, NS_GET_IID(nsIAbAutoCompleteSession))
 
 nsAbAutoCompleteSession::nsAbAutoCompleteSession()
 {
@@ -172,7 +172,7 @@ NS_IMETHODIMP
 nsAbAutoCompleteSession::AutoComplete(nsIMsgIdentity *aIdentity,
                                       nsISupports *aParam,
                                       const PRUnichar *aSearchString,
-                                      nsIAutoCompleteListener *aResultListener)
+                                      nsIAbAutoCompleteListener *aResultListener)
 {
 	// mscott - right now I'm not even going to bother to make this synchronous...
 	// I'll beef it up with some test data later but we want to see if this idea works for right now...

@@ -23,8 +23,8 @@
 #ifndef nsAbAutoCompleteSession_h___
 #define nsAbAutoCompleteSession_h___
 
-#include "nsIAutoCompleteSession.h"
-#include "nsIAutoCompleteListener.h"
+#include "nsIAbAutoCompleteSession.h"
+#include "nsIAbAutoCompleteListener.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsCOMPtr.h"
 #include "msgCore.h"
@@ -39,11 +39,11 @@ typedef struct
 
 #define MAX_ENTRIES 100
 
-class nsAbAutoCompleteSession : public nsIAutoCompleteSession
+class nsAbAutoCompleteSession : public nsIAbAutoCompleteSession
 {
 public:
 	NS_DECL_ISUPPORTS
-    NS_DECL_NSIAUTOCOMPLETESESSION
+    NS_DECL_NSIABAUTOCOMPLETESESSION
 	nsAbAutoCompleteSession();
 	virtual ~nsAbAutoCompleteSession();
 
@@ -52,7 +52,7 @@ protected:
   nsresult PopulateTableWithAB(nsIEnumerator * aABCards); // enumerates through the cards and adds them to the table
   PRUnichar* BuildSearchResult(PRUint32 nIndex, nsIMsgHeaderParser* parser);
   
-  nsCOMPtr<nsIAutoCompleteListener> m_resultListener;
+  nsCOMPtr<nsIAbAutoCompleteListener> m_resultListener;
   PRBool	m_tableInitialized;
   nsAbStubEntry m_searchNameCompletionEntryTable[MAX_ENTRIES];
   PRInt32   m_numEntries;

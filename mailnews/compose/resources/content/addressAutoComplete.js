@@ -38,7 +38,6 @@ var AddressAutoCompleteListener = {
 			dump("value = " + aItem.value + "\n");
 			dump("aOriginalString = " + aOriginalString + "\n");
 			dump("aMatch = " + aMatch + "\n");
-
 			aItem.value = aMatch;
 			aItem.lastValue = aMatch;
 		}
@@ -75,7 +74,7 @@ function AutoCompleteAddress(inputElement)
 		ac = ac.getService();
 	}       
 	if (ac) {
-		ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
+		ac = ac.QueryInterface(Components.interfaces.nsIAbAutoCompleteSession);
 	}
 
     if (!identityElement)
