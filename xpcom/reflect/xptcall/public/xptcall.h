@@ -58,15 +58,15 @@
 #define XPTC_PUBLIC_API(t)    PR_IMPLEMENT(t)
 #define XPTC_PUBLIC_DATA(t)   PR_IMPLEMENT_DATA(t)
 #ifdef _WIN32
-#    define XPTC_EXPORT           _declspec(dllexport)
+#    define XPTC_EXPORT           __declspec(dllexport)
 #else
 #    define XPTC_EXPORT
 #endif
 #else
 #ifdef _WIN32
-#    define XPTC_PUBLIC_API(t)    _declspec(dllimport) t
-#    define XPTC_PUBLIC_DATA(t)   _declspec(dllimport) t
-#    define XPTC_EXPORT           _declspec(dllimport)
+#    define XPTC_PUBLIC_API(t)    __declspec(dllimport) t
+#    define XPTC_PUBLIC_DATA(t)   __declspec(dllimport) t
+#    define XPTC_EXPORT           __declspec(dllimport)
 #else
 #    define XPTC_PUBLIC_API(t)    PR_IMPLEMENT(t)
 #    define XPTC_PUBLIC_DATA(t)   t

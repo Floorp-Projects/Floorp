@@ -51,21 +51,21 @@ PR_BEGIN_EXTERN_C
  * If successful OpenArchive returns a handle in the hZip parameter
  * that must be passed to all subsequent operations on the archive
  */
-extern _declspec(dllexport)int ZIP_OpenArchive( const char * zipname, void** hZip );
-extern _declspec(dllexport)int ZIP_CloseArchive( void** hZip );
+extern __declspec(dllexport)int ZIP_OpenArchive( const char * zipname, void** hZip );
+extern __declspec(dllexport)int ZIP_CloseArchive( void** hZip );
 
 
 /* Test the integrity of every item in this open archive
  * by verifying each item's checksum against the stored
  * CRC32 value.
  */
-extern _declspec(dllexport)int ZIP_TestArchive( void* hZip );
+extern __declspec(dllexport)int ZIP_TestArchive( void* hZip );
 
 /* Extract the named file in the archive to disk. 
  * This function will happily overwrite an existing Outfile if it can.
  * It's up to the caller to detect or move it out of the way if it's important.
  */
-extern _declspec(dllexport)int ZIP_ExtractFile( void* hZip, const char * filename, const char * outname );
+extern __declspec(dllexport)int ZIP_ExtractFile( void* hZip, const char * filename, const char * outname );
 
 
 /* Functions to list the files contained in the archive
@@ -82,9 +82,9 @@ extern _declspec(dllexport)int ZIP_ExtractFile( void* hZip, const char * filenam
  * will return ZIP_ERR_SMALLBUF. When no more matches can be found in
  * the archive it will return ZIP_ERR_FNF
  */
-extern _declspec(dllexport)void* ZIP_FindInit( void* hZip, const char * pattern );
-extern _declspec(dllexport)int ZIP_FindNext( void* hFind, char * outbuf, int bufsize );
-extern _declspec(dllexport)int ZIP_FindFree( void* hFind );
+extern __declspec(dllexport)void* ZIP_FindInit( void* hZip, const char * pattern );
+extern __declspec(dllexport)int ZIP_FindNext( void* hFind, char * outbuf, int bufsize );
+extern __declspec(dllexport)int ZIP_FindFree( void* hFind );
 
 
 PR_END_EXTERN_C
