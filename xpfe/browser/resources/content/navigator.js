@@ -62,7 +62,6 @@ catch (ex)
   var stopButton = null;
   var stopMenu = null;
   var stopContext = null;
-  var locationFld = null;
   var backButton	= null;
   var forwardButton = null;
 
@@ -210,10 +209,14 @@ function UpdateStatusField()
 
 function nsXULBrowserWindow()
 {
+  this.locationField = document.getElementById("urlbar");
 }
 
 nsXULBrowserWindow.prototype = 
 {
+  locationField : null,
+  hideAboutBlank : true,
+
   QueryInterface : function(iid)
   {
     if(iid.equals(Components.interfaces.nsIXULBrowserWindow))
@@ -324,10 +327,14 @@ nsXULBrowserWindow.prototype =
         }
       }
       if(state & Components.interfaces.nsIWebProgressListener.STATE_IS_NETWORK) {
-        // Record page loading time.
-        var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
-        var msg = bundle.GetStringFromName("nv_done");
-        msg = msg.replace(/%elapsed%/, elapsed);
+        var location = channel.URI.spec;
+        var msg = "";
+        if (location != "about:blank") {
+          // Record page loading time.
+          var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
+          msg = bundle.GetStringFromName("nv_done");
+          msg = msg.replace(/%elapsed%/, elapsed);
+        }
         defaultStatus = msg;
         UpdateStatusField();
         // Turn progress meter off.
@@ -363,12 +370,15 @@ nsXULBrowserWindow.prototype =
   },
   onLocationChange : function(location)
   {
-    if(!locationFld)
-      locationFld = document.getElementById("urlbar");
+    if (this.hideAboutBlank) {
+      this.hideAboutBlank = false;
+      if (location == "about:blank")
+        location = "";
+    }
 
     // We should probably not do this if the value has changed since the user 
     // searched
-    locationFld.value = location;
+    this.locationField.value = location;
 
     UpdateBackForwardButtons();
   },
