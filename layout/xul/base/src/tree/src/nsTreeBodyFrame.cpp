@@ -21,6 +21,7 @@
  *
  * Contributor(s): 
  *  Ben Goodger <ben@netscape.com>
+ *  Joe Hewitt <hewitt@netscape.com>
  */
 
 #include "nsCOMPtr.h"
@@ -253,6 +254,7 @@ nsOutlinerBodyFrame::nsOutlinerBodyFrame(nsIPresShell* aPresShell)
  mAlreadyUndrewDueToScroll(PR_FALSE)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
+  mColumnsDirty = PR_TRUE;
 }
 
 // Destructor
@@ -1037,8 +1039,6 @@ nsOutlinerBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
   return NS_OK;
 }
 
-  
-  
 nsresult
 nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect, 
                                          PRInt32 aRowIndex,
@@ -1569,6 +1569,16 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintColumn(nsOutlinerColumn*    aColumn,
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(aColumn->GetElement()));
   mView->GetColumnProperties(aColumn->GetID(), elt, mScratchArray);
 
+  // Read special properties from attributes on the column content node
+  nsAutoString attr;
+  aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertbefore, attr);
+  if (attr.EqualsWithConversion("true"))
+    mScratchArray->AppendElement(nsXULAtoms::insertbefore);
+  attr.AssignWithConversion("");
+  aColumn->GetElement()->GetAttr(kNameSpaceID_None, nsXULAtoms::insertafter, attr);
+  if (attr.EqualsWithConversion("true"))
+    mScratchArray->AppendElement(nsXULAtoms::insertafter);
+  
   // Resolve style for the column.  It contains all the info we need to lay ourselves
   // out and to paint.
   nsCOMPtr<nsIStyleContext> colContext;
@@ -2328,9 +2338,18 @@ nsOutlinerBodyFrame::PseudoMatches(nsIAtom* aTag, nsCSSSelector* aSelector, PRBo
 }
 
 void
+nsOutlinerBodyFrame::InvalidateColumnCache()
+{
+  mColumnsDirty = PR_TRUE;
+}
+
+void
 nsOutlinerBodyFrame::EnsureColumns()
 {
-  if (!mColumns) {
+  if (!mColumns || mColumnsDirty) {
+    delete mColumns;
+    mColumnsDirty = PR_FALSE;
+
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
     nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
@@ -2354,7 +2373,7 @@ nsOutlinerBodyFrame::EnsureColumns()
     nsCOMPtr<nsIDOMNode> node;
     cols->Item(0, getter_AddRefs(node));
     nsCOMPtr<nsIContent> child(do_QueryInterface(node));
-    
+        
     // Get the frame for this column.
     nsIFrame* frame;
     shell->GetPrimaryFrameFor(child, &frame);
@@ -2365,26 +2384,28 @@ nsOutlinerBodyFrame::EnsureColumns()
     frame->GetParent(&colContainer);
       
     nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
-    PRBool isNormal = PR_TRUE;
-    colContainerBox->GetDirection(isNormal);
-
-    PRInt32 i = isNormal ? 0 : count-1;
+    nsIBox* colBox;
+    colContainerBox->GetChildBox(&colBox);
+    
     nsOutlinerColumn* currCol = nsnull;
-    for ( ; (isNormal ? (i < ((PRInt32)count)) : (i >= 0)); (isNormal ? i++ : i--)) {
-      nsCOMPtr<nsIDOMNode> node;
-      cols->Item(i, getter_AddRefs(node));
-      nsCOMPtr<nsIContent> child(do_QueryInterface(node));
-      
-      // Get the frame for this column.
+    while (colBox) {
       nsIFrame* frame;
-      shell->GetPrimaryFrameFor(child, &frame);
+      colBox->GetFrame(&frame);
+      nsCOMPtr<nsIContent> content;
+      frame->GetContent(getter_AddRefs(content));
+      nsCOMPtr<nsIDOMElement> colElt(do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNode> colParentElt;
+      colElt->GetParentNode(getter_AddRefs(colParentElt));
+      if (colParentElt == elt) {
+        // Create a new column structure.
+        nsOutlinerColumn* col = new nsOutlinerColumn(content, frame);
+        if (currCol)
+          currCol->SetNext(col);
+        else mColumns = col;
+        currCol = col;
+      }
       
-      // Create a new column structure.
-      nsOutlinerColumn* col = new nsOutlinerColumn(child, frame);
-      if (currCol)
-        currCol->SetNext(col);
-      else mColumns = col;
-      currCol = col;
+      colBox->GetNextBox(&colBox);
     }
   }
 }

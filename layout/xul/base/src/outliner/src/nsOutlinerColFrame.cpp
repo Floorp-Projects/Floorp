@@ -33,6 +33,7 @@
 #include "nsIDocument.h"
 #include "nsIBoxObject.h"
 #include "nsIDOMElement.h"
+#include "nsOutlinerBodyFrame.h"
 
 //
 // NS_NewOutlinerColFrame
@@ -82,6 +83,18 @@ nsOutlinerColFrame::nsOutlinerColFrame(nsIPresShell* aPresShell, PRBool aIsRoot,
 // Destructor
 nsOutlinerColFrame::~nsOutlinerColFrame()
 {
+}
+
+NS_IMETHODIMP
+nsOutlinerColFrame::Init(nsIPresContext*  aPresContext,
+                         nsIContent*      aContent,
+                         nsIFrame*        aParent,
+                         nsIStyleContext* aContext,
+                         nsIFrame*        aPrevInFlow)
+{
+  nsresult rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  InvalidateColumnCache(aPresContext);  
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -162,24 +175,52 @@ nsOutlinerColFrame::AttributeChanged(nsIPresContext* aPresContext,
 
   if (aAttribute == nsHTMLAtoms::width || aAttribute == nsHTMLAtoms::hidden) {
     // Invalidate the outliner.
-    if (!mOutliner) {
-      // Get our parent node.
-      nsCOMPtr<nsIContent> parent;
-      mContent->GetParent(*getter_AddRefs(parent));
-      nsCOMPtr<nsIDocument> doc;
-      mContent->GetDocument(*getter_AddRefs(doc));
-      nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
-      nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
-  
-      nsCOMPtr<nsIBoxObject> boxObject;
-      nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
-
-      mOutliner = do_QueryInterface(boxObject);
-    }
-
+    EnsureOutliner();
     if (mOutliner)
       mOutliner->Invalidate();
+  } else if (aAttribute == nsXULAtoms::ordinal) {
+    InvalidateColumnCache(aPresContext);
   }
 
   return rv;
+}
+
+void
+nsOutlinerColFrame::EnsureOutliner()
+{
+  if (!mOutliner && mContent) {
+    // Get our parent node.
+    nsCOMPtr<nsIContent> parent;
+    mContent->GetParent(*getter_AddRefs(parent));
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc));
+    nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(doc));
+    nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(parent));
+
+    nsCOMPtr<nsIBoxObject> boxObject;
+    nsDoc->GetBoxObjectFor(elt, getter_AddRefs(boxObject));
+
+    mOutliner = do_QueryInterface(boxObject);
+  }
+}
+
+void
+nsOutlinerColFrame::InvalidateColumnCache(nsIPresContext* aPresContext)
+{
+  EnsureOutliner();  
+  if (mOutliner) {
+    nsCOMPtr<nsIDOMElement> bodyEl;
+    mOutliner->GetOutlinerBody(getter_AddRefs(bodyEl));
+    nsCOMPtr<nsIContent> bodyContent = do_QueryInterface(bodyEl);
+    if (bodyContent) {
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      nsIFrame* frame;
+      shell->GetPrimaryFrameFor(bodyContent, &frame);
+      if (frame) {
+        nsOutlinerBodyFrame* oframe = NS_STATIC_CAST(nsOutlinerBodyFrame*, frame);
+        oframe->InvalidateColumnCache();
+      }
+    }
+  }
 }

@@ -299,6 +299,10 @@ public:
                                   nsIRenderingContext& aRenderingContext, 
                                   const nsRect& aRect, const nsRect& aDirtyRect);
 
+  // This method is called whenever an outlinercol is added or removed and
+  // the column cache needs to be rebuilt.
+  void InvalidateColumnCache();
+                                  
   friend nsresult NS_NewOutlinerBodyFrame(nsIPresShell* aPresShell, 
                                           nsIFrame** aNewFrame);
 
@@ -401,6 +405,9 @@ protected: // Data Members
   nsRect mInnerBox;
   PRInt32 mRowHeight;
   PRInt32 mIndentation;
+
+  // An indicator that columns have changed and need to be rebuilt
+  PRBool mColumnsDirty;
 
   // A scratch array used when looking up cached style contexts.
   nsCOMPtr<nsISupportsArray> mScratchArray;
