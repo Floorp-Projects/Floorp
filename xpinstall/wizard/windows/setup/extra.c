@@ -27,13 +27,40 @@
 #include "dialogs.h"
 #include "ifuncns.h"
 #include "time.h"
+#include <winnls.h>
 #include <winver.h>
+#include <tlhelp32.h>
+#include <winperf.h>
 
 #define HIDWORD(l)   ((DWORD) (((ULONG) (l) >> 32) & 0xFFFF))
 #define LODWORD(l)   ((DWORD) (l))
 
+#define INDEX_STR_LEN       10
+#define PN_PROCESS          TEXT("Process")
+#define PN_THREAD           TEXT("Thread")
+
 ULONG  (PASCAL *NS_GetDiskFreeSpace)(LPCTSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD);
 ULONG  (PASCAL *NS_GetDiskFreeSpaceEx)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+typedef BOOL   (WINAPI *NS_ProcessWalk)(HANDLE hSnapshot, LPPROCESSENTRY32 lppe);
+typedef HANDLE (WINAPI *NS_CreateSnapshot)(DWORD dwFlags, DWORD th32ProcessID);
+typedef PERF_DATA_BLOCK             PERF_DATA,      *PPERF_DATA;
+typedef PERF_OBJECT_TYPE            PERF_OBJECT,    *PPERF_OBJECT;
+typedef PERF_INSTANCE_DEFINITION    PERF_INSTANCE,  *PPERF_INSTANCE;
+TCHAR   INDEX_PROCTHRD_OBJ[2*INDEX_STR_LEN];
+DWORD   PX_PROCESS;
+DWORD   PX_THREAD;
+
+BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize);
+DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name);
+PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex);
+PPERF_OBJECT NextObject (PPERF_OBJECT pObject);
+PPERF_OBJECT FirstObject (PPERF_DATA pData);
+PPERF_INSTANCE   NextInstance (PPERF_INSTANCE pInst);
+PPERF_INSTANCE   FirstInstance (PPERF_OBJECT pObject);
+DWORD   GetPerfData    (HKEY        hPerfKey,
+                        LPTSTR      szObjectIndex,
+                        PPERF_DATA  *ppData,
+                        DWORD       *pDataSize);
 
 BOOL InitApplication(HINSTANCE hInstance, HINSTANCE hSetupRscInst)
 {
@@ -2531,9 +2558,64 @@ void GetAlternateArchiveSearchPath(LPSTR lpszCmdLine)
   }
 }
 
+BOOL CheckProcessWin95(NS_CreateSnapshot pCreateToolhelp32Snapshot, NS_ProcessWalk pProcessWalkFirst, NS_ProcessWalk pProcessWalkNext, LPSTR szProcessName)
+{
+  BOOL            bRv             = FALSE;
+  HANDLE          hCreateSnapshot = NULL;
+  PROCESSENTRY32  peProcessEntry;
+  
+  hCreateSnapshot = pCreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if(hCreateSnapshot == (HANDLE)-1)
+    return(bRv);
+
+  peProcessEntry.dwSize = sizeof(PROCESSENTRY32);
+  if(pProcessWalkFirst(hCreateSnapshot, &peProcessEntry))
+  {
+    do
+    {
+      char  szBuf[MAX_BUF];
+
+      ParsePath(peProcessEntry.szExeFile, szBuf, sizeof(szBuf), PP_FILENAME_ONLY);
+      
+      /* do process name string comparison here! */
+      if(lstrcmpi(szBuf, szProcessName) == 0)
+      {
+        bRv = TRUE;
+        break;
+      }
+
+    } while((bRv == FALSE) && pProcessWalkNext(hCreateSnapshot, &peProcessEntry));
+  }
+
+  CloseHandle(hCreateSnapshot);
+  return(bRv);
+}
+
+BOOL CheckForProcess(LPSTR szProcessName, DWORD dwProcessName)
+{
+  HANDLE            hKernel                   = NULL;
+  NS_CreateSnapshot pCreateToolhelp32Snapshot = NULL;
+  NS_ProcessWalk    pProcessWalkFirst         = NULL;
+  NS_ProcessWalk    pProcessWalkNext          = NULL;
+  BOOL              bDoWin95Check             = TRUE;
+
+  if((hKernel = GetModuleHandle("kernel32.dll")) == NULL)
+    return(FALSE);
+
+  pCreateToolhelp32Snapshot = (NS_CreateSnapshot)GetProcAddress(hKernel, "CreateToolhelp32Snapshot");
+  pProcessWalkFirst         = (NS_ProcessWalk)GetProcAddress(hKernel,    "Process32First");
+  pProcessWalkNext          = (NS_ProcessWalk)GetProcAddress(hKernel,    "Process32Next");
+
+  if(pCreateToolhelp32Snapshot && pProcessWalkFirst && pProcessWalkNext)
+    return(CheckProcessWin95(pCreateToolhelp32Snapshot, pProcessWalkFirst, pProcessWalkNext, szProcessName));
+  else
+    return(CheckProcessNT4(szProcessName, dwProcessName));
+}
+
 HRESULT CheckInstances()
 {
   char  szSection[MAX_BUF];
+  char  szProcessName[MAX_BUF];
   char  szClassName[MAX_BUF];
   char  szWindowName[MAX_BUF];
   char  szMessage[MAX_BUF];
@@ -2559,6 +2641,25 @@ HRESULT CheckInstances()
     lstrcpy(szSection, "Check Instance");
     lstrcat(szSection, szIndex);
 
+    GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniConfig);
+    if(GetPrivateProfileString(szSection, "Process Name", "", szProcessName, MAX_BUF, szFileIniConfig) != 0L)
+    {
+      if(*szProcessName != '\0')
+      {
+        if(CheckForProcess(szProcessName, sizeof(szProcessName)) == TRUE)
+        {
+          if(*szMessage != '\0')
+            MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
+
+          return(TRUE);
+        }
+      }
+
+      /* Process Name= key existed, and has been processed, so continue looking for more */
+      continue;
+    }
+
+    /* Process Name= key did not exist, so look for other keys */
     dwRv0 = GetPrivateProfileString(szSection, "Class Name", "", szClassName, MAX_BUF, szFileIniConfig);
     dwRv1 = GetPrivateProfileString(szSection, "Window Name", "", szWindowName, MAX_BUF, szFileIniConfig);
     if((dwRv0 == 0L) &&
@@ -2580,12 +2681,11 @@ HRESULT CheckInstances()
 
       if((hwndFW = FindWindow(szClassName, szWN)) != NULL)
       {
-        GetPrivateProfileString(szSection, "Message", "", szMessage, MAX_BUF, szFileIniConfig);
         if(*szMessage != '\0')
           MessageBox(hWndMain, szMessage, NULL, MB_ICONEXCLAMATION);
 
-        ShowWindow(hwndFW, SW_RESTORE);
-        SetForegroundWindow(hwndFW);
+//        ShowWindow(hwndFW, SW_RESTORE);
+//        SetForegroundWindow(hwndFW);
         return(TRUE);
       }
     }
@@ -4035,3 +4135,395 @@ void DeInitialize()
   FreeLibrary(hSetupRscInst);
   DeInitializeSmartDownload();
 }
+
+
+
+
+
+
+//
+// The functions below were copied from MSDN 6.0:
+//
+//   \samples\vc98\sdk\sdktools\winnt\pviewer
+//
+// They were listed in the redist.txt file from the cd.
+// Only CheckProcessNT4() was modified to accomodate the setup needs.
+//
+/******************************************************************************\
+ * *       This is a part of the Microsoft Source Code Samples.
+ * *       Copyright (C) 1993-1997 Microsoft Corporation.
+ * *       All rights reserved.
+\******************************************************************************/
+BOOL CheckProcessNT4(LPSTR szProcessName, DWORD dwProcessNameSize)
+{
+  BOOL          bRv;
+  HKEY          hKey;
+  DWORD         dwType;
+  DWORD         dwSize;
+  DWORD         dwTemp;
+  DWORD         dwTitleLastIdx;
+  DWORD         dwIndex;
+  DWORD         dwLen;
+  DWORD         pDataSize = 50 * 1024;
+  LPSTR         szCounterValueName;
+  LPSTR         szTitle;
+  LPSTR         *szTitleSz;
+  LPSTR         szTitleBuffer;
+  PPERF_DATA    pData;
+  PPERF_OBJECT  pProcessObject;
+
+  bRv   = FALSE;
+  hKey  = NULL;
+
+  if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                  TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\perflib"),
+                  0,
+                  KEY_READ,
+                  &hKey) != ERROR_SUCCESS)
+    return(bRv);
+
+  if(RegQueryValueEx(hKey, TEXT("Last Counter"), 0, &dwType, (LPBYTE)&dwTitleLastIdx, &dwSize) != ERROR_SUCCESS)
+  {
+    RegCloseKey(hKey);
+    return(bRv);
+  }
+    
+
+  if(RegQueryValueEx(hKey, TEXT("Version"), 0, &dwType, (LPBYTE)&dwTemp, &dwSize) != ERROR_SUCCESS)
+  {
+    RegCloseKey(hKey);
+    szCounterValueName = TEXT("Counters");
+    if(RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                    TEXT("Software\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009"),
+                    0,
+                    KEY_READ,
+                    &hKey) != ERROR_SUCCESS)
+      return(bRv);
+  }
+  else
+  {
+    RegCloseKey(hKey);
+    szCounterValueName  = TEXT("Counter 009");
+    hKey                = HKEY_PERFORMANCE_DATA;
+  }
+
+  // Find out the size of the data.
+  //
+  if(RegQueryValueEx(hKey, szCounterValueName, 0, &dwType, 0, &dwSize) != ERROR_SUCCESS)
+    return(bRv);
+
+
+  // Allocate memory
+  //
+  szTitleBuffer = (LPTSTR)LocalAlloc(LMEM_FIXED, dwSize);
+  if(!szTitleBuffer)
+  {
+    RegCloseKey(hKey);
+    return(bRv);
+  }
+
+  szTitleSz = (LPTSTR *)LocalAlloc(LPTR, (dwTitleLastIdx + 1) * sizeof(LPTSTR));
+  if(!szTitleSz)
+  {
+    if(szTitleBuffer != NULL)
+    {
+      LocalFree(szTitleBuffer);
+      szTitleBuffer = NULL;
+    }
+
+    RegCloseKey(hKey);
+    return(bRv);
+  }
+
+  // Query the data
+  //
+  if(RegQueryValueEx(hKey, szCounterValueName, 0, &dwType, (BYTE *)szTitleBuffer, &dwSize) != ERROR_SUCCESS)
+  {
+    RegCloseKey(hKey);
+    if(szTitleSz)
+      LocalFree(szTitleSz);
+    if(szTitleBuffer)
+      LocalFree(szTitleBuffer);
+
+    return(bRv);
+  }
+
+  // Setup the TitleSz array of pointers to point to beginning of each title string.
+  // TitleBuffer is type REG_MULTI_SZ.
+  //
+  szTitle = szTitleBuffer;
+  while(dwLen = lstrlen(szTitle))
+  {
+    dwIndex = atoi(szTitle);
+    szTitle = szTitle + dwLen + 1;
+
+    if(dwIndex <= dwTitleLastIdx)
+      szTitleSz[dwIndex] = szTitle;
+
+    szTitle = szTitle + lstrlen(szTitle) + 1;
+  }
+
+  PX_PROCESS = GetTitleIdx (NULL, szTitleSz, dwTitleLastIdx, PN_PROCESS);
+  PX_THREAD  = GetTitleIdx (NULL, szTitleSz, dwTitleLastIdx, PN_THREAD);
+  wsprintf(INDEX_PROCTHRD_OBJ, TEXT("%ld %ld"), PX_PROCESS, PX_THREAD);
+  pData = NULL;
+  if(GetPerfData(HKEY_PERFORMANCE_DATA, INDEX_PROCTHRD_OBJ, &pData, &pDataSize) == ERROR_SUCCESS)
+  {
+    PPERF_INSTANCE pInst;
+    DWORD          i = 0;
+
+    pProcessObject = FindObject(pData, PX_PROCESS);
+    if(pProcessObject)
+    {
+      LPSTR szPtrStr;
+      int   iLen;
+      char  szProcessNamePruned[MAX_BUF];
+      char  szNewProcessName[MAX_BUF];
+
+      if(sizeof(szProcessNamePruned) < (lstrlen(szProcessName) + 1))
+      {
+        if(hKey)
+          RegCloseKey(hKey);
+        if(szTitleSz)
+          LocalFree(szTitleSz);
+        if(szTitleBuffer)
+          LocalFree(szTitleBuffer);
+
+        return(bRv);
+      }
+
+      /* look for .exe and remove from end of string because the Process names
+       * under NT are returned without the extension */
+      lstrcpy(szProcessNamePruned, szProcessName);
+      iLen = lstrlen(szProcessNamePruned);
+      szPtrStr = &szProcessNamePruned[iLen - 4];
+      if((lstrcmpi(szPtrStr, ".exe") == 0) || (lstrcmpi(szPtrStr, ".dll") == 0))
+        *szPtrStr = '\0';
+
+      pInst = FirstInstance(pProcessObject);
+      for(i = 0; i < (DWORD)(pProcessObject->NumInstances); i++)
+      {
+        ZeroMemory(szNewProcessName, MAX_BUF);
+        if(WideCharToMultiByte(CP_ACP,
+                               0,
+                               (LPCWSTR)((PCHAR)pInst + pInst->NameOffset),
+                               -1,
+                               szNewProcessName,
+                               MAX_BUF,
+                               NULL,
+                               NULL) != 0)
+        {
+          if(lstrcmpi(szNewProcessName, szProcessNamePruned) == 0)
+          {
+            bRv = TRUE;
+            break;
+          }
+        }
+
+        pInst = NextInstance(pInst);
+      }
+    }
+  }
+
+  if(hKey)
+    RegCloseKey(hKey);
+  if(szTitleSz)
+    LocalFree(szTitleSz);
+  if(szTitleBuffer)
+    LocalFree(szTitleBuffer);
+
+  return(bRv);
+}
+
+
+//*********************************************************************
+//
+//  GetPerfData
+//
+//      Get a new set of performance data.
+//
+//      *ppData should be NULL initially.
+//      This function will allocate a buffer big enough to hold the
+//      data requested by szObjectIndex.
+//
+//      *pDataSize specifies the initial buffer size.  If the size is
+//      too small, the function will increase it until it is big enough
+//      then return the size through *pDataSize.  Caller should
+//      deallocate *ppData if it is no longer being used.
+//
+//      Returns ERROR_SUCCESS if no error occurs.
+//
+//      Note: the trial and error loop is quite different from the normal
+//            registry operation.  Normally if the buffer is too small,
+//            RegQueryValueEx returns the required size.  In this case,
+//            the perflib, since the data is dynamic, a buffer big enough
+//            for the moment may not be enough for the next. Therefor,
+//            the required size is not returned.
+//
+//            One should start with a resonable size to avoid the overhead
+//            of reallocation of memory.
+//
+DWORD   GetPerfData    (HKEY        hPerfKey,
+                        LPTSTR      szObjectIndex,
+                        PPERF_DATA  *ppData,
+                        DWORD       *pDataSize)
+{
+DWORD   DataSize;
+DWORD   dwR;
+DWORD   Type;
+
+
+    if (!*ppData)
+        *ppData = (PPERF_DATA) LocalAlloc (LMEM_FIXED, *pDataSize);
+
+
+    do  {
+        DataSize = *pDataSize;
+        dwR = RegQueryValueEx (hPerfKey,
+                               szObjectIndex,
+                               NULL,
+                               &Type,
+                               (BYTE *)*ppData,
+                               &DataSize);
+
+        if (dwR == ERROR_MORE_DATA)
+            {
+            LocalFree (*ppData);
+            *pDataSize += 1024;
+            *ppData = (PPERF_DATA) LocalAlloc (LMEM_FIXED, *pDataSize);
+            }
+
+        if (!*ppData)
+            {
+            LocalFree (*ppData);
+            return ERROR_NOT_ENOUGH_MEMORY;
+            }
+
+        } while (dwR == ERROR_MORE_DATA);
+
+    return dwR;
+}
+
+
+
+
+//*********************************************************************
+//
+//  FirstInstance
+//
+//      Returns pointer to the first instance of pObject type.
+//      If pObject is NULL then NULL is returned.
+//
+PPERF_INSTANCE   FirstInstance (PPERF_OBJECT pObject)
+{
+    if (pObject)
+        return (PPERF_INSTANCE)((PCHAR) pObject + pObject->DefinitionLength);
+    else
+        return NULL;
+}
+
+//*********************************************************************
+//
+//  NextInstance
+//
+//      Returns pointer to the next instance following pInst.
+//
+//      If pInst is the last instance, bogus data maybe returned.
+//      The caller should do the checking.
+//
+//      If pInst is NULL, then NULL is returned.
+//
+PPERF_INSTANCE   NextInstance (PPERF_INSTANCE pInst)
+{
+PERF_COUNTER_BLOCK *pCounterBlock;
+
+    if (pInst)
+        {
+        pCounterBlock = (PERF_COUNTER_BLOCK *)((PCHAR) pInst + pInst->ByteLength);
+        return (PPERF_INSTANCE)((PCHAR) pCounterBlock + pCounterBlock->ByteLength);
+        }
+    else
+        return NULL;
+}
+
+//*********************************************************************
+//
+//  FirstObject
+//
+//      Returns pointer to the first object in pData.
+//      If pData is NULL then NULL is returned.
+//
+PPERF_OBJECT FirstObject (PPERF_DATA pData)
+{
+    if (pData)
+        return ((PPERF_OBJECT) ((PBYTE) pData + pData->HeaderLength));
+    else
+        return NULL;
+}
+
+
+
+
+//*********************************************************************
+//
+//  NextObject
+//
+//      Returns pointer to the next object following pObject.
+//
+//      If pObject is the last object, bogus data maybe returned.
+//      The caller should do the checking.
+//
+//      If pObject is NULL, then NULL is returned.
+//
+PPERF_OBJECT NextObject (PPERF_OBJECT pObject)
+{
+    if (pObject)
+        return ((PPERF_OBJECT) ((PBYTE) pObject + pObject->TotalByteLength));
+    else
+        return NULL;
+}
+
+//*********************************************************************
+//
+//  FindObject
+//
+//      Returns pointer to object with TitleIndex.  If not found, NULL
+//      is returned.
+//
+PPERF_OBJECT FindObject (PPERF_DATA pData, DWORD TitleIndex)
+{
+PPERF_OBJECT pObject;
+DWORD        i = 0;
+
+    if (pObject = FirstObject (pData))
+        while (i < pData->NumObjectTypes)
+            {
+            if (pObject->ObjectNameTitleIndex == TitleIndex)
+                return pObject;
+
+            pObject = NextObject (pObject);
+            i++;
+            }
+
+    return NULL;
+}
+
+//********************************************************
+//
+//  GetTitleIdx
+//
+//      Searches Titles[] for Name.  Returns the index found.
+//
+DWORD GetTitleIdx(HWND hWnd, LPTSTR Title[], DWORD LastIndex, LPTSTR Name)
+{
+  DWORD Index;
+
+  for(Index = 0; Index <= LastIndex; Index++)
+    if(Title[Index])
+      if(!lstrcmpi (Title[Index], Name))
+        return(Index);
+
+  MessageBox(hWnd, Name, TEXT("Pviewer cannot find index"), MB_OK);
+  return 0;
+}
+
