@@ -387,6 +387,8 @@ NS_IMETHODIMP nsBlender::GetAlphas(const nsRect& aRect, nsIDrawingSurface* aBlac
         } else {
           result = NS_ERROR_FAILURE;
         }
+      } else {
+        result = NS_ERROR_FAILURE;
       }
 
       whiteSurface->Unlock();
