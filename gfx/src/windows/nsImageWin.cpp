@@ -919,14 +919,17 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
     mHBitmap = nsnull;
     mAlphaHBitmap = nsnull;
 
-    mAlphaBits = nsnull;
     mIsOptimized = PR_FALSE;
   }
 
-  if (mImageBits != nsnull) 
+  if (mImageBits != nsnull) {
     delete [] mImageBits;
-  if (mAlphaBits != nsnull)
+    mImageBits = nsnull;
+  }
+  if (mAlphaBits != nsnull) {
     delete [] mAlphaBits;
+    mAlphaBits = nsnull;
+  }
 
 	// Should be an ISupports, so we can release
   if (mColorMap != nsnull)
