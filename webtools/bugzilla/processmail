@@ -402,7 +402,7 @@ sub NewProcessOneBug {
         my ($who, $what, $when, $old, $new) = (@$ref);
         if ($who ne $lastwho) {
             $lastwho = $who;
-            $difftext .= "\n$who changed:\n\n";
+            $difftext .= "\n$who" . Param('emailsuffix') . " changed:\n\n";
             $difftext .= FormatTriple("What    ", "Old Value", "New Value");
             $difftext .= ('-' x 76) . "\n";
         }
@@ -570,6 +570,8 @@ sub NewProcessOnePerson ($$\@\%\%\%$$$$) {
     my $isnew = ($start !~ m/[1-9]/);
     
     my %substs;
+
+    $person .= Param('emailsuffix');
     $substs{"neworchanged"} = $isnew ? "New" : "Changed";
     $substs{"to"} = $person;
     $substs{"cc"} = '';

@@ -731,7 +731,7 @@ sub GetLongDescriptionAsText {
     while (MoreSQLData()) {
         my ($who, $when, $text) = (FetchSQLData());
         if ($count) {
-            $result .= "\n\n------- Additional Comments From $who  " .
+            $result .= "\n\n------- Additional Comments From $who".Param('emailsuffix')."  ".
                 time2str("%Y-%m-%d %H:%M", str2time($when)) . " -------\n";
         }
         $result .= $text;
@@ -772,6 +772,7 @@ sub GetLongDescriptionAsHTML {
     SendSQL($query);
     while (MoreSQLData()) {
         my ($who, $email, $when, $text) = (FetchSQLData());
+        $email .= Param('emailsuffix');
         if ($count) {
             $result .= "<BR><BR><I>------- Additional Comments From ";
               if ($who) {
