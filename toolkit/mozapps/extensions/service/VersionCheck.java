@@ -35,13 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/**
- * VersionCheckSoapBindingImpl.java
- *
- * This file was auto-generated from WSDL
- * by the Apache Axis WSDL2Java emitter.
- */
-
 package org.mozilla.update.extensions;
 
 import java.sql.*;
@@ -55,22 +48,28 @@ public class VersionCheck
 
   public static void main(String[] args) throws Exception 
   {
-    try 
-    {
-      VersionCheckSoapBindingImpl impl = new VersionCheckSoapBindingImpl();
-      int id = impl.getNewestExtension("{bb8ee064-ccb9-47fc-94ae-ec335af3fe2d}", "3.0", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", "0.8.0+");
-      System.out.println("result = " + impl.getProperty(id, "xpiurl"));
-    }
-    catch (Exception e) 
-    {
-      System.out.println("e = " + e.getMessage());
-    }
+    VersionCheck impl = new VersionCheck();
+    int id = impl.getNewestExtension("{bb8ee064-ccb9-47fc-94ae-ec335af3fe2d}", "3.0", "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}", "0.8.0+");
+    System.out.println("result = " + impl.getProperty(id, "xpiurl"));
   }
 
   protected Connection getConnection() throws Exception
   {
     Class.forName("com.mysql.jdbc.Driver");
     return DriverManager.getConnection("jdbc:mysql://localhost/umo_extensions", "root", "");
+  }
+
+  public Extension getExtension(String aExtensionGUID, String aInstalledVersion, String aTargetApp, String aTargetAppVersion)
+  {
+    int id = getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
+    Extension e = new Extension();
+    e.row = id;
+    e.id = getProperty(id, "id");
+    e.version = getProperty(id, "version");
+    e.name = getProperty(id, "name");
+    e.xpiURL = getProperty(id, "xpiurl");
+
+    return e;
   }
 
   public String getProperty(int aRowID, String aProperty)
@@ -90,7 +89,6 @@ public class VersionCheck
     }
     catch (Exception e)
     {
-      result = e.getMessage();
     }
     return result;
   }
