@@ -297,6 +297,19 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 			      
 			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do {
+		          #ifdef XP_PC
+		            // Test Command attribute
+		            PRBool isCommand = PR_FALSE;
+		            PRBool isControl = PR_FALSE;
+		            theEvent->GetMetaKey(&isCommand);
+		            theEvent->GetCtrlKey(&isControl);
+		            if (((isCommand && (modCommand != "true")) ||
+		                (!isCommand && (modCommand == "true"))) && 
+		                ((isControl && (modControl != "true")) ||
+		                (!isControl && (modControl == "true"))))
+		              break;
+                    //printf("Passed command/ctrl test \n"); // this leaks
+		          #else
 		            // Test Command attribute
 		            PRBool isCommand = PR_FALSE;
 		            theEvent->GetMetaKey(&isCommand);
@@ -311,7 +324,8 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 		                (!isControl && (modControl == "true")))
 		                break;
 		            //printf("Passed control test \n"); // this leaks    
-		                
+		          #endif
+		          
 		            // Test Shift attribute
 		            PRBool isShift = PR_FALSE;
 		            theEvent->GetShiftKey(&isShift);
