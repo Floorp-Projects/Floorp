@@ -30,7 +30,7 @@ tabpanels {
   -moz-image-region: rect(0px, 16px, 16px, 0px);
 }
 
-tab[busy] > .tab-icon {
+tab[busy] > .tab-middle > .tab-icon {
   list-style-image: url("chrome://browser/skin/Throbber-small.gif");
   -moz-opacity: 0.5;
 }

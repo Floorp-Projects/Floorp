@@ -82,7 +82,7 @@ tab[selected="true"] {
   padding: 1px 6px 4px 6px;
 }
 
-tab:focus > hbox {
+tab:focus > .tab-middle {
   -moz-outline: 1px dotted invert;
 }
 
