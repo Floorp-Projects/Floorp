@@ -474,7 +474,7 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 	}
 
 	/* P_String version of the file name. */
-  nsCRT::strcpy((char *)name+1, p_ap_decode_obj->fname);
+  PL_strcpy((char *)name+1, p_ap_decode_obj->fname);
 	name[0] = (char) in_count;
 	
 	if (p_ap_decode_obj->write_as_binhex)
@@ -577,7 +577,7 @@ int ap_decode_file_infor(appledouble_decode_object *p_ap_decode_obj)
 		StandardFileReply reply;
 
 		/* convert char* p_ap_decode_obj->fname to a pascal string */
-		nsCRT::strcpy((char*)filename + 1, p_ap_decode_obj->fname);
+		PL_strcpy((char*)filename + 1, p_ap_decode_obj->fname);
 		filename[0] = nsCRT::strlen(p_ap_decode_obj->fname);
 														
 		if( !p_ap_decode_obj->mSpec )
@@ -829,7 +829,7 @@ int ap_decode_process_header(
 				short	refNum;
 					
 				fname[0] = nsCRT::strlen(p_ap_decode_obj->fname);
-				nsCRT::strcpy((char*)fname+1, p_ap_decode_obj->fname);
+				PL_strcpy((char*)fname+1, p_ap_decode_obj->fname);
 				 
 				if (HOpenRF(p_ap_decode_obj->vRefNum,
 							p_ap_decode_obj->dirId,
@@ -946,7 +946,7 @@ int ap_decode_process_data(
 			fspec.vRefNum = p_ap_decode_obj->vRefNum;
 			fspec.parID   = p_ap_decode_obj->dirId;
 			fspec.name[0] = nsCRT::strlen(p_ap_decode_obj->fname);
-			nsCRT::strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
+			PL_strcpy((char*)fspec.name+1, p_ap_decode_obj->fname);
 			
 			filename = my_PathnameFromFSSpec(&fspec);
 			if (p_ap_decode_obj->is_binary)

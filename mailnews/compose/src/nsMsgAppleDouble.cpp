@@ -34,6 +34,7 @@
 #include "nsMsgAppleDouble.h"
 #include "nsMsgAppleCodes.h"
 #include "nsFileSpec.h"
+#include "nsMsgCompUtils.h"
 
 #ifdef XP_MAC
 
@@ -78,15 +79,15 @@ nsMsgIsMacFile(char *aUrlString)
     return PR_TRUE;
 
   if (
-       (!PL_strncasecmp(ext, "JPG")) ||
-       (!PL_strncasecmp(ext, "GIF")) ||
-       (!PL_strncasecmp(ext, "TIF")) ||
-       (!PL_strncasecmp(ext, "HTM")) ||
-       (!PL_strncasecmp(ext, "HTML")) ||
-       (!PL_strncasecmp(ext, "ART")) ||
-       (!PL_strncasecmp(ext, "XUL")) ||
-       (!PL_strncasecmp(ext, "XML")) ||
-       (!PL_strncasecmp(ext, "XUL"))
+       (!PL_strcasecmp(ext, "JPG")) ||
+       (!PL_strcasecmp(ext, "GIF")) ||
+       (!PL_strcasecmp(ext, "TIF")) ||
+       (!PL_strcasecmp(ext, "HTM")) ||
+       (!PL_strcasecmp(ext, "HTML")) ||
+       (!PL_strcasecmp(ext, "ART")) ||
+       (!PL_strcasecmp(ext, "XUL")) ||
+       (!PL_strcasecmp(ext, "XML")) ||
+       (!PL_strcasecmp(ext, "XUL"))
      )
      return PR_FALSE;
   else

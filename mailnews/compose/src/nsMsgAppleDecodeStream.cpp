@@ -361,7 +361,7 @@ static void
 simple_copy(MWContext* context, char* saveName, void* closure)
 {
 	/* just copy the filename to the closure, so the caller can get it.	*/
-  nsCRT::strcpy(closure, saveName);
+  PL_strcpy(closure, saveName);
 }
 #endif
 

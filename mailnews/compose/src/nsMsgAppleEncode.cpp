@@ -292,7 +292,7 @@ int ap_encode_header(
 	
 	if (firstime)
 	{
-    nsCRT::strcpy(rd_buff, 
+    PL_strcpy(rd_buff, 
 			"Content-Type: application/applefile\nContent-Transfer-Encoding: base64\n\n");
 		status = write_stream(p_ap_encode_obj,
 			 				rd_buff, 
@@ -444,7 +444,7 @@ int ap_encode_data(
 		** preparing to encode the data fork.
 		*/
 		name[0] = nsCRT::strlen(p_ap_encode_obj->fname);
-    nsCRT::strcpy((char*)name+1, p_ap_encode_obj->fname);
+    PL_strcpy((char*)name+1, p_ap_encode_obj->fname);
 		if (HOpen( 	p_ap_encode_obj->vRefNum,
 					p_ap_encode_obj->dirId, 
 					name, 

@@ -288,7 +288,7 @@ int binhex_encode_next(
 		{
 			if  (p_bh_encode_obj->state == BINHEX_STATE_START)
 			{
-				nsCRT::strcpy(p_bh_encode_obj->outbuff + p_bh_encode_obj->pos_outbuff,
+				PL_strcpy(p_bh_encode_obj->outbuff + p_bh_encode_obj->pos_outbuff,
 							"\r\n(This file must be converted with BinHex 4.0)\r\n\r\n:");
 				p_bh_encode_obj->pos_outbuff += 52;
 			
@@ -519,7 +519,7 @@ int binhex_decode_init (
 static void
 simple_copy(MWContext* context, char* newFile, void* closure)
 {
-	nsCRT::strcpy((char *)closure, newFile);
+	PL_strcpy((char *)closure, newFile);
 }
 
 PRIVATE void binhex_process(
