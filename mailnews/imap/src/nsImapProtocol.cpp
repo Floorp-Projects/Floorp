@@ -3873,7 +3873,7 @@ PRBool  nsImapProtocol::GetActive()
 PRBool nsImapProtocol::GetShowAttachmentsInline()
 {
   PRBool showAttachmentsInline = PR_TRUE;
-  if (m_imapMessageSink)
+  if (m_imapServerSink)
     m_imapServerSink->GetShowAttachmentsInline(&showAttachmentsInline);
   return showAttachmentsInline;
 
