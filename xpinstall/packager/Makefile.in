@@ -91,6 +91,9 @@ include $(topsrcdir)/config/rules.mk
 
 GARBAGE		+= $(DIST)/$(PACKAGE) $(PACKAGE)
 
+OSPACKAGE	= unix
+MOZILLA_BIN	= $(DIST)/bin/mozilla-bin
+
 ifeq ($(OS_ARCH),IRIX)
 STRIP_FLAGS	= -f
 endif
@@ -98,10 +101,16 @@ ifeq ($(OS_ARCH),BeOS)
 STRIP_FLAGS	= -g
 PLATFORM_EXCLUDE_LIST = ! -name "*.stub" ! -name "mozilla-bin"
 endif
+ifeq ($(OS_ARCH),OS2)
+STRIP		= lxlite.exe
+STRIP_FLAGS	= -u
+MOZILLA_BIN	= $(DIST)/bin/mozilla$(BIN_SUFFIX)
+OSPACKAGE	= os2
+endif
 
 all export libs install:: $(TARGETS)
 
-$(PACKAGE): $(DIST)/bin/mozilla-bin
+$(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)
 # NOTE: this must be a cp now that dist links into the tree so that we
 # do not strip the binaries actually in the tree.
@@ -145,7 +154,7 @@ endif
 	@echo "Compressing..."
 	cd $(DIST); $(MAKE_PACKAGE)
 
-dist: $(DIST)/bin/mozilla-bin
+dist: $(MOZILLA_BIN)
 ifndef MOZ_PKG_DEST
 	@echo "Please define MOZ_PKG_DEST first. It must be an absolute path to a dir outside the source tree. It should be empty (files might get deleted without warning)."
 	@echo "Other options (not required):"
@@ -155,7 +164,7 @@ else
 	@if [ ! -d $(MOZ_PKG_DEST) ]; then mkdir $(MOZ_PKG_DEST); fi
 	@cd $(MOZ_PKG_DEST); rm -rf bin $(MOZ_PKG_APPNAME) $(PACKAGE)
 	@echo "Creating distribution tarball in $(MOZ_PKG_DEST)..."
-	$(PERL) $(srcdir)/pkgcp.pl --source $(DEPTH)/dist --destination $(MOZ_PKG_DEST) --file $(srcdir)/packages-unix  --os unix --flat
+	$(PERL) $(srcdir)/pkgcp.pl --source $(DEPTH)/dist --destination $(MOZ_PKG_DEST) --file $(srcdir)/packages-$(OSPACKAGE) --os $(OSPACKAGE) --flat
 	@cd $(MOZ_PKG_DEST); mv bin $(MOZ_PKG_APPNAME)
 ifneq ($(MOZ_PKG_APPNAME),mozilla)
 	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
