@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.2 2000/07/17 22:21:42 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.3 2000/07/19 23:23:24 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -59,14 +59,14 @@ PERL=perl
 ## Conditional compilation options are no longer here; see
 ## the file 'mpi-config.h' instead.
 ##
-#CFLAGS=-ansi -fullwarn -woff 1521 -O3 -I.
-#CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 -I.
-#CFLAGS=-ansi -pedantic -Wall -O3 -I.
-#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -DUSE_32 -I.
-#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -I.
-#CFLAGS=-ansi -n32 -g -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC -I.
-#CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 -I.
-CFLAGS = -O -I.
+MPICMN = -I. -DMP_API_COMPATIBLE
+#CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
+#CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
+#CFLAGS=-ansi -pedantic -Wall -O3 $(MPICMN)
+#CFLAGS=-ansi -n32 -O3 -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -n32 -g -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
+#CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
+CFLAGS= -O $(MPICMN)
 
 ##
 ## Define LIBS to include any libraries you need to link against.
@@ -149,6 +149,9 @@ libmpi: mpi.o mpprime.o
 
 logtab.h: make-logtab
 	$(PERL) make-logtab > logtab.h
+
+mdxptest: mdxptest.c mpi.o 
+	$(CC) $(CFLAGS) -o mdxptest mdxptest.c mpi.o $(LIBS)
 
 mptest1: mpi.o tests/mptest-1.c
 	$(CC) $(CFLAGS) -o mptest1 mpi.o tests/mptest-1.c $(LIBS)
