@@ -188,7 +188,8 @@ if (1 < @prodlist) {
         "</SELECT>";
 }
 else {
-    $product_popup = $bug{'product'};
+    $product_popup = $bug{'product'} .
+        "<INPUT TYPE=\"HIDDEN\" NAME=\"product\" VALUE=\"$bug{'product'}\">";
 }
 
 print "
