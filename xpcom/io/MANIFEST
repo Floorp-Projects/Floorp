@@ -1,8 +1,8 @@
 nsEscape.h
 nsFileSpec.h
+nsFileSpecImpl.h
 nsFileSpecStreaming.h
 nsFileStream.h
-nsIFileWidget.h
 nsIBaseStream.h
 nsIByteBufferInputStream.h
 nsIFileStream.h

@@ -25,6 +25,7 @@ nsGUIEvent.h
 nsIRadioButton.h
 nsIMouseListener.h
 nsIEventListener.h
+nsIFileWidget.h
 nsIMenuListener.h
 nsIToolkit.h
 nsWidgetsCID.h
