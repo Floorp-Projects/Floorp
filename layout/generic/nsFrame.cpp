@@ -59,7 +59,6 @@
 #include "nsIFrameManager.h"
 #include "nsCSSRendering.h"
 #ifdef ACCESSIBILITY
-#include "nsIAccessibilityService.h"
 #include "nsIAccessible.h"
 #endif
 
@@ -1017,24 +1016,6 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(rv))
         HandleRelease(aPresContext, aEvent, aEventStatus);
     } break;
-#ifdef ACCESSIBILITY
-  case NS_GETACCESSIBLE:
-    {
-      // get the accessible
-     // if(content) {
-         //nsCOMPtr<nsIDOMNode> node = do_QueryInterface(content);
-         nsresult rv = NS_OK;
-         nsCOMPtr<nsIAccessibilityService> accService = 
-                  do_GetService("@mozilla.org/accessibilityService;1", &rv);
-         if (accService) {
-           // get an accessible for the dom node
-           nsIAccessible* acc;
-           accService->CreateRootAccessible(aPresContext, &acc);
-           NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
-         }
-      //}
-    } break;
-#endif
   default:
     break;
   }//end switch

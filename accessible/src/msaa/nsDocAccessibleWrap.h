@@ -43,23 +43,24 @@
 #ifndef _nsDocAccessibleWrap_H_
 #define _nsDocAccessibleWrap_H_
 
-#include "nsCOMPtr.h"
 #include "ISimpleDOMDocument.h"
 #include "nsDocAccessible.h"
 
 class nsDocAccessibleWrap: public nsDocAccessible,
-                           public ISimpleDOMDocument                           
+                           public ISimpleDOMDocument
 {
 public:
     nsDocAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
     virtual ~nsDocAccessibleWrap();
 
     // IUnknown
+    STDMETHODIMP_(ULONG) AddRef();
+    STDMETHODIMP_(ULONG) Release();
     STDMETHODIMP      QueryInterface(REFIID, void**);
 
-    // nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
+    static PRInt32 GetChildIDFor(nsIAccessible* aAccessible);
 
+    void GetXPAccessibleFor(const VARIANT& varChild, nsIAccessible **aXPAccessible);
     // ISimpleDOMDocument
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL( 
         /* [out] */ BSTR __RPC_FAR *url);
@@ -79,6 +80,14 @@ public:
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE put_alternateViewMediaTypes( 
         /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes);
+
+    // IAccessible
+    // Overrid get_accChild so that it can get any child via the unique ID
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
+        /* [in] */ VARIANT varChild,
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
+
+    NS_IMETHOD FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData);
 };
 
 #endif

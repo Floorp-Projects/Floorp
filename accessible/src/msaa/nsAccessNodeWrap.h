@@ -49,11 +49,18 @@
 #include "nsIDOMElement.h"
 #include "nsIContent.h"
 #include "nsAccessNode.h"
+#include "OLEIDL.H"
+#include "OLEACC.H"
+#include "winable.h"
+#undef ERROR /// Otherwise we can't include nsIDOMNSEvent.h if we include this
+
+typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
+typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
 
 class nsAccessNodeWrap :  public nsAccessNode, public ISimpleDOMNode
 {
   public: // construction, destruction
-    nsAccessNodeWrap(nsIDOMNode *);
+    nsAccessNodeWrap(nsIDOMNode *, nsIWeakReference* aShell);
     virtual ~nsAccessNodeWrap();
 
     // IUnknown methods - see iunknown.h for documentation
@@ -105,10 +112,22 @@ class nsAccessNodeWrap :  public nsAccessNode, public ISimpleDOMNode
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_previousSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
     virtual /* [propget] */ HRESULT STDMETHODCALLTYPE get_nextSibling(ISimpleDOMNode __RPC_FAR *__RPC_FAR *node);
 
+    static void InitAccessibility();
+    static void ShutdownAccessibility();
+
+    /// the accessible library and cached methods
+    static HINSTANCE gmAccLib;
+    static HINSTANCE gmUserLib;
+    static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
+    static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
+    static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
+
   protected:
     void GetAccessibleFor(nsIDOMNode *node, nsIAccessible **newAcc);
-    ISimpleDOMNode* MakeSimpleDOMNode(nsIDOMNode *node);
+    ISimpleDOMNode* MakeAccessNode(nsIDOMNode *node);
     NS_IMETHOD GetComputedStyleDeclaration(nsIDOMCSSStyleDeclaration **aCssDecl, PRUint32 *aLength);
+
+    static PRBool gIsEnumVariantSupportDisabled;
 };
 
 #endif

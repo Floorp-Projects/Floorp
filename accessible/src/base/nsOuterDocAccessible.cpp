@@ -41,16 +41,24 @@
 NS_IMPL_ISUPPORTS_INHERITED0(nsOuterDocAccessible, nsBlockAccessible)
 
 nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode, 
-                                           nsIAccessible* aDocAccessible, 
-                                           nsIWeakReference* aShell):
-  nsBlockAccessible(aNode, aShell), mInnerDocAccessible(aDocAccessible)
+                                          nsIAccessible* aDocAccessible, 
+                                          nsIWeakReference* aShell):
+  nsBlockAccessible(aNode, aShell)
 {
+  SetAccFirstChild(aDocAccessible); // weak ref
+  if (aDocAccessible) {
+    aDocAccessible->SetAccParent(this);
+  }
+  mAccChildCount = 1;
 }
 
   /* attribute wstring accName; */
 NS_IMETHODIMP nsOuterDocAccessible::GetAccName(nsAString& aAccName) 
 { 
-  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mInnerDocAccessible));
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mFirstChild));
+  if (!accDoc) {
+    return NS_ERROR_FAILURE;
+  }
   nsresult rv = accDoc->GetTitle(aAccName);
   if (NS_FAILED(rv) || aAccName.IsEmpty())
     rv = accDoc->GetURL(aAccName);
@@ -59,27 +67,6 @@ NS_IMETHODIMP nsOuterDocAccessible::GetAccName(nsAString& aAccName)
 
 NS_IMETHODIMP nsOuterDocAccessible::GetAccValue(nsAString& aAccValue) 
 { 
-  return NS_OK;
-}
-
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsOuterDocAccessible::GetAccFirstChild(nsIAccessible **aChild)
-{
-  NS_IF_ADDREF(*aChild = mInnerDocAccessible);
-  return NS_OK;
-}
-
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsOuterDocAccessible::GetAccLastChild(nsIAccessible **aChild)
-{
-  NS_IF_ADDREF(*aChild = mInnerDocAccessible);
-  return NS_OK;
-}
-
-/* long getAccChildCount (); */
-NS_IMETHODIMP nsOuterDocAccessible::GetAccChildCount(PRInt32 *aNumChildren)
-{
-  *aNumChildren = 1;
   return NS_OK;
 }
 
@@ -94,3 +81,4 @@ NS_IMETHODIMP nsOuterDocAccessible::GetAccState(PRUint32 *aAccState)
 {
   return nsAccessible::GetAccState(aAccState);
 }
+

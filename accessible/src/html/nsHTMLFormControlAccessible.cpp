@@ -38,20 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
-#include "nsAccessibleWrap.h"
-#include "nsFormControlAccessible.h"
 #include "nsHTMLFormControlAccessible.h"
-#include "nsIDOMHTMLButtonElement.h"
-#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMNSHTMLButtonElement.h"
-#include "nsIDOMHTMLLabelElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
-#include "nsIDOMXULCheckboxElement.h"
-#include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIFrame.h"
+#include "nsISelectionController.h"
 
 // --- checkbox -----
 
@@ -311,7 +303,7 @@ nsFormControlAccessible(aNode, aShell)
 #ifdef MOZ_ACCESSIBILITY_ATK
   SetTextNode(aNode);
 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (shell) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     nsIFrame *frame = nsnull;
@@ -379,16 +371,16 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
     *_retval |= STATE_READONLY;
 
   // Get current selection and find out if current node is in it
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
   if (!shell) {
      return NS_ERROR_FAILURE;  
   }
 
-  nsCOMPtr<nsIPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
   if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context));
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(context,getter_AddRefs(selCon));
     if (selCon) {

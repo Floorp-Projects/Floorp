@@ -37,13 +37,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
-#include "nsCOMPtr.h"
+#include "nsAccessibleWrap.h"
 #include "nsGUIEvent.h"
-#include "nsIContent.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMEventReceiver.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
 #include "nsIPresContext.h"
@@ -214,12 +210,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsLinkableAccessible, nsAccessible)
 NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
 { 
   if (IsALink()) {
-    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-    if (!shell)
-      return NS_ERROR_FAILURE;  
-    nsCOMPtr<nsIPresContext> context;
-    shell->GetPresContext(getter_AddRefs(context));
-    mLinkContent->SetFocus(context);
+    mLinkContent->SetFocus(nsCOMPtr<nsIPresContext>(GetPresContext()));
   }
   
   return NS_OK;
@@ -237,7 +228,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
   }
   
   // Get current selection and find out if current node is in it
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> shell(GetPresShell());
   if (!shell) {
      return NS_ERROR_FAILURE;  
   }
@@ -285,7 +276,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAString& _retval)
 {
   if (IsALink()) {
     nsCOMPtr<nsIDOMNode> linkNode(do_QueryInterface(mLinkContent));
-    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+    nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
     if (linkNode && presShell)
       return presShell->GetLinkLocation(linkNode, _retval);
   }
@@ -320,12 +311,7 @@ NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
   // Action 0 (default action): Jump to link
   if (index == eAction_Jump) {
     if (IsALink()) {
-      nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-      if (!shell)
-        return NS_ERROR_FAILURE;  
-
-      nsCOMPtr<nsIPresContext> presContext;
-      shell->GetPresContext(getter_AddRefs(presContext));
+      nsCOMPtr<nsIPresContext> presContext(GetPresContext());
       if (presContext) {
         nsMouseEvent linkClickEvent;
         linkClickEvent.eventStructType = NS_EVENT;
@@ -358,7 +344,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccKeyboardShortcut(nsAString& _retval)
       nsCOMPtr<nsIAccessible> linkAccessible;
       nsCOMPtr<nsIAccessibilityService> accService = 
         do_GetService("@mozilla.org/accessibilityService;1");
-      accService->GetAccessibleFor(linkNode, getter_AddRefs(linkAccessible));
+      accService->GetAccessibleInWeakShell(linkNode, mWeakShell,
+                                           getter_AddRefs(linkAccessible));
       return linkAccessible->GetAccKeyboardShortcut(_retval);
     }
   }
@@ -390,4 +377,10 @@ PRBool nsLinkableAccessible::IsALink()
   }
   mIsALinkCached = PR_TRUE;  // Cached that there is no link
   return PR_FALSE;
+}
+
+NS_IMETHODIMP nsLinkableAccessible::Shutdown()
+{
+  mLinkContent = nsnull;
+  return nsAccessibleWrap::Shutdown();
 }

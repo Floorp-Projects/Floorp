@@ -39,20 +39,10 @@
 
 // NOTE: alphabetically ordered
 #include "nsFormControlAccessible.h"
-#include "nsIDocument.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMHTMLInputElement.h"
-#include "nsIDOMHTMLLabelElement.h"
-#include "nsIDOMNodeList.h"
-#include "nsIDOMXULButtonElement.h"
-#include "nsIDOMXULCheckboxElement.h"
-#include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMXULLabelElement.h"
-#include "nsIDOMXULSelectCntrlEl.h"
-#include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
+#include "nsIDOMXULControlElement.h"
 
 /**
   * nsFormControlAccessible

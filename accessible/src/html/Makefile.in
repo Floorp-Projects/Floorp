@@ -55,7 +55,6 @@ CPPSRCS = \
   nsHTMLFormControlAccessible.cpp \
   nsHTMLImageAccessible.cpp \
   nsHTMLLinkAccessible.cpp \
-  nsHTMLPluginAccessible.cpp \
   nsHTMLSelectAccessible.cpp \
   nsHTMLTableAccessible.cpp \
   nsHTMLTextAccessible.cpp \

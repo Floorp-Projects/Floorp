@@ -38,8 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXULMenuAccessible.h"
-#include "nsAccessibleWrap.h"
-#include "nsIAccessible.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
@@ -179,40 +177,11 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccFirstChild(nsIAccessible **aAccFirstChild)
-{
-  *aAccFirstChild = nsnull;
-
-  // Last argument of PR_FALSE indicates we don't walk anonymous children for menuitems
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_FALSE);
-  if (NS_SUCCEEDED(walker.GetFirstChild())) {
-    *aAccFirstChild = walker.mState.accessible;
-    NS_ADDREF(*aAccFirstChild);
-  }
-
-  return NS_OK;  
-}
-
-NS_IMETHODIMP nsXULMenuitemAccessible::GetAccLastChild(nsIAccessible **aAccLastChild)
-{
-  *aAccLastChild = nsnull;
-
-  // Last argument of PR_FALSE indicates we don't walk anonymous children for menuitems
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_FALSE);
-  if (NS_SUCCEEDED(walker.GetLastChild())) {
-    *aAccLastChild = walker.mState.accessible;
-    NS_ADDREF(*aAccLastChild);
-  }
-
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsXULMenuitemAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
 {
-  // Last argument of PR_FALSE indicates we don't walk anonymous children for menuitems
-  nsAccessibleTreeWalker walker(mPresShell, mDOMNode, mSiblingIndex, mSiblingList, PR_FALSE);
-  *aAccChildCount = walker.GetChildCount();
-
+  // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
+  CacheChildren(PR_FALSE);
+  *aAccChildCount = mAccChildCount;
   return NS_OK;  
 }
 

@@ -43,7 +43,7 @@
 #include "nsHyperTextAccessible.h"
 #include "nsIFrame.h"
 #include "nsILink.h"
-#include "nsLayoutAtoms.h"
+#include "nsAccessibilityAtoms.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 /*
@@ -96,7 +96,7 @@ void nsAccessibleHyperText::GetAllTextChildren(nsIPresShell* aShell, nsIDOMNode*
     if (frame) {
       nsCOMPtr<nsIAtom> fType;
       frame->GetFrameType(getter_AddRefs(fType));
-      if (fType == nsLayoutAtoms::textFrame) {
+      if (fType == nsAccessibilityAtoms::textFrame) {
         nsRect frameRect;
         frame->GetRect(frameRect);
         // Skip the empty text frames that usually only consist of "\n"
@@ -104,7 +104,7 @@ void nsAccessibleHyperText::GetAllTextChildren(nsIPresShell* aShell, nsIDOMNode*
           mTextChildren->AppendElement(childNode);
         continue;
       }
-      else if (fType == nsLayoutAtoms::blockFrame) {
+      else if (fType == nsAccessibilityAtoms::blockFrame) {
         // we won't traverse the child blockframe that supposes to be another object
         continue;
       }
@@ -373,8 +373,7 @@ NS_IMETHODIMP nsAccessibleHyperText::RemoveSelection(PRInt32 aSelectionNum)
 }
 
 // ------- nsIAccessibleHyperText ---------------
-/* readonly attribute long links; */
-NS_IMETHODIMP nsAccessibleHyperText::GetLinks(PRInt32 *aLinks)
+/* readonly attribute long links; */NS_IMETHODIMP nsAccessibleHyperText::GetLinks(PRInt32 *aLinks)
 {
   *aLinks = 0;
 
@@ -404,12 +403,14 @@ NS_IMETHODIMP nsAccessibleHyperText::GetLink(PRInt32 aIndex, nsIAccessibleHyperL
     domNode->GetParentNode(getter_AddRefs(parentNode));
     nsCOMPtr<nsILink> link(do_QueryInterface(parentNode));
     if (link) {
-      if (linkCount++ == aIndex) {
+      if (linkCount++ == NS_STATIC_CAST(PRUint32, aIndex)) {
         nsCOMPtr<nsIWeakReference> weakShell;
         nsAccessibilityService::GetShellFromNode(parentNode, getter_AddRefs(weakShell));
         NS_ENSURE_TRUE(weakShell, NS_ERROR_FAILURE);
         *aLink = new nsHTMLLinkAccessible(parentNode, weakShell);
         NS_IF_ADDREF(*aLink);
+        nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(*aLink));
+        accessNode->Init();
         break;
       }
     }

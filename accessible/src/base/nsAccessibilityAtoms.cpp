@@ -36,39 +36,23 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNodeWrap.h"
+#include "nsAccessibilityAtoms.h"
+#include "nsStaticAtom.h"
+#include "nsMemory.h"
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+// define storage for all atoms
+#define ACCESSIBILITY_ATOM(_name, _value) nsIAtom* nsAccessibilityAtoms::_name;
+#include "nsAccessibilityAtomList.h"
+#undef ACCESSIBILITY_ATOM
 
+static const nsStaticAtom atomInfo[] = {
+#define ACCESSIBILITY_ATOM(name_, value_) { value_, &nsAccessibilityAtoms::name_ },
+#include "nsAccessibilityAtomList.h"
+#undef ACCESSIBILITY_ATOM
+};
 
-/*
- * Class nsAccessNodeWrap
- */
-
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-
-nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  nsAccessNode(aNode, aShell)
+void nsAccessibilityAtoms::AddRefAtoms()
 {
+  NS_RegisterStaticAtoms(atomInfo, NS_ARRAY_LENGTH(atomInfo));
 }
-
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessNodeWrap::~nsAccessNodeWrap()
-{
-}
-
-void nsAccessNodeWrap::InitAccessibility()
-{
-  nsAccessNode::InitXPAccessibility();
-}
-
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  nsAccessNode::ShutdownXPAccessibility();
-}
+ 

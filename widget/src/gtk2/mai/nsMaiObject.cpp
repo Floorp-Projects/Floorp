@@ -42,7 +42,8 @@
 #include "nsMaiObject.h"
 #include "nsMaiUtil.h"
 #include "nsMaiCache.h"
-#include "nsIAccessibleEventListener.h"
+#include "nsIAccessible.h"
+#include "nsIAccessNode.h"
 #include "nsString.h"
 
 #ifdef MAI_LOGGING
@@ -292,9 +293,10 @@ GetNSAccessibleUniqueID(nsIAccessible *aObj)
 {
     g_return_val_if_fail(aObj != NULL, 0);
 
-    PRInt32 accId = 0;
-    aObj->GetAccId(&accId);
-    return accId;
+    void* accId = 0;
+    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aObj));
+    accessNode->GetUniqueID(&accId);
+    return (guint)accId;
 }
 
 /* static functions for ATK callbacks */

@@ -157,6 +157,10 @@
 #include "nsIFormControl.h"
 #include "nsITimer.h"
 #include "nsITimerInternal.h"
+#ifdef ACCESSIBILITY
+#include "nsIAccessibilityService.h"
+#include "nsIAccessible.h"
+#endif
 
 // For style data reconstruction
 #include "nsStyleChangeList.h"
@@ -6293,12 +6297,19 @@ PresShell::HandleEventInternal(nsEvent* aEvent, nsIView *aView, PRUint32 aFlags,
 #ifdef ACCESSIBILITY
   if (aEvent->eventStructType == NS_ACCESSIBLE_EVENT)
   {
-    void*     clientData;
-    aView->GetClientData(clientData);
-    nsIFrame* frame = (nsIFrame *)clientData;
-    if (!frame)
-      return NS_ERROR_FAILURE;
-    return frame->HandleEvent(mPresContext, (nsGUIEvent*)aEvent, aStatus);
+    nsCOMPtr<nsIAccessibilityService> accService = 
+      do_GetService("@mozilla.org/accessibilityService;1");
+    if (accService) {
+      nsIAccessible* acc;
+      nsCOMPtr<nsIDOMNode> domNode(do_QueryInterface(mDocument));
+      NS_ASSERTION(domNode, "No dom node for doc");
+      accService->GetAccessibleInShell(domNode, this, &acc);
+      // Addref this - it's not a COM Ptr
+      // We'll make sure the right number of Addref's occur before
+      // handing this back to the accessibility client
+      NS_STATIC_CAST(nsAccessibleEvent*, aEvent)->accessible = acc;
+      return NS_OK;
+    }
   }
 #endif
 

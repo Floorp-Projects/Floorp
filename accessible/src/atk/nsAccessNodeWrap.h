@@ -48,8 +48,11 @@
 class nsAccessNodeWrap :  public nsAccessNode
 {
   public: // construction, destruction
-    nsAccessNodeWrap(nsIDOMNode *);
+    nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell);
     virtual ~nsAccessNodeWrap();
+
+    static void InitAccessibility();
+    static void ShutdownAccessibility();
 };
 
 #endif

@@ -40,7 +40,6 @@ interface nsIAccessible : nsISupports
   readonly attribute long accChildCount;
   attribute AString accName;
   readonly attribute AString accValue;
-  readonly attribute long accId;
 
   readonly attribute AString accDescription;
   readonly attribute AString accKeyboardShortcut;
@@ -54,6 +53,7 @@ interface nsIAccessible : nsISupports
   readonly attribute nsIAccessible accFocused;
 
   nsIAccessible accGetAt(in long x, in long y);
+  nsIAccessible getChildAt(in long aChildIndex); // zero-based index
 
   nsIAccessible accNavigateRight();
   nsIAccessible accNavigateLeft();
@@ -77,11 +77,10 @@ interface nsIAccessible : nsISupports
 
   nsIDOMNode accGetDOMNode();
 
-  // Used by Accessible implementation to save data and speed up accessibility tree walking
-  [noscript] void CacheOptimizations(in nsIAccessible aParent, in PRInt32 aSiblingIndex, in nsIDOMNodeList aSiblingList);
-
-  [noscript] void handleEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
-
+  [noscript] void setAccParent(in nsIAccessible aAccParent);
+  [noscript] void setAccFirstChild(in nsIAccessible aAccFirstChild);
+  [noscript] void setAccNextSibling(in nsIAccessible aAccNextSibling);
+  [noscript] void fireToolkitEvent(in unsigned long aEvent, in nsIAccessible aTarget, in voidPtr aData);
   [noscript] void getNativeInterface(out voidPtr aOutAccessible);
 
  // MSAA State flags - used for bitfield. More than 1 allowed.

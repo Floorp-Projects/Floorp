@@ -41,7 +41,6 @@
 // NOTE: alphabetically ordered
 #include "nsContentCID.h"
 #include "nsIAccessibleEditableText.h"
-#include "nsIAccessibleEventListener.h"
 #include "nsIClipboard.h"
 #include "nsIDOMAbstractView.h"
 #include "nsIDOMCharacterData.h"
@@ -67,6 +66,7 @@
 #include "nsStyleStruct.h"
 #include "nsTextAccessible.h"
 #include "nsTextFragment.h"
+#include "nsIAccessibleEventReceiver.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 
@@ -905,6 +905,7 @@ nsAccessibleEditableText::nsAccessibleEditableText()
 
 nsAccessibleEditableText::~nsAccessibleEditableText()
 {
+  // XXX todo bolian, needs to do this at shutdown, and set mEditor = nsnull
   if (mEditor)
     mEditor->RemoveEditActionListener(this);
 }
@@ -930,8 +931,10 @@ nsresult nsAccessibleEditableText::FireTextChangeEvent(AtkTextChange *aTextData)
 {
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(NS_STATIC_CAST(nsIAccessibleText*, this)));
   if (accessible) {
+#ifdef DEBUG
     printf("  [start=%d, length=%d, add=%d]\n", aTextData->start, aTextData->length, aTextData->add);
-    accessible->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
+#endif
+    accessible->FireToolkitEvent(nsIAccessibleEventReceiver::EVENT_ATK_TEXT_CHANGE, accessible, aTextData);
   }
 
   return NS_OK;

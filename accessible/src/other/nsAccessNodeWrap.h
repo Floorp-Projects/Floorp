@@ -48,7 +48,7 @@
 class nsAccessNodeWrap :  public nsAccessNode
 {
   public: // construction, destruction
-    nsAccessNodeWrap(nsIDOMNode *);
+    nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell);
     virtual ~nsAccessNodeWrap();
 };
 

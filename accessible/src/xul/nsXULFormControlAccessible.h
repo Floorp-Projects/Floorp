@@ -42,9 +42,7 @@
 #define _nsXULFormControlAccessible_H_
 
 // NOTE: alphabetically ordered
-#include "nsBaseWidgetAccessible.h"
 #include "nsFormControlAccessible.h"
-#include "nsHTMLFormControlAccessible.h"
 #include "nsIAccessibleValue.h"
 
 class nsXULButtonAccessible : public nsAccessibleWrap

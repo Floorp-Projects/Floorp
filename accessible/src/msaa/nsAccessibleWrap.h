@@ -43,23 +43,8 @@
 #ifndef _nsAccessibleWrap_H_
 #define _nsAccessibleWrap_H_
 
-#include "OLEIDL.H"
-#include "OLEACC.H"
-#include "winable.h"
-#undef ERROR /// Otherwise we can't include nsIDOMNSEvent.h if we include this
 #include "nsCOMPtr.h"
 #include "nsAccessible.h"
-
-typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
-typedef LRESULT (STDAPICALLTYPE *LPFNGETGUITHREADINFO)(DWORD idThread, GUITHREADINFO* pgui);
-
-/// the accessible library and cached methods
-static HINSTANCE gmAccLib;
-static HINSTANCE gmUserLib;
-static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
-static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
-static LPFNGETGUITHREADINFO gmGetGUIThreadInfo;
-static PRBool gIsEnumVariantSupportDisabled = PR_FALSE;
 
 class nsAccessibleWrap : public nsAccessible, 
                          public IAccessible,
@@ -192,7 +177,7 @@ class nsAccessibleWrap : public nsAccessible,
         LCID lcid, WORD wFlags, DISPPARAMS *pDispParams,
         VARIANT *pVarResult, EXCEPINFO *pExcepInfo, UINT *puArgErr);
 
-  virtual void GetXPAccessibleFor(VARIANT varChild, nsIAccessible **aXPAccessible);
+  virtual void GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible);
   NS_IMETHOD GetNativeInterface(void **aOutAccessible);
 
   // NT4 does not have the oleacc that defines these methods. So we define copies here that automatically
@@ -201,21 +186,12 @@ class nsAccessibleWrap : public nsAccessible,
   static STDMETHODIMP NotifyWinEvent(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 
 protected:
-  long mCachedChildCount;
   // mEnumVARIANTPosition not the current accessible's position, but a "cursor" of 
   // where we are in the current list of children, with respect to
   // nsIEnumVariant::Reset(), Skip() and Next().
-  long mEnumVARIANTPosition;  
+  PRUint16 mEnumVARIANTPosition;  
 
   IDispatch *NativeAccessible(nsIAccessible *aXPAccessible);
-
-  // Most IAccessible methods are not optimized to use the cache
-  // when CHILDID_SELF is mot used in the VARIANT struct.
-  // For this reason, a child number of CHILDID_SELF is recommended, 
-  // rather than using the child number you need in the VARIANT
-  // This is what most assistive tech tends to do, so it shouldn't be a problem.
-  void CacheMSAAChildren();
-  IAccessible *GetCachedChild(long aChildNum);
 };
 
 #endif

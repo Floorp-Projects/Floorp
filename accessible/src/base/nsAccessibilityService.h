@@ -40,34 +40,34 @@
 #define __nsAccessibilityService_h__
 
 #include "nsIAccessibilityService.h"
-#include "nsIContent.h"
-#include "nsIPresShell.h"
-#include "nsIDocShell.h"
-#include "nsObjectFrame.h"
+#include "nsIObserver.h"
 
 class nsIFrame;
 class nsIWeakReference;
 class nsIDOMNode;
+class nsObjectFrame;
+class nsIDocShell;
+class nsIPresShell;
+class nsIContent;
 
-class nsAccessibilityService : public nsIAccessibilityService
+class nsAccessibilityService : public nsIAccessibilityService, public nsIObserver
 {
 public:
   nsAccessibilityService();
   virtual ~nsAccessibilityService();
 
   NS_DECL_ISUPPORTS
-
-  // nsIAccessibilityService methods:
   NS_DECL_NSIACCESSIBILITYSERVICE
+  NS_DECL_NSIOBSERVER
 
   static nsresult GetShellFromNode(nsIDOMNode *aNode, nsIWeakReference **weakShell);
 
 private:
-  nsresult GetHTMLObjectAccessibleFor(nsIDOMNode *aNode, nsIPresShell *aShell, nsObjectFrame *aFrame, nsIAccessible **_retval);
   nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
   void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
-  PRBool mIsActive;
+  nsresult GetAccessible(nsIDOMNode *aNode, nsIPresShell *aPresShell,
+                         nsIWeakReference *aWeakShell, nsIAccessible **aAccessible);
 };
 
 #endif /* __nsIAccessibilityService_h__ */

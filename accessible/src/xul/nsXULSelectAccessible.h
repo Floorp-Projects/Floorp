@@ -42,9 +42,9 @@
 
 #include "nsCOMPtr.h"
 #include "nsIAccessibleSelectable.h"
-#include "nsIDOMNode.h"
-#include "nsIWeakReference.h"
 #include "nsXULMenuAccessible.h"
+
+class nsIWeakReference;
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -115,8 +115,6 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-
-  static nsresult GetFocusedOptionNode(nsIWeakReference *aPresShell, nsIDOMNode *aListNode, nsCOMPtr<nsIDOMNode>& aFocusedOptionNode);
 };
 
 /** ------------------------------------------------------ */
@@ -175,7 +173,6 @@ public:
 
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
 
   NS_IMETHOD GetAccValue(nsAString& _retval);

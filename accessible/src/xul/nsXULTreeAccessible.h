@@ -39,15 +39,11 @@
 #ifndef __nsXULTreeAccessible_h__
 #define __nsXULTreeAccessible_h__
 
-#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
-#include "nsCOMPtr.h"
-#include "nsIDOMNode.h"
-#include "nsIWeakReference.h"
 #include "nsITreeBoxObject.h"
 #include "nsITreeView.h"
-#include "nsXULSelectAccessible.h"
 #include "nsIAccessibleTable.h"
+#include "nsXULSelectAccessible.h"
 
 /*
  * A class the represents the XUL Tree widget.
@@ -97,7 +93,6 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccName(nsAString& _retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
-  NS_IMETHOD GetAccId(PRInt32 *_retval);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
@@ -112,6 +107,9 @@ public:
   NS_IMETHOD AccRemoveSelection(void); 
   NS_IMETHOD AccTakeSelection(void); 
   NS_IMETHOD AccTakeFocus(void); 
+
+  /* ------ nsIAccessNode ----- */
+  NS_IMETHOD GetUniqueID(void **aUniqueID);
 
 private:
   nsCOMPtr<nsITreeBoxObject> mTree;

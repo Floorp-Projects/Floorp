@@ -36,39 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNodeWrap.h"
+/******
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
- */
+  This file contains the list of all accessibility nsIAtoms and their values
+  
+  It is designed to be used as inline input to nsAccessibilityAtoms.cpp *only*
+  through the magic of C preprocessing.
+
+  All entires must be enclosed in the macro ACCESSIBILITY_ATOM which will have cruel
+  and unusual things done to it
+
+  It is recommended (but not strictly necessary) to keep all entries
+  in alphabetical order
+
+  The first argument to ACCESSIBILITY_ATOM is the C++ identifier of the atom
+  The second argument is the string value of the atom
+
+ ******/
 
 
-/*
- * Class nsAccessNodeWrap
- */
-
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
-
-nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  nsAccessNode(aNode, aShell)
-{
-}
-
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessNodeWrap::~nsAccessNodeWrap()
-{
-}
-
-void nsAccessNodeWrap::InitAccessibility()
-{
-  nsAccessNode::InitXPAccessibility();
-}
-
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  nsAccessNode::ShutdownXPAccessibility();
-}
+  // Alphabetical list of frame types
+ACCESSIBILITY_ATOM(blockFrame, "BlockFrame")
+ACCESSIBILITY_ATOM(inlineFrame, "InlineFrame")
+ACCESSIBILITY_ATOM(objectFrame, "ObjectFrame")
+ACCESSIBILITY_ATOM(textFrame, "TextFrame")

@@ -38,9 +38,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLAreaAccessible.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
-#include "nsAccessible.h"
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMElement.h"
@@ -53,8 +50,10 @@
 // --- area -----
 
 nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aAccParent, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell), mAccParent(aAccParent)
+nsLinkableAccessible(aDomNode, aShell)
 { 
+  Init(); // Make sure we're in cache
+  mParent = aAccParent;
 }
 
 /* wstring getAccName (); */
@@ -112,17 +111,20 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccChildCount(PRInt32 *_retval)
 
 NS_IMETHODIMP nsHTMLAreaAccessible::GetAccParent(nsIAccessible * *aAccParent) 
 { 
-  *aAccParent = mAccParent;
+  *aAccParent = mParent;
   NS_IF_ADDREF(*aAccParent);
   return NS_OK;
 }
 
-nsIAccessible *nsHTMLAreaAccessible::CreateAreaAccessible(nsIDOMNode *aDOMNode)
+nsIAccessible *nsHTMLAreaAccessible::GetAreaAccessible(nsIDOMNode *aDOMNode)
 {
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   if (accService) {
     nsIAccessible* acc = nsnull;
-    accService->CreateHTMLAreaAccessible(mPresShell, aDOMNode, mAccParent, &acc);
+    accService->GetCachedAccessible(aDOMNode, mWeakShell, &acc);
+    if (!acc) {
+      accService->CreateHTMLAreaAccessible(mWeakShell, aDOMNode, mParent, &acc);
+    }
     return acc;
   }
   return nsnull;
@@ -135,7 +137,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccNextSibling(nsIAccessible * *aAccNextS
   nsCOMPtr<nsIDOMNode> nextNode;
   mDOMNode->GetNextSibling(getter_AddRefs(nextNode));
   if (nextNode)
-    *aAccNextSibling = CreateAreaAccessible(nextNode);
+    *aAccNextSibling = GetAreaAccessible(nextNode);
   return NS_OK;  
 }
 
@@ -146,7 +148,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccPreviousSibling(nsIAccessible * *aAccP
   nsCOMPtr<nsIDOMNode> prevNode;
   mDOMNode->GetPreviousSibling(getter_AddRefs(prevNode));
   if (prevNode)
-    *aAccPrevSibling = CreateAreaAccessible(prevNode);
+    *aAccPrevSibling = GetAreaAccessible(prevNode);
   return NS_OK;  
 }
 
@@ -158,7 +160,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32
 
   *x = *y = *width = *height = 0;
 
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> presShell(GetPresShell());
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIPresContext> presContext;

@@ -37,15 +37,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
-#include "nsIAccessibilityService.h"
+#include "nsXULTreeAccessible.h"
 #include "nsIBoxObject.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMXULElement.h"
 #include "nsITreeSelection.h"
-#include "nsITreeView.h"
-#include "nsXULAtoms.h"
-#include "nsXULTreeAccessible.h"
 
 // ---------- nsXULTreeAccessible ----------
 
@@ -126,7 +121,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccFirstChild(nsIAccessible **aAccFirstChi
     PRInt32 rowCount;
     mTreeView->GetRowCount(&rowCount);
     if (rowCount > 0) {
-      *aAccFirstChild = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, 0);
+      *aAccFirstChild = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, 0);
       if (! *aAccFirstChild)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(*aAccFirstChild);
@@ -143,7 +138,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetAccLastChild(nsIAccessible **aAccLastChild
   PRInt32 rowCount;
   mTreeView->GetRowCount(&rowCount);
   if (rowCount > 0) {
-    *aAccLastChild = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, rowCount - 1);
+    *aAccLastChild = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, rowCount - 1);
     if (! *aAccLastChild)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aAccLastChild);
@@ -191,7 +186,7 @@ NS_IMETHODIMP nsXULTreeAccessible::GetSelectedChildren(nsISupportsArray **_retva
     selection->IsSelected(rowIndex, &isSelected);
     if (isSelected) {
       nsCOMPtr<nsIAccessible> tempAccess;
-      tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, rowIndex);
+      tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, rowIndex);
       if (!tempAccess)
         return NS_ERROR_OUT_OF_MEMORY;
       selectedAccessibles->AppendElement(tempAccess);
@@ -287,7 +282,7 @@ NS_IMETHODIMP nsXULTreeAccessible::RefSelection(PRInt32 aIndex, nsIAccessible **
     if (isSelected) {
       if (selCount == aIndex) {
         nsCOMPtr<nsIAccessible> tempAccess;
-        tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, rowIndex);
+        tempAccess = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, rowIndex);
         if (!tempAccess)
           return NS_ERROR_OUT_OF_MEMORY;
         *_retval = tempAccess;
@@ -523,7 +518,7 @@ NS_IMETHODIMP nsXULTreeAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn, nsIA
   rv = mTree->GetColumnIndex(id.get(), &realColumn);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mPresShell, aRow, realColumn);
+  *_retval = new nsXULTreeitemAccessible(this, mDOMNode, mWeakShell, aRow, realColumn);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
   NS_IF_ADDREF(*_retval);
@@ -644,7 +639,8 @@ NS_IMETHODIMP nsXULTreeAccessible::IsCellSelected(PRInt32 aRow, PRInt32 aColumn,
 nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, PRInt32 aColumn):
 nsLeafAccessible(aDOMNode, aShell)
 {
-  mParent = aParent;
+  Init(); // Add ourselves to cache using GetUniqueID() override
+  mParent = aParent;  // xxx todo: do we need this? We already have mParent on nsAccessible
 
   nsXULTreeAccessible::GetTreeBoxObject(aDOMNode, getter_AddRefs(mTree));
   if (mTree)
@@ -688,10 +684,10 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccValue(nsAString& _retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTreeitemAccessible::GetAccId(PRInt32 *aAccId)
+NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
 {
   // Since mDOMNode is same for all tree item, use |this| pointer as the unique Id
-  *aAccId = - NS_PTR_TO_INT32(this);
+  *aUniqueID = NS_STATIC_CAST(void*, this);
   return NS_OK;
 }
 
@@ -803,7 +799,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccNextSibling(nsIAccessible **aAccNex
 
   if (mColumnIndex < 0) {
     if (mRow < rowCount - 1) {
-      *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow + 1);
+      *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, mRow + 1);
       if (! *aAccNextSibling)
         return NS_ERROR_OUT_OF_MEMORY;
       NS_ADDREF(*aAccNextSibling);
@@ -827,7 +823,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccNextSibling(nsIAccessible **aAccNex
     row++;
   }
 
-  *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, row, column);
+  *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, row, column);
   NS_ENSURE_TRUE(*aAccNextSibling, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aAccNextSibling);
@@ -844,7 +840,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccPreviousSibling(nsIAccessible **aAc
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   if (mRow > 0 && mColumnIndex < 0) {
-    *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, mRow - 1);
+    *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, mRow - 1);
     if (! *aAccPreviousSibling)
       return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*aAccPreviousSibling);
@@ -867,7 +863,7 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetAccPreviousSibling(nsIAccessible **aAc
     row--;
   }
 
-  *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, row, column);
+  *aAccPreviousSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, row, column);
   NS_ENSURE_TRUE(*aAccPreviousSibling, NS_ERROR_OUT_OF_MEMORY);
 
   NS_ADDREF(*aAccPreviousSibling);
@@ -1035,7 +1031,7 @@ NS_IMETHODIMP nsXULTreeColumnsAccessible::GetAccNextSibling(nsIAccessible **aAcc
         PRInt32 rowCount;
         treeView->GetRowCount(&rowCount);
         if (rowCount > 0) {
-          *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mPresShell, 0);
+          *aAccNextSibling = new nsXULTreeitemAccessible(mParent, mDOMNode, mWeakShell, 0);
           if (! *aAccNextSibling)
             return NS_ERROR_OUT_OF_MEMORY;
           NS_ADDREF(*aAccNextSibling);

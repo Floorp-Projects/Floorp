@@ -86,8 +86,6 @@
 #include "winable.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleDocument.h"
-#include "nsIAccessibleEventReceiver.h"
-#include "nsIAccessibleEventListener.h"
 #include "nsIAccessNode.h"
 #ifndef WM_GETOBJECT
 #define WM_GETOBJECT 0x03d
@@ -1895,6 +1893,7 @@ NS_METHOD nsWindow::Show(PRBool bState)
     }
   }
   mIsVisible = bState;
+
   return NS_OK;
 }
 
@@ -4315,8 +4314,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
           result = DispatchFocus(NS_ACTIVATE, isMozWindowTakingFocus);
         }
 #ifdef ACCESSIBILITY
-        if (nsWindow::gIsAccessibilityOn && !mRootAccessible && 
-            mIsTopWidgetWindow) 
+        if (nsWindow::gIsAccessibilityOn && !mRootAccessible &&
+            mIsTopWidgetWindow)
           CreateRootAccessible();
 #endif
         break;
@@ -7301,25 +7300,6 @@ void nsWindow::CreateRootAccessible()
 
   if (!mRootAccessible) {
     DispatchAccessibleEvent(NS_GETACCESSIBLE, &mRootAccessible);
-    if (!mRootAccessible)
-      return; // No root accessible created
-
-    nsCOMPtr<nsIAccessibleDocument> accessibleDoc(do_QueryInterface(mRootAccessible));
-    NS_ASSERTION(accessibleDoc, "No nsIAccessibleDocument for root accessible");
-    accessibleDoc->SetWindow(NS_REINTERPRET_CAST(void*, GetWindowHandle()));
-
-    nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(mRootAccessible));
-    NS_ASSERTION(accessNode, "No nsIAccessNode for root accessible");
-    accessNode->Init(accessibleDoc);
-
-    // XXX aaron this should be simplfied soon
-    nsCOMPtr<nsIAccessibleEventReceiver> eventReceiver = 
-      do_QueryInterface(mRootAccessible);
-    nsCOMPtr<nsIAccessibleEventListener> eventListener = 
-      do_QueryInterface(mRootAccessible);
-    if (eventReceiver && eventListener) {
-      eventReceiver->AddAccessibleEventListener(eventListener);
-    }
   }
 }
 

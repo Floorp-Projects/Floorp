@@ -38,21 +38,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
-#include "nsAccessibilityService.h"
 #include "nsXULTabAccessible.h"
-#include "nsIContentViewer.h"
-#include "nsIDocShell.h"
 #include "nsIDocument.h"
+#include "nsIFrame.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsIFrame.h"
-#include "nsIPluginViewer.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
-#include "nsplugindefs.h"
-#include "nsPluginViewer.h"
 
 /**
   * XUL Tab
@@ -127,7 +118,7 @@ NS_IMETHODIMP nsXULTabAccessible::GetAccState(PRUint32 *_retval)
   // Check style for -moz-user-focus: normal to see if it's focusable
   *_retval &= ~STATE_FOCUSABLE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
   if (presShell && content) {
     nsIFrame *frame = nsnull;
     const nsStyleUserInterface* ui;
@@ -156,7 +147,7 @@ nsAccessibleWrap(aNode, aShell)
 /** We are a window*/
 NS_IMETHODIMP nsXULTabBoxAccessible::GetAccRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_WINDOW;
+  *_retval = ROLE_PANE;
   return NS_OK;
 }
 
@@ -167,12 +158,14 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+#ifdef NEVER
 /** 2 children, tabs, tabpanels */
 NS_IMETHODIMP nsXULTabBoxAccessible::GetAccChildCount(PRInt32 *_retval)
 {
   *_retval = 2;
   return NS_OK;
 }
+#endif
 
 /**
   * XUL TabPanels
@@ -189,7 +182,7 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetAccChildCount(PRInt32 *_retval)
 
 /** Constructor */
 nsXULTabPanelsAccessible::nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
+nsAccessibleWrap(aNode, aShell)
 { 
 }
 
@@ -219,99 +212,6 @@ NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccState(PRUint32 *_retval)
 NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccName(nsAString& _retval)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccFirstChild(nsIAccessible **_retval)
-{
-  nsAccessible::GetAccFirstChild(_retval);
-  if (*_retval == nsnull)
-    GetAccPluginChild(_retval);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccLastChild(nsIAccessible **_retval)
-{
-  nsAccessible::GetAccLastChild(_retval);
-  if (*_retval == nsnull)
-    GetAccPluginChild(_retval);
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP nsXULTabPanelsAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  nsAccessible::GetAccChildCount(_retval);
-  if (*_retval == 0) {
-    *_retval = 1;
-  }
-  return NS_OK;
-}
-
-nsresult nsXULTabPanelsAccessible::GetAccPluginChild(nsIAccessible **_retval)
-{
-  // this big mess eventually gets the HWND for the full
-  // page plugin, and creates the shim class so we can
-  // get the IAccessible from the system in the widget/src code
-  *_retval = nsnull;
-#ifndef XP_WIN
-  return NS_ERROR_NOT_IMPLEMENTED;
-#else
-  if (!mAccService)
-    return NS_ERROR_NOT_AVAILABLE;
-
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  mDOMNode->GetOwnerDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
-  if (!doc)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptGlobalObject> globalObj;
-  doc->GetScriptGlobalObject(getter_AddRefs(globalObj));
-  if (!globalObj)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (!webShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWebShellContainer> container;
-  webShell->GetContainer(*getter_AddRefs(container));
-  nsCOMPtr<nsIWebShellWindow> wsWin(do_QueryInterface(container));
-  if (!wsWin)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWebShell> contentShell;
-  wsWin->GetContentWebShell(getter_AddRefs(contentShell));
-  nsCOMPtr<nsIDocShell> contentDocShell(do_QueryInterface(contentShell));
-  if (!contentDocShell)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContentViewer> contentViewer;
-  contentDocShell->GetContentViewer(getter_AddRefs(contentViewer));
-  nsCOMPtr<nsIPluginViewer> pluginViewer (do_QueryInterface(contentViewer));
-  if (!pluginViewer)
-    return NS_ERROR_FAILURE;
-#endif
-
-#ifdef XP_WIN
-  nsIPluginViewer *pViewer = pluginViewer.get();
-  PluginViewerImpl *viewer = NS_STATIC_CAST(PluginViewerImpl*, pViewer);
-  // Plugin code tends to be very platform specific, need to rev this
-  //    when linux/mac plugins come into the picture HWND == windows
-  HWND pluginPort = nsnull;
-  viewer->GetPluginPort(&pluginPort);
-  if (!pluginPort)
-    return NS_ERROR_FAILURE;
-
-  mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, 
-                                                NS_REINTERPRET_CAST(void*, pluginPort), 
-                                                _retval);
-  return NS_OK;
-#endif
 }
 
 /**
