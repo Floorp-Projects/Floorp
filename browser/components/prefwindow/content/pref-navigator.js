@@ -83,6 +83,21 @@ function setHomePageToDefaultPage()
   homePageField.value = url;
 }
 
+function onOK() {
+  if (!('homepage' in parent)) return;
+
+  // Replace pipes with commas to look nicer.
+  parent.homepage = parent.homepage.replace(/\|/g,', ');
+  
+  try {
+    // Update the home button tooltip.
+    top.opener.document.getElementById("home-button").setAttribute("tooltiptext", parent.homepage);
+  }
+  catch(ex) {
+    // Maybe we opened prefs from somewhere else
+  }
+}
+
 function Startup()
 {  
   if (top.opener) {
@@ -94,5 +109,6 @@ function Startup()
       useButton.label = useButton.getAttribute("label2");
     }
   }
+  parent.hPrefWindow.registerOKCallbackFunc(onOK);
 }
       
