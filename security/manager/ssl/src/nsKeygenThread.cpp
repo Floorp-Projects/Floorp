@@ -32,23 +32,92 @@ nsKeygenThread::nsKeygenThread()
  iAmRunning(PR_FALSE),
  keygenReady(PR_FALSE),
  statusDialogClosed(PR_FALSE),
- threadHandle(nsnull),
- params(nsnull)
+ alreadyReceivedParams(PR_FALSE),
+ privateKey(nsnull),
+ publicKey(nsnull),
+ slot(nsnull),
+ keyGenMechanism(0),
+ params(nsnull),
+ isPerm(PR_FALSE),
+ isSensitive(PR_FALSE),
+ wincx(nsnull),
+ threadHandle(nsnull)
 {
+  NS_INIT_ISUPPORTS();
   mutex = PR_NewLock();
 }
 
 nsKeygenThread::~nsKeygenThread()
 {
-  if (mutex)
+  if (mutex) {
     PR_DestroyLock(mutex);
+  }
+  
+  if (statusDialogPtr) {
+    NS_RELEASE(statusDialogPtr);
+  }
 }
 
-void nsKeygenThread::SetParams(GenerateKeypairParameters *p)
+void nsKeygenThread::SetParams(
+    PK11SlotInfo *a_slot,
+    PRUint32 a_keyGenMechanism,
+    void *a_params,
+    PRBool a_isPerm,
+    PRBool a_isSensitive,
+    void *a_wincx )
 {
   PR_Lock(mutex);
-  params = p;
+ 
+    if (!alreadyReceivedParams) {
+      alreadyReceivedParams = PR_TRUE;
+      if (a_slot) {
+        slot = PK11_ReferenceSlot(a_slot);
+      }
+      else {
+        slot = nsnull;
+      }
+      keyGenMechanism = a_keyGenMechanism;
+      params = a_params;
+      isPerm = a_isPerm;
+      isSensitive = a_isSensitive;
+      wincx = a_wincx;
+    }
+
   PR_Unlock(mutex);
+}
+
+nsresult nsKeygenThread::GetParams(
+    SECKEYPrivateKey **a_privateKey,
+    SECKEYPublicKey **a_publicKey)
+{
+  if (!a_privateKey || !a_publicKey) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult rv;
+  
+  PR_Lock(mutex);
+  
+    // GetParams must not be called until thread creator called
+    // Join on this thread.
+    NS_ASSERTION(keygenReady, "logic error in nsKeygenThread::GetParams");
+
+    if (keygenReady) {
+      *a_privateKey = privateKey;
+      *a_publicKey = publicKey;
+
+      privateKey = 0;
+      publicKey = 0;
+      
+      rv = NS_OK;
+    }
+    else {
+      rv = NS_ERROR_FAILURE;
+    }
+  
+  PR_Unlock(mutex);
+  
+  return rv;
 }
 
 static void PR_CALLBACK nsKeygenThreadRunner(void *arg)
@@ -78,14 +147,14 @@ nsresult nsKeygenThread::StartKeyGeneration(nsIDOMWindowInternal *statusDialog)
 
   PR_Lock(mutex);
 
-    statusDialogPtr = wi;
-    NS_ADDREF(statusDialogPtr);
-    wi = 0;
-
     if (iAmRunning || keygenReady) {
       PR_Unlock(mutex);
       return NS_OK;
     }
+
+    statusDialogPtr = wi;
+    NS_ADDREF(statusDialogPtr);
+    wi = 0;
 
     iAmRunning = PR_TRUE;
 
@@ -119,8 +188,6 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
     // it again to avoid problems.
     statusDialogClosed = PR_TRUE;
 
-    NS_RELEASE(statusDialogPtr);
-
   PR_Unlock(mutex);
 
   return NS_OK;
@@ -128,22 +195,21 @@ nsresult nsKeygenThread::UserCanceled(PRBool *threadAlreadyClosedDialog)
 
 void nsKeygenThread::Run(void)
 {
-  GenerateKeypairParameters *p = 0;
+  PRBool canGenerate = PR_FALSE;
 
   PR_Lock(mutex);
 
-    if (params) {
-      p = params;
-      // Make sure it's impossible that will use the same parameters again.
-      params = 0;
+    if (alreadyReceivedParams) {
+      canGenerate = PR_TRUE;
+      keygenReady = PR_FALSE;
     }
 
   PR_Unlock(mutex);
 
-  if (p)
-    p->privateKey = PK11_GenerateKeyPair(p->slot, p->keyGenMechanism,
-                                         p->params, &p->publicKey,
-                                         PR_TRUE, PR_TRUE, nsnull);
+  if (canGenerate)
+    privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism,
+                                         params, &publicKey,
+                                         isPerm, isSensitive, wincx);
   
   // This call gave us ownership over privateKey and publicKey.
   // But as the params structure is owner by our caller,
@@ -157,6 +223,15 @@ void nsKeygenThread::Run(void)
 
     keygenReady = PR_TRUE;
     iAmRunning = PR_FALSE;
+
+    // forget our parameters
+    if (slot) {
+      PK11_FreeSlot(slot);
+      slot = 0;
+    }
+    keyGenMechanism = 0;
+    params = 0;
+    wincx = 0;
 
     if (!statusDialogClosed)
       windowToClose = statusDialogPtr;

@@ -358,7 +358,7 @@ nsKeygenFormProcessor::GetPublicKey(nsString& aValue, nsString& aChallenge,
     CERTPublicKeyAndChallenge pkac;
     SECKeySizeChoiceInfo *choice = SECKeySizeChoiceList;
     nsIGeneratingKeypairInfoDialogs * dialogs;
-    nsKeygenThread KeygenRunnable;
+    nsKeygenThread *KeygenRunnable = 0;
     nsCOMPtr<nsIKeygenThread> runnable;
 
     // Get the key size //
@@ -440,40 +440,37 @@ found_match:
     rv = getNSSDialogs((void**)&dialogs,
                        NS_GET_IID(nsIGeneratingKeypairInfoDialogs));
 
-    if (NS_FAILED(rv)) {
+    if (NS_SUCCEEDED(rv)) {
+        KeygenRunnable = new nsKeygenThread();
+        if (KeygenRunnable) {
+            NS_ADDREF(KeygenRunnable);
+        }
+    }
+
+    if (NS_FAILED(rv) || !KeygenRunnable) {
+        rv = NS_OK;
         privateKey = PK11_GenerateKeyPair(slot, keyGenMechanism, params,
                                           &publicKey, PR_TRUE, PR_TRUE, nsnull);
     } else {
-        GenerateKeypairParameters gkp;
-        gkp.privateKey = nsnull;
-        gkp.publicKey = nsnull;
-        gkp.slot = slot;
-        gkp.keyGenMechanism = keyGenMechanism;
-        gkp.params = params;
-        KeygenRunnable.SetParams(&gkp);
-        // Our parameters instance will be modified by the thread.
+        KeygenRunnable->SetParams( slot, keyGenMechanism, params, PR_TRUE, PR_TRUE, nsnull );
 
-        runnable = do_QueryInterface(&KeygenRunnable);
+        runnable = do_QueryInterface(KeygenRunnable);
         
         if (runnable) {
             rv = dialogs->DisplayGeneratingKeypairInfo(m_ctx, runnable);
 
-            // We call join on the thread,
-            // so we can be sure that no simultaneous access will happen.
-            KeygenRunnable.Join();
+            // We call join on the thread, 
+            // so we can be sure that no simultaneous access to the passed parameters will happen.
+            KeygenRunnable->Join();
 
             NS_RELEASE(dialogs);
             if (!NS_FAILED(rv)) {
-                privateKey = gkp.privateKey;
-                publicKey = gkp.publicKey;
-                slot = gkp.slot;
-                keyGenMechanism = gkp.keyGenMechanism;
-                params = gkp.params;
+                rv = KeygenRunnable->GetParams(&privateKey, &publicKey);
             }
         }
     }
     
-    if (!privateKey) {
+    if (NS_FAILED(rv) || !privateKey) {
         goto loser;
     }
     // just in case we'll need to authenticate to the db -jp //
@@ -546,6 +543,9 @@ loser:
     }
     if (slot != nsnull) {
         PK11_FreeSlot(slot);
+    }
+    if (KeygenRunnable) {
+      NS_RELEASE(KeygenRunnable);
     }
     return rv;
 }
