@@ -1489,11 +1489,10 @@ nsresult nsParser::Terminate(void){
     if(result==NS_ERROR_HTMLPARSER_STOPPARSING) {
       // XXX - [ until we figure out a way to break parser-sink circularity ]
       // Hack - Hold a reference until we are completely done...
-      nsIParser* me=(nsIParser*)this;
-      NS_ADDREF(me); 
+      nsCOMPtr<nsIParser> kungFuDeathGrip(this); 
       mInternalState=result;
       result=DidBuildModel(result);
-      NS_RELEASE(me);
+      return result;
     }
   }
   return mInternalState;

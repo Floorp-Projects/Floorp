@@ -70,8 +70,8 @@ TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
 TagList  gContainsParam={1,{eHTMLTag_param}};
 TagList  gColgroupKids={1,{eHTMLTag_col}}; 
 TagList  gAddressKids={1,{eHTMLTag_p}};
-TagList  gBodyKids={8, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
-                        eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li}};
+TagList  gBodyKids={9, {eHTMLTag_dd,eHTMLTag_del,eHTMLTag_dt,eHTMLTag_ins,
+                        eHTMLTag_noscript,eHTMLTag_nolayer,eHTMLTag_script,eHTMLTag_li,eHTMLTag_param}}; // Added PARAM for bug 54448
 TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
 TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gDTKids={1,{eHTMLTag_dt}};

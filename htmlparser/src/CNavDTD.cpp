@@ -1307,7 +1307,6 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
   //of another section. If it is, the cache it for later.
   //  1. Get the root node for the child. See if the ultimate node is the BODY, FRAMESET, HEAD or HTML
   PRInt32   theTagCount = mBodyContext->GetCount();
-  CToken*   theToken    = aToken;
 
   if(aToken) {
     // Note: The node for a misplaced skipped content is not yet created ( for optimization ) and hence
@@ -1327,18 +1326,21 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
         }
       }
 
-      PRBool done=PR_FALSE;
       if(theIndex>kNotFound) {
         // Avoid TD and TH getting into misplaced content stack
         // because they are legal table elements. -- Ref: Bug# 20797
         static eHTMLTags gLegalElements[]={eHTMLTag_td,eHTMLTag_th};
-        while(!done){
-          mMisplacedContent.Push(theToken);  
+                  
+        mMisplacedContent.Push(aToken);  
 
-          // If the token is attributed then save those attributes too.
-          if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
+        IF_HOLD(aToken);  // Hold on to this token for later use.
+
+        // If the token is attributed then save those attributes too.    
+        if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
+
+        while(1){
          
-          theToken=mTokenizer->PeekToken();
+          CToken* theToken=mTokenizer->PeekToken();
           
           if(theToken) {
             theTag=(eHTMLTags)theToken->GetTypeID();
@@ -1347,12 +1349,15 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
                  (FindTagInSet(theTag,gLegalElements,sizeof(gLegalElements)/sizeof(theTag))) ||
                  (gHTMLElements[theTag].HasSpecialProperty(kBadContentWatch))                ||
                  (gHTMLElements[aParent].CanContain(theTag))) {
-                  done=PR_TRUE;
+                  break;
               }            
             }
-            if(!done) theToken=mTokenizer->PopToken();
+              
+            theToken=mTokenizer->PopToken();
+            mMisplacedContent.Push(theToken);
+
           }
-          else done=PR_TRUE;
+          else break;
         }//while
         if(result==NS_OK) {
           result=HandleSavedTokens(mBodyContext->mContextTopIndex=theIndex);
@@ -1362,6 +1367,9 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
     }//if
 
     if((aChildTag!=aParent) && (gHTMLElements[aParent].HasSpecialProperty(kSaveMisplaced))) {
+      
+      IF_HOLD(aToken);  // Hold on to this token for later use. Ref Bug. 53695
+      
       mMisplacedContent.Push(aToken);
       // If the token is attributed then save those attributes too.
        if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
@@ -1893,9 +1901,8 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
           mTempContext->Push((nsCParserNode*)mBodyContext->Pop(theChildStyleStack));
         }
      
-        PRInt32 theIndex=kNotFound;
         // Now flush out all the bad contents.
-        while(theBadTokenCount > 0){
+        while(theBadTokenCount-- > 0){
           theToken=(CToken*)mMisplacedContent.PopFront();
           if(theToken) {
             theTag       = (eHTMLTags)theToken->GetTypeID();
@@ -1906,17 +1913,24 @@ nsresult CNavDTD::HandleSavedTokens(PRInt32 anIndex) {
               if(theAttrToken) {
                 mTokenizer->PushTokenFront(theAttrToken);
               }
+              theBadTokenCount--;
             }
             
-            // Make sure that the BeginContext() is ended only by the call to
-            // EndContext(). Ref: Bug 25202
-            if(eToken_end==theToken->GetTokenType()) theIndex=mBodyContext->LastOf(theTag);
+            if(eToken_end==theToken->GetTokenType()) {
+              // Ref: Bug 25202
+              // Make sure that the BeginContext() is ended only by the call to
+              // EndContext(). Ex: <center><table><a></center>.
+              // In the Ex. above </center> should not close <center> above table.
+              // Doing so will cause the current context to get closed prematurely. 
+              PRInt32 theIndex=mBodyContext->LastOf(theTag);
               
-            if(!(theIndex!=kNotFound && theIndex<=mBodyContext->mContextTopIndex))
-              result=HandleToken(theToken,mParser);
-            else IF_FREE(theToken);
+              if(theIndex!=kNotFound && theIndex<=mBodyContext->mContextTopIndex) {
+                IF_FREE(theToken);
+                continue;
+              }
+            }
+            result=HandleToken(theToken,mParser);
           }
-          theBadTokenCount--;
         }//while
         if(theTopIndex != mBodyContext->GetCount()) {
            CloseContainersTo(theTopIndex,mBodyContext->TagAt(theTopIndex),PR_TRUE);
