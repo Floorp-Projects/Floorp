@@ -44,6 +44,4 @@ Rights Reserved.
 
 <!ENTITY reuseThread.label                "Double-clicking a folder opens it in a new window.">
 <!ENTITY reuseThread.accesskey            "f">
-<!ENTITY reuseMessage.label               "Double-clicking a message always opens a new window. (Leave this unchecked to reuse an existing window).">
-<!ENTITY reuseMessage.accesskey           "n">
 <!ENTITY reuseExp.label                   "If you prefer fewer windows, unselect these options, and Mail will open items into existing windows.">

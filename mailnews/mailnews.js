@@ -209,7 +209,6 @@ localDefPref("mailnews.thread_pane_height",         -1);
 localDefPref("mailnews.category_pane_width",        -1);
 pref("mailnews.reuse_thread_window",        true);
 pref("mailnews.reuse_thread_window2",        true);
-pref("mailnews.reuse_message_window",       true);
 pref("mailnews.message_in_thread_window",   true);
 pref("mailnews.javascript_enabled",         true);
 
