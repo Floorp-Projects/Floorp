@@ -204,6 +204,11 @@ SOURCE=\
 # Begin Source File
 
 SOURCE=\
+..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Thread.h
+# End Source File
+# Begin Source File
+
+SOURCE=\
 ..\..\..\..\Packages\java\lang\nativesrc\geninclude\java_lang_Throwable.h
 # End Source File
 # Begin Source File
