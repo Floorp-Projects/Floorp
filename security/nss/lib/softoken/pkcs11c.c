@@ -3068,7 +3068,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     PK11Session *session;
     PRBool checkWeak = PR_FALSE;
     CK_ULONG key_length = 0;
-    CK_KEY_TYPE key_type;
+    CK_KEY_TYPE key_type = -1;
     CK_OBJECT_CLASS objclass = CKO_SECRET_KEY;
     CK_RV crv = CKR_OK;
     CK_BBOOL cktrue = CK_TRUE;
@@ -3144,6 +3144,7 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     case CKM_NETSCAPE_PBE_MD5_HMAC_KEY_GEN:
     case CKM_NETSCAPE_PBE_MD2_HMAC_KEY_GEN:
 	key_gen_type = pk11_pbe_hmac;
+	key_type = CKK_GENERIC_SECRET;
 	break;
     case CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC:
     case CKM_NETSCAPE_PBE_SHA1_40_BIT_RC2_CBC:
@@ -3176,6 +3177,10 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
     }
 
     if (crv != CKR_OK) { pk11_FreeObject(key); return crv; }
+
+    /* if there was no error,
+     * key_type *MUST* be set in the switch statement above */
+    PORT_Assert( key_type != -1 );
 
     /*
      * now to the actual key gen.
