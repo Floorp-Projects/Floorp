@@ -438,7 +438,7 @@ NS_IMETHODIMP nsDragService::GetData (nsITransferable * aTransferable, PRUint32 
 #endif
 
   nsCOMPtr<nsISupports> genericDataWrapper;
-  CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+  nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
   aTransferable->SetTransferData(foundFlavor,
                                  genericDataWrapper,
                                  mSelectionData.length);

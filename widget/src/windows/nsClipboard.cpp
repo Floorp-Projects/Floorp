@@ -30,6 +30,7 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
 
 #include "nsIWidget.h"
 #include "nsIComponentManager.h"
@@ -546,7 +547,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
         if (NS_OK == res) {
           nsCOMPtr<nsISupports> genericDataWrapper;
-          CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
           break;
         }
@@ -554,7 +555,7 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
         if (NS_OK == res) {
           nsCOMPtr<nsISupports> genericDataWrapper;
-          CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
           break;
         }
@@ -657,7 +658,7 @@ NS_IMETHODIMP nsClipboard::ForceDataToClipboard()
       // this call hands back new memory with the contents copied into it
       nsCOMPtr<nsISupports> genericDataWrapper;
       mTransferable->GetTransferData(flavorStr, getter_AddRefs(genericDataWrapper), &dataLen);
-      CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
+      nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataLen );
 
       // now place it on the Clipboard
       if (nsnull != data) {

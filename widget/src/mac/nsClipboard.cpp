@@ -38,6 +38,7 @@
 #include "nsIComponentManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
 
 #include <Scrap.h>
 
@@ -110,14 +111,14 @@ nsClipboard :: SetNativeClipboardData()
       PRUint32 dataSize = 0;
       nsCOMPtr<nsISupports> genericDataWrapper;
       errCode = mTransferable->GetTransferData ( flavorStr, getter_AddRefs(genericDataWrapper), &dataSize );
-      CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
+      nsPrimitiveHelpers::CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, dataSize );
       #ifdef NS_DEBUG
         if ( NS_FAILED(errCode) ) printf("nsClipboard:: Error getting data from transferable\n");
       #endif
       
       // stash on clipboard
       long numBytes = ::PutScrap ( dataSize, macOSFlavor, data );
-      if ( numBytes != dataSize )
+      if ( numBytes != noErr )
         errCode = NS_ERROR_FAILURE;
         
       nsAllocator::Free ( data );
@@ -129,7 +130,7 @@ nsClipboard :: SetNativeClipboardData()
   short mappingLen = 0;
   const char* mapping = theMapper.ExportMapping(&mappingLen);
   long numBytes = ::PutScrap ( mappingLen, nsMimeMapperMac::MappingFlavor(), mapping );
-  if ( numBytes != mappingLen )
+  if ( numBytes != noErr )
     errCode = NS_ERROR_FAILURE;
   nsCRT::free ( NS_CONST_CAST(char*, mapping) );
   
@@ -166,7 +167,6 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
   nsMimeMapperMac theMapper ( mimeMapperData );
   nsCRT::free ( mimeMapperData );
  
-  // 
   // Now walk down the list of flavors. When we find one that is actually on the
   // clipboard, copy out the data into the transferable in that format. SetTransferData()
   // implicitly handles conversions.
@@ -189,7 +189,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
       if ( NS_SUCCEEDED(loadResult) && clipboardData ) {
         // put it into the transferable
         nsCOMPtr<nsISupports> genericDataWrapper;
-        CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );
+        nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );
         errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
         #ifdef NS_DEBUG
           if ( errCode != NS_OK ) printf("nsClipboard:: Error setting data into transferable\n");
@@ -213,7 +213,7 @@ nsClipboard :: GetNativeClipboardData(nsITransferable * aTransferable)
 nsresult
 nsClipboard :: GetDataOffClipboard ( ResType inMacFlavor, char** outData, long* outDataSize )
 {
-  if ( !outData || !outDataSize || !inMacFlavor )
+  if ( !outData || !inMacFlavor )
     return NS_ERROR_FAILURE;
 
   // check if it is on the clipboard

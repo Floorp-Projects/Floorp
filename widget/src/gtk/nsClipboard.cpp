@@ -30,6 +30,7 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsXPIDLString.h"
+#include "nsPrimitiveHelpers.h"
 
 #include "nsVoidArray.h"
 
@@ -559,7 +560,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable)
 #endif
 
   nsCOMPtr<nsISupports> genericDataWrapper;
-  CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
+  nsPrimitiveHelpers::CreatePrimitiveForData ( foundFlavor, mSelectionData.data, mSelectionData.length, getter_AddRefs(genericDataWrapper) );
   aTransferable->SetTransferData(foundFlavor,
                                  genericDataWrapper,
                                  mSelectionData.length);
@@ -784,7 +785,7 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
   rv = cb->mTransferable->GetTransferData(dataFlavor, 
                                           getter_AddRefs(genericDataWrapper),
                                           &dataLength);
-  CreateDataFromPrimitive ( dataFlavor, genericDataWrapper, &clipboardData, dataLength );
+  nsPrimitiveHelpers::CreateDataFromPrimitive ( dataFlavor, genericDataWrapper, &clipboardData, dataLength );
   if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
     size_t size = 1;
     // find the number of bytes in the data for the below thing
