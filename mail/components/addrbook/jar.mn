@@ -12,8 +12,3 @@ messenger.jar:
 *+  content/messenger/addressbook/abNewCardDialog.xul           (content/abNewCardDialog.xul)
 *   content/messenger/addressbook/abContactsPanel.xul           (content/abContactsPanel.xul)
 *   content/messenger/addressbook/abContactsPanel.js            (content/abContactsPanel.js)
-
-en-US.jar:
-+  locale/en-US/messenger/addressbook/abMainWindow.dtd          (locale/abMainWindow.dtd)
-+  locale/en-US/messenger/addressbook/abNewCardDialog.dtd       (locale/abNewCardDialog.dtd)
-   locale/en-US/messenger/addressbook/abContactsPanel.dtd       (locale/abContactsPanel.dtd)
