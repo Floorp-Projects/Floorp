@@ -703,6 +703,8 @@ PRBool nsHTMLTagContent::DivAlignParamToString(const nsHTMLValue& aValue,
   return EnumValueToString(aValue, kDivAlignTable, aResult);
 }
 
+/* ----- table specific attribute code ----- */
+
 static nsHTMLTagContent::EnumTable kTableAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
@@ -721,6 +723,30 @@ PRBool nsHTMLTagContent::TableAlignParamToString(const nsHTMLValue& aValue,
 {
   return EnumValueToString(aValue, kTableAlignTable, aResult);
 }
+
+
+static nsHTMLTagContent::EnumTable kTableCaptionAlignTable[] = {
+  { "left",  NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
+  { "top",   NS_STYLE_VERTICAL_ALIGN_TOP},
+  { "bottom",NS_STYLE_VERTICAL_ALIGN_BOTTOM},
+  { 0 }
+};
+
+PRBool nsHTMLTagContent::ParseTableCaptionAlignParam(const nsString& aString,
+                                                     nsHTMLValue& aResult)
+{
+  return ParseEnumValue(aString, kTableCaptionAlignTable, aResult);
+}
+
+PRBool nsHTMLTagContent::TableCaptionAlignParamToString(const nsHTMLValue& aValue,
+                                                        nsString& aResult)
+{
+  return EnumValueToString(aValue, kTableCaptionAlignTable, aResult);
+}
+
+/* ----- end table specific attribute code ----- */
+
 
 void
 nsHTMLTagContent::ParseValueOrPercent(const nsString& aString,

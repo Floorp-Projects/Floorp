@@ -145,6 +145,44 @@ public:
   NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify);
 };
 
+
+/* ---------- inlines ---------- */
+
+inline int nsTableColGroup::GetType()
+{  return nsITableContent::kTableColGroupType;}
+
+inline int nsTableColGroup::GetSpan ()
+{
+  if (0 < mSpan)
+    return mSpan;
+  return 1;
+}
+  
+inline int nsTableColGroup::GetStartColumnIndex ()
+{  return mStartColIndex;}
+  
+inline void nsTableColGroup::SetStartColumnIndex (int aIndex)
+{
+  if (aIndex != mStartColIndex)
+    mColCount = 0;  // our index is being changed, trigger reset of col indicies, don't propogate back to table
+  mStartColIndex = aIndex;
+}
+
+inline void nsTableColGroup::SetSpan (int aSpan)
+{
+  mSpan = aSpan;
+  if (0 < ChildCount ())  // span is only relevant if we don't have children
+    ResetColumns ();
+}
+
+inline void nsTableColGroup::ResetColumns ()
+{
+  mColCount = 0;
+  if (nsnull != mTable)
+    mTable->ResetColumns ();
+}
+
+
 #endif
 
 

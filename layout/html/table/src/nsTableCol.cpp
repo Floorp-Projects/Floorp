@@ -27,6 +27,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
+#include "nsHTMLAtoms.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -173,53 +174,84 @@ nsrefcnt nsTableCol::Release(void)
   return mRefCnt;
 }
 
-// TODO: what about proportional width values (0*, 1*, etc.) down in COL tag
-// TODO: need a ::SetAttribute hook for width
+void nsTableCol::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+{
+  nsHTMLValue val;
 
-int nsTableCol::GetType()
-{
-  return nsITableContent::kTableColType;
-}
-
-int nsTableCol::GetRepeat ()
-{
-  if (0 < mRepeat)
-    return mRepeat;
-  return 1;
-}
-
-nsTableColGroup * nsTableCol::GetColGroup ()
-{
-  NS_IF_ADDREF(mColGroup);
-  return mColGroup;
-}
-
-void nsTableCol::SetColGroup (nsTableColGroup * aColGroup)
-{
-  mColGroup = aColGroup;
-}
-
-int nsTableCol::GetColumnIndex ()
-{
-  return mColIndex;
-}
-  
-void nsTableCol::SetColumnIndex (int aColIndex)
-{
-  mColIndex = aColIndex;
+  if (aAttribute == nsHTMLAtoms::width) 
+  {
+    ParseValueOrPercentOrProportional(aValue, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if ( aAttribute == nsHTMLAtoms::repeat)
+  {
+    ParseValue(aValue, 0, val, eHTMLUnit_Integer);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    SetRepeat(val.GetIntValue());
+  }
+  else if (aAttribute == nsHTMLAtoms::align) {
+    nsHTMLValue val;
+    if (ParseTableAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
+  else if (aAttribute == nsHTMLAtoms::valign) {
+    nsHTMLValue val;
+    if (ParseTableAlignParam(aValue, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
+    return;
+  }
 }
 
-void nsTableCol::SetRepeat (int aRepeat)
+void nsTableCol::MapAttributesInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext)
 {
-  mRepeat = aRepeat;
-  ResetColumns ();
+  NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
+  NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+  if (nsnull != mAttributes) {
+
+    float p2t;
+    nsHTMLValue value;
+    nsStyleText* textStyle = nsnull;
+
+    // width
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      switch (value.GetUnit()) {
+      case eHTMLUnit_Percent:
+        position->mWidth.SetPercentValue(value.GetPercentValue());
+        break;
+
+      case eHTMLUnit_Pixel:
+        p2t = aPresContext->GetPixelsToTwips();
+        position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
+        break;
+      }
+    }
+
+    // align: enum
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+    
+    // valign: enum
+    GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+  }
 }
 
-void nsTableCol::ResetColumns ()
-{
-  if (nsnull != mColGroup)
-    mColGroup->ResetColumns ();
-}
 
 
 nsresult

@@ -188,10 +188,23 @@ public:
   static PRBool DivAlignParamToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
 
+  /** HTML4 table align attributes 
+    */
   static PRBool ParseTableAlignParam(const nsString& aString, nsHTMLValue& aRes);
 
+  /** HTML4 table align attributes 
+    */
   static PRBool TableAlignParamToString(const nsHTMLValue& aValue,
                                         nsString& aResult);
+  
+  /** HTML4 table caption align attributes 
+    */
+  static PRBool ParseTableCaptionAlignParam(const nsString& aString, nsHTMLValue& aRes);
+
+  /** HTML4 table caption align attributes 
+    */
+  static PRBool TableCaptionAlignParamToString(const nsHTMLValue& aValue,
+                                               nsString& aResult);
 
 protected:
   nsHTMLTagContent();

@@ -106,45 +106,6 @@ nsrefcnt nsTableColGroup::Release(void)
   return mRefCnt;
 }
 
-int nsTableColGroup::GetType()
-{
-  return nsITableContent::kTableColGroupType;
-}
-
-int nsTableColGroup::GetSpan ()
-{
-  if (0 < mSpan)
-    return mSpan;
-  return 1;
-}
-  
-int nsTableColGroup::GetStartColumnIndex ()
-{
-  return mStartColIndex;
-}
-  
-void nsTableColGroup::SetStartColumnIndex (int aIndex)
-{
-  if (aIndex != mStartColIndex)
-    mColCount = 0;  // our index is being changed, trigger reset of col indicies, don't propogate back to table
-  mStartColIndex = aIndex;
-}
-
-
-void nsTableColGroup::SetSpan (int aSpan)
-{
-  mSpan = aSpan;
-  if (0 < ChildCount ())  // span is only relevant if we don't have children
-    ResetColumns ();
-}
-
-void nsTableColGroup::ResetColumns ()
-{
-  mColCount = 0;
-  if (nsnull != mTable)
-    mTable->ResetColumns ();
-}
-
 /** returns the number of columns represented by this group.
   * if there are col children, count them (taking into account the span of each)
   * else, check my own span attribute.
@@ -338,6 +299,7 @@ void nsTableColGroup::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   {
     ParseValue(aValue, 0, val, eHTMLUnit_Integer);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
+    SetSpan(val.GetIntValue());
   }
   else if (aAttribute == nsHTMLAtoms::align) {
     nsHTMLValue val;
@@ -360,41 +322,44 @@ void nsTableColGroup::MapAttributesInto(nsIStyleContext* aContext,
 {
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
+  if (nsnull != mAttributes) {
 
-  float p2t;
-  nsHTMLValue value;
+    float p2t;
+    nsHTMLValue value;
+    nsStyleText* textStyle = nsnull;
 
-  // width
-  GetAttribute(nsHTMLAtoms::width, value);
-  if (value.GetUnit() != eHTMLUnit_Null) {
-    nsStylePosition* position = (nsStylePosition*)
-      aContext->GetMutableStyleData(eStyleStruct_Position);
-    switch (value.GetUnit()) {
-    case eHTMLUnit_Percent:
-      position->mWidth.SetPercentValue(value.GetPercentValue());
-      break;
+    // width
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() != eHTMLUnit_Null) {
+      nsStylePosition* position = (nsStylePosition*)
+        aContext->GetMutableStyleData(eStyleStruct_Position);
+      switch (value.GetUnit()) {
+      case eHTMLUnit_Percent:
+        position->mWidth.SetPercentValue(value.GetPercentValue());
+        break;
 
-    case eHTMLUnit_Pixel:
-      p2t = aPresContext->GetPixelsToTwips();
-      position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
-      break;
+      case eHTMLUnit_Pixel:
+        p2t = aPresContext->GetPixelsToTwips();
+        position->mWidth.SetCoordValue(nscoord(p2t * (float)value.GetPixelValue()));
+        break;
+      }
     }
-  }
 
-  // align
-  GetAttribute(nsHTMLAtoms::align, value);
-  if (value.GetUnit() != eHTMLUnit_Null) {
-    NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
-    nsStyleDisplay* display = (nsStyleDisplay*)aContext->GetMutableStyleData(eStyleStruct_Display);
-
-    switch (value.GetIntValue()) {
-    case NS_STYLE_TEXT_ALIGN_LEFT:
-      display->mFloats = NS_STYLE_FLOAT_LEFT;
-      break;
-
-    case NS_STYLE_TEXT_ALIGN_RIGHT:
-      display->mFloats = NS_STYLE_FLOAT_RIGHT;
-      break;
+    // align: enum
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
+    }
+    
+    // valign: enum
+    GetAttribute(nsHTMLAtoms::valign, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) 
+    {
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
   }
 }

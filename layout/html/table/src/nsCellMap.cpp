@@ -87,40 +87,6 @@ void nsCellMap::GrowTo(int aColCount)
   mColCount = aColCount;
 }
 
-CellData * nsCellMap::GetCellAt(int aRow, int aColumn) const
-{
-  int index = (aRow*mColCount)+aColumn;
-  if (gsDebug1==PR_TRUE) 
-  {
-    printf("GetCellAt [%d, %d] returning %d\n", aRow, aColumn, mCells[index]);
-  }
-  return (CellData *)mCells[index];
-}
-
-void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
-{
-  //Assert aRow, aColumn
-  int index = (aRow*mColCount)+aColumn;
-  CellData* cell = GetCellAt(aRow,aColumn);
-  if (cell != nsnull)
-    delete cell;
-  mCells[index] = (PRInt32)aCell;
-  if (gsDebug1==PR_TRUE) 
-  {
-    printf("SetCellAt [%d, %d] setting %d\n", aRow, aColumn, aCell);
-  }
-}
-
-int nsCellMap::GetColCount() const
-{ 
-  return mColCount; 
-}
-
-int nsCellMap::GetRowCount() const
-{ 
-  return mRowCount; 
-}
-
 void nsCellMap::DumpCellMap() const
 {
   if (gsDebug1==PR_TRUE)

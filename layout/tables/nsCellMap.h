@@ -76,4 +76,30 @@ public:
 
 };
 
+inline CellData * nsCellMap::GetCellAt(int aRow, int aColumn) const
+{
+  int index = (aRow*mColCount)+aColumn;
+  return (CellData *)mCells[index];
+}
+
+inline void nsCellMap::SetCellAt(CellData *aCell, int aRow, int aColumn)
+{
+  //Assert aRow, aColumn
+  int index = (aRow*mColCount)+aColumn;
+  CellData* cell = GetCellAt(aRow,aColumn);
+  if (cell != nsnull)
+    delete cell;
+  mCells[index] = (PRInt32)aCell;
+}
+
+inline int nsCellMap::GetColCount() const
+{ 
+  return mColCount; 
+}
+
+inline int nsCellMap::GetRowCount() const
+{ 
+  return mRowCount; 
+}
+
 #endif

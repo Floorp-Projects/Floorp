@@ -259,6 +259,11 @@ void nsTableRow::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
   NS_PRECONDITION(nsnull!=aAttribute, "bad attribute arg");
   nsHTMLValue val;
+  if (aAttribute == nsHTMLAtoms::bgcolor) {
+    ParseColor(aValue, val);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+    return;
+  }
   if ((aAttribute == nsHTMLAtoms::align) &&
       ParseDivAlignParam(aValue, val)) {
     nsHTMLTagContent::SetAttribute(aAttribute, val);
@@ -296,6 +301,9 @@ void nsTableRow::MapAttributesInto(nsIStyleContext* aContext,
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
     }
+
+    //background: color
+    MapBackgroundAttributesInto(aContext, aPresContext);
   }
 }
 

@@ -53,30 +53,6 @@ nsCellLayoutData::~nsCellLayoutData()
   mColLayoutData = nsnull;
 }
 
-nsTableCellFrame * nsCellLayoutData::GetCellFrame()
-{ return mCellFrame; }
-
-void nsCellLayoutData::SetCellFrame(nsTableCellFrame * aCellFrame)
-{ mCellFrame = aCellFrame; }
-
-nsReflowMetrics * nsCellLayoutData::GetDesiredSize()
-{ return &mDesiredSize; }
-
-void nsCellLayoutData::SetDesiredSize(nsReflowMetrics * aDesiredSize)
-{ 
-  if (nsnull!=aDesiredSize)
-    mDesiredSize = *aDesiredSize;
-}
-
-nsSize * nsCellLayoutData::GetMaxElementSize()
-{ return &mMaxElementSize; }
-
-void nsCellLayoutData::SetMaxElementSize(nsSize * aMaxElementSize)
-{ 
-  if (nsnull!=aMaxElementSize)
-    mMaxElementSize = *aMaxElementSize;
-}
-
 /**
   * Get the style context for this object (determined, by
   * asking for the frame
@@ -91,10 +67,6 @@ nsIStyleContext* nsCellLayoutData::GetStyleContext()
   }
   return nsnull;
 }
-
-
-
-
 
 /**
   * Given a list of nsCellLayoutData and a index, get the style context for
@@ -479,21 +451,11 @@ nsIFrame* nsCellLayoutData::FindBorderFrame(nsTableFrame*    aTableFrame,
 }
 
 
-void nsCellLayoutData::CalculateBorders(nsTableFrame*     aTableFrame,
-                                        nsVoidArray*      aBoundaryCells[4])
-{ 
-
-  for (PRInt32 edge = 0; edge < 4; edge++)
-    mBorderFrame[edge] = FindBorderFrame(aTableFrame, aBoundaryCells[edge], edge);
-}
-
-
 /**
   * Given a List of cell layout data, compare the edges to see which has the
   * border with the highest precidence. 
   *
   **/
-
 nscoord nsCellLayoutData::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 {
   nscoord result = 0;
@@ -557,24 +519,10 @@ void nsCellLayoutData::RecalcLayoutData(nsTableFrame* aTableFrame,
                                         nsVoidArray* aBoundaryCells[4])
 
 {
-  
   CalculateBorders(aTableFrame, aBoundaryCells);
   CalculateMargins(aTableFrame, aBoundaryCells);
   mCalculated = NS_OK;
 }
-
-
-
-NS_METHOD nsCellLayoutData::GetMargin(nsMargin& aMargin)
-{
-  if (mCalculated == NS_OK)
-  {
-    aMargin = mMargin;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_INITIALIZED;
-}
-
 
 void nsCellLayoutData::List(FILE* out, PRInt32 aIndent) const
 {

@@ -151,4 +151,46 @@ private:
   nsIFrame*                 mBorderFrame[4];  // the frame whose border is used
 };
 
+inline nsTableCellFrame * nsCellLayoutData::GetCellFrame()
+{ return mCellFrame; }
+
+inline void nsCellLayoutData::SetCellFrame(nsTableCellFrame * aCellFrame)
+{ mCellFrame = aCellFrame; }
+
+inline nsReflowMetrics * nsCellLayoutData::GetDesiredSize()
+{ return &mDesiredSize; }
+
+inline void nsCellLayoutData::SetDesiredSize(nsReflowMetrics * aDesiredSize)
+{ 
+  if (nsnull!=aDesiredSize)
+    mDesiredSize = *aDesiredSize;
+}
+
+inline nsSize * nsCellLayoutData::GetMaxElementSize()
+{ return &mMaxElementSize; }
+
+inline void nsCellLayoutData::SetMaxElementSize(nsSize * aMaxElementSize)
+{ 
+  if (nsnull!=aMaxElementSize)
+    mMaxElementSize = *aMaxElementSize;
+}
+
+inline void nsCellLayoutData::CalculateBorders(nsTableFrame*     aTableFrame,
+                                        nsVoidArray*      aBoundaryCells[4])
+{ 
+
+  for (PRInt32 edge = 0; edge < 4; edge++)
+    mBorderFrame[edge] = FindBorderFrame(aTableFrame, aBoundaryCells[edge], edge);
+}
+
+inline NS_METHOD nsCellLayoutData::GetMargin(nsMargin& aMargin)
+{
+  if (mCalculated == NS_OK)
+  {
+    aMargin = mMargin;
+    return NS_OK;
+  }
+  return NS_ERROR_NOT_INITIALIZED;
+}
+
 #endif

@@ -82,7 +82,7 @@ void nsTableCaption::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
   nsHTMLValue val;
 
   if (aAttribute == nsHTMLAtoms::align) {
-    if (ParseAlignParam(aValue, val)) {
+    if (ParseTableCaptionAlignParam(aValue, val)) {
       nsHTMLTagContent::SetAttribute(aAttribute, val);
     }
     return;
@@ -102,9 +102,24 @@ void nsTableCaption::MapAttributesInto(nsIStyleContext* aContext,
   if (value.GetUnit() != eHTMLUnit_Null) {
     NS_ASSERTION(value.GetUnit() == eHTMLUnit_Enumerated, "unexpected unit");
 
-    nsStyleText* captionStyle =
-      (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-    captionStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    PRUint8 alignValue = value.GetIntValue();
+    // this code relies on top, bottom, left, and right all being unique values
+    if (NS_STYLE_VERTICAL_ALIGN_BOTTOM==alignValue || 
+             NS_STYLE_VERTICAL_ALIGN_TOP==alignValue)
+    {
+      nsStyleText* textStyle =
+        (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(alignValue, eStyleUnit_Enumerated);
+    }
+    // XXX: this isn't the right place to put this attribute!  probably on the float guy
+    // talk to Peter and Troy
+    else if (NS_STYLE_TEXT_ALIGN_LEFT==alignValue || 
+             NS_STYLE_TEXT_ALIGN_RIGHT==alignValue)
+    {
+      nsStyleText* textStyle =
+        (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = alignValue;
+    }
   }
 }
 
