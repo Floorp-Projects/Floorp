@@ -42,8 +42,8 @@ nsAggregatePrincipal::GetCertificateID(char** aCertificateID)
 {
     if (!mCertificate)
     {
-        aCertificateID = nsnull;
-        return NS_ERROR_FAILURE;
+        *aCertificateID = nsnull;
+        return NS_OK;
     }
 
     nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
@@ -56,7 +56,7 @@ nsAggregatePrincipal::GetCommonName(char** aCommonName)
     if (!mCertificate)
     {
         *aCommonName = nsnull;
-        return NS_ERROR_FAILURE;
+        return NS_OK;
     }
 
     nsCOMPtr<nsICertificatePrincipal> certificate = do_QueryInterface(mCertificate);
