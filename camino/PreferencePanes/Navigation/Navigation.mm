@@ -377,7 +377,13 @@ int compareBundleIDAppDisplayNames(id a, id b, void *context)
   // add separator first, current instance of Camino will be inserted before it
   [menu addItem:[NSMenuItem separatorItem]];
 
-  // set up new menu
+  /* Set up new menu
+    Right now, if Launch Services can't find an app in our list, it just won't make it into
+    the menu. If it can't find the app that is the default app, there will be no default browser
+    selectioned in the menu. If it can't find Camino (it happens oddly enough) then we won't be in
+    the list either. This should be fixed when somebody has time since we obviously know where to
+    find ourselves if not other apps.
+    */
   NSEnumerator *browserEnumerator = [browsers objectEnumerator];
   while (NSString *bundleID = [browserEnumerator nextObject]) {
     NSURL *appURL = nil;
