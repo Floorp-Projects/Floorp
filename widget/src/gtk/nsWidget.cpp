@@ -291,6 +291,22 @@ NS_METHOD nsWidget::SetModal(void)
 	return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+//
+// grab mouse events for this widget
+//
+//-------------------------------------------------------------------------
+NS_METHOD nsWidget::CaptureMouse(PRBool aCapture)
+{
+  if (aCapture)
+    gtk_grab_add(mWidget);
+  else
+    gtk_grab_remove(mWidget);
+
+  return NS_OK;
+}
+
+
 NS_METHOD nsWidget::IsVisible(PRBool &aState)
 {
   if (mWidget) {
