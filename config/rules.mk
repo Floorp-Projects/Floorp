@@ -27,9 +27,6 @@
 #
 # Pass 2. libs - Create libraries & programs.  Publish them to dist/bin.
 #
-# `gmake` will build each of these properly, but `gmake -jN` may break
-# use `gmake MAKE='gmake -jN'` instead
-#
 # Parameters to this makefile (set these before including):
 #
 # a)
@@ -472,13 +469,20 @@ endif
 
 ################################################################################
 
-all:: export libs
+all:: 
+	$(MAKE) export
+	$(MAKE) libs
 
 # Do depend as well
-alldep:: export depend libs
+alldep:: 
+	$(MAKE) export
+	$(MAKE) depend
+	$(MAKE) libs
 
 # Do everything from scratch
-everything:: clean alldep
+everything::
+	$(MAKE) clean
+	$(MAKE) alldep
 
 # Add dummy depend target for tinderboxes
 depend::
