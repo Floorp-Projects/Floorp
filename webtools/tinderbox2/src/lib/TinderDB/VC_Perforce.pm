@@ -75,8 +75,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.19 $ 
-# $Date: 2003/08/17 01:37:53 $ 
+# $Revision: 1.20 $ 
+# $Date: 2003/12/23 13:35:49 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Perforce.pm,v $ 
 # $Name:  $ 
@@ -156,7 +156,7 @@ use Utils;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.19 $ )[1];
+$VERSION = ( qw $Revision: 1.20 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -629,7 +629,7 @@ sub status_table_row {
           $link_choices .= "<br>";
           
           my ($href) = (FileStructure::get_filename($tree, 'tree_URL').
-                        "/all_vc.html#$checkin_page_reference");
+                        "/all_vc.html#$mindate");
           
           $link_choices .= 
               HTMLPopUp::Link(
