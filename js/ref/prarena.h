@@ -188,6 +188,12 @@ extern PR_PUBLIC_API(void)
 PR_CompactArenaPool(PRArenaPool *pool);
 
 /*
+  do arena global initialization
+  */
+extern PR_PUBLIC_API(void)
+PR_ArenaInit(void);
+
+/*
  * Finish using arenas, freeing all memory associated with them.
  */
 extern PR_PUBLIC_API(void)

@@ -29,11 +29,13 @@
 #include "prassert.h"
 
 #ifdef JS_THREADSAFE
-extern js_CompareAndSwap(prword *, prword, prword);
+#include "prlock.h"
 #endif
 
-static PRArena *arena_freelist;
-
+static PRArena *arena_freelist=0;
+#ifdef JS_THREADSAFE
+static PRLock *arena_lock=0;
+#endif
 #ifdef PR_ARENAMETER
 static PRArenaStats *arena_stats_list;
 
@@ -67,9 +69,6 @@ PR_PUBLIC_API(void *)
 PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
 {
     PRArena **ap, *a, *b;
-#ifdef JS_THREADSAFE
-    PRArena *c;
-#endif
     PRUint32 sz;
     void *p;
 
@@ -84,23 +83,25 @@ PR_ArenaAllocate(PRArenaPool *pool, PRUint32 nb)
             a = a->next;
 	    continue;
         }
+#ifdef JS_THREADSAFE
+        PR_Lock(arena_lock);
+#endif
 	while ((b = *ap) != NULL) {		/* reclaim a free arena */
 	    if (b->limit - b->base == pool->arenasize) {
-#ifdef JS_THREADSAFE
-		do {
-                    b = *ap;
-		    c = b->next;
-		} while (!js_CompareAndSwap((prword *)ap,(prword)b,(prword)c));
-#else
 		*ap = b->next;
-#endif
 		b->next = NULL;
 		a = a->next = b;
 		COUNT(pool, nreclaims);
+#ifdef JS_THREADSAFE
+                PR_Unlock(arena_lock);
+#endif
 		goto claim;
 	    }
 	    ap = &b->next;
 	}
+#ifdef JS_THREADSAFE
+        PR_Unlock(arena_lock);
+#endif
 	sz = PR_MAX(pool->arenasize, nb);	/* allocate a new arena */
 	sz += sizeof *a + pool->mask;           /* header and alignment slop */
 	b = malloc(sz);
@@ -137,9 +138,6 @@ static void
 FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 {
     PRArena **ap, *a;
-#ifdef JS_THREADSAFE
-    PRArena *b;
-#endif
 
     ap = &head->next;
     a = *ap;
@@ -164,16 +162,16 @@ FreeArenaList(PRArenaPool *pool, PRArena *head, PRBool reallyFree)
 	} while ((a = *ap) != NULL);
     } else {
 	/* Insert the whole arena chain at the front of the freelist. */
+#ifdef JS_THREADSAFE
+        PR_Lock(arena_lock);
+#endif
 	do {
 	    ap = &(*ap)->next;
 	} while (*ap);
-#ifdef JS_THREADSAFE
-	do {
-	    *ap = b = arena_freelist;
-	} while (!js_CompareAndSwap((prword*)&arena_freelist,(prword)b,(prword)a));
-#else
 	*ap = arena_freelist;
 	arena_freelist = a;
+#ifdef JS_THREADSAFE
+        PR_Unlock(arena_lock);
 #endif
 	head->next = NULL;
     }
@@ -238,23 +236,29 @@ PR_CompactArenaPool(PRArenaPool *pool)
 }
 
 PR_PUBLIC_API(void)
+PR_ArenaInit()
+{
+#ifdef JS_THREADSAFE
+    arena_lock = PR_NewLock();
+#endif
+}
+
+PR_PUBLIC_API(void)
 PR_ArenaFinish()
 {
     PRArena *a, *next;
 
 #ifdef JS_THREADSAFE
-    while (arena_freelist) {
-	a = arena_freelist;
-	next = a->next;
-	if (js_CompareAndSwap((prword*)&arena_freelist,(prword)a,(prword)next))
-	    free(a);
-    }
-#else
+    PR_Lock(arena_lock);
+#endif
     for (a = arena_freelist; a; a = next) {
         next = a->next;
         free(a);
     }
     arena_freelist = NULL;
+#ifdef JS_THREADSAFE
+    PR_Unlock(arena_lock);
+    PR_DestroyLock(arena_lock);
 #endif
 }
 

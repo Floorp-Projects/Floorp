@@ -80,7 +80,7 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 	gc_finalizers[GCX_STRING] = (GCFinalizeOp)js_FinalizeString;
 	gc_finalizers[GCX_DOUBLE] = (GCFinalizeOp)js_FinalizeDouble;
     }
-
+    PR_ArenaInit();
     PR_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
 		     sizeof(JSGCThing));
     PR_InitArenaPool(&rt->gcFlagsPool, "gc-flags", GC_FLAGS_SIZE,
