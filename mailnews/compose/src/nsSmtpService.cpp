@@ -668,6 +668,8 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
 
   nsresult rv;
 
+  loadSmtpServers();
+  
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
