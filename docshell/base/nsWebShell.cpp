@@ -2150,10 +2150,10 @@ nsWebShell::LoadURI(nsIURI * aUri,
    * session history
    */
 
-   nsISupports * historyState=nsnull;
+   nsCOMPtr<nsISupports> historyState;
 
    // Get the history object for the previous page.
-   rv = GetHistoryState(&historyState);
+   rv = GetHistoryState(getter_AddRefs(historyState));
    nsCOMPtr<nsIWebShell> rootWebShell;
    rv = GetRootWebShell(*getter_AddRefs(rootWebShell));
    if (NS_SUCCEEDED(rv) && rootWebShell) {
