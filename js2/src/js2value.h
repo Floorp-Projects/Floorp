@@ -72,6 +72,7 @@
 #define JS2VAL_ALIGN             JS_BIT(JS2VAL_TAGBITS)
 
 #define JS2VAL_INT_POW2(n)       ((js2val)1 << (n))
+#define JS2VAL_INT_MIN           ((js2val)1 - JS2VAL_INT_POW2(30))
 #define JS2VAL_INT_MAX           (JS2VAL_INT_POW2(30) - 1)
 #define INT_TO_JS2VAL(i)         (((js2val)(i) << 1) | JS2VAL_INT)
 #define JS2VAL_TO_INT(v)         ((int32)(v) >> 1)

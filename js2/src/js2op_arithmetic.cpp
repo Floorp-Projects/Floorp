@@ -698,9 +698,13 @@
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) < *JS2VAL_TO_STRING(b));
             else {
-                float64 x = meta->toFloat64(a);
-                float64 y = meta->toFloat64(b);                
-                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x < y));
+                if (JS2VAL_IS_INT(a) && JS2VAL_IS_INT(b))
+                    rval = JS2VAL_TO_INT(a) < JS2VAL_TO_INT(b);
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);                
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x < y));
+                }
             }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
@@ -716,9 +720,13 @@
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) <= *JS2VAL_TO_STRING(b));
             else {
-                float64 x = meta->toFloat64(a);
-                float64 y = meta->toFloat64(b);                
-                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x <= y));
+                if (JS2VAL_IS_INT(a) && JS2VAL_IS_INT(b))
+                    rval = (JS2VAL_TO_INT(a) <= JS2VAL_TO_INT(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);                
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x <= y));
+                }
             }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
@@ -734,9 +742,13 @@
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) > *JS2VAL_TO_STRING(b));
             else {
-                float64 x = meta->toFloat64(a);
-                float64 y = meta->toFloat64(b);                
-                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x > y));
+                if (JS2VAL_IS_INT(a) && JS2VAL_IS_INT(b))
+                    rval = (JS2VAL_TO_INT(a) > JS2VAL_TO_INT(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);                
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x > y));
+                }
             }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
@@ -752,9 +764,13 @@
             if (JS2VAL_IS_STRING(a) && JS2VAL_IS_STRING(b))
                 rval = (*JS2VAL_TO_STRING(a) >= *JS2VAL_TO_STRING(b));
             else {
-                float64 x = meta->toFloat64(a);
-                float64 y = meta->toFloat64(b);                
-                rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x >= y));
+                if (JS2VAL_IS_INT(a) && JS2VAL_IS_INT(b))
+                    rval = (JS2VAL_TO_INT(a) >= JS2VAL_TO_INT(b));
+                else {
+                    float64 x = meta->toFloat64(a);
+                    float64 y = meta->toFloat64(b);                
+                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x >= y));
+                }
             }
             push(BOOLEAN_TO_JS2VAL(rval));
         }
@@ -785,13 +801,17 @@
             }
             else
             if (JS2VAL_IS_NUMBER(a)) {
-                b = meta->toPrimitive(b, NumberHint);
-                if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
-                    rval = false;
+                if (JS2VAL_IS_INT(a) && JS2VAL_IS_INT(b))
+                    rval = (JS2VAL_TO_INT(a) == JS2VAL_TO_INT(b));
                 else {
-                    float64 x = meta->toFloat64(a);
-                    float64 y = meta->toFloat64(b);
-                    rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                    b = meta->toPrimitive(b, NumberHint);
+                    if (JS2VAL_IS_NULL(b) || JS2VAL_IS_UNDEFINED(b))
+                        rval = false;
+                    else {
+                        float64 x = meta->toFloat64(a);
+                        float64 y = meta->toFloat64(b);
+                        rval = (!JSDOUBLE_IS_NaN(x) && !JSDOUBLE_IS_NaN(y) && (x == y));
+                    }
                 }
             }
             else 
@@ -1172,9 +1192,16 @@
             pc += sizeof(short);
             ASSERT(slotIndex < localFrame->frameSlots->size());
             a = (*localFrame->frameSlots)[slotIndex];
-            float64 num = meta->toFloat64(a);
-            (*localFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
-            pushNumber(num);
+            int32 i;
+            if (JS2VAL_IS_INT(a) && ((i = JS2VAL_TO_INT(a)) > JS2VAL_INT_MIN)) {
+                (*localFrame->frameSlots)[slotIndex] = INT_TO_JS2VAL(i - 1);
+                push(a);
+            }
+            else {
+                float64 num = meta->toFloat64(a);
+                (*localFrame->frameSlots)[slotIndex] = allocNumber(num - 1.0);
+                pushNumber(num);
+            }
         }
         break;
     case eFrameSlotPreInc:
