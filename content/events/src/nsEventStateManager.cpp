@@ -528,8 +528,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
           gLastFocusedPresContext = nsnull;
         }             
       } 
-    }
 #endif
+    }
     break;
 
  case NS_ACTIVATE:
