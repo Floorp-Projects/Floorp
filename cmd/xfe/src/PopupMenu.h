@@ -51,7 +51,8 @@ class XFE_PopupMenu : public XFE_Menu, public XFE_PopupMenuBase
 public:
 
   XFE_PopupMenu(String name, XFE_Frame *frame, Widget parent,
-                MenuSpec * menu_spec = NULL);
+                MenuSpec * menu_spec = NULL,
+                XFE_Component *cmdDispatcher = NULL);
 
 private:
 

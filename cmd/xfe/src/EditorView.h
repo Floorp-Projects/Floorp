@@ -73,6 +73,7 @@ public:
 private:
   XFE_EditorDrop *_dropSite;
   XtIntervalId m_update_timer;
+  XFE_CommandList* m_commands;
     
   virtual void DocEncoding(XFE_NotificationCenter *, void *, void *);
   static  void updateChromeTimeout(XtPointer closure, XtIntervalId* id);

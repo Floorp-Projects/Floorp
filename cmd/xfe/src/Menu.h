@@ -100,12 +100,13 @@ typedef struct MenuSpec {
 class XFE_Menu : public XFE_Component
 {
 public:
-  XFE_Menu(XFE_Frame *parent_frame, MenuSpec *menu_spec, Widget baseMenuWidget);
+  XFE_Menu(XFE_Frame *parent_frame, MenuSpec *menu_spec, Widget baseMenuWidget, XFE_Component *cmdDispatcher = NULL);
   virtual ~XFE_Menu();
 
   XFE_Frame *getFrame();
 
   void setMenuSpec(MenuSpec *menu_spec);
+  void setCommandDispatcher(XFE_Component *dispatcher);
 
   // interface for view's adding and subtracting menu items
   Widget addMenuItem(char *itemName, EChromeTag tag, 
@@ -141,6 +142,7 @@ protected:
 
 private:
   XFE_Frame *m_parentFrame;
+  XFE_Component *m_cmdDispatcher;
   MenuSpec *m_spec;
 
   Widget createPulldown(char *cascadeName, MenuSpec *spec, Widget parent_menu, XP_Bool is_fancy);

@@ -128,7 +128,6 @@ XFE_View::addView(XFE_View *new_view)
 void
 XFE_View::removeView(XFE_View *view)
 {
-  XP_Bool found = FALSE;
   int i, vindex;
 
   for (vindex = 0; vindex < m_numsubviews; vindex++)
@@ -343,10 +342,11 @@ XFE_View::getCommandView(XFE_Command* command)
 {
 	int i;
 	CommandType cmd_id = command->getId();
+	XFE_View *subview  = 0;
 
 	for (i = 0; i < m_numsubviews; i ++) {
-		if (m_subviews[i]->getCommand(cmd_id) == command)
-			return m_subviews[i];
+		if (subview = m_subviews[i]->getCommandView(command))
+			return subview;
 	}
 	
 	if (getCommand(cmd_id) == command)

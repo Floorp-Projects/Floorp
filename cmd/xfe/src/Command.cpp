@@ -246,7 +246,10 @@ frame_to_view(XFE_Command* command, XFE_Frame* frame, XFE_CommandInfo*)
 XP_Bool
 XFE_ViewCommand::isEnabled(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+	
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	return ((XFE_AbstractCommand*)this)->isEnabled(view, info);
 }
@@ -254,7 +257,10 @@ XFE_ViewCommand::isEnabled(XFE_Frame* frame, XFE_CommandInfo* info)
 XP_Bool
 XFE_ViewCommand::isSelected(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	return ((XFE_AbstractCommand*)this)->isSelected(view, info);
 }
@@ -262,7 +268,10 @@ XFE_ViewCommand::isSelected(XFE_Frame* frame, XFE_CommandInfo* info)
 XP_Bool
 XFE_ViewCommand::isDeterminate(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	return ((XFE_AbstractCommand*)this)->isDeterminate(view, info);
 }
@@ -270,7 +279,10 @@ XFE_ViewCommand::isDeterminate(XFE_Frame* frame, XFE_CommandInfo* info)
 XFE_CommandParameters*
 XFE_ViewCommand::getParameters(XFE_Frame* frame)
 {
-	XFE_View* view = frame_to_view(this, frame, NULL);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, NULL);
 
 	return ((XFE_AbstractCommand*)this)->getParameters(view);
 }
@@ -278,7 +290,10 @@ XFE_ViewCommand::getParameters(XFE_Frame* frame)
 void
 XFE_ViewCommand::setParameterIndex(XFE_Frame* frame, unsigned index)
 {
-	XFE_View* view = frame_to_view(this, frame, NULL);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, NULL);
 
 	((XFE_AbstractCommand*)this)->setParameterIndex(view, index);
 }
@@ -286,7 +301,10 @@ XFE_ViewCommand::setParameterIndex(XFE_Frame* frame, unsigned index)
 int
 XFE_ViewCommand::getParameterIndex(XFE_Frame* frame)
 {
-	XFE_View* view = frame_to_view(this, frame, NULL);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, NULL);
 
 	return ((XFE_AbstractCommand*)this)->getParameterIndex(view);
 }
@@ -294,7 +312,10 @@ XFE_ViewCommand::getParameterIndex(XFE_Frame* frame)
 char*
 XFE_ViewCommand::getLabel(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	return ((XFE_AbstractCommand*)this)->getLabel(view, info);
 }
@@ -302,7 +323,10 @@ XFE_ViewCommand::getLabel(XFE_Frame* frame, XFE_CommandInfo* info)
 char*
 XFE_ViewCommand::getTipString(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	return ((XFE_AbstractCommand*)this)->getTipString(view, info);
 }
@@ -310,7 +334,11 @@ XFE_ViewCommand::getTipString(XFE_Frame* frame, XFE_CommandInfo* info)
 char*
 XFE_ViewCommand::getDocString(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
+
 
 	return ((XFE_AbstractCommand*)this)->getDocString(view, info);
 }
@@ -318,7 +346,10 @@ XFE_ViewCommand::getDocString(XFE_Frame* frame, XFE_CommandInfo* info)
 void
 XFE_ViewCommand::doCommand(XFE_Frame* frame, XFE_CommandInfo* info)
 {
-	XFE_View* view = frame_to_view(this, frame, info);
+	XFE_View* view = m_view;
+
+	if (!view)
+		view = frame_to_view(this, frame, info);
 
 	((XFE_AbstractCommand*)this)->doCommand(view, info);
 }
@@ -426,7 +457,7 @@ findCommand(XFE_CommandList* list, CommandType id)
 	return NULL;
 }
 
-XFE_ObjectIsCommand::XFE_ObjectIsCommand() : XFE_ViewCommand(xfeCmdObjectIs)
+XFE_ObjectIsCommand::XFE_ObjectIsCommand(XFE_View *view) : XFE_ViewCommand(xfeCmdObjectIs, view)
 {
 };
 

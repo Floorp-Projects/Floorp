@@ -180,7 +180,9 @@ public:
 	void        doCommand(XFE_Frame* view, XFE_CommandInfo*);
 
 protected:
-	XFE_ViewCommand(CommandType id) : XFE_Command(id) { };
+	XFE_View *m_view;
+
+	XFE_ViewCommand(CommandType id, XFE_View *view = NULL) : XFE_Command(id) { m_view = view; };
 
 	//
 	//    Handle utility for provide command hacker feedback, generates:
@@ -237,7 +239,7 @@ private:
 class XFE_ObjectIsCommand : public XFE_ViewCommand
 {
 public:
-	XFE_ObjectIsCommand();
+	XFE_ObjectIsCommand(XFE_View *view = NULL);
 
 	        void  doCommand(XFE_View* view, XFE_CommandInfo* info);
 	virtual char* getObjectType(XFE_View*) = 0;

@@ -908,30 +908,11 @@ xfeDoCommandAction(Widget w, XEvent *event,
 
 	XFE_View *v = f->widgetToView(w);
 
-	if (v && v->handlesCommand(cmd, NULL, &info))
+	if (v && v->handlesCommand(cmd, NULL, &info) &&
+		v->isCommandEnabled(cmd, NULL, &info))
 	{
-		if (v->isCommandEnabled(cmd, NULL, &info))
-		{
-			XFE_Command *handler = v->getCommand(cmd);
-
-			if (handler)
-			{
-#ifdef DEBUG_kin
-				printf("handler->doCommand(0x%.8x): %s\n", handler, cmd);
-				fflush(stdout);
-#endif /* DEBUG_kin */
-				handler->doCommand(v, &info);
-			}
-			else
-			{
-#ifdef DEBUG_kin
-				printf("v->doCommand(0x%.8x): %s\n", v, cmd);
-				fflush(stdout);
-#endif /* DEBUG_kin */
-				v->doCommand(cmd, NULL, &info);
-			}
-			return;
-		}
+		xfe_ExecuteCommand(f, cmd, NULL, &info, v);
+		return;
 	}
 
 #endif /* ENDER */

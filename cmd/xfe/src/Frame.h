@@ -450,7 +450,8 @@ private:
 void xfe_ExecuteCommand(XFE_Frame* frame,
 						CommandType cmd,
 						void *calldata = NULL,
-						XFE_CommandInfo* = NULL);
+						XFE_CommandInfo* = NULL,
+						XFE_Component *cmdDispatcher = NULL);
 
 
 #endif /* _xfe_frame_h */

@@ -50,7 +50,7 @@ extern "C" int XFE_EDITOR_NEWTABLE_COLS;
 class XFE_EditorViewCommand : public XFE_ViewCommand
 {
 public:
-	XFE_EditorViewCommand(char* name) : XFE_ViewCommand(name) {};
+	XFE_EditorViewCommand(char* name, XFE_EditorView *v = NULL) : XFE_ViewCommand(name, v) {};
 	
 	virtual void    reallyDoCommand(XFE_View*, XFE_CommandInfo*) = 0;
 	virtual XP_Bool requiresChromeUpdate() {
@@ -58,6 +58,10 @@ public:
 	};
 	void            doCommand(XFE_View* v_view, XFE_CommandInfo* info) {
 		XFE_EditorView* view = (XFE_EditorView*)v_view;
+
+		if (m_view)
+			view = (XFE_EditorView *)m_view;
+
 		reallyDoCommand(view, info);
 		if (requiresChromeUpdate()) {
 			view->updateChrome();
@@ -68,7 +72,7 @@ public:
 class UndoCommand : public XFE_EditorViewCommand
 {
 public:
-	UndoCommand() : XFE_EditorViewCommand(xfeCmdUndo) {};
+	UndoCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdUndo, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanUndo(view->getContext(), NULL);
@@ -100,7 +104,7 @@ public:
 class RedoCommand : public XFE_EditorViewCommand
 {
 public:
-	RedoCommand() : XFE_EditorViewCommand(xfeCmdRedo) {};
+	RedoCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdRedo, v) {};
 	
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanRedo(view->getContext(), NULL);
@@ -129,7 +133,7 @@ public:
 class CutCommand : public XFE_EditorViewCommand
 {
 public:
-	CutCommand() : XFE_EditorViewCommand(xfeCmdCut) {};
+	CutCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdCut, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanCut(view->getContext());
@@ -142,7 +146,7 @@ public:
 class CopyCommand : public XFE_EditorViewCommand
 {
 public:
-	CopyCommand() : XFE_EditorViewCommand(xfeCmdCopy) {};
+	CopyCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdCopy, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanCopy(view->getContext());
@@ -157,7 +161,7 @@ void CopyCommand::reallyDoCommand(XFE_View* view, XFE_CommandInfo* info) {
 class PasteCommand : public XFE_EditorViewCommand
 {
 public:
-	PasteCommand() : XFE_EditorViewCommand(xfeCmdPaste) {};
+	PasteCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdPaste, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo* info) {
 		XP_Bool rv = FALSE;
@@ -212,7 +216,7 @@ public:
 class AlwaysEnabledCommand : public XFE_EditorViewCommand
 {
 public:
-	AlwaysEnabledCommand(char* name) : XFE_EditorViewCommand(name) {};
+	AlwaysEnabledCommand(char* name, XFE_EditorView *v) : XFE_EditorViewCommand(name, v) {};
 
 	XP_Bool isEnabled(XFE_View*, XFE_CommandInfo*) {
 		return True;
@@ -222,7 +226,7 @@ public:
 class DeleteCommand : public AlwaysEnabledCommand
 {
 public:
-	DeleteCommand() : AlwaysEnabledCommand(xfeCmdDeleteItem) {};
+	DeleteCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdDeleteItem, v) {};
 
 	virtual XP_Bool isSlow() {
 		return FALSE;
@@ -251,7 +255,7 @@ public:
 class SpellCommand : public XFE_EditorViewCommand
 {
 public:
-	SpellCommand() : XFE_EditorViewCommand(xfeCmdSpellCheck) {};
+	SpellCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdSpellCheck, v) {};
 
 	XP_Bool isDynamic() { return TRUE; };
 
@@ -266,7 +270,7 @@ public:
 class SaveCommand : public AlwaysEnabledCommand
 {
 public:
-	SaveCommand() : AlwaysEnabledCommand(xfeCmdSave) {};
+	SaveCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSave, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorSave(view->getContext());
@@ -276,7 +280,7 @@ public:
 class SaveAsCommand : public AlwaysEnabledCommand
 {
 public:
-	SaveAsCommand() : AlwaysEnabledCommand(xfeCmdSaveAs) {};
+	SaveAsCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSaveAs, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorSaveAs(view->getContext());
@@ -286,7 +290,7 @@ public:
 class PublishCommand : public AlwaysEnabledCommand
 {
 public:
-	PublishCommand() : AlwaysEnabledCommand(xfeCmdPublish) {};
+	PublishCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdPublish, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorPublish(view->getContext());
@@ -296,7 +300,7 @@ public:
 class DeleteTableCommand : public XFE_EditorViewCommand
 {
 public:
-	DeleteTableCommand() : XFE_EditorViewCommand(xfeCmdDeleteTable) {};
+	DeleteTableCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdDeleteTable, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableCanDelete(view->getContext());
@@ -309,7 +313,7 @@ public:
 class DeleteTableCellCommand : public XFE_EditorViewCommand
 {
 public:
-	DeleteTableCellCommand() : XFE_EditorViewCommand(xfeCmdDeleteTableCell) {};
+	DeleteTableCellCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdDeleteTableCell, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableCellCanDelete(view->getContext());
@@ -322,7 +326,7 @@ public:
 class DeleteTableRowCommand : public XFE_EditorViewCommand
 {
 public:
-	DeleteTableRowCommand() : XFE_EditorViewCommand(xfeCmdDeleteTableRow) {};
+	DeleteTableRowCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdDeleteTableRow, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableRowCanDelete(view->getContext());
@@ -335,7 +339,7 @@ public:
 class DeleteTableColumnCommand : public XFE_EditorViewCommand
 {
 public:
-	DeleteTableColumnCommand() : XFE_EditorViewCommand(xfeCmdDeleteTableColumn) {};
+	DeleteTableColumnCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdDeleteTableColumn, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableColumnCanDelete(view->getContext());
@@ -348,7 +352,7 @@ public:
 class RemoveLinkCommand : public XFE_EditorViewCommand
 {
 public:
-	RemoveLinkCommand() : XFE_EditorViewCommand(xfeCmdRemoveLink) {};
+	RemoveLinkCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdRemoveLink, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanRemoveLinks(view->getContext());
@@ -361,7 +365,7 @@ public:
 class SelectAllCommand : public AlwaysEnabledCommand
 {
 public:
-	SelectAllCommand() : AlwaysEnabledCommand(xfeCmdSelectAll) {};
+	SelectAllCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSelectAll, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorSelectAll(view->getContext());
@@ -371,7 +375,7 @@ public:
 class FindCommand : public AlwaysEnabledCommand
 {
 public:
-	FindCommand() : AlwaysEnabledCommand(xfeCmdFindInObject) {};
+	FindCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdFindInObject, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorFind(view->getContext());
@@ -381,7 +385,7 @@ public:
 class FindAgainCommand : public XFE_EditorViewCommand
 {
 public:
-	FindAgainCommand() : XFE_EditorViewCommand(xfeCmdFindAgain) {};
+	FindAgainCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdFindAgain, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorCanFindAgain(view->getContext());
@@ -417,8 +421,8 @@ get_show_hide_label(Widget widget, char* root, Boolean show)
 class ToggleParagraphMarksCommand : public AlwaysEnabledCommand
 {
 public:
-	ToggleParagraphMarksCommand() :
-		AlwaysEnabledCommand(xfeCmdToggleParagraphMarks) {};
+	ToggleParagraphMarksCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdToggleParagraphMarks, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorParagraphMarksGetState(view->getContext());
@@ -445,8 +449,8 @@ public:
 class ToggleTableBordersCommand : public AlwaysEnabledCommand
 {
 public:
-	ToggleTableBordersCommand() :
-		AlwaysEnabledCommand(xfeCmdToggleTableBorders) {};
+	ToggleTableBordersCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdToggleTableBorders, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorDisplayTablesGet(view->getContext());
@@ -461,7 +465,7 @@ public:
 class ReloadCommand : public AlwaysEnabledCommand
 {
 public:
-	ReloadCommand() : AlwaysEnabledCommand(xfeCmdReload) {};
+	ReloadCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdReload, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return  !EDT_IS_NEW_DOCUMENT(view->getContext());
@@ -478,7 +482,7 @@ public:
 class RefreshCommand : public AlwaysEnabledCommand
 {
 public:
-	RefreshCommand() : AlwaysEnabledCommand(xfeCmdRefresh) {};
+	RefreshCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdRefresh, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorRefresh(view->getContext());
@@ -488,7 +492,7 @@ public:
 class InsertLinkCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertLinkCommand() : AlwaysEnabledCommand(xfeCmdInsertLink) {};
+	InsertLinkCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdInsertLink, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorInsertLinkDialogDo(view->getContext());
@@ -498,7 +502,7 @@ public:
 class InsertTargetCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertTargetCommand() : AlwaysEnabledCommand(xfeCmdInsertTarget) {};
+	InsertTargetCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdInsertTarget, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorTargetPropertiesDialogDo(view->getContext());
@@ -508,7 +512,7 @@ public:
 class InsertImageCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertImageCommand() : AlwaysEnabledCommand(xfeCmdInsertImage) {};
+	InsertImageCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdInsertImage, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorPropertiesDialogDo(view->getContext(),
@@ -519,8 +523,8 @@ public:
 class InsertBulletedListCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertBulletedListCommand() : 
-		AlwaysEnabledCommand(xfeCmdInsertBulletedList) {};
+	InsertBulletedListCommand(XFE_EditorView *v) : 
+		AlwaysEnabledCommand(xfeCmdInsertBulletedList, v) {};
 
 	XP_Bool isDynamic() { return TRUE; };
 
@@ -535,8 +539,8 @@ public:
 class InsertNumberedListCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertNumberedListCommand() : 
-		AlwaysEnabledCommand(xfeCmdInsertNumberedList) {};
+	InsertNumberedListCommand(XFE_EditorView *v) : 
+		AlwaysEnabledCommand(xfeCmdInsertNumberedList, v) {};
 
 	XP_Bool isDynamic() { return TRUE; };
 
@@ -551,8 +555,8 @@ public:
 class InsertHorizontalLineCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertHorizontalLineCommand() : 
-		AlwaysEnabledCommand(xfeCmdInsertHorizontalLine) {};
+	InsertHorizontalLineCommand(XFE_EditorView *v) : 
+		AlwaysEnabledCommand(xfeCmdInsertHorizontalLine, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo* info) {
 
@@ -571,7 +575,7 @@ public:
 class InsertTableCommand : public XFE_EditorViewCommand
 {
 public:
-	InsertTableCommand() : XFE_EditorViewCommand(xfeCmdInsertTable) {};
+	InsertTableCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdInsertTable, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableCanInsert(view->getContext());
@@ -584,7 +588,7 @@ public:
 class InsertTableRowCommand : public XFE_EditorViewCommand
 {
 public:
-	InsertTableRowCommand() : XFE_EditorViewCommand(xfeCmdInsertTableRow) {};
+	InsertTableRowCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdInsertTableRow, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableRowCanInsert(view->getContext());
@@ -597,7 +601,7 @@ public:
 class InsertTableColumnCommand : public XFE_EditorViewCommand
 {
 public:
-	InsertTableColumnCommand() : XFE_EditorViewCommand(xfeCmdInsertTableColumn) {};
+	InsertTableColumnCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdInsertTableColumn, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableColumnCanInsert(view->getContext());
@@ -610,7 +614,7 @@ public:
 class InsertTableCellCommand : public XFE_EditorViewCommand
 {
 public:
-	InsertTableCellCommand() : XFE_EditorViewCommand(xfeCmdInsertTableCell) {};
+	InsertTableCellCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdInsertTableCell, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableCellCanInsert(view->getContext());
@@ -623,7 +627,7 @@ public:
 class SelectTableCommand : public XFE_EditorViewCommand
 {
 public:
-	SelectTableCommand() : XFE_EditorViewCommand(xfeCmdSelectTable) {};
+	SelectTableCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdSelectTable, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -638,7 +642,7 @@ public:
 class SelectTableCellCommand : public XFE_EditorViewCommand
 {
 public:
-	SelectTableCellCommand() : XFE_EditorViewCommand(xfeCmdSelectTableCell) {};
+	SelectTableCellCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdSelectTableCell, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -653,7 +657,7 @@ public:
 class SelectTableRowCommand : public XFE_EditorViewCommand
 {
 public:
-	SelectTableRowCommand() : XFE_EditorViewCommand(xfeCmdSelectTableRow) {};
+	SelectTableRowCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdSelectTableRow, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -668,8 +672,8 @@ public:
 class SelectTableColumnCommand : public XFE_EditorViewCommand
 {
 public:
-	SelectTableColumnCommand()
-      : XFE_EditorViewCommand(xfeCmdSelectTableColumn) {};
+	SelectTableColumnCommand(XFE_EditorView *v)
+      : XFE_EditorViewCommand(xfeCmdSelectTableColumn, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -684,8 +688,8 @@ public:
 class SelectTableAllCellsCommand : public XFE_EditorViewCommand
 {
 public:
-	SelectTableAllCellsCommand()
-      : XFE_EditorViewCommand(xfeCmdSelectTableAllCells) {};
+	SelectTableAllCellsCommand(XFE_EditorView *v)
+      : XFE_EditorViewCommand(xfeCmdSelectTableAllCells, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -700,8 +704,8 @@ public:
 class TableJoinCommand : public XFE_EditorViewCommand
 {
 public:
-	TableJoinCommand()
-      : XFE_EditorViewCommand(xfeCmdTableJoin) {};
+	TableJoinCommand(XFE_EditorView *v)
+      : XFE_EditorViewCommand(xfeCmdTableJoin, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
         return (EDT_GetMergeTableCellsType(view->getContext()) != 0);
@@ -714,8 +718,8 @@ public:
 class ConvertTextToTableCommand : public XFE_EditorViewCommand
 {
 public:
-	ConvertTextToTableCommand()
-      : XFE_EditorViewCommand(xfeCmdConvertTextToTable) {};
+	ConvertTextToTableCommand(XFE_EditorView *v)
+      : XFE_EditorViewCommand(xfeCmdConvertTextToTable, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return EDT_CanConvertTextToTable(view->getContext());
@@ -734,8 +738,8 @@ public:
 class ConvertTableToTextCommand : public XFE_EditorViewCommand
 {
 public:
-	ConvertTableToTextCommand()
-      : XFE_EditorViewCommand(xfeCmdConvertTableToText) {};
+	ConvertTableToTextCommand(XFE_EditorView *v)
+      : XFE_EditorViewCommand(xfeCmdConvertTableToText, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return (EDT_IsInsertPointInTable(view->getContext()) != 0);
@@ -748,7 +752,7 @@ public:
 class InsertHtmlCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertHtmlCommand() : AlwaysEnabledCommand(xfeCmdInsertHtml) {};
+	InsertHtmlCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdInsertHtml, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorHtmlPropertiesDialogDo(view->getContext());
@@ -758,8 +762,8 @@ public:
 class InsertBreakBelowImageCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertBreakBelowImageCommand() :
-		AlwaysEnabledCommand(xfeCmdInsertBreakBelowImage) {};
+	InsertBreakBelowImageCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdInsertBreakBelowImage, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 
@@ -771,8 +775,8 @@ public:
 class InsertNonBreakingSpaceCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertNonBreakingSpaceCommand() :
-		AlwaysEnabledCommand(xfeCmdInsertNonBreakingSpace) {};
+	InsertNonBreakingSpaceCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdInsertNonBreakingSpace, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 
@@ -892,8 +896,8 @@ style_is_determinate(MWContext* context, ED_TextFormat foo)
 class SetFontSizeCommand : public AlwaysEnabledCommand
 {
 public:
-	SetFontSizeCommand() : AlwaysEnabledCommand(xfeCmdSetFontSize) {};
-	SetFontSizeCommand(char* name) : AlwaysEnabledCommand(name) {};
+	SetFontSizeCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSetFontSize, v) {};
+	SetFontSizeCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {};
 
 	virtual XP_Bool isDynamic() { return TRUE; };
 
@@ -983,10 +987,10 @@ class SetFontFaceCommand : public AlwaysEnabledCommand
 private:
 	XFE_CommandParameters* m_params;
 public:
-	SetFontFaceCommand() : AlwaysEnabledCommand(xfeCmdSetFontFace) {
+	SetFontFaceCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSetFontFace, v) {
 		m_params = NULL;
 	}
-	SetFontFaceCommand(char* name) : AlwaysEnabledCommand(name) {
+	SetFontFaceCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {
 		m_params = NULL;
 	}
 	virtual XP_Bool isDynamic() { return TRUE; };
@@ -1120,7 +1124,7 @@ SetFontFaceCommand::reallyDoCommand(XFE_View* view, XFE_CommandInfo* info)
 class SetFontColorCommand : public AlwaysEnabledCommand
 {
 public:
-	SetFontColorCommand() : AlwaysEnabledCommand(xfeCmdSetFontColor) {
+	SetFontColorCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdSetFontColor, v) {
 		m_params = NULL;
 	};
 
@@ -1251,9 +1255,9 @@ static parse_tokens_st paragraph_style_tokens[] = {
 class SetParagraphStyleCommand : public AlwaysEnabledCommand
 {
 public:
-	SetParagraphStyleCommand() :
-		AlwaysEnabledCommand(xfeCmdSetParagraphStyle) {};
-	SetParagraphStyleCommand(char* name) : AlwaysEnabledCommand(name) {};
+	SetParagraphStyleCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdSetParagraphStyle, v) {};
+	SetParagraphStyleCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {};
 
 	virtual XP_Bool isDynamic() { return TRUE; };
 
@@ -1306,8 +1310,8 @@ static parse_tokens_st list_style_tokens[] = {
 class SetListStyleCommand : public AlwaysEnabledCommand
 {
 public:
-	SetListStyleCommand() :	AlwaysEnabledCommand(xfeCmdSetListStyle) {};
-	SetListStyleCommand(char* name) : AlwaysEnabledCommand(name) {};
+	SetListStyleCommand(XFE_EditorView *v) :	AlwaysEnabledCommand(xfeCmdSetListStyle, v) {};
+	SetListStyleCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {};
 
 	void    set(XFE_View* view, TagType type = P_UNUM_LIST) {
 		fe_EditorToggleList(view->getContext(), type);
@@ -1346,9 +1350,9 @@ static parse_tokens_st align_style_tokens[] = {
 class SetAlignStyleCommand : public AlwaysEnabledCommand
 {
 public:
-	SetAlignStyleCommand() :	
-		AlwaysEnabledCommand(xfeCmdSetAlignmentStyle) {};
-	SetAlignStyleCommand(char* name) : AlwaysEnabledCommand(name) {};
+	SetAlignStyleCommand(XFE_EditorView *v) :	
+		AlwaysEnabledCommand(xfeCmdSetAlignmentStyle, v) {};
+	SetAlignStyleCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {};
 
 	virtual XP_Bool isDynamic() { return TRUE; };
 
@@ -1448,9 +1452,9 @@ protected:
 		fe_EditorCharacterPropertiesSet(context, values);
 	}
 public:
-	SetCharacterStyleCommand() :	
-		AlwaysEnabledCommand(xfeCmdSetCharacterStyle) {};
-	SetCharacterStyleCommand(char* name) : AlwaysEnabledCommand(name) {};
+	SetCharacterStyleCommand(XFE_EditorView *v) :	
+		AlwaysEnabledCommand(xfeCmdSetCharacterStyle, v) {};
+	SetCharacterStyleCommand(char* name, XFE_EditorView *v) : AlwaysEnabledCommand(name, v) {};
 
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* calldata);
 };
@@ -1500,8 +1504,8 @@ SetCharacterStyleCommand::parse_info(XFE_CommandInfo* info, unsigned& style) {
 class ToggleCharacterStyleCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyle) {};
+	ToggleCharacterStyleCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyle, v) {};
 
 	XP_Bool isDynamic() { return TRUE; };
 
@@ -1540,7 +1544,7 @@ ToggleCharacterStyleCommand::isSelected(XFE_View* view, XFE_CommandInfo* calldat
 class IndentCommand : public AlwaysEnabledCommand
 {
 public:
-	IndentCommand() : AlwaysEnabledCommand(xfeCmdIndent) {};
+	IndentCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdIndent, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorIndent(view->getContext(), False);
@@ -1550,7 +1554,7 @@ public:
 class OutdentCommand : public AlwaysEnabledCommand
 {
 public:
-	OutdentCommand() : AlwaysEnabledCommand(xfeCmdOutdent) {};
+	OutdentCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdOutdent, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorIndent(view->getContext(), True);
@@ -1560,8 +1564,8 @@ public:
 class SetObjectPropertiesCommand : public AlwaysEnabledCommand
 {
 public:
-	SetObjectPropertiesCommand() :
-		AlwaysEnabledCommand(xfeCmdSetObjectProperties) {};
+	SetObjectPropertiesCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdSetObjectProperties, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorObjectPropertiesDialogDo(view->getContext());
@@ -1601,8 +1605,8 @@ public:
 class SetPagePropertiesCommand : public AlwaysEnabledCommand
 {
 public:
-	SetPagePropertiesCommand() : 
-		AlwaysEnabledCommand(xfeCmdSetPageProperties) {};
+	SetPagePropertiesCommand(XFE_EditorView *v) : 
+		AlwaysEnabledCommand(xfeCmdSetPageProperties, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorDocumentPropertiesDialogDo(view->getContext(),
@@ -1613,7 +1617,7 @@ public:
 class SetTablePropertiesCommand : public XFE_EditorViewCommand
 {
 public:
-	SetTablePropertiesCommand() : XFE_EditorViewCommand(xfeCmdSetTableProperties) {};
+	SetTablePropertiesCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdSetTableProperties, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorTableCanDelete(view->getContext());
@@ -1629,8 +1633,8 @@ HG10297
 class SetCharacterColorCommand : public AlwaysEnabledCommand
 {
 public:
-	SetCharacterColorCommand() :
-		AlwaysEnabledCommand(xfeCmdSetCharacterColor) {};
+	SetCharacterColorCommand(XFE_EditorView *v) :
+		AlwaysEnabledCommand(xfeCmdSetCharacterColor, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		fe_EditorSetColorsDialogDo(view->getContext());
@@ -1643,8 +1647,8 @@ private:
 	int32 category_id;
 	int32 plugin_id;
 public:
-	JavaPluginCommand(char* name, int32 cid, int32 pid) :
-		AlwaysEnabledCommand(name) {
+	JavaPluginCommand(char* name, int32 cid, int32 pid, XFE_EditorView *v) :
+		AlwaysEnabledCommand(name, v) {
 		category_id = cid;
 		plugin_id = pid;
 	}
@@ -1662,7 +1666,7 @@ public:
 class BrowsePageCommand : public AlwaysEnabledCommand
 {
 public:
-	BrowsePageCommand() : AlwaysEnabledCommand(xfeCmdBrowsePage) {};
+	BrowsePageCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdBrowsePage, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*);
 };
@@ -1684,7 +1688,7 @@ BrowsePageCommand::reallyDoCommand(XFE_View* view, XFE_CommandInfo*)
 class EditSourceCommand : public XFE_EditorViewCommand
 {
 public:
-	EditSourceCommand() : XFE_EditorViewCommand(xfeCmdEditPageSource) {};
+	EditSourceCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdEditPageSource, v) {};
 
 	XP_Bool isEnabled(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorDocumentIsSaved(view->getContext());
@@ -1698,7 +1702,7 @@ public:
 class ViewSourceCommand : public AlwaysEnabledCommand
 {
 public:
-	ViewSourceCommand() : AlwaysEnabledCommand(xfeCmdViewPageSource) {};
+	ViewSourceCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdViewPageSource, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		    fe_EditorDisplaySource(view->getContext());
@@ -1711,8 +1715,8 @@ public:
 class SetFontSizeMinusTwoCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizeMinusTwoCommand() :
-	   		SetFontSizeCommand(xfeCmdSetFontSizeMinusTwo) {};
+	SetFontSizeMinusTwoCommand(XFE_EditorView *v) :
+	   		SetFontSizeCommand(xfeCmdSetFontSizeMinusTwo, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1726,8 +1730,8 @@ public:
 class SetFontSizeMinusOneCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizeMinusOneCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizeMinusOne) {};
+	SetFontSizeMinusOneCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizeMinusOne, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1741,8 +1745,8 @@ public:
 class SetFontSizeZeroCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizeZeroCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizeZero) {};
+	SetFontSizeZeroCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizeZero, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1756,8 +1760,8 @@ public:
 class SetFontSizePlusOneCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizePlusOneCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizePlusOne) {};
+	SetFontSizePlusOneCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizePlusOne, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1771,8 +1775,8 @@ public:
 class SetFontSizePlusTwoCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizePlusTwoCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizePlusTwo) {};
+	SetFontSizePlusTwoCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizePlusTwo, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1786,8 +1790,8 @@ public:
 class SetFontSizePlusThreeCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizePlusThreeCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizePlusThree) {};
+	SetFontSizePlusThreeCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizePlusThree, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1801,8 +1805,8 @@ public:
 class SetFontSizePlusFourCommand : public SetFontSizeCommand
 {
 public:
-	SetFontSizePlusFourCommand() :
-		SetFontSizeCommand(xfeCmdSetFontSizePlusFour) {};
+	SetFontSizePlusFourCommand(XFE_EditorView *v) :
+		SetFontSizeCommand(xfeCmdSetFontSizePlusFour, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1816,8 +1820,8 @@ public:
 class SetParagraphStyleNormalCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleNormalCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleNormal) {};
+	SetParagraphStyleNormalCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleNormal, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1831,8 +1835,8 @@ public:
 class SetParagraphStyleHeadingOneCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingOneCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingOne) {};
+	SetParagraphStyleHeadingOneCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingOne, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1846,8 +1850,8 @@ public:
 class SetParagraphStyleHeadingTwoCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingTwoCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingTwo) {};
+	SetParagraphStyleHeadingTwoCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingTwo, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1861,8 +1865,8 @@ public:
 class SetParagraphStyleHeadingThreeCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingThreeCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingThree) {};
+	SetParagraphStyleHeadingThreeCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingThree, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1876,8 +1880,8 @@ public:
 class SetParagraphStyleHeadingFourCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingFourCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingFour) {};
+	SetParagraphStyleHeadingFourCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingFour, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1891,8 +1895,8 @@ public:
 class SetParagraphStyleHeadingFiveCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingFiveCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingFive) {};
+	SetParagraphStyleHeadingFiveCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingFive, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1906,8 +1910,8 @@ public:
 class SetParagraphStyleHeadingSixCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleHeadingSixCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingSix) {};
+	SetParagraphStyleHeadingSixCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleHeadingSix, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1921,8 +1925,8 @@ public:
 class SetParagraphStyleAddressCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleAddressCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleAddress) {};
+	SetParagraphStyleAddressCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleAddress, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1936,8 +1940,8 @@ public:
 class SetParagraphStyleFormattedCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleFormattedCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleFormatted) {};
+	SetParagraphStyleFormattedCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleFormatted, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1951,8 +1955,8 @@ public:
 class SetParagraphStyleTitleCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleTitleCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleDescriptionTitle) {};
+	SetParagraphStyleTitleCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleDescriptionTitle, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1966,8 +1970,8 @@ public:
 class SetParagraphStyleTextCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleTextCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleDescriptionText) {};
+	SetParagraphStyleTextCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleDescriptionText, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1981,8 +1985,8 @@ public:
 class SetParagraphStyleBlockQuoteCommand : public SetParagraphStyleCommand
 {
 public:
-	SetParagraphStyleBlockQuoteCommand() :
-		SetParagraphStyleCommand(xfeCmdSetParagraphStyleBlockQuote) {};
+	SetParagraphStyleBlockQuoteCommand(XFE_EditorView *v) :
+		SetParagraphStyleCommand(xfeCmdSetParagraphStyleBlockQuote, v) {};
 	
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -1996,8 +2000,8 @@ public:
 class SetListStyleNoneCommand : public SetListStyleCommand
 {
 public:
-	SetListStyleNoneCommand() :
-		SetListStyleCommand(xfeCmdSetListStyleNone) {};
+	SetListStyleNoneCommand(XFE_EditorView *v) :
+		SetListStyleCommand(xfeCmdSetListStyleNone, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2020,8 +2024,8 @@ public:
 class SetListStyleBulletedCommand : public SetListStyleCommand
 {
 public:
-	SetListStyleBulletedCommand() :
-		SetListStyleCommand(xfeCmdSetListStyleBulleted) {};
+	SetListStyleBulletedCommand(XFE_EditorView *v) :
+		SetListStyleCommand(xfeCmdSetListStyleBulleted, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2040,8 +2044,8 @@ public:
 class SetListStyleNumberedCommand : public SetListStyleCommand
 {
 public:
-	SetListStyleNumberedCommand() :
-		SetListStyleCommand(xfeCmdSetListStyleNumbered) {};
+	SetListStyleNumberedCommand(XFE_EditorView *v) :
+		SetListStyleCommand(xfeCmdSetListStyleNumbered, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2060,8 +2064,8 @@ public:
 class SetAlignStyleLeftCommand : public SetAlignStyleCommand
 {
 public:
-	SetAlignStyleLeftCommand() :
-		SetAlignStyleCommand(xfeCmdSetAlignmentStyleLeft) {};
+	SetAlignStyleLeftCommand(XFE_EditorView *v) :
+		SetAlignStyleCommand(xfeCmdSetAlignmentStyleLeft, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorAlignGet(view->getContext()) == ED_ALIGN_LEFT;
@@ -2074,8 +2078,8 @@ public:
 class SetAlignStyleCenterCommand : public SetAlignStyleCommand
 {
 public:
-	SetAlignStyleCenterCommand() :
-		SetAlignStyleCommand(xfeCmdSetAlignmentStyleCenter) {};
+	SetAlignStyleCenterCommand(XFE_EditorView *v) :
+		SetAlignStyleCommand(xfeCmdSetAlignmentStyleCenter, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorAlignGet(view->getContext()) == ED_ALIGN_ABSCENTER;
@@ -2088,8 +2092,8 @@ public:
 class SetAlignStyleRightCommand : public SetAlignStyleCommand
 {
 public:
-	SetAlignStyleRightCommand() :
-		SetAlignStyleCommand(xfeCmdSetAlignmentStyleRight) {};
+	SetAlignStyleRightCommand(XFE_EditorView *v) :
+		SetAlignStyleCommand(xfeCmdSetAlignmentStyleRight, v) {};
 
 	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		return fe_EditorAlignGet(view->getContext()) == ED_ALIGN_RIGHT;
@@ -2102,8 +2106,8 @@ public:
 class ClearAllStylesCommand : public SetCharacterStyleCommand
 {
 public:
-	ClearAllStylesCommand() :
-		SetCharacterStyleCommand(xfeCmdClearAllStyles) {};
+	ClearAllStylesCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdClearAllStyles, v) {};
 
 	void    reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		set(view, TF_NONE);
@@ -2113,8 +2117,8 @@ public:
 class ToggleCharacterStyleBoldCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleBoldCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleBold) {};
+	ToggleCharacterStyleBoldCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleBold, v) {};
 
 	XP_Bool isDeterminate(XFE_View* view, XFE_CommandInfo*) {
 		return style_is_determinate(view->getContext(), TF_BOLD);
@@ -2132,8 +2136,8 @@ public:
 class ToggleCharacterStyleUnderlineCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleUnderlineCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleUnderline) {};
+	ToggleCharacterStyleUnderlineCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleUnderline, v) {};
 
 	XP_Bool isDeterminate(XFE_View* view, XFE_CommandInfo*) {
 		return style_is_determinate(view->getContext(), TF_UNDERLINE);
@@ -2151,8 +2155,8 @@ public:
 class ToggleCharacterStyleItalicCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleItalicCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleItalic) {};
+	ToggleCharacterStyleItalicCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleItalic, v) {};
 
 	XP_Bool isDeterminate(XFE_View* view, XFE_CommandInfo*) {
 		return style_is_determinate(view->getContext(), TF_ITALIC);
@@ -2170,8 +2174,8 @@ public:
 class ToggleCharacterStyleFixedCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleFixedCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleFixed) {};
+	ToggleCharacterStyleFixedCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleFixed, v) {};
 
    	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2186,8 +2190,8 @@ public:
 class ToggleCharacterStyleSuperscriptCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleSuperscriptCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleSuperscript)
+	ToggleCharacterStyleSuperscriptCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleSuperscript, v)
 	{};
 
    	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
@@ -2203,8 +2207,8 @@ public:
 class ToggleCharacterStyleSubscriptCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleSubscriptCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleSubscript)
+	ToggleCharacterStyleSubscriptCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleSubscript, v)
 	{};
 
    	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
@@ -2221,8 +2225,8 @@ class ToggleCharacterStyleStrikethroughCommand :
 	public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleStrikethroughCommand() :
-	SetCharacterStyleCommand(xfeCmdToggleCharacterStyleStrikethrough) {
+	ToggleCharacterStyleStrikethroughCommand(XFE_EditorView *v) :
+	SetCharacterStyleCommand(xfeCmdToggleCharacterStyleStrikethrough, v) {
 	};
 
    	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
@@ -2239,8 +2243,8 @@ public:
 class ToggleCharacterStyleBlinkCommand : public SetCharacterStyleCommand
 {
 public:
-	ToggleCharacterStyleBlinkCommand() :
-		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleBlink) {};
+	ToggleCharacterStyleBlinkCommand(XFE_EditorView *v) :
+		SetCharacterStyleCommand(xfeCmdToggleCharacterStyleBlink, v) {};
 
    	XP_Bool isSelected(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2290,7 +2294,7 @@ static parse_tokens_st move_command_directions[] = {
 class MoveCommand : public AlwaysEnabledCommand
 {
 public:
-	MoveCommand() :	AlwaysEnabledCommand(xfeCmdMoveCursor) {};
+	MoveCommand(XFE_EditorView *v) :	AlwaysEnabledCommand(xfeCmdMoveCursor, v) {};
 
 	virtual XP_Bool isSlow() {
 		return FALSE;
@@ -2344,7 +2348,7 @@ public:
 class KeyInsertCommand : public AlwaysEnabledCommand
 {
 public:
-	KeyInsertCommand() :	AlwaysEnabledCommand(xfeCmdKeyInsert) {};
+	KeyInsertCommand(XFE_EditorView *v) :	AlwaysEnabledCommand(xfeCmdKeyInsert, v) {};
 
 	virtual XP_Bool requiresChromeUpdate() {
 		return FALSE;
@@ -2363,7 +2367,7 @@ public:
 class InsertReturnCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertReturnCommand() :	AlwaysEnabledCommand(xfeCmdInsertReturn) {};
+	InsertReturnCommand(XFE_EditorView *v) :	AlwaysEnabledCommand(xfeCmdInsertReturn, v) {};
 
 	virtual XP_Bool isSlow() {
 		return FALSE;
@@ -2385,7 +2389,7 @@ static parse_tokens_st insert_line_break_types[] = {
 class InsertLineBreakCommand : public AlwaysEnabledCommand
 {
 public:
-	InsertLineBreakCommand() : AlwaysEnabledCommand(xfeCmdInsertLineBreak) {};
+	InsertLineBreakCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdInsertLineBreak, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info) {
 		ED_BreakType type = ED_BREAK_NORMAL;
@@ -2417,7 +2421,7 @@ public:
 class TabCommand : public AlwaysEnabledCommand
 {
 public:
-	TabCommand() : AlwaysEnabledCommand(xfeCmdTab) {};
+	TabCommand(XFE_EditorView *v) : AlwaysEnabledCommand(xfeCmdTab, v) {};
 
 	virtual XP_Bool isSlow() {
 		return FALSE;
@@ -2449,7 +2453,7 @@ public:
 class SelectCommand : public XFE_ViewCommand
 {
 public:
-	SelectCommand() : XFE_ViewCommand(xfeCmdSelect) {};
+	SelectCommand(XFE_EditorView *v) : XFE_ViewCommand(xfeCmdSelect, v) {};
 	
 	virtual XP_Bool isSlow() {
 		return FALSE;
@@ -2464,6 +2468,9 @@ public:
 
 void
 SelectCommand::doCommand(XFE_View* view, XFE_CommandInfo* info) {
+	if (m_view)
+		view = m_view;
+
 	MWContext* context = view->getContext();
 	
 	if (info != NULL && *info->nparams > 0) {
@@ -2501,6 +2508,7 @@ SelectCommand::doCommand(XFE_View* view, XFE_CommandInfo* info) {
 class EditorObjectIsCommand : public XFE_ObjectIsCommand
 {
 public:
+	EditorObjectIsCommand(XFE_EditorView *v) : XFE_ObjectIsCommand(v) {}
 	char* getObjectType(XFE_View*);
 };
 
@@ -2524,9 +2532,12 @@ EditorObjectIsCommand::getObjectType(XFE_View* view)
 class DialogCommand : public XFE_ViewCommand
 {
 public:
-	DialogCommand() : XFE_ViewCommand(xfeCmdDialog) {};
+	DialogCommand(XFE_EditorView *v) : XFE_ViewCommand(xfeCmdDialog, v) {};
 	
 	void doCommand(XFE_View* view, XFE_CommandInfo* info) {
+
+		if (m_view)
+			view = m_view;
 
 		MWContext* context = view->getContext();
 		unsigned   nerrors = 0;
@@ -2681,7 +2692,7 @@ fe_editor_selection_contains_point(MWContext* context, int32 x, int32 y)
 class EditorPopupCommand : public XFE_EditorViewCommand
 {
 public:
-	EditorPopupCommand() : XFE_EditorViewCommand(xfeCmdShowPopup) {};
+	EditorPopupCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdShowPopup, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info);
 };
@@ -2711,6 +2722,11 @@ EditorPopupCommand::reallyDoCommand(XFE_View* v_view, XFE_CommandInfo* info)
 		context = frame->getContext();
 
 		popup = fe_EditorNewPopupMenu(frame, info->widget, context);
+
+#ifdef ENDER
+		if (EDITOR_CONTEXT_DATA(context)->embedded)
+			popup->setCommandDispatcher(view);
+#endif /* ENDER */
 
 		view->setPopupMenu(popup);
 		popup = view->getPopupMenu();
@@ -2742,7 +2758,7 @@ static char label_buf[256];
 class BrowseLinkCommand : public XFE_EditorViewCommand
 {
 public:
-	BrowseLinkCommand() : XFE_EditorViewCommand(xfeCmdOpenLinkNew) {};
+	BrowseLinkCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdOpenLinkNew, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2802,7 +2818,7 @@ public:
 class EditLinkCommand : public XFE_EditorViewCommand
 {
 public:
-	EditLinkCommand() : XFE_EditorViewCommand(xfeCmdOpenLinkEdit) {};
+	EditLinkCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdOpenLinkEdit, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2824,7 +2840,7 @@ public:
 class BookmarkLinkCommand : public XFE_EditorViewCommand
 {
 public:
-	BookmarkLinkCommand() : XFE_EditorViewCommand(xfeCmdAddLinkBookmark) {};
+	BookmarkLinkCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdAddLinkBookmark, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo*) {
 		MWContext* context = view->getContext();
@@ -2843,7 +2859,7 @@ public:
 class CopyLinkCommand : public XFE_EditorViewCommand
 {
 public:
-	CopyLinkCommand() : XFE_EditorViewCommand(xfeCmdCopyLink) {};
+	CopyLinkCommand(XFE_EditorView *v) : XFE_EditorViewCommand(xfeCmdCopyLink, v) {};
 	
 	void reallyDoCommand(XFE_View* view, XFE_CommandInfo* info) {
 		if (info != NULL) {
@@ -2864,8 +2880,6 @@ public:
 
 //    END OF COMMAND DEFINES
 
-static XFE_CommandList* my_commands = 0;
-
 XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 			       Widget parent,
 			       XFE_View *parent_view,
@@ -2880,118 +2894,125 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	_dropSite=new XFE_EditorDrop(getBaseWidget(),this);
 	_dropSite->enable();
 
-	if (my_commands != 0)
-		return;
+	XFE_EditorView *ev = 0;
 
-	registerCommand(my_commands, new BrowseLinkCommand);
-	registerCommand(my_commands, new EditLinkCommand);
-	registerCommand(my_commands, new BookmarkLinkCommand);
-	registerCommand(my_commands, new CopyLinkCommand);
-	registerCommand(my_commands, new EditorPopupCommand);
-	registerCommand(my_commands, new UndoCommand);
-	registerCommand(my_commands, new RedoCommand);
-	registerCommand(my_commands, new CutCommand);
-	registerCommand(my_commands, new CopyCommand);
-	registerCommand(my_commands, new PasteCommand);
-	registerCommand(my_commands, new DeleteCommand);
-	registerCommand(my_commands, new SpellCommand);
-	registerCommand(my_commands, new SaveCommand);
-	registerCommand(my_commands, new SaveAsCommand);
-	registerCommand(my_commands, new PublishCommand);
-	registerCommand(my_commands, new DeleteTableCommand);
-	registerCommand(my_commands, new DeleteTableCellCommand);
-	registerCommand(my_commands, new DeleteTableRowCommand);
-	registerCommand(my_commands, new DeleteTableColumnCommand);
-	registerCommand(my_commands, new SelectTableCommand);
-	registerCommand(my_commands, new SelectTableCellCommand);
-	registerCommand(my_commands, new SelectTableRowCommand);
-	registerCommand(my_commands, new SelectTableColumnCommand);
-	registerCommand(my_commands, new TableJoinCommand);
-	registerCommand(my_commands, new ConvertTextToTableCommand);
-	registerCommand(my_commands, new ConvertTableToTextCommand);
-	registerCommand(my_commands, new RemoveLinkCommand);
-	registerCommand(my_commands, new SelectAllCommand);
-	registerCommand(my_commands, new FindCommand);
-	registerCommand(my_commands, new FindAgainCommand);
-	registerCommand(my_commands, new ToggleTableBordersCommand);
-	registerCommand(my_commands, new ToggleParagraphMarksCommand);
-	registerCommand(my_commands, new ReloadCommand);
-	registerCommand(my_commands, new RefreshCommand);
-	registerCommand(my_commands, new InsertLinkCommand);
-	registerCommand(my_commands, new InsertTargetCommand);
-	registerCommand(my_commands, new InsertImageCommand);
-	registerCommand(my_commands, new InsertHorizontalLineCommand);
-	registerCommand(my_commands, new InsertBulletedListCommand);
-	registerCommand(my_commands, new InsertNumberedListCommand);
-	registerCommand(my_commands, new InsertTableCommand);
-	registerCommand(my_commands, new InsertTableRowCommand);
-	registerCommand(my_commands, new InsertTableColumnCommand);
-	registerCommand(my_commands, new InsertTableCellCommand);
-	registerCommand(my_commands, new InsertHtmlCommand);
-	registerCommand(my_commands, new InsertLineBreakCommand);
-	registerCommand(my_commands, new InsertBreakBelowImageCommand);
-	registerCommand(my_commands, new InsertNonBreakingSpaceCommand);
-	registerCommand(my_commands, new SetFontSizeCommand);
-	registerCommand(my_commands, new SetFontFaceCommand);
-	registerCommand(my_commands, new SetFontColorCommand);
-	registerCommand(my_commands, new SetParagraphStyleCommand);
-	registerCommand(my_commands, new SetListStyleCommand);
-	registerCommand(my_commands, new SetAlignStyleCommand);
-	registerCommand(my_commands, new SetCharacterStyleCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleCommand);
-	registerCommand(my_commands, new ClearAllStylesCommand);
-	registerCommand(my_commands, new IndentCommand);
-	registerCommand(my_commands, new OutdentCommand);
-	registerCommand(my_commands, new SetObjectPropertiesCommand);
-	registerCommand(my_commands, new SetPagePropertiesCommand);
-	registerCommand(my_commands, new SetTablePropertiesCommand);
+#ifdef ENDER
+
+	if (EDITOR_CONTEXT_DATA(context)->embedded)
+		ev = this;
+
+#endif /* ENDER */
+
+	m_commands = 0;
+	registerCommand(m_commands, new BrowseLinkCommand(ev));
+	registerCommand(m_commands, new EditLinkCommand(ev));
+	registerCommand(m_commands, new BookmarkLinkCommand(ev));
+	registerCommand(m_commands, new CopyLinkCommand(ev));
+	registerCommand(m_commands, new EditorPopupCommand(ev));
+	registerCommand(m_commands, new UndoCommand(ev));
+	registerCommand(m_commands, new RedoCommand(ev));
+	registerCommand(m_commands, new CutCommand(ev));
+	registerCommand(m_commands, new CopyCommand(ev));
+	registerCommand(m_commands, new PasteCommand(ev));
+	registerCommand(m_commands, new DeleteCommand(ev));
+	registerCommand(m_commands, new SpellCommand(ev));
+	registerCommand(m_commands, new SaveCommand(ev));
+	registerCommand(m_commands, new SaveAsCommand(ev));
+	registerCommand(m_commands, new PublishCommand(ev));
+	registerCommand(m_commands, new DeleteTableCommand(ev));
+	registerCommand(m_commands, new DeleteTableCellCommand(ev));
+	registerCommand(m_commands, new DeleteTableRowCommand(ev));
+	registerCommand(m_commands, new DeleteTableColumnCommand(ev));
+	registerCommand(m_commands, new SelectTableCommand(ev));
+	registerCommand(m_commands, new SelectTableCellCommand(ev));
+	registerCommand(m_commands, new SelectTableRowCommand(ev));
+	registerCommand(m_commands, new SelectTableColumnCommand(ev));
+	registerCommand(m_commands, new TableJoinCommand(ev));
+	registerCommand(m_commands, new ConvertTextToTableCommand(ev));
+	registerCommand(m_commands, new ConvertTableToTextCommand(ev));
+	registerCommand(m_commands, new RemoveLinkCommand(ev));
+	registerCommand(m_commands, new SelectAllCommand(ev));
+	registerCommand(m_commands, new FindCommand(ev));
+	registerCommand(m_commands, new FindAgainCommand(ev));
+	registerCommand(m_commands, new ToggleTableBordersCommand(ev));
+	registerCommand(m_commands, new ToggleParagraphMarksCommand(ev));
+	registerCommand(m_commands, new ReloadCommand(ev));
+	registerCommand(m_commands, new RefreshCommand(ev));
+	registerCommand(m_commands, new InsertLinkCommand(ev));
+	registerCommand(m_commands, new InsertTargetCommand(ev));
+	registerCommand(m_commands, new InsertImageCommand(ev));
+	registerCommand(m_commands, new InsertHorizontalLineCommand(ev));
+	registerCommand(m_commands, new InsertBulletedListCommand(ev));
+	registerCommand(m_commands, new InsertNumberedListCommand(ev));
+	registerCommand(m_commands, new InsertTableCommand(ev));
+	registerCommand(m_commands, new InsertTableRowCommand(ev));
+	registerCommand(m_commands, new InsertTableColumnCommand(ev));
+	registerCommand(m_commands, new InsertTableCellCommand(ev));
+	registerCommand(m_commands, new InsertHtmlCommand(ev));
+	registerCommand(m_commands, new InsertLineBreakCommand(ev));
+	registerCommand(m_commands, new InsertBreakBelowImageCommand(ev));
+	registerCommand(m_commands, new InsertNonBreakingSpaceCommand(ev));
+	registerCommand(m_commands, new SetFontSizeCommand(ev));
+	registerCommand(m_commands, new SetFontFaceCommand(ev));
+	registerCommand(m_commands, new SetFontColorCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleCommand(ev));
+	registerCommand(m_commands, new SetListStyleCommand(ev));
+	registerCommand(m_commands, new SetAlignStyleCommand(ev));
+	registerCommand(m_commands, new SetCharacterStyleCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleCommand(ev));
+	registerCommand(m_commands, new ClearAllStylesCommand(ev));
+	registerCommand(m_commands, new IndentCommand(ev));
+	registerCommand(m_commands, new OutdentCommand(ev));
+	registerCommand(m_commands, new SetObjectPropertiesCommand(ev));
+	registerCommand(m_commands, new SetPagePropertiesCommand(ev));
+	registerCommand(m_commands, new SetTablePropertiesCommand(ev));
 	HG81272
-	registerCommand(my_commands, new SetCharacterColorCommand);
-	registerCommand(my_commands, new BrowsePageCommand);
-	registerCommand(my_commands, new EditSourceCommand);
-	registerCommand(my_commands, new ViewSourceCommand);
-	registerCommand(my_commands, new EditorObjectIsCommand);
-	registerCommand(my_commands, new DialogCommand);
-	registerCommand(my_commands, new TabCommand);
+	registerCommand(m_commands, new SetCharacterColorCommand(ev));
+	registerCommand(m_commands, new BrowsePageCommand(ev));
+	registerCommand(m_commands, new EditSourceCommand(ev));
+	registerCommand(m_commands, new ViewSourceCommand(ev));
+	registerCommand(m_commands, new EditorObjectIsCommand(ev));
+	registerCommand(m_commands, new DialogCommand(ev));
+	registerCommand(m_commands, new TabCommand(ev));
 
 	//    non-paramaterized font size commands.
-	registerCommand(my_commands, new SetFontSizeMinusTwoCommand);
-	registerCommand(my_commands, new SetFontSizeMinusOneCommand);
-	registerCommand(my_commands, new SetFontSizeZeroCommand);
-	registerCommand(my_commands, new SetFontSizePlusOneCommand);
-	registerCommand(my_commands, new SetFontSizePlusTwoCommand);
-	registerCommand(my_commands, new SetFontSizePlusThreeCommand);
-	registerCommand(my_commands, new SetFontSizePlusFourCommand);
-	registerCommand(my_commands, new SetParagraphStyleNormalCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingOneCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingTwoCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingThreeCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingFourCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingFiveCommand);
-	registerCommand(my_commands, new SetParagraphStyleHeadingSixCommand);
+	registerCommand(m_commands, new SetFontSizeMinusTwoCommand(ev));
+	registerCommand(m_commands, new SetFontSizeMinusOneCommand(ev));
+	registerCommand(m_commands, new SetFontSizeZeroCommand(ev));
+	registerCommand(m_commands, new SetFontSizePlusOneCommand(ev));
+	registerCommand(m_commands, new SetFontSizePlusTwoCommand(ev));
+	registerCommand(m_commands, new SetFontSizePlusThreeCommand(ev));
+	registerCommand(m_commands, new SetFontSizePlusFourCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleNormalCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingOneCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingTwoCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingThreeCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingFourCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingFiveCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleHeadingSixCommand(ev));
 
-	registerCommand(my_commands, new SetParagraphStyleAddressCommand);
-	registerCommand(my_commands, new SetParagraphStyleFormattedCommand);
-	registerCommand(my_commands, new SetParagraphStyleTitleCommand);
-	registerCommand(my_commands, new SetParagraphStyleTextCommand);
-	registerCommand(my_commands, new SetParagraphStyleBlockQuoteCommand);
+	registerCommand(m_commands, new SetParagraphStyleAddressCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleFormattedCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleTitleCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleTextCommand(ev));
+	registerCommand(m_commands, new SetParagraphStyleBlockQuoteCommand(ev));
 
-	registerCommand(my_commands, new SetListStyleNoneCommand);
-	registerCommand(my_commands, new SetListStyleBulletedCommand);
-	registerCommand(my_commands, new SetListStyleNumberedCommand);
+	registerCommand(m_commands, new SetListStyleNoneCommand(ev));
+	registerCommand(m_commands, new SetListStyleBulletedCommand(ev));
+	registerCommand(m_commands, new SetListStyleNumberedCommand(ev));
 
-	registerCommand(my_commands, new SetAlignStyleLeftCommand);
-	registerCommand(my_commands, new SetAlignStyleCenterCommand);
-	registerCommand(my_commands, new SetAlignStyleRightCommand);
+	registerCommand(m_commands, new SetAlignStyleLeftCommand(ev));
+	registerCommand(m_commands, new SetAlignStyleCenterCommand(ev));
+	registerCommand(m_commands, new SetAlignStyleRightCommand(ev));
 
-	registerCommand(my_commands, new ToggleCharacterStyleBoldCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleItalicCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleUnderlineCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleFixedCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleSuperscriptCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleSubscriptCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleStrikethroughCommand);
-	registerCommand(my_commands, new ToggleCharacterStyleBlinkCommand);
+	registerCommand(m_commands, new ToggleCharacterStyleBoldCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleItalicCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleUnderlineCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleFixedCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleSuperscriptCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleSubscriptCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleStrikethroughCommand(ev));
+	registerCommand(m_commands, new ToggleCharacterStyleBlinkCommand(ev));
 
 	//
 	//    Register Java Plugin Commands.
@@ -3009,7 +3030,7 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 			sprintf(buf, "javaPlugin_%d_%d", nc, np);
 			name = Command::intern(buf);
 
-			registerCommand(my_commands, new JavaPluginCommand(name, nc, np));
+			registerCommand(m_commands, new JavaPluginCommand(name, nc, np, ev));
 		}
 	}
 
@@ -3017,10 +3038,10 @@ XFE_EditorView::XFE_EditorView(XFE_Component *toplevel_component,
 	//    Insert these last, so they are at the head of the command
 	//    list, and will get found quickly.
 	//
-	registerCommand(my_commands, new InsertReturnCommand);
-	registerCommand(my_commands, new SelectCommand);
-	registerCommand(my_commands, new MoveCommand);
-	registerCommand(my_commands, new KeyInsertCommand);
+	registerCommand(m_commands, new InsertReturnCommand(ev));
+	registerCommand(m_commands, new SelectCommand(ev));
+	registerCommand(m_commands, new MoveCommand(ev));
+	registerCommand(m_commands, new KeyInsertCommand(ev));
 }
 
 XFE_EditorView::~XFE_EditorView()
@@ -3052,7 +3073,7 @@ XFE_EditorView::getPlainText()
 XFE_Command*
 XFE_EditorView::getCommand(CommandType cmd)
 {
-	XFE_Command* command = findCommand(my_commands, cmd);
+	XFE_Command* command = findCommand(m_commands, cmd);
 
 	if (command != NULL)
 		return command;

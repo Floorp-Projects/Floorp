@@ -64,12 +64,13 @@
 #define ITEM_SEP_CLASS				xmSeparatorGadgetClass
 #define ITEM_TOGGLE_CLASS			xmToggleButtonWidgetClass
 
-XFE_Menu::XFE_Menu(XFE_Frame *parent_frame, MenuSpec *spec, Widget baseMenuWidget) 
+XFE_Menu::XFE_Menu(XFE_Frame *parent_frame, MenuSpec *spec, Widget baseMenuWidget, XFE_Component *cmdDispatcher) 
   : XFE_Component(parent_frame)
 {
 D(	printf ("in XFE_Menu::XFE_Menu()\n");)
 
   m_parentFrame = parent_frame;
+  m_cmdDispatcher = cmdDispatcher;
 
   m_spec = NULL;
 
@@ -796,6 +797,14 @@ D(	printf ("leaving XFE_Menu::setMenuSpec()\n");)
 }
 
 void
+XFE_Menu::setCommandDispatcher(XFE_Component *dispatcher)
+{
+  XP_ASSERT(m_cmdDispatcher == NULL);
+
+  m_cmdDispatcher = dispatcher;
+}
+
+void
 XFE_Menu::cascade_update_cb(Widget w,
 			       XtPointer clientData,
 			       XtPointer /*callData*/)
@@ -858,7 +867,7 @@ XFE_Menu::pushb_activate_cb(Widget w, XtPointer clientData, XtPointer callData)
 						 cd->event,
 						 spec->cmd_args, 0);
   
-  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info);
+  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info, obj->m_cmdDispatcher);
 
   obj->m_parentFrame->notifyInterested(Command::commandDispatchedCallback,
 									   (void*)cmd);
@@ -904,7 +913,7 @@ XFE_Menu::toggleb_activate_cb(Widget w,
 						 cbs->event,
 						 spec->cmd_args, 0);
   
-  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info);
+  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info, obj->m_cmdDispatcher);
 
   obj->m_parentFrame->notifyInterested(Command::commandDispatchedCallback,
 									   (void*)cmd);
@@ -957,7 +966,7 @@ XFE_Menu::radiob_activate_cb(Widget w,
 						 cbs->event,
 						 spec->cmd_args, 0);
   
-  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info);
+  xfe_ExecuteCommand(obj->m_parentFrame, cmd, spec->callData, &e_info, obj->m_cmdDispatcher);
 
   obj->m_parentFrame->notifyInterested(Command::commandDispatchedCallback,
 									   (void*)cmd);

@@ -188,8 +188,9 @@ XFE_PopupMenuBase::raise()
 XFE_PopupMenu::XFE_PopupMenu(String			name,
 							 XFE_Frame *	parent_frame,
 							 Widget			parent,
-							 MenuSpec *		spec)
-    : XFE_Menu(parent_frame,NULL,NULL), XFE_PopupMenuBase(name,parent)
+							 MenuSpec *		spec,
+							 XFE_Component *cmdDispatcher)
+    : XFE_Menu(parent_frame,NULL,NULL, cmdDispatcher), XFE_PopupMenuBase(name,parent)
 {
     setBaseWidget(m_popup_menu);
 	setMenuSpec(spec);

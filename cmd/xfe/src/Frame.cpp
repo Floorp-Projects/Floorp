@@ -3346,11 +3346,34 @@ XFE_Frame::isCommandEnabled(CommandType cmd,
 //
 void
 xfe_ExecuteCommand(XFE_Frame* frame,
-				   CommandType cmd, void* cd, XFE_CommandInfo* info)
+				   CommandType cmd, void* cd, XFE_CommandInfo* info,
+				   XFE_Component *cmdDispatcher)
 {
 	XP_Bool slow = TRUE;
+	XFE_View *v  = 0;
+	XFE_Frame *f = 0;
 
-	XFE_Command* handler = frame->getCommand(cmd);
+	/* We wouldn't have to do this if we just made doCommand(),
+	 * handlesCommand(), and getCommand() part of XFE_Component,
+	 * or pure virtuals of some interface class that both Frame
+	 * and View derived from.
+	 */
+	if (cmdDispatcher)
+	{
+		if (cmdDispatcher->isClassOf("View"))
+			v = (XFE_View *)cmdDispatcher;
+		else if (cmdDispatcher->isClassOf("Frame"))
+			f = (XFE_Frame *)cmdDispatcher;
+	}
+
+	XFE_Command* handler;
+	
+	if (f)
+		handler = f->getCommand(cmd);
+	else if (v)
+		handler = v->getCommand(cmd);
+	else
+		handler = frame->getCommand(cmd);
 
 	if ((handler != NULL && handler->isSlow() != TRUE) ||
 		//
@@ -3383,6 +3406,10 @@ xfe_ExecuteCommand(XFE_Frame* frame,
 
 	if (handler != NULL)
 		handler->doCommand(frame, info);
+	else if (f)
+		f->doCommand(cmd, cd, info);
+	else if (v)
+		v->doCommand(cmd, cd, info);
 	else
 		frame->doCommand(cmd, cd, info);
 
