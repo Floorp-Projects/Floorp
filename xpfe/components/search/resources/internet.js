@@ -171,7 +171,11 @@ function doSearch()
 	var textNode = document.getElementById("searchtext");
 	if (!textNode)	return(false);
 	var text = textNode.value;
-	if (!text)	return(false);
+	if (!text)
+	{
+		alert("Enter some text to search for and select at least one location to search.");
+		return(false);
+	}
 	dump("Search text: " + text + "\n");
 
 	// get selected search engines
@@ -246,7 +250,11 @@ function doSearch()
 			foundEngine = true;
 		}
 	}
-	if (foundEngine == false)	return(false);
+	if (foundEngine == false)
+	{
+		alert("Select at least one location to search.");
+		return(false);
+	}
 
 	searchURL += "&text=" + escape(text);
 	dump("\nInternet Search URL: " + searchURL + "\n");
