@@ -56,7 +56,7 @@ interface nsIPop3Service : nsISupports {
   nsIURI GetNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,
                     in nsIPop3IncomingServer popServer);
 
-  nsIURI CheckForNewMail(in nsIUrlListener aUrlListener,
+  nsIURI CheckForNewMail(in nsIMsgWindow aMsgWindow, in nsIUrlListener aUrlListener,
 						 in nsIMsgFolder inbox,
                          in nsIPop3IncomingServer popServer);
   

@@ -212,6 +212,7 @@ Rights Reserved.
 <!ENTITY nextFlaggedMsgCmd.label "Flagged Message">  
 <!ENTITY nextUnflaggedMsgCmd.label "Unflagged Message">  
 <!ENTITY nextUnreadThread.label "Unread Thread">
+<!ENTITY nextUnreadThreadCmd.key "t">  
 <!ENTITY prevMenu.label "Previous"> 
 <!ENTITY prevMsgCmd.label "Message">  
 <!ENTITY prevUnreadMsgCmd.label "Unread Message">  

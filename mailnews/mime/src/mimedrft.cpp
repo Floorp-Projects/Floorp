@@ -1818,7 +1818,7 @@ mime_bridge_create_draft_stream(
     return nsnull;
 
   nsCOMPtr<nsIURI> aURL;
-  rv = msgService->GetUrlForUri(turl, getter_AddRefs(aURL));
+  rv = msgService->GetUrlForUri(turl, getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) 
     return nsnull;
 

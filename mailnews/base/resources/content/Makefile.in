@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= unix
+
 SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/content/default
 
 EXPORT_RESOURCE_SAMPLES = \

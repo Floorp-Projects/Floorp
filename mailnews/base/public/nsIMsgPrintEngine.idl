@@ -24,6 +24,7 @@
 #include "nsIDocumentLoaderObserver.idl"
 #include "nsrootidl.idl"
 #include "domstubs.idl"
+#include "nsIMsgStatusFeedback.idl"
 
 %{C++
 #include "nsIDOMWindow.h"
@@ -33,7 +34,7 @@
 interface nsIMsgPrintEngine : nsIDocumentLoaderObserver {
 
     void SetWindow(in nsIDOMWindow ptr);
-
+	void SetStatusFeedback(in nsIMsgStatusFeedback feedback);
     void SetPrintURICount(in PRInt32 aCount);
     void AddPrintURI(in wstring aURI);
     void StartPrintOperation();

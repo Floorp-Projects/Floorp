@@ -61,19 +61,6 @@ nsMsgPrintEngine::nsMsgPrintEngine() :
 {
   mCurrentlyPrintingURI = -1;
 
-  // note: it is okay to return a null status feedback and not return an error
-  // it's possible the url really doesn't have status feedback
-  nsresult    rv;
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIMsgWindow>    msgWindow;
-
-    mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
-    if (msgWindow)
-      msgWindow->GetStatusFeedback(getter_AddRefs(mFeedback));  
-  }
-
   NS_INIT_REFCNT();
 }
 
@@ -278,6 +265,13 @@ nsMsgPrintEngine::StartNextPrintOperation()
     return StartNextPrintOperation();
   else
     return rv;
+}
+
+NS_IMETHODIMP    
+nsMsgPrintEngine::SetStatusFeedback(nsIMsgStatusFeedback *aFeedback)
+{
+	mFeedback = aFeedback;
+	return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -246,7 +246,7 @@ nsImapService::LiteSelectFolder(nsIEventQueue * aClientEventQueue,
 	return rv;
 }
 
-NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL) 
+NS_IMETHODIMP nsImapService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow) 
 {
   nsresult rv = NS_OK;
 
@@ -500,7 +500,8 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
                                                PRBool aAddDummyEnvelope, 
                                                nsIUrlListener *aUrlListener, 
                                                nsIURI **aURL,
-                                               PRBool canonicalLineEnding)
+                                               PRBool canonicalLineEnding,
+											   nsIMsgWindow *aMsgWindow)
 {
     nsresult rv = NS_OK;
     nsCOMPtr<nsIMsgFolder> folder;

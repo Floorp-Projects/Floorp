@@ -161,7 +161,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIURI> aURL;
-  rv = msgService->GetUrlForUri(aMsgUri, getter_AddRefs(aURL));
+  rv = msgService->GetUrlForUri(aMsgUri, getter_AddRefs(aURL), nsnull);
   if (NS_FAILED(rv)) return rv;
 
   // now we want to append some quote specific information to the 

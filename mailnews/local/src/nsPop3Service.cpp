@@ -65,7 +65,8 @@ NS_IMPL_ISUPPORTS3(nsPop3Service,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo)
 
-NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
+NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIMsgWindow* aMsgWindow, 
+							   nsIUrlListener * aUrlListener,
 							   nsIMsgFolder *inbox, 
                                nsIPop3IncomingServer *popServer,
                                nsIURI ** aURL)
@@ -84,7 +85,7 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s:%d?check", hostname, POP3_PORT);
-        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url));
+        rv = BuildPop3Url(urlSpec, inbox, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
 		if (hostname) PL_strfree(hostname);
     }
@@ -123,7 +124,7 @@ nsresult nsPop3Service::GetNewMail(nsIMsgWindow *aMsgWindow, nsIUrlListener * aU
 	{
         // now construct a pop3 url...
         char * urlSpec = PR_smprintf("pop3://%s:%d", popHost, POP3_PORT);
-        rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url));
+        rv = BuildPop3Url(urlSpec, nsnull, popServer, aUrlListener, getter_AddRefs(url), aMsgWindow);
         PR_FREEIF(urlSpec);
 	}
     
@@ -149,7 +150,8 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 									 nsIMsgFolder *inbox,
                                      nsIPop3IncomingServer *server,
 									 nsIUrlListener * aUrlListener,
-                                     nsIURI ** aUrl)
+                                     nsIURI ** aUrl,
+									 nsIMsgWindow *aMsgWindow)
 {
 	nsPop3Sink * pop3Sink = new nsPop3Sink();
 	if (pop3Sink)
@@ -180,13 +182,7 @@ nsresult nsPop3Service::BuildPop3Url(char * urlSpec,
 			{
 				mailnewsurl->RegisterListener(aUrlListener);
 
-				// set progress feedback...eventually, we'll need to pass this into all methods in
-				// the mailbox service...this is just a temp work around to get things going...
-				NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-				if (NS_FAILED(rv)) return rv;
-				nsCOMPtr<nsIMsgWindow> window;
-				session->GetTemporaryMsgWindow(getter_AddRefs(window));
-				mailnewsurl->SetMsgWindow(window);
+				mailnewsurl->SetMsgWindow(aMsgWindow);
 			}
 		}
 

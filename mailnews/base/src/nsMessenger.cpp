@@ -333,9 +333,6 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
                 aStatusFeedback->SetWebShell(mWebShell, mWindow);
             nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(mWebShell));
             childDocShell->SetDocLoaderObserver(m_docLoaderObserver);
-            NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-            if(NS_SUCCEEDED(rv))
-                mailSession->SetTemporaryMsgWindow(aMsgWindow);
             aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
         }
     }
@@ -610,7 +607,7 @@ done:
 
 
 NS_IMETHODIMP
-nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
+nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, nsIMsgWindow *aMsgWindow)
 {
   	nsresult rv = NS_ERROR_FAILURE;
     nsIMsgMessageService* messageService = nsnull;
@@ -771,7 +768,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
         default:
             rv = messageService->SaveMessageToDisk(url, aSpec, PR_TRUE,
                                                    urlListener, nsnull,
-                                                   PR_FALSE);
+                                                   PR_FALSE, mMsgWindow);
             break;
         case 1:
         case 2:
@@ -860,7 +857,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity)
         rv = messageService->SaveMessageToDisk(url, aSpec, 
                                                needDummyHeader,
                                                urlListener, nsnull,
-                                               canonicalLineEnding); 
+                                               canonicalLineEnding, mMsgWindow); 
     }
 done:
     if (messageService)
@@ -915,7 +912,8 @@ nsMessenger::DoCommand(nsIRDFCompositeDataSource* db, char *command,
 NS_IMETHODIMP
 nsMessenger::DeleteMessages(nsIRDFCompositeDataSource *database,
                             nsIRDFResource *srcFolderResource,
-                            nsISupportsArray *resourceArray)
+                            nsISupportsArray *resourceArray,
+							PRBool reallyDelete)
 {
 	nsresult rv;
 
@@ -932,7 +930,11 @@ nsMessenger::DeleteMessages(nsIRDFCompositeDataSource *database,
 
 	folderArray->AppendElement(srcFolderResource);
 	
-	rv = DoCommand(database, NC_RDF_DELETE, folderArray, resourceArray);
+	if(reallyDelete)
+		rv = DoCommand(database, NC_RDF_REALLY_DELETE, folderArray, resourceArray);
+	else
+		rv = DoCommand(database, NC_RDF_DELETE, folderArray, resourceArray);
+
 
 	return rv;
 }

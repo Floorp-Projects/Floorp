@@ -408,8 +408,6 @@ public:
   PRUint32                mCompFieldLocalAttachments;     // the number of file:// attachments in the comp fields
   PRUint32                mCompFieldRemoteAttachments;    // the number of remote attachments in the comp fields
 
-  nsCOMPtr <nsIMsgStatusFeedback> mFeedback;              // Tell the user something why don't ya'
-
   //
   // attachment states and other info...
   //

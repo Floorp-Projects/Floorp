@@ -56,6 +56,9 @@ function InitPrintEngineWindow()
   {
     var numSelected = window.arguments[0];
     var uriArray = window.arguments[1];
+	var statusFeedback = window.arguments[2];
+
+	printEngine.SetStatusFeedback(statusFeedback);
 
     if (numSelected > 0)
     {

@@ -897,6 +897,6 @@ function PrintEnginePrint()
   printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
 								                        "",
 								                        "chrome,dialog=no,all",
-								                        numSelected, selectionArray);
+								                        numSelected, selectionArray, statusFeedback);
   return true;
 }

@@ -21,6 +21,7 @@ Rights Reserved.
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://messenger/content/platformMailnewsOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/threadPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/folderPane.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgHdrViewOverlay.xul"?>
@@ -97,7 +98,8 @@ Rights Reserved.
 	<broadcaster id="Messenger:Status"/>
 	<broadcaster id="Messenger:LoadingProgress"/>
 	
-	<broadcaster id="cmd_nextUnreadMsg" oncommand="MsgNextUnreadMessage();"/>
+	<broadcaster id="cmd_nextUnreadMsg" oncommand="goDoCommand('cmd_nextUnreadMsg')" disabled="true"/>
+	<broadcaster id="cmd_nextUnreadThread" oncommand="goDoCommand('cmd_nextUnreadThread')" disabled="true"/>
 </broadcasterset>
 
 <keyset id="keyset">
@@ -112,11 +114,13 @@ Rights Reserved.
 	<key id="key_cut"/>
 	<key id="key_copy"/>
 	<key id="key_paste"/>
-	<key id="key_delete"/>
+	<key id="key_delete" shift="false"/>
+	<key id="cmd_shiftDelete" oncommand="goDoCommand('cmd_shiftDelete')"/>
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
   
-	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" observes="cmd_NextUnreadMsg"/>
+	<key id="key_nextUnreadMsg" key="&nextUnreadMsgCmd.key;" control="false" shift="false" observes="cmd_nextUnreadMsg"/>
+	<key id="key_nextUnreadThread" key="&nextUnreadThreadCmd.key;" control="false" shift="false" observes="cmd_nextUnreadThread"/>
 </keyset>
 
 <popupset>
@@ -257,7 +261,7 @@ Rights Reserved.
 		<menuitem id="threadPaneContext-delete"
 			  value="&contextDelete.label;"
 			  accesskey=""
-			  oncommand="MsgDeleteMessage(false);"/>
+			  oncommand="MsgDeleteMessage(false, false);"/>
 		<menuseparator id="threadPaneContext-sep-edit"/>
 		<menuitem id="threadPaneContext-addSenderToAddressBook"
 			  value="&contextAddSenderToAddressBook.label;"
@@ -595,10 +599,10 @@ Rights Reserved.
       <menu value="&nextMenu.label;">
         <menupopup>
 		<menuitem value="&nextMsgCmd.label;" oncommand="MsgNextMessage();"/>
-        <menuitem value="&nextUnreadMsgCmd.label;" observes="cmd_nextUnreadMsg"/>
+        <menuitem value="&nextUnreadMsgCmd.label;" key="key_nextUnreadMsg" accesskey="&nextUnreadMsgCmd.key;" observes="cmd_nextUnreadMsg"/>
         <menuitem value="&nextFlaggedMsgCmd.label;" oncommand="MsgNextFlaggedMessage();"/>
 		<menuseparator/>
-		<menuitem value="&nextUnreadThread.label;" oncommand="MsgNextUnreadThread();"/>
+		<menuitem value="&nextUnreadThread.label;" observes="cmd_nextUnreadThread"/>
 		</menupopup>
       </menu>
       <menu value="&prevMenu.label;">

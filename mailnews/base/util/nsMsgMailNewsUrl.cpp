@@ -208,14 +208,10 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFee
 	// it's possible the url really doesn't have status feedback
 	if (!m_statusFeedback)
 	{
-		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
 
-		if(NS_SUCCEEDED(rv))
+		if(m_msgWindow)
 		{
-			nsCOMPtr<nsIMsgWindow> msgWindow;
-			mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
-			if (msgWindow)
-				msgWindow->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
+			m_msgWindow->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
 		}
 	}
 	if (aMsgFeedback)

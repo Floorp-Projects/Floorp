@@ -53,7 +53,8 @@ interface nsIMessenger : nsISupports {
     void DoPrintPreview();
     void DeleteMessages(in nsIRDFCompositeDataSource database,
                         in nsIRDFResource srcFolderResource,
-                        in nsISupportsArray messages);
+                        in nsISupportsArray messages,
+						in boolean reallyDelete);
     void DeleteFolders(in nsIRDFCompositeDataSource db,
                        in nsIRDFResource parentFolder,
                        in nsIRDFResource folder);
@@ -101,7 +102,7 @@ interface nsIMessenger : nsISupports {
     void Redo(in nsIMsgWindow msgWindow);
 	void SendUnsentMessages(in nsIMsgIdentity aIdentity);
 	void SetDocumentCharset(in wstring characterSet);
-    void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity);
+    void saveAs(in string url, in boolean asFile, in nsIMsgIdentity identity, in nsIMsgWindow aMsgWindow);
     void openAttachment(in string url, in string displayName, in string messageUri);
     void find();
     void findAgain();

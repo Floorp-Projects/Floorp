@@ -37,8 +37,10 @@
 #include "nsMsgFolderFlags.h"
 #include "nsIFileSpec.h"
 #include "nsPop3Protocol.h"
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
+static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 
 NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,nsMsgIncomingServer,
@@ -128,7 +130,16 @@ NS_IMETHODIMP nsPop3IncomingServer::PerformBiff()
 		}
 	}
 
-	rv = pop3Service->CheckForNewMail(nsnull, inbox, this, nsnull);
+	//Biff just needs to give status in one of the windows. so do it in topmost window.
+	NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+	
+	nsCOMPtr<nsIMsgWindow> msgWindow;
+
+	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+	if(NS_SUCCEEDED(rv))
+		rv = pop3Service->CheckForNewMail(msgWindow, nsnull, inbox, this, nsnull);
 
 	return NS_OK;
 }

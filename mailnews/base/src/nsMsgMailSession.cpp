@@ -69,22 +69,6 @@ nsresult nsMsgMailSession::Shutdown()
   return NS_OK;
 }
 
-nsresult nsMsgMailSession::GetTemporaryMsgWindow(nsIMsgWindow* *aMsgWindow)
-{
-  if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
-  
-  *aMsgWindow = m_temporaryMsgWindow;
-  NS_IF_ADDREF(*aMsgWindow);
-  return NS_OK;
-}
-
-
-nsresult nsMsgMailSession::SetTemporaryMsgWindow(nsIMsgWindow* aMsgWindow)
-{
-  m_temporaryMsgWindow = do_QueryInterface(aMsgWindow);
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener)
 {
@@ -282,6 +266,38 @@ NS_IMETHODIMP  nsMsgMailSession::NotifyDeleteOrMoveMessagesCompleted(nsIFolder *
 
 }
 
+nsresult nsMsgMailSession::GetTopmostMsgWindow(nsIMsgWindow* *aMsgWindow)
+{
+ 
+  //for right now just return the first msg window.  Eventually have to figure out which is topmost.
+  nsresult rv;
+
+  if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
+  
+  *aMsgWindow = nsnull;
+ 
+  if(mWindows)
+  {
+	PRUint32 count;
+	rv = mWindows->Count(&count);
+	if(NS_FAILED(rv))
+		return rv;
+
+	if(count > 0)
+	{
+	  nsCOMPtr<nsISupports> windowSupports = mWindows->ElementAt(0);
+	  if(windowSupports)
+		  rv = windowSupports->QueryInterface(NS_GET_IID(nsIMsgWindow), (void**)aMsgWindow);
+	  if(NS_FAILED(rv))
+		  return rv;
+	}
+  }
+
+  return NS_OK;
+}
+
+
+
 NS_IMETHODIMP nsMsgMailSession::AddMsgWindow(nsIMsgWindow *msgWindow)
 {
 	mWindows->AppendElement(msgWindow);
@@ -334,7 +350,7 @@ NS_IMETHODIMP nsMsgMailSession::IsFolderOpenInWindow(nsIMsgFolder *folder, PRBoo
 }
 
 NS_IMETHODIMP
-nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, char **aURL)
+nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, nsIMsgWindow *aMsgWindow, char **aURL)
 {
   if ((!aURI) || (!aURL))
     return NS_ERROR_NULL_POINTER;
@@ -346,7 +362,7 @@ nsMsgMailSession::ConvertMsgURIToMsgURL(const char *aURI, char **aURL)
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIURI> tURI;
-  rv = msgService->GetUrlForUri(aURI, getter_AddRefs(tURI));
+  rv = msgService->GetUrlForUri(aURI, getter_AddRefs(tURI), aMsgWindow);
   if (NS_FAILED(rv)) 
     return NS_ERROR_NULL_POINTER;
 

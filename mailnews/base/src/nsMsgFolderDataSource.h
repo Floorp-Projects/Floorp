@@ -148,7 +148,7 @@ protected:
   nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
   
   nsresult DoDeleteFromFolder(nsIMsgFolder *folder,
-							  nsISupportsArray *arguments, nsIMsgWindow *msgWindow);
+							  nsISupportsArray *arguments, nsIMsgWindow *msgWindow, PRBool reallyDelete);
 
   nsresult DoCopyToFolder(nsIMsgFolder *dstFolder, nsISupportsArray *arguments,
 						  nsIMsgWindow *msgWindow, PRBool isMove);
@@ -209,6 +209,7 @@ protected:
 
   // commands
   static nsIRDFResource* kNC_Delete;
+  static nsIRDFResource* kNC_ReallyDelete;
   static nsIRDFResource* kNC_NewFolder;
   static nsIRDFResource* kNC_GetNewMessages;
   static nsIRDFResource* kNC_Copy;

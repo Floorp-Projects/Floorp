@@ -53,7 +53,8 @@ protected:
 
 	// helper functions used by the service
 	nsresult PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
-							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl);
+							   nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
+							   nsIMsgWindow *msgWindow);
 
 	nsresult RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDisplayConsumer = nsnull);
 

@@ -1390,7 +1390,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     imapServer = do_QueryInterface(server);
     if (imapServer)
       imapServer->GetDeleteModel(&deleteModel);
-    if (deleteModel != nsMsgImapDeleteModels::MoveToTrash)
+    if (deleteModel != nsMsgImapDeleteModels::MoveToTrash || deleteStorage)
       deleteImmediatelyNoTrash = PR_TRUE;
   }
 

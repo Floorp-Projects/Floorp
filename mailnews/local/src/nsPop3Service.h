@@ -52,7 +52,7 @@ protected:
 	// convience function to make constructing of the pop3 url easier...
 	nsresult BuildPop3Url(char * urlSpec, nsIMsgFolder *inbox,
                           nsIPop3IncomingServer *, nsIUrlListener * aUrlListener,
-                          nsIURI ** aUrl);
+                          nsIURI ** aUrl, nsIMsgWindow *aMsgWindow);
 
 	nsresult RunPopUrl(nsIMsgIncomingServer * aServer, nsIURI * aUrlToRun);
 };

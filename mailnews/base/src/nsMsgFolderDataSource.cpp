@@ -78,6 +78,7 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NoSelect = nsnull;
 
 // commands
 nsIRDFResource* nsMsgFolderDataSource::kNC_Delete= nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_ReallyDelete= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_NewFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_GetNewMessages= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_Copy= nsnull;
@@ -137,6 +138,7 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
     NS_RELEASE2(kNC_NoSelect, refcnt);
 
 		NS_RELEASE2(kNC_Delete, refcnt);
+		NS_RELEASE2(kNC_ReallyDelete, refcnt);
 		NS_RELEASE2(kNC_NewFolder, refcnt);
 		NS_RELEASE2(kNC_GetNewMessages, refcnt);
 		NS_RELEASE2(kNC_Copy, refcnt);
@@ -194,6 +196,7 @@ nsresult nsMsgFolderDataSource::Init()
     rdf->GetResource(NC_RDF_NOSELECT, &kNC_NoSelect);
     
 	rdf->GetResource(NC_RDF_DELETE, &kNC_Delete);
+	rdf->GetResource(NC_RDF_REALLY_DELETE, &kNC_ReallyDelete);
     rdf->GetResource(NC_RDF_NEWFOLDER, &kNC_NewFolder);
     rdf->GetResource(NC_RDF_GETNEWMESSAGES, &kNC_GetNewMessages);
     rdf->GetResource(NC_RDF_COPY, &kNC_Copy);
@@ -573,6 +576,7 @@ nsMsgFolderDataSource::GetAllCommands(nsIRDFResource* source,
     rv = NS_NewISupportsArray(getter_AddRefs(cmds));
     if (NS_FAILED(rv)) return rv;
     cmds->AppendElement(kNC_Delete);
+    cmds->AppendElement(kNC_ReallyDelete);
     cmds->AppendElement(kNC_NewFolder);
     cmds->AppendElement(kNC_GetNewMessages);
     cmds->AppendElement(kNC_Copy);
@@ -615,6 +619,7 @@ nsMsgFolderDataSource::IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aS
     if (NS_SUCCEEDED(rv)) {
       // we don't care about the arguments -- folder commands are always enabled
       if (!((aCommand == kNC_Delete) ||
+            (aCommand == kNC_ReallyDelete) ||
             (aCommand == kNC_NewFolder) ||
             (aCommand == kNC_Copy) ||
             (aCommand == kNC_Move) ||
@@ -656,7 +661,11 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     {
       if ((aCommand == kNC_Delete))
       {
-        rv = DoDeleteFromFolder(folder, aArguments, mWindow);
+        rv = DoDeleteFromFolder(folder, aArguments, mWindow, PR_FALSE);
+      }
+      if ((aCommand == kNC_ReallyDelete))
+      {
+        rv = DoDeleteFromFolder(folder, aArguments, mWindow, PR_TRUE);
       }
       else if((aCommand == kNC_NewFolder)) 
       {
@@ -1500,7 +1509,7 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
     nsIMsgFolder *folder, nsISupportsArray *arguments, 
-    nsIMsgWindow *msgWindow)
+    nsIMsgWindow *msgWindow, PRBool reallyDelete)
 {
 	nsresult rv = NS_OK;
 	PRUint32 itemCount;
@@ -1531,7 +1540,7 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 	rv = messageArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;
 	if (cnt > 0)
-		rv = folder->DeleteMessages(messageArray, msgWindow, PR_FALSE, PR_FALSE);
+		rv = folder->DeleteMessages(messageArray, msgWindow, reallyDelete, PR_FALSE);
 
 	rv = folderArray->Count(&cnt);
 	if (NS_FAILED(rv)) return rv;

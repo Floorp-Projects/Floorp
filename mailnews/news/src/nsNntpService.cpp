@@ -101,7 +101,8 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
                                  PRBool aAddDummyEnvelope, 
                                  nsIUrlListener *aUrlListener, 
                                  nsIURI **aURL,
-                                 PRBool canonicalLineEnding)
+                                 PRBool canonicalLineEnding,
+								 nsIMsgWindow *aMsgWindow)
 {
     nsresult rv = NS_OK;
     if (!aMessageURI) 
@@ -213,7 +214,7 @@ NS_IMETHODIMP nsNntpService::GetCanFetchMimeParts(PRBool *canFetchMimeParts)
 }
 
 
-NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL) 
+NS_IMETHODIMP nsNntpService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow) 
 {
   nsresult rv = NS_OK;
   nsCAutoString uri(aMessageURI);

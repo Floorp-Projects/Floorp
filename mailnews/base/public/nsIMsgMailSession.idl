@@ -42,7 +42,6 @@ interface nsIMsgWindow;
 [scriptable, uuid(D5124440-D59E-11d2-806A-006008128C4E)]
 interface nsIMsgMailSession : nsISupports {
 
-  attribute nsIMsgWindow temporaryMsgWindow;
 
   void Shutdown();
   void AddFolderListener(in nsIFolderListener listener);
@@ -73,11 +72,12 @@ interface nsIMsgMailSession : nsISupports {
   void NotifyFolderLoaded(in nsIFolder folder);
   void NotifyDeleteOrMoveMessagesCompleted(in nsIFolder folder);
 
+  readonly attribute nsIMsgWindow topmostMsgWindow;
   void AddMsgWindow(in nsIMsgWindow msgWindow);
   void RemoveMsgWindow(in nsIMsgWindow msgWindow);
   readonly attribute nsISupportsArray msgWindowsArray;
   boolean IsFolderOpenInWindow(in nsIMsgFolder folder);
 
-  string ConvertMsgURIToMsgURL(in string  aURI);
+  string ConvertMsgURIToMsgURL(in string  aURI, in nsIMsgWindow aMsgWindow);
 };
 

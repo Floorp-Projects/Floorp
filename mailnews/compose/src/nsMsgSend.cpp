@@ -206,19 +206,6 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mMessageWarningSize = 0;
   mWebShell = nsnull;
 
-  // note: it is okay to return a null status feedback and not return an error
-  // it's possible the url really doesn't have status feedback
-  nsresult    rv;
-  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
-  if (NS_SUCCEEDED(rv))
-  {
-    nsCOMPtr<nsIMsgWindow>    msgWindow;
-
-    mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
-    if (msgWindow)
-      msgWindow->GetStatusFeedback(getter_AddRefs(mFeedback));  
-  }
-
 	NS_INIT_REFCNT();
 }
 
@@ -2876,8 +2863,10 @@ nsMsgComposeAndSend::DeliverFileAsNews()
 	if (!mailSession) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIMsgWindow>    msgWindow;
-    rv = mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
-	if (NS_FAILED(rv)) return rv;
+
+	rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+	if(NS_FAILED(rv))
+		return rv;
 
 	if (!msgWindow) return NS_ERROR_FAILURE;
 
@@ -4088,16 +4077,35 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   return rv;
 }
 
+//I'm getting this each time without holding onto the feedback so that 3 pane windows can be closed
+//without any chance of crashing due to holding onto a deleted feedback.
 nsresult
 nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
 {
   PRUnichar     *progressMsg;
-
-  if ( (!mFeedback) || (!aMsgString) || (!mGUINotificationEnabled) )
+  nsresult rv;
+  if ( (!aMsgString) || (!mGUINotificationEnabled) )
     return NS_OK;
 
   progressMsg = nsCRT::strdup(aMsgString);
-  mFeedback->ShowStatusString(progressMsg);
+  nsCOMPtr <nsIMsgMailSession> mailSession = do_GetService(kMsgMailSessionCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  if (!mailSession) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIMsgWindow>    msgWindow;
+
+  rv = mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
+  if(NS_FAILED(rv))
+    return rv;
+
+  if (!msgWindow) return NS_OK;
+
+  nsCOMPtr<nsIMsgStatusFeedback> feedback;
+  rv = msgWindow->GetStatusFeedback(getter_AddRefs(feedback));
+  if(NS_FAILED(rv)) return NS_OK;
+
+  feedback->ShowStatusString(progressMsg);
   return NS_OK;
 }
 

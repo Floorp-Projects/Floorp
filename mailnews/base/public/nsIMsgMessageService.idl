@@ -90,7 +90,7 @@ interface nsIMsgMessageService : nsISupports {
 	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile,
                            in boolean aGenerateDummyEnvelope, 
 						   in nsIUrlListener aUrlListener, out nsIURI aURL,
-                           in boolean canonicalLineEnding);
+                           in boolean canonicalLineEnding, in nsIMsgWindow aMsgWindow);
 
     /////////////////////////////////////////////////////////////////////
 	// GetUrlForUri: when you have a uri and you would like to convert that
@@ -98,7 +98,7 @@ interface nsIMsgMessageService : nsISupports {
 	// the Uri MUST refer to a message and not a folder! 
     /////////////////////////////////////////////////////////////////////
     
-	void GetUrlForUri(in string aMessageURI, out nsIURI aURL);
+	void GetUrlForUri(in string aMessageURI, out nsIURI aURL, in nsIMsgWindow aMsgWindow);
 
 	// tells if the message service can download mime parts directly, like IMAP
 	readonly attribute boolean canFetchMimeParts;

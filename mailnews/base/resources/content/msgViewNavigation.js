@@ -128,7 +128,7 @@ function GoNextThread(type, startFromBeginning, gotoNextInThread)
 			else
 			{
 				//currentTopmessage is the first one in the tree and we want it to be checked for criteria.
-				currentTopMessage = FindFirstMessage(tree);
+				currentTopMessage = msgNavigationService.FindFirstMessage(tree);
 				checkCurrentTopMessage = true;
 			}
 

@@ -21,6 +21,8 @@
 
 DEPTH=..\..\..\..
 
+DIRS=win
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: 

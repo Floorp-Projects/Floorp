@@ -77,6 +77,7 @@ typedef struct _nsMsgRDFNotification {
 
 //Folder Commands
 #define NC_RDF_DELETE				NC_NAMESPACE_URI "Delete"
+#define NC_RDF_REALLY_DELETE		NC_NAMESPACE_URI "ReallyDelete"
 #define NC_RDF_NEWFOLDER			NC_NAMESPACE_URI "NewFolder"
 #define NC_RDF_GETNEWMESSAGES		NC_NAMESPACE_URI "GetNewMessages"
 #define NC_RDF_COPY					NC_NAMESPACE_URI "Copy"

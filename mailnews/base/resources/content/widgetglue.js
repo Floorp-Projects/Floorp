@@ -186,10 +186,14 @@ var DefaultController =
 {
    supportsCommand: function(command)
 	{
+
 		switch ( command )
 		{
 			case "cmd_delete":
 			case "button_delete":
+			case "cmd_shiftDelete":
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextUnreadThread":
 				return true;
             
 			default:
@@ -199,16 +203,16 @@ var DefaultController =
 
 	isCommandEnabled: function(command)
 	{
-        //		dump("ThreadPaneController.isCommandEnabled(" + command + ")\n");
 		switch ( command )
 		{
 			case "cmd_delete":
 			case "button_delete":
+			case "cmd_shiftDelete":
 				var threadTree = GetThreadTree();
 				var numSelected = 0;
 				if ( threadTree && threadTree.selectedItems )
 					numSelected = threadTree.selectedItems.length;
-				if ( command == "cmd_delete" )
+				if ( command == "cmd_delete")
 				{
 					if ( numSelected < 2 )
 						goSetMenuValue(command, 'valueMessage');
@@ -216,7 +220,22 @@ var DefaultController =
 						goSetMenuValue(command, 'valueMessages');
 				}
 				return ( numSelected > 0 );
-			
+			case "cmd_nextUnreadMsg":
+			case "cmd_nextUnreadThread":
+			    //Input and TextAreas should get access to the keys that cause these commands.
+				//Currently if we don't do this then we will steal the key away and you can't type them
+				//in these controls. This is a bug that should be fixed and when it is we can get rid of
+				//this.
+				var focusedElement = top.document.commandDispatcher.focusedElement;
+				if(focusedElement)
+				{
+					var name = focusedElement.nodeName;
+					return ((name != "INPUT") && (name != "TEXTAREA"));
+				}
+				else
+				{
+					return true;
+				}
 			default:
 				return false;
 		}
@@ -224,14 +243,24 @@ var DefaultController =
 
 	doCommand: function(command)
 	{
+   		//dump("ThreadPaneController.doCommand(" + command + ")\n");
+
 		switch ( command )
 		{
 			case "cmd_delete":
-				MsgDeleteMessage(false);
+				MsgDeleteMessage(false, false);
 				break;
-			
+			case "cmd_shiftDelete":
+				MsgDeleteMessage(true, false);
+				break;
 			case "button_delete":
-				MsgDeleteMessage(true);
+				MsgDeleteMessage(false, true);
+				break;
+			case "cmd_nextUnreadMsg":
+				MsgNextUnreadMessage();
+				break;
+			case "cmd_nextUnreadThread":
+				MsgNextUnreadThread();
 				break;
 		}
 	},
@@ -265,6 +294,9 @@ function CommandUpdate_Mail()
 		
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('button_delete');
+	goUpdateCommand('cmd_shiftDelete');
+	goUpdateCommand('cmd_nextUnreadMsg');
+	goUpdateCommand('cmd_nextUnreadThread');
 }
 
 function SetupUndoRedoCommand(command)
@@ -380,11 +412,13 @@ function MsgGetMessage()
   GetNewMessages();
 }
 
-function MsgDeleteMessage(fromToolbar)
+function MsgDeleteMessage(reallyDelete, fromToolbar)
 {
   //dump("\nMsgDeleteMessage from XUL\n");
   //dump("from toolbar? " + fromToolbar + "\n");
 
+  if(reallyDelete)
+	dump("reallyDelete\n");
   var tree = GetThreadTree();
   if(tree) {
 	var srcFolder = GetThreadTreeFolder();
@@ -402,14 +436,13 @@ function MsgDeleteMessage(fromToolbar)
 	//get the selected elements
 
 	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-    	var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
-	//get the current folder
-
-	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
+    var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
 	if(nextMessage)
 		gNextMessageAfterDelete = nextMessage.getAttribute('id');
 	else
 		gNextMessageAfterDelete = null;
+
+	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList, reallyDelete);
   }
 }
 
@@ -1026,7 +1059,7 @@ function MsgViewPageSource()
     uri = selectedItems[i].getAttribute("id");
   
     // Now, we need to get a URL from a URI
-    url = mailSession.ConvertMsgURIToMsgURL(uri);
+    url = mailSession.ConvertMsgURIToMsgURL(uri, msgWindow);
     if (url)
       url += "?header=src";
 
@@ -1063,6 +1096,8 @@ function MsgNextFlaggedMessage()
 
 function MsgNextUnreadThread()
 {
+	//First mark the current thread as read.  Then go to the next one.
+	MsgMarkThreadAsRead();
 	GoNextThread(navigateUnread, true, true);
 }
 

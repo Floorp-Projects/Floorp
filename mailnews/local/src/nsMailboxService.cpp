@@ -121,7 +121,7 @@ nsresult nsMailboxService::FetchMessage(const char* aMessageURI,
   nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
-  rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl));
+  rv = PrepareMessageUrl(aMessageURI, aUrlListener, mailboxAction, getter_AddRefs(mailboxurl), aMsgWindow);
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -160,12 +160,13 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
                                     PRBool aAddDummyEnvelope, 
                                     nsIUrlListener *aUrlListener,
                                     nsIURI **aURL,
-                                    PRBool canonicalLineEnding)
+                                    PRBool canonicalLineEnding,
+									nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv = NS_OK;
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 
-	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionSaveMessageToDisk, getter_AddRefs(mailboxurl));
+	rv = PrepareMessageUrl(aMessageURI, aUrlListener, nsIMailboxUrl::ActionSaveMessageToDisk, getter_AddRefs(mailboxurl), aMsgWindow);
 
 	if (NS_SUCCEEDED(rv))
 	{
@@ -186,11 +187,11 @@ nsMailboxService::SaveMessageToDisk(const char *aMessageURI,
 	return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL)
+NS_IMETHODIMP nsMailboxService::GetUrlForUri(const char *aMessageURI, nsIURI **aURL, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMailboxUrl> mailboxurl;
-  rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl));
+  rv = PrepareMessageUrl(aMessageURI, nsnull, nsIMailboxUrl::ActionDisplayMessage, getter_AddRefs(mailboxurl), aMsgWindow);
   if (NS_SUCCEEDED(rv) && mailboxurl)
     rv = mailboxurl->QueryInterface(NS_GET_IID(nsIURI), (void **) aURL);
   return rv;
@@ -239,7 +240,8 @@ nsresult nsMailboxService::RunMailboxUrl(nsIURI * aMailboxUrl, nsISupports * aDi
 // listener if appropriate. AND it can take in a mailbox action and set that field
 // on the returned url as well.
 nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsIUrlListener * aUrlListener,
-											 nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl)
+											 nsMailboxAction aMailboxAction, nsIMailboxUrl ** aMailboxUrl,
+											 nsIMsgWindow *msgWindow)
 {
 	nsresult rv = NS_OK;
 	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
@@ -279,13 +281,7 @@ nsresult nsMailboxService::PrepareMessageUrl(const char * aSrcMsgMailboxURI, nsI
 			if (aUrlListener)
 				rv = url->RegisterListener(aUrlListener);
 
-			// set progress feedback...eventually, we'll need to pass this into all methods in
-			// the mailbox service...this is just a temp work around to get things going...
-			NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-			if (NS_FAILED(rv)) return rv;
-			nsCOMPtr<nsIMsgWindow> window;
-			session->GetTemporaryMsgWindow(getter_AddRefs(window));
-			url->SetMsgWindow(window);
+			url->SetMsgWindow(msgWindow);
 
 		} // if we got a url
 	} // if we got a url

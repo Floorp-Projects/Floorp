@@ -381,7 +381,7 @@ nsresult nsPop3TestDriver::OnCheck()
 
 	if (pop3Service)
 	{
-		pop3Service->CheckForNewMail(this, nsnull, popServer, nsnull);
+		pop3Service->CheckForNewMail(nsnull, this, nsnull, popServer, nsnull);
 		m_runningURL = PR_TRUE;
 	}
 
