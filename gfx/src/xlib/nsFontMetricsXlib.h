@@ -48,8 +48,8 @@
 typedef struct nsFontCharSetInfo nsFontCharSetInfo;
 
 typedef int (*nsFontCharSetConverter)(nsFontCharSetInfo* aSelf,
-  const PRUnichar* aSrcBuf, PRUint32 aSrcLen, PRUint8* aDestBuf,
-  PRUint32 aDestLen);
+             const PRUnichar* aSrcBuf, PRInt32 aSrcLen, char* aDestBuf,
+             PRInt32 aDestLen);
 
 struct nsFontCharSet;
 class nsFontMetricsXlib;
@@ -61,7 +61,7 @@ struct nsFontXlib
   void LoadFont(nsFontCharSet* aCharSet, nsFontMetricsXlib* aMetrics);
 
   XFontStruct           *mFont;
-  PRUint8*               mMap;
+  PRUint32*              mMap;
   nsFontCharSetInfo*     mCharSetInfo;
   char*                  mName;
   PRUint16               mSize;

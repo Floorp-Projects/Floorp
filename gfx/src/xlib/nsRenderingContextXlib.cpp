@@ -18,6 +18,7 @@
 
 #include "nsRenderingContextXlib.h"
 #include "nsFontMetricsXlib.h"
+#include "nsICharRepresentable.h"
 #include "xlibrgb.h"
 #include "prprf.h"
 #include "prmem.h"
@@ -1025,7 +1026,7 @@ nsRenderingContextXlib::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
-        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
           currFont = *font;
           goto FoundFont; // for speed -- avoid "if" statement
         }
@@ -1181,7 +1182,7 @@ nsRenderingContextXlib::DrawString(const PRUnichar *aString, PRUint32 aLength,
       nsFontXlib** font = metrics->mLoadedFonts;
       nsFontXlib** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
-        if (FONT_HAS_GLYPH((*font)->mMap, c)) {
+        if (IS_REPRESENTABLE((*font)->mMap, c)) {
 	  currFont = *font;
 	  goto FoundFont; // for speed -- avoid "if" statement
 	}
