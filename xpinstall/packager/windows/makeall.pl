@@ -61,12 +61,13 @@ if(!(-e "$inDistPath"))
   system("mkdir $inDestPath");
 }
 
-MakeConfigFile();
 MakeJsFile();
 
 # Make all xpi files
 MakeXpiFile("core");
 MakeXpiFile("mail");
+
+MakeConfigFile();
 
 if(-e "$inDistPath\\setup")
 {
@@ -95,7 +96,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inStagePath $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inStagePath $inDistPath\\xpi $inURLPath") != 0)
   {
     exit(1);
   }

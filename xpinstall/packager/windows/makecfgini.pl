@@ -39,12 +39,13 @@
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 2)
+if($#ARGV < 3)
 {
-  die "usage: $0 <.it file> <staging path> <URL path>
+  die "usage: $0 <.it file> <staging path> <.xpi path> <URL path>
 
        .it file     : input ini template file
        staging path : path to where the components are staged at
+       .xpi path    : path to where the .xpi files have been built to
        URL path     : URL path to where the .xpi files will be staged at.
                       Either ftp:// or http:// can be used
        \n";
@@ -52,7 +53,8 @@ if($#ARGV < 2)
 
 $inItFile         = $ARGV[0];
 $inStagePath      = $ARGV[1];
-$inURLPath        = $ARGV[2];
+$inXpiPath        = $ARGV[2];
+$inURLPath        = $ARGV[3];
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -73,8 +75,8 @@ while($line = <fpInIt>)
   # For each line read, search and replace $InstallSize$ with the calculated size
   if($line =~ /\$InstallSize\$/i)
   {
-    $installSize        = 0;
-    $installSizeSystem  = 0;
+    $installSize          = 0;
+    $installSizeSystem    = 0;
 
     # split read line by ":" deliminator
     @colonSplit = split(/:/, $line);
@@ -107,6 +109,22 @@ while($line = <fpInIt>)
     print fpOutIni "Install Size=$installSize\n";
     print fpOutIni "Install Size System=$installSizeSystem\n";
   }
+  elsif($line =~ /\$InstallSizeArchive\$/i)
+  {
+    $installSizeArchive = 0;
+
+    # split read line by ":" deliminator
+    @colonSplit = split(/:/, $line);
+    if($#colonSplit >= 0)
+    {
+      $componentName = $colonSplit[1];
+      chop($componentName);
+
+      $installSizeArchive = OutputInstallSizeArchive("$inXpiPath\\$componentName");
+    }
+
+    print fpOutIni "Install Size Archive=$installSizeArchive\n";
+  }
   else
   {
     # For each line read, search and replace $InstallSizeSystem$ with the calulated size
@@ -131,6 +149,19 @@ sub OutputInstallSize()
   $installSize    = int($installSize / 1024);
   $installSize   += 1;
   return($installSize);
+}
+
+sub OutputInstallSizeArchive()
+{
+  my($inPath) = @_;
+  my($installSizeArchive);
+  my($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks);
+
+  print "   calulating size for $inPath\n";
+  ($dev, $ino, $mode, $nlink, $uid, $gui, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat $inPath;
+  $installSizeArchive    = int($size / 1024);
+  $installSizeArchive   += 1;
+  return($installSizeArchive);
 }
 
 sub OutputInstallSizeSystem()
