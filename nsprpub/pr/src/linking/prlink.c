@@ -748,7 +748,12 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 #ifdef HAVE_DLL
     {
 #if defined(USE_DLFCN)
+#ifdef NTO
+    /* Neutrino needs RTLD_GROUP to load Netscape plugins. (bug 71179) */
+    int dl_flags = RTLD_GROUP;
+#else
     int dl_flags = 0;
+#endif
     void *h;
 
     if (flags & PR_LD_LAZY) {
