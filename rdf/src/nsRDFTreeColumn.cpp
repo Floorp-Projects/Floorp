@@ -17,20 +17,30 @@
  */
 
 #include "nsRDFTreeColumn.h"
+#include "nsRDFTreeDataModel.h"
+#include "nsIDMWidget.h"
+#include "nsIDataModel.h"
 
+static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
 static NS_DEFINE_IID(kITreeColumnIID, NS_ITREECOLUMN_IID);
 
 const PRUint32 nsRDFTreeColumn::kDefaultWidth = 64; // XXX
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFTreeColumn::nsRDFTreeColumn(const nsString& name)
-    : mName(name),
-      mWidth(kDefaultWidth),
+nsRDFTreeColumn::nsRDFTreeColumn(nsRDFTreeDataModel& tree,
+                                 const nsString& name,
+                                 RDF_Resource property,
+                                 PRUint32 width)
+    : mTree(tree),
+      mName(name),
+      mProperty(property),
+      mWidth(width),
       mSortState(eColumnSortState_Unsorted),
       mDesiredPercentage(0.0)
 {
     NS_INIT_REFCNT();
+    mTree.AddRef();
 }
 
 
@@ -92,7 +102,32 @@ nsRDFTreeColumn::SetPixelWidth(PRUint32 newWidth)
 void
 nsRDFTreeColumn::SetVisibility(PRBool visible)
 {
-    mVisible = visible;
+    if (visible != mVisible) {
+        mVisible = visible;
+
+        nsIDataModel* model;
+        if (NS_SUCCEEDED(mTree.QueryInterface(kIDataModelIID, (void**) &model))) {
+            nsIDMWidget* dmWidget;
+
+            // XXX if interface inheirits...
+            //if (NS_SUCCEEDED(mTree.GetDMWidget(dmWidget))) {
+
+            if (NS_SUCCEEDED(model->GetDMWidget(dmWidget))) {
+#if 0
+                // XXX IMO, this should be in its own interface. Need to ask Hyatt...
+                nsITreeWidget* treeWidget;
+                if (NS_SUCCEEDED(dmWidget->QueryInterface(kITreeWidgetIID, &treeWidget))) {
+                    treeWidget->OnColumnVisibilityChanged(static_cast<nsITreeColumn*>(this),
+                                                          mVisible);
+
+                    treeWidget->Release();
+                }
+#endif
+                dmWidget->Release();
+            }
+            model->Release();
+        }
+    }
 }
 
 

@@ -17,52 +17,81 @@
  */
 
 #include "nsRDFDataModel.h"
+#include "nsRDFDataModelItem.h"
 #include "nsIRDFDataBase.h"
+#include "nsString.h"
+#include "plstr.h"
+#include "prprf.h"
+#include "rdf-int.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
+// XXX these have just GOT to go away. They're copied from ht.c
+PRInt32 htCounter = 0;
+
+char* gNavCenterDataSources1[15] = {
+    "rdf:localStore",
+    "rdf:remoteStore",
+    "rdf:bookmarks",
+    "rdf:remoteStore",
+    "rdf:history",
+    /* "rdf:ldap", */
+    "rdf:esftp",
+    /* "rdf:mail", */
+#ifdef	XP_MAC
+    "rdf:appletalk",
+#endif
+    "rdf:lfs",
+    "rdf:ht",
+    "rdf:columns",
+    "rdf:find",
+    NULL
+};
+
+
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFDataModel::nsRDFDataModel(nsIRDFDataBase& db)
-    : mDB(db), mWidget(NULL)
+nsRDFDataModel::nsRDFDataModel(void)
+    : mDB(NULL), mWidget(NULL)
 {
-    db.AddRef();
     NS_INIT_REFCNT();
 }
 
 nsRDFDataModel::~nsRDFDataModel(void)
 {
-    mDB.Release();
-}
+    if (mRoot)
+        mRoot->Release();
 
+    if (mDB)
+        RDF_ReleaseDB(mDB);
+}
 
 NS_IMPL_ADDREF(nsRDFDataModel);
 NS_IMPL_RELEASE(nsRDFDataModel);
 
-NS_IMETHODIMP
-nsRDFDataModel::QueryInterface(const nsIID& iid, void** result)
-{
-    if (NULL == result)
-        return NS_ERROR_NULL_POINTER;
+static NS_DEFINE_IID(kIDataModelIID, NS_IDATAMODEL_IID);
+NS_IMPL_QUERY_INTERFACE(nsRDFDataModel, kIDataModelIID);
 
-    *result = NULL;
-    if (iid.Equals(kISupportsIID) ||
-        iid.Equals(kIDataModelIID)) {
-        *result = static_cast<nsIDataModel*>(this);
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
+////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsRDFDataModel::InitFromURL(const nsString& url)
+{
+    Initialize(url);
+    return NS_OK;
 }
 
 
-////////////////////////////////////////////////////////////////////////
+NS_IMETHODIMP
+nsRDFDataModel::InitFromResource(nsIDMItem* pResource)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 NS_IMETHODIMP
 nsRDFDataModel::GetDMWidget(nsIDMWidget*& widget) const
 {
-    widget = mWidget;
+    widget = GetWidget();
     return NS_OK;
 }
 
@@ -70,7 +99,7 @@ nsRDFDataModel::GetDMWidget(nsIDMWidget*& widget) const
 NS_IMETHODIMP
 nsRDFDataModel::SetDMWidget(nsIDMWidget* widget)
 {
-    mWidget = widget;
+    SetWidget(widget);
     return NS_OK;
 }
 
@@ -87,4 +116,26 @@ NS_IMETHODIMP
 nsRDFDataModel::GetIntPropertyValue(PRInt32& value, const nsString& property) const
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////
+
+void
+nsRDFDataModel::Initialize(const nsString& aUrl)
+{
+    // XXX A ghastly simplification of HT_PaneFromURL()
+    char* url = aUrl.ToNewCString();
+
+    const char* dbstr[2];
+    dbstr[0] = getBaseURL(url);
+    dbstr[1] = NULL;
+
+    mDB = RDF_GetDB(dbstr);
+    PL_strfree(const_cast<char*>(dbstr[0]));
+
+    RDF_Resource r = RDF_GetResource(mDB, url, PR_TRUE);
+    if ((mRoot = new nsRDFDataModelItem(*this, r)) != NULL)
+        mRoot->AddRef();
+
+    delete url;
 }

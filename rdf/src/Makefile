@@ -48,6 +48,7 @@ CPPSRCS=				\
 	netglue.cpp			\
 	nsRDFDataModel.cpp		\
 	nsRDFDataModelItem.cpp		\
+	nsRDFFactory.cpp		\
 	nsRDFToolbarDataModel.cpp	\
 	nsRDFToolbarDataModelItem.cpp	\
 	nsRDFTreeColumn.cpp		\

@@ -21,14 +21,29 @@
 
 #include "nsString.h"
 #include "nsITreeColumn.h"
+#include "rdf.h"
+
+class nsRDFTreeDataModel;
 
 class nsRDFTreeColumn : public nsITreeColumn {
-public:
-    nsRDFTreeColumn(const nsString& name);
-    virtual ~nsRDFTreeColumn(void);
+private:
+    nsRDFTreeDataModel& mTree;
+    nsString            mName;
+    RDF_Resource        mProperty;
+    PRUint32            mWidth;
+    nsColumnSortState   mSortState;
+    double              mDesiredPercentage;
+    PRBool              mVisible;
 
-    void SetVisibility(PRBool visible);
-    PRBool IsVisible(void) const;
+    static const PRUint32 kDefaultWidth;
+
+public:
+    nsRDFTreeColumn(nsRDFTreeDataModel& tree,
+                    const nsString& name,
+                    const RDF_Resource property,
+                    PRUint32 width = kDefaultWidth);
+
+    virtual ~nsRDFTreeColumn(void);
 
     ////////////////////////////////////////////////////////////////////////
     // nsISupports interface
@@ -47,14 +62,15 @@ public:
     // Setters
     NS_IMETHOD SetPixelWidth(PRUint32 newWidth);
 
-private:
-    nsString          mName;
-    PRUint32          mWidth;
-    nsColumnSortState mSortState;
-    double            mDesiredPercentage;
-    PRBool            mVisible;
+    ////////////////////////////////////////////////////////////////////////
 
-    static const PRUint32 kDefaultWidth;
+    void SetVisibility(PRBool visible);
+
+    PRBool IsVisible(void) const;
+
+    RDF_Resource GetProperty(void) const {
+        return mProperty;
+    }
 };
 
 #endif // nsRDFTreeColumn_h__

@@ -21,21 +21,35 @@
 
 const PRUint32 nsRDFTreeDataModelItem::kInvalidIndentationLevel = PRUint32(-1);
 
+static NS_DEFINE_IID(kIDMItemIID, NS_IDMITEM_IID);
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITreeDMItemIID, NS_ITREEDMITEM_IID);
 
 ////////////////////////////////////////////////////////////////////////
 
-nsRDFTreeDataModelItem::nsRDFTreeDataModelItem(nsRDFTreeDataModel& tree, RDF_Resource& resource)
-    : nsRDFDataModelItem(resource),
-      mTree(tree),
-      mOpen(PR_FALSE),
-      mEnabled(PR_FALSE)
+nsRDFTreeDataModelItem::nsRDFTreeDataModelItem(nsRDFTreeDataModel& tree,
+                                               RDF_Resource resource)
+    : nsRDFDataModelItem(tree, resource)
 {
 }
 
 
 nsRDFTreeDataModelItem::~nsRDFTreeDataModelItem(void)
 {
+}
+
+
+NS_IMETHODIMP_(nsrefcnt)
+nsRDFTreeDataModelItem::AddRef(void)
+{
+    return nsRDFDataModelItem::AddRef();
+}
+
+
+NS_IMETHODIMP_(nsrefcnt)
+nsRDFTreeDataModelItem::Release(void)
+{
+    return nsRDFDataModelItem::Release();
 }
 
 
@@ -48,7 +62,7 @@ nsRDFTreeDataModelItem::QueryInterface(const nsIID& iid, void** result)
     *result = NULL;
     if (iid.Equals(kITreeDMItemIID)) {
         *result = static_cast<nsITreeDMItem*>(this);
-        nsRDFDataModelItem::AddRef(); // delegate to the superclass
+        AddRef();
         return NS_OK;
     }
 
@@ -56,6 +70,62 @@ nsRDFTreeDataModelItem::QueryInterface(const nsIID& iid, void** result)
     return nsRDFDataModelItem::QueryInterface(iid, result);
 }
 
+
+////////////////////////////////////////////////////////////////////////
+
+#if 0
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetIconImage(nsIImage*& image, nsIImageGroup* group) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetOpenState(PRBool& result) const
+{
+    result = IsOpen();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetChildCount(PRUint32& count) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 item) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetParent(nsIDMItem*& pItem) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetStringPropertyValue(nsString& result, const nsString& property) const
+{
+    // 1. convert the property to a URI
+    // 2. ask the RDF database for the value of the property
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsRDFTreeDataModelItem::GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -70,10 +140,14 @@ nsRDFTreeDataModelItem::GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup
 NS_IMETHODIMP
 nsRDFTreeDataModelItem::GetIndentationLevel(PRUint32& indentation) const
 {
-    // 1. ask the tree what the parent/child URI is.
-    // 2. use it to walk back up to the root, counting as we go
-    // 3. multiply the resulting count by the pixel width
+    PRUint32 i = 0;
 
-    mCachedIndentationLevel = 0; // XXX test "mutable" keyword
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsRDFDataModelItem* item =
+        static_cast<nsRDFDataModelItem*>(const_cast<nsRDFTreeDataModelItem*>(this));
+
+    while ((item = item->GetParent()) != NULL)
+        i += 1; // XXX should this be some pixel value?
+
+    indentation = i;
+    return NS_OK;
 }

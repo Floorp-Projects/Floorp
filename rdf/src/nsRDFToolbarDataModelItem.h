@@ -27,26 +27,46 @@ class nsRDFToolbarDataModel;
 
 ////////////////////////////////////////////////////////////////////////
 
-class nsRDFToolbarDataModelItem : public nsRDFDataModelItem, nsIToolbarDMItem {
+class nsRDFToolbarDataModelItem : public nsIToolbarDMItem, public nsRDFDataModelItem
+{
 public:
-    nsRDFToolbarDataModelItem(nsRDFToolbarDataModel& Toolbar, RDF_Resource& resource);
+    nsRDFToolbarDataModelItem(nsRDFToolbarDataModel& Toolbar, RDF_Resource resource);
     virtual ~nsRDFToolbarDataModelItem(void);
 
     ////////////////////////////////////////////////////////////////////////
     // nsISupports interface
 
-    // XXX Note that we'll just use the parent class's implementation
-    // of AddRef() and Release()
-    // NS_IMETHOD_(nsrefcnt) AddRef(void);
-    // NS_IMETHOD_(nsrefcnt) Release(void);
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
     NS_IMETHOD QueryInterface(const nsIID& iid, void** result);
+
+#if 0
+    ////////////////////////////////////////////////////////////////////////
+    // nsIDMItem interface
+
+    // Inspectors
+    NS_IMETHOD GetIconImage(nsIImage*& pImage, nsIImageGroup* pGroup) const;
+    NS_IMETHOD GetOpenState(PRBool& answer) const;
+
+    // Methods for iterating over children.
+    NS_IMETHOD GetChildCount(PRUint32& count) const;
+    NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) const;
+
+    // Parent access
+    NS_IMETHOD GetParent(nsIDMItem*& pItem) const;
+
+    // Setters
+
+    // Methods to query the data model for a specific item displayed within the widget.
+    NS_IMETHOD GetStringPropertyValue(nsString& value, const nsString& itemProperty) const;
+    NS_IMETHOD GetIntPropertyValue(PRInt32& value, const nsString& itemProperty) const;
+#endif
 
     ////////////////////////////////////////////////////////////////////////
     // nsIToolbarItem interface
 
 
 private:
-    nsRDFToolbarDataModel&  mToolbar;
 };
 
 ////////////////////////////////////////////////////////////////////////

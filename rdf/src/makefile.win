@@ -23,6 +23,7 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME=rdf
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
+
 C_OBJS=\
         .\$(OBJDIR)\vocab.obj    \
         .\$(OBJDIR)\core.obj     \
@@ -39,6 +40,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\netglue.obj                   \
         .\$(OBJDIR)\nsRDFDataModel.obj            \
         .\$(OBJDIR)\nsRDFDataModelItem.obj        \
+        .\$(OBJDIR)\nsRDFFactory.obj              \
         .\$(OBJDIR)\nsRDFToolbarDataModel.obj     \
         .\$(OBJDIR)\nsRDFToolbarDataModelItem.obj \
         .\$(OBJDIR)\nsRDFTreeColumn.obj           \
