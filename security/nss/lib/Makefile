@@ -84,5 +84,5 @@ ifdef MOZILLA_SECURITY_BUILD
 # over move to mozilla
 #
 	rm -f $(CORE_DEPTH)/security
-	ln -s $(CORE_DEPTH)/nss $(CORE_DEPTH)/security
+	(cd $(CORE_DEPTH) ; ln -s nss security)
 endif
