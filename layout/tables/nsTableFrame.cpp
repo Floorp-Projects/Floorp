@@ -1618,12 +1618,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
 
   // See if we are supposed to compute our maximum width
   if (aDesiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
-    PRBool  isAutoWidth = IsAutoLayout(&aReflowState) &&
-                          (eStyleUnit_Auto == aReflowState.mStylePosition->mWidth.GetUnit());
+    PRBool  isAutoOrPctWidth = IsAutoLayout(&aReflowState) &&
+                               ((eStyleUnit_Auto == aReflowState.mStylePosition->mWidth.GetUnit() ||
+                                (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit())));
     
     // See if the pass1 maximum width is no longer valid because one of the
     // cell maximum widths changed
-    if (isAutoWidth && !IsMaximumWidthValid()) {
+    if (isAutoOrPctWidth && !IsMaximumWidthValid()) {
       // Initialize the strategy and have it compute the natural size of
       // the table
       mTableLayoutStrategy->Initialize(aPresContext, nsnull, NS_UNCONSTRAINEDSIZE, aReflowState);
@@ -1641,10 +1642,10 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
                           aDesiredSize.maxElementSize);
     }
 
-    if (isAutoWidth) {
-      // Ask the strategy for the natural width of the content area
+    if (isAutoOrPctWidth) {
+      // Ask the strategy for the natural width of the content area 
       aDesiredSize.mMaximumWidth = mTableLayoutStrategy->GetTableMaxContentWidth();
-      
+     
       // Add in space for border
       nsMargin border;
       GetTableBorder (border); // this gets the max border value at every edge
@@ -2678,8 +2679,8 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
 
   // Pass along the reflow command
   nsSize               kidMaxElementSize;
-  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize
-                                                              : nsnull);
+  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull,
+                                  aDesiredSize.mFlags);
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                    aNextFrame, aReflowState.availSize);
 
@@ -4719,7 +4720,7 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
     printf("rea=%d av=(%s,%s) ", aState->reason, width, height); 
     PrettyUC(aState->mComputedWidth, width);
     PrettyUC(aState->mComputedHeight, height);
-    printf("comp=(%s,%s) count=%d \n", width, height, gRflCount);
+    printf("comp=(%s,%s) count=%d \n ", width, height, gRflCount);
     gRflCount++;
     //if (32 == gRflCount) {
     //  NS_ASSERTION(PR_FALSE, "stop");
@@ -4736,6 +4737,9 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
       PrettyUC(aMetrics->maxElementSize->width, width);
       PrettyUC(aMetrics->maxElementSize->height, height);
       printf("maxElem=(%s,%s)", width, height);
+    }
+    if (aMetrics->mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
+      printf("max=%d ", aMetrics->mMaximumWidth);
     }
     if (NS_FRAME_COMPLETE != aStatus) {
       printf("status=%d", aStatus);

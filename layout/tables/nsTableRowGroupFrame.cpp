@@ -1517,7 +1517,8 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState.reflowState,
                                      aNextFrame, kidAvailSize);
   nsSize              kidMaxElementSize;
-  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull);
+  nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull,
+                                  aDesiredSize.mFlags);
 
   // Pass along the reflow command
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,

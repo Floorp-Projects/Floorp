@@ -219,8 +219,16 @@ nsTableRowFrame::RemoveFrame(nsIPresContext* aPresContext,
       tableFrame->InvalidateColumnWidths();
 
       // Because we haven't added any new frames we don't need to do a pass1
-      // reflow. Just generate a reflow command so we reflow the table itself
-      AddTableDirtyReflowCommand(aPresContext, aPresShell, tableFrame);
+      // reflow. Just generate a reflow command so we reflow the table itself.
+      // Target the row so that it gets a dirty reflow before a resize reflow
+      // in case another cell gets added to the row during a reflow coallesce.
+      nsIReflowCommand* reflowCmd;
+
+      if (NS_SUCCEEDED(NS_NewHTMLReflowCommand(&reflowCmd, this,
+                                               nsIReflowCommand::ReflowDirty))) {
+        aPresShell.AppendReflowCommand(reflowCmd);
+        NS_RELEASE(reflowCmd);
+      }
     }
     NS_IF_RELEASE(frameType);
   }
@@ -828,8 +836,13 @@ NS_METHOD nsTableRowFrame::ResizeReflow(nsIPresContext*      aPresContext,
 #endif
 
           if (eReflowReason_Initial == reason) {
+            nscoord oldMaxWidth = ((nsTableCellFrame *)kidFrame)->GetMaximumWidth();
             // Save the pass1 reflow information
             ((nsTableCellFrame *)kidFrame)->SetMaximumWidth(desiredSize.width);
+            // invalidate the table's max width if the cell's max width changes
+            if (oldMaxWidth != desiredSize.mMaximumWidth) {
+              aReflowState.tableFrame->InvalidateMaximumWidth();
+            }
             if (kidMaxElementSize) {
               ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(*kidMaxElementSize);
             }
@@ -1091,7 +1104,6 @@ NS_METHOD nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
 }
 
 
-
 NS_METHOD nsTableRowFrame::IncrementalReflow(nsIPresContext*       aPresContext,
                                              nsHTMLReflowMetrics&  aDesiredSize,
                                              RowReflowState&       aReflowState,
@@ -1211,7 +1223,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     // Pass along the reflow command
     nsSize              kidMaxElementSize;
     // Unless this is a fixed-layout table, then have the cell incrementally
-    // update its maximum width
+    // update its maximum width. XXX should not skip if the cell is in the 1st row
     nsHTMLReflowMetrics desiredSize(&kidMaxElementSize,
                                     aReflowState.tableFrame->IsAutoLayout() ?
                                     NS_REFLOW_CALC_MAX_WIDTH : 0);
@@ -1234,7 +1246,7 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     ((nsTableCellFrame *)aNextFrame)->SetPass1MaxElementSize(kidMaxElementSize);
     if (desiredSize.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
       // If the cell is not auto-width, then the natural width is the
-      // desired width
+      // desired width. XXX what about Pct width?
       PRBool  isAutoWidth = eStyleUnit_Auto == kidReflowState.mStylePosition->mWidth.GetUnit();
       
       if (!isAutoWidth) {
