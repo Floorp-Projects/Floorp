@@ -1379,11 +1379,7 @@ nsComputedDOMStyle::GetListStyleImage(nsIFrame *aFrame,
     if (!list->mListStyleImage) {
       val->SetIdent(nsLayoutAtoms::none);
     } else {
-      nsCOMPtr<nsIURI> uri;
-      if (list->mListStyleImage) {
-        list->mListStyleImage->GetURI(getter_AddRefs(uri));
-      }
-      val->SetURI(uri);
+      val->SetURI(list->mListStyleImage);
     }
   }
     

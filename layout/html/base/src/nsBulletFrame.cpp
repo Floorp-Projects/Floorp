@@ -124,10 +124,7 @@ nsBulletFrame::Init(nsIPresContext*  aPresContext,
   
   nsresult  rv = nsFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  nsCOMPtr<nsIURI> imgURI;
-  imgIRequest *imgReq = GetStyleList()->mListStyleImage;
-  if (imgReq)
-    imgReq->GetURI(getter_AddRefs(imgURI));
+  nsIURI *imgURI = GetStyleList()->mListStyleImage;
   if (imgURI) {
     nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1", &rv));
     if (NS_FAILED(rv))
@@ -1590,10 +1587,7 @@ nsBulletFrame::Reflow(nsIPresContext* aPresContext,
   }
 
   if (isStyleChange) {
-    nsCOMPtr<nsIURI> newURI;
-    imgIRequest *imgReq = GetStyleList()->mListStyleImage;
-    if (imgReq)
-      imgReq->GetURI(getter_AddRefs(newURI));
+    nsIURI *newURI = GetStyleList()->mListStyleImage;
 
     if (newURI) {
 
