@@ -294,7 +294,6 @@ private:
 	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
   Pop3ConData* m_pop3ConData;
-  PRBool m_allow_at_sign_in_mail_user_name;
   void FreeMsgInfo();
 
     //////////////////////////////////////////////////////////////////////////////////////////

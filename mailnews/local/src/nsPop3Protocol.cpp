@@ -52,7 +52,6 @@
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
 
-#define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
 #define EXTRA_SAFETY_SPACE 3096
 
 static PRLogModuleInfo *POP3LOGMODULE = nsnull;
@@ -387,8 +386,7 @@ nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
 	m_totalDownloadSize(0),
 	m_totalBytesReceived(0),
 	m_lineStreamBuffer(nsnull),
-	m_pop3ConData(nsnull),
-	m_allow_at_sign_in_mail_user_name(PR_FALSE)
+	m_pop3ConData(nsnull)
 {
 	SetLookingForCRLF(MSG_LINEBREAK_LEN == 2);
 }
@@ -437,19 +435,6 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
   m_lineStreamBuffer = new nsMsgLineStreamBuffer(OUTPUT_BUFFER_SIZE, CRLF, PR_TRUE);
   if(!m_lineStreamBuffer)
 	  return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-/* the old comment in mkpop3.c in the old source tree:
- *
- * Well, someone finally found a legitimate reason to put an @ in the
- * mail server user name. They're trying to use the user name as a UID
- * in the LDAP directory, and the UIDs happen to have the format
- * foo@bar.com. We don't change our default behavior, but we let admins
- * turn it off if they want
- */
-  rv = prefs->GetBoolPref(PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME, &m_allow_at_sign_in_mail_user_name);
 
   mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
   return rv;
@@ -503,23 +488,7 @@ void nsPop3Protocol::SetUsername(const char* name)
 	NS_ASSERTION(name, "no name specified!");
 	if (name) {
 		m_username = name;
-		/*
-		 * If we are called with data like "fred@bedrock.com", then we will
-		 * help the user by ignoring the stuff after the "@".  People with
-		 * @ signs in their user names will be hosed.  They also can't possibly
-		 * be current happy internet users.  This will waste a few bytes,
-		 * but was the minimal change to make in order to ship cheddar.
-		 * (it might even save bytes by avoiding the code which does the
-		 * right thing)
-		 */
-		if (!m_allow_at_sign_in_mail_user_name) {
-			PRInt32 atPos = -1;
-			atPos = m_username.FindChar('@');
-			if (atPos != -1) {
-				m_username.Truncate(atPos);
-			}
-		}
-	}
+    }
 }
 
 nsresult nsPop3Protocol::GetPassword(char ** aPassword, PRBool *okayValue)
