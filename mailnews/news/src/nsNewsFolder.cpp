@@ -1422,7 +1422,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
       if (NS_FAILED(rv)) return rv;
 
       nsAutoString realm;
-      CopyASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL), realm);
+      CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
       rv = dialog->PromptPassword(aPromptTitle, aPromptMessage, realm.GetUnicode(), nsIPrompt::SAVE_PASSWORD_PERMANENTLY,
                                   getter_Copies(uniGroupPassword), &okayValue);
       if (NS_FAILED(rv)) return rv;
@@ -1488,7 +1488,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
             if (NS_FAILED(rv)) return rv;
 
             nsAutoString realm;
-            CopyASCIItoUCS2(NS_STATIC_CAST(const char*, signonURL), realm);
+            CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, signonURL)), realm);
             rv = dialog->Prompt(aPromptTitle, aPromptMessage, realm.GetUnicode(), 
                                 nsIPrompt::SAVE_PASSWORD_PERMANENTLY, nsnull,
                                 getter_Copies(uniGroupUsername), &okayValue);
