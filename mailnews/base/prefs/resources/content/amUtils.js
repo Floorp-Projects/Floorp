@@ -54,10 +54,31 @@ function BrowseForLocalFolders()
 
   var ret = fp.show();
 
-  if (ret == nsIFilePicker.returnOK) {
-    // convert the nsILocalFile into a nsIFileSpec 
-    currentFolderTextBox.value = fp.file.path;
+  if (ret == nsIFilePicker.returnOK) 
+  {
+    // check that no other account/server has this same local directory
+    var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+    var allServers = accountManager.allServers;
+
+    for (var i=0; i < allServers.Count(); i++)
+    {
+      var currentServer = allServers.GetElementAt(i).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+      var localPath = currentServer.localPath;
+      if (currentServer.key != gServer.key && fp.file.path == localPath.nativePath)
+      {
+        var directoryAlreadyUsed =
+          top.gPrefsBundle.getString("directoryUsedByOtherServer");
+
+        var promptService =
+          Components.classes["@mozilla.org/embedcomp/prompt-service;1"].
+                   getService(Components.interfaces.nsIPromptService);
+        promptService.alert(window, null, directoryAlreadyUsed);
+        return;
+      }
+    }
   }
+  // convert the nsILocalFile into a nsIFileSpec 
+  currentFolderTextBox.value = fp.file.path;
 }
 
 function hostnameIsIllegal(hostname)
