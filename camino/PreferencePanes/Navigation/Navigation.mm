@@ -37,7 +37,7 @@ const int kDefaultExpireDays = 9;
 
 @interface OrgMozillaChimeraPreferenceNavigation(Private)
 
-- (NSString*)getInternetConfigString:(Str255)icPref;
+- (NSString*)getInternetConfigString:(ConstStr255Param)icPref;
 - (NSString*)getDownloadFolderDescription;
 
 @end
@@ -256,7 +256,7 @@ const int kDefaultExpireDays = 9;
 }
 
 
-- (NSString*)getInternetConfigString:(Str255)icPref
+- (NSString*)getInternetConfigString:(ConstStr255Param)icPref
 {
   NSString*     resultString = @"";
   ICInstance		icInstance = NULL;
