@@ -707,7 +707,10 @@ static	long	GetDirModDate(short vRefNum,
 }
 
 /*****************************************************************************/
-
+#if !TARGET_CARBON
+/* NSCP - pinkerton
+ * some of the timer stuff is mismatched for carbon. We don't use it anyway.
+ */
 pascal	OSErr	IndexedSearch(CSParamPtr pb,
 							  long dirID)
 {
@@ -982,6 +985,7 @@ pascal	OSErr	IndexedSearch(CSParamPtr pb,
 	
 	return ( result );
 }
+#endif
 
 /*****************************************************************************/
 
