@@ -811,8 +811,12 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_br)
   {
-    // Do this even if we're not doing formatted output:
-    EnsureVerticalSpace(mEmptyLines+1);
+    // Another egregious editor workaround, see bug 38194:
+    // ignore the bogus br tags that the editor sticks here and there.
+    nsAutoString typeAttr;
+    if (NS_FAILED(GetValueOfAttribute(aNode, "type", typeAttr))
+        || !typeAttr.EqualsWithConversion("_moz"))
+      EnsureVerticalSpace(mEmptyLines+1);
   }
   else if (type == eHTMLTag_whitespace)
   {
