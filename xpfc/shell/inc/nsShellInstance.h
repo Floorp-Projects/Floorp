@@ -142,7 +142,7 @@ public:
 
   NS_IMETHOD_(EVENT_CALLBACK) GetShellEventCallback() ;
 
-  NS_IMETHOD LaunchApplication(nsString& aApplication) ;
+  NS_IMETHOD LaunchApplication(nsString& aApplication,nsString& aArgument) ;
 
   NS_IMETHOD GetCommandLineOptions(PLOptState** aOptState, const char * aOptions) ; 
 
