@@ -20,6 +20,7 @@
 #include "nsString.h"
 #include "nsFileSpec.h"
 #include "nsIServiceManager.h"
+#include "nsCOMPtr.h"
 
 nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 {
@@ -110,20 +111,27 @@ NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::Next(void)
 
 NS_IMETHODIMP nsMessageFromMsgHdrEnumerator::CurrentItem(nsISupports **aItem)
 {
-	nsISupports *currentItem = nsnull;
-	nsIMsgDBHdr *msgDBHdr = nsnull;
-	nsIMessage *message = nsnull;
+	nsCOMPtr<nsISupports> currentItem;
+	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+	nsCOMPtr<nsIMessage> message;
 	nsresult rv;
 
-	rv = mSrcEnumerator->CurrentItem(&currentItem);
+	rv = mSrcEnumerator->CurrentItem(getter_AddRefs(currentItem));
 	if(NS_SUCCEEDED(rv))
-		rv = currentItem->QueryInterface(nsIMsgDBHdr::GetIID(), (void**)&msgDBHdr);
+	{
+		msgDBHdr = do_QueryInterface(currentItem, &rv);
+	}
 
 	if(NS_SUCCEEDED(rv))
-		rv = mFolder->CreateMessageFromMsgDBHdr(msgDBHdr, &message);
+	{
+		rv = mFolder->CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
+	}
 
 	if(NS_SUCCEEDED(rv))
+	{
 		*aItem = message;
+		NS_ADDREF(*aItem);
+	}
 
 	return rv;
 }

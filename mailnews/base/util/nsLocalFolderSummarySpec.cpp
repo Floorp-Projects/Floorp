@@ -20,6 +20,11 @@
 #include "plstr.h"
 #include "nsString.h"
 
+nsLocalFolderSummarySpec::~nsLocalFolderSummarySpec()
+{
+
+}
+
 nsLocalFolderSummarySpec::nsLocalFolderSummarySpec()
 {
 }

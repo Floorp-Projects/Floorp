@@ -30,6 +30,7 @@
 class nsLocalFolderSummarySpec : public nsFileSpec
 {
 public:
+			virtual ~nsLocalFolderSummarySpec();
 			nsLocalFolderSummarySpec();
 			nsLocalFolderSummarySpec(const char *folderPath, PRBool create = PR_FALSE);
 			nsLocalFolderSummarySpec(const nsFileSpec& inFolderPath);
