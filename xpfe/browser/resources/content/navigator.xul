@@ -268,14 +268,16 @@ Contributor(s): ______________________________________. -->
              ondragover="return DragOverPersonalToolbar(event);"
              grippytooltiptext="&personalBar.tooltip;">
 
-      <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu" datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
+      <!-- "Bookmarks" button on personal toolbar -->
+      <menubutton class="button-toolbar bookmarkfolder" id="PersonalMenu"
+        datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
         ref="NC:BookmarksRoot" container="true" value="&bookmarksButton.label;"
-        oncommand="OpenBookmarkURL(event.target, document.getElementById('PersonalMenu').database)"
         tooltiptext="&bookmarksButton.tooltip;">
         <template>
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" >
+              <menu class="menu-iconic bookmarkfolder" uri="rdf:*"
+                value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
             </menupopup>
@@ -287,31 +289,44 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*" 
+                value="rdf:http://home.netscape.com/NC-rdf#Name"
+                oncommand="OpenBookmarkURL(event.target,document.getElementById('PersonalMenu').database)" />
             </menupopup>
           </rule>
         </template>
   
-        <menupopup/>
+        <menupopup>
+          <menuitem accesskey="&addCurPageCmd.accesskey;"
+            key="addBookmarkKb" observes="Browser:AddBookmark"/>
+          <menuitem accesskey="&manBookmarksCmd.accesskey;"
+            key="manBookmarkKb" observes="Browser:ManageBookmark"/>
+          <menuseparator/>
+        </menupopup>
       </menubutton>
 
-      <box id="innermostBox" flex="1" style="min-width: 1px;" datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
+      <!-- Personal toolbar items -->
+      <box id="innermostBox" flex="1" style="min-width: 1px;"
+        datasources="rdf:bookmarks" ref="NC:PersonalToolbarFolder">
     
         <template>
           <rule parent="box" iscontainer="true">
-            <menubutton class="button-toolbar bookmarkfolder" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name">
+            <menubutton class="button-toolbar bookmarkfolder" uri="rdf:*" 
+              value="rdf:http://home.netscape.com/NC-rdf#Name">
               <menupopup/>
             </menubutton>
           </rule>
 
           <rule parent="box">
-            <button class="button-toolbar bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" 
-                    oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
+            <button class="button-toolbar bookmarkitem" uri="rdf:*" 
+              value="rdf:http://home.netscape.com/NC-rdf#Name" 
+              oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database);"/>
           </rule>
         
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name">
+              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" 
+                value="rdf:http://home.netscape.com/NC-rdf#Name">
                 <menupopup/>
               </menu>
             </menupopup>
@@ -323,13 +338,16 @@ Contributor(s): ______________________________________. -->
           </rule>
           <rule>
             <menupopup>
-              <menuitem class="menuitem-iconic bookmarkitem" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"
-                        oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
+              <menuitem class="menuitem-iconic bookmarkitem" uri="rdf:*"
+                value="rdf:http://home.netscape.com/NC-rdf#Name"
+                oncommand="OpenBookmarkURL(event.target, document.getElementById('innermostBox').database)"/>
             </menupopup>
           </rule>
         </template>
        
-        <button class="button-toolbar" id="homebutton" value="&homeButton.label;" oncommand="BrowserHome(); event.preventBubble();"/>
+        <button class="button-toolbar" id="homebutton" 
+          value="&homeButton.label;"
+          oncommand="BrowserHome(); event.preventBubble();"/>
     
       </box>
 
@@ -349,7 +367,8 @@ Contributor(s): ______________________________________. -->
 
       <!-- type attribute is used by frame construction to locate iframes
            intended to hold (html) content -->
-      <browser context="context" type="content-primary" id="content" src="about:blank" flex="100%"/>
+      <browser context="context" type="content-primary" id="content"
+        src="about:blank" flex="100%"/>
   
       <box id="status-bar" class="chromeclass-status"/>
 
