@@ -122,6 +122,10 @@ public:
   // from nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                     nsISupportsArray& aChildList);
+  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
+                               nsIContent *      aContent,
+                               nsIFrame**        aFrame);
+  virtual void PostCreateFrames();
 
   // Utility methods to set current widget state
   void SetValue(const nsAString& aValue);
@@ -278,10 +282,6 @@ protected:
                                  nsIRenderingContext*  aRendContext,
                                  nsSize&               aDesiredSize,
                                  nsSize&               aMinSize);
-
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
-                               nsIContent *      aContent,
-                               nsIFrame**        aFrame);
 
   PRInt32 GetWidthInCharacters() const;
 
