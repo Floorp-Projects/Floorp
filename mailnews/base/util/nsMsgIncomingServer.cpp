@@ -811,7 +811,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
       // Get password entry corresponding to the host URI we are passing in.
       if (NS_SUCCEEDED(passwordMgrInt->FindPasswordEntry(currServerUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
                                              hostFound, userNameFound, passwordFound)))
-        CopyUCS2toASCII(passwordFound, m_password);
+        m_password.AssignWithConversion(passwordFound);
     }
   }
   if (m_password.IsEmpty())
@@ -1784,7 +1784,9 @@ nsMsgIncomingServer::GetIsAuthenticated(PRBool *isAuthenticated)
         }
         else
         {
-          rv = SetPassword(NS_ConvertUCS2toUTF8(passwordFound).get());
+          nsCAutoString cStrPassword;
+          cStrPassword.AssignWithConversion(passwordFound);
+          rv = SetPassword(cStrPassword.get());
           NS_ENSURE_SUCCESS(rv, rv);
         }
       }
@@ -1806,6 +1808,7 @@ nsMsgIncomingServer::ConfigureTemporaryReturnReceiptsFilter(nsIMsgFilterList *fi
   nsCOMPtr<nsIMsgIdentity> identity;
   rv = accountMgr->GetFirstIdentityForServer(this, getter_AddRefs(identity));
   NS_ENSURE_SUCCESS(rv, rv);
+  // this can return success and a null identity...
   
   PRBool useCustomPrefs = PR_FALSE;
   PRInt32 incorp = nsIMsgMdnGenerator::eIncorporateInbox;
