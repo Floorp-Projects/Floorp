@@ -368,8 +368,6 @@ nsJARChannel::SetLoadAttributes(PRUint32 aLoadFlags)
     return NS_OK;
 }
 
-#define DEFAULT_TYPE "text/plain"       // "application/x-unknown-content-type"
-
 NS_IMETHODIMP
 nsJARChannel::GetContentType(char* *aContentType)
 {
@@ -405,8 +403,7 @@ nsJARChannel::GetContentType(char* *aContentType)
         }
 
         if (NS_FAILED(rv)) {
-            // if all else fails treat it as the default:
-            mContentType = nsCRT::strdup(DEFAULT_TYPE);
+            mContentType = nsCRT::strdup(UNKNOWN_MIME);
             if (mContentType == nsnull)
                 rv = NS_ERROR_OUT_OF_MEMORY;
             else
