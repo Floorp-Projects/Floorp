@@ -76,12 +76,15 @@ static PRBool IsInlineNode(nsIDOMNode* node)
 nsWSRunObject::nsWSRunObject(nsHTMLEditor *aEd, nsIDOMNode *aNode, PRInt32 aOffset) :
 mNode(aNode)
 ,mOffset(aOffset)
+,mPRE(PR_FALSE)
 ,mStartNode()
 ,mStartOffset(0)
 ,mStartReason(0)
+,mStartReasonNode()
 ,mEndNode()
 ,mEndOffset(0)
 ,mEndReason(0)
+,mEndReasonNode()
 ,mFirstNBSPNode()
 ,mFirstNBSPOffset(0)
 ,mLastNBSPNode()
@@ -456,6 +459,17 @@ nsWSRunObject::DeleteWSBackward()
   NS_ENSURE_SUCCESS(res, res);
   if (!point.mTextNode) return NS_OK;  // nothing to delete
   
+  if (mPRE)  // easy case, preformatted ws
+  {
+    if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar == nbsp))
+    {
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
+      PRInt32 startOffset = point.mOffset;
+      PRInt32 endOffset = point.mOffset+1;
+      return DeleteChars(node, startOffset, node, endOffset);
+    }
+  }
+  
   // callers job to insure that previous char is really ws.
   // If it is normal ws, we need to delete the whole run
   if (nsCRT::IsAsciiSpace(point.mChar))
@@ -499,6 +513,17 @@ nsWSRunObject::DeleteWSForward()
   res = GetCharAfter(mNode, mOffset, &point);  
   NS_ENSURE_SUCCESS(res, res);
   if (!point.mTextNode) return NS_OK;  // nothing to delete
+  
+  if (mPRE)  // easy case, preformatted ws
+  {
+    if (nsCRT::IsAsciiSpace(point.mChar) || (point.mChar == nbsp))
+    {
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(point.mTextNode));
+      PRInt32 startOffset = point.mOffset;
+      PRInt32 endOffset = point.mOffset+1;
+      return DeleteChars(node, startOffset, node, endOffset);
+    }
+  }
   
   // callers job to insure that next char is really ws.
   // If it is normal ws, we need to delete the whole run
@@ -547,6 +572,7 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
   if (!aNode || !outVisNode || !outVisOffset || !outType)
     return NS_ERROR_NULL_POINTER;
     
+  *outType = eNone;
   WSFragment *run;
   nsresult res = FindRun(aNode, aOffset, &run, PR_FALSE);
   
@@ -707,6 +733,7 @@ nsWSRunObject::GetWSNodes()
             mStartNode = mNode;
             mStartOffset = pos+1;
             mStartReason = eText;
+            mStartReasonNode = mNode;
             break;
           }
           // as we look backwards update our earliest found nbsp
@@ -736,6 +763,7 @@ nsWSRunObject::GetWSNodes()
       {
         start.GetPoint(mStartNode, mStartOffset);
         mStartReason = eOtherBlock;
+        mStartReasonNode = priorNode;
       }
       else if (mHTMLEditor->IsTextNode(priorNode))
       {
@@ -768,6 +796,7 @@ nsWSRunObject::GetWSNodes()
                 mStartNode = priorNode;
                 mStartOffset = pos+1;
                 mStartReason = eText;
+                mStartReasonNode = priorNode;
                 break;
               }
               // as we look backwards update our earliest found nbsp
@@ -793,6 +822,7 @@ nsWSRunObject::GetWSNodes()
           mStartReason = eBreak;
         else
           mStartReason = eSpecial;
+        mStartReasonNode = priorNode;
       }
     }
     else
@@ -800,6 +830,7 @@ nsWSRunObject::GetWSNodes()
       // no prior node means we exhausted blockParent
       start.GetPoint(mStartNode, mStartOffset);
       mStartReason = eThisBlock;
+      mStartReasonNode = blockParent;
     } 
   }
   
@@ -826,6 +857,7 @@ nsWSRunObject::GetWSNodes()
             mEndNode = mNode;
             mEndOffset = pos;
             mEndReason = eText;
+            mEndReasonNode = mNode;
             break;
           }
           // as we look forwards update our latest found nbsp
@@ -856,6 +888,7 @@ nsWSRunObject::GetWSNodes()
         // we encountered a new block.  therefore no more ws.
         end.GetPoint(mEndNode, mEndOffset);
         mEndReason = eOtherBlock;
+        mEndReasonNode = nextNode;
       }
       else if (mHTMLEditor->IsTextNode(nextNode))
       {
@@ -889,6 +922,7 @@ nsWSRunObject::GetWSNodes()
                 mEndNode = nextNode;
                 mEndOffset = pos;
                 mEndReason = eText;
+                mEndReasonNode = nextNode;
                 break;
               }
               // as we look forwards update our latest found nbsp
@@ -912,9 +946,10 @@ nsWSRunObject::GetWSNodes()
         // serves as a terminator to ws runs.
         end.GetPoint(mEndNode, mEndOffset);
         if (nsTextEditUtils::IsBreak(nextNode))
-          mStartReason = eBreak;
+          mEndReason = eBreak;
         else
-          mStartReason = eSpecial;
+          mEndReason = eSpecial;
+        mEndReasonNode = nextNode;
       }
     }
     else
@@ -922,6 +957,7 @@ nsWSRunObject::GetWSNodes()
       // no next node means we exhausted blockParent
       end.GetPoint(mEndNode, mEndOffset);
       mEndReason = eThisBlock;
+      mEndReasonNode = blockParent;
     } 
   }
 
@@ -934,11 +970,11 @@ nsWSRunObject::GetRuns()
   ClearRuns();
   
   // handle some easy cases first
-  
-  // if we are surrounded by text or special, it's all one
+  mHTMLEditor->IsPreformatted(mNode, &mPRE);
+  // if it's preformatedd, or if we are surrounded by text or special, it's all one
   // big normal ws run
-  if ( ((mStartReason == eText) || (mStartReason == eSpecial)) &&
-       ((mEndReason == eText) || (mEndReason == eSpecial) || (mEndReason == eBreak)) )
+  if ( mPRE || (((mStartReason == eText) || (mStartReason == eSpecial)) &&
+       ((mEndReason == eText) || (mEndReason == eSpecial) || (mEndReason == eBreak))) )
   {
     return MakeSingleWSRun(eNormalWS);
   }
@@ -1611,7 +1647,6 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   if (aPoint.mOffset < len)
   {
     *outPoint = aPoint;
-    outPoint->mOffset;
     outPoint->mChar = GetCharAt(aPoint.mTextNode, aPoint.mOffset);
   }
   else if (idx < (PRInt32)(numNodes-1))
@@ -1684,7 +1719,7 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint)
   
   // next, find range of ws it will replace
   nsCOMPtr<nsIDOMNode> startNode, endNode;
-  PRInt32 startOffset, endOffset;
+  PRInt32 startOffset=0, endOffset=0;
   
   res = GetAsciiWSBounds(eAfter, node, aPoint.mOffset+1, address_of(startNode), 
                          &startOffset, address_of(endNode), &endOffset);
@@ -1708,7 +1743,7 @@ nsWSRunObject::GetAsciiWSBounds(PRInt16 aDir, nsIDOMNode *aNode, PRInt32 aOffset
     return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
-  PRInt32 startOffset, endOffset;
+  PRInt32 startOffset=0, endOffset=0;
   
   nsresult res = NS_OK;
   

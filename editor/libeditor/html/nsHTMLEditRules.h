@@ -154,6 +154,11 @@ protected:
   nsCOMPtr<nsIDOMNode> IsInListItem(nsIDOMNode *aNode);
   nsresult ReturnInHeader(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult ReturnInParagraph(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset, PRBool *aCancel, PRBool *aHandled);
+  nsresult SplitParagraph(nsIDOMNode *aPara,
+                          nsIDOMNode *aBRNode, 
+                          nsISelection *aSelection,
+                          nsCOMPtr<nsIDOMNode> *aSelNode, 
+                          PRInt32 *aOffset);
   nsresult ReturnInListItem(nsISelection *aSelection, nsIDOMNode *aHeader, nsIDOMNode *aTextNode, PRInt32 aOffset);
   nsresult AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection);
   nsresult RemovePartOfBlock(nsIDOMNode *aBlock, 
@@ -183,6 +188,7 @@ protected:
   PRBool AtStartOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
   PRBool AtEndOfBlock(nsIDOMNode *aNode, PRInt32 aOffset, nsIDOMNode *aBlock);
 #endif
+  nsresult NormalizeSelection(nsISelection *inSelection);
   nsresult GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
                             PRInt32 actionID, nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
   nsresult GetPromotedRanges(nsISelection *inSelection, 
