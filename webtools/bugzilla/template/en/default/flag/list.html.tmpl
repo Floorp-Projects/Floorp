@@ -33,9 +33,13 @@
         <td>
           <select name="flag-[% flag.id %]">
             <option value="X"></option>
-            <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
-            <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
-            <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+            [% IF flag.is_active %]
+              <option value="+" [% "selected" IF flag.status == "+" %]>+</option>
+              <option value="-" [% "selected" IF flag.status == "-" %]>-</option>
+              <option value="?" [% "selected" IF flag.status == "?" %]>?</option>
+            [% ELSE %]
+              <option value="[% flag.status %]" selected>[% flag.status %]</option>
+            [% END %]
           </select>
         </td>
         <td>

@@ -209,8 +209,7 @@ sub show_bug {
     my $flag_types = 
       Bugzilla::FlagType::match({ 'target_type'  => 'bug', 
                                   'product_id'   => $bug{'product_id'}, 
-                                  'component_id' => $bug{'component_id'}, 
-                                  'is_active'    => 1 });
+                                  'component_id' => $bug{'component_id'});
     foreach my $flag_type (@$flag_types) {
         $flag_type->{'flags'} = 
           Bugzilla::Flag::match({ 'bug_id'      => $id , 
@@ -219,13 +218,21 @@ sub show_bug {
     }
     $vars->{'flag_types'} = $flag_types;
 
-    # The number of types of flags that can be set on attachments
-    # to this bug.  If none, flags won't be shown in the list of attachments.
-    $vars->{'num_attachment_flag_types'} = 
-      Bugzilla::FlagType::count({ 'target_type'  => 'a', 
-                        'product_id'   => $bug{'product_id'}, 
-                        'component_id' => $bug{'component_id'}, 
-                        'is_active'    => 1 });
+    # The number of types of flags that can be set on attachments to this bug
+    # and the number of flags on those attachments.  One of these counts must be
+    # greater than zero in order for the "flags" column to appear in the table 
+    # of attachments.
+    my $num_attachment_flag_types = 
+      Bugzilla::FlagType::count({ 'target_type'  => 'attachment', 
+                                  'product_id'   => $bug{'product_id'}, 
+                                  'component_id' => $bug{'component_id'},
+                                  'is_active'    => 1 });
+    my $num_attachment_flags = 
+      Bugzilla::Flag::count({ 'target_type'  => 'attachment', 
+                              'bug_id'       => $id });
+    
+    $vars->{'show_attachment_flags'} 
+      = $num_attachment_flag_types || $num_attachment_flags;
 
     # Dependencies
     my @list;

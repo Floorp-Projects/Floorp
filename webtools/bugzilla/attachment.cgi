@@ -555,12 +555,11 @@ sub edit
   SendSQL("SELECT product_id, component_id FROM bugs WHERE bug_id = $bugid");
   my ($product_id, $component_id) = FetchSQLData();
   my $flag_types = Bugzilla::FlagType::match({ 'target_type'  => 'attachment' , 
-                                     'product_id'   => $product_id , 
-                                     'component_id' => $component_id , 
-                                     'is_active'    => 1});
+                                               'product_id'   => $product_id , 
+                                               'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
     $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'}, 
-                                          'attach_id' => $::FORM{'id'} });
+                                                    'attach_id' => $::FORM{'id'} });
   }
   $vars->{'flag_types'} = $flag_types;
   

@@ -19,16 +19,13 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
-[%# Whether or not to include flags. %]
-[% display_flags = num_attachment_flag_types > 0 %]
-
 <br>
 <table cellspacing="0" cellpadding="4" border="1">
   <tr>
     <th bgcolor="#cccccc" align="left">Attachment</th>
     <th bgcolor="#cccccc" align="left">Type</th>
     <th bgcolor="#cccccc" align="left">Created</th>
-    [% IF display_flags %]
+    [% IF show_attachment_flags %]
       <th bgcolor="#cccccc" align="left">Flags</th>
     [% END %]
     <th bgcolor="#cccccc" align="left">Actions</th>
@@ -55,7 +52,7 @@
 
       <td valign="top">[% attachment.date %]</td>
 
-      [% IF display_flags %]
+      [% IF show_attachment_flags %]
         <td valign="top">
           [% IF attachment.flags.size == 0 %]
             <i>none</i>
@@ -85,7 +82,7 @@
   [% END %]
 
   <tr>
-    <td colspan="[% display_flags ? 4 : 3 %]">
+    <td colspan="[% show_attachment_flags ? 4 : 3 %]">
       <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
     </td>
     <td colspan="1">
