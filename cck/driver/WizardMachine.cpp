@@ -824,7 +824,8 @@ BOOL CWizardMachineApp::interpret(CString cmd)
 					FillGlobalWidgetArray(CachePath);  // Ignore failure, we'll write one out later
 				}
 			}
-			free(pcmd);
+			// Don't free this!
+			//free(pcmd);
 		}
 
 	return TRUE;
