@@ -33,7 +33,7 @@ endif
 
 MODULE = exthandler
 LIBRARY_NAME    = exthandler_s
-REQUIRES	= xpcom string mime uriloader dom necko rdf webshell
+REQUIRES	= xpcom string mimetype uriloader dom necko rdf webshell
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 OSDIR	= os2
