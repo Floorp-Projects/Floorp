@@ -38,10 +38,10 @@
 <!ENTITY GeneratedName.accesskey               "N">
 <!ENTITY PrimaryEmail.label                    "Email">
 <!ENTITY PrimaryEmail.accesskey                "E">
-<!ENTITY Company.label                         "Company">
-<!ENTITY Company.accesskey                     "C">
+<!ENTITY Company.label                         "Organization">
+<!ENTITY Company.accesskey                     "z">
 <!ENTITY _PhoneticName.label                   "Phonetic Name">
-<!ENTITY _PhoneticName.accesskey               "O">
+<!ENTITY _PhoneticName.accesskey               "o">
 <!ENTITY NickName.label                        "Nickname">
 <!ENTITY NickName.accesskey                    "i">
 <!ENTITY SecondEmail.label                     "Additional Email">
