@@ -74,7 +74,8 @@ XPT_DumpXPTString(XPTString *str);
 
 PRBool
 XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
-                        const int indent, PRBool verbose_mode);
+                        const int indent, PRBool verbose_mode,
+                        PRBool is_result);
 
 PRBool
 XPT_DumpTypeDescriptor(XPTTypeDescriptor *td, int indent, 
@@ -174,8 +175,8 @@ main(int argc, char **argv)
    
         if (param_problems) {
             fprintf(stdout, "\nWARNING: ParamDescriptors are present with "
-                    "no in/out flag information.\nThese have been marked "
-                    "with 'XXX'.\n");
+                    "bad in/out/retval flag information.\nThese have been marked "
+                    "with 'XXX'.\nRemember, retval params should always be marked as out!\n");
         }
 
         XPT_DestroyXDRState(state);
@@ -471,13 +472,13 @@ XPT_DumpMethodDescriptor(XPTHeader *header, XPTMethodDescriptor *md,
             fprintf(stdout, "%*sParameter #%d:\n", new_indent, " ", i);
             
             if (!XPT_DumpParamDescriptor(header, &md->params[i], more_indent, 
-                                         verbose_mode))
+                                         verbose_mode, PR_FALSE))
                 return PR_FALSE;
         }
    
         fprintf(stdout, "%*sResult:\n", indent, " ");
         if (!XPT_DumpParamDescriptor(header, md->result, new_indent,
-                                     verbose_mode)) {
+                                     verbose_mode, PR_TRUE)) {
             return PR_FALSE;
         }
     } else {
@@ -565,13 +566,29 @@ XPT_DumpXPTString(XPTString *str)
 
 PRBool
 XPT_DumpParamDescriptor(XPTHeader *header, XPTParamDescriptor *pd,
-                        const int indent, PRBool verbose_mode)
+                        const int indent, PRBool verbose_mode, 
+                        PRBool is_result)
 {
     int new_indent = indent + BASE_INDENT;
     
-    if (!XPT_PD_IS_IN(pd->flags) && !XPT_PD_IS_OUT(pd->flags)) {
+    if (!XPT_PD_IS_IN(pd->flags) && 
+        !XPT_PD_IS_OUT(pd->flags) &&
+        XPT_PD_IS_RETVAL(pd->flags)) {
         param_problems = PR_TRUE;
         fprintf(stdout, "XXX\n");
+    } else {
+        if (!XPT_PD_IS_IN(pd->flags) && !XPT_PD_IS_OUT(pd->flags)) {
+            if (is_result) {
+                if (XPT_TDP_TAG(pd->type.prefix) != TD_UINT32 &&
+                    XPT_TDP_TAG(pd->type.prefix) != TD_VOID) {
+                    param_problems = PR_TRUE;
+                    fprintf(stdout, "XXX\n");   
+                }
+            } else {
+                param_problems = PR_TRUE;
+                fprintf(stdout, "XXX\n");
+            }
+        }
     }
 
     fprintf(stdout, "%*sIn Param?   ", indent, " ");

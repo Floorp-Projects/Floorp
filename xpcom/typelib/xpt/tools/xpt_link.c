@@ -32,10 +32,8 @@
 #endif
 
 /* Forward declarations. */
-int compare_IDEs_by_IID(XPTInterfaceDirectoryEntry *ide1,
-                        XPTInterfaceDirectoryEntry *ide2);
-int compare_IDEs_by_name(XPTInterfaceDirectoryEntry *ide1,
-                        XPTInterfaceDirectoryEntry *ide2);
+static int compare_IDEs_by_IID(const void *ap, const void *bp);
+static int compare_IDEs_by_name(const void *ap, const void *bp);
 static int compare_IIDs(const void *ap, const void *bp);
 PRBool copy_IDE(XPTInterfaceDirectoryEntry *from, 
                 XPTInterfaceDirectoryEntry *to);
@@ -143,6 +141,11 @@ main(int argc, char **argv)
         }
     }
  
+    qsort(IDE_array, 
+          numberOfInterfaces, 
+          sizeof(XPTInterfaceDirectoryEntry), 
+          compare_IDEs_by_IID);
+
     header = XPT_NewHeader(numberOfInterfaces);
     ann = XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
     header->annotations = ann;
@@ -195,20 +198,21 @@ main(int argc, char **argv)
     return 0;        
 }
 
-int 
-compare_IDEs_by_IID(XPTInterfaceDirectoryEntry *ide1,
-                    XPTInterfaceDirectoryEntry *ide2)
+static int 
+compare_IDEs_by_IID(const void *ap,
+                    const void *bp)
 {
-    nsID *one = &ide1->iid;
-    nsID *two = &ide2->iid; 
+    const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
     
-    return compare_IIDs(one, two);
+    return compare_IIDs(&ide1->iid, &ide2->iid);
 }  
 
-int 
-compare_IDEs_by_name(XPTInterfaceDirectoryEntry *ide1,
-                    XPTInterfaceDirectoryEntry *ide2)
+static int 
+compare_IDEs_by_name(const void *ap,
+                    const void *bp)
 {
+    const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
+    
     return strcmp(ide1->name, ide2->name);
 }
     
