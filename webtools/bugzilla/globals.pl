@@ -967,8 +967,8 @@ sub GetLongDescriptionAsText {
                    "AND    longdescs.bug_id = $id ");
 
     if ($start && $start =~ /[1-9]/) {
-        # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Additional Comments" line in that case.)
+        # If $start is not all zeros, obtain the count-index
+        # of this comment for the leading "Comment #xxx" line.)
         $query .= "AND longdescs.bug_when > '$start'";
         SendSQL("SELECT count(*) FROM longdescs WHERE bug_id = $id AND bug_when <= '$start'");
         ($count) = (FetchSQLData());
@@ -983,7 +983,7 @@ sub GetLongDescriptionAsText {
         my ($who, $when, $text, $isprivate, $work_time, $already_wrapped) = 
             (FetchSQLData());
         if ($count) {
-            $result .= "\n\n------- Additional comment #$count from $who".Param('emailsuffix')."  ".
+            $result .= "\n\n------- Comment #$count from $who".Param('emailsuffix')."  ".
                 Bugzilla::Util::format_time($when) . " -------\n";
         }
         if (($isprivate > 0) && Param("insidergroup")) {

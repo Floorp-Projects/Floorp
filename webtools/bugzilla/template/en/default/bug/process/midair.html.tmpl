@@ -53,7 +53,7 @@
 
 [% IF comments.size > start_at %]
 <p>
-  Added comments:
+  Added the comment(s):
   <blockquote>
     [% PROCESS "bug/comments.html.tmpl" %]
   </blockquote>
@@ -61,7 +61,7 @@
 [% END %]
 
 <p>
-  Your additional comment was:<br>
+  Your comment was:<br>
   <blockquote><pre>[% form.comment FILTER html %]</pre></blockquote>
 </p>
 
