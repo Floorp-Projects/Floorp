@@ -11,6 +11,10 @@ tree[id="searchengines"] > treecol[id="CheckboxColumn"] {
  width: 40px;
 }
 
+treecol[sortActive="true"] {
+ background-color: lightgray;
+}
+
 titledbutton {
   display: inline;
   color:black; 
