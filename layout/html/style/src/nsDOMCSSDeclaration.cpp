@@ -1671,3 +1671,15 @@ nsDOMCSSDeclaration::SetZIndex(const nsString& aZIndex)
   return SetProperty("z-index", aZIndex, "");
 }
 
+
+NS_IMETHODIMP 
+nsDOMCSSDeclaration::GetOpacity(nsString& aOpacity)
+{
+  return GetPropertyValue("opacity", aOpacity);
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::SetOpacity(const nsString& aOpacity)
+{
+  return SetProperty("opacity", aOpacity, "");
+}
