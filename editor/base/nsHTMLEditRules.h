@@ -57,6 +57,7 @@ protected:
   nsresult WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ESelectionCollapseDirection aAction, PRBool *aCancel);
   nsresult WillMakeList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel);
+  nsresult WillRemoveList(nsIDOMSelection *aSelection, PRBool aOrderd, PRBool *aCancel);
   nsresult WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult WillAlign(nsIDOMSelection *aSelection, const nsString *alignType, PRBool *aCancel);
@@ -83,8 +84,10 @@ protected:
   static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBlockquote(nsIDOMNode *aNode);
   static PRBool IsDiv(nsIDOMNode *aNode);
+  static PRBool IsMailCite(nsIDOMNode *aNode);
 
   nsresult IsEmptyBlock(nsIDOMNode *aNode, PRBool *outIsEmptyBlock);
+  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyNode);
   PRBool IsFirstNode(nsIDOMNode *aNode);
   PRBool IsLastNode(nsIDOMNode *aNode);
 
@@ -115,6 +118,10 @@ protected:
                            nsIDOMNode *aNodeRight, 
                            nsCOMPtr<nsIDOMNode> *aOutMergeParent, 
                            PRInt32 *aOutMergeOffset);
+
+  nsresult GetTopEnclosingMailCite(nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutCiteNode);
+  nsresult CleanUpSelection(nsIDOMSelection *aSelection);
+  nsresult PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList);
 
 };
 
