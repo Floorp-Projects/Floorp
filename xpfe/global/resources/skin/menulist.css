@@ -152,9 +152,12 @@
       border-bottom       : 2px groove #CCCCCC;
     }
 
+
   menulist > menupopup > menuitem 
     {
       padding             : 0px;
+      min-width: 0px;
+      max-width: auto;
     }
 
   menulist > menupopup > menuitem > .menu-left 
