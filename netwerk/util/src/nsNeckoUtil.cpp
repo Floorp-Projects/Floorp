@@ -123,4 +123,14 @@ NS_MakeAbsoluteURI(const nsString& spec, nsIURI* baseURI, nsString& result)
     return rv;
 }
 
+nsresult
+NS_NewLoadGroup(nsILoadGroup* *result)
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    return serv->NewLoadGroup(result);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
