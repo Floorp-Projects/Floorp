@@ -46,6 +46,11 @@ include $(topsrcdir)/config/config.mk
 MODULE		= javaxpcom
 LIBRARY_NAME	= javaxpcom
 
+# On Mac OS X, JNI libraries must end with a '.jnilib' extension
+ifeq ($(OS_ARCH),Darwin)
+DLL_SUFFIX = .jnilib
+endif
+
 REQUIRES	= xpcom \
 		  string \
 		  embed_base \
