@@ -236,8 +236,9 @@ protected:
                                       
   nsIXBLDocumentInfo* mXBLDocInfoWeak; // A pointer back to our doc info.  Weak, since it owns us.
 
-  nsObjectHashtable* mAttributeTable; // A table for attribute entries.  Used to efficiently
-                                      // handle attribute changes.
+  nsObjectHashtable* mAttributeTable; // A table for attribute containers. Namespace IDs are used as
+                                      // keys in the table. Containers are nsObjectHashtables.
+                                      // This table is used to efficiently handle attribute changes.
 
   nsObjectHashtable* mInsertionPointTable; // A table of insertion points for placing explicit content
                                            // underneath anonymous content.

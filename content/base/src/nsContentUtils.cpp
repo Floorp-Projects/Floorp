@@ -1627,6 +1627,66 @@ nsContentUtils::CheckQName(const nsAString& aQualifiedName,
                                    aNamespaceAware, &colon);
 }
 
+//static
+nsresult
+nsContentUtils::SplitQName(nsIContent* aNamespaceResolver,
+                           const nsAFlatString& aQName,
+                           PRInt32 *aNamespace, nsIAtom **aLocalName)
+{
+  nsIParserService* parserService = GetParserServiceWeakRef();
+  NS_ENSURE_TRUE(parserService, NS_ERROR_FAILURE);
+
+  const PRUnichar* colon;
+  nsresult rv = parserService->CheckQName(aQName, PR_TRUE, &colon);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (colon) {
+    const PRUnichar* end;
+    aQName.EndReading(end);
+    nsAutoString nameSpace;
+    rv = LookupNamespaceURI(aNamespaceResolver, Substring(aQName.get(), colon),
+                            nameSpace);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    GetNSManagerWeakRef()->GetNameSpaceID(nameSpace, aNamespace);
+    if (*aNamespace == kNameSpaceID_Unknown)
+      return NS_ERROR_FAILURE;
+
+    *aLocalName = NS_NewAtom(Substring(colon + 1, end));
+  }
+  else {
+    *aNamespace = kNameSpaceID_None;
+    *aLocalName = NS_NewAtom(aQName);
+  }
+  NS_ENSURE_TRUE(aLocalName, NS_ERROR_OUT_OF_MEMORY);
+  return NS_OK;
+}
+
+// static
+nsresult
+nsContentUtils::LookupNamespaceURI(nsIContent* aNamespaceResolver,
+                                   const nsAString& aNamespacePrefix,
+                                   nsAString& aNamespaceURI)
+{
+  nsCOMPtr<nsIAtom> name;
+  if (!aNamespacePrefix.IsEmpty()) {
+    name = do_GetAtom(aNamespacePrefix);
+    NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
+  }
+  else {
+    name = nsLayoutAtoms::xmlnsNameSpace;
+  }
+  // Trace up the content parent chain looking for the namespace
+  // declaration that declares aNamespacePrefix.
+  for (nsIContent* content = aNamespaceResolver; content;
+       content = content->GetParent()) {
+    if (content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI) ==
+        NS_CONTENT_ATTR_HAS_VALUE)
+      return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 // static
 nsresult
 nsContentUtils::GetNodeInfoFromQName(const nsAString& aNamespaceURI,
