@@ -50,6 +50,7 @@ pref("app.version",
 pref("app.build_id", 
 #expand __BUILD_ID__
 );
+pref("app.extensions.version", "0.6");
 
 #ifdef XP_MACOSX
 pref("mail.biff.animate_dock_icon", false);
