@@ -92,8 +92,6 @@ typedef struct {
 	char  *szTrustAuthority;	/* the trust authority rating service  */
 	XP_List  *nameList;		/* the list of names of the specific cookies that this label is for */
 	char  *szBy;			/* the by field from the PICS label */
-	char  *szURL;			/* the url that this trust label is for */
-	time_t TimeStamp;		/* when the entry was created, used for cleaning up stall entries */
 } TrustLabel;
 
 TrustLabel *TL_Construct();
@@ -102,12 +100,11 @@ void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor);
 void TL_SetSignatory( TrustLabel *ALabel, char *Signatory );
 void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority );
 void TL_SetByField( TrustLabel *ALabel, char *ByField );
-void TL_SetURLField( TrustLabel *ALabel, char *URLField );
 
 /* utility function that use TrustLabel */
 void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value );
 PRBool IsTrustLabelsEnabled(void);
-PUBLIC PRBool MatchCookieToLabel2(  char *CurURL,  char *CookieName,
+PUBLIC PRBool MatchCookieToLabel2( char *TargetURL,  char *CookieName,
 	char *CookiePath, char *CookieHost, 
 	TrustLabel **TheLabel );
 

@@ -26,6 +26,11 @@
    executed.
 */
 
+#if defined(CookieManagement)
+#define TRUST_LABELS 1
+#endif
+
+
 /* make sure we only include this once */
 #ifndef _NET_PROTO_H_
 #define _NET_PROTO_H_
@@ -489,6 +494,9 @@ struct URL_Struct_ {
 	char	*privacy_policy_url;
 	char	*etag;						  /* HTTP/1.1 Etag */
 	char    *origin_url;                  /* original referrer of javascript: URL */
+#ifdef TRUST_LABELS
+	XP_List	*TrustList;					  /* the list of trust labels that came in the header */
+#endif
 };
 
 #ifndef NU_CACHE /* Not on my branch you don't */

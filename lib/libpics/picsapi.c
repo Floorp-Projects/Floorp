@@ -709,7 +709,7 @@ cleanup:
  *		services and the labels for each service to see if there are any trust
  *		labels.
  *	3.	If trust label are found they are added to the TrustList which is part
- *		of the URL struct.
+ *		of the URL_Struct struct.
  * 
  *  The two main functions for the trust label processing are:
  *  ProcessSingleLabel -  this is where the parsing engine presents ONE label with 
@@ -744,6 +744,7 @@ cleanup:
 #include "jscookie.h"
 #include "mkaccess.h"		/* use #include "trust.h" when it is broken out of mkaccess.h */
 #include "prlong.h"
+#include "mkgeturl.h"
 
 
 #ifdef _DEBUG
@@ -771,10 +772,6 @@ extern int NET_SameDomain(char * currentHost, char * inlineHost);
 extern char * lowercase_string(char *string);
 extern char * illegal_to_underscore(char *string);
 
-/* THIS IS THE MASTER LIST OF TRUST LABELS.  
-   The labels stay on this list until they are matched to an incoming cookie. */
-XP_List *TrustList = NULL;
-
 
 #ifdef _DEBUG
 /**************    FOR DEBUGGINGG   ***********************************/ 
@@ -782,7 +779,7 @@ XP_List *TrustList = NULL;
 LabelTargetCallback_t targetCallback;
 StateRet_t trustCallback(CSLabel_t * pCSMR, CSParse_t * pCSParse, CSLLTC_t target, PRBool closed, void * pVoid)
 {
-#ifdef NOPE
+#ifdef NOPE									  /* for debuggin */
 	static int Total = 0;
     char space[256];
     int change = closed ? -target : target;
@@ -855,7 +852,7 @@ StateRet_t trustErrorHandler(CSLabel_t * pCSLabel, CSParse_t * pCSParse,
  *			draft-ietf-http-trust-state-mgt-02.txt
  * 
  *---------------------------------------------------------------------------------------------------- */
-PUBLIC void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value )
+PUBLIC void PICS_ExtractTrustLabel(URL_Struct *URL_s, char *value )
 {
 	CSParse_t * pCSParse = 0;
     CSDoMore_t status;
@@ -867,8 +864,7 @@ PUBLIC void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value )
 #endif
 
 	/* validate input args */
-	if ( !URL_s || !URL_s->address ||
-		 !value || *value == '\0' ) return;
+	if ( !URL_s || !value || *value == '\0' ) return;
 
 	/* parse the PICS label and extract the trust label information from it */
 	/* ignoring the other rating information. */
@@ -897,7 +893,7 @@ PUBLIC void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value )
 			/* make sure the PICS version is correct */
 			if ( PICS_VERSION <= FVal_value(&CSLabel_getCSLLData(pCSLabel)->version) ) {
 				/* iterate thru each of the service IDs in this label calling ProcessService for each*/
-				CSLabel_iterateServices( pCSLabel, ProcessService, NULL, 0, (void *)(URL_s->address));
+				CSLabel_iterateServices( pCSLabel, ProcessService, NULL, 0, (void *)(URL_s));
 				/* IF there are valid trust labels in this PICS label they are added to  */
 				/* the trust list at TrustList */
 			}
@@ -916,7 +912,7 @@ PUBLIC void PICS_ExtractTrustLabel( URL_Struct *URL_s, char *value )
  * 			
  *  
  *----------------------------------------------------------------------------------------------------*/
-CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * URL_s)
 {
 	CSError_t ret = CSError_OK;
 	if ( IsValidTrustService( CSLabel_getServiceName( pCSLabel ) ) ) {
@@ -926,7 +922,7 @@ CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const cha
 		   
 		   So iterate thru the labels which if they have the purpose, Recipients and identifiable ratings
 		   will be trust labels																	   */
-		ret = CSLabel_iterateLabels(pCSLabel, ProcessLabel, pParms, 0, szURL);
+		ret = CSLabel_iterateLabels(pCSLabel, ProcessLabel, pParms, 0, URL_s);
 	} else {
 		/* if this is not a trust label but a regular PICS label it will usually 
 		   fail the rating service.  So this is an expected occurance. */
@@ -940,14 +936,13 @@ CSError_t ProcessService(CSLabel_t * pCSLabel, State_Parms_t * pParms, const cha
  * 			
  *  
  *----------------------------------------------------------------------------------------------------*/
- CSError_t ProcessLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+ CSError_t ProcessLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * URL_s)
 {
-    return CSLabel_iterateSingleLabels(pCSLabel, ProcessSingleLabel, pParms, 0, szURL);
+    return CSLabel_iterateSingleLabels(pCSLabel, ProcessSingleLabel, pParms, 0, URL_s);
 }
 
 void TL_SetTrustAuthority( TrustLabel *ALabel, char *TrustAuthority );
 void TL_SetByField( TrustLabel *ALabel, char *szBy );
-void TL_SetURLField( TrustLabel *ALabel, char *szURL );
 void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor);
 
 /*----------------------------------------------------------------------------------------------------
@@ -957,14 +952,16 @@ void TL_ProcessForAttrib( TrustLabel *ALabel, char *szFor);
  *  
  *  Input:
  *    pCSLabel - current parsed label instance
- *    szURL    - the URL associated with this trust label
+ *    URL_s  - the URL_Struct associated with this trust label from the HTTP header
  *  NOTES:
  * 	1.  If the same rating is seen twice in one single label, the first VALID instance is used.
  * 
  * History:
+ *   9/10/98 Paul Chek - switch recipient back to supporting a single value.
+ *						 NOTE: this is now controlled by RECIPIENT_RANGE
  *   8/22/98 Paul Chek - switch recipient to support a range of values
  *---------------------------------------------------------------------------------------------------- */
-CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * szURL)
+CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const char * identifier, void * URL_s)
 {
 /* tracks the ratings I have seen */
 #define HAVE_PURPOSE	0x1
@@ -995,10 +992,11 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 	ExtensionData_t	*AData;
 	char	*AName;				
 	PRBool	bForgedLabel;
+	URL_Struct *TheURL_s;
 
 	/* march thru the ratings looking for purpose, Recipients and identification.  When found save their values. */
 	int count = 0;
-	if (!pCSLabel || !szURL ) {
+	if (!pCSLabel || !URL_s ) {
 		/* oops got a bad one */
 		ret = CSError_BAD_PARAM;
 	} else {
@@ -1051,6 +1049,12 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 				/* is it the Recipients rating? */
 				} else if ( (AllRatings & HAVE_RECIPIENTS) &&
 							!XP_STRCASECMP(SVal_value(&Rating->identifier), RecipientsRating.szName)) {
+#ifndef RECIPIENT_RANGE
+					/* yes - is the range valid?*/
+					if ( IsValidValue( &Rating->value, RecipientsRating.Min, RecipientsRating.Max, &RecpRange ) ) {
+						AllRatings &= (~HAVE_RECIPIENTS );
+					}
+#else
 					/* Was a single value given?? */
 					if ( IsValidValue( &Rating->value, RecipientsRating.Min, RecipientsRating.Max, &TempValue ) ) {
 						RecpRange = RecpRange | ( 1 << TempValue );
@@ -1076,6 +1080,7 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 							}
 						}
 					}
+#endif
 				/* is it the identifiable rating   */
 				} else if ( (AllRatings & HAVE_ID) &&
 							!XP_STRCASECMP(SVal_value(&Rating->identifier), IDRating.szName)) {
@@ -1100,7 +1105,6 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 					TheLabel->ExpDate = ExpDate;
 					TL_SetTrustAuthority( TheLabel, CSLabel_getServiceName( pCSLabel ) );
 					TL_SetByField( TheLabel, SVal_value(&LabelOptions->by) );
-					TL_SetURLField( TheLabel, szURL );
 					bForgedLabel = FALSE;
 
 					/* if this is a generic label then set the isGeneric flag */
@@ -1143,14 +1147,17 @@ CSError_t ProcessSingleLabel(CSLabel_t * pCSLabel, State_Parms_t * pParms, const
 						/* seperate the path and domain out of the "for" label attribute */
 						TL_ProcessForAttrib( TheLabel, SVal_value(&LabelOptions->fur) );
 
-						/* add the trust label to the list of trust labels in this header */
-						if ( !TrustList ) {
+						/* add the trust label to the list of trust labels in this header.
+						 * The list of trust labels is maintained in the URL_Struct that 
+						 * was passed in.  */
+						TheURL_s = (URL_Struct *)URL_s;
+						if ( TheURL_s->TrustList == NULL ) {
 							/* create the list */
-							TrustList = XP_ListNew();
+							TheURL_s->TrustList = XP_ListNew();
 						}
-						if ( TrustList ) {
+						if ( TheURL_s->TrustList ) {
 							/* NOTE: this is the only place where trust label are added to the TrustList */
-							XP_ListAddObjectToEnd( TrustList, TheLabel );
+							XP_ListAddObjectToEnd( TheURL_s->TrustList, TheLabel );
 							HTTrace( "  Valid trust label\n" );
 						} else {
 							HTTrace( "ERROR in ProcessSingleLabel: unable to allocate the trust list\n" );
@@ -1276,7 +1283,6 @@ PRBool IsValidTrustService( char *ServiceName )
 {
 	char	*PrefName;
 	char	*escaped_service;
-	PRBool bool_pref;
 
 	if ( ServiceName && *ServiceName ) {
 		/* Build the preference string - first escape the service name */
@@ -1387,12 +1393,11 @@ PRBool IsPrefix( char *path1, char *path2 )
  *  FALSE if none found
  *  TheLabel - ptr to the matching trust label
  *----------------------------------------------------------------------------------------------------*/
-PUBLIC PRBool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, TrustLabel **TheLabel )
+PUBLIC PRBool MatchCookieToLabel( char *TargetURL, JSCFCookieData *CookieData, TrustLabel **TheLabel )
 {
 	PRBool Status = FALSE;
-	if ( CurURL && CookieData && 
-		 !XP_ListIsEmpty( TrustList ) && TheLabel ) {
-		Status = MatchCookieToLabel2( CurURL, CookieData->name_from_header,
+	if ( TargetURL && CookieData && TheLabel ) {
+		Status = MatchCookieToLabel2( TargetURL, CookieData->name_from_header,
 							  CookieData->path_from_header, CookieData->host_from_header, 
 							  TheLabel );
 	} 
@@ -1404,7 +1409,6 @@ PUBLIC PRBool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, Trus
  * 			This implements part of section 3.3.1 of the trust label spec dealing 
  * 			with figuring out if a cookie and a trust label are "compatiable".
  *
- * 	TrustList	- the list of trust labels to search
  *  CookieName  - the name of the cookie 
  *  CookiePath  - the path for the cookie
  *  CookieHost  - the host for the cookie 
@@ -1418,7 +1422,7 @@ PUBLIC PRBool MatchCookieToLabel( char *CurURL, JSCFCookieData *CookieData, Trus
  * History:
  *  Paul Chek - initial creation
  ****************************************************************/
-PUBLIC PRBool MatchCookieToLabel2( char *CurURL, char *CookieName,
+PUBLIC PRBool MatchCookieToLabel2(char *TargetURL, char *CookieName,
 								 char *CookiePath, char *CookieHost, 
 								 TrustLabel **TheLabel )
 {
@@ -1432,14 +1436,14 @@ PUBLIC PRBool MatchCookieToLabel2( char *CurURL, char *CookieName,
 	XP_List *TempTrustList;
 
 	/* make sure I have the data I need										 */
-	if ( CurURL && CookieName && CookiePath && CookieHost &&
-		 !XP_ListIsEmpty( TrustList ) && TheLabel ) {
+	if ( TargetURL && XP_STRLEN( TargetURL ) && 
+		 CookieName && CookiePath && CookieHost &&
+		 TheLabel ) {
 		/* look thru the list of trust labels for one to match this cookie */
 		/* First see if there is a named trust label that matches the cookie */
-		TempTrustList = TrustList;
+		TempTrustList = NET_GetTrustList( TargetURL );
+		if ( TempTrustList ) {
 		while( (ALabel = (TrustLabel *)XP_ListNextObject( TempTrustList )) ) {
-			/* is this label for this URL? */
-			if ( XP_STRCASECMP( CurURL, ALabel->szURL ) == 0 ) {
 				/* is this label for a specific cookie(s)?? */
 				bNameMatch = FALSE;
 				if ( ALabel->nameList != NULL ) {
@@ -1509,8 +1513,8 @@ PUBLIC PRBool MatchCookieToLabel2( char *CurURL, char *CookieName,
 						}
 					}		/* end of if ( ALabel->isGeneric  */
 				}		/* end of if ( NET_SameDomain */
-			}			/* end of if ( XP_STRNCASECMP( CurURL, */
 		}			/* end of while( (ALabel */
+		}			/* end of if ( tmpEntry && tmpEntry */
 	}
 
 	/* Was there a match?? */
@@ -1596,8 +1600,6 @@ TrustLabel *TL_Construct()
 		ALabel->path = NULL;  
 		ALabel->nameList = NULL;
 		ALabel->szBy = NULL;  
-		ALabel->szURL = NULL;  
-		time(&ALabel->TimeStamp);	/* second since 1970 */
 	}
 	return ALabel;
 
@@ -1616,7 +1618,6 @@ PUBLIC void TL_Destruct( TrustLabel *ALabel )
 		if ( ALabel->path ) XP_FREE( ALabel->path );
 		if ( ALabel->szTrustAuthority ) XP_FREE( ALabel->szTrustAuthority );
 		if ( ALabel->szBy ) XP_FREE( ALabel->szBy );
-		if ( ALabel->szURL ) XP_FREE( ALabel->szURL );
 		if ( ALabel->nameList ) {
 			while( (AName = (char *)XP_ListRemoveEndObject( ALabel->nameList )) ){
 				XP_FREE( AName );
@@ -1685,17 +1686,6 @@ void TL_SetByField( TrustLabel *ALabel, char *szBy )
 {
 	if ( ALabel && szBy ) {
 		NET_SACopy( &ALabel->szBy, szBy );
-	}
-}
-
-/*----------------------------------------------------------------------------------------------------
- *  Purpose: set the URL field in the label
- *  
- * ----------------------------------------------------------------------------------------------------*/ 
-void TL_SetURLField( TrustLabel *ALabel, char *szURL )
-{
-	if ( ALabel && szURL ) {
-		NET_SACopy( &ALabel->szURL, szURL );
 	}
 }
 
