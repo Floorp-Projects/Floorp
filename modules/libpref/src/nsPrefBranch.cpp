@@ -994,7 +994,7 @@ NS_IMETHODIMP nsRelativeFilePref::GetFile(nsILocalFile * *aFile)
     NS_ENSURE_ARG_POINTER(aFile);
     *aFile = mFile;
     NS_IF_ADDREF(*aFile);
-    return *aFile ? NS_OK : NS_ERROR_NULL_POINTER;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsRelativeFilePref::SetFile(nsILocalFile * aFile)
