@@ -943,8 +943,9 @@ nsDNSService::DequeueLookup(nsDNSLookup **lookup)
 
     nsAutoMonitor mon(mLookupQMon);
 
-    // Wait for notification of a queued request.
-    if (!mLookupQ)
+    // Wait for notification of a queued request, unless
+    // of course if we're in the process of shutting down.
+    if (!mLookupQ && !mShutdownInProgress)
         mon.Wait();
 
     // Got a request!!
@@ -967,22 +968,21 @@ nsDNSService::DequeueLookup(nsDNSLookup **lookup)
 ////////////////////////////////////////////////////////////////////////////////
 
 nsDNSService::nsDNSService()
-    : mState(NS_OK),
-      mMonitor(nsnull),
-      mLookups(64)
+    : mState(NS_OK)
+    , mMonitor(nsnull)
+    , mLookups(64)
 #if defined(XP_UNIX)
     , mLookupQ(nsnull)
+    , mLookupQMon(nsnull)
+    , mShutdownInProgress(PR_FALSE)
 #endif
 #ifdef DNS_TIMING
-      ,
-      mCount(0),
-      mTimes(0),
-      mSquaredTimes(0),
-      mOut(nsnull)
-
+    , mCount(0)
+    , mTimes(0)
+    , mSquaredTimes(0)
+    , mOut(nsnull)
 #endif
-    ,
-      mMyIPAddress(0)
+    , mMyIPAddress(0)
 {
     NS_INIT_REFCNT();
     
@@ -1262,9 +1262,7 @@ nsDNSService::Run(void)
         if (NS_FAILED(rv)) return rv;
 
         if (lookup) {
-            //
             // Got a request!!
-            //
             lookup->DoSyncLookup();
             NS_RELEASE(lookup);
         } else
@@ -1544,6 +1542,7 @@ nsDNSService::Shutdown()
             // Clear the lookup queue and wake up the worker thread.
             //
             nsAutoMonitor mon2(mLookupQMon);
+            mShutdownInProgress = PR_TRUE;
             if (mLookupQ) {
                 mLookupQ->ClearNextLookup();
                 NS_RELEASE(mLookupQ);
