@@ -53,7 +53,9 @@ ifdef CROSS_COMPILE
 GARBAGE += libhostxpt.$(LIB_SUFFIX) $(HOSTOBJS)
 
 libhostxpt.$(LIB_SUFFIX): $(HOSTOBJS)
+	rm -f $@
 	$(AR) $(AR_FLAGS) $@ $(HOSTOBJS)
+	$(RANLIB) $@
 
 %.o-h: %.c
 	$(HOST_CC) $(HOST_CFLAGS) -I$(DIST)/include $(NSPR_CFLAGS) -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG) -c -o $@ $<
