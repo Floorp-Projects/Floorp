@@ -30,7 +30,8 @@ typedef enum
   nsImageType_kXBM = 2,
   nsImageType_kJPEG = 3,
   nsImageType_kPPM = 4,
-  nsImageType_kPNG = 5
+  nsImageType_kPNG = 5,
+  nsImageType_kART = 6
 } nsImageType;
 
 // IID for the nsIImageManager interface
