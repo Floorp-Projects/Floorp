@@ -299,7 +299,7 @@ nsListControlFrame::Reflow(nsIPresContext&          aPresContext,
 
   mBorderOffsetY = border.top;
 
-  scrolledAreaWidth  -= (border.left + border.right + padding.top + padding.bottom);
+  scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
   scrolledAreaHeight -= (border.top + border.bottom);
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
