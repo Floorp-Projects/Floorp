@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.10 $ $Date: 2001/11/28 16:23:44 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.11 $ $Date: 2001/11/28 20:19:38 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -51,11 +51,11 @@ static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.10 $ $Da
 #include "base.h"
 #endif /* BASE_H */
 
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 static PRLogModuleInfo *s_log = NULL;
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 static void log_item_dump(const char *msg, NSSItem *it)
 {
     char buf[33];
@@ -74,7 +74,7 @@ static void log_item_dump(const char *msg, NSSItem *it)
 }
 #endif
 
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 static void log_cert_ref(const char *msg, NSSCertificate *c)
 {
     PR_LOG(s_log, PR_LOG_DEBUG, ("%s: %s", msg,
@@ -180,7 +180,7 @@ nssTrustDomain_InitializeCache
 {
     NSSArena *arena;
     nssTDCertificateCache *cache = td->cache;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     s_log = PR_NewLogModule("nss_cache");
     PR_ASSERT(s_log);
 #endif
@@ -226,7 +226,7 @@ nssTrustDomain_InitializeCache
     cache->arena = arena;
     PZ_Unlock(cache->lock);
     td->cache = cache;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("Cache initialized."));
 #endif
     return PR_SUCCESS;
@@ -235,7 +235,7 @@ loser:
     PZ_DestroyLock(cache->lock);
     nssArena_Destroy(arena);
     td->cache = NULL;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("Cache initialization failed."));
 #endif
     return PR_FAILURE;
@@ -250,7 +250,7 @@ nssTrustDomain_DestroyCache
     PZ_DestroyLock(td->cache->lock);
     nssArena_Destroy(td->cache->arena);
     td->cache = NULL;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("Cache destroyed."));
 #endif
     return PR_SUCCESS;
@@ -265,7 +265,7 @@ remove_issuer_and_serial_entry
 {
     /* Remove the cert from the issuer/serial hash */
     nssHash_Remove(cache->issuerAndSN, cert);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_cert_ref("removed issuer/sn", cert);
 #endif
     return PR_SUCCESS;
@@ -289,7 +289,7 @@ remove_subject_entry
 	nssList_Remove(ce->entry.list, cert);
 	*subjectList = ce->entry.list;
 	nssrv = PR_SUCCESS;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("removed cert", cert);
 	log_item_dump("from subject list", &cert->subject);
 #endif
@@ -311,7 +311,7 @@ remove_nickname_entry
     if (cert->nickname) {
 	nssHash_Remove(cache->nickname, cert->nickname);
 	nssrv = PR_SUCCESS;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("removed nickname %s", cert->nickname));
 #endif
     } else {
@@ -337,7 +337,7 @@ remove_email_entry
 	    nssList *subjects = ce->entry.list;
 	    /* Remove the subject list from the email hash */
 	    nssList_Remove(subjects, subjectList);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	    log_item_dump("removed subject list", &cert->subject);
 	    PR_LOG(s_log, PR_LOG_DEBUG, ("for email %s", cert->email));
 #endif
@@ -347,7 +347,7 @@ remove_email_entry
 		*/
 		(void)nssList_Destroy(subjects);
 		nssHash_Remove(cache->email, cert->email);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 		PR_LOG(s_log, PR_LOG_DEBUG, ("removed email %s", cert->email));
 #endif
 	    }
@@ -366,13 +366,13 @@ nssTrustDomain_RemoveCertFromCache
 {
     nssList *subjectList;
     PRStatus nssrv;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_cert_ref("attempt to remove cert", cert);
 #endif
     PZ_Lock(td->cache->lock);
     if (!nssHash_Exists(td->cache->issuerAndSN, cert)) {
 	PZ_Unlock(td->cache->lock);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("but it wasn't in the cache"));
 #endif
 	return;
@@ -403,7 +403,7 @@ nssTrustDomain_RemoveCertFromCache
 loser:
     /* if here, then the cache is inconsistent.  For now, flush it. */
     PZ_Unlock(td->cache->lock);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("remove cert failed, flushing"));
 #endif
     nssTrustDomain_FlushCache(td, -1.0);
@@ -471,7 +471,7 @@ add_issuer_and_serial_entry
 {
     cache_entry *ce;
     ce = new_cache_entry(arena, (void *)cert);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_cert_ref("added to issuer/sn", cert);
 #endif
     return nssHash_Add(cache->issuerAndSN, cert, (void *)ce);
@@ -496,7 +496,7 @@ add_subject_entry
 	ce->lastHit = PR_Now();
 	/* The subject is already in, add this cert to the list */
 	nssrv = nssList_AddUnique(ce->entry.list, cert);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("added to existing subject list", cert);
 #endif
     } else {
@@ -521,7 +521,7 @@ add_subject_entry
 	    return nssrv;
 	}
 	*subjectList = list;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("created subject list", cert);
 #endif
     }
@@ -552,7 +552,7 @@ add_nickname_entry
 	    return PR_FAILURE;
 	}
 	nssrv = nssHash_Add(cache->nickname, cert->nickname, ce);
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("created nickname for", cert);
 #endif
     }
@@ -578,7 +578,7 @@ add_email_entry
 	nssrv = nssList_AddUnique(subjects, subjectList);
 	ce->hits++;
 	ce->lastHit = PR_Now();
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("added subject to email for", cert);
 #endif
     } else {
@@ -601,7 +601,7 @@ add_email_entry
 	if (nssrv != PR_SUCCESS) {
 	    return nssrv;
 	}
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("created email for", cert);
 #endif
     }
@@ -623,7 +623,7 @@ add_cert_to_cache
     PZ_Lock(td->cache->lock);
     /* If it exists in the issuer/serial hash, it's already in all */
     if (nssHash_Exists(td->cache->issuerAndSN, cert)) {
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	log_cert_ref("attempted to add cert already in cache", cert);
 #endif
 	PZ_Unlock(td->cache->lock);
@@ -752,7 +752,7 @@ nssTrustDomain_GetCertsForSubjectFromCache
 {
     NSSCertificate **rvArray = NULL;
     cache_entry *ce;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_item_dump("looking for cert by subject", subject);
 #endif
     PZ_Lock(td->cache->lock);
@@ -760,7 +760,7 @@ nssTrustDomain_GetCertsForSubjectFromCache
     if (ce) {
 	ce->hits++;
 	ce->lastHit = PR_Now();
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
     }
@@ -784,7 +784,7 @@ nssTrustDomain_GetCertsForNicknameFromCache
 {
     NSSCertificate **rvArray = NULL;
     cache_entry *ce;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("looking for cert by nick %s", nickname));
 #endif
     PZ_Lock(td->cache->lock);
@@ -792,7 +792,7 @@ nssTrustDomain_GetCertsForNicknameFromCache
     if (ce) {
 	ce->hits++;
 	ce->lastHit = PR_Now();
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
     }
@@ -817,7 +817,7 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
     NSSCertificate **rvArray = NULL;
     cache_entry *ce;
     nssList *collectList;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     PR_LOG(s_log, PR_LOG_DEBUG, ("looking for cert by email %s", email));
 #endif
     PZ_Lock(td->cache->lock);
@@ -825,7 +825,7 @@ nssTrustDomain_GetCertsForEmailAddressFromCache
     if (ce) {
 	ce->hits++;
 	ce->lastHit = PR_Now();
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
     }
@@ -876,7 +876,7 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
     certkey.issuer.size = issuer->size;
     certkey.serial.data = serial->data;
     certkey.serial.size = serial->size;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_item_dump("looking for cert by issuer/sn, issuer", issuer);
     log_item_dump("                               serial", serial);
 #endif
@@ -886,7 +886,7 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
 	ce->hits++;
 	ce->lastHit = PR_Now();
 	rvCert = ce->entry.cert;
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
 	PR_LOG(s_log, PR_LOG_DEBUG, ("... found, %d hits", ce->hits));
 #endif
     }
@@ -942,7 +942,7 @@ nssTrustDomain_GetCertByDERFromCache
     if (nssrv != PR_SUCCESS) {
 	return NULL;
     }
-#ifdef DEBUG
+#ifdef DEBUG_CACHE
     log_item_dump("looking for cert by DER", der);
 #endif
     rvCert = nssTrustDomain_GetCertForIssuerAndSNFromCache(td, 
