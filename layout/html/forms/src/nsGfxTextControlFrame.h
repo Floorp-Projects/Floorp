@@ -281,6 +281,9 @@ protected:
     */
   nsEnderEventListener();
 
+  /** key event dispatch helpers */
+  nsresult DispatchKeyEvent(nsIDOMKeyEvent* aOrigEvent, PRInt32 aEventType);
+
   /** mouse event dispatch helper */
   nsresult DispatchMouseEvent(nsIDOMMouseEvent *aEvent, PRInt32 aEventType);
 
