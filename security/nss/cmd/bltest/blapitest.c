@@ -38,6 +38,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "prtime.h"
+#include "prsystem.h"
 #include "plstr.h"
 #include "nssb64.h"
 #include "secutil.h"
@@ -470,8 +471,7 @@ typedef struct
 	if (info->performance) { \
 		time2 = (PRIntervalTime)(PR_IntervalNow() - time1); \
 		time1 = PR_IntervalToMilliseconds(time2); \
-		printf("%s %d bytes: %.2f ms\n", mode, nb, \
-		         ((float)(time1))/info->repetitions); \
+		printf("%s,%d,%.3f\n", mode, nb, ((float)(time1))/info->repetitions); \
 	}
 
 SECStatus
@@ -527,9 +527,12 @@ des_ecb_test(blapitestInfo *info)
 {
 	SECStatus rv;
 	DESContext *descx;
+	PRIntervalTime time1, time2;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	TIMESTART();
 	descx = DES_CreateContext(info->key.data, NULL, NSS_DES, info->encrypt);
+	TIMEFINISH("DES ECB CONTEXT CREATE", info->key.len);
 	if (!descx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -546,11 +549,14 @@ des_cbc_test(blapitestInfo *info)
 {
 	SECStatus rv;
 	DESContext *descx;
+	PRIntervalTime time1, time2;
 	fillitem(&info->key, DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, DES_KEY_LENGTH, "tmp.iv");
+	TIMESTART();
 	descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_CBC, 
 	                          info->encrypt);
+	TIMEFINISH("DES CBC CONTEXT CREATE", info->key.len);
 	if (!descx) {
 		PR_fprintf(PR_STDERR, 
 		  "%s:  Failed to create encryption context!\n", progName);
@@ -586,10 +592,13 @@ des_ede_ecb_test(blapitestInfo *info)
 {
 	SECStatus rv;
 	DESContext *descx;
+	PRIntervalTime time1, time2;
 	fillitem(&info->key, 3*DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	TIMESTART();
 	descx = DES_CreateContext(info->key.data, NULL, NSS_DES_EDE3,
 	                          info->encrypt);
+	TIMEFINISH("3DES ECB CONTEXT CREATE", info->key.len);
 	if (!descx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -606,11 +615,14 @@ des_ede_cbc_test(blapitestInfo *info)
 {
 	SECStatus rv;
 	DESContext *descx;
+	PRIntervalTime time1, time2;
 	fillitem(&info->key, 3*DES_KEY_LENGTH, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, DES_KEY_LENGTH, "tmp.iv");
+	TIMESTART();
 	descx = DES_CreateContext(info->key.data, info->iv.data, NSS_DES_EDE3_CBC, 
 	                          info->encrypt);
+	TIMEFINISH("3DES CBC CONTEXT CREATE", info->key.len);
 	if (!descx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -654,8 +666,10 @@ rc2_ecb_test(blapitestInfo *info)
 	numiter = info->repetitions;
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	TIMESTART();
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, NULL, 
 	                          NSS_RC2, info->key.len);
+	TIMEFINISH("RC2 ECB CONTEXT CREATE", info->key.len);
 	if (!rc2cx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -693,8 +707,10 @@ rc2_cbc_test(blapitestInfo *info)
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
+	TIMESTART();
 	rc2cx = RC2_CreateContext(info->key.data, info->key.len, info->iv.data, 
 	                          NSS_RC2_CBC, info->key.len);
+	TIMEFINISH("RC2 CBC CONTEXT CREATE", info->key.len);
 	if (!rc2cx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -757,7 +773,13 @@ rc4_test(blapitestInfo *info)
 	numiter = info->repetitions;
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
+		rc4cx = RC4_CreateContext(info->key.data, info->key.len);
+		RC4_DestroyContext(rc4cx, PR_TRUE);
+	}
 	rc4cx = RC4_CreateContext(info->key.data, info->key.len);
+	TIMEFINISH("RC4 CONTEXT CREATE", info->key.len);
 	if (!rc4cx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -818,8 +840,15 @@ rc5_ecb_test(blapitestInfo *info)
 	numiter = info->repetitions;
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
+	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
 	                          NULL, NSS_RC5);
+		RC5_DestroyContext(rc5cx, PR_TRUE);
+	}
+	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+	                          NULL, NSS_RC5);
+	TIMEFINISH("RC5 ECB CONTEXT CREATE", info->key.len);
 	if (!rc5cx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -863,8 +892,15 @@ rc5_cbc_test(blapitestInfo *info)
 	fillitem(&info->key, info->keysize, "tmp.key");
 	fillitem(&info->in, info->bufsize, "tmp.pt");
 	fillitem(&info->iv, info->bufsize, "tmp.iv");
+	TIMESTART();
+	for (i=0; i<numiter-1; i++) {
 	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
 	                          info->iv.data, NSS_RC5_CBC);
+		RC5_DestroyContext(rc5cx, PR_TRUE);
+	}
+	rc5cx = RC5_CreateContext(&info->key, info->rounds, info->wordsize, 
+	                          info->iv.data, NSS_RC5_CBC);
+	TIMEFINISH("RC5 CBC CONTEXT CREATE", info->key.len);
 	if (!rc5cx) {
 		fprintf(stderr,"%s:  Failed to create encryption context!\n", progName);
 		return SECFailure;
@@ -1474,20 +1510,18 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 			info.encrypt = info.hash = info.sign = PR_TRUE;
 			(*cryptofn)(&info);
 			if (SECITEM_CompareItem(&output, &info.out) != 0) {
-				fprintf(stderr, "encrypt self-test for %s failed!\n", mode);
+				printf("encrypt self-test for %s failed!\n", mode);
 			} else {
-				fprintf(stderr, "encrypt self-test for %s passed.\n", mode);
+				printf("encrypt self-test for %s passed.\n", mode);
 			}
 			info.encrypt = info.hash = info.sign = PR_FALSE;
 			info.decrypt = info.verify = PR_TRUE;
 			if (PL_strcmp(mode, "dsa") == 0) {
 				rv = (*cryptofn)(&info);
 				if (rv == SECSuccess) {
-					fprintf(stderr, "signature self-test for %s passed.\n", 
-					        mode);
+					printf("signature self-test for %s passed.\n", mode);
 				} else {
-					fprintf(stderr, "signature self-test for %s failed!\n", 
-					        mode);
+					printf("signature self-test for %s failed!\n", mode);
 				}
 			} else {
 				SECITEM_ZfreeItem(&info.in, PR_FALSE);
@@ -1497,11 +1531,9 @@ blapi_selftest(char **modesToTest, int numModesToTest)
 				rv = (*cryptofn)(&info);
 				if (rv == SECSuccess) {
 					if (SECITEM_CompareItem(&inpCopy, &info.out) != 0) {
-						fprintf(stderr, "decrypt self-test for %s failed!\n", 
-						        mode);
+						printf("decrypt self-test for %s failed!\n", mode);
 					} else {
-						fprintf(stderr, "decrypt self-test for %s passed.\n", 
-						        mode);
+						printf("decrypt self-test for %s passed.\n", mode);
 					}
 				}
 			}
@@ -1652,6 +1684,19 @@ int main(int argc, char **argv)
 
 	if (info.decrypt && !infile)
 		Usage();
+
+	if (info.performance) {
+		char buf[256];
+		PRStatus stat;
+		stat = PR_GetSystemInfo(PR_SI_HOSTNAME, buf, sizeof(buf));
+		printf("HOST: %s\n", buf);
+		stat = PR_GetSystemInfo(PR_SI_SYSNAME, buf, sizeof(buf));
+		printf("SYSTEM: %s\n", buf);
+		stat = PR_GetSystemInfo(PR_SI_RELEASE, buf, sizeof(buf));
+		printf("RELEASE: %s\n", buf);
+		stat = PR_GetSystemInfo(PR_SI_ARCHITECTURE, buf, sizeof(buf));
+		printf("ARCH: %s\n", buf);
+	}
 
 	RNG_RNGInit();
 
