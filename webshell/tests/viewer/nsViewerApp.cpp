@@ -84,7 +84,7 @@
 #define DIALOG_FONT_SIZE 10
 
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "JSConsole.h"
 #ifdef NGPREFS
 #include "ngprefs.h"
@@ -873,7 +873,7 @@ static void* GetWidgetNativeData(nsISupports* aObject)
 
 
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 extern JSConsole *gConsole;
 // XXX temporary robot code until it's made XP
 extern HINSTANCE gInstance, gPrevInstance;
@@ -1158,7 +1158,7 @@ nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
         }
         nsVoidArray * gWorkList = new nsVoidArray();
         gWorkList->AppendElement(new nsString(str));
-#if defined(XP_PC) && defined(NS_DEBUG)
+#if defined(XP_PC) && defined(NS_DEBUG) && !defined(XP_OS2)
         DebugRobot( 
           gWorkList, 
           gVisualDebug ? aWindow->mDocShell : nsnull, 
@@ -1519,7 +1519,8 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
 
 //----------------------------------------
 
-#ifdef XP_PC
+
+#if defined(XP_PC) && !defined(XP_OS2)
 #include "jsconsres.h"
 
 static void DestroyConsole()
@@ -1567,7 +1568,7 @@ static void ShowConsole(nsBrowserWindow* aWindow)
 NS_IMETHODIMP
 nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 {
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
   if (nsnull == gConsole) {
     ShowConsole(aWindow);
   }
@@ -1578,7 +1579,8 @@ nsViewerApp::CreateJSConsole(nsBrowserWindow* aWindow)
 NS_IMETHODIMP
 nsViewerApp::DoPrefs(nsBrowserWindow* aWindow)
 {
-#if defined(XP_PC) && defined(NGPREFS)
+#if defined(XP_PC) && defined(NGPREFS) && !defined(XP_OS2)
+
   INGLayoutPrefs *pPrefs;
   CoInitialize(NULL);
 
