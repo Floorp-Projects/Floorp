@@ -202,7 +202,7 @@ if ($index > 15) {
 for (my $i=$index; $i > $min ; $i--) {
     print ("  <item>\n");
     print ("    <title>" . $articles[$i]->{'Subject'} . "</title>\n");
-    print ("    <link>http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
+    print ("    <link>http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=&lt;" . $articles[$i]->{'Message-ID'} . "&gt;</link>\n");
     print ("  </item>\n\n");
     }
 
@@ -234,10 +234,10 @@ print "<BR>";
 print %article->{'Newsgroups'} . "\n";
 print "<BR>";
 print "<SPAN CLASS=\"articlelink\n\">";
-print "<A HREF=\"http://www.dejanews.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . %article->{'Message-ID'} . ">\">\n";
+print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/msgid.xp?MID=<" . %article->{'Message-ID'} . ">\">\n";
 print "</SPAN>\n";
 print "View Article</A> -\n";
-print "<A HREF=\"http://www.dejanews.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
+print "<A HREF=\"http://www.deja.com/[LB=http://www.mozilla.org/]/thread/%3c" . %article->{'Message-ID'} ."%3e%231/1\">\n";
 print "View Thread\n";
 print "</A>\n";
 print "<!--Submitted to NewsBot by: " . %article->{'submitter'} . "-->\n";
