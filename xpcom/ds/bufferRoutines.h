@@ -336,10 +336,10 @@ inline PRInt32 FindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,co
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32 theIndex=0;
-  PRInt32 thePos=(PRInt32)aLength-anOffset-1;
+  PRInt32 thePos=(PRInt32)anOffset;
   for(theIndex=thePos;theIndex>=0;theIndex--){
     PRUnichar theChar=GetCharAt(aDest,theIndex);
     if(aIgnoreCase)
@@ -362,10 +362,10 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
  *  @param   aIgnorecase tells us whether to use a case sensitive search
  *  @return  index of pos if found, else -1 (kNotFound)
  */
-inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
+inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase) {
   PRUnichar theCmpChar=(aIgnoreCase ? nsCRT::ToUpper(aChar) : aChar);
   PRInt32 theIndex=0;
-  PRInt32 thePos=(PRInt32)aLength-anOffset-1;
+  PRInt32 thePos=(PRInt32)anOffset;
   for(theIndex=thePos;theIndex>=0;theIndex--){
     PRUnichar theChar=GetUnicharAt(aDest,theIndex);
     if(aIgnoreCase)
@@ -376,7 +376,7 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aLength,PRUint32 anOffset,c
   return kNotFound;
 }
 
-typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase);
+typedef PRInt32 (*FindChars)(const char* aDest,PRUint32 aDestLength,PRUint32 anOffset,const PRUnichar aChar,PRBool aIgnoreCase);
 FindChars gFindChars[]={&FindChar1,&FindChar2};
 FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
 

@@ -570,7 +570,7 @@ PRInt32 Find(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffs
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 Find(PRUnichar aChar,PRUint32 offset=0,PRBool aIgnoreCase=PR_FALSE) const;
+PRInt32 Find(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 FindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
@@ -589,7 +589,7 @@ PRInt32 FindCharInSet(const nsStr& aString,PRInt32 anOffset=-1) const;
  * This methods scans the string backwards, looking for the given string
  * @param   aString is substring to be sought in this
  * @param   aIgnoreCase tells us whether or not to do caseless compare
- * @return  offset in string, or -1 (kNotFound)
+ *  @param   anOffset tells us where in this strig to start searching (counting from left)
  */
 PRInt32 RFind(const char* aCString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 PRInt32 RFind(const nsString& aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
@@ -601,18 +601,18 @@ PRInt32 RFind(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOff
  *  Search for given char within this string
  *  
  *  @param   aString is substring to be sought in this
- *  @param   anOffset tells us where in this strig to start searching
+ *  @param   anOffset tells us where in this strig to start searching (counting from left)
  *  @param   aIgnoreCase selects case sensitivity
  *  @return  find pos in string, or -1 (kNotFound)
  */
-PRInt32 RFind(PRUnichar aChar,PRUint32 offset=0,PRBool aIgnoreCase=PR_FALSE) const;
+PRInt32 RFind(PRUnichar aChar,PRInt32 offset=-1,PRBool aIgnoreCase=PR_FALSE) const;
 PRInt32 RFindChar(PRUnichar aChar,PRBool aIgnoreCase=PR_FALSE,PRInt32 anOffset=-1) const;
 
 /**
  * This method searches this string for the last character
  * found in the given string
  * @param aString contains set of chars to be found
- * @param anOffset tells us where to start searching in this
+ *  @param   anOffset tells us where in this strig to start searching (counting from left)
  * @return -1 if not found, else the offset in this
  */
 PRInt32 RFindCharInSet(const char* aString,PRInt32 anOffset=-1) const;

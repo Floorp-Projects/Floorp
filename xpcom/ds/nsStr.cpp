@@ -34,7 +34,7 @@
 #include "nsCRT.h"
 #include "nsDeque.h"
 
-
+ 
 static const char* kFoolMsg = "Error: Some fool overwrote the shared buffer.";
 static const char* kCallFindChar =  "For better performance, call FindChar() for targets whose length==1.";
 static const char* kCallRFindChar = "For better performance, call RFindChar() for targets whose length==1.";
@@ -566,7 +566,7 @@ PRInt32 nsStr::FindCharInSet(const nsStr& aDest,const nsStr& aSet,PRBool aIgnore
  *  @param   aDest string to search
  *  @param   aTarget is the substring you're trying to find.
  *  @param   aIgnorecase indicates case sensitivity of search
- *  @param   anOffset tells us where to start the search
+ *  @param   anOffset tells us where to start the search (counting from left)
  *  @return  index in aDest where member of aSet occurs, or -1 if not found
  */
 PRInt32 nsStr::RFindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRInt32 anOffset) {
