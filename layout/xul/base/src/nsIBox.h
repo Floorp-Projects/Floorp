@@ -103,6 +103,7 @@ public:
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough)=0;
   NS_IMETHOD MarkChildrenStyleChange()=0;
   NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState)=0;
+  NS_IMETHOD DumpBox(FILE* out)=0;
 
   static PRBool AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);
   static PRBool AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize);

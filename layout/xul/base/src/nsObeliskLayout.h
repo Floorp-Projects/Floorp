@@ -64,6 +64,13 @@ protected:
   */
 
   virtual void PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsBoxSize*& aBoxSizes, nsComputedBoxSize*& aComputedBoxSizes, nscoord& aMinSize, nscoord& aMaxSize, PRInt32& aFlexes);
+  virtual void ComputeChildSizes(nsIBox* aBox, 
+                         nsBoxLayoutState& aState, 
+                         nscoord& aGivenSize, 
+                         nsBoxSize* aBoxSizes, 
+                         nsComputedBoxSize*& aComputedBoxSizes);
+
+
   virtual void WillBeDestroyed(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList);
   virtual void Desecrated(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList& aList);
 

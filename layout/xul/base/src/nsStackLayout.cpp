@@ -44,7 +44,8 @@
 #include "nsCSSRendering.h"
 #include "nsIViewManager.h"
 #include "nsBoxLayoutState.h"
-#include "nsIBox.h"
+#include "nsBox.h"
+#include "nsContainerBox.h"
 
 nsCOMPtr<nsIBoxLayout> nsStackLayout::gInstance = new nsStackLayout();
 
@@ -217,7 +218,7 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 {
    nsRect clientRect;
    aBox->GetClientRect(clientRect);
-
+   
    nsIBox* child = nsnull;
    PRBool grow;
 
@@ -235,9 +236,10 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
         if (childRect.width < 0)
           childRect.width = 0;
+
         if (childRect.height < 0)
           childRect.height = 0;
-
+        
         child->SetBounds(aState, childRect);
         child->Layout(aState);
         child->GetBounds(childRect);
@@ -256,7 +258,10 @@ nsStackLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
 
         child->GetNextBox(&child);
      }
-     NS_ASSERTION(passes < 10,"Infinite loop! Someone won't stop growing!!");
+     NS_BOX_ASSERTION(aBox, passes < 10,"Infinite loop! Someone won't stop growing!!");
+     //if (passes > 3)
+     //   printf("Growing!!!\n");
+
      passes++;
    } while(grow);
 

@@ -33,6 +33,89 @@
 #include "nsIScrollableFrame.h"
 #include "nsBox.h"
 
+// ----- Monument Iterator -----
+
+nsLayoutIterator::nsLayoutIterator(nsIBox* aBox):mBox(nsnull),mStartBox(aBox),mScrollFrameCount(0)
+{
+}
+
+void
+nsLayoutIterator::Reset()
+{
+  mBox = nsnull;
+}
+
+PRBool
+nsLayoutIterator::GetNextLayout(nsIBoxLayout** aLayout)
+{
+  if (mBox == nsnull) {
+    mBox = mStartBox;
+  } else {
+    mBox->GetNextBox(&mBox);
+  }
+
+  if (!mBox) {
+
+    if (mScrollFrameCount > 0) {
+      mBox = mScrollFrames[--mScrollFrameCount];
+      return GetNextLayout(aLayout);
+    }
+
+    *aLayout = nsnull;
+    return PR_FALSE;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(mBox, &rv);
+  if (scrollFrame) {
+     nsIFrame* scrolledFrame = nsnull;
+     scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
+     NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
+     mScrollFrames[mScrollFrameCount++] = mBox;
+     nsCOMPtr<nsIBox> b = do_QueryInterface(scrolledFrame);
+     mBox = b;
+  }
+
+  nsCOMPtr<nsIBoxLayout> layout;
+
+  mBox->GetLayoutManager(getter_AddRefs(layout));
+
+  *aLayout = layout;
+  NS_IF_ADDREF(*aLayout);
+
+  return PR_TRUE; 
+
+}
+
+// ---- Monument Iterator -----
+
+nsMonumentIterator::nsMonumentIterator(nsIBox* aBox):nsLayoutIterator(aBox)
+{
+}
+
+PRBool
+nsMonumentIterator::GetNextMonument(nsIMonument** aMonument)
+{
+  nsCOMPtr<nsIBoxLayout> layout;
+
+  while(GetNextLayout(getter_AddRefs(layout))) {
+    if (layout) 
+    {
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
+      *aMonument = monument;
+
+      if (monument) {
+        NS_IF_ADDREF(*aMonument);
+        return PR_TRUE;
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
+
 //------ nsInfoListNodeImpl ----
 
 void
@@ -211,7 +294,7 @@ nsBoxSizeListImpl::RemoveListener()
 }
 
 nsBoxSize
-nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState)
+nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState, PRBool aIsHorizontal)
 {
   if (!mIsSet) {
 
@@ -222,7 +305,7 @@ nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState)
     nsBoxSizeList* node = mFirst;
 
     while(node) {
-      nsBoxSize size = node->GetBoxSize(aState);
+      nsBoxSize size = node->GetBoxSize(aState, aIsHorizontal);
 
       if (size.pref > mBoxSize.pref)
          mBoxSize.pref = size.pref;
@@ -247,11 +330,9 @@ nsBoxSizeListImpl::GetBoxSize(nsBoxLayoutState& aState)
 }
 
 nsBoxSize
-nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState)
+nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState, PRBool aIsHorizontal)
 {
   nsBoxSize size;
-  PRBool isHorizontal = PR_FALSE;
-  mBox->GetOrientation(isHorizontal);
 
   nsSize pref(0,0);
   nsSize min(0,0);
@@ -266,7 +347,7 @@ nsBoxSizeListNodeImpl::GetBoxSize(nsBoxLayoutState& aState)
   mBox->GetFlex(aState, flex);
   nsBox::AddMargin(mBox, pref);
 
-  size.Add(min, pref, max, ascent, flex, isHorizontal); 
+  size.Add(min, pref, max, ascent, flex, !aIsHorizontal); 
 
   return size;
 }
@@ -289,6 +370,13 @@ NS_IMETHODIMP
 nsMonumentLayout::CastToObelisk(nsObeliskLayout** aObelisk)
 {
   *aObelisk = nsnull;
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsMonumentLayout::CastToGrid(nsGridLayout** aGrid)
+{
+  *aGrid = nsnull;
   return NS_ERROR_FAILURE;
 }
 
@@ -416,7 +504,7 @@ nsMonumentLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSize
 
 
 NS_IMETHODIMP
-nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
+nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast, PRBool aIsHorizontal)
 {
    aFirst = aLast = new (aState) nsBoxSize();
 
@@ -432,19 +520,17 @@ nsMonumentLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
    aBox->GetAscent(aState, ascent);
    aBox->GetFlex(aState, flex);
    nsBox::BoundsCheck(min, pref, max);
+
    nsMargin borderPadding(0,0,0,0);
    aBox->GetBorderAndPadding(borderPadding);
 
    nsMargin margin(0,0,0,0);
    aBox->GetMargin(margin);
 
-   PRBool isHorizontal = PR_FALSE;
-   aBox->GetOrientation(isHorizontal);
-
-   (aFirst)->Add(min, pref, max, ascent, flex, !isHorizontal); 
-   (aFirst)->Add(borderPadding,!isHorizontal);
-   (aFirst)->Add(margin,!isHorizontal);
-
+   aFirst->Add(min, pref, max, ascent, flex, aIsHorizontal); 
+   aFirst->Add(borderPadding,aIsHorizontal);
+   aFirst->Add(margin,aIsHorizontal);
+   
    return NS_OK;
 }
 

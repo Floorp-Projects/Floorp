@@ -50,11 +50,13 @@ public:
 
   NS_IMETHOD CastToTemple(nsTempleLayout** aTemple);
   NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk);
+  NS_IMETHOD CastToGrid(nsGridLayout** aGrid);
+
   NS_IMETHOD GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList);
   NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull);
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull);
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList);
-  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast);
+  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast, PRBool aIsHorizontal);
   NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument);
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList);
   NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex);

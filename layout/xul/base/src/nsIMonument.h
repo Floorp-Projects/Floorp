@@ -33,6 +33,7 @@
 class nsIBox;
 class nsBoxLayoutState;
 class nsTempleLayout;
+class nsGridLayout;
 class nsObeliskLayout;
 class nsMonumentLayout;
 class nsBoxLayoutState;
@@ -50,7 +51,7 @@ public:
 class nsBoxSizeList
 {
 public:
-    virtual nsBoxSize GetBoxSize(nsBoxLayoutState& aState)=0;
+    virtual nsBoxSize GetBoxSize(nsBoxLayoutState& aState, PRBool aIsHorizontal)=0;
     virtual nsBoxSizeList* GetFirst()=0;
     virtual nsBoxSizeList* GetLast()=0;
     virtual nsBoxSizeList* GetNext()=0;
@@ -85,11 +86,12 @@ public:
 
   NS_IMETHOD CastToTemple(nsTempleLayout** aTemple)=0;
   NS_IMETHOD CastToObelisk(nsObeliskLayout** aObelisk)=0;
+  NS_IMETHOD CastToGrid(nsGridLayout** aGrid)=0;
   NS_IMETHOD GetOtherMonuments(nsIBox* aBox, nsBoxSizeList** aList)=0;
   NS_IMETHOD GetOtherMonumentsAt(nsIBox* aBox, PRInt32 aIndexOfObelisk, nsBoxSizeList** aList, nsMonumentLayout* aRequestor = nsnull)=0;
   NS_IMETHOD GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aTempleBox, nsMonumentLayout* aRequestor = nsnull)=0;
   NS_IMETHOD GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList** aList)=0;
-  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)=0;
+  NS_IMETHOD BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast, PRBool aIsHorizontal)=0;
   NS_IMETHOD GetParentMonument(nsIBox* aBox, nsCOMPtr<nsIBox>& aParentBox, nsIMonument** aParentMonument)=0;
   NS_IMETHOD GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSizeList** aList)=0;
   NS_IMETHOD EnscriptionChanged(nsBoxLayoutState& aState, PRInt32 aIndex)=0;

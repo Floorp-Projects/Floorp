@@ -30,6 +30,7 @@
 #include "nsGridLayout.h"
 #include "nsTempleLayout.h"
 #include "nsIBox.h"
+#include "nsIScrollableFrame.h"
 
 nsresult
 NS_NewGridLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
@@ -75,6 +76,17 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
 
   while(child)
   {
+    nsIBox* oldBox = child;
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIScrollableFrame> scrollFrame = do_QueryInterface(child, &rv);
+    if (scrollFrame) {
+       nsIFrame* scrolledFrame = nsnull;
+       scrollFrame->GetScrolledFrame(nsnull, scrolledFrame);
+       NS_ASSERTION(scrolledFrame,"Error no scroll frame!!");
+       nsCOMPtr<nsIBox> b = do_QueryInterface(scrolledFrame);
+       child = b;
+    }
+
     nsIBoxLayout* layout = nsnull;
     child->GetLayoutManager(&layout);
 
@@ -94,6 +106,10 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
        }
     }
 
+    if (scrollFrame) {
+      child = oldBox;
+    }
+
     child->GetNextBox(&child);
   }
 
@@ -106,15 +122,22 @@ nsGridLayout::GetOtherTemple(nsIBox* aBox, nsTempleLayout** aTemple, nsIBox** aT
 NS_IMETHODIMP
 nsGridLayout::CastToTemple(nsTempleLayout** aTemple)
 {
-  NS_ERROR("Should not be called");
+  *aTemple = nsnull;
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsGridLayout::CastToObelisk(nsObeliskLayout** aObelisk)
 {
-  NS_ERROR("Should not be called");
+  *aObelisk = nsnull;
   return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsGridLayout::CastToGrid(nsGridLayout** aGrid)
+{
+  *aGrid = this;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -140,7 +163,7 @@ nsGridLayout::GetMonumentsAt(nsIBox* aBox, PRInt32 aMonumentIndex, nsBoxSizeList
 
 
 NS_IMETHODIMP
-nsGridLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
+nsGridLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast, PRBool aIsHorizontal)
 {
   NS_ERROR("Should not be called");
   return NS_ERROR_FAILURE;

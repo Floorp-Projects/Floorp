@@ -43,6 +43,10 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsXULAtoms.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMAttr.h"
+
 
 //#define DEBUG_REFLOW
 
@@ -50,11 +54,10 @@
 static PRInt32 coelesced = 0;
 #endif
 
-#ifdef DEBUG_REFLOW
-
 PRInt32 gIndent = 0;
 PRInt32 gLayout = 0;
 
+#ifdef DEBUG_REFLOW
 void
 nsBoxAddIndents()
 {
@@ -63,42 +66,68 @@ nsBoxAddIndents()
         printf(" ");
     }
 }
+#endif
 
 void
-nsBoxAppendAttribute(nsIContent* aContent, nsIAtom* aAtom, nsAutoString& aResult)
+nsBox::AppendAttribute(const nsAutoString& aAttribute, const nsAutoString& aValue, nsAutoString& aResult)
 {
-   nsAutoString att;
-   aContent->GetAttribute(kNameSpaceID_None, aAtom, att);
-   nsAutoString name;
-   aAtom->ToString(name);
-   aResult.AppendWithConversion("[");
-   aResult.Append(name);
-   aResult.AppendWithConversion("=");
-   aResult.Append(att);
-   aResult.AppendWithConversion("]");
+   aResult.Append(aAttribute);
+   aResult.AppendWithConversion("='");
+   aResult.Append(aValue);
+   aResult.AppendWithConversion("' ");
 }
-
-#endif
 
 void
 nsBox::ListBox(nsAutoString& aResult)
 {
-#ifdef DEBUG_REFLOW
     nsAutoString name;
     nsIFrame* frame;
     GetFrame(&frame);
     GetBoxName(name);
 
+    char addr[100];
+    sprintf(addr, "[@%p] ", frame);
+
+    aResult.AppendWithConversion(addr);
     aResult.Append(name);
+    aResult.AppendWithConversion(" ");
 
     nsCOMPtr<nsIContent> content;
     frame->GetContent(getter_AddRefs(content));
 
+    // add on all the set attributes
     if (content) {
-      nsBoxAppendAttribute(content, nsHTMLAtoms::id, aResult);
-      nsBoxAppendAttribute(content, nsHTMLAtoms::kClass, aResult);
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
+
+      node->GetAttributes(getter_AddRefs(namedMap));
+      PRUint32 length;
+      namedMap->GetLength(&length);
+
+      nsCOMPtr<nsIDOMNode> attribute;
+      for (PRUint32 i = 0; i < length; ++i)
+      {
+        namedMap->Item(i, getter_AddRefs(attribute));
+        nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(attribute));
+        nsAutoString name;
+        attr->GetName(name);
+        nsAutoString value;
+        attr->GetValue(value);
+        AppendAttribute(name, value, aResult);
+      }
     }
-#endif
+
+}
+
+NS_IMETHODIMP
+nsBox::DumpBox(FILE* aFile)
+{
+  nsAutoString s;
+  ListBox(s);
+  char ch[1000];
+  s.ToCString(ch,1000);
+  fprintf(aFile, "%s", ch);
+  return NS_OK;
 }
 
 void
@@ -131,10 +160,8 @@ nsBox::EnterLayout(nsBoxLayoutState& aState)
       char ch[100];
       reason.ToCString(ch,100);
       printf("%s Layout: ", ch);
-      nsAutoString s;
-      ListBox(s);
-      s.ToCString(ch,100);
-      printf("%s\n",ch);
+      DumpBox(stdout);
+      printf("\n");
       gIndent++;
   #endif
 }
@@ -465,7 +492,7 @@ nsBox::GetContentRect(nsRect& aContentRect)
   GetBounds(aContentRect);
   aContentRect.x = 0;
   aContentRect.y = 0;
-  NS_ASSERTION(aContentRect.width >=0 && aContentRect.height >= 0, "Content Size < 0");
+  NS_BOX_ASSERTION(this, aContentRect.width >=0 && aContentRect.height >= 0, "Content Size < 0");
   return NS_OK;
 }
 
@@ -481,7 +508,7 @@ nsBox::GetBounds(nsRect& aRect)
 NS_IMETHODIMP
 nsBox::SetBounds(nsBoxLayoutState& aState, const nsRect& aRect)
 {
-    NS_ASSERTION(aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
+    NS_BOX_ASSERTION(this, aRect.width >=0 && aRect.height >= 0, "SetBounds Size < 0");
 
     nsRect rect(0,0,0,0);
     GetBounds(rect);
@@ -1081,7 +1108,7 @@ nsBox::Redraw(nsBoxLayoutState& aState,
     nsPoint   offset;
   
     frame->GetOffsetFromView(presContext, offset, &view);
-    NS_ASSERTION(nsnull != view, "no view");
+    NS_BOX_ASSERTION(this, nsnull != view, "no view");
     rect += offset;
     view->GetViewManager(*getter_AddRefs(viewManager));
     viewManager->UpdateView(view, rect, flags);

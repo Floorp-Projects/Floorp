@@ -30,6 +30,7 @@
 #include "nsTempleLayout.h"
 #include "nsIBox.h"
 #include "nsCOMPtr.h"
+#include "nsIScrollableFrame.h"
 
 nsresult
 NS_NewTempleLayout( nsIPresShell* aPresShell, nsCOMPtr<nsIBoxLayout>& aNewLayout)
@@ -80,15 +81,13 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
   nsIBox* box = nsnull;
   aBox->GetChildBox(&box);
   nsBoxSizeList* current = nsnull;
-  nsCOMPtr<nsIBoxLayout> layout;
-  while(box) {
+  nsCOMPtr<nsIMonument> monument;
 
-    box->GetLayoutManager(getter_AddRefs(layout));
+  nsMonumentIterator it(box);
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
+  while(it.GetNextMonument(getter_AddRefs(monument))) {
 
-    if (monument) {
+      it.GetBox(&box);
 
       if (!mMonuments) {
           mMonuments = new nsBoxSizeListImpl(box);
@@ -121,10 +120,7 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
         } else {
           current = current->GetNext();
         }
-      }
-    }
-    
-    box->GetNextBox(&box);
+      }    
   }
 
   *aList = mMonuments;
@@ -132,8 +128,10 @@ nsTempleLayout::GetMonumentList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSiz
 }
 
 NS_IMETHODIMP
-nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast)
+nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSize*& aFirst, nsBoxSize*& aLast, PRBool aIsHorizontal)
 {
+  // ok we need to build a nsBoxSize for each obelisk in this temple. We will then return the list of them.
+  // We are just returning a flattened list that we will use to layout our each cell.
   nsIBox* box = nsnull;
   aBox->GetChildBox(&box);
 
@@ -143,17 +141,23 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
   nsBoxSize* first;
   nsBoxSize* last;
   PRInt32 count = 0;
+
   nsCOMPtr<nsIBoxLayout> layout;
-  while(box) {
-    nsIMonument* monument = nsnull;
-    box->GetLayoutManager(getter_AddRefs(layout));
+
+  nsLayoutIterator it(box);
+
+  while(it.GetNextLayout(getter_AddRefs(layout))) {
+
+    it.GetBox(&box);
 
     if (layout) {
-      layout->QueryInterface(NS_GET_IID(nsIMonument), (void**)&monument);
+      nsresult rv = NS_OK;
+      nsCOMPtr<nsIMonument> monument = do_QueryInterface(layout, &rv);
+
       if (monument) 
-           monument->BuildBoxSizeList(box, aState, first, last);
+           monument->BuildBoxSizeList(box, aState, first, last, aIsHorizontal);
       else {
-           nsMonumentLayout::BuildBoxSizeList(box, aState, first, last);
+           nsMonumentLayout::BuildBoxSizeList(box, aState, first, last, aIsHorizontal);
            first->bogus = PR_TRUE;
       }
 
@@ -164,25 +168,32 @@ nsTempleLayout::BuildBoxSizeList(nsIBox* aBox, nsBoxLayoutState& aState, nsBoxSi
       aLast = last;
     }
     
-    box->GetNextBox(&box);
     count++;
   }
 
-  /*
+  // ok now we might have a margin or border. If we do then we need to take that into account. One example 
+  // might be if we are oriented vertically making us a "columns" and we contain a horizontal obelisk "row".
+  // Now say we have a left border of 10px. Well if we just layed things out then the whole row would be pushed over and
+  // the columns would not not line up. So we must take the space from somewhere. So if its on the left we take from the first 
+  // child (which is leftmost) and if its on the right we take from the last child (which is rightmost). So for our example we
+  // need to subtract 10px from the first child.
+  
+  // so get the border and padding and add them up.
   nsMargin borderPadding(0,0,0,0);
   aBox->GetBorderAndPadding(borderPadding);
   nsMargin margin(0,0,0,0);
   aBox->GetMargin(margin);
 
+  // add the margins up
   nsMargin leftMargin(borderPadding.left + margin.left, borderPadding.top + margin.top, 0, 0);
   nsMargin rightMargin(0,0, borderPadding.right + margin.right, borderPadding.bottom + margin.bottom);
 
+  // Subtract them out.
   PRBool isHorizontal = PR_FALSE;
   aBox->GetOrientation(isHorizontal);
 
-  (aFirst)->Add(leftMargin,isHorizontal);
-  (aLast)->Add(rightMargin,isHorizontal);
-  */
+  aFirst->Add(leftMargin,isHorizontal);
+  aLast->Add(rightMargin,isHorizontal);
 
   return NS_OK;
 }

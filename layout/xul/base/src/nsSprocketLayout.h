@@ -107,8 +107,6 @@ public:
 
   nsSprocketLayout();
 
-  static PRInt32 Round(PRInt32 aCoord, PRInt32 aOnePixel);
-
 protected:
 
   virtual PRBool IsHorizontal(nsIBox* aBox) const;

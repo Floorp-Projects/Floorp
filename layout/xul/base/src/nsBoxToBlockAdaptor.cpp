@@ -55,14 +55,16 @@
 #include "nsIFontMetrics.h"
 
 //#define DEBUG_REFLOW
+//#define DEBUG_GROW
+
 
 #ifdef DEBUG_REFLOW
-PRInt32 gIndent = 0;
+PRInt32 gIndent2 = 0;
 
 void
 nsAdaptorAddIndents()
 {
-    for(PRInt32 i=0; i < gIndent; i++)
+    for(PRInt32 i=0; i < gIndent2; i++)
     {
         printf(" ");
     }
@@ -129,6 +131,18 @@ PRBool
 nsBoxToBlockAdaptor::HasStyleChange()
 {
   return mStyleChange;
+}
+
+void
+nsBoxToBlockAdaptor::GetBoxName(nsAutoString& aName)
+{
+   nsIFrameDebug*  frameDebug;
+   nsAutoString name;
+   if (NS_SUCCEEDED(mFrame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
+      frameDebug->GetFrameName(name);
+   }
+
+  aName = name;
 }
 
 void
@@ -428,7 +442,21 @@ nsBoxToBlockAdaptor::Layout(nsBoxLayoutState& aState)
        mFrame->SizeTo(presContext, 0, 0);
      } else {
        mAscent = desiredSize.ascent;
-       mFrame->SizeTo(presContext, desiredSize.width, desiredSize.height);
+       if (desiredSize.width > ourRect.width || desiredSize.height > ourRect.height) {
+
+#ifdef DEBUG_GROW
+            DumpBox(stdout);
+            printf(" GREW from (%d,%d) -> (%d,%d)\n", ourRect.width, ourRect.height, desiredSize.width, desiredSize.height);
+#endif
+
+         if (desiredSize.width > ourRect.width)
+            ourRect.width = desiredSize.width;
+
+         if (desiredSize.height > ourRect.height)
+            ourRect.height = desiredSize.height;
+
+         mFrame->SizeTo(presContext, ourRect.width, ourRect.height);
+       }
      }
    }
 
@@ -458,7 +486,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   printf("Reflowing: ");
   nsFrame::ListTag(stdout, mFrame);
   printf("\n");
-  gIndent++;
+  gIndent2++;
 #endif
 
   //printf("width=%d, height=%d\n", aWidth, aHeight);
@@ -931,7 +959,7 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
   }
 
 #ifdef DEBUG_REFLOW
-  gIndent--;
+  gIndent2--;
 #endif
 
   return NS_OK;

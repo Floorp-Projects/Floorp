@@ -2026,61 +2026,21 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                         if (mDebugChild == child)
                             return NS_OK;
 
-
                             nsCOMPtr<nsIContent> content;
                             ourFrame->GetContent(getter_AddRefs(content));
 
-                            nsAutoString id;
-                            nsAutoString kClass;
-                            nsCOMPtr<nsIAtom> tag;
-                            nsAutoString tagString;
-                            char tagValue[100];
-                            char kClassValue[100];
-                            char idValue[100];
-
-                            if (content) {
-                              content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-                              id.ToCString(idValue,100);
-                       
-                              content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
-                              kClass.ToCString(kClassValue,100);
-
-                              content->GetTag(*getter_AddRefs(tag));
-                              tag->ToString(tagString);
-                              tagString.ToCString(tagValue,100);
-
-                              printf("----- ");
-               
-      #ifdef NS_DEBUG
-                              nsFrame::ListTag(stdout, ourFrame);
-      #endif
-
-                              printf(" Tag='%s', id='%s' class='%s'---------------\n", tagValue, idValue, kClassValue);
-                        
+                            if (content) {                             
+                              printf("---------------\n");
+                              mOuter->DumpBox(stdout);
+                              printf("\n");
                             }
 
                         childFrame->GetContent(getter_AddRefs(content));
 
                         if (content) {
-                            id.SetLength(0);
-                            kClass.SetLength(0);
-                            tagString.SetLength(0);
-
-                            content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-                            id.ToCString(idValue,100);
-                       
-                            content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, kClass);
-                            kClass.ToCString(kClassValue,100);
-
-                            content->GetTag(*getter_AddRefs(tag));
-                            tag->ToString(tagString);
-                            tagString.ToCString(tagValue,100);
-
                             printf("child #%d: ", count);
-#ifdef NS_DEBUG
-                            nsFrame::ListTag(stdout, childFrame);                            
-#endif
-                            printf(" Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
+                            child->DumpBox(stdout);
+                            printf("\n");
 
                         }
 
