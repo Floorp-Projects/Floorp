@@ -266,7 +266,8 @@ NS_IMETHODIMP_(nsrefcnt)
 nsHTMLSelectElement::Release()
 {
   --mRefCnt;
-	if (mRefCnt <= 0) {
+  NS_LOG_RELEASE(this, mRefCnt, "nsHTMLSelectElement");
+  if (mRefCnt <= 0) {
     delete this;                                       
     return 0;                                          
   } else if ((1 == mRefCnt) && mForm) { 
