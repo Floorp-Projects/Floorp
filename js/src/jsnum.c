@@ -287,14 +287,14 @@ num_to(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval, JSDTo
 	if (!js_ValueToNumber(cx, argv[0], &precision))
 	    return JS_FALSE;
 	precision = js_DoubleToInteger(precision);
-    }
-    if (precision < precisionMin || precision > precisionMax) {
-	numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, precision);
-	if (!numStr)
-	    JS_ReportOutOfMemory(cx);
-	else
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PRECISION_RANGE, numStr);
-	return JS_FALSE;
+        if (precision < precisionMin || precision > precisionMax) {
+            numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, precision);
+            if (!numStr)
+                JS_ReportOutOfMemory(cx);
+            else
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_PRECISION_RANGE, numStr);
+            return JS_FALSE;
+        }
     }
 
     numStr = JS_dtostr(buf, sizeof buf, oneArgMode, (jsint)precision + precisionOffset, d);
