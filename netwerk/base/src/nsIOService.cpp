@@ -70,14 +70,6 @@ nsIOService::Init()
     return rv;
 }
 
-nsresult
-nsIOService::LateInit()
-{
-    nsresult rv;
-
-    rv = mSocketTransportService -> LateInit ();
-    return rv;
-}
 
 nsIOService::~nsIOService()
 {
@@ -119,7 +111,6 @@ nsIOService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     }
     
     _rValue = NS_STATIC_CAST (nsISupports*, *aResult);
-    _ios -> LateInit  ();
     NS_RELEASE (_rValue);
     _rValue = nsnull;
 

@@ -32,14 +32,18 @@
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
+MOZ_DECL_CTOR_COUNTER(nsAuthEngine);
+
 nsAuthEngine::nsAuthEngine()
 {
+    MOZ_COUNT_CTOR(nsAuthEngine);
     if (NS_FAILED(Init()))
         NS_ERROR("Failed to initialize the auth engine!");
 }
 
 nsAuthEngine::~nsAuthEngine()
 {
+    MOZ_COUNT_DTOR(nsAuthEngine);
     mAuthList->Clear();
     mProxyAuthList->Clear();
 }
