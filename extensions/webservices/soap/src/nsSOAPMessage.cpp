@@ -29,6 +29,7 @@
 #include "nsSOAPHeaderBlock.h"
 #include "nsSOAPEncoding.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMAttr.h"
 #include "nsIDOMParser.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNamedNodeMap.h"
@@ -95,7 +96,7 @@ NS_IMETHODIMP nsSOAPMessage::GetEnvelope(nsIDOMElement * *aEnvelope)
   return NS_OK;
 }
 
-/* readonly attribute unsigned short version; */
+/* readonly attribute PRUint16 version; */
 NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 *aVersion)
 {
   if (mMessage) {
@@ -125,7 +126,7 @@ NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 *aVersion)
 }
 
 /* Internal method for getting  envelope and  version */
-unsigned short nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
+PRUint16 nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
 {
   if (mMessage) {
     nsCOMPtr<nsIDOMElement> root;
@@ -158,7 +159,7 @@ NS_IMETHODIMP nsSOAPMessage::GetHeader(nsIDOMElement * *aHeader)
 {
   NS_ENSURE_ARG_POINTER(aHeader);
   nsCOMPtr<nsIDOMElement> env;
-  unsigned short version = GetEnvelopeWithVersion(getter_AddRefs(env));
+  PRUint16 version = GetEnvelopeWithVersion(getter_AddRefs(env));
   if (env) {
     nsSOAPUtils::GetSpecificChildElement(env, 
       *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kHeaderTagName, 
@@ -175,7 +176,7 @@ NS_IMETHODIMP nsSOAPMessage::GetBody(nsIDOMElement * *aBody)
 {
   NS_ENSURE_ARG_POINTER(aBody);
   nsCOMPtr<nsIDOMElement> env;
-  unsigned short version = GetEnvelopeWithVersion(getter_AddRefs(env));
+  PRUint16 version = GetEnvelopeWithVersion(getter_AddRefs(env));
   if (env) {
     nsSOAPUtils::GetSpecificChildElement(env, 
       *nsSOAPUtils::kSOAPEnvURI[version], nsSOAPUtils::kBodyTagName, 
@@ -242,7 +243,7 @@ NS_NAMED_LITERAL_STRING(realEmptySOAPDocStr2, "<env:Envelope xmlns:env=\"http://
 const nsAString* kEmptySOAPDocStr[] = {&realEmptySOAPDocStr1, &realEmptySOAPDocStr2};
 
 /* void encode (in AString aMethodName, in AString aTargetObjectURI, in PRUint32 aHeaderBlockCount, [array, size_is (aHeaderBlockCount)] in nsISOAPHeaderBlock aHeaderBlocks, in PRUint32 aParameterCount, [array, size_is (aParameterCount)] in nsISOAPParameter aParameters); */
-NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & aMethodName, const nsAString & aTargetObjectURI, PRUint32 aHeaderBlockCount, nsISOAPHeaderBlock **aHeaderBlocks, PRUint32 aParameterCount, nsISOAPParameter **aParameters)
+NS_IMETHODIMP nsSOAPMessage::Encode(PRUint16 aVersion, const nsAString & aMethodName, const nsAString & aTargetObjectURI, PRUint32 aHeaderBlockCount, nsISOAPHeaderBlock **aHeaderBlocks, PRUint32 aParameterCount, nsISOAPParameter **aParameters)
 {
   if (aVersion != nsISOAPMessage::VERSION_1_1
     && aVersion != nsISOAPMessage::VERSION_1_2)
@@ -260,16 +261,23 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
 		               getter_AddRefs(mMessage));
   if (NS_FAILED(rv)) return rv;
 
-//  Declare the default encoding if one exists
+//  Declare the default encoding.  This should always be non-null, but may be empty string.
 
-  if (mEncoding) {
+  nsCOMPtr<nsISOAPEncoding> encoding;
+  rv = GetEncoding(getter_AddRefs(encoding));
+  if (NS_FAILED(rv)) return rv;
+  if (encoding) {
     nsCOMPtr<nsIDOMElement> envelope;
     rv = GetEnvelope(getter_AddRefs(envelope));
     if (NS_FAILED(rv)) return rv;
     if (envelope) {
       nsAutoString enc;
-      mEncoding->GetStyleURI(enc);
-      envelope->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
+      rv = mEncoding->GetStyleURI(enc);
+      if (NS_FAILED(rv)) return rv;
+      if (!enc.IsEmpty()) {
+        rv = envelope->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
+        if (NS_FAILED(rv)) return rv;
+      }
     }
   }
 
@@ -282,7 +290,6 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
     nsCOMPtr<nsISupports> next;
     nsCOMPtr<nsISOAPHeaderBlock> header;
     nsCOMPtr<nsIDOMElement> element;
-    nsCOMPtr<nsISOAPEncoding> encoding;
     nsCOMPtr<nsISchemaType> schemaType;
     nsCOMPtr<nsIVariant> value;
     nsAutoString name;
@@ -329,7 +336,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
           if (NS_FAILED(rv)) return rv;
         }
 	if (mustUnderstand) {
-	  element->SetAttributeNS(nsSOAPUtils::kSOAPEnvPrefix, nsSOAPUtils::kMustUnderstandAttribute, nsSOAPUtils::kTrue);
+	  element->SetAttributeNS(nsSOAPUtils::kSOAPEnvPrefix, nsSOAPUtils::kMustUnderstandAttribute, nsSOAPUtils::kTrueA);
           if (NS_FAILED(rv)) return rv;
 	}
         if (mEncoding != encoding) {
@@ -368,7 +375,7 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
   nsCOMPtr<nsISupports> next;
   nsCOMPtr<nsISOAPParameter> param;
   nsCOMPtr<nsIDOMElement> element;
-  nsCOMPtr<nsISOAPEncoding> encoding;
+  nsCOMPtr<nsISOAPEncoding> newencoding;
   nsCOMPtr<nsISchemaType> schemaType;
   nsCOMPtr<nsIVariant> value;
   nsAutoString name;
@@ -391,22 +398,21 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
       if (NS_FAILED(rv)) return rv;
       rv = param->GetName(name);
       if (NS_FAILED(rv)) return rv;
-      rv = param->GetEncoding(getter_AddRefs(encoding));
+      rv = param->GetEncoding(getter_AddRefs(newencoding));
       if (NS_FAILED(rv)) return rv;
-      if (!encoding) {
-	rv = GetEncoding(getter_AddRefs(encoding));
-        if (NS_FAILED(rv)) return rv;
+      if (!newencoding) {
+	newencoding = encoding;
       }
       rv = param->GetSchemaType(getter_AddRefs(schemaType));
       if (NS_FAILED(rv)) return rv;
       rv = param->GetValue(getter_AddRefs(value));
       if (NS_FAILED(rv)) return rv;
-      rv = encoding->Encode(value, namespaceURI, name,
+      rv = newencoding->Encode(value, namespaceURI, name,
 		      schemaType, nsnull, body, getter_AddRefs(element));
       if (NS_FAILED(rv)) return rv;
-      if (mEncoding != encoding) {
+      if (encoding != newencoding) {
         nsAutoString enc;
-        encoding->GetStyleURI(enc);
+        newencoding->GetStyleURI(enc);
         element->SetAttributeNS(*nsSOAPUtils::kSOAPEncURI[aVersion], nsSOAPUtils::kEncodingStyleAttribute, enc);
       }
     }
@@ -416,6 +422,56 @@ NS_IMETHODIMP nsSOAPMessage::Encode(unsigned short aVersion, const nsAString & a
 
 static NS_DEFINE_CID(kMemoryCID, NS_MEMORY_CID);
 
+/**
+ * Internally used to track down the encoding to be used at the headers
+ * or parameters.   We know the version is legal, or we couldn't have
+ * found a starting point, so it is used but not checked again.  We
+ * also know that since there is a version, there is an encoding.
+ */
+nsresult nsSOAPMessage::GetEncodingWithVersion(nsIDOMElement* aFirst, PRUint16 *aVersion, nsISOAPEncoding **aEncoding)
+{
+  nsCOMPtr<nsISOAPEncoding> encoding;
+  nsresult rv = GetEncoding(getter_AddRefs(encoding));
+  if (NS_FAILED(rv)) return rv;
+  rv = GetVersion(aVersion);
+  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIDOMElement> element = aFirst;
+
+//  Check for stray encodingStyle attributes.  If none found, then use empty string encoding style.
+
+  nsAutoString style;
+  for (;;) {
+    nsCOMPtr<nsIDOMAttr> enc;
+    rv = element->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[*aVersion], nsSOAPUtils::kEncodingStyleAttribute, getter_AddRefs(enc));
+    if (NS_FAILED(rv)) return rv;
+    if (enc) {
+      rv = enc->GetNodeValue(style);
+      if (NS_FAILED(rv)) return rv;
+      break;
+    }
+    else {
+      nsCOMPtr<nsIDOMNode>next;
+      rv = element->GetParentNode(getter_AddRefs(next));
+      if (NS_FAILED(rv)) return rv;
+      if (next) {
+        PRUint16 type;
+        rv = element->GetNodeType(&type);
+        if (NS_FAILED(rv)) return rv;
+	if (type != nsIDOMNode::ELEMENT_NODE) {
+          next = nsnull;
+	}
+      }
+      if (next) {
+	element = do_QueryInterface(next);
+      }
+      else {
+        break;
+      }
+    }
+  }
+  return encoding->GetAssociatedEncoding(style, PR_TRUE, aEncoding);
+}
+
 /* void getHeaderBlocks (out PRUint32 aCount, [array, size_is (aCount), retval] out nsISOAPHeaderBlock aHeaderBlocks); */
 NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBlock ***aHeaderBlocks)
 {
@@ -424,13 +480,16 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
   *aHeaderBlocks = nsnull;
   int count = 0;
   int length = 0;
+
   nsCOMPtr<nsIDOMElement> element;
   nsresult rv = GetHeader(getter_AddRefs(element));
   if (NS_FAILED(rv) || !element) return rv;
   nsCOMPtr<nsISOAPEncoding> encoding;
-  rv = GetEncoding(getter_AddRefs(encoding));
+  PRUint16 version;
+  rv = GetEncodingWithVersion(element, &version, getter_AddRefs(encoding));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIDOMElement> next;
+
   nsCOMPtr<nsISOAPHeaderBlock> header;
   nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
   while (next) {
@@ -439,7 +498,7 @@ NS_IMETHODIMP nsSOAPMessage::GetHeaderBlocks(PRUint32 *aCount, nsISOAPHeaderBloc
       *aHeaderBlocks = (nsISOAPHeaderBlock* *)memory->Realloc(*aHeaderBlocks, length * sizeof(**aHeaderBlocks));
     }
     element = next;
-    header = new nsSOAPHeaderBlock();
+    header = new nsSOAPHeaderBlock(nsnull, version);// Header needs version to interpret actor, mustInclude
     if (!header) return NS_ERROR_OUT_OF_MEMORY;
 
     (*aHeaderBlocks)[(*aCount)] = header;
@@ -469,9 +528,6 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
   nsCOMPtr<nsIDOMElement> element;
   nsresult rv = GetBody(getter_AddRefs(element));
   if (NS_FAILED(rv) || !element) return rv;
-  nsCOMPtr<nsISOAPEncoding> encoding;
-  rv = GetEncoding(getter_AddRefs(encoding));
-  if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsIDOMElement> next;
   nsCOMPtr<nsISOAPParameter> param;
   nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
@@ -480,6 +536,10 @@ NS_IMETHODIMP nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 *aCou
     if (!element) return NS_ERROR_ILLEGAL_VALUE;
     nsSOAPUtils::GetFirstChildElement(element, getter_AddRefs(next));
   }
+  nsCOMPtr<nsISOAPEncoding> encoding;
+  PRUint16 version;
+  rv = GetEncodingWithVersion(element, &version, getter_AddRefs(encoding));
+  if (NS_FAILED(rv)) return rv;
   while (next) {
     if (length == count) {
       length = length ? 2 * length : 10;
@@ -510,7 +570,7 @@ NS_IMETHODIMP nsSOAPMessage::GetEncoding(nsISOAPEncoding* * aEncoding)
 {
   NS_ENSURE_ARG_POINTER(aEncoding);
   if (!mEncoding) {
-    unsigned short version;
+    PRUint16 version;
     nsresult rc = GetVersion(&version);
     if (NS_FAILED(rc)) return rc;
     if (version != nsISOAPMessage::VERSION_UNKNOWN) {

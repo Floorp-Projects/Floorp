@@ -3,7 +3,18 @@
 </HEAD>
 <BODY>
 <H1>SOAP Test: Is It a Prime Number</H1>
-Type slowly enough and the number will change color depending upon whether the soap call reports <font color="green">prime</font> or <font  color="red">nonprime</font>.
+Type slowly and the number will change color depending upon whether the soap call 
+reports <font color="green">prime</font> or <font  color="red">nonprime</font>.  
+<p>This works by calling a SOAP service listed on 
+<A href="http://www.xmethods.com">X Methods Website</A>.  View the source of this 
+page for details on how it was called.  If you compile mozilla DEBUG (you also need  
+MOZ_SOAP), the message sent and received will  be logged to the console.  Notice 
+that the response seems to be using an incorrect namespaceURI to identify the type 
+of the returned boolean.  For this reason, the script receives the value as a 
+string instead of as a boolean, which is why it is necessary to compare it as a 
+string.
+<p>Experimenters may wish to add other tests which exercize services, with specific 
+user interfaces such as the one in this test.
 <SCRIPT>
 
 // Passed in as the response handler in the asynchronous case
@@ -20,11 +31,11 @@ function oncompletion(resp, call, status) {
     var detail = f.detail;
     var ds = new XMLSerializer();
     var detailStr = ds.serializeToString(detail);
-    alert("Fault:\nFault code: " + f.faultCode + "\nFault string: " + f.faultString + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
+    alert("Fault:\nFault code: " + f.faultCode + "\nFault string: " + f.faultString 
+      + "\nFault actor: "  + f.faultActor + "\nDetail: " + detailStr);
   }
   else {
-    var foo = new Object();
-    var ret = resp.getParameters(false, foo);
+    var ret = resp.getParameters(false, {});
     var val = ret[0].value;
     if (val == "true") {
       document.getElementById("NUMBER").style.color="green"

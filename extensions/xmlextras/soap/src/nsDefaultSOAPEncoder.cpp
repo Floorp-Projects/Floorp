@@ -105,15 +105,15 @@ class ns##name##Encoder : \
 {\
 public:\
   ns##name##Encoder();\
-  ns##name##Encoder(unsigned short aVersion);\
+  ns##name##Encoder(PRUint16 aVersion);\
   virtual ~ns##name##Encoder();\
-  unsigned short mVersion;\
+  PRUint16 mVersion;\
   NS_DECL_ISUPPORTS\
   NS_DECL_NSISOAPENCODER\
   NS_DECL_NSISOAPDECODER\
 };\
 NS_IMPL_ISUPPORTS2(ns##name##Encoder,nsISOAPEncoder,nsISOAPDecoder) \
-ns##name##Encoder::ns##name##Encoder(unsigned short aVersion) {NS_INIT_ISUPPORTS();mVersion=aVersion;}\
+ns##name##Encoder::ns##name##Encoder(PRUint16 aVersion) {NS_INIT_ISUPPORTS();mVersion=aVersion;}\
 ns##name##Encoder::~ns##name##Encoder() {}
 
 // All encoders must be first declared and then registered.
@@ -145,7 +145,7 @@ DECLARE_ENCODER(UnsignedByte)
 
 nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1(): nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_1], nsnull, nsnull) 
 {
-  unsigned short version  =  nsISOAPMessage::VERSION_1_1;
+  PRUint16 version  =  nsISOAPMessage::VERSION_1_1;
   {
     nsDefaultEncoder *handler = new nsDefaultEncoder(version);
     SetDefaultEncoder(handler);
@@ -176,7 +176,7 @@ nsDefaultSOAPEncoder_1_1::nsDefaultSOAPEncoder_1_1(): nsSOAPEncoding(*nsSOAPUtil
 
 nsDefaultSOAPEncoder_1_2::nsDefaultSOAPEncoder_1_2(): nsSOAPEncoding(*nsSOAPUtils::kSOAPEncURI[nsISOAPMessage::VERSION_1_2], nsnull, nsnull) 
 {
-  unsigned short version  =  nsISOAPMessage::VERSION_1_2;
+  PRUint16 version  =  nsISOAPMessage::VERSION_1_2;
   {
     nsDefaultEncoder *handler = new nsDefaultEncoder(version);
     SetDefaultEncoder(handler);
@@ -617,13 +617,13 @@ NS_IMETHODIMP nsBooleanEncoder::Encode(nsISOAPEncoding* aEncoding,
   rc = aSource->GetAsBool(&b);
   if (NS_FAILED(rc)) return rc;
   if (aName.IsEmpty()) {
-    return EncodeSimpleValue(b ? nsSOAPUtils::kTrue : nsSOAPUtils::kFalse,
+    return EncodeSimpleValue(b ? nsSOAPUtils::kTrueA : nsSOAPUtils::kFalseA,
 		       *nsSOAPUtils::kSOAPEncURI[mVersion],
 		       kBooleanSchemaType,
 		       aDestination,
 		       aReturnValue);
   }
-  return EncodeSimpleValue(b ? nsSOAPUtils::kTrue : nsSOAPUtils::kFalse,
+  return EncodeSimpleValue(b ? nsSOAPUtils::kTrueA : nsSOAPUtils::kFalseA,
 		       aNamespaceURI,
 		       aName,
 		       aDestination,
@@ -977,6 +977,25 @@ NS_IMETHODIMP nsDefaultEncoder::Decode(nsISOAPEncoding* aEncoding,
 					    nsIVariant **_retval)
 {
   nsCOMPtr<nsISOAPDecoder> decoder;
+  nsCOMPtr<nsISOAPEncoding> encoding = aEncoding;  //  First, handle encoding redesignation, if any
+
+  {
+    nsCOMPtr<nsIDOMAttr> enc;
+    nsresult rv = aSource->GetAttributeNodeNS(*nsSOAPUtils::kSOAPEncURI[mVersion], nsSOAPUtils::kEncodingStyleAttribute, getter_AddRefs(enc));
+    if (NS_FAILED(rv)) return rv;
+    if (enc) {
+      nsAutoString style;
+      encoding->GetStyleURI(style);
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsISOAPEncoding> newencoding;
+      encoding->GetAssociatedEncoding(style, PR_FALSE, getter_AddRefs(newencoding));
+      if (NS_FAILED(rv)) return rv;
+      if (newencoding) {
+	encoding = newencoding;
+      }
+    }
+  }
+
   nsCOMPtr<nsISchemaType> type = aSchemaType;
   if (!type) {	//  Where no type has been specified, look one up from schema attribute, if it exists
     nsCOMPtr<nsISchemaCollection> collection;

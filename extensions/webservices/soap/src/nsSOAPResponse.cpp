@@ -54,7 +54,7 @@ NS_IMETHODIMP nsSOAPResponse::GetFault(nsISOAPFault * *aFault)
   nsresult rc = GetBody(getter_AddRefs(body));
   if (NS_FAILED(rc)) return rc;
   if (body) {
-    unsigned short version;
+    PRUint16 version;
     rc = GetVersion(&version);
     if (NS_FAILED(rc)) return rc;
     if (rc != nsSOAPMessage::VERSION_UNKNOWN) {

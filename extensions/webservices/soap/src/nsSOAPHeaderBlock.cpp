@@ -33,7 +33,7 @@ nsSOAPHeaderBlock::nsSOAPHeaderBlock():mVersion(nsISOAPMessage::VERSION_UNKNOWN)
   NS_INIT_ISUPPORTS();
 }
 
-nsSOAPHeaderBlock::nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, unsigned short aVersion): nsSOAPBlock(aAttachments), mVersion(aVersion)
+nsSOAPHeaderBlock::nsSOAPHeaderBlock(nsISOAPAttachments* aAttachments, PRUint16 aVersion): nsSOAPBlock(aAttachments), mVersion(aVersion)
 {
 }
 

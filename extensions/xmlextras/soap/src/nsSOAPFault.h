@@ -46,6 +46,6 @@ public:
 
 protected:
   nsCOMPtr<nsIDOMElement> mFaultElement;
-  unsigned short mVersion;
+  PRUint16 mVersion;
 };
 #endif

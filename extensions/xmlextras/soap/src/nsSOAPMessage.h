@@ -50,7 +50,8 @@ public:
 
 protected:
 
-  unsigned short GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope);
+  PRUint16 GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope);
+  nsresult GetEncodingWithVersion(nsIDOMElement *aFirst, PRUint16 *aVersion, nsISOAPEncoding **aEncoding);
   nsCOMPtr<nsIDOMDocument> mMessage;
   nsCOMPtr<nsISOAPEncoding> mEncoding;
   nsString mActionURI;

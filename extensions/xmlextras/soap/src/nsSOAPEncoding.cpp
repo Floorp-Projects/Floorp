@@ -174,7 +174,7 @@ nsSOAPEncoding::nsSOAPEncoding(): mEncoders(new nsSupportsHashtable),
   mRegistry = new nsSOAPEncodingRegistry(this);
 }
 
-nsSOAPEncoding::nsSOAPEncoding(unsigned short aVersion): mEncoders(new nsSupportsHashtable),
+nsSOAPEncoding::nsSOAPEncoding(PRUint16 aVersion): mEncoders(new nsSupportsHashtable),
   mDecoders(new nsSupportsHashtable)
 {
   NS_INIT_ISUPPORTS();
