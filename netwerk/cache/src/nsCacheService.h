@@ -58,6 +58,13 @@ public:
      * Methods called by nsCacheSession
      */
     nsresult       OpenCacheEntry(nsCacheSession *           session,
+                                  const char *               key,
+                                  nsCacheAccessMode          accessRequested,
+                                  nsICacheListener *         listener,
+                                  nsICacheEntryDescriptor ** result);
+
+#if 0
+    nsresult       OpenCacheEntry(nsCacheSession *           session,
                                   const char *               clientKey, 
                                   nsCacheAccessMode          accessRequested,
                                   nsICacheEntryDescriptor ** result);
@@ -66,7 +73,7 @@ public:
                                        const char *       key, 
                                        nsCacheAccessMode  accessRequested,
                                        nsICacheListener * listener);
-
+#endif
     /**
      * Methods called by nsCacheEntryDescriptor
      */

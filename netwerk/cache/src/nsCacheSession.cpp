@@ -52,10 +52,13 @@ nsCacheSession::OpenCacheEntry(const char *               key,
                                nsCacheAccessMode          accessRequested, 
                                nsICacheEntryDescriptor ** result)
 {
-    return nsCacheService::GlobalInstance()->OpenCacheEntry(this,
-                                                            key,
-                                                            accessRequested,
-                                                            result);
+    nsresult rv;
+    rv =  nsCacheService::GlobalInstance()->OpenCacheEntry(this,
+                                                           key,
+                                                           accessRequested,
+                                                           nsnull, // no listener
+                                                           result);
+    return rv;
 }
 
 
@@ -63,8 +66,13 @@ NS_IMETHODIMP nsCacheSession::AsyncOpenCacheEntry(const char *key,
                                                   nsCacheAccessMode accessRequested,
                                                   nsICacheListener *listener)
 {
-    return nsCacheService::GlobalInstance()->AsyncOpenCacheEntry(this,
-                                                                 key,
-                                                                 accessRequested,
-                                                                 listener);
+    nsresult rv;
+    rv = nsCacheService::GlobalInstance()->OpenCacheEntry(this,
+                                                          key,
+                                                          accessRequested,
+                                                          listener,
+                                                          nsnull); // no result
+
+    if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) rv = NS_OK;
+    return rv;
 }

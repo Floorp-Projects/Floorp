@@ -40,7 +40,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
                            PRBool               streamBased,
                            nsCacheStoragePolicy storagePolicy)
     : mKey(key),
-      mFetchCount(0),
+      mFetchCount(1),
       mLastValidated(0),
       mExpirationTime(0),
       mFlags(0),
@@ -50,7 +50,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mData(nsnull),
       mMetaData(nsnull)
 {
-    PR_INIT_CLIST(&mListLink);
+    PR_INIT_CLIST(this);
     PR_INIT_CLIST(&mRequestQ);
     PR_INIT_CLIST(&mDescriptorQ);
 
@@ -170,37 +170,62 @@ nsCacheEntry::UnflattenMetaData(char * data, PRUint32 size)
  */
 
 nsresult
-nsCacheEntry::CommonOpen(nsCacheRequest * request, nsCacheAccessMode *accessGranted)
+nsCacheEntry::RequestAccess(nsCacheRequest * request, nsCacheAccessMode *accessGranted)
 {
     nsresult  rv = NS_OK;
     
     if (!IsInitialized()) {
         // brand new, unbound entry
         request->mKey = nsnull;  // steal ownership of the key string
-        *accessGranted = request->mAccessRequested & nsICache::ACCESS_WRITE;
-        NS_ASSERTION(*accessGranted, "new cache entry for READ-ONLY request");
-        if (request->mStreamBased)  MarkStreamBased();
-        mFetchCount = 1;
+        if (request->IsStreamBased())  MarkStreamBased();
         MarkInitialized();
+
+        *accessGranted = request->AccessRequested() & nsICache::ACCESS_WRITE;
+        NS_ASSERTION(*accessGranted, "new cache entry for READ-ONLY request");
+        PR_APPEND_LINK(request, &mRequestQ);
         return rv;
     }
 
-    if (IsStreamData() != request->mStreamBased) {
+    if (IsStreamData() != request->IsStreamBased()) {
         *accessGranted = nsICache::ACCESS_NONE;
-        return request->mStreamBased ?
+        return request->IsStreamBased() ?
             NS_ERROR_CACHE_DATA_IS_NOT_STREAM : NS_ERROR_CACHE_DATA_IS_STREAM;
     }
 
     if (PR_CLIST_IS_EMPTY(&mDescriptorQ)) {
-        // 1st descriptor for existing, bound entry
-        *accessGranted = request->mAccessRequested;
+        // 1st descriptor for existing bound entry
+        *accessGranted = request->AccessRequested();
     } else {
         // nth request for existing, bound entry
-        *accessGranted = request->mAccessRequested & ~nsICache::ACCESS_WRITE;
+        *accessGranted = request->AccessRequested() & ~nsICache::ACCESS_WRITE;
         if (!IsValid())
             rv = NS_ERROR_CACHE_WAIT_FOR_VALIDATION;
     }
+    PR_APPEND_LINK(request,&mRequestQ);
+
     return rv;
+}
+
+
+nsresult
+nsCacheEntry::CreateDescriptor(nsCacheRequest *           request,
+                               nsCacheAccessMode          accessGranted,
+                               nsICacheEntryDescriptor ** result)
+{
+    NS_ENSURE_ARG_POINTER(request && result);
+    
+    nsCacheEntryDescriptor * descriptor =
+        new nsCacheEntryDescriptor(this, accessGranted);
+
+    if (descriptor == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // XXX check request is on q
+    PR_REMOVE_AND_INIT_LINK(request);
+    PR_APPEND_LINK(descriptor, &mDescriptorQ);
+
+    NS_ADDREF(*result = descriptor);
+    return NS_OK;
 }
 
 
@@ -210,7 +235,7 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
     if (!request)  return NS_ERROR_NULL_POINTER;
 
     nsCacheAccessMode  accessGranted;
-    nsresult  rv = CommonOpen(request, &accessGranted);
+    nsresult  rv = RequestAccess(request, &accessGranted);
     if (NS_SUCCEEDED(rv)) {
         //        rv = nsCacheEntryDescriptor::Create(this, accessGranted, result);
 
@@ -224,12 +249,12 @@ nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
 
         if (NS_SUCCEEDED(rv)) {
             // queue the descriptor
-            PR_APPEND_LINK((descriptor)->GetListNode(), &mDescriptorQ);
+            PR_APPEND_LINK(descriptor, &mDescriptorQ);
         }
 
     } else if (rv == NS_ERROR_CACHE_WAIT_FOR_VALIDATION) {
         // queue request
-        PR_APPEND_LINK(request->GetListNode(), &mRequestQ);
+        PR_APPEND_LINK(request, &mRequestQ);
         // XXX allocate PRCondVar for request, if none
         // XXX release service lock
         // XXX wait until valid or doomed
@@ -244,7 +269,7 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
     if (!request)  return NS_ERROR_NULL_POINTER;
 
     nsCacheAccessMode  accessGranted;
-    nsresult  rv = CommonOpen(request, &accessGranted);
+    nsresult  rv = RequestAccess(request, &accessGranted);
     if (NS_SUCCEEDED(rv)) {
         nsICacheEntryDescriptor * descriptor;
         rv = nsCacheEntryDescriptor::Create(this, accessGranted, &descriptor);
@@ -263,7 +288,7 @@ PRBool
 nsCacheEntry::RemoveRequest(nsCacheRequest * request)
 {
     // XXX if debug: verify this request belongs to this entry
-    PR_REMOVE_AND_INIT_LINK(request->GetListNode());
+    PR_REMOVE_AND_INIT_LINK(request);
 
     // return true if this entry should stay active
     return !((PR_CLIST_IS_EMPTY(&mRequestQ)) &&
@@ -275,7 +300,7 @@ PRBool
 nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
 {
     // XXX if debug: verify this descriptor belongs to this entry
-    PR_REMOVE_AND_INIT_LINK(descriptor->GetListNode());
+    PR_REMOVE_AND_INIT_LINK(descriptor);
 
     if (!PR_CLIST_IS_EMPTY(&mDescriptorQ))
         return PR_TRUE;  // stay active if we still have open descriptors

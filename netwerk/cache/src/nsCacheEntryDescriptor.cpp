@@ -36,7 +36,7 @@ nsCacheEntryDescriptor::nsCacheEntryDescriptor(nsCacheEntry * entry,
     : mCacheEntry(entry), mAccessGranted(accessGranted)
 {
   NS_INIT_ISUPPORTS();
-  PR_INIT_CLIST(&mListLink);
+  PR_INIT_CLIST(this);
 }
 
 
