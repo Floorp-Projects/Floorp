@@ -92,7 +92,7 @@ What kind of file is this?
     if ($mimetype eq "other") {
         $mimetype = $::FORM{'othertype'};
     }
-    if ($mimetype !~ m@^(\w|-)+/(\w|-)+$@) {
+    if ($mimetype !~ m@^(\w|-|\+|\.)+/(\w|-|\+|\.)+$@) {
         Punt("You must select a legal mime type.  '<tt>$mimetype</tt>' simply will not do.");
     }
     SendSQL("insert into attachments (bug_id, filename, description, mimetype, ispatch, submitter_id, thedata) values ($id," .
