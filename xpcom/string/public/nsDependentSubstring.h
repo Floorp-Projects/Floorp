@@ -183,7 +183,6 @@ class NS_COM nsDependentSingleFragmentSubstring
       void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
 
     public:
-      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
       virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
 
     private:
@@ -225,7 +224,6 @@ class NS_COM nsDependentSingleFragmentCSubstring
       void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
 
     public:
-      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
       virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
 
     private:
