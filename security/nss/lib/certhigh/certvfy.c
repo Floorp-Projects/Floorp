@@ -421,8 +421,17 @@ loser:
 	    /* need to dupe since caller expects new cert */
 	    return CERT_DupCertificate(cert);
 	} else {
-	    /* this is the only instance */
-	    return STAN_GetCERTCertificate(chain[1]);
+	    CERTCertificate *rvc;
+	    /* XXX hack - if this is the only instance, return it, otherwise
+	     * the cert came out of the cache or a crypto context, in 
+	     * which case it needs to be duped
+	     */
+	    if (!chain[1]->decoding) {
+		return STAN_GetCERTCertificate(chain[1]);
+	    } else {
+		rvc = STAN_GetCERTCertificate(chain[1]);
+		return CERT_DupCertificate(rvc);
+	    }
 	}
     }
     return NULL;
