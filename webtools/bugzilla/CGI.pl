@@ -797,8 +797,6 @@ sub PutHeader {
     print "$h2\n";
     print "</TD></TR></TABLE>\n";
 
-    print "</TD></TR></TABLE>\n";
-
     if (Param("shutdownhtml")) {
         if (!$ignoreshutdown) {
             print Param("shutdownhtml");
