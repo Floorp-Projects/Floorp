@@ -173,6 +173,12 @@ public:
                               PRInt32 aModType,
                               PRInt32 aHint);
 
+  // if the content is "visibility:hidden", then just hide the view
+  // and all our contents. We don't extend "visibility:hidden" to
+  // the child content ourselves, since it belongs to a different
+  // document and CSS doesn't inherit in there.
+  virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
+
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif
