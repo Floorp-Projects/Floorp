@@ -930,10 +930,7 @@ Contributor(s): ______________________________________. -->
     </vbox>
     <splitter id="splitterSidebar" collapse="before" persist="state hidden"
                                    class="chromeclass-extrachrome sidebar-splitter"
-                                   align="center" onmouseup="SidebarFinishClick();">
-      <grippy class="sidebar-splitter-grippy"
-              onclick="SidebarCleanUpExpandCollapse();"/>
-    </splitter>
+                                   align="center" onmouseup="SidebarFinishClick();"/>
     <tabbrowser id="content"
                 flex="1" contenttooltip="aHTMLTooltip"
                 contentcontextmenu="contentAreaContextMenu"
