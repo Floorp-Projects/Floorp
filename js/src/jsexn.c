@@ -408,6 +408,12 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         older = JS_SetErrorReporter(cx, NULL);
         state = JS_SaveExceptionState(cx);
     }
+#ifdef __GNUC__         /* suppress bogus gcc warnings */
+    else {
+        older = NULL;
+        state = NULL;
+    }
+#endif
     callerid = ATOM_KEY(cx->runtime->atomState.callerAtom);
 
     JS_ASSERT(cx->fp);
@@ -765,10 +771,12 @@ JSBool
 js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
 {
     JSErrNum errorNumber;
-    JSObject *errObject, *errProto;
     JSExnType exn;
+    JSObject *errObject, *errProto;
+    uintN argc;
+    jsval *argv;
+    void *mark;
     JSExnPrivate *privateData;
-    JSString *msgstr, *fnamestr;
 
     /* Find the exception index associated with this error. */
     JS_ASSERT(reportp);
@@ -822,43 +830,24 @@ js_ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp)
     }
 
     /*
-     * Use js_NewObject instead of js_ConstructObject, because
-     * js_ConstructObject seems to require a frame.
+     * Use js_ConstructObject to compute the stack property and any other
+     * default properties or private data.
      */
-    errObject = js_NewObject(cx, &ExceptionClass, errProto, NULL);
+    if (reportp) {
+        argv = JS_PushArguments(cx, &mark, "ssu",
+                                message, reportp->filename, reportp->lineno);
+        argc = 3;
+    } else {
+        argv = JS_PushArguments(cx, &mark, "s", message);
+        argc = 1;
+    }
+    if (!argv)
+        return JS_FALSE;
+    errObject = js_ConstructObject(cx, &ExceptionClass, errProto, NULL,
+                                   argc, argv);
+    JS_PopArguments(cx, mark);
     if (!errObject)
         return JS_FALSE;
-
-    /* Store 'message' as a javascript-visible value. */
-    msgstr = JS_NewStringCopyZ(cx, message);
-    if (!msgstr)
-        return JS_FALSE;
-    if (!JS_DefineProperty(cx, errObject, js_message_str,
-                           STRING_TO_JSVAL(msgstr), NULL, NULL,
-                           JSPROP_ENUMERATE)) {
-        return JS_FALSE;
-    }
-
-    if (reportp) {
-        if (reportp->filename) {
-            fnamestr = JS_NewStringCopyZ(cx, reportp->filename);
-            if (!fnamestr)
-                return JS_FALSE;
-            /* Store 'filename' as a javascript-visible value. */
-            if (!JS_DefineProperty(cx, errObject, js_filename_str,
-                                   STRING_TO_JSVAL(fnamestr), NULL, NULL,
-                                   JSPROP_ENUMERATE)) {
-                return JS_FALSE;
-            }
-            /* Store 'lineno' as a javascript-visible value. */
-            if (!JS_DefineProperty(cx, errObject, js_lineno_str,
-                                   INT_TO_JSVAL((int)reportp->lineno), NULL,
-                                   NULL, JSPROP_ENUMERATE)) {
-                return JS_FALSE;
-            }
-        }
-
-    }
 
     /*
      * Construct a new copy of the error report, and store it in the

@@ -1725,7 +1725,7 @@ FindConstructor(JSContext *cx, JSObject *scope, const char *name, jsval *vp)
 
 JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-                   JSObject *parent)
+                   JSObject *parent, uintN argc, jsval *argv)
 {
     jsval cval, rval;
     JSObject *obj, *ctor;
@@ -1754,7 +1754,7 @@ js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     if (!obj)
         return NULL;
 
-    if (!js_InternalConstruct(cx, obj, cval, 0, NULL, &rval))
+    if (!js_InternalConstruct(cx, obj, cval, argc, argv, &rval))
         goto bad;
     return JSVAL_IS_OBJECT(rval) ? JSVAL_TO_OBJECT(rval) : obj;
 bad:

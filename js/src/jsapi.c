@@ -2000,7 +2000,17 @@ JS_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
     CHECK_REQUEST(cx);
     if (!clasp)
         clasp = &js_ObjectClass;    /* default class is Object */
-    return js_ConstructObject(cx, clasp, proto, parent);
+    return js_ConstructObject(cx, clasp, proto, parent, 0, NULL);
+}
+
+JS_PUBLIC_API(JSObject *)
+JS_ConstructObjectWithArguments(JSContext *cx, JSClass *clasp, JSObject *proto,
+                                JSObject *parent, uintN argc, jsval *argv)
+{
+    CHECK_REQUEST(cx);
+    if (!clasp)
+        clasp = &js_ObjectClass;    /* default class is Object */
+    return js_ConstructObject(cx, clasp, proto, parent, argc, argv);
 }
 
 static JSBool

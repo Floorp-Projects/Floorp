@@ -292,7 +292,7 @@ js_NewObject(JSContext *cx, JSClass *clasp, JSObject *proto, JSObject *parent);
 
 extern JSObject *
 js_ConstructObject(JSContext *cx, JSClass *clasp, JSObject *proto,
-		   JSObject *parent);
+                   JSObject *parent, uintN argc, jsval *argv);
 
 extern void
 js_FinalizeObject(JSContext *cx, JSObject *obj);
