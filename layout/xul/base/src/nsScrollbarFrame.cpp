@@ -137,3 +137,4 @@ nsScrollbarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
 }
+
