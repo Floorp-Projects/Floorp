@@ -126,9 +126,9 @@ NS_IMETHODIMP nsFilePicker::ShowW(PRInt16 *aReturnVal)
     browserInfo.iImage         = nsnull;
 
     // XXX UNICODE support is needed here --> DONE
-    LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
+    LPITEMIDLIST list = nsToolkit::mSHBrowseForFolder(&browserInfo);
     if (list != NULL) {
-      result = ::SHGetPathFromIDListW(list, (LPWSTR)fileBuffer);
+      result = nsToolkit::mSHGetPathFromIDList(list, (LPWSTR)fileBuffer);
       if (result) {
           mUnicodeFile.Append(fileBuffer);
       }

@@ -688,16 +688,21 @@ static nsAttentionTimerMonitor *gAttentionTimerMonitor = 0;
 
 BOOL CALLBACK nsWindow::BroadcastMsgToChildren(HWND aWnd, LPARAM aMsg) 
 {
-  LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
-  if (proc == (LONG)&nsWindow::WindowProc) {
-    // its one of our windows so go ahead and send a message to it
-    WNDPROC winProc = (WNDPROC)GetWindowLong(aWnd, GWL_WNDPROC);
-#ifdef MOZ_UNICODE
-    nsToolkit::mCallWindowProc(winProc, aWnd, aMsg, 0, 0);
-#else
-    ::CallWindowProc(winProc, aWnd, aMsg, 0, 0);
-#endif
-  }
+#ifdef MOZ_UNICODE 
+  LONG proc = nsToolkit::mGetWindowLong(aWnd, GWL_WNDPROC); 
+  if (proc == (LONG)&nsWindow::WindowProc) { 
+    // its one of our windows so go ahead and send a message to it 
+    WNDPROC winProc = (WNDPROC)nsToolkit::mGetWindowLong(aWnd, GWL_WNDPROC); 
+    nsToolkit::mCallWindowProc(winProc, aWnd, aMsg, 0, 0); 
+  } 
+#else 
+  LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC); 
+  if (proc == (LONG)&nsWindow::WindowProc) { 
+    // its one of our windows so go ahead and send a message to it 
+    WNDPROC winProc = (WNDPROC)GetWindowLong(aWnd, GWL_WNDPROC); 
+    ::CallWindowProc(winProc, aWnd, aMsg, 0, 0); 
+  } 
+#endif 
   return TRUE;
 }
 
@@ -1535,11 +1540,13 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
 
     // Show nsIDocShellTreeItem::contentType in GWL_ID
     // This way 3rd part apps can check if a window is chrome (0) or content (1)
-    LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
-    LONG isContent = (contentType == 1 || contentType == 2);
 #ifdef MOZ_UNICODE
+    LONG contentType = aInitData? aInitData->mContentType: (parent? nsToolkit::mGetWindowLong(parent, GWL_ID): -1);
+    LONG isContent = (contentType == 1 || contentType == 2);
     nsToolkit::mSetWindowLong(mWnd, GWL_ID, contentType);
 #else
+    LONG contentType = aInitData? aInitData->mContentType: (parent? ::GetWindowLong(parent, GWL_ID): -1);
+    LONG isContent = (contentType == 1 || contentType == 2);
     ::SetWindowLong(mWnd, GWL_ID, contentType);
 #endif
 
@@ -1847,7 +1854,11 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
          // if not, accept events for any window that hasn't been
          // disabled.
          if (!acceptEvent) {
+#ifdef MOZ_UNICODE
+           LONG proc = nsToolkit::mGetWindowLong(msgWindow, GWL_WNDPROC);
+#else
            LONG proc = ::GetWindowLong(msgWindow, GWL_WNDPROC);
+#endif /* MOZ_UNICODE */
            if (proc == (LONG)&nsWindow::WindowProc) {
              nsWindow *msgWin = GetNSWindowPtr(msgWindow);
              msgWin->IsEnabled(&acceptEvent);
@@ -2486,8 +2497,13 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
 
   DWORD style, exStyle;
   if (aShouldHide) {
+#ifdef MOZ_UNICODE
+    DWORD tempStyle = nsToolkit::mGetWindowLong(hwnd, GWL_STYLE);
+    DWORD tempExStyle = nsToolkit::mGetWindowLong(hwnd, GWL_EXSTYLE);
+#else
     DWORD tempStyle = ::GetWindowLong(hwnd, GWL_STYLE);
     DWORD tempExStyle = ::GetWindowLong(hwnd, GWL_EXSTYLE);
+#endif /* MOZ_UNICODE */
 
     style = WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX;
     exStyle = 0;
@@ -2497,8 +2513,13 @@ NS_IMETHODIMP nsWindow::HideWindowChrome(PRBool aShouldHide)
   }
   else {
     if (!mOldStyle || !mOldExStyle) {
+#ifdef MOZ_UNICODE
+      mOldStyle = nsToolkit::mGetWindowLong(hwnd, GWL_STYLE);
+      mOldExStyle = nsToolkit::mGetWindowLong(hwnd, GWL_EXSTYLE);
+#else
       mOldStyle = ::GetWindowLong(hwnd, GWL_STYLE);
       mOldExStyle = ::GetWindowLong(hwnd, GWL_EXSTYLE);
+#endif /* MOZ_UNICODE */
     }
 
     style = mOldStyle;
@@ -3062,7 +3083,11 @@ BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte 
   }
   else 
   { // 0x20 - SPACE, 0x3D - EQUALS
+#ifdef MOZ_UNICODE
+    if(mbcsCharCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
+#else
     if(virtualKeyCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
+#endif  /* MOZ_UNICODE */
     {
       uniChar = 0;
     } 
@@ -3589,7 +3614,11 @@ static nsresult HeapDump(const char *filename, const char *heading)
 
 BOOL CALLBACK nsWindow::DispatchStarvedPaints(HWND aWnd, LPARAM aMsg) 
 {
+#ifdef MOZ_UNICODE
+  LONG proc = nsToolkit::mGetWindowLong(aWnd, GWL_WNDPROC);
+#else
   LONG proc = ::GetWindowLong(aWnd, GWL_WNDPROC);
+#endif /* MOZ_UNICODE */
   if (proc == (LONG)&nsWindow::WindowProc) {
     // its one of our windows so check to see if it has a 
     // invalidated rect. If it does. Dispatch a synchronous
@@ -4503,7 +4532,11 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             break;
           }
           
+#ifdef MOZ_UNICODE          
+          LONG proc = nsToolkit::mGetWindowLong(destWnd, GWL_WNDPROC);
+#else
           LONG proc = ::GetWindowLong(destWnd, GWL_WNDPROC);
+#endif /* MOZ_UNICODE */
           if (proc != (LONG)&nsWindow::WindowProc)  {
             // Some other app, or a plugin window.
             // Windows directs WM_MOUSEWHEEL to the focused window.
