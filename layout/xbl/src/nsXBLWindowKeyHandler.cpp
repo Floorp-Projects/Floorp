@@ -126,9 +126,6 @@ nsXBLWindowKeyHandler::EnsureHandlers()
     nsXBLService::BuildHandlerChain(content, getter_AddRefs(mHandler));
   }
   else {
-    mHandler = nsnull;
-    mPlatformHandler = nsnull;
-
     if (!mXBLSpecialDocInfo)
       mXBLSpecialDocInfo = new nsXBLSpecialDocInfo();
       
