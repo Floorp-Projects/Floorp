@@ -62,15 +62,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
-  virtual nsresult Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsIWidget *aWindow);
+  NS_IMETHOD Init(nsIDeviceContext* aContext, nsDrawingSurface aSurface);
   virtual nsresult CommonInit();
 
   virtual void Reset();
 
   virtual nsIDeviceContext * GetDeviceContext(void);
 
-  virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
+  NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
+  NS_IMETHOD GetHints(PRUint32& aResult);
 
   virtual void PushState(void);
   virtual PRBool PopState(void);
@@ -137,7 +138,7 @@ public:
   virtual void DrawImage(nsIImage *aImage, const nsRect& aRect);
   virtual void DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
 
-  virtual nsresult CopyOffScreenBits(nsRect &aBounds);
+  NS_IMETHOD CopyOffScreenBits(nsRect &aBounds);
 
 protected:
 

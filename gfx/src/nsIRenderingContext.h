@@ -48,9 +48,8 @@ typedef enum
 } nsClipCombine;
 
 // IID for the nsIRenderingContext interface
-#define NS_IRENDERING_CONTEXT_IID    \
-{ 0x7fd8c0f0, 0xa265, 0x11d1, \
-{ 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
+#define NS_IRENDERING_CONTEXT_IID \
+ { 0xa6cf9068, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 //----------------------------------------------------------------------
 
@@ -70,7 +69,7 @@ public:
    * @param aWidget the widget to hook up to
    * @result The result of the initialization, NS_Ok if no errors
    */
-  virtual nsresult Init(nsIDeviceContext* aContext,nsIWidget *aWidget) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aContext,nsIWidget *aWidget) = 0;
 
   /**
    * Initialize the RenderingContext
@@ -78,7 +77,7 @@ public:
    * @param aSurface the surface to draw into
    * @result The result of the initialization, NS_Ok if no errors
    */
-  virtual nsresult Init(nsIDeviceContext* aContext,nsDrawingSurface aSurface) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aContext,nsDrawingSurface aSurface) = 0;
 
   /**
    * Reset the rendering context
@@ -95,7 +94,13 @@ public:
    * Selects an offscreen drawing surface into the RenderingContext to draw to.
    * @param aSurface is the offscreen surface we are going to draw to.
    */
-  virtual nsresult SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) = 0;
+  NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface) = 0;
+
+  /**
+   * Returns in aResult any rendering hints that the context has.
+   * See below for the hints bits. Always returns NS_OK.
+   */
+  NS_IMETHOD GetHints(PRUint32& aResult) = 0;
 
   /**
    * Save a graphical state onto a stack.
@@ -354,6 +359,7 @@ public:
   virtual void DrawString(const char *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
                           nscoord aWidth) = 0;
+
   /**
    * Draw a string in the RenderingContext
    * @param aString A PRUnichar of the string
@@ -365,6 +371,7 @@ public:
   virtual void DrawString(const PRUnichar *aString, PRUint32 aLength,
                           nscoord aX, nscoord aY,
                           nscoord aWidth) = 0;
+
   /**
    * Draw a string in the RenderingContext
    * @param aString A nsString of the string
@@ -407,7 +414,7 @@ public:
    * Copy offscreen pixelmap to this RenderingContext
    * @param aBounds Destination rectangle to copy to
    */
-  virtual nsresult CopyOffScreenBits(nsRect &aBounds) = 0;
+  NS_IMETHOD CopyOffScreenBits(nsRect &aBounds) = 0;
 };
 
 //modifiers for text rendering
@@ -416,5 +423,21 @@ public:
 #define NS_DRAWSTRING_UNDERLINE         0x1
 #define NS_DRAWSTRING_OVERLINE          0x2
 #define NS_DRAWSTRING_LINE_THROUGH      0x4
+
+// Bit values for GetHints
+
+/**
+ * This bit, when set, indicates that the underlying rendering system
+ * prefers 8 bit text rendering over PRUnichar text rendering. When this
+ * bit is <b>not</b> set the opposite is true: the system prefers PRUnichar
+ * rendering, not 8 bit rendering.
+ */
+#define NS_RENDERING_HINT_FAST_8BIT_TEXT   0x1
+
+/**
+ * This bit, when set, indicates that the rendering is being done
+ * remotely.
+ */
+#define NS_RENDERING_HINT_REMOTE_RENDERING 0x2
 
 #endif /* nsIRenderingContext_h___ */
