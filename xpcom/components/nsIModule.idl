@@ -1,0 +1,65 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIFactory.idl"
+
+[uuid(00000000-0000-0000-0000-000000000005)]
+interface nsIModule : nsISupports
+{
+    // Object Instance Creation
+    void GetFactory(in nsISupports aServMgr, in nsCIDRef aClass,
+                    out nsIFactory return_Factory);
+
+    // Component registration
+    void RegisterSelf(in nsISupports aServMgr, in nsISupports location);
+    void UnregisterSelf(in nsISupports aServMgr, in nsISupports location);
+
+    // Module load management
+    // okToUnload: indicates to the caller if the module can be unloaded.
+    // 		Returning PR_TRUE isn't a guarantee that the module will be
+    //		unloaded. It constitues only willingness of the module to be
+    //		unloaded.
+    //		Returning PR_FALSE guaratees that the module wont be unloaded.
+    //
+    // outstandingObjectCount: indicates to the caller the number of unreleased
+    //		objects of the module NOT including the current object implementing
+    //		nsIModule.
+    //		This will be used to free any objects of this module in the caller's
+    //		cache to facilitate unloading.
+    //
+    void CanUnload(in nsISupports aServMgr, out boolean okToUnload,
+                   out nsrefcnt outstandingObjectCount);
+};
+
+%{C++
+
+// Exported Function from module dll to Create the nsIModule
+#define NS_GET_MODULE_SYMBOL "NSGetModule"
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsISupports *servMgr,
+                                          nsISupports* location,
+                                          nsIModule** return_cobj);
+
+typedef nsresult (*nsGetModuleProc)(nsISupports *servMgr,
+                                    nsISupports* location,
+                                    nsIModule** return_cobj);
+%}
+
+
+
