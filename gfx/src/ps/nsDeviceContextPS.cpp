@@ -229,7 +229,7 @@ nsDeviceContextPS::InitDeviceContextPS(nsIDeviceContext *aCreatingDeviceContext,
   nsCOMPtr<nsILanguageAtomService> langService;
   langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
   if (langService) {
-    langService->GetLocaleLanguageGroup(&gUsersLocale);
+    NS_IF_ADDREF(gUsersLocale = langService->GetLocaleLanguageGroup());
   }
   if (!gUsersLocale) {
     gUsersLocale = NS_NewAtom("x-western");

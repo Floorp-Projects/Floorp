@@ -668,12 +668,8 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
   const nsStyleFont *font = frame->GetStyleFont();
 
   const nsStyleVisibility *visibility = frame->GetStyleVisibility();
-  nsCOMPtr<nsIAtom> langGroup;
-  if (visibility->mLanguage) {
-    visibility->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-  }
 
-  if (NS_FAILED(rc->SetFont(font->mFont, langGroup))) {
+  if (NS_FAILED(rc->SetFont(font->mFont, visibility->mLangGroup))) {
     return NS_ERROR_FAILURE;
   }
 

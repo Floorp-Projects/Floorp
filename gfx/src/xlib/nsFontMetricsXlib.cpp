@@ -1477,23 +1477,23 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
     specialCharSetMap++;
   }
 
-  mUnicode = NS_NewAtom("x-unicode");
+  mUnicode = do_GetAtom("x-unicode");
   if (!mUnicode) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mUserDefined = NS_NewAtom(USER_DEFINED);
+  mUserDefined = do_GetAtom(USER_DEFINED);
   if (!mUserDefined) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mZHTW = NS_NewAtom("zh-TW");
+  mZHTW = do_GetAtom("zh-TW");
   if (!mZHTW) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mZHHK = NS_NewAtom("zh-HK");
+  mZHHK = do_GetAtom("zh-HK");
   if (!mZHHK) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  mZHTWHK = NS_NewAtom("x-zh-TWHK");
+  mZHTWHK = do_GetAtom("x-zh-TWHK");
   if (!mZHTWHK) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1502,14 +1502,12 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   nsCOMPtr<nsILanguageAtomService> langService;
   langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
   if (langService) {
-    nsIAtom *atom;
-    langService->GetLocaleLanguageGroup(&atom);
-    mUsersLocale = atom;
+    mUsersLocale = langService->GetLocaleLanguageGroup();
   }
   if (!mUsersLocale) {
-    mUsersLocale = NS_NewAtom("x-western");
+    mUsersLocale = do_GetAtom("x-western");
   }
-  mWesternLocale = NS_NewAtom("x-western");
+  mWesternLocale = do_GetAtom("x-western");
   if (!mUsersLocale) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

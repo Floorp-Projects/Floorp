@@ -1129,7 +1129,7 @@ nsStyleVisibility::nsStyleVisibility(nsIPresContext* aPresContext)
   else
     mDirection = NS_STYLE_DIRECTION_LTR;
 
-  mLanguage = aPresContext->GetLanguage();
+  mLangGroup = aPresContext->GetLangGroup();
   mVisible = NS_STYLE_VISIBILITY_VISIBLE;
 }
 
@@ -1137,13 +1137,13 @@ nsStyleVisibility::nsStyleVisibility(const nsStyleVisibility& aSource)
 {
   mDirection = aSource.mDirection;
   mVisible = aSource.mVisible;
-  mLanguage = aSource.mLanguage;
+  mLangGroup = aSource.mLangGroup;
 } 
 
 nsChangeHint nsStyleVisibility::CalcDifference(const nsStyleVisibility& aOther) const
 {
   if ((mDirection == aOther.mDirection) &&
-      (mLanguage == aOther.mLanguage)) {
+      (mLangGroup == aOther.mLangGroup)) {
     if ((mVisible == aOther.mVisible)) {
       return NS_STYLE_HINT_NONE;
     }

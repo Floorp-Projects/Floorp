@@ -70,7 +70,7 @@ class nsIEventStateManager;
 class nsIURI;
 class nsILookAndFeel;
 class nsICSSPseudoComparator;
-class nsILanguageAtom;
+class nsIAtom;
 class nsITheme;
 struct nsStyleStruct;
 struct nsStyleBackground;
@@ -80,8 +80,8 @@ class nsIRenderingContext;
 #endif
 
 #define NS_IPRESCONTEXT_IID   \
-{ 0xfaf7c34a, 0x347c, 0x48f6, \
-  {0x81, 0x76, 0xc0, 0xf6, 0xd4, 0xe5, 0x74, 0x2e} }
+{ 0x2820eeff, 0x7e66, 0x43df, \
+  {0xae, 0x19, 0xee, 0xf6, 0x09, 0xc1, 0xcf, 0xfe} }
 
 enum nsWidgetType {
   eWidgetType_Button  	= 1,
@@ -358,7 +358,7 @@ public:
 
   nsIDeviceContext* DeviceContext() { return mDeviceContext; }
   nsIEventStateManager* EventStateManager() { return mEventManager; }
-  nsILanguageAtom* GetLanguage() { return mLanguage; }
+  nsIAtom* GetLangGroup() { return mLangGroup; }
 
   /**
    * Get the language-specific transform type for the current document.
@@ -525,7 +525,7 @@ protected:
                                         // weak pointer to static atom
 
   nsILinkHandler*       mLinkHandler;   // [WEAK]
-  nsILanguageAtom*      mLanguage;      // [STRONG]
+  nsIAtom*              mLangGroup;     // [STRONG]
 
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   PRInt32               mFontScaler;

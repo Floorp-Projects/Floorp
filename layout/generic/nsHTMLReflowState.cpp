@@ -2143,12 +2143,9 @@ ComputeLineHeight(nsIPresContext* aPresContext,
   } else {
     nsCOMPtr<nsIDeviceContext> deviceContext;
     aRenderingContext->GetDeviceContext(*getter_AddRefs(deviceContext));
-    nsCOMPtr<nsIAtom> langGroup;
-    if (vis->mLanguage) {
-      vis->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-    }
     nsCOMPtr<nsIFontMetrics> fm;
-    deviceContext->GetMetricsFor(font->mFont, langGroup, *getter_AddRefs(fm));
+    deviceContext->GetMetricsFor(font->mFont, vis->mLangGroup,
+                                 *getter_AddRefs(fm));
     if (unit == eStyleUnit_Factor) {
       // For factor units the computed value of the line-height property 
       // is found by multiplying the factor by the font's <b>actual</b> 

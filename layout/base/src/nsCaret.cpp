@@ -984,10 +984,7 @@ void nsCaret::GetCaretRectAndInvert()
   {
       const nsStyleFont* fontStyle = mLastCaretFrame->GetStyleFont();
       const nsStyleVisibility* vis = mLastCaretFrame->GetStyleVisibility();
-      nsCOMPtr<nsIAtom> langGroup;
-      if (vis->mLanguage)
-        vis->mLanguage->GetLanguageGroup(getter_AddRefs(langGroup));
-      mRendContext->SetFont(fontStyle->mFont, langGroup);
+      mRendContext->SetFont(fontStyle->mFont, vis->mLangGroup);
 
       nsCOMPtr<nsIFontMetrics> fm;
       mRendContext->GetFontMetrics(*getter_AddRefs(fm));
