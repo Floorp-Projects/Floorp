@@ -32,8 +32,8 @@
 //-------------------------------------------------------------------------------------------------
 var bug = 68498;
 var summary = 'Testing calling obj.eval(str)';
-var statprefix = '; currently at statement ';
-var statsuffix = ' within test -';
+var statprefix = '; currently at expect[';
+var statsuffix = '] within test -';
 var actual = [ ];
 var expect = [ ];
 
