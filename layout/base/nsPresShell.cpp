@@ -63,6 +63,7 @@
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsILayoutHistoryState.h"
+#include "stopwatch.h"
 
 // Drag & Drop, Clipboard
 #include "nsWidgetsCID.h"
@@ -177,7 +178,7 @@ public:
   NS_IMETHOD DoCopy();
 
   NS_IMETHOD GetHistoryState(nsILayoutHistoryState** aLayoutHistoryState);
-  NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);  
+  NS_IMETHOD SetHistoryState(nsILayoutHistoryState* aLayoutHistoryState);
 
   //nsIViewObserver interface
 
@@ -305,6 +306,12 @@ private:
   nsIFrame* GetCurrentEventFrame();
   void PushCurrentEventFrame();
   void PopCurrentEventFrame();
+
+#ifdef RAPTOR_PERF_METRICS
+  Stopwatch mReflowWatch;  // Used for measuring time spent in reflow
+  Stopwatch mFrameCreationWatch;  // Used for measuring time spent in frame creation
+#endif
+
 };
 
 #ifdef NS_DEBUG
@@ -833,6 +840,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
   }
 
   if (nsnull != mRootFrame) {
+    NS_RESET_AND_START_STOPWATCH(mReflowWatch)
     // Kick off a top-down reflow
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                  ("enter nsPresShell::InitialReflow: %d,%d", aWidth, aHeight));
@@ -870,6 +878,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     }
     NS_IF_RELEASE(rcx);
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::InitialReflow"));
+    NS_STOP_STOPWATCH(mReflowWatch)
   }
 
   ExitReflowLock();
