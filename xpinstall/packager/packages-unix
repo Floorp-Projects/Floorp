@@ -120,7 +120,6 @@ bin/components/libimgmng.so
 bin/components/libjsurl.so
 bin/components/liblwbrk.so
 bin/components/libmork.so
-bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
 bin/components/libnslocale.so
 bin/components/liboji.so

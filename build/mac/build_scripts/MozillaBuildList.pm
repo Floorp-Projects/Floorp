@@ -2201,8 +2201,6 @@ sub BuildXPAppProjects()
 
     # Applications
     BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.xml",             "AppShell$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.xml",            "mozBrowser$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
     EndBuildModule("xpapp");
 }
 
