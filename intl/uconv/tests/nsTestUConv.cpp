@@ -62,7 +62,7 @@ char bLatin1_d0[] = {
 };
 
 PRUnichar cLatin1_d0[] = {
-  0x0000,0x000d,0xfffd,0xfffd,0x00ff
+  0x0000,0x000d,0x007f,0x20ac,0x00ff
 };
 
 PRInt32 bLatin1_s0 = ARRAY_SIZE(bLatin1_d0)-1;
@@ -77,8 +77,8 @@ nsresult setupRegistry()
   /** 
    * Ok, here's where we used to register the components needed to run the 
    * tests. This is not necessary anymore, as the auto-registration stuff
-   * is in place now. But, please we don't trigger the autoregistration in 
-   * this test program, so make sure you first run an autoreg app (like 
+   * is in place now. But, as we don't trigger the autoregistration in 
+   * this test program, you make sure you first run an autoreg app (like 
    * viewer). Included is an example of the old code, in case we'll need it.
    *
    * nsresult res = nsComponentManager::RegisterComponent(
