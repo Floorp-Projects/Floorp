@@ -2407,7 +2407,7 @@ dnl ========================================================
 dnl = If NSPR was not detected in the system, 
 dnl = use the one in the source tree (mozilla/nsprpub)
 dnl ========================================================
-MOZ_ARG_WITHOUT_BOOL(system-nspr,
+MOZ_ARG_WITH_BOOL(system-nspr,
 [  --with-system-nspr      Use system installed NSPR],
     _USE_SYSTEM_NSPR=1 )
 
