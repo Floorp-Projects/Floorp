@@ -1,0 +1,5 @@
+file://s:/mozilla/layout/html/tests/frameset/core/border1.html
+file://s:/mozilla/layout/html/tests/frameset/core/border2.html
+file://s:/mozilla/layout/html/tests/frameset/core/border3.html
+file://s:/mozilla/layout/html/tests/frameset/core/border4.html
+
