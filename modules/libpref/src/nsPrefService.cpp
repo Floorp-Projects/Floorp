@@ -24,7 +24,6 @@
 #include "nsPrefService.h"
 #include "jsapi.h"
 #include "nsIObserverService.h"
-#include "nsIProfileChangeStatus.h"
 #include "nsISignatureVerifier.h"
 #include "nsPrefBranch.h"
 #include "nsXPIDLString.h"

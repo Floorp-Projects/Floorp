@@ -280,7 +280,7 @@ SI_SetCharPref(const char * prefname, const char * prefvalue) {
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetCharPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
-      ret = pPrefService->SavePrefFile(); 
+      ret = pPrefService->SavePrefFile(nsnull); 
     }
   }
 }
@@ -303,7 +303,7 @@ SI_SetBoolPref(const char * prefname, PRBool prefvalue) {
   if (!NS_FAILED(ret)) {
     ret = pPrefService->SetBoolPref(prefname, prefvalue);
     if (!NS_FAILED(ret)) {
-      ret = pPrefService->SavePrefFile(); 
+      ret = pPrefService->SavePrefFile(nsnull); 
     }
   }
 }

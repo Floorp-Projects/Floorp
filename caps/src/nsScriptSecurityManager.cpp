@@ -2020,7 +2020,7 @@ nsScriptSecurityManager::SavePrincipal(nsIPrincipal* aToSave)
         mSecurityPrefs->SecurityClearUserPref(idPrefName);
 
     mIsWritingPrefs = PR_FALSE;
-    return mPrefs->SavePrefFile();
+    return mPrefs->SavePrefFile(nsnull);
 }
 
 static nsDOMProp 

@@ -1420,7 +1420,7 @@ function BuildRecentMenu(savePrefs)
   }
   // Force saving to file so next file opened finds these values
   if (savePrefs)
-    gPrefs.SavePrefFile();
+    gPrefs.savePrefFile(null);
 
   // Disable menu item if no entries
   DisableItem("menu_RecentFiles", disableMenu);

@@ -386,9 +386,10 @@ PrefResult PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
 ** file.  The two types need to be in sync for now.  Certain
 ** compilers were having problems with multiple definitions.
 */
-#ifndef __gen_nsIPref_h__
+#ifndef have_PrefChangedFunc_typedef
 typedef int (*PrefChangedFunc) (const char *, void *); 
-#endif /* __gen_nsIPref_h__ */
+#define have_PrefChangedFunc_typedef
+#endif
 
 /*
 // <font color=blue>
