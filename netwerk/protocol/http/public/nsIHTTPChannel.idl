@@ -27,6 +27,7 @@ interface nsIStreamListener;
 interface nsISimpleEnumerator;
 interface nsIAtom;
 interface nsIInputStream;
+interface nsIURI;
 
 [scriptable, uuid(35c00430-1938-11d3-933a-000064657374)]
 interface nsIHTTPChannel : nsIChannel
@@ -36,6 +37,14 @@ interface nsIHTTPChannel : nsIChannel
      */
     const unsigned long BYPASS_CACHE    = 1 << 1;
     const unsigned long BYPASS_PROXY    = 1 << 2;
+
+    /**
+      * Referrer sending policy.
+      */
+    const unsigned long REFERRER_NONE = 0;
+    const unsigned long REFERRER_LINK_CLICK = 1; // http link clicks
+    const unsigned long REFERRER_INLINES = 2; // images and other inlines.
+    const unsigned long REFERRER_NON_HTTP = 3; // e.g. news clicks or FTP links.
 
     /*
         Request functions-
@@ -55,15 +64,18 @@ interface nsIHTTPChannel : nsIChannel
     */
 	attribute nsIInputStream PostDataStream;
 
-    attribute PRBool UsingProxy;
-
     /* 
-        Response funtions. A call to any of these implicitly calls Load() on this
-        protocol instance. 
+        Response funtions. A call to any of these implicitly calls 
+        Load() on this protocol instance. 
     */
     string GetResponseHeader(in nsIAtom headerAtom);
     void   SetResponseHeader(in nsIAtom headerAtom, in string headerValue);
     nsISimpleEnumerator GetResponseHeaderEnumerator();
+
+    /* 
+        Explicitly set a referrer (HTTP's Referer) on this channel
+    */
+    void   SetReferrer(in nsIURI referrer, in unsigned long referrerLevel);
 
     readonly attribute unsigned long ResponseStatus;
 
@@ -77,9 +89,11 @@ interface nsIHTTPChannel : nsIChannel
 
 	attribute PRBool AuthTriedWithPrehost;
 
+    readonly attribute PRBool UsingProxy;
+
     /*
        This string if set is used for forming the final request. So if you 
-       call SetProxyURI(foo) on an HTTP Channel, the outbound
+       call SetProxyRequestURI(foo) on an HTTP Channel, the outbound
        request would look something like GET foo HTTP/1.0... This is done
        to allow other non-http specs to be used in proxy cases. 
    */

@@ -25,21 +25,17 @@
 
 /* 
     The nsHTTPHandler class is an example implementation of how a 
-    pluggable protocol would be written by an external party. As 
-    an example this class also uses the Proxy interface.
+    pluggable protocol would be written by an external party.
 
     Since this is a completely different process boundary, I am 
     keeping this as a singleton. It doesn't have to be that way.
-
-    Currently this is being built with the Netlib dll. But after
-    the registration stuff that DP is working on gets completed 
-    this will move to the HTTP lib.
 
     -Gagan Saksena 02/25/99
 */
 
 #include "nsIHTTPProtocolHandler.h"
 #include "nsIProxy.h"
+#include "nsIProtocolProxyService.h"
 #include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
@@ -53,13 +49,12 @@
 class nsHashtable;
 class nsHTTPChannel;
 
-class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsIProxy 
+class nsHTTPHandler : public nsIHTTPProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIPROTOCOLHANDLER
     NS_DECL_NSIHTTPPROTOCOLHANDLER
-    NS_DECL_NSIPROXY
 
     nsHTTPHandler();
     nsresult Init();
@@ -94,13 +89,10 @@ public:
 
     nsresult FollowRedirects(PRBool bFollow=PR_TRUE);
 
-    nsresult SetDontUseProxyFor(const char* i_hostlist);
+    PRUint32 ReferrerLevel(void) { return mReferrerLevel; } ;
 
 protected:
     virtual ~nsHTTPHandler();
-
-    // Determine if this host/port can connect thru proxy
-    PRBool CanUseProxy(nsIURI* i_Uri);
 
     // This is the array of connections that the handler thread 
     // maintains to verify unique requests. 
@@ -112,13 +104,12 @@ protected:
 
     char*               mAcceptLanguages;
     nsAuthEngine        mAuthEngine;
+    PRBool              mCheckForProxy;
     PRBool              mDoKeepAlive;
-    char*               mNoProxyFor;
     nsCOMPtr<nsIPref>   mPrefs;
-    char*               mProxy;
-    PRInt32             mProxyPort;
+    nsCOMPtr<nsIProtocolProxyService>       mProxySvc;
+    PRUint32            mReferrerLevel;
     PRTime              mSessionStartTime;
-    PRBool              mUseProxy; 
 
     nsresult BuildUserAgent();
     nsCAutoString mAppName;

@@ -25,8 +25,7 @@
 #include "nsHTTPHandler.h"
 #include "nsHTTPChannel.h"
 
-#include "nsIProxy.h"
-#include "plstr.h" // For PL_strcasecmp maybe DEBUG only... TODO check
+#include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsIURL.h"
 #include "nsIURLParser.h"
@@ -40,7 +39,9 @@
 #include "nsHTTPEncodeStream.h" 
 #include "nsHTTPAtoms.h"
 #include "nsFileSpec.h"
-#include "nsIPref.h" // preferences stuff
+#include "nsIPref.h"
+#include "nsIProtocolProxyService.h"
+
 #ifdef DEBUG_gagan
 #include "nsUnixColorPrintf.h"
 #endif
@@ -74,19 +75,20 @@ PRLogModuleInfo* gHTTPLog = nsnull;
 
 #define MAX_NUMBER_OF_OPEN_TRANSPORTS 8
 
-static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance);
-static const char PROXY_PREFS[] = "network.proxy";
+static PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance);
+static const char NETWORK_PREFS[] = "network.";
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAuthUrlParserCID, NS_AUTHORITYURLPARSER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID); // remove now TODO
+static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
+
 NS_DEFINE_CID(kCategoryManagerCID, NS_CATEGORYMANAGER_CID);
 
-NS_IMPL_ISUPPORTS3(nsHTTPHandler,
+NS_IMPL_ISUPPORTS2(nsHTTPHandler,
                    nsIHTTPProtocolHandler,
-                   nsIProtocolHandler,
-                   nsIProxy)
+                   nsIProtocolHandler)
 
 // nsIProtocolHandler methods
 NS_IMETHODIMP
@@ -233,7 +235,6 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         nsCOMPtr<nsIURI> channelURI;
         PRUint32 count;
         PRInt32 index;
-        PRBool useProxy;
 
         //Check to see if an instance already exists in the active list
         mConnections->Count(&count);
@@ -269,28 +270,12 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
             rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
             if (NS_FAILED(rv)) goto done;
 
-            useProxy = mUseProxy && CanUseProxy(i_URL);
-            if (useProxy)
+            if (mCheckForProxy)
             {
-               rv = pChannel->SetProxyHost(mProxy);
-               if (NS_FAILED(rv)) goto done;
-               rv = pChannel->SetProxyPort(mProxyPort);
-               if (NS_FAILED(rv)) goto done;
+                rv = mProxySvc->ExamineForProxy(i_URL, pChannel);
+                if (NS_FAILED(rv)) goto done;
             }
-            rv = pChannel->SetUsingProxy(useProxy);
 
-           if (originalURI) 
-           {
-              // Referer - misspelled, but per the HTTP spec
-              nsCOMPtr<nsIAtom> key = NS_NewAtom("referer");
-              nsXPIDLCString spec;
-              originalURI->GetSpec(getter_Copies(spec));
-              if (spec && (0 == PL_strncasecmp((const char*)spec, 
-                                           "http",4)))
-              {
-                pChannel->SetRequestHeader(key, spec);
-              }
-            }
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
                                           (void**)o_Instance);
             // add this instance to the active list of connections
@@ -521,58 +506,11 @@ nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
     return BuildUserAgent();
 }
 
-
-// nsIProxy methods
-NS_IMETHODIMP
-nsHTTPHandler::GetProxyHost(char* *o_ProxyHost)
-{
-    if (!o_ProxyHost)
-        return NS_ERROR_NULL_POINTER;
-    if (mProxy)
-    {
-        *o_ProxyHost = nsCRT::strdup(mProxy);
-        return (*o_ProxyHost == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    else
-    {
-        *o_ProxyHost = nsnull;
-        return NS_OK;
-    }
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::SetProxyHost(const char* i_ProxyHost) 
-{
-    CRTFREEIF(mProxy);
-    if (i_ProxyHost)
-    {
-        mProxy = nsCRT::strdup(i_ProxyHost);
-        return (mProxy == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::GetProxyPort(PRInt32 *aPort)
-{
-    *aPort = mProxyPort;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTTPHandler::SetProxyPort(PRInt32 i_ProxyPort) 
-{
-    mProxyPort = i_ProxyPort;
-    return NS_OK;
-}
-
 nsHTTPHandler::nsHTTPHandler():
     mAcceptLanguages(nsnull),
+    mCheckForProxy(PR_FALSE),
     mDoKeepAlive(PR_FALSE),
-    mNoProxyFor(0),
-    mProxy(0),
-    mProxyPort(-1),
-    mUseProxy(PR_FALSE)
+    mReferrerLevel(0)
 {
     NS_INIT_REFCNT();
 }
@@ -582,12 +520,13 @@ nsHTTPHandler::Init()
 {
     nsresult rv = NS_OK;
 
+    mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
     mPrefs = do_GetService(kPrefServiceCID, &rv);
     if (!mPrefs)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    mPrefs->RegisterCallback(PROXY_PREFS, 
-                ProxyPrefsCallback, (void*)this);
+    mPrefs->RegisterCallback(NETWORK_PREFS, 
+                HTTPPrefsCallback, (void*)this);
     PrefsChanged();
 
     // initialize the version and app components
@@ -709,12 +648,10 @@ nsHTTPHandler::~nsHTTPHandler()
     nsHTTPAtoms::ReleaseAtoms();
 
     if (mPrefs)
-        mPrefs->UnregisterCallback(PROXY_PREFS, 
-                ProxyPrefsCallback, (void*)this);
+        mPrefs->UnregisterCallback(NETWORK_PREFS, 
+                HTTPPrefsCallback, (void*)this);
 
     CRTFREEIF(mAcceptLanguages);
-    CRTFREEIF(mNoProxyFor);
-    CRTFREEIF(mProxy);
 }
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
@@ -733,7 +670,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (count >= MAX_NUMBER_OF_OPEN_TRANSPORTS) {
 
         // XXX this method incorrectly returns a bool
-        rv = mPendingChannelList->AppendElement((nsISupports*)(nsIRequest*)i_Channel) 
+        rv = mPendingChannelList->AppendElement(
+                (nsISupports*)(nsIRequest*)i_Channel) 
             ? NS_OK : NS_ERROR_FAILURE;  
         NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
 
@@ -812,8 +750,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
     if (*o_pTrans == nsnull)
     {
         // Ask the channel for proxy info... since that overrides
-        PRBool usingProxy;
-
+        PRBool usingProxy = PR_FALSE;
+            
         i_Channel->GetUsingProxy(&usingProxy);
         if (usingProxy)
         {
@@ -831,22 +769,8 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         }
         else
         {
-            // Create a new one...
-            if (!mProxy || !mUseProxy || !CanUseProxy(i_Uri))
-            {
-                rv = CreateTransport(host, port, host,
-                             bufferSegmentSize, bufferMaxSize, &trans);
-                // Update the proxy information on the channel
-                i_Channel->SetProxyHost(mProxy);
-                i_Channel->SetProxyPort(mProxyPort);
-                i_Channel->SetUsingProxy(PR_FALSE);
-            }
-            else
-            {
-                rv = CreateTransport(mProxy, mProxyPort, host, 
-                             bufferSegmentSize, bufferMaxSize, &trans);
-                i_Channel->SetUsingProxy(PR_TRUE);
-            }
+            rv = CreateTransport(host, port, host,
+                         bufferSegmentSize, bufferMaxSize, &trans);
         }
         if (NS_FAILED(rv)) return rv;
     }
@@ -1044,38 +968,25 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         mDoKeepAlive = (keepalive == 1);
 #endif  // remove till here
 
+    if (bChangedAll || !PL_strcmp(pref, "network.sendRefererHeader"))
+    {
+        PRInt32 referrerLevel = -1;
+        rv = mPrefs->GetIntPref("network.sendRefererHeader",&referrerLevel);
+        if (NS_SUCCEEDED(rv) && referrerLevel>0) 
+           mReferrerLevel = referrerLevel; 
+
+#ifdef DEBUG_gagan
+        PRINTF_CYAN;
+        printf("network.sendRefererHeader = %d\n", mReferrerLevel);
+#endif
+    }
+
     if (bChangedAll || !PL_strcmp(pref, "network.proxy.type"))
     {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
         if (NS_SUCCEEDED(rv))
-            mUseProxy = (type == 1); // type == 2 is autoconfig stuff
-    }
-
-    if (bChangedAll || !PL_strcmp(pref, "network.proxy.http"))
-    {
-        nsXPIDLCString proxyServer;
-        rv = mPrefs->CopyCharPref("network.proxy.http", 
-                getter_Copies(proxyServer));
-        if (NS_SUCCEEDED(rv)) 
-            SetProxyHost(proxyServer);
-    }
-
-    if (bChangedAll || !PL_strcmp(pref, "network.proxy.http_port"))
-    {
-        PRInt32 proxyPort = -1;
-        rv = mPrefs->GetIntPref("network.proxy.http_port",&proxyPort);
-        if (NS_SUCCEEDED(rv) && proxyPort>0) 
-            SetProxyPort(proxyPort);
-    }
-
-    if (bChangedAll || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
-    {
-        nsXPIDLCString noProxy;
-        rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
-                getter_Copies(noProxy));
-        if (NS_SUCCEEDED(rv))
-            SetDontUseProxyFor(noProxy);
+            mCheckForProxy = (type != 0);
     }
 
     // Things read only during initialization...
@@ -1089,94 +1000,11 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 }
 
-PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
+PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance)
 {
     nsHTTPHandler* pHandler = (nsHTTPHandler*) instance;
     NS_ASSERTION(nsnull != pHandler, "bad instance data");
     if (nsnull != pHandler)
         pHandler->PrefsChanged(pref);
     return 0;
-}
-
-nsresult
-nsHTTPHandler::SetDontUseProxyFor(const char* i_hostlist)
-{
-    CRTFREEIF(mNoProxyFor);
-    if (i_hostlist)
-    {
-        mNoProxyFor = nsCRT::strdup(i_hostlist);
-        return (mNoProxyFor == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-    }
-    return NS_OK;
-}
-
-PRBool
-nsHTTPHandler::CanUseProxy(nsIURI* i_Uri)
-{
-
-    NS_ASSERTION(mProxy, 
-            "This shouldn't even get called if mProxy is null");
-
-    PRBool rv = PR_TRUE;
-    if (!mNoProxyFor || !*mNoProxyFor)
-        return rv;
-
-    PRInt32 port;
-    char* host;
-
-    rv = i_Uri->GetHost(&host);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = i_Uri->GetPort(&port);
-    if (NS_FAILED(rv)) 
-    {
-        nsCRT::free(host);
-        return rv;
-    }
-
-    if (!host)
-        return rv;
-
-    // mNoProxyFor is of type "foo bar:8080, baz.com ..."
-    char* brk = PL_strpbrk(mNoProxyFor, " ,:");
-    char* noProxy = mNoProxyFor;
-    PRInt32 noProxyPort = -1;
-    int hostLen = PL_strlen(host);
-    char* end = (char*)host+hostLen;
-    char* nextbrk = end;
-    int matchLen = 0;
-    do 
-    {
-        if (brk)
-        {
-            if (*brk == ':')
-            {
-                noProxyPort = atoi(brk+1);
-                nextbrk = PL_strpbrk(brk+1, " ,");
-                if (!nextbrk)
-                    nextbrk = end;
-            }
-            matchLen = brk-noProxy;
-        }
-        else
-            matchLen = end-noProxy;
-
-        if (matchLen <= hostLen) // match is smaller than host
-        {
-            if (((noProxyPort == -1) || (noProxyPort == port)) &&
-                (0 == PL_strncasecmp(host+hostLen-matchLen, 
-                             noProxy, matchLen)))
-                {
-                    nsCRT::free(host);
-                    return PR_FALSE;
-                }
-        }
-
-        noProxy = nextbrk;
-        brk = PL_strpbrk(noProxy, " ,:");
-    }
-    while (brk);
-
-    CRTFREEIF(host);
-    return rv;
 }

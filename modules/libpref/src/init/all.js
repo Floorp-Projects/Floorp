@@ -239,7 +239,7 @@ pref("network.foreign_cookies",             0); // 0 = Accept, 1 = Don't accept
 pref("network.cookie.cookieBehavior",       0); // 0-Accept, 1-dontAcceptForeign, 2-dontUse
 pref("network.cookie.warnAboutCookies",     false);
 pref("signon.rememberSignons",              true);
-pref("network.sendRefererHeader",           true);
+pref("network.sendRefererHeader",           2); // 0=don't send any, 1=send only on clicks, 2=send on image requests as well
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
 pref("network.padPacURL",                   ""); // The proxy autodiscovery url
 pref("wallet.captureForms",                 true);

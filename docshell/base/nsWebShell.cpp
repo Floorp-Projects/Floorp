@@ -1653,7 +1653,8 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       }
 
       rv = pNetService->NewChannelFromURI(aCommand, aUri, loadGroup, requestor,
-                                          aType, referrer /* referring uri */, 0, 0,
+                                          aType, referrer /* referring uri */, 
+                                          0, 0,
                                           getter_AddRefs(pChannel));
       if (NS_FAILED(rv)) {
       if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
@@ -1668,13 +1669,23 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
 
       pChannel->SetLoadAttributes(loadAttribs);
       
-      // figure out if we need to set the post data stream on the channel...right now, 
-      // this is only done for http channels.....
       nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(pChannel));
-      if (httpChannel && aPostDataStream)
+      if (httpChannel)
       {
-        httpChannel->SetRequestMethod(HM_POST);
-        httpChannel->SetPostDataStream(aPostDataStream);
+          // figure out if we need to set the post data stream on the channel...
+          // right now, this is only done for http channels.....
+          if (aPostDataStream)
+          {
+            httpChannel->SetRequestMethod(HM_POST);
+            httpChannel->SetPostDataStream(aPostDataStream);
+          }
+          // Set the referrer explicitly
+          if (referrer)
+          {
+              // Referrer is currenly only set for link clicks here. 
+              httpChannel->SetReferrer(referrer, 
+                      nsIHTTPChannel::REFERRER_LINK_CLICK);
+          }
       }
 
       // now let's pass the channel into the uri loader

@@ -167,7 +167,6 @@ protected:
     */
     PRBool                              mAuthTriedWithPrehost;
 
-    PRBool                              mUsingProxy;
     char*                               mProxy;
     PRInt32                             mProxyPort;
 

@@ -93,7 +93,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, HTTPMethod i_Method,
 
     // Add the user-agent 
     nsresult rv = NS_OK;
-    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, kHTTPHandlerCID, &rv);
+    NS_WITH_SERVICE(nsIHTTPProtocolHandler, httpHandler, 
+            kHTTPHandlerCID, &rv);
     if (NS_FAILED(rv)) return;
 
     nsXPIDLString ua;
@@ -323,19 +324,16 @@ nsresult nsHTTPRequest::WriteRequest(nsIChannel *aTransport, PRBool aIsProxied)
             NS_ASSERTION(header, "Bad HTTP header.");
             if (header) {
                 header->GetField(getter_AddRefs(headerAtom));
-                char* fieldName = nsnull;
-                header->GetFieldName(&fieldName);
+                nsXPIDLCString fieldName;
+                header->GetFieldName(getter_Copies(fieldName));
                 NS_ASSERTION(fieldName, "field name not returned!, \
                         out of memory?");
-                //if (!fieldName)
-                    //return NS_ERROR_OUT_OF_MEMORY;
                 mRequestBuffer.Append(fieldName);
                 header->GetValue(getter_Copies(autoBuffer));
 
                 mRequestBuffer.Append(": ");
                 mRequestBuffer.Append(autoBuffer);
                 mRequestBuffer.Append(CRLF);
-                nsCRT::free(fieldName);
             }
             enumerator->HasMoreElements(&bMoreHeaders);
         }
