@@ -23,6 +23,10 @@
 #include "nsIAllocator.h"
 #include "nsIIOService.h"
 
+#ifdef XP_PC
+#include <windows.h> // ::IsDBCSLeadByte need
+#endif
+
 /* This array tells which chars have to be escaped */
 
 const int EscapeChars[256] =
@@ -262,6 +266,13 @@ CoaleseDirs(char* io_Path)
             (*fwdPtr != '#'); ++fwdPtr)
     {
 #ifdef XP_PC
+        // At first, If this is DBCS charactor, it skips next charactor.
+        if (::IsDBCSLeadByte(*fwdPtr) && *(fwdPtr+1) != '\0') {
+            *urlPtr++ = *fwdPtr++;
+            *urlPtr++ = *fwdPtr;
+            continue;
+        }
+
         if (*fwdPtr == '\\')
             *fwdPtr = '/';
 #endif
