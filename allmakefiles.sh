@@ -849,6 +849,26 @@ if [ "$MOZ_MAIL_NEWS" ]; then
     fi
 fi
 
+
+if [ "$USE_IMG2" ]; then
+    MAKEFILES_libpr0n="
+        modules/libpr0n/Makefile
+        modules/libpr0n/public/Makefile
+        modules/libpr0n/src/Makefile
+        modules/libpr0n/decoders/Makefile
+        modules/libpr0n/decoders/gif/Makefile
+        modules/libpr0n/decoders/png/Makefile
+        modules/libpr0n/decoders/ppm/Makefile
+        modules/libpr0n/decoders/jpeg/Makefile
+"
+
+    MAKEFILES_gfx2="
+        gfx2/Makefile
+        gfx2/public/Makefile
+        gfx2/src/Makefile
+"
+fi
+
 if [ ! "$SYSTEM_JPEG" ]; then
     MAKEFILES_jpeg="jpeg/Makefile"
 fi
@@ -1048,6 +1068,7 @@ $MAKEFILES_expat
 $MAKEFILES_extensions
 $MAKEFILES_gc
 $MAKEFILES_gfx
+$MAKEFILES_gfx2
 $MAKEFILES_htmlparser
 $MAKEFILES_intl
 $MAKEFILES_java_supplement
@@ -1063,6 +1084,7 @@ $MAKEFILES_content
 $MAKEFILES_layout
 $MAKEFILES_libreg
 $MAKEFILES_libimg
+$MAKEFILES_libpr0n
 $MAKEFILES_libjar
 $MAKEFILES_libpref
 $MAKEFILES_libutil
