@@ -2308,6 +2308,7 @@ ET_SetPluginWindow(MWContext *cx, void *instance);
 
 NS_DEFINE_IID(kPluginInstanceIID, NS_IPLUGININSTANCE_IID);
 NS_DEFINE_IID(kLiveConnectPluginIID, NS_ILIVECONNECTPLUGIN_IID);
+NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 
 #if defined(XP_MAC) && !defined(powerc)
 #pragma pointers_in_D0
@@ -2875,7 +2876,16 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
         }
 #endif
     }
-
+#ifdef OJI
+#if 0
+    if (handle->userPlugin) {
+        nsIJVMPlugin* jvmPlugin;
+        if (handle->userPlugin->QueryInterface(kIJVMPluginIID, (void**)&jvmPlugin) == NS_OK) {
+            nsresult err = jvmPlugin->StartupJVM();
+            if (err != NS_OK) goto error;
+        }
+    }
+#endif
     /* XXX This is _not_ where Start() should go (IMO). Start() should be
        called whenever we re-visit an applet
 
@@ -2888,6 +2898,7 @@ np_newinstance(np_handle *handle, MWContext *cx, NPEmbeddedApp *app,
     }
     */
 
+#endif
 #ifdef MOCHA
     {
         /* only wait on applets if onload flag */
@@ -4500,22 +4511,7 @@ NPL_LoadPluginByType(const char* typeAttribute)
     }
 }
 
-extern "C"
-{
-// Used by layout code to translate between a np_instance and a 
-// OJI plugin instance.
-PR_IMPLEMENT(struct nsIPluginInstance*)
-NPL_GetOJIPluginInstance(NPEmbeddedApp *embed)
-{
-    nsIPluginInstance* pluginInst = NULL;
-    np_data *ndata = (np_data*) embed->np_data;
-    np_instance *instance = ndata->instance;
-    if (instance != NULL) {
-        nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*)instance->npp->pdata;
-        pluginInst = peerInst->GetPluginInstance();
-    }
-    return pluginInst;
-}
+PR_BEGIN_EXTERN_C
 
 #ifdef OJI
 static NS_DEFINE_IID(kJVMPluginInstanceIID, NS_IJVMPLUGININSTANCE_IID);
@@ -4523,81 +4519,64 @@ static NS_DEFINE_IID(kJVMPluginInstanceIID, NS_IJVMPLUGININSTANCE_IID);
 
 // Used by layout code to get to a text representing a java bean.
 PR_IMPLEMENT(const char *)
-NPL_GetText(nsIPluginInstance* pluginInst)
+NPL_GetText(LO_CommonPluginStruct* lo_embed)
 {
     const char *text = NULL;
 #ifdef OJI
+    NPEmbeddedApp *embed = (NPEmbeddedApp*) lo_embed->FE_Data;
+    if (embed == NULL)
+        return NULL;
+    np_data *ndata = (np_data*) embed->np_data;
+    np_instance *instance = ndata->instance;
+    if (instance == NULL)
+        return NULL;
+
+    nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*)instance->npp->pdata;
+    nsIPluginInstance* pluginInst = peerInst->GetPluginInstance();
+    if (pluginInst == NULL)
+        return NULL;
+
     nsIJVMPluginInstance *jvmInst = NULL;
     if (pluginInst->QueryInterface(kJVMPluginInstanceIID, (void**)&jvmInst) == NS_OK) {
         nsresult err = jvmInst->GetText(&text);
         PR_ASSERT(err == NS_OK);
         jvmInst->Release();
     }
+    pluginInst->Release();
 #endif
     return text;
 }
 
 PR_IMPLEMENT(jobject)
-NPL_GetJavaObject(nsIPluginInstance* pluginInst)
+NPL_GetJavaObject(LO_CommonPluginStruct* lo_embed)
 {
     jobject javaobject = NULL;
 #if OJI
+    NPEmbeddedApp *embed = (NPEmbeddedApp*) lo_embed->FE_Data;
+    if (embed == NULL)
+        return NULL;
+    np_data *ndata = (np_data*) embed->np_data;
+    np_instance *instance = ndata->instance;
+    if (instance == NULL)
+        return NULL;
+
+    nsPluginInstancePeer* peerInst = (nsPluginInstancePeer*)instance->npp->pdata;
+    nsIPluginInstance* pluginInst = peerInst->GetPluginInstance();
+    if (pluginInst == NULL)
+        return NULL;
+
     nsIJVMPluginInstance *jvmInst = NULL;
     if (pluginInst->QueryInterface(kJVMPluginInstanceIID, (void**)&jvmInst) == NS_OK) {
         nsresult err = jvmInst->GetJavaObject(&javaobject);
         PR_ASSERT(err == NS_OK);
         jvmInst->Release();
     }
+    pluginInst->Release();
 #endif
     return javaobject;
 }
 
-PR_IMPLEMENT(void) NPL_Release(struct nsISupports *supports)
-{
-    supports->Release();
-}
-
-PR_IMPLEMENT(XP_Bool) NPL_IsJVMAndMochaPrefsEnabled(void)
-{
-   XP_Bool  bPrefs  = PR_FALSE;
-#if OJI
-   nsJVMMgr  *pJVMMgr = JVM_GetJVMMgr();
-
-   if (pJVMMgr != NULL) {
-     if (pJVMMgr->IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
-         bPrefs = PR_TRUE;
-     }
-     pJVMMgr->Release();
-   }
-#endif
-   return bPrefs;
-}
-
-PR_IMPLEMENT(PRBool)NPL_JSJInit(void)
-{
-    PRBool bJSJInited = PR_FALSE;
-#ifdef OJI
-    nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
-    if (pJVMMgr != NULL) {
-        bJSJInited = pJVMMgr->JSJInit();
-        pJVMMgr->Release();
-    }
-#endif
-    return bJSJInited;
-}
-
-PR_IMPLEMENT(JNIEnv *)NPL_EnsureJNIExecEnv(PRThread* thread)
-{
-#ifdef OJI
-    return npn_getJavaEnv();
-#else
-    return NULL;
-#endif
-}
-
-
-} /* extern "C" */
-
+PR_END_EXTERN_C
 
 /*
  * This is called by the front-end to create a new plug-in. It will

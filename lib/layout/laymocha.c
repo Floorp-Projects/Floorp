@@ -30,7 +30,7 @@
 #include "jsjava.h"
 #elif defined (OJI)
 #include "jsjava.h"
-#include "np2.h"
+#include "jvmmgr.h"
 #endif
 #include "layers.h"
 
@@ -571,7 +571,7 @@ LO_GetAppletByIndex(MWContext *context, int32 layer_id, uint index)
 
 
 #ifdef OJI
-    if (!NPL_IsJVMAndMochaPrefsEnabled())
+    if (!JVM_IsLiveConnectEnabled())
         return NULL;
 #else
     /* XXX */
@@ -614,12 +614,12 @@ LO_EnumerateApplets(MWContext *context, int32 layer_id)
     lo_DocLists *doc_lists;
 
 #ifdef OJI
-    if (!NPL_IsJVMAndMochaPrefsEnabled())
-        return NULL;
+    if (!JVM_IsLiveConnectEnabled())
+        return 0;
 #else
     /* XXX */
     if (!JSJ_IsEnabled())
-        return NULL;
+        return 0;
 #endif
 
 
@@ -659,12 +659,12 @@ LO_GetEmbedByIndex(MWContext *context, int32 layer_id, uint index)
     lo_DocLists *doc_lists;
 
 #ifdef OJI
-    if (!NPL_IsJVMAndMochaPrefsEnabled())
+    if (!JVM_IsLiveConnectEnabled())
         return NULL;
 #else
     /* XXX */
     if (!JSJ_IsEnabled())
-        return 0;
+        return NULL;
 #endif
 
 
@@ -703,12 +703,12 @@ LO_EnumerateEmbeds(MWContext *context, int32 layer_id)
     lo_DocLists *doc_lists;
 
 #ifdef OJI
-    if (!NPL_IsJVMAndMochaPrefsEnabled())
-        return NULL;
+    if (!JVM_IsLiveConnectEnabled())
+        return 0;
 #else
     /* XXX */
     if (!JSJ_IsEnabled())
-        return NULL;
+        return 0;
 #endif
 
     top_state = lo_GetMochaTopState(context);

@@ -35,9 +35,9 @@
 #include "np.h"
 #include "prefapi.h"
 #include "pa_parse.h"
-/* #include "netcache.h" */
+#include "netcache.h"
 #include "secnav.h"
-
+#include "secstubn.h"
 
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
@@ -2095,7 +2095,7 @@ ET_moz_CallFunctionString(ETStringPtrFunc fn, void * data)
     char * ret;
     MozillaEvent_CallFuncString* event = PR_NEW(MozillaEvent_CallFuncString);
     if (event == NULL) 
-	return PR_FALSE;
+      return NULL;
     PR_InitEvent(&event->ce.event, NULL,
 		 (PRHandleEventProc)et_HandleEvent_CallFunctionString,
 		 (PRDestroyEventProc)et_DestroyEvent_GenericEvent);
@@ -2615,7 +2615,7 @@ ET_TweakLayer(MWContext * context, CL_Layer* layer, int32 x, int32 y,
     MozillaEvent_TweakLayer * event;
     event = PR_NEW(MozillaEvent_TweakLayer);
     if (event == NULL) 
-        return NULL;
+        return 0;
 
     PR_InitEvent(&event->ce.event, context,
 		 (PRHandleEventProc)et_HandleEvent_TweakLayer,

@@ -33,7 +33,7 @@
 #include "nppriv.h"
 #ifdef OJI
 #include "jni.h"
-#include "np2.h"
+#include "jvmmgr.h"
 #else
 #include "jri.h"
 #endif
@@ -221,16 +221,10 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
     }
 
 #ifdef OJI
-    {
-      PRBool  jvmMochaPrefsEnabled = PR_FALSE;
-      if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
-          jvmMochaPrefsEnabled = PR_TRUE;
-      }
-      if (jvmMochaPrefsEnabled == PR_FALSE) {
-          PR_LOG(Moja, debug, ("reflected embed 0x%x as null\n",
-                               lo_embed));
-          return lo_embed->objTag.mocha_object = lm_DummyObject;
-      }
+    if (!JVM_IsLiveConnectEnabled()) {
+        PR_LOG(Moja, debug, ("reflected embed 0x%x as null\n",
+                             lo_embed));
+        return lo_embed->objTag.mocha_object = lm_DummyObject;
     }
 #else
     /* set the element to something bad if we can't get the java obj */
@@ -260,18 +254,9 @@ lm_ReallyReflectEmbed(MWContext *context, LO_EmbedStruct *lo_embed,
 
 #ifdef OJI
         {
-#if 0
-          JNIEnv *jniEnv = NULL;
-          jniEnv = NPL_EnsureJNIExecEnv(NULL);
-          obj = JSJ_WrapJavaObject(decoder->js_context,
-                                   jniEnv,
-                                   jembed,
-                                   (*jniEnv)->GetObjectClass(jniEnv, jembed));
-#else
           jsval val;
           if (JSJ_ConvertJavaObjectToJSValue(decoder->js_context, jembed, &val))
               obj = JSVAL_TO_OBJECT(val);
-#endif
         }
 #else
         obj = js_ReflectJObjectToJSObject(decoder->js_context,

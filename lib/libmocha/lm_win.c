@@ -42,8 +42,11 @@
 #if defined(JAVA)
 #include "jsjava.h"
 #elif defined (OJI)
+/*
 #include "np2.h"
 #include "jsjava.h"
+*/
+#include "jvmmgr.h"
 #endif
 
 #undef FREE_AND_CLEAR           /* XXX over-including Mac compiled headers */
@@ -3235,6 +3238,8 @@ lm_InitWindowContent(MochaDecoder *decoder)
         return JS_FALSE;
 
 #if defined(OJI)
+    JVM_MaybeStartupLiveConnect(cx, obj);
+#if 0
     {
       PRBool  jvmMochaPrefsEnabled = PR_FALSE;
       if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
@@ -3247,6 +3252,7 @@ lm_InitWindowContent(MochaDecoder *decoder)
           return JS_FALSE;
       }
     }
+#endif
 #elif defined(JAVA)
     if (JSJ_IsEnabled() && !JSJ_InitContext(cx, obj))
         return JS_FALSE;

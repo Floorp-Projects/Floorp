@@ -20,6 +20,21 @@
 #define jvmmgr_h___
 
 #include "xp_core.h"    // include first because of Bool problem
+#include "prtypes.h"
+#include "nsCom.h"
+#include "jni.h"
+
+struct nsJVMMgr;
+
+typedef enum nsJVMStatus {
+    nsJVMStatus_Enabled,  // but not Running
+    nsJVMStatus_Disabled, // explicitly disabled
+    nsJVMStatus_Running,  // enabled and started
+    nsJVMStatus_Failed    // enabled but failed to start
+} nsJVMStatus;
+
+#ifdef __cplusplus
+
 #include "nsjvm.h"
 #include "nsAgg.h"
 #include "jsjava.h"
@@ -28,19 +43,13 @@
 class nsIPluginTagInfo2;
 class nsSymantecDebugManager;
 
-enum nsJVMStatus {
-    nsJVMStatus_Enabled,  // but not Running
-    nsJVMStatus_Disabled, // explicitly disabled
-    nsJVMStatus_Running,  // enabled and started
-    nsJVMStatus_Failed    // enabled but failed to start
-};
+/*******************************************************************************
+ * JVMMgr is the interface to the JVM manager that the browser sees. All
+ * files that want to include java services should include this header file.
+ * nsIJVMManager is the more limited interface what the JVM plugin sees.
+ ******************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// JVMMgr is the interface to the JVM manager that the browser sees. All
-// files that want to include java services should include this header file.
-// nsIJVMManager is the more limited interface what the JVM plugin sees.
-
-class nsJVMMgr : public nsIJVMManager {
+struct nsJVMMgr : public nsIJVMManager {
 public:
 
     NS_DECL_AGGREGATED
@@ -56,7 +65,7 @@ public:
     static NS_METHOD
     Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 
-    nsIJVMPlugin* GetJVMPlugin(void);
+    nsIJVMPlugin* GetJVMPlugin(void) { return fJVM; }
 
     // Unlike the nsIJVMPlugin::StartupJVM, this version handles putting
     // up any error dialog:
@@ -64,10 +73,14 @@ public:
     nsJVMStatus ShutdownJVM(PRBool fullShutdown = PR_FALSE);
     nsJVMStatus GetJVMStatus(void);
     void SetJVMEnabled(PRBool enabled);
+    
+    void        ReportJVMError(nsresult err);
+    const char* GetJavaErrorString(JNIEnv* env);
 
     nsresult    AddToClassPath(const char* dirPath);
-    PRBool      JSJInit();
-    PRBool      IsJVMAndMochaPrefsEnabled(void);
+    PRBool      MaybeStartupLiveConnect(JSContext* cx, JSObject* obj);
+    PRBool      MaybeShutdownLiveConnect(void);
+    PRBool      IsLiveConnectEnabled(void);
     JSJavaVM*   GetJSJavaVM() { return fJSJavaVM; }
 
 
@@ -158,21 +171,22 @@ protected:
     char*               fSimulatedCode;
 };
 
+#endif // __cplusplus
+
 ////////////////////////////////////////////////////////////////////////////////
 // Convenience Routines
 
 PR_BEGIN_EXTERN_C
 
-// Returns the JVM manager. You must do a Release on the
-// pointer returned when you're done with it.
-PR_EXTERN(nsJVMMgr*)
+/* Returns the JVM manager. You must do a Release on the pointer returned when
+   you're done with it. */
+PR_EXTERN(struct nsJVMMgr*)
 JVM_GetJVMMgr(void);
 
-// Returns true if java is enabled, and has not failed to load.
-PR_EXTERN(PRBool)
-JVM_IsJVMAvailable(void);
+PR_EXTERN(nsJVMStatus)
+JVM_GetJVMStatus(void);
 
-PR_EXTERN(nsresult)
+PR_EXTERN(PRBool)
 JVM_AddToClassPath(const char* dirPath);
 
 PR_EXTERN(void)
@@ -198,6 +212,18 @@ JVM_GetJavaVM(void);
 
 PR_EXTERN(JNIEnv*)
 JVM_GetJNIEnv(void);
+
+PR_EXTERN(PRBool)
+JVM_MaybeStartupLiveConnect(JSContext* cx, JSObject* obj);
+
+PR_EXTERN(PRBool)
+JVM_MaybeShutdownLiveConnect(void);
+
+PR_EXTERN(PRBool)
+JVM_IsLiveConnectEnabled(void);
+
+PR_EXTERN(nsJVMStatus)
+JVM_ShutdownJVM(void);
 
 PR_END_EXTERN_C
 

@@ -55,11 +55,11 @@ nsSymantecDebugManager::Create(nsISupports* outer, const nsIID& aIID, void* *aIn
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
     nsSymantecDebugManager* dbgr = new nsSymantecDebugManager(outer, jvmMgr);
-    nsresult result = dbgr->QueryInterface(aIID, aInstancePtr);
-    if (result != NS_OK) {
-        delete dbgr;
-    }
-    return result;
+    if (dbgr == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    dbgr->AddRef();
+    *aInstancePtr = dbgr->GetInner();
+    return NS_OK;
 }
 
 #if defined(XP_PC) && defined(_WIN32)

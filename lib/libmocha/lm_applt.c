@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -243,31 +243,15 @@ lm_ReallyReflectApplet(MWContext *context, LO_JavaAppStruct *lo_applet,
 
 #ifdef OJI
     {
-      if (! NPL_IsJVMAndMochaPrefsEnabled()) {
-          return lo_embed->mocha_object = lm_DummyObject;
-      }
+        jsval val;
+        if (!JVM_IsLiveConnectEnabled()) {
+            return lo_embed->mocha_object = lm_DummyObject;
+        }
 
-      embed = (NPEmbeddedApp*) lo_embed->FE_Data;
-      if (embed) {
-          struct nsIPluginInstance *pNPI = NULL;
-          JNIEnv *jniEnv = NULL;
-          jsval val;
-          
-          pNPI = NPL_GetOJIPluginInstance(embed);
-          javaobject = NPL_GetJavaObject(pNPI);
-          NPL_Release((struct nsISupports *)pNPI);
+        javaobject = NPL_GetJavaObject(lo_embed);
 
-#if 0
-          jniEnv = NPL_EnsureJNIExecEnv(NULL);
-          obj = JSJ_WrapJavaObject(decoder->js_context,
-                                   jniEnv,
-                                   javaobject,
-                                   (*jniEnv)->GetObjectClass(jniEnv, javaobject));
-#else
-          if (JSJ_ConvertJavaObjectToJSValue(decoder->js_context, javaobject, &val))
-              obj = JSVAL_TO_OBJECT(val);
-#endif
-      }
+        if (JSJ_ConvertJavaObjectToJSValue(decoder->js_context, javaobject, &val))
+            obj = JSVAL_TO_OBJECT(val);
     }
 #else
     /* set the element to something bad if we can't get the java obj */
@@ -349,7 +333,7 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
     JSContext *cx;
     char *name;
 #ifdef OJI
-	LO_EmbedStruct *embed = (LO_EmbedStruct *)applet_data;
+    LO_EmbedStruct *embed = (LO_EmbedStruct *)applet_data;
 #endif
 
     obj = applet_data->objTag.mocha_object;
@@ -362,10 +346,10 @@ LM_ReflectApplet(MWContext *context, LO_JavaAppStruct *applet_data,
     cx = decoder->js_context;
 
 #ifdef OJI
-	/* this is really skanky, but we don't really have a LO_JavaAppStruct, but instead a LO_EmbedStruct. */
-	name = getValue(&embed->attributes, "NAME");
-	if (name != NULL)
-		name = JS_strdup(cx, name);
+    /* this is really skanky, but we don't really have a LO_JavaAppStruct, but instead a LO_EmbedStruct. */
+    name = getValue(&embed->attributes, "NAME");
+    if (name != NULL)
+        name = JS_strdup(cx, name);
 #else
     /* get the name */
     if (applet_data->attr_name) {

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -40,9 +40,12 @@
 #include "jriext.h"
 #include "java.h"
 #elif defined (OJI)
+/*
 #include "jni.h"
 #include "np2.h"
 #include "jsjava.h"
+*/
+#include "jvmmgr.h"
 #endif
 
 #include "prefapi.h"
@@ -708,19 +711,10 @@ lm_ReallyInitMocha(void)
     lm_crippled_decoder = lm_new_decoder(lm_runtime, &lm_dummy_class);
     lm_crippled_context = lm_crippled_decoder->js_context;
 
-#ifdef OJI
-    {
-      PRBool  jvmMochaPrefsEnabled = PR_FALSE;
-      if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
-          jvmMochaPrefsEnabled = NPL_JSJInit();
-      }
+#if defined(OJI)
+    (void)JVM_MaybeStartupLiveConnect(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context));
 
-      if (jvmMochaPrefsEnabled == PR_TRUE)
-      {
-        JSJ_InitJSContext(lm_crippled_context, JS_GetGlobalObject(lm_crippled_context), NULL);
-      }
-    }
-#elif defined (JAVA)
+#elif defined(JAVA)
     LJ_JSJ_Init();
 
     /* 
@@ -797,6 +791,12 @@ lm_ReallyInitMocha(void)
     return;
 }
 
+JSContext*
+LM_GetCrippledContext(void)
+{
+    return lm_crippled_context;
+}
+
 void
 LM_ForceJSEnabled(MWContext *cx)
 {
@@ -857,14 +857,15 @@ LM_InitMoja()
     if (lm_moja_initialized != LM_MOJA_UNINITIALIZED)
         return lm_moja_initialized;
 #if defined(OJI)
-    lm_JSEnv = NPL_EnsureJNIExecEnv(lm_InterpretThread);
-    if (lm_JSEnv == NULL) {
-        lm_moja_initialized = LM_MOJA_JAVA_FAILED;
-        return lm_moja_initialized;
+    {
+        nsJVMStatus status = JVM_GetJVMStatus();
+        if (status != nsJVMStatus_Running) {
+            lm_moja_initialized = LM_MOJA_JAVA_FAILED;
+            return lm_moja_initialized;
+        }
+
+        lm_moja_initialized = LM_MOJA_OK;
     }
-
-    lm_moja_initialized = LM_MOJA_OK;
-
 #elif defined(JAVA)
     /* initialize the java env associated with the mocha thread */
     lm_JSEnv = LJ_EnsureJavaEnv(lm_InterpretThread);

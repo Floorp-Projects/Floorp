@@ -23,10 +23,8 @@
 #include "jvmmgr.h"
 #include "npglue.h"
 #include "xp.h"
-#include "net.h"
 #include "prefapi.h"
 #include "xp_str.h"
-#include "libmocha.h"
 #include "np.h"
 #include "prio.h"
 #include "prmem.h"
@@ -42,7 +40,7 @@
 extern "C" int XP_PROGRESS_STARTING_JAVA;
 extern "C" int XP_PROGRESS_STARTING_JAVA_DONE;
 extern "C" int XP_JAVA_NO_CLASSES;
-extern "C" int XP_JAVA_WRONG_CLASSES;
+extern "C" int XP_JAVA_GENERAL_FAILURE;
 extern "C" int XP_JAVA_STARTUP_FAILED;
 extern "C" int XP_JAVA_DEBUGGER_FAILED;
 
@@ -76,30 +74,11 @@ nsJVMMgr::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
     nsJVMMgr* jvmmgr = new nsJVMMgr(outer);
-    nsresult result = jvmmgr->QueryInterface(aIID, aInstancePtr);
-    if (result != NS_OK) {
-        delete jvmmgr;
-    }
-    return result;
-}
-
-nsIJVMPlugin*
-nsJVMMgr::GetJVMPlugin(void)
-{
-    // lazily loads the JVM plugin.
-    if (fJVM == NULL) {
-	    nsIPlugin* plugin = NPL_LoadPluginByType(NPJVM_MIME_TYPE);
-	    if (plugin != NULL) {
-	        nsresult rslt = plugin->QueryInterface(kIJVMPluginIID, (void**)&fJVM);
-	        if (rslt != NS_OK) fJVM = NULL;
-	    }
-	 }
-	 // always add an additional reference.
-    if (fJVM != NULL) {
-        fJVM->AddRef();
-        return fJVM;
-    }
-    return NULL;   
+    if (jvmmgr == NULL)
+        return NS_ERROR_OUT_OF_MEMORY;
+    jvmmgr->AddRef();
+    *aInstancePtr = jvmmgr->GetInner();
+    return NS_OK;
 }
 
 nsJVMMgr::nsJVMMgr(nsISupports* outer)
@@ -178,17 +157,10 @@ PR_BEGIN_EXTERN_C
 
 #ifdef MOCHA
 
-PR_EXTERN(JSContext*) map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp);
-PR_EXTERN(JSJavaThreadState*) map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp);
-PR_EXTERN(JSObject*) map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp);
-PR_EXTERN(JavaVM*) get_java_vm_impl(char **errp);
-
-PR_EXTERN_DATA(JSContext*) lm_crippled_context; /* XXX kill me */
-
-PR_IMPLEMENT(JSContext *)
+static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
 {
-    JSContext *cx    = lm_crippled_context;
+    JSContext *cx    = LM_GetCrippledContext();
     PRBool    jvmMochaPrefsEnabled = PR_FALSE;
 
     *errp = NULL;
@@ -196,7 +168,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
     nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
     if (pJVMMgr != NULL) {
         nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
-        jvmMochaPrefsEnabled = pJVMMgr->IsJVMAndMochaPrefsEnabled();
+        jvmMochaPrefsEnabled = LM_GetMochaEnabled();
         if (pJVMPI != NULL) {
             nsIPluginInstance* pPIT;
             nsresult err = pJVMPI->GetPluginInstance(env, &pPIT);
@@ -214,7 +186,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
                 }
                 pPIT->Release();
             }
-            pJVMPI->Release();
+            // pJVMPI->Release(); // GetJVMPlugin no longer calls AddRef
         }
         pJVMMgr->Release();
     }
@@ -245,7 +217,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
 ** to a java thread. JSJ_AttachCurrentThreadToJava just calls AttachCurrentThread
 ** on the java vm.
 */
-PR_IMPLEMENT(JSJavaThreadState *)
+static JSJavaThreadState* PR_CALLBACK
 map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 {
 	*errp = NULL;
@@ -286,7 +258,7 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 ** is made, all subsequent method calls via JSObject use the internal field
 ** to get to the javascript JSObject.
 */
-PR_IMPLEMENT(JSObject *)
+static JSObject* PR_CALLBACK
 map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
 {
     MWContext       *cx;
@@ -312,7 +284,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
     nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
     if (pJVMMgr != NULL) {
         nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
-        jvmMochaPrefsEnabled = pJVMMgr->IsJVMAndMochaPrefsEnabled();
+        jvmMochaPrefsEnabled = LM_GetMochaEnabled();
         if (pJVMPI != NULL) {
             jobject javaObject = applet;
             nsIPluginInstance* pPIT;
@@ -338,7 +310,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
                 }
                 pPIT->Release();
             }
-            pJVMPI->Release();
+            // pJVMPI->Release(); // GetJVMPlugin no longer calls AddRef
         }
         pJVMMgr->Release();
     }
@@ -372,7 +344,7 @@ map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
     return 0;
 }
 
-PR_IMPLEMENT(JavaVM *)
+static JavaVM* PR_CALLBACK
 get_java_vm_impl(char **errp)
 {
     *errp = NULL;
@@ -384,7 +356,7 @@ get_java_vm_impl(char **errp)
         if (pJVMPI != NULL) {
             nsresult err = pJVMPI->GetJavaVM(&pJavaVM);
             PR_ASSERT(err != NS_OK ? pJavaVM == NULL : PR_TRUE);
-            pJVMPI->Release();
+            // pJVMPI->Release(); // GetJVMPlugin no longer calls AddRef
         }
         pJVMMgr->Release();
     }
@@ -433,46 +405,9 @@ static JSJCallbacks jsj_callbacks = {
     get_java_vm_impl
 };
 
-PRBool
-nsJVMMgr::JSJInit()
-{
-    nsIJVMPlugin* pJVMPI = NULL;
-    PRBool        bJSJInited = PR_FALSE;
-    
-    if(fJSJavaVM == NULL)
-    {
-        if( (pJVMPI = GetJVMPlugin()) != NULL)
-        {
-            JSJ_Init(&jsj_callbacks);
-            if (StartupJVM() == nsJVMStatus_Running) {
-                const char* classpath = NULL;
-                nsresult err = pJVMPI->GetClassPath(&classpath);
-                PR_ASSERT(err == NS_OK);
-                fJSJavaVM = JSJ_ConnectToJavaVM(JVM_GetJavaVM(), classpath);
-            }
-            pJVMPI->Release();
-            bJSJInited = PR_TRUE;
-        }
-    }
-    else
-    {
-       bJSJInited = PR_TRUE;
-    }
-
-    return bJSJInited;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #if 0
-NS_METHOD_(PRBool)
-nsJVMMgr::HandOffJSLock(PRThread* oldOwner, PRThread* newOwner)
-{
-    return LM_HandOffJSLock(oldOwner, newOwner);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 static const char*
 ConvertToPlatformPathList(const char* cp)
 {
@@ -514,44 +449,45 @@ ConvertToPlatformPathList(const char* cp)
     return c;
 #endif
 }
+#endif
 
-NS_METHOD
-nsJVMMgr::ReportJVMError(void* env, nsresult err)
+void
+nsJVMMgr::ReportJVMError(nsresult err)
 {
     MWContext* cx = XP_FindSomeContext();
     char *s;
     switch (err) {
       case NS_JVM_ERROR_NO_CLASSES: {
-          const char* cp = fJVM->GetClassPath();
-          const char* jarName = "<jar path>"; // XXX fJVM->GetSystemJARPath();
-          cp = ConvertToPlatformPathList(cp);
-          s = PR_smprintf(XP_GetString(XP_JAVA_NO_CLASSES),
-                          jarName, jarName,
-                          (cp ? cp : "<none>"));
-          free((void*)cp);
+          s = PR_smprintf(XP_GetString(XP_JAVA_NO_CLASSES));
           break;
       }
 
       case NS_JVM_ERROR_JAVA_ERROR: {
-          const char* msg = GetJavaErrorString((JRIEnv*)env);
+          nsIJVMPlugin* plugin = GetJVMPlugin();
+          PR_ASSERT(plugin != NULL);
+          if (plugin == NULL) break;
+          JNIEnv* env;
+          plugin->GetJNIEnv(&env);
+          const char* msg = GetJavaErrorString(env);
+          plugin->ReleaseJNIEnv(env);
 #ifdef DEBUG
-# ifdef XP_MAC
-		  ((JRIEnv*)env)->ExceptionDescribe();
-# else
-          JRI_ExceptionDescribe((JRIEnv*)env);
-# endif
+		  env->ExceptionDescribe();
 #endif
           s = PR_smprintf(XP_GetString(XP_JAVA_STARTUP_FAILED), 
                           (msg ? msg : ""));
           if (msg) free((void*)msg);
           break;
       }
+
       case NS_JVM_ERROR_NO_DEBUGGER: {
           s = PR_smprintf(XP_GetString(XP_JAVA_DEBUGGER_FAILED));
           break;
       }
-      default:
-        return;	/* don't report anything */
+
+      default: {
+          s = PR_smprintf(XP_GetString(XP_JAVA_GENERAL_FAILURE), err);
+          break;
+      }
     }
     if (s) {
         FE_Alert(cx, s);
@@ -565,14 +501,14 @@ nsJVMMgr::ReportJVMError(void* env, nsresult err)
 #define sig_java_lang_Object_toString 	"()Ljava/lang/String;"
 
 const char*
-nsJVMMgr::GetJavaErrorString(JRIEnv* env)
+nsJVMMgr::GetJavaErrorString(JNIEnv* env)
 {
     /* XXX javah is a pain wrt mixing JRI and JDK native methods. 
        Since we need to call a method on Object, we'll do it the hard way 
        to avoid using javah for this.
        Maybe we need a new JRI entry point for toString. Yikes! */
 
-#ifdef XP_MAC
+#if 1 //def XP_MAC
     jthrowable exc = env->ExceptionOccurred();
     if (exc == NULL) {
         return strdup("");	/* XXX better "no error" message? */
@@ -628,9 +564,10 @@ nsJVMMgr::GetJavaErrorString(JRIEnv* env)
     return strdup(msg);
 #endif
 }
-#endif // 0
 
 ////////////////////////////////////////////////////////////////////////////////
+
+PRLogModuleInfo* NSJAVA = NULL;
 
 #ifdef MOZ_SMARTUPDATE
 
@@ -654,8 +591,28 @@ nsJVMMgr::StartupJVM(void)
         break;
     }
 
-    nsIJVMPlugin* jvm = GetJVMPlugin();
-    if (jvm == NULL) {
+#ifdef DEBUG
+    PRIntervalTime start = PR_IntervalNow();
+    if (NSJAVA == NULL)
+        NSJAVA = PR_NewLogModule("NSJAVA");
+    PR_LOG(NSJAVA, PR_LOG_ALWAYS, ("Starting java..."));
+#endif
+
+	MWContext* someRandomContext = XP_FindSomeContext();
+	if (someRandomContext) {
+		FE_Progress(someRandomContext, XP_GetString(XP_PROGRESS_STARTING_JAVA));
+	}
+
+    PR_ASSERT(fJVM == NULL);
+    nsIPlugin* plugin = NPL_LoadPluginByType(NPJVM_MIME_TYPE);
+    if (plugin == NULL) {
+        fStatus = nsJVMStatus_Failed;
+        return fStatus;
+    }
+
+    nsresult rslt = plugin->QueryInterface(kIJVMPluginIID, (void**)&fJVM);
+    if (rslt != NS_OK) {
+        PR_ASSERT(fJVM == NULL);
         fStatus = nsJVMStatus_Failed;
         return fStatus;
     }
@@ -700,24 +657,49 @@ nsJVMMgr::StartupJVM(void)
         }
 #endif
     }
-    jvm->Release();
+    else {
+        ReportJVMError(err);
+        fStatus = nsJVMStatus_Failed;
+    }
+
+#if 0
+    JSContext* crippledContext = LM_GetCrippledContext();
+    MaybeStartupLiveConnect(crippledContext, JS_GetGlobalObject(crippledContext));
+#endif
+
+    fJVM->Release();
+
+#ifdef DEBUG
+    PRIntervalTime end = PR_IntervalNow();
+    PRInt32 d = PR_IntervalToMilliseconds(end - start);
+    PR_LOG(NSJAVA, PR_LOG_ALWAYS,
+           ("Starting java...%s (%ld ms)",
+            (fStatus == nsJVMStatus_Running ? "done" : "failed"), d));
+#endif
+
+	if (someRandomContext) {
+		FE_Progress(someRandomContext, XP_GetString(XP_PROGRESS_STARTING_JAVA_DONE));
+	}
     return fStatus;
 }
 
 nsJVMStatus
 nsJVMMgr::ShutdownJVM(PRBool fullShutdown)
 {
-    if (fJVM) {
-        // XXX we should just make nsPluginError and nsJVMStatus be nsresult
+    if (fStatus == nsJVMStatus_Running) {
+        PR_ASSERT(fJVM != NULL);
+        (void)MaybeShutdownLiveConnect();
         nsresult err = fJVM->ShutdownJVM(fullShutdown);
         if (err == NS_OK)
-            return nsJVMStatus_Enabled;
+            fStatus = nsJVMStatus_Enabled;
         else {
-            // XXX report error?
-            return nsJVMStatus_Disabled;
+            ReportJVMError(err);
+            fStatus = nsJVMStatus_Disabled;
         }
+        fJVM = NULL;
     }
-    return nsJVMStatus_Enabled;   // XXX what if there's no plugin available?
+    PR_ASSERT(fJVM == NULL);
+    return fStatus;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -748,8 +730,7 @@ nsJVMMgr::SetJVMEnabled(PRBool enabled)
     else {
         if (fStatus == nsJVMStatus_Running) 
             (void)ShutdownJVM();
-        else
-            fStatus = nsJVMStatus_Disabled;
+        fStatus = nsJVMStatus_Disabled;
     }
 }
 
@@ -770,18 +751,50 @@ nsJVMMgr::GetJVMStatus(void)
     return fStatus;
 }
 
-PRBool 
-nsJVMMgr::IsJVMAndMochaPrefsEnabled(void)
+PRBool
+nsJVMMgr::MaybeStartupLiveConnect(JSContext* cx, JSObject* obj)
 {
-    if (GetJVMStatus() == nsJVMStatus_Disabled) {
-        return PR_FALSE;
+    if (fJSJavaVM)
+        return PR_TRUE;
+
+    if (IsLiveConnectEnabled()) {
+        JSJ_Init(&jsj_callbacks);
+        nsIJVMPlugin* plugin = GetJVMPlugin();
+        if (plugin) {
+            const char* classpath = NULL;
+            nsresult err = plugin->GetClassPath(&classpath);
+            if (err) return err;
+            JavaVM* javaVM = NULL;
+            err = plugin->GetJavaVM(&javaVM);
+            if (err) return err;
+            fJSJavaVM = JSJ_ConnectToJavaVM(javaVM, classpath);
+            if (fJSJavaVM) {
+                JSJ_InitJSContext(cx, obj, NULL);
+            }
+            // plugin->Release(); // GetJVMPlugin no longer calls AddRef
+            return PR_TRUE;
+        }
     }
-    if (!LM_GetMochaEnabled()) {
-        return PR_FALSE;
-    }
-    return PR_TRUE;
+    return PR_FALSE;
 }
 
+PRBool
+nsJVMMgr::MaybeShutdownLiveConnect(void)
+{
+    if (fJSJavaVM) {
+        JSJ_DisconnectFromJavaVM(fJSJavaVM);
+        fJSJavaVM = NULL;
+        return PR_TRUE; 
+    }
+    return PR_FALSE;
+}
+
+PRBool
+nsJVMMgr::IsLiveConnectEnabled(void)
+{
+    return LM_GetMochaEnabled()
+        && GetJVMStatus() == nsJVMStatus_Running;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -828,7 +841,7 @@ nsJVMMgr::AddToClassPath(const char* dirPath)
     fClassPathAdditions->Add((void*)dirPath);
     if (jvm) {
         jvm->AddToClassPath(dirPath);
-        jvm->Release();
+        // jvm->Release(); // GetJVMPlugin no longer calls AddRef
     }
     return NS_OK;
 }
@@ -1000,20 +1013,20 @@ nsJVMPluginTagInfo::Create(nsISupports* outer, const nsIID& aIID, void* *aInstan
     if (outer && !aIID.Equals(kISupportsIID))
         return NS_NOINTERFACE;   // XXX right error?
 
-    nsJVMPluginTagInfo* jvmInstPeer = new nsJVMPluginTagInfo(outer, info);
-    if (jvmInstPeer == NULL)
+    nsJVMPluginTagInfo* jvmTagInfo = new nsJVMPluginTagInfo(outer, info);
+    if (jvmTagInfo == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    nsresult result = jvmInstPeer->QueryInterface(aIID, aInstancePtr);
-    if (result != NS_OK) goto error;
+    jvmTagInfo->AddRef();
+    *aInstancePtr = jvmTagInfo->GetInner();
 
-    result = outer->QueryInterface(kIPluginTagInfo2IID,
-                                   (void**)&jvmInstPeer->fPluginTagInfo);
+    nsresult result = outer->QueryInterface(kIPluginTagInfo2IID,
+                                            (void**)&jvmTagInfo->fPluginTagInfo);
     if (result != NS_OK) goto error;
     outer->Release();   // no need to AddRef outer
     return result;
 
   error:
-    delete jvmInstPeer;
+    delete jvmTagInfo;
     return result;
 }
 
@@ -1057,21 +1070,19 @@ GetRunningJVM(void)
     return jvm;
 }
 
-PR_IMPLEMENT(PRBool)
-JVM_IsJVMAvailable(void)
+PR_IMPLEMENT(nsJVMStatus)
+JVM_GetJVMStatus(void)
 {
-    PRBool result = PR_FALSE;
+    nsJVMStatus status = nsJVMStatus_Disabled;
     nsJVMMgr* mgr = JVM_GetJVMMgr();
     if (mgr) {
-        nsJVMStatus status = mgr->GetJVMStatus();
-        result = status != nsJVMStatus_Failed
-              && status != nsJVMStatus_Disabled;
+        status = mgr->GetJVMStatus();
         mgr->Release();
     }
-    return result;
+    return status;
 }
 
-PR_IMPLEMENT(nsresult)
+PR_IMPLEMENT(PRBool)
 JVM_AddToClassPath(const char* dirPath)
 {
     nsresult err = NS_ERROR_FAILURE;
@@ -1080,7 +1091,7 @@ JVM_AddToClassPath(const char* dirPath)
         err = mgr->AddToClassPath(dirPath);
         mgr->Release();
     }
-    return err;
+    return err == NS_OK;
 }
 
 // This will get the JVMConsole if one is available. You have to Release it 
@@ -1092,7 +1103,7 @@ GetConsole(void)
     nsIJVMPlugin* jvm = GetRunningJVM();
     if (jvm) {
         jvm->QueryInterface(kIJVMConsoleIID, (void**)&console);
-        jvm->Release();
+        // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
     return console;
 }
@@ -1110,10 +1121,13 @@ JVM_ShowConsole(void)
 PR_IMPLEMENT(void)
 JVM_HideConsole(void)
 {
-    nsIJVMConsole* console = GetConsole();
-    if (console) {
-        console->HideConsole();
-        console->Release();
+    nsJVMStatus status = JVM_GetJVMStatus();
+    if (status == nsJVMStatus_Running) {
+        nsIJVMConsole* console = GetConsole();
+        if (console) {
+            console->HideConsole();
+            console->Release();
+        }
     }
 }
 
@@ -1121,11 +1135,14 @@ PR_IMPLEMENT(PRBool)
 JVM_IsConsoleVisible(void)
 {
     PRBool result = PR_FALSE;
-    nsIJVMConsole* console = GetConsole();
-    if (console) {
-        nsresult err = console->IsConsoleVisible(&result);
-        PR_ASSERT(err != NS_OK ? result == PR_FALSE : PR_TRUE);
-        console->Release();
+    nsJVMStatus status = JVM_GetJVMStatus();
+    if (status == nsJVMStatus_Running) {
+        nsIJVMConsole* console = GetConsole();
+        if (console) {
+            nsresult err = console->IsConsoleVisible(&result);
+            PR_ASSERT(err != NS_OK ? result == PR_FALSE : PR_TRUE);
+            console->Release();
+        }
     }
     return result;
 }
@@ -1149,6 +1166,9 @@ JVM_ToggleConsole(void)
 PR_IMPLEMENT(void)
 JVM_PrintToConsole(const char* msg)
 {
+    nsJVMStatus status = JVM_GetJVMStatus();
+    if (status != nsJVMStatus_Running)
+        return;
     nsIJVMConsole* console = GetConsole();
     if (console) {
         console->Print(msg);
@@ -1167,7 +1187,7 @@ JVM_StartDebugger(void)
             debugger->StartDebugger(nsSymantecDebugPort_SharedMemory);
             debugger->Release();
         }
-        jvm->Release();
+        // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
 }
 
@@ -1179,7 +1199,7 @@ JVM_GetJavaVM(void)
     if (jvm) {
         nsresult err = jvm->GetJavaVM(&javaVM);
         PR_ASSERT(err == NS_OK);
-        jvm->Release();
+        // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
     return javaVM;
 }
@@ -1205,13 +1225,61 @@ JVM_GetJNIEnv(void)
     nsIJVMPlugin* jvm = GetRunningJVM();
     if (jvm) {
         (void)jvm->GetJNIEnv(&env);
-        jvm->Release();
+        // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
 
 	/* Associate the JNIEnv with the current thread. */
 	localEnv.set(env);
 	
     return env;
+}
+
+PR_IMPLEMENT(PRBool)
+JVM_MaybeStartupLiveConnect(JSContext* cx, JSObject* obj)
+{
+    PRBool result = PR_FALSE;
+    nsJVMMgr* mgr = JVM_GetJVMMgr();
+    if (mgr) {
+        result = mgr->MaybeStartupLiveConnect(cx, obj);
+        mgr->Release();
+    }
+    return result;
+}
+
+PR_IMPLEMENT(PRBool)
+JVM_MaybeShutdownLiveConnect(void)
+{
+    PRBool result = PR_FALSE;
+    nsJVMMgr* mgr = JVM_GetJVMMgr();
+    if (mgr) {
+        result = mgr->MaybeShutdownLiveConnect();
+        mgr->Release();
+    }
+    return result;
+}
+
+PR_IMPLEMENT(PRBool)
+JVM_IsLiveConnectEnabled(void)
+{
+    PRBool result = PR_FALSE;
+    nsJVMMgr* mgr = JVM_GetJVMMgr();
+    if (mgr) {
+        result = mgr->IsLiveConnectEnabled();
+        mgr->Release();
+    }
+    return result;
+}
+
+PR_IMPLEMENT(nsJVMStatus)
+JVM_ShutdownJVM(void)
+{
+    nsJVMStatus status = nsJVMStatus_Failed;
+    nsJVMMgr* mgr = JVM_GetJVMMgr();
+    if (mgr) {
+        status = mgr->ShutdownJVM();
+        mgr->Release();
+    }
+    return status;
 }
 
 PR_END_EXTERN_C

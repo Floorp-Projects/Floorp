@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -24,6 +24,9 @@
 #include "layout.h"
 #ifdef JAVA
 #include "java.h"
+#elif defined(OJI)
+#include "np.h"
+#include "np2.h"
 #endif
 #include "laylayer.h"
 #include "libevent.h"
@@ -2923,24 +2926,14 @@ lo_get_form_element_data(MWContext *context,
 
 				name = lo_dup_block(form_data->name);
 #ifdef OJI
-    {
-#include "np.h"
-#include "np2.h"
-
-      NPEmbeddedApp *embed   = (NPEmbeddedApp*) form_data->object->objTag.FE_Data;
-      if (embed) {
-            struct nsIPluginInstance *pNPI = NPL_GetOJIPluginInstance(embed);
-            object_value = NPL_GetText(pNPI);
-            NPL_Release((struct nsISupports *)pNPI);
-      }
-    }
+                object_value = NPL_GetText(&form_data->object->objTag);
 				if (object_value != NULL)
 				{
-				 value = PA_ALLOC(XP_STRLEN(object_value) + 1);
-					PA_LOCK(vstr, char *, value);
-					XP_STRCPY(vstr, object_value);
-					PA_UNLOCK(value);
-				 XP_FREE(object_value);
+                    value = PA_ALLOC(XP_STRLEN(object_value) + 1);
+                    PA_LOCK(vstr, char *, value);
+                    XP_STRCPY(vstr, object_value);
+                    PA_UNLOCK(value);
+                    XP_FREE(object_value);
 				}
 #else
 				object_value = LJ_Applet_GetText(form_data->object->objTag.session_data);

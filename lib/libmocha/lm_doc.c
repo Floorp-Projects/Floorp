@@ -765,16 +765,8 @@ doc_list_properties(JSContext *cx, JSObject *obj)
             return JS_FALSE;
 
 #ifdef OJI
-        {
-           PRBool  jvmMochaPrefsEnabled = PR_FALSE;
-           if (NPL_IsJVMAndMochaPrefsEnabled() == PR_TRUE) {
-               jvmMochaPrefsEnabled = PR_TRUE;
-           }
-           if (jvmMochaPrefsEnabled == PR_FALSE) {
-               return JS_TRUE;
-           }
+        if (JVM_IsLiveConnectEnabled())
            lm_reflect_stuff_eagerly(context, doc->layer_id);
-        }
 #else
         if (JSJ_IsEnabled())
             lm_reflect_stuff_eagerly(context, doc->layer_id);
