@@ -333,6 +333,7 @@ public:
   nsICSSLoader*       mCSSLoader;
   PRUint32            mContentIDCounter;
   PRInt32             mInsideNoXXXTag;
+  PRInt32             mInMonolithicContainer;
 
   void StartLayout();
 
@@ -376,6 +377,7 @@ public:
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,
                     PRInt32 aIndexInContainer);
+  PRBool IsMonolithicContainer(nsHTMLTag aTag);
 #ifdef NS_DEBUG
   void ForceReflow();
 #endif
@@ -1295,6 +1297,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     return rv;
   }
 
+  if (mSink->IsMonolithicContainer(nodeType)) {
+      mSink->mInMonolithicContainer++;
+  }
+    
   // Special handling for certain tags
   switch (nodeType) {
 
@@ -1399,6 +1405,9 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
   DidAddContent(content, PR_FALSE);
 
+  if (mSink->IsMonolithicContainer(nodeType)) {
+    --mSink->mInMonolithicContainer;
+  }
 
   // Special handling for certain tags
   switch (nodeType) {
@@ -2058,6 +2067,7 @@ HTMLContentSink::HTMLContentSink() {
   mContentIDCounter = NS_CONTENT_ID_COUNTER_BASE;
   mInScript = 0;
   mInNotification = 0;
+  mInMonolithicContainer = 0;
   mInsideNoXXXTag  = 0;
 }
 
@@ -2332,7 +2342,7 @@ HTMLContentSink::WillInterrupt()
   return NS_OK;
 #else
   if (mNotifyOnTimer && mLayoutStarted) {
-    if (mBackoffCount) {
+    if (mBackoffCount && !mInMonolithicContainer) {
       PRTime now = PR_Now();
       PRInt64 interval, diff;
       PRInt32 delay;
@@ -3938,10 +3948,21 @@ HTMLContentSink::NotifyInsert(nsIContent* aContent,
   mInNotification--;
 }
 
+PRBool 
+HTMLContentSink::IsMonolithicContainer(nsHTMLTag aTag)
+{
+  if (eHTMLTag_tr == aTag) {
+    return PR_TRUE;
+  }
+  else {
+    return PR_FALSE;
+  }
+}
+
 PRBool
 HTMLContentSink::IsTimeToNotify()
 {
-  if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount) {
+  if (!mNotifyOnTimer || !mLayoutStarted || !mBackoffCount || mInMonolithicContainer) {
     return PR_FALSE;
   }
 
