@@ -26,7 +26,7 @@ LIBRARIES = DisassembleX86 DebuggerChannel $(NULL)
 
 include $(DEPTH)/config/config.mk
 
-OBJS = $(wildcard $(DEPTH)/$(OBJDIR)/EF/*$(OBJ_SUFFIX))
+OBJS = $(wildcard $(DIST)/modules/EF/*$(OBJ_SUFFIX))
 LDFLAGS += $(NSPR_LIBS)
 
 include $(DEPTH)/config/rules.mk
