@@ -33,6 +33,7 @@ use Date::Parse;
 sub sillyness {
     my $zz;
     $zz = $::defaultqueryname;
+    $zz = $::unconfirmedstate;
     $zz = @::components;
     $zz = @::default_column_list;
     $zz = @::keywordsbyname;
@@ -824,6 +825,14 @@ my $dotweak = defined $::FORM{'tweak'};
 
 if ($dotweak) {
     confirm_login();
+    if (!UserInGroup("canedit")) {
+        print qq{
+Sorry; you do not have sufficient priviledges to edit a bunch of bugs
+at once.
+};
+        PutFooter();
+        exit();
+    }
 } else {
     quietly_check_login();
 }
@@ -979,7 +988,7 @@ if ($splitheader) {
             $tablestart .= "</TR>\n<TR><TD></TD>";
         }
         for (my $i=1-$pass ; $i<@th ; $i += 2) {
-            my $h = @th[$i];
+            my $h = $th[$i];
             $h =~ s/TH/TH COLSPAN="2" ALIGN="left"/;
             $tablestart .= $h;
         }
@@ -1287,6 +1296,12 @@ if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
         Do nothing else<br>";
     $knum++;
+    if ($statushash{$::unconfirmedstate} && 1 == scaler(keys(%statushash))) {
+        print "
+<INPUT TYPE=radio NAME=knob VALUE=confirm>
+        Confirm bugs (change status to <b>NEW</b>)<br>";
+    }
+    $knum++;
     print "
 <INPUT TYPE=radio NAME=knob VALUE=accept>
         Accept bugs (change status to <b>ASSIGNED</b>)<br>";
@@ -1363,7 +1378,7 @@ if ($count > 0) {
 <NOBR><A HREF=\"enter_bug.cgi\">Enter New Bug</A></NOBR>
 &nbsp;&nbsp;
 <NOBR><A HREF=\"colchange.cgi?$::buffer\">Change columns</A></NOBR>";
-    if (!$dotweak && $count > 1) {
+    if (!$dotweak && $count > 1 && UserInGroup("canedit")) {
         print "&nbsp;&nbsp;\n";
         print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A></NOBR>\n";

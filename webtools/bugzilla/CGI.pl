@@ -490,6 +490,9 @@ sub BuildPulldown {
         if ($tag eq $default) {
             $selectpart = " SELECTED";
         }
+        if (!defined $desc) {
+            $desc = $tag;
+        }
         $entry .= qq{<OPTION$selectpart VALUE="$tag">$desc\n};
     }
     $entry .= qq{</SELECT>};
@@ -515,28 +518,31 @@ sub quietly_check_login() {
     $::usergroupset = '0';
     my $loginok = 0;
     $::disabledreason = '';
+    $::userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
 	defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
         if (!defined $ENV{'REMOTE_HOST'}) {
             $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
         }
-        SendSQL("select profiles.groupset, profiles.login_name, " .
+        SendSQL("SELECT profiles.userid, profiles.groupset, " .
+                "profiles.login_name, " .
                 "profiles.login_name = " .
 		SqlQuote($::COOKIE{"Bugzilla_login"}) .
-		" and profiles.cryptpassword = logincookies.cryptpassword " .
-		"and logincookies.hostname = " .
+		" AND profiles.cryptpassword = logincookies.cryptpassword " .
+		"AND logincookies.hostname = " .
 		SqlQuote($ENV{"REMOTE_HOST"}) .
                 ", profiles.disabledtext " .
-		" from profiles,logincookies where logincookies.cookie = " .
+		" FROM profiles, logincookies WHERE logincookies.cookie = " .
 		SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-		" and profiles.userid = logincookies.userid");
+		" AND profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            my ($groupset, $loginname, $ok, $disabledtext) = (@row);
+            my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
             if ($ok) {
                 if ($disabledtext eq '') {
                     $loginok = 1;
+                    $::userid = $userid;
                     $::usergroupset = $groupset;
                     $::COOKIE{"Bugzilla_login"} = $loginname; # Makes sure case
                                                               # is in
@@ -730,6 +736,7 @@ name=PleaseMailAPassword>
 
     # Update the timestamp on our logincookie, so it'll keep on working.
     SendSQL("update logincookies set lastused = null where cookie = $::COOKIE{'Bugzilla_logincookie'}");
+    return $::userid;
 }
 
 
@@ -783,6 +790,37 @@ sub PutHeader {
 sub PutFooter {
     print PerformSubsts(Param("footerhtml")); 
 }
+
+
+sub CheckIfVotedConfirmed {
+    my ($id, $who) = (@_);
+    SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
+            "       bugs.everconfirmed " .
+            "FROM bugs, products " .
+            "WHERE bugs.bug_id = $id AND products.product = bugs.product");
+    my ($votes, $status, $votestoconfirm, $everconfirmed) = (FetchSQLData());
+    if ($votes >= $votestoconfirm && $status eq $::unconfirmedstate) {
+        SendSQL("UPDATE bugs SET bug_status = 'NEW', everconfirmed = 1 " .
+                "WHERE bug_id = $id");
+        my $fieldid = GetFieldID("bug_status");
+        SendSQL("INSERT INTO bugs_activity " .
+                "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                "($id,$who,now(),$fieldid,'$::unconfirmedstate','NEW')");
+        if (!$everconfirmed) {
+            $fieldid = GetFieldID("everconfirmed");
+            SendSQL("INSERT INTO bugs_activity " .
+                    "(bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                    "($id,$who,now(),$fieldid,'0','1')");
+        }
+        AppendComment($id, DBID_to_name($who),
+                      "*** This bug has been confirmed by popular vote. ***");
+        print "<TABLE BORDER=1><TD><H2>Bug $id has been confirmed by votes.</H2>\n";
+        system("./processmail", $id);
+        print "<TD><A HREF=\"show_bug.cgi?id=$id\">Go To BUG# $id</A></TABLE>\n";
+    }
+
+}
+
 
 
 sub DumpBugActivity {
@@ -885,7 +923,7 @@ sub GetCommandMenu {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
         }
-        if (UserInGroup("editusers")) {
+        if (UserInGroup("editusers") || UserInGroup("editgroupmembers")) {
             $html .= ", <a href=editusers.cgi>users</a>";
         }
         if (UserInGroup("editcomponents")) {

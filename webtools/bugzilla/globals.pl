@@ -73,6 +73,7 @@ $::param{'version'} = '2.9';
 $::dontchange = "--do_not_change--";
 $::chooseone = "--Choose_one:--";
 $::defaultqueryname = "(Default query)";
+$::unconfirmedstate = "UNCONFIRMED";
 
 sub ConnectToDatabase {
     if (!defined $::db) {
@@ -644,7 +645,7 @@ sub UserInGroup {
 
 sub IsOpenedState {
     my ($state) = (@_);
-    if ($state =~ /^(NEW|REOPENED|ASSIGNED)$/) {
+    if ($state =~ /^(NEW|REOPENED|ASSIGNED)$/ || $state eq $::unconfirmedstate) {
         return 1;
     }
     return 0;
@@ -652,24 +653,42 @@ sub IsOpenedState {
 
 
 sub RemoveVotes {
-    my ($id, $reason) = (@_);
+    my ($id, $who, $reason) = (@_);
     ConnectToDatabase();
-    SendSQL("select profiles.login_name from votes, profiles where votes.bug_id = $id and profiles.userid = votes.who");
+    my $whopart = "";
+    if ($who) {
+        $whopart = " AND votes.who = $who";
+    }
+    SendSQL("SELECT profiles.login_name, votes.count " .
+            "FROM votes, profiles " .
+            "WHERE votes.bug_id = $id " .
+            "AND profiles.userid = votes.who" .
+            $whopart);
     my @list;
     while (MoreSQLData()) {
-        push(@list, FetchOneColumn());
+        my ($name, $count) = (@_);
+        push(@list, [$name, $count]);
     }
     if (0 < @list) {
-        if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
-            my %substs;
-            $substs{"to"} = join(',', @list);
-            $substs{"bugid"} = $id;
-            $substs{"reason"} = $reason;
-            print SENDMAIL PerformSubsts(Param("voteremovedmail"), \%substs);
-            close SENDMAIL;
+        foreach my $ref (@list) {
+            my ($name, $count) = (@$ref);
+            if (open(SENDMAIL, "|/usr/lib/sendmail -t")) {
+                my %substs;
+                $substs{"to"} = $name;
+                $substs{"bugid"} = $id;
+                $substs{"reason"} = $reason;
+                $substs{"count"} = $count;
+                print SENDMAIL PerformSubsts(Param("voteremovedmail"),
+                                             \%substs);
+                close SENDMAIL;
+            }
         }
-        SendSQL("delete from votes where bug_id = $id");
-        SendSQL("update bugs set votes = 0, delta_ts=delta_ts where bug_id = $id");
+        SendSQL("DELETE FROM votes WHERE bug_id = $id" . $whopart);
+        SendSQL("SELECT SUM(count) FROM votes WHERE bug_id = $id");
+        my $v = FetchOneColumn();
+        $v ||= 0;
+        SendSQL("UPDATE bugs SET votes = $v, delta_ts = delta_ts " .
+                "WHERE bug_id = $id");
     }
 }
 

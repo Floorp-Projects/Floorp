@@ -204,7 +204,6 @@ PutHeader ("Enter Bug","Enter Bug","This page lets you enter a new bug into Bugz
 
 print "
 <FORM METHOD=POST ACTION=\"post_bug.cgi\">
-<INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
 <INPUT TYPE=HIDDEN NAME=reporter VALUE=\"$::COOKIE{'Bugzilla_login'}\">
 <INPUT TYPE=HIDDEN NAME=product VALUE=\""  . value_quote($product) . "\">
   <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>";
@@ -260,6 +259,26 @@ print "
     <td></td>
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
+";
+
+if (UserInGroup("canedit") || UserInGroup("canconfirm")) {
+    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
+            SqlQuote($product));
+    if (FetchOneColumn()) {
+        print qq{
+  <TR>
+    <TD ALIGN="right"><B><A HREF="bug_status.html#status">Initial state:</B></A></TD>
+    <TD COLSPAN="5">
+};
+        print BuildPulldown("bug_status",
+                            [[$::unconfirmedstate], ["NEW"]],
+                            "NEW");
+        print "</TD></TR>";
+    }
+}
+
+
+print "
   <tr>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#assigned_to\">Assigned To:</A></B></TD>
     <TD colspan=5>$assign_element

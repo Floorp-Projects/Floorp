@@ -24,6 +24,9 @@
 use diagnostics;
 use strict;
 
+my $UserInEditGroupSet = -1;
+my $UserInCanConfirmGroupSet = -1;
+
 require "CGI.pl";
 
 # Shut up misguided -w warnings about "used only once":
@@ -38,7 +41,7 @@ use vars %::versions,
     %::legal_priority,
     %::legal_severity;
 
-confirm_login();
+my $whoid = confirm_login();
 
 print "Content-type: text/html\n\n";
 
@@ -103,6 +106,97 @@ if ($::FORM{'product'} ne $::dontchange) {
 }
 
 
+# Checks that the user is allowed to change the given field.  Actually, right
+# now, the rules are pretty simple, and don't look at the field itself very
+# much, but that could be enhanced.
+
+my $lastbugid = 0;
+my $ownerid;
+my $reporterid;
+my $qacontactid;
+
+sub CheckCanChangeField {
+    my ($f, $bugid, $oldvalue, $newvalue) = (@_);
+    if ($f eq "assigned_to" || $f eq "reporter" || $f eq "qa_contact") {
+        if ($oldvalue =~ /^\d+$/) {
+            if ($oldvalue == 0) {
+                $oldvalue = "";
+            } else {
+                $oldvalue = DBID_to_name($oldvalue);
+            }
+        }
+    }
+    if ($oldvalue eq $newvalue) {
+        return 1;
+    }
+    if ($f =~ /^longdesc/) {
+        return 1;
+    }
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup("editbugs");
+    }
+    if ($UserInEditGroupSet) {
+        return 1;
+    }
+    if ($lastbugid != $bugid) {
+        SendSQL("SELECT reporter, assigned_to, qa_contact FROM bugs " .
+                "WHERE bug_id = $bugid");
+        ($reporterid, $ownerid, $qacontactid) = (FetchSQLData());
+    }
+    if ($reporterid eq $whoid || $ownerid eq $whoid || $qacontactid eq $whoid) {
+        if ($f ne "bug_status") {
+            return 1;
+        }
+        if ($newvalue eq $::unconfirmedstate || !IsOpenedState($newvalue)) {
+            return 1;
+        }
+
+        # Hmm.  They are trying to set this bug to some opened state
+        # that isn't the UNCONFIRMED state.  Are they in the right
+        # group?  Or, has it ever been confirmed?  If not, then this
+        # isn't legal.
+
+        if ($UserInCanConfirmGroupSet < 0) {
+            $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
+        }
+        if ($UserInCanConfirmGroupSet) {
+            return 1;
+        }
+        my $fieldid = GetFieldID("bug_status");
+        SendSQL("SELECT newvalue FROM bugs_activity " .
+                "WHERE fieldid = $fieldid " .
+                "  AND oldvalue = '$::unconfirmedstate'");
+        while (MoreSQLData()) {
+            my $n = FetchOneColumn();
+            if (IsOpenedState($n) && $n ne $::unconfirmedstate) {
+                return 1;
+            }
+        }
+    }
+    SendSQL("UNLOCK TABLES");
+    $oldvalue = value_quote($oldvalue);
+    $newvalue = value_quote($newvalue);
+    print qq{
+<H1>Sorry, not allowed.</H1>
+Only the owner or submitter of the bug, or a sufficiently
+empowered user, may make that change to the $f field.
+<TABLE>
+<TR><TH ALIGN="right">Old value:</TH><TD>$oldvalue</TD></TR>
+<TR><TH ALIGN="right">New value:</TH><TD>$newvalue</TD></TR>
+</TABLE>
+<pre>($reporterid eq $whoid || $ownerid eq $whoid || $qacontactid eq $whoid)</PRE>
+
+<P>Click <B>Back</B> and try again.
+};
+    PutFooter();
+    exit();
+}
+
+
+    
+    
+
+
 my @idlist;
 if (defined $::FORM{'id'}) {
 
@@ -160,11 +254,29 @@ sub DoComma {
     $::comma = ",";
 }
 
+sub DoConfirm {
+    if ($UserInEditGroupSet < 0) {
+        $UserInEditGroupSet = UserInGroup("editbugs");
+    }
+    if ($UserInCanConfirmGroupSet < 0) {
+        $UserInCanConfirmGroupSet = UserInGroup("canconfirm");
+    }
+    if ($UserInEditGroupSet || $UserInCanConfirmGroupSet) {
+        DoComma();
+        $::query .= "everconfirmed = 1";
+    }
+}
+
+
 sub ChangeStatus {
     my ($str) = (@_);
     if ($str ne $::dontchange) {
         DoComma();
-        $::query .= "bug_status = '$str'";
+        if (IsOpenedState($str)) {
+            $::query .= "bug_status = IF(everconfirmed = 1, '$str', '$::unconfirmedstate')";
+        } else {
+            $::query .= "bug_status = '$str'";
+        }
     }
 }
 
@@ -192,7 +304,7 @@ sub CheckonComment( $ ) {
 
     if( $ret ) {
         if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
-            # No commet - sorry, action not allowed !
+            # No comment - sorry, action not allowed !
             warnBanner("You have to specify a <b>comment</b> on this change." .
                        "<p>" .
                        "Please press <b>Back</b> and give some words " .
@@ -275,11 +387,17 @@ SWITCH: for ($::FORM{'knob'}) {
     /^none$/ && do {
         last SWITCH;
     };
+    /^confirm$/ && CheckonComment( "confirm" ) && do {
+        DoConfirm();
+        ChangeStatus('NEW');
+        last SWITCH;
+    };
     /^accept$/ && CheckonComment( "accept" ) && do {
+        DoConfirm();
         ChangeStatus('ASSIGNED');
         last SWITCH;
     };
-    /^clearresolution$/ && CheckonComment( "clearresolution" ) &&do {
+    /^clearresolution$/ && CheckonComment( "clearresolution" ) && do {
         ChangeResolution('');
         last SWITCH;
     };
@@ -289,6 +407,9 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };
     /^reassign$/ && CheckonComment( "reassign" ) && do {
+        if ($::FORM{'andconfirm'}) {
+            DoConfirm();
+        }
         ChangeStatus('NEW');
         DoComma();
         if ( Param("strictvaluechecks") ) {
@@ -460,7 +581,6 @@ sub SnapShotDeps {
 }
 
 
-my $whoid = DBNameToIdAndCheck($::FORM{'who'});
 my $timestamp;
 
 sub LogDependencyActivity {
@@ -489,6 +609,13 @@ foreach my $id (@idlist) {
             "keywords $write, longdescs $write, fielddefs $write, " .
             "keyworddefs READ, groups READ");
     my @oldvalues = SnapShotBug($id);
+    my $i = 0;
+    foreach my $col (@::log_columns) {
+        if (exists $::FORM{$col}) {
+            CheckCanChangeField($col, $id, $oldvalues[$i], $::FORM{$col});
+        }
+        $i++;
+    }
 
     if (defined $::FORM{'delta_ts'} && $::FORM{'delta_ts'} ne $delta_ts) {
         print "
@@ -730,7 +857,7 @@ The changes made were:
                                         # updates about this bug.
             }
             if ($col eq 'product') {
-                RemoveVotes($id,
+                RemoveVotes($id, 0,
                             "This bug has been moved to a different product");
             }
             $col = GetFieldID($col);

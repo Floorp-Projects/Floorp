@@ -63,17 +63,27 @@ foreach my $id (@buglist) {
     }
 }
 
-SendSQL("select bug_id, product from bugs where bug_id = " .
-        join(" or bug_id = ", @buglist));
+SendSQL("SELECT bugs.bug_id, bugs.product, products.maxvotesperbug " .
+        "FROM bugs, products " .
+        "WHERE products.product = bugs.product ".
+        " AND bugs.bug_id IN (" . join(", ", @buglist) . ")");
 
 my %prodcount;
 
 while (MoreSQLData()) {
-    my ($id, $prod) = (FetchSQLData());
+    my ($id, $prod, $max) = (FetchSQLData());
     if (!defined $prodcount{$prod}) {
         $prodcount{$prod} = 0;
     }
     $prodcount{$prod} += $::FORM{$id};
+    if ($::FORM{$id} > $max) {
+        PutHeader("Don't overstuff!", "Illegal vote");
+        print "You may only use at most $max votes for a single bug in the\n";
+        print "<tt>$prod</tt> product, but you are using $::FORM{$id}.\n";
+        print "<P>Please click <b>Back</b> and try again.<hr>\n";
+        PutFooter();
+        exit();
+    }
 }
 
 foreach my $prod (keys(%prodcount)) {
@@ -81,7 +91,7 @@ foreach my $prod (keys(%prodcount)) {
         PutHeader("Don't overstuff!", "Illegal vote");
         print "You may only use $::prodmaxvotes{$prod} votes for bugs in the\n";
         print "<tt>$prod</tt> product, but you are using $prodcount{$prod}.\n";
-        print "Please click <b>Back</b> and try again.<hr>\n";
+        print "<P>Please click <b>Back</b> and try again.<hr>\n";
         PutFooter();
         exit();
     }
@@ -110,10 +120,12 @@ foreach my $id (keys %affected) {
 SendSQL("unlock tables");
 
 
-
 PutHeader("Voting tabulated", "Voting tabulated", $::COOKIE{'Bugzilla_login'});
 print "Your votes have been recorded.\n";
 print qq{<p><a href="showvotes.cgi?user=$who">Review your votes</a><hr>\n};
+foreach my $id (keys %affected) {
+    CheckIfVotedConfirmed($id, $who);
+}
 PutFooter();
 exit();
     

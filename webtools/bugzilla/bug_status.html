@@ -30,7 +30,9 @@
 The <B>status</B> and <B>resolution</B> field define and track the
 life cycle of a bug.
 
+<a name="status">
 <p>
+</a>
 <TABLE BORDER=1 CELLPADDING=4>
 
 <TR ALIGN=CENTER VALIGN=TOP>
@@ -42,7 +44,12 @@ certain status transitions are allowed.
 <TD>The <b>resolution</b> field indicates what happened to this bug.
 
 <TR VALIGN=TOP><TD>
-<DL><DT><B>NEW</B> 
+<DL><DT><B>UNCONFIRMED</B> 
+<DD> This bug has recently been added to the database.  Nobody has
+     validated that this bug is true.  Users who have the "canconfirm"
+     permission set may confirm this bug, changing its state to NEW.
+     Or, it may be directly resolved and marked RESOLVED.
+<DT><B>NEW</B> 
 <DD> This bug has recently been added to the assignee's list of bugs
      and must be processed. Bugs in this state may be accepted, and
      become <B>ASSIGNED</B>, passed on to someone else, and remain
@@ -60,8 +67,8 @@ certain status transitions are allowed.
 </DL>
 <TD>
 <DL>
-<DD> No resolution yet. All bugs which are <B>NEW</B> or
-     <B>ASSIGNED</B> have the resolution set to blank. All other bugs
+<DD> No resolution yet. All bugs which are in one of these "open" states
+     have the resolution set to blank. All other bugs
      will be marked with one of the following resolutions.
 </DL>
 
@@ -188,8 +195,7 @@ searching for bugs that have been resolved or verified, remember to set the
 status field appropriately. 
 
 <hr>
-<address><a href="http://home.netscape.com/people/terry/">Terry Weissman &lt;terry@netscape.com&gt;</a></address>
 <!-- hhmts start -->
-Last modified: Thu Jan 13 16:22:39 2000
+Last modified: Wed Feb 16 20:41:24 2000
 <!-- hhmts end -->
 </body> </html>

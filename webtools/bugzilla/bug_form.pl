@@ -31,13 +31,13 @@ sub bug_form_pl_sillyness {
     $zz = %::components;
     $zz = %::prodmaxvotes;
     $zz = %::versions;
+    $zz = @::legal_keywords;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_product;
     $zz = @::legal_priority;
     $zz = @::legal_resolution_no_dup;
     $zz = @::legal_severity;
-    $zz = @::keywordsbyname;
 }
 
 my %knownattachments;
@@ -194,13 +194,26 @@ if (@row = FetchSQLData()) {
     exit;
 }
 
+my $assignedtoid = $bug{'assigned_to'};
+my $reporterid = $bug{'reporter'};
+my $qacontactid =  $bug{'qa_contact'};
+
 $bug{'assigned_to'} = DBID_to_name($bug{'assigned_to'});
 $bug{'reporter'} = DBID_to_name($bug{'reporter'});
+
+print qq{<FORM NAME="changeform" METHOD="POST" ACTION="process_bug.cgi">\n};
+
+#  foreach my $i (sort(keys(%bug))) {
+#      my $q = value_quote($bug{$i});
+#      print qq{<INPUT TYPE="HIDDEN" NAME="orig-$i" VALUE="$q">\n};
+#  }
+
 $bug{'long_desc'} = GetLongDescription($id);
 my $longdesclength = length($bug{'long_desc'});
 
-
 GetVersionTable();
+
+
 
 #
 # These should be read from the database ...
@@ -229,11 +242,9 @@ if (defined $URL && $URL ne "none" && $URL ne "NULL" && $URL ne "") {
 }
 
 print "
-<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=\"delta_ts\" VALUE=\"$bug{'delta_ts'}\">
 <INPUT TYPE=HIDDEN NAME=\"longdesclength\" VALUE=\"$longdesclength\">
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$id>
-<INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
     <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
@@ -449,50 +460,73 @@ my $knum = 1;
 
 my $status = $bug{'bug_status'};
 
-if ($status eq "NEW" || $status eq "ASSIGNED" || $status eq "REOPENED") {
-    if ($status ne "ASSIGNED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
-	print "Accept bug (change status to <b>ASSIGNED</b>)<br>";
+my $canedit = UserInGroup("editbugs");
+my $canconfirm;
+
+if ($status eq $::unconfirmedstate) {
+    $canconfirm = UserInGroup("canconfirm");
+    if ($canedit || $canconfirm) {
+        print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
+	print "Confirm bug (change status to <b>NEW</b>)<br>";
         $knum++;
     }
-    if ($bug{'resolution'} ne "") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n";
-        print "Clear the resolution (remove the current resolution of\n";
-        print "<b>$bug{'resolution'}</b>)<br>\n";
-        $knum++;
-    }
-    print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
+}
+
+
+if ($::userid && ($canedit || $::userid == $assignedtoid ||
+                  $::userid == $reporterid || $::userid == $qacontactid)) {
+    if (IsOpenedState($status)) {
+        if ($status ne "ASSIGNED") {
+            print "<INPUT TYPE=radio NAME=knob VALUE=accept>";
+            my $extra = "";
+            if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
+                $extra = "confirm bug, ";
+            }
+            print "Accept bug (${extra}change status to <b>ASSIGNED</b>)<br>";
+            $knum++;
+        }
+        if ($bug{'resolution'} ne "") {
+            print "<INPUT TYPE=radio NAME=knob VALUE=clearresolution>\n";
+            print "Clear the resolution (remove the current resolution of\n";
+            print "<b>$bug{'resolution'}</b>)<br>\n";
+            $knum++;
+        }
+        print "<INPUT TYPE=radio NAME=knob VALUE=resolve>
         Resolve bug, changing <A HREF=\"bug_status.html\">resolution</A> to
         <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
           $resolution_popup</SELECT><br>\n";
-    $knum++;
-    print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
+        $knum++;
+        print "<INPUT TYPE=radio NAME=knob VALUE=duplicate>
         Resolve bug, mark it as duplicate of bug # 
         <INPUT NAME=dup_id SIZE=6 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"><br>\n";
-    $knum++;
-    my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
+        $knum++;
+        my $assign_element = "<INPUT NAME=\"assigned_to\" SIZE=32 ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\" VALUE=\"$bug{'assigned_to'}\">";
 
-    print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
+        print "<INPUT TYPE=radio NAME=knob VALUE=reassign> 
           <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bug to
           $assign_element
         <br>\n";
-    $knum++;
-    print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
+        if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
+            print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=andconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
+        }
+        $knum++;
+        print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
           Reassign bug to owner of selected component<br>\n";
-    $knum++;
-} else {
-    print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
-    $knum++;
-    if ($status eq "RESOLVED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=verify>
+        $knum++;
+    } else {
+        print "<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bug<br>\n";
+        $knum++;
+        if ($status eq "RESOLVED") {
+            print "<INPUT TYPE=radio NAME=knob VALUE=verify>
         Mark bug as <b>VERIFIED</b><br>\n";
-        $knum++;
-    }
-    if ($status ne "CLOSED") {
-        print "<INPUT TYPE=radio NAME=knob VALUE=close>
+            $knum++;
+        }
+        if ($status ne "CLOSED") {
+            print "<INPUT TYPE=radio NAME=knob VALUE=close>
         Mark bug as <b>CLOSED</b><br>\n";
-        $knum++;
+            $knum++;
+        }
     }
 }
  

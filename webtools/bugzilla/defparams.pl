@@ -428,7 +428,7 @@ DefParam("expectbigqueries",
          0);
 
 DefParam("emailregexp",
-         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@, ]$</tt>, which means "local usernames, no @ allowed.',
+         'This defines the regexp to use for legal email addresses.  The default tries to match fully qualified email addresses.  Another popular value to put here is <tt>^[^@, ]*$</tt>, which means "local usernames, no @ allowed.',
          "t",
          q:^[^@, ]*@[^@, ]*\\.[^@, ]*$:);
 
@@ -444,7 +444,7 @@ DefParam("emailsuffix",
 
 
 DefParam("voteremovedmail",
-q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed.  %<i>anythingelse</i>% gets replaced by the definition of thatparameter (as defined on this page).},
+q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed.  %count% is how many votes got removed.%<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).},
          "l",
 "From: bugzilla-daemon
 To: %to%
@@ -453,6 +453,8 @@ Subject: [Bug %bugid%] Your vote has been removed from this bug
 You used to have a vote on bug %bugid%, but it has been removed.
 
 Reason: %reason%
+
+Votes removed: %count%
 
 %urlbase%show_bug.cgi?id=%bugid%
 ");
@@ -487,6 +489,9 @@ DefParam("commentonaccept",
          "b", 0 );
 DefParam("commentonclearresolution", 
          "If this option is on, the user needs to enter a short comment if the bugs resolution is cleared",
+         "b", 0 );
+DefParam("commentonconfirm", 
+         "If this option is on, the user needs to enter a short comment when confirming a bug",
          "b", 0 );
 DefParam("commentonresolve", 
          "If this option is on, the user needs to enter a short comment if the bug is resolved",

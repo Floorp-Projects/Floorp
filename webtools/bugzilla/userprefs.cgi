@@ -215,6 +215,42 @@ sub SaveFooter {
     
 
 
+sub ShowPermissions {
+    print "You have the following permission bits set on your account:\n";
+    print "<P><UL>\n";
+    my $found = 0;
+    SendSQL("SELECT description FROM groups " .
+            "WHERE bit & $::usergroupset != 0 " .
+            "ORDER BY bit");
+    while (MoreSQLData()) {
+        my ($description) = (FetchSQLData());
+        print "<LI>$description\n";
+        $found = 1;
+    }
+    if ($found == 0) {
+        print "<LI>(No extra permission bits have been set).\n";
+    }
+    print "</UL>\n";
+    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $userid");
+    my $blessgroupset = FetchOneColumn();
+    if ($blessgroupset) {
+        print "And you can turn on or off the following bits for\n";
+        print qq{<A HREF="editusers.cgi">other users</A>:\n};
+        print "<P><UL>\n";
+        SendSQL("SELECT description FROM groups " .
+                "WHERE bit & $blessgroupset != 0 " .
+                "ORDER BY bit");
+        while (MoreSQLData()) {
+            my ($description) = (FetchSQLData());
+            print "<LI>$description\n";
+        }
+        print "</UL>\n";
+    }
+}
+        
+
+
+
 ######################################################################
 ################# Live code (not sub defs) starts here ###############
 
@@ -239,7 +275,9 @@ my @banklist = (
                 ["diffs", "Email settings",
                  \&ShowDiffs, \&SaveDiffs],
                 ["footer", "Page footer",
-                 \&ShowFooter, \&SaveFooter]
+                 \&ShowFooter, \&SaveFooter],
+                ["permissions", "Permissions",
+                 \&ShowPermissions, undef]
                 );
 
 
@@ -300,9 +338,11 @@ if (defined $bankdescription) {
 </TABLE>
 <INPUT TYPE="hidden" NAME="dosave" VALUE="1">
 <INPUT TYPE="hidden" NAME="bank" VALUE="$bank">
-<INPUT TYPE="submit" VALUE="Submit">
-</FORM>
 };
+    if ($savefunc) {
+        print qq{<INPUT TYPE="submit" VALUE="Submit">\n};
+    }
+    print qq{</FORM>\n};
 } else {
     print "<P>Please choose from the above links which settings you wish to change.</P>";
 }

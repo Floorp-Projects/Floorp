@@ -547,7 +547,7 @@ $table{bugs} =
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
     bug_severity enum($severities) not null,
-    bug_status enum("NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
+    bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
     creation_ts datetime not null,
     delta_ts timestamp,
     short_desc mediumtext,
@@ -567,6 +567,7 @@ $table{bugs} =
                                 # the real data comes from the keywords table.
     . '
     lastdiffed datetime not null,
+    everconfirmed tinyint not null,
 
     index (assigned_to),
     index (creation_ts),
@@ -656,7 +657,10 @@ $table{products} =
     description mediumtext,
     milestoneurl tinytext not null,
     disallownew tinyint not null,
-    votesperuser smallint not null';
+    votesperuser smallint not null,
+    maxvotesperbug smallint not null default 10000,
+    votestoconfirm smallint not null
+';
 
 
 $table{profiles} =
@@ -670,8 +674,23 @@ $table{profiles} =
     disabledtext mediumtext not null,
     newemailtech tinyint not null,
     mybugslink tinyint not null default 1,
+    blessgroupset bigint not null,
+
 
     unique(login_name)';
+
+
+$table{profiles_activity} = 
+   'userid mediumint not null,
+    who mediumint not null,
+    profiles_when datetime not null,
+    fieldid mediumint not null,
+    oldvalue tinytext,
+    newvalue tinytext,
+
+    index (userid),
+    index (profiles_when),
+    index (fieldid)';
 
 
 $table{namedqueries} =
@@ -775,22 +794,31 @@ while (my ($tabname, $fielddef) = each %table) {
 # Populate groups table
 ###########################################################################
 
+sub GroupExists ($)
+{
+    my ($name) = @_;
+    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
+    $sth->execute;
+    if ($sth->rows) {
+        return 1;
+    }
+    return 0;
+}
+
+
 #
 # This subroutine checks if a group exist. If not, it will be automatically
 # created with the next available bit set
 #
 
-sub AddGroup ($$)
-{
-    my ($name, $desc) = @_;
+sub AddGroup {
+    my ($name, $desc, $userregexp) = @_;
+    $userregexp ||= "";
 
-    # does the group exist?
-    my $sth = $dbh->prepare("SELECT name FROM groups WHERE name='$name'");
-    $sth->execute;
-    return if $sth->rows;
+    return if GroupExists($name);
     
     # get highest bit number
-    $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
+    my $sth = $dbh->prepare("SELECT bit FROM groups ORDER BY bit DESC");
     $sth->execute;
     my @row = $sth->fetchrow_array;
 
@@ -807,20 +835,30 @@ sub AddGroup ($$)
     $sth = $dbh->prepare('INSERT INTO groups
                           (bit, name, description, userregexp)
                           VALUES (?, ?, ?, ?)');
-    $sth->execute($bit, $name, $desc, "");
+    $sth->execute($bit, $name, $desc, $userregexp);
+    return $bit;
 }
 
 
 #
-# BugZilla uses --GROUPS-- to assign various rights to it's users. 
+# BugZilla uses --GROUPS-- to assign various rights to its users. 
 #
 
 AddGroup 'tweakparams',      'Can tweak operating parameters';
 AddGroup 'editusers',      'Can edit or disable users';
-AddGroup 'editgroupmembers', 'Can put people in and out of groups that they are members of.';
 AddGroup 'creategroups',     'Can create and destroy groups.';
 AddGroup 'editcomponents',   'Can create, destroy, and edit components.';
 AddGroup 'editkeywords',   'Can create, destroy, and edit keywords.';
+
+if (!GroupExists("editbugs")) {
+    my $id = AddGroup('editbugs',  'Can edit all aspects of any bug.', ".*");
+    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+}
+
+if (!GroupExists("canconfirm")) {
+    my $id = AddGroup('canconfirm',  'Can confirm a bug.', ".*");
+    $dbh->do("UPDATE profiles SET groupset = groupset | $id");
+}
 
 
 
@@ -1425,6 +1463,24 @@ if (GetIndexDef('profiles', 'login_name')->[1]) {
 
 AddField('profiles', 'mybugslink', 'tinyint not null default 1');
 AddField('namedqueries', 'linkinfooter', 'tinyint not null');
+
+
+# 2000-02-12 Added a new state to bugs, UNCONFIRMED.  Added ability to confirm
+# a vote via bugs.  Added user bits to control which users can confirm bugs
+# by themselves, and which users can edit bugs without their names on them.
+# Added a user field which controls which groups a user can put other users 
+# into.
+
+my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
+              "VERIFIED", "CLOSED");
+CheckEnumField('bugs', 'bug_status', @states);
+if (!GetFieldDef('bugs', 'everconfirmed')) {
+    AddField('bugs', 'everconfirmed',  'tinyint not null');
+    $dbh->do("UPDATE bugs SET everconfirmed = 1");
+}
+AddField('products', 'maxvotesperbug', 'smallint not null default 10000');
+AddField('products', 'votestoconfirm', 'smallint not null');
+AddField('profiles', 'blessgroupset', 'bigint not null');
 
 
 #

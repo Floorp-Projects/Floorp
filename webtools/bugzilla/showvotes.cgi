@@ -84,8 +84,7 @@ if (defined $::FORM{'bug_id'}) {
             if (!defined $status) {
                 next;
             }
-            my $opened = ($status eq "NEW" || $status eq "ASSIGNED" ||
-                          $status eq "REOPENED");
+            my $opened = IsOpenedState($status);
             my $strike = $opened ? "" : "<strike>";
             my $endstrike = $opened ? "" : "</strike>";
             $summary = html_quote($summary);

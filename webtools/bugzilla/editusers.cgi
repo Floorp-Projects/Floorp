@@ -31,7 +31,16 @@ use strict;
 require "CGI.pl";
 require "globals.pl";
 
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
 
+sub sillyness {
+    my $zz;
+    $zz = $::userid;
+}
+
+my $editall;
+my $opblessgroupset = '9223372036854775807'; # This is all 64 bits.
 
 
 
@@ -69,59 +78,81 @@ sub CheckUser ($)
 
 
 
+sub EmitElement ($$)
+{
+    my ($name, $value) = (@_);
+    $value = value_quote($value);
+    if ($editall) {
+        print qq{<TD><INPUT SIZE=64 MAXLENGTH=255 NAME="$name" VALUE="$value"></TD>\n};
+    } else {
+        print qq{<TD>$value</TD>\n};
+    }
+}
+
+
 #
 # Displays the form to edit a user parameters
 #
 
-sub EmitFormElements ($$$$$$)
+sub EmitFormElements ($$$$$$$)
 {
-    my ($user, $password, $realname, $groupset, $emailnotification,
-        $disabledtext) = @_;
+    my ($user, $password, $realname, $groupset, $blessgroupset,
+        $emailnotification, $disabledtext) = @_;
 
     print "  <TH ALIGN=\"right\">Login name:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"user\" VALUE=\"$user\"></TD>\n";
+    EmitElement("user", $user);
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Real name:</TH>\n";
-    print "  <TD><INPUT SIZE=64 MAXLENGTH=255 NAME=\"realname\" VALUE=\"$realname\"></TD>\n";
+    EmitElement("realname", $realname);
 
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Password:</TH>\n";
-    print "  <TD><INPUT SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
+    if ($editall) {
+        print "</TR><TR>\n";
+        print "  <TH ALIGN=\"right\">Password:</TH>\n";
+        print "  <TD><INPUT SIZE=16 MAXLENGTH=16 NAME=\"password\" VALUE=\"$password\"></TD>\n";
 
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
-    print qq{<TD><SELECT NAME="emailnotification">};
-    foreach my $i (["ExcludeSelfChanges", "All qualifying bugs except those which I change"],
-                   ["CConly", "Only those bugs which I am listed on the CC line"],
-                   ["All", "All qualifying bugs"]) {
-        my ($tag, $desc) = (@$i);
-        my $selectpart = "";
-        if ($tag eq $emailnotification) {
-            $selectpart = " SELECTED";
+        print "</TR><TR>\n";
+        print "  <TH ALIGN=\"right\">Email notification:</TH>\n";
+        print qq{<TD><SELECT NAME="emailnotification">};
+        foreach my $i (["ExcludeSelfChanges", "All qualifying bugs except those which I change"],
+                       ["CConly", "Only those bugs which I am listed on the CC line"],
+                       ["All", "All qualifying bugs"]) {
+            my ($tag, $desc) = (@$i);
+            my $selectpart = "";
+            if ($tag eq $emailnotification) {
+                $selectpart = " SELECTED";
+            }
+            print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
         }
-        print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
+        print "</SELECT></TD>\n";
+        print "</TR><TR>\n";
+        print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
+        print "  <TD ROWSPAN=2><TEXTAREA NAME=\"disabledtext\" ROWS=10 COLS=60>" .
+            value_quote($disabledtext) . "</TEXTAREA>\n";
+        print "  </TD>\n";
+        print "</TR><TR>\n";
+        print "  <TD VALIGN=\"top\">If non-empty, then the account will\n";
+        print "be disabled, and this text should explain why.</TD>\n";
     }
-    print "</SELECT></TD>\n";
-    print "</TR><TR>\n";
-    print "  <TH ALIGN=\"right\">Disable text:</TH>\n";
-    print "  <TD ROWSPAN=2><TEXTAREA NAME=\"disabledtext\" ROWS=10 COLS=60>" .
-        value_quote($disabledtext) . "</TEXTAREA>\n";
-    print "  </TD>\n";
-    print "</TR><TR>\n";
-    print "  <TD VALIGN=\"top\">If non-empty, then the account will\n";
-    print "be disabled, and this text should explain why.</TD>\n";
-
-
-    SendSQL("SELECT bit,name,description,bit & $groupset != 0
-	     FROM groups
-	     ORDER BY name");
+        
+    
+    SendSQL("SELECT bit,name,description,bit & $groupset != 0, " .
+            "       bit & $blessgroupset " .
+            "FROM groups " .
+            "WHERE bit & $opblessgroupset != 0 " .
+            "ORDER BY name");
     while (MoreSQLData()) {
-	my ($bit,$name,$description,$checked) = FetchSQLData();
+	my ($bit,$name,$description,$checked,$blchecked) = FetchSQLData();
 	print "</TR><TR>\n";
 	print "  <TH ALIGN=\"right\">", ucfirst($name), ":</TH>\n";
 	$checked = ($checked) ? "CHECKED" : "";
 	print "  <TD><INPUT TYPE=CHECKBOX NAME=\"bit_$name\" $checked VALUE=\"$bit\"> $description</TD>\n";
+        if ($editall) {
+            print "</TR><TR>\n";
+            print "<TH></TH>";
+            $blchecked = ($blchecked) ? "CHECKED" : "";
+            print "<TD><INPUT TYPE=CHECKBOX NAME=\"blbit_$name\" $blchecked VALUE=\"$bit\"> Can turn this bit on for other users</TD>\n";
+        }
     }
 
 }
@@ -165,12 +196,19 @@ confirm_login();
 
 print "Content-type: text/html\n\n";
 
-unless (UserInGroup("editusers")) {
-    PutHeader("Not allowed");
-    print "Sorry, you aren't a member of the 'editusers' group.\n";
-    print "And so, you aren't allowed to add, modify or delete users.\n";
-    PutTrailer();
-    exit;
+$editall = UserInGroup("editusers");
+
+if (!$editall) {
+    SendSQL("SELECT blessgroupset FROM profiles WHERE userid = $::userid");
+    $opblessgroupset = FetchOneColumn();
+    if (!$opblessgroupset) {
+        PutHeader("Not allowed");
+        print "Sorry, you aren't a member of the 'editusers' group, and you\n";
+        print "don't have permissions to put people in or out of any group.\n";
+        print "And so, you aren't allowed to add, modify or delete users.\n";
+        PutTrailer();
+        exit;
+    }
 }
 
 
@@ -198,8 +236,8 @@ List users with login name matching:
 <INPUT SIZE=32 NAME="matchstr">
 <SELECT NAME="matchtype">
 <OPTION VALUE="substr" SELECTED>case-insensitive substring
-<OPTION VALUE="regexp" SELECTED>case-sensitive regexp
-<OPTION VALUE="notregexp" SELECTED>not (case-sensitive regexp)
+<OPTION VALUE="regexp">case-sensitive regexp
+<OPTION VALUE="notregexp">not (case-sensitive regexp)
 </SELECT>
 <BR>
 <INPUT TYPE=SUBMIT VALUE="Submit">
@@ -261,14 +299,17 @@ if ($action eq 'list') {
         }
 	print "</TR>";
     }
-    print "<TR>\n";
-    my $span = $candelete ? 3 : 2;
-    print qq{
+    if ($editall) {
+        print "<TR>\n";
+        my $span = $candelete ? 3 : 2;
+        print qq{
 <TD VALIGN="top" COLSPAN=$span ALIGN="right">
     <A HREF=\"editusers.cgi?action=add\">Add a new user</A>
 </TD>
 };
-    print "</TR></TABLE>\n";
+        print "</TR>";
+    }
+    print "</TABLE>\n";
     print "$count users found.\n";
 
     PutTrailer($localtrailer);
@@ -286,11 +327,16 @@ if ($action eq 'list') {
 
 if ($action eq 'add') {
     PutHeader("Add user");
+    if (!$editall) {
+        print "Sorry, you don't have permissions to add new users.";
+        PutTrailer();
+        exit;
+    }
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 'ExcludeSelfChanges', '');
+    EmitFormElements('', '', '', 0, 0, 'ExcludeSelfChanges', '');
 
     print "</TR></TABLE>\n<HR>\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Add\">\n";
@@ -311,6 +357,12 @@ if ($action eq 'add') {
 
 if ($action eq 'new') {
     PutHeader("Adding new user");
+
+    if (!$editall) {
+        print "Sorry, you don't have permissions to add new users.";
+        PutTrailer();
+        exit;
+    }
 
     # Cleanups and valididy checks
     my $realname = trim($::FORM{realname} || '');
@@ -385,6 +437,11 @@ if ($action eq 'del') {
     if (!$candelete) {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
+    }
+    if (!$editall) {
+        print "Sorry, you don't have permissions to delete users.";
+        PutTrailer();
+        exit;
     }
     CheckUser($user);
 
@@ -515,6 +572,11 @@ if ($action eq 'delete') {
         print "Sorry, deleting users isn't allowed.";
         PutTrailer();
     }
+    if (!$editall) {
+        print "Sorry, you don't have permissions to delete users.";
+        PutTrailer();
+        exit;
+    }
     CheckUser($user);
 
     SendSQL("SELECT userid
@@ -545,25 +607,28 @@ if ($action eq 'edit') {
     CheckUser($user);
 
     # get data of user
-    SendSQL("SELECT password, realname, groupset, emailnotification,
-                    disabledtext
+    SendSQL("SELECT password, realname, groupset, blessgroupset,
+                    emailnotification, disabledtext
 	     FROM profiles
 	     WHERE login_name=" . SqlQuote($user));
-    my ($password, $realname, $groupset, $emailnotification,
+    my ($password, $realname, $groupset, $blessgroupset, $emailnotification,
         $disabledtext) = FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editusers.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements($user, $password, $realname, $groupset,
+    EmitFormElements($user, $password, $realname, $groupset, $blessgroupset,
                      $emailnotification, $disabledtext);
     
     print "</TR></TABLE>\n";
 
     print "<INPUT TYPE=HIDDEN NAME=\"userold\" VALUE=\"$user\">\n";
-    print "<INPUT TYPE=HIDDEN NAME=\"passwordold\" VALUE=\"$password\">\n";
+    if ($editall) {
+        print "<INPUT TYPE=HIDDEN NAME=\"passwordold\" VALUE=\"$password\">\n";
+    }
     print "<INPUT TYPE=HIDDEN NAME=\"realnameold\" VALUE=\"$realname\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"groupsetold\" VALUE=\"$groupset\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"blessgroupsetold\" VALUE=\"$blessgroupset\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"emailnotificationold\" VALUE=\"$emailnotification\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disabledtextold\" VALUE=\"" .
         value_quote($disabledtext) . "\">\n";
@@ -583,7 +648,7 @@ if ($action eq 'edit') {
 #
 
 if ($action eq 'update') {
-    PutHeader("Update User");
+    PutHeader("Updated user");
 
     my $userold               = trim($::FORM{userold}              || '');
     my $realname              = trim($::FORM{realname}             || '');
@@ -595,12 +660,19 @@ if ($action eq 'update') {
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
     my $groupsetold           = trim($::FORM{groupsetold}          || '');
+    my $blessgroupsetold      = trim($::FORM{blessgroupsetold}     || '');
 
     my $groupset = "0";
     foreach (keys %::FORM) {
 	next unless /^bit_/;
 	#print "$_=$::FORM{$_}<br>\n";
-	$groupset .= "+ $::FORM{$_}";
+	$groupset .= " + $::FORM{$_}";
+    }
+    my $blessgroupset = "0";
+    foreach (keys %::FORM) {
+	next unless /^blbit_/;
+	#print "$_=$::FORM{$_}<br>\n";
+	$blessgroupset .= " + $::FORM{$_}";
     }
 
     CheckUser($userold);
@@ -608,34 +680,58 @@ if ($action eq 'update') {
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
 
-    if ($groupset != $groupsetold) {
+    if ($groupset ne $groupsetold) {
         SendSQL("UPDATE profiles
-		 SET groupset=" . $groupset . "
+		 SET groupset = 
+                         groupset - (groupset & $opblessgroupset) + $groupset
 		 WHERE login_name=" . SqlQuote($userold));
+
+        # I'm paranoid that someone who I give the ability to bless people
+        # will start misusing it.  Let's log who blesses who (even though
+        # nothing actually uses this log right now).
+        my $fieldid = GetFieldID("groupset");
+        SendSQL("SELECT userid, groupset FROM profiles WHERE login_name=" .
+                SqlQuote($userold));
+        my $u;
+        ($u, $groupset) = (FetchSQLData());
+        if ($groupset ne $groupsetold) {
+            SendSQL("INSERT INTO profiles_activity " .
+                    "(userid,who,profiles_when,fieldid,oldvalue,newvalue)" .
+                    "VALUES " .
+                    "($u, $::userid, now(), $fieldid, " .
+                    " $groupsetold, $groupset)");
+        }
 	print "Updated permissions.\n";
     }
 
-    if ($emailnotification ne $emailnotificationold) {
+    if ($editall && $blessgroupset ne $blessgroupsetold) {
+        SendSQL("UPDATE profiles
+		 SET blessgroupset=" . $blessgroupset . "
+		 WHERE login_name=" . SqlQuote($userold));
+	print "Updated ability to tweak permissions of other users.\n";
+    }
+
+    if ($editall && $emailnotification ne $emailnotificationold) {
         SendSQL("UPDATE profiles
 		 SET emailnotification=" . SqlQuote($emailnotification) . "
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated email notification.<BR>\n";
     }
 
-    if ($password ne $passwordold) {
+    if ($editall && $password ne $passwordold) {
         my $q = SqlQuote($password);
         SendSQL("UPDATE profiles
 		 SET password= $q, cryptpassword = ENCRYPT($q)
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated password.<BR>\n";
     }
-    if ($realname ne $realnameold) {
+    if ($editall && $realname ne $realnameold) {
         SendSQL("UPDATE profiles
 		 SET realname=" . SqlQuote($realname) . "
 		 WHERE login_name=" . SqlQuote($userold));
 	print "Updated real name.<BR>\n";
     }
-    if ($disabledtext ne $disabledtextold) {
+    if ($editall && $disabledtext ne $disabledtextold) {
         SendSQL("UPDATE profiles
 		 SET disabledtext=" . SqlQuote($disabledtext) . "
 		 WHERE login_name=" . SqlQuote($userold));
@@ -647,7 +743,7 @@ if ($action eq 'update') {
 	         WHERE userid=" . $userid);
 	print "Updated disabled text.<BR>\n";
     }
-    if ($user ne $userold) {
+    if ($editall && $user ne $userold) {
 	unless ($user) {
 	    print "Sorry, I can't delete the user's name.";
             PutTrailer($localtrailer);

@@ -120,11 +120,31 @@ if (Param("useqacontact")) {
 
 
 
+if (exists $::FORM{'bug_status'}) {
+    if (!UserInGroup("canedit") && !UserInGroup("canconfirm")) {
+        delete $::FORM{'bug_status'};
+    }
+}
+
+if (!exists $::FORM{'bug_status'}) {
+    $::FORM{'bug_status'} = $::unconfirmedstate;
+    SendSQL("SELECT votestoconfirm FROM products WHERE product = " .
+            SqlQuote($::FORM{'product'}));
+    if (!FetchOneColumn()) {
+        $::FORM{'bug_status'} = "NEW";
+    }
+}
+
+
 my @used_fields;
 foreach my $f (@bug_fields) {
     if (exists $::FORM{$f}) {
         push (@used_fields, $f);
     }
+}
+if (exists $::FORM{'bug_status'} && $::FORM{'bug_status'} ne $::unconfirmedstate) {
+    push(@used_fields, "everconfirmed");
+    $::FORM{'everconfirmed'} = 1;
 }
 
 my $query = "insert into bugs (\n" . join(",\n", @used_fields) . ",

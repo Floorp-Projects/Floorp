@@ -32,7 +32,13 @@ use strict;
 require "CGI.pl";
 require "globals.pl";
 
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
 
+sub sillyness {
+    my $zz;
+    $zz = $::unconfirmedstate;
+}
 
 
 # TestProduct:  just returns if the specified product does exists
@@ -72,10 +78,10 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$)
+sub EmitFormElements ($$$$$$$)
 {
     my ($product, $description, $milestoneurl, $disallownew,
-        $votesperuser) = @_;
+        $votesperuser, $maxvotesperbug, $votestoconfirm) = @_;
 
     $product = value_quote($product);
     $description = value_quote($description);
@@ -102,6 +108,14 @@ sub EmitFormElements ($$$$$)
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Maximum votes per person:</TH>\n";
     print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votesperuser\" VALUE=\"$votesperuser\"></TD>\n";
+
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Maximum votes a person can put on a single bug:</TH>\n";
+    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"maxvotesperbug\" VALUE=\"$maxvotesperbug\"></TD>\n";
+
+    print "</TR><TR>\n";
+    print "  <TH ALIGN=\"right\">Number of votes a bug in this product needs to automatically get out of the <A HREF=\"bug_status.html#status\">UNCONFIRMED</A> state:</TH>\n";
+    print "  <TD><INPUT SIZE=5 MAXLENGTH=5 NAME=\"votestoconfirm\" VALUE=\"$votestoconfirm\"></TD>\n";
 }
 
 
@@ -173,7 +187,7 @@ unless ($action) {
     PutHeader("Select product");
 
     SendSQL("SELECT products.product,description,disallownew,
-                    votesperuser,COUNT(bug_id)
+                    votesperuser,maxvotesperbug,votestoconfirm,COUNT(bug_id)
              FROM products LEFT JOIN bugs
                ON products.product=bugs.product
              GROUP BY products.product
@@ -183,12 +197,14 @@ unless ($action) {
     print "  <TH ALIGN=\"left\">Description</TH>\n";
     print "  <TH ALIGN=\"left\">Status</TH>\n";
     print "  <TH ALIGN=\"left\">Votes<br>per<br>user</TH>\n";
+    print "  <TH ALIGN=\"left\">Max<br>Votes<br>per<br>bug</TH>\n";
+    print "  <TH ALIGN=\"left\">Votes<br>to<br>confirm</TH>\n";
     print "  <TH ALIGN=\"left\">Bugs</TH>\n";
     print "  <TH ALIGN=\"left\">Action</TH>\n";
     print "</TR>";
     while ( MoreSQLData() ) {
         my ($product, $description, $disallownew, $votesperuser,
-            $bugs) = FetchSQLData();
+            $maxvotesperbug, $votestoconfirm, $bugs) = FetchSQLData();
         $description ||= "<FONT COLOR=\"red\">missing</FONT>";
         $disallownew = $disallownew ? 'closed' : 'open';
         $bugs        ||= 'none';
@@ -197,6 +213,8 @@ unless ($action) {
         print "  <TD VALIGN=\"top\">$description</TD>\n";
         print "  <TD VALIGN=\"top\">$disallownew</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votesperuser</TD>\n";
+        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$maxvotesperbug</TD>\n";
+        print "  <TD VALIGN=\"top\" ALIGN=\"right\">$votestoconfirm</TD>\n";
         print "  <TD VALIGN=\"top\" ALIGN=\"right\">$bugs</TD>\n";
         print "  <TD VALIGN=\"top\"><A HREF=\"editproducts.cgi?action=del&product=", url_quote($product), "\">Delete</A></TD>\n";
         print "</TR>";
@@ -227,7 +245,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', 0, 0);
+    EmitFormElements('', '', '', 0, 0, 10000, 0);
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -283,16 +301,21 @@ if ($action eq 'new') {
     $disallownew = 1 if $::FORM{disallownew};
     my $votesperuser = $::FORM{votesperuser};
     $votesperuser ||= 0;
+    my $maxvotesperbug = $::FORM{maxvotesperbug};
+    $maxvotesperbug = 10000 if !defined $maxvotesperbug;
+    my $votestoconfirm = $::FORM{votestoconfirm};
+    $votestoconfirm ||= 0;
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
-          "product, description, milestoneurl, disallownew, votesperuser" .
+          "product, description, milestoneurl, disallownew, votesperuser, " .
+          "maxvotesperbug, votestoconfirm" .
           " ) VALUES ( " .
           SqlQuote($product) . "," .
           SqlQuote($description) . "," .
           SqlQuote($milestoneurl) . "," .
           $disallownew . "," .
-          SqlQuote($votesperuser) . ")" );
+          "$votesperuser, $maxvotesperbug, $votestoconfirm)");
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
@@ -513,17 +536,19 @@ if ($action eq 'edit') {
     CheckProduct($product);
 
     # get data of product
-    SendSQL("SELECT description,milestoneurl,disallownew,votesperuser
+    SendSQL("SELECT description,milestoneurl,disallownew,
+                    votesperuser,maxvotesperbug,votestoconfirm
              FROM products
              WHERE product=" . SqlQuote($product));
-    my ($description, $milestoneurl, $disallownew, $votesperuser) =
+    my ($description, $milestoneurl, $disallownew,
+        $votesperuser, $maxvotesperbug, $votestoconfirm) =
         FetchSQLData();
 
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE  BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
     EmitFormElements($product, $description, $milestoneurl, $disallownew,
-                     $votesperuser);
+                     $votesperuser, $maxvotesperbug, $votestoconfirm);
     
     print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
@@ -586,6 +611,8 @@ if ($action eq 'edit') {
         value_quote($milestoneurl) . "\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"disallownewold\" VALUE=\"$disallownew\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
+    print "<INPUT TYPE=HIDDEN NAME=\"votestoconfirmold\" VALUE=\"$votestoconfirm\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
@@ -606,17 +633,29 @@ if ($action eq 'edit') {
 if ($action eq 'update') {
     PutHeader("Update product");
 
-    my $productold      = trim($::FORM{productold}      || '');
-    my $description     = trim($::FORM{description}     || '');
-    my $descriptionold  = trim($::FORM{descriptionold}  || '');
-    my $disallownew     = trim($::FORM{disallownew}     || '');
-    my $disallownewold  = trim($::FORM{disallownewold}  || '');
-    my $milestoneurl    = trim($::FORM{milestoneurl}    || '');
-    my $milestoneurlold = trim($::FORM{milestoneurlold} || '');
-    my $votesperuser    = trim($::FORM{votesperuser}    || 0);
-    my $votesperuserold = trim($::FORM{votesperuserold} || '');
+    my $productold        = trim($::FORM{productold}        || '');
+    my $description       = trim($::FORM{description}       || '');
+    my $descriptionold    = trim($::FORM{descriptionold}    || '');
+    my $disallownew       = trim($::FORM{disallownew}       || '');
+    my $disallownewold    = trim($::FORM{disallownewold}    || '');
+    my $milestoneurl      = trim($::FORM{milestoneurl}      || '');
+    my $milestoneurlold   = trim($::FORM{milestoneurlold}   || '');
+    my $votesperuser      = trim($::FORM{votesperuser}      || 0);
+    my $votesperuserold   = trim($::FORM{votesperuserold}   || '');
+    my $maxvotesperbug    = trim($::FORM{maxvotesperbug}    || 0);
+    my $maxvotesperbugold = trim($::FORM{maxvotesperbugold} || '');
+    my $votestoconfirm    = trim($::FORM{votestoconfirm}    || 0);
+    my $votestoconfirmold = trim($::FORM{votestoconfirmold} || '');
+
+    my $checkvotes = 0;
 
     CheckProduct($productold);
+
+    if ($maxvotesperbug !~ /^\d+$/ || $maxvotesperbug <= 0) {
+        print "Sorry, the max votes per bug must be a positive integer.";
+        PutTrailer($localtrailer);
+        exit;
+    }
 
     # Note that the order of this tests is important. If you change
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
@@ -659,8 +698,30 @@ if ($action eq 'update') {
                  SET votesperuser=$votesperuser
                  WHERE product=" . SqlQuote($productold));
         print "Update votes per user.<BR>\n";
+        $checkvotes = 1;
     }
 
+
+    if ($maxvotesperbug ne $maxvotesperbugold) {
+        SendSQL("UPDATE products
+                 SET maxvotesperbug=$maxvotesperbug
+                 WHERE product=" . SqlQuote($productold));
+        print "Update max votes per bug.<BR>\n";
+        $checkvotes = 1;
+    }
+
+
+    if ($votestoconfirm ne $votestoconfirmold) {
+        SendSQL("UPDATE products
+                 SET votestoconfirm=$votestoconfirm
+                 WHERE product=" . SqlQuote($productold));
+        print "Update votes to confirm.<BR>\n";
+        $checkvotes = 1;
+    }
+
+
+    my $qp = SqlQuote($product);
+    my $qpold = SqlQuote($productold);
 
     if ($product ne $productold) {
         unless ($product) {
@@ -676,23 +737,78 @@ if ($action eq 'update') {
             exit;
         }
 
-        SendSQL("UPDATE bugs
-                 SET product=" . SqlQuote($product) . "
-                 WHERE product=" . SqlQuote($productold));
-        SendSQL("UPDATE components
-                 SET program=" . SqlQuote($product) . "
-                 WHERE program=" . SqlQuote($productold));
-        SendSQL("UPDATE products
-                 SET product=" . SqlQuote($product) . "
-                 WHERE product=" . SqlQuote($productold));
-        SendSQL("UPDATE versions
-                 SET program='$product'
-                 WHERE program=" . SqlQuote($productold));
+        SendSQL("UPDATE bugs SET product=$qp WHERE product=$qpold");
+        SendSQL("UPDATE components SET program=$qp WHERE program=$qpold");
+        SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
+        SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
 
         print "Updated product name.<BR>\n";
     }
     unlink "data/versioncache";
     SendSQL("UNLOCK TABLES");
+
+    if ($checkvotes) {
+        print "Checking existing votes in this product for anybody who now has too many votes.";
+        if ($maxvotesperbug < $votesperuser) {
+            SendSQL("SELECT votes.who, votes.bug_id " .
+                    "FROM votes, bugs " .
+                    "WHERE bugs.bug_id = votes.bug_id " .
+                    " AND bugs.product = $qp " .
+                    " AND votes.count > $maxvotesperbug");
+            my @list;
+            while (MoreSQLData()) {
+                my ($who, $id) = (FetchSQLData());
+                push(@list, [$who, $id]);
+            }
+            foreach my $ref (@list) {
+                my ($who, $id) = (@$ref);
+                RemoveVotes($id, $who, "The rules for voting on this product has changed;\nyou had too many votes for a single bug.");
+                my $name = DBID_to_name($who);
+                print qq{<br>Removed votes for bug <A HREF="show_bug.cgi?id=$id">$id</A> from $name\n};
+            }
+        }
+        SendSQL("SELECT votes.who, votes.count FROM votes, bugs " .
+                "WHERE bugs.bug_id = votes.bug_id " .
+                " AND bugs.product = $qp");
+        my %counts;
+        while (MoreSQLData()) {
+            my ($who, $count) = (FetchSQLData());
+            if (!defined $counts{$who}) {
+                $counts{$who} = $count;
+            } else {
+                $counts{$who} += $count;
+            }
+        }
+        foreach my $who (keys(%counts)) {
+            if ($counts{$who} > $votesperuser) {
+                SendSQL("SELECT votes.bug_id FROM votes, bugs " .
+                        "WHERE bugs.bug_id = votes.bug_id " .
+                        " AND bugs.product = $qp " .
+                        " AND votes.who = $who");
+                while (MoreSQLData()) {
+                    my $id = FetchSQLData();
+                    RemoveVotes($id, $who,
+                                "The rules for voting on this product has changed; you had too many\ntotal votes, so all votes have been removed.");
+                    my $name = DBID_to_name($who);
+                    print qq{<br>Removed votes for bug <A HREF="show_bug.cgi?id=$id">$id</A> from $name\n};
+                }
+            }
+        }
+        SendSQL("SELECT bug_id FROM bugs " .
+                "WHERE product = $qp " .
+                "  AND bug_status = '$::unconfirmedstate' " .
+                "  AND votes >= $votestoconfirm");
+        my @list;
+        while (MoreSQLData()) {
+            push(@list, FetchOneColumn());
+        }
+        foreach my $id (@list) {
+            SendSQL("SELECT who FROM votes WHERE bug_id = $id");
+            my $who = FetchOneColumn();
+            CheckIfVotedConfirmed($id, $who);
+        }
+
+    }
 
     PutTrailer($localtrailer);
     exit;
