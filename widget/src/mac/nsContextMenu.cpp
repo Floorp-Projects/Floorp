@@ -211,8 +211,18 @@ NS_METHOD nsContextMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  mMenuItemVoidArray.AppendElement(supports);
       
 	  nsString label;
+	  nsString labelHack = " ";
+	  nsString tmp = "-";
 	  aMenuItem->GetLabel(label);
-	  char* menuLabel = label.ToNewCString();
+	  PRUnichar slash = tmp.CharAt(0);
+	  char* menuLabel;
+	  if(label[0] == slash) {
+	    labelHack.Append(label);
+	    menuLabel = labelHack.ToNewCString();
+	  } else {
+	    menuLabel = label.ToNewCString();
+	  }
+	    
 	  mNumMenuItems++;
 	  ::InsertMenuItem(mMacMenuHandle, (const unsigned char *)" ", mNumMenuItems);
 	  ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
