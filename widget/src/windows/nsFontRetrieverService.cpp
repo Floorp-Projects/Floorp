@@ -272,7 +272,7 @@ static int CALLBACK EnumerateMyFonts(ENUMLOGFONTEX    *lpLogFontEx,
   //printf("Size: %d\n", ourLogFont.lfHeight);
 
   FontInfo * font   = new FontInfo();
-  font->mName       = (char *)lpLogFontEx->elfLogFont.lfFaceName; // XXX I18N ?
+  font->mName.AssignWithConversion((char *)lpLogFontEx->elfLogFont.lfFaceName); // XXX I18N ?
   font->mIsScalable = PR_FALSE;
   font->mSizes      = nsnull;
 

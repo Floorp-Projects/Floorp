@@ -3508,7 +3508,9 @@ nsXULElement::GetResource(nsIRDFResource** aResource)
     }
 
     if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        rv = gRDFService->GetResource(nsCAutoString(id), aResource);
+        nsCAutoString idC;
+        idC.AssignWithConversion(id);
+        rv = gRDFService->GetResource(idC, aResource);
         if (NS_FAILED(rv)) return rv;
     }
     else {

@@ -426,7 +426,7 @@ nsresult cookie_Get(nsInputFileStream strm, char& c) {
   static PRInt32 next = BUFSIZE, count = BUFSIZE;
 
   if (next == count) {
-    if (count < BUFSIZE) {
+    if (BUFSIZE > count) { // never say "count < ..." vc6.0 thinks this is a template beginning and crashes
       next = BUFSIZE;
       count = BUFSIZE;
       return NS_ERROR_FAILURE;

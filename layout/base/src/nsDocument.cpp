@@ -3081,7 +3081,7 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream,
 {
   nsresult  rv = NS_OK;
   
-  nsAutoString charsetStr = aCharset;
+  nsAutoString charsetStr; charsetStr.Assign(aCharset);
   if (charsetStr.Length() == 0)
   {
 	  rv = GetDocumentCharacterSet(charsetStr);

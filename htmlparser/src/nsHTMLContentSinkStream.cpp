@@ -217,7 +217,7 @@ nsHTMLContentSinkStream::InitEncoders()
   // Initialize a charset encoder if we're using the stream interface
   if (mStream)
   {
-    nsAutoString charsetName = mCharsetOverride;
+    nsAutoString charsetName; charsetName.AssignWithConversion(mCharsetOverride);
     NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
     if (NS_SUCCEEDED(res) && calias) {
       nsAutoString temp; temp.AssignWithConversion(mCharsetOverride);
@@ -235,7 +235,7 @@ nsHTMLContentSinkStream::InitEncoders()
     if (NS_FAILED(res))
       return res;
     // SaveAsCharset requires a const char* in its first argument:
-    nsCAutoString charsetCString (charsetName);
+    nsCAutoString charsetCString; charsetCString.AssignWithConversion(charsetName);
     // For ISO-8859-1 only, convert to entity first (always generate entites like &nbsp;).
     res = mCharsetEncoder->Init(charsetCString,
                                 charsetName.EqualsIgnoreCase("ISO-8859-1") ?
@@ -1030,7 +1030,7 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
   eHTMLTags tag = (eHTMLTags)aNode.GetNodeType();
   if (tag == eHTMLTag_userdefined)
   {
-    nsAutoString name = aNode.GetText();
+    nsAutoString name; name.Assign(aNode.GetText());
     if (name.EqualsWithConversion("document_info"))
     {
       PRInt32 count=aNode.GetAttributeCount();
@@ -1047,7 +1047,7 @@ nsHTMLContentSinkStream::OpenContainer(const nsIParserNode& aNode)
         }
         else if (key.EqualsWithConversion("uri"))
         {
-          nsAutoString uristring (aNode.GetValueAt(i));
+          nsAutoString uristring; uristring.Assign(aNode.GetValueAt(i));
 
           // strip double quotes from beginning and end
           uristring.Trim("\"", PR_TRUE, PR_TRUE);

@@ -89,9 +89,9 @@ public:
         char* name = origFile.GetLeafName();
         if (name == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        nsAutoString str(name);
+        nsAutoString str; str.AssignWithConversion(name);
         nsAllocator::Free(name);
-        str += ".bak";
+        str.AppendWithConversion(".bak");
         nsFileSpec spec(origFile);
         spec.SetLeafName(str);
         nsCOMPtr<nsILocalFile> file;
@@ -172,8 +172,8 @@ TestAsyncWrite(const char* fileName, PRUint32 offset, PRInt32 length)
     NS_WITH_SERVICE(nsIFileTransportService, fts, kFileTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    nsString outFile(fileName);
-    outFile += ".out";
+    nsString outFile; outFile.AssignWithConversion(fileName);
+    outFile.AppendWithConversion(".out");
     nsFileSpec fs(outFile);
     nsIChannel* fileTrans;
     nsCOMPtr<nsILocalFile> file;

@@ -295,7 +295,7 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
                 if (NS_SUCCEEDED(res))
                 {
                     PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
-                    res = mSecurityButton->SetAttribute( "level", nsString("high") );
+                    res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("high") );
                 }
 	        }
         }
@@ -304,7 +304,7 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIChannel* aChannel,
 
             PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
             mIsDocumentBroken = PR_TRUE;
-            res = mSecurityButton->SetAttribute( "level", nsString("broken") );
+            res = mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
         }
     }
     else // if (aProgressStatusFlags == nsIWebProgress::flag_net_redirecting)
@@ -359,7 +359,7 @@ nsSecureBrowserUIImpl::OnChildStatusChange(nsIChannel* aChannel, PRInt32 aProgre
         }
 
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: OnChildStatusChange - Icon set to broken\n", this));
-        mSecurityButton->SetAttribute( "level", nsString("broken") );
+        mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
 	    mIsDocumentBroken = PR_TRUE;
     }    
     
@@ -406,13 +406,13 @@ void nsSecureBrowserUIImpl::GetBundleString(const nsString& name, nsString &outS
     if (NS_SUCCEEDED(mStringBundle->GetStringFromName(name.GetUnicode(), &ptrv)))
       outString = ptrv;
     else
-      outString = "";
+      outString.SetLength(0);;
     
     nsAllocator::Free(ptrv);
   }
   else
   {
-    outString = "";
+    outString.SetLength(0);;
   }
 }
 
@@ -432,7 +432,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
 // Check to see if we are going from a secure page to and insecure page
 	if ( !isNewSchemeSecure && isOldSchemeSecure)
 	{
-		mSecurityButton->RemoveAttribute( "level" );
+		mSecurityButton->RemoveAttribute( NS_ConvertASCIItoUCS2("level") );
 	
         if ((mPref->GetBoolPref(LEAVE_SITE_PREF, &boolpref) != 0))
 			boolpref = PR_TRUE;
@@ -445,9 +445,9 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
             
             nsAutoString windowTitle, message, dontShowAgain;
             
-            GetBundleString("Title", windowTitle);
-            GetBundleString("LeaveSiteMessage", message);
-            GetBundleString("DontShowAgain", dontShowAgain);
+            GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+            GetBundleString(NS_ConvertASCIItoUCS2("LeaveSiteMessage"), message);
+            GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
 			dialog->AlertCheck(mWindow, 
@@ -481,9 +481,9 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch( nsIURI* newURI, nsIURI* oldUR
             
             nsAutoString windowTitle, message, dontShowAgain;
             
-            GetBundleString("Title", windowTitle);
-            GetBundleString("EnterSiteMessage", message);
-            GetBundleString("DontShowAgain", dontShowAgain);
+            GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+            GetBundleString(NS_ConvertASCIItoUCS2("EnterSiteMessage"), message);
+            GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
 			dialog->AlertCheck(mWindow, 
@@ -520,7 +520,7 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
     if (!secure  && mIsSecureDocument)
     {
         mIsDocumentBroken = PR_TRUE;
-        mSecurityButton->SetAttribute( "level", nsString("broken") );
+        mSecurityButton->SetAttribute( NS_ConvertASCIItoUCS2("level"), NS_ConvertASCIItoUCS2("broken") );
 
         if (!mPref) return NS_ERROR_NULL_POINTER;
 	    
@@ -536,9 +536,9 @@ nsSecureBrowserUIImpl::CheckMixedContext(nsIURI* nextURI)
         
             nsAutoString windowTitle, message, dontShowAgain;
 
-            GetBundleString("Title", windowTitle);
-            GetBundleString("MixedContentMessage", message);
-            GetBundleString("DontShowAgain", dontShowAgain);
+            GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+            GetBundleString(NS_ConvertASCIItoUCS2("MixedContentMessage"), message);
+            GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
 		    
@@ -590,9 +590,9 @@ nsSecureBrowserUIImpl::CheckPost(nsIURI *actionURL, PRBool *okayToPost)
 
             nsAutoString windowTitle, message, dontShowAgain;
             
-            GetBundleString("Title", windowTitle);
-            GetBundleString("PostToInsecure", message);
-            GetBundleString("DontShowAgain", dontShowAgain);
+            GetBundleString(NS_ConvertASCIItoUCS2("Title"), windowTitle);
+            GetBundleString(NS_ConvertASCIItoUCS2("PostToInsecure"), message);
+            GetBundleString(NS_ConvertASCIItoUCS2("DontShowAgain"), dontShowAgain);
 
             PRBool outCheckValue = PR_TRUE;
 			dialog->ConfirmCheck(mWindow, 

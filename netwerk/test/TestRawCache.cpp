@@ -761,7 +761,7 @@ main(int argc, char* argv[])
     PRUnichar* description;
     rv = cache->GetDescription(&description);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Couldn't get cache description");
-    nsCAutoString descStr(description);
+    nsCAutoString descStr; descStr.AssignWithConversion(description);
     printf("Testing: %s\n", descStr.GetBuffer());
 
     rv = cache->RemoveAll();

@@ -906,7 +906,9 @@ InternetSearchDataSource::GetTarget(nsIRDFResource *source,
 		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
-		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+    nsCAutoString caturiC;
+    caturiC.AssignWithConversion(catURI);
+		if (NS_FAILED(rv = gRDFService->GetResource(caturiC,
 			getter_AddRefs(category))))
 			return(rv);
 
@@ -1005,7 +1007,9 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
-		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+    nsCAutoString caturiC;
+    caturiC.AssignWithConversion(catURI);
+		if (NS_FAILED(rv = gRDFService->GetResource(caturiC,
 			getter_AddRefs(category))))
 			return(rv);
 
@@ -1260,10 +1264,9 @@ InternetSearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 		const char	*uri = nsnull;
 		source->GetValueConst(&uri);
 		if (!uri)	return(NS_ERROR_UNEXPECTED);
-		nsAutoString	catURI; catURI.AssignWithConversion(uri);
 
 		nsCOMPtr<nsIRDFResource>	category;
-		if (NS_FAILED(rv = gRDFService->GetResource(nsCAutoString(catURI),
+		if (NS_FAILED(rv = gRDFService->GetResource(uri,
 			getter_AddRefs(category))))
 			return(rv);
 
@@ -2160,7 +2163,9 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
 				{
 					char	*charsetData = nsnull;
-					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
+          nsCAutoString queryencodingstrC;
+          queryencodingstrC.AssignWithConversion(queryEncodingStr);
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData)) && (charsetData))
 					{
 						text.AssignWithConversion(charsetData);
 						Recycle(charsetData);
@@ -2882,7 +2887,9 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
 				{
 					char	*charsetData = nsnull;
-					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
+          nsCAutoString queryencodingstrC;
+          queryencodingstrC.AssignWithConversion(queryEncodingStr);
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(queryencodingstrC, uni, &charsetData)) && (charsetData))
 					{
 						textTemp.AssignWithConversion(charsetData);
 						Recycle(charsetData);
@@ -2948,8 +2955,10 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			        	postStr += input;
 			        	
 					nsCOMPtr<nsIInputStream>	postDataStream;
+          nsCAutoString poststrC;
+          poststrC.AssignWithConversion(postStr);
 					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postDataStream),
-										   PR_FALSE, nsCAutoString(postStr), 0)))
+										   PR_FALSE, poststrC, 0)))
 					{
 						httpChannel->SetUploadStream(postDataStream);
 					}
@@ -4145,7 +4154,10 @@ InternetSearchDataSource::ParseHTML(nsIURI *aURL, nsIRDFResource *mParent, nsIRD
 			if (hrefStr.Length() < 1)	continue;
 
 			char		*absURIStr = nsnull;
-			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, nsCAutoString(hrefStr), aURL))
+      nsCAutoString hrefstrC;
+      hrefstrC.AssignWithConversion(hrefStr);
+
+			if (NS_SUCCEEDED(rv = NS_MakeAbsoluteURI(&absURIStr, hrefstrC, aURL))
 			    && (absURIStr))
 			{
 				hrefStr.AssignWithConversion(absURIStr);

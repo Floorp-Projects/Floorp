@@ -530,7 +530,8 @@ nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** 
         if (! url)
             return NS_ERROR_UNEXPECTED;
 
-		nsCAutoString uriStr(uri);
+    		nsCAutoString uriStr;
+        uriStr.AssignWithConversion(uri);
         rv = rdf_MakeAbsoluteURI(url, uriStr);
         if (NS_FAILED(rv)) return rv;
 
@@ -766,7 +767,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         if (aElementID.First() != '#') {
             aURI.Append('#');
         }
-        aURI.Append(nsCAutoString(aElementID));
+        aURI.AppendWithConversion(aElementID);
 #else
         nsXPIDLCString spec;
         rv = NS_MakeAbsoluteURI(nsCAutoString(aElementID), docURL, getter_Copies(spec));

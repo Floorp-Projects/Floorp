@@ -112,7 +112,7 @@ nsPSMUIHandlerImpl::PromptForFile(const PRUnichar *prompt, const char *fileRegEx
 
     fp->Init(nsnull, prompt, nsIFilePicker::modeOpen);
     fp->SetFilters(nsIFilePicker::filterAll);
-    fp->AppendFilter(nsAutoString(fileRegEx).GetUnicode(), nsAutoString(fileRegEx).GetUnicode());  
+    fp->AppendFilter(NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode(), NS_ConvertASCIItoUCS2(fileRegEx).GetUnicode());  
     PRInt16 mode;
     nsresult rv = fp->Show(&mode);
 
@@ -299,7 +299,7 @@ char * PromptUserCallback(void *arg, char *prompt, int isPasswd)
     NS_WITH_PROXIED_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, NS_UI_THREAD_EVENTQ, &rv);
     
     if (NS_SUCCEEDED(rv)) {
-	    rv = dialog->PromptPassword(nsString(prompt).GetUnicode(), nsString(" ").GetUnicode(), &password, &value);
+	    rv = dialog->PromptPassword(NS_ConvertASCIItoUCS2(prompt).GetUnicode(), NS_ConvertASCIItoUCS2(" ").GetUnicode(), &password, &value);
 
         if (NS_SUCCEEDED(rv)) {
             nsString a(password);
@@ -326,7 +326,7 @@ char * FilePathPromptCallback(void *arg, char *prompt, char *fileRegEx, CMUint32
     NS_WITH_PROXIED_SERVICE(nsIPSMUIHandler, handler, nsPSMUIHandlerImpl::GetCID(), NS_UI_THREAD_EVENTQ, &rv);
     
     if(NS_SUCCEEDED(rv))
-	    handler->PromptForFile(nsAutoString(prompt).GetUnicode(), fileRegEx, (PRBool)shouldFileExist, &filePath);
+	    handler->PromptForFile(NS_ConvertASCIItoUCS2(prompt).GetUnicode(), fileRegEx, (PRBool)shouldFileExist, &filePath);
 
     return filePath;
 }

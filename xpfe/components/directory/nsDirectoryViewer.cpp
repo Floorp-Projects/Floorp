@@ -710,7 +710,9 @@ nsHTTPIndexParser::ParseData(const char* aDataStr, nsISupports *context)
       {
             entryuri.Append(PRUnichar('/'));
       }
-      rv = gRDF->GetResource(nsCAutoString(entryuri), getter_AddRefs(entry));
+      nsCAutoString entryuriC;
+      entryuriC.AssignWithConversion(entryuri);
+      rv = gRDF->GetResource(entryuriC, getter_AddRefs(entry));
 
   // At this point, we'll (hopefully) have found the filename and
   // constructed a resource for it, stored in entry. So now take a
@@ -792,7 +794,9 @@ nsresult
 nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, nsString& aValue, nsIRDFNode** aResult)
 {
   PRTime tm;
-  PRStatus err = PR_ParseTimeString(nsCAutoString(aValue), PR_FALSE, &tm);
+  nsCAutoString avalueC;
+  avalueC.AssignWithConversion(aValue);
+  PRStatus err = PR_ParseTimeString(avalueC, PR_FALSE, &tm);
   if (err != PR_SUCCESS)
     return NS_ERROR_FAILURE;
 

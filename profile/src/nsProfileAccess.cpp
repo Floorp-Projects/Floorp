@@ -1246,9 +1246,9 @@ nsProfileAccess::CheckRegString(const PRUnichar *profileName, char **info)
         ProfileStruct* profileItem = (ProfileStruct *) (mProfiles->ElementAt(index));
 
         if (!profileItem->NCHavePregInfo.IsEmpty()) {
-            *info = nsCRT::strdup(NS_CONST_CAST
-                                   (char*, nsCAutoString
-                                     (profileItem->NCHavePregInfo).GetBuffer()));
+            nsCAutoString pregC;
+            pregC.AssignWithConversion(profileItem->NCHavePregInfo);
+            *info = nsCRT::strdup(NS_STATIC_CAST(const char*, pregC));
         }
         else
             *info = nsCRT::strdup(REGISTRY_NO_STRING);

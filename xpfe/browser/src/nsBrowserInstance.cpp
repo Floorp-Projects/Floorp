@@ -921,10 +921,11 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
     nsXPIDLString name;
     docShellAsItem->GetName(getter_Copies(name));
-    nsAutoString str(name);
+    nsCAutoString str;
+    str.AssignWithConversion(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to Content WebShell [%s]\n", (const char *)nsCAutoString(str));
+      printf("Attaching to Content WebShell [%s]\n", (const char *)str);
     }
   }
 
@@ -962,10 +963,11 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindow* aWin)
     nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
     nsXPIDLString name;
     docShellAsItem->GetName(getter_Copies(name));
-    nsAutoString str(name);
+    nsCAutoString str;
+    str.AssignWithConversion(name);
 
     if (APP_DEBUG) {
-      printf("Attaching to WebShellWindow[%s]\n", (const char *)nsCAutoString(str));
+      printf("Attaching to WebShellWindow[%s]\n", (const char *)str);
     }
 
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));

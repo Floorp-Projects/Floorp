@@ -436,7 +436,7 @@ HRESULT nsDataObj::SetText  (FORMATETC& aFE, STGMEDIUM& aSTG)
 			return(FALSE);
 
 		GlobalUnlock(hString);
-    nsAutoString str(pString);
+    nsAutoString str; str.AssignWithConversion(pString);
 
   }
 	return ResultFromScode(E_FAIL);

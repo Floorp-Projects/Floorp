@@ -175,7 +175,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 
 PRInt32 
 nsHTMLEntities::EntityToUnicode(const nsString& aEntity) {
-  nsCAutoString theEntity(aEntity);
+  nsCAutoString theEntity; theEntity.AssignWithConversion(aEntity);
   if(';'==theEntity.Last()) {
     theEntity.Truncate(theEntity.Length()-1);
   }
@@ -215,7 +215,7 @@ public:
 
      // Make sure we can find everything we are supposed to
      for (int i = 0; i < NS_HTML_ENTITY_COUNT; i++) {
-       nsAutoString entity(gEntityArray[i].mStr);
+       nsAutoString entity; entity.AssignWithConversion(gEntityArray[i].mStr);
 
        value = nsHTMLEntities::EntityToUnicode(entity);
        NS_ASSERTION(value != -1, "can't find entity");

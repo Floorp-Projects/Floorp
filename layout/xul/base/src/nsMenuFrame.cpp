@@ -1197,7 +1197,7 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
 #ifdef XP_MAC
     commandValue.AssignWithConversion("true");
 #elif defined(XP_PC) || defined(NTO)
-    controlValue = "true";
+    controlValue.AssignWithConversion("true");
 #else 
     altValue = "true";
 #endif

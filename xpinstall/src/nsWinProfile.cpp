@@ -39,7 +39,7 @@ nsWinProfile::nsWinProfile( nsInstall* suObj, const nsString& folder, const nsSt
   {
     if(mFilename->Last() != '\\')
     {
-        mFilename->Append("\\");
+        mFilename->AppendWithConversion("\\");
     }
     mFilename->Append(file);
 
@@ -129,7 +129,7 @@ nsWinProfile::NativeGetString(nsString section, nsString key, nsString* aReturn 
 
     numChars        = GetPrivateProfileString(sectionCString, keyCString, "", valbuf, STRBUFLEN, filenameCString);
 
-    *aReturn        = valbuf;
+    aReturn->AssignWithConversion(valbuf);
 
     if (sectionCString)   Recycle(sectionCString);
     if (keyCString)       Recycle(keyCString);

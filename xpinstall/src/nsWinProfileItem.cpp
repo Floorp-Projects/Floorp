@@ -74,17 +74,18 @@ char* nsWinProfileItem::toString()
   char*     resultCString;
   
   nsString* filename = new nsString(*mProfile->GetFilename());
-  nsString* result = new nsString("Write ");
+  nsString* result = new nsString;
+  result->AssignWithConversion("Write ");
 
   if (filename == nsnull || result == nsnull)
       return nsnull;
 
   result->Append(*filename);
-  result->Append(": [");
+  result->AppendWithConversion(": [");
   result->Append(*mSection);
-  result->Append("] ");
+  result->AppendWithConversion("] ");
   result->Append(*mKey);
-  result->Append("=");
+  result->AppendWithConversion("=");
   result->Append(*mValue);
 
   resultCString = result->ToNewCString();

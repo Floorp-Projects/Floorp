@@ -154,7 +154,7 @@ nsresult testCharsetConverterManager()
 
 #define CREATE_DECODER(_charset)                                \
     nsIUnicodeDecoder * dec;                                    \
-    nsAutoString str(_charset);                                 \
+    nsAutoString str;str.AssignWithConversion(_charset);        \
     nsresult res = ccMan->GetUnicodeDecoder(&str,&dec);         \
     if (NS_FAILED(res)) {                                       \
       printf("ERROR at GetUnicodeDecoder() code=0x%x.\n",res);  \
@@ -163,7 +163,7 @@ nsresult testCharsetConverterManager()
 
 #define CREATE_ENCODER(_charset)                                \
     nsIUnicodeEncoder * enc;                                    \
-    nsAutoString str(_charset);                                 \
+    nsAutoString str; str.AssignWithConversion(_charset);       \
     nsresult res = ccMan->GetUnicodeEncoder(&str,&enc);         \
     if (NS_FAILED(res)) {                                       \
       printf("ERROR at GetUnicodeEncoder() code=0x%x.\n",res);  \

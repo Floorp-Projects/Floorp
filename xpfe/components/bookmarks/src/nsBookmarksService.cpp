@@ -1236,7 +1236,9 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	}
 
 	nsCOMPtr<nsIRDFResource> bookmark;
-	if (NS_FAILED(rv = gRDF->GetResource(nsCAutoString(fullURL), getter_AddRefs(bookmark) )))
+  nsCAutoString fullurlC;
+  fullurlC.AssignWithConversion(fullURL);
+	if (NS_FAILED(rv = gRDF->GetResource(fullurlC, getter_AddRefs(bookmark) )))
 	{
 		NS_ERROR("unable to get bookmark resource");
 		return(rv);

@@ -136,7 +136,7 @@ nsCSSProps::LookupProperty(const nsCString& aProperty)
 
 nsCSSProperty 
 nsCSSProps::LookupProperty(const nsString& aProperty) {
-  nsCAutoString theProp(aProperty);
+  nsCAutoString theProp; theProp.AssignWithConversion(aProperty);
   return LookupProperty(theProp);
 }
 

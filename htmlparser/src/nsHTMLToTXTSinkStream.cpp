@@ -86,7 +86,7 @@ nsresult nsHTMLToTXTSinkStream::InitEncoder(const nsString& aCharset)
                                      (nsISupports**)&calias);
 
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
-  nsAutoString charsetName = aCharset;
+  nsAutoString charsetName;charsetName.Assign(aCharset);
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
     res = calias->GetPreferred(aCharset, charsetName);

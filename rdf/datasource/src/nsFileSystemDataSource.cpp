@@ -467,7 +467,7 @@ FileSystemDataSource::GetTarget(nsIRDFResource *source,
 				rv = source->GetValueConst(&uri);
 				if (NS_FAILED(rv)) return(rv);
 
-				nsAutoString		theURI(uri);
+				nsAutoString		theURI;theURI.AssignWithConversion(uri);
 				if (theURI.Find(ieFavoritesDir) == 0)
 				{
 					if (theURI[theURI.Length() - 1] == '/')
@@ -1017,7 +1017,7 @@ FileSystemDataSource::isValidFolder(nsIRDFResource *source)
 	if (NS_FAILED(rv)) return(isValid);
 
 	PRBool			isIEFavorite = PR_FALSE;
-	nsAutoString		theURI(uri);
+	nsAutoString		theURI; theURI.AssignWithConversion(uri);
 	if (theURI.Find(ieFavoritesDir) == 0)
 	{
 		isValid = PR_FALSE;
@@ -1126,7 +1126,7 @@ FileSystemDataSource::GetName(nsIRDFResource *source, nsIRDFLiteral **aResult)
 	// special hack for IE favorites under Windows; strip off the
 	// trailing ".url" or ".lnk" at the end of IE favorites names
 	PRInt32			nameLen = name.Length();
-	nsAutoString		theURI(uri);
+	nsAutoString		theURI; theURI.AssignWithConversion(uri);
 	if ((theURI.Find(ieFavoritesDir) == 0) && (nameLen > 4))
 	{
 		nsAutoString	extension;
@@ -1220,7 +1220,7 @@ FileSystemDataSource::getIEFavoriteURL(nsIRDFResource *source, nsString aFileURL
 			break;
 		}
 
-		line.Append(buffer);
+		line.AppendWithConversion(buffer);
 
 		if (untruncated || stream.eof())
 		{

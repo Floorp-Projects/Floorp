@@ -70,7 +70,7 @@ Compare(nsString& str, nsString& aFileName)
   int different = 0;
   while ((c = getc(file)) != EOF)
   {
-    inString += c;
+    inString.AppendWithConversion(c);
     // CVS isn't doing newline comparisons on these files for some reason.
     // So compensate for possible newline problems in the CVS file:
     if (c == '\n' && str[index] == '\r')
@@ -122,7 +122,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   nsIHTMLContentSink* sink = nsnull;
 
   // Create the appropriate output sink
-  if (outType == "text/html")
+  if (outType.EqualsWithConversion("text/html"))
     rv = NS_New_HTML_ContentSinkStream(&sink, &outString, flags);
 
   else  // default to plaintext
@@ -136,7 +136,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
   parser->SetContentSink(sink);
   nsIDTD* dtd = nsnull;
-  if (inType == "text/xif")
+  if (inType.EqualsWithConversion("text/xif"))
     rv = NS_NewXIFDTD(&dtd);
   else
     rv = NS_NewNavHTMLDTD(&dtd);
@@ -149,7 +149,7 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
   parser->RegisterDTD(dtd);
 
   char* inTypeStr = inType.ToNewCString();
-  rv = parser->Parse(inString, 0, inTypeStr, PR_FALSE, PR_TRUE);
+  rv = parser->Parse(inString, 0, NS_ConvertASCIItoUCS2(inTypeStr), PR_FALSE, PR_TRUE);
   delete[] inTypeStr;
   if (NS_FAILED(rv))
   {
@@ -176,8 +176,8 @@ HTML2text(nsString& inString, nsString& inType, nsString& outType,
 
 int main(int argc, char** argv)
 {
-  nsString inType ("text/html");
-  nsString outType ("text/plain");
+  nsString inType; inType.AssignWithConversion("text/html");
+  nsString outType; outType.AssignWithConversion("text/plain");
   int wrapCol = 72;
   int flags = 0;
   nsString compareAgainst;
@@ -204,9 +204,9 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
 
         case 'i':
         if (argv[0][2] != '\0')
-          inType = argv[0]+2;
+          inType.AssignWithConversion(argv[0]+2);
         else {
-          inType = argv[1];
+          inType.AssignWithConversion(argv[1]);
           --argc;
           ++argv;
         }
@@ -214,9 +214,9 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
 
       case 'o':
         if (argv[0][2] != '\0')
-          outType = argv[0]+2;
+          outType.AssignWithConversion(argv[0]+2);
         else {
-          outType = argv[1];
+          outType.AssignWithConversion(argv[1]);
           --argc;
           ++argv;
         }
@@ -244,9 +244,9 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
 
       case 'c':
         if (argv[0][2] != '\0')
-          compareAgainst = argv[0]+2;
+          compareAgainst.AssignWithConversion(argv[0]+2);
         else {
-          compareAgainst = argv[1];
+          compareAgainst.AssignWithConversion(argv[1]);
           --argc;
           ++argv;
         }
@@ -278,7 +278,7 @@ Usage: %s [-i intype] [-o outtype] [-f flags] [-w wrapcol] [-c comparison_file] 
   nsString inString;
   char c;
   while ((c = getc(file)) != EOF)
-    inString += c;
+    inString.AppendWithConversion(c);
 
   if (file != stdin)
     fclose(file);

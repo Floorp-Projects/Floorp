@@ -148,7 +148,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
         // The complex looking if above is to make sure that we do not erroneously
         // think a value of "./this:that" would have a scheme of "./that"
 
-        nsCAutoString str(value);
+        nsCAutoString str; str.AssignWithConversion(value);
       
         rv = MakeURI(str,nsnull,aURI);
         if (NS_FAILED(rv))
@@ -191,7 +191,7 @@ nsXMLElement::GetXMLBaseURI(nsIURI **aURI)
       } else {
         // XXX Need to convert unicode to ???
         // XXX Need to URL-escape string
-        nsCAutoString str(base);
+        nsCAutoString str; str.AssignWithConversion(base);
         rv = MakeURI(str,docBase,aURI);
       }
     }

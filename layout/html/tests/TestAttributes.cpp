@@ -44,8 +44,8 @@ void testAttributes(nsIHTMLContent* content) {
   nsIAtom* sHEIGHT = NS_NewAtom("height");
   nsIAtom* sSRC = NS_NewAtom("src");
   nsIAtom* sBAD = NS_NewAtom("badattribute");
-  nsString sempty("");
-  nsString sfoo_gif("foo.gif");
+  nsString sempty;
+  nsString sfoo_gif; sfoo_gif.AssignWithConversion("foo.gif");
 
   content->SetHTMLAttribute(sBORDER, nullValue, PR_FALSE);
   content->SetHTMLAttribute(sWIDTH, nsHTMLValue(5, eHTMLUnit_Pixel), PR_FALSE);
@@ -118,53 +118,53 @@ void testStrings(nsIDocument* aDoc) {
 
   PRBool val;
   // regular Equals
-  val = (nsString("mrString")).Equals(nsString("mrString"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("mrString");
   if (PR_TRUE != val) {
     printf("test 0 failed\n");
   }
-  val = (nsString("mrString")).Equals(nsString("MRString"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("MRString");
   if (PR_FALSE != val) {
     printf("test 1 failed\n");
   }
-  val = (nsString("mrString")).Equals(nsString("mrStri"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsWithConversion("mrStri");
   if (PR_FALSE != val) {
     printf("test 2 failed\n");
   }
-  val = (nsString("mrStri")).Equals(nsString("mrString"));
+  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsWithConversion("mrString");
   if (PR_FALSE != val) {
     printf("test 3 failed\n");
   }
   // EqualsIgnoreCase
-  val = (nsString("mrString")).EqualsIgnoreCase("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrString");
   if (PR_TRUE != val) {
     printf("test 4 failed\n");
   }
-  val = (nsString("mrString")).EqualsIgnoreCase("mrStrinG");
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrStrinG");
   if (PR_TRUE != val) {
     printf("test 5 failed\n");
   }
-  val = (nsString("mrString")).EqualsIgnoreCase("mrStri");
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase("mrStri");
   if (PR_FALSE != val) {
     printf("test 6 failed\n");
   }
-  val = (nsString("mrStri")).EqualsIgnoreCase("mrString");
+  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsIgnoreCase("mrString");
   if (PR_FALSE != val) {
     printf("test 7 failed\n");
   }
   // String vs. Ident
-  val = (nsString("mrString")).EqualsIgnoreCase(NS_NewAtom("mrString"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("mrString"));
   if (PR_TRUE != val) {
     printf("test 8 failed\n");
   }
-  val = (nsString("mrString")).EqualsIgnoreCase(NS_NewAtom("MRStrINg"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("MRStrINg"));
   if (PR_TRUE != val) {
     printf("test 9 failed\n");
   }
-  val = (nsString("mrString")).EqualsIgnoreCase(NS_NewAtom("mrStri"));
+  val = (NS_ConvertASCIItoUCS2("mrString")).EqualsIgnoreCase(NS_NewAtom("mrStri"));
   if (PR_FALSE != val) {
     printf("test 10 failed\n");
   }
-  val = (nsString("mrStri")).EqualsIgnoreCase(NS_NewAtom("mrString"));
+  val = (NS_ConvertASCIItoUCS2("mrStri")).EqualsIgnoreCase(NS_NewAtom("mrString"));
   if (PR_FALSE != val) {
     printf("test 11 failed\n");
   }

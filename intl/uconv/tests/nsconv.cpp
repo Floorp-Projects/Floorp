@@ -98,7 +98,7 @@ int main(int argc, const char** argv)
 
         // First check if a charset alias was given, 
         // and convert to the canonical name
-        res = aliasmgr->GetPreferred(argv[i+1], str);
+        res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(argv[i+1]), str);
         if (NS_FAILED(res))
         {
           fprintf(stderr, "Cannot get charset alias for %s %x\n",
@@ -123,7 +123,7 @@ int main(int argc, const char** argv)
 
         // First check if a charset alias was given, 
         // and convert to the canonical name
-        res = aliasmgr->GetPreferred(argv[i+1], str);
+        res = aliasmgr->GetPreferred(NS_ConvertASCIItoUCS2(argv[i+1]), str);
         if (NS_FAILED(res))
         {
           fprintf(stderr, "Cannot get charset alias for %s %x\n",

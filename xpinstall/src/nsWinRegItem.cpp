@@ -141,37 +141,44 @@ char* nsWinRegItem::toString()
 	{
     case NS_WIN_REG_CREATE:
       keyString = keystr(mRootkey, mSubkey, nsnull);
-      result    = new nsString(kCRK);
+      result    = new nsString;
+      result->AssignWithConversion(kCRK);
       break;
 
     case NS_WIN_REG_DELETE:
       keyString = keystr(mRootkey, mSubkey, nsnull);
-      result    = new nsString(kDRK);
+      result    = new nsString;
+      result->AssignWithConversion(kDRK);
       break;
 
     case NS_WIN_REG_DELETE_VAL:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString(kDRV);
-      break;
+      result    = new nsString;
+      result->AssignWithConversion(kDRV);
+     break;
 
     case NS_WIN_REG_SET_VAL_STRING:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString(kSRVS);
+      result    = new nsString;
+      result->AssignWithConversion(kSRVS);
       break;
 
     case NS_WIN_REG_SET_VAL_NUMBER:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString(kSRVN);
+      result    = new nsString;
+      result->AssignWithConversion(kSRVN);
       break;
 
     case NS_WIN_REG_SET_VAL:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString(kSRV);
+      result    = new nsString;
+      result->AssignWithConversion(kSRV);
       break;
 
     default:
       keyString = keystr(mRootkey, mSubkey, mName);
-      result    = new nsString(kUNK);
+      result    = new nsString;
+      result->AssignWithConversion(kUNK);
       break;
 	}
     
@@ -207,28 +214,28 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 	switch(root)
 	{
 	  case (int)(HKEY_CLASSES_ROOT) :
-		  rootstr = "HKEY_CLASSES_ROOT\\";
+		  rootstr.AssignWithConversion("HKEY_CLASSES_ROOT\\");
 		  break;
 
 	  case (int)(HKEY_CURRENT_USER) :
-		  rootstr = "HKEY_CURRENT_USER\\";
+		  rootstr.AssignWithConversion("HKEY_CURRENT_USER\\");
 		  break;
 
 	  case (int)(HKEY_LOCAL_MACHINE) :
-		  rootstr = "HKEY_LOCAL_MACHINE\\";
+		  rootstr.AssignWithConversion("HKEY_LOCAL_MACHINE\\");
 		  break;
 
 	  case (int)(HKEY_USERS) :
-		  rootstr = "HKEY_USERS\\";
+		  rootstr.AssignWithConversion("HKEY_USERS\\");
 		  break;
 
     default:
       istr = itoa(root);
       if (istr)
       {
-        rootstr = "#";
-        rootstr.Append(istr);
-        rootstr.Append("\\");
+        rootstr.AssignWithConversion("#");
+        rootstr.AppendWithConversion(istr);
+        rootstr.AppendWithConversion("\\");
         
         PR_DELETE(istr);
       }
@@ -239,12 +246,12 @@ nsString* nsWinRegItem::keystr(PRInt32 root, nsString* mSubkey, nsString* mName)
 	if(finalstr != nsnull)
 	{
     finalstr->Append(*mSubkey);
-    finalstr->Append(" [");
+    finalstr->AppendWithConversion(" [");
 
     if(mName != nsnull)
       finalstr->Append(*mName);
 
-    finalstr->Append("]");
+    finalstr->AppendWithConversion("]");
 	}
 
   return finalstr;

@@ -382,7 +382,7 @@ nsresult GetSysFontInfo(HDC aHDC, nsSystemAttrID anID, nsFont * aFont)
   }
 
   
-  aFont->name = logFont->lfFaceName;
+  aFont->name.AssignWithConversion(logFont->lfFaceName);
 
   // Do Style
   aFont->style = NS_FONT_STYLE_NORMAL;
@@ -509,7 +509,7 @@ NS_IMETHODIMP nsDeviceContextWin :: GetSystemAttribute(nsSystemAttrID anID, Syst
     }
     case eSystemAttr_Font_Widget:
 
-      aInfo->mFont->name        = "Arial";
+      aInfo->mFont->name.AssignWithConversion("Arial");
       aInfo->mFont->style       = NS_FONT_STYLE_NORMAL;
       aInfo->mFont->weight      = NS_FONT_WEIGHT_NORMAL;
       aInfo->mFont->decorations = NS_FONT_DECORATION_NONE;

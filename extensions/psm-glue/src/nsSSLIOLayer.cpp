@@ -342,7 +342,7 @@ nsPSMSocketInfo::GetHostName(char * *aHostName)
 nsresult 
 nsPSMSocketInfo::SetHostName(char *aHostName)
 {
-    mHostName.Assign(aHostName);
+    mHostName.AssignWithConversion(aHostName);
     return NS_OK;
 }
 

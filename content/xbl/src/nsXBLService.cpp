@@ -242,7 +242,7 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsString& aURL)
   if (binding)
     return NS_OK;
 
-  nsCAutoString url = aURL;
+  nsCAutoString url; url.AssignWithConversion(aURL);
   if (NS_FAILED(rv = GetBinding(url, getter_AddRefs(binding)))) {
     NS_ERROR("Failed loading an XBL document for content node.");
     return rv;
@@ -405,7 +405,7 @@ NS_IMETHODIMP nsXBLService::GetBinding(const nsCString& aURLStr, nsIXBLBinding**
         if (!tag) {
           // We have a base class binding. Load it right now.
           nsCOMPtr<nsIXBLBinding> baseBinding;
-          nsCAutoString url = value;
+          nsCAutoString url; url.AssignWithConversion(value);
           GetBinding(url, getter_AddRefs(baseBinding));
           if (!baseBinding)
             return NS_OK; // At least we got the derived class binding loaded.

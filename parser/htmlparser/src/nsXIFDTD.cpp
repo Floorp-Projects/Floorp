@@ -999,8 +999,8 @@ PRBool nsXIFDTD::GetAttributePair(nsIParserNode& aNode, nsString& aKey, nsString
     const nsString& k = aNode.GetKeyAt(i);
     const nsString& v = aNode.GetValueAt(i);
 
-    nsAutoString key(k);
-    nsAutoString value(v);
+    nsAutoString key; key.Assign(k);
+    nsAutoString value; value.Assign(v);
 
     char*  quote = "\"";
  
@@ -1366,7 +1366,7 @@ nsresult nsXIFDTD::BeginCSSStyleSheet(const nsIParserNode& aNode)
 nsresult nsXIFDTD::EndCSSStyleSheet(const nsIParserNode& aNode)
 {
   nsresult result=NS_OK;
-  nsAutoString tagName(nsHTMLTags::GetStringValue(eHTMLTag_style));
+  nsAutoString tagName(NS_ConvertASCIItoUCS2(nsHTMLTags::GetStringValue(eHTMLTag_style)));
 
   mBuffer.AppendWithConversion("</");
   mBuffer.Append(tagName);

@@ -160,7 +160,7 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
   NS_ALLOC_CHAR_BUF(label, 256, actualSize);
   ::GetWindowText(mWnd, label, actualSize);
   aBuffer.SetLength(0);
-  aBuffer.Append(label);
+  aBuffer.AppendWithConversion(label);
   NS_FREE_CHAR_BUF(label);
   return NS_OK;
 }

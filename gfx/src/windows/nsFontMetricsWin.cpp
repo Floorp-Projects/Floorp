@@ -848,7 +848,7 @@ GetMap(const char* aName, PRUint32* aMap)
   nsFontHasConverter* f = gFontsHaveConverters;
   while (f->mName) {
     if (!strcmp(f->mName, aName)) {
-      encoding = f->mEncoding;
+      encoding.AssignWithConversion(f->mEncoding);
       break;
     }
     f++;
@@ -891,7 +891,7 @@ GetConverter(const char* aName)
   nsFontHasConverter* f = gFontsHaveConverters;
   while (f->mName) {
     if (!strcmp(f->mName, aName)) {
-      encoding = f->mEncoding;
+      encoding.AssignWithConversion(f->mEncoding);
       break;
     }
     f++;
@@ -2130,7 +2130,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
      // Use lower case name for hash table searches. This eliminates
      // keeping multiple font weights entries when the font name varies 
      // only by case.
-  nsAutoString low = *aName;
+  nsAutoString low; low.Assign(*aName);
   low.ToLowerCase();
 
    // See if the font weight has already been computed.
@@ -2203,16 +2203,18 @@ nsFontMetricsWin::InitializeFamilyNames(void)
     if (!gFamilyNames) {
       return nsnull;
     }
-    gGeneric = new nsString("");
+    gGeneric = new nsString;
     if (!gGeneric) {
       return nsnull;
     }
     nsFontFamilyName* f = gFamilyNameTable;
     while (f->mName) {
-      nsString* name = new nsString(f->mName);
+      nsString* name = new nsString;
+      name->AssignWithConversion(f->mName);
       nsString* winName;
       if (f->mWinName) {
-        winName = new nsString(f->mWinName);
+        winName = new nsString;
+        winName->AssignWithConversion(f->mWinName);
       }
       else {
         winName = gGeneric;
@@ -2341,17 +2343,17 @@ nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
   if (mTriedAllGenerics) {
     return nsnull;
   }
-  nsAutoString prefix("font.name.");
+  nsAutoString prefix; prefix.AssignWithConversion("font.name.");
   if (mGeneric) {
     prefix.Append(*mGeneric);
   }
   else {
-    prefix.Append("serif");
+    prefix.AppendWithConversion("serif");
   }
   char name[128];
   if (mLangGroup) {
     nsAutoString pref = prefix;
-    pref.Append('.');
+    pref.AppendWithConversion('.');
     const PRUnichar* langGroup = nsnull;
     mLangGroup->GetUnicode(&langGroup);
     pref.Append(langGroup);

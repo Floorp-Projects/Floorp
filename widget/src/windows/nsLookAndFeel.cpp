@@ -284,7 +284,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
             if (result == ERROR_SUCCESS) {
               PRInt32 errorCode;
-              nsString str(value);
+              nsString str; str.AssignWithConversion(value);
               PRInt32 submenuDelay = str.ToInteger(&errorCode);
               if (errorCode == NS_OK) {
                 sSubmenuDelay = submenuDelay;

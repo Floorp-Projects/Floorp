@@ -130,7 +130,7 @@ nsCSSKeywords::LookupKeyword(const nsCString& aKeyword)
 
 nsCSSKeyword 
 nsCSSKeywords::LookupKeyword(const nsString& aKeyword) {
-  nsCAutoString theKeyword(aKeyword);
+  nsCAutoString theKeyword; theKeyword.AssignWithConversion(aKeyword);
   return LookupKeyword(theKeyword);
 }
 

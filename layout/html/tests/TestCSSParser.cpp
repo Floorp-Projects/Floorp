@@ -91,7 +91,8 @@ int main(int argc, char** argv)
           Usage();
           return -1;
         }
-        string = new nsString(argv[++i]);
+        string = new nsString;
+        string->AssignWithConversion(argv[++i]);
       }
       else {
         Usage();

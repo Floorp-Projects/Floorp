@@ -170,13 +170,19 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
 
     while (updater) {
         if (updater->mElement == aElement) {
+
+            nsCAutoString eventsC, targetsC, aeventsC, atargetsC; 
+            eventsC.AssignWithConversion(updater->mEvents);
+            targetsC.AssignWithConversion(updater->mTargets);
+            aeventsC.AssignWithConversion(aEvents);
+            atargetsC.AssignWithConversion(aTargets);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
                     this, aElement,
-                    (const char*) nsCAutoString(updater->mEvents),
-                    (const char*) nsCAutoString(updater->mTargets),
-                    (const char*) nsCAutoString(aEvents),
-                    (const char*) nsCAutoString(aTargets)));
+                    (const char*) eventsC,
+                    (const char*) targetsC,
+                    (const char*) aeventsC,
+                    (const char*) atargetsC));
 
             // If the updater was already in the list, then replace
             // (?) the 'events' and 'targets' filters with the new
@@ -189,12 +195,15 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
         link = &(updater->mNext);
         updater = updater->mNext;
     }
+    nsCAutoString aeventsC, atargetsC; 
+    aeventsC.AssignWithConversion(aEvents);
+    atargetsC.AssignWithConversion(aTargets);
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
            ("xulcmd[%p] add     %p(events=%s targets=%s)",
             this, aElement,
-            (const char*) nsCAutoString(aEvents),
-            (const char*) nsCAutoString(aTargets)));
+            (const char*) aeventsC,
+            (const char*) atargetsC));
 
     // If we get here, this is a new updater. Append it to the list.
     updater = new Updater(aElement, aEvents, aTargets);
@@ -217,11 +226,14 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
 
     while (updater) {
         if (updater->mElement == aElement) {
+            nsCAutoString eventsC, targetsC; 
+            eventsC.AssignWithConversion(updater->mEvents);
+            targetsC.AssignWithConversion(updater->mTargets);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xulcmd[%p] remove  %p(events=%s targets=%s)",
                     this, aElement,
-                    (const char*) nsCAutoString(updater->mEvents),
-                    (const char*) nsCAutoString(updater->mTargets)));
+                    (const char*) eventsC,
+                    (const char*) targetsC));
 
             *link = updater->mNext;
             delete updater;
@@ -271,10 +283,12 @@ nsXULCommandDispatcher::UpdateCommands(const nsString& aEventName)
         if (! document)
             continue;
 
+        nsCAutoString aeventnameC; 
+        aeventnameC.AssignWithConversion(aEventName);
         PR_LOG(gLog, PR_LOG_ALWAYS,
                ("xulcmd[%p] update %p event=%s",
                 this, updater->mElement,
-                (const char*) nsCAutoString(aEventName)));
+                (const char*) aeventnameC));
 
         PRInt32 count = document->GetNumberOfShells();
         for (PRInt32 i = 0; i < count; i++) {

@@ -114,7 +114,7 @@ int main(int argc, const char** argv)
        if(strcmp(argv[i], "-f") == 0)
        {
              tocodeind = i+1;
-             nsAutoString str(argv[tocodeind]);
+             nsAutoString str; str.AssignWithConversion(argv[tocodeind]);
              res = ccMain->GetUnicodeDecoder(&str, &decoder);
              if(NS_FAILED(res)) {
 	     	fprintf(stderr, "Cannot get Unicode decoder %s %x\n", 
@@ -126,7 +126,7 @@ int main(int argc, const char** argv)
        if(strcmp(argv[i], "-t") == 0)
        {
              fromcodeind = i+1;
-             nsAutoString str(argv[fromcodeind]);
+             nsAutoString str; str.AssignWithConversion(argv[fromcodeind]);
              res = ccMain->GetUnicodeEncoder(&str, &encoder);
              if(NS_FAILED(res)) {
 	     	fprintf(stderr, "Cannot get Unicode encoder %s %x\n", 
