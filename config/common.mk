@@ -19,6 +19,8 @@
 # Contributor(s): 
 #
 
+INCLUDED_COMMON_MK = 1
+
 ######################################################################
 # Cross-platform defines used on all platforms (in theory)
 ######################################################################
