@@ -74,14 +74,14 @@ nsMacCharset::nsMacCharset()
 	  long ret = ::GetScriptManagerVariable(smRegionCode);
 	  PRInt32 reg = (PRInt32)(ret & 0x00FFFF);
  	  nsAutoString regionKey; regionKey.AssignWithConversion("region.");
-	  regionKey.AppendWithConversion(reg, 10);
+	  regionKey.AppendInt(reg, 10);
 	  
 	  nsresult res = gInfo->Get(regionKey, mCharset);
 	  if(NS_FAILED(res)) {
 		  ret = ::GetScriptManagerVariable(smSysScript);
 		  PRInt32 script = (PRInt32)(ret & 0x00FFFF);
 		  nsAutoString scriptKey; scriptKey.AssignWithConversion("script.");
-		  scriptKey.AppendWithConversion(script, 10);
+		  scriptKey.AppendInt(script, 10);
 	 	  nsresult res = gInfo->Get(scriptKey, mCharset);
 	      if(NS_FAILED(res)) {
 	      	  mCharset.AssignWithConversion("x-mac-roman");
@@ -126,12 +126,12 @@ nsMacCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 	
 	nsAutoString locale_key; locale_key.AssignWithConversion("region.");
-	locale_key.AppendWithConversion(region,10);
+	locale_key.AppendInt(region,10);
 	
 	rv = gInfo->Get(locale_key,charset);
 	if (NS_FAILED(rv)) {
 		locale_key.AssignWithConversion("script.");
-		locale_key.AppendWithConversion(script,10);
+		locale_key.AppendInt(script,10);
 		rv = gInfo->Get(locale_key,charset);
 		if (NS_FAILED(rv)) { charset.AssignWithConversion("x-mac-roman");}
 	}
