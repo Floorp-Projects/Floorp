@@ -65,10 +65,12 @@ var FullScreen =
           els[i].setAttribute("moz-collapsed", "true");
       }
     }
-    
+
+#ifndef XP_MACOSX
     var controls = document.getElementsByAttribute("fullscreencontrol", "true");
     for (i = 0; i < controls.length; ++i)
       controls[i].hidden = aShow;
+#endif
   },
   
   setToolbarButtonMode: function(aToolbar, aMode)

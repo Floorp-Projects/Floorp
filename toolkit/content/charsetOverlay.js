@@ -29,11 +29,11 @@ function MailMultiplexHandler(event)
     } else if (name == 'charsetGroup') {
         var charset = node.getAttribute('id');
         charset = charset.substring('charset.'.length, charset.length)
-        MessengerSetForcedCharacterSet(charset);
+        MessengerSetDefaultCharacterSet(charset);
     } else if (name == 'charsetCustomize') {
         //do nothing - please remove this else statement, once the charset prefs moves to the pref window
     } else {
-        MessengerSetForcedCharacterSet(node.getAttribute('id'));
+        MessengerSetDefaultCharacterSet(node.getAttribute('id'));
     }
 }
 
@@ -80,7 +80,7 @@ function SelectDetector(event, doReload)
         str.data = prefvalue;
         pref.setComplexValue("intl.charset.detector",
                              Components.interfaces.nsISupportsString, str);
-        if (doReload) window.content.location.reload();
+        if (doReload) window._content.location.reload();
     }
     catch (ex) {
         dump("Failed to set the intl.charset.detector preference.\n");
@@ -130,7 +130,7 @@ function UpdateCurrentCharset()
 
     // exctract the charset from DOM
     var wnd = document.commandDispatcher.focusedWindow;
-    if ((window == wnd) || (wnd == null)) wnd = window.content;
+    if ((window == wnd) || (wnd == null)) wnd = window._content;
     menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
     if (menuitem) {
@@ -215,7 +215,7 @@ var gLastBrowserCharset = null;
 
 function charsetLoadListener (event)
 {
-    var charset = window.content.document.characterSet;
+    var charset = window._content.document.characterSet;
 
     if (charset.length > 0 && (charset != gLastBrowserCharset)) {
         gCharsetMenu.SetCurrentCharset(charset);
@@ -227,7 +227,7 @@ function charsetLoadListener (event)
 
 function composercharsetLoadListener (event)
 {
-    var charset = window.content.document.characterSet;
+    var charset = window._content.document.characterSet;
 
  
     if (charset.length > 0 ) {
