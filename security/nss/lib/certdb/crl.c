@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.29 2002/11/02 00:07:48 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.30 2002/11/07 00:02:31 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -922,27 +922,45 @@ PreAllocator* PreAllocator_Create(PRSize size)
 
 static CRLCache crlcache = { NULL, NULL };
 
+static PRBool crlcache_initialized = PR_FALSE;
+
 /* this needs to be called at NSS initialization time */
 
 SECStatus InitCRLCache(void)
 {
-    if (!crlcache.lock)
+    if (PR_FALSE == crlcache_initialized)
     {
+        PR_ASSERT(NULL == crlcache.lock);
         crlcache.lock = PR_NewLock();
         if (!crlcache.lock)
         {
             return SECFailure;
         }
+        PR_ASSERT(NULL == crlcache.issuers);
         crlcache.issuers = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
                                   PL_CompareValues, NULL, NULL);
         if (!crlcache.issuers)
         {
             PR_DestroyLock(crlcache.lock);
-            crlcache.lock = PR_FALSE;
+            crlcache.lock = NULL;
             return SECFailure;
         }
+        crlcache_initialized = PR_TRUE;
+        return SECSuccess;
     }
-    return SECSuccess;
+    else
+    {
+        PR_ASSERT(crlcache.lock);
+        PR_ASSERT(crlcache.issuers);
+        if ( (NULL == crlcache.lock) || (NULL == crlcache.issuers) )
+        {
+            return SECFailure;
+        }
+        else
+        {
+            return SECSuccess;
+        }
+    }
 }
 
 SECStatus DPCache_Destroy(CRLDPCache* cache)
@@ -1055,6 +1073,7 @@ SECStatus ShutdownCRLCache(void)
     crlcache.issuers = NULL;
     PR_DestroyLock(crlcache.lock);
     crlcache.lock = NULL;
+    crlcache_initialized = PR_FALSE;
     return SECSuccess;
 }
 
@@ -1837,7 +1856,6 @@ CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer, SECItem* dp,
 {
     PRBool lockedwrite = PR_FALSE;
     SECStatus rv = SECSuccess;
-    SECCertTimeValidity validity;
     CRLDPCache* dpcache = NULL;
     if (!cert || !issuer) {
         return SECFailure;
