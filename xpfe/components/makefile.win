@@ -42,6 +42,7 @@ DIRS= \
     urlwidget \
     updates \
     intl \
+    resetPref \
     build \
     $(NULL)
 
