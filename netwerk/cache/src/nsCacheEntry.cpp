@@ -185,6 +185,8 @@ nsCacheEntry::RequestAccess(nsCacheRequest * request, nsCacheAccessMode *accessG
         PR_APPEND_LINK(request, &mRequestQ);
         return rv;
     }
+    
+    if (IsDoomed()) return NS_ERROR_CACHE_ENTRY_DOOMED;
 
     if (IsStreamData() != request->IsStreamBased()) {
         *accessGranted = nsICache::ACCESS_NONE;
@@ -228,7 +230,7 @@ nsCacheEntry::CreateDescriptor(nsCacheRequest *           request,
     return NS_OK;
 }
 
-
+#if 0
 nsresult
 nsCacheEntry::Open(nsCacheRequest * request, nsICacheEntryDescriptor ** result)
 {
@@ -282,7 +284,7 @@ nsCacheEntry::AsyncOpen(nsCacheRequest * request)
     }
     return rv;
 }
-
+#endif
 
 PRBool
 nsCacheEntry::RemoveRequest(nsCacheRequest * request)
@@ -308,8 +310,7 @@ nsCacheEntry::RemoveDescriptor(nsCacheEntryDescriptor * descriptor)
     if (PR_CLIST_IS_EMPTY(&mRequestQ))
         return PR_FALSE; // no descriptors or requests, we can deactivate
 
-    // XXX find next best request to give a descriptor to
-    return PR_TRUE;
+    return PR_TRUE;     // find next best request to give a descriptor to
 }
 
 

@@ -59,6 +59,8 @@ private:
     ~nsCacheRequest()
     {
         delete mKey;
+        if (mLock)    PR_DestroyLock(mLock);
+        if (mCondVar) PR_DestroyCondVar(mCondVar);
         NS_ASSERTION(PR_CLIST_IS_EMPTY(this), "request still on a list");
     }
     
@@ -133,6 +135,13 @@ private:
             return NS_ERROR_UNEXPECTED;
 
         return NS_OK;
+    }
+
+    void WakeUp(void) {
+        PR_Lock(mLock);
+        DoneWaitingForValidation();
+        PR_NotifyCondVar(mCondVar);
+        PR_Unlock(mLock);
     }
 
     /**
