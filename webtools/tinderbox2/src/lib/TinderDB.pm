@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.11 $ 
-# $Date: 2002/05/03 04:33:30 $ 
+# $Revision: 1.12 $ 
+# $Date: 2002/05/03 04:44:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -152,11 +152,8 @@ $MAX_UPDATES_SINCE_TRIM = $TinderConfig::DB_MAX_UPDATES_SINCE_TRIM || (50);
 
 $TRIM_SECONDS = $TinderConfig::DB_TRIM_SECONDS || (60 * 60 * 24 * 8);
 
-if (defined($TinderConfig::UNIFORM_ROW_SPACING)) {
-    $UNIFORM_ROW_SPACING = $TinderConfig::UNIFORM_ROW_SPACING;
-} else {
-    $UNIFORM_ROW_SPACING = 1;
-}
+$ROW_SPACING_DISIPLINE = $TinderConfig::ROW_SPACING_DISIPLINE ||
+    'uniform';
 
 # The DB implemenations are sourced in TinderConfig.pm just before
 # this wrapper class is sourced.  It is expected that the
@@ -493,13 +490,13 @@ sub status_table_body {
   # we have data for.
 
   my ($row_times);
-  if      ($ROW_SPACING_DISIPLINE == 'uniform') {
+  if      ($ROW_SPACING_DISIPLINE eq 'uniform') {
       $row_times = construct_uniform_times_vec($start_time, $end_time, 
                                                $TABLE_SPACING,);
-  } elsif ($ROW_SPACING_DISIPLINE == 'event_driven') {
+  } elsif ($ROW_SPACING_DISIPLINE eq 'event_driven') {
       $row_times = construct_event_times_vec($start_time, $end_time, 
                                              $tree);
-  } elsif ($ROW_SPACING_DISIPLINE == 'build_event_driven') {
+  } elsif ($ROW_SPACING_DISIPLINE eq 'build_event_driven') {
       $row_times = construct_build_event_times_vec($start_time, $end_time, 
                                                     $tree);
   } else {

@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.10 $ 
-# $Date: 2002/04/25 23:46:10 $ 
+# $Revision: 1.11 $ 
+# $Date: 2002/05/03 04:40:08 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -313,10 +313,10 @@ sub save_tree_state {
 
   LoadCheckins();
 
-  if ($value == 'Open') {
+  if ($value eq 'Open') {
       $clear_list_of_checkins=1;
       AdminOpenTree($time_now, $clear_list_of_checkins);
-  } elsif ($value == 'Closed') {
+  } elsif ($value eq 'Closed') {
       AdminCloseTree($time_now);
   } else {
       die("Bonsai does not implement TreeState: $value\n");

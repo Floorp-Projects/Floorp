@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.41 $ 
-# $Date: 2002/05/02 22:11:32 $ 
+# $Revision: 1.42 $ 
+# $Date: 2002/05/03 04:40:05 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -164,6 +164,8 @@ $VERSION = '#tinder_version#';
 $EMPTY_TABLE_CELL = $HTMLPopUp::EMPTY_TABLE_CELL ||
     "&nbsp;";
 
+$DISPLAY_BUILD_ERRORS = $TinderConfig::DISPLAY_BUILD_ERRORS  ||
+    1;
 
 # Find the name of each build and the proper order to display them.
 # No part of the code should peek at keys %{ $DATABASE{$tree} } directly.
@@ -1186,9 +1188,7 @@ sub status_table_row {
 
     # Error count (not a link, but hey)
 
-    if ( (BuildStatus::get_display_number_errors) &&
-         ($current_rec->{'errors'}) 
-         ){
+    if ( ($DISPLAY_BUILD_ERRORS) && ($current_rec->{'errors'}) ) {
         $links .= (
                    "\t\t<br>errs: ". 
                    $current_rec->{'errors'}."\n".
