@@ -324,6 +324,7 @@ void ProcessFileOpsForAll(DWORD dwTiming)
 {
   ProcessFileOps(dwTiming, NULL);
   ProcessFileOpsForSelectedComponents(dwTiming);
+  ProcessCreateCustomFiles(dwTiming);
 }
 
 int VerifyArchive(LPSTR szArchive)
@@ -2073,5 +2074,84 @@ HRESULT ProcessProgramFolderShowCmd()
     GetPrivateProfileString(szSection0, "Program Folder", "", szBuf, sizeof(szBuf), szFileIniConfig);
   }
   return(FO_SUCCESS);
+}
+
+HRESULT ProcessCreateCustomFiles(DWORD dwTiming)
+{
+  DWORD dwCompIndex;
+  DWORD dwFileIndex;
+  DWORD dwSectIndex;
+  DWORD dwKVIndex;
+  siC   *siCObject = NULL;
+  char  szBufTiny[MAX_BUF_TINY];
+  char  szSection[MAX_BUF_TINY];
+  char  szBuf[MAX_BUF];
+  char  szFileName[MAX_BUF];
+  char  szDefinedSection[MAX_BUF]; 
+  char  szDefinedKey[MAX_BUF]; 
+  char  szDefinedValue[MAX_BUF];
+
+  dwCompIndex   = 0;
+  siCObject = SiCNodeGetObject(dwCompIndex, TRUE, AC_ALL);
+
+  while(siCObject)
+  {
+    dwFileIndex   = 0;
+    wsprintf(szSection,"%s-Configuration File%d",siCObject->szReferenceName,dwFileIndex);
+    siCObject = SiCNodeGetObject(++dwCompIndex, TRUE, AC_ALL);
+    if(TimingCheck(dwTiming, szSection, szFileIniConfig) == FALSE)
+    {
+      continue;
+    }
+
+    GetPrivateProfileString(szSection, "FileName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    while (*szBuf != '\0')
+    {
+      DecryptString(szFileName, szBuf);
+      if(FileExists(szFileName))
+      {
+        DeleteFile(szFileName);
+      }
+
+      /* TO DO - Support a File Type for something other than .ini */
+      dwSectIndex = 0;
+      wsprintf(szBufTiny, "Section%d",dwSectIndex);
+      GetPrivateProfileString(szSection, szBufTiny, "", szDefinedSection, sizeof(szDefinedSection), szFileIniConfig);
+      while(*szDefinedSection != '\0')
+      {  
+        dwKVIndex =0;
+        wsprintf(szBufTiny,"Section%d-Key%d",dwSectIndex,dwKVIndex);
+        GetPrivateProfileString(szSection, szBufTiny, "", szDefinedKey, sizeof(szDefinedKey), szFileIniConfig);
+        while(*szDefinedKey != '\0')
+        {
+          wsprintf(szBufTiny,"Section%d-Value%d",dwSectIndex,dwKVIndex);
+          GetPrivateProfileString(szSection, szBufTiny, "", szBuf, sizeof(szBuf), szFileIniConfig);
+          DecryptString(szDefinedValue, szBuf);
+          if(WritePrivateProfileString(szDefinedSection, szDefinedKey, szDefinedValue, szFileName) == 0)
+          {
+            char szEWPPS[MAX_BUF];
+            char szBuf[MAX_BUF];
+            char szBuf2[MAX_BUF];
+            if(GetPrivateProfileString("Messages", "ERROR_WRITEPRIVATEPROFILESTRING", "", szEWPPS, sizeof(szEWPPS), szFileIniInstall))
+            {
+              wsprintf(szBuf, "%s\n    [%s]\n    %s=%s", szFileName, szDefinedSection, szDefinedKey, szDefinedValue);
+              wsprintf(szBuf2, szEWPPS, szBuf);
+              PrintError(szBuf2, ERROR_CODE_SHOW);
+            }
+            return(FO_ERROR_WRITE);
+          }
+          wsprintf(szBufTiny,"Section%d-Key%d",dwSectIndex,++dwKVIndex);
+          GetPrivateProfileString(szSection, szBufTiny, "", szDefinedKey, sizeof(szDefinedKey), szFileIniConfig);
+        } /* while(*szDefinedKey != '\0')  */
+
+        wsprintf(szBufTiny, "Section%d",++dwSectIndex);
+        GetPrivateProfileString(szSection, szBufTiny, "", szDefinedSection, sizeof(szDefinedSection), szFileIniConfig);
+      } /*       while(*szDefinedSection != '\0') */
+
+      wsprintf(szSection,"%s-Configuration File%d",siCObject->szReferenceName,++dwFileIndex);
+      GetPrivateProfileString(szSection, "FileName", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    } /* while(*szBuf != '\0') */
+  } /* while(siCObject) */
+  return (FO_SUCCESS);
 }
 

@@ -168,6 +168,7 @@ typedef int PRInt32;
 #define FO_ERROR_FILE_NOT_FOUND         1
 #define FO_ERROR_DESTINATION_CONFLICT   2
 #define FO_ERROR_CHANGE_DIR             3
+#define FO_ERROR_WRITE                  4
 
 /* Mode of Setup to run in */
 #define NORMAL                          0
