@@ -66,7 +66,7 @@ function nsProgressDialog() {
     this.mMIMEInfo    = null;
     this.mDialog      = null;
     this.mDisplayName = null;
-    this.mPaused      = null;
+    this.mPaused      = false;
     this.mRequest     = null;
     this.mCompleted   = false;
     this.mMode        = "normal";
