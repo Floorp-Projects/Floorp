@@ -17,6 +17,7 @@ function Startup()
     cancelButton.setAttribute( "value", "Cancel Yah" );
   }
   Button2.removeAttribute("collapsed");
+  okButton.focus();
 }
 
 function onDeleteFiles()

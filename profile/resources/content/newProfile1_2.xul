@@ -47,10 +47,7 @@
 
 
   <box id="dirbox">
-    <box orient="vertical" flex="1">
-      <html class="indent" id="ProfileDir"/>
-      <spring flex="1"/>
-    </box>
+    <html class="indent" id="ProfileDir" flex="1" style="overflow: auto;"/>
     <box orient="vertical" valign="top">
       <button value="&button.choosefolder.label;" oncommand="chooseProfileFolder();"/>
       <button id="useDefault" value="&button.usedefault.label;" oncommand="setDisplayToDefaultFolder();" disabled="true"/>
@@ -59,12 +56,13 @@
 
   <separator/>
 
-  <box autostretch="never" halign="right">
+  <box autostretch="never">
+    <html id="finishtext">&pnl2.finish.text;</html> 
+    <spring flex="1"/>
     <button value="&langSelection.label;" oncommand="showLangDialog();"/>
   </box>
 
   <!--spring flex="1"/-->
-  <html id="finishtext">&pnl2.finish.text;</html> 
 
   <data id="ProfileLocale" />
 </window>
