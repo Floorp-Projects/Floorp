@@ -710,6 +710,9 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     // If the frame has child frames that stick outside the content
     // area, then size the view large enough to include those child
     // frames
+    NS_ASSERTION(!(aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) ||
+                 aCombinedArea,
+                 "resizing view for frame with overflow to the wrong size");
     if ((aFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) && aCombinedArea) {
       vm->ResizeView(aView, *aCombinedArea, PR_TRUE);
     } else {

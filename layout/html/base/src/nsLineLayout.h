@@ -118,6 +118,11 @@ public:
                                PRBool aAllowJustify,
                                PRBool aShrinkWrapWidth);
 
+  /**
+   * Handle all the relative positioning in the line, compute the
+   * combined area (== overflow area) for the line, and handle view
+   * sizing/positioning and the setting of NS_FRAME_OUTSIDE_CHILDREN.
+   */
   void RelativePositionFrames(nsRect& aCombinedArea);
 
   //----------------------------------------
