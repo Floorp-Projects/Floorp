@@ -144,6 +144,11 @@ class TImapServerState;
 #endif
 #endif
 
+
+#if defined(SMOOTH_PROGRESS) && defined(__cplusplus)
+class nsITransferListener;
+#endif
+
 struct MWContext_ {
     MWContextType type;
 
@@ -344,6 +349,14 @@ struct MWContext_ {
        to get visible content to the user ASAP, even if it means that
        stuff looks funny for a couple seconds. */
     PRPackedBool  requires_reflow;
+
+#if defined(SMOOTH_PROGRESS)
+#if defined(__cplusplus)
+    nsITransferListener* progressManager;
+#else
+    void* progressManager;
+#endif /* __cplusplus */
+#endif /* SMOOTH_PROGRESS */
 };
 
 
