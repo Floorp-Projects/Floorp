@@ -98,6 +98,7 @@ int ssl3CipherSuites[] = {
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,              /* k */
     TLS_RSA_EXPORT1024_WITH_DES_CBC_SHA, 	/* l */
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,		/* m */
+    SSL_RSA_WITH_RC4_128_SHA,                   /* n */
     0
 };
 

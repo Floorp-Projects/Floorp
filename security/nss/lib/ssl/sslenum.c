@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslenum.c,v 1.1 2000/03/31 19:34:53 relyea%netscape.com Exp $
+ * $Id: sslenum.c,v 1.2 2001/01/13 02:05:08 nelsonb%netscape.com Exp $
  */
 
 #include "ssl.h"
@@ -44,6 +44,7 @@ const PRUint16 SSL_ImplementedCiphers[] = {
     SSL_RSA_WITH_NULL_MD5,
     SSL_RSA_EXPORT_WITH_RC4_40_MD5,
     SSL_RSA_WITH_RC4_128_MD5,
+    SSL_RSA_WITH_RC4_128_SHA,
     SSL_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
     SSL_RSA_WITH_DES_CBC_SHA,
     SSL_RSA_WITH_3DES_EDE_CBC_SHA,
