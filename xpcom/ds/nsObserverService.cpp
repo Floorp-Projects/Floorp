@@ -224,6 +224,7 @@ NS_IMETHODIMP nsObserverService::Notify( nsISupports *aSubject,
         rv = observers->First();
         // Continue until error or end of list.
         while ( observers->IsDone() != NS_OK && NS_SUCCEEDED(rv) ) {
+            PRBool advanceToNext = PR_TRUE;
             // Get current item (observer).
             nsISupports *base;
             rv = observers->CurrentItem( &base );
@@ -234,13 +235,19 @@ NS_IMETHODIMP nsObserverService::Notify( nsISupports *aSubject,
                 if ( NS_SUCCEEDED( rv ) && observer ) {
                     // Tell the observer what's up.
                     observer->Observe( aSubject, aTopic, someData );
+                    nsCOMPtr <nsISupports> currentItem;
+                    observers->CurrentItem(getter_AddRefs(currentItem));
+                    // check if the current item has changed, because the
+                    // observer removed the old current item.
+                    advanceToNext = (currentItem == base);
                     // Release the observer.
                     observer->Release();
                 }
             NS_IF_RELEASE(base);
             }
             // Go on to next observer in list.
-            rv = observers->Next();
+            if (advanceToNext)
+              rv = observers->Next();
         }
         // Release the observer list.
         observers->Release();
