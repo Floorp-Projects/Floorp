@@ -138,10 +138,14 @@ PRInt16 gBadPortList[] = {
   0,    // This MUST be zero so that we can populating the array
 };
 
+static const char kProfileChangeNetTeardownTopic[] = "profile-change-net-teardown";
+static const char kProfileChangeNetRestoreTopic[] = "profile-change-net-restore";
+
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
-    : mOffline(PR_FALSE)
+    : mOffline(PR_FALSE),
+      mOfflineForProfileChange(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -219,7 +223,16 @@ nsIOService::Init()
             pbi->AddObserver(PORT_PREF_PREFIX, this, PR_TRUE);
         PrefsChanged(prefBranch);
     }
-
+    
+    // Register for profile change notifications
+    nsCOMPtr<nsIObserverService> observerService =
+        do_GetService("@mozilla.org/observer-service;1");
+    NS_ASSERTION(observerService, "Failed to get observer service");
+    if (observerService) {
+        observerService->AddObserver(this, kProfileChangeNetTeardownTopic, PR_TRUE);
+        observerService->AddObserver(this, kProfileChangeNetRestoreTopic, PR_TRUE);
+    }
+    
     return NS_OK;
 }
 
@@ -791,11 +804,6 @@ nsIOService::SetOffline(PRBool offline)
     nsresult rv1 = NS_OK;
     nsresult rv2 = NS_OK;
     if (offline) {
-        // don't care if notification fails
-        if (observerService)
-            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
-                                                   "network:offline-status-changed",
-                                                   NS_LITERAL_STRING("offline").get());
     	mOffline = PR_TRUE;		// indicate we're trying to shutdown
         // be sure to try and shutdown both (even if the first fails)
         if (mDNSService)
@@ -805,6 +813,11 @@ nsIOService::SetOffline(PRBool offline)
         if (NS_FAILED(rv1)) return rv1;
         if (NS_FAILED(rv2)) return rv2;
 
+        // don't care if notification fails
+        if (observerService)
+            (void)observerService->NotifyObservers(NS_STATIC_CAST(nsIIOService *, this),
+                                                   "network:offline-status-changed",
+                                                   NS_LITERAL_STRING("offline").get());
     }
     else if (!offline && mOffline) {
         // go online
@@ -996,6 +1009,18 @@ nsIOService::Observe(nsISupports *subject,
         nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(subject);
         if (prefBranch)
             PrefsChanged(prefBranch, NS_ConvertUCS2toUTF8(data).get());
+    }
+    else if (!nsCRT::strcmp(topic, kProfileChangeNetTeardownTopic)) {
+        if (!mOffline) {
+            SetOffline(PR_TRUE);
+            mOfflineForProfileChange = PR_TRUE;
+        }
+    }
+    else if (!nsCRT::strcmp(topic, kProfileChangeNetRestoreTopic)) {
+        if (mOfflineForProfileChange) {
+            SetOffline(PR_FALSE);
+            mOfflineForProfileChange = PR_FALSE;
+        }    
     }
     return NS_OK;
 }

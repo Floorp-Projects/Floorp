@@ -104,7 +104,8 @@ protected:
     void ParsePortList(nsIPrefBranch *prefBranch, const char *pref, PRBool remove);
 
 protected:
-    PRBool      mOffline;
+    PRPackedBool      mOffline;
+    PRPackedBool      mOfflineForProfileChange;
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
     nsCOMPtr<nsIDNSService>             mDNSService;
