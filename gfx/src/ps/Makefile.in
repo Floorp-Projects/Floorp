@@ -45,9 +45,14 @@ EXPORTS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		-L$(DIST)/bin \
+		$(NSPR_LIBS)	\
+		-lxpcom	\
+		-lraptorgfx	\
 		-L$(DIST)/lib \
 		-limg_s \
 		-lmozutil_s \
+		$(MOZ_TIMER_LIBS)	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
