@@ -32,5 +32,5 @@ install::
 	$(MAKE_INSTALL) security.properties $(NAV_DIST)
 
 clobber::
-  rm -f $(DIST)\bin\chrome\global\locale\PSMTaskMenu.dtd
-  rm -f $(DIST)\bin\chrome\navigator\locale\security.properties
+  $(RM) -f $(DIST)\bin\chrome\global\locale\PSMTaskMenu.dtd
+  $(RM) -f $(DIST)\bin\chrome\navigator\locale\security.properties

@@ -32,10 +32,10 @@ install::
     $(MAKE_INSTALL) NavSecurityOverlay.css     $(DIST)\bin\chrome\navigator\skin
     
 clobber::
-    rm $(DIST)\bin\chrome\navigator\skin\broken.gif
-    rm $(DIST)\bin\chrome\navigator\skin\lock.gif
-    rm $(DIST)\bin\chrome\navigator\skin\unlock.gif
-    rm $(DIST)\bin\chrome\navigator\skin\NavSecurityOverlay.css
+    $(RM) $(DIST)\bin\chrome\navigator\skin\broken.gif
+    $(RM) $(DIST)\bin\chrome\navigator\skin\lock.gif
+    $(RM) $(DIST)\bin\chrome\navigator\skin\unlock.gif
+    $(RM) $(DIST)\bin\chrome\navigator\skin\NavSecurityOverlay.css
 
     
     
