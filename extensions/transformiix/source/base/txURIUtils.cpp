@@ -51,10 +51,6 @@
 //- Constants -/
 
 const char   URIUtils::HREF_PATH_SEP  = '/';
-const char   URIUtils::DEVICE_SEP     = '|';
-const char   URIUtils::PORT_SEP       = ':';
-const char   URIUtils::PROTOCOL_SEP   = ':';
-
 
 /**
  * Returns an InputStream for the file represented by the href
@@ -66,22 +62,7 @@ const char   URIUtils::PROTOCOL_SEP   = ':';
 **/
 istream* URIUtils::getInputStream(const nsAString& href, nsAString& errMsg)
 {
-
-    istream* inStream = 0;
-
-    ParsedURI* uri = parseURI(href);
-    if ( !uri->isMalformed ) {
-        inStream = openStream(uri);
-    }
-    else {
-        // Try local files
-        inStream = new ifstream(NS_LossyConvertUCS2toASCII(href).get(),
-                                ios::in);
-    }
-    delete uri;
-
-    return inStream;
-
+    return new ifstream(NS_LossyConvertUCS2toASCII(href).get(), ios::in);
 } //-- getInputStream
 
 /**
@@ -134,154 +115,18 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
     nsAutoString documentBase;
     getDocumentBase(PromiseFlatString(base), documentBase);
 
-    //-- check for URL
-    ParsedURI* uri = parseURI(href);
-    if ( !uri->isMalformed ) {
-        dest.Append(href);
-        delete uri;
-        return;
-    }
-
-
     //-- join document base + href
-    nsAutoString xHref;
     if (!documentBase.IsEmpty()) {
-        xHref.Append(documentBase);
+        dest.Append(documentBase);
         if (documentBase.CharAt(documentBase.Length()-1) != HREF_PATH_SEP)
-            xHref.Append(PRUnichar(HREF_PATH_SEP));
+            dest.Append(PRUnichar(HREF_PATH_SEP));
     }
-    xHref.Append(href);
+    dest.Append(href);
 
-    //-- check new href
-    ParsedURI* newUri = parseURI(xHref);
-    if ( !newUri->isMalformed ) {
-        dest.Append(xHref);
-    }
-    else {
-        // Try local files
-        ifstream inFile(NS_LossyConvertUCS2toASCII(xHref).get(),
-                        ios::in);
-        if ( inFile ) dest.Append(xHref);
-        else dest.Append(href);
-        inFile.close();
-    }
-    delete uri;
-    delete newUri;
 #endif
 } //-- resolveHref
 
-#ifdef TX_EXE
-istream* URIUtils::openStream(ParsedURI* uri) {
-    if ( !uri ) return 0;
-    // check protocol
-
-    istream* inStream = 0;
-    if (uri->protocol.Equals(NS_LITERAL_STRING("file"))) {
-        ifstream* inFile =
-            new ifstream(NS_LossyConvertUCS2toASCII(uri->path).get(),
-                         ios::in);
-        inStream = inFile;
-    }
-
-    return inStream;
-} //-- openStream
-
-URIUtils::ParsedURI* URIUtils::parseURI(const nsAString& aUri) {
-    const nsAFlatString& uri = PromiseFlatString(aUri);
-    ParsedURI* uriTokens = new ParsedURI;
-    if (!uriTokens)
-        return nsnull;
-    uriTokens->isMalformed = MB_FALSE;
-
-    ParseMode mode = PROTOCOL_MODE;
-
-    // look for protocol
-    int totalCount = uri.Length();
-    int charCount = 0;
-    PRUnichar prevCh = '\0';
-    int fslash = 0;
-    nsAutoString buffer;
-    while ( charCount < totalCount ) {
-        PRUnichar ch = uri.CharAt(charCount++);
-        switch(ch) {
-            case '.' :
-                if ( mode == PROTOCOL_MODE ) {
-                    uriTokens->isMalformed = MB_TRUE;
-                    mode = HOST_MODE;
-                }
-                buffer.Append(ch);
-                break;
-            case ':' :
-            {
-                switch ( mode ) {
-                    case PROTOCOL_MODE :
-                        uriTokens->protocol = buffer;
-                        buffer.Truncate();
-                        mode = HOST_MODE;
-                        break;
-                    case HOST_MODE :
-                        uriTokens->host = buffer;
-                        buffer.Truncate();
-                        mode = PORT_MODE;
-                        break;
-                    default:
-                        break;
-                }
-                break;
-            }
-            case '/' :
-                switch ( mode ) {
-                    case HOST_MODE :
-                        if (!buffer.IsEmpty()) {
-                            mode = PATH_MODE;
-                            buffer.Append(ch);
-                        }
-                        else if ( fslash == 2 ) mode = PATH_MODE;
-                        else ++fslash;
-                        break;
-                    case PORT_MODE :
-                        mode = PATH_MODE;
-                        uriTokens->port.Append(buffer);
-                        buffer.Truncate();
-                        break;
-                    default:
-                        buffer.Append(ch);
-                        break;
-                }
-                break;
-            default:
-                buffer.Append(ch);
-        }
-        prevCh = ch;
-    }
-
-    if ( mode == PROTOCOL_MODE ) {
-        uriTokens->isMalformed = MB_TRUE;
-    }
-    //-- finish remaining mode
-    if (!buffer.IsEmpty()) {
-        switch ( mode ) {
-            case PROTOCOL_MODE :
-                uriTokens->protocol.Append(buffer);
-                break;
-            case HOST_MODE :
-                uriTokens->host.Append(buffer);
-                break;
-            case PORT_MODE :
-                uriTokens->port.Append(buffer);
-                break;
-            case PATH_MODE :
-                uriTokens->path.Append(buffer);
-                break;
-            default:
-                break;
-        }
-    }
-    return uriTokens;
-} //-- parseURI
-
-#else /* TX_EXE */
-
+#ifndef TX_EXE
 
 nsIScriptSecurityManager *gTxSecurityManager = 0;
 
