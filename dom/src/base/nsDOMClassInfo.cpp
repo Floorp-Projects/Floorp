@@ -459,6 +459,8 @@ nsDOMClassInfoData sClassInfoData[] = {
                            DEFAULT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(BoxObject, nsDOMGenericSH,
                            DEFAULT_SCRIPTABLE_FLAGS)
+  NS_DEFINE_CLASSINFO_DATA(OutlinerSelection, nsDOMGenericSH,
+                           DEFAULT_SCRIPTABLE_FLAGS)
 
   // Crypto classes
   NS_DEFINE_CLASSINFO_DATA(Crypto, nsDOMGenericSH,

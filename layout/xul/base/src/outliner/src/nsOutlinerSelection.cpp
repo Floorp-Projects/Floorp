@@ -27,6 +27,7 @@
 #include "nsIOutlinerView.h"
 #include "nsString.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMClassInfo.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
@@ -247,7 +248,20 @@ nsOutlinerSelection::~nsOutlinerSelection()
   delete mFirstRange;
 }
 
-NS_IMPL_ISUPPORTS2(nsOutlinerSelection, nsIOutlinerSelection, nsISecurityCheckedComponent)
+// XPConnect interface list for nsBoxObject
+NS_CLASSINFO_MAP_BEGIN(OutlinerSelection)
+  NS_CLASSINFO_MAP_ENTRY(nsIOutlinerSelection)
+NS_CLASSINFO_MAP_END
+
+// QueryInterface implementation for nsBoxObject
+NS_INTERFACE_MAP_BEGIN(nsOutlinerSelection)
+  NS_INTERFACE_MAP_ENTRY(nsIOutlinerSelection)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY_DOM_CLASSINFO(OutlinerSelection)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(nsOutlinerSelection)
+NS_IMPL_RELEASE(nsOutlinerSelection)
 
 NS_IMETHODIMP nsOutlinerSelection::GetOutliner(nsIOutlinerBoxObject * *aOutliner)
 {
@@ -699,37 +713,6 @@ nsOutlinerSelection::FireOnSelectHandler()
   return NS_OK;
 }
 
-/* string canCreateWrapper (in nsIIDPtr iid); */
-NS_IMETHODIMP nsOutlinerSelection::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
-NS_IMETHODIMP nsOutlinerSelection::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsOutlinerSelection::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
-
-/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
-NS_IMETHODIMP nsOutlinerSelection::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  nsCAutoString str("AllAccess");
-  *_retval = str.ToNewCString();
-  return NS_OK;
-}
 
 ///////////////////////////////////////////////////////////////////////////////////
 

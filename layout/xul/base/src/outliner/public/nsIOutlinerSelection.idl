@@ -25,10 +25,10 @@
 
 interface nsIOutlinerBoxObject;
 
-#include "nsISecurityCheckedComponent.idl"
+#include "nsISupports.idl"
 
 [scriptable, uuid(F848D7CF-F3D6-4775-8C9F-135546E61E1E)]
-interface nsIOutlinerSelection : nsISecurityCheckedComponent
+interface nsIOutlinerSelection : nsISupports
 {
   /**
    * The outliner widget for this selection.
