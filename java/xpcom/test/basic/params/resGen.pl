@@ -1,4 +1,4 @@
-#!/usr/loacl/bin/perl
+#!/usr/local/bin/perl
 %types=("x2j.in",1,"x2j.out",2,"x2j.inout",3,"x2j.ret",4,
         "j2x.in",5,"j2x.out",6,"j2x.inout",7,"j2x.ret",8);
 
@@ -52,8 +52,8 @@ sub save {
   close(OUT);
 }
 sub DoUsual {
-    my @server_files=<$log_dir/$type."server"*>;
-    my @client_files=<$log_dir/$type."client"*>;
+    my @server_files=<$log_dir/$type.server.*>;
+    my @client_files=<$log_dir/$type.client.*>;
     my %s_files=split(/=/,join("=1=",@server_files)."=1");
     my %c_files=split(/=/,join("=1=",@client_files)."=1");
     my $all_log="<H1>Results for <B>$type</B> tests</H1><table border=1 bgcolor=lightblue><br>";
@@ -123,19 +123,21 @@ sub DoUsual {
 	}else {
 	    open(S,$log_dir."/".$type.".server".$ID)||die "Error opening server file\n";
 	    $i=0;
-	    $result="FAILED";
+	    $result="PASSED";
 	    while($line=<S>) {
 		$line =~ s/\r|\n|^\s*|\s*$//g;
 		$CF[$i]=~ s/\r|\n|^\s*|\s*$//g;
 		$SF[$i]=$line;
+
 		if (($ID eq ".float")||($ID eq ".double")) {
-		   if (substr($SF[$i],0,3) eq substr($CF[$i],0,3))
-			 {$result="PASSED";}
+		   unless (substr($SF[$i],0,3) eq substr($CF[$i],0,3))
+			 {$result="FAILED";}
 		} else {
-		    if($line eq $CF[$i]) {
-		    	$result="PASSED";
+		    unless($line eq $CF[$i]) {
+		    	$result="FAILED";
 		    }
 		}
+
 		$i++;
 	    }
 	    close(S);
@@ -177,9 +179,10 @@ return $all_log;
 
 
 sub DoInout {
-    my @server_files=<$log_dir/$type."server"*>;
-    my @client_files=<$log_dir/$type."client"*>;
-    my @xclient_files=<$log_dir/$type."xclient"*>;
+
+    my @server_files=<$log_dir/$type.server.*>;
+    my @client_files=<$log_dir/$type.client.*>;
+    my @xclient_files=<$log_dir/$type.xclient.*>;
     my %s_files=split(/=/,join("=1=",@server_files)."=1");
     my %c_files=split(/=/,join("=1=",@client_files)."=1");
     my %xc_files=split(/=/,join("=1=",@xclient_files)."=1");
@@ -231,7 +234,8 @@ sub DoInout {
 	    @XCF=<XC>;
 	    close(XC);
 	}
-	$result="FAILED";
+
+	$result="PASSED";
 	if (($ID eq ".float")||($ID eq ".double")) {
 
  	      	for($i=0;$i<=$#CF;$i++) {
@@ -239,9 +243,9 @@ sub DoInout {
 		    $CF[$i]  =~ s/\r|\n|^\s*|\s*$//g;
 		    $SF[$i]  =~ s/\r|\n|^\s*|\s*$//g;
 
-		  if ((substr($SF[$i],0,3) eq substr($CF[$i],0,3))
+		  unless ((substr($SF[$i],0,3) eq substr($CF[$i],0,3))
 	                &&(substr($XCF[$i],0,3) eq substr($CF[$i],0,3))) {
-		 	  $result="PASSED";
+		 	  $result="FAILED";
 	          }
         	 }
 	} else {
@@ -249,12 +253,14 @@ sub DoInout {
   		    $XCF[$i] =~ s/\r|\n|^\s*|\s*$//g;
 		    $CF[$i]  =~ s/\r|\n|^\s*|\s*$//g;
 		    $SF[$i]  =~ s/\r|\n|^\s*|\s*$//g;
-		    if(($CF[$i] eq $XCF[$i])&&($CF[$i] eq $SF[$i])) {
-			$result="PASSED";
+		    unless(($CF[$i] eq $XCF[$i])&&($CF[$i] eq $SF[$i])) {
+			$result="FAILED";
 		    }
 		} 
 	}
-        $all_log.="<tr><td>$type$ID</td><td>".join("<BR>",@CF)."</td><td>".join("<BR>",@SF)."</td><td>".join("<BR>",@XCF)."</td>";
+
+ 
+       $all_log.="<tr><td>$type$ID</td><td>".join("<BR>",@CF)."</td><td>".join("<BR>",@SF)."</td><td>".join("<BR>",@XCF)."</td>";
 	if($result=~/FAILED/) {
 	    $all_log.="<td bgcolor=red>".$result."</td>";
 	} else {
