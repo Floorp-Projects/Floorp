@@ -169,6 +169,16 @@ interface nsIAppShellService : nsISupports
   void unregisterTopLevelWindow(in nsIXULWindow aWindow);
 
   /**
+   * The appshell service needs to be informed of modal XUL windows currently
+   * open. Call this method as a window becomes modal or as it becomes
+   * nonmodal.
+   * @param aWindow no surprises here
+   * @param aModal true if aWindow is becoming modal
+   *               false if aWindow is becoming nonmodal (or being closed)
+   */
+  void topLevelWindowIsModal(in nsIXULWindow aWindow, in boolean aModal);
+
+  /**
    * Remove the splash screen (if visible).  This need be called
    * only once per application session.
    */
