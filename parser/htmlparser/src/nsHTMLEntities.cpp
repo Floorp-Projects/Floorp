@@ -27,27 +27,36 @@
 #include "nsString.h"
 #include "nsAVLTree.h"
 
+MOZ_DECL_CTOR_COUNTER(EntityNode)
+
 struct EntityNode {
   EntityNode(void)
-    : mStr(),
+    : mStr(nsnull),
       mUnicode(-1)
-  {}
+  {
+    MOZ_COUNT_CTOR(EntityNode);
+  }
 
-  EntityNode(const nsCString& aStringValue)
-    : mStr(),
+  EntityNode(const char* aStringValue)
+    : mStr(aStringValue),
       mUnicode(-1)
-  { // point to the incomming buffer
-    // note that the incomming buffer may really be 2 byte
-    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
-                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
+  {
+    MOZ_COUNT_CTOR(EntityNode);
   }
 
   EntityNode(PRInt32 aUnicode)
-    : mStr(),
+    : mStr(nsnull),
       mUnicode(aUnicode)
-  {}
+  {
+    MOZ_COUNT_CTOR(EntityNode);
+  }
 
-  nsCAutoString mStr;
+  ~EntityNode()
+  {
+    MOZ_COUNT_DTOR(EntityNode);
+  }
+
+  const char*   mStr; // never owns buffer
   PRInt32       mUnicode;
 };
 
@@ -57,7 +66,7 @@ public:
   virtual PRInt32 operator()(void* anItem1,void* anItem2) {
     EntityNode* one = (EntityNode*)anItem1;
     EntityNode* two = (EntityNode*)anItem2;
-    return one->mStr.CompareWithConversion(two->mStr, PR_FALSE);
+    return nsCRT::strcmp(one->mStr, two->mStr);
   }
 }; 
 
@@ -81,13 +90,13 @@ static EntityCodeComparitor* gCodeComparitor;
 
 // define array of entity names
 #define HTML_ENTITY(_name, _value) #_name,
-static char* gEntityNames[] = {
+static const char* const gEntityNames[] = {
 #include "nsHTMLEntityList.h"
 };
 #undef HTML_ENTITY
 
 #define HTML_ENTITY(_name, _value) _value,
-static PRInt32 gEntityCodes[] = {
+static const PRInt32 gEntityCodes[] = {
 #include "nsHTMLEntityList.h"
 };
 #undef HTML_ENTITY
@@ -162,10 +171,10 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
     }
       
 
-    EntityNode node(aEntity);
+    EntityNode node(aEntity.get());
     EntityNode*  found = (EntityNode*)gEntityToCodeTree->FindItem(&node);
     if (found) {
-      NS_ASSERTION(found->mStr.Equals(aEntity), "bad tree");
+      NS_ASSERTION(!nsCRT::strcmp(found->mStr, aEntity.get()), "bad tree");
       return found->mUnicode;
     }
   }
@@ -184,7 +193,7 @@ nsHTMLEntities::EntityToUnicode(const nsAReadableString& aEntity) {
 }
 
 
-const nsCString& 
+const char*
 nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
 {
   NS_ASSERTION(gCodeToEntityTree, "no lookup table, needs addref");
@@ -196,12 +205,7 @@ nsHTMLEntities::UnicodeToEntity(PRInt32 aUnicode)
       return found->mStr;
     }
   }
-  static const nsCString* kNullStr=0;
-  if(!kNullStr) {
-    kNullStr=new nsCString("");
-  }
-  return *kNullStr;
-
+  return nsnull;
 }
 
 #ifdef NS_DEBUG
@@ -222,7 +226,7 @@ public:
        NS_ASSERTION(value == gEntityArray[i].mUnicode, "bad unicode value");
 
        entity.AssignWithConversion(nsHTMLEntities::UnicodeToEntity(value));
-       NS_ASSERTION(entity.EqualsWithConversion(gEntityArray[i].mStr.mStr), "bad entity name");
+       NS_ASSERTION(entity.EqualsWithConversion(gEntityArray[i].mStr), "bad entity name");
      }
 
      // Make sure we don't find things that aren't there

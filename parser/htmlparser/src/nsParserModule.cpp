@@ -115,8 +115,8 @@ NS_IMETHODIMP
 nsParserService::HTMLConvertUnicodeToEntity(PRInt32 aUnicode,
                                             nsCString& aEntity) const
 {
-  const nsCString& str = nsHTMLEntities::UnicodeToEntity(aUnicode);
-  if (str.Length() > 0) {
+  const char* str = nsHTMLEntities::UnicodeToEntity(aUnicode);
+  if (str) {
     aEntity.Assign(str);
   }
   return NS_OK;
