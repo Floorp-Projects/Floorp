@@ -114,7 +114,8 @@ sub parse_arguments {
   # Build the list of makefiles to generate
   #
   @makefiles = ();
-  foreach my $makefile (@args) {
+  my $makefile;
+  foreach $makefile (@args) {
     $makefile =~ s/\.in$//;
     $makefile =~ s/\/$//;
     $makefile =~ /Makefile$/ or $makefile .= "/Makefile";
@@ -132,7 +133,8 @@ sub create_directories {
   my @makefiles = @_;
   my @dirs = ();
   my %have_seen = ();
-  foreach my $ac_file (@makefiles) {
+  my $ac_file;
+  foreach $ac_file (@makefiles) {
     next if $ac_file =~ /:/;
     my $ac_dir = dirname($ac_file);
     while (not defined $have_seen{$ac_dir}) {
@@ -142,10 +144,11 @@ sub create_directories {
       $ac_dir =~ s/\/[^\/]+$//;
     }
   }
-  sub by_subdir_count { 
-    split(/\//,$a) <=> split(/\//,$b)
-  }
-  system "mkdir ".join(' ', sort by_subdir_count @dirs) if @dirs;
+  # Call mkdir with the directories sorted by subdir count (how many /'s)
+  system "mkdir ". join(' ', sort {
+                                    split(/\//,$a) <=> split(/\//,$b)
+                                  } @dirs
+                       ) if @dirs;
 }
 
 # Find the top of the source directory
@@ -170,7 +173,8 @@ sub update_makefiles {
   my ($ac_given_srcdir, @makefiles) = @_;
   my @unhandled=();
 
-  foreach my $ac_file (@makefiles) {
+  my $ac_file;
+  foreach $ac_file (@makefiles) {
     my $ac_file_in    = "$ac_given_srcdir/$ac_file.in";
     my $ac_dir        = dirname($ac_file);
     my $ac_dots       = '';
