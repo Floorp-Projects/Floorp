@@ -16,7 +16,8 @@
  * Copyright (C) 1999 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): Stephen Lamm <slamm@netscape.com>
+ * Contributor(s): Stephen Lamm            <slamm@netscape.com>
+ *                 Robert John Churchill   <rjc@netscape.com>
  */
 
 /*
@@ -147,7 +148,80 @@ function (aTitle, aContentURL, aCustomizeURL)
     this.datasource.QueryInterface(nsIRDFRemoteDataSource).Flush();
 
 }
- 
+
+/* decorate prototype to provide ``class'' methods and property accessors */
+nsSidebar.prototype.addSearchEngine =
+function (engineURL, iconURL, suggestedTitle, suggestedCategory)
+{
+    debug("addSearchEngine(" + engineURL + ", " + iconURL + ", " +
+          suggestedCategory + ", " + suggestedTitle + ")");
+
+    if (!this.window)
+    {
+        debug ("no window object set, bailing out.");
+        throw Components.results.NS_ERROR_NOT_INITIALIZED;
+    }
+
+    try
+    {
+	    // make sure using HTTP (for both engine as well as icon URLs)
+	    var protocolOffset = engineURL.indexOf("http://");
+	    if (protocolOffset != 0)
+	    {
+	        debug ("must use HTTP to fetch search engine file");
+	        throw Components.results.NS_ERROR_INVALID_ARG;
+	    }
+	    protocolOffset = iconURL.indexOf("http://");
+	    if (protocolOffset != 0)
+	    {
+	        debug ("must use HTTP to fetch search icon file");
+	        throw Components.results.NS_ERROR_INVALID_ARG;
+	    }
+
+	    // make sure engineURL refers to a .src file
+	    var len = engineURL.length;
+	    var extensionOffset = engineURL.lastIndexOf(".src", len-4);
+	    if (extensionOffset != len-4)
+	    {
+	        debug ("engineURL doesn't reference a .src file");
+	        throw Components.results.NS_ERROR_INVALID_ARG;
+	    }
+
+	    // make sure iconURL refers to a .gif/.jpg/.jpeg/.png file
+	    extensionOffset = iconURL.lastIndexOf(".");
+	    if (extensionOffset < 0)
+	    {
+	        debug ("unable to determine iconURL extension");
+	        throw Components.results.NS_ERROR_INVALID_ARG;
+	    }
+	    var iconType = iconURL.substr(extensionOffset);
+	    iconType = iconType.toLowerCase();
+	    if (iconType != ".gif" && iconType != ".jpg" && iconType != ".jpeg" && iconType != ".png")
+	    {
+	        debug ("iconURL doesn't reference a supported image file");
+	        throw Components.results.NS_ERROR_INVALID_ARG;
+	    }
+    }
+    catch(ex)
+    {
+        this.window.alert("Failed to add the search engine.\n");
+        throw Components.results.NS_ERROR_INVALID_ARG;
+    }
+
+    var rv = this.window.confirm("Add the following search engine?\n\nName:\n'" + suggestedTitle + "'\n\nSearch Category:\n'" + suggestedCategory + "'\n\nDownload URL:\n'" + engineURL + "'");
+    if (!rv)
+        return;
+
+    var internetSearch = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+    if (internetSearch)	internetSearch = internetSearch.QueryInterface(Components.interfaces.nsIInternetSearchService);
+    if (internetSearch)
+    {
+    	internetSearch.AddSearchEngine(engineURL, iconURL, suggestedTitle, suggestedCategory);
+    }
+}
+
+
+
 var sidebarModule = new Object();
 
 sidebarModule.registerSelf =
