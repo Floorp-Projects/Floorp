@@ -31,7 +31,6 @@
 #include "nsViewsCID.h"
 #include "nsAbsoluteFrame.h"
 #include "nsHTMLIIDs.h"
-#include "nsBlockFrame.h"
 #include "nsIWebShell.h"
 #include "nsHTMLValue.h"
 #include "nsHTMLTagContent.h"
@@ -92,7 +91,10 @@ NS_IMETHODIMP
 nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create a block frame and set its style context
-  NS_NewBlockFrame(mContent, this, mFirstChild);
+  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild);
+  if (NS_OK != rv) {
+    return rv;
+  }
   mChildCount = 1;
   nsIStyleContext* pseudoStyleContext =
    aPresContext.ResolvePseudoStyleContextFor(nsHTMLAtoms::columnPseudo, this);
