@@ -34,6 +34,7 @@ install::
 	$(MAKE_INSTALL) inputBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) textAreaBindings.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) hiddenWindow.xul $(DISTBROWSER)
+	$(MAKE_INSTALL) globalBindings.xml $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.xul $(DISTBROWSER)
 	$(MAKE_INSTALL) globalOverlay.js $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.xul $(DISTBROWSER)

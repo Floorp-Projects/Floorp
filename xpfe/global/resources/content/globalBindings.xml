@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<!-- This file should only contain global chrome custom widget definitions. 
+   THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT
+   FIRST HAVING YOUR CHANGES REVIEWED BY hyatt@netscape.com.
+-->
+
+<bindings id="globalBindings"
+  xmlns="http://www.mozilla.org/xbl"
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  
+  <binding name="texttab">
+    <content>
+      <xul:image class="tab-leftedge"/>
+      <xul:box class="textholder" align="vertical" inherits="value"
+        autostretch="always" flex="100%">
+        <xul:spring flex="100%"/>
+        <xul:text class="tab-text" inherits="value" crop="right"/>
+        <xul:spring flex="100%"/>
+       </xul:box>
+       <xul:image class="tab-rightedge"/>
+       <xul:spring class="remain-space"/>
+     </content>
+  </binding>
+
+</bindings>
