@@ -6545,19 +6545,29 @@ static double difftime(time_t time1, time_t time0)
 }
 #endif
 
+static int bm_compare_time (time_t time1, time_t time0)
+{
+  double diff = difftime( time1, time0 );
+
+  if (diff > 0.0) return 1;
+  if (diff < 0.0) return -1;
+
+  return 0;
+}
+
 static int bm_compare_addition_date( const void *elem1, const void *elem2 )
 {
     BM_Entry *p1 = *(BM_Entry **)elem1;
     BM_Entry *p2 = *(BM_Entry **)elem2;
     
-    return difftime( p2->addition_date, p1->addition_date ) >= 0 ? 1 : -1;
+    return bm_compare_time( p2->addition_date, p1->addition_date );
 }
 static int bm_compare_addition_date_Asc( const void *elem1, const void *elem2 )
 {
     BM_Entry *p2 = *(BM_Entry **)elem1;
     BM_Entry *p1 = *(BM_Entry **)elem2;
     
-    return difftime( p2->addition_date, p1->addition_date ) >= 0 ? 1 : -1;
+    return bm_compare_time( p2->addition_date, p1->addition_date );
 }
 
 static int bm_compare_natural( const void *elem1, const void *elem2 )
@@ -6585,7 +6595,7 @@ static int bm_compare_last_visit( const void *elem1, const void *elem2 )
         return 1;
     }
     
-    return difftime( p2->d.url.last_visit, p1->d.url.last_visit ) >= 0 ? 1 : -1;
+    return bm_compare_time( p2->d.url.last_visit, p1->d.url.last_visit );
 }
 static int bm_compare_last_visit_Asc( const void *elem1, const void *elem2 )
 {
@@ -6604,7 +6614,7 @@ static int bm_compare_last_visit_Asc( const void *elem1, const void *elem2 )
         return 1;
     }
     
-    return difftime( p2->d.url.last_visit, p1->d.url.last_visit ) >= 0 ? 1 : -1;
+    return bm_compare_time( p2->d.url.last_visit, p1->d.url.last_visit );
 }
 
 static void
