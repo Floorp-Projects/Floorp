@@ -122,7 +122,7 @@ static void DumpAddressMap()
     malloc_map_entry mme;
     link_map* map = _r_debug.r_map;
     while (NULL != map) {
-      if (0 != map->l_addr) {
+      if (map->l_name) {
 	mme.nameLen = strlen(map->l_name);
 	mme.address = map->l_addr;
 	write(mfd, &mme, sizeof(mme));
