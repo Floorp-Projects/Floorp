@@ -1453,11 +1453,6 @@ static PRInt32 pt_Read(PRFileDesc *fd, void *buf, PRInt32 amount)
     return bytes;
 }  /* pt_Read */
 
-static PRInt32 pt_SocketRead(PRFileDesc *fd, void *buf, PRInt32 amount)
-{
-    return pt_Recv(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
-}  /* pt_SocketRead */
-
 static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
 {
     PRInt32 syserrno, bytes = -1;
@@ -1499,11 +1494,6 @@ static PRInt32 pt_Write(PRFileDesc *fd, const void *buf, PRInt32 amount)
         pt_MapError(_PR_MD_MAP_WRITE_ERROR, syserrno);
     return bytes;
 }  /* pt_Write */
-
-static PRInt32 pt_SocketWrite(PRFileDesc *fd, const void *buf, PRInt32 amount)
-{
-    return pt_Send(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
-}  /* pt_SocketWrite */
 
 static PRInt32 pt_Writev(
     PRFileDesc *fd, const PRIOVec *iov, PRInt32 iov_len, PRIntervalTime timeout)
@@ -1946,6 +1936,11 @@ static PRInt32 pt_Recv(
     return bytes;
 }  /* pt_Recv */
 
+static PRInt32 pt_SocketRead(PRFileDesc *fd, void *buf, PRInt32 amount)
+{
+    return pt_Recv(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
+}  /* pt_SocketRead */
+
 static PRInt32 pt_Send(
     PRFileDesc *fd, const void *buf, PRInt32 amount,
     PRIntn flags, PRIntervalTime timeout)
@@ -2025,6 +2020,11 @@ static PRInt32 pt_Send(
         pt_MapError(_PR_MD_MAP_SEND_ERROR, syserrno);
     return bytes;
 }  /* pt_Send */
+
+static PRInt32 pt_SocketWrite(PRFileDesc *fd, const void *buf, PRInt32 amount)
+{
+    return pt_Send(fd, buf, amount, 0, PR_INTERVAL_NO_TIMEOUT);
+}  /* pt_SocketWrite */
 
 static PRInt32 pt_SendTo(
     PRFileDesc *fd, const void *buf,
