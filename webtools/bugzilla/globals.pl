@@ -550,7 +550,7 @@ sub DBID_to_real_or_loginname {
     my ($id) = (@_);
     SendSQL("SELECT login_name,realname FROM profiles WHERE userid = $id");
     my ($l, $r) = FetchSQLData();
-    if ($r eq "") {
+    if (!defined $r || $r eq "") {
         return $l;
     } else {
         return "$l ($r)";
@@ -562,7 +562,7 @@ sub DBID_to_name {
     if (!defined $::cachedNameArray{$id}) {
         SendSQL("select login_name from profiles where userid = $id");
         my $r = FetchOneColumn();
-        if ($r eq "") {
+        if (!defined $r || $r eq "") {
             $r = "__UNKNOWN__";
         }
         $::cachedNameArray{$id} = $r;
