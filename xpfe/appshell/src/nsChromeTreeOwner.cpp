@@ -317,27 +317,22 @@ NS_IMETHODIMP nsChromeTreeOwner::SetTitle(const PRUnichar* aTitle)
 // nsChromeTreeOwner::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP nsChromeTreeOwner::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+NS_IMETHODIMP
+nsChromeTreeOwner::OnProgressChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    PRInt32 aCurSelfProgress,
+                                    PRInt32 aMaxSelfProgress, 
+                                    PRInt32 aCurTotalProgress,
+                                    PRInt32 aMaxTotalProgress)
 {
    return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeTreeOwner::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurChildProgress, PRInt32 aMaxChildProgress)
-{
-   return NS_OK;   
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsChromeTreeOwner::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
+NS_IMETHODIMP
+nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
+                                 nsIRequest* aRequest,
+                                 PRInt32 aProgressStateFlags,
+                                 nsresult aStatus)
 {
    return NS_OK;
 }

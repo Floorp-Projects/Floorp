@@ -53,7 +53,7 @@ struct _GtkMozEmbedClass
   void (* location)     (GtkMozEmbed *embed);
   void (* title)        (GtkMozEmbed *embed);
   void (* progress)     (GtkMozEmbed *embed, gint maxprogress, gint curprogress);
-  void (* net_status)   (GtkMozEmbed *embed, gint status);
+  void (* net_state)    (GtkMozEmbed *embed, gint state, guint status);
   void (* net_start)    (GtkMozEmbed *embed);
   void (* net_stop)     (GtkMozEmbed *embed);
   void (* new_window)   (GtkMozEmbed *embed, GtkMozEmbed **newEmbed, guint chromemask);
@@ -86,22 +86,25 @@ extern void         gtk_moz_embed_reload           (GtkMozEmbed *embed, gint32 f
 extern void         gtk_moz_embed_set_chrome_mask  (GtkMozEmbed *embed, guint32 flags);
 extern guint32      gtk_moz_embed_get_chrome_mask  (GtkMozEmbed *embed);
 
-/* These are straight out of nsIWebProgress.h */
+/* These are straight out of nsIWebProgressListener.h */
 
-enum { GTK_MOZ_EMBED_FLAG_NET_START = 1,
-       GTK_MOZ_EMBED_FLAG_NET_STOP = 2,
-       GTK_MOZ_EMBED_FLAG_NET_DNS = 4,
-       GTK_MOZ_EMBED_FLAG_NET_CONNECTING = 8,
-       GTK_MOZ_EMBED_FLAG_NET_REDIRECTING = 16,
-       GTK_MOZ_EMBED_FLAG_NET_NEGOTIATING = 32,
-       GTK_MOZ_EMBED_FLAG_NET_TRANSFERRING = 64,
-       GTK_MOZ_EMBED_FLAG_NET_FAILEDDNS = 4096,
-       GTK_MOZ_EMBED_FLAG_NET_FAILEDCONNECT = 8192,
-       GTK_MOZ_EMBED_FLAG_NET_FAILEDTRANSFER = 16384,
-       GTK_MOZ_EMBED_FLAG_NET_FAILEDTIMEOUT = 32768,
-       GTK_MOZ_EMBED_FLAG_NET_USERCANCELLED = 65536,
-       GTK_MOZ_EMBED_FLAG_WIN_START = 1048576,
-       GTK_MOZ_EMBED_FLAG_WIN_STOP = 2097152 };
+enum { GTK_MOZ_EMBED_FLAG_START = 1,
+       GTK_MOZ_EMBED_FLAG_REDIRECTING = 2,
+       GTK_MOZ_EMBED_FLAG_TRANSFERRING = 4,
+       GTK_MOZ_EMBED_FLAG_NEGOTIATING = 8,
+       GTK_MOZ_EMBED_FLAG_STOP = 16,
+
+       GTK_MOZ_EMBED_FLAG_IS_REQUEST = 65536,
+       GTK_MOZ_EMBED_FLAG_IS_DOCUMENT = 131072,
+       GTK_MOZ_EMBED_FLAG_IS_NETWORK = 262144,
+       GTK_MOZ_EMBED_FLAG_IS_WINDOW = 524288 };
+
+/* These are from various networking headers */
+
+enum { GTK_MOZ_EMBED_STATUS_FAILED_DNS     = 268454686,        /* NS_ERROR_UNKNOWN_HOST */
+       GTK_MOZ_EMBED_STATUS_FAILED_CONNECT = 268454669,        /* NS_ERROR_CONNECTION_REFUSED */
+       GTK_MOZ_EMBED_STATUS_FAILED_TIMEOUT = 268454670,        /* NS_ERROR_NET_TIMEOUT */
+       GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED = 268454658 }; /* NS_BINDING_ABORTED */
 
 /* These are straight out of nsIWebNavigation.h */
 

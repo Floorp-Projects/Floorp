@@ -170,32 +170,27 @@ NS_IMETHODIMP CWebBrowserChrome::ShowAsModal(void)
 // CWebBrowserChrome::nsIWebProgressListener
 //*****************************************************************************   
 
-NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+NS_IMETHODIMP CWebBrowserChrome::OnProgressChange(nsIWebProgress *progress, nsIRequest *request,
+                                                  PRInt32 curSelfProgress, PRInt32 maxSelfProgress,
+                                                  PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::OnChildProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 curTotalProgress)
-{
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
+NS_IMETHODIMP CWebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIRequest *request,
+                                               PRInt32 progressStateFlags nsresult status)
 {
 	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
 	
-	if (progressStatusFlags & nsIWebProgress::flag_net_start)
-      mBrowserWindow->OnStatusNetStart(channel);
-	else if (progressStatusFlags & nsIWebProgress::flag_net_stop)
-	   mBrowserWindow->OnStatusNetStop(channel);
-	else if (progressStatusFlags & nsIWebProgress::flag_net_dns)
-      mBrowserWindow->OnStatusDNS(channel);
+    if (progressStateFlags & flag_is_network) {
+      if (progressStateFlags & flag_start)
+        mBrowserWindow->OnStatusNetStart(channel);
+      else if (progressStateFlags & flag_stop)
+        mBrowserWindow->OnStatusNetStop(channel);
+    }
+///	else if (progressStatusFlags & nsIWebProgress::flag_net_dns)
+///      mBrowserWindow->OnStatusDNS(channel);
 
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
    return NS_OK;
 }
 

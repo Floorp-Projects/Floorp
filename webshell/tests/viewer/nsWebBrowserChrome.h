@@ -59,13 +59,13 @@ protected:
    nsBrowserWindow* BrowserWindow();
 
    // Status Change Handling
-   void OnLoadStart(nsIChannel* aChannel);
-   void OnLoadFinished(nsIChannel* aChannel, PRInt32 aProgressStatusFlags);
+   void OnLoadStart(nsIRequest* aRequest);
+   void OnLoadFinished(nsIRequest* aRequest, PRInt32 aProgressStatusFlags);
    void OnStatusDNS(nsIChannel* aChannel);
    void OnStatusConnecting(nsIChannel* aChannel);
    void OnStatusRedirecting(nsIChannel* aChannel);
    void OnStatusNegotiating(nsIChannel* aChannel);
-   void OnStatusTransferring(nsIChannel* aChannel);
+   void OnStatusTransferring(nsIRequest* aRequest);
    void OnWindowActivityStart();
    void OnWindowActivityFinished();
 
@@ -74,6 +74,9 @@ protected:
 
    PRBool            mTimerSet;
    MOZ_TIMER_DECLARE(mTotalTime)
+
+   PRInt32 mActiveDocuments;
+   PRInt32 mCurrent, mTotal, mProgress, mMaxProgress;
 };
 
 #endif /* nsWebBrowserChrome_h__ */

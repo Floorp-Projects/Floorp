@@ -40,7 +40,7 @@ typedef void     (GtkMozEmbedLocationCB)        (void *aData);
 typedef void     (GtkMozEmbedTitleCB)           (void *aData);
 typedef void     (GtkMozEmbedProgressCB)        (void *aData, PRInt32 aProgressTotal,
 						 PRInt32 aProgressCurrent);
-typedef void     (GtkMozEmbedNetCB)             (void *aData, PRInt32 aFlags);
+typedef void     (GtkMozEmbedNetCB)             (void *aData, PRInt32 aFlags, nsresult aStatus);
 typedef PRBool   (GtkMozEmbedStartOpenCB)       (const char *aURI, void *aData);
 
 class nsIGtkEmbed : public nsISupports

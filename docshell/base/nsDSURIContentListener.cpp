@@ -92,7 +92,7 @@ NS_IMETHODIMP nsDSURIContentListener::DoContent(const char* aContentType,
    aOpenedChannel->GetLoadAttributes(&loadAttribs);
 
    if(loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
-      mDocShell->StopCurrentLoads();
+      mDocShell->StopLoad();
 
    mDocShell->OnLoadingSite(aOpenedChannel);
 

@@ -43,7 +43,7 @@ CPP_OBJS=											\
 		.\$(OBJDIR)\nsDocShell.obj			\
 		.\$(OBJDIR)\nsDocShellLoadInfo.obj	\
 		.\$(OBJDIR)\nsDSURIContentListener.obj	\
-		.\$(OBJDIR)\nsDSWebProgressListener.obj	\
+#		.\$(OBJDIR)\nsDSWebProgressListener.obj	\
 		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

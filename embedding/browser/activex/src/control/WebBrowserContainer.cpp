@@ -154,8 +154,8 @@ NS_IMETHODIMP CWebBrowserContainer::UniversalDialog(const PRUnichar *inTitleMess
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
-/* void onProgressChange (in nsIChannel channel, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
-NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIChannel *channel, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
+/* void onProgressChange (in nsIWebProgress aProgress, in nsIRequest aRequest, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
+NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress)
 {
 	NG_TRACE(_T("CWebBrowserContainer::OnProgressChange(...)\n"));
 	
@@ -181,81 +181,73 @@ NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIChannel *channel, PRInt3
 }
 
 
-/* void onChildProgressChange (in nsIChannel channel, in long curChildProgress, in long maxChildProgress); */
-NS_IMETHODIMP CWebBrowserContainer::OnChildProgressChange(nsIChannel *channel, PRInt32 curChildProgress, PRInt32 maxChildProgress)
+
+
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest request, in long progressStateFlags, in unsinged long aStatus); */
+NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
+	NG_TRACE(_T("CWebBrowserContainer::OnStateChange(...)\n"));
 
+    if (progressStateFlags & flag_is_network)
+    {
 
-/* void onStatusChange (in nsIChannel channel, in long progressStatusFlags); */
-NS_IMETHODIMP CWebBrowserContainer::OnStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-	NG_TRACE(_T("CWebBrowserContainer::OnStatusChange(...)\n"));
+    	if (progressStateFlags &  flag_start)
+	    {
+    		// TODO 
+    	}
 
-	if (progressStatusFlags & nsIWebProgress::flag_net_start)
-	{
-		// TODO 
-	}
+    	if (progressStateFlags & flag_stop)
+    	{
+	    	nsXPIDLCString aURI;
+		    if (m_pCurrentURI)
+    		{
+    			m_pCurrentURI->GetSpec(getter_Copies(aURI));
+    		}
 
-	if (progressStatusFlags & nsIWebProgress::flag_net_stop)
-	{
-		nsXPIDLCString aURI;
-		if (m_pCurrentURI)
-		{
-			m_pCurrentURI->GetSpec(getter_Copies(aURI));
-		}
+    		// Fire a NavigateComplete event
+    		USES_CONVERSION;
+    		BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
+    		m_pEvents1->Fire_NavigateComplete(bstrURI);
 
-		// Fire a NavigateComplete event
-		USES_CONVERSION;
-		BSTR bstrURI = SysAllocString(A2OLE((const char *) aURI));
-		m_pEvents1->Fire_NavigateComplete(bstrURI);
+    		// Fire a NavigateComplete2 event
+    		CComVariant vURI(bstrURI);
+    		m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURI);
 
-		// Fire a NavigateComplete2 event
-		CComVariant vURI(bstrURI);
-		m_pEvents2->Fire_NavigateComplete2(m_pOwner, &vURI);
+    		// Cleanup
+    		SysFreeString(bstrURI);
 
-		// Cleanup
-		SysFreeString(bstrURI);
+    		nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
 
-		nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(m_pOwner->mWebBrowser));
+    		// Fire the new NavigateForward state
+    		VARIANT_BOOL bEnableForward = VARIANT_FALSE;
+    		PRBool aCanGoForward = PR_FALSE;
+    		webNav->GetCanGoForward(&aCanGoForward);
+    		if (aCanGoForward == PR_TRUE)
+    		{
+    			bEnableForward = VARIANT_TRUE;
+    		}
+    		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
 
-		// Fire the new NavigateForward state
-		VARIANT_BOOL bEnableForward = VARIANT_FALSE;
-		PRBool aCanGoForward = PR_FALSE;
-		webNav->GetCanGoForward(&aCanGoForward);
-		if (aCanGoForward == PR_TRUE)
-		{
-			bEnableForward = VARIANT_TRUE;
-		}
-		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEFORWARD, bEnableForward);
+    		// Fire the new NavigateBack state
+    		VARIANT_BOOL bEnableBack = VARIANT_FALSE;
+    		PRBool aCanGoBack = PR_FALSE;
+    		webNav->GetCanGoBack(&aCanGoBack);
+    		if (aCanGoBack == PR_TRUE)
+    		{
+    			bEnableBack = VARIANT_TRUE;
+    		}
+    		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
 
-		// Fire the new NavigateBack state
-		VARIANT_BOOL bEnableBack = VARIANT_FALSE;
-		PRBool aCanGoBack = PR_FALSE;
-		webNav->GetCanGoBack(&aCanGoBack);
-		if (aCanGoBack == PR_TRUE)
-		{
-			bEnableBack = VARIANT_TRUE;
-		}
-		m_pEvents2->Fire_CommandStateChange(CSC_NAVIGATEBACK, bEnableBack);
+    		m_pOwner->mBusyFlag = FALSE;
 
-		m_pOwner->mBusyFlag = FALSE;
-
-		if (m_pCurrentURI)
-		{
-			NS_RELEASE(m_pCurrentURI);
-		}
-	}
+    		if (m_pCurrentURI)
+    		{
+    			NS_RELEASE(m_pCurrentURI);
+    		}
+    	}
+    }
 
     return NS_OK;
-}
-
-
-/* void onChildStatusChange (in nsIChannel channel, in long progressStatusFlags); */
-NS_IMETHODIMP CWebBrowserContainer::OnChildStatusChange(nsIChannel *channel, PRInt32 progressStatusFlags)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

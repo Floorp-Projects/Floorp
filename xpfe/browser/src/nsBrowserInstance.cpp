@@ -941,7 +941,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
     mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
     docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
 
-  nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(docShell));
+  nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
   webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
   nsCOMPtr<nsISHistory> sessionHistory(do_CreateInstance(NS_SHISTORY_PROGID));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
@@ -1633,35 +1633,44 @@ nsBrowserInstance::SetLoadCookie(nsISupports * aLoadCookie)
 // nsBrowserInstance::nsIWebProgressListener
 //*****************************************************************************
 
-NS_IMETHODIMP nsBrowserInstance::OnProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
-   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+NS_IMETHODIMP
+nsBrowserInstance::OnProgressChange(nsIWebProgress* aWebProgress,
+                                    nsIRequest* aRequest,
+                                    PRInt32 aCurSelfProgress,
+                                    PRInt32 aMaxSelfProgress, 
+                                    PRInt32 aCurTotalProgress,
+                                    PRInt32 aMaxTotalProgress)
 {
-   EnsureXULBrowserWindow();
-   if(mXULBrowserWindow)
-      mXULBrowserWindow->OnProgress(aChannel, aCurTotalProgress, aMaxTotalProgress);
-   return NS_OK;
+  EnsureXULBrowserWindow();
+  if(mXULBrowserWindow) {
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
+
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mXULBrowserWindow->OnProgress(channel, aCurTotalProgress, aMaxTotalProgress);
+    }
+  }
+  return NS_OK;
 }
       
-NS_IMETHODIMP nsBrowserInstance::OnChildProgressChange(nsIChannel* aChannel,
-   PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress)
+NS_IMETHODIMP
+nsBrowserInstance::OnStateChange(nsIWebProgress* aWebProgress,
+                                 nsIRequest* aRequest,
+                                 PRInt32 aProgressStateFlags,
+                                 nsresult aStatus)
 {
-   return NS_OK;
-}
+  EnsureXULBrowserWindow();
+  if(mXULBrowserWindow) {
+    nsresult rv;
+    nsCOMPtr<nsIChannel> channel;
 
-NS_IMETHODIMP nsBrowserInstance::OnStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   EnsureXULBrowserWindow();
-   if(mXULBrowserWindow)
-      mXULBrowserWindow->OnStatusChange(aChannel, aProgressStatusFlags);
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsBrowserInstance::OnChildStatusChange(nsIChannel* aChannel,
-   PRInt32 aProgressStatusFlags)
-{
-   return NS_OK;
+    channel = do_QueryInterface(aRequest, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      mXULBrowserWindow->OnStatusChange(channel, aProgressStateFlags);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBrowserInstance::OnLocationChange(nsIURI* aLocation)
