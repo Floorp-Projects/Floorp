@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.77 $ ';
+$::UtilsVersion = '$Revision: 1.78 $ ';
 
 package TinderUtils;
 
@@ -917,7 +917,7 @@ sub run_all_tests {
 		  print_log "phonehome = 1\n";
 		  send_startup_results_to_server($avg_startuptime,
 										$times_string, 
-										"coffee");
+										::hostname());
 		}
 
 	  }
