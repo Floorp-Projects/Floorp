@@ -33,7 +33,7 @@
  *
  * shvfy.c - routines to verify signature on a shared library.
  *
- * $Id: shvfy.c,v 1.6 2003/03/01 01:53:11 wtc%netscape.com Exp $
+ * $Id: shvfy.c,v 1.7 2003/03/29 04:29:58 wtc%netscape.com Exp $
  */
 
 #include "shsign.h"
@@ -43,7 +43,7 @@
 #include "seccomon.h"
 #include "stdio.h"
 
-#define DEBUG_SHVERIFY 1
+/* #define DEBUG_SHVERIFY 1 */
 
 static char *
 mkCheckFileName(const char *libName)
