@@ -49,3 +49,11 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
     void OpenURL(in string str);
 };
 
+/* hack to make MsgAppCore visible from AppCore */
+%{ C++
+
+
+extern "C" NS_DOM
+NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype, JSObject * aParentProto);
+ 
+%}
