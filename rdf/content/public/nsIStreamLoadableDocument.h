@@ -1,6 +1,3 @@
-#ifndef nsIStreamLoadableDocument_h___
-#define nsIStreamLoadableDocument_h___
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -20,9 +17,12 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-  // Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
+#ifndef nsIStreamLoadableDocument_h___
+#define nsIStreamLoadableDocument_h___
+
+// Wrapping includes can speed up compiles (see "Large Scale C++ Software Design")
 #ifndef nsISupports_h___
-	#include "nsISupports.h"
+#include "nsISupports.h"
 #endif
 
 class nsIInputStream;
