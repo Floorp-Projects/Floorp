@@ -360,6 +360,10 @@ jsd_IsStackFrameNative(JSDContext* jsdc,
     {
         rv = JS_IsNativeFrame(jsdthreadstate->context, jsdframe->fp);
     }
+    else
+    {
+        rv = JS_FALSE;
+    }
 
     JSD_UNLOCK_THREADSTATES(jsdc);
     return rv;
