@@ -233,6 +233,10 @@ tabcontrol {
 
 /********* XP Scrollbar *********/
 
+scrollbar {
+   behavior: url("resource:/chrome/xulBindings.xml#scrollbar");
+}
+
 thumb {
    display: block;
    user-focus: ignore;

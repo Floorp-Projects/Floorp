@@ -76,6 +76,11 @@ nsGenericXMLElement::CopyInnerTo(nsIContent* aSrcContent,
   if (NS_OK == result) {
     aDst->mNameSpacePrefix = mNameSpacePrefix;
     NS_IF_ADDREF(mNameSpacePrefix);
+
+    aDst->mNameSpace = mNameSpace;
+    NS_IF_ADDREF(mNameSpace);
+
+    aDst->mNameSpaceID = mNameSpaceID;
   }
   return NS_OK;
 }

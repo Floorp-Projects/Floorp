@@ -12,6 +12,7 @@
 #include "nsNetUtil.h"
 #include "plstr.h"
 #include "nsIContent.h"
+#include "nsIDOMElement.h"
 #include "nsIBindableContent.h"
 #include "nsIDocument.h"
 #include "nsIXMLContentSink.h"
@@ -270,7 +271,10 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult)
         content->ChildAt(i, *getter_AddRefs(anonymousChild));
         if (!(*aResult)) 
           NS_NewISupportsArray(aResult); // This call addrefs the array.
-        (*aResult)->AppendElement(anonymousChild);
+
+        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(anonymousChild);
+        if (element) // Don't let the extra text frames get generated.
+          (*aResult)->AppendElement(anonymousChild);
       }
     }
 

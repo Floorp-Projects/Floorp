@@ -23,12 +23,14 @@
 #ifndef nsXMLElement_h___
 #define nsXMLElement_h___
 
+#include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIXMLContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsGenericXMLElement.h"
+#include "nsIBindableContent.h"
 
 class nsIDocument;
 class nsIAtom;
@@ -39,6 +41,7 @@ class nsXMLElement : public nsIDOMElement,
 		     public nsIScriptObjectOwner,
 		     public nsIDOMEventReceiver,
 		     public nsIXMLContent,
+         public nsIBindableContent,
 		     public nsIJSScriptObject
 {
 public:
@@ -196,6 +199,10 @@ public:
     return mInner.SetNameSpaceID(aNameSpaceId);
   }
 
+  // nsIBindableContent
+  NS_IMETHOD SetBinding(nsIXBLBinding* aBinding);
+  NS_IMETHOD GetBinding(nsIXBLBinding** aResult);
+
   // nsIDOMEventReceiver
   NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
 
@@ -229,6 +236,7 @@ protected:
   nsGenericXMLElement mInner;
   PRBool mIsLink;
   PRUint32 mContentID;
+  nsCOMPtr<nsIXBLBinding> mBinding;
 };
 
 #endif // nsXMLElement_h___
