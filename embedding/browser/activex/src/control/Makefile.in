@@ -82,6 +82,7 @@ CPPSRCS = \
 EXTRA_DSO_LDOPTS = \
 	$(DIST)/lib/$(LIB_PREFIX)gkgfx.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)embed_base_s.$(LIB_SUFFIX) \
+	$(MOZ_UNICHARUTIL_LIBS) \
 	$(XPCOM_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)

@@ -333,9 +333,30 @@ endif
 #
 _ALL_META_COMPONENTS=mail crypto
 
-MOZ_META_COMPONENTS_mail = nsMsgBaseModule IMAP_factory nsVCardModule mime_services nsMimeEmitterModule nsMsgNewsModule  nsMsgComposeModule local_mail_services nsAbSyncModule nsImportServiceModule nsTextImportModule nsAbModule nsMsgDBModule
-MOZ_META_COMPONENTS_mail_comps = mailnews msgimap mime mimeemitter msgnews msgcompose localmail absyncsvc import addrbook impText vcard msgdb
-MOZ_META_COMPONENTS_mail_libs = msgbaseutil mimecthglue_s
+MOZ_META_COMPONENTS_mail = nsMsgBaseModule IMAP_factory nsVCardModule mime_services nsMimeEmitterModule nsMsgNewsModule  nsMsgComposeModule local_mail_services nsAbSyncModule nsImportServiceModule nsTextImportModule nsAbModule nsMsgDBModule nsMsgMdnModule nsComm4xMailImportModule
+MOZ_META_COMPONENTS_mail_comps = msgimap mime msgnews import addrbook impText vcard msgdb msgmdn
+MOZ_META_COMPONENTS_mail_libs = mimecthglue_s
+
+ifeq ($(OS_ARCH),WINNT)
+MOZ_META_COMPONENTS_mail += nsEudoraImportModule nsOEImport nsOutlookImport msgMapiModule
+MOZ_META_COMPONENTS_mail_comps += msgbase impEudra importOE impOutlk msgMapi 
+else
+MOZ_META_COMPONENTS_mail_comps += mailnews
+endif
+
+ifdef USE_SHORT_LIBNAME
+MOZ_META_COMPONENTS_mail_comps += emitter msgcompo msglocal absyncsv
+ifeq ($(OS_ARCH),WINNT)
+MOZ_META_COMPONENTS_mail_comps += impComm4xMail
+else
+MOZ_META_COMPONENTS_mail_comps += imp4Mail
+endif
+MOZ_META_COMPONENTS_mail_libs += msgbsutl
+else
+MOZ_META_COMPONENTS_mail_cops += mimeemitter msgcompose localmail absyncsvc impComm4xMail
+MOZ_META_COMPONENTS_mail_libs += msgbaseutil
+endif
+
 ifdef MOZ_PSM
 MOZ_META_COMPONENTS_mail += nsMsgSMIMEModule
 MOZ_META_COMPONENTS_mail_comps += msgsmime

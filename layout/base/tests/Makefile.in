@@ -45,6 +45,7 @@ EXTRA_DSO_LIBS	= gkbase_s gkgfx
 LIBS		+= \
 		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
+		$(MOZ_UNICHARUTIL_LIBS) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(TK_LIBS) \
