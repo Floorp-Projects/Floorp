@@ -101,6 +101,8 @@ nsWidget::nsWidget() : nsBaseWidget()
   mIsToplevel = PR_FALSE;
   mIsMapped = PR_FALSE;
   mVisibility = VisibilityFullyObscured; // this is an X constant.
+  mWindowType = eWindowType_child;
+  mBorderStyle = eBorderStyle_default;
 }
 
 nsWidget::~nsWidget()
@@ -172,6 +174,7 @@ nsWidget::StandardWidgetCreate(nsIWidget *aParent,
   // set up the BaseWidget parts.
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
              aAppShell, aToolkit, aInitData);
+
   // check to see if the parent is there...
   if (nsnull != aParent) {
     parent = ((aParent) ? (Window)aParent->GetNativeData(NS_NATIVE_WINDOW) : nsnull);
@@ -230,10 +233,8 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::Move(x, y)\n"));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
-  mBounds.x = aX;
-  mBounds.y = aY;
   if (mParentWidget) {
-    ((nsWidget*)mParentWidget)->WidgetMove(this);
+    ((nsWidget*)mParentWidget)->WidgetMove(this, aX, aY);
   } else {
     XMoveWindow(mDisplay, mBaseWindow, aX, aY);
   }
@@ -293,12 +294,10 @@ NS_IMETHODIMP nsWidget::Resize(PRInt32 aX,
          ("Resizing window 0x%lx to %d, %d\n", mBaseWindow, aWidth, aHeight));
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, 
          ("Moving window 0x%lx to %d, %d\n", mBaseWindow, aX, aY));
-  mBounds.x = aX;
-  mBounds.y = aY;
   mBounds.width = aWidth;
   mBounds.height = aHeight;
   if (mParentWidget) {
-    ((nsWidget *)mParentWidget)->WidgetMoveResize(this);
+    ((nsWidget *)mParentWidget)->WidgetMoveResize(this, aX, aY);
   } else {
     XMoveResizeWindow(mDisplay, mBaseWindow, aX, aY, aWidth, aHeight);
   }
@@ -576,6 +575,17 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
     }
   }
   return NS_OK;
+}
+
+NS_IMETHODIMP nsWidget::PreCreateWidget(nsWidgetInitData *aInitData)
+{
+  if (nsnull != aInitData) {
+    SetWindowType(aInitData->mWindowType);
+    SetBorderStyle(aInitData->mBorderStyle);
+    
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
 }
 
 nsIWidget *nsWidget::GetParent(void)
@@ -952,14 +962,13 @@ void nsWidget::WidgetPut(nsWidget *aWidget)
   
 }
 
-void nsWidget::WidgetMove(nsWidget *aWidget)
+void nsWidget::WidgetMove(nsWidget *aWidget, PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetMove()\n"));
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Widget is visible...\n"));
     XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                aWidget->mBounds.x,
-                aWidget->mBounds.y);
+                aX, aY);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
@@ -993,7 +1002,7 @@ void nsWidget::WidgetResize(nsWidget *aWidget)
   }
 }
 
-void nsWidget::WidgetMoveResize(nsWidget *aWidget)
+void nsWidget::WidgetMoveResize(nsWidget *aWidget, PRInt32 aX, PRInt32 aY)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetMoveResize()\n"));
   if (PR_TRUE == WidgetVisible(aWidget->mBounds)) {
@@ -1002,8 +1011,7 @@ void nsWidget::WidgetMoveResize(nsWidget *aWidget)
                   aWidget->mBaseWindow,
                   aWidget->mBounds.width, aWidget->mBounds.height);
     XMoveWindow(aWidget->mDisplay, aWidget->mBaseWindow,
-                aWidget->mBounds.x,
-                aWidget->mBounds.y);
+                aX, aY);
     if (aWidget->mIsShown == PR_TRUE) {
       PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("Mapping window 0x%lx...\n", aWidget->mBaseWindow));
       aWidget->Map();
