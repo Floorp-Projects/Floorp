@@ -65,7 +65,7 @@ public:
 	nsIImageGroup* GetImageGroup() const { NS_ADDREF(mImageGroup); return mImageGroup; }
 
 protected:
-	void AddNodesToArray(nsIContent* pContent); 
+	void AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel); 
 		// This recursive function is called to add nodes to the visibility array.
 
 	enum { cDMImageLoaded = 0 } ;

@@ -80,15 +80,21 @@ void nsHTDataModel::SetContentRootDelegate(nsIContent* pContent)
 
 	// Reconstruct our visibility list (so that all items that are visible 
 	// are instantiated).  Need to only look for folder and item children.  All other children should be ignored.
-	AddNodesToArray(mContentRoot);
+	AddNodesToArray(mContentRoot, 0);
 }
 
-void nsHTDataModel::AddNodesToArray(nsIContent* pContent)
+void nsHTDataModel::AddNodesToArray(nsIContent* pContent, PRUint32 indentLevel)
 {
 	// Add this child to the array (unless it is the root node).
 	nsHierarchicalDataItem* pDataItem = CreateDataItemWithContentNode(pContent);
 	if (pContent != mContentRoot)
+	{
+		// Add to our array
 		mVisibleItemArray.AppendElement(pDataItem);
+		// Set the correct indent level for the item.
+		pDataItem->SetIndentationLevel(indentLevel);
+		indentLevel++;
+	}
 	else mRootNode = pDataItem;
 
 	nsHTItem* pItem = (nsHTItem*)(pDataItem->GetImplData());
@@ -110,7 +116,7 @@ void nsHTDataModel::AddNodesToArray(nsIContent* pContent)
 				pContent->ChildAt(i, child);
 				if (child)
 				{
-					AddNodesToArray(child);
+					AddNodesToArray(child, indentLevel);
 				}
 
 				NS_IF_RELEASE(child);

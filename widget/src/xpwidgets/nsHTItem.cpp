@@ -26,6 +26,7 @@ nsHTItem::nsHTItem(nsIContent* pContent, nsHierarchicalDataModel* pDataModel)
 	NS_ADDREF(pContent);
     mContentNode = pContent;
 	mDataModel = pDataModel;
+	mIndentationLevel = 0;
 }
 
 //--------------------------------------------------------------------
@@ -41,7 +42,12 @@ PRBool nsHTItem::IsExpandedDelegate() const
 
 PRUint32 nsHTItem::GetIndentationLevelDelegate() const
 {
-	return 0;
+	return mIndentationLevel;
+}
+
+void nsHTItem::SetIndentationLevelDelegate(PRUint32 n)
+{
+	mIndentationLevel = n;
 }
 
 nsIContent* nsHTItem::FindChildWithName(const nsString& name) const
