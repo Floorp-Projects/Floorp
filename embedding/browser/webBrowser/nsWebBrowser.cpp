@@ -32,6 +32,7 @@
 #include "nsIDeviceContext.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMWindow.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIWebShell.h"
@@ -45,8 +46,8 @@ static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
 //*****************************************************************************
 
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
-   mContentListener(nsnull), mInitInfo(nsnull), mParentNativeWindow(nsnull),
-   mParentWidget(nsnull), mParent(nsnull), mContentType(typeContentWrapper)
+   mContentListener(nsnull), mInitInfo(nsnull), mContentType(typeContentWrapper),
+   mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull)
 {
     NS_INIT_REFCNT();
    mInitInfo = new nsWebBrowserInitInfo();
@@ -180,6 +181,18 @@ NS_IMETHODIMP nsWebBrowser::SetParentURIContentListener(nsIURIContentListener*
    NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
 
    return mContentListener->SetParentContentListener(aParentContentListener);
+}
+
+NS_IMETHODIMP nsWebBrowser::GetContentDOMWindow(nsIDOMWindow **_retval)
+{
+    NS_ENSURE_STATE(mDocShell);
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIDOMWindow> retval = do_GetInterface(mDocShell, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    *_retval = retval;
+    NS_ADDREF(*_retval);
+    return rv;
 }
 
 //*****************************************************************************
