@@ -107,7 +107,7 @@ function HandleDeleteOrMoveMsgCompleted(folder)
 	if((folderUri == gCurrentFolderUri) && gCurrentMessageIsDeleted)
 	{
     gCurrentMessageIsDeleted = false;
-    if (gNextMessageViewIndexAfterDelete != nsMsgViewIndex_None) 
+    if (gNextMessageViewIndexAfterDelete != nsMsgKey_None) 
     {
       var nextMstKey = gDBView.getKeyAt(gNextMessageViewIndexAfterDelete);
       if (nextMstKey != nsMsgKey_None) {

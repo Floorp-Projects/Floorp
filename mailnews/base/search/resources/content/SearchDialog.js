@@ -52,8 +52,6 @@ var gSearchStopButton;
 var gSearchSessionFolderListener;
 var gMailSession;
 
-const nsMsgViewIndex_None = 0xFFFFFFFF;
-
 // Controller object for search results thread pane
 var nsSearchResultsController =
 {
@@ -95,7 +93,7 @@ var nsSearchResultsController =
     {
         switch(command) {
         case "cmd_open":
-            MsgOpenSelectedMessages(gSearchView);
+            MsgOpenSelectedMessages();
             return true;
 
         case "button_delete":
