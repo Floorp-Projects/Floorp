@@ -1265,6 +1265,7 @@ foreach my $id (@idlist) {
     if ($::FORM{'comment'} || $::FORM{'work_time'}) {
         if ($::FORM{'work_time'} && 
             (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/)) {
+            SendSQL("UNLOCK TABLES");
             ThrowUserError('comment_required');
         } else {
             AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
