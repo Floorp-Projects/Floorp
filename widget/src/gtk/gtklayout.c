@@ -7,6 +7,8 @@
  * The coding style should be that of the the GTK core.
  */
 
+#ifndef GTK_HAVE_FEATURES_1_1_6
+
 #include "gtklayout.h"
 #include <gtk/gtksignal.h>
 #include <gdk/gdkx.h>
@@ -1137,3 +1139,6 @@ gtk_layout_gravity_works (void)
   
   return  (y == -20);
 }
+
+#endif
+/* end #ifndef GTK_HAVE_FEATURES_1_1_6 */

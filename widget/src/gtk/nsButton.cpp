@@ -17,7 +17,6 @@
  */
 
 #include <gtk/gtk.h>
-#include "gtklayout.h"
 
 #include "nsButton.h"
 #include "nsToolkit.h"
