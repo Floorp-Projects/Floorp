@@ -1201,7 +1201,7 @@ out:
         PR_Close(fd);
     
     if (registry)
-        delete registry;
+        delete [] registry;
 
      return rv;
 }
