@@ -24,6 +24,7 @@
  * This file implements HTTP access authorization
  * and HTTP cookies
  */
+#define alphabetize 1
 #include "rosetta.h"
 #include "xp.h"
 #include "netutils.h"
@@ -1472,6 +1473,11 @@ net_CheckForCookiePermission(char * hostname) {
     XP_List * list_ptr;
     net_CookiePermissionStruct * cookie_s;
 
+    /* ignore leading period in host name */
+    while (hostname && (*hostname == '.')) {
+	hostname++;
+    }
+
     net_lock_cookie_permission_list();
     list_ptr = net_cookie_permission_list;
     while((cookie_s = (net_CookiePermissionStruct *) XP_ListNextObject(list_ptr))!=0) {
@@ -1672,6 +1678,11 @@ net_AddCookiePermission
     if (cookie_permission) {
 	XP_List * list_ptr = net_cookie_permission_list;
 
+	/* ignore leading periods in host name */
+        while (host_from_header && (*host_from_header == '.')) {
+	    host_from_header++;
+	}
+
 	StrAllocCopy(host_from_header2, host_from_header);
 	cookie_permission->host = host_from_header2;
 	cookie_permission->permission = userHasAccepted;
@@ -1680,6 +1691,7 @@ net_AddCookiePermission
 	    net_cookie_permission_list = XP_ListNew();
 	    if(!net_cookie_permission_list) {
 		PR_Free(cookie_permission->host);
+		PR_Free(cookie_permission);
 		return;
 	    }
 	}
@@ -1707,7 +1719,7 @@ net_AddCookiePermission
 	    }
 	}
 #else
-	/* add it to the list in alphabetical order */
+	/* add it to the end of the list */
 	XP_ListAddObjectToEnd (net_cookie_permission_list, cookie_permission);
 #endif
 
@@ -1716,8 +1728,6 @@ net_AddCookiePermission
 	    net_SaveCookiePermissions(NULL);
 	}
 
-   /* 	RDF_AddCookiePermissionResource (
-   	    cookie_permission->host, cookie_permission->permission); */
     }
 }
 #endif
@@ -3666,14 +3676,67 @@ net_AboutCookiesDialogDone(XPDialogState* state, char** argv, int argc,
     return PR_FALSE;
 }
 
+PRIVATE BOOL
+CookieCompare (net_CookieStruct * cookie1, net_CookieStruct * cookie2) {
+    char * host1 = cookie1->host;
+    char * host2 = cookie2->host;
+
+    /* get rid of leading period on host name, if any */
+    if (*host1 == '.') {
+	host1++;
+    }
+    if (*host2 == '.') {
+	host2++;
+    }
+
+    /* make decision based on host name if they are unequal */
+    if (PL_strcmp (host1, host2) < 0) {
+	return -1;
+    }
+    if (PL_strcmp (host1, host2) > 0) {
+	return 1;
+    }
+
+    /* if host names are equal, make decision based on cookie name */
+    return (PL_strcmp (cookie1->name, cookie2->name));
+}
+
+/*
+ * find the next cookie that is alphabetically after the specified cookie
+ *    ordering is based on hostname and the cookie name
+ *    if specified cookie is NULL, find the first cookie alphabetically
+ */
+PRIVATE net_CookieStruct *
+NextCookieAfter(net_CookieStruct * cookie, int * cookieNum) {
+    XP_List *cookie_list=net_cookie_list;
+    net_CookieStruct *cookie_ptr;
+    net_CookieStruct *lowestCookie = NULL;
+    int localCookieNum = 0;
+    int lowestCookieNum;
+
+    while ( (cookie_ptr=(net_CookieStruct *) XP_ListNextObject(cookie_list)) ) {
+	if (!cookie || (CookieCompare(cookie_ptr, cookie) > 0)) {
+	    if (!lowestCookie ||
+		    (CookieCompare(cookie_ptr, lowestCookie) < 0)) {
+		lowestCookie = cookie_ptr;
+		lowestCookieNum = localCookieNum;
+	    }
+	}
+	localCookieNum++;
+    }
+
+    *cookieNum = lowestCookieNum;
+    return lowestCookie;
+}
+
 PUBLIC void
 NET_DisplayCookieInfoAsHTML(MWContext *context)
 {
     char *buffer = (char*)PR_Malloc(BUFLEN);
     char *buffer2 = 0;
     int g = 0, numOfCookies, cookieNum;
-    XP_List *cookie_list=net_cookie_list;
-    XP_List *cookie_permission_list=net_cookie_permission_list;
+    XP_List *cookie_list;
+    XP_List *cookie_permission_list;
     net_CookieStruct *cookie;
     net_CookiePermissionStruct *cookperm;
 
@@ -3694,8 +3757,8 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "function DeleteCookieSelected() {\n"
 "  selname = document.theform.selname;\n"
 "  goneC = document.theform.goneC;\n"
-"  var p;\n"
 "  var i;\n"
+"  var j;\n"
 "  for (i=selname.options.length; i>0; i--) {\n"
 "    if (selname.options[i-1].selected) {\n"
 "      selname.options[i-1].selected = 0;\n"
@@ -3713,8 +3776,8 @@ NET_DisplayCookieInfoAsHTML(MWContext *context)
 "function DeleteCookiePermissionSelected() {\n"
 "  selname2 = document.theform.selname2;\n"
 "  goneP = document.theform.goneP;\n"
-"  var p;\n"
 "  var i;\n"
+"  var j;\n"
 "  for (i=selname2.options.length; i>0; i--) {\n"
 "    if (selname2.options[i-1].selected) {\n"
 "      selname2.options[i-1].selected = 0;\n"
@@ -3780,19 +3843,21 @@ goto after_stats;
     FLUSH_BUFFER
 after_stats:
 
-    /* Write out each cookie */
+    /* Write out each cookie in alphabetical order */
     g += PR_snprintf(buffer+g, BUFLEN-g,
 "<FORM><TABLE COLS=2>\n"
 "<TH><CENTER>%s<BR></CENTER><CENTER><SELECT NAME=\"selname\" MULTIPLE SIZE=15>\n",
 	XP_GetString(MK_ACCESS_COOKIES_ACCEPTED));
     FLUSH_BUFFER
-    cookieNum = 0;
-    while ( (cookie=(net_CookieStruct *) XP_ListNextObject(cookie_list)) ) {
+    cookie_list=net_cookie_list;
+    cookie = NULL;
+    while (cookie = NextCookieAfter(cookie, &cookieNum)) {
 	g += PR_snprintf(buffer+g, BUFLEN-g,
 "<OPTION VALUE=%d>%s: %s</OPTION>",
-	    cookieNum, cookie->host, cookie->name);
+	    cookieNum,
+            (*(cookie->host)=='.') ? (cookie->host)+1: cookie->host,
+	    cookie->name);
 	FLUSH_BUFFER
-	cookieNum++;
     }
 
     g += PR_snprintf(buffer+g, BUFLEN-g,
@@ -3818,6 +3883,7 @@ after_stats:
 	XP_GetString(MK_ACCESS_COOKIES_PERMISSION));
     FLUSH_BUFFER
     cookieNum = 0;
+    cookie_permission_list=net_cookie_permission_list;
     while ( (cookperm=(net_CookiePermissionStruct *)
 		      XP_ListNextObject(cookie_permission_list)) ) {
         char permit = cookperm->permission ? '+' : '-';
