@@ -134,6 +134,7 @@ struct PRLibrary {
 
 #if defined(XP_MACOSX)
     CFMutableDictionaryRef      wrappers;
+    const struct mach_header*   image;
 #endif /* XP_MACOSX */
 #endif
 
@@ -815,7 +816,10 @@ static PRStatus
 pr_LoadViaDyld(const char *name, PRLibrary *lm)
 {
     lm->dlh = pr_LoadMachDyldModule(name);
-    return (lm->dlh != NULL) ? PR_SUCCESS : PR_FAILURE;
+    if (lm->dlh == NULL) {
+        lm->image = NSAddImage(name, NSADDIMAGE_OPTION_NONE);
+    }
+    return (lm->dlh != NULL || lm->image != NULL) ? PR_SUCCESS : PR_FAILURE;
 }
 #endif
 
@@ -1293,6 +1297,7 @@ PR_UnloadLibrary(PRLibrary *lib)
 #if defined(XP_MACOSX)
     if (lib->wrappers)
         CFRelease(lib->wrappers);
+    /* No way to unload an image (lib->image) */
 #endif
 #endif
 
@@ -1410,6 +1415,17 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         
         if (f == NULL && strcmp(name + SYM_OFFSET, "main") == 0) f = lm->main;
     }
+#if defined(XP_MACOSX)
+    if (lm->image) {
+        NSSymbol symbol;
+        symbol = NSLookupSymbolInImage(lm->image, name,
+                                       NSLOOKUPSYMBOLINIMAGE_OPTION_BIND);
+        if (symbol != NULL)
+            f = NSAddressOfSymbol(symbol);
+        else
+            f = NULL;
+    }
+#endif
 #undef SYM_OFFSET
 #endif /* XP_MAC */
 
