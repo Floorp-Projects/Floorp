@@ -210,6 +210,12 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
         PRBool isBody = MimeObjectChildIsMessageBody(obj, &isAlternativeOrRelated);
         if ( (isAlternativeOrRelated || isBody) && obj->options)
         {
+          MimeContainer *container = (MimeContainer*) obj; 
+          // If we have only one child and this is the message body object,     
+          // this we should check for a special charset and notify the emitter  
+          // if one exists!                                                     
+          if ( (isAlternativeOrRelated) || ((container->children) && (container->nchildren == 1)) )
+          {
            char *ct = MimeHeaders_get(mult->hdrs, HEADER_CONTENT_TYPE, PR_FALSE, PR_FALSE);
            if (ct)
            {
@@ -230,6 +236,7 @@ MimeMultipart_parse_line (char *line, PRInt32 length, MimeObject *obj)
               PR_FREEIF(ct);
               PR_FREEIF(cset);
             }
+          }
           }
         }
       break;
