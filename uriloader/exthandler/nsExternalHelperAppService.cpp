@@ -65,7 +65,7 @@
 #include "nsIEncodedChannel.h"
 #include "nsIMultiPartChannel.h"
 #include "nsIAtom.h"
-#include "nsIObserverService.h" // so we can be an xpcom shutdown observer
+#include "nsIObserverService.h" // so we can be a profile change observer
 
 #if defined(XP_MAC) || defined (XP_MACOSX)
 #include "nsILocalFileMac.h"
@@ -160,33 +160,37 @@ static const char* const nonDecodableExtensions [] = {
   0
 };
 
-NS_IMPL_THREADSAFE_ADDREF(nsExternalHelperAppService)
-NS_IMPL_THREADSAFE_RELEASE(nsExternalHelperAppService)
+NS_IMPL_THREADSAFE_ISUPPORTS6(
+  nsExternalHelperAppService,
+  nsIExternalHelperAppService,
+  nsPIExternalAppLauncher,
+  nsIExternalProtocolService,
+  nsIMIMEService,
+  nsIObserver,
+  nsISupportsWeakReference)
 
-NS_INTERFACE_MAP_BEGIN(nsExternalHelperAppService)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIExternalHelperAppService)
-   NS_INTERFACE_MAP_ENTRY(nsIExternalHelperAppService)
-   NS_INTERFACE_MAP_ENTRY(nsPIExternalAppLauncher)
-   NS_INTERFACE_MAP_ENTRY(nsIExternalProtocolService)
-   NS_INTERFACE_MAP_ENTRY(nsIMIMEService)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-NS_INTERFACE_MAP_END_THREADSAFE
-
-nsExternalHelperAppService::nsExternalHelperAppService() : mDataSourceInitialized(PR_FALSE)
+nsExternalHelperAppService::nsExternalHelperAppService()
+: mDataSourceInitialized(PR_FALSE)
+{
+}
+nsresult nsExternalHelperAppService::Init()
 {
   // we need a good guess for a size for our hash table...let's try O(n) where n = # of default
   // entries we'll be adding to the hash table. Of course, we'll be adding more entries as we 
   // discover those content types at run time...
   PRInt32 hashTableSize = sizeof(defaultMimeEntries) / sizeof(defaultMimeEntries[0]);
   mMimeInfoCache = new nsHashtable(hashTableSize);
+  if (!mMimeInfoCache)
+    return NS_ERROR_OUT_OF_MEMORY;
+
   AddDefaultMimeTypesToCache();
 
-  /* Add an observer to XPCOM shutdown */
+  /* Add an observer for profile change*/
   nsresult rv = NS_OK;
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (obs)
-    rv = obs->AddObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  NS_ENSURE_SUCCESS(rv, rv);
 
+  return obs->AddObserver(this, "profile-before-change", PR_TRUE);
 }
 
 nsExternalHelperAppService::~nsExternalHelperAppService()
@@ -241,6 +245,7 @@ nsresult nsExternalHelperAppService::InitDataSource()
   }
   
   mDataSourceInitialized = PR_TRUE;
+
   return rv;
 }
 
@@ -810,13 +815,16 @@ nsresult nsExternalHelperAppService::ExpungeTemporaryFiles()
 NS_IMETHODIMP
 nsExternalHelperAppService::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *someData )
 {
-  // we must be shutting down xpcom so remove our temporary files...
-  ExpungeTemporaryFiles();
   nsresult rv = NS_OK;
 
-  nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1", &rv);
-  if (obs)
-    rv = obs->RemoveObserver(NS_STATIC_CAST(nsIObserver*, this), NS_XPCOM_SHUTDOWN_OBSERVER_ID);
+  if (!strcmp(aTopic, "profile-before-change")) {
+    ExpungeTemporaryFiles();
+    nsCOMPtr <nsIRDFRemoteDataSource> flushableDataSource = do_QueryInterface(mOverRideDataSource);
+    if (flushableDataSource)
+      flushableDataSource->Flush();
+    mOverRideDataSource = nsnull;
+    mDataSourceInitialized = PR_FALSE;
+  }
 	return NS_OK;
 }
 

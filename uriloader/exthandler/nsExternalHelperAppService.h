@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 3; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -47,14 +47,20 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsISupportsArray.h"
+#include "nsWeakReference.h"
 
 class nsExternalAppHandler;
 class nsIMIMEInfo;
 class nsIRDFService;
 class nsIDownload;
 
-class nsExternalHelperAppService : public nsIExternalHelperAppService, public nsPIExternalAppLauncher, 
-                                   public nsIExternalProtocolService, public nsIMIMEService, public nsIObserver
+class nsExternalHelperAppService
+: public nsIExternalHelperAppService,
+  public nsPIExternalAppLauncher,
+  public nsIExternalProtocolService,
+  public nsIMIMEService,
+  public nsIObserver,
+  public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
@@ -67,6 +73,7 @@ public:
   nsExternalHelperAppService();
   virtual ~nsExternalHelperAppService();
   nsresult InitDataSource();
+  nsresult Init();
 
   // CreateNewExternalHandler is implemented only by the base class...
   // create an external app handler and binds it with a mime info object which represents
