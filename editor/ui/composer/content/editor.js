@@ -1566,7 +1566,7 @@ function SetEditMode(mode)
       //   during multiple uses of source window 
       //   (reinserting entire doc caches all nodes)
       try {
-        gEditor.transactionManager.maxTransactionCount = 2;
+        gEditor.transactionManager.maxTransactionCount = 1;
       } catch (e) {}
 
       gEditor.beginTransaction();
