@@ -201,6 +201,7 @@ alpha*-*-osf*)
 *-hpux*)
     if test -z "$GNU_CC"; then
 	DSO_CFLAGS="+Z"
+	COMPILER_WARNINGS=""
     fi
     DLL_SUFFIX="sl"
     DSO_LDOPTS='-b -E -L$(DIST)/bin $(LDFLAGS)'
