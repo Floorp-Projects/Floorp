@@ -27,6 +27,39 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
+#ifdef XP_MAC
+#include "errors.h"
+#include "m_cvstrm.h"
+
+XP_BEGIN_PROTOS
+extern OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec);
+XP_END_PROTOS
+
+static char* NET_GetLocalFileFromURL(char *url)
+{
+	char * finalPath;
+	NS_ASSERTION(PL_strncasecmp(url, "file://", 7) == 0, "invalid url");
+	finalPath = (char*)PR_Malloc(strlen(url));
+	if (finalPath == NULL)
+		return NULL;
+	strcpy(finalPath, url+6+1);
+	return finalPath;
+}
+
+static char* NET_GetURLFromLocalFile(char *filename)
+{
+    /*  file:///<path>0 */
+	char * finalPath = (char*)PR_Malloc(strlen(filename) + 8 + 1);
+	if (finalPath == NULL)
+		return NULL;
+	finalPath[0] = 0;
+	strcat(finalPath, "file://");
+	strcat(finalPath, filename);
+	return finalPath;
+}
+
+#endif /* XP_MAC */
+
 nsMsgAttachmentHandler::nsMsgAttachmentHandler()
 {
 	m_url_string = NULL;
