@@ -23,8 +23,13 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS =				\
-		nsIUnknownContentTypeHandler.h \
 		$(NULL)
+
+XPIDL_MODULE=mozucth
+
+XPIDLSRCS=\
+    nsIUnknownContentTypeHandler.idl \
+    $(NULL)
 
 include $(topsrcdir)/config/config.mk
 

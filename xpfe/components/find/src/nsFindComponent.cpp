@@ -702,8 +702,9 @@ nsFindComponent::FindNext(nsISupports *aContext, PRBool *aDidFind)
 }
 
 NS_IMETHODIMP
-nsFindComponent::ResetContext( nsISupports *aContext, nsIEditor* aEditor,
-                               nsIWebShell *aNewWebShell )
+nsFindComponent::ResetContext( nsISupports *aContext,
+                               nsIWebShell *aNewWebShell,
+                               nsIEditor* aEditor )
 {
     nsresult rv = NS_OK;
     if ( aContext && aNewWebShell ) {

@@ -497,7 +497,7 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:xpfe:components:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
    # find
-   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST",				"$distdirectory:xpfe:components");
+   InstallFromManifest(":mozilla:xpfe:components:find:public:MANIFEST_IDL",			"$distdirectory:idl:");
 
    # history
    InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
@@ -509,11 +509,13 @@ sub BuildClientDist()
    InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST_IDL",	"$distdirectory:idl:");
 
    # sample
-   InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST",			"$distdirectory:xpfe:components");
+   InstallFromManifest(":mozilla:xpfe:components:sample:public:MANIFEST_IDL",		"$distdirectory:idl:");
    # ucth
-   InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST",				"$distdirectory:xpfe:components");
+   InstallFromManifest(":mozilla:xpfe:components:ucth:public:MANIFEST_IDL",			"$distdirectory:idl:");
    # xfer
-   InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST",				"$distdirectory:xpfe:components");
+   InstallFromManifest(":mozilla:xpfe:components:xfer:public:MANIFEST_IDL",			"$distdirectory:idl:");
+
+   BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",				"mozcomps");
 	
 	# XPAPPS
    InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
