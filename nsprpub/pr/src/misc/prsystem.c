@@ -58,7 +58,7 @@
 #endif
 
 #if defined(HPUX)
-#include <sys/mp.h>
+#include <sys/mpctl.h>
 #endif
 
 #if defined(XP_UNIX)

@@ -64,6 +64,13 @@ GetHighResClock(void *buf, size_t maxbytes)
 
 #elif defined(HPUX)
 
+#ifdef __ia64
+static size_t
+GetHighResClock(void *buf, size_t maxbytes)
+{
+    return 0;
+}
+#else
 static size_t
 GetHighResClock(void *buf, size_t maxbytes)
 {
@@ -73,6 +80,7 @@ GetHighResClock(void *buf, size_t maxbytes)
     cr16val = ret_cr16();
     return(_pr_CopyLowBits(buf, maxbytes, &cr16val, sizeof(cr16val)));
 }
+#endif
 
 #elif defined(OSF1)
 

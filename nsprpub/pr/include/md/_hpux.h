@@ -55,7 +55,11 @@
 #undef	HAVE_WEAK_IO_SYMBOLS
 #undef	HAVE_WEAK_MALLOC_SYMBOLS
 #define	HAVE_DLL
+#ifdef IS_64
+#define USE_DLFCN
+#else
 #define USE_HPSHL
+#endif
 #ifndef HAVE_STRERROR
 #define HAVE_STRERROR
 #endif
