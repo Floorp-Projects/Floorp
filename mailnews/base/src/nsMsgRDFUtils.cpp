@@ -21,6 +21,7 @@
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "nsCOMPtr.h"
+#include "nsIAllocator.h"
 
  
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
@@ -52,8 +53,8 @@ peqSort(nsIRDFResource* r1, nsIRDFResource* r2, PRBool *isSort)
 	r2nsStr = r2Str;
 	r1nsSortStr = r1Str;
 
-	delete[] r1Str;
-	delete[] r2Str;
+	nsAllocator::Free(r1Str);
+	nsAllocator::Free(r2Str);
 
 	//probably need to not assume this will always come directly after property.
 	r1nsSortStr +="?sort=true";
