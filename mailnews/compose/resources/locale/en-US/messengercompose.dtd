@@ -1,5 +1,5 @@
 <!--LOCALIZATION NOTE messengercompose.dtd Main UI for message composition -->
-<!ENTITY msgComposeWindow.title "Message Compose">
+<!ENTITY msgComposeWindow.title "Compose: (no subject)">
 
 <!ENTITY fromAddr.label "From:">
 <!ENTITY subject.label  "Subject:">

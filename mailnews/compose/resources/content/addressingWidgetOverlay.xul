@@ -62,6 +62,7 @@ Rights Reserved.
                      type="autocomplete" allowevents="true" flex="1" 
                      searchSessions="addrbook" timeout="300" maxrows="4" autoFill="true"
                      ontextcommand="awRecipientTextCommand(userAction, this)"
+                     oninput="setupAutocomplete();"
                      onkeypress="awRecipientKeyPress(event, this)"
                      onkeydown="awRecipientKeyDown(event, this)">
               <image onclick="awNotAnEmptyArea(event)" class="person-icon"/>

@@ -67,22 +67,17 @@
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/mail-offline.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/editor.js"/>
-<script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
-<script type="application/x-javascript" src="chrome://editor/content/EditorCommandsDebug.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <!-- drag and drop -->
 <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-<script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
 <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
 
 <commandset id="composeCommands">
   <commandset id="msgComposeCommandUpdate"
     commandupdater="true"
     events="focus"
-    oncommandupdate="CommandUpdate_MsgCompose()"
-  />
+    oncommandupdate="CommandUpdate_MsgCompose()"/>
 
   <commandset id="globalEditMenuItems"/>
   <commandset id="selectEditMenuItems"/>
@@ -130,77 +125,14 @@
   <command id="cmd_outputFormat" oncommand="OutputFormatMenuSelect(event.target)"/>
   <!-- command id="cmd_quoteMessage" oncommand="goDoCommand('cmd_quoteMessage')"/ -->
   <command id="cmd_rewrap" oncommand="goDoCommand('cmd_rewrap')"/>
-
+  <command id="cmd_insert"/>
 </commandset>
 
 <broadcasterset id="composeBroadcasters">
-
-  
-  <!-- Insert Menu -->
-  <broadcaster id="cmd_insert"/>
-  <!--broadcaster id="cmd_link"/-->
-  <!--broadcaster id="cmd_anchor"/-->
-  <!--broadcaster id="cmd_image"/-->
-  <!--broadcaster id="cmd_hline"/-->
-  <!--broadcaster id="cmd_table"/-->
-  <!--broadcaster id="cmd_insertHTML"/-->
-  <!--broadcaster id="cmd_insertChars"/-->
-  <!--broadcaster id="cmd_insertBreak"/-->
-  <!--broadcaster id="cmd_insertBreakAll"/-->
-  
-  <!-- Format Menu -->
-  <broadcaster id="cmd_format"/>
-  <!--broadcaster id="cmd_decreaseFont"/-->
-  <!--broadcaster id="cmd_increaseFont"/-->
-  <!--broadcaster id="cmd_bold"/-->
-  <!--broadcaster id="cmd_italic"/-->
-  <!--broadcaster id="cmd_underline"/-->
-  <!--broadcaster id="cmd_strikethrough"/-->
-  <!--broadcaster id="cmd_superscript"/-->
-  <!--broadcaster id="cmd_subscript"/-->
-  <!--broadcaster id="cmd_nobreak"/-->
-  <!--broadcaster id="cmd_em"/-->
-  <!--broadcaster id="cmd_strong"/-->
-  <!--broadcaster id="cmd_cite"/-->
-  <!--broadcaster id="cmd_abbr"/-->
-  <!--broadcaster id="cmd_acronym"/-->
-  <!--broadcaster id="cmd_code"/-->
-  <!--broadcaster id="cmd_samp"/-->
-  <!--broadcaster id="cmd_var"/-->
-  <!--broadcaster id="cmd_removeList"/-->
-  <!--broadcaster id="cmd_ul"/-->
-  <!--broadcaster id="cmd_ol"/-->
-  <!--broadcaster id="cmd_dt"/-->
-  <!--broadcaster id="cmd_dd"/-->
-  <!--broadcaster id="cmd_listProperties"/-->
-  <!--broadcaster id="cmd_indent"/-->
-  <!--broadcaster id="cmd_outdent"/-->
-  <!--broadcaster id="cmd_objectProperties"/-->
-  <!--broadcaster id="cmd_InsertTable"/-->
-  <!--broadcaster id="cmd_InsertRowAbove"/-->
-  <!--broadcaster id="cmd_InsertRowBelow"/-->
-  <!--broadcaster id="cmd_InsertColumnBefore"/-->
-  <!--broadcaster id="cmd_InsertColumnAfter"/-->
-  <!--broadcaster id="cmd_SelectTable"/-->
-  <!--broadcaster id="cmd_SelectRow"/-->
-  <!--broadcaster id="cmd_SelectColumn"/-->
-  <!--broadcaster id="cmd_SelectCell"/-->
-  <!--broadcaster id="cmd_SelectAllCells"/-->
-  <!--broadcaster id="cmd_DeleteTable"/-->
-  <!--broadcaster id="cmd_DeleteRow"/-->
-  <!--broadcaster id="cmd_DeleteColumn"/-->
-  <!--broadcaster id="cmd_DeleteCell"/-->
-  <!--broadcaster id="cmd_DeleteCellContents"/-->
-  <!--broadcaster id="cmd_NormalizeTable"/-->
-  <!--broadcaster id="cmd_tableJoinCells"/-->
-  <!--broadcaster id="cmd_tableSplitCell"/-->
-  <!--broadcaster id="cmd_editTable"/-->
-
   <broadcaster id="Editor:Throbber" busy="false"/>
   <broadcaster id="Communicator:WorkMode"/>
+  <broadcaster id="args" value="editorType=default"/>
 </broadcasterset>
-
-<broadcaster id="args" value="editorType=default"/>
 
 <popupset>
   <popup id="TextColorPopup"/>
@@ -228,12 +160,12 @@
   <key id="pastequotationkb"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-  <key id="key_find"  key="&findCmd.key;"  observes="cmd_find" modifiers="accel"/>
-  <key id="key_findNext"  key="&findAgainCmd.key;" observes="cmd_findNext" modifiers="accel"/>
+  <key id="key_find"  key="&findCmd.key;"  command="cmd_find" modifiers="accel"/>
+  <key id="key_findNext"  key="&findAgainCmd.key;" command="cmd_findNext" modifiers="accel"/>
   
   <!-- Options Menu -->
   <!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" command="cmd_selectAddress"/ -->
-  <key id="key_checkspelling"  key="&checkSpellingCmd.key;" observes="cmd_spelling"  modifiers="accel"/>
+  <key id="key_checkspelling"  key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
   
 </keyset>
 <keyset id="editorKeys"/>
@@ -278,7 +210,7 @@
         </menupopup>
       </menu>
       <menu id="menu_Edit">
-        <menupopup>
+        <menupopup oncreate="updateEditItems();">
           <menuitem id="menu_undo"/>
           <menuitem id="menu_redo"/>
           <menuseparator/>
@@ -290,8 +222,8 @@
           <menuseparator/>
           <menuitem id="menu_selectAll"/>
           <menuseparator/>
-          <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
-          <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
+          <menuitem label="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      command="cmd_find"/>
+          <menuitem label="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" command="cmd_findNext"/>
           <menuseparator/>
           <menuitem label="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" command="cmd_account"/>
           <menuitem id="menu_preferences" oncommand="goDoCommand('cmd_preferences')"/>
@@ -322,9 +254,9 @@
         </menupopup>
       </menu>
   
-      <menu id="insertMenu" observes="cmd_insert"/>
+      <menu id="insertMenu" command="cmd_insert"/>
 
-      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" observes="cmd_format">
+      <menu id="formatMenu" label="&formatMenu.label;" accesskey="&formatMenu.accesskey;" command="cmd_insert">
         <menupopup id="formatMenuPopup">
           <menu id="tableMenu"/>
           <menuseparator/>
@@ -336,7 +268,7 @@
       <menu label="&optionsMenu.label;" accesskey="&optionsMenu.accesskey;">
         <menupopup> 
           <menuitem label="&selectAddressCmd.label;" accesskey="&selectAddressCmd.accesskey;" command="cmd_selectAddress"/>
-          <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" observes="cmd_spelling"/>
+          <menuitem label="&checkSpellingCmd.label;" id="menu_checkspelling" accesskey="&checkSpellingCmd.accesskey;" key="key_checkspelling" command="cmd_spelling"/>
           <!--menuitem label="&quoteOrigCmd.label;" accesskey="&quoteOrigCmd.accesskey;" command="cmd_quoteMessage"/-->  
           <menuitem label="&editRewrapCmd.label;" accesskey="&editRewrapCmd.accesskey;" command="cmd_rewrap" oncommand="editorShell.Rewrap(false)"/>
           <menuseparator/>
@@ -438,7 +370,7 @@
                command="cmd_attachFile"/>
        <button class="button-toolbar-2 top" 
                id="spellingButton" label="&spellingButton.label;" 
-               observes="cmd_spelling"/>
+               command="cmd_spelling"/>
        <toolbarseparator class="toolbarseparator-primary"/>
        <button class="button-toolbar-2 top" 
                id="button-save" label="&saveButton.label;" 

@@ -39,8 +39,7 @@ var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
 var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 
-var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
-promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
+var gPromptService = null;
 
 //This migrates the LDAPServer Preferences from 4.x to mozilla format.
 try {
@@ -50,39 +49,30 @@ try {
                    Components.interfaces.nsILDAPPrefsService);
 } catch (ex) {dump ("ERROR:" + ex + "\n");}
 
-try {
-var ldapSession = Components.classes[
-            "@mozilla.org/autocompleteSession;1?type=ldap"].createInstance().
-            QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
-} catch (ex) {dump ("ERROR:" + ex + "\n");}
-
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
 var windowLocked = false;
 var contentChanged = false;
-var currentIdentity = null;
+var gCurrentIdentity = null;
 var defaultSaveOperation = "draft";
 var sendOrSaveOperationInProgress = false;
 var isOffline = false;
 var sessionAdded = false;
 var currentAutocompleteDirectory = null;
-
+var gAutocompleteSession = null;
+var gSetupLdapAutocomplete = false;
+var gLDAPSession = null;
 var gComposeMsgsBundle;
 
+const DEBUG = false;
+
 var other_header = "";
-var update_compose_title_as_you_type = true;
 var sendFormat = msgCompSendFormat.AskUser;
 var prefs = Components.classes["@mozilla.org/preferences;1"].getService();
 if (prefs) {
 	prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
 	if (prefs) {
-		try {
-			update_compose_title_as_you_type = prefs.GetBoolPref("mail.update_compose_title_as_you_type");
-		}
-		catch (ex) {
-			dump("failed to get the mail.update_compose_title_as_you_type pref\n");
-		}
 		try {
 			other_header = prefs.CopyCharPref("mail.compose.other.header");
 		}
@@ -176,7 +166,6 @@ g_charsetConvertManager = g_charsetConvertManager.QueryInterface(Components.inte
 var msgWindowContractID      = "@mozilla.org/messenger/msgwindow;1";
 var msgWindow = Components.classes[msgWindowContractID].createInstance();
 
-
 var defaultController =
 {
   supportsCommand: function(command)
@@ -223,7 +212,6 @@ var defaultController =
       case "cmd_insertBreakAll":
 
       //Format Menu
-      case "cmd_format":
       case "cmd_decreaseFont":
       case "cmd_increaseFont":
       case "cmd_bold":
@@ -284,7 +272,6 @@ var defaultController =
         return false;
     }
   },
-
   isCommandEnabled: function(command)
   {
     //For some reason, when editor has the focus, focusedElement is null!.
@@ -317,7 +304,7 @@ var defaultController =
       case "cmd_find":
       case "cmd_findNext":
         //Disable the editor specific edit commands if the focus is not into the body
-        return /*!focusedElement*/false;
+        return !focusedElement;
       case "cmd_account":
       case "cmd_preferences":
         return true;
@@ -341,7 +328,7 @@ var defaultController =
       case "cmd_insertChars":
       case "cmd_insertBreak":
       case "cmd_insertBreakAll":
-        return /*!focusedElement*/false;
+        return !focusedElement;
 
       //Options Menu
       case "cmd_selectAddress":
@@ -356,8 +343,6 @@ var defaultController =
         return !composeHTML && !focusedElement;
 
       //Format Menu
-      case "cmd_format":
-        return !focusedElement;
       case "cmd_decreaseFont":
       case "cmd_increaseFont":
       case "cmd_bold":
@@ -404,7 +389,7 @@ var defaultController =
       case "cmd_tableJoinCells":
       case "cmd_tableSplitCell":
       case "cmd_editTable":
-        return /*!focusedElement*/false;
+        return !focusedElement;
 
       default:
 //        dump("##MsgCompose: command " + command + " disabled!\n");
@@ -471,108 +456,41 @@ function SetupCommandUpdateHandlers()
 
 function CommandUpdate_MsgCompose()
 {
-//  dump("\nCommandUpdate_MsgCompose\n");
+  window.setTimeout("updateComposeItems()", 0);
+}
+
+function updateComposeItems() {
   try {
-
-  //File Menu
-//  goUpdateCommand("cmd_attachFile");
-//  goUpdateCommand("cmd_attachPage");
-    goUpdateCommand("cmd_close");
-//  goUpdateCommand("cmd_saveDefault");
-//  goUpdateCommand("cmd_saveAsFile");
-//  goUpdateCommand("cmd_saveAsDraft");
-//  goUpdateCommand("cmd_saveAsTemplate");
-//  goUpdateCommand("cmd_sendButton");
-//  goUpdateCommand("cmd_sendNow");
-//  goUpdateCommand("cmd_sendLater");
-//  goUpdateCommand("cmd_printSetup");
-    goUpdateCommand("cmd_print");
-    goUpdateCommand("cmd_quit");
-
   //Edit Menu
-  goUpdateCommand("cmd_pasteQuote");
-  goUpdateCommand("cmd_find");
-  goUpdateCommand("cmd_findNext");
-//  goUpdateCommand("cmd_account");
-  goUpdateCommand("cmd_preferences");
-
-  //View Menu
-//  goUpdateCommand("cmd_showComposeToolbar");
-//  goUpdateCommand("cmd_showFormatToolbar");
 
   //Insert Menu
   if (msgCompose && msgCompose.composeHTML)
   {
     goUpdateCommand("cmd_insert");
-    goUpdateCommand("cmd_link");
-    goUpdateCommand("cmd_anchor");
-    goUpdateCommand("cmd_image");
-    goUpdateCommand("cmd_hline");
-    goUpdateCommand("cmd_table");
-    goUpdateCommand("cmd_insertHTML");
-    goUpdateCommand("cmd_insertChars");
-    goUpdateCommand("cmd_insertBreak");
-    goUpdateCommand("cmd_insertBreakAll");
-
-    //Format Menu
-    goUpdateCommand("cmd_format");
     goUpdateCommand("cmd_decreaseFont");
     goUpdateCommand("cmd_increaseFont");
     goUpdateCommand("cmd_bold");
     goUpdateCommand("cmd_italic");
     goUpdateCommand("cmd_underline");
-    goUpdateCommand("cmd_strikethrough");
-    goUpdateCommand("cmd_superscript");
-    goUpdateCommand("cmd_subscript");
-    goUpdateCommand("cmd_nobreak");
-    goUpdateCommand("cmd_em");
-    goUpdateCommand("cmd_strong");
-    goUpdateCommand("cmd_cite");
-    goUpdateCommand("cmd_abbr");
-    goUpdateCommand("cmd_acronym");
-    goUpdateCommand("cmd_code");
-    goUpdateCommand("cmd_samp");
-    goUpdateCommand("cmd_var");
-    goUpdateCommand("cmd_removeList");
     goUpdateCommand("cmd_ul");
     goUpdateCommand("cmd_ol");
-    goUpdateCommand("cmd_dt");
-    goUpdateCommand("cmd_dd");
-    goUpdateCommand("cmd_listProperties");
     goUpdateCommand("cmd_indent");
     goUpdateCommand("cmd_outdent");
     goUpdateCommand("cmd_align");
     goUpdateCommand("cmd_smiley");
-    goUpdateCommand("cmd_objectProperties");
-    goUpdateCommand("cmd_InsertTable");
-    goUpdateCommand("cmd_InsertRowAbove");
-    goUpdateCommand("cmd_InsertRowBelow");
-    goUpdateCommand("cmd_InsertColumnBefore");
-    goUpdateCommand("cmd_InsertColumnAfter");
-    goUpdateCommand("cmd_SelectTable");
-    goUpdateCommand("cmd_SelectRow");
-    goUpdateCommand("cmd_SelectColumn");
-    goUpdateCommand("cmd_SelectCell");
-    goUpdateCommand("cmd_SelectAllCells");
-    goUpdateCommand("cmd_DeleteTable");
-    goUpdateCommand("cmd_DeleteRow");
-    goUpdateCommand("cmd_DeleteColumn");
-    goUpdateCommand("cmd_DeleteCell");
-    goUpdateCommand("cmd_DeleteCellContents");
-    goUpdateCommand("cmd_NormalizeTable");
-    goUpdateCommand("cmd_tableJoinCells");
-    goUpdateCommand("cmd_tableSplitCell");
-    goUpdateCommand("cmd_editTable");
   }
 
   //Options Menu
-//  goUpdateCommand("cmd_selectAddress");
   goUpdateCommand("cmd_spelling");
-//  goUpdateCommand("cmd_outputFormat");
-//  goUpdateCommand("cmd_quoteMessage");
-//  goUpdateCommand("cmd_rewrap");
+
 
   } catch(e) {}
+}
+
+function updateEditItems() {
+  goUpdateCommand("cmd_pasteQuote");
+  goUpdateCommand("cmd_find");
+  goUpdateCommand("cmd_findNext");
 }
 
 var messageComposeOfflineObserver = {
@@ -636,9 +554,9 @@ function AddDirectoryServerObserver(flag) {
   }
   else
   {
-    var prefstring = "mail.identity." + currentIdentity.key + ".overrideGlobal_Pref";
+    var prefstring = "mail.identity." + gCurrentIdentity.key + ".overrideGlobal_Pref";
     prefs.addObserver(prefstring, directoryServerObserver);
-    prefstring = "mail.identity." + currentIdentity.key + ".directoryServer";
+    prefstring = "mail.identity." + gCurrentIdentity.key + ".directoryServer";
     prefs.addObserver(prefstring, directoryServerObserver);
   }
 }
@@ -670,6 +588,7 @@ function RemoveDirectorySettingsObserver(prefstring)
 
 function setupLdapAutocompleteSession()
 {
+    gSetupLdapAutocomplete = true;
     var autocompleteLdap = false;
     var autocompleteDirectory = null;
     var prevAutocompleteDirectory = currentAutocompleteDirectory;
@@ -684,8 +603,15 @@ function setupLdapAutocompleteSession()
         dump("ERROR: " + ex + "\n");
     }
 
-    if(currentIdentity.overrideGlobalPref) {
-        autocompleteDirectory = currentIdentity.directoryServer;
+    if(gCurrentIdentity.overrideGlobalPref) {
+        autocompleteDirectory = gCurrentIdentity.directoryServer;
+    }
+    try {
+       if (!gLDAPSession)
+        gLDAPSession = Components.classes["@mozilla.org/autocompleteSession;1?type=ldap"].createInstance()
+                                 .QueryInterface(Components.interfaces.nsILDAPAutoCompleteSession);
+    } catch (ex) {
+      dump ("ERROR:" + ex + "\n");
     }
     if (autocompleteDirectory && !isOffline) { 
         // Add observer on the directory server we are autocompleting against
@@ -700,12 +626,11 @@ function setupLdapAutocompleteSession()
         }
         else
           AddDirectorySettingsObserver();
-        
-        if (ldapSession) {
+        if (gLDAPSession) {
             if (!sessionAdded) {
             // add session for all the recipients
               for (var i=1; i <= MAX_RECIPIENTS; i++)
-                document.getElementById("msgRecipient#" + i).addSession(ldapSession);
+                document.getElementById("msgRecipient#" + i).addSession(gLDAPSession);
               sessionAdded = true;
             }
             var serverURL = Components.classes[
@@ -719,12 +644,12 @@ function setupLdapAutocompleteSession()
             } catch (ex) {
                 dump("ERROR: " + ex + "\n");
             }
-            ldapSession.serverURL = serverURL;
+            gLDAPSession.serverURL = serverURL;
 
             // don't search on strings shorter than this
             //
             try { 
-                ldapSession.minStringLength = prefs.GetIntPref(
+                gLDAPSession.minStringLength = prefs.GetIntPref(
                     autocompleteDirectory + ".autoComplete.minStringLength");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -734,7 +659,7 @@ function setupLdapAutocompleteSession()
             // override autocomplete entry formatting?
             //
             try {
-                ldapSession.outputFormat = 
+                gLDAPSession.outputFormat = 
                     prefs.CopyUnicharPref(autocompleteDirectory + 
                                           ".autoComplete.outputFormat");
             } catch (ex) {
@@ -745,7 +670,7 @@ function setupLdapAutocompleteSession()
             // override default search filter template?
             //
             try { 
-                ldapSession.filterTemplate = prefs.CopyUnicharPref(
+                gLDAPSession.filterTemplate = prefs.CopyUnicharPref(
                     autocompleteDirectory + ".autoComplete.filterTemplate");
             } catch (ex) {
                 // if this pref isn't there, no big deal.  just let
@@ -759,7 +684,7 @@ function setupLdapAutocompleteSession()
                 // XXXdmose should really use .autocomplete.maxHits,
                 // but there's no UI for that yet
                 // 
-                ldapSession.maxHits = 
+                gLDAPSession.maxHits = 
                     prefs.GetIntPref(autocompleteDirectory + ".maxHits");
             } catch (ex) {
                 // if this pref isn't there, or is out of range, no big deal. 
@@ -773,9 +698,9 @@ function setupLdapAutocompleteSession()
         RemoveDirectorySettingsObserver(currentAutocompleteDirectory);
         currentAutocompleteDirectory = null;
       }
-      if (ldapSession && sessionAdded) {
+      if (gLDAPSession && sessionAdded) {
         for (var i=1; i <= MAX_RECIPIENTS; i++) 
-          document.getElementById("msgRecipient#" + i).removeSession(ldapSession);
+          document.getElementById("msgRecipient#" + i).removeSession(gLDAPSession);
         sessionAdded = false;
       }
     }
@@ -881,44 +806,33 @@ function GetArgs(originalData)
 
 function ComposeFieldsReady(msgType)
 {
-    //If we are in plain text, we nee to set the wrap column
-	if (! msgCompose.composeHTML)
-  		try
-  		{
-  			window.editorShell.wrapColumn = msgCompose.wrapLength;
-  		}
-  		catch (e)
-  		{
-  			dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
-  		}
-
-		CompFields2Recipients(msgCompose.compFields, msgCompose.type);
-        setupLdapAutocompleteSession();
-		SetComposeWindowTitle(13);
-		AdjustFocus();
-		try {
-		window.updateCommands("create");
-		} catch(e) {}
+  //If we are in plain text, we need to set the wrap column
+  if (! msgCompose.composeHTML) {
+    try {
+      window.editorShell.wrapColumn = msgCompose.wrapLength;
+    }
+    catch (e) {
+      dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
+    }
+  }
+  CompFields2Recipients(msgCompose.compFields, msgCompose.type);
+  AdjustFocus();
 }
 
 function ComposeStartup()
 {
-	dump("Compose: ComposeStartup\n");
-
   var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
   var args = null;   // old way, parameters are passed as a string
-
-  if (window.arguments && window.arguments[0])
-  {
+  if (window.arguments && window.arguments[0]) {
     try {
       params = window.arguments[0].QueryInterface(Components.interfaces.nsIMsgComposeParams);
     }
-    catch(ex){}
-    if (params == null)
-	    args = GetArgs(window.arguments[0]);
+    catch(ex) {
+    }
+    if (!params)
+      args = GetArgs(window.arguments[0]);
   }
 
-  //dump("fill in Identity menulist\n");
   var identityList = document.getElementById("msgIdentity");
   var identityListPopup = document.getElementById("msgIdentityPopup");
 
@@ -926,15 +840,13 @@ function ComposeStartup()
     fillIdentityListPopup(identityListPopup);
   }
 
-  if (!params)
-  {
-    /* This code will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string */
+  if (!params) {
+    // This code will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string
 
     params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
     params.composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
 
-    if (args) //Convert old fashion arguments into params
-    {
+    if (args) { //Convert old fashion arguments into params
       var composeFields = params.composeFields;
       if (args.bodyislink == "true")
         params.bodyIsLink = true;
@@ -965,7 +877,7 @@ function ComposeStartup()
     }
   }
 
-  if (params.identity == null) {
+  if (!params.identity) {
     // no pre selected identity, so use the default account
     var identities = accountManager.defaultAccount.identities;
     if (identities.Count() >= 1)
@@ -986,7 +898,6 @@ function ComposeStartup()
     }
   }
   LoadIdentity(true);
-
 	if (msgComposeService)
 	{
 		msgCompose = msgComposeService.InitCompose(window, params);
@@ -1014,7 +925,6 @@ function ComposeStartup()
 			if (msgCompose.composeHTML)
 			{
 				window.editorShell.editorType = "htmlmail";
-//				dump("editor initialized in HTML mode\n");
 			}
 			else
 			{
@@ -1071,10 +981,7 @@ function ComposeStartup()
 
 			msgCompose.RegisterStateListener(stateListener);
 
-			// call updateCommands to disable while we're loading the page
-		  try {
-			  window.updateCommands("create");
-  		} catch(e) {}
+
 		}
 	}
 }
@@ -1098,34 +1005,36 @@ function ComposeLoad()
   AddMessageComposeOfflineObserver();
   AddDirectoryServerObserver(true);
 
-  if (msgComposeService)
+  if (DEBUG && msgComposeService)
     msgComposeService.TimeStamp("Start Initializing the compose window (ComposeLoad)", false);
   gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 
   try {
     SetupCommandUpdateHandlers();
-  	var wizardcallback = true;
-  	var state =	verifyAccounts(wizardcallback);	// this will do migration, or create a new account if we need to.
+    var wizardcallback = true;
+    var state =	verifyAccounts(wizardcallback);	// this will do migration, or create a new account if we need to.
 
-  	if (other_header != "") {
+    if (other_header != "") {
       var selectNode = document.getElementById('msgRecipientType#1');
-
       selectNode = selectNode.childNodes[0];
       var opt = document.createElement('menuitem');
       opt.setAttribute("value", "addr_other");
       opt.setAttribute("label", other_header + ":");
       selectNode.appendChild(opt);
-  	}
-    if(state)
+    }
+    if (state)
       ComposeStartup();
   }
   catch (ex) {
-    dump("###ERROR WHILE LOADING MESSAGE COMPOSE: " + ex + "\n");
     var errorTitle = gComposeMsgsBundle.getString("initErrorDlogTitle");
     var errorMsg = gComposeMsgsBundle.getFormattedString("initErrorDlogMessage",
                                                          [ex]);
-    if (promptService)
-      promptService.alert(window, errorTitle, errorMsg);
+    if (!gPromptService) {
+      gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+    }
+    if (gPromptService)
+      gPromptService.alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
 
@@ -1135,8 +1044,8 @@ function ComposeLoad()
       window.close();
     return;
   }
-	window.tryToClose=ComposeCanClose;
-	if (msgComposeService)
+  window.tryToClose=ComposeCanClose;
+  if (DEBUG && msgComposeService)
     msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about::blank", false);
 }
 
@@ -1145,7 +1054,7 @@ function ComposeUnload()
 	dump("\nComposeUnload from XUL\n");
 	RemoveMessageComposeOfflineObserver();
     RemoveDirectoryServerObserver(null);
-    RemoveDirectoryServerObserver("mail.identity." + currentIdentity.key);
+    RemoveDirectoryServerObserver("mail.identity." + gCurrentIdentity.key);
     if (currentAutocompleteDirectory)
        RemoveDirectorySettingsObserver(currentAutocompleteDirectory);
 	msgCompose.UnregisterStateListener(stateListener);
@@ -1291,10 +1200,14 @@ function GenericSendMessage( msgType )
 				//Check if we have a subject, else ask user for confirmation
 				if (subject == "")
 				{
-    				if (promptService)
+				if (!gPromptService) {
+				  gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+                                  gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+                                }
+    				if (gPromptService)
     				{
 						var result = {value:gComposeMsgsBundle.getString("defaultSubject")};
-        				if (promptService.prompt(
+        				if (gPromptService.prompt(
         					window,
         					gComposeMsgsBundle.getString("subjectDlogTitle"),
         					gComposeMsgsBundle.getString("subjectDlogMessage"),
@@ -1625,12 +1538,8 @@ function SetComposeWindowTitle(event)
 {
 	/* dump("event = " + event + "\n"); */
 
-	/* only set the title when they hit return (or tab?) if
-	  mail.update_compose_title_as_you_type == false
+	/* only set the title when they hit return (or tab?)
 	 */
-	if ((event != 13) && (update_compose_title_as_you_type == false)) {
-		return;
-	}
 
 	var newTitle = document.getElementById('msgSubject').value;
 
@@ -1649,13 +1558,18 @@ function SetComposeWindowTitle(event)
 // This is hooked up to the OS's window close widget (e.g., "X" for Windows)
 function ComposeCanClose()
 {
+  if (!gPromptService) {
+    gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+    gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+  }
   if (sendOrSaveOperationInProgress)
   {
-      if (promptService)
+
+      if (gPromptService)
       {
         var promptTitle = gComposeMsgsBundle.getString("quitComposeWindowTitle");
         var promptMsg = gComposeMsgsBundle.getString("quitComposeWindowMessage");
-        if (promptService.confirm(window, promptTitle, promptMsg))
+        if (gPromptService.confirm(window, promptTitle, promptMsg))
           {
             msgCompose.abort();
             return true;
@@ -1672,16 +1586,15 @@ function ComposeCanClose()
 		// call window.focus, since we need to pop up a dialog
 		// and therefore need to be visible (to prevent user confusion)
 		window.focus();
-        
-		if (promptService)
+		if (gPromptService)
 		{
             var result = {value:0};
-            promptService.confirmEx(window,
+            gPromptService.confirmEx(window,
                               gComposeMsgsBundle.getString("saveDlogTitle"),
                               gComposeMsgsBundle.getString("saveDlogMessage"),
-                              (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
-                              (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
-                              (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2),
+                              (gPromptService.BUTTON_TITLE_SAVE * gPromptService.BUTTON_POS_0) +
+                              (gPromptService.BUTTON_TITLE_CANCEL * gPromptService.BUTTON_POS_1) +
+                              (gPromptService.BUTTON_TITLE_DONT_SAVE * gPromptService.BUTTON_POS_2),
                               null, null, null,
                               null, {value:0}, result);
 
@@ -1739,9 +1652,12 @@ function AttachFile()
     dump("###ERROR ADDING DUPLICATE FILE \n");
     var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
     var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
-
-    if (promptService)
-      promptService.alert(window, errorTitle, errorMsg);
+    if (!gPromptService) {
+      gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+    }
+    if (gPromptService)
+      gPromptService.alert(window, errorTitle, errorMsg);
     else
       window.alert(errorMsg);
   }
@@ -1776,10 +1692,15 @@ function AddAttachment(attachment, prettyName)
 
 function AttachPage()
 {
-    if (promptService)
-    {
+     if (!gPromptService) {
+       gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+       gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+     }
+     
+     if (gPromptService)
+     {
         var result = {value:"http://"};
-        if (promptService.prompt(
+        if (gPromptService.prompt(
         	window,
         	gComposeMsgsBundle.getString("attachPageDlogTitle"),
         	gComposeMsgsBundle.getString("attachPageDlogMessage"),
@@ -1789,7 +1710,7 @@ function AttachPage()
         {
 			AddAttachment(result.value, null);
         }
-    }
+     }
 }
 function DuplicateFileCheck(FileUrl)
 {
@@ -1972,12 +1893,12 @@ function DetermineConvertibility()
 function LoadIdentity(startup)
 {
     var identityElement = document.getElementById("msgIdentity");
-    var prevIdentity = currentIdentity;
+    var prevIdentity = gCurrentIdentity;
     
     if (identityElement) {
         var item = identityElement.selectedItem;
         var idKey = item.getAttribute('id');
-        currentIdentity = accountManager.getIdentity(idKey);
+        gCurrentIdentity = accountManager.getIdentity(idKey);
 
         if (!startup && prevIdentity && idKey != prevIdentity.key)
         {
@@ -1994,15 +1915,15 @@ function LoadIdentity(startup)
             prevBcc += prevIdentity.bccList;
           }
 
-          var newReplyTo = currentIdentity.replyTo;
+          var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
-          if (currentIdentity.bccSelf)
-            newBcc += currentIdentity.email;
-          if (currentIdentity.bccOthers)
+          if (gCurrentIdentity.bccSelf)
+            newBcc += gCurrentIdentity.email;
+          if (gCurrentIdentity.bccOthers)
           {
             if (newBcc != "")
               newBcc += ","
-            newBcc += currentIdentity.bccList;
+            newBcc += gCurrentIdentity.bccList;
           }
 
           var needToCleanUp = false;
@@ -2030,18 +1951,10 @@ function LoadIdentity(startup)
             awCleanupRows();
 
           try {
-            msgCompose.SetSignature(currentIdentity);
+            msgCompose.SetSignature(gCurrentIdentity);
           } catch (ex) { dump("### Cannot set the signature: " + ex + "\n");}
         }
 
-        //Setup autocomplete session, we can doit from here as it's use as a service
-        var session = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
-        if (session)
-        {
-            var emailAddr = currentIdentity.email;
-            var start = emailAddr.lastIndexOf("@");
-            session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
-        }
       AddDirectoryServerObserver(false);
       if (!startup)
         setupLdapAutocompleteSession();
@@ -2049,8 +1962,26 @@ function LoadIdentity(startup)
 }
 
 
-function subjectKeyPress(event)
+function setupAutocomplete()
 {
+  //Setup autocomplete session if we haven't done so already
+  if (!gAutocompleteSession) {
+    gAutocompleteSession = Components.classes["@mozilla.org/autocompleteSession;1?type=addrbook"].getService(Components.interfaces.nsIAbAutoCompleteSession);
+    if (gAutocompleteSession) {
+      var emailAddr = gCurrentIdentity.email;
+      var start = emailAddr.lastIndexOf("@");
+      gAutocompleteSession.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
+    }
+    else {
+      gAutocompleteSession = 1;
+    }
+  }
+  if (!gSetupLdapAutocomplete)
+    setupLdapAutocompleteSession();
+}
+
+function subjectKeyPress(event)
+{  
   switch(event.keyCode) {
   case 9:
     if (!event.shiftKey) {
@@ -2103,9 +2034,12 @@ var attachmentBucketObserver = {
       else {
         var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
         var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
-
-        if (promptService)
-          promptService.alert(window, errorTitle, errorMsg);
+        if (!gPromptService) {
+          gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+          gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+        }
+        if (gPromptService)
+          gPromptService.alert(window, errorTitle, errorMsg);
         else
           window.alert(errorMsg);
       }
@@ -2149,7 +2083,7 @@ function GetMsgFolderFromUri(uri)
 function DisplaySaveFolderDlg(folderURI)
 {
   try{
-    showDialog = currentIdentity.showSaveMsgDlg;
+    showDialog = gCurrentIdentity.showSaveMsgDlg;
   }//try
   catch (e){
     return;
@@ -2166,13 +2100,16 @@ function DisplaySaveFolderDlg(folderURI)
                                                         msgfolder.hostname]);
 
     var CheckMsg = gComposeMsgsBundle.getString("CheckMsg");
-
-    if (promptService)
-      promptService.alertCheck(window, SaveDlgTitle, dlgMsg, CheckMsg, checkbox);
+    if (!gPromptService) {
+      gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+      gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
+    }
+    if (gPromptService)
+      gPromptService.alertCheck(window, SaveDlgTitle, dlgMsg, CheckMsg, checkbox);
     else
       window.alert(dlgMsg);
     try {
-          currentIdentity.showSaveMsgDlg = !checkbox.value;
+          gCurrentIdentity.showSaveMsgDlg = !checkbox.value;
     }//try
     catch (e) {
     return;
