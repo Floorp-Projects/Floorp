@@ -1072,7 +1072,7 @@ sub do_wml {
   %state_symbols = (success=>'green.',busted=>'red.',testfailed=>'orange.');
 
   if (is_tree_state_available()) {
-    print "<p>$::tree is " .  (is_tree_open() ? 'open.' : 'closed.') . "</p>";
+    print "<p align='left'>$::tree is " .  (is_tree_open() ? 'open.' : 'closed.') . "</p>";
   }
   my (%build, %times);
   tb_loadquickparseinfo($::tree, \%build, \%times);
@@ -1089,15 +1089,16 @@ sub do_wml {
     }
   }
   
+  print '<p align="left">';
   if ($flames) {
-    print "<p>There's bustage.</p>";
+    print "There's bustage.</p>";
   }
   if ($testFailed) {
-    print "<p>Tests are failing.</p>";
+    print "Tests are failing.</p>";
   } 
   
   if ($flames == 0 && $testFailed == 0) {
-    print "<p>No bustage.</p>";
+    print "No bustage.</p>";
   }
   print "</card>\n";
 
@@ -1114,7 +1115,7 @@ sub do_wml {
     } else {
       print 'GREEN';
     }
-    print ']</td><td>$buildname</td></tr>';
+    print "]</td><td>$buildname</td></tr>";
     print "\n";
   }
   print '</table></p></card></wml>';
