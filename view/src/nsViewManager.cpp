@@ -125,9 +125,7 @@ struct DisplayListElement2 {
   which contains the tree nodes for the child views, and which also contains a leaf tree
   node which does the painting for the non-leaf view. Initially sibling tree nodes are
   ordered in the same order as their views, which Layout should have arranged in document
-  order. (Actually CreateDisplayList ensures that the tree is created to have elements in the
-  order "<children-with-negative-z-index> <this-view> <children-with-nonnegative-z-index>".
-  This makes sure that this-view gets processed in the right place.)
+  order.
 
   For example, given the view hierarchy and z-indices, and assuming lower-
   numbered views precede higher-numbered views in the document order,
@@ -1107,7 +1105,9 @@ void nsViewManager::RenderViews(nsView *aRootView, nsIRenderingContext& aRC, con
   AddCoveringWidgetsToOpaqueRegion(opaqueRgn, mContext, aRootView);
   OptimizeDisplayList(aRect, finalTransparentRect, opaqueRgn);
 
+#ifdef DEBUG_roc
   // ShowDisplayList(mDisplayListCount);
+#endif
 
   if (!finalTransparentRect.IsEmpty()) {
     // There are some bits here that aren't going to be completely painted unless we do it now.
@@ -2125,7 +2125,9 @@ void nsViewManager::BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aVie
 
   BuildDisplayList(aView, eventRect, PR_TRUE, aCaptured);
 
+#ifdef DEBUG_roc
   // ShowDisplayList(mDisplayListCount);
+#endif
 
   // The display list is in order from back to front. We return the target list in order from
   // front to back.
@@ -3478,7 +3480,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
   }
 
   PRInt32 childCount = aView->GetChildCount();
-  nsView *childView = nsnull;
 
   if (aEventProcessing
       && (aView->GetViewFlags() & NS_VIEW_FLAG_DONT_CHECK_CHILDREN) != 0) {
@@ -3491,6 +3492,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.x -= aOriginX;
       bounds.y -= aOriginY;
 
+      // Add POP first because the z-tree is in reverse order
       retval = AddToDisplayList(aView, aResult, bounds, bounds, POP_CLIP, aX - aOriginX, aY - aOriginY, PR_FALSE);
 
       if (retval)
@@ -3501,12 +3503,11 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       bounds.y += aOriginY;
     }
 
+    // Put in all the children before we add this view itself.
+    // This preserves document order.
+    nsView *childView = nsnull;
     for (childView = aView->GetFirstChild(); nsnull != childView;
          childView = childView->GetNextSibling()) {
-      PRInt32 zindex = childView->GetZIndex();
-      if (zindex < 0)
-        break;
-
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                                  aInsideRealView,
@@ -3554,25 +3555,6 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       if (aView->IsZPlaceholderView()) {
         EnsureZTreeNodeCreated(aView, aResult);
         mMapPlaceholderViewToZTreeNode.Put(new nsVoidKey(aView), aResult);
-      }
-    }
-
-    // any children with negative z-indices?
-    if (!retval && nsnull != childView) {
-      for (; nsnull != childView; childView = childView->GetNextSibling()) {
-        DisplayZTreeNode* createdNode;
-        retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
-                                   aInsideRealView,
-                                   aOriginX, aOriginY, aRealView, aDamageRect, aTopView, posX, posY, aPaintFloaters,
-                                   aEventProcessing);
-        if (createdNode != nsnull) {
-          EnsureZTreeNodeCreated(aView, aResult);
-          createdNode->mZSibling = aResult->mZChild;
-          aResult->mZChild = createdNode;
-        }
-              
-        if (retval)
-          break;
       }
     }
   }
