@@ -26,6 +26,7 @@
 #include "nsIRenderingContext.h"
 #include "nsEventStateManager.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsIDocument.h"
 
 #define NOISY_IMAGES
@@ -379,8 +380,11 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
       return rv;
     }
 
+
     // Initialize the image group
-    rv = mImageGroup->Init(mDeviceContext);
+    nsIURLGroup* urlGroup = mBaseURL->GetURLGroup();
+    rv = mImageGroup->Init(mDeviceContext, urlGroup);
+    NS_IF_RELEASE(urlGroup);
     if (NS_OK != rv) {
       return rv;
     }
