@@ -38,11 +38,9 @@ INSTALLER_URL = "http://ftp.mozilla.org/pub/mozilla.org/pub/mozilla/nightly/late
 endif
 
 installer:
-	$(PERL) $(srcdir)/deliver.pl $(MOZILLA_VERSION) \
-                                     $(INSTALLER_URL)   \
-                                     $(STUB_NAME)       \
-                                     $(SEA_NAME)        \
-                                     -o $(DEPTH) -s $(topsrcdir)
+	$(PERL) $(srcdir)/deliver.pl \
+                -o $(DEPTH) -s $(topsrcdir) \
+                $(MOZILLA_VERSION) $(INSTALLER_URL) $(STUB_NAME) $(SEA_NAME)
 
 include $(topsrcdir)/config/rules.mk
 
