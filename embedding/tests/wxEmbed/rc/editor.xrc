@@ -22,14 +22,17 @@
   
       <object class="tool" name="edit_bold">
         <bitmap>bold.gif</bitmap>
+        <toggle>0</toggle>
         <tooltip>Bold</tooltip>
       </object>
       <object class="tool" name="edit_italic">
         <bitmap>italic.gif</bitmap>
+        <toggle>0</toggle>
         <tooltip>Italic</tooltip>
       </object>
       <object class="tool" name="edit_underline">
         <bitmap>underline.gif</bitmap>
+        <toggle>0</toggle>
         <tooltip>Underline</tooltip>
       </object>
       <object class="separator"/>
@@ -40,6 +43,28 @@
       <object class="tool" name="edit_outdent">
         <bitmap>outdent.gif</bitmap>
         <tooltip>Outdent paragraph</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="edit_aleft">
+        <bitmap>alignleft.gif</bitmap>
+        <tooltip>Left align paragraph</tooltip>
+      </object>
+      <object class="tool" name="edit_acenter">
+        <bitmap>aligncenter.gif</bitmap>
+        <tooltip>Center align paragraph</tooltip>
+      </object>
+      <object class="tool" name="edit_aright">
+        <bitmap>alignright.gif</bitmap>
+        <tooltip>Right align paragraph</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="edit_pen">
+        <bitmap>pen.gif</bitmap>
+        <tooltip>Set the text colour</tooltip>
+      </object>
+      <object class="tool" name="edit_background">
+        <bitmap>background.gif</bitmap>
+        <tooltip>Set the paragraph background colour</tooltip>
       </object>
     </object>
 

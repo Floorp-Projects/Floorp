@@ -48,6 +48,9 @@ BEGIN_EVENT_TABLE(EditorFrame, GeckoFrame)
     EVT_UPDATE_UI(XRCID("edit_underline"), EditorFrame::OnUpdateToggleCmd)
     EVT_MENU(XRCID("edit_indent"),         EditorFrame::OnEditIndent)
     EVT_MENU(XRCID("edit_outdent"),        EditorFrame::OnEditOutdent)
+    EVT_MENU(XRCID("edit_aleft"),          EditorFrame::OnEditAlignLeft)
+    EVT_MENU(XRCID("edit_acenter"),        EditorFrame::OnEditAlignCenter)
+    EVT_MENU(XRCID("edit_aright"),         EditorFrame::OnEditAlignRight)
 END_EVENT_TABLE()
 
 EditorFrame::EditorFrame(wxWindow* aParent)
@@ -72,8 +75,6 @@ EditorFrame::EditorFrame(wxWindow* aParent)
         nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
 }
 
-
-
 void EditorFrame::MakeEditable()
 {
     nsCOMPtr<nsIDOMWindow> domWindow;
@@ -85,14 +86,15 @@ void EditorFrame::MakeEditable()
     editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE);
 }
 
-void EditorFrame::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
+nsresult EditorFrame::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
 {
     if (mCommandManager)
     {
         nsCOMPtr<nsIDOMWindow> domWindow;
         mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
-        mCommandManager->DoCommand(aCommand, aCommandParams, domWindow);
+        return mCommandManager->DoCommand(aCommand, aCommandParams, domWindow);
     }
+    return NS_ERROR_FAILURE;
 }
 
 void EditorFrame::IsCommandEnabled(const char *aCommand, PRBool *retval)
@@ -136,43 +138,57 @@ const char kCmdItalic[]    = "cmd_italic";
 const char kCmdUnderline[] = "cmd_underline";
 const char kCmdIndent[]    = "cmd_indent";
 const char kCmdOutdent[]   = "cmd_outdent";
-
+const char kCmdAlign[]     = "cmd_align";
 
 void EditorFrame::OnEditBold(wxCommandEvent &event)
 {
-    // command manager cmd_bold
     DoCommand(kCmdBold, nsnull);
 }
 
 void EditorFrame::OnEditItalic(wxCommandEvent &event)
 {
-    // command manager cmd_bold
     DoCommand(kCmdItalic, nsnull);
 }
 
 void EditorFrame::OnEditUnderline(wxCommandEvent &event)
 {
-    // command manager cmd_bold
     DoCommand(kCmdUnderline, nsnull);
 }
 
 void EditorFrame::OnEditIndent(wxCommandEvent &event)
 {
-    // command manager cmd_bold
     DoCommand(kCmdIndent, nsnull);
 }
 
 void EditorFrame::OnEditOutdent(wxCommandEvent &event)
 {
-    // command manager cmd_bold
     DoCommand(kCmdOutdent, nsnull);
 }
 
+const char kAlignLeft[]   = "left";
+const char kAlignRight[]  = "right";
+const char kAlignCenter[] = "center";
 
-#define STATE_ALL           "state_all"
-#define STATE_MIXED         "state_mixed"
-#define STATE_ATTRIBUTE     "state_attribute"
-#define STATE_ENABLED       "state_enabled"
+
+void EditorFrame::OnEditAlignLeft(wxCommandEvent &event)
+{
+    ExecuteAttribParam(kCmdAlign, kAlignLeft);
+}
+
+void EditorFrame::OnEditAlignRight(wxCommandEvent &event)
+{
+    ExecuteAttribParam(kCmdAlign, kAlignRight);
+}
+
+void EditorFrame::OnEditAlignCenter(wxCommandEvent &event)
+{
+    ExecuteAttribParam(kCmdAlign, kAlignCenter);
+}
+
+const char kStateAll[]       = "state_all";
+const char kStateMixed[]     = "state_mixed";
+const char kStateAttribute[] = "state_attribute";
+const char kStateEnabled[]   = "state_enabled";
 
 void EditorFrame::OnUpdateToggleCmd(wxUpdateUIEvent &event)
 {
@@ -201,14 +217,27 @@ void EditorFrame::OnUpdateToggleCmd(wxUpdateUIEvent &event)
         // state
         //
         PRBool bMixedStyle = PR_FALSE;
-        params->GetBooleanValue(STATE_MIXED, &bMixedStyle);
+        params->GetBooleanValue(kStateMixed, &bMixedStyle);
 
         // We're not in STATE_MIXED. Enable/Disable the
         // toolbar button based on it's current state
         //
         PRBool bCmdEnabled = PR_FALSE;
-        params->GetBooleanValue(STATE_ALL, &bCmdEnabled);
+        params->GetBooleanValue(kStateAll, &bCmdEnabled);
 
         event.Check((bMixedStyle || bCmdEnabled) ? TRUE : FALSE);
     }
+}
+
+nsresult EditorFrame::ExecuteAttribParam(const char *aCommand, const char *aAttribute)
+{
+    nsresult rv;
+    nsCOMPtr<nsICommandParams> params;
+    rv = MakeCommandParams(getter_AddRefs(params));
+    if (NS_FAILED(rv))
+        return rv;
+    if (!params)
+        return NS_ERROR_FAILURE;
+    params->SetCStringValue(kStateAttribute, aAttribute);
+    return DoCommand(aCommand, params);
 }
