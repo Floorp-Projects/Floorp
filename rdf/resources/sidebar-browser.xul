@@ -24,7 +24,8 @@
                 value="&sidebar.reload.label;"
                 onclick="window.location.reload()" />
   <titledbutton class="borderless paneltitle" 
-                value="&sidebar.customize.label;" />
+                value="&sidebar.customize.label;" 
+				onclick="dialogWindow=makeDialog()" />
  </box>
 </box>
 </window>

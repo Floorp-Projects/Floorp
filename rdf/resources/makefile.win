@@ -21,7 +21,14 @@ MODULE=rdf
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-        document.gif                    \
+        dialog.js						\
+		dialog.xul						\
+		dialogFrame.html				\
+		dialogSidebar.js				\
+		dialogSidebar.xul				\
+		dialogWindow.xul				\
+		sidebar-registry.rdf			\
+		document.gif                    \
         dom-test-1.css                  \
         dom-test-1.xul                  \
         dom-test-2.xul                  \

@@ -27,6 +27,13 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
+	dialog.js						\
+	dialog.xul						\
+	dialogFrame.html				\
+	dialogSidebar.js				\
+	dialogSidebar.xul				\
+	dialogWindow.xul				\
+	sidebar-registry.rdf			\
 	document.gif			\
 	dom-test-1.css			\
 	dom-test-1.xul			\

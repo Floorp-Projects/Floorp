@@ -200,6 +200,10 @@ function OpenURL(url)
   dump("OpenURL("+url+")\n");
 }
 
+function makeDialog() {
+	var newWin = window.openDialog('resource://res/rdf/dialogFrame.html','New','chrome');
+	return newWin;
+}
 
 // To get around "window.onload" not working in viewer.
 function Boot()
