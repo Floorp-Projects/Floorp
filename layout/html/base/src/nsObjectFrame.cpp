@@ -198,7 +198,6 @@ static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
-static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENTVIEWERCONTAINER_IID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRIntn
@@ -357,6 +356,13 @@ nsObjectFrame::CreateWidget(nsIPresContext* aPresContext,
                             nscoord aHeight,
                             PRBool aViewOnly)
 {
+#ifndef XP_MAC
+  // Do not create a widget if 'hidden' (except for Mac, where we
+  // always create a widget...)
+  if (IsHidden())
+    return NS_OK;
+#endif
+
   nsIView* view;
 
   // Create our view and widget
@@ -457,9 +463,15 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
     haveHeight = PR_TRUE;
   }
 
-  // the first time, mInstanceOwner will be null, so we a temporary default
-  if(mInstanceOwner != nsnull)
+  if (IsHidden()) {
+    // If we're hidden, then width and height are zero.
+    haveWidth = haveHeight = PR_TRUE;
+    aMetrics.width = aMetrics.height = 0;
+  }
+  else if(mInstanceOwner != nsnull)
   {
+    // the first time, mInstanceOwner will be null, so we a temporary default
+
     // if no width and height attributes specified use embed_def_dim.
     if(NS_OK != mInstanceOwner->GetWidth(&width))
     {
@@ -1022,6 +1034,34 @@ nsObjectFrame::GetBaseURL(nsIURI* &aURL)
   return NS_OK;
 }
 
+
+PRBool
+nsObjectFrame::IsHidden() const
+{
+  nsCOMPtr<nsIAtom> tag;
+  mContent->GetTag(*getter_AddRefs(tag));
+
+  if (tag.get() != nsHTMLAtoms::object) {
+    // The <object> tag doesn't support the 'hidden' attribute, but
+    // everything else does...
+    nsAutoString hidden;
+    mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::hidden, hidden);
+
+    // Yes, these are really the kooky ways that you could tell 4.x
+    // not to hide the <embed> once you'd put the 'hidden' attribute
+    // on the tag...
+    if (hidden.Length() &&
+        hidden != NS_LITERAL_STRING("false") &&
+        hidden != NS_LITERAL_STRING("no") &&
+        hidden != NS_LITERAL_STRING("off")) {
+      // The <embed> or <applet> is hidden.
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsObjectFrame::ContentChanged(nsIPresContext* aPresContext,
                             nsIContent*     aChild,
@@ -1050,7 +1090,7 @@ nsObjectFrame::DidReflow(nsIPresContext* aPresContext,
 
   // The view is created hidden; once we have reflowed it and it has been
   // positioned then we show it.
-  if (NS_FRAME_REFLOW_FINISHED == aStatus) {
+  if (NS_FRAME_REFLOW_FINISHED == aStatus && !IsHidden()) {
     nsIView* view = nsnull;
     GetView(aPresContext, &view);
     if (nsnull != view) {
@@ -2369,7 +2409,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       if (NS_OK == rv)
       {
         mOwner->GetView(mContext, &view);
-        view->GetWidget(mWidget);
+        if (view)
+          view->GetWidget(mWidget);
 
         if (PR_TRUE == windowless)
         {
@@ -2379,7 +2420,7 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
                                          // so let's postpone passing HDC till paint event
                                          // when it is really needed. Change spec?
         }
-        else
+        else if (mWidget)
         {
           mWidget->Resize(mPluginWindow.width, mPluginWindow.height, PR_FALSE);
           mPluginWindow.window = GetPluginPort();

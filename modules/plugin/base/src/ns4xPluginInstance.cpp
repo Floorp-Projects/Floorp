@@ -530,7 +530,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
     superwin = GDK_SUPERWIN(window->window);
-    if (superwin->bin_window)
+    if (superwin && superwin->bin_window)
     {
 #ifdef NS_DEBUG      
       printf("About to create new xtbin of %i X %i from %p...\n",
