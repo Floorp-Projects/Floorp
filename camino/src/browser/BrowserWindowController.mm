@@ -1170,9 +1170,10 @@ static NSArray* sToolbarDefaults = nil;
   {
     nsAutoString url;
     [theURL assignTo_nsAString:url];
+    NS_ConvertUCS2toUTF8 utf8URL(url);
 
     nsCOMPtr<nsIURI> fixedURI;
-    mURIFixer->CreateFixupURI(url, 0, getter_AddRefs(fixedURI));
+    mURIFixer->CreateFixupURI(utf8URL, 0, getter_AddRefs(fixedURI));
     if (fixedURI)
     {
       nsCAutoString spec;
