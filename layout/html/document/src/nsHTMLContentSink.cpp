@@ -150,6 +150,7 @@ public:
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
 
   nsIDocument* mDocument;
+  nsIScriptObjectOwner* mDocumentScript;
   nsIURL* mDocumentURL;
   nsIWebShell* mWebShell;
 
@@ -184,8 +185,6 @@ public:
 
   void ScrollToRef();
 
-  void ReflowNewContent();
-
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
   nsresult LoadStyleSheet(nsIURL* aURL,
@@ -212,7 +211,7 @@ public:
   // pre-append to true, the container will be appended when it is
   // created.
   void SetPreAppend(PRBool aPreAppend) {
-    mPreAppend = PR_TRUE;
+    mPreAppend = aPreAppend;
   }
 
   nsresult Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot);
@@ -257,18 +256,18 @@ public:
 
 // Temporary factory code to create content objects
 
-// XXX attribute values have entities in them - use the parsers expander!
 static void
 GetAttributeValueAt(const nsIParserNode& aNode,
                     PRInt32 aIndex,
-                    nsString& aResult)
+                    nsString& aResult,
+                    nsIScriptContextOwner* aScriptContextOwner)
 {
   // Copy value
   const nsString& value = aNode.GetValueAt(aIndex);
   aResult.Truncate();
   aResult.Append(value);
 
-  // strip quotes if present
+  // Strip quotes if present
   PRUnichar first = aResult.First();
   if ((first == '"') || (first == '\'')) {
     if (aResult.Last() == first) {
@@ -279,6 +278,104 @@ GetAttributeValueAt(const nsIParserNode& aNode,
       }
     } else {
       // Mismatched quotes - leave them in
+    }
+  }
+
+  // Reduce any entities
+  // XXX Note: as coded today, this will only convert well formed
+  // entities.  This may not be compatible enough.
+  // XXX there is a table in navigator that translates some numeric entities
+  // should we be doing that? If so then it needs to live in two places (bad)
+  // so we should add a translate numeric entity method from the parser...
+  char cbuf[100];
+  PRInt32 index = 0;
+  while (index < aResult.Length()) {
+    if (aResult.CharAt(index++) == '&') {
+      PRInt32 start = index - 1;
+      PRUnichar e = aResult.CharAt(index);
+      if (e == '#') {
+        // Convert a numeric character reference
+        index++;
+        char* cp = cbuf;
+        char* limit = cp + sizeof(cbuf) - 1;
+        PRBool ok = PR_FALSE;
+        PRInt32 slen = aResult.Length();
+        while ((index < slen) && (cp < limit)) {
+          PRUnichar e = aResult.CharAt(index);
+          if (e == ';') {
+            index++;
+            ok = PR_TRUE;
+            break;
+          }
+          if ((e >= '0') && (e <= '9')) {
+            *cp++ = char(e);
+            index++;
+            continue;
+          }
+          break;
+        }
+        if (!ok || (cp == cbuf)) {
+          continue;
+        }
+        *cp = '\0';
+        if (cp - cbuf > 5) {
+          continue;
+        }
+        PRInt32 ch = PRInt32( ::atoi(cbuf) );
+        if (ch > 65535) {
+          continue;
+        }
+
+        // Remove entity from string and replace it with the integer
+        // value.
+        aResult.Cut(start, index - start);
+        aResult.Insert(PRUnichar(ch), start);
+        index = start + 1;
+      }
+      else if (((e >= 'A') && (e <= 'Z')) ||
+               ((e >= 'a') && (e <= 'z'))) {
+        // Convert a named entity
+        index++;
+        char* cp = cbuf;
+        char* limit = cp + sizeof(cbuf) - 1;
+        *cp++ = char(e);
+        PRBool ok = PR_FALSE;
+        PRInt32 slen = aResult.Length();
+        while ((index < slen) && (cp < limit)) {
+          PRUnichar e = aResult.CharAt(index);
+          if (e == ';') {
+            index++;
+            ok = PR_TRUE;
+            break;
+          }
+          if (((e >= '0') && (e <= '9')) ||
+              ((e >= 'A') && (e <= 'Z')) ||
+              ((e >= 'a') && (e <= 'z'))) {
+            *cp++ = char(e);
+            index++;
+            continue;
+          }
+          break;
+        }
+        if (!ok || (cp == cbuf)) {
+          continue;
+        }
+        *cp = '\0';
+        PRInt32 ch = NS_EntityToUnicode(cbuf);
+        if (ch < 0) {
+          continue;
+        }
+
+        // Remove entity from string and replace it with the integer
+        // value.
+        aResult.Cut(start, index - start);
+        aResult.Insert(PRUnichar(ch), start);
+        index = start + 1;
+      }
+      else if (e == '{') {
+        // Convert a script entity
+        // XXX write me!
+      }
     }
   }
 }
@@ -292,8 +389,15 @@ FindAttribute(const nsIParserNode& aNode,
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase(aKeyName)) {
-      // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, aResult);
+      // Get value and remove mandatory quotes.
+
+      // NOTE: we do <b>not</b> evaluate any script entities here
+      // because to do so would result in double evaluations since
+      // attribute values found here are not stored. The unfortunate
+      // implication is that these attributes cannot support script
+      // entities.
+      GetAttributeValueAt(aNode, i, aResult, nsnull);
+
       return PR_TRUE;
     }
   }
@@ -302,7 +406,8 @@ FindAttribute(const nsIParserNode& aNode,
 
 static nsresult
 AddAttributes(const nsIParserNode& aNode,
-              nsIHTMLContent* aContent)
+              nsIHTMLContent* aContent,
+              nsIScriptContextOwner* aScriptContextOwner)
 {
   nsIContent* content = (nsIContent*) aContent;
 
@@ -317,7 +422,7 @@ AddAttributes(const nsIParserNode& aNode,
     k.ToUpperCase();
     
     // Get value and remove mandatory quotes
-    GetAttributeValueAt(aNode, i, v);
+    GetAttributeValueAt(aNode, i, v, aScriptContextOwner);
 
     // Add attribute to content
     content->SetAttribute(k, v, PR_FALSE);
@@ -651,7 +756,9 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
     mStack[mStackPos].mFlags |= APPENDED;
   }
   mStackPos++;
-  rv = AddAttributes(aNode, content);
+  nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
+  rv = AddAttributes(aNode, content, sco);
+  NS_IF_RELEASE(sco);
   if (NS_OK != rv) {
     return rv;
   }
@@ -748,7 +855,9 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       if (NS_OK != rv) {
         return rv;
       }
-      rv = AddAttributes(aNode, content);
+      nsIScriptContextOwner* sco = mSink->mDocument->GetScriptContextOwner();
+      rv = AddAttributes(aNode, content, sco);
+      NS_IF_RELEASE(sco);
       if (NS_OK != rv) {
         NS_RELEASE(content);
         return rv;
@@ -1026,12 +1135,19 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURL* aURL,
                       nsIWebShell* aContainer)
 {
+  NS_PRECONDITION(nsnull != aDoc, "null ptr");
+  NS_PRECONDITION(nsnull != aURL, "null ptr");
+  NS_PRECONDITION(nsnull != aContainer, "null ptr");
+  if ((nsnull == aDoc) || (nsnull == aURL) || (nsnull == aContainer)) {
+    return NS_ERROR_NULL_POINTER;
+  }
+
   mDocument = aDoc;
-  NS_IF_ADDREF(aDoc);
+  NS_ADDREF(aDoc);
   mDocumentURL = aURL;
-  NS_IF_ADDREF(aURL);
+  NS_ADDREF(aURL);
   mWebShell = aContainer;
-  NS_IF_ADDREF(aContainer);
+  NS_ADDREF(aContainer);
 
   // Make root part
   nsresult rv = NS_NewRootPart(&mRoot, mDocument);
@@ -1092,10 +1208,10 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
   }
 
   SINK_TRACE(SINK_TRACE_REFLOW,
-             ("HTMLContentSink::DidBuildModel: layout new content"));
-  ReflowNewContent();
+             ("HTMLContentSink::DidBuildModel: layout final content"));
 
-  // XXX sigh
+  // Reflow the last batch of content
+  mDocument->ContentAppended(mBody);
   ScrollToRef();
 
   mDocument->EndLoad();
@@ -1334,6 +1450,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     // XXX replace with AddAttributes when form's implement nsIHTMLContent
     // Add tag attributes to the form; we can't use AddAttributes
     // because mCurrentForm is not an nsIHTMLContent (yet).
+    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
     nsAutoString k, v;
     PRInt32 ac = aNode.GetAttributeCount();
     for (PRInt32 i = 0; i < ac; i++) {
@@ -1344,9 +1461,10 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
       k.ToUpperCase();
 
       // Get value and remove mandatory quotes
-      GetAttributeValueAt(aNode, i, v);
+      GetAttributeValueAt(aNode, i, v, sco);
       mCurrentForm->SetAttribute(k, v);
     }
+    NS_IF_RELEASE(sco);
 
     // XXX Temporary code till forms become real content
     // Add the form to the document
@@ -1420,6 +1538,7 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
   nsresult rv = NS_NewImageMap(&mCurrentMap, atom);
   NS_RELEASE(atom);
   if (NS_OK == rv) {
+    // XXX rewrite to use AddAttributes and don't use FindAttribute
     // Look for name attribute and set the map name
     nsAutoString name;
     if (FindAttribute(aNode, "name", name)) {
@@ -1640,14 +1759,6 @@ NS_RELEASE(cx);
 }
 
 void
-HTMLContentSink::ReflowNewContent()
-{
-  // Trigger reflows in each of the presentation shells
-  mDocument->ContentAppended(mBody);
-//XXX  ScrollToRef();
-}
-
-void
 HTMLContentSink::AddBaseTagInfo(nsIHTMLContent* aContent)
 {
   if (mBaseHREF.Length() > 0) {
@@ -1689,29 +1800,31 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
     nsAutoString shape, coords, href, target(mBaseTarget), alt;
     PRInt32 ac = aNode.GetAttributeCount();
     PRBool suppress = PR_FALSE;
+    nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
     for (PRInt32 i = 0; i < ac; i++) {
       // Get upper-cased key
       const nsString& key = aNode.GetKeyAt(i);
       if (key.EqualsIgnoreCase("shape")) {
-        GetAttributeValueAt(aNode, i, shape);
+        GetAttributeValueAt(aNode, i, shape, sco);
       }
       else if (key.EqualsIgnoreCase("coords")) {
-        GetAttributeValueAt(aNode, i, coords);
+        GetAttributeValueAt(aNode, i, coords, sco);
       }
       else if (key.EqualsIgnoreCase("href")) {
-        GetAttributeValueAt(aNode, i, href);
+        GetAttributeValueAt(aNode, i, href, sco);
         href.StripWhitespace();
       }
       else if (key.EqualsIgnoreCase("target")) {
-        GetAttributeValueAt(aNode, i, target);
+        GetAttributeValueAt(aNode, i, target, sco);
       }
       else if (key.EqualsIgnoreCase("alt")) {
-        GetAttributeValueAt(aNode, i, alt);
+        GetAttributeValueAt(aNode, i, alt, sco);
       }
       else if (key.EqualsIgnoreCase("suppress")) {
         suppress = PR_TRUE;
       }
     }
+    NS_RELEASE(sco);
     mCurrentMap->AddArea(mBaseHREF, shape, coords, href, target, alt,
                          suppress);
   }
@@ -1721,15 +1834,17 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 nsresult
 HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
+  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, i, mBaseHREF);
+      GetAttributeValueAt(aNode, i, mBaseHREF, sco);
     } else if (key.EqualsIgnoreCase("target")) {
-      GetAttributeValueAt(aNode, i, mBaseTarget);
+      GetAttributeValueAt(aNode, i, mBaseTarget, sco);
     }
   }
+  NS_RELEASE(sco);
   return NS_OK;
 }
 
@@ -1745,25 +1860,27 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   nsAutoString title; 
   nsAutoString type; 
 
+  nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
   for (index = 0; index < count; index++) {
     const nsString& key = aNode.GetKeyAt(index);
     if (key.EqualsIgnoreCase("href")) {
-      GetAttributeValueAt(aNode, index, href);
+      GetAttributeValueAt(aNode, index, href, sco);
       href.StripWhitespace();
     }
     else if (key.EqualsIgnoreCase("rel")) {
-      GetAttributeValueAt(aNode, index, rel);
+      GetAttributeValueAt(aNode, index, rel, sco);
       rel.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("title")) {
-      GetAttributeValueAt(aNode, index, title);
+      GetAttributeValueAt(aNode, index, title, sco);
       title.CompressWhitespace();
     }
     else if (key.EqualsIgnoreCase("type")) {
-      GetAttributeValueAt(aNode, index, type);
+      GetAttributeValueAt(aNode, index, type, sco);
       type.StripWhitespace();
     }
   }
+  NS_RELEASE(sco);
 
   if (rel.EqualsIgnoreCase("stylesheet")) {
     if (type.EqualsIgnoreCase("text/css")) {
@@ -1818,7 +1935,9 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
     if (NS_OK == rv) {
       // Add in the attributes and add the meta content object to the
       // head container.
-      rv = AddAttributes(aNode, it);
+      nsIScriptContextOwner* sco = mDocument->GetScriptContextOwner();
+      rv = AddAttributes(aNode, it, sco);
+      NS_IF_RELEASE(sco);
       if (NS_OK != rv) {
         NS_RELEASE(it);
         return rv;
