@@ -25,6 +25,7 @@ CString scriptPath;
 CString nscpxpiPath;
 CString cdshellPath;
 CString outputPath; 
+CString xpiDstPath;
 
 WIDGET *tempWidget;
 int selCount;
@@ -81,7 +82,7 @@ int ReplaceXPIFiles()
 		// This copy preserves the existing archive if it exists - do we
 		// need to delete it the first time through?
 		xpiArchive = nscpxpiPath + "\\" + xpiList[i].xpiname;
-		xpiArcDest = cdPath + "\\" + xpiList[i].xpiname;
+		xpiArcDest = xpiDstPath + "\\" + xpiList[i].xpiname;
 		if (!CopyFile(xpiArchive, xpiArcDest, TRUE))
 			DWORD e = GetLastError();
 
@@ -100,11 +101,11 @@ int ReplaceINIFile()
 
 	GetCurrentDirectory(sizeof(olddir), olddir);
 
-	if(SetCurrentDirectory((char *)(LPCTSTR) cdPath) == FALSE)
+	if(SetCurrentDirectory((char *)(LPCTSTR) xpiDstPath) == FALSE)
 		return FALSE;
 
 	CString Src = nscpxpiPath + "\\" +exeName;
-	CString Dst = cdPath + "\\" + exeName;
+	CString Dst = xpiDstPath + "\\" + exeName;
 	if (!CopyFile(Src, Dst, FALSE))
 		DWORD e = GetLastError();
 
@@ -455,7 +456,7 @@ void AddThirdParty()
 		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer1, iniDstPath);
 		selCount++;
-		CopyFile(tpCompPath1, cdPath + "\\" + Archive1, FALSE);
+		CopyFile(tpCompPath1, xpiDstPath + "\\" + Archive1, FALSE);
 		DWORD e1 = GetLastError();
 
 	}
@@ -469,7 +470,7 @@ void AddThirdParty()
 		WritePrivateProfileString("Setup Type2", cName, componentName, iniDstPath);
 		WritePrivateProfileString("Setup Type3", cName, componentName, iniDstPath);
 		WritePrivateProfileSection(componentName, cBuffer2, iniDstPath);
-		CopyFile(tpCompPath2, cdPath + "\\" + Archive2, FALSE);
+		CopyFile(tpCompPath2, xpiDstPath + "\\" + Archive2, FALSE);
 		DWORD e2 = GetLastError();
 	}
 	delete [] cBuffer1;
@@ -635,6 +636,7 @@ int StartIB(CString parms, WIDGET *curWidget)
 	iniDstPath	= cdPath + "\\config.ini";
 	scriptPath	= rootPath + "\\script.ib";
 	workspacePath = configPath + "\\Workspace";
+	xpiDstPath	= cdPath;
 	if (SearchPath(workspacePath, "NSCPXPI", NULL, 0, NULL, NULL))
 		nscpxpiPath = workspacePath + "\\NSCPXPI";
 	else
@@ -642,7 +644,20 @@ int StartIB(CString parms, WIDGET *curWidget)
 	iniSrcPath	= nscpxpiPath + "\\config.ini";
 
 	init_components();
-	
+//checking for the autorun CD shell - inorder to create a Core dir or not
+	CString cdDir= GetGlobal("CD image");
+	CString networkDir = GetGlobal("Network");
+	CString ftpLocation = GetGlobal("FTPLocation");
+
+	if (cdDir.Compare("1") ==0)
+	{
+		_mkdir((char *)(LPCTSTR) cdPath);
+	}
+	else
+	{
+		iniDstPath = outputPath + "\\config.ini";
+		xpiDstPath = outputPath;
+	}
 	CNewDialog newprog;
 	newprog.Create(IDD_NEW_DIALOG,NULL );
 	newprog.ShowWindow(SW_SHOW);
@@ -654,7 +669,6 @@ int StartIB(CString parms, WIDGET *curWidget)
 	dlg->SetWindowText("         Customization is in Progress");
 	
 /////////////////////////////
-	_mkdir((char *)(LPCTSTR) cdPath);
 	_mkdir((char *)(LPCTSTR) tempPath);
 	_mkdir((char *)(LPCTSTR) workspacePath);
 //	_mkdir((char *)(LPCTSTR) cdshellPath);
@@ -714,15 +728,12 @@ int StartIB(CString parms, WIDGET *curWidget)
 	/* -- Need to be more selective than this
 	CopyDir(nscpxpiPath, cdPath, NULL, FALSE);
 	*/
-	CString cdDir= GetGlobal("CD image");
-	CString networkDir = GetGlobal("Network");
-	CString ftpLocation = GetGlobal("FTPLocation");
 
 	for (int i=0; i<numComponents; i++)
 	{
 		if (Components[i].selected)
 			CopyFile(nscpxpiPath + "\\" + Components[i].archive, 
-					 cdPath + "\\" + Components[i].archive, TRUE);
+					 xpiDstPath + "\\" + Components[i].archive, TRUE);
 	}
 
 	if (cdDir.Compare("1") ==0)
@@ -741,10 +752,10 @@ int StartIB(CString parms, WIDGET *curWidget)
 		if (!infout)
 			exit( 3 );
 
-		fprintf(infout,"[autorun]\nopen = .\\Core\\NetscapeSetup.exe");
+		fprintf(infout,"[autorun]\nopen = NetscapeSetup.exe");
 	}
 	CString component;
-	CString configiniPath = cdPath +"\\config.ini";
+	CString configiniPath = xpiDstPath +"\\config.ini";
 
 	if (ftpLocation.Compare("ftp://") !=0)
 	{
