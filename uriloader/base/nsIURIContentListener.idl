@@ -58,4 +58,8 @@ interface nsIURIContentListener : nsISupports
 				  in nsIChannel aOpenedChannel,
                   out nsIStreamListener aContentHandler,
 				  out boolean aAbortProcess);
+
+   /* returns true if we can handle the content and false if we can't */
+   boolean canHandleContent(in string aContentType, in string aCommand, 
+						 in string aWindowTarget);
 };
