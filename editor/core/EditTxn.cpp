@@ -43,7 +43,7 @@ nsresult EditTxn::Undo(void)
 
 nsresult EditTxn::Redo(void)
 {
-  return NS_OK;
+  return Do();
 }
 
 nsresult EditTxn::GetIsTransient(PRBool *aIsTransient)
