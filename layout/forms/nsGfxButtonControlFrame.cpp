@@ -159,6 +159,20 @@ nsGfxButtonControlFrame::GetFrameName(nsString& aResult) const
 
 
 NS_IMETHODIMP 
+nsGfxButtonControlFrame::AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                                                               const nsHTMLReflowState& aSuggestedReflowState)
+{
+  if (kSuggestedNotSet == mSuggestedWidth) {
+    aDesiredSize.width  += aSuggestedReflowState.mComputedBorderPadding.left + aSuggestedReflowState.mComputedBorderPadding.right;
+  }
+
+  if (kSuggestedNotSet == mSuggestedHeight) {
+    aDesiredSize.height += aSuggestedReflowState.mComputedBorderPadding.top + aSuggestedReflowState.mComputedBorderPadding.bottom;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext, 
                              nsHTMLReflowMetrics&     aDesiredSize,
                              const nsHTMLReflowState& aReflowState, 
@@ -169,25 +183,22 @@ nsGfxButtonControlFrame::Reflow(nsIPresContext&          aPresContext,
   }
 
   if ((kSuggestedNotSet != mSuggestedWidth) || 
-      (kSuggestedNotSet != mSuggestedHeight))
-  {
+      (kSuggestedNotSet != mSuggestedHeight)) {
+
     nsHTMLReflowState suggestedReflowState(aReflowState);
-   
+
       // Honor the suggested width and/or height.
     if (kSuggestedNotSet != mSuggestedWidth) {
       suggestedReflowState.mComputedWidth = mSuggestedWidth;
-      suggestedReflowState.mComputedWidth -= aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
     }
 
     if (kSuggestedNotSet != mSuggestedHeight) {
       suggestedReflowState.mComputedHeight = mSuggestedHeight;
-      suggestedReflowState.mComputedHeight -= aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom;
     }
 
     return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, suggestedReflowState, aStatus);
 
-  } else {
-      // Normal reflow.
+  } else { // Normal reflow.
     return nsHTMLButtonControlFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   }
 }

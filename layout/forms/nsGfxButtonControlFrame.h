@@ -53,6 +53,9 @@ public:
                                 nsString* aValues, nsString* aNames);
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
+protected:
+  NS_IMETHOD AddComputedBorderPaddingToDesiredSize(nsHTMLReflowMetrics& aDesiredSize,
+                                                   const nsHTMLReflowState& aSuggestedReflowState);
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
