@@ -27,12 +27,13 @@
 
 #include "prtypes.h"
 #include "cmtcmn.h"
+#include "prthread.h"
 
 #include "nsIPSMUIHandler.h"
 #include "nsIDOMWindow.h"
 
 PRStatus InitPSMUICallbacks(PCMT_CONTROL gControl);
-PRStatus InitPSMEventLoop(PCMT_CONTROL gControl);
+PRStatus InitPSMEventLoop(PCMT_CONTROL gControl, PRThread **aThread);
 PRStatus DisplayPSMUIDialog(PCMT_CONTROL control, const char* pickledStatus, const char *hostName, nsIDOMWindow * window);
 
 

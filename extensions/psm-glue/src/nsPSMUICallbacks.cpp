@@ -207,9 +207,12 @@ extern "C" void CARTMAN_UIEventLoop(void *data)
    CMT_EventLoop((PCMT_CONTROL)data);
 }
 
-PRStatus InitPSMEventLoop(PCMT_CONTROL control)
+PRStatus InitPSMEventLoop(PCMT_CONTROL control, PRThread **aThread)
 {
-    PR_CreateThread(PR_USER_THREAD,
+	if (!aThread)
+		return PR_FAILURE;
+		
+    *aThread = PR_CreateThread(PR_USER_THREAD,
                     CARTMAN_UIEventLoop,
                     control, 
                     PR_PRIORITY_NORMAL, 
@@ -217,7 +220,7 @@ PRStatus InitPSMEventLoop(PCMT_CONTROL control)
                     PR_UNJOINABLE_THREAD,
                     0);  
 
-    return PR_SUCCESS;
+    return *aThread ? PR_SUCCESS : PR_FAILURE;
 }
 
 PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
