@@ -28,7 +28,6 @@
 #include "nsWindow.h"
 #include "nsTextWidget.h"
 #include "nsCheckButton.h"
-#include "nsFileWidget.h"
 #include "nsGUIEvent.h"
 #include "nsIMenuItem.h"
 
@@ -430,24 +429,6 @@ void nsXtWidget_Text_Callback(Widget w, XtPointer p, XtPointer call_data)
   for (len = 0; len < cbs->text->length; len++)
     cbs->text->ptr[len] = '*';
 
-}
-
-//==============================================================
-void nsXtWidget_FSBCancel_Callback(Widget w, XtPointer p, XtPointer call_data)
-{
-  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
-  if (p != nsnull) {
-    widgetWindow->OnCancel();
-  }
-}
-
-//==============================================================
-void nsXtWidget_FSBOk_Callback(Widget w, XtPointer p, XtPointer call_data)
-{
-  nsFileWidget * widgetWindow = (nsFileWidget *) p ;
-  if (p != nsnull) {
-    widgetWindow->OnOk();
-  }
 }
 
 //==============================================================

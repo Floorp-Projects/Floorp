@@ -41,7 +41,6 @@ CPPSRCS =              \
 	nsDataObjCollection.cpp      \
 	nsClipboard.cpp      \
 	nsWindow.cpp         \
-	nsFileWidget.cpp     \
 	nsFilePicker.cpp     \
 	nsScrollbar.cpp      \
 	nsAppShell.cpp       \
@@ -69,7 +68,6 @@ OBJS =                             \
 	.\$(OBJDIR)\nsDataObjCollection.obj  \
 	.\$(OBJDIR)\nsClipboard.obj  \
 	.\$(OBJDIR)\nsWindow.obj         \
-	.\$(OBJDIR)\nsFileWidget.obj     \
 	.\$(OBJDIR)\nsFilePicker.obj     \
 	.\$(OBJDIR)\nsScrollbar.obj      \
 	.\$(OBJDIR)\nsAppShell.obj       \

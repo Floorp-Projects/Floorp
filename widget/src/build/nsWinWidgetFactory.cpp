@@ -28,8 +28,6 @@
 #include "nsWidgetsCID.h"
 
 #include "nsFilePicker.h"
-#include "nsFileWidget.h"
-#include "nsFileSpecWithUIImpl.h"
 #include "nsLookAndFeel.h"
 #include "nsScrollbar.h"
 #include "nsToolkit.h"
@@ -58,13 +56,11 @@
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileWidget)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsFileSpecWithUIImpl)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
@@ -147,10 +143,6 @@ static nsModuleComponentInfo components[] =
     NS_CHILD_CID,
     "@mozilla.org/widgets/child_window/win;1",
     ChildWindowConstructor },
-  { "File Widget",
-    NS_FILEWIDGET_CID,
-    "@mozilla.org/widgets/filewidget/win;1",
-    nsFileWidgetConstructor },
   { "File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",
@@ -180,11 +172,6 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/widget/sound/win;1"
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-  { "File Spec with UI",
-    NS_FILESPECWITHUI_CID,
-    //    "@mozilla.org/widget/filespecwithui/win;1",
-    "@mozilla.org/filespecwithui;1",
-    nsFileSpecWithUIImplConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
     //    "@mozilla.org/widget/transferable/win;1",

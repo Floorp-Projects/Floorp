@@ -37,7 +37,6 @@ EXPORTS		= \
 		nsIMenu.h \
 		nsIMenuItem.h \
 		nsIPopUpMenu.h \
-		nsIFileWidget.h \
 		nsStringUtil.h \
 		nsIWidget.h \
 		nsIKBStateControl.h \
@@ -72,7 +71,6 @@ endif
 XPIDLSRCS	= \
 		nsIAppShell.idl \
 		nsIFilePicker.idl \
-		nsIFileSpecWithUI.idl \
 		nsIToolkit.idl \
 		nsISound.idl \
 		nsITransferable.idl \

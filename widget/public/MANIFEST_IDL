@@ -5,7 +5,6 @@
 nsIAppShell.idl
 nsIBidiKeyboard.idl
 nsIFilePicker.idl
-nsIFileSpecWithUI.idl
 nsISound.idl
 nsIToolkit.idl
 nsITransferable.idl

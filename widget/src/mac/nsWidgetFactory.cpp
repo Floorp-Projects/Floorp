@@ -35,7 +35,6 @@
 #include "nsTextWidget.h"
 #include "nsLabel.h"
 #include "nsFilePicker.h"
-#include "nsFileSpecWithUIImpl.h"
 #include "nsScrollbar.h"
 
 #if TARGET_CARBON
@@ -52,8 +51,6 @@
 #include "nsMenu.h"
 #include "nsMenuItem.h"
 #endif
-
-#include "nsFileWidget.h"
 
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
@@ -86,7 +83,6 @@ static NS_DEFINE_CID(kCChild,         NS_CHILD_CID);
 static NS_DEFINE_CID(kCButton,        NS_BUTTON_CID);
 static NS_DEFINE_CID(kCCheckButton,   NS_CHECKBUTTON_CID);
 static NS_DEFINE_CID(kCFilePicker,    NS_FILEPICKER_CID);
-static NS_DEFINE_CID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_CID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_CID(kCTextField,     NS_TEXTFIELD_CID);
@@ -109,7 +105,6 @@ static NS_DEFINE_CID(kCDragService,   NS_DRAGSERVICE_CID);
 
 // Sound services (just Beep for now)
 static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
-static NS_DEFINE_CID(kCFileSpecWithUI,   NS_FILESPECWITHUI_CID);
 
 #ifdef IBMBIDI
 static NS_DEFINE_CID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
@@ -199,9 +194,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCFilePicker)) {
        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
     }
-    else if (mClassID.Equals(kCFileOpen)) {
-       inst = (nsISupports*)(nsBaseWidget*)new nsFileWidget();
-    }
 #if USE_NATIVE_VERSION
     else if (mClassID.Equals(kCCheckButton)) {
         inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsCheckButton();
@@ -244,8 +236,6 @@ nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,
     else if (mClassID.Equals(kCSound)) {
         inst = (nsISupports*)(nsISound*) new nsSound();
     }
-    else if (mClassID.Equals(kCFileSpecWithUI))
-    	inst = (nsISupports*) (nsIFileSpecWithUI *) new nsFileSpecWithUIImpl;
     else if (mClassID.Equals(kCTransferable))
         inst = (nsISupports*)new nsTransferable();
     else if (mClassID.Equals(kCHTMLFormatConverter))

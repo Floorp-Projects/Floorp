@@ -13,7 +13,6 @@ nsGUIEvent.h
 nsEvent.h
 nsIMouseListener.h
 nsIEventListener.h
-nsIFileWidget.h
 nsIMenuListener.h
 nsWidgetsCID.h
 nsILabel.h
