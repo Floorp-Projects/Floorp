@@ -39,7 +39,7 @@
   -->
   <tree id="Tree"
         flex="100%" style="height: 100%"
-        datasources="rdf:null"
+        datasources="rdf:internetsearch"
         ondblclick="return OnDblClick(event.target.parentNode.parentNode);">
 
     <template>
@@ -74,17 +74,25 @@
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name" />
 
     <treechildren>
-      <treeitem id="NC:RelatedLinks">
+      <treeitem id="NC:RelatedLinks" container="true">
         <treerow>
           <treecell><treeindentation/><titledbutton />&related.row.label;</treecell>
         </treerow>
       </treeitem>
+
+      <treeitem id="NC:LastSearchRoot" ref="http://home.netscape.com/NC-rdf#ref" container="true" >
+        <treerow>
+          <treecell><treeindentation/><titledbutton />&lastsearch.row.label;</treecell>
+        </treerow>
+      </treeitem>
+
 
       <treeitem id="NC:SiteMapRoot">
         <treerow>
           <treecell><treeindentation/><titledbutton />&sitemap.row.label;</treecell>
         </treerow>
       </treeitem>
+
     </treechildren>
   </tree>
 </window>

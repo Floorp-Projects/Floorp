@@ -99,7 +99,8 @@ private:
 	nsIRDFResource		*mEngine;
 	static PRInt32		gRefCnt;
 
-    // pseudo-constants
+    // pseudo-constants    
+	static nsIRDFResource	*kNC_LastSearchRoot;
 	static nsIRDFResource	*kNC_loading;
 	static nsIRDFResource	*kNC_Child;
 	static nsIRDFResource	*kNC_Name;
@@ -266,6 +267,7 @@ nsIRDFResource			*SearchDataSource::kRDF_type;
 
 PRInt32				SearchDataSourceCallback::gRefCnt;
 
+nsIRDFResource			*SearchDataSourceCallback::kNC_LastSearchRoot;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Child;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Name;
 nsIRDFResource			*SearchDataSourceCallback::kNC_Data;
@@ -498,7 +500,7 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 	if (! tv)
 		return(rv);
 
-	if (source == kNC_SearchRoot)
+	if ((source == kNC_SearchRoot) || (source == kNC_LastSearchRoot))
 	{
 		if (property == kNC_Child)
 		{
@@ -508,6 +510,7 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 			}
 			return(rv);
 		}
+		return(NS_RDF_NO_VALUE);
 	}
 	else if (isSearchURI(source))
 	{
@@ -529,6 +532,11 @@ SearchDataSource::GetTargets(nsIRDFResource *source,
 			}
 			return(rv);
 		}
+		return(NS_RDF_NO_VALUE);
+	}
+	if (mInner)
+	{
+		rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	return NS_NewEmptyEnumerator(targets);
 }
@@ -642,7 +650,7 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 
 	nsresult rv;
 
-	if ((source == kNC_SearchRoot) || isSearchURI(source))
+	if ((source == kNC_SearchRoot) || (source == kNC_LastSearchRoot) || isSearchURI(source))
 	{
             nsCOMPtr<nsISupportsArray> array;
             rv = NS_NewISupportsArray(getter_AddRefs(array));
@@ -656,7 +664,13 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 
             NS_ADDREF(result);
             *labels = result;
-            return NS_OK;
+            return(NS_OK);
+	}
+	
+	if (mInner)
+	{
+		rv = mInner->ArcLabelsOut(source, labels);
+		return(rv);
 	}
 
 	return NS_NewEmptyEnumerator(labels);
@@ -667,7 +681,13 @@ SearchDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 SearchDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-	return mInner->GetAllResources(aCursor);
+	nsresult	rv = NS_RDF_NO_VALUE;
+
+	if (mInner)
+	{
+		rv = mInner->GetAllResources(aCursor);
+	}
+	return(rv);
 }
 
 
@@ -675,7 +695,13 @@ SearchDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 NS_IMETHODIMP
 SearchDataSource::AddObserver(nsIRDFObserver *aObserver)
 {
-	return mInner->AddObserver(aObserver);
+	nsresult	rv = NS_OK;
+
+	if (mInner)
+	{
+		rv = mInner->AddObserver(aObserver);
+	}
+	return(rv);
 }
 
 
@@ -683,7 +709,13 @@ SearchDataSource::AddObserver(nsIRDFObserver *aObserver)
 NS_IMETHODIMP
 SearchDataSource::RemoveObserver(nsIRDFObserver *aObserver)
 {
-	return mInner->RemoveObserver(aObserver);
+	nsresult	rv = NS_OK;
+
+	if (mInner)
+	{
+		rv = mInner->RemoveObserver(aObserver);
+	}
+	return(rv);
 }
 
 
@@ -820,6 +852,49 @@ SearchDataSource::BeginSearchRequest(nsIRDFResource *source)
 		}
 	}
 
+	if (mInner)
+	{
+		nsCOMPtr<nsISimpleEnumerator>	arcs;
+		if (NS_SUCCEEDED(rv = mInner->GetTargets(kNC_LastSearchRoot, kNC_Child, PR_TRUE, getter_AddRefs(arcs))))
+		{
+			PRBool			hasMore = PR_TRUE;
+			while (hasMore == PR_TRUE)
+			{
+				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+					break;
+				nsCOMPtr<nsISupports>	arc;
+				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+					break;
+				nsCOMPtr<nsIRDFResource>	child = do_QueryInterface(arc);
+				if (child)
+				{
+					mInner->Unassert(kNC_LastSearchRoot, kNC_Child, child);
+				}
+			}
+		}
+	}
+
+#if 0
+		nsCOMPtr<nsIRDFNode>	lastTarget;
+		if (NS_SUCCEEDED(rv = mInner->GetTarget(kNC_LastSearchRoot, kNC_Ref,
+			PR_TRUE, getter_AddRefs(lastTarget))))
+		{
+			if (rv != NS_RDF_NO_VALUE)
+			{
+				rv = mInner->Unassert(kNC_LastSearchRoot, kNC_Ref, lastTarget);
+			}
+		}
+		if (uri.Length() > 0)
+		{
+			const PRUnichar	*uriUni = uri.GetUnicode();
+			nsCOMPtr<nsIRDFLiteral>	uriLiteral;
+			if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(uriUni, getter_AddRefs(uriLiteral))))
+			{
+				rv = mInner->Assert(kNC_LastSearchRoot, kNC_Ref, uriLiteral, PR_TRUE);
+			}
+		}
+	}
+#endif
 	uri.Cut(0, strlen("internetsearch:"));
 
 	nsVoidArray	*engineArray = new nsVoidArray;
@@ -1552,6 +1627,7 @@ SearchDataSourceCallback::SearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFR
 
 		PR_ASSERT(NS_SUCCEEDED(rv));
 
+		gRDFService->GetResource(kURINC_LastSearchRoot, &kNC_LastSearchRoot);
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name", &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "data", &kNC_Data);
@@ -1579,6 +1655,7 @@ SearchDataSourceCallback::~SearchDataSourceCallback()
 
 	if (--gRefCnt == 0)
 	{
+		NS_RELEASE(kNC_LastSearchRoot);
 		NS_RELEASE(kNC_Child);
 		NS_RELEASE(kNC_Name);
 		NS_RELEASE(kNC_Data);
@@ -2138,6 +2215,13 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		{
 			rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
 		}
+
+		// Persist this under kNC_LastSearchRoot
+		if (mDataSource)
+		{
+			rv = mDataSource->Assert(kNC_LastSearchRoot, kNC_Child, res, PR_TRUE);
+		}
+
 	}
 	return(NS_OK);
 }
