@@ -423,6 +423,7 @@ HTMLContentSink::SetTitle(const nsString& aValue)
   nsresult rv = NS_NewHTMLTitle(&it, atom, aValue);
   if (NS_OK == rv) {
     mHead->AppendChild(it, PR_FALSE);
+    NS_RELEASE(it);
   }
   NS_RELEASE(atom);
   return NS_OK;
