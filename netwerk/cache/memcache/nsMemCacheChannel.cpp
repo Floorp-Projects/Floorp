@@ -46,7 +46,9 @@ nsMemCacheChannel::NotifyStorageInUse(PRInt32 aBytesUsed)
  * read capabilities.  It adds methods for initiating, suspending, resuming and
  * cancelling async reads. 
  */
-class AsyncReadStreamAdaptor : public nsIInputStream {
+class AsyncReadStreamAdaptor : public nsIInputStream,
+                               public nsIStreamListener
+{
 public:
     AsyncReadStreamAdaptor(nsMemCacheChannel* aChannel, nsIInputStream *aSyncStream):
         mSyncStream(aSyncStream), mDataAvailCursor(0),
@@ -72,7 +74,7 @@ public:
     nsresult
     Cancel(void) {
         mAborted = PR_TRUE;
-        return mStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_ABORTED, nsnull);
+        return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_ABORTED, nsnull);
     }
 
     nsresult
@@ -86,6 +88,56 @@ public:
         return NextListenerEvent();
     }
 
+    // nsIStreamListener methods, all of which delegate to the real listener
+
+    // This is the heart of this class.
+    // The OnDataAvailable() method is always called from an event processed by
+    // the system event queue.  The event is sent from an
+    // AsyncReadStreamAdaptor object to itself.  This method both forwards the
+    // event to the downstream listener and causes another OnDataAvailable()
+    // event to be enqueued.
+    NS_IMETHOD
+    OnDataAvailable(nsIChannel *channel, nsISupports *aContext,
+                    nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count) {
+        nsresult rv;
+
+        rv = mDownstreamListener->OnDataAvailable(mChannel, aContext, inStr, sourceOffset, count);
+        if (NS_FAILED(rv)) {
+            Cancel();
+            return rv;
+        }
+        if (!mSuspended && !mAborted) {
+            rv = NextListenerEvent();
+            if (NS_FAILED(rv)) {
+                Fail();
+                return rv;
+            }
+        }
+        return rv;
+    }
+
+    NS_IMETHOD
+    OnStartRequest(nsIChannel *channel, nsISupports *aContext) {
+        nsresult rv;
+        rv = mDownstreamListener->OnStartRequest(mChannel, aContext);
+        if (NS_FAILED(rv))
+            Cancel();
+        return rv;
+    }
+
+    NS_IMETHOD
+    OnStopRequest(nsIChannel *channel, nsISupports *aContext,
+                  nsresult status, const PRUnichar *errorMsg) {
+        nsresult rv;
+		rv = mDownstreamListener->OnStopRequest(mChannel, aContext, status, errorMsg);
+        mDownstreamListener = 0;
+		// Tricky: causes this instance to be free'ed because mEventQueueStreamListener
+		// has a circular reference back to this.
+        mEventQueueStreamListener = 0;
+		return rv;
+    }
+
+    // nsIInputStream methods
     NS_IMETHOD
     Available(PRUint32 *aNumBytes) { return mAvailable; }
 
@@ -104,14 +156,6 @@ public:
             return rv;
         }
 
-        if (!mSuspended && !mAvailable) {
-            rv = NextListenerEvent();
-            if (NS_FAILED(rv)) {
-                Fail();
-                return rv;
-            }
-        }
-
         return NS_OK;
     }
 
@@ -120,7 +164,8 @@ public:
         nsresult rv = mSyncStream->Close();
         mSyncStream = 0;
         mContext = 0;
-        mStreamListener = 0;
+        mDownstreamListener = 0;
+        mEventQueueStreamListener = 0;
         return rv;
     }
 
@@ -132,7 +177,7 @@ public:
         nsIEventQueue *eventQ;
 
         mContext = aContext;
-        mStreamListener = aListener;
+        mDownstreamListener = aListener;
         mRemaining = aReadCount;
 
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -144,12 +189,12 @@ public:
         rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), &eventQ);
         if (NS_FAILED(rv)) return rv;
 
-        rv = NS_NewAsyncStreamListener(aListener, eventQ, 
-                                       getter_AddRefs(mStreamListener));
+        rv = NS_NewAsyncStreamListener(NS_STATIC_CAST(nsIStreamListener*, this), eventQ, 
+                                       getter_AddRefs(mEventQueueStreamListener));
         NS_RELEASE(eventQ);
         if (NS_FAILED(rv)) return rv;
 
-        rv = mStreamListener->OnStartRequest(mChannel, aContext);
+        rv = mEventQueueStreamListener->OnStartRequest(mChannel, aContext);
         if (NS_FAILED(rv)) return rv;
 
         return NextListenerEvent();
@@ -160,9 +205,12 @@ protected:
     nsresult
     Fail(void) {
         mAborted = PR_TRUE;
-        return mStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_FAILED, nsnull);
+        return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_FAILED, nsnull);
     }
 
+    // If more data remains in the source stream that the downstream consumer
+    // has not yet been notified about, fire an OnDataAvailable event.
+    // Otherwise, fire an OnStopRequest event.
     nsresult
     NextListenerEvent() {
         PRUint32 available;
@@ -173,14 +221,14 @@ protected:
 
         if (available) {
             PRUint32 size = PR_MIN(available, MEM_CACHE_SEGMENT_SIZE);
-            rv = mStreamListener->OnDataAvailable(mChannel, mContext, this,
-                                                  mDataAvailCursor, size);
+            rv = mEventQueueStreamListener->OnDataAvailable(mChannel, mContext, this,
+                                                      mDataAvailCursor, size);
             mDataAvailCursor += size;
             mRemaining -= size;
             mAvailable += size;
             return rv;
         } else {
-            rv = mStreamListener->OnStopRequest(mChannel, mContext, NS_OK, nsnull);
+            rv = mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_OK, nsnull);
             AsyncReadStreamAdaptor* thisAlias = this;
             NS_RELEASE(thisAlias);
             return rv;
@@ -189,7 +237,8 @@ protected:
     
 private:
     nsCOMPtr<nsISupports>       mContext;        // Opaque context passed to AsyncRead()
-    nsCOMPtr<nsIStreamListener> mStreamListener; // Stream listener that has been proxied
+    nsCOMPtr<nsIStreamListener> mEventQueueStreamListener; // Stream listener that has been proxied
+    nsCOMPtr<nsIStreamListener> mDownstreamListener; // Original stream listener
     nsCOMPtr<nsIInputStream>    mSyncStream;     // Underlying synchronous stream that is
                                                  //   being converted to an async stream
     PRUint32                    mDataAvailCursor;
@@ -202,7 +251,8 @@ private:
     PRBool                      mSuspended;      // Suspend() has been called
 };
 
-NS_IMPL_ISUPPORTS(AsyncReadStreamAdaptor,  NS_GET_IID(nsIInputStream))
+NS_IMPL_ISUPPORTS4(AsyncReadStreamAdaptor, nsIInputStream, nsIBaseStream,
+                   nsIStreamListener, nsIStreamObserver)
 
 // The only purpose of this output stream wrapper is to adjust the cache's
 // overall occupancy as new data flows into the cache entry.
