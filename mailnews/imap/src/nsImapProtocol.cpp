@@ -1390,6 +1390,10 @@ NS_IMETHODIMP nsImapProtocol::IsBusy(PRBool *aIsConnectionBusy,
   return rv;
 }
 
+#define IS_SUBSCRIPTION_RELATED_ACTION(action) (action == nsIImapUrl::nsImapSubscribe\
+|| action == nsIImapUrl::nsImapUnsubscribe || action == nsIImapUrl::nsImapDiscoverAllBoxesUrl)
+
+
 // canRunUrl means the connection is not busy, and is in the selcted state
 // for the desired folder (or authenticated).
 // has to wait means it's in the right selected state, but busy.
@@ -1505,8 +1509,32 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
           else // *** jt - an authenticated state url can be run in either
               // authenticated or selected state
           {
+            nsImapAction actionForProposedUrl;
+            nsImapAction actionForRunningUrl;
+
+            // If proposed url is subscription related, and we are currently running
+            // a subscription url, then we want to queue the proposed url after the current url.
+            // Otherwise, we can run this url if we're not busy.
+            // If we never find a running subscription-related url, the caller will
+            // just use whatever free connection it can find, which is what we want.
+            aImapUrl->GetImapAction(&actionForProposedUrl);
+            if (IS_SUBSCRIPTION_RELATED_ACTION(actionForProposedUrl))
+            {
+              if (isBusy && m_runningUrl)
+              {
+                m_runningUrl->GetImapAction(&actionForRunningUrl);
+                if (IS_SUBSCRIPTION_RELATED_ACTION(actionForRunningUrl))
+                {
+                  *aCanRunUrl = PR_FALSE;
+                  *hasToWait = PR_TRUE;
+                }
+              }
+            }
+            else
+            {
               if (!isBusy)
                   *aCanRunUrl = PR_TRUE;
+            }
           }
           
           PR_FREEIF(urlHostName);
