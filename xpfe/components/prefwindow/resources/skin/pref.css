@@ -24,7 +24,7 @@ background-color: grey
 table {
     display: block;
 		width: 100%;
-    border: groove white 2px;
+    border: 0px;
     min-height: 16px;
     color: white;
 }
