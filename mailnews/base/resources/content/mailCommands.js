@@ -672,6 +672,8 @@ function filterFolderForJunk()
   if (spamSettings.useWhiteList && spamSettings.whiteListAbURI)
     whiteListDirectory = RDF.GetResource(spamSettings.whiteListAbURI).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
 
+  getJunkmailComponent();
+
   for (var i = 0; i < count; i++) {
     var msgIndex = i;
     var msgURI = view.getURIForViewIndex(i);
