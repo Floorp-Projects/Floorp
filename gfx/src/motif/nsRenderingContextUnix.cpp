@@ -290,7 +290,8 @@ NS_IMETHODIMP nsRenderingContextUnix :: PushState(void)
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
-  GetClipRect(state->mLocalClip);
+  PRBool clipState;
+  GetClipRect(state->mLocalClip, clipState);
 
   state->mClipRegion = mRegion;
 
