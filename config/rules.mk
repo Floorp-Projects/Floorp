@@ -327,16 +327,18 @@ ifdef MAPS
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
 else
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 endif
 endif
 ifdef PROGRAM
-	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 endif
 ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 444 $(SIMPLE_PROGRAMS) $(DIST)/bin
+	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
 else
@@ -348,8 +350,10 @@ endif
 endif
 ifdef SHARED_LIBRARY
 ifdef IS_COMPONENT
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib/components
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
 else
+	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/lib
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 endif
 endif
@@ -360,10 +364,10 @@ ifdef MAPS
 	$(INSTALL) -m 444 $(MAPS) $(DIST)/bin
 endif
 ifdef PROGRAM
-	$(INSTALL) -m 444 $(PROGRAM) $(DIST)/bin
+	$(INSTALL) -m 555 $(PROGRAM) $(DIST)/bin
 endif
 ifdef SIMPLE_PROGRAMS
-	$(INSTALL) -m 444 $(SIMPLE_PROGRAMS) $(DIST)/bin
+	$(INSTALL) -m 555 $(SIMPLE_PROGRAMS) $(DIST)/bin
 endif
 	+$(LOOP_OVER_DIRS)
 endif
