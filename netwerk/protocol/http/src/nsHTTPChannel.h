@@ -41,6 +41,7 @@
 #include "nsICachedNetData.h"
 #include "nsIProxy.h"
 #include "nsIPrompt.h"
+#include "nsIHTTPEventSink.h"
 
 class nsHTTPRequest;
 class nsHTTPResponse;
