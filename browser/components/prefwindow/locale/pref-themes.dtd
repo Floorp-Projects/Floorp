@@ -18,3 +18,5 @@
 <!ENTITY  getNewThemes.label      "Get New Themes">
 <!ENTITY  themesTab.label         "Themes">
 <!ENTITY  extensionsTab.label     "Extensions">
+<!ENTITY  disableExtension.label  "Disable Extension">
+<!ENTITY  uninstallExtension.label "Uninstall Extension">
