@@ -37,6 +37,7 @@
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
 #include "nsIStyleSheet.h"
+#include "nsICSSStyleSheet.h"
 #include "nsIStyleContext.h"
 #include "nsIFrame.h"
 
@@ -73,6 +74,7 @@
 #include "nsIDocShell.h"
 #include "nsIFrameDebug.h"
 
+#include "nsIChromeRegistry.h"
 
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -949,6 +951,21 @@ DocumentViewerImpl::CreateStyleSet(nsIDocument* aDocument,
     }
     if (mUAStyleSheet) {
       (*aStyleSet)->AppendBackstopStyleSheet(mUAStyleSheet);
+    }
+
+    NS_WITH_SERVICE(nsIChromeRegistry, chromeRegistry, "component://netscape/chrome/chrome-registry", &rv);
+    if (NS_SUCCEEDED(rv) && chromeRegistry) {
+      nsCOMPtr<nsISupportsArray> sheets;
+      chromeRegistry->GetBackstopSheets(getter_AddRefs(sheets));
+      if(sheets){
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        PRUint32 count;
+        sheets->Count(&count);
+        for(PRUint32 i=0; i<count; i++) {
+          sheets->GetElementAt(i, getter_AddRefs(sheet));
+          (*aStyleSet)->AppendBackstopStyleSheet(sheet);
+        }
+      }
     }
   }
   return rv;
