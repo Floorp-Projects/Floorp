@@ -49,6 +49,7 @@ struct  nsRect;
 struct  nsFont;
 class   nsIMenuBar;
 class   nsIEventListener;
+class   nsIRollupListener;
 %}
 
 [ptr] native nsWidgetInitData(nsWidgetInitData);
@@ -635,5 +636,13 @@ interface nsIWidget : nsISupports
    *
    */
   void CaptureMouse(in PRBool aCapture);
+
+	/**
+	 * Enables/Disables system capture of any and all events that would cause a
+	 * dropdown to be rolled up
+	 * @param aCapture PR_TRUE enables capture, PR_FALSE disables capture 
+	 *
+	 */
+  void CaptureRollupEvents(in nsIRollupListener aListener, in PRBool aDoCapture);
 
 };

@@ -64,6 +64,7 @@ EXPORTS=nsui.h \
   nsIMenuItem.h \
   nsIContextMenu.h \
   nsIPopUpMenu.h \
+  nsIRollupListener.h \
   $(NULL)
 
 
