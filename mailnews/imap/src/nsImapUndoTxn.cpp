@@ -45,9 +45,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsIDBFolderInfo.h"
 
-static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
-
 
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
     m_idsAreUids(PR_FALSE), m_isMove(PR_FALSE), m_srcIsPop3(PR_FALSE)
@@ -161,9 +159,10 @@ nsImapMoveCopyMsgTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::UndoTransaction(void)
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
-  if (NS_FAILED(rv)) return rv;
+  nsresult rv;
+  nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   if (m_isMove || !m_dstFolder)
   {
     if (m_srcIsPop3)
@@ -240,10 +239,11 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
 NS_IMETHODIMP
 nsImapMoveCopyMsgTxn::RedoTransaction(void)
 {
-	nsresult rv = NS_OK;
-	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
-	if (NS_FAILED(rv)) return rv;
-	if (m_isMove || !m_dstFolder)
+	nsresult rv;
+	nsCOMPtr<nsIImapService> imapService = do_GetService(NS_IMAPSERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (m_isMove || !m_dstFolder)
     {
         if (m_srcIsPop3)
         {
