@@ -44,10 +44,12 @@ REQUIRES    = xpcom \
           unicharutil \
           $(NULL)
 
-ifneq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
 DIRS        =
-else
-DIRS        = ps
+
+ifeq (,$(filter os2 windows,$(MOZ_WIDGET_TOOLKIT)))
+ifdef MOZ_ENABLE_POSTSCRIPT
+DIRS        += ps
+endif
 endif
 
 ifeq ($(MOZ_GFX_TOOLKIT),cocoa)

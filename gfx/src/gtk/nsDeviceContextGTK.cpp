@@ -49,8 +49,10 @@
 #include "nsFontMetricsGTK.h"
 #include "nsGfxCIID.h"
 
+#ifdef USE_POSTSCRIPT
 #include "nsGfxPSCID.h"
 #include "nsIDeviceContextPS.h"
+#endif /* USE_POSTSCRIPT */
 #ifdef USE_XPRINT
 #include "nsGfxXPrintCID.h"
 #include "nsIDeviceContextXPrint.h"
@@ -528,6 +530,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
   }
   else
 #endif /* USE_XPRINT */
+#ifdef USE_POSTSCRIPT
   if (method == pmPostScript) { // PostScript
     // default/PS
     static NS_DEFINE_CID(kCDeviceContextPS, NS_DEVICECONTEXTPS_CID);
@@ -551,6 +554,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceContextFor(nsIDeviceContextSpec *aDev
                               (void **)&aContext);
     return rv;
   }
+#endif /* USE_POSTSCRIPT */
   
   NS_WARNING("no print module created.");
   return NS_ERROR_UNEXPECTED;
