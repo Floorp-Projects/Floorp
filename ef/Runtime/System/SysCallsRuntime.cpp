@@ -65,7 +65,7 @@ SYSCALL_FUNC(void*) sysNewIntArray(Int32 length)
 //
 // Throw an Exception
 //
-#if !defined(_WIN32) && !defined(LINUX)
+#if !defined(_WIN32) && !defined(LINUX) && !defined(FREEBSD)
 
 SYSCALL_FUNC(void) sysThrow(const JavaObject& /* inObject */)
 {
@@ -283,7 +283,7 @@ NS_EXTERN SYSCALL_FUNC(void) sysThrowNamedException(const char *exceptionName)
  * you're on a platform that does *not* need stubs
  * to call native code
  */
-#if !(defined _WIN32) && !(defined LINUX)
+#if !defined(_WIN32) && !defined(LINUX) && !defined(FREEBSD)
 SYSCALL_FUNC(void) sysThrowNullPointerException()
 {
   sysThrow(const_cast<Class *>(&Standard::get(cNullPointerException))->newInstance());

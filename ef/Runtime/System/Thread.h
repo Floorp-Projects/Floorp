@@ -32,6 +32,13 @@ typedef CONTEXT ThreadContext;
 typedef pid_t HANDLE;
 typedef pt_regs ThreadContext; 
 
+#elif defined (__FreeBSD__)
+
+#include <machine/signal.h>
+
+typedef void* HANDLE;
+typedef struct sigcontext ThreadContext;
+
 #else
 
 typedef void* HANDLE;

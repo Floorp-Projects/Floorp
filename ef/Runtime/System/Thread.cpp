@@ -26,13 +26,11 @@
 #include "SysCallsRuntime.h"
 
 #ifdef _WIN32
-
 #include "md/x86/x86Win32Thread.h"
-
-#elif defined(__linux__)
-
+#elif defined(LINUX)
 #include "x86LinuxThread.h"
-
+#elif defined(FREEBSD)
+#include "x86FreeBSDThread.h"
 #else
 
 #define GetPassedException(E)
@@ -409,7 +407,7 @@ void Thread::_stop(JavaObject* exc)
 			ce = ca.lookupByRange(ip);
 		}
 		if (ce != NULL) { // REPLACE
-#if defined(XP_PC) || defined(LINUX)
+#if defined(XP_PC) || defined(LINUX) || defined(FREEBSD)
 			ip = new(*pool) Uint8[10];
 			ip[0] = 0xf;                  // 0x0f0b is an illegal instruction
 			ip[1] = 0xb;
