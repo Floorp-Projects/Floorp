@@ -974,9 +974,7 @@ nsStyleBackground::nsStyleBackground(nsIPresContext* aPresContext)
     mBackgroundClip(NS_STYLE_BG_CLIP_BORDER),
     mBackgroundInlinePolicy(NS_STYLE_BG_INLINE_POLICY_CONTINUOUS),
     mBackgroundOrigin(NS_STYLE_BG_ORIGIN_PADDING),
-    mBackgroundRepeat(NS_STYLE_BG_REPEAT_XY),
-    mBackgroundXPosition(0),
-    mBackgroundYPosition(0)
+    mBackgroundRepeat(NS_STYLE_BG_REPEAT_XY)
 {
   aPresContext->GetDefaultBackgroundColor(&mBackgroundColor);
 }
@@ -988,9 +986,9 @@ nsStyleBackground::nsStyleBackground(const nsStyleBackground& aSource)
     mBackgroundInlinePolicy(aSource.mBackgroundInlinePolicy),
     mBackgroundOrigin(aSource.mBackgroundOrigin),
     mBackgroundRepeat(aSource.mBackgroundRepeat),
-    mBackgroundColor(aSource.mBackgroundColor),
     mBackgroundXPosition(aSource.mBackgroundXPosition),
     mBackgroundYPosition(aSource.mBackgroundYPosition),
+    mBackgroundColor(aSource.mBackgroundColor),
     mBackgroundImage(aSource.mBackgroundImage)
 {
 }
@@ -1007,12 +1005,18 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
       (mBackgroundFlags == aOther.mBackgroundFlags) &&
       (mBackgroundRepeat == aOther.mBackgroundRepeat) &&
       (mBackgroundColor == aOther.mBackgroundColor) &&
-      (mBackgroundXPosition == aOther.mBackgroundXPosition) &&
-      (mBackgroundYPosition == aOther.mBackgroundYPosition) &&
       (mBackgroundClip == aOther.mBackgroundClip) &&
       (mBackgroundInlinePolicy == aOther.mBackgroundInlinePolicy) &&
       (mBackgroundOrigin == aOther.mBackgroundOrigin) &&
-      (mBackgroundImage == aOther.mBackgroundImage))
+      (mBackgroundImage == aOther.mBackgroundImage) &&
+      ((!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_PERCENT) ||
+       (mBackgroundXPosition.mFloat == aOther.mBackgroundXPosition.mFloat)) &&
+       (!(mBackgroundFlags & NS_STYLE_BG_X_POSITION_LENGTH) ||
+        (mBackgroundXPosition.mCoord == aOther.mBackgroundXPosition.mCoord))) &&
+      ((!(mBackgroundFlags & NS_STYLE_BG_Y_POSITION_PERCENT) ||
+       (mBackgroundYPosition.mFloat == aOther.mBackgroundYPosition.mFloat)) &&
+       (!(mBackgroundFlags & NS_STYLE_BG_Y_POSITION_LENGTH) ||
+        (mBackgroundYPosition.mCoord == aOther.mBackgroundYPosition.mCoord))))
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_VISUAL;
 }

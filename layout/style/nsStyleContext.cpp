@@ -939,8 +939,8 @@ void nsStyleContext::DumpRegressionData(nsIPresContext* aPresContext, FILE* out,
     (int)bg->mBackgroundFlags,
     (int)bg->mBackgroundRepeat,
     (long)bg->mBackgroundColor,
-    (long)bg->mBackgroundXPosition,
-    (long)bg->mBackgroundYPosition,
+    (long)bg->mBackgroundXPosition.mCoord, // potentially lossy on some platforms
+    (long)bg->mBackgroundYPosition.mCoord, // potentially lossy on some platforms
     NS_ConvertUCS2toUTF8(bg->mBackgroundImage).get());
  
   // SPACING (ie. margin, padding, border, outline)

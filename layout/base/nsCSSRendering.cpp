@@ -2397,14 +2397,16 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
 {
   nscoord x;
   if (NS_STYLE_BG_X_POSITION_LENGTH & aColor.mBackgroundFlags) {
-    x = aColor.mBackgroundXPosition;
+    x = aColor.mBackgroundXPosition.mCoord;
+  }
+  else if (NS_STYLE_BG_X_POSITION_PERCENT & aColor.mBackgroundFlags) {
+    PRFloat64 percent = PRFloat64(aColor.mBackgroundXPosition.mFloat);
+    nscoord tilePos = nscoord(percent * PRFloat64(aTileWidth));
+    nscoord boxPos = nscoord(percent * PRFloat64(aOriginBounds.width));
+    x = boxPos - tilePos;
   }
   else {
-    nscoord t = aColor.mBackgroundXPosition;
-    float pct = float(t) / 100.0f;
-    nscoord tilePos = nscoord(pct * aTileWidth);
-    nscoord boxPos = nscoord(pct * aOriginBounds.width);
-    x = boxPos - tilePos;
+    x = 0;
   }
   x += aOriginBounds.x - aClipBounds.x;
   if (NS_STYLE_BG_REPEAT_X & aColor.mBackgroundRepeat) {
@@ -2434,14 +2436,16 @@ ComputeBackgroundAnchorPoint(const nsStyleBackground& aColor,
 
   nscoord y;
   if (NS_STYLE_BG_Y_POSITION_LENGTH & aColor.mBackgroundFlags) {
-    y = aColor.mBackgroundYPosition;
+    y = aColor.mBackgroundYPosition.mCoord;
+  }
+  else if (NS_STYLE_BG_Y_POSITION_PERCENT & aColor.mBackgroundFlags){
+    PRFloat64 percent = PRFloat64(aColor.mBackgroundYPosition.mFloat);
+    nscoord tilePos = nscoord(percent * PRFloat64(aTileHeight));
+    nscoord boxPos = nscoord(percent * PRFloat64(aOriginBounds.height));
+    y = boxPos - tilePos;
   }
   else {
-    nscoord t = aColor.mBackgroundYPosition;
-    float pct = float(t) / 100.0f;
-    nscoord tilePos = nscoord(pct * aTileHeight);
-    nscoord boxPos = nscoord(pct * aOriginBounds.height);
-    y = boxPos - tilePos;
+    y = 0;
   }
   y += aOriginBounds.y - aClipBounds.y;
   if (NS_STYLE_BG_REPEAT_Y & aColor.mBackgroundRepeat) {

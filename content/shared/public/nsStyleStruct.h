@@ -168,9 +168,15 @@ struct nsStyleBackground : public nsStyleStruct {
   PRUint8 mBackgroundOrigin       : 3; // [reset] See nsStyleConsts.h
   PRUint8 mBackgroundRepeat       : 4; // [reset] See nsStyleConsts.h
 
+  // Note: a member of this union is valid IFF the appropriate bit flag
+  // is set in mBackgroundFlags.
+  union {
+    nscoord mCoord;
+    float   mFloat;
+  } mBackgroundXPosition,         // [reset]
+    mBackgroundYPosition;         // [reset]
+
   nscolor mBackgroundColor;       // [reset]
-  nscoord mBackgroundXPosition;   // [reset]
-  nscoord mBackgroundYPosition;   // [reset]
   nsString mBackgroundImage;      // [reset] absolute url string
 
   PRBool IsTransparent() const
@@ -178,11 +184,6 @@ struct nsStyleBackground : public nsStyleStruct {
     return (mBackgroundFlags &
             (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE)) ==
             (NS_STYLE_BG_COLOR_TRANSPARENT | NS_STYLE_BG_IMAGE_NONE);
-  }
-
-  PRBool IsPositioned() const
-  {
-    return mBackgroundXPosition != 0 || mBackgroundYPosition != 0;
   }
 };
 
