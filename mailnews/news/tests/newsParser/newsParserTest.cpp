@@ -114,10 +114,12 @@ nsresult newsTestDriver::RunDriver()
 
 nsresult newsTestDriver::GetPath(nsFileSpec& aPathName)
 {
-    /* turn news://news.mozilla.org/netscape.public.mozilla.unix 
+    /* eventually turn news://news.mozilla.org/netscape.public.mozilla.unix 
        into /tmp/mozillanews/news.mozilla.org/netscape.public.mozilla.unix 
+       getting /tmp/mozillanews from the account manager (which gets it
+       from the prefs 
     */
-  aPathName = "/tmp/mozillanews/nnn";
+  aPathName = "/tmp/mozillanews/news.mozilla.org/netscape.public.mozilla.unix";
   return NS_OK;
 }
 
