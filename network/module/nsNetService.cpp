@@ -407,11 +407,18 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
 
     if (PL_strcmp(protocol, "resource") == 0) {
       char* fileName;
+      char* search;
       const char* file;
+      aUrl->GetSearch(&file);
+      search = XP_STRDUP(file);
       result = aUrl->GetFile(&file);
       NS_ASSERTION(result == NS_OK, "deal with this");
       fileName = mangleResourceIntoFileURL(file);
       aUrl->SetSpec(fileName);
+      if (search) {
+        aUrl->SetSearch(search);
+        PR_Free(search);
+      }
       PR_Free(fileName);
     } 
 	

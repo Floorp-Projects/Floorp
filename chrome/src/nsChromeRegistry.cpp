@@ -226,12 +226,16 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     }
 
     nsAutoString hostStr(host);
+    const char* file;
     
     // Construct a chrome URL and use it to look up a resource.
     nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
 
+    // Stash any search part of the URL for later
+    aChromeURL->GetSearch(&file);
+    nsAutoString searchStr(file);
+
     // Find out the provider type of the URL
-    const char* file;
     aChromeURL->GetFile(&file);
     nsAutoString restOfURL(file);
     
@@ -308,7 +312,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURL* aChromeURL)
     }
 
     char* finalDecision = chromeBase.ToNewCString();
+    char* search = searchStr.ToNewCString();
     aChromeURL->SetSpec(finalDecision);
+    if (search && *search) {
+      aChromeURL->SetSearch(search);
+      delete []search;
+    }
     delete []finalDecision;
     return NS_OK;
 }
