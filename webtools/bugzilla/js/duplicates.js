@@ -22,7 +22,7 @@
 window.addEventListener('load', loadData, false);
 
 // The base URL of this Bugzilla installation; derived from the page's URL.
-var gBaseURL = window.location.href.replace(/duplicates\.(jar!|xul).*/, "");
+var gBaseURL = window.location.href.replace(/(jar:)?(.*?)duplicates\.(jar!|xul).*/, "$2");
 
 function loadData()
 {
