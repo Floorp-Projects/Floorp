@@ -672,12 +672,12 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
     fixLimitTotal = ((fixTotal - fixMinTotal) < availWidth) ? fixTotal - fixMinTotal : availWidth;
     desLimitTotal = ((autoDesTotal - autoMinTotal) < availWidth) ? autoDesTotal - autoMinTotal : availWidth;
   }
-  else {
-    if (autoDesTotal > 0) {
-      availWidth -= pctTotal + fixTotal; // the pct and fix cols already reached their values
+  else { // FIX or DES_CON with LIMIT_NONE
+    if (FIX == aWidthIndex) {
+      availWidth -= pctTotal;
     }
-    else if (fixTotal > 0) {
-      availWidth -= pctTotal; // the pct already reached their values
+    else if (DES_CON == aWidthIndex) {
+      availWidth -= pctTotal + fixTotal; 
     }
   }
 
