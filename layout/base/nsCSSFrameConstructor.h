@@ -534,7 +534,8 @@ protected:
 
 //MathML Mod - RBS
 #ifdef MOZ_MATHML
-  nsresult ConstructMathMLFrame(nsIPresContext*          aPresContext,
+  nsresult ConstructMathMLFrame(nsIPresShell*            aPresShell,
+                                nsIPresContext*          aPresContext,
                                 nsFrameConstructorState& aState,
                                 nsIContent*              aContent,
                                 nsIFrame*                aParentFrame,
