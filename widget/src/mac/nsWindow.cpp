@@ -1040,12 +1040,12 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 
 	// initialize the paint event
 	nsPaintEvent paintEvent;
-	paintEvent.eventStructType	= NS_PAINT_EVENT;		// nsEvent
+	paintEvent.eventStructType			= NS_PAINT_EVENT;		// nsEvent
 	paintEvent.message					= NS_PAINT;
-	paintEvent.widget						= this;							// nsGUIEvent
+	paintEvent.widget					= this;					// nsGUIEvent
 	paintEvent.nativeMsg				= NULL;
-	paintEvent.renderingContext	= aContext;					// nsPaintEvent
-	paintEvent.rect							= &aRect;
+	paintEvent.renderingContext			= aContext;				// nsPaintEvent
+	paintEvent.rect						= &aRect;
 
 	// draw the widget
 	StartDraw(aContext);
@@ -1053,18 +1053,25 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 		DispatchWindowEvent(paintEvent);
 	EndDraw();
 
+	// beard:  Since we clip so aggressively, drawing from front to back should work,
+	// and it does for the most part. However; certain cases, such as overlapping
+	// areas that are handled by different view managers, don't properly clip siblings.
+#ifdef FRONT_TO_BACK
+#	define FIRST_CHILD(children) (children->Last())
+#	define NEXT_CHILD(children) (children->Prev())
+#else
+#	define FIRST_CHILD(children) (children->First())
+#	define NEXT_CHILD(children) (children->Next())
+#endif
+
 	// recursively draw the children
-	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
-	if (children)
-	{
-		children->First();
-		do
-		{
+	nsCOMPtr<nsIBidirectionalEnumerator> children(getter_AddRefs((nsIBidirectionalEnumerator*)GetChildren()));
+	if (children) {
+		FIRST_CHILD(children);
+		do {
 			nsISupports* child;
-			if (NS_SUCCEEDED(children->CurrentItem(&child)))
-			{
+			if (NS_SUCCEEDED(children->CurrentItem(&child))) {
 				nsWindow* childWindow = static_cast<nsWindow*>(child);
-				NS_RELEASE(child);
 
 				nsRect childBounds;
 				childWindow->GetBounds(childBounds);
@@ -1076,9 +1083,14 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 					intersection.MoveBy(-childBounds.x, -childBounds.y);
 					childWindow->UpdateWidget(intersection, aContext);
 				}
-    	}
-		} while (NS_SUCCEEDED(children->Next()));			
+				
+				NS_RELEASE(child);
+    		}
+		} while (NS_SUCCEEDED(NEXT_CHILD(children)));
 	}
+
+#undef FIRST_CHILD
+#undef NEXT_CHILD
 }
 
 
