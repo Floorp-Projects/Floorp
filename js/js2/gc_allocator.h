@@ -132,7 +132,7 @@ namespace JavaScript {
 		static void construct(pointer p, const T &val) { new(p) T(val);}
 		static void destroy(pointer p) { p->~T(); }
 		
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(_WIN32)
         static size_type max_size() { return size_type(-1) / sizeof(T); }
 #else
 		static size_type max_size() { return std::numeric_limits<size_type>::max() / sizeof(T); }
