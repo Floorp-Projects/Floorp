@@ -76,26 +76,26 @@ Rights Reserved.
 				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
             <html class="headerValue" id="ToValueShort" flex="1">
-            <button class="showMoreAddressesButton" id="ToValueToggleIcon" 
-                oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+            <image class="showMoreAddressesButton" id="ToValueToggleIcon" 
+                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html>
 
             <html class="headerValue" id="ToValueLong" collapsed="true" flex="1">
-            <button class="showFewerAddressesButton"  
-               oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
+            <image class="showFewerAddressesButton"  
+               onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html>
 				</box>
 
 			    <box id="CcBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
               <html class="headerValue" id="CcValueShort" flex="1">
-              <button class="showMoreAddressesButton" id="CcValueToggleIcon" 
-                oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+              <image class="showMoreAddressesButton" id="CcValueToggleIcon" 
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
               </html>
 
               <html class="headerValue" id="CcValueLong" collapsed="true" flex="1">
-              <button class="showFewerAddressesButton"  
-                oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
+              <image class="showFewerAddressesButton"  
+                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
               </html>
 				  </box>
 

@@ -128,7 +128,8 @@ var messageHeaderSink = {
       // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
       
-      NotifyClearAddresses();
+      if (this.NotifyClearAddresses != undefined)
+        NotifyClearAddresses();
 
       // (1) clear out the email fields for to, from, cc....
       ClearEmailField(msgPaneData.FromValue);
@@ -436,8 +437,9 @@ function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, emailAddress,
       itemInDocument.setTextAttribute("emailAddress", emailAddress);
       itemInDocument.setTextAttribute("fullAddress", fullAddress);  
       itemInDocument.setTextAttribute("displayName", displayName);  
-
-      AddExtraAddressProcessing(emailAddress, itemInDocument);
+      
+      if (this.AddExtraAddressProcessing != undefined)
+        AddExtraAddressProcessing(emailAddress, itemInDocument);
 
       hdrViewSetVisible(parentBox, true);
     } 
@@ -492,7 +494,8 @@ function UpdateMessageHeaders()
       hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, "");
 
   }
-  FinishEmailProcessing();
+  if (this.FinishEmailProcessing != undefined)
+    FinishEmailProcessing();
 }
 
 function ClearCurrentHeaders()
