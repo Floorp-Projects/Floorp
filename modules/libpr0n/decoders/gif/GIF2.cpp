@@ -79,6 +79,8 @@ mailing address.
 #include "nsRecyclingAllocator.h"
 #include "nsAutoLock.h"
 
+#include "nsGIFDecoder2.h"
+
 /*******************************************************************************
  * Gif decoder allocator
  *
@@ -208,10 +210,6 @@ static void output_row(gif_struct *gs)
 
   /* Check for scanline below edge of logical screen */
   if ((gs->y_offset + gs->irow) < gs->screen_height) {
-
-    /* XXX: Set this from the GIF data */
-    gdispose drawmode = DISPOSE_OVERWRITE_PREVIOUS;
-
     /* Clip if right edge of image exceeds limits */
     if ((gs->x_offset + gs->width) > gs->screen_width)
       width = gs->screen_width - gs->x_offset;
@@ -219,18 +217,13 @@ static void output_row(gif_struct *gs)
       width = gs->width;
 
     if (width > 0)
-      if (gs->GIFCallback_HaveDecodedRow) {
-        /* Decoded data available callback */
-        (gs->GIFCallback_HaveDecodedRow)(
-          gs->clientptr,
-          gs->rowbuf,      // Pointer to single scanline temporary buffer
-          gs->x_offset,    // x offset with respect to GIF logical screen origin
-          width,           // Length of the row
-          drow_start,      // Row number
-          drow_end - drow_start + 1, // Number of times to duplicate the row?
-          drawmode,        // il_draw_mode
-          gs->ipass);      // interlace pass (1-4)
-      }
+      /* Decoded data available callback */
+      nsGIFDecoder2::HaveDecodedRow(
+        gs->clientptr,
+        gs->rowbuf,      // Pointer to single scanline temporary buffer
+        drow_start,      // Row number
+        drow_end - drow_start + 1, // Number of times to duplicate the row?
+        gs->ipass);      // interlace pass (1-4)
   }
 
   gs->rowp = gs->rowbuf;
@@ -466,73 +459,13 @@ static inline void gif_free(void *ptr)
 /*******************************************************************************
  * setup for gif_struct decoding
  */
-PRBool GIFInit(
-              gif_struct* gs,
-              void* aClientData,
-
-              int (*PR_CALLBACK GIFCallback_NewPixmap)(),
-
-              int (*PR_CALLBACK GIFCallback_BeginGIF)(
-                void* aClientData,
-                PRUint32 aLogicalScreenWidth,
-                PRUint32 aLogicalScreenHeight,
-                PRUint8  aBackgroundRGBIndex),
-
-              int (*PR_CALLBACK GIFCallback_EndGIF)(
-                void*    aClientData,
-                int      aAnimationLoopCount),
-
-              int (*PR_CALLBACK GIFCallback_BeginImageFrame)(
-                void*    aClientData,
-                PRUint32 aFrameNumber,   /* Frame number, 1-n */
-                PRUint32 aFrameXOffset,  /* X offset in logical screen */
-                PRUint32 aFrameYOffset,  /* Y offset in logical screen */
-                PRUint32 aFrameWidth,
-                PRUint32 aFrameHeight,
-                GIF_RGB* aTransparencyChromaKey),
-
-              int (*PR_CALLBACK GIFCallback_EndImageFrame)(
-                void* aClientData,
-                PRUint32 aFrameNumber,
-                PRUint32 aDelayTimeout),
-
-              int (*PR_CALLBACK GIFCallback_SetupColorspaceConverter)(),
-
-              int (*PR_CALLBACK GIFCallback_ResetPalette)(),
-
-              int (*PR_CALLBACK GIFCallback_InitTransparentPixel)(),
-
-              int (*PR_CALLBACK GIFCallback_DestroyTransparentPixel)(),
-
-              int (*PR_CALLBACK GIFCallback_HaveDecodedRow)(
-                void* aClientData,
-                PRUint8* aRowBufPtr, // Pointer to single scanline temp buffer
-                int aXOffset,        // w/respect to GIF logical screen origin
-                int aLength,         // Length of the row?
-                int aRow,            // Row number?
-                int aDuplicateCount, // Number of times to duplicate the row?
-                PRUint8 aDrawMode,   // il_draw_mode
-                int aInterlacePass),
-
-                int (*PR_CALLBACK GIFCallback_HaveImageAll)(void* aClientData)
-              )
+PRBool GIFInit(gif_struct* gs, void* aClientData)
 {
-  NS_ASSERTION(gs, "Got null argument, will crash!");
+  NS_ASSERTION(gs, "Got null argument");
   if (!gs)
     return PR_FALSE;
 
   gs->clientptr = aClientData;
-  gs->GIFCallback_NewPixmap = GIFCallback_NewPixmap;
-  gs->GIFCallback_BeginGIF = GIFCallback_BeginGIF;
-  gs->GIFCallback_EndGIF = GIFCallback_EndGIF;
-  gs->GIFCallback_BeginImageFrame = GIFCallback_BeginImageFrame;
-  gs->GIFCallback_EndImageFrame = GIFCallback_EndImageFrame;
-  gs->GIFCallback_SetupColorspaceConverter = GIFCallback_SetupColorspaceConverter;
-  gs->GIFCallback_ResetPalette = GIFCallback_ResetPalette;
-  gs->GIFCallback_InitTransparentPixel = GIFCallback_InitTransparentPixel;
-  gs->GIFCallback_DestroyTransparentPixel = GIFCallback_DestroyTransparentPixel;
-  gs->GIFCallback_HaveDecodedRow = GIFCallback_HaveDecodedRow;
-  gs->GIFCallback_HaveImageAll = GIFCallback_HaveImageAll;
 
   gs->state = gif_init;
   gs->post_gather_state = gif_error;
@@ -680,7 +613,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       gs->global_colormap_size = 2<<(q[4]&0x07);
 
       // XXX make callback
-      (*gs->GIFCallback_BeginGIF)(
+      nsGIFDecoder2::BeginGIF(
         gs->clientptr,
         gs->screen_width,
         gs->screen_height,
@@ -905,10 +838,10 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
         gs->x_offset = 0;
         gs->y_offset = 0;
 
-        (*gs->GIFCallback_BeginGIF)(gs->clientptr,
-                      gs->screen_width,
-                      gs->screen_height,
-                      gs->screen_bgcolor);
+        nsGIFDecoder2::BeginGIF(gs->clientptr,
+                                gs->screen_width,
+                                gs->screen_height,
+                                gs->screen_bgcolor);
       }
 
       /* Work around more broken GIF files that have zero image
@@ -925,13 +858,12 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       gs->height = height;
       gs->width = width;
 
-      (*gs->GIFCallback_BeginImageFrame)(gs->clientptr,
-                         gs->images_decoded + 1,   /* Frame number, 1-n */
-                         gs->x_offset,  /* X offset in logical screen */
-                         gs->y_offset,  /* Y offset in logical screen */
-                         width,
-                         height,
-                         nsnull /*GIF_RGB* aTransparencyChromaKey*/);
+      nsGIFDecoder2::BeginImageFrame(gs->clientptr,
+                                     gs->images_decoded + 1,   /* Frame number, 1-n */
+                                     gs->x_offset,  /* X offset in logical screen */
+                                     gs->y_offset,  /* Y offset in logical screen */
+                                     width,
+                                     height);
 
       /* This case will never be taken if this is the first image */
       /* being decoded. If any of the later images are larger     */
@@ -1054,9 +986,9 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
       {
         gs->images_decoded++;
 
-        (*gs->GIFCallback_EndImageFrame)(gs->clientptr,
-                                         gs->images_decoded,
-                                         gs->delay_time);
+        nsGIFDecoder2::EndImageFrame(gs->clientptr,
+                                     gs->images_decoded,
+                                     gs->delay_time);
 
         /* Clear state from this image */
         gs->control_extension = PR_FALSE;
@@ -1073,8 +1005,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     break;
 
     case gif_done:
-      if (gs->GIFCallback_EndGIF)
-        (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
+      nsGIFDecoder2::EndGIF(gs->clientptr, gs->loop_count);
       return PR_SUCCESS;
       break;
 
@@ -1137,9 +1068,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
 
     // Handle general errors
     case gif_error:
-      if (gs->GIFCallback_EndGIF) {
-        (gs->GIFCallback_EndGIF)(gs->clientptr, gs->loop_count);
-      }
+      nsGIFDecoder2::EndGIF(gs->clientptr, gs->loop_count);
       return PR_FAILURE;
 
     case gif_stop_animating:

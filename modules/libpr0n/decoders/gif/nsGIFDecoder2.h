@@ -56,6 +56,40 @@ public:
 
   NS_METHOD FlushImageData();
 
+  /* These functions will be called when the decoder has a decoded
+   * rows, frame size information, etc. */
+
+  static int BeginGIF(
+    void* aClientData,
+    PRUint32 aLogicalScreenWidth, 
+    PRUint32 aLogicalScreenHeight,
+    PRUint8  aBackgroundRGBIndex);
+    
+  static int EndGIF(
+    void*    aClientData,
+    int      aAnimationLoopCount);
+  
+  static int BeginImageFrame(
+    void*    aClientData,
+    PRUint32 aFrameNumber,   /* Frame number, 1-n */
+    PRUint32 aFrameXOffset,  /* X offset in logical screen */
+    PRUint32 aFrameYOffset,  /* Y offset in logical screen */
+    PRUint32 aFrameWidth,    
+    PRUint32 aFrameHeight);
+  
+  static int EndImageFrame(
+    void* aClientData,
+    PRUint32 aFrameNumber,
+    PRUint32 aDelayTimeout);
+  
+  static int HaveDecodedRow(
+    void* aClientData,
+    PRUint8* aRowBufPtr,   /* Pointer to single scanline temporary buffer */
+    int aRow,              /* Row number? */
+    int aDuplicateCount,   /* Number of times to duplicate the row? */
+    int aInterlacePass);
+
+private:
   nsCOMPtr<imgIContainer> mImageContainer;
   nsCOMPtr<gfxIImageFrame> mImageFrame;
   nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
