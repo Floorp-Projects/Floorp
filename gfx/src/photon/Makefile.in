@@ -42,7 +42,6 @@ CPPSRCS		= \
 		nsRegionPh.cpp \
 		nsGraphicsStatePh.cpp \
 		nsRenderingContextPh.cpp \
-		clip.cpp \
 		$(NULL)
 
 # Force Debug on to make logging work
