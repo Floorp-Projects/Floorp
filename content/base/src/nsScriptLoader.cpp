@@ -765,16 +765,17 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     nsCOMPtr<nsIChannel> channel;
 
     channel = do_QueryInterface(req);
+    nsAutoString charset;
     if (channel) {
       nsCAutoString charsetVal;
       rv = channel->GetContentCharset(charsetVal);
     
       if (NS_SUCCEEDED(rv)) {
-        characterSet = NS_ConvertASCIItoUCS2(charsetVal);      
+        charset = NS_ConvertASCIItoUCS2(charsetVal);      
         nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID,&rv));
 
         if(NS_SUCCEEDED(rv) && calias) {
-          rv = calias->GetPreferred(characterSet, preferred);
+          rv = calias->GetPreferred(charset, preferred);
 
           if(NS_SUCCEEDED(rv)) {
             characterSet = preferred;
@@ -784,7 +785,6 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
     }
 
     if (NS_FAILED(rv) || characterSet.IsEmpty()) {
-      nsAutoString charset;
       // Check the charset attribute to determine script charset.
       request->mElement->GetCharset(charset);
       if (!charset.IsEmpty()) {
