@@ -26,8 +26,7 @@
 #include "nsIPrincipal.h"
 
 struct nsJSPrincipals : JSPrincipals {
-
-public:
+  static nsresult Startup();
   nsJSPrincipals();
   nsresult Init(char *prin);
   ~nsJSPrincipals(void);

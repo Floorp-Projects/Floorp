@@ -22,9 +22,11 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include <string.h>
 #include "nsSupportsArray.h"
 #include "nsSupportsArrayEnumerator.h"
-#include <string.h>
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
 nsresult
 nsQueryElementAt::operator()( const nsIID& aIID, void** aResult ) const
@@ -44,7 +46,7 @@ static const PRUint32 kGrowArrayBy = 8;
 nsSupportsArray::nsSupportsArray()
 {
   NS_INIT_REFCNT();
-  mArray = &(mAutoArray[0]);
+  mArray = mAutoArray;
   mArraySize = kAutoArraySize;
   mCount = 0;
 }
@@ -70,14 +72,75 @@ nsSupportsArray::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsSupportsArray, nsISupportsArray)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsSupportsArray, nsISupportsArray, nsICollection, nsISerializable)
+
+NS_IMETHODIMP
+nsSupportsArray::Read(nsIObjectInputStream *aStream)
+{
+  nsresult rv;
+
+  PRUint32 newArraySize;
+  rv = aStream->Read32(&newArraySize);
+
+  if (newArraySize <= kAutoArraySize) {
+    if (mArray != mAutoArray) {
+      delete mArray;
+      mArray = mAutoArray;
+      newArraySize = kAutoArraySize;
+    }
+  }
+  else {
+    if (newArraySize <= mArraySize) {
+      // Keep non-default-size mArray, it's more than big enough.
+      newArraySize = mArraySize;
+    }
+    else {
+      nsISupports** array = new nsISupports*[mArraySize];
+      if (!array)
+        return NS_ERROR_OUT_OF_MEMORY;
+      if (mArray != mAutoArray)
+        delete mArray;
+      mArray = array;
+    }
+  }
+  mArraySize = newArraySize;
+
+  rv = aStream->Read32(&mCount);
+  if (NS_FAILED(rv)) return rv;
+
+  for (PRUint32 i = 0; i < mCount; i++) {
+    rv = aStream->ReadObject(PR_TRUE, &mArray[i]);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSupportsArray::Write(nsIObjectOutputStream *aStream)
+{
+  nsresult rv;
+
+  rv = aStream->Write32(mArraySize);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = aStream->Write32(mCount);
+  if (NS_FAILED(rv)) return rv;
+
+  for (PRUint32 i = 0; i < mCount; i++) {
+    rv = aStream->WriteObject(mArray[i], PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  return NS_OK;
+}
 
 void nsSupportsArray::DeleteArray(void)
 {
   Clear();
   if (mArray != &(mAutoArray[0])) {
     delete[] mArray;
-    mArray = &(mAutoArray[0]);
+    mArray = mAutoArray;
     mArraySize = kAutoArraySize;
   }
 }
@@ -101,8 +164,15 @@ nsSupportsArray::operator=(nsISupportsArray const& aOther)
   
   if (otherCount > mArraySize) {
     DeleteArray();
-    mArraySize = otherCount;
-    mArray = new nsISupports*[mArraySize];
+    nsISupports** array = new nsISupports*[otherCount];
+    if (!array) {
+      // Can't grow mArray, can't return an error -- copy mCount elements.
+      otherCount = mCount;
+    }
+    else {
+      mArraySize = otherCount;
+      mArray = array;
+    }
   }
   else {
     Clear();
@@ -197,16 +267,16 @@ nsSupportsArray::InsertElementAt(nsISupports* aElement, PRUint32 aIndex)
     return PR_FALSE;
   }
   if (aIndex <= mCount) {
-    if (mArraySize < (mCount + 1)) {  // need to grow the array
+    if (mArraySize < (mCount + 1)) {    // need to grow the array
       mArraySize += kGrowArrayBy;
       nsISupports** oldArray = mArray;
       mArray = new nsISupports*[mArraySize];
-      if (0 == mArray) { // ran out of memory
+      if (!mArray) {                    // ran out of memory
         mArray = oldArray;
         mArraySize -= kGrowArrayBy;
         return PR_FALSE;
       }
-      if (0 != oldArray) { // need to move old data
+      if (oldArray) {                   // need to move old data
         if (0 < aIndex) {
           ::memcpy(mArray, oldArray, aIndex * sizeof(nsISupports*));
         }
@@ -295,11 +365,10 @@ nsSupportsArray::RemoveLastElement(const nsISupports* aElement)
 NS_IMETHODIMP_(PRBool)
 nsSupportsArray::AppendElements(nsISupportsArray* aElements)
 {
-  PRUint32  countElements;
-
   if (!aElements)
     return PR_FALSE;
 
+  PRUint32 countElements;
   if (NS_FAILED( aElements->Count( &countElements ) ))
     return PR_FALSE;
 
@@ -312,12 +381,12 @@ nsSupportsArray::AppendElements(nsISupportsArray* aElements)
       mArraySize += ((count - mArraySize + kGrowArrayBy - 1) / kGrowArrayBy) * kGrowArrayBy;
       nsISupports** oldArray = mArray;
       mArray = new nsISupports*[mArraySize];
-      if (0 == mArray) { // ran out of memory
+      if (!mArray) {                                // ran out of memory
         mArray = oldArray;
         mArraySize = oldSize;
         return PR_FALSE;
       }
-      if (0 != oldArray) { // need to move old data
+      if (oldArray) {                               // need to move old data
         if (0 < mCount) {
           ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
         }
@@ -355,19 +424,17 @@ nsSupportsArray::Compact(void)
 {
   if ((mArraySize != mCount) && (kAutoArraySize < mArraySize)) {
     nsISupports** oldArray = mArray;
-    PRUint32 oldArraySize = mArraySize;
     if (mCount <= kAutoArraySize) {
-      mArray = &(mAutoArray[0]);
+      mArray = mAutoArray;
       mArraySize = kAutoArraySize;
     }
     else {
       mArray = new nsISupports*[mCount];
+      if (!mArray) {
+        mArray = oldArray;
+        return NS_OK;
+      }
       mArraySize = mCount;
-    }
-    if (0 == mArray) {
-      mArray = oldArray;
-      mArraySize = oldArraySize;
-      return NS_OK;
     }
     ::memcpy(mArray, oldArray, mCount * sizeof(nsISupports*));
     delete[] oldArray;

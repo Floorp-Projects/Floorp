@@ -42,12 +42,12 @@ interface nsIScriptGlobalObjectOwner : nsISupports
   /**
    * Returns the script global object
    */
-	nsIScriptGlobalObject getScriptGlobalObject();
+  nsIScriptGlobalObject getScriptGlobalObject();
 
   /**
    * Error notification method. Informs the owner that an error 
    * occurred while a script was being evaluted.
    *
    */
-	void reportScriptError(in nsIScriptError aError);
+  void reportScriptError(in nsIScriptError aError);
 };

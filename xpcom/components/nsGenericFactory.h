@@ -27,28 +27,28 @@
 #include "nsIClassInfo.h"
 
 /**
- * Most factories follow this simple pattern, so why not just use a function pointer
- * for most creation operations?
+ * Most factories follow this simple pattern, so why not just use a function
+ * pointer for most creation operations?
  */
 class nsGenericFactory : public nsIGenericFactory, public nsIClassInfo {
 public:
-    static const nsCID& CID() { static nsCID cid = NS_GENERICFACTORY_CID; return cid; }
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_GENERICFACTORY_CID);
 
-	nsGenericFactory(nsModuleComponentInfo *info = NULL);
-	virtual ~nsGenericFactory();
-	
-	NS_DECL_ISUPPORTS
+    nsGenericFactory(nsModuleComponentInfo *info = NULL);
+    virtual ~nsGenericFactory();
+    
+    NS_DECL_ISUPPORTS
     NS_DECL_NSICLASSINFO
-	
+    
     /* nsIGenericFactory methods */
     NS_IMETHOD SetComponentInfo(nsModuleComponentInfo *info);
     NS_IMETHOD GetComponentInfo(nsModuleComponentInfo **infop);
 
-	NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
+    NS_IMETHOD CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
-	NS_IMETHOD LockFactory(PRBool aLock);
+    NS_IMETHOD LockFactory(PRBool aLock);
 
-	static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
+    static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
 private:
     nsModuleComponentInfo *mInfo;
 };

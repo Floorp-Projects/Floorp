@@ -22,9 +22,6 @@
 interface nsIFile;
 interface nsIEnumerator;
 
-/* should this be in nsroot.idl? */
-native nsCID(nsCID);
-
 [scriptable, uuid(8458a740-d5dc-11d2-92fb-00e09805570f)]
 interface nsIComponentManager : nsISupports
 {

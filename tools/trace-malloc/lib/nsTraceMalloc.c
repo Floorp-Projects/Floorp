@@ -1555,8 +1555,9 @@ PR_IMPLEMENT(void) NS_TraceMallocShutdown()
         }
     }
     if (tmmon) {
-        PR_DestroyMonitor(tmmon);
+        PRMonitor *mon = tmmon;
         tmmon = NULL;
+        PR_DestroyMonitor(mon);
     }
 #ifdef XP_WIN32
     ShutdownHooker();

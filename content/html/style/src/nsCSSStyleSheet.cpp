@@ -911,6 +911,7 @@ class DOMMediaListImpl : public nsIDOMMediaList,
 
   NS_FORWARD_NSISUPPORTSARRAY(mArray->)
   NS_FORWARD_NSICOLLECTION(mArray->);
+  NS_FORWARD_NSISERIALIZABLE(mArray->); // XXXbe temporary
 
   NS_IMETHOD_(PRBool) operator==(const nsISupportsArray& other) {
     return PR_FALSE;
@@ -936,6 +937,7 @@ NS_INTERFACE_MAP_BEGIN(DOMMediaListImpl)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMMediaList)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(MediaList)
+  NS_INTERFACE_MAP_ENTRY(nsISerializable)
 NS_INTERFACE_MAP_END
 
 

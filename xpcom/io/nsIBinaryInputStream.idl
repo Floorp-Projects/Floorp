@@ -19,11 +19,6 @@
  *
  */
 
-[ptr] native nsString(nsString); 
-%{ C++
-#include "nsString.h"
-%}
-
 #include "nsIInputStream.idl"
 #include "nsrootidl.idl"
 
@@ -72,14 +67,39 @@ interface nsIBinaryInputStream : nsIInputStream {
      * Read an opaque byte array from a binary stream.
      */
     void readBytes([size_is(aLength)] out string aString, in PRUint32 aLength);
-
-    /**
-     * Read a string (possibly containing embedded NULs) from a binary stream.
-     */
-    [noscript] nsString readString();
 };
 
 %{C++
+
 NS_COM nsresult
 NS_NewBinaryInputStream(nsIBinaryInputStream* *aResult, nsIInputStream* aSrcStream);
+
+inline nsresult
+NS_ReadOptionalStringZ(nsIBinaryInputStream* aStream, char* *aResult)
+{
+    PRBool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadStringZ(aResult);
+        else
+            *aResult = nsnull;
+    }
+    return rv;
+}
+
+inline nsresult
+NS_ReadOptionalWStringZ(nsIBinaryInputStream* aStream, PRUnichar* *aResult)
+{
+    PRBool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadWStringZ(aResult);
+        else
+            *aResult = nsnull;
+    }
+    return rv;
+}
+
 %}

@@ -54,7 +54,7 @@ JS_BEGIN_EXTERN_C
  */
 
 typedef union {
-    double value;
+    jsdouble value;
     struct {
 #ifdef IS_LITTLE_ENDIAN
         uint32 lsw;
@@ -66,11 +66,11 @@ typedef union {
     } parts;
 } js_ieee_double_shape_type;
 
-#define JSDOUBLE_HI32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u; \
-                                             sh_u.value = (x); \
+#define JSDOUBLE_HI32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u;  \
+                                             sh_u.value = (x);                \
                                              sh_u.parts.msw; }))
-#define JSDOUBLE_LO32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u; \
-                                             sh_u.value = (x); \
+#define JSDOUBLE_LO32(x)   (__extension__ ({ js_ieee_double_shape_type sh_u;  \
+                                             sh_u.value = (x);                \
                                              sh_u.parts.lsw; }))
 
 #else /* GNUC */
@@ -98,7 +98,7 @@ typedef union {
      (JSDOUBLE_LO32(x) || (JSDOUBLE_HI32(x) & JSDOUBLE_HI32_MANTMASK)))
 
 #define JSDOUBLE_IS_INFINITE(x)                                               \
-    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&   \
+    ((JSDOUBLE_HI32(x) & ~JSDOUBLE_HI32_SIGNBIT) == JSDOUBLE_HI32_EXPMASK &&  \
      !JSDOUBLE_LO32(x))
 
 #define JSDOUBLE_IS_FINITE(x)                                                 \

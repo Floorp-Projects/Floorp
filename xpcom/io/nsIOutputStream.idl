@@ -111,11 +111,11 @@ interface nsIOutputStreamObserver : nsISupports
     /**
      * Called when the output stream's producer has written more data into the stream.
      */
-    void onWrite(in nsIOutputStream inStr, 
+    void onWrite(in nsIOutputStream outStr, 
                  in unsigned long amount);
 
     /**
      * Called when the stream's underlying buffer becomes full.
      */
-    void onFull(in nsIOutputStream inStr);
+    void onFull(in nsIOutputStream outStr);
 };

@@ -53,6 +53,7 @@
 
 typedef struct JSXDRMemState {
     JSXDRState  state;
+    char        *base;
     uint32      count;
     uint32      limit;
 } JSXDRMemState;
@@ -60,9 +61,9 @@ typedef struct JSXDRMemState {
 #define MEM_BLOCK       8192
 #define MEM_PRIV(xdr)   ((JSXDRMemState *)(xdr))
 
+#define MEM_BASE(xdr)   (MEM_PRIV(xdr)->base)
 #define MEM_COUNT(xdr)  (MEM_PRIV(xdr)->count)
 #define MEM_LIMIT(xdr)  (MEM_PRIV(xdr)->limit)
-
 
 #define MEM_LEFT(xdr, bytes)                                                  \
     JS_BEGIN_MACRO                                                            \
@@ -80,10 +81,10 @@ typedef struct JSXDRMemState {
             if (MEM_LIMIT(xdr) &&                                             \
                 MEM_COUNT(xdr) + bytes > MEM_LIMIT(xdr)) {                    \
                 uint32 limit_ = JS_ROUNDUP(MEM_COUNT(xdr) + bytes, MEM_BLOCK);\
-                void *data_ = JS_realloc((xdr)->cx, (xdr)->data, limit_);     \
+                void *data_ = JS_realloc((xdr)->cx, MEM_BASE(xdr), limit_);   \
                 if (!data_)                                                   \
                     return 0;                                                 \
-                (xdr)->data = data_;                                          \
+                MEM_BASE(xdr) = data_;                                        \
                 MEM_LIMIT(xdr) = limit_;                                      \
             }                                                                 \
         } else {                                                              \
@@ -91,7 +92,7 @@ typedef struct JSXDRMemState {
         }                                                                     \
     JS_END_MACRO
 
-#define MEM_DATA(xdr)        ((void *)((char *)(xdr)->data + MEM_COUNT(xdr)))
+#define MEM_DATA(xdr)        ((void *)(MEM_BASE(xdr) + MEM_COUNT(xdr)))
 #define MEM_INCR(xdr,bytes)  (MEM_COUNT(xdr) += (bytes))
 
 static JSBool
@@ -206,7 +207,7 @@ mem_tell(JSXDRState *xdr)
 static void
 mem_finalize(JSXDRState *xdr)
 {
-    JS_free(xdr->cx, xdr->data);
+    JS_free(xdr->cx, MEM_BASE(xdr));
 }
 
 static JSXDROps xdrmem_ops = {
@@ -222,6 +223,7 @@ JS_XDRInitBase(JSXDRState *xdr, JSXDRMode mode, JSContext *cx)
     xdr->registry = NULL;
     xdr->numclasses = xdr->maxclasses = 0;
     xdr->reghash = NULL;
+    xdr->userdata = NULL;
 }
 
 JS_PUBLIC_API(JSXDRState *)
@@ -232,17 +234,17 @@ JS_XDRNewMem(JSContext *cx, JSXDRMode mode)
         return NULL;
     JS_XDRInitBase(xdr, mode, cx);
     if (mode == JSXDR_ENCODE) {
-        if (!(xdr->data = JS_malloc(cx, MEM_BLOCK))) {
+        if (!(MEM_BASE(xdr) = JS_malloc(cx, MEM_BLOCK))) {
             JS_free(cx, xdr);
             return NULL;
         }
     } else {
-        /* XXXbe ok, so better not deref xdr->data if not ENCODE */
-        xdr->data = NULL;
+        /* XXXbe ok, so better not deref MEM_BASE(xdr) if not ENCODE */
+        MEM_BASE(xdr) = NULL;
     }
     xdr->ops = &xdrmem_ops;
-    MEM_PRIV(xdr)->count = 0;
-    MEM_PRIV(xdr)->limit = MEM_BLOCK;
+    MEM_COUNT(xdr) = 0;
+    MEM_LIMIT(xdr) = MEM_BLOCK;
     return xdr;
 }
 
@@ -251,8 +253,8 @@ JS_XDRMemGetData(JSXDRState *xdr, uint32 *lp)
 {
     if (xdr->ops != &xdrmem_ops)
         return NULL;
-    *lp = MEM_PRIV(xdr)->count;
-    return xdr->data;
+    *lp = MEM_COUNT(xdr);
+    return MEM_BASE(xdr);
 }
 
 JS_PUBLIC_API(void)
@@ -260,9 +262,25 @@ JS_XDRMemSetData(JSXDRState *xdr, void *data, uint32 len)
 {
     if (xdr->ops != &xdrmem_ops)
         return;
-    MEM_PRIV(xdr)->limit = len;
-    xdr->data = data;
-    MEM_PRIV(xdr)->count = 0;
+    MEM_LIMIT(xdr) = len;
+    MEM_BASE(xdr) = data;
+    MEM_COUNT(xdr) = 0;
+}
+
+JS_PUBLIC_API(uint32)
+JS_XDRMemDataLeft(JSXDRState *xdr)
+{
+    if (xdr->ops != &xdrmem_ops)
+        return 0;
+    return MEM_LIMIT(xdr) - MEM_COUNT(xdr);
+}
+
+JS_PUBLIC_API(void)
+JS_XDRMemResetData(JSXDRState *xdr)
+{
+    if (xdr->ops != &xdrmem_ops)
+        return;
+    MEM_COUNT(xdr) = 0;
 }
 
 JS_PUBLIC_API(void)
@@ -275,8 +293,6 @@ JS_XDRDestroy(JSXDRState *xdr)
         if (xdr->reghash)
             JS_DHashTableDestroy(xdr->reghash);
     }
-    if (xdr->data)
-        JS_free(cx, xdr->data);
     JS_free(cx, xdr);
 }
 

@@ -93,7 +93,8 @@ interface nsILocalFile : nsIFile
      *
      * @param relativeFilePath
      *        relativeFilePath is a native relative path. For security reasons,
-     *        this cannot contain ..	or cannot start with a directory separator
+     *        this cannot contain .. or cannot start with a directory separator
+     * XXXbe  Why not?  Bogus!
      */
     void appendRelativePath([const] in string relativeFilePath);
     void appendRelativeUnicodePath([const] in wstring relativeFilePath);
@@ -105,19 +106,19 @@ interface nsILocalFile : nsIFile
      */
     attribute string persistentDescriptor;
 
-	/** 
-	 * reveal --> Ask the operating system to open the folder which contains
-	 * this file or folder. This routine only works on platforms which 
-	 * support the ability to open a folder...
-	*/
-	void reveal();
-	
-	/** 
-	 * launch --> Ask the operating system to attempt to open the file. 
+    /** 
+     * reveal --> Ask the operating system to open the folder which contains
+     * this file or folder. This routine only works on platforms which 
+     * support the ability to open a folder...
+     */
+    void reveal();
+    
+    /** 
+     * launch --> Ask the operating system to attempt to open the file. 
      * this really just simulates "double clicking" the file on your platform.
-	 * This routine only works on platforms which support this functionality.
-	 */
-	void launch();
+     * This routine only works on platforms which support this functionality.
+     */
+    void launch();
 };
 
 %{C++

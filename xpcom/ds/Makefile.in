@@ -107,11 +107,13 @@ XPIDLSRCS	= \
 		nsIEnumerator.idl \
 		nsIObserver.idl \
 		nsIObserverService.idl \
+		nsIPersistentProperties2.idl \
 		nsIProperties.idl \
+		nsISerializable.idl \
+		nsIStopwatch.idl \
 		nsISupportsArray.idl \
 		nsISupportsIterators.idl \
 		nsISupportsPrimitives.idl \
-		nsIPersistentProperties2.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

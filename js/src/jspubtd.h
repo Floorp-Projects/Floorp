@@ -496,6 +496,16 @@ typedef JSBool
                                     JSString *src1, JSString *src2,
                                     jsval *rval);
 
+/*
+ * Security protocol types.
+ */
+typedef struct JSPrincipals JSPrincipals;
+
+/* NB: implementations must JSPRINCIPALS_HOLD *principalsp before returning. */
+typedef JSBool
+(* JS_DLL_CALLBACK JSPrincipalsDecoder)(JSXDRState *xdr,
+                                        JSPrincipals **principalsp);
+
 JS_END_EXTERN_C
 
 #endif /* jspubtd_h___ */

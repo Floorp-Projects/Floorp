@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -563,12 +563,12 @@ static PRBool FindProviderFile(nsISupports* aElement, void *aData)
   nsresult rv;
   nsCOMPtr<nsIDirectoryServiceProvider> prov = do_QueryInterface(aElement);
   if (!prov)
-    return PR_FALSE;
+      return PR_FALSE;
 
   FileData* fileData = (FileData*)aData;
   rv = prov->GetFile(fileData->property, &fileData->persistent, &(fileData->file) );
   if (NS_SUCCEEDED(rv) && fileData->file)
-    return PR_FALSE;
+      return PR_FALSE;
 
   return PR_TRUE;
 }
@@ -591,37 +591,35 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
         cachedFile->Clone(getter_AddRefs(cloneFile));
         return cloneFile->QueryInterface(uuid, result);
     }
-    else
-    {
-      // it is not one of our defaults, lets check any providers
-      FileData fileData;
-      fileData.property   = prop;
-      fileData.file       = nsnull;
-      fileData.persistent = PR_TRUE;
 
-      mProviders->EnumerateForwards(FindProviderFile, &fileData);
-      if (fileData.file)
-      {
+    // it is not one of our defaults, lets check any providers
+    FileData fileData;
+    fileData.property   = prop;
+    fileData.file       = nsnull;
+    fileData.persistent = PR_TRUE;
+
+    mProviders->EnumerateForwards(FindProviderFile, &fileData);
+    if (fileData.file)
+    {
         if (fileData.persistent)
-		{
-			Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
-		}
+        {
+            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+        }
         nsresult rv = (fileData.file)->QueryInterface(uuid, result);
-		NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
-		return rv;
-      }
-      
-      FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
-      if (fileData.file)
-      {
+        NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+        return rv;
+    }
+    
+    FindProviderFile(NS_STATIC_CAST(nsIDirectoryServiceProvider*, this), &fileData);
+    if (fileData.file)
+    {
         if (fileData.persistent)
-		{
-			Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
-		}
+        {
+            Set(prop, NS_STATIC_CAST(nsIFile*, fileData.file));
+        }
         nsresult rv = (fileData.file)->QueryInterface(uuid, result);
-		NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
-		return rv;
-      }
+        NS_RELEASE(fileData.file);  // addref occurs in FindProviderFile()
+        return rv;
     }
 
     return NS_ERROR_FAILURE;

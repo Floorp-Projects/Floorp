@@ -501,9 +501,9 @@ class nsCOMPtr
             }
         }
 
-      #define NSCAP_ASSERT_NO_QUERY_NEEDED();    Assert_NoQueryNeeded();
+  #define NSCAP_ASSERT_NO_QUERY_NEEDED() Assert_NoQueryNeeded();
 #else
-      #define NSCAP_ASSERT_NO_QUERY_NEEDED();
+  #define NSCAP_ASSERT_NO_QUERY_NEEDED()
 #endif
 
 

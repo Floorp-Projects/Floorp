@@ -77,9 +77,10 @@ interface nsIClassInfo : nsISupports
 
     /**
      * A class ID through which an instance of this class can be created
-     * (or accessed as a service, if |flags & SINGLETON|), or null.
+     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
+     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.
      */
-    readonly attribute nsCIDPtr classID;
+    readonly attribute nsCID classID;
 
     /**
      * Return language type from list in nsIProgrammingLanguage

@@ -184,6 +184,9 @@ struct JSRuntime {
 #define NO_SCOPE_SHARING_TODO   ((JSScope *) 0xfeedbeef)
 #endif
 
+    /* Security principals serialization support. */
+    JSPrincipalsDecoder principalsDecoder;
+
 #ifdef DEBUG
     /* Function invocation metering. */
     jsrefcount          inlineCalls;

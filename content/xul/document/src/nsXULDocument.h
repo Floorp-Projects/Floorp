@@ -74,6 +74,7 @@
 
 class nsIAtom;
 class nsIElementFactory;
+class nsIFile;
 class nsILoadGroup;
 class nsIRDFResource;
 class nsIRDFService;
@@ -81,13 +82,19 @@ class nsITimer;
 class nsIXULContentUtils;
 class nsIXULPrototypeCache;
 #if 0 // XXXbe save me, scc (need NSCAP_FORWARD_DECL(nsXULPrototypeScript))
+class nsIObjectInputStream;
+class nsIObjectOutputStream;
 class nsIXULPrototypeScript;
 #else
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 #include "nsXULElement.h"
 #endif
 
 struct JSObject;
 struct PRLogModuleInfo;
+
+#include "nsIFastLoadService.h"         // XXXbe temporary?
 
 /**
  * The XUL document class
@@ -331,6 +338,8 @@ public:
     NS_IMETHOD RemoveSubtreeFromDocument(nsIContent* aElement);
     NS_IMETHOD SetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder* aBuilder);
     NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult);
+    NS_IMETHOD OnPrototypeLoadDone();
+    NS_IMETHOD OnResumeContentSink();
     
     // nsIDOMEventCapturer interface
     NS_IMETHOD    CaptureEvent(const nsAReadableString& aType);
@@ -388,6 +397,16 @@ public:
                          PRInt32 aNamespaceID,
                          nsRDFDOMNodeList* aElements);
 
+    static nsresult
+    GetFastLoadService(nsIFastLoadService** aResult)
+    {
+        NS_IF_ADDREF(*aResult = gFastLoadService);
+        return NS_OK;
+    }
+
+    static nsresult
+    AbortFastLoads();
+
 protected:
     // Implementation methods
     friend nsresult
@@ -423,6 +442,27 @@ protected:
     void SetIsPopup(PRBool isPopup) { mIsPopup = isPopup; };
 
     nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIContent** aResult);
+
+    nsresult StartFastLoad();
+    nsresult EndFastLoad();
+
+    static nsIFastLoadService*  gFastLoadService;
+    static nsIFile*             gFastLoadFile;
+    static PRBool               gFastLoadDone;
+    static nsXULDocument*       gFastLoadList;
+
+    void RemoveFromFastLoadList() {
+        nsXULDocument** docp = &gFastLoadList;
+        nsXULDocument* doc;
+        while ((doc = *docp) != nsnull) {
+            if (doc == this) {
+                *docp = doc->mNextFastLoad;
+                doc->mNextFastLoad = nsnull;
+                break;
+            }
+            docp = &doc->mNextFastLoad;
+        }
+    }
 
     nsresult PrepareToLoad(nsISupports* aContainer,
                            const char* aCommand,
@@ -509,9 +549,10 @@ protected:
     nsCOMPtr<nsIRDFDataSource>          mLocalStore;
     nsCOMPtr<nsILineBreaker>            mLineBreaker;    // [OWNER] 
     nsCOMPtr<nsIWordBreaker>            mWordBreaker;    // [OWNER] 
-    nsString                   mCommand;
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
-    PRBool                     mIsPopup;
+    PRPackedBool               mIsPopup;
+    PRPackedBool               mIsFastLoad;
+    nsXULDocument*             mNextFastLoad;
     nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
     nsCOMPtr<nsIBindingManager> mBindingManager; // [OWNER] of all bindings
@@ -634,12 +675,12 @@ protected:
      */
     nsXULPrototypeScript* mCurrentScriptProto;
 
-	/**
-	 * A "dummy" channel that is used as a placeholder to signal document load
-	 * completion.
-	 */
-	nsCOMPtr<nsIRequest> mPlaceHolderRequest;
-	
+    /**
+     * A "dummy" channel that is used as a placeholder to signal document load
+     * completion.
+     */
+    nsCOMPtr<nsIRequest> mPlaceHolderRequest;
+        
     /**
      * Create a XUL template builder on the specified node if a 'datasources'
      * attribute is present.
@@ -765,11 +806,12 @@ protected:
     class CachedChromeStreamListener : public nsIStreamListener {
     protected:
         nsXULDocument* mDocument;
+        PRPackedBool   mProtoLoaded;
 
         virtual ~CachedChromeStreamListener();
 
     public:
-        CachedChromeStreamListener(nsXULDocument* aDocument);
+        CachedChromeStreamListener(nsXULDocument* aDocument, PRBool aProtoLoaded);
 
         NS_DECL_ISUPPORTS
         NS_DECL_NSIREQUESTOBSERVER

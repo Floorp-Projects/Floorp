@@ -32,7 +32,7 @@
 
 class nsIURI;
 
-#define NS_CERTIFICATEPRINCIPALMANAGER_CID \
+#define NS_CERTIFICATEPRINCIPAL_CID \
 { 0x7ee2a4c0, 0x4b91, 0x11d3, \
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
@@ -40,8 +40,9 @@ class nsCertificatePrincipal : public nsICertificatePrincipal, public nsBasePrin
 {
 public:
 
-    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPALMANAGER_CID)
+    NS_DEFINE_STATIC_CID_ACCESSOR(NS_CERTIFICATEPRINCIPAL_CID)
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICERTIFICATEPRINCIPAL
 
     NS_IMETHOD ToString(char **result);

@@ -56,6 +56,8 @@ typedef unsigned long       size_t;
 [ptr]         native charPtr(char);
 [ptr]         native unicharPtr(PRUnichar);
 
+[nsid]        native nsCID(nsCID);
+
 [ref, nsid]   native nsIDRef(nsID);
 [ref, nsid]   native nsIIDRef(nsIID);
 [ref, nsid]   native nsCIDRef(nsCID);

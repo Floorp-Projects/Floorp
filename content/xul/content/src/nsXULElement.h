@@ -76,6 +76,9 @@ class nsXULAttributes;
 class nsVoidArray;
 class nsIWebShell;
 
+class nsIObjectInputStream;
+class nsIObjectOutputStream;
+
 ////////////////////////////////////////////////////////////////////////
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
@@ -165,8 +168,6 @@ public:
 
  */
 
-class nsXULPrototypeElement;
-
 class nsXULPrototypeNode
 {
 public:
@@ -176,6 +177,10 @@ public:
     PRInt32                  mLineNo;
 
     virtual ~nsXULPrototypeNode() {}
+    virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                               nsIScriptContext* aContext);
+    virtual nsresult Deserialize(nsIObjectInputStream* aStream,
+                                 nsIScriptContext* aContext);
 
 protected:
     nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
@@ -210,6 +215,10 @@ public:
         delete[] mChildren;
     }
 
+    virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                               nsIScriptContext* aContext);
+    virtual nsresult Deserialize(nsIObjectInputStream* aStream,
+                                 nsIScriptContext* aContext);
 
     nsIXULPrototypeDocument* mDocument;           // [WEAK] because doc is refcounted
     PRInt32                  mNumChildren;
@@ -236,6 +245,11 @@ class nsXULPrototypeScript : public nsXULPrototypeNode
 public:
     nsXULPrototypeScript(PRInt32 aLineNo, const char *aVersion);
     virtual ~nsXULPrototypeScript();
+
+    virtual nsresult Serialize(nsIObjectOutputStream* aStream,
+                               nsIScriptContext* aContext);
+    virtual nsresult Deserialize(nsIObjectInputStream* aStream,
+                                 nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRInt32 aLineNo,

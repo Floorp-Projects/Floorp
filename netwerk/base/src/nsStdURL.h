@@ -33,6 +33,7 @@
 #include "nsIFile.h"
 #include "nsIFileChannel.h"
 #include "nsIFileChannel.h"
+#include "nsISerializable.h"
 
 #define NS_THIS_STANDARDURL_IMPLEMENTATION_CID       \
 { /* e3939dc8-29ab-11d3-8cce-0060b0fc14a3 */         \
@@ -42,7 +43,7 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsStdURL : public nsIFileURL, nsIStandardURL
+class nsStdURL : public nsIFileURL, nsIStandardURL, nsISerializable
 {
 public:
     ///////////////////////////////////////////////////////////////////////////
@@ -67,6 +68,7 @@ public:
     NS_DECL_NSIURL
     NS_DECL_NSIFILEURL
     NS_DECL_NSISTANDARDURL
+    NS_DECL_NSISERIALIZABLE
 
 protected:
     enum Format { ESCAPED, // Normal URL escaping

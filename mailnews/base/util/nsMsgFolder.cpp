@@ -180,10 +180,11 @@ nsMsgFolder::~nsMsgFolder(void)
     }
 }
 
-NS_IMPL_ISUPPORTS_INHERITED3(nsMsgFolder, nsRDFResource,
-                                   nsIMsgFolder,
-                                   nsIFolder,
-                                   nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS_INHERITED4(nsMsgFolder, nsRDFResource,
+                             nsIMsgFolder,
+                             nsIFolder,
+                             nsISupportsWeakReference,
+                             nsISerializable)
 
 nsresult
 nsMsgFolder::initializeStrings()
@@ -237,6 +238,21 @@ nsresult nsMsgFolder::CreateBaseMessageURI(const char *aURI)
 NS_IMETHODIMP nsMsgFolder::Shutdown(PRBool shutdownChildren)
 {
 	return NS_OK;
+}
+
+  // nsISerializable methods:
+NS_IMETHODIMP
+nsMsgFolder::Read(nsIObjectInputStream *aStream)
+{
+  NS_NOTREACHED("nsMsgFolder::Read");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgFolder::Write(nsIObjectOutputStream *aStream)
+{
+  NS_NOTREACHED("nsMsgFolder::Write");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
   // nsICollection methods:

@@ -20,6 +20,7 @@
 #define nsJARURI_h__
 
 #include "nsIJARURI.h"
+#include "nsISerializable.h"
 #include "nsCOMPtr.h"
 
 #define NS_JARURI_CID					 \
@@ -30,12 +31,13 @@
     {0x9f, 0x63, 0x00, 0x60, 0x08, 0xa6, 0xef, 0xe9} \
 }
 
-class nsJARURI : public nsIJARURI
+class nsJARURI : public nsIJARURI, nsISerializable
 {
 public:    
     NS_DECL_ISUPPORTS
     NS_DECL_NSIURI
     NS_DECL_NSIJARURI
+    NS_DECL_NSISERIALIZABLE
 
     // nsJARURI
     nsJARURI();

@@ -41,7 +41,7 @@ nsJARURI::~nsJARURI()
         nsMemory::Free(mJAREntry);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARURI, nsIJARURI, nsIURI)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsJARURI, nsIJARURI, nsIURI, nsISerializable)
 
 NS_METHOD
 nsJARURI::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -93,7 +93,24 @@ nsJARURI::FormatSpec(const char* entryPath, char* *result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsURI methods:
+// nsISerializable methods:
+
+NS_IMETHODIMP
+nsJARURI::Read(nsIObjectInputStream* aStream)
+{
+    NS_NOTREACHED("nsJARURI::Read");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsJARURI::Write(nsIObjectOutputStream* aStream)
+{
+    NS_NOTREACHED("nsJARURI::Write");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsIURI methods:
 
 NS_IMETHODIMP
 nsJARURI::GetSpec(char* *aSpec)

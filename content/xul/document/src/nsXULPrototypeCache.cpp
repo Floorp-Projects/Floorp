@@ -30,6 +30,7 @@
  */
 
 #include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULPrototypeDocument.h"
@@ -56,9 +57,12 @@ public:
     NS_IMETHOD PutStyleSheet(nsICSSStyleSheet* aStyleSheet);
     NS_IMETHOD FlushStyleSheets();
 
+    NS_IMETHOD GetScript(nsIURI* aURI, void** aScriptObject);
+    NS_IMETHOD PutScript(nsIURI* aURI, void* aScriptObject);
+    NS_IMETHOD FlushScripts();
+
     NS_IMETHOD GetXBLDocumentInfo(const nsCString& aString, nsIXBLDocumentInfo** _result);
     NS_IMETHOD PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo);
-
     NS_IMETHOD FlushXBLInformation();
 
     NS_IMETHOD Flush();
@@ -74,6 +78,7 @@ protected:
 
     nsSupportsHashtable mPrototypeTable;
     nsSupportsHashtable mStyleSheetTable;
+    nsHashtable         mScriptTable;
     nsSupportsHashtable mXBLDocTable;
     
     class nsIURIKey : public nsHashKey {
@@ -138,17 +143,11 @@ nsXULPrototypeCache::nsXULPrototypeCache()
 
 nsXULPrototypeCache::~nsXULPrototypeCache()
 {
+    FlushScripts();
 }
 
 
-NS_IMPL_THREADSAFE_ADDREF(nsXULPrototypeCache)
-NS_IMPL_THREADSAFE_RELEASE(nsXULPrototypeCache)
-
-
-NS_INTERFACE_MAP_BEGIN(nsXULPrototypeCache)
-    NS_INTERFACE_MAP_ENTRY(nsISupports)
-    NS_INTERFACE_MAP_ENTRY(nsIXULPrototypeCache)
-NS_INTERFACE_MAP_END
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsXULPrototypeCache, nsIXULPrototypeCache);
 
 
 NS_IMETHODIMP
@@ -199,8 +198,9 @@ nsXULPrototypeCache::PutPrototype(nsIXULPrototypeDocument* aDocument)
     rv = aDocument->GetURI(getter_AddRefs(uri));
 
     nsIURIKey key(uri);
-        // Put() w/o  a third parameter with a destination for the
-        // replaced value releases it 
+
+    // Put() w/o  a third parameter with a destination for the
+    // replaced value releases it 
     mPrototypeTable.Put(&key, aDocument);
 
     return NS_OK;
@@ -211,6 +211,9 @@ NS_IMETHODIMP
 nsXULPrototypeCache::FlushPrototypes()
 {
     mPrototypeTable.Reset();
+
+    // Clear the script cache, as it refers to prototype-owned mJSObjects.
+    mScriptTable.Reset();
     return NS_OK;
 }
 
@@ -237,38 +240,67 @@ nsXULPrototypeCache::PutStyleSheet(nsICSSStyleSheet* aStyleSheet)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
-{
-  nsCStringKey key(aURL);
-  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)); // Addref happens here.
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
-{
-  nsCOMPtr<nsIDocument> doc;
-  aDocumentInfo->GetDocument(getter_AddRefs(doc));
-
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
-
-  nsXPIDLCString str;
-  uri->GetSpec(getter_Copies(str));
-  
-  nsCStringKey key((const char*)str);
-  nsCOMPtr<nsIXBLDocumentInfo> info = getter_AddRefs(NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)));
-  if (!info)
-    mXBLDocTable.Put(&key, aDocumentInfo);
-
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsXULPrototypeCache::FlushStyleSheets()
 {
     mStyleSheetTable.Reset();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetScript(nsIURI* aURI, void** aScriptObject)
+{
+    nsIURIKey key(aURI);
+    *aScriptObject = mScriptTable.Get(&key);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutScript(nsIURI* aURI, void* aScriptObject)
+{
+    nsIURIKey key(aURI);
+    mScriptTable.Put(&key, aScriptObject);
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::FlushScripts()
+{
+    mScriptTable.Reset();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo** aResult)
+{
+    nsCStringKey key(aURL);
+    *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)); // Addref happens here.
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsXULPrototypeCache::PutXBLDocumentInfo(nsIXBLDocumentInfo* aDocumentInfo)
+{
+    nsCOMPtr<nsIDocument> doc;
+    aDocumentInfo->GetDocument(getter_AddRefs(doc));
+
+    nsCOMPtr<nsIURI> uri;
+    doc->GetDocumentURL(getter_AddRefs(uri));
+
+    nsXPIDLCString str;
+    uri->GetSpec(getter_Copies(str));
+    
+    nsCStringKey key((const char*)str);
+    nsCOMPtr<nsIXBLDocumentInfo> info = getter_AddRefs(NS_STATIC_CAST(nsIXBLDocumentInfo*, mXBLDocTable.Get(&key)));
+    if (!info)
+        mXBLDocTable.Put(&key, aDocumentInfo);
+
     return NS_OK;
 }
 
@@ -280,14 +312,17 @@ nsXULPrototypeCache::FlushXBLInformation()
     return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsXULPrototypeCache::Flush()
 {
     FlushPrototypes();
     FlushStyleSheets();
     FlushXBLInformation();
+    FlushScripts();
     return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsXULPrototypeCache::GetEnabled(PRBool* aIsEnabled)
@@ -295,4 +330,3 @@ nsXULPrototypeCache::GetEnabled(PRBool* aIsEnabled)
     *aIsEnabled = !gDisableXULCache;
     return NS_OK;
 }
-

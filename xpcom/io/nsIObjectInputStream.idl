@@ -1,0 +1,73 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *  
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *  
+ * The Original Code is Mozilla FastLoad code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Brendan Eich <brendan@mozilla.org> (original author)
+ */
+
+#include "nsIBinaryInputStream.idl"
+#include "nsrootidl.idl"
+
+/**
+ * @See nsIObjectOutputStream
+ * @See nsIBinaryInputStream
+ */
+
+[nsid] native nsID(nsID);
+
+[scriptable, uuid(6c248606-4eae-46fa-9df0-ba58502368eb)]
+interface nsIObjectInputStream : nsIBinaryInputStream
+{
+    /**
+     * Read an object from this stream to satisfy a strong or weak reference
+     * to one of its interfaces.  If the interface was not along the primary
+     * inheritance chain ending in the "root" or XPCOM-identity nsISupports,
+     * readObject will QueryInterface from the deserialized object root to the
+     * correct interface, which was specified when the object was serialized.
+     *
+     * @See nsIObjectOutputStream
+     */
+    nsISupports readObject(in PRBool aIsStrongRef);
+
+    nsID readID();
+
+    /**
+     * Optimized deserialization support -- see nsIStreamBufferAccess.idl.
+     */
+    [notxpcom] charPtr getBuffer(in PRUint32 aLength, in PRUint32 aAlignMask);
+    [notxpcom] void    putBuffer(in charPtr aBuffer, in PRUint32 aLength);
+};
+
+%{C++
+
+inline nsresult
+NS_ReadOptionalObject(nsIObjectInputStream* aStream, PRBool aIsStrongRef,
+                      nsISupports* *aResult)
+{
+    PRBool nonnull;
+    nsresult rv = aStream->ReadBoolean(&nonnull);
+    if (NS_SUCCEEDED(rv)) {
+        if (nonnull)
+            rv = aStream->ReadObject(aIsStrongRef, aResult);
+        else
+            *aResult = nsnull;
+    }
+    return rv;
+}
+
+%}

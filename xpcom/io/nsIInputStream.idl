@@ -99,10 +99,10 @@ interface nsIInputStreamObserver : nsISupports
     /**
      * Called when the input stream's consumer has read all the existing data from the stream.
      */
-    void onEmpty(in nsIInputStream outStr);
+    void onEmpty(in nsIInputStream inStr);
 
     /**
      * Called when the consumer closes its end of the stream.
      */
-    void onClose(in nsIInputStream outStr);
+    void onClose(in nsIInputStream inStr);
 };

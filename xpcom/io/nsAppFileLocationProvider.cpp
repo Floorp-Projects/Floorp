@@ -10,18 +10,18 @@
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
  *
- * The Original Code is Mozilla Communicator client code, 
- * released March 31, 1998. 
+ * The Original Code is Mozilla Communicator client code,
+ * released March 31, 1998.
  *
- * The Initial Developer of the Original Code is Netscape Communications 
+ * The Initial Developer of the Original Code is Netscape Communications
  * Corporation.  Portions created by Netscape are
  * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
  *     Conrad Carlen <conrad@ingress.com>
  */
- 
+
 #include "nsAppFileLocationProvider.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
@@ -56,7 +56,7 @@
 #include <storage/FindDirectory.h>
 #endif
 
- 
+
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
 
@@ -66,7 +66,7 @@
 #define APP_REGISTRY_NAME "registry.dat"
 #else
 #define APP_REGISTRY_NAME "appreg"
-#endif 
+#endif
 
 // define default product directory
 #if defined(XP_WIN) || defined(XP_MAC) || defined(XP_OS2) || defined(XP_BEOS)
@@ -83,7 +83,7 @@
 #define RES_DIR_NAME                "Res"
 #define CHROME_DIR_NAME             "Chrome"
 #define PLUGINS_DIR_NAME            "Plug-ins"
-#define SEARCH_DIR_NAME             "Search Plugins" 
+#define SEARCH_DIR_NAME             "Search Plugins"
 #else
 #define DEFAULTS_DIR_NAME           "defaults"
 #define DEFAULTS_PREF_DIR_NAME      "pref"
@@ -91,13 +91,13 @@
 #define RES_DIR_NAME                "res"
 #define CHROME_DIR_NAME             "chrome"
 #define PLUGINS_DIR_NAME            "plugins"
-#define SEARCH_DIR_NAME             "searchplugins" 
+#define SEARCH_DIR_NAME             "searchplugins"
 #endif
 
 
 //*****************************************************************************
 // nsAppFileLocationProvider::Constructor/Destructor
-//*****************************************************************************   
+//*****************************************************************************
 
 nsAppFileLocationProvider::nsAppFileLocationProvider()
 {
@@ -111,23 +111,23 @@ nsAppFileLocationProvider::~nsAppFileLocationProvider()
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsISupports
-//*****************************************************************************   
+//*****************************************************************************
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider
-//*****************************************************************************   
+//*****************************************************************************
 
 NS_IMETHODIMP
 nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile **_retval)
-{    
-	nsCOMPtr<nsILocalFile>  localFile;
-	nsresult rv = NS_ERROR_FAILURE;
+{
+    nsCOMPtr<nsILocalFile>  localFile;
+    nsresult rv = NS_ERROR_FAILURE;
 
-	*_retval = nsnull;
-	*persistant = PR_TRUE;
-	
+    *_retval = nsnull;
+    *persistant = PR_TRUE;
+    
     if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
@@ -165,7 +165,7 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
     }
     else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
-        rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));   
+        rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));
     }
     else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
     {
@@ -191,11 +191,11 @@ nsAppFileLocationProvider::GetFile(const char *prop, PRBool *persistant, nsIFile
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativePath(SEARCH_DIR_NAME);
     }
-    
-	if (localFile && NS_SUCCEEDED(rv))
-		return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
-		
-	return rv;
+
+    if (localFile && NS_SUCCEEDED(rv))
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)_retval);
+        
+    return rv;
 }
 
 
@@ -203,19 +203,18 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
     nsresult rv;
-    
+
     if (!mMozBinDirectory)
-    {        
+    {
         // Get the mozilla bin directory
         // 1. Check the directory service first for NS_XPCOM_CURRENT_PROCESS_DIR
         //    This will be set if a directory was passed to NS_InitXPCOM
         // 2. If that doesn't work, set it to be the current process directory
-        
-        nsCOMPtr<nsIProperties> directoryService = 
-                 do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+        nsCOMPtr<nsIProperties>
+          directoryService(do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv));
         if (NS_FAILED(rv))
             return rv;
-        
+
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
         if (NS_FAILED(rv)) {
             rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
@@ -223,7 +222,7 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
                 return rv;
         }
     }
-    
+
     nsCOMPtr<nsIFile> aFile;
     rv = mMozBinDirectory->Clone(getter_AddRefs(aFile));
     if (NS_FAILED(rv))
@@ -232,7 +231,7 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
     nsCOMPtr<nsILocalFile> lfile = do_QueryInterface (aFile);
     if (!lfile)
         return NS_ERROR_FAILURE;
-    
+
     NS_IF_ADDREF(*aLocalFile = lfile);
     return NS_OK;
 }
@@ -242,17 +241,17 @@ NS_METHOD nsAppFileLocationProvider::CloneMozBinDirectory(nsILocalFile **aLocalF
 // GetProductDirectory - Gets the directory which contains the application data folder
 //
 // UNIX   : ~/.mozilla/
-// WIN    : <Application Data folder on user's machine>\Mozilla 
+// WIN    : <Application Data folder on user's machine>\Mozilla
 // Mac    : :Documents:Mozilla:
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
-    
+
     nsresult rv;
     PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
-   
+
 #if defined(XP_MAC)
     nsCOMPtr<nsIProperties> directoryService = 
              do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
@@ -311,7 +310,7 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
     *aLocalFile = localDir;
     NS_ADDREF(*aLocalFile);
 
-   return rv; 
+   return rv;
 }
 
 
@@ -319,17 +318,16 @@ NS_METHOD nsAppFileLocationProvider::GetProductDirectory(nsILocalFile **aLocalFi
 // GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
 //
 // UNIX   : ~/.mozilla/
-// WIN    : <Application Data folder on user's machine>\Mozilla\Profiles 
+// WIN    : <Application Data folder on user's machine>\Mozilla\Profiles
 // Mac    : :Documents:Mozilla:Profiles:
 //----------------------------------------------------------------------------------------
 NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
 {
     NS_ENSURE_ARG_POINTER(aLocalFile);
-    
+
     nsresult rv;
-    PRBool exists;
     nsCOMPtr<nsILocalFile> localDir;
-   
+
     rv = GetProductDirectory(getter_AddRefs(localDir));
     if (NS_FAILED(rv)) return rv;
 
@@ -337,6 +335,8 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
     // These 3 platforms share this part of the path - do them as one
     rv = localDir->AppendRelativePath("Profiles");
     if (NS_FAILED(rv)) return rv;
+
+    PRBool exists;
     rv = localDir->Exists(&exists);
     if (NS_SUCCEEDED(rv) && !exists)
         rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
@@ -346,6 +346,6 @@ NS_METHOD nsAppFileLocationProvider::GetDefaultUserProfileRoot(nsILocalFile **aL
     *aLocalFile = localDir;
     NS_ADDREF(*aLocalFile);
 
-   return rv; 
+   return rv;
 }
 

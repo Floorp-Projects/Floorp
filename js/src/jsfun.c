@@ -1113,6 +1113,7 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
         fun = js_NewFunction(cx, NULL, NULL, 0, 0, NULL, NULL);
         if (!fun)
             return JS_FALSE;
+        atomstr = NULL;
     }
 
     if (!JS_XDRStringOrNull(xdr, &atomstr) ||

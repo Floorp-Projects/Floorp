@@ -26,6 +26,7 @@
 #include "nsIFileStreams.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsIStreamBufferAccess.h"
 #include "nsCOMPtr.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,29 +50,38 @@ protected:
 protected:
     PRUint32                    mBufferSize;
     char*                       mBuffer;
-    // mBufferStartOffset is the offset relative to the start of mStream:
+
+    // mBufferStartOffset is the offset relative to the start of mStream.
     PRUint32                    mBufferStartOffset;
+
     // mCursor is the read cursor for input streams, or write cursor for
-    // output streams, and is relative to mBufferStartOffset:
+    // output streams, and is relative to mBufferStartOffset.
     PRUint32                    mCursor;
+
     // mFillPoint is the amount available in the buffer for input streams,
-    // or the end of the buffer for output streams, and is relative to 
-    // mBufferStartOffset:
+    // or the count of bytes written or read (in case of a seek/read/write
+    // cycle) in the buffer for output streams, and is therefore relative
+    // to mBufferStartOffset.
     PRUint32                    mFillPoint;
+
     nsISupports*                mStream;        // cast to appropriate subclass
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsBufferedInputStream : public nsBufferedStream,
-                              public nsIBufferedInputStream
+                              public nsIBufferedInputStream,
+                              public nsIStreamBufferAccess
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSIINPUTSTREAM
     NS_DECL_NSIBUFFEREDINPUTSTREAM
+    NS_DECL_NSISTREAMBUFFERACCESS
 
-    nsBufferedInputStream() : nsBufferedStream() {}
+    nsBufferedInputStream() : nsBufferedStream(),
+                              mBufferDisabled(PR_FALSE),
+                              mGetBufferCount(0) {}
     virtual ~nsBufferedInputStream() {}
 
     static NS_METHOD
@@ -84,6 +94,10 @@ public:
 protected:
     NS_IMETHOD Fill();
     NS_IMETHOD Flush() { return NS_OK; } // no-op for input streams
+
+private:
+    PRPackedBool mBufferDisabled;
+    PRUint8      mGetBufferCount;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,7 +121,7 @@ public:
     }
 
 protected:
-    NS_IMETHOD Fill() { return NS_OK; } // no-op for output streams
+    NS_IMETHOD Fill();
 };
 
 ////////////////////////////////////////////////////////////////////////////////

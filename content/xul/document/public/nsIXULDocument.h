@@ -142,6 +142,18 @@ public:
    * node.
    */
   NS_IMETHOD GetTemplateBuilderFor(nsIContent* aContent, nsIXULTemplateBuilder** aResult) = 0;
+
+  /**
+   * Callback notifying this document when its XUL prototype document load
+   * completes.  The prototype load was initiated by another document load
+   * request than the one whose document is being notified here.
+   */
+  NS_IMETHOD OnPrototypeLoadDone() = 0;
+
+  /**
+   * Callback from the content sink upon resumption from the parser.
+   */
+  NS_IMETHOD OnResumeContentSink() = 0;
 };
 
 // factory functions

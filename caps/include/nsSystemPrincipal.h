@@ -28,15 +28,18 @@
 
 #include "nsBasePrincipal.h"
 
+#define NS_SYSTEMPRINCIPAL_CLASSNAME "systemprincipal"
 #define NS_SYSTEMPRINCIPAL_CID \
 { 0x4a6212db, 0xaccb, 0x11d3, \
 { 0xb7, 0x65, 0x0, 0x60, 0xb0, 0xb6, 0xce, 0xcb }}
+#define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
 class nsSystemPrincipal : public nsBasePrincipal {
 public:
     
     NS_DECL_ISUPPORTS
+    NS_DECL_NSISERIALIZABLE
     
     NS_IMETHOD ToString(char **result);
 

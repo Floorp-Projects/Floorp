@@ -30,6 +30,8 @@
 #include "prprf.h"
 #include "nsURLHelper.h"
 #include "nsNetCID.h"
+#include "nsIObjectInputStream.h"
+#include "nsIObjectOutputStream.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,
@@ -60,16 +62,49 @@ nsSimpleURI::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     NS_ENSURE_ARG_POINTER(aInstancePtr);
 
-     if (aIID.Equals(kISupportsIID))
-         *aInstancePtr = GetInner();
-    else if (aIID.Equals(kThisSimpleURIImplementationCID) ||        // used by Equals
-        aIID.Equals(NS_GET_IID(nsIURI)))
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = GetInner();
+    } else if (aIID.Equals(kThisSimpleURIImplementationCID) || // used by Equals
+               aIID.Equals(NS_GET_IID(nsIURI))) {
         *aInstancePtr = NS_STATIC_CAST(nsIURI*, this);
-     else {
-         *aInstancePtr = nsnull;
-          return NS_NOINTERFACE;
-     }
+    } else if (aIID.Equals(NS_GET_IID(nsISerializable))) {
+        *aInstancePtr = NS_STATIC_CAST(nsISerializable*, this);
+    } else {
+        *aInstancePtr = nsnull;
+        return NS_NOINTERFACE;
+    }
     NS_ADDREF((nsISupports*)*aInstancePtr);
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// nsISerializable methods:
+
+NS_IMETHODIMP
+nsSimpleURI::Read(nsIObjectInputStream* aStream)
+{
+    nsresult rv;
+
+    rv = aStream->ReadStringZ(&mScheme);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->ReadStringZ(&mPath);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSimpleURI::Write(nsIObjectOutputStream* aStream)
+{
+    nsresult rv;
+
+    rv = aStream->WriteStringZ(mScheme);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aStream->WriteStringZ(mPath);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
 }
 

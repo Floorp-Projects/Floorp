@@ -56,6 +56,8 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  NS_DECL_NSISERIALIZABLE       // XXXbe temporary NOT_IMPLEMENTED stubs
+
   NS_DECL_NSICOLLECTION
   NS_DECL_NSIFOLDER
   // eventually this will be an instantiable class, and we should
