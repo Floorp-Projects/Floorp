@@ -511,10 +511,9 @@ calDavCalendar.prototype = {
         };
 
         // convert this into a form the WebDAV service can use
-        // XXX is "text/xml" really the right type?
         var xParser = Components.classes['@mozilla.org/xmlextras/domparser;1']
                       .getService(Components.interfaces.nsIDOMParser);
-        queryDoc = xParser.parseFromString(aQuery, "text/xml");
+        queryDoc = xParser.parseFromString(aQuery, "application/xml");
 
         // construct the resource we want to search against
         // XXX adding "calendar/" to the uri is wrong

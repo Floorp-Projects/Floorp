@@ -1374,7 +1374,7 @@ function printEventArray( calendarEventArray, stylesheetName )
 
       domParser.baseURI = stylesheetUrl;
       var xslContent = loadFile( stylesheetName );
-      var xslDocument = domParser.parseFromString(xslContent, 'text/xml');
+      var xslDocument = domParser.parseFromString(xslContent, 'application/xml');
 
       // hack, might be cleaner to assing xml document directly to printWindow.document
       // var elementNode = xcsDocument.documentElement;
