@@ -347,7 +347,7 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
 	  return ResultFromScode(E_FAIL);
   }
   CreateDataFromPrimitive ( flavorStr, genericDataWrapper, &data, len );
-  delete [] flavorStr;
+  nsAllocator::Free(flavorStr);
 
   HGLOBAL     hGlobalMemory = NULL;
   PSTR        pGlobalMemory = NULL;
@@ -355,54 +355,30 @@ HRESULT nsDataObj::GetText(nsString * aDF, FORMATETC& aFE, STGMEDIUM& aSTG)
   aSTG.tymed          = TYMED_HGLOBAL;
   aSTG.pUnkForRelease = NULL;
 
-  //***************
-  // NOTE: On Win98 it allocates to the nearest DWORD boundary 
-  // alloc 4 gets you 8
-  // alloc 6 gets you 8
-  // etc.
-  // The GHND will zero fill, external windows apps expect 
-  // text string to be zero terminated.
-  // 
-  // So if we are copying CF_TEXT or CF_UNICODE we need to add
-  // the null terminator because the transferable only gives up the text
-  // and no terminating zero.
-  // So if the length of the text is modulo 8 we need to add extra space
-  // for terminating zero
-
+  // the transferable gives us data that is not null-terminated, but windoze apps
+  // expect that CF_TEXT and CF_UNICODETEXT	be so. Bump the data buffer by the appropriate
+  // size to account for the null (one byte for CF_TEXT, two bytes for CF_UNICODETEXT).
   DWORD allocLen = (DWORD)len;
-
-  if (CF_TEXT        == aFE.cfFormat ||
-      CF_UNICODETEXT == aFE.cfFormat) {
-    if (len % 8 == 0) {
-      allocLen++; // note: this by actually add more than one byte.
-    }
-  }
+  if ( CF_TEXT == aFE.cfFormat )
+    allocLen += sizeof(char);
+  else if ( CF_UNICODETEXT == aFE.cfFormat)
+    allocLen += sizeof(char) * 2;
 
   // GHND zeroes the memory
   hGlobalMemory = (HGLOBAL)::GlobalAlloc(GHND, allocLen); 
-  //DWORD newSize = ::GlobalSize(hGlobalMemory);
 
   // Copy text to Global Memory Area
   if (hGlobalMemory != NULL) {
-    //PSTR pstr = (PSTR)::GlobalLock(hGlobalMemory);
-    char * pstr = (char *)::GlobalLock(hGlobalMemory);
-    //PSTR pstr = pGlobalMemory;
-
-    // need to use memcpy here
-    char* s = NS_REINTERPRET_CAST(char*, data);
-    PRUint32 inx;
-    for (inx=0; inx < len; inx++) {
-	    *pstr++ = *s++;
-    }
-
-    // Put data on Clipboard
+    char* dest = NS_REINTERPRET_CAST(char*, ::GlobalLock(hGlobalMemory));
+    char* source = NS_REINTERPRET_CAST(char*, data);
+    memcpy ( dest, source, len );
     BOOL status = ::GlobalUnlock(hGlobalMemory);
   }
 
   aSTG.hGlobal = hGlobalMemory;
 
   // Now, delete the memory that was created by CreateDataFromPrimitive
-  delete [] data;
+  nsAllocator::Free(data);
 
 	return ResultFromScode(S_OK);
 }
@@ -492,8 +468,8 @@ void nsDataObj::SetTransferable(nsITransferable * aTransferable)
 }
 
 
-//еее skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
-//еее please forgive me.
+//XXX skanky hack until i can correctly re-create primitives from native data. i know this code sucks,
+//XXX please forgive me.
 void
 CreatePrimitiveForData ( const char* aFlavor, void* aDataBuff, PRUint32 aDataLen, nsISupports** aPrimitive )
 {
