@@ -213,7 +213,7 @@ TableBackgroundPainter::TableBackgroundData::SetBCBorder(nsMargin& aBorder,
   mSynthBorder->mBorder.SetBottom(coord);
   coord.SetCoordValue(aBorder.left);
   mSynthBorder->mBorder.SetLeft(coord);
-  mSynthBorder->RecalcData();
+  mSynthBorder->RecalcData(aPainter->mPresContext);
 
   mBorder = mSynthBorder;
   return NS_OK;
@@ -242,7 +242,7 @@ TableBackgroundPainter::TableBackgroundPainter(nsTableFrame*        aTableFrame,
   mZeroBorder.mBorder.SetRight(coord);
   mZeroBorder.mBorder.SetBottom(coord);
   mZeroBorder.mBorder.SetLeft(coord);
-  mZeroBorder.RecalcData();
+  mZeroBorder.RecalcData(aPresContext);
 
   mZeroPadding.RecalcData();
 

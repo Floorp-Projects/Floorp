@@ -441,15 +441,6 @@ nsStylePadding::CalcPaddingFor(const nsIFrame* aFrame, nsMargin& aPadding) const
 
 nsStyleBorder::nsStyleBorder(nsPresContext* aPresContext)
 {
-  // XXX support mBorderWidths until deprecated methods are removed
-  float pixelsToTwips = 20.0f;
-  if (aPresContext) {
-    pixelsToTwips = aPresContext->PixelsToTwips();
-  }
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_THIN] = NSIntPixelsToTwips(1, pixelsToTwips);
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_MEDIUM] = NSIntPixelsToTwips(3, pixelsToTwips);
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_THICK] = NSIntPixelsToTwips(5, pixelsToTwips);
-   
   // spacing values not inherited
   nsStyleCoord  medium(NS_STYLE_BORDER_WIDTH_MEDIUM, eStyleUnit_Enumerated);
   mBorder.SetLeft(medium);
@@ -513,7 +504,7 @@ PRBool nsStyleBorder::IsBorderSideVisible(PRUint8 aSide) const
        && (borderStyle != NS_STYLE_BORDER_STYLE_HIDDEN));
 }
 
-void nsStyleBorder::RecalcData()
+void nsStyleBorder::RecalcData(nsPresContext* aContext)
 {
   PRBool allFixed = PR_TRUE;
   {NS_FOR_CSS_SIDES(side) {
@@ -525,9 +516,10 @@ void nsStyleBorder::RecalcData()
   }}
   if (allFixed) {
     nsStyleCoord coord;
+    const nscoord* borderWidths = aContext->GetBorderWidthTable();
     NS_FOR_CSS_SIDES(side) {
       mCachedBorder.*(gMarginSides[side]) = IsBorderSideVisible(side)
-        ? CalcCoord(mBorder.Get(side, coord), mBorderWidths, 3)
+        ? CalcCoord(mBorder.Get(side, coord), borderWidths, 3)
         : 0;
     }
     mHasCachedBorder = PR_TRUE;
@@ -602,7 +594,8 @@ nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, nsMargin& aBorder) const
   if (mHasCachedBorder) {
     aBorder = mCachedBorder;
   } else {
-    CalcSidesFor(aFrame, mBorder, NS_SPACING_BORDER, mBorderWidths, 3, aBorder);
+    CalcSidesFor(aFrame, mBorder, NS_SPACING_BORDER,
+                 aFrame->GetPresContext()->GetBorderWidthTable(), 3, aBorder);
   }
 }
 
@@ -625,19 +618,12 @@ nsStyleBorder::CalcBorderFor(const nsIFrame* aFrame, PRUint8 aSide, nscoord& aWi
   default: // NS_SIDE_LEFT
     coord = mBorder.GetLeft(coord);
   }
-  aWidth = CalcSideFor(aFrame, coord, NS_SPACING_BORDER, aSide, mBorderWidths, 3);
+  aWidth = CalcSideFor(aFrame, coord, NS_SPACING_BORDER, aSide,
+                       aFrame->GetPresContext()->GetBorderWidthTable(), 3);
 }
 
 nsStyleOutline::nsStyleOutline(nsPresContext* aPresContext)
 {
-  // XXX support mBorderWidths until deprecated methods are removed
-  float pixelsToTwips = 20.0f;
-  if (aPresContext)
-    pixelsToTwips = aPresContext->PixelsToTwips();
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_THIN] = NSIntPixelsToTwips(1, pixelsToTwips);
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_MEDIUM] = NSIntPixelsToTwips(3, pixelsToTwips);
-  mBorderWidths[NS_STYLE_BORDER_WIDTH_THICK] = NSIntPixelsToTwips(5, pixelsToTwips);
- 
   // spacing values not inherited
   mOutlineRadius.Reset();
   mOutlineOffset.Reset();
@@ -655,15 +641,16 @@ nsStyleOutline::nsStyleOutline(const nsStyleOutline& aSrc) {
 }
 
 void 
-nsStyleOutline::RecalcData(void)
+nsStyleOutline::RecalcData(nsPresContext* aContext)
 {
   if ((NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle()) || 
      IsFixedUnit(mOutlineWidth.GetUnit(), PR_TRUE)) {
+    const nscoord* borderWidths = aContext->GetBorderWidthTable();
     if (NS_STYLE_BORDER_STYLE_NONE == GetOutlineStyle())
       mCachedOutlineWidth = 0;
     else
-      mCachedOutlineWidth = CalcCoord(mOutlineWidth, mBorderWidths, 3);
-    mCachedOutlineOffset = CalcCoord(mOutlineOffset, mBorderWidths, 3);
+      mCachedOutlineWidth = CalcCoord(mOutlineWidth, borderWidths, 3);
+    mCachedOutlineOffset = CalcCoord(mOutlineOffset, borderWidths, 3);
     mHasCachedOutline = PR_TRUE;
   }
   else

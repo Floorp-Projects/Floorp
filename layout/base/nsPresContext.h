@@ -595,6 +595,12 @@ public:
                               nsIFrame * aFrame, PRUint32 aColor);
 #endif
 
+  /**
+   * This table maps border-width enums 'thin', 'medium', 'thick'
+   * to actual nscoord values.
+   */
+  const nscoord* GetBorderWidthTable() { return mBorderWidthTable; }
+
 protected:
   NS_HIDDEN_(void) SetImgAnimations(nsIContent *aParent, PRUint16 aMode);
   NS_HIDDEN_(void) GetDocumentColorPreferences();
@@ -669,6 +675,8 @@ protected:
   nsFont                mDefaultMonospaceFont;
   nsFont                mDefaultCursiveFont;
   nsFont                mDefaultFantasyFont;
+
+  nscoord               mBorderWidthTable[3];
 
   unsigned              mUseDocumentFonts : 1;
   unsigned              mUseDocumentColors : 1;

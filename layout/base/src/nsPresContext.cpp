@@ -690,6 +690,11 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mInitialized = PR_TRUE;
 #endif
 
+  float pixelsToTwips = PixelsToTwips();
+  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_THIN] = NSIntPixelsToTwips(1, pixelsToTwips);
+  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_MEDIUM] = NSIntPixelsToTwips(3, pixelsToTwips);
+  mBorderWidthTable[NS_STYLE_BORDER_WIDTH_THICK] = NSIntPixelsToTwips(5, pixelsToTwips);
+
   return NS_OK;
 }
 
