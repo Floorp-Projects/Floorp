@@ -240,10 +240,15 @@ static GtkIMContext *IM_get_input_context(MozDrawingarea *aArea);
 #endif
 
 // needed for imgIContainer cursors
+// GdkDisplay* was added in 2.2
+typedef struct _GdkDisplay GdkDisplay;
+typedef GdkDisplay* (*_gdk_display_get_default_fn)(void);
+
 typedef GdkCursor*  (*_gdk_cursor_new_from_pixbuf_fn)(GdkDisplay *display,
                                                       GdkPixbuf *pixbuf,
                                                       gint x,
                                                       gint y);
+static _gdk_display_get_default_fn    _gdk_display_get_default;
 static _gdk_cursor_new_from_pixbuf_fn _gdk_cursor_new_from_pixbuf;
 static PRBool sPixbufCursorChecked;
 
@@ -801,9 +806,11 @@ nsWindow::SetCursor(imgIContainer* aCursor)
         PRLibrary* lib;
         _gdk_cursor_new_from_pixbuf = (_gdk_cursor_new_from_pixbuf_fn)
             PR_FindFunctionSymbolAndLibrary("gdk_cursor_new_from_pixbuf", &lib);
+        _gdk_display_get_default = (_gdk_display_get_default_fn)
+            PR_FindFunctionSymbolAndLibrary("gdk_display_get_default", &lib);
         sPixbufCursorChecked = PR_TRUE;
     }
-    if (!_gdk_cursor_new_from_pixbuf)
+    if (!_gdk_cursor_new_from_pixbuf || !_gdk_display_get_default)
         return NS_ERROR_NOT_IMPLEMENTED;
 
     mCursor = nsCursor(-1);
@@ -850,7 +857,7 @@ nsWindow::SetCursor(imgIContainer* aCursor)
     }
 
     // Now create the cursor
-    GdkCursor* cursor = _gdk_cursor_new_from_pixbuf(gdk_display_get_default(),
+    GdkCursor* cursor = _gdk_cursor_new_from_pixbuf(_gdk_display_get_default(),
                                                     pixbuf,
                                                     hX, hY);
     gdk_pixbuf_unref(pixbuf);
