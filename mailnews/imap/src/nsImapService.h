@@ -69,6 +69,8 @@ public:
   NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
 
 protected:
+  PRBool WeAreOffline();
+
     PRUnichar GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder);
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
                            char **folderName);

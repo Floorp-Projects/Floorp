@@ -89,5 +89,7 @@ NS_END_EXTERN_C
 #define IMAP_MOVE_FOLDER_TO_TRASH                   5055
 #define IMAP_NO_NEW_MESSAGES                        5056
 #define IMAP_DEFAULT_ACCOUNT_NAME                   5057
-#define IMAP_DELETE_NO_TRASH                       5058
+#define IMAP_DELETE_NO_TRASH                        5058
+#define IMAP_HTML_NO_CACHED_BODY_TITLE              5059
+#define IMAP_HTML_NO_CACHED_BODY_BODY               5060
 #endif /* _nsImapStringBundle_H__ */

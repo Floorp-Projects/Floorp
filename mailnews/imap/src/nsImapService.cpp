@@ -55,6 +55,9 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
+#include "nsIIOService.h"
+#include "nsImapStringBundle.h"
+#include "plbase64.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -62,6 +65,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
 static const char *sequenceString = "SEQUENCE";
@@ -114,6 +118,18 @@ PRUnichar nsImapService::GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder)
     return delimiter;
 }
 
+PRBool nsImapService::WeAreOffline()
+{
+	nsresult rv = NS_OK;
+  PRBool offline = PR_FALSE;
+
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && netService)
+  {
+    netService->GetOffline(&offline);
+  }
+  return offline;
+}
 // N.B., this returns an escaped folder name, appropriate for putting in a url.
 nsresult
 nsImapService::GetFolderName(nsIMsgFolder* aImapFolder,
@@ -167,15 +183,18 @@ nsImapService::SelectFolder(nsIEventQueue * aClientEventQueue,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
-    NS_ASSERTION (aImapMailFolder && aClientEventQueue,
-                  "Oops ... null pointer");
-    if (!aImapMailFolder || !aClientEventQueue)
-        return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION (aImapMailFolder && aClientEventQueue,
+                "Oops ... null pointer");
+  if (!aImapMailFolder || !aClientEventQueue)
+      return NS_ERROR_NULL_POINTER;
 
-    PRBool noSelect = PR_FALSE;
-    aImapMailFolder->GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+  if (WeAreOffline())
+    return NS_MSG_ERROR_OFFLINE;
 
-    if (noSelect) return NS_OK;
+  PRBool noSelect = PR_FALSE;
+  aImapMailFolder->GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
+
+  if (noSelect) return NS_OK;
 
 	nsCOMPtr<nsIImapUrl> imapUrl;
 	nsCAutoString urlSpec;
@@ -915,113 +934,140 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 	// create a protocol instance to handle the request.
 	// NOTE: once we start working with multiple connections, this step will be much more complicated...but for now
 	// just create a connection and process the request.
-    NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
-    if (!aImapUrl || !aImapMailFolder || !aImapMessage)
-        return NS_ERROR_NULL_POINTER;
+  NS_ASSERTION (aImapUrl && aImapMailFolder &&  aImapMessage,"Oops ... null pointer");
+  if (!aImapUrl || !aImapMailFolder || !aImapMessage)
+      return NS_ERROR_NULL_POINTER;
 
-    nsCAutoString urlSpec;
-    nsresult rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
-
-    rv = aImapUrl->SetImapMessageSink(aImapMessage);
-    if (NS_SUCCEEDED(rv))
-	{
-      nsXPIDLCString currentSpec;
-      nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
-      url->GetSpec(getter_Copies(currentSpec));
-      urlSpec.Assign(currentSpec);
-
-      PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
-
-	  urlSpec.Append("fetch>");
-	  urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
-	  urlSpec.Append(">");
-	  urlSpec.AppendWithConversion(hierarchySeparator);
-
-	  nsXPIDLCString folderName;
-	  GetFolderName(aImapMailFolder, getter_Copies(folderName));
-	  urlSpec.Append((const char *) folderName);
-	  urlSpec.Append(">");
-	  urlSpec.Append(messageIdentifierList);
-
-
-    // rhp: If we are displaying this message for the purpose of printing, we
-    // need to append the header=print option.
-    //
-    if (mPrintingOperation)
-      urlSpec.Append("?header=print");
-
-		  // mscott - this cast to a char * is okay...there's a bug in the XPIDL
-		  // compiler that is preventing in string parameters from showing up as
-		  // const char *. hopefully they will fix it soon.
-		  rv = url->SetSpec((char *) urlSpec.GetBuffer());
-
-	    rv = aImapUrl->SetImapAction(aImapAction);
-	   if (aImapMailFolder && aDisplayConsumer)
-	   {
-			nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
-			rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
-			if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
-			{
-				PRBool interrupted;
-				nsCOMPtr<nsIImapIncomingServer>
-					aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
-				if (NS_SUCCEEDED(rv) && aImapServer)
-					aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
-			}
-	   }
-      // if the display consumer is a docshell, then we should run the url in the docshell.
-      // otherwise, it should be a stream listener....so open a channel using AsyncRead
-      // and the provided stream listener....
-
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
-      if (NS_SUCCEEDED(rv) && docShell)
-      {      
-        rv = docShell->LoadURI(url, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
-      }
-      else
+  nsresult rv;
+  nsXPIDLCString currentSpec;
+  nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
+  if (WeAreOffline())
+  {
+    nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(aImapUrl));
+    if (msgurl)
+    {
+      PRBool msgIsInLocalCache = PR_FALSE;
+      msgurl->GetMsgIsInLocalCache(&msgIsInLocalCache);
+      if (!msgIsInLocalCache)
       {
-        nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
-        if (NS_SUCCEEDED(rv) && aStreamListener)
+        nsCOMPtr<nsIMsgIncomingServer> server;
+        nsCOMPtr<nsIImapServerSink> imapServer;
+
+        rv = aImapMailFolder->GetServer(getter_AddRefs(server));
+        if (server)
         {
-          nsCOMPtr<nsIChannel> aChannel;
-          nsCOMPtr<nsILoadGroup> aLoadGroup;
-          nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
-          if (NS_SUCCEEDED(rv) && mailnewsUrl)
+          imapServer = do_QueryInterface(server);
+          if (imapServer)
           {
-            if (aMsgWindow)
-              mailnewsUrl->SetMsgWindow(aMsgWindow);
-            mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+            nsXPIDLString errorMsgTitle;
+            nsXPIDLString errorMsgBody;
+
+            imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_BODY, getter_Copies(errorMsgBody));
+            imapServer->GetImapStringByID(IMAP_HTML_NO_CACHED_BODY_TITLE, getter_Copies(errorMsgTitle));
+            return aMsgWindow->DisplayHTMLInMessagePane(errorMsgTitle, errorMsgBody);
           }
-          rv = NewChannel(url, getter_AddRefs(aChannel));
-          if (NS_FAILED(rv)) return rv;
-
-          rv = aChannel->SetLoadGroup(aLoadGroup);
-          if (NS_FAILED(rv)) return rv;
-
-          nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
-          //  now try to open the channel passing in our display consumer as the listener 
-          rv = aChannel->AsyncRead(aStreamListener, aCtxt);
-        }
-        else // do what we used to do before
-        {
-          // I'd like to get rid of this code as I believe that we always get a docshell
-          // or stream listener passed into us in this method but i'm not sure yet...
-          // I'm going to use an assert for now to figure out if this is ever getting called
-#ifdef DEBUG_mscott
-          NS_ASSERTION(0, "oops...someone still is reaching this part of the code");
-#endif
-          nsCOMPtr<nsIEventQueue> queue;	
-          // get the Event Queue for this thread...
-	        NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
-
-          if (NS_FAILED(rv)) return rv;
-
-          rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-          if (NS_FAILED(rv)) return rv;
-          rv = GetImapConnectionAndLoadUrl(queue, aImapUrl, aDisplayConsumer, aURL);
         }
       }
-	}
+    }
+  }
+
+  nsCAutoString urlSpec;
+  rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
+
+  rv = aImapUrl->SetImapMessageSink(aImapMessage);
+  url->GetSpec(getter_Copies(currentSpec));
+  urlSpec.Assign(currentSpec);
+
+  PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
+
+	urlSpec.Append("fetch>");
+	urlSpec.Append(messageIdsAreUID ? uidString : sequenceString);
+	urlSpec.Append(">");
+	urlSpec.AppendWithConversion(hierarchySeparator);
+
+	nsXPIDLCString folderName;
+	GetFolderName(aImapMailFolder, getter_Copies(folderName));
+	urlSpec.Append((const char *) folderName);
+	urlSpec.Append(">");
+	urlSpec.Append(messageIdentifierList);
+
+  // rhp: If we are displaying this message for the purpose of printing, we
+  // need to append the header=print option.
+  //
+  if (mPrintingOperation)
+    urlSpec.Append("?header=print");
+
+	// mscott - this cast to a char * is okay...there's a bug in the XPIDL
+	// compiler that is preventing in string parameters from showing up as
+	// const char *. hopefully they will fix it soon.
+	rv = url->SetSpec((char *) urlSpec.GetBuffer());
+
+	rv = aImapUrl->SetImapAction(aImapAction);
+  if (aImapMailFolder && aDisplayConsumer)
+  {
+		nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+		rv = aImapMailFolder->GetServer(getter_AddRefs(aMsgIncomingServer));
+		if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+		{
+			PRBool interrupted;
+			nsCOMPtr<nsIImapIncomingServer>
+				aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+			if (NS_SUCCEEDED(rv) && aImapServer)
+				aImapServer->PseudoInterruptMsgLoad(aImapUrl, &interrupted);
+		}
+	 }
+    // if the display consumer is a docshell, then we should run the url in the docshell.
+    // otherwise, it should be a stream listener....so open a channel using AsyncRead
+    // and the provided stream listener....
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aDisplayConsumer, &rv));
+  if (NS_SUCCEEDED(rv) && docShell)
+  {      
+    rv = docShell->LoadURI(url, nsnull, nsIWebNavigation::LOAD_FLAGS_NONE);
+  }
+  else
+  {
+    nsCOMPtr<nsIStreamListener> aStreamListener = do_QueryInterface(aDisplayConsumer, &rv);
+    if (NS_SUCCEEDED(rv) && aStreamListener)
+    {
+      nsCOMPtr<nsIChannel> aChannel;
+      nsCOMPtr<nsILoadGroup> aLoadGroup;
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl, &rv);
+      if (NS_SUCCEEDED(rv) && mailnewsUrl)
+      {
+        if (aMsgWindow)
+          mailnewsUrl->SetMsgWindow(aMsgWindow);
+        mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
+      }
+      rv = NewChannel(url, getter_AddRefs(aChannel));
+      if (NS_FAILED(rv)) return rv;
+
+      rv = aChannel->SetLoadGroup(aLoadGroup);
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
+      //  now try to open the channel passing in our display consumer as the listener 
+      rv = aChannel->AsyncRead(aStreamListener, aCtxt);
+    }
+    else // do what we used to do before
+    {
+      // I'd like to get rid of this code as I believe that we always get a docshell
+      // or stream listener passed into us in this method but i'm not sure yet...
+      // I'm going to use an assert for now to figure out if this is ever getting called
+#ifdef DEBUG_mscott
+      NS_ASSERTION(0, "oops...someone still is reaching this part of the code");
+#endif
+      nsCOMPtr<nsIEventQueue> queue;	
+      // get the Event Queue for this thread...
+	    NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
+
+      if (NS_FAILED(rv)) return rv;
+
+      rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
+      if (NS_FAILED(rv)) return rv;
+      rv = GetImapConnectionAndLoadUrl(queue, aImapUrl, aDisplayConsumer, aURL);
+    }
+  }
 	return rv;
 }
 
@@ -1928,27 +1974,40 @@ nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsISupports* aConsumer,
                                            nsIURI** aURL)
 {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
-  	nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
-    rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
-    
-    if (aURL)
-    {
-        *aURL = msgUrl;
-        NS_IF_ADDREF(*aURL);
-    }
+  NS_ENSURE_ARG(aImapUrl);
 
-    if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
-    {
-        nsCOMPtr<nsIImapIncomingServer>
-            aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
-        if (NS_SUCCEEDED(rv) && aImapServer)
-            rv = aImapServer->GetImapConnectionAndLoadUrl(aClientEventQueue,
-                                                          aImapUrl,
-                                                          aConsumer);
-    }
-    return rv;
+  if (WeAreOffline())
+  {
+    nsImapAction imapAction;
+
+    // the only thing we can do offline is fetch messages.
+    // ### TODO - need to look at msg copy, save attachment, etc. when we
+    // have offline message bodies.
+    aImapUrl->GetImapAction(&imapAction);
+    if (imapAction != nsIImapUrl::nsImapMsgFetch)
+      return NS_MSG_ERROR_OFFLINE;
+  }
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+  nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
+  rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
+    
+  if (aURL)
+  {
+      *aURL = msgUrl;
+      NS_IF_ADDREF(*aURL);
+  }
+
+  if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+  {
+    nsCOMPtr<nsIImapIncomingServer> aImapServer(do_QueryInterface(aMsgIncomingServer, &rv));
+    if (NS_SUCCEEDED(rv) && aImapServer)
+      rv = aImapServer->GetImapConnectionAndLoadUrl(aClientEventQueue,
+                                                        aImapUrl,
+                                                        aConsumer);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
