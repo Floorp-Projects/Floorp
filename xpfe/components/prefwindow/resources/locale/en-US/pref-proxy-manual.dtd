@@ -9,4 +9,4 @@
 <!ENTITY port.label "Port:">
 <!ENTITY direct.label "You may provide a list of domains that Netscape should access directly, rather than via the proxy:">
 <!ENTITY noproxy.label "No Proxy for:">
-<!ENTITY sockhost.label "SOCKS Host:">
+<!ENTITY sockhost.label "SOCKS v5 Host:">
