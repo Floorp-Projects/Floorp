@@ -57,7 +57,8 @@
 #include "nsIFontMetrics.h"
 #include "nsIFontEnumerator.h" 
 #include "nsIFontPackageService.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
@@ -237,6 +238,8 @@ static LONG  gLastClickCount    = 0L;
 // native toolkit input events it returns the current time. The value is
 // compatible with PR_IntervalToMicroseconds(PR_IntervalNow()).
 static PRUint32 gLastInputEventTime = 0;
+
+static int gTrimOnMinimize = 2; // uninitialized, but still true
 
 #if 0
 static PRBool is_vk_down(int vk)
@@ -1526,6 +1529,25 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     DispatchStandardEvent(NS_CREATE);
     SubclassWindow(TRUE);
 
+    if (gTrimOnMinimize == 2 && mWindowType == eWindowType_invisible) {
+      /* not yet initialized, and this is the hidden window
+         (conveniently created before any visible windows and after
+         the profile has been initialized) */
+      gTrimOnMinimize = 1;
+      nsCOMPtr<nsIPrefService> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+      if (prefs) {
+        nsCOMPtr<nsIPrefBranch> prefBranch;
+        prefs->GetBranch(0, getter_AddRefs(prefBranch));
+        if (prefBranch) {
+          PRBool trimOnMinimize;
+          if (NS_SUCCEEDED(prefBranch->GetBoolPref("config.trim_on_minimize",
+                                                   &trimOnMinimize))
+              && !trimOnMinimize)
+            gTrimOnMinimize = 0;
+        }
+      }
+    }
+
     return(NS_OK);
 }
 
@@ -1814,7 +1836,7 @@ NS_IMETHODIMP nsWindow::SetSizeMode(PRInt32 aMode) {
         mode = SW_MAXIMIZE;
         break;
       case nsSizeMode_Minimized :
-        mode = SW_MINIMIZE;
+        mode = gTrimOnMinimize ? SW_MINIMIZE : SW_SHOWMINIMIZED;
         break;
       default :
         mode = SW_RESTORE;
@@ -3761,12 +3783,18 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                   // Changing nsIPref entry which triggers callbacks
                   // and flows into calling mDeviceContext->FlushFontCache()
                   // to update the font cache in all the instance of Browsers
-                  nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
-                  if (NS_SUCCEEDED(rv)) { 
-                    PRBool fontInternalChange = PR_FALSE;  
-                    pPrefs->GetBoolPref("font.internaluseonly.changed", &fontInternalChange);
-                    pPrefs->SetBoolPref("font.internaluseonly.changed", !fontInternalChange);
-                  }                
+                  nsCOMPtr<nsIPrefService> prefs =
+                                    do_GetService(NS_PREFSERVICE_CONTRACTID);
+                  if (prefs) {
+                    nsCOMPtr<nsIPrefBranch> fiPrefs;
+                    prefs->GetBranch("font.internaluseonly.",
+                                     getter_AddRefs(fiPrefs));
+                    if (fiPrefs) {
+                      PRBool fontInternalChange = PR_FALSE;  
+                      fiPrefs->GetBoolPref("changed", &fontInternalChange);
+                      fiPrefs->SetBoolPref("changed", !fontInternalChange);
+                    }
+                  }
                 }
               }
             } //if (NS_SUCCEEDED(rv))
@@ -4442,6 +4470,14 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       } 
 #endif
       
+      case WM_SYSCOMMAND:
+        // prevent Windows from trimming the working set. bug 76831
+        if (!gTrimOnMinimize && wParam == SC_MINIMIZE) {
+          ::ShowWindow(mWnd, SW_SHOWMINIMIZED);
+          result = PR_TRUE;
+        }
+        break;
+
       default: {
         // Handle both flavors of mouse wheel events.
         if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
