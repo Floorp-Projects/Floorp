@@ -797,9 +797,6 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) goto error;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
    if (aURL->GetBackgroundLoad()) 
       flags |= nsIChannel::LOAD_BACKGROUND;
        
