@@ -59,6 +59,7 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/images/ED_NewFile.gif \
 	$(srcdir)/images/ED_OpenFile.gif \
 	$(srcdir)/images/ED_SaveFile.gif \
+	$(srcdir)/images/ED_SaveMod.gif \
 	$(srcdir)/images/ED_Publish.gif \
 	$(srcdir)/images/ED_Preview.gif \
 	$(srcdir)/images/ED_Print.gif \

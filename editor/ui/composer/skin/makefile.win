@@ -51,6 +51,7 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\ED_NewFile.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_OpenFile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_SaveFile.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\ED_SaveMod.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Publish.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Preview.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\ED_Print.gif     $(DIST)\bin\chrome\editor\skin\default\images
@@ -90,6 +91,7 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_NewFile.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_OpenFile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_SaveFile.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_SaveMod.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Publish.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Preview.gif 
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\ED_Print.gif   
