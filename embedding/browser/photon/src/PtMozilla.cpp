@@ -57,7 +57,10 @@ static void mozilla_init( PtWidget_t *widget )
 	}
 #else
 	// init our embedding
-	NS_InitEmbedding(component_path);
+	nsCOMPtr<nsILocalFile> binDir;
+	NS_NewLocalFile(component_path, PR_TRUE, getter_AddRefs(binDir));
+	
+	NS_InitEmbedding(binDir, nsnull);
 #endif
 
 	// check to see if we have to set up our thread event queue
