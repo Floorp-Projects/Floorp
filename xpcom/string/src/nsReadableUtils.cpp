@@ -222,7 +222,7 @@ ToNewUTF8String( const nsAString& aSource )
     else {
       // We didn't allocate a buffer, so we need to copy it out of the
       // nsCAutoString's storage.
-      result = nsCRT::strdup(temp.mStr);
+      result = ToNewCString(temp);
     }
 
     return result;
@@ -342,17 +342,22 @@ IsASCII( const nsAString& aString )
   /**
    * A character sink for case conversion.
    */
-template <class CharT>
 class ConvertToUpperCase
   {
     public:
-      typedef CharT value_type;
+      typedef char value_type;
 
       PRUint32
-      write( const CharT* aSource, PRUint32 aSourceLength )
+      write( const char* aSource, PRUint32 aSourceLength )
         {
-          for ( PRUint32 i=0; i<aSourceLength; ++i )
-            NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToUpper(aSource[i]);
+          char* cp = NS_CONST_CAST(char*,aSource);
+          const char* end = aSource + aSourceLength;
+          while (cp != end) {
+            char ch = *cp;
+            if ((ch >= 'a') && (ch <= 'z'))
+              *cp = ch - ('a' - 'A');
+            ++cp;
+          }
           return aSourceLength;
         }
   };
@@ -362,7 +367,7 @@ void
 ToUpperCase( nsACString& aCString )
   {
     nsACString::iterator fromBegin, fromEnd;
-    ConvertToUpperCase<char> converter;
+    ConvertToUpperCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
 
@@ -370,17 +375,22 @@ ToUpperCase( nsACString& aCString )
   /**
    * A character sink for case conversion.
    */
-template <class CharT>
 class ConvertToLowerCase
   {
     public:
-      typedef CharT value_type;
+      typedef char value_type;
 
       PRUint32
-      write( const CharT* aSource, PRUint32 aSourceLength )
+      write( const char* aSource, PRUint32 aSourceLength )
         {
-          for ( PRUint32 i=0; i<aSourceLength; ++i )
-            NS_CONST_CAST(CharT*, aSource)[i] = nsCRT::ToLower(aSource[i]);
+          char* cp = NS_CONST_CAST(char*,aSource);
+          const char* end = aSource + aSourceLength;
+          while (cp != end) {
+            char ch = *cp;
+            if ((ch >= 'A') && (ch <= 'Z'))
+              *cp = ch + ('a' - 'A');
+            ++cp;
+          }
           return aSourceLength;
         }
   };
@@ -390,7 +400,7 @@ void
 ToLowerCase( nsACString& aCString )
   {
     nsACString::iterator fromBegin, fromEnd;
-    ConvertToLowerCase<char> converter;
+    ConvertToLowerCase converter;
     copy_string(aCString.BeginWriting(fromBegin), aCString.EndWriting(fromEnd), converter);
   }
 
