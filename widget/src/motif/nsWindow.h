@@ -181,6 +181,8 @@ protected:
   } mInner;
   friend InnerSupport;
 
+private:
+  GC mGC;
 };
 
 //

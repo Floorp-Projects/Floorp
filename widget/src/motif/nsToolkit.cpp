@@ -67,4 +67,12 @@ void nsToolkit::Init(PRThread *aThread)
 {
 }
 
+void nsToolkit::SetSharedGC(GC aGC)
+{
+  mSharedGC = aGC;
+}
 
+GC nsToolkit::GetSharedGC()
+{
+  return (mSharedGC);
+}
