@@ -60,6 +60,8 @@ public:
 
     NS_IMETHOD RevokeEvents(void* owner) = 0;
     NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue) = 0;
+
+    NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult) = 0;
 };
 
 #endif /* nsIEventQueue_h___ */
