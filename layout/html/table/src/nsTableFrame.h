@@ -29,7 +29,6 @@ class nsTableCellFrame;
 class nsTableColFrame;
 class nsTableRowGroupFrame;
 class nsTableRowFrame;
-class CellData;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
 class ColumnInfoCache;
@@ -42,6 +41,31 @@ struct nsStyleSpacing;
  {0xff1d2780, 0x06d6, 0x11d2, {0x8f, 0x37, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c}}
 
 extern const nsIID kTableFrameCID;
+
+/** Data stored by nsCellMap to rationalize rowspan and colspan cells.
+  * if mCell is null then mRealCell will be the rowspan/colspan source
+  * in addition, if fOverlap is non-null then it will point to the
+  * other cell that overlaps this position
+  * @see nsCellMap
+  * @see nsTableFrame::BuildCellMap
+  * @see nsTableFrame::GrowCellMap
+  * @see nsTableFrame::BuildCellIntoMap
+  * 
+  */
+class CellData
+{
+public:
+  nsTableCellFrame *mCell;
+  CellData *mRealCell;
+  CellData *mOverlap;
+
+  CellData();
+
+  ~CellData();
+};
+
+
+/* ============================================================================ */
 
 /** nsTableFrame maps the inner portion of a table (everything except captions.)
   * Used as a pseudo-frame within nsTableOuterFrame, 

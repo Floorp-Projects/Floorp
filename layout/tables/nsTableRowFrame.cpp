@@ -405,16 +405,12 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     {
       kidAvailSize.height -= kidMargin.top + kidMargin.bottom;
     }
-    // Subtract off for left and right margin
-    // XXX Why bother doing this if we always set the available width
-    // based on the column width below?
-    if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMargin.left + kidMargin.right;
-    }
+
+    // left and right margins already taken into account by table layout strategy
 
     // Compute the x-origin for the child, taking into account straddlers (cells from prior
     // rows with rowspans > 1)
-    nscoord x = kidMargin.left;
+    nscoord x = 0;
     PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
     for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
     {
@@ -428,7 +424,9 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
     nscoord availWidth = 0;
     for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
+    {
       availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
+    }
     kidAvailSize.width = availWidth;
     if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
     {

@@ -23,34 +23,10 @@
 #include "nsHTMLContainer.h"
 
 // forward declarations
-class nsTableCellFrame;
-class nsCellMap;
 class nsTableRowGroup;
 class nsTableColGroup;
 class nsTableCol;
 class nsTableCaption;
-
-/** Data stored by nsCellMap to rationalize rowspan and colspan cells.
-  * if mCell is null then mRealCell will be the rowspan/colspan source
-  * in addition, if fOverlap is non-null then it will point to the
-  * other cell that overlaps this position
-  * @see nsCellMap
-  * @see nsTableFrame::BuildCellMap
-  * @see nsTableFrame::GrowCellMap
-  * @see nsTableFrame::BuildCellIntoMap
-  * 
-  */
-class CellData
-{
-public:
-  nsTableCellFrame *mCell;
-  CellData *mRealCell;
-  CellData *mOverlap;
-
-  CellData();
-
-  ~CellData();
-};
 
 /**
   * Table Content Model.
@@ -118,7 +94,6 @@ public:
 
 protected:
   /** destructor 
-    * deletes mCellMap, if allocated.
     */
   virtual ~nsTablePart();
 
