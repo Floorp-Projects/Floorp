@@ -47,7 +47,7 @@
 // 98-10-14 joe -- temporary item to turn on ENDER MIME support before it fully lands
 #define MOZ_ENDER_MIME 1
 
-#define USE_NSREG 1
+// #define USE_NSREG 1
 
 // ———————————————————————————————————————————————————————————————————————————
 //	•	You typically will not need to change things below here
