@@ -83,7 +83,6 @@ dnl Set the minimum version of toolkit libs used by mozilla
 dnl ========================================================
 GLIB_VERSION=1.2.0
 GTK_VERSION=1.2.0
-GDK_PIXBUF_VERSION=0.8.0
 LIBIDL_VERSION=0.6.3
 PERL_VERSION=5.004
 QT_VERSION=2.2.0
@@ -1357,23 +1356,11 @@ then
 	])
 fi
 
-HAVE_GDK_PIXBUF=
-MOZ_GDK_PIXBUF_CFLAGS=
-MOZ_GDK_PIXBUF_LIBS=
-
 if test "$MOZ_ENABLE_GTK"
 then
     AM_PATH_GTK($GTK_VERSION,,
       AC_MSG_ERROR(Test for GTK failed.))
 
-
-    AM_PATH_GDK_PIXBUF($GDK_PIXBUF_VERSION,
-      [HAVE_GDK_PIXBUF=1],)
-
-    if test "$HAVE_GDK_PIXBUF"; then
-        MOZ_GDK_PIXBUF_CFLAGS=$GDK_PIXBUF_CFLAGS
-        MOZ_GDK_PIXBUF_LIBS=$GDK_PIXBUF_LIBS
-    fi
 
 dnl ========================================================
 dnl =							   =
@@ -1840,9 +1827,6 @@ AC_SUBST(MOZ_QT_CFLAGS)
 AC_SUBST(MOZ_QT_LDFLAGS)
 AC_SUBST(MOZ_DEFAULT_TOOLKIT)
 
-AC_SUBST(HAVE_GDK_PIXBUF)
-AC_SUBST(MOZ_GDK_PIXBUF_CFLAGS)
-AC_SUBST(MOZ_GDK_PIXBUF_LIBS)
 AC_SUBST(HAVE_XIE)
 AC_SUBST(MOZ_XIE_LIBS)
 
