@@ -588,24 +588,12 @@ static NS_DEFINE_CID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID)
 static NS_DEFINE_CID(kCDOMNativeObjectRegistry, NS_DOM_NATIVE_OBJECT_REGISTRY_CID);
 static NS_DEFINE_CID(kCScriptNameSetRegistry, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
 class nsDOMFactory : public nsIFactory
 {   
   public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                              void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+    NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsDOMFactory(const nsCID &aClass);   
 
@@ -613,13 +601,12 @@ class nsDOMFactory : public nsIFactory
     virtual ~nsDOMFactory();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };   
 
 nsDOMFactory::nsDOMFactory(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 }   
 
@@ -627,32 +614,7 @@ nsDOMFactory::~nsDOMFactory()
 {   
 }   
 
-nsresult nsDOMFactory::QueryInterface(const nsIID &aIID,   
-                                      void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  } else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  AddRef(); // Increase reference count for caller   
-  return NS_OK;   
-}   
-
-NS_IMPL_ADDREF(nsDOMFactory);
-NS_IMPL_RELEASE(nsDOMFactory);
+NS_IMPL_ISUPPORTS(nsDOMFactory, NS_GET_IID(nsIFactory))
 
 nsresult nsDOMFactory::CreateInstance(nsISupports *aOuter,  
                                       const nsIID &aIID,  
@@ -680,12 +642,11 @@ nsresult nsDOMFactory::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
+  NS_ADDREF(inst);  // Stabilize
+  
   nsresult res = inst->QueryInterface(aIID, aResult);
 
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>    
 
   return res;  
 }  
@@ -723,7 +684,7 @@ NSGetFactory(nsISupports* servMgr,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return (*aFactory)->QueryInterface(NS_GET_IID(nsIFactory), (void**)aFactory);
 }
 
 
