@@ -305,12 +305,6 @@ function createAccount(accountData)
 function finishAccount(account, accountData) {
 
     if (accountData.incomingServer) {
-        dump("*** copyObjectToInterface:\n");
-        for (var i in account.incomingServer) {
-            if (typeof(account.incomingServer[i]) != "function")
-                dump("account.incomingServer." + i + " = " +
-                     account.incomingServer[i] + "\n");
-        }
 
         var destServer = account.incomingServer;
         var srcServer = accountData.incomingServer;
