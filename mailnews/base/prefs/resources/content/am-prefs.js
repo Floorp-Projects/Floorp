@@ -94,7 +94,6 @@ function getAccountValueIsLocked(element)
     // see if the prefstring is locked
     if (prefstr) {
       var bLocked=nsPrefBranch.prefIsLocked(prefstr);
-return true;
       return bLocked;
     }
   }
