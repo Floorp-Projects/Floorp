@@ -311,9 +311,6 @@ HTML_ATOM(wrappedFramePseudo, ":wrapped-frame")
 HTML_ATOM(zindex, "zindex")
 HTML_ATOM(z_index, "z-index")
 
-HTML_ATOM(moz_tristate, "moz-tristate")
-HTML_ATOM(moz_tristatevalue, "moz-tristatevalue")
-
 #ifdef DEBUG
 HTML_ATOM(iform, "IForm")
 HTML_ATOM(form_control_list, "FormControlList")

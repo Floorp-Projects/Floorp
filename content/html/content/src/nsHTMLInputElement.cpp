@@ -167,6 +167,10 @@ public:
             || mType == NS_FORM_INPUT_HIDDEN)) {
       Reset();
     }
+    if (aName == nsHTMLAtoms::checked && !mCheckedChanged
+        && (mType == NS_FORM_INPUT_CHECKBOX || mType == NS_FORM_INPUT_RADIO)) {
+      Reset();
+    }
     return rv;
   }
   NS_IMETHOD SetAttr(nsINodeInfo* aNodeInfo, const nsAReadableString& aValue,
@@ -180,7 +184,10 @@ public:
     nsresult rv = nsGenericHTMLLeafElement::UnsetAttr(aNameSpaceID,
                                                       aAttribute,
                                                       aNotify);
-    if (aAttribute == nsHTMLAtoms::value) {
+    if (aAttribute == nsHTMLAtoms::value && !mValueChanged) {
+      Reset();
+    }
+    if (aAttribute == nsHTMLAtoms::checked && !mCheckedChanged) {
       Reset();
     }
     return rv;
@@ -216,12 +223,16 @@ protected:
     return tmp.EqualsIgnoreCase("image");
   }
 
+  void FireOnChange();
+
   nsCOMPtr<nsIControllers> mControllers;
 
   PRInt8                   mType;
   PRPackedBool             mSkipFocusEvent;
   PRPackedBool             mHandlingClick;
   PRPackedBool             mValueChanged;
+  PRPackedBool             mCheckedChanged;
+  PRPackedBool             mChecked;
   char*                    mValue;
 };
 
@@ -261,6 +272,8 @@ nsHTMLInputElement::nsHTMLInputElement()
   mHandlingClick = PR_FALSE;
   mValueChanged = PR_FALSE;
   mValue = nsnull;
+  mCheckedChanged = PR_FALSE;
+  mChecked = PR_FALSE;
 }
 
 nsHTMLInputElement::~nsHTMLInputElement()
@@ -355,20 +368,15 @@ nsHTMLInputElement::GetDefaultChecked(PRBool* aDefaultChecked)
 NS_IMETHODIMP
 nsHTMLInputElement::SetDefaultChecked(PRBool aDefaultChecked)
 {
-  nsresult rv = NS_OK;
-  nsHTMLValue empty(eHTMLUnit_Empty);
+  nsresult rv;
 
-  if (aDefaultChecked) {                                                     
-    rv = SetHTMLAttribute(nsHTMLAtoms::checked, empty, PR_TRUE); 
-  } else {                                                            
+  if (aDefaultChecked) {
+    rv = SetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked,
+                 NS_LITERAL_STRING(""), PR_TRUE);
+  } else {
     rv = UnsetAttr(kNameSpaceID_HTML, nsHTMLAtoms::checked, PR_TRUE);
   }
-
-  if (NS_SUCCEEDED(rv)) {
-    //When setting DefaultChecked, we must also reset Checked (DOM Errata)
-    SetChecked(aDefaultChecked);
-  }
-
+  
   return rv;
 }
   
@@ -560,35 +568,45 @@ nsHTMLInputElement::SetValueChanged(PRBool aValueChanged)
 }
 
 NS_IMETHODIMP 
-nsHTMLInputElement::GetChecked(PRBool* aValue)
+nsHTMLInputElement::GetChecked(PRBool* aChecked)
 {
-  nsAutoString value(NS_LITERAL_STRING("0"));
+  PRInt32 type;
+  GetType(&type);
+  if (type == NS_FORM_INPUT_RADIO) {
+    nsAutoString value(NS_LITERAL_STRING("0"));
 
-  // No need to flush here, if there's no frame created for this input
-  // yet, we know our own checked state.
-  nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
+    // No need to flush here, if there's no frame created for this input
+    // yet, we know our own checked state.
+    nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
-  if (formControlFrame) {
-    formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
-  }
-  else {
-    // Retrieve the presentation state instead.
-    nsCOMPtr<nsIPresState> presState;
-    GetPrimaryPresState(this, getter_AddRefs(presState));
+    if (formControlFrame) {
+      formControlFrame->GetProperty(nsHTMLAtoms::checked, value);
+    }
+    else {
+      // Retrieve the presentation state instead.
+      nsCOMPtr<nsIPresState> presState;
+      GetPrimaryPresState(this, getter_AddRefs(presState));
 
-    // Obtain the value property from the presentation state.
-    if (presState) {
-      presState->GetStateProperty(NS_LITERAL_STRING("checked"), value);
+      // Obtain the value property from the presentation state.
+      if (presState) {
+        presState->GetStateProperty(NS_LITERAL_STRING("checked"), value);
+      }
+    }
+
+    if (value.Equals(NS_LITERAL_STRING("1"))) {
+      *aChecked = PR_TRUE;
+    } else {
+      *aChecked = PR_FALSE;
+    }
+  } else {
+    if (!mCheckedChanged) {
+      GetDefaultChecked(aChecked);
+    } else {
+      *aChecked = mChecked;
     }
   }
-  
-  if (value.Equals(NS_LITERAL_STRING("1"))) {
-    *aValue = PR_TRUE;
-  } else {
-    *aValue = PR_FALSE;
-  }
 
-  return NS_OK;      
+  return NS_OK;
 }
 
 void
@@ -608,71 +626,78 @@ nsHTMLInputElement::SetPresStateChecked(nsIHTMLContent * aHTMLContent,
 NS_IMETHODIMP 
 nsHTMLInputElement::SetChecked(PRBool aValue)
 {
-  // First check to see if the new value is the same as our current value.
-  // If so, then return.
-  PRBool checked = PR_TRUE;
-  GetChecked(&checked);
-  if (checked == aValue) {
-    return NS_OK;
-  }
+  mCheckedChanged = PR_TRUE;
 
-  // Since the value is changing, send out an onchange event (bug 23571)
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(this, getter_AddRefs(presContext));
+  //
+  // Set the value
+  //
+  mChecked = aValue;
 
+  //
+  // Notify the frame
+  //
   // No need to flush here since if there's no frame for this input at
   // this point we don't care about creating one, once it's created
   // the frame will do the right thing.
+  PRInt32 type;
+  GetType(&type);
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
   if (formControlFrame) {
-    // the value is being toggled
-    nsAutoString val; val.AssignWithConversion(aValue ? "1" : "0");
+    nsCOMPtr<nsIPresContext> presContext;
+    GetPresContext(this, getter_AddRefs(presContext));
 
-    formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, val);
+    if (type == NS_FORM_INPUT_CHECKBOX) {
+      nsICheckboxControlFrame* checkboxFrame = nsnull;
+      CallQueryInterface(formControlFrame, &checkboxFrame);
+      if (checkboxFrame) {
+        checkboxFrame->OnChecked(presContext, aValue);
+      }
+    } else if (type == NS_FORM_INPUT_RADIO) {
+      // the value is being toggled
+      nsAutoString val; val.AssignWithConversion(aValue ? "1" : "0");
+
+      formControlFrame->SetProperty(presContext, nsHTMLAtoms::checked, val);
+    }
   }
-  else {
+  else if (type == NS_FORM_INPUT_RADIO) {
     SetPresStateChecked(this, aValue);
 
-    PRInt32 type;
-    GetType(&type);
-    if (type == NS_FORM_INPUT_RADIO) {
-      nsAutoString name;
-      GetName(name);
+    nsAutoString name;
+    GetName(name);
 
-      nsCOMPtr<nsIDOMHTMLFormElement> formElement;
-      if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement))) && formElement) {
-        nsCOMPtr<nsIDOMHTMLCollection> controls; 
+    nsCOMPtr<nsIDOMHTMLFormElement> formElement;
+    if (NS_SUCCEEDED(GetForm(getter_AddRefs(formElement))) && formElement) {
+      nsCOMPtr<nsIDOMHTMLCollection> controls;
 
-        nsresult rv = formElement->GetElements(getter_AddRefs(controls)); 
+      nsresult rv = formElement->GetElements(getter_AddRefs(controls));
 
-        if (controls) {
-          PRUint32 numControls;
+      if (controls) {
+        PRUint32 numControls;
 
-          controls->GetLength(&numControls);
+        controls->GetLength(&numControls);
 
-          for (PRUint32 i = 0; i < numControls; i++) {
-            nsCOMPtr<nsIDOMNode> elementNode;
+        for (PRUint32 i = 0; i < numControls; i++) {
+          nsCOMPtr<nsIDOMNode> elementNode;
 
-            controls->Item(i, getter_AddRefs(elementNode));
+          controls->Item(i, getter_AddRefs(elementNode));
 
-            if (elementNode) {
-              nsCOMPtr<nsIDOMHTMLInputElement>
-                inputElement(do_QueryInterface(elementNode));
+          if (elementNode) {
+            nsCOMPtr<nsIDOMHTMLInputElement>
+              inputElement(do_QueryInterface(elementNode));
 
-              if (inputElement && inputElement.get() !=
-                  NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)) {
-                nsAutoString childName;
+            if (inputElement && inputElement.get() !=
+              NS_STATIC_CAST(nsIDOMHTMLInputElement *, this)) {
+              nsAutoString childName;
 
-                rv = inputElement->GetName(childName);
+              rv = inputElement->GetName(childName);
 
-                if (NS_SUCCEEDED(rv)) {
-                  if (name == childName) {
-                    nsCOMPtr<nsIHTMLContent>
-                      htmlContent(do_QueryInterface(inputElement));
+              if (NS_SUCCEEDED(rv)) {
+                if (name == childName) {
+                  nsCOMPtr<nsIHTMLContent>
+                    htmlContent(do_QueryInterface(inputElement));
 
-                    SetPresStateChecked(htmlContent, PR_FALSE);
-                  }
+                  SetPresStateChecked(htmlContent, PR_FALSE);
                 }
               }
             }
@@ -682,13 +707,22 @@ nsHTMLInputElement::SetChecked(PRBool aValue)
     }
   }
 
+  return NS_OK;
+}
+
+void
+nsHTMLInputElement::FireOnChange()
+{
+  //
+  // Since the value is changing, send out an onchange event (bug 23571)
+  //
+  nsCOMPtr<nsIPresContext> presContext;
+  GetPresContext(this, getter_AddRefs(presContext));
   nsEventStatus status = nsEventStatus_eIgnore;
   nsEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_FORM_CHANGE;
   HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
-
-  return NS_OK;     
 }
 
 NS_IMETHODIMP
@@ -1094,6 +1128,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
           PRBool checked;
           GetChecked(&checked);
           SetChecked(!checked);
+          FireOnChange();
           // Fire an event to notify accessibility
 #ifdef ACCESSIBILITY
           FireEventForAccessibility( aPresContext, NS_LITERAL_STRING("CheckboxStateChange"));
@@ -1115,6 +1150,7 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
             }
           }
           SetChecked(PR_TRUE);
+          FireOnChange();
           // Fire an event to notify accessibility
 #ifdef ACCESSIBILITY
           if ( selectedRadiobtn != this ) {
@@ -1743,7 +1779,6 @@ nsHTMLInputElement::Reset()
 
   nsIFormControlFrame* formControlFrame = GetFormControlFrame(PR_FALSE);
 
-  // Seems like a dumb idea to reset image.
   switch (type) {
     case NS_FORM_INPUT_CHECKBOX:
     case NS_FORM_INPUT_RADIO:
@@ -1751,6 +1786,7 @@ nsHTMLInputElement::Reset()
       PRBool resetVal;
       GetDefaultChecked(&resetVal);
       rv = SetChecked(resetVal);
+      mCheckedChanged = PR_FALSE;
       break;
     }
     case NS_FORM_INPUT_HIDDEN:

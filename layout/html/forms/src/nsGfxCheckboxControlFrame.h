@@ -66,21 +66,6 @@ public:
     return MakeFrameName(NS_LITERAL_STRING("CheckboxControl"), aResult);
   }
 #endif
-   // this should be protected, but VC6 is lame.
-  enum CheckState { eOff, eOn, eMixed } ;
-
-  NS_IMETHOD Init(nsIPresContext*  aPresContext,
-                  nsIContent*      aContent,
-                  nsIFrame*        aParent,
-                  nsIStyleContext* aContext,
-                  nsIFrame*        aPrevInFlow) ;
-
-  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent*     aChild,
-                              PRInt32         aNameSpaceID,
-                              nsIAtom*        aAttribute,
-                              PRInt32         aModType, 
-                              PRInt32         aHint) ;
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -93,10 +78,9 @@ public:
 #endif
 
 
-   //nsICheckboxControlFrame methods
+  //nsICheckboxControlFrame methods
   NS_IMETHOD SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext);
-
-  void InitializeControl(nsIPresContext* aPresContext);
+  NS_IMETHOD OnChecked(nsIPresContext* aPresContext, PRBool aChecked);
 
   NS_IMETHOD GetAdditionalStyleContext(PRInt32 aIndex, 
                                        nsIStyleContext** aStyleContext) const;
@@ -104,8 +88,6 @@ public:
                                        nsIStyleContext* aStyleContext);
 
     // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAReadableString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsAWritableString& aValue); 
   NS_IMETHOD OnContentReset();
 
    // nsIStatefulFrame
@@ -121,14 +103,18 @@ public:
                     nsReflowStatus&          aStatus);
 #endif
 
-  NS_IMETHOD GetChecked(PRBool* aIsChecked) { *aIsChecked = (GetCheckboxState() == eOn); return NS_OK; }
-  NS_IMETHOD SetChecked(nsIPresContext* aPresContext, PRBool aIsChecked) { SetCheckboxState(aPresContext, aIsChecked ? eOn : eOff); return NS_OK; }
+  NS_IMETHOD GetChecked(PRBool* aIsChecked) {
+    *aIsChecked = GetCheckboxState(); return NS_OK;
+  }
+  NS_IMETHOD SetChecked(nsIPresContext* aPresContext, PRBool aIsChecked) {
+    SetCheckboxState(aPresContext, aIsChecked); return NS_OK;
+  }
 
 protected:
 
     // native/gfx implementations need to implement needs.
-  CheckState GetCheckboxState();
-  void SetCheckboxState(nsIPresContext* aPresContext, CheckState aValue);
+  PRBool GetCheckboxState();
+  void SetCheckboxState(nsIPresContext* aPresContext, PRBool aValue);
 
    // Utility methods for implementing SetProperty/GetProperty
   void SetCheckboxControlFrameState(nsIPresContext* aPresContext,
@@ -136,22 +122,8 @@ protected:
   void GetCheckboxControlFrameState(nsAWritableString& aValue);  
 
     // utility routine for converting from DOM values to internal enum
-  void CheckStateToString ( CheckState inState, nsAWritableString& outStateAsString ) ;
-  CheckState StringToCheckState ( const nsAReadableString & aStateAsString ) ;
-
-    // figure out if we're a tri-state checkbox.
-  PRBool IsTristateCheckbox ( ) const { return mIsTristate; }
-
-    // we just became a tri-state, or we just lost tri-state status. fix up
-    // the attributes for the new mode.
-  void SwitchModesWithEmergencyBrake ( nsIPresContext* aPresContext,
-                                       PRBool inIsNowTristate ) ;
-  
-    // for tri-state checkbox. meaningless for normal HTML
-  PRBool mIsTristate;
-  
-  static nsIAtom* GetTristateAtom() ;
-  static nsIAtom* GetTristateValueAtom() ;
+  void CheckStateToString(PRBool inState, nsAWritableString& outStateAsString) ;
+  PRBool StringToCheckState(const nsAReadableString & aStateAsString) ;
 
 protected:
 
@@ -159,12 +131,9 @@ protected:
                              nsIRenderingContext& aRenderingContext,
                              const nsRect& aDirtyRect,
                              nsFramePaintLayer aWhichLayer);
-  virtual void PaintMixedMark(nsIRenderingContext& aRenderingContext,
-                               float aPixelsToTwips, const nsRect& aRect) ;
 
   //GFX-rendered state variables
   PRBool           mInClickEvent;
-  CheckState       mChecked;
   nsIStyleContext* mCheckButtonFaceStyle;
 
 private:
