@@ -25,13 +25,13 @@
  *    -- fixed memory leak in NamedMap::hashKey method by deleting
  *       up char[] chars;
  *
- * $Id: NamedMap.cpp,v 1.5 2001/01/22 09:38:28 kvisco%ziplink.net Exp $
+ * $Id: NamedMap.cpp,v 1.6 2001/04/03 12:36:04 peterv%netscape.com Exp $
  */
 
 /**
  * A Named Map for MITREObjects
  * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.5 $ $Date: 2001/01/22 09:38:28 $
+ * @version $Revision: 1.6 $ $Date: 2001/04/03 12:36:04 $
 **/
 
 #include "NamedMap.h"
@@ -190,7 +190,10 @@ MBool NamedMap::isEmpty() {
  * Please delete this List when you are done with it
 **/
 StringList* NamedMap::keys() {
-  StringList* list = new StringList();
+    StringList* list = new StringList();
+    if (!list)
+        return NULL;
+
     for (int i = 0; i < numberOfBuckets; i++) {
         BucketItem* item = elements[i];
         while (item) {
@@ -250,7 +253,11 @@ void NamedMap::put(const String& key, TxObject* obj) {
             ++numberOfElements;
         }
         //-- we found bucket item, just set value
-        else bktItem->item = obj;
+        else {
+            if (doObjectDeletion)
+                delete bktItem->item;
+            bktItem->item = obj;
+        }
     }
 } //-- put
 /**
@@ -312,10 +319,12 @@ int NamedMap::size() {
 NamedMap::BucketItem* NamedMap::createBucketItem(const String& key, TxObject* objPtr)
 {
     BucketItem* bktItem = new BucketItem;
-    bktItem->next = 0;
-    bktItem->prev = 0;
-    bktItem->key  = key;
-    bktItem->item = objPtr;
+    if (bktItem) {
+        bktItem->next = 0;
+        bktItem->prev = 0;
+        bktItem->key  = key;
+        bktItem->item = objPtr;
+    }
     return bktItem;
 } //-- createBucketItem
 
