@@ -33,6 +33,9 @@ DIRS		= base components extensions app
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS += config
+ifdef MOZ_INSTALLER
+DIRS += installer/windows
+endif
 endif
 
 ifeq ($(OS_ARCH),Linux)
