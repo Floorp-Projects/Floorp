@@ -476,7 +476,9 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-  printf("Menu Selected %s\n", mLabel.ToNewCString());
+  char* menuLabel = mLabel.ToNewCString()
+  printf("Menu Selected %s\n", menuLabel);
+  delete[] menuLabel;
   if (nsnull != mListener) {
     mListener->MenuSelected(aMenuEvent);
   }
@@ -486,7 +488,9 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
-  printf("Menu Deselected %s\n", mLabel.ToNewCString());
+  char* menuLabel = mLabel.ToNewCString()
+  printf("Menu Deselected %s\n", menuLabel);
+  delete[] menuLabel;
   if (nsnull != mListener) {
     mListener->MenuDeselected(aMenuEvent);
   }

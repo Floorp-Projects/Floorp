@@ -61,7 +61,7 @@ nsTransferable::~nsTransferable()
     delete mStrCache;
   }
   if (mDataPtr) {
-    delete mDataPtr;
+    delete[] mDataPtr;
   }
   
 }
@@ -135,7 +135,7 @@ NS_IMETHODIMP nsTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
 NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void ** aData, PRUint32 * aDataLen)
 {
   if (mDataPtr) {
-    delete mDataPtr;
+    delete[] mDataPtr;
   }
 
   nsAutoString  mimeInQuestion;

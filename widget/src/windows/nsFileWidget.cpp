@@ -99,9 +99,9 @@ PRBool nsFileWidget::Show()
   delete currentDirectory;
   
    // Clean up filter buffers
-  delete filterBuffer;
-  delete title;
-  delete initialDir;
+  delete[] filterBuffer;
+  delete[] title;
+  delete[] initialDir;
 
    // Set user-selected location of file or directory
   mFile.SetLength(0);
