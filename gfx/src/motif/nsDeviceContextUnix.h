@@ -75,7 +75,7 @@ public:
   virtual PRUint32 ConvertPixel(nscolor aColor);
 
 
-  NS_IMETHOD CheckFontExistence(const char * aFontName);
+  NS_IMETHOD CheckFontExistence(const nsString& aFontName);
 
 protected:
   ~nsDeviceContextUnix();
