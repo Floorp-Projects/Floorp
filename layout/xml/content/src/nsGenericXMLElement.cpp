@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 #include "nsGenericXMLElement.h"
 
@@ -173,26 +174,6 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
 
   *aScriptObject = slots->mScriptObject;
   return res;
-}
-
-nsresult
-nsGenericXMLElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
-{
-  nsINodeInfo *newNodeInfo;
-
-  nsresult rv = mNodeInfo->PrefixChanged(aNameSpacePrefix, newNodeInfo);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  NS_RELEASE(mNodeInfo);
-  mNodeInfo = newNodeInfo;
-
-  return NS_OK;
-}
-
-nsresult
-nsGenericXMLElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
-{
-  return mNodeInfo->GetPrefixAtom(aNameSpacePrefix);
 }
 
 nsresult

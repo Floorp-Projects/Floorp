@@ -22,6 +22,7 @@
  *
  * Contributor(s): 
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Peter Annema <disttsc@bart.nl>
  *
  *
  * This Original Code has been modified by IBM Corporation.
@@ -91,7 +92,6 @@
 #include "nsIStyledContent.h"
 #include "nsISupportsArray.h"
 #include "nsIURL.h"
-#include "nsIXMLContent.h"
 #include "nsIXULContent.h"
 #include "nsIXULContentUtils.h"
 #include "nsIXULDocument.h"
@@ -1603,28 +1603,6 @@ nsXULElement::GetContainingNameSpace(nsINameSpace*& aNameSpace) const
 
     aNameSpace = nsnull;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::SetNameSpacePrefix(nsIAtom* aNameSpacePrefix)
-{
-    nsresult rv;
-
-    rv = EnsureSlots();
-    if (NS_FAILED(rv)) return rv;
-
-    nsCOMPtr<nsINodeInfo> newNodeInfo;
-    mSlots->mNodeInfo->PrefixChanged(aNameSpacePrefix,
-                                     *getter_AddRefs(newNodeInfo));
-
-    mSlots->mNodeInfo = newNodeInfo;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULElement::GetNameSpacePrefix(nsIAtom*& aNameSpacePrefix) const
-{
-    return NodeInfo()->GetPrefixAtom(aNameSpacePrefix);
 }
 
 NS_IMETHODIMP

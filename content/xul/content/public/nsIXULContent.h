@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 /*
@@ -29,7 +30,7 @@
 #ifndef nsIXULContent_h__
 #define nsIXULContent_h__
 
-#include "nsISupports.h"
+#include "nsIXMLContent.h"
 class nsIAtom;
 class nsIRDFCompositeDataSource;
 class nsIXULTemplateBuilder;
@@ -40,7 +41,7 @@ class nsString;
 { 0x39c5ecc0, 0x5c47, 0x11d3, { 0xbe, 0x36, 0x0, 0x10, 0x4b, 0xde, 0x60, 0x48 } }
 
 
-class nsIXULContent : public nsISupports
+class nsIXULContent : public nsIXMLContent
 {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IXULCONTENT_IID; return iid; }

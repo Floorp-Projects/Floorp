@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 
 #ifndef nsXMLElement_h___
@@ -212,12 +213,6 @@ public:
   }
   NS_IMETHOD GetContainingNameSpace(nsINameSpace*& aNameSpace) const  {
     return mInner.GetContainingNameSpace(aNameSpace);
-  }
-  NS_IMETHOD SetNameSpacePrefix(nsIAtom* aNameSpace) {
-    return mInner.SetNameSpacePrefix(aNameSpace);
-  }
-  NS_IMETHOD GetNameSpacePrefix(nsIAtom*& aNameSpace) const {
-    return mInner.GetNameSpacePrefix(aNameSpace);
   }
   NS_IMETHOD MaybeTriggerAutoLink(nsIWebShell *aShell);
 
