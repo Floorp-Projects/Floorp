@@ -68,8 +68,18 @@ PRBool
 SEC_CertNicknameConflict(char *nickname, SECItem *derSubject,
 			 CERTCertDBHandle *handle)
 {
-    /* XXX still an issue? */
-	return PR_FALSE;
+    CERTCertificate *cert;
+    PRBool conflict = PR_FALSE;
+
+    cert=CERT_FindCertByNickname(handle, nickname);
+
+    if (!cert) {
+	return conflict;
+    }
+
+    conflict = !SECITEM_ItemsAreEqual(derSubject,&cert->derSubject);
+    CERT_DestroyCertificate(cert);
+    return conflict;
 }
 
 SECStatus
