@@ -221,9 +221,6 @@ nsresult nsMsgFolderCache::OpenMDB(const char *dbName, PRBool exists)
 
 			if (m_mdbEnv)
 				m_mdbEnv->SetAutoClear(PR_TRUE);
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_MAC)
-//			UnixToNative(nativeFileName);
-#endif
 			if (exists)
 			{
 				mdbOpenPolicy inOpenPolicy;
