@@ -189,6 +189,9 @@ nsFTPChannel::GetURI(nsIURI * *aURL)
     return NS_OK;
 }
 
+#define NS_FTP_SEGMENT_SIZE        (2*1024)
+#define NS_FTP_BUFFER_SIZE         (8*1024)
+
 NS_IMETHODIMP
 nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
                               nsIInputStream **_retval)
@@ -206,7 +209,7 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     nsCOMPtr<nsIBufferOutputStream> bufOutStream;
     nsCOMPtr<nsIBufferInputStream>  bufInStream;
     rv = NS_NewPipe(getter_AddRefs(bufInStream), getter_AddRefs(bufOutStream),
-                    nsnull, mBufferSegmentSize, mBufferMaxSize);
+                    nsnull, NS_FTP_SEGMENT_SIZE, NS_FTP_BUFFER_SIZE);
     if (NS_FAILED(rv)) return rv;
 
     *_retval = NS_STATIC_CAST(nsIInputStream*, bufInStream.get());
