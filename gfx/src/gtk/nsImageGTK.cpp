@@ -440,8 +440,8 @@ nsImageGTK::DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
   gdk_pixbuf_render_to_drawable(newPb,
                                 drawing->GetDrawable(),
                                 copyGC,
-                                aSX, aSY,
-                                aDX + aSX, aDY + aSY,
+                                0, 0,
+                                aDX, aDY,
                                 aDWidth, aDHeight,
                                 GDK_RGB_DITHER_MAX, 0, 0);
 
