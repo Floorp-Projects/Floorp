@@ -1,0 +1,16 @@
+interface XULCommandDispatcher {
+
+/* IID: { 0xf3c50361, 0x14fe, 0x11d3, \
+		{ 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } } */
+
+	attribute Element focusedElement;
+	attribute Window focusedWindow;
+
+	void addCommand(in Element listener);
+	void removeCommand(in Element listener);
+
+	void updateCommands();
+
+	xpidl nsIController getController();
+	void setController(in xpidl nsIController controller);
+};

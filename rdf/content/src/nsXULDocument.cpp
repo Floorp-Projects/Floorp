@@ -108,8 +108,8 @@
 
 #include "nsIFrameReflow.h"
 #include "nsIBrowserWindow.h"
-#include "nsIDOMXULFocusTracker.h"
-#include "nsIXULFocusTracker.h"
+#include "nsIDOMXULCommandDispatcher.h"
+#include "nsIXULCommandDispatcher.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
@@ -176,8 +176,8 @@ static NS_DEFINE_CID(kTextNodeCID,               NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 
-static NS_DEFINE_CID(kXULFocusTrackerCID, NS_XULFOCUSTRACKER_CID);
-static NS_DEFINE_IID(kIXULFocusTrackerIID, NS_IXULFOCUSTRACKER_IID);
+static NS_DEFINE_CID(kXULCommandDispatcherCID, NS_XULCOMMANDDISPATCHER_CID);
+static NS_DEFINE_IID(kIXULCommandDispatcherIID, NS_IXULCOMMANDDISPATCHER_IID);
 static NS_DEFINE_IID(kLWBrkCID, NS_LWBRK_CID);
 static NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 static NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
@@ -793,7 +793,7 @@ protected:
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
     PRBool                     mIsPopup; 
     nsCOMPtr<nsIDOMHTMLFormElement>     mHiddenForm;   // [OWNER] of this content element
-    nsCOMPtr<nsIDOMXULFocusTracker>     mFocusTracker; // [OWNER] of the focus tracker
+    nsCOMPtr<nsIDOMXULCommandDispatcher>     mCommandDispatcher; // [OWNER] of the focus tracker
 
       // The following are pointers into the content model which provide access to
       // the objects triggering either a popup or a tooltip. These are marked as
@@ -2956,9 +2956,9 @@ XULDocumentImpl::SetTooltipElement(nsIDOMElement* anElement)
 
 
 NS_IMETHODIMP
-XULDocumentImpl::GetFocus(nsIDOMXULFocusTracker** aTracker)
+XULDocumentImpl::GetCommandDispatcher(nsIDOMXULCommandDispatcher** aTracker)
 {
-  *aTracker = mFocusTracker;
+  *aTracker = mCommandDispatcher;
   NS_IF_ADDREF(*aTracker);
   return NS_OK;
 }
@@ -3904,19 +3904,19 @@ XULDocumentImpl::Init(void)
         return rv;
 
     // Create our focus tracker and hook it up.
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULFocusTrackerCID,
+    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kXULCommandDispatcherCID,
                                                     nsnull,
-                                                    kIXULFocusTrackerIID,
-                                                    (void**) &mFocusTracker))) {
+                                                    kIXULCommandDispatcherIID,
+                                                    (void**) &mCommandDispatcher))) {
         NS_ERROR("unable to create a focus tracker");
         return rv;
     }
 
-    nsCOMPtr<nsIDOMEventListener> focusTracker = do_QueryInterface(mFocusTracker);
-    if (focusTracker) {
+    nsCOMPtr<nsIDOMEventListener> CommandDispatcher = do_QueryInterface(mCommandDispatcher);
+    if (CommandDispatcher) {
       // Take the focus tracker and add it as an event listener for focus and blur events.
-        AddEventListener("focus", focusTracker, PR_TRUE);
-        AddEventListener("blur", focusTracker, PR_TRUE);
+        AddEventListener("focus", CommandDispatcher, PR_TRUE);
+        AddEventListener("blur", CommandDispatcher, PR_TRUE);
     }
 
     return NS_OK;

@@ -16,19 +16,19 @@
  * Reserved.
  */
 
-#ifndef nsIXULFocusTracker_h__
-#define nsIXULFocusTracker_h__
+#ifndef nsIXULCommandDispatcher_h__
+#define nsIXULCommandDispatcher_h__
 
 // {A7033701-1502-11d3-BF87-00105A1B0627}
-#define NS_IXULFOCUSTRACKER_IID \
+#define NS_IXULCOMMANDDISPATCHER_IID \
 { 0xa7033701, 0x1502, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
-class nsIXULFocusTracker: public nsISupports {
+class nsIXULCommandDispatcher: public nsISupports {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IXULFOCUSTRACKER_IID; return iid; }
+    static const nsIID& GetIID() { static nsIID iid = NS_IXULCOMMANDDISPATCHER_IID; return iid; }
 };
 
 extern nsresult
-NS_NewXULFocusTracker(nsIXULFocusTracker** result);
+NS_NewXULCommandDispatcher(nsIXULCommandDispatcher** result);
 
-#endif // nsIXULFocusTracker_h__
+#endif // nsIXULCommandDispatcher_h__

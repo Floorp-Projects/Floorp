@@ -26,7 +26,7 @@
 #include "nsIDOMDocument.h"
 
 class nsIDOMElement;
-class nsIDOMXULFocusTracker;
+class nsIDOMXULCommandDispatcher;
 class nsIDOMNodeList;
 
 #define NS_IDOMXULDOCUMENT_IID \
@@ -43,7 +43,7 @@ public:
   NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement)=0;
   NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement)=0;
 
-  NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus)=0;
+  NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher)=0;
 
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn)=0;
 
@@ -56,7 +56,7 @@ public:
   NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement);  \
   NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement);  \
   NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement);  \
-  NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus);  \
+  NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
@@ -67,7 +67,7 @@ public:
   NS_IMETHOD    SetPopupElement(nsIDOMElement* aPopupElement) { return _to SetPopupElement(aPopupElement); } \
   NS_IMETHOD    GetTooltipElement(nsIDOMElement** aTooltipElement) { return _to GetTooltipElement(aTooltipElement); } \
   NS_IMETHOD    SetTooltipElement(nsIDOMElement* aTooltipElement) { return _to SetTooltipElement(aTooltipElement); } \
-  NS_IMETHOD    GetFocus(nsIDOMXULFocusTracker** aFocus) { return _to GetFocus(aFocus); } \
+  NS_IMETHOD    GetCommandDispatcher(nsIDOMXULCommandDispatcher** aCommandDispatcher) { return _to GetCommandDispatcher(aCommandDispatcher); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 
