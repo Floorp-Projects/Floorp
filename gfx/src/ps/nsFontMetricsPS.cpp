@@ -184,27 +184,15 @@ float offset;
 
   offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition)/1000.0f;
   mUnderlineOffset = NSToCoordRound(offset);
-  //mUnderlineOffset = (nscoord)(NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mUnderlinePosition))/1000)*dev2app));
 
-  //offset = mAFMInfo->mPSFontInfo->mFontBBox_ury-mAFMInfo->mPSFontInfo->mFontBBox_lly;
-  //offset = NSFloatPointsToTwips(fontsize*offset)/1000.0f;
-  //mHeight = NSToCoordRound(offset);
   mHeight = NSToCoordRound(fontsize * dev2app);
 
 
   offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000.0f;
   mAscent = NSToCoordRound(offset);
-  //mAscent = NSToCoordRound((float)((fontsize*mAFMInfo->mPSFontInfo->mAscender)/1000)*dev2app);
 
   offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
   mDescent = -(NSToCoordRound(offset));
-  //mDescent = NSToCoordRound((float)((fabs(fontsize*mAFMInfo->mPSFontInfo->mDescender))/1000)*dev2app);
-
-  offset=NSFloatPointsToTwips(fontsize*mAFMInfo->mPSFontInfo->mDescender)/1000.0f;
-  mDescent = NSToCoordRound(offset);
-
-  //mHeight = mAscent + -mDescent;
-
 
   mLeading = 0;
   mMaxAscent = mAscent;
