@@ -37,24 +37,30 @@ install::
 	$(MAKE_INSTALL) $(XPDIST)\include\java\jri_md.h .\include
 	$(MAKE_INSTALL) $(XPDIST)\include\java\jritypes.h .\include
 
-	$(INSTALL) $(XPDIST)/include/xpcom/nsCom.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsComponentManagerUtils.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsCOMPtr.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nscore.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsDebug.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsError.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIClassInfo.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIComponentManager.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsID.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIFactory.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIID.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIMemory.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIProgrammingLanguage.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsIServiceManager.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupports.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsISupportsUtils.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsrootidl.h ./include
-	$(INSTALL) $(XPDIST)/include/xpcom/nsTraceRefcnt.h ./include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCom.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComObsolete.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsComponentManagerUtils.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsCOMPtr.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nscore.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsDebug.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsError.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIClassInfo.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIComponentManager.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsID.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIFactory.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIMemory.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIProgrammingLanguage.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManager.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManagerObsolete.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsIServiceManagerUtils.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupports.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsBase.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsImpl.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsObsolete.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsISupportsUtils.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsrootidl.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsTraceRefcnt.h .\include
+	$(MAKE_INSTALL) $(XPDIST)\include\xpcom\nsXPCOM.h .\include
 
 	$(INSTALL) $(XPDIST)/include/nspr/pratom.h ./include
 	$(INSTALL) $(XPDIST)/include/nspr/prcpucfg.h ./include
