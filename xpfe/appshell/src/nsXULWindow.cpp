@@ -814,8 +814,9 @@ void nsXULWindow::OnChromeLoaded()
 {
   mChromeLoaded = PR_TRUE;
 
-  if(mContentTreeOwner)
-    mContentTreeOwner->ApplyChromeFlags();
+  NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+ 
+  mContentTreeOwner->ApplyChromeFlags();
 
   LoadTitleFromXUL();
   LoadWindowClassFromXUL();
