@@ -46,6 +46,13 @@ OS_REL_CFLAGS		= -Di386
 CPU_ARCH		= x86
 endif
 
+ifndef CLASSIC_NSPR
+USE_PTHREADS		= 1
+DEFINES			+= -D_THREAD_SAFE -pthread
+OS_LIBS			+= -pthread
+DSO_LDOPTS		+= -pthread
+endif
+
 DLL_SUFFIX		= so.1.0
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DOPENBSD
