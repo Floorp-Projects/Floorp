@@ -32,7 +32,7 @@
 #include "nsNetUtil.h"
 
 // nsViewSourceChannel methods
-nsViewSourceChannel::nsViewSourceChannel()
+nsViewSourceChannel::nsViewSourceChannel() : mIsDocument(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -173,7 +173,17 @@ nsViewSourceChannel::GetURI(nsIURI* *aURI)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    return mChannel->GetURI(aURI);
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCAutoString spec;
+    uri->GetSpec(spec);
+
+    /* XXX Gross hack -- NS_NewURI goes into an infinite loop on
+       non-flat specs.  See bug 136980 */
+    return NS_NewURI(aURI, nsCAutoString(NS_LITERAL_CSTRING("view-source:")+spec), nsnull);
 }
 
 NS_IMETHODIMP
@@ -191,15 +201,57 @@ nsViewSourceChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 
     mListener = aListener;
 
-    return mChannel->AsyncOpen(this, ctxt);
+    /*
+     * We want to add ourselves to the loadgroup before opening
+     * mChannel, since we want to make sure we're in the loadgroup
+     * when mChannel finishes and fires OnStopRequest()
+     */
+    
+    nsCOMPtr<nsILoadGroup> loadGroup;
+    mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+    if (loadGroup)
+        loadGroup->AddRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                             this), nsnull);
+    
+    nsresult rv = mChannel->AsyncOpen(this, ctxt);
+
+    if (NS_FAILED(rv) && loadGroup)
+        loadGroup->RemoveRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                                this),
+                                 nsnull, rv);
+
+    return rv;
 }
+
+/*
+ * Both the view source channel and mChannel are added to the
+ * loadgroup.  There should never be more than one request in the
+ * loadgroup that has LOAD_DOCUMENT_URI set.  The one that has this
+ * flag set is the request whose URI is used to refetch the document,
+ * so it better be the viewsource channel.
+ *
+ * Therefore, we need to make sure that
+ * 1) The load flags on mChannel _never_ include LOAD_DOCUMENT_URI
+ * 2) The load flags on |this| include LOAD_DOCUMENT_URI when it was
+ *    set via SetLoadFlags (mIsDocument keeps track of this flag).
+ */
 
 NS_IMETHODIMP
 nsViewSourceChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    return mChannel->GetLoadFlags(aLoadFlags);
+    nsresult rv = mChannel->GetLoadFlags(aLoadFlags);
+    if (NS_FAILED(rv))
+      return rv;
+
+    // This should actually be just LOAD_DOCUMENT_URI but the win32 compiler
+    // fails to deal due to amiguous inheritance.  nsIChannel::LOAD_DOCUMENT_URI
+    // also fails; the Win32 compiler thinks that's supposed to be a method.
+    if (mIsDocument)
+      *aLoadFlags |= ::nsIChannel::LOAD_DOCUMENT_URI;
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -207,11 +259,19 @@ nsViewSourceChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    // "View source" always wants the currently cached content. 
+    // "View source" always wants the currently cached content.
+    // We also want to have _this_ channel, not mChannel to be the
+    // 'document' channel in the loadgroup. 
  
-    // This should actually be just nsIRequest::LOAD_FROM_CACHE but
-    // the win32 compiler fails to deal... tries to do a method lookup
-    return mChannel->SetLoadFlags(aLoadFlags | ::nsIRequest::LOAD_FROM_CACHE);
+    // These should actually be just LOAD_FROM_CACHE and LOAD_DOCUMENT_URI but
+    // the win32 compiler fails to deal due to amiguous inheritance.
+    // nsIChannel::LOAD_DOCUMENT_URI/nsIRequest::LOAD_FROM_CACHE also fails; the
+    // Win32 compiler thinks that's supposed to be a method.
+    mIsDocument = (aLoadFlags & ::nsIChannel::LOAD_DOCUMENT_URI) ? PR_TRUE : PR_FALSE;
+
+    return mChannel->SetLoadFlags((aLoadFlags |
+                                   ::nsIRequest::LOAD_FROM_CACHE) &
+                                  ~::nsIChannel::LOAD_DOCUMENT_URI);
 }
 
 #define X_VIEW_SOURCE_PARAM "; x-view-type=view-source"
@@ -393,6 +453,17 @@ nsViewSourceChannel::OnStopRequest(nsIRequest *aRequest, nsISupports* aContext,
                                nsresult aStatus)
 {
     NS_ENSURE_TRUE(mListener, NS_ERROR_FAILURE);
+    if (mChannel)
+    {
+        nsCOMPtr<nsILoadGroup> loadGroup;
+        mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+        if (loadGroup)
+        {
+            loadGroup->RemoveRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
+                                                    this),
+                                     nsnull, aStatus);
+        }
+    }
     return mListener->OnStopRequest(NS_STATIC_CAST(nsIViewSourceChannel*,
                                                    this),
                                     aContext, aStatus);

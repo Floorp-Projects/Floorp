@@ -467,7 +467,11 @@ nsresult CViewSourceHTML::WillBuildModel(const CParserContext& aParserContext,
 
   if((!aParserContext.mPrevContext) && (mSink)) {
 
-    mFilename=aParserContext.mScanner->GetFilename();
+    nsAString & contextFilename = aParserContext.mScanner->GetFilename();
+    mFilename = Substring(contextFilename,
+                          12, // The length of "view-source:"
+                          contextFilename.Length() - 12);
+    
     mTags.Truncate();
     mErrors.Assign(NS_LITERAL_STRING(" HTML 4.0 Strict-DTD validation (enabled); [Should use Transitional?].\n"));
 
