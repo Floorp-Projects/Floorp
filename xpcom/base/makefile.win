@@ -53,7 +53,7 @@ XPIDLSRCS =               \
         .\nsILeakDetector.idl \
         .\nsIInterfaceRequestor.idl \
         .\nsISupports.idl \
-        .\nsISystemInfo.idl \
+#        .\nsISystemInfo.idl \
         .\nsIWeakReference.idl \
 	.\nsIConsoleService.idl \
 	.\nsIConsoleMessage.idl \
@@ -88,7 +88,7 @@ CPP_OBJS =                            \
         .\$(OBJDIR)\nsCWeakReference.obj \
         .\$(OBJDIR)\nsID.obj          \
         .\$(OBJDIR)\nsIInterfaceRequestor.obj \
-        .\$(OBJDIR)\nsSystemInfo.obj  \
+#        .\$(OBJDIR)\nsSystemInfo.obj  \
         .\$(OBJDIR)\nsTraceRefcnt.obj \
         .\$(OBJDIR)\nsWeakReference.obj \
         .\$(OBJDIR)\nsConsoleService.obj \
