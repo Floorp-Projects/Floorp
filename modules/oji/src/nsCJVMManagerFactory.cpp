@@ -168,19 +168,7 @@ NS_IMPL_ISUPPORTS(nsCJVMManagerFactory, kIFactoryIID)
 NS_METHOD
 nsCJVMManagerFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-	*aResult  = NULL;
-
-	if (aOuter && !aIID.Equals(kISupportsIID))
-		return NS_NOINTERFACE;   // XXX right error?
-
-	nsresult res = NS_ERROR_OUT_OF_MEMORY;  
-	nsJVMManager *manager = new nsJVMManager(aOuter);
-	if (manager != NULL) {
-		res = manager->QueryInterface(aIID, (void**)aResult);
-		if (res != NS_OK)
-			delete manager;
-	}
-	return res;
+	return nsJVMManager::Create(aOuter, aIID, aResult);
 }
 
 NS_METHOD

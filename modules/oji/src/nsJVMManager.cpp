@@ -267,14 +267,21 @@ nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
 NS_METHOD
 nsJVMManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
+	 if (!aInstancePtr)
+		  return NS_ERROR_INVALID_POINTER;
+	 *aInstancePtr = nsnull;
+
     if (outer && !aIID.Equals(kISupportsIID))
-        return NS_NOINTERFACE;   // XXX right error?
+        return NS_ERROR_INVALID_ARG; 
     nsJVMManager* jvmmgr = new nsJVMManager(outer);
     if (jvmmgr == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    jvmmgr->AddRef();
-    *aInstancePtr = (outer != NULL ? (void*) jvmmgr->GetInner() : (void*) jvmmgr);
-    return NS_OK;
+
+	 nsresult rv = jvmmgr->AggregatedQueryInterface(aIID, aInstancePtr);
+	 if(NS_FAILED(rv))
+		  delete jvmmgr;
+
+	 return rv;
 }
 
 nsJVMManager::nsJVMManager(nsISupports* outer)

@@ -40,26 +40,40 @@ nsSymantecDebugManager::~nsSymantecDebugManager()
 NS_METHOD
 nsSymantecDebugManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    if (aIID.Equals(kISymantecDebugManagerIID)) {
-        *aInstancePtr = this;
-        AddRef();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
+	 if (!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
+
+	 if (aIID.Equals(NS_GET_IID(nsISupports)))
+	     *aInstancePtr = GetInner();
+    else if (aIID.Equals(kISymantecDebugManagerIID))
+        *aInstancePtr = NS_STATIC_CAST(nsISymantecDebugManager*, this);
+	 else {
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
+	 }
+
+	 NS_ADDREF((nsISupports*)*aInstancePtr);
+	 return NS_OK;
 }
 
 NS_METHOD
 nsSymantecDebugManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr, 
                                nsJVMManager* jvmMgr)
 {
+	 if (!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
     if (outer && !aIID.Equals(kISupportsIID))
-        return NS_NOINTERFACE;   // XXX right error?
+        return NS_ERROR_INVALID_ARG;
     nsSymantecDebugManager* dbgr = new nsSymantecDebugManager(outer, jvmMgr);
     if (dbgr == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    dbgr->AddRef();
-    *aInstancePtr = dbgr->GetInner();
-    return NS_OK;
+
+	 nsresult rv = dbgr->AggregatedQueryInterface(aIID, aInstancePtr);
+	 if (NS_FAILED(rv)) {
+	     delete dbgr;
+		  return rv;
+	 }
+    return rv;
 }
 
 #if defined(XP_PC) && defined(_WIN32)

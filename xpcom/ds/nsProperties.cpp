@@ -32,15 +32,17 @@ nsProperties::nsProperties(nsISupports* outer)
 NS_METHOD
 nsProperties::Create(nsISupports *outer, REFNSIID aIID, void **aResult)
 {
-    if (outer && !aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
-        return NS_NOINTERFACE;   // XXX right error?
+    NS_ENSURE_ARG_POINTER(aResult);
+	 NS_ENSURE_PROPER_AGGREGATION(outer, aIID);
+
     nsProperties* props = new nsProperties(outer);
     if (props == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(props);
-    nsresult rv = props->QueryInterface(aIID, aResult);
-    NS_RELEASE(props);
-    return NS_OK;
+
+    nsresult rv = props->AggregatedQueryInterface(aIID, aResult);
+	 if (NS_FAILED(rv))
+	     delete props;
+    return rv;
 }
 
 PRBool
@@ -61,16 +63,19 @@ NS_IMPL_AGGREGATED(nsProperties);
 NS_METHOD
 nsProperties::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
-    if (NULL == aInstancePtr) {                                            
-        return NS_ERROR_NULL_POINTER;                                        
-    }                                                                      
-    if (aIID.Equals(nsIProperties::GetIID()) || 
-        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-        *aInstancePtr = (void*) this; 
-        NS_ADDREF_THIS(); 
-        return NS_OK; 
+    NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+	 if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
+	     *aInstancePtr = GetInner();
+	 else if (aIID.Equals(nsIProperties::GetIID()))
+	     *aInstancePtr = NS_STATIC_CAST(nsIProperties*, this);
+	 else {
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
     } 
-    return NS_NOINTERFACE;
+
+	 NS_ADDREF((nsISupports*)*aInstancePtr);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -51,9 +51,6 @@ PR_END_EXTERN_C
 
 #include "nsCLiveconnect.h"
 
-static NS_DEFINE_IID(kILiveconnectIID, NS_ILIVECONNECT_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 
 ////////////////////////////////////////////////////////////////////////////
 // from nsISupports and AggregatedQueryInterface:
@@ -65,18 +62,21 @@ NS_IMPL_AGGREGATED(nsCLiveconnect);
 NS_METHOD
 nsCLiveconnect::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-    if (aIID.Equals(kISupportsIID)) {
+	 if (!*aInstancePtr)
+		return NS_ERROR_INVALID_POINTER;
+
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
       *aInstancePtr = GetInner();
-      AddRef();
-      return NS_OK;
     }
-    if (aIID.Equals(kILiveconnectIID)) 
-    {
-        *aInstancePtr = (nsILiveconnect *)this;
-        AddRef();
-        return NS_OK;
+    else if (aIID.Equals(NS_GET_IID(nsILiveconnect))) {
+        *aInstancePtr = NS_STATIC_CAST(nsILiveconnect*, this);
     }
-    return NS_NOINTERFACE;
+	 else	{
+		  *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
+	 }
+	 NS_ADDREF((nsISupports*) *aInstancePtr);
+	 return NS_OK;
 }
 
 

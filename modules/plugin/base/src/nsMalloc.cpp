@@ -22,7 +22,6 @@
 
 #include "nsMalloc.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
 
 nsMalloc::nsMalloc(nsISupports* outer)
@@ -41,30 +40,37 @@ nsMalloc::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {                                            
         return NS_ERROR_NULL_POINTER;                                        
-    }                                                                      
-    if (aIID.Equals(kIMallocIID) || 
-        aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) this; 
-        AddRef(); 
-        return NS_OK; 
-    } 
-    return NS_NOINTERFACE;
+    }
+	 if (aIID.Equals(NS_GET_IID(nsISupports)))
+	     *aInstancePtr = GetInner();                                                                      
+    else if (aIID.Equals(kIMallocIID))
+        *aInstancePtr = NS_STATIC_CAST(nsIMalloc*, this);
+	 else {
+	     *aInstancePtr = nsnull;
+		  return NS_NOINTERFACE;
+	 }
+
+	 NS_ADDREF((nsISupports*)*aInstancePtr);
+	 return NS_OK; 
 }
 
 NS_METHOD
 nsMalloc::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
+    if (!aInstancePtr)
+	     return NS_ERROR_INVALID_POINTER;
     if (outer && !aIID.Equals(kISupportsIID))
-        return NS_NOINTERFACE;   // XXX right error?
+        return NS_ERROR_INVALID_ARG;
     nsMalloc* mm = new nsMalloc(outer);
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
-    mm->AddRef();
-    if (aIID.Equals(kISupportsIID))
-        *aInstancePtr = mm->GetInner();
-    else
-        *aInstancePtr = mm;
-    return NS_OK;
+
+	 nsresult rv = mm->AggregatedQueryInterface(aIID, aInstancePtr);
+	 if (NS_FAILED(rv)) {
+	     delete mm;
+		  return rv;
+	 }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
