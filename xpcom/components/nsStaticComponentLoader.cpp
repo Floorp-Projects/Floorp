@@ -40,7 +40,12 @@
 #include "nsVoidArray.h"
 #include "pldhash.h"
 #include NEW_H
-#include <stdio.h>
+#include "prlog.h"
+
+#ifdef PR_LOGGING
+static PRLogModuleInfo *sLog = PR_NewLogModule("StaticComponentLoader");
+#endif
+#define LOG(args) PR_LOG(sLog, PR_LOG_DEBUG, args)
 
 extern const char staticComponentType[];
 
@@ -165,9 +170,7 @@ nsStaticComponentLoader::GetInfoFor(const char *aLocation,
     if (!info->module) {
         rv = info->info.getModule(mComponentMgr, nsnull,
                              getter_AddRefs(info->module));
-#ifdef DEBUG
-        fprintf(stderr, "nSCL: GetInfoFor(\"%s\"): %lx\n", aLocation, rv);
-#endif
+        LOG(("nSCL: GetInfoFor(\"%s\"): %lx\n", aLocation, rv));
         if (NS_FAILED(rv))
             return rv;
     }
@@ -201,18 +204,14 @@ nsStaticComponentLoader::info_RegisterSelf(PLDHashTable *table,
     nsresult rv;
     if (!info->module) {
         rv = info->info.getModule(mgr, nsnull, getter_AddRefs(info->module));
-#ifdef DEBUG
-        fprintf(stderr, "nSCL: getModule(\"%s\"): %lx\n", info->info.name, rv);
-#endif
+        LOG(("nSCL: getModule(\"%s\"): %lx\n", info->info.name, rv));
         if (NS_FAILED(rv))
             return PL_DHASH_NEXT; // oh well.
     }
 
     rv = info->module->RegisterSelf(mgr, nsnull, info->info.name,
                                     staticComponentType);
-#ifdef DEBUG
-    fprintf(stderr, "nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv);
-#endif
+    LOG(("nSCL: autoreg of \"%s\": %lx\n", info->info.name, rv));
 
     if (rv == NS_ERROR_FACTORY_REGISTER_AGAIN)
         loader->mDeferredComponents.AppendElement(info);
