@@ -494,7 +494,7 @@ nsProgressDialog.prototype = {
              var dontaskmsg = this.getProperty( "dontAskAgain",
                                                 [ ], 0 );
              var checkbox = {value:0};
-             var okToProceed = promptService.confirmCheck(window, title, msg, dontaskmsg, checkbox);
+             var okToProceed = promptService.confirmCheck(this.dialog, title, msg, dontaskmsg, checkbox);
              try {
                if (checkbox.value != dontAskAgain)
                  pref.setBoolPref(kDontAskAgainPref, checkbox.value);
