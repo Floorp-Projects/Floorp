@@ -22,6 +22,7 @@
  * Contributor(s):
  *     Daniel Veditz <dveditz@netscape.com>
  *     Douglas Turner <dougt@netscape.com>
+ *     Jens Bannmann <jens.b@web.de>
  *     Pierre Phaneuf <pp@ludusdesign.com>
  *     Sean Su <ssu@netscape.com>
  *     Samir Gehani <sgehani@netscape.com>
@@ -2564,22 +2565,55 @@ nsInstall::Alert(nsString& string)
     if (!ui)
         return UNEXPECTED_ERROR;
 
-    return ui->Alert( GetTranslatedString(NS_LITERAL_STRING("Alert").get()),
-                      string.get());
+    nsAutoString title;
+    title.AssignLiteral("Alert");
+    if (!mUIName.IsEmpty())
+    {
+        title = mUIName;
+    }
+    else
+    {
+        PRUnichar *t = GetTranslatedString(title.get());
+        if (t)
+            title.Adopt(t);
+    }
+    return ui->Alert( title.get(), string.get());
 }
 
 PRInt32
-nsInstall::Confirm(nsString& string, PRBool* aReturn)
+nsInstall::ConfirmEx(nsString& aDialogTitle, nsString& aText, PRUint32 aButtonFlags, nsString& aButton0Title, nsString& aButton1Title, nsString& aButton2Title, nsString& aCheckMsg, PRBool* aCheckState, PRInt32* aReturn)
 {
-    *aReturn = PR_FALSE; /* default value */
+    *aReturn = -1; /* default value */
 
     nsPIXPIProxy *ui = GetUIThreadProxy();
     if (!ui)
         return UNEXPECTED_ERROR;
 
-    return ui->Confirm( GetTranslatedString(NS_LITERAL_STRING("Confirm").get()),
-                        string.get(),
-                        aReturn);
+    nsAutoString title;
+    title.AssignLiteral("Confirm");
+    if (!aDialogTitle.IsEmpty())
+    {
+        title = aDialogTitle;
+    }
+    else if (!mUIName.IsEmpty())
+    {
+        title = mUIName;
+    }
+    else
+    {
+        PRUnichar *t = GetTranslatedString(title.get());
+        if (t)
+            title.Adopt(t);
+    }
+    return ui->ConfirmEx( title.get(),
+                          aText.get(),
+                          aButtonFlags,
+                          aButton0Title.get(),
+                          aButton1Title.get(),
+                          aButton2Title.get(),
+                          aCheckMsg.get(),
+                          aCheckState,
+                          aReturn);
 }
 
 
