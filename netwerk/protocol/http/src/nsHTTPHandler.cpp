@@ -322,7 +322,7 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
     }
     else {
         nsCOMPtr<nsISupports> in;
-        rv = NS_NewStringInputStream(getter_AddRefs(in), data);
+        rv = NS_NewCStringInputStream(getter_AddRefs(in), data);
         if (NS_FAILED(rv)) return rv;
 
         rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)result);
@@ -460,7 +460,7 @@ nsHTTPHandler::GetVendor(PRUnichar* *aVendor)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendor(const PRUnichar* aVendor)
 {
-    mVendor = aVendor;
+    mVendor.AssignWithConversion(aVendor);
     return BuildUserAgent();
 }
 
@@ -475,7 +475,7 @@ nsHTTPHandler::GetVendorSub(PRUnichar* *aVendorSub)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendorSub(const PRUnichar* aVendorSub)
 {
-    mVendorSub = aVendorSub;
+    mVendorSub.AssignWithConversion(aVendorSub);
     return BuildUserAgent();
 }
 
@@ -490,7 +490,7 @@ nsHTTPHandler::GetVendorComment(PRUnichar* *aComment)
 NS_IMETHODIMP
 nsHTTPHandler::SetVendorComment(const PRUnichar* aComment)
 {
-    mVendorComment = aComment;
+    mVendorComment.AssignWithConversion(aComment);
     return BuildUserAgent();
 }
 
@@ -505,7 +505,7 @@ nsHTTPHandler::GetProduct(PRUnichar* *aProduct)
 NS_IMETHODIMP
 nsHTTPHandler::SetProduct(const PRUnichar* aProduct)
 {
-    mProduct = aProduct;
+    mProduct.AssignWithConversion(aProduct);
     return BuildUserAgent();
 }
 
@@ -520,7 +520,7 @@ nsHTTPHandler::GetProductSub(PRUnichar* *aProductSub)
 NS_IMETHODIMP
 nsHTTPHandler::SetProductSub(const PRUnichar* aProductSub)
 {
-    mProductSub = aProductSub;
+    mProductSub.AssignWithConversion(aProductSub);
     return BuildUserAgent();
 }
 
@@ -535,7 +535,7 @@ nsHTTPHandler::GetProductComment(PRUnichar* *aComment)
 NS_IMETHODIMP
 nsHTTPHandler::SetProductComment(const PRUnichar* aComment)
 {
-    mProductComment = aComment;
+    mProductComment.AssignWithConversion(aComment);
     return BuildUserAgent();
 }
 
@@ -550,7 +550,7 @@ nsHTTPHandler::GetLanguage(PRUnichar* *aLanguage)
 NS_IMETHODIMP
 nsHTTPHandler::SetLanguage(const PRUnichar* aLanguage)
 {
-    mAppLanguage = aLanguage;
+    mAppLanguage.AssignWithConversion(aLanguage);
     return BuildUserAgent();
 }
 
@@ -590,7 +590,7 @@ nsHTTPHandler::GetMisc(PRUnichar* *aMisc)
 NS_IMETHODIMP
 nsHTTPHandler::SetMisc(const PRUnichar* aMisc)
 {
-    mAppMisc = (const PRUnichar*)aMisc;
+    mAppMisc.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, aMisc));
     return BuildUserAgent();
 }
 
@@ -660,7 +660,7 @@ nsHTTPHandler::InitUserAgentComponents()
     rv = mPrefs->CopyCharPref(UA_PREF_PREFIX "security",
         getter_Copies(UAPrefVal));
     if (NS_SUCCEEDED(rv))
-        mAppSecurity = UAPrefVal;
+        mAppSecurity.Assign(NS_STATIC_CAST(const char*, UAPrefVal));
     else
         mAppSecurity = "N";
 

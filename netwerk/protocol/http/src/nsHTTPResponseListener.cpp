@@ -374,8 +374,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                 StreamConvService, kStreamConverterServiceCID, &rv);
 					    if (NS_FAILED(rv)) return rv;
 
-					    nsString fromStr ( compressHeader );
-					    nsString toStr   ( "uncompressed" );
+					    nsString fromStr; fromStr.AssignWithConversion ( compressHeader );
+					    nsString toStr;     toStr.AssignWithConversion ( "uncompressed" );
 				    
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
@@ -402,8 +402,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                                 StreamConvService, kStreamConverterServiceCID, &rv);
 		    			if (NS_FAILED(rv)) return rv;
 
-			    		nsString fromStr ( chunkHeader);
-				    	nsString toStr   ("unchunked" );
+			    		nsString fromStr; fromStr.AssignWithConversion ( chunkHeader );
+				    	nsString toStr;     toStr.AssignWithConversion ( "unchunked" );
 				    
                         nsCOMPtr<nsIStreamListener> converterListener;
 					    rv = StreamConvService->AsyncConvertData(
@@ -653,7 +653,7 @@ nsWriteToString(void* closure,
 {
   nsString *str = (nsString*)closure;
 
-  str->Append(fromRawSegment, count);
+  str->AppendWithConversion(fromRawSegment, count);
   *writeCount = count;
   
   return NS_OK;

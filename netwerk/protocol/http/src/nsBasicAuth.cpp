@@ -51,8 +51,10 @@ nsBasicAuth::Authenticate(nsIURI* i_URI,
         tempBuff = PL_Base64Encode(iUserPass, 0, tempBuff); 
         if (!tempBuff)
             return NS_ERROR_FAILURE; // ??
-        nsString authString("Basic ");
-        authString += tempBuff;
+        
+          // STRING USE WARNING: perhaps |authString| should be an |nsCAutoString|? -- scc
+        nsString authString; authString.AssignWithConversion("Basic ");
+        authString.AppendWithConversion(tempBuff);
         *oResult = authString.ToNewCString();
         PR_Free(tempBuff);
         rv = NS_OK;

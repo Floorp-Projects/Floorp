@@ -1640,9 +1640,9 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         PRBool retval = PR_FALSE;
 
         //TODO localize it!
-        nsAutoString message = "Enter username for "; 
+        nsAutoString message; message.AssignWithConversion("Enter username for "); 
          // later on change to only show realm and then host's info. 
-        message += iChallenge;
+        message.AppendWithConversion(iChallenge);
         
         // Get url
          nsXPIDLCString urlCString; 

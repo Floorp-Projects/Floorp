@@ -309,7 +309,7 @@ nsHTTPRequest::formHeaders (PRUint32 capabilities)
     nsXPIDLString ua;
     if (NS_SUCCEEDED (httpHandler -> GetUserAgent (getter_Copies(ua))))
     {
-        nsCAutoString uaString ((const PRUnichar*)ua);
+        nsCAutoString uaString; uaString.AssignWithConversion(NS_STATIC_CAST(const PRUnichar*, ua));
         SetHeader (nsHTTPAtoms::User_Agent, uaString.GetBuffer ());
     }
 
