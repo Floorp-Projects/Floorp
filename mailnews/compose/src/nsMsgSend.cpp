@@ -97,6 +97,8 @@ static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 #define PREF_MAIL_MESSAGE_WARNING_SIZE "mailnews.message_warning_size"
 #define PREF_MAIL_COLLECT_EMAIL_ADDRESS_OUTGOING "mail.collect_email_address_outgoing"
 
+enum  { kDefaultMode = (PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE) };
+
 #ifdef XP_MAC
 #include "xp.h"                 // mac only 
 #include "errors.h"
@@ -539,7 +541,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 		if (!mHTMLFileSpec)
 			goto FAILMEM;
 
-		nsOutputFileStream tempfile(*mHTMLFileSpec);
+		nsOutputFileStream tempfile(*mHTMLFileSpec, kDefaultMode, 00600);
 		if (! tempfile.is_open()) 
     {
 			status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
@@ -612,7 +614,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	if (! mTempFileSpec)
 		goto FAILMEM;
 
-  mOutputFile = new nsOutputFileStream(*mTempFileSpec);
+  mOutputFile = new nsOutputFileStream(*mTempFileSpec, kDefaultMode, 00600);
 	if (! mOutputFile->is_open()) 
   {
 		status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
