@@ -31,7 +31,7 @@ $| = 1;
 
 print "Content-type: text/html\n\n<HTML>\n";
 
-print "<H1>Notes log</H1>\n";
+EmitHtmlHeader("Notes");
 
 my $tree = $form{'tree'};
 my $start = $form{'start'};
@@ -86,3 +86,35 @@ if (defined $tree && defined $start && defined $end) {
     print "</table>\n";
 }
 
+if (!defined $tree) {
+    $tree = "";
+
+
+if (!defined $start) {
+    $start = time2str($TIMEFORMAT, time() - 7*24*60*60); # One week ago.
+
+
+if (!defined $end) {
+    $end = time2str($TIMEFORMAT, time()); # #now
+
+print qq|
+<form>
+<table>
+<tr>
+<th align=right>Tree:</th>
+<td><input name=tree size=30 value="$tree"></td>
+</tr>
+<tr>
+<th align=right>Start time:</th>
+<td><input name=start size=30 value="$start"></td>
+</tr>
+<tr>
+<th align=right>End time:</th>
+<td><input name=end size=30 value="$end"></td>
+</tr>
+</table>
+
+<INPUT TYPE=\"submit\" VALUE=\"View Notes \">
+
+</form>
+|;
