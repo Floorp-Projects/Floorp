@@ -45,10 +45,19 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 inFileSearch::inFileSearch()
+  : mSearchLoop(nsnull),
+    mBasePath(nsnull),
+    mTextCriteria(nsnull),
+    mFilenameCriteria(nsnull),
+    mDirsSearched(0),
+    mFilenameCriteriaCount(0),
+    mResultCount(0),
+    mIsActive(PR_FALSE),
+    mHoldResults(PR_FALSE),
+    mReturnRelativePaths(PR_FALSE),
+    mSearchRecursive(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-
-  mSearchLoop = 0;
 }
 
 inFileSearch::~inFileSearch()
