@@ -19,9 +19,12 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
+DEPTH=..\..\..\..
 
-DIRS = resources base build
+XPIDLSRCS = .\nsIVixenShell.idl  \
+	    $(NULL)
+
+MODULE=vixen
 
 include <$(DEPTH)\config\rules.mak>
+

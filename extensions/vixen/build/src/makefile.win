@@ -1,5 +1,3 @@
-#!nmake
-#
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -19,9 +17,30 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..
-include <$(DEPTH)/config/config.mak>
+DEPTH=..\..\..\..
+MODULE=vixen
 
-DIRS = resources base build
+LIBNAME = .\$(OBJDIR)\vixen
+DLL = $(LIBNAME).dll
 
-include <$(DEPTH)\config\rules.mak>
+################################################################################
+## library
+
+LINCS=-I..\..\base\src
+
+CPP_OBJS=					    \
+		.\$(OBJDIR)\nsVixenModule.obj       \
+		$(NULL)
+
+LLIBS=						      \
+		$(DIST)\lib\xpcom.lib		      \
+                $(DIST)\lib\vixen_s.lib               \
+		$(LIBNSPR)	 	              \
+		$(NULL)
+
+include <$(DEPTH)/config/rules.mak>
+
+install:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
+

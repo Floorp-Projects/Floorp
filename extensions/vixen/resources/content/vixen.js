@@ -31,13 +31,29 @@ function _dd(aString)
     dump("*** " + aString + "\n");
 }
 
+function _ddf(aString, aValue)
+{
+  if (_DEBUG)
+    dump("*** " + aString + " = " + aValue + "\n");
+}
+
 const kMenuHeight = 130;
 const kPropertiesWidth = 170;
 
+var gVixenShell;
 
 function vx_Startup()
 {
   _dd("vx_Startup");
+  
+  // initialise the vfd shell (this is not a service! need to shift to new_vfd)
+  const kVixenProgid = "component://netscape/vixen/shell";
+  gVixenShell = nsJSComponentManager.createInstance(kVixenProgid, "nsIVixenShell");
+  gVixenShell.foopy = "Noopy";
+  
+  _ddf("Foopy", gVixenShell.foopy);
+  
+  // size the window
   window.moveTo(0,0);
   window.outerWidth = screen.availWidth;
   window.outerHeight = kMenuHeight;
@@ -48,31 +64,17 @@ function vx_Startup()
   // load a scratch document
   vx_LoadForm("chrome://vixen/content/vfdScratch.xul");
   
-  var url = Components.classes["component://netscape/network/standard-url"].createInstance();
-  if (url) url = url.QueryInterface(Components.interfaces.nsIURI);
-  url.spec = "chrome://vixen/skin/vfdScratch.css";
-  var chromeRegistry = Components.classes["component://netscape/chrome/chrome-registry"].getService();
-  chromeRegistry = chromeRegistry.QueryInterface( Components.interfaces.nsIChromeRegistry );
-  var url2 = chromeRegistry.convertChromeURL(url);
-  dump(url2);
 }
 
 function vx_Shutdown()
 {
   _dd("vx_Shutdown");
   
-  const WM_PROGID = "component://netscape/rdf/datasource?name=window-mediator";
-  var wm = nsJSComponentManager.getService(WM_PROGID, "nsIWindowMediator");
-  var windows = wm.getXULWindowEnumerator("xuledit:document");
-  while (windows.hasMoreElements()) {
-    var currWindow = windows.getNext();
-    currWindow.close();
-  }
 }
 
 function vx_LoadForm(aURL)
 {
-  hwnd = openDialog(aURL, "", "chrome,dialog=no,resizable");
+  hwnd = openDialog(aURL, "", "chrome,dialog=no,resizable,dependant");
   hwnd.moveTo(kPropertiesWidth + 5, kMenuHeight + 5);
   hwnd.outerWidth = screen.availWidth - (kPropertiesWidth * 2) - 5;
   hwnd.outerHeight = screen.availHeight - kMenuHeight - 20;
