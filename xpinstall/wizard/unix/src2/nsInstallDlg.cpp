@@ -22,20 +22,25 @@
  *     Samir Gehani <sgehani@netscape.com>
  */
 
+#include "nsSocket.h"
 #include "nsInstallDlg.h"
 #include "nsXInstaller.h"
 #include "nsXIEngine.h"
 #include <signal.h>
 
+#define NUM_PS_ENTRIES 4
+
 static char             *sXPInstallEngine;
 static nsRunApp         *sRunAppList = NULL;
 
+static GtkWidget        *sDLTable = NULL;
 static GtkWidget        *sMsg0Label;
 static GtkWidget        *sMajorLabel;
 static GtkWidget        *sMinorLabel;
 static GtkWidget        *sRateLabel;
 static GtkWidget        *sMajorProgBar;
 static GtkWidget        *sMinorProgBar;
+static GtkWidget        *sPSTextEntry[NUM_PS_ENTRIES];
 
 static int              bDownload = FALSE;
 static struct timeval   sDLStartTime;
@@ -113,6 +118,8 @@ nsInstallDlg::Next(GtkWidget *aWidget, gpointer aData)
     gtk_widget_hide(gCtx->back);
     gtk_widget_hide(gCtx->next);
     gtk_widget_hide(sMsg0Label);
+    if (bDownload && sDLTable)
+        gtk_widget_hide(sDLTable);
     XI_GTK_UPDATE_UI();
 
     WorkDammitWork((void*) NULL);
@@ -275,14 +282,21 @@ int
 nsInstallDlg::Show(int aDirection)
 {
     int err = OK;
+    int totalComps = 0;
     GtkWidget *hbox = NULL;
     GtkWidget *vbox = NULL;
+    GtkWidget *dlFrame, *dlCheckbox, *dlProxyBtn;
 
     XI_VERIFY(gCtx);
     XI_VERIFY(gCtx->notebook);
 
     if (mWidgetsInit == FALSE)
     {
+        int bCus = 
+            (gCtx->opt->mSetupType == (gCtx->sdlg->GetNumSetupTypes() - 1));
+        nsComponentList *comps = 
+            gCtx->sdlg->GetSelectedSetupType()->GetComponents(); 
+
         // create a new table and add it as a page of the notebook
         mTable = gtk_table_new(4, 1, FALSE);
         gtk_notebook_append_page(GTK_NOTEBOOK(gCtx->notebook), mTable, NULL);
@@ -294,10 +308,43 @@ nsInstallDlg::Show(int aDirection)
         hbox = gtk_hbox_new(FALSE, 0);
         gtk_box_pack_start(GTK_BOX(hbox), sMsg0Label, FALSE, FALSE, 0);
         gtk_widget_show(hbox);
-        gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 1, 2,
+        gtk_table_attach(GTK_TABLE(mTable), hbox, 0, 1, 0, 1,
             static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
 			GTK_FILL, 20, 20);
         gtk_widget_show(sMsg0Label);
+
+        if (!nsXIEngine::ExistAllXPIs(bCus, comps, &totalComps))
+        {
+            // insert a [ x ] heterogenous table
+            sDLTable = gtk_table_new(2, 2, FALSE);
+            gtk_widget_show(sDLTable);
+
+            gtk_table_attach(GTK_TABLE(mTable), sDLTable, 0, 1, 1, 4, 
+                static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+    			GTK_FILL, 20, 20);
+            
+            // download settings groupbox
+            dlFrame = gtk_frame_new(gCtx->Res("DL_SETTINGS"));
+            gtk_table_attach_defaults(GTK_TABLE(sDLTable), dlFrame, 0, 2, 0, 2);
+            gtk_widget_show(dlFrame);
+    
+            // save installer modules checkbox and label
+            dlCheckbox = gtk_check_button_new_with_label(
+                            gCtx->Res("SAVE_MODULES"));
+            gtk_widget_show(dlCheckbox);
+            gtk_table_attach(GTK_TABLE(sDLTable), dlCheckbox, 0, 2, 0, 1,
+                GTK_FILL, GTK_FILL, 10, 20);
+            gtk_signal_connect(GTK_OBJECT(dlCheckbox), "toggled",
+                GTK_SIGNAL_FUNC(SaveModulesToggled), NULL);
+
+            // proxy settings button
+            dlProxyBtn = gtk_button_new_with_label(gCtx->Res("PROXY_SETTINGS"));
+            gtk_widget_show(dlProxyBtn);
+            gtk_table_attach(GTK_TABLE(sDLTable), dlProxyBtn, 0, 1, 1, 2,
+                GTK_FILL, GTK_FILL, 10, 10);
+            gtk_signal_connect(GTK_OBJECT(dlProxyBtn), "clicked",
+                   GTK_SIGNAL_FUNC(ShowProxySettings), NULL);
+        }
 
         // vbox with two widgets packed in: label0 / progmeter0 (major)
         vbox = gtk_vbox_new(FALSE, 0);
@@ -349,7 +396,7 @@ nsInstallDlg::Show(int aDirection)
     // signal connect the buttons
     gCtx->backID = gtk_signal_connect(GTK_OBJECT(gCtx->back), "clicked",
                    GTK_SIGNAL_FUNC(nsInstallDlg::Back), gCtx->idlg);
-    gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "released",
+    gCtx->nextID = gtk_signal_connect(GTK_OBJECT(gCtx->next), "clicked",
                    GTK_SIGNAL_FUNC(nsInstallDlg::Next), gCtx->idlg);
 
     if (gCtx->opt->mSetupType != (gCtx->sdlg->GetNumSetupTypes() - 1))
@@ -433,6 +480,12 @@ nsInstallDlg::WorkDammitWork(void *arg)
     
     // 3> install .xpis
     XI_ERR_BAIL(engine->Install(bCus, comps, gCtx->opt->mDestination));
+
+    // save xpis if user requested so
+    if (bDownload && gCtx->opt->mSaveModules)
+    {
+        engine->SaveXPIs();
+    }
 
     ShowCompleteDlg();
 
@@ -583,22 +636,36 @@ nsInstallDlg::DownloadCB(int aBytesRd, int aTotal)
     struct timeval now;
     char label[64];
     int rate;
-    gfloat percent;
+    gfloat percent = 0;
     static int timesCalled = 0;
-    
+    static int activityCount = 0;
+
     if (++timesCalled < SHOW_EVERY_N_KB)
         return 0; 
     else
         timesCalled = 0;
 
     gettimeofday(&now, NULL);
-    rate = (int) nsFTPConn::CalcRate(&sDLStartTime, &now, aBytesRd);
-    percent = (gfloat)aBytesRd/(gfloat)aTotal;
+    rate = (int) nsSocket::CalcRate(&sDLStartTime, &now, aBytesRd);
 
     // only update rate in major label line
     sprintf(label, gCtx->Res("DLRATE"), rate);
     gtk_label_set_text(GTK_LABEL(sRateLabel), label);
-    gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+
+    if (aTotal <= 0) 
+    {
+        // show some activity
+        if (activityCount >= 5) activityCount = 0;
+        percent = (gfloat)( (gfloat)activityCount++/ (gfloat)5 ); 
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), TRUE); 
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+    }
+    else
+    {
+        percent = (gfloat)aBytesRd/(gfloat)aTotal;
+        gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE); 
+        gtk_progress_bar_update(GTK_PROGRESS_BAR(sMajorProgBar), percent);
+    }
 
     XI_GTK_UPDATE_UI();
     return 0;
@@ -608,6 +675,7 @@ void
 nsInstallDlg::ClearRateLabel()
 {
     gtk_label_set_text(GTK_LABEL(sRateLabel), "");
+    gtk_progress_set_activity_mode(GTK_PROGRESS(sMajorProgBar), FALSE); 
     XI_GTK_UPDATE_UI();
 }
 
@@ -628,6 +696,7 @@ nsInstallDlg::ShowCompleteDlg()
     gtk_packer_add_defaults(GTK_PACKER(packer), label, GTK_SIDE_BOTTOM,
                             GTK_ANCHOR_CENTER, GTK_FILL_X);
     gtk_window_set_modal(GTK_WINDOW(completeDlg), TRUE);
+    gtk_window_set_title(GTK_WINDOW(completeDlg), gCtx->opt->mTitle);
     gtk_window_set_position(GTK_WINDOW(completeDlg), GTK_WIN_POS_CENTER);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(completeDlg)->vbox), packer);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(completeDlg)->action_area),
@@ -641,8 +710,167 @@ nsInstallDlg::ShowCompleteDlg()
 void
 nsInstallDlg::CompleteOK(GtkWidget *aWidget, gpointer aData)
 {
-    if (aWidget)
-        gtk_widget_destroy(aWidget);
+    GtkWidget *dlg = (GtkWidget *) aData;
+
+    if (dlg)
+        gtk_widget_destroy(dlg);
 
     gtk_main_quit();
+}
+
+void
+nsInstallDlg::SaveModulesToggled(GtkWidget *aWidget, gpointer aData)
+{
+    if (GTK_TOGGLE_BUTTON(aWidget)->active)
+    {
+        DUMP("Save modules toggled on");
+        gCtx->opt->mSaveModules = TRUE;
+    }
+    else
+    {
+        DUMP("Save modules toggled off");
+        gCtx->opt->mSaveModules = FALSE;
+    }
+}
+
+void
+nsInstallDlg::ShowProxySettings(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *psDlg, *psTable, *packer;
+    GtkWidget *okButton, *cancelButton;
+    GtkWidget *psLabel[NUM_PS_ENTRIES];
+    int i;
+    char resName[16], *text;
+
+    psDlg = gtk_dialog_new();
+    gtk_window_set_title(GTK_WINDOW(psDlg), gCtx->opt->mTitle);
+    gtk_window_set_position(GTK_WINDOW(psDlg), GTK_WIN_POS_CENTER);
+
+    psTable = gtk_table_new(5, 2, FALSE);
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(psDlg)->vbox), psTable);
+    gtk_widget_show(psTable);
+
+    // create labels
+    for (i = 0; i < NUM_PS_ENTRIES; ++i) 
+    {
+        sprintf(resName, "PS_LABEL%d", i);
+        psLabel[i] = gtk_label_new(gCtx->Res(resName));
+        gtk_widget_show(psLabel[i]);
+
+        packer = gtk_packer_new();
+        gtk_packer_add_defaults(GTK_PACKER(packer), psLabel[i], GTK_SIDE_RIGHT,
+            GTK_ANCHOR_CENTER, GTK_FILL_X);
+        gtk_widget_show(packer);
+
+        gtk_table_attach(GTK_TABLE(psTable), packer, 0, 1, i, i + 1,
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 5, 5);
+    }
+    
+    // create text entry fields
+    for (i = 0; i < NUM_PS_ENTRIES; ++i)
+    {
+        sPSTextEntry[i] = gtk_entry_new();
+        gtk_entry_set_editable(GTK_ENTRY(sPSTextEntry[i]), TRUE);
+
+        // reset text if we already opened this dlg before
+        if (i == 0) text = gCtx->opt->mProxyHost;
+        if (i == 1) text = gCtx->opt->mProxyPort;
+        if (i == 2) text = gCtx->opt->mProxyUser;
+        if (i == 3) text = gCtx->opt->mProxyPswd;
+
+        if (text)
+            gtk_entry_set_text(GTK_ENTRY(sPSTextEntry[i]), text);
+
+        // password field
+        if (i + 1 == NUM_PS_ENTRIES)
+            gtk_entry_set_visibility(GTK_ENTRY(sPSTextEntry[i]), FALSE); 
+
+        gtk_widget_show(sPSTextEntry[i]);
+
+        gtk_table_attach(GTK_TABLE(psTable), sPSTextEntry[i], 
+            1, 2, i, i + 1,
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+            static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND), 5, 5);
+    }
+
+    // pre-populate text entry fields if data already stored
+    okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(psDlg)->action_area),
+        okButton);
+    gtk_signal_connect(GTK_OBJECT(okButton), "clicked",
+                   GTK_SIGNAL_FUNC(PSDlgOK), psDlg);
+    gtk_widget_show(okButton);
+
+    cancelButton = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));
+    gtk_container_add(GTK_CONTAINER(GTK_DIALOG(psDlg)->action_area),
+        cancelButton);
+    gtk_signal_connect(GTK_OBJECT(cancelButton), "clicked",
+                   GTK_SIGNAL_FUNC(PSDlgCancel), psDlg);
+    gtk_widget_show(cancelButton);
+
+    gtk_widget_show(psDlg);
+}
+
+void
+nsInstallDlg::PSDlgOK(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *dlg = (GtkWidget *) aData;
+    char *text;
+
+    // grab proxy host field
+    if (sPSTextEntry[0])
+    {
+        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[0]), 0, -1);
+        if (text)
+        {
+            XI_IF_FREE(gCtx->opt->mProxyHost);
+            gCtx->opt->mProxyHost = text;
+        }
+    }
+
+    // grab proxy port field
+    if (sPSTextEntry[1])
+    {
+        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[1]), 0, -1);
+        if (text)
+        {
+            XI_IF_FREE(gCtx->opt->mProxyPort);
+            gCtx->opt->mProxyPort = text;
+        }
+    }
+
+    // grab proxy user field
+    if (sPSTextEntry[2])
+    {
+        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[2]), 0, -1);
+        if (text)
+        {
+            XI_IF_FREE(gCtx->opt->mProxyUser);
+            gCtx->opt->mProxyUser = text;
+        }
+    }
+
+    // grab proxy pswd field
+    if (sPSTextEntry[3])
+    {
+        text = gtk_editable_get_chars(GTK_EDITABLE(sPSTextEntry[3]), 0, -1);
+        if (text)
+        {
+            XI_IF_FREE(gCtx->opt->mProxyPswd);
+            gCtx->opt->mProxyPswd = text;
+        }
+    }
+
+    if (dlg)
+        gtk_widget_destroy(dlg);
+}
+
+void
+nsInstallDlg::PSDlgCancel(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *dlg = (GtkWidget *) aData;
+
+    if (dlg)
+        gtk_widget_destroy(dlg);
 }

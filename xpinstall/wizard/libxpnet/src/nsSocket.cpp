@@ -61,6 +61,7 @@ const int kUsecsPerSec = 1000000;
 const int kTimeoutThresholdUsecs = 120 * kUsecsPerSec;
 const int kTimeoutSelectUsecs = 100000;
 const int kKilobyte = 1024;
+const int kUsecsPerKBFactor = (kUsecsPerSec/kKilobyte);
 const int kReadBufSize = 1024;
 
 #ifdef _WINDOWS
@@ -463,8 +464,7 @@ nsSocket::CalcRate(struct timeval *aPre, struct timeval *aPost, int aBytes)
     
     diffUsecs = (float)(aPost->tv_sec - aPre->tv_sec) * kUsecsPerSec;
     diffUsecs += (float)aPost->tv_usec - (float)aPre->tv_usec;
-    rate = ((float)(aBytes/kKilobyte))/
-           ((float)(diffUsecs/kUsecsPerSec));
+    rate = ((float)aBytes)/((float)diffUsecs) * kUsecsPerKBFactor;
 
     return rate;
 }

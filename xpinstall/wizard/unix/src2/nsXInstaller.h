@@ -51,8 +51,6 @@ private:
     GtkWidget   *DrawLogo();
     int         DrawCancelButton(GtkWidget *aLogoVBox);
     int         DrawNavButtons();
-
-    char        *mTitle;
 };
 
 int     main(int argc, char **argv);

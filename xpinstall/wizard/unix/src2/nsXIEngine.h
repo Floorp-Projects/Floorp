@@ -31,7 +31,6 @@
 #include "nsComponentList.h"
 #include "nsInstallDlg.h"
 #include "nsZipExtractor.h"
-#include "nsFTPConn.h"
 
 #include "xpistub.h"
 
@@ -42,6 +41,8 @@
 #include <unistd.h>
 #include <dlfcn.h>
 #include <sys/stat.h>
+
+class nsFTPConn;
 
 /*------------------------------------------------------------------------*
  *   XPI Stub Glue
@@ -75,6 +76,7 @@ public:
     int     Download(int aCustom, nsComponentList *aComps);
     int     Extract(nsComponent *aXPIEngine);
     int     Install(int aCustom, nsComponentList *aComps, char *aDestination);
+    void    SaveXPIs(void);
 
     static void ProgressCallback(const char* aMsg, PRInt32 aVal, PRInt32 aMax);
     static int  ExistAllXPIs(int aCustom, nsComponentList *aComps, int *aTotal);

@@ -673,13 +673,50 @@ nsSetupTypeDlg::VerifyDestination()
 {
     int err = E_NO_DEST;
     int stat_err = 0;
-    struct stat dummy; 
+    struct stat stbuf; 
     GtkWidget *yesButton, *noButton, *label;
+    GtkWidget *noPermsDlg, *okButton;
     char message[MAXPATHLEN];
     
-    stat_err = stat(gCtx->opt->mDestination, &dummy);
+    stat_err = stat(gCtx->opt->mDestination, &stbuf);
     if (stat_err == 0)
-        return OK;
+    {
+        // check perms on dir: we need rwx for user
+        if ( !(stbuf.st_mode & S_IREAD)  ||
+             !(stbuf.st_mode & S_IWRITE) ||
+             !(stbuf.st_mode & S_IEXEC)   ) 
+        {
+            sprintf(message, gCtx->Res("NO_PERMS"), gCtx->opt->mDestination);
+
+            noPermsDlg = gtk_dialog_new();
+            label = gtk_label_new(message);
+            okButton = gtk_button_new_with_label(gCtx->Res("OK_LABEL"));
+
+            if (noPermsDlg && label && okButton)
+            {
+                gtk_window_set_title(GTK_WINDOW(noPermsDlg), gCtx->opt->mTitle);
+                gtk_window_set_position(GTK_WINDOW(noPermsDlg), 
+                    GTK_WIN_POS_CENTER);
+                gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+                gtk_box_pack_start(GTK_BOX(
+                    GTK_DIALOG(noPermsDlg)->action_area), okButton,
+                    FALSE, FALSE, 10);
+                gtk_signal_connect(GTK_OBJECT(okButton), "clicked", 
+                    GTK_SIGNAL_FUNC(NoPermsOK), noPermsDlg);
+                gtk_box_pack_start(GTK_BOX(
+                   GTK_DIALOG(noPermsDlg)->vbox), label, FALSE, FALSE, 10);
+
+                gtk_widget_show_all(noPermsDlg);
+            }
+
+            return E_NO_PERMS;
+        }
+        else
+        {
+            // perms OK, we can proceed
+            return OK;
+        }
+    }
 
     // destination doesn't exist so ask user if we should create it
     sprintf(message, gCtx->Res("DOESNT_EXIST"), gCtx->opt->mDestination);
@@ -689,6 +726,8 @@ nsSetupTypeDlg::VerifyDestination()
     yesButton = gtk_button_new_with_label(gCtx->Res("YES_LABEL"));
     noButton = gtk_button_new_with_label(gCtx->Res("NO_LABEL"));
 
+    gtk_window_set_title(GTK_WINDOW(sCreateDestDlg), gCtx->opt->mTitle);
+    gtk_window_set_position(GTK_WINDOW(sCreateDestDlg), GTK_WIN_POS_CENTER);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->action_area),
                       yesButton);
     gtk_container_add(GTK_CONTAINER(GTK_DIALOG(sCreateDestDlg)->action_area),
@@ -704,6 +743,17 @@ nsSetupTypeDlg::VerifyDestination()
     sConfirmCreateUp = TRUE;
 
     return err;
+}
+
+void
+nsSetupTypeDlg::NoPermsOK(GtkWidget *aWidget, gpointer aData)
+{
+    GtkWidget *noPermsDlg = (GtkWidget *) aData;
+
+    if (!noPermsDlg)
+        return;
+
+    gtk_widget_destroy(noPermsDlg);
 }
 
 void
@@ -775,6 +825,8 @@ nsSetupTypeDlg::DeleteOldInst()
     {
         // throw up delete dialog 
         sDelInstDlg = gtk_dialog_new();
+        gtk_window_set_title(GTK_WINDOW(sDelInstDlg), gCtx->opt->mTitle);
+        gtk_window_set_position(GTK_WINDOW(sDelInstDlg), GTK_WIN_POS_CENTER);
 
         deleteBtn = gtk_button_new_with_label(gCtx->Res("DELETE_LABEL"));
         cancelBtn = gtk_button_new_with_label(gCtx->Res("CANCEL_LABEL"));

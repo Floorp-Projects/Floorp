@@ -33,7 +33,6 @@ REQUIRES	= xpcom jar
 
 CPPSRCS		= \
         nsINIParser.cpp \
-        nsFTPConn.cpp \
         nsXInstallerDlg.cpp \
         nsComponent.cpp \
         nsSetupType.cpp \
@@ -55,9 +54,11 @@ CPPSRCS		= \
 LIBS        = \
         `$(GTK_CONFIG) --libs` \
         -ljar$(VERSION_NUMBER)_s \
+        -lxpnet_s \
         $(NULL)
 
 LOCAL_INCLUDES += -I$(srcdir)/../../../stub
+LOCAL_INCLUDES += -I$(srcdir)/../../libxpnet/src
 
 ifeq ($(OS_ARCH), Linux)
 DEFINES	+= -D_BSD_SOURCE
