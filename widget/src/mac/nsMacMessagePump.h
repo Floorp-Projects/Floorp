@@ -61,6 +61,7 @@ class nsMacMessagePump
 	Point							mMousePoint;				// keep track of where the mouse is at all times
 	PRBool						mInBackground;
   static  nsWindow	*gCurrentWindow;
+  static  nsWindow  *gGrabWindow;
 
 
 	// CLASS METHODS
