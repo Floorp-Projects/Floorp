@@ -1808,7 +1808,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   nsILookAndFeel * lookAndFeel;
   if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
     lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
-    lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,  windowBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
     NS_RELEASE(lookAndFeel);
   }
 
