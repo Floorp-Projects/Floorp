@@ -244,7 +244,7 @@ sub quietly_check_login() {
 		"and logincookies.hostname = " .
 		SqlQuote($ENV{"REMOTE_HOST"}) .
 		" from profiles,logincookies where logincookies.cookie = " .
-		$::COOKIE{"Bugzilla_logincookie"} .
+		SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
 		" and profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
