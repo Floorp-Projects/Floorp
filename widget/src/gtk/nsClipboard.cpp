@@ -47,6 +47,10 @@
 
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+
+#include "prtime.h"
+#include "prthread.h"
+
 // unicode conversion
 #define NS_IMPL_IDS
 #  include "nsIPlatformCharset.h"
@@ -1304,45 +1308,27 @@ void send_selection_notify_to_widget(XEvent *xevent, GtkWidget *widget)
   gtk_widget_event(widget, &event);
 }
 
+/* Maximum time to wait for a SelectionNotify event, in microseconds */
+#define NS_CLIPBOARD_TIMEOUT 500000
 
 PRBool nsClipboard::FindSelectionNotifyEvent()
 {
-  int i;
-
-  SendClipPing(); // send out the first message (convert should have already been called)
-
+  PRTime entryTime=PR_Now();
   XEvent xevent;
 
-  for (i = 0; i < 300; ++i) {
-    XIfEvent(GDK_DISPLAY(), &xevent, find_clipboard_event, (XPointer)sWidget);
-
-    if (xevent.type == SelectionNotify) {
+  while (1) {
+    if (XCheckTypedWindowEvent(GDK_DISPLAY(),
+                               GDK_WINDOW_XWINDOW(sWidget->window),
+                               SelectionNotify,
+                               &xevent)) {
       send_selection_notify_to_widget(&xevent, sWidget);
       return PR_TRUE;
-    } else if (xevent.type == ClientMessage) {
-#ifdef DEBUG_CLIPBOARD
-      printf("got client message %i\n", i);
-#endif
-      SendClipPing(); // send out the message again
     }
-  }
-
-  // lets try one last time, since the queue could have gotten really long and if its there,
-  // we don't want to miss it
-  if (XCheckTypedWindowEvent(GDK_DISPLAY(),
-                             GDK_WINDOW_XWINDOW(sWidget->window),
-                             SelectionNotify,
-                             &xevent)) {
-#ifdef DEBUG_CLIPBOARD
-    printf("call to XCheckTypedWindowEvent returned me a SelectionNotify event!\n");
-#endif
-    send_selection_notify_to_widget(&xevent, sWidget);
-    return PR_TRUE;
-  }
-
+    PR_Sleep(20*PR_TicksPerSecond()/1000);  /* sleep for 20 ms/iteration */
+    if (PR_Now()-entryTime > NS_CLIPBOARD_TIMEOUT) break; 
+  } 
 #ifdef DEBUG_CLIPBOARD
   printf("can't find a SelectionNotify event, giving up\n");
 #endif
-
   return PR_FALSE;
 }
