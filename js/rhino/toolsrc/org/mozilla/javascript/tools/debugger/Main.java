@@ -432,8 +432,6 @@ class FileTextArea extends JTextArea implements ActionListener,
     }
     public void mouseReleased(MouseEvent e) {
         checkPopup(e);
-        requestFocus();
-        getCaret().setVisible(true);
     }
 
     private void checkPopup(MouseEvent e) {
@@ -756,28 +754,38 @@ class FindFunction extends JDialog implements ActionListener {
 };
 
 class FileHeader extends JPanel implements MouseListener {
-
+    private int pressLine = -1;
     FileWindow fileWindow;
 
     public void mouseEntered(MouseEvent e) {
     }
     public void mousePressed(MouseEvent e) {
+        Font font = fileWindow.textArea.getFont();
+        FontMetrics metrics = getFontMetrics(font);
+        int h = metrics.getHeight();
+        pressLine = e.getY() / h;
     }
     public void mouseClicked(MouseEvent e) {
+    }
+    public void mouseExited(MouseEvent e) {
+    }
+    public void mouseReleased(MouseEvent e) {
         if (e.getComponent() == this &&
-          (e.getModifiers() & MouseEvent.BUTTON1_MASK) != 0) {
+          (e.getModifiers() & MouseEvent.BUTTON1_MASK) != 0) 
+        {
             int x = e.getX();
             int y = e.getY();
             Font font = fileWindow.textArea.getFont();
             FontMetrics metrics = getFontMetrics(font);
             int h = metrics.getHeight();
             int line = y/h;
-            fileWindow.toggleBreakPoint(line + 1);
+            if (line == pressLine) {
+                fileWindow.toggleBreakPoint(line + 1);
+            }
+            else {
+                pressLine = -1;
+            }
         }
-    }
-    public void mouseExited(MouseEvent e) {
-    }
-    public void mouseReleased(MouseEvent e) {
     }
 
     FileHeader(FileWindow fileWindow) {
