@@ -496,30 +496,42 @@ nsRenderingContextXlib::IsVisibleRect(const nsRect& aRect, PRBool &aVisible)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextXlib::SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipState)
+NS_IMETHODIMP 
+nsRenderingContextXlib::SetClipRect(const nsRect& aRect,
+                                    nsClipCombine aCombine,
+                                    PRBool &aClipEmpty)
 {
   PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRect()\n"));
   nsRect trect = aRect;
   mTranMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
-  switch(aCombine) {
-  case nsClipCombine_kIntersect:
-    mClipRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kUnion:
-    mClipRegion->Union(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kSubtract:
-    mClipRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
-    break;
-  case nsClipCombine_kReplace:
-    mClipRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
-    break;
-  }
-  aClipState = mClipRegion->IsEmpty();
-
+                              &trect.width, &trect.height);
+  SetClipRectInPixels(trect, aCombine, aClipEmpty);
   return NS_OK;
+}
+
+void nsRenderingContextXlib::SetClipRectInPixels(const nsRect& aRect,
+                                                 nsClipCombine aCombine,
+                                                 PRBool &aClipEmpty)
+{
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::SetClipRectInPixels()\n"));
+
+  switch(aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      mClipRegion->Intersect(aRect.x,aRect.y,aRect.width,aRect.height);
+      break;
+    case nsClipCombine_kUnion:
+      mClipRegion->Union(aRect.x,aRect.y,aRect.width,aRect.height);
+      break;
+    case nsClipCombine_kSubtract:
+      mClipRegion->Subtract(aRect.x,aRect.y,aRect.width,aRect.height);
+      break;
+    case nsClipCombine_kReplace:
+      mClipRegion->SetTo(aRect.x,aRect.y,aRect.width,aRect.height);
+      break;
+  }
+  
+  aClipEmpty = mClipRegion->IsEmpty();
 }
 
 NS_IMETHODIMP

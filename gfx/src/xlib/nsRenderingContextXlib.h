@@ -218,6 +218,7 @@ public:
 
 #endif /* MOZ_MATHML */
 
+  void SetClipRectInPixels(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty);
 
   xGC *GetGC() { mGC->AddRef(); return mGC; }
   void UpdateGC();
