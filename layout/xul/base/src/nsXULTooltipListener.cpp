@@ -366,7 +366,7 @@ nsresult
 nsXULTooltipListener::ShowTooltip()
 {
   // get the tooltip content designated for the target node 
-  GetTooltipFor(mSourceNode, &mCurrentTooltip);
+  GetTooltipFor(mSourceNode, getter_AddRefs(mCurrentTooltip));
   if (!mCurrentTooltip)
     return NS_ERROR_FAILURE; // the target node doesn't need a tooltip
 
@@ -564,6 +564,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
         if (needTooltip) {
           // specifying tooltiptext means we will always use the default tooltip
            mRootBox->GetDefaultTooltip(aTooltip);
+           NS_IF_ADDREF(*aTooltip);
            return NS_OK;
         } else {
           nsAutoString tooltipId;
@@ -572,6 +573,8 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
           // if tooltip == _child, look for first <tooltip> child
           if (tooltipId.Equals(NS_LITERAL_STRING("_child"))) {
             GetImmediateChild(aTarget, nsXULAtoms::tooltip, aTooltip); // this addrefs
+            NS_IF_ADDREF(*aTooltip);
+            return NS_OK;
           } else {
             if (!tooltipId.IsEmpty()) {
               // tooltip must be an id, use getElementById to find it
@@ -589,6 +592,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
 
                 nsCOMPtr<nsIContent> tooltipContent(do_QueryInterface(tooltipEl));
                 *aTooltip = tooltipContent;
+                NS_IF_ADDREF(*aTooltip);
 
                 return NS_OK;
               }
@@ -599,6 +603,7 @@ nsXULTooltipListener::GetTooltipFor(nsIContent* aTarget, nsIContent** aTooltip)
         // titletips should just use the default tooltip
         if (mIsTargetOutliner && mNeedTitletip) {
           mRootBox->GetDefaultTooltip(aTooltip);
+          NS_IF_ADDREF(*aTooltip);
           return NS_OK;
         }
       }
