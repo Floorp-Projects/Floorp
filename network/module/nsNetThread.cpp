@@ -47,6 +47,7 @@ extern "C" {
 #include "remoturl.h"
 #include "netcache.h"
 
+#include "cvactive.h"
 
 void RL_Init();
 
@@ -106,6 +107,15 @@ nsresult NS_InitNetlib(void)
     NET_RegisterUniversalEncodingConverter("chunked",
                                            NULL,
                                            NET_ChunkedDecoderStream);
+
+    NET_RegisterContentTypeConverter("multipart/x-mixed-replace", FO_NGLAYOUT,
+                                     (void *) CVACTIVE_SIGNAL_AT_END_OF_MULTIPART,
+                                     CV_MakeMultipleDocumentStream);
+
+    NET_RegisterContentTypeConverter("multipart/mixed", FO_NGLAYOUT,
+                                     (void *) CVACTIVE_SIGNAL_AT_END_OF_MULTIPART,
+                                     CV_MakeMultipleDocumentStream);
+
     RL_Init();
 
 #if defined(XP_PC)

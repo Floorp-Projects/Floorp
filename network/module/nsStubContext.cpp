@@ -269,7 +269,7 @@ PRIVATE void stub_GraphProgressInit(MWContext  *context,
     if (nsnull != (pListener = getStreamListener(URL_s))) {
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, 0, content_length);
-        pListener->Release();
+        NS_RELEASE(pListener);
     }
 }
 
@@ -289,7 +289,7 @@ PRIVATE void stub_GraphProgress(MWContext  *context,
         nsConnectionInfo *pConn = (nsConnectionInfo *) URL_s->fe_data;
         pListener->OnProgress(pConn->pURL, bytes_received, 
                               content_length);
-        pListener->Release();
+        NS_RELEASE(pListener);
     }
 }
 
@@ -325,7 +325,7 @@ PRIVATE void stub_Progress(MWContext *context, const char *msg)
             (nsConnectionInfo *) context->modular_data->fe_data;
         nsAutoString status(msg);
         pListener->OnStatus(pConn->pURL, status);
-        pListener->Release();
+        NS_RELEASE(pListener);
     } else {
         printf("%s\n", msg);
     }
@@ -539,16 +539,14 @@ void stub_complete(NET_StreamClass *stream)
 
     /* Close the stream and remove it from the ConnectionInfo... */
     pConn->pNetStream->Close();
-    pConn->pNetStream->Release();
-    pConn->pNetStream = NULL;
+    NS_RELEASE(pConn->pNetStream);
 
 
     /* Notify the Data Consumer that the Binding has completed... */
     if (pConn->pConsumer) {
         nsAutoString status;
         pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_SUCCEEDED, status);
-        pConn->pConsumer->Release();
-        pConn->pConsumer = NULL;
+        pConn->mStatus = nsConnectionSucceeded;
     }
 
     /* Release the URL_Struct hanging off of the data_object */
@@ -565,8 +563,7 @@ void stub_abort(NET_StreamClass *stream, int status)
 
     /* Close the stream and remove it from the ConnectionInfo... */
     pConn->pNetStream->Close();
-    pConn->pNetStream->Release();
-    pConn->pNetStream = NULL;
+    NS_RELEASE(pConn->pNetStream);
 
     /* Notify the Data Consumer that the Binding has completed... */
     /* 
@@ -577,8 +574,7 @@ void stub_abort(NET_StreamClass *stream, int status)
         nsAutoString status;
 
         pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_ABORTED, status);
-        pConn->pConsumer->Release();
-        pConn->pConsumer = NULL;
+        pConn->mStatus = nsConnectionAborted;
     }
 
     /* Release the URL_Struct hanging off of the data_object */
@@ -681,6 +677,9 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
              */
             pConn = (nsConnectionInfo *)URL_s->fe_data;
 
+            /* Mark the connection as active... */
+            pConn->mStatus = nsConnectionActive;
+
             /*
              * If the URL address has been rewritten by netlib then update
              * the cached info in the URL object...
@@ -699,19 +698,18 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
                     free(stream);
                     return NULL;
                 }
-                pConn->pNetStream->AddRef();
+                NS_ADDREF(pConn->pNetStream);
             }
 
             /* Hang the URL_Struct off of the NET_StreamClass */
             NET_HoldURLStruct(URL_s);
             stream->data_object = URL_s;
 
-            /* Notify the data consumer that Binding is beginning...*/
-            /* XXX: check result to terminate connection if necessary */
 #ifdef NOISY
             printf("+++ Created a stream for %s\n", URL_s->address);
 #endif
-            if (pConn->pConsumer) {
+            /* Notify the data consumer that Binding is beginning...*/
+            if (nsnull != pConn->pConsumer) {
                 nsresult rv;
 
                 rv = pConn->pConsumer->OnStartBinding(pConn->pURL, URL_s->content_type);

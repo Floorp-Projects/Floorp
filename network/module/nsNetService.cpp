@@ -922,23 +922,25 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
         PR_ASSERT(pConn);
 
         /* Release the ConnectionInfo object held in the URL_Struct. */
-        if (pConn) {
+        if (nsnull != pConn) {
             /* 
              * Normally, the stream is closed when the connection has been
              * completed.  However, if the URL exit proc was called directly
              * by NET_GetURL(...), then the stream may still be around...
              */
-            if (pConn->pNetStream) {
+            if (nsnull != pConn->pNetStream) {
                 pConn->pNetStream->Close();
                 NS_RELEASE(pConn->pNetStream);
             }
 
             /* 
-             * Notify the Data Consumer that the Binding has completed... 
-             * Since the Consumer is still available, the stream was never
+             * If the connection is still marked as active, then
+             * notify the Data Consumer that the Binding has completed... 
+             * Since the connection is still active, the stream was never
              * closed (or possibly created).  So, the binding has failed...
              */
-            if (pConn->pConsumer) {
+            if ((nsConnectionActive == pConn->mStatus) && 
+                (nsnull != pConn->pConsumer)) {
                 nsAutoString status;
                 pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
                 NS_RELEASE(pConn->pConsumer);
