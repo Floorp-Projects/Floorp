@@ -282,7 +282,8 @@ sub quietly_check_login() {
     if (defined $::COOKIE{"Bugzilla_login"} &&
 	defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
-        SendSQL("select profiles.groupset, profiles.login_name = " .
+        SendSQL("select profiles.groupset, profiles.login_name, " .
+                "profiles.login_name = " .
 		SqlQuote($::COOKIE{"Bugzilla_login"}) .
 		" and profiles.cryptpassword = logincookies.cryptpassword " .
 		"and logincookies.hostname = " .
@@ -292,9 +293,11 @@ sub quietly_check_login() {
 		" and profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
-            $loginok = $row[1];
+            $loginok = $row[2];
             if ($loginok) {
                 $::usergroupset = $row[0];
+                $::COOKIE{"Bugzilla_login"} = $row[1]; # Makes sure case is in
+                                                       # canonical form.
             }
         }
     }
