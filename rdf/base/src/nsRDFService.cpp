@@ -386,7 +386,6 @@ ServiceImpl::~ServiceImpl(void)
 nsresult
 ServiceImpl::GetRDFService(nsIRDFService** mgr)
 {
-    nsresult rv;
     if (! gRDFService) {
         ServiceImpl* serv = new ServiceImpl();
         if (! serv)
@@ -464,12 +463,17 @@ ServiceImpl::GetResource(const char* uri, nsIRDFResource** resource)
         }
     }
     rv = result->Init(uri);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(result);
+        return rv;
+    }
 
     *resource = result;
-    return RegisterResource(result);
+    rv = RegisterResource(result);
+    if (NS_FAILED(rv))
+        NS_RELEASE(result);
+    return rv;
 }
-
 
 NS_IMETHODIMP
 ServiceImpl::GetUnicodeResource(const PRUnichar* uri, nsIRDFResource** resource)
