@@ -165,7 +165,7 @@ Contributor(s): ______________________________________. -->
     <command id="cmd_textZoomEnlarge" oncommand="ZoomManager.prototype.getInstance().enlarge();"/>
     <command id="cmd_textZoomReset"   oncommand="ZoomManager.prototype.getInstance().reset();"/>
     <command id="cmd_history" oncommand="toHistory();"/>
-    <command id="cmd_stop" oncommad="BrowserStop();"/>
+    <command id="cmd_stop" oncommand="BrowserStop();"/>
     <command id="cmd_viewnavbar" oncommand="goToggleToolbar( 'nav-bar','cmd_viewnavbar');" checked="true"/>
     <command id="cmd_viewpersonaltoolbar" oncommand="goToggleToolbar('PersonalToolbar','cmd_viewpersonaltoolbar');" checked="true"/>
     <command id="cmd_viewtaskbar" oncommand="goToggleToolbar('status-bar','cmd_viewtaskbar');" checked="true"/>
