@@ -216,7 +216,10 @@ SecuritySupport is replaced by ClassShutter and SecurityController, where ClassS
 SecurityController provides permission management. For compatibility SecuritySupport is still available as a deprecated interface but only its visibleToScripts method is used as an alias for ClassShutter.visibleToScripts. See API documentation for new classes for details.
 <p>
 New SecurityController allows integration of script security with Java2 security model and its implementation that uses java policy settings to restrict script permissions based on its URL is available with Rhino shell. See the <a href="http://lxr.mozilla.org/mozilla/source/js/rhino/toolsrc/org/mozilla/javascript/tools/shell/JavaPolicySecurity.java">JavaPolicySecurity</a> source for details. To activate it, set the <tt>rhino.use_java_policy_security</tt> system property to true when invoking Rhino shell together with installing a security manager.
-<h3>
+
+
+<h3>Regular expressions improvements</h3>
+<a href="mailto:rogerl@netscape.com">rogerl@netscape.com</a> committed new regular expressions implementation which fully confirms to EcmaScript 262 standard and faster.
 
 <hr width="100%"><br>
 <a href="index.html">back to top</a></h3>
