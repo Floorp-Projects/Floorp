@@ -26,6 +26,15 @@ if [ -d "$NTDIST" ] ; then
     if [  ! -h WINNT5.0_OPT.OBJ -a ! -d WINNT5.0_OPT.OBJ ] ; then 
         ln -s WINNT4.0_OPT.OBJ WINNT5.0_OPT.OBJ
     fi
+    if [  ! -h WINNT5.1_DBG.OBJ -a ! -d WINNT5.1_DBG.OBJ ] ; then 
+        ln -s WINNT4.0_DBG.OBJ WINNT5.1_DBG.OBJ
+    fi
+    if [  ! -h WINNT5.1_DBG.OBJD -a ! -d WINNT5.1_DBG.OBJD ] ; then 
+        ln -s WINNT4.0_DBG.OBJD WINNT5.1_DBG.OBJD
+    fi
+    if [  ! -h WINNT5.1_OPT.OBJ -a ! -d WINNT5.1_OPT.OBJ ] ; then 
+        ln -s WINNT4.0_OPT.OBJ WINNT5.1_OPT.OBJ
+    fi
     
     if [ $O_DEBUG = ON ] ; then
         tell
