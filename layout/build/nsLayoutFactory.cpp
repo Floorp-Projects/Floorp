@@ -90,7 +90,7 @@ static NS_DEFINE_CID(kTextEncoderCID, NS_TEXT_ENCODER_CID);
 
 static NS_DEFINE_CID(kXBLServiceCID, NS_XBLSERVICE_CID);
 
-extern nsresult NS_NewRangeList(nsIFrameSelection** aResult);
+extern nsresult NS_NewSelection(nsIFrameSelection** aResult);
 extern nsresult NS_NewRange(nsIDOMRange** aResult);
 extern nsresult NS_NewContentIterator(nsIContentIterator** aResult);
 extern nsresult NS_NewContentSubtreeIterator(nsIContentIterator** aResult);
@@ -207,9 +207,9 @@ nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
 #endif
   else if (mClassID.Equals(kFrameSelectionCID)) {
-    res = NS_NewRangeList((nsIFrameSelection**)&inst);
+    res = NS_NewSelection((nsIFrameSelection**)&inst);
     if (NS_FAILED(res)) {
-      LOG_NEW_FAILURE("NS_NewRangeList", res);
+      LOG_NEW_FAILURE("NS_NewSelection", res);
       return res;
     }
   }

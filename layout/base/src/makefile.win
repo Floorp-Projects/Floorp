@@ -58,7 +58,7 @@ CPPSRCS =				\
 	nsStyleSet.cpp			\
 	nsTextFragment.cpp		\
 	nsXIFConverter.cpp		\
-	nsRangeList.cpp			\
+	nsSelection.cpp			\
 	nsLayoutAtoms.cpp		\
 	nsLayoutDebugger.cpp		\
 	nsLayoutUtils.cpp		\
@@ -104,7 +104,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsStyleSet.obj		\
 	.\$(OBJDIR)\nsTextFragment.obj		\
 	.\$(OBJDIR)\nsXIFConverter.obj		\
-	.\$(OBJDIR)\nsRangeList.obj		\
+	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsLayoutAtoms.obj		\
 	.\$(OBJDIR)\nsLayoutDebugger.obj	\
 	.\$(OBJDIR)\nsLayoutUtils.obj	\
