@@ -98,7 +98,8 @@ protected:
     */
   virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
                                                nscoord                  aComputedWidth,
-                                               const nsHTMLReflowState& aReflowState);
+                                               const nsHTMLReflowState& aReflowState,
+                                               float                    aPixelToTwips);
 
 
 };

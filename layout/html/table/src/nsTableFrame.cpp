@@ -263,6 +263,26 @@ nsTableFrame::Destroy(nsIPresContext* aPresContext)
   return nsHTMLContainerFrame::Destroy(aPresContext);
 }
 
+nscoord 
+nsTableFrame::RoundToPixel(nscoord aValue,
+                           float   aPixelToTwips)
+{
+  nscoord halfPixel = NSToCoordRound(aPixelToTwips / 2.0f);
+  nscoord fullPixel = NSToCoordRound(aPixelToTwips);
+  PRInt32 excess = aValue % fullPixel;
+  if (0 == excess) {
+    return aValue;
+  }
+  else {
+    if (excess > halfPixel) {
+      return aValue + (fullPixel - excess);
+    }
+    else {
+      return aValue - excess;
+    }
+  }
+}
+
 // Helper function. It marks the table frame as dirty and generates
 // a reflow command
 nsresult

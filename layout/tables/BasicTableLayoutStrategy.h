@@ -103,7 +103,8 @@ protected:
     */
   virtual PRBool AssignPreliminaryColumnWidths(nsIPresContext*          aPresContext,
                                                nscoord                  aComputedWidth,
-                                               const nsHTMLReflowState& aReflowState);
+                                               const nsHTMLReflowState& aReflowState,
+                                               float                    aPixelToTwips);
 
   /** 
     * Calculate the adjusted widths (min, desired, fixed, or pct) for a cell
@@ -119,7 +120,8 @@ protected:
                             PRInt32           aColIndex,
                             PRInt32           aColSpan,
                             PRBool            aConsiderPct,
-                            nscoord           aPercentBase);
+                            nscoord           aPercentBase,
+                            float             aPixelToTwips);
 
   /** 
     * main helper for above. For min width calculations, it can get called up to
@@ -137,10 +139,12 @@ protected:
                               PRInt32           aColIndex,
                               PRInt32           aColSpan,
                               PRBool            aConsiderPct,
-                              PRInt32           aLimitType);
+                              PRInt32           aLimitType,
+                              float             aPixelToTwips);
 
   nscoord AssignPercentageColumnWidths(nscoord aBasis,
-                                       PRBool  aTableIsAutoWidth);
+                                       PRBool  aTableIsAutoWidth,
+                                       float   aPixelToTwips);
 
   void CalculateTotals(PRInt32& aCellSpacing,
                        PRInt32* aTotalCounts,
@@ -157,11 +161,13 @@ protected:
   void AllocateConstrained(PRInt32  aAvailWidth,
                            PRInt32  aWidthType,
                            PRBool   aStartAtMin,        
-                           PRInt32* aAllocTypes);
+                           PRInt32* aAllocTypes,
+                           float    aPixelToTwips);
 
   void AllocateUnconstrained(PRInt32  aAllocAmount,
                              PRInt32* aAllocTypes,
-                             PRBool   aSkip0Proportional);
+                             PRBool   aSkip0Proportional,
+                             float    aPixelToTwips);
 
   /** return true if the colIndex is in the list of colIndexes */
   virtual PRBool IsColumnInList(const PRInt32 colIndex, 
