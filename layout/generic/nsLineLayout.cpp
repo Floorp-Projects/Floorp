@@ -22,15 +22,20 @@
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
 #include "nsIPresContext.h"
+#include "nsISpaceManager.h"
 #include "nsIPtr.h"
 #include "nsAbsoluteFrame.h"
 #include "nsPlaceholderFrame.h"
+#include "nsCSSLayout.h"
+#include "nsCRT.h"
 
 #undef NOISY_REFLOW
 
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
+static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIStyleContext);
@@ -44,6 +49,8 @@ nsLineData::nsLineData()
   mFirstContentOffset = 0;
   mLastContentOffset = 0;
   mLastContentIsComplete = PR_TRUE;
+  mHasBullet = PR_FALSE;
+  mIsBlock = PR_FALSE;
   mBounds.SetRect(0, 0, 0, 0);
 }
 
@@ -60,34 +67,66 @@ nsLineData::UnlinkLine()
   if (nsnull != prevLine) prevLine->mNextLine = nextLine;
 }
 
-nsresult
-nsLineData::Verify() const
+void
+nsLineData::MoveLineBy(nscoord dx, nscoord dy)
 {
-  NS_ASSERTION(0 != mChildCount, "empty line");
-  NS_ASSERTION(nsnull != mFirstChild, "empty line");
+  nsIFrame* kid = mFirstChild;
+  nsPoint pt;
+  for (PRInt32 i = mChildCount; --i >= 0; ) {
+    kid->GetOrigin(pt);
+    pt.x += dx;
+    pt.y += dy;
+    kid->MoveTo(pt.x, pt.y);
+    kid->GetNextSibling(kid);
+  }
+  mBounds.MoveBy(dx, dy);
+}
 
-  nsIFrame* nextLinesFirstChild = nsnull;
+nsresult
+nsLineData::Verify(PRBool aFinalCheck) const
+{
+  NS_ASSERTION(mNextLine != this, "bad line linkage");
+  NS_ASSERTION(mPrevLine != this, "bad line linkage");
+  if (nsnull != mPrevLine) {
+    NS_ASSERTION(mPrevLine->mNextLine == this, "bad line linkage");
+  }
   if (nsnull != mNextLine) {
-    nextLinesFirstChild = mNextLine->mFirstChild;
+    NS_ASSERTION(mNextLine->mPrevLine == this, "bad line linkage");
   }
 
-  // Check that number of children are ok and that the index in parent
-  // information agrees with the content offsets.
-  PRInt32 offset = mFirstContentOffset;
-  PRInt32 len = 0;
-  nsIFrame* child = mFirstChild;
-  while ((nsnull != child) && (child != nextLinesFirstChild)) {
-    PRInt32 indexInParent;
-    child->GetIndexInParent(indexInParent);
-    NS_ASSERTION(indexInParent == offset, "bad line offsets");
-    len++;
-    if (len != mChildCount) {
-      offset++;
+  if (aFinalCheck) {
+    NS_ASSERTION(0 != mChildCount, "empty line");
+    NS_ASSERTION(nsnull != mFirstChild, "empty line");
+
+    nsIFrame* nextLinesFirstChild = nsnull;
+    if (nsnull != mNextLine) {
+      nextLinesFirstChild = mNextLine->mFirstChild;
     }
-    child->GetNextSibling(child);
+
+
+    // Check that number of children are ok and that the index in parent
+    // information agrees with the content offsets.
+    PRInt32 offset = mFirstContentOffset;
+    PRInt32 len = 0;
+    nsIFrame* child = mFirstChild;
+    if (mHasBullet) {
+      // Skip bullet
+      child->GetNextSibling(child);
+      len++;
+    }
+    while ((nsnull != child) && (child != nextLinesFirstChild)) {
+      PRInt32 indexInParent;
+      child->GetIndexInParent(indexInParent);
+      NS_ASSERTION(indexInParent == offset, "bad line offsets");
+      len++;
+      if (len != mChildCount) {
+        offset++;
+      }
+      child->GetNextSibling(child);
+    }
+    NS_ASSERTION(offset == mLastContentOffset, "bad mLastContentOffset");
+    NS_ASSERTION(len == mChildCount, "bad child count");
   }
-  NS_ASSERTION(offset == mLastContentOffset, "bad mLastContentOffset");
-  NS_ASSERTION(len == mChildCount, "bad child count");
 
   // XXX verify content offsets and mLastContentIsComplete
   return NS_OK;
@@ -155,49 +194,51 @@ nsLineData::List(FILE* out, PRInt32 aIndent) const
 
 //----------------------------------------------------------------------
 
-nsLineLayout::nsLineLayout()
+nsLineLayout::nsLineLayout(nsBlockReflowState& aState)
 {
-  mBlockContent = nsnull;
+  mBlock = aState.mBlock;
+  mSpaceManager = aState.mSpaceManager;
+  mBlock->GetContent(mBlockContent);
+  mPresContext = aState.mPresContext;
+  mBlockIsPseudo = aState.mBlockIsPseudo;
+  mUnconstrainedWidth = aState.mUnconstrainedWidth;
+  mUnconstrainedHeight = aState.mUnconstrainedHeight;
+  mMaxElementSizePointer = aState.mMaxElementSizePointer;
+
+  mAscents = mAscentBuf;
+  mMaxAscents = sizeof(mAscentBuf) / sizeof(mAscentBuf[0]);
 }
 
 nsLineLayout::~nsLineLayout()
 {
   NS_IF_RELEASE(mBlockContent);
+  if (mAscents != mAscentBuf) {
+    delete [] mAscents;
+  }
 }
 
 nsresult
-nsLineLayout::Initialize(nsBlockReflowState& aState,
-                         nsLineData* aLine,
-                         const nsRect& aAvailSpace)
+nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
 {
   nsresult rv = NS_OK;
 
-  mPresContext = aState.mPresContext;
-  mBlock = aState.mBlock;
-  mBlockIsPseudo = aState.mBlockIsPseudo;
-  mBlock->GetContent(mBlockContent);
   mLine = aLine;
   mKidPrevInFlow = nsnull;
   mNewFrames = 0;
   mKidIndex = aLine->mFirstContentOffset;
 
-  mReflowData.mX = aAvailSpace.x;
-  mReflowData.mAvailWidth = aAvailSpace.width;
   mReflowData.mMaxElementSize.width = 0;
   mReflowData.mMaxElementSize.height = 0;
   mReflowData.mMaxAscent = nsnull;
   mReflowData.mMaxDescent = nsnull;
 
-  mUnconstrainedWidth = aState.mUnconstrainedWidth;
-  mUnconstrainedHeight = aState.mUnconstrainedHeight;
-  mY = aState.mY;/* XXX ??? */
-  mLineHeight = 0;
-  mAvailHeight = aState.mAvailHeight;
-  mMaxElementSizePointer = aState.mMaxElementSizePointer;
-  mX0 = aAvailSpace.x;
+  SetReflowSpace(aState.mCurrentBand.availSpace);
+  mY = aState.mY;
+  mMaxHeight = aState.mAvailSize.height;
+  mReflowDataChanged = PR_FALSE;
 
-  mAscents = mAscentBuf;
-  mMaxAscents = sizeof(mAscentBuf) / sizeof(mAscentBuf[0]);
+  mLineHeight = 0;
+  mAscentNum = 0;
 
   mKidFrame = nsnull;
   mPrevKidFrame = nsnull;
@@ -207,8 +248,39 @@ nsLineLayout::Initialize(nsBlockReflowState& aState,
   mWordStartOffset = 0;
 
   mSkipLeadingWhiteSpace = PR_TRUE;
+  mColumn = 0;
 
   return rv;
+}
+
+void
+nsLineLayout::SetReflowSpace(nsRect& aAvailableSpaceRect)
+{
+  mReflowData.mX = aAvailableSpaceRect.x;
+  mReflowData.mAvailWidth = aAvailableSpaceRect.width;
+  mX0 = mReflowData.mX;
+  mMaxWidth = mReflowData.mAvailWidth;
+  mReflowDataChanged = PR_TRUE;
+}
+
+nsresult
+nsLineLayout::AddAscent(nscoord aAscent)
+{
+  if (mAscentNum == mMaxAscents) {
+    mMaxAscents *= 2;
+    nscoord* newAscents = new nscoord[mMaxAscents];
+    if (nsnull != newAscents) {
+      nsCRT::memcpy(newAscents, mAscents, sizeof(nscoord) * mAscentNum);
+      if (mAscents != mAscentBuf) {
+        delete [] mAscents;
+      }
+      mAscents = newAscents;
+    } else {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+  mAscents[mAscentNum++] = aAscent;
+  return NS_OK;
 }
 
 nsIFrame*
@@ -248,7 +320,7 @@ nsLineLayout::WordBreakReflow()
   nsresult rv;
   nsSize kidAvailSize;
   kidAvailSize.width = mReflowData.mAvailWidth;
-  kidAvailSize.height = mAvailHeight;
+  kidAvailSize.height = mMaxHeight;
   if (!mUnconstrainedWidth) {
     nsIStyleContextPtr kidSC;
     rv = frame->GetStyleContext(mPresContext, kidSC.AssignRef());
@@ -271,9 +343,9 @@ nsLineLayout::WordBreakReflow()
   if (nsnull != mMaxElementSizePointer) {
     kidMaxElementSize = &maxElementSize;
   }
-  rv = mBlock->ReflowLineChild(frame, mPresContext, kidSize,
-                               kidAvailSize, kidMaxElementSize,
-                               kidReflowStatus);
+  rv = mBlock->ReflowInlineChild(frame, mPresContext, kidSize,
+                                 kidAvailSize, kidMaxElementSize,
+                                 kidReflowStatus);
 
   return rv;
 }
@@ -316,7 +388,7 @@ nsLineLayout::ReflowChild()
   // Get the available size to reflow the child into
   nsSize kidAvailSize;
   kidAvailSize.width = mReflowData.mAvailWidth;
-  kidAvailSize.height = mAvailHeight;
+  kidAvailSize.height = mMaxHeight;
   nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
     kidSC->GetData(kStyleSpacingSID);
   if (!mUnconstrainedWidth) {
@@ -328,6 +400,7 @@ nsLineLayout::ReflowChild()
   }
 
   // Reflow the child
+  nsRect kidRect;
   nsSize maxElementSize;
   nsReflowMetrics kidSize;
   nsSize* kidMaxElementSize = nsnull;
@@ -336,9 +409,29 @@ nsLineLayout::ReflowChild()
     kidMaxElementSize = &maxElementSize;
   }
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
-  rv = mBlock->ReflowLineChild(mKidFrame, mPresContext, kidSize,
-                               kidAvailSize, kidMaxElementSize,
-                               kidReflowStatus);
+  nscoord dx = mReflowData.mX + kidSpacing->mMargin.left;
+  if (isBlock) {
+    mSpaceManager->Translate(dx, 0);
+    rv = mBlock->ReflowBlockChild(mKidFrame, mPresContext,
+                                  mSpaceManager, kidAvailSize, kidRect,
+                                  kidMaxElementSize, kidReflowStatus);
+    mSpaceManager->Translate(-dx, 0);
+    kidRect.x = dx;
+    kidRect.y = mY;
+    kidSize.width = kidRect.width;
+    kidSize.height = kidRect.height;
+    kidSize.ascent = kidRect.height;
+    kidSize.descent = 0;
+  }
+  else {
+    rv = mBlock->ReflowInlineChild(mKidFrame, mPresContext,
+                                   kidSize, kidAvailSize, kidMaxElementSize,
+                                   kidReflowStatus);
+    kidRect.x = dx;
+    kidRect.y = mY;
+    kidRect.width = kidSize.width;
+    kidRect.height = kidSize.height;
+  }
   if (NS_OK != rv) return rv;
 
   // See if the child fit
@@ -367,27 +460,14 @@ nsLineLayout::ReflowChild()
     }
   }
 
-#if XXX
-  // Now that the child fit, see where to go next
-  switch (mReflowResult) {
-  case NS_LINE_LAYOUT_NOT_AWARE:
-    // The child did not update our reflow state. This means that it's
-    // the kind of child that doesn't interact with us directly which
-    // means we have to treat it carefully. An example of such a child
-    // is an html image.
+  // For non-aware children they act like words which means that space
+  // immediately following them must not be skipped over.
+  if (NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE == mReflowResult) {
     mSkipLeadingWhiteSpace = PR_FALSE;
-    mWordStart = nsnull;
-    break;
   }
-#endif
 
   // Place child
-  nsRect pos;
-  pos.x = mReflowData.mX + kidSpacing->mMargin.left;
-  pos.y = mY;
-  pos.width = kidSize.width;
-  pos.height = kidSize.height;
-  mKidFrame->SetRect(pos);
+  mKidFrame->SetRect(kidRect);
 
   // Advance
   // XXX RTL
@@ -413,14 +493,17 @@ nsLineLayout::ReflowChild()
   if (kidSize.descent > mReflowData.mMaxDescent) {
     mReflowData.mMaxDescent = kidSize.descent;
   }
+  AddAscent(isBlock ? 0 : kidSize.ascent);
+  mLine->mIsBlock = isBlock;
 
   // Set completion status
   mLine->mLastContentOffset = mKidIndex;
   if (nsIFrame::frComplete == kidReflowStatus) {
     mLine->mLastContentIsComplete = PR_TRUE;
-    rv = isBlock
-      ? NS_LINE_LAYOUT_BREAK_AFTER
-      : NS_LINE_LAYOUT_COMPLETE;
+    if (isBlock ||
+        (NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER == mReflowResult)) {
+      rv = NS_LINE_LAYOUT_BREAK_AFTER;
+    }
     mKidPrevInFlow = nsnull;
   }
   else {
@@ -509,7 +592,7 @@ nsLineLayout::SplitLine(PRInt32 aChildReflowStatus, PRInt32 aRemainingKids)
     // to compute them so don't bother.
 #ifdef NS_DEBUG
     to->mLastContentOffset = -1;
-    to->mLastContentIsComplete = PRBool(-1);
+    to->mLastContentIsComplete = PRPackedBool(0x255);
 #endif
 
     from->mChildCount -= aRemainingKids;
@@ -948,7 +1031,12 @@ nsLineLayout::ReflowLine()
   }
 
   // Perform alignment operations
-  AlignChildren();
+  if (mLine->mIsBlock) {
+    mLineHeight = mReflowData.mMaxAscent + mReflowData.mMaxDescent;
+  }
+  else {
+    AlignChildren();
+  }
 
   // Set final bounds of the line
   mLine->mBounds.height = mLineHeight;
@@ -967,9 +1055,37 @@ nsLineLayout::ReflowLine()
 nsresult
 nsLineLayout::AlignChildren()
 {
+  NS_PRECONDITION(mLine->mChildCount == mAscentNum, "bad line reflow");
+
   nsresult rv = NS_OK;
 
-  mLineHeight = mReflowData.mMaxAscent + mReflowData.mMaxDescent;/* XXX */
+  nsIStyleContextPtr blockSC;
+  mBlock->GetStyleContext(mPresContext, blockSC.AssignRef());
+  nsStyleFont* blockFont = (nsStyleFont*)
+    blockSC->GetData(kStyleFontSID);
+  nsStyleText* blockText = (nsStyleText*)
+    blockSC->GetData(kStyleTextSID);
+
+  // First vertically align the children on the line; this will
+  // compute the actual line height for us.
+  mLineHeight =
+    nsCSSLayout::VerticallyAlignChildren(mPresContext, mBlock, blockFont,
+                                         mY,
+                                         mLine->mFirstChild,
+                                         mLine->mChildCount,
+                                         mAscents, mReflowData.mMaxAscent); 
+
+  // Now horizontally place the children
+  nsCSSLayout::HorizontallyPlaceChildren(mPresContext, mBlock, blockText,
+                                         mLine->mFirstChild,
+                                         mLine->mChildCount,
+                                         mReflowData.mX - mX0,
+                                         mMaxWidth);
+
+  // Last, apply relative positioning
+  nsCSSLayout::RelativePositionChildren(mPresContext, mBlock,
+                                        mLine->mFirstChild,
+                                        mLine->mChildCount);
 
   return rv;
 }
