@@ -234,7 +234,7 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
     JSValue rv = r2.toPrimitive(JSValue::Number);
     if (lv.isString() && rv.isString()) {
         // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-        return JSValue();
+        return JSValue(rv.string->compare(*lv.string));
     }
     else {
         lv = lv.toNumber();
@@ -690,7 +690,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
                             if (thisClass && thisClass->hasStatic(*src2(gp))) {
-                                const JSSlot& slot = thisClass->getSlot(*src2(gp));
+                                const JSSlot& slot = thisClass->getStatic(*src2(gp));
                                 (*registers)[dst(gp).first] = (*thisClass)[slot.mIndex];
                             }
                         } else {
@@ -709,7 +709,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                             // REVISIT: should signal error if slot doesn't exist.
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.object);
                             if (thisClass && thisClass->hasStatic(*src1(sp))) {
-                                const JSSlot& slot = thisClass->getSlot(*src1(sp));
+                                const JSSlot& slot = thisClass->getStatic(*src1(sp));
                                 (*thisClass)[slot.mIndex] = (*registers)[src2(sp).first];
                             }
                         } else {

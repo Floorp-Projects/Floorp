@@ -195,14 +195,20 @@ namespace JSClasses {
     public:
         void* operator new(size_t n, JSClass* thisClass)
         {
-            return gc_base::operator new((n - sizeof(JSValue)) + thisClass->getSlotCount() * sizeof(JSValue));
+            uint32 slotCount = thisClass->getSlotCount();
+            if (slotCount > 0) n += sizeof(JSValue) * (slotCount - 1);
+            return gc_base::operator new(n);
         }
         
         JSInstance(JSClass* thisClass)
         {
             mType = thisClass;
-            // initialize all slots with undefined.
-            std::uninitialized_fill(&mSlots[1], &mSlots[0] + thisClass->getSlotCount(), JSTypes::kUndefinedValue);
+            // initialize extra slots with undefined.
+            uint32 slotCount = thisClass->getSlotCount();
+            if (slotCount > 0) {
+                std::uninitialized_fill(&mSlots[1], &mSlots[1] + (slotCount - 1),
+                                        JSTypes::kUndefinedValue);
+            }
             // for grins, use the prototype link to access methods.
             setPrototype(thisClass->getScope());
         }
