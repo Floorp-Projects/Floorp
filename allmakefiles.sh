@@ -34,6 +34,10 @@ add_makefiles() {
   done
 }
 
+if [ -z "${srcdir}" ]; then
+    srcdir=.
+fi
+
 add_makefiles <<END_NGMAKEFILES
 Makefile
 base/Makefile
@@ -337,5 +341,5 @@ END_EDITOR_MAKEFILES
 fi
 
 if [ "$MOZ_MAIL_NEWS" ]; then
-  add_makefiles < mailnews/makefiles
+  add_makefiles < ${srcdir}/mailnews/makefiles
 fi
