@@ -234,7 +234,7 @@ Contributor(s):
          oncommand="return SearchBarPopupCommand(event);"
          onpopupshowing="return SearchBarPopupShowing(event);">
     <menuitem id="miSearchModeFind" type="checkbox"
-              label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;"/>
+              label="&findOnSearchBarCmd.label;" accesskey="&findOnCmd.accesskey;"/>
     <menuseparator/>
 
     <template>
