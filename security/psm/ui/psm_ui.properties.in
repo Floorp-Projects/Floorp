@@ -892,13 +892,16 @@ left1-1_content={leftframework left1-1tabs,info_selected}
 left1-2_type=text/html
 left1-2_content={leftframework left1-2tabs,info_about}
 
+app_does_smime={link_left_tab {text_messenger},2,2}
+app_does_javajs={link_left_tab {text_javajs},2,3}
+
 ;
 ; Applications pane
 ;
 left2-1tabs:
 {select_left_tab {text_navigator}}
-{link_left_tab {text_messenger},2,2}
-{link_left_tab {text_javajs},2,3}
+{_smime_tab}
+{_java_js_tab}
 :left2-1tabs
 left2-2tabs:
 {link_left_tab {text_navigator},2,1}
@@ -919,12 +922,14 @@ left2-2_content={leftframework left2-2tabs,apps_messenger}
 left2-3_type=text/html
 left2-3_content={leftframework left2-3tabs,apps_javajs}
 
+app_uses_others={link_left_tab {text_others},3,2}
+
 ;
 ; Certificates pane
 ;
 left3-1tabs:
 {select_left_tab {text_mine},3,1}
-{link_left_tab {text_others},3,2}
+{_addOthersCerts}
 {link_left_tab {text_websites},3,3}
 {link_left_tab {text_authorities},3,4}
 :left3-1tabs
@@ -4878,6 +4883,7 @@ function checknewpasswordfield()
   if (doCancel) {
     return true;
   }
+  PopUpAlert('in checknewpasswordfield()');
   if (passwordform.oldpassword && passwordform.oldpassword.value == '') {
     PopUpAlert('{supply_current_password}');
     resetForm(passwordform);

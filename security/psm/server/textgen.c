@@ -325,8 +325,6 @@ SSMTextGen_PushStack(SSMTextGenContext *cx,
 void
 SSMTextGen_DestroyContext(SSMTextGenContext *cx)
 {
-    PRInt32 i;
-
     if (cx->m_params)
     {
         char *tmp;
@@ -917,15 +915,14 @@ SSM_FindUTF8StringInBundles(SSMTextGenContext *cx,
                                char **utf8Result)
 {
     SSMStatus rv = SSM_FAILURE;
-    size_t bufSize;
     char *utf8;
 
-	/* Attempt to get the string. */
-	utf8 = nlsGetUTF8String(key);
-	if (utf8) {
-		rv = SSMTextGen_DequotifyString(utf8); /* found it */
-		*utf8Result = utf8;
-	}
+    /* Attempt to get the string. */
+    utf8 = nlsGetUTF8String(key);
+    if (utf8) {
+        rv = SSMTextGen_DequotifyString(utf8); /* found it */
+        *utf8Result = utf8;
+    }
     return rv;
 }
 
@@ -1266,6 +1263,12 @@ void SSM_InitNLS(char *dataDirectory)
                                SSM_DisplayCRLButton);
     SSM_RegisterKeywordHandler("_crlList",
                                SSM_ListCRLs);
+    SSM_RegisterKeywordHandler("_smime_tab",
+                               SSM_LayoutSMIMETab);
+    SSM_RegisterKeywordHandler("_java_js_tab",
+                               SSM_LayoutJavaJSTab);
+    SSM_RegisterKeywordHandler("_addOthersCerts",
+                               SSM_LayoutOthersTab);
 #if 0
     TestNLS();
 #endif

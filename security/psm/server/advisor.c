@@ -76,6 +76,15 @@ SSMStatus SSM_SetSelectedItemInfo(SSMSecurityAdvisorContext* cx);
 #define SSM_MESSAGE_BAD_SIGNED			"sa_message_bad_signed"
 #define SSM_MESSAGE_BAD_ENCRYPTED		"sa_message_bad_encrypted"
 
+/* A list of User agent strings that we know can do S/MIME
+ * and want the Java tab as well.
+ */
+
+#define COMMON_TO_SMIME_AND_JAVA "Mozilla/4.7"
+
+const char *kSMimeApps[]  = {COMMON_TO_SMIME_AND_JAVA, NULL};
+const char *kJavaJSApps[] = {COMMON_TO_SMIME_AND_JAVA, NULL};
+
 char * SSM_ConvertStringToHTMLString(char * string);
 char * SSMUI_GetPKCS12Error(PRIntn error, PRBool isBackup);
 
@@ -3284,4 +3293,39 @@ SSM_ListCRLs(SSMTextGenContext *cx)
     return SSM_SUCCESS;
  loser:
     return SSM_FAILURE;
+}
+
+SSMStatus
+ssm_getStringForAbleAgent(SSMTextGenContext *cx, const char *agents[],
+                          const char *key)
+{
+    int i;
+    SSMStatus rv;
+
+    for (i=0; agents[i] != NULL; i++) {
+        if (PL_strstr(cx->m_request->agent, agents[i]) != NULL) {
+            PR_FREEIF(cx->m_result);
+            rv = SSM_GetAndExpandText(cx, key, &cx->m_result);
+            if (rv != SSM_SUCCESS) {
+                return rv;
+            }
+            break;
+        }
+    }
+    return SSM_SUCCESS;
+}
+
+SSMStatus SSM_LayoutSMIMETab(SSMTextGenContext *cx)
+{
+    return ssm_getStringForAbleAgent(cx, kSMimeApps, "app_does_smime");
+}
+
+SSMStatus SSM_LayoutJavaJSTab(SSMTextGenContext *cx)
+{
+    return ssm_getStringForAbleAgent(cx, kJavaJSApps, "app_does_javajs");
+}
+
+SSMStatus SSM_LayoutOthersTab(SSMTextGenContext *cx)
+{
+    return ssm_getStringForAbleAgent(cx, kSMimeApps, "app_uses_others");
 }
