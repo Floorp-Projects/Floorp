@@ -29,6 +29,7 @@
 #include "mimevcrd.h"
 #include "nsEscape.h"
 #include "nsVCardTransition.h"
+#include "comi18n.h"
 
 
 #include "nsVCard.h"
@@ -970,7 +971,9 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 	char* charset = NULL;
 	char* rsrcString = NULL;
 	char* converted = NULL;
-	PRInt16 fromCharsetID, toCharsetID;
+  PRInt32 converted_length;
+  PRInt32   res;
+	// RICHIE PRInt16 fromCharsetID, toCharsetID;
 
 	if (!obj->options->output_vcard_buttons_p)
 		return status;
@@ -988,50 +991,49 @@ static int OutputButtons(MimeObject *obj, PRBool basic, VObject *v)
 		return MK_OUT_OF_MEMORY;
 
 	/* parse a content type for the charset */
-	fromCharsetID = INTL_CharSetNameToID(INTL_ResourceCharSet());
 	charset = PL_strstr(obj->content_type, "charset=");
-	toCharsetID = (charset != NULL) ? INTL_CharSetNameToID(charset+8) : INTL_DocToWinCharSetID(fromCharsetID);
-	
+
+  if (!charset)
+    charset = "ISO-8859-1";
+
 	if (basic)
 	{
 		rsrcString = XP_GetString(MK_ADDR_VIEW_COMPLETE_VCARD);
-		/* convert from the resource charset. */
-		converted = (fromCharsetID != toCharsetID) ?
-			(char *) INTL_ConvertLineWithoutAutoDetect(
-						fromCharsetID, toCharsetID, (unsigned char *) rsrcString, (PRUint32) PL_strlen(rsrcString)) : rsrcString;
-		if (converted == NULL)
+		// convert from the resource charset. 
+    res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+                              &converted, &converted_length);
+    if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
-	
-		htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showAdvanced%d();\\\"></INPUT></FORM>", 
-			converted, s_unique);
+
+    htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showAdvanced%d();\\\"></INPUT></FORM>", 
+			                        converted, s_unique);
 	}
 	else 
 	{
 		rsrcString = XP_GetString(MK_ADDR_VIEW_CONDENSED_VCARD);
-		converted = (fromCharsetID != toCharsetID) ?
-			(char *) INTL_ConvertLineWithoutAutoDetect(
-						fromCharsetID, toCharsetID, (unsigned char *) rsrcString, (PRUint32) PL_strlen(rsrcString)) : rsrcString;
-		if (converted == NULL)
+    res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+                              &converted, &converted_length);
+    if ( (res != 0) || (converted == NULL) )
 			converted = rsrcString;
 
 		htmlLine1 = PR_smprintf ("<FORM name=form1><INPUT type=reset value=\\\"%s\\\" onClick=\\\"showBasic%d();\\\"></INPUT></FORM>", 
 			converted, s_unique);
 	}
+
 	if (converted != rsrcString)
 		PR_FREEIF(converted);
 
 	rsrcString = XP_GetString(MK_MSG_ADD_TO_ADDR_BOOK);
-	converted = (fromCharsetID != toCharsetID) ?
-		(char *) INTL_ConvertLineWithoutAutoDetect(
-					fromCharsetID, toCharsetID, (unsigned char *) rsrcString, (PRUint32) PL_strlen(rsrcString)) : rsrcString;
-	if (converted == NULL)
+
+  res = MIME_ConvertCharset(charset, "UTF-8", rsrcString, PL_strlen(rsrcString), 
+                            &converted, &converted_length);
+  if ( (res != 0) || (converted == NULL) )
 		converted = rsrcString;
 
 	htmlLine2 = PR_smprintf ("<FORM name=form1 METHOD=get ACTION=\"addbook:add\"><INPUT TYPE=hidden name=vcard VALUE=\"%s\"><INPUT type=submit value=\"%s\"></INPUT></FORM>",
 		vEscCard, converted);
 	if (converted != rsrcString)
 		PR_FREEIF(converted);
-
 
 	if (!htmlLine1 && !htmlLine2)
 	{
@@ -1746,23 +1748,40 @@ static int WriteOutVCardProperties (MimeObject *obj, VObject* v, int* numEmail)
 
 static int WriteLineToStream (MimeObject *obj, const char *line)
 {
-	int status = 0;
-	char *htmlLine;
-	int htmlLen = PL_strlen(line) + PL_strlen("<DT></DT>") + 1;;
+	int     status = 0;
+	char    *htmlLine;
+	int     htmlLen ;
+  char    *charset = PL_strstr(obj->content_type, "charset=");
+  char    *converted = NULL;
+  PRInt32 converted_length;
+  PRInt32 res;
+
+  // convert from the resource charset. 
+  if (!charset)
+    charset = "ISO-8859-1";
+  res = MIME_ConvertCharset(charset, "UTF-8", line, PL_strlen(line), 
+                            &converted, &converted_length);
+  if ( (res != 0) || (converted == NULL) )
+    converted = (char *)line;
+  else
+    converted[converted_length] = '\0';
+
+  htmlLen = PL_strlen(converted) + PL_strlen("<DT></DT>") + 1;;
 
 	htmlLine = (char *) PR_MALLOC (htmlLen);
 	if (htmlLine)
 	{
-		htmlLine[0] = '\0';
-		PL_strcat (htmlLine, "<DT>");
-		PL_strcat (htmlLine, line);
-                PL_strcat (htmlLine, "</DT>");
-	        status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
-		PR_Free ((void*) htmlLine);
+    htmlLine[0] = '\0';
+    PL_strcat (htmlLine, "<DT>");
+    PL_strcat (htmlLine, converted);
+    PL_strcat (htmlLine, "</DT>");
+    status = COM_MimeObject_write(obj, htmlLine, PL_strlen(htmlLine), PR_TRUE);
+    PR_Free ((void*) htmlLine);
 	}
 	else
 		status = MK_OUT_OF_MEMORY;
 
+  PR_FREEIF(converted);
 	return status;
 }
 
@@ -1785,4 +1804,42 @@ static int WriteValue (MimeObject *obj, const char *value)
 	return status;
 }
 
+/* Strip CR+LF+<whitespace> runs within (original).
+   Since the string at (original) can only shrink,
+   this conversion is done in place. (original)
+   is returned. */
+extern "C" char *
+MIME_StripContinuations(char *original)
+{
+	char *p1, *p2;
+
+	/* If we were given a null string, return it as is */
+	if (!original) return NULL;
+
+	/* Start source and dest pointers at the beginning */
+	p1 = p2 = original;
+
+	while(*p2)
+	{
+		/* p2 runs ahead at (CR and/or LF) + <space> */
+		if ((p2[0] == CR) || (p2[0] == LF))
+		{
+			/* move past (CR and/or LF) + whitespace following */	
+			do
+			{
+				p2++;
+			}
+			while((*p2 == CR) || (*p2 == LF) || IS_SPACE(*p2));
+
+			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
+		}
+
+		/* Copy the next non-linebreaking char */
+		*p1 = *p2;
+		p1++; p2++;
+	}
+	*p1 = '\0';
+
+	return original;
+}
 

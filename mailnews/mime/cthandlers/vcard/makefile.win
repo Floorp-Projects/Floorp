@@ -57,7 +57,6 @@ OBJS=						\
 		.\$(OBJDIR)\nsVCard.obj		\
 		.\$(OBJDIR)\nsVCardObj.obj	\
 		.\$(OBJDIR)\nsVCardTransition.obj	\
-		.\$(OBJDIR)\oldi18n.obj		\
 		.\$(OBJDIR)\comi18n.obj		\
 		.\$(OBJDIR)\nsVCardFactory.obj	\
 		.\$(OBJDIR)\nsMimeContentTypeHandler.obj	\
@@ -111,6 +110,7 @@ LINCS=$(LINCS)  -I.             \
 			   -I$(PUBLIC)\raptor		\
 			   -I$(PUBLIC)\mime		\
 			   -I$(PUBLIC)\mailnews		\
+			   -I$(PUBLIC)\uconv		\
 			   -I..\..\src 			\
 			   $(NULL)
 

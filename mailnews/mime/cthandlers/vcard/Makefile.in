@@ -39,10 +39,6 @@ CPPSRCS = \
 		nsMimeContentTypeHandler.cpp	\
 		$(NULL)
 
-CSRCS = \
-		oldi18n.c      	\
-		$(NULL)
-
 EXTRA_DSO_LDOPTS = \
 	$(NSPR_LIBS)	\
 	-L$(DIST)/bin	\
