@@ -180,6 +180,7 @@ public:
   void DumpStyleSheets(FILE *out = stdout);
   void DumpStyleContexts(FILE *out = stdout);
   void DumpReflowStats(FILE *out = stdout);
+  void DisplayReflowStats(PRBool aIsOn);
   void ToggleFrameBorders();
   void ToggleVisualEventDebugging();
   void ToggleBoolPrefAndRefresh(const char * aPrefName);
