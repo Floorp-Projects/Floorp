@@ -4099,6 +4099,21 @@ nsEventStateManager::ContentRemoved(nsIContent* aContent)
     NS_RELEASE(mCurrentFocus);
   }
 
+  if (aContent == mHoverContent) {
+    // Since hover is hierarchical, set the current hover to the
+    // content's parent node.
+    NS_RELEASE(mHoverContent);
+    aContent->GetParent(mHoverContent);
+  }
+
+  if (aContent == mActiveContent) {
+    NS_RELEASE(mActiveContent);
+  }
+
+  if (aContent == mDragOverContent) {
+    NS_RELEASE(mDragOverContent);
+  }
+
   return NS_OK;
 }
 
