@@ -77,6 +77,7 @@ public:
                            nsIContent* aContent,
                            nsIFrame*   aParent);
 
+  // nsISupports
   NS_IMETHOD  QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   // Overloaded new operator. Initializes the memory to 0
@@ -84,6 +85,7 @@ public:
 
   NS_IMETHOD  DeleteFrame();
 
+  // nsIFrame
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
   NS_IMETHOD  GetContentIndex(PRInt32& aIndexInParent) const;
 
@@ -131,7 +133,7 @@ public:
   NS_IMETHOD  GetFrameState(nsFrameState& aResult);
   NS_IMETHOD  SetFrameState(nsFrameState aNewState);
 
-  // Resize reflow methods
+  // Reflow methods
   NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
   NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
                         nsDidReflowStatus aStatus);
@@ -207,6 +209,10 @@ public:
   // Sibling pointer used to link together frames
   NS_IMETHOD  GetNextSibling(nsIFrame*& aNextSibling) const;
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
+
+  // Invalidate part of the frame by asking the view manager to repaint.
+  // aDamageRect is in the frame's local coordinate space
+  void        Invalidate(const nsRect& aDamageRect) const;
 
   // Debugging
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0) const;
