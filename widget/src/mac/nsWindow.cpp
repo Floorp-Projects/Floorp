@@ -399,11 +399,12 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 
 	if (aRealEvent && theEvent->what != nullEvent ) {
 
-		WindowPtr window = (WindowPtr) GetNativeData(NS_NATIVE_DISPLAY),
-		          rollupWindow = gRollupWidget ? (WindowPtr) gRollupWidget->GetNativeData(NS_NATIVE_DISPLAY) : 0;
+		WindowPtr window = (WindowPtr) GetNativeData(NS_NATIVE_DISPLAY);
+		WindowPtr rollupWindow = gRollupWidget ? (WindowPtr) gRollupWidget->GetNativeData(NS_NATIVE_DISPLAY) : nsnull;
 		WindowPtr eventWindow = nsnull;
+		
 		PRInt16 where = ::FindWindow ( theEvent->where, &eventWindow );
-		bool inWindow = eventWindow && (eventWindow == window || eventWindow == rollupWindow);
+		PRBool inWindow = eventWindow && (eventWindow == window || eventWindow == rollupWindow);
 
 		switch ( theEvent->what ) {
 			// is it a mouse event?
@@ -415,10 +416,23 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 				// (note we also let some events questionable for modal dialogs pass through.
 				// but it makes sense that the draggability et.al. of a modal window should
 				// be controlled by whether the window has a drag bar).
-				if ( inWindow &&
-				     ( where == inContent || where == inDrag || where == inGrow ||
-				       where == inGoAway || where == inZoomIn || where == inZoomOut ))
+				if (inWindow) {
+				     if ( where == inContent || where == inDrag   || where == inGrow ||
+				          where == inGoAway  || where == inZoomIn || where == inZoomOut )
 					*aForWindow = PR_TRUE;
+				}
+				else      // we're in another window.
+				{
+				  // let's handle dragging of background windows here
+				  if (eventWindow && (where == inDrag) && (theEvent->modifiers & cmdKey))
+				  {
+    				Rect screenRect;
+    				::GetRegionBounds(::GetGrayRgn(), &screenRect);
+				    ::DragWindow(eventWindow, theEvent->where, &screenRect);
+				  }
+				  
+  				*aForWindow = PR_FALSE;
+				}
 				break;
 			case keyDown:
 			case keyUp:
