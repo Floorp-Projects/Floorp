@@ -131,8 +131,7 @@ PR_END_MACRO
 
 #else
 
-#define MOZ_REG_CTOR(_type,_counter)
-#define MOZ_DECL_CTOR_(type)
+#define MOZ_DECL_CTOR(_type)
 #define MOZ_CTOR(_type)
 #define MOZ_DTOR(_type)
 
