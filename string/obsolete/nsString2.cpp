@@ -108,7 +108,7 @@ void Subsume(nsStr& aDest,nsStr& aSource){
       aDest.mCharSize=aSource.mCharSize;
       aDest.mCapacity=aSource.mCapacity;
       aDest.mOwnsBuffer=aSource.mOwnsBuffer;
-      aSource.mOwnsBuffer=false;
+      aSource.mOwnsBuffer=PR_FALSE;
       aSource.mStr=0;
     }
     else{
