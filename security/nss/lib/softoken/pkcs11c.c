@@ -363,30 +363,17 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 	}
 	/* get the key type */
 	att = pk11_FindAttribute(key,CKA_KEY_TYPE);
-	PORT_Assert(att != NULL);
-	size = sizeof(CK_KEY_TYPE);
-	if (att->attrib.ulValueLen < size) {
-	    CK_KEY_TYPE kt;
-	    int i;
-	    int shift;
-#ifdef IS_LITTLE_ENDIAN
-	    shift = 0;
-#else
-	    shift = (att->attrib.ulValueLen - 1) * 8;
-#endif
-	    kt = 0;
-	    for (i=att->attrib.ulValueLen - 1; i>=0; i--) {
-		kt |= ((unsigned char *)att->attrib.pValue)[i] << shift;
-#ifdef IS_LITTLE_ENDIAN
-		shift += 8;
-#else
-		shift -= 8;
-#endif
-	    }
-	    *keyTypePtr = kt;
-	} else {
- 	    *keyTypePtr = *((CK_KEY_TYPE *)att->attrib.pValue);
+	if (att == NULL) {
+	    pk11_FreeObject(key);
+	    return CKR_KEY_TYPE_INCONSISTENT;
 	}
+	PORT_Assert(att->attrib.ulValueLen == sizeof(CK_KEY_TYPE));
+	if (att->attrib.ulValueLen != sizeof(CK_KEY_TYPE)) {
+	    pk11_FreeAttribute(att);
+	    pk11_FreeObject(key);
+	    return CKR_ATTRIBUTE_VALUE_INVALID;
+	}
+	PORT_Memcpy(keyTypePtr, att->attrib.pValue, sizeof(CK_KEY_TYPE));
 	pk11_FreeAttribute(att);
 	*keyPtr = key;
     }

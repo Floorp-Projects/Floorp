@@ -688,6 +688,7 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
     int keyTypeLen;
     CK_ULONG keyLen;
     CK_KEY_TYPE keyType;
+    PRUint32 keyTypeStorage;
 
     switch (type) {
     case CKA_PRIVATE:
@@ -732,25 +733,72 @@ pk11_FindSecretKeyAttribute(PK11TokenObject *object, CK_ATTRIBUTE_TYPE type)
 	 * in host order, with any leading zeros stripped off. Only key types
 	 * under 0x1f (AES) were stored. We assume that any values which are
 	 * either 1 byte long (big endian), or have byte[0] between 0 and 
-	 * 0x1f and bytes[1]-bytes[3] equal to '0' (little endian). All other
+	 * 0x7f and bytes[1]-bytes[3] equal to '0' (little endian). All other
 	 * values are assumed to be from the new database, which is always 4
-	 * bytes in host order */
+	 * bytes in network order */
 	keyType=0;
 	keyString = key->u.rsa.coefficient.data;
 	keyTypeLen = key->u.rsa.coefficient.len;
-	/* only length of 1 or 4 are valid */
-	if ((keyTypeLen != sizeof(keyType)) && (keyTypeLen != 1)) {
-	    PORT_SetError(SEC_ERROR_BAD_DATABASE);
-	    return NULL;
+
+
+	/*
+ 	 * Because of various endian and word lengths The database may have
+	 * stored the keyType value in one of the following formats:
+	 *   (kt) <= 0x1f 
+	 *                                   length data
+	 * Big Endian,     pre-3.9, all lengths: 1  (kt)
+	 * Little Endian,  pre-3.9, 32 bits:     4  (kt) 0  0  0
+	 * Little Endian,  pre-3.9, 64 bits:     8  (kt) 0  0  0   0  0  0  0
+	 * All platforms,      3.9, 32 bits:     4    0  0  0 (kt)
+	 * Big Endian,         3.9, 64 bits:     8    0  0  0 (kt) 0  0  0  0
+	 * Little  Endian,     3.9, 64 bits:     8    0  0  0  0   0  0  0 (kt)
+	 * All platforms, >= 3.9.1, all lengths: 4   (a) k1 k2 k3
+	 * where (a) is 0 or >= 0x80. currently (a) can only be 0.
+	 */
+	/*
+ 	 * this key was written on a 64 bit platform with a using NSS 3.9
+	 * or earlier. Reduce the 64 bit possibilities above. We were are
+	 * through, we will only have:
+	 * 
+	 * Big Endian,     pre-3.9, all lengths: 1  (kt)
+	 * Little Endian,  pre-3.9, all lengths: 4  (kt) 0  0  0
+	 * All platforms,      3.9, all lengths: 4    0  0  0 (kt)
+	 * All platforms, => 3.9.1, all lengths: 4   (a) k1 k2 k3
+	 */
+	if (keyTypeLen == 8) {
+	    keyTypeStorage = *(PRUint32 *) keyString;
+	    if (keyTypeStorage == 0) {
+		keyString += sizeof(PRUint32);
+	    }
+	    keyTypeLen = 4;
 	}
-	if ((keyTypeLen == 1)  ||
-	    ((keyString[0] <= 0x1f) && (keyString[1] == 0) && 
-	     (keyString[2] == 0)    && (keyString[3] == 0))) {
-	    keyType = (CK_KEY_TYPE) keyString[0] ;
+	/*
+	 * Now Handle:
+	 *
+	 * All platforms,      3.9, all lengths: 4    0  0  0 (kt)
+	 * All platforms, => 3.9.1, all lengths: 4   (a) k1 k2 k3
+	 *
+	 * NOTE: if  kt == 0 or ak1k2k3 == 0, the test fails and
+	 * we handle it as:
+	 *
+	 * Little Endian,  pre-3.9, all lengths: 4  (kt) 0  0  0
+	 */
+	if (keyTypeLen == sizeof(keyTypeStorage) &&
+	     (((keyString[0] & 0x80) == 0x80) ||
+		!((keyString[1] == 0) && (keyString[2] == 0)
+	   				    && (keyString[3] == 0))) ) {
+	    PORT_Memcpy(&keyTypeStorage, keyString, sizeof(keyTypeStorage));
+	    keyType = (CK_KEY_TYPE) PR_ntohl(keyTypeStorage);
 	} else {
-	    keyType = *(CK_KEY_TYPE *) keyString;
-	    keyType = PR_ntohl(keyType);
-	}
+	/*
+	 * Now Handle:
+	 *
+	 * Big Endian,     pre-3.9, all lengths: 1  (kt)
+	 * Little Endian,  pre-3.9, all lengths: 4  (kt) 0  0  0
+	 *  -- KeyType == 0 all other cases ---: 4    0  0  0  0
+	 */
+	    keyType = (CK_KEY_TYPE) keyString[0] ;
+        }
 	return pk11_NewTokenAttribute(type,&keyType,sizeof(keyType),PR_TRUE);
     case CKA_VALUE:
 	return pk11_NewTokenAttribute(type,key->u.rsa.privateExponent.data,

@@ -2160,6 +2160,7 @@ pk11_mkSecretKeyRep(PK11Object *object)
     NSSLOWKEYPrivateKey *privKey = 0;
     PLArenaPool *arena = 0;
     CK_KEY_TYPE keyType;
+    PRUint32 keyTypeStorage;
     SECItem keyTypeItem;
     CK_RV crv;
     SECStatus rv;
@@ -2212,10 +2213,13 @@ pk11_mkSecretKeyRep(PK11Object *object)
 
     /* Coeficient set to KEY_TYPE */
     crv = pk11_GetULongAttribute(object, CKA_KEY_TYPE, &keyType);
-    if (crv != CKR_OK) goto loser;
-    keyType = PR_htonl(keyType);
-    keyTypeItem.data = (unsigned char *)&keyType;
-    keyTypeItem.len = sizeof (keyType);
+    if (crv != CKR_OK) goto loser; 
+    /* on 64 bit platforms, we still want to store 32 bits of keyType (This is
+     * safe since the PKCS #11 defines for all types are 32 bits or less). */
+    keyTypeStorage = (PRUint32) keyType;
+    keyTypeStorage = PR_htonl(keyTypeStorage);
+    keyTypeItem.data = (unsigned char *)&keyTypeStorage;
+    keyTypeItem.len = sizeof (keyTypeStorage);
     rv = SECITEM_CopyItem(arena, &privKey->u.rsa.coefficient, &keyTypeItem);
     if (rv != SECSuccess) {
 	crv = CKR_HOST_MEMORY;
