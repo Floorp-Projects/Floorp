@@ -309,6 +309,10 @@ RelatedLinksDataSource::QueryInterface(REFNSIID aIID, void** aResult)
 NS_IMETHODIMP
 RelatedLinksDataSource::Init(const char *uri)
 {
+    NS_PRECONDITION(uri != nsnull, "null ptr");
+    if (! uri)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
 	if ((mURI = PL_strdup(uri)) == nsnull)
@@ -332,6 +336,10 @@ RelatedLinksDataSource::Init(const char *uri)
 NS_IMETHODIMP
 RelatedLinksDataSource::GetURI(char **uri)
 {
+    NS_PRECONDITION(uri != nsnull, "null ptr");
+    if (! uri)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
 	if ((*uri = nsXPIDLCString::Copy(mURI)) != nsnull)
@@ -347,9 +355,25 @@ RelatedLinksDataSource::GetSource(nsIRDFResource* property,
                           PRBool tv,
                           nsIRDFResource** source /* out */)
 {
-	nsresult	result = NS_RDF_NO_VALUE;
-	if (mInner)	result = mInner->GetSource(property, target, tv, source);
-	return(result);
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+	if (mInner) {
+        return mInner->GetSource(property, target, tv, source);
+    }
+    else {
+        *source = nsnull;
+        return NS_RDF_NO_VALUE;
+    }
 }
 
 
@@ -360,9 +384,12 @@ RelatedLinksDataSource::GetSources(nsIRDFResource *property,
 			   PRBool tv,
                            nsISimpleEnumerator **sources /* out */)
 {
-	nsresult	result = NS_RDF_NO_VALUE;
-	if (mInner)	result = mInner->GetSources(property, target, tv, sources);
-	return(result);
+	if (mInner)	{
+        return mInner->GetSources(property, target, tv, sources);
+    }
+    else {
+        return NS_NewEmptyEnumerator(sources);
+    }
 }
 
 
@@ -373,6 +400,18 @@ RelatedLinksDataSource::GetTarget(nsIRDFResource *source,
                           PRBool tv,
                           nsIRDFNode **target /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult		rv = NS_RDF_NO_VALUE;
 
 	// we only have positive assertions in the Related Links data source.
@@ -773,6 +812,18 @@ RelatedLinksDataSource::GetTargets(nsIRDFResource *source,
                            PRBool tv,
                            nsISimpleEnumerator **targets /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(targets != nsnull, "null ptr");
+    if (! targets)
+        return NS_ERROR_NULL_POINTER;
+
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the Related Links data source.
@@ -842,7 +893,7 @@ RelatedLinksDataSource::Assert(nsIRDFResource *source,
                        PRBool tv)
 {
 //	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -853,7 +904,7 @@ RelatedLinksDataSource::Unassert(nsIRDFResource *source,
                          nsIRDFNode *target)
 {
 //	PR_ASSERT(0);
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_RDF_ASSERTION_REJECTED;
 }
 
 
@@ -865,6 +916,22 @@ RelatedLinksDataSource::HasAssertion(nsIRDFResource *source,
                              PRBool tv,
                              PRBool *hasAssertion /* out */)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(hasAssertion != nsnull, "null ptr");
+    if (! hasAssertion)
+        return NS_ERROR_NULL_POINTER;
+
 	PRBool			retVal = PR_FALSE;
 	nsresult		rv = NS_OK;
 
@@ -895,9 +962,20 @@ NS_IMETHODIMP
 RelatedLinksDataSource::ArcLabelsIn(nsIRDFNode *node,
                             nsISimpleEnumerator ** labels /* out */)
 {
-	nsresult	result = NS_RDF_NO_VALUE;
-	if (mInner)	result = mInner->ArcLabelsIn(node, labels);
-	return(result);
+    NS_PRECONDITION(node != nsnull, "null ptr");
+    if (! node)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(labels != nsnull, "null ptr");
+    if (! labels)
+        return NS_ERROR_NULL_POINTER;
+
+	if (mInner)	{
+        return mInner->ArcLabelsIn(node, labels);
+    }
+    else {
+        return NS_NewEmptyEnumerator(labels);
+    }
 }
 
 
@@ -906,9 +984,15 @@ NS_IMETHODIMP
 RelatedLinksDataSource::ArcLabelsOut(nsIRDFResource *source,
                              nsISimpleEnumerator **labels /* out */)
 {
-	nsresult		rv = NS_RDF_NO_VALUE;
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
 
-	*labels = nsnull;
+    NS_PRECONDITION(labels != nsnull, "null ptr");
+    if (! labels)
+        return NS_ERROR_NULL_POINTER;
+
+	nsresult rv;
 
 	if (source == kNC_RelatedLinksRoot)
 	{
@@ -940,9 +1024,16 @@ RelatedLinksDataSource::ArcLabelsOut(nsIRDFResource *source,
 NS_IMETHODIMP
 RelatedLinksDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
-	nsresult	result;
-	if (mInner)	result = mInner->GetAllResources(aCursor);
-	return(result);
+    NS_PRECONDITION(aCursor != nsnull, "null ptr");
+    if (! aCursor)
+        return NS_ERROR_NULL_POINTER;
+
+	if (mInner)	{
+        return mInner->GetAllResources(aCursor);
+    }
+    else {
+        return NS_NewEmptyEnumerator(aCursor);
+    }
 }
 
 
@@ -950,6 +1041,13 @@ RelatedLinksDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 NS_IMETHODIMP
 RelatedLinksDataSource::AddObserver(nsIRDFObserver *n)
 {
+    NS_PRECONDITION(n != nsnull, "null ptr");
+    if (! n)
+        return NS_ERROR_NULL_POINTER;
+
+
+    // XXX Ouch! This seems wrong: when is it the case that we don't have an inner?
+
 	nsresult	result = NS_OK;
 	if (mInner)	result = mInner->AddObserver(n);
 
@@ -972,14 +1070,15 @@ RelatedLinksDataSource::RemoveObserver(nsIRDFObserver *n)
 	if (! n)
 		return NS_ERROR_NULL_POINTER;
 
+    // XXX Ouch! This seems wrong: when is it the case that we don't have an inner?
+
 	nsresult	result = NS_OK;
 	if (mInner)	result = mInner->RemoveObserver(n);
 
-//	NS_AUTOLOCK(mLock);
 	if (! mObservers)
 		return NS_OK;
-	mObservers->RemoveElement(n);
 
+	mObservers->RemoveElement(n);
 	return(result);
 }
 
