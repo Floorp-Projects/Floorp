@@ -146,7 +146,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           }
           else
           {
-			      printf("-- Paint cell (%d %d)\n", GetRowIndex(), GetColIndex());
+			      //printf("-- Paint cell (%d %d)\n", GetRowIndex(), GetColIndex());
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                              aDirtyRect, rect, &mBorderEdges, skipSides);
           }
@@ -191,7 +191,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
     {
       PRInt32 colIndex = aColIndex-GetColIndex();
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges.mMaxBorderWidth.top = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.top);
+      mBorderEdges.mMaxBorderWidth.top = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.top);
       break;
     }
 
@@ -199,7 +199,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
     {
       PRInt32 colIndex = aColIndex-GetColIndex();
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
-      mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.bottom);
+      mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.bottom);
       break;
     }
   
@@ -207,7 +207,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
     {
       PRInt32 rowIndex = aRowIndex-GetRowIndex();
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges.mMaxBorderWidth.left = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.left);
+      mBorderEdges.mMaxBorderWidth.left = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.left);
       break;
     }
       
@@ -215,7 +215,7 @@ void nsTableCellFrame::SetBorderEdge(PRUint8       aSide,
     {
       PRInt32 rowIndex = aRowIndex-GetRowIndex();
       border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
-      mBorderEdges.mMaxBorderWidth.right = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.right);
+      mBorderEdges.mMaxBorderWidth.right = PR_MAX(aBorder->mWidth+aOddAmountToAdd, mBorderEdges.mMaxBorderWidth.right);
       break;
     }
   }
