@@ -701,7 +701,7 @@ nsXULOutlinerBuilder::CycleHeader(const PRUnichar* aColID, nsIDOMElement* aEleme
                         childContent->GetTag(*getter_AddRefs(childTag));
                         if (childTag.get() == nsXULAtoms::outlinercol && childContent != header) {
                             childContent->UnsetAttribute(kNameSpaceID_None,
-                                                         nsXULAtoms::sortDirection, false);
+                                                         nsXULAtoms::sortDirection, PR_FALSE);
                         }
                     }
                 }
