@@ -60,7 +60,7 @@
 	<xpbutton halign="center" valign="bottom" label="Print..." weightmajor="0" weightminor="0" miniimage="images/print_mini.gif" fullimage="resource://res/ui/images/print_full.gif" fullhoverimage="resource://res/ui/images/print_hover_full.gif" fullpressedimage="resource://res/ui/images/print_pressed_full.gif"/>
 	<object class="separator" weightmajor="0" weightminor="0"/>
 	<xpbutton halign="right" valign="center" label="GOTO:" weightmajor="0" weightminor="0"/>
-	<object class="editfield" weightmajor="1" weightminor="1" label=""/>
+	<object class="editfield" weightmajor="1" weightminor="1" label="" command="LoadUrl?$label"/>
 	<object class="separator"weightmajor="0" weightminor="0" />
 	<button label="Throbber" weightmajor="0" weightminor="0" miniimage="throbber_mini##.gif" fullimage="throbber_full##.gif" align="right"/>
 </toolbar> 

@@ -100,18 +100,6 @@ CAPIHandle nsCalToolkit::GetCAPIHandle()
   return (mCalendarShell->GetCAPIHandle());
 }
 
-#if 0
-char * nsCalToolkit::GetCAPIServer()
-{
-  return (mCalendarShell->GetCAPIServer());
-}
-
-char * nsCalToolkit::GetCAPIUser()
-{
-  return (mCalendarShell->GetCAPIUser());
-}
-#endif
-
 char * nsCalToolkit::GetCAPIPassword()
 {
   return (mCalendarShell->GetCAPIPassword());

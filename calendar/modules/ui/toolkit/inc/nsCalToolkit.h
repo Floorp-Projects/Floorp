@@ -37,11 +37,6 @@ public:
   NS_IMETHOD_(CAPISession) GetCAPISession();
   NS_IMETHOD_(CAPIHandle) GetCAPIHandle();
 
-#if 0
-  NS_IMETHOD_(char *) GetCAPIServer();
-  NS_IMETHOD_(char *) GetCAPIUser() ;
-#endif
-
   NS_IMETHOD_(char *) GetCAPIPassword() ;
   NS_IMETHOD_(NSCalendar *) GetNSCalendar();
 

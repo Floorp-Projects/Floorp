@@ -76,8 +76,11 @@ public:
 
   NS_IMETHOD ShowDialog(nsIXPFCDialog * aDialog);
 
+  NS_IMETHOD_(nsEventStatus) ProcessCommand(nsIXPFCCommand * aCommand) ;
+
 private:
   NS_METHOD RegisterFactories();
+  NS_METHOD ProcessActionCommand(nsString& aCommand);
 
 public:
   nsICalendarShell * mCalendarShell;

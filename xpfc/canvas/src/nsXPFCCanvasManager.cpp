@@ -400,3 +400,16 @@ nsresult nsXPFCCanvasManager::ResizeReflow(nsIView * aView,
   return NS_OK;
 }
 
+
+
+nsresult nsXPFCCanvasManager::SetWebViewerContainer(nsIWebViewerContainer * aWebViewerContainer)
+{
+  mWebViewerContainer = aWebViewerContainer;
+  return NS_OK;
+}
+
+nsIWebViewerContainer * nsXPFCCanvasManager::GetWebViewerContainer()
+{
+  return(mWebViewerContainer);
+}
+

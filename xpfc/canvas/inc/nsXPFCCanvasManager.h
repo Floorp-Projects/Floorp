@@ -30,6 +30,7 @@
 #include "nsIXPFCCanvasManager.h"
 #include "nsIView.h"
 #include "nsIViewObserver.h"
+#include "nsIWebViewerContainer.h"
 
 class nsXPFCCanvasManager : public nsIXPFCCanvasManager,
                             public nsIViewObserver
@@ -77,6 +78,9 @@ public:
   NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight);
 
 
+  NS_IMETHOD_(nsIWebViewerContainer *) GetWebViewerContainer() ;
+  NS_IMETHOD SetWebViewerContainer(nsIWebViewerContainer * aWebViewerContainer) ;
+
 protected:
   ~nsXPFCCanvasManager();
 
@@ -92,6 +96,7 @@ private:
   nsIXPFCCanvas * mFocusedCanvas;
   nsIXPFCCanvas * mMouseOverCanvas ;
   nsIXPFCCanvas * mPressedCanvas ;
+  nsIWebViewerContainer * mWebViewerContainer;
 
 };
 

@@ -24,6 +24,7 @@
 class nsIXPFCCanvas;
 class nsIView;
 class nsIWidget;
+class nsIWebViewerContainer;
 
 // IID for the nsIXPFCCanvasManager interface
 #define NS_IXPFC_CANVAS_MANAGER_IID   \
@@ -124,6 +125,11 @@ public:
    * @result nsresult, NS_OK if successful
    */
   NS_IMETHOD SetMouseOverCanvas(nsIXPFCCanvas * aCanvas) = 0;
+
+
+  NS_IMETHOD_(nsIWebViewerContainer *) GetWebViewerContainer() = 0;
+  NS_IMETHOD SetWebViewerContainer(nsIWebViewerContainer * aWebViewerContainer) = 0;
+
 
 };
 

@@ -31,6 +31,7 @@
 #include "nsViewsCID.h"
 #include "nsIViewManager.h"
 #include "nsXPFCToolkit.h"
+#include "nsXPFCActionCommand.h"
 
 // XXX: This code should use XML for defining the Root UI. We need to
 //      implement the stream manager first to do this, then lots of
@@ -149,6 +150,8 @@ nsresult nsCalendarContainer::Init(nsIWidget * aParent,
 
   mViewManager->SetFrameRate(25);
 #endif
+
+  gXPFCToolkit->GetCanvasManager()->SetWebViewerContainer((nsIWebViewerContainer *) this);
 
   /*
    * Create the Root UI
@@ -616,5 +619,58 @@ nsresult nsCalendarContainer::RegisterFactories()
   nsRepository::RegisterFactory(kCXPFCActionCommandCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCXPFCCommandServerCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
+  return NS_OK;
+}
+
+
+nsEventStatus nsCalendarContainer::ProcessCommand(nsIXPFCCommand * aCommand)
+{
+  /*
+   * Check to see this is an ActionCommand
+   */
+
+  nsresult res;
+
+  nsXPFCActionCommand * action_command = nsnull;
+
+  static NS_DEFINE_IID(kXPFCActionCommandCID, NS_XPFC_ACTION_COMMAND_CID);                 
+
+  res = aCommand->QueryInterface(kXPFCActionCommandCID,(void**)&action_command);
+
+  if (NS_OK != res)
+    return nsEventStatus_eIgnore;
+  
+
+  /*
+   * Yeah, this is an action command. Do something
+   */
+
+  ProcessActionCommand(action_command->mAction);
+
+  NS_RELEASE(action_command);
+
+  return (nsEventStatus_eIgnore); 
+}
+
+
+nsresult nsCalendarContainer::ProcessActionCommand(nsString& aAction)
+{
+  nsString command ;
+  PRUint32 offset = aAction.Find("?");
+
+  if (offset > 0)
+    aAction.Left(command,offset);
+  else
+    command = aAction;
+
+  if (command.EqualsIgnoreCase("LoadUrl")) 
+  {
+    nsString url ;
+
+    aAction.Mid(url, offset+1, aAction.Length() - offset - 1);
+
+    LoadURL(url, nsnull);
+  }
+  
   return NS_OK;
 }

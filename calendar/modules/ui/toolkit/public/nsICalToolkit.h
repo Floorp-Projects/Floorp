@@ -39,10 +39,6 @@ public:
   NS_IMETHOD Init(nsIApplicationShell * aApplicationShell) = 0;
   NS_IMETHOD_(CAPISession) GetCAPISession() = 0;
   NS_IMETHOD_(CAPIHandle) GetCAPIHandle() = 0;
-#if 0
-  NS_IMETHOD_(char *) GetCAPIServer() = 0;
-  NS_IMETHOD_(char *) GetCAPIUser()  = 0;
-#endif
   NS_IMETHOD_(char *) GetCAPIPassword() = 0 ;
   NS_IMETHOD_(NSCalendar *) GetNSCalendar() = 0;
 
