@@ -20,6 +20,7 @@
 
 #include "nslayout.h"
 class nsString;
+class nsTextFragment;
 
 // IID for the nsITextContent interface
 #define NS_ITEXT_CONTENT_IID \
@@ -31,16 +32,25 @@ class nsString;
  */
 class nsITextContent : public nsISupports {
 public:
-  /*
+  /**
    * Get direct access to the text in the text content.
    */
-  NS_IMETHOD GetText(const PRUnichar*& aBaseResult,
-                     PRInt32& aLengthResult) = 0;
-  /*
+  NS_IMETHOD GetText(const nsTextFragment*& aFragmentsResult,
+                     PRInt32& aNumFragmentsResult) = 0;
+
+  /**
    * Set the text to the given value. If aNotify is PR_TRUE then
    * the document is notified of the content change.
    */
   NS_IMETHOD SetText(const PRUnichar* aBuffer,
+                     PRInt32 aLength,
+                     PRBool aNotify) = 0;
+
+  /**
+   * Set the text to the given value. If aNotify is PR_TRUE then
+   * the document is notified of the content change.
+   */
+  NS_IMETHOD SetText(const char* aBuffer,
                      PRInt32 aLength,
                      PRBool aNotify) = 0;
 };
