@@ -530,7 +530,7 @@ nsBoxToBlockAdaptor::GetMaxSize(nsBoxLayoutState& aState, nsSize& aSize)
   } else {
     mMaxSize.width = NS_INTRINSICSIZE;
     mMaxSize.height = NS_INTRINSICSIZE;
-    nsresult rv = nsBox::GetMaxSize(aState, mMaxSize);
+    nsBox::GetMaxSize(aState, mMaxSize);
   }
 
   aSize = mMaxSize;
@@ -593,7 +593,6 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
    const nsHTMLReflowState* reflowState = aState.GetReflowState();
    nsIPresContext* presContext = aState.GetPresContext();
    nsReflowStatus status = NS_FRAME_COMPLETE;
-   nsSize maxElementSize(0,0);
    nsHTMLReflowMetrics desiredSize(nsnull);
    nsresult rv;
  
@@ -606,8 +605,6 @@ nsBoxToBlockAdaptor::DoLayout(nsBoxLayoutState& aState)
     if (currentSize) {
        desiredSize.maxElementSize = &maxElementSize;
     }
-
-    nscoord origWidth = ourRect.width;
 
      rv = Reflow(aState,
                  presContext, 
@@ -834,6 +831,15 @@ nsBoxToBlockAdaptor::Reflow(nsBoxLayoutState& aState,
     mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+
+    // Save the ascent.  (bug 103925)
+    PRBool isCollapsed = PR_FALSE;
+    IsCollapsed(aState, isCollapsed);
+    if (isCollapsed) {
+      mAscent = 0;
+    } else {
+      mAscent = aDesiredSize.ascent;
+    }
 
     nsFrameState  kidState;
     mFrame->GetFrameState(&kidState);

@@ -1020,7 +1020,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   aDesiredSize.width  = r.width;
   aDesiredSize.height = r.height;
   aDesiredSize.ascent = ascent;
-  aDesiredSize.descent = 0;
+  aDesiredSize.descent = r.height - ascent;
 
   // max sure the max element size reflects
   // our min width
