@@ -68,7 +68,12 @@ endif
 # XCFLAGS may be set in the environment or on the gmake command line
 #
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
-LDFLAGS		= -lm $(XLDFLAGS)
+
+LDFLAGS		= $(XLDFLAGS)
+
+ifndef NO_LIBM
+LDFLAGS += -lm
+endif
 
 #
 # Ask perl what flags it was built with, so we can build js with similar flags

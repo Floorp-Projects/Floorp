@@ -48,7 +48,7 @@
 #include "fdlibm.h"
 
 /* XXX ugly hack to get msvc to link without error. */
-#if _LIB_VERSION == _IEEE_
+#if _LIB_VERSION == _IEEE_ && !defined(RHAPSODY)
    int errno;
 #  define EDOM 0
 #  define ERANGE 0
