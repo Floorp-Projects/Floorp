@@ -964,6 +964,15 @@ Reason: %reason%
   },
 
   {
+   name => 'requirelogin',
+   desc => 'If this option is set, all access to the system beyond the ' .
+           ' front page will require a login. No anonymous users will ' .
+           ' be permitted.',
+   type => 'b',
+   default => '0'
+  },
+
+  {
    name => 'usermatchmode',
    desc => 'Allow match strings to be entered for user names when entering ' .
            'and editing bugs.  <p>' .

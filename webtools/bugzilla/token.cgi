@@ -36,7 +36,7 @@ require "CGI.pl";
 
 # Establish a connection to the database backend.
 ConnectToDatabase();
-quietly_check_login();
+quietly_check_login('permit_anonymous');
 
 # Use the "Token" module that contains functions for doing various
 # token-related tasks.

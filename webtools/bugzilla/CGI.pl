@@ -219,7 +219,14 @@ sub get_netaddr {
     return join(".", unpack("CCCC", pack("N", $addr)));
 }
 
-sub quietly_check_login() {
+my $login_cookie_set = 0;
+# If quietly_check_login is called with no arguments and logins are
+# required, it will prompt for a login.
+sub quietly_check_login {
+    if (Param('requirelogin') && !(@_)) {
+        confirm_login();
+        return;
+    }
     $::disabledreason = '';
     my $userid = 0;
     my $ipaddr = $ENV{'REMOTE_ADDR'};
@@ -561,11 +568,19 @@ sub confirm_login {
 
        $::COOKIE{"Bugzilla_logincookie"} = $logincookie;
        my $cookiepath = Param("cookiepath");
-       print "Set-Cookie: Bugzilla_login= " . url_quote($enteredlogin) . " ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
-       print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       if ($login_cookie_set == 0) {
+           $login_cookie_set = 1;
+           print "Set-Cookie: Bugzilla_login= " . url_quote($enteredlogin) . " ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+           print "Set-Cookie: Bugzilla_logincookie=$logincookie ; path=$cookiepath; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+       }
     }
 
-    $userid = quietly_check_login();
+    # If anonymous logins are disabled, quietly_check_login will force
+    # the user to log in by calling confirm_login() when called by any 
+    # code that does not call it with an argument. When confirm_login
+    # calls quietly_check_login, it must not result in confirm_login
+    # being called back.
+    $userid = quietly_check_login('do_not_recurse_here');
 
     if (!$userid) {
         if ($::disabledreason) {

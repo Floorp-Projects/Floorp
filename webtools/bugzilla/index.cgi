@@ -45,7 +45,7 @@ use vars qw(
 ConnectToDatabase();
 
 # Check whether or not the user is logged in and, if so, set the $::userid 
-quietly_check_login();
+quietly_check_login('permit_anonymous');
 
 ###############################################################################
 # Main Body Execution
