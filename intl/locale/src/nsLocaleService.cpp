@@ -121,7 +121,7 @@ public:
 	NS_IMETHOD GetSystemLocale(nsILocale **_retval);
 	NS_IMETHOD GetApplicationLocale(nsILocale **_retval);
 	NS_IMETHOD GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILocale **_retval);
-
+	NS_IMETHOD GetLocaleComponentForUserAgent(PRUnichar **_retval);
 	//
 	// implementation methods
 	//
@@ -238,6 +238,7 @@ nsLocaleService::nsLocaleService(void)
                 int i;
                 nsString category;
                 nsLocale* resultLocale = new nsLocale();
+				if (resultLocale==NULL) { posixConverter->Release(); return; }
                 for(i=0;i<LocaleListLength;i++) {
                     char* lc_temp = setlocale(posix_locale_category[i],"");
                     category = LocaleList[i];
@@ -482,6 +483,25 @@ nsLocaleService::GetLocaleService(nsILocaleService** localeService)
 	*localeService = gLocaleService;
 	return NS_OK;
 }
+
+nsresult
+nsLocaleService::GetLocaleComponentForUserAgent(PRUnichar **_retval)
+{
+	nsCOMPtr<nsILocale>		system_locale;
+	nsresult				result;
+
+	result = GetSystemLocale(getter_AddRefs(system_locale));
+	if (NS_SUCCEEDED(result))
+	{
+		nsString	lc_messages(NSILOCALE_MESSAGE);
+		result = system_locale->GetCategory(lc_messages.GetUnicode(),_retval);
+		return result;
+	}
+
+	return result;
+}
+
+
 
 nsresult
 NS_NewLocaleService(nsILocaleService** result)
