@@ -167,8 +167,10 @@
 
 <!ENTITY helpMenu.label         "Help"> 
 <!ENTITY helpMenu.accesskey     "H"> 
-<!ENTITY helpMenuWin.label      "?"> 
-<!ENTITY helpMenuWin.accesskey  "?"> 
+<!-- LOCALIZATION NOTE some localizations of Windows (ex:french, german) use "?"
+                       for the help button in the menubar but Gnome does not.   -->
+<!ENTITY helpMenuWin.label      "Help"> 
+<!ENTITY helpMenuWin.accesskey  "H"> 
 
 <!ENTITY releaseCmd.label       "Release Notes">
 <!ENTITY releaseCmd.accesskey       "R">
