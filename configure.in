@@ -108,6 +108,7 @@ dnl Note this case statement doesn't seem to handle [] as part of a regexp
 dnl set the defaults first
 dnl ========================================================
 MKSHLIB='$(LD) $(DSO_LDOPTS)'
+DSO_LDOPTS='-shared -soname $(@:$(OBJDIR)/%.so=%.so)'
 
 dnl now the exceptions
 dnl ========================================================
@@ -117,16 +118,8 @@ case "$target" in
         DSO_LDOPTS='-G -h $(@:$(OBJDIR)/%.so=%.so)' ;;
 
 alpha-*-linux*)
-	CFLAGS="$CFLAGS -mieee"
-        DSO_LDOPTS='-Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
-	MKSHLIB='$(CC) -shared' ;;
+	CFLAGS="$CFLAGS -mieee" ;;
 
-*-linux*)
-        DSO_LDOPTS='-Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
-	MKSHLIB='$(CC) -shared' ;;
-
-*)
-	DSO_LDOPTS='-Bsymbolic -shared' ;;
 esac
 
 dnl Checks for typedefs, structures, and compiler characteristics.
