@@ -376,12 +376,16 @@ void AddToPadding(nsIPresContext* aPresContext, nsStyleUnit aStyleUnit, nscoord 
 NS_METHOD 
 nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
+  if (mIsPseudoFrame) {
+    return NS_OK;
+  }
+
   // marginwidth/marginheight set in the body cancels marginwidth/marginheight set in the 
   // web shell. However, if marginwidth is set in the web shell but marginheight is not set
   // it is as if marginheight were set to 0. The same logic applies when marginheight is
   // set and marginwidth is not set.
       
-  PRInt32 marginWidth, marginHeight;
+  PRInt32 marginWidth = -1, marginHeight = -1;
   
   nsISupports* container;
   aPresContext->GetContainer(&container);
@@ -422,11 +426,10 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
     }
   }
 
-  nsStyleSpacing* spacing = (nsStyleSpacing*)
-    mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
+  nsStyleSpacing* spacing = nsnull;
   nsStyleCoord styleCoord;
-  nscoord coord;
-  if (marginWidth >= 0) {  // add marginwidth to padding
+  if (marginWidth > 0) {  // add marginwidth to padding
+    spacing = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
     AddToPadding(aPresContext, spacing->mPadding.GetLeftUnit(), 
                  marginWidth, PR_FALSE, spacing->mPadding.GetLeft(styleCoord));
     spacing->mPadding.SetLeft(styleCoord);
@@ -434,7 +437,10 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
                  marginWidth, PR_FALSE, spacing->mPadding.GetRight(styleCoord));
     spacing->mPadding.SetRight(styleCoord);
   }
-  if (marginHeight >= 0) { // add marginheight to padding
+  if (marginHeight > 0) { // add marginheight to padding
+    if (nsnull == spacing) {
+      spacing = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
+    }
     AddToPadding(aPresContext, spacing->mPadding.GetTopUnit(), 
                  marginHeight, PR_TRUE, spacing->mPadding.GetTop(styleCoord));
     spacing->mPadding.SetTop(styleCoord);
@@ -443,7 +449,9 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
     spacing->mPadding.SetBottom(styleCoord);
   }
 
-  mStyleContext->RecalcAutomaticData(aPresContext);
+  if (nsnull != spacing) {
+    mStyleContext->RecalcAutomaticData(aPresContext);
+  }
   return NS_OK;
 }
 /////////////////////////////////////////////////////////////////////////////
