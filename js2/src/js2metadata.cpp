@@ -1104,16 +1104,24 @@ namespace MetaData {
         case StmtNode::Function:
             {
                 FunctionStmtNode *f = checked_cast<FunctionStmtNode *>(p);
-                CompilationData *oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
-                env->addFrame(f->function.fWrap->compileFrame);
+                CompilationData *oldData = NULL;
+                try {
+                    oldData = startCompilationUnit(f->function.fWrap->bCon, bCon->mSource, bCon->mSourceLocation);
+                    env->addFrame(f->function.fWrap->compileFrame);
 #ifdef DEBUG
-                bCon->fName = *f->function.name;
+                    bCon->fName = *f->function.name;
 #endif
-                SetupStmt(env, phase, f->function.body);
-                // XXX need to make sure that all paths lead to an exit of some kind
-                bCon->emitOp(eReturnVoid, p->pos);
-                env->removeTopFrame();
-                restoreCompilationUnit(oldData);
+                    SetupStmt(env, phase, f->function.body);
+                    // XXX need to make sure that all paths lead to an exit of some kind
+                    bCon->emitOp(eReturnVoid, p->pos);
+                    env->removeTopFrame();
+                    restoreCompilationUnit(oldData);
+                }
+                catch (Exception &x) {
+                    if (oldData)
+                        restoreCompilationUnit(oldData);
+                    throw x;
+                }
             }
             break;
         case StmtNode::Var:
