@@ -1947,7 +1947,7 @@ function cmdGotoURL(e)
         if (client.host == "Mozilla") {
             window.openNewTabWith(e.url, false, false);
         } else {
-            window.openNewTabWith(e.url);
+            window.openNewTabWith(e.url, null, null, null, null, false);
         }
         return;
     }
