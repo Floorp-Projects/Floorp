@@ -280,13 +280,18 @@ nsresult nsShellInstance::RegisterFactories()
   // register widget classes
   static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
   static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
+  static NS_DEFINE_IID(kCDialogCID, NS_DIALOG_CID);
+  static NS_DEFINE_IID(kCLabelCID, NS_LABEL_CID);
+  static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
   static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
   static NS_DEFINE_IID(kCButtonCID, NS_BUTTON_CID);
+  static NS_DEFINE_IID(kCToolkitCID, NS_TOOLKIT_CID);
   static NS_DEFINE_IID(kCCheckButtonCID, NS_CHECKBUTTON_CID);
   static NS_DEFINE_IID(kCComboBoxCID, NS_COMBOBOX_CID);
   static NS_DEFINE_IID(kCListBoxCID, NS_LISTBOX_CID);
   static NS_DEFINE_IID(kCRadioButtonCID, NS_RADIOBUTTON_CID);
   static NS_DEFINE_IID(kCRadioGroupCID, NS_RADIOGROUP_CID);
+  static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
   static NS_DEFINE_IID(kCHorzScrollbarCID, NS_HORZSCROLLBAR_CID);
   static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
   static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
@@ -343,6 +348,12 @@ nsresult nsShellInstance::RegisterFactories()
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
+
+  nsRepository::RegisterFactory(kLookAndFeelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCDialogCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCLabelCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCAppShellCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
+  nsRepository::RegisterFactory(kCToolkitCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
 
   return NS_OK;
 }
