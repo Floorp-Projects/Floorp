@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.25 2002/08/09 21:53:17 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.26 2002/11/05 00:25:20 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -407,6 +407,7 @@ typedef enum {
     cipher_aes_128,
     cipher_aes_256,
     cipher_missing              /* reserved for no such supported cipher */
+    /* This enum must match ssl3_cipherName[] in ssl3con.c.  */
 } SSL3BulkCipher;
 
 typedef enum { type_stream, type_block } CipherType;

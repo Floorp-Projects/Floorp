@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.42 2002/09/30 20:51:05 wtc%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.43 2002/11/05 00:25:19 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -337,6 +337,8 @@ const char * const ssl3_cipherName[] = {
     "DES-CBC-40",
     "IDEA-CBC",
     "FORTEZZA",
+    "AES-128",
+    "AES-256",
     "missing"
 };
 
