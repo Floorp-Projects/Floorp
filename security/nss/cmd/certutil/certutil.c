@@ -1506,8 +1506,8 @@ AddKeyUsage (void *extHandle)
 	fprintf(stdout, "%-25s 2 - Key encipherment\n", "");
 	fprintf(stdout, "%-25s 3 - Data encipherment\n", "");   
 	fprintf(stdout, "%-25s 4 - Key agreement\n", "");
-	fprintf(stdout, "%-25s 5 - Cert signning key\n", "");   
-	fprintf(stdout, "%-25s 6 - CRL signning key\n", "");
+	fprintf(stdout, "%-25s 5 - Cert signing key\n", "");   
+	fprintf(stdout, "%-25s 6 - CRL signing key\n", "");
 	fprintf(stdout, "%-25s Other to finish\n", "");
 	if (gets (buffer)) {
 	    value = atoi (buffer);
