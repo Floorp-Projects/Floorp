@@ -881,6 +881,7 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
             rv = CreateNewProfile(currProfileName.get(), currProfilePath.get(), nsnull, PR_TRUE);
             if (NS_SUCCEEDED(rv)) {
                 *profileDirSet = PR_TRUE;
+                mCurrentProfileAvailable = PR_TRUE;
                 gProfileDataAccess->SetCurrentProfile(currProfileName.get());
 
                 // Need to load new profile prefs.
