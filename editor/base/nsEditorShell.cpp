@@ -3291,6 +3291,76 @@ nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRIn
   return result;
 }
 
+NS_IMETHODIMP
+nsEditorShell::GetFirstRow(nsIDOMElement *aTableElement, nsIDOMElement **_retval)
+{
+  if (!_retval || !aTableElement)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->GetFirstRow(aTableElement, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetNextRow(nsIDOMElement *aCurrentRow, nsIDOMElement **_retval)
+{
+  if (!_retval || !*_retval || !aCurrentRow)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        if (tableEditor)
+          result = tableEditor->GetNextRow(aCurrentRow, *_retval);
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetSelectedOrParentTableElement(PRUnichar **aTagName, PRBool *aIsSelected, nsIDOMElement **_retval)
+{
+  if (!_retval || !aTagName || !aIsSelected)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult  result = NS_NOINTERFACE;
+  switch (mEditorType)
+  {
+    case eHTMLTextEditorType:
+      {
+        nsCOMPtr<nsITableEditor> tableEditor = do_QueryInterface(mEditor);
+        nsAutoString TagName(*aTagName);
+        if (tableEditor)
+          result = tableEditor->GetSelectedOrParentTableElement(*_retval, TagName, *aIsSelected);
+          // Need an ugly cast to get around "const" return value
+          *aTagName = (PRUnichar*)TagName.GetUnicode();
+      }
+      break;
+    default:
+      result = NS_ERROR_NOT_IMPLEMENTED;
+  }
+  return result;
+}
+
 /* end of table editing */
 
 NS_IMETHODIMP

@@ -420,7 +420,15 @@ function EditorShowClipboard()
 
 function EditorViewSource()
 {
-  window.openDialog( "chrome://editor/content/viewsource.xul", "_blank", "all,dialog=no", window.content.location );
+  // *** THIS IS NOT CORRECT - It simply loads the content from original URL,
+  //     which will now show current editor document changes.
+
+  // Use a browser window to view source
+  window.openDialog( "chrome://navigator/content/",
+                     "_blank",
+                     "chrome,menubar,status,dialog=no,resizable",
+                     window.content.location,
+                     "view-source" );
 }
 
 
@@ -629,6 +637,20 @@ function EditorSelectBackColor(ColorPickerID, ColorWellID)
   EditorSetBackgroundColor(color);
 }
 
+function EditorRemoveTextColor(ColorWellID)
+{
+  //TODO: Set colorwell to browser's default color
+  editorShell.SetTextProperty("font", "color", "");
+  contentWindow.focus();
+}
+
+function EditorRemoveBackColor(ColorWellID)
+{
+  //TODO: Set colorwell to browser's default color
+  editorShell.SetBackgroundColor("");
+  contentWindow.focus();
+}
+
 function EditorSetFontColor(color)
 {
   editorShell.SetTextProperty("font", "color", color);
@@ -731,7 +753,7 @@ function EditorListProperties()
 
 function EditorPageProperties(startTab)
 {
-  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", startTab);
+  window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "", startTab);
   contentWindow.focus();
 }
 
@@ -866,112 +888,6 @@ function EditorIndent(indent)
 {
   dump(indent+"\n");
   editorShell.Indent(indent);
-  contentWindow.focus();
-}
-
-// Call this with insertAllowed = true to allow inserting if not in existing table,
-//   else use false to do nothing if not in a table
-function EditorInsertOrEditTable(insertAllowed)
-{
-  var table = editorShell.GetElementOrParentByTagName("table", null);
-  if (table) {
-    // Edit properties of existing table
-    dump("Existing table found ... Editing its properties\n");
-
-    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "");
-    contentWindow.focus();
-  } else if(insertAllowed) {
-    EditorInsertTable();
-  }
-}
-
-function EditorSelectTable()
-{
-  //TODO: FINISH THIS!
-  contentWindow.focus();
-}
-
-function EditorSelectTableRow()
-{
-  //TODO: FINISH THIS!
-  contentWindow.focus();
-}
-
-function EditorSelectTableColumn()
-{
-  //TODO: FINISH THIS!
-  contentWindow.focus();
-}
-
-function EditorSelectTableCell()
-{
-  //TODO: FINISH THIS!
-  contentWindow.focus();
-}
-
-function EditorInsertTable()
-{
-  // Insert a new table
-  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
-  contentWindow.focus();
-}
-
-function EditorInsertTableCell(after)
-{
-  editorShell.InsertTableCell(1,after);
-  contentWindow.focus();
-}
-
-function EditorInsertTableRow(below)
-{
-  editorShell.InsertTableRow(1,below);
-  contentWindow.focus();
-}
-
-function EditorInsertTableColumn(after)
-{
-  editorShell.InsertTableColumn(1,after);
-  contentWindow.focus();
-}
-
-function JoinTableCells()
-{
-  editorShell.JoinTableCells();
-  contentWindow.focus();
-}
-
-function EditorDeleteTable()
-{
-  editorShell.DeleteTable();
-  contentWindow.focus();
-}
-
-function EditorDeleteTableRow()
-{
-  // TODO: Get the number of rows to delete from the selection
-  editorShell.DeleteTableRow(1);
-  contentWindow.focus();
-}
-
-function EditorDeleteTableColumn()
-{
-  // TODO: Get the number of cols to delete from the selection
-  editorShell.DeleteTableColumn(1);
-  contentWindow.focus();
-}
-
-
-function EditorDeleteTableCell()
-{
-  // TODO: Get the number of cells to delete from the selection
-  editorShell.DeleteTableCell(1);
-  contentWindow.focus();
-}
-
-function EditorDeleteTableCellContents()
-{
-  // TODO: Get the number of cells to delete from the selection
-  editorShell.DeleteTableCellContents();
   contentWindow.focus();
 }
 
@@ -1381,4 +1297,180 @@ function getColorAndSetColorWell(ColorPickerID, ColorWellID)
   }
 
   return color;
+}
+
+// Call this with insertAllowed = true to allow inserting if not in existing table,
+//   else use false to do nothing if not in a table
+function EditorInsertOrEditTable(insertAllowed)
+{
+  var table = editorShell.GetElementOrParentByTagName("table", null);
+  if (table) {
+    // Edit properties of existing table
+    dump("Existing table found ... Editing its properties\n");
+
+    window.openDialog("chrome://editor/content/EdTableProps.xul", "_blank", "chrome,close,titlebar,modal", "");
+    contentWindow.focus();
+  } else if(insertAllowed) {
+    EditorInsertTable();
+  }
+}
+
+function GetChildOffset(parent,child)
+{
+  if (!parent || !child)
+    return null;
+  
+  var nodeList = parent.childNodes;
+  var i;
+  if (nodeList)
+  {
+    for ( i = 0; i<nodeList.length; i++)
+    {
+      if (nodeList.item(i) == child)
+        return i;
+    }
+  }
+  return null;
+}
+
+function AppendNodeToSelection(selection, node)
+{
+  if (selection && node)
+  {
+    var parent = node.parentNode;
+    var offset = GetChildOffset(parent,node);
+    if (offset)
+    {
+      var range = editorShell.editorDocument.createRange();
+      if (range)
+      {
+        range.setStart(parent,offset);
+        range.setEnd(parent,offset+1);
+        selection.addRange(range);
+      }
+    }
+  }
+}
+
+function EditorSelectTableCell()
+{
+  var selection = editorShell.editorSelection;
+  if (selection)
+  {
+    var cellNode = editorShell.GetElementOrParentByTagName("td",selection.anchorNode);
+    if (cellNode)
+    {
+      selection.clearSelection();
+      AppendNodeToSelection(selection, cellNode);
+    }  
+  }
+  contentWindow.focus();
+}
+
+function EditorSelectTable()
+{
+  var selection = editorShell.editorSelection;
+  if (selection)
+  {
+    var tableNode = editorShell.GetElementOrParentByTagName("table",selection.anchorNode);
+    if (tableNode)
+    {
+      selection.clearSelection();
+      AppendNodeToSelection(selection, tableNode);
+    }  
+  }
+  contentWindow.focus();
+}
+
+function EditorSelectTableRow()
+{
+  var tagNameObj = new Object();
+  var isSelectedObj = new Object();
+  var tagName;
+  var isSelected;
+  var tableElement = editorShell.GetSelectedOrParentTableElement(tagNameObj,isSelectedObj);
+  tagName = tagNameObj.value;
+  isSelected = isSelectedObj.value;
+dump("Table element="+tableElement+" Tagname="+tagName+" IsSelected="+isSelected+"\n");
+
+  //TODO: FINISH THIS!
+  contentWindow.focus();
+}
+
+function EditorSelectTableColumn()
+{
+  //TODO: FINISH THIS!
+  contentWindow.focus();
+}
+
+function EditorInsertTable()
+{
+  // Insert a new table
+  window.openDialog("chrome://editor/content/EdInsertTable.xul", "_blank", "chrome,close,titlebar,modal", "");
+  contentWindow.focus();
+}
+
+function EditorInsertTableCell(after)
+{
+  editorShell.InsertTableCell(1,after);
+  contentWindow.focus();
+}
+
+function EditorInsertTableRow(below)
+{
+  editorShell.InsertTableRow(1,below);
+  contentWindow.focus();
+}
+
+function EditorInsertTableColumn(after)
+{
+  editorShell.InsertTableColumn(1,after);
+  contentWindow.focus();
+}
+
+function EditorNormalizeTable()
+{
+  editorShell.NormalizeTable(null);
+  contentWindow.focus();
+}
+
+function EditorJoinTableCells()
+{
+  editorShell.JoinTableCells();
+  contentWindow.focus();
+}
+
+function EditorDeleteTable()
+{
+  editorShell.DeleteTable();
+  contentWindow.focus();
+}
+
+function EditorDeleteTableRow()
+{
+  // TODO: Get the number of rows to delete from the selection
+  editorShell.DeleteTableRow(1);
+  contentWindow.focus();
+}
+
+function EditorDeleteTableColumn()
+{
+  // TODO: Get the number of cols to delete from the selection
+  editorShell.DeleteTableColumn(1);
+  contentWindow.focus();
+}
+
+
+function EditorDeleteTableCell()
+{
+  // TODO: Get the number of cells to delete from the selection
+  editorShell.DeleteTableCell(1);
+  contentWindow.focus();
+}
+
+function EditorDeleteTableCellContents()
+{
+  // TODO: Get the number of cells to delete from the selection
+  editorShell.DeleteTableCellContents();
+  contentWindow.focus();
 }

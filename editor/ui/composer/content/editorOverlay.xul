@@ -486,8 +486,6 @@
           accesskey="&formatstylesheetmenu.accesskey;"
           position="13">
     <menupopup>
-      <menuitem value="&stylesheetEditorOneCmd.label;"     accesskey="&sseditor1.accesskey;"     oncommand="EditorApplyStyleSheet('chrome://editor/content/EditorStyles1.css')"/>
-      <menuseparator />
       <menuitem value="&stylesheetOldstyleCmd.label;"      accesskey="&ssoldstyle.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
       <menuitem value="&stylesheetModernistCmd.label;"     accesskey="&ssmodernist.accesskey;"   oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
       <menuitem value="&stylesheetMidnightCmd.label;"      accesskey="&ssmidnight.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Midnight')"/>
@@ -527,14 +525,14 @@
               position="19"/>
     <menuitem id="colorsAndBackground" value="&colorsAndBackground.label;"
               accesskey="&colorsandbackground.accesskey;"
-              oncommand="EditorPageProperties('1')"
+              oncommand="EditorPageProperties('ColorTab')"
               position="20"/>
     <!-- Merge page property items here -->
   </menupopup>
 
   <menuitem id="pageProperties" value="&pageProperties.label;"
             accesskey="&pageproperties.accesskey;"
-            oncommand="EditorPageProperties('0')"/>
+            oncommand="EditorPageProperties('GeneralTab')"/>
 
   <menu id="tableMenu" value="&tableMenu.label;" accesskey="&tablemenu.accesskey;">
   <menupopup>
@@ -570,6 +568,7 @@
     </menupopup>
     </menu>
     <menuseparator />
+    <menuitem id="tableFixupMenuitem"      value="&tableFixup.label;"     accesskey="&tablefixup.accesskey;"   oncommand="EditorNormalizeTable()"/>
     <menuitem id="tableJoinCellsMenuitem"  value="&tableJoinCells.label;" accesskey="&tablejoin.accesskey;"    oncommand="EditorJoinTableCells()"/>
     <menuitem id="tablePropertiesMenuitem" value="&properties.label;"     accesskey="&properties.accesskey;"   oncommand="EditorInsertOrEditTable(false)"/>
   </menupopup>
@@ -579,6 +578,7 @@
       <html:div id="TextColorCaption" class="color-caption" align="center">&textColorCaption.label;</html:div>
   		<!-- TODO: Add "Last color picked" button and text -->
       <colorpicker id="TextColorPicker" palettename="standard" onclick="EditorSelectTextColor('TextColorPicker','TextColorPopupButton'); parentNode.closePopup();"/>
+      <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveTextColor('TextColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 
     <popup id="BackColorPopup"  popupanchor="bottomleft">
@@ -586,6 +586,7 @@
   		<!-- TODO: Add "Last color picked" button and text -->
       <html:div id="BackColorCaption" class="color-caption" align="center">Background Color</html:div>
   		<colorpicker id="BackColorPicker" palettename="standard" onclick="EditorSelectBackColor('BackColorPicker','BackColorPopupButton'); parentNode.closePopup();"/>
+      <titledbutton class="push" value="&formatToolbar.colorPicker.default.label;" onclick="EditorRemoveBackColor('BackColorPopupButton'); parentNode.closePopup();"/>
     </popup>
 
     <menupopup id="AlignmentPopup">

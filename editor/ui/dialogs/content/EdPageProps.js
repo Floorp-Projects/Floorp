@@ -20,11 +20,10 @@
  * Contributor(s): 
  */
 
-var textColor;
-var linkColor;
-var followedLinkColor;
-var activeLinkColor;
-var backgroundColor;
+var tabPanel;
+var currentTab;
+var colorPage;
+var colorIndex = 0;
 
 //Cancel() is in EdDialogCommon.js
 // dialog initialization code
@@ -33,10 +32,54 @@ function Startup()
   if (!InitEditorShell())
     return;
 
+  colorPage = new Object;
+  if (!colorPage)
+  {
+    dump("Failed to create colorPage object!!!\n");
+    window.close();
+  }
+
+  colorPage.ColorPreview = document.getElementById("ColorPreview");
+  colorPage.NormalText = document.getElementById("NormalText");
+  colorPage.LinkText = document.getElementById("LinkText");
+  colorPage.ActiveLinkText = document.getElementById("ActiveLinkText");
+  colorPage.FollowedLinkText = document.getElementById("FollowedLinkText");
+
+//  colorPage. = documentgetElementById("");
+
+  tabPanel = document.getElementById("tabPanel");
+
+  // Set the starting Tab:
+  var tabName = window.arguments[1];
+  currentTab = document.getElementById(tabName);
+  if (!currentTab)
+    currentTab = document.getElementById("GeneralTab");
+
+  if (!tabPanel || !currentTab)
+  {
+    dump("Not all dialog controls were found!!!\n");
+    window.close;
+  }
+
+  // Trigger setting of style for the selected tab widget
+  currentTab.setAttribute("selected", "true");
+  // Activate the corresponding panel
+  var index = 0;
+  switch(tabName)
+  {
+    case "ColorTab":
+      index = 1;
+      break;
+    case "MetaTab":
+      index = 2;
+      break;
+  }
+  tabPanel.setAttribute("index",index);
+
   doSetOKCancel(onOK, null);
 
-  initDialog();
-  
+  InitDialog();
+
   //.focus();
 }
 
@@ -44,27 +87,45 @@ function InitDialog()
 {
 }
 
-function getColor(ColorPickerID, ColorWellID)
+function GetColor(ColorPickerID, ColorWellID)
 {
   var color = getColorAndSetColorWell(ColorPickerID, ColorWellID);
+dump("GetColor, color="+color+"\n");
+  if (!color)
+  {
+    // No color was clicked on,
+    //  so user clicked on "Don't Specify Color" button
+    color = "inherit";
+    dump("Don't specify color\n");
+  }
+  var colorString = "color:"+color;
   switch( ColorPickerID )
   {
     case "textCP":
-      textColor = color;
+      colorPage.textColor = color;
+      colorPage.NormalText.setAttribute("style",colorString);
       break;
     case "linkCP":
-      linkColor = color;
+      colorPage.linkColor = color;
+      colorPage.LinkText.setAttribute("style",colorString);
       break;
     case "followedCP":
-      followedLinkColor = color;
+      colorPage.followedLinkColor = color;
+      colorPage.FollowedLinkText.setAttribute("style",colorString);
       break;
     case "activeCP":
-      activeLinkColor = color;
+      colorPage.activeLinkColor = color;
+      colorPage.ActiveLinkText.setAttribute("style",colorString);
       break;
     case "backgroundCP":
-      backgroundColor = color;
+      colorPage.backgroundColor = color;
+      colorPage.ColorPreview.setAttribute("bgcolor",color);
       break;
   }
+}
+
+function RemoveColor(ColorWellID)
+{
 }
 
 function onOK()

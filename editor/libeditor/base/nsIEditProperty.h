@@ -109,6 +109,7 @@ public:
   static nsIAtom *caption;   
   static nsIAtom *col;       
   static nsIAtom *colgroup;  
+  static nsIAtom *tbody;     
   static nsIAtom *thead;     
   static nsIAtom *tfoot;     
   static nsIAtom *li;        

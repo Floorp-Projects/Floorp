@@ -2758,6 +2758,7 @@ nsEditor::IsNodeBlock(nsIDOMNode *aNode, PRBool &aIsBlock)
           tagAtom==nsIEditProperty::caption    ||
           tagAtom==nsIEditProperty::col        ||
           tagAtom==nsIEditProperty::colgroup   ||
+          tagAtom==nsIEditProperty::tbody      ||
           tagAtom==nsIEditProperty::thead      ||
           tagAtom==nsIEditProperty::tfoot      ||
           tagAtom==nsIEditProperty::li         ||
