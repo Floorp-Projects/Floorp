@@ -93,7 +93,7 @@ Go back to the Error Log</a>
 
 <form action='addnote.cgi' METHOD='post'>
 
-<br>Your email address: <INPUT Type='input' name='who' size=10><BR>
+<br>Your email address: <INPUT Type='input' name='who' size=32><BR>
 <TEXTAREA NAME=note ROWS=10 COLS=30 WRAP=HARD>
 </textarea>
 <INPUT Type='hidden' name='buildname' value='${buildname}'>
