@@ -47,8 +47,12 @@
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIInterfaceRequestor.h"
 
-#include "nsDSURIContentListener.h"
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
+
+
+// Local Includes
+#include "nsDSURIContentListener.h"
+#include "nsDSWebProgressListener.h"
 
 // Interfaces Needed
 #include "nsISupportsArray.h"
@@ -81,6 +85,7 @@ class nsDocShell : public nsIDocShell,
                    public nsIScriptGlobalObjectOwner
 {
 friend class nsDSURIContentListener;
+friend class nsDSWebProgressListener;
 
 public:
    NS_DECL_ISUPPORTS
@@ -157,6 +162,19 @@ protected:
    NS_IMETHOD AddToGlobalHistory(nsIURI* aURI);
    NS_IMETHOD UpdateCurrentGlobalHistory();
 
+   // WebProgressListener Management
+   NS_IMETHOD EnsureWebProgressListener();
+
+   NS_IMETHOD FireOnProgressChange(nsIChannel* aChannel, 
+      PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, 
+      PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress);
+   NS_IMETHOD FireOnChildProgressChange(nsIChannel* aChannel,
+      PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress);
+   NS_IMETHOD FireOnStatusChange(nsIChannel* aChannel, PRInt32 aProgressStatusFlags);
+   NS_IMETHOD FireOnChildStatusChange(nsIChannel* aChannel, 
+      PRInt32 aProgressStatusFlags);
+   NS_IMETHOD FireOnLocationChange(nsIURI* aURI);
+
    // Helper Routines
    nsDocShellInitInfo* InitInfo();
    NS_IMETHOD GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
@@ -217,6 +235,7 @@ protected:
    For that reasons don't use nsCOMPtr.*/
    nsIDocShellTreeItem*       mParent;  // Weak Reference
    nsIDocShellTreeOwner*      mTreeOwner; // Weak Reference
+   nsIWebProgressListener*    mOwnerProgressListener; // Weak Reference
    nsIChromeEventHandler*     mChromeEventHandler; //Weak Reference
 };
 
