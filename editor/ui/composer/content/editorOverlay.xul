@@ -545,7 +545,7 @@
     <!-- Stylesheet submenu -->
     <menu id="stylesheetMenu" value="&stylesheetMenu.label;"
           accesskey="&formatstylesheetmenu.accesskey;"
-          position="14" hidden="true" disabled="true">
+          position="14">
     <menupopup>
       <menuitem value="&stylesheetOldstyleCmd.label;"      accesskey="&ssoldstyle.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
       <menuitem value="&stylesheetModernistCmd.label;"     accesskey="&ssmodernist.accesskey;"   oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
