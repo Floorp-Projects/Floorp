@@ -147,6 +147,7 @@ sub gcc_parser {
       unless(defined($dir = $file_hash_ref->{$filename})) {
         $dir = '[no_match]';
       }
+      warn "Did not find $cvsroot/$tree/$builddir/$filename,v\n" if $dir =~ /multiple/;
     }
     my $file = "$dir/$filename";
 
