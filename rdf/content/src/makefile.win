@@ -37,6 +37,9 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
         -I$(DEPTH)\rdf\base\src  \
+!if 0   # XXX need to link against layout.dll for this
+        -I$(DEPTH)\layout\html\base\src \
+!endif
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
