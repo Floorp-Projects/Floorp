@@ -954,13 +954,13 @@ export:: $(EXPORTS) $(PUBLIC)
 endif 
 
 ################################################################################
-# Copy each element of PREF_JS_EXPORTS to $(DIST)/bin/components
+# Copy each element of PREF_JS_EXPORTS to $(DIST)/bin/defaults/pref
 
 ifneq ($(PREF_JS_EXPORTS),)
-$(DIST)/bin/components::
+$(DIST)/bin/defaults/pref::
 	@if test ! -d $@; then echo Creating $@; rm -rf $@; $(NSINSTALL) -D $@; else true; fi
 
-export:: $(PREF_JS_EXPORTS) $(DIST)/bin/components
+export:: $(PREF_JS_EXPORTS) $(DIST)/bin/defaults/pref
 	$(INSTALL) -m 444 $^
 endif 
 
