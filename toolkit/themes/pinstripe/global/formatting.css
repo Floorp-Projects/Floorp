@@ -1,0 +1,259 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* inset areas */
+
+.inset
+  {
+    border-left           : 1px solid ThreeDShadow;
+    border-top            : 1px solid ThreeDShadow;
+    border-right          : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDHighlight;
+    margin                : 0px 5px 5px 5px;
+  }
+  
+.box-inset {
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: #EEEEEE;
+  color: -moz-DialogText;
+}  
+  
+/* formatting */
+.groove-top
+  {
+    border-top            : 2px groove ThreeDFace;  
+  }
+  
+.groove-right
+  {
+    border-right          : 2px groove ThreeDFace;
+  }
+  
+.groove-left
+  {
+    border-left           : 2px groove ThreeDFace;
+  }
+  
+.groove-bottom
+  {
+    border-bottom         : 2px groove ThreeDFace;
+  }
+  
+.outset
+  {
+    border-left           : 1px solid ThreeDHighlight;
+    border-top            : 1px solid ThreeDHighlight;
+    border-right          : 1px solid ThreeDShadow;
+    border-bottom         : 1px solid ThreeDShadow;
+  }
+  
+.outset-top-bottom
+  {
+    border-top            : 1px solid ThreeDHighlight;
+    border-bottom         : 1px solid ThreeDShadow;
+  }   
+
+
+  
+/** separator rules **/
+/* standard separators */
+  separator, separator[orient="horizontal"] 
+    {
+      height: 1.5em;
+    }
+  
+  separator[orient="vertical"] 
+    {
+      width: 1.5em;
+    }
+
+/* thinner separators (50% size) */
+  separator.thin, separator.thin[orient="horizontal"] 
+    {
+      height: 0.5em;
+    }
+  
+  separator.thin[orient="vertical"] 
+    {
+      width: 0.5em;
+    }
+
+/* groove separators (50% size) */
+  separator.groove,
+  separator.groove[orient="horizontal"] 
+    {
+      border-top: 1px solid #A3A3A3;
+      height: 0px;
+      margin-top: 0.4em;
+      margin-bottom: 0.4em;
+    }
+  
+  separator.groove[orient="vertical"] 
+    {
+      border-left: 1px solid #A3A3A3;
+      margin-left: 0.4em;
+      margin-right: 0.4em;
+    }
+  
+/* groove separators (0 padding, for dividing effects) */  
+  separator.groove-thin 
+    {
+      border-top: 1px solid #A3A3A3;
+      height: 0px;
+    }
+  
+  separator[orient="vertical"].groove-thin 
+    {
+      border-left: 1px solid #A3A3A3;
+    }
+
+/** text formatting rules **/
+/* label (with margins) */
+
+/** Reduced Margin for some UI **/
+  .small-margin
+    {
+      margin              : 1px 2px 1px 2px;
+    }
+    
+  .plain 
+    {
+      margin: 0px !important;
+      border: none;
+      padding: 0px;
+    }
+
+  label[disabled="true"] 
+    {
+      color                 : GrayText;
+    }    
+
+  description, label
+    {
+      cursor              : default;
+    }
+
+  label
+    {
+      margin              : 1px 5px 2px 6px;
+    }
+
+  .header 
+    {
+
+	margin-bottom: 6px;
+	font-weight: bold;
+    }
+
+  .larger-text 
+    {
+      font-size           : larger;
+    }
+
+  .smaller-text 
+    {
+      font-size           : smaller;
+    }
+   
+  .monospace
+    {
+      font-family         : monospace;
+    }
+    
+  .indent
+    {
+      margin-left         : 23px;
+    }
+
+  .box-padded
+    {
+      padding             : 5px;
+    }    
+
+  .spaced
+    {
+      margin              : 3px 5px 4px 5px;
+    }    
+
+  .wizard-box
+    {
+      padding             : 20px 44px 10px 44px;
+    }    
+
+/* Double Border Boxes */
+
+  /* top only */
+  .double-box-top
+    {
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#double-box");
+      border-top          : 1px solid ThreeDShadow;
+      background-color    : #FFFFFF;
+      margin              : 0px;
+    }
+  
+  .double-box-top > .db-internal-box
+    {
+      border-top          : 1px solid ThreeDDarkShadow;
+    }          
+    
+  /* all round */    
+  .double-box
+    {
+      -moz-binding          : url("chrome://global/skin/classicBindings.xml#double-box");
+      border-left           : 1px solid ThreeDShadow;
+      border-top            : 1px solid ThreeDShadow;
+      border-bottom         : 1px solid ThreeDHighlight;
+      border-right          : 1px solid ThreeDHighlight;
+      background-color      : #FFFFFF;
+      margin                : 0px;
+    }
+  
+  .double-box > .db-internal-box
+    {
+      border                : 1px solid ThreeDDarkShadow;
+    }   
+
+  .caption-text
+    {
+      margin: 0px 2px 0px 1px !important;
+    }
+
+#commonDialog > hbox > vbox > description, #commonDialog > hbox > vbox > vbox > description {
+	font: menu;
+	font-weight: bold !important;
+        line-height: 16px;
+	margin-bottom: 6px;
+}
+
+
+/* class for text with a 'link' appearance */
+  .text-link
+    {
+      color                 : blue;
+      text-decoration       : underline;
+    }
+  
+  .text-link:focus
+    {
+      color                 : red;
+      -moz-outline: 1px dotted invert;
+    }
+
+  .text-link:hover
+    {
+      cursor                : pointer;
+    } 
+  
+  .text-link:hover:active
+    {
+      color                 : red;
+    } 
+
+  .text-link[visited="true"]
+    {
+      color                 : purple;
+    }

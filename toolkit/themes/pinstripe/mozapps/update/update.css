@@ -1,0 +1,79 @@
+/* Found Updates */
+
+#foundList {
+  -moz-appearance: listbox;
+  margin: 10px 4px 10px 4px;
+}
+
+updateitem {
+  padding: 5px 0px 5px 5px;
+  border-bottom: 1px dotted #C0C0C0;
+  margin-bottom: 5px;
+}
+
+.warning {
+  font-weight: bold;
+}
+
+.updateItemIcon {
+  width: 32px;
+  height: 32px;
+  max-width: 32px !important;
+  max-height: 32px !important;
+  margin-right: 5px;
+}
+
+.updateItemName {
+  font-weight: bold;
+}
+
+.updateItemNameRow {
+  padding-bottom: 3px;
+}
+
+.updateItemURL {
+  -moz-appearance: none;
+  border: none;
+  background-color: Window;
+}
+
+.updateItemFromLabel {
+  padding-top: 2px;
+}
+
+.updateItemIcon {
+  list-style-image: url("chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png");
+}
+
+.updateItemChecked {
+  margin: 20px 0px 3px 0px;
+  padding: 0px;
+}
+
+.updateItemChecked .checkbox-label-box {
+  display: none;
+}
+
+/* Update Wizard */
+#alert {
+  list-style-image: url("chrome://mozapps/skin/update/warning.gif"); 
+}
+
+/* Inline Update Notifications */
+.updateIndicator[updateCount="0"] {
+  visibility: hidden;
+}
+
+.updateIcon {
+  width: 16px;
+  height: 16px;
+}
+.updateIcon[severity="0"] {
+  background-color: #00FF00;
+}
+.updateIcon[severity="1"] {
+  background-color: #0000FF;
+}
+.updateIcon[severity="2"] {
+  background-color: #FF0000;
+}

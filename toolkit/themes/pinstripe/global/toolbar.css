@@ -1,0 +1,139 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *   Kevin Gerich (webmail@kmgerich.com)
+ */
+
+/* ===== toolbar.css ====================================================
+  == Styles used by XUL toolbar-related elements.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: toolbox ::::: */
+
+toolbox {
+  -moz-appearance: toolbar !important;
+}
+
+/* ::::: toolbar & menubar ::::: */
+
+toolbar,
+toolbarpalette,
+menubar {
+  min-width: 1px;
+  min-height: 20px !important;
+  color: #000000;
+  border-bottom: 1px solid #a3a3a3;
+  background: url("chrome://global/skin/toolbar/toolbar-pinstripe-overlay.png") repeat;
+}
+
+
+.toolbar-holder {
+ min-width: 1px;
+}  
+
+/* ::::: toolbarseparator ::::: */
+
+toolbarseparator {
+  -moz-appearance       : none;
+  margin: 3px 4px 3px 4px;
+  background: url("chrome://global/skin/toolbar/toolbar-separator.png") transparent repeat-y;
+  
+  padding: 0px;
+  width: 1px !important;
+}
+
+.toolbar-primary {
+	min-height: 24px !important;
+}
+
+
+/* ::::: toolbarpaletteitem ::::: */
+
+toolbarpaletteitem {
+  cursor: -moz-grab;
+}
+
+toolbar[iconsize="small"] toolbarpaletteitem[type="spacer"] {
+	min-width: 24px !important;
+}
+
+toolbarpaletteitem[type="spacer"] {
+	min-width: 32px !important;
+}
+
+.toolbarpaletteitem-box[type="spacer"] {
+  border: 1px solid #A3A3A3;
+  background: url("chrome://global/skin/10pct_transparent_grey.png") repeat;
+  height: 32px !important;
+  width: 32px !important;
+  margin-top: 18px;
+}
+
+.toolbarpaletteitem-box[type="spring"] {
+  border: 1px solid #A3A3A3;
+  background: url("chrome://global/skin/toolbar/spring.gif") #FFFFFF no-repeat;
+  height: 32px !important;
+  width: 32px !important;
+  margin-top: 18px;
+}
+
+.toolbarpaletteitem-box[type="spring"][place="toolbar"] {
+  border: 1px solid #A3A3A3;
+  background: url("chrome://global/skin/10pct_transparent_grey.png") repeat;
+}
+
+.toolbarpaletteitem-box[type="spacer"][place="toolbar"],
+.toolbarpaletteitem-box[type="spring"][place="toolbar"] {
+  margin: 2px;
+}
+
+.toolbarpaletteitem-box[type="separator"][place="palette"] {
+  width: 2px;
+  height: 50px;
+}
+
+.toolbarpaletteitem-box[type="spacer"][place="palette"],
+.toolbarpaletteitem-box[type="spring"][place="palette"] {
+  margin-bottom: 2px;
+  width: 50px;
+  height: 50px;
+}
+
+/* ..... drag and drop feedback ..... */
+
+toolbarpaletteitem[dragover="left"] {
+  border-left-color: #000000;
+}
+
+toolbarpaletteitem[dragover="right"] {
+  border-right-color: #000000;
+}
+
+toolbar[iconsize="small"] toolbarspacer {
+	min-width: 24px !important;
+}
+
+toolbarspacer {
+	min-width: 32px !important;
+}
+

@@ -1,0 +1,63 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+
+wizard {
+	padding: 14px;
+}
+
+#header { 
+	display: inline !important;
+}
+.wizard-header {
+	-moz-appearance: dialog;
+}
+
+.wizard-header-box-1 {
+  color: #000000;
+}
+
+.wizard-header-box-text {
+  padding: 6px 10px 6px 10px;
+  font: menu;
+  font-weight: bold;
+}
+
+.wizard-header-label {
+  margin-left: 23px;
+  font-weight: bold;
+}
+
+.wizard-header-box-icon {
+  margin: 3px 20 0 3px;
+}
+
+.wizard-header-icon {
+  list-style-image: inherit;
+}
+
+.wizard-page-box {
+  padding: 15px 23px;
+    -moz-appearance: dialog;
+}
+
+.wizard-buttons-separator {
+  margin: 0 !important;
+  border-bottom: 1px solid #FFFFFF !important;
+}
+
+.wizard-buttons-btm {
+  padding: 3px 6px 6px 6px;
+}
+
+.wizard-label-box {
+  border: 1px solid #777777;
+  padding: 0 6px;
+  background-color: #BBBBBB;
+  font-weight: bold;
+}
+
+.wizard-button {
+  font: menu !important;
+}
+
+
