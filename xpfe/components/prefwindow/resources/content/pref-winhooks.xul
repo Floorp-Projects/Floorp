@@ -102,6 +102,13 @@
             <treeitem>
                 <treerow>
                     <treecell>
+                        <checkbox id="isHandlingXHTML" label="&xhtml.label;" accesskey="&xhtml.accesskey;" allowevents="true"/>
+                    </treecell>
+                </treerow>
+            </treeitem>
+            <treeitem>
+                <treerow>
+                    <treecell>
                         <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>

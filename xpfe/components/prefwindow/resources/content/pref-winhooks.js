@@ -43,6 +43,7 @@ if ( !( "winHooks" in parent ) ) {
                                  "isHandlingBMP",
                                  "isHandlingICO",
                                  "isHandlingXML",
+                                 "isHandlingXHTML",
                                  "isHandlingXUL",
                                  "isHandlingHTTP",
                                  "isHandlingHTTPS",

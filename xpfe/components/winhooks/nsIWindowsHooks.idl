@@ -135,6 +135,7 @@ interface nsIWindowsHooksSettings : nsISupports {
     attribute boolean isHandlingBMP;
     attribute boolean isHandlingICO;
     attribute boolean isHandlingXML;
+    attribute boolean isHandlingXHTML;
     attribute boolean isHandlingXUL;
 
     // Nag dialog flag.  Set this so that dialog
