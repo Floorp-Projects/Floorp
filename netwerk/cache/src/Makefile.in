@@ -53,10 +53,7 @@ CPPSRCS		= \
 
 include $(topsrcdir)/config/config.mk
 
-EXTRA_LIBS	+= \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
-		$(NULL)
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 #EXTRA_LIBS	= $(NSPR_LIBS)
 
