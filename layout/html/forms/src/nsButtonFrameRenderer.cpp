@@ -340,14 +340,12 @@ nsButtonFrameRenderer::ReResolveStyles(nsIPresContext* aPresContext)
 
 
   // style for the inner such as a dotted line (Windows)
-  nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(":-moz-focus-inner"));
-  aPresContext->ProbePseudoStyleContextFor(content, atom, context,
+  aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozFocusInnerPseudo, context,
                                           PR_FALSE,
                                           getter_AddRefs(mInnerFocusStyle));
 
   // style for outer focus like a ridged border (MAC).
-  atom = getter_AddRefs(NS_NewAtom(":-moz-focus-outer"));
-  aPresContext->ProbePseudoStyleContextFor(content, atom, context,
+  aPresContext->ProbePseudoStyleContextFor(content, nsHTMLAtoms::mozFocusOuterPseudo, context,
                                           PR_FALSE,
                                           getter_AddRefs(mOuterFocusStyle));
 
