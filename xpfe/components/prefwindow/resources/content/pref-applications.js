@@ -9,6 +9,7 @@ function newType()
   if (gNewTypeRV) {
     //gTree.builder.rebuild();
     gTree.setAttribute("ref", "urn:mimetypes");
+    selectApplication();
     gNewTypeRV = null;
   }
 }
@@ -29,6 +30,7 @@ function editType()
     var uri = gTree.selectedItems[0].id;
     var handlerOverride = new HandlerOverride(uri);
     window.openDialog("chrome://communicator/content/pref/pref-applications-edit.xul", "appEdit", "chrome,modal=yes,resizable=no", handlerOverride);
+    selectApplication();
   }
 }
 
@@ -39,6 +41,8 @@ var gBundle = null;
 var gExtensionField = null;
 var gMIMETypeField  = null;
 var gHandlerField   = null;
+var gEditButton     = null;
+var gRemoveButton   = null;
 
 function Startup()
 {
@@ -50,6 +54,8 @@ function Startup()
   gExtensionField = document.getElementById("extension");        
   gMIMETypeField  = document.getElementById("mimeType");
   gHandlerField   = document.getElementById("handler");
+  gEditButton     = document.getElementById("editButton");
+  gRemoveButton   = document.getElementById("removeButton");
 
   const mimeTypes = 66638;
   var fileLocator = Components.classes["component://netscape/filelocator"].getService();
@@ -83,6 +89,15 @@ function selectApplication()
     else 
       gHandlerField.setAttribute("value", handlerOverride.appDisplayName);
 
+    if (handlerOverride.isEditable == "false") {
+      gEditButton.setAttribute("disabled", "true");
+      gRemoveButton.setAttribute("disabled", "true");
+    }
+    else {
+      gEditButton.removeAttribute("disabled");
+      gRemoveButton.removeAttribute("disabled");
+    }
+      
     delete handlerOverride;
   }
 } 

@@ -164,11 +164,15 @@ function onOK()
   
   // now save the information
   var handlerInfo = new HandlerOverride(MIME_URI(gMIMEField.value));
+  handlerInfo.mUpdateMode = mimeHandlerExists(gMIMEField.value);
   handlerInfo.mimeType = gMIMEField.value;
 
   // other info we need to set (not reflected in UI)
-  if (gHandlerGroup.data == "2")
+  if (gHandlerGroup.data == "2") {
     handlerInfo.appPath = gAppPath.value;
+    handlerInfo.setHandlerProcedure("saveToDisk", "false");
+    handlerInfo.setHandlerProcedure("handleInternal", "false");
+  }
   else if (gHandlerGroup.data == "1")
     handlerInfo.saveToDisk = true;
   else
