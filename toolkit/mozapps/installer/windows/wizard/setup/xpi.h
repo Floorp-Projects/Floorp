@@ -27,7 +27,7 @@
 
 HRESULT         InitializeXPIStub(char *xpinstallPath);
 HRESULT         DeInitializeXPIStub(void);
-HRESULT         SmartUpdateJars(void);
+HRESULT         SmartUpdateJars(HWND aWizardPanel);
 void            cbXPIStart(const char *, const char *UIName);
 void            cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max);
 void            cbXPIFinal(const char *, PRInt32 finalStatus);

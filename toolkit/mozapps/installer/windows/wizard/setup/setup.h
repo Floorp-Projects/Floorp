@@ -269,6 +269,7 @@ typedef int PRInt32;
 #define SIC_IGNORE_XPINSTALL_ERROR      0x00000200
 #define SIC_UNCOMPRESS                  0x00000400
 #define SIC_SUPERSEDE                   0x00000800
+#define SIC_MAIN_COMPONENT              0x00001000
 
 /* AC: Additional Components */
 #define AC_NONE                         0
@@ -634,6 +635,10 @@ typedef struct dlgInstall
   char szBrowse_[MAX_BUF];
   char szDownloadSize[MAX_BUF];
   char szCurrentSettings[MAX_BUF];
+  char szInstallFolder[MAX_BUF];
+  char szPrimCompNoOthers[MAX_BUF];
+  char szPrimCompOthers[MAX_BUF];
+  char szAddtlCompWrapper[MAX_BUF];
   char szInstall_[MAX_BUF];
   char szDelete_[MAX_BUF];
   char szContinue_[MAX_BUF];

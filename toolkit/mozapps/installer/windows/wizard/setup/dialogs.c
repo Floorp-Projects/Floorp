@@ -57,7 +57,6 @@ const int DownloadDlgItemList[] = {IDPAUSE,
                                    IDC_STATUS_STATUS,
                                    IDC_STATIC2,
                                    IDC_STATUS_FILE,
-                                   IDC_GAUGE_FILE,
                                    IDC_PERCENTAGE,
                                    IDC_STATIC4,
                                    IDC_STATUS_TO,
@@ -71,9 +70,7 @@ const int DownloadDlgItemList[] = {IDPAUSE,
  * in the dialog is hidden.
 */
 const int InstallProgressDlgItemList[] = {IDC_STATUS0,
-                                          IDC_GAUGE_ARCHIVE,
                                           IDC_STATUS3,
-                                          IDC_GAUGE_FILE,
                                           -2};  /* -1 is used by IDC_STATIC.  Even though
                                                  * there shouldn't be any IDC_STATIC in
                                                  * list, we shouldn't use it.
@@ -374,6 +371,7 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 {
   HWND    hRadioSt0, hStaticSt0, hRadioSt1, hStaticSt1;
   LPNMHDR notifyMessage;
+  BOOL    skipNext = FALSE;
 
   hRadioSt0   = GetDlgItem(hDlg, IDC_RADIO_ST0);
   hStaticSt0  = GetDlgItem(hDlg, IDC_STATIC_ST0_DESCRIPTION);
@@ -441,13 +439,22 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
       SiCNodeSetItemsSelected(dwSetupType);
 
       dwTempSetupType = dwSetupType;
+
+      // If the user has selected "Standard" (easy install) no further data 
+      // collection is required, go right to the end. 
+      if (notifyMessage->code == PSN_WIZNEXT && 
+          dwSetupType == ST_RADIO0) {
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_START_INSTALL);
+        skipNext = TRUE;
+      }
+      
       break;
     }
 
     break;
   }
 
-  return 0;
+  return skipNext;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -489,6 +496,8 @@ void BrowseForDirectory(HWND hParent)
       SetDlgItemText(hParent, IDC_EDIT_DESTINATION, szBuf);
 
       SetCurrentDirectory(currDir);
+
+      lstrcpy(sgProduct.szPath, currDir);
     }
 
 #if 0
@@ -615,6 +624,91 @@ LRESULT CALLBACK DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LO
   }
 
   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: UPGRADE CONFIRMATION
+//
+
+LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  char buf[MAX_BUF];
+
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+
+      GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
+          buf, sizeof(buf), szFileIniInstall);
+      SetWindowText(hDlg, buf);
+
+      GetPrivateProfileString("Strings", "Message Cleanup On Upgrade", "",
+          buf, sizeof(buf), szFileIniConfig);
+      ReplacePrivateProfileStrCR(buf);
+      SetDlgItemText(hDlg, IDC_MESSAGE0, buf);
+
+      GetPrivateProfileString("Strings", "Cleanup On Upgrade Path Box String", "",
+          buf, sizeof(buf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_STATIC, buf);
+
+      MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
+      RemoveBackSlash(buf);
+      SetDlgItemText(hDlg, IDC_DELETE_PATH, buf);
+
+      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+
+      SetDlgItemText(hDlg, IDCONTINUE, sgInstallGui.szContinue_);
+      SetDlgItemText(hDlg, IDSKIP, sgInstallGui.szSkip_);
+      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
+      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDC_DELETE_PATH, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDCONTINUE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDSKIP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        case IDCONTINUE:
+          /* If the installation path happens to be within the %windir%, then
+           * show error message and continue without removing the previous
+           * installation path. */
+          if(IsPathWithinWindir(sgProduct.szPath))
+          {
+            GetPrivateProfileString("Strings", "Message Cleanup On Upgrade Windir", "",
+                buf, sizeof(buf), szFileIniConfig);
+            MessageBox(hWndMain, buf, NULL, MB_ICONEXCLAMATION);
+          }
+          else
+            /* set the var to delete target path here */
+            sgProduct.doCleanupOnUpgrade = TRUE;
+
+          SiCNodeSetItemsSelected(dwSetupType);
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          break;
+
+        case IDSKIP:
+          sgProduct.doCleanupOnUpgrade = FALSE;
+          SiCNodeSetItemsSelected(dwSetupType);
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          break;
+
+        case IDWIZBACK:
+          SaveWindowPosition(hDlg);
+          DestroyWindow(hDlg);
+          break;
+
+        default:
+          break;
+      }
+      break;
+  }
+  return(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -980,8 +1074,253 @@ LRESULT CALLBACK DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LON
   return 0;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: SUMMARY
+//
 
+BOOL IsSelectableComponent(siC* aComponent)
+{
+  return !(aComponent->dwAttributes & SIC_INVISIBLE) && 
+         !(aComponent->dwAttributes & SIC_ADDITIONAL);
+}
 
+LRESULT CALLBACK DlgProcSummary(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  HWND hInstallFolder;
+  LPSTR szMessage = NULL;
+  LPNMHDR notifyMessage;
+  char szAddtlComps[MAX_BUF];
+  char szTemp[MAX_BUF];
+  char szFormat[MAX_BUF_TINY];
+  BOOL hasAddtlComps;
+  BOOL skipNext = FALSE;
+  siC *currComponent, *mainComponent;
+
+  switch(msg) {
+  case WM_INITDIALOG:
+    DisableSystemMenuItems(hDlg, FALSE);
+    SetWindowText(hDlg, diStartInstall.szTitle);
+
+    SetDlgItemText(hDlg, IDC_MESSAGE1, diStartInstall.szMessage0);
+    SetDlgItemText(hDlg, IDC_MESSAGE2, sgInstallGui.szProxyMessage);
+    SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
+    SetDlgItemText(hDlg, IDC_INSTALL_FOLDER_LABEL, sgInstallGui.szInstallFolder);
+
+    if ((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
+    else
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
+
+    break;
+  
+  case WM_NOTIFY:
+    notifyMessage = (LPNMHDR)lParam;
+
+    switch (notifyMessage->code) {
+    case PSN_SETACTIVE:
+      // Wizard dialog title
+      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diSelectComponents.szTitle); 
+
+      // Set the user-determined fields here in case they go back and change
+      // options - WM_INITDIALOG only gets called once, not every time the
+      // panel is displayed.
+
+      *szAddtlComps = '\0';
+
+      currComponent = siComponents;
+      do {
+        if (!currComponent)
+          break;
+
+        if (currComponent->dwAttributes & SIC_MAIN_COMPONENT)
+          mainComponent = currComponent;
+        else if (IsSelectableComponent(currComponent)) {
+          wsprintf(szFormat, "%s\r\n", sgInstallGui.szAddtlCompWrapper);
+          wsprintf(szTemp, szFormat, currComponent->szDescriptionShort);
+          lstrcat(szAddtlComps, szTemp);
+
+          hasAddtlComps = TRUE;
+        }
+
+        currComponent = currComponent->Next;
+      }
+      while (currComponent && currComponent != siComponents);
+
+      if (hasAddtlComps)
+        wsprintf(szTemp, sgInstallGui.szPrimCompOthers, mainComponent->szDescriptionShort);
+      else
+        wsprintf(szTemp, sgInstallGui.szPrimCompNoOthers, mainComponent->szDescriptionShort);
+      SetDlgItemText(hDlg, IDC_PRIMARY_COMPONENT, szTemp);
+
+      SetDlgItemText(hDlg, IDC_OPTIONAL_COMPONENTS, szAddtlComps);
+
+      SetDlgItemText(hDlg, IDC_INSTALL_FOLDER, sgProduct.szPath);
+      hInstallFolder = GetDlgItem(hDlg, IDC_INSTALL_FOLDER);
+      TruncateString(hInstallFolder, sgProduct.szPath, szTemp, sizeof(szTemp));
+      
+      PropSheet_SetWizButtons(GetParent(hDlg), PSWIZB_NEXT|PSWIZB_BACK);
+
+      break;
+      
+    case PSN_WIZNEXT:
+      SaveUserChanges();
+
+      if (!IsDownloadRequired()) {
+        // No download required, bypass the download step and go directly to 
+        // the installing stage. 
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_EXTRACTING);
+        skipNext = TRUE;
+      }
+      break;
+
+    case PSN_WIZBACK:
+      // If the user selected Easy Install, go right back to the setup type
+      // selection page, bypassing the advanced configuration steps. 
+      if (dwSetupType == ST_RADIO0) {
+        SetWindowLong(hDlg, DWL_MSGRESULT, DLG_SETUP_TYPE);
+        skipNext = TRUE;
+      }
+      break;
+
+    }
+    break;
+  case WM_COMMAND:
+    switch(LOWORD(wParam)) {
+    case IDC_CONNECTION_SETTINGS:
+      break;
+    }
+    break;
+  }
+
+  return skipNext;
+}
+
+void SaveUserChanges()
+{
+  char szDestPath[MAX_BUF];
+  char szInstallLogFile[MAX_BUF];
+
+  gbProcessingXpnstallFiles = TRUE;
+
+  LogISShared();
+  LogISDestinationPath();
+  LogISSetupType();
+  LogISComponentsSelected();
+  LogISComponentsToDownload();
+  LogISDiskSpace(gdsnComponentDSRequirement);
+
+  lstrcpy(szDestPath, sgProduct.szPath);
+  if(*sgProduct.szSubPath != '\0')
+  {
+    AppendBackSlash(szDestPath, sizeof(szDestPath));
+    lstrcat(szDestPath, sgProduct.szSubPath);
+  }
+  AppendBackSlash(szDestPath, sizeof(szDestPath));
+
+  // Create the destination path here in case it had not been created,
+  // as in the case of silent or auto mode installs 
+  if(CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG) != WIZ_OK)
+  {
+    char buf[MAX_BUF];
+    char errorCreateDir[MAX_BUF];
+    char pathToShow[MAX_PATH];
+
+    // reformat the path to display so that it'll be readable in the
+    // error dialog shown 
+    _snprintf(pathToShow, sizeof(pathToShow), "\"%s\" ", szDestPath);
+    pathToShow[sizeof(pathToShow) - 1] = '\0';
+    if(GetPrivateProfileString("Messages", "ERROR_CREATE_DIRECTORY", "", errorCreateDir, sizeof(errorCreateDir), szFileIniInstall))
+      wsprintf(buf, errorCreateDir, pathToShow);
+    assert(*buf != '\0');
+    PrintError(buf, ERROR_CODE_HIDE);
+    PostQuitMessage(1);
+    return;
+  }
+
+  // Set global var, that determines where the log file is to update, to
+  // not use the TEMP dir *before* the FileCopy() calls because we want
+  // to log the FileCopy() calls to where the log files were copied to.
+  // This is possible because the logging, that is done within the
+  // FileCopy() function, is done after the actual copy
+  //
+  gbILUseTemp = FALSE;
+
+  // copy the install_wizard.log file from the temp\ns_temp dir to
+  // the destination dir and use the new destination file to continue
+  // logging.
+  //
+  lstrcpy(szInstallLogFile, szTempDir);
+  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+  lstrcat(szInstallLogFile, FILE_INSTALL_LOG);
+  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+  DeleteFile(szInstallLogFile);
+
+  // copy the install_status.log file from the temp\ns_temp dir to
+  // the destination dir and use the new destination file to continue
+  // logging.
+  //
+  lstrcpy(szInstallLogFile, szTempDir);
+  AppendBackSlash(szInstallLogFile, sizeof(szInstallLogFile));
+  lstrcat(szInstallLogFile, FILE_INSTALL_STATUS_LOG);
+  FileCopy(szInstallLogFile, szDestPath, FALSE, FALSE);
+  DeleteFile(szInstallLogFile);
+}
+
+BOOL IsDownloadRequired()
+{
+  DWORD dwIndex0;
+  DWORD dwFileCounter;
+  siC   *siCObject = NULL;
+  long  result;
+  char  szFileIdiGetArchives[MAX_BUF];
+  char  szSection[MAX_BUF];
+  char  szCorruptedArchiveList[MAX_BUF];
+  char  szPartiallyDownloadedFilename[MAX_BUF];
+
+  ZeroMemory(szCorruptedArchiveList, sizeof(szCorruptedArchiveList));
+  lstrcpy(szFileIdiGetArchives, szTempDir);
+  AppendBackSlash(szFileIdiGetArchives, sizeof(szFileIdiGetArchives));
+  lstrcat(szFileIdiGetArchives, FILE_IDI_GETARCHIVES);
+  GetSetupCurrentDownloadFile(szPartiallyDownloadedFilename,
+                              sizeof(szPartiallyDownloadedFilename));
+
+  gbDownloadTriggered= FALSE;
+  result            = WIZ_OK;
+  dwIndex0           = 0;
+  dwFileCounter      = 0;
+  siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  
+  while (siCObject) {
+    if (siCObject->dwAttributes & SIC_SELECTED) {
+      // If a previous unfinished setup was detected, then
+      // include the TEMP dir when searching for archives.
+      // Only download jars if not already in the local machine.
+      // Also if the last file being downloaded should be resumed.
+      // The resume detection is done automatically.
+      if ((LocateJar(siCObject, NULL, 0, 
+                    gbPreviousUnfinishedDownload) == AP_NOT_FOUND) ||
+          (lstrcmpi(szPartiallyDownloadedFilename,
+                    siCObject->szArchiveName) == 0)) {
+        wsprintf(szSection, "File%d", dwFileCounter);
+
+        result = AddArchiveToIdiFile(siCObject,
+                                     szSection,
+                                     szFileIdiGetArchives);
+        if (result)
+          return result;
+
+        ++dwFileCounter;
+      }
+    }
+
+    ++dwIndex0;
+    siCObject = SiCNodeGetObject(dwIndex0, TRUE, AC_ALL);
+  }
+
+  // The existence of the getarchives.idi file determines if there are
+  // any archives needed to be downloaded.
+  return FileExists(szFileIdiGetArchives);
+}
 
 void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStringBufSize)
 {
@@ -1035,459 +1374,9 @@ void TruncateString(HWND hWnd, LPSTR szInURL, LPSTR szOutString, DWORD dwOutStri
   ReleaseDC(hWnd, hdcWnd);
 }
 
-LRESULT CALLBACK DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  char buf[MAX_BUF];
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-
-      GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
-          buf, sizeof(buf), szFileIniInstall);
-      SetWindowText(hDlg, buf);
-
-      GetPrivateProfileString("Strings", "Message Cleanup On Upgrade", "",
-          buf, sizeof(buf), szFileIniConfig);
-      ReplacePrivateProfileStrCR(buf);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, buf);
-
-      GetPrivateProfileString("Strings", "Cleanup On Upgrade Path Box String", "",
-          buf, sizeof(buf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_STATIC, buf);
-
-      MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
-      RemoveBackSlash(buf);
-      SetDlgItemText(hDlg, IDC_DELETE_PATH, buf);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      SetDlgItemText(hDlg, IDCONTINUE, sgInstallGui.szContinue_);
-      SetDlgItemText(hDlg, IDSKIP, sgInstallGui.szSkip_);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDC_DELETE_PATH, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDCONTINUE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDSKIP, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L); 
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDCONTINUE:
-          /* If the installation path happens to be within the %windir%, then
-           * show error message and continue without removing the previous
-           * installation path. */
-          if(IsPathWithinWindir(sgProduct.szPath))
-          {
-            GetPrivateProfileString("Strings", "Message Cleanup On Upgrade Windir", "",
-                buf, sizeof(buf), szFileIniConfig);
-            MessageBox(hWndMain, buf, NULL, MB_ICONEXCLAMATION);
-          }
-          else
-            /* set the var to delete target path here */
-            sgProduct.doCleanupOnUpgrade = TRUE;
-
-          SiCNodeSetItemsSelected(dwSetupType);
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDSKIP:
-          sgProduct.doCleanupOnUpgrade = FALSE;
-          SiCNodeSetItemsSelected(dwSetupType);
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
-
-LRESULT CALLBACK DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  BOOL                bReturn = FALSE;
-  siC                 *siCTemp;
-  DWORD               dwIndex;
-  DWORD               dwItems = MAX_BUF;
-  HWND                hwndLBComponents;
-  TCHAR               tchBuffer[MAX_BUF];
-  LPDRAWITEMSTRUCT    lpdis;
-  ULONGLONG           ullDSBuf;
-  char                szBuf[MAX_BUF];
-
-  hwndLBComponents  = GetDlgItem(hDlg, IDC_LIST_COMPONENTS);
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diSelectAdditionalComponents.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diSelectAdditionalComponents.szMessage0);
-
-      siCTemp = siComponents;
-      if(siCTemp != NULL)
-      {
-        if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
-          lbAddItem(hwndLBComponents, siCTemp);
-
-        siCTemp = siCTemp->Next;
-        while((siCTemp != siComponents) && (siCTemp != NULL))
-        {
-          if((!(siCTemp->dwAttributes & SIC_INVISIBLE)) && (siCTemp->dwAttributes & SIC_ADDITIONAL))
-            lbAddItem(hwndLBComponents, siCTemp);
-
-          siCTemp = siCTemp->Next;
-        }
-        SetFocus(hwndLBComponents);
-        SendMessage(hwndLBComponents, LB_SETCURSEL, 0, 0);
-        SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(0, FALSE, AC_ADDITIONAL_COMPONENTS));
-      }
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      /* update the disk space available info in the dialog.  GetDiskSpaceAvailable()
-         returns value in kbytes */
-      ullDSBuf = GetDiskSpaceAvailable(sgProduct.szPath);
-      _ui64toa(ullDSBuf, tchBuffer, 10);
-      ParsePath(sgProduct.szPath, szBuf, sizeof(szBuf), FALSE, PP_ROOT_ONLY);
-      RemoveBackSlash(szBuf);
-      lstrcat(szBuf, "   ");
-      lstrcat(szBuf, tchBuffer);
-      lstrcat(szBuf, " KB");
-      SetDlgItemText(hDlg, IDC_SPACE_AVAILABLE, szBuf);
-
-      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szAdditionalComponents_);
-      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szDescription);
-      SetDlgItemText(hDlg, IDC_STATIC3, sgInstallGui.szTotalDownloadSize);
-      SetDlgItemText(hDlg, IDC_STATIC4, sgInstallGui.szSpaceAvailable);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC4, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST_COMPONENTS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC_DESCRIPTION, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_DOWNLOAD_SIZE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_SPACE_AVAILABLE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
-      gdwACFlag = AC_ADDITIONAL_COMPONENTS;
-      OldListBoxWndProc = SubclassWindow(hwndLBComponents, (WNDPROC)NewListBoxWndProc);
-      break;
-
-    case WM_DRAWITEM:
-      lpdis = (LPDRAWITEMSTRUCT)lParam;
-
-      // If there are no list box items, skip this message.
-      if(lpdis->itemID == -1)
-        break;
-
-      DrawLBText(lpdis, AC_ADDITIONAL_COMPONENTS);
-      DrawCheck(lpdis, AC_ADDITIONAL_COMPONENTS);
-
-      // draw the focus rect on the selected item
-      if((lpdis->itemAction & ODA_FOCUS) &&
-         (lpdis->itemState & ODS_FOCUS))
-      {
-        DrawFocusRect(lpdis->hDC, &(lpdis->rcItem));
-      }
-
-      bReturn = TRUE;
-
-      /* update the disk space required info in the dialog.  It is already
-         in Kilobytes */
-      ullDSBuf = GetDiskSpaceRequired(DSR_DOWNLOAD_SIZE);
-      _ui64toa(ullDSBuf, tchBuffer, 10);
-      lstrcpy(szBuf, tchBuffer);
-      lstrcat(szBuf, " KB");
-      
-      SetDlgItemText(hDlg, IDC_DOWNLOAD_SIZE, szBuf);
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDC_LIST_COMPONENTS:
-          /* to update the long description for each component the user selected */
-          if((dwIndex = SendMessage(hwndLBComponents, LB_GETCURSEL, 0, 0)) != LB_ERR)
-            SetDlgItemText(hDlg, IDC_STATIC_DESCRIPTION, SiCNodeGetDescriptionLong(dwIndex, FALSE, AC_ADDITIONAL_COMPONENTS));
-          break;
-
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-
-  return(bReturn);
-}
-
-LRESULT CALLBACK DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  HWND hcbCheck0;
-  HWND hcbCheck1;
-  HWND hcbCheck2;
-  HWND hcbCheck3;
-
-  hcbCheck0 = GetDlgItem(hDlg, IDC_CHECK0);
-  hcbCheck1 = GetDlgItem(hDlg, IDC_CHECK1);
-  hcbCheck2 = GetDlgItem(hDlg, IDC_CHECK2);
-  hcbCheck3 = GetDlgItem(hDlg, IDC_CHECK3);
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diWindowsIntegration.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diWindowsIntegration.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diWindowsIntegration.szMessage1);
-
-      if(diWindowsIntegration.wiCB0.bEnabled)
-      {
-        ShowWindow(hcbCheck0, SW_SHOW);
-        CheckDlgButton(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.bCheckBoxState);
-        SetDlgItemText(hDlg, IDC_CHECK0, diWindowsIntegration.wiCB0.szDescription);
-      }
-      else
-        ShowWindow(hcbCheck0, SW_HIDE);
-
-      if(diWindowsIntegration.wiCB1.bEnabled)
-      {
-        ShowWindow(hcbCheck1, SW_SHOW);
-        CheckDlgButton(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.bCheckBoxState);
-        SetDlgItemText(hDlg, IDC_CHECK1, diWindowsIntegration.wiCB1.szDescription);
-      }
-      else
-        ShowWindow(hcbCheck1, SW_HIDE);
-
-      if(diWindowsIntegration.wiCB2.bEnabled)
-      {
-        ShowWindow(hcbCheck2, SW_SHOW);
-        CheckDlgButton(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.bCheckBoxState);
-        SetDlgItemText(hDlg, IDC_CHECK2, diWindowsIntegration.wiCB2.szDescription);
-      }
-      else
-        ShowWindow(hcbCheck2, SW_HIDE);
-
-      if(diWindowsIntegration.wiCB3.bEnabled)
-      {
-        ShowWindow(hcbCheck3, SW_SHOW);
-        CheckDlgButton(hDlg, IDC_CHECK3, diWindowsIntegration.wiCB3.bCheckBoxState);
-        SetDlgItemText(hDlg, IDC_CHECK3, diWindowsIntegration.wiCB3.szDescription);
-      }
-      else
-        ShowWindow(hcbCheck3, SW_HIDE);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK3, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          if(IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED)
-          {
-          }
-
-          if(diWindowsIntegration.wiCB0.bEnabled)
-          {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK0) == BST_CHECKED)
-              diWindowsIntegration.wiCB0.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB0.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB1.bEnabled)
-          {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK1) == BST_CHECKED)
-              diWindowsIntegration.wiCB1.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB1.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB2.bEnabled)
-          {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK2) == BST_CHECKED)
-              diWindowsIntegration.wiCB2.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB2.bCheckBoxState = FALSE;
-          }
-
-          if(diWindowsIntegration.wiCB3.bEnabled)
-          {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK3) == BST_CHECKED)
-              diWindowsIntegration.wiCB3.bCheckBoxState = TRUE;
-            else
-              diWindowsIntegration.wiCB3.bCheckBoxState = FALSE;
-          }
-
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
-
-LRESULT CALLBACK DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  char            szBuf[MAX_BUF];
-  HANDLE          hDir;
-  DWORD           dwIndex;
-  WIN32_FIND_DATA wfdFindFileData;
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diProgramFolder.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diProgramFolder.szMessage0);
-      SetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, sgProduct.szProgramFolderName);
-
-      lstrcpy(szBuf, sgProduct.szProgramFolderPath);
-      lstrcat(szBuf, "\\*.*");
-      if((hDir = FindFirstFile(szBuf , &wfdFindFileData)) != INVALID_HANDLE_VALUE)
-      {
-        if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
-        {
-          SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
-        }
-
-        while(FindNextFile(hDir, &wfdFindFileData))
-        {
-          if((wfdFindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && (lstrcmpi(wfdFindFileData.cFileName, ".") != 0) && (lstrcmpi(wfdFindFileData.cFileName, "..") != 0))
-            SendDlgItemMessage(hDlg, IDC_LIST, LB_ADDSTRING, 0, (LPARAM)wfdFindFileData.cFileName);
-        }
-        FindClose(hDir);
-      }
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      SetDlgItemText(hDlg, IDC_STATIC1, sgInstallGui.szProgramFolder_);
-      SetDlgItemText(hDlg, IDC_STATIC2, sgInstallGui.szExistingFolder_);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_STATIC2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_PROGRAM_FOLDER, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          GetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf, MAX_BUF);
-          if(*szBuf == '\0')
-          {
-            char szEProgramFolderName[MAX_BUF];
-
-            GetPrivateProfileString("Messages", "ERROR_PROGRAM_FOLDER_NAME", "", szEProgramFolderName, sizeof(szEProgramFolderName), szFileIniInstall);
-            MessageBox(hDlg, szEProgramFolderName, NULL, MB_OK | MB_ICONEXCLAMATION);
-            break;
-          }
-          lstrcpy(sgProduct.szProgramFolderName, szBuf);
-        
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDC_LIST:
-          if((dwIndex = SendDlgItemMessage(hDlg, IDC_LIST, LB_GETCURSEL, 0, 0)) != LB_ERR)
-          {
-            SendDlgItemMessage(hDlg, IDC_LIST, LB_GETTEXT, dwIndex, (LPARAM)szBuf);
-            SetDlgItemText(hDlg, IDC_EDIT_PROGRAM_FOLDER, szBuf);
-          }
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: CONNECTION SETTINGS
+//
 
 void SaveDownloadProtocolOption(HWND hDlg)
 {
@@ -1582,14 +1471,12 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
 
           SaveDownloadProtocolOption(hDlg);
           DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
           break;
 
         case IDWIZBACK:
         case IDCANCEL:
           SaveWindowPosition(hDlg);
           DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
           break;
 
         default:
@@ -1600,568 +1487,9 @@ LRESULT CALLBACK DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LON
   return(0);
 }
 
-void SaveAdditionalOptions(HWND hDlg, HWND hwndCBSiteSelector)
-{
-  int iIndex;
-
-  /* get selected item from the site selector's pull down list */
-  iIndex = SendMessage(hwndCBSiteSelector, CB_GETCURSEL, 0, 0);
-  SendMessage(hwndCBSiteSelector, CB_GETLBTEXT, (WPARAM)iIndex, (LPARAM)szSiteSelectorDescription);
-
-  /* get the state of the Save Installer Files checkbox */
-  if(IsDlgButtonChecked(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES) == BST_CHECKED)
-    diAdditionalOptions.bSaveInstaller = TRUE;
-  else
-    diAdditionalOptions.bSaveInstaller = FALSE;
-
-  /* get the state of the Recapture Homepage checkbox */
-  if(IsDlgButtonChecked(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE) == BST_CHECKED)
-    diAdditionalOptions.bRecaptureHomepage = TRUE;
-  else
-    diAdditionalOptions.bRecaptureHomepage = FALSE;
-}
-
-LRESULT CALLBACK DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  char  szBuf[MAX_BUF];
-  HWND  hwndCBSiteSelector;
-  int   iIndex;
-  ssi   *ssiTemp;
-  char  szCBDefault[MAX_BUF];
-
-  hwndCBSiteSelector = GetDlgItem(hDlg, IDC_LIST_SITE_SELECTOR);
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-//      if(gdwSiteSelectorStatus == SS_HIDE)
-//      {
-//        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE0),  SW_HIDE);
-//        ShowWindow(GetDlgItem(hDlg, IDC_LIST_SITE_SELECTOR),  SW_HIDE);
-//      }
-
-      if(diAdditionalOptions.bShowHomepageOption == FALSE)
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE0),  SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE),  SW_HIDE);
-      }
-
-      if(GetTotalArchivesToDownload() == 0)
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_MESSAGE1),  SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES),  SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH), SW_HIDE);
-        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_PROXY_SETTINGS), SW_HIDE);
-      }
-
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diAdditionalOptions.szTitle);
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diAdditionalOptions.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diAdditionalOptions.szMessage1);
-
-      GetPrivateProfileString("Strings", "IDC Save Installer Files", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, szBuf);
-      GetPrivateProfileString("Strings", "IDC Recapture Homepage", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, szBuf);
-
-      GetSaveInstallerPath(szBuf, sizeof(szBuf));
-      SetDlgItemText(hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, szBuf);
-
-      SetDlgItemText(hDlg, IDC_BUTTON_PROXY_SETTINGS, sgInstallGui.szProxySettings_);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_BUTTON_PROXY_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_LIST_SITE_SELECTOR, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_EDIT_LOCAL_INSTALLER_PATH, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      ssiTemp = ssiSiteSelector;
-      do
-      {
-        if(ssiTemp == NULL)
-          break;
-
-        SendMessage(hwndCBSiteSelector, CB_ADDSTRING, 0, (LPARAM)(ssiTemp->szDescription));
-        ssiTemp = ssiTemp->Next;
-      } while(ssiTemp != ssiSiteSelector);
-
-      if((szSiteSelectorDescription == NULL) || (*szSiteSelectorDescription == '\0'))
-      {
-          if(GetPrivateProfileString("Messages", "CB_DEFAULT", "", szCBDefault, sizeof(szCBDefault), szFileIniInstall) &&
-          ((iIndex = SendMessage(hwndCBSiteSelector, CB_SELECTSTRING, -1, (LPARAM)szCBDefault)) != CB_ERR))
-          SendMessage(hwndCBSiteSelector, CB_SETCURSEL, (WPARAM)iIndex, 0);
-        else
-          SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
-      }
-      else if((iIndex = SendMessage(hwndCBSiteSelector, CB_SELECTSTRING, -1, (LPARAM)szSiteSelectorDescription)) != CB_ERR)
-        SendMessage(hwndCBSiteSelector, CB_SETCURSEL, (WPARAM)iIndex, 0);
-      else
-        SendMessage(hwndCBSiteSelector, CB_SETCURSEL, 0, 0);
-
-      if(diAdditionalOptions.bSaveInstaller)
-        CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_CHECKED);
-      else
-        CheckDlgButton(hDlg, IDC_CHECK_SAVE_INSTALLER_FILES, BST_UNCHECKED);
-
-      if(diAdditionalOptions.bRecaptureHomepage)
-        CheckDlgButton(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, BST_CHECKED);
-      else
-        CheckDlgButton(hDlg, IDC_CHECK_RECAPTURE_HOMEPAGE, BST_UNCHECKED);
-
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDC_BUTTON_ADDITIONAL_SETTINGS:
-          SaveWindowPosition(hDlg);
-          SaveAdditionalOptions(hDlg, hwndCBSiteSelector);
-          DestroyWindow(hDlg);
-          DlgSequence(OTHER_DLG_1);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
-
-void AppendStringWOAmpersand(LPSTR szInputString, DWORD dwInputStringSize, LPSTR szString)
-{
-  DWORD i;
-  DWORD iInputStringCounter;
-  DWORD iInputStringLen;
-  DWORD iStringLen;
-
-
-  iInputStringLen = lstrlen(szInputString);
-  iStringLen      = lstrlen(szString);
-
-  if((iInputStringLen + iStringLen) >= dwInputStringSize)
-    return;
-
-  iInputStringCounter = iInputStringLen;
-  for(i = 0; i < iStringLen; i++)
-  {
-    if(szString[i] != '&')
-      szInputString[iInputStringCounter++] = szString[i];
-  }
-}
-
-LPSTR GetStartInstallMessage()
-{
-  char  szBuf[MAX_BUF];
-  char  szSTRRequired[MAX_BUF_TINY];
-  siC   *siCObject   = NULL;
-  LPSTR szMessageBuf = NULL;
-  DWORD dwBufSize;
-  DWORD dwIndex0;
-
-  GetPrivateProfileString("Strings", "STR Force Upgrade Required", "", szSTRRequired, sizeof(szSTRRequired), szFileIniConfig);
-
-  /* calculate the amount of memory to allocate for the buffer */
-  dwBufSize = 0;
-
-  /* setup type */
-  if(GetPrivateProfileString("Messages", "STR_SETUP_TYPE", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-  dwBufSize += 4; // take into account 4 indentation spaces
-
-  switch(dwSetupType)
-  {
-    case ST_RADIO1:
-      dwBufSize += lstrlen(diSetupType.stSetupType1.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
-      break;
-
-    default:
-      dwBufSize += lstrlen(diSetupType.stSetupType0.szDescriptionShort) + 2; // the extra 2 bytes is for the \r\n characters
-      break;
-  }
-  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-  /* selected components */
-  if(GetPrivateProfileString("Messages", "STR_SELECTED_COMPONENTS", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-  dwIndex0 = 0;
-  siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
-  while(siCObject)
-  {
-    if(siCObject->dwAttributes & SIC_SELECTED)
-    {
-      dwBufSize += 4; // take into account 4 indentation spaces
-      dwBufSize += lstrlen(siCObject->szDescriptionShort);
-    }
-
-    if(siCObject->bForceUpgrade)
-    {
-      /* add the "(Required)" string (or something equivalent) after the component description */
-      if(*szSTRRequired != '\0')
-      {
-        dwBufSize += 1; // space after the short description
-        dwBufSize += lstrlen(szSTRRequired);
-      }
-    }
-
-    if(siCObject->dwAttributes & SIC_SELECTED)
-      dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-    ++dwIndex0;
-    siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
-  }
-  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-  /* destination path */
-  if(GetPrivateProfileString("Messages", "STR_DESTINATION_DIRECTORY", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-  dwBufSize += 4; // take into account 4 indentation spaces
-  dwBufSize += lstrlen(sgProduct.szPath) + 2; // the extra 2 bytes is for the \r\n characters
-  dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-  /* program folder */
-  if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-  dwBufSize += 4; // take into account 4 indentation spaces
-  dwBufSize += lstrlen(sgProduct.szProgramFolderName) + 2; // the extra 2 bytes is for the \r\n\r\n characters
-
-  if(GetTotalArchivesToDownload() > 0)
-  {
-    dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-    /* site selector info */
-    if(GetPrivateProfileString("Messages", "STR_DOWNLOAD_SITE", "", szBuf, sizeof(szBuf), szFileIniInstall))
-      dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-    dwBufSize += 4; // take into account 4 indentation spaces
-    dwBufSize += lstrlen(szSiteSelectorDescription) + 2; // the extra 2 bytes is for the \r\n characters
-
-    if(diAdditionalOptions.bSaveInstaller)
-    {
-      dwBufSize += 2; // the extra 2 bytes is for the \r\n characters
-
-      /* site selector info */
-      if(GetPrivateProfileString("Messages", "STR_SAVE_INSTALLER_FILES", "", szBuf, sizeof(szBuf), szFileIniInstall))
-        dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-
-      GetSaveInstallerPath(szBuf, sizeof(szBuf));
-      dwBufSize += 4; // take into account 4 indentation spaces
-      dwBufSize += lstrlen(szBuf) + 2; // the extra 2 bytes is for the \r\n characters
-    }
-  }
-
-  dwBufSize += 1; // take into account the null character
-
-
-  /* From here down, the buffer is created given the above calculated buffer size.  If the 
-   * string concatenation (addition) is changed below, then the buffer size calculation above
-   * needs to be changed accordingly! */
-
-  /* allocate the memory */
-  if((szMessageBuf = NS_GlobalAlloc(dwBufSize)) != NULL)
-  {
-    ZeroMemory(szMessageBuf, dwBufSize);
-
-    /* Setup Type */
-    if(GetPrivateProfileString("Messages", "STR_SETUP_TYPE", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    {
-      lstrcat(szMessageBuf, szBuf);
-      lstrcat(szMessageBuf, "\r\n");
-    }
-    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-      
-    switch(dwSetupType)
-    {
-      case ST_RADIO1:
-        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType1.szDescriptionShort);
-        break;
-
-      default:
-        AppendStringWOAmpersand(szMessageBuf, dwBufSize, diSetupType.stSetupType0.szDescriptionShort);
-        break;
-    }
-    lstrcat(szMessageBuf, "\r\n\r\n");
-
-    /* Selected Components */
-    if(GetPrivateProfileString("Messages", "STR_SELECTED_COMPONENTS", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    {
-      lstrcat(szMessageBuf, szBuf);
-      lstrcat(szMessageBuf, "\r\n");
-    }
-
-    dwIndex0  = 0;
-    siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
-    while(siCObject)
-    {
-      if(siCObject->dwAttributes & SIC_SELECTED)
-      {
-        lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-        lstrcat(szMessageBuf, siCObject->szDescriptionShort);
-      }
-
-      if(siCObject->bForceUpgrade)
-      {
-        /* add the "(Required)" string (or something equivalent) after the component description */
-        if(*szSTRRequired != '\0')
-        {
-          lstrcat(szMessageBuf, " "); // add 1 space
-          lstrcat(szMessageBuf, szSTRRequired);
-        }
-      }
-
-      if(siCObject->dwAttributes & SIC_SELECTED)
-        lstrcat(szMessageBuf, "\r\n");
-
-      ++dwIndex0;
-      siCObject = SiCNodeGetObject(dwIndex0, FALSE, AC_ALL);
-    }
-    lstrcat(szMessageBuf, "\r\n");
-
-    /* destination directory */
-    if(GetPrivateProfileString("Messages", "STR_DESTINATION_DIRECTORY", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    {
-      lstrcat(szMessageBuf, szBuf);
-      lstrcat(szMessageBuf, "\r\n");
-    }
-    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-    lstrcat(szMessageBuf, sgProduct.szPath);
-    lstrcat(szMessageBuf, "\r\n\r\n");
-
-    /* program folder */
-    if(GetPrivateProfileString("Messages", "STR_PROGRAM_FOLDER", "", szBuf, sizeof(szBuf), szFileIniInstall))
-    {
-      lstrcat(szMessageBuf, szBuf);
-      lstrcat(szMessageBuf, "\r\n");
-    }
-    lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-    lstrcat(szMessageBuf, sgProduct.szProgramFolderName);
-    lstrcat(szMessageBuf, "\r\n");
-
-    if(GetTotalArchivesToDownload() > 0)
-    {
-      lstrcat(szMessageBuf, "\r\n");
-
-      /* site selector info */
-      if(GetPrivateProfileString("Messages", "STR_DOWNLOAD_SITE", "", szBuf, sizeof(szBuf), szFileIniInstall))
-      {
-        lstrcat(szMessageBuf, szBuf);
-        lstrcat(szMessageBuf, "\r\n");
-      }
-
-      lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-      lstrcat(szMessageBuf, szSiteSelectorDescription); // site selector description
-      lstrcat(szMessageBuf, "\r\n");
-
-      if(diAdditionalOptions.bSaveInstaller)
-      {
-        lstrcat(szMessageBuf, "\r\n");
-
-        /* site selector info */
-        if(GetPrivateProfileString("Messages", "STR_SAVE_INSTALLER_FILES", "", szBuf, sizeof(szBuf), szFileIniInstall))
-        {
-          lstrcat(szMessageBuf, szBuf);
-          lstrcat(szMessageBuf, "\r\n");
-        }
-
-        GetSaveInstallerPath(szBuf, sizeof(szBuf));
-        lstrcat(szMessageBuf, "    "); // add 4 indentation spaces
-        lstrcat(szMessageBuf, szBuf);
-        lstrcat(szMessageBuf, "\r\n");
-      }
-    }
-  }
-
-  return(szMessageBuf);
-}
-
-// XXX also defined in extra.c, need to factor out
-
-#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
-
-LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  LPSTR szMessage = NULL;
-  char  szBuf[MAX_BUF];
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diQuickLaunch.szTitle);
-
-      GetPrivateProfileString("Strings", "IDC Turbo Mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
-      SetDlgItemText(hDlg, IDC_CHECK_TURBO_MODE, szBuf);
-      SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szNext_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE1, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE2, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CHECK_TURBO_MODE, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      SetDlgItemText(hDlg, IDC_MESSAGE0, diQuickLaunch.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diQuickLaunch.szMessage1);
-      SetDlgItemText(hDlg, IDC_MESSAGE2, diQuickLaunch.szMessage2);
-
-      if(diQuickLaunch.bTurboModeEnabled)
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_SHOW);
-      else
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_CHECK_TURBO_MODE),  SW_HIDE);
-        diQuickLaunch.bTurboMode = FALSE;
-      }
-
-      if(diQuickLaunch.bTurboMode)
-        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_CHECKED);
-      else
-        CheckDlgButton(hDlg, IDC_CHECK_TURBO_MODE, BST_UNCHECKED);
-
-      break;
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          if(diQuickLaunch.bTurboModeEnabled)
-          {
-            if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED)
-              diQuickLaunch.bTurboMode = TRUE;
-            else
-              diQuickLaunch.bTurboMode = FALSE;
-          }
- 
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
-
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          /* remember the last state of the TurboMode checkbox */
-          if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
-            diQuickLaunch.bTurboMode = TRUE;
-          }
-          else {
-            diQuickLaunch.bTurboMode = FALSE;
-          }
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
-          break;
-
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
-          break;
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
-
-LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
-{
-  LPSTR szMessage = NULL;
-  LPNMHDR header;
-
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diStartInstall.szTitle);
-
-      SetDlgItemText(hDlg, IDC_MESSAGE1, diStartInstall.szMessage0);
-      SetDlgItemText(hDlg, IDC_MESSAGE2, sgInstallGui.szProxyMessage);
-      SetDlgItemText(hDlg, IDC_CONNECTION_SETTINGS, sgInstallGui.szProxyButton);
-      SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
-      SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
-      SetDlgItemText(hDlg, IDCANCEL, sgInstallGui.szCancel_);
-      SendDlgItemMessage (hDlg, IDC_STATIC, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZBACK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDWIZNEXT, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDCANCEL, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_MESSAGE0, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_CURRENT_SETTINGS, WM_SETFONT, (WPARAM)sgInstallGui.systemFont, 0L);
- 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
-
-      if((diAdvancedSettings.bShowDialog == FALSE) || (GetTotalArchivesToDownload() == 0))
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_HIDE);
-        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageInstall);
-      }
-      else
-      {
-        ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SITE_SELECTOR), SW_SHOW);
-        SetDlgItemText(hDlg, IDC_MESSAGE0, diStartInstall.szMessageDownload);
-      }
-
-      if((szMessage = GetStartInstallMessage()) != NULL)
-      {
-        SetDlgItemText(hDlg, IDC_CURRENT_SETTINGS, szMessage);
-        FreeMemory(&szMessage);
-      }
-
-      break;
-    
-    case WM_NOTIFY:
-      header = (LPNMHDR)lParam;
-      switch (header->code) 
-      {
-        case PSN_WIZNEXT:
-//          SetWindowLong(hDlg, DWL_MSGRESULT, DLG_DOWNLOADING);
-          break;
-      }
-
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-
-        default:
-          break;
-      }
-      break;
-  }
-  return(0);
-}
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: DOWNLOADING FILES
+//
 
 LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
@@ -2187,100 +1515,165 @@ LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
   return(0);
 }
 
+///////////////////////////////////////////////////////////////////////////////
+// DIALOG: INSTALLING FILES
+//
+
 LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      SetWindowText(hDlg, diInstalling.szTitle);
+  HWND ctrl; 
+  LPNMHDR notifyMessage;
+  static BOOL initialized = FALSE; 
+  
+  switch(msg) {
+  case WM_INITDIALOG:
+    DisableSystemMenuItems(hDlg, FALSE);
+    SetWindowText(hDlg, diInstalling.szTitle);
 
-      SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
-      SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
+    SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
+    SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
+
+    ctrl = GetDlgItem(hDlg, IDC_PROGRESS_FILE);
+    SendMessage(ctrl, PBM_SETRANGE, 0, 100); 
+    SendMessage(ctrl, PBM_SETSTEP, 1, 0); 
+
+    ctrl = GetDlgItem(hDlg, IDC_PROGRESS_ARCHIVE);
+    SendMessage(ctrl, PBM_SETRANGE, 0, 100); 
+    SendMessage(ctrl, PBM_SETSTEP, 1, 0); 
+
+    break;
+
+  case WM_PAINT:
+    if (initialized)
       break;
 
-    case WM_COMMAND:
-      switch(LOWORD(wParam))
-      {
-        default:
-          break;
-      }
+    initialized = TRUE;
+
+    if (InstallFiles(hDlg)) {
+      PropSheet_SetCurSelByID(GetParent(hDlg), DLG_WELCOME);
       break;
+    }
+    else {
+      printf("Files NOT Installed...\n");
+    }
+    break;
+
+  case WM_NOTIFY:
+    notifyMessage = (LPNMHDR)lParam;
+
+    switch (notifyMessage->code) {
+    case PSN_SETACTIVE:
+      // Wizard dialog title
+      PropSheet_SetTitle(GetParent(hDlg), 0, (LPTSTR)diInstalling.szTitle); 
+
+      PropSheet_SetWizButtons(GetParent(hDlg), 0);
+
+      break;
+    }
   }
-  return(0);
+  return 0;
 }
 
-LRESULT CALLBACK DlgProcReboot(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+BOOL InstallFiles(HWND hDlg)
 {
-  HANDLE            hToken;
-  TOKEN_PRIVILEGES  tkp;
-  HWND              hRadioYes;
+  HRESULT err;
+  char szDestPath[MAX_PATH];
 
-  hRadioYes = GetDlgItem(hDlg, IDC_RADIO_YES);
+  // Clean up old versions of GRE previously installed.
+  // These GREs should only be fully uninstalled if they were only
+  // being used by the mozilla that we're installing over/ontop of
+  // (upgrade scenario).
+  // We should only do this type of cleanup if we're about to install'
+  // GRE in shared mode.
+  //
+  // This should only be called when the installer is installing GRE!
+  if (IsInstallerProductGRE())
+    CleanupOrphanedGREs();
 
-  switch(msg)
-  {
-    case WM_INITDIALOG:
-      DisableSystemMenuItems(hDlg, FALSE);
-      CheckDlgButton(hDlg, IDC_RADIO_YES, BST_CHECKED);
-      SetFocus(hRadioYes);
+  if (sgProduct.bInstallFiles) {
+    // POST_DOWNLOAD process file manipulation functions 
+    ProcessFileOpsForAll(T_POST_DOWNLOAD);
+    // PRE_XPCOM process file manipulation functions 
+    ProcessFileOpsForAll(T_PRE_XPCOM);
 
-      RepositionWindow(hDlg, NO_BANNER_IMAGE);
+    // save the installer files in the local machine 
+    if (diAdditionalOptions.bSaveInstaller)
+      SaveInstallerFiles();
 
-      SetWindowText(hDlg, sgInstallGui.szRestart);
-      SetDlgItemText(hDlg, 202, sgInstallGui.szSetupMessage);
-      SetDlgItemText(hDlg, IDC_RADIO_YES, sgInstallGui.szYesRestart);
-      SetDlgItemText(hDlg, IDC_RADIO_NO, sgInstallGui.szNoRestart);
-      SetDlgItemText(hDlg, IDOK, sgInstallGui.szOk);
-      SendDlgItemMessage (hDlg, 202, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_YES, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDC_RADIO_NO, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      SendDlgItemMessage (hDlg, IDOK, WM_SETFONT, (WPARAM)sgInstallGui.definedFont, 0L);
-      break;
+    if (CheckInstances()) {
+      bSDUserCanceled = TRUE;
+      CleanupXpcomFile();
+      return FALSE;
+    }
 
-    case WM_COMMAND:
-      SaveWindowPosition(hDlg);
-      switch(LOWORD(wParam))
-      {
-        case IDOK:
-          if(IsDlgButtonChecked(hDlg, IDC_RADIO_YES) == BST_CHECKED)
-          {
-            // Get a token for this process.
-            OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken);
+    // Remove the previous installation of the product here.
+    // This should be done before processing the Xpinstall engine.
+    if(sgProduct.doCleanupOnUpgrade) {
+      SetSetupState(SETUP_STATE_REMOVING_PREV_INST);
+      CleanupOnUpgrade();
+    }
 
-            // Get the LUID for the shutdown privilege.
-            LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid);
-            tkp.PrivilegeCount = 1;  // one privilege to set
-            tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
+    if(gbDownloadTriggered || gbPreviousUnfinishedDownload)
+      SetSetupState(SETUP_STATE_UNPACK_XPCOM);
 
-            // Get the shutdown privilege for this process.
-            AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+    if(ProcessXpinstallEngine() != WIZ_OK) {
+      bSDUserCanceled = TRUE;
+      CleanupXpcomFile();
+      return FALSE;
+    }
 
-            DestroyWindow(hDlg);
-            PostQuitMessage(0);
-            DestroyWindow(hWndMain);
+    if (gbDownloadTriggered || gbPreviousUnfinishedDownload)
+      SetSetupState(SETUP_STATE_INSTALL_XPI); // clears and sets new setup state
 
-            // Reboot the system and force all applications to close.
-            ExitWindowsEx(EWX_REBOOT, 0);
-          }
-          else
-          {
-            DestroyWindow(hDlg);
-            PostQuitMessage(0);
-          }
-          break;
+    // POST_XPCOM process file manipulation functions
+    ProcessFileOpsForAll(T_POST_XPCOM);
+    // PRE_SMARTUPDATE process file manipulation functions
+    ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
 
-        case IDCANCEL:
-          DestroyWindow(hDlg);
-          PostQuitMessage(0);
-          break;
+    lstrcat(szDestPath, "uninstall\\");
+    CreateDirectoriesAll(szDestPath, ADD_TO_UNINSTALL_LOG);
 
-        default:
-          break;
-      }
-      break;
+    //XXXben TODO - process this return result!
+    err = SmartUpdateJars(hDlg);
   }
-  return(0);
+  else
+    err = WIZ_OK;
+
+  if (err == WIZ_OK || err == 999){
+    if (sgProduct.bInstallFiles)
+      UpdateJSProxyInfo();
+
+    /* POST_SMARTUPDATE process file manipulation functions */
+    ProcessFileOpsForAll(T_POST_SMARTUPDATE);
+
+    if (sgProduct.bInstallFiles) {
+      /* PRE_LAUNCHAPP process file manipulation functions */
+      ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
+
+      LaunchApps();
+
+      // Refresh system icons if necessary
+      if (gSystemInfo.bRefreshIcons)
+        RefreshIcons();
+
+      UnsetSetupState(); // clear setup state
+      ClearWinRegUninstallFileDeletion();
+      if (!gbIgnoreProgramFolderX)
+        ProcessProgramFolderShowCmd();
+
+      CleanupArgsRegistry();
+      CleanupPreviousVersionRegKeys();
+
+      /* POST_LAUNCHAPP process file manipulation functions */
+      ProcessFileOpsForAll(T_POST_LAUNCHAPP);
+      /* DEPEND_REBOOT process file manipulation functions */
+      ProcessFileOpsForAll(T_DEPEND_REBOOT);
+    }
+  }
+  
+  CleanupXpcomFile();
+
+  return TRUE;
 }
 
 LRESULT CALLBACK DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
@@ -2415,44 +1808,6 @@ HWND InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlg
   return(hDlg);
 }
 
-/*
- * Check to see if turbo is enabled.  If so, do the following:
- *   * Log the turbo status that use had chosen.
- *   * Set the appropriate Windows registry keys/values.
- */
-void SetTurboArgs(void)
-{
-  char szData[MAX_BUF];
-  char szKey[MAX_BUF];
-
-  if(diQuickLaunch.bTurboModeEnabled)
-  {
-    /* log if the user selected the turbo mode or not */
-    LogISTurboMode(diQuickLaunch.bTurboMode);
-    LogMSTurboMode(diQuickLaunch.bTurboMode);
-
-    if(diQuickLaunch.bTurboMode)
-      strcpy( szData, "turbo=yes" );
-    else
-      strcpy( szData, "turbo=no" );
-
-    wsprintf(szKey,
-             SETUP_STATE_REG_KEY,
-             sgProduct.szCompanyName,
-             sgProduct.szProductNameInternal,
-             sgProduct.szUserAgent);
-    AppendWinReg(HKEY_CURRENT_USER,
-                 szKey,
-                 "browserargs",
-                 REG_SZ,
-                 szData,
-                 0,
-                 strlen( szData ) + 1,
-                 FALSE,
-                 FALSE );
-  }
-}
-
 void InitSequence(HINSTANCE hInstance)
 {
   // Wizard data structures
@@ -2461,18 +1816,12 @@ void InitSequence(HINSTANCE hInstance)
   PROPSHEETHEADER psh;
   int count = 0;
 
-  // Welcome Page Header font data
-  NONCLIENTMETRICS ncm = {0};
-  LOGFONT titleLogFont;
-  HDC hDC;
-  int fontSize;
-
   /////////////////////////////////////////////////////////////////////////////
   // Create the Wizard Sequence
   //
   psp.dwSize            = sizeof(psp);
   psp.hInstance         = hSetupRscInst;
-  psp.lParam            = NULL;
+  psp.lParam            = 0;
 
   // Welcome Page
   if (diWelcome.bShowDialog) {
@@ -2529,7 +1878,7 @@ void InitSequence(HINSTANCE hInstance)
     psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
     psp.pszHeaderTitle    = diStartInstall.szTitle;
     psp.pszHeaderSubTitle = diStartInstall.szSubTitle;
-    psp.pfnDlgProc        = DlgProcStartInstall;
+    psp.pfnDlgProc        = DlgProcSummary;
     psp.pszTemplate       = MAKEINTRESOURCE(DLG_START_INSTALL);
 
     pages[count++]        = CreatePropertySheetPage(&psp);
@@ -2568,283 +1917,38 @@ void InitSequence(HINSTANCE hInstance)
 
 
   // Create the Font for Intro/End page headers.
-  ncm.cbSize = sizeof(ncm);
-  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
-
-  titleLogFont = ncm.lfMessageFont;
-  titleLogFont.lfWeight = FW_BOLD;
-  lstrcpy(titleLogFont.lfFaceName, TEXT("Trebuchet MS Bold"));
-
-  hDC = GetDC(NULL); //gets the screen DC
-  fontSize = 14;
-  titleLogFont.lfHeight = 0 - GetDeviceCaps(hDC, LOGPIXELSY) * fontSize / 72;
-  sgInstallGui.welcomeTitleFont = CreateFontIndirect(&titleLogFont);
-  ReleaseDC(NULL, hDC);
+  sgInstallGui.welcomeTitleFont = MakeFont(TEXT("Trebuchet MS Bold"), 14, FW_BOLD);
 
   // Start the Wizard.
   PropertySheet(&psh);
 
-  // DeleteObject(sgInstallGui.welcomeTitleFont);
+  DeleteObject(sgInstallGui.welcomeTitleFont);
 }
 
-void DlgSequence(int iDirection)
+HFONT MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight) 
 {
-  return;
+  // Welcome Page Header font data
+  NONCLIENTMETRICS ncm = {0};
+  LOGFONT lf;
+  HDC hDC;
+
+  ncm.cbSize = sizeof(ncm);
+  SystemParametersInfo(SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
+
+  if (aFaceName) 
+    lstrcpy(lf.lfFaceName, aFaceName); 
+
+  lf = ncm.lfMessageFont;
+  lf.lfWeight = aWeight;
+
+  hDC = GetDC(NULL); 
+  lf.lfHeight = 0 - GetDeviceCaps(hDC, LOGPIXELSY) * aFontSize / 72;
+  ReleaseDC(NULL, hDC);
+
+  return CreateFontIndirect(&lf);
 }
 
 #if 0
-void DlgSequence(int iDirection)
-{
-  HRESULT hrValue;
-  BOOL    bDone = FALSE;
-
-  do
-  {
-    gbProcessingXpnstallFiles = FALSE;
-
-    if(iDirection == NEXT_DLG)
-    {
-      switch(dwWizardState)
-      {
-        case DLG_NONE:
-          dwWizardState = DLG_WELCOME;
-          break;
-        case DLG_WELCOME:
-          dwWizardState = DLG_LICENSE;
-          break;
-        case DLG_LICENSE:
-          dwWizardState = DLG_SETUP_TYPE;
-          break;
-        case DLG_SETUP_TYPE:
-          dwWizardState = DLG_UPGRADE;
-          break;
-        case DLG_UPGRADE:
-          dwWizardState = DLG_SELECT_COMPONENTS;
-          break;
-        case DLG_SELECT_COMPONENTS:
-          dwWizardState = DLG_PRE_INSTALL_SUMMARY;
-          break;
-        case DLG_PRE_INSTALL_SUMMARY:
-          dwWizardState = DLG_DOWNLOADING;
-          break;
-        case DLG_DOWNLOADING:
-          dwWizardState = DLG_INSTALLING;
-          break;
-        case DLG_INSTALLING:
-          dwWizardState = DLG_WINDOWS_INTEGRATION;
-          break;
-        case DLG_WINDOWS_INTEGRATION:
-          dwWizardState = DLG_POST_INSTALL_SUMMARY;
-          break;
-        case DLG_POST_INSTALL_SUMMARY:
-          // XXXben Goat. 
-          break;
-        default:
-          dwWizardState = DLG_WELCOME;
-          break;      
-      }
-    }
-    else if(iDirection == PREV_DLG)
-    {
-      switch(dwWizardState)
-      {
-        case DLG_LICENSE:
-          dwWizardState = DLG_WELCOME;
-          break;
-        case DLG_SETUP_TYPE:
-          dwWizardState = DLG_LICENSE;
-          break;
-        case DLG_UPGRADE:
-          dwWizardState = DLG_SETUP_TYPE;
-          break;
-        case DLG_SELECT_COMPONENTS:
-          dwWizardState = DLG_SETUP_TYPE;
-          break;
-        case DLG_PRE_INSTALL_SUMAMRY:
-          dwWizardState = DLG_SELECT_COMPONENTS;
-          break;
-        case DLG_POST_INSTALL_SUMMARY: 
-          dwWizardState = DLG_WINDOWS_INTEGRATION;
-          break;
-      }
-    }
-    else if(iDirection == OTHER_DLG_1)
-    {
-      switch(dwWizardState)
-      {
-        case DLG_ADDITIONAL_OPTIONS:
-          dwWizardState = DLG_ADVANCED_SETTINGS;
-          break;
-
-        // You'll get here only if DLG_ADVANCED_SETTINGS is not displayed, which really should
-        //   should never be the case unless DLG_ADDITIONAL_OPTIONS is also not displayed, since this
-        //   is a button off that dialog.  But if the user turns this off in error, handling the case
-        //   will keep from dropping into an infinite loop.
-        case DLG_ADVANCED_SETTINGS:
-          dwWizardState = DLG_ADDITIONAL_OPTIONS;
-          break;
-      }
-    }
-
-    switch(dwWizardState)
-    {
-      case DLG_WELCOME:
-        if(diWelcome.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWelcome.szTitle, DlgProcWelcome);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_LICENSE:
-        if(diLicense.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diLicense.szTitle, DlgProcLicense);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_SETUP_TYPE:
-        if(diSetupType.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSetupType.szTitle, DlgProcSetupType);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_UPGRADE:
-        if(sgProduct.checkCleanupOnUpgrade)
-        {
-          char buf[MAX_BUF];
-
-          // Found destination folder.  check to see if we're upgrading ontop
-          // of a previous installation.  If so, we need to prompt the user
-          // about removing the entire dir before installation happens.
-          MozCopyStr(sgProduct.szPath, buf, sizeof(buf));
-          AppendBackSlash(buf, sizeof(buf));
-          lstrcat(buf, sgProduct.szProgramName);
-          if(FileExists(buf))
-          {
-            char warningTitleString[MAX_BUF];
-
-            GetPrivateProfileString("Messages", "MB_WARNING_STR", "",
-                warningTitleString, sizeof(warningTitleString),
-                szFileIniInstall);
-
-            /* Prompt user if deleting target path is okay. Only show
-             * prompt if the setup is running in normal mode, else
-             * assume user wants deletion */
-            if(sgProduct.mode == NORMAL)
-            {
-              hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState,
-                  warningTitleString, DlgProcUpgrade);
-              bDone = TRUE;
-            }
-            else
-              sgProduct.doCleanupOnUpgrade = TRUE;
-          }
-        }
-
-        /* SiCNodeSetItemsSelected() is called from within DlgProcUpgrade().
-         * If DlgProcUpgrade is not called (in the case of a !NORMAL install),
-         * then we need to call it here. */
-        if(sgProduct.mode != NORMAL)
-          SiCNodeSetItemsSelected(dwSetupType);
-
-        break;
-
-      case DLG_SELECT_COMPONENTS:
-        if((diSelectComponents.bShowDialog) && (sgProduct.dwCustomType == dwSetupType))
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectComponents.szTitle, DlgProcSelectComponents);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_SELECT_ADDITIONAL_COMPONENTS:
-        if((diSelectAdditionalComponents.bShowDialog) && (GetAdditionalComponentsCount() > 0))
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diSelectAdditionalComponents.szTitle, DlgProcSelectAdditionalComponents);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_WINDOWS_INTEGRATION:
-        if(diWindowsIntegration.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diWindowsIntegration.szTitle, DlgProcWindowsIntegration);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_PROGRAM_FOLDER:
-        if(diProgramFolder.bShowDialog && (sgProduct.dwCustomType == dwSetupType))
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diProgramFolder.szTitle, DlgProcProgramFolder);
-          bDone = TRUE;
-        }
-      break;
-
-      case DLG_ADVANCED_SETTINGS:
-        if(diAdvancedSettings.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdvancedSettings.szTitle, DlgProcAdvancedSettings);
-          bDone = TRUE;
-        }
-        break;
-
-     case DLG_QUICK_LAUNCH:
-        if(diQuickLaunch.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diQuickLaunch.szTitle, DlgProcQuickLaunch);
-          bDone = TRUE;
-        }
-        break;
-
-     case DLG_ADDITIONAL_OPTIONS:
-        do
-        {
-          hrValue = VerifyDiskSpace();
-          if(hrValue == IDOK)
-          {
-            /* show previous visible window */
-            iDirection = PREV_DLG;
-          }
-          else if(hrValue == IDCANCEL)
-          {
-            AskCancelDlg(hWndMain);
-            hrValue = IDRETRY;
-          }
-        }while(hrValue == IDRETRY);
-
-        if(hrValue != IDOK)
-        {
-          if(ShowAdditionalOptionsDialog() == TRUE)
-          {
-            hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diAdditionalOptions.szTitle, DlgProcAdditionalOptions);
-            bDone = TRUE;
-          }
-        }
-        break;
-
-      case DLG_START_INSTALL:
-        if(diStartInstall.bShowDialog)
-        {
-          hDlgCurrent = InstantiateDialog(hWndMain, dwWizardState, diStartInstall.szTitle, DlgProcStartInstall);
-          bDone = TRUE;
-        }
-        break;
-
-      case DLG_COMMIT_INSTALL:
-        gbProcessingXpnstallFiles = TRUE;
-        CommitInstall();
-        bDone = TRUE;
-        break;
-    }
-  } while(!bDone);
-}
-#endif
-
 void CommitInstall(void)
 {
   HRESULT hrErr;
@@ -3055,3 +2159,4 @@ void CommitInstall(void)
   }
   gbProcessingXpnstallFiles = FALSE;
 }
+#endif

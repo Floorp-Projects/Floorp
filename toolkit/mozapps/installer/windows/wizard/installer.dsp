@@ -810,6 +810,10 @@ SOURCE=..\..\..\..\..\browser\installer\windows\xpcom.jst
 # End Group
 # Begin Source File
 
+SOURCE=.\setuprsc\bitmap1.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\setuprsc\Header.bmp
 # End Source File
 # Begin Source File

@@ -33,7 +33,6 @@ LRESULT CALLBACK  DlgProcSelectComponents(HWND hDlg, UINT msg, WPARAM wParam, LO
 LRESULT CALLBACK  DlgProcSelectInstallPath(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcSelectAdditionalComponents(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcWindowsIntegration(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
-LRESULT CALLBACK  DlgProcProgramFolder(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcAdditionalOptions(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcAdvancedSettings(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 LRESULT CALLBACK  DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
@@ -46,12 +45,17 @@ LRESULT CALLBACK  DlgProcMessage(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam
 LRESULT CALLBACK  NewListBoxWndProc( HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK  DlgProcUpgrade(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam);
 
+BOOL              IsSelectableComponent(siC* aComponent);
+HFONT             MakeFont(TCHAR* aFaceName, int aFontSize, LONG aWeight);
+void              SaveUserChanges();
+BOOL              IsDownloadRequired();
+BOOL              InstallFiles(HWND hDlg);
+
 void              ToggleCheck(HWND hwndListBox, DWORD dwIndex, DWORD dwACFlag);
 BOOL              AskCancelDlg(HWND hDlg);
 void              lbAddItem(HWND hList, siC *siCComponent);
 HWND              InstantiateDialog(HWND hParent, DWORD dwDlgID, LPSTR szTitle, WNDPROC wpDlgProc);
 void              InitSequence(HINSTANCE hInstance);
-void              DlgSequence(int iDirection);
 void              PaintGradientShade(HWND hWnd, HDC hdc);
 void              BrowseForDirectory(HWND hDlg);
 LRESULT CALLBACK  BrowseHookProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

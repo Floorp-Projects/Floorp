@@ -232,7 +232,7 @@ HRESULT           ProcessXpinstallEngine(void);
 void              GetXpinstallPath(char *aPath, int aPathBufSize);
 BOOL              GreInstallerNeedsReboot(void);
 void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
-void              UpdateGREAppInstallerProgress(int percent);
+void              UpdateGREInstallProgress(int percent);
 BOOL              IsPathWithinWindir();
 void              CleanupOnUpgrade();
 BOOL              IsInstallerProductGRE(void);
