@@ -416,7 +416,7 @@ form {
 }
 input {
   vertical-align: bottom;
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color: black;
 }
@@ -430,8 +430,8 @@ input[type=radio] {
   margin-right:  5px;  
   margin-top:    3px; 
   margin-bottom: 3px; 
-  border: 2px outset rgb(192, 192, 192);
-  background-color:rgb(192, 192, 192);
+  border: 2px outset rgb(204, 204, 204);
+  background-color:rgb(204, 204, 204);
   color:black;
   width:12px;
   height:12px;
@@ -440,7 +440,7 @@ input[type=radio] {
 
 input[type=radio]:active {
   background-color:white;
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px inset rgb(204, 204, 204);
 }
 
 input[type=radio]:hover {
@@ -463,17 +463,17 @@ input[type=checkbox] {
   margin-right:  5px;  
   margin-top:    3px; 
   margin-bottom: 4px;
-  border: 2px outset rgb(192, 192, 192);
+  border: 1px outset rgb(153, 153, 153);
   width:11px;
   height:11px;
-  background-color:rgb(192, 192, 192);
+  background-color:rgb(204, 204, 204);
   color:black;
-  -moz-border-radius:1px;
+/*  -moz-border-radius:1px; */
 }
 
 input[type=checkbox]:active {
   background-color:gray;
-  border: 2px inset rgb(192, 192, 192);
+  border: 1px inset rgb(204, 204, 204);
 }
 
 input[type=checkbox]:hover {
@@ -694,20 +694,20 @@ button:focus:-moz-focus-inner {
 }
 
 :-moz-file-button {
-  border: 2px outset rgb(192, 192, 192);
+  border: 2px outset rgb(204, 204, 204);
   color:black;
-  background-color: rgb(192, 192, 192);
+  background-color: rgb(204, 204, 204);
 }
 
 :-moz-file-text {
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px inset rgb(204, 204, 204);
   margin-right: 10px; 
   background-color: white;
   color: black;
 }
 
 input[type=text] {
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color: black;
 }
@@ -717,7 +717,7 @@ input[type=text][disabled] {
 }
 
 input[type=password] {
-  border: 2px inset rgb(192, 192, 192);
+  border: 2px inset rgb(204, 204, 204);
   background-color: white;
   color:black;
 }
@@ -730,13 +730,20 @@ label {
   padding-right: 3px;
 }
 
-select {
+/* Combo box style */
+select, select[size="1"] {
   vertical-align: bottom;
   border: 1px inset #c0c0c0;
-  background-color: white;
+  background-color:rgb(204, 204, 204);
   color:black;
   white-space:nowrap;
   text-align: left; 
+}
+
+/* Listbox style */
+select[size] {
+  background-color: white;
+  border: 1px inset rgb(153, 153, 153);
 }
 
 select:active {
@@ -750,7 +757,7 @@ option {
 }
 
 /* Combobox item style */
-select option[-moz-option-selected], select[size="1"] option[-moz-option-selected] {
+select option[-moz-option-selected] {
  color:black;
  background-color:white; 
 }
@@ -758,15 +765,13 @@ select option[-moz-option-selected], select[size="1"] option[-moz-option-selecte
 /* List box item selected style */
 select[size] option[-moz-option-selected] {
  color:white;
- background-color:black; 
+ background-color:rgb(51,51,102); 
 }
 
-option.selected {
-  border:   1px solid rgb(0,0,128);
-  background-color: rgb(0,0,128);
-  color: rgb(255,255,255);
+select[size="1"] option[-moz-option-selected] {
+  color:black;
+  background-color:white;
 }
-
 
 option.selectedfocus {
   border:   1px dotted white;
@@ -990,14 +995,14 @@ sourcetext { /* XXX should not be in HTML namespace */
 
 :-moz-dropdown-btn-pressed {
 /*  border: 2px inset #c0c0c0; */
-  background-color: rgb(192, 192, 192);
+  background-color: rgb(204, 204, 204);
   border: none;
 }
 
 :-moz-dropdown-list {
  position:absolute;
- background-color:rgb(192, 192, 192);
- border: 1px solid black;
+ background-color:rgb(204, 204, 204);
+ border: 1px inset rgb(153, 153, 153);
 } 
 
 

@@ -622,79 +622,82 @@ void nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex, PRInt32 aEndInde
 
 void nsListControlFrame::SingleSelection()
 {
-   // Store previous selection
-  PRInt32 oldSelectedIndex = mSelectedIndex;
-   // Get Current selection
-  PRInt32 newSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
-  if (newSelectedIndex != kNothingSelected) {
-    if (oldSelectedIndex != newSelectedIndex) {
-        // Deselect the previous selection if there is one
-      if (oldSelectedIndex != kNothingSelected) {
-        SetFrameSelected(oldSelectedIndex, PR_FALSE);
+  if (nsnull != mHitFrame) {
+     // Store previous selection
+    PRInt32 oldSelectedIndex = mSelectedIndex;
+     // Get Current selection
+    PRInt32 newSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
+    if (newSelectedIndex != kNothingSelected) {
+      if (oldSelectedIndex != newSelectedIndex) {
+          // Deselect the previous selection if there is one
+        if (oldSelectedIndex != kNothingSelected) {
+          SetFrameSelected(oldSelectedIndex, PR_FALSE);
+        }
+          // Display the new selection
+        SetFrameSelected(newSelectedIndex, PR_TRUE);
+        mSelectedIndex = newSelectedIndex;
+      } else {
+        // Selecting the currently selected item so do nothing.
       }
-        // Display the new selection
-      SetFrameSelected(newSelectedIndex, PR_TRUE);
-      mSelectedIndex = newSelectedIndex;
-    } else {
-      // Selecting the currently selected item so do nothing.
     }
   }
-
 }
 
 void nsListControlFrame::MultipleSelection(PRBool aIsShift, PRBool aIsControl)
 {
+  if (nsnull != mHitFrame) {
   mSelectedIndex = (PRInt32)GetSelectedIndex(mHitFrame);
   if (kNothingSelected != mSelectedIndex) {
-    if ((aIsShift) || (mButtonDown && (!aIsControl))) {
-        // Shift is held down
-      SetFrameSelected(mSelectedIndex, PR_TRUE);
-      if (mEndExtendedIndex == kNothingSelected) {
-        mEndExtendedIndex = mSelectedIndex;
-        ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex, PR_FALSE, PR_TRUE);
-      } else {
-        if (mStartExtendedIndex < mEndExtendedIndex) {
-          if (mSelectedIndex < mStartExtendedIndex) {
-            ExtendedSelection(mSelectedIndex, mEndExtendedIndex, PR_TRUE, PR_TRUE);
-            mEndExtendedIndex   = mSelectedIndex;
-          } else if (mSelectedIndex > mEndExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex+1, mSelectedIndex, PR_FALSE, PR_TRUE);
-            mEndExtendedIndex = mSelectedIndex;
-          } else if (mSelectedIndex < mEndExtendedIndex) {
-            ExtendedSelection(mSelectedIndex+1, mEndExtendedIndex, PR_FALSE, PR_FALSE);
-            mEndExtendedIndex = mSelectedIndex;
-          }
-        } else if (mStartExtendedIndex > mEndExtendedIndex) {
-          if (mSelectedIndex > mStartExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex, mSelectedIndex, PR_TRUE, PR_TRUE);
-            mEndExtendedIndex   = mSelectedIndex;
-          } else if (mSelectedIndex < mEndExtendedIndex) {
-            ExtendedSelection(mStartExtendedIndex+1, mEndExtendedIndex-1, PR_FALSE, PR_TRUE);
-            mEndExtendedIndex = mSelectedIndex;
-          } else if (mSelectedIndex > mEndExtendedIndex) {
-            ExtendedSelection(mEndExtendedIndex, mSelectedIndex-1, PR_FALSE, PR_FALSE);
-            mEndExtendedIndex = mSelectedIndex;
+      if ((aIsShift) || (mButtonDown && (!aIsControl))) {
+          // Shift is held down
+        SetFrameSelected(mSelectedIndex, PR_TRUE);
+        if (mEndExtendedIndex == kNothingSelected) {
+          mEndExtendedIndex = mSelectedIndex;
+          ExtendedSelection(mStartExtendedIndex, mEndExtendedIndex, PR_FALSE, PR_TRUE);
+        } else {
+          if (mStartExtendedIndex < mEndExtendedIndex) {
+            if (mSelectedIndex < mStartExtendedIndex) {
+              ExtendedSelection(mSelectedIndex, mEndExtendedIndex, PR_TRUE, PR_TRUE);
+              mEndExtendedIndex   = mSelectedIndex;
+            } else if (mSelectedIndex > mEndExtendedIndex) {
+              ExtendedSelection(mEndExtendedIndex+1, mSelectedIndex, PR_FALSE, PR_TRUE);
+              mEndExtendedIndex = mSelectedIndex;
+            } else if (mSelectedIndex < mEndExtendedIndex) {
+              ExtendedSelection(mSelectedIndex+1, mEndExtendedIndex, PR_FALSE, PR_FALSE);
+              mEndExtendedIndex = mSelectedIndex;
+            }
+          } else if (mStartExtendedIndex > mEndExtendedIndex) {
+            if (mSelectedIndex > mStartExtendedIndex) {
+              ExtendedSelection(mEndExtendedIndex, mSelectedIndex, PR_TRUE, PR_TRUE);
+              mEndExtendedIndex   = mSelectedIndex;
+            } else if (mSelectedIndex < mEndExtendedIndex) {
+              ExtendedSelection(mStartExtendedIndex+1, mEndExtendedIndex-1, PR_FALSE, PR_TRUE);
+              mEndExtendedIndex = mSelectedIndex;
+            } else if (mSelectedIndex > mEndExtendedIndex) {
+              ExtendedSelection(mEndExtendedIndex, mSelectedIndex-1, PR_FALSE, PR_FALSE);
+              mEndExtendedIndex = mSelectedIndex;
+            }
           }
         }
-      }
-    } else if (aIsControl) {
-       // Control is held down
-      if (IsFrameSelected(mSelectedIndex)) {
-        SetFrameSelected(mSelectedIndex, PR_FALSE);
-      } else {
-        SetFrameSelected(mSelectedIndex, PR_TRUE);
-      }
+      } else if (aIsControl) {
+         // Control is held down
+        if (IsFrameSelected(mSelectedIndex)) {
+          SetFrameSelected(mSelectedIndex, PR_FALSE);
+        } else {
+          SetFrameSelected(mSelectedIndex, PR_TRUE);
+        }
  
-    } else {
-       // Neither control nor shift is held down
-      SetFrameSelected(mSelectedIndex, PR_TRUE);
-      mStartExtendedIndex = mSelectedIndex;
-      mEndExtendedIndex   = kNothingSelected;
-      ClearSelection();
-    }
+      } else {
+         // Neither control nor shift is held down
+        SetFrameSelected(mSelectedIndex, PR_TRUE);
+        mStartExtendedIndex = mSelectedIndex;
+        mEndExtendedIndex   = kNothingSelected;
+        ClearSelection();
+      }
+     }
 
-    //XXX Fix this mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
- }
+      //XXX Fix this mHitContent->SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, (selected?kSelectedFocus:kNormal), PR_TRUE);
+   }
 
 }
 

@@ -135,12 +135,14 @@ public:
 
 
 protected:
+  
   virtual void PaintComboboxControl(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRenderingContext,
                                     const nsRect& aDirtyRect,
                                     nsFramePaintLayer aWhichLayer);
   virtual PRIntn GetSkipSides() const;
   void InitTextStr();
+  void SelectionChanged();
 
   nsFormFrame*          mFormFrame;               // Parent Form Frame
   nsIFrame *            mPlaceHolderFrame;
