@@ -42,8 +42,6 @@
 #include "nsMenuItem.h"
 #include "nsPopUpMenu.h"
 #endif
-#include "nsTabWidget.h"
-#include "nsTooltipWidget.h"
 #include "nsFontRetrieverService.h"
 
 // Drag & Drop, Clipboard
