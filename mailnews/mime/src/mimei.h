@@ -289,11 +289,11 @@ extern char *mime_imap_part_address(MimeObject *obj);
    is appended to any existing part-number already in that URL; otherwise,
    it replaces it.
  */
-extern char *mime_set_url_part(const char *url, char *part, PRBool append_p);
+extern char *mime_set_url_part(const char *url, const char *part, PRBool append_p);
 
 /* Puts an *IMAP* part-number into a URL.
  */
-extern char *mime_set_url_imap_part(const char *url, char *part, char *libmimepart);
+extern char *mime_set_url_imap_part(const char *url, const char *part, const char *libmimepart);
 
 
 /* Given a part ID, looks through the MimeObject tree for a sub-part whose ID

@@ -313,9 +313,8 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
   for (; i<cobj->nchildren ; i++) 
   {
     MimeObject    *child = cobj->children[i];
-    char          *part = mime_part_address(child);
-    char          *imappart = NULL;
-
+    nsXPIDLCString imappart;
+    nsXPIDLCString part;
 
     /*
       if we are processing an inline RFC822 message, we should skip its childern
@@ -347,24 +346,22 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
     if (addExternalBodiesOnly && !mime_typep((MimeObject *)child, (MimeObjectClass *)&mimeExternalObjectClass) && !isAnAppleDoublePart )
         return NS_OK;
 
-    if (!part) 
+    part.Adopt(mime_part_address(child));
+    if (part.IsEmpty()) 
       return NS_ERROR_OUT_OF_MEMORY;
 
     if (aChild->options->missing_parts)
-      imappart = mime_imap_part_address(child);
+      imappart.Adopt(mime_imap_part_address(child));
 
     char *urlSpec = nsnull;
-    if (imappart)
+    if (!imappart.IsEmpty())
     {
       isIMAPPart = PR_TRUE;
-      urlSpec = mime_set_url_imap_part(aMessageURL, imappart, part);
+      urlSpec = mime_set_url_imap_part(aMessageURL, imappart.get(), part.get());
     }
     else
-      urlSpec = mime_set_url_part(aMessageURL, part, PR_TRUE);
+      urlSpec = mime_set_url_part(aMessageURL, part.get(), PR_TRUE);
   
-	  PR_FREEIF(part);
-  	PR_FREEIF(imappart);
-
     if (!urlSpec)
       return NS_ERROR_OUT_OF_MEMORY;
 
@@ -466,7 +463,7 @@ BuildAttachmentList(MimeObject *aChild, nsMsgAttachmentData *aAttachData,
       tmp->real_name = MimeGetStringByID(MIME_MSG_DEFAULT_ATTACHMENT_NAME);
       if (tmp->real_name)
       {
-        char *newName = PR_smprintf(tmp->real_name, mime_part_address(child));
+        char *newName = PR_smprintf(tmp->real_name, part.get());
         if (newName)
         {
           PR_Free(tmp->real_name);
