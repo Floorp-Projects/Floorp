@@ -410,6 +410,41 @@ nsBrowserWindow::DoFileOpen()
   }
 }
 
+void
+nsBrowserWindow::DoSelectAll()
+{
+
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIDocument* doc = shell->GetDocument();
+    if (nsnull != doc) {
+      doc->SelectAll();
+      ForceRefresh();
+      NS_RELEASE(doc);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+void
+nsBrowserWindow::ForceRefresh()
+{
+  nsIPresShell* shell = GetPresShell();
+  if (nsnull != shell) {
+    nsIViewManager* vm = shell->GetViewManager();
+    if (nsnull != vm) {
+      nsIView* root = vm->GetRootView();
+      if (nsnull != root) {
+        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
+        NS_RELEASE(root);
+      }
+      NS_RELEASE(vm);
+    }
+    NS_RELEASE(shell);
+  }
+}
+
+
 //----------------------------------------------------------------------
 
 // Note: operator new zeros our memory
@@ -1249,24 +1284,6 @@ nsBrowserWindow::ToggleFrameBorders()
 }
 
 void
-nsBrowserWindow::ForceRefresh()
-{
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIViewManager* vm = shell->GetViewManager();
-    if (nsnull != vm) {
-      nsIView* root = vm->GetRootView();
-      if (nsnull != root) {
-        vm->UpdateView(root, (nsIRegion*)nsnull, NS_VMREFRESH_IMMEDIATE);
-        NS_RELEASE(root);
-      }
-      NS_RELEASE(vm);
-    }
-    NS_RELEASE(shell);
-  }
-}
-
-void
 nsBrowserWindow::ShowContentSize()
 {
   nsISizeOfHandler* szh;
@@ -1456,24 +1473,6 @@ nsBrowserWindow::DoDebugSave()
     NS_RELEASE(shell);
   }
 }
-
-void
-nsBrowserWindow::DoSelectAll()
-{
-
-  nsIPresShell* shell = GetPresShell();
-  if (nsnull != shell) {
-    nsIDocument* doc = shell->GetDocument();
-    if (nsnull != doc) {
-      doc->SelectAll();
-      ForceRefresh();
-      NS_RELEASE(doc);
-    }
-    NS_RELEASE(shell);
-  }
-}
-
-
 
 void 
 nsBrowserWindow::DoToggleSelection()
