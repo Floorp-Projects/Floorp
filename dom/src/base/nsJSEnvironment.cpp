@@ -183,6 +183,7 @@ nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
   nsIScriptObjectOwner *owner;
   JSObject *global;
   nsresult res = aGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void **)&owner);
+  mIsInitialized = PR_FALSE;
 
   if (NS_OK == res) {
     res = owner->GetScriptObject(this, (void **)&global);

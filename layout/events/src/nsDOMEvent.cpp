@@ -23,6 +23,7 @@
 #include "nsIContent.h"
 #include "nsIRenderingContext.h"
 #include "nsIDOMRenderingContext.h"
+#include "nsIWidget.h"
 
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
@@ -195,13 +196,43 @@ NS_METHOD nsDOMEvent::SetCommitText(PRBool aCommitText)
 
 NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
 {
-  *aScreenX = 0;
+  nsRect bounds, offset;
+  offset.x = 0;
+
+  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
+  //Add extra since loop will free one.
+  NS_ADDREF(parent);
+  nsIWidget* tmp;
+  while (nsnull != prent) {
+    parent->GetBoundsa(bounds);
+    offset.x += bounds.x;
+    tmp = parent;
+    parent = tmp->GetParent();
+    NS_RELEASE(tmp);
+  }
+
+  *aScreenX = mEvent->refPoint.x + offset.x;
   return NS_OK;
 }
 
 NS_METHOD nsDOMEvent::GetScreenY(PRInt32* aScreenY)
 {
-  *aScreenY = 0;
+  nsRect bounds, offset;
+  offset.y = 0;
+
+  nsIWidget* parent = ((nsGUIEvent*)mEvent)->widget;
+  //Add extra since loop will free one.
+  NS_ADDREF(parent);
+  nsIWidget* tmp;
+  while (nsnull != parent) {
+    parent->GetBounds(bounds);
+    offset.y += bounds.y;
+    tmp = parent;
+    parent = tmp->GetParent();
+    NS_RELEASE(tmp);
+  }
+
+  *aScreenY = mEvent->refPoint.y + offset.y;
   return NS_OK;
 }
 
@@ -318,14 +349,12 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
 
 NS_METHOD nsDOMEvent::GetPageX(PRInt32* aPageX)
 {
-  *aPageX = 0;
-  return NS_OK;
+  return GetClientX(aPageX);
 }
 
 NS_METHOD nsDOMEvent::GetPageY(PRInt32* aPageY)
 {
-  *aPageY = 0;
-  return NS_OK;
+  return GetClientY(aPageY);
 }
 
 NS_METHOD nsDOMEvent::GetWhich(PRUint32* aWhich)

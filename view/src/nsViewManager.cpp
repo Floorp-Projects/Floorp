@@ -1721,6 +1721,10 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
         mContext->GetDevUnitsToAppUnits(p2t);
         mContext->GetAppUnitsToDevUnits(t2p);
 
+        //Before we start mucking with coords, make sure we know our baseline
+        aEvent->refPoint.x = aEvent->point.x;
+        aEvent->refPoint.y = aEvent->point.y;
+
         aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
         aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
