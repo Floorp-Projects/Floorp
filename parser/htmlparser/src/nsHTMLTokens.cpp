@@ -302,6 +302,18 @@ nsresult CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
+
+  //This code was added to fix Bug#1125.
+  //The problem occurs in bad tags like this: </font size>.
+  //"font size" was being viewed as the tag, which of course doesn't exist.
+  //Instead, just look at the first word.
+  int theBufPos=-1;
+  while(buffer[++theBufPos]){
+    if(kSpace==buffer[theBufPos]){
+      buffer[theBufPos]=0;
+      break;
+    }
+  }
   mTypeID= NS_TagToEnum(buffer);
 
   if(NS_OK==result)
