@@ -63,7 +63,7 @@ NS_IMETHODIMP DeleteTableCellTxn::Do(void)
   nsCOMPtr<nsIDOMSelection> selection;
   res = mPresShell->GetSelection(getter_AddRefs(selection));
   if (NS_SUCCEEDED(res)) {
-    res = selection->Collapse(mElement, 0 /*mOffset+1*/ /*+mStringToInsert.Length()*/);
+    res = selection->Collapse(mElement, 0 /*mOffset+1*/ /*+mStringToInsert.Length()*/, SELECTION_NORMAL);
   }
   return res;
 }
@@ -79,7 +79,7 @@ NS_IMETHODIMP DeleteTableCellTxn::Undo(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mPresShell->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mElement, mOffset);
+      result = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
     }
   }
 #endif

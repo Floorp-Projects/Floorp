@@ -149,7 +149,7 @@ NS_IMETHODIMP DeleteRangeTxn::Do(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mStartParent, mStartOffset);
+      result = selection->Collapse(mStartParent, mStartOffset, SELECTION_NORMAL);
     }
   }
 
@@ -169,8 +169,8 @@ NS_IMETHODIMP DeleteRangeTxn::Undo(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      selection->Collapse(mStartParent, mStartOffset);
-      selection->Extend(mEndParent, mEndOffset);
+      selection->Collapse(mStartParent, mStartOffset, SELECTION_NORMAL);
+      selection->Extend(mEndParent, mEndOffset, SELECTION_NORMAL);
     }
   }
 
@@ -190,7 +190,7 @@ NS_IMETHODIMP DeleteRangeTxn::Redo(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mStartParent, mStartOffset);
+      result = selection->Collapse(mStartParent, mStartOffset, SELECTION_NORMAL);
     }
   }
 

@@ -81,7 +81,7 @@ NS_IMETHODIMP InsertTextTxn::Do(void)
   if (NS_SUCCEEDED(result) && selection) {
     result = mElement->InsertData(mOffset, mStringToInsert);
     if (NS_SUCCEEDED(result)) {
-      result = selection->Collapse(mElement, mOffset+mStringToInsert.Length());
+      result = selection->Collapse(mElement, mOffset+mStringToInsert.Length(), SELECTION_NORMAL);
       NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after insert.");
     }
   }
@@ -99,7 +99,7 @@ NS_IMETHODIMP InsertTextTxn::Undo(void)
     nsCOMPtr<nsIDOMSelection> selection;
     result = mPresShell->GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result) && selection) {
-      result = selection->Collapse(mElement, mOffset);
+      result = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
       NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
     }
   }
