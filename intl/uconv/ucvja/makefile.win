@@ -30,20 +30,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvja
 MODULE_NAME=nsUCvJAModule
 
-CPPSRCS =				\
-	nsJapaneseToUnicode.cpp		\
-	nsUnicodeToSJIS.cpp		\
-	nsCP932ToUnicode.cpp		\
-	nsUnicodeToCP932.cpp		\
-	nsUCvJaSupport.cpp		\
-	nsUCvJaModule.cpp			\
-        nsUnicodeToEUCJP.cpp            \
-        nsUnicodeToJISx0201.cpp         \
-        nsUnicodeToJISx0208.cpp         \
-        nsUnicodeToJISx0212.cpp         \
-        nsUnicodeToISO2022JP.cpp        \
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsJapaneseToUnicode.obj 			\
 	.\$(OBJDIR)\nsUnicodeToSJIS.obj			\

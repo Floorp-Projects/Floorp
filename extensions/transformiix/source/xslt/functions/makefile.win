@@ -33,17 +33,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=$(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=					\
-	CurrentFunctionCall.cpp			\
-	DocumentFunctionCall.cpp		\
-	ElementAvailableFnCall.cpp		\
-	FunctionAvailableFnCall.cpp		\
-	GenerateIDFunctionCall.cpp		\
-	SystemPropertyFunctionCall.cpp		\
-	txFormatNumberFunctionCall.cpp		\
-	txKeyFunctionCall.cpp			\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\CurrentFunctionCall.obj			\
 	.\$(OBJDIR)\DocumentFunctionCall.obj		\

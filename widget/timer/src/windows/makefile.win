@@ -29,14 +29,7 @@ DEFINES=-DWIN32_LEAN_AND_MEAN -DSTRICT
 
 EXPORTS=nsTimerManager.h nsWindowsTimer.h nsIWindowsTimerMap.h
 
-CPPSRCS =			\
-	nsTimer.cpp		\
-	nsNewTimer.cpp		\
-	nsTimerManager.cpp		\
-	$(NULL)
-
 MODULE=timer
-
 
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsTimer.obj		\

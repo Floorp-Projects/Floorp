@@ -26,12 +26,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=$(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=			\
-	XMLPrinter.cpp		\
-	HTMLPrinter.cpp		\
-	TEXTPrinter.cpp		\
-	$(NULL)
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\XMLPrinter.obj	\
 	.\$(OBJDIR)\HTMLPrinter.obj	\

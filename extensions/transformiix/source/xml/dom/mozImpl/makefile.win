@@ -31,27 +31,6 @@ REQUIRES	= string \
 
 include <$(DEPTH)/config/config.mak>
 
-CPPSRCS=				\
-	MozillaAttr.cpp			\
-	MozillaCDATASection.cpp		\
-	MozillaCharacterData.cpp	\
-	MozillaComment.cpp		\
-	MozillaDocument.cpp		\
-	MozillaDocumentFragment.cpp	\
-	MozillaDocumentType.cpp		\
-	MozillaDOMImplementation.cpp	\
-	MozillaElement.cpp		\
-	MozillaEntity.cpp		\
-	MozillaEntityReference.cpp	\
-	MozillaNamedNodeMap.cpp		\
-	MozillaNode.cpp			\
-	MozillaNodeList.cpp		\
-	MozillaNotation.cpp		\
-  MozillaObjectWrapper.cpp	\
-	MozillaProcInstruction.cpp	\
-	MozillaText.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\MozillaAttr.obj		\
 	.\$(OBJDIR)\MozillaCDATASection.obj	\

@@ -35,29 +35,6 @@ DEFINES=-D_IMPL_NS_INTL -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME=uconv
 MODULE_NAME=nsUConvModule
 
-CPPSRCS =				\
-	nsTextToSubURI.cpp		\
-	nsCharsetConverterManager.cpp	\
-	nsUnicodeDecodeHelper.cpp	\
-	nsUnicodeEncodeHelper.cpp	\
-	nsWinCharset.cpp		\
-	nsCharsetAliasImp.cpp		\
-	nsUConvModule.cpp		\
-	nsMappingCache.cpp		\
-	nsURLProperties.cpp		\
-	nsISO88591ToUnicode.cpp     \
-	nsCP1252ToUnicode.cpp     \
-	nsMacRomanToUnicode.cpp     \
-	nsUTF8ToUnicode.cpp     \
-	nsUnicodeToISO88591.cpp     \
-	nsUnicodeToCP1252.cpp     \
-	nsUnicodeToMacRoman.cpp     \
-	nsUnicodeToUTF8.cpp     \
-	nsUCvMinSupport.cpp		\
-	nsScriptableUConv.cpp	\
-	nsConverterInputStream.cpp   \
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsTextToSubURI.obj			\
 	.\$(OBJDIR)\nsCharsetConverterManager.obj 	\

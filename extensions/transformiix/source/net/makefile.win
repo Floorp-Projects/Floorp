@@ -30,10 +30,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES= $(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=		\
-	URIUtils.cpp 	\
-	$(NULL)
-
 CPP_OBJS=			\
 	.\$(OBJDIR)\URIUtils.obj \
 	$(NULL)

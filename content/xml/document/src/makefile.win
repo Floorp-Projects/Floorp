@@ -48,11 +48,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsXMLContentSink.cpp			\
-	nsXMLDocument.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLContentSink.obj	\
 	.\$(OBJDIR)\nsXMLDocument.obj		\

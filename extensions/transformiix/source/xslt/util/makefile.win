@@ -34,12 +34,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=$(DEFINES) -DTX_EXE
 !endif
 
-CPPSRCS=			\
-	NodeStack.cpp		\
-	txNodeSorter.cpp	\
-	txXPathResultComparator.cpp \
-	$(NULL)
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\NodeStack.obj	\
 	.\$(OBJDIR)\txNodeSorter.obj	\

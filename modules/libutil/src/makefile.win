@@ -21,10 +21,7 @@
 
 MODULE=util 
 DEPTH=..\..\.. 
-CSRCS=obs.c 
 LIBRARY_NAME=util 
-CPPSRCS=stopwatch.cpp \
-        $(NULL)
 
 CPP_OBJS=.\$(OBJDIR)\stopwatch.obj \
 	 $(NULL)

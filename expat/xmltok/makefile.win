@@ -38,11 +38,6 @@
 
 DEPTH= ..\..
 
-CPPSRCS=				\
-	xmltok.c			\
-	xmlrole.c			\
-	$(NULL)
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\xmltok.obj      	\
 	.\$(OBJDIR)\xmlrole.obj     	\

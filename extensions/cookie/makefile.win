@@ -39,21 +39,6 @@ REQUIRES	= xpcom \
 
 EXPORTS = nsCookieHTTPNotify.h
 
-CPPSRCS=				\
- nsModuleFactory.cpp		\
- nsCookie.cpp			\
- nsPermission.cpp			\
- nsCookieManager.cpp			\
- nsCookieService.cpp			\
- nsImgManager.cpp			\
- nsPermissionManager.cpp			\
- nsCookies.cpp			\
- nsImages.cpp			\
- nsPermissions.cpp			\
- nsUtils.cpp			\
- nsCookieHTTPNotify.cpp			\
- $(NULL)
-
 XPIDLSRCS=      .\nsICookieManager.idl           \
                 .\nsIImgManager.idl            \
                 .\nsIPermissionManager.idl       \

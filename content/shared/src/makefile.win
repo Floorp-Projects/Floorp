@@ -43,24 +43,6 @@ DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS = \
-  nsCSSAtoms.cpp \
-  nsCSSKeywords.cpp \
-  nsCSSProps.cpp \
-  nsHTMLAtoms.cpp \
-  nsHTMLUtils.cpp \
-  nsHTMLValue.cpp \
-  nsImageMapUtils.cpp \
-  nsLayoutAtoms.cpp \
-  nsStyleUtil.cpp \
-  nsStyleStruct.cpp \
-  nsTextFragment.cpp \
-  nsXULAtoms.cpp \
-  nsXBLAtoms.cpp \
-  nsStyleCoord.cpp \
-  $(NULL)
-
-
 CPP_OBJS= \
   .\$(OBJDIR)\nsCSSAtoms.obj \
   .\$(OBJDIR)\nsCSSKeywords.obj \

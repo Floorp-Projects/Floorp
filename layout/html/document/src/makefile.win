@@ -49,11 +49,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS=					\
-	nsFrameFrame.cpp				\
-	nsFrameSetFrame.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsFrameFrame.obj		\
 	.\$(OBJDIR)\nsFrameSetFrame.obj		\

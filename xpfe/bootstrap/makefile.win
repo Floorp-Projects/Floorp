@@ -57,18 +57,6 @@ SEDCMDS=nsStaticComonents.cpp.sed
 GARBAGE=$(GARBAGE) $(EXTRA_LIBS_LIST_FILE) $(SEDCMDS) nsStaticComponents.cpp
 !endif
 
-CPPSRCS=                                \
- nsAppRunner.cpp                        \
- nsSetupRegistry.cpp                    \
- nsWindowCreator.cpp                    \
- nsNativeAppSupportBase.cpp             \
- nsNativeAppSupportWin.cpp              \
- showOSAlert.cpp                        \
-!if defined(MOZ_STATIC_COMPONENT_LIBS) && !defined(MOZ_GECKO_DLL)
- nsStaticComponents.cpp                 \
-!endif
- $(NULL)
-
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsAppRunner.obj            \
  .\$(OBJDIR)\nsSetupRegistry.obj        \

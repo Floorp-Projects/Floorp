@@ -37,8 +37,6 @@ REQUIRES	= xpcom \
 
 RESFILE = widget.res
 
-CPPSRCS  = nsWinWidgetFactory.cpp
-
 CPP_OBJS = .\$(OBJDIR)\nsWinWidgetFactory.obj
 
 

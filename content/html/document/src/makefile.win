@@ -60,14 +60,6 @@ DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 !endif
 
-CPPSRCS=					\
-	nsHTMLContentSink.cpp			\
-	nsHTMLDocument.cpp			\
-	nsHTMLFragmentContentSink.cpp		\
-	nsImageDocument.cpp			\
-	nsMarkupDocument.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsHTMLContentSink.obj	\
 	.\$(OBJDIR)\nsHTMLDocument.obj		\

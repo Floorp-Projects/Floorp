@@ -34,10 +34,6 @@ LLIBS=				\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)
 
-CPPSRCS =				\
-	MyService.cpp			\
-	$(NULL)
-
 CPP_OBJS = \
 	.\$(OBJDIR)\MyService.obj	\
 	$(NULL)

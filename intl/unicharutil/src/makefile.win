@@ -39,19 +39,6 @@ OBJS= \
 CSRCS= \
 	$(NULL)
 
-CPPSRCS= \
-	nsCategoryImp.cpp	\
-	nsCaseConversionImp2.cpp	\
-	nsUcharUtilModule.cpp	\
-	nsHankakuToZenkaku.cpp	\
-	nsEntityConverter.cpp	\
-	nsSaveAsCharset.cpp	\
-!ifdef IBMBIDI
-	nsBidiUtilsImp.cpp \
-	nsBidiImp.cpp \
-!endif
-	$(NULL)
-
 CPP_OBJS= \
 	.\$(OBJDIR)\nsCategoryImp.obj \
 	.\$(OBJDIR)\nsCaseConversionImp2.obj \

@@ -30,20 +30,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvtw2
 MODULE_NAME=nsUCvTW2Module
 
-CPPSRCS =				\
-	nsEUCTWToUnicode.cpp		\
-	nsUnicodeToEUCTW.cpp		\
-	nsUnicodeToCNS11643p1.cpp		\
-	nsUnicodeToCNS11643p2.cpp		\
-	nsUnicodeToCNS11643p3.cpp		\
-	nsUnicodeToCNS11643p4.cpp		\
-	nsUnicodeToCNS11643p5.cpp		\
-	nsUnicodeToCNS11643p6.cpp		\
-	nsUnicodeToCNS11643p7.cpp		\
-	nsUCvTW2Support.cpp		\
-	nsUCvTw2Module.cpp			\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsEUCTWToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToEUCTW.obj		\

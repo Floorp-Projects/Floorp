@@ -34,10 +34,6 @@ include <$(DEPTH)/config/config.mak>
 LIBRARY_NAME=transformiix
 MODULE_NAME=TransformiixModule
 
-CPPSRCS=						\
-	XSLTProcessorModule.cpp		\
-	$(NULL)
-
 CPP_OBJS=							\
 	..\source\base\$(OBJDIR)\ArrayList.obj \
 	..\source\base\$(OBJDIR)\Double.obj \

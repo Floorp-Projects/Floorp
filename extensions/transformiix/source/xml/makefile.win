@@ -36,11 +36,6 @@ DEFINES=$(DEFINES) -DTX_EXE
 DIRS = $(DIRS) printer
 !endif
 
-CPPSRCS=				\
-	XMLDOMUtils.cpp			\
-	XMLUtils.cpp			\
-	$(NULL)
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\XMLDOMUtils.obj	\
 	.\$(OBJDIR)\XMLUtils.obj	\

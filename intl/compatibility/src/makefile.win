@@ -27,11 +27,6 @@ DEFINES= -DWIN32_LEAN_AND_MEAN
 LIBRARY_NAME= intlcmpt 
 
 
-CPPSRCS= \
-	nsI18nCompatibility.cpp \
-	nsCSIDtoCharsetName.cpp \
-	$(NULL)
-
 CPP_OBJS= \
 	.\$(OBJDIR)\nsI18nCompatibility.obj \
 	.\$(OBJDIR)\nsCSIDtoCharsetName.obj \

@@ -30,10 +30,6 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=strres
 
-CPPSRCS =				\
-	nsStringBundle.cpp		\
-	$(NULL)
-
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsStringBundle.obj		\
 	$(NULL)

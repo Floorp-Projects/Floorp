@@ -24,25 +24,6 @@ include <$(DEPTH)/config/config.mak>
 
 DEFINES=$(DEFINES) -DTX_EXE
 
-CPPSRCS=Attr.cpp \
-        CDATASection.cpp \
-        CharacterData.cpp \
-        Comment.cpp \
-        DOMImplementation.cpp \
-        Document.cpp \
-        DocumentFragment.cpp \
-        DocumentType.cpp \
-        Element.cpp \
-        Entity.cpp \
-        EntityReference.cpp \
-        NamedNodeMap.cpp \
-        NodeDefinition.cpp \
-        NodeListDefinition.cpp \
-        Notation.cpp \
-        ProcessingInstruction.cpp \
-        Text.cpp \
-	$(NULL)
-
 CPP_OBJS=					\
 	  .\$(OBJDIR)\Attr.obj \
         .\$(OBJDIR)\CDATASection.obj \

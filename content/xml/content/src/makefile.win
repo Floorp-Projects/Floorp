@@ -41,15 +41,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-	nsXMLElement.cpp			\
-	nsXMLCDATASection.cpp			\
-	nsXMLProcessingInstruction.cpp		\
-	nsXMLEntity.cpp				\
-	nsXMLNotation.cpp			\
-	nsXMLNamedNodeMap.cpp			\
-	$(NULL)
-
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsXMLElement.obj		\
 	.\$(OBJDIR)\nsXMLCDATASection.obj	\

@@ -30,22 +30,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvko
 MODULE_NAME=nsUCvKoModule
 
-CPPSRCS =				\
-	nsEUCKRToUnicode.cpp		\
-	nsUnicodeToEUCKR.cpp		\
-	nsUnicodeToKSC5601.cpp		\
-	nsISO2022KRToUnicode.cpp		\
-	nsUnicodeToISO2022KR.cpp		\
-	nsCP949ToUnicode.cpp		\
-	nsUnicodeToCP949.cpp		\
-	nsUnicodeToX11Johab.cpp		\
-	nsJohabToUnicode.cpp	\
-	nsUnicodeToJohab.cpp	\
-	nsUnicodeToJohabNoAscii.cpp	\
-	nsUCvKOSupport.cpp		\
-	nsUCvKoModule.cpp			\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsEUCKRToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToEUCKR.obj		\

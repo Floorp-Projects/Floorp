@@ -18,7 +18,6 @@ REQUIRES	= xpcom \
 		  chrome \
 		  necko \
 		  $(NULL)
-CPPSRCS		= regchrome.cpp
 
 MAKE_OBJ_TYPE   = EXE
 PROG = .\$(OBJDIR)\regchrome.exe

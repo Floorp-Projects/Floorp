@@ -37,21 +37,12 @@ REQUIRES	= string \
 include <$(DEPTH)/config/config.mak>
 
 !ifndef TX_EXE
-CPPSRCS= 			\
-	nsSyncLoader.cpp	\
-	XMLParser.cpp	\
-	$(NULL)
-
 CPP_OBJS= 					\
 	.\$(OBJDIR)\nsSyncLoader.obj	\
 	.\$(OBJDIR)\XMLParser.obj	\
 	$(NULL)
 !else
 DEFINES=$(DEFINES) -DTX_EXE
-
-CPPSRCS= 			\
-	XMLParser.cpp	\
-	$(NULL)
 
 CPP_OBJS= 					\
 	.\$(OBJDIR)\XMLParser.obj	\

@@ -26,13 +26,6 @@ include <$(DEPTH)/config/config.mak>
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
-CPPSRCS=				\
- dlldeps.cpp			    \
- nsComFactory.cpp			\
- nsDLLFactory.cpp			\
- nsWebShell.cpp				\
- $(NULL)
-
 CPP_OBJS=				\
  .\$(OBJDIR)\dlldeps.obj		    \
  .\$(OBJDIR)\nsComFactory.obj		\

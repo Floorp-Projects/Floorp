@@ -41,11 +41,6 @@ MODULE = expat
 EXPORTS = xmlparse.h
 LIBRARY_NAME=expat
 
-CPPSRCS=					\
-	xmlparse.c				\
-	hashtable.c				\
-	$(NULL)
-
 CPP_OBJS=                                   	\
 	.\$(OBJDIR)\xmlparse.obj      		\
 	.\$(OBJDIR)\hashtable.obj     		\

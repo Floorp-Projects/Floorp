@@ -48,10 +48,6 @@ XPIDLSRCS =                             \
         .\nsIRegistryDataSource.idl     \
         $(NULL)
 
-CPPSRCS=                                \
- nsRegistryViewer.cpp                   \
- $(NULL)
-
 CPP_OBJS=                               \
  .\$(OBJDIR)\nsRegistryDataSource.obj   \
  $(NULL)

@@ -63,23 +63,6 @@ REQUIRES	= xpcom \
                   appshell \
 		  $(NULL)
 
-CPPSRCS =			\
-	nsBarProps.cpp          \
-	nsDOMException.cpp 	\
-	nsJSEnvironment.cpp	\
-	nsFocusController.cpp	\
-	nsGlobalWindow.cpp      \
-	nsLocation.cpp		\
-	nsDOMWindowList.cpp	\
-	nsJSUtils.cpp		\
-	nsScreen.cpp		\
-	nsHistory.cpp		\
-	nsMimeTypeArray.cpp	\
-	nsPluginArray.cpp	\
-	nsWindowRoot.cpp	\
-	nsDOMClassInfo.cpp	\
-	$(NULL)
-
 MODULE=dom
 
 

@@ -46,15 +46,6 @@ REQUIRES	= xpcom \
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS=					\
-        nsRDFDOMNodeList.cpp                    \
-        nsXULAttributeValue.cpp                 \
-        nsXULAttributes.cpp                     \
-        nsXULElement.cpp                        \
-        nsXULPopupListener.cpp                  \
-        nsXULTreeElement.cpp                    \
-	$(NULL)
-
 CPP_OBJS=					        \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj                \
         .\$(OBJDIR)\nsXULAttributeValue.obj             \

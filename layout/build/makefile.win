@@ -38,8 +38,6 @@ DEFINES=-D_IMPL_NS_HTML
 LIBRARY_NAME=gklayout
 MODULE_NAME=nsLayoutModule
 
-CPPSRCS=dlldeps.cpp nsLayoutDLF.cpp nsLayoutFactory.cpp
-
 CPP_OBJS=				\
 	.\$(OBJDIR)\dlldeps.obj		\
 	.\$(OBJDIR)\nsLayoutModule.obj	\

@@ -46,11 +46,6 @@ MODULE_NAME = nsEditorModule
 
 !if defined(MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY)
 
-CPPSRCS =                          \
-          $(CPPSRCS)               \
-          nsTextEditorReg.cpp      \
-          $(NULL)
-
 CPP_OBJS =                                 \
            $(CPP_OBJS)                     \
            .\$(OBJDIR)\nsTextEditorReg.obj \
@@ -59,11 +54,6 @@ CPP_OBJS =                                 \
 LIBRARY_NAME = texteditor
 
 !else
-
-CPPSRCS =                          \
-          $(CPPSRCS)               \
-          nsEditorRegistration.cpp \
-          $(NULL)
 
 CPP_OBJS =                                      \
            $(CPP_OBJS)                          \

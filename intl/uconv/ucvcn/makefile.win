@@ -30,24 +30,6 @@ REQUIRES	= xpcom \
 LIBRARY_NAME=ucvcn
 MODULE_NAME=nsUCvCnModule
 
-CPPSRCS =				\
-	nsGB2312ToUnicodeV2.cpp		\
-	nsUnicodeToGB2312V2.cpp		\
-	nsUnicodeToGB2312GL.cpp		\
-	nsGBKToUnicode.cpp		\
-	nsUnicodeToGBKNoAscii.cpp	\
-	nsUnicodeToGBK.cpp		\
-	nsISO2022CNToUnicode.cpp		\
-	nsUnicodeToISO2022CN.cpp		\
-	nsHZToUnicode.cpp		\
-	nsUnicodeToHZ.cpp		\
-	nsCP936ToUnicode.cpp		\
-	nsUnicodeToCP936.cpp		\
-	nsUCvCnSupport.cpp		\
-	nsUCvCnModule.cpp			\
-	nsGBKConvUtil.cpp			\
-	$(NULL)
-
 CPP_OBJS=						\
 	.\$(OBJDIR)\nsGB2312ToUnicodeV2.obj 		\
 	.\$(OBJDIR)\nsUnicodeToGB2312V2.obj		\

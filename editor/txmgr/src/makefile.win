@@ -28,14 +28,6 @@ REQUIRES	= xpcom \
 		  string \
 		  $(NULL)
 
-CPPSRCS =				\
-	nsTransactionItem.cpp	\
-	nsTransactionList.cpp	\
-	nsTransactionManager.cpp	\
-	nsTransactionManagerFactory.cpp	\
-	nsTransactionStack.cpp	\
-	$(NULL)
-
 CPP_OBJS =					\
 	.\$(OBJDIR)\nsTransactionItem.obj	\
 	.\$(OBJDIR)\nsTransactionList.obj	\
