@@ -266,7 +266,6 @@ nsContentAreaDragDrop::DragOver(nsIDOMEvent* inEvent)
     session->GetSourceDocument(getter_AddRefs(sourceDoc));
     nsCOMPtr<nsIDOMDocument> eventDoc;
     GetEventDocument(inEvent, getter_AddRefs(eventDoc));
-    if ( sourceDoc == eventDoc ) printf("we're in content area dragdrop and about to disallow\n");
     if ( sourceDoc == eventDoc )
       dropAllowed = PR_FALSE;
     session->SetCanDrop(dropAllowed);
