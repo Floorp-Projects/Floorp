@@ -148,14 +148,13 @@ protected:
 private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFDataSource> mDataSource;
+  nsCOMPtr<nsIXPIProgressDialog> mXPIProgress;
   nsCOMPtr<nsIRDFContainer> mDownloadsContainer;
   nsCOMPtr<nsIRDFContainerUtils> mRDFContainerUtils;
   nsCOMPtr<nsIStringBundle> mBundle;
   nsCOMPtr<nsITimer> mDMOpenTimer;
   PRInt32 mBatches;
   nsHashtable mCurrDownloads;
-  
-  nsXPIProgressListener* mXPIProgress;
   
   friend class nsDownload;
 };

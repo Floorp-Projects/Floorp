@@ -102,7 +102,7 @@ static PRInt32 gRefCnt = 0;
 
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver)
 
-nsDownloadManager::nsDownloadManager() : mBatches(0), mXPIProgress(nsnull)
+nsDownloadManager::nsDownloadManager() : mBatches(0)
 {
 }
 
@@ -132,10 +132,9 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_DateStarted);
   NS_IF_RELEASE(gNC_DateEnded);
 
-  if (mXPIProgress) {
-    delete mXPIProgress;
-    mXPIProgress = nsnull;
-  }
+  // Download Manager is shutting down! Tell the XPInstallManager to stop
+  // transferring any files that may have been being downloaded. 
+  gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
 
   NS_RELEASE(gRDFService);
   NS_RELEASE(gObserverService);
@@ -559,13 +558,14 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
   
   // Assert icon information
   if (aIconURL) {
-    nsCOMPtr<nsIRDFLiteral> iconURLLiteral;
-    gRDFService->GetLiteral(aIconURL, getter_AddRefs(iconURLLiteral));
+    nsCOMPtr<nsIRDFResource> iconURIRes;
+    nsDependentString iconURL(aIconURL);
+    gRDFService->GetUnicodeResource(iconURL, getter_AddRefs(iconURIRes));
     mDataSource->GetTarget(downloadRes, gNC_IconURL, PR_TRUE, getter_AddRefs(node));
     if (node)
-      rv = mDataSource->Change(downloadRes, gNC_IconURL, node, iconURLLiteral);
+      rv = mDataSource->Change(downloadRes, gNC_IconURL, node, iconURIRes);
     else
-      rv = mDataSource->Assert(downloadRes, gNC_IconURL, iconURLLiteral, PR_TRUE);
+      rv = mDataSource->Assert(downloadRes, gNC_IconURL, iconURIRes, PR_TRUE);
   }
 
   internalDownload->SetMIMEInfo(aMIMEInfo);
@@ -616,7 +616,9 @@ nsDownloadManager::AddDownload(DownloadType aDownloadType,
     if (!mXPIProgress)
       mXPIProgress = new nsXPIProgressListener(this);
 
-    mXPIProgress->AddDownload(*aDownload);
+    nsIXPIProgressDialog* dialog = mXPIProgress.get();
+    nsXPIProgressListener* listener = NS_STATIC_CAST(nsXPIProgressListener*, dialog);
+    listener->AddDownload(*aDownload);
   }
 
   mCurrDownloads.Put(&key, *aDownload);
@@ -865,6 +867,11 @@ nsDownloadManager::GetCanCleanUp(PRBool* aResult)
 nsresult
 nsDownloadManager::ValidateDownloadsContainer()
 {
+  // None of the function calls here should need error checking or their results
+  // null checked because they should always succeed. If they fail, and there's 
+  // a crash, it's a sign that this function is being called after the download 
+  // manager or services that it rely on have been shut down, and there's a 
+  // problem in some other code, somewhere.
   nsCOMPtr<nsIRDFContainer> downloads;
   GetDownloadsContainer(getter_AddRefs(downloads));
 
@@ -1312,7 +1319,9 @@ nsDownloadManager::GetXpiProgress(nsIXPIProgressDialog** aProgress)
 NS_IMETHODIMP
 nsDownloadManager::GetHasActiveXPIOperations(PRBool* aHasOps)
 {
-  *aHasOps = !mXPIProgress ? PR_FALSE : mXPIProgress->HasActiveXPIOperations();
+  nsIXPIProgressDialog* dialog = mXPIProgress.get();
+  nsXPIProgressListener* listener = NS_STATIC_CAST(nsXPIProgressListener*, dialog);
+  *aHasOps = !mXPIProgress ? PR_FALSE : listener->HasActiveXPIOperations();
   return NS_OK;
 }
 
@@ -1528,25 +1537,27 @@ nsDownloadsDataSource::GetTarget(nsIRDFResource* aSource, nsIRDFResource* aPrope
     if (!hasIconURLArc) {
       nsCOMPtr<nsIRDFNode> target;
       rv = mInner->GetTarget(aSource, gNC_File, aTruthValue, getter_AddRefs(target));
-      if (NS_FAILED(rv)) return rv;
-      
-      nsXPIDLCString path;
-      nsCOMPtr<nsIRDFResource> res(do_QueryInterface(target));
-      res->GetValue(getter_Copies(path));
-      
-      nsAutoString iconURL(NS_LITERAL_STRING("moz-icon://"));
-      nsAutoString pathTemp; pathTemp.AssignWithConversion(path);
-      iconURL += pathTemp + NS_LITERAL_STRING("?size=32");
+      if (NS_SUCCEEDED(rv) && target) {
+        nsXPIDLCString path;
+        nsCOMPtr<nsIRDFResource> res(do_QueryInterface(target));
+        res->GetValue(getter_Copies(path));
+        
+        nsAutoString iconURL(NS_LITERAL_STRING("moz-icon://"));
+        nsAutoString pathTemp; pathTemp.AssignWithConversion(path);
+        iconURL += pathTemp + NS_LITERAL_STRING("?size=32");
 
-      nsCOMPtr<nsIRDFResource> result;
-      gRDFService->GetUnicodeResource(iconURL, getter_AddRefs(result));
+        nsCOMPtr<nsIRDFResource> result;
+        gRDFService->GetUnicodeResource(iconURL, getter_AddRefs(result));
 
-      *aResult = result;
-      NS_IF_ADDREF(*aResult);
+        *aResult = result;
+        NS_IF_ADDREF(*aResult);
 
-      return NS_OK;
+        return NS_OK;
+      }
     }
   }
+  // Either it's some other property, or we DO have an IconURL property
+  // and we just need to get the value from the real datasource. 
   return mInner->GetTarget(aSource, aProperty, aTruthValue, aResult);
 }
 

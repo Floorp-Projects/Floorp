@@ -64,7 +64,8 @@ download[selected="true"] {
   border-bottom: 1px dotted #7F9DB9;
 }
 
-download[state="0"], download[state="-1"], download[state="4"] {
+download[state="0"], download[state="-1"], download[state="4"], 
+download[state="5"], download[state="6"] {
   background-color: transparent;
   background-image: url("chrome://mozapps/skin/downloads/downloadFader.png");
 }
