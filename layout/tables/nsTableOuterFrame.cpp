@@ -825,10 +825,9 @@ nsresult nsTableOuterFrame::CreateInnerTableFrame(nsIPresContext* aPresContext,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Resolve style and set the style context
-    nsIStyleContextPtr styleContext =
-      aPresContext->ResolveStyleContextFor(mContent, this);
-    aTableFrame->SetStyleContext(aPresContext,styleContext);
+    // Resolve style and set the style context. Have the inner table use our
+    // style context
+    aTableFrame->SetStyleContext(aPresContext, mStyleContext);
 
   } else {
     // Create a continuing column

@@ -762,12 +762,15 @@ void nsTablePart::GetTableBorder(nsIHTMLContent* aContent,
     else {
       twips.SetCoordValue(nscoord(NS_INT_PIXELS_TO_TWIPS(value.GetPixelValue(), p2t)));
     }
+
+#if 0
     nsStyleCoord  two(nscoord(NS_INT_PIXELS_TO_TWIPS(2,p2t)));
 
     spacing->mPadding.SetTop(two);
     spacing->mPadding.SetRight(two);
     spacing->mPadding.SetBottom(two);
     spacing->mPadding.SetLeft(two);
+#endif
 
     spacing->mBorder.SetTop(twips);
     spacing->mBorder.SetRight(twips);
