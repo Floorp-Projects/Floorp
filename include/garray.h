@@ -98,13 +98,32 @@ public:
         return m_iSize++;
     }
 
+    int Insert(void* newElement, int nIndex){
+        GuaranteeSize(m_iSize+1);
+        if( nIndex < m_iSize )
+        {
+            /* Shuffle pointers at and above insert index up */
+            for( int i = m_iSize; i > nIndex; i-- )
+            {
+               m_pData[i] = m_pData[i-1];
+            }
+            /* Overwrite pointer at designated location */
+            m_pData[nIndex] = newElement;        
+        } else {
+            /* nIndex is too large - just add at end */
+            m_pData[m_iSize] = newElement;
+        }
+        /* Return index to last item in list */
+        return m_iSize++;
+    }
+
     int Delete( int nIndex ){ 
         if( nIndex < m_iSize )
         {
+            /* Shuffle remaining pointers down */
             for( int i = nIndex; i < m_iSize-1; i++ )
             {
-               /* Suffle remaining pointers down */
-               m_pData[nIndex] = m_pData[nIndex+1];
+               m_pData[i] = m_pData[i+1];
             }
             m_iSize--;
         }
