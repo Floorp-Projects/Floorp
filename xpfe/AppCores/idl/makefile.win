@@ -32,7 +32,6 @@ IDLSRCS= \
 	AppCoresManager.idl \
 	BaseAppCore.idl     \
 	BrowserAppCore.idl  \
-	RDFCore.idl         \
 	ProfileCore.idl     \
 	ToolkitCore.idl
 !endif

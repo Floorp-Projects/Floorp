@@ -22,7 +22,6 @@
 #include "nsAppCoresCIDs.h"
 #include "nsAppCoresManagerFactory.h"
 #include "nsProfileCoreFactory.h" 
-#include "nsRDFCoreFactory.h"
 #include "nsBrowserAppCoreFactory.h"
 #include "nsToolkitCoreFactory.h"
 #include "nsIFactory.h"
@@ -36,7 +35,6 @@ static PRInt32 gInstanceCnt = 0;
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kIFactoryIID,        NS_IFACTORY_IID);
 static NS_DEFINE_IID(kProfileCoreCID,     NS_PROFILECORE_CID); 
-static NS_DEFINE_IID(kRDFCoreCID,         NS_RDFCORE_CID);
 static NS_DEFINE_IID(kToolkitCoreCID,     NS_TOOLKITCORE_CID);
 static NS_DEFINE_IID(kBrowserAppCoreCID,  NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_IID(kAppCoresManagerCID, NS_APPCORESMANAGER_CID);
@@ -58,7 +56,6 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     printf("*** AppCores object is being registered\n");
     nsComponentManager::RegisterComponent(kAppCoresManagerCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kProfileCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE); 
-    nsComponentManager::RegisterComponent(kRDFCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kToolkitCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
     nsComponentManager::RegisterComponent(kBrowserAppCoreCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
 
@@ -72,7 +69,6 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     
     nsComponentManager::UnregisterComponent(kAppCoresManagerCID, path);
     nsComponentManager::UnregisterComponent(kProfileCoreCID, path); 
-    nsComponentManager::UnregisterComponent(kRDFCoreCID, path);
     nsComponentManager::UnregisterComponent(kToolkitCoreCID, path);
     nsComponentManager::UnregisterComponent(kBrowserAppCoreCID, path);
     
@@ -103,10 +99,6 @@ NSGetFactory(nsISupports* serviceMgr,
     else if ( aClass.Equals(kProfileCoreCID) ) 
     { 
         inst = new nsProfileCoreFactory(); 
-    }
-    else if ( aClass.Equals(kRDFCoreCID) )
-    {
-        inst = new nsRDFCoreFactory();      
     }
     else if ( aClass.Equals(kToolkitCoreCID) )
     {
