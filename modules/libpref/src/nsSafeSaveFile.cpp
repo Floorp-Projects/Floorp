@@ -77,6 +77,19 @@ nsresult nsSafeSaveFile::OnSaveFinished(PRBool aSaveSucceeded, PRBool aBackupTar
   if (aSaveSucceeded) {
     NS_ENSURE_STATE(mTargetFile && mTempFile);
 
+    if (!mTargetFileExists) {
+      // If the target file did not exist when we were initialized, then the
+      // temp file we gave out was actually a reference to the target file.
+      // since we succeeded in writing to the temp file (and hence succeeded
+      // in writing to the target file), there is nothing more to do.
+#ifdef DEBUG      
+      PRBool equal;
+      if (NS_FAILED(mTargetFile->Equals(mTempFile, &equal)) || !equal)
+        NS_ERROR("mTempFile not equal to mTargetFile");
+#endif
+      return NS_OK;      
+    }
+
     nsCAutoString targetFilename;
     rv = mTargetFile->GetNativeLeafName(targetFilename);
     
