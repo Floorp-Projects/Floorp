@@ -1,5 +1,4 @@
-/*** -*- Mode: Javascript; tab-width: 2;
-
+/*** -*- Mode: Javascript; tab-width: 2; 
 The contents of this file are subject to the Mozilla Public
 License Version 1.1 (the "License"); you may not use this file
 except in compliance with the License. You may obtain a copy of
@@ -11,10 +10,10 @@ implied. See the License for the specific language governing
 rights and limitations under the License.
 
 The Original Code is Collabnet code.
-The Initial Developer of the Original Code is Collabnet.
+The Initial Developer of the Original Code is jslib team.
 
-Portions created by Collabnet are
-Copyright (C) 2000 Collabnet.  All
+Portions created by jslib team are
+Copyright (C) 2000 jslib team.  All
 Rights Reserved.
 
 Contributor(s): Pete Collins, 
@@ -115,54 +114,89 @@ xpcom nsIFile file IO library from js
 
 ************/
 
-
 // insure jslib base is loaded
-if (typeof(JS_LIB_LOADED)=='boolean')
-{
+if (typeof(JS_LIB_LOADED)=='boolean') {
 
 // test to make sure filesystem base class is loaded
 if (typeof(JS_FILESYSTEM_LOADED)!='boolean')
-  include(JS_LIB_PATH+'io/filesystem.js');
+  include(jslib_filesystem);
 
 /****************** Globals **********************/
-const JS_FILE_LOADED                   = true;
-const JS_FILE_FILE                     = "file.js";
+const JS_FILE_LOADED           = true;
+const JS_FILE_FILE             = "file.js";
 
-const JS_FILE_F_CHANNEL_CID            = "@mozilla.org/network/local-file-channel;1";
-const JS_FILE_I_STREAM_CID             = "@mozilla.org/scriptableinputstream;1";
+const JS_FILE_F_CHANNEL_CID    = "@mozilla.org/network/local-file-channel;1";
+const JS_FILE_IOSERVICE_CID    = "@mozilla.org/network/io-service;1";
+const JS_FILE_I_STREAM_CID     = "@mozilla.org/scriptableinputstream;1";
+
 const JS_FILE_F_TRANSPORT_SERVICE_CID  = "@mozilla.org/network/file-transport-service;1";
 
 const JS_FILE_I_FILE_CHANNEL           = "nsIFileChannel";
+const JS_FILE_I_IOSERVICE              = C.interfaces.nsIIOService;
 const JS_FILE_I_SCRIPTABLE_IN_STREAM   = "nsIScriptableInputStream";
 
-const JS_FILE_READ                     = 0x01;     // 1
-const JS_FILE_WRITE                    = 0x08;     // 8
-const JS_FILE_APPEND                   = 0x10;     // 16
+const JS_FILE_READ          = 0x01;  // 1
+const JS_FILE_WRITE         = 0x08;  // 8
+const JS_FILE_APPEND        = 0x10;  // 16
 
-const JS_FILE_READ_MODE                = "r";
-const JS_FILE_WRITE_MODE               = "w";
-const JS_FILE_APPEND_MODE              = "a";
+const JS_FILE_READ_MODE     = "r";
+const JS_FILE_WRITE_MODE    = "w";
+const JS_FILE_APPEND_MODE   = "a";
 
-const JS_FILE_FILE_TYPE                = 0x00;     // 0
+const JS_FILE_FILE_TYPE     = 0x00;  // 0
 
-const JS_FILE_CHUNK                    = 1024;     // buffer for readline => set to 1k
+const JS_FILE_CHUNK         = 1024;  // buffer for readline => set to 1k
 
-const JS_FILE_DEFAULT_PERMS            = 0644;
+const JS_FILE_DEFAULT_PERMS = 0644;
 
-const JS_FILE_OK                       = true;
+const JS_FILE_OK            = true;
 
-const JS_FILE_InputStream  = new C.Constructor
-( JS_FILE_I_STREAM_CID, JS_FILE_I_SCRIPTABLE_IN_STREAM );
+try {
+  /*
+  const JS_FILE_FileChannel  = new C.Constructor
+  (JS_FILE_F_CHANNEL_CID, JS_FILE_I_FILE_CHANNEL);
+  */
+  const JS_FILE_InputStream  = new C.Constructor
+  (JS_FILE_I_STREAM_CID, JS_FILE_I_SCRIPTABLE_IN_STREAM);
 
-// The File Transport Service provides nsITransport objects 
-// which can supply nsIOutputStream objects for writing to files.
-/*
-const JS_FILE_FileTransportService =
-C.classes[JS_FILE_F_TRANSPORT_SERVICE_CID].
-getService(C.interfaces.nsIFileTransportService);
-*/
-// Possible values for the ioFlags parameter to FileTransportService.createTransport.
-// From http://lxr.mozilla.org/seamonkey/source/netwerk/base/public/nsIFileChannel.idl
+  const JS_FILE_IOSERVICE    = C.classes[JS_FILE_IOSERVICE_CID].
+  getService(JS_FILE_I_IOSERVICE);
+
+  /***
+   * The File Transport Service provides nsITransport objects 
+   * which can supply nsIOutputStream objects for writing to files.
+   */
+
+  /*
+  const JS_FILE_FileTransportService =
+  C.classes[JS_FILE_F_TRANSPORT_SERVICE_CID].
+  getService(C.interfaces.nsIFileTransportService);
+  */
+} catch (e) {
+  jslibError (e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
+                "NS_ERROR_FAILURE", 
+                JS_FILE_FILE);
+}
+
+/***
+ * Possible values for the ioFlags parameter to 
+ *  FileTransportService.createTransport.
+ */
+
+/***
+ * From: 
+ * http://lxr.mozilla.org/seamonkey/source/nsprpub/pr/include/prio.h#601
+ */
+
+
+// #define PR_RDONLY       0x01
+// #define PR_WRONLY       0x02
+// #define PR_RDWR         0x04
+// #define PR_CREATE_FILE  0x08
+// #define PR_APPEND       0x10
+// #define PR_TRUNCATE     0x20
+// #define PR_SYNC         0x40
+// #define PR_EXCL         0x80
 
 const JS_FILE_NS_RDONLY               = 0x01;
 const JS_FILE_NS_WRONLY               = 0x02;
@@ -205,6 +239,7 @@ File.prototype = new FileSystem();
 File.prototype.mMode        = null;
 File.prototype.mFileChannel = null;
 File.prototype.mTransport   = null;
+File.prototype.mURI         = null;
 File.prototype.mOutStream   = null;
 File.prototype.mInputStream = null;
 File.prototype.mLineBuffer  = null;
@@ -236,6 +271,13 @@ File.prototype.open = function(aMode, aPerms)
     return null;
   }
 
+  if (this.exists() && this.mFileInst.isDirectory()) {
+      jslibError(null, "open("+this.mMode+") (cannot open directory)", 
+                        "NS_ERROR_FAILURE", 
+                        JS_FILE_FILE+":open");
+      return null;
+  }
+
   if (this.mMode) {
     jslibError(null, "open("+this.mMode+") (already open)", 
                       "NS_ERROR_NOT_INITIALIZED", 
@@ -246,30 +288,24 @@ File.prototype.open = function(aMode, aPerms)
 
   this.close();
 
+  if (!this.mURI) {
+    if (!this.exists())
+      this.create();
+    this.mURI = JS_FILE_IOSERVICE.newFileURI(this.mFileInst);
+  }
+
   if (!aMode)
     aMode=JS_FILE_READ_MODE;
-
-  if (this.exists() && this.mFileInst.isDirectory()) {
-      jslibError(null, "open("+this.mMode+") (cannot open directory)", 
-                        "NS_ERROR_FAILURE", 
-                        JS_FILE_FILE+":open");
-      return null;
-  }
 
   this.resetCache();
   var rv;
 
-  switch(aMode)
-  {
+  switch(aMode) {
     case JS_FILE_WRITE_MODE: 
     case JS_FILE_APPEND_MODE: {
       try {
         if (!this.mFileChannel)
-           Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-           var nsiuri = ioService.newURI(this.mPath, null, null);
-          if (!nsiuri)
-            return null;
-          this.mFileChannel = ioService.newChannelFromURI(nsiuri);
+          this.mFileChannel = JS_FILE_IOSERVICE.newChannelFromURI(this.mURI);
       } catch(e)    {
         jslibError(e, "open("+this.mMode+") (unable to get nsIFileChannel)", 
                       "NS_ERROR_FAILURE", 
@@ -294,18 +330,21 @@ File.prototype.open = function(aMode, aPerms)
           this.mMode=JS_FILE_WRITE_MODE;
           // Create a file transport in write mode
           if (!this.mTransport) {
-            this.mTransport = JS_FILE_FileTransportService.createTransport(this.mFileInst, 
-              JS_FILE_NS_WRONLY | JS_FILE_NS_CREATE_FILE | JS_FILE_NS_TRUNCATE, aPerms, true);
+            this.mTransport = JS_FILE_FileTransportService.createTransport
+                  (this.mFileInst, 
+                   JS_FILE_NS_WRONLY | JS_FILE_NS_CREATE_FILE | 
+                   JS_FILE_NS_TRUNCATE, aPerms, true);
           }
         } else {
           this.mMode=JS_FILE_APPEND_MODE;
           if (!this.mTransport) {
               this.mTransport = JS_FILE_FileTransportService.createTransport(
                                 this.mFileInst, 
-                                JS_FILE_NS_APPEND | JS_FILE_NS_RDWR | 
-                                JS_FILE_NS_SYNC   | JS_FILE_NS_CREATE_FILE, 
+                                JS_FILE_NS_CREATE_FILE | JS_FILE_NS_WRONLY 
+                                | JS_FILE_NS_APPEND,
                                 aPerms, true);
           }
+          jslib_debug("this.mTransport: "+this.mTransport);
         }
       } catch(e) {
         jslibError(e, "open("+this.mMode+") (unable to get transport)", 
@@ -340,13 +379,7 @@ File.prototype.open = function(aMode, aPerms)
       }
       this.mMode=JS_FILE_READ_MODE;
       try {
-        Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-           var nsiuri = ioService.newURI(this.mPath, null, null);
-          if (!nsiuri)
-            return null;
-          this.mFileChannel = ioService.newChannelFromURI(nsiuri);
-          
-          //this.mFileChannel        = new JS_FILE_FileChannel( this.mPath );
+        this.mFileChannel = JS_FILE_IOSERVICE.newChannelFromURI(this.mURI);
         this.mInputStream        = new JS_FILE_InputStream();    
         this.mLineBuffer         = new Array();
         this.mFileChannel.init(this.mFileInst, JS_FILE_READ, this.permissions);
@@ -386,7 +419,7 @@ File.prototype.open = function(aMode, aPerms)
 *   outputs: <string contents of foo.dat>                       *
 ****************************************************************/
 
-File.prototype.read = function() 
+File.prototype.read = function(aSize) 
 {
 
   if (!this.checkInst())
@@ -399,7 +432,7 @@ File.prototype.read = function()
     this.close();
     return null;
   }
-  var rv=null;
+  var rv = null;
   try {
     if (!this.mFileInst || !this.mInputStream) {
       jslibError(null, "(no file instance or input stream) ", 
@@ -407,7 +440,7 @@ File.prototype.read = function()
                         JS_FILE_FILE+":read");
       return null;
     }
-    rv = this.mInputStream.read(this.mFileInst.fileSize);
+    rv = this.mInputStream.read(aSize != undefined ? aSize : this.mFileInst.fileSize);
     this.mInputStream.close();
   } catch (e) { 
     jslibError(e, "read (input stream read)", 
@@ -595,19 +628,20 @@ File.prototype.copy = function (aDest)
     jslibError(null, "(no dest defined)", 
                       "NS_ERROR_INVALID_ARG", 
                       JS_FILE_FILE+":copy");
-    return false;
+    throw -C.results.NS_ERROR_INVALID_ARG;
   }
 
   if (!this.exists()) {
     jslibError(null, "(file doesn't exist)", 
                       "NS_ERROR_FAILURE", 
                       JS_FILE_FILE+":copy");
-    return false;
+    throw -C.results.NS_ERROR_FAILURE;
   }
 
   var rv;
   try {
     var dest          = new JS_FS_File_Path(aDest);
+    jslibDebug(dest);
     var copyName      = null;
     var dir           = null;
 
@@ -615,55 +649,55 @@ File.prototype.copy = function (aDest)
       jslibError(null, "(can't copy file to itself)", 
                         "NS_ERROR_FAILURE", 
                         JS_FILE_FILE+":copy");
-      return false;
+      throw -C.results.NS_ERROR_FAILURE;
     }
-    
-    //dest.append(this.leaf);
-    
+
     if (dest.exists()) {
       jslibError(null, "(dest "+dest.path+" already exists)", 
                               "NS_ERROR_FAILURE", 
                               JS_FILE_FILE+":copy");
-      return false;
+      throw -C.results.NS_ERROR_FAILURE;
     }
+
     if (this.mFileInst.isDirectory()) {
       jslibError(null, "(cannot copy directory)", 
                         "NS_ERROR_FAILURE", 
                         JS_FILE_FILE+":copy");
-      return false;
+      throw -C.results.NS_ERROR_FAILURE;
     }
+
     if (!dest.exists()) {
       copyName          = dest.leafName;
       dir               = dest.parent;
 
       if (!dir.exists()) {
-        jslibError(null, "(dest directory "+dest.parent.path+" doesn't exist and dir is "+dir+")", 
+        jslibError(null, "(dest "+dir.path+" doesn't exist)", 
                           "NS_ERROR_FAILURE", 
                           JS_FILE_FILE+":copy");
-        return false;
+        throw -C.results.NS_ERROR_FAILURE;
       }
+
       if (!dir.isDirectory()) {
         jslibError(null, "(dest "+dir.path+" is not a valid path)", 
                           "NS_ERROR_FAILURE", 
                           JS_FILE_FILE+":copy");
-        return false;
+        throw -C.results.NS_ERROR_FAILURE;
       }
     }
+
     if (!dir) {
-      dir=dest;
+      dir = dest;
       if (dest.equals(this.mFileInst)) {
         jslibError(null, "(can't copy file to itself)", "NS_ERROR_FAILURE", JS_FILE_FILE+":copy");
-        return false;
+        throw -C.results.NS_ERROR_FAILURE;
       }
     }
     this.mFileInst.copyTo(dir, copyName);
-    jslib_debug(JS_FILE_FILE+":copy successful!");
-    rv = true;
+    jslibDebug(JS_FILE_FILE+":copy successful!");
   } catch (e) {
     jslibError(e, "(unexpected error)", "NS_ERROR_UNEXPECTED", JS_FILE_FILE+":copy");
-    rv=false;
   }
-  return rv;
+  return;
 }
 
 /********************* CLOSE ************************************
@@ -919,7 +953,7 @@ function()
   return help;
 })
 
-jslib_debug('*** load: '+JS_FILE_FILE+' OK');
+jslibDebug('*** load: '+JS_FILE_FILE+' OK');
 
 } // END BLOCK JS_LIB_LOADED CHECK
 
