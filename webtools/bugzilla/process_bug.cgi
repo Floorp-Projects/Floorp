@@ -615,7 +615,7 @@ my $prod_id; # Remember, can't use this for mass changes
 if ($::FORM{'product'} ne $::dontchange) {
     $prod_id = get_product_id($::FORM{'product'});
     $prod_id ||
-      ThrowUserError("invalid_product_name", {product => $::FORM{'product'});
+      ThrowUserError("invalid_product_name", {product => $::FORM{'product'}});
       
     DoComma();
     $::query .= "product_id = $prod_id";
