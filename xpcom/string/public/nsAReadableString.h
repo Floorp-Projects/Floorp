@@ -367,7 +367,7 @@ class basic_nsAReadableString
     sometimes will.
   */
 
-#define NS_READABLE_CAST(CharT, expr)  (NS_STATIC_CAST(const basic_nsAReadableString<CharT>, (expr)))
+#define NS_READABLE_CAST(CharT, expr)  (NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, (expr)))
 
 template <class CharT>
 inline
