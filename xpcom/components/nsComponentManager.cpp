@@ -3051,7 +3051,7 @@ private:
 };
 
 // static
-PLDHashOperator
+PLDHashOperator PR_CALLBACK
 PLDHashTableEnumeratorImpl::Enumerator(PLDHashTable *table,
                                        PLDHashEntryHdr *hdr, PRUint32 number,
                                        void *data)
