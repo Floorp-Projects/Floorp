@@ -579,7 +579,7 @@
 
             // Wire up a progress listener to our tab.
             var listener = (this.mTabProgressListener)(this, this.mCurrentTab, false);
-            this.webProgress.addProgressListener(listener);
+            this.webProgress.addProgressListener(listener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[0] = listener;
           ]]>
         </body>
@@ -631,7 +631,7 @@
             // wire up a progress listener for the new browser object.
             var position = this.mTabContainer.childNodes.length-1;
             var tabListener = (this.mTabProgressListener)(this, t, blank);
-            b.webProgress.addProgressListener(tabListener);
+            b.webProgress.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             this.mTabListeners[position] = tabListener;
 
             if (!blank)
@@ -771,6 +771,7 @@
 
       <method name="addProgressListener">
         <parameter name="aListener"/>
+        <parameter name="aMask"/>
         <body>
           <![CDATA[
             if (!this.mProgressListeners) {
@@ -784,7 +785,7 @@
 
                 // Wire up a progress listener to our tab.
                 var listener = (this.mTabProgressListener)(this, this.mCurrentTab);
-                this.webProgress.addProgressListener(listener);
+                this.webProgress.addProgressListener(listener, aMask);
                 this.mTabListeners[0] = listener;
               }
 
@@ -796,7 +797,7 @@
 
             if (!this.mTabbedMode)
               // Just perform a direct wiring to the single active browser.
-              this.mCurrentBrowser.addProgressListener(aListener);
+              this.mCurrentBrowser.addProgressListener(aListener, aMask);
           ]]>
         </body>
       </method>
