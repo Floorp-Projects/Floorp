@@ -30,15 +30,22 @@
 
 #include "nsXPIDLString.h"
 
+#define NC_RDF_ENABLED NC_NAMESPACE_URI "Enabled"
+
 NS_IMPL_ISUPPORTS1(nsMsgFilterDataSource, nsIRDFDataSource)
 
-    nsrefcnt nsMsgFilterDataSource::mGlobalRefCount = 0;
+nsrefcnt nsMsgFilterDataSource::mGlobalRefCount = 0;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Child;
 nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Name;
+nsCOMPtr<nsIRDFResource> nsMsgFilterDataSource::kNC_Enabled;
+
+nsCOMPtr<nsIRDFLiteral> nsMsgFilterDataSource::kTrueLiteral;
 
 nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterListArcsOut;
 nsCOMPtr<nsISupportsArray> nsMsgFilterDataSource::mFilterArcsOut;
-  
+
+
+
 nsMsgFilterDataSource::nsMsgFilterDataSource()
 {
     NS_INIT_ISUPPORTS();
@@ -46,9 +53,6 @@ nsMsgFilterDataSource::nsMsgFilterDataSource()
     if (mGlobalRefCount == 0)
         initGlobalObjects(getRDFService());
 
-#ifdef DEBUG_alecf
-    printf("nsMsgFilterDataSource::nsMsgFilterDataSource()\n");
-#endif
     
     mGlobalRefCount++;
     /* member initializers and constructor code */
@@ -68,20 +72,27 @@ nsMsgFilterDataSource::cleanupGlobalObjects()
     mFilterArcsOut = nsnull;
     kNC_Child = nsnull;
     kNC_Name = nsnull;
+    kNC_Enabled = nsnull;
+    kTrueLiteral = nsnull;
     return NS_OK;
 }
 
 nsresult
 nsMsgFilterDataSource::initGlobalObjects(nsIRDFService *rdf)
 {
+    rdf->GetLiteral(nsAutoString("true").GetUnicode(),
+                    getter_AddRefs(kTrueLiteral));
+    
     rdf->GetResource(NC_RDF_CHILD, getter_AddRefs(kNC_Child));
     rdf->GetResource(NC_RDF_NAME, getter_AddRefs(kNC_Name));
+    rdf->GetResource(NC_RDF_ENABLED, getter_AddRefs(kNC_Enabled));
 
     NS_NewISupportsArray(getter_AddRefs(mFilterListArcsOut));
     mFilterListArcsOut->AppendElement(kNC_Child);
   
     NS_NewISupportsArray(getter_AddRefs(mFilterArcsOut));
     mFilterArcsOut->AppendElement(kNC_Name);
+    mFilterArcsOut->AppendElement(kNC_Enabled);
   
     return NS_OK;
 }
@@ -92,42 +103,62 @@ nsMsgFilterDataSource::GetTargets(nsIRDFResource *aSource,
                                   PRBool aTruthValue,
                                   nsISimpleEnumerator **aResult)
 {
-#ifdef DEBUG_alecf
-    nsXPIDLCString source;
-    aSource->GetValue(getter_Copies(source));
-
-    nsXPIDLCString property;
-    aProperty->GetValue(getter_Copies(property));
-
-    printf("nsMsgFilterDataSource::GetTargets(%s, %s, %s..);\n",
-           (const char*)source,
-           (const char*)property, aTruthValue ? "TRUE" : "FALSE");
-
-#endif
     nsresult rv;
-    nsCOMPtr<nsIMsgFilterList> filterList;
     
     nsCOMPtr<nsISupportsArray> resourceList;
-    NS_NewISupportsArray(getter_AddRefs(resourceList));
+    rv = NS_NewISupportsArray(getter_AddRefs(resourceList));
+    NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsISupports> filterDelegate;
+    
     // first see if it's a filter list
-    rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilterList),
-                             (void **)getter_AddRefs(filterList));
-    if (NS_SUCCEEDED(rv))
+    rv = aSource->GetDelegate("filter", NS_GET_IID(nsISupports),
+                             (void **)getter_AddRefs(filterDelegate));
+
+    if (NS_FAILED(rv)) {
+        // no filter delegate
+        nsSingletonEnumerator *cursor = new nsSingletonEnumerator(nsnull);
+        NS_ENSURE_TRUE(cursor, NS_ERROR_OUT_OF_MEMORY);
+        
+        *aResult = cursor;
+        NS_ADDREF(*aResult);
+        return NS_OK;
+    }
+        
+
+    //
+    // nsIMsgFilterList
+    //
+    nsCOMPtr<nsIMsgFilterList> filterList =
+        do_QueryInterface(filterDelegate, &rv);
+    
+    if (NS_SUCCEEDED(rv)) {
         rv = getFilterListTargets(filterList, aSource, aProperty,
                                   aTruthValue, resourceList);
-    else {
-        // maybe it's a filter?
-        // not sure if RDF will ask us or not.
-        NS_WARNING("nsMsgFilterDataSource: Filters don't have multiple targets");
     }
+    else {
 
+        //
+        // nsIMsgFilter
+        //
+        nsCOMPtr<nsIMsgFilter> filter =
+            do_QueryInterface(filterDelegate, &rv);
+
+        if (NS_SUCCEEDED(rv)) {
+            // filters do not have multiple targets, right?
+            // do we have to call GetTarget and return the result?
+        }
+
+        else {
+            NS_WARNING("ArcLabelsOut(): unknown filter delegate!\n");
+        }
+    }
+    
     nsArrayEnumerator *cursor = new nsArrayEnumerator(resourceList);
     NS_ENSURE_TRUE(cursor, NS_ERROR_OUT_OF_MEMORY);
     
     *aResult = cursor;
     NS_ADDREF(*aResult);
-    
     return NS_OK;
 }
 
@@ -137,8 +168,40 @@ nsMsgFilterDataSource::GetTarget(nsIRDFResource *aSource,
                                  PRBool aTruthValue,
                                  nsIRDFNode **aResult)
 {
+    nsresult rv;
     *aResult = nsnull;
+
     
+    nsCOMPtr<nsISupports> filterDelegate;
+    aSource->GetDelegate("filter", NS_GET_IID(nsISupports),
+                         (void **)getter_AddRefs(filterDelegate));
+
+    //
+    // nsIMsgFilterList
+    //
+    nsCOMPtr<nsIMsgFilterList> filterList =
+        do_QueryInterface(filterDelegate, &rv);
+
+    if (NS_SUCCEEDED(rv))
+        rv = getFilterListTarget(filterList, aProperty, aTruthValue, aResult);
+    else {
+
+        //
+        // nsIMsgFilter
+        //
+        nsCOMPtr<nsIMsgFilter> filter =
+            do_QueryInterface(filterDelegate, &rv);
+        if (NS_SUCCEEDED(rv))
+            rv = getFilterTarget(filter, aProperty, aTruthValue, aResult);
+        
+        else {
+            NS_WARNING("GetTarget(): unknown filter delegate!\n");
+        }
+    }
+
+    if (*aResult)
+        return NS_OK;
+
     return NS_RDF_NO_VALUE;
 }
 
@@ -150,20 +213,37 @@ nsMsgFilterDataSource::ArcLabelsOut(nsIRDFResource *aSource,
     nsresult rv;
     nsCOMPtr<nsISupportsArray> arcs;
 
-    nsCOMPtr<nsIMsgFilterList> filterList;
-    rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilterList),
-                              (void **)getter_AddRefs(filterList));
+    nsCOMPtr<nsISupports> filterDelegate;
+    
+    rv = aSource->GetDelegate("filter", NS_GET_IID(nsISupports),
+                              (void **)getter_AddRefs(filterDelegate));
+    
+    if (NS_FAILED(rv)) return NS_RDF_NO_VALUE;
+
+    //
+    // nsIMsgFilterList
+    //
+    nsCOMPtr<nsIMsgFilterList> filterList =
+        do_QueryInterface(filterDelegate, &rv);
+    
     if (NS_SUCCEEDED(rv)) {
         arcs = mFilterListArcsOut;
     
     } else {
 
-        nsCOMPtr<nsIMsgFilter> filter;
-        rv = aSource->GetDelegate("filter", NS_GET_IID(nsIMsgFilter),
-                                 (void **)getter_AddRefs(filter));
-    
+        //
+        // nsIMsgFilter
+        //
+        nsCOMPtr<nsIMsgFilter> filter =
+            do_QueryInterface(filterDelegate, &rv);
+        
         if (NS_SUCCEEDED(rv))
             arcs = mFilterArcsOut;
+        
+        else {
+            NS_WARNING("GetTargets(): unknown filter delegate!\n");
+
+        }
     }
 
     if (!arcs) {
@@ -204,8 +284,11 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
     // from there we'll append "#filter", and then enumerate the
     // filters to get all the resources like
     // mailbox://username@host/folder#filter4
+
+    // a better way to do this might be to ask the filter
+    // what folder it's in. Then we wouldn't need aSource
     nsXPIDLCString filterListUri;
-    aSource->GetValue(getter_Copies(filterListUri));
+    aSource->GetValueConst(getter_Shares(filterListUri));
 
     nsCAutoString filterUri((const char *)filterListUri);
     filterUri.Append("#filter");
@@ -236,3 +319,43 @@ nsMsgFilterDataSource::getFilterListTargets(nsIMsgFilterList *aFilterList,
     
     return NS_OK;
 }
+
+nsresult
+nsMsgFilterDataSource::getFilterListTarget(nsIMsgFilterList *aFilterList,
+                                           nsIRDFResource *aProperty,
+                                           PRBool aTruthValue,
+                                           nsIRDFNode **aResult)
+{
+
+    // here we probably need to answer to the #child property
+    // so that RDF realizes this is a container
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+nsresult
+nsMsgFilterDataSource::getFilterTarget(nsIMsgFilter *aFilter,
+                                       nsIRDFResource *aProperty,
+                                       PRBool aTruthValue,
+                                       nsIRDFNode **aResult)
+{
+
+    if (aProperty == kNC_Name.get()) {
+        nsXPIDLCString filterName;
+        aFilter->GetFilterName(getter_Copies(filterName));
+        return createNode((const char*)filterName, aResult, getRDFService());
+        
+    } else if (aProperty == kNC_Enabled.get()) {
+        PRBool enabled;
+        aFilter->GetEnabled(&enabled);
+        if (enabled) {
+            *aResult = kTrueLiteral;
+            NS_ADDREF(*aResult);
+            return NS_OK;
+        }
+    }
+    
+    return NS_RDF_NO_VALUE;
+}
+
+

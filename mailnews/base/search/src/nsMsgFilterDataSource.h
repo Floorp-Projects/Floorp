@@ -58,7 +58,12 @@ private:
     nsresult getFilterTarget(nsIMsgFilter *aFilter,
                              nsIRDFResource *aProperty,
                              PRBool aTruthValue,
-                             nsIRDFResource **aResult);
+                             nsIRDFNode **aResult);
+    
+    nsresult getFilterListTarget(nsIMsgFilterList *aFilter,
+                                 nsIRDFResource *aProperty,
+                                 PRBool aTruthValue,
+                                 nsIRDFNode **aResult);
     
     nsresult getFilterListTargets(nsIMsgFilterList *aFilter,
                                   nsIRDFResource *aSource,
@@ -80,6 +85,8 @@ private:
     // resources used
     static nsCOMPtr<nsIRDFResource> kNC_Child;
     static nsCOMPtr<nsIRDFResource> kNC_Name;
+    static nsCOMPtr<nsIRDFResource> kNC_Enabled;
+    static nsCOMPtr<nsIRDFLiteral> kTrueLiteral;
 
 };
 
