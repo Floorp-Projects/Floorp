@@ -411,14 +411,9 @@ nsHTMLAnchorElement::GetHref(nsString& aValue)
   mInner.GetBaseURL(baseURL);
 
   // Get href= attribute (relative URL).
-  mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
+  rv = mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::href, relURLSpec);
 
-  // If there is no href=, then use base target.
-  if (relURLSpec.Length() == 0) {
-    mInner.GetBaseTarget(relURLSpec);
-  }
-
-  if (nsnull != baseURL) {
+  if (nsnull != baseURL && (rv == NS_CONTENT_ATTR_HAS_VALUE)) {
     // Get absolute URL.
     rv = NS_MakeAbsoluteURI(aValue, relURLSpec, baseURL);
   }

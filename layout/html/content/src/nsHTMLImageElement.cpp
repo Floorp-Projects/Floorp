@@ -725,12 +725,7 @@ nsHTMLImageElement::GetSrc(nsString& aSrc)
   // Get href= attribute (relative URL).
   mInner.GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::src, relURLSpec);
 
-  // If there is no href=, then use base target.
-  if (relURLSpec.Length() == 0) {
-    GetBaseTarget(relURLSpec);
-  }
-
-  if (nsnull != baseURL) {
+  if (nsnull != baseURL && relURLSpec.Length() > 0) {
     // Get absolute URL.
     rv = NS_MakeAbsoluteURI(aSrc, relURLSpec, baseURL);
   }
