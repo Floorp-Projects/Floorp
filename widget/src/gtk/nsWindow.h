@@ -81,6 +81,7 @@ public:
                                            PRBool aConsumeRollupEvent);
   NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
   NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
+  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
   NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD           SetCursor(nsCursor aCursor);
   NS_IMETHOD           SetFocus(void);

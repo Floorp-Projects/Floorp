@@ -465,6 +465,22 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous)
+{
+
+  if (!mSuperWin)
+    return NS_OK;
+  
+  mUpdateArea->Union(*aRegion);
+
+  if (aIsSynchronous)
+    Update();
+  else
+    QueueDraw();
+  
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsWindow::SetBackgroundColor(const nscolor &aColor)
 {
   nsBaseWidget::SetBackgroundColor(aColor);
