@@ -1,4 +1,7 @@
-titledbox
+/* titledbox is deprecated but included for backwards compatibility;
+   it is to be removed later */
+titledbox,
+groupbox
   {
     border                : 2px groove -moz-Dialog;
     padding               : 7px !important;
@@ -12,7 +15,7 @@ label
     background-color      : -moz-Dialog;
   }
 
-.titledbox-body
+.groupbox-body
   {
     padding               : inherit;
   }

@@ -22,20 +22,22 @@
  */
 
 /* ===== titledbox.css ==================================================
-  == Styles used by the XUL titledbox and related elements.
+  == Styles used by the XUL groupbox and related elements.
   ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: titledbox ::::: */
+/* ::::: groupbox ::::: */
+/* (titledbox included for backwards compatibility for now) */
 
-titledbox {
+titledbox,
+groupbox {
   border: 2px groove #C7D0D9;
   padding: 5px;
   margin: 5px;
 }
 
-.titledbox-body {
+.groupbox-body {
   padding: inherit;
 }
 

@@ -51,6 +51,7 @@ splitter {
 
 rows > splitter,
 window[orient="vertical"] > splitter,
+vbox > splitter,
 box[orient="vertical"] > splitter {
   cursor: n-resize;
   border-top: 1px solid #000000;
@@ -63,6 +64,7 @@ box[orient="vertical"] > splitter {
 
 rows > splitter > .splitter-internal-box,
 window[orient="vertical"] > splitter > .splitter-internal-box,
+vbox > splitter > .splitter-internal-box,
 box[orient="vertical"] > splitter > .splitter-internal-box {
   min-height: 5px;
 /*  background: url("chrome://global/skin/splitter/splitter-hrz-mid.gif") repeat-x;*/
@@ -82,6 +84,7 @@ grippy {
 }
 
 window[orient="vertical"] > splitter > grippy,
+vbox > splitter > grippy,
 box[orient="vertical"] > splitter > grippy {
   width: 63px;
   height: 5px;
@@ -100,11 +103,13 @@ splitter[collapse="after"] > grippy {
 
 /* horizontal grippies */
 window[orient="vertical"] > splitter[collapse="before"] > grippy,
+vbox > splitter[collapse="before"] > grippy,
 box[orient="vertical"] > splitter[collapse="before"] > grippy {
   background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
 }  
 
 window[orient="vertical"] > splitter[collapse="after"] > grippy,
+vbox > splitter[collapse="after"] > grippy,
 box[orient="vertical"] > splitter[collapse="after"] > grippy {
   background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
 }  
@@ -122,11 +127,13 @@ splitter[collapse="after"] > grippy:hover:active {
 
 /* horizontal grippies */
 window[orient="vertical"] > splitter[collapse="before"] > grippy:hover:active,
+vbox > splitter[collapse="before"] > grippy:hover:active,
 box[orient="vertical"] > splitter[collapse="before"] > grippy:hover:active {
   background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
 }  
 
 window[orient="vertical"] > splitter[collapse="after"] > grippy:hover:active,
+vbox > splitter[collapse="after"] > grippy:hover:active,
 box[orient="vertical"] > splitter[collapse="after"] > grippy:hover:active {
   background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
 }  
@@ -144,11 +151,13 @@ splitter[collapse="after"][state="collapsed"] > grippy {
 
 /* horizontal grippies */
 window[orient="vertical"] > splitter[collapse="before"][state="collapsed"] > grippy,
+vbox > splitter[collapse="before"][state="collapsed"] > grippy,
 box[orient="vertical"] > splitter[collapse="before"][state="collapsed"] > grippy {
   background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
 }  
 
 window[orient="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy,
+vbox > splitter[collapse="after"][state="collapsed"] > grippy,
 box[orient="vertical"] > splitter[collapse="after"][state="collapsed"] > grippy {
   background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
 }  

@@ -149,7 +149,7 @@ function Startup()
   var selectedText;
   if (insertLinkAtCaret)
   {
-    // Titledbox caption:
+    // Groupbox caption:
     dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
     // Message above input field:
     dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));

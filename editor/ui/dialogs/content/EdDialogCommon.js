@@ -24,7 +24,7 @@
 /*
   if we ever need to use a different string bundle, use srGetStrBundle
   by including
-  <script language="javascript" src="chrome://global/content/strres.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   e.g.:
   var bundle = srGetStrBundle("chrome://global/locale/filepicker.properties");
 */

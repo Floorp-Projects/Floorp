@@ -227,8 +227,8 @@ nsWalletViewer.prototype =
               var row = menuList.parentNode;
               var rows = row.parentNode;
               var grid = rows.parentNode;
-              var titledBox = grid.parentNode;
-              titledBox.setAttribute("hidden", "false");
+              var groupBox = grid.parentNode;
+              groupBox.setAttribute("hidden", "false");
               row.setAttribute("hidden", "false");
 
               var strings = schemaToValue[aPageTag+elementIDs[i]].split(BREAK);

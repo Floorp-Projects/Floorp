@@ -1,12 +1,14 @@
-
-titledbox
+/* titledbox is deprecated but included for backwards compatibility;
+   it is to be removed later */
+titledbox,
+groupbox 
   {
     border                : 2px groove #CCCCCC;
     padding               : 7px;
     margin                : 5px;
   }
 
-title
+label
   {
     margin-left           : 6px;
     padding-left          : 3px;
@@ -15,13 +17,13 @@ title
 
   }
 
-box.titledbox-title 
+box.groupbox-title 
   {
     padding-left           : 5px;
     padding-right          : 5px;     
   } 
 
-box.titledbox-body
+box.groupbox-body
   {
     padding               : inherit;
   }
