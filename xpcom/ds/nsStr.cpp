@@ -438,31 +438,23 @@ void nsStr::CompressSet(nsStr& aDest,const char* aSet,PRUint32 aChar,PRBool aEli
 
 
 PRInt32 nsStr::FindSubstr(const nsStr& aDest,const nsStr& aTarget, PRBool aIgnoreCase,PRUint32 anOffset) {
+  PRUint32 index=anOffset-1;
+  PRUint32 theMax=aDest.mLength-aTarget.mLength;
   if((aDest.mLength>0) && (aTarget.mLength>0) && (anOffset<aTarget.mLength)){
-
-      //This little block of code builds up the boyer-moore skip table.
-      //It might be nicer if this could be generated externally as passed in to improve performance.
-    const int theSize=100;
-    int theSkipTable[theSize];
-    PRUint32 theIndex=0;
-    for (theIndex=0;theIndex<theSize;++theIndex) {
-      theSkipTable[theIndex]=aTarget.mLength;
-    }
-    for(theIndex=0;theIndex<aTarget.mLength-1;++theIndex) {
-      theSkipTable[(PRUint32)GetCharAt(aTarget,theIndex)]=(aTarget.mLength-theIndex-1);
-    }
-
-      //and now we do the actual searching.      
-    PRUint32 theMaxIndex=aDest.mLength-anOffset;
-    for (theIndex=aTarget.mLength-1; theIndex< theMaxIndex; theIndex+= theSkipTable[(unsigned char)GetCharAt(aDest,theIndex)]) {
-      int theBufIndex=theIndex;
-      int thePatIndex=aTarget.mLength-1;
-      while (thePatIndex >= 0 && GetCharAt(aDest,theBufIndex)==GetCharAt(aTarget,thePatIndex)){
-        --theBufIndex;
-        --thePatIndex;
+    PRUint32 theNewStartPos=-1;
+    PRUnichar theFirstTargetChar=GetCharAt(aTarget,0);
+    PRUnichar theLastTargetChar=GetCharAt(aTarget,aTarget.mLength-1);
+    PRUint32 theTargetMax=aTarget.mLength;
+    while(++index<=theMax) {
+      PRUint32 theSubIndex=-1;
+      PRBool  matches=PR_TRUE;
+      while((++theSubIndex<theTargetMax) && (matches)){
+        PRUnichar theChar=GetCharAt(aDest,index+theSubIndex);
+        PRUnichar theTargetChar=GetCharAt(aTarget,theSubIndex);
+        matches=PRBool(theChar==theTargetChar);
       }
-      if(-1==thePatIndex){
-        return anOffset+theBufIndex+1;
+      if(matches) {
+        return index;
       }
     }
   }//if
