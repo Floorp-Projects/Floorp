@@ -399,6 +399,8 @@ function updateStatusBar()
   findLocation(null, -1, 
       selection.focusNode, selection.focusOffset, interlinePosition, result);
 
+  //pch no status bar for now
+  return;
   statusBarField.label = getViewSourceBundle()
       .getFormattedString("statusBarLineCol", [result.line, result.col]);
 }

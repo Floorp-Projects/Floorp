@@ -1212,6 +1212,34 @@
                 onget="return this.mCurrentBrowser.securityUI;"
                 readonly="true"/>
 
+      <method name="find">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.find();
+          ]]>
+        </body>
+      </method>
+
+      <method name="findAgain">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.findAgain();
+          ]]>
+        </body>
+      </method>
+
+      <method name="findPrevious">
+        <body>
+          <![CDATA[
+            return this.mCurrentBrowser.findPrevious();
+          ]]>
+        </body>
+      </method>
+
+      <property name="canFindAgain"
+                onget="return this.mCurrentBrowser.canFindAgain;"
+                readonly="true"/>
+
       <constructor>
         <![CDATA[
         this.mCurrentBrowser = this.mPanelContainer.firstChild;
