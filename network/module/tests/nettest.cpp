@@ -77,6 +77,7 @@ public:
     NS_DECL_ISUPPORTS
     
     TestConsumer();
+    virtual ~TestConsumer();
 
     NS_IMETHOD GetBindInfo(nsIURL* aURL, nsStreamBindingInfo* info);
     NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 Progress, PRUint32 ProgressMax);
@@ -84,9 +85,6 @@ public:
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
-
-protected:
-    ~TestConsumer();
 };
 
 
