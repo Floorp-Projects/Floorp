@@ -206,11 +206,12 @@ struct nsKeyConverter nsKeycodes[] = {
   { NS_VK_OPEN_BRACKET, GDK_bracketleft },
   { NS_VK_CLOSE_BRACKET, GDK_bracketright },
   { NS_VK_QUOTE, GDK_quotedbl },
+  { NS_VK_SEMICOLON, GDK_colon },
 
   // Some shifted keys, see bug 15463.
   // These should be subject to different keyboard mappings;
   // how do we do that in gtk?
-  { NS_VK_SEMICOLON, GDK_colon },
+  { NS_VK_SEMICOLON, GDK_semicolon },
   { NS_VK_BACK_QUOTE, GDK_asciitilde },
   { NS_VK_COMMA, GDK_less },
   { NS_VK_PERIOD, GDK_greater },
@@ -371,7 +372,7 @@ void InitKeyPressEvent(GdkEventKey *aGEK,
     } else
       anEvent.keyCode = nsPlatformToDOMKeyCode(aGEK);
 
-#if defined(DEBUG_akkana) || defined(DEBUG_pavlov) || defined (DEBUG_ftang)
+#if defined(DEBUG_akkana_not) || defined(DEBUG_pavlov) || defined (DEBUG_ftang)
     printf("Key Press event: keyCode = 0x%x, char code = '%c'",
            anEvent.keyCode, anEvent.charCode);
     if (anEvent.isShift)
