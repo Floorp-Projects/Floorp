@@ -164,7 +164,7 @@ NS_IMETHODIMP TestConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStre
         char buffer[80];
         PRUint32 i;
 
-        err = pIStream->Read(buffer, 0, 80, &len);
+        err = pIStream->Read(buffer, 80, &len);
         if (err == NS_OK) {
             for (i=0; i<len; i++) {
                 putchar(buffer[i]);
@@ -205,7 +205,7 @@ nsresult ReadStreamSynchronously(nsIInputStream* aIn)
         do {
             PRUint32 i;
 
-            rv = aIn->Read(buffer, 0, sizeof(buffer), &len);
+            rv = aIn->Read(buffer, sizeof(buffer), &len);
             for (i=0; i<len; i++) {
                 putchar(buffer[i]);
             }
