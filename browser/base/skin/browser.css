@@ -302,6 +302,17 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(64px 224px 96px 192px);
 }
 
+#mail-button {
+  -moz-image-region: rect(0px 224px 32px 192px);
+}
+#mail-button:hover,
+#mail-button[checked="true"] {
+  -moz-image-region: rect(32px 224px 64px 192px);
+}
+#mail-button[disabled="true"] {
+  -moz-image-region: rect(64px 224px 96px 192px);
+}
+
 #cut-button {
   -moz-image-region: rect(0px 384px 32px 352px);
 }
@@ -450,6 +461,17 @@ toolbar[iconsize="small"] #history-button[checked="true"] {
   -moz-image-region: rect(20px 140px 40px 120px);
 }
 toolbar[iconsize="small"] #history-button[disabled="true"] {
+  -moz-image-region: rect(40px 140px 60px 120px) !important;
+}
+
+toolbar[iconsize="small"] #mail-button {
+  -moz-image-region: rect(0px 140px 20px 120px);
+}
+toolbar[iconsize="small"] #mail-button:hover,
+toolbar[iconsize="small"] #mail-button[checked="true"] {
+  -moz-image-region: rect(20px 140px 40px 120px);
+}
+toolbar[iconsize="small"] #mail-button[disabled="true"] {
   -moz-image-region: rect(40px 140px 60px 120px) !important;
 }
 

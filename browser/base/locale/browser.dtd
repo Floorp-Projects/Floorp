@@ -268,6 +268,18 @@
 <!ENTITY historyButton.label            "History">
 <!ENTITY historyButton.tooltip          "Display pages you've viewed recently">
 
+<!ENTITY mailButton.label                 "Mail">
+<!ENTITY mailButton.tooltip               "Read and Send Mail">
+<!ENTITY mailButton.readMail.label        "Read Mail">
+<!ENTITY mailButton.readMail.accesskey    "M">
+<!ENTITY mailButton.newMessage.label      "New Message...">
+<!ENTITY mailButton.newMessage.accesskey  "w">
+<!ENTITY mailButton.sendLink.label        "Send Link...">
+<!ENTITY mailButton.sendLink.accesskey    "L">
+<!ENTITY mailButton.readNews.label        "Read News">
+<!ENTITY mailButton.readNews.accesskey    "N">
+<!ENTITY sendMessage.commandkey           "m">
+
 <!ENTITY newTabButton.tooltip           "Open a new tab">
 <!ENTITY newWindowButton.tooltip        "Open a new window">
 <!ENTITY sidebarCloseButton.tooltip     "Close sidebar">

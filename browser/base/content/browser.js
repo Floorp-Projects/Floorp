@@ -1503,7 +1503,6 @@ function updateToolbarStates(toolbarMenuElt)
 
 function BrowserImport()
 {
-  // goats
 #ifdef XP_MACOSX
   var features = "centerscreen,chrome,resizable=no";
 #else
@@ -3207,14 +3206,14 @@ nsContextMenu.prototype = {
         saveURL( this.linkURL(), this.linkText(), null, true, true );
     },
     sendLink : function () {
-        sendLink( this.linkURL(), "" ); // we don't know the title of the link so pass in an empty string
+        MailIntegration.sendMessage( this.linkURL(), "" ); // we don't know the title of the link so pass in an empty string
     },
     // Save URL of clicked-on image.
     saveImage : function () {
         saveURL( this.imageURL, null, "SaveImageTitle", false );
     },
     sendImage : function () {
-        sendLink(this.imageURL, "");
+        MailIntegration.sendMessage(this.imageURL, "");
     },
     toggleImageBlocking : function (aBlock) {
       var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
@@ -3942,27 +3941,6 @@ function charsetLoadListener (event)
     }
 }
 
-// a generic method which can be used to pass arbitrary urls to the operating system.
-// aURL --> a nsIURI which represents the url to launch
-function launchExternalUrl(aURL)
-{
-  var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService(Components.interfaces.nsIExternalProtocolService);
-  if (extProtocolSvc)
-    extProtocolSvc.loadUrl(aURL);
-}
-
-function sendLink(url, title)
-{
-  // generate a mailto url based on the url and the url's title
-  var mailtoUrl = url ? "mailto:?body=" + encodeURIComponent(url) + "&subject=" + encodeURIComponent(title) : "mailto:";
-
-  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
-  var uri = ioService.newURI(mailtoUrl, null, null);
-
-  // now pass this url to the operating system
-  launchExternalUrl(uri); 
-}
-
 #ifdef XP_MACOSX
 const nsIWindowDataSource = Components.interfaces.nsIWindowDataSource;
 
@@ -4317,3 +4295,61 @@ function WindowIsClosing()
 
   return reallyClose;
 }
+
+var MailIntegration = {
+  sendLinkForContent: function ()
+  {
+    this.sendMessage(Components.lookupMethod(window._content, 'location').call(window._content).href,
+                     Components.lookupMethod(window._content.document, 'title').call(window._content.document));  
+  },
+
+  sendMessage: function (aBody, aSubject) 
+  {
+    // generate a mailto url based on the url and the url's title
+    var mailtoUrl = aBody ? "mailto:?body=" + encodeURIComponent(aBody) + "&subject=" + encodeURIComponent(aSubject) : "mailto:";
+
+    var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+    var uri = ioService.newURI(mailtoUrl, null, null);
+
+    // now pass this url to the operating system
+    this._launchExternalUrl(uri); 
+  },
+
+  // a generic method which can be used to pass arbitrary urls to the operating system.
+  // aURL --> a nsIURI which represents the url to launch
+  _launchExternalUrl: function(aURL)
+  {
+    var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService(Components.interfaces.nsIExternalProtocolService);
+    if (extProtocolSvc)
+      extProtocolSvc.loadUrl(aURL);
+#ifdef XP_WIN
+  },
+  
+  readMail: function ()
+  {
+    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
+    whs.openDefaultClient("Mail");
+  },
+  
+  readNews: function ()
+  {
+    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
+    whs.openDefaultClient("News");
+  },
+  
+  updateUnreadCount: function ()
+  {
+    var whs = Components.classes["@mozilla.org/winhooks;1"].getService(Components.interfaces.nsIWindowsHooks);
+    var unreadCount = whs.unreadMailCount;
+    var message = gNavigatorBundle.getFormattedString("mailUnreadTooltip", [unreadCount]);
+    var element = document.getElementById("mail-button");
+    element.setAttribute("tooltiptext", message);
+                                                              
+    message = gNavigatorBundle.getFormattedString("mailUnreadMenuitem", [unreadCount]);
+    element = document.getElementById("readMailItem");
+    element.setAttribute("label", message);
+  }
+#else
+  }
+#endif
+};

@@ -767,3 +767,125 @@ nsWindowsHooks::SetImageAsWallpaper(nsIDOMElement* aElement, PRBool aUseBackgrou
   return rv;
 }
 
+NS_IMETHODIMP
+nsWindowsHooks::OpenDefaultClient(const char* aClient)
+{
+  nsresult rv;
+
+  // The Default Client section of the Windows Registry looks like this:
+  // 
+  // Clients\aClient\
+  //  e.g. aClient = "Mail"...
+  //        \Mail\(default) = Client Subkey Name
+  //             \Client Subkey Name
+  //             \Client Subkey Name\shell\open\command\ 
+  //             \Client Subkey Name\shell\open\command\(default) = path to exe
+  //
+  nsCAutoString clientKey(NS_LITERAL_CSTRING("SOFTWARE\\Clients\\"));
+  clientKey += aClient;
+
+  nsXPIDLCString defaultClient;
+  rv = GetRegistryEntry(nsIWindowsRegistry::HKLM, clientKey.get(), "", 
+                        getter_Copies(defaultClient));
+  if (NS_FAILED(rv) || defaultClient.IsEmpty()) 
+    return rv;
+
+  clientKey.Append("\\");
+  clientKey.Append(defaultClient.get());
+  clientKey.Append("\\shell\\open\\command");
+
+  nsXPIDLCString path;
+  rv = GetRegistryEntry(nsIWindowsRegistry::HKLM, clientKey.get(), "",
+                        getter_Copies(path));
+  if (NS_FAILED(rv) || path.IsEmpty()) 
+    return rv;
+
+  // Look for any embedded environment variables and substitute their 
+  // values, as |::CreateProcess| is unable to do this. 
+  PRInt32 end = path.Length();
+  PRInt32 cursor = 0, temp = 0;
+  char buf[_MAX_PATH];
+  do {
+    cursor = path.FindChar('%', cursor);
+    if (cursor < 0) 
+      break;
+
+    temp = path.FindChar('%', cursor + 1);
+
+    ++cursor;
+
+    ::ZeroMemory(&buf, sizeof(buf));
+    ::GetEnvironmentVariable(nsCAutoString(Substring(path, cursor, temp - cursor)).get(), 
+                             buf, sizeof(buf));
+    
+    // "+ 2" is to subtract the extra characters used to delimit the environment
+    // variable ('%').
+    path.Replace((cursor - 1), temp - cursor + 2, nsDependentCString(buf));
+
+    ++cursor;
+  }
+  while (cursor < end);
+
+  STARTUPINFO si;
+  PROCESS_INFORMATION pi;
+
+  ::ZeroMemory(&si, sizeof(STARTUPINFO));
+  ::ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
+
+  char* pathCStr = ToNewCString(path);
+  BOOL success = ::CreateProcess(NULL, pathCStr, NULL, NULL, FALSE, 0, NULL, 
+                                 NULL, &si, &pi);
+  nsCRT::free(pathCStr);
+  if (!success)
+    return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsHooks::GetUnreadMailCount(PRUint32* aResult)
+{
+  *aResult = 0;
+
+  HKEY accountKey;
+  if (GetMailAccountKey(&accountKey)) {
+    DWORD type, length, unreadCount;
+    DWORD result = ::RegQueryValueEx(accountKey, "MessageCount", 0, &type, 
+                                     (LPBYTE)&unreadCount, &length);
+    if (result == ERROR_SUCCESS) {
+      *aResult = unreadCount;
+    }
+  }
+
+  return NS_OK;
+}
+
+PRBool
+nsWindowsHooks::GetMailAccountKey(HKEY* aResult)
+{
+  HKEY mailKey;
+  DWORD result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
+                                "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\UnreadMail\\",
+                                0, KEY_ENUMERATE_SUB_KEYS, &mailKey);
+
+  PRInt32 i = 0;
+  do {
+    char subkeyName[_MAX_PATH];
+    DWORD len = sizeof subkeyName;
+    result = ::RegEnumKeyEx(mailKey, i++, subkeyName, &len, 0, 0, 0, 0);
+    if (result == ERROR_SUCCESS) {
+      HKEY accountKey;
+      result = ::RegOpenKeyEx(mailKey, subkeyName, 0, KEY_READ, &accountKey);
+      if (result == ERROR_SUCCESS) {
+        *aResult = accountKey;
+        return PR_TRUE;
+      }
+    }
+    else
+      break;
+  }
+  while (1);
+
+  return PR_FALSE;
+}
+

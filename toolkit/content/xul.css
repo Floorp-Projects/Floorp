@@ -123,6 +123,10 @@ toolbarbutton[type="menu"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu");
 }
 
+toolbarbutton[orient] {
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-orient");
+}
+
 toolbarbutton[type="menu-button"] {
   -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#menu-button");
 }
