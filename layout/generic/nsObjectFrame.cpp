@@ -1569,7 +1569,7 @@ nsObjectFrame::CreateDefaultFrames(nsPresContext *aPresContext,
   rv = anchor->BindToTree(doc, mContent, anchor, PR_TRUE);
   if (NS_FAILED(rv)) {
     anchor->UnbindFromTree();
-    return rv;
+    return;
   }
 
   anchor->AppendChildTo(img, PR_FALSE, PR_TRUE);
