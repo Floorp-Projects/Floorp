@@ -271,6 +271,25 @@ cookie_RemoveExpiredCookies() {
   }
 }
 
+/* Remove any session cookies from memory */
+PUBLIC void
+COOKIE_RemoveSessionCookies() {
+  cookie_CookieStruct * cookie_s;
+  if (cookie_list == nsnull) {
+    return;
+  }
+  
+  for (PRInt32 i = cookie_list->Count(); i > 0;) {
+    i--;
+    cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
+    NS_ASSERTION(cookie_s, "corrupt cookie list");
+      if(!cookie_s->expires) {
+        cookie_list->RemoveElementAt(i);
+        deleteCookie((void*)cookie_s, nsnull);
+      }
+  }
+}
+
 /* checks to see if the maximum number of cookies per host
  * is being exceeded and deletes the oldest one in that
  * case

@@ -89,6 +89,7 @@ nsresult nsCookieService::Init()
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", PR_TRUE);
     observerService->AddObserver(this, "profile-do-change", PR_TRUE);
+    observerService->AddObserver(this, "session-logout", PR_TRUE);
     observerService->AddObserver(this, "cookieIcon", PR_FALSE);
   }
 
@@ -243,6 +244,9 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
     COOKIE_Read();
+  } else if (!nsCRT::strcmp(aTopic, "session-logout")) {
+    // Quicklaunch exit -- need to remove session cookies.
+    COOKIE_RemoveSessionCookies();
   } else if (!nsCRT::strcmp(aTopic, "cookieIcon")) {
     gCookieIconVisible = (!nsCRT::strcmp(someData, NS_LITERAL_STRING("on").get()));
   }

@@ -62,6 +62,7 @@ extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, const c
 extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, const char * set_cookie_header, char * server_date, nsIIOService* ioService, nsIHttpChannel* aHttpChannel);
 extern void COOKIE_RegisterPrefCallbacks(void);
 
+extern void COOKIE_RemoveSessionCookies();
 extern void COOKIE_RemoveAll(void);
 extern void COOKIE_DeletePersistentUserData(void);
 extern PRInt32 COOKIE_Count();
