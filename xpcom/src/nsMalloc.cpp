@@ -60,7 +60,10 @@ nsMalloc::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
     if (mm == NULL)
         return NS_ERROR_OUT_OF_MEMORY;
     mm->AddRef();
-    *aInstancePtr = mm->GetInner();
+    if (aIID.Equals(kISupportsIID))
+        *aInstancePtr = mm->GetInner();
+    else
+        *aInstancePtr = mm;
     return NS_OK;
 }
 
