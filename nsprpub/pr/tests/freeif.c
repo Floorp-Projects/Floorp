@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static void Noop(void) { }
+
 static void Fail(void)
 {
     printf("FAIL\n");
@@ -37,6 +39,13 @@ int main()
     int foo = 1;
     char *ptr = NULL;
 
+    /* this fails to compile with the old definition of PR_DELETE */
+    if (foo)
+        PR_DELETE(ptr);
+    else
+        Noop();
+
+    /* this nests incorrectly with the old definition of PR_FREEIF */
     if (foo)
         PR_FREEIF(ptr);
     else
