@@ -53,13 +53,16 @@ public:
     void setCacheDirectory(nsILocalFile* directory);
 
 private:
-    nsresult getFileForEntry(nsCacheEntry * entry, nsIFile**);
+    nsresult getFileForEntry(nsCacheEntry * entry, PRBool meta, nsIFile**);
+    static nsresult getTransportForFile(nsIFile* file, nsCacheAccessMode mode, nsITransport ** result);
+
+    nsresult scanEntries(void);
 
 private:
     nsCOMPtr<nsILocalFile>      mCacheDirectory;
-    nsCacheEntryHashTable       mInactiveEntries;
+    nsCacheEntryHashTable       mCachedEntries;
+    PRBool                      mScannedEntries;
     PRUint64                    mTotalCachedDataSize;
 };
-
 
 #endif // _nsDiskCacheDevice_h_
