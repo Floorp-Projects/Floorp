@@ -416,6 +416,7 @@ class Primitive: public DataNode, public DoublyLinkedEntry<Primitive> // Links t
 	void changeContainer(ControlNode *c) {assert(container); remove(); container = c;} // For use by ControlNode only.
 
 	Uint16 getBurgState() const { return burgState;}
+    Uint16* getBurgStatePtr() { return &burgState; }
 	Uint16 setBurgState(Uint16 newState) {burgState = newState; return newState;}
 
 	Uint16 getLineNumber() {return lineNumber;}
