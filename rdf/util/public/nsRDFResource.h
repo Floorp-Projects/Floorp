@@ -20,6 +20,7 @@
 #define nsRDFResource_h__
 
 #include "nsIRDFNode.h"
+#include "nsIRDFResource.h"
 #include "nscore.h"
 #include "rdf.h"
 class nsIRDFService;
