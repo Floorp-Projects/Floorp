@@ -56,7 +56,6 @@ nsIPrivateDOMImplementation.h \
 nsIContentSerializer.h \
 nsIHTMLToTextSink.h \
 nsIContentList.h \
-nsIMenuElement.h \
 $(NULL)
 
 XPIDLSRCS	= \

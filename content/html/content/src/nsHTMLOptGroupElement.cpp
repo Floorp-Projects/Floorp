@@ -49,12 +49,10 @@
 
 #include "nsISelectElement.h"
 #include "nsIDOMHTMLSelectElement.h"
-#include "nsIMenuElement.h"
 
 
 class nsHTMLOptGroupElement : public nsGenericHTMLContainerElement,
-                              public nsIDOMHTMLOptGroupElement,
-                              public nsIMenuElement
+                              public nsIDOMHTMLOptGroupElement
 {
 public:
   nsHTMLOptGroupElement();
@@ -87,11 +85,6 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
-
-  // nsIMenuElement
-  virtual const nsIContent* GetActiveItem() const;
-  virtual void SetActiveItem(const nsIContent* aItem);
-
 #ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
 #endif
@@ -99,8 +92,6 @@ public:
 protected:
 
   nsresult GetSelect(nsISelectElement **aSelectElement);
-
-  const nsIContent* mActiveItem;
 };
 
 nsresult
@@ -131,7 +122,6 @@ NS_NewHTMLOptGroupElement(nsIHTMLContent** aInstancePtrResult,
 
 
 nsHTMLOptGroupElement::nsHTMLOptGroupElement()
-  : mActiveItem(nsnull)
 {
 }
 
@@ -148,7 +138,6 @@ NS_IMPL_RELEASE_INHERITED(nsHTMLOptGroupElement, nsGenericElement);
 NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLOptGroupElement,
                                     nsGenericHTMLContainerElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLOptGroupElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMenuElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLOptGroupElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -322,16 +311,4 @@ nsHTMLOptGroupElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
                                                              aNotify);
 
   return rv;
-}
-
-const nsIContent*
-nsHTMLOptGroupElement::GetActiveItem() const
-{
-  return mActiveItem;
-}
-
-void
-nsHTMLOptGroupElement::SetActiveItem(const nsIContent* aItem)
-{
-  mActiveItem = aItem;
 }

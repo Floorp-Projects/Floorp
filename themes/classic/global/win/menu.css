@@ -43,8 +43,8 @@ menuitem[default="true"] {
 }  
   
 menu[disabled="true"], menuitem[disabled="true"],
-menu[disabled="true"]:-moz-menuactive,
-menuitem[disabled="true"]:-moz-menuactive {
+menu[_moz-menuactive="true"][disabled="true"],
+menuitem[_moz-menuactive="true"][disabled="true"] {
   color: GrayText;
 }
 
@@ -88,7 +88,7 @@ menuitem[disabled="true"]:-moz-menuactive {
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
 }
 
-menu:-moz-menuactive > .menu-right {
+.menu-right[_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow-hover.gif");
 }
 
@@ -104,14 +104,14 @@ menubar > menu {
   margin: 1px 0px 1px 0px;
 }
 
-menubar > menu:-moz-menuactive {
+menubar > menu[_moz-menuactive="true"] {
   border-top: 1px solid ThreeDHighlight;
   border-right: 1px solid ThreeDShadow;
   border-bottom: 1px solid ThreeDShadow;
   border-left: 1px solid ThreeDHighlight;
 }
 
-menubar > menu[open="true"]:-moz-menuactive {
+menubar > menu[_moz-menuactive="true"][open="true"] {
   border-top: 1px solid ThreeDShadow;
   border-right: 1px solid ThreeDHighlight;
   border-bottom: 1px solid ThreeDHighlight;
@@ -140,10 +140,10 @@ popup > menuitem {
   max-width: 42em;
 }
 
-menupopup > menu:-moz-menuactive,
-menupopup > menuitem:-moz-menuactive,
-popup > menu:-moz-menuactive,
-popup > menuitem:-moz-menuactive {
+menupopup > menu[_moz-menuactive="true"],
+menupopup > menuitem[_moz-menuactive="true"],
+popup > menu[_moz-menuactive="true"],
+popup > menuitem[_moz-menuactive="true"] {
   background-color: Highlight;
   color: HighlightText;
 }
@@ -168,7 +168,7 @@ menulist > menupopup > menu > .menu-iconic-left {
   display: none;
 }
     
-menulist > menupopup > menuitem:-moz-menuactive {
+menulist > menupopup > menuitem[_moz-menuactive="true"] {
   border: 1px dotted #F5DB95;
 }
  
@@ -182,7 +182,7 @@ menuitem[checked="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-disabled.gif");
 }
 
-menuitem[checked="true"]:-moz-menuactive {
+menuitem[checked="true"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hover.gif");
 }
 
@@ -196,7 +196,7 @@ menuitem[checked="true"][type="radio"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-disabled.gif");
 }
 
-menuitem[checked="true"][type="radio"]:-moz-menuactive {
+menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hover.gif");
 }
 

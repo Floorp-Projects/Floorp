@@ -85,7 +85,6 @@
 #include "nsGUIEvent.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
-#include "nsCSSAtoms.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -584,10 +583,14 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
   nsAutoString domEventToFire;
 
   if (aActivateFlag) {
+    // Highlight the menu.
+    mContent->SetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, NS_LITERAL_STRING("true"), PR_TRUE);
     // The menuactivated event is used by accessibility to track the user's movements through menus
     domEventToFire.Assign(NS_LITERAL_STRING("DOMMenuItemActive"));
   }
   else {
+    // Unhighlight the menu.
+    mContent->UnsetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
     domEventToFire.Assign(NS_LITERAL_STRING("DOMMenuItemInactive"));
   }
 
@@ -1319,9 +1322,9 @@ nsMenuFrame::Notify(nsITimer* aTimer)
   // Our timer has fired.
   if (aTimer == mOpenTimer.get()) {
     if (!mMenuOpen && mMenuParent) {
-      nsIMenuFrame* activeMenu = nsnull;
-      mMenuParent->GetCurrentMenuItem(&activeMenu);
-      if (activeMenu == this) {
+      nsAutoString active;
+      mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::menuactive, active);
+      if (active.Equals(NS_LITERAL_STRING("true"))) {
         // We're still the active menu. Make sure all submenus/timers are closed
         // before opening this one
         mMenuParent->KillPendingTimers();
@@ -2097,24 +2100,6 @@ nsMenuFrame::GetScrollableView(nsIScrollableView** aView)
     childFrame->GetRect(itemRect);
     (*aView)->SetLineHeight(itemRect.height);
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMenuFrame::NotifyStateChanged(nsIMenuFrame* aOtherMenuFrame)
-{
-  nsCOMPtr<nsIContent> otherContent;
-  if (aOtherMenuFrame) {
-    nsIFrame* otherFrame = nsnull;
-    CallQueryInterface(aOtherMenuFrame, &otherFrame);
-    otherFrame->GetContent(getter_AddRefs(otherContent));
-  }
-
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document)
-    document->ContentStatesChanged(mContent, otherContent, nsCSSAtoms::menuActivePseudo);
 
   return NS_OK;
 }

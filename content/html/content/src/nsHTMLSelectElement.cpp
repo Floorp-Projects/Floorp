@@ -79,7 +79,7 @@
 #include "nsIPresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFrame.h"
-#include "nsIMenuElement.h"
+
 #include "nsRuleNode.h"
 
 
@@ -125,8 +125,7 @@ class nsHTMLSelectElement : public nsGenericHTMLContainerFormElement,
                             public nsIDOMHTMLSelectElement,
                             public nsIDOMNSHTMLSelectElement,
                             public nsIDOMNSXBLFormControl,
-                            public nsISelectElement,
-                            public nsIMenuElement
+                            public nsISelectElement
 {
 public:
   nsHTMLSelectElement();
@@ -190,9 +189,6 @@ public:
   NS_IMETHOD GetMappedAttributeImpact(const nsIAtom* aAttribute,
                                       PRInt32 aModType, PRInt32& aHint) const;
 
-  // nsIMenuElement
-  virtual const nsIContent* GetActiveItem() const;
-  virtual void SetActiveItem(const nsIContent* aItem);
 
 protected:
   // Helper Methods
@@ -246,7 +242,6 @@ protected:
   PRUint32  mArtifactsAtTopLevel;
   PRInt32   mSelectedIndex;
   nsString* mRestoreState;
-  const nsIContent* mActiveItem;
 };
 
 
@@ -294,7 +289,6 @@ nsHTMLSelectElement::nsHTMLSelectElement()
 
   mRestoreState = nsnull;
   mSelectedIndex = -1;
-  mActiveItem = nsnull;
 }
 
 nsHTMLSelectElement::~nsHTMLSelectElement()
@@ -324,7 +318,6 @@ NS_HTML_CONTENT_INTERFACE_MAP_BEGIN(nsHTMLSelectElement,
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSHTMLSelectElement)
   NS_INTERFACE_MAP_ENTRY(nsIDOMNSXBLFormControl)
   NS_INTERFACE_MAP_ENTRY(nsISelectElement)
-  NS_INTERFACE_MAP_ENTRY(nsIMenuElement)
   NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLSelectElement)
 NS_HTML_CONTENT_INTERFACE_MAP_END
 
@@ -2043,17 +2036,6 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   return NS_OK;
 }
 
-const nsIContent*
-nsHTMLSelectElement::GetActiveItem() const
-{
-  return mActiveItem;
-}
-
-void
-nsHTMLSelectElement::SetActiveItem(const nsIContent* aItem)
-{
-  mActiveItem = aItem;
-}
 
 //----------------------------------------------------------------------
 //

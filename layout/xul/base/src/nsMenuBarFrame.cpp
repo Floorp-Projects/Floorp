@@ -58,7 +58,6 @@
 #include "nsMenuPopupFrame.h"
 #include "nsGUIEvent.h"
 #include "nsUnicharUtils.h"
-#include "nsIMenuElement.h"
 #ifdef XP_WIN
 #include "nsISound.h"
 #include "nsWidgetsCID.h"
@@ -200,8 +199,6 @@ nsMenuBarFrame::SetActive(PRBool aActiveFlag)
 void
 nsMenuBarFrame::ToggleMenuActiveState()
 {
-  nsIMenuFrame* oldCurrent = mCurrentMenu;
-
   if (mIsActive) {
     // Deactivate the menu bar
     mIsActive = PR_FALSE;
@@ -224,7 +221,8 @@ nsMenuBarFrame::ToggleMenuActiveState()
     InstallKeyboardNavigator();
 
     // Set the active menu to be the top left item (e.g., the File menu).
-    // We use the -moz-menuactive pseudoclass to track the current active menu.
+    // We use an attribute called "_moz-menuactive" to track the current 
+    // active menu.
     nsIMenuFrame* firstFrame;
     GetNextMenuItem(nsnull, &firstFrame);
     if (firstFrame) {
@@ -234,23 +232,6 @@ nsMenuBarFrame::ToggleMenuActiveState()
       mCurrentMenu = firstFrame;
     }
   }
-
-  // Update the state on the menubar content node
-  nsCOMPtr<nsIMenuElement> menubar = do_QueryInterface(mContent);
-  nsCOMPtr<nsIContent> newActive;
-  if (mCurrentMenu) {
-    nsIFrame* frame = nsnull;
-    CallQueryInterface(mCurrentMenu, &frame);
-    frame->GetContent(getter_AddRefs(newActive));
-  }
-  menubar->SetActiveItem(newActive);
-
-  // Now send a CSS state change notification
-  if (mCurrentMenu)
-    mCurrentMenu->NotifyStateChanged(oldCurrent);
-  else if (oldCurrent)
-    oldCurrent->NotifyStateChanged(nsnull);
-
 }
 
 static void GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aFrame, nsIFrame* aChild,
@@ -535,8 +516,6 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   PRBool wasOpen = PR_FALSE;
   
   // Unset the current child.
-  nsIMenuFrame* oldMenuFrame = mCurrentMenu;
-
   if (mCurrentMenu) {
     mCurrentMenu->MenuIsOpen(wasOpen);
     mCurrentMenu->SelectMenu(PR_FALSE);
@@ -554,23 +533,6 @@ NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
   }
 
   mCurrentMenu = aMenuItem;
-
-  // Update the menubar content node
-  nsCOMPtr<nsIMenuElement> menubar = do_QueryInterface(mContent);
-  nsCOMPtr<nsIContent> newActive;
-  if (mCurrentMenu) {
-    nsIFrame* frame = nsnull;
-    CallQueryInterface(mCurrentMenu, &frame);
-    frame->GetContent(getter_AddRefs(newActive));
-  }
-
-  menubar->SetActiveItem(newActive);
-
-  // Now send a CSS state change notification
-  if (mCurrentMenu)
-    mCurrentMenu->NotifyStateChanged(oldMenuFrame);
-  else if (oldMenuFrame)
-    oldMenuFrame->NotifyStateChanged(nsnull);
 
   return NS_OK;
 }

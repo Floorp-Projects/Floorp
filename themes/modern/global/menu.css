@@ -57,8 +57,8 @@ menuitem[default="true"] {
   
 menu[disabled="true"],
 menuitem[disabled="true"],
-menu[menuactive="true"][disabled="true"],
-menuitem[menuactive="true"][disabled="true"] {
+menu[_moz-menuactive="true"][disabled="true"],
+menuitem[_moz-menuactive="true"][disabled="true"] {
   color: #8C99AB;
 }
 
@@ -102,7 +102,7 @@ menuitem[menuactive="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
 }
 
-menu:-moz-menuactive > .menu-right {
+.menu-right[_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-arrow-hov.gif");
 }
 
@@ -118,11 +118,11 @@ menubar > menu {
   margin: 1px 0px 1px 0px;
 }
 
-menubar > menu:-moz-menuactive {
+menubar > menu[_moz-menuactive="true"] {
   border: 1px outset #DDE3EB;
 }
 
-menubar > menu[open="true"]:-moz-menuactive {
+menubar > menu[_moz-menuactive="true"][open="true"] {
   border-style: inset;
 }
 
@@ -148,10 +148,10 @@ popup > menuitem {
   max-width: 42em;
 }
 
-menupopup > menu:-moz-menuactive,
-menupopup > menuitem:-moz-menuactive,
-popup > menu:-moz-menuactive,
-popup > menuitem:-moz-menuactive {
+menupopup > menu[_moz-menuactive="true"],
+menupopup > menuitem[_moz-menuactive="true"],
+popup > menu[_moz-menuactive="true"],
+popup > menuitem[_moz-menuactive="true"] {
   background-color: #424F63;
   color: #FFFFFF;
 }
@@ -175,7 +175,7 @@ menulist > menupopup > menuitem[selected="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check.gif");
 }
   
-menulist > menupopup > menuitem[selected="true"]:-moz-menuactive {
+menulist > menupopup > menuitem[_moz-menuactive="true"][selected="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
 }
 
@@ -189,7 +189,7 @@ menuitem[checked="true"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-dis.gif");
 }
 
-menuitem[checked="true"]:-moz-menuactive {
+menuitem[checked="true"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
 }
 
@@ -203,7 +203,7 @@ menuitem[checked="true"][type="radio"][disabled="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-dis.gif");
 }
 
-menuitem[checked="true"][type="radio"]:-moz-menuactive {
+menuitem[checked="true"][type="radio"][_moz-menuactive="true"] {
   list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
 }
 
