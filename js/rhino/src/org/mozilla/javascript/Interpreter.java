@@ -241,8 +241,7 @@ public class Interpreter extends LabelTable {
                                         + node.toString());
     }
     
-    private int generateICode(Node node, int iCodeTop)
-    {
+    private int generateICode(Node node, int iCodeTop) {
         int type = node.getType();
         Node child = node.getFirstChild();
         Node firstChild = child;
@@ -846,6 +845,7 @@ public class Interpreter extends LabelTable {
                         set the stackDepth to 1 to account for the incoming
                         exception object.
                     */
+                    boolean insertedEndTry = false;
                     while (child != null) {
                         if (catchTarget != null && lastChild == catchTarget) {
                             itsStackDepth = 1;
@@ -860,11 +860,13 @@ public class Interpreter extends LabelTable {
                             before that goto.
                         */
                         Node nextSibling = child.getNextSibling();
-                        if (nextSibling == catchTarget ||
-                            nextSibling == finallyTarget)
+                        if (!insertedEndTry && nextSibling != null &&
+                            (nextSibling == catchTarget ||
+                             nextSibling == finallyTarget))
                         {
                             iCodeTop = addByte((byte) TokenStream.ENDTRY,
                                                iCodeTop);
+                            insertedEndTry = true;
                         }
                         iCodeTop = generateICode(child, iCodeTop);
                         lastChild = child;
