@@ -1344,7 +1344,8 @@ proc filter_deny { why } {
    By now you have a fully functional Bugzilla, but what good are bugs if
    they're not annoying? To help make those bugs more annoying you can
    set up Bugzilla's automatic whining system to complain at engineers
-   which leave their bugs in the NEW state without triaging them.
+   which leave their bugs in the NEW or REOPENED state without triaging
+   them.
 
    This can be done by adding the following command as a daily crontab
    entry (for help on that see that crontab man page):
@@ -3218,8 +3219,8 @@ Appendix A. The Bugzilla FAQ
         A.4.2. I'm evaluating/testing Bugzilla, and don't want it to send
                 email to anyone but me. How do I do it? 
 
-        A.4.3. I want whineatnews.pl to whine at something different to
-                only new bugs. How do I do it? 
+        A.4.3. I want whineatnews.pl to whine at something other than new
+                and reopened bugs. How do I do it? 
 
         A.4.4. How do I set up the email interface to submit/change bugs
                 via email? 
@@ -3561,8 +3562,8 @@ perl -pi -e 's@#\!/usr/bin/perl@#\!/usr/local/bin/perl@' *cgi *pl
    Edit the "newchangedmail" Param. Replace "To:" with "X-Real-To:",
    replace "Cc:" with "X-Real-CC:", and add a "To: <youremailaddress>".
 
-   A.4.3. I want whineatnews.pl to whine at something different to only
-   new bugs. How do I do it?
+   A.4.3. I want whineatnews.pl to whine at something other than new and
+   reopened bugs. How do I do it?
 
    Try Klaas Freitag's excellent patch for "whineatassigned"
    functionality. You can find it in bug 6679. This patch is against an
