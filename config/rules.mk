@@ -417,9 +417,15 @@ distclean::
 	Makefile config.log config.cache depend.mk .md .deps .HSancillary _xpidlgen
 	+$(LOOP_OVER_DIRS)
 
+#
+# Tags: emacs (etags), vi (ctags)
+# TAG_PROGRAM := ctags -F -
+#
+TAG_PROGRAM := etags -a
+
 alltags:
 	rm -f TAGS
-	find . -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | xargs etags -a
+	find $(topsrcdir) -name dist -prune -o \( -name '*.[hc]' -o -name '*.cp' -o -name '*.cpp' -o -name '*.idl' \) -print | xargs $(TAG_PROGRAM)
 
 #
 # Turn on C++ linking if we have any .cpp files
