@@ -44,11 +44,6 @@
 #define CONVERT_TO_WORDS
 #endif
 
-/* this case is failing for 3.1.  See bug #55234.  */
-#if (defined(SOLARIS) || defined(HPUX)) && defined(NSS_USE_64)
-#undef CONVERT_TO_WORDS
-#endif
-
 #if defined(AIX) || defined(OSF1)
 /* Treat array variables as longs, not bytes */
 #define USE_LONG
@@ -68,6 +63,8 @@ typedef PRUint8 Stype;
 #endif
 
 #define ARCFOUR_STATE_SIZE 256
+
+#define MASK1BYTE (WORD)(0xff)
 
 #define SWAP(a, b) \
 	tmp = a; \
@@ -395,7 +392,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 #endif
 			ARCFOUR_NEXT_BYTE();
 			streamWord |= (WORD)(cx->S[t]) << 8*i;
-			mask |= 0xff << 8*i;
+			mask |= MASK1BYTE << 8*i;
 		}
 		inWord = *pInWord++;
 		/* If buffers are relatively misaligned, shift the bytes in inWord
@@ -511,7 +508,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 #endif
 		ARCFOUR_NEXT_BYTE();
 		streamWord |= (WORD)(cx->S[t]) << 8*i;
-		mask |= 0xff << 8*i;
+		mask |= MASK1BYTE << 8*i;
 	}
 	*pOutWord = (*pOutWord & ~mask) | ((inWord ^ streamWord) & mask);
 	cx->i = tmpi;
