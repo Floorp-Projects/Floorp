@@ -6453,6 +6453,47 @@ nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
   mBullet->DidReflow(aState.mPresContext, &aState.mReflowState, NS_FRAME_REFLOW_FINISHED);
 }
 
+// This is used to scan overflow frames for any float placeholders,
+// and add their floats to the list represented by aHead and aTail. We
+// only search the inline descendants.
+static void CollectOverflowFloats(nsIFrame* aFrame, nsIFrame* aBlockParent,
+                                  nsIFrame** aHead, nsIFrame** aTail) {
+  while (aFrame) {
+    // Don't descend into block children
+    if (!aFrame->GetStyleDisplay()->IsBlockLevel()) {
+      if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
+        nsIFrame *outOfFlowFrame =
+          NS_STATIC_CAST(nsPlaceholderFrame*, aFrame)->GetOutOfFlowFrame();
+        // Make sure that its parent is the block we care
+        // about. Otherwise we don't want to mess around with it because
+        // it belongs to someone else. I think this could happen if the
+        // overflow lines contain a block descendant which owns its own
+        // floats.
+        if (outOfFlowFrame &&
+            !outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
+          NS_ASSERTION(outOfFlowFrame->GetParent() == aBlockParent,
+                       "Out of flow frame doesn't have the expected parent");
+          // It's not an absolute or fixed positioned frame, so it must
+          // be a float!
+          // XXX This is a lame-o way of detecting a float, but it's the
+          // only way apparently
+          if (!*aHead) {
+            *aHead = *aTail = outOfFlowFrame;
+          } else {
+            (*aTail)->SetNextSibling(outOfFlowFrame);
+            *aTail = outOfFlowFrame;
+          }
+        }
+      }
+
+      CollectOverflowFloats(aFrame->GetFirstChild(nsnull), aBlockParent,
+                            aHead, aTail);
+    }
+    
+    aFrame = aFrame->GetNextSibling();
+  }
+}
+
 //XXX get rid of this -- its slow
 void
 nsBlockFrame::BuildFloatList()
@@ -6494,29 +6535,9 @@ nsBlockFrame::BuildFloatList()
     head = nsnull;
     current = nsnull;
 
-    nsIFrame* frame = overflowLines->front()->mFirstChild;
-    while (frame) {
-      if (nsLayoutAtoms::placeholderFrame == frame->GetType()) {
-        nsIFrame *outOfFlowFrame = NS_STATIC_CAST(nsPlaceholderFrame*, frame)->GetOutOfFlowFrame();
-        if (outOfFlowFrame &&
-            !outOfFlowFrame->GetStyleDisplay()->IsAbsolutelyPositioned()) {
-          // It's not an absolute or fixed positioned frame, so it
-          // must be a float!
-          // XXX This is a lame-o way of detecting a float, but it's the only way
-          // apparently
-          if (!head) {
-            head = current = outOfFlowFrame;
-          } else {
-            current->SetNextSibling(outOfFlowFrame);
-            current = outOfFlowFrame;
-          }
-        }
-      }
+    CollectOverflowFloats(overflowLines->front()->mFirstChild,
+                          this, &head, &current);
 
-      // XXXldb What about a placeholder within an inline or block descendant?
-      frame = frame->GetNextSibling();
-    }
-    
     if (current) {
       current->SetNextSibling(nsnull);
       nsFrameList* frameList = new nsFrameList(head);
