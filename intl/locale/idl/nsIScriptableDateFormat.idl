@@ -42,32 +42,39 @@ enum
 };
 %}
 
+%{C++
+// Define Progid and CID
+// {2EA2E7D0-4095-11d3-9144-006008A6EDF6}
+#define NS_SCRIPTABLEDATEFORMAT_CID \
+{ 0x2ea2e7d0, 0x4095, 0x11d3, { 0x91, 0x44, 0x0, 0x60, 0x8, 0xa6, 0xed, 0xf6 } }
+
+#define NS_SCRIPTABLEDATEFORMAT_PROGID "component://netscape/intl/scriptabledateformat"
+
+extern nsISupports *NEW_SCRIPTABLE_DATEFORMAT(void);
+%}
 
 [scriptable, uuid(0c89efb0-1aae-11d3-9141-006008a6edf6)]
 interface nsIScriptableDateFormat : nsISupports {
     // format date and time, locale is language country pair (e.g. en-US) or empty string for application default
-    void FormatDateTime(in wstring locale, 
-                        in nsDateFormatSelector dateFormatSelector, 
-                        in nsTimeFormatSelector timeFormatSelector,
-                        in long year, 
-                        in long month, 
-                        in long day, 
-                        in long hour, 
-                        in long minute, 
-                        in long second,
-                        [shared, retval] out wstring dateTimeString);
+    wstring FormatDateTime(in wstring locale, 
+                           in nsDateFormatSelector dateFormatSelector, 
+                           in nsTimeFormatSelector timeFormatSelector,
+                           in long year, 
+                           in long month, 
+                           in long day, 
+                           in long hour, 
+                           in long minute, 
+                           in long second);
     // format date, locale is language country pair (e.g. en-US) or empty string for application default
-    void FormatDate(in wstring locale, 
-                    in nsDateFormatSelector dateFormatSelector, 
-                    in long year, 
-                    in long month, 
-                    in long day, 
-                    [shared, retval] out wstring dateString);
+    wstring FormatDate(in wstring locale, 
+                       in nsDateFormatSelector dateFormatSelector, 
+                       in long year, 
+                       in long month, 
+                       in long day);
     // format time, locale is language country pair (e.g. en-US) or empty string for application default
-    void FormatTime(in wstring locale, 
-                    in nsTimeFormatSelector timeFormatSelector,
-                    in long hour, 
-                    in long minute, 
-                    in long second,
-                    [shared, retval] out wstring timeString);
+    wstring FormatTime(in wstring locale, 
+                       in nsTimeFormatSelector timeFormatSelector,
+                       in long hour, 
+                       in long minute, 
+                       in long second);
 };

@@ -41,14 +41,14 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                             PRInt32 hour, 
                             PRInt32 minute, 
                             PRInt32 second, 
-                            const PRUnichar **dateTimeString);
+                            PRUnichar **dateTimeString);
 
   NS_IMETHOD FormatDate(const PRUnichar *locale, 
                         nsDateFormatSelector dateFormatSelector, 
                         PRInt32 year, 
                         PRInt32 month, 
                         PRInt32 day, 
-                        const PRUnichar **dateString)
+                        PRUnichar **dateString)
                         {return FormatDateTime(locale, dateFormatSelector, kTimeFormatNone, 
                                                year, month, day, 0, 0, 0, dateString);}
 
@@ -57,7 +57,7 @@ class nsScriptableDateFormat : public nsIScriptableDateFormat {
                         PRInt32 hour, 
                         PRInt32 minute, 
                         PRInt32 second, 
-                        const PRUnichar **timeString)
+                        PRUnichar **timeString)
                         {return FormatDateTime(locale, kDateFormatNone, timeFormatSelector, 
                                                1999, 1, 1, hour, minute, second, timeString);}
 
@@ -79,7 +79,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
                             PRInt32 hour, 
                             PRInt32 minute, 
                             PRInt32 second, 
-                            const PRUnichar **dateTimeString)
+                            PRUnichar **dateTimeString)
 {
 	nsILocaleFactory* localeFactory; 
 	nsILocale* aLocale; 
@@ -101,7 +101,7 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
         struct tm tmTime;
         time_t  timetTime;
 
-	nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
+        nsCRT::memset( &tmTime, 0, sizeof(tmTime) );
         tmTime.tm_year = year - 1900;
         tmTime.tm_mon = month - 1;
         tmTime.tm_mday = day;
@@ -113,13 +113,26 @@ NS_IMETHODIMP nsScriptableDateFormat::FormatDateTime(
         timetTime = mktime(&tmTime);
         if (-1 != timetTime) {
           rv = aDateTimeFormat->FormatTime(aLocale, dateFormatSelector, timeFormatSelector, 
-                          timetTime, mStringOut);
+                                           timetTime, mStringOut);
           if (NS_SUCCEEDED(rv)) {
-            *dateTimeString = mStringOut.GetUnicode();
+            *dateTimeString = mStringOut.ToNewUnicode();
           }
         }
         else {
-          rv = NS_ERROR_ILLEGAL_VALUE; // invalid arg value
+          // if mktime fails (e.g. year <= 1970), then try NSPR.
+          PRTime prtime;
+          char string[32];
+          sprintf(string, "%.2d/%.2d/%d %.2d:%.2d:%.2d", month, day, year, hour, minute, second);
+          if (PR_SUCCESS != PR_ParseTimeString(string, PR_FALSE, &prtime)) {
+            rv = NS_ERROR_ILLEGAL_VALUE; // invalid arg value
+          }
+          else {
+            rv = aDateTimeFormat->FormatPRTime(aLocale, dateFormatSelector, timeFormatSelector, 
+                                               prtime, mStringOut);
+            if (NS_SUCCEEDED(rv)) {
+              *dateTimeString = mStringOut.ToNewUnicode();
+            }
+          }
         }
         NS_RELEASE(aDateTimeFormat);
       }
