@@ -33,8 +33,10 @@ function onLoad() {
 
 	if ( !browser ) {
 		dump( "No browser instance provided!\n" );
-		window.close();
-        return;
+		dialog.newWindow.checked = true;
+		dialog.newWindow.disabled = true;
+	//	window.close();
+    //    return;
 	}
 
 	/* Give input field the focus. */
