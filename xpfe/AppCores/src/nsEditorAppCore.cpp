@@ -770,7 +770,7 @@ done:
   if (NS_FAILED(rv))
     return rv;
 
-  nsIWebShellWindow* newWindow = nsnull;
+  //nsIWebShellWindow* newWindow = nsnull;
   
   toolkit->ShowWindowWithArgs( urlStr, nsnull, "chrome://editor/content/EditorInitPage.html" );
   
@@ -1355,14 +1355,14 @@ nsEditorAppCore::GetContentsAsText(nsString& aContentsAsText)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputText(aContentsAsText);
+          err = textEditor->OutputTextToString(aContentsAsText);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputText(aContentsAsText);
+          err = htmlEditor->OutputTextToString(aContentsAsText);
       }
       break;
     default:
@@ -1383,14 +1383,14 @@ nsEditorAppCore::GetContentsAsHTML(nsString& aContentsAsHTML)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputHTML(aContentsAsHTML);
+          err = textEditor->OutputHTMLToString(aContentsAsHTML);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputHTML(aContentsAsHTML);
+          err = htmlEditor->OutputHTMLToString(aContentsAsHTML);
       }
       break;
     default:
@@ -1505,14 +1505,14 @@ nsEditorAppCore::GetContentsAsTextStream(nsIOutputStream* aContentsAsText)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputText(aContentsAsText);
+          err = textEditor->OutputTextToStream(aContentsAsText);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputText(aContentsAsText);
+          err = htmlEditor->OutputTextToStream(aContentsAsText);
       }
       break;
     default:
@@ -1533,14 +1533,14 @@ nsEditorAppCore::GetContentsAsHTMLStream(nsIOutputStream* aContentsAsHTML)
       {
         nsCOMPtr<nsITextEditor>  textEditor = do_QueryInterface(mEditor);
         if (textEditor)
-          err = textEditor->OutputHTML(aContentsAsHTML);
+          err = textEditor->OutputHTMLToStream(aContentsAsHTML);
       }
       break;
     case eHTMLTextEditorType:
       {
         nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
         if (htmlEditor)
-          err = htmlEditor->OutputHTML(aContentsAsHTML);
+          err = htmlEditor->OutputHTMLToStream(aContentsAsHTML);
       }
       break;
     default:
@@ -2123,7 +2123,7 @@ nsEditorAppCore::RunUnitTests()
     err = editor->DebugUnitTests(&numTests, &numTestsFailed);
 
 #ifdef APP_DEBUG
-  printf("\nRan %ld tests, of which %ld failed\n", numTests, numTestsFailed);
+  printf("\nRan %ld tests, of which %ld failed\n", (long)numTests, (long)numTestsFailed);
 #endif
 
   return NS_OK;
