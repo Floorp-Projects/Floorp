@@ -140,7 +140,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
   // Clean up filter buffers
   delete[] filterBuffer;
 
-  if ( userClicksOK )
+  if (userClicksOK == returnOK)
   {
     nsCOMPtr<nsILocalFile>    localFile(do_CreateInstance("component://mozilla/file/local"));
 	  nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(localFile));
@@ -494,7 +494,7 @@ NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
-  NS_ENSURE_ARG_POINTER(*aFile);
+  NS_ENSURE_ARG_POINTER(aFile);
   NS_IF_ADDREF(*aFile = mFile);
   return NS_OK;
 }
