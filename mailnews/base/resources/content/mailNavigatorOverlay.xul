@@ -10,7 +10,6 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-
     function getCurrentIdentityKey()                                           
     {                                                                          
       try {                                                                                 
@@ -66,21 +65,21 @@
       var shouldShowSendLink = gContextMenu.onLink;
       gContextMenu.showItem("context-sendlink", shouldShowSendLink);
       
-      var appsSeparator = document.getElementById("context-sep-apps");
-      if (appsSeparator) {
-        var tempElement = appsSeparator.previousSibling;
-        if (tempElement.localName == "menuseparator") 
-          gContextMenu.showItem("context-sep-apps", false);
-      }
+      gContextMenu.showItem("context-sep-apps", gContextMenu.shouldShowSeparator("context-sep-apps"));
     }
       
-    function initMailContextMenuListener(aEvent)
+    var gAddedMailContextMenuPopupListener = false;
+    function initMailContextMenuPopupListener(aEvent)
     {
+      // This is really lame, but we can't seem to add a bubbling listener to the DOMWindow (!)
+      if (gAddedMailContextMenuPopupListener)
+        return;
       var popup = document.getElementById("contentAreaContextMenu");
       popup.addEventListener("popupshowing", initMailContextMenuItems, false);
+      gAddedMailContextMenuPopupListener = true;
     }
-    
-    addEventListener("load", initMailContextMenuListener, false);
+
+    addEventListener("load", initMailContextMenuPopupListener, true);
   ]]>
   </script>         
 
