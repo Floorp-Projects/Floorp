@@ -665,10 +665,14 @@ lo_ProcessStyleAttribute(MWContext *context, lo_DocState *state, PA_Tag *tag, ch
      */
     for (ptr=(char*)tag->data, end = ptr+tag->data_len; ptr < end; ptr++) {
         if (*ptr == '"') {
-            in_double_quote = !in_double_quote;
+			/* Fix for bug #120234. Ignore double quotes while inside single quoted attribute. */
+			if (!in_single_quote)
+				in_double_quote = !in_double_quote;
         }
         else if (*ptr == '\'') {
-            in_single_quote = !in_single_quote;
+			/* Fix for bug #120234. Ignore single quotes while inside double quoted attribute. */
+			if (!in_double_quote)
+				in_single_quote = !in_single_quote;
         }
         else if (!in_single_quote &&
                  !in_double_quote &&
