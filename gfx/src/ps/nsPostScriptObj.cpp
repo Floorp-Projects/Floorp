@@ -321,7 +321,7 @@ printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
     mPrintSetup->right = (int) (right * mPrintSetup->dpi); 
 #ifdef DEBUG
     printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
-#endif DEBUG
+#endif
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
     mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
