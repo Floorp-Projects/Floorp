@@ -21,6 +21,7 @@
  * Contributor(s): Garth Smedley <garths@oeone.com>
  *                 Mike Potter <mikep@oeone.com>
  *                 Karl Guertin <grayrest@grayrest.com> 
+ *                 Christopher Aillon <christopher@aillon.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -39,12 +40,12 @@
 #mini-cal {                                                           
   list-style-image: url("chrome://calendar/skin/taskbar-cal.gif");    
 }                                                                     
-                                                                      
+
 #mini-cal:hover:active {                                              
   list-style-image: url("chrome://calendar/skin/taskbar-cal-act.gif");
 }                                                                     
 
 .icon-calendar16 {
-  list-style-image: url("chrome://calendar/skin/taskbar-cal.gif");
+  list-style-image: url("chrome://calendar/skin/calendar-16.gif");
 }
 
