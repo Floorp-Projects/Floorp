@@ -601,20 +601,6 @@ jsdScript::GetIsValid(PRBool *_rval)
 }
     
 NS_IMETHODIMP
-jsdScript::GetIsActive(PRBool *_rval)
-{
-    if (!mValid) {
-        *_rval = PR_FALSE;
-        return NS_OK;
-    }
-    
-    JSD_LockScriptSubsystem(mCx);
-    *_rval = JSD_IsActiveScript(mCx, mScript);
-    JSD_UnlockScriptSubsystem(mCx);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 jsdScript::GetFileName(char **_rval)
 {
     *_rval = mFileName->ToNewCString();
@@ -942,7 +928,7 @@ jsdValue::GetJsType (PRUint32 *_rval)
     else if (JSD_IsValueVoid(mCx, mValue))
         *_rval = TYPE_VOID;
     else
-        *_rval = TYPE_UNKNOWN;    
+        NS_ASSERTION (0, "Value has no discernible type.");
 
     return NS_OK;
 }
@@ -1002,7 +988,11 @@ NS_IMETHODIMP
 jsdValue::GetDoubleValue(double *_rval)
 {
     ASSERT_VALID_VALUE;
-    *_rval = *JSD_GetValueDouble (mCx, mValue);
+    double *dp = JSD_GetValueDouble (mCx, mValue);
+    if (dp)
+        *_rval = *dp;
+    else
+        *_rval = 0;
     return NS_OK;
 }
 
@@ -1224,6 +1214,16 @@ jsdService::EnumerateScripts (jsdIScriptEnumerator *enumerator)
     JSD_UnlockScriptSubsystem(mCx);
 
     return rv;
+}
+
+
+NS_IMETHODIMP
+jsdService::GC (void)
+{
+    ASSERT_VALID_CONTEXT;
+    JSContext *cx = JSD_GetDefaultJSContext (mCx);
+    JS_GC(cx);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
