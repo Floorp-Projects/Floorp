@@ -10,26 +10,33 @@ REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS =				\
-	nsJSCSSFontFaceRule.cpp		\
-	nsJSCSSMediaRule.cpp		\
-	nsJSCSSPageRule.cpp		\
-	nsJSCSSStyleDeclaration.cpp	\
-	nsJSCSSStyleRule.cpp		\
-	nsJSCSSStyleRuleCollection.cpp	\
-	nsJSCSSStyleRuleSimple.cpp	\
-	nsJSCSSStyleSheet.cpp		\
+  nsJSCSS2Properties.cpp \
+  nsJSCSSFontFaceRule.cpp \
+  nsJSCSSImportRule.cpp \
+  nsJSCSSMediaRule.cpp \
+  nsJSCSSPageRule.cpp \
+  nsJSCSSRule.cpp \
+  nsJSCSSStyleDeclaration.cpp \
+  nsJSCSSStyleRule.cpp \
+  nsJSCSSStyleRuleCollection.cpp  \
+  nsJSCSSStyleSheet.cpp \
+  nsJSCSSUnknownRule.cpp \
 	$(NULL)
 
 CPP_OBJS=						\
-	.\$(OBJDIR)\nsJSCSSFontFaceRule.obj		\
-	.\$(OBJDIR)\nsJSCSSMediaRule.obj		\
-	.\$(OBJDIR)\nsJSCSSPageRule.obj			\
-	.\$(OBJDIR)\nsJSCSSStyleDeclaration.obj		\
-	.\$(OBJDIR)\nsJSCSSStyleRule.obj		\
-	.\$(OBJDIR)\nsJSCSSStyleRuleCollection.obj	\
-	.\$(OBJDIR)\nsJSCSSStyleRuleSimple.obj		\
-	.\$(OBJDIR)\nsJSCSSStyleSheet.obj		\
+  .\$(OBJDIR)\nsJSCSS2Properties.obj \
+  .\$(OBJDIR)\nsJSCSSFontFaceRule.obj \
+  .\$(OBJDIR)\nsJSCSSImportRule.obj \
+  .\$(OBJDIR)\nsJSCSSMediaRule.obj \
+  .\$(OBJDIR)\nsJSCSSPageRule.obj \
+  .\$(OBJDIR)\nsJSCSSRule.obj \
+  .\$(OBJDIR)\nsJSCSSStyleDeclaration.obj \
+  .\$(OBJDIR)\nsJSCSSStyleRule.obj \
+  .\$(OBJDIR)\nsJSCSSStyleRuleCollection.obj \
+  .\$(OBJDIR)\nsJSCSSStyleSheet.obj \
+  .\$(OBJDIR)\nsJSCSSUnknownRule.obj \
 	$(NULL)
+
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
 	-I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib

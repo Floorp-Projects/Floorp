@@ -18,7 +18,20 @@
 </head>
 
 <body bgcolor="#FFFFFF" text="#000000">
+<table border=4>
+<tr>
+<td>
 <h1>Example 0: Basic HTML Text Styles</h1>
+</td>
+<td>
+more table cell
+</td>
+</tr>
+<tr>
+<td>second row</td>
+<td>second row</td>
+</tr>
+</table>
 <p><br></p>
 <h2>Formatted Text</h2>
 <p>This is a basic paragraph with <b>bold</b>, <i>italic</i> and <i>bold-italic 
@@ -81,7 +94,7 @@
 <p>&nbsp;</p>
 <script>
 var r = 0, g = 0, b = 0;
-var h = document.documentElement.childNodes[1].childNodes[1];
+var h = document.documentElement.childNodes[1].childNodes[1].childNodes[0].childNodes[0].childNodes[0].childNodes[1];
 h.style.borderStyle = "groove";
 
 function changeColor() {

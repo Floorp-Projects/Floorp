@@ -20,14 +20,17 @@ IGNORE_MANIFEST=1
 
 DEFINES=-D_IMPL_NS_DOM 
 EXPORTS= \
-	nsIDOMCSSFontFaceRule.h \
-	nsIDOMCSSMediaRule.h \
-	nsIDOMCSSPageRule.h \
-	nsIDOMCSSStyleDeclaration.h \
-	nsIDOMCSSStyleRule.h \
-	nsIDOMCSSStyleRuleCollection.h \
-	nsIDOMCSSStyleRuleSimple.h \
-	nsIDOMCSSStyleSheet.h
+  nsIDOMCSS2Properties.h \
+  nsIDOMCSSFontFaceRule.h \
+  nsIDOMCSSImportRule.h \
+  nsIDOMCSSMediaRule.h \
+  nsIDOMCSSPageRule.h \
+  nsIDOMCSSRule.h \
+  nsIDOMCSSStyleDeclaration.h \
+  nsIDOMCSSStyleRule.h \
+  nsIDOMCSSStyleRuleCollection.h \
+  nsIDOMCSSStyleSheet.h \
+  nsIDOMCSSUnknownRule.h
 
 MODULE=dom 
 

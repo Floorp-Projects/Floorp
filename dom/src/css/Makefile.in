@@ -25,15 +25,19 @@ include $(DEPTH)/config/autoconf.mk
 LIBRARY_NAME = jsdomcss_s
 
 CPPSRCS =				\
-	nsJSCSSFontFaceRule.cpp		\
-	nsJSCSSMediaRule.cpp		\
-	nsJSCSSPageRule.cpp		\
-	nsJSCSSStyleDeclaration.cpp	\
-	nsJSCSSStyleRule.cpp		\
-	nsJSCSSStyleRuleCollection.cpp	\
-	nsJSCSSStyleRuleSimple.cpp	\
-	nsJSCSSStyleSheet.cpp		\
+  nsJSCSS2Properties.cpp  \
+  nsJSCSSFontFaceRule.cpp \
+  nsJSCSSImportRule.cpp \
+  nsJSCSSMediaRule.cpp  \
+  nsJSCSSPageRule.cpp \
+  nsJSCSSRule.cpp \
+  nsJSCSSStyleDeclaration.cpp \
+  nsJSCSSStyleRule.cpp  \
+  nsJSCSSStyleRuleCollection.cpp  \
+  nsJSCSSStyleSheet.cpp \
+  nsJSCSSUnknownRule.cpp  \
 	$(NULL)
+
 
 DEFINES += -D_IMPL_NS_DOM
 

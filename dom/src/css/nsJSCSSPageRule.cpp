@@ -42,7 +42,7 @@ NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
 // CSSPageRule property ids
 //
 enum CSSPageRule_slots {
-  CSSPAGERULE_SELECTORTEXT = -1,
+  CSSPAGERULE_NAME = -1,
   CSSPAGERULE_STYLE = -2
 };
 
@@ -62,10 +62,10 @@ GetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSPAGERULE_SELECTORTEXT:
+      case CSSPAGERULE_NAME:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetSelectorText(prop)) {
+        if (NS_OK == a->GetName(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
@@ -143,7 +143,7 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSPAGERULE_SELECTORTEXT:
+      case CSSPAGERULE_NAME:
       {
         nsAutoString prop;
         JSString *jsstring;
@@ -154,7 +154,7 @@ SetCSSPageRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           prop.SetString((const char *)nsnull);
         }
       
-        a->SetSelectorText(prop);
+        a->SetName(prop);
         
         break;
       }
@@ -291,7 +291,7 @@ JSClass CSSPageRuleClass = {
 //
 static JSPropertySpec CSSPageRuleProperties[] =
 {
-  {"selectorText",    CSSPAGERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"name",    CSSPAGERULE_NAME,    JSPROP_ENUMERATE},
   {"style",    CSSPAGERULE_STYLE,    JSPROP_ENUMERATE},
   {0}
 };
@@ -334,7 +334,7 @@ nsresult NS_InitCSSPageRuleClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitCSSStyleRuleClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCSSRuleClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context

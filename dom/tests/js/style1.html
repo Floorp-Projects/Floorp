@@ -1,7 +1,8 @@
 <html>
 <head>
 <title>Example 0</title>
-<style>
+<style title="hello" media="screen, print">
+ :first-letter { color: green; }
  a#id.foo:visited:first-line { color: red; }
  a#id.foo:first-line { color: red; }
  a#id.foo:visited { color: red; }
@@ -13,7 +14,8 @@
  a:visited:visited { color: red; }
  a:first-line:visited { color: red; }
  :active { color: blue; }
- :first-letter { color: green; }
+ P.first:first-line { color: blue; }
+ P.first:first-letter { color: yellow; }
 </style>
 </head>
 
@@ -28,7 +30,7 @@
 <p>This is a paragraph with font variations: <b><font face="Arial, Helvetica, sans-serif">Arial,</font></b><font face="Arial, Helvetica, sans-serif"> 
   <i><font face="Verdana, Arial, Helvetica, sans-serif">Verdana</font>,</i> <font face="co">COURIER, 
   <font face="Times New Roman, Times, serif">Times New Roman.</font></font></font></p>
-<p><font size=7>Font size=7, </font><font size=6>Font size=6, </font><font size=5>Font 
+<p class="first"><font size=7>Font size=7, </font><font size=6>Font size=6, </font><font size=5>Font 
   size=5, </font><font size=4>Font size=4, </font><font size=3>Font size=3, </font><font size=2>Font 
   size=2, </font><font size=1>Font size=1, </font><font point-size=24 font-weight=700>Font 
   point-size=24 font-weight=700</font></p>
@@ -82,6 +84,9 @@
 <script>
 var r = 0, g = 0, b = 0;
 var h = document.documentElement.childNodes[1].childNodes[1];
+var sheet = document.styleSheets[0];
+var rule = sheet.cssRules[0];
+var size = 10;
 
 function changeColor() {
   r += 5;
@@ -90,8 +95,14 @@ function changeColor() {
   r %= 255;
   g %= 255;
   b %= 255;
+  size += 1;
+  if (size > 48) {
+    size = 10;
+  }
 
   h.style.backgroundColor = "rgb(" + r + "," + g + "," + b + ")";
+  rule.style.color = "rgb(" + r + "," + g + "," + b + ")";
+  rule.style.fontSize = size + "pt";
 }
 
 setInterval(changeColor, 40);

@@ -16,9 +16,12 @@
 # This is a list of local files which get copied to the mozilla:dist:dom directory
 #
 
+nsIDOMCSS2Properties.h
 nsIDOMCSSFontFaceRule.h
+nsIDOMCSSImportRule.h
 nsIDOMCSSMediaRule.h
-nsIDOMCSSPageRule.h		   
+nsIDOMCSSPageRule.h
+nsIDOMCSSRule.h
 nsIDOMCSSStyleDeclaration.h
 nsIDOMCSSStyleRule.h
 nsIDOMCSSStyleRuleCollection.h

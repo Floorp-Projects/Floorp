@@ -25,21 +25,25 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMCSSStyleRule.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_IDOMCSSSTYLERULE_IID);
 
+NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
 NS_DEF_PTR(nsIDOMCSSStyleRule);
 
 //
 // CSSStyleRule property ids
 //
 enum CSSStyleRule_slots {
-  CSSSTYLERULE_TYPE = -1
+  CSSSTYLERULE_SELECTORTEXT = -1,
+  CSSSTYLERULE_STYLE = -2
 };
 
 /***********************************************************************/
@@ -58,13 +62,40 @@ GetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSSTYLERULE_TYPE:
+      case CSSSTYLERULE_SELECTORTEXT:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetType(prop)) {
+        if (NS_OK == a->GetSelectorText(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case CSSSTYLERULE_STYLE:
+      {
+        nsIDOMCSSStyleDeclaration* prop;
+        if (NS_OK == a->GetStyle(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
         }
         else {
           return JS_FALSE;
@@ -112,7 +143,44 @@ SetCSSStyleRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case CSSSTYLERULE_SELECTORTEXT:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetSelectorText(prop);
+        
+        break;
+      }
+      case CSSSTYLERULE_STYLE:
+      {
+        nsIDOMCSSStyleDeclaration* prop;
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
+          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
+          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
+          if (NS_OK != supports->QueryInterface(kICSSStyleDeclarationIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type CSSStyleDeclaration");
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be an object");
+          return JS_FALSE;
+        }
+      
+        a->SetStyle(prop);
+        if (prop) NS_RELEASE(prop);
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -223,7 +291,8 @@ JSClass CSSStyleRuleClass = {
 //
 static JSPropertySpec CSSStyleRuleProperties[] =
 {
-  {"type",    CSSSTYLERULE_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectorText",    CSSSTYLERULE_SELECTORTEXT,    JSPROP_ENUMERATE},
+  {"style",    CSSSTYLERULE_STYLE,    JSPROP_ENUMERATE},
   {0}
 };
 
@@ -265,6 +334,9 @@ nsresult NS_InitCSSStyleRuleClass(nsIScriptContext *aContext, void **aPrototype)
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
+    if (NS_OK != NS_InitCSSRuleClass(aContext, (void **)&parent_proto)) {
+      return NS_ERROR_FAILURE;
+    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 

@@ -1,11 +1,11 @@
 
-   interface CSSMediaRule : CSSStyleRule {	
+   interface CSSMediaRule : CSSRule {	
  /* IID: { 0xa6cf90bc, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
 
-     attribute wstring mediaTypes;
-     readonly attribute CSSStyleRuleCollection rules;
+     attribute wstring mediaTypes; 
+     readonly attribute CSSStyleRuleCollection cssRules; 
 
-     unsigned long addRule(in wstring selector, in wstring declaration, in unsigned long index);
-     void removeRule(in unsigned long index);
+     unsigned long insertRule(in wstring rule, in unsigned long index); 
+     void deleteRule(in unsigned long index); 
    };

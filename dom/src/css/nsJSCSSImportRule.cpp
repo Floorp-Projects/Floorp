@@ -25,35 +25,36 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMCSSStyleDeclaration.h"
-#include "nsIDOMCSSStyleRuleSimple.h"
+#include "nsIDOMCSSImportRule.h"
+#include "nsIDOMCSSStyleSheet.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
-static NS_DEFINE_IID(kICSSStyleRuleSimpleIID, NS_IDOMCSSSTYLERULESIMPLE_IID);
+static NS_DEFINE_IID(kICSSImportRuleIID, NS_IDOMCSSIMPORTRULE_IID);
+static NS_DEFINE_IID(kICSSStyleSheetIID, NS_IDOMCSSSTYLESHEET_IID);
 
-NS_DEF_PTR(nsIDOMCSSStyleDeclaration);
-NS_DEF_PTR(nsIDOMCSSStyleRuleSimple);
+NS_DEF_PTR(nsIDOMCSSImportRule);
+NS_DEF_PTR(nsIDOMCSSStyleSheet);
 
 //
-// CSSStyleRuleSimple property ids
+// CSSImportRule property ids
 //
-enum CSSStyleRuleSimple_slots {
-  CSSSTYLERULESIMPLE_SELECTORTEXT = -1,
-  CSSSTYLERULESIMPLE_STYLE = -2
+enum CSSImportRule_slots {
+  CSSIMPORTRULE_HREF = -1,
+  CSSIMPORTRULE_MEDIA = -2,
+  CSSIMPORTRULE_STYLESHEET = -3
 };
 
 /***********************************************************************/
 //
-// CSSStyleRuleSimple Properties Getter
+// CSSImportRule Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -62,10 +63,10 @@ GetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSSTYLERULESIMPLE_SELECTORTEXT:
+      case CSSIMPORTRULE_HREF:
       {
         nsAutoString prop;
-        if (NS_OK == a->GetSelectorText(prop)) {
+        if (NS_OK == a->GetHref(prop)) {
           JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
           // set the return value
           *vp = STRING_TO_JSVAL(jsstring);
@@ -75,10 +76,23 @@ GetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case CSSSTYLERULESIMPLE_STYLE:
+      case CSSIMPORTRULE_MEDIA:
       {
-        nsIDOMCSSStyleDeclaration* prop;
-        if (NS_OK == a->GetStyle(&prop)) {
+        nsAutoString prop;
+        if (NS_OK == a->GetMedia(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case CSSIMPORTRULE_STYLESHEET:
+      {
+        nsIDOMCSSStyleSheet* prop;
+        if (NS_OK == a->GetStyleSheet(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -129,12 +143,12 @@ GetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// CSSStyleRuleSimple Properties Setter
+// CSSImportRule Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetCSSImportRuleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -143,7 +157,7 @@ SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case CSSSTYLERULESIMPLE_SELECTORTEXT:
+      case CSSIMPORTRULE_HREF:
       {
         nsAutoString prop;
         JSString *jsstring;
@@ -154,7 +168,22 @@ SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           prop.SetString((const char *)nsnull);
         }
       
-        a->SetSelectorText(prop);
+        a->SetHref(prop);
+        
+        break;
+      }
+      case CSSIMPORTRULE_MEDIA:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetMedia(prop);
         
         break;
       }
@@ -185,12 +214,12 @@ SetCSSStyleRuleSimpleProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// CSSStyleRuleSimple finalizer
+// CSSImportRule finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
+FinalizeCSSImportRule(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -206,12 +235,12 @@ FinalizeCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
 
 
 //
-// CSSStyleRuleSimple enumerate
+// CSSImportRule enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
+EnumerateCSSImportRule(JSContext *cx, JSObject *obj)
 {
-  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -226,12 +255,12 @@ EnumerateCSSStyleRuleSimple(JSContext *cx, JSObject *obj)
 
 
 //
-// CSSStyleRuleSimple resolve
+// CSSImportRule resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveCSSStyleRuleSimple(JSContext *cx, JSObject *obj, jsval id)
+ResolveCSSImportRule(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMCSSStyleRuleSimple *a = (nsIDOMCSSStyleRuleSimple*)JS_GetPrivate(cx, obj);
+  nsIDOMCSSImportRule *a = (nsIDOMCSSImportRule*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -247,56 +276,57 @@ ResolveCSSStyleRuleSimple(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for CSSStyleRuleSimple
+// class for CSSImportRule
 //
-JSClass CSSStyleRuleSimpleClass = {
-  "CSSStyleRuleSimple", 
+JSClass CSSImportRuleClass = {
+  "CSSImportRule", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetCSSStyleRuleSimpleProperty,
-  SetCSSStyleRuleSimpleProperty,
-  EnumerateCSSStyleRuleSimple,
-  ResolveCSSStyleRuleSimple,
+  GetCSSImportRuleProperty,
+  SetCSSImportRuleProperty,
+  EnumerateCSSImportRule,
+  ResolveCSSImportRule,
   JS_ConvertStub,
-  FinalizeCSSStyleRuleSimple
+  FinalizeCSSImportRule
 };
 
 
 //
-// CSSStyleRuleSimple class properties
+// CSSImportRule class properties
 //
-static JSPropertySpec CSSStyleRuleSimpleProperties[] =
+static JSPropertySpec CSSImportRuleProperties[] =
 {
-  {"selectorText",    CSSSTYLERULESIMPLE_SELECTORTEXT,    JSPROP_ENUMERATE},
-  {"style",    CSSSTYLERULESIMPLE_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"href",    CSSIMPORTRULE_HREF,    JSPROP_ENUMERATE},
+  {"media",    CSSIMPORTRULE_MEDIA,    JSPROP_ENUMERATE},
+  {"styleSheet",    CSSIMPORTRULE_STYLESHEET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
 
 //
-// CSSStyleRuleSimple class methods
+// CSSImportRule class methods
 //
-static JSFunctionSpec CSSStyleRuleSimpleMethods[] = 
+static JSFunctionSpec CSSImportRuleMethods[] = 
 {
   {0}
 };
 
 
 //
-// CSSStyleRuleSimple constructor
+// CSSImportRule constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-CSSStyleRuleSimple(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CSSImportRule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
 
 
 //
-// CSSStyleRuleSimple class initialization
+// CSSImportRule class initialization
 //
-nsresult NS_InitCSSStyleRuleSimpleClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitCSSImportRuleClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -305,23 +335,23 @@ nsresult NS_InitCSSStyleRuleSimpleClass(nsIScriptContext *aContext, void **aProt
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CSSStyleRuleSimple", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CSSImportRule", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitCSSStyleRuleClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitCSSRuleClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &CSSStyleRuleSimpleClass,      // JSClass
-                         CSSStyleRuleSimple,            // JSNative ctor
+                         &CSSImportRuleClass,      // JSClass
+                         CSSImportRule,            // JSNative ctor
                          0,             // ctor args
-                         CSSStyleRuleSimpleProperties,  // proto props
-                         CSSStyleRuleSimpleMethods,     // proto funcs
+                         CSSImportRuleProperties,  // proto props
+                         CSSImportRuleMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -344,17 +374,17 @@ nsresult NS_InitCSSStyleRuleSimpleClass(nsIScriptContext *aContext, void **aProt
 
 
 //
-// Method for creating a new CSSStyleRuleSimple JavaScript object
+// Method for creating a new CSSImportRule JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptCSSStyleRuleSimple(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptCSSImportRule(nsIScriptContext *aContext, nsISupports *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCSSStyleRuleSimple");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCSSImportRule");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   nsresult result = NS_OK;
-  nsIDOMCSSStyleRuleSimple *aCSSStyleRuleSimple;
+  nsIDOMCSSImportRule *aCSSImportRule;
 
   if (nsnull == aParent) {
     parent = nsnull;
@@ -370,23 +400,23 @@ extern "C" NS_DOM nsresult NS_NewScriptCSSStyleRuleSimple(nsIScriptContext *aCon
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitCSSStyleRuleSimpleClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitCSSImportRuleClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
-  result = aSupports->QueryInterface(kICSSStyleRuleSimpleIID, (void **)&aCSSStyleRuleSimple);
+  result = aSupports->QueryInterface(kICSSImportRuleIID, (void **)&aCSSImportRule);
   if (NS_OK != result) {
     return result;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &CSSStyleRuleSimpleClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &CSSImportRuleClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
-    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aCSSStyleRuleSimple);
+    JS_SetPrivate(jscontext, (JSObject *)*aReturn, aCSSImportRule);
   }
   else {
-    NS_RELEASE(aCSSStyleRuleSimple);
+    NS_RELEASE(aCSSImportRule);
     return NS_ERROR_FAILURE; 
   }
 

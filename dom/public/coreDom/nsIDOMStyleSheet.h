@@ -32,6 +32,8 @@
 class nsIDOMStyleSheet : public nsISupports {
 public:
 
+  NS_IMETHOD    GetType(nsString& aType)=0;
+
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
 
@@ -40,6 +42,7 @@ public:
 
 
 #define NS_DECL_IDOMSTYLESHEET   \
+  NS_IMETHOD    GetType(nsString& aType);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetReadOnly(PRBool* aReadOnly);  \
@@ -47,6 +50,7 @@ public:
 
 
 #define NS_FORWARD_IDOMSTYLESHEET(_to)  \
+  NS_IMETHOD    GetType(nsString& aType) { return _to##GetType(aType); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to##GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to##SetDisabled(aDisabled); } \
   NS_IMETHOD    GetReadOnly(PRBool* aReadOnly) { return _to##GetReadOnly(aReadOnly); } \

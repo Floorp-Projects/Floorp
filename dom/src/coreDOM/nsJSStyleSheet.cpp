@@ -39,8 +39,9 @@ NS_DEF_PTR(nsIDOMStyleSheet);
 // StyleSheet property ids
 //
 enum StyleSheet_slots {
-  STYLESHEET_DISABLED = -1,
-  STYLESHEET_READONLY = -2
+  STYLESHEET_TYPE = -1,
+  STYLESHEET_DISABLED = -2,
+  STYLESHEET_READONLY = -3
 };
 
 /***********************************************************************/
@@ -59,6 +60,19 @@ GetStyleSheetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+      case STYLESHEET_TYPE:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetType(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       case STYLESHEET_DISABLED:
       {
         PRBool prop;
@@ -248,6 +262,7 @@ JSClass StyleSheetClass = {
 //
 static JSPropertySpec StyleSheetProperties[] =
 {
+  {"type",    STYLESHEET_TYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"disabled",    STYLESHEET_DISABLED,    JSPROP_ENUMERATE},
   {"readOnly",    STYLESHEET_READONLY,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
