@@ -492,6 +492,8 @@ private:
 	void OnDeleteFolder(const char * aSourceMailbox);
 	void OnRenameFolder(const char * aSourceMailbox);
 	void OnMoveFolderHierarchy(const char * aSourceMailbox);
+  void DeleteFolderAndMsgs(const char * aSourceMailbox);
+  void RemoveMsgsAndExpunge();
 	void FindMailboxesIfNecessary();
 	void CreateMailbox(const char *mailboxName);
   void DeleteMailbox(const char *mailboxName);

@@ -2039,6 +2039,9 @@ void nsImapProtocol::ProcessSelectedStateURL()
               HandleMemoryFailure();
         }
         break;
+      case nsIImapUrl::nsImapDeleteFolderAndMsgs:
+        DeleteFolderAndMsgs(mailboxName);
+        break;
       case nsIImapUrl::nsImapDeleteAllMsgs:
         {
           uint32 numberOfMessages = GetServerStateParser().NumberOfMessages();
@@ -5717,6 +5720,31 @@ void nsImapProtocol::OnDeleteFolder(const char * sourceMailbox)
         if (deleted)
             FolderDeleted(sourceMailbox);
     }
+}
+
+void nsImapProtocol::RemoveMsgsAndExpunge()
+{
+  uint32 numberOfMessages = GetServerStateParser().NumberOfMessages();
+  if (numberOfMessages)
+  {
+    // Remove all msgs and expunge the folder (ie, compact it).
+    Store("1:*", "+FLAGS.SILENT (\\Deleted)", PR_FALSE);  // use sequence #'s  
+    if (GetServerStateParser().LastCommandSuccessful())
+      Expunge();
+  }
+}
+
+void nsImapProtocol::DeleteFolderAndMsgs(const char * sourceMailbox)
+{
+  RemoveMsgsAndExpunge();
+  if (GetServerStateParser().LastCommandSuccessful())
+  {
+    // All msgs are deleted successfully - let's remove the folder itself.
+    PRBool reportingErrors = GetServerStateParser().GetReportingErrors();
+    GetServerStateParser().SetReportingErrors(PR_FALSE);
+    OnDeleteFolder(sourceMailbox);
+    GetServerStateParser().SetReportingErrors(reportingErrors);
+  }
 }
 
 void nsImapProtocol::OnRenameFolder(const char * sourceMailbox)

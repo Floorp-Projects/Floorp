@@ -1569,6 +1569,18 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
     nsCOMPtr<nsIImapUrl> imapUrl;
     nsCAutoString urlSpec;
 
+    // If it's an aol server then use 'deletefolder' url to 
+    // remove all msgs first and then remove the folder itself.
+    PRBool removeFolderAndMsgs = PR_FALSE;
+    nsCOMPtr<nsIMsgIncomingServer> server;
+    if (NS_SUCCEEDED(folder->GetServer(getter_AddRefs(server))) && server)
+    {
+      nsCOMPtr <nsIImapIncomingServer> imapServer = do_QueryInterface(server);
+      if (imapServer) 
+        imapServer->GetIsAOLServer(&removeFolderAndMsgs);
+
+    }
+
     PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
     rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl), folder, urlListener, urlSpec, hierarchySeparator);
     if (NS_SUCCEEDED(rv))
@@ -1578,7 +1590,10 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
         {
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
 
-            urlSpec.Append("/delete>");
+            if (removeFolderAndMsgs)
+              urlSpec.Append("/deletefolder>");
+            else
+              urlSpec.Append("/delete>");
             urlSpec.Append(char(hierarchySeparator));
             
             nsXPIDLCString folderName;

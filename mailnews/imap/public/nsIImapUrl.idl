@@ -182,6 +182,8 @@ interface nsIImapUrl : nsISupports
   const long nsImapSaveMessageToDisk = 0x10000030;
   const long nsImapOpenMimePart = 0x10000031;
   const long nsImapMsgDownloadForOffline	= 0x10000032;
+  const long nsImapDeleteFolderAndMsgs = 0x10000033;
+
 };
 
 %{C++

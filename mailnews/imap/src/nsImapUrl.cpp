@@ -635,6 +635,11 @@ void nsImapUrl::ParseImapPart(char *imapPartOfUrl)
       m_imapAction = nsImapDeleteFolder;
       ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
     }
+    else if (!nsCRT::strcasecmp(m_urlidSubString, "deletefolder"))
+    {
+      m_imapAction = nsImapDeleteFolderAndMsgs;
+      ParseFolderPath(&m_sourceCanonicalFolderPathSubString);
+    }
     else if (!nsCRT::strcasecmp(m_urlidSubString, "rename"))
     {
       m_imapAction = nsImapRenameFolder;
