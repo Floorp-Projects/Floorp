@@ -143,13 +143,11 @@ nsHTMLObjectElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLObjectElement* it = new nsHTMLObjectElement();
+  nsRefPtr<nsHTMLObjectElement> it = new nsHTMLObjectElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  nsCOMPtr<nsIDOMNode> kungFuDeathGrip(it);
 
   nsresult rv = it->Init(mNodeInfo);
 

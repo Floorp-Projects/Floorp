@@ -145,13 +145,11 @@ nsHTMLSharedListElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
-  nsHTMLSharedListElement* it = new nsHTMLSharedListElement();
+  nsRefPtr<nsHTMLSharedListElement> it = new nsHTMLSharedListElement();
 
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-
-  nsCOMPtr<nsIDOMHTMLOListElement> kungFuDeathGrip(it);
 
   nsresult rv = it->Init(mNodeInfo);
 
